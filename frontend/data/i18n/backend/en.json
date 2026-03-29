@@ -399,6 +399,7 @@
   "booking.offer_category.transportation": "Transportation",
   "booking.offer_total": "Offer {total}",
   "booking.open_date_picker": "Open date picker",
+  "booking.page_discard.action": "Discard edits",
   "booking.page_discard.running": "Discarding edits...",
   "booking.page_discard.saved": "All edits reverted",
   "booking.page_save.clean": "No unsaved edits",

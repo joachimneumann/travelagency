@@ -507,6 +507,24 @@ html[data-language-direction="rtl"] .home-page .meta span {
   gap: 0.35rem;
 }
 
+.filter-panel-action {
+  width: 100%;
+  border: 0;
+  border-radius: 10px;
+  background: var(--surface-subtle);
+  color: var(--accent-text-deep);
+  padding: 0.68rem 0.8rem;
+  font-size: var(--font-size-body-sm);
+  font-weight: var(--font-weight-semibold);
+  text-align: left;
+  cursor: pointer;
+}
+
+.filter-panel-action:hover,
+.filter-panel-action:focus-visible {
+  background: var(--surface-muted);
+}
+
 .filter-checkbox-option {
   display: flex;
   align-items: center;
@@ -550,17 +568,16 @@ html[data-language-direction="rtl"] .home-page .meta span {
   box-shadow: 0 10px 28px var(--shadow-panel-soft);
 }
 
-.hero .filter-menu--hero #clearFilters.btn {
+.hero .filter-menu--hero .btn-primary--hero {
   min-height: 3.1rem;
-  background: var(--white-alpha-14);
-  color: var(--surface);
-  border: 1px solid var(--line-light-soft);
-  box-shadow: none;
+  min-width: 200px;
+  padding-inline: 1.2rem;
+  box-shadow: 0 14px 32px var(--shadow-panel-soft);
 }
 
-.hero .filter-menu--hero #clearFilters.btn:hover,
-.hero .filter-menu--hero #clearFilters.btn:focus-visible {
-  background: var(--white-alpha-22);
+.hero .filter-menu--hero .btn-primary--hero:hover,
+.hero .filter-menu--hero .btn-primary--hero:focus-visible {
+  transform: translateY(-1px);
 }
 
 .hero .filter-menu--hero .filter-select-panel {
@@ -889,6 +906,23 @@ textarea:focus-visible {
 .filter-pill.active {
   color: var(--accent-text-deep);
   font-weight: var(--font-weight-semibold);
+}
+
+.filters-toolbar__clear {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  padding: 0;
+  font-size: var(--font-size-body-sm);
+  font-weight: var(--font-weight-semibold);
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+  cursor: pointer;
+}
+
+.filters-toolbar__clear:hover,
+.filters-toolbar__clear:focus-visible {
+  color: var(--accent-text-deep);
 }
 
 .tour-grid {

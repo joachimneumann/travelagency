@@ -3,7 +3,11 @@ import {
   TRAVEL_PLAN_SERVICE_KIND_OPTIONS,
   TRAVEL_PLAN_TIMING_KIND_OPTIONS as GENERATED_TRAVEL_PLAN_TIMING_KIND_OPTIONS
 } from "../shared/generated_catalogs.js";
-import { bookingT } from "./i18n.js";
+import {
+  bookingT,
+  normalizeBookingContentLang,
+  normalizeBookingEditingLang
+} from "./i18n.js";
 import {
   buildDualLocalizedPayload,
   normalizeLocalizedEditorMap,
@@ -265,9 +269,20 @@ export function getTravelPlanServiceCoverageStatus(kind, links = [], financialCo
   return normalizeItemKind(kind) === "free_time" ? "not_applicable" : "not_covered";
 }
 
-export function normalizeTravelPlanDraft(plan, offerComponents = []) {
+export function normalizeTravelPlanDraft(plan, offerComponents = [], options = {}) {
   const source = plan && typeof plan === "object" ? plan : {};
-  const targetLang = String(window.__BOOKING_CONTENT_LANG || "en").trim() || "en";
+  const targetLang = normalizeBookingContentLang(
+    options?.targetLang
+    || options?.contentLang
+    || String(window.__BOOKING_CONTENT_LANG || "en").trim()
+    || "en"
+  );
+  const sourceLang = normalizeBookingEditingLang(
+    options?.sourceLang
+    || options?.editingLang
+    || String(window.__BOOKING_EDITING_LANG || "en").trim()
+    || "en"
+  );
   const linkableOfferComponentIds = new Set(
     (Array.isArray(offerComponents) ? offerComponents : [])
       .map((component) => String(component?.id || "").trim())
@@ -281,17 +296,19 @@ export function normalizeTravelPlanDraft(plan, offerComponents = []) {
         id: String(rawDay.id || travelPlanId("travel_plan_day")),
         day_number: dayIndex + 1,
         date: normalizeOptionalText(rawDay.date),
-        title: resolveLocalizedEditorText(rawDay.title_i18n ?? rawDay.title, "en", ""),
+        title: resolveLocalizedEditorText(rawDay.title_i18n ?? rawDay.title, sourceLang, ""),
         title_i18n: buildDualLocalizedPayload(
-          resolveLocalizedEditorText(rawDay.title_i18n ?? rawDay.title, "en", ""),
+          resolveLocalizedEditorText(rawDay.title_i18n ?? rawDay.title, sourceLang, ""),
           resolveLocalizedEditorBranchText(rawDay.title_i18n ?? rawDay.title, targetLang, ""),
-          targetLang
+          targetLang,
+          sourceLang
         ).map,
-        overnight_location: resolveLocalizedEditorText(rawDay.overnight_location_i18n ?? rawDay.overnight_location, "en", ""),
+        overnight_location: resolveLocalizedEditorText(rawDay.overnight_location_i18n ?? rawDay.overnight_location, sourceLang, ""),
         overnight_location_i18n: buildDualLocalizedPayload(
-          resolveLocalizedEditorText(rawDay.overnight_location_i18n ?? rawDay.overnight_location, "en", ""),
+          resolveLocalizedEditorText(rawDay.overnight_location_i18n ?? rawDay.overnight_location, sourceLang, ""),
           resolveLocalizedEditorBranchText(rawDay.overnight_location_i18n ?? rawDay.overnight_location, targetLang, ""),
-          targetLang
+          targetLang,
+          sourceLang
         ).map,
         services: (
           Array.isArray(rawDay.services)
@@ -301,56 +318,61 @@ export function normalizeTravelPlanDraft(plan, offerComponents = []) {
           const rawItem = item && typeof item === "object" ? item : {};
           const timing = normalizeItemTiming(rawItem);
           const timeLabelMap = buildDualLocalizedPayload(
-            resolveLocalizedEditorText(rawItem.time_label_i18n ?? timing.time_label, "en", ""),
+            resolveLocalizedEditorText(rawItem.time_label_i18n ?? timing.time_label, sourceLang, ""),
             resolveLocalizedEditorBranchText(rawItem.time_label_i18n ?? timing.time_label, targetLang, ""),
-            targetLang
+            targetLang,
+            sourceLang
           ).map;
           const titleMap = buildDualLocalizedPayload(
-            resolveLocalizedEditorText(rawItem.title_i18n ?? rawItem.title, "en", ""),
+            resolveLocalizedEditorText(rawItem.title_i18n ?? rawItem.title, sourceLang, ""),
             resolveLocalizedEditorBranchText(rawItem.title_i18n ?? rawItem.title, targetLang, ""),
-            targetLang
+            targetLang,
+            sourceLang
           ).map;
           const detailsMap = buildDualLocalizedPayload(
-            resolveLocalizedEditorText(rawItem.details_i18n ?? rawItem.details, "en", ""),
+            resolveLocalizedEditorText(rawItem.details_i18n ?? rawItem.details, sourceLang, ""),
             resolveLocalizedEditorBranchText(rawItem.details_i18n ?? rawItem.details, targetLang, ""),
-            targetLang
+            targetLang,
+            sourceLang
           ).map;
           const locationMap = buildDualLocalizedPayload(
-            resolveLocalizedEditorText(rawItem.location_i18n ?? rawItem.location, "en", ""),
+            resolveLocalizedEditorText(rawItem.location_i18n ?? rawItem.location, sourceLang, ""),
             resolveLocalizedEditorBranchText(rawItem.location_i18n ?? rawItem.location, targetLang, ""),
-            targetLang
+            targetLang,
+            sourceLang
           ).map;
-          const financialNoteMap = normalizeLocalizedEditorMap(rawItem.financial_note_i18n ?? rawItem.financial_note, "en");
+          const financialNoteMap = normalizeLocalizedEditorMap(rawItem.financial_note_i18n ?? rawItem.financial_note, sourceLang);
           return {
             id: String(rawItem.id || travelPlanId("travel_plan_service")),
             timing_kind: timing.timing_kind,
-            time_label: resolveLocalizedEditorText(timeLabelMap, "en", ""),
+            time_label: resolveLocalizedEditorText(timeLabelMap, sourceLang, ""),
             time_label_i18n: timeLabelMap,
             time_point: timing.time_point,
             kind: normalizeItemKind(rawItem.kind),
             accommodation_days: normalizeAccommodationDays(rawItem.accommodation_days, rawItem.kind),
-            title: resolveLocalizedEditorText(titleMap, "en", ""),
+            title: resolveLocalizedEditorText(titleMap, sourceLang, ""),
             title_i18n: titleMap,
-            details: resolveLocalizedEditorText(detailsMap, "en", ""),
+            details: resolveLocalizedEditorText(detailsMap, sourceLang, ""),
             details_i18n: detailsMap,
-            location: resolveLocalizedEditorText(locationMap, "en", ""),
+            location: resolveLocalizedEditorText(locationMap, sourceLang, ""),
             location_i18n: locationMap,
             supplier_id: normalizeOptionalText(rawItem.supplier_id),
             start_time: timing.start_time,
             end_time: timing.end_time,
             financial_coverage_needed: rawItem.financial_coverage_needed !== false,
-            financial_note: resolveLocalizedEditorText(financialNoteMap, targetLang, ""),
+            financial_note: resolveLocalizedEditorText(financialNoteMap, sourceLang, ""),
             financial_note_i18n: financialNoteMap,
             financial_coverage_status: "not_covered",
             images: normalizeItemImages(rawItem.images),
             copied_from: normalizeCopiedFrom(rawItem.copied_from)
           };
         }),
-        notes: resolveLocalizedEditorText(rawDay.notes_i18n ?? rawDay.notes, "en", ""),
+        notes: resolveLocalizedEditorText(rawDay.notes_i18n ?? rawDay.notes, sourceLang, ""),
         notes_i18n: buildDualLocalizedPayload(
-          resolveLocalizedEditorText(rawDay.notes_i18n ?? rawDay.notes, "en", ""),
+          resolveLocalizedEditorText(rawDay.notes_i18n ?? rawDay.notes, sourceLang, ""),
           resolveLocalizedEditorBranchText(rawDay.notes_i18n ?? rawDay.notes, targetLang, ""),
-          targetLang
+          targetLang,
+          sourceLang
         ).map
       };
     });

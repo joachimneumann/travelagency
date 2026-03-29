@@ -3,7 +3,10 @@ import {
   normalizeBookingPersonsPayload
 } from "../../lib/booking_persons.js";
 import { execImageMagick } from "../../lib/imagemagick.js";
-import { normalizeBookingContentLang } from "../../domain/booking_content_i18n.js";
+import {
+  normalizeBookingContentLang,
+  normalizeBookingEditingLang
+} from "../../domain/booking_content_i18n.js";
 import {
   isSuspiciousSentinelString,
   resolveBookingNameForStorage
@@ -455,6 +458,7 @@ export function createBookingHandlers(deps) {
     handlePostBookingMilestoneAction,
     handlePatchBookingName,
     handlePatchBookingCustomerLanguage,
+    handlePatchBookingEditingLanguage,
     handlePatchBookingSource,
     handlePatchBookingOwner,
     handlePatchBookingNotes,
@@ -784,6 +788,7 @@ export function createBookingHandlers(deps) {
     const booking = {
       id: bookingId,
       customer_language: inputPreferredLanguage || "en",
+      editing_language: normalizeBookingEditingLang(inputPreferredLanguage || "en"),
       name: initialBookingName,
       core_revision: 0,
       notes_revision: 0,
@@ -901,6 +906,7 @@ export function createBookingHandlers(deps) {
     handlePublicBookingPersonPhoto,
     handlePatchBookingName,
     handlePatchBookingCustomerLanguage,
+    handlePatchBookingEditingLanguage,
     handlePatchBookingSource,
     handleUploadBookingImage,
     handlePostBookingMilestoneAction,

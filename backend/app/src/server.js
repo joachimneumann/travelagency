@@ -59,6 +59,16 @@ import { normalizeText } from "./lib/text.js";
 
 const __filename = fileURLToPath(import.meta.url);
 
+const backendUmaskValue = normalizeText(process.env.BACKEND_UMASK || "000");
+if (backendUmaskValue) {
+  const parsedUmask = Number.parseInt(backendUmaskValue, 8);
+  if (Number.isInteger(parsedUmask) && parsedUmask >= 0) {
+    // Shared staging content is managed outside the backend process, so keep
+    // newly created files world-writable (0666) and directories writable/traversable (0777).
+    process.umask(parsedUmask);
+  }
+}
+
 const httpHelpers = createHttpHelpers({ corsOrigin: CORS_ORIGIN });
 const stagingAccessHandlers = createStagingAccessHandlers({
   enabled: STAGING_ACCESS_CONFIG.enabled,

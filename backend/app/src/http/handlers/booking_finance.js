@@ -12,11 +12,12 @@ import {
 import {
   mergeEditableLocalizedTextField,
   mergeLocalizedTextField,
-  normalizeBookingContentLang
+  normalizeBookingContentLang,
+  normalizeBookingEditingLang
 } from "../../domain/booking_content_i18n.js";
 import {
   markOfferTranslationManual,
-  translateOfferFromEnglish
+  translateOfferFromSourceLanguage
 } from "../../domain/booking_translation.js";
 import { freezeAcceptedCommercialRecord } from "../../domain/accepted_record.js";
 
@@ -106,15 +107,22 @@ export function createBookingFinanceHandlers(deps) {
     }
   }
 
-  function mergeOfferForLang(existingOffer, nextOffer, lang, preferredCurrency) {
+  function bookingEditingLang(booking) {
+    return normalizeBookingEditingLang(booking?.editing_language || "en");
+  }
+
+  function mergeOfferForLang(existingOffer, nextOffer, lang, preferredCurrency, sourceLang = "en") {
     const normalizedLang = normalizeBookingContentLang(lang);
+    const normalizedSourceLang = normalizeBookingContentLang(sourceLang);
     const existingNormalized = normalizeBookingOffer(existingOffer, preferredCurrency, {
       contentLang: normalizedLang,
-      flatLang: normalizedLang
+      flatLang: normalizedLang,
+      sourceLang: normalizedSourceLang
     });
     const nextNormalized = normalizeBookingOffer(nextOffer, preferredCurrency, {
       contentLang: normalizedLang,
-      flatLang: normalizedLang
+      flatLang: normalizedLang,
+      sourceLang: normalizedSourceLang
     });
     const existingById = new Map(
       (Array.isArray(existingNormalized?.components) ? existingNormalized.components : []).map((component) => [component.id, component])
@@ -128,20 +136,30 @@ export function createBookingFinanceHandlers(deps) {
           existingComponent?.label_i18n ?? existingComponent?.label,
           component.label,
           normalizedLang,
-          { fallbackLang: normalizedLang }
+          {
+            fallbackLang: normalizedLang,
+            defaultLang: normalizedSourceLang
+          }
         );
         const detailsField = mergeEditableLocalizedTextField(
           existingComponent?.details_i18n ?? existingComponent?.details,
           component.details,
           component.details_i18n,
           normalizedLang,
-          { pruneExtraTranslationsOnEnglishChange: true }
+          {
+            sourceLang: normalizedSourceLang,
+            defaultLang: normalizedSourceLang,
+            pruneExtraTranslationsOnSourceChange: true
+          }
         );
         const notesField = mergeLocalizedTextField(
           existingComponent?.notes_i18n ?? existingComponent?.notes,
           component.notes,
           normalizedLang,
-          { fallbackLang: normalizedLang }
+          {
+            fallbackLang: normalizedLang,
+            defaultLang: normalizedSourceLang
+          }
         );
         return {
           ...component,
@@ -162,7 +180,7 @@ export function createBookingFinanceHandlers(deps) {
       return;
     }
     if (error?.code === "TRANSLATION_SOURCE_LANGUAGE") {
-      sendJson(res, 422, { error: String(error.message || "English cannot be auto-translated.") });
+      sendJson(res, 422, { error: String(error.message || "The editing language cannot be auto-translated.") });
       return;
     }
     if (error?.code === "TRANSLATION_INVALID_RESPONSE" || error?.code === "TRANSLATION_REQUEST_FAILED") {
@@ -430,14 +448,16 @@ export function createBookingFinanceHandlers(deps) {
     // }
 
     const contentLang = requestContentLang(req, payload);
+    const sourceLang = bookingEditingLang(booking);
     const mergedOffer = mergeOfferForLang(
       booking.offer,
       check.offer,
       contentLang,
-      booking.preferred_currency || booking.pricing?.currency || BASE_CURRENCY
+      booking.preferred_currency || booking.pricing?.currency || BASE_CURRENCY,
+      sourceLang
     );
-    if (contentLang !== "en") {
-      markOfferTranslationManual(mergedOffer, contentLang, nowIso());
+    if (contentLang !== sourceLang) {
+      markOfferTranslationManual(mergedOffer, contentLang, nowIso(), sourceLang);
     }
     const nextOfferBase = await convertBookingOfferToBaseCurrency(mergedOffer);
     const nextOfferJson = JSON.stringify(nextOfferBase);
@@ -499,9 +519,11 @@ export function createBookingFinanceHandlers(deps) {
     if (!(await assertExpectedRevision(req, payload, booking, "expected_offer_revision", "offer_revision", res))) return;
 
     const contentLang = requestContentLang(req, payload);
+    const sourceLang = bookingEditingLang(booking);
     try {
-      const translatedOffer = await translateOfferFromEnglish(
+      const translatedOffer = await translateOfferFromSourceLanguage(
         booking.offer,
+        sourceLang,
         contentLang,
         translateEntries,
         nowIso()
@@ -520,7 +542,7 @@ export function createBookingFinanceHandlers(deps) {
         booking.id,
         "OFFER_TRANSLATED",
         actorLabel(principal, normalizeText(payload?.actor) || "keycloak_user"),
-        `Offer translated from English to ${contentLang}`
+        `Offer translated from ${sourceLang} to ${contentLang}`
       );
       await persistStore(store);
       sendJson(res, 200, await buildBookingDetailResponse(booking, req));

@@ -4,13 +4,14 @@ import {
   mergeEditableLocalizedTextField,
   mergeLocalizedTextField,
   normalizeBookingContentLang,
+  normalizeBookingEditingLang,
   normalizeLocalizedTextMap,
   resolveLocalizedText
 } from "../../domain/booking_content_i18n.js";
 import {
   buildInvoiceTranslationStatus,
   markInvoiceTranslationManual,
-  translateInvoiceFromEnglish
+  translateInvoiceFromSourceLanguage
 } from "../../domain/booking_translation.js";
 
 export function createBookingInvoiceHandlers(deps) {
@@ -64,17 +65,24 @@ export function createBookingInvoiceHandlers(deps) {
     });
   }
 
-  function mergeInvoiceComponentsForLang(existingComponents, nextComponents, lang) {
+  function bookingEditingLang(booking) {
+    return normalizeBookingEditingLang(booking?.editing_language || "en");
+  }
+
+  function mergeInvoiceComponentsForLang(existingComponents, nextComponents, lang, sourceLang = "en") {
     const normalizedLang = normalizeBookingContentLang(lang);
+    const normalizedSourceLang = normalizeBookingContentLang(sourceLang);
     const existingById = new Map(
       normalizeInvoiceComponents(existingComponents, {
         contentLang: normalizedLang,
-        flatLang: normalizedLang
+        flatLang: normalizedLang,
+        sourceLang: normalizedSourceLang
       }).map((component) => [component.id, component])
     );
     return normalizeInvoiceComponents(nextComponents, {
       contentLang: normalizedLang,
-      flatLang: normalizedLang
+      flatLang: normalizedLang,
+      sourceLang: normalizedSourceLang
     }).map((component) => {
       const existingComponent = existingById.get(component.id);
       const descriptionField = mergeEditableLocalizedTextField(
@@ -82,6 +90,10 @@ export function createBookingInvoiceHandlers(deps) {
         component.description,
         component.description_i18n,
         normalizedLang,
+        {
+          sourceLang: normalizedSourceLang,
+          defaultLang: normalizedSourceLang
+        }
       );
       return {
         ...component,
@@ -91,25 +103,27 @@ export function createBookingInvoiceHandlers(deps) {
     });
   }
 
-  function buildInvoiceReadModel(invoice, options = {}) {
+  function buildInvoiceReadModel(invoice, booking = null, options = {}) {
     const readLang = normalizeBookingContentLang(options?.lang || invoice?.lang || "en");
     const contentLang = normalizeBookingContentLang(invoice?.lang || readLang);
+    const sourceLang = normalizeBookingContentLang(options?.sourceLang || bookingEditingLang(booking));
     const title_i18n = normalizeLocalizedTextMap(invoice?.title_i18n ?? invoice?.title, contentLang);
     const notes_i18n = normalizeLocalizedTextMap(invoice?.notes_i18n ?? invoice?.notes, contentLang);
     const normalizedComponents = normalizeInvoiceComponents(invoice?.components, {
       contentLang,
-      flatLang: readLang
+      flatLang: readLang,
+      sourceLang
     });
-    const title = resolveLocalizedText(title_i18n, readLang) || buildDefaultInvoiceTitle(invoice, readLang);
+    const title = resolveLocalizedText(title_i18n, readLang, "", { sourceLang }) || buildDefaultInvoiceTitle(invoice, readLang);
     return {
       ...invoice,
       lang: normalizePdfLang(invoice?.lang || readLang),
       title,
       title_i18n,
-      notes: resolveLocalizedText(notes_i18n, readLang) || null,
+      notes: resolveLocalizedText(notes_i18n, readLang, "", { sourceLang }) || null,
       notes_i18n,
       components: normalizedComponents,
-      translation_status: buildInvoiceTranslationStatus(invoice, readLang),
+      translation_status: buildInvoiceTranslationStatus(invoice, readLang, sourceLang),
       sent_to_recipient: Boolean(invoice.sent_to_recipient),
       sent_to_recipient_at: invoice.sent_to_recipient_at || null,
       pdf_url: `/api/v1/invoices/${encodeURIComponent(invoice.id)}/pdf`
@@ -122,7 +136,7 @@ export function createBookingInvoiceHandlers(deps) {
       return;
     }
     if (error?.code === "TRANSLATION_SOURCE_LANGUAGE") {
-      sendJson(res, 422, { error: String(error.message || "English cannot be auto-translated.") });
+      sendJson(res, 422, { error: String(error.message || "The editing language cannot be auto-translated.") });
       return;
     }
     if (error?.code === "TRANSLATION_INVALID_RESPONSE" || error?.code === "TRANSLATION_REQUEST_FAILED") {
@@ -164,10 +178,11 @@ export function createBookingInvoiceHandlers(deps) {
     }
 
     const readLang = requestContentLang(req);
+    const sourceLang = bookingEditingLang(booking);
     const invoices = [...store.invoices]
       .filter((invoice) => invoice.booking_id === bookingId)
       .sort((a, b) => String(b.updated_at || b.created_at || "").localeCompare(String(a.updated_at || a.created_at || "")))
-      .map((invoice) => buildInvoiceReadModel(invoice, { lang: readLang }));
+      .map((invoice) => buildInvoiceReadModel(invoice, booking, { lang: readLang, sourceLang }));
     sendJson(res, 200, { items: invoices, total: invoices.length });
   }
 
@@ -196,8 +211,9 @@ export function createBookingInvoiceHandlers(deps) {
     const now = nowIso();
     const invoiceParty = getInvoicePartyForBooking(booking);
     const contentLang = requestContentLang(req, payload, null, invoiceParty.preferred_language || "en");
+    const sourceLang = bookingEditingLang(booking);
     const documentLang = normalizePdfLang(payload.lang || invoiceParty.preferred_language || "en");
-    const mergedComponents = mergeInvoiceComponentsForLang([], payload.components, contentLang);
+    const mergedComponents = mergeInvoiceComponentsForLang([], payload.components, contentLang, sourceLang);
     if (!mergedComponents.length) {
       sendJson(res, 422, { error: "At least one invoice component is required" });
       return;
@@ -211,8 +227,15 @@ export function createBookingInvoiceHandlers(deps) {
       }),
       payload.title_i18n,
       contentLang,
+      {
+        sourceLang,
+        defaultLang: sourceLang
+      }
     );
-    const notesField = mergeEditableLocalizedTextField(null, payload.notes, payload.notes_i18n, contentLang);
+    const notesField = mergeEditableLocalizedTextField(null, payload.notes, payload.notes_i18n, contentLang, {
+      sourceLang,
+      defaultLang: sourceLang
+    });
     const invoice = {
       id: `inv_${randomUUID()}`,
       booking_id: bookingId,
@@ -244,18 +267,18 @@ export function createBookingInvoiceHandlers(deps) {
       created_at: now,
       updated_at: now
     };
-    if (contentLang !== "en") {
-      markInvoiceTranslationManual(invoice, contentLang, now);
+    if (contentLang !== sourceLang) {
+      markInvoiceTranslationManual(invoice, contentLang, now, sourceLang);
     }
 
-    await writeInvoicePdf(buildInvoiceReadModel(invoice, { lang: documentLang }), invoiceParty, booking);
+    await writeInvoicePdf(buildInvoiceReadModel(invoice, booking, { lang: documentLang, sourceLang }), invoiceParty, booking);
     store.invoices.push(invoice);
     incrementBookingRevision(booking, "invoices_revision");
     booking.updated_at = now;
     addActivity(store, booking.id, "INVOICE_UPDATED", actorLabel(principal, normalizeText(payload.actor) || "keycloak_user"), `Invoice ${invoice.invoice_number} created`);
     await persistStore(store);
     sendJson(res, 201, {
-      invoice: buildInvoiceReadModel(invoice, { lang: contentLang }),
+      invoice: buildInvoiceReadModel(invoice, booking, { lang: contentLang, sourceLang }),
       booking: await buildBookingPayload(booking, { req, lang: contentLang })
     });
   }
@@ -290,11 +313,12 @@ export function createBookingInvoiceHandlers(deps) {
 
     const invoiceParty = getInvoicePartyForBooking(booking);
     const contentLang = requestContentLang(req, payload, invoice, booking?.customer_language || booking?.web_form_submission?.preferred_language || "en");
+    const sourceLang = bookingEditingLang(booking);
     const nextDocumentLang = payload.lang !== undefined
       ? normalizePdfLang(payload.lang || invoice.lang || invoiceParty?.preferred_language || booking?.customer_language || "en")
       : normalizePdfLang(invoice.lang || booking?.customer_language || booking?.web_form_submission?.preferred_language || "en");
     const components = payload.components !== undefined
-      ? mergeInvoiceComponentsForLang(invoice.components, payload.components, contentLang)
+      ? mergeInvoiceComponentsForLang(invoice.components, payload.components, contentLang, sourceLang)
       : Array.isArray(invoice.components)
         ? invoice.components
         : [];
@@ -356,6 +380,10 @@ export function createBookingInvoiceHandlers(deps) {
           payload.title,
           payload.title_i18n,
           contentLang,
+          {
+            sourceLang,
+            defaultLang: sourceLang
+          }
         );
         invoice.title = titleField.text || buildDefaultInvoiceTitle(invoice, nextDocumentLang);
         invoice.title_i18n = titleField.map;
@@ -369,6 +397,10 @@ export function createBookingInvoiceHandlers(deps) {
           payload.notes,
           payload.notes_i18n,
           contentLang,
+          {
+            sourceLang,
+            defaultLang: sourceLang
+          }
         );
         invoice.notes = notesField.text || null;
         invoice.notes_i18n = notesField.map;
@@ -376,12 +408,12 @@ export function createBookingInvoiceHandlers(deps) {
       invoice.components = components;
       invoice.total_amount_cents = totalAmountCents;
       invoice.due_amount_cents = dueAmountCents;
-      if (contentLang !== "en" && contentFieldsUpdated) {
-        markInvoiceTranslationManual(invoice, contentLang, nowIso());
+      if (contentLang !== sourceLang && contentFieldsUpdated) {
+        markInvoiceTranslationManual(invoice, contentLang, nowIso(), sourceLang);
       }
       invoice.version = Number(invoice.version || 1) + 1;
       await writeInvoicePdf(
-        buildInvoiceReadModel(invoice, { lang: invoice.lang || nextDocumentLang }),
+        buildInvoiceReadModel(invoice, booking, { lang: invoice.lang || nextDocumentLang, sourceLang }),
         invoice.recipient_snapshot || invoiceParty,
         booking
       );
@@ -402,7 +434,7 @@ export function createBookingInvoiceHandlers(deps) {
 
     await persistStore(store);
     sendJson(res, 200, {
-      invoice: buildInvoiceReadModel(invoice, { lang: contentLang }),
+      invoice: buildInvoiceReadModel(invoice, booking, { lang: contentLang, sourceLang }),
       booking: await buildBookingPayload(booking, { req, lang: contentLang })
     });
   }
@@ -437,9 +469,11 @@ export function createBookingInvoiceHandlers(deps) {
     }
 
     const contentLang = requestContentLang(req, payload, invoice, booking?.customer_language || booking?.web_form_submission?.preferred_language || "en");
+    const sourceLang = bookingEditingLang(booking);
     try {
-      const translatedInvoice = await translateInvoiceFromEnglish(
+      const translatedInvoice = await translateInvoiceFromSourceLanguage(
         invoice,
+        sourceLang,
         contentLang,
         translateEntries,
         nowIso()
@@ -448,7 +482,7 @@ export function createBookingInvoiceHandlers(deps) {
       const currentJson = JSON.stringify(invoice || null);
       if (nextJson === currentJson) {
         sendJson(res, 200, {
-          invoice: buildInvoiceReadModel(invoice, { lang: contentLang }),
+          invoice: buildInvoiceReadModel(invoice, booking, { lang: contentLang, sourceLang }),
           booking: await buildBookingPayload(booking, { req, lang: contentLang }),
           unchanged: true
         });
@@ -460,7 +494,7 @@ export function createBookingInvoiceHandlers(deps) {
       invoice.version = Number(invoice.version || 1) + 1;
       invoice.updated_at = nowIso();
       const invoiceParty = invoice.recipient_snapshot || getInvoicePartyForBooking(booking);
-      await writeInvoicePdf(buildInvoiceReadModel(invoice, { lang: invoice.lang }), invoiceParty, booking);
+      await writeInvoicePdf(buildInvoiceReadModel(invoice, booking, { lang: invoice.lang, sourceLang }), invoiceParty, booking);
       incrementBookingRevision(booking, "invoices_revision");
       booking.updated_at = invoice.updated_at;
       addActivity(
@@ -468,11 +502,11 @@ export function createBookingInvoiceHandlers(deps) {
         booking.id,
         "INVOICE_UPDATED",
         actorLabel(principal, normalizeText(payload?.actor) || "keycloak_user"),
-        `Invoice ${invoice.invoice_number} translated from English to ${contentLang}`
+        `Invoice ${invoice.invoice_number} translated from ${sourceLang} to ${contentLang}`
       );
       await persistStore(store);
       sendJson(res, 200, {
-        invoice: buildInvoiceReadModel(invoice, { lang: contentLang }),
+        invoice: buildInvoiceReadModel(invoice, booking, { lang: contentLang, sourceLang }),
         booking: await buildBookingPayload(booking, { req, lang: contentLang })
       });
     } catch (error) {
@@ -496,7 +530,7 @@ export function createBookingInvoiceHandlers(deps) {
 
     const invoiceParty = invoice.recipient_snapshot || getInvoicePartyForBooking(booking);
     const pdfPath = invoicePdfPath(invoice.id, invoice.version);
-    await writeInvoicePdf(buildInvoiceReadModel(invoice, { lang: invoice.lang }), invoiceParty, booking);
+    await writeInvoicePdf(buildInvoiceReadModel(invoice, booking, { lang: invoice.lang, sourceLang: bookingEditingLang(booking) }), invoiceParty, booking);
     res.setHeader("Content-Disposition", `inline; filename=\"${invoice.invoice_number || invoice.id}.pdf\"`);
     await sendFileWithCache(req, res, pdfPath, "private, max-age=0, no-store");
   }

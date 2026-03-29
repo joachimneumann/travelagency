@@ -1,11 +1,15 @@
 import { normalizeText } from "../shared/api.js";
 import {
+  BOOKING_EDITING_LANGUAGE_OPTIONS,
   BOOKING_CONTENT_LANGUAGE_OPTIONS,
   bookingContentLang,
-  bookingContentLanguageLabel,
   bookingContentLanguageOption,
+  bookingEditingLang,
+  bookingEditingLanguageOption,
+  normalizeBookingEditingLang,
   normalizeBookingContentLang,
-  setBookingContentLang
+  readStoredBookingEditingLanguage,
+  setBookingEditingLang,
 } from "../booking/i18n.js";
 
 export function createBookingPageLanguageController(ctx) {
@@ -66,6 +70,14 @@ export function createBookingPageLanguageController(ctx) {
       return normalizeBookingContentLang(customerLanguage);
     }
     return normalizeBookingContentLang(submissionPreferredLanguage || "en");
+  }
+
+  function resolveSubmissionEditingLanguage(booking) {
+    const editingLanguage = normalizeText(booking?.editing_language);
+    if (editingLanguage) {
+      return normalizeBookingEditingLang(editingLanguage);
+    }
+    return readStoredBookingEditingLanguage(booking?.id || state.id, currentBackendLang() || "en");
   }
 
   function closeContentLanguageMenu() {
@@ -283,11 +295,194 @@ export function createBookingPageLanguageController(ctx) {
     setStatus("");
   }
 
+  function closeEditingLanguageMenu() {
+    const menu = els.editingLanguageMenuMount?.querySelector('[data-booking-editing-lang-menu="true"]');
+    const trigger = menu?.querySelector('[data-booking-editing-lang-trigger="true"]');
+    const panel = menu?.querySelector('[data-booking-editing-lang-panel="true"]');
+    if (!menu || !trigger || !panel) return;
+    menu.classList.remove("is-open");
+    panel.hidden = true;
+    panel.style.position = "";
+    panel.style.left = "";
+    panel.style.top = "";
+    panel.style.right = "";
+    panel.style.width = "";
+    panel.style.maxHeight = "";
+    panel.style.visibility = "";
+    trigger.setAttribute("aria-expanded", "false");
+  }
+
+  let editingDismissHandlersBound = false;
+
+  function positionEditingLanguageMenu(trigger, panel) {
+    positionContentLanguageMenu(trigger, panel);
+  }
+
+  function ensureEditingLanguageMenuDismissHandlers() {
+    if (editingDismissHandlersBound) return;
+    editingDismissHandlersBound = true;
+    document.addEventListener("click", (event) => {
+      const menu = els.editingLanguageMenuMount?.querySelector('[data-booking-editing-lang-menu="true"]');
+      if (!menu || menu.contains(event.target)) return;
+      closeEditingLanguageMenu();
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") closeEditingLanguageMenu();
+    });
+    window.addEventListener("resize", () => {
+      const menu = els.editingLanguageMenuMount?.querySelector('[data-booking-editing-lang-menu="true"]');
+      const trigger = menu?.querySelector('[data-booking-editing-lang-trigger="true"]');
+      const panel = menu?.querySelector('[data-booking-editing-lang-panel="true"]');
+      if (!menu?.classList.contains("is-open") || !trigger || !panel) return;
+      positionEditingLanguageMenu(trigger, panel);
+    });
+    window.addEventListener("scroll", () => {
+      const menu = els.editingLanguageMenuMount?.querySelector('[data-booking-editing-lang-menu="true"]');
+      const trigger = menu?.querySelector('[data-booking-editing-lang-trigger="true"]');
+      const panel = menu?.querySelector('[data-booking-editing-lang-panel="true"]');
+      if (!menu?.classList.contains("is-open") || !trigger || !panel) return;
+      positionEditingLanguageMenu(trigger, panel);
+    }, { passive: true });
+  }
+
+  function renderEditingLanguageMenu() {
+    if (!els.editingLanguageMenuMount) return;
+    ensureEditingLanguageMenuDismissHandlers();
+    const activeCode = normalizeBookingEditingLang(
+      els.editingLanguageSelect?.value
+      || state.coreDraft?.editing_language
+      || state.booking?.editing_language
+      || bookingEditingLang(currentBackendLang() || "en")
+    );
+    const active = bookingEditingLanguageOption(activeCode);
+    const otherOptions = BOOKING_EDITING_LANGUAGE_OPTIONS
+      .filter((option) => option.code !== active.code)
+      .map((option) => {
+        const renderedOption = bookingEditingLanguageOption(option.code);
+        return `
+        <button
+          type="button"
+          class="lang-menu-item"
+          data-booking-editing-lang-option="${escapeHtml(renderedOption.code)}"
+          role="menuitem"
+        >
+          <span class="lang-flag ${escapeHtml(renderedOption.flagClass)}" aria-hidden="true"></span>
+          <span class="lang-menu-code">${escapeHtml(renderedOption.shortLabel)}</span>
+          <span class="lang-menu-label">${escapeHtml(renderedOption.label)}</span>
+        </button>
+      `;
+      })
+      .join("");
+
+    els.editingLanguageMenuMount.innerHTML = `
+      <div class="lang-menu booking-content-language-menu" data-booking-editing-lang-menu="true">
+        <button
+          type="button"
+          class="lang-menu-trigger"
+          data-booking-editing-lang-trigger="true"
+          aria-haspopup="menu"
+          aria-expanded="false"
+          aria-label="${escapeHtml(backendT("booking.editing_language", "Editing language"))}"
+        >
+          <span class="lang-flag ${escapeHtml(active.flagClass)}" aria-hidden="true"></span>
+          <span class="lang-menu-code">${escapeHtml(active.shortLabel)}</span>
+          <span class="lang-menu-caret" aria-hidden="true"></span>
+        </button>
+        <div
+          class="lang-menu-panel"
+          data-booking-editing-lang-panel="true"
+          role="menu"
+          hidden
+        >${otherOptions}</div>
+      </div>
+    `;
+
+    const menu = els.editingLanguageMenuMount.querySelector('[data-booking-editing-lang-menu="true"]');
+    const trigger = menu?.querySelector('[data-booking-editing-lang-trigger="true"]');
+    const panel = menu?.querySelector('[data-booking-editing-lang-panel="true"]');
+    if (!menu || !trigger || !panel) return;
+
+    const openMenu = () => {
+      menu.classList.add("is-open");
+      panel.hidden = false;
+      positionEditingLanguageMenu(trigger, panel);
+      trigger.setAttribute("aria-expanded", "true");
+    };
+
+    trigger.addEventListener("click", () => {
+      if (menu.classList.contains("is-open")) closeEditingLanguageMenu();
+      else openMenu();
+    });
+
+    panel.querySelectorAll("[data-booking-editing-lang-option]").forEach((item) => {
+      item.addEventListener("click", () => {
+        const next = normalizeBookingEditingLang(item.getAttribute("data-booking-editing-lang-option") || active.code);
+        closeEditingLanguageMenu();
+        if (!els.editingLanguageSelect) return;
+        els.editingLanguageSelect.value = next;
+        els.editingLanguageSelect.dispatchEvent(new Event("change", { bubbles: true }));
+      });
+    });
+  }
+
+  function syncEditingLanguageSelector() {
+    if (!els.editingLanguageSelect) return;
+    const normalized = normalizeBookingEditingLang(
+      state.coreDraft?.editing_language
+      || state.booking?.editing_language
+      || readStoredBookingEditingLanguage(state.booking?.id || state.id, "")
+      || currentBackendLang()
+      || bookingEditingLang("en")
+    );
+    if (state.coreDraft && typeof state.coreDraft === "object") {
+      state.coreDraft.editing_language = normalized;
+    }
+    setBookingEditingLang(normalized);
+    els.editingLanguageSelect.value = normalized;
+    renderEditingLanguageMenu();
+  }
+
+  function populateEditingLanguageSelect() {
+    if (!els.editingLanguageSelect) return;
+    els.editingLanguageSelect.innerHTML = BOOKING_EDITING_LANGUAGE_OPTIONS
+      .map((option) => `<option value="${escapeHtml(option.code)}">${escapeHtml(option.label)}</option>`)
+      .join("");
+    syncEditingLanguageSelector();
+  }
+
+  async function handleEditingLanguageChange() {
+    if (!els.editingLanguageSelect) return;
+    const previousLang = normalizeBookingEditingLang(
+      state.coreDraft?.editing_language
+      || state.booking?.editing_language
+      || readStoredBookingEditingLanguage(state.booking?.id || state.id, "")
+      || currentBackendLang()
+      || bookingEditingLang("en")
+    );
+    const nextLang = normalizeBookingEditingLang(els.editingLanguageSelect.value || previousLang);
+    setBookingEditingLang(nextLang);
+    if (nextLang === previousLang || !state.permissions.canEditBooking) {
+      syncEditingLanguageSelector();
+      return;
+    }
+    if (!state.coreDraft || typeof state.coreDraft !== "object") {
+      state.coreDraft = {};
+    }
+    state.coreDraft.editing_language = nextLang;
+    updateCoreDirtyState?.();
+    syncEditingLanguageSelector();
+    setStatus("");
+  }
+
   return {
     handleContentLanguageChange,
+    handleEditingLanguageChange,
     populateContentLanguageSelect,
+    populateEditingLanguageSelect,
     resolveSubmissionCustomerLanguage,
+    resolveSubmissionEditingLanguage,
     syncContentLanguageSelector,
+    syncEditingLanguageSelector,
     updateContentLangInUrl,
     waitForBackendI18n,
     withBackendLang,

@@ -30,6 +30,7 @@ export function createBookingPageDataController(ctx) {
     resolveSubmissionCustomerLanguage,
     updateContentLangInUrl,
     syncContentLanguageSelector,
+    syncEditingLanguageSelector,
     withBookingContentLang,
     applyBookingPayload,
     renderBookingHeader,
@@ -97,6 +98,7 @@ export function createBookingPageDataController(ctx) {
     const method = options.method || "GET";
     const body = options.body;
     const requestUrl = resolveApiUrl(apiOrigin, withBookingContentLang(path));
+    state.lastMutationError = null;
 
     try {
       const response = await fetch(requestUrl, {
@@ -110,6 +112,13 @@ export function createBookingPageDataController(ctx) {
 
       const payload = await response.json();
       if (!response.ok) {
+        state.lastMutationError = {
+          method,
+          url: requestUrl,
+          status: response.status,
+          statusText: response.statusText,
+          payload
+        };
         if (response.status === 401) {
           redirectToBackendLogin();
           return null;
@@ -140,8 +149,16 @@ export function createBookingPageDataController(ctx) {
       }
 
       clearError();
+      state.lastMutationError = null;
       return payload;
     } catch (error) {
+      state.lastMutationError = {
+        method,
+        url: requestUrl,
+        status: 0,
+        statusText: "NETWORK_ERROR",
+        payload: null
+      };
       showError(backendT("booking.error.connect", "Could not connect to backend API."));
       logBrowserConsoleError("[booking] Network error while sending a booking mutation request.", {
         booking_id: state.id,
@@ -231,10 +248,10 @@ export function createBookingPageDataController(ctx) {
         return await loadBookingPage();
       }
     }
-
     state.keycloakUsers = mergeAssignableUsersWithStaffProfiles(usersPayload?.items, staffProfilesPayload?.items);
     applyBookingPayload(bookingPayload, { forceDraftReset: true });
     syncContentLanguageSelector?.();
+    syncEditingLanguageSelector?.();
     await ensureTourImageLoaded();
 
     renderBookingHeader();

@@ -718,7 +718,7 @@ test("booking page top control row keeps staff and customer language visually al
   );
 });
 
-test("service titles show a required state inline and drive a specific page-save error", async () => {
+test("service titles remain optional across save validation and UI state", async () => {
   const travelPlanScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan.js");
   const travelPlanValidationPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan_validation.js");
   const bookingStylesPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "pages", "backend-booking.css");
@@ -728,35 +728,25 @@ test("service titles show a required state inline and drive a specific page-save
   const bookingStyles = await readFile(bookingStylesPath, "utf8");
   const travelPlanStyles = await readFile(travelPlanStylesPath, "utf8");
 
-  assert.match(
+  assert.doesNotMatch(
     travelPlanSource,
-    /querySelectorAll\('\[data-travel-plan-service-field="title"\]\[data-localized-lang="en"\]\[data-localized-role="source"\]'\)/,
-    "Travel plan validation should target the English source title input for each service"
-  );
-  assert.match(
-    travelPlanSource,
-    /input\.classList\.toggle\("travel-plan-service-title-input--required", isEmpty\);[\s\S]*input\.placeholder = isEmpty \? requiredPlaceholder\(\) : "";/,
-    "Empty service titles should render with a required-state class and placeholder"
-  );
-  assert.match(
-    travelPlanSource,
-    /setPageSaveActionError\?\.\(\s*bookingT\(\s*"booking\.travel_plan\.validation\.item_title_action_error",\s*"Service \{item\} on day \{day\} needs a title\."/,
-    "Travel plan save should expose a specific page-save error when an item title is missing"
+    /travel-plan-service-title-input--required|item_title_action_error|syncTravelPlanRequiredTitleStates/,
+    "Travel plan editing should not keep the old required-title error state or save hook"
   );
   assert.match(
     travelPlanSource,
     /travel-plan-grid travel-plan-grid--item-kind[\s\S]*booking\.travel_plan\.kind_label[\s\S]*travel-plan-grid[\s\S]*booking\.travel_plan\.item_title[\s\S]*booking\.location/,
-    "Service editing should show kind first, with title and location below it"
+    "Service editing should still show kind first, with title and location below it"
   );
-  assert.match(
+  assert.doesNotMatch(
     validationSource,
-    /code:\s*"item_title_required"[\s\S]*dayNumber[\s\S]*itemNumber/,
-    "Travel plan validation should return structured metadata for missing item titles"
+    /item_title_required|Service title is required/,
+    "Travel plan validation should not reject missing service titles"
   );
-  assert.match(
+  assert.doesNotMatch(
     bookingStyles,
-    /\.booking-detail-page \.travel-plan-service-title-input--required[\s\S]*background: var\(--surface-error\);[\s\S]*border-color: var\(--line-error-strong\);/,
-    "The booking page should render empty required travel plan titles with an error background"
+    /travel-plan-service-title-input--required/,
+    "The booking page should not style travel plan titles as required"
   );
   assert.match(
     travelPlanStyles,
@@ -826,8 +816,8 @@ test("accommodation services expose a day-count helper and create linked copy da
   );
   assert.match(
     travelPlanSource,
-    /function canCreateAccommodationDays\(item\)[\s\S]*String\(item\?\.title \|\| ""\)\.trim\(\)[\s\S]*normalizeAccommodationDays\(item\?\.accommodation_days\)[\s\S]*> 1/,
-    "Accommodation travel-plan items should derive Create days enablement from both the title and the day count"
+    /function canCreateAccommodationDays\(item\)[\s\S]*normalizeAccommodationDays\(item\?\.accommodation_days\)[\s\S]*> 1/,
+    "Accommodation travel-plan items should derive Create days enablement from the day count"
   );
   assert.match(
     travelPlanSource,
@@ -837,17 +827,17 @@ test("accommodation services expose a day-count helper and create linked copy da
   assert.match(
     travelPlanSource,
     /data-travel-plan-service-field="accommodation_days"[\s\S]*data-travel-plan-create-days="[^"]*"[\s\S]*type="button"\$\{createDaysEnabled \? "" : " disabled"\}/,
-    "Accommodation travel-plan items should render the Create days button disabled until those prerequisites are met"
+    "Accommodation travel-plan items should render the Create days button disabled until the day-count prerequisite is met"
   );
   assert.match(
     travelPlanSource,
-    /syncTravelPlanRequiredTitleStates\(\);[\s\S]*syncAccommodationCreateDaysButtonStates\(\);[\s\S]*els\.travel_plan_editor\.addEventListener\("change"[\s\S]*syncTravelPlanRequiredTitleStates\(\);[\s\S]*syncAccommodationCreateDaysButtonStates\(\);/,
-    "Accommodation Create days enablement should resync during render and while editing title or day count fields"
+    /els\.travel_plan_editor\.addEventListener\("input"[\s\S]*syncAccommodationCreateDaysButtonStates\(\);[\s\S]*els\.travel_plan_editor\.addEventListener\("change"[\s\S]*syncAccommodationCreateDaysButtonStates\(\);/,
+    "Accommodation Create days enablement should resync during render and while editing the item"
   );
-  assert.match(
+  assert.doesNotMatch(
     travelPlanSource,
-    /if \(!String\(sourceItem\?\.title \|\| ""\)\.trim\(\)\) \{[\s\S]*create_days_title_required[\s\S]*data-localized-lang="en"\]\[data-localized-role="source"\]/,
-    "Create days should guard against blank accommodation titles and focus the English title input"
+    /create_days_title_required|if \(!String\(sourceItem\?\.title \|\| ""\)\.trim\(\)\)/,
+    "Create days should not require a service title"
   );
   assert.match(
     travelPlanSource,
@@ -1257,12 +1247,67 @@ test("offer detail level select uses literal detail level values instead of curr
 
 test("booking page save orchestrates dirty sections through existing section endpoints", async () => {
   const bookingPageScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking.js");
-  const bookingSource = await readFile(bookingPageScriptPath, "utf8");
+  const travelPlanModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan.js");
+  const [bookingSource, travelPlanSource] = await Promise.all([
+    readFile(bookingPageScriptPath, "utf8"),
+    readFile(travelPlanModulePath, "utf8")
+  ]);
 
   assert.match(
     bookingSource,
     /async function savePageEdits\(\)\s*\{[\s\S]*?saveCoreEdits\(\)[\s\S]*?saveNoteEdits\(\)[\s\S]*?personsModule\.saveAllPersonDrafts\(\)[\s\S]*?saveOffer\(\)[\s\S]*?travelPlanModule\.saveTravelPlan\(\)[\s\S]*?savePricing\(\)[\s\S]*?createInvoice\(\)[\s\S]*?state\.pendingSavedCustomerLanguage[\s\S]*?loadBookingPage\(\)/,
     "Page save should orchestrate the existing booking section endpoints in order"
+  );
+  assert.match(
+    travelPlanSource,
+    /async function persistTravelPlan\(\)\s*\{[\s\S]*?if \(!state\.travelPlanDirty\) \{[\s\S]*?syncTravelPlanDraftFromDom\(\);[\s\S]*?updateTravelPlanDirtyState\(\);[\s\S]*?if \(!state\.travelPlanDirty\) \{[\s\S]*?return true;/,
+    "Travel-plan persistence should resync dirty state from the DOM and treat a clean result as a no-op instead of blocking page save"
+  );
+});
+
+test("booking editing language falls back to browser-local storage when the backend route is unavailable", async () => {
+  const bookingI18nPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "i18n.js");
+  const coreModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "core.js");
+  const bookingPageDataModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking_page_data.js");
+  const bookingPageLanguageModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking_page_language.js");
+  const bookingHandlersModulePath = path.resolve(__dirname, "..", "..", "..", "backend", "app", "src", "http", "handlers", "bookings.js");
+  const [i18nSource, coreSource, bookingPageDataSource, bookingPageLanguageSource, bookingHandlersSource] = await Promise.all([
+    readFile(bookingI18nPath, "utf8"),
+    readFile(coreModulePath, "utf8"),
+    readFile(bookingPageDataModulePath, "utf8"),
+    readFile(bookingPageLanguageModulePath, "utf8"),
+    readFile(bookingHandlersModulePath, "utf8")
+  ]);
+
+  assert.match(
+    i18nSource,
+    /export function readStoredBookingEditingLanguage\(bookingId,\s*fallback = DEFAULT_BOOKING_EDITING_LANG\)/,
+    "Booking i18n helpers should expose a per-booking stored editing-language fallback reader"
+  );
+  assert.match(
+    coreSource,
+    /function shouldApplyEditingLanguageCompatibilityFallback\(requestUrl\) \{[\s\S]*const status = Number\(errorMeta\?\.status \|\| 0\);[\s\S]*includes\("\/editing-language"\)[\s\S]*status === 404/,
+    "Core booking saves should recognize the missing editing-language route on older backends"
+  );
+  assert.match(
+    coreSource,
+    /function applyEditingLanguageCompatibilityFallback\(booking,\s*nextEditingLanguage\) \{[\s\S]*writeStoredBookingEditingLanguage\(/,
+    "Core booking saves should persist editing-language changes into browser-local fallback storage when the backend route is missing"
+  );
+  assert.match(
+    bookingPageDataSource,
+    /state\.lastMutationError = \{[\s\S]*status: response\.status[\s\S]*payload/,
+    "Booking mutation requests should retain the last HTTP error metadata so save compatibility fallbacks can inspect it"
+  );
+  assert.match(
+    bookingPageLanguageSource,
+    /resolveSubmissionEditingLanguage\(booking\) \{[\s\S]*readStoredBookingEditingLanguage\(booking\?\.id \|\| state\.id,/,
+    "The booking page should reuse the browser-local editing-language fallback when the backend payload has no persisted editing language"
+  );
+  assert.match(
+    bookingHandlersSource,
+    /return \{[\s\S]*handlePatchBookingCustomerLanguage,[\s\S]*handlePatchBookingEditingLanguage,[\s\S]*handlePatchBookingSource,/,
+    "Booking handler composition should expose the editing-language patch handler once the route is declared"
   );
 });
 
@@ -1297,6 +1342,50 @@ test("offer editor persists only through explicit page save", async () => {
     offerSaveSource,
     /async function saveOffer\(\)\s*\{\s*return await persistOffer\(\);\s*\}/,
     "Offer drafts should only persist through the explicit save path"
+  );
+});
+
+test("booking page logs reload-time dirty diagnostics and core comparisons ignore inactive referral fields", async () => {
+  const bookingPageModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking.js");
+  const coreModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "core.js");
+  const travelPlanModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan.js");
+  const travelPlanHelpersModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan_helpers.js");
+  const [bookingPageSource, coreSource, travelPlanSource, travelPlanHelpersSource] = await Promise.all([
+    readFile(bookingPageModulePath, "utf8"),
+    readFile(coreModulePath, "utf8"),
+    readFile(travelPlanModulePath, "utf8"),
+    readFile(travelPlanHelpersModulePath, "utf8")
+  ]);
+
+  assert.match(
+    bookingPageSource,
+    /function setBookingSectionDirty\(sectionKey,\s*isDirty,\s*diagnostic = undefined\)/,
+    "The booking page should accept optional section dirty diagnostics from child modules"
+  );
+  assert.match(
+    bookingPageSource,
+    /\[booking-dirty\] Booking page loaded with unsaved state after refresh\./,
+    "The booking page should log a reload-specific dirty summary when a fresh load still comes back dirty"
+  );
+  assert.match(
+    coreSource,
+    /function normalizeCoreComparableState\(values = \{\}\) \{[\s\S]*referralKind === "b2b_partner" \|\| referralKind === "other_customer"[\s\S]*referralKind === "atp_staff"/,
+    "Core dirty comparisons should clear irrelevant referral fields so stale backend-only values do not manufacture a dirty state"
+  );
+  assert.match(
+    travelPlanSource,
+    /reason: "travel_plan_snapshot_mismatch"/,
+    "Travel-plan dirty diagnostics should include a concrete snapshot mismatch reason for reload debugging"
+  );
+  assert.match(
+    travelPlanSource,
+    /function getTravelPlanNormalizationOptions\(\) \{[\s\S]*state\.coreDraft\?\.editing_language[\s\S]*state\.booking\?\.editing_language/,
+    "Travel-plan normalization should derive its source language from the booking draft instead of an uninitialized global runtime value"
+  );
+  assert.match(
+    travelPlanHelpersSource,
+    /export function normalizeTravelPlanDraft\(plan, offerComponents = \[\], options = \{\}\) \{[\s\S]*const sourceLang = normalizeBookingEditingLang\([\s\S]*resolveLocalizedEditorText\(rawDay\.title_i18n \?\? rawDay\.title, sourceLang, ""\)/,
+    "Travel-plan helper normalization should accept an explicit source language and flatten localized content through that branch"
   );
 });
 
@@ -1584,6 +1673,11 @@ test("travel-plan module preserves add/remove/reorder and offer-link editing hel
     source,
     /for \(let minute = 0; minute < 60; minute \+= 5\)/,
     "travel_plan.js should offer 5-minute time increments instead of free one-minute entry"
+  );
+  assert.match(
+    source,
+    /function renderTravelPlanLocalizedField\(\{[\s\S]*sourceValue = ""[\s\S]*renderLocalizedStackedField\(\{[\s\S]*sourceValue,/,
+    "travel_plan.js should forward localized sourceValue into the shared localized field renderer"
   );
   assert.doesNotMatch(
     source,

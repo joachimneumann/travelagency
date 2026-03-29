@@ -8,11 +8,12 @@ import {
 import {
   mergeEditableLocalizedTextField,
   mergeLocalizedTextField,
-  normalizeBookingContentLang
+  normalizeBookingContentLang,
+  normalizeBookingEditingLang
 } from "../../domain/booking_content_i18n.js";
 import {
   markTravelPlanTranslationManual,
-  translateTravelPlanFromEnglish
+  translateTravelPlanFromSourceLanguage
 } from "../../domain/booking_translation.js";
 import { createBookingTravelPlanAttachmentHandlers } from "./booking_travel_plan_attachments.js";
 import { createBookingTravelPlanImportHandlers } from "./booking_travel_plan_import.js";
@@ -76,6 +77,10 @@ export function createBookingTravelPlanHandlers(deps) {
     }
   }
 
+  function bookingEditingLang(booking) {
+    return normalizeBookingEditingLang(booking?.editing_language || "en");
+  }
+
   function travelPlanPdfTempOutputPath(bookingId, prefix = "travel-plan-preview") {
     const tempRoot = String(TRAVEL_PLAN_PDF_PREVIEW_DIR || TEMP_UPLOAD_DIR || "").trim();
     return path.join(tempRoot, `${prefix}-${bookingId}-${randomUUID()}.pdf`);
@@ -94,16 +99,19 @@ export function createBookingTravelPlanHandlers(deps) {
     };
   }
 
-  function mergeTravelPlanForLang(existingTravelPlan, nextTravelPlan, offer, lang) {
+  function mergeTravelPlanForLang(existingTravelPlan, nextTravelPlan, offer, lang, sourceLang = "en") {
     const normalizedLang = normalizeBookingContentLang(lang);
+    const normalizedSourceLang = normalizeBookingContentLang(sourceLang);
     const existingNormalized = normalizeBookingTravelPlan(existingTravelPlan, offer, {
       contentLang: normalizedLang,
       flatLang: normalizedLang,
+      sourceLang: normalizedSourceLang,
       strictReferences: false
     });
     const nextNormalized = normalizeBookingTravelPlan(nextTravelPlan, offer, {
       contentLang: normalizedLang,
       flatLang: normalizedLang,
+      sourceLang: normalizedSourceLang,
       strictReferences: false
     });
     const existingDaysById = new Map(
@@ -123,21 +131,33 @@ export function createBookingTravelPlanHandlers(deps) {
               day.title,
               day.title_i18n,
               normalizedLang,
-              { pruneExtraTranslationsOnEnglishChange: true }
+              {
+                sourceLang: normalizedSourceLang,
+                defaultLang: normalizedSourceLang,
+                pruneExtraTranslationsOnSourceChange: true
+              }
             );
             const nextOvernightField = mergeEditableLocalizedTextField(
               existingDay?.overnight_location_i18n ?? existingDay?.overnight_location,
               day.overnight_location,
               day.overnight_location_i18n,
               normalizedLang,
-              { pruneExtraTranslationsOnEnglishChange: true }
+              {
+                sourceLang: normalizedSourceLang,
+                defaultLang: normalizedSourceLang,
+                pruneExtraTranslationsOnSourceChange: true
+              }
             );
             const nextNotesField = mergeEditableLocalizedTextField(
               existingDay?.notes_i18n ?? existingDay?.notes,
               day.notes,
               day.notes_i18n,
               normalizedLang,
-              { pruneExtraTranslationsOnEnglishChange: true }
+              {
+                sourceLang: normalizedSourceLang,
+                defaultLang: normalizedSourceLang,
+                pruneExtraTranslationsOnSourceChange: true
+              }
             );
 
         return {
@@ -155,34 +175,53 @@ export function createBookingTravelPlanHandlers(deps) {
               item.time_label,
               item.time_label_i18n,
               normalizedLang,
-              { pruneExtraTranslationsOnEnglishChange: true }
+              {
+                sourceLang: normalizedSourceLang,
+                defaultLang: normalizedSourceLang,
+                pruneExtraTranslationsOnSourceChange: true
+              }
             );
             const titleItemField = mergeEditableLocalizedTextField(
               existingItem?.title_i18n ?? existingItem?.title,
               item.title,
               item.title_i18n,
               normalizedLang,
-              { pruneExtraTranslationsOnEnglishChange: true }
+              {
+                sourceLang: normalizedSourceLang,
+                defaultLang: normalizedSourceLang,
+                pruneExtraTranslationsOnSourceChange: true
+              }
             );
             const detailsField = mergeEditableLocalizedTextField(
               existingItem?.details_i18n ?? existingItem?.details,
               item.details,
               item.details_i18n,
               normalizedLang,
-              { pruneExtraTranslationsOnEnglishChange: true }
+              {
+                sourceLang: normalizedSourceLang,
+                defaultLang: normalizedSourceLang,
+                pruneExtraTranslationsOnSourceChange: true
+              }
             );
             const locationField = mergeEditableLocalizedTextField(
               existingItem?.location_i18n ?? existingItem?.location,
               item.location,
               item.location_i18n,
               normalizedLang,
-              { pruneExtraTranslationsOnEnglishChange: true }
+              {
+                sourceLang: normalizedSourceLang,
+                defaultLang: normalizedSourceLang,
+                pruneExtraTranslationsOnSourceChange: true
+              }
             );
             const financialNoteField = mergeLocalizedTextField(
               existingItem?.financial_note_i18n ?? existingItem?.financial_note,
               item.financial_note,
               normalizedLang,
-              { fallbackLang: normalizedLang }
+              {
+                fallbackLang: normalizedLang,
+                defaultLang: normalizedSourceLang
+              }
             );
 
             return {
@@ -210,7 +249,7 @@ export function createBookingTravelPlanHandlers(deps) {
       return;
     }
     if (error?.code === "TRANSLATION_SOURCE_LANGUAGE") {
-      sendJson(res, 422, { error: String(error.message || "English cannot be auto-translated.") });
+      sendJson(res, 422, { error: String(error.message || "The editing language cannot be auto-translated.") });
       return;
     }
     if (error?.code === "TRANSLATION_INVALID_RESPONSE" || error?.code === "TRANSLATION_REQUEST_FAILED") {
@@ -582,9 +621,10 @@ export function createBookingTravelPlanHandlers(deps) {
     }
 
     const contentLang = requestContentLang(req, payload);
-    const mergedTravelPlan = mergeTravelPlanForLang(booking.travel_plan, check.travel_plan, booking.offer, contentLang);
-    if (contentLang !== "en") {
-      markTravelPlanTranslationManual(mergedTravelPlan, contentLang, nowIso());
+    const sourceLang = bookingEditingLang(booking);
+    const mergedTravelPlan = mergeTravelPlanForLang(booking.travel_plan, check.travel_plan, booking.offer, contentLang, sourceLang);
+    if (contentLang !== sourceLang) {
+      markTravelPlanTranslationManual(mergedTravelPlan, contentLang, nowIso(), sourceLang);
     }
     const nextTravelPlanJson = JSON.stringify(mergedTravelPlan);
     const currentTravelPlanJson = JSON.stringify(booking.travel_plan || null);
@@ -632,9 +672,11 @@ export function createBookingTravelPlanHandlers(deps) {
     if (!(await assertExpectedRevision(req, payload, booking, "expected_travel_plan_revision", "travel_plan_revision", res))) return;
 
     const contentLang = requestContentLang(req, payload);
+    const sourceLang = bookingEditingLang(booking);
     try {
-      const translatedTravelPlan = await translateTravelPlanFromEnglish(
+      const translatedTravelPlan = await translateTravelPlanFromSourceLanguage(
         booking.travel_plan,
+        sourceLang,
         contentLang,
         translateEntries,
         nowIso()
@@ -654,7 +696,7 @@ export function createBookingTravelPlanHandlers(deps) {
         booking.id,
         "TRAVEL_PLAN_TRANSLATED",
         actorLabel(principal, normalizeText(payload?.actor) || "keycloak_user"),
-        `Travel plan translated from English to ${contentLang}`
+        `Travel plan translated from ${sourceLang} to ${contentLang}`
       );
       await persistStore(store);
       sendJson(res, 200, await buildBookingDetailResponse(booking, req));

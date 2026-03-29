@@ -1,12 +1,13 @@
 (function frontendI18nBootstrap() {
   const CATALOG = window.ASIATRAVELPLAN_LANGUAGE_CATALOG;
   const LANGUAGES = Array.isArray(CATALOG?.frontendLanguages)
-    ? CATALOG.frontendLanguages.map((item) => ({
+    ? orderLanguageMenuItems(CATALOG.frontendLanguages.map((item) => ({
         code: item.code,
         label: item.nativeLabel,
         shortLabel: item.shortLabel,
-        flagClass: item.flagClass
-      }))
+        flagClass: item.flagClass,
+        sortLabel: item.promptName || item.apiValue || item.nativeLabel || item.code
+      })))
     : [];
 
   const CONFIG = {
@@ -125,6 +126,22 @@
   function normalizeSupportedLang(value) {
     const normalized = normalizeText(value).toLowerCase();
     return CONFIG.supported.includes(normalized) ? normalized : CONFIG.defaultLang;
+  }
+
+  function orderLanguageMenuItems(items) {
+    return [...items].sort((left, right) => {
+      const priorityDifference = languagePriority(left?.code) - languagePriority(right?.code);
+      if (priorityDifference !== 0) return priorityDifference;
+      return String(left?.sortLabel || left?.label || left?.code || "")
+        .localeCompare(String(right?.sortLabel || right?.label || right?.code || ""), "en", { sensitivity: "base" });
+    });
+  }
+
+  function languagePriority(code) {
+    const normalized = normalizeText(code).toLowerCase();
+    if (normalized === 'en') return 0;
+    if (normalized === 'vi') return 1;
+    return 2;
   }
 
   async function loadDictionary(lang) {

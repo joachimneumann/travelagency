@@ -65,7 +65,7 @@ const state = {
   rankedTripsDebug: [],
   formStep: 1,
   bookingSubmitted: false,
-  visibleToursCount: 3,
+  visibleToursCount: 6,
   showMoreUsed: false,
   selectedTour: null,
   selectedTeamMemberUsername: "",
@@ -78,7 +78,7 @@ let authStatusLoadScheduled = false;
 let tourImagePrewarmToken = 0;
 let teamSectionRevealObserved = false;
 
-const INITIAL_VISIBLE_TOURS = 3;
+const INITIAL_VISIBLE_TOURS = 6;
 const SHOW_MORE_BATCH = 3;
 const TOURS_CACHE_TTL_MS = 5 * 60 * 1000;
 const BACKEND_BASE_URL = window.ASIATRAVELPLAN_API_BASE ? window.ASIATRAVELPLAN_API_BASE.replace(/\/$/, "") : "";
@@ -103,7 +103,7 @@ const els = {
   backendLoginBtnTitle: document.getElementById("backendLoginBtnTitle"),
   backendLoginBtnSubtitle: document.getElementById("backendLoginBtnSubtitle"),
   websiteAuthStatus: document.getElementById("websiteAuthStatus"),
-  clearFilters: document.getElementById("clearFilters"),
+  viewToursBtn: document.getElementById("viewToursBtn"),
   activeFilters: document.getElementById("activeFilters"),
   toursTitle: document.getElementById("toursTitle"),
   toursBooking: document.getElementById("toursBooking"),
@@ -113,12 +113,10 @@ const els = {
   teamGrid: document.getElementById("teamGrid"),
   teamDetail: document.getElementById("teamDetail"),
   heroDynamicSubtitle: document.getElementById("heroDynamicSubtitle"),
-  heroScrollLink: document.getElementById("heroScrollLink"),
   bookingTitle: document.getElementById("bookingTitle"),
   tourGrid: document.getElementById("tourGrid"),
   tourActions: document.getElementById("tourActions"),
   showMoreTours: document.getElementById("showMoreTours"),
-  showAllTours: document.getElementById("showAllTours"),
   debugPriorityBtn: document.getElementById("debugPriorityBtn"),
   debugPriorityOutput: document.getElementById("debugPriorityOutput"),
   noResultsMessage: document.getElementById("noResultsMessage"),
@@ -246,7 +244,6 @@ async function init() {
   setupTravelMonthControls();
   setupMobileNav();
   setupFAQ();
-  setupHeroScroll();
   setupTeamSection();
   setupBackendLogin();
   setupHiddenBackendQuickLogin();
@@ -601,25 +598,6 @@ function setupFAQ() {
 
     const icon = button.querySelector('[aria-hidden="true"]');
     if (icon) icon.textContent = open ? "+" : "−";
-  });
-}
-
-function setupHeroScroll() {
-  if (!els.heroScrollLink) return;
-
-  els.heroScrollLink.addEventListener("click", (event) => {
-    event.preventDefault();
-    const toursSection = document.getElementById("tours");
-    if (!toursSection) return;
-
-    const header = document.querySelector(".header");
-    const headerHeight = header ? header.getBoundingClientRect().height : 0;
-    const targetTop = toursSection.getBoundingClientRect().top + window.scrollY - headerHeight;
-
-    window.scrollTo({
-      top: Math.max(0, targetTop),
-      behavior: "smooth"
-    });
   });
 }
 
@@ -1031,17 +1009,9 @@ function goToFormStep(step) {
 if (els.showMoreTours) {
   els.showMoreTours.addEventListener("click", () => {
     const remaining = Math.max(0, state.filteredTrips.length - state.visibleToursCount);
-    const toShow = Math.min(SHOW_MORE_BATCH, remaining);
+    const toShow = remaining;
     if (!toShow) return;
     state.visibleToursCount += toShow;
-    state.showMoreUsed = true;
-    renderVisibleTrips();
-  });
-}
-
-if (els.showAllTours) {
-  els.showAllTours.addEventListener("click", () => {
-    state.visibleToursCount = state.filteredTrips.length;
     renderVisibleTrips();
   });
 }

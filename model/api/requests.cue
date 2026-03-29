@@ -62,6 +62,12 @@ import (
 	actor?:                  string
 }
 
+#BookingEditingLanguageUpdateRequest: {
+	expected_core_revision?: >=0 & int
+	editing_language:       "en" | "vi"
+	actor?:                 string
+}
+
 #BookingSourceUpdateRequest: {
 	expected_core_revision?:  >=0 & int
 	source_channel:           enums.#BookingSourceChannel

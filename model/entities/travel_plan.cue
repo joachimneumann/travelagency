@@ -48,7 +48,7 @@ import (
 	time_point?:               string
 	kind:                      enums.#TravelPlanServiceKind
 	accommodation_days?:       >=1 & <=100 & int
-	title:                     string
+	title?:                    string
 	details?:                  string
 	location?:                 string
 	supplier_id?:              common.#Identifier

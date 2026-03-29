@@ -165,21 +165,10 @@ export function createFrontendToursController(ctx) {
     }
   }
 
-  function renderChip(label, value, kind) {
-    const active = Array.isArray(value) && value.length > 0;
-    const text = active
-      ? filterLabels(value, kind).join(", ")
-      : kind === "destination"
-        ? frontendT("filters.all_destinations", "All destinations")
-        : frontendT("filters.all_styles", "All travel styles");
-    return `<span class="filter-pill ${active ? "active" : ""}">${label}: ${text}</span>`;
-  }
-
   function renderFilterSummary() {
-    const chips = [];
-    chips.push(renderChip(frontendT("filters.destination_label", "Destination"), state.filters.dest, "destination"));
-    chips.push(renderChip(frontendT("filters.style_label", "Style"), state.filters.style, "style"));
-    els.activeFilters.innerHTML = chips.join("");
+    if (!els.activeFilters) return;
+    els.activeFilters.innerHTML = "";
+    els.activeFilters.hidden = true;
   }
 
   function buildShowMoreToursLabel(moreCount) {
@@ -206,8 +195,33 @@ export function createFrontendToursController(ctx) {
       : frontendT("tours.show_more.generic_many", "Show {count} more tours", { count: countText });
   }
 
+  function updateViewToursButton() {
+    if (!els.viewToursBtn) return;
+    const total = state.filteredTrips.length;
+    if (total <= 0) {
+      els.viewToursBtn.textContent = frontendT("tours.view.none", "No matching tours");
+      els.viewToursBtn.disabled = true;
+      return;
+    }
+    els.viewToursBtn.textContent = frontendT("tours.view.count", "View {count} tours", { count: total });
+    els.viewToursBtn.disabled = false;
+  }
+
+  function scrollToToursGrid() {
+    const toursSection = document.getElementById("tours");
+    if (!toursSection) return;
+    const header = document.querySelector(".header");
+    const headerHeight = header ? header.getBoundingClientRect().height : 0;
+    const targetTop = toursSection.getBoundingClientRect().top + window.scrollY - headerHeight;
+
+    window.scrollTo({
+      top: Math.max(0, targetTop),
+      behavior: "smooth"
+    });
+  }
+
   function updateTourActions() {
-    if (!els.tourActions || !els.showMoreTours || !els.showAllTours) return;
+    if (!els.tourActions || !els.showMoreTours) return;
 
     const total = state.filteredTrips.length;
     const remaining = Math.max(0, total - state.visibleToursCount);
@@ -215,35 +229,19 @@ export function createFrontendToursController(ctx) {
     if (total === 0 || remaining === 0) {
       els.tourActions.hidden = true;
       els.showMoreTours.hidden = true;
-      els.showAllTours.hidden = true;
       return;
     }
 
-    const moreCount = Math.min(showMoreBatch, remaining);
-    const showMoreAvailable = !state.showMoreUsed && moreCount > 0;
-    const showAllAvailable = state.showMoreUsed && remaining > 0;
-    const noFilterSelected = !state.filters.dest.length && !state.filters.style.length;
+    const moreCount = remaining;
+    const showMoreAvailable = moreCount > 0;
 
-    els.tourActions.hidden = !(showMoreAvailable || showAllAvailable);
+    els.tourActions.hidden = !showMoreAvailable;
 
     if (showMoreAvailable) {
       els.showMoreTours.hidden = false;
-      if (noFilterSelected) {
-        els.showMoreTours.textContent = frontendT("tours.show_more.default", "Show more tours");
-      } else {
-        els.showMoreTours.textContent = buildShowMoreToursLabel(moreCount);
-      }
+      els.showMoreTours.textContent = frontendT("tours.show_all.count", "Show all {count} tours", { count: total });
     } else {
       els.showMoreTours.hidden = true;
-    }
-
-    if (showAllAvailable) {
-      els.showAllTours.hidden = false;
-      els.showAllTours.textContent = remaining === 1
-        ? frontendT("tours.show_remaining.one", "There is 1 more tour")
-        : frontendT("tours.show_remaining.many", "Show the remaining {count} tours", { count: remaining });
-    } else {
-      els.showAllTours.hidden = true;
     }
   }
 
@@ -298,9 +296,7 @@ export function createFrontendToursController(ctx) {
     if (els.toursTitle) els.toursTitle.textContent = heading;
     if (els.toursBooking) els.toursBooking.textContent = booking;
     if (els.heroDynamicSubtitle) {
-      els.heroDynamicSubtitle.textContent = heading;
-      const noFilterSelected = !dest.length && !style.length;
-      els.heroDynamicSubtitle.hidden = noFilterSelected;
+      els.heroDynamicSubtitle.hidden = true;
     }
     if (els.bookingStepTitle) {
       els.bookingStepTitle.textContent = heading;
@@ -554,6 +550,7 @@ export function createFrontendToursController(ctx) {
 
     renderFilterSummary();
     updateTitlesForFilters();
+    updateViewToursButton();
     renderVisibleTrips();
     renderPriorityDebug();
   }
@@ -576,25 +573,33 @@ export function createFrontendToursController(ctx) {
     els.navDestinationOptions.addEventListener("change", () => {
       state.filters.dest = getCheckedValues(els.navDestinationOptions);
       state.visibleToursCount = initialVisibleTours;
-      state.showMoreUsed = false;
       onFilterChange();
+    });
+
+    els.navDestinationOptions.addEventListener("click", (event) => {
+      const button = event.target instanceof Element ? event.target.closest("[data-clear-filter-group]") : null;
+      if (!button) return;
+      clearFilterGroup("destination", els.navDestinationOptions);
     });
 
     els.navStyleOptions.addEventListener("change", () => {
       state.filters.style = getCheckedValues(els.navStyleOptions);
       state.visibleToursCount = initialVisibleTours;
-      state.showMoreUsed = false;
       onFilterChange();
     });
 
-    els.clearFilters.addEventListener("click", () => {
-      state.filters.dest = [];
-      state.filters.style = [];
-      state.visibleToursCount = initialVisibleTours;
-      state.showMoreUsed = false;
-      syncFilterInputs();
-      onFilterChange();
+    els.navStyleOptions.addEventListener("click", (event) => {
+      const button = event.target instanceof Element ? event.target.closest("[data-clear-filter-group]") : null;
+      if (!button) return;
+      clearFilterGroup("style", els.navStyleOptions);
     });
+
+    if (els.viewToursBtn) {
+      els.viewToursBtn.addEventListener("click", () => {
+        if (els.viewToursBtn.disabled) return;
+        scrollToToursGrid();
+      });
+    }
   }
 
   function updateURLWithFilters() {
@@ -621,6 +626,29 @@ export function createFrontendToursController(ctx) {
     updateFilterTriggerLabels();
   }
 
+  function closeFilterPanelForOptions(optionsContainer) {
+    const panel = optionsContainer?.closest(".filter-select-panel");
+    const wrap = panel?.parentElement;
+    const trigger = wrap?.querySelector(".filter-select-trigger");
+    if (panel) panel.hidden = true;
+    if (trigger) trigger.setAttribute("aria-expanded", "false");
+  }
+
+  function clearFilterGroup(group, optionsContainer) {
+    if (group === "destination") {
+      state.filters.dest = [];
+    } else if (group === "style") {
+      state.filters.style = [];
+    } else {
+      return;
+    }
+
+    state.visibleToursCount = initialVisibleTours;
+    syncFilterInputs();
+    onFilterChange();
+    closeFilterPanelForOptions(optionsContainer);
+  }
+
   function renderFilterCheckbox(kind, value, label = value) {
     const safeValue = escapeHTML(value);
     const safeLabel = escapeHTML(label);
@@ -633,6 +661,14 @@ export function createFrontendToursController(ctx) {
     `;
   }
 
+  function renderFilterClearAction(group, label) {
+    return `
+      <button class="filter-panel-action" type="button" data-clear-filter-group="${escapeAttr(group)}">
+        ${escapeHTML(label)}
+      </button>
+    `;
+  }
+
   function populateFilterOptions() {
     const destinations = filterOptionList("destination");
     const styles = filterOptionList("style");
@@ -640,15 +676,17 @@ export function createFrontendToursController(ctx) {
     const bookingStyles = styles.map((option) => option.label);
 
     if (els.navDestinationOptions) {
-      els.navDestinationOptions.innerHTML = destinations
-        .map((destination) => renderFilterCheckbox("destination", destination.code, destination.label))
-        .join("");
+      els.navDestinationOptions.innerHTML = [
+        renderFilterClearAction("destination", frontendT("filters.all_destinations", "All destinations")),
+        ...destinations.map((destination) => renderFilterCheckbox("destination", destination.code, destination.label))
+      ].join("");
     }
 
     if (els.navStyleOptions) {
-      els.navStyleOptions.innerHTML = styles
-        .map((style) => renderFilterCheckbox("style", style.code, style.label))
-        .join("");
+      els.navStyleOptions.innerHTML = [
+        renderFilterClearAction("style", frontendT("filters.all_styles", "All travel styles")),
+        ...styles.map((style) => renderFilterCheckbox("style", style.code, style.label))
+      ].join("");
     }
 
     if (els.bookingDestinationOptions) {

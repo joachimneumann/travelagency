@@ -8,12 +8,14 @@ import { logBrowserConsoleError } from "../shared/api.js";
 import {
   bookingContentLang,
   bookingContentLanguageOption,
+  bookingEditingLang,
   bookingT
 } from "./i18n.js";
 import { formatMoneyDisplay } from "./pricing.js";
 import { renderBookingSectionHeader } from "./sections.js";
 import {
   buildDualLocalizedPayload,
+  mergeDualLocalizedPayload,
   renderLocalizedStackedField,
   requestBookingFieldTranslation,
   resolveLocalizedEditorBranchText
@@ -79,14 +81,6 @@ export function createBookingTravelPlanModule(ctx) {
     console.info(message, payload);
   }
 
-  function requiredPlaceholder() {
-    return bookingT("booking.travel_plan.item_title", "Service title");
-  }
-
-  function requiredDayTitlePlaceholder() {
-    return bookingT("booking.travel_plan.day_title", "Day title");
-  }
-
   function currentInternalOfferDetailLevel() {
     const explicit = String(state.offerDraft?.offer_detail_level_internal || state.booking?.offer?.offer_detail_level_internal || "").trim().toLowerCase();
     if (explicit === "component" || explicit === "day" || explicit === "trip") return explicit;
@@ -96,35 +90,6 @@ export function createBookingTravelPlanModule(ctx) {
     return "trip";
   }
 
-  function syncTravelPlanRequiredTitleStates({ focusFirst = false } = {}) {
-    if (!els.travel_plan_editor) return true;
-    const serviceTitleInputs = Array.from(
-      els.travel_plan_editor.querySelectorAll('[data-travel-plan-service-field="title"][data-localized-lang="en"][data-localized-role="source"]')
-    );
-    const dayTitleInputs = Array.from(
-      els.travel_plan_editor.querySelectorAll('[data-travel-plan-day-field="title"][data-localized-lang="en"][data-localized-role="source"]')
-    );
-    let firstEmptyInput = null;
-    for (const input of serviceTitleInputs) {
-      const isEmpty = !String(input?.value || "").trim();
-      input.classList.toggle("travel-plan-service-title-input--required", isEmpty);
-      input.toggleAttribute("aria-invalid", isEmpty);
-      input.placeholder = isEmpty ? requiredPlaceholder() : "";
-      if (!firstEmptyInput && isEmpty) firstEmptyInput = input;
-    }
-    for (const input of dayTitleInputs) {
-      const isEmpty = !String(input?.value || "").trim();
-      input.classList.toggle("travel-plan-service-title-input--required", isEmpty);
-      input.toggleAttribute("aria-invalid", isEmpty);
-      input.placeholder = isEmpty ? requiredDayTitlePlaceholder() : "";
-      if (!firstEmptyInput && isEmpty) firstEmptyInput = input;
-    }
-    if (focusFirst && firstEmptyInput?.focus) {
-      firstEmptyInput.focus();
-    }
-    return !firstEmptyInput;
-  }
-
   function syncAccommodationCreateDaysButtonStates() {
     if (!els.travel_plan_editor) return;
     const itemNodes = Array.from(els.travel_plan_editor.querySelectorAll("[data-travel-plan-service]"));
@@ -132,11 +97,8 @@ export function createBookingTravelPlanModule(ctx) {
       const createDaysButton = itemNode.querySelector("[data-travel-plan-create-days]");
       if (!(createDaysButton instanceof HTMLButtonElement)) return;
       const kindValue = String(itemNode.querySelector('[data-travel-plan-service-field="kind"]')?.value || "").trim();
-      const titleValue = String(
-        itemNode.querySelector('[data-travel-plan-service-field="title"][data-localized-lang="en"][data-localized-role="source"]')?.value || ""
-      ).trim();
       const accommodationDaysValue = String(itemNode.querySelector('[data-travel-plan-service-field="accommodation_days"]')?.value || "").trim();
-      const isEnabled = kindValue === "accommodation" && Boolean(titleValue) && (normalizeAccommodationDays(accommodationDaysValue) || 0) > 1;
+      const isEnabled = kindValue === "accommodation" && (normalizeAccommodationDays(accommodationDaysValue) || 0) > 1;
       createDaysButton.disabled = !isEnabled;
     });
   }
@@ -177,8 +139,7 @@ export function createBookingTravelPlanModule(ctx) {
 
   function canCreateAccommodationDays(item) {
     return Boolean(
-      String(item?.title || "").trim()
-      && (normalizeAccommodationDays(item?.accommodation_days) || 0) > 1
+      (normalizeAccommodationDays(item?.accommodation_days) || 0) > 1
     );
   }
 
@@ -273,15 +234,16 @@ export function createBookingTravelPlanModule(ctx) {
 
   function travelPlanTranslateButtonState() {
     const targetLang = bookingContentLang();
+    const sourceLang = bookingEditingLang();
     const status = state.booking?.travel_plan_translation_status || {};
     const disabledReason = !state.permissions.canEditBooking
       ? bookingT("booking.translation.disabled.no_permission", "Disabled: you do not have permission to edit this booking.")
-      : targetLang === "en"
-        ? bookingT("booking.translation.disabled.source_language", "Disabled: English is the source language.")
+      : targetLang === sourceLang
+        ? bookingT("booking.translation.disabled.source_language", "Disabled: the customer language already matches the editing language.")
         : state.travelPlanDirty
           ? bookingT("booking.travel_plan.translate_everything_clean_state", "Save or discard unsaved travel-plan edits before translating everything.")
           : !status.has_source_content
-            ? bookingT("booking.translation.disabled.no_source", "Disabled: add English {section} content first.", {
+            ? bookingT("booking.translation.disabled.no_source", "Disabled: add editing-language {section} content first.", {
                 section: travelPlanSectionLabel()
               })
             : "";
@@ -295,7 +257,8 @@ export function createBookingTravelPlanModule(ctx) {
     if (!(els.travel_plan_translate_all_btn instanceof HTMLButtonElement)) return;
     const button = els.travel_plan_translate_all_btn;
     const targetLang = bookingContentLang();
-    const shouldShow = targetLang !== "en";
+    const sourceLang = bookingEditingLang();
+    const shouldShow = targetLang !== sourceLang;
     button.hidden = !shouldShow;
     if (!shouldShow) {
       button.disabled = true;
@@ -305,9 +268,9 @@ export function createBookingTravelPlanModule(ctx) {
     const { disabled, disabledReason } = travelPlanTranslateButtonState();
     const targetOption = bookingContentLanguageOption(targetLang);
     button.textContent = bookingT(
-      "booking.translation.translate_everything_to_code",
-      "Translate everything to {code} (CAUTION)",
-      { code: targetOption.shortLabel || String(targetOption.code || "").trim().toUpperCase() || "EN" }
+      "booking.translation.translate_everything_to_language",
+      "Update {language}",
+      { language: targetOption.label || targetOption.shortLabel || String(targetOption.code || "").trim().toUpperCase() || "EN" }
     );
     button.disabled = disabled;
     if (disabledReason) {
@@ -335,13 +298,28 @@ export function createBookingTravelPlanModule(ctx) {
     return getLinkableOfferComponents(sourceComponents);
   }
 
-  function setTravelPlanDirty(isDirty) {
+  function setTravelPlanDirty(isDirty, diagnostic = undefined) {
     state.travelPlanDirty = Boolean(isDirty) && state.permissions.canEditBooking;
-    setBookingSectionDirty("travel_plan", state.travelPlanDirty);
+    setBookingSectionDirty("travel_plan", state.travelPlanDirty, diagnostic);
+  }
+
+  function getTravelPlanNormalizationOptions() {
+    return {
+      targetLang: bookingContentLang(),
+      sourceLang: String(
+        state.coreDraft?.editing_language
+        || state.booking?.editing_language
+        || bookingEditingLang()
+      ).trim() || bookingEditingLang()
+    };
+  }
+
+  function normalizeTravelPlanState(plan = state.travelPlanDraft, offerComponents = getOfferComponentsForLinks()) {
+    return normalizeTravelPlanDraft(plan, offerComponents, getTravelPlanNormalizationOptions());
   }
 
   function buildTravelPlanPayload(plan = state.travelPlanDraft) {
-    return normalizeTravelPlanDraft({
+    return normalizeTravelPlanState({
       ...plan,
       offer_component_links: (Array.isArray(plan?.offer_component_links) ? plan.offer_component_links : [])
         .filter((link) => String(link?.offer_component_id || "").trim())
@@ -349,17 +327,105 @@ export function createBookingTravelPlanModule(ctx) {
   }
 
   function getTravelPlanSnapshot(plan = state.travelPlanDraft) {
-    return JSON.stringify(normalizeTravelPlanDraft(plan, getOfferComponentsForLinks()));
+    return JSON.stringify(normalizeTravelPlanState(plan, getOfferComponentsForLinks()));
+  }
+
+  function summarizeTravelPlanDiffValue(value) {
+    if (typeof value === "string") {
+      return value.length > 120 ? `${value.slice(0, 117)}...` : value;
+    }
+    if (Array.isArray(value)) {
+      return `[${value.length} items]`;
+    }
+    if (value && typeof value === "object") {
+      return "{...}";
+    }
+    return value;
+  }
+
+  function findFirstTravelPlanDifference(savedValue, draftValue, path = "travel_plan") {
+    if (savedValue === draftValue) return null;
+    const savedIsArray = Array.isArray(savedValue);
+    const draftIsArray = Array.isArray(draftValue);
+    if (savedIsArray || draftIsArray) {
+      if (!savedIsArray || !draftIsArray) {
+        return {
+          path,
+          saved: summarizeTravelPlanDiffValue(savedValue),
+          draft: summarizeTravelPlanDiffValue(draftValue)
+        };
+      }
+      if (savedValue.length !== draftValue.length) {
+        return {
+          path: `${path}.length`,
+          saved: savedValue.length,
+          draft: draftValue.length
+        };
+      }
+      for (let index = 0; index < savedValue.length; index += 1) {
+        const nested = findFirstTravelPlanDifference(savedValue[index], draftValue[index], `${path}[${index}]`);
+        if (nested) return nested;
+      }
+      return {
+        path,
+        saved: summarizeTravelPlanDiffValue(savedValue),
+        draft: summarizeTravelPlanDiffValue(draftValue)
+      };
+    }
+    const savedIsObject = Boolean(savedValue) && typeof savedValue === "object";
+    const draftIsObject = Boolean(draftValue) && typeof draftValue === "object";
+    if (savedIsObject || draftIsObject) {
+      if (!savedIsObject || !draftIsObject) {
+        return {
+          path,
+          saved: summarizeTravelPlanDiffValue(savedValue),
+          draft: summarizeTravelPlanDiffValue(draftValue)
+        };
+      }
+      const keys = [...new Set([...Object.keys(savedValue), ...Object.keys(draftValue)])].sort();
+      for (const key of keys) {
+        if (!Object.prototype.hasOwnProperty.call(savedValue, key) || !Object.prototype.hasOwnProperty.call(draftValue, key)) {
+          return {
+            path: `${path}.${key}`,
+            saved: summarizeTravelPlanDiffValue(savedValue[key]),
+            draft: summarizeTravelPlanDiffValue(draftValue[key])
+          };
+        }
+        const nested = findFirstTravelPlanDifference(savedValue[key], draftValue[key], `${path}.${key}`);
+        if (nested) return nested;
+      }
+      return {
+        path,
+        saved: summarizeTravelPlanDiffValue(savedValue),
+        draft: summarizeTravelPlanDiffValue(draftValue)
+      };
+    }
+    return {
+      path,
+      saved: summarizeTravelPlanDiffValue(savedValue),
+      draft: summarizeTravelPlanDiffValue(draftValue)
+    };
   }
 
   function updateTravelPlanDirtyState() {
-    state.travelPlanDraft = normalizeTravelPlanDraft(state.travelPlanDraft, getOfferComponentsForLinks());
-    const isDirty = getTravelPlanSnapshot() !== state.originalTravelPlanSnapshot;
-    setTravelPlanDirty(isDirty);
+    const normalizedDraft = normalizeTravelPlanState(state.travelPlanDraft, getOfferComponentsForLinks());
+    const nextSnapshot = JSON.stringify(normalizedDraft);
+    const isDirty = nextSnapshot !== state.originalTravelPlanSnapshot;
+    state.travelPlanDraft = normalizedDraft;
+    setTravelPlanDirty(
+      isDirty,
+      isDirty
+        ? {
+            reason: "travel_plan_snapshot_mismatch",
+            source_lang: bookingEditingLang(),
+            target_lang: bookingContentLang(),
+            first_difference: findFirstTravelPlanDifference(state.originalTravelPlanState, normalizedDraft)
+          }
+        : null
+    );
     if (isDirty) {
       travelPlanStatus("");
     }
-    syncTravelPlanRequiredTitleStates();
     syncTravelPlanTranslateButton();
   }
 
@@ -379,15 +445,16 @@ export function createBookingTravelPlanModule(ctx) {
   }
 
   function applyBookingPayload() {
-    state.travelPlanDraft = normalizeTravelPlanDraft(state.booking?.travel_plan || createEmptyTravelPlan(), getOfferComponentsForLinks());
+    state.travelPlanDraft = normalizeTravelPlanState(state.booking?.travel_plan || createEmptyTravelPlan(), getOfferComponentsForLinks());
     state.travelPlanCollapsedServiceIds = new Set(
       (Array.isArray(state.travelPlanDraft?.days) ? state.travelPlanDraft.days : [])
         .flatMap((day) => (Array.isArray(day?.services) ? day.services : []))
         .map((item) => String(item?.id || "").trim())
         .filter(Boolean)
     );
-    state.originalTravelPlanSnapshot = getTravelPlanSnapshot(state.travelPlanDraft);
-    setTravelPlanDirty(false);
+    state.originalTravelPlanState = normalizeTravelPlanState(state.travelPlanDraft, getOfferComponentsForLinks());
+    state.originalTravelPlanSnapshot = JSON.stringify(state.originalTravelPlanState);
+    setTravelPlanDirty(false, null);
     travelPlanStatus("");
     travelPlanServiceLibraryModule.populateTravelPlanServiceLibraryKindOptions();
   }
@@ -396,7 +463,7 @@ export function createBookingTravelPlanModule(ctx) {
     return resolveLocalizedEditorBranchText(map, lang, fallback);
   }
 
-  function renderTravelPlanLocalizedField({ label, idBase, dataScope, dayId = "", itemId = "", field, type = "input", rows = 3, englishValue = "", localizedValue = "" }) {
+  function renderTravelPlanLocalizedField({ label, idBase, dataScope, dayId = "", itemId = "", field, type = "input", rows = 3, sourceValue = "", localizedValue = "" }) {
     return renderLocalizedStackedField({
       escapeHtml,
       idBase,
@@ -406,7 +473,7 @@ export function createBookingTravelPlanModule(ctx) {
       targetLang: bookingContentLang(),
       disabled: !state.permissions.canEditBooking,
       translateEnabled: Boolean(state.booking?.translation_enabled),
-      englishValue,
+      sourceValue,
       localizedValue,
       commonData: {
         [dataScope]: field,
@@ -600,7 +667,7 @@ export function createBookingTravelPlanModule(ctx) {
       if (startLabel && endLabel) return `${startLabel} - ${endLabel}`;
       return startLabel || endLabel || "";
     }
-    return resolveLocalizedDraftBranchText(item?.time_label_i18n ?? item?.time_label, "en", "");
+    return resolveLocalizedDraftBranchText(item?.time_label_i18n ?? item?.time_label, bookingEditingLang(), "");
   }
 
   function toggleTravelPlanServiceCollapsed(itemId) {
@@ -628,7 +695,7 @@ export function createBookingTravelPlanModule(ctx) {
       .some((link) => String(link?.travel_plan_service_id || "").trim() === normalizedId && String(link?.offer_component_id || "").trim());
     if (hasLinkedOfferComponents) return;
     item.financial_coverage_needed = item.financial_coverage_needed === false;
-    state.travelPlanDraft = normalizeTravelPlanDraft(state.travelPlanDraft, getOfferComponentsForLinks());
+    state.travelPlanDraft = normalizeTravelPlanState(state.travelPlanDraft, getOfferComponentsForLinks());
     updateTravelPlanDirtyState();
     renderBookingSectionHeader(els.travel_plan_panel_summary, travelPlanSummary());
     renderTravelPlanPanel();
@@ -986,7 +1053,7 @@ export function createBookingTravelPlanModule(ctx) {
           itemId: item.id,
           field: "time_label",
           type: "input",
-          englishValue: resolveLocalizedDraftBranchText(item.time_label_i18n ?? item.time_label, "en", ""),
+          sourceValue: resolveLocalizedDraftBranchText(item.time_label_i18n ?? item.time_label, bookingEditingLang(), ""),
           localizedValue: resolveLocalizedDraftBranchText(item.time_label_i18n ?? item.time_label, bookingContentLang(), "")
         })}
       </div>
@@ -1030,8 +1097,8 @@ export function createBookingTravelPlanModule(ctx) {
     const showFinancialCoverage = currentInternalOfferDetailLevel() === "component";
     const coverageLabel = coverageBadgeLabel(coverageStatus);
     const collapsed = isTravelPlanServiceCollapsed(item.id);
-    const englishTitle = resolveLocalizedDraftBranchText(item.title_i18n ?? item.title, "en", "").trim();
-    const collapsedTitle = englishTitle || bookingT("booking.travel_plan.item_heading", "Service {item}", { item: itemIndex + 1 });
+    const sourceTitle = resolveLocalizedDraftBranchText(item.title_i18n ?? item.title, bookingEditingLang(), "").trim();
+    const collapsedTitle = sourceTitle || bookingT("booking.travel_plan.item_heading", "Service {item}", { item: itemIndex + 1 });
     const timingSummary = travelPlanTimingSummary(day, item).trim();
     const shouldShowCoverageBadge = showFinancialCoverage && coverageStatus !== "not_applicable";
     const coverageBadge = !shouldShowCoverageBadge
@@ -1103,7 +1170,7 @@ export function createBookingTravelPlanModule(ctx) {
               itemId: item.id,
               field: "title",
               type: "input",
-              englishValue: resolveLocalizedDraftBranchText(item.title_i18n ?? item.title, "en", ""),
+              sourceValue: resolveLocalizedDraftBranchText(item.title_i18n ?? item.title, bookingEditingLang(), ""),
               localizedValue: resolveLocalizedDraftBranchText(item.title_i18n ?? item.title, bookingContentLang(), "")
             })}
           </div>
@@ -1116,7 +1183,7 @@ export function createBookingTravelPlanModule(ctx) {
               itemId: item.id,
               field: "location",
               type: "input",
-              englishValue: resolveLocalizedDraftBranchText(item.location_i18n ?? item.location, "en", ""),
+              sourceValue: resolveLocalizedDraftBranchText(item.location_i18n ?? item.location, bookingEditingLang(), ""),
               localizedValue: resolveLocalizedDraftBranchText(item.location_i18n ?? item.location, bookingContentLang(), "")
             })}
           </div>
@@ -1135,7 +1202,7 @@ export function createBookingTravelPlanModule(ctx) {
               field: "details",
               type: "textarea",
               rows: 3,
-              englishValue: resolveLocalizedDraftBranchText(item.details_i18n ?? item.details, "en", ""),
+              sourceValue: resolveLocalizedDraftBranchText(item.details_i18n ?? item.details, bookingEditingLang(), ""),
               localizedValue: resolveLocalizedDraftBranchText(item.details_i18n ?? item.details, bookingContentLang(), "")
             })}
           </div>
@@ -1188,7 +1255,7 @@ export function createBookingTravelPlanModule(ctx) {
               dayId: day.id,
               field: "title",
               type: "input",
-              englishValue: resolveLocalizedDraftBranchText(day.title_i18n ?? day.title, "en", ""),
+              sourceValue: resolveLocalizedDraftBranchText(day.title_i18n ?? day.title, bookingEditingLang(), ""),
               localizedValue: resolveLocalizedDraftBranchText(day.title_i18n ?? day.title, bookingContentLang(), "")
             })}
           </div>
@@ -1200,7 +1267,7 @@ export function createBookingTravelPlanModule(ctx) {
               dayId: day.id,
               field: "overnight_location",
               type: "input",
-              englishValue: resolveLocalizedDraftBranchText(day.overnight_location_i18n ?? day.overnight_location, "en", ""),
+              sourceValue: resolveLocalizedDraftBranchText(day.overnight_location_i18n ?? day.overnight_location, bookingEditingLang(), ""),
               localizedValue: resolveLocalizedDraftBranchText(day.overnight_location_i18n ?? day.overnight_location, bookingContentLang(), "")
             })}
           </div>
@@ -1214,7 +1281,7 @@ export function createBookingTravelPlanModule(ctx) {
             field: "notes",
             type: "textarea",
             rows: 3,
-            englishValue: resolveLocalizedDraftBranchText(day.notes_i18n ?? day.notes, "en", ""),
+            sourceValue: resolveLocalizedDraftBranchText(day.notes_i18n ?? day.notes, bookingEditingLang(), ""),
             localizedValue: resolveLocalizedDraftBranchText(day.notes_i18n ?? day.notes, bookingContentLang(), "")
           })}
         </div>
@@ -1227,15 +1294,16 @@ export function createBookingTravelPlanModule(ctx) {
     `;
   }
 
-  function readLocalizedFieldPayload(container, dataScope, field) {
-    const englishInput = container?.querySelector(`[data-${dataScope}="${field}"][data-localized-lang="en"][data-localized-role="source"]`);
+  function readLocalizedFieldPayload(container, dataScope, field, existingValue = null) {
+    const sourceInput = container?.querySelector(`[data-${dataScope}="${field}"][data-localized-role="source"]`);
+    const sourceLang = bookingEditingLang();
     const targetLang = bookingContentLang();
-    const localizedInput = targetLang === "en"
+    const localizedInput = targetLang === sourceLang
       ? null
       : container?.querySelector(`[data-${dataScope}="${field}"][data-localized-lang="${targetLang}"][data-localized-role="target"]`);
-    const englishValue = String(englishInput?.value || "").trim();
-    const localizedValue = targetLang === "en" ? "" : String(localizedInput?.value || "").trim();
-    return buildDualLocalizedPayload(englishValue, localizedValue, targetLang);
+    const sourceValue = String(sourceInput?.value || "").trim();
+    const localizedValue = targetLang === sourceLang ? "" : String(localizedInput?.value || "").trim();
+    return mergeDualLocalizedPayload(existingValue, sourceValue, localizedValue, targetLang, sourceLang);
   }
 
   function syncTravelPlanDraftFromDom() {
@@ -1251,14 +1319,25 @@ export function createBookingTravelPlanModule(ctx) {
       const day = createEmptyTravelPlanDay(dayIndex);
       day.id = dayId || day.id;
       day.day_number = dayIndex + 1;
-      const dayTitle = readLocalizedFieldPayload(dayNode, "travel-plan-day-field", "title");
+      const previousDay = (Array.isArray(state.travelPlanDraft?.days) ? state.travelPlanDraft.days : []).find((candidate) => candidate?.id === day.id) || null;
+      const dayTitle = readLocalizedFieldPayload(dayNode, "travel-plan-day-field", "title", previousDay?.title_i18n ?? previousDay?.title);
       day.title = dayTitle.text;
       day.title_i18n = dayTitle.map;
       day.date = String(dayNode.querySelector('[data-travel-plan-day-field="date"]')?.value || "").trim();
-      const overnight = readLocalizedFieldPayload(dayNode, "travel-plan-day-field", "overnight_location");
+      const overnight = readLocalizedFieldPayload(
+        dayNode,
+        "travel-plan-day-field",
+        "overnight_location",
+        previousDay?.overnight_location_i18n ?? previousDay?.overnight_location
+      );
       day.overnight_location = overnight.text;
       day.overnight_location_i18n = overnight.map;
-      const dayNotes = readLocalizedFieldPayload(dayNode, "travel-plan-day-field", "notes");
+      const dayNotes = readLocalizedFieldPayload(
+        dayNode,
+        "travel-plan-day-field",
+        "notes",
+        previousDay?.notes_i18n ?? previousDay?.notes
+      );
       day.notes = dayNotes.text;
       day.notes_i18n = dayNotes.map;
       day.services = Array.from(dayNode.querySelectorAll("[data-travel-plan-service]")).map((itemNode) => {
@@ -1267,7 +1346,12 @@ export function createBookingTravelPlanModule(ctx) {
         const item = createEmptyTravelPlanService();
         item.id = itemId || item.id;
         item.timing_kind = String(itemNode.querySelector('[data-travel-plan-service-field="timing_kind"]')?.value || "label").trim();
-        const timeLabel = readLocalizedFieldPayload(itemNode, "travel-plan-service-field", "time_label");
+        const timeLabel = readLocalizedFieldPayload(
+          itemNode,
+          "travel-plan-service-field",
+          "time_label",
+          previousItem?.time_label_i18n ?? previousItem?.time_label
+        );
         item.time_label = timeLabel.text;
         item.time_label_i18n = timeLabel.map;
         item.time_point = combineDateAndTime(
@@ -1276,13 +1360,28 @@ export function createBookingTravelPlanModule(ctx) {
         );
         item.kind = String(itemNode.querySelector('[data-travel-plan-service-field="kind"]')?.value || "").trim();
         item.accommodation_days = String(itemNode.querySelector('[data-travel-plan-service-field="accommodation_days"]')?.value || "").trim();
-        const itemTitle = readLocalizedFieldPayload(itemNode, "travel-plan-service-field", "title");
+        const itemTitle = readLocalizedFieldPayload(
+          itemNode,
+          "travel-plan-service-field",
+          "title",
+          previousItem?.title_i18n ?? previousItem?.title
+        );
         item.title = itemTitle.text;
         item.title_i18n = itemTitle.map;
-        const itemLocation = readLocalizedFieldPayload(itemNode, "travel-plan-service-field", "location");
+        const itemLocation = readLocalizedFieldPayload(
+          itemNode,
+          "travel-plan-service-field",
+          "location",
+          previousItem?.location_i18n ?? previousItem?.location
+        );
         item.location = itemLocation.text;
         item.location_i18n = itemLocation.map;
-        const itemDetails = readLocalizedFieldPayload(itemNode, "travel-plan-service-field", "details");
+        const itemDetails = readLocalizedFieldPayload(
+          itemNode,
+          "travel-plan-service-field",
+          "details",
+          previousItem?.details_i18n ?? previousItem?.details
+        );
         item.details = itemDetails.text;
         item.details_i18n = itemDetails.map;
         item.start_time = combineDateAndTime(
@@ -1308,7 +1407,7 @@ export function createBookingTravelPlanModule(ctx) {
       coverage_type: String(linkNode.querySelector("[data-travel-plan-link-coverage-type]")?.value || "full").trim()
     }));
     draft.attachments = Array.isArray(state.travelPlanDraft?.attachments) ? state.travelPlanDraft.attachments : [];
-    state.travelPlanDraft = normalizeTravelPlanDraft(draft, getOfferComponentsForLinks());
+    state.travelPlanDraft = normalizeTravelPlanState(draft, getOfferComponentsForLinks());
     return state.travelPlanDraft;
   }
 
@@ -1367,16 +1466,6 @@ export function createBookingTravelPlanModule(ctx) {
     if (sourceItemIndex < 0) return;
     const sourceItem = sourceDay.services[sourceItemIndex];
     if (sourceItem?.kind !== "accommodation") return;
-
-    if (!String(sourceItem?.title || "").trim()) {
-      travelPlanStatus(
-        bookingT("booking.travel_plan.create_days_title_required", "Set a service title before creating days."),
-        "error"
-      );
-      const titleInput = els.travel_plan_editor?.querySelector(`[data-travel-plan-service="${escapeSelectorValue(itemId)}"] [data-travel-plan-service-field="title"][data-localized-lang="en"][data-localized-role="source"]`);
-      titleInput?.focus?.();
-      return;
-    }
 
     const accommodationDays = normalizeAccommodationDays(sourceItem.accommodation_days);
     if (!accommodationDays) {
@@ -1549,15 +1638,27 @@ export function createBookingTravelPlanModule(ctx) {
   }
 
   async function persistTravelPlan() {
-    if (!state.permissions.canEditBooking || !state.booking || !state.travelPlanDirty || state.travelPlanSaving) {
+    if (!state.permissions.canEditBooking || !state.booking || state.travelPlanSaving) {
       logTravelPlanSave("[booking-save][travel-plan] Persist returned early.", {
         booking_id: state.booking?.id || null,
         can_edit_booking: state.permissions.canEditBooking === true,
         has_booking: Boolean(state.booking),
+        page_travel_plan_dirty: state.dirty?.travel_plan === true,
         travel_plan_dirty: state.travelPlanDirty === true,
         travel_plan_saving: state.travelPlanSaving === true
       });
       return false;
+    }
+    if (!state.travelPlanDirty) {
+      syncTravelPlanDraftFromDom();
+      updateTravelPlanDirtyState();
+      if (!state.travelPlanDirty) {
+        logTravelPlanSave("[booking-save][travel-plan] Persist found no remaining dirty state after sync.", {
+          booking_id: state.booking.id,
+          page_travel_plan_dirty: state.dirty?.travel_plan === true
+        });
+        return true;
+      }
     }
     const saveStartedAt = Date.now();
     let pendingWarningTimer = null;
@@ -1584,16 +1685,6 @@ export function createBookingTravelPlanModule(ctx) {
         code: validation.code || null,
         message: validation.error || ""
       });
-      if (validation.code === "item_title_required") {
-        setPageSaveActionError?.(
-          bookingT(
-            "booking.travel_plan.validation.item_title_action_error",
-            "Service {item} on day {day} needs a title.",
-            { item: validation.itemNumber, day: validation.dayNumber }
-          )
-        );
-        syncTravelPlanRequiredTitleStates({ focusFirst: true });
-      }
       if (validation.code === "accommodation_days_invalid") {
         setPageSaveActionError?.(
           bookingT(
@@ -1694,22 +1785,23 @@ export function createBookingTravelPlanModule(ctx) {
     const editor = button.closest(".localized-pair");
     if (!editor) return;
     const direction = String(button.getAttribute("data-localized-translate-direction") || "source-to-target").trim();
-    const englishInput = editor?.querySelector('[data-localized-lang="en"][data-localized-role="source"]');
+    const editingLang = bookingEditingLang();
+    const sourceFieldInput = editor?.querySelector('[data-localized-role="source"]');
     const targetLang = bookingContentLang();
-    const localizedInput = targetLang === "en"
+    const localizedInput = targetLang === editingLang
       ? null
       : editor?.querySelector(`[data-localized-lang="${targetLang}"][data-localized-role="target"]`);
-    if (!englishInput || !localizedInput || targetLang === "en") return;
-    const sourceInput = direction === "target-to-source" ? localizedInput : englishInput;
-    const destinationInput = direction === "target-to-source" ? englishInput : localizedInput;
-    const sourceLang = direction === "target-to-source" ? targetLang : "en";
-    const destinationLang = direction === "target-to-source" ? "en" : targetLang;
+    if (!sourceFieldInput || !localizedInput || targetLang === editingLang) return;
+    const sourceInput = direction === "target-to-source" ? localizedInput : sourceFieldInput;
+    const destinationInput = direction === "target-to-source" ? sourceFieldInput : localizedInput;
+    const sourceLang = direction === "target-to-source" ? targetLang : editingLang;
+    const destinationLang = direction === "target-to-source" ? editingLang : targetLang;
     const sourceText = String(sourceInput?.value || "").trim();
     if (!sourceText) return;
-    const targetOption = bookingContentLanguageOption(targetLang);
-    const statusMessage = direction === "target-to-source"
-      ? bookingT("booking.translation.translating_field_to_english", "Translating field to English...")
-      : bookingT("booking.translation.translating_field_from_english", "Translating field from English...");
+    const targetOption = bookingContentLanguageOption(destinationLang);
+    const statusMessage = bookingT("booking.translation.translating_field_from_language", "Translating field from {language}...", {
+      language: bookingContentLanguageOption(sourceLang).label
+    });
     travelPlanStatus(statusMessage);
     let translated = "";
     try {
@@ -1743,7 +1835,7 @@ export function createBookingTravelPlanModule(ctx) {
     renderBookingSectionHeader(els.travel_plan_panel_summary, travelPlanSummary());
     travelPlanStatus(
       direction === "target-to-source"
-        ? bookingT("booking.translation.field_translated_to_english", "Field translated to English.")
+        ? bookingT("booking.translation.field_translated_to_language", "Field translated to {lang}.", { lang: targetOption.shortLabel })
         : bookingT("booking.translation.field_translated_to_customer_language", "Field translated to {lang}.", { lang: targetOption.shortLabel })
     );
   }
@@ -1771,7 +1863,7 @@ export function createBookingTravelPlanModule(ctx) {
       }
     });
 
-    travelPlanStatus(translationBusyText(travelPlanSectionLabel()), "loading");
+    travelPlanStatus(translationBusyText(travelPlanSectionLabel(), status.source_lang || bookingEditingLang()), "loading");
     if (els.travel_plan_translate_all_btn instanceof HTMLButtonElement) {
       els.travel_plan_translate_all_btn.disabled = true;
     }
@@ -1816,7 +1908,6 @@ export function createBookingTravelPlanModule(ctx) {
         syncTravelPlanDraftFromDom();
         updateTravelPlanDirtyState();
         renderBookingSectionHeader(els.travel_plan_panel_summary, travelPlanSummary());
-        syncTravelPlanRequiredTitleStates();
         syncAccommodationCreateDaysButtonStates();
       });
       els.travel_plan_editor.addEventListener("change", (event) => {
@@ -1838,7 +1929,6 @@ export function createBookingTravelPlanModule(ctx) {
         syncTravelPlanDraftFromDom();
         updateTravelPlanDirtyState();
         renderBookingSectionHeader(els.travel_plan_panel_summary, travelPlanSummary());
-        syncTravelPlanRequiredTitleStates();
         syncAccommodationCreateDaysButtonStates();
         const shouldRerender = Boolean(
           target?.matches?.('[data-travel-plan-service-field="timing_kind"]')
@@ -1992,7 +2082,7 @@ export function createBookingTravelPlanModule(ctx) {
 
   function renderTravelPlanPanel() {
     if (!els.travel_plan_panel || !els.travel_plan_editor || !state.booking) return;
-    state.travelPlanDraft = normalizeTravelPlanDraft(state.travelPlanDraft || state.booking.travel_plan, getOfferComponentsForLinks());
+    state.travelPlanDraft = normalizeTravelPlanState(state.travelPlanDraft || state.booking.travel_plan, getOfferComponentsForLinks());
     syncTravelPlanCollapsedServiceIds();
     renderBookingSectionHeader(els.travel_plan_panel_summary, travelPlanSummary());
     els.travel_plan_editor.innerHTML = `
@@ -2020,7 +2110,6 @@ export function createBookingTravelPlanModule(ctx) {
       </div>
     `;
     updateTravelPlanDirtyState();
-    syncTravelPlanRequiredTitleStates();
     syncAccommodationCreateDaysButtonStates();
     syncTravelPlanTranslateButton();
   }

@@ -5,7 +5,7 @@ import {
   bookingGeneratedOfferUpdateRequest
 } from "../../Generated/API/generated_APIRequestFactory.js";
 import { logBrowserConsoleError } from "../shared/api.js";
-import { bookingContentLang, bookingContentLanguageLabel, bookingT, bookingLang } from "./i18n.js";
+import { bookingContentLang, bookingContentLanguageLabel, bookingEditingLanguageLabel, bookingT, bookingLang } from "./i18n.js";
 import { formatMoneyDisplay } from "./pricing.js";
 import { getBookingPersons } from "../shared/booking_persons.js";
 import {
@@ -593,9 +593,10 @@ export function createBookingGeneratedOffersModule(ctx) {
     const missingTranslationCount = countMissingOfferPdfTranslations(state.booking, selectedLang);
     if (missingTranslationCount > 0 && !window.confirm(bookingT(
       "booking.offer.generate_missing_translation_confirm",
-      "Customer language is {language}, but {count} offer or travel-plan fields are not translated yet. The PDF shell will use {language}, and those fields will fall back to English. Generate anyway?",
+      "Customer language is {language}, but {count} offer or travel-plan fields are not translated yet. The PDF shell will use {language}, and those fields will fall back to {editingLanguage}. Generate anyway?",
       {
         language: bookingContentLanguageLabel(selectedLang),
+        editingLanguage: bookingEditingLanguageLabel(state.booking?.editing_language || "en"),
         count: missingTranslationCount
       }
     ))) {

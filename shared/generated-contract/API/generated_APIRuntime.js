@@ -356,6 +356,17 @@
         ]
       },
       {
+        key: "booking_editing_language",
+        path: "/api/v1/bookings/{booking_id}/editing-language",
+        method: "PATCH",
+        authenticated: true,
+        requestType: "BookingEditingLanguageUpdateRequest",
+        responseType: "BookingDetail",
+        parameters: [
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1)
+        ]
+      },
+      {
         key: "booking_source",
         path: "/api/v1/bookings/{booking_id}/source",
         method: "PATCH",

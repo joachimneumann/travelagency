@@ -48,6 +48,8 @@ case "booking_name":
   return RequestFactory.bookingNameRequest(options);
 case "booking_customer_language":
   return RequestFactory.bookingCustomerLanguageRequest(options);
+case "booking_editing_language":
+  return RequestFactory.bookingEditingLanguageRequest(options);
 case "booking_source":
   return RequestFactory.bookingSourceRequest(options);
 case "booking_image":

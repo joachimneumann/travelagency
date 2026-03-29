@@ -19,12 +19,9 @@ all tour titles: FAKE
 
 * voice to text with Voquill
 
-When backend in vietnamese:
-translate VI -> all, not english to all
-as the first two languages, always have vi and en. then translate to others... 
-customer language VI and staff language VI: no translation needed
+Actually I'm thinking that this setup with three language selectors is too complicated. I only want to change the language of the atp_staff in the top right (between Vietnamese and English). 
+The editing language as a concept can either be removed completely or should be hidden from the ATP staff user that uses the web page. Can you think about this concept, nd tell me if that is possible or not? What happens on a frequent switch of the language at the top right? Would that degrade the translations? OR cause dataloss?
 
-When staff language changes to en? translate all???? what?
 
 
 "Your ATP guide xxx" section when creating the PDF:

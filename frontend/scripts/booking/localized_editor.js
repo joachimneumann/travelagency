@@ -3,6 +3,8 @@ import { logBrowserConsoleError } from "../shared/api.js";
 import {
   bookingContentLang,
   bookingContentLanguageOption,
+  bookingEditingLang,
+  bookingEditingLanguageOption,
   bookingT,
   normalizeBookingContentLang
 } from "./i18n.js";
@@ -52,18 +54,39 @@ export function setLocalizedEditorText(value, lang, text) {
   return normalized;
 }
 
-export function buildDualLocalizedPayload(englishText, localizedText, targetLang = bookingContentLang()) {
+export function buildDualLocalizedPayload(sourceText, localizedText, targetLang = bookingContentLang(), sourceLang = bookingEditingLang()) {
+  const normalizedSourceLang = normalizeBookingContentLang(sourceLang || DEFAULT_CONTENT_LANG);
   const normalizedTargetLang = normalizeBookingContentLang(targetLang || DEFAULT_CONTENT_LANG);
   const rawMap = {
-    en: String(englishText || "").trim()
+    [normalizedSourceLang]: String(sourceText || "").trim()
   };
-  if (normalizedTargetLang !== "en") {
+  if (normalizedTargetLang !== normalizedSourceLang) {
     rawMap[normalizedTargetLang] = String(localizedText || "").trim();
   }
-  const normalizedMap = normalizeLocalizedEditorMap(rawMap, "en");
+  const normalizedMap = normalizeLocalizedEditorMap(rawMap, normalizedSourceLang);
   return {
-    map: rawMap,
-    text: resolveLocalizedEditorText(normalizedMap, "en", "")
+    map: normalizedMap,
+    text: resolveLocalizedEditorText(normalizedMap, normalizedSourceLang, "")
+  };
+}
+
+export function mergeDualLocalizedPayload(
+  existingValue,
+  sourceText,
+  localizedText,
+  targetLang = bookingContentLang(),
+  sourceLang = bookingEditingLang()
+) {
+  const normalizedSourceLang = normalizeBookingContentLang(sourceLang || DEFAULT_CONTENT_LANG);
+  const normalizedTargetLang = normalizeBookingContentLang(targetLang || DEFAULT_CONTENT_LANG);
+  let nextMap = normalizeLocalizedEditorMap(existingValue, normalizedSourceLang);
+  nextMap = setLocalizedEditorText(nextMap, normalizedSourceLang, sourceText);
+  if (normalizedTargetLang !== normalizedSourceLang) {
+    nextMap = setLocalizedEditorText(nextMap, normalizedTargetLang, localizedText);
+  }
+  return {
+    map: nextMap,
+    text: resolveLocalizedEditorText(nextMap, normalizedSourceLang, "")
   };
 }
 
@@ -91,6 +114,8 @@ export function renderLocalizedSplitField({
   type = "input",
   rows = 3,
   commonData = {},
+  sourceLang = bookingEditingLang(),
+  sourceValue = "",
   englishValue = "",
   localizedValue = "",
   englishPlaceholder = "",
@@ -101,16 +126,20 @@ export function renderLocalizedSplitField({
   translateEnabled = true,
   localizedReadOnly = false
 }) {
+  const normalizedSourceLang = normalizeBookingContentLang(sourceLang || DEFAULT_CONTENT_LANG);
   const normalizedTargetLang = normalizeBookingContentLang(targetLang || DEFAULT_CONTENT_LANG);
+  const sourceOption = bookingEditingLanguageOption(normalizedSourceLang);
   const targetOption = bookingContentLanguageOption(normalizedTargetLang);
-  const rightDisabled = disabled || normalizedTargetLang === "en" || localizedReadOnly;
-  const showTranslateButton = normalizedTargetLang !== "en" && !localizedReadOnly;
+  const resolvedSourceValue = sourceValue !== undefined ? sourceValue : englishValue;
+  const sameLanguage = normalizedTargetLang === normalizedSourceLang;
+  const rightDisabled = disabled || sameLanguage || localizedReadOnly;
+  const showTranslateButton = !sameLanguage && !localizedReadOnly;
   const inputTag = type === "textarea" ? "textarea" : "input";
-  const englishId = `${idBase}_en`;
+  const englishId = `${idBase}_${sourceOption.code}`;
   const localizedId = `${idBase}_${targetOption.code}_target`;
-  const englishData = renderDataAttributes({
+  const sourceData = renderDataAttributes({
     ...commonData,
-    "localized-lang": "en",
+    "localized-lang": sourceOption.code,
     "localized-role": "source"
   });
   const localizedData = renderDataAttributes({
@@ -124,12 +153,12 @@ export function renderLocalizedSplitField({
   });
   const sharedAttrs = disabled ? " disabled" : "";
   const rightAttrs = rightDisabled ? " disabled" : "";
-  const englishControl = renderLocalizedControl({
+  const sourceControl = renderLocalizedControl({
     escapeHtml,
     inputTag,
     id: englishId,
-    value: englishValue,
-    data: englishData,
+    value: resolvedSourceValue,
+    data: sourceData,
     attrs: sharedAttrs,
     rows,
     placeholder: englishPlaceholder
@@ -146,24 +175,24 @@ export function renderLocalizedSplitField({
   });
 
   return `
-    <div class="localized-editor ${normalizedTargetLang === "en" ? "localized-editor--single-language" : ""}">
+    <div class="localized-editor ${sameLanguage ? "localized-editor--single-language" : ""}">
       <div class="localized-editor__header">
         <label class="localized-editor__label" for="${escapeHtml(englishId)}"${labelId ? ` id="${escapeHtml(labelId)}"` : ""}>${escapeHtml(label)}</label>
       </div>
       <div class="localized-editor__grid">
         <div class="localized-editor__pane localized-editor__pane--source">
           <div class="localized-editor__pane-head">
-            <span class="localized-editor__lang"><span class="lang-flag flag-en" aria-hidden="true"></span><span class="localized-editor__lang-code">EN</span></span>
+            <span class="localized-editor__lang"><span class="lang-flag ${escapeHtml(sourceOption.flagClass)}" aria-hidden="true"></span><span class="localized-editor__lang-code">${escapeHtml(sourceOption.shortLabel)}</span></span>
           </div>
-          ${englishControl}
+          ${sourceControl}
         </div>
-        <div class="localized-editor__pane localized-editor__pane--target ${normalizedTargetLang === "en" ? "is-disabled" : ""}">
+        <div class="localized-editor__pane localized-editor__pane--target ${sameLanguage ? "is-disabled" : ""}">
           <div class="localized-editor__pane-head">
             <span class="localized-editor__lang"><span class="lang-flag ${escapeHtml(targetOption.flagClass)}" aria-hidden="true"></span><span class="localized-editor__lang-code">${escapeHtml(targetOption.shortLabel)}</span></span>
-            ${showTranslateButton && translateEnabled ? `<button type="button" class="btn btn-ghost localized-editor__translate-btn"${translateData}>${escapeHtml(bookingT("booking.translation.translate_from_english", "Translate from English"))}</button>` : ""}
+            ${showTranslateButton && translateEnabled ? `<button type="button" class="btn btn-ghost localized-editor__translate-btn"${translateData}>${escapeHtml(bookingT("booking.translation.update_language", "Update {language}", { language: targetOption.label }))}</button>` : ""}
           </div>
           ${localizedControl}
-          ${normalizedTargetLang === "en" ? `<p class="micro localized-editor__hint">${escapeHtml(bookingT("booking.translation.not_needed_for_english", "Customer language is English. No translation is needed."))}</p>` : ""}
+          ${sameLanguage ? `<p class="micro localized-editor__hint">${escapeHtml(bookingT("booking.translation.not_needed_for_matching_languages", "Editing language matches customer language. No translation is needed."))}</p>` : ""}
         </div>
       </div>
     </div>
@@ -178,6 +207,8 @@ export function renderLocalizedStackedField({
   type = "input",
   rows = 3,
   commonData = {},
+  sourceLang = bookingEditingLang(),
+  sourceValue = "",
   englishValue = "",
   localizedValue = "",
   englishPlaceholder = "",
@@ -188,14 +219,18 @@ export function renderLocalizedStackedField({
   translateEnabled = true,
   localizedReadOnly = false
 }) {
+  const normalizedSourceLang = normalizeBookingContentLang(sourceLang || DEFAULT_CONTENT_LANG);
   const normalizedTargetLang = normalizeBookingContentLang(targetLang || DEFAULT_CONTENT_LANG);
+  const sourceOption = bookingEditingLanguageOption(normalizedSourceLang);
   const targetOption = bookingContentLanguageOption(normalizedTargetLang);
+  const resolvedSourceValue = sourceValue !== undefined ? sourceValue : englishValue;
+  const sameLanguage = normalizedTargetLang === normalizedSourceLang;
   const inputTag = type === "textarea" ? "textarea" : "input";
-  const englishId = `${idBase}_en`;
+  const englishId = `${idBase}_${sourceOption.code}`;
   const localizedId = `${idBase}_${targetOption.code}_target`;
-  const englishData = renderDataAttributes({
+  const sourceData = renderDataAttributes({
     ...commonData,
-    "localized-lang": "en",
+    "localized-lang": sourceOption.code,
     "localized-role": "source"
   });
   const localizedData = renderDataAttributes({
@@ -209,13 +244,13 @@ export function renderLocalizedStackedField({
       ? bookingT("booking.translation.disabled.no_permission", "Disabled: you do not have permission to edit this booking.")
       : "";
   const englishAttrs = disabled ? " disabled" : "";
-  const localizedAttrs = (disabled || localizedReadOnly || normalizedTargetLang === "en") ? " disabled" : "";
-  const englishControl = renderLocalizedControl({
+  const localizedAttrs = (disabled || localizedReadOnly || sameLanguage) ? " disabled" : "";
+  const sourceControl = renderLocalizedControl({
     escapeHtml,
     inputTag,
     id: englishId,
-    value: englishValue,
-    data: englishData,
+    value: resolvedSourceValue,
+    data: sourceData,
     attrs: englishAttrs,
     rows,
     placeholder: englishPlaceholder
@@ -231,14 +266,14 @@ export function renderLocalizedStackedField({
     placeholder: localizedPlaceholder
   });
 
-  if (normalizedTargetLang === "en") {
+  if (sameLanguage) {
     return `
       <div class="localized-pair localized-pair--single-language">
         <div class="localized-pair__header">
           <label class="localized-pair__label" for="${escapeHtml(englishId)}"${labelId ? ` id="${escapeHtml(labelId)}"` : ""}>${escapeHtml(label)}</label>
         </div>
         <div class="localized-pair__field localized-pair__field--single">
-          ${englishControl}
+          ${sourceControl}
         </div>
       </div>
     `;
@@ -247,11 +282,6 @@ export function renderLocalizedStackedField({
   const forwardTranslateData = renderDataAttributes({
     "localized-translate": "true",
     "localized-translate-direction": "source-to-target",
-    ...translatePayload
-  });
-  const reverseTranslateData = renderDataAttributes({
-    "localized-translate": "true",
-    "localized-translate-direction": "target-to-source",
     ...translatePayload
   });
   const translateDisabledAttr = (!translateEnabled || disabled || localizedReadOnly) ? " disabled" : "";
@@ -266,9 +296,9 @@ export function renderLocalizedStackedField({
         <label class="localized-pair__label" for="${escapeHtml(englishId)}"${labelId ? ` id="${escapeHtml(labelId)}"` : ""}>${escapeHtml(label)}</label>
       </div>
       <div class="localized-pair__row">
-        <span class="localized-pair__code" aria-hidden="true">EN</span>
+        <span class="localized-pair__code" aria-hidden="true">${escapeHtml(sourceOption.shortLabel)}</span>
         <div class="localized-pair__field">
-          ${englishControl}
+          ${sourceControl}
         </div>
       </div>
       <div class="localized-pair__row localized-pair__row--target">
@@ -276,8 +306,7 @@ export function renderLocalizedStackedField({
         <div class="localized-pair__field">
           ${localizedControl}
           <div class="localized-pair__actions">
-            <button type="button" class="btn btn-ghost localized-pair__translate-btn"${forwardTranslateData}${translateDisabledAttr}${translateTitleAttr}>EN → ${escapeHtml(targetOption.shortLabel)}</button>
-            <button type="button" class="btn btn-ghost localized-pair__translate-btn"${reverseTranslateData}${translateDisabledAttr}${translateTitleAttr}>${escapeHtml(targetOption.shortLabel)} → EN</button>
+            <button type="button" class="btn btn-ghost localized-pair__translate-btn"${forwardTranslateData}${translateDisabledAttr}${translateTitleAttr}>${escapeHtml(bookingT("booking.translation.update_language", "Update {language}", { language: targetOption.shortLabel }))}</button>
           </div>
           ${disabledHint}
         </div>
@@ -292,7 +321,7 @@ export async function requestBookingFieldTranslation({
   fetchBookingMutation,
   apiBase = "",
   actor = null,
-  sourceLang = "en",
+  sourceLang = bookingEditingLang(),
   targetLang = bookingContentLang()
 }) {
   const normalizedSourceLang = normalizeBookingContentLang(sourceLang || DEFAULT_CONTENT_LANG);

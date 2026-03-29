@@ -1,5 +1,6 @@
 import {
   validateBookingCustomerLanguageUpdateRequest,
+  validateBookingEditingLanguageUpdateRequest,
   validateBookingSourceUpdateRequest,
   validateTranslationEntriesRequest
 } from "../../../Generated/API/generated_APIModels.js";
@@ -8,7 +9,10 @@ import {
   bookingMilestoneMeta,
   validateBookingMilestoneAction
 } from "../../domain/booking_milestones.js";
-import { normalizeBookingContentLang } from "../../domain/booking_content_i18n.js";
+import {
+  normalizeBookingContentLang,
+  normalizeBookingEditingLang
+} from "../../domain/booking_content_i18n.js";
 
 export function createBookingCoreHandlers(deps) {
   const {
@@ -193,6 +197,51 @@ export function createBookingCoreHandlers(deps) {
       "BOOKING_UPDATED",
       actorLabel(principal, normalizeText(payload?.actor) || "keycloak_user"),
       `Customer language set to ${nextCustomerLanguage}`
+    );
+    await persistStore(store);
+
+    sendJson(res, 200, await buildBookingDetailResponse(booking, req));
+  }
+
+  async function handlePatchBookingEditingLanguage(req, res, [bookingId]) {
+    let payload;
+    try {
+      payload = await readBodyJson(req);
+      validateBookingEditingLanguageUpdateRequest(payload);
+    } catch (error) {
+      sendJson(res, 400, { error: String(error?.message || "Invalid JSON payload") });
+      return;
+    }
+
+    const principal = getPrincipal(req);
+    const store = await readStore();
+    const booking = store.bookings.find((item) => item.id === bookingId);
+    if (!booking) {
+      sendJson(res, 404, { error: "Booking not found" });
+      return;
+    }
+    if (!canEditBooking(principal, booking)) {
+      sendJson(res, 403, { error: "Forbidden" });
+      return;
+    }
+    if (!(await assertExpectedRevision(req, payload, booking, "expected_core_revision", "core_revision", res))) return;
+
+    const nextEditingLanguage = normalizeBookingEditingLang(payload.editing_language);
+    const currentEditingLanguage = normalizeBookingEditingLang(booking?.editing_language || "en");
+    if (nextEditingLanguage === currentEditingLanguage && normalizeText(booking?.editing_language) === nextEditingLanguage) {
+      sendJson(res, 200, { ...(await buildBookingDetailResponse(booking, req)), unchanged: true });
+      return;
+    }
+
+    booking.editing_language = nextEditingLanguage;
+    incrementBookingRevision(booking, "core_revision");
+    booking.updated_at = nowIso();
+    addActivity(
+      store,
+      booking.id,
+      "BOOKING_UPDATED",
+      actorLabel(principal, normalizeText(payload?.actor) || "keycloak_user"),
+      `Editing language set to ${nextEditingLanguage}`
     );
     await persistStore(store);
 
@@ -512,6 +561,7 @@ export function createBookingCoreHandlers(deps) {
     handlePostBookingMilestoneAction,
     handlePatchBookingName,
     handlePatchBookingCustomerLanguage,
+    handlePatchBookingEditingLanguage,
     handlePatchBookingSource,
     handlePatchBookingOwner,
     handlePatchBookingNotes,

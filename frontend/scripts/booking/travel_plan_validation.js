@@ -32,20 +32,6 @@ export function validateTravelPlanDraft(plan, {
     dayIds.add(dayId);
 
     const dayNumber = Number(day?.day_number) || Array.from(dayIds).length;
-    const dayTitle = String(day?.title || "").trim();
-    if (!dayTitle) {
-      return {
-        ok: false,
-        code: "day_title_required",
-        dayId,
-        dayNumber,
-        error: bookingT(
-          "booking.travel_plan.validation.day_title_required",
-          "Day {day} title is required.",
-          { day: dayNumber }
-        )
-      };
-    }
 
     if (String(day?.date || "").trim() && !isValidIsoCalendarDate(day.date)) {
       return {
@@ -125,23 +111,6 @@ export function validateTravelPlanDraft(plan, {
           error: bookingT(
             "booking.travel_plan.validation.accommodation_days_invalid",
             "Day {day}, service {item}: Accommodation days must be between 1 and 100.",
-            { day: dayNumber, item: itemNumber }
-          )
-        };
-      }
-
-      const itemTitle = String(item?.title || "").trim();
-      if (!itemTitle) {
-        return {
-          ok: false,
-          code: "item_title_required",
-          dayId,
-          itemId,
-          dayNumber,
-          itemNumber,
-          error: bookingT(
-            "booking.travel_plan.validation.item_title_required",
-            "Day {day}, service {item}: Service title is required.",
             { day: dayNumber, item: itemNumber }
           )
         };

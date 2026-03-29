@@ -1,6 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mergeEditableLocalizedTextField } from "../src/domain/booking_content_i18n.js";
+import {
+  mergeEditableLocalizedTextField,
+  normalizeBookingEditingLang
+} from "../src/domain/booking_content_i18n.js";
 
 test("editing the English source prunes stale translations down to English and the current language", () => {
   const result = mergeEditableLocalizedTextField(
@@ -70,4 +73,30 @@ test("editing English while English is the selected language removes all non-Eng
     en: "Private airport transfer"
   });
   assert.equal(result.text, "Private airport transfer");
+});
+
+test("editing a Vietnamese source prunes stale translations down to Vietnamese and the current target", () => {
+  const result = mergeEditableLocalizedTextField(
+    {
+      vi: "Don san bay",
+      de: "Flughafenabholung",
+      fr: "Transfert aeroport"
+    },
+    "Don san bay rieng",
+    {
+      vi: "Don san bay rieng",
+      de: "Privater Flughafentransfer"
+    },
+    "de",
+    {
+      sourceLang: normalizeBookingEditingLang("vi"),
+      pruneExtraTranslationsOnSourceChange: true
+    }
+  );
+
+  assert.deepEqual(result.map, {
+    vi: "Don san bay rieng",
+    de: "Privater Flughafentransfer"
+  });
+  assert.equal(result.text, "Don san bay rieng");
 });

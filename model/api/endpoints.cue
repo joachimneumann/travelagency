@@ -310,6 +310,21 @@ package api
 		}]
 	},
 	{
+		key:           "booking_editing_language"
+		path:          "/api/v1/bookings/{booking_id}/editing-language"
+		method:        "PATCH"
+		tag:           "Bookings"
+		authenticated: true
+		requestType:   "BookingEditingLanguageUpdateRequest"
+		responseType:  "BookingDetail"
+		parameters: [{
+			name:     "booking_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}]
+	},
+	{
 		key:           "booking_source"
 		path:          "/api/v1/bookings/{booking_id}/source"
 		method:        "PATCH"

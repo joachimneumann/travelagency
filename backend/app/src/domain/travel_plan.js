@@ -229,6 +229,7 @@ function normalizeTravelPlanDays(days, options = {}) {
   const sourceDays = Array.isArray(days) ? days : [];
   const contentLang = normalizeBookingContentLang(options?.contentLang || options?.lang || "en");
   const flatLang = normalizeBookingContentLang(options?.flatLang || options?.lang || "en");
+  const sourceLang = normalizeBookingContentLang(options?.sourceLang || contentLang);
   return [...sourceDays]
     .map((day, index) => ({
       raw: day && typeof day === "object" && !Array.isArray(day) ? day : {},
@@ -259,23 +260,23 @@ function normalizeTravelPlanDays(days, options = {}) {
         return {
           id: normalizeText(rawItem.id) || `travel_plan_service_${dayIndex + 1}_${itemIndex + 1}`,
           timing_kind: timing.timing_kind,
-          time_label: timing.timing_kind === "label" ? (resolveLocalizedText(time_label_i18n, flatLang) || null) : null,
+          time_label: timing.timing_kind === "label" ? (resolveLocalizedText(time_label_i18n, flatLang, "", { sourceLang }) || null) : null,
           time_label_i18n,
           time_point: timing.time_point,
           kind: normalizeItemKind(rawItem.kind),
           accommodation_days: normalizeAccommodationDays(rawItem.accommodation_days, rawItem.kind),
-          title: resolveLocalizedText(title_i18n, flatLang),
+          title: resolveLocalizedText(title_i18n, flatLang, "", { sourceLang }),
           title_i18n,
-          details: resolveLocalizedText(details_i18n, flatLang) || null,
+          details: resolveLocalizedText(details_i18n, flatLang, "", { sourceLang }) || null,
           details_i18n,
-          location: resolveLocalizedText(location_i18n, flatLang) || null,
+          location: resolveLocalizedText(location_i18n, flatLang, "", { sourceLang }) || null,
           location_i18n,
           supplier_id: normalizeOptionalText(rawItem.supplier_id),
           start_time: timing.start_time,
           end_time: timing.end_time,
           financial_coverage_needed: normalizeFinancialCoverageNeeded(rawItem.financial_coverage_needed),
           financial_coverage_status: normalizeFinancialCoverageStatus(rawItem.financial_coverage_status),
-          financial_note: resolveLocalizedText(financial_note_i18n, flatLang) || null,
+          financial_note: resolveLocalizedText(financial_note_i18n, flatLang, "", { sourceLang }) || null,
           financial_note_i18n,
           images: normalizeTravelPlanServiceImages(rawItem.images, dayIndex, itemIndex),
           copied_from: normalizeTravelPlanServiceCopiedFrom(rawItem.copied_from)
@@ -293,12 +294,12 @@ function normalizeTravelPlanDays(days, options = {}) {
         id: normalizeText(day.id) || `travel_plan_day_${dayIndex + 1}`,
         day_number: dayIndex + 1,
         date: normalizeOptionalText(day.date),
-        title: resolveLocalizedText(title_i18n, flatLang),
+        title: resolveLocalizedText(title_i18n, flatLang, "", { sourceLang }),
         title_i18n,
-        overnight_location: resolveLocalizedText(overnight_location_i18n, flatLang) || null,
+        overnight_location: resolveLocalizedText(overnight_location_i18n, flatLang, "", { sourceLang }) || null,
         overnight_location_i18n,
         services,
-        notes: resolveLocalizedText(notes_i18n, flatLang) || null,
+        notes: resolveLocalizedText(notes_i18n, flatLang, "", { sourceLang }) || null,
         notes_i18n
       };
     });
@@ -398,9 +399,6 @@ export function createTravelPlanHelpers() {
         return { ok: false, error: `Travel-plan day id ${day.id} is duplicated.` };
       }
       dayIds.add(day.id);
-      if (!normalizeText(day.title)) {
-        return { ok: false, error: `Day ${day.day_number} title is required.` };
-      }
 
       for (const [itemIndex, item] of day.services.entries()) {
         const itemNumber = itemIndex + 1;
@@ -422,9 +420,6 @@ export function createTravelPlanHelpers() {
           && !(Number.isInteger(item.accommodation_days) && item.accommodation_days >= 1 && item.accommodation_days <= 100)
         ) {
           return { ok: false, error: `Day ${day.day_number}, Service ${itemNumber}: Accommodation days must be between 1 and 100.` };
-        }
-        if (!normalizeText(item.title)) {
-          return { ok: false, error: `Day ${day.day_number}, Service ${itemNumber}: Service title is required.` };
         }
         if (normalizeText(item.supplier_id) && !supplierIds.has(item.supplier_id)) {
           return { ok: false, error: `Day ${day.day_number}, Service ${itemNumber}: Unknown supplier ${item.supplier_id}.` };

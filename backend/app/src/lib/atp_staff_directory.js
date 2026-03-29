@@ -1,5 +1,5 @@
 import { existsSync } from "node:fs";
-import { access, appendFile, copyFile, mkdir, readdir, readFile, writeFile } from "node:fs/promises";
+import { access, appendFile, copyFile, mkdir, readdir, readFile, rename, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import {
   normalizeLocalizedTextMap,
@@ -403,11 +403,33 @@ export function createAtpStaffDirectory({
       ...entry
     };
     const serialized = `${JSON.stringify(nextEntry)}\n`;
-    writeQueueRef.current = writeQueueRef.current.then(async () => {
+    await queueWrite(async () => {
       await mkdir(path.dirname(auditLogPath), { recursive: true });
       await appendFile(auditLogPath, serialized, "utf8");
     });
-    await writeQueueRef.current;
+  }
+
+  async function waitForQueuedWrites() {
+    await Promise.resolve(writeQueueRef.current).catch(() => {});
+  }
+
+  async function queueWrite(task) {
+    const queuedWrite = Promise.resolve(writeQueueRef.current)
+      .catch(() => {})
+      .then(task);
+    writeQueueRef.current = queuedWrite;
+    await queuedWrite;
+  }
+
+  async function writeTextFileAtomic(targetPath, contents) {
+    const tempPath = `${targetPath}.${process.pid}.${Date.now().toString(36)}.${Math.random().toString(16).slice(2)}.tmp`;
+    try {
+      await writeFile(tempPath, contents, "utf8");
+      await rename(tempPath, targetPath);
+    } catch (error) {
+      await unlink(tempPath).catch(() => {});
+      throw error;
+    }
   }
 
   function profilesDocumentFromItems(items) {
@@ -456,6 +478,7 @@ export function createAtpStaffDirectory({
   }
 
   async function readProfiles() {
+    await waitForQueuedWrites();
     const raw = await readFile(dataPath, "utf8");
     const parsed = JSON.parse(raw);
     const sourceItems = profilesFromStoredDocument(parsed);
@@ -471,6 +494,9 @@ export function createAtpStaffDirectory({
         return normalized;
       })
       .filter(Boolean);
+    if (sourceItems.length > 0 && items.length === 0) {
+      throw new Error(`Refusing to normalize ATP staff profiles at ${dataPath} into an empty set.`);
+    }
     return { items, changed };
   }
 
@@ -488,14 +514,14 @@ export function createAtpStaffDirectory({
       became_empty: items.length === 0,
       ...(items.length === 0 ? { stack: captureAuditStack() } : {})
     };
-    writeQueueRef.current = writeQueueRef.current.then(async () => {
-      await writeFile(dataPath, `${JSON.stringify(document, null, 2)}\n`, "utf8");
+    await queueWrite(async () => {
+      await writeTextFileAtomic(dataPath, `${JSON.stringify(document, null, 2)}\n`);
     });
-    await writeQueueRef.current;
     await appendProfilesAuditLog(auditEntry);
   }
 
   async function readKeycloakUserSnapshot() {
+    await waitForQueuedWrites();
     const raw = await readFile(keycloakUsersSnapshotPath, "utf8");
     const parsed = JSON.parse(raw);
     const sourceItems = Array.isArray(parsed?.items) ? parsed.items : [];
@@ -515,16 +541,15 @@ export function createAtpStaffDirectory({
   }
 
   async function persistKeycloakUserSnapshot(payload) {
-    writeQueueRef.current = writeQueueRef.current.then(async () => {
-      await writeFile(keycloakUsersSnapshotPath, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
+    await queueWrite(async () => {
+      await writeTextFileAtomic(keycloakUsersSnapshotPath, `${JSON.stringify(payload, null, 2)}\n`);
     });
-    await writeQueueRef.current;
   }
 
   async function ensureKeycloakUserSnapshotStorage() {
     await mkdir(path.dirname(keycloakUsersSnapshotPath), { recursive: true });
     if (!(await fileExists(keycloakUsersSnapshotPath))) {
-      await writeFile(keycloakUsersSnapshotPath, `${JSON.stringify({ items: [] }, null, 2)}\n`, "utf8");
+      await writeTextFileAtomic(keycloakUsersSnapshotPath, `${JSON.stringify({ items: [] }, null, 2)}\n`);
     }
     const payload = await readKeycloakUserSnapshot().catch(() => ({ items: [], changed: true }));
     if (payload.changed) {
@@ -597,7 +622,7 @@ export function createAtpStaffDirectory({
           source_path: legacyDataPath
         });
       } else {
-        await writeFile(dataPath, `${JSON.stringify({ staff: {} }, null, 2)}\n`, "utf8");
+        await writeTextFileAtomic(dataPath, `${JSON.stringify({ staff: {} }, null, 2)}\n`);
         await appendProfilesAuditLog({
           action: "create_empty_profiles_file",
           reason: "ensure_storage_missing_data_path",
@@ -616,7 +641,7 @@ export function createAtpStaffDirectory({
         await copyFile(sourcePath, targetPath).catch(() => {});
       }
     }
-    const payload = await readProfiles().catch(() => ({ items: [], changed: true }));
+    const payload = await readProfiles();
     let changed = Boolean(payload.changed);
     for (const profile of payload.items) {
       if (await writeAvatarIfMissing(profile)) changed = true;

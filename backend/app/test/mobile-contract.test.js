@@ -1477,7 +1477,7 @@ test("booking travel plan patch rejects stale revisions", async () => {
   assert.equal(stalePatch.body.code, "BOOKING_REVISION_MISMATCH");
 });
 
-test("booking travel plan patch rejects invalid items and unknown offer links", async () => {
+test("booking travel plan patch allows blank service titles and still rejects invalid items and unknown offer links", async () => {
   const createdBooking = await createSeedBooking();
   const bookingId = createdBooking.id;
 
@@ -1508,8 +1508,9 @@ test("booking travel plan patch rejects invalid items and unknown offer links", 
       }
     }
   );
-  assert.equal(missingTitleResult.status, 422);
-  assert.match(String(missingTitleResult.body.error || ""), /title is required/i);
+  assert.equal(missingTitleResult.status, 200);
+  assert.equal(missingTitleResult.body.booking.travel_plan.days[0].services[0].title, "");
+  const nextTravelPlanRevision = missingTitleResult.body.booking.travel_plan_revision;
 
   const missingPointTimeResult = await requestJson(
     endpointPath("booking_travel_plan").replace("{booking_id}", bookingId),
@@ -1517,7 +1518,7 @@ test("booking travel plan patch rejects invalid items and unknown offer links", 
     {
       method: "PATCH",
       body: {
-        expected_travel_plan_revision: createdBooking.travel_plan_revision,
+        expected_travel_plan_revision: nextTravelPlanRevision,
         travel_plan: {
           days: [
             {
@@ -1548,7 +1549,7 @@ test("booking travel plan patch rejects invalid items and unknown offer links", 
     {
       method: "PATCH",
       body: {
-        expected_travel_plan_revision: createdBooking.travel_plan_revision,
+        expected_travel_plan_revision: nextTravelPlanRevision,
         travel_plan: {
           days: [
             {

@@ -461,6 +461,7 @@ export const GENERATED_OFFER_CATEGORIES = Object.freeze([
     schemaField({"name":"number_of_travelers","required":false,"wireName":"number_of_travelers"}, SHARED_FIELD_DEFS.FIELD_17),
     schemaField({"name":"preferred_currency","required":false,"wireName":"preferred_currency"}, SHARED_FIELD_DEFS.FIELD_18),
     schemaField({"name":"customer_language","required":false,"wireName":"customer_language"}, SHARED_FIELD_DEFS.FIELD_11),
+    schemaField({"name":"editing_language","required":false,"wireName":"editing_language"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"confirmed_generated_offer_id","required":false,"wireName":"confirmed_generated_offer_id"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"notes","required":false,"wireName":"notes"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"persons","required":false,"wireName":"persons"}, SHARED_FIELD_DEFS.FIELD_44),

@@ -90,6 +90,27 @@ export function createBookingPersonsModule(ctx) {
     return entry?.nativeLabel || entry?.apiValue || String(value || "");
   }
 
+  function personLanguagePriority(code) {
+    const normalized = normalizePersonLanguageCode(code);
+    if (normalized === "en") return 0;
+    if (normalized === "vi") return 1;
+    return 2;
+  }
+
+  function orderedPersonLanguageCodes() {
+    return [...GENERATED_LANGUAGE_CODES]
+      .map((language) => normalizePersonLanguageCode(language))
+      .filter(Boolean)
+      .sort((left, right) => {
+        const priorityDifference = personLanguagePriority(left) - personLanguagePriority(right);
+        if (priorityDifference !== 0) return priorityDifference;
+        const leftEntry = languageByCode(left);
+        const rightEntry = languageByCode(right);
+        return String(leftEntry?.apiValue || leftEntry?.nativeLabel || left)
+          .localeCompare(String(rightEntry?.apiValue || rightEntry?.nativeLabel || right), "en", { sensitivity: "base" });
+      });
+  }
+
   function getDisplayedTravelerCount() {
     return state.personDrafts.filter((person) => !person?._is_new && isTravelingPerson(person)).length;
   }
@@ -1020,7 +1041,7 @@ export function createBookingPersonsModule(ctx) {
     if (els.personModalPreferredLanguage) {
       els.personModalPreferredLanguage.innerHTML = [
         `<option value="">${escapeHtml(bookingT("booking.persons.select_language", "Select language"))}</option>`,
-        ...GENERATED_LANGUAGE_CODES.map((language) => `<option value="${escapeHtml(language)}">${escapeHtml(formatPersonLanguageLabel(language))}</option>`)
+        ...orderedPersonLanguageCodes().map((language) => `<option value="${escapeHtml(language)}">${escapeHtml(formatPersonLanguageLabel(language))}</option>`)
       ].join("");
       els.personModalPreferredLanguage.value = normalizePersonLanguageCode(draft.preferred_language) || "";
       els.personModalPreferredLanguage.disabled = !canEdit;

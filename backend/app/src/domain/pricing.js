@@ -706,6 +706,7 @@ export function createPricingHelpers({
       : requestedVisibleDetailLevel;
     const contentLang = normalizeBookingContentLang(options?.contentLang || options?.lang || "en");
     const flatLang = normalizeBookingContentLang(options?.flatLang || options?.lang || "en");
+    const sourceLang = normalizeBookingContentLang(options?.sourceLang || contentLang);
     const sourceComponents = Array.isArray(source.components) ? source.components : [];
     const legacyDiscountComponent = source.discount
       ? null
@@ -724,9 +725,9 @@ export function createPricingHelpers({
         return {
           id: normalizeText(component?.id) || `offer_component_${index + 1}`,
           category: computedAmounts.category,
-          label: resolveLocalizedText(label_i18n, flatLang),
+          label: resolveLocalizedText(label_i18n, flatLang, "", { sourceLang }),
           label_i18n,
-          details: resolveLocalizedText(details_i18n, flatLang),
+          details: resolveLocalizedText(details_i18n, flatLang, "", { sourceLang }),
           details_i18n,
           day_number: Number.isInteger(normalizedDayNumber) && normalizedDayNumber >= 1 ? normalizedDayNumber : null,
           quantity: computedAmounts.quantity,
@@ -736,7 +737,7 @@ export function createPricingHelpers({
           unit_total_amount_cents: computedAmounts.unit_total_amount_cents,
           tax_rate_basis_points: computedAmounts.tax_rate_basis_points,
           currency,
-          notes: resolveLocalizedText(notes_i18n, flatLang),
+          notes: resolveLocalizedText(notes_i18n, flatLang, "", { sourceLang }),
           notes_i18n,
           sort_order: Number.isFinite(Number(component?.sort_order)) ? Number(component.sort_order) : index,
           created_at: component?.created_at || null,
@@ -1418,13 +1419,14 @@ export function createPricingHelpers({
     const input = Array.isArray(value) ? value : [];
     const contentLang = normalizeBookingContentLang(options?.contentLang || options?.lang || "en");
     const flatLang = normalizeBookingContentLang(options?.flatLang || options?.lang || "en");
+    const sourceLang = normalizeBookingContentLang(options?.sourceLang || contentLang);
     return input
       .map((component) => {
         const description_i18n = normalizeLocalizedTextMap(
           component?.description_i18n ?? component?.description,
           contentLang
         );
-        const description = resolveLocalizedText(description_i18n, flatLang);
+        const description = resolveLocalizedText(description_i18n, flatLang, "", { sourceLang });
         const quantity = Math.max(1, safeInt(component?.quantity) || 1);
         const unitAmountCents = safeAmountCents(component?.unit_amount_cents);
         if (!description || !unitAmountCents) return null;

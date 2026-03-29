@@ -11,6 +11,9 @@ rsync -av atp:/srv/asiatravelplan/content/atp_staff/ content/atp_staff/
 rsync -av atp:/srv/asiatravelplan/content/tours/ content/tours/
 
 
+## compare local content vs ATP
+./scripts/compare_content.sh
+
 
 ## copy to backup
 rsync -av content/atp_staff/ backup/atp_staff/

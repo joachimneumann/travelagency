@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { normalizeText } from "../lib/text.js";
+import { promptLanguageName } from "../../../../shared/generated/language_catalog.js";
 import {
   DEFAULT_BOOKING_CONTENT_LANG,
   normalizeBookingContentLang,
@@ -75,8 +76,9 @@ function createFieldDescriptor({
   };
 }
 
-function collectOfferFieldDescriptors(offer, targetLang) {
-  const normalizedTargetLang = normalizeBookingContentLang(targetLang);
+function collectOfferFieldDescriptors(offer, options = {}) {
+  const normalizedSourceLang = normalizeBookingContentLang(options?.sourceLang || DEFAULT_BOOKING_CONTENT_LANG);
+  const normalizedTargetLang = normalizeBookingContentLang(options?.targetLang || options?.lang || DEFAULT_BOOKING_CONTENT_LANG);
   const components = Array.isArray(offer?.components) ? offer.components : [];
   return components.flatMap((component, index) => {
     const componentId = normalizeText(component?.id) || `component_${index + 1}`;
@@ -85,7 +87,7 @@ function collectOfferFieldDescriptors(offer, targetLang) {
       holder: component,
       mapField: "details_i18n",
       plainField: "details",
-      sourceLang: DEFAULT_BOOKING_CONTENT_LANG,
+      sourceLang: normalizedSourceLang,
       targetLang: normalizedTargetLang,
       emptyValue: ""
     });
@@ -93,8 +95,9 @@ function collectOfferFieldDescriptors(offer, targetLang) {
   });
 }
 
-function collectTravelPlanFieldDescriptors(travelPlan, targetLang) {
-  const normalizedTargetLang = normalizeBookingContentLang(targetLang);
+function collectTravelPlanFieldDescriptors(travelPlan, options = {}) {
+  const normalizedSourceLang = normalizeBookingContentLang(options?.sourceLang || DEFAULT_BOOKING_CONTENT_LANG);
+  const normalizedTargetLang = normalizeBookingContentLang(options?.targetLang || options?.lang || DEFAULT_BOOKING_CONTENT_LANG);
   const days = Array.isArray(travelPlan?.days) ? travelPlan.days : [];
   return days.flatMap((day, dayIndex) => {
     const dayId = normalizeText(day?.id) || `day_${dayIndex + 1}`;
@@ -104,7 +107,7 @@ function collectTravelPlanFieldDescriptors(travelPlan, targetLang) {
         holder: day,
         mapField: "title_i18n",
         plainField: "title",
-        sourceLang: DEFAULT_BOOKING_CONTENT_LANG,
+        sourceLang: normalizedSourceLang,
         targetLang: normalizedTargetLang,
         emptyValue: ""
       }),
@@ -113,7 +116,7 @@ function collectTravelPlanFieldDescriptors(travelPlan, targetLang) {
         holder: day,
         mapField: "overnight_location_i18n",
         plainField: "overnight_location",
-        sourceLang: DEFAULT_BOOKING_CONTENT_LANG,
+        sourceLang: normalizedSourceLang,
         targetLang: normalizedTargetLang,
         emptyValue: null
       }),
@@ -122,7 +125,7 @@ function collectTravelPlanFieldDescriptors(travelPlan, targetLang) {
         holder: day,
         mapField: "notes_i18n",
         plainField: "notes",
-        sourceLang: DEFAULT_BOOKING_CONTENT_LANG,
+        sourceLang: normalizedSourceLang,
         targetLang: normalizedTargetLang,
         emptyValue: null
       })
@@ -139,7 +142,7 @@ function collectTravelPlanFieldDescriptors(travelPlan, targetLang) {
           holder: item,
           mapField: "time_label_i18n",
           plainField: "time_label",
-          sourceLang: DEFAULT_BOOKING_CONTENT_LANG,
+          sourceLang: normalizedSourceLang,
           targetLang: normalizedTargetLang,
           emptyValue: null,
           enabled: String(item?.timing_kind || "label") === "label"
@@ -149,7 +152,7 @@ function collectTravelPlanFieldDescriptors(travelPlan, targetLang) {
           holder: item,
           mapField: "title_i18n",
           plainField: "title",
-          sourceLang: DEFAULT_BOOKING_CONTENT_LANG,
+          sourceLang: normalizedSourceLang,
           targetLang: normalizedTargetLang,
           emptyValue: ""
         }),
@@ -158,7 +161,7 @@ function collectTravelPlanFieldDescriptors(travelPlan, targetLang) {
           holder: item,
           mapField: "details_i18n",
           plainField: "details",
-          sourceLang: DEFAULT_BOOKING_CONTENT_LANG,
+          sourceLang: normalizedSourceLang,
           targetLang: normalizedTargetLang,
           emptyValue: null
         }),
@@ -167,7 +170,7 @@ function collectTravelPlanFieldDescriptors(travelPlan, targetLang) {
           holder: item,
           mapField: "location_i18n",
           plainField: "location",
-          sourceLang: DEFAULT_BOOKING_CONTENT_LANG,
+          sourceLang: normalizedSourceLang,
           targetLang: normalizedTargetLang,
           emptyValue: null
         })
@@ -178,15 +181,16 @@ function collectTravelPlanFieldDescriptors(travelPlan, targetLang) {
   });
 }
 
-function collectInvoiceFieldDescriptors(invoice, targetLang) {
-  const normalizedTargetLang = normalizeBookingContentLang(targetLang);
+function collectInvoiceFieldDescriptors(invoice, options = {}) {
+  const normalizedSourceLang = normalizeBookingContentLang(options?.sourceLang || DEFAULT_BOOKING_CONTENT_LANG);
+  const normalizedTargetLang = normalizeBookingContentLang(options?.targetLang || options?.lang || DEFAULT_BOOKING_CONTENT_LANG);
   const descriptors = [
     createFieldDescriptor({
       key: "invoice.title",
       holder: invoice,
       mapField: "title_i18n",
       plainField: "title",
-      sourceLang: DEFAULT_BOOKING_CONTENT_LANG,
+      sourceLang: normalizedSourceLang,
       targetLang: normalizedTargetLang,
       emptyValue: ""
     }),
@@ -195,7 +199,7 @@ function collectInvoiceFieldDescriptors(invoice, targetLang) {
       holder: invoice,
       mapField: "notes_i18n",
       plainField: "notes",
-      sourceLang: DEFAULT_BOOKING_CONTENT_LANG,
+      sourceLang: normalizedSourceLang,
       targetLang: normalizedTargetLang,
       emptyValue: null
     })
@@ -209,7 +213,7 @@ function collectInvoiceFieldDescriptors(invoice, targetLang) {
       holder: component,
       mapField: "description_i18n",
       plainField: "description",
-      sourceLang: DEFAULT_BOOKING_CONTENT_LANG,
+      sourceLang: normalizedSourceLang,
       targetLang: normalizedTargetLang,
       emptyValue: ""
     });
@@ -224,21 +228,28 @@ function computeSourceHash(descriptors) {
   return createHash("sha256").update(JSON.stringify(payload)).digest("hex");
 }
 
-function buildTranslationSummary(section, targetLang, collectDescriptors) {
+function buildTranslationSummary(section, targetLang, collectDescriptors, sourceLang = DEFAULT_BOOKING_CONTENT_LANG) {
+  const normalizedSourceLang = normalizeBookingContentLang(sourceLang || DEFAULT_BOOKING_CONTENT_LANG);
   const normalizedTargetLang = normalizeBookingContentLang(targetLang);
-  const descriptors = collectDescriptors(section, normalizedTargetLang);
+  const descriptors = collectDescriptors(section, {
+    sourceLang: normalizedSourceLang,
+    targetLang: normalizedTargetLang
+  });
   const totalFields = descriptors.length;
   const translatedFields = descriptors.reduce((count, descriptor) => count + (descriptor.targetText() ? 1 : 0), 0);
   const missingFields = Math.max(0, totalFields - translatedFields);
   const metaByLang = normalizeSectionTranslationMeta(section?.translation_meta);
   const meta = metaByLang[normalizedTargetLang] || null;
   const sourceHash = computeSourceHash(descriptors);
-  const stale = normalizedTargetLang !== DEFAULT_BOOKING_CONTENT_LANG
+  const stale = normalizedTargetLang !== normalizedSourceLang
     && Boolean(meta?.source_hash)
-    && meta.source_hash !== sourceHash;
+    && (
+      normalizeBookingContentLang(meta?.source_lang || normalizedSourceLang) !== normalizedSourceLang
+      || meta.source_hash !== sourceHash
+    );
 
   let status = "missing";
-  if (normalizedTargetLang === DEFAULT_BOOKING_CONTENT_LANG) {
+  if (normalizedTargetLang === normalizedSourceLang) {
     status = "source";
   } else if (!totalFields) {
     status = "empty";
@@ -256,7 +267,7 @@ function buildTranslationSummary(section, targetLang, collectDescriptors) {
 
   return {
     lang: normalizedTargetLang,
-    source_lang: DEFAULT_BOOKING_CONTENT_LANG,
+    source_lang: normalizedSourceLang,
     status,
     ...(meta?.origin ? { origin: meta.origin } : {}),
     ...(meta?.updated_at ? { updated_at: meta.updated_at } : {}),
@@ -270,10 +281,14 @@ function buildTranslationSummary(section, targetLang, collectDescriptors) {
   };
 }
 
-function touchSectionTranslationMeta(section, targetLang, origin, timestamp, collectDescriptors) {
+function touchSectionTranslationMeta(section, targetLang, origin, timestamp, collectDescriptors, sourceLang = DEFAULT_BOOKING_CONTENT_LANG) {
+  const normalizedSourceLang = normalizeBookingContentLang(sourceLang || DEFAULT_BOOKING_CONTENT_LANG);
   const normalizedTargetLang = normalizeBookingContentLang(targetLang);
-  if (normalizedTargetLang === DEFAULT_BOOKING_CONTENT_LANG) return section;
-  const descriptors = collectDescriptors(section, normalizedTargetLang);
+  if (normalizedTargetLang === normalizedSourceLang) return section;
+  const descriptors = collectDescriptors(section, {
+    sourceLang: normalizedSourceLang,
+    targetLang: normalizedTargetLang
+  });
   const metaByLang = normalizeSectionTranslationMeta(section?.translation_meta);
   if (!descriptors.length) {
     delete metaByLang[normalizedTargetLang];
@@ -281,7 +296,7 @@ function touchSectionTranslationMeta(section, targetLang, origin, timestamp, col
     return section;
   }
   metaByLang[normalizedTargetLang] = {
-    source_lang: DEFAULT_BOOKING_CONTENT_LANG,
+    source_lang: normalizedSourceLang,
     source_hash: computeSourceHash(descriptors),
     origin: normalizeOrigin(origin),
     updated_at: normalizeText(timestamp) || null
@@ -290,18 +305,22 @@ function touchSectionTranslationMeta(section, targetLang, origin, timestamp, col
   return section;
 }
 
-async function translateSection(section, targetLang, translateEntries, timestamp, collectDescriptors) {
+async function translateSection(section, targetLang, translateEntries, timestamp, collectDescriptors, sourceLang = DEFAULT_BOOKING_CONTENT_LANG) {
+  const normalizedSourceLang = normalizeBookingContentLang(sourceLang || DEFAULT_BOOKING_CONTENT_LANG);
   const normalizedTargetLang = normalizeBookingContentLang(targetLang);
-  if (normalizedTargetLang === DEFAULT_BOOKING_CONTENT_LANG) {
-    const error = new Error("English is the source language and cannot be auto-translated.");
+  if (normalizedTargetLang === normalizedSourceLang) {
+    const error = new Error(`${promptLanguageName(normalizedSourceLang)} is the editing language and cannot be auto-translated.`);
     error.code = "TRANSLATION_SOURCE_LANGUAGE";
     throw error;
   }
   const nextSection = cloneJson(section);
-  const descriptors = collectDescriptors(nextSection, normalizedTargetLang);
+  const descriptors = collectDescriptors(nextSection, {
+    sourceLang: normalizedSourceLang,
+    targetLang: normalizedTargetLang
+  });
   const entries = Object.fromEntries(descriptors.map((descriptor) => [descriptor.key, descriptor.sourceText]));
   const translatedEntries = await translateEntries(entries, normalizedTargetLang, {
-    sourceLang: "English",
+    sourceLang: promptLanguageName(normalizedSourceLang),
     domain: "travel planning",
     allowGoogleFallback: true
   });
@@ -310,7 +329,7 @@ async function translateSection(section, targetLang, translateEntries, timestamp
     if (!translatedText) return;
     descriptor.apply(translatedText);
   });
-  return touchSectionTranslationMeta(nextSection, normalizedTargetLang, "machine", timestamp, collectDescriptors);
+  return touchSectionTranslationMeta(nextSection, normalizedTargetLang, "machine", timestamp, collectDescriptors, normalizedSourceLang);
 }
 
 export function normalizeOfferTranslationMeta(offer) {
@@ -331,38 +350,50 @@ export function normalizeInvoiceTranslationMeta(invoice) {
   return normalizedInvoice;
 }
 
-export function buildOfferTranslationStatus(offer, targetLang) {
-  return buildTranslationSummary(offer, targetLang, collectOfferFieldDescriptors);
+export function buildOfferTranslationStatus(offer, targetLang, sourceLang = DEFAULT_BOOKING_CONTENT_LANG) {
+  return buildTranslationSummary(offer, targetLang, collectOfferFieldDescriptors, sourceLang);
 }
 
-export function buildTravelPlanTranslationStatus(travelPlan, targetLang) {
-  return buildTranslationSummary(travelPlan, targetLang, collectTravelPlanFieldDescriptors);
+export function buildTravelPlanTranslationStatus(travelPlan, targetLang, sourceLang = DEFAULT_BOOKING_CONTENT_LANG) {
+  return buildTranslationSummary(travelPlan, targetLang, collectTravelPlanFieldDescriptors, sourceLang);
 }
 
-export function buildInvoiceTranslationStatus(invoice, targetLang) {
-  return buildTranslationSummary(invoice, targetLang, collectInvoiceFieldDescriptors);
+export function buildInvoiceTranslationStatus(invoice, targetLang, sourceLang = DEFAULT_BOOKING_CONTENT_LANG) {
+  return buildTranslationSummary(invoice, targetLang, collectInvoiceFieldDescriptors, sourceLang);
 }
 
-export function markOfferTranslationManual(offer, targetLang, timestamp) {
-  return touchSectionTranslationMeta(offer, targetLang, "manual", timestamp, collectOfferFieldDescriptors);
+export function markOfferTranslationManual(offer, targetLang, timestamp, sourceLang = DEFAULT_BOOKING_CONTENT_LANG) {
+  return touchSectionTranslationMeta(offer, targetLang, "manual", timestamp, collectOfferFieldDescriptors, sourceLang);
 }
 
-export function markTravelPlanTranslationManual(travelPlan, targetLang, timestamp) {
-  return touchSectionTranslationMeta(travelPlan, targetLang, "manual", timestamp, collectTravelPlanFieldDescriptors);
+export function markTravelPlanTranslationManual(travelPlan, targetLang, timestamp, sourceLang = DEFAULT_BOOKING_CONTENT_LANG) {
+  return touchSectionTranslationMeta(travelPlan, targetLang, "manual", timestamp, collectTravelPlanFieldDescriptors, sourceLang);
 }
 
-export function markInvoiceTranslationManual(invoice, targetLang, timestamp) {
-  return touchSectionTranslationMeta(invoice, targetLang, "manual", timestamp, collectInvoiceFieldDescriptors);
+export function markInvoiceTranslationManual(invoice, targetLang, timestamp, sourceLang = DEFAULT_BOOKING_CONTENT_LANG) {
+  return touchSectionTranslationMeta(invoice, targetLang, "manual", timestamp, collectInvoiceFieldDescriptors, sourceLang);
+}
+
+export async function translateOfferFromSourceLanguage(offer, sourceLang, targetLang, translateEntries, timestamp) {
+  return translateSection(offer, targetLang, translateEntries, timestamp, collectOfferFieldDescriptors, sourceLang);
+}
+
+export async function translateTravelPlanFromSourceLanguage(travelPlan, sourceLang, targetLang, translateEntries, timestamp) {
+  return translateSection(travelPlan, targetLang, translateEntries, timestamp, collectTravelPlanFieldDescriptors, sourceLang);
+}
+
+export async function translateInvoiceFromSourceLanguage(invoice, sourceLang, targetLang, translateEntries, timestamp) {
+  return translateSection(invoice, targetLang, translateEntries, timestamp, collectInvoiceFieldDescriptors, sourceLang);
 }
 
 export async function translateOfferFromEnglish(offer, targetLang, translateEntries, timestamp) {
-  return translateSection(offer, targetLang, translateEntries, timestamp, collectOfferFieldDescriptors);
+  return translateOfferFromSourceLanguage(offer, DEFAULT_BOOKING_CONTENT_LANG, targetLang, translateEntries, timestamp);
 }
 
 export async function translateTravelPlanFromEnglish(travelPlan, targetLang, translateEntries, timestamp) {
-  return translateSection(travelPlan, targetLang, translateEntries, timestamp, collectTravelPlanFieldDescriptors);
+  return translateTravelPlanFromSourceLanguage(travelPlan, DEFAULT_BOOKING_CONTENT_LANG, targetLang, translateEntries, timestamp);
 }
 
 export async function translateInvoiceFromEnglish(invoice, targetLang, translateEntries, timestamp) {
-  return translateSection(invoice, targetLang, translateEntries, timestamp, collectInvoiceFieldDescriptors);
+  return translateInvoiceFromSourceLanguage(invoice, DEFAULT_BOOKING_CONTENT_LANG, targetLang, translateEntries, timestamp);
 }

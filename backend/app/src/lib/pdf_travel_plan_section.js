@@ -119,7 +119,7 @@ function formatTravelPlanTiming(item, lang, dayDate, formatPdfDateOnly) {
   return normalizeText(item?.time_label);
 }
 
-function dayHeading(day, lang, pdfT) {
+export function dayHeading(day, lang, pdfT) {
   const label = pdfT(lang, "offer.day_label", "Day {day}", {
     day: Number(day?.day_number || 0) || 1
   });

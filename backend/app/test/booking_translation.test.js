@@ -102,3 +102,35 @@ test("invoice translation status tracks title, notes, and component descriptions
   assert.equal(readyStatus.missing_fields, 0);
   assert.equal(readyStatus.status, "reviewed");
 });
+
+test("translation status uses the configured source language instead of assuming English", () => {
+  const offer = {
+    components: [
+      {
+        id: "comp_vi_1",
+        details: "Don san bay rieng",
+        details_i18n: {
+          vi: "Don san bay rieng",
+          de: "Privater Flughafentransfer"
+        }
+      }
+    ]
+  };
+
+  markOfferTranslationManual(offer, "de", "2026-03-16T10:00:00.000Z", "vi");
+
+  const sourceStatus = buildOfferTranslationStatus(offer, "vi", "vi");
+  assert.equal(sourceStatus.status, "source");
+  assert.equal(sourceStatus.source_lang, "vi");
+
+  const targetStatus = buildOfferTranslationStatus(offer, "de", "vi");
+  assert.equal(targetStatus.status, "reviewed");
+  assert.equal(targetStatus.source_lang, "vi");
+
+  offer.components[0].details_i18n.vi = "Don san bay VIP";
+  offer.components[0].details = "Don san bay VIP";
+
+  const staleStatus = buildOfferTranslationStatus(offer, "de", "vi");
+  assert.equal(staleStatus.status, "stale");
+  assert.equal(staleStatus.stale, true);
+});

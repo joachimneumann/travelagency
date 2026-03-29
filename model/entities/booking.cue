@@ -127,6 +127,7 @@ import (
 	number_of_travelers?:         >=0 & <=common.#MaxTravelers & int
 	preferred_currency?:          enums.#CurrencyCode
 	customer_language?:           enums.#LanguageCode
+	editing_language?:           "en" | "vi"
 	confirmed_generated_offer_id?: common.#Identifier
 	accepted_deposit_amount_cents?: common.#NonNegativeMoneyAmount
 	accepted_deposit_currency?:     enums.#CurrencyCode

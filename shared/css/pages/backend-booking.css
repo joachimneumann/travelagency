@@ -253,8 +253,9 @@
   z-index: 40;
   display: block;
   margin: 0;
-  width: min(100%, 430px);
-  flex: 0 0 430px;
+  width: 100%;
+  max-width: 900px;
+  flex: 1 1 auto;
 }
 
 .booking-detail-page .booking-dirty-bar.booking-dirty-bar--dirty {
@@ -729,17 +730,6 @@
 .booking-detail-page .booking-milestone-actions__hint {
   min-height: 1.1rem;
   margin-top: 0.35rem;
-  color: var(--error-text-strong);
-}
-
-.booking-detail-page .travel-plan-service-title-input--required,
-.booking-detail-page .localized-editor__pane input.travel-plan-service-title-input--required,
-.booking-detail-page .localized-pair__field input.travel-plan-service-title-input--required {
-  background: var(--surface-error);
-  border-color: var(--line-error-strong);
-}
-
-.booking-detail-page .travel-plan-service-title-input--required::placeholder {
   color: var(--error-text-strong);
 }
 

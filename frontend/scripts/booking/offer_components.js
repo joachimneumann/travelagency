@@ -9,7 +9,7 @@ import {
   normalizeCurrencyCode,
   parseMoneyInputValue
 } from "./pricing.js";
-import { bookingContentLang, bookingContentLanguageOption, bookingT } from "./i18n.js";
+import { bookingContentLang, bookingContentLanguageOption, bookingEditingLang, bookingT } from "./i18n.js";
 import { renderLocalizedStackedField, requestBookingFieldTranslation, resolveLocalizedEditorBranchText } from "./localized_editor.js";
 
 export function createBookingOfferComponentsModule(ctx) {
@@ -126,7 +126,7 @@ export function createBookingOfferComponentsModule(ctx) {
     if (typeof getCountMissingOfferPdfTranslations === "function") {
       return getCountMissingOfferPdfTranslations(booking, lang);
     }
-    if (!booking || lang === "en") return 0;
+    if (!booking || lang === bookingEditingLang(booking?.editing_language || "en")) return 0;
     const normalizedLang = String(lang || "").trim().toLowerCase();
     const offerSummary = booking?.offer_translation_status;
     const travelPlanSummary = booking?.travel_plan_translation_status;
@@ -190,7 +190,7 @@ export function createBookingOfferComponentsModule(ctx) {
     if (!Number.isFinite(normalizedDayNumber) || normalizedDayNumber < 1) return "";
     const travelDay = (Array.isArray(state.travelPlanDraft?.days) ? state.travelPlanDraft.days : [])[normalizedDayNumber - 1];
     if (!travelDay) return "";
-    return resolveLocalizedEditorBranchText(travelDay.title_i18n ?? travelDay.title, "en", "").trim();
+    return resolveLocalizedEditorBranchText(travelDay.title_i18n ?? travelDay.title, bookingEditingLang(), "").trim();
   }
 
   function computeOfferComponentUnitGrossAmount(componentOrValues) {
@@ -442,7 +442,7 @@ export function createBookingOfferComponentsModule(ctx) {
       targetLang: bookingContentLang(),
       disabled: !state.permissions.canEditBooking,
       translateEnabled: Boolean(state.booking?.translation_enabled),
-      englishValue: resolveLocalizedEditorBranchText(component?.details_i18n ?? component?.details, "en", ""),
+      sourceValue: resolveLocalizedEditorBranchText(component?.details_i18n ?? component?.details, bookingEditingLang(), ""),
       localizedValue: resolveLocalizedEditorBranchText(component?.details_i18n ?? component?.details, bookingContentLang(), ""),
       commonData: {
         "offer-component-details": index
@@ -570,7 +570,7 @@ export function createBookingOfferComponentsModule(ctx) {
   }
 
   function readOfferDraftComponentsForRender() {
-    const rows = Array.from(document.querySelectorAll('[data-offer-component-details][data-localized-lang="en"][data-localized-role="source"]'));
+    const rows = Array.from(document.querySelectorAll('[data-offer-component-details][data-localized-role="source"]'));
     const fallbackComponents = Array.isArray(state.offerDraft?.components) ? state.offerDraft.components : [];
     if (!rows.length) {
       return fallbackComponents;
@@ -583,9 +583,10 @@ export function createBookingOfferComponentsModule(ctx) {
           || fallbackComponent?.category
           || "OTHER"
       );
-      const englishDetails = String(document.querySelector(`[data-offer-component-details="${index}"][data-localized-lang="en"][data-localized-role="source"]`)?.value || "").trim();
+      const sourceDetails = String(document.querySelector(`[data-offer-component-details="${index}"][data-localized-role="source"]`)?.value || "").trim();
+      const sourceLang = bookingEditingLang();
       const targetLang = bookingContentLang();
-      const localizedDetails = targetLang === "en"
+      const localizedDetails = targetLang === sourceLang
         ? ""
         : String(document.querySelector(`[data-offer-component-details="${index}"][data-localized-lang="${targetLang}"][data-localized-role="target"]`)?.value || "").trim();
       const quantityInput = document.querySelector(`[data-offer-component-quantity="${index}"]`);
@@ -598,13 +599,13 @@ export function createBookingOfferComponentsModule(ctx) {
       const displayAmountRaw = totalInput?.value ?? unitInput?.value ?? "0";
       const displayedAmount = parseMoneyInputValue(displayAmountRaw, currency);
       const detailsPayload = paymentTermsModule.buildDualLocalizedPayload
-        ? paymentTermsModule.buildDualLocalizedPayload(englishDetails, localizedDetails, targetLang)
+        ? paymentTermsModule.buildDualLocalizedPayload(sourceDetails, localizedDetails, targetLang, sourceLang)
         : {
-            text: englishDetails || null,
-            map: targetLang === "en"
-              ? (englishDetails ? { en: englishDetails } : {})
+            text: sourceDetails || null,
+            map: targetLang === sourceLang
+              ? (sourceDetails ? { [sourceLang]: sourceDetails } : {})
               : {
-                  ...(englishDetails ? { en: englishDetails } : {}),
+                  ...(sourceDetails ? { [sourceLang]: sourceDetails } : {}),
                   ...(localizedDetails ? { [targetLang]: localizedDetails } : {})
                 }
           };
@@ -653,19 +654,19 @@ export function createBookingOfferComponentsModule(ctx) {
     };
   }
 
-  function buildDualLocalizedPayload(englishText, localizedText, targetLang) {
-    const english = String(englishText || "").trim();
+  function buildDualLocalizedPayload(sourceText, localizedText, targetLang, sourceLang = bookingEditingLang()) {
+    const source = String(sourceText || "").trim();
     const localized = String(localizedText || "").trim();
-    if (targetLang === "en") {
+    if (targetLang === sourceLang) {
       return {
-        text: english || null,
-        map: english ? { en: english } : {}
+        text: source || null,
+        map: source ? { [sourceLang]: source } : {}
       };
     }
     return {
-      text: english || null,
+      text: source || null,
       map: {
-        ...(english ? { en: english } : {}),
+        ...(source ? { [sourceLang]: source } : {}),
         ...(localized ? { [targetLang]: localized } : {})
       }
     };
@@ -1471,21 +1472,22 @@ export function createBookingOfferComponentsModule(ctx) {
       button.addEventListener("click", async () => {
         const index = Number(button.getAttribute("data-offer-component-details-translate"));
         const targetLang = bookingContentLang();
+        const editingLang = bookingEditingLang();
         const direction = String(button.getAttribute("data-localized-translate-direction") || "source-to-target").trim();
-        const englishInput = document.querySelector(`[data-offer-component-details="${index}"][data-localized-lang="en"][data-localized-role="source"]`);
+        const englishInput = document.querySelector(`[data-offer-component-details="${index}"][data-localized-role="source"]`);
         const localizedInput = document.querySelector(`[data-offer-component-details="${index}"][data-localized-lang="${targetLang}"][data-localized-role="target"]`);
-        if (!englishInput || !localizedInput || !state.booking?.id || targetLang === "en") return;
+        if (!englishInput || !localizedInput || !state.booking?.id || targetLang === editingLang) return;
         const sourceInput = direction === "target-to-source" ? localizedInput : englishInput;
         const destinationInput = direction === "target-to-source" ? englishInput : localizedInput;
-        const sourceLang = direction === "target-to-source" ? targetLang : "en";
-        const destinationLang = direction === "target-to-source" ? "en" : targetLang;
+        const sourceLang = direction === "target-to-source" ? targetLang : editingLang;
+        const destinationLang = direction === "target-to-source" ? editingLang : targetLang;
         const sourceText = String(sourceInput?.value || "").trim();
         if (!sourceText) return;
-        const targetOption = bookingContentLanguageOption(targetLang);
+        const targetOption = bookingContentLanguageOption(destinationLang);
         setOfferStatus(
-          direction === "target-to-source"
-            ? bookingT("booking.translation.translating_field_to_english", "Translating field to English...")
-            : bookingT("booking.translation.translating_field_from_english", "Translating field from English...")
+          bookingT("booking.translation.translating_field_from_language", "Translating field from {language}...", {
+            language: bookingContentLanguageOption(sourceLang).label
+          })
         );
         let translated = "";
         try {
@@ -1508,7 +1510,7 @@ export function createBookingOfferComponentsModule(ctx) {
         setOfferSaveEnabled(true);
         setOfferStatus(
           direction === "target-to-source"
-            ? bookingT("booking.translation.field_translated_to_english", "Field translated to English.")
+            ? bookingT("booking.translation.field_translated_to_language", "Field translated to {lang}.", { lang: targetOption.shortLabel })
             : bookingT("booking.translation.field_translated_to_customer_language", "Field translated to {lang}.", { lang: targetOption.shortLabel })
         );
       });
@@ -1749,7 +1751,7 @@ export function createBookingOfferComponentsModule(ctx) {
 
   function collectOfferComponents({ throwOnError = true } = {}) {
     const currency = normalizeCurrencyCode(state.offerDraft.currency || state.booking?.preferred_currency || "USD");
-    const rows = Array.from(document.querySelectorAll('[data-offer-component-details][data-localized-lang="en"][data-localized-role="source"]'));
+    const rows = Array.from(document.querySelectorAll('[data-offer-component-details][data-localized-role="source"]'));
     const components = [];
     for (const input of rows) {
       const index = Number(input.getAttribute("data-offer-component-details"));
@@ -1759,9 +1761,10 @@ export function createBookingOfferComponentsModule(ctx) {
           || fallbackComponent?.category
           || "OTHER"
       );
-      const englishDetails = String(document.querySelector(`[data-offer-component-details="${index}"][data-localized-lang="en"][data-localized-role="source"]`)?.value || "").trim();
+      const sourceDetails = String(document.querySelector(`[data-offer-component-details="${index}"][data-localized-role="source"]`)?.value || "").trim();
+      const sourceLang = bookingEditingLang();
       const targetLang = bookingContentLang();
-      const localizedDetails = targetLang === "en"
+      const localizedDetails = targetLang === sourceLang
         ? ""
         : String(document.querySelector(`[data-offer-component-details="${index}"][data-localized-lang="${targetLang}"][data-localized-role="target"]`)?.value || "").trim();
       const quantityInput = document.querySelector(`[data-offer-component-quantity="${index}"]`);
@@ -1774,7 +1777,7 @@ export function createBookingOfferComponentsModule(ctx) {
       const unitAmount = deriveUnitNetAmountFromGross(displayedGrossAmount, taxRateBasisPoints);
       const label = String(offerCategoryLabel(category)).trim();
       const notes = String(fallbackComponent?.notes || "").trim();
-      const detailsPayload = buildDualLocalizedPayload(englishDetails, localizedDetails, targetLang);
+      const detailsPayload = buildDualLocalizedPayload(sourceDetails, localizedDetails, targetLang, sourceLang);
       if (!category) {
         if (throwOnError) throw new Error(bookingT("booking.offer.error.component_category", "Offer component {index} requires a category.", { index: index + 1 }));
         continue;

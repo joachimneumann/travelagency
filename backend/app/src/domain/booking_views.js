@@ -1,6 +1,9 @@
 import { normalizeText } from "../lib/text.js";
 import { getBookingPersons, getBookingPrimaryContact } from "../lib/booking_persons.js";
-import { normalizeBookingContentLang } from "./booking_content_i18n.js";
+import {
+  normalizeBookingContentLang,
+  normalizeBookingEditingLang
+} from "./booking_content_i18n.js";
 import { resolveBookingMilestoneState } from "./booking_milestones.js";
 import { isSuspiciousSentinelString } from "./booking_names.js";
 import {
@@ -441,6 +444,7 @@ export function createBookingViewHelpers({
       };
     }
     const acceptedRecord = listMode ? undefined : await buildAcceptedRecordReadModel();
+    const editingLanguage = normalizeBookingEditingLang(normalizedBooking?.editing_language || "en");
     return {
       ...normalizedBooking,
       stage: milestoneState.stage,
@@ -464,18 +468,25 @@ export function createBookingViewHelpers({
         || normalizedBooking?.web_form_submission?.preferred_language
         || "en"
       ),
+      editing_language: editingLanguage,
       preferred_currency: preferredCurrency,
-      travel_plan: buildBookingTravelPlanReadModel(normalizedBooking.travel_plan, normalizedBooking.offer, { lang }),
-      travel_plan_translation_status: buildTravelPlanTranslationStatus(normalizedBooking.travel_plan, lang),
+      travel_plan: buildBookingTravelPlanReadModel(normalizedBooking.travel_plan, normalizedBooking.offer, {
+        lang,
+        sourceLang: editingLanguage
+      }),
+      travel_plan_translation_status: buildTravelPlanTranslationStatus(normalizedBooking.travel_plan, lang, editingLanguage),
       pricing: await buildBookingPricingReadModel(normalizedBooking.pricing, pricingDisplayCurrency),
-      offer: await buildBookingOfferReadModel(normalizedBooking.offer, offerDisplayCurrency, { lang }),
+      offer: await buildBookingOfferReadModel(normalizedBooking.offer, offerDisplayCurrency, {
+        lang,
+        sourceLang: editingLanguage
+      }),
       ...(acceptedRecord ? { accepted_record: acceptedRecord } : {}),
       travel_plan_pdfs: travelPlanPdfs.map((item) => ({
         ...item,
         sent_to_customer: item?.sent_to_customer === true,
         pdf_url: `/api/v1/bookings/${encodeURIComponent(normalizedBooking.id)}/travel-plan/pdfs/${encodeURIComponent(item.id)}/pdf`
       })),
-      offer_translation_status: buildOfferTranslationStatus(normalizedBooking.offer, lang),
+      offer_translation_status: buildOfferTranslationStatus(normalizedBooking.offer, lang, editingLanguage),
       generated_offers: generatedOffers,
       generated_offer_email_enabled: isGeneratedOfferEmailEnabled(),
       translation_enabled: Boolean(translationEnabled)

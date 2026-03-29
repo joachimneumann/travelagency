@@ -318,6 +318,23 @@ export function bookingCustomerLanguageRequest({ baseURL = '', params = {}, quer
   };
 }
 
+export function bookingEditingLanguagePath(params = {}) {
+  return buildPath("/api/v1/bookings/{booking_id}/editing-language", params);
+}
+
+export function bookingEditingLanguageRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = bookingEditingLanguagePath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "booking_editing_language",
+    method: "PATCH",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
 export function bookingSourcePath(params = {}) {
   return buildPath("/api/v1/bookings/{booking_id}/source", params);
 }

@@ -15,6 +15,7 @@ export const CONTRACT_ROUTE_DEFINITIONS = Object.freeze([
   { method: "GET", path: "/api/v1/bookings/{booking_id}/chat", handlerKey: "handleListBookingChatEvents" },
   { method: "PATCH", path: "/api/v1/bookings/{booking_id}/name", handlerKey: "handlePatchBookingName" },
   { method: "PATCH", path: "/api/v1/bookings/{booking_id}/customer-language", handlerKey: "handlePatchBookingCustomerLanguage" },
+  { method: "PATCH", path: "/api/v1/bookings/{booking_id}/editing-language", handlerKey: "handlePatchBookingEditingLanguage" },
   { method: "PATCH", path: "/api/v1/bookings/{booking_id}/source", handlerKey: "handlePatchBookingSource" },
   { method: "POST", path: "/api/v1/bookings/{booking_id}/milestone-actions", handlerKey: "handlePostBookingMilestoneAction" },
   { method: "POST", path: "/api/v1/bookings/{booking_id}/translate-fields", handlerKey: "handleTranslateBookingFields" },
@@ -103,11 +104,19 @@ function pathTemplateToPattern(pathTemplate) {
   return new RegExp(`^${source}$`);
 }
 
+function resolveRouteHandler(route, handlers) {
+  const handler = handlers[route.handlerKey];
+  if (typeof handler !== "function") {
+    throw new Error(`Missing route handler for ${route.method} ${route.path || route.pattern}: ${route.handlerKey}`);
+  }
+  return handler;
+}
+
 function materializeContractRoutes(handlers) {
   return CONTRACT_ROUTE_DEFINITIONS.map((route) => ({
     method: route.method,
     pattern: pathTemplateToPattern(route.path),
-    handler: handlers[route.handlerKey]
+    handler: resolveRouteHandler(route, handlers)
   }));
 }
 
@@ -115,7 +124,7 @@ function materializeOperationalRoutes(handlers) {
   return OPERATIONAL_ROUTE_DEFINITIONS.map((route) => ({
     method: route.method,
     pattern: route.pattern,
-    handler: handlers[route.handlerKey]
+    handler: resolveRouteHandler(route, handlers)
   }));
 }
 

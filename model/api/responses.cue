@@ -138,7 +138,7 @@ import (
 	day_number?:          >0 & int
 	service_id:              common.#Identifier
 	service_kind?:           enums.#TravelPlanServiceKind
-	title:                string
+	title?:               string
 	details?:             string
 	location?:            string
 	overnight_location?:  string
@@ -355,6 +355,7 @@ import (
 	number_of_travelers?:         >=0 & int
 	preferred_currency?:          enums.#CurrencyCode
 	customer_language?:           enums.#LanguageCode
+	editing_language?:            "en" | "vi"
 	confirmed_generated_offer_id?: common.#Identifier
 	accepted_record?:             #BookingAcceptedRecordReadModel
 	notes?:                       string

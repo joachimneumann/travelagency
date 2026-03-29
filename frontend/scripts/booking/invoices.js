@@ -12,7 +12,7 @@ import {
   parseMoneyInputValue,
   setSelectValue
 } from "./pricing.js";
-import { bookingContentLang, bookingT } from "./i18n.js";
+import { bookingContentLang, bookingEditingLang, bookingT } from "./i18n.js";
 import {
   buildDualLocalizedPayload,
   renderLocalizedSplitField,
@@ -100,12 +100,12 @@ export function createBookingInvoicesModule(ctx) {
 
   function refreshInvoiceInputRefs() {
     const targetLang = bookingContentLang();
-    els.invoice_title_input = document.querySelector('[data-invoice-localized-field="title"][data-localized-lang="en"][data-localized-role="source"]');
+    els.invoice_title_input = document.querySelector('[data-invoice-localized-field="title"][data-localized-role="source"]');
     els.invoice_title_localized_input = document.querySelector(`[data-invoice-localized-field="title"][data-localized-lang="${targetLang}"][data-localized-role="target"]`);
-    els.invoice_components_input = document.querySelector('[data-invoice-localized-field="components"][data-localized-lang="en"][data-localized-role="source"]');
+    els.invoice_components_input = document.querySelector('[data-invoice-localized-field="components"][data-localized-role="source"]');
     els.invoice_components_localized_input = document.querySelector(`[data-invoice-localized-field="components"][data-localized-lang="${targetLang}"][data-localized-role="target"]`);
     els.invoice_components_label = document.getElementById("invoice_components_label");
-    els.invoice_notes_input = document.querySelector('[data-invoice-localized-field="notes"][data-localized-lang="en"][data-localized-role="source"]');
+    els.invoice_notes_input = document.querySelector('[data-invoice-localized-field="notes"][data-localized-role="source"]');
     els.invoice_notes_localized_input = document.querySelector(`[data-invoice-localized-field="notes"][data-localized-lang="${targetLang}"][data-localized-role="target"]`);
   }
 
@@ -136,7 +136,7 @@ export function createBookingInvoicesModule(ctx) {
         targetLang,
         disabled: !state.permissions.canEditBooking,
         translateEnabled: Boolean(state.booking?.translation_enabled),
-        englishValue: resolveLocalizedEditorText(invoice?.title_i18n ?? invoice?.title, "en", ""),
+        sourceValue: resolveLocalizedEditorText(invoice?.title_i18n ?? invoice?.title, bookingEditingLang(), ""),
         localizedValue: resolveLocalizedEditorText(invoice?.title_i18n ?? invoice?.title, targetLang, ""),
         englishPlaceholder: bookingT("booking.invoice_title_placeholder", "Invoice title"),
         localizedPlaceholder: bookingT("booking.invoice_title_placeholder", "Invoice title"),
@@ -160,7 +160,7 @@ export function createBookingInvoicesModule(ctx) {
         targetLang,
         disabled: !state.permissions.canEditBooking,
         translateEnabled: Boolean(state.booking?.translation_enabled),
-        englishValue: invoiceComponentsToText(invoice?.components || [], currency, "en"),
+        sourceValue: invoiceComponentsToText(invoice?.components || [], currency, bookingEditingLang()),
         localizedValue: invoiceComponentsToText(invoice?.components || [], currency, targetLang),
         englishPlaceholder: bookingT("booking.invoice_components_placeholder", "Example: Custom Vietnam route | 2 | 245000"),
         localizedPlaceholder: bookingT("booking.invoice_components_placeholder", "Example: Custom Vietnam route | 2 | 245000"),
@@ -180,7 +180,7 @@ export function createBookingInvoicesModule(ctx) {
         targetLang,
         disabled: !state.permissions.canEditBooking,
         translateEnabled: Boolean(state.booking?.translation_enabled),
-        englishValue: resolveLocalizedEditorText(invoice?.notes_i18n ?? invoice?.notes, "en", ""),
+        sourceValue: resolveLocalizedEditorText(invoice?.notes_i18n ?? invoice?.notes, bookingEditingLang(), ""),
         localizedValue: resolveLocalizedEditorText(invoice?.notes_i18n ?? invoice?.notes, targetLang, ""),
         commonData: { "invoice-localized-field": "notes" },
         translatePayload: { "invoice-translate-field": "notes" }
@@ -247,7 +247,7 @@ export function createBookingInvoicesModule(ctx) {
     }
     els.invoice_panel?.querySelectorAll('[data-invoice-localized-field]').forEach((el) => {
       const isTargetPane = el.getAttribute("data-localized-role") === "target";
-      el.disabled = disabled || (isTargetPane && bookingContentLang() === "en");
+      el.disabled = disabled || (isTargetPane && bookingContentLang() === bookingEditingLang());
     });
   }
 
@@ -436,23 +436,25 @@ export function createBookingInvoicesModule(ctx) {
 
   function collectInvoicePayload() {
     const currency = normalizeCurrencyCode(els.invoice_currency_input?.value || "USD");
+    const sourceLang = bookingEditingLang();
     const englishTitle = String(els.invoice_title_input?.value || "").trim();
-    const localizedTitle = bookingContentLang() === "en"
+    const localizedTitle = bookingContentLang() === sourceLang
       ? ""
       : String(els.invoice_title_localized_input?.value || "").trim();
     const englishNotes = String(els.invoice_notes_input?.value || "").trim();
-    const localizedNotes = bookingContentLang() === "en"
+    const localizedNotes = bookingContentLang() === sourceLang
       ? ""
       : String(els.invoice_notes_localized_input?.value || "").trim();
     const englishComponents = parseInvoiceComponentsText(els.invoice_components_input?.value || "", currency);
     const localizedDescriptions = parseLocalizedInvoiceDescriptions(els.invoice_components_localized_input?.value || "");
-    const titlePayload = buildDualLocalizedPayload(englishTitle, localizedTitle, bookingContentLang());
-    const notesPayload = buildDualLocalizedPayload(englishNotes, localizedNotes, bookingContentLang());
+    const titlePayload = buildDualLocalizedPayload(englishTitle, localizedTitle, bookingContentLang(), sourceLang);
+    const notesPayload = buildDualLocalizedPayload(englishNotes, localizedNotes, bookingContentLang(), sourceLang);
     const components = englishComponents.map((component, index) => {
       const descriptionPayload = buildDualLocalizedPayload(
         component.description,
         localizedDescriptions[index] || "",
-        bookingContentLang()
+        bookingContentLang(),
+        sourceLang
       );
       return {
         description: descriptionPayload.text,
@@ -565,7 +567,7 @@ export function createBookingInvoicesModule(ctx) {
   }
 
   async function translateInvoiceField(button) {
-    if (!state.permissions.canEditBooking || !state.booking?.id || bookingContentLang() === "en") return;
+    if (!state.permissions.canEditBooking || !state.booking?.id || bookingContentLang() === bookingEditingLang()) return;
     const field = String(button.getAttribute("data-invoice-translate-field") || "").trim();
     if (!field) return;
 
@@ -582,12 +584,13 @@ export function createBookingInvoicesModule(ctx) {
       const entries = Object.fromEntries(
         englishComponents.map((component, index) => [`line_${index}`, component.description])
       );
-      setInvoiceStatus(bookingT("booking.translation.translating_field", "Translating field from English..."));
+      setInvoiceStatus(bookingT("booking.translation.translating_field", "Translating field from editing language..."));
       const translated = await requestBookingFieldTranslation({
         bookingId: state.booking.id,
         entries,
         fetchBookingMutation,
         actor: state.user || null,
+        sourceLang: bookingEditingLang(),
         targetLang: bookingContentLang()
       });
       if (!translated) {
@@ -601,21 +604,22 @@ export function createBookingInvoicesModule(ctx) {
         currency
       );
       updateInvoiceDirtyState();
-      setInvoiceStatus(bookingT("booking.translation.field_translated", "Field translated from English."));
+      setInvoiceStatus(bookingT("booking.translation.field_translated", "Field translated from editing language."));
       return;
     }
 
     const editor = button.closest(".localized-editor");
-    const englishInput = editor?.querySelector('[data-localized-lang="en"][data-localized-role="source"]');
+    const englishInput = editor?.querySelector('[data-localized-role="source"]');
     const localizedInput = editor?.querySelector(`[data-localized-lang="${bookingContentLang()}"][data-localized-role="target"]`);
     const englishText = String(englishInput?.value || "").trim();
     if (!englishText || !localizedInput) return;
-    setInvoiceStatus(bookingT("booking.translation.translating_field", "Translating field from English..."));
+    setInvoiceStatus(bookingT("booking.translation.translating_field", "Translating field from editing language..."));
     const translated = await requestBookingFieldTranslation({
       bookingId: state.booking.id,
       entries: { field: englishText },
       fetchBookingMutation,
       actor: state.user || null,
+      sourceLang: bookingEditingLang(),
       targetLang: bookingContentLang()
     });
     if (!translated?.field) {
@@ -624,7 +628,7 @@ export function createBookingInvoicesModule(ctx) {
     }
     localizedInput.value = translated.field;
     updateInvoiceDirtyState();
-    setInvoiceStatus(bookingT("booking.translation.field_translated", "Field translated from English."));
+    setInvoiceStatus(bookingT("booking.translation.field_translated", "Field translated from editing language."));
   }
 
   if (els.invoice_panel && els.invoice_panel.dataset.localizedTranslateBound !== "true") {

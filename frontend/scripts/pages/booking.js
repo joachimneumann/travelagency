@@ -49,6 +49,7 @@ import { wireAuthLogoutLink } from "../shared/auth.js";
 import {
   bookingContentLang,
   normalizeBookingContentLang,
+  setBookingEditingLang,
   setBookingContentLang
 } from "../booking/i18n.js";
 
@@ -222,7 +223,9 @@ const state = {
 };
 
 state.dirty = { core: false, note: false, persons: false, travel_plan: false, offer: false, payment_terms: false, pricing: false, invoice: false };
+state.dirtyDiagnostics = {};
 state.originalTravelPlanSnapshot = "";
+state.originalTravelPlanState = null;
 state.originalInvoiceSnapshot = "";
 state.pricingDepositReceiptArmed = false;
 state.pageSaveInFlight = false;
@@ -230,6 +233,7 @@ state.pageDiscardInFlight = false;
 state.pageDirtyBarStatus = "";
 state.pageSaveActionError = "";
 state.pendingSavedCustomerLanguage = "";
+state.lastMutationError = null;
 
 let bookingWhatsApp = null;
 
@@ -327,6 +331,9 @@ const els = {
   contentLanguageField: document.getElementById("booking_content_language_field"),
   contentLanguageMenuMount: document.getElementById("booking_content_language_menu_mount"),
   contentLanguageSelect: document.getElementById("booking_content_language_select"),
+  editingLanguageField: document.getElementById("booking_editing_language_field"),
+  editingLanguageMenuMount: document.getElementById("booking_editing_language_menu_mount"),
+  editingLanguageSelect: document.getElementById("booking_editing_language_select"),
   lastActionDetail: document.getElementById("booking_last_action_detail"),
   milestoneActionsBefore: document.getElementById("booking_milestone_actions_before"),
   milestoneActionsAfter: document.getElementById("booking_milestone_actions_after"),
@@ -447,12 +454,41 @@ async function waitForBackendNavRefs(timeoutMs = 1500) {
   refreshBackendNavRefs();
 }
 
-function setBookingSectionDirty(sectionKey, isDirty) {
-  state.dirty[sectionKey] = Boolean(isDirty);
+function currentDirtyDiagnostics() {
+  return Object.fromEntries(
+    Object.entries(state.dirty)
+      .filter(([, isDirty]) => Boolean(isDirty))
+      .map(([sectionKey]) => [sectionKey, state.dirtyDiagnostics?.[sectionKey] || null])
+  );
+}
+
+function setBookingSectionDirty(sectionKey, isDirty, diagnostic = undefined) {
+  const previousDirty = Boolean(state.dirty[sectionKey]);
+  const nextDirty = Boolean(isDirty);
+  if (!state.dirtyDiagnostics || typeof state.dirtyDiagnostics !== "object") {
+    state.dirtyDiagnostics = {};
+  }
+  if (!nextDirty) {
+    delete state.dirtyDiagnostics[sectionKey];
+  } else if (diagnostic && typeof diagnostic === "object") {
+    state.dirtyDiagnostics[sectionKey] = diagnostic;
+  } else if (diagnostic === null) {
+    delete state.dirtyDiagnostics[sectionKey];
+  }
+  state.dirty[sectionKey] = nextDirty;
   if (hasUnsavedBookingChanges()) {
     state.pageDirtyBarStatus = "";
   }
   state.pageSaveActionError = "";
+  if (previousDirty !== nextDirty) {
+    console.info("[booking-dirty] Section dirty state changed.", {
+      booking_id: state.id || null,
+      section: sectionKey,
+      dirty: nextDirty,
+      diagnostic: nextDirty ? state.dirtyDiagnostics?.[sectionKey] || null : null,
+      dirty_sections: Object.keys(state.dirty).filter((key) => Boolean(state.dirty[key]))
+    });
+  }
   updatePageDirtyBar();
   updateCleanStateActionAvailability();
   pricingModule.refreshDepositReceiptActionState?.();
@@ -551,9 +587,13 @@ const bookingLanguageController = createBookingPageLanguageController({
 });
 const {
   handleContentLanguageChange,
+  handleEditingLanguageChange,
   populateContentLanguageSelect,
+  populateEditingLanguageSelect,
   resolveSubmissionCustomerLanguage,
+  resolveSubmissionEditingLanguage,
   syncContentLanguageSelector,
+  syncEditingLanguageSelector,
   updateContentLangInUrl,
   waitForBackendI18n,
   withBackendLang,
@@ -616,6 +656,7 @@ async function init() {
     delete window.__BOOKING_CONTENT_LANG;
     delete document.documentElement.dataset.bookingContentLang;
   }
+  setBookingEditingLang(resolveSubmissionEditingLanguage(state.booking));
   const backHref = withBackendLang("/backend.html", { section: "bookings" });
 
   if (els.homeLink) els.homeLink.href = backHref;
@@ -644,6 +685,7 @@ async function init() {
   populateCurrencySelectFromModule(els.invoice_currency_input);
   renderOfferCurrencyMenu(els.offer_currency_input, els.offerCurrencyMenuMount);
   populateContentLanguageSelect();
+  populateEditingLanguageSelect();
   updatePageDirtyBar();
 
   if (els.heroCopyBtn) els.heroCopyBtn.addEventListener("click", copyHeroIdToClipboard);
@@ -671,6 +713,9 @@ async function init() {
   if (els.referralStaffSelect) els.referralStaffSelect.addEventListener("change", updateCoreDirtyState);
   if (els.contentLanguageSelect) els.contentLanguageSelect.addEventListener("change", () => {
     void handleContentLanguageChange();
+  });
+  if (els.editingLanguageSelect) els.editingLanguageSelect.addEventListener("change", () => {
+    void handleEditingLanguageChange();
   });
   [els.milestoneActionsBefore, els.milestoneActionsAfter].filter(Boolean).forEach((mount) => {
     mount.addEventListener("click", (event) => {
@@ -816,6 +861,13 @@ async function loadBookingPage() {
   const result = await bookingPageDataController.loadBookingPage();
   updatePageDirtyBar();
   updateCleanStateActionAvailability();
+  if (result && hasUnsavedBookingChanges()) {
+    console.warn("[booking-dirty] Booking page loaded with unsaved state after refresh.", {
+      booking_id: state.id || null,
+      dirty_sections: dirtySectionLabels(),
+      diagnostics: currentDirtyDiagnostics()
+    });
+  }
   return result;
 }
 
@@ -846,6 +898,8 @@ function copyHeroIdToClipboard() {
 
 function renderBookingData() {
   const result = coreModule.renderBookingData();
+  syncContentLanguageSelector();
+  syncEditingLanguageSelector();
   updateCleanStateActionAvailability();
   return result;
 }
@@ -1615,6 +1669,7 @@ const coreModule = createBookingCoreModule({
   setPendingSavedCustomerLanguage: (lang) => {
     state.pendingSavedCustomerLanguage = normalizeBookingContentLang(lang || "");
   },
+  setStatus,
   rerenderWhatsApp: (booking) => bookingWhatsApp?.rerender(booking),
   renderPersonsEditor: (...args) => personsModule.renderPersonsEditor(...args)
 });
@@ -1636,6 +1691,7 @@ const bookingPageDataController = createBookingPageDataController({
   resolveSubmissionCustomerLanguage,
   updateContentLangInUrl,
   syncContentLanguageSelector,
+  syncEditingLanguageSelector,
   withBookingContentLang,
   applyBookingPayload,
   renderBookingHeader,
