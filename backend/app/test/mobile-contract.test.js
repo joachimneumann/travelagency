@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { Readable, Writable } from "node:stream";
-import { mkdtemp, mkdir, readFile, stat, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { spawnSync } from "node:child_process";
 import os from "node:os";
 import path from "node:path";
@@ -131,6 +131,11 @@ global.fetch = async function mockedFetch(input, init = {}) {
 
   return new Response("not mocked", { status: 404 });
 };
+
+test.after(async () => {
+  global.fetch = originalFetch;
+  await rm(TEST_DATA_DIR, { recursive: true, force: true });
+});
 
 const contractMeta = JSON.parse(await readFile(CONTRACT_META_PATH, "utf8"));
 const { createBackendHandler } = await import("../src/server.js");
@@ -333,6 +338,37 @@ async function createPublicBooking(overrides = {}) {
   });
   assert.equal(result.status, 201);
   return result.body.booking;
+}
+
+async function deleteBookingForTest(bookingId) {
+  if (!bookingId) return;
+  const detailResult = await requestJson(
+    endpointPath("booking_detail").replace("{booking_id}", bookingId),
+    apiHeaders()
+  );
+  if (detailResult.status !== 200) return;
+
+  const deleteResult = await requestJson(
+    endpointPath("booking_delete").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "DELETE",
+      body: {
+        expected_core_revision: detailResult.body.booking.core_revision
+      }
+    }
+  );
+  assert.equal(deleteResult.status, 200);
+}
+
+async function deleteTourForTest(tourId) {
+  if (!tourId) return;
+  const deleteResult = await requestJson(
+    endpointPath("tour_delete").replace("{tour_id}", tourId),
+    apiHeaders("atp_tour_editor", "tour-editor", "kc-tour-editor"),
+    { method: "DELETE" }
+  );
+  assert.equal(deleteResult.status, 200);
 }
 
 function assertBookingShape(booking) {
@@ -5400,42 +5436,50 @@ test("tour editor can manage tours while staff cannot access tour endpoints", as
 });
 
 test("tour delete is blocked while bookings still reference the tour", async () => {
-  const createResult = await requestJson(
-    endpointPath("tour_create"),
-    apiHeaders("atp_tour_editor", "tour-editor", "kc-tour-editor"),
-    {
-      method: "POST",
-      body: {
-        title: "Tour delete guard test",
-        destinations: ["vietnam"],
-        styles: ["culture"],
-        short_description: "Tour kept by booking reference",
-        highlights: ["Still referenced"]
+  let tourId = "";
+  let bookingId = "";
+  try {
+    const createResult = await requestJson(
+      endpointPath("tour_create"),
+      apiHeaders("atp_tour_editor", "tour-editor", "kc-tour-editor"),
+      {
+        method: "POST",
+        body: {
+          title: "Tour delete guard test",
+          destinations: ["vietnam"],
+          styles: ["culture"],
+          short_description: "Tour kept by booking reference",
+          highlights: ["Still referenced"]
+        }
       }
-    }
-  );
-  assert.equal(createResult.status, 201);
-  const tourId = createResult.body.tour.id;
+    );
+    assert.equal(createResult.status, 201);
+    tourId = createResult.body.tour.id;
 
-  const booking = await createPublicBooking({
-    tour_id: tourId,
-    notes: "This booking references a created tour."
-  });
-  assert.equal(booking.web_form_submission?.tour_id, tourId);
+    const booking = await createPublicBooking({
+      tour_id: tourId,
+      notes: "This booking references a created tour."
+    });
+    bookingId = booking.id;
+    assert.equal(booking.web_form_submission?.tour_id, tourId);
 
-  const deleteResult = await requestJson(
-    endpointPath("tour_delete").replace("{tour_id}", tourId),
-    apiHeaders("atp_tour_editor", "tour-editor", "kc-tour-editor"),
-    { method: "DELETE" }
-  );
-  assert.equal(deleteResult.status, 409);
-  assert.match(String(deleteResult.body.error || ""), /referenced by bookings/i);
+    const deleteResult = await requestJson(
+      endpointPath("tour_delete").replace("{tour_id}", tourId),
+      apiHeaders("atp_tour_editor", "tour-editor", "kc-tour-editor"),
+      { method: "DELETE" }
+    );
+    assert.equal(deleteResult.status, 409);
+    assert.match(String(deleteResult.body.error || ""), /referenced by bookings/i);
 
-  const detailResult = await requestJson(
-    endpointPath("tour_detail").replace("{tour_id}", tourId),
-    apiHeaders("atp_tour_editor", "tour-editor", "kc-tour-editor")
-  );
-  assert.equal(detailResult.status, 200);
+    const detailResult = await requestJson(
+      endpointPath("tour_detail").replace("{tour_id}", tourId),
+      apiHeaders("atp_tour_editor", "tour-editor", "kc-tour-editor")
+    );
+    assert.equal(detailResult.status, 200);
+  } finally {
+    await deleteBookingForTest(bookingId);
+    await deleteTourForTest(tourId);
+  }
 });
 
 test("accountant is read-only everywhere", async () => {
