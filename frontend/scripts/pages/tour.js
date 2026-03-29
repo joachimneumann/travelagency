@@ -73,7 +73,7 @@ function withApiLang(pathname, params = {}) {
 
 const qs = new URLSearchParams(window.location.search);
 const apiBase = (window.ASIATRAVELPLAN_API_BASE || "").replace(/\/$/, "");
-const apiOrigin = apiBase || window.location.origin;
+const apiOrigin = new URL(apiBase || "/", window.location.origin).toString().replace(/\/$/, "");
 
 function normalizeText(value) {
   return String(value ?? "").trim();
