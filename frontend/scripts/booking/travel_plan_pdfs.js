@@ -2,7 +2,7 @@ import {
   bookingTravelPlanPdfDeleteRequest,
   bookingTravelPlanPdfUpdateRequest
 } from "../../Generated/API/generated_APIRequestFactory.js";
-import { bookingT } from "./i18n.js";
+import { bookingLanguageQuery, bookingT } from "./i18n.js";
 
 function pageCountLabel(pageCount) {
   const count = Number(pageCount) || 0;
@@ -26,6 +26,14 @@ export function createBookingTravelPlanPdfsModule(deps) {
     ensureTravelPlanReadyForMutation,
     finalizeTravelPlanMutation
   } = deps;
+
+  function withBookingLanguageQuery(urlLike) {
+    const url = new URL(urlLike, window.location.origin);
+    const query = bookingLanguageQuery();
+    url.searchParams.set("content_lang", query.content_lang);
+    url.searchParams.set("source_lang", query.source_lang);
+    return url.toString();
+  }
 
   function renderTravelPlanPdfsTable() {
     const pdfs = Array.isArray(state.booking?.travel_plan_pdfs) ? state.booking.travel_plan_pdfs : [];
@@ -51,7 +59,7 @@ export function createBookingTravelPlanPdfsModule(deps) {
                       <td class="travel-plan-existing-pdfs-col-document">
                         <a
                           class="travel-plan-existing-pdfs__link"
-                          href="${escapeHtml(pdf.pdf_url || "")}"
+                          href="${escapeHtml(withBookingLanguageQuery(pdf.pdf_url || ""))}"
                           target="_blank"
                           rel="noopener"
                         >${escapeHtml(pdf.filename || bookingT("booking.travel_plan.travel_plan_pdf", "Travel plan PDF"))}</a>

@@ -96,6 +96,54 @@ const QUALIFICATION_LANGUAGE_OPTIONS = Object.freeze(
     .filter((entry) => entry.value)
 );
 
+function currentStaffSourceLang() {
+  return normalizeCatalogLanguageCode(
+    typeof window.backendI18n?.getLang === "function" ? window.backendI18n.getLang() : "en",
+    { fallback: "en" }
+  );
+}
+
+function qualificationLanguageOptionsForEditor() {
+  const options = QUALIFICATION_LANGUAGE_OPTIONS.length
+    ? [...QUALIFICATION_LANGUAGE_OPTIONS]
+    : [{ value: "en", label: "EN", direction: "ltr" }];
+  const byCode = new Map(options.map((option) => [normalizeText(option.value).toLowerCase(), option]));
+  const sourceLang = currentStaffSourceLang();
+  const prioritized = [];
+  const primary = byCode.get(sourceLang);
+  if (primary) prioritized.push(primary);
+  const pairedLang = sourceLang === "vi" ? "en" : "vi";
+  const paired = byCode.get(pairedLang);
+  if (paired && !prioritized.some((option) => option.value === paired.value)) {
+    prioritized.push(paired);
+  }
+  const remaining = options
+    .filter((option) => !prioritized.some((entry) => entry.value === option.value))
+    .sort((left, right) => String(left.label || "").localeCompare(String(right.label || ""), "en", { sensitivity: "base" }));
+  return [...prioritized, ...remaining];
+}
+
+function currentStaffSourceOption() {
+  return qualificationLanguageOptionsForEditor()[0] || { value: "en", label: "EN", direction: "ltr" };
+}
+
+function translateAllButtonLabel() {
+  return backendT("backend.users.translation.translate_all", "{source} → ALL", {
+    source: currentStaffSourceOption().label
+  });
+}
+
+function translateButtonLabel(targetOption) {
+  return `${currentStaffSourceOption().label} → ${normalizeText(targetOption?.label) || normalizeText(targetOption?.value).toUpperCase()}`;
+}
+
+function translationTargetLanguages() {
+  const sourceLang = currentStaffSourceLang();
+  return qualificationLanguageOptionsForEditor()
+    .map((option) => normalizeText(option?.value).toLowerCase())
+    .filter((lang) => lang && lang !== sourceLang);
+}
+
 const LANGUAGE_LABEL_BY_VALUE = new Map(
   (LANGUAGE_OPTIONS.length ? LANGUAGE_OPTIONS : enumOptionsFor("LanguageCode"))
     .map((option) => [normalizeText(option?.value).toLowerCase(), normalizeText(option?.label) || normalizeText(option?.value).toUpperCase()])
@@ -704,18 +752,17 @@ function renderDestinationChecklist() {
 
 function renderPositionEditor() {
   if (!els.staffEditorPosition) return;
-  const options = QUALIFICATION_LANGUAGE_OPTIONS.length
-    ? QUALIFICATION_LANGUAGE_OPTIONS
-    : [{ value: "en", label: "EN", direction: "ltr" }];
+  const options = qualificationLanguageOptionsForEditor();
   const current = state.editor?.positionByLang && typeof state.editor.positionByLang === "object"
     ? state.editor.positionByLang
     : {};
+  const sourceLang = currentStaffSourceLang();
   const rows = options
     .map((option) => {
       const lang = normalizeText(option.value).toLowerCase();
-      const buttonHtml = lang === "en"
-        ? `<button type="button" class="btn btn-ghost tour-localized-group__translate-all-btn" data-staff-translate-all="position">${escapeHtml(backendT("backend.users.translation.translate_all", "EN → ALL"))}</button>`
-        : `<button type="button" class="btn btn-ghost tour-localized-group__translate-btn" data-staff-translate-field="position" data-target-lang="${escapeHtml(lang)}">EN → ${escapeHtml(option.label)}</button>`;
+      const buttonHtml = lang === sourceLang
+        ? `<button type="button" class="btn btn-ghost tour-localized-group__translate-all-btn" data-staff-translate-all="position">${escapeHtml(translateAllButtonLabel())}</button>`
+        : `<button type="button" class="btn btn-ghost tour-localized-group__translate-btn" data-staff-translate-field="position" data-target-lang="${escapeHtml(lang)}">${escapeHtml(translateButtonLabel(option))}</button>`;
       return `<div class="tour-localized-group__row">
         <div class="tour-localized-group__code-cell">${buttonHtml}</div>
         <div class="tour-localized-group__field">
@@ -729,18 +776,17 @@ function renderPositionEditor() {
 
 function renderDescriptionEditor() {
   if (!els.staffEditorDescription) return;
-  const options = QUALIFICATION_LANGUAGE_OPTIONS.length
-    ? QUALIFICATION_LANGUAGE_OPTIONS
-    : [{ value: "en", label: "EN", direction: "ltr" }];
+  const options = qualificationLanguageOptionsForEditor();
   const current = state.editor?.descriptionByLang && typeof state.editor.descriptionByLang === "object"
     ? state.editor.descriptionByLang
     : {};
+  const sourceLang = currentStaffSourceLang();
   const rows = options
     .map((option) => {
       const lang = normalizeText(option.value).toLowerCase();
-      const buttonHtml = lang === "en"
-        ? `<button type="button" class="btn btn-ghost tour-localized-group__translate-all-btn" data-staff-translate-all="description">${escapeHtml(backendT("backend.users.translation.translate_all", "EN → ALL"))}</button>`
-        : `<button type="button" class="btn btn-ghost tour-localized-group__translate-btn" data-staff-translate-field="description" data-target-lang="${escapeHtml(lang)}">EN → ${escapeHtml(option.label)}</button>`;
+      const buttonHtml = lang === sourceLang
+        ? `<button type="button" class="btn btn-ghost tour-localized-group__translate-all-btn" data-staff-translate-all="description">${escapeHtml(translateAllButtonLabel())}</button>`
+        : `<button type="button" class="btn btn-ghost tour-localized-group__translate-btn" data-staff-translate-field="description" data-target-lang="${escapeHtml(lang)}">${escapeHtml(translateButtonLabel(option))}</button>`;
       return `<div class="tour-localized-group__row">
         <div class="tour-localized-group__code-cell">${buttonHtml}</div>
         <div class="tour-localized-group__field">
@@ -754,18 +800,17 @@ function renderDescriptionEditor() {
 
 function renderShortDescriptionEditor() {
   if (!els.staffEditorShortDescription) return;
-  const options = QUALIFICATION_LANGUAGE_OPTIONS.length
-    ? QUALIFICATION_LANGUAGE_OPTIONS
-    : [{ value: "en", label: "EN", direction: "ltr" }];
+  const options = qualificationLanguageOptionsForEditor();
   const current = state.editor?.shortDescriptionByLang && typeof state.editor.shortDescriptionByLang === "object"
     ? state.editor.shortDescriptionByLang
     : {};
+  const sourceLang = currentStaffSourceLang();
   const rows = options
     .map((option) => {
       const lang = normalizeText(option.value).toLowerCase();
-      const buttonHtml = lang === "en"
-        ? `<button type="button" class="btn btn-ghost tour-localized-group__translate-all-btn" data-staff-translate-all="short-description">${escapeHtml(backendT("backend.users.translation.translate_all", "EN → ALL"))}</button>`
-        : `<button type="button" class="btn btn-ghost tour-localized-group__translate-btn" data-staff-translate-field="short-description" data-target-lang="${escapeHtml(lang)}">EN → ${escapeHtml(option.label)}</button>`;
+      const buttonHtml = lang === sourceLang
+        ? `<button type="button" class="btn btn-ghost tour-localized-group__translate-all-btn" data-staff-translate-all="short-description">${escapeHtml(translateAllButtonLabel())}</button>`
+        : `<button type="button" class="btn btn-ghost tour-localized-group__translate-btn" data-staff-translate-field="short-description" data-target-lang="${escapeHtml(lang)}">${escapeHtml(translateButtonLabel(option))}</button>`;
       return `<div class="tour-localized-group__row">
         <div class="tour-localized-group__code-cell">${buttonHtml}</div>
         <div class="tour-localized-group__field">
@@ -978,13 +1023,14 @@ function setShortDescriptionValue(lang, value) {
 async function requestPositionTranslation(targetLang, sourceText) {
   const user = getSelectedUser();
   if (!user) return null;
+  const sourceLang = currentStaffSourceLang();
   const entries = buildPositionTranslationEntries(sourceText);
   if (!Object.keys(entries).length) return null;
   const request = keycloakUserStaffProfileTranslateFieldsRequest({
     baseURL: apiOrigin,
     params: { username: user.username },
     body: {
-      source_lang: "en",
+      source_lang: sourceLang,
       target_lang: targetLang,
       entries: Object.entries(entries).map(([key, value]) => ({ key, value }))
     }
@@ -1004,13 +1050,14 @@ async function requestPositionTranslation(targetLang, sourceText) {
 async function requestDescriptionTranslation(targetLang, sourceText) {
   const user = getSelectedUser();
   if (!user) return null;
+  const sourceLang = currentStaffSourceLang();
   const entries = buildDescriptionTranslationEntries(sourceText);
   if (!Object.keys(entries).length) return null;
   const request = keycloakUserStaffProfileTranslateFieldsRequest({
     baseURL: apiOrigin,
     params: { username: user.username },
     body: {
-      source_lang: "en",
+      source_lang: sourceLang,
       target_lang: targetLang,
       entries: Object.entries(entries).map(([key, value]) => ({ key, value }))
     }
@@ -1030,13 +1077,14 @@ async function requestDescriptionTranslation(targetLang, sourceText) {
 async function requestShortDescriptionTranslation(targetLang, sourceText) {
   const user = getSelectedUser();
   if (!user) return null;
+  const sourceLang = currentStaffSourceLang();
   const entries = buildShortDescriptionTranslationEntries(sourceText);
   if (!Object.keys(entries).length) return null;
   const request = keycloakUserStaffProfileTranslateFieldsRequest({
     baseURL: apiOrigin,
     params: { username: user.username },
     body: {
-      source_lang: "en",
+      source_lang: sourceLang,
       target_lang: targetLang,
       entries: Object.entries(entries).map(([key, value]) => ({ key, value }))
     }
@@ -1055,19 +1103,21 @@ async function requestShortDescriptionTranslation(targetLang, sourceText) {
 
 async function translatePosition(button) {
   const targetLang = normalizeText(button?.getAttribute("data-target-lang")).toLowerCase();
-  const englishInput = getPositionInput("en");
+  const sourceInput = getPositionInput(currentStaffSourceLang());
   const targetInput = getPositionInput(targetLang);
-  if (!targetLang || !englishInput || !targetInput) return;
+  if (!targetLang || !sourceInput || !targetInput) return;
 
-  const englishSource = String(englishInput.value || "");
-  if (!Object.keys(buildPositionTranslationEntries(englishSource)).length) {
-    showEditorStatus(backendT("backend.users.position_translation.missing_source", "Add English position first."), true);
+  const sourceText = String(sourceInput.value || "");
+  if (!Object.keys(buildPositionTranslationEntries(sourceText)).length) {
+    showEditorStatus(backendT("backend.users.position_translation.missing_source", "Add {language} position first.", {
+      language: currentStaffSourceOption().label
+    }), true);
     return;
   }
 
   setPositionValue(targetLang, "");
   showEditorStatus(backendT("backend.users.position_translation.translating", "Translating position..."));
-  const translatedEntries = await requestPositionTranslation(targetLang, englishSource);
+  const translatedEntries = await requestPositionTranslation(targetLang, sourceText);
   if (!translatedEntries) {
     showEditorStatus(backendT("backend.users.position_translation.error", "Could not translate the position."), true);
     return;
@@ -1080,18 +1130,18 @@ async function translatePosition(button) {
 async function translatePositionToAll(button) {
   const field = normalizeText(button?.getAttribute("data-staff-translate-all")).toLowerCase();
   if (field !== "position") return;
-  const englishInput = getPositionInput("en");
-  if (!englishInput) return;
+  const sourceInput = getPositionInput(currentStaffSourceLang());
+  if (!sourceInput) return;
 
-  const englishSource = String(englishInput.value || "");
-  if (!Object.keys(buildPositionTranslationEntries(englishSource)).length) {
-    showEditorStatus(backendT("backend.users.position_translation.missing_source", "Add English position first."), true);
+  const sourceText = String(sourceInput.value || "");
+  if (!Object.keys(buildPositionTranslationEntries(sourceText)).length) {
+    showEditorStatus(backendT("backend.users.position_translation.missing_source", "Add {language} position first.", {
+      language: currentStaffSourceOption().label
+    }), true);
     return;
   }
 
-  const targets = QUALIFICATION_LANGUAGE_OPTIONS
-    .map((option) => normalizeText(option?.value).toLowerCase())
-    .filter((lang) => lang && lang !== "en");
+  const targets = translationTargetLanguages();
   if (!targets.length) return;
 
   for (const targetLang of targets) {
@@ -1100,7 +1150,7 @@ async function translatePositionToAll(button) {
   showEditorStatus(backendT("backend.users.position_translation.translating_all", "Translating all position languages..."));
 
   for (const targetLang of targets) {
-    const translatedEntries = await requestPositionTranslation(targetLang, englishSource);
+    const translatedEntries = await requestPositionTranslation(targetLang, sourceText);
     if (!translatedEntries) {
       showEditorStatus(backendT("backend.users.position_translation.error", "Could not translate the position."), true);
       return;
@@ -1113,43 +1163,45 @@ async function translatePositionToAll(button) {
 
 async function translateDescription(button) {
   const targetLang = normalizeText(button?.getAttribute("data-target-lang")).toLowerCase();
-  const englishInput = getDescriptionTextarea("en");
+  const sourceInput = getDescriptionTextarea(currentStaffSourceLang());
   const targetInput = getDescriptionTextarea(targetLang);
-  if (!targetLang || !englishInput || !targetInput) return;
+  if (!targetLang || !sourceInput || !targetInput) return;
 
-  const englishSource = String(englishInput.value || "");
-  if (!Object.keys(buildDescriptionTranslationEntries(englishSource)).length) {
-    showEditorStatus(backendT("backend.users.description_translation.missing_source", "Add English description first."), true);
+  const sourceText = String(sourceInput.value || "");
+  if (!Object.keys(buildDescriptionTranslationEntries(sourceText)).length) {
+    showEditorStatus(backendT("backend.users.description_translation.missing_source", "Add {language} description first.", {
+      language: currentStaffSourceOption().label
+    }), true);
     return;
   }
 
   setDescriptionValue(targetLang, "");
   showEditorStatus(backendT("backend.users.description_translation.translating", "Translating description..."));
-  const translatedEntries = await requestDescriptionTranslation(targetLang, englishSource);
+  const translatedEntries = await requestDescriptionTranslation(targetLang, sourceText);
   if (!translatedEntries) {
     showEditorStatus(backendT("backend.users.description_translation.error", "Could not translate the description."), true);
     return;
   }
 
-  setDescriptionValue(targetLang, translatedDescriptionValue(translatedEntries, englishSource));
+  setDescriptionValue(targetLang, translatedDescriptionValue(translatedEntries, sourceText));
   showEditorStatus(backendT("backend.users.description_translation.done", "Description translated."));
 }
 
 async function translateDescriptionToAll(button) {
   const field = normalizeText(button?.getAttribute("data-staff-translate-all")).toLowerCase();
   if (field !== "description") return;
-  const englishInput = getDescriptionTextarea("en");
-  if (!englishInput) return;
+  const sourceInput = getDescriptionTextarea(currentStaffSourceLang());
+  if (!sourceInput) return;
 
-  const englishSource = String(englishInput.value || "");
-  if (!Object.keys(buildDescriptionTranslationEntries(englishSource)).length) {
-    showEditorStatus(backendT("backend.users.description_translation.missing_source", "Add English description first."), true);
+  const sourceText = String(sourceInput.value || "");
+  if (!Object.keys(buildDescriptionTranslationEntries(sourceText)).length) {
+    showEditorStatus(backendT("backend.users.description_translation.missing_source", "Add {language} description first.", {
+      language: currentStaffSourceOption().label
+    }), true);
     return;
   }
 
-  const targets = QUALIFICATION_LANGUAGE_OPTIONS
-    .map((option) => normalizeText(option?.value).toLowerCase())
-    .filter((lang) => lang && lang !== "en");
+  const targets = translationTargetLanguages();
   if (!targets.length) return;
 
   for (const targetLang of targets) {
@@ -1158,12 +1210,12 @@ async function translateDescriptionToAll(button) {
   showEditorStatus(backendT("backend.users.description_translation.translating_all", "Translating all description languages..."));
 
   for (const targetLang of targets) {
-    const translatedEntries = await requestDescriptionTranslation(targetLang, englishSource);
+    const translatedEntries = await requestDescriptionTranslation(targetLang, sourceText);
     if (!translatedEntries) {
       showEditorStatus(backendT("backend.users.description_translation.error", "Could not translate the description."), true);
       return;
     }
-    setDescriptionValue(targetLang, translatedDescriptionValue(translatedEntries, englishSource));
+    setDescriptionValue(targetLang, translatedDescriptionValue(translatedEntries, sourceText));
   }
 
   showEditorStatus(backendT("backend.users.description_translation.all_done", "All description translations updated."));
@@ -1171,43 +1223,45 @@ async function translateDescriptionToAll(button) {
 
 async function translateShortDescription(button) {
   const targetLang = normalizeText(button?.getAttribute("data-target-lang")).toLowerCase();
-  const englishInput = getShortDescriptionTextarea("en");
+  const sourceInput = getShortDescriptionTextarea(currentStaffSourceLang());
   const targetInput = getShortDescriptionTextarea(targetLang);
-  if (!targetLang || !englishInput || !targetInput) return;
+  if (!targetLang || !sourceInput || !targetInput) return;
 
-  const englishSource = String(englishInput.value || "");
-  if (!Object.keys(buildShortDescriptionTranslationEntries(englishSource)).length) {
-    showEditorStatus(backendT("backend.users.short_description_translation.missing_source", "Add English short description first."), true);
+  const sourceText = String(sourceInput.value || "");
+  if (!Object.keys(buildShortDescriptionTranslationEntries(sourceText)).length) {
+    showEditorStatus(backendT("backend.users.short_description_translation.missing_source", "Add {language} short description first.", {
+      language: currentStaffSourceOption().label
+    }), true);
     return;
   }
 
   setShortDescriptionValue(targetLang, "");
   showEditorStatus(backendT("backend.users.short_description_translation.translating", "Translating short description..."));
-  const translatedEntries = await requestShortDescriptionTranslation(targetLang, englishSource);
+  const translatedEntries = await requestShortDescriptionTranslation(targetLang, sourceText);
   if (!translatedEntries) {
     showEditorStatus(backendT("backend.users.short_description_translation.error", "Could not translate the short description."), true);
     return;
   }
 
-  setShortDescriptionValue(targetLang, translatedShortDescriptionValue(translatedEntries, englishSource));
+  setShortDescriptionValue(targetLang, translatedShortDescriptionValue(translatedEntries, sourceText));
   showEditorStatus(backendT("backend.users.short_description_translation.done", "Short description translated."));
 }
 
 async function translateShortDescriptionToAll(button) {
   const field = normalizeText(button?.getAttribute("data-staff-translate-all")).toLowerCase();
   if (field !== "short-description") return;
-  const englishInput = getShortDescriptionTextarea("en");
-  if (!englishInput) return;
+  const sourceInput = getShortDescriptionTextarea(currentStaffSourceLang());
+  if (!sourceInput) return;
 
-  const englishSource = String(englishInput.value || "");
-  if (!Object.keys(buildShortDescriptionTranslationEntries(englishSource)).length) {
-    showEditorStatus(backendT("backend.users.short_description_translation.missing_source", "Add English short description first."), true);
+  const sourceText = String(sourceInput.value || "");
+  if (!Object.keys(buildShortDescriptionTranslationEntries(sourceText)).length) {
+    showEditorStatus(backendT("backend.users.short_description_translation.missing_source", "Add {language} short description first.", {
+      language: currentStaffSourceOption().label
+    }), true);
     return;
   }
 
-  const targets = QUALIFICATION_LANGUAGE_OPTIONS
-    .map((option) => normalizeText(option?.value).toLowerCase())
-    .filter((lang) => lang && lang !== "en");
+  const targets = translationTargetLanguages();
   if (!targets.length) return;
 
   for (const targetLang of targets) {
@@ -1216,12 +1270,12 @@ async function translateShortDescriptionToAll(button) {
   showEditorStatus(backendT("backend.users.short_description_translation.translating_all", "Translating all short description languages..."));
 
   for (const targetLang of targets) {
-    const translatedEntries = await requestShortDescriptionTranslation(targetLang, englishSource);
+    const translatedEntries = await requestShortDescriptionTranslation(targetLang, sourceText);
     if (!translatedEntries) {
       showEditorStatus(backendT("backend.users.short_description_translation.error", "Could not translate the short description."), true);
       return;
     }
-    setShortDescriptionValue(targetLang, translatedShortDescriptionValue(translatedEntries, englishSource));
+    setShortDescriptionValue(targetLang, translatedShortDescriptionValue(translatedEntries, sourceText));
   }
 
   showEditorStatus(backendT("backend.users.short_description_translation.all_done", "All short description translations updated."));

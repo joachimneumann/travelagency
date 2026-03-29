@@ -2,7 +2,10 @@ import {
   getBookingPersons,
   getBookingPrimaryContact
 } from "../../lib/booking_persons.js";
-import { normalizeBookingContentLang } from "../../domain/booking_content_i18n.js";
+import {
+  normalizeBookingContentLang,
+  normalizeBookingSourceLang
+} from "../../domain/booking_content_i18n.js";
 
 export function createBookingQueryModule(deps) {
   const {
@@ -136,15 +139,37 @@ export function createBookingQueryModule(deps) {
     };
   }
 
-  function resolveRequestedLang(source) {
+  function resolveRequestedContentLang(source) {
     if (!source) return "en";
     if (typeof source === "string") return normalizeBookingContentLang(source);
     if (typeof source?.lang === "string") return normalizeBookingContentLang(source.lang);
-    if (source?.req) return resolveRequestedLang(source.req);
+    if (typeof source?.contentLang === "string") return normalizeBookingContentLang(source.contentLang);
+    if (typeof source?.content_lang === "string") return normalizeBookingContentLang(source.content_lang);
+    if (source?.req) return resolveRequestedContentLang(source.req);
     if (typeof source?.url === "string") {
       try {
         const requestUrl = new URL(source.url, "http://localhost");
-        return normalizeBookingContentLang(requestUrl.searchParams.get("lang") || "en");
+        return normalizeBookingContentLang(
+          requestUrl.searchParams.get("content_lang")
+          || requestUrl.searchParams.get("lang")
+          || "en"
+        );
+      } catch {
+        return "en";
+      }
+    }
+    return "en";
+  }
+
+  function resolveRequestedSourceLang(source) {
+    if (!source) return "en";
+    if (typeof source?.sourceLang === "string") return normalizeBookingSourceLang(source.sourceLang);
+    if (typeof source?.source_lang === "string") return normalizeBookingSourceLang(source.source_lang);
+    if (source?.req) return resolveRequestedSourceLang(source.req);
+    if (typeof source?.url === "string") {
+      try {
+        const requestUrl = new URL(source.url, "http://localhost");
+        return normalizeBookingSourceLang(requestUrl.searchParams.get("source_lang") || "en");
       } catch {
         return "en";
       }
@@ -157,7 +182,8 @@ export function createBookingQueryModule(deps) {
       ...booking,
       persons: getBookingPersons(booking)
     }, {
-      lang: resolveRequestedLang(options),
+      lang: resolveRequestedContentLang(options),
+      sourceLang: resolveRequestedSourceLang(options),
       includeBookingConfirmationToken: Boolean(options?.includeBookingConfirmationToken),
       listMode: options?.listMode === true
     });

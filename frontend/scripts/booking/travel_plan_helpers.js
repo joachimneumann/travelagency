@@ -4,10 +4,10 @@ import {
   TRAVEL_PLAN_TIMING_KIND_OPTIONS as GENERATED_TRAVEL_PLAN_TIMING_KIND_OPTIONS
 } from "../shared/generated_catalogs.js";
 import {
-  bookingEditingLang,
+  bookingSourceLang,
   bookingT,
   normalizeBookingContentLang,
-  normalizeBookingEditingLang
+  normalizeBookingSourceLang
 } from "./i18n.js";
 import {
   buildDualLocalizedPayload,
@@ -278,10 +278,10 @@ export function normalizeTravelPlanDraft(plan, offerComponents = [], options = {
     || String(window.__BOOKING_CONTENT_LANG || "en").trim()
     || "en"
   );
-  const sourceLang = normalizeBookingEditingLang(
+  const sourceLang = normalizeBookingSourceLang(
     options?.sourceLang
     || options?.editingLang
-    || bookingEditingLang("en")
+    || bookingSourceLang("en")
     || "en"
   );
   const linkableOfferComponentIds = new Set(

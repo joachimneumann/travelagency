@@ -42,9 +42,9 @@ Important backend areas:
 - `backend/app/src/http/`
   - route wiring, handlers, pagination, HTTP helpers
 - `backend/app/src/domain/`
-  - pricing, booking views, travel plan, access, tour support
+  - pricing, booking views, travel plan, access, tour support, content-i18n and translation status helpers
 - `backend/app/src/lib/`
-  - PDF writers, translation client, Keycloak directory, store utilities
+  - PDF writers, translation client, Keycloak directory, store utilities, PDF i18n
 - `backend/app/src/integrations/`
   - Meta webhook integration
 
@@ -65,6 +65,7 @@ Frontend roots:
 - `frontend/scripts/`
 - `shared/css/`
 - `shared/js/`
+- `shared/generated/`
 
 Public site entry:
 - `frontend/pages/index.html`
@@ -89,6 +90,20 @@ Booking page feature modules:
 - `frontend/scripts/booking/invoices.js`
 - `frontend/scripts/booking/travel_plan.js`
 - `frontend/scripts/booking/whatsapp.js`
+
+Language/runtime i18n entrypoints:
+- `shared/generated/language_catalog.js`
+  - generated language source of truth
+- `frontend/scripts/shared/backend_i18n.js`
+  - backend workspace UI language
+- `frontend/scripts/shared/frontend_i18n.js`
+  - public-site UI language
+- `frontend/scripts/booking/i18n.js`
+  - booking source/customer language helpers
+- `backend/app/src/domain/booking_content_i18n.js`
+  - booking localized-map normalization and branch resolution
+- `backend/app/src/lib/pdf_i18n.js`
+  - customer-facing PDF copy dictionary
 
 Styling:
 - shared entrypoint: `shared/css/styles.css`
@@ -163,6 +178,9 @@ This is acceptable only while the handwritten behavior stays aligned with:
 - `api/generated/openapi.yaml`
 - generated runtime contract modules
 
+Current known exception:
+- none in the booking source-language contract path after the `editing_language` cleanup; page URLs use `lang` for backend UI, and booking API requests use `content_lang` plus `source_lang`
+
 ## 7. Practical Reading Order
 
 For a new contributor:
@@ -170,9 +188,10 @@ For a new contributor:
 1. `README.md`
 2. `documentation/current_system_map.md`
 3. `documentation/concept/software_architecture.md`
-4. `model/root.cue`
-5. `model/api/endpoints.cue`
-6. `tools/generator/generate_mobile_contract_artifacts.rb`
-7. `backend/app/src/http/routes.js`
-8. `backend/app/src/server.js`
-9. the relevant runtime page or service entrypoint you intend to change
+4. `documentation/concept/i18n_runtime.md` for language-sensitive changes
+5. `model/root.cue`
+6. `model/api/endpoints.cue`
+7. `tools/generator/generate_mobile_contract_artifacts.rb`
+8. `backend/app/src/http/routes.js`
+9. `backend/app/src/server.js`
+10. the relevant runtime page or service entrypoint you intend to change

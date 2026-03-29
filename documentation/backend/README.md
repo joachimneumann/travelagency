@@ -223,7 +223,8 @@ Helper scripts:
 - `node backend/app/scripts/prune_stale_content_translations.js`
   - dry-run by default
   - add `--write` to persist
-  - keeps only `en` plus the booking's current customer language in booking offer and travel-plan localized fields
+  - keeps the booking's current customer language plus inferred backend source-language branches in booking offer and travel-plan localized fields
+  - prunes section translation metadata to kept target languages only
 
 Recommended local setup:
 - Keycloak on `http://localhost:8081`

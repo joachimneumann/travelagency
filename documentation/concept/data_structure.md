@@ -29,6 +29,15 @@ This means:
 - `persons[]`
 - `generated_offers[]`
 
+Current language meaning:
+- `customer_language`
+  - persisted customer-facing target language
+- backend UI language
+  - current ATP staff editing/source language in `booking.html`
+- source language
+  - derived at runtime from the current backend UI language
+  - passed through booking API calls as `source_lang`
+
 `web_form_submission`
 - immutable snapshot of the original website submission
 - used for audit and input traceability

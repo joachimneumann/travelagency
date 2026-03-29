@@ -5,7 +5,14 @@ import {
   bookingGeneratedOfferUpdateRequest
 } from "../../Generated/API/generated_APIRequestFactory.js";
 import { logBrowserConsoleError } from "../shared/api.js";
-import { bookingContentLang, bookingContentLanguageLabel, bookingEditingLanguageLabel, bookingT, bookingLang } from "./i18n.js";
+import {
+  bookingContentLang,
+  bookingContentLanguageLabel,
+  bookingLanguageQuery,
+  bookingSourceLanguageLabel,
+  bookingT,
+  bookingLang
+} from "./i18n.js";
 import { formatMoneyDisplay } from "./pricing.js";
 import { getBookingPersons } from "../shared/booking_persons.js";
 import {
@@ -19,6 +26,14 @@ import { setBookingPageOverlay } from "./page_overlay.js";
 
 const GMAIL_TAB_NAME = "asiatravelplan_gmail_drafts";
 let gmailWindowHandle = null;
+
+function withBookingLanguageQuery(urlLike) {
+  const url = new URL(urlLike, window.location.origin);
+  const query = bookingLanguageQuery();
+  url.searchParams.set("content_lang", query.content_lang);
+  url.searchParams.set("source_lang", query.source_lang);
+  return url.toString();
+}
 
 function acquireGmailWindow() {
   if (gmailWindowHandle && !gmailWindowHandle.closed) {
@@ -388,7 +403,7 @@ export function createBookingGeneratedOffersModule(ctx) {
         .slice()
         .sort((left, right) => String(right.created_at || "").localeCompare(String(left.created_at || "")))
         .map((item) => {
-          const pdfUrl = String(item.pdf_url || "").trim();
+          const pdfUrl = item?.pdf_url ? withBookingLanguageQuery(item.pdf_url) : "";
           const bookingConfirmationLink = buildGeneratedOfferBookingConfirmationLink(item);
           const recipientEmail = getBookingConfirmationRecipientEmail();
           const offerStatus = resolveGeneratedOfferStatus(item);
@@ -593,10 +608,10 @@ export function createBookingGeneratedOffersModule(ctx) {
     const missingTranslationCount = countMissingOfferPdfTranslations(state.booking, selectedLang);
     if (missingTranslationCount > 0 && !window.confirm(bookingT(
       "booking.offer.generate_missing_translation_confirm",
-      "Customer language is {language}, but {count} offer or travel-plan fields are not translated yet. The PDF shell will use {language}, and those fields will fall back to {editingLanguage}. Generate anyway?",
+      "Customer language is {language}, but {count} offer or travel-plan fields are not translated yet. The PDF shell will use {language}, and those fields will fall back to {sourceLanguage}. Generate anyway?",
       {
         language: bookingContentLanguageLabel(selectedLang),
-        editingLanguage: bookingEditingLanguageLabel(),
+        sourceLanguage: bookingSourceLanguageLabel(),
         count: missingTranslationCount
       }
     ))) {

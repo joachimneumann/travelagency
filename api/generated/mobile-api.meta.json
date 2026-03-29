@@ -3,7 +3,7 @@
   "generatorVersion": "0.1.0",
   "modulePath": "travelagency.local/model",
   "defaultCurrency": "USD",
-  "generatedAt": "2026-03-29T05:37:14Z",
+  "generatedAt": "2026-03-29T10:14:02Z",
   "languages": [
     "en",
     "ar",
@@ -515,23 +515,6 @@
       "tag": "Bookings",
       "authenticated": true,
       "requestType": "BookingCustomerLanguageUpdateRequest",
-      "responseType": "BookingDetail",
-      "parameters": [
-        {
-          "name": "booking_id",
-          "location": "path",
-          "required": true,
-          "typeName": "Identifier"
-        }
-      ]
-    },
-    {
-      "key": "booking_editing_language",
-      "path": "/api/v1/bookings/{booking_id}/editing-language",
-      "method": "PATCH",
-      "tag": "Bookings",
-      "authenticated": true,
-      "requestType": "BookingEditingLanguageUpdateRequest",
       "responseType": "BookingDetail",
       "parameters": [
         {

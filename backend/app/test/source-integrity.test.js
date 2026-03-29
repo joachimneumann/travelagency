@@ -953,8 +953,8 @@ test("travel plan footer exposes clean-state-gated preview and create actions ba
   );
   assert.match(
     travelPlanSource,
-    /function previewTravelPlanPdf\(\)[\s\S]*bookingTravelPlanPdfRequest\([\s\S]*query:\s*\{\s*lang:\s*bookingContentLang\(\)\s*\}/,
-    "Previewing a travel-plan PDF should use the preview GET request with the current booking content language"
+    /function previewTravelPlanPdf\(\)[\s\S]*bookingTravelPlanPdfRequest\([\s\S]*query:\s*bookingLanguageQuery\(\)/,
+    "Previewing a travel-plan PDF should use the preview GET request with explicit booking content/source language query parameters"
   );
   assert.match(
     bookingPageSource,
@@ -1135,6 +1135,59 @@ test("offer and travel-plan PDFs route Arabic text blocks through the shared RTL
   );
 });
 
+test("offer and travel-plan PDFs localize guide, pricing summary, and payment-term labels across the PDF dictionary", async () => {
+  const pdfI18nPath = path.resolve(__dirname, "..", "src", "lib", "pdf_i18n.js");
+  const offerPdfPath = path.resolve(__dirname, "..", "src", "lib", "offer_pdf.js");
+  const travelPlanPdfPath = path.resolve(__dirname, "..", "src", "lib", "travel_plan_pdf.js");
+  const [pdfI18nSource, offerPdfSource, travelPlanPdfSource] = await Promise.all([
+    readFile(pdfI18nPath, "utf8"),
+    readFile(offerPdfPath, "utf8"),
+    readFile(travelPlanPdfPath, "utf8")
+  ]);
+
+  const localeBlockCount = (pdfI18nSource.match(/^\s{2}"[a-z]{2}": Object\.freeze\(\{/gm) || []).length;
+  assert.ok(localeBlockCount >= 15, "Expected the PDF i18n dictionary to define the supported language blocks");
+
+  const keyOccurrenceCount = (key) => {
+    const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return (pdfI18nSource.match(new RegExp(`"${escapedKey}":`, "g")) || []).length;
+  };
+
+  for (const key of [
+    "guide.section_title_named",
+    "guide.section_title_fallback",
+    "offer.trip_label",
+    "offer.trip_total",
+    "offer.additional_item",
+    "offer.discount",
+    "offer.tax_rate",
+    "offer.quotation_tax_summary",
+    "offer.payment_terms_title"
+  ]) {
+    assert.equal(
+      keyOccurrenceCount(key),
+      localeBlockCount,
+      `Expected ${key} to be translated in every PDF locale block`
+    );
+  }
+
+  assert.match(
+    offerPdfSource,
+    /function isSyntheticTripTotalLabel\(value\)/,
+    "Offer PDFs should recognize synthetic English trip-total labels so they can be replaced at render time"
+  );
+  assert.match(
+    offerPdfSource,
+    /!isSyntheticAdditionalItemLabel\(item\??\.label\)/,
+    "Offer PDFs should avoid printing synthetic English additional-item labels in the customer-facing details column"
+  );
+  assert.match(
+    travelPlanPdfSource,
+    /pdfT\(lang,\s*"guide\.section_title_named",\s*"Our team member \{name\} will assist you"/,
+    "Travel-plan PDFs should source the guide heading from the localized PDF dictionary"
+  );
+});
+
 test("staging PDF font stack includes Japanese and Chinese smoke coverage paths", async () => {
   const dockerfilePath = path.resolve(__dirname, "..", "..", "..", "backend", "Dockerfile.staging");
   const resolverPath = path.resolve(__dirname, "..", "src", "lib", "pdf_font_resolver.js");
@@ -1268,17 +1321,17 @@ test("booking page save orchestrates dirty sections through existing section end
 test("booking page derives ATP staff source language from the top-right backend language", async () => {
   const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
   const bookingI18nPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "i18n.js");
-  const coreModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "core.js");
   const bookingPageDataModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking_page_data.js");
   const bookingPageLanguageModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking_page_language.js");
   const bookingHandlersModulePath = path.resolve(__dirname, "..", "..", "..", "backend", "app", "src", "http", "handlers", "bookings.js");
-  const [bookingSource, i18nSource, coreSource, bookingPageDataSource, bookingPageLanguageSource, bookingHandlersSource] = await Promise.all([
+  const routesModulePath = path.resolve(__dirname, "..", "src", "http", "routes.js");
+  const [bookingSource, i18nSource, bookingPageDataSource, bookingPageLanguageSource, bookingHandlersSource, routesSource] = await Promise.all([
     readFile(bookingPagePath, "utf8"),
     readFile(bookingI18nPath, "utf8"),
-    readFile(coreModulePath, "utf8"),
     readFile(bookingPageDataModulePath, "utf8"),
     readFile(bookingPageLanguageModulePath, "utf8"),
-    readFile(bookingHandlersModulePath, "utf8")
+    readFile(bookingHandlersModulePath, "utf8"),
+    readFile(routesModulePath, "utf8")
   ]);
 
   assert.doesNotMatch(
@@ -1288,18 +1341,18 @@ test("booking page derives ATP staff source language from the top-right backend 
   );
   assert.match(
     i18nSource,
-    /export function bookingEditingLang\(fallback = DEFAULT_BOOKING_EDITING_LANG\) \{[\s\S]*window\.backendI18n\?\.getLang/,
+    /export function bookingSourceLang\(fallback = DEFAULT_BOOKING_SOURCE_LANG\) \{[\s\S]*window\.backendI18n\?\.getLang/,
     "Booking i18n helpers should derive the ATP staff source language from the active backend language selector"
   );
   assert.match(
     bookingPageDataSource,
-    /async function syncBookingEditingLanguageToSelectedStaffLanguage\(bookingPayload\) \{[\s\S]*bookingEditingLang\("en"\)[\s\S]*bookingEditingLanguageRequest/,
-    "Booking load should sync the backend editing-language field from the selected top-right ATP staff language"
+    /fetchApi\(withBookingContentLang\(bookingDetailRequest\(\{[\s\S]*applyBookingPayload\(bookingPayload,\s*\{\s*forceDraftReset:\s*true\s*\}\);/,
+    "Booking page loads should request booking detail with booking language query semantics and apply that payload directly"
   );
-  assert.match(
+  assert.doesNotMatch(
     bookingPageDataSource,
-    /const effectiveBookingPayload = await syncBookingEditingLanguageToSelectedStaffLanguage\(bookingPayload\);[\s\S]*applyBookingPayload\(effectiveBookingPayload,\s*\{\s*forceDraftReset:\s*true\s*\}\);/,
-    "Booking page loads should apply the post-sync payload so downstream translation status and source branches follow the selected staff language"
+    /syncBookingEditingLanguageToSelectedStaffLanguage|bookingSourceLanguageRequest/,
+    "Booking page load should not mutate persisted booking state just to mirror the current ATP staff source language"
   );
   assert.match(
     bookingPageDataSource,
@@ -1312,9 +1365,19 @@ test("booking page derives ATP staff source language from the top-right backend 
     "The booking page language controller should no longer manage a separate editing-language selector"
   );
   assert.match(
+    bookingPageLanguageSource,
+    /function withBookingContentLang\(pathname, params = \{\}\) \{[\s\S]*bookingLanguageQuery\(\{[\s\S]*url\.searchParams\.set\("content_lang", query\.content_lang\);[\s\S]*url\.searchParams\.set\("source_lang", query\.source_lang\);/,
+    "Booking API URLs should carry explicit content and source language query parameters instead of overloading `lang`"
+  );
+  assert.doesNotMatch(
     bookingHandlersSource,
-    /return \{[\s\S]*handlePatchBookingCustomerLanguage,[\s\S]*handlePatchBookingEditingLanguage,[\s\S]*handlePatchBookingSource,/,
-    "Booking handler composition should expose the editing-language patch handler once the route is declared"
+    /handlePatchBookingEditingLanguage/,
+    "Booking handler composition should no longer expose the removed editing-language patch handler"
+  );
+  assert.doesNotMatch(
+    routesSource,
+    /\/editing-language/,
+    "The booking editing-language route should be removed from the backend route table"
   );
 });
 
@@ -1358,7 +1421,7 @@ test("full booking reloads force-reset core drafts so discard restores saved val
 
   assert.match(
     bookingPageDataSource,
-    /applyBookingPayload\(effectiveBookingPayload,\s*\{\s*forceDraftReset:\s*true\s*\}\);/,
+    /applyBookingPayload\(bookingPayload,\s*\{\s*forceDraftReset:\s*true\s*\}\);/,
     "A full booking reload should force-reset local drafts from the freshly fetched backend payload"
   );
   assert.match(
@@ -1418,12 +1481,12 @@ test("booking page logs reload-time dirty diagnostics and core comparisons ignor
   );
   assert.match(
     travelPlanSource,
-    /function getTravelPlanNormalizationOptions\(\) \{[\s\S]*sourceLang:\s*bookingEditingLang\(\)/,
+    /function getTravelPlanNormalizationOptions\(\) \{[\s\S]*sourceLang:\s*bookingSourceLang\(\)/,
     "Travel-plan normalization should derive its source language from the selected ATP staff language in the top-right selector"
   );
   assert.match(
     travelPlanHelpersSource,
-    /export function normalizeTravelPlanDraft\(plan, offerComponents = \[\], options = \{\}\) \{[\s\S]*const sourceLang = normalizeBookingEditingLang\([\s\S]*bookingEditingLang\("en"\)[\s\S]*resolveLocalizedEditorText\(rawDay\.title_i18n \?\? rawDay\.title, sourceLang, ""\)/,
+    /export function normalizeTravelPlanDraft\(plan, offerComponents = \[\], options = \{\}\) \{[\s\S]*const sourceLang = normalizeBookingSourceLang\([\s\S]*bookingSourceLang\("en"\)[\s\S]*resolveLocalizedEditorText\(rawDay\.title_i18n \?\? rawDay\.title, sourceLang, ""\)/,
     "Travel-plan helper normalization should accept an explicit source language and otherwise fall back to the selected ATP staff language"
   );
 });
@@ -1911,6 +1974,32 @@ test("settings page staff table shows separate realm and client Keycloak roles",
     source,
     /async function saveSelectedStaffProfile\(\) \{[\s\S]*pendingPhoto\?\.dataBase64[\s\S]*keycloakUserStaffProfilePictureUploadRequest[\s\S]*applyUpdatedUser\(latestUser\);/,
     "Saving an ATP staff profile should upload any pending staged photo through the generated picture-upload endpoint"
+  );
+});
+
+test("settings page staff translation follows the active backend source language", async () => {
+  const settingsPageModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "settings_list.js");
+  const source = await readFile(settingsPageModulePath, "utf8");
+
+  assert.match(
+    source,
+    /function currentStaffSourceLang\(\) \{[\s\S]*window\.backendI18n\?\.getLang/,
+    "Settings translation helpers should derive ATP staff source language from the active backend language selector"
+  );
+  assert.match(
+    source,
+    /function qualificationLanguageOptionsForEditor\(\) \{[\s\S]*const pairedLang = sourceLang === "vi" \? "en" : "vi";[\s\S]*localeCompare/,
+    "Settings localized editors should place the EN\/VI pair first and sort remaining languages alphabetically"
+  );
+  assert.doesNotMatch(
+    source,
+    /source_lang:\s*"en"/,
+    "Settings field translation requests must not hard-code English as the source language"
+  );
+  assert.match(
+    source,
+    /function translateAllButtonLabel\(\) \{[\s\S]*"\{source\} → ALL"/,
+    "Settings translation controls should render the translate-all button from the active source language label"
   );
 });
 

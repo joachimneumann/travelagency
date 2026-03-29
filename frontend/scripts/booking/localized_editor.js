@@ -3,8 +3,8 @@ import { logBrowserConsoleError } from "../shared/api.js";
 import {
   bookingContentLang,
   bookingContentLanguageOption,
-  bookingEditingLang,
-  bookingEditingLanguageOption,
+  bookingSourceLang,
+  bookingSourceLanguageOption,
   bookingT,
   normalizeBookingContentLang
 } from "./i18n.js";
@@ -54,7 +54,7 @@ export function setLocalizedEditorText(value, lang, text) {
   return normalized;
 }
 
-export function buildDualLocalizedPayload(sourceText, localizedText, targetLang = bookingContentLang(), sourceLang = bookingEditingLang()) {
+export function buildDualLocalizedPayload(sourceText, localizedText, targetLang = bookingContentLang(), sourceLang = bookingSourceLang()) {
   const normalizedSourceLang = normalizeBookingContentLang(sourceLang || DEFAULT_CONTENT_LANG);
   const normalizedTargetLang = normalizeBookingContentLang(targetLang || DEFAULT_CONTENT_LANG);
   const rawMap = {
@@ -75,7 +75,7 @@ export function mergeDualLocalizedPayload(
   sourceText,
   localizedText,
   targetLang = bookingContentLang(),
-  sourceLang = bookingEditingLang()
+  sourceLang = bookingSourceLang()
 ) {
   const normalizedSourceLang = normalizeBookingContentLang(sourceLang || DEFAULT_CONTENT_LANG);
   const normalizedTargetLang = normalizeBookingContentLang(targetLang || DEFAULT_CONTENT_LANG);
@@ -114,7 +114,7 @@ export function renderLocalizedSplitField({
   type = "input",
   rows = 3,
   commonData = {},
-  sourceLang = bookingEditingLang(),
+  sourceLang = bookingSourceLang(),
   sourceValue = "",
   englishValue = "",
   localizedValue = "",
@@ -128,7 +128,7 @@ export function renderLocalizedSplitField({
 }) {
   const normalizedSourceLang = normalizeBookingContentLang(sourceLang || DEFAULT_CONTENT_LANG);
   const normalizedTargetLang = normalizeBookingContentLang(targetLang || DEFAULT_CONTENT_LANG);
-  const sourceOption = bookingEditingLanguageOption(normalizedSourceLang);
+  const sourceOption = bookingSourceLanguageOption(normalizedSourceLang);
   const targetOption = bookingContentLanguageOption(normalizedTargetLang);
   const resolvedSourceValue = sourceValue !== undefined ? sourceValue : englishValue;
   const sameLanguage = normalizedTargetLang === normalizedSourceLang;
@@ -207,7 +207,7 @@ export function renderLocalizedStackedField({
   type = "input",
   rows = 3,
   commonData = {},
-  sourceLang = bookingEditingLang(),
+  sourceLang = bookingSourceLang(),
   sourceValue = "",
   englishValue = "",
   localizedValue = "",
@@ -221,7 +221,7 @@ export function renderLocalizedStackedField({
 }) {
   const normalizedSourceLang = normalizeBookingContentLang(sourceLang || DEFAULT_CONTENT_LANG);
   const normalizedTargetLang = normalizeBookingContentLang(targetLang || DEFAULT_CONTENT_LANG);
-  const sourceOption = bookingEditingLanguageOption(normalizedSourceLang);
+  const sourceOption = bookingSourceLanguageOption(normalizedSourceLang);
   const targetOption = bookingContentLanguageOption(normalizedTargetLang);
   const resolvedSourceValue = sourceValue !== undefined ? sourceValue : englishValue;
   const sameLanguage = normalizedTargetLang === normalizedSourceLang;
@@ -321,7 +321,7 @@ export async function requestBookingFieldTranslation({
   fetchBookingMutation,
   apiBase = "",
   actor = null,
-  sourceLang = bookingEditingLang(),
+  sourceLang = bookingSourceLang(),
   targetLang = bookingContentLang()
 }) {
   const normalizedSourceLang = normalizeBookingContentLang(sourceLang || DEFAULT_CONTENT_LANG);

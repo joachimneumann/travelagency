@@ -2,7 +2,7 @@ import { normalizeText } from "../lib/text.js";
 import { getBookingPersons, getBookingPrimaryContact } from "../lib/booking_persons.js";
 import {
   normalizeBookingContentLang,
-  normalizeBookingEditingLang
+  normalizeBookingSourceLang
 } from "./booking_content_i18n.js";
 import { resolveBookingMilestoneState } from "./booking_milestones.js";
 import { isSuspiciousSentinelString } from "./booking_names.js";
@@ -322,6 +322,7 @@ export function createBookingViewHelpers({
     } = { ...booking };
     delete normalizedBooking.budget;
     const lang = normalizeBookingContentLang(options?.lang || "en");
+    const sourceLang = normalizeBookingSourceLang(options?.sourceLang || "en");
     const listMode = options?.listMode === true;
     const preferredCurrency = safeCurrency(normalizedBooking?.preferred_currency || normalizedBooking?.pricing?.currency || baseCurrency);
     const offerCurrency = safeCurrency(normalizedBooking?.offer?.currency || preferredCurrency);
@@ -444,7 +445,6 @@ export function createBookingViewHelpers({
       };
     }
     const acceptedRecord = listMode ? undefined : await buildAcceptedRecordReadModel();
-    const editingLanguage = normalizeBookingEditingLang(normalizedBooking?.editing_language || "en");
     return {
       ...normalizedBooking,
       stage: milestoneState.stage,
@@ -468,17 +468,16 @@ export function createBookingViewHelpers({
         || normalizedBooking?.web_form_submission?.preferred_language
         || "en"
       ),
-      editing_language: editingLanguage,
       preferred_currency: preferredCurrency,
       travel_plan: buildBookingTravelPlanReadModel(normalizedBooking.travel_plan, normalizedBooking.offer, {
         lang,
-        sourceLang: editingLanguage
+        sourceLang
       }),
-      travel_plan_translation_status: buildTravelPlanTranslationStatus(normalizedBooking.travel_plan, lang, editingLanguage),
+      travel_plan_translation_status: buildTravelPlanTranslationStatus(normalizedBooking.travel_plan, lang, sourceLang),
       pricing: await buildBookingPricingReadModel(normalizedBooking.pricing, pricingDisplayCurrency),
       offer: await buildBookingOfferReadModel(normalizedBooking.offer, offerDisplayCurrency, {
         lang,
-        sourceLang: editingLanguage
+        sourceLang
       }),
       ...(acceptedRecord ? { accepted_record: acceptedRecord } : {}),
       travel_plan_pdfs: travelPlanPdfs.map((item) => ({
@@ -486,7 +485,7 @@ export function createBookingViewHelpers({
         sent_to_customer: item?.sent_to_customer === true,
         pdf_url: `/api/v1/bookings/${encodeURIComponent(normalizedBooking.id)}/travel-plan/pdfs/${encodeURIComponent(item.id)}/pdf`
       })),
-      offer_translation_status: buildOfferTranslationStatus(normalizedBooking.offer, lang, editingLanguage),
+      offer_translation_status: buildOfferTranslationStatus(normalizedBooking.offer, lang, sourceLang),
       generated_offers: generatedOffers,
       generated_offer_email_enabled: isGeneratedOfferEmailEnabled(),
       translation_enabled: Boolean(translationEnabled)

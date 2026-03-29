@@ -13,7 +13,7 @@ import {
   mergeEditableLocalizedTextField,
   mergeLocalizedTextField,
   normalizeBookingContentLang,
-  normalizeBookingEditingLang
+  normalizeBookingSourceLang
 } from "../../domain/booking_content_i18n.js";
 import {
   markOfferTranslationManual,
@@ -101,19 +101,35 @@ export function createBookingFinanceHandlers(deps) {
   function requestContentLang(req, payload = null) {
     try {
       const requestUrl = new URL(req.url, "http://localhost");
-      return normalizeBookingContentLang(payload?.lang || requestUrl.searchParams.get("lang") || "en");
+      return normalizeBookingContentLang(
+        payload?.content_lang
+        || payload?.lang
+        || requestUrl.searchParams.get("content_lang")
+        || requestUrl.searchParams.get("lang")
+        || "en"
+      );
     } catch {
-      return normalizeBookingContentLang(payload?.lang || "en");
+      return normalizeBookingContentLang(payload?.content_lang || payload?.lang || "en");
     }
   }
 
-  function bookingEditingLang(booking) {
-    return normalizeBookingEditingLang(booking?.editing_language || "en");
+  function requestSourceLang(req, payload = null, fallback = "en") {
+    try {
+      const requestUrl = new URL(req.url, "http://localhost");
+      return normalizeBookingSourceLang(
+        payload?.source_lang
+        || requestUrl.searchParams.get("source_lang")
+        || fallback
+        || "en"
+      );
+    } catch {
+      return normalizeBookingSourceLang(payload?.source_lang || fallback || "en");
+    }
   }
 
   function mergeOfferForLang(existingOffer, nextOffer, lang, preferredCurrency, sourceLang = "en") {
     const normalizedLang = normalizeBookingContentLang(lang);
-    const normalizedSourceLang = normalizeBookingContentLang(sourceLang);
+    const normalizedSourceLang = normalizeBookingSourceLang(sourceLang);
     const existingNormalized = normalizeBookingOffer(existingOffer, preferredCurrency, {
       contentLang: normalizedLang,
       flatLang: normalizedLang,
@@ -180,7 +196,7 @@ export function createBookingFinanceHandlers(deps) {
       return;
     }
     if (error?.code === "TRANSLATION_SOURCE_LANGUAGE") {
-      sendJson(res, 422, { error: String(error.message || "The editing language cannot be auto-translated.") });
+      sendJson(res, 422, { error: String(error.message || "The source language cannot be auto-translated.") });
       return;
     }
     if (error?.code === "TRANSLATION_INVALID_RESPONSE" || error?.code === "TRANSLATION_REQUEST_FAILED") {
@@ -448,7 +464,7 @@ export function createBookingFinanceHandlers(deps) {
     // }
 
     const contentLang = requestContentLang(req, payload);
-    const sourceLang = bookingEditingLang(booking);
+    const sourceLang = requestSourceLang(req, payload);
     const mergedOffer = mergeOfferForLang(
       booking.offer,
       check.offer,
@@ -519,7 +535,7 @@ export function createBookingFinanceHandlers(deps) {
     if (!(await assertExpectedRevision(req, payload, booking, "expected_offer_revision", "offer_revision", res))) return;
 
     const contentLang = requestContentLang(req, payload);
-    const sourceLang = bookingEditingLang(booking);
+    const sourceLang = requestSourceLang(req, payload);
     try {
       const translatedOffer = await translateOfferFromSourceLanguage(
         booking.offer,

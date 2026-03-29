@@ -296,23 +296,6 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         return validateShape(value, BOOKING_CUSTOMER_LANGUAGE_UPDATE_REQUEST_SCHEMA);
       }
 
-      export const BOOKING_EDITING_LANGUAGE_UPDATE_REQUEST_SCHEMA = {
-        name: "BookingEditingLanguageUpdateRequest",
-        domain: "api",
-        module: "api",
-        sourceType: "openapi.components.schemas.BookingEditingLanguageUpdateRequest",
-        requireOneOf: [],
-        fields: [
-    schemaField({"name":"expected_core_revision","required":false,"wireName":"expected_core_revision"}, SHARED_FIELD_DEFS.FIELD_17),
-    schemaField({"name":"editing_language","required":true,"wireName":"editing_language"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"actor","required":false,"wireName":"actor"}, SHARED_FIELD_DEFS.FIELD_1)
-        ]
-      };
-
-      export function validateBookingEditingLanguageUpdateRequest(value) {
-        return validateShape(value, BOOKING_EDITING_LANGUAGE_UPDATE_REQUEST_SCHEMA);
-      }
-
       export const BOOKING_SOURCE_UPDATE_REQUEST_SCHEMA = {
         name: "BookingSourceUpdateRequest",
         domain: "api",
@@ -1176,7 +1159,6 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
     schemaField({"name":"number_of_travelers","required":false,"wireName":"number_of_travelers"}, SHARED_FIELD_DEFS.FIELD_17),
     schemaField({"name":"preferred_currency","required":false,"wireName":"preferred_currency"}, SHARED_FIELD_DEFS.FIELD_18),
     schemaField({"name":"customer_language","required":false,"wireName":"customer_language"}, SHARED_FIELD_DEFS.FIELD_11),
-    schemaField({"name":"editing_language","required":false,"wireName":"editing_language"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"confirmed_generated_offer_id","required":false,"wireName":"confirmed_generated_offer_id"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"notes","required":false,"wireName":"notes"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"persons","required":false,"wireName":"persons"}, SHARED_FIELD_DEFS.FIELD_92),
@@ -1431,7 +1413,7 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
     schemaField({"name":"day_number","required":false,"wireName":"day_number"}, SHARED_FIELD_DEFS.FIELD_17),
     schemaField({"name":"service_id","required":true,"wireName":"service_id"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"service_kind","required":false,"wireName":"service_kind"}, SHARED_FIELD_DEFS.FIELD_107),
-    schemaField({"name":"title","required":false,"wireName":"title"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"title","required":true,"wireName":"title"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"details","required":false,"wireName":"details"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"location","required":false,"wireName":"location"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"overnight_location","required":false,"wireName":"overnight_location"}, SHARED_FIELD_DEFS.FIELD_1),
@@ -2254,6 +2236,6 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         ]
       };
 
-      export function validateBookingTravelPlanServiceImageFocalPoint(value) {
-        return validateShape(value, BOOKING_TRAVEL_PLAN_SERVICE_IMAGE_FOCAL_POINT_SCHEMA);
-      }
+export function validateBookingTravelPlanServiceImageFocalPoint(value) {
+  return validateShape(value, BOOKING_TRAVEL_PLAN_SERVICE_IMAGE_FOCAL_POINT_SCHEMA);
+}

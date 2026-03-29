@@ -21,7 +21,7 @@ function sortLanguageOptions(entries) {
   });
 }
 
-export const BOOKING_EDITING_LANGUAGE_OPTIONS = Object.freeze(
+export const BOOKING_SOURCE_LANGUAGE_OPTIONS = Object.freeze(
   sortLanguageOptions(BACKEND_UI_LANGUAGES.map((entry) => ({
     code: entry.code,
     label: entry.nativeLabel,
@@ -42,7 +42,7 @@ export const BOOKING_CONTENT_LANGUAGE_OPTIONS = Object.freeze(
 );
 
 const DEFAULT_BOOKING_CONTENT_LANG = "en";
-const DEFAULT_BOOKING_EDITING_LANG = "en";
+const DEFAULT_BOOKING_SOURCE_LANG = "en";
 
 export function bookingT(id, fallback, vars) {
   if (typeof window.backendT === "function") {
@@ -67,10 +67,10 @@ export function normalizeBookingContentLang(value) {
   return normalizeLanguageCode(value, { fallback: DEFAULT_BOOKING_CONTENT_LANG });
 }
 
-export function normalizeBookingEditingLang(value) {
+export function normalizeBookingSourceLang(value) {
   return normalizeLanguageCode(value, {
-    allowedCodes: BOOKING_EDITING_LANGUAGE_OPTIONS.map((option) => option.code),
-    fallback: DEFAULT_BOOKING_EDITING_LANG
+    allowedCodes: BOOKING_SOURCE_LANGUAGE_OPTIONS.map((option) => option.code),
+    fallback: DEFAULT_BOOKING_SOURCE_LANG
   });
 }
 
@@ -89,11 +89,11 @@ export function bookingContentLanguageLabel(value) {
   return bookingContentLanguageOption(value).label;
 }
 
-export function bookingEditingLanguageOption(value) {
+export function bookingSourceLanguageOption(value) {
   const normalized = value === undefined
-    ? bookingEditingLang(DEFAULT_BOOKING_EDITING_LANG)
-    : normalizeBookingEditingLang(value || DEFAULT_BOOKING_EDITING_LANG);
-  return BOOKING_EDITING_LANGUAGE_OPTIONS.find((option) => option.code === normalized) || {
+    ? bookingSourceLang(DEFAULT_BOOKING_SOURCE_LANG)
+    : normalizeBookingSourceLang(value || DEFAULT_BOOKING_SOURCE_LANG);
+  return BOOKING_SOURCE_LANGUAGE_OPTIONS.find((option) => option.code === normalized) || {
     code: normalized,
     label: normalized,
     shortLabel: normalized.toUpperCase(),
@@ -102,8 +102,8 @@ export function bookingEditingLanguageOption(value) {
   };
 }
 
-export function bookingEditingLanguageLabel(value) {
-  return bookingEditingLanguageOption(value).label;
+export function bookingSourceLanguageLabel(value) {
+  return bookingSourceLanguageOption(value).label;
 }
 
 export function bookingContentLang(fallback = DEFAULT_BOOKING_CONTENT_LANG) {
@@ -112,16 +112,14 @@ export function bookingContentLang(fallback = DEFAULT_BOOKING_CONTENT_LANG) {
   return normalizeBookingContentLang(fallback || DEFAULT_BOOKING_CONTENT_LANG);
 }
 
-export function bookingEditingLang(fallback = DEFAULT_BOOKING_EDITING_LANG) {
+export function bookingSourceLang(fallback = DEFAULT_BOOKING_SOURCE_LANG) {
   const backendCandidate = typeof window.backendI18n?.getLang === "function"
     ? String(window.backendI18n.getLang() || "").trim()
     : "";
-  if (backendCandidate) return normalizeBookingEditingLang(backendCandidate);
-  const runtimeCandidate = String(window.__BOOKING_EDITING_LANG || "").trim();
-  if (runtimeCandidate) return normalizeBookingEditingLang(runtimeCandidate);
+  if (backendCandidate) return normalizeBookingSourceLang(backendCandidate);
   const documentLang = String(document.documentElement.lang || "").trim();
-  if (documentLang) return normalizeBookingEditingLang(documentLang);
-  return normalizeBookingEditingLang(fallback || DEFAULT_BOOKING_EDITING_LANG);
+  if (documentLang) return normalizeBookingSourceLang(documentLang);
+  return normalizeBookingSourceLang(fallback || DEFAULT_BOOKING_SOURCE_LANG);
 }
 
 export function setBookingContentLang(value) {
@@ -134,11 +132,14 @@ export function setBookingContentLang(value) {
   return normalized;
 }
 
-export function setBookingEditingLang(value) {
-  const normalized = normalizeBookingEditingLang(value || DEFAULT_BOOKING_EDITING_LANG);
-  window.__BOOKING_EDITING_LANG = normalized;
-  document.documentElement.dataset.bookingEditingLang = normalized;
-  return normalized;
+export function bookingLanguageQuery({
+  contentLang = bookingContentLang(),
+  sourceLang = bookingSourceLang()
+} = {}) {
+  return {
+    content_lang: normalizeBookingContentLang(contentLang || DEFAULT_BOOKING_CONTENT_LANG),
+    source_lang: normalizeBookingSourceLang(sourceLang || DEFAULT_BOOKING_SOURCE_LANG)
+  };
 }
 
 export function formatLocalizedDate(value, locale, options = {}, fallback = "-") {

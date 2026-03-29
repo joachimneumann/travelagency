@@ -7,9 +7,10 @@ import {
 import { logBrowserConsoleError } from "../shared/api.js";
 import {
   bookingContentLang,
+  bookingLanguageQuery,
   bookingContentLanguageOption,
-  bookingEditingLang,
-  bookingEditingLanguageLabel,
+  bookingSourceLang,
+  bookingSourceLanguageLabel,
   bookingT
 } from "./i18n.js";
 import { formatMoneyDisplay } from "./pricing.js";
@@ -80,6 +81,14 @@ export function createBookingTravelPlanModule(ctx) {
   function logTravelPlanSave(message, details = {}) {
     const payload = details && typeof details === "object" ? { ...details } : { details };
     console.info(message, payload);
+  }
+
+  function withBookingLanguageQuery(urlLike) {
+    const url = new URL(urlLike, window.location.origin);
+    const query = bookingLanguageQuery();
+    url.searchParams.set("content_lang", query.content_lang);
+    url.searchParams.set("source_lang", query.source_lang);
+    return url.toString();
   }
 
   function currentInternalOfferDetailLevel() {
@@ -235,7 +244,7 @@ export function createBookingTravelPlanModule(ctx) {
 
   function travelPlanTranslateButtonState() {
     const targetLang = bookingContentLang();
-    const sourceLang = bookingEditingLang();
+    const sourceLang = bookingSourceLang();
     const status = state.booking?.travel_plan_translation_status || {};
     const disabledReason = !state.permissions.canEditBooking
       ? bookingT("booking.translation.disabled.no_permission", "Disabled: you do not have permission to edit this booking.")
@@ -245,7 +254,7 @@ export function createBookingTravelPlanModule(ctx) {
           ? bookingT("booking.travel_plan.translate_everything_clean_state", "Save or discard unsaved travel-plan edits before translating everything.")
           : !status.has_source_content
           ? bookingT("booking.translation.disabled.no_source", "Disabled: add {language} {section} content first.", {
-                language: bookingEditingLanguageLabel(),
+                language: bookingSourceLanguageLabel(),
                 section: travelPlanSectionLabel()
               })
             : "";
@@ -259,7 +268,7 @@ export function createBookingTravelPlanModule(ctx) {
     if (!(els.travel_plan_translate_all_btn instanceof HTMLButtonElement)) return;
     const button = els.travel_plan_translate_all_btn;
     const targetLang = bookingContentLang();
-    const sourceLang = bookingEditingLang();
+    const sourceLang = bookingSourceLang();
     const shouldShow = targetLang !== sourceLang;
     button.hidden = !shouldShow;
     if (!shouldShow) {
@@ -308,7 +317,7 @@ export function createBookingTravelPlanModule(ctx) {
   function getTravelPlanNormalizationOptions() {
     return {
       targetLang: bookingContentLang(),
-      sourceLang: bookingEditingLang()
+      sourceLang: bookingSourceLang()
     };
   }
 
@@ -415,7 +424,7 @@ export function createBookingTravelPlanModule(ctx) {
       isDirty
         ? {
             reason: "travel_plan_snapshot_mismatch",
-            source_lang: bookingEditingLang(),
+            source_lang: bookingSourceLang(),
             target_lang: bookingContentLang(),
             first_difference: findFirstTravelPlanDifference(state.originalTravelPlanState, normalizedDraft)
           }
@@ -665,7 +674,7 @@ export function createBookingTravelPlanModule(ctx) {
       if (startLabel && endLabel) return `${startLabel} - ${endLabel}`;
       return startLabel || endLabel || "";
     }
-    return resolveLocalizedDraftBranchText(item?.time_label_i18n ?? item?.time_label, bookingEditingLang(), "");
+    return resolveLocalizedDraftBranchText(item?.time_label_i18n ?? item?.time_label, bookingSourceLang(), "");
   }
 
   function toggleTravelPlanServiceCollapsed(itemId) {
@@ -1051,7 +1060,7 @@ export function createBookingTravelPlanModule(ctx) {
           itemId: item.id,
           field: "time_label",
           type: "input",
-          sourceValue: resolveLocalizedDraftBranchText(item.time_label_i18n ?? item.time_label, bookingEditingLang(), ""),
+          sourceValue: resolveLocalizedDraftBranchText(item.time_label_i18n ?? item.time_label, bookingSourceLang(), ""),
           localizedValue: resolveLocalizedDraftBranchText(item.time_label_i18n ?? item.time_label, bookingContentLang(), "")
         })}
       </div>
@@ -1095,7 +1104,7 @@ export function createBookingTravelPlanModule(ctx) {
     const showFinancialCoverage = currentInternalOfferDetailLevel() === "component";
     const coverageLabel = coverageBadgeLabel(coverageStatus);
     const collapsed = isTravelPlanServiceCollapsed(item.id);
-    const sourceTitle = resolveLocalizedDraftBranchText(item.title_i18n ?? item.title, bookingEditingLang(), "").trim();
+    const sourceTitle = resolveLocalizedDraftBranchText(item.title_i18n ?? item.title, bookingSourceLang(), "").trim();
     const collapsedTitle = sourceTitle || bookingT("booking.travel_plan.item_heading", "Service {item}", { item: itemIndex + 1 });
     const timingSummary = travelPlanTimingSummary(day, item).trim();
     const shouldShowCoverageBadge = showFinancialCoverage && coverageStatus !== "not_applicable";
@@ -1168,7 +1177,7 @@ export function createBookingTravelPlanModule(ctx) {
               itemId: item.id,
               field: "title",
               type: "input",
-              sourceValue: resolveLocalizedDraftBranchText(item.title_i18n ?? item.title, bookingEditingLang(), ""),
+              sourceValue: resolveLocalizedDraftBranchText(item.title_i18n ?? item.title, bookingSourceLang(), ""),
               localizedValue: resolveLocalizedDraftBranchText(item.title_i18n ?? item.title, bookingContentLang(), "")
             })}
           </div>
@@ -1181,7 +1190,7 @@ export function createBookingTravelPlanModule(ctx) {
               itemId: item.id,
               field: "location",
               type: "input",
-              sourceValue: resolveLocalizedDraftBranchText(item.location_i18n ?? item.location, bookingEditingLang(), ""),
+              sourceValue: resolveLocalizedDraftBranchText(item.location_i18n ?? item.location, bookingSourceLang(), ""),
               localizedValue: resolveLocalizedDraftBranchText(item.location_i18n ?? item.location, bookingContentLang(), "")
             })}
           </div>
@@ -1200,7 +1209,7 @@ export function createBookingTravelPlanModule(ctx) {
               field: "details",
               type: "textarea",
               rows: 3,
-              sourceValue: resolveLocalizedDraftBranchText(item.details_i18n ?? item.details, bookingEditingLang(), ""),
+              sourceValue: resolveLocalizedDraftBranchText(item.details_i18n ?? item.details, bookingSourceLang(), ""),
               localizedValue: resolveLocalizedDraftBranchText(item.details_i18n ?? item.details, bookingContentLang(), "")
             })}
           </div>
@@ -1253,7 +1262,7 @@ export function createBookingTravelPlanModule(ctx) {
               dayId: day.id,
               field: "title",
               type: "input",
-              sourceValue: resolveLocalizedDraftBranchText(day.title_i18n ?? day.title, bookingEditingLang(), ""),
+              sourceValue: resolveLocalizedDraftBranchText(day.title_i18n ?? day.title, bookingSourceLang(), ""),
               localizedValue: resolveLocalizedDraftBranchText(day.title_i18n ?? day.title, bookingContentLang(), "")
             })}
           </div>
@@ -1265,7 +1274,7 @@ export function createBookingTravelPlanModule(ctx) {
               dayId: day.id,
               field: "overnight_location",
               type: "input",
-              sourceValue: resolveLocalizedDraftBranchText(day.overnight_location_i18n ?? day.overnight_location, bookingEditingLang(), ""),
+              sourceValue: resolveLocalizedDraftBranchText(day.overnight_location_i18n ?? day.overnight_location, bookingSourceLang(), ""),
               localizedValue: resolveLocalizedDraftBranchText(day.overnight_location_i18n ?? day.overnight_location, bookingContentLang(), "")
             })}
           </div>
@@ -1279,7 +1288,7 @@ export function createBookingTravelPlanModule(ctx) {
             field: "notes",
             type: "textarea",
             rows: 3,
-            sourceValue: resolveLocalizedDraftBranchText(day.notes_i18n ?? day.notes, bookingEditingLang(), ""),
+            sourceValue: resolveLocalizedDraftBranchText(day.notes_i18n ?? day.notes, bookingSourceLang(), ""),
             localizedValue: resolveLocalizedDraftBranchText(day.notes_i18n ?? day.notes, bookingContentLang(), "")
           })}
         </div>
@@ -1294,7 +1303,7 @@ export function createBookingTravelPlanModule(ctx) {
 
   function readLocalizedFieldPayload(container, dataScope, field, existingValue = null) {
     const sourceInput = container?.querySelector(`[data-${dataScope}="${field}"][data-localized-role="source"]`);
-    const sourceLang = bookingEditingLang();
+    const sourceLang = bookingSourceLang();
     const targetLang = bookingContentLang();
     const localizedInput = targetLang === sourceLang
       ? null
@@ -1597,7 +1606,7 @@ export function createBookingTravelPlanModule(ctx) {
         .sort((left, right) => String(right?.created_at || "").localeCompare(String(left?.created_at || "")));
       renderTravelPlanPanel();
       const link = document.createElement("a");
-      link.href = artifact.pdf_url;
+      link.href = withBookingLanguageQuery(artifact.pdf_url);
       link.target = "_blank";
       link.rel = "noopener";
       link.click();
@@ -1616,7 +1625,7 @@ export function createBookingTravelPlanModule(ctx) {
     const request = bookingTravelPlanPdfRequest({
       baseURL: apiOrigin,
       params: { booking_id: state.booking.id },
-      query: { lang: bookingContentLang() }
+      query: bookingLanguageQuery()
     });
     const previewUrl = new URL(request.url, window.location.origin);
     previewUrl.searchParams.set("preview", "1");
@@ -1714,7 +1723,7 @@ export function createBookingTravelPlanModule(ctx) {
         body: {
           expected_travel_plan_revision: expectedTravelPlanRevision,
           travel_plan: travelPlanPayload,
-          lang: bookingContentLang()
+          content_lang: bookingContentLang()
         }
       });
       logTravelPlanSave("[booking-save][travel-plan] Sending mutation request.", {
@@ -1783,7 +1792,7 @@ export function createBookingTravelPlanModule(ctx) {
     const editor = button.closest(".localized-pair");
     if (!editor) return;
     const direction = String(button.getAttribute("data-localized-translate-direction") || "source-to-target").trim();
-    const editingLang = bookingEditingLang();
+    const editingLang = bookingSourceLang();
     const sourceFieldInput = editor?.querySelector('[data-localized-role="source"]');
     const targetLang = bookingContentLang();
     const localizedInput = targetLang === editingLang
@@ -1856,12 +1865,13 @@ export function createBookingTravelPlanModule(ctx) {
       params: { booking_id: state.booking.id },
       body: {
         expected_travel_plan_revision: getBookingRevision("travel_plan_revision"),
-        lang: bookingContentLang(),
+        source_lang: bookingSourceLang(),
+        target_lang: bookingContentLang(),
         actor: state.user || "keycloak_user"
       }
     });
 
-    travelPlanStatus(translationBusyText(travelPlanSectionLabel(), status.source_lang || bookingEditingLang()), "loading");
+    travelPlanStatus(translationBusyText(travelPlanSectionLabel(), status.source_lang || bookingSourceLang()), "loading");
     if (els.travel_plan_translate_all_btn instanceof HTMLButtonElement) {
       els.travel_plan_translate_all_btn.disabled = true;
     }

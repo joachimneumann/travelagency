@@ -7,8 +7,8 @@ import {
 
 export const BOOKING_CONTENT_LANGUAGES = CUSTOMER_CONTENT_LANGUAGE_CODES;
 export const DEFAULT_BOOKING_CONTENT_LANG = "en";
-export const BOOKING_EDITING_LANGUAGE_CODES = BACKEND_UI_LANGUAGE_CODES;
-export const DEFAULT_BOOKING_EDITING_LANG = "en";
+export const BOOKING_SOURCE_LANGUAGE_CODES = BACKEND_UI_LANGUAGE_CODES;
+export const DEFAULT_BOOKING_SOURCE_LANG = "en";
 
 function unique(values) {
   return Array.from(new Set((Array.isArray(values) ? values : []).filter(Boolean)));
@@ -18,10 +18,10 @@ export function normalizeBookingContentLang(value) {
   return normalizeLanguageCode(normalizeText(value), { fallback: DEFAULT_BOOKING_CONTENT_LANG });
 }
 
-export function normalizeBookingEditingLang(value) {
+export function normalizeBookingSourceLang(value) {
   return normalizeLanguageCode(normalizeText(value), {
-    allowedCodes: BOOKING_EDITING_LANGUAGE_CODES,
-    fallback: DEFAULT_BOOKING_EDITING_LANG
+    allowedCodes: BOOKING_SOURCE_LANGUAGE_CODES,
+    fallback: DEFAULT_BOOKING_SOURCE_LANG
   });
 }
 

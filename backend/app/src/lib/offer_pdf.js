@@ -120,6 +120,22 @@ function textOrNull(value) {
   return normalized || null;
 }
 
+function isSyntheticTripTotalLabel(value) {
+  return normalizeText(value).toLowerCase() === "trip total";
+}
+
+function isSyntheticDailyLabel(value, dayNumber = null) {
+  const normalized = normalizeText(value).toLowerCase();
+  if (!normalized) return false;
+  if (normalized === "daily total") return true;
+  if (/^day\s+\d+$/.test(normalized)) return true;
+  return Number.isInteger(Number(dayNumber)) && normalized === `day ${Number(dayNumber)}`;
+}
+
+function isSyntheticAdditionalItemLabel(value) {
+  return /^additional item(?:\s+\d+)?$/i.test(normalizeText(value));
+}
+
 function extractPublicRelativePath(publicUrl, prefix) {
   const normalizedUrl = normalizeText(publicUrl);
   if (!normalizedUrl) return null;
@@ -260,10 +276,13 @@ function buildOfferTableRows(generatedOffer, formatMoneyValue, lang) {
   let mainRows = componentRows;
   if (visiblePricing?.detail_level === "trip" && visiblePricing?.trip_price) {
     const tripPrice = visiblePricing.trip_price;
+    const customTripLabel = textOrNull(tripPrice?.label) && !isSyntheticTripTotalLabel(tripPrice?.label)
+      ? textOrNull(tripPrice?.label)
+      : null;
     mainRows = [{
       category: pdfT(lang, "offer.trip_label", "Trip"),
-      categoryTax: textOrNull(tripPrice?.label) || pdfT(lang, "offer.trip_total", "Trip total"),
-      details: textOrNull(tripPrice?.label) || "—",
+      categoryTax: customTripLabel || pdfT(lang, "offer.trip_total", "Trip total"),
+      details: customTripLabel || "—",
       quantity: "—",
       unitText: "—",
       totalText: formatMoneyValue(
@@ -272,35 +291,45 @@ function buildOfferTableRows(generatedOffer, formatMoneyValue, lang) {
       )
     }];
   } else if (visiblePricing?.detail_level === "day" && visiblePricing?.derivable !== false && safeArray(visiblePricing?.days).length) {
-    mainRows = safeArray(visiblePricing.days).map((dayPrice) => ({
-      category: formatVisiblePricingLabel(dayPrice, lang),
-      categoryTax: textOrNull(dayPrice?.label) || pdfT(lang, "offer.daily_total", "Daily total"),
-      details: textOrNull(dayPrice?.label) || "—",
-      quantity: "—",
-      unitText: "—",
-      totalText: formatMoneyValue(
-        dayPrice?.line_gross_amount_cents ?? dayPrice?.line_total_amount_cents ?? dayPrice?.amount_cents,
-        currency
-      )
-    }));
+    mainRows = safeArray(visiblePricing.days).map((dayPrice) => {
+      const customDayLabel = textOrNull(dayPrice?.label) && !isSyntheticDailyLabel(dayPrice?.label, dayPrice?.day_number)
+        ? textOrNull(dayPrice?.label)
+        : null;
+      return {
+        category: formatVisiblePricingLabel(dayPrice, lang),
+        categoryTax: customDayLabel || pdfT(lang, "offer.daily_total", "Daily total"),
+        details: customDayLabel || "—",
+        quantity: "—",
+        unitText: "—",
+        totalText: formatMoneyValue(
+          dayPrice?.line_gross_amount_cents ?? dayPrice?.line_total_amount_cents ?? dayPrice?.amount_cents,
+          currency
+        )
+      };
+    });
   }
 
-  const additionalItemRows = safeArray(visiblePricing?.additional_items || offer?.additional_items).map((item) => ({
-    category: Number.isInteger(Number(item?.day_number)) && Number(item?.day_number) >= 1
-      ? pdfT(lang, "offer.additional_item_day", "Additional item · Day {day}", { day: Number(item.day_number) })
-      : pdfT(lang, "offer.additional_item", "Additional item"),
-    categoryTax: formatTaxRateLabel(item?.tax_rate_basis_points, lang),
-    details: [textOrNull(item?.label), textOrNull(item?.details)].filter(Boolean).join(" · ") || "—",
-    quantity: String(Number(item?.quantity || 1)),
-    unitText: formatMoneyValue(
-      item?.unit_total_amount_cents ?? item?.unit_amount_cents,
-      currency
-    ),
-    totalText: formatMoneyValue(
-      item?.line_gross_amount_cents ?? item?.line_total_amount_cents,
-      currency
-    )
-  }));
+  const additionalItemRows = safeArray(visiblePricing?.additional_items || offer?.additional_items).map((item) => {
+    const customLabel = textOrNull(item?.label) && !isSyntheticAdditionalItemLabel(item?.label)
+      ? textOrNull(item?.label)
+      : null;
+    return {
+      category: Number.isInteger(Number(item?.day_number)) && Number(item?.day_number) >= 1
+        ? pdfT(lang, "offer.additional_item_day", "Additional item · Day {day}", { day: Number(item.day_number) })
+        : pdfT(lang, "offer.additional_item", "Additional item"),
+      categoryTax: formatTaxRateLabel(item?.tax_rate_basis_points, lang),
+      details: [customLabel, textOrNull(item?.details)].filter(Boolean).join(" · ") || "—",
+      quantity: String(Number(item?.quantity || 1)),
+      unitText: formatMoneyValue(
+        item?.unit_total_amount_cents ?? item?.unit_amount_cents,
+        currency
+      ),
+      totalText: formatMoneyValue(
+        item?.line_gross_amount_cents ?? item?.line_total_amount_cents,
+        currency
+      )
+    };
+  });
 
   const discountRows = discount && Number(discount?.amount_cents || 0) > 0
     ? [{

@@ -1,8 +1,10 @@
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { BACKEND_UI_LANGUAGE_CODES } from "../../../shared/generated/language_catalog.js";
 import {
   normalizeBookingContentLang,
+  normalizeBookingSourceLang,
   normalizeLocalizedTextMap,
   resolveLocalizedText
 } from "../src/domain/booking_content_i18n.js";
@@ -22,9 +24,10 @@ function usage() {
     "  node backend/app/scripts/prune_stale_content_translations.js [--store <path>] [--booking <booking_id>] [--write]",
     "",
     "Behavior:",
-    "  - keeps only English plus the booking's current customer language",
+    "  - keeps the booking's current customer language plus inferred source-language branches",
     "  - affects booking.offer.details_i18n and customer-facing booking.travel_plan *_i18n fields",
-    "  - prunes offer/travel-plan translation_meta to the same kept language",
+    "  - infers source languages from section translation_meta and backend-editable localized branches",
+    "  - prunes offer/travel-plan translation_meta to kept target languages only",
     "  - defaults to dry-run; pass --write to persist changes"
   ].join("\n");
 }
@@ -86,9 +89,37 @@ function bookingCurrentContentLanguage(booking) {
   );
 }
 
-function keepLanguagesForBooking(booking) {
-  const current = bookingCurrentContentLanguage(booking);
-  return current === "en" ? ["en"] : ["en", current];
+function keepTargetLanguagesForBooking(booking) {
+  return [bookingCurrentContentLanguage(booking)];
+}
+
+function normalizeSourceLanguageSet(values) {
+  return Array.from(new Set(
+    (Array.isArray(values) ? values : [])
+      .map((lang) => normalizeBookingSourceLang(lang))
+      .filter((lang) => BACKEND_UI_LANGUAGE_CODES.includes(lang))
+  ));
+}
+
+function sourceLanguagesFromTranslationMeta(section) {
+  const translationMeta = section?.translation_meta && typeof section.translation_meta === "object" && !Array.isArray(section.translation_meta)
+    ? section.translation_meta
+    : {};
+  return normalizeSourceLanguageSet(
+    Object.values(translationMeta).map((entry) => entry?.source_lang)
+  );
+}
+
+function sourceLanguagesFromLocalizedValue(value) {
+  return normalizeSourceLanguageSet(Object.keys(normalizeLocalizedTextMap(value, "en")));
+}
+
+function keepLanguagesForField(value, keepTargetLangs, sectionSourceLangs = []) {
+  return Array.from(new Set([
+    ...(Array.isArray(keepTargetLangs) ? keepTargetLangs : []).map((lang) => normalizeBookingContentLang(lang)),
+    ...sectionSourceLangs,
+    ...sourceLanguagesFromLocalizedValue(value)
+  ]));
 }
 
 function pruneLocalizedMap(value, keepLangs) {
@@ -110,10 +141,11 @@ function pruneLocalizedMap(value, keepLangs) {
 }
 
 function pruneTranslationMeta(section, keepLangs) {
+  const sourceLangs = new Set(sourceLanguagesFromTranslationMeta(section));
   const keep = new Set(
     (Array.isArray(keepLangs) ? keepLangs : [])
       .map((lang) => normalizeBookingContentLang(lang))
-      .filter((lang) => lang !== "en")
+      .filter((lang) => !sourceLangs.has(lang))
   );
   const previous = section?.translation_meta && typeof section.translation_meta === "object" && !Array.isArray(section.translation_meta)
     ? section.translation_meta
@@ -139,10 +171,17 @@ function pruneOffer(offer, keepLangs) {
     return { fieldChanges: 0, removedLanguages: 0, translationMetaRemoved: 0 };
   }
   normalizeOfferTranslationMeta(offer);
+  const sectionSourceLangs = sourceLanguagesFromTranslationMeta(offer);
   let fieldChanges = 0;
   let removedLanguages = 0;
   for (const component of Array.isArray(offer.components) ? offer.components : []) {
-    const result = applyPrunedField(component, "details_i18n", "details", keepLangs, "");
+    const result = applyPrunedField(
+      component,
+      "details_i18n",
+      "details",
+      keepLanguagesForField(component?.details_i18n ?? component?.details, keepLangs, sectionSourceLangs),
+      ""
+    );
     if (result.changed) fieldChanges += 1;
     removedLanguages += result.removedLanguages;
   }
@@ -158,6 +197,7 @@ function pruneTravelPlan(travelPlan, keepLangs) {
     return { fieldChanges: 0, removedLanguages: 0, translationMetaRemoved: 0 };
   }
   normalizeTravelPlanTranslationMeta(travelPlan);
+  const sectionSourceLangs = sourceLanguagesFromTranslationMeta(travelPlan);
   let fieldChanges = 0;
   let removedLanguages = 0;
 
@@ -167,7 +207,13 @@ function pruneTravelPlan(travelPlan, keepLangs) {
       ["overnight_location_i18n", "overnight_location", null],
       ["notes_i18n", "notes", null]
     ]) {
-      const result = applyPrunedField(day, mapField, plainField, keepLangs, emptyValue);
+      const result = applyPrunedField(
+        day,
+        mapField,
+        plainField,
+        keepLanguagesForField(day?.[mapField] ?? day?.[plainField], keepLangs, sectionSourceLangs),
+        emptyValue
+      );
       if (result.changed) fieldChanges += 1;
       removedLanguages += result.removedLanguages;
     }
@@ -179,7 +225,13 @@ function pruneTravelPlan(travelPlan, keepLangs) {
         ["details_i18n", "details", null],
         ["location_i18n", "location", null]
       ]) {
-        const result = applyPrunedField(item, mapField, plainField, keepLangs, emptyValue);
+        const result = applyPrunedField(
+          item,
+          mapField,
+          plainField,
+          keepLanguagesForField(item?.[mapField] ?? item?.[plainField], keepLangs, sectionSourceLangs),
+          emptyValue
+        );
         if (result.changed) fieldChanges += 1;
         removedLanguages += result.removedLanguages;
       }
@@ -219,7 +271,7 @@ async function main() {
   for (const booking of bookings) {
     if (!shouldProcessBooking(booking, options.bookingIds)) continue;
     summary.bookingsScanned += 1;
-    const keepLangs = keepLanguagesForBooking(booking);
+    const keepLangs = keepTargetLanguagesForBooking(booking);
     const offerResult = pruneOffer(booking.offer, keepLangs);
     const travelPlanResult = pruneTravelPlan(booking.travel_plan, keepLangs);
     const changed = Boolean(
@@ -230,7 +282,7 @@ async function main() {
     );
     if (changed) {
       summary.bookingsTouched += 1;
-      console.log(`${booking.id}: kept ${keepLangs.join(", ")}`);
+      console.log(`${booking.id}: kept target languages ${keepLangs.join(", ")}`);
     }
     summary.offerFieldsPruned += offerResult.fieldChanges;
     summary.travelPlanFieldsPruned += travelPlanResult.fieldChanges;

@@ -9,7 +9,7 @@ import {
   mergeEditableLocalizedTextField,
   mergeLocalizedTextField,
   normalizeBookingContentLang,
-  normalizeBookingEditingLang
+  normalizeBookingSourceLang
 } from "../../domain/booking_content_i18n.js";
 import {
   markTravelPlanTranslationManual,
@@ -71,14 +71,30 @@ export function createBookingTravelPlanHandlers(deps) {
   function requestContentLang(req, payload = null) {
     try {
       const requestUrl = new URL(req.url, "http://localhost");
-      return normalizeBookingContentLang(payload?.lang || requestUrl.searchParams.get("lang") || "en");
+      return normalizeBookingContentLang(
+        payload?.content_lang
+        || payload?.lang
+        || requestUrl.searchParams.get("content_lang")
+        || requestUrl.searchParams.get("lang")
+        || "en"
+      );
     } catch {
-      return normalizeBookingContentLang(payload?.lang || "en");
+      return normalizeBookingContentLang(payload?.content_lang || payload?.lang || "en");
     }
   }
 
-  function bookingEditingLang(booking) {
-    return normalizeBookingEditingLang(booking?.editing_language || "en");
+  function requestSourceLang(req, payload = null, fallback = "en") {
+    try {
+      const requestUrl = new URL(req.url, "http://localhost");
+      return normalizeBookingSourceLang(
+        payload?.source_lang
+        || requestUrl.searchParams.get("source_lang")
+        || fallback
+        || "en"
+      );
+    } catch {
+      return normalizeBookingSourceLang(payload?.source_lang || fallback || "en");
+    }
   }
 
   function travelPlanPdfTempOutputPath(bookingId, prefix = "travel-plan-preview") {
@@ -101,7 +117,7 @@ export function createBookingTravelPlanHandlers(deps) {
 
   function mergeTravelPlanForLang(existingTravelPlan, nextTravelPlan, offer, lang, sourceLang = "en") {
     const normalizedLang = normalizeBookingContentLang(lang);
-    const normalizedSourceLang = normalizeBookingContentLang(sourceLang);
+    const normalizedSourceLang = normalizeBookingSourceLang(sourceLang);
     const existingNormalized = normalizeBookingTravelPlan(existingTravelPlan, offer, {
       contentLang: normalizedLang,
       flatLang: normalizedLang,
@@ -249,7 +265,7 @@ export function createBookingTravelPlanHandlers(deps) {
       return;
     }
     if (error?.code === "TRANSLATION_SOURCE_LANGUAGE") {
-      sendJson(res, 422, { error: String(error.message || "The editing language cannot be auto-translated.") });
+      sendJson(res, 422, { error: String(error.message || "The source language cannot be auto-translated.") });
       return;
     }
     if (error?.code === "TRANSLATION_INVALID_RESPONSE" || error?.code === "TRANSLATION_REQUEST_FAILED") {
@@ -311,10 +327,12 @@ export function createBookingTravelPlanHandlers(deps) {
     }
 
     const contentLang = requestContentLang(req, null);
+    const sourceLang = requestSourceLang(req);
     const travelPlanSnapshot = buildBookingTravelPlanReadModel(booking.travel_plan, booking.offer, {
       lang: contentLang,
       contentLang,
-      flatLang: contentLang
+      flatLang: contentLang,
+      sourceLang
     });
 
     const previewPath = travelPlanPdfTempOutputPath(booking.id, "travel-plan-preview");
@@ -363,10 +381,12 @@ export function createBookingTravelPlanHandlers(deps) {
     if (!(await assertExpectedRevision(req, payload, booking, "expected_travel_plan_revision", "travel_plan_revision", res))) return;
 
     const contentLang = requestContentLang(req, payload);
+    const sourceLang = requestSourceLang(req, payload);
     const travelPlanSnapshot = buildBookingTravelPlanReadModel(booking.travel_plan, booking.offer, {
       lang: contentLang,
       contentLang,
-      flatLang: contentLang
+      flatLang: contentLang,
+      sourceLang
     });
 
     const tempPdfPath = travelPlanPdfTempOutputPath(booking.id, "travel-plan-artifact");
@@ -621,7 +641,7 @@ export function createBookingTravelPlanHandlers(deps) {
     }
 
     const contentLang = requestContentLang(req, payload);
-    const sourceLang = bookingEditingLang(booking);
+    const sourceLang = requestSourceLang(req, payload);
     const mergedTravelPlan = mergeTravelPlanForLang(booking.travel_plan, check.travel_plan, booking.offer, contentLang, sourceLang);
     if (contentLang !== sourceLang) {
       markTravelPlanTranslationManual(mergedTravelPlan, contentLang, nowIso(), sourceLang);
@@ -672,7 +692,7 @@ export function createBookingTravelPlanHandlers(deps) {
     if (!(await assertExpectedRevision(req, payload, booking, "expected_travel_plan_revision", "travel_plan_revision", res))) return;
 
     const contentLang = requestContentLang(req, payload);
-    const sourceLang = bookingEditingLang(booking);
+    const sourceLang = requestSourceLang(req, payload);
     try {
       const translatedTravelPlan = await translateTravelPlanFromSourceLanguage(
         booking.travel_plan,

@@ -131,7 +131,6 @@ import (
 		BookingDeleteRequest:                             apiModel.#BookingDeleteRequest
 		BookingNameUpdateRequest:                         apiModel.#BookingNameUpdateRequest
 		BookingCustomerLanguageUpdateRequest:             apiModel.#BookingCustomerLanguageUpdateRequest
-		BookingEditingLanguageUpdateRequest:              apiModel.#BookingEditingLanguageUpdateRequest
 		BookingSourceUpdateRequest:                       apiModel.#BookingSourceUpdateRequest
 		BookingImageUploadRequest:                        apiModel.#BookingImageUploadRequest
 		BookingMilestoneActionRequest:                    apiModel.#BookingMilestoneActionRequest

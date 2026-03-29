@@ -2,7 +2,9 @@ import { normalizeText } from "../shared/api.js";
 import {
   BOOKING_CONTENT_LANGUAGE_OPTIONS,
   bookingContentLang,
+  bookingLanguageQuery,
   bookingContentLanguageOption,
+  bookingSourceLang,
   normalizeBookingContentLang,
 } from "../booking/i18n.js";
 
@@ -12,6 +14,8 @@ export function createBookingPageLanguageController(ctx) {
     els,
     escapeHtml,
     backendT,
+    updateCoreDirtyState,
+    setStatus,
   } = ctx;
 
   async function waitForBackendI18n() {
@@ -41,8 +45,12 @@ export function createBookingPageLanguageController(ctx) {
         url.searchParams.set(key, String(value));
       }
     });
-    const lang = state.contentLang || bookingContentLang("en");
-    if (lang) url.searchParams.set("lang", lang);
+    const query = bookingLanguageQuery({
+      contentLang: state.contentLang || bookingContentLang("en"),
+      sourceLang: bookingSourceLang("en")
+    });
+    url.searchParams.set("content_lang", query.content_lang);
+    url.searchParams.set("source_lang", query.source_lang);
     return `${url.pathname}${url.search}`;
   }
 

@@ -1,5 +1,5 @@
 import {
-  bookingEditingLang,
+  bookingSourceLang,
   bookingContentLanguageLabel,
   bookingT
 } from "./i18n.js";
@@ -47,7 +47,7 @@ export function translationStatusLabel(status) {
 
 export function buildFallbackTranslationStatus({ lang = "en", fieldMaps = [] } = {}) {
   const normalizedLang = normalizedLangCode(lang);
-  const sourceLang = normalizedLangCode(bookingEditingLang("en"));
+  const sourceLang = normalizedLangCode(bookingSourceLang("en"));
   const maps = (Array.isArray(fieldMaps) ? fieldMaps : [])
     .map((value) => normalizeLocalizedMapForStatus(value))
     .filter((map) => Object.keys(map).length > 0);
@@ -90,7 +90,7 @@ export function buildFallbackTranslationStatus({ lang = "en", fieldMaps = [] } =
 
 function disabledReasonText(normalizedStatus, sectionLabel, explicitReason = "") {
   if (explicitReason) return explicitReason;
-  const sourceLang = normalizedLangCode(normalizedStatus.source_lang || bookingEditingLang("en"));
+  const sourceLang = normalizedLangCode(normalizedStatus.source_lang || bookingSourceLang("en"));
   const sourceLabel = languageLabel(sourceLang);
   if (normalizedStatus.lang === sourceLang) {
     return bookingT("booking.translation.disabled.source_language", "Disabled: {language} is the ATP staff language.", {
@@ -109,7 +109,7 @@ function disabledReasonText(normalizedStatus, sectionLabel, explicitReason = "")
 export function translationToolbarHtml({ status, sectionLabel, disabled = false, disabledReason = "", escapeHtml }) {
   const normalizedStatus = status && typeof status === "object" ? status : {};
   const targetLanguage = languageLabel(normalizedStatus.lang || "en");
-  const sourceLanguage = languageLabel(normalizedStatus.source_lang || bookingEditingLang("en"));
+  const sourceLanguage = languageLabel(normalizedStatus.source_lang || bookingSourceLang("en"));
   const progressText = bookingT("booking.translation.progress", "{translated} of {total} fields ready in {language}.", {
     translated: Number(normalizedStatus.translated_fields || 0),
     total: Number(normalizedStatus.total_fields || 0),
@@ -160,7 +160,7 @@ export function translationToolbarHtml({ status, sectionLabel, disabled = false,
   const actionLabel = normalizedStatus.has_target_content
     ? bookingT("booking.translation.retranslate_language", "Update {language}", { language: targetLanguage })
     : bookingT("booking.translation.translate_language", "Create {language}", { language: targetLanguage });
-  const buttonDisabled = disabled || normalizedStatus.lang === normalizedLangCode(normalizedStatus.source_lang || bookingEditingLang("en")) || !normalizedStatus.has_source_content;
+  const buttonDisabled = disabled || normalizedStatus.lang === normalizedLangCode(normalizedStatus.source_lang || bookingSourceLang("en")) || !normalizedStatus.has_source_content;
   const reasonText = buttonDisabled ? disabledReasonText(normalizedStatus, sectionLabel, disabledReason) : "";
   const statusClass = `booking-translation-toolbar__badge booking-translation-toolbar__badge--${escapeHtml(String(normalizedStatus.status || "missing").replace(/_/g, "-"))}`;
 
@@ -189,20 +189,20 @@ export function retranslateConfirmText(status, sectionLabel) {
     "Replace the current {language} translation for {section} with a fresh machine translation from {sourceLanguage}?",
     {
       language: languageLabel(status?.lang || "en"),
-      sourceLanguage: languageLabel(status?.source_lang || bookingEditingLang("en")),
+      sourceLanguage: languageLabel(status?.source_lang || bookingSourceLang("en")),
       section: sectionLabel
     }
   );
 }
 
-export function translationBusyText(sectionLabel, sourceLang = bookingEditingLang("en")) {
+export function translationBusyText(sectionLabel, sourceLang = bookingSourceLang("en")) {
   return bookingT("booking.translation.translating", "Translating {section} from {language}...", {
     section: sectionLabel,
     language: languageLabel(sourceLang)
   });
 }
 
-export function translationSuccessText(sectionLabel, sourceLang = bookingEditingLang("en")) {
+export function translationSuccessText(sectionLabel, sourceLang = bookingSourceLang("en")) {
   return bookingT("booking.translation.translated", "{section} translated from {language}.", {
     section: sectionLabel,
     language: languageLabel(sourceLang)

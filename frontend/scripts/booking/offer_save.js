@@ -52,7 +52,7 @@ export function createBookingOfferSaveController(ctx) {
         expected_offer_revision: getBookingRevision("offer_revision"),
         offer,
         actor: state.user,
-        lang: bookingContentLang()
+        content_lang: bookingContentLang()
       }
     });
 

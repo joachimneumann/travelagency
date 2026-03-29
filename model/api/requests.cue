@@ -62,12 +62,6 @@ import (
 	actor?:                  string
 }
 
-#BookingEditingLanguageUpdateRequest: {
-	expected_core_revision?: >=0 & int
-	editing_language:       "en" | "vi"
-	actor?:                 string
-}
-
 #BookingSourceUpdateRequest: {
 	expected_core_revision?:  >=0 & int
 	source_channel:           enums.#BookingSourceChannel
@@ -137,7 +131,8 @@ import (
 
 #BookingTravelPlanTranslateRequest: {
 	expected_travel_plan_revision?: >=0 & int
-	lang:                           enums.#LanguageCode
+	source_lang:                    enums.#LanguageCode
+	target_lang:                    enums.#LanguageCode
 	actor?:                         string
 }
 
@@ -236,7 +231,8 @@ import (
 
 #BookingOfferTranslateRequest: {
 	expected_offer_revision?: >=0 & int
-	lang:                     enums.#LanguageCode
+	source_lang:              enums.#LanguageCode
+	target_lang:              enums.#LanguageCode
 	actor?:                   string
 }
 
@@ -360,7 +356,8 @@ import (
 
 #BookingInvoiceTranslateRequest: {
 	expected_invoices_revision?: >=0 & int
-	lang:                        enums.#LanguageCode
+	source_lang:                 enums.#LanguageCode
+	target_lang:                 enums.#LanguageCode
 	actor?:                      string
 }
 

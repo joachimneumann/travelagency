@@ -14,6 +14,7 @@ Read these in order:
 - [Current System Map](/Users/internal_admin/projects/travelagency/documentation/current_system_map.md)
 - [Software Architecture](/Users/internal_admin/projects/travelagency/documentation/concept/software_architecture.md)
 - [ATP Architecture Notes](/Users/internal_admin/projects/travelagency/documentation/concept/software_architecture_atp.md)
+- [Runtime Language Model](/Users/internal_admin/projects/travelagency/documentation/concept/i18n_runtime.md)
 - [Backend Guide](/Users/internal_admin/projects/travelagency/documentation/backend/README.md)
 - [Mobile App Guide](/Users/internal_admin/projects/travelagency/documentation/backend/mobileApp.md)
 

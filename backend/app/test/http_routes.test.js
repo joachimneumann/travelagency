@@ -15,11 +15,11 @@ test("buildApiRoutes materializes declared handlers when all handler keys are pr
 
 test("buildApiRoutes throws when a declared handler key is missing", () => {
   const handlers = new Proxy({}, {
-    get: (_target, prop) => prop === "handlePatchBookingEditingLanguage" ? undefined : () => {}
+    get: (_target, prop) => prop === "handlePatchBookingCustomerLanguage" ? undefined : () => {}
   });
 
   assert.throws(
     () => buildApiRoutes({ handlers }),
-    /Missing route handler.*handlePatchBookingEditingLanguage/
+    /Missing route handler.*handlePatchBookingCustomerLanguage/
   );
 });

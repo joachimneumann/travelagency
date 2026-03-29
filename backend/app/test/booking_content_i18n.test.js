@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   mergeEditableLocalizedTextField,
-  normalizeBookingEditingLang
+  normalizeBookingSourceLang
 } from "../src/domain/booking_content_i18n.js";
 
 test("editing the English source prunes stale translations down to English and the current language", () => {
@@ -89,7 +89,7 @@ test("editing a Vietnamese source prunes stale translations down to Vietnamese a
     },
     "de",
     {
-      sourceLang: normalizeBookingEditingLang("vi"),
+      sourceLang: normalizeBookingSourceLang("vi"),
       pruneExtraTranslationsOnSourceChange: true
     }
   );

@@ -355,7 +355,6 @@ import (
 	number_of_travelers?:         >=0 & int
 	preferred_currency?:          enums.#CurrencyCode
 	customer_language?:           enums.#LanguageCode
-	editing_language?:            "en" | "vi"
 	confirmed_generated_offer_id?: common.#Identifier
 	accepted_record?:             #BookingAcceptedRecordReadModel
 	notes?:                       string

@@ -4,7 +4,7 @@ import {
   normalizeCurrencyCode,
   setSelectValue
 } from "./pricing.js";
-import { bookingEditingLang, bookingT } from "./i18n.js";
+import { bookingSourceLang, bookingT } from "./i18n.js";
 import { renderBookingSectionHeader } from "./sections.js";
 import { createBookingGeneratedOffersModule } from "./offer_generated_offers.js";
 import { createBookingOfferComponentsModule } from "./offer_components.js";
@@ -217,7 +217,7 @@ export function createBookingOfferModule(ctx) {
   }
 
   function countMissingOfferPdfTranslations(booking, lang) {
-    if (!booking || lang === bookingEditingLang("en")) return 0;
+    if (!booking || lang === bookingSourceLang("en")) return 0;
     const normalizedLang = String(lang || "").trim().toLowerCase();
     const offerSummary = booking?.offer_translation_status;
     const travelPlanSummary = booking?.travel_plan_translation_status;
@@ -433,12 +433,12 @@ export function createBookingOfferModule(ctx) {
         label: String(component?.label || ""),
         details: resolveLocalizedEditorText(
           component?.details_i18n ?? component?.details ?? component?.description,
-          bookingEditingLang("en"),
+          bookingSourceLang("en"),
           ""
         ),
         details_i18n: normalizeLocalizedEditorMap(
           component?.details_i18n ?? component?.details ?? component?.description,
-          bookingEditingLang("en")
+          bookingSourceLang("en")
         ),
         day_number: Number.isInteger(Number(component?.day_number)) && Number(component?.day_number) >= 1
           ? Number(component.day_number)

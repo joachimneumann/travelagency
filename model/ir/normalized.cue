@@ -872,7 +872,6 @@ IR: {
 				{name: "number_of_travelers", kind: "scalar", typeName: "int", required: false},
 				{name: "preferred_currency", kind: "enum", typeName: "CurrencyCode", required: false},
 				{name: "customer_language", kind: "enum", typeName: "LanguageCode", required: false},
-				{name: "editing_language", kind: "scalar", typeName: "string", required: false},
 				{name: "confirmed_generated_offer_id", kind: "scalar", typeName: "Identifier", required: false},
 				{name: "notes", kind: "scalar", typeName: "string", required: false},
 				{name: "persons", kind: "entity", typeName: "BookingPerson", required: false, isArray: true},
@@ -1120,7 +1119,6 @@ IR: {
 				{name: "number_of_travelers", kind: "scalar", typeName: "int", required: false},
 				{name: "preferred_currency", kind: "enum", typeName: "CurrencyCode", required: false},
 				{name: "customer_language", kind: "enum", typeName: "LanguageCode", required: false},
-				{name: "editing_language", kind: "scalar", typeName: "string", required: false},
 				{name: "confirmed_generated_offer_id", kind: "scalar", typeName: "Identifier", required: false},
 				{name: "notes", kind: "scalar", typeName: "string", required: false},
 				{name: "persons", kind: "entity", typeName: "BookingPerson", required: false, isArray: true},
@@ -1658,17 +1656,6 @@ IR: {
 			fields: [
 				{name: "expected_core_revision", kind: "scalar", typeName: "int", required: false},
 				{name: "customer_language", kind: "enum", typeName: "LanguageCode", required: true},
-				{name: "actor", kind: "scalar", typeName: "string", required: false},
-			]
-		},
-		{
-			name:       "BookingEditingLanguageUpdateRequest"
-			domain:     "api"
-			module:     "api"
-			sourceType: "api.#BookingEditingLanguageUpdateRequest"
-			fields: [
-				{name: "expected_core_revision", kind: "scalar", typeName: "int", required: false},
-				{name: "editing_language", kind: "scalar", typeName: "string", required: true},
 				{name: "actor", kind: "scalar", typeName: "string", required: false},
 			]
 		},

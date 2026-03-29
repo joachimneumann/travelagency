@@ -309,7 +309,7 @@ async function translateSection(section, targetLang, translateEntries, timestamp
   const normalizedSourceLang = normalizeBookingContentLang(sourceLang || DEFAULT_BOOKING_CONTENT_LANG);
   const normalizedTargetLang = normalizeBookingContentLang(targetLang);
   if (normalizedTargetLang === normalizedSourceLang) {
-    const error = new Error(`${promptLanguageName(normalizedSourceLang)} is the editing language and cannot be auto-translated.`);
+    const error = new Error(`${promptLanguageName(normalizedSourceLang)} is the source language and cannot be auto-translated.`);
     error.code = "TRANSLATION_SOURCE_LANGUAGE";
     throw error;
   }

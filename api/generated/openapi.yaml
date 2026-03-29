@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-03-29T05:37:14Z
+# 2026-03-29T10:14:02Z
 
 ---
 openapi: 3.1.0
@@ -4310,6 +4310,7 @@ components:
           nullable: true
         title:
           type: string
+          nullable: true
         details:
           type: string
           nullable: true
@@ -4358,7 +4359,6 @@ components:
       required:
       - id
       - day_number
-      - title
       properties:
         id:
           type: string
@@ -4370,6 +4370,7 @@ components:
           nullable: true
         title:
           type: string
+          nullable: true
         overnight_location:
           type: string
           nullable: true
@@ -5459,9 +5460,6 @@ components:
         customer_language:
           "$ref": "#/components/schemas/LanguageCode"
           nullable: true
-        editing_language:
-          type: string
-          nullable: true
         confirmed_generated_offer_id:
           type: string
           nullable: true
@@ -5951,9 +5949,6 @@ components:
         customer_language:
           "$ref": "#/components/schemas/LanguageCode"
           nullable: true
-        editing_language:
-          type: string
-          nullable: true
         confirmed_generated_offer_id:
           type: string
           nullable: true
@@ -6044,6 +6039,7 @@ components:
       required:
       - source_booking_id
       - service_id
+      - title
       properties:
         source_booking_id:
           type: string
@@ -6773,19 +6769,6 @@ components:
           nullable: true
         customer_language:
           "$ref": "#/components/schemas/LanguageCode"
-        actor:
-          type: string
-          nullable: true
-    BookingEditingLanguageUpdateRequest:
-      type: object
-      required:
-      - editing_language
-      properties:
-        expected_core_revision:
-          type: integer
-          nullable: true
-        editing_language:
-          type: string
         actor:
           type: string
           nullable: true
@@ -7961,45 +7944,6 @@ paths:
           application/json:
             schema:
               "$ref": "#/components/schemas/BookingCustomerLanguageUpdateRequest"
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/BookingDetail"
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-  "/api/v1/bookings/{booking_id}/editing-language":
-    patch:
-      operationId: booking_editing_language
-      summary: Booking Editing Language
-      tags:
-      - Bookings
-      security:
-      - bearerAuth: []
-      parameters:
-      - name: booking_id
-        in: path
-        required: true
-        schema:
-          type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              "$ref": "#/components/schemas/BookingEditingLanguageUpdateRequest"
       responses:
         '200':
           description: Success
