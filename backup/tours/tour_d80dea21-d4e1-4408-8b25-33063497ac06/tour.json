@@ -1,0 +1,139 @@
+{
+  "id": "tour_d80dea21-d4e1-4408-8b25-33063497ac06",
+  "title": {
+    "en": "Laos Culture Journey",
+    "fr": "Voyage culture au Laos",
+    "zh": "老挝文化之旅",
+    "ja": "ラオス 文化の旅",
+    "ko": "라오스 문화 여행",
+    "vi": "Hành trình Văn hóa Lào",
+    "de": "Laos-Kulturreise",
+    "es": "Viaje cultural de Laos",
+    "it": "Viaggio nella cultura del Laos",
+    "ru": "Путешествие по культуре Лаоса",
+    "nl": "Cultuurreis Laos",
+    "pl": "Podróż po kulturze Laosu",
+    "da": "Laos kulturrejse",
+    "sv": "Laos kulturresa",
+    "no": "Laos kulturreise",
+    "ar": "رحلة ثقافة لاوس",
+    "ms": "Perjalanan Budaya Laos"
+  },
+  "styles": [
+    "culture"
+  ],
+  "priority": 50,
+  "image": "/public/v1/tour-images/tour_d80dea21-d4e1-4408-8b25-33063497ac06/tour_d80dea21-d4e1-4408-8b25-33063497ac06.webp",
+  "highlights": {
+    "en": [
+      "Signature stop in Luang Prabang",
+      "Route highlight around Vang Vieng",
+      "Smooth transfer planning via Mekong River"
+    ],
+    "fr": [
+      "Étape signature à Luang Prabang",
+      "Temps fort de l'itinéraire autour de Vang Vieng",
+      "Transferts fluides via le Mékong"
+    ],
+    "zh": [
+      "琅勃拉邦标志性停留",
+      "万荣周边路线亮点",
+      "经湄公河衔接的顺畅交通安排"
+    ],
+    "ja": [
+      "ルアンパバーンでの象徴的な立ち寄り",
+      "バンビエン周辺のルート見どころ",
+      "メコン川経由のスムーズな移動計画"
+    ],
+    "ko": [
+      "루앙프라방의 대표적인 방문지",
+      "방비엥 일대의 주요 동선 하이라이트",
+      "메콩강 경유의 매끄러운 이동 계획"
+    ],
+    "vi": [
+      "Điểm dừng nổi bật tại Luang Prabang",
+      "Điểm nhấn hành trình quanh Vang Vieng",
+      "Kế hoạch di chuyển mượt mà qua sông Mê Kông"
+    ],
+    "de": [
+      "Signature-Stopp in Luang Prabang",
+      "Routenhighlight rund um Vang Vieng",
+      "Reibungslose Transferplanung über den Mekong"
+    ],
+    "es": [
+      "Parada exclusiva en Luang Prabang",
+      "Ruta destacada alrededor de Vang Vieng",
+      "Planificación fluida del traslado a través del río Mekong"
+    ],
+    "it": [
+      "Fermata esclusiva a Luang Prabang",
+      "Evidenziazione del percorso intorno a Vang Vieng",
+      "Pianificazione agevole del trasferimento attraverso il fiume Mekong"
+    ],
+    "ru": [
+      "Фирменная остановка в Луанг Прабанге",
+      "Обзор маршрута по Ванг-Вьенгу",
+      "Плавное планирование трансфера через реку Меконг"
+    ],
+    "nl": [
+      "Kenmerkende stop in Luang Prabang",
+      "Route hoogtepunt rond Vang Vieng",
+      "Soepele transferplanning via de Mekong rivier"
+    ],
+    "pl": [
+      "Przystanek podpisu w Luang Prabang",
+      "Najważniejszy punkt trasy wokół Vang Vieng",
+      "Płynne planowanie transferu przez rzekę Mekong"
+    ],
+    "da": [
+      "Signaturstop i Luang Prabang",
+      "Rutehøjdepunkt omkring Vang Vieng",
+      "Glat overførselsplanlægning via Mekong-floden"
+    ],
+    "sv": [
+      "Signaturstopp i Luang Prabang",
+      "Ruttens höjdpunkt runt Vang Vieng",
+      "Smidig överföringsplanering via Mekongfloden"
+    ],
+    "no": [
+      "Signaturstopp i Luang Prabang",
+      "Rutehøydepunkt rundt Vang Vieng",
+      "Jevn overføringsplanlegging via Mekong-elven"
+    ],
+    "ar": [
+      "توقف التوقيع في لوانغ برابانغ",
+      "تسليط الضوء على الطريق حول فانغ فينغ",
+      "تخطيط النقل السلس عبر نهر ميكونغ"
+    ],
+    "ms": [
+      "Persinggahan utama di Luang Prabang",
+      "Sorotan laluan sekitar Vang Vieng",
+      "Perancangan pemindahan lancar melalui Sungai Mekong"
+    ]
+  },
+  "seasonality_start_month": "nov",
+  "seasonality_end_month": "feb",
+  "legacy_id": "trip-laos-culture-classic",
+  "destinations": [
+    "laos"
+  ],
+  "short_description": {
+    "en": "A Laos culture itinerary focused on a balanced first-trip route, with heritage depth, local life, and meaningful guided visits.",
+    "fr": "Un itinéraire culturel au Laos pensé pour un premier voyage équilibré, avec une vraie profondeur patrimoniale, de la vie locale et des visites guidées de qualité.",
+    "zh": "这是一条以均衡的首次旅行路线为核心的老挝文化行程，包含丰富的文化遗产体验、在地生活感受以及有意义的导览参访。",
+    "ja": "初めての旅でもバランスのよい周遊ルートを軸にしたラオスの文化旅程で、奥行きのある文化体験、現地の暮らし、価値あるガイド付き見学。",
+    "ko": "균형 잡힌 첫 여행 동선에 초점을 맞춘 라오스 문화 일정으로, 깊이 있는 문화유산 체험, 현지 생활, 의미 있는 가이드 방문.",
+    "vi": "Đây là lịch trình văn hóa tại Lào tập trung vào lộ trình cân bằng cho chuyến đi đầu tiên, với chiều sâu di sản, đời sống địa phương và những chuyến tham quan có hướng dẫn giàu giá trị.",
+    "de": "Eine Kulturroute in Laos, die sich auf eine ausgewogene Route für die erste Reise konzentriert, mit viel Kulturgeschichte, lokalem Leben und sinnvollen Führungen.",
+    "es": "Un itinerario cultural de Laos centrado en una ruta equilibrada de primer viaje, con profundidad patrimonial, vida local y visitas guiadas significativas.",
+    "it": "Un itinerario culturale del Laos incentrato su un percorso equilibrato del primo viaggio, con profondità del patrimonio, vita locale e visite guidate significative.",
+    "ru": "Маршрут по культуре Лаоса ориентирован на сбалансированный маршрут первой поездки, с глубиной наследия, местной жизнью и содержательными экскурсиями.",
+    "nl": "Een cultuurroute in Laos gericht op een uitgebalanceerde eerste reisroute, met erfgoeddiepte, het lokale leven en zinvolle rondleidingen.",
+    "pl": "Trasa po kulturze Laosu skupiająca się na zrównoważonej trasie pierwszej podróży, z głębią dziedzictwa kulturowego, życiem lokalnym i znaczącymi wizytami z przewodnikiem.",
+    "da": "En Laos-kulturrute fokuserede på en afbalanceret første-tursrute med arvsdybde, lokalt liv og meningsfulde guidede besøg.",
+    "sv": "En Laos kulturresplan fokuserade på en balanserad första-tursrutt, med arvsdjup, lokalt liv och meningsfulla guidade besök.",
+    "no": "En Laos kulturreise fokuserte på en balansert førstetursrute, med arvdybde, lokalt liv og meningsfylte guidede besøk.",
+    "ar": "يركز خط سير الرحلة الثقافي في لاوس على مسار متوازن للرحلة الأولى، مع عمق التراث والحياة المحلية والزيارات المصحوبة بمرشدين ذات مغزى.",
+    "ms": "Jadual perjalanan budaya Laos yang berfokus pada laluan lawatan pertama yang seimbang, dengan kedalaman warisan, kehidupan tempatan dan lawatan berpandu yang bermakna."
+  }
+}

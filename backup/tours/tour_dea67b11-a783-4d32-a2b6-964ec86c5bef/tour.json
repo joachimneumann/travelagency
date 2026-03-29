@@ -1,0 +1,139 @@
+{
+  "id": "tour_dea67b11-a783-4d32-a2b6-964ec86c5bef",
+  "title": {
+    "en": "Laos Expeditions",
+    "fr": "Voyage aventure au Laos",
+    "zh": "老挝探险之旅",
+    "ja": "ラオス アドベンチャーの旅",
+    "ko": "라오스 어드벤처 여행",
+    "vi": "Hành trình Phiêu lưu Lào",
+    "de": "Laos-Abenteuerreise",
+    "es": "Viaje de aventura en Laos",
+    "it": "Viaggio avventuroso nel Laos",
+    "ru": "Лаосское приключенческое путешествие",
+    "nl": "Laos avontuurlijke reis",
+    "pl": "Wyprawa przygodowa w Laosie",
+    "da": "Laos eventyrrejse",
+    "sv": "Laos äventyrsresa",
+    "no": "Laos eventyrreise",
+    "ar": "بعثات لاوس",
+    "ms": "Ekspedisi Laos"
+  },
+  "styles": [
+    "grand-expeditions"
+  ],
+  "priority": 50,
+  "image": "/public/v1/tour-images/tour_dea67b11-a783-4d32-a2b6-964ec86c5bef/tour_dea67b11-a783-4d32-a2b6-964ec86c5bef.webp",
+  "highlights": {
+    "en": [
+      "Signature stop in Luang Prabang",
+      "Route highlight around Vang Vieng",
+      "Smooth transfer planning via Mekong River"
+    ],
+    "fr": [
+      "Étape signature à Luang Prabang",
+      "Temps fort de l'itinéraire autour de Vang Vieng",
+      "Transferts fluides via le Mékong"
+    ],
+    "zh": [
+      "琅勃拉邦标志性停留",
+      "万荣周边路线亮点",
+      "经湄公河衔接的顺畅交通安排"
+    ],
+    "ja": [
+      "ルアンパバーンでの象徴的な立ち寄り",
+      "バンビエン周辺のルート見どころ",
+      "メコン川経由のスムーズな移動計画"
+    ],
+    "ko": [
+      "루앙프라방의 대표적인 방문지",
+      "방비엥 일대의 주요 동선 하이라이트",
+      "메콩강 경유의 매끄러운 이동 계획"
+    ],
+    "vi": [
+      "Điểm dừng nổi bật tại Luang Prabang",
+      "Điểm nhấn hành trình quanh Vang Vieng",
+      "Kế hoạch di chuyển mượt mà qua sông Mê Kông"
+    ],
+    "de": [
+      "Signature-Stopp in Luang Prabang",
+      "Routenhighlight rund um Vang Vieng",
+      "Reibungslose Transferplanung über den Mekong"
+    ],
+    "es": [
+      "Parada exclusiva en Luang Prabang",
+      "Ruta destacada alrededor de Vang Vieng",
+      "Planificación fluida del traslado a través del río Mekong"
+    ],
+    "it": [
+      "Fermata esclusiva a Luang Prabang",
+      "Evidenziazione del percorso intorno a Vang Vieng",
+      "Pianificazione agevole del trasferimento attraverso il fiume Mekong"
+    ],
+    "ru": [
+      "Фирменная остановка в Луанг Прабанге",
+      "Обзор маршрута по Ванг-Вьенгу",
+      "Плавное планирование трансфера через реку Меконг"
+    ],
+    "nl": [
+      "Kenmerkende stop in Luang Prabang",
+      "Route hoogtepunt rond Vang Vieng",
+      "Soepele transferplanning via de Mekong rivier"
+    ],
+    "pl": [
+      "Przystanek podpisu w Luang Prabang",
+      "Najważniejszy punkt trasy wokół Vang Vieng",
+      "Płynne planowanie transferu przez rzekę Mekong"
+    ],
+    "da": [
+      "Signaturstop i Luang Prabang",
+      "Rutehøjdepunkt omkring Vang Vieng",
+      "Glat overførselsplanlægning via Mekong-floden"
+    ],
+    "sv": [
+      "Signaturstopp i Luang Prabang",
+      "Ruttens höjdpunkt runt Vang Vieng",
+      "Smidig överföringsplanering via Mekongfloden"
+    ],
+    "no": [
+      "Signaturstopp i Luang Prabang",
+      "Rutehøydepunkt rundt Vang Vieng",
+      "Jevn overføringsplanlegging via Mekong-elven"
+    ],
+    "ar": [
+      "توقف التوقيع في لوانغ برابانغ",
+      "تسليط الضوء على الطريق حول فانغ فينغ",
+      "تخطيط النقل السلس عبر نهر ميكونغ"
+    ],
+    "ms": [
+      "Persinggahan utama di Luang Prabang",
+      "Sorotan laluan sekitar Vang Vieng",
+      "Perancangan pemindahan lancar melalui Sungai Mekong"
+    ]
+  },
+  "seasonality_start_month": "nov",
+  "seasonality_end_month": "feb",
+  "legacy_id": "trip-laos-grand-expeditions-classic",
+  "destinations": [
+    "laos"
+  ],
+  "short_description": {
+    "en": "A Laos grand expeditions itinerary focused on a balanced first-trip route, with active days, scenic routes, and practical local support.",
+    "fr": "Un itinéraire d'aventure au Laos pensé pour un premier voyage équilibré, avec des journées actives, de beaux itinéraires et un accompagnement local concret.",
+    "zh": "这是一条以均衡的首次旅行路线为核心的老挝探险行程，包含充满活力的每日安排、风景优美的路线以及实用的当地支持。",
+    "ja": "初めての旅でもバランスのよい周遊ルートを軸にしたラオスのアドベンチャー旅程で、アクティブな日程、美しい景観ルート、実用的な現地サポート。",
+    "ko": "균형 잡힌 첫 여행 동선에 초점을 맞춘 라오스 어드벤처 일정으로, 활동적인 일정, 아름다운 경로, 실용적인 현지 지원.",
+    "vi": "Đây là lịch trình phiêu lưu tại Lào tập trung vào lộ trình cân bằng cho chuyến đi đầu tiên, với những ngày năng động, cung đường đẹp và hỗ trợ địa phương thiết thực.",
+    "de": "Eine Abenteuerreise durch Laos, die sich auf eine ausgewogene Route für die erste Reise konzentriert, mit aktiven Tagen, malerischen Routen und praktischer Unterstützung vor Ort.",
+    "es": "Un itinerario de aventura en Laos centrado en una ruta equilibrada de primer viaje, con días activos, rutas panorámicas y apoyo local práctico.",
+    "it": "Un itinerario avventuroso in Laos incentrato su un percorso equilibrato del primo viaggio, con giornate attive, percorsi panoramici e supporto pratico locale.",
+    "ru": "Приключенческий маршрут по Лаосу ориентирован на сбалансированный маршрут первой поездки, с активными днями, живописными маршрутами и практической местной поддержкой.",
+    "nl": "Een avontuurlijke reisroute in Laos gericht op een uitgebalanceerde eerste reisroute, met actieve dagen, schilderachtige routes en praktische lokale ondersteuning.",
+    "pl": "Plan przygody w Laosie skupiał się na zrównoważonej trasie pierwszej podróży, z aktywnymi dniami, malowniczymi trasami i praktycznym lokalnym wsparciem.",
+    "da": "En Laos-eventyrrute fokuserede på en afbalanceret rute for første tur med aktive dage, naturskønne ruter og praktisk lokal støtte.",
+    "sv": "En äventyrsresplan till Laos fokuserade på en balanserad första resa med aktiva dagar, natursköna rutter och praktiskt lokalt stöd.",
+    "no": "En Laos eventyrreise fokuserte på en balansert førstetursrute, med aktive dager, naturskjønne ruter og praktisk lokal støtte.",
+    "ar": "ركز خط سير الرحلات الاستكشافية الكبرى في لاوس على طريق متوازن للرحلة الأولى، مع أيام نشطة ومسارات ذات مناظر خلابة ودعم محلي عملي.",
+    "ms": "Jadual perjalanan ekspedisi besar Laos yang berfokus pada laluan lawatan pertama yang seimbang, dengan hari-hari aktif, laluan pemandangan indah dan sokongan tempatan yang praktikal."
+  }
+}

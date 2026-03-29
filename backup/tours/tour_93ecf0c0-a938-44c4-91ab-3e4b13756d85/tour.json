@@ -1,0 +1,141 @@
+{
+  "id": "tour_93ecf0c0-a938-44c4-91ab-3e4b13756d85",
+  "title": {
+    "en": "Siem Reap Wellness & Temple Calm",
+    "fr": "Siem Reap Bien-être & Calme du Temple",
+    "zh": "暹粒养生与寺庙静谧",
+    "ja": "シェムリアップ ウェルネス & テンプル カーム",
+    "ko": "씨엠립 웰니스 & 템플 캄",
+    "vi": "Siem Reap Chăm sóc sức khỏe & Temple Calm",
+    "de": "Siem Reap Wellness und Tempelruhe",
+    "es": "Bienestar y calma en el templo de Siem Reap",
+    "it": "Siem Reap Benessere e calma nel tempio",
+    "ru": "Оздоровительный центр и храмовый покой в ​​Сиемреапе",
+    "nl": "Siem Reap Wellness & Tempelrust",
+    "pl": "Siem Reap Wellness i spokój świątyni",
+    "da": "Siem Reap Wellness & Temple Calm",
+    "sv": "Siem Reap Wellness & Temple Calm",
+    "no": "Siem Reap velvære og tempelro",
+    "ar": "سييم ريب العافية ومعبد الهدوء",
+    "ms": "Siem Reap Kesejahteraan & Ketenangan Kuil"
+  },
+  "styles": [
+    "wellness",
+    "culture"
+  ],
+  "priority": 55,
+  "highlights": {
+    "en": [
+      "Sunrise temple visits followed by midday spa recovery",
+      "Detoxifying treatments and calm hotel afternoons in Siem Reap",
+      "Private pacing that avoids the usual Angkor rush"
+    ],
+    "fr": [
+      "Visites de temples au lever du soleil suivies d'une récupération au spa à midi",
+      "Soins détoxifiants et après-midis calmes à l'hôtel à Siem Reap",
+      "Rythme privé qui évite la ruée habituelle vers Angkor"
+    ],
+    "zh": [
+      "参观日出寺庙，然后进行中午水疗恢复",
+      "暹粒的排毒护理和平静的酒店下午",
+      "私人节奏，避免通常的吴哥高峰"
+    ],
+    "ja": [
+      "日の出の寺院訪問、その後の正午のスパでの回復",
+      "シェムリアップのデトックス トリートメントと穏やかなホテルの午後",
+      "通常のアンコールの混雑を避けたプライベート ペース"
+    ],
+    "ko": [
+      "일출 사원 방문 후 정오 스파 회복",
+      "씨엠립에서 해독 트리트먼트와 조용한 호텔 오후",
+      "일반적인 앙코르 러시를 피하는 개인 페이싱"
+    ],
+    "vi": [
+      "Thăm chùa lúc bình minh, sau đó là spa phục hồi vào giữa trưa",
+      "Phương pháp điều trị thải độc và buổi chiều yên tĩnh tại khách sạn ở Siem Reap",
+      "Nhịp độ riêng tư tránh cơn sốt Angkor thông thường"
+    ],
+    "de": [
+      "Tempelbesuche bei Sonnenaufgang, gefolgt von Spa-Erholung am Mittag",
+      "Entgiftende Behandlungen und ruhige Hotelnachmittage in Siem Reap",
+      "Privates Tempo, das den üblichen Angkor-Ansturm vermeidet"
+    ],
+    "es": [
+      "Visitas al templo al amanecer seguidas de recuperación en el spa al mediodía",
+      "Tratamientos desintoxicantes y tranquilas tardes de hotel en Siem Reap",
+      "Ritmo privado que evita las prisas habituales de Angkor"
+    ],
+    "it": [
+      "Visite ai templi all'alba seguite dal recupero termale di mezzogiorno",
+      "Trattamenti disintossicanti e tranquilli pomeriggi in hotel a Siem Reap",
+      "Ritmo privato che evita la solita corsa ad Angkor"
+    ],
+    "ru": [
+      "Посещение храма на рассвете с последующим восстановлением в спа-центре в полдень",
+      "Детоксикационные процедуры и спокойные дни в отеле в Сиемреапе",
+      "Приватный темп, позволяющий избежать обычной суеты Ангкора"
+    ],
+    "nl": [
+      "Tempelbezoeken bij zonsopgang gevolgd door herstel in de spa in de middag",
+      "Ontgiftende behandelingen en rustige hotelmiddagen in Siem Reap",
+      "Privé-tempo dat de gebruikelijke Angkor-rush vermijdt"
+    ],
+    "pl": [
+      "Wizyty w świątyni o wschodzie słońca, po których następuje rekonwalescencja w spa w południe",
+      "Zabiegi detoksykujące i spokojne popołudnia w hotelu w Siem Reap",
+      "Prywatne tempo, które pozwala uniknąć zwykłego pośpiechu w Angkor"
+    ],
+    "da": [
+      "Tempelbesøg ved solopgang efterfulgt af spa-genopretning ved middagstid",
+      "Afgiftende behandlinger og rolige hoteleftermiddage i Siem Reap",
+      "Privat tempo, der undgår det sædvanlige Angkor-sus"
+    ],
+    "sv": [
+      "Tempelbesök i soluppgången följt av återhämtning av spa vid middagstid",
+      "Avgiftande behandlingar och lugna hotelleftermiddagar i Siem Reap",
+      "Privat pacing som undviker den vanliga Angkor-rusningen"
+    ],
+    "no": [
+      "Soloppgang-tempelbesøk etterfulgt av middagsspa-gjenoppretting",
+      "Avgiftende behandlinger og rolige hotellettermiddager i Siem Reap",
+      "Privat tempo som unngår det vanlige Angkor-rushet"
+    ],
+    "ar": [
+      "زيارات معبد شروق الشمس يتبعها التعافي في المنتجع الصحي في منتصف النهار",
+      "علاجات إزالة السموم والهدوء بعد الظهر في الفندق في سييم ريب",
+      "سرعة خاصة تتجنب الاندفاع المعتاد في أنغكور"
+    ],
+    "ms": [
+      "Lawatan kuil waktu matahari terbit diikuti pemulihan spa pada tengah hari",
+      "Rawatan detoks dan petang hotel yang tenang di Siem Reap",
+      "Rentak peribadi yang mengelakkan kesibukan biasa di Angkor"
+    ]
+  },
+  "seasonality_start_month": "nov",
+  "seasonality_end_month": "mar",
+  "legacy_id": "trip-cambodia-siem-reap-wellness-temple-calm",
+  "destinations": [
+    "cambodia"
+  ],
+  "short_description": {
+    "en": "A gentler Cambodia route centered on Siem Reap, pairing Angkor’s major sites with restorative downtime, spa rituals, and flexible private pacing.",
+    "fr": "Un itinéraire cambodgien plus doux centré sur Siem Reap, associant les principaux sites d'Angkor à des temps d'arrêt réparateurs, des rituels de spa et un rythme privé flexible.",
+    "zh": "一条以暹粒为中心的较为温和的柬埔寨路线，将吴哥窟的主要景点与恢复性的休息时间、水疗仪式和灵活的私人节奏结合起来。",
+    "ja": "シェムリアップを中心とした穏やかなカンボジアルートで、アンコール遺跡の主要な遺跡と、回復のためのダウンタイム、スパ儀式、柔軟なプライベートペースを組み合わせています。",
+    "ko": "씨엠립을 중심으로 한 온화한 캄보디아 루트로, 앙코르의 주요 유적지와 회복을 위한 다운타임, 스파 의식, 유연한 프라이빗 페이스를 결합합니다.",
+    "vi": "Một tuyến đường Campuchia nhẹ nhàng hơn tập trung vào Siem Reap, kết hợp các địa điểm chính của Angkor với thời gian ngừng phục hồi, các nghi thức spa và nhịp độ riêng tư linh hoạt.",
+    "de": "Eine sanftere Kambodscha-Route mit Schwerpunkt auf Siem Reap, die die wichtigsten Sehenswürdigkeiten von Angkor mit erholsamen Auszeiten, Spa-Ritualen und flexiblem privatem Tempo verbindet.",
+    "es": "Una ruta más suave por Camboya centrada en Siem Reap, que combina los principales sitios de Angkor con tiempo de inactividad reparador, rituales de spa y un ritmo privado flexible.",
+    "it": "Un percorso più dolce della Cambogia incentrato su Siem Reap, che abbina i principali siti di Angkor a tempi di inattività rigeneranti, rituali termali e ritmi privati ​​flessibili.",
+    "ru": "Более мягкий маршрут по Камбодже сосредоточен в Сиемреапе и сочетает в себе основные достопримечательности Ангкора с восстановительным отдыхом, спа-ритуалами и гибким частным графиком.",
+    "nl": "Een zachtere Cambodja-route met als middelpunt Siem Reap, waarbij de belangrijkste bezienswaardigheden van Angkor worden gecombineerd met herstellende ontspanning, spa-rituelen en flexibel privé-tempo.",
+    "pl": "Łagodniejsza trasa do Kambodży skupiająca się w Siem Reap, łącząca główne atrakcje Angkoru z przestojami regeneracyjnymi, rytuałami spa i elastycznym prywatnym tempem.",
+    "da": "En blidere Cambodia-rute centreret om Siem Reap, der parrer Angkors store steder med genoprettende nedetid, spa-ritualer og fleksibelt privat tempo.",
+    "sv": "En mjukare Kambodja-rutt centrerad på Siem Reap, som kombinerar Angkors stora platser med återställande driftstopp, spa-ritualer och flexibel privat takt.",
+    "no": "En mildere Kambodsja-rute sentrert om Siem Reap, og parer Angkors viktigste nettsteder med gjenopprettende nedetid, spa-ritualer og fleksibelt privat tempo.",
+    "ar": "يتمركز طريق كمبوديا اللطيف في سيام ريب، ويجمع بين المواقع الرئيسية في أنغكور مع أوقات التوقف التصالحية وطقوس السبا والسير الخاص المرن.",
+    "ms": "Laluan Kemboja yang lebih lembut berpusat di Siem Reap, menggabungkan tapak utama Angkor dengan masa rehat pemulihan, ritual spa dan rentak peribadi yang fleksibel."
+  },
+  "image": "/public/v1/tour-images/tour_93ecf0c0-a938-44c4-91ab-3e4b13756d85/tour_93ecf0c0-a938-44c4-91ab-3e4b13756d85.webp",
+  "updated_at": "2026-03-23T06:33:08Z"
+}

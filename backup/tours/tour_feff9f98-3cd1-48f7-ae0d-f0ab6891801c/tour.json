@@ -1,0 +1,139 @@
+{
+  "id": "tour_feff9f98-3cd1-48f7-ae0d-f0ab6891801c",
+  "title": {
+    "en": "Vietnam Expeditions - Caves",
+    "fr": "Voyage aventure au Vietnam - Exploration des grottes",
+    "zh": "越南探险之旅 - 洞穴探索",
+    "ja": "ベトナム アドベンチャーの旅 - 洞窟探訪",
+    "ko": "베트남 어드벤처 여행 - 동굴 탐험",
+    "vi": "Hành trình Phiêu lưu Việt Nam - Khám phá hang động",
+    "de": "Vietnam-Abenteuer – Höhlen",
+    "es": "Aventura en Vietnam - Cuevas",
+    "it": "Avventura in Vietnam - Grotte",
+    "ru": "Вьетнамское приключение - Пещеры",
+    "nl": "Vietnam Avontuur - Grotten",
+    "pl": "Przygoda w Wietnamie - jaskinie",
+    "da": "Vietnam Expeditions - Huler",
+    "sv": "Vietnamäventyr - grottor",
+    "no": "Vietnameventyr - grotter",
+    "ar": "بعثات فيتنام - الكهوف",
+    "ms": "Ekspedisi Vietnam - Gua"
+  },
+  "styles": [
+    "grand-expeditions"
+  ],
+  "priority": 50,
+  "image": "/public/v1/tour-images/tour_feff9f98-3cd1-48f7-ae0d-f0ab6891801c/tour_feff9f98-3cd1-48f7-ae0d-f0ab6891801c.webp",
+  "highlights": {
+    "en": [
+      "Signature stop in Hanoi",
+      "Route highlight around Hoi An",
+      "Smooth transfer planning via Ha Long Bay"
+    ],
+    "fr": [
+      "Étape signature à Hanoï",
+      "Temps fort de l'itinéraire autour de Hoi An",
+      "Transferts fluides via la baie d'Ha Long"
+    ],
+    "zh": [
+      "河内标志性停留",
+      "会安周边路线亮点",
+      "经下龙湾衔接的顺畅交通安排"
+    ],
+    "ja": [
+      "ハノイでの象徴的な立ち寄り",
+      "ホイアン周辺のルート見どころ",
+      "ハロン湾経由のスムーズな移動計画"
+    ],
+    "ko": [
+      "하노이의 대표적인 방문지",
+      "호이안 일대의 주요 동선 하이라이트",
+      "하롱베이 경유의 매끄러운 이동 계획"
+    ],
+    "vi": [
+      "Điểm dừng nổi bật tại Hà Nội",
+      "Điểm nhấn hành trình quanh Hội An",
+      "Kế hoạch di chuyển mượt mà qua Vịnh Hạ Long"
+    ],
+    "de": [
+      "Signature-Stopp in Hanoi",
+      "Routenhighlight rund um Hoi An",
+      "Reibungslose Transferplanung über die Halong-Bucht"
+    ],
+    "es": [
+      "Parada exclusiva en Hanoi",
+      "Ruta destacada alrededor de Hoi An",
+      "Planificación fluida del traslado a través de la bahía de Ha Long"
+    ],
+    "it": [
+      "Fermata esclusiva ad Hanoi",
+      "Evidenziazione del percorso intorno a Hoi An",
+      "Pianificazione fluida del trasferimento attraverso la baia di Ha Long"
+    ],
+    "ru": [
+      "Фирменная остановка в Ханое",
+      "Обзор маршрута вокруг Хойана",
+      "Плавное планирование трансфера через залив Халонг"
+    ],
+    "nl": [
+      "Kenmerkende stop in Hanoi",
+      "Route hoogtepunt rond Hoi An",
+      "Soepele transferplanning via Ha Long Bay"
+    ],
+    "pl": [
+      "Przystanek podpisowy w Hanoi",
+      "Najważniejszy punkt trasy wokół Hoi An",
+      "Płynne planowanie transferu przez zatokę Ha Long"
+    ],
+    "da": [
+      "Signaturstop i Hanoi",
+      "Rutehøjdepunkt omkring Hoi An",
+      "Glat overførselsplanlægning via Ha Long Bay"
+    ],
+    "sv": [
+      "Signaturstopp i Hanoi",
+      "Ruttens höjdpunkt runt Hoi An",
+      "Smidig överföringsplanering via Ha Long Bay"
+    ],
+    "no": [
+      "Signaturstopp i Hanoi",
+      "Rutehøydepunkt rundt Hoi An",
+      "Jevn overføringsplanlegging via Ha Long Bay"
+    ],
+    "ar": [
+      "توقف التوقيع في هانوي",
+      "تسليط الضوء على الطريق حول هوي آن",
+      "تخطيط النقل السلس عبر خليج ها لونج"
+    ],
+    "ms": [
+      "Persinggahan utama di Hanoi",
+      "Sorotan laluan sekitar Hoi An",
+      "Perancangan pemindahan lancar melalui Teluk Ha Long"
+    ]
+  },
+  "seasonality_start_month": "oct",
+  "seasonality_end_month": "apr",
+  "legacy_id": "trip-vietnam-grand-expeditions-caves",
+  "destinations": [
+    "vietnam"
+  ],
+  "short_description": {
+    "en": "A Vietnam grand expeditions itinerary focused on a route shaped around Caves, with active days, scenic routes, and practical local support.",
+    "fr": "Un itinéraire d'aventure au Vietnam pensé pour un parcours construit autour des grottes, avec des journées actives, de beaux itinéraires et un accompagnement local concret.",
+    "zh": "这是一条以围绕洞穴探索打造的路线为核心的越南探险行程，包含充满活力的每日安排、风景优美的路线以及实用的当地支持。",
+    "ja": "洞窟体験を軸に組んだルートを軸にしたベトナムのアドベンチャー旅程で、アクティブな日程、美しい景観ルート、実用的な現地サポート。",
+    "ko": "동굴 체험을 중심으로 구성한 동선에 초점을 맞춘 베트남 어드벤처 일정으로, 활동적인 일정, 아름다운 경로, 실용적인 현지 지원.",
+    "vi": "Đây là lịch trình phiêu lưu tại Việt Nam tập trung vào tuyến đi được thiết kế quanh trải nghiệm hang động, với những ngày năng động, cung đường đẹp và hỗ trợ địa phương thiết thực.",
+    "de": "Eine Vietnam-Abenteuerreise, die sich auf eine Route rund um Höhlen konzentriert, mit aktiven Tagen, malerischen Routen und praktischer Unterstützung vor Ort.",
+    "es": "Un itinerario de aventuras en Vietnam centrado en una ruta alrededor de las cuevas, con días activos, rutas panorámicas y apoyo local práctico.",
+    "it": "Un itinerario avventuroso in Vietnam incentrato su un percorso modellato attorno alle Grotte, con giornate attive, percorsi panoramici e supporto pratico locale.",
+    "ru": "Приключенческий маршрут по Вьетнаму, ориентированный на пещеры, с активными днями, живописными маршрутами и практической местной поддержкой.",
+    "nl": "Een avontuurlijke route door Vietnam, gericht op een route rond grotten, met actieve dagen, schilderachtige routes en praktische lokale ondersteuning.",
+    "pl": "Plan przygody w Wietnamie skupiał się na trasie wokół jaskiń, z aktywnymi dniami, malowniczymi trasami i praktycznym lokalnym wsparciem.",
+    "da": "En Vietnam-eventyrrute fokuserede på en rute formet omkring huler med aktive dage, naturskønne ruter og praktisk lokal støtte.",
+    "sv": "En resplan för äventyr i Vietnam fokuserade på en rutt formad runt grottor, med aktiva dagar, natursköna rutter och praktiskt lokalt stöd.",
+    "no": "En eventyrreise fra Vietnam fokuserte på en rute formet rundt grotter, med aktive dager, naturskjønne ruter og praktisk lokal støtte.",
+    "ar": "ركز خط سير الرحلات الاستكشافية الكبرى في فيتنام على طريق تم تشكيله حول الكهوف، مع أيام نشطة وطرق ذات مناظر خلابة ودعم محلي عملي.",
+    "ms": "Jadual perjalanan ekspedisi besar Vietnam yang berfokus pada laluan yang dibentuk sekitar Gua, dengan hari-hari aktif, laluan pemandangan indah dan sokongan tempatan yang praktikal."
+  }
+}

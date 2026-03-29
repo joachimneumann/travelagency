@@ -1,0 +1,139 @@
+{
+  "id": "tour_d2cd0a9d-b0a8-48a4-b2cc-13da5de585cd",
+  "title": {
+    "en": "Laos Beach Journey",
+    "fr": "Voyage plage au Laos",
+    "zh": "老挝海滩之旅",
+    "ja": "ラオス ビーチの旅",
+    "ko": "라오스 해변 여행",
+    "vi": "Hành trình Biển Lào",
+    "de": "Laos Strandreise",
+    "es": "Viaje a la playa de Laos",
+    "it": "Viaggio sulla spiaggia del Laos",
+    "ru": "Путешествие по пляжу Лаоса",
+    "nl": "Laos strandreis",
+    "pl": "Wycieczka na plażę Laosu",
+    "da": "Laos strandrejse",
+    "sv": "Laos strandresa",
+    "no": "Laos strandreise",
+    "ar": "رحلة شاطئ لاوس",
+    "ms": "Perjalanan Pantai Laos"
+  },
+  "styles": [
+    "beach"
+  ],
+  "priority": 50,
+  "image": "/public/v1/tour-images/tour_d2cd0a9d-b0a8-48a4-b2cc-13da5de585cd/tour_d2cd0a9d-b0a8-48a4-b2cc-13da5de585cd.webp",
+  "highlights": {
+    "en": [
+      "Signature stop in Luang Prabang",
+      "Route highlight around Vang Vieng",
+      "Smooth transfer planning via Mekong River"
+    ],
+    "fr": [
+      "Étape signature à Luang Prabang",
+      "Temps fort de l'itinéraire autour de Vang Vieng",
+      "Transferts fluides via le Mékong"
+    ],
+    "zh": [
+      "琅勃拉邦标志性停留",
+      "万荣周边路线亮点",
+      "经湄公河衔接的顺畅交通安排"
+    ],
+    "ja": [
+      "ルアンパバーンでの象徴的な立ち寄り",
+      "バンビエン周辺のルート見どころ",
+      "メコン川経由のスムーズな移動計画"
+    ],
+    "ko": [
+      "루앙프라방의 대표적인 방문지",
+      "방비엥 일대의 주요 동선 하이라이트",
+      "메콩강 경유의 매끄러운 이동 계획"
+    ],
+    "vi": [
+      "Điểm dừng nổi bật tại Luang Prabang",
+      "Điểm nhấn hành trình quanh Vang Vieng",
+      "Kế hoạch di chuyển mượt mà qua sông Mê Kông"
+    ],
+    "de": [
+      "Signature-Stopp in Luang Prabang",
+      "Routenhighlight rund um Vang Vieng",
+      "Reibungslose Transferplanung über den Mekong"
+    ],
+    "es": [
+      "Parada exclusiva en Luang Prabang",
+      "Ruta destacada alrededor de Vang Vieng",
+      "Planificación fluida del traslado a través del río Mekong"
+    ],
+    "it": [
+      "Fermata esclusiva a Luang Prabang",
+      "Evidenziazione del percorso intorno a Vang Vieng",
+      "Pianificazione agevole del trasferimento attraverso il fiume Mekong"
+    ],
+    "ru": [
+      "Фирменная остановка в Луанг Прабанге",
+      "Обзор маршрута по Ванг-Вьенгу",
+      "Плавное планирование трансфера через реку Меконг"
+    ],
+    "nl": [
+      "Kenmerkende stop in Luang Prabang",
+      "Route hoogtepunt rond Vang Vieng",
+      "Soepele transferplanning via de Mekong rivier"
+    ],
+    "pl": [
+      "Przystanek podpisu w Luang Prabang",
+      "Najważniejszy punkt trasy wokół Vang Vieng",
+      "Płynne planowanie transferu przez rzekę Mekong"
+    ],
+    "da": [
+      "Signaturstop i Luang Prabang",
+      "Rutehøjdepunkt omkring Vang Vieng",
+      "Glat overførselsplanlægning via Mekong-floden"
+    ],
+    "sv": [
+      "Signaturstopp i Luang Prabang",
+      "Ruttens höjdpunkt runt Vang Vieng",
+      "Smidig överföringsplanering via Mekongfloden"
+    ],
+    "no": [
+      "Signaturstopp i Luang Prabang",
+      "Rutehøydepunkt rundt Vang Vieng",
+      "Jevn overføringsplanlegging via Mekong-elven"
+    ],
+    "ar": [
+      "توقف التوقيع في لوانغ برابانغ",
+      "تسليط الضوء على الطريق حول فانغ فينغ",
+      "تخطيط النقل السلس عبر نهر ميكونغ"
+    ],
+    "ms": [
+      "Persinggahan utama di Luang Prabang",
+      "Sorotan laluan sekitar Vang Vieng",
+      "Perancangan pemindahan lancar melalui Sungai Mekong"
+    ]
+  },
+  "seasonality_start_month": "nov",
+  "seasonality_end_month": "feb",
+  "legacy_id": "trip-laos-beach-classic",
+  "destinations": [
+    "laos"
+  ],
+  "short_description": {
+    "en": "A Laos beach itinerary focused on a balanced first-trip route, with relaxed coast time balanced with easy local discovery.",
+    "fr": "Un itinéraire balnéaire au Laos pensé pour un premier voyage équilibré, avec du temps au bord de la mer, équilibré par des découvertes locales faciles.",
+    "zh": "这是一条以均衡的首次旅行路线为核心的老挝海滩行程，包含轻松的海岸时光，并搭配轻松的本地探索。",
+    "ja": "初めての旅でもバランスのよい周遊ルートを軸にしたラオスのビーチ旅程で、ゆったりした海辺の時間と無理のないローカル体験。",
+    "ko": "균형 잡힌 첫 여행 동선에 초점을 맞춘 라오스 해변 일정으로, 여유로운 해변 시간과 부담 없는 현지 탐방.",
+    "vi": "Đây là lịch trình biển tại Lào tập trung vào lộ trình cân bằng cho chuyến đi đầu tiên, với thời gian thư giãn bên biển kết hợp khám phá địa phương nhẹ nhàng.",
+    "de": "Eine Strandroute in Laos konzentrierte sich auf eine ausgewogene Route für die erste Reise, mit entspannter Zeit an der Küste und einfacher Erkundung der Gegend.",
+    "es": "Un itinerario por las playas de Laos centrado en una ruta equilibrada de primer viaje, con un tiempo relajado en la costa equilibrado con un fácil descubrimiento local.",
+    "it": "Un itinerario sulla spiaggia del Laos incentrato su un itinerario equilibrato del primo viaggio, con un tempo rilassato sulla costa bilanciato con una facile scoperta locale.",
+    "ru": "Пляжный маршрут Лаоса ориентирован на сбалансированный маршрут первой поездки, где спокойное времяпровождение на побережье сочетается с легкими открытиями местных достопримечательностей.",
+    "nl": "Een strandroute in Laos gericht op een uitgebalanceerde eerste reisroute, met ontspannen kusttijd in evenwicht met gemakkelijke lokale ontdekkingen.",
+    "pl": "Plan podróży na plażę w Laosie skupia się na zrównoważonej trasie pierwszej podróży, z relaksującym czasem na wybrzeżu, zrównoważonym łatwym odkrywaniem lokalnych atrakcji.",
+    "da": "En Laos-strandrute fokuserede på en afbalanceret rute for første tur, med afslappet kysttid afbalanceret med let lokal opdagelse.",
+    "sv": "En resplan till Laos strand fokuserade på en balanserad första resa, med avslappnad kusttid balanserad med enkel lokal upptäckt.",
+    "no": "En reiserute på Laos-stranden fokuserte på en balansert førstetursrute, med avslappet kysttid balansert med lett lokal oppdagelse.",
+    "ar": "يركز خط سير الرحلة على شاطئ لاوس على مسار متوازن للرحلة الأولى، مع توفير وقت مريح على الساحل متوازن مع سهولة الاكتشاف المحلي.",
+    "ms": "Jadual perjalanan pantai Laos yang berfokus pada laluan lawatan pertama yang seimbang, dengan masa santai di pesisir yang diimbangi dengan penemuan tempatan yang mudah."
+  }
+}

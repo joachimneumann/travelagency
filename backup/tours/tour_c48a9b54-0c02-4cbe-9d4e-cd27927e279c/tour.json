@@ -1,0 +1,139 @@
+{
+  "id": "tour_c48a9b54-0c02-4cbe-9d4e-cd27927e279c",
+  "title": {
+    "en": "Laos Family Journey",
+    "fr": "Voyage famille au Laos",
+    "zh": "老挝家庭之旅",
+    "ja": "ラオス 家族の旅",
+    "ko": "라오스 가족 여행",
+    "vi": "Hành trình Gia đình Lào",
+    "de": "Familienreise nach Laos",
+    "es": "Viaje familiar a Laos",
+    "it": "Viaggio in famiglia nel Laos",
+    "ru": "Семейное путешествие по Лаосу",
+    "nl": "Familiereis naar Laos",
+    "pl": "Rodzinna podróż do Laosu",
+    "da": "Laos familierejse",
+    "sv": "Laos familjeresa",
+    "no": "Laos familiereise",
+    "ar": "رحلة عائلة لاوس",
+    "ms": "Perjalanan Keluarga Laos"
+  },
+  "styles": [
+    "family"
+  ],
+  "priority": 50,
+  "image": "/public/v1/tour-images/tour_c48a9b54-0c02-4cbe-9d4e-cd27927e279c/tour_c48a9b54-0c02-4cbe-9d4e-cd27927e279c.webp",
+  "highlights": {
+    "en": [
+      "Signature stop in Luang Prabang",
+      "Route highlight around Vang Vieng",
+      "Smooth transfer planning via Mekong River"
+    ],
+    "fr": [
+      "Étape signature à Luang Prabang",
+      "Temps fort de l'itinéraire autour de Vang Vieng",
+      "Transferts fluides via le Mékong"
+    ],
+    "zh": [
+      "琅勃拉邦标志性停留",
+      "万荣周边路线亮点",
+      "经湄公河衔接的顺畅交通安排"
+    ],
+    "ja": [
+      "ルアンパバーンでの象徴的な立ち寄り",
+      "バンビエン周辺のルート見どころ",
+      "メコン川経由のスムーズな移動計画"
+    ],
+    "ko": [
+      "루앙프라방의 대표적인 방문지",
+      "방비엥 일대의 주요 동선 하이라이트",
+      "메콩강 경유의 매끄러운 이동 계획"
+    ],
+    "vi": [
+      "Điểm dừng nổi bật tại Luang Prabang",
+      "Điểm nhấn hành trình quanh Vang Vieng",
+      "Kế hoạch di chuyển mượt mà qua sông Mê Kông"
+    ],
+    "de": [
+      "Signature-Stopp in Luang Prabang",
+      "Routenhighlight rund um Vang Vieng",
+      "Reibungslose Transferplanung über den Mekong"
+    ],
+    "es": [
+      "Parada exclusiva en Luang Prabang",
+      "Ruta destacada alrededor de Vang Vieng",
+      "Planificación fluida del traslado a través del río Mekong"
+    ],
+    "it": [
+      "Fermata esclusiva a Luang Prabang",
+      "Evidenziazione del percorso intorno a Vang Vieng",
+      "Pianificazione agevole del trasferimento attraverso il fiume Mekong"
+    ],
+    "ru": [
+      "Фирменная остановка в Луанг Прабанге",
+      "Обзор маршрута по Ванг-Вьенгу",
+      "Плавное планирование трансфера через реку Меконг"
+    ],
+    "nl": [
+      "Kenmerkende stop in Luang Prabang",
+      "Route hoogtepunt rond Vang Vieng",
+      "Soepele transferplanning via de Mekong rivier"
+    ],
+    "pl": [
+      "Przystanek podpisu w Luang Prabang",
+      "Najważniejszy punkt trasy wokół Vang Vieng",
+      "Płynne planowanie transferu przez rzekę Mekong"
+    ],
+    "da": [
+      "Signaturstop i Luang Prabang",
+      "Rutehøjdepunkt omkring Vang Vieng",
+      "Glat overførselsplanlægning via Mekong-floden"
+    ],
+    "sv": [
+      "Signaturstopp i Luang Prabang",
+      "Ruttens höjdpunkt runt Vang Vieng",
+      "Smidig överföringsplanering via Mekongfloden"
+    ],
+    "no": [
+      "Signaturstopp i Luang Prabang",
+      "Rutehøydepunkt rundt Vang Vieng",
+      "Jevn overføringsplanlegging via Mekong-elven"
+    ],
+    "ar": [
+      "توقف التوقيع في لوانغ برابانغ",
+      "تسليط الضوء على الطريق حول فانغ فينغ",
+      "تخطيط النقل السلس عبر نهر ميكونغ"
+    ],
+    "ms": [
+      "Persinggahan utama di Luang Prabang",
+      "Sorotan laluan sekitar Vang Vieng",
+      "Perancangan pemindahan lancar melalui Sungai Mekong"
+    ]
+  },
+  "seasonality_start_month": "nov",
+  "seasonality_end_month": "feb",
+  "legacy_id": "trip-laos-family-classic",
+  "destinations": [
+    "laos"
+  ],
+  "short_description": {
+    "en": "A Laos family itinerary focused on a balanced first-trip route, with family-friendly pacing and dependable on-trip logistics.",
+    "fr": "Un itinéraire familial au Laos pensé pour un premier voyage équilibré, avec un rythme adapté aux familles et une logistique fiable sur place.",
+    "zh": "这是一条以均衡的首次旅行路线为核心的老挝家庭行程，包含适合家庭的节奏和可靠的在途后勤安排。",
+    "ja": "初めての旅でもバランスのよい周遊ルートを軸にしたラオスの家族旅程で、家族にやさしいペースと信頼できる現地手配。",
+    "ko": "균형 잡힌 첫 여행 동선에 초점을 맞춘 라오스 가족 일정으로, 가족 친화적인 속도와 믿을 수 있는 현지 운영.",
+    "vi": "Đây là lịch trình gia đình tại Lào tập trung vào lộ trình cân bằng cho chuyến đi đầu tiên, với nhịp độ phù hợp cho gia đình và khâu vận hành đáng tin cậy trong suốt chuyến đi.",
+    "de": "Eine Familienreise durch Laos, die sich auf eine ausgewogene Erstreiseroute mit familienfreundlichem Tempo und zuverlässiger Logistik während der Reise konzentriert.",
+    "es": "Un itinerario familiar por Laos centrado en una ruta de primer viaje equilibrada, con un ritmo familiar y una logística fiable durante el viaje.",
+    "it": "Un itinerario per famiglie in Laos incentrato su un primo viaggio equilibrato, con ritmi adatti alle famiglie e una logistica di viaggio affidabile.",
+    "ru": "Семейный маршрут по Лаосу ориентирован на сбалансированный маршрут первой поездки, с удобным для всей семьи темпом и надежной логистикой во время поездки.",
+    "nl": "Een familiereisroute in Laos gericht op een uitgebalanceerde route voor de eerste reis, met gezinsvriendelijk tempo en betrouwbare logistiek tijdens de reis.",
+    "pl": "Rodzinny plan podróży do Laosu skupiający się na zrównoważonej trasie pierwszej podróży, z przyjaznym rodzinom tempem i niezawodną logistyką podróży.",
+    "da": "En Laos familierejseplan fokuserede på en afbalanceret rute for første tur med familievenligt tempo og pålidelig logistik på tur.",
+    "sv": "En resplan för familjen i Laos fokuserade på en balanserad första resa, med familjevänligt tempo och pålitlig logistik på resan.",
+    "no": "En familiereise i Laos fokuserte på en balansert førstetursrute, med familievennlig tempo og pålitelig logistikk på tur.",
+    "ar": "يركز خط سير الرحلة العائلي في لاوس على مسار متوازن للرحلة الأولى، مع سرعة مناسبة للعائلة وخدمات لوجستية يمكن الاعتماد عليها أثناء الرحلة.",
+    "ms": "Jadual perjalanan keluarga Laos yang berfokus pada laluan lawatan pertama yang seimbang, dengan rentak mesra keluarga dan logistik perjalanan di lokasi yang boleh diharap."
+  }
+}

@@ -1,0 +1,142 @@
+{
+  "id": "tour_ee68e41e-355e-4099-91cf-9ba133f4f4ac",
+  "title": {
+    "en": "Central Vietnam Spa & Coast Escape",
+    "fr": "Spa et escapade sur la côte du centre du Vietnam",
+    "zh": "越南中部水疗和海岸度假",
+    "ja": "中部ベトナム スパ & コースト エスケープ",
+    "ko": "베트남 중부 스파 & 코스트 이스케이프",
+    "vi": "Central Vietnam Spa & Coast Escape",
+    "de": "Spa- und Küstenurlaub in Zentralvietnam",
+    "es": "Spa central de Vietnam y escapada a la costa",
+    "it": "Spa nel Vietnam centrale e fuga sulla costa",
+    "ru": "Спа и отдых на побережье Центрального Вьетнама",
+    "nl": "Centraal Vietnam Spa & kustontsnapping",
+    "pl": "Centralny Wietnam Spa i ucieczka na wybrzeże",
+    "da": "Central Vietnam Spa & Coast Escape",
+    "sv": "Central Vietnam Spa & Coast Escape",
+    "no": "Central Vietnam Spa & Coast Escape",
+    "ar": "سبا وسط فيتنام وساحل إسكيب",
+    "ms": "Pelarian Spa & Pantai Vietnam Tengah"
+  },
+  "styles": [
+    "wellness",
+    "beach",
+    "luxury"
+  ],
+  "priority": 55,
+  "highlights": {
+    "en": [
+      "Beachside downtime around Da Nang and Hoi An with premium spa appointments",
+      "Detox scrub and collagen facial inspired treatments woven into the stay",
+      "Private transfers and light touring instead of a packed day-by-day schedule"
+    ],
+    "fr": [
+      "Temps d'arrêt en bord de mer autour de Da Nang et Hoi An avec rendez-vous au spa haut de gamme",
+      "Des soins du visage inspirés du gommage détox et du collagène intégrés au séjour",
+      "Transferts privés et visites légères au lieu d'un programme quotidien chargé"
+    ],
+    "zh": [
+      "岘港和会安周围的海滨休息时间，享受高级水疗预约",
+      "排毒磨砂和胶原蛋白面部护理融入住宿",
+      "私人接送和轻型旅游，而不是拥挤的日常日程"
+    ],
+    "ja": [
+      "プレミアムスパの予約付き、ダナンとホイアン周辺のビーチサイドでのダウンタイム",
+      "デトックス スクラブとコラーゲン フェイシャルをヒントにしたトリートメントが滞在に織り込まれています",
+      "日々の詰め込まれたスケジュールではなく、プライベート送迎と軽いツアー"
+    ],
+    "ko": [
+      "프리미엄 스파 예약으로 다낭과 호이안 주변의 해변 다운타임",
+      "디톡스 스크럽과 콜라겐 페이셜 트리트먼트가 스테이에 엮여 있습니다",
+      "빡빡한 하루 일정 대신 개인 이동 및 가벼운 여행"
+    ],
+    "vi": [
+      "Thời gian thư giãn bên bờ biển quanh Đà Nẵng và Hội An với các cuộc hẹn spa cao cấp",
+      "Tẩy tế bào chết bằng thải độc và các phương pháp điều trị lấy cảm hứng từ da mặt bằng collagen được áp dụng trong thời gian lưu trú",
+      "Đưa đón riêng và tham quan nhẹ nhàng thay vì lịch trình dày đặc hàng ngày"
+    ],
+    "de": [
+      "Entspannung am Strand rund um Da Nang und Hoi An mit Premium-Spa-Terminen",
+      "Detox-Peeling und Kollagen-Gesichtsbehandlungen sind in den Aufenthalt integriert",
+      "Private Transfers und leichte Touren statt eines vollen Tagesplans"
+    ],
+    "es": [
+      "Tiempo de inactividad junto a la playa en Da Nang y Hoi An con citas de spa premium",
+      "Exfoliante desintoxicante y tratamientos faciales inspirados en colágeno integrados en la estancia",
+      "Traslados privados y recorridos ligeros en lugar de una agenda apretada día a día"
+    ],
+    "it": [
+      "Tempo libero sulla spiaggia intorno a Da Nang e Hoi An con appuntamenti spa premium",
+      "Scrub disintossicante e trattamenti viso ispirati al collagene integrati nel soggiorno",
+      "Trasferimenti privati ​​e tour leggeri invece di un fitto programma giornaliero"
+    ],
+    "ru": [
+      "Отдых на пляже в Дананге и Хойане с посещением спа-салона премиум-класса",
+      "Детокс-скраб и коллагеновые процедуры для лица, вплетенные в пребывание",
+      "Частные трансферы и легкие туры вместо плотного ежедневного графика."
+    ],
+    "nl": [
+      "Ontspanning aan het strand rond Da Nang en Hoi An met premium spa-afspraken",
+      "Detox-scrub en collageen-gezichtsbehandelingen verweven in het verblijf",
+      "Privétransfers en lichte toertochten in plaats van een druk schema van dag tot dag"
+    ],
+    "pl": [
+      "Przerwa na plaży w okolicach Da Nang i Hoi An z wizytami w spa premium",
+      "Peeling detoksykujący i zabiegi na twarz inspirowane kolagenem wplecione w pobyt",
+      "Prywatne transfery i lekkie wycieczki zamiast napiętego harmonogramu dnia po dniu"
+    ],
+    "da": [
+      "Nedetid ved stranden omkring Da Nang og Hoi An med premium spa-aftaler",
+      "Detox scrub og kollagen ansigtsinspirerede behandlinger vævet ind i opholdet",
+      "Private overførsler og let touring i stedet for en pakket dag-for-dag tidsplan"
+    ],
+    "sv": [
+      "Avbrott vid stranden runt Da Nang och Hoi An med förstklassiga spamöten",
+      "Detox scrub och kollagen ansiktsinspirerade behandlingar invävda i vistelsen",
+      "Privata transfers och lätta turnéer istället för ett fullspäckat schema dag för dag"
+    ],
+    "no": [
+      "Nedetid ved stranden rundt Da Nang og Hoi An med premium spa-avtaler",
+      "Detox scrub og kollagen ansiktsinspirerte behandlinger vevd inn i oppholdet",
+      "Privat transport og lett tur i stedet for en fullpakket dag-for-dag-plan"
+    ],
+    "ar": [
+      "أوقات راحة على شاطئ البحر حول مدينتي دا نانج وهوي آن مع مواعيد سبا متميزة",
+      "فرك التخلص من السموم وعلاجات الوجه المستوحاة من الكولاجين مدمجة في الإقامة",
+      "النقل الخاص والجولات الخفيفة بدلاً من جدول الأعمال اليومي المزدحم"
+    ],
+    "ms": [
+      "Masa rehat di tepi pantai sekitar Da Nang dan Hoi An dengan janji temu spa premium",
+      "Rawatan berinspirasikan lulur detoks dan rawatan muka kolagen yang disepadukan ke dalam penginapan",
+      "Pemindahan peribadi dan lawatan ringan menggantikan jadual harian yang padat"
+    ]
+  },
+  "seasonality_start_month": "feb",
+  "seasonality_end_month": "aug",
+  "legacy_id": "trip-vietnam-central-spa-coast-escape",
+  "destinations": [
+    "vietnam"
+  ],
+  "short_description": {
+    "en": "A restorative central Vietnam itinerary pairing coast time with polished spa experiences, low-stress sightseeing, and private support throughout.",
+    "fr": "Un itinéraire réparateur dans le centre du Vietnam associant le temps passé sur la côte à des expériences de spa raffinées, des visites touristiques sans stress et un soutien privé tout au long.",
+    "zh": "越南中部恢复活力的行程将海岸时间与精致的水疗体验、轻松的观光和全程私人支持相结合。",
+    "ja": "海岸沿いの時間と洗練されたスパ体験、ストレスの少ない観光、プライベートサポートを組み合わせた、元気を取り戻せるベトナム中部の旅程です。",
+    "ko": "해안 시간과 세련된 스파 경험, 스트레스가 적은 관광, 개인 지원을 결합한 베트남 중부 여행 일정입니다.",
+    "vi": "Hành trình phục hồi miền Trung Việt Nam kết hợp thời gian ở bờ biển với trải nghiệm spa sang trọng, tham quan ít căng thẳng và hỗ trợ riêng xuyên suốt.",
+    "de": "Eine erholsame Reiseroute durch Zentralvietnam, die Zeit an der Küste mit ausgefeilten Spa-Erlebnissen, stressfreiem Sightseeing und privater Betreuung während des gesamten Aufenthaltes verbindet.",
+    "es": "Un itinerario restaurador por el centro de Vietnam que combina tiempo en la costa con experiencias de spa refinadas, visitas turísticas sin estrés y apoyo privado en todo momento.",
+    "it": "Un itinerario rigenerante nel Vietnam centrale che abbina il tempo sulla costa a raffinate esperienze termali, visite turistiche senza stress e supporto privato durante tutto il viaggio.",
+    "ru": "Восстанавливающий маршрут по центральному Вьетнаму, сочетающий время на побережье с роскошными спа-процедурами, осмотром достопримечательностей без стресса и частной поддержкой на протяжении всего пути.",
+    "nl": "Een herstellende route door centraal Vietnam, waarbij kusttijd wordt gecombineerd met gepolijste spa-ervaringen, bezienswaardigheden met weinig stress en overal privéondersteuning.",
+    "pl": "Regenerująca trasa po środkowym Wietnamie, łącząca czas wybrzeża z doskonałymi spa, zwiedzaniem bez stresu i prywatnym wsparciem przez cały czas.",
+    "da": "En genoprettende rejseplan i det centrale Vietnam, der parrer kysttid med polerede spa-oplevelser, sightseeing med lav stress og privat støtte overalt.",
+    "sv": "En återställande resplan i centrala Vietnam som kombinerar kusttid med polerade spa-upplevelser, sightseeing med låg stress och privat support genomgående.",
+    "no": "En gjenoppbyggende reiserute til sentralt Vietnam som kombinerer kysttid med polerte spa-opplevelser, sightseeing med lite stress og privat støtte hele veien.",
+    "ar": "خط سير رحلة مجدد في وسط فيتنام يجمع بين الوقت الساحلي وتجارب السبا المصقولة ومشاهدة المعالم السياحية منخفضة التوتر والدعم الخاص في جميع الأنحاء.",
+    "ms": "Jadual perjalanan pemulihan di Vietnam tengah yang menggabungkan masa di pesisir dengan pengalaman spa yang kemas, lawatan tanpa tekanan dan sokongan peribadi sepanjang masa."
+  },
+  "image": "/public/v1/tour-images/tour_ee68e41e-355e-4099-91cf-9ba133f4f4ac/tour_ee68e41e-355e-4099-91cf-9ba133f4f4ac.webp",
+  "updated_at": "2026-03-23T06:31:04Z"
+}

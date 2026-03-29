@@ -1,0 +1,142 @@
+{
+  "id": "tour_8fdd4246-09c4-4ce3-a353-1fd09858e24b",
+  "title": {
+    "en": "Cambodia Expeditions",
+    "fr": "Voyage aventure au Cambodge",
+    "zh": "柬埔寨探险之旅",
+    "ja": "カンボジア アドベンチャーの旅",
+    "ko": "캄보디아 어드벤처 여행",
+    "vi": "Hành trình Phiêu lưu Campuchia",
+    "de": "Kambodscha-Abenteuerreise",
+    "es": "Viaje de aventura en Camboya",
+    "it": "Viaggio Avventura in Cambogia",
+    "ru": "Приключенческое путешествие в Камбоджу",
+    "nl": "Avontuurlijke reis door Cambodja",
+    "pl": "Przygoda w Kambodży",
+    "da": "Cambodja eventyrrejse",
+    "sv": "Äventyrsresa till Kambodja",
+    "no": "Kambodsja eventyrreise",
+    "ar": "بعثات كمبوديا",
+    "ms": "Ekspedisi Kemboja"
+  },
+  "styles": [
+    "grand-expeditions",
+    "beach"
+  ],
+  "priority": 50,
+  "image": "/public/v1/tour-images/tour_8fdd4246-09c4-4ce3-a353-1fd09858e24b/tour_8fdd4246-09c4-4ce3-a353-1fd09858e24b.webp",
+  "highlights": {
+    "en": [
+      "Signature stop in Siem Reap",
+      "Route highlight around Phnom Penh",
+      "Smooth transfer planning via Tonle Sap"
+    ],
+    "fr": [
+      "Étape signature à Siem Reap",
+      "Temps fort de l'itinéraire autour de Phnom Penh",
+      "Transferts fluides via Tonlé Sap"
+    ],
+    "zh": [
+      "暹粒标志性停留",
+      "金边周边路线亮点",
+      "经洞里萨湖衔接的顺畅交通安排"
+    ],
+    "ja": [
+      "シェムリアップでの象徴的な立ち寄り",
+      "プノンペン周辺のルート見どころ",
+      "トンレサップ湖経由のスムーズな移動計画"
+    ],
+    "ko": [
+      "씨엠립의 대표적인 방문지",
+      "프놈펜 일대의 주요 동선 하이라이트",
+      "톤레삽 경유의 매끄러운 이동 계획"
+    ],
+    "vi": [
+      "Điểm dừng nổi bật tại Siem Reap",
+      "Điểm nhấn hành trình quanh Phnom Penh",
+      "Kế hoạch di chuyển mượt mà qua hồ Tonlé Sap"
+    ],
+    "de": [
+      "Signature-Stopp in Siem Reap",
+      "Routenhighlight rund um Phnom Penh",
+      "Reibungslose Transferplanung über Tonle Sap"
+    ],
+    "es": [
+      "Parada exclusiva en Siem Reap",
+      "Ruta destacada alrededor de Phnom Penh",
+      "Planificación de transferencia fluida a través de Tonle Sap"
+    ],
+    "it": [
+      "Fermata esclusiva a Siem Reap",
+      "Punti salienti del percorso intorno a Phnom Penh",
+      "Pianificazione fluida del trasferimento tramite Tonle Sap"
+    ],
+    "ru": [
+      "Фирменная остановка в Сием Рипе",
+      "Обзор маршрута по Пномпеню",
+      "Плавное планирование трансфера через Тонлесап"
+    ],
+    "nl": [
+      "Kenmerkende stop in Siem Reap",
+      "Route hoogtepunt rond Phnom Penh",
+      "Vlotte overdrachtsplanning via Tonle Sap"
+    ],
+    "pl": [
+      "Przystanek podpisu w Siem Reap",
+      "Najważniejszy punkt trasy wokół Phnom Penh",
+      "Płynne planowanie transferów za pośrednictwem Tonle Sap"
+    ],
+    "da": [
+      "Signaturstop i Siem Reap",
+      "Rutehøjdepunkt omkring Phnom Penh",
+      "Jævn overførselsplanlægning via Tonle Sap"
+    ],
+    "sv": [
+      "Signaturstopp i Siem Reap",
+      "Ruttens höjdpunkt runt Phnom Penh",
+      "Smidig överföringsplanering via Tonle Sap"
+    ],
+    "no": [
+      "Signaturstopp i Siem Reap",
+      "Rutehøydepunkt rundt Phnom Penh",
+      "Jevn overføringsplanlegging via Tonle Sap"
+    ],
+    "ar": [
+      "توقف التوقيع في سييم ريب",
+      "تسليط الضوء على الطريق حول بنوم بنه",
+      "تخطيط النقل السلس عبر Tonle Sap"
+    ],
+    "ms": [
+      "Persinggahan utama di Siem Reap",
+      "Sorotan laluan sekitar Phnom Penh",
+      "Perancangan pemindahan lancar melalui Tonle Sap"
+    ]
+  },
+  "seasonality_start_month": "nov",
+  "seasonality_end_month": "feb",
+  "updated_at": "2026-02-26T13:45:45.497Z",
+  "legacy_id": "trip-cambodia-grand-expeditions-classic",
+  "destinations": [
+    "cambodia",
+    "laos"
+  ],
+  "short_description": {
+    "en": "A Cambodia grand expeditions tour focused on a balanced first-trip route, with active days, scenic routes, and practical local support.",
+    "fr": "Un itinéraire d'aventure au Cambodge pensé pour un premier voyage équilibré, avec des journées actives, de beaux itinéraires et un accompagnement local concret.",
+    "zh": "这是一条以均衡的首次旅行路线为核心的柬埔寨探险行程，包含充满活力的每日安排、风景优美的路线以及实用的当地支持。",
+    "ja": "初めての旅でもバランスのよい周遊ルートを軸にしたカンボジアのアドベンチャー旅程で、アクティブな日程、美しい景観ルート、実用的な現地サポート。",
+    "ko": "균형 잡힌 첫 여행 동선에 초점을 맞춘 캄보디아 어드벤처 일정으로, 활동적인 일정, 아름다운 경로, 실용적인 현지 지원.",
+    "vi": "Đây là lịch trình phiêu lưu tại Campuchia tập trung vào lộ trình cân bằng cho chuyến đi đầu tiên, với những ngày năng động, cung đường đẹp và hỗ trợ địa phương thiết thực.",
+    "de": "Eine Kambodscha-Abenteuerreise konzentrierte sich auf eine ausgewogene Erstreiseroute mit aktiven Tagen, malerischen Routen und praktischer Unterstützung vor Ort.",
+    "es": "Un recorrido de aventura por Camboya centrado en una ruta equilibrada de primer viaje, con días activos, rutas panorámicas y apoyo local práctico.",
+    "it": "Un tour avventuroso in Cambogia incentrato su un percorso di primo viaggio equilibrato, con giornate attive, percorsi panoramici e supporto pratico locale.",
+    "ru": "Приключенческий тур в Камбоджу ориентирован на сбалансированный маршрут первой поездки, с активными днями, живописными маршрутами и практической местной поддержкой.",
+    "nl": "Een avontuurlijke rondreis door Cambodja gericht op een uitgebalanceerde eerste reisroute, met actieve dagen, schilderachtige routes en praktische lokale ondersteuning.",
+    "pl": "Wycieczka przygodowa po Kambodży skupiająca się na zrównoważonej trasie pierwszej podróży, z aktywnymi dniami, malowniczymi trasami i praktycznym lokalnym wsparciem.",
+    "da": "En eventyrtur i Cambodia fokuserede på en afbalanceret første tur-rute med aktive dage, naturskønne ruter og praktisk lokal støtte.",
+    "sv": "En äventyrsturné i Kambodja fokuserade på en balanserad första resa med aktiva dagar, natursköna rutter och praktiskt lokalt stöd.",
+    "no": "En eventyrtur i Kambodsja fokuserte på en balansert førstetursrute, med aktive dager, naturskjønne ruter og praktisk lokal støtte.",
+    "ar": "ركزت جولة الرحلات الاستكشافية الكبرى في كمبوديا على مسار متوازن للرحلة الأولى، مع أيام نشطة وطرق ذات مناظر خلابة ودعم محلي عملي.",
+    "ms": "Jadual perjalanan ekspedisi besar Kemboja yang berfokus pada laluan lawatan pertama yang seimbang, dengan hari-hari aktif, laluan pemandangan indah dan sokongan tempatan yang praktikal."
+  }
+}

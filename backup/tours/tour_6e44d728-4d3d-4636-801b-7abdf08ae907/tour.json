@@ -1,0 +1,139 @@
+{
+  "id": "tour_6e44d728-4d3d-4636-801b-7abdf08ae907",
+  "title": {
+    "en": "Thailand Gastronomic Experience",
+    "fr": "Voyage gastronomie en Thaïlande",
+    "zh": "泰国美食之旅",
+    "ja": "タイ グルメの旅",
+    "ko": "태국 미식 여행",
+    "vi": "Hành trình Ẩm thực Thái Lan",
+    "de": "Thailand-Gastronomic Experiences-Reise",
+    "es": "Viaje gastronómico de Tailandia",
+    "it": "Viaggio gastronomico in Thailandia",
+    "ru": "Гастрономическое путешествие в Таиланд",
+    "nl": "Thailand Voedselreis",
+    "pl": "Podróż kulinarna po Tajlandii",
+    "da": "Thailand madrejse",
+    "sv": "Thailand matresa",
+    "no": "Thailand matreise",
+    "ar": "تجربة تذوق الطعام في تايلاند",
+    "ms": "Pengalaman Gastronomi Thailand"
+  },
+  "styles": [
+    "gastronomic-experiences"
+  ],
+  "priority": 50,
+  "image": "/public/v1/tour-images/tour_6e44d728-4d3d-4636-801b-7abdf08ae907/tour_6e44d728-4d3d-4636-801b-7abdf08ae907.webp",
+  "highlights": {
+    "en": [
+      "Signature stop in Bangkok",
+      "Route highlight around Chiang Mai",
+      "Smooth transfer planning via Phuket"
+    ],
+    "fr": [
+      "Étape signature à Bangkok",
+      "Temps fort de l'itinéraire autour de Chiang Mai",
+      "Transferts fluides via Phuket"
+    ],
+    "zh": [
+      "曼谷标志性停留",
+      "清迈周边路线亮点",
+      "经普吉衔接的顺畅交通安排"
+    ],
+    "ja": [
+      "バンコクでの象徴的な立ち寄り",
+      "チェンマイ周辺のルート見どころ",
+      "プーケット経由のスムーズな移動計画"
+    ],
+    "ko": [
+      "방콕의 대표적인 방문지",
+      "치앙마이 일대의 주요 동선 하이라이트",
+      "푸껫 경유의 매끄러운 이동 계획"
+    ],
+    "vi": [
+      "Điểm dừng nổi bật tại Bangkok",
+      "Điểm nhấn hành trình quanh Chiang Mai",
+      "Kế hoạch di chuyển mượt mà qua Phuket"
+    ],
+    "de": [
+      "Signature-Stopp in Bangkok",
+      "Routenhighlight rund um Chiang Mai",
+      "Reibungslose Transferplanung über Phuket"
+    ],
+    "es": [
+      "Parada exclusiva en Bangkok",
+      "Ruta destacada alrededor de Chiang Mai",
+      "Planificación fluida del traslado a través de Phuket"
+    ],
+    "it": [
+      "Fermata esclusiva a Bangkok",
+      "Momento clou del percorso intorno a Chiang Mai",
+      "Pianificazione agevole del trasferimento via Phuket"
+    ],
+    "ru": [
+      "Фирменная остановка в Бангкоке",
+      "Обзор маршрута по Чиангмаю",
+      "Плавное планирование трансфера через Пхукет"
+    ],
+    "nl": [
+      "Kenmerkende stop in Bangkok",
+      "Hoogtepunt van de route rond Chiang Mai",
+      "Vlotte transferplanning via Phuket"
+    ],
+    "pl": [
+      "Podpisowy przystanek w Bangkoku",
+      "Najważniejszy punkt trasy wokół Chiang Mai",
+      "Płynne planowanie transferu przez Phuket"
+    ],
+    "da": [
+      "Signaturstop i Bangkok",
+      "Rutens højdepunkt omkring Chiang Mai",
+      "Glat overførselsplanlægning via Phuket"
+    ],
+    "sv": [
+      "Signaturstopp i Bangkok",
+      "Ruttens höjdpunkt runt Chiang Mai",
+      "Smidig överföringsplanering via Phuket"
+    ],
+    "no": [
+      "Signaturstopp i Bangkok",
+      "Rutehøydepunkt rundt Chiang Mai",
+      "Jevn overføringsplanlegging via Phuket"
+    ],
+    "ar": [
+      "توقف التوقيع في بانكوك",
+      "تسليط الضوء على الطريق حول شيانغ ماي",
+      "تخطيط النقل السلس عبر فوكيت"
+    ],
+    "ms": [
+      "Persinggahan utama di Bangkok",
+      "Sorotan laluan sekitar Chiang Mai",
+      "Perancangan pemindahan lancar melalui Phuket"
+    ]
+  },
+  "seasonality_start_month": "nov",
+  "seasonality_end_month": "mar",
+  "legacy_id": "trip-thailand-gastronomic-experiences-classic",
+  "destinations": [
+    "thailand"
+  ],
+  "short_description": {
+    "en": "A Thailand gastronomic experiences itinerary focused on a balanced first-trip route, with market visits, tastings, and regional culinary experiences.",
+    "fr": "Un itinéraire gastronomique en Thaïlande pensé pour un premier voyage équilibré, avec des visites de marchés, des dégustations et des expériences culinaires régionales.",
+    "zh": "这是一条以均衡的首次旅行路线为核心的泰国美食行程，包含市场探访、品鉴体验和区域美食体验。",
+    "ja": "初めての旅でもバランスのよい周遊ルートを軸にしたタイのグルメ旅程で、市場訪問、試食、地域ごとの食体験。",
+    "ko": "균형 잡힌 첫 여행 동선에 초점을 맞춘 태국 미식 일정으로, 시장 방문, 시식, 지역 미식 체험.",
+    "vi": "Đây là lịch trình ẩm thực tại Thái Lan tập trung vào lộ trình cân bằng cho chuyến đi đầu tiên, với các buổi ghé chợ, nếm thử và trải nghiệm ẩm thực vùng miền.",
+    "de": "Eine kulinarische Reiseroute für Thailand, die sich auf eine ausgewogene Erstreiseroute mit Marktbesuchen, Verkostungen und regionalen kulinarischen Erlebnissen konzentriert.",
+    "es": "Un itinerario gastronómico de Tailandia centrado en una ruta equilibrada de primer viaje, con visitas a mercados, degustaciones y experiencias culinarias regionales.",
+    "it": "Un itinerario gastronomico in Thailandia incentrato su un percorso equilibrato di primo viaggio, con visite al mercato, degustazioni ed esperienze culinarie regionali.",
+    "ru": "Гастрономический маршрут по Таиланду ориентирован на сбалансированный маршрут первой поездки с посещением рынков, дегустациями и региональными кулинарными впечатлениями.",
+    "nl": "Een voedselroute door Thailand gericht op een uitgebalanceerde eerste reisroute, met marktbezoeken, proeverijen en regionale culinaire ervaringen.",
+    "pl": "Trasa kulinarna po Tajlandii skupiająca się na zrównoważonej trasie pierwszej podróży, obejmującej wizyty na rynku, degustacje i regionalne doświadczenia kulinarne.",
+    "da": "En thailandsk madrejseplan fokuserede på en afbalanceret første tur-rute med markedsbesøg, smagsprøver og regionale kulinariske oplevelser.",
+    "sv": "En matresplan i Thailand fokuserade på en balanserad första resa med marknadsbesök, provningar och regionala kulinariska upplevelser.",
+    "no": "En matreise i Thailand fokuserte på en balansert førstetursrute, med markedsbesøk, smaksprøver og regionale kulinariske opplevelser.",
+    "ar": "يركز خط سير تجارب تذوق الطعام في تايلاند على مسار الرحلة الأولى المتوازن، مع زيارات السوق والتذوق وتجارب الطهي الإقليمية.",
+    "ms": "Jadual perjalanan pengalaman gastronomi Thailand yang berfokus pada laluan lawatan pertama yang seimbang, dengan lawatan pasar, sesi merasa dan pengalaman kulinari serantau."
+  }
+}

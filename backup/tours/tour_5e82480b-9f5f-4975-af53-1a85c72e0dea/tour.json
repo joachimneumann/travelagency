@@ -1,0 +1,141 @@
+{
+  "id": "tour_5e82480b-9f5f-4975-af53-1a85c72e0dea",
+  "title": {
+    "en": "Laos River & Renewal Retreat",
+    "fr": "Retraite sur le fleuve Laos et le renouveau",
+    "zh": "老挝河与复兴度假村",
+    "ja": "ラオス リバー & リニューアル リトリート",
+    "ko": "라오스 리버 & 리뉴얼 리트리트",
+    "vi": "Sông Lào & Khóa Tu Đổi Mới",
+    "de": "Laos River & Renewal Retreat",
+    "es": "Río Laos y retiro de renovación",
+    "it": "Ritiro del fiume Laos e del rinnovamento",
+    "ru": "Река Лаос и ретрит обновления",
+    "nl": "Laos River & Vernieuwingsretraite",
+    "pl": "Rzeka Laos i rekolekcje odnowy",
+    "da": "Laos River & Renewal Retreat",
+    "sv": "Laos River & Renewal Retreat",
+    "no": "Laos River & Renewal Retreat",
+    "ar": "نهر لاوس وتراجع التجديد",
+    "ms": "Retret Sungai & Pembaharuan Laos"
+  },
+  "styles": [
+    "wellness",
+    "luxury"
+  ],
+  "priority": 55,
+  "highlights": {
+    "en": [
+      "Boutique river stay with daily wellness time",
+      "Deep-relaxation massage inspired treatments for a full reset",
+      "Minimal transfers and plenty of time to rest between outings"
+    ],
+    "fr": [
+      "Séjour boutique en rivière avec espace bien-être quotidien",
+      "Des soins inspirés des massages de relaxation profonde pour une réinitialisation complète",
+      "Transferts minimes et beaucoup de temps pour se reposer entre les sorties"
+    ],
+    "zh": [
+      "精品河畔住宿，每日享受健康时光",
+      "以深度放松按摩为灵感的护理，让您彻底康复",
+      "最少的换乘和外出之间有充足的休息时间"
+    ],
+    "ja": [
+      "毎日のウェルネスタイム付きのブティックリバーステイ",
+      "Deep-relaxation massage inspired treatments for a full reset",
+      "Minimal transfers and plenty of time to rest between outings"
+    ],
+    "ko": [
+      "매일 웰니스 시간을 제공하는 부티크 리버 스테이",
+      "완전한 재설정을 위한 깊은 휴식 마사지에서 영감을 받은 트리트먼트",
+      "최소한의 환승과 외출 사이에 충분한 휴식 시간"
+    ],
+    "vi": [
+      "Nghỉ dưỡng ven sông với thời gian chăm sóc sức khỏe hàng ngày",
+      "Các phương pháp trị liệu lấy cảm hứng từ massage thư giãn sâu để thiết lập lại toàn bộ",
+      "Di chuyển tối thiểu và có nhiều thời gian để nghỉ ngơi giữa các chuyến đi"
+    ],
+    "de": [
+      "Boutique-Flussaufenthalt mit täglicher Wellnesszeit",
+      "Von einer Tiefenentspannungsmassage inspirierte Behandlungen für einen vollständigen Neustart",
+      "Minimale Transfers und viel Zeit zum Ausruhen zwischen den Ausflügen"
+    ],
+    "es": [
+      "Estancia boutique en el río con tiempo de bienestar diario",
+      "Tratamientos inspirados en masajes de relajación profunda para un reinicio completo",
+      "Traslados mínimos y mucho tiempo para descansar entre salidas."
+    ],
+    "it": [
+      "Soggiorno boutique sul fiume con momento benessere giornaliero",
+      "Trattamenti ispirati al massaggio rilassante profondo per un ripristino completo",
+      "Trasferimenti minimi e tanto tempo per riposarsi tra un'uscita e l'altra"
+    ],
+    "ru": [
+      "Бутик-отель у реки с ежедневным оздоровительным отдыхом",
+      "Процедуры глубокого релаксации, вдохновленные массажем, для полного восстановления сил",
+      "Минимальные трансферы и много времени для отдыха между поездками."
+    ],
+    "nl": [
+      "Boutique rivierverblijf met dagelijkse wellnesstijd",
+      "Op diepe ontspanningsmassage geïnspireerde behandelingen voor een volledige reset",
+      "Minimale transfers en voldoende tijd om te rusten tussen de uitstapjes"
+    ],
+    "pl": [
+      "Butikowy pobyt nad rzeką z codziennym czasem wellness",
+      "Zabiegi inspirowane masażem głębokorelaksacyjnym dla pełnego resetu",
+      "Minimalna liczba transferów i mnóstwo czasu na odpoczynek pomiędzy wycieczkami"
+    ],
+    "da": [
+      "Boutique-flodophold med daglig wellness-tid",
+      "Dyb afslappende massage inspirerede behandlinger for en fuld nulstilling",
+      "Minimale overførsler og masser af tid til at hvile mellem udflugterne"
+    ],
+    "sv": [
+      "Boutique-flodvistelse med daglig wellness-tid",
+      "Djupavslappnande massageinspirerade behandlingar för en fullständig återställning",
+      "Minimala förflyttningar och gott om tid att vila mellan utflykterna"
+    ],
+    "no": [
+      "Boutique-elveopphold med daglig velværetid",
+      "Dypavslappende massasje-inspirerte behandlinger for en fullstendig tilbakestilling",
+      "Minimale overføringer og god tid til å hvile mellom utfluktene"
+    ],
+    "ar": [
+      "إقامة نهرية بوتيكية مع وقت عافية يومي",
+      "علاجات مستوحاة من تدليك الاسترخاء العميق لإعادة ضبط النفس بالكامل",
+      "الحد الأدنى من التنقلات والكثير من الوقت للراحة بين النزهات"
+    ],
+    "ms": [
+      "Penginapan butik di tepi sungai dengan masa kesejahteraan setiap hari",
+      "Rawatan berinspirasikan urutan relaksasi mendalam untuk set semula menyeluruh",
+      "Pemindahan minimum dan banyak masa untuk berehat antara aktiviti"
+    ]
+  },
+  "seasonality_start_month": "nov",
+  "seasonality_end_month": "mar",
+  "legacy_id": "trip-laos-river-renewal-retreat",
+  "destinations": [
+    "laos"
+  ],
+  "short_description": {
+    "en": "A short Laos retreat built for recovery rather than mileage, with a boutique river base, curated excursions, and spa-led downtime.",
+    "fr": "Une courte retraite au Laos conçue pour la récupération plutôt que pour le kilométrage, avec une base fluviale boutique, des excursions organisées et des temps d'arrêt au spa.",
+    "zh": "老挝的一个短期度假胜地，旨在恢复体力而不是里程数，设有精品河流基地、精心策划的短途旅行和水疗中心的休息时间。",
+    "ja": "走行距離よりも回復を目的として建てられたラオスの短い保養地。ブティックな川の拠点、厳選されたツアー、スパ主導のダウンタイムが含まれます。",
+    "ko": "마일리지보다는 회복을 위해 지어진 짧은 라오스 휴양지로, 부티크 강 베이스, 엄선된 여행, 스파 주도의 다운타임을 제공합니다.",
+    "vi": "Một nơi nghỉ dưỡng ngắn ngày ở Lào được xây dựng để phục hồi chứ không phải đi quãng đường dài, với nền tảng ven sông, các chuyến du ngoạn được tuyển chọn và thời gian ngừng hoạt động do spa hướng dẫn.",
+    "de": "Ein kurzer Rückzugsort in Laos, der eher der Erholung als der Kilometerleistung dient, mit einer Boutique-Basis am Fluss, kuratierten Ausflügen und Spa-geführten Auszeiten.",
+    "es": "Un breve retiro en Laos construido para la recuperación en lugar del kilometraje, con una base boutique en el río, excursiones seleccionadas y tiempo de inactividad en un spa.",
+    "it": "Un breve rifugio in Laos costruito per il recupero piuttosto che per il chilometraggio, con una base fluviale boutique, escursioni curate e tempi di inattività guidati dalla spa.",
+    "ru": "Короткий ретрит в Лаосе, созданный для восстановления, а не для пробега, с роскошной речной базой, тщательно подобранными экскурсиями и отдыхом в спа-центре.",
+    "nl": "Een korte retraite in Laos, gebouwd voor herstel in plaats van kilometers, met een boetiekrivierbasis, samengestelde excursies en door de spa geleide ontspanning.",
+    "pl": "Krótkie rekolekcje w Laosie, stworzone z myślą o regeneracji, a nie pokonywaniu kilometrów, z butikową bazą nad rzeką, wybranymi wycieczkami i przestojami w spa.",
+    "da": "Et kort Laos-retræte bygget til restitution snarere end kilometertal, med en boutique-flodbase, udvalgte udflugter og spa-ledet nedetid.",
+    "sv": "En kort Laos reträtt byggd för återhämtning snarare än körsträcka, med en boutiqueflodbas, utvalda utflykter och spa-ledda stillestånd.",
+    "no": "Et kort Laos-tilfluktssted bygget for restitusjon i stedet for kjørelengde, med en boutique-elvebase, utvalgte utflukter og spa-ledet nedetid.",
+    "ar": "ملاذ قصير في لاوس تم تصميمه من أجل التعافي وليس المسافة المقطوعة، مع قاعدة نهرية بوتيكية، ورحلات استكشافية منسقة، وفترات توقف عن العمل تحت إشراف المنتجع الصحي.",
+    "ms": "Retret singkat Laos yang direka untuk pemulihan, bukannya mengejar jarak, dengan penginapan butik di tepi sungai, lawatan terpilih dan masa rehat yang dipimpin oleh spa."
+  },
+  "image": "/public/v1/tour-images/tour_5e82480b-9f5f-4975-af53-1a85c72e0dea/tour_5e82480b-9f5f-4975-af53-1a85c72e0dea.webp",
+  "updated_at": "2026-03-23T06:35:13Z"
+}

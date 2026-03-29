@@ -1,0 +1,142 @@
+{
+  "id": "tour_ea36473e-561b-426a-8db5-52c360e1adad",
+  "title": {
+    "en": "Phuket Wellness by the Sea",
+    "fr": "Phuket bien-être au bord de la mer",
+    "zh": "普吉岛海滨健康中心",
+    "ja": "プーケット ウェルネス バイ ザ シー",
+    "ko": "푸켓 웰니스 바이 더 씨",
+    "vi": "Phuket Wellness bên bờ biển",
+    "de": "Phuket Wellness am Meer",
+    "es": "Bienestar de Phuket junto al mar",
+    "it": "Benessere a Phuket in riva al mare",
+    "ru": "Пхукет Велнес у моря",
+    "nl": "Phuket Wellness aan zee",
+    "pl": "Wellness w Phuket nad morzem",
+    "da": "Phuket Wellness ved havet",
+    "sv": "Phuket Wellness vid havet",
+    "no": "Phuket velvære ved sjøen",
+    "ar": "منتجع فوكيت الصحي على البحر",
+    "ms": "Kesejahteraan Phuket di Tepi Laut"
+  },
+  "styles": [
+    "wellness",
+    "beach",
+    "luxury"
+  ],
+  "priority": 55,
+  "highlights": {
+    "en": [
+      "Sea-facing downtime with massage-led recovery sessions",
+      "Optional scrub or hot-stone style treatments between island activities",
+      "Resort rhythm, easy excursions, and generous sunset free time"
+    ],
+    "fr": [
+      "Temps d'arrêt face à la mer avec des séances de récupération par massage",
+      "Traitements optionnels de type gommage ou pierres chaudes entre les activités de l'île",
+      "Rythme de la station, excursions faciles et temps libre généreux au coucher du soleil"
+    ],
+    "zh": [
+      "面朝大海的休息时间，享受以按摩为主导的恢复课程",
+      "岛屿活动之间可选择磨砂或热石式护理",
+      "度假胜地的节奏、轻松的短途旅行和充足的日落空闲时间"
+    ],
+    "ja": [
+      "マッサージ主導の回復セッションによる海に面したダウンタイム",
+      "島でのアクティビティの合間には、スクラブまたはホットストーン スタイルのトリートメント (オプション)",
+      "リゾートのリズム、気軽な小旅行、たっぷりの夕日の自由時間"
+    ],
+    "ko": [
+      "마사지를 통한 회복 세션으로 바다를 향한 가동 중지 시간",
+      "섬 활동 사이에 선택적 스크럽 또는 핫스톤 스타일 트리트먼트",
+      "리조트 리듬, 여유로운 여행, 넉넉한 일몰 자유시간"
+    ],
+    "vi": [
+      "Thời gian nghỉ ngơi hướng ra biển với các buổi phục hồi bằng massage",
+      "Tùy chọn trị liệu bằng chà hoặc đá nóng giữa các hoạt động trên đảo",
+      "Nhịp điệu nghỉ dưỡng, những chuyến du ngoạn dễ dàng và thời gian rảnh rỗi khi hoàng hôn buông xuống"
+    ],
+    "de": [
+      "Auszeit mit Blick aufs Meer und Erholungssitzungen unter Massage",
+      "Optionale Peeling- oder Hot-Stone-Behandlungen zwischen den Aktivitäten auf der Insel",
+      "Resort-Rhythmus, einfache Ausflüge und großzügige Freizeit bei Sonnenuntergang"
+    ],
+    "es": [
+      "Tiempo de inactividad frente al mar con sesiones de recuperación dirigidas por masajes",
+      "Tratamientos opcionales con exfoliantes o piedras calientes entre actividades en la isla",
+      "Ritmo de resort, excursiones sencillas y generoso tiempo libre al atardecer"
+    ],
+    "it": [
+      "Tempo di recupero fronte mare con sessioni di recupero guidate da massaggi",
+      "Scrub opzionale o trattamenti con pietre calde tra le attività dell'isola",
+      "Ritmo del resort, escursioni facili e generoso tempo libero al tramonto"
+    ],
+    "ru": [
+      "Отдых с видом на море и сеансы восстановления под руководством массажа",
+      "Дополнительные процедуры скраба или обработки горячими камнями между развлечениями на острове",
+      "Курортный ритм, легкие экскурсии и щедрое свободное время на закате."
+    ],
+    "nl": [
+      "Rusttijd met uitzicht op zee met herstelsessies onder leiding van massage",
+      "Optionele scrub- of hotstone-behandelingen tussen eilandactiviteiten",
+      "Resortritme, gemakkelijke excursies en royale vrije tijd bij zonsondergang"
+    ],
+    "pl": [
+      "Przerwa z widokiem na morze z sesjami regeneracyjnymi prowadzonymi przez masaż",
+      "Opcjonalne peelingi lub zabiegi na bazie gorących kamieni pomiędzy zajęciami na wyspie",
+      "Rytm kurortu, łatwe wycieczki i hojny czas wolny na zachód słońca"
+    ],
+    "da": [
+      "Havvendt nedetid med massage-ledede genopretningssessioner",
+      "Valgfri scrub- eller hot-stone-behandlinger mellem ø-aktiviteter",
+      "Resortrytme, lette udflugter og generøs solnedgangsfritid"
+    ],
+    "sv": [
+      "Avbrott i havet med massageledda återhämtningssessioner",
+      "Valfria behandlingar med skrubb eller varma stenar mellan öaktiviteter",
+      "Resortrytm, enkla utflykter och generös fritid i solnedgången"
+    ],
+    "no": [
+      "Sjøvendt nedetid med massasjeledede restitusjonsøkter",
+      "Valgfrie kratt- eller varmebehandlinger mellom øyaktiviteter",
+      "Feriestedsrytme, enkle utflukter og sjenerøs fritid ved solnedgang"
+    ],
+    "ar": [
+      "فترة توقف في مواجهة البحر مع جلسات التعافي التي يقودها التدليك",
+      "فرك اختياري أو علاجات على طراز الحجر الساخن بين أنشطة الجزيرة",
+      "إيقاع المنتجع والرحلات الاستكشافية السهلة ووقت الفراغ السخي عند غروب الشمس"
+    ],
+    "ms": [
+      "Masa rehat menghadap laut dengan sesi pemulihan berasaskan urutan",
+      "Pilihan rawatan lulur atau gaya batu panas di antara aktiviti pulau",
+      "Rentak resort, lawatan mudah dan masa lapang waktu senja yang luas"
+    ]
+  },
+  "seasonality_start_month": "nov",
+  "seasonality_end_month": "apr",
+  "legacy_id": "trip-thailand-phuket-wellness-by-the-sea",
+  "destinations": [
+    "thailand"
+  ],
+  "short_description": {
+    "en": "A Thailand beach escape with a wellness focus, built around sea air, slower days, and spa appointments that reset the body without overloading the schedule.",
+    "fr": "Une escapade à la plage en Thaïlande axée sur le bien-être, construite autour de l'air marin, de journées plus calmes et de rendez-vous au spa qui réinitialisent le corps sans surcharger le programme.",
+    "zh": "泰国海滩度假胜地，以健康为中心，以海洋空气、悠闲时光和水疗预约为中心，在不超负荷日程安排的情况下重新调整身体。",
+    "ja": "ウェルネスに焦点を当てたタイのビーチ エスケープは、海の空気、ゆっくりとした一日、スケジュールに負担をかけずに体をリセットするスパの予約を中心に構築されています。",
+    "ko": "바다 공기, 여유로운 낮 시간, 일정에 과중한 부담 없이 몸을 재설정할 수 있는 스파 예약을 중심으로 웰니스에 중점을 둔 태국 해변 휴양지입니다.",
+    "vi": "Một chuyến đi trốn khỏi bãi biển ở Thái Lan với trọng tâm là chăm sóc sức khỏe, được xây dựng dựa trên không khí biển, những ngày chậm rãi hơn và các cuộc hẹn spa giúp phục hồi cơ thể mà không làm quá tải lịch trình.",
+    "de": "Ein Strandurlaub in Thailand mit Wellness-Fokus, der auf Seeluft, ruhigeren Tagen und Spa-Terminen basiert, die den Körper neu starten, ohne den Zeitplan zu überlasten.",
+    "es": "Una escapada a la playa de Tailandia con un enfoque de bienestar, construida alrededor del aire del mar, días más tranquilos y citas de spa que restablecen el cuerpo sin sobrecargar la agenda.",
+    "it": "Una fuga sulla spiaggia della Thailandia con un focus sul benessere, costruito attorno all'aria di mare, giornate più lente e appuntamenti alla spa che rigenerano il corpo senza sovraccaricare il programma.",
+    "ru": "Пляжный отдых в Таиланде с упором на оздоровительный отдых, построенный на морском воздухе, более медленных днях и посещениях спа-салона, которые перезагрузят организм, не перегружая график.",
+    "nl": "Een strandvakantie in Thailand met een wellnessfocus, opgebouwd rond zeelucht, langzamere dagen en spa-afspraken die het lichaam resetten zonder het schema te overbelasten.",
+    "pl": "Ucieczka na plażę w Tajlandii ze szczególnym naciskiem na wellness, zbudowana wokół morskiego powietrza, wolniejszych dni i wizyt w spa, które resetują ciało bez przeciążania harmonogramu.",
+    "da": "En strandflugt fra Thailand med et wellness-fokus, bygget op omkring havluft, langsommere dage og spa-aftaler, der nulstiller kroppen uden at overbelaste tidsplanen.",
+    "sv": "En strandflykt från Thailand med fokus på välmående, byggd kring havsluft, långsammare dagar och spamöten som återställer kroppen utan att överbelasta schemat.",
+    "no": "En strandflukt fra Thailand med et velværefokus, bygget rundt sjøluft, langsommere dager og spaavtaler som tilbakestiller kroppen uten å overbelaste timeplanen.",
+    "ar": "ملاذ على شاطئ تايلاند مع التركيز على العافية، حيث يتمحور حول هواء البحر والأيام البطيئة ومواعيد السبا التي تعيد ضبط الجسم دون زيادة الضغط على الجدول الزمني.",
+    "ms": "Pelarian pantai Thailand dengan fokus kesejahteraan, dibina sekitar udara laut, hari-hari yang lebih santai dan janji temu spa yang menyegarkan tubuh tanpa membebankan jadual."
+  },
+  "image": "/public/v1/tour-images/tour_ea36473e-561b-426a-8db5-52c360e1adad/tour_ea36473e-561b-426a-8db5-52c360e1adad.webp",
+  "updated_at": "2026-03-23T06:31:46Z"
+}

@@ -1,0 +1,141 @@
+{
+  "id": "tour_18e53ef1-4aba-40e6-ae63-e87e08fa8f3a",
+  "title": {
+    "en": "Chiang Mai Wellness & Mountain Calm",
+    "fr": "Chiang Mai Bien-être & Calme des Montagnes",
+    "zh": "清迈健康与山静",
+    "ja": "チェンマイ ウェルネス & マウンテン カーム",
+    "ko": "치앙마이 웰니스 & 마운틴 캄",
+    "vi": "Sức khỏe Chiang Mai & Núi Bình tĩnh",
+    "de": "Chiang Mai Wellness und Bergruhe",
+    "es": "Bienestar y calma en la montaña de Chiang Mai",
+    "it": "Benessere e tranquillità in montagna a Chiang Mai",
+    "ru": "Оздоровление и горное спокойствие Чиангмая",
+    "nl": "Chiang Mai Wellness en bergrust",
+    "pl": "Chiang Mai Wellness i górski spokój",
+    "da": "Chiang Mai Wellness & Mountain Calm",
+    "sv": "Chiang Mai Wellness & Mountain Calm",
+    "no": "Chiang Mai velvære og fjellro",
+    "ar": "شيانغ ماي العافية والهدوء الجبلي",
+    "ms": "Chiang Mai Kesejahteraan & Ketenangan Gunung"
+  },
+  "styles": [
+    "wellness",
+    "culture"
+  ],
+  "priority": 55,
+  "highlights": {
+    "en": [
+      "Gentle Chiang Mai culture days balanced with spa recovery",
+      "Warm-stone style relaxation after temple and market visits",
+      "Space for yoga, cafe time, and a slower northern Thailand rhythm"
+    ],
+    "fr": [
+      "Journées culturelles douces à Chiang Mai équilibrées avec récupération au spa",
+      "Détente aux pierres chaudes après les visites de temples et de marchés",
+      "Espace pour le yoga, l'heure du café et un rythme plus lent du nord de la Thaïlande"
+    ],
+    "zh": [
+      "温和的清迈文化日与水疗恢复相平衡",
+      "参观寺庙和市场后享受温暖的石头风格的放松",
+      "瑜伽空间、咖啡馆时间和泰国北部较慢的节奏"
+    ],
+    "ja": [
+      "スパでの回復とバランスの取れた穏やかなチェンマイ文化の日々",
+      "寺院や市場を訪れた後は、ウォームストーン スタイルでリラックス",
+      "ヨガやカフェタイム、タイ北部のゆっくりとしたリズムを楽しめるスペース"
+    ],
+    "ko": [
+      "스파 회복과 균형을 이루는 온화한 치앙마이 문화의 날",
+      "사원 및 시장 방문 후 따뜻한 돌 스타일의 휴식",
+      "요가, 카페 타임, 그리고 느린 태국 북부 리듬을 위한 공간"
+    ],
+    "vi": [
+      "Những ngày văn hóa Chiang Mai nhẹ nhàng cân bằng với spa phục hồi",
+      "Thư giãn kiểu đá ấm sau khi tham quan chùa và chợ",
+      "Không gian dành cho yoga, thời gian uống cà phê và nhịp sống miền Bắc Thái Lan chậm hơn"
+    ],
+    "de": [
+      "Sanfte Kulturtage in Chiang Mai, ausgeglichen mit Spa-Erholung",
+      "Entspannung im warmen Steinstil nach Tempel- und Marktbesuchen",
+      "Raum für Yoga, Kaffeepause und einen langsameren Nordthailand-Rhythmus"
+    ],
+    "es": [
+      "Días suaves de cultura en Chiang Mai equilibrados con recuperación en el spa",
+      "Relajación al estilo de las piedras cálidas después de visitar templos y mercados",
+      "Espacio para yoga, café y un ritmo más lento del norte de Tailandia"
+    ],
+    "it": [
+      "Delicate giornate culturali a Chiang Mai bilanciate con il recupero termale",
+      "Rilassamento in stile pietra calda dopo le visite ai templi e al mercato",
+      "Spazio per lo yoga, l'ora del caffè e un ritmo più lento della Thailandia settentrionale"
+    ],
+    "ru": [
+      "Нежные культурные дни Чиангмая, сбалансированные спа-оздоровлением",
+      "Релаксация в стиле теплых камней после посещения храмов и рынков",
+      "Место для йоги, времяпрепровождения в кафе и более медленный ритм северного Таиланда."
+    ],
+    "nl": [
+      "Zachte cultuurdagen in Chiang Mai, gebalanceerd met spa-herstel",
+      "Ontspanning in warme steenstijl na tempel- en marktbezoeken",
+      "Ruimte voor yoga, cafétijd en een langzamer Noord-Thailand ritme"
+    ],
+    "pl": [
+      "Delikatne dni kultury Chiang Mai zrównoważone regeneracją w spa",
+      "Relaks w stylu ciepłych kamieni po wizytach w świątyni i na rynku",
+      "Miejsce na jogę, kawiarnię i wolniejszy rytm północnej Tajlandii"
+    ],
+    "da": [
+      "Blide Chiang Mai kulturdage balanceret med spa-genopretning",
+      "Afslapning i varmstenstil efter tempel- og markedsbesøg",
+      "Plads til yoga, cafétid og en langsommere nordthailandsk rytme"
+    ],
+    "sv": [
+      "Milda Chiang Mai kulturdagar balanserade med spaåterhämtning",
+      "Avkoppling i varm sten efter tempel- och marknadsbesök",
+      "Plats för yoga, cafétid och en långsammare norra Thailands rytm"
+    ],
+    "no": [
+      "Milde Chiang Mai kulturdager balansert med spa-restitusjon",
+      "Avslapping i varm steinstil etter tempel- og markedsbesøk",
+      "Plass til yoga, kafétid og en tregere nord-Thailand-rytme"
+    ],
+    "ar": [
+      "أيام الثقافة اللطيفة في شيانغ ماي متوازنة مع التعافي في المنتجع الصحي",
+      "الاسترخاء على طراز الحجر الدافئ بعد زيارات المعبد والسوق",
+      "مساحة لليوجا ووقت المقهى وإيقاع شمال تايلاند الأبطأ"
+    ],
+    "ms": [
+      "Hari budaya Chiang Mai yang lembut diimbangi dengan pemulihan spa",
+      "Relaksasi gaya batu hangat selepas lawatan ke kuil dan pasar",
+      "Ruang untuk yoga, masa di kafe dan rentak Thailand utara yang lebih santai"
+    ]
+  },
+  "seasonality_start_month": "nov",
+  "seasonality_end_month": "mar",
+  "legacy_id": "trip-thailand-chiang-mai-wellness-mountain-calm",
+  "destinations": [
+    "thailand"
+  ],
+  "short_description": {
+    "en": "A northern Thailand itinerary for travelers who want temples and food culture without fatigue, with spa recovery built into the route.",
+    "fr": "Un itinéraire du nord de la Thaïlande pour les voyageurs qui veulent des temples et une culture gastronomique sans fatigue, avec une récupération en spa intégrée à l'itinéraire.",
+    "zh": "泰国北部的行程，适合想要参观寺庙和饮食文化而又不会感到疲劳的旅行者，路线中还设有水疗恢复功能。",
+    "ja": "疲れることなく寺院や食文化を楽しみたい旅行者向けのタイ北部の旅程で、ルートにスパ回復が組み込まれています。",
+    "ko": "피로하지 않고 사원과 음식 문화를 원하는 여행자를 위한 태국 북부 여행 일정에 스파 회복도 포함되어 있습니다.",
+    "vi": "Hành trình về miền bắc Thái Lan dành cho những du khách muốn đến chùa và văn hóa ẩm thực mà không mệt mỏi, với dịch vụ spa phục hồi được tích hợp trong tuyến đường.",
+    "de": "Eine Nordthailand-Reiseroute für Reisende, die Tempel und Esskultur ohne Ermüdung genießen möchten, mit integrierter Spa-Erholung.",
+    "es": "Un itinerario por el norte de Tailandia para viajeros que desean templos y cultura gastronómica sin fatiga, con recuperación de spa incorporada en la ruta.",
+    "it": "Un itinerario nel nord della Thailandia per viaggiatori che desiderano templi e cultura del cibo senza fatica, con il recupero termale integrato nel percorso.",
+    "ru": "Маршрут по северному Таиланду для путешественников, которые хотят посетить храмы и кулинарную культуру без усталости, с включенным в маршрут спа-оздоровлением.",
+    "nl": "Een reisroute door Noord-Thailand voor reizigers die tempels en eetcultuur willen zonder vermoeidheid, waarbij spa-herstel in de route is ingebouwd.",
+    "pl": "Trasa północnej Tajlandii dla podróżników, którzy chcą świątyń i kultury kulinarnej bez zmęczenia, z wbudowaną w trasę regeneracją spa.",
+    "da": "En rejseplan til det nordlige Thailand for rejsende, der ønsker templer og madkultur uden træthed, med spa-genopretning indbygget i ruten.",
+    "sv": "En resplan till norra Thailand för resenärer som vill ha tempel och matkultur utan trötthet, med spa-återhämtning inbyggd i rutten.",
+    "no": "En reiserute i Nord-Thailand for reisende som ønsker templer og matkultur uten tretthet, med spa-gjenoppretting innebygd i ruten.",
+    "ar": "خط سير رحلة شمال تايلاند للمسافرين الذين يريدون المعابد وثقافة الطعام دون تعب، مع وجود منتجع صحي مدمج في المسار.",
+    "ms": "Jadual perjalanan utara Thailand untuk pengembara yang mahukan kuil dan budaya makanan tanpa keletihan, dengan masa pemulihan spa yang dibina ke dalam laluan."
+  },
+  "image": "/public/v1/tour-images/tour_18e53ef1-4aba-40e6-ae63-e87e08fa8f3a/tour_18e53ef1-4aba-40e6-ae63-e87e08fa8f3a.webp",
+  "updated_at": "2026-03-23T06:32:25Z"
+}

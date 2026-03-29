@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="720" viewBox="0 0 720 720">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4e6b50"/>
+      <stop offset="100%" stop-color="#9fc17a"/>
+    </linearGradient>
+  </defs>
+  <rect width="720" height="720" rx="72" fill="url(#bg)"/>
+  <circle cx="564" cy="148" r="38" fill="#f4d7a2" opacity="0.95"/>
+  <text x="360" y="406" text-anchor="middle" fill="#ffffff" font-size="220" font-family="Source Sans 3, Arial, sans-serif" font-weight="700">T</text>
+  <text x="360" y="560" text-anchor="middle" fill="#ffffff" font-size="42" font-family="Source Sans 3, Arial, sans-serif" opacity="0.9">thaoly</text>
+</svg>

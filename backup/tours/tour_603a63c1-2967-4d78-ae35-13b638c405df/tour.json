@@ -1,0 +1,139 @@
+{
+  "id": "tour_603a63c1-2967-4d78-ae35-13b638c405df",
+  "title": {
+    "en": "Thailand Family Journey",
+    "fr": "Voyage famille en Thaïlande",
+    "zh": "泰国家庭之旅",
+    "ja": "タイ 家族の旅",
+    "ko": "태국 가족 여행",
+    "vi": "Hành trình Gia đình Thái Lan",
+    "de": "Thailand-Familienreise",
+    "es": "Viaje familiar a Tailandia",
+    "it": "Viaggio in famiglia in Tailandia",
+    "ru": "Семейное путешествие в Таиланд",
+    "nl": "Familiereis door Thailand",
+    "pl": "Rodzinna podróż do Tajlandii",
+    "da": "Familierejse til Thailand",
+    "sv": "Familjeresa till Thailand",
+    "no": "Familiereise til Thailand",
+    "ar": "رحلة عائلية إلى تايلاند",
+    "ms": "Perjalanan Keluarga Thailand"
+  },
+  "styles": [
+    "family"
+  ],
+  "priority": 50,
+  "image": "/public/v1/tour-images/tour_603a63c1-2967-4d78-ae35-13b638c405df/tour_603a63c1-2967-4d78-ae35-13b638c405df.webp",
+  "highlights": {
+    "en": [
+      "Signature stop in Bangkok",
+      "Route highlight around Chiang Mai",
+      "Smooth transfer planning via Phuket"
+    ],
+    "fr": [
+      "Étape signature à Bangkok",
+      "Temps fort de l'itinéraire autour de Chiang Mai",
+      "Transferts fluides via Phuket"
+    ],
+    "zh": [
+      "曼谷标志性停留",
+      "清迈周边路线亮点",
+      "经普吉衔接的顺畅交通安排"
+    ],
+    "ja": [
+      "バンコクでの象徴的な立ち寄り",
+      "チェンマイ周辺のルート見どころ",
+      "プーケット経由のスムーズな移動計画"
+    ],
+    "ko": [
+      "방콕의 대표적인 방문지",
+      "치앙마이 일대의 주요 동선 하이라이트",
+      "푸껫 경유의 매끄러운 이동 계획"
+    ],
+    "vi": [
+      "Điểm dừng nổi bật tại Bangkok",
+      "Điểm nhấn hành trình quanh Chiang Mai",
+      "Kế hoạch di chuyển mượt mà qua Phuket"
+    ],
+    "de": [
+      "Signature-Stopp in Bangkok",
+      "Routenhighlight rund um Chiang Mai",
+      "Reibungslose Transferplanung über Phuket"
+    ],
+    "es": [
+      "Parada exclusiva en Bangkok",
+      "Ruta destacada alrededor de Chiang Mai",
+      "Planificación fluida del traslado a través de Phuket"
+    ],
+    "it": [
+      "Fermata esclusiva a Bangkok",
+      "Momento clou del percorso intorno a Chiang Mai",
+      "Pianificazione agevole del trasferimento via Phuket"
+    ],
+    "ru": [
+      "Фирменная остановка в Бангкоке",
+      "Обзор маршрута по Чиангмаю",
+      "Плавное планирование трансфера через Пхукет"
+    ],
+    "nl": [
+      "Kenmerkende stop in Bangkok",
+      "Hoogtepunt van de route rond Chiang Mai",
+      "Vlotte transferplanning via Phuket"
+    ],
+    "pl": [
+      "Podpisowy przystanek w Bangkoku",
+      "Najważniejszy punkt trasy wokół Chiang Mai",
+      "Płynne planowanie transferu przez Phuket"
+    ],
+    "da": [
+      "Signaturstop i Bangkok",
+      "Rutens højdepunkt omkring Chiang Mai",
+      "Glat overførselsplanlægning via Phuket"
+    ],
+    "sv": [
+      "Signaturstopp i Bangkok",
+      "Ruttens höjdpunkt runt Chiang Mai",
+      "Smidig överföringsplanering via Phuket"
+    ],
+    "no": [
+      "Signaturstopp i Bangkok",
+      "Rutehøydepunkt rundt Chiang Mai",
+      "Jevn overføringsplanlegging via Phuket"
+    ],
+    "ar": [
+      "توقف التوقيع في بانكوك",
+      "تسليط الضوء على الطريق حول شيانغ ماي",
+      "تخطيط النقل السلس عبر فوكيت"
+    ],
+    "ms": [
+      "Persinggahan utama di Bangkok",
+      "Sorotan laluan sekitar Chiang Mai",
+      "Perancangan pemindahan lancar melalui Phuket"
+    ]
+  },
+  "seasonality_start_month": "nov",
+  "seasonality_end_month": "mar",
+  "legacy_id": "trip-thailand-family-classic",
+  "destinations": [
+    "thailand"
+  ],
+  "short_description": {
+    "en": "A Thailand family itinerary focused on a balanced first-trip route, with family-friendly pacing and dependable on-trip logistics.",
+    "fr": "Un itinéraire familial en Thaïlande pensé pour un premier voyage équilibré, avec un rythme adapté aux familles et une logistique fiable sur place.",
+    "zh": "这是一条以均衡的首次旅行路线为核心的泰国家庭行程，包含适合家庭的节奏和可靠的在途后勤安排。",
+    "ja": "初めての旅でもバランスのよい周遊ルートを軸にしたタイの家族旅程で、家族にやさしいペースと信頼できる現地手配。",
+    "ko": "균형 잡힌 첫 여행 동선에 초점을 맞춘 태국 가족 일정으로, 가족 친화적인 속도와 믿을 수 있는 현지 운영.",
+    "vi": "Đây là lịch trình gia đình tại Thái Lan tập trung vào lộ trình cân bằng cho chuyến đi đầu tiên, với nhịp độ phù hợp cho gia đình và khâu vận hành đáng tin cậy trong suốt chuyến đi.",
+    "de": "Eine Familienreise durch Thailand, die sich auf eine ausgewogene Erstreiseroute mit familienfreundlichem Tempo und zuverlässiger Logistik während der Reise konzentriert.",
+    "es": "Un itinerario familiar por Tailandia centrado en una ruta de primer viaje equilibrada, con un ritmo familiar y una logística confiable durante el viaje.",
+    "it": "Un itinerario per famiglie in Tailandia incentrato su un primo viaggio equilibrato, con ritmi adatti alle famiglie e una logistica di viaggio affidabile.",
+    "ru": "Семейный маршрут по Таиланду ориентирован на сбалансированный маршрут первой поездки, с удобным для всей семьи темпом и надежной логистикой во время поездки.",
+    "nl": "Een familiereisroute door Thailand, gericht op een uitgebalanceerde route voor de eerste reis, met gezinsvriendelijk tempo en betrouwbare logistiek tijdens de reis.",
+    "pl": "Rodzinny plan podróży do Tajlandii skupiający się na zrównoważonej trasie pierwszej podróży, z przyjaznym rodzinom tempem i niezawodną logistyką podróży.",
+    "da": "En Thailands familierejseplan fokuserede på en afbalanceret første tur-rute med familievenligt tempo og pålidelig logistik på turen.",
+    "sv": "En Thailands familjeväg fokuserade på en balanserad första-tursrutt, med familjevänligt tempo och pålitlig logistik på resan.",
+    "no": "En familiereise i Thailand fokuserte på en balansert førstetursrute, med familievennlig tempo og pålitelig logistikk på tur.",
+    "ar": "يركز خط سير الرحلة العائلي في تايلاند على مسار متوازن للرحلة الأولى، مع سرعة مناسبة للعائلة وخدمات لوجستية يمكن الاعتماد عليها أثناء الرحلة.",
+    "ms": "Jadual perjalanan keluarga Thailand yang berfokus pada laluan lawatan pertama yang seimbang, dengan rentak mesra keluarga dan logistik perjalanan di lokasi yang boleh diharap."
+  }
+}

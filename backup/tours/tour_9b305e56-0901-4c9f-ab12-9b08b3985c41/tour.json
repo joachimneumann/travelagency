@@ -1,0 +1,139 @@
+{
+  "id": "tour_9b305e56-0901-4c9f-ab12-9b08b3985c41",
+  "title": {
+    "en": "Thailand Beach - Island Escape",
+    "fr": "Voyage plage en Thaïlande - Escapade insulaire",
+    "zh": "泰国海滩之旅 - 海岛度假",
+    "ja": "タイ ビーチの旅 - アイランドエスケープ",
+    "ko": "태국 해변 여행 - 아일랜드 이스케이프",
+    "vi": "Hành trình Biển Thái Lan - Nghỉ dưỡng đảo",
+    "de": "Thailand Beach – Inselflucht",
+    "es": "Playa de Tailandia - Escape de la isla",
+    "it": "Spiaggia della Tailandia - Fuga dall'isola",
+    "ru": "Пляж Таиланда - Побег с острова",
+    "nl": "Thailand strand - eilandontsnapping",
+    "pl": "Plaża w Tajlandii – ucieczka z wyspy",
+    "da": "Thailand Beach - Island Escape",
+    "sv": "Thailand Beach - Island Escape",
+    "no": "Thailand Beach - Island Escape",
+    "ar": "شاطئ تايلاند - الهروب من الجزيرة",
+    "ms": "Pantai Thailand - Pelarian Pulau"
+  },
+  "styles": [
+    "beach"
+  ],
+  "priority": 50,
+  "image": "/public/v1/tour-images/tour_9b305e56-0901-4c9f-ab12-9b08b3985c41/tour_9b305e56-0901-4c9f-ab12-9b08b3985c41.webp",
+  "highlights": {
+    "en": [
+      "Signature stop in Bangkok",
+      "Route highlight around Chiang Mai",
+      "Smooth transfer planning via Phuket"
+    ],
+    "fr": [
+      "Étape signature à Bangkok",
+      "Temps fort de l'itinéraire autour de Chiang Mai",
+      "Transferts fluides via Phuket"
+    ],
+    "zh": [
+      "曼谷标志性停留",
+      "清迈周边路线亮点",
+      "经普吉衔接的顺畅交通安排"
+    ],
+    "ja": [
+      "バンコクでの象徴的な立ち寄り",
+      "チェンマイ周辺のルート見どころ",
+      "プーケット経由のスムーズな移動計画"
+    ],
+    "ko": [
+      "방콕의 대표적인 방문지",
+      "치앙마이 일대의 주요 동선 하이라이트",
+      "푸껫 경유의 매끄러운 이동 계획"
+    ],
+    "vi": [
+      "Điểm dừng nổi bật tại Bangkok",
+      "Điểm nhấn hành trình quanh Chiang Mai",
+      "Kế hoạch di chuyển mượt mà qua Phuket"
+    ],
+    "de": [
+      "Signature-Stopp in Bangkok",
+      "Routenhighlight rund um Chiang Mai",
+      "Reibungslose Transferplanung über Phuket"
+    ],
+    "es": [
+      "Parada exclusiva en Bangkok",
+      "Ruta destacada alrededor de Chiang Mai",
+      "Planificación fluida del traslado a través de Phuket"
+    ],
+    "it": [
+      "Fermata esclusiva a Bangkok",
+      "Momento clou del percorso intorno a Chiang Mai",
+      "Pianificazione agevole del trasferimento via Phuket"
+    ],
+    "ru": [
+      "Фирменная остановка в Бангкоке",
+      "Обзор маршрута по Чиангмаю",
+      "Плавное планирование трансфера через Пхукет"
+    ],
+    "nl": [
+      "Kenmerkende stop in Bangkok",
+      "Hoogtepunt van de route rond Chiang Mai",
+      "Vlotte transferplanning via Phuket"
+    ],
+    "pl": [
+      "Podpisowy przystanek w Bangkoku",
+      "Najważniejszy punkt trasy wokół Chiang Mai",
+      "Płynne planowanie transferu przez Phuket"
+    ],
+    "da": [
+      "Signaturstop i Bangkok",
+      "Rutens højdepunkt omkring Chiang Mai",
+      "Glat overførselsplanlægning via Phuket"
+    ],
+    "sv": [
+      "Signaturstopp i Bangkok",
+      "Ruttens höjdpunkt runt Chiang Mai",
+      "Smidig överföringsplanering via Phuket"
+    ],
+    "no": [
+      "Signaturstopp i Bangkok",
+      "Rutehøydepunkt rundt Chiang Mai",
+      "Jevn overføringsplanlegging via Phuket"
+    ],
+    "ar": [
+      "توقف التوقيع في بانكوك",
+      "تسليط الضوء على الطريق حول شيانغ ماي",
+      "تخطيط النقل السلس عبر فوكيت"
+    ],
+    "ms": [
+      "Persinggahan utama di Bangkok",
+      "Sorotan laluan sekitar Chiang Mai",
+      "Perancangan pemindahan lancar melalui Phuket"
+    ]
+  },
+  "seasonality_start_month": "nov",
+  "seasonality_end_month": "mar",
+  "legacy_id": "trip-thailand-beach-island-escape",
+  "destinations": [
+    "thailand"
+  ],
+  "short_description": {
+    "en": "A Thailand beach itinerary focused on an island-focused rhythm with extra beach downtime, with relaxed coast time balanced with easy local discovery.",
+    "fr": "Un itinéraire balnéaire en Thaïlande pensé pour un rythme insulaire avec davantage de temps libre à la plage, avec du temps au bord de la mer, équilibré par des découvertes locales faciles.",
+    "zh": "这是一条以海岛节奏与更多海滩放松时间为核心的泰国海滩行程，包含轻松的海岸时光，并搭配轻松的本地探索。",
+    "ja": "島時間とビーチでのゆとりを重視した流れを軸にしたタイのビーチ旅程で、ゆったりした海辺の時間と無理のないローカル体験。",
+    "ko": "섬 중심 리듬과 더 많은 해변 휴식을 살린 일정에 초점을 맞춘 태국 해변 일정으로, 여유로운 해변 시간과 부담 없는 현지 탐방.",
+    "vi": "Đây là lịch trình biển tại Thái Lan tập trung vào nhịp đi thiên về đảo với nhiều thời gian nghỉ biển hơn, với thời gian thư giãn bên biển kết hợp khám phá địa phương nhẹ nhàng.",
+    "de": "Eine Strandroute in Thailand, die sich auf einen inselorientierten Rhythmus mit zusätzlichen Strandpausen konzentriert, mit entspannter Zeit an der Küste, ausgeglichen mit einfacher lokaler Entdeckung.",
+    "es": "Un itinerario de playa en Tailandia centrado en un ritmo isleño con tiempo de inactividad adicional en la playa, con un tiempo relajado en la costa equilibrado con un fácil descubrimiento local.",
+    "it": "Un itinerario sulla spiaggia della Thailandia incentrato su un ritmo incentrato sull'isola con tempi di inattività extra in spiaggia, con un tempo rilassato sulla costa bilanciato con una facile scoperta locale.",
+    "ru": "Пляжный маршрут по Таиланду ориентирован на островной ритм с дополнительным временем простоя на пляже, расслабленным отдыхом на побережье и легкими открытиями для местных жителей.",
+    "nl": "Een strandroute in Thailand gericht op een eilandgericht ritme met extra strandpauzes, met ontspannen kusttijd in evenwicht met gemakkelijke lokale ontdekkingen.",
+    "pl": "Plan wycieczki po Tajlandii skupiający się na rytmie wyspiarskim z dodatkowymi przestojami na plaży, z relaksującym czasem na wybrzeżu zrównoważonym łatwym odkrywaniem lokalnych atrakcji.",
+    "da": "En strandrejseplan i Thailand fokuseret på en ø-fokuseret rytme med ekstra strandnedetid, med afslappet kysttid afbalanceret med let lokal opdagelse.",
+    "sv": "En strandresplan i Thailand fokuserad på en ö-fokuserad rytm med extra strandstopp, med avslappnad kusttid balanserad med enkel lokal upptäckt.",
+    "no": "En strandreise i Thailand fokusert på en øyfokusert rytme med ekstra strandnedetid, med avslappet kysttid balansert med lett lokal oppdagelse.",
+    "ar": "يركز خط سير الرحلة على شاطئ تايلاند على إيقاع يركز على الجزيرة مع فترات راحة إضافية على الشاطئ، مع وقت مريح على الساحل متوازن مع سهولة الاكتشاف المحلي.",
+    "ms": "Jadual perjalanan pantai Thailand yang berfokus pada rentak berpusat di pulau dengan lebih banyak masa rehat di pantai, dengan masa santai di pesisir yang diimbangi dengan penemuan tempatan yang mudah."
+  }
+}

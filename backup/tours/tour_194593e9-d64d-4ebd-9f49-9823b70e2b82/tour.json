@@ -1,0 +1,139 @@
+{
+  "id": "tour_194593e9-d64d-4ebd-9f49-9823b70e2b82",
+  "title": {
+    "en": "Thailand Culture Journey",
+    "fr": "Voyage culture en Thaïlande",
+    "zh": "泰国文化之旅",
+    "ja": "タイ 文化の旅",
+    "ko": "태국 문화 여행",
+    "vi": "Hành trình Văn hóa Thái Lan",
+    "de": "Thailand-Kulturreise",
+    "es": "Viaje cultural a Tailandia",
+    "it": "Viaggio culturale in Thailandia",
+    "ru": "Культурное путешествие Таиланда",
+    "nl": "Cultuurreis Thailand",
+    "pl": "Podróż kulturowa Tajlandii",
+    "da": "Thailands kulturrejse",
+    "sv": "Thailands kulturresa",
+    "no": "Thailands kulturreise",
+    "ar": "رحلة الثقافة في تايلاند",
+    "ms": "Perjalanan Budaya Thailand"
+  },
+  "styles": [
+    "culture"
+  ],
+  "priority": 50,
+  "image": "/public/v1/tour-images/tour_194593e9-d64d-4ebd-9f49-9823b70e2b82/tour_194593e9-d64d-4ebd-9f49-9823b70e2b82.webp",
+  "highlights": {
+    "en": [
+      "Signature stop in Bangkok",
+      "Route highlight around Chiang Mai",
+      "Smooth transfer planning via Phuket"
+    ],
+    "fr": [
+      "Étape signature à Bangkok",
+      "Temps fort de l'itinéraire autour de Chiang Mai",
+      "Transferts fluides via Phuket"
+    ],
+    "zh": [
+      "曼谷标志性停留",
+      "清迈周边路线亮点",
+      "经普吉衔接的顺畅交通安排"
+    ],
+    "ja": [
+      "バンコクでの象徴的な立ち寄り",
+      "チェンマイ周辺のルート見どころ",
+      "プーケット経由のスムーズな移動計画"
+    ],
+    "ko": [
+      "방콕의 대표적인 방문지",
+      "치앙마이 일대의 주요 동선 하이라이트",
+      "푸껫 경유의 매끄러운 이동 계획"
+    ],
+    "vi": [
+      "Điểm dừng nổi bật tại Bangkok",
+      "Điểm nhấn hành trình quanh Chiang Mai",
+      "Kế hoạch di chuyển mượt mà qua Phuket"
+    ],
+    "de": [
+      "Signature-Stopp in Bangkok",
+      "Routenhighlight rund um Chiang Mai",
+      "Reibungslose Transferplanung über Phuket"
+    ],
+    "es": [
+      "Parada exclusiva en Bangkok",
+      "Ruta destacada alrededor de Chiang Mai",
+      "Planificación fluida del traslado a través de Phuket"
+    ],
+    "it": [
+      "Fermata esclusiva a Bangkok",
+      "Momento clou del percorso intorno a Chiang Mai",
+      "Pianificazione agevole del trasferimento via Phuket"
+    ],
+    "ru": [
+      "Фирменная остановка в Бангкоке",
+      "Обзор маршрута по Чиангмаю",
+      "Плавное планирование трансфера через Пхукет"
+    ],
+    "nl": [
+      "Kenmerkende stop in Bangkok",
+      "Hoogtepunt van de route rond Chiang Mai",
+      "Vlotte transferplanning via Phuket"
+    ],
+    "pl": [
+      "Podpisowy przystanek w Bangkoku",
+      "Najważniejszy punkt trasy wokół Chiang Mai",
+      "Płynne planowanie transferu przez Phuket"
+    ],
+    "da": [
+      "Signaturstop i Bangkok",
+      "Rutens højdepunkt omkring Chiang Mai",
+      "Glat overførselsplanlægning via Phuket"
+    ],
+    "sv": [
+      "Signaturstopp i Bangkok",
+      "Ruttens höjdpunkt runt Chiang Mai",
+      "Smidig överföringsplanering via Phuket"
+    ],
+    "no": [
+      "Signaturstopp i Bangkok",
+      "Rutehøydepunkt rundt Chiang Mai",
+      "Jevn overføringsplanlegging via Phuket"
+    ],
+    "ar": [
+      "توقف التوقيع في بانكوك",
+      "تسليط الضوء على الطريق حول شيانغ ماي",
+      "تخطيط النقل السلس عبر فوكيت"
+    ],
+    "ms": [
+      "Persinggahan utama di Bangkok",
+      "Sorotan laluan sekitar Chiang Mai",
+      "Perancangan pemindahan lancar melalui Phuket"
+    ]
+  },
+  "seasonality_start_month": "nov",
+  "seasonality_end_month": "mar",
+  "legacy_id": "trip-thailand-culture-classic",
+  "destinations": [
+    "thailand"
+  ],
+  "short_description": {
+    "en": "A Thailand culture itinerary focused on a balanced first-trip route, with heritage depth, local life, and meaningful guided visits.",
+    "fr": "Un itinéraire culturel en Thaïlande pensé pour un premier voyage équilibré, avec une vraie profondeur patrimoniale, de la vie locale et des visites guidées de qualité.",
+    "zh": "这是一条以均衡的首次旅行路线为核心的泰国文化行程，包含丰富的文化遗产体验、在地生活感受以及有意义的导览参访。",
+    "ja": "初めての旅でもバランスのよい周遊ルートを軸にしたタイの文化旅程で、奥行きのある文化体験、現地の暮らし、価値あるガイド付き見学。",
+    "ko": "균형 잡힌 첫 여행 동선에 초점을 맞춘 태국 문화 일정으로, 깊이 있는 문화유산 체험, 현지 생활, 의미 있는 가이드 방문.",
+    "vi": "Đây là lịch trình văn hóa tại Thái Lan tập trung vào lộ trình cân bằng cho chuyến đi đầu tiên, với chiều sâu di sản, đời sống địa phương và những chuyến tham quan có hướng dẫn giàu giá trị.",
+    "de": "Eine thailändische Kulturreiseroute, die sich auf eine ausgewogene Route für die erste Reise konzentriert, mit viel Kulturgeschichte, lokalem Leben und sinnvollen Führungen.",
+    "es": "Un itinerario cultural de Tailandia centrado en una ruta equilibrada de primer viaje, con profundidad patrimonial, vida local y visitas guiadas significativas.",
+    "it": "Un itinerario culturale tailandese incentrato su un percorso equilibrato del primo viaggio, con profondità del patrimonio, vita locale e visite guidate significative.",
+    "ru": "Маршрут по культуре Таиланда ориентирован на сбалансированный маршрут первой поездки, с глубоким наследием, местной жизнью и содержательными экскурсиями.",
+    "nl": "Een cultuurroute door Thailand gericht op een uitgebalanceerde eerste reisroute, met diepgang in het erfgoed, het lokale leven en zinvolle rondleidingen.",
+    "pl": "Plan podróży po Tajlandii skupiający się na zrównoważonej trasie pierwszej podróży, z głębią dziedzictwa kulturowego, życiem lokalnym i znaczącymi wizytami z przewodnikiem.",
+    "da": "En thailandsk kulturrejseplan fokuserede på en afbalanceret første-tursrute med dybde, lokalt liv og meningsfulde guidede besøg.",
+    "sv": "En resplan för Thailands kultur fokuserade på en balanserad första-tursrutt, med arvsdjup, lokalt liv och meningsfulla guidade besök.",
+    "no": "En thailandsk kulturreise fokuserte på en balansert førstetursrute, med kulturarvsdybde, lokalt liv og meningsfylte guidede besøk.",
+    "ar": "يركز خط سير الرحلة الثقافي في تايلاند على مسار الرحلة الأولى المتوازن، مع عمق التراث والحياة المحلية والزيارات المصحوبة بمرشدين ذات مغزى.",
+    "ms": "Jadual perjalanan budaya Thailand yang berfokus pada laluan lawatan pertama yang seimbang, dengan kedalaman warisan, kehidupan tempatan dan lawatan berpandu yang bermakna."
+  }
+}

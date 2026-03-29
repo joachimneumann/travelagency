@@ -1,0 +1,139 @@
+{
+  "id": "tour_f49aeb51-4831-428a-9769-0f7cf4d11b27",
+  "title": {
+    "en": "Vietnam Culture - Hoi An",
+    "fr": "Voyage culture au Vietnam - Hoi An",
+    "zh": "越南文化之旅 - 会安",
+    "ja": "ベトナム 文化の旅 - ホイアン",
+    "ko": "베트남 문화 여행 - 호이안",
+    "vi": "Hành trình Văn hóa Việt Nam - Hội An",
+    "de": "Vietnam-Kultur - Hoi An",
+    "es": "Cultura de Vietnam - Hoi An",
+    "it": "Cultura del Vietnam - Hoi An",
+    "ru": "Культура Вьетнама - Хойан",
+    "nl": "Vietnamcultuur - Hoi An",
+    "pl": "Kultura Wietnamu - Hoi An",
+    "da": "Vietnam Kultur - Hoi An",
+    "sv": "Vietnamkultur - Hoi An",
+    "no": "Vietnam kultur - Hoi An",
+    "ar": "ثقافة فيتنام - هوي آن",
+    "ms": "Budaya Vietnam - Hoi An"
+  },
+  "styles": [
+    "culture"
+  ],
+  "priority": 80,
+  "image": "/public/v1/tour-images/tour_f49aeb51-4831-428a-9769-0f7cf4d11b27/tour_f49aeb51-4831-428a-9769-0f7cf4d11b27.webp",
+  "highlights": {
+    "en": [
+      "Signature stop in Hanoi",
+      "Route highlight around Hoi An",
+      "Smooth transfer planning via Ha Long Bay"
+    ],
+    "fr": [
+      "Étape signature à Hanoï",
+      "Temps fort de l'itinéraire autour de Hoi An",
+      "Transferts fluides via la baie d'Ha Long"
+    ],
+    "zh": [
+      "河内标志性停留",
+      "会安周边路线亮点",
+      "经下龙湾衔接的顺畅交通安排"
+    ],
+    "ja": [
+      "ハノイでの象徴的な立ち寄り",
+      "ホイアン周辺のルート見どころ",
+      "ハロン湾経由のスムーズな移動計画"
+    ],
+    "ko": [
+      "하노이의 대표적인 방문지",
+      "호이안 일대의 주요 동선 하이라이트",
+      "하롱베이 경유의 매끄러운 이동 계획"
+    ],
+    "vi": [
+      "Điểm dừng nổi bật tại Hà Nội",
+      "Điểm nhấn hành trình quanh Hội An",
+      "Kế hoạch di chuyển mượt mà qua Vịnh Hạ Long"
+    ],
+    "de": [
+      "Signature-Stopp in Hanoi",
+      "Routenhighlight rund um Hoi An",
+      "Reibungslose Transferplanung über die Halong-Bucht"
+    ],
+    "es": [
+      "Parada exclusiva en Hanoi",
+      "Ruta destacada alrededor de Hoi An",
+      "Planificación fluida del traslado a través de la bahía de Ha Long"
+    ],
+    "it": [
+      "Fermata esclusiva ad Hanoi",
+      "Evidenziazione del percorso intorno a Hoi An",
+      "Pianificazione fluida del trasferimento attraverso la baia di Ha Long"
+    ],
+    "ru": [
+      "Фирменная остановка в Ханое",
+      "Обзор маршрута вокруг Хойана",
+      "Плавное планирование трансфера через залив Халонг"
+    ],
+    "nl": [
+      "Kenmerkende stop in Hanoi",
+      "Route hoogtepunt rond Hoi An",
+      "Soepele transferplanning via Ha Long Bay"
+    ],
+    "pl": [
+      "Przystanek podpisowy w Hanoi",
+      "Najważniejszy punkt trasy wokół Hoi An",
+      "Płynne planowanie transferu przez zatokę Ha Long"
+    ],
+    "da": [
+      "Signaturstop i Hanoi",
+      "Rutehøjdepunkt omkring Hoi An",
+      "Glat overførselsplanlægning via Ha Long Bay"
+    ],
+    "sv": [
+      "Signaturstopp i Hanoi",
+      "Ruttens höjdpunkt runt Hoi An",
+      "Smidig överföringsplanering via Ha Long Bay"
+    ],
+    "no": [
+      "Signaturstopp i Hanoi",
+      "Rutehøydepunkt rundt Hoi An",
+      "Jevn overføringsplanlegging via Ha Long Bay"
+    ],
+    "ar": [
+      "توقف التوقيع في هانوي",
+      "تسليط الضوء على الطريق حول هوي آن",
+      "تخطيط النقل السلس عبر خليج ها لونج"
+    ],
+    "ms": [
+      "Persinggahan utama di Hanoi",
+      "Sorotan laluan sekitar Hoi An",
+      "Perancangan pemindahan lancar melalui Teluk Ha Long"
+    ]
+  },
+  "seasonality_start_month": "oct",
+  "seasonality_end_month": "apr",
+  "legacy_id": "trip-vietnam-culture-hoi-an",
+  "destinations": [
+    "vietnam"
+  ],
+  "short_description": {
+    "en": "A Vietnam culture itinerary focused on a route shaped around Hoi An, with heritage depth, local life, and meaningful guided visits.",
+    "fr": "Un itinéraire culturel au Vietnam pensé pour un parcours construit autour de Hoi An, avec une vraie profondeur patrimoniale, de la vie locale et des visites guidées de qualité.",
+    "zh": "这是一条以围绕会安展开的路线为核心的越南文化行程，包含丰富的文化遗产体验、在地生活感受以及有意义的导览参访。",
+    "ja": "ホイアンを中心に組んだルートを軸にしたベトナムの文化旅程で、奥行きのある文化体験、現地の暮らし、価値あるガイド付き見学。",
+    "ko": "호이안을 중심으로 짜인 동선에 초점을 맞춘 베트남 문화 일정으로, 깊이 있는 문화유산 체험, 현지 생활, 의미 있는 가이드 방문.",
+    "vi": "Đây là lịch trình văn hóa tại Việt Nam tập trung vào tuyến đi được thiết kế quanh Hội An, với chiều sâu di sản, đời sống địa phương và những chuyến tham quan có hướng dẫn giàu giá trị.",
+    "de": "Eine Vietnam-Kulturreise, die sich auf eine Route rund um Hoi An konzentriert, mit viel Kulturgeschichte, lokalem Leben und sinnvollen Führungen.",
+    "es": "Un itinerario cultural de Vietnam centrado en una ruta alrededor de Hoi An, con profundidad patrimonial, vida local y visitas guiadas significativas.",
+    "it": "Un itinerario culturale del Vietnam incentrato su un percorso modellato attorno a Hoi An, con profondità del patrimonio, vita locale e visite guidate significative.",
+    "ru": "Маршрут по культуре Вьетнама сосредоточен на маршруте, сформированном вокруг Хойана, с глубиной наследия, местной жизнью и содержательными экскурсиями.",
+    "nl": "Een cultuurroute door Vietnam gericht op een route rond Hoi An, met diepgang in het erfgoed, het lokale leven en zinvolle rondleidingen.",
+    "pl": "Trasa po kulturze Wietnamu skupiająca się na trasie wokół Hoi An, z głębią dziedzictwa, życiem lokalnym i znaczącymi wizytami z przewodnikiem.",
+    "da": "En Vietnam-kulturrute fokuserede på en rute formet omkring Hoi An, med arvsdybde, lokalt liv og meningsfulde guidede besøg.",
+    "sv": "En resplan för Vietnams kultur fokuserade på en rutt formad runt Hoi An, med arvsdjup, lokalt liv och meningsfulla guidade besök.",
+    "no": "En Vietnam-kulturreise fokuserte på en rute formet rundt Hoi An, med kulturarvsdybde, lokalt liv og meningsfylte guidede besøk.",
+    "ar": "يركز خط سير رحلة الثقافة الفيتنامية على طريق تم تشكيله حول هوي آن، مع عمق التراث والحياة المحلية والزيارات المصحوبة بمرشدين ذات مغزى.",
+    "ms": "Jadual perjalanan budaya Vietnam yang berfokus pada laluan yang dibentuk sekitar Hoi An, dengan kedalaman warisan, kehidupan tempatan dan lawatan berpandu yang bermakna."
+  }
+}
