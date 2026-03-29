@@ -1,5 +1,5 @@
 import { existsSync } from "node:fs";
-import { access, copyFile, mkdir, readdir, readFile, writeFile } from "node:fs/promises";
+import { access, appendFile, copyFile, mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import {
   normalizeLocalizedTextMap,
@@ -386,6 +386,29 @@ export function createAtpStaffDirectory({
   staffRoleNames = []
 }) {
   const allowedStaffRoleNames = new Set(normalizeRoleNames(staffRoleNames));
+  const auditLogPath = `${dataPath}.audit.log`;
+
+  function captureAuditStack() {
+    return String(new Error().stack || "")
+      .split("\n")
+      .slice(2, 8)
+      .map((line) => line.trim())
+      .filter(Boolean);
+  }
+
+  async function appendProfilesAuditLog(entry) {
+    const nextEntry = {
+      timestamp: new Date().toISOString(),
+      data_path: dataPath,
+      ...entry
+    };
+    const serialized = `${JSON.stringify(nextEntry)}\n`;
+    writeQueueRef.current = writeQueueRef.current.then(async () => {
+      await mkdir(path.dirname(auditLogPath), { recursive: true });
+      await appendFile(auditLogPath, serialized, "utf8");
+    });
+    await writeQueueRef.current;
+  }
 
   function profilesDocumentFromItems(items) {
     const staff = Object.fromEntries(
@@ -451,11 +474,25 @@ export function createAtpStaffDirectory({
     return { items, changed };
   }
 
-  async function persistProfiles(payload) {
+  async function persistProfiles(payload, meta = {}) {
+    const items = Array.isArray(payload?.items) ? payload.items : [];
+    const document = profilesDocumentFromItems(items);
+    const usernames = items
+      .map((profile) => normalizeText(profile?.username).toLowerCase())
+      .filter(Boolean);
+    const auditEntry = {
+      action: "persist_profiles",
+      reason: normalizeText(meta.reason) || "unspecified",
+      item_count: items.length,
+      usernames,
+      became_empty: items.length === 0,
+      ...(items.length === 0 ? { stack: captureAuditStack() } : {})
+    };
     writeQueueRef.current = writeQueueRef.current.then(async () => {
-      await writeFile(dataPath, `${JSON.stringify(profilesDocumentFromItems(payload?.items || []), null, 2)}\n`, "utf8");
+      await writeFile(dataPath, `${JSON.stringify(document, null, 2)}\n`, "utf8");
     });
     await writeQueueRef.current;
+    await appendProfilesAuditLog(auditEntry);
   }
 
   async function readKeycloakUserSnapshot() {
@@ -554,8 +591,19 @@ export function createAtpStaffDirectory({
     if (!(await fileExists(dataPath))) {
       if (legacyDataPath && await fileExists(legacyDataPath)) {
         await copyFile(legacyDataPath, dataPath);
+        await appendProfilesAuditLog({
+          action: "seed_profiles_from_legacy_copy",
+          reason: "ensure_storage_missing_data_path",
+          source_path: legacyDataPath
+        });
       } else {
         await writeFile(dataPath, `${JSON.stringify({ staff: {} }, null, 2)}\n`, "utf8");
+        await appendProfilesAuditLog({
+          action: "create_empty_profiles_file",
+          reason: "ensure_storage_missing_data_path",
+          became_empty: true,
+          stack: captureAuditStack()
+        });
       }
     }
     if (legacyPhotosDir && await fileExists(legacyPhotosDir)) {
@@ -578,7 +626,9 @@ export function createAtpStaffDirectory({
       }
     }
     if (changed) {
-      await persistProfiles({ items: payload.items });
+      await persistProfiles({ items: payload.items }, {
+        reason: "ensure_storage_normalize_and_avatar_backfill"
+      });
     }
     await ensureKeycloakUserSnapshotStorage();
   }
@@ -716,7 +766,9 @@ export function createAtpStaffDirectory({
     if (!nextStored) return null;
     itemsByUsername.set(username, nextStored);
     await writeAvatarIfMissing(nextStored);
-    await persistProfiles({ items: sortProfiles(Array.from(itemsByUsername.values())) });
+    await persistProfiles({ items: sortProfiles(Array.from(itemsByUsername.values())) }, {
+      reason: `update_profile_by_username:${username}`
+    });
     return buildDirectoryEntryForUsername(username);
   }
 
@@ -750,7 +802,9 @@ export function createAtpStaffDirectory({
     });
     if (!nextStored) return null;
     itemsByUsername.set(username, nextStored);
-    await persistProfiles({ items: sortProfiles(Array.from(itemsByUsername.values())) });
+    await persistProfiles({ items: sortProfiles(Array.from(itemsByUsername.values())) }, {
+      reason: `set_picture_ref_by_username:${username}`
+    });
     return buildDirectoryEntryForUsername(username);
   }
 

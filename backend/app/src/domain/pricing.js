@@ -289,18 +289,30 @@ export function createPricingHelpers({
     return normalized;
   }
 
+  function isSyntheticCarryOverAdditionalItem(item) {
+    const details = normalizeText(item?.details).toLowerCase();
+    if (!details) return false;
+    return details === "carry-over surcharge" || details === "carry over surcharge";
+  }
+
   function buildVisiblePricingProjection(offer) {
     const normalizedOffer = normalizeBookingOffer(offer, getOfferCurrencyForStorage(offer));
     const visibleDetailLevel = normalizeOfferDetailLevel(normalizedOffer?.offer_detail_level_visible);
     const internalDetailLevel = normalizeOfferDetailLevel(normalizedOffer?.offer_detail_level_internal);
     const currency = safeCurrency(normalizedOffer?.currency || baseCurrency);
     const additionalItems = Array.isArray(normalizedOffer?.additional_items) ? normalizedOffer.additional_items : [];
+    const foldedCarryOverItems = visibleDetailLevel === "trip"
+      ? additionalItems.filter((item) => isSyntheticCarryOverAdditionalItem(item))
+      : [];
+    const visibleAdditionalItems = foldedCarryOverItems.length
+      ? additionalItems.filter((item) => !isSyntheticCarryOverAdditionalItem(item))
+      : additionalItems;
     const projection = {
       detail_level: visibleDetailLevel,
       derivable: true,
       days: [],
       components: [],
-      additional_items: additionalItems
+      additional_items: visibleAdditionalItems
     };
 
     if (visibleDetailLevel === "trip") {
@@ -308,7 +320,7 @@ export function createPricingHelpers({
         projection.trip_price = createVisibleProjectionLine({
           label: normalizedOffer.trip_price_internal?.label || "Trip total",
           currency,
-          lines: [normalizedOffer.trip_price_internal]
+          lines: [normalizedOffer.trip_price_internal, ...foldedCarryOverItems]
         });
         return projection;
       }
@@ -316,14 +328,14 @@ export function createPricingHelpers({
         projection.trip_price = createVisibleProjectionLine({
           label: "Trip total",
           currency,
-          lines: normalizedOffer.days_internal
+          lines: [...normalizedOffer.days_internal, ...foldedCarryOverItems]
         });
         return projection;
       }
       projection.trip_price = createVisibleProjectionLine({
         label: "Trip total",
         currency,
-        lines: normalizedOffer.components
+        lines: [...normalizedOffer.components, ...foldedCarryOverItems]
       });
       return projection;
     }

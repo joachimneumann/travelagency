@@ -20,6 +20,10 @@ import {
 } from "./pdf_attachments.js";
 import { resolvePdfFontsForLang } from "./pdf_font_resolver.js";
 import { drawMultifontText, measureMultifontTextHeight } from "./pdf_multifont_text.js";
+import {
+  buildTravelPlanItemThumbnailMap,
+  drawTravelPlanDaysSection
+} from "./pdf_travel_plan_section.js";
 import { pdfTheme } from "./style_tokens.js";
 import { normalizeText } from "./text.js";
 import { resolveLocalizedText } from "../domain/booking_content_i18n.js";
@@ -39,9 +43,6 @@ const HEADER_LOGO_WIDTH = 150;
 const HERO_IMAGE_WIDTH = 195;
 const HERO_IMAGE_HEIGHT = 128;
 const GUIDE_PHOTO_SIZE = 96;
-const ITEM_CARD_PADDING = 14;
-const ITEM_COLUMN_GAP = 18;
-const ITEM_VERTICAL_GAP = 8;
 const TABLE_ROW_GAP = 8;
 const TABLE_HEADER_HEIGHT = 28;
 const TABLE_CELL_PADDING_X = 8;
@@ -202,45 +203,6 @@ function formatFriendlyDateOnly(dateValue, lang) {
     month: "short",
     year: "numeric"
   });
-}
-
-function humanizeTravelPlanServiceKind(kind, lang) {
-  const normalizedKind = normalizeText(kind).toLowerCase();
-  if (!normalizedKind) return "";
-  const fallback = normalizedKind
-    .split("_")
-    .filter(Boolean)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
-  return pdfT(lang, `offer.item.${normalizedKind}`, fallback);
-}
-
-function formatTravelPlanDateTime(rawValue, lang, fallbackDayDate = "") {
-  const raw = normalizeText(rawValue);
-  if (!raw) return "";
-  const dateTimeMatch = raw.match(/^(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2})/);
-  if (dateTimeMatch) {
-    const [, datePart, timePart] = dateTimeMatch;
-    if (fallbackDayDate && datePart === fallbackDayDate) return timePart;
-    return `${formatFriendlyDateOnly(datePart, lang)} ${timePart}`;
-  }
-  const timeOnlyMatch = raw.match(/^(\d{2}:\d{2})$/);
-  if (timeOnlyMatch) return timeOnlyMatch[1];
-  return raw;
-}
-
-function formatTravelPlanTiming(item, lang, dayDate = "") {
-  const timingKind = normalizeText(item?.timing_kind) || "label";
-  if (timingKind === "point") {
-    return formatTravelPlanDateTime(item?.time_point, lang, dayDate);
-  }
-  if (timingKind === "range") {
-    const start = formatTravelPlanDateTime(item?.start_time, lang, dayDate);
-    const end = formatTravelPlanDateTime(item?.end_time, lang, dayDate);
-    if (start && end) return `${start} - ${end}`;
-    return start || end || "";
-  }
-  return normalizeText(item?.time_label);
 }
 
 function peopleTraveling(booking) {
@@ -843,240 +805,27 @@ function drawGuideSection(doc, startY, fonts, lang, guideContext, guidePhoto) {
   return startY + cardHeight + 20;
 }
 
-function drawTravelPlanOverview(doc, generatedOffer, booking, startY, fonts, lang) {
+function drawTravelPlanOverview(doc, generatedOffer, booking, startY, fonts, lang, itemThumbnailMap) {
   const travelPlan = generatedOffer?.travel_plan || booking?.travel_plan;
-  const days = safeArray(travelPlan?.days);
-  if (!days.length) return startY;
-
-  const sectionTitle = pdfT(lang, "offer.travel_plan_title", "Travel plan overview");
-  const dayBlockWidth = doc.page.width - PAGE_MARGIN * 2;
-  const columnWidth = (dayBlockWidth - ITEM_COLUMN_GAP) / 2;
-
-  function measureOfferTravelPlanItemHeight(item, dayDate = "") {
-    const timingText = formatTravelPlanTiming(item, lang, dayDate);
-    const itemTitle = textOrNull(item?.title) || humanizeTravelPlanServiceKind(item?.kind, lang) || pdfT(lang, "offer.item_fallback", "Planned service");
-    const itemMetaParts = [];
-    const kindLabel = humanizeTravelPlanServiceKind(item?.kind, lang);
-    const location = textOrNull(item?.location);
-    if (kindLabel) itemMetaParts.push(kindLabel);
-    if (location) itemMetaParts.push(location);
-    const itemMeta = itemMetaParts.join(" · ");
-    const itemDetails = textOrNull(item?.details);
-    const innerWidth = columnWidth - ITEM_CARD_PADDING * 2;
-
-    doc.font(pdfFontName("bold", fonts)).fontSize(10.5);
-    const timingHeight = timingText ? doc.heightOfString(timingText, { width: innerWidth }) : 0;
-    const titleHeight = doc.heightOfString(itemTitle, { width: innerWidth, align: pdfTextAlign(lang) });
-    doc.font(pdfFontName("regular", fonts)).fontSize(9.2);
-    const metaHeight = itemMeta ? doc.heightOfString(itemMeta, { width: innerWidth, align: pdfTextAlign(lang) }) : 0;
-    doc.font(pdfFontName("regular", fonts)).fontSize(9.8);
-    const detailsHeight = itemDetails ? doc.heightOfString(itemDetails, { width: innerWidth, align: pdfTextAlign(lang), lineGap: 1 }) : 0;
-
-    return ITEM_CARD_PADDING * 2
-      + timingHeight
-      + (timingText ? 5 : 0)
-      + titleHeight
-      + (itemMeta ? metaHeight + 4 : 0)
-      + (itemDetails ? detailsHeight + 6 : 0);
-  }
-
-  function drawOfferTravelPlanItemCard(x, y, item, dayDate = "") {
-    const timingText = formatTravelPlanTiming(item, lang, dayDate);
-    const itemTitle = textOrNull(item?.title) || humanizeTravelPlanServiceKind(item?.kind, lang) || pdfT(lang, "offer.item_fallback", "Planned service");
-    const itemMetaParts = [];
-    const kindLabel = humanizeTravelPlanServiceKind(item?.kind, lang);
-    const location = textOrNull(item?.location);
-    if (kindLabel) itemMetaParts.push(kindLabel);
-    if (location) itemMetaParts.push(location);
-    const itemMeta = itemMetaParts.join(" · ");
-    const itemDetails = textOrNull(item?.details);
-    const cardHeight = measureOfferTravelPlanItemHeight(item, dayDate);
-    const innerWidth = columnWidth - ITEM_CARD_PADDING * 2;
-    const textX = x + ITEM_CARD_PADDING;
-    let textY = y + ITEM_CARD_PADDING;
-
-    doc
-      .save()
-      .roundedRect(x, y, columnWidth, cardHeight, 10)
-      .fill(PDF_COLORS.surface)
-      .restore();
-
-    if (timingText) {
-      doc
-        .font(pdfFontName("bold", fonts))
-        .fontSize(9.8)
-        .fillColor(PDF_COLORS.textMutedStrong)
-        .text(timingText, textX, textY, { width: innerWidth, align: pdfTextAlign(lang) });
-      textY = doc.y + 3;
-    }
-
-    doc
-      .font(pdfFontName("bold", fonts))
-      .fontSize(10.5)
-      .fillColor(PDF_COLORS.textStrong)
-      .text(itemTitle, textX, textY, { width: innerWidth, align: pdfTextAlign(lang) });
-    textY = doc.y;
-
-    if (itemMeta) {
-      doc
-        .font(pdfFontName("regular", fonts))
-        .fontSize(9.2)
-        .fillColor(PDF_COLORS.textMuted)
-        .text(itemMeta, textX, textY + 2, { width: innerWidth, align: pdfTextAlign(lang) });
-      textY = doc.y;
-    }
-
-    if (itemDetails) {
-      doc
-        .font(pdfFontName("regular", fonts))
-        .fontSize(9.8)
-        .fillColor(PDF_COLORS.textMutedStrong)
-        .text(itemDetails, textX, textY + 3, { width: innerWidth, align: pdfTextAlign(lang), lineGap: 1 });
-    }
-
-    return cardHeight;
-  }
-
-  function layoutOfferTravelPlanItemsForPage(items, dayDate, availableHeight) {
-    const columns = { left: [], right: [] };
-    const heights = { left: 0, right: 0 };
-    let index = 0;
-
-    const projectedHeight = (key, itemHeight) => heights[key] + (columns[key].length ? ITEM_VERTICAL_GAP : 0) + itemHeight;
-
-    while (index < items.length) {
-      const item = items[index];
-      const itemHeight = measureOfferTravelPlanItemHeight(item, dayDate);
-      const preferredKey = heights.left <= heights.right ? "left" : "right";
-      const alternateKey = preferredKey === "left" ? "right" : "left";
-      const fitsPreferred = projectedHeight(preferredKey, itemHeight) <= availableHeight;
-      const fitsAlternate = projectedHeight(alternateKey, itemHeight) <= availableHeight;
-      let targetKey = null;
-
-      if (fitsPreferred || (!columns.left.length && !columns.right.length)) {
-        targetKey = preferredKey;
-      } else if (fitsAlternate) {
-        targetKey = alternateKey;
-      } else {
-        break;
-      }
-
-      heights[targetKey] = projectedHeight(targetKey, itemHeight);
-      columns[targetKey].push({ item, itemHeight });
-      index += 1;
-    }
-
-    return {
-      columns,
-      height: Math.max(heights.left, heights.right, 0),
-      rest: items.slice(index)
-    };
-  }
-
-  let y = startY;
-  const redrawSectionHeader = (pdfDoc, nextY) => {
-    pdfDoc
-      .font(pdfFontName("bold", fonts))
-      .fontSize(13)
-      .fillColor(PDF_COLORS.textStrong)
-      .text(sectionTitle, PAGE_MARGIN, nextY, {
-        width: doc.page.width - PAGE_MARGIN * 2,
-        align: pdfTextAlign(lang)
-      });
-    return nextY + 18;
-  };
-
-  y = redrawSectionHeader(doc, y);
-
-  for (const day of days) {
-    const dayTitle = `${pdfT(lang, "offer.day_label", "Day {day}", { day: Number(day?.day_number || 0) || 1 })}${textOrNull(day?.title) ? ` - ${textOrNull(day.title)}` : ""}`;
-    const dayMetaParts = [];
-    if (textOrNull(day?.date)) dayMetaParts.push(formatFriendlyDateOnly(day.date, lang));
-    if (textOrNull(day?.overnight_location)) {
-      dayMetaParts.push(pdfT(lang, "offer.overnight", "Overnight: {location}", { location: textOrNull(day.overnight_location) }));
-    }
-    const dayMeta = dayMetaParts.join(" · ");
-
-    const dayTitleWidth = dayBlockWidth * 0.58;
-    const dayMetaWidth = dayBlockWidth - dayTitleWidth - 24;
-    doc.font(pdfFontName("bold", fonts)).fontSize(11);
-    const dayTitleHeight = doc.heightOfString(dayTitle, { width: dayTitleWidth });
-    doc.font(pdfFontName("regular", fonts)).fontSize(9.5);
-    const dayMetaHeight = dayMeta ? doc.heightOfString(dayMeta, { width: dayMetaWidth, align: "right" }) : 0;
-    const dayHeaderHeight = Math.max(30, Math.max(dayTitleHeight, dayMetaHeight) + 14);
-
-    y = ensureSpace(doc, y, dayHeaderHeight + 14, redrawSectionHeader);
-    doc
-      .save()
-      .roundedRect(PAGE_MARGIN, y, dayBlockWidth, dayHeaderHeight, 10)
-      .fill(PDF_COLORS.surfaceMuted)
-      .restore();
-
-    doc
-      .font(pdfFontName("bold", fonts))
-      .fontSize(11)
-      .fillColor(PDF_COLORS.textStrong)
-      .text(dayTitle, PAGE_MARGIN + 12, y + 7, {
-        width: dayTitleWidth,
-        align: pdfTextAlign(lang)
-      });
-
-    if (dayMeta) {
-      doc
-        .font(pdfFontName("regular", fonts))
-        .fontSize(9.5)
-        .fillColor(PDF_COLORS.textMuted)
-        .text(dayMeta, PAGE_MARGIN + 12 + dayTitleWidth + 12, y + 8, {
-          width: dayMetaWidth,
-          align: "right"
-        });
-    }
-
-    y += dayHeaderHeight + 8;
-
-    if (textOrNull(day?.notes)) {
-      y = ensureSpace(doc, y, 34, redrawSectionHeader);
-      doc
-        .font(pdfFontName("regular", fonts))
-        .fontSize(10)
-        .fillColor(PDF_COLORS.textMuted)
-        .text(day.notes, PAGE_MARGIN + 4, y, {
-          width: dayBlockWidth - 8,
-          align: pdfTextAlign(lang),
-          lineGap: 1
-        });
-      y = doc.y + 8;
-    }
-
-    let remainingItems = safeArray(day?.services || day?.items);
-    while (remainingItems.length) {
-      const availableHeight = Math.max(96, doc.page.height - PAGE_MARGIN - 32 - y);
-      const pageLayout = layoutOfferTravelPlanItemsForPage(remainingItems, textOrNull(day?.date), availableHeight);
-      if (!pageLayout.columns.left.length && !pageLayout.columns.right.length) break;
-
-      let leftY = y;
-      let rightY = y;
-      for (const entry of pageLayout.columns.left) {
-        drawOfferTravelPlanItemCard(PAGE_MARGIN, leftY, entry.item, textOrNull(day?.date));
-        leftY += entry.itemHeight + ITEM_VERTICAL_GAP;
-      }
-      for (const entry of pageLayout.columns.right) {
-        drawOfferTravelPlanItemCard(PAGE_MARGIN + columnWidth + ITEM_COLUMN_GAP, rightY, entry.item, textOrNull(day?.date));
-        rightY += entry.itemHeight + ITEM_VERTICAL_GAP;
-      }
-
-      y += pageLayout.height + 6;
-      remainingItems = pageLayout.rest;
-      if (remainingItems.length) {
-        y = redrawSectionHeader(doc, ensureSpace(doc, y, 80, redrawSectionHeader));
-        y = ensureSpace(doc, y, 90, redrawSectionHeader);
-      }
-    }
-
-    y += 10;
-  }
-
-  return y;
+  return drawTravelPlanDaysSection({
+    doc,
+    startY,
+    plan: travelPlan,
+    itemThumbnailMap,
+    fonts,
+    lang,
+    colors: PDF_COLORS,
+    pdfFontName,
+    pdfTextOptions,
+    pdfT,
+    formatPdfDateOnly,
+    pageMargin: PAGE_MARGIN,
+    bottomLimit: () => doc.page.height - PAGE_MARGIN - 24,
+    addContinuationPage: () => startSectionOnNewPage(doc),
+    sectionTitle: pdfT(lang, "offer.travel_plan_title", "Travel plan overview"),
+    emptyStateMessage: pdfT(lang, "travel_plan.empty", "No travel plan is available yet."),
+    sectionTitleFontSize: 13
+  });
 }
 
 function drawTableHeader(doc, startY, columns, fonts, lang) {
@@ -1436,13 +1185,21 @@ function drawPaymentTerms(doc, generatedOffer, startY, formatMoneyValue, fonts, 
 }
 
 function drawOfferTable(doc, generatedOffer, startY, formatMoneyValue, fonts, lang) {
-  const columns = [
-    { key: "category", label: pdfT(lang, "offer.table.category", "Category"), width: 86 },
-    { key: "details", label: pdfT(lang, "offer.table.details", "Details"), width: 141 },
-    { key: "quantity", label: pdfT(lang, "offer.table.quantity", "Quantity"), width: 62, align: "right" },
-    { key: "single", label: pdfT(lang, "offer.table.single", "Unit"), width: 98, align: "right" },
-    { key: "total", label: pdfT(lang, "offer.table.total", "Total"), width: 120, align: "right" }
-  ];
+  const visibleDetailLevel = normalizeText(generatedOffer?.offer?.visible_pricing?.detail_level).toLowerCase();
+  const isTripVisibleDetail = visibleDetailLevel === "trip";
+  const columns = isTripVisibleDetail
+    ? [
+        { key: "category", label: pdfT(lang, "offer.table.category", "Category"), width: 120 },
+        { key: "details", label: pdfT(lang, "offer.table.details", "Details"), width: 278 },
+        { key: "total", label: pdfT(lang, "offer.table.total", "Total"), width: 109, align: "right" }
+      ]
+    : [
+        { key: "category", label: pdfT(lang, "offer.table.category", "Category"), width: 86 },
+        { key: "details", label: pdfT(lang, "offer.table.details", "Details"), width: 141 },
+        { key: "quantity", label: pdfT(lang, "offer.table.quantity", "Quantity"), width: 62, align: "right" },
+        { key: "single", label: pdfT(lang, "offer.table.single", "Unit"), width: 98, align: "right" },
+        { key: "total", label: pdfT(lang, "offer.table.total", "Total"), width: 120, align: "right" }
+      ];
   let y = startY;
   doc
     .font(pdfFontName("bold", fonts))
@@ -1490,10 +1247,16 @@ function drawOfferTable(doc, generatedOffer, startY, formatMoneyValue, fonts, la
     const rowHeight = Math.max(
       24,
       categoryTextHeight + categoryTaxHeight + 2,
-    doc.heightOfString(details, { width: columns[1].width - TABLE_CELL_PADDING_X * 2, align: pdfTextAlign(lang) }),
-      doc.heightOfString(quantity, { width: columns[2].width - TABLE_CELL_PADDING_X * 2, align: "right" }),
-      doc.heightOfString(unitText, { width: columns[3].width - TABLE_CELL_PADDING_X * 2, align: "right" }),
-      doc.heightOfString(totalText, { width: columns[4].width - TABLE_CELL_PADDING_X * 2, align: "right" })
+      doc.heightOfString(details, { width: columns[1].width - TABLE_CELL_PADDING_X * 2, align: pdfTextAlign(lang) }),
+      ...(isTripVisibleDetail
+        ? [
+            doc.heightOfString(totalText, { width: columns[2].width - TABLE_CELL_PADDING_X * 2, align: "right" })
+          ]
+        : [
+            doc.heightOfString(quantity, { width: columns[2].width - TABLE_CELL_PADDING_X * 2, align: "right" }),
+            doc.heightOfString(unitText, { width: columns[3].width - TABLE_CELL_PADDING_X * 2, align: "right" }),
+            doc.heightOfString(totalText, { width: columns[4].width - TABLE_CELL_PADDING_X * 2, align: "right" })
+          ])
     ) + TABLE_CELL_PADDING_Y * 2;
 
     y = ensureSpace(doc, y, rowHeight + 24, redrawHeader);
@@ -1526,7 +1289,9 @@ function drawOfferTable(doc, generatedOffer, startY, formatMoneyValue, fonts, la
       });
 
     x += columns[0].width;
-    const values = [details, quantity, unitText, totalText];
+    const values = isTripVisibleDetail
+      ? [details, totalText]
+      : [details, quantity, unitText, totalText];
     for (let index = 1; index < columns.length; index += 1) {
       const column = columns[index];
       const value = values[index - 1];
@@ -1555,25 +1320,51 @@ function drawOfferTable(doc, generatedOffer, startY, formatMoneyValue, fonts, la
 
   const quotationSummary = deriveOfferQuotationSummary(generatedOffer?.offer);
 
-  doc
-    .font(pdfFontName("bold", fonts))
-    .fontSize(12)
-    .fillColor(PDF_COLORS.textStrong)
-    .text(pdfT(lang, "offer.total", "Total (including tax)"), PAGE_MARGIN + columns[0].width + columns[1].width, y + 6, {
-      width: columns[2].width + columns[3].width - 12,
-      align: "right"
-    });
-  doc
-    .font(pdfFontName("bold", fonts))
-    .fontSize(12)
-    .fillColor(PDF_COLORS.textStrong)
-    .text(formatMoneyValue(
-      quotationSummary?.grand_total_amount_cents ?? generatedOffer?.total_price_cents,
-      generatedOffer?.currency
-    ), PAGE_MARGIN + columns[0].width + columns[1].width + columns[2].width + columns[3].width, y + 6, {
-      width: columns[4].width - 8,
-      align: "right"
-    });
+  const totalValueText = formatMoneyValue(
+    quotationSummary?.grand_total_amount_cents ?? generatedOffer?.total_price_cents,
+    generatedOffer?.currency
+  );
+  if (isTripVisibleDetail) {
+    const totalColumn = columns[2];
+    const totalValueWidth = totalColumn.width - 8;
+    const totalValueX = PAGE_MARGIN + columns[0].width + columns[1].width;
+    const totalLabelWidth = 180;
+    const totalLabelX = Math.max(PAGE_MARGIN, totalValueX - totalLabelWidth - 14);
+
+    doc
+      .font(pdfFontName("bold", fonts))
+      .fontSize(12)
+      .fillColor(PDF_COLORS.textStrong)
+      .text(pdfT(lang, "offer.total", "Total (including tax)"), totalLabelX, y + 6, {
+        width: totalLabelWidth,
+        align: "right"
+      });
+    doc
+      .font(pdfFontName("bold", fonts))
+      .fontSize(12)
+      .fillColor(PDF_COLORS.textStrong)
+      .text(totalValueText, totalValueX, y + 6, {
+        width: totalValueWidth,
+        align: "right"
+      });
+  } else {
+    doc
+      .font(pdfFontName("bold", fonts))
+      .fontSize(12)
+      .fillColor(PDF_COLORS.textStrong)
+      .text(pdfT(lang, "offer.total", "Total (including tax)"), PAGE_MARGIN + columns[0].width + columns[1].width, y + 6, {
+        width: columns[2].width + columns[3].width - 12,
+        align: "right"
+      });
+    doc
+      .font(pdfFontName("bold", fonts))
+      .fontSize(12)
+      .fillColor(PDF_COLORS.textStrong)
+      .text(totalValueText, PAGE_MARGIN + columns[0].width + columns[1].width + columns[2].width + columns[3].width, y + 6, {
+        width: columns[4].width - 8,
+        align: "right"
+      });
+  }
   y += 32;
 
   const summaryRows = [
@@ -1725,7 +1516,8 @@ export function createOfferPdfWriter({
       resolveAtpStaffPhotoDiskPath
     });
 
-    const [logoImage, heroPath, baseFonts, accentFonts, heroTitle, guidePhoto] = await Promise.all([
+    const offerTravelPlan = generatedOffer?.travel_plan || booking?.travel_plan || null;
+    const [logoImage, heroPath, baseFonts, accentFonts, heroTitle, guidePhoto, itemThumbnailMap] = await Promise.all([
       rasterizeImage(logoPath, { width: 1000 }),
       resolveBookingImageForPdf({ booking, bookingImagesDir, readTours, resolveTourImageDiskPath }),
       resolvePdfFontsForLang({
@@ -1748,7 +1540,8 @@ export function createOfferPdfWriter({
             width: 420,
             height: 420
           }).catch(() => null)
-        : null
+        : null,
+      buildTravelPlanItemThumbnailMap(offerTravelPlan, bookingImagesDir)
     ]);
     const fonts = {
       ...(baseFonts || {}),
@@ -1785,7 +1578,7 @@ export function createOfferPdfWriter({
       y = drawGuideSection(doc, y, fonts, lang, guideContext, guidePhoto);
       if (safeArray(generatedOffer?.travel_plan?.days || booking?.travel_plan?.days).length) {
         y = startSectionOnNewPage(doc);
-        y = drawTravelPlanOverview(doc, generatedOffer, booking, y, fonts, lang);
+        y = drawTravelPlanOverview(doc, generatedOffer, booking, y, fonts, lang, itemThumbnailMap);
       }
       y = startSectionOnNewPage(doc);
       y = drawOfferTable(doc, generatedOffer, y, renderMoney, fonts, lang);

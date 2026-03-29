@@ -27,6 +27,10 @@ import {
   resolveAtpStaffFriendlyShortName,
   resolveAtpStaffFullName
 } from "./atp_staff_pdf.js";
+import {
+  buildTravelPlanItemThumbnailMap,
+  drawTravelPlanDaysSection
+} from "./pdf_travel_plan_section.js";
 
 const MM_TO_POINTS = 72 / 25.4;
 // PDFKit's built-in "A4" preset rounds the page box and some viewers display it as
@@ -38,11 +42,6 @@ const HEADER_LOGO_WIDTH = 250;
 const HEADER_LOGO_HEIGHT = 98;
 const HERO_IMAGE_WIDTH = 195;
 const HERO_IMAGE_HEIGHT = 128;
-const ITEM_THUMBNAIL_WIDTH = 118;
-const ITEM_THUMBNAIL_HEIGHT = 88;
-const ITEM_CARD_PADDING = 14;
-const ITEM_COLUMN_GAP = 18;
-const ITEM_VERTICAL_GAP = 8;
 const GUIDE_PHOTO_SIZE = 92;
 const PDF_FONT_REGULAR = "ATPUnicodeRegular";
 const PDF_FONT_BOLD = "ATPUnicodeBold";
@@ -181,53 +180,6 @@ function resolveTravelPlanAttachmentPaths(travelPlan, travelPlanAttachmentsDir) 
     });
 }
 
-function formatTravelPlanDate(rawValue, lang) {
-  const raw = normalizeText(rawValue);
-  if (!raw) return "";
-  return formatPdfDateOnly(raw, lang, {
-    day: "2-digit",
-    month: "short",
-    year: "numeric"
-  });
-}
-
-function formatTravelPlanDateTime(rawValue, lang, fallbackDayDate = "") {
-  const raw = normalizeText(rawValue);
-  if (!raw) return "";
-  const dateTimeMatch = raw.match(/^(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2})/);
-  if (dateTimeMatch) {
-    const [, datePart, timePart] = dateTimeMatch;
-    if (fallbackDayDate && datePart === fallbackDayDate) return timePart;
-    const formattedDate = formatTravelPlanDate(datePart, lang);
-    return formattedDate ? `${formattedDate} ${timePart}` : timePart;
-  }
-  const timeOnlyMatch = raw.match(/^(\d{2}:\d{2})$/);
-  if (timeOnlyMatch) return timeOnlyMatch[1];
-  return raw;
-}
-
-function formatTravelPlanTiming(item, lang, dayDate = "") {
-  const timingKind = normalizeText(item?.timing_kind) || "label";
-  if (timingKind === "point") {
-    return formatTravelPlanDateTime(item?.time_point, lang, dayDate);
-  }
-  if (timingKind === "range") {
-    const start = formatTravelPlanDateTime(item?.start_time, lang, dayDate);
-    const end = formatTravelPlanDateTime(item?.end_time, lang, dayDate);
-    if (start && end) return `${start} - ${end}`;
-    return start || end || "";
-  }
-  return normalizeText(item?.time_label);
-}
-
-function dayHeading(day, lang) {
-  const label = pdfT(lang, "offer.day_label", "Day {day}", {
-    day: Number(day?.day_number || 0) || 1
-  });
-  const title = textOrNull(day?.title);
-  return title ? `${label} - ${title}` : label;
-}
-
 function measureTextHeight(doc, text, { width, fontSize, fonts, weight = "regular", lineGap = 0 }) {
   if (!text) return 0;
   doc.font(pdfFontName(weight, fonts)).fontSize(fontSize);
@@ -327,32 +279,6 @@ async function resolveBookingImageForPdf({ booking, bookingImagesDir, readTours,
   }
 
   return null;
-}
-
-export function resolveTravelPlanServiceThumbnailPath(item, bookingImagesDir) {
-  if (!bookingImagesDir) return null;
-  const candidate = safeArray(item?.images)
-    .filter((image) => image?.is_customer_visible !== false)
-    .find((image) => textOrNull(image?.storage_path));
-  if (!candidate) return null;
-  const storagePath = String(candidate.storage_path || "");
-  const publicRelativePath = extractPublicRelativePath(storagePath, "/public/v1/booking-images/");
-  const relativePath = publicRelativePath || storagePath.replace(/^\/+/, "");
-  return relativePath ? path.resolve(bookingImagesDir, relativePath) : null;
-}
-
-async function buildItemThumbnailMap(plan, bookingImagesDir) {
-  const items = safeArray(plan?.days).flatMap((day) => safeArray(day?.services || day?.items));
-  const entries = await Promise.all(items.map(async (item) => {
-    const thumbnailPath = resolveTravelPlanServiceThumbnailPath(item, bookingImagesDir);
-    if (!thumbnailPath || !(await fileExists(thumbnailPath))) return [item.id, null];
-    const thumbnail = await rasterizeImage(thumbnailPath, {
-      width: ITEM_THUMBNAIL_WIDTH * 3,
-      height: ITEM_THUMBNAIL_HEIGHT * 3
-    }).catch(() => null);
-    return [item.id, thumbnail];
-  }));
-  return new Map(entries.filter(([, thumbnail]) => thumbnail?.buffer));
 }
 
 function footerText(companyProfile, lang) {
@@ -469,225 +395,6 @@ function drawRunningHeader(doc, booking, fonts, companyProfile, lang) {
 
   drawDivider(doc, PAGE_MARGIN + 20);
   return PAGE_MARGIN + 36;
-}
-
-function itemBoxHeight(doc, item, fonts, lang, dayDate, contentWidth, hasThumbnail = false) {
-  const innerWidth = contentWidth - ITEM_CARD_PADDING * 2;
-  const textWidth = innerWidth;
-  const metaParts = [textOrNull(item?.location), formatTravelPlanTiming(item, lang, dayDate)].filter(Boolean);
-  const title = textOrNull(item?.title) || pdfT(lang, "offer.item_fallback", "Planned service");
-  const details = textOrNull(item?.details);
-  let textHeight = 0;
-  if (metaParts.length) {
-    textHeight += measureTextHeight(doc, metaParts.join(" · "), { width: textWidth, fontSize: 9.2, fonts, lineGap: 1 }) + 4;
-  }
-  textHeight += measureTextHeight(doc, title, { width: textWidth, fontSize: 11.2, fonts, weight: "bold", lineGap: 1 }) + 4;
-  if (details) {
-    textHeight += measureTextHeight(doc, details, { width: textWidth, fontSize: 10.2, fonts, lineGap: 2 }) + 4;
-  }
-  const thumbnailHeight = hasThumbnail ? ITEM_THUMBNAIL_HEIGHT + 10 : 0;
-  return Math.max(88, ITEM_CARD_PADDING + thumbnailHeight + textHeight + ITEM_CARD_PADDING);
-}
-
-function drawTravelPlanItemCard(doc, x, y, width, item, thumbnail, fonts, lang, dayDate) {
-  const itemHeight = itemBoxHeight(doc, item, fonts, lang, dayDate, width, Boolean(thumbnail));
-  doc
-    .save()
-    .roundedRect(x, y, width, itemHeight, 12)
-    .fill(PDF_COLORS.surfaceSubtle)
-    .restore();
-
-  const innerX = x + ITEM_CARD_PADDING;
-  const innerWidth = width - ITEM_CARD_PADDING * 2;
-  const textWidth = innerWidth;
-  let innerY = y + ITEM_CARD_PADDING;
-
-  if (thumbnail?.buffer) {
-    doc
-      .save()
-      .roundedRect(innerX, innerY, innerWidth, ITEM_THUMBNAIL_HEIGHT, 10)
-      .clip();
-    doc.image(thumbnail.buffer, innerX, innerY, {
-      fit: [innerWidth, ITEM_THUMBNAIL_HEIGHT],
-      align: "center",
-      valign: "center"
-    });
-    doc.restore();
-    innerY += ITEM_THUMBNAIL_HEIGHT + 10;
-  }
-
-  const metaParts = [textOrNull(item?.location), formatTravelPlanTiming(item, lang, dayDate)].filter(Boolean);
-  if (metaParts.length) {
-    doc
-      .font(pdfFontName("regular", fonts))
-      .fontSize(9.2)
-      .fillColor(PDF_COLORS.textMutedStrong)
-      .text(metaParts.join(" · "), innerX, innerY, pdfTextOptions(lang, {
-        width: textWidth,
-        lineGap: 1
-      }));
-    innerY = doc.y + 4;
-  }
-
-  doc
-    .font(pdfFontName("bold", fonts))
-    .fontSize(11.2)
-    .fillColor(PDF_COLORS.textStrong)
-    .text(textOrNull(item?.title) || pdfT(lang, "offer.item_fallback", "Planned service"), innerX, innerY, pdfTextOptions(lang, {
-      width: textWidth,
-      lineGap: 1
-    }));
-  innerY = doc.y + 4;
-
-  const details = textOrNull(item?.details);
-  if (details) {
-    doc
-      .font(pdfFontName("regular", fonts))
-      .fontSize(10.2)
-      .fillColor(PDF_COLORS.text)
-      .text(details, innerX, innerY, pdfTextOptions(lang, {
-        width: textWidth,
-        lineGap: 2
-      }));
-  }
-
-  return itemHeight;
-}
-
-function layoutTravelPlanItemsForPage(doc, items, itemThumbnailMap, fonts, lang, dayDate, columnWidth, availableHeight) {
-  const columns = {
-    left: [],
-    right: []
-  };
-  const heights = {
-    left: 0,
-    right: 0
-  };
-  let index = 0;
-
-  function projectedHeight(key, itemHeight) {
-    return heights[key] + (columns[key].length ? ITEM_VERTICAL_GAP : 0) + itemHeight;
-  }
-
-  while (index < items.length) {
-    const item = items[index];
-    const thumbnail = itemThumbnailMap.get(item?.id) || null;
-    const itemHeight = itemBoxHeight(doc, item, fonts, lang, dayDate, columnWidth, Boolean(thumbnail));
-    const preferredKey = heights.left <= heights.right ? "left" : "right";
-    const alternateKey = preferredKey === "left" ? "right" : "left";
-    const fitsPreferred = projectedHeight(preferredKey, itemHeight) <= availableHeight;
-    const fitsAlternate = projectedHeight(alternateKey, itemHeight) <= availableHeight;
-    let targetKey = null;
-
-    if (fitsPreferred || (!columns.left.length && !columns.right.length)) {
-      targetKey = preferredKey;
-    } else if (fitsAlternate) {
-      targetKey = alternateKey;
-    } else {
-      break;
-    }
-
-    heights[targetKey] = projectedHeight(targetKey, itemHeight);
-    columns[targetKey].push({ item, thumbnail, itemHeight });
-    index += 1;
-  }
-
-  return {
-    columns,
-    height: Math.max(heights.left, heights.right, 0),
-    rest: items.slice(index)
-  };
-}
-
-function drawTravelPlanItemColumns(doc, startY, columnWidth, pageLayout, fonts, lang, dayDate) {
-  const leftX = PAGE_MARGIN;
-  const rightX = PAGE_MARGIN + columnWidth + ITEM_COLUMN_GAP;
-  let leftY = startY;
-  let rightY = startY;
-
-  for (const entry of pageLayout.columns.left) {
-    drawTravelPlanItemCard(doc, leftX, leftY, columnWidth, entry.item, entry.thumbnail, fonts, lang, dayDate);
-    leftY += entry.itemHeight + ITEM_VERTICAL_GAP;
-  }
-
-  for (const entry of pageLayout.columns.right) {
-    drawTravelPlanItemCard(doc, rightX, rightY, columnWidth, entry.item, entry.thumbnail, fonts, lang, dayDate);
-    rightY += entry.itemHeight + ITEM_VERTICAL_GAP;
-  }
-}
-
-function drawTravelPlanDayHeader(doc, y, day, fonts, lang, { compact = false } = {}) {
-  const dateLabel = formatTravelPlanDate(day?.date, lang);
-  doc
-    .font(pdfFontName("bold", fonts))
-    .fontSize(15)
-    .fillColor(PDF_COLORS.textStrong)
-    .text(dayHeading(day, lang), PAGE_MARGIN, y, pdfTextOptions(lang, {
-      width: doc.page.width - PAGE_MARGIN * 2 - 150
-    }));
-  if (dateLabel) {
-    doc
-      .font(pdfFontName("regular", fonts))
-      .fontSize(10)
-      .fillColor(PDF_COLORS.textMutedStrong)
-      .text(dateLabel, doc.page.width - PAGE_MARGIN - 140, y + 2, {
-        width: 140,
-        align: "right"
-      });
-  }
-  let nextY = doc.y + 4;
-
-  const overnight = textOrNull(day?.overnight_location);
-  if (overnight) {
-    doc
-      .font(pdfFontName("regular", fonts))
-      .fontSize(10)
-      .fillColor(PDF_COLORS.textMutedStrong)
-      .text(pdfT(lang, "offer.overnight", "Overnight: {location}", { location: overnight }), PAGE_MARGIN, nextY, pdfTextOptions(lang, {
-        width: doc.page.width - PAGE_MARGIN * 2
-      }));
-    nextY = doc.y + 4;
-  }
-
-  if (!compact) {
-    const dayNotes = textOrNull(day?.notes);
-    if (dayNotes) {
-      doc
-        .font(pdfFontName("regular", fonts))
-        .fontSize(10.2)
-        .fillColor(PDF_COLORS.text)
-        .text(dayNotes, PAGE_MARGIN, nextY, pdfTextOptions(lang, {
-          width: doc.page.width - PAGE_MARGIN * 2,
-          lineGap: 2
-        }));
-      nextY = doc.y + 8;
-    }
-  }
-
-  return nextY;
-}
-
-function drawEmptyState(doc, y, fonts, lang) {
-  doc
-    .save()
-    .roundedRect(PAGE_MARGIN, y, doc.page.width - PAGE_MARGIN * 2, 72, 14)
-    .fill(PDF_COLORS.surfaceMuted)
-    .restore();
-  doc
-    .font(pdfFontName("bold", fonts))
-    .fontSize(13)
-    .fillColor(PDF_COLORS.textStrong)
-    .text(travelPlanSectionTitle(lang), PAGE_MARGIN + 18, y + 16, pdfTextOptions(lang, {
-      width: doc.page.width - PAGE_MARGIN * 2 - 36
-    }));
-  doc
-    .font(pdfFontName("regular", fonts))
-    .fontSize(10.5)
-    .fillColor(PDF_COLORS.textMutedStrong)
-    .text(pdfT(lang, "travel_plan.empty", "No travel plan is available yet."), PAGE_MARGIN + 18, y + 38, pdfTextOptions(lang, {
-      width: doc.page.width - PAGE_MARGIN * 2 - 36
-    }));
-  return y + 88;
 }
 
 function buildAttachmentClosingNote(attachmentCount, lang) {
@@ -920,7 +627,7 @@ export function createTravelPlanPdfWriter({
       resolveBookingHeroTitle(booking, lang, readTours),
       rasterizeImage(logoPath, { width: 1000 }).catch(() => null),
       resolveBookingImageForPdf({ booking, bookingImagesDir, readTours, resolveTourImageDiskPath }),
-      buildItemThumbnailMap(plan, bookingImagesDir),
+      buildTravelPlanItemThumbnailMap(plan, bookingImagesDir),
       guideContext?.photoDiskPath
         ? rasterizeImage(guideContext.photoDiskPath, {
             width: 420,
@@ -1025,68 +732,25 @@ export function createTravelPlanPdfWriter({
       y = ensureSpace(y, estimateGuideSectionHeight(doc, guideContext, fonts, lang) + 10);
       y = drawGuideSection(doc, y, fonts, lang, guideContext, guidePhoto);
 
-      const days = safeArray(plan?.days);
-      if (!days.length) {
-        y = ensureSpace(y, 40 + 88);
-        doc
-          .font(pdfFontName("bold", fonts))
-          .fontSize(18)
-          .fillColor(PDF_COLORS.textStrong)
-          .text(travelPlanSectionTitle(lang), PAGE_MARGIN, y, pdfTextOptions(lang, {
-            width: doc.page.width - PAGE_MARGIN * 2
-          }));
-        y = doc.y + 10;
-        y = ensureSpace(y, 88);
-        y = drawEmptyState(doc, y, fonts, lang);
-      } else {
-        y = ensureSpace(y, 40 + 90);
-        doc
-          .font(pdfFontName("bold", fonts))
-          .fontSize(18)
-          .fillColor(PDF_COLORS.textStrong)
-          .text(travelPlanSectionTitle(lang), PAGE_MARGIN, y, pdfTextOptions(lang, {
-            width: doc.page.width - PAGE_MARGIN * 2
-          }));
-        y = doc.y + 10;
-        for (const day of days) {
-          y = ensureSpace(y, 90);
-          y = drawTravelPlanDayHeader(doc, y, day, fonts, lang);
-
-          const contentWidth = doc.page.width - PAGE_MARGIN * 2;
-          const columnWidth = (contentWidth - ITEM_COLUMN_GAP) / 2;
-          let remainingItems = safeArray(day?.services || day?.items);
-          let compactHeader = true;
-
-          while (remainingItems.length) {
-            const availableHeight = Math.max(96, bottomLimit() - y);
-            const pageLayout = layoutTravelPlanItemsForPage(
-              doc,
-              remainingItems,
-              itemThumbnailMap,
-              fonts,
-              lang,
-              day?.date,
-              columnWidth,
-              availableHeight
-            );
-
-            if (!pageLayout.columns.left.length && !pageLayout.columns.right.length) {
-              break;
-            }
-
-            drawTravelPlanItemColumns(doc, y, columnWidth, pageLayout, fonts, lang, day?.date);
-            y += pageLayout.height + 14;
-            remainingItems = pageLayout.rest;
-
-            if (remainingItems.length) {
-              y = addContinuationPage();
-              y = drawTravelPlanDayHeader(doc, y, day, fonts, lang, { compact: compactHeader });
-            }
-          }
-
-          y += 6;
-        }
-      }
+      y = drawTravelPlanDaysSection({
+        doc,
+        startY: y,
+        plan,
+        itemThumbnailMap,
+        fonts,
+        lang,
+        colors: PDF_COLORS,
+        pdfFontName,
+        pdfTextOptions,
+        pdfT,
+        formatPdfDateOnly,
+        pageMargin: PAGE_MARGIN,
+        bottomLimit,
+        addContinuationPage,
+        sectionTitle: travelPlanSectionTitle(lang),
+        emptyStateMessage: pdfT(lang, "travel_plan.empty", "No travel plan is available yet."),
+        sectionTitleFontSize: 18
+      });
 
       y = ensureSpace(y + 8, 96);
       drawClosing(doc, y + 10, fonts, lang, attachmentPaths.length);
