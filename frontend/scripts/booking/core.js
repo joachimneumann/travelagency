@@ -129,23 +129,23 @@ const BOOKING_STAGE_FALLBACKS = Object.freeze({
 });
 
 const BOOKING_SOURCE_CHANNEL_OPTIONS = Object.freeze([
-  ["other", "Other"],
-  ["website", "Website"],
-  ["email", "Email"],
-  ["whatsapp", "WhatsApp"],
-  ["facebook_messenger", "Facebook Messenger"],
-  ["google_maps", "Google Maps"],
-  ["instagram", "Instagram"],
-  ["phone_call", "Phone call"],
-  ["walk_in", "Walk-in"],
-  ["zalo", "Zalo"]
+  Object.freeze({ value: "other", labelKey: "booking.source_channel.option.other", labelFallback: "Other" }),
+  Object.freeze({ value: "website", labelKey: "booking.source_channel.option.website", labelFallback: "Website" }),
+  Object.freeze({ value: "email", labelKey: "booking.source_channel.option.email", labelFallback: "Email" }),
+  Object.freeze({ value: "whatsapp", labelKey: "booking.source_channel.option.whatsapp", labelFallback: "WhatsApp" }),
+  Object.freeze({ value: "facebook_messenger", labelKey: "booking.source_channel.option.facebook_messenger", labelFallback: "Facebook Messenger" }),
+  Object.freeze({ value: "google_maps", labelKey: "booking.source_channel.option.google_maps", labelFallback: "Google Maps" }),
+  Object.freeze({ value: "instagram", labelKey: "booking.source_channel.option.instagram", labelFallback: "Instagram" }),
+  Object.freeze({ value: "phone_call", labelKey: "booking.source_channel.option.phone_call", labelFallback: "Phone call" }),
+  Object.freeze({ value: "walk_in", labelKey: "booking.source_channel.option.walk_in", labelFallback: "Walk-in" }),
+  Object.freeze({ value: "zalo", labelKey: "booking.source_channel.option.zalo", labelFallback: "Zalo" })
 ]);
 
 const BOOKING_REFERRAL_KIND_OPTIONS = Object.freeze([
-  ["none", "No referral"],
-  ["other_customer", "Other customer"],
-  ["b2b_partner", "B2B partner"],
-  ["atp_staff", "ATP staff"]
+  Object.freeze({ value: "none", labelKey: "booking.referral.kind.none", labelFallback: "No referral" }),
+  Object.freeze({ value: "other_customer", labelKey: "booking.referral.kind.other_customer", labelFallback: "Other customer" }),
+  Object.freeze({ value: "b2b_partner", labelKey: "booking.referral.kind.b2b_partner", labelFallback: "B2B partner" }),
+  Object.freeze({ value: "atp_staff", labelKey: "booking.referral.kind.atp_staff", labelFallback: "ATP staff" })
 ]);
 
 const REFERRAL_MODE_CONFIG = Object.freeze({
@@ -724,7 +724,7 @@ export function createBookingCoreModule(ctx) {
 
     if (els.sourceChannelSelect) {
       els.sourceChannelSelect.innerHTML = BOOKING_SOURCE_CHANNEL_OPTIONS
-        .map(([value, label]) => `<option value="${escapeHtml(value)}">${escapeHtml(label)}</option>`)
+        .map((option) => `<option value="${escapeHtml(option.value)}">${escapeHtml(bookingT(option.labelKey, option.labelFallback))}</option>`)
         .join("");
       els.sourceChannelSelect.value = normalizeText(draft.source_channel).toLowerCase() || "other";
       els.sourceChannelSelect.disabled = !state.permissions.canEditBooking;
@@ -732,7 +732,7 @@ export function createBookingCoreModule(ctx) {
 
     if (els.referralKindSelect) {
       els.referralKindSelect.innerHTML = BOOKING_REFERRAL_KIND_OPTIONS
-        .map(([value, label]) => `<option value="${escapeHtml(value)}">${escapeHtml(label)}</option>`)
+        .map((option) => `<option value="${escapeHtml(option.value)}">${escapeHtml(bookingT(option.labelKey, option.labelFallback))}</option>`)
         .join("");
       els.referralKindSelect.value = normalizeText(draft.referral_kind).toLowerCase() || "none";
       els.referralKindSelect.disabled = !state.permissions.canEditBooking;

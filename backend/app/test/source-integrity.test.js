@@ -1318,6 +1318,38 @@ test("booking page derives ATP staff source language from the top-right backend 
   );
 });
 
+test("booking source and referral labels are routed through backend i18n", async () => {
+  const bookingCorePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "core.js");
+  const englishTranslationsPath = path.resolve(__dirname, "..", "..", "..", "frontend", "data", "i18n", "backend", "en.json");
+  const vietnameseTranslationsPath = path.resolve(__dirname, "..", "..", "..", "frontend", "data", "i18n", "backend", "vi.json");
+  const [coreSource, englishTranslations, vietnameseTranslations] = await Promise.all([
+    readFile(bookingCorePath, "utf8"),
+    readFile(englishTranslationsPath, "utf8"),
+    readFile(vietnameseTranslationsPath, "utf8")
+  ]);
+
+  assert.match(
+    coreSource,
+    /const BOOKING_SOURCE_CHANNEL_OPTIONS = Object\.freeze\(\[[\s\S]*labelKey: "booking\.source_channel\.option\.website"[\s\S]*els\.sourceChannelSelect\.innerHTML = BOOKING_SOURCE_CHANNEL_OPTIONS[\s\S]*bookingT\(option\.labelKey,\s*option\.labelFallback\)/,
+    "Booking source-channel options should render through backend i18n instead of hard-coded English labels"
+  );
+  assert.match(
+    coreSource,
+    /const BOOKING_REFERRAL_KIND_OPTIONS = Object\.freeze\(\[[\s\S]*labelKey: "booking\.referral\.kind\.other_customer"[\s\S]*els\.referralKindSelect\.innerHTML = BOOKING_REFERRAL_KIND_OPTIONS[\s\S]*bookingT\(option\.labelKey,\s*option\.labelFallback\)/,
+    "Booking referral-kind options should render through backend i18n instead of hard-coded English labels"
+  );
+  assert.match(
+    englishTranslations,
+    /"booking\.referral\.customer_name": "Customer name"[\s\S]*"booking\.referral\.kind\.b2b_partner": "B2B partner"[\s\S]*"booking\.source_channel\.option\.facebook_messenger": "Facebook Messenger"/,
+    "English booking translations should define the source-channel and referral labels used by the booking page"
+  );
+  assert.match(
+    vietnameseTranslations,
+    /"booking\.note_title": "Ghi chú booking \(nội bộ ATP\)"[\s\S]*"booking\.referral\.customer_name": "Tên khách hàng"[\s\S]*"booking\.source_channel\.option\.phone_call": "Cuộc gọi điện thoại"/,
+    "Vietnamese booking translations should localize ATP-internal labels and booking source/referral labels"
+  );
+});
+
 test("full booking reloads force-reset core drafts so discard restores saved values", async () => {
   const bookingPageDataModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking_page_data.js");
   const coreModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "core.js");
