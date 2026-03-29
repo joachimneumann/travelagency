@@ -5,6 +5,8 @@ Then Automatically derive the stage and write a description of the stage and las
 
 # TODO
 
+* voice to text with Voquill
+
 "Your ATP guide xxx" section when creating the PDF:
 - rephrase to "Assisted by our team member xxx"
 - when the Qualification is empty in the atps_staff, use the mobile description
