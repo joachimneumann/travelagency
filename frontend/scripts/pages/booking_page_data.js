@@ -1,14 +1,17 @@
 import {
   authMeRequest,
   bookingDetailRequest,
+  bookingEditingLanguageRequest,
   keycloakUsersRequest,
   staffProfilesRequest
 } from "../../Generated/API/generated_APIRequestFactory.js";
 import { validateAuthMeResponse } from "../../Generated/API/generated_APIModels.js";
-import { logBrowserConsoleError, resolveApiUrl } from "../shared/api.js";
+import { logBrowserConsoleError, normalizeText, resolveApiUrl } from "../shared/api.js";
 import { applyBackendUserLabel } from "../shared/backend_page.js";
 import {
   bookingContentLang,
+  bookingEditingLang,
+  normalizeBookingEditingLang,
   setBookingContentLang
 } from "../booking/i18n.js";
 
@@ -30,7 +33,6 @@ export function createBookingPageDataController(ctx) {
     resolveSubmissionCustomerLanguage,
     updateContentLangInUrl,
     syncContentLanguageSelector,
-    syncEditingLanguageSelector,
     withBookingContentLang,
     applyBookingPayload,
     renderBookingHeader,
@@ -222,6 +224,37 @@ export function createBookingPageDataController(ctx) {
     }
   }
 
+  async function syncBookingEditingLanguageToSelectedStaffLanguage(bookingPayload) {
+    const booking = bookingPayload?.booking || null;
+    if (!booking || !state.permissions.canEditBooking) return bookingPayload;
+    const selectedStaffLang = bookingEditingLang("en");
+    const persistedEditingLanguage = normalizeText(booking?.editing_language);
+    const normalizedPersistedEditingLanguage = normalizeBookingEditingLang(persistedEditingLanguage || "en");
+    const alreadySynced = persistedEditingLanguage
+      ? normalizedPersistedEditingLanguage === selectedStaffLang
+      : selectedStaffLang === "en";
+    if (alreadySynced) return bookingPayload;
+
+    const request = bookingEditingLanguageRequest({
+      baseURL: apiOrigin,
+      params: { booking_id: booking.id }
+    });
+    const response = await fetchBookingMutation(request.url, {
+      method: request.method,
+      body: {
+        expected_core_revision: Number(booking.core_revision || 0),
+        editing_language: selectedStaffLang,
+        actor: state.user || "keycloak_user"
+      }
+    });
+    if (!response?.booking) {
+      clearError();
+      clearStatus();
+      return bookingPayload;
+    }
+    return response;
+  }
+
   async function loadBookingPage() {
     clearStatus();
     const requestedContentLang = normalizeBookingContentLang(state.contentLang || bookingContentLang("en"));
@@ -248,10 +281,10 @@ export function createBookingPageDataController(ctx) {
         return await loadBookingPage();
       }
     }
+    const effectiveBookingPayload = await syncBookingEditingLanguageToSelectedStaffLanguage(bookingPayload);
     state.keycloakUsers = mergeAssignableUsersWithStaffProfiles(usersPayload?.items, staffProfilesPayload?.items);
-    applyBookingPayload(bookingPayload, { forceDraftReset: true });
+    applyBookingPayload(effectiveBookingPayload, { forceDraftReset: true });
     syncContentLanguageSelector?.();
-    syncEditingLanguageSelector?.();
     await ensureTourImageLoaded();
 
     renderBookingHeader();

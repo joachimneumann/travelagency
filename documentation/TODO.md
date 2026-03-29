@@ -19,8 +19,10 @@ all tour titles: FAKE
 
 * voice to text with Voquill
 
-Actually I'm thinking that this setup with three language selectors is too complicated. I only want to change the language of the atp_staff in the top right (between Vietnamese and English). 
-The editing language as a concept can either be removed completely or should be hidden from the ATP staff user that uses the web page. Can you think about this concept, nd tell me if that is possible or not? What happens on a frequent switch of the language at the top right? Would that degrade the translations? OR cause dataloss?
+ok, now follow the same approach for the booking.html page:
+
+I only want to change the language of the atp_staff in the top right (between Vietnamese and English). 
+remove editing_language and use the selected language instead. refactor the page accordingly.
 
 
 

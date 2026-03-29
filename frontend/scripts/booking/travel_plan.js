@@ -9,6 +9,7 @@ import {
   bookingContentLang,
   bookingContentLanguageOption,
   bookingEditingLang,
+  bookingEditingLanguageLabel,
   bookingT
 } from "./i18n.js";
 import { formatMoneyDisplay } from "./pricing.js";
@@ -239,11 +240,12 @@ export function createBookingTravelPlanModule(ctx) {
     const disabledReason = !state.permissions.canEditBooking
       ? bookingT("booking.translation.disabled.no_permission", "Disabled: you do not have permission to edit this booking.")
       : targetLang === sourceLang
-        ? bookingT("booking.translation.disabled.source_language", "Disabled: the customer language already matches the editing language.")
+        ? bookingT("booking.translation.not_needed_for_matching_languages", "ATP staff language matches customer language. No translation is needed.")
         : state.travelPlanDirty
           ? bookingT("booking.travel_plan.translate_everything_clean_state", "Save or discard unsaved travel-plan edits before translating everything.")
           : !status.has_source_content
-            ? bookingT("booking.translation.disabled.no_source", "Disabled: add editing-language {section} content first.", {
+          ? bookingT("booking.translation.disabled.no_source", "Disabled: add {language} {section} content first.", {
+                language: bookingEditingLanguageLabel(),
                 section: travelPlanSectionLabel()
               })
             : "";
@@ -306,11 +308,7 @@ export function createBookingTravelPlanModule(ctx) {
   function getTravelPlanNormalizationOptions() {
     return {
       targetLang: bookingContentLang(),
-      sourceLang: String(
-        state.coreDraft?.editing_language
-        || state.booking?.editing_language
-        || bookingEditingLang()
-      ).trim() || bookingEditingLang()
+      sourceLang: bookingEditingLang()
     };
   }
 

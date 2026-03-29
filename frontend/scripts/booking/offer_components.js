@@ -126,7 +126,7 @@ export function createBookingOfferComponentsModule(ctx) {
     if (typeof getCountMissingOfferPdfTranslations === "function") {
       return getCountMissingOfferPdfTranslations(booking, lang);
     }
-    if (!booking || lang === bookingEditingLang(booking?.editing_language || "en")) return 0;
+    if (!booking || lang === bookingEditingLang("en")) return 0;
     const normalizedLang = String(lang || "").trim().toLowerCase();
     const offerSummary = booking?.offer_translation_status;
     const travelPlanSummary = booking?.travel_plan_translation_status;

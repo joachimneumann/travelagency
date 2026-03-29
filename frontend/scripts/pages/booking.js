@@ -49,7 +49,6 @@ import { wireAuthLogoutLink } from "../shared/auth.js";
 import {
   bookingContentLang,
   normalizeBookingContentLang,
-  setBookingEditingLang,
   setBookingContentLang
 } from "../booking/i18n.js";
 
@@ -331,9 +330,6 @@ const els = {
   contentLanguageField: document.getElementById("booking_content_language_field"),
   contentLanguageMenuMount: document.getElementById("booking_content_language_menu_mount"),
   contentLanguageSelect: document.getElementById("booking_content_language_select"),
-  editingLanguageField: document.getElementById("booking_editing_language_field"),
-  editingLanguageMenuMount: document.getElementById("booking_editing_language_menu_mount"),
-  editingLanguageSelect: document.getElementById("booking_editing_language_select"),
   lastActionDetail: document.getElementById("booking_last_action_detail"),
   milestoneActionsBefore: document.getElementById("booking_milestone_actions_before"),
   milestoneActionsAfter: document.getElementById("booking_milestone_actions_after"),
@@ -587,13 +583,9 @@ const bookingLanguageController = createBookingPageLanguageController({
 });
 const {
   handleContentLanguageChange,
-  handleEditingLanguageChange,
   populateContentLanguageSelect,
-  populateEditingLanguageSelect,
   resolveSubmissionCustomerLanguage,
-  resolveSubmissionEditingLanguage,
   syncContentLanguageSelector,
-  syncEditingLanguageSelector,
   updateContentLangInUrl,
   waitForBackendI18n,
   withBackendLang,
@@ -656,7 +648,6 @@ async function init() {
     delete window.__BOOKING_CONTENT_LANG;
     delete document.documentElement.dataset.bookingContentLang;
   }
-  setBookingEditingLang(resolveSubmissionEditingLanguage(state.booking));
   const backHref = withBackendLang("/backend.html", { section: "bookings" });
 
   if (els.homeLink) els.homeLink.href = backHref;
@@ -685,7 +676,6 @@ async function init() {
   populateCurrencySelectFromModule(els.invoice_currency_input);
   renderOfferCurrencyMenu(els.offer_currency_input, els.offerCurrencyMenuMount);
   populateContentLanguageSelect();
-  populateEditingLanguageSelect();
   updatePageDirtyBar();
 
   if (els.heroCopyBtn) els.heroCopyBtn.addEventListener("click", copyHeroIdToClipboard);
@@ -713,9 +703,6 @@ async function init() {
   if (els.referralStaffSelect) els.referralStaffSelect.addEventListener("change", updateCoreDirtyState);
   if (els.contentLanguageSelect) els.contentLanguageSelect.addEventListener("change", () => {
     void handleContentLanguageChange();
-  });
-  if (els.editingLanguageSelect) els.editingLanguageSelect.addEventListener("change", () => {
-    void handleEditingLanguageChange();
   });
   [els.milestoneActionsBefore, els.milestoneActionsAfter].filter(Boolean).forEach((mount) => {
     mount.addEventListener("click", (event) => {
@@ -899,7 +886,6 @@ function copyHeroIdToClipboard() {
 function renderBookingData() {
   const result = coreModule.renderBookingData();
   syncContentLanguageSelector();
-  syncEditingLanguageSelector();
   updateCleanStateActionAvailability();
   return result;
 }
@@ -1691,7 +1677,6 @@ const bookingPageDataController = createBookingPageDataController({
   resolveSubmissionCustomerLanguage,
   updateContentLangInUrl,
   syncContentLanguageSelector,
-  syncEditingLanguageSelector,
   withBookingContentLang,
   applyBookingPayload,
   renderBookingHeader,

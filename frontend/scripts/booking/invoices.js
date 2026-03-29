@@ -12,7 +12,7 @@ import {
   parseMoneyInputValue,
   setSelectValue
 } from "./pricing.js";
-import { bookingContentLang, bookingEditingLang, bookingT } from "./i18n.js";
+import { bookingContentLang, bookingEditingLang, bookingEditingLanguageLabel, bookingT } from "./i18n.js";
 import {
   buildDualLocalizedPayload,
   renderLocalizedSplitField,
@@ -584,7 +584,9 @@ export function createBookingInvoicesModule(ctx) {
       const entries = Object.fromEntries(
         englishComponents.map((component, index) => [`line_${index}`, component.description])
       );
-      setInvoiceStatus(bookingT("booking.translation.translating_field", "Translating field from editing language..."));
+      setInvoiceStatus(bookingT("booking.translation.translating_field", "Translating field from {language}...", {
+        language: bookingEditingLanguageLabel()
+      }));
       const translated = await requestBookingFieldTranslation({
         bookingId: state.booking.id,
         entries,
@@ -604,7 +606,9 @@ export function createBookingInvoicesModule(ctx) {
         currency
       );
       updateInvoiceDirtyState();
-      setInvoiceStatus(bookingT("booking.translation.field_translated", "Field translated from editing language."));
+      setInvoiceStatus(bookingT("booking.translation.field_translated", "Field translated from {language}.", {
+        language: bookingEditingLanguageLabel()
+      }));
       return;
     }
 
@@ -613,7 +617,9 @@ export function createBookingInvoicesModule(ctx) {
     const localizedInput = editor?.querySelector(`[data-localized-lang="${bookingContentLang()}"][data-localized-role="target"]`);
     const englishText = String(englishInput?.value || "").trim();
     if (!englishText || !localizedInput) return;
-    setInvoiceStatus(bookingT("booking.translation.translating_field", "Translating field from editing language..."));
+    setInvoiceStatus(bookingT("booking.translation.translating_field", "Translating field from {language}...", {
+      language: bookingEditingLanguageLabel()
+    }));
     const translated = await requestBookingFieldTranslation({
       bookingId: state.booking.id,
       entries: { field: englishText },
@@ -628,7 +634,9 @@ export function createBookingInvoicesModule(ctx) {
     }
     localizedInput.value = translated.field;
     updateInvoiceDirtyState();
-    setInvoiceStatus(bookingT("booking.translation.field_translated", "Field translated from editing language."));
+    setInvoiceStatus(bookingT("booking.translation.field_translated", "Field translated from {language}.", {
+      language: bookingEditingLanguageLabel()
+    }));
   }
 
   if (els.invoice_panel && els.invoice_panel.dataset.localizedTranslateBound !== "true") {

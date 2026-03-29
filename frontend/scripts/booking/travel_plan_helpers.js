@@ -4,6 +4,7 @@ import {
   TRAVEL_PLAN_TIMING_KIND_OPTIONS as GENERATED_TRAVEL_PLAN_TIMING_KIND_OPTIONS
 } from "../shared/generated_catalogs.js";
 import {
+  bookingEditingLang,
   bookingT,
   normalizeBookingContentLang,
   normalizeBookingEditingLang
@@ -280,7 +281,7 @@ export function normalizeTravelPlanDraft(plan, offerComponents = [], options = {
   const sourceLang = normalizeBookingEditingLang(
     options?.sourceLang
     || options?.editingLang
-    || String(window.__BOOKING_EDITING_LANG || "en").trim()
+    || bookingEditingLang("en")
     || "en"
   );
   const linkableOfferComponentIds = new Set(

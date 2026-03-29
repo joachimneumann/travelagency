@@ -43,7 +43,6 @@ export const BOOKING_CONTENT_LANGUAGE_OPTIONS = Object.freeze(
 
 const DEFAULT_BOOKING_CONTENT_LANG = "en";
 const DEFAULT_BOOKING_EDITING_LANG = "en";
-const BOOKING_EDITING_LANGUAGE_STORAGE_PREFIX = "travelagency.booking.editing_language.";
 
 export function bookingT(id, fallback, vars) {
   if (typeof window.backendT === "function") {
@@ -91,7 +90,9 @@ export function bookingContentLanguageLabel(value) {
 }
 
 export function bookingEditingLanguageOption(value) {
-  const normalized = normalizeBookingEditingLang(value || DEFAULT_BOOKING_EDITING_LANG);
+  const normalized = value === undefined
+    ? bookingEditingLang(DEFAULT_BOOKING_EDITING_LANG)
+    : normalizeBookingEditingLang(value || DEFAULT_BOOKING_EDITING_LANG);
   return BOOKING_EDITING_LANGUAGE_OPTIONS.find((option) => option.code === normalized) || {
     code: normalized,
     label: normalized,
@@ -112,35 +113,15 @@ export function bookingContentLang(fallback = DEFAULT_BOOKING_CONTENT_LANG) {
 }
 
 export function bookingEditingLang(fallback = DEFAULT_BOOKING_EDITING_LANG) {
+  const backendCandidate = typeof window.backendI18n?.getLang === "function"
+    ? String(window.backendI18n.getLang() || "").trim()
+    : "";
+  if (backendCandidate) return normalizeBookingEditingLang(backendCandidate);
   const runtimeCandidate = String(window.__BOOKING_EDITING_LANG || "").trim();
   if (runtimeCandidate) return normalizeBookingEditingLang(runtimeCandidate);
+  const documentLang = String(document.documentElement.lang || "").trim();
+  if (documentLang) return normalizeBookingEditingLang(documentLang);
   return normalizeBookingEditingLang(fallback || DEFAULT_BOOKING_EDITING_LANG);
-}
-
-function bookingEditingLanguageStorageKey(bookingId) {
-  const normalizedBookingId = String(bookingId || "").trim();
-  if (!normalizedBookingId) return "";
-  return `${BOOKING_EDITING_LANGUAGE_STORAGE_PREFIX}${normalizedBookingId}`;
-}
-
-export function readStoredBookingEditingLanguage(bookingId, fallback = DEFAULT_BOOKING_EDITING_LANG) {
-  const storageKey = bookingEditingLanguageStorageKey(bookingId);
-  if (!storageKey) return normalizeBookingEditingLang(fallback || DEFAULT_BOOKING_EDITING_LANG);
-  try {
-    const stored = String(globalThis.localStorage?.getItem(storageKey) || "").trim();
-    if (stored) return normalizeBookingEditingLang(stored);
-  } catch {}
-  return normalizeBookingEditingLang(fallback || DEFAULT_BOOKING_EDITING_LANG);
-}
-
-export function writeStoredBookingEditingLanguage(bookingId, value) {
-  const normalized = normalizeBookingEditingLang(value || DEFAULT_BOOKING_EDITING_LANG);
-  const storageKey = bookingEditingLanguageStorageKey(bookingId);
-  if (!storageKey) return normalized;
-  try {
-    globalThis.localStorage?.setItem(storageKey, normalized);
-  } catch {}
-  return normalized;
 }
 
 export function setBookingContentLang(value) {
@@ -157,9 +138,6 @@ export function setBookingEditingLang(value) {
   const normalized = normalizeBookingEditingLang(value || DEFAULT_BOOKING_EDITING_LANG);
   window.__BOOKING_EDITING_LANG = normalized;
   document.documentElement.dataset.bookingEditingLang = normalized;
-  window.dispatchEvent(new CustomEvent("booking-editing-langchange", {
-    detail: { lang: normalized }
-  }));
   return normalized;
 }
 

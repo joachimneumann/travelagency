@@ -596,7 +596,7 @@ export function createBookingGeneratedOffersModule(ctx) {
       "Customer language is {language}, but {count} offer or travel-plan fields are not translated yet. The PDF shell will use {language}, and those fields will fall back to {editingLanguage}. Generate anyway?",
       {
         language: bookingContentLanguageLabel(selectedLang),
-        editingLanguage: bookingEditingLanguageLabel(state.booking?.editing_language || "en"),
+        editingLanguage: bookingEditingLanguageLabel(),
         count: missingTranslationCount
       }
     ))) {

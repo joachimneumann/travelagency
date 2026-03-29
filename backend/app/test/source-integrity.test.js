@@ -1265,13 +1265,15 @@ test("booking page save orchestrates dirty sections through existing section end
   );
 });
 
-test("booking editing language falls back to browser-local storage when the backend route is unavailable", async () => {
+test("booking page derives ATP staff source language from the top-right backend language", async () => {
+  const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
   const bookingI18nPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "i18n.js");
   const coreModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "core.js");
   const bookingPageDataModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking_page_data.js");
   const bookingPageLanguageModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking_page_language.js");
   const bookingHandlersModulePath = path.resolve(__dirname, "..", "..", "..", "backend", "app", "src", "http", "handlers", "bookings.js");
-  const [i18nSource, coreSource, bookingPageDataSource, bookingPageLanguageSource, bookingHandlersSource] = await Promise.all([
+  const [bookingSource, i18nSource, coreSource, bookingPageDataSource, bookingPageLanguageSource, bookingHandlersSource] = await Promise.all([
+    readFile(bookingPagePath, "utf8"),
     readFile(bookingI18nPath, "utf8"),
     readFile(coreModulePath, "utf8"),
     readFile(bookingPageDataModulePath, "utf8"),
@@ -1279,30 +1281,35 @@ test("booking editing language falls back to browser-local storage when the back
     readFile(bookingHandlersModulePath, "utf8")
   ]);
 
+  assert.doesNotMatch(
+    bookingSource,
+    /id="booking_editing_language_field"/,
+    "booking.html should no longer render a separate editing-language field once the top-right ATP staff language owns that choice"
+  );
   assert.match(
     i18nSource,
-    /export function readStoredBookingEditingLanguage\(bookingId,\s*fallback = DEFAULT_BOOKING_EDITING_LANG\)/,
-    "Booking i18n helpers should expose a per-booking stored editing-language fallback reader"
+    /export function bookingEditingLang\(fallback = DEFAULT_BOOKING_EDITING_LANG\) \{[\s\S]*window\.backendI18n\?\.getLang/,
+    "Booking i18n helpers should derive the ATP staff source language from the active backend language selector"
   );
   assert.match(
-    coreSource,
-    /function shouldApplyEditingLanguageCompatibilityFallback\(requestUrl\) \{[\s\S]*const status = Number\(errorMeta\?\.status \|\| 0\);[\s\S]*includes\("\/editing-language"\)[\s\S]*status === 404/,
-    "Core booking saves should recognize the missing editing-language route on older backends"
+    bookingPageDataSource,
+    /async function syncBookingEditingLanguageToSelectedStaffLanguage\(bookingPayload\) \{[\s\S]*bookingEditingLang\("en"\)[\s\S]*bookingEditingLanguageRequest/,
+    "Booking load should sync the backend editing-language field from the selected top-right ATP staff language"
   );
   assert.match(
-    coreSource,
-    /function applyEditingLanguageCompatibilityFallback\(booking,\s*nextEditingLanguage\) \{[\s\S]*writeStoredBookingEditingLanguage\(/,
-    "Core booking saves should persist editing-language changes into browser-local fallback storage when the backend route is missing"
+    bookingPageDataSource,
+    /const effectiveBookingPayload = await syncBookingEditingLanguageToSelectedStaffLanguage\(bookingPayload\);[\s\S]*applyBookingPayload\(effectiveBookingPayload,\s*\{\s*forceDraftReset:\s*true\s*\}\);/,
+    "Booking page loads should apply the post-sync payload so downstream translation status and source branches follow the selected staff language"
   );
   assert.match(
     bookingPageDataSource,
     /state\.lastMutationError = \{[\s\S]*status: response\.status[\s\S]*payload/,
-    "Booking mutation requests should retain the last HTTP error metadata so save compatibility fallbacks can inspect it"
+    "Booking mutation requests should retain the last HTTP error metadata for compatibility and diagnostics"
   );
-  assert.match(
+  assert.doesNotMatch(
     bookingPageLanguageSource,
-    /resolveSubmissionEditingLanguage\(booking\) \{[\s\S]*readStoredBookingEditingLanguage\(booking\?\.id \|\| state\.id,/,
-    "The booking page should reuse the browser-local editing-language fallback when the backend payload has no persisted editing language"
+    /resolveSubmissionEditingLanguage|populateEditingLanguageSelect|syncEditingLanguageSelector|handleEditingLanguageChange/,
+    "The booking page language controller should no longer manage a separate editing-language selector"
   );
   assert.match(
     bookingHandlersSource,
@@ -1319,7 +1326,7 @@ test("full booking reloads force-reset core drafts so discard restores saved val
 
   assert.match(
     bookingPageDataSource,
-    /applyBookingPayload\(bookingPayload,\s*\{\s*forceDraftReset:\s*true\s*\}\);/,
+    /applyBookingPayload\(effectiveBookingPayload,\s*\{\s*forceDraftReset:\s*true\s*\}\);/,
     "A full booking reload should force-reset local drafts from the freshly fetched backend payload"
   );
   assert.match(
@@ -1379,13 +1386,13 @@ test("booking page logs reload-time dirty diagnostics and core comparisons ignor
   );
   assert.match(
     travelPlanSource,
-    /function getTravelPlanNormalizationOptions\(\) \{[\s\S]*state\.coreDraft\?\.editing_language[\s\S]*state\.booking\?\.editing_language/,
-    "Travel-plan normalization should derive its source language from the booking draft instead of an uninitialized global runtime value"
+    /function getTravelPlanNormalizationOptions\(\) \{[\s\S]*sourceLang:\s*bookingEditingLang\(\)/,
+    "Travel-plan normalization should derive its source language from the selected ATP staff language in the top-right selector"
   );
   assert.match(
     travelPlanHelpersSource,
-    /export function normalizeTravelPlanDraft\(plan, offerComponents = \[\], options = \{\}\) \{[\s\S]*const sourceLang = normalizeBookingEditingLang\([\s\S]*resolveLocalizedEditorText\(rawDay\.title_i18n \?\? rawDay\.title, sourceLang, ""\)/,
-    "Travel-plan helper normalization should accept an explicit source language and flatten localized content through that branch"
+    /export function normalizeTravelPlanDraft\(plan, offerComponents = \[\], options = \{\}\) \{[\s\S]*const sourceLang = normalizeBookingEditingLang\([\s\S]*bookingEditingLang\("en"\)[\s\S]*resolveLocalizedEditorText\(rawDay\.title_i18n \?\? rawDay\.title, sourceLang, ""\)/,
+    "Travel-plan helper normalization should accept an explicit source language and otherwise fall back to the selected ATP staff language"
   );
 });
 

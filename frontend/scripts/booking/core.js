@@ -1,7 +1,6 @@
 import {
   bookingCustomerLanguageRequest,
   bookingDeleteRequest,
-  bookingEditingLanguageRequest,
   bookingImageRequest,
   bookingMilestoneActionRequest,
   bookingNameRequest,
@@ -17,10 +16,7 @@ import {
 import {
   bookingContentLanguageLabel,
   bookingT,
-  normalizeBookingEditingLang,
-  normalizeBookingContentLang,
-  readStoredBookingEditingLanguage,
-  writeStoredBookingEditingLanguage
+  normalizeBookingContentLang
 } from "./i18n.js";
 
 function labelizeKey(key) {
@@ -235,7 +231,6 @@ export function createBookingCoreModule(ctx) {
         name: "",
         assigned_keycloak_user_id: "",
         customer_language: "en",
-        editing_language: "en",
         source_channel: "other",
         referral_kind: "none",
         referral_label: "",
@@ -255,47 +250,6 @@ export function createBookingCoreModule(ctx) {
     );
   }
 
-  function savedEditingLanguage(booking = state.booking) {
-    const persistedEditingLanguage = normalizeText(booking?.editing_language);
-    if (persistedEditingLanguage) {
-      return normalizeBookingEditingLang(persistedEditingLanguage);
-    }
-    return readStoredBookingEditingLanguage(booking?.id || state.id, "en");
-  }
-
-  function shouldApplyEditingLanguageCompatibilityFallback(requestUrl) {
-    const errorMeta = state.lastMutationError;
-    const status = Number(errorMeta?.status || 0);
-    const isEditingLanguageRequest = String(errorMeta?.url || requestUrl || "").includes("/editing-language");
-    if (!isEditingLanguageRequest) return false;
-    if (status === 404) return true;
-    return false;
-  }
-
-  function applyEditingLanguageCompatibilityFallback(booking, nextEditingLanguage) {
-    const bookingId = normalizeText(booking?.id || state.booking?.id || state.id);
-    const normalized = writeStoredBookingEditingLanguage(bookingId, nextEditingLanguage);
-    const nextBooking = booking && typeof booking === "object"
-      ? { ...booking, editing_language: normalized }
-      : { ...(state.booking || {}), editing_language: normalized };
-    state.booking = nextBooking;
-    if (state.coreDraft && typeof state.coreDraft === "object") {
-      state.coreDraft.editing_language = normalized;
-    }
-    console.warn("[booking] Backend does not support booking editing-language persistence yet; using browser-local fallback.", {
-      booking_id: bookingId,
-      editing_language: normalized,
-      mutation_error: state.lastMutationError || null
-    });
-    if (typeof setStatus === "function") {
-      setStatus(bookingT(
-        "booking.editing_language.local_fallback",
-        "Editing language is stored only in this browser until the backend is updated."
-      ));
-    }
-    return nextBooking;
-  }
-
   function savedMilestoneActionKey(booking = state.booking) {
     return resolveStatusPresentation(booking).currentActionKey;
   }
@@ -307,7 +261,6 @@ export function createBookingCoreModule(ctx) {
       draft.name = normalizeText(state.booking.name) || "";
       draft.assigned_keycloak_user_id = normalizeText(state.booking.assigned_keycloak_user_id) || "";
       draft.customer_language = savedCustomerLanguage(state.booking);
-      draft.editing_language = savedEditingLanguage(state.booking);
       draft.source_channel = normalizeText(state.booking.source_channel).toLowerCase() || "other";
       draft.referral_kind = normalizeText(state.booking.referral_kind).toLowerCase() || "none";
       draft.referral_label = normalizeText(state.booking.referral_label) || "";
@@ -327,7 +280,6 @@ export function createBookingCoreModule(ctx) {
       name: normalizeText(values.name) || "",
       assigned_keycloak_user_id: normalizeText(values.assigned_keycloak_user_id) || "",
       customer_language: normalizeBookingContentLang(values.customer_language || "en"),
-      editing_language: normalizeBookingEditingLang(values.editing_language || "en"),
       source_channel: normalizeText(values.source_channel).toLowerCase() || "other",
       referral_kind: referralKind,
       referral_label: referralKind === "b2b_partner" || referralKind === "other_customer"
@@ -345,7 +297,6 @@ export function createBookingCoreModule(ctx) {
       name: normalizeText(state.booking?.name) || "",
       assigned_keycloak_user_id: normalizeText(state.booking?.assigned_keycloak_user_id) || "",
       customer_language: savedCustomerLanguage(state.booking),
-      editing_language: savedEditingLanguage(state.booking),
       source_channel: normalizeText(state.booking?.source_channel).toLowerCase() || "other",
       referral_kind: normalizeText(state.booking?.referral_kind).toLowerCase() || "none",
       referral_label: normalizeText(state.booking?.referral_label) || "",
@@ -360,7 +311,6 @@ export function createBookingCoreModule(ctx) {
       name: normalizeText(draft.name) || "",
       assigned_keycloak_user_id: normalizeText(draft.assigned_keycloak_user_id) || "",
       customer_language: normalizeBookingContentLang(draft.customer_language || savedCustomerLanguage(state.booking)),
-      editing_language: normalizeBookingEditingLang(draft.editing_language || savedEditingLanguage(state.booking)),
       source_channel: normalizeText(draft.source_channel).toLowerCase() || "other",
       referral_kind: normalizeText(draft.referral_kind).toLowerCase() || "none",
       referral_label: normalizeText(draft.referral_label) || "",
@@ -398,7 +348,6 @@ export function createBookingCoreModule(ctx) {
       draft.referral_label = "";
     }
     draft.customer_language = normalizeBookingContentLang(draft.customer_language || savedCustomerLanguage(state.booking));
-    draft.editing_language = normalizeBookingEditingLang(draft.editing_language || savedEditingLanguage(state.booking));
     draft.milestone_action_key = normalizeText(draft.milestone_action_key || savedMilestoneActionKey(state.booking)).toUpperCase();
     const savedState = state.booking ? coreComparableStateFromBooking() : null;
     const draftState = state.booking ? coreComparableStateFromDraft() : null;
@@ -1071,29 +1020,6 @@ export function createBookingCoreModule(ctx) {
       updateContentLangInUrl?.(nextCustomerLanguage);
     }
 
-    const nextEditingLanguage = normalizeBookingEditingLang(draft.editing_language || "en");
-    if (nextEditingLanguage !== savedEditingLanguage(latestBooking)) {
-      const request = bookingEditingLanguageRequest({ baseURL: apiOrigin, params: { booking_id: latestBooking.id } });
-      const result = await fetchBookingMutation(request.url, {
-        method: request.method,
-        body: {
-          expected_core_revision: Number(latestBooking.core_revision || 0),
-          editing_language: nextEditingLanguage,
-          actor: state.user
-        }
-      });
-      if (!result?.booking) {
-        if (shouldApplyEditingLanguageCompatibilityFallback(request.url)) {
-          latestBooking = applyEditingLanguageCompatibilityFallback(latestBooking, nextEditingLanguage);
-        } else {
-          return false;
-        }
-      } else {
-        latestBooking = result.booking;
-        state.booking = latestBooking;
-      }
-    }
-
     const nextSourceChannel = normalizeText(draft.source_channel).toLowerCase() || "other";
     const nextReferralKind = normalizeText(draft.referral_kind).toLowerCase() || "none";
     const nextReferralLabel = nextReferralKind === "b2b_partner" || nextReferralKind === "other_customer"
@@ -1236,9 +1162,6 @@ export function createBookingCoreModule(ctx) {
   function applyBookingPayload(payload = {}, options = {}) {
     const previousTourId = normalizeText(state.booking?.web_form_submission?.tour_id);
     state.booking = payload.booking || state.booking || null;
-    if (state.booking && !normalizeText(state.booking.editing_language)) {
-      state.booking.editing_language = savedEditingLanguage(state.booking);
-    }
     syncCoreDraftFromBooking({ force: options.forceDraftReset === true });
     const nextTourId = normalizeText(state.booking?.web_form_submission?.tour_id);
     if (normalizeText(state.booking?.image)) {
