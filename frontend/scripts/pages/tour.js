@@ -201,10 +201,20 @@ function orderedTourTextLanguages() {
   const languages = tourTextLanguages();
   const editingLang = currentTourEditingLang();
   const editingLanguage = languages.find((language) => normalizeTourTextLang(language?.code) === editingLang);
-  if (!editingLanguage) return languages;
+  const secondaryLang = editingLang === "vi" ? "en" : "vi";
+  const secondaryLanguage = languages.find((language) => normalizeTourTextLang(language?.code) === secondaryLang);
+  const otherLanguages = languages
+    .filter((language) => {
+      const lang = normalizeTourTextLang(language?.code);
+      return lang !== editingLang && lang !== secondaryLang;
+    })
+    .sort((left, right) => tourLanguageShortLabel(left?.code).localeCompare(tourLanguageShortLabel(right?.code), "en", {
+      sensitivity: "base"
+    }));
   return [
-    editingLanguage,
-    ...languages.filter((language) => normalizeTourTextLang(language?.code) !== editingLang)
+    ...(editingLanguage ? [editingLanguage] : []),
+    ...(secondaryLanguage ? [secondaryLanguage] : []),
+    ...otherLanguages
   ];
 }
 

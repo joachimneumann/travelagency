@@ -1760,6 +1760,11 @@ test("tour page uses the active backend language as the localized editor source"
     "Tour localized editors should rebuild their translation buttons from the active editing language"
   );
   assert.match(
+    tourSource,
+    /const secondaryLang = editingLang === "vi" \? "en" : "vi";[\s\S]*tourLanguageShortLabel\(left\?\.code\)\.localeCompare/,
+    "Tour localized editors should place the EN\/VI pair first and sort the remaining languages alphabetically"
+  );
+  assert.match(
     backendEnI18n,
     /"tour\.translation\.translate_one": "\{source\} → \{target\}"/,
     "English backend strings should provide the dynamic tour translation button label"
