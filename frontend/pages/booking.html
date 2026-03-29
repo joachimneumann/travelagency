@@ -135,12 +135,12 @@
             <div class="booking-dirty-bar" id="booking_dirty_bar" hidden>
               <div class="booking-dirty-bar__panel">
                 <div class="booking-dirty-bar__copy">
-                  <strong id="booking_dirty_bar_title">Unsaved edits</strong>
+                  <strong id="booking_dirty_bar_title" data-i18n-id="booking.page_save.unsaved">Unsaved edits</strong>
                   <span class="micro booking-dirty-bar__summary" id="booking_dirty_bar_summary"></span>
                 </div>
                 <div class="booking-dirty-bar__actions">
-                  <button class="btn btn-ghost" id="booking_discard_edits_btn" type="button">Discard</button>
-                  <button class="btn btn-primary" id="booking_save_edits_btn" type="button">Save</button>
+                  <button class="btn btn-ghost" id="booking_discard_edits_btn" type="button" data-i18n-id="booking.persons.discard_changes">Discard</button>
+                  <button class="btn btn-primary" id="booking_save_edits_btn" type="button" data-i18n-id="common.save">Save</button>
                   <span class="micro booking-dirty-bar__action-error" id="booking_save_error_hint" aria-live="polite"></span>
                 </div>
               </div>
@@ -178,7 +178,7 @@
                       </div>
                       <div class="field booking-top-card__field booking-top-card__field--currency">
                         <label for="offer_currency_input">
-                          <span>Customer Currency</span>
+                          <span data-i18n-id="booking.customer_currency">Customer Currency</span>
                         </label>
                         <div class="booking-currency-menu-mount" id="booking_currency_menu_mount"></div>
                         <select id="offer_currency_input" class="visually-hidden" tabindex="-1" aria-hidden="true"></select>
@@ -200,24 +200,24 @@
                 </div>
                 <div class="booking-status-panel">
                   <div class="booking-status-panel__head">
-                    <h2 class="booking-status-panel__title" hidden>Booking status</h2>
+                    <h2 class="booking-status-panel__title" hidden data-i18n-id="booking.status_title">Booking status</h2>
                     <div id="booking_milestone_actions" hidden></div>
                     <div class="micro booking-milestone-actions__last-action" id="booking_last_action_detail" hidden></div>
                   </div>
                   <div class="booking-status-panel__phase booking-status-panel__phase--before" id="booking_status_phase_before">
                     <div class="booking-status-panel__phase-copy">
-                      <div class="booking-status-panel__phase-label">Before deposit received</div>
+                      <div class="booking-status-panel__phase-label" data-i18n-id="booking.status.before_deposit">Before deposit received</div>
                     </div>
                     <div class="booking-milestone-actions" id="booking_milestone_actions_before"></div>
                   </div>
                   <div class="booking-status-panel__divider">
                     <div class="booking-status-panel__divider-line"></div>
-                    <div class="booking-status-panel__divider-badge">Deposit Received</div>
+                    <div class="booking-status-panel__divider-badge" data-i18n-id="booking.status.deposit_received">Deposit Received</div>
                     <div class="booking-status-panel__divider-line"></div>
                   </div>
                   <div class="booking-status-panel__phase booking-status-panel__phase--after" id="booking_status_phase_after">
                     <div class="booking-status-panel__phase-copy">
-                      <div class="booking-status-panel__phase-label">After deposit received</div>
+                      <div class="booking-status-panel__phase-label" data-i18n-id="booking.status.after_deposit">After deposit received</div>
                     </div>
                     <div class="booking-milestone-actions" id="booking_milestone_actions_after"></div>
                   </div>
@@ -238,16 +238,16 @@
           <article class="booking-source-panel" style="margin-bottom: 1rem;">
             <div class="booking-control-deck__fields booking-source-panel__fields">
               <div class="field booking-source-panel__source-field">
-                <label for="booking_source_channel_select">Source channel</label>
+                <label for="booking_source_channel_select" data-i18n-id="booking.source_channel">Source channel</label>
                 <select id="booking_source_channel_select"></select>
               </div>
               <div class="field booking-source-panel__referral-field">
-                <label for="booking_referral_kind_select">Referred by</label>
+                <label for="booking_referral_kind_select" data-i18n-id="booking.referred_by">Referred by</label>
                 <select id="booking_referral_kind_select"></select>
               </div>
             </div>
             <div class="field booking-control-deck__detail-field booking-source-panel__conditional" id="booking_referral_label_field" hidden>
-              <label for="booking_referral_label_input" id="booking_referral_label_label">Partner name</label>
+              <label for="booking_referral_label_input" id="booking_referral_label_label" data-i18n-id="booking.partner_name">Partner name</label>
               <input id="booking_referral_label_input" type="text" />
               <select id="booking_referral_staff_select" hidden></select>
               <span class="micro" id="booking_referral_label_hint"></span>
@@ -632,23 +632,23 @@
             <div class="modal-panel travel-plan-library-modal__panel" role="document">
               <div class="modal-head travel-plan-library-modal__head">
                 <div>
-                  <h2 id="travel_plan_service_library_title">Insert existing service</h2>
-                  <p class="micro" id="travel_plan_service_library_subtitle">Search existing booking services and insert a copy into this day.</p>
+                  <h2 id="travel_plan_service_library_title" data-i18n-id="booking.travel_plan.insert_existing">Insert existing service</h2>
+                  <p class="micro" id="travel_plan_service_library_subtitle" data-i18n-id="booking.travel_plan.insert_existing_subtitle">Search existing booking services and insert a copy into this day.</p>
                 </div>
-                <button class="btn btn-ghost" id="travel_plan_service_library_close_btn" type="button" aria-label="Close insert service dialog">&times;</button>
+                <button class="btn btn-ghost" id="travel_plan_service_library_close_btn" type="button" aria-label="Close insert service dialog" data-i18n-aria-label-id="booking.travel_plan.close_insert_service_dialog">&times;</button>
               </div>
               <div class="modal-body travel-plan-library-modal__body">
                 <div class="travel-plan-library-modal__filters">
                   <div class="field">
-                    <label for="travel_plan_service_library_query">Search</label>
-                    <input id="travel_plan_service_library_query" type="search" placeholder="Search services, bookings, locations..." />
+                    <label for="travel_plan_service_library_query" data-i18n-id="common.search">Search</label>
+                    <input id="travel_plan_service_library_query" type="search" placeholder="Search services, bookings, locations..." data-i18n-placeholder-id="booking.travel_plan.search_placeholder" />
                   </div>
                   <div class="field">
-                    <label for="travel_plan_service_library_kind">Kind</label>
+                    <label for="travel_plan_service_library_kind" data-i18n-id="booking.travel_plan.kind_label">Kind</label>
                     <select id="travel_plan_service_library_kind"></select>
                   </div>
                   <div class="travel-plan-library-modal__search-action">
-                    <button class="btn btn-primary" id="travel_plan_service_library_search_btn" type="button">Search</button>
+                    <button class="btn btn-primary" id="travel_plan_service_library_search_btn" type="button" data-i18n-id="common.search">Search</button>
                   </div>
                 </div>
                 <div id="travel_plan_service_library_status" class="micro booking-inline-status"></div>
@@ -668,7 +668,7 @@
             <div class="modal-panel travel-plan-image-preview-modal__panel" role="document">
               <div class="modal-head travel-plan-image-preview-modal__head">
                 <div></div>
-                <button class="btn btn-ghost" id="travel_plan_image_preview_close_btn" type="button" aria-label="Close image preview">&times;</button>
+                <button class="btn btn-ghost" id="travel_plan_image_preview_close_btn" type="button" aria-label="Close image preview" data-i18n-aria-label-id="booking.travel_plan.close_image_preview">&times;</button>
               </div>
               <div class="modal-body travel-plan-image-preview-modal__body">
                 <img id="travel_plan_image_preview_image" class="travel-plan-image-preview-modal__image" src="" alt="" />
@@ -685,7 +685,7 @@
             </div>
             <div class="booking-section__body">
               <div class="backend-controls travel-plan-actions">
-                <button class="btn btn-ghost" id="travel_plan_translate_all_btn" type="button">Translate everything</button>
+                <button class="btn btn-ghost" id="travel_plan_translate_all_btn" type="button" data-i18n-id="booking.travel_plan.translate_everything">Translate everything</button>
                 <span id="travel_plan_status" class="micro booking-inline-status"></span>
               </div>
               <div id="travel_plan_editor"></div>
@@ -707,14 +707,14 @@
             <div class="offer-detail-level-panel__layout">
               <div class="offer-detail-level-panel__stack">
                 <div class="offer-detail-level-field">
-                  <label class="offer-detail-level-field__label" for="offer_detail_level_internal_input">Internal offer detail level</label>
+                  <label class="offer-detail-level-field__label" for="offer_detail_level_internal_input" data-i18n-id="booking.offer.internal_detail_level">Internal offer detail level</label>
                   <select id="offer_detail_level_internal_input" class="visually-hidden" tabindex="-1" aria-hidden="true"></select>
-                  <div id="offer_detail_level_internal_pill" class="offer-detail-level-pill" role="group" aria-label="Internal offer detail level"></div>
+                  <div id="offer_detail_level_internal_pill" class="offer-detail-level-pill" role="group" aria-label="Internal offer detail level" data-i18n-aria-label-id="booking.offer.internal_detail_level"></div>
                 </div>
                 <div class="offer-detail-level-field">
-                  <label class="offer-detail-level-field__label" for="offer_detail_level_visible_input">Customer-facing offer detail level</label>
+                  <label class="offer-detail-level-field__label" for="offer_detail_level_visible_input" data-i18n-id="booking.offer.visible_detail_level">Customer-facing offer detail level</label>
                   <select id="offer_detail_level_visible_input" class="visually-hidden" tabindex="-1" aria-hidden="true"></select>
-                  <div id="offer_detail_level_visible_pill" class="offer-detail-level-pill" role="group" aria-label="Customer-facing offer detail level"></div>
+                  <div id="offer_detail_level_visible_pill" class="offer-detail-level-pill" role="group" aria-label="Customer-facing offer detail level" data-i18n-aria-label-id="booking.offer.visible_detail_level"></div>
                 </div>
                 <span id="offer_visible_pricing_hint" class="micro booking-inline-status offer-detail-level-panel__hint"></span>
               </div>
@@ -730,7 +730,7 @@
                 <table class="backend-table" id="offer_components_table"></table>
               </div>
               <div class="backend-controls booking-offer-editor-head">
-                <h3 class="booking-offer-editor-head__title">Additional items</h3>
+                <h3 class="booking-offer-editor-head__title" data-i18n-id="booking.offer.pricing_header_additional_items">Additional items</h3>
               </div>
               <div class="backend-table-wrap" style="margin-bottom: 1rem;">
                 <table class="backend-table" id="offer_additional_items_table"></table>
@@ -760,7 +760,7 @@
               </div>
               <div class="booking-generated-offer-route">
                 <div class="booking-generated-offers-actions">
-                  <button class="btn btn-ghost booking-offer-add-btn" id="generate_offer_btn" type="button" data-requires-clean-state data-clean-state-hint-id="generate_offer_dirty_hint">Create New PDF</button>
+                  <button class="btn btn-ghost booking-offer-add-btn" id="generate_offer_btn" type="button" data-requires-clean-state data-clean-state-hint-id="generate_offer_dirty_hint" data-i18n-id="booking.offer.create_new_pdf">Create New PDF</button>
                   <span id="generate_offer_dirty_hint" class="micro booking-inline-status booking-generated-offers-actions__hint"></span>
                 </div>
               </div>
@@ -811,7 +811,7 @@
                   <select id="pricing_currency_input"></select>
                 </div>
                 <div class="field">
-                  <label for="pricing_agreed_net_input" id="pricing_agreed_net_label">Agreed Net Amount (USD)</label>
+                  <label for="pricing_agreed_net_input" id="pricing_agreed_net_label" data-i18n-id="booking.pricing.agreed_net_amount">Agreed Net Amount (USD)</label>
                   <input id="pricing_agreed_net_input" type="number" min="0" step="1" />
                 </div>
               </div>
@@ -871,7 +871,7 @@
                 <div class="field" id="invoice_components_field"></div>
 
                 <div class="field">
-                  <label for="invoice_due_amount_input" id="invoice_due_amount_label">Due Amount (USD, optional)</label>
+                  <label for="invoice_due_amount_input" id="invoice_due_amount_label" data-i18n-id="booking.invoice_due_amount_optional">Due Amount (USD, optional)</label>
                   <input id="invoice_due_amount_input" type="number" min="1" step="1" />
                 </div>
                 <div class="field">
@@ -922,23 +922,23 @@
     <div class="booking-page-overlay" id="travel_plan_translate_overlay" hidden aria-hidden="true">
       <div class="booking-page-overlay__panel" role="status" aria-live="assertive">
         <span class="booking-page-overlay__spinner" aria-hidden="true"></span>
-        <span class="booking-page-overlay__text" id="travel_plan_translate_overlay_text">Translating... Please wait.</span>
+        <span class="booking-page-overlay__text" id="travel_plan_translate_overlay_text" data-i18n-id="booking.translation.translating_overlay_generic">Translating... Please wait.</span>
       </div>
     </div>
 
     <div class="modal offer-detail-level-confirm" id="offer_detail_level_confirm_modal" hidden role="dialog" aria-modal="true" aria-labelledby="offer_detail_level_confirm_title">
       <div class="modal-panel offer-detail-level-confirm__panel" role="document">
         <div class="modal-head">
-          <h2 id="offer_detail_level_confirm_title">Destructive internal offer detail level change</h2>
-          <button class="btn btn-ghost" id="offer_detail_level_confirm_close_btn" type="button" aria-label="Close offer detail level warning">&times;</button>
+          <h2 id="offer_detail_level_confirm_title" data-i18n-id="booking.offer.internal_detail_level_warning_title">Destructive internal offer detail level change</h2>
+          <button class="btn btn-ghost" id="offer_detail_level_confirm_close_btn" type="button" aria-label="Close offer detail level warning" data-i18n-aria-label-id="booking.offer.close_internal_detail_level_warning">&times;</button>
         </div>
         <div class="modal-body">
           <div class="offer-detail-level-confirm__copy">
-            <p id="offer_detail_level_confirm_message">Changing the internal offer detail level is destructive. Existing internal pricing rows will be deleted and rebuilt for the selected structure.</p>
+            <p id="offer_detail_level_confirm_message" data-i18n-id="booking.offer.internal_detail_level_warning_body">Changing the internal offer detail level is destructive. Existing internal pricing rows will be deleted and rebuilt for the selected structure.</p>
           </div>
           <div class="offer-detail-level-confirm__actions">
-            <button class="btn btn-ghost" id="offer_detail_level_confirm_cancel_btn" type="button">Cancel</button>
-            <button class="btn btn-primary" id="offer_detail_level_confirm_accept_btn" type="button">Continue</button>
+            <button class="btn btn-ghost" id="offer_detail_level_confirm_cancel_btn" type="button" data-i18n-id="common.cancel">Cancel</button>
+            <button class="btn btn-primary" id="offer_detail_level_confirm_accept_btn" type="button" data-i18n-id="booking.offer.continue">Continue</button>
           </div>
         </div>
       </div>

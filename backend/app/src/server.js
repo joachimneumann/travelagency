@@ -210,6 +210,7 @@ const applicationSupport = Object.freeze({
 });
 
 export async function createBackendHandler({ port = PORT } = {}) {
+  await moveDirectoryIfNeeded(RUNTIME_PATHS.legacyToursDir, RUNTIME_PATHS.toursDir);
   await moveDirectoryIfNeeded(RUNTIME_PATHS.legacyInvoicesDir, RUNTIME_PATHS.invoicesDir);
   await moveDirectoryIfNeeded(RUNTIME_PATHS.legacyGeneratedOffersDir, RUNTIME_PATHS.generatedOffersDir);
   await moveDirectoryIfNeeded(RUNTIME_PATHS.legacyBookingTravelPlanAttachmentsDir, RUNTIME_PATHS.bookingTravelPlanAttachmentsDir);

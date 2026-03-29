@@ -3,16 +3,19 @@ cd /arv/asiatravelplan
 
 
 ## export to ATP
-scp -r content atp:/srv/asiatravelplan
+rsync -av content/atp_staff/ atp:/srv/asiatravelplan/content/atp_staff/
+rsync -av content/tours/ atp:/srv/asiatravelplan/content/tours/
 
 ## import from ATP
-scp -r atp:/srv/asiatravelplan/content .
-
+rsync -av atp:/srv/asiatravelplan/content/atp_staff/ content/atp_staff/
+rsync -av atp:/srv/asiatravelplan/content/tours/ content/tours/
 
 
 
 ## copy to backup
-cp -r content/atp_staff backup
+rsync -av content/atp_staff/ backup/atp_staff/
+rsync -av content/tours/ backup/tours/
 
 ## restore from backup
-cp -r backup/* content
+rsync -av backup/atp_staff/ content/atp_staff/
+rsync -av backup/tours/ content/tours/

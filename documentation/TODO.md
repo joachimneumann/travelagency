@@ -5,7 +5,26 @@ Then Automatically derive the stage and write a description of the stage and las
 
 # TODO
 
+* deposit received not i18n
+Remove "reset tour search in hero
+
+offer not in VN
+
+Tour data in contect/tour
+with backup
+
+staging: git write persmissions
+
+all tour titles: FAKE
+
 * voice to text with Voquill
+
+When backend in vietnamese:
+translate VI -> all, not english to all
+customer language VI and staff language VI: no translation needed
+
+When staff language changes to en? translate all???? what?
+
 
 "Your ATP guide xxx" section when creating the PDF:
 - rephrase to "Assisted by our team member xxx"

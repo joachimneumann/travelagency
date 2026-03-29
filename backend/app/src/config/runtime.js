@@ -25,7 +25,10 @@ export const REPO_ROOT = path.resolve(APP_ROOT, "..", "..");
 export const DATA_ROOT = path.resolve(normalizeText(process.env.BACKEND_DATA_DIR) || path.join(APP_ROOT, "data"));
 export const DATA_PATH = path.resolve(normalizeText(process.env.STORE_FILE) || path.join(DATA_ROOT, "store.json"));
 export const CONTENT_ROOT = resolveConfigPathFromRepoRoot(normalizeText(process.env.CONTENT_ROOT || "content"));
-export const TOURS_DIR = path.join(DATA_ROOT, "tours");
+export const LEGACY_TOURS_DIR = path.join(DATA_ROOT, "tours");
+export const TOURS_DIR = resolveConfigPathFromRepoRoot(
+  normalizeText(process.env.TOURS_DIR || process.env.TOURS_ROOT || path.join("content", "tours"))
+);
 export const PDFS_ROOT = path.join(DATA_ROOT, "pdfs");
 export const INVOICES_DIR = path.join(PDFS_ROOT, "invoices");
 export const GENERATED_OFFERS_DIR = path.join(PDFS_ROOT, "generated_offers");
@@ -245,6 +248,7 @@ export const RUNTIME_PATHS = Object.freeze({
   dataRoot: DATA_ROOT,
   contentRoot: CONTENT_ROOT,
   dataPath: DATA_PATH,
+  legacyToursDir: LEGACY_TOURS_DIR,
   pdfsRoot: PDFS_ROOT,
   toursDir: TOURS_DIR,
   invoicesDir: INVOICES_DIR,
