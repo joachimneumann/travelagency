@@ -866,8 +866,9 @@
   "tour.subtitle_loading": "Dang tai tour...",
   "tour.translation.all_done": "Đã cập nhật tất cả bản dịch.",
   "tour.translation.done": "Đã cập nhật bản dịch.",
-  "tour.translation.missing_source": "Hãy nhập nội dung tiếng Anh trước.",
-  "tour.translation.translate_all": "EN → TẤT CẢ",
-  "tour.translation.translating": "Đang dịch...",
-  "tour.translation.translating_all": "Đang dịch tất cả ngôn ngữ..."
+  "tour.translation.missing_source": "Hãy nhập nội dung {sourceLanguage} trước.",
+  "tour.translation.translate_all": "{source} → TẤT CẢ",
+  "tour.translation.translate_one": "{source} → {target}",
+  "tour.translation.translating": "Đang dịch từ {sourceLanguage}...",
+  "tour.translation.translating_all": "Đang dịch tất cả ngôn ngữ từ {sourceLanguage}..."
 }

@@ -1729,6 +1729,48 @@ test("tour page reads month options from the generated catalogs layer", async ()
   );
 });
 
+test("tour page uses the active backend language as the localized editor source", async () => {
+  const tourPageModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "tour.js");
+  const backendEnI18nPath = path.resolve(__dirname, "..", "..", "..", "frontend", "data", "i18n", "backend", "en.json");
+  const backendViI18nPath = path.resolve(__dirname, "..", "..", "..", "frontend", "data", "i18n", "backend", "vi.json");
+  const [tourSource, backendEnI18n, backendViI18n] = await Promise.all([
+    readFile(tourPageModulePath, "utf8"),
+    readFile(backendEnI18nPath, "utf8"),
+    readFile(backendViI18nPath, "utf8")
+  ]);
+
+  assert.match(
+    tourSource,
+    /function currentTourEditingLang\(\)\s*\{[\s\S]*currentBackendLang\(\)/,
+    "Tour page should derive its editing source from the current backend language selector"
+  );
+  assert.match(
+    tourSource,
+    /const sourceLang = currentTourEditingLang\(\);[\s\S]*source_lang: sourceLang/,
+    "Tour field translation requests should send the active backend language as the source language"
+  );
+  assert.doesNotMatch(
+    tourSource,
+    /source_lang:\s*"en"/,
+    "Tour field translation requests must not hard-code English as the source language"
+  );
+  assert.match(
+    tourSource,
+    /orderedTourTextLanguages\(\)\.map\([\s\S]*tour\.translation\.translate_one/,
+    "Tour localized editors should rebuild their translation buttons from the active editing language"
+  );
+  assert.match(
+    backendEnI18n,
+    /"tour\.translation\.translate_one": "\{source\} → \{target\}"/,
+    "English backend strings should provide the dynamic tour translation button label"
+  );
+  assert.match(
+    backendViI18n,
+    /"tour\.translation\.translate_one": "\{source\} → \{target\}"/,
+    "Vietnamese backend strings should provide the dynamic tour translation button label"
+  );
+});
+
 test("travel style catalog stays generated from config and exposed through the generated schema helpers", async () => {
   const configPath = path.resolve(__dirname, "..", "..", "..", "config", "tour_style_catalog.json");
   const generatedCatalogPath = path.resolve(__dirname, "..", "..", "..", "shared", "generated", "tour_style_catalog.js");

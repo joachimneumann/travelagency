@@ -866,8 +866,9 @@
   "tour.subtitle_loading": "Loading tour...",
   "tour.translation.all_done": "All translations updated.",
   "tour.translation.done": "Translation updated.",
-  "tour.translation.missing_source": "Add English text first.",
-  "tour.translation.translate_all": "EN → ALL",
-  "tour.translation.translating": "Translating...",
-  "tour.translation.translating_all": "Translating all languages..."
+  "tour.translation.missing_source": "Add {sourceLanguage} text first.",
+  "tour.translation.translate_all": "{source} → ALL",
+  "tour.translation.translate_one": "{source} → {target}",
+  "tour.translation.translating": "Translating from {sourceLanguage}...",
+  "tour.translation.translating_all": "Translating all languages from {sourceLanguage}..."
 }
