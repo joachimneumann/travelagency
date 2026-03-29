@@ -240,6 +240,7 @@ async function requestTourTranslation(field, targetLang, sourceText) {
   if (!Object.keys(entries).length) return null;
 
   const request = tourTranslateFieldsRequest({
+    baseURL: apiOrigin,
     body: {
       source_lang: "en",
       target_lang: targetLang,
