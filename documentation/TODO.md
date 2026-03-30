@@ -5,32 +5,7 @@ Then Automatically derive the stage and write a description of the stage and las
 
 # TODO
 
-* deposit received not i18n
-Remove "reset tour search in hero
-
-offer not in VN
-
-Tour data in contect/tour
-with backup
-
 staging: git write persmissions
-
-all tour titles: FAKE
-
-* voice to text with Voquill
-
-ok, now follow the same approach for the booking.html page:
-
-I only want to change the language of the atp_staff in the top right (between Vietnamese and English). 
-remove editing_language and use the selected language instead. refactor the page accordingly.
-
-
-
-"Your ATP guide xxx" section when creating the PDF:
-- rephrase to "Assisted by our team member xxx"
-- when the Qualification is empty in the atps_staff, use the mobile description
-
-* atp_admin can not be assigned to a booking, only atp_staff
 
 # tour guide / ATP staff
 
