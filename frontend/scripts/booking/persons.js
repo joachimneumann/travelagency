@@ -55,7 +55,6 @@ export function createBookingPersonsModule(ctx) {
     renderBookingData,
     renderActionControls,
     setBookingSectionDirty,
-    hasUnsavedBookingChanges,
     reloadBookingPageForLatestTravelerData
   } = ctx;
 
@@ -915,13 +914,17 @@ export function createBookingPersonsModule(ctx) {
     if (!draft) return;
     const personId = normalizeText(draft.id);
     if (!draft._is_new && personId) {
-      if (typeof hasUnsavedBookingChanges === "function" && hasUnsavedBookingChanges()) {
-        setPersonsEditorStatus(bookingT(
-          "booking.persons.loading_latest_blocked_by_unsaved",
-          "Save or discard page edits before loading the latest traveler data."
+      if (isPersonDraftDirtyAgainstBooking(draft, state.booking, index)) {
+        const personLabel = normalizeText(draft.name) || bookingT("booking.persons.this_person", "this person");
+        const shouldDiscardLocalChanges = window.confirm(bookingT(
+          "booking.persons.loading_latest_discard_confirm",
+          "Discard unsaved changes for {name} and load the latest traveler data?",
+          { name: personLabel }
         ));
-        openPersonModal(index);
-        return;
+        if (!shouldDiscardLocalChanges) {
+          openPersonModal(index);
+          return;
+        }
       }
       setPersonsEditorStatus(bookingT("booking.persons.loading_latest", "Loading latest traveler data..."));
       const refreshed = await refreshPersonDraftFromBackend(personId);
@@ -1639,6 +1642,54 @@ export function createBookingPersonsModule(ctx) {
     });
   }
 
+  function applyLatestTravelerPayload(booking = null, focusedPersonId = "") {
+    if (!booking || typeof booking !== "object") return false;
+    const previousBooking = state.booking;
+    const previousDrafts = Array.isArray(state.personDrafts)
+      ? state.personDrafts.map((draft) => JSON.parse(JSON.stringify(draft)))
+      : [];
+    const activePersonId = state.active_person_id;
+    const normalizedFocusedPersonId = normalizeText(focusedPersonId);
+    state.booking = {
+      ...(state.booking && typeof state.booking === "object" ? state.booking : {}),
+      persons: Array.isArray(booking.persons) ? booking.persons : [],
+      persons_revision: Number.isInteger(Number(booking.persons_revision))
+        ? Math.max(0, Number(booking.persons_revision))
+        : Number.isInteger(Number(state.booking?.persons_revision))
+          ? Math.max(0, Number(state.booking.persons_revision))
+          : 0,
+      updated_at: normalizeText(booking.updated_at) || normalizeText(state.booking?.updated_at) || "",
+      last_action_at: normalizeText(booking.last_action_at) || normalizeText(state.booking?.last_action_at) || ""
+    };
+    state.personDrafts = getBookingPersons(state.booking).map(clonePersonDraft);
+    previousDrafts.forEach((draft, index) => {
+      const draftId = normalizeText(draft?.id);
+      if (!draftId || draftId === normalizedFocusedPersonId) return;
+      if (draft._is_new === true) {
+        if (personDraftHasMeaningfulInput(draft)) {
+          state.personDrafts.push(draft);
+        }
+        return;
+      }
+      if (!isPersonDraftDirtyAgainstBooking(draft, previousBooking, index)) return;
+      const nextIndex = state.personDrafts.findIndex((person) => normalizeText(person?.id) === draftId);
+      if (nextIndex < 0) return;
+      state.personDrafts[nextIndex] = draft;
+    });
+    if (activePersonId) {
+      state.active_person_index = state.personDrafts.findIndex((person) => normalizeText(person?.id) === activePersonId);
+      if (state.active_person_index < 0) {
+        state.active_person_id = "";
+        finalizeClosePersonModal();
+      } else {
+        state.active_person_id = state.personDrafts[state.active_person_index]?.id || "";
+      }
+    }
+    markPersonsSnapshotClean(state.booking);
+    updatePersonsDirtyState();
+    return true;
+  }
+
   function applyBookingPayload(payload = null) {
     const activePersonId = state.active_person_id;
     if (payload?.booking) {
@@ -1702,6 +1753,7 @@ export function createBookingPersonsModule(ctx) {
   }
 
   return {
+    applyLatestTravelerPayload,
     bindEvents,
     applyBookingPayload,
     renderPersonsEditor,

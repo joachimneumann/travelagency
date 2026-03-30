@@ -224,16 +224,7 @@ export function createBookingPageDataController(ctx) {
   async function loadBookingPage() {
     clearStatus();
     const requestedContentLang = normalizeBookingContentLang(state.contentLang || bookingContentLang("en"));
-    const requests = [
-      fetchApi(withBookingContentLang(bookingDetailRequest({ baseURL: apiOrigin, params: { booking_id: state.id } }).url)),
-      state.permissions.canReadAssignmentDirectory
-        ? fetchApi(keycloakUsersRequest({ baseURL: apiOrigin }).url, { suppressNotFound: true })
-        : Promise.resolve(null),
-      state.permissions.canReadAssignmentDirectory
-        ? fetchApi(staffProfilesRequest({ baseURL: apiOrigin }).url, { suppressNotFound: true })
-        : Promise.resolve(null)
-    ];
-    const [bookingPayload, usersPayload, staffProfilesPayload] = await Promise.all(requests);
+    const bookingPayload = await fetchApi(withBookingContentLang(bookingDetailRequest({ baseURL: apiOrigin, params: { booking_id: state.id } }).url));
     if (!bookingPayload) return false;
 
     const incomingBooking = bookingPayload?.booking || null;
@@ -247,6 +238,16 @@ export function createBookingPageDataController(ctx) {
         return await loadBookingPage();
       }
     }
+
+    const requests = [
+      state.permissions.canReadAssignmentDirectory
+        ? fetchApi(keycloakUsersRequest({ baseURL: apiOrigin }).url, { suppressNotFound: true })
+        : Promise.resolve(null),
+      state.permissions.canReadAssignmentDirectory
+        ? fetchApi(staffProfilesRequest({ baseURL: apiOrigin }).url, { suppressNotFound: true })
+        : Promise.resolve(null)
+    ];
+    const [usersPayload, staffProfilesPayload] = await Promise.all(requests);
     state.keycloakUsers = mergeAssignableUsersWithStaffProfiles(usersPayload?.items, staffProfilesPayload?.items);
     applyBookingPayload(bookingPayload, { forceDraftReset: true });
     syncContentLanguageSelector?.();
@@ -266,8 +267,13 @@ export function createBookingPageDataController(ctx) {
     return true;
   }
 
+  async function fetchLatestBookingDetail() {
+    return await fetchApi(withBookingContentLang(bookingDetailRequest({ baseURL: apiOrigin, params: { booking_id: state.id } }).url));
+  }
+
   return {
     fetchBookingMutation,
+    fetchLatestBookingDetail,
     loadAuthStatus,
     loadBookingPage
   };

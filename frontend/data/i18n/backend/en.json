@@ -442,6 +442,7 @@
   "booking.persons.hotel_room_preference.single_room": "Single room",
   "booking.persons.hotel_room_smoking.non_smoker": "Non-smoker",
   "booking.persons.hotel_room_smoking.smoker": "Smoker",
+  "booking.persons.loading_latest_discard_confirm": "Discard unsaved changes for {name} and load the latest traveler data?",
   "booking.persons.loading_latest": "Loading latest traveler details...",
   "booking.persons.mismatch_less": "The web form indicates {declared}, but this booking currently has {listed}.",
   "booking.persons.mismatch_declared": "The web form indicated {declared}.",

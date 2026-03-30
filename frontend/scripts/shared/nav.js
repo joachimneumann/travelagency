@@ -89,7 +89,7 @@ export function mountBackendNav(mount, options = {}) {
         <div class="backend-section-nav" role="tablist" aria-label="${backendT("a11y.backend_sections", "Backend sections")}">
           ${buildSectionButton("bookings", backendT("nav.bookings", "Bookings"), { type: "image", src: "assets/img/profile_booking.png", size: "large" })}
           ${buildSectionButton("settings", backendT("nav.settings", "Reports and Settings"), { type: "image", src: "assets/img/profile_person.png", size: "large" })}
-          ${buildSectionButton("tours", backendT("nav.tours", "Tours"), "🗺️")}
+          ${buildSectionButton("tours", backendT("nav.tours", "Tours"), { type: "image", src: "assets/img/hat.png", size: "large" })}
         </div>
       </div>
 

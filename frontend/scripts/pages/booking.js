@@ -860,7 +860,15 @@ async function loadBookingPage() {
 }
 
 async function reloadBookingPageForLatestTravelerData(_personId = "") {
-  return await loadBookingPage();
+  const latestBookingPayload = await bookingPageDataController.fetchLatestBookingDetail();
+  if (!latestBookingPayload?.booking) return false;
+  const applied = personsModule.applyLatestTravelerPayload(latestBookingPayload.booking, _personId);
+  if (!applied) return false;
+  renderBookingHeader();
+  renderBookingData();
+  renderActionControls();
+  renderPersonsEditor();
+  return true;
 }
 
 function renderBookingHeader() {
@@ -1652,7 +1660,6 @@ const personsModule = createBookingPersonsModule({
   renderActionControls,
   setBookingSectionDirty,
   updateCleanStateActionAvailability,
-  hasUnsavedBookingChanges,
   reloadBookingPageForLatestTravelerData
 });
 

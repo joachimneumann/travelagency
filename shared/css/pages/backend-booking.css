@@ -397,6 +397,7 @@
   display: grid;
   gap: 1.6rem;
   padding: 2.1rem 2.4rem 2.3rem;
+  margin-top: 1rem;
   border: 1px solid rgba(239, 233, 223, 0.95);
   border-radius: 34px;
   background: rgba(255, 252, 247, 0.99);

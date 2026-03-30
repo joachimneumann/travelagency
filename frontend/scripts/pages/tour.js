@@ -563,7 +563,6 @@ async function loadTour() {
   const styles = tour_styles(tour);
   updateHeader(tour, destinations, styles);
 
-  setInput("tour_id", tour.id || "");
   setInput("tour_priority", toInputNumber(tour.priority));
   setInput("tour_seasonality_start_month", tour.seasonality_start_month || "");
   setInput("tour_seasonality_end_month", tour.seasonality_end_month || "");
@@ -607,7 +606,6 @@ async function initializeNewTourForm() {
 
   updateHeader({ title: backendT("tour.new_title", "New tour") }, [], []);
   if (els.subtitle) els.subtitle.textContent = backendT("tour.create_subtitle", "Create a new tour");
-  setInput("tour_id", "(new)");
   setInput("tour_priority", "50");
   setInput("tour_seasonality_start_month", "");
   setInput("tour_seasonality_end_month", "");
@@ -873,7 +871,7 @@ function applyTourPermissions() {
     els.titleInput.disabled = !state.permissions.canEditTours;
   }
   if (state.permissions.canEditTours) return;
-  if (els.changeImageBtn) els.changeImageBtn.style.display = "none";
+  if (els.changeImageBtn) els.changeImageBtn.disabled = true;
   if (els.imageUpload) els.imageUpload.disabled = true;
   if (els.form) {
     els.form.querySelectorAll("input, textarea, select, button").forEach((el) => {
@@ -952,14 +950,12 @@ function updateHeroImage(src) {
   if (!els.heroImage) return;
   const value = String(src || "").trim();
   if (!value) {
-    els.heroImage.src = "";
+    els.heroImage.src = "assets/img/profile_booking.png";
     els.heroImage.classList.add("empty");
-    els.heroImage.style.display = "none";
     return;
   }
   els.heroImage.src = absolutizeApiUrl(value);
   els.heroImage.classList.remove("empty");
-  els.heroImage.style.display = "block";
 }
 
 function updateHeader(tour, destinations, styles) {

@@ -40,10 +40,6 @@ booking.js:149 [booking-save] Save task finished. {booking_id: 'booking_dec5e3e2
 booking.js:149 [booking-save] Save flow stopped because a task returned false. {booking_id: 'booking_dec5e3e2-bef7-44f2-8dc9-22b0ad162e3b', task: 'Booking details', dirty: {…}}
 booking.js:149 [booking-save] Save flow finalized. {booking_id: 'booking_dec5e3e2-bef7-44f2-8dc9-22b0ad162e3b', save_completed: false, duration_ms: 12, page_dirty_bar_status: '', dirty: {…}}
 
-translation of backend texts
-============================
-When an english backend text changes in frontend/data/i18n/backend/en.json (like for example booking.travel_plan.day_notes recently), how can I make sure that the vietnamese backend texts are also updated wuth the corresponding translation? In these two backend files en.json and vi.json english is always the master and vietnamese is derrived by translation from english. Should we have a translate script? Add timestamps of edits? Add a dirty boolean to vi when an english text changes? Always translate immidiately or clean up after wards?
-
 Scrolling
 =========
 add a shadow to make scrolling enter below the sticky bar, gradually fading our over 20px (scrolling.png)
@@ -51,21 +47,6 @@ add a shadow to make scrolling enter below the sticky bar, gradually fading our 
 Travler
 =======
 * when clicking on the traveler, load the data from the backend. The traveler might have submitted his data.
-
-Service
-=======
-* Service in travel plan day:
-Move the picture up, to the top right of the expanded service. Use a placeholder picture if no picture is set. to change: clickable as in ATP staff profile picture editing.
-
-* Look at the source code. Where is the Service Kind element used? 
-  If only accomodation, replace the service kind with a with "multi-day" checkbox (and consequently a "days" numberic textfield).
-* Location (optional)
-* Service title -> Summary: Service provided
-* Time information -> When?
-* time range: improve layout (time_range.png)
-* Details -> Notes about the Service
-* "Supplier / financial note (ATP internal) -> ATP internal Notes> placeholder: "Supplier information / Financial notes"
-
 
 emergency.html
 =============
@@ -79,10 +60,6 @@ offer
 Welcome PDF
 ===========
 * After accepting the offer (deposit paid) generate another "prepare yout journey" pdf that also includes travel documents with practical tips and emergency numbers. 
-
-Tours
-=====
-change picture as in ATP staff profile picture editing.
 
 Other
 =====

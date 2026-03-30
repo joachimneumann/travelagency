@@ -46,19 +46,12 @@
             </div>
             <div class="field full">
               <div class="tour-hero-row">
-                <img id="tour_hero_image" src="" alt="Tour hero" class="tour-hero-image" />
-                <div class="tour-hero-actions">
-                  <button class="btn btn-ghost" id="tour_change_image_btn" type="button" data-i18n-id="tour.change_image">Change image</button>
-                  <p class="micro" data-i18n-id="tour.image_help">Image is converted to WebP and resized to max 1000px automatically.</p>
-                </div>
+                <button class="tour-hero-image-button" id="tour_change_image_btn" type="button" data-i18n-aria-label-id="tour.change_image" aria-label="Change image">
+                  <img id="tour_hero_image" src="assets/img/profile_booking.png" alt="" class="tour-hero-image empty" />
+                </button>
+                <p class="micro" data-i18n-id="tour.image_help">Image is converted to WebP and resized to max 1000px automatically.</p>
               </div>
               <input id="tour_image_upload" name="tour_image_upload" type="file" accept="image/*" class="u-file-input-hidden" />
-            </div>
-            <div class="field full">
-              <div id="tour_short_description_editor"></div>
-            </div>
-            <div class="field full">
-              <div id="tour_highlights_editor"></div>
             </div>
             <div class="field">
               <label for="tour_seasonality_start_month" data-i18n-id="tour.seasonality_start">Seasonality Start Month</label>
@@ -87,8 +80,10 @@
               <input id="tour_priority" name="priority" type="number" min="0" max="100" step="1" />
             </div>
             <div class="field full">
-              <label for="tour_id" data-i18n-id="tour.id_label">ID (read-only)</label>
-              <input id="tour_id" name="id" type="text" readonly />
+              <div id="tour_short_description_editor"></div>
+            </div>
+            <div class="field full">
+              <div id="tour_highlights_editor"></div>
             </div>
           </form>
         </div>

@@ -3927,7 +3927,8 @@ textarea:focus-visible {
   align-items: start;
 }
 
-.settings-staff-editor__photo-button {
+.settings-staff-editor__photo-button,
+.tour-hero-image-button {
   appearance: none;
   border: 0;
   background: transparent;
@@ -3941,20 +3942,24 @@ textarea:focus-visible {
 }
 
 .settings-staff-editor__photo-button::before,
-.settings-staff-editor__photo-button::after {
+.settings-staff-editor__photo-button::after,
+.tour-hero-image-button::before,
+.tour-hero-image-button::after {
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.18s ease;
 }
 
-.settings-staff-editor__photo-button::before {
+.settings-staff-editor__photo-button::before,
+.tour-hero-image-button::before {
   content: "";
   position: absolute;
   inset: 0;
   background: color-mix(in srgb, var(--text-black) 38%, transparent);
 }
 
-.settings-staff-editor__photo-button::after {
+.settings-staff-editor__photo-button::after,
+.tour-hero-image-button::after {
   content: "✎";
   position: absolute;
   left: 50%;
@@ -3973,27 +3978,41 @@ textarea:focus-visible {
   line-height: 1;
 }
 
-.settings-staff-editor__photo-button:hover::before,
-.settings-staff-editor__photo-button:hover::after,
+.settings-staff-editor__photo-button:not(:disabled):hover::before,
+.settings-staff-editor__photo-button:not(:disabled):hover::after,
+.tour-hero-image-button:not(:disabled):hover::before,
+.tour-hero-image-button:not(:disabled):hover::after,
 .settings-staff-editor__photo-button:focus-visible::before,
-.settings-staff-editor__photo-button:focus-visible::after {
+.settings-staff-editor__photo-button:focus-visible::after,
+.tour-hero-image-button:focus-visible::before,
+.tour-hero-image-button:focus-visible::after {
   opacity: 1;
 }
 
-.settings-staff-editor__photo-button:focus-visible {
+.settings-staff-editor__photo-button:focus-visible,
+.tour-hero-image-button:focus-visible {
   outline: 2px solid var(--focus-ring);
   outline-offset: 4px;
   border-radius: 1rem;
 }
 
-.settings-staff-editor__photo {
-  width: 7.5rem;
-  height: 7.5rem;
+.settings-staff-editor__photo-button:disabled,
+.tour-hero-image-button:disabled {
+  cursor: default;
+}
+
+.settings-staff-editor__photo,
+.tour-hero-image {
   object-fit: cover;
-  border-radius: 1rem;
   border: 1px solid var(--line);
   background: var(--surface-muted);
   pointer-events: none;
+}
+
+.settings-staff-editor__photo {
+  width: 7.5rem;
+  height: 7.5rem;
+  border-radius: 1rem;
 }
 
 .settings-staff-editor__hero-copy {
@@ -4132,38 +4151,40 @@ textarea:focus-visible {
   margin: 0.35rem 0 0;
 }
 
-.backend-tour-form .field:last-of-type,
-.backend-tour-form .field:nth-last-of-type(2),
 .backend-tour-form .backend-controls {
   grid-column: 1 / -1;
 }
 
 .tour-hero-row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.8rem;
+  display: grid;
+  justify-items: center;
+  gap: 0.55rem;
   padding: 0.5rem 0 0.75rem;
   margin: 0.25rem 0 0.5rem;
 }
 
+.tour-hero-image-button {
+  width: min(100%, 420px);
+}
+
 .tour-hero-image {
   width: 100%;
-  max-width: 420px;
-  border-radius: 10px;
+  aspect-ratio: 16 / 9;
+  display: block;
+  border-radius: 1rem;
   border: 1px solid var(--line-soft);
-  display: none;
 }
 
-.tour-hero-actions {
-  display: grid;
-  gap: 0.35rem;
-  align-items: start;
+.tour-hero-image.empty {
+  object-fit: contain;
+  padding: 1rem;
+  background: color-mix(in srgb, var(--surface-muted) 82%, var(--white));
 }
 
-.tour-hero-actions .micro {
+.tour-hero-row .micro {
   margin: 0;
-  max-width: 220px;
+  max-width: 420px;
+  text-align: center;
 }
 
 .backend-checkbox-grid {
@@ -4635,18 +4656,21 @@ textarea:focus-visible {
   }
 
   .tour-hero-row {
-    flex-direction: column;
-    align-items: stretch;
+    justify-items: stretch;
     padding: 0.4rem 0 0.55rem;
     margin: 0.1rem 0 0.35rem;
   }
 
-  .tour-hero-image {
-    max-width: 100%;
+  .tour-hero-image-button {
+    width: 100%;
   }
 
-  .tour-hero-actions .micro {
-    max-width: 100%;
+  .tour-hero-image {
+    width: 100%;
+  }
+
+  .tour-hero-row .micro {
+    max-width: none;
   }
 
   .settings-staff-editor__hero,
