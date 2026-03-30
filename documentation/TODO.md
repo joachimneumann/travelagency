@@ -59,14 +59,9 @@ Travler
 * 1 traveling: Joachim Neumann (Primary contact) --> 1 Traveler: Joachim Neumann
 * "The web form indicates 2 travelers, but this booking currently has one traveler only." -> "The web form indicated 2 travelers"
 
-
 Travel Plan
 ===========
 Service in the same blue as day now
-* Travel Plan subtitle: 2 days · 3 services · 1 uncovered --> 2 days · 3 services
-* --travel-plan-content-offset --> 5rem
-* Customer-facing additional notes about this day -> Notes about the day
-* Day title: day as text, Summary, overnight, X services
 
 Service
 =======
