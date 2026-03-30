@@ -580,23 +580,6 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         return validateShape(value, TRAVEL_PLAN_SERVICE_IMAGE_DELETE_REQUEST_SCHEMA);
       }
 
-      export const TRAVEL_PLAN_SERVICE_IMAGE_REORDER_REQUEST_SCHEMA = {
-        name: "TravelPlanServiceImageReorderRequest",
-        domain: "api",
-        module: "api",
-        sourceType: "openapi.components.schemas.TravelPlanServiceImageReorderRequest",
-        requireOneOf: [],
-        fields: [
-    schemaField({"name":"expected_travel_plan_revision","required":false,"wireName":"expected_travel_plan_revision"}, SHARED_FIELD_DEFS.FIELD_17),
-    schemaField({"name":"image_ids","required":false,"wireName":"image_ids"}, SHARED_FIELD_DEFS.FIELD_10),
-    schemaField({"name":"actor","required":false,"wireName":"actor"}, SHARED_FIELD_DEFS.FIELD_1)
-        ]
-      };
-
-      export function validateTravelPlanServiceImageReorderRequest(value) {
-        return validateShape(value, TRAVEL_PLAN_SERVICE_IMAGE_REORDER_REQUEST_SCHEMA);
-      }
-
       export const TRAVEL_PLAN_ATTACHMENT_UPLOAD_REQUEST_SCHEMA = {
         name: "TravelPlanAttachmentUploadRequest",
         domain: "api",
@@ -2042,7 +2025,7 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
     schemaField({"name":"time_label","required":false,"wireName":"time_label"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"time_point","required":false,"wireName":"time_point"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"kind","required":true,"wireName":"kind"}, SHARED_FIELD_DEFS.FIELD_107),
-    schemaField({"name":"accommodation_days","required":false,"wireName":"accommodation_days"}, SHARED_FIELD_DEFS.FIELD_17),
+    schemaField({"name":"duration_days","required":false,"wireName":"duration_days"}, SHARED_FIELD_DEFS.FIELD_17),
     schemaField({"name":"title","required":false,"wireName":"title"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"details","required":false,"wireName":"details"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"location","required":false,"wireName":"location"}, SHARED_FIELD_DEFS.FIELD_1),
@@ -2051,7 +2034,7 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
     schemaField({"name":"end_time","required":false,"wireName":"end_time"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"financial_coverage_status","required":true,"wireName":"financial_coverage_status"}, SHARED_FIELD_DEFS.FIELD_132),
     schemaField({"name":"financial_note","required":false,"wireName":"financial_note"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"images","required":false,"wireName":"images"}, SHARED_FIELD_DEFS.FIELD_133),
+    schemaField({"name":"image","required":false,"wireName":"image"}, SHARED_FIELD_DEFS.FIELD_133),
     schemaField({"name":"copied_from","required":false,"wireName":"copied_from"}, SHARED_FIELD_DEFS.FIELD_134)
         ]
       };
@@ -2236,6 +2219,7 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         ]
       };
 
-export function validateBookingTravelPlanServiceImageFocalPoint(value) {
-  return validateShape(value, BOOKING_TRAVEL_PLAN_SERVICE_IMAGE_FOCAL_POINT_SCHEMA);
-}
+      export function validateBookingTravelPlanServiceImageFocalPoint(value) {
+        return validateShape(value, BOOKING_TRAVEL_PLAN_SERVICE_IMAGE_FOCAL_POINT_SCHEMA);
+      }
+

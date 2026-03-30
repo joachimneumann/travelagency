@@ -11,13 +11,13 @@ export function publicBookingImagePath(normalizeText, relativePath) {
   return normalized ? `/public/v1/booking-images/${normalized}` : "";
 }
 
-export function normalizeItemImageRefs(images = []) {
-  const items = Array.isArray(images) ? images : [];
-  return items.map((image, index) => ({
+export function normalizeItemImageRef(image) {
+  if (!image || typeof image !== "object" || Array.isArray(image)) return null;
+  return {
     ...image,
-    sort_order: index,
-    is_primary: index === 0
-  }));
+    sort_order: 0,
+    is_primary: true
+  };
 }
 
 export function cloneTravelPlanLocalizedMap(value) {

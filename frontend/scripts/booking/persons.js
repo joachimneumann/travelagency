@@ -125,27 +125,10 @@ export function createBookingPersonsModule(ctx) {
       declared === 1 ? "{count} traveler" : "{count} travelers",
       { count: declared }
     );
-    if (listed < declared) {
-      const listedLabel = listed === 1
-        ? bookingT("booking.persons.one_traveler_only", "one traveler only")
-        : bookingT("booking.persons.traveler_many_only", "{count} travelers only", { count: listed });
-      return bookingT(
-        "booking.persons.mismatch_less",
-        "The web form indicates {declared}, but this booking currently has {listed}.",
-        { declared: declaredLabel, listed: listedLabel }
-      );
-    }
-    if (listed === 1) {
-      return bookingT(
-        "booking.persons.mismatch_one",
-        "The web form indicates {declared}, but this booking currently has one traveler.",
-        { declared: declaredLabel }
-      );
-    }
     return bookingT(
-      "booking.persons.mismatch_more",
-      "The web form indicates {declared}, but this booking currently has {listed} travelers.",
-      { declared: declaredLabel, listed }
+      "booking.persons.mismatch_declared",
+      "The web form indicated {declared}.",
+      { declared: declaredLabel }
     );
   }
 
@@ -156,8 +139,9 @@ export function createBookingPersonsModule(ctx) {
     els.personsMismatchWarning.hidden = !message;
   }
 
-  function buildCollapsedPersonSummary(person) {
+  function buildCollapsedPersonSummary(person, { includeMeta = true } = {}) {
     const personName = normalizeText(person?.name) || bookingT("booking.unnamed_person", "Unnamed person");
+    if (!includeMeta) return personName;
     const commentParts = [];
     const nationality = normalizeText(person?.nationality).toUpperCase();
     if (nationality) commentParts.push(nationality);
@@ -176,13 +160,21 @@ export function createBookingPersonsModule(ctx) {
       renderBookingSectionHeader(els.personsPanelSummary, { primary: bookingT("booking.no_persons", "No persons listed.") });
       return;
     }
-    const traveling = persons.filter((person) => isTravelingPerson(person)).map((person) => buildCollapsedPersonSummary(person));
-    const notTraveling = persons.filter((person) => !isTravelingPerson(person)).map((person) => buildCollapsedPersonSummary(person));
+    const traveling = persons
+      .filter((person) => isTravelingPerson(person))
+      .map((person) => buildCollapsedPersonSummary(person, { includeMeta: false }));
+    const notTraveling = persons
+      .filter((person) => !isTravelingPerson(person))
+      .map((person) => buildCollapsedPersonSummary(person, { includeMeta: false }));
     const lines = [
-      bookingT("booking.persons.traveling_summary", "{count} traveling: {people}", {
+      bookingT(
+        traveling.length === 1 ? "booking.persons.traveling_summary_one" : "booking.persons.traveling_summary_many",
+        traveling.length === 1 ? "{count} Traveler: {people}" : "{count} Travelers: {people}",
+        {
         count: traveling.length,
         people: traveling.length ? traveling.join(" · ") : bookingT("common.none", "none")
-      })
+        }
+      )
     ];
     if (notTraveling.length) {
       lines.push(bookingT("booking.persons.not_traveling_summary", "Not traveling: {people}", { people: notTraveling.join(" · ") }));

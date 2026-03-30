@@ -445,8 +445,7 @@ export function createBookingTravelPlanHandlers(deps) {
 
   const {
     handleUploadTravelPlanServiceImage,
-    handleDeleteTravelPlanServiceImage,
-    handleReorderTravelPlanServiceImages
+    handleDeleteTravelPlanServiceImage
   } = createBookingTravelPlanImageHandlers({
     readBodyJson,
     sendJson,
@@ -730,7 +729,6 @@ export function createBookingTravelPlanHandlers(deps) {
     handleImportTravelPlanService,
     handleUploadTravelPlanServiceImage,
     handleDeleteTravelPlanServiceImage,
-    handleReorderTravelPlanServiceImages,
     handleGetTravelPlanAttachmentPdf,
     handleUploadTravelPlanAttachment,
     handleDeleteTravelPlanAttachment,

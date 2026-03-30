@@ -735,7 +735,7 @@ test("service titles remain optional across save validation and UI state", async
   );
   assert.match(
     travelPlanSource,
-    /travel-plan-grid travel-plan-grid--item-kind[\s\S]*booking\.travel_plan\.kind_label[\s\S]*travel-plan-grid[\s\S]*booking\.travel_plan\.item_title[\s\S]*booking\.location/,
+    /travel-plan-service__overview-main[\s\S]*booking\.travel_plan\.kind_label[\s\S]*booking\.travel_plan\.item_title[\s\S]*(booking\.location|booking\.travel_plan\.location_optional)/,
     "Service editing should still show kind first, with title and location below it"
   );
   assert.doesNotMatch(
@@ -750,12 +750,12 @@ test("service titles remain optional across save validation and UI state", async
   );
   assert.match(
     travelPlanStyles,
-    /\.travel-plan-grid--item-kind \{[\s\S]*grid-template-columns: minmax\(220px, 280px\);/,
-    "Travel plan styles should keep the kind selector on its own row above title and location"
+    /\.travel-plan-grid--item-kind \{[\s\S]*grid-template-columns: minmax\(220px, 280px\) minmax\(240px, 1fr\);/,
+    "Travel plan styles should keep the kind and duration controls grouped above title and location"
   );
 });
 
-test("accommodation services expose a day-count helper and create linked copy days", async () => {
+test("travel-plan services expose a reusable duration helper and create linked copy days", async () => {
   const modelPath = path.resolve(__dirname, "..", "..", "..", "model", "entities", "travel_plan.cue");
   const travelPlanScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan.js");
   const travelPlanHelpersPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan_helpers.js");
@@ -786,53 +786,53 @@ test("accommodation services expose a day-count helper and create linked copy da
 
   assert.match(
     modelSource,
-    /accommodation_days\?:\s+>=1 & <=100 & int/,
-    "The travel-plan item model should persist an optional accommodation day count"
+    /duration_days\?:\s+>=1 & <=100 & int/,
+    "The travel-plan item model should persist an optional service duration day count"
   );
   assert.match(
     openApiSource,
-    /BookingTravelPlanService:[\s\S]*accommodation_days:[\s\S]*type: integer[\s\S]*minimum: 1[\s\S]*maximum: 100/,
-    "The generated OpenAPI schema should expose the accommodation day count on travel-plan items"
+    /BookingTravelPlanService:[\s\S]*duration_days:[\s\S]*type: integer[\s\S]*minimum: 1[\s\S]*maximum: 100/,
+    "The generated OpenAPI schema should expose the service duration day count on travel-plan items"
   );
   assert.match(
     generatedApiModelsSource,
-    /schemaField\(\{"name":"accommodation_days","required":false,"wireName":"accommodation_days"\}, SHARED_FIELD_DEFS\.FIELD_17\)/,
-    "The generated API models should include accommodation_days on BookingTravelPlanService"
+    /schemaField\(\{"name":"duration_days","required":false,"wireName":"duration_days"\}, SHARED_FIELD_DEFS\.FIELD_17\)/,
+    "The generated API models should include duration_days on BookingTravelPlanService"
   );
   assert.match(
     travelPlanHelpersSource,
-    /function normalizeAccommodationDays\(value, kind\)[\s\S]*normalizeItemKind\(kind\) !== "accommodation"[\s\S]*return parsed >= 1 && parsed <= 100 \? parsed : null;/,
-    "Travel-plan draft helpers should normalize the accommodation day count only for accommodation items"
+    /function resolveDurationDays\(rawItem\)[\s\S]*rawItem\?\.duration_days[\s\S]*rawItem\?\.accommodation_days[\s\S]*return 1;/,
+    "Travel-plan draft helpers should read the new duration field while still supporting legacy accommodation_days input"
   );
   assert.match(
     domainSource,
-    /function normalizeAccommodationDays\(value, kind\)[\s\S]*normalizeItemKind\(kind\) !== "accommodation"[\s\S]*return parsed >= 1 && parsed <= 100 \? parsed : null;/,
-    "Backend travel-plan normalization should persist the accommodation day count with the same range"
+    /function resolveDurationDays\(rawItem\)[\s\S]*rawItem\?\.duration_days[\s\S]*rawItem\?\.accommodation_days[\s\S]*return 1;/,
+    "Backend travel-plan normalization should persist the new duration field while still supporting legacy accommodation_days input"
   );
   assert.match(
     validationSource,
-    /code:\s*"accommodation_days_invalid"[\s\S]*Accommodation days must be between 1 and 100\./,
-    "Travel-plan validation should reject invalid accommodation day counts with structured metadata"
+    /code:\s*"duration_days_invalid"[\s\S]*Duration days must be between 1 and 100\./,
+    "Travel-plan validation should reject invalid service durations with structured metadata"
   );
   assert.match(
     travelPlanSource,
-    /function canCreateAccommodationDays\(item\)[\s\S]*normalizeAccommodationDays\(item\?\.accommodation_days\)[\s\S]*> 1/,
-    "Accommodation travel-plan items should derive Create days enablement from the day count"
+    /function canCreateServiceSpanDays\(item\)[\s\S]*resolveDurationDays\(item\) > 1/,
+    "Travel-plan items should derive Create days enablement from the service duration"
   );
   assert.match(
     travelPlanSource,
-    /function syncAccommodationCreateDaysButtonStates\(\)[\s\S]*createDaysButton\.disabled = !isEnabled;/,
-    "Travel-plan editing should include a live sync helper for accommodation Create days button state"
+    /function syncDurationCreateDaysButtonStates\(\)[\s\S]*createDaysButton\.disabled = !isEnabled;/,
+    "Travel-plan editing should include a live sync helper for Create days button state"
   );
   assert.match(
     travelPlanSource,
-    /data-travel-plan-service-field="accommodation_days"[\s\S]*data-travel-plan-create-days="[^"]*"[\s\S]*type="button"\$\{createDaysEnabled \? "" : " disabled"\}/,
-    "Accommodation travel-plan items should render the Create days button disabled until the day-count prerequisite is met"
+    /data-travel-plan-service-field="multi_day"[\s\S]*data-travel-plan-service-field="duration_days"[\s\S]*data-travel-plan-create-days="[^"]*"[\s\S]*type="button"\$\{createDaysEnabled \? "" : " disabled"\}/,
+    "Travel-plan items should render multi-day controls and the Create days button disabled until the duration prerequisite is met"
   );
   assert.match(
     travelPlanSource,
-    /els\.travel_plan_editor\.addEventListener\("input"[\s\S]*syncAccommodationCreateDaysButtonStates\(\);[\s\S]*els\.travel_plan_editor\.addEventListener\("change"[\s\S]*syncAccommodationCreateDaysButtonStates\(\);/,
-    "Accommodation Create days enablement should resync during render and while editing the item"
+    /els\.travel_plan_editor\.addEventListener\("input"[\s\S]*syncDurationCreateDaysButtonStates\(\);[\s\S]*els\.travel_plan_editor\.addEventListener\("change"[\s\S]*syncDurationCreateDaysButtonStates\(\);/,
+    "Create days enablement should resync during render and while editing the item"
   );
   assert.doesNotMatch(
     travelPlanSource,
@@ -846,8 +846,8 @@ test("accommodation services expose a day-count helper and create linked copy da
   );
   assert.match(
     travelPlanStyles,
-    /\.travel-plan-grid--item-kind-accommodation \{[\s\S]*grid-template-columns: minmax\(220px, 280px\) minmax\(160px, 220px\) auto;/,
-    "Accommodation travel-plan items should reserve a dedicated row layout for the day-count field and Create days button"
+    /\.travel-plan-grid--item-kind \{[\s\S]*grid-template-columns: minmax\(220px, 280px\) minmax\(240px, 1fr\);[\s\S]*\.travel-plan-service__duration-controls \{/,
+    "Travel-plan items should reserve a dedicated layout for the duration controls and Create days button"
   );
 });
 
@@ -1539,7 +1539,7 @@ test("persons and travel plan editors no longer autosave from local interactions
   );
   assert.match(
     travelPlanImagesSource,
-    /function removeTravelPlanServiceImage\(dayId, itemId, imageId\)\s*\{[\s\S]*syncTravelPlanDraftFromDom\?\.\(\);[\s\S]*item\.images = nextImages;[\s\S]*renderTravelPlanPanel\?\.\(\);/,
+    /function removeTravelPlanServiceImage\(dayId, itemId, imageId\)\s*\{[\s\S]*syncTravelPlanDraftFromDom\?\.\(\);[\s\S]*item\.image = null;[\s\S]*renderTravelPlanPanel\?\.\(\);/,
     "Removing a travel plan image should mutate the local draft and rerender instead of persisting immediately"
   );
   assert.doesNotMatch(

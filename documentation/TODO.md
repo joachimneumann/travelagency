@@ -48,24 +48,15 @@ Scrolling
 =========
 add a shadow to make scrolling enter below the sticky bar, gradually fading our over 20px (scrolling.png)
 
-Booking Hero
-============
-* title font: remove font-family from booking-hero__name  Note: this should revert to var(--font-family-sans);
-* Hero subtitle: last updated {value} last updated 4 day(s) ago
-
 Travler
 =======
 * when clicking on the traveler, load the data from the backend. The traveler might have submitted his data.
-* 1 traveling: Joachim Neumann (Primary contact) --> 1 Traveler: Joachim Neumann
-* "The web form indicates 2 travelers, but this booking currently has one traveler only." -> "The web form indicated 2 travelers"
-
-Travel Plan
-===========
-Service in the same blue as day now
 
 Service
 =======
-* Move the picture up, to the right of Summary: Service provided. use placeholder picture. to change: clickable as in ATP staff profile picture editing.
+* Service in travel plan day:
+Move the picture up, to the top right of the expanded service. Use a placeholder picture if no picture is set. to change: clickable as in ATP staff profile picture editing.
+
 * Look at the source code. Where is the Service Kind element used? 
   If only accomodation, replace the service kind with a with "multi-day" checkbox (and consequently a "days" numberic textfield).
 * Location (optional)

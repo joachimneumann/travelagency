@@ -4214,7 +4214,7 @@
   FIELD_133: {
   "kind": "transport",
   "typeName": "BookingTravelPlanServiceImage",
-  "isArray": true
+  "isArray": false
 },
   FIELD_134: {
   "kind": "transport",

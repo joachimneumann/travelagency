@@ -183,6 +183,7 @@ const state = {
     canEditBooking: false
   },
   booking: null,
+  latestActivityAt: "",
   tour_image: "",
   tour_image_tour_id: "",
   personDrafts: [],
@@ -1213,6 +1214,22 @@ function renderActivitiesTable(items = []) {
   els.activities_table.innerHTML = `${header}<tbody>${body}</tbody>`;
 }
 
+function resolveLatestActivityTimestamp(items = []) {
+  let latestTimestamp = "";
+  let latestTimeMs = Number.NEGATIVE_INFINITY;
+  for (const activity of Array.isArray(items) ? items : []) {
+    const candidate = normalizeText(activity?.updated_at) || normalizeText(activity?.created_at);
+    if (!candidate) continue;
+    const timeMs = new Date(candidate).getTime();
+    if (!Number.isFinite(timeMs)) continue;
+    if (timeMs > latestTimeMs) {
+      latestTimeMs = timeMs;
+      latestTimestamp = candidate;
+    }
+  }
+  return latestTimestamp;
+}
+
 function renderStaticSectionHeaders() {
   renderBookingSectionHeader(els.personsPanelSummary, { primary: backendT("booking.no_persons", "No persons listed.") });
   renderBookingSectionHeader(els.travel_plan_panel_summary, {
@@ -1236,7 +1253,14 @@ async function loadActivities() {
     params: { booking_id: state.booking.id }
   });
   const payload = await fetchApi(request.url, { suppressNotFound: true });
-  renderActivitiesTable(Array.isArray(payload?.items) ? payload.items : payload?.activities);
+  const items = Array.isArray(payload?.items) ? payload.items : payload?.activities;
+  const nextLatestActivityAt = resolveLatestActivityTimestamp(items);
+  const latestActivityChanged = nextLatestActivityAt !== state.latestActivityAt;
+  state.latestActivityAt = nextLatestActivityAt;
+  renderActivitiesTable(items);
+  if (latestActivityChanged) {
+    renderBookingHeader();
+  }
 }
 
 function renderPricingPanel(options = {}) {

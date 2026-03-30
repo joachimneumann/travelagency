@@ -47,7 +47,7 @@ import (
 	time_label?:               string
 	time_point?:               string
 	kind:                      enums.#TravelPlanServiceKind
-	accommodation_days?:       >=1 & <=100 & int
+	duration_days?:            >=1 & <=100 & int
 	title?:                    string
 	details?:                  string
 	location?:                 string
@@ -57,7 +57,7 @@ import (
 	financial_coverage_needed?: *true | bool
 	financial_coverage_status: *"not_covered" | enums.#TravelPlanFinancialCoverageStatus
 	financial_note?:           string
-	images?: [...#BookingTravelPlanServiceImage]
+	image?:                    #BookingTravelPlanServiceImage
 	copied_from?: #BookingTravelPlanServiceCopiedFrom
 }
 

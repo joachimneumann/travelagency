@@ -12,18 +12,22 @@ function copyItemForImport(sourceItem, options = {}) {
   const includeCustomerVisibleImagesOnly = options.includeCustomerVisibleImagesOnly === true;
   const importedAt = options.normalizeText(options.importedAt) || options.nowIso();
 
-  const sourceImages = Array.isArray(sourceItem?.images) ? sourceItem.images : [];
-  const importedImages = includeImages
-    ? sourceImages
-      .filter((image) => !includeCustomerVisibleImagesOnly || image?.is_customer_visible !== false)
-      .map((image, index) => ({
-        ...image,
-        id: `travel_plan_service_image_${options.randomUUID()}`,
-        sort_order: index,
-        is_primary: index === 0,
-        created_at: importedAt
-      }))
-    : [];
+  const sourceImage = sourceItem?.image && typeof sourceItem.image === "object" && !Array.isArray(sourceItem.image)
+    ? sourceItem.image
+    : (
+      Array.isArray(sourceItem?.images)
+        ? sourceItem.images.find((image) => image?.is_primary) || sourceItem.images[0] || null
+        : null
+    );
+  const importedImage = includeImages && sourceImage && (!includeCustomerVisibleImagesOnly || sourceImage?.is_customer_visible !== false)
+    ? {
+      ...sourceImage,
+      id: `travel_plan_service_image_${options.randomUUID()}`,
+      sort_order: 0,
+      is_primary: true,
+      created_at: importedAt
+    }
+    : null;
 
   return {
     id: `travel_plan_service_${options.randomUUID()}`,
@@ -45,7 +49,7 @@ function copyItemForImport(sourceItem, options = {}) {
     financial_coverage_status: options.normalizeText(sourceItem?.financial_coverage_status) || "not_covered",
     financial_note: includeNotes ? options.normalizeText(sourceItem?.financial_note) : null,
     financial_note_i18n: includeNotes && includeTranslations ? cloneTravelPlanLocalizedMap(sourceItem?.financial_note_i18n) : undefined,
-    images: importedImages,
+    image: importedImage,
     copied_from: {
       source_type: "booking_travel_plan_service",
       source_booking_id: options.normalizeText(options.sourceBookingId),
@@ -58,8 +62,13 @@ function copyItemForImport(sourceItem, options = {}) {
 }
 
 function buildSearchResult({ booking, day, item, supplierName = "", normalizeText }) {
-  const images = Array.isArray(item?.images) ? item.images : [];
-  const primaryImage = images.find((image) => image?.is_primary) || images.find((image) => image?.is_customer_visible !== false) || images[0] || null;
+  const primaryImage = item?.image && typeof item.image === "object" && !Array.isArray(item.image)
+    ? item.image
+    : (
+      Array.isArray(item?.images)
+        ? item.images.find((image) => image?.is_primary) || item.images.find((image) => image?.is_customer_visible !== false) || item.images[0] || null
+        : null
+    );
   return {
     source_booking_id: booking.id,
     source_booking_name: normalizeText(booking.name),
@@ -72,7 +81,7 @@ function buildSearchResult({ booking, day, item, supplierName = "", normalizeTex
     location: normalizeText(item.location),
     overnight_location: normalizeText(day?.overnight_location),
     thumbnail_url: normalizeText(primaryImage?.storage_path),
-    image_count: images.length,
+    image_count: primaryImage ? 1 : 0,
     supplier_name: normalizeText(supplierName),
     updated_at: normalizeText(booking.updated_at || booking.created_at)
   };

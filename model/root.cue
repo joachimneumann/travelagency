@@ -147,7 +147,6 @@ import (
 		TravelPlanServiceImportRequest:                      apiModel.#TravelPlanServiceImportRequest
 		TravelPlanServiceImageUploadRequest:                 apiModel.#TravelPlanServiceImageUploadRequest
 		TravelPlanServiceImageDeleteRequest:                 apiModel.#TravelPlanServiceImageDeleteRequest
-		TravelPlanServiceImageReorderRequest:                apiModel.#TravelPlanServiceImageReorderRequest
 		TravelPlanAttachmentUploadRequest:                apiModel.#TravelPlanAttachmentUploadRequest
 		TravelPlanAttachmentDeleteRequest:                apiModel.#TravelPlanAttachmentDeleteRequest
 		TravelPlanPdfArtifactCreateRequest:               apiModel.#TravelPlanPdfArtifactCreateRequest

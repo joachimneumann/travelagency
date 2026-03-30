@@ -259,7 +259,10 @@ function collectBookingArtifactPaths(booking, invoices = []) {
   const travelPlan = booking?.travel_plan && typeof booking.travel_plan === "object" ? booking.travel_plan : null;
   for (const day of Array.isArray(travelPlan?.days) ? travelPlan.days : []) {
     for (const service of Array.isArray(day?.services) ? day.services : []) {
-      for (const image of Array.isArray(service?.images) ? service.images : []) {
+      const images = service?.image && typeof service.image === "object" && !Array.isArray(service.image)
+        ? [service.image]
+        : (Array.isArray(service?.images) ? service.images : []);
+      for (const image of images) {
         addPublicPath(image?.storage_path, "/public/v1/booking-images/", bookingImagePaths);
       }
     }

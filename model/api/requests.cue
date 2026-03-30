@@ -169,12 +169,6 @@ import (
 	actor?:                         string
 }
 
-#TravelPlanServiceImageReorderRequest: {
-	expected_travel_plan_revision?: >=0 & int
-	image_ids: [...common.#Identifier]
-	actor?:                      string
-}
-
 #TravelPlanAttachmentUploadRequest: #EvidenceUpload & {
 	expected_travel_plan_revision?: >=0 & int
 	actor?:                         string

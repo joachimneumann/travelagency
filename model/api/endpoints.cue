@@ -631,7 +631,7 @@ package api
 	},
 	{
 		key:           "booking_travel_plan_service_image_upload"
-		path:          "/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/services/{service_id}/images"
+		path:          "/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/services/{service_id}/image"
 		method:        "POST"
 		tag:           "Bookings"
 		authenticated: true
@@ -656,41 +656,11 @@ package api
 	},
 	{
 		key:           "booking_travel_plan_service_image_delete"
-		path:          "/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/services/{service_id}/images/{image_id}"
+		path:          "/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/services/{service_id}/image"
 		method:        "DELETE"
 		tag:           "Bookings"
 		authenticated: true
 		requestType:   "TravelPlanServiceImageDeleteRequest"
-		responseType:  "BookingDetail"
-		parameters: [{
-			name:     "booking_id"
-			location: "path"
-			required: true
-			typeName: "Identifier"
-		}, {
-			name:     "day_id"
-			location: "path"
-			required: true
-			typeName: "Identifier"
-		}, {
-			name:     "service_id"
-			location: "path"
-			required: true
-			typeName: "Identifier"
-		}, {
-			name:     "image_id"
-			location: "path"
-			required: true
-			typeName: "Identifier"
-		}]
-	},
-	{
-		key:           "booking_travel_plan_service_image_reorder"
-		path:          "/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/services/{service_id}/images/order"
-		method:        "PATCH"
-		tag:           "Bookings"
-		authenticated: true
-		requestType:   "TravelPlanServiceImageReorderRequest"
 		responseType:  "BookingDetail"
 		parameters: [{
 			name:     "booking_id"

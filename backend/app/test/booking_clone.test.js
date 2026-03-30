@@ -134,7 +134,8 @@ test("cloneBookingForTesting remaps ids and resets generated state", () => {
 
   assert.notEqual(cloned.travel_plan.days[0].id, "travel_plan_day_1");
   assert.notEqual(cloned.travel_plan.days[0].services[0].id, "travel_plan_service_1");
-  assert.equal(cloned.travel_plan.days[0].services[0].images.length, 0);
+  assert.equal(cloned.travel_plan.days[0].services[0].image, null);
+  assert.equal(cloned.travel_plan.days[0].services[0].images, undefined);
   assert.equal(cloned.travel_plan.attachments.length, 0);
   assert.equal(cloned.travel_plan.offer_component_links.length, 1);
   assert.equal(

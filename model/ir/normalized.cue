@@ -295,7 +295,7 @@ IR: {
 				{name: "time_label", kind: "scalar", typeName: "string", required: false},
 				{name: "time_point", kind: "scalar", typeName: "string", required: false},
 				{name: "kind", kind: "enum", typeName: "TravelPlanServiceKind", required: true},
-				{name: "accommodation_days", kind: "scalar", typeName: "int", required: false},
+				{name: "duration_days", kind: "scalar", typeName: "int", required: false},
 				{name: "title", kind: "scalar", typeName: "string", required: false},
 				{name: "details", kind: "scalar", typeName: "string", required: false},
 				{name: "location", kind: "scalar", typeName: "string", required: false},
@@ -304,7 +304,7 @@ IR: {
 				{name: "end_time", kind: "scalar", typeName: "string", required: false},
 				{name: "financial_coverage_status", kind: "enum", typeName: "TravelPlanFinancialCoverageStatus", required: true},
 				{name: "financial_note", kind: "scalar", typeName: "string", required: false},
-				{name: "images", kind: "entity", typeName: "BookingTravelPlanServiceImage", required: false, isArray: true},
+				{name: "image", kind: "entity", typeName: "BookingTravelPlanServiceImage", required: false},
 				{name: "copied_from", kind: "entity", typeName: "BookingTravelPlanServiceCopiedFrom", required: false},
 			]
 		},
@@ -1849,17 +1849,6 @@ IR: {
 			sourceType: "api.#TravelPlanServiceImageDeleteRequest"
 			fields: [
 				{name: "expected_travel_plan_revision", kind: "scalar", typeName: "int", required: false},
-				{name: "actor", kind: "scalar", typeName: "string", required: false},
-			]
-		},
-		{
-			name:       "TravelPlanServiceImageReorderRequest"
-			domain:     "api"
-			module:     "api"
-			sourceType: "api.#TravelPlanServiceImageReorderRequest"
-			fields: [
-				{name: "expected_travel_plan_revision", kind: "scalar", typeName: "int", required: false},
-				{name: "image_ids", kind: "scalar", typeName: "Identifier", required: true, isArray: true},
 				{name: "actor", kind: "scalar", typeName: "string", required: false},
 			]
 		},

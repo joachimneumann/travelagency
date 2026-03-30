@@ -29,7 +29,8 @@ function resetStoredFileArtifacts(booking) {
       const services = Array.isArray(day?.services) ? day.services : [];
       for (const service of services) {
         if (!service || typeof service !== "object") continue;
-        service.images = [];
+        service.image = null;
+        delete service.images;
       }
     }
   }
@@ -124,7 +125,7 @@ function remapTravelPlan(booking, componentIdMap, randomUUID) {
         return {
           ...service,
           id: newServiceId,
-          images: []
+          image: null
         };
       });
       return {

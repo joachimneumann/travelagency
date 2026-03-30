@@ -96,21 +96,18 @@ export function validateTravelPlanDraft(plan, {
         };
       }
 
-      const accommodationDays = Number(item?.accommodation_days);
-      if (
-        itemKind === "accommodation"
-        && !(Number.isInteger(accommodationDays) && accommodationDays >= 1 && accommodationDays <= 100)
-      ) {
+      const durationDays = Number(item?.duration_days);
+      if (!(Number.isInteger(durationDays) && durationDays >= 1 && durationDays <= 100)) {
         return {
           ok: false,
-          code: "accommodation_days_invalid",
+          code: "duration_days_invalid",
           dayId,
           itemId,
           dayNumber,
           itemNumber,
           error: bookingT(
-            "booking.travel_plan.validation.accommodation_days_invalid",
-            "Day {day}, service {item}: Accommodation days must be between 1 and 100.",
+            "booking.travel_plan.validation.duration_days_invalid",
+            "Day {day}, service {item}: Duration days must be between 1 and 100.",
             { day: dayNumber, item: itemNumber }
           )
         };

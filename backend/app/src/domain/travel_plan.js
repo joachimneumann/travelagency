@@ -80,37 +80,51 @@ function normalizeTravelPlanServiceCopiedFrom(rawCopiedFrom) {
   };
 }
 
-function normalizeTravelPlanServiceImages(images, dayIndex, itemIndex) {
-  const sourceImages = Array.isArray(images) ? images : [];
-  const normalized = sourceImages
-    .map((image, imageIndex) => {
-      const rawImage = image && typeof image === "object" && !Array.isArray(image) ? image : {};
-      return {
-        id: normalizeText(rawImage.id) || `travel_plan_service_image_${dayIndex + 1}_${itemIndex + 1}_${imageIndex + 1}`,
-        storage_path: normalizeOptionalText(rawImage.storage_path),
-        caption: normalizeOptionalText(rawImage.caption),
-        alt_text: normalizeOptionalText(rawImage.alt_text),
-        sort_order: normalizeNonNegativeInt(rawImage.sort_order, imageIndex),
-        is_primary: normalizeOptionalBoolean(rawImage.is_primary, false) === true,
-        is_customer_visible: normalizeOptionalBoolean(rawImage.is_customer_visible, true),
-        width_px: normalizePositiveInt(rawImage.width_px, null),
-        height_px: normalizePositiveInt(rawImage.height_px, null),
-        source_attribution: normalizeTravelPlanServiceImageSourceAttribution(rawImage.source_attribution),
-        focal_point: normalizeTravelPlanServiceImageFocalPoint(rawImage.focal_point),
-        created_at: normalizeOptionalText(rawImage.created_at)
-      };
-    })
-    .filter((image) => image.storage_path)
-    .sort((left, right) => left.sort_order - right.sort_order);
+function resolveRawTravelPlanServiceImage(rawImageOrImages) {
+  if (Array.isArray(rawImageOrImages)) {
+    const normalized = rawImageOrImages
+      .map((image, imageIndex) => {
+        const rawImage = image && typeof image === "object" && !Array.isArray(image) ? image : {};
+        return {
+          rawImage,
+          sort_order: normalizeNonNegativeInt(rawImage.sort_order, imageIndex),
+          is_primary: normalizeOptionalBoolean(rawImage.is_primary, false) === true,
+          is_customer_visible: normalizeOptionalBoolean(rawImage.is_customer_visible, true)
+        };
+      })
+      .filter((entry) => normalizeOptionalText(entry.rawImage.storage_path))
+      .sort((left, right) => left.sort_order - right.sort_order);
+    return (
+      normalized.find((entry) => entry.is_primary)?.rawImage
+      || normalized.find((entry) => entry.is_customer_visible !== false)?.rawImage
+      || normalized[0]?.rawImage
+      || null
+    );
+  }
+  return rawImageOrImages && typeof rawImageOrImages === "object" && !Array.isArray(rawImageOrImages)
+    ? rawImageOrImages
+    : null;
+}
 
-  const primaryIndex = normalized.findIndex((image) => image.is_primary);
-  const resolvedPrimaryIndex = primaryIndex >= 0 ? primaryIndex : (normalized.length ? 0 : -1);
-
-  return normalized.map((image, index) => ({
-    ...image,
-    sort_order: index,
-    is_primary: index === resolvedPrimaryIndex
-  }));
+function normalizeTravelPlanServiceImage(image, dayIndex, itemIndex) {
+  const rawImage = resolveRawTravelPlanServiceImage(image);
+  if (!rawImage) return null;
+  const storagePath = normalizeOptionalText(rawImage.storage_path);
+  if (!storagePath) return null;
+  return {
+    id: normalizeText(rawImage.id) || `travel_plan_service_image_${dayIndex + 1}_${itemIndex + 1}_1`,
+    storage_path: storagePath,
+    caption: normalizeOptionalText(rawImage.caption),
+    alt_text: normalizeOptionalText(rawImage.alt_text),
+    sort_order: 0,
+    is_primary: true,
+    is_customer_visible: normalizeOptionalBoolean(rawImage.is_customer_visible, true),
+    width_px: normalizePositiveInt(rawImage.width_px, null),
+    height_px: normalizePositiveInt(rawImage.height_px, null),
+    source_attribution: normalizeTravelPlanServiceImageSourceAttribution(rawImage.source_attribution),
+    focal_point: normalizeTravelPlanServiceImageFocalPoint(rawImage.focal_point),
+    created_at: normalizeOptionalText(rawImage.created_at)
+  };
 }
 
 function normalizeTravelPlanAttachments(attachments) {
@@ -149,13 +163,21 @@ function normalizeCoverageType(value) {
   return TRAVEL_PLAN_OFFER_COVERAGE_TYPES.has(normalized) ? normalized : "full";
 }
 
-function normalizeAccommodationDays(value, kind) {
-  if (normalizeItemKind(kind) !== "accommodation") return null;
+function normalizeDurationDays(value) {
   const raw = normalizeText(value);
-  if (!raw) return 1;
+  if (!raw || !/^\d+$/.test(raw)) return null;
   const parsed = Number.parseInt(raw, 10);
-  if (!Number.isInteger(parsed)) return null;
   return parsed >= 1 && parsed <= 100 ? parsed : null;
+}
+
+function resolveDurationDays(rawItem) {
+  if (rawItem?.duration_days !== undefined && rawItem?.duration_days !== null) {
+    return normalizeDurationDays(rawItem.duration_days);
+  }
+  if (rawItem?.accommodation_days !== undefined && rawItem?.accommodation_days !== null) {
+    return normalizeDurationDays(rawItem.accommodation_days);
+  }
+  return 1;
 }
 
 function normalizeFinancialCoverageStatus(value) {
@@ -264,7 +286,7 @@ function normalizeTravelPlanDays(days, options = {}) {
           time_label_i18n,
           time_point: timing.time_point,
           kind: normalizeItemKind(rawItem.kind),
-          accommodation_days: normalizeAccommodationDays(rawItem.accommodation_days, rawItem.kind),
+          duration_days: resolveDurationDays(rawItem),
           title: resolveLocalizedText(title_i18n, flatLang, "", { sourceLang }),
           title_i18n,
           details: resolveLocalizedText(details_i18n, flatLang, "", { sourceLang }) || null,
@@ -278,7 +300,7 @@ function normalizeTravelPlanDays(days, options = {}) {
           financial_coverage_status: normalizeFinancialCoverageStatus(rawItem.financial_coverage_status),
           financial_note: resolveLocalizedText(financial_note_i18n, flatLang, "", { sourceLang }) || null,
           financial_note_i18n,
-          images: normalizeTravelPlanServiceImages(rawItem.images, dayIndex, itemIndex),
+          image: normalizeTravelPlanServiceImage(rawItem.image ?? rawItem.images, dayIndex, itemIndex),
           copied_from: normalizeTravelPlanServiceCopiedFrom(rawItem.copied_from)
         };
       });
@@ -416,10 +438,9 @@ export function createTravelPlanHelpers() {
           return { ok: false, error: `Day ${day.day_number}, Service ${itemNumber}: Kind is invalid.` };
         }
         if (
-          item.kind === "accommodation"
-          && !(Number.isInteger(item.accommodation_days) && item.accommodation_days >= 1 && item.accommodation_days <= 100)
+          !(Number.isInteger(item.duration_days) && item.duration_days >= 1 && item.duration_days <= 100)
         ) {
-          return { ok: false, error: `Day ${day.day_number}, Service ${itemNumber}: Accommodation days must be between 1 and 100.` };
+          return { ok: false, error: `Day ${day.day_number}, Service ${itemNumber}: Duration days must be between 1 and 100.` };
         }
         if (normalizeText(item.supplier_id) && !supplierIds.has(item.supplier_id)) {
           return { ok: false, error: `Day ${day.day_number}, Service ${itemNumber}: Unknown supplier ${item.supplier_id}.` };
@@ -430,8 +451,10 @@ export function createTravelPlanHelpers() {
         if (item.timing_kind === "range" && (!normalizeText(item.start_time) || !normalizeText(item.end_time))) {
           return { ok: false, error: `Day ${day.day_number}, Service ${itemNumber}: Start and end time are required.` };
         }
-        let primaryImageCount = 0;
-        for (const image of Array.isArray(item.images) ? item.images : []) {
+        const image = item.image && typeof item.image === "object" && !Array.isArray(item.image)
+          ? item.image
+          : null;
+        if (image) {
           if (!normalizeText(image.id)) {
             return { ok: false, error: `Day ${day.day_number}, Service ${itemNumber}: Service image id is missing.` };
           }
@@ -442,10 +465,9 @@ export function createTravelPlanHelpers() {
           if (!normalizeText(image.storage_path)) {
             return { ok: false, error: `Day ${day.day_number}, Service ${itemNumber}: Service image storage path is required.` };
           }
-          if (image.is_primary) primaryImageCount += 1;
-        }
-        if (primaryImageCount > 1) {
-          return { ok: false, error: `Day ${day.day_number}, Service ${itemNumber}: Only one primary image is allowed.` };
+          if (image.is_primary === false) {
+            return { ok: false, error: `Day ${day.day_number}, Service ${itemNumber}: The service image must be primary.` };
+          }
         }
         if (item.copied_from) {
           if (!normalizeText(item.copied_from.source_booking_id) || !normalizeText(item.copied_from.source_service_id)) {

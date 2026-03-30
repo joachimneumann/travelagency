@@ -1178,7 +1178,7 @@ def openapi_schema_for_field(field, type_index, enum_schema_names)
            { type: 'string' }
          end
 
-  if field.fetch('name') == 'accommodation_days' && field.fetch('typeName') == 'int'
+  if %w[accommodation_days duration_days].include?(field.fetch('name')) && field.fetch('typeName') == 'int'
     prop = prop.merge(minimum: 1, maximum: 100)
   end
 

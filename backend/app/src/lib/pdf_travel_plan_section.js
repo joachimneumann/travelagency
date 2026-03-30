@@ -56,9 +56,11 @@ async function rasterizeImage(filePath, { width, height } = {}) {
 
 export function resolveTravelPlanServiceThumbnailPath(item, bookingImagesDir) {
   if (!bookingImagesDir) return null;
-  const candidate = safeArray(item?.images)
-    .filter((image) => image?.is_customer_visible !== false)
-    .find((image) => textOrNull(image?.storage_path));
+  const candidate = item?.image && typeof item.image === "object" && !Array.isArray(item.image)
+    ? item.image
+    : safeArray(item?.images)
+      .filter((image) => image?.is_customer_visible !== false)
+      .find((image) => textOrNull(image?.storage_path));
   if (!candidate) return null;
   const storagePath = String(candidate.storage_path || "");
   const publicRelativePath = extractPublicRelativePath(storagePath, "/public/v1/booking-images/");

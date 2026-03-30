@@ -1382,6 +1382,7 @@ test("booking travel plan patch persists days, links, and derived financial cove
                   start_time: "14:00",
                   end_time: "15:00",
                   kind: "accommodation",
+                  duration_days: 3,
                   title: "Hotel check-in",
                   financial_coverage_status: "not_covered"
                 },
@@ -1391,6 +1392,14 @@ test("booking travel plan patch persists days, links, and derived financial cove
                   time_label: "Evening",
                   kind: "free_time",
                   title: "Explore the old town"
+                },
+                {
+                  id: "travel_plan_service_4",
+                  timing_kind: "label",
+                  time_label: "2 days",
+                  kind: "activity",
+                  duration_days: 2,
+                  title: "Mountain hiking"
                 }
               ]
             }
@@ -1423,8 +1432,10 @@ test("booking travel plan patch persists days, links, and derived financial cove
   assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].services[1].timing_kind, "range");
   assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].services[1].start_time, "14:00");
   assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].services[1].end_time, "15:00");
+  assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].services[1].duration_days, 3);
   assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].services[2].timing_kind, "label");
   assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].services[2].time_label, "Evening");
+  assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].services[3].duration_days, 2);
   assert.equal(
     travelPlanPatchResult.body.booking.travel_plan.days[0].services[0].financial_coverage_status,
     "partially_covered"
@@ -1436,6 +1447,10 @@ test("booking travel plan patch persists days, links, and derived financial cove
   assert.equal(
     travelPlanPatchResult.body.booking.travel_plan.days[0].services[2].financial_coverage_status,
     "not_applicable"
+  );
+  assert.equal(
+    travelPlanPatchResult.body.booking.travel_plan.days[0].services[3].financial_coverage_status,
+    "not_covered"
   );
 
   const detailAfter = await requestJson(
@@ -1449,6 +1464,8 @@ test("booking travel plan patch persists days, links, and derived financial cove
     "partially_covered"
   );
   assert.equal(detailAfter.body.booking.travel_plan.days[0].services[0].time_point, "19:00");
+  assert.equal(detailAfter.body.booking.travel_plan.days[0].services[1].duration_days, 3);
+  assert.equal(detailAfter.body.booking.travel_plan.days[0].services[3].duration_days, 2);
 
   const activitiesAfter = await requestJson(
     endpointPath("booking_activities").replace("{booking_id}", bookingId),
@@ -1579,6 +1596,37 @@ test("booking travel plan patch allows blank service titles and still rejects in
   assert.equal(missingPointTimeResult.status, 422);
   assert.match(String(missingPointTimeResult.body.error || ""), /time point/i);
 
+  const invalidDurationResult = await requestJson(
+    endpointPath("booking_travel_plan").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_travel_plan_revision: nextTravelPlanRevision,
+        travel_plan: {
+          days: [
+            {
+              id: "travel_plan_day_1",
+              day_number: 1,
+              title: "Arrival",
+              services: [
+                {
+                  id: "travel_plan_service_1",
+                  kind: "activity",
+                  duration_days: 0,
+                  title: "Two-day hike"
+                }
+              ]
+            }
+          ],
+          offer_component_links: []
+        }
+      }
+    }
+  );
+  assert.equal(invalidDurationResult.status, 422);
+  assert.match(String(invalidDurationResult.body.error || ""), /duration/i);
+
   const invalidLinkResult = await requestJson(
     endpointPath("booking_travel_plan").replace("{booking_id}", bookingId),
     apiHeaders(),
@@ -1648,16 +1696,14 @@ test("services can be searched and imported from another booking", async () => {
             details: "Private transfer and riverside hotel check-in.",
             location: "Hoi An",
             financial_note: "",
-            images: [
-              {
-                id: "source_item_image_1",
-                storage_path: "/public/v1/booking-images/source/item-1.webp",
-                sort_order: 0,
-                is_primary: true,
-                is_customer_visible: true,
-                created_at: "2026-03-21T00:00:00Z"
-              }
-            ]
+            image: {
+              id: "source_item_image_1",
+              storage_path: "/public/v1/booking-images/source/item-1.webp",
+              sort_order: 0,
+              is_primary: true,
+              is_customer_visible: true,
+              created_at: "2026-03-21T00:00:00Z"
+            }
           }
         ],
         notes: ""
@@ -1719,12 +1765,12 @@ test("services can be searched and imported from another booking", async () => {
   assert.equal(importedItem.title, "Boutique hotel check-in");
   assert.equal(importedItem.copied_from.source_booking_id, sourceBooking.id);
   assert.equal(importedItem.copied_from.source_service_id, "source_item_1");
-  assert.equal(importedItem.images.length, 1);
-  assert.notEqual(importedItem.images[0].id, "source_item_image_1");
-  assert.equal(importedItem.images[0].storage_path, "/public/v1/booking-images/source/item-1.webp");
+  assert.ok(importedItem.image);
+  assert.notEqual(importedItem.image.id, "source_item_image_1");
+  assert.equal(importedItem.image.storage_path, "/public/v1/booking-images/source/item-1.webp");
 });
 
-test("service images can be reordered and deleted", async () => {
+test("service image can be deleted", async () => {
   const booking = await createSeedBooking();
 
   const store = JSON.parse(await readFile(STORE_PATH, "utf8"));
@@ -1748,22 +1794,13 @@ test("service images can be reordered and deleted", async () => {
             details: "Guided walk",
             location: "Hue",
             financial_note: "",
-            images: [
-              {
-                id: "item_image_a",
-                storage_path: "/public/v1/booking-images/a.webp",
-                sort_order: 0,
-                is_primary: true,
-                is_customer_visible: true
-              },
-              {
-                id: "item_image_b",
-                storage_path: "/public/v1/booking-images/b.webp",
-                sort_order: 1,
-                is_primary: false,
-                is_customer_visible: true
-              }
-            ]
+            image: {
+              id: "item_image_a",
+              storage_path: "/public/v1/booking-images/a.webp",
+              sort_order: 0,
+              is_primary: true,
+              is_customer_visible: true
+            }
           }
         ],
         notes: ""
@@ -1773,48 +1810,24 @@ test("service images can be reordered and deleted", async () => {
   };
   await writeFile(STORE_PATH, `${JSON.stringify(store, null, 2)}\n`, "utf8");
 
-  const reorderResult = await requestJson(
-    endpointPath("booking_travel_plan_service_image_reorder")
+  const deleteResult = await requestJson(
+    endpointPath("booking_travel_plan_service_image_delete")
       .replace("{booking_id}", booking.id)
       .replace("{day_id}", "travel_day_1")
       .replace("{service_id}", "travel_item_1"),
     apiHeaders(),
     {
-      method: "PATCH",
-      body: {
-        expected_travel_plan_revision: booking.travel_plan_revision,
-        image_ids: ["item_image_b", "item_image_a"]
-      }
-    }
-  );
-  assert.equal(reorderResult.status, 200);
-  const reorderedImages = reorderResult.body.booking.travel_plan.days[0].services[0].images;
-  assert.deepEqual(reorderedImages.map((image) => image.id), ["item_image_b", "item_image_a"]);
-  assert.equal(reorderedImages[0].is_primary, true);
-  assert.equal(reorderedImages[1].is_primary, false);
-
-  const deleteResult = await requestJson(
-    endpointPath("booking_travel_plan_service_image_delete")
-      .replace("{booking_id}", booking.id)
-      .replace("{day_id}", "travel_day_1")
-      .replace("{service_id}", "travel_item_1")
-      .replace("{image_id}", "item_image_b"),
-    apiHeaders(),
-    {
       method: "DELETE",
       body: {
-        expected_travel_plan_revision: reorderResult.body.booking.travel_plan_revision
+        expected_travel_plan_revision: booking.travel_plan_revision
       }
     }
   );
   assert.equal(deleteResult.status, 200);
-  const remainingImages = deleteResult.body.booking.travel_plan.days[0].services[0].images;
-  assert.equal(remainingImages.length, 1);
-  assert.equal(remainingImages[0].id, "item_image_a");
-  assert.equal(remainingImages[0].is_primary, true);
+  assert.equal(deleteResult.body.booking.travel_plan.days[0].services[0].image, null);
 });
 
-test("service images can be uploaded", { skip: !HAS_MAGICK }, async () => {
+test("service image upload keeps exactly one image", { skip: !HAS_MAGICK }, async () => {
   const booking = await createSeedBooking();
 
   const store = JSON.parse(await readFile(STORE_PATH, "utf8"));
@@ -1838,7 +1851,13 @@ test("service images can be uploaded", { skip: !HAS_MAGICK }, async () => {
             details: "",
             location: "Hanoi",
             financial_note: "",
-            images: []
+            image: {
+              id: "travel_item_upload_image_1",
+              storage_path: "/public/v1/booking-images/old.webp",
+              sort_order: 0,
+              is_primary: true,
+              is_customer_visible: true
+            }
           }
         ],
         notes: ""
@@ -1864,10 +1883,11 @@ test("service images can be uploaded", { skip: !HAS_MAGICK }, async () => {
     }
   );
   assert.equal(uploadResult.status, 200);
-  const uploadedImages = uploadResult.body.booking.travel_plan.days[0].services[0].images;
-  assert.equal(uploadedImages.length, 1);
-  assert.match(String(uploadedImages[0].storage_path || ""), /^\/public\/v1\/booking-images\//);
-  assert.equal(uploadedImages[0].is_primary, true);
+  const uploadedImage = uploadResult.body.booking.travel_plan.days[0].services[0].image;
+  assert.ok(uploadedImage);
+  assert.notEqual(uploadedImage.id, "travel_item_upload_image_1");
+  assert.match(String(uploadedImage.storage_path || ""), /^\/public\/v1\/booking-images\//);
+  assert.equal(uploadedImage.is_primary, true);
 });
 
 test("travel plan PDF attachments normalize non-A4 uploads and append to travel-plan and generated-offer PDFs", async () => {

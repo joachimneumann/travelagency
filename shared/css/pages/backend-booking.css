@@ -10,9 +10,10 @@
   --booking-type-title: clamp(1.28rem, 2vw, 1.55rem);
   --booking-type-section: 1.04rem;
   --booking-type-body: var(--font-size-base);
-  --booking-type-meta: 0.94rem;
-  --booking-type-label: 0.86rem;
-  --booking-type-micro: 0.78rem;
+  --booking-type-sm: 1rem;
+  --booking-type-meta: var(--booking-type-sm);
+  --booking-type-label: var(--booking-type-sm);
+  --booking-type-micro: var(--booking-type-sm);
   --booking-font-weight-strong: var(--font-weight-semibold);
   --booking-font-weight-bold: var(--font-weight-bold);
   --booking-letter-spacing-tight: -0.015em;

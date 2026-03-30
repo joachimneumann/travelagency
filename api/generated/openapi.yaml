@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-03-29T10:14:02Z
+# 2026-03-30T13:48:02Z
 
 ---
 openapi: 3.1.0
@@ -4303,7 +4303,7 @@ components:
           nullable: true
         kind:
           "$ref": "#/components/schemas/TravelPlanServiceKind"
-        accommodation_days:
+        duration_days:
           type: integer
           minimum: 1
           maximum: 100
@@ -4331,10 +4331,9 @@ components:
         financial_note:
           type: string
           nullable: true
-        images:
-          type: array
-          items:
-            "$ref": "#/components/schemas/BookingTravelPlanServiceImage"
+        image:
+          "$ref": "#/components/schemas/BookingTravelPlanServiceImage"
+          nullable: true
         copied_from:
           "$ref": "#/components/schemas/BookingTravelPlanServiceCopiedFrom"
           nullable: true
@@ -7032,20 +7031,6 @@ components:
         actor:
           type: string
           nullable: true
-    TravelPlanServiceImageReorderRequest:
-      type: object
-      required: []
-      properties:
-        expected_travel_plan_revision:
-          type: integer
-          nullable: true
-        image_ids:
-          type: array
-          items:
-            type: string
-        actor:
-          type: string
-          nullable: true
     TravelPlanAttachmentUploadRequest:
       type: object
       required:
@@ -8725,7 +8710,7 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
-  "/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/services/{service_id}/images":
+  "/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/services/{service_id}/image":
     post:
       operationId: booking_travel_plan_service_image_upload
       summary: Booking Travel Plan Service Image Upload
@@ -8780,7 +8765,6 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
-  "/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/services/{service_id}/images/{image_id}":
     delete:
       operationId: booking_travel_plan_service_image_delete
       summary: Booking Travel Plan Service Image Delete
@@ -8804,66 +8788,12 @@ paths:
         required: true
         schema:
           type: string
-      - name: image_id
-        in: path
-        required: true
-        schema:
-          type: string
       requestBody:
         required: true
         content:
           application/json:
             schema:
               "$ref": "#/components/schemas/TravelPlanServiceImageDeleteRequest"
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/BookingDetail"
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-  "/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/services/{service_id}/images/order":
-    patch:
-      operationId: booking_travel_plan_service_image_reorder
-      summary: Booking Travel Plan Service Image Reorder
-      tags:
-      - Bookings
-      security:
-      - bearerAuth: []
-      parameters:
-      - name: booking_id
-        in: path
-        required: true
-        schema:
-          type: string
-      - name: day_id
-        in: path
-        required: true
-        schema:
-          type: string
-      - name: service_id
-        in: path
-        required: true
-        schema:
-          type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              "$ref": "#/components/schemas/TravelPlanServiceImageReorderRequest"
       responses:
         '200':
           description: Success

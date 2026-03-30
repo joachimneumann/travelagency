@@ -65,13 +65,22 @@ function normalizeCoverageType(value) {
     : "full";
 }
 
-function normalizeAccommodationDays(value, kind) {
-  if (normalizeItemKind(kind) !== "accommodation") return null;
+function normalizeDurationDays(value) {
   const raw = normalizeOptionalText(value);
-  if (!raw) return 1;
+  if (!raw) return null;
   if (!/^\d+$/.test(raw)) return null;
   const parsed = Number.parseInt(raw, 10);
   return parsed >= 1 && parsed <= 100 ? parsed : null;
+}
+
+function resolveDurationDays(rawItem) {
+  if (rawItem?.duration_days !== undefined && rawItem?.duration_days !== null) {
+    return normalizeDurationDays(rawItem.duration_days);
+  }
+  if (rawItem?.accommodation_days !== undefined && rawItem?.accommodation_days !== null) {
+    return normalizeDurationDays(rawItem.accommodation_days);
+  }
+  return 1;
 }
 
 function normalizeItemTiming(rawItem) {
@@ -108,44 +117,62 @@ function normalizeItemTiming(rawItem) {
   };
 }
 
-function normalizeItemImages(images) {
-  return (Array.isArray(images) ? images : [])
+function resolveRawItemImage(rawImageOrImages) {
+  if (rawImageOrImages && typeof rawImageOrImages === "object" && !Array.isArray(rawImageOrImages)) {
+    return rawImageOrImages;
+  }
+  if (!Array.isArray(rawImageOrImages)) return null;
+  const candidates = rawImageOrImages
     .map((image, index) => {
       const rawImage = image && typeof image === "object" ? image : {};
       return {
-        id: String(rawImage.id || travelPlanId("travel_plan_service_image")),
-        storage_path: normalizeOptionalText(rawImage.storage_path),
-        caption: normalizeOptionalText(rawImage.caption),
-        alt_text: normalizeOptionalText(rawImage.alt_text),
+        rawImage,
         sort_order: Number.isInteger(rawImage.sort_order) ? rawImage.sort_order : index,
         is_primary: rawImage.is_primary === true,
-        is_customer_visible: rawImage.is_customer_visible !== false,
-        width_px: Number.isInteger(rawImage.width_px) && rawImage.width_px > 0 ? rawImage.width_px : null,
-        height_px: Number.isInteger(rawImage.height_px) && rawImage.height_px > 0 ? rawImage.height_px : null,
-        source_attribution: rawImage.source_attribution && typeof rawImage.source_attribution === "object" && !Array.isArray(rawImage.source_attribution)
-          ? {
-            source_name: normalizeOptionalText(rawImage.source_attribution.source_name),
-            source_url: normalizeOptionalText(rawImage.source_attribution.source_url),
-            photographer: normalizeOptionalText(rawImage.source_attribution.photographer),
-            license: normalizeOptionalText(rawImage.source_attribution.license)
-          }
-          : null,
-        focal_point: rawImage.focal_point && typeof rawImage.focal_point === "object" && !Array.isArray(rawImage.focal_point)
-          ? {
-            x: Number.isFinite(Number(rawImage.focal_point.x)) ? Number(rawImage.focal_point.x) : null,
-            y: Number.isFinite(Number(rawImage.focal_point.y)) ? Number(rawImage.focal_point.y) : null
-          }
-          : null,
-        created_at: normalizeOptionalText(rawImage.created_at)
+        is_customer_visible: rawImage.is_customer_visible !== false
       };
     })
-    .filter((image) => image.storage_path)
-    .sort((left, right) => left.sort_order - right.sort_order)
-    .map((image, index, list) => ({
-      ...image,
-      sort_order: index,
-      is_primary: list.some((item) => item.is_primary) ? image.is_primary === true && list.findIndex((item) => item.is_primary) === index : index === 0
-    }));
+    .filter((entry) => normalizeOptionalText(entry.rawImage.storage_path))
+    .sort((left, right) => left.sort_order - right.sort_order);
+  return (
+    candidates.find((entry) => entry.is_primary)?.rawImage
+    || candidates.find((entry) => entry.is_customer_visible !== false)?.rawImage
+    || candidates[0]?.rawImage
+    || null
+  );
+}
+
+function normalizeItemImage(rawImageOrImages) {
+  const rawImage = resolveRawItemImage(rawImageOrImages);
+  if (!rawImage) return null;
+  const storagePath = normalizeOptionalText(rawImage.storage_path);
+  if (!storagePath) return null;
+  return {
+    id: String(rawImage.id || travelPlanId("travel_plan_service_image")),
+    storage_path: storagePath,
+    caption: normalizeOptionalText(rawImage.caption),
+    alt_text: normalizeOptionalText(rawImage.alt_text),
+    sort_order: 0,
+    is_primary: true,
+    is_customer_visible: rawImage.is_customer_visible !== false,
+    width_px: Number.isInteger(rawImage.width_px) && rawImage.width_px > 0 ? rawImage.width_px : null,
+    height_px: Number.isInteger(rawImage.height_px) && rawImage.height_px > 0 ? rawImage.height_px : null,
+    source_attribution: rawImage.source_attribution && typeof rawImage.source_attribution === "object" && !Array.isArray(rawImage.source_attribution)
+      ? {
+        source_name: normalizeOptionalText(rawImage.source_attribution.source_name),
+        source_url: normalizeOptionalText(rawImage.source_attribution.source_url),
+        photographer: normalizeOptionalText(rawImage.source_attribution.photographer),
+        license: normalizeOptionalText(rawImage.source_attribution.license)
+      }
+      : null,
+    focal_point: rawImage.focal_point && typeof rawImage.focal_point === "object" && !Array.isArray(rawImage.focal_point)
+      ? {
+        x: Number.isFinite(Number(rawImage.focal_point.x)) ? Number(rawImage.focal_point.x) : null,
+        y: Number.isFinite(Number(rawImage.focal_point.y)) ? Number(rawImage.focal_point.y) : null
+      }
+      : null,
+    created_at: normalizeOptionalText(rawImage.created_at)
+  };
 }
 
 function normalizeTravelPlanAttachments(attachments) {
@@ -193,7 +220,7 @@ export function createEmptyTravelPlanService() {
     time_label_i18n: {},
     time_point: "",
     kind: "other",
-    accommodation_days: null,
+    duration_days: 1,
     title: "",
     title_i18n: {},
     details: "",
@@ -207,7 +234,7 @@ export function createEmptyTravelPlanService() {
     financial_coverage_status: "not_covered",
     financial_note: "",
     financial_note_i18n: {},
-    images: [],
+    image: null,
     copied_from: null
   };
 }
@@ -350,7 +377,7 @@ export function normalizeTravelPlanDraft(plan, offerComponents = [], options = {
             time_label_i18n: timeLabelMap,
             time_point: timing.time_point,
             kind: normalizeItemKind(rawItem.kind),
-            accommodation_days: normalizeAccommodationDays(rawItem.accommodation_days, rawItem.kind),
+            duration_days: resolveDurationDays(rawItem),
             title: resolveLocalizedEditorText(titleMap, sourceLang, ""),
             title_i18n: titleMap,
             details: resolveLocalizedEditorText(detailsMap, sourceLang, ""),
@@ -364,7 +391,7 @@ export function normalizeTravelPlanDraft(plan, offerComponents = [], options = {
             financial_note: resolveLocalizedEditorText(financialNoteMap, sourceLang, ""),
             financial_note_i18n: financialNoteMap,
             financial_coverage_status: "not_covered",
-            images: normalizeItemImages(rawItem.images),
+            image: normalizeItemImage(rawItem.image ?? rawItem.images),
             copied_from: normalizeCopiedFrom(rawItem.copied_from)
           };
         }),

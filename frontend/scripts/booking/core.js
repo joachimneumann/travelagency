@@ -453,6 +453,22 @@ export function createBookingCoreModule(ctx) {
     return formatDateTime(text);
   }
 
+  function resolveNewestBookingTimestamp(...values) {
+    let latestValue = "";
+    let latestTimeMs = Number.NEGATIVE_INFINITY;
+    for (const value of values) {
+      const text = normalizeText(value);
+      if (!text) continue;
+      const timeMs = new Date(text).getTime();
+      if (!Number.isFinite(timeMs)) continue;
+      if (timeMs > latestTimeMs) {
+        latestTimeMs = timeMs;
+        latestValue = text;
+      }
+    }
+    return latestValue;
+  }
+
   function blockPersistedAction() {
     if (!hasUnsavedBookingChanges?.()) return false;
     reportPersistedActionBlocked?.();
@@ -485,9 +501,12 @@ export function createBookingCoreModule(ctx) {
     if (els.subtitle) {
       const bookingId = normalizeText(state.booking.id);
       const shortId = bookingId ? bookingId.slice(-6) : "-";
-      const lastActionAt = normalizeText(state.booking?.last_action_at)
-        || normalizeText(state.booking?.updated_at);
-      const relativeLastAction = formatRelativeActionTime(lastActionAt);
+      const latestHeaderTimestamp = resolveNewestBookingTimestamp(
+        state.latestActivityAt,
+        state.booking?.updated_at,
+        state.booking?.last_action_at
+      );
+      const relativeLastAction = formatRelativeActionTime(latestHeaderTimestamp);
       const lastUpdatedLabel = relativeLastAction
         ? bookingT("booking.last_updated", "last updated {value}", { value: relativeLastAction })
         : "";
@@ -1164,6 +1183,9 @@ export function createBookingCoreModule(ctx) {
 
   function applyBookingPayload(payload = {}, options = {}) {
     const previousTourId = normalizeText(state.booking?.web_form_submission?.tour_id);
+    if (payload?.booking) {
+      state.latestActivityAt = "";
+    }
     state.booking = payload.booking || state.booking || null;
     syncCoreDraftFromBooking({ force: options.forceDraftReset === true });
     const nextTourId = normalizeText(state.booking?.web_form_submission?.tour_id);

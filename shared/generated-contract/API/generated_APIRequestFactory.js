@@ -608,7 +608,7 @@ export function bookingTravelPlanServiceImportRequest({ baseURL = '', params = {
 }
 
 export function bookingTravelPlanServiceImageUploadPath(params = {}) {
-  return buildPath("/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/services/{service_id}/images", params);
+  return buildPath("/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/services/{service_id}/image", params);
 }
 
 export function bookingTravelPlanServiceImageUploadRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
@@ -625,7 +625,7 @@ export function bookingTravelPlanServiceImageUploadRequest({ baseURL = '', param
 }
 
 export function bookingTravelPlanServiceImageDeletePath(params = {}) {
-  return buildPath("/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/services/{service_id}/images/{image_id}", params);
+  return buildPath("/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/services/{service_id}/image", params);
 }
 
 export function bookingTravelPlanServiceImageDeleteRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
@@ -634,23 +634,6 @@ export function bookingTravelPlanServiceImageDeleteRequest({ baseURL = '', param
   return {
     key: "booking_travel_plan_service_image_delete",
     method: "DELETE",
-    authenticated: true,
-    url,
-    headers,
-    body
-  };
-}
-
-export function bookingTravelPlanServiceImageReorderPath(params = {}) {
-  return buildPath("/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/services/{service_id}/images/order", params);
-}
-
-export function bookingTravelPlanServiceImageReorderRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
-  const path = bookingTravelPlanServiceImageReorderPath(params);
-  const url = buildURL(baseURL, path, query);
-  return {
-    key: "booking_travel_plan_service_image_reorder",
-    method: "PATCH",
     authenticated: true,
     url,
     headers,

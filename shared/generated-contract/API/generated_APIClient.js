@@ -86,8 +86,6 @@ case "booking_travel_plan_service_image_upload":
   return RequestFactory.bookingTravelPlanServiceImageUploadRequest(options);
 case "booking_travel_plan_service_image_delete":
   return RequestFactory.bookingTravelPlanServiceImageDeleteRequest(options);
-case "booking_travel_plan_service_image_reorder":
-  return RequestFactory.bookingTravelPlanServiceImageReorderRequest(options);
 case "booking_travel_plan_attachment_upload":
   return RequestFactory.bookingTravelPlanAttachmentUploadRequest(options);
 case "booking_travel_plan_attachment_delete":

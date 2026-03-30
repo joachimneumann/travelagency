@@ -1,11 +1,10 @@
 import {
   validateTravelPlanServiceImageDeleteRequest,
-  validateTravelPlanServiceImageReorderRequest,
   validateTravelPlanServiceImageUploadRequest
 } from "../../../Generated/API/generated_APIModels.js";
 import {
   findTravelPlanDayAndItem,
-  normalizeItemImageRefs,
+  normalizeItemImageRef,
   publicBookingImagePath
 } from "./booking_travel_plan_shared.js";
 
@@ -91,22 +90,20 @@ export function createBookingTravelPlanImageHandlers(deps) {
       await rm(tempInputPath, { force: true });
     }
 
-    const currentImages = Array.isArray(item.images) ? item.images : [];
-    const nextImages = normalizeItemImageRefs([
-      ...currentImages,
+    const nextImage = normalizeItemImageRef(
       {
         id: `travel_plan_service_image_${randomUUID()}`,
         storage_path: publicBookingImagePath(normalizeText, outputRelativePath),
-        sort_order: currentImages.length,
-        is_primary: currentImages.length === 0,
+        sort_order: 0,
+        is_primary: true,
         is_customer_visible: true,
         created_at: nowIso()
       }
-    ]);
+    );
 
     normalizedTravelPlan.days[dayIndex].services[itemIndex] = {
       ...item,
-      images: nextImages
+      image: nextImage
     };
 
     const check = validateBookingTravelPlanInput(
@@ -135,7 +132,7 @@ export function createBookingTravelPlanImageHandlers(deps) {
     sendJson(res, 200, await buildBookingDetailResponse(booking, req));
   }
 
-  async function handleDeleteTravelPlanServiceImage(req, res, [bookingId, dayId, itemId, imageId]) {
+  async function handleDeleteTravelPlanServiceImage(req, res, [bookingId, dayId, itemId]) {
     let payload;
     try {
       payload = await readBodyJson(req);
@@ -165,16 +162,17 @@ export function createBookingTravelPlanImageHandlers(deps) {
       return;
     }
 
-    const currentImages = Array.isArray(item.images) ? item.images : [];
-    const nextImages = currentImages.filter((image) => image.id !== imageId);
-    if (nextImages.length === currentImages.length) {
-      sendJson(res, 404, { error: "Service image not found" });
+    const currentImage = item.image && typeof item.image === "object" && !Array.isArray(item.image)
+      ? item.image
+      : null;
+    if (!currentImage) {
+      sendJson(res, 404, { error: "Service image not set" });
       return;
     }
 
     normalizedTravelPlan.days[dayIndex].services[itemIndex] = {
       ...item,
-      images: normalizeItemImageRefs(nextImages)
+      image: null
     };
 
     const check = validateBookingTravelPlanInput(
@@ -203,83 +201,8 @@ export function createBookingTravelPlanImageHandlers(deps) {
     sendJson(res, 200, await buildBookingDetailResponse(booking, req));
   }
 
-  async function handleReorderTravelPlanServiceImages(req, res, [bookingId, dayId, itemId]) {
-    let payload;
-    try {
-      payload = await readBodyJson(req);
-      validateTravelPlanServiceImageReorderRequest(payload);
-    } catch (error) {
-      sendJson(res, 400, { error: String(error?.message || "Invalid JSON payload") });
-      return;
-    }
-
-    const principal = getPrincipal(req);
-    const store = await readStore();
-    const booking = store.bookings.find((item) => item.id === bookingId);
-    if (!booking) {
-      sendJson(res, 404, { error: "Booking not found" });
-      return;
-    }
-    if (!canEditBooking(principal, booking)) {
-      sendJson(res, 403, { error: "Forbidden" });
-      return;
-    }
-    if (!(await assertExpectedRevision(req, payload, booking, "expected_travel_plan_revision", "travel_plan_revision", res))) return;
-
-    const normalizedTravelPlan = normalizeBookingTravelPlan(booking.travel_plan, booking.offer, { strictReferences: false });
-    const { dayIndex, itemIndex, item } = findTravelPlanDayAndItem(normalizedTravelPlan, dayId, itemId);
-    if (dayIndex < 0 || itemIndex < 0 || !item) {
-      sendJson(res, 404, { error: "Service not found" });
-      return;
-    }
-
-    const currentImages = Array.isArray(item.images) ? item.images : [];
-    const requestedOrder = Array.isArray(payload.image_ids) ? payload.image_ids.map((id) => normalizeText(id)).filter(Boolean) : [];
-    if (requestedOrder.length !== currentImages.length) {
-      sendJson(res, 422, { error: "image_ids must contain all service image ids exactly once." });
-      return;
-    }
-    const currentImageMap = new Map(currentImages.map((image) => [image.id, image]));
-    const uniqueRequestedOrder = new Set(requestedOrder);
-    if (uniqueRequestedOrder.size !== currentImages.length || requestedOrder.some((id) => !currentImageMap.has(id))) {
-      sendJson(res, 422, { error: "image_ids must contain all service image ids exactly once." });
-      return;
-    }
-
-    normalizedTravelPlan.days[dayIndex].services[itemIndex] = {
-      ...item,
-      images: normalizeItemImageRefs(requestedOrder.map((id) => currentImageMap.get(id)))
-    };
-
-    const check = validateBookingTravelPlanInput(
-      normalizedTravelPlan,
-      booking.offer,
-      {
-        supplierIds: Array.isArray(store.suppliers) ? store.suppliers.map((supplier) => supplier?.id) : []
-      }
-    );
-    if (!check.ok) {
-      sendJson(res, 422, { error: check.error });
-      return;
-    }
-
-    booking.travel_plan = check.travel_plan;
-    incrementBookingRevision(booking, "travel_plan_revision");
-    booking.updated_at = nowIso();
-    addActivity(
-      store,
-      booking.id,
-      "TRAVEL_PLAN_UPDATED",
-      actorLabel(principal, normalizeText(payload.actor) || "keycloak_user"),
-      "Service images reordered"
-    );
-    await persistStore(store);
-    sendJson(res, 200, await buildBookingDetailResponse(booking, req));
-  }
-
   return {
     handleUploadTravelPlanServiceImage,
-    handleDeleteTravelPlanServiceImage,
-    handleReorderTravelPlanServiceImages
+    handleDeleteTravelPlanServiceImage
   };
 }
