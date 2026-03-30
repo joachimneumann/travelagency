@@ -22,6 +22,8 @@ content/**
 !content/tours/
 !content/tours/.gitkeep
 
+backup/atp_staff/staff.json.audit.log
+
 __pycache__/
 *.xcuserstate
 *.xccheckout
