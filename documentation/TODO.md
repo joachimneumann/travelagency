@@ -9,32 +9,63 @@ staging: git write persmissions
 
 # tour guide / ATP staff
 
+translation of backend texts
+============================
+When an english backend text changes in frontend/data/i18n/backend/en.json (like for example booking.travel_plan.day_notes recently), how can I make sure that the vietnamese backend texts are also updated wuth the corresponding translation? In these two backend files en.json and vi.json english is always the master and vietnamese is derrived by translation from english. Should we have a translate script? Add timestamps of edits? Add a dirty boolean to vi when an english text changes? Always translate immidiately or clean up after wards?
 
-Nguyen Thi Ngoan
-Travel Consultant | Asia Travel Plan
+Scrolling
+=========
+add a shadow to make scrolling enter below the sticky bar, gradually fading our over 20px (scrolling.png)
 
-Ngoan’s journey began at the front desk of a hotel, where she discovered a genuine passion for caring for people—not just serving guests, but truly listening and understanding their needs.
+Booking Hero
+============
+* title font: remove font-family from booking-hero__name  Note: this should revert to var(--font-family-sans);
+* Hero subtitle: last updated {value} last updated 4 day(s) ago
 
-Her transition into online sales and inbound tourism allowed her to deepen both her experience and her love for travel. For Ngoan, every journey is more than just a product—it is a story, where emotions, experiences, and meaningful connections come together.
+Travel Plan
+===========
+* Travel Plan subtitle: 2 days · 3 services · 1 uncovered --> 2 days · 3 services
+* --travel-plan-content-offset --> 5rem
+* Customer-facing additional notes about this day -> Notes about the day
 
-Known for her gentle approach, attention to detail, and sincere dedication, Ngoan ensures that every client feels cared for from the very first interaction. Each itinerary is thoughtfully crafted, every detail carefully considered, creating travel experiences that are both seamless and memorable.
+Travler
+=======
+* when clicking on the traveler, load the data from the backend. The traveler might have submitted his data.
+* 1 traveling: Joachim Neumann (Primary contact) --> 1 Traveler: Joachim Neumann
+* "The web form indicates 2 travelers, but this booking currently has one traveler only." -> "The web form indicated 2 travelers"
 
-As part of Asia Travel Plan, Ngoan brings not only professional expertise, but also a heartfelt commitment to delivering journeys that go beyond destinations—leaving lasting impressions through every step of the experience.
+Service
+=======
+* Move the picture up, to the right of Summary: Service provided. use placeholder picture. to change: clickable as in ATP staff profile picture editing.
+* Look at the source code. Where is the Service Kind element used? 
+  If only accomodation, replace the service kind with a with "multi-day" checkbox (and consequently a "days" numberic textfield).
+* Location (optional)
+* Service title -> Summary: Service provided
+* Time information -> When?
+* time range: improve layout (time_range.png)
+* Details -> Notes about the Service
+* "Supplier / financial note (ATP internal) -> ATP internal Notes> placeholder: "Supplier information / Financial notes"
 
 
-
-* in traveler-details.html:
-- after "Send traveler details to Asia Travel Plan" the confirmation should be "Your details have been transmitted to AsiaTravePlan".
-- If nationality is VI: keep the cice between Passport and ID card.
-- If the nationality is different: change the title "Travel document" to "Passport" and remove the ID card option
-- Allow uploading a picture of the passport or ID card
-
-* in booking.html when clicking on the traveler, load the data from the backend. THe traveler might have submitted his data.
-
+emergency.html
+=============
 * Create model and storage space for practical tips and emergency numbers for each country. This information is not used at this point in time.
+* Create a new backend menu item "emergency" with a red cross icon and allow atp_admin and atp_tour_editor users to edit this information.
 
-* After accepting the offer (deposit paid) generate another pdf that also includes travel documents with practical tips and emergency numbers. 
+offer
+=====
+* input of currency amounts (VND no cents)
 
+Welcome PDF
+===========
+* After accepting the offer (deposit paid) generate another "prepare yout journey" pdf that also includes travel documents with practical tips and emergency numbers. 
+
+Tours
+=====
+change picture as in ATP staff profile picture editing.
+
+Other
+=====
 * Point out that personal data needs to be filled
 
 * Suppliers!
