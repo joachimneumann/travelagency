@@ -224,7 +224,12 @@ async function translateEntries(sourceEntries, targetLang, sourceLang, translato
     sourceLangCode: sourceLang,
     domain: "ATP backend UI",
     context: BACKEND_UI_TRANSLATION_CONTEXT,
-    allowGoogleFallback: translatorSession.allowGoogleFallback
+    allowGoogleFallback: translatorSession.allowGoogleFallback,
+    onChunkStart({ startIndex, totalEntries, keys }) {
+      keys.forEach((key, offset) => {
+        console.log(`Translating [${startIndex + offset + 1}/${totalEntries}] ${key}`);
+      });
+    }
   });
 
   const translated = {};

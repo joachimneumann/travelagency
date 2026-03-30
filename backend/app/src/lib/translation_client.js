@@ -170,10 +170,22 @@ export function createTranslationClient({
     const contextNote = normalizeText(options?.context);
     const targetLanguageName = promptLanguageName(targetLang, "English");
     const chunks = chunkEntries(normalizedEntries);
+    const onChunkStart = typeof options?.onChunkStart === "function" ? options.onChunkStart : null;
     const translated = {};
+    let translatedCount = 0;
 
-    for (const chunk of chunks) {
+    for (let chunkIndex = 0; chunkIndex < chunks.length; chunkIndex += 1) {
+      const chunk = chunks[chunkIndex];
       const chunkPayload = Object.fromEntries(chunk);
+      if (onChunkStart) {
+        onChunkStart({
+          chunkIndex,
+          totalChunks: chunks.length,
+          startIndex: translatedCount,
+          totalEntries: normalizedEntries.length,
+          keys: chunk.map(([key]) => key)
+        });
+      }
       const response = await fetch("https://api.openai.com/v1/responses", {
         method: "POST",
         headers: {
@@ -230,6 +242,7 @@ export function createTranslationClient({
       for (const [key] of chunk) {
         translated[key] = normalizeText(parsed[key]);
       }
+      translatedCount += chunk.length;
     }
 
     return translated;
