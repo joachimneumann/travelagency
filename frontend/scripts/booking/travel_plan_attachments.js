@@ -55,17 +55,15 @@ export function createBookingTravelPlanAttachmentsModule(deps) {
   function renderTravelPlanAttachments(plan) {
     const attachments = Array.isArray(plan?.attachments) ? plan.attachments : [];
     const canEdit = Boolean(state.permissions?.canEditBooking);
-    const emptyColspan = canEdit ? 4 : 3;
+    const emptyColspan = canEdit ? 3 : 2;
     return `
       <div class="travel-plan-attachments">
-        <h4 class="travel-plan-attachments__title">${escapeHtml(bookingT("booking.travel_plan.additional_pdfs", "Appended PDFs"))}</h4>
         <div class="backend-table-wrap travel-plan-attachments__table-wrap">
           <table class="backend-table travel-plan-attachments__table">
             <thead>
               <tr>
                 <th class="travel-plan-attachments-col-document">${escapeHtml(bookingT("booking.pdf", "PDF"))}</th>
                 <th class="travel-plan-attachments-col-pages">${escapeHtml(bookingT("booking.pages", "Pages"))}</th>
-                <th class="travel-plan-attachments-col-date">${escapeHtml(bookingT("booking.date", "Date"))}</th>
                 ${canEdit ? `<th class="travel-plan-attachments-col-actions">${escapeHtml(bookingT("backend.table.actions", "Actions"))}</th>` : ""}
               </tr>
             </thead>
@@ -82,7 +80,6 @@ export function createBookingTravelPlanAttachmentsModule(deps) {
                         >${escapeHtml(attachment.filename)}</a>
                       </td>
                       <td class="travel-plan-attachments-col-pages">${escapeHtml(attachmentPageCountLabel(attachment.page_count))}</td>
-                      <td class="travel-plan-attachments-col-date">${escapeHtml(formatDateTime(attachment.created_at))}</td>
                       ${canEdit ? `
                         <td class="travel-plan-attachments-col-actions">
                           <button
@@ -103,13 +100,15 @@ export function createBookingTravelPlanAttachmentsModule(deps) {
           </table>
         </div>
         ${canEdit ? `
-          <button
-            class="btn btn-ghost booking-offer-add-btn travel-plan-attachments__upload-btn"
-            data-travel-plan-upload-attachments
-            data-requires-clean-state
-            data-clean-state-hint-id="travel_plan_attachments_dirty_hint"
-            type="button"
-          >${escapeHtml(bookingT("booking.travel_plan.upload_additional_pdfs", "Add Appendix"))}</button>
+          <div class="travel-plan-attachments__actions">
+            <button
+              class="btn btn-ghost booking-offer-add-btn travel-plan-pdf-btn travel-plan-attachments__upload-btn"
+              data-travel-plan-upload-attachments
+              data-requires-clean-state
+              data-clean-state-hint-id="travel_plan_attachments_dirty_hint"
+              type="button"
+            >${escapeHtml(bookingT("booking.travel_plan.upload_additional_pdfs", "Add Attachment"))}</button>
+          </div>
         ` : ""}
         <span id="travel_plan_attachments_dirty_hint" class="micro booking-inline-status travel-plan-pdf-actions__hint"></span>
       </div>

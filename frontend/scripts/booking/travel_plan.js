@@ -1938,6 +1938,17 @@ export function createBookingTravelPlanModule(ctx) {
       travelPlanStatus(bookingT("booking.action_requires_save", "Save edits to enable."), "info");
       return;
     }
+    const previewWindow = window.open("", "_blank");
+    if (!previewWindow) {
+      travelPlanStatus(bookingT("booking.travel_plan.preview_popup_blocked", "Allow pop-ups to preview the PDF."), "error");
+      return;
+    }
+    previewWindow.document.title = bookingT("booking.travel_plan.preview_pdf", "Preview PDF");
+    previewWindow.document.body.innerHTML = `
+      <div style="font-family: sans-serif; padding: 2rem; color: #234; text-align: center;">
+        ${escapeHtml(bookingT("booking.travel_plan.generating_pdf_overlay", "Generating travel plan PDF. Please wait."))}
+      </div>
+    `;
     const request = bookingTravelPlanPdfRequest({
       baseURL: apiOrigin,
       params: { booking_id: state.booking.id },
@@ -1945,11 +1956,31 @@ export function createBookingTravelPlanModule(ctx) {
     });
     const previewUrl = new URL(request.url, window.location.origin);
     previewUrl.searchParams.set("preview", "1");
-    const link = document.createElement("a");
-    link.href = previewUrl.toString();
-    link.target = "_blank";
-    link.rel = "noopener";
-    link.click();
+    setBookingPageOverlay(els, true, bookingT("booking.travel_plan.generating_pdf_overlay", "Generating travel plan PDF. Please wait."));
+    void fetch(previewUrl.toString(), {
+      method: request.method,
+      credentials: "include",
+      headers: request.headers
+    }).then(async (response) => {
+      if (!response.ok) {
+        throw new Error(`Preview request failed with status ${response.status}`);
+      }
+      const pdfBlob = await response.blob();
+      const objectUrl = URL.createObjectURL(pdfBlob);
+      previewWindow.location.replace(objectUrl);
+      window.setTimeout(() => {
+        URL.revokeObjectURL(objectUrl);
+      }, 60_000);
+    }).catch((error) => {
+      previewWindow.close();
+      travelPlanStatus(bookingT("booking.travel_plan.preview_pdf_failed", "Could not preview the travel plan PDF."), "error");
+      logBrowserConsoleError("[travel-plan] Failed to preview the travel plan PDF.", {
+        booking_id: state.booking?.id || null,
+        url: previewUrl.toString()
+      }, error);
+    }).finally(() => {
+      setBookingPageOverlay(els, false);
+    });
   }
 
   function removeLink(linkId) {
@@ -2418,20 +2449,22 @@ export function createBookingTravelPlanModule(ctx) {
           </button>
         </div>
         <div class="travel-plan-footer__separator" aria-hidden="true"></div>
-        <div class="travel-plan-footer__existing-pdfs">
-          ${travelPlanPdfsModule.renderTravelPlanPdfsTable()}
-        </div>
-        <div class="travel-plan-footer__create-pdf">
-          <div class="travel-plan-pdf-actions">
-            <div class="travel-plan-pdf-actions__buttons">
-              <button class="btn btn-ghost booking-offer-add-btn travel-plan-pdf-btn" data-travel-plan-preview-pdf data-requires-clean-state data-clean-state-hint-id="travel_plan_pdf_dirty_hint" type="button">${escapeHtml(bookingT("booking.travel_plan.preview_pdf", "Preview Travel Plan PDF"))}</button>
-              <button class="btn btn-ghost booking-offer-add-btn travel-plan-pdf-btn" data-travel-plan-create-pdf data-requires-clean-state data-clean-state-hint-id="travel_plan_pdf_dirty_hint" type="button">${escapeHtml(bookingT("booking.travel_plan.create_pdf", "Create Travel Plan PDF"))}</button>
-            </div>
+        <div class="travel-plan-footer__workspace">
+          <div class="travel-plan-footer__preview">
+            <button class="btn btn-ghost booking-offer-add-btn travel-plan-pdf-btn travel-plan-pdf-btn--preview" data-travel-plan-preview-pdf data-requires-clean-state data-clean-state-hint-id="travel_plan_pdf_dirty_hint" type="button">${escapeHtml(bookingT("booking.travel_plan.preview_pdf", "Preview PDF"))}</button>
             <span id="travel_plan_pdf_dirty_hint" class="micro booking-inline-status travel-plan-pdf-actions__hint"></span>
           </div>
-        </div>
-        <div class="travel-plan-footer__attachments">
-          ${travelPlanAttachmentsModule.renderTravelPlanAttachments(state.travelPlanDraft)}
+          <div class="travel-plan-footer__content">
+            <div class="travel-plan-footer__existing-pdfs">
+              ${travelPlanPdfsModule.renderTravelPlanPdfsTable()}
+              <div class="travel-plan-footer__table-action">
+                <button class="btn btn-ghost booking-offer-add-btn travel-plan-pdf-btn" data-travel-plan-create-pdf data-requires-clean-state data-clean-state-hint-id="travel_plan_pdf_dirty_hint" type="button">${escapeHtml(bookingT("booking.travel_plan.create_pdf", "Create PDF"))}</button>
+              </div>
+            </div>
+            <div class="travel-plan-footer__attachments">
+              ${travelPlanAttachmentsModule.renderTravelPlanAttachments(state.travelPlanDraft)}
+            </div>
+          </div>
         </div>
       </div>
     `;
