@@ -338,7 +338,7 @@
                           data-person-field="date_of_birth"
                           type="text"
                           inputmode="numeric"
-                          autocomplete="bday"
+                          autocomplete="off"
                           spellcheck="false"
                           placeholder="YYYY-MM-DD"
                           pattern="[0-9]{4}-[0-9]{2}-[0-9]{2}"
@@ -779,8 +779,8 @@
 
               <div class="backend-controls" id="pricing_deposit_controls" style="margin-bottom: 1rem;" hidden>
                 <div class="field">
-                  <label for="pricing_deposit_amount" data-i18n-id="booking.pricing.deposit_amount">Deposit amount</label>
-                  <div id="pricing_deposit_amount" class="pricing-deposit-amount-text" aria-live="polite"></div>
+                  <span class="field-label" id="pricing_deposit_amount_label" data-i18n-id="booking.pricing.deposit_amount">Deposit amount</span>
+                  <div id="pricing_deposit_amount" class="pricing-deposit-amount-text" aria-live="polite" aria-labelledby="pricing_deposit_amount_label"></div>
                 </div>
                 <div class="field">
                   <label for="pricing_deposit_received_at_input" data-i18n-id="booking.pricing.deposit_received_at">Deposit received at</label>
@@ -795,7 +795,7 @@
                   <input id="pricing_deposit_reference_input" type="text" data-i18n-placeholder-id="booking.pricing.deposit_reference_placeholder" placeholder="Bank transfer ref / receipt no. (optional)" />
                 </div>
                 <div class="field field--compact-action">
-                  <label>&nbsp;</label>
+                  <span class="field-label" aria-hidden="true">&nbsp;</span>
                   <button class="btn pricing-deposit-ack-btn" id="pricing_deposit_received_btn" type="button" data-i18n-id="booking.pricing.full_deposit_received">Full Deposit received</button>
                   <span id="pricing_deposit_action_hint" class="micro booking-inline-status"></span>
                 </div>

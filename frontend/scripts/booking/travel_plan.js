@@ -1256,7 +1256,7 @@ export function createBookingTravelPlanModule(ctx) {
         <div class="travel-plan-grid">
           <div class="field">
             ${renderTravelPlanLocalizedField({
-              label: bookingT("booking.travel_plan.day_title", "Day title"),
+              label: bookingT("booking.travel_plan.day_title", "Summary: What is happening on this day?"),
               idBase: `travel_plan_day_title_${day.id}`,
               dataScope: "travel-plan-day-field",
               dayId: day.id,
@@ -1268,7 +1268,7 @@ export function createBookingTravelPlanModule(ctx) {
           </div>
           <div class="field">
             ${renderTravelPlanLocalizedField({
-              label: bookingT("booking.travel_plan.overnight_location", "Overnight location"),
+              label: bookingT("booking.travel_plan.overnight_location", "Overnight location (optional)"),
               idBase: `travel_plan_day_overnight_${day.id}`,
               dataScope: "travel-plan-day-field",
               dayId: day.id,
@@ -1281,7 +1281,7 @@ export function createBookingTravelPlanModule(ctx) {
         </div>
         <div class="field">
           ${renderTravelPlanLocalizedField({
-            label: bookingT("booking.travel_plan.day_notes", "Day notes"),
+            label: bookingT("booking.travel_plan.day_notes", "Customer-facing additional notes about this day"),
             idBase: `travel_plan_day_notes_${day.id}`,
             dataScope: "travel-plan-day-field",
             dayId: day.id,
@@ -1294,8 +1294,11 @@ export function createBookingTravelPlanModule(ctx) {
         </div>
         ${items.map((item, itemIndex) => renderTravelPlanService(day, item, itemIndex)).join("")}
         <div class="travel-plan-day__footer">
-          <button class="btn travel-plan-day-add-btn travel-plan-day-add-btn--positive" data-travel-plan-add-item="${escapeHtml(day.id)}" type="button">${escapeHtml(bookingT("booking.travel_plan.new_item", "New service"))}</button>
-          <button class="btn btn-ghost travel-plan-day-add-btn" data-travel-plan-open-import="${escapeHtml(day.id)}" data-requires-clean-state type="button">${escapeHtml(bookingT("booking.travel_plan.insert_existing", "Insert existing"))}</button>
+          <button class="btn travel-plan-day__footer-plus" type="button" disabled aria-hidden="true">+</button>
+          <div class="travel-plan-day__footer-actions">
+            <button class="btn travel-plan-day-add-btn travel-plan-day-add-btn--service" data-travel-plan-add-item="${escapeHtml(day.id)}" type="button">${escapeHtml(bookingT("booking.travel_plan.new_item", "New service"))}</button>
+            <button class="btn travel-plan-day-add-btn travel-plan-day-add-btn--service" data-travel-plan-open-import="${escapeHtml(day.id)}" data-requires-clean-state type="button">${escapeHtml(bookingT("booking.travel_plan.insert_existing", "Copy existing service"))}</button>
+          </div>
         </div>
       </section>
     `;

@@ -236,6 +236,16 @@ export function createBookingOfferPaymentTermsModule(ctx) {
     return bookingT("booking.offer.payment_terms.due_type_on_acceptance", "On acceptance");
   }
 
+  function buildOfferPaymentTermFieldId(field, index) {
+    const normalizedIndex = Math.max(0, Number(index || 0));
+    return `offer_payment_term_${field}_${normalizedIndex}`;
+  }
+
+  function buildOfferPaymentTermFieldName(field, index) {
+    const normalizedIndex = Math.max(0, Number(index || 0));
+    return `offer_payment_terms[${normalizedIndex}][${field}]`;
+  }
+
   function formatPaymentTermAmountSpec(amountSpec, currency) {
     const mode = String(amountSpec?.mode || "").trim().toUpperCase();
     if (mode === "PERCENTAGE_OF_OFFER_TOTAL") {
@@ -648,17 +658,34 @@ export function createBookingOfferPaymentTermsModule(ctx) {
       const isFinalBalance = normalizeOfferPaymentTermKindValue(line?.kind) === "FINAL_BALANCE";
       const installmentNumber = resolveOfferPaymentTermInstallmentNumber(lines, index);
       const kindLabel = formatPaymentTermKindLabel(line?.kind, "", { installmentNumber });
+      const kindFieldId = buildOfferPaymentTermFieldId("kind", index);
+      const labelFieldId = buildOfferPaymentTermFieldId("label", index);
+      const amountModeFieldId = buildOfferPaymentTermFieldId("amount_mode", index);
+      const fixedAmountFieldId = buildOfferPaymentTermFieldId("fixed_amount", index);
+      const percentageFieldId = buildOfferPaymentTermFieldId("percentage", index);
+      const dueTypeFieldId = buildOfferPaymentTermFieldId("due_type", index);
+      const fixedDateFieldId = buildOfferPaymentTermFieldId("fixed_date", index);
+      const daysFieldId = buildOfferPaymentTermFieldId("days", index);
+      const descriptionFieldId = buildOfferPaymentTermFieldId("description", index);
       const dueEditor = `<div class="offer-payment-terms__due-editor" data-offer-payment-term-due-editor="${index}">
-            <select data-offer-payment-term-due-type="${index}">
+            <select
+              id="${dueTypeFieldId}"
+              name="${buildOfferPaymentTermFieldName("due_type", index)}"
+              data-offer-payment-term-due-type="${index}"
+            >
               ${OFFER_PAYMENT_DUE_TYPES.map((type) => `<option value="${escapeHtml(type)}" ${type === dueType ? "selected" : ""}>${escapeHtml(formatPaymentTermDueTypeLabel(type))}</option>`).join("")}
             </select>
             <input
+              id="${fixedDateFieldId}"
+              name="${buildOfferPaymentTermFieldName("fixed_date", index)}"
               type="date"
               data-offer-payment-term-fixed-date="${index}"
               value="${escapeHtml(String(line?.due_rule?.fixed_date || ""))}"
               ${offerPaymentDueTypeUsesFixedDate(dueType) ? "" : "hidden"}
             />
             <input
+              id="${daysFieldId}"
+              name="${buildOfferPaymentTermFieldName("days", index)}"
               type="number"
               min="0"
               step="1"
@@ -672,26 +699,57 @@ export function createBookingOfferPaymentTermsModule(ctx) {
           <td class="offer-payment-term-col-kind">
             ${isFinalBalance
               ? `<div class="offer-payment-terms__static offer-payment-terms__static--empty"></div>`
-              : `<select data-offer-payment-term-kind="${index}">
+              : `<select
+                  id="${kindFieldId}"
+                  name="${buildOfferPaymentTermFieldName("kind", index)}"
+                  data-offer-payment-term-kind="${index}"
+                >
                   ${OFFER_PAYMENT_EDITABLE_TERM_KINDS.map((kind) => `<option value="${escapeHtml(kind)}" ${kind === line.kind ? "selected" : ""}>${escapeHtml(formatPaymentTermKindLabel(kind, "", { installmentNumber: resolveOfferPaymentTermInstallmentNumber(lines, index, kind) }))}</option>`).join("")}
                 </select>`}
           </td>
           <td class="offer-payment-term-col-label">
-            <input type="text" data-offer-payment-term-label="${index}" value="${escapeHtml(String(line?.label || kindLabel))}" />
+            <input
+              id="${labelFieldId}"
+              name="${buildOfferPaymentTermFieldName("label", index)}"
+              type="text"
+              data-offer-payment-term-label="${index}"
+              value="${escapeHtml(String(line?.label || kindLabel))}"
+            />
           </td>
           <td class="offer-payment-term-col-amount">
             ${isFinalBalance
               ? `<div class="offer-payment-terms__static offer-payment-terms__static--empty"></div>`
-              : `<select data-offer-payment-term-amount-mode="${index}">
+              : `<select
+                  id="${amountModeFieldId}"
+                  name="${buildOfferPaymentTermFieldName("amount_mode", index)}"
+                  data-offer-payment-term-amount-mode="${index}"
+                >
                   ${OFFER_PAYMENT_EDITABLE_AMOUNT_MODES.map((mode) => `<option value="${escapeHtml(mode)}" ${mode === amountMode ? "selected" : ""}>${escapeHtml(formatPaymentTermAmountModeLabel(mode))}</option>`).join("")}
                 </select>`}
           </td>
           <td class="offer-payment-term-col-value">
             ${amountMode === "FIXED_AMOUNT"
-              ? `<input type="number" min="0" step="${amountStep}" data-offer-payment-term-fixed-amount="${index}" value="${escapeHtml(formatMoneyInputValue(line?.amount_spec?.fixed_amount_cents || 0, currency))}" />`
+              ? `<input
+                  id="${fixedAmountFieldId}"
+                  name="${buildOfferPaymentTermFieldName("fixed_amount", index)}"
+                  type="number"
+                  min="0"
+                  step="${amountStep}"
+                  data-offer-payment-term-fixed-amount="${index}"
+                  value="${escapeHtml(formatMoneyInputValue(line?.amount_spec?.fixed_amount_cents || 0, currency))}"
+                />`
               : amountMode === "PERCENTAGE_OF_OFFER_TOTAL"
                 ? `<div class="offer-payment-terms__input-with-suffix">
-                    <input type="number" min="0" max="100" step="0.01" data-offer-payment-term-percentage="${index}" value="${escapeHtml(formatPercentageBasisPoints(line?.amount_spec?.percentage_basis_points || 0).replace(/%$/, ""))}" />
+                    <input
+                      id="${percentageFieldId}"
+                      name="${buildOfferPaymentTermFieldName("percentage", index)}"
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="0.01"
+                      data-offer-payment-term-percentage="${index}"
+                      value="${escapeHtml(formatPercentageBasisPoints(line?.amount_spec?.percentage_basis_points || 0).replace(/%$/, ""))}"
+                    />
                     <span>%</span>
                   </div>`
                 : `<div class="offer-payment-terms__static offer-payment-terms__static--empty"></div>`}
@@ -711,7 +769,13 @@ export function createBookingOfferPaymentTermsModule(ctx) {
         <tr class="offer-payment-terms__description-row">
           <td class="offer-payment-terms__description-cell" colspan="6">
             <div class="offer-payment-terms__description-title">${escapeHtml(bookingT("booking.offer.payment_terms.customer_note", "Note for customer"))}</div>
-            <textarea class="booking-text-field booking-text-field--customer" rows="2" data-offer-payment-term-description="${index}">${escapeHtml(String(line?.description || ""))}</textarea>
+            <textarea
+              id="${descriptionFieldId}"
+              name="${buildOfferPaymentTermFieldName("description", index)}"
+              class="booking-text-field booking-text-field--customer"
+              rows="2"
+              data-offer-payment-term-description="${index}"
+            >${escapeHtml(String(line?.description || ""))}</textarea>
           </td>
           <td class="offer-payment-terms__description-spacer"></td>
         </tr>
