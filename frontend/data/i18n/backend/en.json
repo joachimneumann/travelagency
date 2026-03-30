@@ -651,7 +651,7 @@
   "booking.travel_plan.create_pdf": "Create Travel Plan PDF",
   "booking.travel_plan.date_invalid": "Enter a valid date.",
   "booking.travel_plan.day_heading": "Day {day}",
-  "booking.travel_plan.day_notes": "Customer-facing additional notes about this day",
+  "booking.travel_plan.day_notes": "Notes about the day",
   "booking.travel_plan.day_title": "Summary: What is happening on this day?",
   "booking.travel_plan.delete_pdf": "Delete travel plan PDF",
   "booking.travel_plan.delete_pdf_confirm": "Delete this travel plan PDF?",

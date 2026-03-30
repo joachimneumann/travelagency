@@ -28,7 +28,6 @@ import {
 } from "../shared/generated_catalogs.js";
 import {
   countTravelPlanServices,
-  countUncoveredTravelPlanServices,
   createEmptyTravelPlan,
   createEmptyTravelPlanDay,
   createEmptyTravelPlanOfferComponentLink,
@@ -589,7 +588,6 @@ export function createBookingTravelPlanModule(ctx) {
   function travelPlanSummary() {
     const days = Array.isArray(state.travelPlanDraft?.days) ? state.travelPlanDraft.days.length : 0;
     const items = countTravelPlanServices(state.travelPlanDraft);
-    const uncovered = countUncoveredTravelPlanServices(state.travelPlanDraft);
     if (!days && !items) {
       return {
         primary: bookingT("booking.travel_plan", "Travel plan"),
@@ -608,7 +606,6 @@ export function createBookingTravelPlanModule(ctx) {
         { count: items }
       )
     ];
-    if (uncovered > 0) secondary.push(bookingT("booking.travel_plan.summary.uncovered", "{count} uncovered", { count: uncovered }));
     return {
       primary: bookingT("booking.travel_plan", "Travel plan"),
       secondary: secondary.join(" · ")
@@ -654,9 +651,9 @@ export function createBookingTravelPlanModule(ctx) {
     return syncTravelPlanCollapsedServiceIds().has(String(itemId || "").trim());
   }
 
-  function ensureTravelPlanCollapsedDayIds() {
+  function ensureTravelPlanCollapsedDayIds(initialIds = null) {
     if (!(state.travelPlanCollapsedDayIds instanceof Set)) {
-      state.travelPlanCollapsedDayIds = new Set();
+      state.travelPlanCollapsedDayIds = new Set(initialIds instanceof Set ? [...initialIds] : initialIds || []);
     }
     return state.travelPlanCollapsedDayIds;
   }
@@ -667,7 +664,7 @@ export function createBookingTravelPlanModule(ctx) {
         .map((day) => String(day?.id || "").trim())
         .filter(Boolean)
     );
-    const collapsedIds = ensureTravelPlanCollapsedDayIds();
+    const collapsedIds = ensureTravelPlanCollapsedDayIds(activeIds);
     for (const dayId of [...collapsedIds]) {
       if (!activeIds.has(dayId)) collapsedIds.delete(dayId);
     }
@@ -728,6 +725,7 @@ export function createBookingTravelPlanModule(ctx) {
   }
 
   function travelPlanDayCollapsedSummary(day, items) {
+    const dateLabel = String(day?.date || "").trim();
     const title = resolveLocalizedDraftBranchText(day?.title_i18n ?? day?.title, bookingSourceLang(), "").trim();
     const overnightLocation = resolveLocalizedDraftBranchText(
       day?.overnight_location_i18n ?? day?.overnight_location,
@@ -735,14 +733,15 @@ export function createBookingTravelPlanModule(ctx) {
       ""
     ).trim();
     const parts = [];
+    if (dateLabel) parts.push(dateLabel);
     if (title) parts.push(title);
-    if (overnightLocation) {
-      parts.push(bookingT("booking.travel_plan.overnight_location_summary", "Overnight: {location}", {
-        location: overnightLocation
-      }));
-    }
-    if (!parts.length && items.length) {
-      parts.push(items.length === 1 ? "1 service" : `${items.length} services`);
+    if (overnightLocation) parts.push(overnightLocation);
+    if (items.length) {
+      parts.push(bookingT(
+        items.length === 1 ? "booking.travel_plan.summary.item" : "booking.travel_plan.summary.items",
+        items.length === 1 ? "{count} service" : "{count} services",
+        { count: items.length }
+      ));
     }
     return parts.join(" · ");
   }
@@ -1315,18 +1314,21 @@ export function createBookingTravelPlanModule(ctx) {
           <div class="travel-plan-day__head">
             <div class="travel-plan-day__head-copy">
               <div class="travel-plan-day__title-row">
-                <h3>${escapeHtml(formatTravelPlanDayHeading(dayIndex))}:</h3>
-                <div class="field travel-plan-day__date-field">
-                  ${renderTravelPlanDateInput({
-                    id: `travel_plan_day_date_${day.id}`,
-                    dataAttribute: 'data-travel-plan-day-field="date"',
-                    value: day.date,
-                    disabled: !state.permissions.canEditBooking,
-                    ariaLabel: `${formatTravelPlanDayHeading(dayIndex)} ${bookingT("booking.date", "Date")}`
-                  })}
-                </div>
+                ${collapsed
+                  ? `<h3 class="travel-plan-day__collapsed-heading" title="${escapeHtml(collapsedSummary || formatTravelPlanDayHeading(dayIndex))}">${escapeHtml(collapsedSummary || formatTravelPlanDayHeading(dayIndex))}</h3>`
+                  : `
+                    <h3>${escapeHtml(formatTravelPlanDayHeading(dayIndex))}:</h3>
+                    <div class="field travel-plan-day__date-field">
+                      ${renderTravelPlanDateInput({
+                        id: `travel_plan_day_date_${day.id}`,
+                        dataAttribute: 'data-travel-plan-day-field="date"',
+                        value: day.date,
+                        disabled: !state.permissions.canEditBooking,
+                        ariaLabel: `${formatTravelPlanDayHeading(dayIndex)} ${bookingT("booking.date", "Date")}`
+                      })}
+                    </div>
+                  `}
               </div>
-              ${collapsed && collapsedSummary ? `<div class="travel-plan-day__collapsed-summary">${escapeHtml(collapsedSummary)}</div>` : ""}
             </div>
             <button class="btn btn-ghost offer-remove-btn" data-travel-plan-remove-day="${escapeHtml(day.id)}" type="button" aria-label="${escapeHtml(bookingT("booking.travel_plan.remove_day", "Remove day"))}">&times;</button>
           </div>
@@ -1359,7 +1361,7 @@ export function createBookingTravelPlanModule(ctx) {
             </div>
             <div class="field">
               ${renderTravelPlanLocalizedField({
-                label: bookingT("booking.travel_plan.day_notes", "Customer-facing additional notes about this day"),
+                label: bookingT("booking.travel_plan.day_notes", "Notes about the day"),
                 idBase: `travel_plan_day_notes_${day.id}`,
                 dataScope: "travel-plan-day-field",
                 dayId: day.id,
@@ -1375,12 +1377,12 @@ export function createBookingTravelPlanModule(ctx) {
             </div>
           </div>
           <div class="travel-plan-service-footer">
-            <button class="btn travel-plan-service-footer__plus" type="button" disabled aria-hidden="true">+</button>
-            <div class="travel-plan-service-footer__main">
-              <div class="travel-plan-service-footer__actions">
-                <button class="btn travel-plan-day-add-btn travel-plan-day-add-btn--service" data-travel-plan-add-item="${escapeHtml(day.id)}" type="button">${escapeHtml(bookingT("booking.travel_plan.new_item", "New service"))}</button>
-                <button class="btn travel-plan-day-add-btn travel-plan-day-add-btn--service" data-travel-plan-open-import="${escapeHtml(day.id)}" data-requires-clean-state type="button">${escapeHtml(bookingT("booking.travel_plan.insert_existing", "Copy existing service"))}</button>
-              </div>
+            <div class="travel-plan-service-footer__actions">
+              <button class="btn travel-plan-day-add-btn travel-plan-day-add-btn--service travel-plan-day-add-btn--service-create" data-travel-plan-add-item="${escapeHtml(day.id)}" type="button">
+                <span class="travel-plan-add-btn__icon" aria-hidden="true">+</span>
+                <span class="travel-plan-add-btn__label">${escapeHtml(bookingT("booking.travel_plan.new_item", "New service"))}</span>
+              </button>
+              <button class="btn travel-plan-day-add-btn travel-plan-day-add-btn--service" data-travel-plan-open-import="${escapeHtml(day.id)}" data-requires-clean-state type="button">${escapeHtml(bookingT("booking.travel_plan.insert_existing", "Copy existing service"))}</button>
             </div>
           </div>
         </div>
@@ -2188,8 +2190,10 @@ export function createBookingTravelPlanModule(ctx) {
       ${(Array.isArray(state.travelPlanDraft.days) ? state.travelPlanDraft.days : []).map((day, dayIndex) => renderTravelPlanDay(day, dayIndex)).join("") || `<p class="travel-plan-empty">${escapeHtml(bookingT("booking.travel_plan.no_days", "No travel-plan days yet."))}</p>`}
       <div class="travel-plan-footer">
         <div class="travel-plan-footer__new-day">
-          <button class="btn travel-plan-footer__new-day-plus" type="button" disabled aria-hidden="true">+</button>
-          <button class="btn btn-ghost booking-offer-add-btn travel-plan-add-day-btn" data-travel-plan-add-day type="button">${escapeHtml(bookingT("booking.travel_plan.new_day", "New day"))}</button>
+          <button class="btn btn-ghost booking-offer-add-btn travel-plan-add-day-btn travel-plan-add-day-btn--combined" data-travel-plan-add-day type="button">
+            <span class="travel-plan-add-btn__icon" aria-hidden="true">+</span>
+            <span class="travel-plan-add-btn__label">${escapeHtml(bookingT("booking.travel_plan.new_day", "New day"))}</span>
+          </button>
         </div>
         <div class="travel-plan-footer__separator" aria-hidden="true"></div>
         <div class="travel-plan-footer__existing-pdfs">

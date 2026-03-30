@@ -59,14 +59,6 @@ Travler
 * 1 traveling: Joachim Neumann (Primary contact) --> 1 Traveler: Joachim Neumann
 * "The web form indicates 2 travelers, but this booking currently has one traveler only." -> "The web form indicated 2 travelers"
 
-Travel Plan Colors
-===================
-1.
-* rename --info-surface-alpha to --travelplan_day_color
-* Rename --success-surface-alpha to --travelplan_service_color;
-2.
-* set travelplan_day_color to rgba(12, 99, 180, 0.25);
-* set travelplan_service_color to rgba(12, 99, 180, 0.25);
 
 Travel Plan
 ===========
