@@ -4,20 +4,55 @@ import { normalizeLanguageCode, promptLanguageName } from "../../../../shared/ge
 function parseJsonObject(text) {
   const normalized = normalizeText(text);
   if (!normalized) return null;
+  const withoutCodeFence = normalized
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/\s*```$/i, "");
   try {
-    const parsed = JSON.parse(normalized);
+    const parsed = JSON.parse(withoutCodeFence);
     return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : null;
   } catch {
-    const start = normalized.indexOf("{");
-    const end = normalized.lastIndexOf("}");
+    const start = withoutCodeFence.indexOf("{");
+    const end = withoutCodeFence.lastIndexOf("}");
     if (start < 0 || end <= start) return null;
     try {
-      const parsed = JSON.parse(normalized.slice(start, end + 1));
+      const parsed = JSON.parse(withoutCodeFence.slice(start, end + 1));
       return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : null;
     } catch {
       return null;
     }
   }
+}
+
+function buildChunkJsonSchema(chunkPayload) {
+  const keys = Object.keys(chunkPayload || {});
+  return {
+    type: "json_schema",
+    name: "translation_chunk",
+    strict: true,
+    schema: {
+      type: "object",
+      properties: Object.fromEntries(keys.map((key) => [key, { type: "string" }])),
+      required: keys,
+      additionalProperties: false
+    }
+  };
+}
+
+function extractResponseOutputText(payload) {
+  const direct = normalizeText(payload?.output_text);
+  if (direct) return direct;
+
+  const items = Array.isArray(payload?.output) ? payload.output : [];
+  const parts = [];
+  for (const item of items) {
+    if (item?.type !== "message") continue;
+    const content = Array.isArray(item?.content) ? item.content : [];
+    for (const entry of content) {
+      const text = normalizeText(entry?.text || entry?.value);
+      if (text) parts.push(text);
+    }
+  }
+  return parts.join("\n").trim();
 }
 
 function chunkEntries(entries, { maxEntries = 40, maxChars = 7000 } = {}) {
@@ -66,10 +101,14 @@ function extractGoogleTranslatedText(payload) {
 export function createTranslationClient({
   apiKey,
   model = "gpt-4o-mini",
+  organizationId = "",
+  projectId = "",
   googleFallbackEnabled = true
 } = {}) {
   const normalizedApiKey = normalizeText(apiKey);
   const normalizedModel = normalizeText(model) || "gpt-4o-mini";
+  const normalizedOrganizationId = normalizeText(organizationId);
+  const normalizedProjectId = normalizeText(projectId);
   const allowGoogleFallbackByDefault = googleFallbackEnabled !== false;
 
   async function translateEntriesWithGoogle(entries, targetLang, options = {}) {
@@ -128,6 +167,7 @@ export function createTranslationClient({
       || promptLanguageName(options?.sourceLangCode, "English")
       || "English";
     const domainLabel = normalizeText(options?.domain || "travel planning") || "travel planning";
+    const contextNote = normalizeText(options?.context);
     const targetLanguageName = promptLanguageName(targetLang, "English");
     const chunks = chunkEntries(normalizedEntries);
     const translated = {};
@@ -138,37 +178,25 @@ export function createTranslationClient({
         method: "POST",
         headers: {
           Authorization: `Bearer ${normalizedApiKey}`,
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
+          ...(normalizedOrganizationId ? { "OpenAI-Organization": normalizedOrganizationId } : {}),
+          ...(normalizedProjectId ? { "OpenAI-Project": normalizedProjectId } : {})
         },
         body: JSON.stringify({
           model: normalizedModel,
-          input: [
-            {
-              role: "system",
-              content: [
-                {
-                  type: "input_text",
-                  text: [
-                    `You translate ${domainLabel} copy from ${sourceLang} into ${targetLanguageName}.`,
-                    "Return JSON only.",
-                    "Keep the exact same keys.",
-                    "Preserve line breaks and blank lines within each value exactly.",
-                    "Preserve proper nouns, brand names, phone numbers, ISO codes, URLs, and currency codes unless a natural translation requires otherwise.",
-                    "Do not add explanations."
-                  ].join(" ")
-                }
-              ]
-            },
-            {
-              role: "user",
-              content: [
-                {
-                  type: "input_text",
-                  text: JSON.stringify(chunkPayload)
-                }
-              ]
-            }
-          ]
+          instructions: [
+            `You translate ${domainLabel} copy from ${sourceLang} into ${targetLanguageName}.`,
+            contextNote ? `Context: ${contextNote}` : "",
+            "Return JSON only.",
+            "Keep the exact same keys.",
+            "Preserve line breaks and blank lines within each value exactly.",
+            "Preserve proper nouns, brand names, phone numbers, ISO codes, URLs, and currency codes unless a natural translation requires otherwise.",
+            "Do not add explanations."
+          ].filter(Boolean).join(" "),
+          input: JSON.stringify(chunkPayload),
+          text: {
+            format: buildChunkJsonSchema(chunkPayload)
+          }
         })
       });
 
@@ -189,7 +217,7 @@ export function createTranslationClient({
       }
 
       const payload = await response.json();
-      const parsed = parseJsonObject(payload?.output_text);
+      const parsed = parseJsonObject(extractResponseOutputText(payload));
       if (!parsed) {
         if (allowGoogleFallback) {
           return translateEntriesWithGoogle(Object.fromEntries(normalizedEntries), targetLang, options);

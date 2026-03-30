@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+SYNC_SCRIPT="$ROOT_DIR/scripts/sync_backend_i18n.mjs"
+
+usage() {
+  cat <<'EOF'
+Usage:
+  ./scripts/translate update
+  ./scripts/translate all
+
+Commands:
+  update   Translate only missing or stale backend UI translations (en -> vi)
+  all      Retranslate all backend UI translations (en -> vi)
+EOF
+}
+
+if [[ ! -f "$SYNC_SCRIPT" ]]; then
+  echo "Error: sync script not found at $SYNC_SCRIPT" >&2
+  exit 1
+fi
+
+if ! command -v node >/dev/null 2>&1; then
+  echo "Error: required command 'node' is not installed." >&2
+  exit 1
+fi
+
+case "${1:-}" in
+  "")
+    usage
+    ;;
+  -h|--help|help)
+    usage
+    ;;
+  update)
+    shift
+    if [[ "$#" -ne 0 ]]; then
+      echo "Error: update does not accept extra arguments." >&2
+      usage >&2
+      exit 1
+    fi
+    exec node "$SYNC_SCRIPT" translate --target vi
+    ;;
+  all)
+    shift
+    if [[ "$#" -ne 0 ]]; then
+      echo "Error: all does not accept extra arguments." >&2
+      usage >&2
+      exit 1
+    fi
+    exec node "$SYNC_SCRIPT" translate --target vi --force-all
+    ;;
+  *)
+    echo "Error: unknown command '${1}'." >&2
+    usage >&2
+    exit 1
+    ;;
+esac

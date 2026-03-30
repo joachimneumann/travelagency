@@ -46,6 +46,7 @@ META_WEBHOOK_VERIFY_TOKEN="${META_WEBHOOK_VERIFY_TOKEN:-}"
 META_APP_SECRET="${META_APP_SECRET:-}"
 OPENAI_API_KEY="${OPENAI_API_KEY:-}"
 OPENAI_TRANSLATION_MODEL="${OPENAI_TRANSLATION_MODEL:-${OPENAI_MODEL:-gpt-4.1}}"
+BACKEND_I18N_STRICT="${BACKEND_I18N_STRICT:-1}"
 BOOKING_CONFIRMATION_TOKEN_SECRET="${BOOKING_CONFIRMATION_TOKEN_SECRET:-}"
 BOOKING_CONFIRMATION_TOKEN_TTL_SECONDS="${BOOKING_CONFIRMATION_TOKEN_TTL_SECONDS:-}"
 CORS_ORIGIN="${CORS_ORIGIN:-http://localhost:${FRONTEND_PORT},http://127.0.0.1:${FRONTEND_PORT},http://localhost,http://127.0.0.1}"
@@ -101,6 +102,27 @@ ensure_backend_deps() {
 
   echo "Backend dependencies are missing. Installing from ${BACKEND_DIR} ..."
   (cd "$BACKEND_DIR" && npm ci --no-audit --no-fund)
+}
+
+check_backend_i18n() {
+  local sync_script="$ROOT_DIR/scripts/sync_backend_i18n.mjs"
+  if [ ! -f "$sync_script" ]; then
+    echo "Error: backend i18n sync script not found at $sync_script" >&2
+    exit 1
+  fi
+
+  if node "$sync_script" check; then
+    return
+  fi
+
+  echo "Backend UI translations are out of sync." >&2
+  echo "Run: node scripts/sync_backend_i18n.mjs translate --target vi" >&2
+  if [ "$BACKEND_I18N_STRICT" = "0" ]; then
+    echo "Continuing because BACKEND_I18N_STRICT=0." >&2
+    return
+  fi
+  echo "Refusing to start because BACKEND_I18N_STRICT=${BACKEND_I18N_STRICT}." >&2
+  exit 1
 }
 
 stop_listeners_on_port() {
@@ -184,6 +206,7 @@ EOF
   fi
 
   ensure_backend_deps
+  check_backend_i18n
 
   stop_existing_backend
 

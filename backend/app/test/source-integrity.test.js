@@ -1,11 +1,14 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { execFile } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
+import { promisify } from "node:util";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const execFileAsync = promisify(execFile);
 
 async function topLevelFunctionDeclarations(filePath) {
   const source = await readFile(filePath, "utf8");
@@ -114,6 +117,26 @@ test("booking handlers do not contain duplicate top-level helper declarations", 
   const names = await topLevelFunctionDeclarations(filePath);
   const duplicates = names.filter((name, index) => names.indexOf(name) !== index);
   assert.deepEqual(duplicates, []);
+});
+
+test("backend ui i18n sync script passes and local backend startup is strict by default", async () => {
+  const repoRoot = path.resolve(__dirname, "..", "..", "..");
+  const syncScriptPath = path.join(repoRoot, "scripts", "sync_backend_i18n.mjs");
+  const startLocalBackendPath = path.join(repoRoot, "scripts", "start_local_backend.sh");
+  const startLocalBackendSource = await readFile(startLocalBackendPath, "utf8");
+
+  await execFileAsync(process.execPath, [syncScriptPath, "check"], { cwd: repoRoot });
+
+  assert.match(
+    startLocalBackendSource,
+    /BACKEND_I18N_STRICT="\$\{BACKEND_I18N_STRICT:-1\}"/,
+    "Local backend startup should enable strict backend i18n checking by default"
+  );
+  assert.match(
+    startLocalBackendSource,
+    /node "\$sync_script" check/,
+    "Local backend startup should run the backend i18n sync check before booting"
+  );
 });
 
 test("booking page keeps critical init handlers wired to real local functions", async () => {
