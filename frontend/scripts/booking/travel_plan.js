@@ -1202,92 +1202,95 @@ export function createBookingTravelPlanModule(ctx) {
             aria-expanded="${collapsed ? "false" : "true"}"
           >${collapsed ? "+" : "−"}</button>
         </div>
-        <div class="travel-plan-service__head">
-          <div class="travel-plan-service__title">
-            <span class="travel-plan-service__collapsed-title">${escapeHtml(collapsedTitle)}</span>
-            ${collapsed && timingSummary ? `<span class="travel-plan-service__collapsed-timing">${escapeHtml(timingSummary)}</span>` : ""}
-            ${coverageBadge}
-          </div>
-          <div class="travel-plan-service__actions">
-            <button class="btn btn-ghost travel-plan-move-btn" data-travel-plan-move-item-up="${escapeHtml(item.id)}" type="button" aria-label="${escapeHtml(bookingT("booking.travel_plan.move_item_up", "Move service up"))}">&#8593;</button>
-            <button class="btn btn-ghost travel-plan-move-btn" data-travel-plan-move-item-down="${escapeHtml(item.id)}" type="button" aria-label="${escapeHtml(bookingT("booking.travel_plan.move_item_down", "Move service down"))}">&#8595;</button>
-            <button class="btn btn-ghost offer-remove-btn" data-travel-plan-remove-item="${escapeHtml(item.id)}" type="button" aria-label="${escapeHtml(bookingT("booking.travel_plan.remove_item", "Remove service"))}">&times;</button>
-          </div>
-        </div>
-        <div class="travel-plan-service__body">
-        <div class="travel-plan-grid travel-plan-grid--item-kind${item.kind === "accommodation" ? " travel-plan-grid--item-kind-accommodation" : ""}">
-          <div class="field">
-            <label for="travel_plan_kind_${escapeHtml(item.id)}">${escapeHtml(bookingT("booking.travel_plan.kind_label", "Kind"))}</label>
-            <select id="travel_plan_kind_${escapeHtml(item.id)}" data-travel-plan-service-field="kind">
-              ${itemKindOptions(item.kind)}
-            </select>
-          </div>
-          ${accommodationControls}
-        </div>
-        <div class="travel-plan-grid">
-          <div class="field">
-            ${renderTravelPlanLocalizedField({
-              label: bookingT("booking.travel_plan.item_title", "Service title"),
-              idBase: `travel_plan_title_${item.id}`,
-              dataScope: "travel-plan-service-field",
-              dayId: day.id,
-              itemId: item.id,
-              field: "title",
-              type: "input",
-              sourceValue: resolveLocalizedDraftBranchText(item.title_i18n ?? item.title, bookingSourceLang(), ""),
-              localizedValue: resolveLocalizedDraftBranchText(item.title_i18n ?? item.title, bookingContentLang(), "")
-            })}
-          </div>
-          <div class="field">
-            ${renderTravelPlanLocalizedField({
-              label: bookingT("booking.location", "Location"),
-              idBase: `travel_plan_location_${item.id}`,
-              dataScope: "travel-plan-service-field",
-              dayId: day.id,
-              itemId: item.id,
-              field: "location",
-              type: "input",
-              sourceValue: resolveLocalizedDraftBranchText(item.location_i18n ?? item.location, bookingSourceLang(), ""),
-              localizedValue: resolveLocalizedDraftBranchText(item.location_i18n ?? item.location, bookingContentLang(), "")
-            })}
-          </div>
-        </div>
-        <div class="travel-plan-grid travel-plan-grid--item travel-plan-grid--item-timing">
-          ${renderTravelPlanTimingFields(day, item)}
-        </div>
-        <div class="travel-plan-grid travel-plan-grid--item">
-          <div class="field">
-            ${renderTravelPlanLocalizedField({
-              label: bookingT("booking.details", "Details"),
-              idBase: `travel_plan_details_${item.id}`,
-              dataScope: "travel-plan-service-field",
-              dayId: day.id,
-              itemId: item.id,
-              field: "details",
-              type: "textarea",
-              rows: 3,
-              sourceValue: resolveLocalizedDraftBranchText(item.details_i18n ?? item.details, bookingSourceLang(), ""),
-              localizedValue: resolveLocalizedDraftBranchText(item.details_i18n ?? item.details, bookingContentLang(), "")
-            })}
-          </div>
-          <div class="field">
-            <label for="travel_plan_financial_note_${escapeHtml(item.id)}">${escapeHtml(bookingT("booking.travel_plan.financial_note", "Supplier / financial note (ATP internal)"))}</label>
-            <textarea class="booking-text-field booking-text-field--internal" id="travel_plan_financial_note_${escapeHtml(item.id)}" data-travel-plan-service-field="financial_note" rows="3">${escapeHtml(item.financial_note || "")}</textarea>
-          </div>
-        </div>
-        ${travelPlanImagesModule.renderTravelPlanServiceImages(day, item)}
-        ${showFinancialCoverage ? `<div class="travel-plan-links">
-          <div class="travel-plan-links__head">
-            <h4>${escapeHtml(bookingT("booking.travel_plan.financial_coverage", "Financial coverage"))}</h4>
-            <div class="travel-plan-links__actions">
-              <button class="btn btn-ghost travel-plan-link-add-btn" data-travel-plan-add-link="${escapeHtml(item.id)}" type="button">${escapeHtml(bookingT("booking.travel_plan.link_offer_component", "Add offer component"))}</button>
-              <button class="btn btn-ghost travel-plan-link-toggle-btn${noFinancialCoverageNeeded ? " travel-plan-link-toggle-btn--active" : ""}" data-travel-plan-toggle-no-coverage="${escapeHtml(item.id)}" type="button" aria-pressed="${noFinancialCoverageNeeded ? "true" : "false"}"${hasLinkedOfferComponents ? ` disabled title="${escapeHtml(bookingT("booking.travel_plan.no_financial_coverage_blocked", "Remove linked offer components first."))}"` : ""}>${escapeHtml(bookingT("booking.travel_plan.no_financial_coverage_needed", "No financial coverage needed"))}</button>
+        <div class="travel-plan-service__main">
+          <div class="travel-plan-service__head">
+            <div class="travel-plan-service__title">
+              <span class="travel-plan-service__collapsed-title">${escapeHtml(collapsedTitle)}</span>
+              ${collapsed && timingSummary ? `<span class="travel-plan-service__collapsed-timing">${escapeHtml(timingSummary)}</span>` : ""}
+              ${coverageBadge}
+            </div>
+            <div class="travel-plan-service__actions">
+              <button class="btn btn-ghost travel-plan-move-btn" data-travel-plan-move-item-up="${escapeHtml(item.id)}" type="button" aria-label="${escapeHtml(bookingT("booking.travel_plan.move_item_up", "Move service up"))}">&#8593;</button>
+              <button class="btn btn-ghost travel-plan-move-btn" data-travel-plan-move-item-down="${escapeHtml(item.id)}" type="button" aria-label="${escapeHtml(bookingT("booking.travel_plan.move_item_down", "Move service down"))}">&#8595;</button>
+              <button class="btn btn-ghost offer-remove-btn" data-travel-plan-remove-item="${escapeHtml(item.id)}" type="button" aria-label="${escapeHtml(bookingT("booking.travel_plan.remove_item", "Remove service"))}">&times;</button>
             </div>
           </div>
-          ${renderTravelPlanLinkRows(item.id, day.day_number)}
-        </div>` : ""}
+          <div class="travel-plan-service__body">
+          <div class="travel-plan-grid travel-plan-grid--item-kind${item.kind === "accommodation" ? " travel-plan-grid--item-kind-accommodation" : ""}">
+            <div class="field">
+              <label for="travel_plan_kind_${escapeHtml(item.id)}">${escapeHtml(bookingT("booking.travel_plan.kind_label", "Kind"))}</label>
+              <select id="travel_plan_kind_${escapeHtml(item.id)}" data-travel-plan-service-field="kind">
+                ${itemKindOptions(item.kind)}
+              </select>
+            </div>
+            ${accommodationControls}
+          </div>
+          <div class="travel-plan-grid">
+            <div class="field">
+              ${renderTravelPlanLocalizedField({
+                label: bookingT("booking.travel_plan.item_title", "Service title"),
+                idBase: `travel_plan_title_${item.id}`,
+                dataScope: "travel-plan-service-field",
+                dayId: day.id,
+                itemId: item.id,
+                field: "title",
+                type: "input",
+                sourceValue: resolveLocalizedDraftBranchText(item.title_i18n ?? item.title, bookingSourceLang(), ""),
+                localizedValue: resolveLocalizedDraftBranchText(item.title_i18n ?? item.title, bookingContentLang(), "")
+              })}
+            </div>
+            <div class="field">
+              ${renderTravelPlanLocalizedField({
+                label: bookingT("booking.location", "Location"),
+                idBase: `travel_plan_location_${item.id}`,
+                dataScope: "travel-plan-service-field",
+                dayId: day.id,
+                itemId: item.id,
+                field: "location",
+                type: "input",
+                sourceValue: resolveLocalizedDraftBranchText(item.location_i18n ?? item.location, bookingSourceLang(), ""),
+                localizedValue: resolveLocalizedDraftBranchText(item.location_i18n ?? item.location, bookingContentLang(), "")
+              })}
+            </div>
+          </div>
+          <div class="travel-plan-grid travel-plan-grid--item travel-plan-grid--item-timing">
+            ${renderTravelPlanTimingFields(day, item)}
+          </div>
+          <div class="travel-plan-grid travel-plan-grid--item">
+            <div class="field">
+              ${renderTravelPlanLocalizedField({
+                label: bookingT("booking.details", "Details"),
+                idBase: `travel_plan_details_${item.id}`,
+                dataScope: "travel-plan-service-field",
+                dayId: day.id,
+                itemId: item.id,
+                field: "details",
+                type: "textarea",
+                rows: 3,
+                sourceValue: resolveLocalizedDraftBranchText(item.details_i18n ?? item.details, bookingSourceLang(), ""),
+                localizedValue: resolveLocalizedDraftBranchText(item.details_i18n ?? item.details, bookingContentLang(), "")
+              })}
+            </div>
+            <div class="field">
+              <label for="travel_plan_financial_note_${escapeHtml(item.id)}">${escapeHtml(bookingT("booking.travel_plan.financial_note", "Supplier / financial note (ATP internal)"))}</label>
+              <textarea class="booking-text-field booking-text-field--internal" id="travel_plan_financial_note_${escapeHtml(item.id)}" data-travel-plan-service-field="financial_note" rows="3">${escapeHtml(item.financial_note || "")}</textarea>
+            </div>
+          </div>
+          ${travelPlanImagesModule.renderTravelPlanServiceImages(day, item)}
+          ${showFinancialCoverage ? `<div class="travel-plan-links">
+            <div class="travel-plan-links__head">
+              <h4>${escapeHtml(bookingT("booking.travel_plan.financial_coverage", "Financial coverage"))}</h4>
+              <div class="travel-plan-links__actions">
+                <button class="btn btn-ghost travel-plan-link-add-btn" data-travel-plan-add-link="${escapeHtml(item.id)}" type="button">${escapeHtml(bookingT("booking.travel_plan.link_offer_component", "Add offer component"))}</button>
+                <button class="btn btn-ghost travel-plan-link-toggle-btn${noFinancialCoverageNeeded ? " travel-plan-link-toggle-btn--active" : ""}" data-travel-plan-toggle-no-coverage="${escapeHtml(item.id)}" type="button" aria-pressed="${noFinancialCoverageNeeded ? "true" : "false"}"${hasLinkedOfferComponents ? ` disabled title="${escapeHtml(bookingT("booking.travel_plan.no_financial_coverage_blocked", "Remove linked offer components first."))}"` : ""}>${escapeHtml(bookingT("booking.travel_plan.no_financial_coverage_needed", "No financial coverage needed"))}</button>
+              </div>
+            </div>
+            ${renderTravelPlanLinkRows(item.id, day.day_number)}
+          </div>
+          ` : ""}
+          </div>
+          </div>
         </div>
-      </div>
     `;
   }
 
@@ -1367,10 +1370,14 @@ export function createBookingTravelPlanModule(ctx) {
                 localizedValue: resolveLocalizedDraftBranchText(day.notes_i18n ?? day.notes, bookingContentLang(), "")
               })}
             </div>
-            ${items.map((item, itemIndex) => renderTravelPlanService(day, item, itemIndex)).join("")}
-            <div class="travel-plan-day__footer">
-              <button class="btn travel-plan-day__footer-plus" type="button" disabled aria-hidden="true">+</button>
-              <div class="travel-plan-day__footer-actions">
+            <div class="travel-plan-day__services">
+              ${items.map((item, itemIndex) => renderTravelPlanService(day, item, itemIndex)).join("")}
+            </div>
+          </div>
+          <div class="travel-plan-service-footer">
+            <button class="btn travel-plan-service-footer__plus" type="button" disabled aria-hidden="true">+</button>
+            <div class="travel-plan-service-footer__main">
+              <div class="travel-plan-service-footer__actions">
                 <button class="btn travel-plan-day-add-btn travel-plan-day-add-btn--service" data-travel-plan-add-item="${escapeHtml(day.id)}" type="button">${escapeHtml(bookingT("booking.travel_plan.new_item", "New service"))}</button>
                 <button class="btn travel-plan-day-add-btn travel-plan-day-add-btn--service" data-travel-plan-open-import="${escapeHtml(day.id)}" data-requires-clean-state type="button">${escapeHtml(bookingT("booking.travel_plan.insert_existing", "Copy existing service"))}</button>
               </div>
