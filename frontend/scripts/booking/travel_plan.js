@@ -2181,6 +2181,7 @@ export function createBookingTravelPlanModule(ctx) {
       ${(Array.isArray(state.travelPlanDraft.days) ? state.travelPlanDraft.days : []).map((day, dayIndex) => renderTravelPlanDay(day, dayIndex)).join("") || `<p class="travel-plan-empty">${escapeHtml(bookingT("booking.travel_plan.no_days", "No travel-plan days yet."))}</p>`}
       <div class="travel-plan-footer">
         <div class="travel-plan-footer__new-day">
+          <button class="btn travel-plan-footer__new-day-plus" type="button" disabled aria-hidden="true">+</button>
           <button class="btn btn-ghost booking-offer-add-btn travel-plan-add-day-btn" data-travel-plan-add-day type="button">${escapeHtml(bookingT("booking.travel_plan.new_day", "New day"))}</button>
         </div>
         <div class="travel-plan-footer__separator" aria-hidden="true"></div>
