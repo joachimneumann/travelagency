@@ -6,6 +6,16 @@
 
   const PREFIX = "[localhost-diagnostics]";
   const apiBase = String(window.ASIATRAVELPLAN_API_BASE || window.location.origin).replace(/\/$/, "");
+  const localBackendPort = String(window.ASIATRAVELPLAN_LOCAL_BACKEND_PORT || "8787").trim() || "8787";
+  const healthProbeBase = (() => {
+    try {
+      const url = new URL(apiBase || window.location.origin, window.location.origin);
+      url.port = localBackendPort;
+      return url.origin;
+    } catch {
+      return `${window.location.protocol}//${host}:${localBackendPort}`;
+    }
+  })();
 
   function snapshot(extra = {}) {
     return {
@@ -53,7 +63,7 @@
   }
 
   async function probeBackendHealth() {
-    const healthUrl = `${apiBase}/health`;
+    const healthUrl = `${healthProbeBase}/health`;
     const controller = typeof AbortController === "function" ? new AbortController() : null;
     const timeoutId = window.setTimeout(() => controller?.abort(), 2500);
     info("probing backend health", { health_url: healthUrl });

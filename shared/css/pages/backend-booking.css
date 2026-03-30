@@ -5,6 +5,18 @@
   --wa-text: var(--wa-text-strong);
   --wa-meta: var(--wa-text-muted);
   --booking-form-control-inline-start: 0.72rem;
+  --booking-type-display: clamp(2.1rem, 3.6vw, 3rem);
+  --booking-type-display-input: clamp(1.9rem, 3.3vw, 2.6rem);
+  --booking-type-title: clamp(1.28rem, 2vw, 1.55rem);
+  --booking-type-section: 1.04rem;
+  --booking-type-body: var(--font-size-base);
+  --booking-type-meta: 0.94rem;
+  --booking-type-label: 0.86rem;
+  --booking-type-micro: 0.78rem;
+  --booking-font-weight-strong: var(--font-weight-semibold);
+  --booking-font-weight-bold: var(--font-weight-bold);
+  --booking-letter-spacing-tight: -0.015em;
+  --booking-letter-spacing-label: 0.01em;
   font-family: var(--font-family-sans);
   background-color: #efe7da;
   background-image:
@@ -65,8 +77,33 @@
 
 .booking-detail-page .booking-page-overlay__text {
   color: var(--text-strong);
-  font-size: var(--font-size-body);
-  font-weight: var(--font-weight-semibold);
+  font-size: var(--booking-type-body);
+  font-weight: var(--booking-font-weight-strong);
+}
+
+.booking-detail-page .backend-collapsible__summary,
+.booking-detail-page .backend-section__summary,
+.booking-detail-page .booking-collapsible__summary,
+.booking-detail-page .booking-section__summary {
+  font-size: var(--booking-type-section);
+  font-weight: var(--booking-font-weight-strong);
+  line-height: 1.3;
+}
+
+.booking-detail-page .backend-collapsible-header__secondary,
+.booking-detail-page .backend-section-header__secondary,
+.booking-detail-page .booking-segment-header__secondary {
+  font-size: var(--booking-type-meta);
+  color: var(--text-muted-strong);
+}
+
+.booking-detail-page .field label,
+.booking-detail-page .field .field-label {
+  font-size: var(--booking-type-label);
+  font-weight: var(--booking-font-weight-strong);
+  line-height: 1.3;
+  letter-spacing: var(--booking-letter-spacing-label);
+  text-transform: none;
 }
 
 .booking-detail-page #main-content {
@@ -98,8 +135,8 @@
   background: transparent;
   color: #5d6d66;
   font: inherit;
-  font-size: 1rem;
-  font-weight: 600;
+  font-size: var(--booking-type-meta);
+  font-weight: var(--booking-font-weight-strong);
   line-height: 1.2;
   padding: 0;
   cursor: pointer;
@@ -176,9 +213,9 @@
 .booking-detail-page .booking-status-panel__title {
   margin: 0;
   color: #173227;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 1.25rem;
-  line-height: 1.1;
+  font-size: var(--booking-type-title);
+  font-weight: var(--booking-font-weight-strong);
+  line-height: 1.2;
 }
 
 .booking-detail-page .booking-status-panel__phase {
@@ -216,10 +253,10 @@
 
 .booking-detail-page .booking-status-panel__phase-label {
   color: #6c5230;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-size: 0.76rem;
-  font-weight: 700;
+  text-transform: none;
+  letter-spacing: var(--booking-letter-spacing-label);
+  font-size: var(--booking-type-label);
+  font-weight: var(--booking-font-weight-strong);
 }
 
 .booking-detail-page .booking-status-panel__phase-text {
@@ -243,8 +280,8 @@
   border-radius: 0;
   background: transparent;
   color: #7a623f;
-  font-size: 0.9rem;
-  font-weight: 700;
+  font-size: var(--booking-type-meta);
+  font-weight: var(--booking-font-weight-strong);
   box-shadow: none;
   text-transform: none;
 }
@@ -297,8 +334,8 @@
 
 .booking-detail-page .booking-dirty-bar__copy strong {
   color: #6f726d;
-  font-size: 0.92rem;
-  font-weight: 700;
+  font-size: var(--booking-type-meta);
+  font-weight: var(--booking-font-weight-strong);
   line-height: 1.2;
   white-space: nowrap;
 }
@@ -319,8 +356,8 @@
   min-width: 82px;
   min-height: 34px;
   border-radius: 12px;
-  font-size: 0.88rem;
-  font-weight: 700;
+  font-size: var(--booking-type-label);
+  font-weight: var(--booking-font-weight-strong);
   padding-inline: 0.6rem;
 }
 
@@ -426,8 +463,8 @@
 
 .booking-detail-page .booking-top-card__field label {
   color: #22372d;
-  font-size: 0.92rem;
-  font-weight: 700;
+  font-size: var(--booking-type-label);
+  font-weight: var(--booking-font-weight-strong);
 }
 
 .booking-detail-page .booking-top-card__currency-hint {
@@ -585,7 +622,8 @@
 .booking-detail-page .booking-offer-editor-head__title {
   margin: 0;
   flex: 1;
-  font-size: 0.98rem;
+  font-size: var(--booking-type-section);
+  font-weight: var(--booking-font-weight-strong);
 }
 
 .booking-detail-page #booking_actions_panel .field {
@@ -716,8 +754,8 @@
   align-items: center;
   padding: 0.1rem 0;
   color: var(--text-strong);
-  font-size: 1.15rem;
-  font-weight: 700;
+  font-size: var(--booking-type-section);
+  font-weight: var(--booking-font-weight-bold);
   line-height: 1.2;
 }
 
@@ -747,8 +785,8 @@
 
 .booking-detail-page .booking-offer-currency-hint {
   color: var(--error-text-critical);
-  font-size: var(--font-size-overline);
-  font-weight: var(--font-weight-bold);
+  font-size: var(--booking-type-micro);
+  font-weight: var(--booking-font-weight-strong);
   margin-left: 0;
 }
 
@@ -1048,10 +1086,10 @@
 .booking-detail-page .booking-hero__name {
   margin: 0;
   color: #173227;
-  font-size: clamp(2.2rem, 3.9vw, 3.3rem);
-  font-weight: 700;
+  font-size: var(--booking-type-display);
+  font-weight: var(--booking-font-weight-bold);
   line-height: 0.98;
-  letter-spacing: -0.02em;
+  letter-spacing: var(--booking-letter-spacing-tight);
 }
 
 .booking-detail-page .booking-hero__title-row {
@@ -1065,10 +1103,11 @@
 .booking-detail-page .booking-hero__name-input {
   flex: 1;
   min-width: 0;
-  font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Palatino, Georgia, "Times New Roman", serif;
-  font-size: clamp(1.95rem, 3.4vw, 2.7rem);
-  font-weight: 700;
+  font-family: inherit;
+  font-size: var(--booking-type-display-input);
+  font-weight: var(--booking-font-weight-bold);
   line-height: 0.98;
+  letter-spacing: var(--booking-letter-spacing-tight);
   color: #173227;
   background: rgba(255, 252, 246, 0.96);
   border: 2px solid rgba(207, 220, 207, 1);
@@ -1082,8 +1121,8 @@
   background: transparent;
   color: var(--text-ink-soft);
   font: inherit;
-  font-size: var(--font-size-heading);
-  font-weight: var(--font-weight-bold);
+  font-size: var(--booking-type-section);
+  font-weight: var(--booking-font-weight-strong);
   line-height: 1;
   padding: 0.16rem 0.32rem;
   border-radius: 10px;
@@ -1100,8 +1139,8 @@
 .booking-detail-page .booking-hero__id {
   margin: 0;
   color: #5a6a63;
-  font-size: 0.96rem;
-  font-weight: 600;
+  font-size: var(--booking-type-meta);
+  font-weight: var(--booking-font-weight-strong);
 }
 
 .booking-detail-page .booking-hero__id-row {
@@ -1119,8 +1158,8 @@
   background: transparent;
   color: #173227;
   font: inherit;
-  font-size: 0.98rem;
-  font-weight: var(--font-weight-semibold);
+  font-size: var(--booking-type-meta);
+  font-weight: var(--booking-font-weight-strong);
   line-height: 1;
   padding: 0.12rem 0.2rem;
   border-radius: 10px;
@@ -1148,9 +1187,9 @@
 
 .booking-persons-current {
   margin: 0;
-  font-size: var(--font-size-title-sm);
+  font-size: var(--booking-type-section);
   line-height: 1.3;
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--booking-font-weight-strong);
   color: var(--text);
   padding: 0.18rem 0.42rem;
   border-radius: 10px;
@@ -1249,10 +1288,10 @@
 
 .booking-person-card__title {
   margin: 0;
-  font-size: var(--font-size-fluid-section);
-  line-height: 1.08;
+  font-size: var(--booking-type-title);
+  line-height: 1.15;
   color: var(--text-black);
-  font-weight: var(--font-weight-bold);
+  font-weight: var(--booking-font-weight-bold);
 }
 
 .booking-person-card__identity {
@@ -1373,7 +1412,7 @@
 .booking-inline-status {
   display: inline;
   margin: 0 0 0 0.75rem;
-  font-size: var(--font-size-body-sm);
+  font-size: var(--booking-type-micro);
   font-weight: var(--font-weight-regular);
   line-height: 1.35;
   color: var(--text-muted);
@@ -1581,8 +1620,8 @@
   background: transparent;
   color: var(--text-black-soft);
   font: inherit;
-  font-size: var(--font-size-body);
-  font-weight: var(--font-weight-bold);
+  font-size: var(--booking-type-meta);
+  font-weight: var(--booking-font-weight-strong);
   padding: 0.52rem 1rem;
   border-radius: 999px;
   cursor: pointer;
@@ -1666,8 +1705,8 @@
   background: var(--surface);
   color: var(--text-muted-alt);
   font: inherit;
-  font-size: var(--font-size-overline);
-  font-weight: var(--font-weight-bold);
+  font-size: var(--booking-type-micro);
+  font-weight: var(--booking-font-weight-strong);
   line-height: 1;
   padding: 0.28rem 0.52rem;
   border-radius: 999px;

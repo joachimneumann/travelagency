@@ -488,16 +488,19 @@ export function createBookingCoreModule(ctx) {
       const lastActionAt = normalizeText(state.booking?.last_action_at)
         || normalizeText(state.booking?.updated_at);
       const relativeLastAction = formatRelativeActionTime(lastActionAt);
+      const lastUpdatedLabel = relativeLastAction
+        ? bookingT("booking.last_updated", "last updated {value}", { value: relativeLastAction })
+        : "";
       const idNode = document.getElementById("detail_sub_title_id");
       const updatedNode = document.getElementById("detail_sub_title_updated");
       if (idNode && updatedNode) {
         idNode.textContent = `${bookingT("booking.id_short", "ID")}: ${shortId}`;
-        updatedNode.textContent = relativeLastAction
-          ? `· ${bookingT("booking.last_updated", "last updated")} ${relativeLastAction}`
+        updatedNode.textContent = lastUpdatedLabel
+          ? `· ${lastUpdatedLabel}`
           : "";
       } else {
-        els.subtitle.textContent = relativeLastAction
-          ? `${bookingT("booking.id_short", "ID")}: ${shortId} · ${bookingT("booking.last_updated", "last updated")} ${relativeLastAction}`
+        els.subtitle.textContent = lastUpdatedLabel
+          ? `${bookingT("booking.id_short", "ID")}: ${shortId} · ${lastUpdatedLabel}`
           : `${bookingT("booking.id_short", "ID")}: ${shortId}`;
       }
       els.subtitle.hidden = false;

@@ -262,7 +262,7 @@ export function createBookingTravelPlanImagesModule(deps) {
     if (!modal) return;
     modal.hidden = true;
     if (image) {
-      image.src = "";
+      image.removeAttribute("src");
       image.alt = "";
     }
   }
