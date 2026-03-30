@@ -870,18 +870,8 @@ test("travel plan images cap inline previews and open in a full-size modal", asy
   );
   assert.match(
     travelPlanImagesSource,
-    /data-travel-plan-preview-image="[^"]*"[\s\S]*data-travel-plan-preview-src="[^"]*"[\s\S]*data-travel-plan-preview-alt="[^"]*"/,
-    "Travel plan image cards should expose preview metadata for the full-size modal"
-  );
-  assert.match(
-    travelPlanImagesSource,
-    /travel-plan-image-card__preview[\s\S]*travel-plan-image-card__badge travel-plan-image-card__badge--overlay[\s\S]*travel-plan-image-card__badge travel-plan-image-card__badge--muted travel-plan-image-card__badge--overlay-start/,
-    "Travel plan image badges should render as overlays on the image itself without a separate meta row"
-  );
-  assert.match(
-    travelPlanSource,
-    /data-travel-plan-preview-image[\s\S]*openTravelPlanImagePreview\(/,
-    "Travel plan click handling should open the full-size image preview modal"
+    /class="travel-plan-images__hero-button"[\s\S]*data-travel-plan-add-image="[^"]*"[\s\S]*class="travel-plan-images__hero-image"/,
+    "Travel plan services should render a single top-right hero image button for adding or replacing the service image"
   );
   assert.match(
     travelPlanImagesSource,
@@ -895,13 +885,13 @@ test("travel plan images cap inline previews and open in a full-size modal", asy
   );
   assert.match(
     travelPlanStyles,
-    /\.travel-plan-image-card \{[\s\S]*width: min\(100%, 240px\);[\s\S]*\.travel-plan-image-card__preview \{[\s\S]*width: 220px;[\s\S]*height: 220px;[\s\S]*\.travel-plan-image-card__actions \{[\s\S]*justify-content: center;/,
-    "Inline travel plan image previews should render inside a compact fixed-size card"
+    /\.travel-plan-images__hero-button \{[\s\S]*width: min\(100%, 18rem\);[\s\S]*aspect-ratio: 1 \/ 1;[\s\S]*\.travel-plan-images__hero-image \{[\s\S]*width: 100%;[\s\S]*height: 100%;[\s\S]*object-fit: contain;/,
+    "The travel plan hero image should use a single fixed frame and contain-fit the uploaded image without cropping"
   );
-  assert.match(
-    travelPlanStyles,
-    /\.travel-plan-image-card__preview \{[\s\S]*position: relative;[\s\S]*\.travel-plan-image-card__badge--overlay \{[\s\S]*top: 0.55rem;[\s\S]*right: 0.55rem;[\s\S]*\.travel-plan-image-card__badge--overlay-start \{[\s\S]*top: 0.55rem;[\s\S]*left: 0.55rem;/,
-    "Travel plan image badges should be positioned as inline preview overlays instead of using a meta row"
+  assert.doesNotMatch(
+    travelPlanImagesSource,
+    /travel-plan-images__list|travel-plan-image-card__preview|data-travel-plan-remove-image/,
+    "Travel plan services should no longer render a duplicate image card, primary badge row, or delete button beneath the hero image"
   );
   assert.match(
     travelPlanStyles,

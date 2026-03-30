@@ -50,7 +50,6 @@
   .travel-plan-images__title-wrap h4,
   .travel-plan-images__copied-from,
   .travel-plan-images__empty,
-  .travel-plan-image-card__badge,
   .travel-plan-library-card__placeholder,
   .travel-plan-library-card__eyebrow,
   .travel-plan-library-card__meta,
@@ -892,8 +891,8 @@
 
 .travel-plan-images__hero-button {
   appearance: none;
-  border: 0;
-  background: transparent;
+  border: 1px solid var(--line);
+  background: var(--surface-muted);
   padding: 0;
   margin: 0;
   line-height: 0;
@@ -902,6 +901,10 @@
   overflow: hidden;
   border-radius: 1rem;
   justify-self: end;
+  width: min(100%, 18rem);
+  aspect-ratio: 1 / 1;
+  display: grid;
+  place-items: center;
 }
 
 .travel-plan-images__hero-button::before,
@@ -950,12 +953,13 @@
 }
 
 .travel-plan-images__hero-image {
-  width: min(100%, 18rem);
-  aspect-ratio: 1 / 1;
-  object-fit: cover;
-  border-radius: 1rem;
-  border: 1px solid var(--line);
-  background: var(--surface-muted);
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: inherit;
+  background: transparent;
+  padding: 0.85rem;
+  box-sizing: border-box;
   display: block;
   pointer-events: none;
 }
@@ -981,113 +985,6 @@
 .travel-plan-images__empty {
   margin: 0;
   color: var(--text-ink-soft);
-}
-
-.travel-plan-images__list {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 240px));
-  gap: 0.7rem;
-  justify-content: start;
-}
-
-.travel-plan-images__list--sidebar {
-  margin-top: 0.85rem;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-}
-
-.travel-plan-images__list--sidebar .travel-plan-image-card {
-  width: 100%;
-}
-
-.travel-plan-images__list--sidebar .travel-plan-image-card__preview {
-  width: 100%;
-  height: 150px;
-  max-height: 150px;
-  min-height: 150px;
-}
-
-.travel-plan-images__list--sidebar .travel-plan-image-card__preview img {
-  max-height: calc(150px - 0.9rem);
-}
-
-.travel-plan-image-card {
-  display: grid;
-  gap: 0.45rem;
-  width: min(100%, 240px);
-  padding: 0.7rem;
-  border: 1px solid var(--line-cool);
-  border-radius: 18px;
-  background: var(--white-alpha-92);
-  justify-self: start;
-}
-
-.travel-plan-image-card__preview {
-  appearance: none;
-  position: relative;
-  width: 220px;
-  max-width: 100%;
-  height: 220px;
-  max-height: 220px;
-  min-height: 220px;
-  overflow: hidden;
-  border-radius: 14px;
-  background: var(--surface-muted-cool);
-  border: 0;
-  padding: 0.45rem;
-  display: grid;
-  place-items: center;
-  cursor: zoom-in;
-  justify-self: start;
-}
-
-.travel-plan-image-card__preview:focus-visible {
-  outline: 3px solid var(--secondary-ring);
-  outline-offset: 2px;
-}
-
-.travel-plan-image-card__preview img {
-  width: auto;
-  height: auto;
-  max-width: 100%;
-  max-height: calc(220px - 0.9rem);
-  object-fit: contain;
-  display: block;
-}
-
-.travel-plan-image-card__badge {
-  display: inline-flex;
-  align-items: center;
-  border-radius: 999px;
-  padding: 0.18rem 0.48rem;
-  background: var(--secondary-surface);
-  color: var(--secondary-text);
-  font-weight: var(--booking-font-weight-strong);
-}
-
-.travel-plan-image-card__badge--overlay {
-  position: absolute;
-  top: 0.55rem;
-  right: 0.55rem;
-  z-index: 1;
-}
-
-.travel-plan-image-card__badge--overlay-start {
-  position: absolute;
-  top: 0.55rem;
-  left: 0.55rem;
-  z-index: 1;
-}
-
-.travel-plan-image-card__badge--muted {
-  background: var(--neutral-surface-alpha);
-  color: var(--neutral-text);
-}
-
-.travel-plan-image-card__actions {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
 }
 
 .travel-plan-library-modal__panel {
@@ -1368,6 +1265,7 @@
 
   .travel-plan-images__hero-button {
     justify-self: stretch;
+    width: 100%;
   }
 
   .travel-plan-images__hero-image {
@@ -1435,7 +1333,6 @@
     justify-content: stretch;
   }
 
-  .travel-plan-images__list,
   .travel-plan-library-modal__filters,
   .travel-plan-library-card {
     grid-template-columns: 1fr;

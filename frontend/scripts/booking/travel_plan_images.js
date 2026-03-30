@@ -88,44 +88,6 @@ export function createBookingTravelPlanImagesModule(deps) {
           />
         </button>
         ${copiedFromText ? `<p class="travel-plan-images__copied-from">${escapeHtml(copiedFromText)}</p>` : ""}
-        ${image ? `
-          <div class="travel-plan-images__list${variant === "sidebar" ? " travel-plan-images__list--sidebar" : ""}">
-            ${(() => {
-              const previewSrc = resolveTravelPlanImageSrc(image.storage_path, apiOrigin);
-              const previewAlt = image.alt_text || image.caption || item.title || bookingT("booking.travel_plan.picture", "Picture");
-              return `
-                <article class="travel-plan-image-card" data-travel-plan-image="${escapeHtml(image.id)}">
-                  <button
-                    class="travel-plan-image-card__preview"
-                    data-travel-plan-preview-image="${escapeHtml(image.id)}"
-                    data-travel-plan-preview-src="${escapeHtml(previewSrc)}"
-                    data-travel-plan-preview-alt="${escapeHtml(previewAlt)}"
-                    type="button"
-                    aria-label="${escapeHtml(bookingT("booking.travel_plan.open_full_image", "Open full size image"))}"
-                  >
-                    ${image.is_primary ? `<span class="travel-plan-image-card__badge travel-plan-image-card__badge--overlay">${escapeHtml(bookingT("booking.travel_plan.primary_image", "Primary"))}</span>` : ""}
-                    ${image.is_customer_visible === false ? `<span class="travel-plan-image-card__badge travel-plan-image-card__badge--muted travel-plan-image-card__badge--overlay-start">${escapeHtml(bookingT("booking.travel_plan.internal_only", "Internal only"))}</span>` : ""}
-                    <img
-                      src="${escapeHtml(previewSrc)}"
-                      alt="${escapeHtml(previewAlt)}"
-                      loading="lazy"
-                    />
-                  </button>
-                  <div class="travel-plan-image-card__actions">
-                    <button
-                      class="btn btn-ghost offer-remove-btn"
-                      data-travel-plan-remove-image="${escapeHtml(image.id)}"
-                      data-travel-plan-day-id="${escapeHtml(day.id)}"
-                      data-travel-plan-service-id="${escapeHtml(item.id)}"
-                      type="button"
-                      aria-label="${escapeHtml(bookingT("booking.travel_plan.remove_image", "Remove image"))}"
-                    >&times;</button>
-                  </div>
-                </article>
-              `;
-            })()}
-          </div>
-        ` : ""}
       </div>
     `;
   }

@@ -18,6 +18,7 @@
   --booking-font-weight-bold: var(--font-weight-bold);
   --booking-letter-spacing-tight: -0.015em;
   --booking-letter-spacing-label: 0.01em;
+  --booking-sticky-bar-fade-height: 20px;
   font-family: var(--font-family-sans);
   background-color: #efe7da;
   background-image:
@@ -288,15 +289,37 @@
 }
 
 .booking-detail-page .booking-dirty-bar {
+  --booking-dirty-bar-fade-rgb: 255, 252, 247;
+  --booking-dirty-bar-fade-alpha: 0.99;
   z-index: 40;
   display: block;
   margin: 0;
   width: 100%;
   max-width: 900px;
   flex: 1 1 auto;
+  position: relative;
+}
+
+.booking-detail-page .booking-dirty-bar::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  height: var(--booking-sticky-bar-fade-height);
+  pointer-events: none;
+  z-index: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(var(--booking-dirty-bar-fade-rgb), var(--booking-dirty-bar-fade-alpha)) 0%,
+    rgba(var(--booking-dirty-bar-fade-rgb), calc(var(--booking-dirty-bar-fade-alpha) * 0.6)) 45%,
+    rgba(var(--booking-dirty-bar-fade-rgb), 0) 100%
+  );
 }
 
 .booking-detail-page .booking-dirty-bar.booking-dirty-bar--dirty {
+  --booking-dirty-bar-fade-rgb: 255, 240, 236;
+  --booking-dirty-bar-fade-alpha: 0.98;
   background: transparent;
 }
 
@@ -311,6 +334,8 @@
   border: 1.5px solid rgba(196, 189, 177, 0.95);
   border-radius: 16px;
   background: rgba(255, 252, 247, 0.99);
+  position: relative;
+  z-index: 1;
   box-shadow: none;
   transition: background 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
 }
