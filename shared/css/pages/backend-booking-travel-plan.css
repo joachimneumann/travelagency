@@ -3,6 +3,7 @@
   --travel-plan-accent-border-strong: rgba(12, 99, 180, 0.18);
   --travel-plan-accent-border-hover: rgba(12, 99, 180, 0.22);
   --travel-plan-accent-shadow: rgba(12, 99, 180, 0.1);
+  --travel-plan-content-offset: 5.55rem;
 }
 
 .booking-detail-page .travel-plan-actions {
@@ -150,7 +151,7 @@
 .travel-plan-day__main {
   display: grid;
   gap: 0.9rem;
-  margin-left: 5.55rem;
+  margin-left: var(--travel-plan-content-offset);
 }
 
 .travel-plan-day__head {
@@ -237,7 +238,7 @@
   display: flex;
   align-items: center;
   gap: 1rem;
-  margin-left: 5.55rem;
+  margin-left: 0;
 }
 
 .travel-plan-day__footer-plus {
@@ -255,7 +256,13 @@
   line-height: 1;
 }
 
-.travel-plan-day__footer-plus[disabled] {
+.booking-detail-page .travel-plan-day__footer-plus[disabled],
+.booking-detail-page .travel-plan-day__footer-plus[disabled]:hover,
+.booking-detail-page .travel-plan-day__footer-plus[disabled]:focus-visible {
+  background: var(--success-surface-alpha);
+  color: var(--text-disabled);
+  border: 0;
+  box-shadow: none;
   opacity: 1;
   cursor: default;
 }
@@ -520,7 +527,6 @@
 .travel-plan-service {
   position: relative;
   margin: 0;
-  margin-left: 5.55rem;
   padding: 0.45rem 0 0 2.75rem;
   border: 0 !important;
   border-radius: 0;
@@ -528,6 +534,10 @@
   background: none !important;
   box-shadow: none !important;
   min-height: 3rem;
+}
+
+.travel-plan-service:not(.travel-plan-service--collapsed) {
+  margin-left: var(--travel-plan-content-offset);
 }
 
 .travel-plan-service__rail {

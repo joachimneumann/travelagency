@@ -39,6 +39,32 @@ export function logBrowserConsoleError(message, details = {}, error = null) {
   console.error(message, payload);
 }
 
+export function isLocalhostBrowser() {
+  if (typeof window === "undefined") return false;
+  const host = String(window.location.hostname || "").trim().toLowerCase();
+  return host === "localhost" || host === "127.0.0.1";
+}
+
+export function logLocalhostDiagnostic(level, message, details = {}, error = null) {
+  if (!isLocalhostBrowser()) return;
+  const logger = window.__ATP_LOCALHOST_DIAGNOSTICS_LOG__;
+  if (logger && typeof logger[level] === "function") {
+    logger[level](message, details, error);
+    return;
+  }
+
+  const payload = details && typeof details === "object" ? { ...details } : { details };
+  if (error) {
+    payload.error_name = error?.name || null;
+    payload.error_message = error?.message || String(error);
+    console.error(`[localhost-diagnostics] ${message}`, payload, error);
+    return;
+  }
+
+  const method = typeof console[level] === "function" ? level : "info";
+  console[method](`[localhost-diagnostics] ${message}`, payload);
+}
+
 export async function fetchApiJson(path, options = {}) {
   const {
     apiBase = "",
@@ -73,6 +99,12 @@ export async function fetchApiJson(path, options = {}) {
       const message = includeDetailInError && payload?.detail
         ? `${payload.error || "Request failed"}: ${payload.detail}`
         : payload?.error || "Request failed";
+      logLocalhostDiagnostic("warn", "backend request returned a non-OK response", {
+        ...requestMeta,
+        status: response.status,
+        status_text: response.statusText,
+        response_payload: payload
+      });
       logBrowserConsoleError("[api] Backend request failed.", {
         ...requestMeta,
         status: response.status,
@@ -89,6 +121,10 @@ export async function fetchApiJson(path, options = {}) {
     return payload;
   } catch (error) {
     if (typeof onError === "function") onError(connectionErrorMessage, null, null, error);
+    logLocalhostDiagnostic("error", "backend request failed before a response", {
+      ...requestMeta,
+      connection_error_message: connectionErrorMessage
+    }, error);
     logBrowserConsoleError("[api] Network error while calling backend.", {
       ...requestMeta,
       connection_error_message: connectionErrorMessage

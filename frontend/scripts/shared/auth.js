@@ -1,5 +1,6 @@
 import { authMeRequest } from "../../Generated/API/generated_APIRequestFactory.js";
 import { validateAuthMeResponse } from "../../Generated/API/generated_APIModels.js";
+import { logLocalhostDiagnostic } from "./api.js";
 
 const BACKEND_AUTH_CACHE_KEY = "asiatravelplan_backend_auth_me_v1";
 
@@ -77,13 +78,50 @@ export function wireAuthLogoutLink(link, { apiBase = "", returnTo = "" } = {}) {
 export async function fetchAuthMe(apiBase = "") {
   const authBase = resolveAuthBase(apiBase);
   const request = authMeRequest({ baseURL: authBase });
-  const response = await fetch(request.url, {
-    method: request.method,
-    credentials: "include",
-    headers: request.headers
+  logLocalhostDiagnostic("info", "auth/me request started", {
+    request_url: request.url,
+    method: request.method
   });
-  const payload = await response.json().catch(() => null);
-  if (payload) validateAuthMeResponse(payload);
+  let response;
+  try {
+    response = await fetch(request.url, {
+      method: request.method,
+      credentials: "include",
+      headers: request.headers
+    });
+  } catch (error) {
+    logLocalhostDiagnostic("error", "auth/me request failed before a response", {
+      request_url: request.url,
+      method: request.method
+    }, error);
+    throw error;
+  }
+  const payload = await response.json().catch((error) => {
+    logLocalhostDiagnostic("warn", "auth/me response body was not valid JSON", {
+      request_url: request.url,
+      status: response.status,
+      status_text: response.statusText
+    }, error);
+    return null;
+  });
+  logLocalhostDiagnostic("info", "auth/me response received", {
+    request_url: request.url,
+    status: response.status,
+    status_text: response.statusText,
+    authenticated: payload?.authenticated === true
+  });
+  if (payload) {
+    try {
+      validateAuthMeResponse(payload);
+    } catch (error) {
+      logLocalhostDiagnostic("error", "auth/me payload validation failed", {
+        request_url: request.url,
+        status: response.status,
+        payload_keys: Object.keys(payload || {})
+      }, error);
+      throw error;
+    }
+  }
   writeCachedAuthMe(payload);
   return { request, response, payload };
 }
