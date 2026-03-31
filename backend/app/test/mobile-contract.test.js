@@ -1880,6 +1880,8 @@ test("days can be searched and imported from another booking with cleared timing
   assert.equal(importedDay.title, "Waterfall day");
   assert.deepEqual(importedDay.title_i18n, { en: "Waterfall day", de: "Wasserfalltag" });
   assert.deepEqual(importedDay.notes_i18n, { en: "Bring water", de: "Wasser mitbringen" });
+  assert.equal(importedDay.copied_from.source_booking_id, sourceBooking.id);
+  assert.equal(importedDay.copied_from.source_day_id, "source_day_copy_1");
   assert.equal(importResult.body.booking.travel_plan.offer_component_links.length, 0);
 
   const importedService = importedDay.services[0];
@@ -1897,6 +1899,180 @@ test("days can be searched and imported from another booking with cleared timing
   assert.ok(importedService.image);
   assert.notEqual(importedService.image.id, "source_day_service_image_1");
   assert.equal(importedService.image.storage_path, "/public/v1/booking-images/source/day-service-1.webp");
+});
+
+test("travel plans can be searched and appended from another booking with grouped provenance", async () => {
+  const sourceBooking = await createSeedBooking();
+  const targetBooking = await createPublicBooking({
+    name: "Plan Target User",
+    email: "plan-target@example.com"
+  });
+
+  const store = JSON.parse(await readFile(STORE_PATH, "utf8"));
+  const sourceRecord = store.bookings.find((item) => item.id === sourceBooking.id);
+  const targetRecord = store.bookings.find((item) => item.id === targetBooking.id);
+  assert.ok(sourceRecord);
+  assert.ok(targetRecord);
+
+  sourceRecord.travel_plan = {
+    days: [
+      {
+        id: "source_plan_day_1",
+        day_number: 1,
+        date: "2026-07-01",
+        title: "Arrival day",
+        overnight_location: "Hue",
+        services: [
+          {
+            id: "source_plan_service_1",
+            timing_kind: "point",
+            time_label: "",
+            time_label_i18n: {},
+            time_point: "2026-07-01T09:30",
+            kind: "transport",
+            title: "Airport pickup",
+            title_i18n: { en: "Airport pickup", de: "Flughafenabholung" },
+            details: "Private transfer",
+            details_i18n: { en: "Private transfer", de: "Privater Transfer" },
+            location: "Hue Airport",
+            location_i18n: { en: "Hue Airport", de: "Flughafen Hue" },
+            financial_coverage_needed: true,
+            financial_coverage_status: "covered",
+            financial_note: "Supplier already confirmed",
+            financial_note_i18n: { en: "Supplier already confirmed", de: "Lieferant bereits bestatigt" },
+            image: {
+              id: "source_plan_service_image_1",
+              storage_path: "/public/v1/booking-images/source/plan-service-1.webp",
+              sort_order: 0,
+              is_primary: true,
+              is_customer_visible: true,
+              created_at: "2026-03-21T00:00:00Z"
+            }
+          }
+        ],
+        notes: "Lantern welcome dinner",
+        notes_i18n: { en: "Lantern welcome dinner", de: "Laternen-Abendessen" }
+      },
+      {
+        id: "source_plan_day_2",
+        day_number: 2,
+        date: "2026-07-03",
+        title: "Cave day",
+        overnight_location: "Phong Nha",
+        services: [
+          {
+            id: "source_plan_service_2",
+            timing_kind: "range",
+            time_label: "",
+            time_label_i18n: {},
+            start_time: "2026-07-03T08:00",
+            end_time: "2026-07-03T11:30",
+            kind: "activity",
+            title: "Lantern cave walk",
+            details: "Guided cave visit",
+            location: "Phong Nha",
+            financial_coverage_needed: true,
+            financial_coverage_status: "covered",
+            financial_note: "Paid by source booking"
+          }
+        ],
+        notes: "Bring water"
+      }
+    ],
+    offer_component_links: [
+      {
+        id: "source_plan_link_1",
+        travel_plan_service_id: "source_plan_service_1",
+        offer_component_id: "missing_component",
+        coverage_type: "full"
+      }
+    ],
+    attachments: [
+      {
+        id: "source_plan_attachment_1",
+        filename: "source-attachment.pdf",
+        storage_path: "/tmp/source-attachment.pdf",
+        page_count: 2,
+        sort_order: 0,
+        created_at: "2026-03-21T00:00:00Z"
+      }
+    ]
+  };
+  targetRecord.travel_plan = {
+    days: [
+      {
+        id: "target_plan_day_1",
+        day_number: 1,
+        date: "2026-07-10",
+        title: "Target arrival",
+        overnight_location: "Da Nang",
+        services: [],
+        notes: ""
+      }
+    ],
+    offer_component_links: [],
+    attachments: []
+  };
+  await writeFile(STORE_PATH, `${JSON.stringify(store, null, 2)}\n`, "utf8");
+
+  const searchResult = await requestJson(
+    `${endpointPath("travel_plan_search")}?q=lantern`,
+    apiHeaders()
+  );
+  assert.equal(searchResult.status, 200);
+  assert.equal(typeof searchResult.body.total, "number");
+  assert.ok(Array.isArray(searchResult.body.items));
+  const foundPlan = searchResult.body.items.find((item) => item.source_booking_id === sourceBooking.id);
+  assert.ok(foundPlan, "Expected imported travel plan to appear in search results");
+  assert.equal(foundPlan.day_count, 2);
+  assert.equal(foundPlan.service_count, 2);
+  assert.equal(foundPlan.first_date, "2026-07-01");
+  assert.equal(foundPlan.last_date, "2026-07-03");
+  assert.equal(foundPlan.thumbnail_url, "/public/v1/booking-images/source/plan-service-1.webp");
+
+  const importResult = await requestJson(
+    endpointPath("booking_travel_plan_import").replace("{booking_id}", targetBooking.id),
+    apiHeaders(),
+    {
+      method: "POST",
+      body: {
+        expected_travel_plan_revision: targetBooking.travel_plan_revision,
+        source_booking_id: sourceBooking.id,
+        include_images: true,
+        include_customer_visible_images_only: false,
+        include_notes: true,
+        include_translations: true
+      }
+    }
+  );
+
+  assert.equal(importResult.status, 200);
+  assert.equal(importResult.body.booking.travel_plan.days.length, 3);
+  assert.equal(importResult.body.booking.travel_plan.offer_component_links.length, 0);
+  assert.equal(importResult.body.booking.travel_plan.attachments.length, 0);
+
+  const importedDays = importResult.body.booking.travel_plan.days.slice(1);
+  assert.equal(importedDays[0].date, "2026-07-11");
+  assert.equal(importedDays[1].date, "2026-07-13");
+  assert.equal(importedDays[0].copied_from.source_booking_id, sourceBooking.id);
+  assert.equal(importedDays[0].copied_from.source_day_id, "source_plan_day_1");
+  assert.equal(importedDays[1].copied_from.source_day_id, "source_plan_day_2");
+  assert.ok(importedDays[0].copied_from.import_batch_id);
+  assert.equal(importedDays[1].copied_from.import_batch_id, importedDays[0].copied_from.import_batch_id);
+
+  const importedFirstService = importedDays[0].services[0];
+  const importedSecondService = importedDays[1].services[0];
+  assert.equal(importedFirstService.time_point, "2026-07-11T09:30");
+  assert.equal(importedSecondService.start_time, "2026-07-13T08:00");
+  assert.equal(importedSecondService.end_time, "2026-07-13T11:30");
+  assert.equal(importedFirstService.financial_note, "Supplier already confirmed");
+  assert.equal(importedFirstService.copied_from.source_service_id, "source_plan_service_1");
+  assert.equal(importedSecondService.copied_from.source_service_id, "source_plan_service_2");
+  assert.equal(importedFirstService.copied_from.import_batch_id, importedDays[0].copied_from.import_batch_id);
+  assert.equal(importedSecondService.copied_from.import_batch_id, importedDays[0].copied_from.import_batch_id);
+  assert.ok(importedFirstService.image);
+  assert.notEqual(importedFirstService.image.id, "source_plan_service_image_1");
+  assert.equal(importedFirstService.image.storage_path, "/public/v1/booking-images/source/plan-service-1.webp");
 });
 
 test("service image can be deleted", async () => {
@@ -2966,6 +3142,76 @@ test("booking travel plan pdf includes the assigned ATP guide section with the g
   );
   assert.doesNotMatch(decodedText, /JoachimfromAsiaTravelPlanwillkeepthisroutecomfortableandwellpacedforyou/);
   assert.doesNotMatch(decodedText, /Languages:DE·EN·VI|Languages:DEENVI/);
+});
+
+test("booking travel plan pdf renders personalized copy, shared customer note, and accommodation line", async () => {
+  const createdBooking = await createSeedBooking();
+  const bookingId = createdBooking.id;
+
+  const store = JSON.parse(await readFile(STORE_PATH, "utf8"));
+  const bookingRecord = store.bookings.find((item) => item.id === bookingId);
+  assert.ok(bookingRecord);
+
+  bookingRecord.destinations = ["VN", "KH"];
+  bookingRecord.pdf_personalization = {
+    shared: {
+      customer_note: "Please also let us know about any room preferences.",
+      customer_note_i18n: {
+        en: "Please also let us know about any room preferences."
+      }
+    },
+    travel_plan: {
+      subtitle: "12 days in Vietnam and Cambodia",
+      subtitle_i18n: {
+        en: "12 days in Vietnam and Cambodia"
+      },
+      welcome: "This is your current travel plan.",
+      welcome_i18n: {
+        en: "This is your current travel plan."
+      },
+      closing: "We would be happy to refine anything together.",
+      closing_i18n: {
+        en: "We would be happy to refine anything together."
+      }
+    }
+  };
+  bookingRecord.travel_plan = {
+    days: [{
+      id: "travel_plan_day_personalized_1",
+      day_number: 1,
+      date: "2026-03-20",
+      title: "Arrival day",
+      overnight_location: "Hoi An",
+      services: [
+        {
+          id: "travel_plan_service_hotel_1",
+          kind: "accommodation",
+          title: "Lantern Boutique Hotel"
+        },
+        {
+          id: "travel_plan_service_activity_1",
+          kind: "activity",
+          title: "Airport transfer",
+          details: "Private transfer to the hotel",
+          images: []
+        }
+      ]
+    }],
+    offer_component_links: []
+  };
+  await writeFile(STORE_PATH, `${JSON.stringify(store, null, 2)}\n`, "utf8");
+
+  const pdfResult = await requestRaw(
+    `${endpointPath("booking_travel_plan_pdf").replace("{booking_id}", bookingId)}?lang=en`,
+    apiHeaders()
+  );
+  assert.equal(pdfResult.status, 200);
+  const decodedText = normalizeExtractedPdfText(decodePdfHexText(pdfResult.body));
+  assert.match(decodedText, /12daysinVietnamandCambodia/);
+  assert.match(decodedText, /Thisisyourcurrenttravelplan\./);
+  assert.match(decodedText, /Pleasealsoletusknowaboutanyroompreferences\./);
+  assert.match(decodedText, /Youwillstayat:LanternBoutiqueHotel/);
+  assert.match(decodedText, /Wewouldbehappytorefineanythingtogether\./);
 });
 
 test("booking generated offer pdf endpoint returns a pdf file", async () => {
@@ -4731,6 +4977,84 @@ test("booking name and persons endpoints update the booking", async () => {
   assert.equal(detailAfterPersons.body.booking.persons[0].documents[0].document_number, "C01X9981");
 });
 
+test("booking source update persists trip context and pdf personalization", async () => {
+  const createdBooking = await createSeedBooking();
+  const bookingId = createdBooking.id;
+
+  const detailBefore = await requestJson(
+    endpointPath("booking_detail").replace("{booking_id}", bookingId),
+    apiHeaders()
+  );
+  assert.equal(detailBefore.status, 200);
+
+  const sourceUpdateResult = await requestJson(
+    endpointPath("booking_source").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_core_revision: detailBefore.body.booking.core_revision,
+        source_channel: "website",
+        referral_kind: "none",
+        destinations: ["VN", "KH"],
+        travel_styles: ["adventure", "culture"],
+        pdf_personalization: {
+          shared: {
+            customer_note: "Please also let us know about any room preferences.",
+            customer_note_i18n: {
+              en: "Please also let us know about any room preferences."
+            }
+          },
+          travel_plan: {
+            subtitle: "12 days in Vietnam and Cambodia",
+            subtitle_i18n: {
+              en: "12 days in Vietnam and Cambodia"
+            },
+            welcome: "This is your current travel plan.",
+            welcome_i18n: {
+              en: "This is your current travel plan."
+            }
+          },
+          offer: {
+            closing: "We would be happy to refine anything together.",
+            closing_i18n: {
+              en: "We would be happy to refine anything together."
+            }
+          }
+        },
+        actor: "joachim"
+      }
+    }
+  );
+  assert.equal(sourceUpdateResult.status, 200);
+  assert.deepEqual(sourceUpdateResult.body.booking.destinations, ["VN", "KH"]);
+  assert.deepEqual(sourceUpdateResult.body.booking.travel_styles, ["grand-expeditions", "culture"]);
+  assert.equal(
+    sourceUpdateResult.body.booking.pdf_personalization.shared.customer_note,
+    "Please also let us know about any room preferences."
+  );
+  assert.equal(
+    sourceUpdateResult.body.booking.pdf_personalization.travel_plan.subtitle,
+    "12 days in Vietnam and Cambodia"
+  );
+  assert.equal(
+    sourceUpdateResult.body.booking.pdf_personalization.offer.closing,
+    "We would be happy to refine anything together."
+  );
+
+  const detailAfter = await requestJson(
+    endpointPath("booking_detail").replace("{booking_id}", bookingId),
+    apiHeaders()
+  );
+  assert.equal(detailAfter.status, 200);
+  assert.deepEqual(detailAfter.body.booking.destinations, ["VN", "KH"]);
+  assert.deepEqual(detailAfter.body.booking.travel_styles, ["grand-expeditions", "culture"]);
+  assert.equal(
+    detailAfter.body.booking.pdf_personalization.travel_plan.welcome,
+    "This is your current travel plan."
+  );
+});
+
 test("booking activity create uses the core revision", async () => {
   const createdBooking = await createSeedBooking();
   const booking_id = createdBooking.id;
@@ -5599,6 +5923,67 @@ test("tour editor can manage tours while staff cannot access tour endpoints", as
     apiHeaders("atp_staff", "staff", "kc-staff")
   );
   assert.equal(staffDetail.status, 403);
+});
+
+test("admin and tour editor can manage country emergency references while staff cannot access them", async () => {
+  const editorList = await requestJson(
+    endpointPath("country_reference_info"),
+    apiHeaders("atp_tour_editor", "tour-editor", "kc-tour-editor")
+  );
+  assert.equal(editorList.status, 200);
+  assert.ok(Array.isArray(editorList.body.items));
+  assert.deepEqual(
+    editorList.body.items.map((item) => item.country).sort(),
+    ["KH", "LA", "TH", "VN"]
+  );
+
+  const updatedItems = editorList.body.items.map((item) => (
+    item.country === "VN"
+      ? {
+        ...item,
+        practical_tips: ["Keep a local SIM or roaming enabled for urgent coordination."],
+        emergency_contacts: [
+          { label: "Police", phone: "113" },
+          { label: "Ambulance", phone: "115", note: "Public ambulance service" }
+        ]
+      }
+      : item
+  ));
+
+  const editorUpdate = await requestJson(
+    endpointPath("country_reference_info_update"),
+    apiHeaders("atp_tour_editor", "tour-editor", "kc-tour-editor"),
+    {
+      method: "PATCH",
+      body: {
+        items: updatedItems
+      }
+    }
+  );
+  assert.equal(editorUpdate.status, 200);
+
+  const vietnam = editorUpdate.body.items.find((item) => item.country === "VN");
+  assert.ok(vietnam);
+  assert.deepEqual(vietnam.practical_tips, ["Keep a local SIM or roaming enabled for urgent coordination."]);
+  assert.equal(vietnam.emergency_contacts.length, 2);
+  assert.equal(vietnam.emergency_contacts[1].note, "Public ambulance service");
+  assert.ok(vietnam.updated_at);
+
+  const adminList = await requestJson(
+    endpointPath("country_reference_info"),
+    apiHeaders("atp_admin", "admin", "kc-admin")
+  );
+  assert.equal(adminList.status, 200);
+  assert.deepEqual(
+    adminList.body.items.find((item) => item.country === "VN")?.practical_tips,
+    ["Keep a local SIM or roaming enabled for urgent coordination."]
+  );
+
+  const staffList = await requestJson(
+    endpointPath("country_reference_info"),
+    apiHeaders("atp_staff", "staff", "kc-staff")
+  );
+  assert.equal(staffList.status, 403);
 });
 
 test("tour delete is blocked while bookings still reference the tour", async () => {

@@ -68,6 +68,9 @@ import (
 	referral_kind:            enums.#BookingReferralKind
 	referral_label?:          string
 	referral_staff_user_id?:  common.#Identifier
+	destinations?:            [...enums.#CountryCode]
+	travel_styles?:           [...string]
+	pdf_personalization?:     entities.#BookingPdfPersonalization
 	actor?:                   string
 }
 
@@ -136,26 +139,65 @@ import (
 	actor?:                         string
 }
 
+#TravelPlanDaySearchRequest: {
+	q?:           string
+	destination?: string
+	country?:     enums.#CountryCode
+	style?:       string
+	limit?:       >=0 & int
+	offset?:      >=0 & int
+}
+
 #TravelPlanServiceSearchRequest: {
 	q?:           string
 	destination?: string
 	country?:     enums.#CountryCode
 	style?:       string
-	service_kind?:   enums.#TravelPlanServiceKind
+	service_kind?: enums.#TravelPlanServiceKind
 	limit?:       >=0 & int
 	offset?:      >=0 & int
+}
+
+#TravelPlanDayImportRequest: {
+	expected_travel_plan_revision?:       >=0 & int
+	source_booking_id:                    common.#Identifier
+	source_day_id:                        common.#Identifier
+	include_images:                       *true | bool
+	include_customer_visible_images_only: *false | bool
+	include_notes:                        *true | bool
+	include_translations:                 *true | bool
+	actor?:                               string
 }
 
 #TravelPlanServiceImportRequest: {
 	expected_travel_plan_revision?:       >=0 & int
 	source_booking_id:                    common.#Identifier
-	source_service_id:                       common.#Identifier
-	insert_after_service_id?:                common.#Identifier
+	source_service_id:                    common.#Identifier
+	insert_after_service_id?:             common.#Identifier
 	include_images:                       *true | bool
 	include_customer_visible_images_only: *false | bool
 	include_notes:                        *true | bool
 	include_translations:                 *true | bool
 	include_offer_links:                  *false | bool
+	actor?:                               string
+}
+
+#TravelPlanSearchRequest: {
+	q?:           string
+	destination?: string
+	country?:     enums.#CountryCode
+	style?:       string
+	limit?:       >=0 & int
+	offset?:      >=0 & int
+}
+
+#TravelPlanImportRequest: {
+	expected_travel_plan_revision?:       >=0 & int
+	source_booking_id:                    common.#Identifier
+	include_images:                       *true | bool
+	include_customer_visible_images_only: *false | bool
+	include_notes:                        *true | bool
+	include_translations:                 *true | bool
 	actor?:                               string
 }
 
@@ -295,6 +337,10 @@ import (
 	email?:           common.#Email
 	country?:         enums.#CountryCode
 	category?:        enums.#SupplierCategory
+}
+
+#CountryPracticalInfoUpdateRequest: {
+	items: [...entities.#CountryPracticalInfo]
 }
 
 #AtpStaffProfileUpdateRequest: {

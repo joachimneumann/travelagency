@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en" translate="no">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title data-i18n-id="backend.emergency.heading">Emergency</title>
+    <meta name="description" content="AsiaTravelPlan backend emergency workspace" />
+    <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml" />
+    <script>
+      if (!window.ASIATRAVELPLAN_API_BASE && ["localhost", "127.0.0.1"].includes(window.location.hostname)) {
+        window.ASIATRAVELPLAN_API_BASE = window.location.origin;
+      }
+    </script>
+    <script src="/frontend/scripts/shared/localhost_diagnostics.js"></script>
+    <link rel="stylesheet" href="assets/css/styles.css" />
+  </head>
+  <body class="backend-list-page">
+    <header class="header" id="top">
+      <div class="container header-wrap">
+        <a class="brand" id="backendHomeLink" href="backend.html" aria-label="AsiaTravelPlan backend home">
+          <img class="brand-logo" src="assets/img/logo-asiatravelplan.svg" alt="AsiaTravelPlan" width="320" height="76" />
+        </a>
+
+        <div id="backendNavMount"></div>
+      </div>
+    </header>
+
+    <main id="main-content">
+      <section class="section">
+        <div class="container">
+          <div id="backendError" class="backend-message" role="alert" aria-live="assertive"></div>
+
+          <section class="backend-section emergency-editor" id="emergencyPanel">
+            <div class="emergency-editor__head">
+              <div>
+                <h1 class="section-title u-title-medium" data-i18n-id="backend.emergency.heading">Emergency</h1>
+                <p class="micro emergency-editor__intro" data-i18n-id="backend.emergency.intro">Internal country reference notes for ATP staff. This information is not yet used in customer-facing outputs.</p>
+              </div>
+              <p class="micro emergency-editor__status" id="emergencyStatus" role="status" aria-live="polite"></p>
+            </div>
+
+            <div class="backend-controls emergency-editor__controls">
+              <div class="field">
+                <label for="emergencyAddCountry" data-i18n-id="backend.emergency.add_country_label">Add country</label>
+                <select id="emergencyAddCountry"></select>
+              </div>
+              <button class="btn btn-ghost" id="emergencyAddCountryBtn" type="button" data-i18n-id="backend.emergency.add_country">Add country</button>
+              <button class="btn btn-primary" id="emergencySaveBtn" type="button" data-i18n-id="common.save" disabled>Save</button>
+            </div>
+
+            <div class="emergency-editor__list" id="emergencyList"></div>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <script src="shared/generated/language_catalog.global.js"></script>
+    <script src="frontend/scripts/shared/backend_i18n.js"></script>
+    <script type="module">
+      import { mountBackendNav } from "./frontend/scripts/shared/nav.js";
+      await (window.__BACKEND_I18N_PROMISE || Promise.resolve());
+      mountBackendNav(document.getElementById("backendNavMount"), { currentSection: "emergency" });
+    </script>
+    <script type="module" src="frontend/scripts/pages/emergency.js"></script>
+  </body>
+</html>

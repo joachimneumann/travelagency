@@ -1508,6 +1508,7 @@ export function createBookingTravelPlanModule(ctx) {
       );
       day.notes = dayNotes.text;
       day.notes_i18n = dayNotes.map;
+      day.copied_from = previousDay?.copied_from || null;
       day.services = Array.from(dayNode.querySelectorAll("[data-travel-plan-service]")).map((itemNode) => {
         const itemId = String(itemNode.getAttribute("data-travel-plan-service") || "").trim();
         const previousItem = previousItemsById.get(itemId);
@@ -1858,12 +1859,7 @@ export function createBookingTravelPlanModule(ctx) {
       applyBookingPayload();
       renderTravelPlanPanel();
       await loadActivities();
-      travelPlanStatus(
-        response.unchanged
-          ? ""
-          : bookingT("booking.travel_plan.saved", "Travel plan saved."),
-        response.unchanged ? "info" : "success"
-      );
+      travelPlanStatus("");
       return true;
     } catch (error) {
       logBrowserConsoleError("[booking-save][travel-plan] Mutation threw an error.", {
@@ -2107,6 +2103,10 @@ export function createBookingTravelPlanModule(ctx) {
           travelPlanServiceLibraryModule.openTravelPlanDayLibrary();
           return;
         }
+        if (button.hasAttribute("data-travel-plan-open-plan-import")) {
+          travelPlanServiceLibraryModule.openTravelPlanLibrary();
+          return;
+        }
         if (button.hasAttribute("data-travel-plan-open-import")) {
           travelPlanServiceLibraryModule.openTravelPlanServiceLibrary(button.getAttribute("data-travel-plan-open-import"));
           return;
@@ -2200,6 +2200,7 @@ export function createBookingTravelPlanModule(ctx) {
             <span class="travel-plan-add-btn__label">${escapeHtml(bookingT("booking.travel_plan.new_day", "New day"))}</span>
           </button>
           <button class="btn travel-plan-day-add-btn travel-plan-day-add-btn--service travel-plan-day-add-btn--day-copy" data-travel-plan-open-day-import data-requires-clean-state type="button">${escapeHtml(bookingT("booking.travel_plan.insert_existing_day", "Copy existing day"))}</button>
+          <button class="btn travel-plan-day-add-btn travel-plan-day-add-btn--service travel-plan-day-add-btn--day-copy" data-travel-plan-open-plan-import data-requires-clean-state type="button">${escapeHtml(bookingT("booking.travel_plan.append_existing_plan", "Append existing travel plan"))}</button>
         </div>
         <div class="travel-plan-footer__separator" aria-hidden="true"></div>
         <div class="travel-plan-footer__workspace">

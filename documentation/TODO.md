@@ -42,7 +42,7 @@ booking.js:149 [booking-save] Save flow finalized. {booking_id: 'booking_dec5e3e
 
 Travel plan
 ===========
-* Copy whole treve plan from another booking
+* Copy whole travel plan from another booking
 ** Regenerate all IDs
 ** set dates blank
 * remove "Travel plan saved."
@@ -52,27 +52,27 @@ Travel plan
 ** in the preview: remove "Day X" and "0 image(s)"
 ** mark as copied service.
 ** search for service: 
+*** priority: services from this travel plan
 *** When services have an identical summary only show the newest of theses services but enable a button: show all
 *** remove "Search existing booking services and insert a copy into this day."
 *** "Copy existing service" --> "Existing services"
 * Copy existing day, also with preview
+
 * after adding a picture to a service, keep the service open, no jumping on the page
-* Remove multi-day, too complicated.
-* make subtitle editable. default: X days in List of countries
-* Booking at the top: list of countries and type of holiday below the ATP staff...
-* make welcome remarks editable. default: This is your current travel plan. Please let us know if you want to modify anything.
-* make final remarks editable. default: We would be happy to hear from you.
-* show note from customer! (allergies, etc)
 
 Travel plan PDF
 ==============
+* in Booking.html at the top: list of countries and type of holiday below the ATP staff... use this information to derrive text for the PDF
+* make subtitle in pdf editable. default: X days in List of countries
+* make welcome remarks in pdf editable. propose a default similar to: This is your current travel plan. Please let us know if you want to modify anything.
+* make final remarks editable. default: We would be happy to hear from you.
+* Add another note to the customer in the PDF. Next to it show the note from the web submission (allergies, etc) if it exists.
 * Treat accomodation special: You will stay at:... near the day
 
-Scrolling
-=========
-add a shadow to make scrolling enter below the sticky bar, gradually fading our over 20px (scrolling.png)
 
-* Translate tour descriptino with openai
+Translate
+=========
+* Also Translate tour descriptions with openai
 
 Travler
 =======
@@ -85,7 +85,7 @@ emergency.html
 
 offer
 =====
-* input of currency amounts (VND no cents)
+* improve the input of currency amounts (VND no cents)
 
 Welcome PDF
 ===========

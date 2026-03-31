@@ -121,6 +121,11 @@ function formatTravelPlanTiming(item, lang, dayDate, formatPdfDateOnly) {
   return normalizeText(item?.time_label);
 }
 
+function resolveDayAccommodationTitle(day) {
+  const accommodation = safeArray(day?.services || day?.items).find((item) => normalizeText(item?.kind).toLowerCase() === "accommodation");
+  return textOrNull(accommodation?.title);
+}
+
 export function dayHeading(day, lang, pdfT) {
   const label = pdfT(lang, "offer.day_label", "Day {day}", {
     day: Number(day?.day_number || 0) || 1
@@ -304,6 +309,23 @@ function drawTravelPlanDayHeader(doc, y, day, fonts, lang, deps, { compact = fal
       .text(deps.pdfT(lang, "offer.overnight", "Overnight: {location}", { location: overnight }), deps.pageMargin, nextY, deps.pdfTextOptions(lang, {
         width: doc.page.width - deps.pageMargin * 2
       }));
+    nextY = doc.y + 4;
+  }
+
+  const accommodationTitle = resolveDayAccommodationTitle(day);
+  if (accommodationTitle) {
+    doc
+      .font(deps.pdfFontName("regular", fonts))
+      .fontSize(10)
+      .fillColor(deps.colors.textMutedStrong)
+      .text(
+        deps.pdfT(lang, "travel_plan.accommodation_line", "You will stay at: {name}", { name: accommodationTitle }),
+        deps.pageMargin,
+        nextY,
+        deps.pdfTextOptions(lang, {
+          width: doc.page.width - deps.pageMargin * 2
+        })
+      );
     nextY = doc.y + 4;
   }
 

@@ -110,6 +110,12 @@
   object-fit: contain;
 }
 
+.backend-section-nav__icon-svg {
+  display: block;
+  width: 1.9rem;
+  height: 1.9rem;
+}
+
 .backend-section-nav__icon-image--large {
   width: 2.15rem;
   height: 2.15rem;

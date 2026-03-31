@@ -11,6 +11,7 @@ import {
   buildTravelPlanTranslationStatus
 } from "./booking_translation.js";
 import { buildGeneratedOfferTransportFields } from "./booking_confirmation.js";
+import { normalizeBookingPdfPersonalization } from "../lib/booking_pdf_personalization.js";
 
 export function createBookingViewHelpers({
   baseCurrency,
@@ -468,6 +469,10 @@ export function createBookingViewHelpers({
         || normalizedBooking?.web_form_submission?.preferred_language
         || "en"
       ),
+      pdf_personalization: normalizeBookingPdfPersonalization(normalizedBooking?.pdf_personalization, {
+        flatLang: lang,
+        sourceLang
+      }),
       preferred_currency: preferredCurrency,
       travel_plan: buildBookingTravelPlanReadModel(normalizedBooking.travel_plan, normalizedBooking.offer, {
         lang,

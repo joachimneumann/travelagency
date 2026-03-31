@@ -3,6 +3,8 @@ import {
   validateBookingSourceUpdateRequest,
   validateTranslationEntriesRequest
 } from "../../../Generated/API/generated_APIModels.js";
+import { enumValueSetFor } from "../../lib/generated_catalogs.js";
+import { normalizeBookingPdfPersonalization } from "../../lib/booking_pdf_personalization.js";
 import {
   applyBookingMilestoneAction,
   bookingMilestoneMeta,
@@ -11,6 +13,18 @@ import {
 import {
   normalizeBookingContentLang
 } from "../../domain/booking_content_i18n.js";
+
+const COUNTRY_CODE_SET = enumValueSetFor("CountryCode");
+
+function normalizeCountryCodes(items, normalizeText) {
+  return Array.from(
+    new Set(
+      (Array.isArray(items) ? items : [])
+        .map((item) => normalizeText(item).toUpperCase())
+        .filter((item) => item && COUNTRY_CODE_SET.has(item))
+    )
+  );
+}
 
 export function createBookingCoreHandlers(deps) {
   const {
@@ -30,6 +44,8 @@ export function createBookingCoreHandlers(deps) {
     persistStore,
     listAssignableKeycloakUsers,
     keycloakDisplayName,
+    normalizeStringArray,
+    canonicalBookingTravelStyles,
     syncBookingAssignmentFields,
     assertExpectedRevision,
     buildBookingDetailResponse,
@@ -258,12 +274,41 @@ export function createBookingCoreHandlers(deps) {
     const currentReferralKind = normalizeText(booking?.referral_kind).toLowerCase() || null;
     const currentReferralLabel = normalizeText(booking?.referral_label) || null;
     const currentReferralStaffUserId = normalizeText(booking?.referral_staff_user_id) || null;
+    const nextDestinations = payload?.destinations !== undefined
+      ? normalizeCountryCodes(payload.destinations, normalizeText)
+      : normalizeCountryCodes(booking?.destinations, normalizeText);
+    const currentDestinations = normalizeCountryCodes(booking?.destinations, normalizeText);
+    const nextTravelStyles = payload?.travel_styles !== undefined
+      ? canonicalBookingTravelStyles(normalizeStringArray(payload.travel_styles))
+      : canonicalBookingTravelStyles(normalizeStringArray(booking?.travel_styles));
+    const currentTravelStyles = canonicalBookingTravelStyles(normalizeStringArray(booking?.travel_styles));
+    const preferredCustomerLang = normalizeBookingContentLang(
+      booking?.customer_language
+      || booking?.web_form_submission?.preferred_language
+      || "en"
+    );
+    const nextPdfPersonalization = payload?.pdf_personalization !== undefined
+      ? normalizeBookingPdfPersonalization(payload.pdf_personalization, {
+          flatLang: preferredCustomerLang,
+          sourceLang: preferredCustomerLang
+        })
+      : normalizeBookingPdfPersonalization(booking?.pdf_personalization, {
+          flatLang: preferredCustomerLang,
+          sourceLang: preferredCustomerLang
+        });
+    const currentPdfPersonalization = normalizeBookingPdfPersonalization(booking?.pdf_personalization, {
+      flatLang: preferredCustomerLang,
+      sourceLang: preferredCustomerLang
+    });
 
     if (
       nextSourceChannel === currentSourceChannel
       && nextReferralKind === currentReferralKind
       && nextReferralLabel === currentReferralLabel
       && nextReferralStaffUserId === currentReferralStaffUserId
+      && JSON.stringify(nextDestinations) === JSON.stringify(currentDestinations)
+      && JSON.stringify(nextTravelStyles) === JSON.stringify(currentTravelStyles)
+      && JSON.stringify(nextPdfPersonalization) === JSON.stringify(currentPdfPersonalization)
     ) {
       sendJson(res, 200, { ...(await buildBookingDetailResponse(booking, req)), unchanged: true });
       return;
@@ -273,6 +318,9 @@ export function createBookingCoreHandlers(deps) {
     booking.referral_kind = nextReferralKind || null;
     booking.referral_label = nextReferralLabel;
     booking.referral_staff_user_id = nextReferralStaffUserId;
+    booking.destinations = nextDestinations;
+    booking.travel_styles = nextTravelStyles;
+    booking.pdf_personalization = nextPdfPersonalization;
     incrementBookingRevision(booking, "core_revision");
     booking.updated_at = nowIso();
 

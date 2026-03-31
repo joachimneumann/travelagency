@@ -1,5 +1,9 @@
 import { normalizeText } from "./text.js";
-import { normalizeTourStyleLabels } from "../domain/tour_catalog_i18n.js";
+import {
+  normalizeTourStyleCode,
+  normalizeTourStyleLabels,
+  sortTourStyleCodes
+} from "../domain/tour_catalog_i18n.js";
 import { resolveBookingMilestoneState } from "../domain/booking_milestones.js";
 import {
   CUSTOMER_CONTENT_LANGUAGE_CODES,
@@ -278,7 +282,11 @@ export function normalizeStoredBookingRecord(booking, _store = {}) {
     last_action_at: booking?.last_action_at
   }, booking?.stage);
   const normalizedDestinations = normalizeStringArray(booking?.destinations);
-  const normalizedTravelStyles = normalizeTourStyleLabels(booking?.travel_styles, "en");
+  const normalizedTravelStyles = sortTourStyleCodes(
+    normalizeStringArray(booking?.travel_styles)
+      .map((value) => normalizeTourStyleCode(value))
+      .filter(Boolean)
+  );
   const {
     public_traveler_details_token_nonce: _legacyTravelerDetailsTokenNonce,
     public_traveler_details_token_created_at: _legacyTravelerDetailsTokenCreatedAt,

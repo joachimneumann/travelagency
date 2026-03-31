@@ -33,6 +33,11 @@ import {
   resolveAtpGuideShortDescriptionText,
   resolveAtpStaffFullName
 } from "./atp_staff_pdf.js";
+import {
+  resolveBookingPdfCountryLabels,
+  resolveBookingPdfPersonalizationText,
+  resolveBookingPdfTravelStyleLabels
+} from "./booking_pdf_personalization.js";
 
 const MM_TO_POINTS = 72 / 25.4;
 // PDFKit's built-in "A4" preset rounds the page box and some viewers display it as
@@ -549,7 +554,7 @@ function drawTopHeader(doc, companyProfile, logoImage, fonts, lang) {
 }
 
 function drawHero(doc, heroTitle, booking, generatedOffer, heroImage, startY, fonts, lang) {
-  const heroSubtitle = pdfT(lang, "offer.hero_subtitle", "Your personalized Asia Travel Plan offer");
+  const heroSubtitle = resolveOfferSubtitle(booking, generatedOffer, lang);
   const detailsX = PAGE_MARGIN + HERO_IMAGE_WIDTH + 18;
   const detailsWidth = doc.page.width - PAGE_MARGIN - detailsX;
 
@@ -626,6 +631,10 @@ function drawHero(doc, heroTitle, booking, generatedOffer, heroImage, startY, fo
 }
 
 function drawIntro(doc, startY, fonts, lang) {
+  const booking = doc.__booking_for_offer_pdf || null;
+  const welcomeText = resolveOfferWelcomeText(booking, lang);
+  const customerNote = resolveSharedCustomerNote(booking, lang);
+  if (!welcomeText && !customerNote) {
   doc
     .font(pdfFontName("regular", fonts))
     .fontSize(11.5)
@@ -639,7 +648,43 @@ function drawIntro(doc, startY, fonts, lang) {
         lineGap: 2
       })
     );
-  return doc.y + 18;
+    return doc.y + 18;
+  }
+
+  let y = startY;
+  if (welcomeText) {
+    doc
+      .font(pdfFontName("regular", fonts))
+      .fontSize(11.5)
+      .fillColor(PDF_COLORS.textMutedStrong)
+      .text(
+        welcomeText,
+        PAGE_MARGIN,
+        y,
+        pdfTextOptions(lang, {
+          width: doc.page.width - PAGE_MARGIN * 2,
+          lineGap: 2
+        })
+      );
+    y = doc.y + 12;
+  }
+  if (customerNote) {
+    doc
+      .font(pdfFontName("regular", fonts))
+      .fontSize(11.2)
+      .fillColor(PDF_COLORS.textMutedStrong)
+      .text(
+        customerNote,
+        PAGE_MARGIN,
+        y,
+        pdfTextOptions(lang, {
+          width: doc.page.width - PAGE_MARGIN * 2,
+          lineGap: 2
+        })
+      );
+    y = doc.y + 12;
+  }
+  return y;
 }
 
 function drawTravelers(doc, booking, startY, fonts, lang) {
@@ -1434,6 +1479,9 @@ function drawOfferTable(doc, generatedOffer, startY, formatMoneyValue, fonts, la
 }
 
 function buildClosingBody(generatedOffer, formatMoneyValue, lang) {
+  const booking = generatedOffer?.__booking_for_offer_pdf || null;
+  const override = textOrNull(resolveBookingPdfPersonalizationText(booking?.pdf_personalization, "offer", "closing", lang, { sourceLang: lang }));
+  if (override) return override;
   const routeMode = normalizeText(generatedOffer?.booking_confirmation_route?.mode).toUpperCase();
   if (routeMode === "DEPOSIT_PAYMENT") {
     const routeRule = generatedOffer?.booking_confirmation_route?.deposit_rule && typeof generatedOffer.booking_confirmation_route.deposit_rule === "object"
@@ -1459,6 +1507,32 @@ function buildClosingBody(generatedOffer, formatMoneyValue, lang) {
     "offer.closing_body",
     "If this offer feels right for you, simply respond to us by email or WhatsApp and we will be happy to confirm next steps, refine details, and help you move toward booking."
   );
+}
+
+function resolveOfferSubtitle(booking, generatedOffer, lang) {
+  const override = textOrNull(resolveBookingPdfPersonalizationText(booking?.pdf_personalization, "offer", "subtitle", lang, { sourceLang: lang }));
+  if (override) return override;
+  const dayCount = Array.isArray(generatedOffer?.travel_plan?.days) ? generatedOffer.travel_plan.days.length : 0;
+  const countries = resolveBookingPdfCountryLabels(booking);
+  if (dayCount > 0 && countries.length) {
+    return `${dayCount} ${dayCount === 1 ? "day" : "days"} in ${countries.join(", ")}`;
+  }
+  if (countries.length) return countries.join(", ");
+  return pdfT(lang, "offer.hero_subtitle", "Your personalized Asia Travel Plan offer");
+}
+
+function resolveOfferWelcomeText(booking, lang) {
+  const override = textOrNull(resolveBookingPdfPersonalizationText(booking?.pdf_personalization, "offer", "welcome", lang, { sourceLang: lang }));
+  if (override) return override;
+  const styles = resolveBookingPdfTravelStyleLabels(booking, lang);
+  if (styles.length) {
+    return `This offer is based on your current ${styles.join(", ")} itinerary. Please let us know if you would like to adjust anything.`;
+  }
+  return "This is your current offer. Please let us know if you would like to adjust anything.";
+}
+
+function resolveSharedCustomerNote(booking, lang) {
+  return textOrNull(resolveBookingPdfPersonalizationText(booking?.pdf_personalization, "shared", "customer_note", lang, { sourceLang: lang })) || "";
 }
 
 function buildAttachmentClosingNote(attachmentCount, lang) {
@@ -1598,6 +1672,8 @@ export function createOfferPdfWriter({
       doc.on("error", reject);
 
       registerPdfFonts(doc, fonts);
+      doc.__booking_for_offer_pdf = booking;
+      generatedOffer.__booking_for_offer_pdf = booking;
 
       let y = drawTopHeader(doc, companyProfile, logoImage, fonts, lang);
       y = drawHero(doc, heroTitle, booking, generatedOffer, heroImage, y, fonts, lang);

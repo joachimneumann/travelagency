@@ -190,7 +190,24 @@ function normalizeCopiedFrom(value) {
     source_day_id: normalizeOptionalText(source.source_day_id),
     source_service_id: sourceItemId,
     copied_at: normalizeOptionalText(source.copied_at),
-    copied_by_atp_staff_id: normalizeOptionalText(source.copied_by_atp_staff_id)
+    copied_by_atp_staff_id: normalizeOptionalText(source.copied_by_atp_staff_id),
+    import_batch_id: normalizeOptionalText(source.import_batch_id)
+  };
+}
+
+function normalizeCopiedDayFrom(value) {
+  const source = value && typeof value === "object" && !Array.isArray(value) ? value : null;
+  if (!source) return null;
+  const sourceBookingId = normalizeOptionalText(source.source_booking_id);
+  const sourceDayId = normalizeOptionalText(source.source_day_id);
+  if (!sourceBookingId || !sourceDayId) return null;
+  return {
+    source_type: normalizeOptionalText(source.source_type) || "booking_travel_plan_day",
+    source_booking_id: sourceBookingId,
+    source_day_id: sourceDayId,
+    copied_at: normalizeOptionalText(source.copied_at),
+    copied_by_atp_staff_id: normalizeOptionalText(source.copied_by_atp_staff_id),
+    import_batch_id: normalizeOptionalText(source.import_batch_id)
   };
 }
 
@@ -231,7 +248,8 @@ export function createEmptyTravelPlanDay(index = 0) {
     overnight_location_i18n: {},
     services: [],
     notes: "",
-    notes_i18n: {}
+    notes_i18n: {},
+    copied_from: null
   };
 }
 
@@ -381,7 +399,8 @@ export function normalizeTravelPlanDraft(plan, offerComponents = [], options = {
           resolveLocalizedEditorBranchText(rawDay.notes_i18n ?? rawDay.notes, targetLang, ""),
           targetLang,
           sourceLang
-        ).map
+        ).map,
+        copied_from: normalizeCopiedDayFrom(rawDay.copied_from)
       };
     });
 

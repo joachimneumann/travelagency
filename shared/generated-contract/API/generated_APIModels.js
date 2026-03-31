@@ -296,6 +296,59 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         return validateShape(value, BOOKING_CUSTOMER_LANGUAGE_UPDATE_REQUEST_SCHEMA);
       }
 
+      export const BOOKING_PDF_PERSONALIZATION_SHARED_SCHEMA = {
+        name: "BookingPdfPersonalizationShared",
+        domain: "api",
+        module: "api",
+        sourceType: "openapi.components.schemas.BookingPdfPersonalizationShared",
+        requireOneOf: [],
+        fields: [
+    schemaField({"name":"customer_note","required":false,"wireName":"customer_note"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"customer_note_i18n","required":false,"wireName":"customer_note_i18n"}, {"kind":"transport","typeName":"Record<string,string>","isArray":false})
+        ]
+      };
+
+      export function validateBookingPdfPersonalizationShared(value) {
+        return validateShape(value, BOOKING_PDF_PERSONALIZATION_SHARED_SCHEMA);
+      }
+
+      export const BOOKING_PDF_PERSONALIZATION_SCOPED_SCHEMA = {
+        name: "BookingPdfPersonalizationScoped",
+        domain: "api",
+        module: "api",
+        sourceType: "openapi.components.schemas.BookingPdfPersonalizationScoped",
+        requireOneOf: [],
+        fields: [
+    schemaField({"name":"subtitle","required":false,"wireName":"subtitle"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"subtitle_i18n","required":false,"wireName":"subtitle_i18n"}, {"kind":"transport","typeName":"Record<string,string>","isArray":false}),
+    schemaField({"name":"welcome","required":false,"wireName":"welcome"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"welcome_i18n","required":false,"wireName":"welcome_i18n"}, {"kind":"transport","typeName":"Record<string,string>","isArray":false}),
+    schemaField({"name":"closing","required":false,"wireName":"closing"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"closing_i18n","required":false,"wireName":"closing_i18n"}, {"kind":"transport","typeName":"Record<string,string>","isArray":false})
+        ]
+      };
+
+      export function validateBookingPdfPersonalizationScoped(value) {
+        return validateShape(value, BOOKING_PDF_PERSONALIZATION_SCOPED_SCHEMA);
+      }
+
+      export const BOOKING_PDF_PERSONALIZATION_SCHEMA = {
+        name: "BookingPdfPersonalization",
+        domain: "api",
+        module: "api",
+        sourceType: "openapi.components.schemas.BookingPdfPersonalization",
+        requireOneOf: [],
+        fields: [
+    schemaField({"name":"shared","required":false,"wireName":"shared"}, {"kind":"transport","typeName":"BookingPdfPersonalizationShared","isArray":false}),
+    schemaField({"name":"travel_plan","required":false,"wireName":"travel_plan"}, {"kind":"transport","typeName":"BookingPdfPersonalizationScoped","isArray":false}),
+    schemaField({"name":"offer","required":false,"wireName":"offer"}, {"kind":"transport","typeName":"BookingPdfPersonalizationScoped","isArray":false})
+        ]
+      };
+
+      export function validateBookingPdfPersonalization(value) {
+        return validateShape(value, BOOKING_PDF_PERSONALIZATION_SCHEMA);
+      }
+
       export const BOOKING_SOURCE_UPDATE_REQUEST_SCHEMA = {
         name: "BookingSourceUpdateRequest",
         domain: "api",
@@ -308,6 +361,9 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
     schemaField({"name":"referral_kind","required":true,"wireName":"referral_kind"}, SHARED_FIELD_DEFS.FIELD_43),
     schemaField({"name":"referral_label","required":false,"wireName":"referral_label"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"referral_staff_user_id","required":false,"wireName":"referral_staff_user_id"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"destinations","required":false,"wireName":"destinations"}, SHARED_FIELD_DEFS.FIELD_16),
+    schemaField({"name":"travel_styles","required":false,"wireName":"travel_styles"}, SHARED_FIELD_DEFS.FIELD_10),
+    schemaField({"name":"pdf_personalization","required":false,"wireName":"pdf_personalization"}, {"kind":"transport","typeName":"BookingPdfPersonalization","isArray":false}),
     schemaField({"name":"actor","required":false,"wireName":"actor"}, SHARED_FIELD_DEFS.FIELD_1)
         ]
       };
@@ -519,28 +575,6 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
 
       export function validateTravelPlanServiceSearchResponse(value) {
         return validateShape(value, TRAVEL_PLAN_SERVICE_SEARCH_RESPONSE_SCHEMA);
-      }
-
-      export const TRAVEL_PLAN_DAY_IMPORT_REQUEST_SCHEMA = {
-        name: "TravelPlanDayImportRequest",
-        domain: "api",
-        module: "api",
-        sourceType: "openapi.components.schemas.TravelPlanDayImportRequest",
-        requireOneOf: [],
-        fields: [
-    schemaField({"name":"expected_travel_plan_revision","required":false,"wireName":"expected_travel_plan_revision"}, SHARED_FIELD_DEFS.FIELD_17),
-    schemaField({"name":"source_booking_id","required":true,"wireName":"source_booking_id"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"source_day_id","required":true,"wireName":"source_day_id"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"include_images","required":true,"wireName":"include_images"}, SHARED_FIELD_DEFS.FIELD_8),
-    schemaField({"name":"include_customer_visible_images_only","required":true,"wireName":"include_customer_visible_images_only"}, SHARED_FIELD_DEFS.FIELD_8),
-    schemaField({"name":"include_notes","required":true,"wireName":"include_notes"}, SHARED_FIELD_DEFS.FIELD_8),
-    schemaField({"name":"include_translations","required":true,"wireName":"include_translations"}, SHARED_FIELD_DEFS.FIELD_8),
-    schemaField({"name":"actor","required":false,"wireName":"actor"}, SHARED_FIELD_DEFS.FIELD_1)
-        ]
-      };
-
-      export function validateTravelPlanDayImportRequest(value) {
-        return validateShape(value, TRAVEL_PLAN_DAY_IMPORT_REQUEST_SCHEMA);
       }
 
       export const TRAVEL_PLAN_SERVICE_IMPORT_REQUEST_SCHEMA = {
@@ -1159,6 +1193,7 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
     schemaField({"name":"service_level_agreement_due_at","required":false,"wireName":"service_level_agreement_due_at"}, SHARED_FIELD_DEFS.FIELD_5),
     schemaField({"name":"destinations","required":false,"wireName":"destinations"}, SHARED_FIELD_DEFS.FIELD_16),
     schemaField({"name":"travel_styles","required":false,"wireName":"travel_styles"}, SHARED_FIELD_DEFS.FIELD_10),
+    schemaField({"name":"pdf_personalization","required":false,"wireName":"pdf_personalization"}, {"kind":"transport","typeName":"BookingPdfPersonalization","isArray":false}),
     schemaField({"name":"travel_start_day","required":false,"wireName":"travel_start_day"}, SHARED_FIELD_DEFS.FIELD_7),
     schemaField({"name":"travel_end_day","required":false,"wireName":"travel_end_day"}, SHARED_FIELD_DEFS.FIELD_7),
     schemaField({"name":"number_of_travelers","required":false,"wireName":"number_of_travelers"}, SHARED_FIELD_DEFS.FIELD_17),
@@ -1431,48 +1466,6 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
 
       export function validateTravelPlanServiceSearchResult(value) {
         return validateShape(value, TRAVEL_PLAN_SERVICE_SEARCH_RESULT_SCHEMA);
-      }
-
-      export const TRAVEL_PLAN_DAY_SEARCH_RESULT_SCHEMA = {
-        name: "TravelPlanDaySearchResult",
-        domain: "api",
-        module: "api",
-        sourceType: "openapi.components.schemas.TravelPlanDaySearchResult",
-        requireOneOf: [],
-        fields: [
-    schemaField({"name":"source_booking_id","required":true,"wireName":"source_booking_id"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"source_booking_name","required":false,"wireName":"source_booking_name"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"source_booking_code","required":false,"wireName":"source_booking_code"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"day_id","required":true,"wireName":"day_id"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"day_number","required":false,"wireName":"day_number"}, SHARED_FIELD_DEFS.FIELD_17),
-    schemaField({"name":"title","required":true,"wireName":"title"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"overnight_location","required":false,"wireName":"overnight_location"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"notes","required":false,"wireName":"notes"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"thumbnail_url","required":false,"wireName":"thumbnail_url"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"image_count","required":false,"wireName":"image_count"}, SHARED_FIELD_DEFS.FIELD_17),
-    schemaField({"name":"service_count","required":false,"wireName":"service_count"}, SHARED_FIELD_DEFS.FIELD_17),
-    schemaField({"name":"updated_at","required":false,"wireName":"updated_at"}, SHARED_FIELD_DEFS.FIELD_5)
-        ]
-      };
-
-      export function validateTravelPlanDaySearchResult(value) {
-        return validateShape(value, TRAVEL_PLAN_DAY_SEARCH_RESULT_SCHEMA);
-      }
-
-      export const TRAVEL_PLAN_DAY_SEARCH_RESPONSE_SCHEMA = {
-        name: "TravelPlanDaySearchResponse",
-        domain: "api",
-        module: "api",
-        sourceType: "openapi.components.schemas.TravelPlanDaySearchResponse",
-        requireOneOf: [],
-        fields: [
-    schemaField({"name":"items","required":false,"wireName":"items"}, {"kind":"array","itemType":"TravelPlanDaySearchResult"}),
-    schemaField({"name":"total","required":true,"wireName":"total"}, SHARED_FIELD_DEFS.FIELD_17)
-        ]
-      };
-
-      export function validateTravelPlanDaySearchResponse(value) {
-        return validateShape(value, TRAVEL_PLAN_DAY_SEARCH_RESPONSE_SCHEMA);
       }
 
       export const BOOKING_TRAVEL_PLAN_PDF_READ_MODEL_SCHEMA = {

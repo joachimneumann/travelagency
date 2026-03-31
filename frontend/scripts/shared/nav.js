@@ -8,6 +8,13 @@ function buildIconMarkup(icon) {
   return String(icon || "");
 }
 
+const EMERGENCY_NAV_ICON = `
+  <svg class="backend-section-nav__icon-svg" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+    <rect x="24" y="10" width="16" height="44" rx="4" fill="#d92d20"></rect>
+    <rect x="10" y="24" width="44" height="16" rx="4" fill="#d92d20"></rect>
+  </svg>
+`;
+
 function buildSectionButton(section, title, icon) {
   return `
     <button type="button" class="backend-section-nav__item" data-backend-section="${section}" title="${title}" aria-label="${title}">
@@ -41,6 +48,8 @@ export function resolveBackendSectionHref(section) {
   const pathname =
     normalizedSection === "tours"
       ? "tours.html"
+      : normalizedSection === "emergency"
+        ? "emergency.html"
       : normalizedSection === "settings"
         ? "settings.html"
         : "backend.html";
@@ -62,6 +71,7 @@ function applyNavPermissions(mount, roles) {
   const resolvedRoles = Array.isArray(roles) ? roles : [];
   const canReadBookings = hasAnyRole(resolvedRoles, "atp_admin", "atp_manager", "atp_accountant", "atp_staff");
   const canReadTours = hasAnyRole(resolvedRoles, "atp_admin", "atp_accountant", "atp_tour_editor");
+  const canReadEmergency = hasAnyRole(resolvedRoles, "atp_admin", "atp_tour_editor");
   const canReadSettings = hasAnyRole(resolvedRoles, "atp_admin", "atp_manager", "atp_accountant");
   mount
     .querySelectorAll(".backend-section-nav__item[data-backend-section]")
@@ -70,6 +80,7 @@ function applyNavPermissions(mount, roles) {
       const visible =
         (section === "bookings" && canReadBookings) ||
         (section === "tours" && canReadTours) ||
+        (section === "emergency" && canReadEmergency) ||
         (section === "settings" && canReadSettings);
       button.hidden = !visible;
       button.classList.toggle("is-hidden", !visible);
@@ -90,6 +101,7 @@ export function mountBackendNav(mount, options = {}) {
           ${buildSectionButton("bookings", backendT("nav.bookings", "Bookings"), { type: "image", src: "assets/img/profile_booking.png", size: "large" })}
           ${buildSectionButton("settings", backendT("nav.settings", "Reports and Settings"), { type: "image", src: "assets/img/profile_person.png", size: "large" })}
           ${buildSectionButton("tours", backendT("nav.tours", "Tours"), { type: "image", src: "assets/img/hat.png", size: "large" })}
+          ${buildSectionButton("emergency", backendT("nav.emergency", "Emergency"), EMERGENCY_NAV_ICON)}
         </div>
       </div>
 

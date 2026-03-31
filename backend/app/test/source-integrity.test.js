@@ -2049,6 +2049,7 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
   const backendHtml = await readFile(path.join(frontendRoot, "pages", "backend.html"), "utf8");
   const toursHtml = await readFile(path.join(frontendRoot, "pages", "tours.html"), "utf8");
   const settingsHtml = await readFile(path.join(frontendRoot, "pages", "settings.html"), "utf8");
+  const emergencyHtml = await readFile(path.join(frontendRoot, "pages", "emergency.html"), "utf8");
   const localCaddy = await readFile(path.join(deployRoot, "Caddyfile.local"), "utf8");
   const stagingCaddy = await readFile(path.join(deployRoot, "Caddyfile"), "utf8");
 
@@ -2067,11 +2068,17 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
     /frontend\/scripts\/pages\/settings_list\.js/,
     "settings.html should mount the settings page script"
   );
+  assert.match(
+    emergencyHtml,
+    /frontend\/scripts\/pages\/emergency\.js/,
+    "emergency.html should mount the emergency page script"
+  );
 
   for (const source of [localCaddy, stagingCaddy]) {
     assert.match(source, /\/backend\.html/, "Caddy should serve backend.html");
     assert.match(source, /\/tours\.html/, "Caddy should serve tours.html");
     assert.match(source, /\/settings\.html/, "Caddy should serve settings.html");
+    assert.match(source, /\/emergency\.html/, "Caddy should serve emergency.html");
   }
   assert.match(
     stagingCaddy,
@@ -2159,23 +2166,25 @@ test("runtime links use direct tours and settings pages instead of backend secti
     path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking_list.js"),
     path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "tours_list.js"),
     path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "settings_list.js"),
+    path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "emergency.js"),
     path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "tour.js"),
     path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "shared", "nav.js"),
     path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "tours.html"),
-    path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "settings.html")
+    path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "settings.html"),
+    path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "emergency.html")
   ];
 
   for (const filePath of filesToScan) {
     const source = await readFile(filePath, "utf8");
     assert.doesNotMatch(
       source,
-      /backend\.html\?section=(tours|settings)/,
-      `${path.basename(filePath)} should not hard-code backend section query routes for tours/settings`
+      /backend\.html\?section=(tours|settings|emergency)/,
+      `${path.basename(filePath)} should not hard-code backend section query routes for tours/settings/emergency`
     );
     assert.doesNotMatch(
       source,
-      /withBackendLang\(\s*"\/backend\.html"\s*,\s*\{\s*section\s*:\s*"(tours|settings)"/,
-      `${path.basename(filePath)} should not build tours/settings routes through backend.html`
+      /withBackendLang\(\s*"\/backend\.html"\s*,\s*\{\s*section\s*:\s*"(tours|settings|emergency)"/,
+      `${path.basename(filePath)} should not build tours/settings/emergency routes through backend.html`
     );
   }
 });

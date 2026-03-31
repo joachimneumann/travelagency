@@ -423,8 +423,10 @@ export function createBookingTravelPlanHandlers(deps) {
   }
 
   const {
+    handleSearchTravelPlans,
     handleSearchTravelPlanDays,
     handleSearchTravelPlanServices,
+    handleImportTravelPlan,
     handleImportTravelPlanDay,
     handleImportTravelPlanService
   } = createBookingTravelPlanImportHandlers({
@@ -730,8 +732,10 @@ export function createBookingTravelPlanHandlers(deps) {
   }
 
   return {
+    handleSearchTravelPlans,
     handleSearchTravelPlanDays,
     handleSearchTravelPlanServices,
+    handleImportTravelPlan,
     handleImportTravelPlanDay,
     handleImportTravelPlanService,
     handleUploadTravelPlanServiceImage,

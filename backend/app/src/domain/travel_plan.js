@@ -76,7 +76,25 @@ function normalizeTravelPlanServiceCopiedFrom(rawCopiedFrom) {
     source_day_id: normalizeOptionalText(source.source_day_id),
     source_service_id: sourceServiceId,
     copied_at: normalizeOptionalText(source.copied_at),
-    copied_by_atp_staff_id: normalizeOptionalText(source.copied_by_atp_staff_id)
+    copied_by_atp_staff_id: normalizeOptionalText(source.copied_by_atp_staff_id),
+    import_batch_id: normalizeOptionalText(source.import_batch_id)
+  };
+}
+
+function normalizeTravelPlanDayCopiedFrom(rawCopiedFrom) {
+  const source = rawCopiedFrom && typeof rawCopiedFrom === "object" && !Array.isArray(rawCopiedFrom)
+    ? rawCopiedFrom
+    : {};
+  const sourceBookingId = normalizeOptionalText(source.source_booking_id);
+  const sourceDayId = normalizeOptionalText(source.source_day_id);
+  if (!sourceBookingId || !sourceDayId) return null;
+  return {
+    source_type: normalizeOptionalText(source.source_type) || "booking_travel_plan_day",
+    source_booking_id: sourceBookingId,
+    source_day_id: sourceDayId,
+    copied_at: normalizeOptionalText(source.copied_at),
+    copied_by_atp_staff_id: normalizeOptionalText(source.copied_by_atp_staff_id),
+    import_batch_id: normalizeOptionalText(source.import_batch_id)
   };
 }
 
@@ -304,7 +322,8 @@ function normalizeTravelPlanDays(days, options = {}) {
         overnight_location_i18n,
         services,
         notes: resolveLocalizedText(notes_i18n, flatLang, "", { sourceLang }) || null,
-        notes_i18n
+        notes_i18n,
+        copied_from: normalizeTravelPlanDayCopiedFrom(day?.copied_from)
       };
     });
 }
@@ -403,6 +422,11 @@ export function createTravelPlanHelpers() {
         return { ok: false, error: `Travel-plan day id ${day.id} is duplicated.` };
       }
       dayIds.add(day.id);
+      if (day.copied_from) {
+        if (!normalizeText(day.copied_from.source_booking_id) || !normalizeText(day.copied_from.source_day_id)) {
+          return { ok: false, error: `Day ${day.day_number}: Copied-from metadata is incomplete.` };
+        }
+      }
 
       for (const [itemIndex, item] of day.services.entries()) {
         const itemNumber = itemIndex + 1;

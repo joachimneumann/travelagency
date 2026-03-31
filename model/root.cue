@@ -85,6 +85,7 @@ import (
 		KeycloakUserStaffProfileEntryResponse:            apiModel.#KeycloakUserStaffProfileEntryResponse
 		KeycloakUserStaffProfileListResponse:             apiModel.#KeycloakUserStaffProfileListResponse
 		PublicAtpStaffTeamResponse:                       apiModel.#PublicAtpStaffTeamResponse
+		CountryPracticalInfoListResponse:                 apiModel.#CountryPracticalInfoListResponse
 		BookingActivitiesResponse:                        apiModel.#BookingActivitiesResponse
 		BookingActivityResponse:                          apiModel.#BookingActivityResponse
 		BookingDeleteResponse:                            apiModel.#BookingDeleteResponse
@@ -100,8 +101,12 @@ import (
 		OfferExchangeRatesResponse:                       apiModel.#OfferExchangeRatesResponse
 		BookingListFilters:                               apiModel.#BookingListFilters
 		TourListFilters:                                  apiModel.#TourListFilters
-		TravelPlanServiceSearchResult:                       apiModel.#TravelPlanServiceSearchResult
-		TravelPlanServiceSearchResponse:                     apiModel.#TravelPlanServiceSearchResponse
+		TravelPlanDaySearchResult:                         apiModel.#TravelPlanDaySearchResult
+		TravelPlanDaySearchResponse:                       apiModel.#TravelPlanDaySearchResponse
+		TravelPlanSearchResult:                            apiModel.#TravelPlanSearchResult
+		TravelPlanSearchResponse:                          apiModel.#TravelPlanSearchResponse
+		TravelPlanServiceSearchResult:                     apiModel.#TravelPlanServiceSearchResult
+		TravelPlanServiceSearchResponse:                   apiModel.#TravelPlanServiceSearchResponse
 		AuthenticatedUser:                                apiModel.#AuthenticatedUser
 		AuthMeResponse:                                   apiModel.#AuthMeResponse
 		MobileBootstrap:                                  apiModel.#MobileBootstrap
@@ -143,6 +148,10 @@ import (
 		BookingTravelPlanUpdateRequest:                   apiModel.#BookingTravelPlanUpdateRequest
 		BookingDepositReceiptUpdateRequest:               apiModel.#BookingDepositReceiptUpdateRequest
 		BookingPricingUpdateRequest:                      apiModel.#BookingPricingUpdateRequest
+		TravelPlanDaySearchRequest:                       apiModel.#TravelPlanDaySearchRequest
+		TravelPlanDayImportRequest:                       apiModel.#TravelPlanDayImportRequest
+		TravelPlanSearchRequest:                          apiModel.#TravelPlanSearchRequest
+		TravelPlanImportRequest:                          apiModel.#TravelPlanImportRequest
 		TravelPlanServiceSearchRequest:                      apiModel.#TravelPlanServiceSearchRequest
 		TravelPlanServiceImportRequest:                      apiModel.#TravelPlanServiceImportRequest
 		TravelPlanServiceImageUploadRequest:                 apiModel.#TravelPlanServiceImageUploadRequest
@@ -160,6 +169,7 @@ import (
 		OfferExchangeRatesRequest:                        apiModel.#OfferExchangeRatesRequest
 		BookingActivityCreateRequest:                     apiModel.#BookingActivityCreateRequest
 		BookingInvoiceUpsertRequest:                      apiModel.#BookingInvoiceUpsertRequest
+		CountryPracticalInfoUpdateRequest:                apiModel.#CountryPracticalInfoUpdateRequest
 		AtpStaffProfileUpdateRequest:                     apiModel.#AtpStaffProfileUpdateRequest
 		AtpStaffPhotoUploadRequest:                       apiModel.#AtpStaffPhotoUploadRequest
 		TourUpsertRequest:                                apiModel.#TourUpsertRequest

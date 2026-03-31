@@ -4206,6 +4206,111 @@ textarea:focus-visible {
   height: 1rem;
 }
 
+.emergency-editor {
+  display: grid;
+  gap: 1rem;
+}
+
+.emergency-editor__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.emergency-editor__intro,
+.emergency-editor__status {
+  margin: 0.25rem 0 0;
+}
+
+.emergency-editor__status {
+  color: var(--text-muted);
+  text-align: right;
+}
+
+.emergency-editor__status.is-error {
+  color: var(--error-text);
+}
+
+.emergency-editor__controls {
+  align-items: end;
+}
+
+.emergency-editor__list {
+  display: grid;
+  gap: 1rem;
+}
+
+.emergency-editor__empty {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.emergency-country-card {
+  display: grid;
+  gap: 0.95rem;
+  padding: 1rem 1rem 1.05rem;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--surface-subtle);
+}
+
+.emergency-country-card__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.emergency-country-card__title,
+.emergency-country-card__updated {
+  margin: 0;
+}
+
+.emergency-country-card__updated {
+  margin-top: 0.25rem;
+  color: var(--text-muted);
+}
+
+.emergency-country-card__remove,
+.emergency-contact-row__remove {
+  color: var(--error-text-strong);
+  border-color: color-mix(in srgb, var(--line-error) 72%, var(--line));
+}
+
+.emergency-country-card__contacts-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.55rem;
+}
+
+.emergency-country-card__contacts-head .field-label {
+  margin: 0;
+}
+
+.emergency-country-card__contacts {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.emergency-country-card__empty {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.emergency-contact-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(160px, 0.85fr) minmax(0, 1fr) auto;
+  gap: 0.55rem;
+  align-items: center;
+}
+
+.emergency-contact-row input {
+  min-width: 0;
+}
+
 .backend-message {
   border: 1px solid var(--line-error);
   background: var(--surface-error);
@@ -4694,6 +4799,19 @@ textarea:focus-visible {
   .settings-staff-editor__qualification-code {
     min-height: auto;
     justify-content: flex-start;
+  }
+
+  .emergency-editor__head,
+  .emergency-country-card__contacts-head {
+    display: grid;
+  }
+
+  .emergency-contact-row {
+    grid-template-columns: 1fr;
+  }
+
+  .emergency-editor__status {
+    text-align: left;
   }
 
   #tourChangeImageBtn {

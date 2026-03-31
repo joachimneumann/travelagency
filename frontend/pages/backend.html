@@ -129,8 +129,14 @@
       import { mountBackendNav } from "./frontend/scripts/shared/nav.js";
       const params = new URLSearchParams(window.location.search);
       const requestedSection = params.get("section") || "bookings";
-      if (requestedSection === "tours" || requestedSection === "settings") {
-        const target = new URL(requestedSection === "tours" ? "tours.html" : "settings.html", window.location.origin);
+      if (requestedSection === "tours" || requestedSection === "settings" || requestedSection === "emergency") {
+        const pageName =
+          requestedSection === "tours"
+            ? "tours.html"
+            : requestedSection === "settings"
+              ? "settings.html"
+              : "emergency.html";
+        const target = new URL(pageName, window.location.origin);
         const lang = params.get("lang");
         if (lang) target.searchParams.set("lang", lang);
         window.location.replace(`${target.pathname}${target.search}`);

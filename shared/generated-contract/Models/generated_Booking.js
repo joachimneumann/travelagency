@@ -99,6 +99,59 @@ export const GENERATED_OFFER_CATEGORIES = Object.freeze([
         return validateShape(value, BOOKING_PERSON_DOCUMENT_SCHEMA);
       }
 
+      export const BOOKING_PDF_PERSONALIZATION_SHARED_SCHEMA = {
+        name: "BookingPdfPersonalizationShared",
+        domain: "booking",
+        module: "entities",
+        sourceType: "openapi.components.schemas.BookingPdfPersonalizationShared",
+        requireOneOf: [],
+        fields: [
+    schemaField({"name":"customer_note","required":false,"wireName":"customer_note"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"customer_note_i18n","required":false,"wireName":"customer_note_i18n"}, {"kind":"transport","typeName":"Record<string,string>","isArray":false})
+        ]
+      };
+
+      export function validateBookingPdfPersonalizationShared(value) {
+        return validateShape(value, BOOKING_PDF_PERSONALIZATION_SHARED_SCHEMA);
+      }
+
+      export const BOOKING_PDF_PERSONALIZATION_SCOPED_SCHEMA = {
+        name: "BookingPdfPersonalizationScoped",
+        domain: "booking",
+        module: "entities",
+        sourceType: "openapi.components.schemas.BookingPdfPersonalizationScoped",
+        requireOneOf: [],
+        fields: [
+    schemaField({"name":"subtitle","required":false,"wireName":"subtitle"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"subtitle_i18n","required":false,"wireName":"subtitle_i18n"}, {"kind":"transport","typeName":"Record<string,string>","isArray":false}),
+    schemaField({"name":"welcome","required":false,"wireName":"welcome"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"welcome_i18n","required":false,"wireName":"welcome_i18n"}, {"kind":"transport","typeName":"Record<string,string>","isArray":false}),
+    schemaField({"name":"closing","required":false,"wireName":"closing"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"closing_i18n","required":false,"wireName":"closing_i18n"}, {"kind":"transport","typeName":"Record<string,string>","isArray":false})
+        ]
+      };
+
+      export function validateBookingPdfPersonalizationScoped(value) {
+        return validateShape(value, BOOKING_PDF_PERSONALIZATION_SCOPED_SCHEMA);
+      }
+
+      export const BOOKING_PDF_PERSONALIZATION_SCHEMA = {
+        name: "BookingPdfPersonalization",
+        domain: "booking",
+        module: "entities",
+        sourceType: "openapi.components.schemas.BookingPdfPersonalization",
+        requireOneOf: [],
+        fields: [
+    schemaField({"name":"shared","required":false,"wireName":"shared"}, {"kind":"transport","typeName":"BookingPdfPersonalizationShared","isArray":false}),
+    schemaField({"name":"travel_plan","required":false,"wireName":"travel_plan"}, {"kind":"transport","typeName":"BookingPdfPersonalizationScoped","isArray":false}),
+    schemaField({"name":"offer","required":false,"wireName":"offer"}, {"kind":"transport","typeName":"BookingPdfPersonalizationScoped","isArray":false})
+        ]
+      };
+
+      export function validateBookingPdfPersonalization(value) {
+        return validateShape(value, BOOKING_PDF_PERSONALIZATION_SCHEMA);
+      }
+
       export const BOOKING_PERSON_SCHEMA = {
         name: "BookingPerson",
         domain: "booking",
@@ -456,6 +509,7 @@ export const GENERATED_OFFER_CATEGORIES = Object.freeze([
     schemaField({"name":"service_level_agreement_due_at","required":false,"wireName":"service_level_agreement_due_at"}, SHARED_FIELD_DEFS.FIELD_5),
     schemaField({"name":"destinations","required":false,"wireName":"destinations"}, SHARED_FIELD_DEFS.FIELD_16),
     schemaField({"name":"travel_styles","required":false,"wireName":"travel_styles"}, SHARED_FIELD_DEFS.FIELD_10),
+    schemaField({"name":"pdf_personalization","required":false,"wireName":"pdf_personalization"}, {"kind":"transport","typeName":"BookingPdfPersonalization","isArray":false}),
     schemaField({"name":"travel_start_day","required":false,"wireName":"travel_start_day"}, SHARED_FIELD_DEFS.FIELD_7),
     schemaField({"name":"travel_end_day","required":false,"wireName":"travel_end_day"}, SHARED_FIELD_DEFS.FIELD_7),
     schemaField({"name":"number_of_travelers","required":false,"wireName":"number_of_travelers"}, SHARED_FIELD_DEFS.FIELD_17),
@@ -477,4 +531,3 @@ export const GENERATED_OFFER_CATEGORIES = Object.freeze([
       export function validateBooking(value) {
         return validateShape(value, BOOKING_SCHEMA);
       }
-

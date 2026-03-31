@@ -28,6 +28,11 @@ import {
   resolveAtpStaffFullName
 } from "./atp_staff_pdf.js";
 import {
+  resolveBookingPdfCountryLabels,
+  resolveBookingPdfPersonalizationText,
+  resolveBookingPdfTravelStyleLabels
+} from "./booking_pdf_personalization.js";
+import {
   buildTravelPlanItemThumbnailMap,
   drawTravelPlanDaysSection
 } from "./pdf_travel_plan_section.js";
@@ -165,6 +170,39 @@ function safeBookingTitle(booking, lang) {
 
 function travelPlanSectionTitle(lang) {
   return pdfT(lang, "travel_plan.pdf_subtitle", "Travel plan overview");
+}
+
+function resolveTravelPlanSubtitle(booking, plan, lang) {
+  const override = textOrNull(resolveBookingPdfPersonalizationText(booking?.pdf_personalization, "travel_plan", "subtitle", lang, { sourceLang: lang }));
+  if (override) return override;
+  const dayCount = Array.isArray(plan?.days) ? plan.days.length : 0;
+  const countries = resolveBookingPdfCountryLabels(booking);
+  if (dayCount > 0 && countries.length) {
+    return `${dayCount} ${dayCount === 1 ? "day" : "days"} in ${countries.join(", ")}`;
+  }
+  if (countries.length) return countries.join(", ");
+  return dayCount > 0 ? `${dayCount} ${dayCount === 1 ? "day" : "days"}` : "";
+}
+
+function resolveTravelPlanWelcomeText(booking, lang) {
+  const override = textOrNull(resolveBookingPdfPersonalizationText(booking?.pdf_personalization, "travel_plan", "welcome", lang, { sourceLang: lang }));
+  if (override) return override;
+  const styles = resolveBookingPdfTravelStyleLabels(booking, lang);
+  if (styles.length) {
+    return `This is your current ${styles.join(", ")} travel plan. Please let us know if you would like to modify anything.`;
+  }
+  return "This is your current travel plan. Please let us know if you would like to modify anything.";
+}
+
+function resolveSharedCustomerNote(booking, lang) {
+  return textOrNull(resolveBookingPdfPersonalizationText(booking?.pdf_personalization, "shared", "customer_note", lang, { sourceLang: lang })) || "";
+}
+
+function resolveTravelPlanClosingText(booking, lang) {
+  return (
+    textOrNull(resolveBookingPdfPersonalizationText(booking?.pdf_personalization, "travel_plan", "closing", lang, { sourceLang: lang }))
+    || pdfT(lang, "travel_plan.closing_body", "We would be happy to hear from you.")
+  );
 }
 
 function resolveTravelPlanAttachmentPaths(travelPlan, travelPlanAttachmentsDir) {
@@ -341,7 +379,7 @@ function drawTopHeader(doc, companyProfile, logoImage, fonts, lang) {
   return nextY + 18;
 }
 
-function drawTravelPlanHero(doc, heroTitle, heroImage, startY, fonts, lang) {
+function drawTravelPlanHero(doc, heroTitle, heroSubtitle, heroImage, startY, fonts, lang) {
   const detailsX = PAGE_MARGIN + HERO_IMAGE_WIDTH + 18;
   const detailsWidth = doc.page.width - PAGE_MARGIN - detailsX;
 
@@ -370,7 +408,16 @@ function drawTravelPlanHero(doc, heroTitle, heroImage, startY, fonts, lang) {
     .text(heroTitle, detailsX, startY + 4, pdfTextOptions(lang, { width: detailsWidth }));
   const titleHeight = doc.heightOfString(heroTitle, pdfTextOptions(lang, { width: detailsWidth }));
   const titleBottomY = startY + 4 + titleHeight;
-  return Math.max(startY + HERO_IMAGE_HEIGHT, titleBottomY) + 18;
+  let bottomY = titleBottomY;
+  if (heroSubtitle) {
+    doc
+      .font(pdfFontName("regular", fonts))
+      .fontSize(11.5)
+      .fillColor(PDF_COLORS.textMutedStrong)
+      .text(heroSubtitle, detailsX, titleBottomY + 6, pdfTextOptions(lang, { width: detailsWidth }));
+    bottomY = doc.y;
+  }
+  return Math.max(startY + HERO_IMAGE_HEIGHT, bottomY) + 18;
 }
 
 function drawTravelPlanSectionTitle(doc, y, fonts, lang) {
@@ -416,20 +463,26 @@ function buildAttachmentClosingNote(attachmentCount, lang) {
     : pdfT(lang, "pdf.attachment_note_multiple", "Please also find the attached additional PDFs at the end of this document.");
 }
 
-function drawClosing(doc, startY, fonts, lang, attachmentCount = 0) {
+function drawTextParagraph(doc, startY, text, fonts, lang, { fontSize = 11, lineGap = 2 } = {}) {
+  if (!text) return startY;
   doc
     .font(pdfFontName("regular", fonts))
-    .fontSize(11)
+    .fontSize(fontSize)
     .fillColor(PDF_COLORS.textMutedStrong)
     .text(
-      pdfT(lang, "travel_plan.closing_body", "We would be happy to hear from you."),
+      text,
       PAGE_MARGIN,
       startY,
       pdfTextOptions(lang, {
         width: doc.page.width - PAGE_MARGIN * 2,
-        lineGap: 2
+        lineGap
       })
     );
+  return doc.y;
+}
+
+function drawClosing(doc, startY, fonts, lang, closingText, attachmentCount = 0) {
+  let y = drawTextParagraph(doc, startY, closingText, fonts, lang);
 
   const attachmentNote = buildAttachmentClosingNote(attachmentCount, lang);
   if (attachmentNote) {
@@ -439,9 +492,10 @@ function drawClosing(doc, startY, fonts, lang, attachmentCount = 0) {
         width: doc.page.width - PAGE_MARGIN * 2,
         lineGap: 2
       }));
+    y = doc.y;
   }
 
-  const signY = doc.y + 18;
+  const signY = y + 18;
   doc
     .font(pdfFontName("regular", fonts))
     .fontSize(11)
@@ -627,6 +681,10 @@ export function createTravelPlanPdfWriter({
     await mkdir(path.dirname(outputPath), { recursive: true });
     const plan = travelPlan && typeof travelPlan === "object" ? travelPlan : { days: [] };
     const attachmentPaths = resolveTravelPlanAttachmentPaths(plan, travelPlanAttachmentsDir);
+    const heroSubtitle = resolveTravelPlanSubtitle(booking, plan, lang);
+    const welcomeText = resolveTravelPlanWelcomeText(booking, lang);
+    const sharedCustomerNote = resolveSharedCustomerNote(booking, lang);
+    const closingText = resolveTravelPlanClosingText(booking, lang);
 
     const guideContext = await resolveAtpGuidePdfContext({
       booking,
@@ -739,9 +797,17 @@ export function createTravelPlanPdfWriter({
       );
 
       let y = drawTopHeader(doc, companyProfile, logoImage, fonts, lang);
-      y = drawTravelPlanHero(doc, heroTitle, heroImage, y, fonts, lang);
+      y = drawTravelPlanHero(doc, heroTitle, heroSubtitle, heroImage, y, fonts, lang);
       y = ensureSpace(y, estimateGuideSectionHeight(doc, guideContext, fonts, lang) + 10);
       y = drawGuideSection(doc, y, fonts, lang, guideContext, guidePhoto);
+      if (welcomeText) {
+        y = ensureSpace(y + 6, 72);
+        y = drawTextParagraph(doc, y + 6, welcomeText, fonts, lang, { fontSize: 11.2 }) + 12;
+      }
+      if (sharedCustomerNote) {
+        y = ensureSpace(y, 72);
+        y = drawTextParagraph(doc, y, sharedCustomerNote, fonts, lang, { fontSize: 11.2 }) + 12;
+      }
 
       y = drawTravelPlanSectionTitle(doc, y, fonts, lang);
       y = drawTravelPlanDaysSection({
@@ -766,7 +832,7 @@ export function createTravelPlanPdfWriter({
       });
 
       y = ensureSpace(y + 8, 96);
-      drawClosing(doc, y + 10, fonts, lang, attachmentPaths.length);
+      drawClosing(doc, y + 10, fonts, lang, closingText, attachmentPaths.length);
       drawFooter(doc, fonts, companyProfile, lang);
       doc.end();
     });

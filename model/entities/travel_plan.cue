@@ -39,6 +39,16 @@ import (
 	source_service_id:       common.#Identifier
 	copied_at:               common.#Timestamp
 	copied_by_atp_staff_id?: common.#Identifier
+	import_batch_id?:        common.#Identifier
+}
+
+#BookingTravelPlanDayCopiedFrom: {
+	source_type:             "booking_travel_plan_day"
+	source_booking_id:       common.#Identifier
+	source_day_id:           common.#Identifier
+	copied_at:               common.#Timestamp
+	copied_by_atp_staff_id?: common.#Identifier
+	import_batch_id?:        common.#Identifier
 }
 
 #BookingTravelPlanService: {
@@ -84,6 +94,7 @@ import (
 	overnight_location?: string
 	services?: [...#BookingTravelPlanService]
 	notes?: string
+	copied_from?:        #BookingTravelPlanDayCopiedFrom
 }
 
 #BookingTravelPlan: {

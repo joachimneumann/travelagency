@@ -149,6 +149,41 @@ function logBookingSave(message, details = {}) {
   console.info(message, payload);
 }
 
+function setupBookingFilterPanels() {
+  const controls = [
+    { trigger: els.destinationsTrigger, panel: els.destinationsPanel },
+    { trigger: els.travelStylesTrigger, panel: els.travelStylesPanel }
+  ].filter((item) => item.trigger && item.panel);
+
+  if (!controls.length) return;
+
+  const closeAllPanels = () => {
+    controls.forEach(({ trigger, panel }) => {
+      panel.hidden = true;
+      trigger.setAttribute("aria-expanded", "false");
+    });
+  };
+
+  controls.forEach(({ trigger, panel }) => {
+    trigger.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const willOpen = panel.hidden;
+      closeAllPanels();
+      panel.hidden = !willOpen;
+      trigger.setAttribute("aria-expanded", willOpen ? "true" : "false");
+    });
+
+    panel.addEventListener("click", (event) => {
+      event.stopPropagation();
+    });
+  });
+
+  document.addEventListener("click", closeAllPanels);
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") closeAllPanels();
+  });
+}
+
 const qs = new URLSearchParams(window.location.search);
 const apiBase = (window.ASIATRAVELPLAN_API_BASE || "").replace(/\/$/, "");
 const apiOrigin = apiBase || window.location.origin;
@@ -290,7 +325,6 @@ const els = {
   travelPlanServiceLibraryModal: document.getElementById("travel_plan_service_library_modal"),
   travelPlanServiceLibraryCloseBtn: document.getElementById("travel_plan_service_library_close_btn"),
   travelPlanServiceLibraryTitle: document.getElementById("travel_plan_service_library_title"),
-  travelPlanServiceLibrarySubtitle: document.getElementById("travel_plan_service_library_subtitle"),
   travelPlanServiceLibraryQuery: document.getElementById("travel_plan_service_library_query"),
   travelPlanServiceLibraryKind: document.getElementById("travel_plan_service_library_kind"),
   travelPlanServiceLibrarySearchBtn: document.getElementById("travel_plan_service_library_search_btn"),
@@ -329,6 +363,23 @@ const els = {
   referralLabelInput: document.getElementById("booking_referral_label_input"),
   referralLabelHint: document.getElementById("booking_referral_label_hint"),
   referralStaffSelect: document.getElementById("booking_referral_staff_select"),
+  destinationsTrigger: document.getElementById("booking_destinations_trigger"),
+  destinationsSummary: document.getElementById("booking_destinations_summary"),
+  destinationsPanel: document.getElementById("booking_destinations_panel"),
+  destinationsOptions: document.getElementById("booking_destinations_options"),
+  travelStylesTrigger: document.getElementById("booking_travel_styles_trigger"),
+  travelStylesSummary: document.getElementById("booking_travel_styles_summary"),
+  travelStylesPanel: document.getElementById("booking_travel_styles_panel"),
+  travelStylesOptions: document.getElementById("booking_travel_styles_options"),
+  pdfPersonalizationPanel: document.getElementById("booking_pdf_personalization_panel"),
+  pdfTravelPlanSubtitleMount: document.getElementById("booking_pdf_travel_plan_subtitle_mount"),
+  pdfTravelPlanWelcomeMount: document.getElementById("booking_pdf_travel_plan_welcome_mount"),
+  pdfTravelPlanClosingMount: document.getElementById("booking_pdf_travel_plan_closing_mount"),
+  pdfOfferSubtitleMount: document.getElementById("booking_pdf_offer_subtitle_mount"),
+  pdfOfferWelcomeMount: document.getElementById("booking_pdf_offer_welcome_mount"),
+  pdfOfferClosingMount: document.getElementById("booking_pdf_offer_closing_mount"),
+  pdfSharedCustomerNoteMount: document.getElementById("booking_pdf_customer_note_mount"),
+  pdfCustomerReference: document.getElementById("booking_pdf_customer_reference"),
   contentLanguageField: document.getElementById("booking_content_language_field"),
   contentLanguageMenuMount: document.getElementById("booking_content_language_menu_mount"),
   contentLanguageSelect: document.getElementById("booking_content_language_select"),
@@ -678,6 +729,7 @@ async function init() {
   populateCurrencySelectFromModule(els.invoice_currency_input);
   renderOfferCurrencyMenu(els.offer_currency_input, els.offerCurrencyMenuMount);
   populateContentLanguageSelect();
+  setupBookingFilterPanels();
   updatePageDirtyBar();
 
   if (els.heroCopyBtn) els.heroCopyBtn.addEventListener("click", copyHeroIdToClipboard);
@@ -703,6 +755,22 @@ async function init() {
   }
   if (els.referralLabelInput) els.referralLabelInput.addEventListener("input", updateCoreDirtyState);
   if (els.referralStaffSelect) els.referralStaffSelect.addEventListener("change", updateCoreDirtyState);
+  if (els.destinationsOptions) {
+    els.destinationsOptions.addEventListener("change", () => {
+      updateCoreDirtyState();
+      renderActionControls();
+    });
+  }
+  if (els.travelStylesOptions) {
+    els.travelStylesOptions.addEventListener("change", () => {
+      updateCoreDirtyState();
+      renderActionControls();
+    });
+  }
+  if (els.pdfPersonalizationPanel) {
+    els.pdfPersonalizationPanel.addEventListener("input", updateCoreDirtyState);
+    els.pdfPersonalizationPanel.addEventListener("change", updateCoreDirtyState);
+  }
   if (els.contentLanguageSelect) els.contentLanguageSelect.addEventListener("change", () => {
     void handleContentLanguageChange();
   });

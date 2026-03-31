@@ -34,6 +34,16 @@ export function createAccessHelpers({ auth, appRoles }) {
       hasRole(principal, appRoles.TOUR_EDITOR);
   }
 
+  function canReadCountryReferenceInfo(principal) {
+    return hasRole(principal, appRoles.ADMIN) ||
+      hasRole(principal, appRoles.TOUR_EDITOR);
+  }
+
+  function canEditCountryReferenceInfo(principal) {
+    return hasRole(principal, appRoles.ADMIN) ||
+      hasRole(principal, appRoles.TOUR_EDITOR);
+  }
+
   function canReadSuppliers(principal) {
     return canReadBackend(principal);
   }
@@ -50,6 +60,8 @@ export function createAccessHelpers({ auth, appRoles }) {
     canEditAtpStaffProfiles,
     canReadTours,
     canEditTours,
+    canReadCountryReferenceInfo,
+    canEditCountryReferenceInfo,
     canReadSuppliers,
     canEditSuppliers
   };

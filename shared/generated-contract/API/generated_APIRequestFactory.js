@@ -573,10 +573,6 @@ export function bookingTravelPlanTranslateRequest({ baseURL = '', params = {}, q
   };
 }
 
-export function travelPlanServiceSearchPath(params = {}) {
-  return buildPath("/api/v1/travel-plan-services/search", params);
-}
-
 export function travelPlanDaySearchPath(params = {}) {
   return buildPath("/api/v1/travel-plan-days/search", params);
 }
@@ -592,6 +588,27 @@ export function travelPlanDaySearchRequest({ baseURL = '', params = {}, query = 
     headers,
     body
   };
+}
+
+export function travelPlanSearchPath(params = {}) {
+  return buildPath("/api/v1/travel-plan/plans", params);
+}
+
+export function travelPlanSearchRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = travelPlanSearchPath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "travel_plan_search",
+    method: "GET",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function travelPlanServiceSearchPath(params = {}) {
+  return buildPath("/api/v1/travel-plan-services/search", params);
 }
 
 export function travelPlanServiceSearchRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
@@ -616,6 +633,23 @@ export function bookingTravelPlanDayImportRequest({ baseURL = '', params = {}, q
   const url = buildURL(baseURL, path, query);
   return {
     key: "booking_travel_plan_day_import",
+    method: "POST",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function bookingTravelPlanImportPath(params = {}) {
+  return buildPath("/api/v1/bookings/{booking_id}/travel-plan/import", params);
+}
+
+export function bookingTravelPlanImportRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = bookingTravelPlanImportPath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "booking_travel_plan_import",
     method: "POST",
     authenticated: true,
     url,
@@ -990,6 +1024,40 @@ export function supplierUpdateRequest({ baseURL = '', params = {}, query = {}, b
   const url = buildURL(baseURL, path, query);
   return {
     key: "supplier_update",
+    method: "PATCH",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function countryReferenceInfoPath(params = {}) {
+  return buildPath("/api/v1/country-reference-info", params);
+}
+
+export function countryReferenceInfoRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = countryReferenceInfoPath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "country_reference_info",
+    method: "GET",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function countryReferenceInfoUpdatePath(params = {}) {
+  return buildPath("/api/v1/country-reference-info", params);
+}
+
+export function countryReferenceInfoUpdateRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = countryReferenceInfoUpdatePath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "country_reference_info_update",
     method: "PATCH",
     authenticated: true,
     url,

@@ -11,6 +11,7 @@ import { buildPaginatedListResponse } from "../http/pagination.js";
 import { buildApiRoutes } from "../http/routes.js";
 import { createAtpStaffHandlers } from "../http/handlers/atp_staff.js";
 import { createBookingHandlers } from "../http/handlers/bookings.js";
+import { createCountryReferenceHandlers } from "../http/handlers/country_reference.js";
 import { createKeycloakUserHandlers } from "../http/handlers/keycloak_users.js";
 import { createSupplierHandlers } from "../http/handlers/suppliers.js";
 import { createTourHandlers } from "../http/handlers/tours.js";
@@ -30,6 +31,8 @@ export function createApplicationRoutes({
     canEditAtpStaffProfiles,
     canReadTours,
     canEditTours,
+    canReadCountryReferenceInfo,
+    canEditCountryReferenceInfo,
     canReadSuppliers,
     canEditSuppliers
   } = createAccessHelpers({
@@ -44,6 +47,7 @@ export function createApplicationRoutes({
     storeUtils,
     keycloakDirectory,
     atpStaffDirectory,
+    countryReferenceStore,
     travelPlanPdfArtifacts,
     metaWebhookHandlers,
     tourHelpers,
@@ -197,6 +201,18 @@ export function createApplicationRoutes({
     randomUUID
   });
 
+  const countryReferenceHandlers = createCountryReferenceHandlers({
+    readBodyJson: httpHelpers.readBodyJson,
+    sendJson: httpHelpers.sendJson,
+    getPrincipal,
+    canReadCountryReferenceInfo,
+    canEditCountryReferenceInfo,
+    readCountryPracticalInfo: countryReferenceStore.readCountryPracticalInfo,
+    persistCountryPracticalInfo: countryReferenceStore.persistCountryPracticalInfo,
+    normalizeText: support.normalizeText,
+    nowIso: support.nowIso
+  });
+
   const tourHandlers = createTourHandlers({
     normalizeText: support.normalizeText,
     normalizeStringArray: support.normalizeStringArray,
@@ -255,6 +271,7 @@ export function createApplicationRoutes({
       ...bookingHandlers,
       ...atpStaffHandlers,
       ...keycloakUserHandlers,
+      ...countryReferenceHandlers,
       ...supplierHandlers,
       ...tourHandlers
     }

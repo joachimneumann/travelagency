@@ -566,6 +566,84 @@ package api
 		}]
 	},
 	{
+		key:           "travel_plan_day_search"
+		path:          "/api/v1/travel-plan-days/search"
+		method:        "GET"
+		tag:           "Bookings"
+		authenticated: true
+		responseType:  "TravelPlanDaySearchResponse"
+		parameters: [{
+			name:     "q"
+			location: "query"
+			required: false
+			typeName: "string"
+		}, {
+			name:     "destination"
+			location: "query"
+			required: false
+			typeName: "string"
+		}, {
+			name:     "country"
+			location: "query"
+			required: false
+			typeName: "CountryCode"
+		}, {
+			name:     "style"
+			location: "query"
+			required: false
+			typeName: "string"
+		}, {
+			name:     "limit"
+			location: "query"
+			required: false
+			typeName: "int"
+		}, {
+			name:     "offset"
+			location: "query"
+			required: false
+			typeName: "int"
+		}]
+	},
+	{
+		key:           "travel_plan_search"
+		path:          "/api/v1/travel-plan/plans"
+		method:        "GET"
+		tag:           "Bookings"
+		authenticated: true
+		responseType:  "TravelPlanSearchResponse"
+		parameters: [{
+			name:     "q"
+			location: "query"
+			required: false
+			typeName: "string"
+		}, {
+			name:     "destination"
+			location: "query"
+			required: false
+			typeName: "string"
+		}, {
+			name:     "country"
+			location: "query"
+			required: false
+			typeName: "CountryCode"
+		}, {
+			name:     "style"
+			location: "query"
+			required: false
+			typeName: "string"
+		}, {
+			name:     "limit"
+			location: "query"
+			required: false
+			typeName: "int"
+		}, {
+			name:     "offset"
+			location: "query"
+			required: false
+			typeName: "int"
+		}]
+	},
+	{
 		key:           "travel_plan_service_search"
 		path:          "/api/v1/travel-plan-services/search"
 		method:        "GET"
@@ -607,6 +685,36 @@ package api
 			location: "query"
 			required: false
 			typeName: "int"
+		}]
+	},
+	{
+		key:           "booking_travel_plan_day_import"
+		path:          "/api/v1/bookings/{booking_id}/travel-plan/days/import"
+		method:        "POST"
+		tag:           "Bookings"
+		authenticated: true
+		requestType:   "TravelPlanDayImportRequest"
+		responseType:  "BookingDetail"
+		parameters: [{
+			name:     "booking_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}]
+	},
+	{
+		key:           "booking_travel_plan_import"
+		path:          "/api/v1/bookings/{booking_id}/travel-plan/import"
+		method:        "POST"
+		tag:           "Bookings"
+		authenticated: true
+		requestType:   "TravelPlanImportRequest"
+		responseType:  "BookingDetail"
+		parameters: [{
+			name:     "booking_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
 		}]
 	},
 	{
@@ -979,6 +1087,23 @@ package api
 			required: true
 			typeName: "Identifier"
 		}]
+	},
+	{
+		key:           "country_reference_info"
+		path:          "/api/v1/country-reference-info"
+		method:        "GET"
+		tag:           "CountryReference"
+		authenticated: true
+		responseType:  "CountryPracticalInfoListResponse"
+	},
+	{
+		key:           "country_reference_info_update"
+		path:          "/api/v1/country-reference-info"
+		method:        "PATCH"
+		tag:           "CountryReference"
+		authenticated: true
+		requestType:   "CountryPracticalInfoUpdateRequest"
+		responseType:  "CountryPracticalInfoListResponse"
 	},
 	{
 		key:           "booking_activities"

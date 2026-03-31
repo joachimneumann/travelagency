@@ -16,7 +16,7 @@ import {
   ensureGeneratedOfferBookingConfirmationTokenState,
   synchronizeGeneratedOfferBookingConfirmationRouteStatus
 } from "../../domain/booking_confirmation.js";
-import { normalizeTourStyleLabels } from "../../domain/tour_catalog_i18n.js";
+import { normalizeTourStyleCode, sortTourStyleCodes } from "../../domain/tour_catalog_i18n.js";
 import { createBookingQueryModule } from "./booking_query.js";
 import { createBookingChatHandlers } from "./booking_chat.js";
 import { createBookingCoreHandlers } from "./booking_core.js";
@@ -148,8 +148,11 @@ export function createBookingHandlers(deps) {
   }
 
   function canonicalBookingTravelStyles(values) {
-    const normalized = normalizeTourStyleLabels(normalizeStringArray(values), "en");
-    return normalized.length ? normalized : normalizeStringArray(values);
+    return sortTourStyleCodes(
+      normalizeStringArray(values)
+        .map((value) => normalizeTourStyleCode(value))
+        .filter(Boolean)
+    );
   }
 
   async function resolveSubmittedBookingName(payload) {
@@ -484,6 +487,8 @@ export function createBookingHandlers(deps) {
     persistStore,
     listAssignableKeycloakUsers,
     keycloakDisplayName,
+    normalizeStringArray,
+    canonicalBookingTravelStyles,
     syncBookingAssignmentFields,
     assertExpectedRevision,
     buildBookingDetailResponse,
@@ -513,8 +518,10 @@ export function createBookingHandlers(deps) {
   });
 
   const {
+    handleSearchTravelPlans,
     handleSearchTravelPlanDays,
     handleSearchTravelPlanServices,
+    handleImportTravelPlan,
     handleImportTravelPlanDay,
     handleImportTravelPlanService,
     handleUploadTravelPlanServiceImage,
@@ -912,8 +919,10 @@ export function createBookingHandlers(deps) {
     handleCreateBookingPerson,
     handlePatchBookingPerson,
     handleDeleteBookingPerson,
+    handleSearchTravelPlans,
     handleSearchTravelPlanDays,
     handleSearchTravelPlanServices,
+    handleImportTravelPlan,
     handleImportTravelPlanDay,
     handleImportTravelPlanService,
     handleUploadTravelPlanServiceImage,

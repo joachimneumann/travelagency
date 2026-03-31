@@ -14,10 +14,22 @@ import {
   initializeBookingSections
 } from "./sections.js";
 import {
+  mergeDualLocalizedPayload,
+  normalizeLocalizedEditorMap,
+  renderLocalizedStackedField,
+  resolveLocalizedEditorBranchText
+} from "./localized_editor.js";
+import {
+  bookingContentLang,
   bookingContentLanguageLabel,
+  bookingSourceLang,
   bookingT,
   normalizeBookingContentLang
 } from "./i18n.js";
+import {
+  COUNTRY_CODE_OPTIONS,
+  TOUR_STYLE_CODE_OPTIONS
+} from "../shared/generated_catalogs.js";
 
 function labelizeKey(key) {
   return String(key || "")
@@ -169,6 +181,124 @@ const REFERRAL_MODE_CONFIG = Object.freeze({
   })
 });
 
+const COUNTRY_LABEL_BY_CODE = new Map(
+  COUNTRY_CODE_OPTIONS.map((option) => [
+    String(option.value || "").trim().toUpperCase(),
+    String(option.label || option.value || "").trim().replace(/^[A-Z]{2}\s+/, "")
+  ])
+);
+
+const TOUR_DESTINATION_OPTIONS = Object.freeze([
+  Object.freeze({ value: "VN", label: "Vietnam", aliases: ["vietnam", "vn"] }),
+  Object.freeze({ value: "TH", label: "Thailand", aliases: ["thailand", "th"] }),
+  Object.freeze({ value: "KH", label: "Cambodia", aliases: ["cambodia", "kh"] }),
+  Object.freeze({ value: "LA", label: "Laos", aliases: ["laos", "la"] })
+]);
+
+const TOUR_DESTINATION_LABEL_BY_CODE = new Map(
+  TOUR_DESTINATION_OPTIONS.map((option) => [option.value, option.label])
+);
+
+const TOUR_DESTINATION_VALUE_BY_ALIAS = new Map(
+  TOUR_DESTINATION_OPTIONS.flatMap((option) => [
+    [option.value.toLowerCase(), option.value],
+    [option.label.toLowerCase(), option.value],
+    ...option.aliases.map((alias) => [normalizeTextValue(alias).toLowerCase(), option.value])
+  ])
+);
+
+const TRAVEL_STYLE_LABEL_BY_VALUE = new Map(
+  TOUR_STYLE_CODE_OPTIONS.map((option) => [
+    String(option.value || "").trim().toLowerCase(),
+    String(option.label || option.value || "").trim()
+  ])
+);
+
+function normalizeTextValue(value) {
+  return String(value || "").trim();
+}
+
+function unique(values) {
+  return Array.from(new Set((Array.isArray(values) ? values : []).filter(Boolean)));
+}
+
+function normalizeCodeArray(values) {
+  return unique((Array.isArray(values) ? values : [])
+    .map((value) => TOUR_DESTINATION_VALUE_BY_ALIAS.get(normalizeTextValue(value).toLowerCase()) || normalizeTextValue(value).toUpperCase())
+    .filter(Boolean))
+    .filter((value) => TOUR_DESTINATION_LABEL_BY_CODE.has(value))
+    .sort((left, right) => (TOUR_DESTINATION_LABEL_BY_CODE.get(left) || left).localeCompare(TOUR_DESTINATION_LABEL_BY_CODE.get(right) || right));
+}
+
+function normalizeTravelStyleArray(values) {
+  const labelToValue = new Map(
+    TOUR_STYLE_CODE_OPTIONS.flatMap((option) => {
+      const value = normalizeTextValue(option.value).toLowerCase();
+      const label = normalizeTextValue(option.label).toLowerCase();
+      return [
+        [value, value],
+        [label, value]
+      ];
+    })
+  );
+  return unique((Array.isArray(values) ? values : [])
+    .map((value) => labelToValue.get(normalizeTextValue(value).toLowerCase()) || normalizeTextValue(value).toLowerCase())
+    .filter(Boolean))
+    .sort((left, right) => (TRAVEL_STYLE_LABEL_BY_VALUE.get(left) || left).localeCompare(TRAVEL_STYLE_LABEL_BY_VALUE.get(right) || right));
+}
+
+function destinationLabels(values) {
+  return normalizeCodeArray(values).map((code) => TOUR_DESTINATION_LABEL_BY_CODE.get(code) || COUNTRY_LABEL_BY_CODE.get(code) || code);
+}
+
+function travelStyleLabels(values) {
+  return normalizeTravelStyleArray(values).map((value) => TRAVEL_STYLE_LABEL_BY_VALUE.get(value) || value);
+}
+
+function normalizePdfTextField(value, mapValue) {
+  const normalizedMap = normalizeLocalizedEditorMap(mapValue ?? value, "en");
+  return {
+    text: resolveLocalizedEditorBranchText(normalizedMap, "en", ""),
+    i18n: normalizedMap
+  };
+}
+
+function normalizePdfPersonalization(value) {
+  const raw = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+  const shared = raw.shared && typeof raw.shared === "object" && !Array.isArray(raw.shared) ? raw.shared : {};
+  const travelPlan = raw.travel_plan && typeof raw.travel_plan === "object" && !Array.isArray(raw.travel_plan) ? raw.travel_plan : {};
+  const offer = raw.offer && typeof raw.offer === "object" && !Array.isArray(raw.offer) ? raw.offer : {};
+  const customerNote = normalizePdfTextField(shared.customer_note, shared.customer_note_i18n);
+  const travelPlanSubtitle = normalizePdfTextField(travelPlan.subtitle, travelPlan.subtitle_i18n);
+  const travelPlanWelcome = normalizePdfTextField(travelPlan.welcome, travelPlan.welcome_i18n);
+  const travelPlanClosing = normalizePdfTextField(travelPlan.closing, travelPlan.closing_i18n);
+  const offerSubtitle = normalizePdfTextField(offer.subtitle, offer.subtitle_i18n);
+  const offerWelcome = normalizePdfTextField(offer.welcome, offer.welcome_i18n);
+  const offerClosing = normalizePdfTextField(offer.closing, offer.closing_i18n);
+  return {
+    shared: {
+      customer_note: customerNote.text,
+      customer_note_i18n: customerNote.i18n
+    },
+    travel_plan: {
+      subtitle: travelPlanSubtitle.text,
+      subtitle_i18n: travelPlanSubtitle.i18n,
+      welcome: travelPlanWelcome.text,
+      welcome_i18n: travelPlanWelcome.i18n,
+      closing: travelPlanClosing.text,
+      closing_i18n: travelPlanClosing.i18n
+    },
+    offer: {
+      subtitle: offerSubtitle.text,
+      subtitle_i18n: offerSubtitle.i18n,
+      welcome: offerWelcome.text,
+      welcome_i18n: offerWelcome.i18n,
+      closing: offerClosing.text,
+      closing_i18n: offerClosing.i18n
+    }
+  };
+}
+
 export function createBookingCoreModule(ctx) {
   const {
     state,
@@ -236,6 +366,9 @@ export function createBookingCoreModule(ctx) {
         referral_label: "",
         referral_staff_user_id: "",
         milestone_action_key: "",
+        destinations: [],
+        travel_styles: [],
+        pdf_personalization: normalizePdfPersonalization(),
         notes: ""
       };
     }
@@ -254,6 +387,279 @@ export function createBookingCoreModule(ctx) {
     return resolveStatusPresentation(booking).currentActionKey;
   }
 
+  function computedPdfDayCount(booking = state.booking) {
+    const planDays = Array.isArray(booking?.travel_plan?.days) ? booking.travel_plan.days.length : 0;
+    if (planDays > 0) return planDays;
+    const exactDays = Number.parseInt(booking?.web_form_submission?.travel_duration_days_max || booking?.web_form_submission?.travel_duration_days_min, 10);
+    return Number.isInteger(exactDays) && exactDays > 0 ? exactDays : 0;
+  }
+
+  function computedPdfCountryLabel(booking = state.booking) {
+    const draft = ensureCoreDraft();
+    const labels = destinationLabels(Array.isArray(draft.destinations) && draft.destinations.length ? draft.destinations : booking?.destinations);
+    return labels.join(", ");
+  }
+
+  function computedPdfTravelStyleLabel(booking = state.booking) {
+    const draft = ensureCoreDraft();
+    const labels = travelStyleLabels(Array.isArray(draft.travel_styles) && draft.travel_styles.length ? draft.travel_styles : booking?.travel_styles);
+    return labels.join(", ");
+  }
+
+  function computedPdfSubtitlePlaceholder(booking = state.booking) {
+    const dayCount = computedPdfDayCount(booking);
+    const countryLabel = computedPdfCountryLabel(booking);
+    if (dayCount > 0 && countryLabel) {
+      return bookingT("booking.pdf.default_subtitle_days_countries", "{count} days in {countries}", {
+        count: dayCount,
+        countries: countryLabel
+      });
+    }
+    if (countryLabel) return countryLabel;
+    if (dayCount > 0) {
+      return bookingT("booking.pdf.default_subtitle_days", "{count} days", { count: dayCount });
+    }
+    return "";
+  }
+
+  function computedTravelPlanWelcomePlaceholder(booking = state.booking) {
+    const styleLabel = computedPdfTravelStyleLabel(booking);
+    if (styleLabel) {
+      return bookingT(
+        "booking.pdf.travel_plan.default_welcome_styles",
+        "This is your current {styles} travel plan. Please let us know if you would like to modify anything.",
+        { styles: styleLabel }
+      );
+    }
+    return bookingT(
+      "booking.pdf.travel_plan.default_welcome",
+      "This is your current travel plan. Please let us know if you would like to modify anything."
+    );
+  }
+
+  function computedOfferWelcomePlaceholder(booking = state.booking) {
+    const styleLabel = computedPdfTravelStyleLabel(booking);
+    if (styleLabel) {
+      return bookingT(
+        "booking.pdf.offer.default_welcome_styles",
+        "This offer is based on your current {styles} itinerary. Please let us know if you would like to adjust anything.",
+        { styles: styleLabel }
+      );
+    }
+    return bookingT(
+      "booking.pdf.offer.default_welcome",
+      "This is your current offer. Please let us know if you would like to adjust anything."
+    );
+  }
+
+  function computedClosingPlaceholder() {
+    return bookingT("booking.pdf.default_closing", "We would be happy to hear from you.");
+  }
+
+  function renderCheckboxOptions(container, values, selectedValues, dataAttr, disabled, formatter) {
+    if (!(container instanceof HTMLElement)) return;
+    const selected = new Set(selectedValues);
+    container.innerHTML = values.map((value) => {
+      const checked = selected.has(value);
+      const label = formatter(value);
+      return `
+        <label class="booking-multiselect__option">
+          <input type="checkbox" data-${dataAttr}="${escapeHtml(value)}" ${checked ? "checked" : ""} ${disabled ? "disabled" : ""} />
+          <span>${escapeHtml(label)}</span>
+        </label>
+      `;
+    }).join("");
+  }
+
+  function updateMultiselectSummary(summaryEl, labels, emptyLabel) {
+    if (!(summaryEl instanceof HTMLElement)) return;
+    summaryEl.textContent = labels.length ? labels.join(", ") : emptyLabel;
+    summaryEl.classList.toggle("is-empty", labels.length === 0);
+  }
+
+  function readCheckedValues(container, dataAttr) {
+    if (!(container instanceof HTMLElement)) return [];
+    return Array.from(container.querySelectorAll(`input[type="checkbox"][data-${dataAttr}]`))
+      .filter((input) => input instanceof HTMLInputElement && input.checked)
+      .map((input) => String(input.getAttribute(`data-${dataAttr}`) || "").trim())
+      .filter(Boolean);
+  }
+
+  function readLocalizedBookingPdfField(scope, field, existingValue) {
+    const root = els.pdfPersonalizationPanel;
+    if (!(root instanceof HTMLElement)) return normalizePdfTextField(existingValue, existingValue?.i18n || existingValue);
+    const sourceInput = root.querySelector(`[data-booking-pdf-field="${scope}.${field}"][data-localized-role="source"]`);
+    const targetInput = root.querySelector(`[data-booking-pdf-field="${scope}.${field}"][data-localized-role="target"]`);
+    const sourceValue = String(sourceInput?.value || "").trim();
+    const localizedValue = String(targetInput?.value || "").trim();
+    const payload = mergeDualLocalizedPayload(
+      existingValue?.i18n ?? existingValue,
+      sourceValue,
+      localizedValue
+    );
+    return {
+      text: payload.text,
+      i18n: payload.map
+    };
+  }
+
+  function customerReferenceEntries(booking = state.booking) {
+    const entries = [];
+    const submissionNotes = normalizeText(booking?.web_form_submission?.notes);
+    if (submissionNotes) {
+      entries.push({
+        label: bookingT("booking.pdf.reference.submission_note", "Web form note"),
+        value: submissionNotes
+      });
+    }
+    const persons = ctx.getBookingPersons(booking);
+    const foodPreferences = unique(
+      persons.flatMap((person) => Array.isArray(person?.food_preferences) ? person.food_preferences : [])
+        .map((value) => normalizeText(value))
+        .filter(Boolean)
+    );
+    if (foodPreferences.length) {
+      entries.push({
+        label: bookingT("booking.pdf.reference.food_preferences", "Food preferences"),
+        value: foodPreferences.join(", ")
+      });
+    }
+    const allergies = unique(
+      persons.flatMap((person) => Array.isArray(person?.allergies) ? person.allergies : [])
+        .map((value) => normalizeText(value))
+        .filter(Boolean)
+    );
+    if (allergies.length) {
+      entries.push({
+        label: bookingT("booking.pdf.reference.allergies", "Allergies"),
+        value: allergies.join(", ")
+      });
+    }
+    return entries;
+  }
+
+  function renderPdfPersonalizationFields() {
+    const draft = ensureCoreDraft();
+    const disabled = !state.permissions.canEditBooking;
+    renderCheckboxOptions(
+      els.destinationsOptions,
+      TOUR_DESTINATION_OPTIONS.map((option) => option.value),
+      normalizeCodeArray(draft.destinations),
+      "booking-destination-option",
+      disabled,
+      (value) => TOUR_DESTINATION_LABEL_BY_CODE.get(value) || value
+    );
+    renderCheckboxOptions(
+      els.travelStylesOptions,
+      TOUR_STYLE_CODE_OPTIONS.map((option) => String(option.value || "").trim().toLowerCase()).filter(Boolean),
+      normalizeTravelStyleArray(draft.travel_styles),
+      "booking-travel-style-option",
+      disabled,
+      (value) => TRAVEL_STYLE_LABEL_BY_VALUE.get(value) || value
+    );
+    updateMultiselectSummary(
+      els.destinationsSummary,
+      destinationLabels(draft.destinations),
+      bookingT("booking.destinations_placeholder", "Select destinations")
+    );
+    updateMultiselectSummary(
+      els.travelStylesSummary,
+      travelStyleLabels(draft.travel_styles),
+      bookingT("booking.travel_styles_placeholder", "Select travel style")
+    );
+
+    const travelPlan = normalizePdfPersonalization(draft.pdf_personalization).travel_plan;
+    const offer = normalizePdfPersonalization(draft.pdf_personalization).offer;
+    const shared = normalizePdfPersonalization(draft.pdf_personalization).shared;
+    const renderField = (mount, scope, field, label, placeholder, rows = 2) => {
+      if (!(mount instanceof HTMLElement)) return;
+      const branch = scope === "travel_plan" ? travelPlan : scope === "offer" ? offer : shared;
+      mount.innerHTML = renderLocalizedStackedField({
+        escapeHtml,
+        idBase: `booking_pdf_${scope}_${field}`,
+        label,
+        type: rows > 1 ? "textarea" : "input",
+        rows,
+        commonData: { "booking-pdf-field": `${scope}.${field}` },
+        sourceValue: resolveLocalizedEditorBranchText(branch?.[`${field}_i18n`] ?? branch?.[field], bookingSourceLang(), ""),
+        localizedValue: resolveLocalizedEditorBranchText(branch?.[`${field}_i18n`] ?? branch?.[field], bookingContentLang(), ""),
+        englishPlaceholder: placeholder,
+        localizedPlaceholder: placeholder,
+        disabled,
+        translateEnabled: false
+      });
+    };
+
+    renderField(
+      els.pdfTravelPlanSubtitleMount,
+      "travel_plan",
+      "subtitle",
+      bookingT("booking.pdf.travel_plan.subtitle", "Travel plan subtitle"),
+      computedPdfSubtitlePlaceholder(),
+      2
+    );
+    renderField(
+      els.pdfTravelPlanWelcomeMount,
+      "travel_plan",
+      "welcome",
+      bookingT("booking.pdf.travel_plan.welcome", "Travel plan welcome"),
+      computedTravelPlanWelcomePlaceholder(),
+      4
+    );
+    renderField(
+      els.pdfTravelPlanClosingMount,
+      "travel_plan",
+      "closing",
+      bookingT("booking.pdf.travel_plan.closing", "Travel plan closing"),
+      computedClosingPlaceholder(),
+      3
+    );
+    renderField(
+      els.pdfOfferSubtitleMount,
+      "offer",
+      "subtitle",
+      bookingT("booking.pdf.offer.subtitle", "Offer subtitle"),
+      computedPdfSubtitlePlaceholder(),
+      2
+    );
+    renderField(
+      els.pdfOfferWelcomeMount,
+      "offer",
+      "welcome",
+      bookingT("booking.pdf.offer.welcome", "Offer welcome"),
+      computedOfferWelcomePlaceholder(),
+      4
+    );
+    renderField(
+      els.pdfOfferClosingMount,
+      "offer",
+      "closing",
+      bookingT("booking.pdf.offer.closing", "Offer closing"),
+      computedClosingPlaceholder(),
+      3
+    );
+    renderField(
+      els.pdfSharedCustomerNoteMount,
+      "shared",
+      "customer_note",
+      bookingT("booking.pdf.customer_note", "Customer note for PDFs"),
+      bookingT("booking.pdf.customer_note_placeholder", "Optional note shown in customer-facing PDFs."),
+      4
+    );
+
+    if (els.pdfCustomerReference) {
+      const entries = customerReferenceEntries();
+      els.pdfCustomerReference.innerHTML = entries.length
+        ? entries.map((entry) => `
+            <div class="booking-pdf-reference__item">
+              <div class="booking-pdf-reference__label">${escapeHtml(entry.label)}</div>
+              <div class="booking-pdf-reference__value">${escapeHtml(entry.value)}</div>
+            </div>
+          `).join("")
+        : `<p class="micro booking-pdf-reference__empty">${escapeHtml(bookingT("booking.pdf.reference.empty", "No customer input is available yet."))}</p>`;
+    }
+  }
+
   function syncCoreDraftFromBooking({ force = false } = {}) {
     if (!state.booking) return ensureCoreDraft();
     const draft = ensureCoreDraft();
@@ -266,6 +672,9 @@ export function createBookingCoreModule(ctx) {
       draft.referral_label = normalizeText(state.booking.referral_label) || "";
       draft.referral_staff_user_id = normalizeText(state.booking.referral_staff_user_id) || "";
       draft.milestone_action_key = savedMilestoneActionKey(state.booking);
+      draft.destinations = normalizeCodeArray(state.booking.destinations);
+      draft.travel_styles = normalizeTravelStyleArray(state.booking.travel_styles);
+      draft.pdf_personalization = normalizePdfPersonalization(state.booking.pdf_personalization);
     }
     if (force || !state.dirty.note) {
       draft.notes = normalizeText(state.booking.notes) || "";
@@ -288,7 +697,10 @@ export function createBookingCoreModule(ctx) {
       referral_staff_user_id: referralKind === "atp_staff"
         ? normalizeText(values.referral_staff_user_id) || ""
         : "",
-      milestone_action_key: normalizeText(values.milestone_action_key).toUpperCase()
+      milestone_action_key: normalizeText(values.milestone_action_key).toUpperCase(),
+      destinations: JSON.stringify(normalizeCodeArray(values.destinations)),
+      travel_styles: JSON.stringify(normalizeTravelStyleArray(values.travel_styles)),
+      pdf_personalization: JSON.stringify(normalizePdfPersonalization(values.pdf_personalization))
     };
   }
 
@@ -301,7 +713,10 @@ export function createBookingCoreModule(ctx) {
       referral_kind: normalizeText(state.booking?.referral_kind).toLowerCase() || "none",
       referral_label: normalizeText(state.booking?.referral_label) || "",
       referral_staff_user_id: normalizeText(state.booking?.referral_staff_user_id) || "",
-      milestone_action_key: savedMilestoneActionKey(state.booking)
+      milestone_action_key: savedMilestoneActionKey(state.booking),
+      destinations: state.booking?.destinations,
+      travel_styles: state.booking?.travel_styles,
+      pdf_personalization: state.booking?.pdf_personalization
     });
   }
 
@@ -315,7 +730,10 @@ export function createBookingCoreModule(ctx) {
       referral_kind: normalizeText(draft.referral_kind).toLowerCase() || "none",
       referral_label: normalizeText(draft.referral_label) || "",
       referral_staff_user_id: normalizeText(draft.referral_staff_user_id) || "",
-      milestone_action_key: normalizeText(draft.milestone_action_key || savedMilestoneActionKey(state.booking)).toUpperCase()
+      milestone_action_key: normalizeText(draft.milestone_action_key || savedMilestoneActionKey(state.booking)).toUpperCase(),
+      destinations: draft.destinations,
+      travel_styles: draft.travel_styles,
+      pdf_personalization: draft.pdf_personalization
     });
   }
 
@@ -339,6 +757,33 @@ export function createBookingCoreModule(ctx) {
     if (els.referralKindSelect) draft.referral_kind = normalizeText(els.referralKindSelect.value).toLowerCase() || "none";
     if (els.referralLabelInput) draft.referral_label = normalizeText(els.referralLabelInput.value) || "";
     if (els.referralStaffSelect) draft.referral_staff_user_id = normalizeText(els.referralStaffSelect.value) || "";
+    draft.destinations = normalizeCodeArray(readCheckedValues(els.destinationsOptions, "booking-destination-option"));
+    draft.travel_styles = normalizeTravelStyleArray(readCheckedValues(els.travelStylesOptions, "booking-travel-style-option"));
+    draft.pdf_personalization = {
+      shared: {
+        ...draft.pdf_personalization?.shared,
+        customer_note: readLocalizedBookingPdfField("shared", "customer_note", draft.pdf_personalization?.shared?.customer_note_i18n).text,
+        customer_note_i18n: readLocalizedBookingPdfField("shared", "customer_note", draft.pdf_personalization?.shared?.customer_note_i18n).i18n
+      },
+      travel_plan: {
+        ...draft.pdf_personalization?.travel_plan,
+        subtitle: readLocalizedBookingPdfField("travel_plan", "subtitle", draft.pdf_personalization?.travel_plan?.subtitle_i18n).text,
+        subtitle_i18n: readLocalizedBookingPdfField("travel_plan", "subtitle", draft.pdf_personalization?.travel_plan?.subtitle_i18n).i18n,
+        welcome: readLocalizedBookingPdfField("travel_plan", "welcome", draft.pdf_personalization?.travel_plan?.welcome_i18n).text,
+        welcome_i18n: readLocalizedBookingPdfField("travel_plan", "welcome", draft.pdf_personalization?.travel_plan?.welcome_i18n).i18n,
+        closing: readLocalizedBookingPdfField("travel_plan", "closing", draft.pdf_personalization?.travel_plan?.closing_i18n).text,
+        closing_i18n: readLocalizedBookingPdfField("travel_plan", "closing", draft.pdf_personalization?.travel_plan?.closing_i18n).i18n
+      },
+      offer: {
+        ...draft.pdf_personalization?.offer,
+        subtitle: readLocalizedBookingPdfField("offer", "subtitle", draft.pdf_personalization?.offer?.subtitle_i18n).text,
+        subtitle_i18n: readLocalizedBookingPdfField("offer", "subtitle", draft.pdf_personalization?.offer?.subtitle_i18n).i18n,
+        welcome: readLocalizedBookingPdfField("offer", "welcome", draft.pdf_personalization?.offer?.welcome_i18n).text,
+        welcome_i18n: readLocalizedBookingPdfField("offer", "welcome", draft.pdf_personalization?.offer?.welcome_i18n).i18n,
+        closing: readLocalizedBookingPdfField("offer", "closing", draft.pdf_personalization?.offer?.closing_i18n).text,
+        closing_i18n: readLocalizedBookingPdfField("offer", "closing", draft.pdf_personalization?.offer?.closing_i18n).i18n
+      }
+    };
     if (draft.referral_kind === "none") {
       draft.referral_label = "";
       draft.referral_staff_user_id = "";
@@ -870,6 +1315,7 @@ export function createBookingCoreModule(ctx) {
         els.noteInput.value = draft.notes || "";
       }
     }
+    renderPdfPersonalizationFields();
     updateCoreDirtyState();
     updateNoteSaveButtonState();
     if (els.deleteBtn) {
@@ -1050,11 +1496,17 @@ export function createBookingCoreModule(ctx) {
     const nextReferralStaffUserId = nextReferralKind === "atp_staff"
       ? normalizeText(draft.referral_staff_user_id) || null
       : null;
+    const nextDestinations = normalizeCodeArray(draft.destinations);
+    const nextTravelStyles = normalizeTravelStyleArray(draft.travel_styles);
+    const nextPdfPersonalization = normalizePdfPersonalization(draft.pdf_personalization);
     if (
       nextSourceChannel !== (normalizeText(latestBooking.source_channel).toLowerCase() || "other")
       || nextReferralKind !== (normalizeText(latestBooking.referral_kind).toLowerCase() || "none")
       || nextReferralLabel !== (normalizeText(latestBooking.referral_label) || null)
       || nextReferralStaffUserId !== (normalizeText(latestBooking.referral_staff_user_id) || null)
+      || JSON.stringify(nextDestinations) !== JSON.stringify(normalizeCodeArray(latestBooking.destinations))
+      || JSON.stringify(nextTravelStyles) !== JSON.stringify(normalizeTravelStyleArray(latestBooking.travel_styles))
+      || JSON.stringify(nextPdfPersonalization) !== JSON.stringify(normalizePdfPersonalization(latestBooking.pdf_personalization))
     ) {
       const request = bookingSourceRequest({ baseURL: apiOrigin, params: { booking_id: latestBooking.id } });
       const result = await fetchBookingMutation(request.url, {
@@ -1065,6 +1517,9 @@ export function createBookingCoreModule(ctx) {
           referral_kind: nextReferralKind,
           referral_label: nextReferralLabel,
           referral_staff_user_id: nextReferralStaffUserId,
+          destinations: nextDestinations,
+          travel_styles: nextTravelStyles,
+          pdf_personalization: nextPdfPersonalization,
           actor: state.user
         }
       });

@@ -78,8 +78,16 @@ case "booking_travel_plan_attachment_pdf":
   return RequestFactory.bookingTravelPlanAttachmentPdfRequest(options);
 case "booking_travel_plan_translate":
   return RequestFactory.bookingTravelPlanTranslateRequest(options);
+case "travel_plan_day_search":
+  return RequestFactory.travelPlanDaySearchRequest(options);
+case "travel_plan_search":
+  return RequestFactory.travelPlanSearchRequest(options);
 case "travel_plan_service_search":
   return RequestFactory.travelPlanServiceSearchRequest(options);
+case "booking_travel_plan_day_import":
+  return RequestFactory.bookingTravelPlanDayImportRequest(options);
+case "booking_travel_plan_import":
+  return RequestFactory.bookingTravelPlanImportRequest(options);
 case "booking_travel_plan_service_import":
   return RequestFactory.bookingTravelPlanServiceImportRequest(options);
 case "booking_travel_plan_service_image_upload":
@@ -124,6 +132,10 @@ case "supplier_detail":
   return RequestFactory.supplierDetailRequest(options);
 case "supplier_update":
   return RequestFactory.supplierUpdateRequest(options);
+case "country_reference_info":
+  return RequestFactory.countryReferenceInfoRequest(options);
+case "country_reference_info_update":
+  return RequestFactory.countryReferenceInfoUpdateRequest(options);
 case "booking_activities":
   return RequestFactory.bookingActivitiesRequest(options);
 case "booking_activity_create":

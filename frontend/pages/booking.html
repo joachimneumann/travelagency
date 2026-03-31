@@ -184,6 +184,42 @@
                         <div class="booking-currency-menu-mount" id="booking_currency_menu_mount"></div>
                         <select id="offer_currency_input" class="visually-hidden" tabindex="-1" aria-hidden="true"></select>
                       </div>
+                      <div class="field booking-top-card__field booking-top-card__field--context booking-top-card__field--context-row">
+                        <label for="booking_destinations_trigger" data-i18n-id="booking.destinations">Destinations</label>
+                        <div class="select-wrap booking-top-card__select-wrap">
+                          <button
+                            id="booking_destinations_trigger"
+                            class="filter-select-trigger booking-top-card__filter-trigger"
+                            type="button"
+                            aria-expanded="false"
+                            aria-controls="booking_destinations_panel"
+                          >
+                            <span id="booking_destinations_summary">Select destinations</span>
+                            <span class="filter-select-trigger__caret" aria-hidden="true">▾</span>
+                          </button>
+                          <div id="booking_destinations_panel" class="filter-select-panel booking-top-card__filter-panel" hidden>
+                            <div id="booking_destinations_options" class="filter-checkbox-list" role="group" aria-label="Booking destinations"></div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="field booking-top-card__field booking-top-card__field--context booking-top-card__field--context-row">
+                        <label for="booking_travel_styles_trigger" data-i18n-id="booking.travel_style">Travel style</label>
+                        <div class="select-wrap booking-top-card__select-wrap">
+                          <button
+                            id="booking_travel_styles_trigger"
+                            class="filter-select-trigger booking-top-card__filter-trigger"
+                            type="button"
+                            aria-expanded="false"
+                            aria-controls="booking_travel_styles_panel"
+                          >
+                            <span id="booking_travel_styles_summary">Select travel style</span>
+                            <span class="filter-select-trigger__caret" aria-hidden="true">▾</span>
+                          </button>
+                          <div id="booking_travel_styles_panel" class="filter-select-panel booking-top-card__filter-panel" hidden>
+                            <div id="booking_travel_styles_options" class="filter-checkbox-list" role="group" aria-label="Booking travel styles"></div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                     <div id="offer_currency_hint" class="micro booking-inline-status booking-offer-currency-hint booking-top-card__currency-hint" hidden></div>
                   </div>
@@ -252,6 +288,39 @@
               <input id="booking_referral_label_input" type="text" />
               <select id="booking_referral_staff_select" hidden></select>
               <span class="micro" id="booking_referral_label_hint"></span>
+            </div>
+          </article>
+
+          <article id="booking_pdf_personalization_panel" class="booking-pdf-panel" style="margin-bottom: 1rem;">
+            <div class="booking-pdf-panel__head">
+              <h2 class="booking-pdf-panel__title" data-i18n-id="booking.pdf.title">PDF personalization</h2>
+              <p class="micro booking-pdf-panel__hint" data-i18n-id="booking.pdf.hint">Override the default customer-facing text when needed. Leave a field empty to use the derived default.</p>
+            </div>
+            <div class="booking-pdf-panel__grid">
+              <section class="booking-pdf-panel__column">
+                <h3 class="booking-pdf-panel__column-title" data-i18n-id="booking.travel_plan">Travel plan</h3>
+                <div id="booking_pdf_travel_plan_subtitle_mount"></div>
+                <div id="booking_pdf_travel_plan_welcome_mount"></div>
+                <div id="booking_pdf_travel_plan_closing_mount"></div>
+              </section>
+              <section class="booking-pdf-panel__column">
+                <h3 class="booking-pdf-panel__column-title" data-i18n-id="booking.offer">Offer</h3>
+                <div id="booking_pdf_offer_subtitle_mount"></div>
+                <div id="booking_pdf_offer_welcome_mount"></div>
+                <div id="booking_pdf_offer_closing_mount"></div>
+              </section>
+            </div>
+            <div class="booking-pdf-panel__customer-grid">
+              <section class="booking-pdf-panel__customer-note">
+                <div id="booking_pdf_customer_note_mount"></div>
+              </section>
+              <aside class="booking-pdf-reference">
+                <div class="booking-pdf-reference__head">
+                  <h3 class="booking-pdf-reference__title" data-i18n-id="booking.pdf.reference_title">Customer input</h3>
+                  <p class="micro booking-pdf-reference__hint" data-i18n-id="booking.pdf.reference_hint">Use this as context while writing your note to the customer.</p>
+                </div>
+                <div id="booking_pdf_customer_reference"></div>
+              </aside>
             </div>
           </article>
 
@@ -633,10 +702,9 @@
             <div class="modal-panel travel-plan-library-modal__panel" role="document">
               <div class="modal-head travel-plan-library-modal__head">
                 <div>
-                  <h2 id="travel_plan_service_library_title" data-i18n-id="booking.travel_plan.insert_existing">Insert existing service</h2>
-                  <p class="micro" id="travel_plan_service_library_subtitle" data-i18n-id="booking.travel_plan.insert_existing_subtitle">Search existing booking services and insert a copy into this day.</p>
+                  <h2 id="travel_plan_service_library_title" data-i18n-id="booking.travel_plan.existing_services">Existing services</h2>
                 </div>
-                <button class="btn btn-ghost" id="travel_plan_service_library_close_btn" type="button" aria-label="Close insert service dialog" data-i18n-aria-label-id="booking.travel_plan.close_insert_service_dialog">&times;</button>
+                <button class="btn btn-ghost offer-remove-btn" id="travel_plan_service_library_close_btn" type="button" aria-label="Close insert service dialog" data-i18n-aria-label-id="booking.travel_plan.close_insert_service_dialog">&times;</button>
               </div>
               <div class="modal-body travel-plan-library-modal__body">
                 <div class="travel-plan-library-modal__filters">

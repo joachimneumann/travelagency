@@ -69,19 +69,19 @@
   "typeName": "Identifier"
 },
   PARAM_12: {
-  "name": "service_kind",
-  "location": "query",
-  "required": false,
-  "typeName": "Identifier"
-},
-  PARAM_13: {
   "name": "limit",
   "location": "query",
   "required": false,
   "typeName": "Identifier"
 },
-  PARAM_14: {
+  PARAM_13: {
   "name": "offset",
+  "location": "query",
+  "required": false,
+  "typeName": "Identifier"
+},
+  PARAM_14: {
+  "name": "service_kind",
   "location": "query",
   "required": false,
   "typeName": "Identifier"
@@ -533,8 +533,24 @@
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_9),
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_10),
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_11),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_13),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_14)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_12),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_13)
+        ]
+      },
+      {
+        key: "travel_plan_search",
+        path: "/api/v1/travel-plan/plans",
+        method: "GET",
+        authenticated: true,
+        requestType: null,
+        responseType: "TravelPlanSearchResponse",
+        parameters: [
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_8),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_9),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_10),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_11),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_12),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_13)
         ]
       },
       {
@@ -549,9 +565,9 @@
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_9),
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_10),
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_11),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_14),
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_12),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_13),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_14)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_13)
         ]
       },
       {
@@ -560,6 +576,17 @@
         method: "POST",
         authenticated: true,
         requestType: "TravelPlanDayImportRequest",
+        responseType: "BookingDetail",
+        parameters: [
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1)
+        ]
+      },
+      {
+        key: "booking_travel_plan_import",
+        path: "/api/v1/bookings/{booking_id}/travel-plan/import",
+        method: "POST",
+        authenticated: true,
+        requestType: "TravelPlanImportRequest",
         responseType: "BookingDetail",
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1)
@@ -818,6 +845,28 @@
         responseType: "SupplierResponse",
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_18)
+        ]
+      },
+      {
+        key: "country_reference_info",
+        path: "/api/v1/country-reference-info",
+        method: "GET",
+        authenticated: true,
+        requestType: null,
+        responseType: "CountryPracticalInfoListResponse",
+        parameters: [
+
+        ]
+      },
+      {
+        key: "country_reference_info_update",
+        path: "/api/v1/country-reference-info",
+        method: "PATCH",
+        authenticated: true,
+        requestType: "CountryPracticalInfoUpdateRequest",
+        responseType: "CountryPracticalInfoListResponse",
+        parameters: [
+
         ]
       },
       {

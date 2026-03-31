@@ -44,6 +44,11 @@ import (
 	total: >=0 & int
 }
 
+#CountryPracticalInfoListResponse: {
+	items: [...entities.#CountryPracticalInfo]
+	total: >=0 & int
+}
+
 #BookingDeleteResponse: {
 	deleted:    bool
 	booking_id: common.#Identifier
@@ -136,8 +141,8 @@ import (
 	source_booking_name?: string
 	source_booking_code?: string
 	day_number?:          >0 & int
-	service_id:              common.#Identifier
-	service_kind?:           enums.#TravelPlanServiceKind
+	service_id:           common.#Identifier
+	service_kind?:        enums.#TravelPlanServiceKind
 	title?:               string
 	details?:             string
 	location?:            string
@@ -150,6 +155,45 @@ import (
 
 #TravelPlanServiceSearchResponse: {
 	items: [...#TravelPlanServiceSearchResult]
+	total: >=0 & int
+}
+
+#TravelPlanDaySearchResult: {
+	source_booking_id:    common.#Identifier
+	source_booking_name?: string
+	source_booking_code?: string
+	day_id:               common.#Identifier
+	day_number?:          >0 & int
+	title?:               string
+	overnight_location?:  string
+	notes?:               string
+	thumbnail_url?:       common.#Url | string
+	service_count?:       >=0 & int
+	image_count?:         >=0 & int
+	updated_at?:          common.#Timestamp
+}
+
+#TravelPlanDaySearchResponse: {
+	items: [...#TravelPlanDaySearchResult]
+	total: >=0 & int
+}
+
+#TravelPlanSearchResult: {
+	source_booking_id:    common.#Identifier
+	source_booking_name?: string
+	source_booking_code?: string
+	day_count:            >=0 & int
+	service_count:        >=0 & int
+	first_date?:          common.#DateOnly
+	last_date?:           common.#DateOnly
+	title_preview?:       string
+	overnight_preview?:   string
+	thumbnail_url?:       common.#Url | string
+	updated_at?:          common.#Timestamp
+}
+
+#TravelPlanSearchResponse: {
+	items: [...#TravelPlanSearchResult]
 	total: >=0 & int
 }
 
@@ -350,6 +394,7 @@ import (
 	service_level_agreement_due_at?: common.#Timestamp
 	destinations?: [...enums.#CountryCode]
 	travel_styles?: [...string]
+	pdf_personalization?: entities.#BookingPdfPersonalization
 	travel_start_day?:            common.#DateOnly
 	travel_end_day?:              common.#DateOnly
 	number_of_travelers?:         >=0 & int

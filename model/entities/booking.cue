@@ -94,6 +94,26 @@ import (
 
 #BookingInvoice: #Invoice
 
+#BookingPdfPersonalizationShared: {
+	customer_note?:      string
+	customer_note_i18n?: [string]: string
+}
+
+#BookingPdfPersonalizationScoped: {
+	subtitle?:      string
+	subtitle_i18n?: [string]: string
+	welcome?:       string
+	welcome_i18n?:  [string]: string
+	closing?:       string
+	closing_i18n?:  [string]: string
+}
+
+#BookingPdfPersonalization: {
+	shared?:      #BookingPdfPersonalizationShared
+	travel_plan?: #BookingPdfPersonalizationScoped
+	offer?:       #BookingPdfPersonalizationScoped
+}
+
 #Booking: {
 	id:                              common.#Identifier
 	name?:                           string
@@ -122,6 +142,7 @@ import (
 	service_level_agreement_due_at?: common.#Timestamp
 	destinations?: [...enums.#CountryCode]
 	travel_styles?: [...string]
+	pdf_personalization?: #BookingPdfPersonalization
 	travel_start_day?:            common.#DateOnly
 	travel_end_day?:              common.#DateOnly
 	number_of_travelers?:         >=0 & <=common.#MaxTravelers & int
