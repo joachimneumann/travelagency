@@ -6086,6 +6086,58 @@ components:
             "$ref": "#/components/schemas/TravelPlanServiceSearchResult"
         total:
           type: integer
+    TravelPlanDaySearchResult:
+      type: object
+      required:
+      - source_booking_id
+      - day_id
+      - title
+      properties:
+        source_booking_id:
+          type: string
+        source_booking_name:
+          type: string
+          nullable: true
+        source_booking_code:
+          type: string
+          nullable: true
+        day_id:
+          type: string
+        day_number:
+          type: integer
+          nullable: true
+        title:
+          type: string
+        overnight_location:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        thumbnail_url:
+          type: string
+          nullable: true
+        image_count:
+          type: integer
+          nullable: true
+        service_count:
+          type: integer
+          nullable: true
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+    TravelPlanDaySearchResponse:
+      type: object
+      required:
+      - total
+      properties:
+        items:
+          type: array
+          items:
+            "$ref": "#/components/schemas/TravelPlanDaySearchResult"
+        total:
+          type: integer
     TourList:
       type: object
       required:
@@ -6962,6 +7014,34 @@ components:
           nullable: true
         offset:
           type: integer
+          nullable: true
+    TravelPlanDayImportRequest:
+      type: object
+      required:
+      - source_booking_id
+      - source_day_id
+      - include_images
+      - include_customer_visible_images_only
+      - include_notes
+      - include_translations
+      properties:
+        expected_travel_plan_revision:
+          type: integer
+          nullable: true
+        source_booking_id:
+          type: string
+        source_day_id:
+          type: string
+        include_images:
+          type: boolean
+        include_customer_visible_images_only:
+          type: boolean
+        include_notes:
+          type: boolean
+        include_translations:
+          type: boolean
+        actor:
+          type: string
           nullable: true
     TravelPlanServiceImportRequest:
       type: object
@@ -8592,6 +8672,64 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/travel-plan-days/search":
+    get:
+      operationId: travel_plan_day_search
+      summary: Travel Plan Day Search
+      tags:
+      - Bookings
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: q
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: destination
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: country
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: style
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/TravelPlanDaySearchResponse"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
   "/api/v1/travel-plan-services/search":
     get:
       operationId: travel_plan_service_search
@@ -8643,6 +8781,51 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/TravelPlanServiceSearchResponse"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/bookings/{booking_id}/travel-plan/days/import":
+    post:
+      operationId: booking_travel_plan_day_import
+      summary: Booking Travel Plan Day Import
+      tags:
+      - Bookings
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: booking_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/TravelPlanDayImportRequest"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingDetail"
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingDetail"
         '401':
           description: Unauthorized
           content:

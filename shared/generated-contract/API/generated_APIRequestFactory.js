@@ -577,12 +577,46 @@ export function travelPlanServiceSearchPath(params = {}) {
   return buildPath("/api/v1/travel-plan-services/search", params);
 }
 
+export function travelPlanDaySearchPath(params = {}) {
+  return buildPath("/api/v1/travel-plan-days/search", params);
+}
+
+export function travelPlanDaySearchRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = travelPlanDaySearchPath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "travel_plan_day_search",
+    method: "GET",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
 export function travelPlanServiceSearchRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
   const path = travelPlanServiceSearchPath(params);
   const url = buildURL(baseURL, path, query);
   return {
     key: "travel_plan_service_search",
     method: "GET",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function bookingTravelPlanDayImportPath(params = {}) {
+  return buildPath("/api/v1/bookings/{booking_id}/travel-plan/days/import", params);
+}
+
+export function bookingTravelPlanDayImportRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = bookingTravelPlanDayImportPath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "booking_travel_plan_day_import",
+    method: "POST",
     authenticated: true,
     url,
     headers,
@@ -1303,4 +1337,3 @@ export function tourImageRequest({ baseURL = '', params = {}, query = {}, body, 
     body
   };
 }
-

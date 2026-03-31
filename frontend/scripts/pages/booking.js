@@ -289,6 +289,7 @@ const els = {
   personModalDeleteBtn: document.getElementById("booking_person_modal_delete_btn"),
   travelPlanServiceLibraryModal: document.getElementById("travel_plan_service_library_modal"),
   travelPlanServiceLibraryCloseBtn: document.getElementById("travel_plan_service_library_close_btn"),
+  travelPlanServiceLibraryTitle: document.getElementById("travel_plan_service_library_title"),
   travelPlanServiceLibrarySubtitle: document.getElementById("travel_plan_service_library_subtitle"),
   travelPlanServiceLibraryQuery: document.getElementById("travel_plan_service_library_query"),
   travelPlanServiceLibraryKind: document.getElementById("travel_plan_service_library_kind"),

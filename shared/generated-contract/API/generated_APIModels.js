@@ -521,6 +521,28 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         return validateShape(value, TRAVEL_PLAN_SERVICE_SEARCH_RESPONSE_SCHEMA);
       }
 
+      export const TRAVEL_PLAN_DAY_IMPORT_REQUEST_SCHEMA = {
+        name: "TravelPlanDayImportRequest",
+        domain: "api",
+        module: "api",
+        sourceType: "openapi.components.schemas.TravelPlanDayImportRequest",
+        requireOneOf: [],
+        fields: [
+    schemaField({"name":"expected_travel_plan_revision","required":false,"wireName":"expected_travel_plan_revision"}, SHARED_FIELD_DEFS.FIELD_17),
+    schemaField({"name":"source_booking_id","required":true,"wireName":"source_booking_id"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"source_day_id","required":true,"wireName":"source_day_id"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"include_images","required":true,"wireName":"include_images"}, SHARED_FIELD_DEFS.FIELD_8),
+    schemaField({"name":"include_customer_visible_images_only","required":true,"wireName":"include_customer_visible_images_only"}, SHARED_FIELD_DEFS.FIELD_8),
+    schemaField({"name":"include_notes","required":true,"wireName":"include_notes"}, SHARED_FIELD_DEFS.FIELD_8),
+    schemaField({"name":"include_translations","required":true,"wireName":"include_translations"}, SHARED_FIELD_DEFS.FIELD_8),
+    schemaField({"name":"actor","required":false,"wireName":"actor"}, SHARED_FIELD_DEFS.FIELD_1)
+        ]
+      };
+
+      export function validateTravelPlanDayImportRequest(value) {
+        return validateShape(value, TRAVEL_PLAN_DAY_IMPORT_REQUEST_SCHEMA);
+      }
+
       export const TRAVEL_PLAN_SERVICE_IMPORT_REQUEST_SCHEMA = {
         name: "TravelPlanServiceImportRequest",
         domain: "api",
@@ -1411,6 +1433,48 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         return validateShape(value, TRAVEL_PLAN_SERVICE_SEARCH_RESULT_SCHEMA);
       }
 
+      export const TRAVEL_PLAN_DAY_SEARCH_RESULT_SCHEMA = {
+        name: "TravelPlanDaySearchResult",
+        domain: "api",
+        module: "api",
+        sourceType: "openapi.components.schemas.TravelPlanDaySearchResult",
+        requireOneOf: [],
+        fields: [
+    schemaField({"name":"source_booking_id","required":true,"wireName":"source_booking_id"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"source_booking_name","required":false,"wireName":"source_booking_name"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"source_booking_code","required":false,"wireName":"source_booking_code"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"day_id","required":true,"wireName":"day_id"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"day_number","required":false,"wireName":"day_number"}, SHARED_FIELD_DEFS.FIELD_17),
+    schemaField({"name":"title","required":true,"wireName":"title"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"overnight_location","required":false,"wireName":"overnight_location"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"notes","required":false,"wireName":"notes"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"thumbnail_url","required":false,"wireName":"thumbnail_url"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"image_count","required":false,"wireName":"image_count"}, SHARED_FIELD_DEFS.FIELD_17),
+    schemaField({"name":"service_count","required":false,"wireName":"service_count"}, SHARED_FIELD_DEFS.FIELD_17),
+    schemaField({"name":"updated_at","required":false,"wireName":"updated_at"}, SHARED_FIELD_DEFS.FIELD_5)
+        ]
+      };
+
+      export function validateTravelPlanDaySearchResult(value) {
+        return validateShape(value, TRAVEL_PLAN_DAY_SEARCH_RESULT_SCHEMA);
+      }
+
+      export const TRAVEL_PLAN_DAY_SEARCH_RESPONSE_SCHEMA = {
+        name: "TravelPlanDaySearchResponse",
+        domain: "api",
+        module: "api",
+        sourceType: "openapi.components.schemas.TravelPlanDaySearchResponse",
+        requireOneOf: [],
+        fields: [
+    schemaField({"name":"items","required":false,"wireName":"items"}, {"kind":"array","itemType":"TravelPlanDaySearchResult"}),
+    schemaField({"name":"total","required":true,"wireName":"total"}, SHARED_FIELD_DEFS.FIELD_17)
+        ]
+      };
+
+      export function validateTravelPlanDaySearchResponse(value) {
+        return validateShape(value, TRAVEL_PLAN_DAY_SEARCH_RESPONSE_SCHEMA);
+      }
+
       export const BOOKING_TRAVEL_PLAN_PDF_READ_MODEL_SCHEMA = {
         name: "BookingTravelPlanPdfReadModel",
         domain: "api",
@@ -2221,4 +2285,3 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
       export function validateBookingTravelPlanServiceImageFocalPoint(value) {
         return validateShape(value, BOOKING_TRAVEL_PLAN_SERVICE_IMAGE_FOCAL_POINT_SCHEMA);
       }
-

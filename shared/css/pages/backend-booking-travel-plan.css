@@ -1,10 +1,12 @@
 .booking-detail-page {
-  --travelplan_day_color: rgba(12, 99, 180, 0.23);
+  --travelplan_day_color: rgba(12, 99, 180, 0.3);
   --travelplan_service_color: rgba(12, 99, 180, 0.1);
-  --travel-plan-accent-text: var(--info-text-strong);
+  --travelplan_day_text_color: #084f96;
+  --travelplan_service_text_color: #488fd3;
+  --travel-plan-accent-text: var(--travelplan_day_text_color);
   --travel-plan-font-size-sm: 1rem;
   --travel-plan-service-button-bg: rgba(12, 99, 180, 0.07);
-  --travel-plan-service-button-text: rgba(12, 99, 180, 0.76);
+  --travel-plan-service-button-text: var(--travelplan_service_text_color);
   --travel-plan-accent-border-strong: rgba(12, 99, 180, 0.18);
   --travel-plan-accent-border-hover: rgba(12, 99, 180, 0.22);
   --travel-plan-accent-shadow: rgba(12, 99, 180, 0.1);
@@ -409,6 +411,8 @@
 
 .travel-plan-footer__new-day {
   display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
   width: 100%;
   justify-content: flex-start;
   align-items: center;
@@ -1192,7 +1196,7 @@
   border-radius: 999px;
   border-color: var(--travel-plan-accent-border-strong);
   background: var(--travelplan_service_color);
-  color: var(--travel-plan-accent-text);
+  color: var(--travel-plan-service-button-text);
   font-size: 1rem;
   font-weight: var(--font-weight-bold);
   box-shadow: none;
@@ -1206,8 +1210,19 @@
 .booking-detail-page .travel-plan-day-add-btn--service:focus-visible:not([disabled]) {
   border-color: var(--travel-plan-accent-border-hover);
   background: var(--travelplan_service_color);
-  color: var(--travel-plan-accent-text);
+  color: var(--travel-plan-service-button-text);
   box-shadow: 0 8px 16px var(--travel-plan-accent-shadow);
+}
+
+.booking-detail-page .travel-plan-day-add-btn--day-copy {
+  background: var(--travelplan_day_color);
+  color: var(--travel-plan-accent-text);
+}
+
+.booking-detail-page .travel-plan-day-add-btn--day-copy:hover:not([disabled]),
+.booking-detail-page .travel-plan-day-add-btn--day-copy:focus-visible:not([disabled]) {
+  background: var(--travelplan_day_color);
+  color: var(--travel-plan-accent-text);
 }
 
 .travel-plan-link-row {

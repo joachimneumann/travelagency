@@ -522,6 +522,22 @@
         ]
       },
       {
+        key: "travel_plan_day_search",
+        path: "/api/v1/travel-plan-days/search",
+        method: "GET",
+        authenticated: true,
+        requestType: null,
+        responseType: "TravelPlanDaySearchResponse",
+        parameters: [
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_8),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_9),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_10),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_11),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_13),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_14)
+        ]
+      },
+      {
         key: "travel_plan_service_search",
         path: "/api/v1/travel-plan-services/search",
         method: "GET",
@@ -536,6 +552,17 @@
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_12),
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_13),
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_14)
+        ]
+      },
+      {
+        key: "booking_travel_plan_day_import",
+        path: "/api/v1/bookings/{booking_id}/travel-plan/days/import",
+        method: "POST",
+        authenticated: true,
+        requestType: "TravelPlanDayImportRequest",
+        responseType: "BookingDetail",
+        parameters: [
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1)
         ]
       },
       {

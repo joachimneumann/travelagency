@@ -513,7 +513,9 @@ export function createBookingHandlers(deps) {
   });
 
   const {
+    handleSearchTravelPlanDays,
     handleSearchTravelPlanServices,
+    handleImportTravelPlanDay,
     handleImportTravelPlanService,
     handleUploadTravelPlanServiceImage,
     handleDeleteTravelPlanServiceImage,
@@ -910,7 +912,9 @@ export function createBookingHandlers(deps) {
     handleCreateBookingPerson,
     handlePatchBookingPerson,
     handleDeleteBookingPerson,
+    handleSearchTravelPlanDays,
     handleSearchTravelPlanServices,
+    handleImportTravelPlanDay,
     handleImportTravelPlanService,
     handleUploadTravelPlanServiceImage,
     handleDeleteTravelPlanServiceImage,

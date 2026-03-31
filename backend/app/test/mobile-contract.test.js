@@ -1764,6 +1764,141 @@ test("services can be searched and imported from another booking", async () => {
   assert.equal(importedItem.image.storage_path, "/public/v1/booking-images/source/item-1.webp");
 });
 
+test("days can be searched and imported from another booking with cleared timing and detached financial coverage", async () => {
+  const sourceBooking = await createSeedBooking();
+  const targetBooking = await createPublicBooking({
+    name: "Day Target User",
+    email: "day-target@example.com"
+  });
+
+  const store = JSON.parse(await readFile(STORE_PATH, "utf8"));
+  const sourceRecord = store.bookings.find((item) => item.id === sourceBooking.id);
+  const targetRecord = store.bookings.find((item) => item.id === targetBooking.id);
+  assert.ok(sourceRecord);
+  assert.ok(targetRecord);
+
+  sourceRecord.travel_plan = {
+    days: [
+      {
+        id: "source_day_copy_1",
+        day_number: 1,
+        date: "2026-06-03",
+        title: "Waterfall day",
+        title_i18n: { en: "Waterfall day", de: "Wasserfalltag" },
+        overnight_location: "Hue",
+        overnight_location_i18n: { en: "Hue", de: "Hue" },
+        services: [
+          {
+            id: "source_day_service_1",
+            timing_kind: "point",
+            time_label: "",
+            time_label_i18n: {},
+            time_point: "2026-06-03T08:30:00.000Z",
+            kind: "activity",
+            title: "Canyon walk",
+            title_i18n: { en: "Canyon walk", de: "Canyon-Wanderung" },
+            details: "Guided hike",
+            details_i18n: { en: "Guided hike", de: "Gefuhrte Wanderung" },
+            location: "Bach Ma",
+            location_i18n: { en: "Bach Ma", de: "Bach Ma" },
+            financial_coverage_needed: true,
+            financial_coverage_status: "covered",
+            financial_note: "Covered by package",
+            financial_note_i18n: { en: "Covered by package", de: "Im Paket enthalten" },
+            image: {
+              id: "source_day_service_image_1",
+              storage_path: "/public/v1/booking-images/source/day-service-1.webp",
+              sort_order: 0,
+              is_primary: true,
+              is_customer_visible: true,
+              created_at: "2026-03-21T00:00:00Z"
+            }
+          }
+        ],
+        notes: "Bring water",
+        notes_i18n: { en: "Bring water", de: "Wasser mitbringen" }
+      }
+    ],
+    offer_component_links: [
+      {
+        id: "source_day_link_1",
+        travel_plan_service_id: "source_day_service_1",
+        offer_component_id: "missing_component",
+        coverage_type: "full"
+      }
+    ]
+  };
+  targetRecord.travel_plan = {
+    days: [
+      {
+        id: "target_day_copy_1",
+        day_number: 1,
+        date: "2026-06-10",
+        title: "Arrival",
+        overnight_location: "Da Nang",
+        services: [],
+        notes: ""
+      }
+    ],
+    offer_component_links: []
+  };
+  await writeFile(STORE_PATH, `${JSON.stringify(store, null, 2)}\n`, "utf8");
+
+  const searchResult = await requestJson(
+    `${endpointPath("travel_plan_day_search")}?q=waterfall`,
+    apiHeaders()
+  );
+  assert.equal(searchResult.status, 200);
+  assert.equal(typeof searchResult.body.total, "number");
+  assert.ok(Array.isArray(searchResult.body.items));
+  const foundDay = searchResult.body.items.find((item) => item.source_booking_id === sourceBooking.id);
+  assert.ok(foundDay, "Expected imported day to appear in search results");
+  assert.equal(foundDay.day_id, "source_day_copy_1");
+  assert.equal(foundDay.service_count, 1);
+  assert.equal(foundDay.thumbnail_url, "/public/v1/booking-images/source/day-service-1.webp");
+
+  const importResult = await requestJson(
+    endpointPath("booking_travel_plan_day_import").replace("{booking_id}", targetBooking.id),
+    apiHeaders(),
+    {
+      method: "POST",
+      body: {
+        expected_travel_plan_revision: targetBooking.travel_plan_revision,
+        source_booking_id: sourceBooking.id,
+        source_day_id: "source_day_copy_1",
+        include_images: true,
+        include_customer_visible_images_only: false,
+        include_notes: true,
+        include_translations: true
+      }
+    }
+  );
+  assert.equal(importResult.status, 200);
+  assert.equal(importResult.body.booking.travel_plan.days.length, 2);
+  const importedDay = importResult.body.booking.travel_plan.days[1];
+  assert.equal(importedDay.date, "2026-06-11");
+  assert.equal(importedDay.title, "Waterfall day");
+  assert.deepEqual(importedDay.title_i18n, { en: "Waterfall day", de: "Wasserfalltag" });
+  assert.deepEqual(importedDay.notes_i18n, { en: "Bring water", de: "Wasser mitbringen" });
+  assert.equal(importResult.body.booking.travel_plan.offer_component_links.length, 0);
+
+  const importedService = importedDay.services[0];
+  assert.equal(importedService.title, "Canyon walk");
+  assert.deepEqual(importedService.title_i18n, { en: "Canyon walk", de: "Canyon-Wanderung" });
+  assert.equal(importedService.time_point, null);
+  assert.equal(importedService.start_time, null);
+  assert.equal(importedService.end_time, null);
+  assert.equal(importedService.financial_coverage_needed, false);
+  assert.equal(importedService.financial_note, null);
+  assert.equal(importedService.financial_coverage_status, "not_applicable");
+  assert.equal(importedService.copied_from.source_booking_id, sourceBooking.id);
+  assert.equal(importedService.copied_from.source_day_id, "source_day_copy_1");
+  assert.equal(importedService.copied_from.source_service_id, "source_day_service_1");
+  assert.ok(importedService.image);
+  assert.notEqual(importedService.image.id, "source_day_service_image_1");
+  assert.equal(importedService.image.storage_path, "/public/v1/booking-images/source/day-service-1.webp");
+});
+
 test("service image can be deleted", async () => {
   const booking = await createSeedBooking();
 
