@@ -99,6 +99,8 @@ export const KEYCLOAK_DIRECTORY_CONFIG = Object.freeze({
 });
 
 const OPENAI_API_KEY = normalizeText(process.env.OPENAI_API_KEY || "");
+const OPENAI_PROJECT_ID = normalizeText(process.env.OPENAI_PROJECT_ID || "");
+const OPENAI_ORGANIZATION_ID = normalizeText(process.env.OPENAI_ORGANIZATION_ID || "");
 const OPENAI_TRANSLATION_MODEL = normalizeText(process.env.OPENAI_TRANSLATION_MODEL || process.env.OPENAI_MODEL || "gpt-4.1") || "gpt-4.1";
 const GOOGLE_TRANSLATE_FALLBACK_ENABLED = String(process.env.GOOGLE_TRANSLATE_FALLBACK_ENABLED || "true").trim().toLowerCase() !== "false";
 
@@ -138,6 +140,8 @@ export const TRAVELER_DETAILS_TOKEN_CONFIG = Object.freeze({
 
 export const TRANSLATION_CLIENT = createTranslationClient({
   apiKey: OPENAI_API_KEY,
+  projectId: OPENAI_PROJECT_ID,
+  organizationId: OPENAI_ORGANIZATION_ID,
   model: OPENAI_TRANSLATION_MODEL,
   googleFallbackEnabled: GOOGLE_TRANSLATE_FALLBACK_ENABLED
 });

@@ -1,6 +1,7 @@
 import {
   createApiFetcher,
   escapeHtml,
+  fetchApiJson,
   normalizeText
 } from "../shared/api.js";
 import { GENERATED_APP_ROLES } from "../../Generated/Models/generated_Roles.js";
@@ -233,6 +234,31 @@ function showEditorStatus(message, isError = false) {
 
 function clearEditorStatus() {
   showEditorStatus("", false);
+}
+
+function translationProviderLabelFromResponse(response) {
+  return normalizeText(response?.headers?.get("x-atp-translation-provider-label"));
+}
+
+function translationStatusMessage(baseMessage, { providerLabel = "", current = 0, total = 0 } = {}) {
+  const parts = [normalizeText(baseMessage)];
+  if (Number.isFinite(current) && Number.isFinite(total) && total > 0) {
+    parts.push(`(${current}/${total}${providerLabel ? `, ${providerLabel}` : ""})`);
+  } else if (providerLabel) {
+    parts.push(`(${providerLabel})`);
+  }
+  return parts.filter(Boolean).join(" ");
+}
+
+function staffLanguageLabel(lang) {
+  const normalizedLang = normalizeText(lang).toLowerCase();
+  return normalizeText(LANGUAGE_LABEL_BY_VALUE.get(normalizedLang)) || normalizedLang.toUpperCase();
+}
+
+function logStaffTranslationBatch(message, details = {}, isError = false) {
+  const method = isError ? "error" : "info";
+  const payload = details && typeof details === "object" ? details : { details };
+  console[method](`[staff-translation] ${message}`, payload);
 }
 
 const fetchApi = createApiFetcher({
@@ -1021,64 +1047,21 @@ function setShortDescriptionValue(lang, value) {
 }
 
 async function requestPositionTranslation(targetLang, sourceText) {
-  const user = getSelectedUser();
-  if (!user) return null;
-  const sourceLang = currentStaffSourceLang();
-  const entries = buildPositionTranslationEntries(sourceText);
-  if (!Object.keys(entries).length) return null;
-  const request = keycloakUserStaffProfileTranslateFieldsRequest({
-    baseURL: apiOrigin,
-    params: { username: user.username },
-    body: {
-      source_lang: sourceLang,
-      target_lang: targetLang,
-      entries: Object.entries(entries).map(([key, value]) => ({ key, value }))
-    }
-  });
-  const payload = await fetchApi(request.url, {
-    method: request.method,
-    body: request.body
-  });
-  if (!Array.isArray(payload?.entries)) return null;
-  return Object.fromEntries(
-    payload.entries
-      .map((entry) => [normalizeText(entry?.key), normalizeText(entry?.value)])
-      .filter(([key, value]) => Boolean(key && value))
-  );
+  return requestStaffTranslation(targetLang, buildPositionTranslationEntries(sourceText));
 }
 
 async function requestDescriptionTranslation(targetLang, sourceText) {
-  const user = getSelectedUser();
-  if (!user) return null;
-  const sourceLang = currentStaffSourceLang();
-  const entries = buildDescriptionTranslationEntries(sourceText);
-  if (!Object.keys(entries).length) return null;
-  const request = keycloakUserStaffProfileTranslateFieldsRequest({
-    baseURL: apiOrigin,
-    params: { username: user.username },
-    body: {
-      source_lang: sourceLang,
-      target_lang: targetLang,
-      entries: Object.entries(entries).map(([key, value]) => ({ key, value }))
-    }
-  });
-  const payload = await fetchApi(request.url, {
-    method: request.method,
-    body: request.body
-  });
-  if (!Array.isArray(payload?.entries)) return null;
-  return Object.fromEntries(
-    payload.entries
-      .map((entry) => [normalizeText(entry?.key), normalizeText(entry?.value)])
-      .filter(([key, value]) => Boolean(key && value))
-  );
+  return requestStaffTranslation(targetLang, buildDescriptionTranslationEntries(sourceText));
 }
 
 async function requestShortDescriptionTranslation(targetLang, sourceText) {
+  return requestStaffTranslation(targetLang, buildShortDescriptionTranslationEntries(sourceText));
+}
+
+async function requestStaffTranslation(targetLang, entries) {
   const user = getSelectedUser();
   if (!user) return null;
   const sourceLang = currentStaffSourceLang();
-  const entries = buildShortDescriptionTranslationEntries(sourceText);
   if (!Object.keys(entries).length) return null;
   const request = keycloakUserStaffProfileTranslateFieldsRequest({
     baseURL: apiOrigin,
@@ -1089,16 +1072,28 @@ async function requestShortDescriptionTranslation(targetLang, sourceText) {
       entries: Object.entries(entries).map(([key, value]) => ({ key, value }))
     }
   });
-  const payload = await fetchApi(request.url, {
+  let providerLabel = "";
+  const payload = await fetchApiJson(request.url, {
+    apiBase,
     method: request.method,
-    body: request.body
+    body: request.body,
+    suppressNotFound: false,
+    includeDetailInError: false,
+    onError: (message) => showError(message),
+    connectionErrorMessage: backendT("booking.error.connect", "Could not connect to backend API."),
+    onSuccess: (_payload, response) => {
+      providerLabel = translationProviderLabelFromResponse(response);
+    }
   });
   if (!Array.isArray(payload?.entries)) return null;
-  return Object.fromEntries(
-    payload.entries
-      .map((entry) => [normalizeText(entry?.key), normalizeText(entry?.value)])
-      .filter(([key, value]) => Boolean(key && value))
-  );
+  return {
+    entries: Object.fromEntries(
+      payload.entries
+        .map((entry) => [normalizeText(entry?.key), normalizeText(entry?.value)])
+        .filter(([key, value]) => Boolean(key && value))
+    ),
+    providerLabel
+  };
 }
 
 async function translatePosition(button) {
@@ -1117,14 +1112,17 @@ async function translatePosition(button) {
 
   setPositionValue(targetLang, "");
   showEditorStatus(backendT("backend.users.position_translation.translating", "Translating position..."));
-  const translatedEntries = await requestPositionTranslation(targetLang, sourceText);
-  if (!translatedEntries) {
+  const translationResult = await requestPositionTranslation(targetLang, sourceText);
+  if (!translationResult?.entries) {
     showEditorStatus(backendT("backend.users.position_translation.error", "Could not translate the position."), true);
     return;
   }
 
-  setPositionValue(targetLang, translatedPositionValue(translatedEntries));
-  showEditorStatus(backendT("backend.users.position_translation.done", "Position translated."));
+  setPositionValue(targetLang, translatedPositionValue(translationResult.entries));
+  showEditorStatus(translationStatusMessage(
+    backendT("backend.users.position_translation.done", "Position translated."),
+    { providerLabel: translationResult.providerLabel }
+  ));
 }
 
 async function translatePositionToAll(button) {
@@ -1147,18 +1145,62 @@ async function translatePositionToAll(button) {
   for (const targetLang of targets) {
     setPositionValue(targetLang, "");
   }
-  showEditorStatus(backendT("backend.users.position_translation.translating_all", "Translating all position languages..."));
+  let providerLabel = "";
+  logStaffTranslationBatch("Starting translate-all batch", {
+    field: "position",
+    source_lang: currentStaffSourceLang(),
+    source_label: currentStaffSourceOption().label,
+    total_targets: targets.length
+  });
 
-  for (const targetLang of targets) {
-    const translatedEntries = await requestPositionTranslation(targetLang, sourceText);
-    if (!translatedEntries) {
+  for (let index = 0; index < targets.length; index += 1) {
+    const targetLang = targets[index];
+    logStaffTranslationBatch("Translating target language", {
+      field: "position",
+      current: index + 1,
+      total: targets.length,
+      target_lang: targetLang,
+      target_label: staffLanguageLabel(targetLang),
+      provider: providerLabel || "pending"
+    });
+    showEditorStatus(translationStatusMessage(
+      backendT("backend.users.position_translation.translating_all", "Translating all position languages..."),
+      { current: index + 1, total: targets.length, providerLabel }
+    ));
+    const translationResult = await requestPositionTranslation(targetLang, sourceText);
+    if (!translationResult?.entries) {
+      logStaffTranslationBatch("Translate-all batch failed", {
+        field: "position",
+        current: index + 1,
+        total: targets.length,
+        target_lang: targetLang,
+        target_label: staffLanguageLabel(targetLang),
+        provider: providerLabel || "unknown"
+      }, true);
       showEditorStatus(backendT("backend.users.position_translation.error", "Could not translate the position."), true);
       return;
     }
-    setPositionValue(targetLang, translatedPositionValue(translatedEntries));
+    providerLabel = translationResult.providerLabel || providerLabel;
+    setPositionValue(targetLang, translatedPositionValue(translationResult.entries));
+    logStaffTranslationBatch("Translated target language", {
+      field: "position",
+      current: index + 1,
+      total: targets.length,
+      target_lang: targetLang,
+      target_label: staffLanguageLabel(targetLang),
+      provider: providerLabel || "unknown"
+    });
   }
 
-  showEditorStatus(backendT("backend.users.position_translation.all_done", "All position translations updated."));
+  showEditorStatus(translationStatusMessage(
+    backendT("backend.users.position_translation.all_done", "All position translations updated."),
+    { current: targets.length, total: targets.length, providerLabel }
+  ));
+  logStaffTranslationBatch("Translate-all batch completed", {
+    field: "position",
+    total: targets.length,
+    provider: providerLabel || "unknown"
+  });
 }
 
 async function translateDescription(button) {
@@ -1177,14 +1219,17 @@ async function translateDescription(button) {
 
   setDescriptionValue(targetLang, "");
   showEditorStatus(backendT("backend.users.description_translation.translating", "Translating description..."));
-  const translatedEntries = await requestDescriptionTranslation(targetLang, sourceText);
-  if (!translatedEntries) {
+  const translationResult = await requestDescriptionTranslation(targetLang, sourceText);
+  if (!translationResult?.entries) {
     showEditorStatus(backendT("backend.users.description_translation.error", "Could not translate the description."), true);
     return;
   }
 
-  setDescriptionValue(targetLang, translatedDescriptionValue(translatedEntries, sourceText));
-  showEditorStatus(backendT("backend.users.description_translation.done", "Description translated."));
+  setDescriptionValue(targetLang, translatedDescriptionValue(translationResult.entries, sourceText));
+  showEditorStatus(translationStatusMessage(
+    backendT("backend.users.description_translation.done", "Description translated."),
+    { providerLabel: translationResult.providerLabel }
+  ));
 }
 
 async function translateDescriptionToAll(button) {
@@ -1207,18 +1252,62 @@ async function translateDescriptionToAll(button) {
   for (const targetLang of targets) {
     setDescriptionValue(targetLang, "");
   }
-  showEditorStatus(backendT("backend.users.description_translation.translating_all", "Translating all description languages..."));
+  let providerLabel = "";
+  logStaffTranslationBatch("Starting translate-all batch", {
+    field: "description",
+    source_lang: currentStaffSourceLang(),
+    source_label: currentStaffSourceOption().label,
+    total_targets: targets.length
+  });
 
-  for (const targetLang of targets) {
-    const translatedEntries = await requestDescriptionTranslation(targetLang, sourceText);
-    if (!translatedEntries) {
+  for (let index = 0; index < targets.length; index += 1) {
+    const targetLang = targets[index];
+    logStaffTranslationBatch("Translating target language", {
+      field: "description",
+      current: index + 1,
+      total: targets.length,
+      target_lang: targetLang,
+      target_label: staffLanguageLabel(targetLang),
+      provider: providerLabel || "pending"
+    });
+    showEditorStatus(translationStatusMessage(
+      backendT("backend.users.description_translation.translating_all", "Translating all description languages..."),
+      { current: index + 1, total: targets.length, providerLabel }
+    ));
+    const translationResult = await requestDescriptionTranslation(targetLang, sourceText);
+    if (!translationResult?.entries) {
+      logStaffTranslationBatch("Translate-all batch failed", {
+        field: "description",
+        current: index + 1,
+        total: targets.length,
+        target_lang: targetLang,
+        target_label: staffLanguageLabel(targetLang),
+        provider: providerLabel || "unknown"
+      }, true);
       showEditorStatus(backendT("backend.users.description_translation.error", "Could not translate the description."), true);
       return;
     }
-    setDescriptionValue(targetLang, translatedDescriptionValue(translatedEntries, sourceText));
+    providerLabel = translationResult.providerLabel || providerLabel;
+    setDescriptionValue(targetLang, translatedDescriptionValue(translationResult.entries, sourceText));
+    logStaffTranslationBatch("Translated target language", {
+      field: "description",
+      current: index + 1,
+      total: targets.length,
+      target_lang: targetLang,
+      target_label: staffLanguageLabel(targetLang),
+      provider: providerLabel || "unknown"
+    });
   }
 
-  showEditorStatus(backendT("backend.users.description_translation.all_done", "All description translations updated."));
+  showEditorStatus(translationStatusMessage(
+    backendT("backend.users.description_translation.all_done", "All description translations updated."),
+    { current: targets.length, total: targets.length, providerLabel }
+  ));
+  logStaffTranslationBatch("Translate-all batch completed", {
+    field: "description",
+    total: targets.length,
+    provider: providerLabel || "unknown"
+  });
 }
 
 async function translateShortDescription(button) {
@@ -1237,14 +1326,17 @@ async function translateShortDescription(button) {
 
   setShortDescriptionValue(targetLang, "");
   showEditorStatus(backendT("backend.users.short_description_translation.translating", "Translating short description..."));
-  const translatedEntries = await requestShortDescriptionTranslation(targetLang, sourceText);
-  if (!translatedEntries) {
+  const translationResult = await requestShortDescriptionTranslation(targetLang, sourceText);
+  if (!translationResult?.entries) {
     showEditorStatus(backendT("backend.users.short_description_translation.error", "Could not translate the short description."), true);
     return;
   }
 
-  setShortDescriptionValue(targetLang, translatedShortDescriptionValue(translatedEntries, sourceText));
-  showEditorStatus(backendT("backend.users.short_description_translation.done", "Short description translated."));
+  setShortDescriptionValue(targetLang, translatedShortDescriptionValue(translationResult.entries, sourceText));
+  showEditorStatus(translationStatusMessage(
+    backendT("backend.users.short_description_translation.done", "Short description translated."),
+    { providerLabel: translationResult.providerLabel }
+  ));
 }
 
 async function translateShortDescriptionToAll(button) {
@@ -1267,18 +1359,62 @@ async function translateShortDescriptionToAll(button) {
   for (const targetLang of targets) {
     setShortDescriptionValue(targetLang, "");
   }
-  showEditorStatus(backendT("backend.users.short_description_translation.translating_all", "Translating all short description languages..."));
+  let providerLabel = "";
+  logStaffTranslationBatch("Starting translate-all batch", {
+    field: "short_description",
+    source_lang: currentStaffSourceLang(),
+    source_label: currentStaffSourceOption().label,
+    total_targets: targets.length
+  });
 
-  for (const targetLang of targets) {
-    const translatedEntries = await requestShortDescriptionTranslation(targetLang, sourceText);
-    if (!translatedEntries) {
+  for (let index = 0; index < targets.length; index += 1) {
+    const targetLang = targets[index];
+    logStaffTranslationBatch("Translating target language", {
+      field: "short_description",
+      current: index + 1,
+      total: targets.length,
+      target_lang: targetLang,
+      target_label: staffLanguageLabel(targetLang),
+      provider: providerLabel || "pending"
+    });
+    showEditorStatus(translationStatusMessage(
+      backendT("backend.users.short_description_translation.translating_all", "Translating all short description languages..."),
+      { current: index + 1, total: targets.length, providerLabel }
+    ));
+    const translationResult = await requestShortDescriptionTranslation(targetLang, sourceText);
+    if (!translationResult?.entries) {
+      logStaffTranslationBatch("Translate-all batch failed", {
+        field: "short_description",
+        current: index + 1,
+        total: targets.length,
+        target_lang: targetLang,
+        target_label: staffLanguageLabel(targetLang),
+        provider: providerLabel || "unknown"
+      }, true);
       showEditorStatus(backendT("backend.users.short_description_translation.error", "Could not translate the short description."), true);
       return;
     }
-    setShortDescriptionValue(targetLang, translatedShortDescriptionValue(translatedEntries, sourceText));
+    providerLabel = translationResult.providerLabel || providerLabel;
+    setShortDescriptionValue(targetLang, translatedShortDescriptionValue(translationResult.entries, sourceText));
+    logStaffTranslationBatch("Translated target language", {
+      field: "short_description",
+      current: index + 1,
+      total: targets.length,
+      target_lang: targetLang,
+      target_label: staffLanguageLabel(targetLang),
+      provider: providerLabel || "unknown"
+    });
   }
 
-  showEditorStatus(backendT("backend.users.short_description_translation.all_done", "All short description translations updated."));
+  showEditorStatus(translationStatusMessage(
+    backendT("backend.users.short_description_translation.all_done", "All short description translations updated."),
+    { current: targets.length, total: targets.length, providerLabel }
+  ));
+  logStaffTranslationBatch("Translate-all batch completed", {
+    field: "short_description",
+    total: targets.length,
+    provider: providerLabel || "unknown"
+  });
 }
 
 function handleDestinationToggle(event) {

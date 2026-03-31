@@ -44,9 +44,11 @@ Scrolling
 =========
 add a shadow to make scrolling enter below the sticky bar, gradually fading our over 20px (scrolling.png)
 
+* Translate tour descriptino with openai
+
 Travler
 =======
-* when clicking on the traveler, load the data from the backend. The traveler might have submitted his data.
+* test! when clicking on the traveler, load the data from the backend. The traveler might have submitted his data.
 
 emergency.html
 =============

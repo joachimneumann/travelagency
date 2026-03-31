@@ -5288,6 +5288,11 @@ test("admin can translate ATP staff profile text from English to Malay", async (
     assert.equal(translateResult.status, 200);
     assert.equal(translateResult.body.source_lang, "en");
     assert.equal(translateResult.body.target_lang, "ms");
+    assert.match(
+      String(translateResult.headers["x-atp-translation-provider-label"] || ""),
+      /^(Google Translate|OpenAI \(.+\))$/,
+      "Staff translation responses should expose the translation provider label"
+    );
     assert.equal(
       translateResult.body.entries.find((entry) => entry.key === "value")?.value,
       "Perancang perjalanan Asia Tenggara yang tenang"

@@ -172,6 +172,7 @@ export function createApplicationRoutes({
     setAtpStaffPictureRefByUsername: atpStaffDirectory.setPictureRefByUsername,
     resetAtpStaffPictureByUsername: atpStaffDirectory.resetPictureByUsername,
     translateEntries: runtime.translationClient.translateEntries,
+    translateEntriesWithMeta: runtime.translationClient.translateEntriesWithMeta,
     execFile: runtime.execFile,
     mkdir,
     writeFile,

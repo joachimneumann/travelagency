@@ -86,6 +86,7 @@ export function createAtpStaffHandlers(deps) {
     setAtpStaffPictureRefByUsername,
     resetAtpStaffPictureByUsername,
     translateEntries,
+    translateEntriesWithMeta,
     execFile,
     mkdir,
     writeFile,
@@ -294,15 +295,28 @@ export function createAtpStaffHandlers(deps) {
     }
 
     try {
-      const translatedEntries = await translateEntries(entries, targetLang, {
-        sourceLangCode: sourceLang,
-        domain: "ATP staff profile text",
-        allowGoogleFallback: true
-      });
+      const translationResult = translateEntriesWithMeta
+        ? await translateEntriesWithMeta(entries, targetLang, {
+            sourceLangCode: sourceLang,
+            domain: "ATP staff profile text",
+            allowGoogleFallback: true
+          })
+        : {
+            entries: await translateEntries(entries, targetLang, {
+              sourceLangCode: sourceLang,
+              domain: "ATP staff profile text",
+              allowGoogleFallback: true
+            }),
+            provider: null
+          };
+      const translatedEntries = translationResult?.entries || {};
       sendJson(res, 200, {
         source_lang: sourceLang,
         target_lang: targetLang,
         entries: translationEntriesFromObject(translatedEntries)
+      }, {
+        ...(normalizeText(translationResult?.provider?.kind) ? { "X-ATP-Translation-Provider": normalizeText(translationResult.provider.kind) } : {}),
+        ...(normalizeText(translationResult?.provider?.label) ? { "X-ATP-Translation-Provider-Label": normalizeText(translationResult.provider.label) } : {})
       });
     } catch (error) {
       if (error?.code === "TRANSLATION_NOT_CONFIGURED") {

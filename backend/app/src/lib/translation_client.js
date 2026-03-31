@@ -79,6 +79,23 @@ function googleTranslateLangCode(value, fallback = "en") {
   return normalized;
 }
 
+function googleProviderMeta() {
+  return Object.freeze({
+    kind: "google",
+    label: "Google Translate",
+    model: ""
+  });
+}
+
+function openAiProviderMeta(model) {
+  const normalizedModel = normalizeText(model);
+  return Object.freeze({
+    kind: "openai",
+    label: normalizedModel ? `OpenAI (${normalizedModel})` : "OpenAI",
+    model: normalizedModel
+  });
+}
+
 function extractGoogleTranslatedText(payload) {
   if (!Array.isArray(payload) || !Array.isArray(payload[0])) return "";
   const parts = payload[0]
@@ -142,15 +159,23 @@ export function createTranslationClient({
       translated[key] = translatedText;
     }
 
-    return translated;
+    return {
+      entries: translated,
+      provider: googleProviderMeta()
+    };
   }
 
-  async function translateEntries(entries, targetLang, options = {}) {
+  async function translateEntriesWithMeta(entries, targetLang, options = {}) {
     const normalizedEntries = Object.entries(entries || {})
       .map(([key, value]) => [normalizeText(key), normalizeText(value)])
       .filter(([key, value]) => Boolean(key && value));
 
-    if (!normalizedEntries.length) return {};
+    if (!normalizedEntries.length) {
+      return {
+        entries: {},
+        provider: null
+      };
+    }
 
     const allowGoogleFallback = Boolean(options?.allowGoogleFallback) && allowGoogleFallbackByDefault;
 
@@ -245,10 +270,19 @@ export function createTranslationClient({
       translatedCount += chunk.length;
     }
 
-    return translated;
+    return {
+      entries: translated,
+      provider: openAiProviderMeta(normalizedModel)
+    };
+  }
+
+  async function translateEntries(entries, targetLang, options = {}) {
+    const result = await translateEntriesWithMeta(entries, targetLang, options);
+    return result.entries;
   }
 
   return {
-    translateEntries
+    translateEntries,
+    translateEntriesWithMeta
   };
 }
