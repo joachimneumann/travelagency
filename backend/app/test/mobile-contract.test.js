@@ -5253,6 +5253,18 @@ test("admin can translate ATP staff profile text from English to Malay", async (
         headers: { "content-type": "application/json" }
       });
     }
+    if (String(url) === "https://api.openai.com/v1/responses") {
+      const payload = JSON.parse(String(init?.body || "{}"));
+      assert.equal(payload.model, String(process.env.OPENAI_TRANSLATION_MODEL || process.env.OPENAI_MODEL || "gpt-4.1").trim());
+      return new Response(JSON.stringify({
+        output_text: JSON.stringify({
+          value: "Perancang perjalanan Asia Tenggara yang tenang"
+        })
+      }), {
+        status: 200,
+        headers: { "content-type": "application/json" }
+      });
+    }
     return previousFetch(input, init);
   };
 
