@@ -40,6 +40,34 @@ booking.js:149 [booking-save] Save task finished. {booking_id: 'booking_dec5e3e2
 booking.js:149 [booking-save] Save flow stopped because a task returned false. {booking_id: 'booking_dec5e3e2-bef7-44f2-8dc9-22b0ad162e3b', task: 'Booking details', dirty: {…}}
 booking.js:149 [booking-save] Save flow finalized. {booking_id: 'booking_dec5e3e2-bef7-44f2-8dc9-22b0ad162e3b', save_completed: false, duration_ms: 12, page_dirty_bar_status: '', dirty: {…}}
 
+Travel plan
+===========
+* Copy whole treve plan from another booking
+** Regenerate all IDs
+** set dates blank
+* remove "Travel plan saved."
+* Copy existing service:
+** red "X"
+** "Insert as copy" "use"
+** in the preview: remove "Day X" and "0 image(s)"
+** mark as copied service.
+** search for service: 
+*** When services have an identical summary only show the newest of theses services but enable a button: show all
+*** remove "Search existing booking services and insert a copy into this day."
+*** "Copy existing service" --> "Existing services"
+* Copy existing day, also with preview
+* after adding a picture to a service, keep the service open, no jumping on the page
+* Remove multi-day, too complicated.
+* make subtitle editable. default: X days in List of countries
+* Booking at the top: list of countries and type of holiday below the ATP staff...
+* make welcome remarks editable. default: This is your current travel plan. Please let us know if you want to modify anything.
+* make final remarks editable. default: We would be happy to hear from you.
+* show note from customer! (allergies, etc)
+
+Travel plan PDF
+==============
+* Treat accomodation special: You will stay at:... near the day
+
 Scrolling
 =========
 add a shadow to make scrolling enter below the sticky bar, gradually fading our over 20px (scrolling.png)
