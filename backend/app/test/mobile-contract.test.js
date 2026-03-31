@@ -1382,7 +1382,6 @@ test("booking travel plan patch persists days, links, and derived financial cove
                   start_time: "14:00",
                   end_time: "15:00",
                   kind: "accommodation",
-                  duration_days: 3,
                   title: "Hotel check-in",
                   financial_coverage_status: "not_covered"
                 },
@@ -1398,7 +1397,6 @@ test("booking travel plan patch persists days, links, and derived financial cove
                   timing_kind: "label",
                   time_label: "2 days",
                   kind: "activity",
-                  duration_days: 2,
                   title: "Mountain hiking"
                 }
               ]
@@ -1432,10 +1430,8 @@ test("booking travel plan patch persists days, links, and derived financial cove
   assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].services[1].timing_kind, "range");
   assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].services[1].start_time, "14:00");
   assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].services[1].end_time, "15:00");
-  assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].services[1].duration_days, 3);
   assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].services[2].timing_kind, "label");
   assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].services[2].time_label, "Evening");
-  assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].services[3].duration_days, 2);
   assert.equal(
     travelPlanPatchResult.body.booking.travel_plan.days[0].services[0].financial_coverage_status,
     "partially_covered"
@@ -1464,8 +1460,6 @@ test("booking travel plan patch persists days, links, and derived financial cove
     "partially_covered"
   );
   assert.equal(detailAfter.body.booking.travel_plan.days[0].services[0].time_point, "19:00");
-  assert.equal(detailAfter.body.booking.travel_plan.days[0].services[1].duration_days, 3);
-  assert.equal(detailAfter.body.booking.travel_plan.days[0].services[3].duration_days, 2);
 
   const activitiesAfter = await requestJson(
     endpointPath("booking_activities").replace("{booking_id}", bookingId),
@@ -1596,7 +1590,7 @@ test("booking travel plan patch allows blank service titles and still rejects in
   assert.equal(missingPointTimeResult.status, 422);
   assert.match(String(missingPointTimeResult.body.error || ""), /time point/i);
 
-  const invalidDurationResult = await requestJson(
+  const invalidSupplierResult = await requestJson(
     endpointPath("booking_travel_plan").replace("{booking_id}", bookingId),
     apiHeaders(),
     {
@@ -1613,8 +1607,8 @@ test("booking travel plan patch allows blank service titles and still rejects in
                 {
                   id: "travel_plan_service_1",
                   kind: "activity",
-                  duration_days: 0,
-                  title: "Two-day hike"
+                  supplier_id: "supplier_missing",
+                  title: "Broken service"
                 }
               ]
             }
@@ -1624,8 +1618,8 @@ test("booking travel plan patch allows blank service titles and still rejects in
       }
     }
   );
-  assert.equal(invalidDurationResult.status, 422);
-  assert.match(String(invalidDurationResult.body.error || ""), /duration/i);
+  assert.equal(invalidSupplierResult.status, 422);
+  assert.match(String(invalidSupplierResult.body.error || ""), /unknown supplier/i);
 
   const invalidLinkResult = await requestJson(
     endpointPath("booking_travel_plan").replace("{booking_id}", bookingId),

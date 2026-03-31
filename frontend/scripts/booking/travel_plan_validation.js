@@ -96,23 +96,6 @@ export function validateTravelPlanDraft(plan, {
         };
       }
 
-      const durationDays = Number(item?.duration_days);
-      if (!(Number.isInteger(durationDays) && durationDays >= 1 && durationDays <= 100)) {
-        return {
-          ok: false,
-          code: "duration_days_invalid",
-          dayId,
-          itemId,
-          dayNumber,
-          itemNumber,
-          error: bookingT(
-            "booking.travel_plan.validation.duration_days_invalid",
-            "Day {day}, service {item}: Duration days must be between 1 and 100.",
-            { day: dayNumber, item: itemNumber }
-          )
-        };
-      }
-
       if (timingKind === "point" && !String(item?.time_point || "").trim()) {
         return {
           ok: false,

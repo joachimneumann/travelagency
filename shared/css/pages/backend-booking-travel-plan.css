@@ -42,7 +42,6 @@
 
 .booking-detail-page :is(
   #travel_plan_translate_all_btn,
-  .travel-plan-service__create-days-btn,
   .travel-plan-link-add-btn,
   .travel-plan-link-toggle-btn,
   .travel-plan-day-add-btn,
@@ -186,64 +185,6 @@
   flex: 1 1 auto;
   width: auto;
   min-width: 0;
-}
-
-.travel-plan-service__create-days-btn {
-  min-width: 160px;
-}
-
-.travel-plan-service__duration-field {
-  align-content: start;
-}
-
-.travel-plan-service__duration-controls {
-  display: flex;
-  flex-wrap: nowrap;
-  align-items: center;
-  gap: 0.8rem;
-}
-
-.travel-plan-service__multi-day-toggle {
-  align-items: center;
-  align-self: center;
-  padding-top: 0;
-  white-space: nowrap;
-}
-
-.travel-plan-service__multi-day-toggle input[type="checkbox"] {
-  flex: 0 0 auto;
-}
-
-.travel-plan-service__multi-day-toggle span {
-  font-weight: var(--booking-font-weight-strong);
-}
-
-.travel-plan-service__duration-stack {
-  display: flex;
-  flex-wrap: nowrap;
-  align-items: center;
-  gap: 0.7rem;
-  flex: 0 1 auto;
-}
-
-.travel-plan-service__duration-input {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  min-width: 0;
-  max-width: none;
-  flex: 0 0 auto;
-}
-
-.travel-plan-service__duration-input label {
-  padding-top: 0;
-  margin: 0;
-  white-space: nowrap;
-}
-
-.travel-plan-service__duration-input input {
-  width: 6.5rem;
-  min-width: 6.5rem;
 }
 
 .travel-plan-service .field label,
@@ -1311,11 +1252,6 @@
 @media (max-width: 760px) {
   .booking-detail-page {
     --travel-plan-content-offset: 3.2rem;
-  }
-
-  .travel-plan-service__duration-controls,
-  .travel-plan-service__duration-stack {
-    flex-wrap: wrap;
   }
 
   .travel-plan-grid,

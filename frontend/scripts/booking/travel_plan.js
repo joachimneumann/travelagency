@@ -16,7 +16,6 @@ import {
 import { formatMoneyDisplay } from "./pricing.js";
 import { renderBookingSectionHeader } from "./sections.js";
 import {
-  buildDualLocalizedPayload,
   mergeDualLocalizedPayload,
   renderLocalizedStackedField,
   requestBookingFieldTranslation,
@@ -99,26 +98,6 @@ export function createBookingTravelPlanModule(ctx) {
     return "trip";
   }
 
-  function readTravelPlanServiceDurationDaysValue(itemNode) {
-    const multiDayEnabled = itemNode.querySelector('[data-travel-plan-service-field="multi_day"]')?.checked === true;
-    if (!multiDayEnabled) return "1";
-    const durationInput = itemNode.querySelector('[data-travel-plan-service-field="duration_days"]');
-    if (!(durationInput instanceof HTMLInputElement)) return "2";
-    return String(durationInput.value || "").trim();
-  }
-
-  function syncDurationCreateDaysButtonStates() {
-    if (!els.travel_plan_editor) return;
-    const itemNodes = Array.from(els.travel_plan_editor.querySelectorAll("[data-travel-plan-service]"));
-    itemNodes.forEach((itemNode) => {
-      const createDaysButton = itemNode.querySelector("[data-travel-plan-create-days]");
-      if (!(createDaysButton instanceof HTMLButtonElement)) return;
-      const durationDaysValue = readTravelPlanServiceDurationDaysValue(itemNode);
-      const isEnabled = (normalizeDurationDays(durationDaysValue) || 0) > 1;
-      createDaysButton.disabled = !isEnabled;
-    });
-  }
-
   function findDraftDay(dayId) {
     return (Array.isArray(state.travelPlanDraft?.days) ? state.travelPlanDraft.days : []).find((day) => day.id === dayId) || null;
   }
@@ -128,107 +107,10 @@ export function createBookingTravelPlanModule(ctx) {
     return (Array.isArray(day?.services) ? day.services : []).find((item) => item.id === itemId) || null;
   }
 
-  function travelPlanLocalId(prefix) {
-    const safePrefix = String(prefix || "travel_plan").replace(/[^a-z0-9_]+/gi, "_").toLowerCase();
-    if (globalThis.crypto?.randomUUID) {
-      return `${safePrefix}_${globalThis.crypto.randomUUID()}`;
-    }
-    return `${safePrefix}_${Date.now()}_${Math.random().toString(16).slice(2, 10)}`;
-  }
-
   function escapeSelectorValue(value) {
     const raw = String(value || "");
     if (globalThis.CSS?.escape) return globalThis.CSS.escape(raw);
     return raw.replace(/["\\]/g, "\\$&");
-  }
-
-  function normalizeDurationDays(value) {
-    const raw = String(value ?? "").trim();
-    if (!raw || !/^\d+$/.test(raw)) return null;
-    const parsed = Number.parseInt(raw, 10);
-    return parsed >= 1 && parsed <= 100 ? parsed : null;
-  }
-
-  function resolveDurationDays(item) {
-    const explicitDuration = normalizeDurationDays(item?.duration_days);
-    if (explicitDuration) return explicitDuration;
-    const legacyDuration = normalizeDurationDays(item?.accommodation_days);
-    if (legacyDuration) return legacyDuration;
-    return 1;
-  }
-
-  function durationDaysInputValue(item) {
-    return String(Math.max(2, resolveDurationDays(item)));
-  }
-
-  function isMultiDayService(item) {
-    return resolveDurationDays(item) > 1;
-  }
-
-  function canCreateServiceSpanDays(item) {
-    return resolveDurationDays(item) > 1;
-  }
-
-  function createGeneratedDayTitle(dayNumber) {
-    return bookingT("booking.travel_plan.generated_day_title", "Day {day}", { day: dayNumber });
-  }
-
-  function buildGeneratedDayTitleMap(dayNumber) {
-    return buildDualLocalizedPayload(createGeneratedDayTitle(dayNumber), "", bookingContentLang()).map;
-  }
-
-  function cloneTravelPlanServiceImage(image) {
-    if (!image || typeof image !== "object" || Array.isArray(image)) return null;
-    return {
-      ...image,
-      id: travelPlanLocalId("travel_plan_service_image"),
-      sort_order: 0,
-      is_primary: true
-    };
-  }
-
-  function cloneTravelPlanServiceForGeneratedDay(sourceItem) {
-    const clonedItem = createEmptyTravelPlanService();
-    const sourceImage = sourceItem?.image && typeof sourceItem.image === "object" && !Array.isArray(sourceItem.image)
-      ? sourceItem.image
-      : (
-        Array.isArray(sourceItem?.images)
-          ? sourceItem.images.find((image) => image?.is_primary) || sourceItem.images[0] || null
-          : null
-      );
-    clonedItem.timing_kind = String(sourceItem?.timing_kind || "label").trim() || "label";
-    clonedItem.time_label = String(sourceItem?.time_label || "").trim();
-    clonedItem.time_label_i18n = sourceItem?.time_label_i18n && typeof sourceItem.time_label_i18n === "object"
-      ? { ...sourceItem.time_label_i18n }
-      : {};
-    clonedItem.time_point = String(sourceItem?.time_point || "").trim();
-    clonedItem.kind = String(sourceItem?.kind || "other").trim() || "other";
-    clonedItem.duration_days = 1;
-    clonedItem.title = String(sourceItem?.title || "").trim();
-    clonedItem.title_i18n = sourceItem?.title_i18n && typeof sourceItem.title_i18n === "object"
-      ? { ...sourceItem.title_i18n }
-      : {};
-    clonedItem.details = String(sourceItem?.details || "").trim();
-    clonedItem.details_i18n = sourceItem?.details_i18n && typeof sourceItem.details_i18n === "object"
-      ? { ...sourceItem.details_i18n }
-      : {};
-    clonedItem.location = String(sourceItem?.location || "").trim();
-    clonedItem.location_i18n = sourceItem?.location_i18n && typeof sourceItem.location_i18n === "object"
-      ? { ...sourceItem.location_i18n }
-      : {};
-    clonedItem.supplier_id = String(sourceItem?.supplier_id || "").trim();
-    clonedItem.start_time = String(sourceItem?.start_time || "").trim();
-    clonedItem.end_time = String(sourceItem?.end_time || "").trim();
-    clonedItem.financial_coverage_needed = sourceItem?.financial_coverage_needed !== false;
-    clonedItem.financial_note = String(sourceItem?.financial_note || "").trim();
-    clonedItem.financial_note_i18n = sourceItem?.financial_note_i18n && typeof sourceItem.financial_note_i18n === "object"
-      ? { ...sourceItem.financial_note_i18n }
-      : {};
-    clonedItem.image = cloneTravelPlanServiceImage(sourceImage);
-    clonedItem.copied_from = sourceItem?.copied_from && typeof sourceItem.copied_from === "object"
-      ? { ...sourceItem.copied_from }
-      : null;
-    return clonedItem;
   }
 
   function applyTravelPlanMutationBooking(booking) {
@@ -1379,41 +1261,6 @@ export function createBookingTravelPlanModule(ctx) {
     const coverageBadge = !shouldShowCoverageBadge
       ? ""
       : `<span class="travel-plan-coverage-badge travel-plan-coverage-badge--${escapeHtml(coverageStatus.replace(/_/g, "-"))}" data-travel-plan-coverage-badge="${escapeHtml(item.id)}">${escapeHtml(coverageLabel)}</span>`;
-    const multiDay = isMultiDayService(item);
-    const createDaysEnabled = canCreateServiceSpanDays(item);
-    const durationControls = `
-      <div class="field travel-plan-service__duration-field">
-        <span class="field-label">${escapeHtml(bookingT("booking.travel_plan.duration_label", "Duration"))}</span>
-        <div class="travel-plan-service__duration-controls">
-          <label class="backend-checkbox-item travel-plan-service__multi-day-toggle" for="travel_plan_multi_day_${escapeHtml(item.id)}">
-            <input
-              id="travel_plan_multi_day_${escapeHtml(item.id)}"
-              data-travel-plan-service-field="multi_day"
-              type="checkbox"
-              ${multiDay ? "checked" : ""}
-            />
-            <span>${escapeHtml(bookingT("booking.travel_plan.multi_day", "Multi-day"))}</span>
-          </label>
-          ${multiDay ? `
-            <div class="travel-plan-service__duration-stack">
-              <div class="travel-plan-service__duration-input">
-                <label for="travel_plan_duration_days_${escapeHtml(item.id)}">${escapeHtml(bookingT("booking.travel_plan.duration_days", "Number of days"))}</label>
-                <input
-                  id="travel_plan_duration_days_${escapeHtml(item.id)}"
-                  data-travel-plan-service-field="duration_days"
-                  type="number"
-                  min="2"
-                  max="100"
-                  step="1"
-                  value="${escapeHtml(durationDaysInputValue(item))}"
-                />
-              </div>
-              <button class="btn btn-ghost travel-plan-service__create-days-btn" data-travel-plan-create-days="${escapeHtml(item.id)}" type="button"${createDaysEnabled ? "" : " disabled"}>${escapeHtml(bookingT("booking.travel_plan.create_days", "Create days"))}</button>
-            </div>
-          ` : ""}
-        </div>
-      </div>
-    `;
     return `
       <div class="travel-plan-service travel-plan-service--${escapeHtml(coverageStatus.replace(/_/g, "-"))}${collapsed ? " travel-plan-service--collapsed" : ""}" data-travel-plan-service="${escapeHtml(item.id)}" data-travel-plan-financial-coverage-needed="${noFinancialCoverageNeeded ? "false" : "true"}">
         <div class="travel-plan-service__rail">
@@ -1475,7 +1322,6 @@ export function createBookingTravelPlanModule(ctx) {
                   localizedValue: resolveLocalizedDraftBranchText(item.location_i18n ?? item.location, bookingContentLang(), "")
                 })}
               </div>
-              ${durationControls}
             </div>
             <div class="travel-plan-service__overview-media">
               ${travelPlanImagesModule.renderTravelPlanServiceImages(day, item, { variant: "sidebar" })}
@@ -1681,7 +1527,6 @@ export function createBookingTravelPlanModule(ctx) {
           String(itemNode.querySelector('[data-travel-plan-service-field="time_point_time"]')?.value || "").trim()
         );
         item.kind = String(itemNode.querySelector('[data-travel-plan-service-field="kind"]')?.value || "").trim();
-        item.duration_days = readTravelPlanServiceDurationDaysValue(itemNode);
         const itemTitle = readLocalizedFieldPayload(
           itemNode,
           "travel-plan-service-field",
@@ -1777,85 +1622,6 @@ export function createBookingTravelPlanModule(ctx) {
     day.services = Array.isArray(day.services) ? day.services : [];
     day.services.push(createEmptyTravelPlanService());
     renderTravelPlanPanel();
-  }
-
-  function createServiceSpanDays(itemId) {
-    syncTravelPlanDraftFromDom();
-    const days = Array.isArray(state.travelPlanDraft?.days) ? state.travelPlanDraft.days : [];
-    const sourceDayIndex = days.findIndex((day) => Array.isArray(day?.services) && day.services.some((item) => item.id === itemId));
-    if (sourceDayIndex < 0) return;
-
-    const sourceDay = days[sourceDayIndex];
-    const sourceItemIndex = (Array.isArray(sourceDay?.services) ? sourceDay.services : []).findIndex((item) => item.id === itemId);
-    if (sourceItemIndex < 0) return;
-    const sourceItem = sourceDay.services[sourceItemIndex];
-
-    const durationDays = normalizeDurationDays(sourceItem.duration_days);
-    if (!durationDays) {
-      travelPlanStatus(
-        bookingT(
-          "booking.travel_plan.validation.duration_days_invalid",
-          "Day {day}, service {item}: Duration days must be between 1 and 100.",
-          { day: sourceDayIndex + 1, item: sourceItemIndex + 1 }
-        ),
-        "error"
-      );
-      const invalidInput = els.travel_plan_editor?.querySelector(`[data-travel-plan-service="${escapeSelectorValue(itemId)}"] [data-travel-plan-service-field="duration_days"]`);
-      invalidInput?.focus?.();
-      return;
-    }
-
-    const additionalDays = durationDays - 1;
-    if (additionalDays < 1) {
-      travelPlanStatus(bookingT("booking.travel_plan.create_days_no_extra", "This service already spans one day."), "info");
-      return;
-    }
-
-    const sourceLinks = (Array.isArray(state.travelPlanDraft?.offer_component_links) ? state.travelPlanDraft.offer_component_links : [])
-      .filter((link) => link.travel_plan_service_id === itemId);
-    const generatedDays = [];
-    const generatedLinks = [];
-    let nextDateValue = String(sourceDay?.date || "").trim();
-
-    for (let offset = 1; offset <= additionalDays; offset += 1) {
-      const generatedDay = createEmptyTravelPlanDay(sourceDayIndex + offset);
-      const generatedDayNumber = sourceDayIndex + offset + 1;
-      generatedDay.title = createGeneratedDayTitle(generatedDayNumber);
-      generatedDay.title_i18n = buildGeneratedDayTitleMap(generatedDayNumber);
-      generatedDay.overnight_location = String(sourceItem.location || sourceDay?.overnight_location || "").trim();
-      generatedDay.overnight_location_i18n = sourceItem.location_i18n && typeof sourceItem.location_i18n === "object"
-        ? { ...sourceItem.location_i18n }
-        : sourceDay?.overnight_location_i18n && typeof sourceDay.overnight_location_i18n === "object"
-          ? { ...sourceDay.overnight_location_i18n }
-          : {};
-      nextDateValue = nextIsoDate(nextDateValue);
-      generatedDay.date = nextDateValue;
-
-      const generatedItem = cloneTravelPlanServiceForGeneratedDay(sourceItem);
-      generatedDay.services = [generatedItem];
-      generatedDays.push(generatedDay);
-
-      sourceLinks.forEach((link) => {
-        generatedLinks.push({
-          ...link,
-          id: travelPlanLocalId("travel_plan_offer_link"),
-          travel_plan_service_id: generatedItem.id
-        });
-      });
-    }
-
-    sourceItem.duration_days = 1;
-    days.splice(sourceDayIndex + 1, 0, ...generatedDays);
-    state.travelPlanDraft.days = days;
-    state.travelPlanDraft.offer_component_links = [
-      ...(Array.isArray(state.travelPlanDraft.offer_component_links) ? state.travelPlanDraft.offer_component_links : []),
-      ...generatedLinks
-    ];
-    renderTravelPlanPanel();
-    travelPlanStatus(
-      bookingT("booking.travel_plan.create_days_created", "Created {count} additional day(s) for this service.", { count: additionalDays }),
-      "success"
-    );
   }
 
   function removeItem(itemId) {
@@ -2039,17 +1805,6 @@ export function createBookingTravelPlanModule(ctx) {
         code: validation.code || null,
         message: validation.error || ""
       });
-      if (validation.code === "duration_days_invalid") {
-        setPageSaveActionError?.(
-          bookingT(
-            "booking.travel_plan.validation.duration_days_action_error",
-            "Day {day}, service {item} needs a duration between 1 and 100 days.",
-            { item: validation.itemNumber, day: validation.dayNumber }
-          )
-        );
-        const invalidInput = els.travel_plan_editor?.querySelector(`[data-travel-plan-service="${escapeSelectorValue(validation.itemId || "")}"] [data-travel-plan-service-field="duration_days"]`);
-        invalidInput?.focus?.();
-      }
       travelPlanStatus(validation.error, "error");
       return false;
     }
@@ -2264,7 +2019,6 @@ export function createBookingTravelPlanModule(ctx) {
         refreshTravelPlanVisibleHeadCopy(target);
         updateTravelPlanDirtyState();
         renderBookingSectionHeader(els.travel_plan_panel_summary, travelPlanSummary());
-        syncDurationCreateDaysButtonStates();
       });
       els.travel_plan_editor.addEventListener("change", (event) => {
         const target = event.target;
@@ -2286,11 +2040,9 @@ export function createBookingTravelPlanModule(ctx) {
         refreshTravelPlanVisibleHeadCopy(target);
         updateTravelPlanDirtyState();
         renderBookingSectionHeader(els.travel_plan_panel_summary, travelPlanSummary());
-        syncDurationCreateDaysButtonStates();
         const shouldRerender = Boolean(
           target?.matches?.('[data-travel-plan-service-field="timing_kind"]')
           || target?.matches?.('[data-travel-plan-service-field="kind"]')
-          || target?.matches?.('[data-travel-plan-service-field="multi_day"]')
           || target?.matches?.("[data-travel-plan-link-component]")
           || target?.matches?.("[data-travel-plan-link-coverage-type]")
         );
@@ -2349,10 +2101,6 @@ export function createBookingTravelPlanModule(ctx) {
         }
         if (button.hasAttribute("data-travel-plan-add-item")) {
           addItem(button.getAttribute("data-travel-plan-add-item"));
-          return;
-        }
-        if (button.hasAttribute("data-travel-plan-create-days")) {
-          createServiceSpanDays(button.getAttribute("data-travel-plan-create-days"));
           return;
         }
         if (button.hasAttribute("data-travel-plan-open-import")) {
@@ -2470,7 +2218,6 @@ export function createBookingTravelPlanModule(ctx) {
     `;
     syncTravelPlanCollapsibleUi(false);
     updateTravelPlanDirtyState();
-    syncDurationCreateDaysButtonStates();
     syncTravelPlanTranslateButton();
   }
 

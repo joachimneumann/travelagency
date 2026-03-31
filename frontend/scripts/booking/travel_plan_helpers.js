@@ -65,24 +65,6 @@ function normalizeCoverageType(value) {
     : "full";
 }
 
-function normalizeDurationDays(value) {
-  const raw = normalizeOptionalText(value);
-  if (!raw) return null;
-  if (!/^\d+$/.test(raw)) return null;
-  const parsed = Number.parseInt(raw, 10);
-  return parsed >= 1 && parsed <= 100 ? parsed : null;
-}
-
-function resolveDurationDays(rawItem) {
-  if (rawItem?.duration_days !== undefined && rawItem?.duration_days !== null) {
-    return normalizeDurationDays(rawItem.duration_days);
-  }
-  if (rawItem?.accommodation_days !== undefined && rawItem?.accommodation_days !== null) {
-    return normalizeDurationDays(rawItem.accommodation_days);
-  }
-  return 1;
-}
-
 function normalizeItemTiming(rawItem) {
   const timing_kind = normalizeTimingKind(rawItem?.timing_kind);
   const time_label = normalizeOptionalText(rawItem?.time_label);
@@ -220,7 +202,6 @@ export function createEmptyTravelPlanService() {
     time_label_i18n: {},
     time_point: "",
     kind: "other",
-    duration_days: 1,
     title: "",
     title_i18n: {},
     details: "",
@@ -377,7 +358,6 @@ export function normalizeTravelPlanDraft(plan, offerComponents = [], options = {
             time_label_i18n: timeLabelMap,
             time_point: timing.time_point,
             kind: normalizeItemKind(rawItem.kind),
-            duration_days: resolveDurationDays(rawItem),
             title: resolveLocalizedEditorText(titleMap, sourceLang, ""),
             title_i18n: titleMap,
             details: resolveLocalizedEditorText(detailsMap, sourceLang, ""),

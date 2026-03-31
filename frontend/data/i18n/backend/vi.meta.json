@@ -3249,26 +3249,6 @@
     "origin": "machine",
     "updated_at": "2026-03-30T23:51:31.875Z"
   },
-  "booking.travel_plan.create_days": {
-    "source_hash": "71ced3c3c419ff9ae81d6061c642d9a4cc32f3449291047eb02ab189f0d2c79a",
-    "origin": "machine",
-    "updated_at": "2026-03-30T23:51:31.875Z"
-  },
-  "booking.travel_plan.create_days_created": {
-    "source_hash": "e94e5f9c01927b6f765abce67c730d9e9ba33a250bfa4b138a02232e6ce8d6f8",
-    "origin": "machine",
-    "updated_at": "2026-03-30T23:51:31.875Z"
-  },
-  "booking.travel_plan.create_days_no_extra": {
-    "source_hash": "8721b8ddca6e522adbb052672da56b2bf41a646e5c99151d1f3d6572ed89031b",
-    "origin": "machine",
-    "updated_at": "2026-03-30T23:51:31.875Z"
-  },
-  "booking.travel_plan.create_days_title_required": {
-    "source_hash": "c93afe3bee19b6cf1c7c01bfff15c0889d9ff32ad8b662e2a33cce1df3851111",
-    "origin": "machine",
-    "updated_at": "2026-03-30T23:51:31.875Z"
-  },
   "booking.travel_plan.create_pdf": {
     "source_hash": "e45411b9a4716ed2c68e8fa2dac474b4e0fb054ecaf30f9525a28430a01666dc",
     "origin": "machine",
@@ -3304,16 +3284,6 @@
     "origin": "machine",
     "updated_at": "2026-03-30T23:51:31.875Z"
   },
-  "booking.travel_plan.duration_days": {
-    "source_hash": "7117cd896fb27c0af28a0a665a913a8629eccaefd0732973cb88c725146c9ced",
-    "origin": "machine",
-    "updated_at": "2026-03-30T23:51:31.875Z"
-  },
-  "booking.travel_plan.duration_label": {
-    "source_hash": "4fc52a3c4c558b517c463b22d86d0e3b9cfd4255c98fe3510f9075b37ab419c9",
-    "origin": "machine",
-    "updated_at": "2026-03-30T23:51:31.875Z"
-  },
   "booking.travel_plan.end_date": {
     "source_hash": "14303aa0c4a08d390e1180d9ed4ecbad43d4c4176d82ea8b8ae3f4b648b07380",
     "origin": "machine",
@@ -3341,11 +3311,6 @@
   },
   "booking.travel_plan.financial_note_placeholder": {
     "source_hash": "9d1cabaf5615ae58962983fad3c3b08bd106ec312870114427cca3f2ba77e2b4",
-    "origin": "machine",
-    "updated_at": "2026-03-30T23:51:31.875Z"
-  },
-  "booking.travel_plan.generated_day_title": {
-    "source_hash": "562e5b929d75143be2bbc825c3f4438d02c929d8daf79a1fa0d979e70cf896fb",
     "origin": "machine",
     "updated_at": "2026-03-30T23:51:31.875Z"
   },
@@ -3496,11 +3461,6 @@
   },
   "booking.travel_plan.move_item_up": {
     "source_hash": "4be6cd0c6cdbd0763817df67fb63fa58e56df9c788aa2b7f70d91780ad662f30",
-    "origin": "machine",
-    "updated_at": "2026-03-30T23:51:31.875Z"
-  },
-  "booking.travel_plan.multi_day": {
-    "source_hash": "672dd2ad168ab9427d1a208788b9e798f313e5d4f98ed94a5aeab6ca18c13e46",
     "origin": "machine",
     "updated_at": "2026-03-30T23:51:31.875Z"
   },
@@ -3801,16 +3761,6 @@
   },
   "booking.travel_plan.uploading_pdf_progress": {
     "source_hash": "46b1cea3406a5ebdf2fadde81d7f5271c0875019469be93c9550569bc7101d43",
-    "origin": "machine",
-    "updated_at": "2026-03-30T23:51:31.875Z"
-  },
-  "booking.travel_plan.validation.duration_days_action_error": {
-    "source_hash": "f4c3ee21be758d9ff043c1d3ac9c27c8eda9391382f2f94cacb6161de78d84ca",
-    "origin": "machine",
-    "updated_at": "2026-03-30T23:51:31.875Z"
-  },
-  "booking.travel_plan.validation.duration_days_invalid": {
-    "source_hash": "0c4a931871efde2ae9609aecc976e089300fe39808de5e68110f4b25251a5902",
     "origin": "machine",
     "updated_at": "2026-03-30T23:51:31.875Z"
   },

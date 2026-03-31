@@ -773,12 +773,12 @@ test("service titles remain optional across save validation and UI state", async
   );
   assert.match(
     travelPlanStyles,
-    /\.travel-plan-grid--item-kind \{[\s\S]*grid-template-columns: minmax\(220px, 280px\) minmax\(240px, 1fr\);/,
-    "Travel plan styles should keep the kind and duration controls grouped above title and location"
+    /\.travel-plan-service__overview \{[\s\S]*grid-template-columns: minmax\(0, 1fr\) minmax\(0, 1fr\);/,
+    "Travel plan styles should keep the service fields and image editor in a balanced two-column layout"
   );
 });
 
-test("travel-plan services expose a reusable duration helper and create linked copy days", async () => {
+test("travel-plan services are single-day only across model, API, backend, and UI", async () => {
   const modelPath = path.resolve(__dirname, "..", "..", "..", "model", "entities", "travel_plan.cue");
   const travelPlanScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan.js");
   const travelPlanHelpersPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan_helpers.js");
@@ -807,70 +807,45 @@ test("travel-plan services expose a reusable duration helper and create linked c
     readFile(generatedApiModelsPath, "utf8")
   ]);
 
-  assert.match(
+  assert.doesNotMatch(
     modelSource,
-    /duration_days\?:\s+>=1 & <=100 & int/,
-    "The travel-plan item model should persist an optional service duration day count"
+    /duration_days|accommodation_days/,
+    "The travel-plan service model should no longer expose a multi-day duration field"
   );
-  assert.match(
+  assert.doesNotMatch(
     openApiSource,
-    /BookingTravelPlanService:[\s\S]*duration_days:[\s\S]*type: integer[\s\S]*minimum: 1[\s\S]*maximum: 100/,
-    "The generated OpenAPI schema should expose the service duration day count on travel-plan items"
+    /BookingTravelPlanService:[\s\S]*duration_days:/,
+    "The generated OpenAPI schema should no longer expose service duration days"
   );
-  assert.match(
+  assert.doesNotMatch(
     generatedApiModelsSource,
     /schemaField\(\{"name":"duration_days","required":false,"wireName":"duration_days"\}, SHARED_FIELD_DEFS\.FIELD_17\)/,
-    "The generated API models should include duration_days on BookingTravelPlanService"
+    "The generated API models should no longer include duration_days on BookingTravelPlanService"
   );
-  assert.match(
+  assert.doesNotMatch(
     travelPlanHelpersSource,
-    /function resolveDurationDays\(rawItem\)[\s\S]*rawItem\?\.duration_days[\s\S]*rawItem\?\.accommodation_days[\s\S]*return 1;/,
-    "Travel-plan draft helpers should read the new duration field while still supporting legacy accommodation_days input"
+    /duration_days|accommodation_days|resolveDurationDays|normalizeDurationDays/,
+    "Travel-plan draft helpers should no longer normalize multi-day duration fields"
   );
-  assert.match(
+  assert.doesNotMatch(
     domainSource,
-    /function resolveDurationDays\(rawItem\)[\s\S]*rawItem\?\.duration_days[\s\S]*rawItem\?\.accommodation_days[\s\S]*return 1;/,
-    "Backend travel-plan normalization should persist the new duration field while still supporting legacy accommodation_days input"
+    /duration_days|accommodation_days|resolveDurationDays|normalizeDurationDays/,
+    "Backend travel-plan normalization should no longer persist service duration days"
   );
-  assert.match(
+  assert.doesNotMatch(
     validationSource,
-    /code:\s*"duration_days_invalid"[\s\S]*Duration days must be between 1 and 100\./,
-    "Travel-plan validation should reject invalid service durations with structured metadata"
-  );
-  assert.match(
-    travelPlanSource,
-    /function canCreateServiceSpanDays\(item\)[\s\S]*resolveDurationDays\(item\) > 1/,
-    "Travel-plan items should derive Create days enablement from the service duration"
-  );
-  assert.match(
-    travelPlanSource,
-    /function syncDurationCreateDaysButtonStates\(\)[\s\S]*createDaysButton\.disabled = !isEnabled;/,
-    "Travel-plan editing should include a live sync helper for Create days button state"
-  );
-  assert.match(
-    travelPlanSource,
-    /data-travel-plan-service-field="multi_day"[\s\S]*data-travel-plan-service-field="duration_days"[\s\S]*data-travel-plan-create-days="[^"]*"[\s\S]*type="button"\$\{createDaysEnabled \? "" : " disabled"\}/,
-    "Travel-plan items should render multi-day controls and the Create days button disabled until the duration prerequisite is met"
-  );
-  assert.match(
-    travelPlanSource,
-    /els\.travel_plan_editor\.addEventListener\("input"[\s\S]*syncDurationCreateDaysButtonStates\(\);[\s\S]*els\.travel_plan_editor\.addEventListener\("change"[\s\S]*syncDurationCreateDaysButtonStates\(\);/,
-    "Create days enablement should resync during render and while editing the item"
+    /duration_days_invalid|Duration days must be between 1 and 100\./,
+    "Travel-plan validation should no longer contain multi-day duration errors"
   );
   assert.doesNotMatch(
     travelPlanSource,
-    /create_days_title_required|if \(!String\(sourceItem\?\.title \|\| ""\)\.trim\(\)\)/,
-    "Create days should not require a service title"
+    /data-travel-plan-service-field="multi_day"|data-travel-plan-service-field="duration_days"|data-travel-plan-create-days=|createServiceSpanDays|syncDurationCreateDaysButtonStates|createGeneratedDayTitle|cloneTravelPlanServiceForGeneratedDay/,
+    "Travel-plan editing should no longer expose the multi-day controls or Create days workflow"
   );
-  assert.match(
-    travelPlanSource,
-    /generatedDay\.title = createGeneratedDayTitle\(generatedDayNumber\);[\s\S]*cloneTravelPlanServiceForGeneratedDay\(sourceItem\)[\s\S]*days\.splice\(sourceDayIndex \+ 1, 0, \.\.\.generatedDays\);/,
-    "Create days should insert generated days after the source day and clone the accommodation item into each one"
-  );
-  assert.match(
+  assert.doesNotMatch(
     travelPlanStyles,
-    /\.travel-plan-grid--item-kind \{[\s\S]*grid-template-columns: minmax\(220px, 280px\) minmax\(240px, 1fr\);[\s\S]*\.travel-plan-service__duration-controls \{/,
-    "Travel-plan items should reserve a dedicated layout for the duration controls and Create days button"
+    /travel-plan-service__duration|travel-plan-service__create-days-btn|travel-plan-service__multi-day-toggle/,
+    "Travel-plan styles should no longer reserve space for duration controls or Create days"
   );
 });
 

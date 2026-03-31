@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-03-30T13:48:02Z
+# 2026-03-31T16:33:07Z
 
 ---
 openapi: 3.1.0
@@ -4303,11 +4303,6 @@ components:
           nullable: true
         kind:
           "$ref": "#/components/schemas/TravelPlanServiceKind"
-        duration_days:
-          type: integer
-          minimum: 1
-          maximum: 100
-          nullable: true
         title:
           type: string
           nullable: true

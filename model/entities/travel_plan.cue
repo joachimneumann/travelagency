@@ -47,7 +47,6 @@ import (
 	time_label?:               string
 	time_point?:               string
 	kind:                      enums.#TravelPlanServiceKind
-	duration_days?:            >=1 & <=100 & int
 	title?:                    string
 	details?:                  string
 	location?:                 string

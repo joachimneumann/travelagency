@@ -163,23 +163,6 @@ function normalizeCoverageType(value) {
   return TRAVEL_PLAN_OFFER_COVERAGE_TYPES.has(normalized) ? normalized : "full";
 }
 
-function normalizeDurationDays(value) {
-  const raw = normalizeText(value);
-  if (!raw || !/^\d+$/.test(raw)) return null;
-  const parsed = Number.parseInt(raw, 10);
-  return parsed >= 1 && parsed <= 100 ? parsed : null;
-}
-
-function resolveDurationDays(rawItem) {
-  if (rawItem?.duration_days !== undefined && rawItem?.duration_days !== null) {
-    return normalizeDurationDays(rawItem.duration_days);
-  }
-  if (rawItem?.accommodation_days !== undefined && rawItem?.accommodation_days !== null) {
-    return normalizeDurationDays(rawItem.accommodation_days);
-  }
-  return 1;
-}
-
 function normalizeFinancialCoverageStatus(value) {
   const normalized = normalizeText(value).toLowerCase();
   return TRAVEL_PLAN_FINANCIAL_COVERAGE_STATUSES.has(normalized) ? normalized : null;
@@ -286,7 +269,6 @@ function normalizeTravelPlanDays(days, options = {}) {
           time_label_i18n,
           time_point: timing.time_point,
           kind: normalizeItemKind(rawItem.kind),
-          duration_days: resolveDurationDays(rawItem),
           title: resolveLocalizedText(title_i18n, flatLang, "", { sourceLang }),
           title_i18n,
           details: resolveLocalizedText(details_i18n, flatLang, "", { sourceLang }) || null,
@@ -436,11 +418,6 @@ export function createTravelPlanHelpers() {
         }
         if (!TRAVEL_PLAN_SERVICE_KINDS.has(item.kind)) {
           return { ok: false, error: `Day ${day.day_number}, Service ${itemNumber}: Kind is invalid.` };
-        }
-        if (
-          !(Number.isInteger(item.duration_days) && item.duration_days >= 1 && item.duration_days <= 100)
-        ) {
-          return { ok: false, error: `Day ${day.day_number}, Service ${itemNumber}: Duration days must be between 1 and 100.` };
         }
         if (normalizeText(item.supplier_id) && !supplierIds.has(item.supplier_id)) {
           return { ok: false, error: `Day ${day.day_number}, Service ${itemNumber}: Unknown supplier ${item.supplier_id}.` };
