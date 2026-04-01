@@ -62,12 +62,9 @@ Travel plan
 
 Travel plan PDF
 ==============
-* in Booking.html at the top: list of countries and type of holiday below the ATP staff... use this information to derrive text for the PDF
-* make subtitle in pdf editable. default: X days in List of countries
-* make welcome remarks in pdf editable. propose a default similar to: This is your current travel plan. Please let us know if you want to modify anything.
-* make final remarks editable. default: We would be happy to hear from you.
-* Add another note to the customer in the PDF. Next to it show the note from the web submission (allergies, etc) if it exists.
-* Treat accomodation special: You will stay at:... near the day
+- remove subtitle "Override the default customer-facing text when needed. Leave a field empty to use the derived default."
+- Travel plan subtitle -> Subtitle below title
+- Treat accomodation special: You will stay at:... near the day
 
 
 Translate

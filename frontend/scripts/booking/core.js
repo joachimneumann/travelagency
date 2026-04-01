@@ -265,10 +265,8 @@ function normalizePdfTextField(value, mapValue) {
 
 function normalizePdfPersonalization(value) {
   const raw = value && typeof value === "object" && !Array.isArray(value) ? value : {};
-  const shared = raw.shared && typeof raw.shared === "object" && !Array.isArray(raw.shared) ? raw.shared : {};
   const travelPlan = raw.travel_plan && typeof raw.travel_plan === "object" && !Array.isArray(raw.travel_plan) ? raw.travel_plan : {};
   const offer = raw.offer && typeof raw.offer === "object" && !Array.isArray(raw.offer) ? raw.offer : {};
-  const customerNote = normalizePdfTextField(shared.customer_note, shared.customer_note_i18n);
   const travelPlanSubtitle = normalizePdfTextField(travelPlan.subtitle, travelPlan.subtitle_i18n);
   const travelPlanWelcome = normalizePdfTextField(travelPlan.welcome, travelPlan.welcome_i18n);
   const travelPlanClosing = normalizePdfTextField(travelPlan.closing, travelPlan.closing_i18n);
@@ -276,10 +274,6 @@ function normalizePdfPersonalization(value) {
   const offerWelcome = normalizePdfTextField(offer.welcome, offer.welcome_i18n);
   const offerClosing = normalizePdfTextField(offer.closing, offer.closing_i18n);
   return {
-    shared: {
-      customer_note: customerNote.text,
-      customer_note_i18n: customerNote.i18n
-    },
     travel_plan: {
       subtitle: travelPlanSubtitle.text,
       subtitle_i18n: travelPlanSubtitle.i18n,
@@ -503,39 +497,8 @@ export function createBookingCoreModule(ctx) {
     };
   }
 
-  function customerReferenceEntries(booking = state.booking) {
-    const entries = [];
-    const submissionNotes = normalizeText(booking?.web_form_submission?.notes);
-    if (submissionNotes) {
-      entries.push({
-        label: bookingT("booking.pdf.reference.submission_note", "Web form note"),
-        value: submissionNotes
-      });
-    }
-    const persons = ctx.getBookingPersons(booking);
-    const foodPreferences = unique(
-      persons.flatMap((person) => Array.isArray(person?.food_preferences) ? person.food_preferences : [])
-        .map((value) => normalizeText(value))
-        .filter(Boolean)
-    );
-    if (foodPreferences.length) {
-      entries.push({
-        label: bookingT("booking.pdf.reference.food_preferences", "Food preferences"),
-        value: foodPreferences.join(", ")
-      });
-    }
-    const allergies = unique(
-      persons.flatMap((person) => Array.isArray(person?.allergies) ? person.allergies : [])
-        .map((value) => normalizeText(value))
-        .filter(Boolean)
-    );
-    if (allergies.length) {
-      entries.push({
-        label: bookingT("booking.pdf.reference.allergies", "Allergies"),
-        value: allergies.join(", ")
-      });
-    }
-    return entries;
+  function customerReferenceNote(booking = state.booking) {
+    return normalizeText(booking?.web_form_submission?.notes);
   }
 
   function renderPdfPersonalizationFields() {
@@ -570,10 +533,9 @@ export function createBookingCoreModule(ctx) {
 
     const travelPlan = normalizePdfPersonalization(draft.pdf_personalization).travel_plan;
     const offer = normalizePdfPersonalization(draft.pdf_personalization).offer;
-    const shared = normalizePdfPersonalization(draft.pdf_personalization).shared;
     const renderField = (mount, scope, field, label, placeholder, rows = 2) => {
       if (!(mount instanceof HTMLElement)) return;
-      const branch = scope === "travel_plan" ? travelPlan : scope === "offer" ? offer : shared;
+      const branch = scope === "travel_plan" ? travelPlan : offer;
       mount.innerHTML = renderLocalizedStackedField({
         escapeHtml,
         idBase: `booking_pdf_${scope}_${field}`,
@@ -638,25 +600,14 @@ export function createBookingCoreModule(ctx) {
       computedClosingPlaceholder(),
       3
     );
-    renderField(
-      els.pdfSharedCustomerNoteMount,
-      "shared",
-      "customer_note",
-      bookingT("booking.pdf.customer_note", "Customer note for PDFs"),
-      bookingT("booking.pdf.customer_note_placeholder", "Optional note shown in customer-facing PDFs."),
-      4
-    );
 
     if (els.pdfCustomerReference) {
-      const entries = customerReferenceEntries();
-      els.pdfCustomerReference.innerHTML = entries.length
-        ? entries.map((entry) => `
-            <div class="booking-pdf-reference__item">
-              <div class="booking-pdf-reference__label">${escapeHtml(entry.label)}</div>
-              <div class="booking-pdf-reference__value">${escapeHtml(entry.value)}</div>
-            </div>
-          `).join("")
-        : `<p class="micro booking-pdf-reference__empty">${escapeHtml(bookingT("booking.pdf.reference.empty", "No customer input is available yet."))}</p>`;
+      const submissionNote = customerReferenceNote();
+      els.pdfCustomerReference.innerHTML = `
+        <div class="booking-pdf-reference__item">
+          <div class="booking-pdf-reference__value">${escapeHtml(submissionNote || bookingT("booking.web_form.no_note", "(no note)"))}</div>
+        </div>
+      `;
     }
   }
 
@@ -760,11 +711,6 @@ export function createBookingCoreModule(ctx) {
     draft.destinations = normalizeCodeArray(readCheckedValues(els.destinationsOptions, "booking-destination-option"));
     draft.travel_styles = normalizeTravelStyleArray(readCheckedValues(els.travelStylesOptions, "booking-travel-style-option"));
     draft.pdf_personalization = {
-      shared: {
-        ...draft.pdf_personalization?.shared,
-        customer_note: readLocalizedBookingPdfField("shared", "customer_note", draft.pdf_personalization?.shared?.customer_note_i18n).text,
-        customer_note_i18n: readLocalizedBookingPdfField("shared", "customer_note", draft.pdf_personalization?.shared?.customer_note_i18n).i18n
-      },
       travel_plan: {
         ...draft.pdf_personalization?.travel_plan,
         subtitle: readLocalizedBookingPdfField("travel_plan", "subtitle", draft.pdf_personalization?.travel_plan?.subtitle_i18n).text,

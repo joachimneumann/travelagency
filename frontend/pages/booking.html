@@ -291,39 +291,6 @@
             </div>
           </article>
 
-          <article id="booking_pdf_personalization_panel" class="booking-pdf-panel" style="margin-bottom: 1rem;">
-            <div class="booking-pdf-panel__head">
-              <h2 class="booking-pdf-panel__title" data-i18n-id="booking.pdf.title">PDF personalization</h2>
-              <p class="micro booking-pdf-panel__hint" data-i18n-id="booking.pdf.hint">Override the default customer-facing text when needed. Leave a field empty to use the derived default.</p>
-            </div>
-            <div class="booking-pdf-panel__grid">
-              <section class="booking-pdf-panel__column">
-                <h3 class="booking-pdf-panel__column-title" data-i18n-id="booking.travel_plan">Travel plan</h3>
-                <div id="booking_pdf_travel_plan_subtitle_mount"></div>
-                <div id="booking_pdf_travel_plan_welcome_mount"></div>
-                <div id="booking_pdf_travel_plan_closing_mount"></div>
-              </section>
-              <section class="booking-pdf-panel__column">
-                <h3 class="booking-pdf-panel__column-title" data-i18n-id="booking.offer">Offer</h3>
-                <div id="booking_pdf_offer_subtitle_mount"></div>
-                <div id="booking_pdf_offer_welcome_mount"></div>
-                <div id="booking_pdf_offer_closing_mount"></div>
-              </section>
-            </div>
-            <div class="booking-pdf-panel__customer-grid">
-              <section class="booking-pdf-panel__customer-note">
-                <div id="booking_pdf_customer_note_mount"></div>
-              </section>
-              <aside class="booking-pdf-reference">
-                <div class="booking-pdf-reference__head">
-                  <h3 class="booking-pdf-reference__title" data-i18n-id="booking.pdf.reference_title">Customer input</h3>
-                  <p class="micro booking-pdf-reference__hint" data-i18n-id="booking.pdf.reference_hint">Use this as context while writing your note to the customer.</p>
-                </div>
-                <div id="booking_pdf_customer_reference"></div>
-              </aside>
-            </div>
-          </article>
-
           <div
             class="modal booking-person-modal"
             id="booking_person_modal"
@@ -758,6 +725,41 @@
                 <span id="travel_plan_status" class="micro booking-inline-status"></span>
               </div>
               <div id="travel_plan_editor"></div>
+            </div>
+          </article>
+
+          <article id="travel_plan_pdf_panel" class="booking-section">
+            <div class="booking-section__head">
+              <button class="booking-section__summary booking-section__summary--inline-pad-16" id="travel_plan_pdf_panel_summary" type="button"></button>
+            </div>
+            <div class="booking-section__body travel-plan-pdf-section__body">
+              <div id="booking_pdf_personalization_panel" class="booking-pdf-panel">
+                <div class="booking-pdf-panel__head">
+                </div>
+                <div class="booking-pdf-panel__grid">
+                  <section class="booking-pdf-panel__column">
+                    <h3 class="booking-pdf-panel__column-title" data-i18n-id="booking.travel_plan">Travel plan</h3>
+                    <div id="booking_pdf_travel_plan_subtitle_mount"></div>
+                    <div id="booking_pdf_travel_plan_welcome_mount"></div>
+                    <div id="booking_pdf_travel_plan_closing_mount"></div>
+                  </section>
+                  <section class="booking-pdf-panel__column">
+                    <h3 class="booking-pdf-panel__column-title" data-i18n-id="booking.offer">Offer</h3>
+                    <div id="booking_pdf_offer_subtitle_mount"></div>
+                    <div id="booking_pdf_offer_welcome_mount"></div>
+                    <div id="booking_pdf_offer_closing_mount"></div>
+                  </section>
+                </div>
+                <div class="booking-pdf-panel__customer-grid">
+                  <aside class="booking-pdf-reference">
+                    <div class="booking-pdf-reference__head">
+                      <h3 class="booking-pdf-reference__title booking-pdf-reference__title--compact" data-i18n-id="booking.pdf.reference.web_form_title">Web form submission:</h3>
+                    </div>
+                    <div id="booking_pdf_customer_reference"></div>
+                  </aside>
+                </div>
+              </div>
+              <div id="travel_plan_pdf_workspace" class="travel-plan-pdf-section__workspace"></div>
             </div>
           </article>
 

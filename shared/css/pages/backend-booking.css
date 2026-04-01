@@ -584,6 +584,7 @@
   grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.9fr);
   gap: 1rem 1.2rem;
   align-items: start;
+  justify-content: stretch;
 }
 
 .booking-detail-page .booking-pdf-reference {
@@ -593,11 +594,20 @@
   border: 1px solid rgba(232, 226, 216, 0.92);
   border-radius: 20px;
   background: rgba(250, 247, 241, 0.9);
+  justify-self: stretch;
+  width: 100%;
+  text-align: left;
 }
 
 .booking-detail-page .booking-pdf-reference__head {
   display: grid;
   gap: 0.22rem;
+  justify-items: start;
+}
+
+.booking-detail-page .booking-pdf-reference__title--compact {
+  font-size: 0.95rem;
+  text-align: left;
 }
 
 .booking-detail-page .booking-pdf-reference__item {

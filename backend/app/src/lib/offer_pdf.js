@@ -633,21 +633,20 @@ function drawHero(doc, heroTitle, booking, generatedOffer, heroImage, startY, fo
 function drawIntro(doc, startY, fonts, lang) {
   const booking = doc.__booking_for_offer_pdf || null;
   const welcomeText = resolveOfferWelcomeText(booking, lang);
-  const customerNote = resolveSharedCustomerNote(booking, lang);
-  if (!welcomeText && !customerNote) {
-  doc
-    .font(pdfFontName("regular", fonts))
-    .fontSize(11.5)
-    .fillColor(PDF_COLORS.textMutedStrong)
-    .text(
-      pdfT(lang, "offer.intro_body", "Thank you for considering Asia Travel Plan for your journey. We are pleased to share this offer for your trip, and we hope it feels like a strong starting point for your travel planning. If you like it, simply reply to us and we will refine the next steps together."),
-      PAGE_MARGIN,
-      startY,
-      pdfTextOptions(lang, {
-        width: doc.page.width - PAGE_MARGIN * 2,
-        lineGap: 2
-      })
-    );
+  if (!welcomeText) {
+    doc
+      .font(pdfFontName("regular", fonts))
+      .fontSize(11.5)
+      .fillColor(PDF_COLORS.textMutedStrong)
+      .text(
+        pdfT(lang, "offer.intro_body", "Thank you for considering Asia Travel Plan for your journey. We are pleased to share this offer for your trip, and we hope it feels like a strong starting point for your travel planning. If you like it, simply reply to us and we will refine the next steps together."),
+        PAGE_MARGIN,
+        startY,
+        pdfTextOptions(lang, {
+          width: doc.page.width - PAGE_MARGIN * 2,
+          lineGap: 2
+        })
+      );
     return doc.y + 18;
   }
 
@@ -659,22 +658,6 @@ function drawIntro(doc, startY, fonts, lang) {
       .fillColor(PDF_COLORS.textMutedStrong)
       .text(
         welcomeText,
-        PAGE_MARGIN,
-        y,
-        pdfTextOptions(lang, {
-          width: doc.page.width - PAGE_MARGIN * 2,
-          lineGap: 2
-        })
-      );
-    y = doc.y + 12;
-  }
-  if (customerNote) {
-    doc
-      .font(pdfFontName("regular", fonts))
-      .fontSize(11.2)
-      .fillColor(PDF_COLORS.textMutedStrong)
-      .text(
-        customerNote,
         PAGE_MARGIN,
         y,
         pdfTextOptions(lang, {
@@ -1529,10 +1512,6 @@ function resolveOfferWelcomeText(booking, lang) {
     return `This offer is based on your current ${styles.join(", ")} itinerary. Please let us know if you would like to adjust anything.`;
   }
   return "This is your current offer. Please let us know if you would like to adjust anything.";
-}
-
-function resolveSharedCustomerNote(booking, lang) {
-  return textOrNull(resolveBookingPdfPersonalizationText(booking?.pdf_personalization, "shared", "customer_note", lang, { sourceLang: lang })) || "";
 }
 
 function buildAttachmentClosingNote(attachmentCount, lang) {

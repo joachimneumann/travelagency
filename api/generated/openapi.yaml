@@ -6806,16 +6806,6 @@ components:
         actor:
           type: string
           nullable: true
-    BookingPdfPersonalizationShared:
-      type: object
-      properties:
-        customer_note:
-          type: string
-          nullable: true
-        customer_note_i18n:
-          type: object
-          additionalProperties:
-            type: string
     BookingPdfPersonalizationScoped:
       type: object
       properties:
@@ -6843,9 +6833,6 @@ components:
     BookingPdfPersonalization:
       type: object
       properties:
-        shared:
-          "$ref": "#/components/schemas/BookingPdfPersonalizationShared"
-          nullable: true
         travel_plan:
           "$ref": "#/components/schemas/BookingPdfPersonalizationScoped"
           nullable: true

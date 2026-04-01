@@ -926,8 +926,8 @@ test("travel plan footer exposes clean-state-gated preview and create actions ba
   );
   assert.match(
     travelPlanSource,
-    /travel-plan-footer__new-day[\s\S]*data-travel-plan-add-day[\s\S]*travel-plan-footer__separator[\s\S]*travel-plan-footer__workspace[\s\S]*travel-plan-footer__preview[\s\S]*data-travel-plan-preview-pdf[\s\S]*travel-plan-footer__content[\s\S]*travel-plan-footer__existing-pdfs[\s\S]*data-travel-plan-create-pdf[\s\S]*travel-plan-footer__attachments/,
-    "The travel-plan footer should render the requested mockup layout: New day, separator, preview rail, existing travel-plan PDFs with Create PDF below, then appended PDFs"
+    /travel-plan-footer__new-day[\s\S]*data-travel-plan-add-day[\s\S]*els\.travel_plan_pdf_workspace[\s\S]*travel-plan-footer__workspace[\s\S]*travel-plan-footer__preview[\s\S]*data-travel-plan-preview-pdf[\s\S]*travel-plan-footer__content[\s\S]*travel-plan-footer__existing-pdfs[\s\S]*data-travel-plan-create-pdf[\s\S]*travel-plan-footer__attachments/,
+    "The travel-plan UI should keep day actions in the footer while rendering preview, existing PDFs, create action, and attachments inside the dedicated Travel plan PDF workspace"
   );
   assert.doesNotMatch(
     travelPlanSource,

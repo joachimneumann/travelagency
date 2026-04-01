@@ -378,7 +378,6 @@ const els = {
   pdfOfferSubtitleMount: document.getElementById("booking_pdf_offer_subtitle_mount"),
   pdfOfferWelcomeMount: document.getElementById("booking_pdf_offer_welcome_mount"),
   pdfOfferClosingMount: document.getElementById("booking_pdf_offer_closing_mount"),
-  pdfSharedCustomerNoteMount: document.getElementById("booking_pdf_customer_note_mount"),
   pdfCustomerReference: document.getElementById("booking_pdf_customer_reference"),
   contentLanguageField: document.getElementById("booking_content_language_field"),
   contentLanguageMenuMount: document.getElementById("booking_content_language_menu_mount"),
@@ -392,6 +391,9 @@ const els = {
   actionStatus: document.getElementById("booking_action_status"),
   travel_plan_panel: document.getElementById("travel_plan_panel"),
   travel_plan_panel_summary: document.getElementById("travel_plan_panel_summary"),
+  travel_plan_pdf_panel: document.getElementById("travel_plan_pdf_panel"),
+  travel_plan_pdf_panel_summary: document.getElementById("travel_plan_pdf_panel_summary"),
+  travel_plan_pdf_workspace: document.getElementById("travel_plan_pdf_workspace"),
   travel_plan_editor: document.getElementById("travel_plan_editor"),
   travel_plan_translate_all_btn: document.getElementById("travel_plan_translate_all_btn"),
   travel_plan_status: document.getElementById("travel_plan_status"),
@@ -1312,6 +1314,9 @@ function renderStaticSectionHeaders() {
   renderBookingSectionHeader(els.travel_plan_panel_summary, {
     primary: backendT("booking.travel_plan", "Travel plan"),
     secondary: backendT("booking.no_travel_plan", "No travel plan yet.")
+  });
+  renderBookingSectionHeader(els.travel_plan_pdf_panel_summary, {
+    primary: backendT("booking.travel_plan.travel_plan_pdf", "Travel plan PDF")
   });
   renderBookingSectionHeader(els.offerPanelSummary, { primary: backendT("booking.offer", "Offer") });
   renderBookingSectionHeader(els.offerPaymentTermsPanelSummary, { primary: backendT("booking.payment_terms", "Payment terms") });

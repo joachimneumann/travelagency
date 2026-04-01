@@ -42,19 +42,10 @@ function normalizePdfTextField(value, mapValue, { flatLang = "en", sourceLang = 
 
 export function normalizeBookingPdfPersonalization(value, { flatLang = "en", sourceLang = "en" } = {}) {
   const raw = value && typeof value === "object" && !Array.isArray(value) ? value : {};
-  const shared = raw.shared && typeof raw.shared === "object" && !Array.isArray(raw.shared) ? raw.shared : {};
   const travelPlan = raw.travel_plan && typeof raw.travel_plan === "object" && !Array.isArray(raw.travel_plan) ? raw.travel_plan : {};
   const offer = raw.offer && typeof raw.offer === "object" && !Array.isArray(raw.offer) ? raw.offer : {};
 
   return compactObject({
-    shared: compactObject({
-      ...(normalizePdfTextField(shared.customer_note, shared.customer_note_i18n, { flatLang, sourceLang })
-        ? {
-            customer_note: normalizePdfTextField(shared.customer_note, shared.customer_note_i18n, { flatLang, sourceLang }).text,
-            customer_note_i18n: normalizePdfTextField(shared.customer_note, shared.customer_note_i18n, { flatLang, sourceLang }).i18n
-          }
-        : {})
-    }),
     travel_plan: compactObject({
       ...(normalizePdfTextField(travelPlan.subtitle, travelPlan.subtitle_i18n, { flatLang, sourceLang })
         ? {

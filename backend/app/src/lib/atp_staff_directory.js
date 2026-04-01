@@ -5,7 +5,7 @@ import {
   normalizeLocalizedTextMap,
   resolveLocalizedText
 } from "../domain/booking_content_i18n.js";
-import { normalizeText } from "./text.js";
+import { normalizeDisplayLineBreaks, normalizeText } from "./text.js";
 
 function unique(items) {
   return Array.from(new Set((Array.isArray(items) ? items : []).filter(Boolean)));
@@ -92,11 +92,11 @@ export function resolveAtpStaffQualificationText(profile, lang = "en") {
 }
 
 export function resolveAtpStaffShortDescriptionText(profile, lang = "en") {
-  return resolveLocalizedText(
+  return normalizeDisplayLineBreaks(resolveLocalizedText(
     normalizeShortDescriptionMap(profile?.short_description_i18n ?? profile?.short_description),
     lang,
     normalizeText(profile?.short_description)
-  );
+  ));
 }
 
 function avatarPictureFilenameForUsername(username) {

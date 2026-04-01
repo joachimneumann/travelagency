@@ -55,11 +55,55 @@ function lineHeightForChoices(doc, choices, fontSize, lineGap) {
   return height + Number(lineGap || 0);
 }
 
+function tokenizeContent(content) {
+  const tokens = [];
+  let buffer = "";
+  let bufferType = "";
+
+  const flushBuffer = () => {
+    if (!buffer) return;
+    tokens.push({ type: bufferType, value: buffer });
+    buffer = "";
+  };
+
+  for (const char of Array.from(String(content || ""))) {
+    if (char === "\r") continue;
+    if (char === "\n") {
+      flushBuffer();
+      tokens.push({ type: "newline", value: "\n" });
+      bufferType = "";
+      continue;
+    }
+    const nextType = /\s/.test(char) ? "space" : "word";
+    if (bufferType && bufferType !== nextType) flushBuffer();
+    bufferType = nextType;
+    buffer += char;
+  }
+
+  flushBuffer();
+  return tokens;
+}
+
+function measureTokenWidth(doc, token, currentChoice, choices, fontSize) {
+  let width = 0;
+  let choice = currentChoice || choices[0] || null;
+
+  for (const char of Array.from(String(token || ""))) {
+    choice = resolveChoiceForChar(char, choices, choice);
+    if (!choice) continue;
+    doc.font(choice.name).fontSize(fontSize);
+    width += doc.widthOfString(char);
+  }
+
+  return { width, choice };
+}
+
 function layoutText(doc, text, { width = 0, fontSize = 12, lineGap = 0, fontChoices = [] } = {}) {
   const choices = normalizeChoices(fontChoices);
   if (!choices.length) return { segments: [], height: 0 };
   const maxWidth = Number(width || 0);
   const content = String(text || "");
+  const tokens = tokenizeContent(content);
   const lineHeight = lineHeightForChoices(doc, choices, fontSize, lineGap);
   const segments = [];
 
@@ -67,6 +111,7 @@ function layoutText(doc, text, { width = 0, fontSize = 12, lineGap = 0, fontChoi
   let cursorX = 0;
   let cursorY = 0;
   let currentChoice = choices[0];
+  let sawContent = false;
 
   const nextLine = () => {
     lineIndex += 1;
@@ -74,15 +119,9 @@ function layoutText(doc, text, { width = 0, fontSize = 12, lineGap = 0, fontChoi
     cursorY += lineHeight;
   };
 
-  for (const char of Array.from(content)) {
-    if (char === "\r") continue;
-    if (char === "\n") {
-      nextLine();
-      continue;
-    }
-
+  const appendChar = (char) => {
     const choice = resolveChoiceForChar(char, choices, currentChoice);
-    if (!choice) continue;
+    if (!choice) return;
     currentChoice = choice;
     doc.font(choice.name).fontSize(fontSize);
     const charWidth = doc.widthOfString(char);
@@ -91,7 +130,7 @@ function layoutText(doc, text, { width = 0, fontSize = 12, lineGap = 0, fontChoi
       nextLine();
     }
     if (maxWidth > 0 && cursorX === 0 && /\s/.test(char)) {
-      continue;
+      return;
     }
 
     const last = segments[segments.length - 1];
@@ -115,11 +154,41 @@ function layoutText(doc, text, { width = 0, fontSize = 12, lineGap = 0, fontChoi
       });
     }
     cursorX += charWidth;
+    sawContent = true;
+  };
+
+  for (const token of tokens) {
+    if (token.type === "newline") {
+      sawContent = true;
+      nextLine();
+      continue;
+    }
+
+    if (token.type === "space") {
+      if (cursorX === 0) continue;
+      const { width: tokenWidth } = measureTokenWidth(doc, token.value, currentChoice, choices, fontSize);
+      if (maxWidth > 0 && cursorX + tokenWidth > maxWidth) {
+        nextLine();
+        continue;
+      }
+      for (const char of Array.from(token.value)) appendChar(char);
+      continue;
+    }
+
+    const { width: tokenWidth } = measureTokenWidth(doc, token.value, currentChoice, choices, fontSize);
+    if (maxWidth > 0 && cursorX > 0 && cursorX + tokenWidth > maxWidth) {
+      nextLine();
+    }
+    if (maxWidth > 0 && tokenWidth > maxWidth) {
+      for (const char of Array.from(token.value)) appendChar(char);
+      continue;
+    }
+    for (const char of Array.from(token.value)) appendChar(char);
   }
 
   return {
     segments,
-    height: segments.length ? (cursorY + lineHeight) : lineHeight
+    height: sawContent ? (cursorY + lineHeight) : lineHeight
   };
 }
 

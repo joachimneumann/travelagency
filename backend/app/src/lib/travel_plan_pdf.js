@@ -194,10 +194,6 @@ function resolveTravelPlanWelcomeText(booking, lang) {
   return "This is your current travel plan. Please let us know if you would like to modify anything.";
 }
 
-function resolveSharedCustomerNote(booking, lang) {
-  return textOrNull(resolveBookingPdfPersonalizationText(booking?.pdf_personalization, "shared", "customer_note", lang, { sourceLang: lang })) || "";
-}
-
 function resolveTravelPlanClosingText(booking, lang) {
   return (
     textOrNull(resolveBookingPdfPersonalizationText(booking?.pdf_personalization, "travel_plan", "closing", lang, { sourceLang: lang }))
@@ -683,7 +679,6 @@ export function createTravelPlanPdfWriter({
     const attachmentPaths = resolveTravelPlanAttachmentPaths(plan, travelPlanAttachmentsDir);
     const heroSubtitle = resolveTravelPlanSubtitle(booking, plan, lang);
     const welcomeText = resolveTravelPlanWelcomeText(booking, lang);
-    const sharedCustomerNote = resolveSharedCustomerNote(booking, lang);
     const closingText = resolveTravelPlanClosingText(booking, lang);
 
     const guideContext = await resolveAtpGuidePdfContext({
@@ -803,10 +798,6 @@ export function createTravelPlanPdfWriter({
       if (welcomeText) {
         y = ensureSpace(y + 6, 72);
         y = drawTextParagraph(doc, y + 6, welcomeText, fonts, lang, { fontSize: 11.2 }) + 12;
-      }
-      if (sharedCustomerNote) {
-        y = ensureSpace(y, 72);
-        y = drawTextParagraph(doc, y, sharedCustomerNote, fonts, lang, { fontSize: 11.2 }) + 12;
       }
 
       y = drawTravelPlanSectionTitle(doc, y, fonts, lang);

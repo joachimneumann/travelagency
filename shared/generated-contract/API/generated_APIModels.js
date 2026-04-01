@@ -296,22 +296,6 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         return validateShape(value, BOOKING_CUSTOMER_LANGUAGE_UPDATE_REQUEST_SCHEMA);
       }
 
-      export const BOOKING_PDF_PERSONALIZATION_SHARED_SCHEMA = {
-        name: "BookingPdfPersonalizationShared",
-        domain: "api",
-        module: "api",
-        sourceType: "openapi.components.schemas.BookingPdfPersonalizationShared",
-        requireOneOf: [],
-        fields: [
-    schemaField({"name":"customer_note","required":false,"wireName":"customer_note"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"customer_note_i18n","required":false,"wireName":"customer_note_i18n"}, {"kind":"transport","typeName":"Record<string,string>","isArray":false})
-        ]
-      };
-
-      export function validateBookingPdfPersonalizationShared(value) {
-        return validateShape(value, BOOKING_PDF_PERSONALIZATION_SHARED_SCHEMA);
-      }
-
       export const BOOKING_PDF_PERSONALIZATION_SCOPED_SCHEMA = {
         name: "BookingPdfPersonalizationScoped",
         domain: "api",
@@ -339,7 +323,6 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         sourceType: "openapi.components.schemas.BookingPdfPersonalization",
         requireOneOf: [],
         fields: [
-    schemaField({"name":"shared","required":false,"wireName":"shared"}, {"kind":"transport","typeName":"BookingPdfPersonalizationShared","isArray":false}),
     schemaField({"name":"travel_plan","required":false,"wireName":"travel_plan"}, {"kind":"transport","typeName":"BookingPdfPersonalizationScoped","isArray":false}),
     schemaField({"name":"offer","required":false,"wireName":"offer"}, {"kind":"transport","typeName":"BookingPdfPersonalizationScoped","isArray":false})
         ]

@@ -1711,10 +1711,61 @@ export function createBookingTravelPlanModule(ctx) {
       return;
     }
     previewWindow.document.title = bookingT("booking.travel_plan.preview_pdf", "Preview PDF");
-    previewWindow.document.body.innerHTML = `
-      <div style="font-family: sans-serif; padding: 2rem; color: #234; text-align: center;">
-        ${escapeHtml(bookingT("booking.travel_plan.generating_pdf_overlay", "Generating travel plan PDF. Please wait."))}
-      </div>
+    previewWindow.document.documentElement.innerHTML = `
+      <head>
+        <title>${escapeHtml(bookingT("booking.travel_plan.preview_pdf", "Preview PDF"))}</title>
+        <style>
+          :root {
+            color-scheme: light;
+          }
+          body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            background: rgba(245, 241, 232, 0.78);
+            backdrop-filter: blur(3px);
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+          }
+          .booking-page-overlay__panel {
+            min-width: min(28rem, calc(100vw - 3rem));
+            max-width: 32rem;
+            display: grid;
+            justify-items: center;
+            gap: 0.9rem;
+            padding: 1.45rem 1.6rem;
+            border: 1px solid rgba(202, 191, 173, 0.9);
+            border-radius: 24px;
+            background: rgba(255, 255, 255, 0.96);
+            box-shadow: 0 24px 48px rgba(24, 35, 52, 0.16);
+            text-align: center;
+          }
+          .booking-page-overlay__spinner {
+            width: 2.2rem;
+            height: 2.2rem;
+            border: 3px solid rgba(202, 191, 173, 0.9);
+            border-top-color: rgba(84, 93, 105, 1);
+            border-radius: 999px;
+            animation: booking-inline-status-spin 0.8s linear infinite;
+          }
+          .booking-page-overlay__text {
+            color: rgba(35, 52, 73, 1);
+            font-size: 1rem;
+            font-weight: 600;
+          }
+          @keyframes booking-inline-status-spin {
+            to { transform: rotate(360deg); }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="booking-page-overlay__panel" role="status" aria-live="polite">
+          <span class="booking-page-overlay__spinner" aria-hidden="true"></span>
+          <span class="booking-page-overlay__text">${escapeHtml(bookingT("booking.travel_plan.generating_pdf_overlay", "Generating travel plan PDF. Please wait."))}</span>
+        </div>
+      </body>
     `;
     const request = bookingTravelPlanPdfRequest({
       baseURL: apiOrigin,
@@ -2018,14 +2069,6 @@ export function createBookingTravelPlanModule(ctx) {
       });
       els.travel_plan_editor.addEventListener("change", (event) => {
         const target = event.target;
-        if (target?.matches?.("[data-travel-plan-pdf-sent]")) {
-          const artifactId = String(target.getAttribute("data-travel-plan-pdf-sent") || "").trim();
-          const sentToCustomer = target.checked === true;
-          void travelPlanPdfsModule.setTravelPlanPdfSentToCustomer(artifactId, sentToCustomer).then((ok) => {
-            if (!ok) renderTravelPlanPanel();
-          });
-          return;
-        }
         if (target?.matches?.("[data-travel-plan-date-picker-for]")) {
           applyTravelPlanDatePickerValue(target);
         }
@@ -2069,26 +2112,6 @@ export function createBookingTravelPlanModule(ctx) {
         }
         if (button.hasAttribute("data-travel-plan-toggle-item")) {
           toggleTravelPlanServiceCollapsed(button.getAttribute("data-travel-plan-toggle-item"));
-          return;
-        }
-        if (button.hasAttribute("data-travel-plan-create-pdf")) {
-          openTravelPlanPdf();
-          return;
-        }
-        if (button.hasAttribute("data-travel-plan-preview-pdf")) {
-          previewTravelPlanPdf();
-          return;
-        }
-        if (button.hasAttribute("data-travel-plan-upload-attachments")) {
-          travelPlanAttachmentsModule.triggerTravelPlanAttachmentPicker();
-          return;
-        }
-        if (button.hasAttribute("data-travel-plan-delete-attachment")) {
-          void travelPlanAttachmentsModule.deleteTravelPlanAttachment(button.getAttribute("data-travel-plan-delete-attachment"));
-          return;
-        }
-        if (button.hasAttribute("data-travel-plan-delete-pdf")) {
-          void travelPlanPdfsModule.deleteTravelPlanPdf(button.getAttribute("data-travel-plan-delete-pdf"));
           return;
         }
         if (button.hasAttribute("data-travel-plan-remove-day")) {
@@ -2173,6 +2196,42 @@ export function createBookingTravelPlanModule(ctx) {
       });
       els.travel_plan_editor.dataset.travelPlanBound = "true";
     }
+    if (els.travel_plan_pdf_workspace && els.travel_plan_pdf_workspace.dataset.travelPlanBound !== "true") {
+      els.travel_plan_pdf_workspace.addEventListener("click", (event) => {
+        const button = event.target instanceof Element ? event.target.closest("button") : null;
+        if (!(button instanceof HTMLButtonElement)) return;
+        if (button.hasAttribute("data-travel-plan-create-pdf")) {
+          openTravelPlanPdf();
+          return;
+        }
+        if (button.hasAttribute("data-travel-plan-preview-pdf")) {
+          previewTravelPlanPdf();
+          return;
+        }
+        if (button.hasAttribute("data-travel-plan-upload-attachments")) {
+          travelPlanAttachmentsModule.triggerTravelPlanAttachmentPicker();
+          return;
+        }
+        if (button.hasAttribute("data-travel-plan-delete-attachment")) {
+          void travelPlanAttachmentsModule.deleteTravelPlanAttachment(button.getAttribute("data-travel-plan-delete-attachment"));
+          return;
+        }
+        if (button.hasAttribute("data-travel-plan-delete-pdf")) {
+          void travelPlanPdfsModule.deleteTravelPlanPdf(button.getAttribute("data-travel-plan-delete-pdf"));
+        }
+      });
+      els.travel_plan_pdf_workspace.addEventListener("change", (event) => {
+        const target = event.target;
+        if (target?.matches?.("[data-travel-plan-pdf-sent]")) {
+          const artifactId = String(target.getAttribute("data-travel-plan-pdf-sent") || "").trim();
+          const sentToCustomer = target.checked === true;
+          void travelPlanPdfsModule.setTravelPlanPdfSentToCustomer(artifactId, sentToCustomer).then((ok) => {
+            if (!ok) renderTravelPlanPanel();
+          });
+        }
+      });
+      els.travel_plan_pdf_workspace.dataset.travelPlanBound = "true";
+    }
     if (els.travel_plan_translate_all_btn instanceof HTMLButtonElement && els.travel_plan_translate_all_btn.dataset.travelPlanBound !== "true") {
       els.travel_plan_translate_all_btn.addEventListener("click", () => {
         void translateEntireTravelPlan();
@@ -2202,10 +2261,13 @@ export function createBookingTravelPlanModule(ctx) {
           <button class="btn travel-plan-day-add-btn travel-plan-day-add-btn--service travel-plan-day-add-btn--day-copy" data-travel-plan-open-day-import data-requires-clean-state type="button">${escapeHtml(bookingT("booking.travel_plan.insert_existing_day", "Copy existing day"))}</button>
           <button class="btn travel-plan-day-add-btn travel-plan-day-add-btn--service travel-plan-day-add-btn--day-copy" data-travel-plan-open-plan-import data-requires-clean-state type="button">${escapeHtml(bookingT("booking.travel_plan.append_existing_plan", "Append existing travel plan"))}</button>
         </div>
-        <div class="travel-plan-footer__separator" aria-hidden="true"></div>
+      </div>
+    `;
+    if (els.travel_plan_pdf_workspace) {
+      els.travel_plan_pdf_workspace.innerHTML = `
         <div class="travel-plan-footer__workspace">
           <div class="travel-plan-footer__preview">
-            <button class="btn btn-ghost booking-offer-add-btn travel-plan-pdf-btn travel-plan-pdf-btn--preview" data-travel-plan-preview-pdf data-requires-clean-state data-clean-state-hint-id="travel_plan_pdf_dirty_hint" type="button">${escapeHtml(bookingT("booking.travel_plan.preview_pdf", "Preview PDF"))}</button>
+            <button class="btn btn-ghost booking-offer-add-btn travel-plan-pdf-btn travel-plan-pdf-btn--preview" data-travel-plan-preview-pdf data-requires-clean-state data-clean-state-hint-id="travel_plan_pdf_dirty_hint" type="button">${escapeHtml(bookingT("booking.travel_plan.preview_pdf", "Preview"))}</button>
             <span id="travel_plan_pdf_dirty_hint" class="micro booking-inline-status travel-plan-pdf-actions__hint"></span>
           </div>
           <div class="travel-plan-footer__content">
@@ -2220,8 +2282,8 @@ export function createBookingTravelPlanModule(ctx) {
             </div>
           </div>
         </div>
-      </div>
-    `;
+      `;
+    }
     syncTravelPlanCollapsibleUi(false);
     updateTravelPlanDirtyState();
     syncTravelPlanTranslateButton();

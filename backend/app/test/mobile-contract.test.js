@@ -3144,7 +3144,7 @@ test("booking travel plan pdf includes the assigned ATP guide section with the g
   assert.doesNotMatch(decodedText, /Languages:DE·EN·VI|Languages:DEENVI/);
 });
 
-test("booking travel plan pdf renders personalized copy, shared customer note, and accommodation line", async () => {
+test("booking travel plan pdf renders personalized copy and accommodation line", async () => {
   const createdBooking = await createSeedBooking();
   const bookingId = createdBooking.id;
 
@@ -3154,12 +3154,6 @@ test("booking travel plan pdf renders personalized copy, shared customer note, a
 
   bookingRecord.destinations = ["VN", "KH"];
   bookingRecord.pdf_personalization = {
-    shared: {
-      customer_note: "Please also let us know about any room preferences.",
-      customer_note_i18n: {
-        en: "Please also let us know about any room preferences."
-      }
-    },
     travel_plan: {
       subtitle: "12 days in Vietnam and Cambodia",
       subtitle_i18n: {
@@ -3209,7 +3203,6 @@ test("booking travel plan pdf renders personalized copy, shared customer note, a
   const decodedText = normalizeExtractedPdfText(decodePdfHexText(pdfResult.body));
   assert.match(decodedText, /12daysinVietnamandCambodia/);
   assert.match(decodedText, /Thisisyourcurrenttravelplan\./);
-  assert.match(decodedText, /Pleasealsoletusknowaboutanyroompreferences\./);
   assert.match(decodedText, /Youwillstayat:LanternBoutiqueHotel/);
   assert.match(decodedText, /Wewouldbehappytorefineanythingtogether\./);
 });
@@ -4999,26 +4992,23 @@ test("booking source update persists trip context and pdf personalization", asyn
         destinations: ["VN", "KH"],
         travel_styles: ["adventure", "culture"],
         pdf_personalization: {
-          shared: {
-            customer_note: "Please also let us know about any room preferences.",
-            customer_note_i18n: {
-              en: "Please also let us know about any room preferences."
-            }
-          },
           travel_plan: {
             subtitle: "12 days in Vietnam and Cambodia",
             subtitle_i18n: {
-              en: "12 days in Vietnam and Cambodia"
+              en: "12 days in Vietnam and Cambodia",
+              de: "12 Tage in Vietnam und Kambodscha"
             },
             welcome: "This is your current travel plan.",
             welcome_i18n: {
-              en: "This is your current travel plan."
+              en: "This is your current travel plan.",
+              de: "Dies ist Ihr aktueller Reiseplan."
             }
           },
           offer: {
             closing: "We would be happy to refine anything together.",
             closing_i18n: {
-              en: "We would be happy to refine anything together."
+              en: "We would be happy to refine anything together.",
+              de: "Wir verfeinern alles gern gemeinsam mit Ihnen."
             }
           }
         },
@@ -5030,16 +5020,16 @@ test("booking source update persists trip context and pdf personalization", asyn
   assert.deepEqual(sourceUpdateResult.body.booking.destinations, ["VN", "KH"]);
   assert.deepEqual(sourceUpdateResult.body.booking.travel_styles, ["grand-expeditions", "culture"]);
   assert.equal(
-    sourceUpdateResult.body.booking.pdf_personalization.shared.customer_note,
-    "Please also let us know about any room preferences."
-  );
-  assert.equal(
     sourceUpdateResult.body.booking.pdf_personalization.travel_plan.subtitle,
     "12 days in Vietnam and Cambodia"
   );
   assert.equal(
     sourceUpdateResult.body.booking.pdf_personalization.offer.closing,
     "We would be happy to refine anything together."
+  );
+  assert.equal(
+    sourceUpdateResult.body.booking.pdf_personalization.travel_plan.subtitle_i18n.de,
+    "12 Tage in Vietnam und Kambodscha"
   );
 
   const detailAfter = await requestJson(
@@ -5052,6 +5042,14 @@ test("booking source update persists trip context and pdf personalization", asyn
   assert.equal(
     detailAfter.body.booking.pdf_personalization.travel_plan.welcome,
     "This is your current travel plan."
+  );
+  assert.equal(
+    detailAfter.body.booking.pdf_personalization.travel_plan.welcome_i18n.de,
+    "Dies ist Ihr aktueller Reiseplan."
+  );
+  assert.equal(
+    detailAfter.body.booking.pdf_personalization.offer.closing_i18n.de,
+    "Wir verfeinern alles gern gemeinsam mit Ihnen."
   );
 });
 

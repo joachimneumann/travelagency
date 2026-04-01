@@ -94,11 +94,6 @@ import (
 
 #BookingInvoice: #Invoice
 
-#BookingPdfPersonalizationShared: {
-	customer_note?:      string
-	customer_note_i18n?: [string]: string
-}
-
 #BookingPdfPersonalizationScoped: {
 	subtitle?:      string
 	subtitle_i18n?: [string]: string
@@ -109,7 +104,6 @@ import (
 }
 
 #BookingPdfPersonalization: {
-	shared?:      #BookingPdfPersonalizationShared
 	travel_plan?: #BookingPdfPersonalizationScoped
 	offer?:       #BookingPdfPersonalizationScoped
 }
