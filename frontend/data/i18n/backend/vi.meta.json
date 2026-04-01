@@ -864,6 +864,16 @@
     "origin": "machine",
     "updated_at": "2026-03-30T23:51:31.875Z"
   },
+  "booking.destinations": {
+    "source_hash": "72eb63f032e47e349e8901353e08ba91cfb9d1f78d08d070c60bae0e9b4e038d",
+    "origin": "machine",
+    "updated_at": "2026-04-01T12:00:00.000Z"
+  },
+  "booking.destinations_placeholder": {
+    "source_hash": "f51d11e8035bcc510a1c991ec482c2774350d487ee419938a26f256598c09ece",
+    "origin": "machine",
+    "updated_at": "2026-04-01T12:00:00.000Z"
+  },
   "booking.dirty.core": {
     "source_hash": "afeea261f83208d775eb87aa0ef484e1688465e7540950344e3ba561a8d1c9d7",
     "origin": "machine",
@@ -2228,6 +2238,96 @@
     "source_hash": "1d393b0081b632c54654eb08c345ff76b92ae4efe0768b4c0f64b9ebbe920492",
     "origin": "machine",
     "updated_at": "2026-03-30T23:51:31.875Z"
+  },
+  "booking.pdf.default_closing": {
+    "source_hash": "c7d8003829e5d3a08451d0d2096a3154c5c956eab520b734baf3cba20a0936ed",
+    "origin": "machine",
+    "updated_at": "2026-04-01T12:00:00.000Z"
+  },
+  "booking.pdf.default_subtitle_days": {
+    "source_hash": "e9f0a85930cc6fa61b7ac01763893020adc4c712d1b8e8897bdd13971637d529",
+    "origin": "machine",
+    "updated_at": "2026-04-01T12:00:00.000Z"
+  },
+  "booking.pdf.default_subtitle_days_countries": {
+    "source_hash": "2b32b13bc4519ae297c3d36f3fe7c23824d262345f288509573d58dda97e9985",
+    "origin": "machine",
+    "updated_at": "2026-04-01T12:00:00.000Z"
+  },
+  "booking.pdf.offer.closing": {
+    "source_hash": "b552ce6f1d9231adae9890163aa499e89bed99bd91cfc7fed7a592ce998d6e80",
+    "origin": "machine",
+    "updated_at": "2026-04-01T12:00:00.000Z"
+  },
+  "booking.pdf.offer.default_welcome": {
+    "source_hash": "953e1b7ae90c504f04901e679593e30031c6a4350eeecf472601b419e4931975",
+    "origin": "machine",
+    "updated_at": "2026-04-01T12:00:00.000Z"
+  },
+  "booking.pdf.offer.default_welcome_styles": {
+    "source_hash": "bc6d90e910c4482de2f43f165a3bf4baa5209da70d6b69b735699f276cea7592",
+    "origin": "machine",
+    "updated_at": "2026-04-01T12:00:00.000Z"
+  },
+  "booking.pdf.offer.subtitle": {
+    "source_hash": "47176e8066baad21b96d7be3a28d651cd56c437889e5d8e85be45b4b6bdc4794",
+    "origin": "machine",
+    "updated_at": "2026-04-01T12:00:00.000Z"
+  },
+  "booking.pdf.offer.welcome": {
+    "source_hash": "1a3918609ad2945923a2db085c73b34ca442efe29dddb7285124caf4abe774e2",
+    "origin": "machine",
+    "updated_at": "2026-04-01T12:00:00.000Z"
+  },
+  "booking.pdf.reference.allergies": {
+    "source_hash": "c21b6d2a61441b9ae0aa5bf7b839f80441e4afbc47b962db7ee4d0e0ae894401",
+    "origin": "machine",
+    "updated_at": "2026-04-01T12:00:00.000Z"
+  },
+  "booking.pdf.reference.empty": {
+    "source_hash": "811e1d592b358d0e3d3e6297aaf543acd7a934c1ad5d487b1b6f48ab5266a80b",
+    "origin": "machine",
+    "updated_at": "2026-04-01T12:00:00.000Z"
+  },
+  "booking.pdf.reference.food_preferences": {
+    "source_hash": "48469aa7fd8942852f9b93fad2dea50779d27cddd5b956d8fc8ed8afa6d47b92",
+    "origin": "machine",
+    "updated_at": "2026-04-01T12:00:00.000Z"
+  },
+  "booking.pdf.reference.submission_note": {
+    "source_hash": "9918f8ead21312ebe0a11f2e17cb84083eaee76510ea23d8613b2e899e3bfa3f",
+    "origin": "machine",
+    "updated_at": "2026-04-01T12:00:00.000Z"
+  },
+  "booking.pdf.reference.web_form_title": {
+    "source_hash": "5815594aa63d10331f7d3acedfcf0df4f9f24b070bb9c82d41d259424f8c9b53",
+    "origin": "machine",
+    "updated_at": "2026-04-01T12:00:00.000Z"
+  },
+  "booking.pdf.travel_plan.closing": {
+    "source_hash": "4fb2e6af4302d57ca0ea352ea6e88288a7dff33009977f48c2f555a4ebcca9f3",
+    "origin": "machine",
+    "updated_at": "2026-04-01T12:00:00.000Z"
+  },
+  "booking.pdf.travel_plan.default_welcome": {
+    "source_hash": "c549fcc63e4e9439192adfeae920cfceaba587d807a859fafe6f74284ea1dcf2",
+    "origin": "machine",
+    "updated_at": "2026-04-01T12:00:00.000Z"
+  },
+  "booking.pdf.travel_plan.default_welcome_styles": {
+    "source_hash": "35fb1f62e112a0e0c1a1b69395f2d6609b171bcde12684e11bf932726e34482a",
+    "origin": "machine",
+    "updated_at": "2026-04-01T12:00:00.000Z"
+  },
+  "booking.pdf.travel_plan.subtitle": {
+    "source_hash": "6629a3626970dca557f936f7c82bf39e127e68f26663dddd46a134c1b1a36284",
+    "origin": "machine",
+    "updated_at": "2026-04-01T12:00:00.000Z"
+  },
+  "booking.pdf.travel_plan.welcome": {
+    "source_hash": "9eb17baf6aeb6bb5807e434db733562d65c6c2be0aff0e30e08fcdf7770d9297",
+    "origin": "machine",
+    "updated_at": "2026-04-01T12:00:00.000Z"
   },
   "booking.person_details": {
     "source_hash": "a6ab707707a8ebcc165bc39b77e51e320a32abdf256ff5398442ba02769c5232",
@@ -4024,6 +4124,16 @@
     "origin": "machine",
     "updated_at": "2026-03-30T23:51:31.875Z"
   },
+  "booking.travel_style": {
+    "source_hash": "94f3584dc9df9ffa594a7971c08f3d6364a1976a74adf30d18e225f8498e8055",
+    "origin": "machine",
+    "updated_at": "2026-04-01T12:00:00.000Z"
+  },
+  "booking.travel_styles_placeholder": {
+    "source_hash": "f0279bf98b4f0566b9e8c54fe960e5fcdf5f44e9b301072f646c5a9838868caf",
+    "origin": "machine",
+    "updated_at": "2026-04-01T12:00:00.000Z"
+  },
   "booking.traveler_details.copy_link": {
     "source_hash": "3b42163d9e3346c222ae8e8e339c82eb8713c902975a9d07efc3244fc02589b4",
     "origin": "machine",
@@ -4188,6 +4298,11 @@
     "source_hash": "dcd1d5223f73b3a965c07e3ff5dbee3eedcfedb806686a05b9b3868a2c3d6d50",
     "origin": "machine",
     "updated_at": "2026-03-30T23:51:31.875Z"
+  },
+  "booking.web_form.no_note": {
+    "source_hash": "79f5519504692582a936b1ca1f06d39afe5bb5d8640ed562bc32a96fcfa15522",
+    "origin": "machine",
+    "updated_at": "2026-04-01T12:00:00.000Z"
   },
   "booking.web_form.notes": {
     "source_hash": "8a7525b1492fb84833f5c4a69b30f4bfbb134f9b666b61a2c1872d63d234c085",
@@ -4363,6 +4478,11 @@
     "source_hash": "09e2a970b007022f8d420ef4928dcc61dc68106753e2721f2e18c0a6b15d538e",
     "origin": "machine",
     "updated_at": "2026-03-30T23:51:31.875Z"
+  },
+  "travel_plan.accommodation_line": {
+    "source_hash": "28fca9523b614fe17532d227deb0d44f2a01bbe0c0806d075a7cda86b079f483",
+    "origin": "machine",
+    "updated_at": "2026-04-01T12:00:00.000Z"
   },
   "common.add": {
     "source_hash": "9fd728c66c9a256b121472dabf32a34317aed01d8427d70ec830289cf23a7cc8",

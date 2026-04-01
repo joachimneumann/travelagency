@@ -1658,12 +1658,12 @@ export function createOfferPdfWriter({
       y = drawHero(doc, heroTitle, booking, generatedOffer, heroImage, y, fonts, lang);
       y = drawIntro(doc, y, fonts, lang);
       y = drawTravelers(doc, booking, y, fonts, lang);
-      y = ensureSpace(doc, y, estimateGuideSectionHeight(doc, guideContext, fonts, lang) + 10);
-      y = drawGuideSection(doc, y, fonts, lang, guideContext, guidePhoto);
       if (safeArray(generatedOffer?.travel_plan?.days || booking?.travel_plan?.days).length) {
         y = startSectionOnNewPage(doc);
         y = drawTravelPlanOverview(doc, generatedOffer, booking, y, fonts, lang, itemThumbnailMap);
       }
+      y = ensureSpace(doc, y, estimateGuideSectionHeight(doc, guideContext, fonts, lang) + 10);
+      y = drawGuideSection(doc, y, fonts, lang, guideContext, guidePhoto);
       y = startSectionOnNewPage(doc);
       y = drawOfferTable(doc, generatedOffer, y, renderMoney, fonts, lang);
       if (safeArray(generatedOffer?.payment_terms?.lines || generatedOffer?.offer?.payment_terms?.lines).length) {

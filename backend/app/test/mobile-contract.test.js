@@ -3099,6 +3099,26 @@ test("booking travel plan pdf includes the assigned ATP guide section with the g
   );
   assert.equal(detailBefore.status, 200);
 
+  const store = JSON.parse(await readFile(STORE_PATH, "utf8"));
+  const bookingRecord = store.bookings.find((item) => item.id === bookingId);
+  assert.ok(bookingRecord);
+  bookingRecord.travel_plan = {
+    days: [{
+      id: "travel_plan_day_guide_order_1",
+      day_number: 1,
+      date: "2026-03-20",
+      title: "GuideOrderDayMarker",
+      services: [{
+        id: "travel_plan_service_guide_order_1",
+        kind: "activity",
+        title: "GuideOrderServiceMarker",
+        images: []
+      }]
+    }],
+    offer_component_links: []
+  };
+  await writeFile(STORE_PATH, `${JSON.stringify(store, null, 2)}\n`, "utf8");
+
   const guideProfileUpdateResult = await requestJson(
     guideProfileUpdatePath,
     apiHeaders("atp_admin", "admin", "kc-admin"),
@@ -3139,6 +3159,10 @@ test("booking travel plan pdf includes the assigned ATP guide section with the g
   assert.match(
     decodedText,
     /Specializesinsoft-pacedSoutheastAsiaitineraries/
+  );
+  assert.ok(
+    decodedText.indexOf("GuideOrderDayMarker") < decodedText.indexOf("OurteammemberJoachimCarlNeumannwillassistyou"),
+    "Expected guide section after the travel plan section in the travel plan PDF"
   );
   assert.doesNotMatch(decodedText, /JoachimfromAsiaTravelPlanwillkeepthisroutecomfortableandwellpacedforyou/);
   assert.doesNotMatch(decodedText, /Languages:DE·EN·VI|Languages:DEENVI/);
@@ -3374,6 +3398,26 @@ test("booking generated offer pdf wiring includes the assigned ATP guide section
   );
   assert.equal(detailBefore.status, 200);
 
+  const store = JSON.parse(await readFile(STORE_PATH, "utf8"));
+  const bookingRecord = store.bookings.find((item) => item.id === bookingId);
+  assert.ok(bookingRecord);
+  bookingRecord.travel_plan = {
+    days: [{
+      id: "travel_plan_day_offer_guide_order_1",
+      day_number: 1,
+      date: "2026-03-21",
+      title: "OfferGuideOrderDayMarker",
+      services: [{
+        id: "travel_plan_service_offer_guide_order_1",
+        kind: "activity",
+        title: "OfferGuideOrderServiceMarker",
+        images: []
+      }]
+    }],
+    offer_component_links: []
+  };
+  await writeFile(STORE_PATH, `${JSON.stringify(store, null, 2)}\n`, "utf8");
+
   const assignResult = await requestJson(
     endpointPath("booking_owner").replace("{booking_id}", bookingId),
     apiHeaders("atp_admin", "admin", "kc-admin"),
@@ -3445,7 +3489,16 @@ test("booking generated offer pdf wiring includes the assigned ATP guide section
   assert.match(String(pdfResult.headers["content-disposition"] || ""), /ATP offer \d{4}-\d{2}-\d{2}\.pdf/);
   const source = await readFile(path.join(__dirname, "..", "src", "lib", "offer_pdf.js"), "utf8");
   assert.match(source, /resolveAtpGuidePdfContext/);
-  assert.match(source, /drawGuideSection\(doc, y, fonts, lang, guideContext, guidePhoto\)/);
+  assert.ok(
+    source.indexOf("y = drawTravelPlanOverview(doc, generatedOffer, booking, y, fonts, lang, itemThumbnailMap);")
+      < source.indexOf("y = drawGuideSection(doc, y, fonts, lang, guideContext, guidePhoto);"),
+    "Expected guide section to be rendered after the travel plan section in the offer PDF writer"
+  );
+  assert.ok(
+    source.indexOf("y = drawGuideSection(doc, y, fonts, lang, guideContext, guidePhoto);")
+      < source.indexOf("y = drawOfferTable(doc, generatedOffer, y, renderMoney, fonts, lang);"),
+    "Expected guide section to be rendered before the financial offer details in the offer PDF writer"
+  );
 });
 
 test("booking generated offer pdf endpoint serves the frozen artifact without re-rendering", async () => {

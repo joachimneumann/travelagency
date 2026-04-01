@@ -793,8 +793,6 @@ export function createTravelPlanPdfWriter({
 
       let y = drawTopHeader(doc, companyProfile, logoImage, fonts, lang);
       y = drawTravelPlanHero(doc, heroTitle, heroSubtitle, heroImage, y, fonts, lang);
-      y = ensureSpace(y, estimateGuideSectionHeight(doc, guideContext, fonts, lang) + 10);
-      y = drawGuideSection(doc, y, fonts, lang, guideContext, guidePhoto);
       if (welcomeText) {
         y = ensureSpace(y + 6, 72);
         y = drawTextParagraph(doc, y + 6, welcomeText, fonts, lang, { fontSize: 11.2 }) + 12;
@@ -822,6 +820,8 @@ export function createTravelPlanPdfWriter({
         renderSectionTitle: false
       });
 
+      y = ensureSpace(y, estimateGuideSectionHeight(doc, guideContext, fonts, lang) + 10);
+      y = drawGuideSection(doc, y, fonts, lang, guideContext, guidePhoto);
       y = ensureSpace(y + 8, 96);
       drawClosing(doc, y + 10, fonts, lang, closingText, attachmentPaths.length);
       drawFooter(doc, fonts, companyProfile, lang);
