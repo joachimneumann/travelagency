@@ -1859,6 +1859,31 @@ test("tour page reads month options from the generated catalogs layer", async ()
   );
 });
 
+test("tour read models version public image URLs so immutable caching still refreshes after uploads", async () => {
+  const toursSupportPath = path.resolve(__dirname, "..", "src", "domain", "tours_support.js");
+  const toursHandlerPath = path.resolve(__dirname, "..", "src", "http", "handlers", "tours.js");
+  const [toursSupportSource, toursHandlerSource] = await Promise.all([
+    readFile(toursSupportPath, "utf8"),
+    readFile(toursHandlerPath, "utf8")
+  ]);
+
+  assert.match(
+    toursHandlerSource,
+    /sendFileWithCache\(req, res, absolutePath, "public, max-age=31536000, immutable"\)/,
+    "Public tour images should keep the long-lived immutable cache headers"
+  );
+  assert.match(
+    toursSupportSource,
+    /function withAssetVersion\(value, version\) \{[\s\S]*searchParams\.set\("v", normalizedVersion\)/,
+    "Tour support should append a version query parameter for cache busting"
+  );
+  assert.match(
+    toursSupportSource,
+    /image:\s*withAssetVersion\([\s\S]*toTourImagePublicUrl\(stored\.image\)[\s\S]*stored\.updated_at \|\| stored\.created_at/,
+    "Tour read models should version returned image URLs with the tour update timestamp"
+  );
+});
+
 test("tour page uses the active backend language as the localized editor source", async () => {
   const tourPageModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "tour.js");
   const backendEnI18nPath = path.resolve(__dirname, "..", "..", "..", "frontend", "data", "i18n", "backend", "en.json");
