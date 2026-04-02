@@ -101,6 +101,7 @@ const state = {
   },
   allowPageUnload: false,
   tour: null,
+  pendingHeroImagePreviewUrl: "",
   options: {
     destinations: [],
     styles: []
@@ -536,6 +537,8 @@ async function init() {
   if (els.imageUpload) {
     els.imageUpload.addEventListener("change", () => {
       const file = els.imageUpload.files?.[0];
+      setPendingHeroImagePreview(file);
+      renderHeroImage();
       if (file) setStatus(backendT("tour.status.selected_image", "Selected image: {file}", { file: file.name }));
       updateTourDirtyState();
     });
@@ -574,7 +577,8 @@ async function loadTour() {
     { multiline: true }
   );
   renderLocalizedTourEditors();
-  updateHeroImage(tour.image || "");
+  setPendingHeroImagePreview(null);
+  renderHeroImage();
 
   renderDestinationChoices(tour_destination_codes(tour));
   renderStyleChoices(tour_style_codes(tour));
@@ -612,7 +616,8 @@ async function initializeNewTourForm() {
   state.localizedContent.short_description_i18n = {};
   state.localizedContent.highlights_i18n = {};
   renderLocalizedTourEditors();
-  updateHeroImage("");
+  setPendingHeroImagePreview(null);
+  renderHeroImage();
   renderDestinationChoices([]);
   renderStyleChoices([]);
   applyTourPermissions();
@@ -946,6 +951,19 @@ function setStatus(message) {
   els.status.textContent = message;
 }
 
+function setPendingHeroImagePreview(file) {
+  if (state.pendingHeroImagePreviewUrl) {
+    URL.revokeObjectURL(state.pendingHeroImagePreviewUrl);
+    state.pendingHeroImagePreviewUrl = "";
+  }
+  if (!(file instanceof File)) return;
+  state.pendingHeroImagePreviewUrl = URL.createObjectURL(file);
+}
+
+function renderHeroImage() {
+  updateHeroImage(state.pendingHeroImagePreviewUrl || state.tour?.image || "");
+}
+
 function updateHeroImage(src) {
   if (!els.heroImage) return;
   const value = String(src || "").trim();
@@ -954,7 +972,9 @@ function updateHeroImage(src) {
     els.heroImage.classList.add("empty");
     return;
   }
-  els.heroImage.src = absolutizeApiUrl(value);
+  els.heroImage.src = /^(?:blob:|data:|https?:\/\/)/.test(value)
+    ? value
+    : absolutizeApiUrl(value);
   els.heroImage.classList.remove("empty");
 }
 

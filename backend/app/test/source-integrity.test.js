@@ -1817,6 +1817,16 @@ test("tour page reads month options from the generated catalogs layer", async ()
     /id="tour_titleInput"/,
     "Tour page should no longer render the old form title text field"
   );
+  assert.match(
+    tourSource,
+    /els\.imageUpload\.addEventListener\("change", \(\) => \{[\s\S]*setPendingHeroImagePreview\(file\);[\s\S]*renderHeroImage\(\);[\s\S]*tour\.status\.selected_image/,
+    "Tour page should preview a newly selected hero image immediately before save"
+  );
+  assert.match(
+    tourSource,
+    /function setPendingHeroImagePreview\(file\) \{[\s\S]*URL\.createObjectURL\(file\)/,
+    "Tour page should stage a temporary object URL for the selected hero image"
+  );
 });
 
 test("tour page uses the active backend language as the localized editor source", async () => {
