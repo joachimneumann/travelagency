@@ -1,0 +1,8 @@
+.git
+.gitignore
+.DS_Store
+**/node_modules
+backend/app/data/pdfs
+backend/app/data/tmp
+backend/app/data/booking_images
+backend/app/data/booking_person_photos

@@ -40,4 +40,20 @@ for source_path, marker, output_path in targets:
         selected_font.save(output_path)
 PY
 
+RUN mkdir -p /srv/backend/app \
+  && chown -R node:node /srv/backend
+
 WORKDIR /srv/backend/app
+COPY --chown=node:node backend/app/package.json backend/app/package-lock.json ./
+
+USER node
+RUN npm ci
+
+USER root
+WORKDIR /srv
+COPY --chown=node:node . .
+RUN mkdir -p /srv/backend/app/data /srv/content
+
+WORKDIR /srv/backend/app
+USER node
+CMD ["node", "src/server.js"]

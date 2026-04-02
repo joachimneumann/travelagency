@@ -24,9 +24,9 @@ services:
     user: "1000:1000"
     restart: unless-stopped
     working_dir: /srv/backend/app
-    command: sh -c "npm ci && npm start"
     volumes:
-      - ./:/srv
+      - ./backend/app/data:/srv/backend/app/data
+      - ./content:/srv/content
     env_file:
       - .env.staging
     depends_on:
