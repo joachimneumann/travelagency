@@ -68,6 +68,7 @@ const state = {
   visibleToursCount: 6,
   showMoreUsed: false,
   selectedTour: null,
+  selectedTourDescriptionId: "",
   selectedTeamMemberUsername: "",
   websiteAuthenticated: false,
   websiteAuthenticatedUser: ""
@@ -112,6 +113,7 @@ const els = {
   teamSectionBody: document.getElementById("teamSectionBody"),
   teamGrid: document.getElementById("teamGrid"),
   teamDetail: document.getElementById("teamDetail"),
+  tourDescriptionDetail: document.getElementById("tourDescriptionDetail"),
   heroDynamicSubtitle: document.getElementById("heroDynamicSubtitle"),
   bookingTitle: document.getElementById("bookingTitle"),
   tourGrid: document.getElementById("tourGrid"),

@@ -2171,6 +2171,38 @@ test("frontend language switching updates the homepage in place instead of forci
   );
 });
 
+test("homepage tour cards clamp long descriptions and open the shared detail popup", async () => {
+  const mainToursPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "main_tours.js");
+  const homepagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "index.html");
+  const siteCssPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "site.css");
+  const [mainToursSource, homepageSource, siteCssSource] = await Promise.all([
+    readFile(mainToursPath, "utf8"),
+    readFile(homepagePath, "utf8"),
+    readFile(siteCssPath, "utf8")
+  ]);
+
+  assert.match(
+    homepageSource,
+    /id="tourDescriptionDetail"/,
+    "Homepage should expose a dedicated overlay mount for expanded tour descriptions"
+  );
+  assert.match(
+    mainToursSource,
+    /data-tour-desc-toggle[\s\S]*data-tour-desc-trip-id[\s\S]*syncTourDescriptionToggles\(\)/,
+    "Tour cards should render a conditional more button for clamped descriptions"
+  );
+  assert.match(
+    mainToursSource,
+    /function renderTourDescriptionDetail\(\) \{[\s\S]*team-detail[\s\S]*team-detail__name[\s\S]*team-detail__body/,
+    "Expanded tour descriptions should reuse the shared homepage detail popup shell"
+  );
+  assert.match(
+    siteCssSource,
+    /\.tour-desc \{[\s\S]*-webkit-line-clamp: 4;[\s\S]*min-height: calc\(1\.55em \* 4\);/,
+    "Tour descriptions should clamp to a fixed-height preview so cards stay aligned"
+  );
+});
+
 test("runtime links use direct tours and settings pages instead of backend section query routes", async () => {
   const filesToScan = [
     path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking_list.js"),

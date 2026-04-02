@@ -959,6 +959,7 @@ textarea:focus-visible {
   padding: 1rem;
   display: grid;
   gap: 0.72rem;
+  grid-template-rows: auto auto 1fr auto;
 }
 
 .tour-topline {
@@ -992,19 +993,58 @@ textarea:focus-visible {
   margin: 0;
   color: var(--muted);
   font-size: var(--font-size-body-sm);
+  line-height: 1.55;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  overflow: hidden;
+  min-height: calc(1.55em * 4);
+}
+
+.tour-desc-wrap {
+  display: grid;
+  gap: 0.4rem;
+  align-content: start;
+}
+
+.tour-desc-toggle {
+  appearance: none;
+  border: 0;
+  background: none;
+  padding: 0;
+  margin: 0;
+  justify-self: start;
+  color: var(--info-text);
+  font: inherit;
+  font-size: var(--font-size-body-sm);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+  cursor: pointer;
+}
+
+.tour-desc-toggle:hover,
+.tour-desc-toggle:focus-visible {
+  color: var(--text);
 }
 
 .tags {
   display: flex;
   flex-wrap: wrap;
   gap: 0.4rem;
+  align-self: end;
+}
+
+.tour-body > .btn {
+  align-self: stretch;
 }
 
 .tag {
   background: var(--surface-info-soft);
   color: var(--info-text-muted);
-  font-size: var(--font-size-overline);
-  padding: 0.3rem 0.55rem;
+  font-size: 0.82rem;
+  line-height: 1.2;
+  padding: 0.18rem 0.48rem;
   border-radius: 999px;
 }
 

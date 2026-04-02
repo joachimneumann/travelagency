@@ -448,6 +448,7 @@ export function createFrontendToursController(ctx) {
         const countries = tourDestinations(trip);
         const countriesLabel = countries.join(", ");
         const ctaLabel = frontendT("tour.card.plan_trip", "Plan this trip");
+        const moreLabel = frontendT("tour.card.more", "more");
         const loading = index < 3 ? "eager" : "lazy";
         const fetchpriority = index < 3 ? "high" : "auto";
 
@@ -466,7 +467,17 @@ export function createFrontendToursController(ctx) {
             />
             <div class="tour-body">
               <h3 class="tour-title tour-title--topline">${escapeHTML(tripTitle)}</h3>
-              <p class="tour-desc">${escapeHTML(tripShortDescription)}</p>
+              <div class="tour-desc-wrap">
+                <p class="tour-desc" data-tour-desc>${escapeHTML(tripShortDescription)}</p>
+                <button
+                  class="tour-desc-toggle"
+                  type="button"
+                  data-tour-desc-toggle
+                  data-tour-desc-trip-id="${escapeAttr(trip.id)}"
+                  data-more-label="${escapeAttr(moreLabel)}"
+                  hidden
+                >${escapeHTML(moreLabel)}</button>
+              </div>
               <div class="tags">${tags}</div>
               <button class="btn btn-primary" type="button" data-open-modal data-trip-id="${escapeAttr(trip.id)}">${escapeHTML(ctaLabel)}</button>
             </div>
@@ -476,11 +487,96 @@ export function createFrontendToursController(ctx) {
       .join("");
 
     els.tourGrid.innerHTML = cards;
+    window.requestAnimationFrame(() => {
+      syncTourDescriptionToggles();
+      renderTourDescriptionDetail();
+    });
     bindTourCardOpenHandlers();
+  }
+
+  function syncTourDescriptionToggles() {
+    if (!els.tourGrid) return;
+    const cards = els.tourGrid.querySelectorAll(".tour-card");
+    cards.forEach((card) => {
+      const description = card.querySelector("[data-tour-desc]");
+      const toggle = card.querySelector("[data-tour-desc-toggle]");
+      if (!(description instanceof HTMLElement) || !(toggle instanceof HTMLButtonElement)) return;
+      toggle.hidden = description.scrollHeight <= description.clientHeight + 1;
+      toggle.textContent = toggle.dataset.moreLabel || frontendT("tour.card.more", "more");
+    });
+  }
+
+  function selectedTourDescriptionTrip() {
+    const tripId = normalizeText(state.selectedTourDescriptionId);
+    if (!tripId) return null;
+    return state.filteredTrips.find((trip) => normalizeText(trip?.id) === tripId)
+      || state.trips.find((trip) => normalizeText(trip?.id) === tripId)
+      || null;
+  }
+
+  function closeTourDescriptionDetail() {
+    if (!state.selectedTourDescriptionId) return;
+    state.selectedTourDescriptionId = "";
+    renderTourDescriptionDetail();
+  }
+
+  function renderTourDescriptionDetail() {
+    if (!els.tourDescriptionDetail) return;
+    const selectedTrip = selectedTourDescriptionTrip();
+    const detailBody = resolveLocalizedFrontendText(selectedTrip?.short_description, state.lang);
+    const detailTitle = resolveLocalizedFrontendText(selectedTrip?.title, state.lang);
+
+    if (!selectedTrip || !detailBody) {
+      els.tourDescriptionDetail.hidden = true;
+      els.tourDescriptionDetail.setAttribute("aria-hidden", "true");
+      els.tourDescriptionDetail.innerHTML = "";
+      return;
+    }
+
+    els.tourDescriptionDetail.hidden = false;
+    els.tourDescriptionDetail.setAttribute("aria-hidden", "false");
+    els.tourDescriptionDetail.innerHTML = `
+      <div class="team-detail" role="dialog" aria-modal="true" aria-label="${escapeAttr(frontendT("tour.card.more", "more"))}">
+        <div class="team-detail__content">
+          <div class="team-detail__copy">
+            <h3 class="team-detail__name">${escapeHTML(detailTitle)}</h3>
+            <p class="team-detail__body">${escapeHTML(detailBody)}</p>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function bindTourDescriptionDetail() {
+    if (!els.tourDescriptionDetail || els.tourDescriptionDetail.dataset.tourDescBound === "1") return;
+    els.tourDescriptionDetail.dataset.tourDescBound = "1";
+    els.tourDescriptionDetail.addEventListener("click", () => {
+      closeTourDescriptionDetail();
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key !== "Escape" || !state.selectedTourDescriptionId) return;
+      closeTourDescriptionDetail();
+    });
+    window.addEventListener("resize", () => {
+      window.requestAnimationFrame(syncTourDescriptionToggles);
+    });
   }
 
   function bindTourCardOpenHandlers() {
     if (!els.tourGrid) return;
+    bindTourDescriptionDetail();
+
+    const descriptionButtons = els.tourGrid.querySelectorAll("[data-tour-desc-toggle]");
+    descriptionButtons.forEach((button) => {
+      if (button.dataset.descBound) return;
+      button.addEventListener("click", () => {
+        const tripId = normalizeText(button.getAttribute("data-tour-desc-trip-id"));
+        if (!tripId) return;
+        state.selectedTourDescriptionId = tripId;
+        renderTourDescriptionDetail();
+      });
+      button.dataset.descBound = "1";
+    });
 
     const buttons = els.tourGrid.querySelectorAll("[data-open-modal][data-trip-id]");
     buttons.forEach((button) => {
