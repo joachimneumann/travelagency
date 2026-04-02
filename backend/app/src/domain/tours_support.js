@@ -133,6 +133,16 @@ export function createTourHelpers({ toursDir, safeInt }) {
     return `/public/v1/tour-images/${normalized.replace(/^\/+/, "")}`;
   }
 
+  function withAssetVersion(value, version) {
+    const normalizedValue = normalizeText(value);
+    const normalizedVersion = normalizeText(version);
+    if (!normalizedValue || !normalizedVersion) return normalizedValue;
+    const absolute = /^https?:\/\//i.test(normalizedValue);
+    const url = new URL(normalizedValue, "http://localhost");
+    url.searchParams.set("v", normalizedVersion);
+    return absolute ? url.toString() : `${url.pathname}${url.search}${url.hash}`;
+  }
+
   function normalizeTourForStorage(tour) {
     const next = {
       ...(tour && typeof tour === "object" ? tour : {})
@@ -172,7 +182,10 @@ export function createTourHelpers({ toursDir, safeInt }) {
       destination_codes: destinationCodes,
       styles: styleCodes.map((code) => getTourStyleLabel(code, normalizedLang)),
       style_codes: styleCodes,
-      image: toTourImagePublicUrl(stored.image),
+      image: withAssetVersion(
+        toTourImagePublicUrl(stored.image),
+        normalizeText(stored.updated_at || stored.created_at)
+      ),
       highlights: resolveLocalizedStringArray(stored.highlights, normalizedLang),
       priority: safeInt(stored.priority) ?? 50
     };
