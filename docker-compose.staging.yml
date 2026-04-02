@@ -21,6 +21,7 @@ services:
       context: .
       dockerfile: backend/Dockerfile.staging
     image: asiatravelplan-backend-staging:latest
+    user: "1000:1000"
     restart: unless-stopped
     working_dir: /srv/backend/app
     command: sh -c "npm ci && npm start"
