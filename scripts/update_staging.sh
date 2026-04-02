@@ -62,7 +62,7 @@ run_staging_tests() {
   echo "Running staging pre-deploy tests..."
   docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" build backend
   docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" run --rm --no-deps backend \
-    sh -lc 'npm ci >/dev/null && node --test test/mobile-contract.test.js test/source-integrity.test.js'
+    node --test test/mobile-contract.test.js test/source-integrity.test.js
 }
 
 cd "$ROOT_DIR"

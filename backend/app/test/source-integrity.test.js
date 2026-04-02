@@ -139,6 +139,36 @@ test("backend ui i18n sync script passes and local backend startup is strict by 
   );
 });
 
+test("translate wrapper covers backend and frontend i18n sync scripts", async () => {
+  const repoRoot = path.resolve(__dirname, "..", "..", "..");
+  const frontendSyncScriptPath = path.join(repoRoot, "scripts", "sync_frontend_i18n.mjs");
+  const translateScriptPath = path.join(repoRoot, "scripts", "translate");
+  const translateScriptSource = await readFile(translateScriptPath, "utf8");
+
+  await execFileAsync(process.execPath, [frontendSyncScriptPath, "check"], { cwd: repoRoot });
+
+  assert.match(
+    translateScriptSource,
+    /BACKEND_SYNC_SCRIPT=.*sync_backend_i18n\.mjs/,
+    "Translate wrapper should keep the backend sync script wired"
+  );
+  assert.match(
+    translateScriptSource,
+    /FRONTEND_SYNC_SCRIPT=.*sync_frontend_i18n\.mjs/,
+    "Translate wrapper should keep the frontend sync script wired"
+  );
+  assert.match(
+    translateScriptSource,
+    /node "\$BACKEND_SYNC_SCRIPT" translate --target vi[\s\S]*node "\$FRONTEND_SYNC_SCRIPT" translate/,
+    "Translate update should run backend and frontend syncs in sequence"
+  );
+  assert.match(
+    translateScriptSource,
+    /node "\$BACKEND_SYNC_SCRIPT" check --target vi[\s\S]*node "\$FRONTEND_SYNC_SCRIPT" check/,
+    "Translate check should validate backend and frontend sync state"
+  );
+});
+
 test("booking page keeps critical init handlers wired to real local functions", async () => {
   const filePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking.js");
   const names = await moduleLevelFunctionDeclarations(filePath);
@@ -2271,6 +2301,62 @@ test("staging bootstrap does not seed legacy customer store data", async () => {
     source,
     /printf '\{\}\\n' > backend\/app\/data\/store\.json/,
     "update_staging.sh should bootstrap an empty JSON store"
+  );
+});
+
+test("staging backend bakes dependencies into the image and mounts only writable data roots", async () => {
+  const repoRoot = path.resolve(__dirname, "..", "..", "..");
+  const dockerfilePath = path.join(repoRoot, "backend", "Dockerfile.staging");
+  const composePath = path.join(repoRoot, "docker-compose.staging.yml");
+  const updateStagingPath = path.join(repoRoot, "scripts", "update_staging.sh");
+  const dockerIgnorePath = path.join(repoRoot, ".dockerignore");
+  const [dockerfileSource, composeSource, updateStagingSource, dockerIgnoreSource] = await Promise.all([
+    readFile(dockerfilePath, "utf8"),
+    readFile(composePath, "utf8"),
+    readFile(updateStagingPath, "utf8"),
+    readFile(dockerIgnorePath, "utf8")
+  ]);
+  const backendComposeBlock = (composeSource.match(/\n  backend:\n[\s\S]*?(?=\n  keycloak:)/)?.[0] || "");
+
+  assert.match(
+    dockerfileSource,
+    /COPY --chown=node:node backend\/app\/package\.json backend\/app\/package-lock\.json \.\/[\s\S]*RUN npm ci/,
+    "Staging backend image should install backend dependencies during docker build"
+  );
+  assert.match(
+    dockerfileSource,
+    /COPY --chown=node:node \. \.[\s\S]*WORKDIR \/srv\/backend\/app[\s\S]*CMD \["node", "src\/server\.js"\]/,
+    "Staging backend image should carry the repo snapshot and start the backend directly"
+  );
+  assert.match(
+    backendComposeBlock,
+    /user: "1000:1000"/,
+    "Staging backend should run as the host-compatible non-root user"
+  );
+  assert.doesNotMatch(
+    backendComposeBlock,
+    /command:\s*sh -c "npm ci && npm start"/,
+    "Staging backend should not reinstall dependencies on container startup"
+  );
+  assert.doesNotMatch(
+    backendComposeBlock,
+    /-\s*\.\/:\/srv\b/,
+    "Staging backend should not bind-mount the whole repo at runtime"
+  );
+  assert.match(
+    backendComposeBlock,
+    /- \.\/backend\/app\/data:\/srv\/backend\/app\/data[\s\S]*- \.\/content:\/srv\/content/,
+    "Staging backend should mount only the writable backend data and content roots"
+  );
+  assert.doesNotMatch(
+    updateStagingSource,
+    /npm ci >/,
+    "Staging pre-deploy tests should rely on the baked image dependencies"
+  );
+  assert.match(
+    dockerIgnoreSource,
+    /\*\*\/node_modules/,
+    "Docker builds should ignore host node_modules directories"
   );
 });
 

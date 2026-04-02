@@ -2,22 +2,30 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-SYNC_SCRIPT="$ROOT_DIR/scripts/sync_backend_i18n.mjs"
+BACKEND_SYNC_SCRIPT="$ROOT_DIR/scripts/sync_backend_i18n.mjs"
+FRONTEND_SYNC_SCRIPT="$ROOT_DIR/scripts/sync_frontend_i18n.mjs"
 
 usage() {
   cat <<'EOF'
 Usage:
   ./scripts/translate update
+  ./scripts/translate check
   ./scripts/translate all
 
 Commands:
-  update   Translate only missing or stale backend UI translations (en -> vi)
-  all      Retranslate all backend UI translations (en -> vi)
+  update   Translate only missing or stale backend UI and frontend site translations
+  check    Verify backend UI and frontend site translations are in sync
+  all      Retranslate all backend UI and frontend site translations
 EOF
 }
 
-if [[ ! -f "$SYNC_SCRIPT" ]]; then
-  echo "Error: sync script not found at $SYNC_SCRIPT" >&2
+if [[ ! -f "$BACKEND_SYNC_SCRIPT" ]]; then
+  echo "Error: backend sync script not found at $BACKEND_SYNC_SCRIPT" >&2
+  exit 1
+fi
+
+if [[ ! -f "$FRONTEND_SYNC_SCRIPT" ]]; then
+  echo "Error: frontend sync script not found at $FRONTEND_SYNC_SCRIPT" >&2
   exit 1
 fi
 
@@ -40,7 +48,18 @@ case "${1:-}" in
       usage >&2
       exit 1
     fi
-    exec node "$SYNC_SCRIPT" translate --target vi
+    node "$BACKEND_SYNC_SCRIPT" translate --target vi
+    node "$FRONTEND_SYNC_SCRIPT" translate
+    ;;
+  check)
+    shift
+    if [[ "$#" -ne 0 ]]; then
+      echo "Error: check does not accept extra arguments." >&2
+      usage >&2
+      exit 1
+    fi
+    node "$BACKEND_SYNC_SCRIPT" check --target vi
+    node "$FRONTEND_SYNC_SCRIPT" check
     ;;
   all)
     shift
@@ -49,7 +68,8 @@ case "${1:-}" in
       usage >&2
       exit 1
     fi
-    exec node "$SYNC_SCRIPT" translate --target vi --force-all
+    node "$BACKEND_SYNC_SCRIPT" translate --target vi --force-all
+    node "$FRONTEND_SYNC_SCRIPT" translate --force-all
     ;;
   *)
     echo "Error: unknown command '${1}'." >&2
