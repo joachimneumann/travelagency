@@ -981,6 +981,27 @@ test("travel plan footer exposes clean-state-gated preview and create actions ba
   );
 });
 
+test("travel plan editor warns in the console when the new-day controls never render", async () => {
+  const travelPlanScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan.js");
+  const travelPlanSource = await readFile(travelPlanScriptPath, "utf8");
+
+  assert.match(
+    travelPlanSource,
+    /function warnIfTravelPlanControlsMissing\(reason = "renderTravelPlanPanel"\) \{[\s\S]*querySelectorAll\("\[data-travel-plan-add-day\]"\)[\s\S]*console\.warn\("\[booking-travel-plan\] Expected new-day controls are missing after render\."/,
+    "Travel plan rendering should warn in the browser console when the add-day controls are missing from the injected editor markup"
+  );
+  assert.match(
+    travelPlanSource,
+    /scheduleTravelPlanControlsDiagnostic\("renderTravelPlanPanel"\)/,
+    "Travel plan rendering should run the missing-controls diagnostic immediately after each render"
+  );
+  assert.match(
+    travelPlanSource,
+    /warnIfTravelPlanControlsMissing\("post-load-watchdog"\)/,
+    "Travel plan binding should keep a delayed watchdog so staging surfaces missing controls even when the editor stays empty after page load"
+  );
+});
+
 test("travel plan footer exposes additional PDF attachment controls and contract routes", async () => {
   const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
   const travelPlanScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan.js");

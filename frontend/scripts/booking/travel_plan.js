@@ -75,6 +75,7 @@ export function createBookingTravelPlanModule(ctx) {
     setPageSaveActionError,
     hasUnsavedBookingChanges
   } = ctx;
+  let lastMissingTravelPlanControlsDiagnosticKey = "";
 
   function logTravelPlanSave(message, details = {}) {
     const payload = details && typeof details === "object" ? { ...details } : { details };
@@ -241,6 +242,50 @@ export function createBookingTravelPlanModule(ctx) {
 
   function getTravelPlanSnapshot(plan = state.travelPlanDraft) {
     return JSON.stringify(normalizeTravelPlanState(plan, getOfferComponentsForLinks()));
+  }
+
+  function hasSharedBookingStylesheetLoaded() {
+    if (typeof document === "undefined") return false;
+    return Array.from(document.styleSheets || []).some((sheet) => {
+      const href = String(sheet?.href || "");
+      return href.includes("/assets/css/styles.css") || href.includes("/shared/css/styles.css");
+    });
+  }
+
+  function warnIfTravelPlanControlsMissing(reason = "renderTravelPlanPanel") {
+    if (!(els.travel_plan_editor instanceof HTMLElement) || !state.booking) return;
+    const addDayButtons = els.travel_plan_editor.querySelectorAll("[data-travel-plan-add-day]");
+    if (addDayButtons.length > 0) {
+      lastMissingTravelPlanControlsDiagnosticKey = "";
+      return;
+    }
+    const html = String(els.travel_plan_editor.innerHTML || "").trim();
+    const diagnostic = {
+      booking_id: state.booking?.id || null,
+      reason,
+      draft_days_count: Array.isArray(state.travelPlanDraft?.days) ? state.travelPlanDraft.days.length : 0,
+      rendered_day_nodes: els.travel_plan_editor.querySelectorAll("[data-travel-plan-day]").length,
+      editor_child_count: els.travel_plan_editor.childElementCount,
+      editor_html_length: html.length,
+      editor_html_preview: html.replace(/\s+/g, " ").slice(0, 240) || null,
+      stylesheet_link_present: Boolean(document.querySelector('link[rel="stylesheet"][href*="assets/css/styles.css"]')),
+      stylesheet_loaded: hasSharedBookingStylesheetLoaded(),
+      location_href: window.location.href
+    };
+    const diagnosticKey = JSON.stringify(diagnostic);
+    if (diagnosticKey === lastMissingTravelPlanControlsDiagnosticKey) return;
+    lastMissingTravelPlanControlsDiagnosticKey = diagnosticKey;
+    console.warn("[booking-travel-plan] Expected new-day controls are missing after render.", diagnostic);
+  }
+
+  function scheduleTravelPlanControlsDiagnostic(reason = "renderTravelPlanPanel") {
+    if (typeof window === "undefined") return;
+    const schedule = typeof window.requestAnimationFrame === "function"
+      ? window.requestAnimationFrame.bind(window)
+      : (callback) => window.setTimeout(callback, 0);
+    schedule(() => {
+      warnIfTravelPlanControlsMissing(reason);
+    });
   }
 
   function summarizeTravelPlanDiffValue(value) {
@@ -2195,6 +2240,9 @@ export function createBookingTravelPlanModule(ctx) {
         }
       });
       els.travel_plan_editor.dataset.travelPlanBound = "true";
+      window.setTimeout(() => {
+        warnIfTravelPlanControlsMissing("post-load-watchdog");
+      }, 1500);
     }
     if (els.travel_plan_pdf_workspace && els.travel_plan_pdf_workspace.dataset.travelPlanBound !== "true") {
       els.travel_plan_pdf_workspace.addEventListener("click", (event) => {
@@ -2287,6 +2335,7 @@ export function createBookingTravelPlanModule(ctx) {
     syncTravelPlanCollapsibleUi(false);
     updateTravelPlanDirtyState();
     syncTravelPlanTranslateButton();
+    scheduleTravelPlanControlsDiagnostic("renderTravelPlanPanel");
   }
 
   return {
