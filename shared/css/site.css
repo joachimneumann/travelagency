@@ -4287,19 +4287,25 @@ textarea:focus-visible {
 }
 
 .emergency-country-card {
-  display: grid;
-  gap: 0.95rem;
-  padding: 1rem 1rem 1.05rem;
-  border: 1px solid var(--line);
-  border-radius: 18px;
+  margin-bottom: 0;
   background: var(--surface-subtle);
 }
 
 .emergency-country-card__head {
-  display: flex;
+  background: var(--surface-subtle);
+}
+
+.emergency-country-card__summary,
+.emergency-country-card__body {
+  background: var(--surface-subtle);
+}
+
+.emergency-country-card__summary {
   align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.8rem;
+}
+
+.emergency-country-card__header {
+  width: 100%;
 }
 
 .emergency-country-card__title,
@@ -4307,15 +4313,34 @@ textarea:focus-visible {
   margin: 0;
 }
 
-.emergency-country-card__updated {
-  margin-top: 0.25rem;
+.emergency-country-card__code {
   color: var(--text-muted);
+  font-size: var(--font-size-body-sm);
+  font-weight: var(--font-weight-regular);
+}
+
+.emergency-country-card__updated {
+  color: var(--text-muted);
+}
+
+.emergency-country-card__body {
+  display: grid;
+  gap: 0.95rem;
+}
+
+.emergency-country-card__body .field {
+  margin: 0;
 }
 
 .emergency-country-card__remove,
 .emergency-contact-row__remove {
   color: var(--error-text-strong);
   border-color: color-mix(in srgb, var(--line-error) 72%, var(--line));
+}
+
+.emergency-country-card__remove {
+  align-self: center;
+  margin-right: 1rem;
 }
 
 .emergency-country-card__contacts-head {

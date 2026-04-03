@@ -15,6 +15,7 @@ import {
   loadBackendPageAuthState,
   withBackendApiLang
 } from "../shared/backend_page.js";
+import { initializeBackendCollapsibles } from "../shared/collapsible.js";
 
 const apiBase = getBackendApiBase();
 const apiOrigin = getBackendApiOrigin();
@@ -66,7 +67,8 @@ const state = {
   items: [],
   loaded: false,
   isDirty: false,
-  saving: false
+  saving: false,
+  openCountries: new Set()
 };
 
 const fetchApi = createApiFetcher({
@@ -215,14 +217,21 @@ function renderItems() {
     const updatedCopy = updatedAt
       ? backendT("backend.emergency.updated_at", "Updated {value}", { value: formatDateTime(updatedAt) })
       : backendT("backend.emergency.not_saved_yet", "Not saved yet");
+    const isOpen = state.openCountries.has(country);
 
     return `
-      <article class="emergency-country-card" data-emergency-country-card data-country="${escapeHtml(country)}">
-        <div class="emergency-country-card__head">
-          <div>
-            <h2 class="u-title-small emergency-country-card__title">${escapeHtml(countryLabel(country))} <span class="micro">(${escapeHtml(country)})</span></h2>
-            <p class="micro emergency-country-card__updated">${escapeHtml(updatedCopy)}</p>
-          </div>
+      <article class="backend-section emergency-country-card${isOpen ? " is-open" : ""}" data-emergency-country-card data-country="${escapeHtml(country)}">
+        <div class="backend-section__head emergency-country-card__head">
+          <button
+            class="backend-section__summary emergency-country-card__summary"
+            type="button"
+            data-emergency-toggle-country="${escapeHtml(country)}"
+          >
+            <span class="backend-section-header emergency-country-card__header">
+              <span class="backend-section-header__primary emergency-country-card__title">${escapeHtml(countryLabel(country))} <span class="emergency-country-card__code">(${escapeHtml(country)})</span></span>
+              <span class="backend-section-header__secondary emergency-country-card__updated">${escapeHtml(updatedCopy)}</span>
+            </span>
+          </button>
           <button
             class="btn btn-ghost emergency-country-card__remove"
             type="button"
@@ -231,6 +240,7 @@ function renderItems() {
           >&times;</button>
         </div>
 
+        <div class="backend-section__body emergency-country-card__body">
         <div class="field full">
           <label class="field-label" data-i18n-id="backend.emergency.practical_tips">Practical tips</label>
           <textarea
@@ -255,10 +265,12 @@ function renderItems() {
             ${renderEmergencyContactRows(country, item?.emergency_contacts)}
           </div>
         </div>
+        </div>
       </article>
     `;
   }).join("");
   applyBackendI18n(els.list);
+  initializeBackendCollapsibles(els.list);
 }
 
 function readItemsFromDom() {
@@ -322,6 +334,16 @@ function syncStateFromDom() {
   state.items = readItemsFromDom();
 }
 
+function syncExpandedCountriesFromDom() {
+  if (!els.list) return;
+  state.openCountries = new Set(
+    Array.from(els.list.querySelectorAll("[data-emergency-country-card]"))
+      .filter((card) => card.classList.contains("is-open"))
+      .map((card) => normalizeText(card.getAttribute("data-country")).toUpperCase())
+      .filter(Boolean)
+  );
+}
+
 function markDirty() {
   if (!state.loaded) return;
   state.isDirty = true;
@@ -338,6 +360,7 @@ async function loadCountryReferenceInfo() {
     return;
   }
   state.items = sortCountryItems(Array.isArray(payload.items) ? payload.items : []);
+  state.openCountries = new Set(state.items.map((item) => normalizeText(item?.country).toUpperCase()).filter(Boolean));
   state.loaded = true;
   state.isDirty = false;
   renderItems();
@@ -349,6 +372,7 @@ async function loadCountryReferenceInfo() {
 async function saveCountryReferenceInfo() {
   if (!state.permissions.canEditEmergency || state.saving) return;
   clearError();
+  syncExpandedCountriesFromDom();
   syncStateFromDom();
   const validationError = validateItems(state.items);
   if (validationError) {
@@ -380,11 +404,13 @@ async function saveCountryReferenceInfo() {
 
 function handleAddCountry() {
   if (!state.permissions.canEditEmergency) return;
+  syncExpandedCountriesFromDom();
   syncStateFromDom();
   const country = normalizeText(els.addCountrySelect?.value).toUpperCase();
   if (!country) return;
   if (state.items.some((item) => normalizeText(item?.country).toUpperCase() === country)) return;
   state.items = sortCountryItems([...state.items, buildEmptyCountryItem(country)]);
+  state.openCountries.add(country);
   state.isDirty = true;
   renderItems();
   renderAddCountryOptions();
@@ -398,13 +424,24 @@ function bindEvents() {
 
   els.list?.addEventListener("click", (event) => {
     const target = event.target instanceof Element ? event.target : null;
-    if (!target || !state.permissions.canEditEmergency) return;
+    if (!target) return;
+
+    const toggleButton = target.closest("[data-emergency-toggle-country]");
+    if (toggleButton) {
+      window.requestAnimationFrame(() => {
+        syncExpandedCountriesFromDom();
+      });
+    }
+
+    if (!state.permissions.canEditEmergency) return;
 
     const removeCountryButton = target.closest("[data-emergency-remove-country]");
     if (removeCountryButton) {
+      syncExpandedCountriesFromDom();
       syncStateFromDom();
       const country = normalizeText(removeCountryButton.getAttribute("data-emergency-remove-country")).toUpperCase();
       state.items = state.items.filter((item) => normalizeText(item?.country).toUpperCase() !== country);
+      state.openCountries.delete(country);
       state.isDirty = true;
       renderItems();
       renderAddCountryOptions();
@@ -415,6 +452,7 @@ function bindEvents() {
 
     const addContactButton = target.closest("[data-emergency-add-contact]");
     if (addContactButton) {
+      syncExpandedCountriesFromDom();
       syncStateFromDom();
       const country = normalizeText(addContactButton.getAttribute("data-emergency-add-contact")).toUpperCase();
       state.items = state.items.map((item) => (
@@ -438,6 +476,7 @@ function bindEvents() {
 
     const removeContactButton = target.closest("[data-emergency-remove-contact]");
     if (removeContactButton) {
+      syncExpandedCountriesFromDom();
       syncStateFromDom();
       const country = normalizeText(removeContactButton.getAttribute("data-emergency-remove-contact")).toUpperCase();
       const contactIndex = Number(removeContactButton.getAttribute("data-contact-index"));
