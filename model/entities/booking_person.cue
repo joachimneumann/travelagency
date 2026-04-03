@@ -51,6 +51,7 @@ import (
 	hotel_room_smoker?: *false | bool
 	hotel_room_sharing_ok?: *true | bool
 	date_of_birth?:      common.#DateOnly
+	gender?:             enums.#BookingPersonGender
 	nationality?:        enums.#CountryCode
 	address?:            #BookingPersonAddress
 	roles?: [...enums.#BookingPersonRole]

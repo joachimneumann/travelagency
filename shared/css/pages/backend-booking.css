@@ -98,6 +98,32 @@
   color: var(--text-muted-strong);
 }
 
+.booking-detail-page .booking-persons-summary {
+  display: grid;
+  gap: 0.22rem;
+}
+
+.booking-detail-page .booking-persons-summary__passport {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--text-muted-strong);
+  font-size: var(--booking-type-meta);
+  font-weight: var(--font-weight-regular);
+}
+
+.booking-detail-page .booking-persons-summary__passport.is-complete {
+  color: var(--text-black-muted);
+}
+
+.booking-detail-page .booking-persons-summary__passport-check {
+  color: var(--text-muted-soft);
+}
+
+.booking-detail-page .booking-persons-summary__passport.is-complete .booking-persons-summary__passport-check {
+  color: var(--success-text-bright);
+}
+
 .booking-detail-page .field label,
 .booking-detail-page .field .field-label {
   font-size: var(--booking-type-label);
@@ -577,6 +603,26 @@
   border: 1px solid rgba(232, 226, 216, 0.92);
   border-radius: 20px;
   background: rgba(255, 255, 255, 0.72);
+}
+
+.booking-detail-page .booking-pdf-panel__toggle {
+  display: grid;
+}
+
+.booking-detail-page .booking-pdf-panel__toggle-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  font-size: var(--booking-type-label);
+  font-weight: var(--booking-font-weight-strong);
+  line-height: 1.3;
+  color: var(--text-strong);
+}
+
+.booking-detail-page .booking-pdf-panel__toggle-label input[type="checkbox"] {
+  width: 1rem;
+  height: 1rem;
+  margin: 0;
 }
 
 .booking-detail-page .booking-pdf-panel__customer-grid {

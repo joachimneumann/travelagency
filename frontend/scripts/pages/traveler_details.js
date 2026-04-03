@@ -15,6 +15,30 @@ const apiBase = (window.ASIATRAVELPLAN_API_BASE || "").replace(/\/$/, "");
 const apiOrigin = apiBase || window.location.origin;
 const DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const VIETNAM_COUNTRY_CODE = "VN";
+const BOOKING_PERSON_GENDER_OPTIONS = Object.freeze([
+  "male",
+  "female",
+  "other",
+  "prefer_not_to_say"
+]);
+const TRAVELER_DETAILS_TRANSLATIONS = Object.freeze({
+  en: {
+    gender: "Gender",
+    gender_placeholder: "Select gender",
+    gender_male: "Male",
+    gender_female: "Female",
+    gender_other: "Other",
+    gender_prefer_not_to_say: "Prefer not to say"
+  },
+  vi: {
+    gender: "Giới tính",
+    gender_placeholder: "Chọn giới tính",
+    gender_male: "Nam",
+    gender_female: "Nữ",
+    gender_other: "Khác",
+    gender_prefer_not_to_say: "Không muốn tiết lộ"
+  }
+});
 
 const state = {
   bookingId: normalizeText(query.get("booking_id")),
@@ -37,6 +61,21 @@ const els = {
   saveBtn: document.getElementById("traveler_details_save_btn"),
   status: document.getElementById("traveler_details_status")
 };
+
+function travelerDetailsLang() {
+  const normalized = normalizeText(
+    query.get("lang")
+    || state.access?.customer_language
+    || document.documentElement.lang
+    || "en"
+  ).toLowerCase();
+  return normalized === "vi" ? "vi" : "en";
+}
+
+function travelerDetailsT(key, fallback) {
+  const catalog = TRAVELER_DETAILS_TRANSLATIONS[travelerDetailsLang()] || TRAVELER_DETAILS_TRANSLATIONS.en;
+  return catalog?.[key] || fallback;
+}
 
 function normalizeTravelerLanguageCode(value) {
   const raw = normalizeText(value);
@@ -76,6 +115,30 @@ function renderCountryOptions(currentValue = "", placeholderLabel = "Select nati
     options.splice(1, 0, `<option value="${escapeHtml(current)}" selected>${escapeHtml(current)}</option>`);
   }
   return options.join("");
+}
+
+function normalizeTravelerGender(value) {
+  const normalized = normalizeText(value).toLowerCase();
+  return BOOKING_PERSON_GENDER_OPTIONS.includes(normalized) ? normalized : "";
+}
+
+function formatTravelerGenderLabel(value) {
+  const normalized = normalizeTravelerGender(value);
+  if (normalized === "male") return travelerDetailsT("gender_male", "Male");
+  if (normalized === "female") return travelerDetailsT("gender_female", "Female");
+  if (normalized === "other") return travelerDetailsT("gender_other", "Other");
+  if (normalized === "prefer_not_to_say") return travelerDetailsT("gender_prefer_not_to_say", "Prefer not to say");
+  return "";
+}
+
+function renderTravelerGenderOptions(currentValue = "") {
+  const current = normalizeTravelerGender(currentValue);
+  return [
+    `<option value="">${escapeHtml(travelerDetailsT("gender_placeholder", "Select gender"))}</option>`,
+    ...BOOKING_PERSON_GENDER_OPTIONS.map((gender) => (
+      `<option value="${escapeHtml(gender)}"${gender === current ? " selected" : ""}>${escapeHtml(formatTravelerGenderLabel(gender))}</option>`
+    ))
+  ].join("");
 }
 
 function parseDateOnly(value) {
@@ -173,6 +236,7 @@ function createTravelerDraft(traveler = {}) {
     hotel_room_smoker: traveler?.hotel_room_smoker === true,
     hotel_room_sharing_ok: traveler?.hotel_room_sharing_ok !== false,
     date_of_birth: normalizeText(traveler.date_of_birth),
+    gender: normalizeTravelerGender(traveler.gender),
     nationality: normalizeText(traveler.nationality).toUpperCase(),
     address: {
       line_1: normalizeText(traveler.address?.line_1),
@@ -255,6 +319,7 @@ function buildTravelerPayload(traveler) {
     hotel_room_smoker: traveler.hotel_room_smoker === true,
     hotel_room_sharing_ok: traveler.hotel_room_sharing_ok !== false,
     date_of_birth: normalizeText(traveler.date_of_birth),
+    gender: normalizeTravelerGender(traveler.gender),
     nationality: normalizeText(traveler.nationality).toUpperCase(),
     ...(hasAddress ? {
       address: {
@@ -333,6 +398,12 @@ function travelerCardMarkup(traveler) {
         <label for="traveler_nationality">Nationality</label>
         <select id="traveler_nationality" data-field="nationality">
           ${renderCountryOptions(traveler.nationality, "Select nationality")}
+        </select>
+      </div>
+      <div class="field">
+        <label for="traveler_gender">${escapeHtml(travelerDetailsT("gender", "Gender"))}</label>
+        <select id="traveler_gender" data-field="gender">
+          ${renderTravelerGenderOptions(traveler.gender)}
         </select>
       </div>
       <div class="field">
@@ -508,6 +579,8 @@ function handleTravelerFormInput(event) {
         state.traveler.documents.passport = passportDocument;
       }
       renderTravelerCard();
+    } else if (field === "gender") {
+      state.traveler[field] = normalizeTravelerGender(target.value);
     } else if (field === "food_preferences" || field === "allergies") {
       state.traveler[field] = normalizePreferenceList(target.value);
     } else if (field === "hotel_room_smoker") {

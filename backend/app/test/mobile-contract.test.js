@@ -3190,9 +3190,22 @@ test("booking travel plan pdf renders personalized copy and accommodation line",
       closing: "We would be happy to refine anything together.",
       closing_i18n: {
         en: "We would be happy to refine anything together."
-      }
+      },
+      include_who_is_traveling: true
     }
   };
+  bookingRecord.persons = [
+    {
+      id: "booking_person_traveler_pdf_1",
+      name: "Traveler Marker One",
+      roles: ["traveler", "primary_contact"]
+    },
+    {
+      id: "booking_person_traveler_pdf_2",
+      name: "Traveler Marker Two",
+      roles: ["traveler"]
+    }
+  ];
   bookingRecord.travel_plan = {
     days: [{
       id: "travel_plan_day_personalized_1",
@@ -3228,6 +3241,13 @@ test("booking travel plan pdf renders personalized copy and accommodation line",
   assert.match(decodedText, /12daysinVietnamandCambodia/);
   assert.match(decodedText, /Thisisyourcurrenttravelplan\./);
   assert.match(decodedText, /Youwillstayat:LanternBoutiqueHotel/);
+  assert.match(decodedText, /Whoistraveling/);
+  assert.match(decodedText, /TravelerMarkerOne/);
+  assert.match(decodedText, /TravelerMarkerTwo/);
+  assert.ok(
+    decodedText.indexOf("Arrivalday") < decodedText.indexOf("Whoistraveling"),
+    "Expected traveler list after the travel plan section"
+  );
   assert.match(decodedText, /Wewouldbehappytorefineanythingtogether\./);
 });
 
@@ -5055,14 +5075,16 @@ test("booking source update persists trip context and pdf personalization", asyn
             welcome_i18n: {
               en: "This is your current travel plan.",
               de: "Dies ist Ihr aktueller Reiseplan."
-            }
+            },
+            include_who_is_traveling: true
           },
           offer: {
             closing: "We would be happy to refine anything together.",
             closing_i18n: {
               en: "We would be happy to refine anything together.",
               de: "Wir verfeinern alles gern gemeinsam mit Ihnen."
-            }
+            },
+            include_who_is_traveling: false
           }
         },
         actor: "joachim"
@@ -5084,6 +5106,14 @@ test("booking source update persists trip context and pdf personalization", asyn
     sourceUpdateResult.body.booking.pdf_personalization.travel_plan.subtitle_i18n.de,
     "12 Tage in Vietnam und Kambodscha"
   );
+  assert.equal(
+    sourceUpdateResult.body.booking.pdf_personalization.travel_plan.include_who_is_traveling,
+    true
+  );
+  assert.equal(
+    sourceUpdateResult.body.booking.pdf_personalization.offer.include_who_is_traveling,
+    false
+  );
 
   const detailAfter = await requestJson(
     endpointPath("booking_detail").replace("{booking_id}", bookingId),
@@ -5099,6 +5129,14 @@ test("booking source update persists trip context and pdf personalization", asyn
   assert.equal(
     detailAfter.body.booking.pdf_personalization.travel_plan.welcome_i18n.de,
     "Dies ist Ihr aktueller Reiseplan."
+  );
+  assert.equal(
+    detailAfter.body.booking.pdf_personalization.travel_plan.include_who_is_traveling,
+    true
+  );
+  assert.equal(
+    detailAfter.body.booking.pdf_personalization.offer.include_who_is_traveling,
+    false
   );
   assert.equal(
     detailAfter.body.booking.pdf_personalization.offer.closing_i18n.de,

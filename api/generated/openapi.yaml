@@ -468,19 +468,44 @@ components:
         label: assistant
       - value: other
         label: other
+    BookingPersonGender:
+      type: string
+      enum:
+      - male
+      - female
+      - other
+      - prefer_not_to_say
+      x-enum-catalog:
+      - code: male
+      - code: female
+      - code: other
+      - code: prefer_not_to_say
+      x-enum-options:
+      - value: male
+        label: male
+      - value: female
+        label: female
+      - value: other
+        label: other
+      - value: prefer_not_to_say
+        label: prefer_not_to_say
     TravelPlanTimingKind:
       type: string
       enum:
       - label
+      - not_applicable
       - point
       - range
       x-enum-catalog:
       - code: label
+      - code: not_applicable
       - code: point
       - code: range
       x-enum-options:
       - value: label
         label: label
+      - value: not_applicable
+        label: not_applicable
       - value: point
         label: point
       - value: range
@@ -4173,6 +4198,9 @@ components:
           type: string
           format: date
           nullable: true
+        gender:
+          "$ref": "#/components/schemas/BookingPersonGender"
+          nullable: true
         nationality:
           "$ref": "#/components/schemas/CountryCode"
           nullable: true
@@ -6830,6 +6858,9 @@ components:
           type: object
           additionalProperties:
             type: string
+        include_who_is_traveling:
+          type: boolean
+          nullable: true
     BookingPdfPersonalization:
       type: object
       properties:

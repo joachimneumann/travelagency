@@ -23,6 +23,7 @@ function compactObject(value) {
   const next = Object.fromEntries(
     Object.entries(value).filter(([, entryValue]) => {
       if (entryValue === null || entryValue === undefined) return false;
+      if (typeof entryValue === "boolean") return true;
       if (Array.isArray(entryValue)) return entryValue.length > 0;
       if (typeof entryValue === "object") return Object.keys(entryValue).length > 0;
       return Boolean(entryValue);
@@ -44,6 +45,8 @@ export function normalizeBookingPdfPersonalization(value, { flatLang = "en", sou
   const raw = value && typeof value === "object" && !Array.isArray(value) ? value : {};
   const travelPlan = raw.travel_plan && typeof raw.travel_plan === "object" && !Array.isArray(raw.travel_plan) ? raw.travel_plan : {};
   const offer = raw.offer && typeof raw.offer === "object" && !Array.isArray(raw.offer) ? raw.offer : {};
+  const travelPlanIncludeWhoIsTraveling = travelPlan.include_who_is_traveling === true;
+  const offerIncludeWhoIsTraveling = offer.include_who_is_traveling !== false;
 
   return compactObject({
     travel_plan: compactObject({
@@ -64,7 +67,8 @@ export function normalizeBookingPdfPersonalization(value, { flatLang = "en", sou
             closing: normalizePdfTextField(travelPlan.closing, travelPlan.closing_i18n, { flatLang, sourceLang }).text,
             closing_i18n: normalizePdfTextField(travelPlan.closing, travelPlan.closing_i18n, { flatLang, sourceLang }).i18n
           }
-        : {})
+        : {}),
+      include_who_is_traveling: travelPlanIncludeWhoIsTraveling
     }),
     offer: compactObject({
       ...(normalizePdfTextField(offer.subtitle, offer.subtitle_i18n, { flatLang, sourceLang })
@@ -84,7 +88,8 @@ export function normalizeBookingPdfPersonalization(value, { flatLang = "en", sou
             closing: normalizePdfTextField(offer.closing, offer.closing_i18n, { flatLang, sourceLang }).text,
             closing_i18n: normalizePdfTextField(offer.closing, offer.closing_i18n, { flatLang, sourceLang }).i18n
           }
-        : {})
+        : {}),
+      include_who_is_traveling: offerIncludeWhoIsTraveling
     })
   }) || {};
 }

@@ -4164,6 +4164,7 @@
   "isArray": false,
   "enumValues": [
     "label",
+    "not_applicable",
     "point",
     "range"
   ],
@@ -4171,6 +4172,10 @@
     {
       "value": "label",
       "label": "label"
+    },
+    {
+      "value": "not_applicable",
+      "label": "not_applicable"
     },
     {
       "value": "point",
@@ -4230,6 +4235,35 @@
   "kind": "transport",
   "typeName": "BookingTravelPlanServiceImageFocalPoint",
   "isArray": false
+},
+  FIELD_137: {
+  "kind": "enum",
+  "typeName": "BookingPersonGender",
+  "isArray": false,
+  "enumValues": [
+    "male",
+    "female",
+    "other",
+    "prefer_not_to_say"
+  ],
+  "options": [
+    {
+      "value": "male",
+      "label": "male"
+    },
+    {
+      "value": "female",
+      "label": "female"
+    },
+    {
+      "value": "other",
+      "label": "other"
+    },
+    {
+      "value": "prefer_not_to_say",
+      "label": "prefer_not_to_say"
+    }
+  ]
 }
     });
 

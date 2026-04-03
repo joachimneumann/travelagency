@@ -46,6 +46,7 @@ IR: {
 		BookingSourceChannel: {catalog: "bookingSourceChannels"}
 		BookingReferralKind: {catalog: "bookingReferralKinds"}
 		BookingPersonRole: {catalog: "bookingPersonRoles"}
+		BookingPersonGender: {catalog: "bookingPersonGenders"}
 		TravelPlanTimingKind: {catalog: "travelPlanTimingKinds"}
 		TravelPlanServiceKind: {catalog: "travelPlanServiceKinds"}
 		TravelPlanFinancialCoverageStatus: {catalog: "travelPlanFinancialCoverageStatuses"}
@@ -220,6 +221,7 @@ IR: {
 				{name: "hotel_room_smoker", kind: "scalar", typeName: "bool", required: false},
 				{name: "hotel_room_sharing_ok", kind: "scalar", typeName: "bool", required: false},
 				{name: "date_of_birth", kind: "scalar", typeName: "DateOnly", required: false},
+				{name: "gender", kind: "enum", typeName: "BookingPersonGender", required: false},
 				{name: "nationality", kind: "enum", typeName: "CountryCode", required: false},
 				{name: "address", kind: "entity", typeName: "BookingPersonAddress", required: false},
 				{name: "roles", kind: "enum", typeName: "BookingPersonRole", required: false, isArray: true},

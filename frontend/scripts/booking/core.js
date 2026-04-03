@@ -280,7 +280,8 @@ function normalizePdfPersonalization(value) {
       welcome: travelPlanWelcome.text,
       welcome_i18n: travelPlanWelcome.i18n,
       closing: travelPlanClosing.text,
-      closing_i18n: travelPlanClosing.i18n
+      closing_i18n: travelPlanClosing.i18n,
+      include_who_is_traveling: travelPlan.include_who_is_traveling === true
     },
     offer: {
       subtitle: offerSubtitle.text,
@@ -288,7 +289,8 @@ function normalizePdfPersonalization(value) {
       welcome: offerWelcome.text,
       welcome_i18n: offerWelcome.i18n,
       closing: offerClosing.text,
-      closing_i18n: offerClosing.i18n
+      closing_i18n: offerClosing.i18n,
+      include_who_is_traveling: offer.include_who_is_traveling !== false
     }
   };
 }
@@ -576,6 +578,22 @@ export function createBookingCoreModule(ctx) {
       computedClosingPlaceholder(),
       3
     );
+    if (els.pdfTravelPlanIncludeWhoIsTravelingMount instanceof HTMLElement) {
+      els.pdfTravelPlanIncludeWhoIsTravelingMount.innerHTML = `
+        <div class="booking-pdf-panel__toggle">
+          <label class="booking-pdf-panel__toggle-label" for="booking_pdf_travel_plan_include_who_is_traveling">
+            <input
+              id="booking_pdf_travel_plan_include_who_is_traveling"
+              type="checkbox"
+              data-booking-pdf-toggle="travel_plan.include_who_is_traveling"
+              ${travelPlan.include_who_is_traveling === true ? "checked" : ""}
+              ${disabled ? "disabled" : ""}
+            />
+            <span>${escapeHtml(bookingT("booking.pdf.travel_plan.include_who_is_traveling", "Include Who is traveling"))}</span>
+          </label>
+        </div>
+      `;
+    }
     renderField(
       els.pdfOfferSubtitleMount,
       "offer",
@@ -600,6 +618,22 @@ export function createBookingCoreModule(ctx) {
       computedClosingPlaceholder(),
       3
     );
+    if (els.pdfOfferIncludeWhoIsTravelingMount instanceof HTMLElement) {
+      els.pdfOfferIncludeWhoIsTravelingMount.innerHTML = `
+        <div class="booking-pdf-panel__toggle">
+          <label class="booking-pdf-panel__toggle-label" for="booking_pdf_offer_include_who_is_traveling">
+            <input
+              id="booking_pdf_offer_include_who_is_traveling"
+              type="checkbox"
+              data-booking-pdf-toggle="offer.include_who_is_traveling"
+              ${offer.include_who_is_traveling !== false ? "checked" : ""}
+              ${disabled ? "disabled" : ""}
+            />
+            <span>${escapeHtml(bookingT("booking.pdf.travel_plan.include_who_is_traveling", "Include Who is traveling"))}</span>
+          </label>
+        </div>
+      `;
+    }
 
     if (els.pdfCustomerReference) {
       const submissionNote = customerReferenceNote();
@@ -718,7 +752,8 @@ export function createBookingCoreModule(ctx) {
         welcome: readLocalizedBookingPdfField("travel_plan", "welcome", draft.pdf_personalization?.travel_plan?.welcome_i18n).text,
         welcome_i18n: readLocalizedBookingPdfField("travel_plan", "welcome", draft.pdf_personalization?.travel_plan?.welcome_i18n).i18n,
         closing: readLocalizedBookingPdfField("travel_plan", "closing", draft.pdf_personalization?.travel_plan?.closing_i18n).text,
-        closing_i18n: readLocalizedBookingPdfField("travel_plan", "closing", draft.pdf_personalization?.travel_plan?.closing_i18n).i18n
+        closing_i18n: readLocalizedBookingPdfField("travel_plan", "closing", draft.pdf_personalization?.travel_plan?.closing_i18n).i18n,
+        include_who_is_traveling: els.pdfPersonalizationPanel?.querySelector('[data-booking-pdf-toggle="travel_plan.include_who_is_traveling"]')?.checked === true
       },
       offer: {
         ...draft.pdf_personalization?.offer,
@@ -727,7 +762,8 @@ export function createBookingCoreModule(ctx) {
         welcome: readLocalizedBookingPdfField("offer", "welcome", draft.pdf_personalization?.offer?.welcome_i18n).text,
         welcome_i18n: readLocalizedBookingPdfField("offer", "welcome", draft.pdf_personalization?.offer?.welcome_i18n).i18n,
         closing: readLocalizedBookingPdfField("offer", "closing", draft.pdf_personalization?.offer?.closing_i18n).text,
-        closing_i18n: readLocalizedBookingPdfField("offer", "closing", draft.pdf_personalization?.offer?.closing_i18n).i18n
+        closing_i18n: readLocalizedBookingPdfField("offer", "closing", draft.pdf_personalization?.offer?.closing_i18n).i18n,
+        include_who_is_traveling: els.pdfPersonalizationPanel?.querySelector('[data-booking-pdf-toggle="offer.include_who_is_traveling"]')?.checked !== false
       }
     };
     if (draft.referral_kind === "none") {

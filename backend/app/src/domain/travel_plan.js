@@ -239,6 +239,15 @@ function normalizeItemTiming(rawItem) {
       end_time
     };
   }
+  if (timing_kind === "not_applicable") {
+    return {
+      timing_kind,
+      time_label: null,
+      time_point: null,
+      start_time: null,
+      end_time: null
+    };
+  }
   return {
     timing_kind,
     time_label,

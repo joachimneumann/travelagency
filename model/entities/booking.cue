@@ -95,12 +95,13 @@ import (
 #BookingInvoice: #Invoice
 
 #BookingPdfPersonalizationScoped: {
-	subtitle?:      string
-	subtitle_i18n?: [string]: string
-	welcome?:       string
-	welcome_i18n?:  [string]: string
-	closing?:       string
-	closing_i18n?:  [string]: string
+	subtitle?:                 string
+	subtitle_i18n?:            [string]: string
+	welcome?:                  string
+	welcome_i18n?:             [string]: string
+	closing?:                  string
+	closing_i18n?:             [string]: string
+	include_who_is_traveling?: bool
 }
 
 #BookingPdfPersonalization: {

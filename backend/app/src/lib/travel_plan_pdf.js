@@ -36,6 +36,10 @@ import {
   buildTravelPlanItemThumbnailMap,
   drawTravelPlanDaysSection
 } from "./pdf_travel_plan_section.js";
+import {
+  drawPdfTravelersSection,
+  estimatePdfTravelersSectionHeight
+} from "./pdf_travelers_section.js";
 
 const MM_TO_POINTS = 72 / 25.4;
 // PDFKit's built-in "A4" preset rounds the page box and some viewers display it as
@@ -416,17 +420,6 @@ function drawTravelPlanHero(doc, heroTitle, heroSubtitle, heroImage, startY, fon
   return Math.max(startY + HERO_IMAGE_HEIGHT, bottomY) + 18;
 }
 
-function drawTravelPlanSectionTitle(doc, y, fonts, lang) {
-  doc
-    .font(pdfFontName("bold", fonts))
-    .fontSize(18)
-    .fillColor(PDF_COLORS.textStrong)
-    .text(travelPlanSectionTitle(lang), PAGE_MARGIN, y, pdfTextOptions(lang, {
-      width: doc.page.width - PAGE_MARGIN * 2
-    }));
-  return doc.y + 10;
-}
-
 function drawRunningHeader(doc, booking, fonts, companyProfile, lang) {
   const pageWidth = doc.page.width - PAGE_MARGIN * 2;
   let y = PAGE_MARGIN;
@@ -501,10 +494,10 @@ function drawClosing(doc, startY, fonts, lang, closingText, attachmentCount = 0)
       align: pdfTextAlign(lang)
     });
   doc
-    .font(pdfFontName("bold", fonts))
+    .font(pdfFontName("regular", fonts))
     .fontSize(12)
     .fillColor(PDF_COLORS.textStrong)
-    .text(pdfT(lang, "travel_plan.closing_team", "That's your Asia Travel Plan team."), PAGE_MARGIN, signY + 18, {
+    .text(pdfT(lang, "travel_plan.closing_team", "Your Asia Travel Plan team."), PAGE_MARGIN, signY + 18, {
       width: doc.page.width - PAGE_MARGIN * 2,
       align: pdfTextAlign(lang)
     });
@@ -798,7 +791,6 @@ export function createTravelPlanPdfWriter({
         y = drawTextParagraph(doc, y + 6, welcomeText, fonts, lang, { fontSize: 11.2 }) + 12;
       }
 
-      y = drawTravelPlanSectionTitle(doc, y, fonts, lang);
       y = drawTravelPlanDaysSection({
         doc,
         startY: y,
@@ -819,6 +811,22 @@ export function createTravelPlanPdfWriter({
         sectionTitleFontSize: 18,
         renderSectionTitle: false
       });
+
+      if (booking?.pdf_personalization?.travel_plan?.include_who_is_traveling === true) {
+        y = ensureSpace(y, estimatePdfTravelersSectionHeight(booking));
+        y = drawPdfTravelersSection({
+          doc,
+          booking,
+          startY: y,
+          fonts,
+          lang,
+          colors: PDF_COLORS,
+          pageMargin: PAGE_MARGIN,
+          pdfFontName,
+          pdfTextAlign,
+          pdfT
+        });
+      }
 
       y = ensureSpace(y, estimateGuideSectionHeight(doc, guideContext, fonts, lang) + 10);
       y = drawGuideSection(doc, y, fonts, lang, guideContext, guidePhoto);

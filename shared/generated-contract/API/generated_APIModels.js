@@ -308,7 +308,8 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
     schemaField({"name":"welcome","required":false,"wireName":"welcome"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"welcome_i18n","required":false,"wireName":"welcome_i18n"}, {"kind":"transport","typeName":"Record<string,string>","isArray":false}),
     schemaField({"name":"closing","required":false,"wireName":"closing"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"closing_i18n","required":false,"wireName":"closing_i18n"}, {"kind":"transport","typeName":"Record<string,string>","isArray":false})
+    schemaField({"name":"closing_i18n","required":false,"wireName":"closing_i18n"}, {"kind":"transport","typeName":"Record<string,string>","isArray":false}),
+    schemaField({"name":"include_who_is_traveling","required":false,"wireName":"include_who_is_traveling"}, SHARED_FIELD_DEFS.FIELD_8)
         ]
       };
 

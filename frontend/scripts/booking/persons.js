@@ -73,6 +73,13 @@ export function createBookingPersonsModule(ctx) {
   let personModalActionStatus = "";
   let personModalSaveInFlight = false;
   let personModalDiscardInFlight = false;
+  const VIETNAM_COUNTRY_CODE = "VN";
+  const BOOKING_PERSON_GENDER_OPTIONS = Object.freeze([
+    "male",
+    "female",
+    "other",
+    "prefer_not_to_say"
+  ]);
 
   function normalizePersonLanguageCode(value) {
     const raw = normalizeText(value);
@@ -114,6 +121,27 @@ export function createBookingPersonsModule(ctx) {
     return state.personDrafts.filter((person) => !person?._is_new && isTravelingPerson(person)).length;
   }
 
+  function normalizePersonGender(value) {
+    const normalized = normalizeText(value).toLowerCase();
+    return BOOKING_PERSON_GENDER_OPTIONS.includes(normalized) ? normalized : "";
+  }
+
+  function formatPersonGenderLabel(value) {
+    const normalized = normalizePersonGender(value);
+    if (!normalized) return "";
+    return bookingT(`booking.gender.option.${normalized}`, normalized);
+  }
+
+  function renderPersonGenderOptions(currentValue = "") {
+    const current = normalizePersonGender(currentValue);
+    return [
+      `<option value="">${escapeHtml(bookingT("booking.gender.placeholder", "Select gender"))}</option>`,
+      ...BOOKING_PERSON_GENDER_OPTIONS.map((gender) => (
+        `<option value="${escapeHtml(gender)}"${gender === current ? " selected" : ""}>${escapeHtml(formatPersonGenderLabel(gender))}</option>`
+      ))
+    ].join("");
+  }
+
   function buildTravelerMismatchMessage(booking) {
     const declared = Number(booking?.web_form_submission?.number_of_travelers || 0);
     if (!declared) return "";
@@ -138,19 +166,22 @@ export function createBookingPersonsModule(ctx) {
     els.personsMismatchWarning.hidden = !message;
   }
 
-  function buildCollapsedPersonSummary(person, { includeMeta = true } = {}) {
-    const personName = normalizeText(person?.name) || bookingT("booking.unnamed_person", "Unnamed person");
-    if (!includeMeta) return personName;
-    const commentParts = [];
-    const nationality = normalizeText(person?.nationality).toUpperCase();
-    if (nationality) commentParts.push(nationality);
-    commentParts.push(
-      ...normalizeStringList(person?.roles)
-        .filter((role) => role !== "traveler")
-        .map((role) => formatPersonRoleLabel(role))
+  function renderPersonsSectionSummary(target, travelerCount, allTravelersHavePassportData) {
+    if (!(target instanceof HTMLElement)) return;
+    const travelerCountLabel = bookingT(
+      travelerCount === 1 ? "booking.persons.traveling_summary_one" : "booking.persons.traveling_summary_many",
+      travelerCount === 1 ? "{count} Traveler" : "{count} Travelers",
+      { count: travelerCount }
     );
-    if (!commentParts.length) return personName;
-    return `${personName} (${commentParts.join(", ")})`;
+    target.innerHTML = `
+      <span class="backend-section-header booking-persons-summary">
+        <span class="backend-section-header__primary">${escapeHtml(travelerCountLabel)}</span>
+        <span class="booking-persons-summary__passport${allTravelersHavePassportData ? " is-complete" : ""}">
+          <span class="booking-person-card__identity-check booking-persons-summary__passport-check" aria-hidden="true">&#10003;</span>
+          <span>${escapeHtml(bookingT("booking.passport", "Passport"))}</span>
+        </span>
+      </span>
+    `;
   }
 
   function renderPersonsSummaryText() {
@@ -159,26 +190,12 @@ export function createBookingPersonsModule(ctx) {
       renderBookingSectionHeader(els.personsPanelSummary, { primary: bookingT("booking.no_persons", "No persons listed.") });
       return;
     }
-    const traveling = persons
-      .filter((person) => isTravelingPerson(person))
-      .map((person) => buildCollapsedPersonSummary(person, { includeMeta: false }));
-    const notTraveling = persons
-      .filter((person) => !isTravelingPerson(person))
-      .map((person) => buildCollapsedPersonSummary(person, { includeMeta: false }));
-    const lines = [
-      bookingT(
-        traveling.length === 1 ? "booking.persons.traveling_summary_one" : "booking.persons.traveling_summary_many",
-        traveling.length === 1 ? "{count} Traveler: {people}" : "{count} Travelers: {people}",
-        {
-        count: traveling.length,
-        people: traveling.length ? traveling.join(" · ") : bookingT("common.none", "none")
-        }
-      )
-    ];
-    if (notTraveling.length) {
-      lines.push(bookingT("booking.persons.not_traveling_summary", "Not traveling: {people}", { people: notTraveling.join(" · ") }));
-    }
-    renderBookingSectionHeader(els.personsPanelSummary, { primary: lines.join("\n") });
+    const traveling = persons.filter((person) => isTravelingPerson(person));
+    renderPersonsSectionSummary(
+      els.personsPanelSummary,
+      traveling.length,
+      traveling.length > 0 && traveling.every((person) => personHasCompleteIdentityDocument(person, "passport"))
+    );
   }
 
   function clonePersonDraft(person = {}, index = 0) {
@@ -195,6 +212,7 @@ export function createBookingPersonsModule(ctx) {
       hotel_room_smoker: person?.hotel_room_smoker === true,
       hotel_room_sharing_ok: person?.hotel_room_sharing_ok !== false,
       date_of_birth: normalizeText(person.date_of_birth) || "",
+      gender: normalizePersonGender(person.gender),
       nationality: normalizeText(person.nationality) || "",
       address: person.address && typeof person.address === "object" ? { ...person.address } : {},
       roles: normalizeStringList(person.roles),
@@ -220,6 +238,7 @@ export function createBookingPersonsModule(ctx) {
       hotel_room_smoker: false,
       hotel_room_sharing_ok: true,
       date_of_birth: "",
+      gender: "",
       nationality: "",
       address: {},
       roles: ["traveler"],
@@ -319,6 +338,16 @@ export function createBookingPersonsModule(ctx) {
     return documentType === "national_id"
       ? bookingT("booking.id_card", "ID card")
       : bookingT("booking.passport", "Passport");
+  }
+
+  function personSupportsNationalId(draft) {
+    return normalizeText(draft?.nationality).toUpperCase() === VIETNAM_COUNTRY_CODE;
+  }
+
+  function resolveActivePersonDocumentType(draft, requestedType = state.active_person_document_type || getPreferredPersonDocumentType(draft)) {
+    return personSupportsNationalId(draft) && normalizeText(requestedType) === "national_id"
+      ? "national_id"
+      : "passport";
   }
 
   function getPersonDocumentPictureElements(documentType) {
@@ -532,6 +561,7 @@ export function createBookingPersonsModule(ctx) {
       hotel_room_smoker: draft?.hotel_room_smoker === true,
       hotel_room_sharing_ok: draft?.hotel_room_sharing_ok !== false,
       date_of_birth: normalizeText(draft?.date_of_birth) || undefined,
+      gender: normalizePersonGender(draft?.gender) || undefined,
       nationality: normalizeText(draft?.nationality).toUpperCase() || undefined,
       address: Object.keys(cleanedAddress).length ? cleanedAddress : undefined,
       roles: normalizeStringList(draft?.roles),
@@ -559,6 +589,7 @@ export function createBookingPersonsModule(ctx) {
       draft.hotel_room_smoker === true ||
       draft.hotel_room_sharing_ok === false ||
       normalizeText(draft.date_of_birth) ||
+      normalizePersonGender(draft.gender) ||
       normalizeText(draft.nationality) ||
       addressValues.some((value) => normalizeText(value)) ||
       hasNonDefaultRoles ||
@@ -1045,6 +1076,11 @@ export function createBookingPersonsModule(ctx) {
       els.personModalDateOfBirth.value = normalizeText(draft.date_of_birth) || "";
       els.personModalDateOfBirth.disabled = !canEdit;
     }
+    if (els.personModalGender) {
+      els.personModalGender.innerHTML = renderPersonGenderOptions(draft.gender);
+      els.personModalGender.value = normalizePersonGender(draft.gender) || "";
+      els.personModalGender.disabled = !canEdit;
+    }
     if (els.personModalNationality) {
       populateCountryCodeSelect(els.personModalNationality, bookingT("booking.persons.select_nationality", "Select nationality"));
       els.personModalNationality.value = normalizeText(draft.nationality) || "";
@@ -1093,7 +1129,8 @@ export function createBookingPersonsModule(ctx) {
 
     const passport = getPersonDocument(draft, "passport") || normalizePersonDocumentDraft({}, "passport");
     const nationalId = getPersonDocument(draft, "national_id") || normalizePersonDocumentDraft({}, "national_id");
-    const activeDocumentType = state.active_person_document_type || getPreferredPersonDocumentType(draft);
+    const activeDocumentType = resolveActivePersonDocumentType(draft);
+    state.active_person_document_type = activeDocumentType;
     const fieldBindings = [
       [els.personModalAddressLine1, normalizeText(draft.address?.line_1) || ""],
       [els.personModalAddressLine2, normalizeText(draft.address?.line_2) || ""],
@@ -1200,6 +1237,9 @@ export function createBookingPersonsModule(ctx) {
   }
 
   function updatePersonModalDocumentSwitcher(draft, activeDocumentType, canEdit) {
+    const supportsNationalId = personSupportsNationalId(draft);
+    const resolvedDocumentType = resolveActivePersonDocumentType(draft, activeDocumentType);
+    state.active_person_document_type = resolvedDocumentType;
     const passportSwitch = document.getElementById("booking_person_modal_switch_passport");
     const nationalIdSwitch = document.getElementById("booking_person_modal_switch_national_id");
     const switches = [
@@ -1208,17 +1248,19 @@ export function createBookingPersonsModule(ctx) {
     ];
     switches.forEach(([button, documentType, label]) => {
       if (!(button instanceof HTMLButtonElement)) return;
-      const isActive = activeDocumentType === documentType;
+      const isSupported = documentType !== "national_id" || supportsNationalId;
+      const isActive = resolvedDocumentType === documentType;
       const isComplete = personHasCompleteIdentityDocument(draft, documentType);
       button.classList.toggle("is-active", isActive);
       button.setAttribute("aria-selected", String(isActive));
-      button.disabled = !canEdit;
+      button.disabled = !canEdit || !isSupported;
+      button.hidden = !isSupported;
       button.innerHTML = isComplete
         ? `${escapeHtml(label)} <span class="booking-person-modal__document-switch-check" aria-hidden="true">&#10003;</span>`
         : escapeHtml(label);
     });
     document.querySelectorAll("[data-document-panel]").forEach((panel) => {
-      const matches = panel.getAttribute("data-document-panel") === activeDocumentType;
+      const matches = panel.getAttribute("data-document-panel") === resolvedDocumentType;
       panel.hidden = !matches;
       panel.style.display = matches ? "" : "none";
     });
@@ -1228,7 +1270,7 @@ export function createBookingPersonsModule(ctx) {
     Object.entries(personModalAutofillConfig).forEach(([id, config]) => {
       const button = document.getElementById(id);
       if (!(button instanceof HTMLButtonElement)) return;
-      const isActive = config.document_type === activeDocumentType;
+      const isActive = config.document_type === resolvedDocumentType;
       button.hidden = !isActive;
       button.disabled = !canEdit;
       button.textContent = config.source === "name" ? abbreviatedName : nationalityCode;
@@ -1390,6 +1432,10 @@ export function createBookingPersonsModule(ctx) {
       } else if (field === "nationality") {
         draft[field] = normalizeText(target.value).toUpperCase();
         target.value = draft[field];
+        state.active_person_document_type = resolveActivePersonDocumentType(draft, state.active_person_document_type);
+      } else if (field === "gender") {
+        draft[field] = normalizePersonGender(target.value);
+        target.value = draft[field];
       } else {
         draft[field] = target.value;
       }
@@ -1441,7 +1487,10 @@ export function createBookingPersonsModule(ctx) {
     }
     const documentSwitch = event.target.closest("[data-document-switch]");
     if (documentSwitch) {
-      state.active_person_document_type = normalizeText(documentSwitch.getAttribute("data-document-switch")) || "passport";
+      state.active_person_document_type = resolveActivePersonDocumentType(
+        draft,
+        normalizeText(documentSwitch.getAttribute("data-document-switch")) || "passport"
+      );
       renderPersonModal();
       return;
     }

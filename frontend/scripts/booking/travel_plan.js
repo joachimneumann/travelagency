@@ -537,6 +537,13 @@ export function createBookingTravelPlanModule(ctx) {
     return "";
   }
 
+  function suggestedNextTravelPlanDayDate(dayIndex) {
+    const index = Number(dayIndex);
+    if (!Number.isInteger(index) || index <= 0) return "";
+    const previousDay = Array.isArray(state.travelPlanDraft?.days) ? state.travelPlanDraft.days[index - 1] : null;
+    return nextIsoDate(previousDay?.date);
+  }
+
   function travelPlanSummary() {
     const days = Array.isArray(state.travelPlanDraft?.days) ? state.travelPlanDraft.days.length : 0;
     const items = countTravelPlanServices(state.travelPlanDraft);
@@ -821,6 +828,9 @@ export function createBookingTravelPlanModule(ctx) {
 
   function travelPlanTimingSummary(day, item) {
     const timingKind = String(item?.timing_kind || "label").trim();
+    if (timingKind === "not_applicable") {
+      return bookingT("booking.travel_plan.timing_kind.not_applicable", "Not applicable");
+    }
     if (timingKind === "point") {
       return compactTravelPlanDateTime(day?.date, item?.time_point);
     }
@@ -1038,7 +1048,7 @@ export function createBookingTravelPlanModule(ctx) {
     return "";
   }
 
-  function renderTravelPlanDateInput({ id, dataAttribute, value = "", disabled = false, ariaLabel = "" }) {
+  function renderTravelPlanDateInput({ id, dataAttribute, value = "", disabled = false, ariaLabel = "", trailingContent = "" }) {
     return `
       <div class="booking-person-modal__date-input travel-plan-date-input">
         <input
@@ -1072,6 +1082,7 @@ export function createBookingTravelPlanModule(ctx) {
           data-travel-plan-date-picker-for="${escapeHtml(id)}"
           ${disabled ? "disabled" : ""}
         />
+        ${trailingContent}
       </div>
       <div class="error" data-travel-plan-date-error="${escapeHtml(id)}"></div>
     `;
@@ -1133,6 +1144,20 @@ export function createBookingTravelPlanModule(ctx) {
     pickerInput.click();
   }
 
+  function applySuggestedTravelPlanDayDate(button) {
+    const targetId = String(button?.getAttribute("data-travel-plan-apply-next-day") || "").trim();
+    const suggestedDate = String(button?.getAttribute("data-travel-plan-next-day-date") || "").trim();
+    const textInput = targetId ? document.getElementById(targetId) : null;
+    if (!(textInput instanceof HTMLInputElement) || !suggestedDate) return null;
+    textInput.value = suggestedDate;
+    validateTravelPlanDateTextInput(textInput, { allowPartial: false });
+    syncTravelPlanDraftFromDom();
+    refreshTravelPlanVisibleHeadCopy(textInput);
+    updateTravelPlanDirtyState();
+    renderBookingSectionHeader(els.travel_plan_panel_summary, travelPlanSummary());
+    return textInput;
+  }
+
   function validateTravelPlanDateFieldsInDom({ allowPartial = false, focusFirstInvalid = false } = {}) {
     if (!els.travel_plan_editor) return { ok: true, message: "" };
     const dateInputs = Array.from(els.travel_plan_editor.querySelectorAll('[data-travel-plan-date-text="true"]'));
@@ -1168,6 +1193,16 @@ export function createBookingTravelPlanModule(ctx) {
 
   function renderTravelPlanTimingFields(day, item) {
     const timingKind = String(item?.timing_kind || "label");
+    if (timingKind === "not_applicable") {
+      return `
+        <div class="field travel-plan-timing-field travel-plan-timing-field--kind">
+          <label for="travel_plan_timing_kind_${escapeHtml(item.id)}">${escapeHtml(bookingT("booking.travel_plan.time_information", "When?"))}</label>
+          <select id="travel_plan_timing_kind_${escapeHtml(item.id)}" data-travel-plan-service-field="timing_kind">
+            ${timingKindOptions(timingKind)}
+          </select>
+        </div>
+      `;
+    }
     if (timingKind === "point") {
       const pointParts = splitDateTimeValue(day?.date, item.time_point);
       return `
@@ -1336,14 +1371,8 @@ export function createBookingTravelPlanModule(ctx) {
           <div class="travel-plan-service__overview">
             <div class="travel-plan-service__overview-main">
               <div class="field">
-                <label for="travel_plan_kind_${escapeHtml(item.id)}">${escapeHtml(bookingT("booking.travel_plan.kind_label", "Kind"))}</label>
-                <select id="travel_plan_kind_${escapeHtml(item.id)}" data-travel-plan-service-field="kind">
-                  ${itemKindOptions(item.kind)}
-                </select>
-              </div>
-              <div class="field">
                 ${renderTravelPlanLocalizedField({
-                  label: bookingT("booking.travel_plan.item_title", "Summary: Service provided"),
+                  label: bookingT("booking.travel_plan.item_title", "Service Title"),
                   idBase: `travel_plan_title_${item.id}`,
                   dataScope: "travel-plan-service-field",
                   dayId: day.id,
@@ -1356,15 +1385,16 @@ export function createBookingTravelPlanModule(ctx) {
               </div>
               <div class="field">
                 ${renderTravelPlanLocalizedField({
-                  label: bookingT("booking.travel_plan.location_optional", "Location (optional)"),
-                  idBase: `travel_plan_location_${item.id}`,
+                  label: bookingT("booking.travel_plan.item_notes", "Service Details"),
+                  idBase: `travel_plan_details_${item.id}`,
                   dataScope: "travel-plan-service-field",
                   dayId: day.id,
                   itemId: item.id,
-                  field: "location",
-                  type: "input",
-                  sourceValue: resolveLocalizedDraftBranchText(item.location_i18n ?? item.location, bookingSourceLang(), ""),
-                  localizedValue: resolveLocalizedDraftBranchText(item.location_i18n ?? item.location, bookingContentLang(), "")
+                  field: "details",
+                  type: "textarea",
+                  rows: 3,
+                  sourceValue: resolveLocalizedDraftBranchText(item.details_i18n ?? item.details, bookingSourceLang(), ""),
+                  localizedValue: resolveLocalizedDraftBranchText(item.details_i18n ?? item.details, bookingContentLang(), "")
                 })}
               </div>
             </div>
@@ -1372,24 +1402,31 @@ export function createBookingTravelPlanModule(ctx) {
               ${travelPlanImagesModule.renderTravelPlanServiceImages(day, item, { variant: "sidebar" })}
             </div>
           </div>
+          <div class="travel-plan-grid travel-plan-grid--item">
+            <div class="field">
+              <label for="travel_plan_kind_${escapeHtml(item.id)}">${escapeHtml(bookingT("booking.travel_plan.kind_label", "Kind"))}</label>
+              <select id="travel_plan_kind_${escapeHtml(item.id)}" data-travel-plan-service-field="kind">
+                ${itemKindOptions(item.kind)}
+              </select>
+            </div>
+            <div class="field">
+              ${renderTravelPlanLocalizedField({
+                label: bookingT("booking.travel_plan.location_optional", "Location (optional)"),
+                idBase: `travel_plan_location_${item.id}`,
+                dataScope: "travel-plan-service-field",
+                dayId: day.id,
+                itemId: item.id,
+                field: "location",
+                type: "input",
+                sourceValue: resolveLocalizedDraftBranchText(item.location_i18n ?? item.location, bookingSourceLang(), ""),
+                localizedValue: resolveLocalizedDraftBranchText(item.location_i18n ?? item.location, bookingContentLang(), "")
+              })}
+            </div>
+          </div>
           <div class="travel-plan-grid travel-plan-grid--item travel-plan-grid--item-timing travel-plan-grid--item-timing-${escapeHtml(String(item.timing_kind || "label").trim() || "label")}">
             ${renderTravelPlanTimingFields(day, item)}
           </div>
           <div class="travel-plan-grid travel-plan-grid--item">
-            <div class="field">
-              ${renderTravelPlanLocalizedField({
-                label: bookingT("booking.travel_plan.item_notes", "Notes about the Service"),
-                idBase: `travel_plan_details_${item.id}`,
-                dataScope: "travel-plan-service-field",
-                dayId: day.id,
-                itemId: item.id,
-                field: "details",
-                type: "textarea",
-                rows: 3,
-                sourceValue: resolveLocalizedDraftBranchText(item.details_i18n ?? item.details, bookingSourceLang(), ""),
-                localizedValue: resolveLocalizedDraftBranchText(item.details_i18n ?? item.details, bookingContentLang(), "")
-              })}
-            </div>
             <div class="field">
               <label for="travel_plan_financial_note_${escapeHtml(item.id)}">${escapeHtml(bookingT("booking.travel_plan.financial_note", "ATP internal Notes"))}</label>
               <textarea class="booking-text-field booking-text-field--internal" id="travel_plan_financial_note_${escapeHtml(item.id)}" data-travel-plan-service-field="financial_note" rows="3" placeholder="${escapeHtml(bookingT("booking.travel_plan.financial_note_placeholder", "Supplier information / Financial notes"))}">${escapeHtml(item.financial_note || "")}</textarea>
@@ -1417,6 +1454,8 @@ export function createBookingTravelPlanModule(ctx) {
     const collapsed = isTravelPlanDayCollapsed(day.id);
     const collapsedSummary = travelPlanDayCollapsedSummary(day, items);
     const headingLabel = collapsedSummary || formatTravelPlanDayHeading(dayIndex);
+    const dateInputId = `travel_plan_day_date_${day.id}`;
+    const nextDaySuggestion = !String(day?.date || "").trim() ? suggestedNextTravelPlanDayDate(dayIndex) : "";
     return `
       <section class="travel-plan-day${collapsed ? " travel-plan-day--collapsed" : ""}" data-travel-plan-day="${escapeHtml(day.id)}">
         <div class="travel-plan-day__rail">
@@ -1440,19 +1479,25 @@ export function createBookingTravelPlanModule(ctx) {
           <div class="travel-plan-day__body">
             <div class="travel-plan-day__content">
               <div class="field travel-plan-day__date-field">
-                <label for="travel_plan_day_date_${escapeHtml(day.id)}">${escapeHtml(bookingT("booking.date", "Date"))}</label>
+                <label for="${escapeHtml(dateInputId)}">${escapeHtml(bookingT("booking.date", "Date"))}</label>
                 ${renderTravelPlanDateInput({
-                  id: `travel_plan_day_date_${day.id}`,
+                  id: dateInputId,
                   dataAttribute: 'data-travel-plan-day-field="date"',
                   value: day.date,
                   disabled: !state.permissions.canEditBooking,
-                  ariaLabel: `${formatTravelPlanDayHeading(dayIndex)} ${bookingT("booking.date", "Date")}`
+                  ariaLabel: `${formatTravelPlanDayHeading(dayIndex)} ${bookingT("booking.date", "Date")}`,
+                  trailingContent: nextDaySuggestion
+                    ? `<div class="travel-plan-day__date-suggestion">
+                      <span class="travel-plan-day__date-suggestion-label">${escapeHtml(bookingT("booking.travel_plan.next_day", "next day:"))}</span>
+                      <button class="btn btn-ghost travel-plan-day__date-suggestion-btn" data-travel-plan-apply-next-day="${escapeHtml(dateInputId)}" data-travel-plan-next-day-date="${escapeHtml(nextDaySuggestion)}" type="button">${escapeHtml(nextDaySuggestion)}</button>
+                    </div>`
+                    : ""
                 })}
               </div>
               <div class="travel-plan-grid">
               <div class="field">
                 ${renderTravelPlanLocalizedField({
-                  label: bookingT("booking.travel_plan.day_title", "Summary: What is happening on this day?"),
+                  label: bookingT("booking.travel_plan.day_title", "Day Title"),
                   idBase: `travel_plan_day_title_${day.id}`,
                   dataScope: "travel-plan-day-field",
                   dayId: day.id,
@@ -1477,7 +1522,7 @@ export function createBookingTravelPlanModule(ctx) {
             </div>
             <div class="field">
               ${renderTravelPlanLocalizedField({
-                label: bookingT("booking.travel_plan.day_notes", "Notes about the day"),
+                label: bookingT("booking.travel_plan.day_notes", "Day Details"),
                 idBase: `travel_plan_day_notes_${day.id}`,
                 dataScope: "travel-plan-day-field",
                 dayId: day.id,
@@ -2227,6 +2272,10 @@ export function createBookingTravelPlanModule(ctx) {
         }
         if (button.hasAttribute("data-travel-plan-date-picker-btn")) {
           openTravelPlanDatePicker(button);
+          return;
+        }
+        if (button.hasAttribute("data-travel-plan-apply-next-day")) {
+          applySuggestedTravelPlanDayDate(button);
           return;
         }
         if (button.hasAttribute("data-travel-plan-remove-link")) {

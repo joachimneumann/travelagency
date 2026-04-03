@@ -31,6 +31,12 @@ function optionalLanguageCode(value) {
   return null;
 }
 
+function optionalPersonGender(value) {
+  const normalized = normalizeText(value).toLowerCase();
+  if (["male", "female", "other", "prefer_not_to_say"].includes(normalized)) return normalized;
+  return null;
+}
+
 function optionalInt(value) {
   if (value === null || value === undefined || value === "") return null;
   const parsed = Number.parseInt(value, 10);
@@ -186,6 +192,7 @@ export function normalizeBookingPerson(person, index = 0, bookingId = "booking")
     hotel_room_smoker: optionalBoolean(person.hotel_room_smoker, false),
     hotel_room_sharing_ok: optionalBoolean(person.hotel_room_sharing_ok, true),
     date_of_birth: optionalText(person.date_of_birth),
+    gender: optionalPersonGender(person.gender),
     nationality: optionalUppercaseText(person.nationality),
     address: normalizeAddress(person),
     roles: normalizeRoles(person.roles),

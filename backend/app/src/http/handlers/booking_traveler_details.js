@@ -126,6 +126,7 @@ function buildPublicVisiblePerson(bookingId, person) {
     ...(normalized.hotel_room_smoker === true ? { hotel_room_smoker: true } : {}),
     ...(normalized.hotel_room_sharing_ok === false ? { hotel_room_sharing_ok: false } : {}),
     ...(String(normalized.date_of_birth || "").trim() ? { date_of_birth: normalized.date_of_birth } : {}),
+    ...(String(normalized.gender || "").trim() ? { gender: normalized.gender } : {}),
     ...(String(normalized.nationality || "").trim() ? { nationality: normalized.nationality } : {}),
     ...(normalized.address ? { address: normalized.address } : {}),
     ...(Array.isArray(normalized.documents) && normalized.documents.length ? {
@@ -179,6 +180,7 @@ function collectPublicTravelerDetailsPayload(booking, personId, rawPerson) {
     hotel_room_smoker: normalizeBooleanInput(rawPerson.hotel_room_smoker, false),
     hotel_room_sharing_ok: normalizeBooleanInput(rawPerson.hotel_room_sharing_ok, true),
     date_of_birth: String(rawPerson.date_of_birth || "").trim(),
+    gender: String(rawPerson.gender || "").trim().toLowerCase(),
     nationality: String(rawPerson.nationality || "").trim().toUpperCase(),
     address: buildPublicAddressInput(rawPerson.address),
     documents
@@ -250,6 +252,7 @@ function buildStoredPersonOverwrite(existingPerson, normalizedPerson) {
         ? false
         : existingPerson?.hotel_room_sharing_ok !== false,
     ...(normalizedPerson.date_of_birth ? { date_of_birth: normalizedPerson.date_of_birth } : {}),
+    ...(normalizedPerson.gender ? { gender: normalizedPerson.gender } : {}),
     ...(normalizedPerson.nationality ? { nationality: normalizedPerson.nationality } : {}),
     ...(normalizedPerson.address ? { address: normalizedPerson.address } : {}),
     ...(preservedDocuments ? { documents: preservedDocuments } : {}),

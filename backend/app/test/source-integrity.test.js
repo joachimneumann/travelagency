@@ -413,8 +413,18 @@ test("booking person modal exposes traveler-details link actions and the public 
   );
   assert.match(
     travelerDetailsScript,
-    /renderTravelerLanguageOptions\(traveler\.preferred_language\)[\s\S]*renderCountryOptions\(traveler\.nationality, "Select nationality"\)/,
-    "Public traveler-details form should render dropdowns for preferred language and nationality"
+    /renderTravelerLanguageOptions\(traveler\.preferred_language\)[\s\S]*renderCountryOptions\(traveler\.nationality, "Select nationality"\)[\s\S]*renderTravelerGenderOptions\(traveler\.gender\)/,
+    "Public traveler-details form should render dropdowns for preferred language, nationality, and gender"
+  );
+  assert.match(
+    travelerDetailsScript,
+    /gender: normalizeTravelerGender\(traveler\.gender\)[\s\S]*state\.traveler\[field\] = normalizeTravelerGender\(target\.value\)/,
+    "Public traveler-details form should normalize and persist the traveler gender enum"
+  );
+  assert.match(
+    travelerDetailsScript,
+    /TRAVELER_DETAILS_TRANSLATIONS = Object\.freeze\(\{[\s\S]*gender: "Gender"[\s\S]*gender: "Giới tính"[\s\S]*function travelerDetailsT\(key, fallback\)[\s\S]*travelerDetailsT\("gender_placeholder", "Select gender"\)[\s\S]*travelerDetailsT\("gender", "Gender"\)/,
+    "Public traveler-details form should localize the gender field and options for the traveler language"
   );
   assert.match(
     travelerDetailsScript,
@@ -477,14 +487,112 @@ test("booking person modal exposes separate passport and ID card document image 
     "Booking person modal should expose separate upload controls for passport and ID card images"
   );
   assert.match(
+    bookingPageSource,
+    /booking_person_modal_date_of_birth[\s\S]*booking_person_modal_gender[\s\S]*booking_person_modal_nationality/,
+    "Booking person modal should place the gender selector alongside date of birth and nationality"
+  );
+  assert.match(
     personsSource,
     /bookingPersonDocumentPictureRequest[\s\S]*\[\s*"passport",\s*"national_id"\s*\][\s\S]*data-document-picture-upload/,
     "Booking persons module should upload document images through the dedicated booking person document-picture endpoint"
   );
   assert.match(
+    personsSource,
+    /BOOKING_PERSON_GENDER_OPTIONS[\s\S]*"male"[\s\S]*"female"[\s\S]*"other"[\s\S]*"prefer_not_to_say"[\s\S]*function renderPersonGenderOptions\(/,
+    "Booking persons module should render and persist the booking-person gender enum through the modal draft"
+  );
+  assert.ok(
+    personsSource.includes('booking.gender.placeholder'),
+    "Booking persons module should use the gender placeholder translation key"
+  );
+  assert.ok(
+    personsSource.includes('els.personModalGender.innerHTML = renderPersonGenderOptions(draft.gender);')
+    && personsSource.includes('els.personModalGender.value = normalizePersonGender(draft.gender) || "";'),
+    "Booking persons module should bind the gender selector into the person modal"
+  );
+  assert.ok(
+    personsSource.includes('gender: normalizePersonGender(person.gender),')
+    && personsSource.includes('gender: normalizePersonGender(draft?.gender) || undefined,'),
+    "Booking persons module should normalize gender on draft load and include it in the persisted person payload"
+  );
+  assert.match(
+    personsSource,
+    /const VIETNAM_COUNTRY_CODE = "VN";[\s\S]*function personSupportsNationalId\(draft\) \{[\s\S]*normalizeText\(draft\?\.nationality\)\.toUpperCase\(\) === VIETNAM_COUNTRY_CODE[\s\S]*function resolveActivePersonDocumentType\([\s\S]*personSupportsNationalId\(draft\)[\s\S]*"national_id"[\s\S]*button\.hidden = !isSupported;/,
+    "Booking person modal should only expose the ID-card switch when the traveler's nationality is Vietnam"
+  );
+  assert.match(
     bookingStyles,
     /\.booking-person-modal__document-picture-preview \{[\s\S]*min-height: 180px;[\s\S]*border: 1px dashed var\(--line-cool-alpha\);/,
     "Booking person modal should style the document image preview area as a dedicated upload surface"
+  );
+});
+
+test("booking person gender enum stays in sync across model and generated contracts", async () => {
+  const modelEnumPath = path.resolve(__dirname, "..", "..", "..", "model", "enums", "booking_person_gender.cue");
+  const modelEntityPath = path.resolve(__dirname, "..", "..", "..", "model", "entities", "booking_person.cue");
+  const normalizedIrPath = path.resolve(__dirname, "..", "..", "..", "model", "ir", "normalized.cue");
+  const openapiPath = path.resolve(__dirname, "..", "..", "..", "api", "generated", "openapi.yaml");
+  const schemaRuntimePath = path.resolve(__dirname, "..", "..", "..", "shared", "generated-contract", "Models", "generated_SchemaRuntime.js");
+  const generatedBookingPath = path.resolve(__dirname, "..", "..", "..", "shared", "generated-contract", "Models", "generated_Booking.js");
+  const modelEnum = await readFile(modelEnumPath, "utf8");
+  const modelEntity = await readFile(modelEntityPath, "utf8");
+  const normalizedIr = await readFile(normalizedIrPath, "utf8");
+  const openapi = await readFile(openapiPath, "utf8");
+  const schemaRuntime = await readFile(schemaRuntimePath, "utf8");
+  const generatedBooking = await readFile(generatedBookingPath, "utf8");
+
+  assert.match(
+    modelEnum,
+    /BookingPersonGenderCatalog:\s*\[[\s\S]*"male"[\s\S]*"female"[\s\S]*"other"[\s\S]*"prefer_not_to_say"[\s\S]*#BookingPersonGender: or\(BookingPersonGenderCatalog\)/,
+    "Model should define the BookingPersonGender enum catalog"
+  );
+  assert.match(
+    modelEntity,
+    /date_of_birth\?:\s+common\.\#DateOnly[\s\S]*gender\?:\s+enums\.\#BookingPersonGender[\s\S]*nationality\?:\s+enums\.\#CountryCode/,
+    "BookingPerson entity should include the gender enum between date of birth and nationality"
+  );
+  assert.match(
+    normalizedIr,
+    /BookingPersonGender: \{catalog: "bookingPersonGenders"\}[\s\S]*\{name: "gender", kind: "enum", typeName: "BookingPersonGender", required: false\}/,
+    "Normalized IR should expose BookingPersonGender and the BookingPerson.gender field"
+  );
+  assert.match(
+    openapi,
+    /BookingPersonGender:[\s\S]*enum:[\s\S]*- male[\s\S]*- female[\s\S]*- other[\s\S]*- prefer_not_to_say[\s\S]*BookingPerson:[\s\S]*gender:[\s\S]*BookingPersonGender/,
+    "OpenAPI should expose the BookingPersonGender enum and the BookingPerson.gender property"
+  );
+  assert.match(
+    schemaRuntime,
+    /FIELD_137:[\s\S]*"typeName": "BookingPersonGender"[\s\S]*"male"[\s\S]*"female"[\s\S]*"other"[\s\S]*"prefer_not_to_say"/,
+    "Generated schema runtime should expose BookingPersonGender as a shared enum field"
+  );
+  assert.match(
+    generatedBooking,
+    /schemaField\(\{"name":"date_of_birth"[\s\S]*schemaField\(\{"name":"gender","required":false,"wireName":"gender"\}, SHARED_FIELD_DEFS\.FIELD_137\)[\s\S]*schemaField\(\{"name":"nationality"/,
+    "Generated booking schema should include the gender field in BookingPerson"
+  );
+});
+
+test("booking persons section summary shows traveler count plus passport completeness", async () => {
+  const personsScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "persons.js");
+  const bookingStylesPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "pages", "backend-booking.css");
+  const personsSource = await readFile(personsScriptPath, "utf8");
+  const bookingStyles = await readFile(bookingStylesPath, "utf8");
+
+  assert.match(
+    personsSource,
+    /function renderPersonsSectionSummary\(target, travelerCount, allTravelersHavePassportData\) \{[\s\S]*booking-persons-summary[\s\S]*booking-person-card__identity-check booking-persons-summary__passport-check[\s\S]*bookingT\("booking\.passport", "Passport"\)/,
+    "Booking persons section summary should render a dedicated count-plus-passport indicator instead of plain text names"
+  );
+  assert.match(
+    personsSource,
+    /const traveling = persons\.filter\(\(person\) => isTravelingPerson\(person\)\);[\s\S]*renderPersonsSectionSummary\([\s\S]*traveling\.length[\s\S]*traveling\.length > 0 && traveling\.every\(\(person\) => personHasCompleteIdentityDocument\(person, "passport"\)\)/,
+    "Booking persons section summary should mark passport completeness only when every traveler has a complete passport"
+  );
+  assert.match(
+    bookingStyles,
+    /\.booking-detail-page \.booking-persons-summary__passport \{[\s\S]*color: var\(--text-muted-strong\);[\s\S]*\.booking-detail-page \.booking-persons-summary__passport-check \{[\s\S]*color: var\(--text-muted-soft\);[\s\S]*\.booking-detail-page \.booking-persons-summary__passport\.is-complete \.booking-persons-summary__passport-check \{[\s\S]*color: var\(--success-text-bright\);/,
+    "Booking persons section summary should use a muted passport check by default and the same bright success color when complete"
   );
 });
 
@@ -1270,7 +1378,7 @@ test("staging PDF font stack includes Japanese and Chinese smoke coverage paths"
   }
 });
 
-test("travel-plan PDF removes the old hero subtitle and badge, adds a section title, and suggests the new download filename", async () => {
+test("travel-plan PDF removes the old hero subtitle and in-body section title, and suggests the new download filename", async () => {
   const travelPlanPdfPath = path.resolve(__dirname, "..", "src", "lib", "travel_plan_pdf.js");
   const bookingTravelPlanHandlerPath = path.resolve(__dirname, "..", "src", "http", "handlers", "booking_travel_plan.js");
   const [travelPlanPdfSource, bookingTravelPlanHandlerSource] = await Promise.all([
@@ -1278,11 +1386,6 @@ test("travel-plan PDF removes the old hero subtitle and badge, adds a section ti
     readFile(bookingTravelPlanHandlerPath, "utf8")
   ]);
 
-  assert.match(
-    travelPlanPdfSource,
-    /function travelPlanSectionTitle\(lang\)[\s\S]*pdfT\(lang,\s*"travel_plan\.pdf_subtitle",\s*"Travel plan overview"\)/,
-    "Travel-plan PDFs should define a dedicated itinerary section heading"
-  );
   assert.doesNotMatch(
     travelPlanPdfSource,
     /travel_plan\.section_title|fallback = normalizedLang === "de" \? "Reiseplan" : "Travel plan"/,
@@ -1293,10 +1396,10 @@ test("travel-plan PDF removes the old hero subtitle and badge, adds a section ti
     /drawTravelPlanHero[\s\S]*travel_plan\.pdf_subtitle[\s\S]*travel_plan\.pdf_badge/,
     "Travel-plan hero rendering should no longer show the old subtitle and badge labels"
   );
-  assert.match(
+  assert.doesNotMatch(
     travelPlanPdfSource,
-    /text\(travelPlanSectionTitle\(lang\), PAGE_MARGIN, y,/,
-    "Travel-plan PDFs should render a standalone section heading above the first itinerary day"
+    /function drawTravelPlanSectionTitle\(|text\(travelPlanSectionTitle\(lang\), PAGE_MARGIN, y,/,
+    "Travel-plan PDFs should not render a standalone in-body section heading above the first itinerary day"
   );
   assert.match(
     bookingTravelPlanHandlerSource,
@@ -1812,6 +1915,11 @@ test("travel-plan module preserves add/remove/reorder and offer-link editing hel
   );
   assert.match(
     source,
+    /function suggestedNextTravelPlanDayDate\(dayIndex\)[\s\S]*data-travel-plan-apply-next-day[\s\S]*booking\.travel_plan\.next_day/,
+    "travel_plan.js should offer a next-day suggestion button when a blank day follows a dated day"
+  );
+  assert.match(
+    source,
     /for \(let minute = 0; minute < 60; minute \+= 5\)/,
     "travel_plan.js should offer 5-minute time increments instead of free one-minute entry"
   );
@@ -1827,12 +1935,74 @@ test("travel-plan module preserves add/remove/reorder and offer-link editing hel
   );
   assert.equal(
     generatedCatalogs.TRAVEL_PLAN_TIMING_KIND_OPTIONS.length,
-    3,
+    4,
     "Generated Travel plan timing options should stay populated from the schema runtime"
   );
   assert.deepEqual(
     generatedCatalogs.TRAVEL_PLAN_TIMING_KIND_OPTIONS.map((option) => option.value),
-    ["label", "point", "range"]
+    ["label", "not_applicable", "point", "range"]
+  );
+  assert.match(
+    helperSource,
+    /option\.value === "not_applicable"[\s\S]*"Not applicable"/,
+    "Travel-plan timing helper labels should localize the not_applicable timing mode"
+  );
+  assert.match(
+    source,
+    /timingKind === "not_applicable"[\s\S]*booking\.travel_plan\.timing_kind\.not_applicable/,
+    "travel_plan.js should render and summarize the not_applicable timing mode"
+  );
+});
+
+test("travel plan PDF personalization exposes and persists traveler-list toggles for both PDF types", async () => {
+  const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
+  const bookingCorePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "core.js");
+  const bookingPdfPersonalizationPath = path.resolve(__dirname, "..", "..", "..", "backend", "app", "src", "lib", "booking_pdf_personalization.js");
+  const travelPlanPdfPath = path.resolve(__dirname, "..", "..", "..", "backend", "app", "src", "lib", "travel_plan_pdf.js");
+  const pageSource = await readFile(bookingPagePath, "utf8");
+  const coreSource = await readFile(bookingCorePath, "utf8");
+  const personalizationSource = await readFile(bookingPdfPersonalizationPath, "utf8");
+  const travelPlanPdfSource = await readFile(travelPlanPdfPath, "utf8");
+
+  assert.match(
+    pageSource,
+    /id="booking_pdf_travel_plan_include_who_is_traveling_mount"/,
+    "booking.html should expose a mount for the Travel plan PDF traveler-list toggle"
+  );
+  assert.match(
+    pageSource,
+    /id="booking_pdf_offer_include_who_is_traveling_mount"/,
+    "booking.html should expose a mount for the Offer PDF traveler-list toggle"
+  );
+  assert.match(
+    coreSource,
+    /include_who_is_traveling:\s*travelPlan\.include_who_is_traveling === true/,
+    "booking core should normalize the Travel plan PDF traveler-list toggle"
+  );
+  assert.match(
+    coreSource,
+    /include_who_is_traveling:\s*offer\.include_who_is_traveling !== false/,
+    "booking core should normalize the Offer PDF traveler-list toggle"
+  );
+  assert.match(
+    coreSource,
+    /data-booking-pdf-toggle="travel_plan\.include_who_is_traveling"/,
+    "booking core should render the Travel plan PDF traveler-list checkbox"
+  );
+  assert.match(
+    personalizationSource,
+    /include_who_is_traveling:\s*offerIncludeWhoIsTraveling/,
+    "backend PDF personalization should preserve the Offer traveler-list toggle"
+  );
+  assert.match(
+    travelPlanPdfSource,
+    /include_who_is_traveling === true[\s\S]*drawPdfTravelersSection/,
+    "travel_plan_pdf.js should render the traveler list only when the toggle is enabled"
+  );
+  assert.match(
+    coreSource,
+    /data-booking-pdf-toggle="offer\.include_who_is_traveling"/,
+    "booking core should render the Offer PDF traveler-list checkbox"
   );
 });
 
@@ -2126,6 +2296,70 @@ test("offer and travel-plan PDFs prefer ATP staff full and friendly names in the
     travelPlanPdfSource,
     /measureTextHeight\(doc,\s*guideFriendlyShortName|text\(guideFriendlyShortName/,
     "Travel-plan PDFs should not render a separate ATP guide short-name subtitle line"
+  );
+});
+
+test("shared travel-plan PDF headers reserve height for wrapped day titles before metadata rows", async () => {
+  const travelPlanSectionPath = path.resolve(__dirname, "..", "..", "..", "backend", "app", "src", "lib", "pdf_travel_plan_section.js");
+  const source = await readFile(travelPlanSectionPath, "utf8");
+
+  assert.match(
+    source,
+    /const titleHeight = measureTextHeight\(doc, titleText,[\s\S]*const dateHeight = dateLabel[\s\S]*let nextY = y \+ Math\.max\(titleHeight, dateHeight\) \+ 4;/,
+    "The shared travel-plan PDF day header should reserve space for wrapped titles before rendering overnight or accommodation rows"
+  );
+});
+
+test("shared travel-plan PDF item layout falls back to full-width cards when only one item fits", async () => {
+  const travelPlanSectionPath = path.resolve(__dirname, "..", "..", "..", "backend", "app", "src", "lib", "pdf_travel_plan_section.js");
+  const source = await readFile(travelPlanSectionPath, "utf8");
+
+  assert.match(
+    source,
+    /function layoutTravelPlanItemsForFullWidthPage\(/,
+    "The shared travel-plan PDF renderer should define a full-width fallback packer"
+  );
+  assert.match(
+    source,
+    /if \(countTravelPlanLayoutItems\(pageLayout\) === 1\) \{[\s\S]*layoutTravelPlanItemsForFullWidthPage\(/,
+    "The shared travel-plan PDF renderer should repack single-card pages as full-width layouts"
+  );
+  assert.match(
+    source,
+    /if \(pageLayout\.mode === "stack"\) \{[\s\S]*drawTravelPlanItemStack\(/,
+    "The shared travel-plan PDF renderer should draw the full-width fallback stack when selected"
+  );
+});
+
+test("shared travel-plan PDF continuation pages do not repeat the current day header", async () => {
+  const travelPlanSectionPath = path.resolve(__dirname, "..", "..", "..", "backend", "app", "src", "lib", "pdf_travel_plan_section.js");
+  const source = await readFile(travelPlanSectionPath, "utf8");
+
+  assert.doesNotMatch(
+    source,
+    /if \(remainingItems\.length\) \{[\s\S]*drawTravelPlanDayHeader\(/,
+    "The shared travel-plan PDF renderer should not redraw the current day header on continuation pages"
+  );
+});
+
+test("shared travel-plan PDF item packing defers oversized cards instead of drawing them cut off", async () => {
+  const travelPlanSectionPath = path.resolve(__dirname, "..", "..", "..", "backend", "app", "src", "lib", "pdf_travel_plan_section.js");
+  const source = await readFile(travelPlanSectionPath, "utf8");
+
+  assert.doesNotMatch(
+    source,
+    /\|\| \(!columns\.left\.length && !columns\.right\.length\)/,
+    "The shared travel-plan PDF column packer should not force the first item onto a page when it does not fit"
+  );
+  assert.doesNotMatch(
+    source,
+    /projectedHeight > availableHeight && entries\.length/,
+    "The shared travel-plan PDF full-width packer should not force the first item onto a page when it does not fit"
+  );
+  assert.match(
+    source,
+    /if \(!countTravelPlanLayoutItems\(pageLayout\)\) \{[\s\S]*addContinuationPage\(\);[\s\S]*continue;/,
+    "The shared travel-plan PDF renderer should move oversized cards to the next page instead of drawing them cut off"
   );
 });
 

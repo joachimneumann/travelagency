@@ -23,6 +23,8 @@ export const TRAVEL_PLAN_TIMING_KIND_OPTIONS = Object.freeze(
       `booking.travel_plan.timing_kind.${option.value}`,
       option.value === "label"
         ? "Human readable"
+        : option.value === "not_applicable"
+          ? "Not applicable"
         : option.value === "point"
           ? "Point of time"
           : option.value === "range"
@@ -88,6 +90,15 @@ function normalizeItemTiming(rawItem) {
       time_point: "",
       start_time,
       end_time
+    };
+  }
+  if (timing_kind === "not_applicable") {
+    return {
+      timing_kind,
+      time_label: "",
+      time_point: "",
+      start_time: "",
+      end_time: ""
     };
   }
   return {

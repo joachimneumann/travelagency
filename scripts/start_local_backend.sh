@@ -118,6 +118,7 @@ check_backend_i18n() {
     return
   fi
 
+  echo "### Backend i18n sync failed for vi. ###" >&2
   echo "Backend UI translations are out of sync." >&2
   echo "Run: node scripts/sync_backend_i18n.mjs translate --target vi" >&2
   if [ "$BACKEND_I18N_STRICT" = "0" ]; then

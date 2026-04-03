@@ -111,7 +111,8 @@ export const GENERATED_OFFER_CATEGORIES = Object.freeze([
     schemaField({"name":"welcome","required":false,"wireName":"welcome"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"welcome_i18n","required":false,"wireName":"welcome_i18n"}, {"kind":"transport","typeName":"Record<string,string>","isArray":false}),
     schemaField({"name":"closing","required":false,"wireName":"closing"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"closing_i18n","required":false,"wireName":"closing_i18n"}, {"kind":"transport","typeName":"Record<string,string>","isArray":false})
+    schemaField({"name":"closing_i18n","required":false,"wireName":"closing_i18n"}, {"kind":"transport","typeName":"Record<string,string>","isArray":false}),
+    schemaField({"name":"include_who_is_traveling","required":false,"wireName":"include_who_is_traveling"}, SHARED_FIELD_DEFS.FIELD_8)
         ]
       };
 
@@ -153,6 +154,7 @@ export const GENERATED_OFFER_CATEGORIES = Object.freeze([
     schemaField({"name":"hotel_room_smoker","required":false,"wireName":"hotel_room_smoker"}, SHARED_FIELD_DEFS.FIELD_8),
     schemaField({"name":"hotel_room_sharing_ok","required":false,"wireName":"hotel_room_sharing_ok"}, SHARED_FIELD_DEFS.FIELD_8),
     schemaField({"name":"date_of_birth","required":false,"wireName":"date_of_birth"}, SHARED_FIELD_DEFS.FIELD_7),
+    schemaField({"name":"gender","required":false,"wireName":"gender"}, SHARED_FIELD_DEFS.FIELD_137),
     schemaField({"name":"nationality","required":false,"wireName":"nationality"}, SHARED_FIELD_DEFS.FIELD_2),
     schemaField({"name":"address","required":false,"wireName":"address"}, SHARED_FIELD_DEFS.FIELD_12),
     schemaField({"name":"roles","required":false,"wireName":"roles"}, SHARED_FIELD_DEFS.FIELD_13),
