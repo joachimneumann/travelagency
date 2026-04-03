@@ -8,6 +8,8 @@ const ITEM_THUMBNAIL_HEIGHT = 88;
 const ITEM_CARD_PADDING = 14;
 const ITEM_COLUMN_GAP = 18;
 const ITEM_VERTICAL_GAP = 8;
+const IMAGE_CARD_MIN_HEIGHT = 92;
+const IMAGE_CARD_MAX_HEIGHT = 124;
 
 function safeArray(value) {
   return Array.isArray(value) ? value : [];
@@ -140,7 +142,13 @@ function measureTextHeight(doc, text, { width, fontSize, fonts, weight = "regula
   return doc.heightOfString(text, { width, lineGap });
 }
 
-function itemBoxHeight(doc, item, fonts, lang, dayDate, contentWidth, hasThumbnail, deps) {
+function imageBoxHeight(contentWidth) {
+  const innerWidth = contentWidth - ITEM_CARD_PADDING * 2;
+  const naturalHeight = innerWidth * (ITEM_THUMBNAIL_HEIGHT / ITEM_THUMBNAIL_WIDTH);
+  return ITEM_CARD_PADDING * 2 + Math.min(IMAGE_CARD_MAX_HEIGHT, Math.max(IMAGE_CARD_MIN_HEIGHT, naturalHeight));
+}
+
+function itemBoxHeight(doc, item, fonts, lang, dayDate, contentWidth, deps) {
   const innerWidth = contentWidth - ITEM_CARD_PADDING * 2;
   const textWidth = innerWidth;
   const metaParts = [textOrNull(item?.location), formatTravelPlanTiming(item, lang, dayDate, deps.formatPdfDateOnly)].filter(Boolean);
@@ -154,12 +162,28 @@ function itemBoxHeight(doc, item, fonts, lang, dayDate, contentWidth, hasThumbna
   if (details) {
     textHeight += measureTextHeight(doc, details, { width: textWidth, fontSize: 10.2, fonts, lineGap: 2, pdfFontName: deps.pdfFontName }) + 4;
   }
-  const thumbnailHeight = hasThumbnail ? ITEM_THUMBNAIL_HEIGHT + 10 : 0;
-  return Math.max(88, ITEM_CARD_PADDING + thumbnailHeight + textHeight + ITEM_CARD_PADDING);
+  return Math.max(88, ITEM_CARD_PADDING + textHeight + ITEM_CARD_PADDING);
 }
 
-function drawTravelPlanItemCard(doc, x, y, width, item, thumbnail, fonts, lang, dayDate, deps) {
-  const itemHeight = itemBoxHeight(doc, item, fonts, lang, dayDate, width, Boolean(thumbnail), deps);
+function drawTravelPlanItemCard(doc, x, y, width, entry, fonts, lang, dayDate, deps) {
+  if (entry?.kind === "image" && entry.thumbnail?.buffer) {
+    const itemHeight = imageBoxHeight(width);
+    doc
+      .save()
+      .roundedRect(x, y, width, itemHeight, 12)
+      .clip();
+    doc.image(entry.thumbnail.buffer, x, y, {
+      fit: [width, itemHeight],
+      align: "center",
+      valign: "center"
+    });
+    doc.restore();
+
+    return itemHeight;
+  }
+
+  const item = entry?.item || entry;
+  const itemHeight = itemBoxHeight(doc, item, fonts, lang, dayDate, width, deps);
   doc
     .save()
     .roundedRect(x, y, width, itemHeight, 12)
@@ -170,20 +194,6 @@ function drawTravelPlanItemCard(doc, x, y, width, item, thumbnail, fonts, lang, 
   const innerWidth = width - ITEM_CARD_PADDING * 2;
   const textWidth = innerWidth;
   let innerY = y + ITEM_CARD_PADDING;
-
-  if (thumbnail?.buffer) {
-    doc
-      .save()
-      .roundedRect(innerX, innerY, innerWidth, ITEM_THUMBNAIL_HEIGHT, 10)
-      .clip();
-    doc.image(thumbnail.buffer, innerX, innerY, {
-      fit: [innerWidth, ITEM_THUMBNAIL_HEIGHT],
-      align: "center",
-      valign: "center"
-    });
-    doc.restore();
-    innerY += ITEM_THUMBNAIL_HEIGHT + 10;
-  }
 
   const metaParts = [textOrNull(item?.location), formatTravelPlanTiming(item, lang, dayDate, deps.formatPdfDateOnly)].filter(Boolean);
   if (metaParts.length) {
@@ -223,7 +233,18 @@ function drawTravelPlanItemCard(doc, x, y, width, item, thumbnail, fonts, lang, 
   return itemHeight;
 }
 
-function layoutTravelPlanItemsForPage(doc, items, itemThumbnailMap, fonts, lang, dayDate, columnWidth, availableHeight, deps) {
+function buildTravelPlanDayLayoutEntries(day, itemThumbnailMap) {
+  return safeArray(day?.services || day?.items).flatMap((item) => {
+    const entries = [{ kind: "service", item }];
+    const thumbnail = itemThumbnailMap.get(item?.id) || null;
+    if (thumbnail?.buffer) {
+      entries.push({ kind: "image", item, thumbnail });
+    }
+    return entries;
+  });
+}
+
+function layoutTravelPlanItemsForPage(doc, items, fonts, lang, dayDate, columnWidth, availableHeight, deps) {
   const columns = { left: [], right: [] };
   const heights = { left: 0, right: 0 };
   let index = 0;
@@ -233,9 +254,10 @@ function layoutTravelPlanItemsForPage(doc, items, itemThumbnailMap, fonts, lang,
   }
 
   while (index < items.length) {
-    const item = items[index];
-    const thumbnail = itemThumbnailMap.get(item?.id) || null;
-    const itemHeight = itemBoxHeight(doc, item, fonts, lang, dayDate, columnWidth, Boolean(thumbnail), deps);
+    const entry = items[index];
+    const itemHeight = entry?.kind === "image"
+      ? imageBoxHeight(columnWidth)
+      : itemBoxHeight(doc, entry.item, fonts, lang, dayDate, columnWidth, deps);
     const preferredKey = heights.left <= heights.right ? "left" : "right";
     const alternateKey = preferredKey === "left" ? "right" : "left";
     const fitsPreferred = projectedHeight(preferredKey, itemHeight) <= availableHeight;
@@ -251,7 +273,7 @@ function layoutTravelPlanItemsForPage(doc, items, itemThumbnailMap, fonts, lang,
     }
 
     heights[targetKey] = projectedHeight(targetKey, itemHeight);
-    columns[targetKey].push({ item, thumbnail, itemHeight });
+    columns[targetKey].push({ entry, itemHeight });
     index += 1;
   }
 
@@ -269,19 +291,20 @@ function countTravelPlanLayoutItems(layout) {
   return safeArray(layout.columns?.left).length + safeArray(layout.columns?.right).length;
 }
 
-function layoutTravelPlanItemsForFullWidthPage(doc, items, itemThumbnailMap, fonts, lang, dayDate, contentWidth, availableHeight, deps) {
+function layoutTravelPlanItemsForFullWidthPage(doc, items, fonts, lang, dayDate, contentWidth, availableHeight, deps) {
   const entries = [];
   let height = 0;
   let index = 0;
 
   while (index < items.length) {
-    const item = items[index];
-    const thumbnail = itemThumbnailMap.get(item?.id) || null;
-    const itemHeight = itemBoxHeight(doc, item, fonts, lang, dayDate, contentWidth, Boolean(thumbnail), deps);
+    const entry = items[index];
+    const itemHeight = entry?.kind === "image"
+      ? imageBoxHeight(contentWidth)
+      : itemBoxHeight(doc, entry.item, fonts, lang, dayDate, contentWidth, deps);
     const projectedHeight = height + (entries.length ? ITEM_VERTICAL_GAP : 0) + itemHeight;
     if (projectedHeight > availableHeight) break;
     height = projectedHeight;
-    entries.push({ item, thumbnail, itemHeight });
+    entries.push({ entry, itemHeight });
     index += 1;
   }
 
@@ -300,12 +323,12 @@ function drawTravelPlanItemColumns(doc, startY, columnWidth, pageLayout, fonts, 
   let rightY = startY;
 
   for (const entry of pageLayout.columns.left) {
-    drawTravelPlanItemCard(doc, leftX, leftY, columnWidth, entry.item, entry.thumbnail, fonts, lang, dayDate, deps);
+    drawTravelPlanItemCard(doc, leftX, leftY, columnWidth, entry.entry, fonts, lang, dayDate, deps);
     leftY += entry.itemHeight + ITEM_VERTICAL_GAP;
   }
 
   for (const entry of pageLayout.columns.right) {
-    drawTravelPlanItemCard(doc, rightX, rightY, columnWidth, entry.item, entry.thumbnail, fonts, lang, dayDate, deps);
+    drawTravelPlanItemCard(doc, rightX, rightY, columnWidth, entry.entry, fonts, lang, dayDate, deps);
     rightY += entry.itemHeight + ITEM_VERTICAL_GAP;
   }
 }
@@ -313,7 +336,7 @@ function drawTravelPlanItemColumns(doc, startY, columnWidth, pageLayout, fonts, 
 function drawTravelPlanItemStack(doc, startY, contentWidth, pageLayout, fonts, lang, dayDate, deps) {
   let y = startY;
   for (const entry of safeArray(pageLayout.entries)) {
-    drawTravelPlanItemCard(doc, deps.pageMargin, y, contentWidth, entry.item, entry.thumbnail, fonts, lang, dayDate, deps);
+    drawTravelPlanItemCard(doc, deps.pageMargin, y, contentWidth, entry.entry, fonts, lang, dayDate, deps);
     y += entry.itemHeight + ITEM_VERTICAL_GAP;
   }
 }
@@ -502,7 +525,7 @@ export function drawTravelPlanDaysSection({
 
     const contentWidth = doc.page.width - pageMargin * 2;
     const columnWidth = (contentWidth - ITEM_COLUMN_GAP) / 2;
-    let remainingItems = safeArray(day?.services || day?.items);
+    let remainingItems = buildTravelPlanDayLayoutEntries(day, itemThumbnailMap);
     let continuationPageReady = false;
 
     while (remainingItems.length) {
@@ -510,7 +533,6 @@ export function drawTravelPlanDaysSection({
       let pageLayout = layoutTravelPlanItemsForPage(
         doc,
         remainingItems,
-        itemThumbnailMap,
         fonts,
         lang,
         day?.date,
@@ -523,7 +545,6 @@ export function drawTravelPlanDaysSection({
         pageLayout = layoutTravelPlanItemsForFullWidthPage(
           doc,
           remainingItems,
-          itemThumbnailMap,
           fonts,
           lang,
           day?.date,

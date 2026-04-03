@@ -2363,6 +2363,32 @@ test("shared travel-plan PDF item packing defers oversized cards instead of draw
   );
 });
 
+test("shared travel-plan PDF uses text-only service cards with interleaved standalone image cards", async () => {
+  const travelPlanSectionPath = path.resolve(__dirname, "..", "..", "..", "backend", "app", "src", "lib", "pdf_travel_plan_section.js");
+  const source = await readFile(travelPlanSectionPath, "utf8");
+  const itemBoxHeightSource = source.match(/function itemBoxHeight\([\s\S]*?return Math\.max\(88, ITEM_CARD_PADDING \+ textHeight \+ ITEM_CARD_PADDING\);\n\}/)?.[0] || "";
+
+  assert.ok(
+    itemBoxHeightSource,
+    "The shared travel-plan PDF source should expose the text-only service card height calculator"
+  );
+  assert.match(
+    source,
+    /function buildTravelPlanDayLayoutEntries\(day, itemThumbnailMap\)[\s\S]*\{ kind: "service", item \}[\s\S]*\{ kind: "image", item, thumbnail \}/,
+    "The shared travel-plan PDF renderer should build each day's flow from standalone service and image entries"
+  );
+  assert.match(
+    source,
+    /function drawTravelPlanItemCard\([\s\S]*if \(entry\?\.kind === "image" && entry\.thumbnail\?\.buffer\) \{/,
+    "The shared travel-plan PDF renderer should draw image entries as standalone floating cards"
+  );
+  assert.match(
+    source,
+    /let remainingItems = buildTravelPlanDayLayoutEntries\(day, itemThumbnailMap\);/,
+    "The shared travel-plan PDF renderer should interleave image cards directly into each day's page flow"
+  );
+});
+
 test("backend list pages have dedicated entrypoints and are served by caddy", async () => {
   const frontendRoot = path.resolve(__dirname, "..", "..", "..", "frontend");
   const deployRoot = path.resolve(__dirname, "..", "..", "..", "deploy");
