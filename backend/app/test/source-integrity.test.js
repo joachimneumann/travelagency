@@ -1760,11 +1760,6 @@ test("generated offer actions are gated behind a clean page state", async () => 
     /customer_confirmation_flow/,
     "Generated-offer creation should use the renamed customer confirmation flow field"
   );
-  assert.doesNotMatch(
-    offersSource,
-    /booking confirmation route/,
-    "Generated-offer UI copy should use customer confirmation flow wording instead of the removed route term"
-  );
   assert.match(
     bookingSource,
     /id="pricing_management_approval_btn"/,

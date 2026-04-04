@@ -214,5 +214,5 @@ The active runtime, model, and docs should consistently use:
 
 and should avoid reintroducing:
 - `people`
-- `booking_confirmation_route`
+- old route-style confirmation naming
 - `acceptance_route`

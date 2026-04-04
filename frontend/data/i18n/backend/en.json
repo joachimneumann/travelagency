@@ -378,7 +378,7 @@
   "booking.offer.error.exchange_failed": "Offer exchange failed.",
   "booking.offer.error.exchange_lookup": "Exchange rate lookup failed: {message}",
   "booking.offer.error.generate_invalid_payment_term": "This booking cannot generate a new offer because the selected payment term line for booking confirmation is missing.",
-  "booking.offer.error.generate_missing_payment_terms": "This booking cannot generate a new offer yet because the selected booking confirmation route needs at least one payment term line.",
+  "booking.offer.error.generate_missing_payment_terms": "This booking cannot generate a new offer yet because the selected customer confirmation flow needs at least one payment term line.",
   "booking.offer.error.generate_missing_travel_plan": "Add at least one travel-plan service before generating a new offer.",
   "booking.offer.error.generate_pdf": "Could not generate offer PDF.",
   "booking.offer.error.trip_amount": "Trip total requires a valid non-negative price.",

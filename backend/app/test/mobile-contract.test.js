@@ -4503,7 +4503,7 @@ test("public generated booking confirmation enforces uniqueness per booking", as
   assert.match(String(secondAcceptResult.body.error || ""), /already been confirmed/i);
 });
 
-test("generated offer creation persists deposit-payment acceptance routes in authenticated read models", async () => {
+test("generated offer creation persists deposit-payment customer confirmation flows in authenticated read models", async () => {
   const createdBooking = await createSeedBooking();
   const bookingId = createdBooking.id;
 
@@ -4560,7 +4560,7 @@ test("generated offer creation persists deposit-payment acceptance routes in aut
               id: "offer_component_customer_confirmation_flow_1",
               category: "ACCOMMODATION",
               label: "Accommodation",
-              details: "Deposit acceptance route room",
+              details: "Deposit confirmation flow room",
               quantity: 1,
               unit_amount_cents: 15000,
               tax_rate_basis_points: 1000,
@@ -4585,7 +4585,7 @@ test("generated offer creation persists deposit-payment acceptance routes in aut
       method: "POST",
       body: {
         expected_offer_revision: offerPatchResult.body.booking.offer_revision,
-        comment: "Deposit acceptance route",
+        comment: "Deposit confirmation flow",
         customer_confirmation_flow: {
           mode: "DEPOSIT_PAYMENT",
           deposit_rule: {
@@ -4619,7 +4619,7 @@ test("generated offer creation persists deposit-payment acceptance routes in aut
   );
 });
 
-test("booking detail persists expired generated-offer route status instead of deriving it in the read model", async () => {
+test("booking detail persists expired generated-offer flow status instead of deriving it in the read model", async () => {
   const createdBooking = await createSeedBooking();
   const bookingId = createdBooking.id;
 
@@ -4806,7 +4806,7 @@ test("booking detail repairs missing booking confirmation token state for genera
   assertISODateLike(generatedOfferAfter?.booking_confirmation_token_expires_at, "generated offer repaired booking_confirmation_token_expires_at");
 });
 
-test("public generated offer access exposes deposit acceptance route and blocks direct confirmation", async () => {
+test("public generated offer access exposes deposit confirmation flow and blocks direct confirmation", async () => {
   const createdBooking = await createSeedBooking();
   const bookingId = createdBooking.id;
 
