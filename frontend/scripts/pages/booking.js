@@ -269,6 +269,7 @@ state.pageDirtyBarStatus = "";
 state.pageSaveActionError = "";
 state.pendingSavedCustomerLanguage = "";
 state.lastMutationError = null;
+state.cloneBookingInFlight = false;
 
 let bookingWhatsApp = null;
 
@@ -299,6 +300,12 @@ const els = {
   heroInitials: document.getElementById("booking_hero_initials"),
   heroCopyBtn: document.getElementById("booking_hero_copy_btn"),
   heroCopyStatus: document.getElementById("booking_hero_copy_status"),
+  cloneTitleLabel: document.getElementById("booking_clone_title_label"),
+  cloneTitleInput: document.getElementById("booking_clone_title_input"),
+  cloneIncludeTravelersInput: document.getElementById("booking_clone_include_travelers_input"),
+  cloneIncludeTravelersLabel: document.getElementById("booking_clone_include_travelers_label"),
+  cloneBtn: document.getElementById("booking_clone_btn"),
+  cloneStatus: document.getElementById("booking_clone_status"),
   deleteBtn: document.getElementById("booking_delete_btn"),
   error: document.getElementById("detail_error"),
   booking_data_view: document.getElementById("booking_data_view"),
@@ -609,6 +616,15 @@ function cleanStateBlockMessage() {
 function updateCleanStateActionAvailability() {
   const blocked = hasUnsavedBookingChanges() || state.pageSaveInFlight || state.pageDiscardInFlight;
   const message = cleanStateBlockMessage();
+  if (els.cloneBtn instanceof HTMLButtonElement) {
+    const cloneTitle = normalizeText(els.cloneTitleInput?.value);
+    els.cloneBtn.dataset.cleanStateBaseDisabled = (
+      !state.permissions.canEditBooking
+      || state.cloneBookingInFlight
+      || !state.booking?.id
+      || !cloneTitle
+    ) ? "true" : "false";
+  }
   document.querySelectorAll("[data-requires-clean-state]").forEach((element) => {
     if (!(element instanceof HTMLElement) || !("disabled" in element)) return;
     if (!Object.prototype.hasOwnProperty.call(element.dataset, "cleanStateBaseDisabled")) {
@@ -790,6 +806,14 @@ async function init() {
     });
   });
   if (els.deleteBtn) els.deleteBtn.addEventListener("click", deleteBooking);
+  if (els.cloneTitleInput) {
+    els.cloneTitleInput.addEventListener("input", () => {
+      const defaultValue = normalizeText(els.cloneTitleInput?.dataset.defaultValue);
+      els.cloneTitleInput.dataset.userEdited = normalizeText(els.cloneTitleInput.value) !== defaultValue ? "true" : "false";
+      updateCleanStateActionAvailability();
+    });
+  }
+  if (els.cloneBtn) els.cloneBtn.addEventListener("click", cloneBooking);
   if (els.noteInput) els.noteInput.addEventListener("input", updateNoteSaveButtonState);
   if (els.noteInput) els.noteInput.addEventListener("change", updateNoteSaveButtonState);
   if (els.discardEditsBtn) els.discardEditsBtn.addEventListener("click", discardPageEdits);
@@ -1273,6 +1297,10 @@ function handleBookingTitleInputKeydown(event) {
 
 function deleteBooking() {
   return coreModule.deleteBooking();
+}
+
+function cloneBooking() {
+  return coreModule.cloneBooking();
 }
 
 function renderPersonsEditor(options) {
@@ -1769,6 +1797,11 @@ const coreModule = createBookingCoreModule({
   resolveBookingImageSrc,
   displayKeycloakUser,
   resolveCurrentAuthKeycloakUser,
+  canReadAllBookingsInUi: () => (
+    state.roles.includes(ROLES.ADMIN)
+    || state.roles.includes(ROLES.MANAGER)
+    || state.roles.includes(ROLES.ACCOUNTANT)
+  ),
   setBookingSectionDirty,
   hasUnsavedBookingChanges,
   reportPersistedActionBlocked: () => setStatus(cleanStateBlockMessage()),

@@ -3426,7 +3426,7 @@
 },
   FIELD_57: {
   "kind": "transport",
-  "typeName": "PublicGeneratedOfferBookingConfirmationRouteView",
+  "typeName": "PublicGeneratedOfferCustomerConfirmationFlowView",
   "isArray": false
 },
   FIELD_58: {
@@ -3516,7 +3516,7 @@
 },
   FIELD_75: {
   "kind": "transport",
-  "typeName": "BookingGenerateOfferBookingConfirmationRouteRequest",
+  "typeName": "BookingGenerateOfferCustomerConfirmationFlowRequest",
   "isArray": false
 },
   FIELD_76: {
@@ -3769,7 +3769,7 @@
 },
   FIELD_99: {
   "kind": "enum",
-  "typeName": "GeneratedOfferBookingConfirmationRouteMode",
+  "typeName": "GeneratedOfferCustomerConfirmationFlowMode",
   "isArray": false,
   "enumValues": [
     "DEPOSIT_PAYMENT"
@@ -3783,7 +3783,7 @@
 },
   FIELD_100: {
   "kind": "enum",
-  "typeName": "GeneratedOfferBookingConfirmationRouteStatus",
+  "typeName": "GeneratedOfferCustomerConfirmationFlowStatus",
   "isArray": false,
   "enumValues": [
     "OPEN",
@@ -4009,7 +4009,7 @@
 },
   FIELD_117: {
   "kind": "transport",
-  "typeName": "GeneratedOfferBookingConfirmationRoute",
+  "typeName": "GeneratedOfferCustomerConfirmationFlow",
   "isArray": false
 },
   FIELD_118: {

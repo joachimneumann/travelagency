@@ -11,7 +11,7 @@ import (
 	entities: {
 		Booking:                                     entityModel.#Booking
 		GeneratedBookingOffer:                       entityModel.#GeneratedBookingOffer
-		GeneratedOfferBookingConfirmationRoute:               entityModel.#GeneratedOfferBookingConfirmationRoute
+		GeneratedOfferCustomerConfirmationFlow:               entityModel.#GeneratedOfferCustomerConfirmationFlow
 		GeneratedOfferDepositBookingConfirmationRule:         entityModel.#GeneratedOfferDepositBookingConfirmationRule
 		GeneratedOfferBookingConfirmation:                    entityModel.#GeneratedOfferBookingConfirmation
 		BookingPerson:                               entityModel.#BookingPerson
@@ -62,8 +62,8 @@ import (
 		OfferPaymentTermKind:                enumModel.#OfferPaymentTermKind
 		OfferPaymentAmountMode:              enumModel.#OfferPaymentAmountMode
 		OfferPaymentDueType:                 enumModel.#OfferPaymentDueType
-		GeneratedOfferBookingConfirmationRouteMode:   enumModel.#GeneratedOfferBookingConfirmationRouteMode
-		GeneratedOfferBookingConfirmationRouteStatus: enumModel.#GeneratedOfferBookingConfirmationRouteStatus
+		GeneratedOfferCustomerConfirmationFlowMode:   enumModel.#GeneratedOfferCustomerConfirmationFlowMode
+		GeneratedOfferCustomerConfirmationFlowStatus: enumModel.#GeneratedOfferCustomerConfirmationFlowStatus
 		BookingConfirmationMethod:               enumModel.#BookingConfirmationMethod
 		TourStyleCode:                       enumModel.#TourStyleCode
 		CountryCode:                         enumModel.#CountryCode
@@ -121,7 +121,7 @@ import (
 		TranslationStatusSummary:                         apiModel.#TranslationStatusSummary
 		GeneratedOfferBookingConfirmationPublicSummary:            apiModel.#GeneratedOfferBookingConfirmationPublicSummary
 		PublicGeneratedOfferDepositBookingConfirmationRuleView:    apiModel.#PublicGeneratedOfferDepositBookingConfirmationRuleView
-		PublicGeneratedOfferBookingConfirmationRouteView:          apiModel.#PublicGeneratedOfferBookingConfirmationRouteView
+		PublicGeneratedOfferCustomerConfirmationFlowView:          apiModel.#PublicGeneratedOfferCustomerConfirmationFlowView
 		BookingOfferPaymentTermLineReadModel:             apiModel.#BookingOfferPaymentTermLineReadModel
 		BookingOfferPaymentTermsReadModel:                apiModel.#BookingOfferPaymentTermsReadModel
 		BookingOfferReadModel:                            apiModel.#BookingOfferReadModel
@@ -164,7 +164,7 @@ import (
 		BookingOfferUpdateRequest:                        apiModel.#BookingOfferUpdateRequest
 		BookingGenerateOfferRequest:                      apiModel.#BookingGenerateOfferRequest
 		BookingGenerateOfferDepositBookingConfirmationRuleRequest: apiModel.#BookingGenerateOfferDepositBookingConfirmationRuleRequest
-		BookingGenerateOfferBookingConfirmationRouteRequest:       apiModel.#BookingGenerateOfferBookingConfirmationRouteRequest
+		BookingGenerateOfferCustomerConfirmationFlowRequest:       apiModel.#BookingGenerateOfferCustomerConfirmationFlowRequest
 		OfferExchangeRateComponent:                       apiModel.#OfferExchangeRateComponent
 		OfferExchangeRatesRequest:                        apiModel.#OfferExchangeRatesRequest
 		BookingActivityCreateRequest:                     apiModel.#BookingActivityCreateRequest

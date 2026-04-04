@@ -316,6 +316,7 @@ export function createBookingCoreModule(ctx) {
     resolveBookingImageSrc,
     displayKeycloakUser,
     resolveCurrentAuthKeycloakUser,
+    canReadAllBookingsInUi,
     setBookingSectionDirty,
     hasUnsavedBookingChanges,
     reportPersistedActionBlocked,
@@ -349,6 +350,31 @@ export function createBookingCoreModule(ctx) {
     }
     const fallbackHref = normalizeText(els.back?.href) || withBackendLang("/backend.html", { section: "bookings" });
     window.location.href = fallbackHref;
+  }
+
+  function cloneStatus(message) {
+    if (els.cloneStatus instanceof HTMLElement) {
+      els.cloneStatus.textContent = message || "";
+    }
+  }
+
+  function defaultCloneTitle(booking = state.booking) {
+    const base = normalizeText(booking?.name) || normalizeText(booking?.id) || bookingT("booking.booking", "Booking");
+    return bookingT("booking.clone_title_default", "{name} Copy", { name: base });
+  }
+
+  function syncCloneTitleInput({ force = false } = {}) {
+    if (!(els.cloneTitleInput instanceof HTMLInputElement)) return;
+    const nextDefault = defaultCloneTitle(state.booking);
+    const previousDefault = normalizeText(els.cloneTitleInput.dataset.defaultValue);
+    const currentValue = normalizeText(els.cloneTitleInput.value);
+    const userEdited = els.cloneTitleInput.dataset.userEdited === "true";
+    if (force || !userEdited || !currentValue || currentValue === previousDefault) {
+      els.cloneTitleInput.value = nextDefault;
+      els.cloneTitleInput.dataset.userEdited = "false";
+    }
+    els.cloneTitleInput.dataset.defaultValue = nextDefault;
+    els.cloneTitleInput.placeholder = nextDefault;
   }
 
   function ensureCoreDraft() {
@@ -1300,9 +1326,27 @@ export function createBookingCoreModule(ctx) {
     renderPdfPersonalizationFields();
     updateCoreDirtyState();
     updateNoteSaveButtonState();
+    if (els.cloneTitleLabel) {
+      els.cloneTitleLabel.textContent = bookingT("booking.clone_new_title", "New title");
+    }
+    if (els.cloneIncludeTravelersLabel) {
+      els.cloneIncludeTravelersLabel.textContent = bookingT("booking.clone_include_travelers", "Include travelers");
+    }
+    syncCloneTitleInput();
     if (els.deleteBtn) {
       els.deleteBtn.style.display = state.permissions.canEditBooking ? "" : "none";
       els.deleteBtn.disabled = !state.permissions.canEditBooking;
+    }
+    if (els.cloneBtn) {
+      els.cloneBtn.textContent = bookingT("booking.clone_booking", "Clone booking");
+      els.cloneBtn.style.display = state.permissions.canEditBooking ? "" : "none";
+      els.cloneBtn.disabled = !state.permissions.canEditBooking || state.cloneBookingInFlight;
+    }
+    if (els.cloneTitleInput) {
+      els.cloneTitleInput.disabled = !state.permissions.canEditBooking || state.cloneBookingInFlight;
+    }
+    if (els.cloneIncludeTravelersInput) {
+      els.cloneIncludeTravelersInput.disabled = !state.permissions.canEditBooking || state.cloneBookingInFlight;
     }
   }
 
@@ -1402,6 +1446,69 @@ export function createBookingCoreModule(ctx) {
     if (!result?.deleted) return;
 
     window.location.href = withBackendLang("/backend.html", { section: "bookings" });
+  }
+
+  async function cloneBooking() {
+    if (!state.permissions.canEditBooking || !state.booking?.id || state.cloneBookingInFlight || blockPersistedAction()) return;
+    const nextName = normalizeText(els.cloneTitleInput?.value);
+    if (!nextName) {
+      cloneStatus(bookingT("booking.clone_missing_title", "Enter a title for the cloned booking."));
+      return;
+    }
+
+    const includeTravelers = els.cloneIncludeTravelersInput?.checked === true;
+    const label = normalizeText(getPrimaryContact(state.booking)?.name) || state.booking.id;
+    if (!window.confirm(
+      bookingT("booking.clone_confirm", "Clone booking for {name} as {title}?", {
+        name: label,
+        title: nextName
+      })
+    )) {
+      return;
+    }
+
+    state.cloneBookingInFlight = true;
+    cloneStatus(bookingT("booking.cloning", "Cloning booking..."));
+    renderActionControls();
+
+    try {
+      const result = await fetchBookingMutation(
+        resolveApiUrl(apiBase, `/api/v1/bookings/${encodeURIComponent(state.booking.id)}/clone`),
+        {
+          method: "POST",
+          body: {
+            expected_core_revision: getBookingRevision("core_revision"),
+            name: nextName,
+            include_travelers: includeTravelers,
+            actor: state.user
+          }
+        }
+      );
+      const clonedId = normalizeText(result?.booking?.id);
+      if (!clonedId) {
+        cloneStatus(bookingT("booking.clone_failed", "Could not clone booking."));
+        return;
+      }
+      if (canReadAllBookingsInUi?.()) {
+        window.location.href = withBackendLang("/booking.html", {
+          id: clonedId,
+          content_lang: savedCustomerLanguage(result.booking)
+        });
+        return;
+      }
+      cloneStatus(bookingT(
+        "booking.clone_success_unassigned",
+        "Cloned as {bookingId}. The new booking is unassigned, so you may no longer be able to open it.",
+        { bookingId: clonedId }
+      ));
+      syncCloneTitleInput({ force: true });
+      if (els.cloneIncludeTravelersInput instanceof HTMLInputElement) {
+        els.cloneIncludeTravelersInput.checked = false;
+      }
+    } finally {
+      state.cloneBookingInFlight = false;
+      renderActionControls();
+    }
   }
 
   function updateNoteSaveButtonState() {
@@ -1674,6 +1781,7 @@ export function createBookingCoreModule(ctx) {
     handleBookingTitleInputKeydown,
     copyHeroIdToClipboard,
     deleteBooking,
+    cloneBooking,
     recordBookingMilestoneAction,
     applyBookingPayload
   };

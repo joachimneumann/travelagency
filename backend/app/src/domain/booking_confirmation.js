@@ -23,29 +23,29 @@ export function readGeneratedOfferBookingConfirmationTokenState(generatedOffer) 
   };
 }
 
-export function normalizeGeneratedOfferBookingConfirmationRouteMode(value) {
-  return normalizeGeneratedEnumValue("GeneratedOfferBookingConfirmationRouteMode", value, "DEPOSIT_PAYMENT", {
+export function normalizeGeneratedOfferCustomerConfirmationFlowMode(value) {
+  return normalizeGeneratedEnumValue("GeneratedOfferCustomerConfirmationFlowMode", value, "DEPOSIT_PAYMENT", {
     transform: (rawValue) => normalizeBookingConfirmationText(rawValue).toUpperCase()
   });
 }
 
-export function normalizeGeneratedOfferBookingConfirmationRouteStatus(value, mode = "DEPOSIT_PAYMENT") {
-  const normalizedMode = normalizeGeneratedOfferBookingConfirmationRouteMode(mode);
-  const normalized = normalizeGeneratedEnumValue("GeneratedOfferBookingConfirmationRouteStatus", value, "", {
+export function normalizeGeneratedOfferCustomerConfirmationFlowStatus(value, mode = "DEPOSIT_PAYMENT") {
+  const normalizedMode = normalizeGeneratedOfferCustomerConfirmationFlowMode(mode);
+  const normalized = normalizeGeneratedEnumValue("GeneratedOfferCustomerConfirmationFlowStatus", value, "", {
     transform: (rawValue) => normalizeBookingConfirmationText(rawValue).toUpperCase()
   });
   if (normalized) return normalized;
   return normalizedMode === "DEPOSIT_PAYMENT" ? "AWAITING_PAYMENT" : "OPEN";
 }
 
-export function synchronizeGeneratedOfferBookingConfirmationRouteStatus(generatedOffer, { now = null } = {}) {
-  const route = generatedOffer?.customer_confirmation_flow;
-  if (!route || typeof route !== "object") return false;
-  const mode = normalizeGeneratedOfferBookingConfirmationRouteMode(route.mode);
-  const expiresAt = normalizeBookingConfirmationText(route.expires_at);
+export function synchronizeGeneratedOfferCustomerConfirmationFlowStatus(generatedOffer, { now = null } = {}) {
+  const customerConfirmationFlow = generatedOffer?.customer_confirmation_flow;
+  if (!customerConfirmationFlow || typeof customerConfirmationFlow !== "object") return false;
+  const mode = normalizeGeneratedOfferCustomerConfirmationFlowMode(customerConfirmationFlow.mode);
+  const expiresAt = normalizeBookingConfirmationText(customerConfirmationFlow.expires_at);
   const nowMs = parseIsoTimestamp(now) ?? Date.now();
   const expiresAtMs = parseIsoTimestamp(expiresAt);
-  let nextStatus = normalizeGeneratedOfferBookingConfirmationRouteStatus(route.status, mode);
+  let nextStatus = normalizeGeneratedOfferCustomerConfirmationFlowStatus(customerConfirmationFlow.status, mode);
   if (generatedOffer?.booking_confirmation && typeof generatedOffer.booking_confirmation === "object") {
     nextStatus = "CONFIRMED";
   } else if (nextStatus !== "REVOKED" && expiresAt && Number.isFinite(expiresAtMs) && expiresAtMs <= nowMs) {
@@ -53,12 +53,12 @@ export function synchronizeGeneratedOfferBookingConfirmationRouteStatus(generate
   }
 
   let changed = false;
-  if (normalizeBookingConfirmationText(route.mode) !== mode) {
-    route.mode = mode;
+  if (normalizeBookingConfirmationText(customerConfirmationFlow.mode) !== mode) {
+    customerConfirmationFlow.mode = mode;
     changed = true;
   }
-  if (normalizeBookingConfirmationText(route.status).toUpperCase() !== nextStatus) {
-    route.status = nextStatus;
+  if (normalizeBookingConfirmationText(customerConfirmationFlow.status).toUpperCase() !== nextStatus) {
+    customerConfirmationFlow.status = nextStatus;
     changed = true;
   }
   return changed;
@@ -77,17 +77,13 @@ function migratePersistedGeneratedOfferBookingConfirmationState(generatedOffer) 
     changed = true;
   }
 
-  const legacyRoute = generatedOffer?.acceptance_route ?? generatedOffer?.booking_confirmation_route;
+  const legacyRoute = generatedOffer?.acceptance_route;
   if (legacyRoute && generatedOffer?.customer_confirmation_flow == null) {
     generatedOffer.customer_confirmation_flow = legacyRoute;
     changed = true;
   }
   if ("acceptance_route" in generatedOffer) {
     delete generatedOffer.acceptance_route;
-    changed = true;
-  }
-  if ("booking_confirmation_route" in generatedOffer) {
-    delete generatedOffer.booking_confirmation_route;
     changed = true;
   }
 
@@ -310,7 +306,7 @@ export function backfillGeneratedOfferBookingConfirmationState(store, { now = nu
       if (ensureGeneratedOfferBookingConfirmationTokenState(generatedOffer, { now, ttlMs })) {
         changed = true;
       }
-      if (synchronizeGeneratedOfferBookingConfirmationRouteStatus(generatedOffer, { now })) {
+      if (synchronizeGeneratedOfferCustomerConfirmationFlowStatus(generatedOffer, { now })) {
         changed = true;
       }
     }
@@ -336,7 +332,7 @@ export function buildGeneratedOfferTransportFields(generatedOffer, { secret = ""
     delete publicFields.comment;
   }
 
-  const normalizedCustomerConfirmationFlow = buildGeneratedOfferBookingConfirmationRouteReadModel(generatedOffer, { now: new Date().toISOString() });
+  const normalizedCustomerConfirmationFlow = buildGeneratedOfferCustomerConfirmationFlowReadModel(generatedOffer, { now: new Date().toISOString() });
   if (normalizedCustomerConfirmationFlow) {
     publicFields.customer_confirmation_flow = normalizedCustomerConfirmationFlow;
   } else {
@@ -373,23 +369,23 @@ export function buildGeneratedOfferTransportFields(generatedOffer, { secret = ""
   }
 }
 
-export function buildGeneratedOfferBookingConfirmationRouteReadModel(generatedOffer, { now = null } = {}) {
-  const route = generatedOffer?.customer_confirmation_flow;
-  if (!route || typeof route !== "object") return null;
-  const mode = normalizeGeneratedOfferBookingConfirmationRouteMode(route.mode);
-  const expiresAt = normalizeBookingConfirmationText(route.expires_at);
-  const status = normalizeGeneratedOfferBookingConfirmationRouteStatus(route.status, mode);
+export function buildGeneratedOfferCustomerConfirmationFlowReadModel(generatedOffer, { now = null } = {}) {
+  const customerConfirmationFlow = generatedOffer?.customer_confirmation_flow;
+  if (!customerConfirmationFlow || typeof customerConfirmationFlow !== "object") return null;
+  const mode = normalizeGeneratedOfferCustomerConfirmationFlowMode(customerConfirmationFlow.mode);
+  const expiresAt = normalizeBookingConfirmationText(customerConfirmationFlow.expires_at);
+  const status = normalizeGeneratedOfferCustomerConfirmationFlowStatus(customerConfirmationFlow.status, mode);
 
-  const selectedAt = normalizeBookingConfirmationText(route.selected_at);
-  const selectedByStaffId = normalizeBookingConfirmationText(route.selected_by_atp_staff_id);
-  const customerMessageSnapshot = normalizeBookingConfirmationText(route.customer_message_snapshot);
-  const depositRule = mode === "DEPOSIT_PAYMENT" && route.deposit_rule && typeof route.deposit_rule === "object"
+  const selectedAt = normalizeBookingConfirmationText(customerConfirmationFlow.selected_at);
+  const selectedByStaffId = normalizeBookingConfirmationText(customerConfirmationFlow.selected_by_atp_staff_id);
+  const customerMessageSnapshot = normalizeBookingConfirmationText(customerConfirmationFlow.customer_message_snapshot);
+  const depositRule = mode === "DEPOSIT_PAYMENT" && customerConfirmationFlow.deposit_rule && typeof customerConfirmationFlow.deposit_rule === "object"
     ? {
-        payment_term_line_id: normalizeBookingConfirmationText(route.deposit_rule.payment_term_line_id),
-        payment_term_label: normalizeBookingConfirmationText(route.deposit_rule.payment_term_label),
-        required_amount_cents: Math.max(0, Math.round(Number(route.deposit_rule.required_amount_cents || 0))),
-        currency: normalizeBookingConfirmationText(route.deposit_rule.currency || generatedOffer?.currency || generatedOffer?.offer?.currency || "USD").toUpperCase() || "USD",
-        aggregation_mode: normalizeBookingConfirmationText(route.deposit_rule.aggregation_mode) || "SUM_LINKED_PAID_PAYMENTS"
+        payment_term_line_id: normalizeBookingConfirmationText(customerConfirmationFlow.deposit_rule.payment_term_line_id),
+        payment_term_label: normalizeBookingConfirmationText(customerConfirmationFlow.deposit_rule.payment_term_label),
+        required_amount_cents: Math.max(0, Math.round(Number(customerConfirmationFlow.deposit_rule.required_amount_cents || 0))),
+        currency: normalizeBookingConfirmationText(customerConfirmationFlow.deposit_rule.currency || generatedOffer?.currency || generatedOffer?.offer?.currency || "USD").toUpperCase() || "USD",
+        aggregation_mode: normalizeBookingConfirmationText(customerConfirmationFlow.deposit_rule.aggregation_mode) || "SUM_LINKED_PAID_PAYMENTS"
       }
     : null;
 
@@ -404,20 +400,20 @@ export function buildGeneratedOfferBookingConfirmationRouteReadModel(generatedOf
   };
 }
 
-export function buildPublicGeneratedOfferBookingConfirmationRouteView(generatedOffer, { now = null } = {}) {
-  const route = buildGeneratedOfferBookingConfirmationRouteReadModel(generatedOffer, { now });
-  if (!route) return null;
+export function buildPublicGeneratedOfferCustomerConfirmationFlowView(generatedOffer, { now = null } = {}) {
+  const customerConfirmationFlow = buildGeneratedOfferCustomerConfirmationFlowReadModel(generatedOffer, { now });
+  if (!customerConfirmationFlow) return null;
   return {
-    mode: route.mode,
-    status: route.status,
-    ...(route.expires_at ? { expires_at: route.expires_at } : {}),
-    ...(route.customer_message_snapshot ? { customer_message_snapshot: route.customer_message_snapshot } : {}),
-    ...(route.deposit_rule
+    mode: customerConfirmationFlow.mode,
+    status: customerConfirmationFlow.status,
+    ...(customerConfirmationFlow.expires_at ? { expires_at: customerConfirmationFlow.expires_at } : {}),
+    ...(customerConfirmationFlow.customer_message_snapshot ? { customer_message_snapshot: customerConfirmationFlow.customer_message_snapshot } : {}),
+    ...(customerConfirmationFlow.deposit_rule
       ? {
           deposit_rule: {
-            payment_term_label: route.deposit_rule.payment_term_label,
-            required_amount_cents: route.deposit_rule.required_amount_cents,
-            currency: route.deposit_rule.currency
+            payment_term_label: customerConfirmationFlow.deposit_rule.payment_term_label,
+            required_amount_cents: customerConfirmationFlow.deposit_rule.required_amount_cents,
+            currency: customerConfirmationFlow.deposit_rule.currency
           }
         }
       : {})
@@ -477,7 +473,7 @@ export function buildGeneratedOfferSnapshotHash(generatedOffer) {
     total_price_cents: Number.isFinite(Number(generatedOffer.total_price_cents)) ? Number(generatedOffer.total_price_cents) : null,
     management_approver_atp_staff_id: generatedOffer.management_approver_atp_staff_id || null,
     management_approver_label: generatedOffer.management_approver_label || null,
-    customer_confirmation_flow: buildGeneratedOfferBookingConfirmationRouteReadModel(generatedOffer) || null,
+    customer_confirmation_flow: buildGeneratedOfferCustomerConfirmationFlowReadModel(generatedOffer) || null,
     offer: generatedOffer.offer || null,
     travel_plan: generatedOffer.travel_plan || null
   };

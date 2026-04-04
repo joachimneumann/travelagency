@@ -492,6 +492,22 @@
       ]
     },
     {
+      "key": "booking_clone",
+      "path": "/api/v1/bookings/{booking_id}/clone",
+      "method": "POST",
+      "tag": "Bookings",
+      "authenticated": true,
+      "responseType": "BookingDetail",
+      "parameters": [
+        {
+          "name": "booking_id",
+          "location": "path",
+          "required": true,
+          "typeName": "Identifier"
+        }
+      ]
+    },
+    {
       "key": "booking_name",
       "path": "/api/v1/bookings/{booking_id}/name",
       "method": "PATCH",

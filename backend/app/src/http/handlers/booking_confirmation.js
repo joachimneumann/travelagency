@@ -2,14 +2,14 @@ import { normalizePdfLang } from "../../lib/pdf_i18n.js";
 import { validatePublicGeneratedOfferAcceptRequest } from "../../../Generated/API/generated_APIModels.js";
 import {
   buildGeneratedOfferBookingConfirmationPublicSummary,
-  buildPublicGeneratedOfferBookingConfirmationRouteView,
+  buildPublicGeneratedOfferCustomerConfirmationFlowView,
   buildGeneratedOfferSnapshotHash,
   buildBookingConfirmationStatement,
   buildBookingConfirmationTermsSnapshot,
   BOOKING_CONFIRMATION_TERMS_VERSION,
   readGeneratedOfferBookingConfirmationTokenState,
   verifyBookingConfirmationToken,
-  synchronizeGeneratedOfferBookingConfirmationRouteStatus
+  synchronizeGeneratedOfferCustomerConfirmationFlowStatus
 } from "../../domain/booking_confirmation.js";
 
 export function createBookingConfirmationHandlers(deps) {
@@ -66,7 +66,7 @@ export function createBookingConfirmationHandlers(deps) {
     const bookingConfirmationTokenState = readGeneratedOfferBookingConfirmationTokenState(generatedOffer);
     const bookingName = normalizeText(booking?.name || booking?.web_form_submission?.booking_name);
     const comment = normalizeText(generatedOffer?.comment);
-    const customerConfirmationFlow = buildPublicGeneratedOfferBookingConfirmationRouteView(generatedOffer, { now: nowIso() });
+    const customerConfirmationFlow = buildPublicGeneratedOfferCustomerConfirmationFlowView(generatedOffer, { now: nowIso() });
     const bookingConfirmationSummary = buildGeneratedOfferBookingConfirmationPublicSummary(generatedOffer?.booking_confirmation);
     return {
       booking_id: booking.id,
@@ -97,7 +97,7 @@ export function createBookingConfirmationHandlers(deps) {
       generated_offer_id: generatedOfferId,
       confirmed: Boolean(bookingConfirmation),
       status: "CONFIRMED",
-      ...(generatedOffer ? { customer_confirmation_flow: buildPublicGeneratedOfferBookingConfirmationRouteView(generatedOffer, { now: nowIso() }) } : {}),
+      ...(generatedOffer ? { customer_confirmation_flow: buildPublicGeneratedOfferCustomerConfirmationFlowView(generatedOffer, { now: nowIso() }) } : {}),
       ...(bookingConfirmation ? { booking_confirmation: buildGeneratedOfferBookingConfirmationPublicSummary(bookingConfirmation) } : {})
     };
   }
@@ -314,7 +314,7 @@ export function createBookingConfirmationHandlers(deps) {
       sendJson(res, 404, { error: "Generated offer not found" });
       return;
     }
-    if (synchronizeGeneratedOfferBookingConfirmationRouteStatus(generatedOffer, { now: nowIso() })) {
+    if (synchronizeGeneratedOfferCustomerConfirmationFlowStatus(generatedOffer, { now: nowIso() })) {
       await persistStore(store);
     }
 
@@ -350,7 +350,7 @@ export function createBookingConfirmationHandlers(deps) {
       sendJson(res, 404, { error: "Generated offer not found" });
       return;
     }
-    if (synchronizeGeneratedOfferBookingConfirmationRouteStatus(generatedOffer, { now: nowIso() })) {
+    if (synchronizeGeneratedOfferCustomerConfirmationFlowStatus(generatedOffer, { now: nowIso() })) {
       await persistStore(store);
     }
 
@@ -402,7 +402,7 @@ export function createBookingConfirmationHandlers(deps) {
       sendJson(res, 404, { error: "Generated offer not found" });
       return;
     }
-    if (synchronizeGeneratedOfferBookingConfirmationRouteStatus(generatedOffer, { now: nowIso() })) {
+    if (synchronizeGeneratedOfferCustomerConfirmationFlowStatus(generatedOffer, { now: nowIso() })) {
       await persistStore(store);
     }
 

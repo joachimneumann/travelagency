@@ -1979,6 +1979,38 @@
   border-top: 1px solid var(--line-danger-soft);
 }
 
+.booking-danger-zone__clone {
+  display: grid;
+  gap: 0.7rem;
+  max-width: 28rem;
+  margin-bottom: 0.95rem;
+}
+
+.booking-danger-zone__clone .field {
+  margin: 0;
+}
+
+.booking-danger-zone__checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-weight: var(--font-weight-semibold);
+}
+
+.booking-danger-zone__clone-btn {
+  width: fit-content;
+  background: transparent;
+  border-color: var(--warning-border-strong);
+  color: var(--warning-text-strong);
+}
+
+.booking-danger-zone__clone-btn:hover,
+.booking-danger-zone__clone-btn:focus-visible {
+  background: var(--warning-surface-soft);
+  border-color: var(--warning-border-strong);
+  color: var(--warning-text-strong);
+}
+
 .booking-data-panel {
   display: grid;
   gap: 0.8rem;

@@ -14,7 +14,7 @@ import {
 } from "./i18n.js";
 import { formatMoneyDisplay } from "./pricing.js";
 import {
-  normalizeGeneratedOfferBookingConfirmationRouteStatus as normalizeGeneratedOfferRouteStatus
+  normalizeGeneratedOfferCustomerConfirmationFlowStatus
 } from "../shared/booking_confirmation_catalog.js";
 import { renderBookingSectionHeader } from "./sections.js";
 import { setBookingPageOverlay } from "./page_overlay.js";
@@ -174,7 +174,7 @@ export function createBookingGeneratedOffersModule(ctx) {
       };
     }
 
-    const routeStatus = normalizeGeneratedOfferRouteStatus(
+    const routeStatus = normalizeGeneratedOfferCustomerConfirmationFlowStatus(
       generatedOffer?.customer_confirmation_flow?.status,
       generatedOffer?.customer_confirmation_flow?.mode === "DEPOSIT_PAYMENT" ? "AWAITING_PAYMENT" : "OPEN"
     );
@@ -236,7 +236,6 @@ export function createBookingGeneratedOffersModule(ctx) {
     const canEdit = state.permissions.canEditBooking;
     const selectedPaymentTerm = resolveSelectedBookingConfirmationPaymentTerm(lines);
     const selectedAmount = selectedPaymentTerm ? formatMoneyDisplay(Number(selectedPaymentTerm?.resolved_amount_cents || 0), currency) : "";
-    generatedOfferRouteMode = "DEPOSIT_PAYMENT";
 
     if (els.generate_offer_btn) {
       els.generate_offer_btn.style.display = canEdit ? "" : "none";
@@ -439,7 +438,7 @@ export function createBookingGeneratedOffersModule(ctx) {
       baseURL: apiOrigin,
       params: { booking_id: state.booking.id }
     });
-    const bookingConfirmationRoute = generatedOfferPaymentTermLineId
+    const customerConfirmationFlow = generatedOfferPaymentTermLineId
       ? {
           mode: "DEPOSIT_PAYMENT",
           deposit_rule: {
@@ -454,7 +453,7 @@ export function createBookingGeneratedOffersModule(ctx) {
       body: {
         expected_offer_revision: getBookingRevision("offer_revision"),
         lang: selectedLang,
-        ...(bookingConfirmationRoute ? { customer_confirmation_flow: bookingConfirmationRoute } : {})
+        ...(customerConfirmationFlow ? { customer_confirmation_flow: customerConfirmationFlow } : {})
       }
     }).finally(() => {
       setBookingPageOverlay(els, false);

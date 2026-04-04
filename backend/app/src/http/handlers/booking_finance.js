@@ -6,7 +6,7 @@ import { readFile } from "node:fs/promises";
 import { createGmailDraftsClient } from "../../lib/gmail_drafts.js";
 import { normalizePdfLang, pdfT } from "../../lib/pdf_i18n.js";
 import {
-  normalizeGeneratedOfferBookingConfirmationRouteMode,
+  normalizeGeneratedOfferCustomerConfirmationFlowMode,
   ensureGeneratedOfferBookingConfirmationTokenState,
   buildBookingConfirmationStatement,
   buildBookingConfirmationTermsSnapshot,
@@ -226,14 +226,14 @@ export function createBookingFinanceHandlers(deps) {
     return lines.find((line) => normalizeText(line?.kind).toUpperCase() === "DEPOSIT") || lines[0];
   }
 
-  function buildGeneratedOfferBookingConfirmationRoute({ generatedOffer, booking, offerSnapshot, payload, principal, now }) {
+  function buildGeneratedOfferCustomerConfirmationFlow({ generatedOffer, booking, offerSnapshot, payload, principal, now }) {
     const requestedFlow = payload?.customer_confirmation_flow && typeof payload.customer_confirmation_flow === "object"
       ? payload.customer_confirmation_flow
       : null;
     const paymentTerms = offerSnapshot?.payment_terms || null;
     const hasPaymentTermLines = Array.isArray(paymentTerms?.lines) && paymentTerms.lines.length > 0;
     const mode = requestedFlow
-      ? normalizeGeneratedOfferBookingConfirmationRouteMode(requestedFlow.mode)
+      ? normalizeGeneratedOfferCustomerConfirmationFlowMode(requestedFlow.mode)
       : (hasPaymentTermLines ? "DEPOSIT_PAYMENT" : "");
     const selectedByATPStaffId = normalizeText(
       principal?.sub
@@ -885,7 +885,7 @@ export function createBookingFinanceHandlers(deps) {
       generatedOffer.management_approver_label = approverLabel;
     }
     try {
-      const bookingConfirmationRoute = buildGeneratedOfferBookingConfirmationRoute({
+      const bookingConfirmationRoute = buildGeneratedOfferCustomerConfirmationFlow({
         generatedOffer,
         booking,
         offerSnapshot,

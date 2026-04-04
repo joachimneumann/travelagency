@@ -197,9 +197,9 @@ import (
 	aggregation_mode:      "SUM_LINKED_PAID_PAYMENTS"
 }
 
-#GeneratedOfferBookingConfirmationRoute: {
-	mode:                       enums.#GeneratedOfferBookingConfirmationRouteMode
-	status:                     enums.#GeneratedOfferBookingConfirmationRouteStatus
+#GeneratedOfferCustomerConfirmationFlow: {
+	mode:                       enums.#GeneratedOfferCustomerConfirmationFlowMode
+	status:                     enums.#GeneratedOfferCustomerConfirmationFlowStatus
 	selected_at:                common.#Timestamp
 	selected_by_atp_staff_id:   common.#Identifier
 	expires_at?:                common.#Timestamp
@@ -265,7 +265,7 @@ import (
 	management_approver_label?:             string
 	pdf_frozen_at?:               common.#Timestamp
 	pdf_sha256?:                  string & =~"^[a-f0-9]{64}$"
-	customer_confirmation_flow?:            #GeneratedOfferBookingConfirmationRoute
+	customer_confirmation_flow?:            #GeneratedOfferCustomerConfirmationFlow
 	booking_confirmation_token_nonce?:      string & !=""
 	booking_confirmation_token_created_at?: common.#Timestamp
 	booking_confirmation_token_expires_at?: common.#Timestamp

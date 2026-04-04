@@ -536,7 +536,8 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         requireOneOf: [],
         fields: [
     schemaField({"name":"expected_travel_plan_revision","required":false,"wireName":"expected_travel_plan_revision"}, SHARED_FIELD_DEFS.FIELD_17),
-    schemaField({"name":"lang","required":true,"wireName":"lang"}, SHARED_FIELD_DEFS.FIELD_11),
+    schemaField({"name":"source_lang","required":true,"wireName":"source_lang"}, SHARED_FIELD_DEFS.FIELD_11),
+    schemaField({"name":"target_lang","required":true,"wireName":"target_lang"}, SHARED_FIELD_DEFS.FIELD_11),
     schemaField({"name":"actor","required":false,"wireName":"actor"}, SHARED_FIELD_DEFS.FIELD_1)
         ]
       };
@@ -1227,10 +1228,10 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
       }
 
       export const PUBLIC_GENERATED_OFFER_BOOKING_CONFIRMATION_ROUTE_VIEW_SCHEMA = {
-        name: "PublicGeneratedOfferBookingConfirmationRouteView",
+        name: "PublicGeneratedOfferCustomerConfirmationFlowView",
         domain: "api",
         module: "api",
-        sourceType: "openapi.components.schemas.PublicGeneratedOfferBookingConfirmationRouteView",
+        sourceType: "openapi.components.schemas.PublicGeneratedOfferCustomerConfirmationFlowView",
         requireOneOf: [],
         fields: [
     schemaField({"name":"mode","required":true,"wireName":"mode"}, SHARED_FIELD_DEFS.FIELD_99),
@@ -1241,7 +1242,7 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         ]
       };
 
-      export function validatePublicGeneratedOfferBookingConfirmationRouteView(value) {
+      export function validatePublicGeneratedOfferCustomerConfirmationFlowView(value) {
         return validateShape(value, PUBLIC_GENERATED_OFFER_BOOKING_CONFIRMATION_ROUTE_VIEW_SCHEMA);
       }
 
@@ -1476,10 +1477,10 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
       }
 
       export const BOOKING_GENERATE_OFFER_BOOKING_CONFIRMATION_ROUTE_REQUEST_SCHEMA = {
-        name: "BookingGenerateOfferBookingConfirmationRouteRequest",
+        name: "BookingGenerateOfferCustomerConfirmationFlowRequest",
         domain: "api",
         module: "api",
-        sourceType: "openapi.components.schemas.BookingGenerateOfferBookingConfirmationRouteRequest",
+        sourceType: "openapi.components.schemas.BookingGenerateOfferCustomerConfirmationFlowRequest",
         requireOneOf: [],
         fields: [
     schemaField({"name":"mode","required":true,"wireName":"mode"}, SHARED_FIELD_DEFS.FIELD_99),
@@ -1489,7 +1490,7 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         ]
       };
 
-      export function validateBookingGenerateOfferBookingConfirmationRouteRequest(value) {
+      export function validateBookingGenerateOfferCustomerConfirmationFlowRequest(value) {
         return validateShape(value, BOOKING_GENERATE_OFFER_BOOKING_CONFIRMATION_ROUTE_REQUEST_SCHEMA);
       }
 
@@ -1967,10 +1968,10 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
       }
 
       export const GENERATED_OFFER_BOOKING_CONFIRMATION_ROUTE_SCHEMA = {
-        name: "GeneratedOfferBookingConfirmationRoute",
+        name: "GeneratedOfferCustomerConfirmationFlow",
         domain: "api",
         module: "api",
-        sourceType: "openapi.components.schemas.GeneratedOfferBookingConfirmationRoute",
+        sourceType: "openapi.components.schemas.GeneratedOfferCustomerConfirmationFlow",
         requireOneOf: [],
         fields: [
     schemaField({"name":"mode","required":true,"wireName":"mode"}, SHARED_FIELD_DEFS.FIELD_99),
@@ -1983,7 +1984,7 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         ]
       };
 
-      export function validateGeneratedOfferBookingConfirmationRoute(value) {
+      export function validateGeneratedOfferCustomerConfirmationFlow(value) {
         return validateShape(value, GENERATED_OFFER_BOOKING_CONFIRMATION_ROUTE_SCHEMA);
       }
 

@@ -519,6 +519,20 @@ function ensureSpace(doc, currentY, requiredHeight, headerRedraw = null) {
   return PAGE_MARGIN;
 }
 
+function getContentBottomLimit(doc) {
+  return doc.page.height - PAGE_MARGIN - 24;
+}
+
+function getSinglePageContentCapacity(doc) {
+  return getContentBottomLimit(doc) - PAGE_MARGIN;
+}
+
+function keepSectionTogetherIfPossible(doc, currentY, estimatedHeight, headerRedraw = null) {
+  if (!Number.isFinite(estimatedHeight) || estimatedHeight <= 0) return currentY;
+  if (estimatedHeight > getSinglePageContentCapacity(doc)) return currentY;
+  return ensureSpace(doc, currentY, estimatedHeight, headerRedraw);
+}
+
 function startSectionOnNewPage(doc) {
   doc.addPage();
   return PAGE_MARGIN;
@@ -845,6 +859,113 @@ function drawTableHeader(doc, startY, columns, fonts, lang) {
     x += column.width;
   }
   return startY + TABLE_HEADER_HEIGHT + 10;
+}
+
+function resolveOfferTableColumns(generatedOffer, lang) {
+  const visibleDetailLevel = normalizeText(generatedOffer?.offer?.visible_pricing?.detail_level).toLowerCase();
+  const isTripVisibleDetail = visibleDetailLevel === "trip";
+  const columns = isTripVisibleDetail
+    ? [
+        { key: "category", label: pdfT(lang, "offer.table.category", "Category"), width: 120 },
+        { key: "details", label: pdfT(lang, "offer.table.details", "Details"), width: 278 },
+        { key: "total", label: pdfT(lang, "offer.table.total", "Total"), width: 109, align: "right" }
+      ]
+    : [
+        { key: "category", label: pdfT(lang, "offer.table.category", "Category"), width: 86 },
+        { key: "details", label: pdfT(lang, "offer.table.details", "Details"), width: 141 },
+        { key: "quantity", label: pdfT(lang, "offer.table.quantity", "Quantity"), width: 62, align: "right" },
+        { key: "single", label: pdfT(lang, "offer.table.single", "Unit"), width: 98, align: "right" },
+        { key: "total", label: pdfT(lang, "offer.table.total", "Total"), width: 120, align: "right" }
+      ];
+  return { columns, isTripVisibleDetail };
+}
+
+function measureOfferTableRowHeight(doc, row, columns, isTripVisibleDetail, fonts, lang) {
+  const category = row.category;
+  const categoryTax = row.categoryTax;
+  const details = row.details;
+  const quantity = row.quantity;
+  const unitText = row.unitText;
+  const totalText = row.totalText;
+
+  doc.font(pdfFontName("regular", fonts)).fontSize(10.5);
+  const categoryTextHeight = doc.heightOfString(category, {
+    width: columns[0].width - TABLE_CELL_PADDING_X * 2,
+    align: pdfTextAlign(lang)
+  });
+  doc.font(pdfFontName("regular", fonts)).fontSize(8.8);
+  const categoryTaxHeight = doc.heightOfString(categoryTax, {
+    width: columns[0].width - TABLE_CELL_PADDING_X * 2,
+    align: pdfTextAlign(lang)
+  });
+  doc.font(pdfFontName("regular", fonts)).fontSize(10.5);
+
+  return Math.max(
+    24,
+    categoryTextHeight + categoryTaxHeight + 2,
+    doc.heightOfString(details, { width: columns[1].width - TABLE_CELL_PADDING_X * 2, align: pdfTextAlign(lang) }),
+    ...(isTripVisibleDetail
+      ? [
+          doc.heightOfString(totalText, { width: columns[2].width - TABLE_CELL_PADDING_X * 2, align: "right" })
+        ]
+      : [
+          doc.heightOfString(quantity, { width: columns[2].width - TABLE_CELL_PADDING_X * 2, align: "right" }),
+          doc.heightOfString(unitText, { width: columns[3].width - TABLE_CELL_PADDING_X * 2, align: "right" }),
+          doc.heightOfString(totalText, { width: columns[4].width - TABLE_CELL_PADDING_X * 2, align: "right" })
+        ])
+  ) + TABLE_CELL_PADDING_Y * 2;
+}
+
+function estimateOfferTableHeight(doc, generatedOffer, formatMoneyValue, fonts, lang) {
+  const { columns, isTripVisibleDetail } = resolveOfferTableColumns(generatedOffer, lang);
+  let height = 18;
+  height += TABLE_HEADER_HEIGHT + 10;
+
+  const rows = buildOfferTableRows(generatedOffer, formatMoneyValue, lang);
+  if (!rows.length) {
+    doc
+      .font(pdfFontName("regular", fonts))
+      .fontSize(10.5);
+    height += doc.heightOfString(
+      pdfT(lang, "offer.table_empty", "No offer items were included in this version of the offer."),
+      pdfTextOptions(lang, { width: doc.page.width - PAGE_MARGIN * 2 })
+    ) + 18;
+    return height;
+  }
+
+  for (const row of rows) {
+    height += measureOfferTableRowHeight(doc, row, columns, isTripVisibleDetail, fonts, lang) + TABLE_ROW_GAP;
+  }
+
+  const quotationSummary = deriveOfferQuotationSummary(generatedOffer?.offer);
+  const hasTaxSummary = Number(quotationSummary?.total_tax_amount_cents || 0) !== 0;
+  height += 32;
+  if (!hasTaxSummary) return height + 10;
+
+  const summaryRows = [
+    {
+      label: pdfT(lang, "offer.subtotal_before_tax", "Subtotal before tax"),
+      value: formatMoneyValue(quotationSummary?.subtotal_net_amount_cents, generatedOffer?.currency)
+    },
+    ...safeArray(quotationSummary?.tax_breakdown)
+      .filter((bucket) => Number(bucket?.tax_amount_cents || 0) !== 0)
+      .map((bucket) => ({
+        label: formatTaxRateLabel(bucket.tax_rate_basis_points, lang),
+        value: formatMoneyValue(bucket.tax_amount_cents, generatedOffer?.currency)
+      })),
+    {
+      label: pdfT(lang, "offer.total_with_tax", "Total with tax"),
+      value: formatMoneyValue(
+        quotationSummary?.grand_total_amount_cents ?? generatedOffer?.total_price_cents,
+        generatedOffer?.currency
+      ),
+      isTotal: true
+    }
+  ];
+  const summaryCardHeight = 18 + 18 + 14
+    + summaryRows.reduce((sum, row) => sum + (row.isTotal ? 26 : 22), 0)
+    + (summaryRows.some((row) => row.isTotal) ? 15 : 0);
+  return height + summaryCardHeight + 10;
 }
 
 function drawSummaryCard(doc, startY, rows, fonts, title, lang) {
@@ -1184,6 +1305,79 @@ function drawPaymentTerms(doc, generatedOffer, startY, formatMoneyValue, fonts, 
   return y + 10;
 }
 
+function measurePaymentTermCardHeight(doc, line, currency, formatMoneyValue, fonts, lang, cardWidth, labelWidth, amountWidth, metaWidth) {
+  const label = textOrNull(line?.label)
+    || pdfT(lang, "offer.payment_term.default_label", "Payment term {index}", { index: 1 });
+  const amountText = formatMoneyValue(line?.resolved_amount_cents, currency);
+  const meta = [
+    formatPaymentTermAmountSpecForPdf(line?.amount_spec, currency, formatMoneyValue, lang),
+    formatPaymentTermDueRuleForPdf(line?.due_rule, lang)
+  ].filter(Boolean).join(" · ");
+  const description = textOrNull(line?.description);
+
+  doc.font(pdfFontName("bold", fonts)).fontSize(10.6);
+  const labelHeight = doc.heightOfString(label, pdfTextOptions(lang, { width: labelWidth }));
+  doc.font(pdfFontName("regular", fonts)).fontSize(10);
+  const metaHeight = meta ? doc.heightOfString(meta, pdfTextOptions(lang, { width: metaWidth })) : 0;
+  const descriptionHeight = description
+    ? doc.heightOfString(description, pdfTextOptions(lang, { width: cardWidth - 28, lineGap: 1 }))
+    : 0;
+  const amountHeight = doc.heightOfString(amountText, { width: amountWidth, align: "right" });
+
+  return Math.max(34, Math.max(labelHeight + metaHeight + 4, amountHeight) + descriptionHeight + 18);
+}
+
+function estimatePaymentTermsHeight(doc, generatedOffer, formatMoneyValue, fonts, lang) {
+  const paymentTerms = generatedOffer?.payment_terms || generatedOffer?.offer?.payment_terms;
+  const lines = safeArray(paymentTerms?.lines);
+  if (!lines.length) return 0;
+
+  const currency = generatedOffer?.currency || paymentTerms?.currency;
+  const cardWidth = doc.page.width - PAGE_MARGIN * 2;
+  const labelWidth = 230;
+  const amountWidth = 118;
+  const metaWidth = cardWidth - labelWidth - amountWidth - 32;
+
+  let height = 18;
+  for (const line of lines) {
+    height += measurePaymentTermCardHeight(doc, line, currency, formatMoneyValue, fonts, lang, cardWidth, labelWidth, amountWidth, metaWidth) + 8;
+  }
+
+  const basisTotal = Number(paymentTerms?.basis_total_amount_cents || generatedOffer?.total_price_cents || 0);
+  const scheduledTotal = Number(
+    paymentTerms?.scheduled_total_amount_cents
+    || lines.reduce((sum, line) => sum + Math.max(0, Number(line?.resolved_amount_cents || 0)), 0)
+  );
+  const summaryRows = [
+    {
+      label: pdfT(lang, "offer.payment_terms.basis_total", "Offer total"),
+      value: formatMoneyValue(basisTotal, currency)
+    },
+    {
+      label: pdfT(lang, "offer.payment_terms.scheduled_total", "Scheduled total"),
+      value: formatMoneyValue(scheduledTotal, currency)
+    }
+  ];
+  const summaryCardHeight = 18 + 18 + 14
+    + summaryRows.reduce((sum, row) => sum + (row.isTotal ? 26 : 22), 0)
+    + (summaryRows.some((row) => row.isTotal) ? 15 : 0);
+  height += summaryCardHeight;
+
+  const notes = textOrNull(paymentTerms?.notes);
+  if (notes) {
+    doc
+      .font(pdfFontName("regular", fonts))
+      .fontSize(10);
+    const notesHeight = doc.heightOfString(notes, pdfTextOptions(lang, {
+      width: cardWidth,
+      lineGap: 1
+    }));
+    height += Math.max(54, 40 + notesHeight);
+  }
+
+  return height + 10;
+}
+
 function drawOfferTable(doc, generatedOffer, startY, formatMoneyValue, fonts, lang) {
   const visibleDetailLevel = normalizeText(generatedOffer?.offer?.visible_pricing?.detail_level).toLowerCase();
   const isTripVisibleDetail = visibleDetailLevel === "trip";
@@ -1473,6 +1667,47 @@ function buildAttachmentClosingNote(attachmentCount, lang) {
     : pdfT(lang, "pdf.attachment_note_multiple", "Please also find the attached additional PDFs at the end of this document.");
 }
 
+function estimateClosingHeight(doc, fonts, lang, generatedOffer, formatMoneyValue, attachmentCount = 0) {
+  const textWidth = doc.page.width - PAGE_MARGIN * 2;
+
+  doc
+    .font(pdfFontName("regular", fonts))
+    .fontSize(11);
+  const bodyHeight = doc.heightOfString(
+    buildClosingBody(generatedOffer, formatMoneyValue, lang),
+    pdfTextOptions(lang, {
+      width: textWidth,
+      lineGap: 2
+    })
+  );
+
+  const attachmentNote = buildAttachmentClosingNote(attachmentCount, lang);
+  const attachmentHeight = attachmentNote
+    ? doc.heightOfString(attachmentNote, pdfTextOptions(lang, {
+      width: textWidth,
+      lineGap: 2
+    })) + (11 * 0.8)
+    : 0;
+
+  doc
+    .font(pdfFontName("regular", fonts))
+    .fontSize(11);
+  const regardsHeight = doc.heightOfString(pdfT(lang, "offer.closing_regards", "Warm regards,"), {
+    width: textWidth,
+    align: pdfTextAlign(lang)
+  });
+
+  doc
+    .font(pdfFontName("regular", fonts))
+    .fontSize(12);
+  const teamHeight = doc.heightOfString(pdfT(lang, "offer.closing_team", "Your Asia Travel Plan team."), {
+    width: textWidth,
+    align: pdfTextAlign(lang)
+  });
+
+  return bodyHeight + attachmentHeight + 18 + regardsHeight + 18 + teamHeight + 10;
+}
+
 function drawClosing(doc, startY, fonts, lang, generatedOffer, formatMoneyValue, attachmentCount = 0) {
   doc
     .font(pdfFontName("regular", fonts))
@@ -1628,14 +1863,18 @@ export function createOfferPdfWriter({
       }
       y = ensureSpace(doc, y, estimateGuideSectionHeight(doc, guideContext, fonts, lang) + 10);
       y = drawGuideSection(doc, y, fonts, lang, guideContext, guidePhoto);
-      y = startSectionOnNewPage(doc);
+      y = keepSectionTogetherIfPossible(doc, y, estimateOfferTableHeight(doc, generatedOffer, renderMoney, fonts, lang));
       y = drawOfferTable(doc, generatedOffer, y, renderMoney, fonts, lang);
       if (safeArray(generatedOffer?.payment_terms?.lines || generatedOffer?.offer?.payment_terms?.lines).length) {
-        y = startSectionOnNewPage(doc);
+        y = keepSectionTogetherIfPossible(doc, y, estimatePaymentTermsHeight(doc, generatedOffer, renderMoney, fonts, lang));
         y = drawPaymentTerms(doc, generatedOffer, y, renderMoney, fonts, lang);
       }
-      y = ensureSpace(doc, y, 90);
-      y = drawClosing(doc, y + 18, fonts, lang, generatedOffer, renderMoney, attachmentPaths.length);
+      y = keepSectionTogetherIfPossible(
+        doc,
+        y + 18,
+        estimateClosingHeight(doc, fonts, lang, generatedOffer, renderMoney, attachmentPaths.length)
+      );
+      y = drawClosing(doc, y, fonts, lang, generatedOffer, renderMoney, attachmentPaths.length);
 
       drawDivider(doc, doc.page.height - PAGE_MARGIN - 12);
       doc

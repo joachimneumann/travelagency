@@ -278,15 +278,15 @@ import (
 	expected_offer_revision?: >=0 & int
 	comment?:                 string
 	actor?:                   string
-	customer_confirmation_flow?:        #BookingGenerateOfferBookingConfirmationRouteRequest
+	customer_confirmation_flow?:        #BookingGenerateOfferCustomerConfirmationFlowRequest
 }
 
 #BookingGenerateOfferDepositBookingConfirmationRuleRequest: {
 	payment_term_line_id: common.#Identifier
 }
 
-#BookingGenerateOfferBookingConfirmationRouteRequest: {
-	mode:                       enums.#GeneratedOfferBookingConfirmationRouteMode
+#BookingGenerateOfferCustomerConfirmationFlowRequest: {
+	mode:                       enums.#GeneratedOfferCustomerConfirmationFlowMode
 	expires_at?:                common.#Timestamp
 	customer_message_snapshot?: string
 

@@ -1,6 +1,6 @@
 package enums
 
-GeneratedOfferBookingConfirmationRouteStatusCatalog: [
+GeneratedOfferCustomerConfirmationFlowStatusCatalog: [
 	"OPEN",
 	"AWAITING_PAYMENT",
 	"CONFIRMED",
@@ -8,4 +8,4 @@ GeneratedOfferBookingConfirmationRouteStatusCatalog: [
 	"REVOKED",
 ]
 
-#GeneratedOfferBookingConfirmationRouteStatus: or(GeneratedOfferBookingConfirmationRouteStatusCatalog)
+#GeneratedOfferCustomerConfirmationFlowStatus: or(GeneratedOfferCustomerConfirmationFlowStatusCatalog)

@@ -8,10 +8,10 @@ import {
 } from "../../Generated/Models/generated_Currency.js";
 import { resolveApiUrl } from "../shared/api.js";
 import {
-  formatGeneratedOfferBookingConfirmationRouteLabel,
-  generatedOfferRouteUsesDepositPayment,
-  normalizeGeneratedOfferBookingConfirmationRouteMode as normalizeBookingConfirmationRouteMode,
-  normalizeGeneratedOfferBookingConfirmationRouteStatus as normalizeBookingConfirmationRouteStatus
+  formatGeneratedOfferCustomerConfirmationFlowLabel,
+  generatedOfferCustomerConfirmationFlowUsesDepositPayment,
+  normalizeGeneratedOfferCustomerConfirmationFlowMode as normalizeCustomerConfirmationFlowMode,
+  normalizeGeneratedOfferCustomerConfirmationFlowStatus as normalizeCustomerConfirmationFlowStatus
 } from "../shared/booking_confirmation_catalog.js";
 
 const query = new URLSearchParams(window.location.search);
@@ -34,7 +34,7 @@ const els = {
   loading: document.getElementById("booking_confirmation_loading"),
   content: document.getElementById("booking_confirmation_content"),
   summary: document.getElementById("booking_confirmation_summary"),
-  route: document.getElementById("booking_confirmation_route"),
+  customerFlow: document.getElementById("booking_confirmation_customer_flow"),
   paymentTerms: document.getElementById("booking_confirmation_payment_terms"),
   pdfLink: document.getElementById("booking_confirmation_pdf_link"),
   result: document.getElementById("booking_confirmation_result"),
@@ -120,12 +120,12 @@ function formatPaymentDueRule(rule) {
   return "On booking confirmation";
 }
 
-function routeMode() {
-  return normalizeBookingConfirmationRouteMode(state.access?.customer_confirmation_flow?.mode || "DEPOSIT_PAYMENT");
+function customerConfirmationFlowMode() {
+  return normalizeCustomerConfirmationFlowMode(state.access?.customer_confirmation_flow?.mode || "DEPOSIT_PAYMENT");
 }
 
-function routeUsesDepositPayment() {
-  return generatedOfferRouteUsesDepositPayment(routeMode());
+function customerConfirmationFlowUsesDepositPayment() {
+  return generatedOfferCustomerConfirmationFlowUsesDepositPayment(customerConfirmationFlowMode());
 }
 
 function setError(message) {
@@ -159,7 +159,7 @@ function renderSummary() {
   const rows = [
     ["Booking", access.booking_name || access.booking_id],
     ["Offer total", `<span class="booking-confirmation-summary__value is-total">${escapeHtml(formatMoney(access.total_price_cents, access.currency))}</span>`],
-    ["Route", escapeHtml(formatGeneratedOfferBookingConfirmationRouteLabel(routeMode(), { deposit: "Deposit payment" }))],
+    ["Customer flow", escapeHtml(formatGeneratedOfferCustomerConfirmationFlowLabel(customerConfirmationFlowMode(), { deposit: "Deposit payment" }))],
     ["Offer language", escapeHtml(String(access.lang || "").toUpperCase() || "-")],
     ["Generated", escapeHtml(formatDateTime(access.created_at))],
     ["Link expires", escapeHtml(formatDateTime(access.public_booking_confirmation_expires_at))],
@@ -173,19 +173,19 @@ function renderSummary() {
   `).join("");
 }
 
-function renderRouteCard() {
-  if (!els.route) return;
+function renderCustomerFlowCard() {
+  if (!els.customerFlow) return;
   const access = state.access;
   const customerConfirmationFlow = access?.customer_confirmation_flow;
   if (!access || !customerConfirmationFlow) {
-    els.route.hidden = true;
-    els.route.innerHTML = "";
+    els.customerFlow.hidden = true;
+    els.customerFlow.innerHTML = "";
     return;
   }
-  const isDeposit = routeUsesDepositPayment();
-  const routeTitle = isDeposit
+  const isDeposit = customerConfirmationFlowUsesDepositPayment();
+  const customerFlowTitle = isDeposit
     ? "Deposit payment confirms the offer"
-    : formatGeneratedOfferBookingConfirmationRouteLabel(routeMode(), { deposit: "Deposit payment" });
+    : formatGeneratedOfferCustomerConfirmationFlowLabel(customerConfirmationFlowMode(), { deposit: "Deposit payment" });
   const defaultMessage = isDeposit
     ? (() => {
         const label = normalizeText(customerConfirmationFlow?.deposit_rule?.payment_term_label) || "the required payment";
@@ -195,30 +195,30 @@ function renderRouteCard() {
         return `This offer is confirmed once we receive ${amount} for ${label}.`;
       })()
     : "Review the frozen offer and confirm the booking below.";
-  const routeStatus = normalizeBookingConfirmationRouteStatus(
+  const customerFlowStatus = normalizeCustomerConfirmationFlowStatus(
     customerConfirmationFlow?.status,
     isDeposit ? "AWAITING_PAYMENT" : "OPEN"
   );
-  const statusLabel = normalizeText(routeStatus)
-    ? normalizeText(String(routeStatus).replace(/_/g, " ").toLowerCase()).replace(/^\w/, (char) => char.toUpperCase())
+  const statusLabel = normalizeText(customerFlowStatus)
+    ? normalizeText(String(customerFlowStatus).replace(/_/g, " ").toLowerCase()).replace(/^\w/, (char) => char.toUpperCase())
     : (isDeposit ? "Awaiting payment" : "Open");
-  const depositMeta = isDeposit && bookingConfirmationRoute?.deposit_rule
+  const depositMeta = isDeposit && customerConfirmationFlow?.deposit_rule
     ? `
       <div class="booking-confirmation-route__meta">
-        <div><strong>Required payment</strong><span>${escapeHtml(bookingConfirmationRoute.deposit_rule.payment_term_label || "Payment")}</span></div>
-        <div><strong>Amount</strong><span>${escapeHtml(formatMoney(bookingConfirmationRoute.deposit_rule.required_amount_cents || 0, bookingConfirmationRoute.deposit_rule.currency || access.currency))}</span></div>
+        <div><strong>Required payment</strong><span>${escapeHtml(customerConfirmationFlow.deposit_rule.payment_term_label || "Payment")}</span></div>
+        <div><strong>Amount</strong><span>${escapeHtml(formatMoney(customerConfirmationFlow.deposit_rule.required_amount_cents || 0, customerConfirmationFlow.deposit_rule.currency || access.currency))}</span></div>
       </div>
     `
     : "";
-  els.route.innerHTML = `
+  els.customerFlow.innerHTML = `
     <div class="booking-confirmation-route__header">
-      <h2 class="booking-confirmation-route__title">${escapeHtml(routeTitle)}</h2>
+      <h2 class="booking-confirmation-route__title">${escapeHtml(customerFlowTitle)}</h2>
       <span class="booking-confirmation-route__status">${escapeHtml(statusLabel)}</span>
     </div>
     <p class="booking-confirmation-route__body">${escapeHtml(normalizeText(customerConfirmationFlow?.customer_message_snapshot) || defaultMessage)}</p>
     ${depositMeta}
   `;
-  els.route.hidden = false;
+  els.customerFlow.hidden = false;
 }
 
 function renderPaymentTerms() {
@@ -303,11 +303,11 @@ function render() {
   els.content.hidden = !access;
   if (!access) return;
 
-  const depositRoute = routeUsesDepositPayment();
+  const depositCustomerFlow = customerConfirmationFlowUsesDepositPayment();
   document.documentElement.lang = String(access.lang || query.get("lang") || "en").toLowerCase();
-  document.title = depositRoute ? "Offer payment | AsiaTravelPlan" : "Booking Confirmation | AsiaTravelPlan";
-  els.title.textContent = depositRoute ? "Review your offer and payment terms" : "Confirm your booking";
-  els.intro.textContent = depositRoute
+  document.title = depositCustomerFlow ? "Offer payment | AsiaTravelPlan" : "Booking Confirmation | AsiaTravelPlan";
+  els.title.textContent = depositCustomerFlow ? "Review your offer and payment terms" : "Confirm your booking";
+  els.intro.textContent = depositCustomerFlow
     ? "Review the frozen PDF and payment terms. Your offer is confirmed once we receive the required payment."
     : "Review the frozen PDF and confirm your booking.";
   if (els.contactHint) {
@@ -316,13 +316,13 @@ function render() {
   }
 
   renderSummary();
-  renderRouteCard();
+  renderCustomerFlowCard();
   renderPaymentTerms();
   els.pdfLink.href = resolveApiUrl(apiOrigin, access.pdf_url || "#");
   els.pdfLink.hidden = !access.pdf_url;
   els.sendBtn.disabled = state.sending;
   renderConfirmedState();
-  els.form.hidden = depositRoute || state.confirmed;
+  els.form.hidden = depositCustomerFlow || state.confirmed;
 }
 
 async function loadAccess() {
@@ -368,7 +368,7 @@ function validateBaseForm() {
 }
 
 async function confirmBooking() {
-  if (routeUsesDepositPayment()) return;
+  if (customerConfirmationFlowUsesDepositPayment()) return;
   if (!validateBaseForm()) return;
   state.sending = true;
   render();

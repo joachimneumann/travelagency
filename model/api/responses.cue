@@ -250,9 +250,9 @@ import (
 	currency:              enums.#CurrencyCode
 }
 
-#PublicGeneratedOfferBookingConfirmationRouteView: {
-	mode:                       enums.#GeneratedOfferBookingConfirmationRouteMode
-	status:                     enums.#GeneratedOfferBookingConfirmationRouteStatus
+#PublicGeneratedOfferCustomerConfirmationFlowView: {
+	mode:                       enums.#GeneratedOfferCustomerConfirmationFlowMode
+	status:                     enums.#GeneratedOfferCustomerConfirmationFlowStatus
 	expires_at?:                common.#Timestamp
 	customer_message_snapshot?: string
 	deposit_rule?:              #PublicGeneratedOfferDepositBookingConfirmationRuleView
@@ -348,7 +348,7 @@ import (
 	management_approver_atp_staff_id?:      common.#Identifier
 	management_approver_label?:             string
 	pdf_url:                       string & !=""
-	customer_confirmation_flow?:             entities.#GeneratedOfferBookingConfirmationRoute
+	customer_confirmation_flow?:             entities.#GeneratedOfferCustomerConfirmationFlow
 	public_booking_confirmation_token?:      string & !=""
 	public_booking_confirmation_expires_at?: common.#Timestamp
 	booking_confirmation?:                   entities.#GeneratedOfferBookingConfirmation
@@ -440,7 +440,7 @@ import (
 	created_at:                    common.#Timestamp
 	pdf_url?:                      string & !=""
 	payment_terms?:                #BookingOfferPaymentTermsReadModel
-	customer_confirmation_flow?:             #PublicGeneratedOfferBookingConfirmationRouteView
+	customer_confirmation_flow?:             #PublicGeneratedOfferCustomerConfirmationFlowView
 	public_booking_confirmation_expires_at?: common.#Timestamp
 	confirmed:                     bool
 	booking_confirmation?:                   #GeneratedOfferBookingConfirmationPublicSummary
@@ -451,7 +451,7 @@ import (
 	generated_offer_id:   common.#Identifier
 	confirmed:            bool
 	status:               "CONFIRMED"
-	customer_confirmation_flow?:    #PublicGeneratedOfferBookingConfirmationRouteView
+	customer_confirmation_flow?:    #PublicGeneratedOfferCustomerConfirmationFlowView
 	booking_confirmation?:          #GeneratedOfferBookingConfirmationPublicSummary
 }
 

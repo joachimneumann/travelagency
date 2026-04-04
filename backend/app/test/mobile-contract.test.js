@@ -361,6 +361,17 @@ async function deleteBookingForTest(bookingId) {
   assert.equal(deleteResult.status, 200);
 }
 
+async function cloneBookingForTest(bookingId, body = {}) {
+  return await requestJson(
+    `/api/v1/bookings/${encodeURIComponent(bookingId)}/clone`,
+    apiHeaders(),
+    {
+      method: "POST",
+      body
+    }
+  );
+}
+
 async function deleteTourForTest(tourId) {
   if (!tourId) return;
   const deleteResult = await requestJson(
@@ -440,6 +451,154 @@ test("bookings list response conforms to the mobile contract", async () => {
   assert.ok(result.body.items.length > 0, "Expected at least one booking");
   assert.equal(result.body.items[0].id, createdBooking.id);
   assertBookingShape(result.body.items[0]);
+});
+
+test("booking clone endpoint applies the shared clone policy and can include travelers", async () => {
+  const createdBooking = await createPublicBooking({
+    name: "Original booking",
+    preferred_language: "de",
+    preferred_currency: "USD",
+    destinations: ["Vietnam", "Cambodia"],
+    travel_style: ["Culture", "Food"],
+    notes: "Original note"
+  });
+
+  const store = JSON.parse(await readFile(STORE_PATH, "utf8"));
+  const bookingRecord = store.bookings.find((booking) => booking.id === createdBooking.id);
+  bookingRecord.assigned_keycloak_user_id = "kc-staff";
+  bookingRecord.source_channel = "website";
+  bookingRecord.referral_kind = "atp_staff";
+  bookingRecord.referral_label = "Joachim";
+  bookingRecord.referral_staff_user_id = "kc-staff";
+  bookingRecord.accepted_offer_snapshot = { total_price_cents: 12300 };
+  bookingRecord.accepted_travel_plan_snapshot = { days: [{ id: "old_day_1" }] };
+  bookingRecord.accepted_offer_artifact_ref = "generated_offer_1";
+  bookingRecord.accepted_travel_plan_artifact_ref = "travel_plan_pdf_1";
+  bookingRecord.accepted_deposit_amount_cents = 3300;
+  bookingRecord.accepted_deposit_currency = "USD";
+  bookingRecord.deposit_received_at = "2026-03-25T09:15:00.000Z";
+  bookingRecord.travel_plan = {
+    days: [
+      {
+        id: "travel_day_1",
+        day_number: 1,
+        title: "Arrival",
+        services: [
+          {
+            id: "travel_service_1",
+            title: "Airport pickup",
+            image: {
+              id: "travel_image_1",
+              storage_path: "booking_images/source/service.webp",
+              sort_order: 0
+            }
+          }
+        ]
+      }
+    ],
+    offer_component_links: [
+      {
+        id: "travel_link_1",
+        travel_plan_service_id: "travel_service_1",
+        offer_component_id: "offer_component_1",
+        coverage_type: "full"
+      }
+    ],
+    attachments: [
+      {
+        id: "attachment_1",
+        filename: "voucher.pdf",
+        storage_path: "booking_source/voucher.pdf",
+        page_count: 1,
+        sort_order: 0
+      }
+    ]
+  };
+  bookingRecord.offer = {
+    currency: "USD",
+    status: "OFFER_SENT",
+    offer_detail_level_internal: "component",
+    offer_detail_level_visible: "component",
+    category_rules: [{ category: "OTHER", tax_rate_basis_points: 0 }],
+    components: [{
+      id: "offer_component_1",
+      category: "OTHER",
+      label: "Other",
+      quantity: 1,
+      unit_amount_cents: 10000
+    }],
+    additional_items: [],
+    totals: {
+      net_amount_cents: 10000,
+      tax_amount_cents: 0,
+      gross_amount_cents: 10000,
+      total_price_cents: 10000,
+      items_count: 1
+    },
+    quotation_summary: {
+      tax_included: true,
+      subtotal_net_amount_cents: 10000,
+      total_tax_amount_cents: 0,
+      grand_total_amount_cents: 10000,
+      tax_breakdown: []
+    },
+    total_price_cents: 10000
+  };
+  bookingRecord.pricing = {
+    currency: "USD",
+    agreed_net_amount_cents: 10000,
+    adjustments: [{ id: "pricing_adjustment_1", type: "SURCHARGE", amount_cents: 500 }],
+    payments: [{ id: "pricing_payment_1", label: "Deposit", status: "PAID", paid_at: "2026-03-25T09:15:00.000Z" }],
+    summary: {
+      agreed_net_amount_cents: 10000,
+      adjustments_delta_cents: 500,
+      adjusted_net_amount_cents: 10500,
+      scheduled_net_amount_cents: 10000,
+      unscheduled_net_amount_cents: 500,
+      scheduled_tax_amount_cents: 0,
+      scheduled_gross_amount_cents: 10000,
+      paid_gross_amount_cents: 10000,
+      outstanding_gross_amount_cents: 0,
+      is_schedule_balanced: false
+    }
+  };
+  await writeFile(STORE_PATH, `${JSON.stringify(store, null, 2)}\n`, "utf8");
+
+  const cloneWithoutTravelers = await cloneBookingForTest(createdBooking.id, {
+    expected_core_revision: bookingRecord.core_revision,
+    name: "Cloned without travelers"
+  });
+  assert.equal(cloneWithoutTravelers.status, 201);
+  assert.equal(cloneWithoutTravelers.body.booking.name, "Cloned without travelers");
+  assert.equal(cloneWithoutTravelers.body.booking.stage, "NEW_BOOKING");
+  assert.equal(cloneWithoutTravelers.body.booking.assigned_keycloak_user_id, null);
+  assert.deepEqual(cloneWithoutTravelers.body.booking.persons, []);
+  assert.equal(cloneWithoutTravelers.body.booking.customer_language, "de");
+  assert.deepEqual(cloneWithoutTravelers.body.booking.destinations, ["Vietnam", "Cambodia"]);
+  assert.deepEqual(cloneWithoutTravelers.body.booking.travel_styles, ["culture", "gastronomic-experiences"]);
+  assert.equal(cloneWithoutTravelers.body.booking.source_channel, null);
+  assert.equal(cloneWithoutTravelers.body.booking.referral_kind, null);
+  assert.deepEqual(cloneWithoutTravelers.body.booking.accepted_record, { available: false });
+  assert.equal(cloneWithoutTravelers.body.booking.travel_plan.days[0].services[0].image.storage_path, "booking_images/source/service.webp");
+  assert.equal(cloneWithoutTravelers.body.booking.travel_plan.attachments[0].storage_path, "booking_source/voucher.pdf");
+  assert.equal(cloneWithoutTravelers.body.booking.travel_plan.offer_component_links.length, 0);
+  assert.deepEqual(cloneWithoutTravelers.body.booking.pricing.adjustments, []);
+  assert.deepEqual(cloneWithoutTravelers.body.booking.pricing.payments, []);
+  assert.equal(cloneWithoutTravelers.body.booking.web_form_submission.booking_name, "Cloned without travelers");
+  assert.equal(cloneWithoutTravelers.body.booking.web_form_submission.notes, `cloned from ${createdBooking.id}`);
+  assert.equal(cloneWithoutTravelers.body.booking.web_form_submission.name, undefined);
+  assert.equal(cloneWithoutTravelers.body.booking.web_form_submission.email, undefined);
+  assert.equal(cloneWithoutTravelers.body.booking.web_form_submission.phone_number, undefined);
+
+  const cloneWithTravelers = await cloneBookingForTest(createdBooking.id, {
+    expected_core_revision: bookingRecord.core_revision,
+    name: "Cloned with travelers",
+    include_travelers: true
+  });
+  assert.equal(cloneWithTravelers.status, 201);
+  assert.equal(cloneWithTravelers.body.booking.persons.length, 1);
+  assert.equal(cloneWithTravelers.body.booking.persons[0].name, "Original booking");
+  assert.equal(cloneWithTravelers.body.booking.persons[0].roles.includes("primary_contact"), true);
 });
 
 test("public booking discovery-call request can be created without destinations or travel styles", async () => {

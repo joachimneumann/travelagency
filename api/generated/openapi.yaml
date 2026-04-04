@@ -761,7 +761,7 @@ components:
         label: DAYS_AFTER_TRIP_START
       - value: DAYS_AFTER_TRIP_END
         label: DAYS_AFTER_TRIP_END
-    GeneratedOfferBookingConfirmationRouteMode:
+    GeneratedOfferCustomerConfirmationFlowMode:
       type: string
       enum:
       - DEPOSIT_PAYMENT
@@ -770,7 +770,7 @@ components:
       x-enum-options:
       - value: DEPOSIT_PAYMENT
         label: DEPOSIT_PAYMENT
-    GeneratedOfferBookingConfirmationRouteStatus:
+    GeneratedOfferCustomerConfirmationFlowStatus:
       type: string
       enum:
       - OPEN
@@ -4900,7 +4900,7 @@ components:
           "$ref": "#/components/schemas/ATPCurrencyCode"
         aggregation_mode:
           type: string
-    GeneratedOfferBookingConfirmationRoute:
+    GeneratedOfferCustomerConfirmationFlow:
       type: object
       required:
       - mode
@@ -4909,9 +4909,9 @@ components:
       - selected_by_atp_staff_id
       properties:
         mode:
-          "$ref": "#/components/schemas/GeneratedOfferBookingConfirmationRouteMode"
+          "$ref": "#/components/schemas/GeneratedOfferCustomerConfirmationFlowMode"
         status:
-          "$ref": "#/components/schemas/GeneratedOfferBookingConfirmationRouteStatus"
+          "$ref": "#/components/schemas/GeneratedOfferCustomerConfirmationFlowStatus"
         selected_at:
           type: string
           format: date-time
@@ -5233,7 +5233,7 @@ components:
           type: string
           nullable: true
         customer_confirmation_flow:
-          "$ref": "#/components/schemas/GeneratedOfferBookingConfirmationRoute"
+          "$ref": "#/components/schemas/GeneratedOfferCustomerConfirmationFlow"
           nullable: true
         booking_confirmation_token_nonce:
           type: string
@@ -5594,16 +5594,16 @@ components:
           type: integer
         currency:
           "$ref": "#/components/schemas/ATPCurrencyCode"
-    PublicGeneratedOfferBookingConfirmationRouteView:
+    PublicGeneratedOfferCustomerConfirmationFlowView:
       type: object
       required:
       - mode
       - status
       properties:
         mode:
-          "$ref": "#/components/schemas/GeneratedOfferBookingConfirmationRouteMode"
+          "$ref": "#/components/schemas/GeneratedOfferCustomerConfirmationFlowMode"
         status:
-          "$ref": "#/components/schemas/GeneratedOfferBookingConfirmationRouteStatus"
+          "$ref": "#/components/schemas/GeneratedOfferCustomerConfirmationFlowStatus"
         expires_at:
           type: string
           format: date-time
@@ -5835,7 +5835,7 @@ components:
         pdf_url:
           type: string
         customer_confirmation_flow:
-          "$ref": "#/components/schemas/GeneratedOfferBookingConfirmationRoute"
+          "$ref": "#/components/schemas/GeneratedOfferCustomerConfirmationFlow"
           nullable: true
         public_booking_confirmation_token:
           type: string
@@ -6363,7 +6363,7 @@ components:
           "$ref": "#/components/schemas/BookingOfferPaymentTermsReadModel"
           nullable: true
         customer_confirmation_flow:
-          "$ref": "#/components/schemas/PublicGeneratedOfferBookingConfirmationRouteView"
+          "$ref": "#/components/schemas/PublicGeneratedOfferCustomerConfirmationFlowView"
           nullable: true
         public_booking_confirmation_expires_at:
           type: string
@@ -6391,7 +6391,7 @@ components:
         status:
           type: string
         customer_confirmation_flow:
-          "$ref": "#/components/schemas/PublicGeneratedOfferBookingConfirmationRouteView"
+          "$ref": "#/components/schemas/PublicGeneratedOfferCustomerConfirmationFlowView"
           nullable: true
         booking_confirmation:
           "$ref": "#/components/schemas/GeneratedOfferBookingConfirmationPublicSummary"
@@ -7020,12 +7020,15 @@ components:
     BookingTravelPlanTranslateRequest:
       type: object
       required:
-      - lang
+      - source_lang
+      - target_lang
       properties:
         expected_travel_plan_revision:
           type: integer
           nullable: true
-        lang:
+        source_lang:
+          "$ref": "#/components/schemas/LanguageCode"
+        target_lang:
           "$ref": "#/components/schemas/LanguageCode"
         actor:
           type: string
@@ -7232,7 +7235,7 @@ components:
           type: string
           nullable: true
         customer_confirmation_flow:
-          "$ref": "#/components/schemas/BookingGenerateOfferBookingConfirmationRouteRequest"
+          "$ref": "#/components/schemas/BookingGenerateOfferCustomerConfirmationFlowRequest"
           nullable: true
     BookingGenerateOfferDepositBookingConfirmationRuleRequest:
       type: object
@@ -7241,13 +7244,13 @@ components:
       properties:
         payment_term_line_id:
           type: string
-    BookingGenerateOfferBookingConfirmationRouteRequest:
+    BookingGenerateOfferCustomerConfirmationFlowRequest:
       type: object
       required:
       - mode
       properties:
         mode:
-          "$ref": "#/components/schemas/GeneratedOfferBookingConfirmationRouteMode"
+          "$ref": "#/components/schemas/GeneratedOfferCustomerConfirmationFlowMode"
         expires_at:
           type: string
           format: date-time
@@ -7951,6 +7954,57 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/BookingChatResponse"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/bookings/{booking_id}/clone":
+    post:
+      operationId: booking_clone
+      summary: Booking Clone
+      tags:
+      - Bookings
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: booking_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - expected_core_revision
+              - name
+              properties:
+                expected_core_revision:
+                  type: integer
+                name:
+                  type: string
+                include_travelers:
+                  type: boolean
+                actor:
+                  type: string
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingDetail"
         '401':
           description: Unauthorized
           content:

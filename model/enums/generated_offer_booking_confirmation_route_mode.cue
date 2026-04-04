@@ -1,7 +1,7 @@
 package enums
 
-GeneratedOfferBookingConfirmationRouteModeCatalog: [
+GeneratedOfferCustomerConfirmationFlowModeCatalog: [
 	"DEPOSIT_PAYMENT",
 ]
 
-#GeneratedOfferBookingConfirmationRouteMode: or(GeneratedOfferBookingConfirmationRouteModeCatalog)
+#GeneratedOfferCustomerConfirmationFlowMode: or(GeneratedOfferCustomerConfirmationFlowModeCatalog)

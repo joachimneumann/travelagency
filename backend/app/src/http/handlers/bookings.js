@@ -11,10 +11,11 @@ import {
   resolveBookingNameForStorage
 } from "../../domain/booking_names.js";
 import { normalizePdfLang } from "../../lib/pdf_i18n.js";
+import { cloneBookingForTesting } from "../../domain/booking_clone.js";
 import { createGeneratedOfferArtifactHelpers } from "../../domain/generated_offer_artifacts.js";
 import {
   ensureGeneratedOfferBookingConfirmationTokenState,
-  synchronizeGeneratedOfferBookingConfirmationRouteStatus
+  synchronizeGeneratedOfferCustomerConfirmationFlowStatus
 } from "../../domain/booking_confirmation.js";
 import { normalizeTourStyleCode, sortTourStyleCodes } from "../../domain/tour_catalog_i18n.js";
 import { createBookingQueryModule } from "./booking_query.js";
@@ -132,7 +133,7 @@ export function createBookingHandlers(deps) {
       if (ensureGeneratedOfferBookingConfirmationTokenState(generatedOffer, { now })) {
         changed = true;
       }
-      if (synchronizeGeneratedOfferBookingConfirmationRouteStatus(generatedOffer, { now })) {
+      if (synchronizeGeneratedOfferCustomerConfirmationFlowStatus(generatedOffer, { now })) {
         changed = true;
       }
     }
@@ -901,11 +902,61 @@ export function createBookingHandlers(deps) {
     sendJson(res, 200, { deleted: true, booking_id: bookingId });
   }
 
+  async function handleCloneBooking(req, res, [bookingId]) {
+    let payload;
+    try {
+      payload = await readBodyJson(req);
+    } catch {
+      sendJson(res, 400, { error: "Invalid JSON payload" });
+      return;
+    }
+
+    const nextName = normalizeText(payload?.name);
+    if (!nextName) {
+      sendJson(res, 422, { error: "name is required" });
+      return;
+    }
+
+    const store = await readStore();
+    const sourceBooking = store.bookings.find((item) => item.id === bookingId);
+    if (!sourceBooking) {
+      sendJson(res, 404, { error: "Booking not found" });
+      return;
+    }
+
+    const principal = getPrincipal(req);
+    if (!canEditBooking(principal, sourceBooking)) {
+      sendJson(res, 403, { error: "Forbidden" });
+      return;
+    }
+    if (!(await assertExpectedRevision(req, payload, sourceBooking, "expected_core_revision", "core_revision", res))) return;
+
+    const clonedBooking = cloneBookingForTesting(sourceBooking, {
+      randomUUID,
+      nowIso,
+      name: nextName,
+      includeTravelers: payload?.include_travelers === true
+    });
+
+    store.bookings.push(clonedBooking);
+    addActivity(
+      store,
+      clonedBooking.id,
+      "BOOKING_CREATED",
+      actorLabel(principal, normalizeText(payload?.actor) || "keycloak_user"),
+      `Cloned from ${sourceBooking.id}`
+    );
+    await persistStore(store);
+
+    sendJson(res, 201, await buildBookingDetailResponse(clonedBooking, req));
+  }
+
   return {
     handleCreateBooking,
     handleListBookings,
     handleGetBooking,
     handleDeleteBooking,
+    handleCloneBooking,
     handleListBookingChatEvents,
     handlePublicBookingImage,
     handlePublicBookingPersonPhoto,

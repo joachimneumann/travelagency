@@ -14,7 +14,7 @@ test("generated-offer booking confirmation backfill migrates legacy confirmation
               method: "PORTAL_CLICK",
               accepted_at: "2026-04-04T00:00:00.000Z"
             },
-            booking_confirmation_route: {
+            acceptance_route: {
               mode: "DEPOSIT_PAYMENT",
               status: "OPEN"
             },
@@ -48,7 +48,7 @@ test("generated-offer booking confirmation backfill migrates legacy confirmation
   assert.equal(migratedOffer.booking_confirmation_token_revoked_at, "2026-04-05T00:00:00.000Z");
 
   assert.equal("acceptance" in migratedOffer, false);
-  assert.equal("booking_confirmation_route" in migratedOffer, false);
+  assert.equal("acceptance_route" in migratedOffer, false);
   assert.equal("public_acceptance_token_nonce" in migratedOffer, false);
   assert.equal("public_acceptance_token_created_at" in migratedOffer, false);
   assert.equal("public_acceptance_token_expires_at" in migratedOffer, false);

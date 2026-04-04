@@ -304,7 +304,7 @@ test("backend startup writes back legacy generated-offer confirmation fields bef
 
   assert.match(
     confirmationDomainSource,
-    /function migratePersistedGeneratedOfferBookingConfirmationState\(generatedOffer\) \{[\s\S]*customer_confirmation_flow[\s\S]*booking_confirmation_route[\s\S]*booking_confirmation_token_nonce/,
+    /function migratePersistedGeneratedOfferBookingConfirmationState\(generatedOffer\) \{[\s\S]*customer_confirmation_flow[\s\S]*acceptance_route[\s\S]*booking_confirmation_token_nonce/,
     "Generated-offer confirmation migration should rewrite legacy route and token field names into the current persisted shape"
   );
   assert.match(
@@ -1208,6 +1208,33 @@ test("travel plan PDF table exposes sent and delete controls backed by dedicated
     travelPlanPdfsSource,
     /booking\.comments[\s\S]*booking\.travel_plan\.sent_to_customer[\s\S]*data-travel-plan-pdf-comment-input[\s\S]*data-travel-plan-pdf-save-comment[\s\S]*data-travel-plan-pdf-sent[\s\S]*data-travel-plan-delete-pdf/,
     "The travel-plan PDF table should render inline comment editing alongside the sent-to-customer checkbox and delete action"
+  );
+});
+
+test("booking danger zone exposes clone controls before delete", async () => {
+  const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
+  const bookingPageScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking.js");
+  const routesPath = path.resolve(__dirname, "..", "src", "http", "routes.js");
+  const [bookingPageSource, bookingPageScriptSource, routesSource] = await Promise.all([
+    readFile(bookingPagePath, "utf8"),
+    readFile(bookingPageScriptPath, "utf8"),
+    readFile(routesPath, "utf8")
+  ]);
+
+  assert.match(
+    bookingPageSource,
+    /id="booking_clone_title_input"[\s\S]*id="booking_clone_include_travelers_input"[\s\S]*id="booking_clone_btn"[\s\S]*id="booking_delete_btn"/,
+    "booking.html should expose clone controls in the danger zone before the delete button"
+  );
+  assert.match(
+    bookingPageScriptSource,
+    /cloneTitleInput[\s\S]*cloneIncludeTravelersInput[\s\S]*cloneBtn[\s\S]*addEventListener\("click", cloneBooking\)/,
+    "booking page script should wire the clone danger-zone controls"
+  );
+  assert.match(
+    routesSource,
+    /POST", path: "\/api\/v1\/bookings\/\{booking_id\}\/clone", handlerKey: "handleCloneBooking"/,
+    "The booking routes should expose a clone endpoint"
   );
 });
 
@@ -2525,6 +2552,100 @@ test("offer PDF omits the quotation tax summary and uses a plain total label whe
     source,
     /if \(!hasTaxSummary\) \{\s*return y \+ 10;\s*\}/,
     "Offer PDFs should skip the quotation tax summary block entirely when the quotation has no tax"
+  );
+});
+
+test("offer PDF keeps offer details and payment terms together when they fit instead of forcing dedicated pages", async () => {
+  const offerPdfPath = path.resolve(__dirname, "..", "..", "..", "backend", "app", "src", "lib", "offer_pdf.js");
+  const source = await readFile(offerPdfPath, "utf8");
+
+  assert.match(
+    source,
+    /function keepSectionTogetherIfPossible\([\s\S]*if \(estimatedHeight > getSinglePageContentCapacity\(doc\)\) return currentY;[\s\S]*return ensureSpace\(doc, currentY, estimatedHeight, headerRedraw\);/,
+    "Offer PDFs should expose a helper that keeps a section together only when the full section can fit on one page"
+  );
+  assert.match(
+    source,
+    /y = keepSectionTogetherIfPossible\(doc, y, estimateOfferTableHeight\(doc, generatedOffer, renderMoney, fonts, lang\)\);\s*y = drawOfferTable\(doc, generatedOffer, y, renderMoney, fonts, lang\);/,
+    "Offer details should only move to a new page when the entire section would not fit in the remaining space"
+  );
+  assert.match(
+    source,
+    /y = keepSectionTogetherIfPossible\(doc, y, estimatePaymentTermsHeight\(doc, generatedOffer, renderMoney, fonts, lang\)\);\s*y = drawPaymentTerms\(doc, generatedOffer, y, renderMoney, fonts, lang\);/,
+    "Payment terms should only move to a new page when the entire section would not fit in the remaining space"
+  );
+  assert.doesNotMatch(
+    source,
+    /y = startSectionOnNewPage\(doc\);\s*y = drawOfferTable\(doc, generatedOffer, y, renderMoney, fonts, lang\);/,
+    "Offer PDFs should no longer force Offer details onto a dedicated new page"
+  );
+  assert.doesNotMatch(
+    source,
+    /y = startSectionOnNewPage\(doc\);\s*y = drawPaymentTerms\(doc, generatedOffer, y, renderMoney, fonts, lang\);/,
+    "Offer PDFs should no longer force Payment terms onto a dedicated new page"
+  );
+});
+
+test("offer PDF keeps the closing letter and signoff together when they fit on one page", async () => {
+  const offerPdfPath = path.resolve(__dirname, "..", "..", "..", "backend", "app", "src", "lib", "offer_pdf.js");
+  const source = await readFile(offerPdfPath, "utf8");
+
+  assert.match(
+    source,
+    /function estimateClosingHeight\([\s\S]*buildClosingBody\(generatedOffer, formatMoneyValue, lang\)[\s\S]*offer\.closing_regards[\s\S]*offer\.closing_team/s,
+    "Offer PDFs should estimate the full closing block height, including the signoff"
+  );
+  assert.match(
+    source,
+    /y = keepSectionTogetherIfPossible\(\s*doc,\s*y \+ 18,\s*estimateClosingHeight\(doc, fonts, lang, generatedOffer, renderMoney, attachmentPaths\.length\)\s*\);\s*y = drawClosing\(doc, y, fonts, lang, generatedOffer, renderMoney, attachmentPaths\.length\);/s,
+    "Offer PDFs should keep the closing body and signoff together when the entire block can fit on the current page"
+  );
+  assert.doesNotMatch(
+    source,
+    /y = ensureSpace\(doc, y, 90\);\s*y = drawClosing\(doc, y \+ 18, fonts, lang, generatedOffer, renderMoney, attachmentPaths\.length\);/,
+    "Offer PDFs should no longer rely on a fixed 90-point spacer before drawing the closing block"
+  );
+});
+
+test("booking travel-plan translate contract accepts explicit source and target languages", async () => {
+  const requestsCuePath = path.resolve(__dirname, "..", "..", "..", "model", "api", "requests.cue");
+  const normalizedIrPath = path.resolve(__dirname, "..", "..", "..", "model", "ir", "normalized.cue");
+  const openApiPath = path.resolve(__dirname, "..", "..", "..", "api", "generated", "openapi.yaml");
+  const generatedModelsPath = path.resolve(__dirname, "..", "..", "..", "shared", "generated-contract", "API", "generated_APIModels.js");
+  const [requestsCueSource, normalizedIrSource, openApiSource, generatedModelsSource] = await Promise.all([
+    readFile(requestsCuePath, "utf8"),
+    readFile(normalizedIrPath, "utf8"),
+    readFile(openApiPath, "utf8"),
+    readFile(generatedModelsPath, "utf8")
+  ]);
+
+  assert.match(
+    requestsCueSource,
+    /#BookingTravelPlanTranslateRequest:\s*\{[\s\S]*source_lang:\s+enums\.\#LanguageCode[\s\S]*target_lang:\s+enums\.\#LanguageCode/,
+    "The authored travel-plan translate request model should require source_lang and target_lang"
+  );
+  assert.match(
+    normalizedIrSource,
+    /name:\s+"BookingTravelPlanTranslateRequest"[\s\S]*\{name: "source_lang", kind: "enum", typeName: "LanguageCode", required: true\}[\s\S]*\{name: "target_lang", kind: "enum", typeName: "LanguageCode", required: true\}/,
+    "The normalized API IR should keep source_lang and target_lang for travel-plan translation"
+  );
+  assert.match(
+    openApiSource,
+    /BookingTravelPlanTranslateRequest:[\s\S]*required:[\s\S]*- source_lang[\s\S]*- target_lang[\s\S]*properties:[\s\S]*source_lang:[\s\S]*target_lang:/,
+    "The generated OpenAPI schema should require source_lang and target_lang for travel-plan translation"
+  );
+  const generatedSchemaBlock = generatedModelsSource.match(
+    /export const BOOKING_TRAVEL_PLAN_TRANSLATE_REQUEST_SCHEMA = \{[\s\S]*?\n\s*\};/
+  )?.[0] || "";
+  assert.match(
+    generatedSchemaBlock,
+    /"name":"source_lang"[\s\S]*"name":"target_lang"/,
+    "The shared runtime validator should accept source_lang and target_lang for travel-plan translation"
+  );
+  assert.equal(
+    generatedSchemaBlock.includes('"name":"lang"'),
+    false,
+    "The shared runtime validator should not keep the legacy lang-only travel-plan translation schema"
   );
 });
 
