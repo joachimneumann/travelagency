@@ -225,12 +225,14 @@ import (
 	expected_travel_plan_revision?: >=0 & int
 	lang?:                          enums.#LanguageCode
 	filename_suffix?:               string
+	comment?:                       string
 	actor?:                         string
 }
 
 #TravelPlanPdfArtifactUpdateRequest: {
 	expected_travel_plan_revision?: >=0 & int
-	sent_to_customer:               bool
+	sent_to_customer?:              bool
+	comment?:                       string
 	actor?:                         string
 }
 

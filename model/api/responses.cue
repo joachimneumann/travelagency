@@ -357,6 +357,7 @@ import (
 	page_count:       >0 & int
 	created_at:       common.#Timestamp
 	sent_to_customer: bool
+	comment?:         string
 	pdf_url:          string & !=""
 }
 

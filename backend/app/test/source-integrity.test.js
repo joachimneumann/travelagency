@@ -1188,8 +1188,8 @@ test("travel plan PDF table exposes sent and delete controls backed by dedicated
   );
   assert.match(
     travelPlanPdfsSource,
-    /booking\.travel_plan\.sent_to_customer[\s\S]*data-travel-plan-pdf-sent[\s\S]*data-travel-plan-delete-pdf/,
-    "The travel-plan PDF table should render the sent-to-customer checkbox and delete action"
+    /booking\.comments[\s\S]*booking\.travel_plan\.sent_to_customer[\s\S]*data-travel-plan-pdf-comment-input[\s\S]*data-travel-plan-pdf-save-comment[\s\S]*data-travel-plan-pdf-sent[\s\S]*data-travel-plan-delete-pdf/,
+    "The travel-plan PDF table should render inline comment editing alongside the sent-to-customer checkbox and delete action"
   );
 });
 
@@ -1667,13 +1667,18 @@ test("generated offer actions are gated behind a clean page state", async () => 
   );
   assert.match(
     offersSource,
-    /data-generated-offer-edit-comment="[^"]+"[^>]*data-requires-clean-state[\s\S]*data-generated-offer-delete="[^"]+"[^>]*data-requires-clean-state/,
-    "Generated-offer comment edit and delete controls should be disabled while the page is dirty"
+    /data-generated-offer-save-comment="[^"]+"[^>]*data-requires-clean-state[\s\S]*data-generated-offer-delete="[^"]+"[^>]*data-requires-clean-state/,
+    "Generated-offer comment save and delete controls should be disabled while the page is dirty"
   );
   assert.match(
     offersSource,
     /ensureOfferCleanState/,
     "Generated-offer actions should call the explicit clean-state guard before mutating generated offers"
+  );
+  assert.doesNotMatch(
+    offersSource,
+    /window\.prompt\(bookingT\("booking\.offer\.comment_prompt"/,
+    "Generating a new offer should no longer interrupt ATP staff with a comment prompt popup"
   );
 });
 

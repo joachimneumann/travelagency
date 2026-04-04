@@ -19,7 +19,6 @@ There are also some good security choices already in place:
 - role-based authorization is enforced on `/api/v1/*`
 - invoice PDFs are served through authenticated endpoints
 - public generated-offer access and public generated-offer PDFs are gated by a dedicated booking confirmation token
-- booking confirmation can require a separate email OTP with resend throttling and a rolling send cap
 - booking image path resolution uses path-bound checks
 - image conversion uses `execFile(...)` instead of spawning a shell command string
 
@@ -85,8 +84,6 @@ Relevant code:
 
 Current behavior:
 - public booking confirmation requires a dedicated booking confirmation token
-- optional email OTP can be required before final acceptance
-- OTP issue flow has resend throttling and a rolling send cap
 
 This is materially better than a public flow that trusts only `booking_id` and `generated_offer_id`.
 
@@ -252,9 +249,6 @@ I did not find route-level or global rate limiting for:
 - upload endpoints
 - authenticated API mutations
 
-Important exception:
-- the public generated-booking confirmation OTP flow does implement resend throttling and a rolling send cap in `backend/app/src/domain/booking_confirmation.js`
-
 Impact:
 - easier brute force and abuse
 - easier denial of service
@@ -263,7 +257,6 @@ Impact:
 Recommendation:
 - add IP-based and route-based throttling
 - add stricter limits for login and upload routes
-- keep the current booking-confirmationance OTP throttling, but do not treat it as a substitute for system-wide rate limiting
 - log and alert on repeated failures
 
 ### 9. `INSECURE_TEST_AUTH` is a dangerous production footgun

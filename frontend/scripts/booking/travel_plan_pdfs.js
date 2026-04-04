@@ -38,7 +38,7 @@ export function createBookingTravelPlanPdfsModule(deps) {
   function renderTravelPlanPdfsTable() {
     const pdfs = Array.isArray(state.booking?.travel_plan_pdfs) ? state.booking.travel_plan_pdfs : [];
     const canEdit = Boolean(state.permissions?.canEditBooking);
-    const emptyColspan = canEdit ? 5 : 4;
+    const emptyColspan = canEdit ? 6 : 5;
     return `
       <div class="travel-plan-existing-pdfs">
         <div class="backend-table-wrap travel-plan-existing-pdfs__table-wrap">
@@ -48,6 +48,7 @@ export function createBookingTravelPlanPdfsModule(deps) {
                 <th class="travel-plan-existing-pdfs-col-document">${escapeHtml(bookingT("booking.pdf", "PDF"))}</th>
                 <th class="travel-plan-existing-pdfs-col-pages">${escapeHtml(bookingT("booking.pages", "Pages"))}</th>
                 <th class="travel-plan-existing-pdfs-col-date">${escapeHtml(bookingT("booking.date", "Date"))}</th>
+                <th class="travel-plan-existing-pdfs-col-comment">${escapeHtml(bookingT("booking.comments", "Comments"))}</th>
                 <th class="travel-plan-existing-pdfs-col-sent">${escapeHtml(bookingT("booking.travel_plan.sent_to_customer", "Sent to customer"))}</th>
                 ${canEdit ? `<th class="travel-plan-existing-pdfs-col-actions">${escapeHtml(bookingT("backend.table.actions", "Actions"))}</th>` : ""}
               </tr>
@@ -66,6 +67,10 @@ export function createBookingTravelPlanPdfsModule(deps) {
                       </td>
                       <td class="travel-plan-existing-pdfs-col-pages">${escapeHtml(pageCountLabel(pdf.page_count))}</td>
                       <td class="travel-plan-existing-pdfs-col-date">${escapeHtml(formatDateTime(pdf.created_at))}</td>
+                      <td class="travel-plan-existing-pdfs-col-comment generated-offers-col-comment">${canEdit
+                        ? `<textarea data-travel-plan-pdf-comment-input="${escapeHtml(pdf.id)}" rows="2">${escapeHtml(pdf.comment || "")}</textarea>
+                           <button class="btn btn-ghost" type="button" data-travel-plan-pdf-save-comment="${escapeHtml(pdf.id)}" data-requires-clean-state data-clean-state-hint-id="travel_plan_pdf_dirty_hint">${escapeHtml(bookingT("common.save", "Save"))}</button>`
+                        : (escapeHtml(pdf.comment || "") || "-")}</td>
                       <td class="travel-plan-existing-pdfs-col-sent">
                         <label class="travel-plan-existing-pdfs__sent-toggle">
                           <input
@@ -100,8 +105,34 @@ export function createBookingTravelPlanPdfsModule(deps) {
     `;
   }
 
+  async function saveTravelPlanPdfComment(artifactId, value) {
+    if (!(await ensureTravelPlanReadyForMutation())) return false;
+    const currentArtifact = (Array.isArray(state.booking?.travel_plan_pdfs) ? state.booking.travel_plan_pdfs : [])
+      .find((item) => item?.id === artifactId);
+    const request = bookingTravelPlanPdfUpdateRequest({
+      baseURL: apiOrigin,
+      params: {
+        booking_id: state.booking.id,
+        artifact_id: artifactId
+      },
+      body: {
+        expected_travel_plan_revision: getBookingRevision("travel_plan_revision"),
+        sent_to_customer: currentArtifact?.sent_to_customer === true,
+        comment: String(value || "").trim(),
+        actor: state.user
+      }
+    });
+    const result = await fetchBookingMutation(request.url, {
+      method: request.method,
+      body: request.body
+    });
+    return await finalizeTravelPlanMutation(result, bookingT("booking.travel_plan.pdf_comment_saved", "Travel plan PDF comment saved."));
+  }
+
   async function setTravelPlanPdfSentToCustomer(artifactId, sentToCustomer) {
     if (!(await ensureTravelPlanReadyForMutation())) return false;
+    const currentArtifact = (Array.isArray(state.booking?.travel_plan_pdfs) ? state.booking.travel_plan_pdfs : [])
+      .find((item) => item?.id === artifactId);
     const request = bookingTravelPlanPdfUpdateRequest({
       baseURL: apiOrigin,
       params: {
@@ -111,6 +142,7 @@ export function createBookingTravelPlanPdfsModule(deps) {
       body: {
         expected_travel_plan_revision: getBookingRevision("travel_plan_revision"),
         sent_to_customer: sentToCustomer === true,
+        comment: String(currentArtifact?.comment || "").trim(),
         actor: state.user
       }
     });
@@ -149,6 +181,7 @@ export function createBookingTravelPlanPdfsModule(deps) {
 
   return {
     renderTravelPlanPdfsTable,
+    saveTravelPlanPdfComment,
     setTravelPlanPdfSentToCustomer,
     deleteTravelPlanPdf
   };

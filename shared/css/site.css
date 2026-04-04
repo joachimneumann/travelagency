@@ -3252,6 +3252,10 @@ textarea:focus-visible {
   min-height: 42px;
 }
 
+.backend-table td.generated-offers-col-comment .btn {
+  margin-top: 0.4rem;
+}
+
 .backend-table .generated-offers-col-actions {
   width: 64px;
   min-width: 64px;

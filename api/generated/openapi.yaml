@@ -5864,6 +5864,9 @@ components:
           format: date-time
         sent_to_customer:
           type: boolean
+        comment:
+          type: string
+          nullable: true
         pdf_url:
           type: string
     TravelPlanPdfArtifactCreateResponse:
@@ -7153,19 +7156,25 @@ components:
         filename_suffix:
           type: string
           nullable: true
+        comment:
+          type: string
+          nullable: true
         actor:
           type: string
           nullable: true
     TravelPlanPdfArtifactUpdateRequest:
       type: object
-      required:
-      - sent_to_customer
+      required: []
       properties:
         expected_travel_plan_revision:
           type: integer
           nullable: true
         sent_to_customer:
           type: boolean
+          nullable: true
+        comment:
+          type: string
+          nullable: true
         actor:
           type: string
           nullable: true

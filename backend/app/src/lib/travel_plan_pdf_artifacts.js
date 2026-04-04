@@ -58,6 +58,7 @@ function normalizeMetadataItem(raw) {
   }
   const customerLanguage = String(raw?.customer_language || "").trim();
   const travelPlanRevision = Number(raw?.travel_plan_revision);
+  const comment = String(raw?.comment || "").trim();
   return {
     id: artifactId,
     booking_id: bookingId,
@@ -66,6 +67,7 @@ function normalizeMetadataItem(raw) {
     created_at: createdAt,
     page_count: Math.max(1, Math.round(pageCount)),
     sent_to_customer: raw?.sent_to_customer === true,
+    ...(comment ? { comment } : {}),
     ...(customerLanguage ? { customer_language: customerLanguage } : {}),
     ...(Number.isFinite(travelPlanRevision) && travelPlanRevision >= 0 ? { travel_plan_revision: Math.round(travelPlanRevision) } : {})
   };
@@ -173,6 +175,7 @@ export function createTravelPlanPdfArtifacts({ travelPlanPdfsDir, generatedOffer
       page_count: item.page_count,
       created_at: item.created_at,
       sent_to_customer: item.sent_to_customer === true,
+      ...(String(item.comment || "").trim() ? { comment: String(item.comment || "").trim() } : {}),
       ...(item.customer_language ? { customer_language: item.customer_language } : {}),
       ...(Number.isFinite(item.travel_plan_revision) ? { travel_plan_revision: item.travel_plan_revision } : {}),
       ...(absolutePath ? { storage_path: absolutePath } : {})
@@ -237,6 +240,7 @@ export function createTravelPlanPdfArtifacts({ travelPlanPdfsDir, generatedOffer
         created_at: createdAt,
         page_count: pageCount,
         sent_to_customer: false,
+        comment: String(options?.comment || "").trim(),
         customer_language: String(options?.customerLanguage || "").trim(),
         travel_plan_revision: Number(options?.travelPlanRevision)
       });
@@ -262,7 +266,12 @@ export function createTravelPlanPdfArtifacts({ travelPlanPdfsDir, generatedOffer
       if (index < 0) return null;
       items[index] = normalizeMetadataItem({
         ...items[index],
-        sent_to_customer: patch?.sent_to_customer === true
+        sent_to_customer: typeof patch?.sent_to_customer === "boolean"
+          ? patch.sent_to_customer === true
+          : items[index]?.sent_to_customer === true,
+        comment: typeof patch?.comment === "string"
+          ? String(patch.comment || "").trim()
+          : items[index]?.comment
       });
       await writeManifest(normalizedBookingId, items);
       return toReadModelItem(items[index], artifactStoragePath(normalizedBookingId, normalizedArtifactId));
@@ -312,7 +321,8 @@ export function createTravelPlanPdfArtifacts({ travelPlanPdfsDir, generatedOffer
         display_filename: buildTravelPlanPdfDisplayFilename(datePart, suffix),
         created_at: createdAt,
         page_count: pageCount,
-        sent_to_customer: metadata?.sent_to_customer === true
+        sent_to_customer: metadata?.sent_to_customer === true,
+        comment: String(metadata?.comment || "").trim()
       });
       items.push(item);
       try {

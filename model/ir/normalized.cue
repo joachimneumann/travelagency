@@ -1074,6 +1074,7 @@ IR: {
 				{name: "page_count", kind: "scalar", typeName: "int", required: true},
 				{name: "created_at", kind: "scalar", typeName: "Timestamp", required: true},
 				{name: "sent_to_customer", kind: "scalar", typeName: "bool", required: true},
+				{name: "comment", kind: "scalar", typeName: "string", required: false},
 				{name: "pdf_url", kind: "scalar", typeName: "string", required: true},
 			]
 		},
@@ -1886,6 +1887,7 @@ IR: {
 				{name: "expected_travel_plan_revision", kind: "scalar", typeName: "int", required: false},
 				{name: "lang", kind: "enum", typeName: "LanguageCode", required: false},
 				{name: "filename_suffix", kind: "scalar", typeName: "string", required: false},
+				{name: "comment", kind: "scalar", typeName: "string", required: false},
 				{name: "actor", kind: "scalar", typeName: "string", required: false},
 			]
 		},
@@ -1896,7 +1898,8 @@ IR: {
 			sourceType: "api.#TravelPlanPdfArtifactUpdateRequest"
 			fields: [
 				{name: "expected_travel_plan_revision", kind: "scalar", typeName: "int", required: false},
-				{name: "sent_to_customer", kind: "scalar", typeName: "bool", required: true},
+				{name: "sent_to_customer", kind: "scalar", typeName: "bool", required: false},
+				{name: "comment", kind: "scalar", typeName: "string", required: false},
 				{name: "actor", kind: "scalar", typeName: "string", required: false},
 			]
 		},

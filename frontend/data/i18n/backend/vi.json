@@ -787,6 +787,7 @@
   "booking.travel_plan.overnight_location": "Địa điểm nghỉ qua đêm (tùy chọn)",
   "booking.travel_plan.pdf_created": "Đã tạo PDF kế hoạch chuyến đi.",
   "booking.travel_plan.pdf_deleted": "Đã xóa PDF kế hoạch chuyến đi.",
+  "booking.travel_plan.pdf_comment_saved": "Đã lưu ghi chú PDF lịch trình.",
   "booking.travel_plan.pdf_marked_not_sent": "PDF lịch trình được đánh dấu là chưa gửi cho khách hàng.",
   "booking.travel_plan.pdf_marked_sent": "PDF lịch trình được đánh dấu là đã gửi cho khách hàng.",
   "booking.travel_plan.picture": "Hình ảnh",

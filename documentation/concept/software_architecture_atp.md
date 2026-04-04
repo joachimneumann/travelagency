@@ -91,7 +91,7 @@ Backend:
 - persistence orchestration
 - chat/webhook integration
 - generated-offer freezing and serving
-- generated-booking confirmation and OTP verification
+- generated-booking confirmation
 
 Frontend:
 - public website interactions
@@ -117,20 +117,15 @@ The important current handler split is:
   - public generated-offer access
   - public generated-offer PDF
   - public acceptance
-  - email OTP issue/verify flow
-  - resend throttling responses including `retry_after_seconds`
 - `backend/app/src/domain/generated_offer_artifacts.js`
   - frozen generated-offer PDF artifact logic
 - `backend/app/src/domain/booking_confirmation.js`
   - acceptance-token lifecycle
   - acceptance-token verification
-  - OTP challenge helpers
 - `frontend/pages/booking-confirmation.html`
   - public acceptance page
 - `frontend/scripts/pages/booking_confirmation.js`
   - token-gated public generated-offer read flow
-  - email OTP issue/verify UX
-  - resend countdown using `retry_after_seconds`
 
 The backend startup path in `backend/app/src/server.js` performs explicit acceptance-token-state backfill for legacy stored generated offers.
 This backfill is done at startup, not during booking GET requests.

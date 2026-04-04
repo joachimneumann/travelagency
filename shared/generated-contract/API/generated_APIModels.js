@@ -665,6 +665,7 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
     schemaField({"name":"expected_travel_plan_revision","required":false,"wireName":"expected_travel_plan_revision"}, SHARED_FIELD_DEFS.FIELD_17),
     schemaField({"name":"lang","required":false,"wireName":"lang"}, SHARED_FIELD_DEFS.FIELD_11),
     schemaField({"name":"filename_suffix","required":false,"wireName":"filename_suffix"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"comment","required":false,"wireName":"comment"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"actor","required":false,"wireName":"actor"}, SHARED_FIELD_DEFS.FIELD_1)
         ]
       };
@@ -696,7 +697,8 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         requireOneOf: [],
         fields: [
     schemaField({"name":"expected_travel_plan_revision","required":false,"wireName":"expected_travel_plan_revision"}, SHARED_FIELD_DEFS.FIELD_17),
-    schemaField({"name":"sent_to_customer","required":true,"wireName":"sent_to_customer"}, SHARED_FIELD_DEFS.FIELD_8),
+    schemaField({"name":"sent_to_customer","required":false,"wireName":"sent_to_customer"}, SHARED_FIELD_DEFS.FIELD_8),
+    schemaField({"name":"comment","required":false,"wireName":"comment"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"actor","required":false,"wireName":"actor"}, SHARED_FIELD_DEFS.FIELD_1)
         ]
       };
@@ -1464,6 +1466,7 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
     schemaField({"name":"page_count","required":true,"wireName":"page_count"}, SHARED_FIELD_DEFS.FIELD_17),
     schemaField({"name":"created_at","required":true,"wireName":"created_at"}, SHARED_FIELD_DEFS.FIELD_5),
     schemaField({"name":"sent_to_customer","required":true,"wireName":"sent_to_customer"}, SHARED_FIELD_DEFS.FIELD_8),
+    schemaField({"name":"comment","required":false,"wireName":"comment"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"pdf_url","required":true,"wireName":"pdf_url"}, SHARED_FIELD_DEFS.FIELD_1)
         ]
       };

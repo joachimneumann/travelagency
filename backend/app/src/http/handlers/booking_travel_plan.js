@@ -105,12 +105,14 @@ export function createBookingTravelPlanHandlers(deps) {
   function buildTravelPlanPdfArtifactResponse(bookingId, artifact) {
     const artifactId = String(artifact?.id || "").trim();
     if (!artifactId) return null;
+    const comment = normalizeText(artifact?.comment);
     return {
       id: artifactId,
       filename: String(artifact?.filename || buildTravelPlanDownloadFilename(artifact?.created_at || nowIso())).trim(),
       page_count: Math.max(1, Number(artifact?.page_count) || 1),
       created_at: String(artifact?.created_at || nowIso()).trim(),
       sent_to_customer: artifact?.sent_to_customer === true,
+      ...(comment ? { comment } : {}),
       pdf_url: `/api/v1/bookings/${encodeURIComponent(bookingId)}/travel-plan/pdfs/${encodeURIComponent(artifactId)}/pdf`
     };
   }
@@ -404,6 +406,7 @@ export function createBookingTravelPlanHandlers(deps) {
       const artifact = await persistBookingTravelPlanPdfArtifact(booking.id, renderedPath, {
         createdAt: nowIso(),
         suffix: payload?.filename_suffix,
+        comment: normalizeText(payload?.comment),
         customerLanguage: contentLang,
         travelPlanRevision: Number(booking?.travel_plan_revision)
       });
@@ -532,8 +535,12 @@ export function createBookingTravelPlanHandlers(deps) {
     }
     if (!(await assertExpectedRevision(req, payload, booking, "expected_travel_plan_revision", "travel_plan_revision", res))) return;
 
+    const nextComment = typeof payload?.comment === "string" ? normalizeText(payload.comment) || "" : undefined;
     const updatedArtifact = typeof updateBookingTravelPlanPdfArtifact === "function"
-      ? await updateBookingTravelPlanPdfArtifact(booking.id, artifactId, { sent_to_customer: payload.sent_to_customer === true }).catch(() => null)
+      ? await updateBookingTravelPlanPdfArtifact(booking.id, artifactId, {
+          ...(typeof payload?.sent_to_customer === "boolean" ? { sent_to_customer: payload.sent_to_customer === true } : {}),
+          ...(typeof nextComment === "string" ? { comment: nextComment } : {})
+        }).catch(() => null)
       : null;
     if (!updatedArtifact) {
       sendJson(res, 404, { error: "Travel plan PDF not found" });
@@ -547,9 +554,11 @@ export function createBookingTravelPlanHandlers(deps) {
       booking.id,
       "TRAVEL_PLAN_UPDATED",
       actorLabel(principal, normalizeText(payload.actor) || "keycloak_user"),
-      payload.sent_to_customer === true
-        ? `Travel-plan PDF marked as sent to customer: ${normalizeText(updatedArtifact.filename) || artifactId}`
-        : `Travel-plan PDF marked as not sent to customer: ${normalizeText(updatedArtifact.filename) || artifactId}`
+      typeof payload?.comment === "string"
+        ? `Travel-plan PDF comment updated: ${normalizeText(updatedArtifact.filename) || artifactId}`
+        : payload.sent_to_customer === true
+          ? `Travel-plan PDF marked as sent to customer: ${normalizeText(updatedArtifact.filename) || artifactId}`
+          : `Travel-plan PDF marked as not sent to customer: ${normalizeText(updatedArtifact.filename) || artifactId}`
     );
     await persistStore(store);
     sendJson(res, 200, await buildBookingDetailResponse(booking, req));

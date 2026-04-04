@@ -140,15 +140,10 @@ Use these terms consistently:
 
 Keep this distinct from the generated-booking confirmation flow:
 - `booking confirmation token`: capability token scoped to one frozen generated offer
-- `acceptance OTP`: optional short verification code used during booking confirmation
 - `booking confirmation record`: immutable commercial acceptance evidence
 - `booking-confirmation.html`: separate public acceptance page for the frozen generated-offer snapshot and PDF
-- current acceptance OTP transport: email
-- acceptance resend throttling is handled independently from traveler-page throttling
 
-Do not call the week-long invitation token an OTP.
-
-An OTP is the short verification code, not the reusable invitation link.
+Do not call the week-long invitation token a booking confirmation token.
 
 Do not reuse traveler invitation tokens or traveler sessions for booking confirmation.
 These are different scopes with different data access:

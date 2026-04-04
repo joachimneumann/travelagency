@@ -216,14 +216,11 @@ Current important runtime split:
   - public generated-offer access
   - public PDF access
   - booking confirmation
-  - email OTP issue and verification
-  - resend throttling responses including `retry_after_seconds`
 - `generated_offer_artifacts.js`
   - frozen PDF artifact creation and lookup
 - `booking_confirmation.js`
   - acceptance-token state
   - acceptance-token verification
-  - OTP challenge primitives
 
 ### Layer 4: Persistence
 
@@ -249,7 +246,7 @@ The backend is responsible for:
 - invoice creation and PDF generation
 - generated-offer artifact freezing and serving
 - public generated-offer access and acceptance
-- acceptance-token verification and OTP throttling
+- acceptance-token verification
 - chat/webhook ingestion
 - persistence
 

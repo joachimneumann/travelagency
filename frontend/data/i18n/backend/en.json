@@ -787,6 +787,7 @@
   "booking.travel_plan.overnight_location": "Overnight location (optional)",
   "booking.travel_plan.pdf_created": "Travel plan PDF created.",
   "booking.travel_plan.pdf_deleted": "Travel plan PDF deleted.",
+  "booking.travel_plan.pdf_comment_saved": "Travel plan PDF comment saved.",
   "booking.travel_plan.pdf_marked_not_sent": "Travel plan PDF marked as not sent to customer.",
   "booking.travel_plan.pdf_marked_sent": "Travel plan PDF marked as sent to customer.",
   "booking.travel_plan.picture": "Picture",

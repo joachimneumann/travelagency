@@ -2426,7 +2426,8 @@ test("travel plan PDF attachments normalize non-A4 uploads and append to travel-
       method: "POST",
       body: {
         expected_travel_plan_revision: uploadResult.body.booking.travel_plan_revision,
-        lang: "en"
+        lang: "en",
+        comment: "Travel plan note"
       }
     }
   );
@@ -2465,6 +2466,31 @@ test("travel plan PDF attachments normalize non-A4 uploads and append to travel-
     false,
     "Newly generated travel-plan PDFs should default to not sent to customer"
   );
+  assert.equal(
+    persistedTravelPlanPdfRow.comment,
+    "Travel plan note",
+    "Travel-plan PDF rows should persist the optional PDF comment"
+  );
+
+  const updateTravelPlanPdfCommentResult = await requestJson(
+    endpointPath("booking_travel_plan_pdf_update")
+      .replace("{booking_id}", bookingId)
+      .replace("{artifact_id}", persistedTravelPlanPdfId),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_travel_plan_revision: bookingAfterMergedTravelPlanPdf.body.booking.travel_plan_revision,
+        comment: "Updated travel plan note"
+      }
+    }
+  );
+  assert.equal(updateTravelPlanPdfCommentResult.status, 200);
+  assert.equal(
+    updateTravelPlanPdfCommentResult.body.booking.travel_plan_pdfs.find((item) => item.id === persistedTravelPlanPdfId)?.comment,
+    "Updated travel plan note",
+    "Travel-plan PDF rows should allow updating the persisted PDF comment after creation"
+  );
 
   const markTravelPlanPdfSentResult = await requestJson(
     endpointPath("booking_travel_plan_pdf_update")
@@ -2474,7 +2500,7 @@ test("travel plan PDF attachments normalize non-A4 uploads and append to travel-
     {
       method: "PATCH",
       body: {
-        expected_travel_plan_revision: bookingAfterMergedTravelPlanPdf.body.booking.travel_plan_revision,
+        expected_travel_plan_revision: updateTravelPlanPdfCommentResult.body.booking.travel_plan_revision,
         sent_to_customer: true
       }
     }
@@ -2484,6 +2510,11 @@ test("travel plan PDF attachments normalize non-A4 uploads and append to travel-
     markTravelPlanPdfSentResult.body.booking.travel_plan_pdfs.find((item) => item.id === persistedTravelPlanPdfId)?.sent_to_customer,
     true,
     "Travel-plan PDF rows should persist the sent-to-customer flag"
+  );
+  assert.equal(
+    markTravelPlanPdfSentResult.body.booking.travel_plan_pdfs.find((item) => item.id === persistedTravelPlanPdfId)?.comment,
+    "Updated travel plan note",
+    "Travel-plan PDF sent-state updates should preserve the stored PDF comment"
   );
 
   const rejectSentTravelPlanPdfDeleteResult = await requestJson(

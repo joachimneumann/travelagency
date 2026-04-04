@@ -2326,6 +2326,15 @@ export function createBookingTravelPlanModule(ctx) {
         }
         if (button.hasAttribute("data-travel-plan-delete-pdf")) {
           void travelPlanPdfsModule.deleteTravelPlanPdf(button.getAttribute("data-travel-plan-delete-pdf"));
+          return;
+        }
+        if (button.hasAttribute("data-travel-plan-pdf-save-comment")) {
+          const artifactId = String(button.getAttribute("data-travel-plan-pdf-save-comment") || "").trim();
+          const input = els.travel_plan_pdf_workspace.querySelector(`[data-travel-plan-pdf-comment-input="${CSS.escape(artifactId)}"]`);
+          const nextValue = input instanceof HTMLTextAreaElement ? input.value : "";
+          void travelPlanPdfsModule.saveTravelPlanPdfComment(artifactId, nextValue).then((ok) => {
+            if (!ok) renderTravelPlanPanel();
+          });
         }
       });
       els.travel_plan_pdf_workspace.addEventListener("change", (event) => {

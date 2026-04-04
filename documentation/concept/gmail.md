@@ -203,8 +203,6 @@ Booking confirmation flow:
 - customer uses a dedicated public booking confirmation link
 - the link opens the public acceptance page `booking-confirmation.html`
 - the link is based on a public booking confirmation token
-- optional email OTP verification can be required before final acceptance
-- resend throttling is enforced server-side and exposed to the page via `retry_after_seconds`
 - acceptance is tied to the frozen generated-offer snapshot and frozen PDF
 
 This separation is intentional:

@@ -211,19 +211,16 @@ Important boundary:
 - `offer_snapshot_sha256`
 - `ip_address?`
 - `user_agent?`
-- `otp_channel?`
-- `otp_verified_at?`
 - `deposit_payment_id?`
 
 Meaning:
 - this is the immutable evidence record for accepting one frozen generated offer
 - it stores what was accepted, how it was accepted, and what exact PDF/snapshot hashes were involved
-- it is written only after acceptance-token verification and, when required, successful OTP verification
+- it is written only after acceptance-token verification
 
 Current implementation note:
-- OTP is optional at the model level
-- the current public acceptance flow uses email OTP when second-factor verification is requested
-- resend throttling and rolling send caps are runtime challenge-state concerns and are not stored inside `GeneratedOfferBookingConfirmation`
+- booking confirmation is token-gated
+- challenge-state throttling details are not stored inside `GeneratedOfferBookingConfirmation`
 
 ## API Read Models
 

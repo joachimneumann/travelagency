@@ -443,8 +443,8 @@ export function createBookingGeneratedOffersModule(ctx) {
           <td class="generated-offers-col-total">${escapeHtml(formatMoneyDisplay(item.total_price_cents || 0, item.currency || state.offerDraft?.currency || "USD"))}</td>
           <td class="generated-offers-col-date">${escapeHtml(formatGeneratedOfferDate(item.created_at))}</td>
           <td class="generated-offers-col-comment">${canEdit
-            ? `<div class="generated-offers-comment-text">${escapeHtml(item.comment || "-")}</div>
-               <button class="btn btn-ghost" type="button" data-generated-offer-edit-comment="${escapeHtml(item.id)}" data-requires-clean-state>${escapeHtml(bookingT("common.edit", "Edit"))}</button>`
+            ? `<textarea data-generated-offer-comment-input="${escapeHtml(item.id)}" rows="2">${escapeHtml(item.comment || "")}</textarea>
+               <button class="btn btn-ghost" type="button" data-generated-offer-save-comment="${escapeHtml(item.id)}" data-requires-clean-state>${escapeHtml(bookingT("common.save", "Save"))}</button>`
             : (escapeHtml(item.comment || "") || "-")}</td>
           ${canEdit
             ? `<td class="generated-offers-col-actions"><button class="btn btn-ghost offer-remove-btn" type="button" data-generated-offer-delete="${escapeHtml(item.id)}" data-requires-clean-state title="${escapeHtml(bookingT("booking.offer.delete_generated", "Delete generated offer"))}" aria-label="${escapeHtml(bookingT("booking.offer.delete_generated", "Delete generated offer"))}">×</button></td>`
@@ -456,9 +456,12 @@ export function createBookingGeneratedOffersModule(ctx) {
     els.generated_offers_table.innerHTML = `<thead><tr><th class="generated-offers-col-link">${escapeHtml(bookingT("booking.offer.document", "Offer"))}</th>${emailHeader}${routeHeader}${statusHeader}<th class="generated-offers-col-language">${escapeHtml(bookingT("booking.language", "Language"))}</th><th class="generated-offers-col-total">${escapeHtml(bookingT("booking.total", "Total"))}</th><th class="generated-offers-col-date">${escapeHtml(bookingT("booking.date", "Date"))}</th><th>${escapeHtml(bookingT("booking.comments", "Comments"))}</th>${actionHeader}</tr></thead><tbody>${rows}</tbody>`;
 
     if (canEdit) {
-      els.generated_offers_table.querySelectorAll("[data-generated-offer-edit-comment]").forEach((button) => {
+      els.generated_offers_table.querySelectorAll("[data-generated-offer-save-comment]").forEach((button) => {
         button.addEventListener("click", () => {
-          void promptGeneratedOfferCommentEdit(button.getAttribute("data-generated-offer-edit-comment"));
+          const generatedOfferId = String(button.getAttribute("data-generated-offer-save-comment") || "").trim();
+          const input = els.generated_offers_table.querySelector(`[data-generated-offer-comment-input="${CSS.escape(generatedOfferId)}"]`);
+          const nextValue = input instanceof HTMLTextAreaElement ? input.value : "";
+          void saveGeneratedOfferComment(generatedOfferId, nextValue);
         });
       });
       els.generated_offers_table.querySelectorAll("[data-generated-offer-delete]").forEach((button) => {
@@ -505,24 +508,12 @@ export function createBookingGeneratedOffersModule(ctx) {
       method: request.method,
       body: {
         expected_offer_revision: getBookingRevision("offer_revision"),
-        comment: String(value || "").trim() || null
+        comment: String(value || "").trim()
       }
     });
     if (await applyOfferBookingResponse(response)) return;
     if (!response) return;
     setOfferStatus(response?.detail || response?.error || bookingT("booking.offer.error.update_comment", "Could not update generated offer comment."));
-  }
-
-  async function promptGeneratedOfferCommentEdit(generatedOfferId) {
-    if (!state.permissions.canEditBooking || !state.booking?.id || !generatedOfferId) return;
-    if (!(await ensureOfferCleanState())) return;
-    const generatedOffer = (Array.isArray(state.booking.generated_offers) ? state.booking.generated_offers : [])
-      .find((item) => item?.id === generatedOfferId);
-    const currentValue = String(generatedOffer?.comment || "");
-    const nextValue = window.prompt(bookingT("booking.offer.comment_prompt", "Comment for this generated offer (optional):"), currentValue);
-    if (nextValue === null) return;
-    if (String(nextValue).trim() === currentValue.trim()) return;
-    await saveGeneratedOfferComment(generatedOfferId, nextValue);
   }
 
   async function deleteGeneratedOffer(generatedOfferId) {
@@ -621,9 +612,6 @@ export function createBookingGeneratedOffersModule(ctx) {
       baseURL: apiOrigin,
       params: { booking_id: state.booking.id }
     });
-    const commentInput = window.prompt(bookingT("booking.offer.comment_prompt", "Comment for this generated offer (optional):"), "");
-    if (commentInput === null) return;
-    const normalizedComment = String(commentInput || "").trim();
     const bookingConfirmationRoute = generatedOfferPaymentTermLineId
       ? {
           mode: "DEPOSIT_PAYMENT",
@@ -638,7 +626,6 @@ export function createBookingGeneratedOffersModule(ctx) {
       method: request.method,
       body: {
         expected_offer_revision: getBookingRevision("offer_revision"),
-        comment: normalizedComment || null,
         lang: selectedLang,
         ...(bookingConfirmationRoute ? { booking_confirmation_route: bookingConfirmationRoute } : {})
       }
