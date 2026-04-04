@@ -472,13 +472,26 @@
   gap: 3.35rem;
 }
 
-.travel-plan-footer__new-day {
-  display: flex;
-  flex-wrap: wrap;
+.travel-plan-footer__action-rows {
+  display: grid;
   gap: 0.9rem;
   width: 100%;
-  justify-content: flex-start;
-  align-items: center;
+  max-width: 70rem;
+}
+
+.travel-plan-footer__action-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.9rem;
+  align-items: stretch;
+}
+
+.travel-plan-footer__action-row--double {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.travel-plan-footer__action-row > .btn {
+  width: 100%;
 }
 
 .travel-plan-footer__workspace {
@@ -1371,6 +1384,10 @@
 
   .travel-plan-footer {
     gap: 1rem;
+  }
+
+  .travel-plan-footer__action-row--double {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .travel-plan-footer__workspace {

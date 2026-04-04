@@ -1238,6 +1238,52 @@ test("booking danger zone exposes clone controls before delete", async () => {
   );
 });
 
+test("travel-plan PDF personalization exposes children policy and exclusions fields and renders them before the closing block", async () => {
+  const bookingModelPath = path.resolve(__dirname, "..", "..", "..", "model", "entities", "booking.cue");
+  const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
+  const bookingPageScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking.js");
+  const bookingCorePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "core.js");
+  const travelPlanPdfPath = path.resolve(__dirname, "..", "src", "lib", "travel_plan_pdf.js");
+  const [bookingModelSource, bookingPageSource, bookingPageScriptSource, bookingCoreSource, travelPlanPdfSource] = await Promise.all([
+    readFile(bookingModelPath, "utf8"),
+    readFile(bookingPagePath, "utf8"),
+    readFile(bookingPageScriptPath, "utf8"),
+    readFile(bookingCorePath, "utf8"),
+    readFile(travelPlanPdfPath, "utf8")
+  ]);
+
+  assert.match(
+    bookingModelSource,
+    /children_policy\?:\s+string[\s\S]*children_policy_i18n\?:\s+\[string\]: string[\s\S]*whats_not_included\?:\s+string[\s\S]*whats_not_included_i18n\?:\s+\[string\]: string/,
+    "Booking PDF personalization should model children's policy and exclusions text with localized maps"
+  );
+  assert.match(
+    bookingPageSource,
+    /id="booking_pdf_travel_plan_children_policy_mount"[\s\S]*id="booking_pdf_travel_plan_whats_not_included_mount"[\s\S]*id="booking_pdf_travel_plan_closing_mount"/,
+    "booking.html should place the travel-plan children policy and exclusions fields before the closing field"
+  );
+  assert.match(
+    bookingPageScriptSource,
+    /pdfTravelPlanChildrenPolicyMount[\s\S]*pdfTravelPlanWhatsNotIncludedMount[\s\S]*pdfTravelPlanClosingMount/,
+    "booking page script should expose the new travel-plan PDF personalization mounts"
+  );
+  assert.match(
+    bookingCoreSource,
+    /"travel_plan",\s*"children_policy"[\s\S]*"travel_plan",\s*"whats_not_included"[\s\S]*"travel_plan",\s*"closing"/,
+    "booking core UI should render the new travel-plan PDF fields before the closing field"
+  );
+  assert.match(
+    bookingCoreSource,
+    /children_policy:\s*readLocalizedBookingPdfField\("travel_plan", "children_policy"[\s\S]*whats_not_included:\s*readLocalizedBookingPdfField\("travel_plan", "whats_not_included"/,
+    "booking core dirty tracking should persist the new travel-plan PDF personalization fields"
+  );
+  assert.match(
+    travelPlanPdfSource,
+    /resolveTravelPlanChildrenPolicyText[\s\S]*resolveTravelPlanWhatsNotIncludedText[\s\S]*pdfT\(lang, "travel_plan\.children_policy_title", "Children's Policy"\)[\s\S]*pdfT\(lang, "travel_plan\.whats_not_included_title", "What's not included"\)[\s\S]*closingText/,
+    "travel_plan_pdf.js should resolve and render the new titled sections before the closing block"
+  );
+});
+
 test("backend bookings page exposes an internal create-booking modal backed by a protected API route", async () => {
   const bookingListPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "backend.html");
   const bookingListScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking_list.js");

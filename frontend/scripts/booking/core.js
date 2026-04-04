@@ -269,6 +269,8 @@ function normalizePdfPersonalization(value) {
   const offer = raw.offer && typeof raw.offer === "object" && !Array.isArray(raw.offer) ? raw.offer : {};
   const travelPlanSubtitle = normalizePdfTextField(travelPlan.subtitle, travelPlan.subtitle_i18n);
   const travelPlanWelcome = normalizePdfTextField(travelPlan.welcome, travelPlan.welcome_i18n);
+  const travelPlanChildrenPolicy = normalizePdfTextField(travelPlan.children_policy, travelPlan.children_policy_i18n);
+  const travelPlanWhatsNotIncluded = normalizePdfTextField(travelPlan.whats_not_included, travelPlan.whats_not_included_i18n);
   const travelPlanClosing = normalizePdfTextField(travelPlan.closing, travelPlan.closing_i18n);
   const offerSubtitle = normalizePdfTextField(offer.subtitle, offer.subtitle_i18n);
   const offerWelcome = normalizePdfTextField(offer.welcome, offer.welcome_i18n);
@@ -279,6 +281,10 @@ function normalizePdfPersonalization(value) {
       subtitle_i18n: travelPlanSubtitle.i18n,
       welcome: travelPlanWelcome.text,
       welcome_i18n: travelPlanWelcome.i18n,
+      children_policy: travelPlanChildrenPolicy.text,
+      children_policy_i18n: travelPlanChildrenPolicy.i18n,
+      whats_not_included: travelPlanWhatsNotIncluded.text,
+      whats_not_included_i18n: travelPlanWhatsNotIncluded.i18n,
       closing: travelPlanClosing.text,
       closing_i18n: travelPlanClosing.i18n,
       include_who_is_traveling: travelPlan.include_who_is_traveling === true
@@ -597,6 +603,22 @@ export function createBookingCoreModule(ctx) {
       4
     );
     renderField(
+      els.pdfTravelPlanChildrenPolicyMount,
+      "travel_plan",
+      "children_policy",
+      bookingT("booking.pdf.travel_plan.children_policy", "Children's Policy"),
+      "",
+      3
+    );
+    renderField(
+      els.pdfTravelPlanWhatsNotIncludedMount,
+      "travel_plan",
+      "whats_not_included",
+      bookingT("booking.pdf.travel_plan.whats_not_included", "What's not included"),
+      "",
+      3
+    );
+    renderField(
       els.pdfTravelPlanClosingMount,
       "travel_plan",
       "closing",
@@ -777,6 +799,10 @@ export function createBookingCoreModule(ctx) {
         subtitle_i18n: readLocalizedBookingPdfField("travel_plan", "subtitle", draft.pdf_personalization?.travel_plan?.subtitle_i18n).i18n,
         welcome: readLocalizedBookingPdfField("travel_plan", "welcome", draft.pdf_personalization?.travel_plan?.welcome_i18n).text,
         welcome_i18n: readLocalizedBookingPdfField("travel_plan", "welcome", draft.pdf_personalization?.travel_plan?.welcome_i18n).i18n,
+        children_policy: readLocalizedBookingPdfField("travel_plan", "children_policy", draft.pdf_personalization?.travel_plan?.children_policy_i18n).text,
+        children_policy_i18n: readLocalizedBookingPdfField("travel_plan", "children_policy", draft.pdf_personalization?.travel_plan?.children_policy_i18n).i18n,
+        whats_not_included: readLocalizedBookingPdfField("travel_plan", "whats_not_included", draft.pdf_personalization?.travel_plan?.whats_not_included_i18n).text,
+        whats_not_included_i18n: readLocalizedBookingPdfField("travel_plan", "whats_not_included", draft.pdf_personalization?.travel_plan?.whats_not_included_i18n).i18n,
         closing: readLocalizedBookingPdfField("travel_plan", "closing", draft.pdf_personalization?.travel_plan?.closing_i18n).text,
         closing_i18n: readLocalizedBookingPdfField("travel_plan", "closing", draft.pdf_personalization?.travel_plan?.closing_i18n).i18n,
         include_who_is_traveling: els.pdfPersonalizationPanel?.querySelector('[data-booking-pdf-toggle="travel_plan.include_who_is_traveling"]')?.checked === true

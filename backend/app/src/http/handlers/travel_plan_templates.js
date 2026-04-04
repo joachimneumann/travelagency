@@ -2,6 +2,11 @@ import {
   validateBookingTravelPlanTemplateApplyRequest,
   validateTravelPlanTemplateUpsertRequest
 } from "../../../Generated/API/generated_APIModels.js";
+import {
+  extractTravelPlanPdfPersonalization,
+  normalizeBookingPdfPersonalization,
+  replaceTravelPlanPdfPersonalization
+} from "../../lib/booking_pdf_personalization.js";
 
 function parsePositiveInt(value, fallback) {
   const parsed = Number.parseInt(value, 10);
@@ -169,6 +174,7 @@ export function createTravelPlanTemplateHandlers(deps) {
     }
 
     let nextTravelPlan = null;
+    let nextPdfPersonalization = {};
     const sourceBookingId = normalizeText(payload?.source_booking_id);
     if (sourceBookingId) {
       const sourceContext = findSourceBookingContext(store, principal, sourceBookingId);
@@ -184,6 +190,7 @@ export function createTravelPlanTemplateHandlers(deps) {
         return;
       }
       nextTravelPlan = cloneBookingTravelPlanAsTemplate(sourcePlan);
+      nextPdfPersonalization = extractTravelPlanPdfPersonalization(sourceContext.booking?.pdf_personalization);
     } else if (payload?.travel_plan) {
       const check = validateTemplateTravelPlan(payload.travel_plan, store);
       if (!check.ok) {
@@ -206,6 +213,7 @@ export function createTravelPlanTemplateHandlers(deps) {
       source_booking_id: sourceBookingId || null,
       created_by_atp_staff_id: normalizeText(principal?.sub),
       travel_plan: nextTravelPlan,
+      pdf_personalization: nextPdfPersonalization,
       created_at: nowIso(),
       updated_at: nowIso()
     });
@@ -241,6 +249,7 @@ export function createTravelPlanTemplateHandlers(deps) {
 
     let nextTravelPlan = existing.travel_plan;
     let nextSourceBookingId = existing.source_booking_id;
+    let nextPdfPersonalization = existing.pdf_personalization;
     const requestedSourceBookingId = normalizeText(payload?.source_booking_id);
     if (requestedSourceBookingId) {
       const sourceContext = findSourceBookingContext(store, principal, requestedSourceBookingId);
@@ -257,6 +266,7 @@ export function createTravelPlanTemplateHandlers(deps) {
       }
       nextTravelPlan = cloneBookingTravelPlanAsTemplate(sourcePlan);
       nextSourceBookingId = requestedSourceBookingId;
+      nextPdfPersonalization = extractTravelPlanPdfPersonalization(sourceContext.booking?.pdf_personalization);
     } else if (payload?.travel_plan) {
       const check = validateTemplateTravelPlan(payload.travel_plan, store);
       if (!check.ok) {
@@ -275,6 +285,7 @@ export function createTravelPlanTemplateHandlers(deps) {
       travel_styles: payload?.travel_styles !== undefined ? payload.travel_styles : existing.travel_styles,
       source_booking_id: nextSourceBookingId,
       travel_plan: nextTravelPlan,
+      pdf_personalization: nextPdfPersonalization,
       updated_at: nowIso()
     });
     await persistTravelPlanTemplate(updated);
@@ -346,8 +357,19 @@ export function createTravelPlanTemplateHandlers(deps) {
       return;
     }
 
+    const currentPdfPersonalization = normalizeBookingPdfPersonalization(booking?.pdf_personalization);
+    const nextPdfPersonalization = replaceTravelPlanPdfPersonalization(
+      booking?.pdf_personalization,
+      template?.pdf_personalization
+    );
+    const pdfPersonalizationChanged = JSON.stringify(nextPdfPersonalization) !== JSON.stringify(currentPdfPersonalization);
+
     booking.travel_plan = check.travel_plan;
     incrementBookingRevision(booking, "travel_plan_revision");
+    booking.pdf_personalization = nextPdfPersonalization;
+    if (pdfPersonalizationChanged) {
+      incrementBookingRevision(booking, "core_revision");
+    }
     booking.updated_at = nowIso();
     addActivity(
       store,

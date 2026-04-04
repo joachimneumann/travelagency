@@ -2204,6 +2204,20 @@ test("travel plans can be searched and appended from another booking with groupe
       }
     ]
   };
+  sourceRecord.pdf_personalization = {
+    travel_plan: {
+      subtitle: "Source subtitle marker",
+      subtitle_i18n: {
+        en: "Source subtitle marker",
+        de: "Quelluntertitel Marker"
+      },
+      welcome: "Source welcome marker",
+      children_policy: "Source children policy marker",
+      whats_not_included: "Source exclusions marker",
+      closing: "Source closing marker",
+      include_who_is_traveling: true
+    }
+  };
   targetRecord.travel_plan = {
     days: [
       {
@@ -2218,6 +2232,14 @@ test("travel plans can be searched and appended from another booking with groupe
     ],
     offer_component_links: [],
     attachments: []
+  };
+  targetRecord.pdf_personalization = {
+    travel_plan: {
+      subtitle: "Target subtitle marker"
+    },
+    offer: {
+      closing: "Offer personalization should stay on the target booking."
+    }
   };
   await writeFile(STORE_PATH, `${JSON.stringify(store, null, 2)}\n`, "utf8");
 
@@ -2256,6 +2278,17 @@ test("travel plans can be searched and appended from another booking with groupe
   assert.equal(importResult.body.booking.travel_plan.days.length, 3);
   assert.equal(importResult.body.booking.travel_plan.offer_component_links.length, 0);
   assert.equal(importResult.body.booking.travel_plan.attachments.length, 0);
+  assert.equal(importResult.body.booking.pdf_personalization.travel_plan.subtitle, "Source subtitle marker");
+  assert.equal(importResult.body.booking.pdf_personalization.travel_plan.subtitle_i18n.de, "Quelluntertitel Marker");
+  assert.equal(importResult.body.booking.pdf_personalization.travel_plan.welcome, "Source welcome marker");
+  assert.equal(importResult.body.booking.pdf_personalization.travel_plan.children_policy, "Source children policy marker");
+  assert.equal(importResult.body.booking.pdf_personalization.travel_plan.whats_not_included, "Source exclusions marker");
+  assert.equal(importResult.body.booking.pdf_personalization.travel_plan.closing, "Source closing marker");
+  assert.equal(importResult.body.booking.pdf_personalization.travel_plan.include_who_is_traveling, true);
+  assert.equal(
+    importResult.body.booking.pdf_personalization.offer.closing,
+    "Offer personalization should stay on the target booking."
+  );
 
   const importedDays = importResult.body.booking.travel_plan.days.slice(1);
   assert.equal(importedDays[0].date, "2026-07-11");
@@ -2279,6 +2312,116 @@ test("travel plans can be searched and appended from another booking with groupe
   assert.ok(importedFirstService.image);
   assert.notEqual(importedFirstService.image.id, "source_plan_service_image_1");
   assert.equal(importedFirstService.image.storage_path, "/public/v1/booking-images/source/plan-service-1.webp");
+});
+
+test("published standard travel plan apply copies travel-plan PDF personalization from the source template", async () => {
+  const sourceBooking = await createSeedBooking();
+  const targetBooking = await createPublicBooking({
+    name: "Template Target User",
+    email: "template-target@example.com"
+  });
+
+  const store = JSON.parse(await readFile(STORE_PATH, "utf8"));
+  const sourceRecord = store.bookings.find((item) => item.id === sourceBooking.id);
+  const targetRecord = store.bookings.find((item) => item.id === targetBooking.id);
+  assert.ok(sourceRecord);
+  assert.ok(targetRecord);
+
+  sourceRecord.travel_plan = {
+    days: [
+      {
+        id: "template_source_day_1",
+        day_number: 1,
+        date: "2026-08-01",
+        title: "Template day marker",
+        overnight_location: "Siem Reap",
+        services: [
+          {
+            id: "template_source_service_1",
+            timing_kind: "label",
+            time_label: "Morning",
+            kind: "activity",
+            title: "Template service marker",
+            details: "Template service details",
+            location: "Siem Reap"
+          }
+        ],
+        notes: ""
+      }
+    ],
+    offer_component_links: []
+  };
+  sourceRecord.pdf_personalization = {
+    travel_plan: {
+      subtitle: "Template subtitle marker",
+      welcome: "Template welcome marker",
+      children_policy: "Template children marker",
+      whats_not_included: "Template exclusions marker",
+      closing: "Template closing marker",
+      include_who_is_traveling: true
+    }
+  };
+  targetRecord.travel_plan = {
+    days: [
+      {
+        id: "template_target_day_1",
+        day_number: 1,
+        date: "2026-08-10",
+        title: "Old target day",
+        overnight_location: "Da Nang",
+        services: [],
+        notes: ""
+      }
+    ],
+    offer_component_links: []
+  };
+  targetRecord.pdf_personalization = {
+    travel_plan: {
+      subtitle: "Old target subtitle"
+    },
+    offer: {
+      closing: "Target offer closing marker"
+    }
+  };
+  await writeFile(STORE_PATH, `${JSON.stringify(store, null, 2)}\n`, "utf8");
+
+  const templateCreateResult = await requestJson(
+    endpointPath("travel_plan_template_create"),
+    apiHeaders(),
+    {
+      method: "POST",
+      body: {
+        title: "Template copy marker",
+        status: "published",
+        source_booking_id: sourceBooking.id
+      }
+    }
+  );
+  assert.equal(templateCreateResult.status, 201);
+
+  const applyResult = await requestJson(
+    endpointPath("booking_travel_plan_template_apply")
+      .replace("{booking_id}", targetBooking.id)
+      .replace("{template_id}", templateCreateResult.body.template.id),
+    apiHeaders(),
+    {
+      method: "POST",
+      body: {
+        expected_travel_plan_revision: targetBooking.travel_plan_revision
+      }
+    }
+  );
+  assert.equal(applyResult.status, 200);
+  assert.equal(applyResult.body.booking.travel_plan.days.length, 1);
+  assert.equal(applyResult.body.booking.travel_plan.days[0].title, "Template day marker");
+  assert.equal(applyResult.body.booking.travel_plan.days[0].services[0].title, "Template service marker");
+  assert.equal(applyResult.body.booking.pdf_personalization.travel_plan.subtitle, "Template subtitle marker");
+  assert.equal(applyResult.body.booking.pdf_personalization.travel_plan.welcome, "Template welcome marker");
+  assert.equal(applyResult.body.booking.pdf_personalization.travel_plan.children_policy, "Template children marker");
+  assert.equal(applyResult.body.booking.pdf_personalization.travel_plan.whats_not_included, "Template exclusions marker");
+  assert.equal(applyResult.body.booking.pdf_personalization.travel_plan.closing, "Template closing marker");
+  assert.equal(applyResult.body.booking.pdf_personalization.travel_plan.include_who_is_traveling, true);
+  assert.equal(applyResult.body.booking.pdf_personalization.offer.closing, "Target offer closing marker");
 });
 
 test("service image can be deleted", async () => {

@@ -32,6 +32,10 @@ function compactObject(value) {
   return Object.keys(next).length ? next : null;
 }
 
+function cloneJson(value) {
+  return value == null ? value : JSON.parse(JSON.stringify(value));
+}
+
 function normalizePdfTextField(value, mapValue, { flatLang = "en", sourceLang = "en" } = {}) {
   const map = normalizeLocalizedTextMap(mapValue ?? value, sourceLang);
   const text = resolveLocalizedText(map, flatLang, "", { sourceLang }) || null;
@@ -60,6 +64,18 @@ export function normalizeBookingPdfPersonalization(value, { flatLang = "en", sou
         ? {
             welcome: normalizePdfTextField(travelPlan.welcome, travelPlan.welcome_i18n, { flatLang, sourceLang }).text,
             welcome_i18n: normalizePdfTextField(travelPlan.welcome, travelPlan.welcome_i18n, { flatLang, sourceLang }).i18n
+          }
+        : {}),
+      ...(normalizePdfTextField(travelPlan.children_policy, travelPlan.children_policy_i18n, { flatLang, sourceLang })
+        ? {
+            children_policy: normalizePdfTextField(travelPlan.children_policy, travelPlan.children_policy_i18n, { flatLang, sourceLang }).text,
+            children_policy_i18n: normalizePdfTextField(travelPlan.children_policy, travelPlan.children_policy_i18n, { flatLang, sourceLang }).i18n
+          }
+        : {}),
+      ...(normalizePdfTextField(travelPlan.whats_not_included, travelPlan.whats_not_included_i18n, { flatLang, sourceLang })
+        ? {
+            whats_not_included: normalizePdfTextField(travelPlan.whats_not_included, travelPlan.whats_not_included_i18n, { flatLang, sourceLang }).text,
+            whats_not_included_i18n: normalizePdfTextField(travelPlan.whats_not_included, travelPlan.whats_not_included_i18n, { flatLang, sourceLang }).i18n
           }
         : {}),
       ...(normalizePdfTextField(travelPlan.closing, travelPlan.closing_i18n, { flatLang, sourceLang })
@@ -91,6 +107,28 @@ export function normalizeBookingPdfPersonalization(value, { flatLang = "en", sou
         : {}),
       include_who_is_traveling: offerIncludeWhoIsTraveling
     })
+  }) || {};
+}
+
+export function extractTravelPlanPdfPersonalization(value, options = {}) {
+  const normalized = normalizeBookingPdfPersonalization(value, options);
+  const travelPlan = normalized?.travel_plan && typeof normalized.travel_plan === "object" && !Array.isArray(normalized.travel_plan)
+    ? cloneJson(normalized.travel_plan)
+    : null;
+  return compactObject({
+    ...(travelPlan ? { travel_plan: travelPlan } : {})
+  }) || {};
+}
+
+export function replaceTravelPlanPdfPersonalization(targetValue, sourceValue, options = {}) {
+  const normalizedTarget = normalizeBookingPdfPersonalization(targetValue, options);
+  const nextTravelPlan = extractTravelPlanPdfPersonalization(sourceValue, options);
+  const offer = normalizedTarget?.offer && typeof normalizedTarget.offer === "object" && !Array.isArray(normalizedTarget.offer)
+    ? cloneJson(normalizedTarget.offer)
+    : null;
+  return compactObject({
+    ...(offer ? { offer } : {}),
+    ...(nextTravelPlan?.travel_plan ? { travel_plan: cloneJson(nextTravelPlan.travel_plan) } : {})
   }) || {};
 }
 

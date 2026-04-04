@@ -1,5 +1,6 @@
 import { normalizeText } from "../lib/text.js";
 import { enumValueSetFor } from "../lib/generated_catalogs.js";
+import { extractTravelPlanPdfPersonalization } from "../lib/booking_pdf_personalization.js";
 
 const TEMPLATE_STATUSES = new Set(["draft", "published", "archived"]);
 const COUNTRY_CODE_SET = enumValueSetFor("CountryCode");
@@ -183,6 +184,7 @@ export function createTravelPlanTemplateHelpers({
     const source = template && typeof template === "object" && !Array.isArray(template)
       ? template
       : {};
+    const pdfPersonalization = extractTravelPlanPdfPersonalization(source.pdf_personalization);
     return {
       id: normalizeText(source.id),
       title: normalizeText(source.title),
@@ -193,6 +195,7 @@ export function createTravelPlanTemplateHelpers({
       source_booking_id: normalizeOptionalText(source.source_booking_id),
       created_by_atp_staff_id: normalizeOptionalText(source.created_by_atp_staff_id),
       travel_plan: normalizeTemplateTravelPlan(source.travel_plan),
+      ...(pdfPersonalization?.travel_plan ? { pdf_personalization: pdfPersonalization } : {}),
       created_at: normalizeOptionalText(source.created_at),
       updated_at: normalizeOptionalText(source.updated_at)
     };
@@ -200,12 +203,13 @@ export function createTravelPlanTemplateHelpers({
 
   function buildTravelPlanTemplateReadModel(template, options = {}) {
     const stored = normalizeTravelPlanTemplateForStorage(template);
+    const { pdf_personalization: ignoredPdfPersonalization, ...publicTemplate } = stored;
     const days = Array.isArray(stored?.travel_plan?.days) ? stored.travel_plan.days : [];
     const services = days.flatMap((day) => (Array.isArray(day?.services) ? day.services : []));
     const thumbnail = services.find((service) => firstImageFromService(service)) || services[0] || null;
     const thumbnailUrl = normalizeOptionalText(firstImageFromService(thumbnail)?.storage_path);
     return {
-      ...stored,
+      ...publicTemplate,
       source_booking_name: normalizeOptionalText(options.sourceBookingName),
       day_count: days.length,
       service_count: services.length,

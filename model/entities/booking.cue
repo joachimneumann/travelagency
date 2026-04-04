@@ -99,6 +99,10 @@ import (
 	subtitle_i18n?:            [string]: string
 	welcome?:                  string
 	welcome_i18n?:             [string]: string
+	children_policy?:          string
+	children_policy_i18n?:     [string]: string
+	whats_not_included?:       string
+	whats_not_included_i18n?:  [string]: string
 	closing?:                  string
 	closing_i18n?:             [string]: string
 	include_who_is_traveling?: bool

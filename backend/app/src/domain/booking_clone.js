@@ -1,4 +1,5 @@
 import { normalizeText } from "../lib/text.js";
+import { extractTravelPlanPdfPersonalization } from "../lib/booking_pdf_personalization.js";
 
 function cloneJson(value) {
   return value == null ? value : JSON.parse(JSON.stringify(value));
@@ -49,6 +50,7 @@ function resolveCloneCurrency(booking) {
 }
 
 function resetSourceMetadata(booking, { sourceBookingId, nextName }) {
+  const nextTravelPlanPdfPersonalization = extractTravelPlanPdfPersonalization(booking?.pdf_personalization);
   booking.source_channel = null;
   booking.referral_kind = null;
   booking.referral_label = null;
@@ -57,7 +59,11 @@ function resetSourceMetadata(booking, { sourceBookingId, nextName }) {
   booking.travel_start_day = null;
   booking.travel_end_day = null;
   booking.notes = "";
-  delete booking.pdf_personalization;
+  if (nextTravelPlanPdfPersonalization?.travel_plan) {
+    booking.pdf_personalization = nextTravelPlanPdfPersonalization;
+  } else {
+    delete booking.pdf_personalization;
+  }
 
   booking.web_form_submission = {
     booking_name: normalizeText(nextName || booking?.name) || undefined,

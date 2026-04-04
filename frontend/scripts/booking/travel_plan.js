@@ -2371,17 +2371,30 @@ export function createBookingTravelPlanModule(ctx) {
     state.travelPlanDraft = normalizeTravelPlanState(state.travelPlanDraft || state.booking.travel_plan, getOfferComponentsForLinks());
     syncTravelPlanCollapsedServiceIds();
     renderBookingSectionHeader(els.travel_plan_panel_summary, travelPlanSummary());
+    const hasDays = Array.isArray(state.travelPlanDraft.days) && state.travelPlanDraft.days.length > 0;
+    const standardTemplateLabel = hasDays
+      ? bookingT("booking.travel_plan.append_standard_template", "Append a Standard Travel Plan")
+      : bookingT("booking.travel_plan.use_standard_template", "Use a Standard Travel Plan");
+    const bookingPlanLabel = hasDays
+      ? bookingT("booking.travel_plan.append_existing_plan", "Append a Travel Plan from another Booking")
+      : bookingT("booking.travel_plan.use_existing_plan", "Use a Travel Plan from another Booking");
     els.travel_plan_editor.innerHTML = `
       ${(Array.isArray(state.travelPlanDraft.days) ? state.travelPlanDraft.days : []).map((day, dayIndex) => renderTravelPlanDay(day, dayIndex)).join("") || `<p class="travel-plan-empty">${escapeHtml(bookingT("booking.travel_plan.no_days", "No travel-plan days yet."))}</p>`}
       <div class="travel-plan-footer">
-        <div class="travel-plan-footer__new-day">
-          <button class="btn btn-ghost booking-offer-add-btn travel-plan-add-day-btn travel-plan-add-day-btn--combined" data-travel-plan-add-day type="button">
-            <span class="travel-plan-add-btn__icon" aria-hidden="true">+</span>
-            <span class="travel-plan-add-btn__label">${escapeHtml(bookingT("booking.travel_plan.new_day", "New day"))}</span>
-          </button>
-          <button class="btn travel-plan-day-add-btn travel-plan-day-add-btn--service travel-plan-day-add-btn--day-copy" data-travel-plan-open-template-import data-requires-clean-state type="button">${escapeHtml(bookingT("booking.travel_plan.use_standard_template", "Use standard travel plan"))}</button>
-          <button class="btn travel-plan-day-add-btn travel-plan-day-add-btn--service travel-plan-day-add-btn--day-copy" data-travel-plan-open-day-import data-requires-clean-state type="button">${escapeHtml(bookingT("booking.travel_plan.insert_existing_day", "Copy existing day"))}</button>
-          <button class="btn travel-plan-day-add-btn travel-plan-day-add-btn--service travel-plan-day-add-btn--day-copy" data-travel-plan-open-plan-import data-requires-clean-state type="button">${escapeHtml(bookingT("booking.travel_plan.append_existing_plan", "Append existing travel plan"))}</button>
+        <div class="travel-plan-footer__action-rows">
+          <div class="travel-plan-footer__action-row travel-plan-footer__action-row--double">
+            <button class="btn btn-ghost booking-offer-add-btn travel-plan-add-day-btn travel-plan-add-day-btn--combined" data-travel-plan-add-day type="button">
+              <span class="travel-plan-add-btn__icon" aria-hidden="true">+</span>
+              <span class="travel-plan-add-btn__label">${escapeHtml(bookingT("booking.travel_plan.new_day", "New day"))}</span>
+            </button>
+            <button class="btn travel-plan-day-add-btn travel-plan-day-add-btn--service travel-plan-day-add-btn--day-copy" data-travel-plan-open-day-import data-requires-clean-state type="button">${escapeHtml(bookingT("booking.travel_plan.insert_existing_day", "Copy existing day"))}</button>
+          </div>
+          <div class="travel-plan-footer__action-row">
+            <button class="btn travel-plan-day-add-btn travel-plan-day-add-btn--service travel-plan-day-add-btn--day-copy" data-travel-plan-open-template-import data-requires-clean-state type="button">${escapeHtml(standardTemplateLabel)}</button>
+          </div>
+          <div class="travel-plan-footer__action-row">
+            <button class="btn travel-plan-day-add-btn travel-plan-day-add-btn--service travel-plan-day-add-btn--day-copy" data-travel-plan-open-plan-import data-requires-clean-state type="button">${escapeHtml(bookingPlanLabel)}</button>
+          </div>
         </div>
       </div>
     `;

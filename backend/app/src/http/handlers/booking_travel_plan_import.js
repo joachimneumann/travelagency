@@ -6,6 +6,10 @@ import {
   cloneTravelPlanLocalizedMap,
   parseTravelPlanQueryInt
 } from "./booking_travel_plan_shared.js";
+import {
+  normalizeBookingPdfPersonalization,
+  replaceTravelPlanPdfPersonalization
+} from "../../lib/booking_pdf_personalization.js";
 
 function assertPlainObject(value, label) {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
@@ -729,8 +733,19 @@ export function createBookingTravelPlanImportHandlers(deps) {
       return;
     }
 
+    const currentPdfPersonalization = normalizeBookingPdfPersonalization(targetBooking?.pdf_personalization);
+    const nextPdfPersonalization = replaceTravelPlanPdfPersonalization(
+      targetBooking?.pdf_personalization,
+      sourceBooking?.pdf_personalization
+    );
+    const pdfPersonalizationChanged = JSON.stringify(nextPdfPersonalization) !== JSON.stringify(currentPdfPersonalization);
+
     targetBooking.travel_plan = check.travel_plan;
     incrementBookingRevision(targetBooking, "travel_plan_revision");
+    targetBooking.pdf_personalization = nextPdfPersonalization;
+    if (pdfPersonalizationChanged) {
+      incrementBookingRevision(targetBooking, "core_revision");
+    }
     targetBooking.updated_at = nowIso();
     addActivity(
       store,
@@ -829,8 +844,19 @@ export function createBookingTravelPlanImportHandlers(deps) {
       return;
     }
 
+    const currentPdfPersonalization = normalizeBookingPdfPersonalization(targetBooking?.pdf_personalization);
+    const nextPdfPersonalization = replaceTravelPlanPdfPersonalization(
+      targetBooking?.pdf_personalization,
+      sourceBooking?.pdf_personalization
+    );
+    const pdfPersonalizationChanged = JSON.stringify(nextPdfPersonalization) !== JSON.stringify(currentPdfPersonalization);
+
     targetBooking.travel_plan = check.travel_plan;
     incrementBookingRevision(targetBooking, "travel_plan_revision");
+    targetBooking.pdf_personalization = nextPdfPersonalization;
+    if (pdfPersonalizationChanged) {
+      incrementBookingRevision(targetBooking, "core_revision");
+    }
     targetBooking.updated_at = nowIso();
     addActivity(
       store,
@@ -932,8 +958,19 @@ export function createBookingTravelPlanImportHandlers(deps) {
       return;
     }
 
+    const currentPdfPersonalization = normalizeBookingPdfPersonalization(targetBooking?.pdf_personalization);
+    const nextPdfPersonalization = replaceTravelPlanPdfPersonalization(
+      targetBooking?.pdf_personalization,
+      sourceBooking?.pdf_personalization
+    );
+    const pdfPersonalizationChanged = JSON.stringify(nextPdfPersonalization) !== JSON.stringify(currentPdfPersonalization);
+
     targetBooking.travel_plan = check.travel_plan;
     incrementBookingRevision(targetBooking, "travel_plan_revision");
+    targetBooking.pdf_personalization = nextPdfPersonalization;
+    if (pdfPersonalizationChanged) {
+      incrementBookingRevision(targetBooking, "core_revision");
+    }
     targetBooking.updated_at = nowIso();
     addActivity(
       store,

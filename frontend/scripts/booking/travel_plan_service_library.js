@@ -119,6 +119,10 @@ export function createBookingTravelPlanServiceLibraryModule(deps) {
     return prioritizeCurrentBookingResults(rows);
   }
 
+  function currentTravelPlanHasDays() {
+    return Array.isArray(state.travelPlanDraft?.days) && state.travelPlanDraft.days.length > 0;
+  }
+
   function formatTravelPlanLibraryDateRange(item) {
     const firstDate = String(item?.first_date || "").trim();
     const lastDate = String(item?.last_date || "").trim();
@@ -151,6 +155,9 @@ export function createBookingTravelPlanServiceLibraryModule(deps) {
       return;
     }
     if (isTemplateLibraryMode()) {
+      const templateActionLabel = currentTravelPlanHasDays()
+        ? bookingT("booking.travel_plan.append", "Append")
+        : bookingT("booking.travel_plan.use_action", "Use");
       els.travelPlanServiceLibraryResults.innerHTML = rows.map((item) => `
         <article class="travel-plan-library-card">
           <div class="travel-plan-library-card__media">
@@ -175,13 +182,16 @@ export function createBookingTravelPlanServiceLibraryModule(deps) {
               data-travel-plan-apply-template="${escapeHtml(item.id || "")}"
               data-requires-clean-state
               type="button"
-            >${escapeHtml(bookingT("booking.travel_plan.use_standard_template", "Use standard travel plan"))}</button>
+            >${escapeHtml(templateActionLabel)}</button>
           </div>
         </article>
       `).join("");
       return;
     }
     if (isPlanLibraryMode()) {
+      const planActionLabel = currentTravelPlanHasDays()
+        ? bookingT("booking.travel_plan.append", "Append")
+        : bookingT("booking.travel_plan.use_action", "Use");
       els.travelPlanServiceLibraryResults.innerHTML = rows.map((item) => {
         const dateRange = formatTravelPlanLibraryDateRange(item);
         const previewText = item.title_preview || item.overnight_preview || "";
@@ -209,7 +219,7 @@ export function createBookingTravelPlanServiceLibraryModule(deps) {
                 data-travel-plan-import-source-plan-booking="${escapeHtml(item.source_booking_id || "")}"
                 data-requires-clean-state
                 type="button"
-              >${escapeHtml(bookingT("booking.travel_plan.append", "Append"))}</button>
+              >${escapeHtml(planActionLabel)}</button>
             </div>
           </article>
         `;

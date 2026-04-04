@@ -205,6 +205,18 @@ function resolveTravelPlanClosingText(booking, lang) {
   );
 }
 
+function resolveTravelPlanChildrenPolicyText(booking, lang) {
+  return textOrNull(
+    resolveBookingPdfPersonalizationText(booking?.pdf_personalization, "travel_plan", "children_policy", lang, { sourceLang: lang })
+  );
+}
+
+function resolveTravelPlanWhatsNotIncludedText(booking, lang) {
+  return textOrNull(
+    resolveBookingPdfPersonalizationText(booking?.pdf_personalization, "travel_plan", "whats_not_included", lang, { sourceLang: lang })
+  );
+}
+
 function resolveTravelPlanAttachmentPaths(travelPlan, travelPlanAttachmentsDir) {
   return (Array.isArray(travelPlan?.attachments) ? travelPlan.attachments : [])
     .slice()
@@ -470,8 +482,120 @@ function drawTextParagraph(doc, startY, text, fonts, lang, { fontSize = 11, line
   return doc.y;
 }
 
-function drawClosing(doc, startY, fonts, lang, closingText, attachmentCount = 0) {
-  let y = drawTextParagraph(doc, startY, closingText, fonts, lang);
+function measureTravelPlanEndingHeight(doc, fonts, lang, {
+  childrenPolicyText = "",
+  whatsNotIncludedText = "",
+  closingText = "",
+  attachmentCount = 0
+} = {}) {
+  const width = doc.page.width - PAGE_MARGIN * 2;
+  let height = 0;
+  const sections = [
+    {
+      title: pdfT(lang, "travel_plan.children_policy_title", "Children's Policy"),
+      body: childrenPolicyText
+    },
+    {
+      title: pdfT(lang, "travel_plan.whats_not_included_title", "What's not included"),
+      body: whatsNotIncludedText
+    }
+  ].filter((section) => section.body);
+
+  for (const section of sections) {
+    height += measureTextHeight(doc, section.title, {
+      width,
+      fontSize: 11.2,
+      fonts,
+      weight: "bold",
+      lineGap: 1
+    });
+    height += 4;
+    height += measureTextHeight(doc, section.body, {
+      width,
+      fontSize: 11,
+      fonts,
+      lineGap: 2
+    });
+    height += 14;
+  }
+
+  height += measureTextHeight(doc, closingText, {
+    width,
+    fontSize: 11,
+    fonts,
+    lineGap: 2
+  });
+
+  const attachmentNote = buildAttachmentClosingNote(attachmentCount, lang);
+  if (attachmentNote) {
+    height += 14;
+    height += measureTextHeight(doc, attachmentNote, {
+      width,
+      fontSize: 11,
+      fonts,
+      lineGap: 2
+    });
+  }
+
+  height += 18;
+  height += measureTextHeight(doc, pdfT(lang, "travel_plan.closing_regards", "Warm regards,"), {
+    width,
+    fontSize: 11,
+    fonts
+  });
+  height += measureTextHeight(doc, pdfT(lang, "travel_plan.closing_team", "Your Asia Travel Plan team."), {
+    width,
+    fontSize: 12,
+    fonts
+  });
+
+  return height + 16;
+}
+
+function drawTravelPlanTitledParagraph(doc, startY, fonts, lang, title, text) {
+  if (!text) return startY;
+  doc
+    .font(pdfFontName("bold", fonts))
+    .fontSize(11.2)
+    .fillColor(PDF_COLORS.textStrong)
+    .text(title, PAGE_MARGIN, startY, pdfTextOptions(lang, {
+      width: doc.page.width - PAGE_MARGIN * 2,
+      lineGap: 1
+    }));
+  return drawTextParagraph(doc, doc.y + 4, text, fonts, lang, { fontSize: 11 });
+}
+
+function drawClosing(doc, startY, fonts, lang, {
+  childrenPolicyText = "",
+  whatsNotIncludedText = "",
+  closingText = "",
+  attachmentCount = 0
+} = {}) {
+  let y = startY;
+
+  if (childrenPolicyText) {
+    y = drawTravelPlanTitledParagraph(
+      doc,
+      y,
+      fonts,
+      lang,
+      pdfT(lang, "travel_plan.children_policy_title", "Children's Policy"),
+      childrenPolicyText
+    ) + 14;
+  }
+
+  if (whatsNotIncludedText) {
+    y = drawTravelPlanTitledParagraph(
+      doc,
+      y,
+      fonts,
+      lang,
+      pdfT(lang, "travel_plan.whats_not_included_title", "What's not included"),
+      whatsNotIncludedText
+    ) + 14;
+  }
+
+  y = drawTextParagraph(doc, y, closingText, fonts, lang);
 
   const attachmentNote = buildAttachmentClosingNote(attachmentCount, lang);
   if (attachmentNote) {
@@ -672,6 +796,8 @@ export function createTravelPlanPdfWriter({
     const attachmentPaths = resolveTravelPlanAttachmentPaths(plan, travelPlanAttachmentsDir);
     const heroSubtitle = resolveTravelPlanSubtitle(booking, plan, lang);
     const welcomeText = resolveTravelPlanWelcomeText(booking, lang);
+    const childrenPolicyText = resolveTravelPlanChildrenPolicyText(booking, lang);
+    const whatsNotIncludedText = resolveTravelPlanWhatsNotIncludedText(booking, lang);
     const closingText = resolveTravelPlanClosingText(booking, lang);
 
     const guideContext = await resolveAtpGuidePdfContext({
@@ -830,8 +956,18 @@ export function createTravelPlanPdfWriter({
 
       y = ensureSpace(y, estimateGuideSectionHeight(doc, guideContext, fonts, lang) + 10);
       y = drawGuideSection(doc, y, fonts, lang, guideContext, guidePhoto);
-      y = ensureSpace(y + 8, 96);
-      drawClosing(doc, y + 10, fonts, lang, closingText, attachmentPaths.length);
+      y = ensureSpace(y + 8, measureTravelPlanEndingHeight(doc, fonts, lang, {
+        childrenPolicyText,
+        whatsNotIncludedText,
+        closingText,
+        attachmentCount: attachmentPaths.length
+      }));
+      drawClosing(doc, y + 10, fonts, lang, {
+        childrenPolicyText,
+        whatsNotIncludedText,
+        closingText,
+        attachmentCount: attachmentPaths.length
+      });
       drawFooter(doc, fonts, companyProfile, lang);
       doc.end();
     });

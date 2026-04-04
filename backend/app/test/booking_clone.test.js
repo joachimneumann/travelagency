@@ -34,7 +34,19 @@ function buildSourceBooking() {
     travel_styles: ["culture", "food"],
     pdf_personalization: {
       travel_plan: {
-        subtitle: "Welcome to your trip"
+        subtitle: "Welcome to your trip",
+        subtitle_i18n: {
+          en: "Welcome to your trip",
+          de: "Willkommen zu Ihrer Reise"
+        },
+        welcome: "This is your current travel plan.",
+        children_policy: "Children under 6 stay free.",
+        whats_not_included: "International flights are not included.",
+        closing: "We would be happy to refine anything together.",
+        include_who_is_traveling: true
+      },
+      offer: {
+        closing: "Offer closing that should not be cloned."
       }
     },
     confirmed_generated_offer_id: "generated_offer_1",
@@ -204,7 +216,32 @@ test("cloneBookingForTesting keeps only approved metadata and clears commercial 
   assert.equal(cloned.travel_start_day, null);
   assert.equal(cloned.travel_end_day, null);
   assert.equal(cloned.notes, "");
-  assert.equal(cloned.pdf_personalization, undefined);
+  assert.deepEqual(cloned.pdf_personalization, {
+    travel_plan: {
+      subtitle: "Welcome to your trip",
+      subtitle_i18n: {
+        en: "Welcome to your trip",
+        de: "Willkommen zu Ihrer Reise"
+      },
+      welcome: "This is your current travel plan.",
+      welcome_i18n: {
+        en: "This is your current travel plan."
+      },
+      children_policy: "Children under 6 stay free.",
+      children_policy_i18n: {
+        en: "Children under 6 stay free."
+      },
+      whats_not_included: "International flights are not included.",
+      whats_not_included_i18n: {
+        en: "International flights are not included."
+      },
+      closing: "We would be happy to refine anything together.",
+      closing_i18n: {
+        en: "We would be happy to refine anything together."
+      },
+      include_who_is_traveling: true
+    }
+  });
   assert.deepEqual(cloned.persons, []);
   assert.equal(cloned.offer.status, "DRAFT");
   assert.equal(cloned.offer.currency, "USD");

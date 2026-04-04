@@ -382,6 +382,8 @@ const els = {
   pdfPersonalizationPanel: document.getElementById("booking_pdf_personalization_panel"),
   pdfTravelPlanSubtitleMount: document.getElementById("booking_pdf_travel_plan_subtitle_mount"),
   pdfTravelPlanWelcomeMount: document.getElementById("booking_pdf_travel_plan_welcome_mount"),
+  pdfTravelPlanChildrenPolicyMount: document.getElementById("booking_pdf_travel_plan_children_policy_mount"),
+  pdfTravelPlanWhatsNotIncludedMount: document.getElementById("booking_pdf_travel_plan_whats_not_included_mount"),
   pdfTravelPlanClosingMount: document.getElementById("booking_pdf_travel_plan_closing_mount"),
   pdfTravelPlanIncludeWhoIsTravelingMount: document.getElementById("booking_pdf_travel_plan_include_who_is_traveling_mount"),
   pdfOfferSubtitleMount: document.getElementById("booking_pdf_offer_subtitle_mount"),
