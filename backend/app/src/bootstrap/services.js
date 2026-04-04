@@ -1,7 +1,12 @@
 import { createPricingHelpers } from "../domain/pricing.js";
 import { createTravelPlanHelpers } from "../domain/travel_plan.js";
+import { createTravelPlanTemplateHelpers } from "../domain/travel_plan_templates.js";
 import { createBookingViewHelpers } from "../domain/booking_views.js";
 import { createTourHelpers } from "../domain/tours_support.js";
+import {
+  normalizeTourDestinationCode,
+  normalizeTourStyleCode
+} from "../domain/tour_catalog_i18n.js";
 import { createMetaWebhookHandlers } from "../integrations/meta_webhook.js";
 import { createInvoicePdfWriter } from "../lib/invoice_pdf.js";
 import { createOfferPdfWriter } from "../lib/offer_pdf.js";
@@ -42,6 +47,14 @@ export function createBackendServices({
   });
 
   const travelPlanHelpers = createTravelPlanHelpers();
+  const travelPlanTemplateHelpers = createTravelPlanTemplateHelpers({
+    normalizeBookingTravelPlan: travelPlanHelpers.normalizeBookingTravelPlan,
+    normalizeStringArray: support.normalizeStringArray,
+    normalizeTourDestinationCode,
+    normalizeTourStyleCode,
+    randomUUID: support.randomUUID,
+    nowIso: support.nowIso
+  });
 
   const keycloakDirectory = createKeycloakDirectory({
     keycloakEnabled: runtime.keycloakDirectoryConfig.keycloakEnabled,
@@ -111,6 +124,7 @@ export function createBackendServices({
   const storeUtils = createStoreUtils({
     dataPath: collections.dataPath,
     toursDir: collections.toursDir,
+    travelPlanTemplatesDir: collections.travelPlanTemplatesDir,
     invoicesDir: collections.invoicesDir,
     generatedOffersDir: collections.generatedOffersDir,
     travelPlanPdfsDir: collections.travelPlanPdfsDir,
@@ -186,6 +200,7 @@ export function createBackendServices({
   return {
     pricingHelpers,
     travelPlanHelpers,
+    travelPlanTemplateHelpers,
     bookingViewHelpers,
     storeUtils,
     keycloakDirectory,

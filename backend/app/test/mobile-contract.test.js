@@ -372,6 +372,13 @@ async function cloneBookingForTest(bookingId, body = {}) {
   );
 }
 
+async function createBackendBookingForTest(body = {}, headers = apiHeaders()) {
+  return await requestJson("/api/v1/bookings", headers, {
+    method: "POST",
+    body
+  });
+}
+
 async function deleteTourForTest(tourId) {
   if (!tourId) return;
   const deleteResult = await requestJson(
@@ -599,6 +606,46 @@ test("booking clone endpoint applies the shared clone policy and can include tra
   assert.equal(cloneWithTravelers.body.booking.persons.length, 1);
   assert.equal(cloneWithTravelers.body.booking.persons[0].name, "Original booking");
   assert.equal(cloneWithTravelers.body.booking.persons[0].roles.includes("primary_contact"), true);
+});
+
+test("backend booking create endpoint creates an internal booking and assigns staff creators to themselves", async () => {
+  await resetStore();
+
+  const result = await createBackendBookingForTest({
+    name: "Kuala Lumpur Family Planning",
+    preferred_language: "ms",
+    preferred_currency: "USD",
+    destinations: ["MY", "SG"],
+    travel_styles: ["culture", "family-friendly"],
+    primary_contact_name: "Aina Rahman",
+    primary_contact_email: "aina@example.com",
+    primary_contact_phone_number: "+60123456789",
+    number_of_travelers: 4
+  }, apiHeaders("atp_staff", "staff", "kc-staff"));
+
+  assert.equal(result.status, 201);
+  assert.equal(result.body.booking.name, "Kuala Lumpur Family Planning");
+  assert.equal(result.body.booking.customer_language, "ms");
+  assert.equal(result.body.booking.preferred_currency, "USD");
+  assert.deepEqual(result.body.booking.destinations, ["MY", "SG"]);
+  assert.deepEqual(result.body.booking.travel_styles, ["culture", "family-friendly"]);
+  assert.equal(result.body.booking.assigned_keycloak_user_id, "kc-staff");
+  assert.equal(result.body.booking.web_form_submission, undefined);
+  assert.equal(result.body.booking.persons.length, 1);
+  assert.equal(result.body.booking.persons[0].name, "Aina Rahman");
+  assert.deepEqual(result.body.booking.persons[0].emails, ["aina@example.com"]);
+  assert.deepEqual(result.body.booking.persons[0].phone_numbers, ["+60123456789"]);
+
+  const activitiesResult = await requestJson(
+    endpointPath("booking_activities").replace("{booking_id}", result.body.booking.id),
+    apiHeaders("atp_staff", "staff", "kc-staff")
+  );
+  assert.equal(activitiesResult.status, 200);
+  assert.match(
+    activitiesResult.body.activities[0].detail,
+    /Booking created in backend/,
+    "Internal booking creation should leave a backend activity trail"
+  );
 });
 
 test("public booking discovery-call request can be created without destinations or travel styles", async () => {

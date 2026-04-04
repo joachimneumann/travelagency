@@ -46,6 +46,19 @@ import (
 	idempotency_key?: string
 }
 
+#BookingCreateRequest: {
+	name:                          string
+	preferred_language:            enums.#LanguageCode
+	preferred_currency:            enums.#CurrencyCode
+	destinations?:                 [...enums.#CountryCode]
+	travel_styles?:                [...string]
+	primary_contact_name?:         string
+	primary_contact_email?:        common.#Email
+	primary_contact_phone_number?: string & !=""
+	number_of_travelers?:          >=common.#MinTravelers & <=common.#MaxTravelers & int
+	actor?:                        string
+}
+
 #BookingDeleteRequest: {
 	expected_core_revision?: >=0 & int
 }
@@ -89,6 +102,13 @@ import (
 	expected_core_revision?:    >=0 & int
 	assigned_keycloak_user_id?: common.#Identifier
 	actor?:                     string
+}
+
+#BookingCloneRequest: {
+	expected_core_revision?: >=0 & int
+	name:                    string
+	include_travelers?:      bool
+	actor?:                  string
 }
 
 #BookingPersonCreateRequest: {
@@ -199,6 +219,22 @@ import (
 	include_notes:                        *true | bool
 	include_translations:                 *true | bool
 	actor?:                               string
+}
+
+#TravelPlanTemplateUpsertRequest: {
+	title?:             string
+	description?:       string
+	status?:            enums.#TravelPlanTemplateStatus
+	destinations?:      [...enums.#CountryCode]
+	travel_styles?:     [...string]
+	source_booking_id?: common.#Identifier
+	travel_plan?:       entities.#BookingTravelPlan
+	actor?:             string
+}
+
+#BookingTravelPlanTemplateApplyRequest: {
+	expected_travel_plan_revision?: >=0 & int
+	actor?:                         string
 }
 
 #TravelPlanServiceImageUploadRequest: #EvidenceUpload & {

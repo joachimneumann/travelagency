@@ -2231,6 +2231,10 @@ export function createBookingTravelPlanModule(ctx) {
           travelPlanServiceLibraryModule.openTravelPlanLibrary();
           return;
         }
+        if (button.hasAttribute("data-travel-plan-open-template-import")) {
+          travelPlanServiceLibraryModule.openTravelPlanTemplateLibrary();
+          return;
+        }
         if (button.hasAttribute("data-travel-plan-open-import")) {
           travelPlanServiceLibraryModule.openTravelPlanServiceLibrary(button.getAttribute("data-travel-plan-open-import"));
           return;
@@ -2375,6 +2379,7 @@ export function createBookingTravelPlanModule(ctx) {
             <span class="travel-plan-add-btn__icon" aria-hidden="true">+</span>
             <span class="travel-plan-add-btn__label">${escapeHtml(bookingT("booking.travel_plan.new_day", "New day"))}</span>
           </button>
+          <button class="btn travel-plan-day-add-btn travel-plan-day-add-btn--service travel-plan-day-add-btn--day-copy" data-travel-plan-open-template-import data-requires-clean-state type="button">${escapeHtml(bookingT("booking.travel_plan.use_standard_template", "Use standard travel plan"))}</button>
           <button class="btn travel-plan-day-add-btn travel-plan-day-add-btn--service travel-plan-day-add-btn--day-copy" data-travel-plan-open-day-import data-requires-clean-state type="button">${escapeHtml(bookingT("booking.travel_plan.insert_existing_day", "Copy existing day"))}</button>
           <button class="btn travel-plan-day-add-btn travel-plan-day-add-btn--service travel-plan-day-add-btn--day-copy" data-travel-plan-open-plan-import data-requires-clean-state type="button">${escapeHtml(bookingT("booking.travel_plan.append_existing_plan", "Append existing travel plan"))}</button>
         </div>

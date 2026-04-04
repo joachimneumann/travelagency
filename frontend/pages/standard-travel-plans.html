@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en" translate="no">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title data-i18n-id="backend.standard_travel_plans.heading">Standard travel plans</title>
+    <meta name="description" content="AsiaTravelPlan standard travel plan templates" />
+    <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml" />
+    <script>
+      if (!window.ASIATRAVELPLAN_API_BASE && ["localhost", "127.0.0.1"].includes(window.location.hostname)) {
+        window.ASIATRAVELPLAN_API_BASE = window.location.origin;
+      }
+    </script>
+    <script src="/frontend/scripts/shared/localhost_diagnostics.js"></script>
+    <link rel="stylesheet" href="assets/css/styles.css" />
+    <style>
+      .travel-plan-template-modal__panel {
+        width: min(980px, calc(100vw - 2rem));
+      }
+
+      .travel-plan-template-modal__grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1rem;
+      }
+
+      .travel-plan-template-modal__grid .field--full {
+        grid-column: 1 / -1;
+      }
+
+      .travel-plan-template-modal__hint {
+        margin-top: 0.35rem;
+        color: #64748b;
+      }
+
+      .travel-plan-template-modal__status {
+        min-height: 1.4rem;
+        margin: 0 0 1rem;
+        color: #7c2d12;
+      }
+
+      .travel-plan-template-modal__booking-search {
+        display: grid;
+        gap: 0.75rem;
+      }
+
+      .travel-plan-template-modal__booking-search-row {
+        display: flex;
+        gap: 0.75rem;
+        align-items: flex-end;
+      }
+
+      .travel-plan-template-modal__booking-search-row .field {
+        flex: 1 1 auto;
+        margin-bottom: 0;
+      }
+
+      .travel-plan-template-modal__booking-results {
+        display: grid;
+        gap: 0.5rem;
+      }
+
+      .travel-plan-template-modal__booking-result {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.8rem 0.95rem;
+        border: 1px solid rgba(148, 163, 184, 0.22);
+        border-radius: 18px;
+        background: rgba(248, 250, 252, 0.95);
+      }
+
+      .travel-plan-template-modal__booking-meta {
+        display: grid;
+        gap: 0.2rem;
+      }
+
+      .travel-plan-template-modal__booking-title {
+        font-weight: 700;
+        color: #173329;
+      }
+
+      .travel-plan-template-modal__selected-booking {
+        padding: 0.8rem 0.95rem;
+        border: 1px solid rgba(59, 130, 246, 0.22);
+        border-radius: 18px;
+        background: rgba(239, 246, 255, 0.95);
+      }
+
+      .travel-plan-template-modal__actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.75rem;
+      }
+
+      .travel-plan-template-modal__filters {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1rem;
+      }
+
+      .travel-plan-template-modal__filter-card {
+        display: grid;
+        gap: 0.55rem;
+      }
+
+      .travel-plan-template-modal__filter-card .filter-checkbox-list {
+        min-width: 0;
+        max-height: none;
+        padding: 0.85rem 1rem;
+        border: 1px solid rgba(148, 163, 184, 0.22);
+        border-radius: 18px;
+        background: rgba(248, 250, 252, 0.95);
+      }
+
+      .backend-table__actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+
+      @media (max-width: 820px) {
+        .travel-plan-template-modal__grid {
+          grid-template-columns: 1fr;
+        }
+
+        .travel-plan-template-modal__filters {
+          grid-template-columns: 1fr;
+        }
+
+        .travel-plan-template-modal__booking-search-row {
+          flex-direction: column;
+          align-items: stretch;
+        }
+      }
+    </style>
+  </head>
+  <body class="backend-list-page">
+    <header class="header" id="top">
+      <div class="container header-wrap">
+        <a class="brand" id="backendHomeLink" href="backend.html" aria-label="AsiaTravelPlan backend home">
+          <img class="brand-logo" src="assets/img/logo-asiatravelplan.svg" alt="AsiaTravelPlan" width="320" height="76" />
+        </a>
+
+        <div id="backendNavMount"></div>
+      </div>
+    </header>
+
+    <main id="main-content">
+      <section class="section">
+        <div class="container">
+          <div id="backendError" class="backend-message" role="alert" aria-live="assertive"></div>
+
+          <section class="backend-section" id="standardTravelPlansPanel">
+            <div class="backend-controls">
+              <div class="field">
+                <label for="standardTravelPlansSearch" data-i18n-id="backend.standard_travel_plans.search_label">Search templates</label>
+                <input id="standardTravelPlansSearch" type="text" data-i18n-placeholder-id="backend.standard_travel_plans.search_placeholder" placeholder="title, source booking..." />
+              </div>
+              <div class="field">
+                <label for="standardTravelPlansStatus" data-i18n-id="backend.standard_travel_plans.status_label">Status</label>
+                <select id="standardTravelPlansStatus">
+                  <option value="all" data-i18n-id="backend.standard_travel_plans.all_statuses">All statuses</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="standardTravelPlansDestination" data-i18n-id="backend.standard_travel_plans.destination_label">Destination</label>
+                <select id="standardTravelPlansDestination">
+                  <option value="all" data-i18n-id="backend.standard_travel_plans.all_destinations">All destinations</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="standardTravelPlansStyle" data-i18n-id="backend.standard_travel_plans.style_label">Travel style</label>
+                <select id="standardTravelPlansStyle">
+                  <option value="all" data-i18n-id="backend.standard_travel_plans.all_styles">All travel styles</option>
+                </select>
+              </div>
+              <button class="btn btn-ghost" id="standardTravelPlansSearchBtn" type="button" data-i18n-id="common.search">Search</button>
+              <button class="btn btn-ghost" id="standardTravelPlansClearFiltersBtn" type="button" data-i18n-id="backend.standard_travel_plans.clear_filters">Clear filters</button>
+              <button class="btn btn-primary" id="standardTravelPlansCreateBtn" type="button" data-i18n-id="backend.standard_travel_plans.new_template">New template</button>
+              <span id="standardTravelPlansCountInfo" class="micro"></span>
+              <span id="standardTravelPlansActionStatus" class="micro" role="status" aria-live="polite"></span>
+            </div>
+
+            <div class="backend-table-wrap">
+              <table class="backend-table" id="standardTravelPlansTable"></table>
+            </div>
+            <div class="backend-pagination" id="standardTravelPlansPagination" aria-label="Standard travel plan pagination"></div>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <div class="modal" id="travelPlanTemplateModal" hidden role="dialog" aria-modal="true" aria-labelledby="travelPlanTemplateModalTitle">
+      <div class="modal-panel travel-plan-template-modal__panel" role="document">
+        <div class="modal-head">
+          <h2 id="travelPlanTemplateModalTitle" data-i18n-id="backend.standard_travel_plans.modal_title_create">Create standard travel plan</h2>
+          <button class="btn btn-ghost" id="travelPlanTemplateModalCloseBtn" type="button" data-i18n-id="common.close">Close</button>
+        </div>
+        <div class="modal-body">
+          <p id="travelPlanTemplateModalStatus" class="micro travel-plan-template-modal__status" aria-live="polite"></p>
+          <form id="travelPlanTemplateForm">
+            <div class="travel-plan-template-modal__grid">
+              <div class="field field--full">
+                <label for="travelPlanTemplateTitleInput" data-i18n-id="backend.standard_travel_plans.form.title">Title</label>
+                <input id="travelPlanTemplateTitleInput" name="title" type="text" autocomplete="off" required />
+              </div>
+              <div class="field field--full">
+                <label for="travelPlanTemplateDescriptionInput" data-i18n-id="backend.standard_travel_plans.form.description">Description</label>
+                <textarea id="travelPlanTemplateDescriptionInput" name="description" rows="3"></textarea>
+              </div>
+              <div class="field">
+                <label for="travelPlanTemplateStatusInput" data-i18n-id="backend.standard_travel_plans.form.status">Status</label>
+                <select id="travelPlanTemplateStatusInput" name="status"></select>
+              </div>
+              <div class="field field--full">
+                <div class="travel-plan-template-modal__filters">
+                  <div class="travel-plan-template-modal__filter-card">
+                    <label data-i18n-id="backend.standard_travel_plans.form.destinations">Destinations</label>
+                    <div id="travelPlanTemplateDestinationsInput" class="filter-checkbox-list" role="group" aria-label="Template destinations"></div>
+                  </div>
+                  <div class="travel-plan-template-modal__filter-card">
+                    <label data-i18n-id="backend.standard_travel_plans.form.travel_styles">Travel styles</label>
+                    <div id="travelPlanTemplateTravelStylesInput" class="filter-checkbox-list" role="group" aria-label="Template travel styles"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="field field--full">
+                <label data-i18n-id="backend.standard_travel_plans.form.source_booking">Source booking</label>
+                <div class="travel-plan-template-modal__booking-search">
+                  <div id="travelPlanTemplateSelectedBooking" class="travel-plan-template-modal__selected-booking" hidden></div>
+                  <div class="travel-plan-template-modal__booking-search-row">
+                    <div class="field">
+                      <input id="travelPlanTemplateBookingSearchInput" type="text" data-i18n-placeholder-id="backend.standard_travel_plans.form.source_booking_search_placeholder" placeholder="Search bookings to copy the travel plan from..." />
+                    </div>
+                    <button class="btn btn-ghost" id="travelPlanTemplateBookingSearchBtn" type="button" data-i18n-id="common.search">Search</button>
+                  </div>
+                  <div id="travelPlanTemplateBookingResults" class="travel-plan-template-modal__booking-results"></div>
+                </div>
+                <p class="micro travel-plan-template-modal__hint" data-i18n-id="backend.standard_travel_plans.form.source_booking_hint">Phase 1 templates are created from an existing booking travel plan.</p>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-head travel-plan-template-modal__actions">
+          <button class="btn btn-ghost" id="travelPlanTemplateCancelBtn" type="button" data-i18n-id="common.cancel">Cancel</button>
+          <button class="btn btn-primary" id="travelPlanTemplateSubmitBtn" type="button" data-i18n-id="common.save">Save</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="shared/generated/language_catalog.global.js"></script>
+    <script src="frontend/scripts/shared/backend_i18n.js"></script>
+    <script type="module">
+      import { mountBackendNav } from "./frontend/scripts/shared/nav.js";
+      await (window.__BACKEND_I18N_PROMISE || Promise.resolve());
+      mountBackendNav(document.getElementById("backendNavMount"), { currentSection: "standard-travel-plans" });
+    </script>
+    <script type="module" src="frontend/scripts/pages/standard_travel_plans.js"></script>
+  </body>
+</html>

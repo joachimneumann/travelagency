@@ -38,10 +38,14 @@ case "public_atp_staff_team":
   return RequestFactory.publicAtpStaffTeamRequest(options);
 case "bookings":
   return RequestFactory.bookingsRequest(options);
+case "booking_create":
+  return RequestFactory.bookingCreateRequest(options);
 case "booking_detail":
   return RequestFactory.bookingDetailRequest(options);
 case "booking_delete":
   return RequestFactory.bookingDeleteRequest(options);
+case "booking_clone":
+  return RequestFactory.bookingCloneRequest(options);
 case "booking_chat":
   return RequestFactory.bookingChatRequest(options);
 case "booking_name":
@@ -88,6 +92,18 @@ case "booking_travel_plan_day_import":
   return RequestFactory.bookingTravelPlanDayImportRequest(options);
 case "booking_travel_plan_import":
   return RequestFactory.bookingTravelPlanImportRequest(options);
+case "travel_plan_templates":
+  return RequestFactory.travelPlanTemplatesRequest(options);
+case "travel_plan_template_create":
+  return RequestFactory.travelPlanTemplateCreateRequest(options);
+case "travel_plan_template_detail":
+  return RequestFactory.travelPlanTemplateDetailRequest(options);
+case "travel_plan_template_update":
+  return RequestFactory.travelPlanTemplateUpdateRequest(options);
+case "travel_plan_template_delete":
+  return RequestFactory.travelPlanTemplateDeleteRequest(options);
+case "booking_travel_plan_template_apply":
+  return RequestFactory.bookingTravelPlanTemplateApplyRequest(options);
 case "booking_travel_plan_service_import":
   return RequestFactory.bookingTravelPlanServiceImportRequest(options);
 case "booking_travel_plan_service_image_upload":

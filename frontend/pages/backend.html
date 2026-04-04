@@ -64,11 +64,75 @@
 
       .backend-list-page .backend-controls {
         margin-bottom: 1rem;
+        align-items: flex-end;
       }
 
       .backend-list-page .backend-message {
         margin-bottom: 1rem;
         border-radius: 22px;
+      }
+
+      .backend-list-hero__actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        align-items: flex-end;
+      }
+
+      .backend-list-hero__actions .field {
+        flex: 1 1 320px;
+        min-width: 220px;
+      }
+
+      .backend-create-booking-modal__panel {
+        width: min(720px, calc(100vw - 2rem));
+      }
+
+      .backend-create-booking-modal__grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1rem;
+      }
+
+      .backend-create-booking-modal__grid .field--full {
+        grid-column: 1 / -1;
+      }
+
+      .backend-create-booking-modal__status {
+        min-height: 1.4rem;
+        margin: 0 0 1rem;
+        color: #7c2d12;
+      }
+
+      .backend-create-booking-modal__hint {
+        margin-top: 0.35rem;
+        color: #64748b;
+      }
+
+      .backend-create-booking-modal__actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.75rem;
+      }
+
+      .backend-create-booking-modal__filters {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1rem;
+      }
+
+      .backend-create-booking-modal__filter-card {
+        display: grid;
+        gap: 0.55rem;
+      }
+
+      .backend-create-booking-modal__filter-card .filter-checkbox-list {
+        min-width: 0;
+        max-height: none;
+        padding: 0.85rem 1rem;
+        border: 1px solid rgba(148, 163, 184, 0.22);
+        border-radius: 18px;
+        background: rgba(248, 250, 252, 0.95);
       }
 
       @media (max-width: 720px) {
@@ -80,6 +144,14 @@
 
         .backend-list-hero__title {
           font-size: 2.2rem;
+        }
+
+        .backend-create-booking-modal__grid {
+          grid-template-columns: 1fr;
+        }
+
+        .backend-create-booking-modal__filters {
+          grid-template-columns: 1fr;
         }
       }
     </style>
@@ -102,12 +174,13 @@
           <div class="backend-list-shell">
             <section class="backend-list-hero" aria-label="Backend bookings search">
               <h1 class="backend-list-hero__title" data-i18n-id="backend.bookings.title">Bookings</h1>
-              <div class="backend-controls">
+              <div class="backend-controls backend-list-hero__actions">
                 <div class="field">
                   <input id="bookingsSearch" type="text" placeholder="id, person, destination, assigned user, whatsapp chat..." data-i18n-placeholder-id="backend.bookings.search_placeholder" />
                 </div>
                 <button class="btn btn-ghost" id="bookingsSearchBtn" type="button" data-i18n-id="common.search">Search</button>
                 <button class="btn btn-ghost" id="bookingsClearSearchBtn" type="button" hidden data-i18n-id="backend.bookings.clear_search">Clear Search</button>
+                <button class="btn btn-primary" id="bookingCreateOpenBtn" type="button">New booking</button>
                 <span id="bookingsCountInfo" class="micro"></span>
               </div>
             </section>
@@ -123,16 +196,83 @@
       </section>
     </main>
 
+    <div class="modal" id="bookingCreateModal" hidden role="dialog" aria-modal="true" aria-labelledby="bookingCreateModalTitle">
+      <div class="modal-panel backend-create-booking-modal__panel" role="document">
+        <div class="modal-head">
+          <h2 id="bookingCreateModalTitle">Create booking</h2>
+          <button class="btn btn-ghost" id="bookingCreateCloseBtn" type="button">Close</button>
+        </div>
+        <div class="modal-body">
+          <p id="bookingCreateStatus" class="micro backend-create-booking-modal__status" aria-live="polite"></p>
+          <form id="bookingCreateForm">
+            <div class="backend-create-booking-modal__grid">
+              <div class="field field--full">
+                <label for="bookingCreateTitleInput">Title</label>
+                <input id="bookingCreateTitleInput" name="name" type="text" autocomplete="off" required />
+              </div>
+              <div class="field">
+                <label for="bookingCreateLanguageInput">Customer language</label>
+                <select id="bookingCreateLanguageInput" name="preferred_language"></select>
+              </div>
+              <div class="field">
+                <label for="bookingCreateCurrencyInput">Preferred currency</label>
+                <select id="bookingCreateCurrencyInput" name="preferred_currency"></select>
+              </div>
+              <div class="field field--full">
+                <div class="backend-create-booking-modal__filters">
+                  <div class="backend-create-booking-modal__filter-card">
+                    <label>Destinations</label>
+                    <div id="bookingCreateDestinationsInput" class="filter-checkbox-list" role="group" aria-label="Booking destinations"></div>
+                  </div>
+                  <div class="backend-create-booking-modal__filter-card">
+                    <label>Travel style</label>
+                    <div id="bookingCreateTravelStylesInput" class="filter-checkbox-list" role="group" aria-label="Booking travel styles"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="field">
+                <label for="bookingCreatePrimaryContactNameInput">Primary contact name</label>
+                <input id="bookingCreatePrimaryContactNameInput" name="primary_contact_name" type="text" autocomplete="name" />
+              </div>
+              <div class="field">
+                <label for="bookingCreateTravelerCountInput">Travelers</label>
+                <input id="bookingCreateTravelerCountInput" name="number_of_travelers" type="number" min="1" max="30" inputmode="numeric" />
+              </div>
+              <div class="field">
+                <label for="bookingCreatePrimaryContactEmailInput">Primary contact email</label>
+                <input id="bookingCreatePrimaryContactEmailInput" name="primary_contact_email" type="email" autocomplete="email" />
+              </div>
+              <div class="field">
+                <label for="bookingCreatePrimaryContactPhoneInput">Primary contact phone</label>
+                <input id="bookingCreatePrimaryContactPhoneInput" name="primary_contact_phone_number" type="text" autocomplete="tel" />
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-head backend-create-booking-modal__actions">
+          <button class="btn btn-ghost" id="bookingCreateCancelBtn" type="button">Cancel</button>
+          <button class="btn btn-primary" id="bookingCreateSubmitBtn" type="button">Create booking</button>
+        </div>
+      </div>
+    </div>
+
     <script src="shared/generated/language_catalog.global.js"></script>
     <script src="frontend/scripts/shared/backend_i18n.js"></script>
     <script type="module">
       import { mountBackendNav } from "./frontend/scripts/shared/nav.js";
       const params = new URLSearchParams(window.location.search);
       const requestedSection = params.get("section") || "bookings";
-      if (requestedSection === "tours" || requestedSection === "settings" || requestedSection === "emergency") {
+      if (
+        requestedSection === "tours"
+        || requestedSection === "settings"
+        || requestedSection === "emergency"
+        || requestedSection === "standard-travel-plans"
+      ) {
         const pageName =
           requestedSection === "tours"
             ? "tours.html"
+            : requestedSection === "standard-travel-plans"
+              ? "standard-travel-plans.html"
             : requestedSection === "settings"
               ? "settings.html"
               : "emergency.html";

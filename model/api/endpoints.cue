@@ -237,6 +237,15 @@ package api
 		responseType:  "BookingList"
 	},
 	{
+		key:           "booking_create"
+		path:          "/api/v1/bookings"
+		method:        "POST"
+		tag:           "Bookings"
+		authenticated: true
+		requestType:   "BookingCreateRequest"
+		responseType:  "BookingDetail"
+	},
+	{
 		key:           "booking_detail"
 		path:          "/api/v1/bookings/{booking_id}"
 		method:        "GET"
@@ -258,6 +267,21 @@ package api
 		authenticated: true
 		requestType:   "BookingDeleteRequest"
 		responseType:  "BookingDeleteResponse"
+		parameters: [{
+			name:     "booking_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}]
+	},
+	{
+		key:           "booking_clone"
+		path:          "/api/v1/bookings/{booking_id}/clone"
+		method:        "POST"
+		tag:           "Bookings"
+		authenticated: true
+		requestType:   "BookingCloneRequest"
+		responseType:  "BookingDetail"
 		parameters: [{
 			name:     "booking_id"
 			location: "path"
@@ -712,6 +736,116 @@ package api
 		responseType:  "BookingDetail"
 		parameters: [{
 			name:     "booking_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}]
+	},
+	{
+		key:           "travel_plan_templates"
+		path:          "/api/v1/travel-plan-templates"
+		method:        "GET"
+		tag:           "Travel plan templates"
+		authenticated: true
+		responseType:  "TravelPlanTemplateListResponse"
+		parameters: [{
+			name:     "q"
+			location: "query"
+			required: false
+			typeName: "string"
+		}, {
+			name:     "status"
+			location: "query"
+			required: false
+			typeName: "TravelPlanTemplateStatus"
+		}, {
+			name:     "destination"
+			location: "query"
+			required: false
+			typeName: "CountryCode"
+		}, {
+			name:     "style"
+			location: "query"
+			required: false
+			typeName: "TourStyleCode"
+		}, {
+			name:     "page"
+			location: "query"
+			required: false
+			typeName: "int"
+		}, {
+			name:     "page_size"
+			location: "query"
+			required: false
+			typeName: "int"
+		}]
+	},
+	{
+		key:           "travel_plan_template_create"
+		path:          "/api/v1/travel-plan-templates"
+		method:        "POST"
+		tag:           "Travel plan templates"
+		authenticated: true
+		requestType:   "TravelPlanTemplateUpsertRequest"
+		responseType:  "TravelPlanTemplateResponse"
+	},
+	{
+		key:           "travel_plan_template_detail"
+		path:          "/api/v1/travel-plan-templates/{template_id}"
+		method:        "GET"
+		tag:           "Travel plan templates"
+		authenticated: true
+		responseType:  "TravelPlanTemplateResponse"
+		parameters: [{
+			name:     "template_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}]
+	},
+	{
+		key:           "travel_plan_template_update"
+		path:          "/api/v1/travel-plan-templates/{template_id}"
+		method:        "PATCH"
+		tag:           "Travel plan templates"
+		authenticated: true
+		requestType:   "TravelPlanTemplateUpsertRequest"
+		responseType:  "TravelPlanTemplateResponse"
+		parameters: [{
+			name:     "template_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}]
+	},
+	{
+		key:           "travel_plan_template_delete"
+		path:          "/api/v1/travel-plan-templates/{template_id}"
+		method:        "DELETE"
+		tag:           "Travel plan templates"
+		authenticated: true
+		parameters: [{
+			name:     "template_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}]
+	},
+	{
+		key:           "booking_travel_plan_template_apply"
+		path:          "/api/v1/bookings/{booking_id}/travel-plan/templates/{template_id}/apply"
+		method:        "POST"
+		tag:           "Travel plan templates"
+		authenticated: true
+		requestType:   "BookingTravelPlanTemplateApplyRequest"
+		responseType:  "BookingDetail"
+		parameters: [{
+			name:     "booking_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}, {
+			name:     "template_id"
 			location: "path"
 			required: true
 			typeName: "Identifier"

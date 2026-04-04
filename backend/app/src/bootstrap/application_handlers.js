@@ -11,9 +11,11 @@ import { buildPaginatedListResponse } from "../http/pagination.js";
 import { buildApiRoutes } from "../http/routes.js";
 import { createAtpStaffHandlers } from "../http/handlers/atp_staff.js";
 import { createBookingHandlers } from "../http/handlers/bookings.js";
+import { createBookingQueryModule } from "../http/handlers/booking_query.js";
 import { createCountryReferenceHandlers } from "../http/handlers/country_reference.js";
 import { createKeycloakUserHandlers } from "../http/handlers/keycloak_users.js";
 import { createSupplierHandlers } from "../http/handlers/suppliers.js";
+import { createTravelPlanTemplateHandlers } from "../http/handlers/travel_plan_templates.js";
 import { createTourHandlers } from "../http/handlers/tours.js";
 
 export function createApplicationRoutes({
@@ -34,7 +36,9 @@ export function createApplicationRoutes({
     canReadCountryReferenceInfo,
     canEditCountryReferenceInfo,
     canReadSuppliers,
-    canEditSuppliers
+    canEditSuppliers,
+    canReadTravelPlanTemplates,
+    canEditTravelPlanTemplates
   } = createAccessHelpers({
     auth,
     appRoles: runtime.appRoles
@@ -43,6 +47,7 @@ export function createApplicationRoutes({
   const {
     pricingHelpers,
     travelPlanHelpers,
+    travelPlanTemplateHelpers,
     bookingViewHelpers,
     storeUtils,
     keycloakDirectory,
@@ -55,6 +60,44 @@ export function createApplicationRoutes({
     writeGeneratedOfferPdf,
     writeTravelPlanPdf
   } = services;
+
+  function getBookingRevision(booking, field) {
+    const value = Number(booking?.[field]);
+    return Number.isInteger(value) && value >= 0 ? value : 0;
+  }
+
+  function incrementBookingRevision(booking, field) {
+    booking[field] = getBookingRevision(booking, field) + 1;
+  }
+
+  const bookingQueryModule = createBookingQueryModule({
+    buildBookingReadModel: bookingViewHelpers.buildBookingReadModel,
+    normalizeText: support.normalizeText,
+    normalizeStringArray: support.normalizeStringArray,
+    normalizeEmail: support.normalizeEmail,
+    normalizePhone: support.normalizePhone,
+    safeCurrency: pricingHelpers.safeCurrency,
+    BASE_CURRENCY: runtime.baseCurrency,
+    getBookingAssignedKeycloakUserId: bookingViewHelpers.getBookingAssignedKeycloakUserId
+  });
+
+  async function assertExpectedRevision(req, payload, booking, payloadField, revisionField, res) {
+    const rawExpected = payload?.[payloadField];
+    const expectedRevision = rawExpected === undefined || rawExpected === null || rawExpected === ""
+      ? null
+      : support.safeInt(rawExpected);
+    const currentRevision = getBookingRevision(booking, revisionField);
+    if (expectedRevision === null || expectedRevision !== currentRevision) {
+      httpHelpers.sendJson(res, 409, {
+        error: "Booking changed in backend",
+        detail: "The booking has changed in the backend. The data has been refreshed. Your changes are lost. Please do them again.",
+        code: "BOOKING_REVISION_MISMATCH",
+        booking: await bookingQueryModule.buildBookingPayload(booking, req)
+      });
+      return false;
+    }
+    return true;
+  }
 
   const bookingHandlers = createBookingHandlers({
     readBodyJson: httpHelpers.readBodyJson,
@@ -255,6 +298,39 @@ export function createApplicationRoutes({
     rm
   });
 
+  const travelPlanTemplateHandlers = createTravelPlanTemplateHandlers({
+    readBodyJson: httpHelpers.readBodyJson,
+    sendJson: httpHelpers.sendJson,
+    readStore: storeUtils.readStore,
+    readTravelPlanTemplates: storeUtils.readTravelPlanTemplates,
+    persistTravelPlanTemplate: storeUtils.persistTravelPlanTemplate,
+    deleteTravelPlanTemplate: storeUtils.deleteTravelPlanTemplate,
+    getPrincipal,
+    canReadTravelPlanTemplates,
+    canEditTravelPlanTemplates,
+    canAccessBooking: bookingViewHelpers.canAccessBooking,
+    canEditBooking: bookingViewHelpers.canEditBooking,
+    normalizeText: support.normalizeText,
+    normalizeTourDestinationCode,
+    normalizeTourStyleCode,
+    nowIso: support.nowIso,
+    randomUUID,
+    buildTravelPlanTemplateReadModel: travelPlanTemplateHelpers.buildTravelPlanTemplateReadModel,
+    normalizeTravelPlanTemplateForStorage: travelPlanTemplateHelpers.normalizeTravelPlanTemplateForStorage,
+    normalizeTravelPlanTemplateStatus: travelPlanTemplateHelpers.normalizeTravelPlanTemplateStatus,
+    cloneBookingTravelPlanAsTemplate: travelPlanTemplateHelpers.cloneBookingTravelPlanAsTemplate,
+    cloneTemplateTravelPlanForBooking: travelPlanTemplateHelpers.cloneTemplateTravelPlanForBooking,
+    normalizeTemplateTravelPlan: travelPlanTemplateHelpers.normalizeTemplateTravelPlan,
+    validateBookingTravelPlanInput: travelPlanHelpers.validateBookingTravelPlanInput,
+    normalizeBookingTravelPlan: travelPlanHelpers.normalizeBookingTravelPlan,
+    assertExpectedRevision,
+    buildBookingDetailResponse: bookingQueryModule.buildBookingDetailResponse,
+    incrementBookingRevision,
+    persistStore: storeUtils.persistStore,
+    addActivity: bookingViewHelpers.addActivity,
+    actorLabel: bookingViewHelpers.actorLabel
+  });
+
   return buildApiRoutes({
     authRoutes: auth.routes,
     handlers: {
@@ -273,7 +349,8 @@ export function createApplicationRoutes({
       ...keycloakUserHandlers,
       ...countryReferenceHandlers,
       ...supplierHandlers,
-      ...tourHandlers
+      ...tourHandlers,
+      ...travelPlanTemplateHandlers
     }
   });
 }

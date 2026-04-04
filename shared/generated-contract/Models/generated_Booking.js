@@ -99,43 +99,6 @@ export const GENERATED_OFFER_CATEGORIES = Object.freeze([
         return validateShape(value, BOOKING_PERSON_DOCUMENT_SCHEMA);
       }
 
-      export const BOOKING_PDF_PERSONALIZATION_SCOPED_SCHEMA = {
-        name: "BookingPdfPersonalizationScoped",
-        domain: "booking",
-        module: "entities",
-        sourceType: "openapi.components.schemas.BookingPdfPersonalizationScoped",
-        requireOneOf: [],
-        fields: [
-    schemaField({"name":"subtitle","required":false,"wireName":"subtitle"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"subtitle_i18n","required":false,"wireName":"subtitle_i18n"}, {"kind":"transport","typeName":"Record<string,string>","isArray":false}),
-    schemaField({"name":"welcome","required":false,"wireName":"welcome"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"welcome_i18n","required":false,"wireName":"welcome_i18n"}, {"kind":"transport","typeName":"Record<string,string>","isArray":false}),
-    schemaField({"name":"closing","required":false,"wireName":"closing"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"closing_i18n","required":false,"wireName":"closing_i18n"}, {"kind":"transport","typeName":"Record<string,string>","isArray":false}),
-    schemaField({"name":"include_who_is_traveling","required":false,"wireName":"include_who_is_traveling"}, SHARED_FIELD_DEFS.FIELD_8)
-        ]
-      };
-
-      export function validateBookingPdfPersonalizationScoped(value) {
-        return validateShape(value, BOOKING_PDF_PERSONALIZATION_SCOPED_SCHEMA);
-      }
-
-      export const BOOKING_PDF_PERSONALIZATION_SCHEMA = {
-        name: "BookingPdfPersonalization",
-        domain: "booking",
-        module: "entities",
-        sourceType: "openapi.components.schemas.BookingPdfPersonalization",
-        requireOneOf: [],
-        fields: [
-    schemaField({"name":"travel_plan","required":false,"wireName":"travel_plan"}, {"kind":"transport","typeName":"BookingPdfPersonalizationScoped","isArray":false}),
-    schemaField({"name":"offer","required":false,"wireName":"offer"}, {"kind":"transport","typeName":"BookingPdfPersonalizationScoped","isArray":false})
-        ]
-      };
-
-      export function validateBookingPdfPersonalization(value) {
-        return validateShape(value, BOOKING_PDF_PERSONALIZATION_SCHEMA);
-      }
-
       export const BOOKING_PERSON_SCHEMA = {
         name: "BookingPerson",
         domain: "booking",
@@ -154,12 +117,12 @@ export const GENERATED_OFFER_CATEGORIES = Object.freeze([
     schemaField({"name":"hotel_room_smoker","required":false,"wireName":"hotel_room_smoker"}, SHARED_FIELD_DEFS.FIELD_8),
     schemaField({"name":"hotel_room_sharing_ok","required":false,"wireName":"hotel_room_sharing_ok"}, SHARED_FIELD_DEFS.FIELD_8),
     schemaField({"name":"date_of_birth","required":false,"wireName":"date_of_birth"}, SHARED_FIELD_DEFS.FIELD_7),
-    schemaField({"name":"gender","required":false,"wireName":"gender"}, SHARED_FIELD_DEFS.FIELD_137),
+    schemaField({"name":"gender","required":false,"wireName":"gender"}, SHARED_FIELD_DEFS.FIELD_12),
     schemaField({"name":"nationality","required":false,"wireName":"nationality"}, SHARED_FIELD_DEFS.FIELD_2),
-    schemaField({"name":"address","required":false,"wireName":"address"}, SHARED_FIELD_DEFS.FIELD_12),
-    schemaField({"name":"roles","required":false,"wireName":"roles"}, SHARED_FIELD_DEFS.FIELD_13),
-    schemaField({"name":"consents","required":false,"wireName":"consents"}, SHARED_FIELD_DEFS.FIELD_14),
-    schemaField({"name":"documents","required":false,"wireName":"documents"}, SHARED_FIELD_DEFS.FIELD_15),
+    schemaField({"name":"address","required":false,"wireName":"address"}, SHARED_FIELD_DEFS.FIELD_13),
+    schemaField({"name":"roles","required":false,"wireName":"roles"}, SHARED_FIELD_DEFS.FIELD_14),
+    schemaField({"name":"consents","required":false,"wireName":"consents"}, SHARED_FIELD_DEFS.FIELD_15),
+    schemaField({"name":"documents","required":false,"wireName":"documents"}, SHARED_FIELD_DEFS.FIELD_16),
     schemaField({"name":"notes","required":false,"wireName":"notes"}, SHARED_FIELD_DEFS.FIELD_1)
         ]
       };
@@ -175,7 +138,7 @@ export const GENERATED_OFFER_CATEGORIES = Object.freeze([
         sourceType: "openapi.components.schemas.BookingWebFormSubmission",
         requireOneOf: [],
         fields: [
-    schemaField({"name":"destinations","required":false,"wireName":"destinations"}, SHARED_FIELD_DEFS.FIELD_16),
+    schemaField({"name":"destinations","required":false,"wireName":"destinations"}, SHARED_FIELD_DEFS.FIELD_17),
     schemaField({"name":"travel_style","required":false,"wireName":"travel_style"}, SHARED_FIELD_DEFS.FIELD_10),
     schemaField({"name":"booking_name","required":false,"wireName":"booking_name"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"tour_id","required":false,"wireName":"tour_id"}, SHARED_FIELD_DEFS.FIELD_1),
@@ -187,15 +150,15 @@ export const GENERATED_OFFER_CATEGORIES = Object.freeze([
     schemaField({"name":"utm_medium","required":false,"wireName":"utm_medium"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"utm_campaign","required":false,"wireName":"utm_campaign"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"travel_month","required":false,"wireName":"travel_month"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"number_of_travelers","required":false,"wireName":"number_of_travelers"}, SHARED_FIELD_DEFS.FIELD_17),
-    schemaField({"name":"preferred_currency","required":false,"wireName":"preferred_currency"}, SHARED_FIELD_DEFS.FIELD_18),
-    schemaField({"name":"travel_duration_days_min","required":false,"wireName":"travel_duration_days_min"}, SHARED_FIELD_DEFS.FIELD_17),
-    schemaField({"name":"travel_duration_days_max","required":false,"wireName":"travel_duration_days_max"}, SHARED_FIELD_DEFS.FIELD_17),
+    schemaField({"name":"number_of_travelers","required":false,"wireName":"number_of_travelers"}, SHARED_FIELD_DEFS.FIELD_18),
+    schemaField({"name":"preferred_currency","required":false,"wireName":"preferred_currency"}, SHARED_FIELD_DEFS.FIELD_19),
+    schemaField({"name":"travel_duration_days_min","required":false,"wireName":"travel_duration_days_min"}, SHARED_FIELD_DEFS.FIELD_18),
+    schemaField({"name":"travel_duration_days_max","required":false,"wireName":"travel_duration_days_max"}, SHARED_FIELD_DEFS.FIELD_18),
     schemaField({"name":"name","required":false,"wireName":"name"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"email","required":false,"wireName":"email"}, SHARED_FIELD_DEFS.FIELD_19),
+    schemaField({"name":"email","required":false,"wireName":"email"}, SHARED_FIELD_DEFS.FIELD_20),
     schemaField({"name":"phone_number","required":false,"wireName":"phone_number"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"budget_lower_usd","required":false,"wireName":"budget_lower_usd"}, SHARED_FIELD_DEFS.FIELD_17),
-    schemaField({"name":"budget_upper_usd","required":false,"wireName":"budget_upper_usd"}, SHARED_FIELD_DEFS.FIELD_17),
+    schemaField({"name":"budget_lower_usd","required":false,"wireName":"budget_lower_usd"}, SHARED_FIELD_DEFS.FIELD_18),
+    schemaField({"name":"budget_upper_usd","required":false,"wireName":"budget_upper_usd"}, SHARED_FIELD_DEFS.FIELD_18),
     schemaField({"name":"preferred_language","required":false,"wireName":"preferred_language"}, SHARED_FIELD_DEFS.FIELD_11),
     schemaField({"name":"notes","required":false,"wireName":"notes"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"submitted_at","required":false,"wireName":"submitted_at"}, SHARED_FIELD_DEFS.FIELD_5)
@@ -215,7 +178,7 @@ export const GENERATED_OFFER_CATEGORIES = Object.freeze([
         fields: [
     schemaField({"name":"id","required":true,"wireName":"id"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"booking_id","required":true,"wireName":"booking_id"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"type","required":true,"wireName":"type"}, SHARED_FIELD_DEFS.FIELD_20),
+    schemaField({"name":"type","required":true,"wireName":"type"}, SHARED_FIELD_DEFS.FIELD_21),
     schemaField({"name":"actor","required":true,"wireName":"actor"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"detail","required":true,"wireName":"detail"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"created_at","required":true,"wireName":"created_at"}, SHARED_FIELD_DEFS.FIELD_5)
@@ -235,9 +198,9 @@ export const GENERATED_OFFER_CATEGORIES = Object.freeze([
         fields: [
     schemaField({"name":"id","required":false,"wireName":"id"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"description","required":true,"wireName":"description"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"quantity","required":true,"wireName":"quantity"}, SHARED_FIELD_DEFS.FIELD_17),
-    schemaField({"name":"unit_amount_cents","required":true,"wireName":"unit_amount_cents"}, SHARED_FIELD_DEFS.FIELD_21),
-    schemaField({"name":"total_amount_cents","required":false,"wireName":"total_amount_cents"}, SHARED_FIELD_DEFS.FIELD_21)
+    schemaField({"name":"quantity","required":true,"wireName":"quantity"}, SHARED_FIELD_DEFS.FIELD_18),
+    schemaField({"name":"unit_amount_cents","required":true,"wireName":"unit_amount_cents"}, SHARED_FIELD_DEFS.FIELD_22),
+    schemaField({"name":"total_amount_cents","required":false,"wireName":"total_amount_cents"}, SHARED_FIELD_DEFS.FIELD_22)
         ]
       };
 
@@ -255,18 +218,18 @@ export const GENERATED_OFFER_CATEGORIES = Object.freeze([
     schemaField({"name":"id","required":true,"wireName":"id"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"booking_id","required":false,"wireName":"booking_id"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"invoice_number","required":false,"wireName":"invoice_number"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"version","required":false,"wireName":"version"}, SHARED_FIELD_DEFS.FIELD_17),
+    schemaField({"name":"version","required":false,"wireName":"version"}, SHARED_FIELD_DEFS.FIELD_18),
     schemaField({"name":"status","required":false,"wireName":"status"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"currency","required":true,"wireName":"currency"}, SHARED_FIELD_DEFS.FIELD_18),
+    schemaField({"name":"currency","required":true,"wireName":"currency"}, SHARED_FIELD_DEFS.FIELD_19),
     schemaField({"name":"issue_date","required":false,"wireName":"issue_date"}, SHARED_FIELD_DEFS.FIELD_7),
     schemaField({"name":"due_date","required":false,"wireName":"due_date"}, SHARED_FIELD_DEFS.FIELD_7),
     schemaField({"name":"title","required":false,"wireName":"title"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"components","required":false,"wireName":"components"}, SHARED_FIELD_DEFS.FIELD_22),
+    schemaField({"name":"components","required":false,"wireName":"components"}, SHARED_FIELD_DEFS.FIELD_23),
     schemaField({"name":"notes","required":false,"wireName":"notes"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"sent_to_recipient","required":false,"wireName":"sent_to_recipient"}, SHARED_FIELD_DEFS.FIELD_8),
     schemaField({"name":"sent_to_recipient_at","required":false,"wireName":"sent_to_recipient_at"}, SHARED_FIELD_DEFS.FIELD_5),
-    schemaField({"name":"total_amount_cents","required":false,"wireName":"total_amount_cents"}, SHARED_FIELD_DEFS.FIELD_21),
-    schemaField({"name":"due_amount_cents","required":false,"wireName":"due_amount_cents"}, SHARED_FIELD_DEFS.FIELD_21),
+    schemaField({"name":"total_amount_cents","required":false,"wireName":"total_amount_cents"}, SHARED_FIELD_DEFS.FIELD_22),
+    schemaField({"name":"due_amount_cents","required":false,"wireName":"due_amount_cents"}, SHARED_FIELD_DEFS.FIELD_22),
     schemaField({"name":"created_at","required":false,"wireName":"created_at"}, SHARED_FIELD_DEFS.FIELD_5),
     schemaField({"name":"updated_at","required":false,"wireName":"updated_at"}, SHARED_FIELD_DEFS.FIELD_5),
     schemaField({"name":"pdf_url","required":false,"wireName":"pdf_url"}, SHARED_FIELD_DEFS.FIELD_1)
@@ -285,9 +248,9 @@ export const GENERATED_OFFER_CATEGORIES = Object.freeze([
         requireOneOf: [],
         fields: [
     schemaField({"name":"id","required":true,"wireName":"id"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"type","required":true,"wireName":"type"}, SHARED_FIELD_DEFS.FIELD_23),
+    schemaField({"name":"type","required":true,"wireName":"type"}, SHARED_FIELD_DEFS.FIELD_24),
     schemaField({"name":"label","required":true,"wireName":"label"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"amount_cents","required":true,"wireName":"amount_cents"}, SHARED_FIELD_DEFS.FIELD_21),
+    schemaField({"name":"amount_cents","required":true,"wireName":"amount_cents"}, SHARED_FIELD_DEFS.FIELD_22),
     schemaField({"name":"note","required":false,"wireName":"note"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"created_at","required":false,"wireName":"created_at"}, SHARED_FIELD_DEFS.FIELD_5),
     schemaField({"name":"updated_at","required":false,"wireName":"updated_at"}, SHARED_FIELD_DEFS.FIELD_5)
@@ -307,14 +270,14 @@ export const GENERATED_OFFER_CATEGORIES = Object.freeze([
         fields: [
     schemaField({"name":"id","required":true,"wireName":"id"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"label","required":true,"wireName":"label"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"status","required":true,"wireName":"status"}, SHARED_FIELD_DEFS.FIELD_24),
-    schemaField({"name":"net_amount_cents","required":true,"wireName":"net_amount_cents"}, SHARED_FIELD_DEFS.FIELD_21),
-    schemaField({"name":"tax_rate_basis_points","required":true,"wireName":"tax_rate_basis_points"}, SHARED_FIELD_DEFS.FIELD_17),
+    schemaField({"name":"status","required":true,"wireName":"status"}, SHARED_FIELD_DEFS.FIELD_25),
+    schemaField({"name":"net_amount_cents","required":true,"wireName":"net_amount_cents"}, SHARED_FIELD_DEFS.FIELD_22),
+    schemaField({"name":"tax_rate_basis_points","required":true,"wireName":"tax_rate_basis_points"}, SHARED_FIELD_DEFS.FIELD_18),
     schemaField({"name":"due_date","required":false,"wireName":"due_date"}, SHARED_FIELD_DEFS.FIELD_7),
     schemaField({"name":"paid_at","required":false,"wireName":"paid_at"}, SHARED_FIELD_DEFS.FIELD_5),
     schemaField({"name":"notes","required":false,"wireName":"notes"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"tax_amount_cents","required":false,"wireName":"tax_amount_cents"}, SHARED_FIELD_DEFS.FIELD_21),
-    schemaField({"name":"gross_amount_cents","required":false,"wireName":"gross_amount_cents"}, SHARED_FIELD_DEFS.FIELD_21),
+    schemaField({"name":"tax_amount_cents","required":false,"wireName":"tax_amount_cents"}, SHARED_FIELD_DEFS.FIELD_22),
+    schemaField({"name":"gross_amount_cents","required":false,"wireName":"gross_amount_cents"}, SHARED_FIELD_DEFS.FIELD_22),
     schemaField({"name":"origin_generated_offer_id","required":false,"wireName":"origin_generated_offer_id"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"origin_payment_term_line_id","required":false,"wireName":"origin_payment_term_line_id"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"created_at","required":false,"wireName":"created_at"}, SHARED_FIELD_DEFS.FIELD_5),
@@ -333,15 +296,15 @@ export const GENERATED_OFFER_CATEGORIES = Object.freeze([
         sourceType: "openapi.components.schemas.BookingPricingSummary",
         requireOneOf: [],
         fields: [
-    schemaField({"name":"agreed_net_amount_cents","required":true,"wireName":"agreed_net_amount_cents"}, SHARED_FIELD_DEFS.FIELD_21),
-    schemaField({"name":"adjustments_delta_cents","required":true,"wireName":"adjustments_delta_cents"}, SHARED_FIELD_DEFS.FIELD_21),
-    schemaField({"name":"adjusted_net_amount_cents","required":true,"wireName":"adjusted_net_amount_cents"}, SHARED_FIELD_DEFS.FIELD_21),
-    schemaField({"name":"scheduled_net_amount_cents","required":true,"wireName":"scheduled_net_amount_cents"}, SHARED_FIELD_DEFS.FIELD_21),
-    schemaField({"name":"unscheduled_net_amount_cents","required":true,"wireName":"unscheduled_net_amount_cents"}, SHARED_FIELD_DEFS.FIELD_21),
-    schemaField({"name":"scheduled_tax_amount_cents","required":true,"wireName":"scheduled_tax_amount_cents"}, SHARED_FIELD_DEFS.FIELD_21),
-    schemaField({"name":"scheduled_gross_amount_cents","required":true,"wireName":"scheduled_gross_amount_cents"}, SHARED_FIELD_DEFS.FIELD_21),
-    schemaField({"name":"paid_gross_amount_cents","required":true,"wireName":"paid_gross_amount_cents"}, SHARED_FIELD_DEFS.FIELD_21),
-    schemaField({"name":"outstanding_gross_amount_cents","required":true,"wireName":"outstanding_gross_amount_cents"}, SHARED_FIELD_DEFS.FIELD_21),
+    schemaField({"name":"agreed_net_amount_cents","required":true,"wireName":"agreed_net_amount_cents"}, SHARED_FIELD_DEFS.FIELD_22),
+    schemaField({"name":"adjustments_delta_cents","required":true,"wireName":"adjustments_delta_cents"}, SHARED_FIELD_DEFS.FIELD_22),
+    schemaField({"name":"adjusted_net_amount_cents","required":true,"wireName":"adjusted_net_amount_cents"}, SHARED_FIELD_DEFS.FIELD_22),
+    schemaField({"name":"scheduled_net_amount_cents","required":true,"wireName":"scheduled_net_amount_cents"}, SHARED_FIELD_DEFS.FIELD_22),
+    schemaField({"name":"unscheduled_net_amount_cents","required":true,"wireName":"unscheduled_net_amount_cents"}, SHARED_FIELD_DEFS.FIELD_22),
+    schemaField({"name":"scheduled_tax_amount_cents","required":true,"wireName":"scheduled_tax_amount_cents"}, SHARED_FIELD_DEFS.FIELD_22),
+    schemaField({"name":"scheduled_gross_amount_cents","required":true,"wireName":"scheduled_gross_amount_cents"}, SHARED_FIELD_DEFS.FIELD_22),
+    schemaField({"name":"paid_gross_amount_cents","required":true,"wireName":"paid_gross_amount_cents"}, SHARED_FIELD_DEFS.FIELD_22),
+    schemaField({"name":"outstanding_gross_amount_cents","required":true,"wireName":"outstanding_gross_amount_cents"}, SHARED_FIELD_DEFS.FIELD_22),
     schemaField({"name":"is_schedule_balanced","required":true,"wireName":"is_schedule_balanced"}, SHARED_FIELD_DEFS.FIELD_8)
         ]
       };
@@ -357,11 +320,11 @@ export const GENERATED_OFFER_CATEGORIES = Object.freeze([
         sourceType: "openapi.components.schemas.BookingPricing",
         requireOneOf: [],
         fields: [
-    schemaField({"name":"currency","required":true,"wireName":"currency"}, SHARED_FIELD_DEFS.FIELD_18),
-    schemaField({"name":"agreed_net_amount_cents","required":true,"wireName":"agreed_net_amount_cents"}, SHARED_FIELD_DEFS.FIELD_21),
-    schemaField({"name":"adjustments","required":false,"wireName":"adjustments"}, SHARED_FIELD_DEFS.FIELD_25),
-    schemaField({"name":"payments","required":false,"wireName":"payments"}, SHARED_FIELD_DEFS.FIELD_26),
-    schemaField({"name":"summary","required":true,"wireName":"summary"}, SHARED_FIELD_DEFS.FIELD_27)
+    schemaField({"name":"currency","required":true,"wireName":"currency"}, SHARED_FIELD_DEFS.FIELD_19),
+    schemaField({"name":"agreed_net_amount_cents","required":true,"wireName":"agreed_net_amount_cents"}, SHARED_FIELD_DEFS.FIELD_22),
+    schemaField({"name":"adjustments","required":false,"wireName":"adjustments"}, SHARED_FIELD_DEFS.FIELD_26),
+    schemaField({"name":"payments","required":false,"wireName":"payments"}, SHARED_FIELD_DEFS.FIELD_27),
+    schemaField({"name":"summary","required":true,"wireName":"summary"}, SHARED_FIELD_DEFS.FIELD_28)
         ]
       };
 
@@ -376,8 +339,8 @@ export const GENERATED_OFFER_CATEGORIES = Object.freeze([
         sourceType: "openapi.components.schemas.BookingOfferCategoryRule",
         requireOneOf: [],
         fields: [
-    schemaField({"name":"category","required":true,"wireName":"category"}, SHARED_FIELD_DEFS.FIELD_28),
-    schemaField({"name":"tax_rate_basis_points","required":true,"wireName":"tax_rate_basis_points"}, SHARED_FIELD_DEFS.FIELD_17)
+    schemaField({"name":"category","required":true,"wireName":"category"}, SHARED_FIELD_DEFS.FIELD_29),
+    schemaField({"name":"tax_rate_basis_points","required":true,"wireName":"tax_rate_basis_points"}, SHARED_FIELD_DEFS.FIELD_18)
         ]
       };
 
@@ -393,21 +356,21 @@ export const GENERATED_OFFER_CATEGORIES = Object.freeze([
         requireOneOf: [],
         fields: [
     schemaField({"name":"id","required":true,"wireName":"id"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"category","required":true,"wireName":"category"}, SHARED_FIELD_DEFS.FIELD_28),
+    schemaField({"name":"category","required":true,"wireName":"category"}, SHARED_FIELD_DEFS.FIELD_29),
     schemaField({"name":"label","required":true,"wireName":"label"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"details","required":false,"wireName":"details"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"quantity","required":true,"wireName":"quantity"}, SHARED_FIELD_DEFS.FIELD_17),
-    schemaField({"name":"unit_amount_cents","required":true,"wireName":"unit_amount_cents"}, SHARED_FIELD_DEFS.FIELD_21),
-    schemaField({"name":"unit_tax_amount_cents","required":false,"wireName":"unit_tax_amount_cents"}, SHARED_FIELD_DEFS.FIELD_21),
-    schemaField({"name":"unit_total_amount_cents","required":false,"wireName":"unit_total_amount_cents"}, SHARED_FIELD_DEFS.FIELD_21),
-    schemaField({"name":"tax_rate_basis_points","required":true,"wireName":"tax_rate_basis_points"}, SHARED_FIELD_DEFS.FIELD_17),
-    schemaField({"name":"currency","required":true,"wireName":"currency"}, SHARED_FIELD_DEFS.FIELD_18),
-    schemaField({"name":"line_net_amount_cents","required":false,"wireName":"line_net_amount_cents"}, SHARED_FIELD_DEFS.FIELD_21),
-    schemaField({"name":"line_tax_amount_cents","required":false,"wireName":"line_tax_amount_cents"}, SHARED_FIELD_DEFS.FIELD_21),
-    schemaField({"name":"line_gross_amount_cents","required":false,"wireName":"line_gross_amount_cents"}, SHARED_FIELD_DEFS.FIELD_21),
-    schemaField({"name":"line_total_amount_cents","required":false,"wireName":"line_total_amount_cents"}, SHARED_FIELD_DEFS.FIELD_17),
+    schemaField({"name":"quantity","required":true,"wireName":"quantity"}, SHARED_FIELD_DEFS.FIELD_18),
+    schemaField({"name":"unit_amount_cents","required":true,"wireName":"unit_amount_cents"}, SHARED_FIELD_DEFS.FIELD_22),
+    schemaField({"name":"unit_tax_amount_cents","required":false,"wireName":"unit_tax_amount_cents"}, SHARED_FIELD_DEFS.FIELD_22),
+    schemaField({"name":"unit_total_amount_cents","required":false,"wireName":"unit_total_amount_cents"}, SHARED_FIELD_DEFS.FIELD_22),
+    schemaField({"name":"tax_rate_basis_points","required":true,"wireName":"tax_rate_basis_points"}, SHARED_FIELD_DEFS.FIELD_18),
+    schemaField({"name":"currency","required":true,"wireName":"currency"}, SHARED_FIELD_DEFS.FIELD_19),
+    schemaField({"name":"line_net_amount_cents","required":false,"wireName":"line_net_amount_cents"}, SHARED_FIELD_DEFS.FIELD_22),
+    schemaField({"name":"line_tax_amount_cents","required":false,"wireName":"line_tax_amount_cents"}, SHARED_FIELD_DEFS.FIELD_22),
+    schemaField({"name":"line_gross_amount_cents","required":false,"wireName":"line_gross_amount_cents"}, SHARED_FIELD_DEFS.FIELD_22),
+    schemaField({"name":"line_total_amount_cents","required":false,"wireName":"line_total_amount_cents"}, SHARED_FIELD_DEFS.FIELD_18),
     schemaField({"name":"notes","required":false,"wireName":"notes"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"sort_order","required":false,"wireName":"sort_order"}, SHARED_FIELD_DEFS.FIELD_17),
+    schemaField({"name":"sort_order","required":false,"wireName":"sort_order"}, SHARED_FIELD_DEFS.FIELD_18),
     schemaField({"name":"created_at","required":false,"wireName":"created_at"}, SHARED_FIELD_DEFS.FIELD_5),
     schemaField({"name":"updated_at","required":false,"wireName":"updated_at"}, SHARED_FIELD_DEFS.FIELD_5)
         ]
@@ -424,11 +387,11 @@ export const GENERATED_OFFER_CATEGORIES = Object.freeze([
         sourceType: "openapi.components.schemas.BookingOfferTotals",
         requireOneOf: [],
         fields: [
-    schemaField({"name":"net_amount_cents","required":true,"wireName":"net_amount_cents"}, SHARED_FIELD_DEFS.FIELD_21),
-    schemaField({"name":"tax_amount_cents","required":true,"wireName":"tax_amount_cents"}, SHARED_FIELD_DEFS.FIELD_21),
-    schemaField({"name":"gross_amount_cents","required":true,"wireName":"gross_amount_cents"}, SHARED_FIELD_DEFS.FIELD_21),
-    schemaField({"name":"total_price_cents","required":true,"wireName":"total_price_cents"}, SHARED_FIELD_DEFS.FIELD_21),
-    schemaField({"name":"items_count","required":true,"wireName":"items_count"}, SHARED_FIELD_DEFS.FIELD_17)
+    schemaField({"name":"net_amount_cents","required":true,"wireName":"net_amount_cents"}, SHARED_FIELD_DEFS.FIELD_22),
+    schemaField({"name":"tax_amount_cents","required":true,"wireName":"tax_amount_cents"}, SHARED_FIELD_DEFS.FIELD_22),
+    schemaField({"name":"gross_amount_cents","required":true,"wireName":"gross_amount_cents"}, SHARED_FIELD_DEFS.FIELD_22),
+    schemaField({"name":"total_price_cents","required":true,"wireName":"total_price_cents"}, SHARED_FIELD_DEFS.FIELD_22),
+    schemaField({"name":"items_count","required":true,"wireName":"items_count"}, SHARED_FIELD_DEFS.FIELD_18)
         ]
       };
 
@@ -444,19 +407,19 @@ export const GENERATED_OFFER_CATEGORIES = Object.freeze([
         requireOneOf: [],
         fields: [
     schemaField({"name":"status","required":false,"wireName":"status"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"currency","required":true,"wireName":"currency"}, SHARED_FIELD_DEFS.FIELD_18),
-    schemaField({"name":"offer_detail_level_internal","required":true,"wireName":"offer_detail_level_internal"}, SHARED_FIELD_DEFS.FIELD_29),
-    schemaField({"name":"offer_detail_level_visible","required":true,"wireName":"offer_detail_level_visible"}, SHARED_FIELD_DEFS.FIELD_29),
-    schemaField({"name":"category_rules","required":false,"wireName":"category_rules"}, SHARED_FIELD_DEFS.FIELD_30),
-    schemaField({"name":"components","required":false,"wireName":"components"}, SHARED_FIELD_DEFS.FIELD_31),
-    schemaField({"name":"trip_price_internal","required":false,"wireName":"trip_price_internal"}, SHARED_FIELD_DEFS.FIELD_32),
-    schemaField({"name":"days_internal","required":false,"wireName":"days_internal"}, SHARED_FIELD_DEFS.FIELD_33),
-    schemaField({"name":"additional_items","required":false,"wireName":"additional_items"}, SHARED_FIELD_DEFS.FIELD_34),
-    schemaField({"name":"discount","required":false,"wireName":"discount"}, SHARED_FIELD_DEFS.FIELD_35),
-    schemaField({"name":"totals","required":true,"wireName":"totals"}, SHARED_FIELD_DEFS.FIELD_36),
-    schemaField({"name":"quotation_summary","required":false,"wireName":"quotation_summary"}, SHARED_FIELD_DEFS.FIELD_37),
-    schemaField({"name":"payment_terms","required":false,"wireName":"payment_terms"}, SHARED_FIELD_DEFS.FIELD_38),
-    schemaField({"name":"total_price_cents","required":true,"wireName":"total_price_cents"}, SHARED_FIELD_DEFS.FIELD_17)
+    schemaField({"name":"currency","required":true,"wireName":"currency"}, SHARED_FIELD_DEFS.FIELD_19),
+    schemaField({"name":"offer_detail_level_internal","required":true,"wireName":"offer_detail_level_internal"}, SHARED_FIELD_DEFS.FIELD_30),
+    schemaField({"name":"offer_detail_level_visible","required":true,"wireName":"offer_detail_level_visible"}, SHARED_FIELD_DEFS.FIELD_30),
+    schemaField({"name":"category_rules","required":false,"wireName":"category_rules"}, SHARED_FIELD_DEFS.FIELD_31),
+    schemaField({"name":"components","required":false,"wireName":"components"}, SHARED_FIELD_DEFS.FIELD_32),
+    schemaField({"name":"trip_price_internal","required":false,"wireName":"trip_price_internal"}, SHARED_FIELD_DEFS.FIELD_33),
+    schemaField({"name":"days_internal","required":false,"wireName":"days_internal"}, SHARED_FIELD_DEFS.FIELD_34),
+    schemaField({"name":"additional_items","required":false,"wireName":"additional_items"}, SHARED_FIELD_DEFS.FIELD_35),
+    schemaField({"name":"discount","required":false,"wireName":"discount"}, SHARED_FIELD_DEFS.FIELD_36),
+    schemaField({"name":"totals","required":true,"wireName":"totals"}, SHARED_FIELD_DEFS.FIELD_37),
+    schemaField({"name":"quotation_summary","required":false,"wireName":"quotation_summary"}, SHARED_FIELD_DEFS.FIELD_38),
+    schemaField({"name":"payment_terms","required":false,"wireName":"payment_terms"}, SHARED_FIELD_DEFS.FIELD_39),
+    schemaField({"name":"total_price_cents","required":true,"wireName":"total_price_cents"}, SHARED_FIELD_DEFS.FIELD_18)
         ]
       };
 
@@ -474,40 +437,39 @@ export const GENERATED_OFFER_CATEGORIES = Object.freeze([
     schemaField({"name":"id","required":true,"wireName":"id"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"name","required":false,"wireName":"name"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"image","required":false,"wireName":"image"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"stage","required":true,"wireName":"stage"}, SHARED_FIELD_DEFS.FIELD_39),
-    schemaField({"name":"milestones","required":false,"wireName":"milestones"}, SHARED_FIELD_DEFS.FIELD_40),
-    schemaField({"name":"last_action","required":false,"wireName":"last_action"}, SHARED_FIELD_DEFS.FIELD_41),
+    schemaField({"name":"stage","required":true,"wireName":"stage"}, SHARED_FIELD_DEFS.FIELD_40),
+    schemaField({"name":"milestones","required":false,"wireName":"milestones"}, SHARED_FIELD_DEFS.FIELD_41),
+    schemaField({"name":"last_action","required":false,"wireName":"last_action"}, SHARED_FIELD_DEFS.FIELD_42),
     schemaField({"name":"last_action_at","required":false,"wireName":"last_action_at"}, SHARED_FIELD_DEFS.FIELD_5),
     schemaField({"name":"assigned_keycloak_user_id","required":false,"wireName":"assigned_keycloak_user_id"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"source_channel","required":false,"wireName":"source_channel"}, SHARED_FIELD_DEFS.FIELD_42),
-    schemaField({"name":"referral_kind","required":false,"wireName":"referral_kind"}, SHARED_FIELD_DEFS.FIELD_43),
+    schemaField({"name":"source_channel","required":false,"wireName":"source_channel"}, SHARED_FIELD_DEFS.FIELD_43),
+    schemaField({"name":"referral_kind","required":false,"wireName":"referral_kind"}, SHARED_FIELD_DEFS.FIELD_44),
     schemaField({"name":"referral_label","required":false,"wireName":"referral_label"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"referral_staff_user_id","required":false,"wireName":"referral_staff_user_id"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"assigned_keycloak_user_label","required":false,"wireName":"assigned_keycloak_user_label"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"core_revision","required":false,"wireName":"core_revision"}, SHARED_FIELD_DEFS.FIELD_17),
-    schemaField({"name":"notes_revision","required":false,"wireName":"notes_revision"}, SHARED_FIELD_DEFS.FIELD_17),
-    schemaField({"name":"persons_revision","required":false,"wireName":"persons_revision"}, SHARED_FIELD_DEFS.FIELD_17),
-    schemaField({"name":"travel_plan_revision","required":false,"wireName":"travel_plan_revision"}, SHARED_FIELD_DEFS.FIELD_17),
-    schemaField({"name":"pricing_revision","required":false,"wireName":"pricing_revision"}, SHARED_FIELD_DEFS.FIELD_17),
-    schemaField({"name":"offer_revision","required":false,"wireName":"offer_revision"}, SHARED_FIELD_DEFS.FIELD_17),
-    schemaField({"name":"invoices_revision","required":false,"wireName":"invoices_revision"}, SHARED_FIELD_DEFS.FIELD_17),
+    schemaField({"name":"core_revision","required":false,"wireName":"core_revision"}, SHARED_FIELD_DEFS.FIELD_18),
+    schemaField({"name":"notes_revision","required":false,"wireName":"notes_revision"}, SHARED_FIELD_DEFS.FIELD_18),
+    schemaField({"name":"persons_revision","required":false,"wireName":"persons_revision"}, SHARED_FIELD_DEFS.FIELD_18),
+    schemaField({"name":"travel_plan_revision","required":false,"wireName":"travel_plan_revision"}, SHARED_FIELD_DEFS.FIELD_18),
+    schemaField({"name":"pricing_revision","required":false,"wireName":"pricing_revision"}, SHARED_FIELD_DEFS.FIELD_18),
+    schemaField({"name":"offer_revision","required":false,"wireName":"offer_revision"}, SHARED_FIELD_DEFS.FIELD_18),
+    schemaField({"name":"invoices_revision","required":false,"wireName":"invoices_revision"}, SHARED_FIELD_DEFS.FIELD_18),
     schemaField({"name":"service_level_agreement_due_at","required":false,"wireName":"service_level_agreement_due_at"}, SHARED_FIELD_DEFS.FIELD_5),
-    schemaField({"name":"destinations","required":false,"wireName":"destinations"}, SHARED_FIELD_DEFS.FIELD_16),
+    schemaField({"name":"destinations","required":false,"wireName":"destinations"}, SHARED_FIELD_DEFS.FIELD_17),
     schemaField({"name":"travel_styles","required":false,"wireName":"travel_styles"}, SHARED_FIELD_DEFS.FIELD_10),
-    schemaField({"name":"pdf_personalization","required":false,"wireName":"pdf_personalization"}, {"kind":"transport","typeName":"BookingPdfPersonalization","isArray":false}),
     schemaField({"name":"travel_start_day","required":false,"wireName":"travel_start_day"}, SHARED_FIELD_DEFS.FIELD_7),
     schemaField({"name":"travel_end_day","required":false,"wireName":"travel_end_day"}, SHARED_FIELD_DEFS.FIELD_7),
-    schemaField({"name":"number_of_travelers","required":false,"wireName":"number_of_travelers"}, SHARED_FIELD_DEFS.FIELD_17),
-    schemaField({"name":"preferred_currency","required":false,"wireName":"preferred_currency"}, SHARED_FIELD_DEFS.FIELD_18),
+    schemaField({"name":"number_of_travelers","required":false,"wireName":"number_of_travelers"}, SHARED_FIELD_DEFS.FIELD_18),
+    schemaField({"name":"preferred_currency","required":false,"wireName":"preferred_currency"}, SHARED_FIELD_DEFS.FIELD_19),
     schemaField({"name":"customer_language","required":false,"wireName":"customer_language"}, SHARED_FIELD_DEFS.FIELD_11),
     schemaField({"name":"confirmed_generated_offer_id","required":false,"wireName":"confirmed_generated_offer_id"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"notes","required":false,"wireName":"notes"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"persons","required":false,"wireName":"persons"}, SHARED_FIELD_DEFS.FIELD_44),
-    schemaField({"name":"travel_plan","required":false,"wireName":"travel_plan"}, SHARED_FIELD_DEFS.FIELD_45),
-    schemaField({"name":"web_form_submission","required":false,"wireName":"web_form_submission"}, SHARED_FIELD_DEFS.FIELD_46),
-    schemaField({"name":"pricing","required":true,"wireName":"pricing"}, SHARED_FIELD_DEFS.FIELD_47),
-    schemaField({"name":"offer","required":true,"wireName":"offer"}, SHARED_FIELD_DEFS.FIELD_48),
-    schemaField({"name":"generated_offers","required":false,"wireName":"generated_offers"}, SHARED_FIELD_DEFS.FIELD_49),
+    schemaField({"name":"persons","required":false,"wireName":"persons"}, SHARED_FIELD_DEFS.FIELD_45),
+    schemaField({"name":"travel_plan","required":false,"wireName":"travel_plan"}, SHARED_FIELD_DEFS.FIELD_46),
+    schemaField({"name":"web_form_submission","required":false,"wireName":"web_form_submission"}, SHARED_FIELD_DEFS.FIELD_47),
+    schemaField({"name":"pricing","required":true,"wireName":"pricing"}, SHARED_FIELD_DEFS.FIELD_48),
+    schemaField({"name":"offer","required":true,"wireName":"offer"}, SHARED_FIELD_DEFS.FIELD_49),
+    schemaField({"name":"generated_offers","required":false,"wireName":"generated_offers"}, SHARED_FIELD_DEFS.FIELD_50),
     schemaField({"name":"created_at","required":true,"wireName":"created_at"}, SHARED_FIELD_DEFS.FIELD_5),
     schemaField({"name":"updated_at","required":true,"wireName":"updated_at"}, SHARED_FIELD_DEFS.FIELD_5)
         ]
@@ -516,3 +478,4 @@ export const GENERATED_OFFER_CATEGORIES = Object.freeze([
       export function validateBooking(value) {
         return validateShape(value, BOOKING_SCHEMA);
       }
+

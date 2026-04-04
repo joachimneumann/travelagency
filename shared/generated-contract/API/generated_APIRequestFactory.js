@@ -233,6 +233,23 @@ export function bookingsRequest({ baseURL = '', params = {}, query = {}, body, h
   };
 }
 
+export function bookingCreatePath(params = {}) {
+  return buildPath("/api/v1/bookings", params);
+}
+
+export function bookingCreateRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = bookingCreatePath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "booking_create",
+    method: "POST",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
 export function bookingDetailPath(params = {}) {
   return buildPath("/api/v1/bookings/{booking_id}", params);
 }
@@ -260,6 +277,23 @@ export function bookingDeleteRequest({ baseURL = '', params = {}, query = {}, bo
   return {
     key: "booking_delete",
     method: "DELETE",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function bookingClonePath(params = {}) {
+  return buildPath("/api/v1/bookings/{booking_id}/clone", params);
+}
+
+export function bookingCloneRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = bookingClonePath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "booking_clone",
+    method: "POST",
     authenticated: true,
     url,
     headers,
@@ -650,6 +684,108 @@ export function bookingTravelPlanImportRequest({ baseURL = '', params = {}, quer
   const url = buildURL(baseURL, path, query);
   return {
     key: "booking_travel_plan_import",
+    method: "POST",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function travelPlanTemplatesPath(params = {}) {
+  return buildPath("/api/v1/travel-plan-templates", params);
+}
+
+export function travelPlanTemplatesRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = travelPlanTemplatesPath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "travel_plan_templates",
+    method: "GET",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function travelPlanTemplateCreatePath(params = {}) {
+  return buildPath("/api/v1/travel-plan-templates", params);
+}
+
+export function travelPlanTemplateCreateRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = travelPlanTemplateCreatePath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "travel_plan_template_create",
+    method: "POST",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function travelPlanTemplateDetailPath(params = {}) {
+  return buildPath("/api/v1/travel-plan-templates/{template_id}", params);
+}
+
+export function travelPlanTemplateDetailRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = travelPlanTemplateDetailPath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "travel_plan_template_detail",
+    method: "GET",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function travelPlanTemplateUpdatePath(params = {}) {
+  return buildPath("/api/v1/travel-plan-templates/{template_id}", params);
+}
+
+export function travelPlanTemplateUpdateRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = travelPlanTemplateUpdatePath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "travel_plan_template_update",
+    method: "PATCH",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function travelPlanTemplateDeletePath(params = {}) {
+  return buildPath("/api/v1/travel-plan-templates/{template_id}", params);
+}
+
+export function travelPlanTemplateDeleteRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = travelPlanTemplateDeletePath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "travel_plan_template_delete",
+    method: "DELETE",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function bookingTravelPlanTemplateApplyPath(params = {}) {
+  return buildPath("/api/v1/bookings/{booking_id}/travel-plan/templates/{template_id}/apply", params);
+}
+
+export function bookingTravelPlanTemplateApplyRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = bookingTravelPlanTemplateApplyPath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "booking_travel_plan_template_apply",
     method: "POST",
     authenticated: true,
     url,
@@ -1405,3 +1541,4 @@ export function tourImageRequest({ baseURL = '', params = {}, query = {}, body, 
     body
   };
 }
+

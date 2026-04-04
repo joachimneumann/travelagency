@@ -1,4 +1,4 @@
-import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { normalizeText } from "./text.js";
 import { normalizeStoredBookingRecord } from "./booking_persons.js";
@@ -6,6 +6,7 @@ import { normalizeStoredBookingRecord } from "./booking_persons.js";
 export function createStoreUtils({
   dataPath,
   toursDir,
+  travelPlanTemplatesDir,
   invoicesDir,
   generatedOffersDir,
   travelPlanPdfsDir,
@@ -26,6 +27,7 @@ export function createStoreUtils({
   async function ensureStorage() {
     await mkdir(path.dirname(dataPath), { recursive: true });
     await mkdir(toursDir, { recursive: true });
+    await mkdir(travelPlanTemplatesDir, { recursive: true });
     await mkdir(invoicesDir, { recursive: true });
     await mkdir(generatedOffersDir, { recursive: true });
     if (travelPlanPdfsDir) {
@@ -123,6 +125,14 @@ export function createStoreUtils({
     return path.join(tourFolderPath(tourId), "tour.json");
   }
 
+  function travelPlanTemplateFolderPath(templateId) {
+    return path.join(travelPlanTemplatesDir, templateId);
+  }
+
+  function travelPlanTemplateJsonPath(templateId) {
+    return path.join(travelPlanTemplateFolderPath(templateId), "template.json");
+  }
+
   async function readTours() {
     const items = [];
     const entries = await readdir(toursDir, { withFileTypes: true }).catch(() => []);
@@ -152,11 +162,52 @@ export function createStoreUtils({
     await writeQueueRef.current;
   }
 
+  async function readTravelPlanTemplates() {
+    const items = [];
+    const entries = await readdir(travelPlanTemplatesDir, { withFileTypes: true }).catch(() => []);
+    for (const entry of entries) {
+      if (!entry.isDirectory()) continue;
+      const templatePath = path.join(travelPlanTemplatesDir, entry.name, "template.json");
+      try {
+        const raw = await readFile(templatePath, "utf8");
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === "object" && normalizeText(parsed.id)) {
+          items.push(parsed);
+        }
+      } catch {
+        // Ignore unreadable template folders.
+      }
+    }
+    return items;
+  }
+
+  async function persistTravelPlanTemplate(template) {
+    writeQueueRef.current = writeQueueRef.current.then(async () => {
+      const id = normalizeText(template?.id);
+      if (!id) throw new Error("Travel plan template id is required");
+      await mkdir(travelPlanTemplateFolderPath(id), { recursive: true });
+      await writeFile(travelPlanTemplateJsonPath(id), `${JSON.stringify(template, null, 2)}\n`, "utf8");
+    });
+    await writeQueueRef.current;
+  }
+
+  async function deleteTravelPlanTemplate(templateId) {
+    writeQueueRef.current = writeQueueRef.current.then(async () => {
+      const id = normalizeText(templateId);
+      if (!id) throw new Error("Travel plan template id is required");
+      await rm(travelPlanTemplateFolderPath(id), { recursive: true, force: true });
+    });
+    await writeQueueRef.current;
+  }
+
   return {
     ensureStorage,
     readStore,
     persistStore,
     readTours,
-    persistTour
+    persistTour,
+    readTravelPlanTemplates,
+    persistTravelPlanTemplate,
+    deleteTravelPlanTemplate
   };
 }

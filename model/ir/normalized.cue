@@ -62,6 +62,7 @@ IR: {
 		GeneratedOfferCustomerConfirmationFlowMode: {catalog: "generatedOfferCustomerConfirmationFlowModes"}
 		GeneratedOfferCustomerConfirmationFlowStatus: {catalog: "generatedOfferCustomerConfirmationFlowStatuses"}
 		BookingConfirmationMethod: {catalog: "bookingConfirmationMethods"}
+		TravelPlanTemplateStatus: {catalog: "travelPlanTemplateStatuses"}
 		TourStyleCode: {catalog: "tourStyles"}
 		CountryCode: {catalog: "countries"}
 		TimezoneCode: {catalog: "timezones"}
@@ -137,6 +138,25 @@ IR: {
 				{name: "short_description", kind: "scalar", typeName: "string", required: false},
 				{name: "highlights", kind: "scalar", typeName: "string", required: false, isArray: true},
 				{name: "image", kind: "scalar", typeName: "string", required: false},
+				{name: "created_at", kind: "scalar", typeName: "Timestamp", required: false},
+				{name: "updated_at", kind: "scalar", typeName: "Timestamp", required: false},
+			]
+		},
+		{
+			name:       "TravelPlanTemplate"
+			domain:     "aux"
+			module:     "entities"
+			sourceType: "entities.#TravelPlanTemplate"
+			fields: [
+				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
+				{name: "title", kind: "scalar", typeName: "string", required: true},
+				{name: "description", kind: "scalar", typeName: "string", required: false},
+				{name: "status", kind: "enum", typeName: "TravelPlanTemplateStatus", required: true},
+				{name: "destinations", kind: "enum", typeName: "CountryCode", required: false, isArray: true},
+				{name: "travel_styles", kind: "scalar", typeName: "string", required: false, isArray: true},
+				{name: "source_booking_id", kind: "scalar", typeName: "Identifier", required: false},
+				{name: "created_by_atp_staff_id", kind: "scalar", typeName: "Identifier", required: false},
+				{name: "travel_plan", kind: "entity", typeName: "BookingTravelPlan", required: true},
 				{name: "created_at", kind: "scalar", typeName: "Timestamp", required: false},
 				{name: "updated_at", kind: "scalar", typeName: "Timestamp", required: false},
 			]
@@ -1480,6 +1500,48 @@ IR: {
 			]
 		},
 		{
+			name:       "TravelPlanTemplateReadModel"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#TravelPlanTemplateReadModel"
+			fields: [
+				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
+				{name: "title", kind: "scalar", typeName: "string", required: true},
+				{name: "description", kind: "scalar", typeName: "string", required: false},
+				{name: "status", kind: "enum", typeName: "TravelPlanTemplateStatus", required: true},
+				{name: "destinations", kind: "enum", typeName: "CountryCode", required: false, isArray: true},
+				{name: "travel_styles", kind: "scalar", typeName: "string", required: false, isArray: true},
+				{name: "source_booking_id", kind: "scalar", typeName: "Identifier", required: false},
+				{name: "source_booking_name", kind: "scalar", typeName: "string", required: false},
+				{name: "created_by_atp_staff_id", kind: "scalar", typeName: "Identifier", required: false},
+				{name: "travel_plan", kind: "entity", typeName: "BookingTravelPlan", required: true},
+				{name: "day_count", kind: "scalar", typeName: "int", required: true},
+				{name: "service_count", kind: "scalar", typeName: "int", required: true},
+				{name: "thumbnail_url", kind: "scalar", typeName: "string", required: false},
+				{name: "created_at", kind: "scalar", typeName: "Timestamp", required: false},
+				{name: "updated_at", kind: "scalar", typeName: "Timestamp", required: false},
+			]
+		},
+		{
+			name:       "TravelPlanTemplateListResponse"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#TravelPlanTemplateListResponse"
+			fields: [
+				{name: "items", kind: "transport", typeName: "TravelPlanTemplateReadModel", required: true, isArray: true},
+				{name: "total", kind: "scalar", typeName: "int", required: true},
+			]
+		},
+		{
+			name:       "TravelPlanTemplateResponse"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#TravelPlanTemplateResponse"
+			fields: [
+				{name: "template", kind: "transport", typeName: "TravelPlanTemplateReadModel", required: true},
+			]
+		},
+		{
 			name:       "MobileBootstrap"
 			domain:     "api"
 			module:     "api"
@@ -1718,6 +1780,18 @@ IR: {
 			]
 		},
 		{
+			name:       "BookingCloneRequest"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#BookingCloneRequest"
+			fields: [
+				{name: "expected_core_revision", kind: "scalar", typeName: "int", required: false},
+				{name: "name", kind: "scalar", typeName: "string", required: true},
+				{name: "include_travelers", kind: "scalar", typeName: "bool", required: false},
+				{name: "actor", kind: "scalar", typeName: "string", required: false},
+			]
+		},
+		{
 			name:       "BookingPersonCreateRequest"
 			domain:     "api"
 			module:     "api"
@@ -1803,6 +1877,32 @@ IR: {
 				{name: "expected_travel_plan_revision", kind: "scalar", typeName: "int", required: false},
 				{name: "source_lang", kind: "enum", typeName: "LanguageCode", required: true},
 				{name: "target_lang", kind: "enum", typeName: "LanguageCode", required: true},
+				{name: "actor", kind: "scalar", typeName: "string", required: false},
+			]
+		},
+		{
+			name:       "TravelPlanTemplateUpsertRequest"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#TravelPlanTemplateUpsertRequest"
+			fields: [
+				{name: "title", kind: "scalar", typeName: "string", required: false},
+				{name: "description", kind: "scalar", typeName: "string", required: false},
+				{name: "status", kind: "enum", typeName: "TravelPlanTemplateStatus", required: false},
+				{name: "destinations", kind: "enum", typeName: "CountryCode", required: false, isArray: true},
+				{name: "travel_styles", kind: "scalar", typeName: "string", required: false, isArray: true},
+				{name: "source_booking_id", kind: "scalar", typeName: "Identifier", required: false},
+				{name: "travel_plan", kind: "entity", typeName: "BookingTravelPlan", required: false},
+				{name: "actor", kind: "scalar", typeName: "string", required: false},
+			]
+		},
+		{
+			name:       "BookingTravelPlanTemplateApplyRequest"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#BookingTravelPlanTemplateApplyRequest"
+			fields: [
+				{name: "expected_travel_plan_revision", kind: "scalar", typeName: "int", required: false},
 				{name: "actor", kind: "scalar", typeName: "string", required: false},
 			]
 		},

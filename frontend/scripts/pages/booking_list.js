@@ -6,6 +6,10 @@ import {
 } from "../shared/api.js";
 import { GENERATED_APP_ROLES } from "../../Generated/Models/generated_Roles.js";
 import {
+  GENERATED_CURRENCIES,
+  normalizeCurrencyCode as normalizeGeneratedCurrencyCode
+} from "../../Generated/Models/generated_Currency.js";
+import {
   bookingsRequest,
   publicToursRequest
 } from "../../Generated/API/generated_APIRequestFactory.js";
@@ -22,9 +26,18 @@ import {
   initializeBackendPageChrome,
   loadBackendPageAuthState
 } from "../shared/backend_page.js";
+import { BOOKING_CONTENT_LANGUAGE_OPTIONS } from "../booking/i18n.js";
+import {
+  COUNTRY_CODE_OPTIONS,
+  TOUR_STYLE_CODE_OPTIONS
+} from "../shared/generated_catalogs.js";
 
 const apiBase = getBackendApiBase();
 const apiOrigin = getBackendApiOrigin();
+const DESTINATION_COUNTRY_CODES = Object.freeze(["VN", "TH", "KH", "LA"]);
+const DESTINATION_COUNTRY_OPTIONS = Object.freeze(
+  COUNTRY_CODE_OPTIONS.filter((option) => DESTINATION_COUNTRY_CODES.includes(option?.value))
+);
 
 const els = {
   homeLink: document.getElementById("backendHomeLink"),
@@ -34,6 +47,22 @@ const els = {
   bookingsSearch: document.getElementById("bookingsSearch"),
   bookingsSearchBtn: document.getElementById("bookingsSearchBtn"),
   bookingsClearSearchBtn: document.getElementById("bookingsClearSearchBtn"),
+  bookingCreateOpenBtn: document.getElementById("bookingCreateOpenBtn"),
+  bookingCreateModal: document.getElementById("bookingCreateModal"),
+  bookingCreateCloseBtn: document.getElementById("bookingCreateCloseBtn"),
+  bookingCreateCancelBtn: document.getElementById("bookingCreateCancelBtn"),
+  bookingCreateSubmitBtn: document.getElementById("bookingCreateSubmitBtn"),
+  bookingCreateForm: document.getElementById("bookingCreateForm"),
+  bookingCreateStatus: document.getElementById("bookingCreateStatus"),
+  bookingCreateTitleInput: document.getElementById("bookingCreateTitleInput"),
+  bookingCreateLanguageInput: document.getElementById("bookingCreateLanguageInput"),
+  bookingCreateCurrencyInput: document.getElementById("bookingCreateCurrencyInput"),
+  bookingCreateDestinationsInput: document.getElementById("bookingCreateDestinationsInput"),
+  bookingCreateTravelStylesInput: document.getElementById("bookingCreateTravelStylesInput"),
+  bookingCreatePrimaryContactNameInput: document.getElementById("bookingCreatePrimaryContactNameInput"),
+  bookingCreatePrimaryContactEmailInput: document.getElementById("bookingCreatePrimaryContactEmailInput"),
+  bookingCreatePrimaryContactPhoneInput: document.getElementById("bookingCreatePrimaryContactPhoneInput"),
+  bookingCreateTravelerCountInput: document.getElementById("bookingCreateTravelerCountInput"),
   bookingsCountInfo: document.getElementById("bookingsCountInfo"),
   bookingsPagination: document.getElementById("bookingsPagination"),
   bookingsTable: document.getElementById("bookingsTable")
@@ -58,6 +87,7 @@ const state = {
   permissions: {
     canReadBookings: false
   },
+  createBookingInFlight: false,
   bookings: {
     page: 1,
     pageSize: 10,
@@ -131,6 +161,174 @@ function clearError() {
   if (!els.error) return;
   els.error.textContent = "";
   els.error.classList.remove("show");
+}
+
+function normalizeCurrencyCode(value) {
+  return normalizeGeneratedCurrencyCode(value) || "USD";
+}
+
+function selectedValues(selectEl) {
+  if (selectEl instanceof HTMLSelectElement) {
+    return Array.from(selectEl.selectedOptions)
+      .map((option) => normalizeText(option.value))
+      .filter(Boolean);
+  }
+  if (!(selectEl instanceof HTMLElement)) return [];
+  return Array.from(selectEl.querySelectorAll('input[type="checkbox"]:checked'))
+    .map((input) => normalizeText(input instanceof HTMLInputElement ? input.value : ""))
+    .filter(Boolean);
+}
+
+function renderCheckboxOption(kind, value, label = value) {
+  const safeValue = escapeHtml(value);
+  const safeLabel = escapeHtml(label);
+  const inputId = `${kind}_${value.toLowerCase().replace(/[^a-z0-9]+/g, "_")}`;
+  return `
+    <label class="filter-checkbox-option" for="${escapeHtml(inputId)}">
+      <input id="${escapeHtml(inputId)}" type="checkbox" value="${safeValue}" />
+      <span>${safeLabel}</span>
+    </label>
+  `;
+}
+
+function setCreateBookingStatus(message = "") {
+  if (!els.bookingCreateStatus) return;
+  els.bookingCreateStatus.textContent = message;
+}
+
+function populateCreateBookingOptions() {
+  if (els.bookingCreateLanguageInput instanceof HTMLSelectElement) {
+    els.bookingCreateLanguageInput.innerHTML = BOOKING_CONTENT_LANGUAGE_OPTIONS
+      .map((option) => `<option value="${escapeHtml(option.code)}">${escapeHtml(option.label || option.apiValue || option.code.toUpperCase())}</option>`)
+      .join("");
+    els.bookingCreateLanguageInput.value = "en";
+  }
+
+  if (els.bookingCreateCurrencyInput instanceof HTMLSelectElement) {
+    els.bookingCreateCurrencyInput.innerHTML = Object.keys(GENERATED_CURRENCIES || {})
+      .map((code) => `<option value="${escapeHtml(code)}">${escapeHtml(code)}</option>`)
+      .join("");
+    els.bookingCreateCurrencyInput.value = normalizeCurrencyCode("USD");
+  }
+
+  if (els.bookingCreateDestinationsInput instanceof HTMLSelectElement) {
+    els.bookingCreateDestinationsInput.innerHTML = DESTINATION_COUNTRY_OPTIONS
+      .map((option) => `<option value="${escapeHtml(option.value)}">${escapeHtml(option.label || option.value)}</option>`)
+      .join("");
+  } else if (els.bookingCreateDestinationsInput instanceof HTMLElement) {
+    els.bookingCreateDestinationsInput.innerHTML = DESTINATION_COUNTRY_OPTIONS
+      .map((option) => renderCheckboxOption("bookingCreateDestination", option.value, option.label || option.value))
+      .join("");
+  }
+
+  if (els.bookingCreateTravelStylesInput instanceof HTMLSelectElement) {
+    els.bookingCreateTravelStylesInput.innerHTML = TOUR_STYLE_CODE_OPTIONS
+      .map((option) => `<option value="${escapeHtml(option.value)}">${escapeHtml(option.label || option.value)}</option>`)
+      .join("");
+  } else if (els.bookingCreateTravelStylesInput instanceof HTMLElement) {
+    els.bookingCreateTravelStylesInput.innerHTML = TOUR_STYLE_CODE_OPTIONS
+      .map((option) => renderCheckboxOption("bookingCreateStyle", option.value, option.label || option.value))
+      .join("");
+  }
+}
+
+function resetCreateBookingForm() {
+  els.bookingCreateForm?.reset();
+  populateCreateBookingOptions();
+  setCreateBookingStatus("");
+}
+
+function setCreateBookingControlsDisabled(disabled) {
+  const controls = [
+    els.bookingCreateCloseBtn,
+    els.bookingCreateCancelBtn,
+    els.bookingCreateSubmitBtn,
+    els.bookingCreateTitleInput,
+    els.bookingCreateLanguageInput,
+    els.bookingCreateCurrencyInput,
+    els.bookingCreateDestinationsInput,
+    els.bookingCreateTravelStylesInput,
+    els.bookingCreatePrimaryContactNameInput,
+    els.bookingCreatePrimaryContactEmailInput,
+    els.bookingCreatePrimaryContactPhoneInput,
+    els.bookingCreateTravelerCountInput
+  ];
+  for (const control of controls) {
+    if (control) control.disabled = Boolean(disabled);
+  }
+  [els.bookingCreateDestinationsInput, els.bookingCreateTravelStylesInput].forEach((container) => {
+    if (!(container instanceof HTMLElement)) return;
+    Array.from(container.querySelectorAll('input[type="checkbox"]')).forEach((input) => {
+      if (input instanceof HTMLInputElement) input.disabled = Boolean(disabled);
+    });
+  });
+}
+
+function openCreateBookingModal() {
+  if (!state.permissions.canReadBookings || !els.bookingCreateModal) return;
+  resetCreateBookingForm();
+  els.bookingCreateModal.hidden = false;
+  if (!els.bookingCreateModal.hasAttribute("tabindex")) {
+    els.bookingCreateModal.setAttribute("tabindex", "-1");
+  }
+  window.setTimeout(() => {
+    els.bookingCreateTitleInput?.focus?.();
+  }, 0);
+}
+
+function closeCreateBookingModal({ returnFocus = true } = {}) {
+  if (!els.bookingCreateModal || state.createBookingInFlight) return;
+  els.bookingCreateModal.hidden = true;
+  setCreateBookingStatus("");
+  if (returnFocus) {
+    els.bookingCreateOpenBtn?.focus?.();
+  }
+}
+
+async function createBackendBooking() {
+  if (!state.permissions.canReadBookings || state.createBookingInFlight) return;
+  clearError();
+  const name = normalizeText(els.bookingCreateTitleInput?.value);
+  if (!name) {
+    setCreateBookingStatus("Enter a booking title.");
+    els.bookingCreateTitleInput?.focus?.();
+    return;
+  }
+
+  state.createBookingInFlight = true;
+  setCreateBookingControlsDisabled(true);
+  setCreateBookingStatus("Creating booking...");
+
+  try {
+    const payload = await fetchApi("/api/v1/bookings", {
+      method: "POST",
+      body: {
+        name,
+        preferred_language: normalizeText(els.bookingCreateLanguageInput?.value) || "en",
+        preferred_currency: normalizeCurrencyCode(els.bookingCreateCurrencyInput?.value || "USD"),
+        destinations: selectedValues(els.bookingCreateDestinationsInput),
+        travel_styles: selectedValues(els.bookingCreateTravelStylesInput),
+        primary_contact_name: normalizeText(els.bookingCreatePrimaryContactNameInput?.value),
+        primary_contact_email: normalizeText(els.bookingCreatePrimaryContactEmailInput?.value),
+        primary_contact_phone_number: normalizeText(els.bookingCreatePrimaryContactPhoneInput?.value),
+        number_of_travelers: normalizeText(els.bookingCreateTravelerCountInput?.value) || null,
+        actor: state.authUser?.preferred_username || state.authUser?.sub || "backend_user"
+      },
+      connectionErrorMessage: backendT("booking.error.connect", "Could not connect to backend API.")
+    });
+
+    const bookingId = normalizeText(payload?.booking?.id);
+    if (!bookingId) {
+      setCreateBookingStatus("Could not create booking.");
+      return;
+    }
+
+    closeCreateBookingModal({ returnFocus: false });
+    window.location.href = buildBookingHref(bookingId);
+  } finally {
+    state.createBookingInFlight = false;
+    setCreateBookingControlsDisabled(false);
+  }
 }
 
 const fetchApi = createApiFetcher({
@@ -215,6 +413,37 @@ async function init() {
 
 function bindControls() {
   bindSearch(els.bookingsSearchBtn, els.bookingsSearch, state.bookings, loadBookings);
+  populateCreateBookingOptions();
+  if (els.bookingCreateOpenBtn) {
+    els.bookingCreateOpenBtn.addEventListener("click", openCreateBookingModal);
+  }
+  if (els.bookingCreateCloseBtn) {
+    els.bookingCreateCloseBtn.addEventListener("click", () => closeCreateBookingModal());
+  }
+  if (els.bookingCreateCancelBtn) {
+    els.bookingCreateCancelBtn.addEventListener("click", () => closeCreateBookingModal());
+  }
+  if (els.bookingCreateSubmitBtn) {
+    els.bookingCreateSubmitBtn.addEventListener("click", createBackendBooking);
+  }
+  if (els.bookingCreateForm) {
+    els.bookingCreateForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      createBackendBooking();
+    });
+  }
+  if (els.bookingCreateModal) {
+    els.bookingCreateModal.addEventListener("click", (event) => {
+      if (event.target === els.bookingCreateModal) {
+        closeCreateBookingModal();
+      }
+    });
+  }
+  window.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !els.bookingCreateModal?.hidden) {
+      closeCreateBookingModal();
+    }
+  });
   if (els.bookingsClearSearchBtn) {
     els.bookingsClearSearchBtn.addEventListener("click", () => {
       state.bookings.search = "";

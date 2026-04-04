@@ -48,6 +48,8 @@ export function resolveBackendSectionHref(section) {
   const pathname =
     normalizedSection === "tours"
       ? "tours.html"
+      : normalizedSection === "standard-travel-plans"
+        ? "standard-travel-plans.html"
       : normalizedSection === "emergency"
         ? "emergency.html"
       : normalizedSection === "settings"
@@ -70,6 +72,7 @@ function resolveUserLabel(authUser = null) {
 function applyNavPermissions(mount, roles) {
   const resolvedRoles = Array.isArray(roles) ? roles : [];
   const canReadBookings = hasAnyRole(resolvedRoles, "atp_admin", "atp_manager", "atp_accountant", "atp_staff");
+  const canReadStandardTravelPlans = hasAnyRole(resolvedRoles, "atp_admin", "atp_manager", "atp_staff");
   const canReadTours = hasAnyRole(resolvedRoles, "atp_admin", "atp_accountant", "atp_tour_editor");
   const canReadEmergency = hasAnyRole(resolvedRoles, "atp_admin", "atp_tour_editor");
   const canReadSettings = hasAnyRole(resolvedRoles, "atp_admin", "atp_manager", "atp_accountant");
@@ -79,6 +82,7 @@ function applyNavPermissions(mount, roles) {
       const section = button.getAttribute("data-backend-section");
       const visible =
         (section === "bookings" && canReadBookings) ||
+        (section === "standard-travel-plans" && canReadStandardTravelPlans) ||
         (section === "tours" && canReadTours) ||
         (section === "emergency" && canReadEmergency) ||
         (section === "settings" && canReadSettings);
@@ -99,6 +103,7 @@ export function mountBackendNav(mount, options = {}) {
       <div class="backend-section-nav-wrap">
         <div class="backend-section-nav" role="tablist" aria-label="${backendT("a11y.backend_sections", "Backend sections")}">
           ${buildSectionButton("bookings", backendT("nav.bookings", "Bookings"), { type: "image", src: "assets/img/profile_booking.png", size: "large" })}
+          ${buildSectionButton("standard-travel-plans", backendT("nav.standard_travel_plans", "Standard travel plans"), { type: "image", src: "assets/img/standardTravelPlan.png", size: "large" })}
           ${buildSectionButton("settings", backendT("nav.settings", "Reports and Settings"), { type: "image", src: "assets/img/profile_person.png", size: "large" })}
           ${buildSectionButton("tours", backendT("nav.tours", "Tours"), { type: "image", src: "assets/img/hat.png", size: "large" })}
           ${buildSectionButton("emergency", backendT("nav.emergency", "Emergency"), EMERGENCY_NAV_ICON)}

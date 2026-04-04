@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-03-31T18:28:19Z
+# 2026-04-04T09:49:25Z
 
 ---
 openapi: 3.1.0
@@ -24,6 +24,7 @@ tags:
 - name: Public
 - name: Auth
 - name: Bookings
+- name: Travel plan templates
 - name: Offers
 - name: Suppliers
 - name: CountryReference
@@ -470,25 +471,9 @@ components:
         label: other
     BookingPersonGender:
       type: string
-      enum:
-      - male
-      - female
-      - other
-      - prefer_not_to_say
-      x-enum-catalog:
-      - code: male
-      - code: female
-      - code: other
-      - code: prefer_not_to_say
-      x-enum-options:
-      - value: male
-        label: male
-      - value: female
-        label: female
-      - value: other
-        label: other
-      - value: prefer_not_to_say
-        label: prefer_not_to_say
+      enum: []
+      x-enum-catalog: []
+      x-enum-options: []
     TravelPlanTimingKind:
       type: string
       enum:
@@ -816,6 +801,23 @@ components:
         label: PORTAL_CLICK
       - value: ESIGN
         label: ESIGN
+    TravelPlanTemplateStatus:
+      type: string
+      enum:
+      - draft
+      - published
+      - archived
+      x-enum-catalog:
+      - code: draft
+      - code: published
+      - code: archived
+      x-enum-options:
+      - value: draft
+        label: draft
+      - value: published
+        label: published
+      - value: archived
+        label: archived
     TourStyleCode:
       type: string
       enum:
@@ -4043,6 +4045,47 @@ components:
           type: string
           format: date-time
           nullable: true
+    TravelPlanTemplate:
+      type: object
+      required:
+      - id
+      - title
+      - status
+      - travel_plan
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        status:
+          "$ref": "#/components/schemas/TravelPlanTemplateStatus"
+        destinations:
+          type: array
+          items:
+            "$ref": "#/components/schemas/CountryCode"
+        travel_styles:
+          type: array
+          items:
+            type: string
+        source_booking_id:
+          type: string
+          nullable: true
+        created_by_atp_staff_id:
+          type: string
+          nullable: true
+        travel_plan:
+          "$ref": "#/components/schemas/BookingTravelPlan"
+        created_at:
+          type: string
+          format: date-time
+          nullable: true
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
     Supplier:
       type: object
       required:
@@ -5168,6 +5211,9 @@ components:
         user_agent:
           type: string
           nullable: true
+        management_approver_atp_staff_id:
+          type: string
+          nullable: true
         deposit_payment_id:
           type: string
           nullable: true
@@ -5224,6 +5270,12 @@ components:
           "$ref": "#/components/schemas/BookingOffer"
         travel_plan:
           "$ref": "#/components/schemas/BookingTravelPlan"
+          nullable: true
+        management_approver_atp_staff_id:
+          type: string
+          nullable: true
+        management_approver_label:
+          type: string
           nullable: true
         pdf_frozen_at:
           type: string
@@ -5473,9 +5525,6 @@ components:
           type: array
           items:
             type: string
-        pdf_personalization:
-          "$ref": "#/components/schemas/BookingPdfPersonalization"
-          nullable: true
         travel_start_day:
           type: string
           format: date
@@ -5575,6 +5624,9 @@ components:
           format: date-time
         method:
           "$ref": "#/components/schemas/BookingConfirmationMethod"
+        management_approver_atp_staff_id:
+          type: string
+          nullable: true
         accepted_amount_cents:
           type: integer
           nullable: true
@@ -5832,6 +5884,12 @@ components:
         travel_plan:
           "$ref": "#/components/schemas/BookingTravelPlan"
           nullable: true
+        management_approver_atp_staff_id:
+          type: string
+          nullable: true
+        management_approver_label:
+          type: string
+          nullable: true
         pdf_url:
           type: string
         customer_confirmation_flow:
@@ -5968,9 +6026,6 @@ components:
           type: array
           items:
             type: string
-        pdf_personalization:
-          "$ref": "#/components/schemas/BookingPdfPersonalization"
-          nullable: true
         travel_start_day:
           type: string
           format: date
@@ -6515,6 +6570,77 @@ components:
       properties:
         tour:
           "$ref": "#/components/schemas/Tour"
+    TravelPlanTemplateReadModel:
+      type: object
+      required:
+      - id
+      - title
+      - status
+      - travel_plan
+      - day_count
+      - service_count
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        status:
+          "$ref": "#/components/schemas/TravelPlanTemplateStatus"
+        destinations:
+          type: array
+          items:
+            "$ref": "#/components/schemas/CountryCode"
+        travel_styles:
+          type: array
+          items:
+            type: string
+        source_booking_id:
+          type: string
+          nullable: true
+        source_booking_name:
+          type: string
+          nullable: true
+        created_by_atp_staff_id:
+          type: string
+          nullable: true
+        travel_plan:
+          "$ref": "#/components/schemas/BookingTravelPlan"
+        day_count:
+          type: integer
+        service_count:
+          type: integer
+        thumbnail_url:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          nullable: true
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+    TravelPlanTemplateListResponse:
+      type: object
+      required:
+      - total
+      properties:
+        items:
+          type: array
+          items:
+            "$ref": "#/components/schemas/TravelPlanTemplateReadModel"
+        total:
+          type: integer
+    TravelPlanTemplateResponse:
+      type: object
+      required:
+      - template
+      properties:
+        template:
+          "$ref": "#/components/schemas/TravelPlanTemplateReadModel"
     MobileBootstrap:
       type: object
       required:
@@ -6830,55 +6956,8 @@ components:
         referral_staff_user_id:
           type: string
           nullable: true
-        destinations:
-          type: array
-          items:
-            "$ref": "#/components/schemas/CountryCode"
-        travel_styles:
-          type: array
-          items:
-            type: string
-        pdf_personalization:
-          "$ref": "#/components/schemas/BookingPdfPersonalization"
-          nullable: true
         actor:
           type: string
-          nullable: true
-    BookingPdfPersonalizationScoped:
-      type: object
-      properties:
-        subtitle:
-          type: string
-          nullable: true
-        subtitle_i18n:
-          type: object
-          additionalProperties:
-            type: string
-        welcome:
-          type: string
-          nullable: true
-        welcome_i18n:
-          type: object
-          additionalProperties:
-            type: string
-        closing:
-          type: string
-          nullable: true
-        closing_i18n:
-          type: object
-          additionalProperties:
-            type: string
-        include_who_is_traveling:
-          type: boolean
-          nullable: true
-    BookingPdfPersonalization:
-      type: object
-      properties:
-        travel_plan:
-          "$ref": "#/components/schemas/BookingPdfPersonalizationScoped"
-          nullable: true
-        offer:
-          "$ref": "#/components/schemas/BookingPdfPersonalizationScoped"
           nullable: true
     BookingImageUploadRequest:
       type: object
@@ -6921,6 +7000,22 @@ components:
           nullable: true
         assigned_keycloak_user_id:
           type: string
+          nullable: true
+        actor:
+          type: string
+          nullable: true
+    BookingCloneRequest:
+      type: object
+      required:
+      - name
+      properties:
+        expected_core_revision:
+          type: integer
+          nullable: true
+        name:
+          type: string
+        include_travelers:
+          type: boolean
           nullable: true
         actor:
           type: string
@@ -7030,6 +7125,46 @@ components:
           "$ref": "#/components/schemas/LanguageCode"
         target_lang:
           "$ref": "#/components/schemas/LanguageCode"
+        actor:
+          type: string
+          nullable: true
+    TravelPlanTemplateUpsertRequest:
+      type: object
+      required: []
+      properties:
+        title:
+          type: string
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        status:
+          "$ref": "#/components/schemas/TravelPlanTemplateStatus"
+          nullable: true
+        destinations:
+          type: array
+          items:
+            "$ref": "#/components/schemas/CountryCode"
+        travel_styles:
+          type: array
+          items:
+            type: string
+        source_booking_id:
+          type: string
+          nullable: true
+        travel_plan:
+          "$ref": "#/components/schemas/BookingTravelPlan"
+          nullable: true
+        actor:
+          type: string
+          nullable: true
+    BookingTravelPlanTemplateApplyRequest:
+      type: object
+      required: []
+      properties:
+        expected_travel_plan_revision:
+          type: integer
+          nullable: true
         actor:
           type: string
           nullable: true
@@ -7862,6 +7997,45 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
+    post:
+      operationId: booking_create
+      summary: Booking Create
+      tags:
+      - Bookings
+      security:
+      - bearerAuth: []
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/BookingCreateRequest"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingDetail"
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingDetail"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
   "/api/v1/bookings/{booking_id}":
     get:
       operationId: booking_detail
@@ -7933,6 +8107,51 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/bookings/{booking_id}/clone":
+    post:
+      operationId: booking_clone
+      summary: Booking Clone
+      tags:
+      - Bookings
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: booking_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/BookingCloneRequest"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingDetail"
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingDetail"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
   "/api/v1/bookings/{booking_id}/chat":
     get:
       operationId: booking_chat
@@ -7954,57 +8173,6 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/BookingChatResponse"
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-  "/api/v1/bookings/{booking_id}/clone":
-    post:
-      operationId: booking_clone
-      summary: Booking Clone
-      tags:
-      - Bookings
-      security:
-      - bearerAuth: []
-      parameters:
-      - name: booking_id
-        in: path
-        required: true
-        schema:
-          type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-              - expected_core_revision
-              - name
-              properties:
-                expected_core_revision:
-                  type: integer
-                name:
-                  type: string
-                include_travelers:
-                  type: boolean
-                actor:
-                  type: string
-      responses:
-        '201':
-          description: Success
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/BookingDetail"
         '401':
           description: Unauthorized
           content:
@@ -8988,6 +9156,256 @@ paths:
           application/json:
             schema:
               "$ref": "#/components/schemas/TravelPlanImportRequest"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingDetail"
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingDetail"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/travel-plan-templates":
+    get:
+      operationId: travel_plan_templates
+      summary: Travel Plan Templates
+      tags:
+      - Travel plan templates
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: q
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: destination
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: style
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: page_size
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/TravelPlanTemplateListResponse"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+    post:
+      operationId: travel_plan_template_create
+      summary: Travel Plan Template Create
+      tags:
+      - Travel plan templates
+      security:
+      - bearerAuth: []
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/TravelPlanTemplateUpsertRequest"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/TravelPlanTemplateResponse"
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/TravelPlanTemplateResponse"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/travel-plan-templates/{template_id}":
+    get:
+      operationId: travel_plan_template_detail
+      summary: Travel Plan Template Detail
+      tags:
+      - Travel plan templates
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: template_id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/TravelPlanTemplateResponse"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+    patch:
+      operationId: travel_plan_template_update
+      summary: Travel Plan Template Update
+      tags:
+      - Travel plan templates
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: template_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/TravelPlanTemplateUpsertRequest"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/TravelPlanTemplateResponse"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: travel_plan_template_delete
+      summary: Travel Plan Template Delete
+      tags:
+      - Travel plan templates
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: template_id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/bookings/{booking_id}/travel-plan/templates/{template_id}/apply":
+    post:
+      operationId: booking_travel_plan_template_apply
+      summary: Booking Travel Plan Template Apply
+      tags:
+      - Travel plan templates
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: booking_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: template_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/BookingTravelPlanTemplateApplyRequest"
       responses:
         '200':
           description: Success

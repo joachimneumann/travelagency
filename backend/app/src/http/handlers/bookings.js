@@ -28,6 +28,19 @@ import { createBookingInvoiceHandlers } from "./booking_invoices.js";
 import { createBookingPeopleHandlers } from "./booking_people.js";
 import { createBookingTravelerDetailsHandlers } from "./booking_traveler_details.js";
 import { createBookingTravelPlanHandlers } from "./booking_travel_plan.js";
+import { enumValueSetFor } from "../../lib/generated_catalogs.js";
+
+const COUNTRY_CODE_SET = enumValueSetFor("CountryCode");
+
+function normalizeCountryCodes(items, normalizeText) {
+  return Array.from(
+    new Set(
+      (Array.isArray(items) ? items : [])
+        .map((item) => normalizeText(item).toUpperCase())
+        .filter((item) => item && COUNTRY_CODE_SET.has(item))
+    )
+  );
+}
 
 export function createBookingHandlers(deps) {
   const {
@@ -222,6 +235,65 @@ export function createBookingHandlers(deps) {
       preferred_language: submitted.preferred_language || null,
       roles: ["primary_contact", "traveler"]
     };
+  }
+
+  function buildPrimaryContactFromManualCreate({
+    bookingId,
+    name,
+    email,
+    phoneNumber,
+    preferredLanguage
+  }) {
+    const contactName = normalizeText(name);
+    const contactEmail = normalizeEmail(email);
+    const contactPhoneNumber = normalizePhone(phoneNumber);
+    if (!contactName && !contactEmail && !contactPhoneNumber) return null;
+    return {
+      id: `${normalizeText(bookingId) || "booking"}_primary_contact`,
+      name: contactName || "Primary contact",
+      emails: contactEmail ? [contactEmail] : [],
+      phone_numbers: contactPhoneNumber ? [contactPhoneNumber] : [],
+      preferred_language: preferredLanguage || null,
+      roles: ["primary_contact", "traveler"]
+    };
+  }
+
+  function validateBackendBookingInput(payload) {
+    const title = normalizeText(payload?.name);
+    if (!title) {
+      return { ok: false, error: "name is required" };
+    }
+    if (isSuspiciousSentinelString(title, normalizeText)) {
+      return { ok: false, error: "Invalid name" };
+    }
+
+    if (!normalizeText(payload?.preferred_language)) {
+      return { ok: false, error: "preferred_language is required" };
+    }
+    if (!normalizeText(payload?.preferred_currency)) {
+      return { ok: false, error: "preferred_currency is required" };
+    }
+
+    const primaryContactName = normalizeText(payload?.primary_contact_name);
+    if (primaryContactName && isSuspiciousSentinelString(primaryContactName, normalizeText)) {
+      return { ok: false, error: "Invalid primary_contact_name" };
+    }
+
+    if (normalizeText(payload?.primary_contact_email) && !normalizeEmail(payload?.primary_contact_email)) {
+      return { ok: false, error: "Invalid primary_contact_email" };
+    }
+    if (normalizeText(payload?.primary_contact_phone_number) && !normalizePhone(payload?.primary_contact_phone_number)) {
+      return { ok: false, error: "Invalid primary_contact_phone_number" };
+    }
+
+    const travelers = payload?.number_of_travelers === undefined || payload?.number_of_travelers === null || payload?.number_of_travelers === ""
+      ? null
+      : safeInt(payload.number_of_travelers);
+    if (travelers !== null && (!Number.isInteger(travelers) || travelers < 1 || travelers > 30)) {
+      return { ok: false, error: "number_of_travelers must be between 1 and 30" };
+    }
+
+    return { ok: true };
   }
 
   function getBookingRevision(booking, field) {
@@ -835,6 +907,92 @@ export function createBookingHandlers(deps) {
     sendJson(res, 201, await buildBookingDetailResponse(booking, req));
   }
 
+  async function handleCreateBackendBooking(req, res) {
+    let payload;
+    try {
+      payload = await readBodyJson(req);
+    } catch {
+      sendJson(res, 400, { error: "Invalid JSON payload" });
+      return;
+    }
+
+    const check = validateBackendBookingInput(payload);
+    if (!check.ok) {
+      sendJson(res, 422, { error: check.error });
+      return;
+    }
+
+    const principal = getPrincipal(req);
+    const canCreateBooking = canReadAllBookings(principal)
+      || (Array.isArray(principal?.roles) && principal.roles.includes("atp_staff") && normalizeText(principal?.sub));
+    if (!canCreateBooking) {
+      sendJson(res, 403, { error: "Forbidden" });
+      return;
+    }
+
+    const now = nowIso();
+    const bookingId = `booking_${randomUUID()}`;
+    const preferredLanguage = normalizeBookingContentLang(payload?.preferred_language);
+    const preferredCurrency = safeCurrency(payload?.preferred_currency || BASE_CURRENCY);
+    const travelerCount = payload?.number_of_travelers === undefined || payload?.number_of_travelers === null || payload?.number_of_travelers === ""
+      ? null
+      : safeInt(payload.number_of_travelers);
+    const booking = {
+      id: bookingId,
+      customer_language: preferredLanguage,
+      name: normalizeText(payload?.name),
+      core_revision: 0,
+      notes_revision: 0,
+      persons_revision: 0,
+      travel_plan_revision: 0,
+      pricing_revision: 0,
+      offer_revision: 0,
+      invoices_revision: 0,
+      stage: STAGES.NEW_BOOKING,
+      assigned_keycloak_user_id: normalizeText(principal?.sub) || null,
+      service_level_agreement_due_at: computeServiceLevelAgreementDueAt(STAGES.NEW_BOOKING),
+      destinations: normalizeCountryCodes(payload?.destinations, normalizeText),
+      travel_styles: canonicalBookingTravelStyles(payload?.travel_styles),
+      web_form_travel_month: null,
+      travel_start_day: null,
+      travel_end_day: null,
+      number_of_travelers: travelerCount,
+      preferred_currency: preferredCurrency,
+      notes: "",
+      persons: [],
+      travel_plan: defaultBookingTravelPlan(),
+      pricing: defaultBookingPricing(),
+      offer: defaultBookingOffer(preferredCurrency),
+      generated_offers: [],
+      created_at: now,
+      updated_at: now
+    };
+
+    const primaryContact = buildPrimaryContactFromManualCreate({
+      bookingId,
+      name: payload?.primary_contact_name,
+      email: payload?.primary_contact_email,
+      phoneNumber: payload?.primary_contact_phone_number,
+      preferredLanguage
+    });
+    if (primaryContact) {
+      booking.persons = [primaryContact];
+    }
+
+    const store = await readStore();
+    store.bookings.push(booking);
+    addActivity(
+      store,
+      booking.id,
+      "BOOKING_CREATED",
+      actorLabel(principal, normalizeText(payload?.actor) || "keycloak_user"),
+      "Booking created in backend"
+    );
+    await persistStore(store);
+
+    sendJson(res, 201, await buildBookingDetailResponse(booking, req));
+  }
+
   async function handleListBookings(req, res) {
     const store = await readStore();
     const principal = getPrincipal(req);
@@ -953,6 +1111,7 @@ export function createBookingHandlers(deps) {
 
   return {
     handleCreateBooking,
+    handleCreateBackendBooking,
     handleListBookings,
     handleGetBooking,
     handleDeleteBooking,

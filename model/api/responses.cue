@@ -197,6 +197,33 @@ import (
 	total: >=0 & int
 }
 
+#TravelPlanTemplateReadModel: {
+	id:                       common.#Identifier
+	title:                    string
+	description?:             string
+	status:                   enums.#TravelPlanTemplateStatus
+	destinations?:            [...enums.#CountryCode]
+	travel_styles?:           [...string]
+	source_booking_id?:       common.#Identifier
+	source_booking_name?:     string
+	created_by_atp_staff_id?: common.#Identifier
+	travel_plan:              entities.#BookingTravelPlan
+	day_count:                >=0 & int
+	service_count:            >=0 & int
+	thumbnail_url?:           common.#Url | string
+	created_at?:              common.#Timestamp
+	updated_at?:              common.#Timestamp
+}
+
+#TravelPlanTemplateListResponse: {
+	items: [...#TravelPlanTemplateReadModel]
+	total: >=0 & int
+}
+
+#TravelPlanTemplateResponse: {
+	template: #TravelPlanTemplateReadModel
+}
+
 #OfferExchangeRatesResponse: {
 	from_currency:     string
 	to_currency:       string

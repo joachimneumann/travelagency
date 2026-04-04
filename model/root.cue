@@ -34,6 +34,7 @@ import (
 		CountryPracticalInfo:                        entityModel.#CountryPracticalInfo
 		Supplier:                                    entityModel.#Supplier
 		Tour:                                        entityModel.#Tour
+		TravelPlanTemplate:                          entityModel.#TravelPlanTemplate
 	}
 
 	common: {
@@ -65,6 +66,7 @@ import (
 		GeneratedOfferCustomerConfirmationFlowMode:   enumModel.#GeneratedOfferCustomerConfirmationFlowMode
 		GeneratedOfferCustomerConfirmationFlowStatus: enumModel.#GeneratedOfferCustomerConfirmationFlowStatus
 		BookingConfirmationMethod:               enumModel.#BookingConfirmationMethod
+		TravelPlanTemplateStatus:               enumModel.#TravelPlanTemplateStatus
 		TourStyleCode:                       enumModel.#TourStyleCode
 		CountryCode:                         enumModel.#CountryCode
 		TimezoneCode:                        enumModel.#TimezoneCode
@@ -107,6 +109,9 @@ import (
 		TravelPlanSearchResponse:                          apiModel.#TravelPlanSearchResponse
 		TravelPlanServiceSearchResult:                     apiModel.#TravelPlanServiceSearchResult
 		TravelPlanServiceSearchResponse:                   apiModel.#TravelPlanServiceSearchResponse
+		TravelPlanTemplateReadModel:                       apiModel.#TravelPlanTemplateReadModel
+		TravelPlanTemplateListResponse:                    apiModel.#TravelPlanTemplateListResponse
+		TravelPlanTemplateResponse:                        apiModel.#TravelPlanTemplateResponse
 		AuthenticatedUser:                                apiModel.#AuthenticatedUser
 		AuthMeResponse:                                   apiModel.#AuthMeResponse
 		MobileBootstrap:                                  apiModel.#MobileBootstrap
@@ -118,6 +123,7 @@ import (
 		PaginatedRequest:                                 apiModel.#PaginatedRequest
 		WebsiteBookingForm:                               apiModel.#WebsiteBookingForm
 		PublicBookingCreateRequest:                       apiModel.#PublicBookingCreateRequest
+		BookingCreateRequest:                             apiModel.#BookingCreateRequest
 		TranslationStatusSummary:                         apiModel.#TranslationStatusSummary
 		GeneratedOfferBookingConfirmationPublicSummary:            apiModel.#GeneratedOfferBookingConfirmationPublicSummary
 		PublicGeneratedOfferDepositBookingConfirmationRuleView:    apiModel.#PublicGeneratedOfferDepositBookingConfirmationRuleView
@@ -140,6 +146,7 @@ import (
 		BookingImageUploadRequest:                        apiModel.#BookingImageUploadRequest
 		BookingMilestoneActionRequest:                    apiModel.#BookingMilestoneActionRequest
 		BookingOwnerUpdateRequest:                        apiModel.#BookingOwnerUpdateRequest
+		BookingCloneRequest:                              apiModel.#BookingCloneRequest
 		BookingPersonCreateRequest:                       apiModel.#BookingPersonCreateRequest
 		BookingPersonUpdateRequest:                       apiModel.#BookingPersonUpdateRequest
 		BookingPersonDeleteRequest:                       apiModel.#BookingPersonDeleteRequest
@@ -152,6 +159,8 @@ import (
 		TravelPlanDayImportRequest:                       apiModel.#TravelPlanDayImportRequest
 		TravelPlanSearchRequest:                          apiModel.#TravelPlanSearchRequest
 		TravelPlanImportRequest:                          apiModel.#TravelPlanImportRequest
+		TravelPlanTemplateUpsertRequest:                  apiModel.#TravelPlanTemplateUpsertRequest
+		BookingTravelPlanTemplateApplyRequest:            apiModel.#BookingTravelPlanTemplateApplyRequest
 		TravelPlanServiceSearchRequest:                      apiModel.#TravelPlanServiceSearchRequest
 		TravelPlanServiceImportRequest:                      apiModel.#TravelPlanServiceImportRequest
 		TravelPlanServiceImageUploadRequest:                 apiModel.#TravelPlanServiceImageUploadRequest
