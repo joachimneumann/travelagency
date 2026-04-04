@@ -4338,6 +4338,9 @@ components:
         details:
           type: string
           nullable: true
+        image_subtitle:
+          type: string
+          nullable: true
         location:
           type: string
           nullable: true

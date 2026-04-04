@@ -3644,6 +3644,11 @@
     "origin": "machine",
     "updated_at": "2026-03-30T23:51:31.875Z"
   },
+  "booking.travel_plan.image_subtitle_optional": {
+    "source_hash": "86d8e15b048d222988c5c91928d1e4763704829932dc74133eb1852663a346ac",
+    "origin": "manual",
+    "updated_at": "2026-04-03T17:10:00.000Z"
+  },
   "booking.travel_plan.image_uploaded": {
     "source_hash": "3f997b5e2da6671f88f429074ed0fb6105871854007db1e6132a8d7cbd7f138d",
     "origin": "machine",

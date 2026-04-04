@@ -142,10 +142,19 @@ function measureTextHeight(doc, text, { width, fontSize, fonts, weight = "regula
   return doc.heightOfString(text, { width, lineGap });
 }
 
-function imageBoxHeight(contentWidth) {
+function imageBoxHeight(doc, entry, contentWidth, fonts, deps) {
   const innerWidth = contentWidth - ITEM_CARD_PADDING * 2;
   const naturalHeight = innerWidth * (ITEM_THUMBNAIL_HEIGHT / ITEM_THUMBNAIL_WIDTH);
-  return ITEM_CARD_PADDING * 2 + Math.min(IMAGE_CARD_MAX_HEIGHT, Math.max(IMAGE_CARD_MIN_HEIGHT, naturalHeight));
+  const baseHeight = ITEM_CARD_PADDING * 2 + Math.min(IMAGE_CARD_MAX_HEIGHT, Math.max(IMAGE_CARD_MIN_HEIGHT, naturalHeight));
+  const subtitle = textOrNull(entry?.item?.image_subtitle);
+  if (!subtitle) return baseHeight;
+  return baseHeight + measureTextHeight(doc, subtitle, {
+    width: innerWidth,
+    fontSize: 9.2,
+    fonts,
+    lineGap: 1,
+    pdfFontName: deps.pdfFontName
+  }) + 8;
 }
 
 function itemBoxHeight(doc, item, fonts, lang, dayDate, contentWidth, deps) {
@@ -167,17 +176,44 @@ function itemBoxHeight(doc, item, fonts, lang, dayDate, contentWidth, deps) {
 
 function drawTravelPlanItemCard(doc, x, y, width, entry, fonts, lang, dayDate, deps) {
   if (entry?.kind === "image" && entry.thumbnail?.buffer) {
-    const itemHeight = imageBoxHeight(width);
+    const itemHeight = imageBoxHeight(doc, entry, width, fonts, deps);
+    const subtitle = textOrNull(entry?.item?.image_subtitle);
+    const subtitleHeight = subtitle
+      ? measureTextHeight(doc, subtitle, {
+        width: width - ITEM_CARD_PADDING * 2,
+        fontSize: 9.2,
+        fonts,
+        lineGap: 1,
+        pdfFontName: deps.pdfFontName
+      })
+      : 0;
+    const imageHeight = itemHeight - subtitleHeight - (subtitle ? 8 : 0);
     doc
       .save()
-      .roundedRect(x, y, width, itemHeight, 12)
+      .roundedRect(x, y, width, imageHeight, 12)
       .clip();
     doc.image(entry.thumbnail.buffer, x, y, {
-      fit: [width, itemHeight],
+      fit: [width, imageHeight],
       align: "center",
       valign: "center"
     });
     doc.restore();
+
+    if (subtitle) {
+      doc
+        .save()
+        .translate(x + ITEM_CARD_PADDING, y + imageHeight + 8)
+        .transform(1, 0, -0.16, 1, 0, 0)
+        .font(deps.pdfFontName("regular", fonts))
+        .fontSize(9.2)
+        .fillColor(deps.colors.textMutedStrong)
+        .text(subtitle, 0, 0, deps.pdfTextOptions(lang, {
+          width: width - ITEM_CARD_PADDING * 2,
+          align: "center",
+          lineGap: 1
+        }));
+      doc.restore();
+    }
 
     return itemHeight;
   }
@@ -247,18 +283,31 @@ function buildTravelPlanDayLayoutEntries(day, itemThumbnailMap) {
 function layoutTravelPlanItemsForPage(doc, items, fonts, lang, dayDate, columnWidth, availableHeight, deps) {
   const columns = { left: [], right: [] };
   const heights = { left: 0, right: 0 };
+  const imageCounts = { left: 0, right: 0 };
+  let lastImageColumn = null;
   let index = 0;
 
   function projectedHeight(key, itemHeight) {
     return heights[key] + (columns[key].length ? ITEM_VERTICAL_GAP : 0) + itemHeight;
   }
 
+  function choosePreferredColumnForImage() {
+    if (imageCounts.left !== imageCounts.right) {
+      return imageCounts.left <= imageCounts.right ? "left" : "right";
+    }
+    if (lastImageColumn === "left") return "right";
+    if (lastImageColumn === "right") return "left";
+    return heights.left <= heights.right ? "left" : "right";
+  }
+
   while (index < items.length) {
     const entry = items[index];
     const itemHeight = entry?.kind === "image"
-      ? imageBoxHeight(columnWidth)
+      ? imageBoxHeight(doc, entry, columnWidth, fonts, deps)
       : itemBoxHeight(doc, entry.item, fonts, lang, dayDate, columnWidth, deps);
-    const preferredKey = heights.left <= heights.right ? "left" : "right";
+    const preferredKey = entry?.kind === "image"
+      ? choosePreferredColumnForImage()
+      : (heights.left <= heights.right ? "left" : "right");
     const alternateKey = preferredKey === "left" ? "right" : "left";
     const fitsPreferred = projectedHeight(preferredKey, itemHeight) <= availableHeight;
     const fitsAlternate = projectedHeight(alternateKey, itemHeight) <= availableHeight;
@@ -274,6 +323,10 @@ function layoutTravelPlanItemsForPage(doc, items, fonts, lang, dayDate, columnWi
 
     heights[targetKey] = projectedHeight(targetKey, itemHeight);
     columns[targetKey].push({ entry, itemHeight });
+    if (entry?.kind === "image") {
+      imageCounts[targetKey] += 1;
+      lastImageColumn = targetKey;
+    }
     index += 1;
   }
 
@@ -299,7 +352,7 @@ function layoutTravelPlanItemsForFullWidthPage(doc, items, fonts, lang, dayDate,
   while (index < items.length) {
     const entry = items[index];
     const itemHeight = entry?.kind === "image"
-      ? imageBoxHeight(contentWidth)
+      ? imageBoxHeight(doc, entry, contentWidth, fonts, deps)
       : itemBoxHeight(doc, entry.item, fonts, lang, dayDate, contentWidth, deps);
     const projectedHeight = height + (entries.length ? ITEM_VERTICAL_GAP : 0) + itemHeight;
     if (projectedHeight > availableHeight) break;

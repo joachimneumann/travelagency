@@ -1440,6 +1440,27 @@ test("offer detail level select uses literal detail level values instead of curr
   );
 });
 
+test("offer editor preserves explicit zero tax rates and keeps zero-tax rows out of the summary", async () => {
+  const offerComponentsModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "offer_components.js");
+  const source = await readFile(offerComponentsModulePath, "utf8");
+
+  assert.match(
+    source,
+    /function readOfferTaxRateBasisPointsInput\(input, fallback = defaultOfferTaxRateBasisPoints\) \{[\s\S]*if \(!rawValue\) return normalizeOfferTaxRateBasisPoints\(fallback, defaultOfferTaxRateBasisPoints\);[\s\S]*Number\(rawValue\) \* 100/,
+    "Offer tax inputs should preserve an explicit 0 while still falling back when the field is blank"
+  );
+  assert.match(
+    source,
+    /tax_rate_basis_points: readOfferTaxRateBasisPointsInput\(taxInput, fallback\.tax_rate_basis_points\)/,
+    "Offer draft readers should reuse the zero-preserving tax parser for trip, day, and additional-item tax rates"
+  );
+  assert.match(
+    source,
+    /summary\.tax_breakdown[\s\S]*filter\(\(bucket\) => Number\(bucket\?\.tax_amount_cents \|\| 0\) !== 0\)/,
+    "Offer quotation summaries should omit tax rows entirely when the computed tax amount is zero"
+  );
+});
+
 test("booking page save orchestrates dirty sections through existing section endpoints", async () => {
   const bookingPageScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking.js");
   const travelPlanModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan.js");
@@ -1954,6 +1975,47 @@ test("travel-plan module preserves add/remove/reorder and offer-link editing hel
   );
 });
 
+test("travel-plan service image subtitle stays wired across model, API, backend, and UI", async () => {
+  const modelPath = path.resolve(__dirname, "..", "..", "..", "model", "entities", "travel_plan.cue");
+  const openApiPath = path.resolve(__dirname, "..", "..", "..", "api", "generated", "openapi.yaml");
+  const backendPath = path.resolve(__dirname, "..", "..", "..", "backend", "app", "src", "domain", "travel_plan.js");
+  const helperPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan_helpers.js");
+  const uiPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan.js");
+  const [modelSource, openApiSource, backendSource, helperSource, uiSource] = await Promise.all([
+    readFile(modelPath, "utf8"),
+    readFile(openApiPath, "utf8"),
+    readFile(backendPath, "utf8"),
+    readFile(helperPath, "utf8"),
+    readFile(uiPath, "utf8")
+  ]);
+
+  assert.match(
+    modelSource,
+    /image_subtitle\?:\s+string/,
+    "The travel-plan service model should expose an optional image subtitle field"
+  );
+  assert.match(
+    openApiSource,
+    /image_subtitle:\n\s+type: string\n\s+nullable: true/,
+    "The OpenAPI contract should expose the optional travel-plan service image subtitle"
+  );
+  assert.match(
+    backendSource,
+    /image_subtitle: normalizeOptionalText\(rawItem\.image_subtitle\) \|\| null/,
+    "The backend travel-plan normalizer should persist the service image subtitle"
+  );
+  assert.match(
+    helperSource,
+    /image_subtitle: ""[\s\S]*image_subtitle: normalizeOptionalText\(rawItem\.image_subtitle\)/,
+    "The frontend travel-plan helpers should seed and normalize the service image subtitle"
+  );
+  assert.match(
+    uiSource,
+    /data-travel-plan-service-field="image_subtitle"[\s\S]*item\.image_subtitle = String\(itemNode\.querySelector\('\[data-travel-plan-service-field="image_subtitle"\]'\)\?\.value \|\| ""\)\.trim\(\);/,
+    "The travel-plan editor should render and save the service image subtitle field"
+  );
+});
+
 test("travel plan PDF personalization exposes and persists traveler-list toggles for both PDF types", async () => {
   const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
   const bookingCorePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "core.js");
@@ -2331,6 +2393,22 @@ test("shared travel-plan PDF item layout falls back to full-width cards when onl
   );
 });
 
+test("shared travel-plan PDF packer balances image cards across both columns when possible", async () => {
+  const travelPlanSectionPath = path.resolve(__dirname, "..", "..", "..", "backend", "app", "src", "lib", "pdf_travel_plan_section.js");
+  const source = await readFile(travelPlanSectionPath, "utf8");
+
+  assert.match(
+    source,
+    /const imageCounts = \{ left: 0, right: 0 \};[\s\S]*let lastImageColumn = null;[\s\S]*function choosePreferredColumnForImage\(\) \{[\s\S]*imageCounts\.left !== imageCounts\.right[\s\S]*lastImageColumn === "left"[\s\S]*lastImageColumn === "right"/,
+    "The shared travel-plan PDF packer should track image-card balance and alternate image placement when both columns can accept the next image"
+  );
+  assert.match(
+    source,
+    /const preferredKey = entry\?\.kind === "image"[\s\S]*choosePreferredColumnForImage\(\)[\s\S]*if \(entry\?\.kind === "image"\) \{[\s\S]*imageCounts\[targetKey\] \+= 1;[\s\S]*lastImageColumn = targetKey;/,
+    "The shared travel-plan PDF packer should apply the balancing preference only to image cards and remember where each image landed"
+  );
+});
+
 test("shared travel-plan PDF continuation pages do not repeat the current day header", async () => {
   const travelPlanSectionPath = path.resolve(__dirname, "..", "..", "..", "backend", "app", "src", "lib", "pdf_travel_plan_section.js");
   const source = await readFile(travelPlanSectionPath, "utf8");
@@ -2386,6 +2464,22 @@ test("shared travel-plan PDF uses text-only service cards with interleaved stand
     source,
     /let remainingItems = buildTravelPlanDayLayoutEntries\(day, itemThumbnailMap\);/,
     "The shared travel-plan PDF renderer should interleave image cards directly into each day's page flow"
+  );
+});
+
+test("offer PDF omits the quotation tax summary and uses a plain total label when tax is zero", async () => {
+  const offerPdfPath = path.resolve(__dirname, "..", "..", "..", "backend", "app", "src", "lib", "offer_pdf.js");
+  const source = await readFile(offerPdfPath, "utf8");
+
+  assert.match(
+    source,
+    /const hasTaxSummary = Number\(quotationSummary\?\.total_tax_amount_cents \|\| 0\) !== 0;[\s\S]*const totalLabel = hasTaxSummary[\s\S]*pdfT\(lang, "offer\.table\.total", "Total"\)/,
+    "Offer PDFs should switch the offer-details total row to the plain Total label when the quotation has no tax"
+  );
+  assert.match(
+    source,
+    /if \(!hasTaxSummary\) \{\s*return y \+ 10;\s*\}/,
+    "Offer PDFs should skip the quotation tax summary block entirely when the quotation has no tax"
   );
 });
 

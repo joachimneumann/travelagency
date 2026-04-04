@@ -1319,6 +1319,10 @@ function drawOfferTable(doc, generatedOffer, startY, formatMoneyValue, fonts, la
   }
 
   const quotationSummary = deriveOfferQuotationSummary(generatedOffer?.offer);
+  const hasTaxSummary = Number(quotationSummary?.total_tax_amount_cents || 0) !== 0;
+  const totalLabel = hasTaxSummary
+    ? pdfT(lang, "offer.total", "Total (including tax)")
+    : pdfT(lang, "offer.table.total", "Total");
 
   const totalValueText = formatMoneyValue(
     quotationSummary?.grand_total_amount_cents ?? generatedOffer?.total_price_cents,
@@ -1335,7 +1339,7 @@ function drawOfferTable(doc, generatedOffer, startY, formatMoneyValue, fonts, la
       .font(pdfFontName("bold", fonts))
       .fontSize(12)
       .fillColor(PDF_COLORS.textStrong)
-      .text(pdfT(lang, "offer.total", "Total (including tax)"), totalLabelX, y + 6, {
+      .text(totalLabel, totalLabelX, y + 6, {
         width: totalLabelWidth,
         align: "right"
       });
@@ -1352,7 +1356,7 @@ function drawOfferTable(doc, generatedOffer, startY, formatMoneyValue, fonts, la
       .font(pdfFontName("bold", fonts))
       .fontSize(12)
       .fillColor(PDF_COLORS.textStrong)
-      .text(pdfT(lang, "offer.total", "Total (including tax)"), PAGE_MARGIN + columns[0].width + columns[1].width, y + 6, {
+      .text(totalLabel, PAGE_MARGIN + columns[0].width + columns[1].width, y + 6, {
         width: columns[2].width + columns[3].width - 12,
         align: "right"
       });
@@ -1366,6 +1370,10 @@ function drawOfferTable(doc, generatedOffer, startY, formatMoneyValue, fonts, la
       });
   }
   y += 32;
+
+  if (!hasTaxSummary) {
+    return y + 10;
+  }
 
   const summaryRows = [
     {

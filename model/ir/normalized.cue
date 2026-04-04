@@ -299,6 +299,7 @@ IR: {
 				{name: "kind", kind: "enum", typeName: "TravelPlanServiceKind", required: true},
 				{name: "title", kind: "scalar", typeName: "string", required: false},
 				{name: "details", kind: "scalar", typeName: "string", required: false},
+				{name: "image_subtitle", kind: "scalar", typeName: "string", required: false},
 				{name: "location", kind: "scalar", typeName: "string", required: false},
 				{name: "supplier_id", kind: "scalar", typeName: "Identifier", required: false},
 				{name: "start_time", kind: "scalar", typeName: "string", required: false},

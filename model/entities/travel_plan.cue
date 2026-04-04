@@ -59,6 +59,7 @@ import (
 	kind:                      enums.#TravelPlanServiceKind
 	title?:                    string
 	details?:                  string
+	image_subtitle?:           string
 	location?:                 string
 	supplier_id?:              common.#Identifier
 	start_time?:               string

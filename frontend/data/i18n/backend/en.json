@@ -728,6 +728,7 @@
   "booking.travel_plan.human_readable_time": "Human readable time",
   "booking.travel_plan.image_count": "{count} image(s)",
   "booking.travel_plan.image_order_updated": "Picture order updated.",
+  "booking.travel_plan.image_subtitle_optional": "Image subtitle (optional)",
   "booking.travel_plan.image_uploaded": "Picture uploaded.",
   "booking.travel_plan.images_uploaded": "{count} pictures uploaded.",
   "booking.travel_plan.insert_as_copy": "use",

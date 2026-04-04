@@ -300,6 +300,7 @@ function normalizeTravelPlanDays(days, options = {}) {
           title_i18n,
           details: resolveLocalizedText(details_i18n, flatLang, "", { sourceLang }) || null,
           details_i18n,
+          image_subtitle: normalizeOptionalText(rawItem.image_subtitle) || null,
           location: resolveLocalizedText(location_i18n, flatLang, "", { sourceLang }) || null,
           location_i18n,
           supplier_id: normalizeOptionalText(rawItem.supplier_id),

@@ -1400,6 +1400,16 @@ export function createBookingTravelPlanModule(ctx) {
             </div>
             <div class="travel-plan-service__overview-media">
               ${travelPlanImagesModule.renderTravelPlanServiceImages(day, item, { variant: "sidebar" })}
+              <div class="field travel-plan-service__image-subtitle-field">
+                <label for="travel_plan_image_subtitle_${escapeHtml(item.id)}">${escapeHtml(bookingT("booking.travel_plan.image_subtitle_optional", "Image subtitle (optional)"))}</label>
+                <input
+                  class="booking-text-field travel-plan-service__image-subtitle-input"
+                  id="travel_plan_image_subtitle_${escapeHtml(item.id)}"
+                  data-travel-plan-service-field="image_subtitle"
+                  type="text"
+                  value="${escapeHtml(item.image_subtitle || "")}"
+                />
+              </div>
             </div>
           </div>
           <div class="travel-plan-grid travel-plan-grid--item">
@@ -1652,6 +1662,7 @@ export function createBookingTravelPlanModule(ctx) {
         );
         item.financial_coverage_needed = itemNode.getAttribute("data-travel-plan-financial-coverage-needed") !== "false";
         item.financial_note = String(itemNode.querySelector('[data-travel-plan-service-field="financial_note"]')?.value || "").trim();
+        item.image_subtitle = String(itemNode.querySelector('[data-travel-plan-service-field="image_subtitle"]')?.value || "").trim();
         item.image = previousItem?.image && typeof previousItem.image === "object" && !Array.isArray(previousItem.image)
           ? previousItem.image
           : null;

@@ -165,8 +165,20 @@ export function createBookingOfferComponentsModule(ctx) {
     const rule = Array.isArray(state.offerDraft?.category_rules)
       ? state.offerDraft.category_rules.find((componentRule) => normalizeOfferCategory(componentRule?.category) === normalizedCategory)
       : null;
-    const basisPoints = Number(rule?.tax_rate_basis_points ?? defaultOfferTaxRateBasisPoints);
-    return Number.isFinite(basisPoints) ? Math.max(0, Math.round(basisPoints)) : defaultOfferTaxRateBasisPoints;
+    return normalizeOfferTaxRateBasisPoints(rule?.tax_rate_basis_points, defaultOfferTaxRateBasisPoints);
+  }
+
+  function normalizeOfferTaxRateBasisPoints(value, fallback = defaultOfferTaxRateBasisPoints) {
+    const numeric = Number(value);
+    if (Number.isFinite(numeric)) return Math.max(0, Math.round(numeric));
+    const fallbackNumeric = Number(fallback);
+    return Number.isFinite(fallbackNumeric) ? Math.max(0, Math.round(fallbackNumeric)) : defaultOfferTaxRateBasisPoints;
+  }
+
+  function readOfferTaxRateBasisPointsInput(input, fallback = defaultOfferTaxRateBasisPoints) {
+    const rawValue = String(input?.value ?? "").trim();
+    if (!rawValue) return normalizeOfferTaxRateBasisPoints(fallback, defaultOfferTaxRateBasisPoints);
+    return normalizeOfferTaxRateBasisPoints(Number(rawValue) * 100, fallback);
   }
 
   function computeOfferComponentLineTotals(component) {
@@ -957,9 +969,7 @@ export function createBookingOfferComponentsModule(ctx) {
       amount_cents: Number.isFinite(parseMoneyInputValue(amountInput?.value ?? "", currency))
         ? Math.max(0, Math.round(parseMoneyInputValue(amountInput?.value ?? "", currency)))
         : Math.max(0, Number(fallback.amount_cents || 0)),
-      tax_rate_basis_points: Number.isFinite(Number(taxInput?.value))
-        ? Math.max(0, Math.round(Number(taxInput.value) * 100))
-        : Math.max(0, Number(fallback.tax_rate_basis_points || defaultOfferTaxRateBasisPoints)),
+      tax_rate_basis_points: readOfferTaxRateBasisPointsInput(taxInput, fallback.tax_rate_basis_points),
       currency
     };
   }
@@ -977,9 +987,7 @@ export function createBookingOfferComponentsModule(ctx) {
       const taxInput = row.querySelector("[data-offer-day-tax-rate]");
       const parsedGrossAmount = parseMoneyInputValue(amountInput?.value ?? "", currency);
       const parsedDayNumber = Number.parseInt(String(dayNumberInput?.value || "").trim(), 10);
-      const taxRateBasisPoints = Number.isFinite(Number(taxInput?.value))
-        ? Math.max(0, Math.round(Number(taxInput.value) * 100))
-        : Math.max(0, Number(fallback.tax_rate_basis_points || defaultOfferTaxRateBasisPoints));
+      const taxRateBasisPoints = readOfferTaxRateBasisPointsInput(taxInput, fallback.tax_rate_basis_points);
       return {
         ...fallback,
         day_number: Number.isInteger(parsedDayNumber) && parsedDayNumber >= 1 ? parsedDayNumber : index + 1,
@@ -1021,15 +1029,11 @@ export function createBookingOfferComponentsModule(ctx) {
           ? (isDayDetailLevel
               ? deriveUnitNetAmountFromGross(
                   Math.round(parsedAmount / Math.max(1, Math.round(Number(quantityInput?.value || fallback.quantity || 1)))),
-                  Number.isFinite(Number(taxInput?.value))
-                    ? Math.max(0, Math.round(Number(taxInput.value) * 100))
-                    : Math.max(0, Number(fallback.tax_rate_basis_points || defaultOfferTaxRateBasisPoints))
+                  readOfferTaxRateBasisPointsInput(taxInput, fallback.tax_rate_basis_points)
                 )
               : Math.max(0, Math.round(parsedAmount)))
           : Math.max(0, Number(fallback.unit_amount_cents || 0)),
-        tax_rate_basis_points: Number.isFinite(Number(taxInput?.value))
-          ? Math.max(0, Math.round(Number(taxInput.value) * 100))
-          : Math.max(0, Number(fallback.tax_rate_basis_points || defaultOfferTaxRateBasisPoints)),
+        tax_rate_basis_points: readOfferTaxRateBasisPointsInput(taxInput, fallback.tax_rate_basis_points),
         currency,
         sort_order: index
       };
@@ -1717,9 +1721,10 @@ export function createBookingOfferComponentsModule(ctx) {
     return offerCategories.map((category) => {
       const override = byCategory.get(category.code);
       const raw = override?.tax_rate_basis_points;
-      const taxRateBasisPoints = Number.isFinite(Number(raw))
-        ? Math.max(0, Math.round(Number(raw)))
-        : defaults.find((entry) => entry.category === category.code)?.tax_rate_basis_points || defaultOfferTaxRateBasisPoints;
+      const taxRateBasisPoints = normalizeOfferTaxRateBasisPoints(
+        raw,
+        defaults.find((entry) => entry.category === category.code)?.tax_rate_basis_points ?? defaultOfferTaxRateBasisPoints
+      );
       return {
         category: category.code,
         tax_rate_basis_points: taxRateBasisPoints
@@ -1824,7 +1829,7 @@ export function createBookingOfferComponentsModule(ctx) {
     return {
       label: String(tripPrice.label || "").trim() || null,
       amount_cents: amountCents,
-      tax_rate_basis_points: Math.max(0, Math.round(Number(tripPrice.tax_rate_basis_points || defaultOfferTaxRateBasisPoints))),
+      tax_rate_basis_points: normalizeOfferTaxRateBasisPoints(tripPrice.tax_rate_basis_points, defaultOfferTaxRateBasisPoints),
       currency: normalizeCurrencyCode(tripPrice.currency || state.offerDraft?.currency || state.booking?.preferred_currency || "USD"),
       ...(String(tripPrice.notes || "").trim() ? { notes: String(tripPrice.notes).trim() } : {})
     };
@@ -1849,7 +1854,7 @@ export function createBookingOfferComponentsModule(ctx) {
         day_number: dayNumber,
         ...(String(dayPrice?.label || "").trim() ? { label: String(dayPrice.label).trim() } : {}),
         amount_cents: amountCents,
-        tax_rate_basis_points: Math.max(0, Math.round(Number(dayPrice?.tax_rate_basis_points || defaultOfferTaxRateBasisPoints))),
+        tax_rate_basis_points: normalizeOfferTaxRateBasisPoints(dayPrice?.tax_rate_basis_points, defaultOfferTaxRateBasisPoints),
         currency,
         sort_order: index,
         ...(String(dayPrice?.notes || "").trim() ? { notes: String(dayPrice.notes).trim() } : {})
@@ -1879,7 +1884,7 @@ export function createBookingOfferComponentsModule(ctx) {
         ...(Number.isInteger(parsedDayNumber) && parsedDayNumber >= 1 ? { day_number: parsedDayNumber } : {}),
         quantity,
         unit_amount_cents: unitAmountCents,
-        tax_rate_basis_points: Math.max(0, Math.round(Number(item?.tax_rate_basis_points || defaultOfferTaxRateBasisPoints))),
+        tax_rate_basis_points: normalizeOfferTaxRateBasisPoints(item?.tax_rate_basis_points, defaultOfferTaxRateBasisPoints),
         currency,
         category: normalizeOfferCategory(item?.category || "OTHER"),
         ...(String(item?.notes || "").trim() ? { notes: String(item.notes).trim() } : {}),
@@ -1980,7 +1985,7 @@ export function createBookingOfferComponentsModule(ctx) {
         unit_amount_cents: Number(component.unit_amount_cents || 0),
         category: component.category || "OTHER",
         quantity: Number(component.quantity || 1),
-        tax_rate_basis_points: Number(component.tax_rate_basis_points || 1000)
+        tax_rate_basis_points: normalizeOfferTaxRateBasisPoints(component.tax_rate_basis_points, defaultOfferTaxRateBasisPoints)
       }))
     };
     const response = await fetchApi(request.url, {
@@ -2019,7 +2024,7 @@ export function createBookingOfferComponentsModule(ctx) {
           unit_amount_cents: Number(line.unit_amount_cents || 0),
           category: line.category || "OTHER",
           quantity: Number(line.quantity || 1),
-          tax_rate_basis_points: Number(line.tax_rate_basis_points || 0)
+          tax_rate_basis_points: normalizeOfferTaxRateBasisPoints(line.tax_rate_basis_points, 0)
         }))
       }
     });
@@ -2129,7 +2134,7 @@ export function createBookingOfferComponentsModule(ctx) {
               id: dayPrice.id || `offer_day_internal_${index}`,
               unit_amount_cents: Number(dayPrice.amount_cents || 0),
               quantity: 1,
-              tax_rate_basis_points: Number(dayPrice.tax_rate_basis_points || 0)
+              tax_rate_basis_points: normalizeOfferTaxRateBasisPoints(dayPrice.tax_rate_basis_points, 0)
             })))
           : Promise.resolve([]),
         internalDetailLevel === "trip" && tripPriceInternal
@@ -2137,14 +2142,14 @@ export function createBookingOfferComponentsModule(ctx) {
               id: "offer_trip_internal",
               unit_amount_cents: Number(tripPriceInternal.amount_cents || 0),
               quantity: 1,
-              tax_rate_basis_points: Number(tripPriceInternal.tax_rate_basis_points || 0)
+              tax_rate_basis_points: normalizeOfferTaxRateBasisPoints(tripPriceInternal.tax_rate_basis_points, 0)
             }])
           : Promise.resolve([]),
         convertOfferPricingLinesInBackend(currentCurrency, nextCurrency, additionalItems.map((item, index) => ({
           id: item.id || `offer_additional_item_${index}`,
           unit_amount_cents: Number(item.unit_amount_cents || 0),
           quantity: Number(item.quantity || 1),
-          tax_rate_basis_points: Number(item.tax_rate_basis_points || 0),
+          tax_rate_basis_points: normalizeOfferTaxRateBasisPoints(item.tax_rate_basis_points, 0),
           category: item.category || "OTHER"
         }))),
         convertOfferDiscountInBackend(currentCurrency, nextCurrency, discount)

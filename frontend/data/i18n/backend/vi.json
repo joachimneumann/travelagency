@@ -728,6 +728,7 @@
   "booking.travel_plan.human_readable_time": "Thời gian dạng dễ đọc",
   "booking.travel_plan.image_count": "{count} ảnh",
   "booking.travel_plan.image_order_updated": "Thứ tự ảnh đã được cập nhật.",
+  "booking.travel_plan.image_subtitle_optional": "Phụ đề ảnh (tùy chọn)",
   "booking.travel_plan.image_uploaded": "Ảnh đã được tải lên.",
   "booking.travel_plan.images_uploaded": "{count} ảnh đã được tải lên.",
   "booking.travel_plan.insert_as_copy": "Sử dụng",

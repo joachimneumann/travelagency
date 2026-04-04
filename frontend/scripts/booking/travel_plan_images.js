@@ -65,7 +65,7 @@ export function createBookingTravelPlanImagesModule(deps) {
       ? resolveTravelPlanImageSrc(image.storage_path, apiOrigin)
       : placeholderSrc;
     const primaryPreviewAlt = image
-      ? (image.alt_text || image.caption || item.title || bookingT("booking.travel_plan.picture", "Picture"))
+      ? (image.alt_text || image.caption || item.image_subtitle || item.title || bookingT("booking.travel_plan.picture", "Picture"))
       : (item.title || bookingT("booking.travel_plan.pictures", "Pictures"));
     const changePictureLabel = image
       ? bookingT("booking.travel_plan.change_picture", "Change picture")

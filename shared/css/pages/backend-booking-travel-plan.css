@@ -889,8 +889,19 @@
 
 .travel-plan-service__overview-media {
   display: flex;
+  flex-direction: column;
+  align-items: flex-end;
   justify-content: flex-end;
+  gap: 0.6rem;
   min-width: 0;
+}
+
+.travel-plan-service__image-subtitle-field {
+  width: min(100%, 18rem);
+}
+
+.travel-plan-service__image-subtitle-input {
+  font-style: italic;
 }
 
 .travel-plan-move-btn {
