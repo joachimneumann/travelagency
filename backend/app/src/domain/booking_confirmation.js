@@ -16,30 +16,10 @@ function parseIsoTimestamp(value) {
 
 export function readGeneratedOfferBookingConfirmationTokenState(generatedOffer) {
   return {
-    nonce: normalizeBookingConfirmationText(
-      generatedOffer?.booking_confirmation_token_nonce
-      || generatedOffer?.public_booking_confirmation_token_nonce
-      || generatedOffer?.acceptance_token_nonce
-      || generatedOffer?.public_acceptance_token_nonce
-    ),
-    createdAt: normalizeBookingConfirmationText(
-      generatedOffer?.booking_confirmation_token_created_at
-      || generatedOffer?.public_booking_confirmation_token_created_at
-      || generatedOffer?.acceptance_token_created_at
-      || generatedOffer?.public_acceptance_token_created_at
-    ),
-    expiresAt: normalizeBookingConfirmationText(
-      generatedOffer?.booking_confirmation_token_expires_at
-      || generatedOffer?.public_booking_confirmation_token_expires_at
-      || generatedOffer?.acceptance_token_expires_at
-      || generatedOffer?.public_acceptance_token_expires_at
-    ),
-    revokedAt: normalizeBookingConfirmationText(
-      generatedOffer?.booking_confirmation_token_revoked_at
-      || generatedOffer?.public_booking_confirmation_token_revoked_at
-      || generatedOffer?.acceptance_token_revoked_at
-      || generatedOffer?.public_acceptance_token_revoked_at
-    )
+    nonce: normalizeBookingConfirmationText(generatedOffer?.booking_confirmation_token_nonce),
+    createdAt: normalizeBookingConfirmationText(generatedOffer?.booking_confirmation_token_created_at),
+    expiresAt: normalizeBookingConfirmationText(generatedOffer?.booking_confirmation_token_expires_at),
+    revokedAt: normalizeBookingConfirmationText(generatedOffer?.booking_confirmation_token_revoked_at)
   };
 }
 
@@ -59,7 +39,7 @@ export function normalizeGeneratedOfferBookingConfirmationRouteStatus(value, mod
 }
 
 export function synchronizeGeneratedOfferBookingConfirmationRouteStatus(generatedOffer, { now = null } = {}) {
-  const route = generatedOffer?.booking_confirmation_route;
+  const route = generatedOffer?.customer_confirmation_flow;
   if (!route || typeof route !== "object") return false;
   const mode = normalizeGeneratedOfferBookingConfirmationRouteMode(route.mode);
   const expiresAt = normalizeBookingConfirmationText(route.expires_at);
@@ -84,44 +64,88 @@ export function synchronizeGeneratedOfferBookingConfirmationRouteStatus(generate
   return changed;
 }
 
-function migrateLegacyGeneratedOfferBookingConfirmationState(generatedOffer) {
+function migratePersistedGeneratedOfferBookingConfirmationState(generatedOffer) {
   if (!generatedOffer || typeof generatedOffer !== "object") return false;
   let changed = false;
-  const legacyObjectFieldMap = [
-    ["acceptance", "booking_confirmation"],
-    ["acceptance_route", "booking_confirmation_route"]
-  ];
-  for (const [legacyField, currentField] of legacyObjectFieldMap) {
-    if (generatedOffer?.[legacyField] && generatedOffer?.[currentField] == null) {
-      generatedOffer[currentField] = generatedOffer[legacyField];
-      changed = true;
-    }
-    if (legacyField in generatedOffer) {
-      delete generatedOffer[legacyField];
-      changed = true;
-    }
-  }
-  const legacyFieldMap = [
-    ["acceptance_token_nonce", "booking_confirmation_token_nonce"],
-    ["acceptance_token_created_at", "booking_confirmation_token_created_at"],
-    ["acceptance_token_expires_at", "booking_confirmation_token_expires_at"],
-    ["acceptance_token_revoked_at", "booking_confirmation_token_revoked_at"],
-    ["public_acceptance_token_nonce", "booking_confirmation_token_nonce"],
-    ["public_acceptance_token_created_at", "booking_confirmation_token_created_at"],
-    ["public_acceptance_token_expires_at", "booking_confirmation_token_expires_at"],
-    ["public_acceptance_token_revoked_at", "booking_confirmation_token_revoked_at"],
-    ["public_booking_confirmation_token_nonce", "booking_confirmation_token_nonce"],
-    ["public_booking_confirmation_token_created_at", "booking_confirmation_token_created_at"],
-    ["public_booking_confirmation_token_expires_at", "booking_confirmation_token_expires_at"],
-    ["public_booking_confirmation_token_revoked_at", "booking_confirmation_token_revoked_at"]
-  ];
 
-  for (const [legacyField, currentField] of legacyFieldMap) {
-    const legacyValue = normalizeBookingConfirmationText(generatedOffer?.[legacyField]);
-    if (legacyValue && !normalizeBookingConfirmationText(generatedOffer?.[currentField])) {
-      generatedOffer[currentField] = legacyValue;
-      changed = true;
-    }
+  if (generatedOffer?.acceptance && generatedOffer?.booking_confirmation == null) {
+    generatedOffer.booking_confirmation = generatedOffer.acceptance;
+    changed = true;
+  }
+  if ("acceptance" in generatedOffer) {
+    delete generatedOffer.acceptance;
+    changed = true;
+  }
+
+  const legacyRoute = generatedOffer?.acceptance_route ?? generatedOffer?.booking_confirmation_route;
+  if (legacyRoute && generatedOffer?.customer_confirmation_flow == null) {
+    generatedOffer.customer_confirmation_flow = legacyRoute;
+    changed = true;
+  }
+  if ("acceptance_route" in generatedOffer) {
+    delete generatedOffer.acceptance_route;
+    changed = true;
+  }
+  if ("booking_confirmation_route" in generatedOffer) {
+    delete generatedOffer.booking_confirmation_route;
+    changed = true;
+  }
+
+  const legacyTokenNonce = normalizeBookingConfirmationText(
+    generatedOffer?.acceptance_token_nonce
+    || generatedOffer?.public_acceptance_token_nonce
+    || generatedOffer?.public_booking_confirmation_token_nonce
+  );
+  if (legacyTokenNonce && !normalizeBookingConfirmationText(generatedOffer?.booking_confirmation_token_nonce)) {
+    generatedOffer.booking_confirmation_token_nonce = legacyTokenNonce;
+    changed = true;
+  }
+
+  const legacyTokenCreatedAt = normalizeBookingConfirmationText(
+    generatedOffer?.acceptance_token_created_at
+    || generatedOffer?.public_acceptance_token_created_at
+    || generatedOffer?.public_booking_confirmation_token_created_at
+  );
+  if (legacyTokenCreatedAt && !normalizeBookingConfirmationText(generatedOffer?.booking_confirmation_token_created_at)) {
+    generatedOffer.booking_confirmation_token_created_at = legacyTokenCreatedAt;
+    changed = true;
+  }
+
+  const legacyTokenExpiresAt = normalizeBookingConfirmationText(
+    generatedOffer?.acceptance_token_expires_at
+    || generatedOffer?.public_acceptance_token_expires_at
+    || generatedOffer?.public_booking_confirmation_token_expires_at
+  );
+  if (legacyTokenExpiresAt && !normalizeBookingConfirmationText(generatedOffer?.booking_confirmation_token_expires_at)) {
+    generatedOffer.booking_confirmation_token_expires_at = legacyTokenExpiresAt;
+    changed = true;
+  }
+
+  const legacyTokenRevokedAt = normalizeBookingConfirmationText(
+    generatedOffer?.acceptance_token_revoked_at
+    || generatedOffer?.public_acceptance_token_revoked_at
+    || generatedOffer?.public_booking_confirmation_token_revoked_at
+  );
+  if (legacyTokenRevokedAt && !normalizeBookingConfirmationText(generatedOffer?.booking_confirmation_token_revoked_at)) {
+    generatedOffer.booking_confirmation_token_revoked_at = legacyTokenRevokedAt;
+    changed = true;
+  }
+
+  const legacyTokenFields = [
+    "acceptance_token_nonce",
+    "acceptance_token_created_at",
+    "acceptance_token_expires_at",
+    "acceptance_token_revoked_at",
+    "public_acceptance_token_nonce",
+    "public_acceptance_token_created_at",
+    "public_acceptance_token_expires_at",
+    "public_acceptance_token_revoked_at",
+    "public_booking_confirmation_token_nonce",
+    "public_booking_confirmation_token_created_at",
+    "public_booking_confirmation_token_expires_at",
+    "public_booking_confirmation_token_revoked_at"
+  ];
+  for (const legacyField of legacyTokenFields) {
     if (legacyField in generatedOffer) {
       delete generatedOffer[legacyField];
       changed = true;
@@ -239,7 +263,10 @@ export function verifyBookingConfirmationToken(token, { bookingId, generatedOffe
 
 export function ensureGeneratedOfferBookingConfirmationTokenState(generatedOffer, { now = null, ttlMs = BOOKING_CONFIRMATION_TOKEN_TTL_MS } = {}) {
   if (!generatedOffer || typeof generatedOffer !== "object") return false;
-  let changed = migrateLegacyGeneratedOfferBookingConfirmationState(generatedOffer);
+  let changed = false;
+  if (!generatedOffer?.customer_confirmation_flow || typeof generatedOffer.customer_confirmation_flow !== "object") {
+    return changed;
+  }
   const timestamp = normalizeBookingConfirmationText(now) || new Date().toISOString();
   const existingTokenState = readGeneratedOfferBookingConfirmationTokenState(generatedOffer);
   const createdAt = normalizeBookingConfirmationText(
@@ -266,7 +293,7 @@ export function ensureGeneratedOfferBookingConfirmationTokenState(generatedOffer
   return changed;
 }
 
-export function backfillGeneratedOfferBookingConfirmationTokenState(store, { now = null, ttlMs = BOOKING_CONFIRMATION_TOKEN_TTL_MS } = {}) {
+export function backfillGeneratedOfferBookingConfirmationState(store, { now = null, ttlMs = BOOKING_CONFIRMATION_TOKEN_TTL_MS } = {}) {
   const bookings = Array.isArray(store?.bookings) ? store.bookings : [];
   let changed = false;
   for (const booking of bookings) {
@@ -277,6 +304,9 @@ export function backfillGeneratedOfferBookingConfirmationTokenState(store, { now
     }
     const generatedOffers = Array.isArray(booking?.generated_offers) ? booking.generated_offers : [];
     for (const generatedOffer of generatedOffers) {
+      if (migratePersistedGeneratedOfferBookingConfirmationState(generatedOffer)) {
+        changed = true;
+      }
       if (ensureGeneratedOfferBookingConfirmationTokenState(generatedOffer, { now, ttlMs })) {
         changed = true;
       }
@@ -293,22 +323,10 @@ export function buildGeneratedOfferTransportFields(generatedOffer, { secret = ""
   const {
     pdf_frozen_at: _pdfFrozenAt,
     pdf_sha256: _pdfSha256,
-    booking_confirmation_token_nonce: _acceptanceTokenNonce,
-    booking_confirmation_token_created_at: _acceptanceTokenCreatedAt,
-    booking_confirmation_token_expires_at: _acceptanceTokenExpiresAt,
-    booking_confirmation_token_revoked_at: _acceptanceTokenRevokedAt,
-    acceptance_token_nonce: _legacyAcceptanceTokenNonceOld,
-    acceptance_token_created_at: _legacyAcceptanceTokenCreatedAtOld,
-    acceptance_token_expires_at: _legacyAcceptanceTokenExpiresAtOld,
-    acceptance_token_revoked_at: _legacyAcceptanceTokenRevokedAtOld,
-    public_acceptance_token_nonce: _legacyPublicAcceptanceTokenNonceOld,
-    public_acceptance_token_created_at: _legacyPublicAcceptanceTokenCreatedAtOld,
-    public_acceptance_token_expires_at: _legacyPublicAcceptanceTokenExpiresAtOld,
-    public_acceptance_token_revoked_at: _legacyPublicAcceptanceTokenRevokedAtOld,
-    public_booking_confirmation_token_nonce: _legacyAcceptanceTokenNonce,
-    public_booking_confirmation_token_created_at: _legacyAcceptanceTokenCreatedAt,
-    public_booking_confirmation_token_expires_at: _legacyAcceptanceTokenExpiresAt,
-    public_booking_confirmation_token_revoked_at: _legacyAcceptanceTokenRevokedAt,
+    booking_confirmation_token_nonce: _bookingConfirmationTokenNonce,
+    booking_confirmation_token_created_at: _bookingConfirmationTokenCreatedAt,
+    booking_confirmation_token_expires_at: _bookingConfirmationTokenExpiresAt,
+    booking_confirmation_token_revoked_at: _bookingConfirmationTokenRevokedAt,
     ...publicFields
   } = generatedOffer;
   const normalizedComment = normalizeBookingConfirmationText(publicFields.comment);
@@ -318,14 +336,14 @@ export function buildGeneratedOfferTransportFields(generatedOffer, { secret = ""
     delete publicFields.comment;
   }
 
-  const normalizedBookingConfirmationRoute = buildGeneratedOfferBookingConfirmationRouteReadModel(generatedOffer, { now: new Date().toISOString() });
-  if (normalizedBookingConfirmationRoute) {
-    publicFields.booking_confirmation_route = normalizedBookingConfirmationRoute;
+  const normalizedCustomerConfirmationFlow = buildGeneratedOfferBookingConfirmationRouteReadModel(generatedOffer, { now: new Date().toISOString() });
+  if (normalizedCustomerConfirmationFlow) {
+    publicFields.customer_confirmation_flow = normalizedCustomerConfirmationFlow;
   } else {
-    delete publicFields.booking_confirmation_route;
+    delete publicFields.customer_confirmation_flow;
   }
 
-  if (!includeBookingConfirmationToken) return publicFields;
+  if (!includeBookingConfirmationToken || !normalizedCustomerConfirmationFlow) return publicFields;
 
   const normalizedSecret = normalizeBookingConfirmationText(secret);
   const bookingConfirmationTokenState = readGeneratedOfferBookingConfirmationTokenState(generatedOffer);
@@ -356,7 +374,7 @@ export function buildGeneratedOfferTransportFields(generatedOffer, { secret = ""
 }
 
 export function buildGeneratedOfferBookingConfirmationRouteReadModel(generatedOffer, { now = null } = {}) {
-  const route = generatedOffer?.booking_confirmation_route;
+  const route = generatedOffer?.customer_confirmation_flow;
   if (!route || typeof route !== "object") return null;
   const mode = normalizeGeneratedOfferBookingConfirmationRouteMode(route.mode);
   const expiresAt = normalizeBookingConfirmationText(route.expires_at);
@@ -411,6 +429,9 @@ export function buildGeneratedOfferBookingConfirmationPublicSummary(bookingConfi
   return {
     accepted_at: normalizeBookingConfirmationText(bookingConfirmation.accepted_at) || new Date().toISOString(),
     method: normalizeBookingConfirmationText(bookingConfirmation.method).toUpperCase() || "PORTAL_CLICK",
+    ...(normalizeBookingConfirmationText(bookingConfirmation.management_approver_atp_staff_id)
+      ? { management_approver_atp_staff_id: normalizeBookingConfirmationText(bookingConfirmation.management_approver_atp_staff_id) }
+      : {}),
     ...(Number.isFinite(Number(bookingConfirmation.accepted_amount_cents))
       ? { accepted_amount_cents: Math.max(0, Math.round(Number(bookingConfirmation.accepted_amount_cents))) }
       : {}),
@@ -454,7 +475,9 @@ export function buildGeneratedOfferSnapshotHash(generatedOffer) {
     lang: generatedOffer.lang || null,
     currency: generatedOffer.currency || null,
     total_price_cents: Number.isFinite(Number(generatedOffer.total_price_cents)) ? Number(generatedOffer.total_price_cents) : null,
-    booking_confirmation_route: buildGeneratedOfferBookingConfirmationRouteReadModel(generatedOffer) || null,
+    management_approver_atp_staff_id: generatedOffer.management_approver_atp_staff_id || null,
+    management_approver_label: generatedOffer.management_approver_label || null,
+    customer_confirmation_flow: buildGeneratedOfferBookingConfirmationRouteReadModel(generatedOffer) || null,
     offer: generatedOffer.offer || null,
     travel_plan: generatedOffer.travel_plan || null
   };

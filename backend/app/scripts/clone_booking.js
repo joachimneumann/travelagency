@@ -21,7 +21,7 @@ function normalizeText(value) {
 function usageLines() {
   return [
     "Usage:",
-    "  node backend/app/scripts/clone_booking.js --source <booking_id> [--name <name>] [--copies <n>] [--store <path>] [--data-dir <path>] [--keep-assignee] [--keep-stage]",
+    "  node backend/app/scripts/clone_booking.js --source <booking_id> [--name <name>] [--copies <n>] [--store <path>] [--data-dir <path>] [--include-travelers]",
     "  node backend/app/scripts/clone_booking.js --source <booking_id> --push-to <ssh_host> [--remote-store <path>] [--remote-data-dir <path>] [--overwrite]",
     "  node backend/app/scripts/clone_booking.js --source <booking_id> --pull-from <ssh_host> [--remote-store <path>] [--remote-data-dir <path>] [--overwrite]",
     "",
@@ -31,8 +31,7 @@ function usageLines() {
     "  --copies <n>          Create multiple clones. Default: 1.",
     "  --store <path>        Override local STORE_FILE.",
     "  --data-dir <path>     Override local BACKEND_DATA_DIR.",
-    "  --keep-assignee       Preserve assigned_keycloak_user_id when cloning locally.",
-    "  --keep-stage          Preserve the source booking stage when cloning locally.",
+    "  --include-travelers   Clone travelers and their document/photo refs into the new booking.",
     "  --push-to <ssh_host>  Copy one booking from the local machine to a remote machine via SSH.",
     "  --pull-from <ssh_host> Copy one booking from a remote machine to the local machine via SSH.",
     "  --remote-store <path> Override remote STORE_FILE.",
@@ -49,8 +48,7 @@ function parseArgs(argv = process.argv.slice(2)) {
     copies: 1,
     storePath: "",
     dataDir: "",
-    keepAssignment: false,
-    keepStage: false,
+    includeTravelers: false,
     pushTo: "",
     pullFrom: "",
     remoteStorePath: "",
@@ -118,12 +116,8 @@ function parseArgs(argv = process.argv.slice(2)) {
       index += 1;
       continue;
     }
-    if (arg === "--keep-assignee") {
-      options.keepAssignment = true;
-      continue;
-    }
-    if (arg === "--keep-stage") {
-      options.keepStage = true;
+    if (arg === "--include-travelers") {
+      options.includeTravelers = true;
       continue;
     }
     if (arg === "--overwrite") {
@@ -140,7 +134,7 @@ function parseArgs(argv = process.argv.slice(2)) {
   if (options.pushTo && options.pullFrom) {
     throw new Error("--push-to and --pull-from cannot be used together");
   }
-  if ((options.pushTo || options.pullFrom) && (options.name || options.copies !== 1 || options.keepAssignment || options.keepStage)) {
+  if ((options.pushTo || options.pullFrom) && (options.name || options.copies !== 1 || options.includeTravelers)) {
     throw new Error("SSH transfer mode cannot be combined with clone-only options");
   }
 
@@ -204,8 +198,7 @@ export async function cloneBookingsFromStore(options = {}) {
       randomUUID,
       nowIso,
       name: cloneName,
-      keepAssignment: options.keepAssignment === true,
-      keepStage: options.keepStage === true
+      includeTravelers: options.includeTravelers === true
     });
     store.bookings.push(clonedBooking);
     store.activities.push({

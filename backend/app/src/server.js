@@ -8,7 +8,7 @@ import {
   normalizeEmail,
   normalizePhone
 } from "./domain/phone_matching.js";
-import { backfillGeneratedOfferBookingConfirmationTokenState } from "./domain/booking_confirmation.js";
+import { backfillGeneratedOfferBookingConfirmationState } from "./domain/booking_confirmation.js";
 import { collapseGeneratedOfferPaymentTermsState } from "./domain/generated_offer_artifacts.js";
 import { createBackendServices } from "./bootstrap/services.js";
 import { createApplicationRoutes } from "./bootstrap/application_handlers.js";
@@ -234,7 +234,7 @@ export async function createBackendHandler({ port = PORT } = {}) {
   const backfilledBookingPersons = startupStore.__bookingPersonsWritebackNeeded === true;
   const backfilledBookingOffers = startupStore.__bookingOfferWritebackNeeded === true;
   const collapsedGeneratedOfferPaymentTerms = collapseGeneratedOfferPaymentTermsState(startupStore);
-  if (backfillGeneratedOfferBookingConfirmationTokenState(startupStore, {
+  if (backfillGeneratedOfferBookingConfirmationState(startupStore, {
     now: nowIso(),
     ttlMs: BOOKING_CONFIRMATION_TOKEN_CONFIG.ttlMs
   }) || collapsedGeneratedOfferPaymentTerms || backfilledBookingPersons || backfilledBookingOffers) {

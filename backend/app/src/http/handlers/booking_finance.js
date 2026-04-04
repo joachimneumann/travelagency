@@ -7,7 +7,11 @@ import { createGmailDraftsClient } from "../../lib/gmail_drafts.js";
 import { normalizePdfLang, pdfT } from "../../lib/pdf_i18n.js";
 import {
   normalizeGeneratedOfferBookingConfirmationRouteMode,
-  ensureGeneratedOfferBookingConfirmationTokenState
+  ensureGeneratedOfferBookingConfirmationTokenState,
+  buildBookingConfirmationStatement,
+  buildBookingConfirmationTermsSnapshot,
+  BOOKING_CONFIRMATION_TERMS_VERSION,
+  buildGeneratedOfferSnapshotHash
 } from "../../domain/booking_confirmation.js";
 import {
   mergeEditableLocalizedTextField,
@@ -223,13 +227,13 @@ export function createBookingFinanceHandlers(deps) {
   }
 
   function buildGeneratedOfferBookingConfirmationRoute({ generatedOffer, booking, offerSnapshot, payload, principal, now }) {
-    const requestedRoute = payload?.booking_confirmation_route && typeof payload.booking_confirmation_route === "object"
-      ? payload.booking_confirmation_route
+    const requestedFlow = payload?.customer_confirmation_flow && typeof payload.customer_confirmation_flow === "object"
+      ? payload.customer_confirmation_flow
       : null;
     const paymentTerms = offerSnapshot?.payment_terms || null;
     const hasPaymentTermLines = Array.isArray(paymentTerms?.lines) && paymentTerms.lines.length > 0;
-    const mode = requestedRoute
-      ? normalizeGeneratedOfferBookingConfirmationRouteMode(requestedRoute.mode)
+    const mode = requestedFlow
+      ? normalizeGeneratedOfferBookingConfirmationRouteMode(requestedFlow.mode)
       : (hasPaymentTermLines ? "DEPOSIT_PAYMENT" : "");
     const selectedByATPStaffId = normalizeText(
       principal?.sub
@@ -238,8 +242,8 @@ export function createBookingFinanceHandlers(deps) {
       || booking?.assigned_keycloak_user_id
       || "keycloak_user"
     ) || "keycloak_user";
-    const expiresAt = normalizeText(requestedRoute?.expires_at) || "";
-    const customerMessageSnapshot = normalizeText(requestedRoute?.customer_message_snapshot);
+    const expiresAt = normalizeText(requestedFlow?.expires_at) || "";
+    const customerMessageSnapshot = normalizeText(requestedFlow?.customer_message_snapshot);
 
     if (!mode) {
       return null;
@@ -248,7 +252,7 @@ export function createBookingFinanceHandlers(deps) {
     if (mode === "DEPOSIT_PAYMENT") {
       const acceptanceLine = resolveGeneratedOfferBookingConfirmationPaymentLine(
         paymentTerms,
-        requestedRoute?.deposit_rule?.payment_term_line_id
+        requestedFlow?.deposit_rule?.payment_term_line_id
       );
       return {
         mode,
@@ -268,6 +272,176 @@ export function createBookingFinanceHandlers(deps) {
     }
 
     throw new Error("Invalid generated booking confirmation route.");
+  }
+
+  function resolveGeneratedOfferManagementApprover(booking) {
+    const approverId = normalizeText(
+      booking?.assigned_keycloak_user_id
+      || booking?.assigned_atp_staff?.id
+      || booking?.assigned_atp_staff?.username
+    );
+    const approverLabel = normalizeText(
+      booking?.assigned_atp_staff?.full_name
+      || booking?.assigned_keycloak_user_label
+      || booking?.assigned_atp_staff?.username
+    );
+    return {
+      approverId: approverId || null,
+      approverLabel: approverLabel || approverId || null
+    };
+  }
+
+  function toDateOnly(value) {
+    const normalized = normalizeText(value);
+    if (!normalized) return null;
+    const directMatch = normalized.match(/^(\d{4}-\d{2}-\d{2})/);
+    if (directMatch) return directMatch[1];
+    const parsed = new Date(normalized);
+    if (Number.isNaN(parsed.getTime())) return null;
+    return parsed.toISOString().slice(0, 10);
+  }
+
+  function shiftDateOnly(value, days) {
+    const baseDate = toDateOnly(value);
+    if (!baseDate) return null;
+    const parsed = new Date(`${baseDate}T00:00:00.000Z`);
+    if (Number.isNaN(parsed.getTime())) return null;
+    parsed.setUTCDate(parsed.getUTCDate() + (Number.isFinite(Number(days)) ? Math.round(Number(days)) : 0));
+    return parsed.toISOString().slice(0, 10);
+  }
+
+  function resolveAcceptedOfferPaymentDueDate(line, booking, acceptedAt) {
+    const dueRule = line?.due_rule && typeof line.due_rule === "object" ? line.due_rule : {};
+    const dueType = normalizeText(dueRule.type).toUpperCase();
+    const days = Number.isFinite(Number(dueRule.days)) ? Number(dueRule.days) : 0;
+
+    if (dueType === "FIXED_DATE") return toDateOnly(dueRule.fixed_date);
+    if (dueType === "DAYS_AFTER_ACCEPTANCE") return shiftDateOnly(acceptedAt, days);
+    if (dueType === "DAYS_BEFORE_TRIP_START") return shiftDateOnly(booking?.travel_start_day, -days);
+    if (dueType === "DAYS_AFTER_TRIP_START") return shiftDateOnly(booking?.travel_start_day, days);
+    if (dueType === "DAYS_AFTER_TRIP_END") return shiftDateOnly(booking?.travel_end_day, days);
+    return toDateOnly(acceptedAt);
+  }
+
+  function buildAcceptedOfferSeedPricing({ booking, normalizedSnapshot, acceptedAt }) {
+    const paymentTerms = normalizedSnapshot?.payment_terms;
+    const lines = Array.isArray(paymentTerms?.lines) ? paymentTerms.lines : [];
+    if (!lines.length) return null;
+
+    return {
+      currency: normalizeText(paymentTerms?.currency || normalizedSnapshot?.currency) || "USD",
+      agreed_net_amount_cents: Math.max(0, Math.round(Number(normalizedSnapshot?.total_price_cents || 0))),
+      adjustments: [],
+      payments: lines.map((line, index) => {
+        const label = normalizeText(line?.label) || `Payment ${index + 1}`;
+        const dueDate = resolveAcceptedOfferPaymentDueDate(line, booking, acceptedAt);
+        const notes = normalizeText(line?.description);
+        return {
+          id: `pricing_payment_${randomUUID()}`,
+          label,
+          ...(dueDate ? { due_date: dueDate } : {}),
+          net_amount_cents: Math.max(0, Math.round(Number(line?.resolved_amount_cents || 0))),
+          tax_rate_basis_points: 0,
+          status: "PENDING",
+          paid_at: null,
+          ...(notes ? { notes } : {})
+        };
+      })
+    };
+  }
+
+  async function seedAcceptedOfferPricing({ booking, normalizedSnapshot, acceptedAt }) {
+    const seedPricing = buildAcceptedOfferSeedPricing({ booking, normalizedSnapshot, acceptedAt });
+    if (!seedPricing) return false;
+
+    const currentPricing = await convertBookingPricingToBaseCurrency(booking?.pricing || {});
+    if (Array.isArray(currentPricing?.payments) && currentPricing.payments.length > 0) {
+      return false;
+    }
+
+    const convertedSeedPricing = await convertBookingPricingToBaseCurrency(seedPricing);
+    const nextPricing = normalizeBookingPricing({
+      ...currentPricing,
+      currency: convertedSeedPricing.currency,
+      agreed_net_amount_cents: Number(currentPricing?.agreed_net_amount_cents || 0) > 0
+        ? currentPricing.agreed_net_amount_cents
+        : convertedSeedPricing.agreed_net_amount_cents,
+      payments: convertedSeedPricing.payments
+    });
+
+    if (JSON.stringify(nextPricing) === JSON.stringify(currentPricing)) {
+      return false;
+    }
+
+    booking.pricing = nextPricing;
+    incrementBookingRevision(booking, "pricing_revision");
+    return true;
+  }
+
+  async function finalizeManagementGeneratedOfferConfirmation({ req, payload, store, booking, generatedOffer, principal }) {
+    if (normalizeText(booking?.confirmed_generated_offer_id) && normalizeText(booking.confirmed_generated_offer_id) !== generatedOffer.id) {
+      return { ok: false, status: 409, error: "Another generated offer has already been confirmed for this booking." };
+    }
+
+    if (generatedOffer?.booking_confirmation && typeof generatedOffer.booking_confirmation === "object") {
+      if (!normalizeText(booking?.confirmed_generated_offer_id)) {
+        booking.confirmed_generated_offer_id = generatedOffer.id;
+        await persistStore(store);
+      }
+      return { ok: true, bookingConfirmation: generatedOffer.booking_confirmation, unchanged: true };
+    }
+
+    const approverId = normalizeText(generatedOffer?.management_approver_atp_staff_id);
+    const approverLabel = normalizeText(generatedOffer?.management_approver_label);
+    if (!approverId || !approverLabel) {
+      return { ok: false, status: 422, error: "This generated offer has no management approver assigned." };
+    }
+    if (normalizeText(principal?.sub) !== approverId) {
+      return { ok: false, status: 403, error: "Only the assigned management approver can confirm this booking." };
+    }
+
+    const normalizedSnapshot = normalizeGeneratedOfferSnapshot(generatedOffer, booking);
+    const frozenPdf = await ensureFrozenGeneratedOfferPdf(generatedOffer, booking, { store });
+    const bookingConfirmation = {
+      id: `booking_confirmation_${randomUUID()}`,
+      accepted_at: nowIso(),
+      accepted_by_name: approverLabel,
+      language: normalizePdfLang(normalizedSnapshot.lang || booking?.customer_language || "en"),
+      method: "MANAGEMENT",
+      management_approver_atp_staff_id: approverId,
+      statement_snapshot: buildBookingConfirmationStatement({
+        bookingName: normalizeText(booking?.name || booking?.web_form_submission?.booking_name),
+        formattedTotal: formatMoney(normalizedSnapshot.total_price_cents, normalizedSnapshot.currency)
+      }),
+      terms_version: BOOKING_CONFIRMATION_TERMS_VERSION,
+      terms_snapshot: buildBookingConfirmationTermsSnapshot(),
+      offer_currency: normalizedSnapshot.currency,
+      offer_total_price_cents: Number(normalizedSnapshot.total_price_cents || 0),
+      offer_pdf_sha256: normalizeText(generatedOffer?.pdf_sha256 || frozenPdf?.sha256),
+      offer_snapshot_sha256: buildGeneratedOfferSnapshotHash(normalizedSnapshot)
+    };
+
+    generatedOffer.booking_confirmation = bookingConfirmation;
+    if (generatedOffer?.customer_confirmation_flow && typeof generatedOffer.customer_confirmation_flow === "object") {
+      generatedOffer.customer_confirmation_flow.status = "CONFIRMED";
+    }
+    booking.confirmed_generated_offer_id = generatedOffer.id;
+    await seedAcceptedOfferPricing({
+      booking,
+      normalizedSnapshot,
+      acceptedAt: bookingConfirmation.accepted_at
+    });
+    booking.offer_revision = (Number.isInteger(Number(booking.offer_revision)) ? Number(booking.offer_revision) : 0) + 1;
+    booking.updated_at = nowIso();
+    addActivity(
+      store,
+      booking.id,
+      "BOOKING_CONFIRMED",
+      actorLabel(principal, normalizeText(payload?.actor) || "keycloak_user"),
+      `Booking confirmed by management approver ${approverLabel}`
+    );
+    await persistStore(store);
+    return { ok: true, bookingConfirmation, unchanged: false };
   }
 
   async function handlePatchBookingPricing(req, res, [bookingId]) {
@@ -703,7 +877,13 @@ export function createBookingFinanceHandlers(deps) {
       offer: offerSnapshot,
       travel_plan: travelPlanSnapshot
     };
-    ensureGeneratedOfferBookingConfirmationTokenState(generatedOffer);
+    const { approverId, approverLabel } = resolveGeneratedOfferManagementApprover(booking);
+    if (approverId) {
+      generatedOffer.management_approver_atp_staff_id = approverId;
+    }
+    if (approverLabel) {
+      generatedOffer.management_approver_label = approverLabel;
+    }
     try {
       const bookingConfirmationRoute = buildGeneratedOfferBookingConfirmationRoute({
         generatedOffer,
@@ -714,7 +894,8 @@ export function createBookingFinanceHandlers(deps) {
         now
       });
       if (bookingConfirmationRoute) {
-        generatedOffer.booking_confirmation_route = bookingConfirmationRoute;
+        generatedOffer.customer_confirmation_flow = bookingConfirmationRoute;
+        ensureGeneratedOfferBookingConfirmationTokenState(generatedOffer, { now });
       }
     } catch (error) {
       sendJson(res, 422, { error: String(error?.message || error || "Invalid generated booking confirmation route.") });
@@ -890,17 +1071,52 @@ export function createBookingFinanceHandlers(deps) {
       return;
     }
 
+    const currentGeneratedOffer = generatedOffers[index];
     const nextComment = normalizeText(payload?.comment) || null;
-    if ((generatedOffers[index].comment || null) === nextComment) {
+    const confirmAsManagement = payload?.confirm_as_management === true;
+    const commentChanged = (currentGeneratedOffer.comment || null) !== nextComment;
+    if (!commentChanged && !confirmAsManagement) {
       sendJson(res, 200, { ...(await buildBookingDetailResponse(booking, req)), unchanged: true });
       return;
     }
 
-    generatedOffers[index] = {
-      ...generatedOffers[index],
-      comment: nextComment
-    };
-    booking.generated_offers = generatedOffers;
+    if (commentChanged) {
+      generatedOffers[index] = {
+        ...currentGeneratedOffer,
+        comment: nextComment
+      };
+      booking.generated_offers = generatedOffers;
+    }
+
+    if (confirmAsManagement) {
+      const finalized = await finalizeManagementGeneratedOfferConfirmation({
+        req,
+        payload,
+        store,
+        booking,
+        generatedOffer: generatedOffers[index],
+        principal
+      });
+      if (!finalized.ok) {
+        sendJson(res, finalized.status || 422, { error: finalized.error || "Could not confirm generated offer." });
+        return;
+      }
+      if (commentChanged && finalized.unchanged) {
+        incrementBookingRevision(booking, "offer_revision");
+        booking.updated_at = nowIso();
+        addActivity(
+          store,
+          booking.id,
+          "OFFER_UPDATED",
+          actorLabel(principal, normalizeText(payload?.actor) || "keycloak_user"),
+          "Generated offer comment updated"
+        );
+        await persistStore(store);
+      }
+      sendJson(res, 200, await buildBookingDetailResponse(booking, req));
+      return;
+    }
+
     incrementBookingRevision(booking, "offer_revision");
     booking.updated_at = nowIso();
     addActivity(

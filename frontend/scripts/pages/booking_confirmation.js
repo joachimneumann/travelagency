@@ -121,7 +121,7 @@ function formatPaymentDueRule(rule) {
 }
 
 function routeMode() {
-  return normalizeBookingConfirmationRouteMode(state.access?.booking_confirmation_route?.mode || "DEPOSIT_PAYMENT");
+  return normalizeBookingConfirmationRouteMode(state.access?.customer_confirmation_flow?.mode || "DEPOSIT_PAYMENT");
 }
 
 function routeUsesDepositPayment() {
@@ -176,8 +176,8 @@ function renderSummary() {
 function renderRouteCard() {
   if (!els.route) return;
   const access = state.access;
-  const bookingConfirmationRoute = access?.booking_confirmation_route;
-  if (!access || !bookingConfirmationRoute) {
+  const customerConfirmationFlow = access?.customer_confirmation_flow;
+  if (!access || !customerConfirmationFlow) {
     els.route.hidden = true;
     els.route.innerHTML = "";
     return;
@@ -188,15 +188,15 @@ function renderRouteCard() {
     : formatGeneratedOfferBookingConfirmationRouteLabel(routeMode(), { deposit: "Deposit payment" });
   const defaultMessage = isDeposit
     ? (() => {
-        const label = normalizeText(bookingConfirmationRoute?.deposit_rule?.payment_term_label) || "the required payment";
-        const amount = Number.isFinite(Number(bookingConfirmationRoute?.deposit_rule?.required_amount_cents))
-          ? formatMoney(bookingConfirmationRoute.deposit_rule.required_amount_cents, bookingConfirmationRoute?.deposit_rule?.currency || access.currency)
+        const label = normalizeText(customerConfirmationFlow?.deposit_rule?.payment_term_label) || "the required payment";
+        const amount = Number.isFinite(Number(customerConfirmationFlow?.deposit_rule?.required_amount_cents))
+          ? formatMoney(customerConfirmationFlow.deposit_rule.required_amount_cents, customerConfirmationFlow?.deposit_rule?.currency || access.currency)
           : formatMoney(access.total_price_cents, access.currency);
         return `This offer is confirmed once we receive ${amount} for ${label}.`;
       })()
     : "Review the frozen offer and confirm the booking below.";
   const routeStatus = normalizeBookingConfirmationRouteStatus(
-    bookingConfirmationRoute?.status,
+    customerConfirmationFlow?.status,
     isDeposit ? "AWAITING_PAYMENT" : "OPEN"
   );
   const statusLabel = normalizeText(routeStatus)
@@ -215,7 +215,7 @@ function renderRouteCard() {
       <h2 class="booking-confirmation-route__title">${escapeHtml(routeTitle)}</h2>
       <span class="booking-confirmation-route__status">${escapeHtml(statusLabel)}</span>
     </div>
-    <p class="booking-confirmation-route__body">${escapeHtml(normalizeText(bookingConfirmationRoute?.customer_message_snapshot) || defaultMessage)}</p>
+    <p class="booking-confirmation-route__body">${escapeHtml(normalizeText(customerConfirmationFlow?.customer_message_snapshot) || defaultMessage)}</p>
     ${depositMeta}
   `;
   els.route.hidden = false;
@@ -391,7 +391,7 @@ async function confirmBooking() {
       ...state.access,
       confirmed: true,
       booking_confirmation: result.payload.booking_confirmation || null,
-      booking_confirmation_route: result.payload.booking_confirmation_route || state.access?.booking_confirmation_route
+      customer_confirmation_flow: result.payload.customer_confirmation_flow || state.access?.customer_confirmation_flow
     };
     setStatus("Booking confirmed.", "success");
     render();

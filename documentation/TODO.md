@@ -40,6 +40,14 @@ booking.js:149 [booking-save] Save task finished. {booking_id: 'booking_dec5e3e2
 booking.js:149 [booking-save] Save flow stopped because a task returned false. {booking_id: 'booking_dec5e3e2-bef7-44f2-8dc9-22b0ad162e3b', task: 'Booking details', dirty: {…}}
 booking.js:149 [booking-save] Save flow finalized. {booking_id: 'booking_dec5e3e2-bef7-44f2-8dc9-22b0ad162e3b', save_completed: false, duration_ms: 12, page_dirty_bar_status: '', dirty: {…}}
 
+
+Can you add a feature to the booking.html page, in the danger zone at the bottom:
+Clone Booking with a "new title" textfield.
+When pressed, the booking should be cloned following the rules set in the cloning script (new IDs)
+
+Improve the english texts (not only spelling and grammar, also writing style) in "services"/"title" and "services"/"details" of booking booking_feb687e7-68cd-47ac-b51d-ac74f135ac2c in backend/app/data/store.json
+
+
 Travel plan
 ===========
 * Copy whole travel plan from another booking
@@ -62,8 +70,11 @@ Travel plan
 
 Travel plan PDF
 ==============
+PDF personalization
 - remove subtitle "Override the default customer-facing text when needed. Leave a field empty to use the derived default."
 - Travel plan subtitle -> Subtitle below title
+- horizontally center the web form submission
+
 - Treat accomodation special: You will stay at:... near the day
 
 

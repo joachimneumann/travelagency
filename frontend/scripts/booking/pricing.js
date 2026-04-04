@@ -2,7 +2,10 @@ import {
   GENERATED_CURRENCIES,
   normalizeCurrencyCode as normalizeGeneratedCurrencyCode
 } from "../../Generated/Models/generated_Currency.js";
-import { bookingPricingRequest } from "../../Generated/API/generated_APIRequestFactory.js";
+import {
+  bookingGeneratedOfferUpdateRequest,
+  bookingPricingRequest
+} from "../../Generated/API/generated_APIRequestFactory.js";
 import { createSnapshotDirtyTracker } from "../shared/edit_state.js";
 import { bookingLang, bookingT } from "./i18n.js";
 
@@ -423,12 +426,61 @@ export function createBookingPricingModule(ctx) {
     };
   }
 
+  function latestPendingManagementGeneratedOffer() {
+    const items = Array.isArray(state.booking?.generated_offers) ? state.booking.generated_offers : [];
+    return items
+      .filter((item) => (
+        item
+        && !item.booking_confirmation
+        && (!item.customer_confirmation_flow || typeof item.customer_confirmation_flow !== "object")
+        && String(item.management_approver_atp_staff_id || "").trim()
+      ))
+      .sort((left, right) => String(right.created_at || "").localeCompare(String(left.created_at || "")))[0] || null;
+  }
+
+  function managementApprovalReadiness() {
+    const generatedOffer = latestPendingManagementGeneratedOffer();
+    if (!generatedOffer) {
+      return { available: false, ready: false, message: "" };
+    }
+    const approverId = String(generatedOffer.management_approver_atp_staff_id || "").trim();
+    const approverLabel = String(generatedOffer.management_approver_label || approverId || "").trim();
+    const selectedId = String(els.pricing_deposit_confirmed_by_select?.value || "").trim();
+    if (!selectedId) {
+      return {
+        available: true,
+        ready: false,
+        message: bookingT("booking.pricing.management_select_approver", "Choose the management approver under \"Confirmed by\".")
+      };
+    }
+    if (selectedId !== approverId) {
+      return {
+        available: true,
+        ready: false,
+        message: bookingT("booking.pricing.management_expected_approver", "Select {name} under \"Confirmed by\" to unlock management approval.", {
+          name: approverLabel || bookingT("booking.pricing.confirmed_by", "Confirmed by")
+        })
+      };
+    }
+    return {
+      available: true,
+      ready: true,
+      generatedOfferId: String(generatedOffer.id || "").trim(),
+      approverLabel
+    };
+  }
+
   function renderDepositReceiptActionState({ locked = bookingHasRecordedDeposit() } = {}) {
     const armed = depositReceiptIsArmed();
     const readiness = depositReceiptReadiness({ includeCleanState: !armed });
+    const managementReadiness = managementApprovalReadiness();
     if (els.pricing_deposit_received_btn) {
       els.pricing_deposit_received_btn.disabled = locked || !state.permissions.canEditBooking || armed || !readiness.ready;
       els.pricing_deposit_received_btn.hidden = locked;
+    }
+    if (els.pricing_management_approval_btn) {
+      els.pricing_management_approval_btn.hidden = locked || !managementReadiness.available;
+      els.pricing_management_approval_btn.disabled = locked || !state.permissions.canEditBooking || !managementReadiness.ready;
     }
     if (locked) {
       setDepositActionHint("", "info");
@@ -442,7 +494,11 @@ export function createBookingPricingModule(ctx) {
       return;
     }
     if (!readiness.ready) {
-      setDepositActionHint(readiness.missing[0] || "", "error");
+      setDepositActionHint(readiness.missing[0] || managementReadiness.message || "", "error");
+      return;
+    }
+    if (!managementReadiness.ready && managementReadiness.message) {
+      setDepositActionHint(managementReadiness.message, "info");
       return;
     }
     setDepositActionHint(
@@ -924,11 +980,48 @@ export function createBookingPricingModule(ctx) {
     return true;
   }
 
+  async function confirmGeneratedOfferByManagement() {
+    if (!state.booking || !state.permissions.canEditBooking) return false;
+    clearPricingStatus();
+    const readiness = managementApprovalReadiness();
+    if (!readiness.available || !readiness.generatedOfferId) return false;
+    if (!readiness.ready) {
+      const message = readiness.message || bookingT("booking.pricing.management_select_approver", "Choose the management approver under \"Confirmed by\".");
+      setDepositActionHint(message, "error");
+      setPageSaveActionError?.(message);
+      return false;
+    }
+    const request = bookingGeneratedOfferUpdateRequest({
+      baseURL: apiOrigin,
+      params: {
+        booking_id: state.booking.id,
+        generated_offer_id: readiness.generatedOfferId
+      }
+    });
+    const result = await fetchBookingMutation(request.url, {
+      method: request.method,
+      body: {
+        expected_offer_revision: getBookingRevision("offer_revision"),
+        confirm_as_management: true,
+        actor: state.user || null
+      }
+    });
+    if (!result?.booking) return false;
+    state.booking = result.booking;
+    renderBookingHeader();
+    renderBookingData();
+    renderActionControls?.();
+    renderPricingPanel({ preserveDraft: true });
+    await loadActivities();
+    return true;
+  }
+
   return {
     updatePricingDirtyState,
     markPricingSnapshotClean,
     renderPricingPanel,
     savePricing,
+    confirmGeneratedOfferByManagement,
     applyDefaultDepositReceiptDraft,
     disarmDepositReceiptConfirmation,
     refreshDepositReceiptActionState: () => renderDepositReceiptActionState()

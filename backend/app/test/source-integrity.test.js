@@ -296,6 +296,24 @@ test("backend startup writes back legacy offers with explicit offer detail level
   );
 });
 
+test("backend startup writes back legacy generated-offer confirmation fields before serving requests", async () => {
+  const serverPath = path.resolve(__dirname, "..", "src", "server.js");
+  const confirmationDomainPath = path.resolve(__dirname, "..", "src", "domain", "booking_confirmation.js");
+  const serverSource = await readFile(serverPath, "utf8");
+  const confirmationDomainSource = await readFile(confirmationDomainPath, "utf8");
+
+  assert.match(
+    confirmationDomainSource,
+    /function migratePersistedGeneratedOfferBookingConfirmationState\(generatedOffer\) \{[\s\S]*customer_confirmation_flow[\s\S]*booking_confirmation_route[\s\S]*booking_confirmation_token_nonce/,
+    "Generated-offer confirmation migration should rewrite legacy route and token field names into the current persisted shape"
+  );
+  assert.match(
+    serverSource,
+    /backfillGeneratedOfferBookingConfirmationState\(startupStore,[\s\S]*persistStore\(startupStore\)/,
+    "Backend startup should persist legacy generated-offer confirmation field migrations before serving requests"
+  );
+});
+
 test("booking page initial customer language prefers the saved booking customer language", async () => {
   const bookingPageLanguagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking_page_language.js");
   const source = await readFile(bookingPageLanguagePath, "utf8");
@@ -1657,8 +1675,10 @@ test("booking page logs reload-time dirty diagnostics and core comparisons ignor
 test("generated offer actions are gated behind a clean page state", async () => {
   const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
   const offersModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "offer_generated_offers.js");
+  const pricingModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "pricing.js");
   const bookingSource = await readFile(bookingPagePath, "utf8");
   const offersSource = await readFile(offersModulePath, "utf8");
+  const pricingSource = await readFile(pricingModulePath, "utf8");
 
   assert.match(
     bookingSource,
@@ -1674,6 +1694,26 @@ test("generated offer actions are gated behind a clean page state", async () => 
     offersSource,
     /ensureOfferCleanState/,
     "Generated-offer actions should call the explicit clean-state guard before mutating generated offers"
+  );
+  assert.match(
+    offersSource,
+    /customer_confirmation_flow/,
+    "Generated-offer creation should use the renamed customer confirmation flow field"
+  );
+  assert.match(
+    bookingSource,
+    /id="pricing_management_approval_btn"/,
+    "The Payments section should expose the dedicated management approval action next to the deposit receipt action"
+  );
+  assert.match(
+    pricingSource,
+    /confirm_as_management:\s*true/,
+    "Management confirmation should be triggered from the Payments module"
+  );
+  assert.doesNotMatch(
+    offersSource,
+    /generated-offers-col-route|data-generated-offer-copy-link|data-generated-offer-email-draft|data-generated-offer-confirm-management/,
+    "The generated-offers table should no longer render the Route column or its related management and link actions"
   );
   assert.doesNotMatch(
     offersSource,

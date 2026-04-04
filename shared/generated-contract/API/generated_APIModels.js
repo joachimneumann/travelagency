@@ -106,7 +106,7 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
     schemaField({"name":"created_at","required":true,"wireName":"created_at"}, SHARED_FIELD_DEFS.FIELD_5),
     schemaField({"name":"pdf_url","required":false,"wireName":"pdf_url"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"payment_terms","required":false,"wireName":"payment_terms"}, SHARED_FIELD_DEFS.FIELD_56),
-    schemaField({"name":"booking_confirmation_route","required":false,"wireName":"booking_confirmation_route"}, SHARED_FIELD_DEFS.FIELD_57),
+    schemaField({"name":"customer_confirmation_flow","required":false,"wireName":"customer_confirmation_flow"}, SHARED_FIELD_DEFS.FIELD_57),
     schemaField({"name":"public_booking_confirmation_expires_at","required":false,"wireName":"public_booking_confirmation_expires_at"}, SHARED_FIELD_DEFS.FIELD_5),
     schemaField({"name":"confirmed","required":true,"wireName":"confirmed"}, SHARED_FIELD_DEFS.FIELD_8),
     schemaField({"name":"booking_confirmation","required":false,"wireName":"booking_confirmation"}, SHARED_FIELD_DEFS.FIELD_58)
@@ -148,7 +148,7 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
     schemaField({"name":"generated_offer_id","required":true,"wireName":"generated_offer_id"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"confirmed","required":true,"wireName":"confirmed"}, SHARED_FIELD_DEFS.FIELD_8),
     schemaField({"name":"status","required":true,"wireName":"status"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"booking_confirmation_route","required":false,"wireName":"booking_confirmation_route"}, SHARED_FIELD_DEFS.FIELD_57),
+    schemaField({"name":"customer_confirmation_flow","required":false,"wireName":"customer_confirmation_flow"}, SHARED_FIELD_DEFS.FIELD_57),
     schemaField({"name":"booking_confirmation","required":false,"wireName":"booking_confirmation"}, SHARED_FIELD_DEFS.FIELD_58)
         ]
       };
@@ -784,7 +784,7 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
     schemaField({"name":"expected_offer_revision","required":false,"wireName":"expected_offer_revision"}, SHARED_FIELD_DEFS.FIELD_17),
     schemaField({"name":"comment","required":false,"wireName":"comment"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"actor","required":false,"wireName":"actor"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"booking_confirmation_route","required":false,"wireName":"booking_confirmation_route"}, SHARED_FIELD_DEFS.FIELD_75)
+    schemaField({"name":"customer_confirmation_flow","required":false,"wireName":"customer_confirmation_flow"}, SHARED_FIELD_DEFS.FIELD_75)
         ]
       };
 
@@ -1658,7 +1658,7 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
     schemaField({"name":"offer","required":true,"wireName":"offer"}, SHARED_FIELD_DEFS.FIELD_94),
     schemaField({"name":"travel_plan","required":false,"wireName":"travel_plan"}, SHARED_FIELD_DEFS.FIELD_70),
     schemaField({"name":"pdf_url","required":true,"wireName":"pdf_url"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"booking_confirmation_route","required":false,"wireName":"booking_confirmation_route"}, SHARED_FIELD_DEFS.FIELD_117),
+    schemaField({"name":"customer_confirmation_flow","required":false,"wireName":"customer_confirmation_flow"}, SHARED_FIELD_DEFS.FIELD_117),
     schemaField({"name":"public_booking_confirmation_token","required":false,"wireName":"public_booking_confirmation_token"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"public_booking_confirmation_expires_at","required":false,"wireName":"public_booking_confirmation_expires_at"}, SHARED_FIELD_DEFS.FIELD_5),
     schemaField({"name":"booking_confirmation","required":false,"wireName":"booking_confirmation"}, SHARED_FIELD_DEFS.FIELD_118)

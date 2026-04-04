@@ -3727,6 +3727,62 @@ test("booking generated offers support comment update and delete", async () => {
   assert.equal(deleteResult.body.booking.generated_offers.length, 0);
 });
 
+test("booking generated offers support management confirmation by the frozen approver", async () => {
+  const createdBooking = await createSeedBooking();
+  const bookingId = createdBooking.id;
+
+  const storeBeforeGenerate = JSON.parse(await readFile(STORE_PATH, "utf8"));
+  const bookingBeforeGenerate = storeBeforeGenerate.bookings.find((item) => item.id === bookingId);
+  assert.ok(bookingBeforeGenerate);
+  bookingBeforeGenerate.assigned_keycloak_user_id = "kc-joachim";
+  bookingBeforeGenerate.assigned_keycloak_user_label = "Joachim";
+  await writeFile(STORE_PATH, `${JSON.stringify(storeBeforeGenerate, null, 2)}\n`, "utf8");
+
+  const generateResult = await requestJson(
+    endpointPath("booking_generate_offer").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "POST",
+      body: {
+        expected_offer_revision: createdBooking.offer_revision,
+        comment: "Management approval"
+      }
+    }
+  );
+  assert.equal(generateResult.status, 201);
+  const generatedOffer = generateResult.body.booking.generated_offers[0];
+  assert.equal(generatedOffer.management_approver_atp_staff_id, "kc-joachim");
+  assert.equal(generatedOffer.management_approver_label, "Joachim");
+  assert.equal(generatedOffer.customer_confirmation_flow, undefined);
+  assert.equal(generatedOffer.public_booking_confirmation_token, undefined);
+
+  const confirmResult = await requestJson(
+    endpointPath("booking_generated_offer_update")
+      .replace("{booking_id}", bookingId)
+      .replace("{generated_offer_id}", generatedOffer.id),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_offer_revision: generateResult.body.booking.offer_revision,
+        confirm_as_management: true
+      }
+    }
+  );
+  assert.equal(confirmResult.status, 200);
+  assert.equal(confirmResult.body.booking.confirmed_generated_offer_id, generatedOffer.id);
+  assert.equal(confirmResult.body.booking.generated_offers[0].booking_confirmation.method, "MANAGEMENT");
+  assert.equal(confirmResult.body.booking.generated_offers[0].booking_confirmation.management_approver_atp_staff_id, "kc-joachim");
+
+  const storeAfterConfirm = JSON.parse(await readFile(STORE_PATH, "utf8"));
+  const bookingAfterConfirm = storeAfterConfirm.bookings.find((item) => item.id === bookingId);
+  assert.ok(bookingAfterConfirm);
+  assert.equal(bookingAfterConfirm.confirmed_generated_offer_id, generatedOffer.id);
+  assert.equal(bookingAfterConfirm.generated_offers[0].booking_confirmation.method, "MANAGEMENT");
+  assert.equal(bookingAfterConfirm.generated_offers[0].booking_confirmation.accepted_by_name, "Joachim");
+  assert.equal(bookingAfterConfirm.generated_offers[0].booking_confirmation.management_approver_atp_staff_id, "kc-joachim");
+});
+
 test("public generated booking confirmation finalizes the frozen offer and stores the booking pointer", async () => {
   const createdBooking = await createSeedBooking();
   const bookingId = createdBooking.id;
@@ -3832,7 +3888,7 @@ test("public generated booking confirmation finalizes the frozen offer and store
   const storeBeforeLegacyAccept = JSON.parse(await readFile(STORE_PATH, "utf8"));
   const bookingBeforeLegacyAccept = storeBeforeLegacyAccept.bookings.find((item) => item.id === bookingId);
   assert.ok(bookingBeforeLegacyAccept);
-  delete bookingBeforeLegacyAccept.generated_offers[0].booking_confirmation_route;
+  delete bookingBeforeLegacyAccept.generated_offers[0].customer_confirmation_flow;
   await writeFile(STORE_PATH, `${JSON.stringify(storeBeforeLegacyAccept, null, 2)}\n`, "utf8");
 
   const acceptResult = await requestJson(
@@ -4016,7 +4072,7 @@ test("deposit receipt freezes the accepted customer record and keeps it stable a
   const storeBeforeAccept = JSON.parse(await readFile(STORE_PATH, "utf8"));
   const bookingBeforeAccept = storeBeforeAccept.bookings.find((item) => item.id === bookingId);
   assert.ok(bookingBeforeAccept);
-  delete bookingBeforeAccept.generated_offers[0].booking_confirmation_route;
+  delete bookingBeforeAccept.generated_offers[0].customer_confirmation_flow;
   await writeFile(STORE_PATH, `${JSON.stringify(storeBeforeAccept, null, 2)}\n`, "utf8");
 
   const acceptResult = await requestJson(
@@ -4223,8 +4279,8 @@ test("public generated booking confirmation enforces uniqueness per booking", as
   const storeBeforeLegacyUniqueness = JSON.parse(await readFile(STORE_PATH, "utf8"));
   const bookingBeforeLegacyUniqueness = storeBeforeLegacyUniqueness.bookings.find((item) => item.id === bookingId);
   assert.ok(bookingBeforeLegacyUniqueness);
-  delete bookingBeforeLegacyUniqueness.generated_offers[0].booking_confirmation_route;
-  delete bookingBeforeLegacyUniqueness.generated_offers[1].booking_confirmation_route;
+  delete bookingBeforeLegacyUniqueness.generated_offers[0].customer_confirmation_flow;
+  delete bookingBeforeLegacyUniqueness.generated_offers[1].customer_confirmation_flow;
   await writeFile(STORE_PATH, `${JSON.stringify(storeBeforeLegacyUniqueness, null, 2)}\n`, "utf8");
 
   const firstAcceptResult = await requestJson(
@@ -4314,7 +4370,7 @@ test("generated offer creation persists deposit-payment acceptance routes in aut
           },
           components: [
             {
-              id: "offer_component_booking_confirmation_route_1",
+              id: "offer_component_customer_confirmation_flow_1",
               category: "ACCOMMODATION",
               label: "Accommodation",
               details: "Deposit acceptance route room",
@@ -4343,7 +4399,7 @@ test("generated offer creation persists deposit-payment acceptance routes in aut
       body: {
         expected_offer_revision: offerPatchResult.body.booking.offer_revision,
         comment: "Deposit acceptance route",
-        booking_confirmation_route: {
+        customer_confirmation_flow: {
           mode: "DEPOSIT_PAYMENT",
           deposit_rule: {
             payment_term_line_id: depositLine.id
@@ -4354,12 +4410,12 @@ test("generated offer creation persists deposit-payment acceptance routes in aut
   );
   assert.equal(generateResult.status, 201);
   const generatedOffer = generateResult.body.booking.generated_offers[0];
-  assert.equal(generatedOffer.booking_confirmation_route.mode, "DEPOSIT_PAYMENT");
-  assert.equal(generatedOffer.booking_confirmation_route.status, "AWAITING_PAYMENT");
-  assert.equal(generatedOffer.booking_confirmation_route.deposit_rule.payment_term_line_id, depositLine.id);
-  assert.equal(generatedOffer.booking_confirmation_route.deposit_rule.payment_term_label, depositLine.label);
-  assert.equal(generatedOffer.booking_confirmation_route.deposit_rule.required_amount_cents, depositLine.resolved_amount_cents);
-  assert.equal(generatedOffer.booking_confirmation_route.deposit_rule.currency, createdBooking.preferred_currency);
+  assert.equal(generatedOffer.customer_confirmation_flow.mode, "DEPOSIT_PAYMENT");
+  assert.equal(generatedOffer.customer_confirmation_flow.status, "AWAITING_PAYMENT");
+  assert.equal(generatedOffer.customer_confirmation_flow.deposit_rule.payment_term_line_id, depositLine.id);
+  assert.equal(generatedOffer.customer_confirmation_flow.deposit_rule.payment_term_label, depositLine.label);
+  assert.equal(generatedOffer.customer_confirmation_flow.deposit_rule.required_amount_cents, depositLine.resolved_amount_cents);
+  assert.equal(generatedOffer.customer_confirmation_flow.deposit_rule.currency, createdBooking.preferred_currency);
   assert.equal(generatedOffer.payment_terms.lines.length, 2);
   assert.equal(typeof generatedOffer.public_booking_confirmation_token, "string");
 
@@ -4368,10 +4424,10 @@ test("generated offer creation persists deposit-payment acceptance routes in aut
     apiHeaders()
   );
   assert.equal(detailAfter.status, 200);
-  assert.equal(detailAfter.body.booking.generated_offers[0].booking_confirmation_route.mode, "DEPOSIT_PAYMENT");
-  assert.equal(detailAfter.body.booking.generated_offers[0].booking_confirmation_route.status, "AWAITING_PAYMENT");
+  assert.equal(detailAfter.body.booking.generated_offers[0].customer_confirmation_flow.mode, "DEPOSIT_PAYMENT");
+  assert.equal(detailAfter.body.booking.generated_offers[0].customer_confirmation_flow.status, "AWAITING_PAYMENT");
   assert.equal(
-    detailAfter.body.booking.generated_offers[0].booking_confirmation_route.deposit_rule.payment_term_line_id,
+    detailAfter.body.booking.generated_offers[0].customer_confirmation_flow.deposit_rule.payment_term_line_id,
     depositLine.id
   );
 });
@@ -4447,9 +4503,9 @@ test("booking detail persists expired generated-offer route status instead of de
   const bookingBefore = storeBefore.bookings.find((item) => item.id === bookingId);
   assert.ok(bookingBefore);
   const generatedOfferBefore = bookingBefore.generated_offers.find((item) => item.id === generatedOfferId);
-  assert.ok(generatedOfferBefore?.booking_confirmation_route);
-  generatedOfferBefore.booking_confirmation_route.status = "OPEN";
-  generatedOfferBefore.booking_confirmation_route.expires_at = "2020-01-01T00:00:00.000Z";
+  assert.ok(generatedOfferBefore?.customer_confirmation_flow);
+  generatedOfferBefore.customer_confirmation_flow.status = "OPEN";
+  generatedOfferBefore.customer_confirmation_flow.expires_at = "2020-01-01T00:00:00.000Z";
   await writeFile(STORE_PATH, `${JSON.stringify(storeBefore, null, 2)}\n`, "utf8");
 
   const detailResult = await requestJson(
@@ -4457,13 +4513,13 @@ test("booking detail persists expired generated-offer route status instead of de
     apiHeaders()
   );
   assert.equal(detailResult.status, 200);
-  assert.equal(detailResult.body.booking.generated_offers[0].booking_confirmation_route.status, "EXPIRED");
+  assert.equal(detailResult.body.booking.generated_offers[0].customer_confirmation_flow.status, "EXPIRED");
 
   const storeAfter = JSON.parse(await readFile(STORE_PATH, "utf8"));
   const bookingAfter = storeAfter.bookings.find((item) => item.id === bookingId);
   assert.ok(bookingAfter);
   const generatedOfferAfter = bookingAfter.generated_offers.find((item) => item.id === generatedOfferId);
-  assert.equal(generatedOfferAfter?.booking_confirmation_route?.status, "EXPIRED");
+  assert.equal(generatedOfferAfter?.customer_confirmation_flow?.status, "EXPIRED");
 });
 
 test("booking detail repairs missing booking confirmation token state for generated offers", async () => {
@@ -4532,7 +4588,7 @@ test("booking detail repairs missing booking confirmation token state for genera
   );
   assert.equal(generateResult.status, 201);
   const generatedOfferId = generateResult.body.booking.generated_offers[0].id;
-  assert.equal(generateResult.body.booking.generated_offers[0].booking_confirmation_route.mode, "DEPOSIT_PAYMENT");
+  assert.equal(generateResult.body.booking.generated_offers[0].customer_confirmation_flow.mode, "DEPOSIT_PAYMENT");
   assert.equal(typeof generateResult.body.booking.generated_offers[0].public_booking_confirmation_token, "string");
 
   const storeBefore = JSON.parse(await readFile(STORE_PATH, "utf8"));
@@ -4644,7 +4700,7 @@ test("public generated offer access exposes deposit acceptance route and blocks 
       body: {
         expected_offer_revision: offerPatchResult.body.booking.offer_revision,
         comment: "Deposit-based public acceptance",
-        booking_confirmation_route: {
+        customer_confirmation_flow: {
           mode: "DEPOSIT_PAYMENT",
           deposit_rule: {
             payment_term_line_id: depositLine.id
@@ -4664,11 +4720,11 @@ test("public generated offer access exposes deposit acceptance route and blocks 
   );
   assert.equal(accessResult.status, 200);
   assert.equal(accessResult.body.confirmed, false);
-  assert.equal(accessResult.body.booking_confirmation_route.mode, "DEPOSIT_PAYMENT");
-  assert.equal(accessResult.body.booking_confirmation_route.status, "AWAITING_PAYMENT");
-  assert.equal(accessResult.body.booking_confirmation_route.deposit_rule.payment_term_label, depositLine.label);
-  assert.equal(accessResult.body.booking_confirmation_route.deposit_rule.required_amount_cents, depositLine.resolved_amount_cents);
-  assert.equal(accessResult.body.booking_confirmation_route.deposit_rule.currency, createdBooking.preferred_currency);
+  assert.equal(accessResult.body.customer_confirmation_flow.mode, "DEPOSIT_PAYMENT");
+  assert.equal(accessResult.body.customer_confirmation_flow.status, "AWAITING_PAYMENT");
+  assert.equal(accessResult.body.customer_confirmation_flow.deposit_rule.payment_term_label, depositLine.label);
+  assert.equal(accessResult.body.customer_confirmation_flow.deposit_rule.required_amount_cents, depositLine.resolved_amount_cents);
+  assert.equal(accessResult.body.customer_confirmation_flow.deposit_rule.currency, createdBooking.preferred_currency);
   assert.equal(accessResult.body.payment_terms.lines.length, 2);
   assert.equal(accessResult.body.booking_confirmation, undefined);
 

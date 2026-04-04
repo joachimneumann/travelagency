@@ -66,7 +66,7 @@ export function createBookingConfirmationHandlers(deps) {
     const bookingConfirmationTokenState = readGeneratedOfferBookingConfirmationTokenState(generatedOffer);
     const bookingName = normalizeText(booking?.name || booking?.web_form_submission?.booking_name);
     const comment = normalizeText(generatedOffer?.comment);
-    const bookingConfirmationRoute = buildPublicGeneratedOfferBookingConfirmationRouteView(generatedOffer, { now: nowIso() });
+    const customerConfirmationFlow = buildPublicGeneratedOfferBookingConfirmationRouteView(generatedOffer, { now: nowIso() });
     const bookingConfirmationSummary = buildGeneratedOfferBookingConfirmationPublicSummary(generatedOffer?.booking_confirmation);
     return {
       booking_id: booking.id,
@@ -79,7 +79,7 @@ export function createBookingConfirmationHandlers(deps) {
       created_at: normalizeText(generatedOffer.created_at) || nowIso(),
       pdf_url: `/public/v1/bookings/${encodeURIComponent(booking.id)}/generated-offers/${encodeURIComponent(generatedOffer.id)}/pdf?token=${encodeURIComponent(bookingConfirmationToken)}`,
       ...(normalizedGeneratedOffer.payment_terms ? { payment_terms: normalizedGeneratedOffer.payment_terms } : {}),
-      ...(bookingConfirmationRoute ? { booking_confirmation_route: bookingConfirmationRoute } : {}),
+      ...(customerConfirmationFlow ? { customer_confirmation_flow: customerConfirmationFlow } : {}),
       ...(bookingConfirmationTokenState.expiresAt ? { public_booking_confirmation_expires_at: bookingConfirmationTokenState.expiresAt } : {}),
       confirmed: Boolean(generatedOffer?.booking_confirmation),
       ...(bookingConfirmationSummary ? { booking_confirmation: bookingConfirmationSummary } : {})
@@ -97,7 +97,7 @@ export function createBookingConfirmationHandlers(deps) {
       generated_offer_id: generatedOfferId,
       confirmed: Boolean(bookingConfirmation),
       status: "CONFIRMED",
-      ...(generatedOffer ? { booking_confirmation_route: buildPublicGeneratedOfferBookingConfirmationRouteView(generatedOffer, { now: nowIso() }) } : {}),
+      ...(generatedOffer ? { customer_confirmation_flow: buildPublicGeneratedOfferBookingConfirmationRouteView(generatedOffer, { now: nowIso() }) } : {}),
       ...(bookingConfirmation ? { booking_confirmation: buildGeneratedOfferBookingConfirmationPublicSummary(bookingConfirmation) } : {})
     };
   }
@@ -243,10 +243,10 @@ export function createBookingConfirmationHandlers(deps) {
       if (!normalizeText(booking?.confirmed_generated_offer_id)) {
         booking.confirmed_generated_offer_id = generatedOffer.id;
       }
-      if (generatedOffer?.booking_confirmation_route && typeof generatedOffer.booking_confirmation_route === "object") {
-        generatedOffer.booking_confirmation_route.status = "CONFIRMED";
+      if (generatedOffer?.customer_confirmation_flow && typeof generatedOffer.customer_confirmation_flow === "object") {
+        generatedOffer.customer_confirmation_flow.status = "CONFIRMED";
       }
-      if (!normalizeText(booking?.confirmed_generated_offer_id) || generatedOffer?.booking_confirmation_route?.status === "CONFIRMED") {
+      if (!normalizeText(booking?.confirmed_generated_offer_id) || generatedOffer?.customer_confirmation_flow?.status === "CONFIRMED") {
         await persistStore(store);
       }
       return { ok: true, booking_confirmation: generatedOffer.booking_confirmation, unchanged: true };
@@ -278,8 +278,8 @@ export function createBookingConfirmationHandlers(deps) {
     };
 
     generatedOffer.booking_confirmation = bookingConfirmation;
-    if (generatedOffer?.booking_confirmation_route && typeof generatedOffer.booking_confirmation_route === "object") {
-      generatedOffer.booking_confirmation_route.status = "CONFIRMED";
+    if (generatedOffer?.customer_confirmation_flow && typeof generatedOffer.customer_confirmation_flow === "object") {
+      generatedOffer.customer_confirmation_flow.status = "CONFIRMED";
     }
     booking.confirmed_generated_offer_id = generatedOffer.id;
     await seedAcceptedOfferPricing({
@@ -444,7 +444,7 @@ export function createBookingConfirmationHandlers(deps) {
       return;
     }
 
-    if (normalizeText(generatedOffer?.booking_confirmation_route?.mode).toUpperCase() === "DEPOSIT_PAYMENT") {
+    if (normalizeText(generatedOffer?.customer_confirmation_flow?.mode).toUpperCase() === "DEPOSIT_PAYMENT") {
       sendJson(res, 409, { error: "This offer is confirmed by the required deposit payment, not by public booking confirmation." });
       return;
     }

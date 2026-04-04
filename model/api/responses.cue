@@ -239,6 +239,7 @@ import (
 #GeneratedOfferBookingConfirmationPublicSummary: {
 	accepted_at:            common.#Timestamp
 	method:                 enums.#BookingConfirmationMethod
+	management_approver_atp_staff_id?: common.#Identifier
 	accepted_amount_cents?: >=0 & int
 	accepted_currency?:     enums.#CurrencyCode
 }
@@ -344,8 +345,10 @@ import (
 	payment_terms?:                #BookingOfferPaymentTermsReadModel
 	offer:                         #BookingOfferReadModel
 	travel_plan?:                  entities.#BookingTravelPlan
+	management_approver_atp_staff_id?:      common.#Identifier
+	management_approver_label?:             string
 	pdf_url:                       string & !=""
-	booking_confirmation_route?:             entities.#GeneratedOfferBookingConfirmationRoute
+	customer_confirmation_flow?:             entities.#GeneratedOfferBookingConfirmationRoute
 	public_booking_confirmation_token?:      string & !=""
 	public_booking_confirmation_expires_at?: common.#Timestamp
 	booking_confirmation?:                   entities.#GeneratedOfferBookingConfirmation
@@ -437,7 +440,7 @@ import (
 	created_at:                    common.#Timestamp
 	pdf_url?:                      string & !=""
 	payment_terms?:                #BookingOfferPaymentTermsReadModel
-	booking_confirmation_route?:             #PublicGeneratedOfferBookingConfirmationRouteView
+	customer_confirmation_flow?:             #PublicGeneratedOfferBookingConfirmationRouteView
 	public_booking_confirmation_expires_at?: common.#Timestamp
 	confirmed:                     bool
 	booking_confirmation?:                   #GeneratedOfferBookingConfirmationPublicSummary
@@ -448,7 +451,7 @@ import (
 	generated_offer_id:   common.#Identifier
 	confirmed:            bool
 	status:               "CONFIRMED"
-	booking_confirmation_route?:    #PublicGeneratedOfferBookingConfirmationRouteView
+	customer_confirmation_flow?:    #PublicGeneratedOfferBookingConfirmationRouteView
 	booking_confirmation?:          #GeneratedOfferBookingConfirmationPublicSummary
 }
 

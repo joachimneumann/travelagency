@@ -228,14 +228,16 @@ import (
 	offer_snapshot_sha256:          string & =~"^[a-f0-9]{64}$"
 	ip_address?:                    string
 	user_agent?:                    string
+	management_approver_atp_staff_id?: common.#Identifier
 	deposit_payment_id?:            common.#Identifier
 	accepted_payment_term_line_id?: common.#Identifier
 	accepted_payment_ids?: [...common.#Identifier]
 	accepted_amount_cents?: >=0 & int
 	accepted_currency?:     enums.#CurrencyCode
 
-	if method == "PORTAL_CLICK" || method == "ESIGN" {
+	if method == "MANAGEMENT" {
 		accepted_by_name: string & !=""
+		management_approver_atp_staff_id: common.#Identifier
 	}
 
 	if method == "DEPOSIT_PAYMENT" {
@@ -259,9 +261,11 @@ import (
 	total_price_cents:            int
 	offer:                        #BookingOffer
 	travel_plan?:                 #BookingTravelPlan
+	management_approver_atp_staff_id?:      common.#Identifier
+	management_approver_label?:             string
 	pdf_frozen_at?:               common.#Timestamp
 	pdf_sha256?:                  string & =~"^[a-f0-9]{64}$"
-	booking_confirmation_route?:            #GeneratedOfferBookingConfirmationRoute
+	customer_confirmation_flow?:            #GeneratedOfferBookingConfirmationRoute
 	booking_confirmation_token_nonce?:      string & !=""
 	booking_confirmation_token_created_at?: common.#Timestamp
 	booking_confirmation_token_expires_at?: common.#Timestamp

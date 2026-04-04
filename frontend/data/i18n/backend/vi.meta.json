@@ -2824,6 +2824,21 @@
     "origin": "machine",
     "updated_at": "2026-03-30T23:51:31.875Z"
   },
+  "booking.pricing.management_approval": {
+    "source_hash": "4f38f19456661b43e937aa3b5c1a9ae542dd767eee79d39ad1c920d5fa1f18cd",
+    "origin": "legacy",
+    "updated_at": "2026-04-04T06:18:18.043Z"
+  },
+  "booking.pricing.management_expected_approver": {
+    "source_hash": "364cebfd6dbb575b400d06264fe839e1f1e04c2cc72528092681c4cbe7476183",
+    "origin": "legacy",
+    "updated_at": "2026-04-04T06:18:18.043Z"
+  },
+  "booking.pricing.management_select_approver": {
+    "source_hash": "964b2f964cd24097ec13fe979fd51fa581e2479adedda4558f076d3a28a65a56",
+    "origin": "legacy",
+    "updated_at": "2026-04-04T06:18:18.043Z"
+  },
   "booking.pricing.label": {
     "source_hash": "0e66373f45dcf3dd656151e519f7ee5e3d558d9c22cb87df339bbdd2b6c6a3c1",
     "origin": "machine",

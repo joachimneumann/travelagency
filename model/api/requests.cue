@@ -278,7 +278,7 @@ import (
 	expected_offer_revision?: >=0 & int
 	comment?:                 string
 	actor?:                   string
-	booking_confirmation_route?:        #BookingGenerateOfferBookingConfirmationRouteRequest
+	customer_confirmation_flow?:        #BookingGenerateOfferBookingConfirmationRouteRequest
 }
 
 #BookingGenerateOfferDepositBookingConfirmationRuleRequest: {
@@ -298,6 +298,7 @@ import (
 #BookingGeneratedOfferUpdateRequest: {
 	expected_offer_revision?: >=0 & int
 	comment?:                 string
+	confirm_as_management?:   bool
 	actor?:                   string
 }
 

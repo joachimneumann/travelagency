@@ -945,6 +945,13 @@
   max-width: 26rem;
 }
 
+.booking-detail-page .pricing-deposit-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  align-items: center;
+}
+
 .booking-detail-page .booking-milestone-actions__hint {
   min-height: 1.1rem;
   margin-top: 0.35rem;

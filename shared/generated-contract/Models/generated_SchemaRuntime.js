@@ -3826,6 +3826,7 @@
   "isArray": false,
   "enumValues": [
     "DEPOSIT_PAYMENT",
+    "MANAGEMENT",
     "PORTAL_CLICK",
     "ESIGN"
   ],
@@ -3833,6 +3834,10 @@
     {
       "value": "DEPOSIT_PAYMENT",
       "label": "DEPOSIT_PAYMENT"
+    },
+    {
+      "value": "MANAGEMENT",
+      "label": "MANAGEMENT"
     },
     {
       "value": "PORTAL_CLICK",

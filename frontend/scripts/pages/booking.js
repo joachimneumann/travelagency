@@ -411,6 +411,7 @@ const els = {
   pricing_deposit_confirmed_by_select: document.getElementById("pricing_deposit_confirmed_by_select"),
   pricing_deposit_reference_input: document.getElementById("pricing_deposit_reference_input"),
   pricing_deposit_received_btn: document.getElementById("pricing_deposit_received_btn"),
+  pricing_management_approval_btn: document.getElementById("pricing_management_approval_btn"),
   pricing_deposit_action_hint: document.getElementById("pricing_deposit_action_hint"),
   pricing_deposit_hint_row: document.getElementById("pricing_deposit_hint_row"),
   pricing_deposit_hint: document.getElementById("pricing_deposit_hint"),
@@ -849,6 +850,11 @@ async function init() {
         dirty: { ...state.dirty }
       });
       await savePricing();
+    });
+  }
+  if (els.pricing_management_approval_btn) {
+    els.pricing_management_approval_btn.addEventListener("click", async () => {
+      await confirmGeneratedOfferByManagementFromPricing();
     });
   }
   if (els.offer_currency_input)
@@ -1394,6 +1400,10 @@ function createInvoice() {
 
 function savePricing() {
   return pricingModule.savePricing();
+}
+
+function confirmGeneratedOfferByManagementFromPricing() {
+  return pricingModule.confirmGeneratedOfferByManagement?.();
 }
 
 function applyDefaultDepositReceiptDraft() {

@@ -4,38 +4,105 @@ function cloneJson(value) {
   return value == null ? value : JSON.parse(JSON.stringify(value));
 }
 
-function resetStoredFileArtifacts(booking) {
-  if (!booking || typeof booking !== "object") return;
-  delete booking.image;
+function zeroOfferTotals() {
+  return {
+    net_amount_cents: 0,
+    tax_amount_cents: 0,
+    gross_amount_cents: 0,
+    total_price_cents: 0,
+    items_count: 0
+  };
+}
 
-  if (Array.isArray(booking.persons)) {
-    for (const person of booking.persons) {
-      if (!person || typeof person !== "object") continue;
-      delete person.photo_ref;
-      if (Array.isArray(person.documents)) {
-        for (const document of person.documents) {
-          if (!document || typeof document !== "object") continue;
-          delete document.document_picture_ref;
-        }
-      }
-    }
+function zeroOfferQuotationSummary() {
+  return {
+    tax_included: true,
+    subtotal_net_amount_cents: 0,
+    total_tax_amount_cents: 0,
+    grand_total_amount_cents: 0,
+    tax_breakdown: []
+  };
+}
+
+function zeroPricingSummary() {
+  return {
+    agreed_net_amount_cents: 0,
+    adjustments_delta_cents: 0,
+    adjusted_net_amount_cents: 0,
+    scheduled_net_amount_cents: 0,
+    unscheduled_net_amount_cents: 0,
+    scheduled_tax_amount_cents: 0,
+    scheduled_gross_amount_cents: 0,
+    paid_gross_amount_cents: 0,
+    outstanding_gross_amount_cents: 0,
+    is_schedule_balanced: true
+  };
+}
+
+function resolveCloneCurrency(booking) {
+  return normalizeText(
+    booking?.preferred_currency
+    || booking?.pricing?.currency
+    || booking?.offer?.currency
+    || booking?.web_form_submission?.preferred_currency
+  ) || "USD";
+}
+
+function resetSourceMetadata(booking, { sourceBookingId, nextName }) {
+  booking.source_channel = null;
+  booking.referral_kind = null;
+  booking.referral_label = null;
+  booking.referral_staff_user_id = null;
+  booking.number_of_travelers = null;
+  booking.travel_start_day = null;
+  booking.travel_end_day = null;
+  booking.notes = "";
+  delete booking.pdf_personalization;
+
+  booking.web_form_submission = {
+    booking_name: normalizeText(nextName || booking?.name) || undefined,
+    notes: `cloned from ${sourceBookingId}`
+  };
+}
+
+function resetOffer(booking) {
+  const offer = booking.offer && typeof booking.offer === "object" ? booking.offer : {};
+  const currency = resolveCloneCurrency(booking);
+  booking.offer = {
+    ...offer,
+    status: "DRAFT",
+    currency,
+    offer_detail_level_internal: normalizeText(offer.offer_detail_level_internal).toLowerCase() || "trip",
+    offer_detail_level_visible: normalizeText(offer.offer_detail_level_visible).toLowerCase() || "trip",
+    category_rules: Array.isArray(offer.category_rules) ? cloneJson(offer.category_rules) : [],
+    components: [],
+    additional_items: [],
+    totals: zeroOfferTotals(),
+    quotation_summary: zeroOfferQuotationSummary(),
+    total_price_cents: 0
+  };
+  delete booking.offer.trip_price_internal;
+  delete booking.offer.days_internal;
+  delete booking.offer.payment_terms;
+  delete booking.offer.discount;
+}
+
+function remapServiceImages(service, randomUUID) {
+  if (!service || typeof service !== "object") return;
+
+  if (service.image && typeof service.image === "object") {
+    service.image = {
+      ...service.image,
+      id: `travel_plan_service_image_${randomUUID()}`
+    };
   }
 
-  const travelPlan = booking.travel_plan && typeof booking.travel_plan === "object" ? booking.travel_plan : null;
-  if (!travelPlan) return;
-
-  if (Array.isArray(travelPlan.days)) {
-    for (const day of travelPlan.days) {
-      const services = Array.isArray(day?.services) ? day.services : [];
-      for (const service of services) {
-        if (!service || typeof service !== "object") continue;
-        service.image = null;
-        delete service.images;
-      }
-    }
+  if (Array.isArray(service.images)) {
+    service.images = service.images.map((image) => ({
+      ...image,
+      id: `travel_plan_service_image_${randomUUID()}`
+    }));
   }
-
-  travelPlan.attachments = [];
 }
 
 function remapPersons(booking, bookingId) {
@@ -60,56 +127,7 @@ function remapPersons(booking, bookingId) {
   });
 }
 
-function remapOffer(booking, randomUUID) {
-  const offer = booking.offer && typeof booking.offer === "object" ? booking.offer : null;
-  if (!offer) return new Map();
-
-  const componentIdMap = new Map();
-  if (Array.isArray(offer.components)) {
-    offer.components = offer.components.map((component) => {
-      const oldId = normalizeText(component?.id);
-      const newId = `offer_component_${randomUUID()}`;
-      if (oldId) componentIdMap.set(oldId, newId);
-      return {
-        ...component,
-        id: newId
-      };
-    });
-  }
-
-  if (Array.isArray(offer.days_internal)) {
-    offer.days_internal = offer.days_internal.map((dayPrice) => ({
-      ...dayPrice,
-      id: `offer_day_internal_${randomUUID()}`
-    }));
-  }
-
-  if (Array.isArray(offer.additional_items)) {
-    offer.additional_items = offer.additional_items.map((item) => ({
-      ...item,
-      id: `offer_additional_item_${randomUUID()}`
-    }));
-  }
-
-  if (offer.payment_terms && typeof offer.payment_terms === "object" && Array.isArray(offer.payment_terms.lines)) {
-    const paymentTermLineIdMap = new Map();
-    offer.payment_terms.lines = offer.payment_terms.lines.map((line) => {
-      const oldId = normalizeText(line?.id);
-      const newId = `offer_payment_term_${randomUUID()}`;
-      if (oldId) paymentTermLineIdMap.set(oldId, newId);
-      return {
-        ...line,
-        id: newId
-      };
-    });
-    booking.__clone_payment_term_line_id_map = paymentTermLineIdMap;
-  }
-
-  offer.status = "DRAFT";
-  return componentIdMap;
-}
-
-function remapTravelPlan(booking, componentIdMap, randomUUID) {
+function remapTravelPlan(booking, randomUUID) {
   const travelPlan = booking.travel_plan && typeof booking.travel_plan === "object" ? booking.travel_plan : null;
   if (!travelPlan) return;
 
@@ -124,10 +142,10 @@ function remapTravelPlan(booking, componentIdMap, randomUUID) {
         if (oldServiceId) serviceIdMap.set(oldServiceId, newServiceId);
         return {
           ...service,
-          id: newServiceId,
-          image: null
+          id: newServiceId
         };
       });
+      services.forEach((service) => remapServiceImages(service, randomUUID));
       return {
         ...day,
         id: nextDayId,
@@ -136,48 +154,42 @@ function remapTravelPlan(booking, componentIdMap, randomUUID) {
     });
   }
 
-  travelPlan.offer_component_links = (Array.isArray(travelPlan.offer_component_links) ? travelPlan.offer_component_links : [])
-    .map((link) => {
-      const newServiceId = serviceIdMap.get(normalizeText(link?.travel_plan_service_id));
-      const newOfferComponentId = componentIdMap.get(normalizeText(link?.offer_component_id));
-      if (!newServiceId || !newOfferComponentId) return null;
-      return {
-        ...link,
-        id: `travel_plan_offer_link_${randomUUID()}`,
-        travel_plan_service_id: newServiceId,
-        offer_component_id: newOfferComponentId
-      };
-    })
-    .filter(Boolean);
+  travelPlan.offer_component_links = [];
 
-  travelPlan.attachments = [];
+  if (Array.isArray(travelPlan.attachments)) {
+    travelPlan.attachments = travelPlan.attachments.map((attachment) => ({
+      ...attachment,
+      id: `travel_plan_attachment_${randomUUID()}`
+    }));
+  }
 }
 
-function remapPricing(booking, randomUUID) {
-  const pricing = booking.pricing && typeof booking.pricing === "object" ? booking.pricing : null;
-  if (!pricing) return;
-
-  pricing.adjustments = (Array.isArray(pricing.adjustments) ? pricing.adjustments : []).map((adjustment) => ({
-    ...adjustment,
-    id: `pricing_adjustment_${randomUUID()}`
-  }));
-
-  pricing.payments = (Array.isArray(pricing.payments) ? pricing.payments : []).map((payment) => ({
-    ...payment,
-    id: `pricing_payment_${randomUUID()}`,
-    status: "PENDING",
-    paid_at: null
-  }));
+function resetPricing(booking) {
+  const pricing = booking.pricing && typeof booking.pricing === "object" ? booking.pricing : {};
+  const currency = resolveCloneCurrency(booking);
+  booking.pricing = {
+    ...pricing,
+    currency,
+    agreed_net_amount_cents: 0,
+    adjustments: [],
+    payments: [],
+    summary: zeroPricingSummary()
+  };
 }
 
 function resetCommercialState(booking) {
   delete booking.confirmed_generated_offer_id;
   delete booking.accepted_generated_offer_id;
+  delete booking.accepted_offer_artifact_ref;
+  delete booking.accepted_travel_plan_artifact_ref;
+  delete booking.accepted_deposit_amount_cents;
+  delete booking.accepted_deposit_currency;
   delete booking.deposit_received_at;
   delete booking.deposit_confirmed_by_atp_staff_id;
   delete booking.accepted_deposit_reference;
   delete booking.deposit_receipt_draft_received_at;
   delete booking.deposit_receipt_draft_confirmed_by_atp_staff_id;
+  delete booking.deposit_receipt_draft_reference;
   delete booking.accepted_offer_snapshot;
   delete booking.accepted_payment_terms_snapshot;
   delete booking.accepted_travel_plan_snapshot;
@@ -211,15 +223,11 @@ export function cloneBookingForTesting(sourceBooking, options = {}) {
   const nextBookingId = `booking_${randomUUID()}`;
   const nextNow = nowIso();
   const nextName = normalizeText(options.name);
-  const keepAssignment = options.keepAssignment === true;
-  const keepStage = options.keepStage === true;
+  const includeTravelers = options.includeTravelers === true;
 
   cloned.id = nextBookingId;
   if (nextName) {
     cloned.name = nextName;
-    if (cloned.web_form_submission && typeof cloned.web_form_submission === "object") {
-      cloned.web_form_submission.booking_name = nextName;
-    }
   }
 
   cloned.core_revision = 0;
@@ -236,21 +244,24 @@ export function cloneBookingForTesting(sourceBooking, options = {}) {
   cloned.last_action_at = null;
   cloned.milestones = {};
   cloned.service_level_agreement_due_at = null;
+  cloned.assigned_keycloak_user_id = null;
+  cloned.stage = "NEW_BOOKING";
+  cloned.preferred_currency = resolveCloneCurrency(cloned);
 
-  if (!keepAssignment) {
-    cloned.assigned_keycloak_user_id = null;
+  resetSourceMetadata(cloned, {
+    sourceBookingId: normalizeText(sourceBooking.id) || "unknown booking",
+    nextName: nextName || cloned.name
+  });
+  if (includeTravelers) {
+    remapPersons(cloned, nextBookingId);
+  } else {
+    cloned.persons = [];
   }
-  if (!keepStage) {
-    cloned.stage = "NEW_BOOKING";
-  }
-
-  remapPersons(cloned, nextBookingId);
-  const componentIdMap = remapOffer(cloned, randomUUID);
-  remapTravelPlan(cloned, componentIdMap, randomUUID);
-  remapPricing(cloned, randomUUID);
+  resetOffer(cloned);
+  remapTravelPlan(cloned, randomUUID);
+  resetPricing(cloned);
   resetCommercialState(cloned);
   resetPortalState(cloned);
-  resetStoredFileArtifacts(cloned);
 
   delete cloned.__clone_payment_term_line_id_map;
 

@@ -4,12 +4,10 @@ import os from "node:os";
 import path from "node:path";
 import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { cloneBookingForTesting } from "../src/domain/booking_clone.js";
-import { transferBookingOverSsh } from "../scripts/clone_booking.js";
+import { cloneBookingsFromStore, transferBookingOverSsh } from "../scripts/clone_booking.js";
 
-test("cloneBookingForTesting remaps ids and resets generated state", () => {
-  let counter = 0;
-  const randomUUID = () => `uuid_${++counter}`;
-  const source = {
+function buildSourceBooking() {
+  return {
     id: "booking_source",
     name: "Source Booking",
     stage: "PAYMENT_CONFIRMED",
@@ -22,18 +20,51 @@ test("cloneBookingForTesting remaps ids and resets generated state", () => {
     offer_revision: 6,
     invoices_revision: 1,
     image: "booking_images/source.webp",
+    notes: "Internal note",
+    source_channel: "website",
+    referral_kind: "atp_staff",
+    referral_label: "Joachim",
+    referral_staff_user_id: "kc-joachim",
+    travel_start_day: "2026-04-10",
+    travel_end_day: "2026-04-20",
+    number_of_travelers: 2,
+    preferred_currency: "USD",
+    customer_language: "de",
+    destinations: ["VN", "KH"],
+    travel_styles: ["culture", "food"],
+    pdf_personalization: {
+      travel_plan: {
+        subtitle: "Welcome to your trip"
+      }
+    },
     confirmed_generated_offer_id: "generated_offer_1",
+    accepted_generated_offer_id: "generated_offer_legacy",
+    accepted_offer_artifact_ref: "generated_offer_1",
+    accepted_travel_plan_artifact_ref: "travel_plan_pdf_1",
+    accepted_deposit_amount_cents: 3300,
+    accepted_deposit_currency: "USD",
     deposit_received_at: "2026-03-01T00:00:00.000Z",
     deposit_confirmed_by_atp_staff_id: "kc-joachim",
+    accepted_deposit_reference: "BANK-REF-1",
+    deposit_receipt_draft_received_at: "2026-02-28T00:00:00.000Z",
+    deposit_receipt_draft_confirmed_by_atp_staff_id: "kc-joachim",
+    deposit_receipt_draft_reference: "DRAFT-REF-1",
     accepted_offer_snapshot: { total_price_cents: 12300 },
     accepted_payment_terms_snapshot: { lines: [{ id: "payment_term_old" }] },
     accepted_travel_plan_snapshot: { days: [{ id: "travel_plan_day_old" }] },
     traveler_details_token_nonce: "secret",
+    public_traveler_details_token_nonce: "public-secret",
     web_form_submission: {
       booking_name: "Source Booking",
+      preferred_language: "de",
+      preferred_currency: "USD",
+      destinations: ["VN", "KH"],
+      travel_style: ["culture", "food"],
+      number_of_travelers: 2,
       name: "Traveler",
       email: "traveler@example.com",
-      phone_number: "+15550000000"
+      phone_number: "+15550000000",
+      notes: "Original submission note"
     },
     persons: [
       {
@@ -52,6 +83,14 @@ test("cloneBookingForTesting remaps ids and resets generated state", () => {
     offer: {
       status: "OFFER_SENT",
       currency: "USD",
+      offer_detail_level_internal: "component",
+      offer_detail_level_visible: "component",
+      category_rules: [
+        {
+          category: "OTHER",
+          tax_rate_basis_points: 0
+        }
+      ],
       components: [
         {
           id: "offer_component_1",
@@ -67,7 +106,22 @@ test("cloneBookingForTesting remaps ids and resets generated state", () => {
       payment_terms: {
         currency: "USD",
         lines: [{ id: "payment_term_1", kind: "DEPOSIT", label: "Deposit" }]
-      }
+      },
+      totals: {
+        net_amount_cents: 10000,
+        tax_amount_cents: 0,
+        gross_amount_cents: 10000,
+        total_price_cents: 10000,
+        items_count: 1
+      },
+      quotation_summary: {
+        tax_included: true,
+        subtotal_net_amount_cents: 10000,
+        total_tax_amount_cents: 0,
+        grand_total_amount_cents: 10000,
+        tax_breakdown: []
+      },
+      total_price_cents: 10000
     },
     travel_plan: {
       days: [
@@ -79,6 +133,11 @@ test("cloneBookingForTesting remaps ids and resets generated state", () => {
             {
               id: "travel_plan_service_1",
               title: "Airport pickup",
+              image: {
+                id: "travel_plan_service_image_single_1",
+                storage_path: "travel_plan_service_images/single.webp",
+                sort_order: 0
+              },
               images: [{ id: "travel_plan_service_image_1", storage_path: "travel_plan_service_images/pickup.webp" }]
             }
           ]
@@ -98,10 +157,28 @@ test("cloneBookingForTesting remaps ids and resets generated state", () => {
       currency: "USD",
       agreed_net_amount_cents: 10000,
       adjustments: [{ id: "pricing_adjustment_1", type: "SURCHARGE", amount_cents: 500 }],
-      payments: [{ id: "pricing_payment_1", label: "Deposit", status: "PAID", paid_at: "2026-03-01T00:00:00.000Z" }]
+      payments: [{ id: "pricing_payment_1", label: "Deposit", status: "PAID", paid_at: "2026-03-01T00:00:00.000Z" }],
+      summary: {
+        agreed_net_amount_cents: 10000,
+        adjustments_delta_cents: 500,
+        adjusted_net_amount_cents: 10500,
+        scheduled_net_amount_cents: 10000,
+        unscheduled_net_amount_cents: 500,
+        scheduled_tax_amount_cents: 0,
+        scheduled_gross_amount_cents: 10000,
+        paid_gross_amount_cents: 10000,
+        outstanding_gross_amount_cents: 0,
+        is_schedule_balanced: false
+      }
     },
     generated_offers: [{ id: "generated_offer_1" }]
   };
+}
+
+test("cloneBookingForTesting keeps only approved metadata and clears commercial state by default", () => {
+  let counter = 0;
+  const randomUUID = () => `uuid_${++counter}`;
+  const source = buildSourceBooking();
 
   const cloned = cloneBookingForTesting(source, {
     randomUUID,
@@ -114,43 +191,132 @@ test("cloneBookingForTesting remaps ids and resets generated state", () => {
   assert.equal(cloned.created_at, "2026-03-29T00:00:00.000Z");
   assert.equal(cloned.updated_at, "2026-03-29T00:00:00.000Z");
   assert.equal(cloned.core_revision, 0);
+  assert.equal(cloned.image, "booking_images/source.webp");
+  assert.equal(cloned.customer_language, "de");
+  assert.equal(cloned.preferred_currency, "USD");
+  assert.deepEqual(cloned.destinations, ["VN", "KH"]);
+  assert.deepEqual(cloned.travel_styles, ["culture", "food"]);
+  assert.equal(cloned.source_channel, null);
+  assert.equal(cloned.referral_kind, null);
+  assert.equal(cloned.referral_label, null);
+  assert.equal(cloned.referral_staff_user_id, null);
+  assert.equal(cloned.number_of_travelers, null);
+  assert.equal(cloned.travel_start_day, null);
+  assert.equal(cloned.travel_end_day, null);
+  assert.equal(cloned.notes, "");
+  assert.equal(cloned.pdf_personalization, undefined);
+  assert.deepEqual(cloned.persons, []);
   assert.equal(cloned.offer.status, "DRAFT");
+  assert.equal(cloned.offer.currency, "USD");
+  assert.deepEqual(cloned.offer.components, []);
+  assert.deepEqual(cloned.offer.additional_items, []);
+  assert.equal(cloned.offer.days_internal, undefined);
+  assert.equal(cloned.offer.payment_terms, undefined);
+  assert.equal(cloned.offer.total_price_cents, 0);
+  assert.deepEqual(cloned.offer.totals, {
+    net_amount_cents: 0,
+    tax_amount_cents: 0,
+    gross_amount_cents: 0,
+    total_price_cents: 0,
+    items_count: 0
+  });
   assert.deepEqual(cloned.generated_offers, []);
   assert.equal(cloned.confirmed_generated_offer_id, undefined);
+  assert.equal(cloned.accepted_generated_offer_id, undefined);
+  assert.equal(cloned.accepted_offer_artifact_ref, undefined);
+  assert.equal(cloned.accepted_travel_plan_artifact_ref, undefined);
+  assert.equal(cloned.accepted_deposit_amount_cents, undefined);
+  assert.equal(cloned.accepted_deposit_currency, undefined);
   assert.equal(cloned.deposit_received_at, undefined);
   assert.equal(cloned.accepted_offer_snapshot, undefined);
   assert.equal(cloned.traveler_details_token_nonce, undefined);
-  assert.equal(cloned.image, undefined);
-
-  assert.equal(cloned.persons[0].id, "booking_uuid_1_person_1");
-  assert.equal(cloned.persons[0].photo_ref, undefined);
-  assert.equal(cloned.persons[0].documents[0].id, "booking_uuid_1_person_1_document_1");
-  assert.equal(cloned.persons[0].documents[0].document_picture_ref, undefined);
-
-  assert.notEqual(cloned.offer.components[0].id, "offer_component_1");
-  assert.notEqual(cloned.offer.days_internal[0].id, "offer_day_internal_1");
-  assert.notEqual(cloned.offer.additional_items[0].id, "offer_additional_1");
-  assert.notEqual(cloned.offer.payment_terms.lines[0].id, "payment_term_1");
+  assert.equal(cloned.public_traveler_details_token_nonce, undefined);
+  assert.deepEqual(cloned.web_form_submission, {
+    booking_name: "Source Booking",
+    notes: "cloned from booking_source"
+  });
 
   assert.notEqual(cloned.travel_plan.days[0].id, "travel_plan_day_1");
   assert.notEqual(cloned.travel_plan.days[0].services[0].id, "travel_plan_service_1");
-  assert.equal(cloned.travel_plan.days[0].services[0].image, null);
-  assert.equal(cloned.travel_plan.days[0].services[0].images, undefined);
-  assert.equal(cloned.travel_plan.attachments.length, 0);
-  assert.equal(cloned.travel_plan.offer_component_links.length, 1);
-  assert.equal(
-    cloned.travel_plan.offer_component_links[0].offer_component_id,
-    cloned.offer.components[0].id
-  );
-  assert.equal(
-    cloned.travel_plan.offer_component_links[0].travel_plan_service_id,
-    cloned.travel_plan.days[0].services[0].id
-  );
+  assert.equal(cloned.travel_plan.days[0].services[0].image.storage_path, "travel_plan_service_images/single.webp");
+  assert.notEqual(cloned.travel_plan.days[0].services[0].image.id, "travel_plan_service_image_single_1");
+  assert.equal(cloned.travel_plan.days[0].services[0].images[0].storage_path, "travel_plan_service_images/pickup.webp");
+  assert.notEqual(cloned.travel_plan.days[0].services[0].images[0].id, "travel_plan_service_image_1");
+  assert.equal(cloned.travel_plan.attachments.length, 1);
+  assert.equal(cloned.travel_plan.attachments[0].storage_path, "booking_travel_plan_attachments/doc.pdf");
+  assert.notEqual(cloned.travel_plan.attachments[0].id, "travel_plan_attachment_1");
+  assert.equal(cloned.travel_plan.offer_component_links.length, 0);
 
-  assert.notEqual(cloned.pricing.adjustments[0].id, "pricing_adjustment_1");
-  assert.notEqual(cloned.pricing.payments[0].id, "pricing_payment_1");
-  assert.equal(cloned.pricing.payments[0].status, "PENDING");
-  assert.equal(cloned.pricing.payments[0].paid_at, null);
+  assert.equal(cloned.pricing.currency, "USD");
+  assert.equal(cloned.pricing.agreed_net_amount_cents, 0);
+  assert.deepEqual(cloned.pricing.adjustments, []);
+  assert.deepEqual(cloned.pricing.payments, []);
+  assert.deepEqual(cloned.pricing.summary, {
+    agreed_net_amount_cents: 0,
+    adjustments_delta_cents: 0,
+    adjusted_net_amount_cents: 0,
+    scheduled_net_amount_cents: 0,
+    unscheduled_net_amount_cents: 0,
+    scheduled_tax_amount_cents: 0,
+    scheduled_gross_amount_cents: 0,
+    paid_gross_amount_cents: 0,
+    outstanding_gross_amount_cents: 0,
+    is_schedule_balanced: true
+  });
+});
+
+test("cloneBookingForTesting can include travelers while keeping file refs", () => {
+  let counter = 0;
+  const randomUUID = () => `uuid_${++counter}`;
+  const cloned = cloneBookingForTesting(buildSourceBooking(), {
+    randomUUID,
+    nowIso: () => "2026-03-29T00:00:00.000Z",
+    includeTravelers: true,
+    name: "Copied booking"
+  });
+
+  assert.equal(cloned.name, "Copied booking");
+  assert.equal(cloned.web_form_submission.booking_name, "Copied booking");
+  assert.equal(cloned.persons.length, 1);
+  assert.equal(cloned.persons[0].id, "booking_uuid_1_person_1");
+  assert.equal(cloned.persons[0].photo_ref, "booking_person_photos/source.webp");
+  assert.equal(cloned.persons[0].documents[0].id, "booking_uuid_1_person_1_document_1");
+  assert.equal(cloned.persons[0].documents[0].document_picture_ref, "booking_person_photos/passport.webp");
+});
+
+test("cloneBookingsFromStore forwards includeTravelers to the shared clone policy", async () => {
+  const rootDir = await mkdtemp(path.join(os.tmpdir(), "travelagency-booking-clone-"));
+  const storePath = path.join(rootDir, "store.json");
+
+  try {
+    await writeFile(storePath, `${JSON.stringify({
+      bookings: [buildSourceBooking()],
+      activities: [],
+      invoices: [{ id: "invoice_1", booking_id: "booking_source" }],
+      chat_conversations: [{ id: "conv_1", booking_id: "booking_source" }],
+      chat_events: [{ id: "evt_1", conversation_id: "conv_1" }]
+    }, null, 2)}\n`, "utf8");
+
+    const result = await cloneBookingsFromStore({
+      sourceBookingId: "booking_source",
+      storePath,
+      includeTravelers: true
+    });
+
+    const updatedStore = JSON.parse(await readFile(storePath, "utf8"));
+    const cloned = updatedStore.bookings.find((booking) => booking.id === result.createdIds[0]);
+    assert.ok(cloned);
+    assert.equal(cloned.persons.length, 1);
+    assert.equal(cloned.generated_offers.length, 0);
+    assert.equal(updatedStore.invoices.length, 1);
+    assert.equal(updatedStore.chat_conversations.length, 1);
+    assert.equal(updatedStore.chat_events.length, 1);
+    assert.equal(updatedStore.activities.length, 1);
+    assert.equal(updatedStore.activities[0].booking_id, cloned.id);
+    assert.match(updatedStore.activities[0].detail, /Cloned from booking_source/);
+  } finally {
+    await rm(rootDir, { recursive: true, force: true });
+  }
 });
 
 test("transferBookingOverSsh copies one booking and its booking-owned artifacts from a remote store to the local store", async () => {
