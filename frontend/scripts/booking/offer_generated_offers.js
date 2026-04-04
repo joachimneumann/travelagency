@@ -142,13 +142,13 @@ export function createBookingGeneratedOffersModule(ctx) {
     if (/deposit payment acceptance requires at least one payment term line/i.test(message)) {
       return bookingT(
         "booking.offer.error.generate_missing_payment_terms",
-        "This booking cannot generate a new offer yet because the selected booking confirmation route needs at least one payment term line."
+        "This booking cannot generate a new offer yet because the selected customer confirmation flow needs at least one payment term line."
       );
     }
     if (/selected acceptance payment term line was not found/i.test(message)) {
       return bookingT(
         "booking.offer.error.generate_invalid_payment_term",
-        "This booking cannot generate a new offer because the selected payment term line for booking confirmation is missing."
+        "This booking cannot generate a new offer because the selected payment term line for the customer confirmation flow is missing."
       );
     }
     if (/no travel plan|travel plan.*not available|travel plan.*empty/i.test(message)) {

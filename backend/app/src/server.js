@@ -8,7 +8,10 @@ import {
   normalizeEmail,
   normalizePhone
 } from "./domain/phone_matching.js";
-import { backfillGeneratedOfferBookingConfirmationState } from "./domain/booking_confirmation.js";
+import {
+  backfillGeneratedOfferBookingConfirmationState,
+  pruneLegacyGeneratedOfferConfirmationState
+} from "./domain/booking_confirmation.js";
 import { collapseGeneratedOfferPaymentTermsState } from "./domain/generated_offer_artifacts.js";
 import { createBackendServices } from "./bootstrap/services.js";
 import { createApplicationRoutes } from "./bootstrap/application_handlers.js";
@@ -235,10 +238,25 @@ export async function createBackendHandler({ port = PORT } = {}) {
   const backfilledBookingPersons = startupStore.__bookingPersonsWritebackNeeded === true;
   const backfilledBookingOffers = startupStore.__bookingOfferWritebackNeeded === true;
   const collapsedGeneratedOfferPaymentTerms = collapseGeneratedOfferPaymentTermsState(startupStore);
-  if (backfillGeneratedOfferBookingConfirmationState(startupStore, {
+  const backfilledGeneratedOfferBookingConfirmationState = backfillGeneratedOfferBookingConfirmationState(startupStore, {
     now: nowIso(),
     ttlMs: BOOKING_CONFIRMATION_TOKEN_CONFIG.ttlMs
-  }) || collapsedGeneratedOfferPaymentTerms || backfilledBookingPersons || backfilledBookingOffers) {
+  });
+  const prunedLegacyGeneratedOffers = pruneLegacyGeneratedOfferConfirmationState(startupStore);
+  if (prunedLegacyGeneratedOffers.removedGeneratedOfferIds.length) {
+    await Promise.all(
+      prunedLegacyGeneratedOffers.removedGeneratedOfferIds.map((generatedOfferId) => (
+        rm(services.pricingHelpers.generatedOfferPdfPath(generatedOfferId), { force: true }).catch(() => {})
+      ))
+    );
+  }
+  if (
+    backfilledGeneratedOfferBookingConfirmationState
+    || collapsedGeneratedOfferPaymentTerms
+    || backfilledBookingPersons
+    || backfilledBookingOffers
+    || prunedLegacyGeneratedOffers.changed
+  ) {
     await services.storeUtils.persistStore(startupStore);
   }
   const auth = createAuth({ port });

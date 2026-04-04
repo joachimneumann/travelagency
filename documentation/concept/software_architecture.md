@@ -10,7 +10,9 @@ It is not a generic template. It describes the actual structure used in this rep
 - handwritten runtime workflow code
 - booking-owned person data
 - modeled read models for API responses
-- frozen generated-offer artifacts and acceptance workflow
+- frozen generated-offer artifacts
+- customer confirmation flow and booking confirmation
+- standard travel plan templates
 
 ## Architecture Summary
 
@@ -27,10 +29,14 @@ The active operational domains are:
 - booking persons
 - ATP staff
 - tours
+- travel plan templates
 - pricing
 - invoices
 - activities
 - chat timelines linked to bookings
+- generated offers
+- customer confirmation flow
+- booking confirmation
 
 The system intentionally does not use a separate shared master-data layer for contacts or traveler groups.
 
@@ -52,9 +58,10 @@ This model defines:
 - naming
 - invariants
 
-Important current domain decision:
+Important current domain decisions:
 - `booking.persons[]` is the editable person structure
 - `booking.web_form_submission` is the immutable inbound snapshot
+- `TravelPlanTemplate` is a separate reusable entity, not a fake booking
 
 ### Why This Matters
 
@@ -67,8 +74,6 @@ The architecture is designed to prevent that.
 
 ## Model Boundary
 
-The CUE model is split intentionally.
-
 ### `model/entities/`
 
 Contains business entities and value objects.
@@ -76,8 +81,8 @@ Contains business entities and value objects.
 Examples:
 - `Booking`
 - `BookingPerson`
-- `Invoice`
-- `Tour`
+- `TravelPlanTemplate`
+- `GeneratedBookingOffer`
 
 These types describe what the business data means.
 
@@ -91,9 +96,7 @@ Examples:
 - endpoint request and response envelopes
 - read models such as `BookingReadModel`
 - read models such as `GeneratedBookingOfferReadModel`
-- error shapes
-
-These types describe how data moves across HTTP.
+- read models such as `TravelPlanTemplateReadModel`
 
 Important rule:
 - transport-only fields such as `pdf_url`, `public_booking_confirmation_token`, or translation summaries belong in `model/api/`
@@ -133,10 +136,6 @@ Generated outputs include:
 - `frontend/Generated/`
 - `mobile/iOS/Generated/` when explicitly generated for iOS consumption
 
-Current repository note:
-- the active iOS app does not currently keep generated Swift artifacts checked in
-- current mobile status is documented in `documentation/backend/mobileApp.md`
-
 The generator should own:
 - transport schemas
 - enum catalogs
@@ -154,20 +153,21 @@ The runtime distinguishes between:
 Examples:
 - `entities.#GeneratedBookingOffer`
   - persisted commercial snapshot
-  - internal artifact metadata
-  - internal acceptance-token lifecycle metadata
+  - frozen PDF metadata
+  - internal booking-confirmation token lifecycle metadata
+  - optional `customer_confirmation_flow`
+  - optional `booking_confirmation`
 - `api.#GeneratedBookingOfferReadModel`
   - customer/admin-facing response shape
   - `pdf_url`
   - `public_booking_confirmation_token`
   - `public_booking_confirmation_expires_at`
+  - `customer_confirmation_flow`
 
-- `entities.#Booking`
-  - persisted operational booking record
-- `api.#BookingReadModel`
-  - booking response shape used by list/detail/activity/invoice responses
-  - translation summaries
-  - capability flags such as `generated_offer_email_enabled`
+- `entities.#TravelPlanTemplate`
+  - persisted reusable travel plan
+- `api.#TravelPlanTemplateReadModel`
+  - derived counts and source-booking presentation data
 
 This split exists to stop response-only fields from becoming accidental persisted domain fields.
 
@@ -182,8 +182,6 @@ Responsibilities:
 - define transport meaning
 - define shared enums and catalogs
 
-This is the most stable layer.
-
 ### Layer 2: Generated contract
 
 Owned by the generator.
@@ -192,8 +190,6 @@ Responsibilities:
 - publish the transport contract
 - expose generated request builders
 - expose generated models and catalogs for backend, frontend, and later mobile
-
-This is the shared communication layer between runtimes.
 
 ### Layer 3: Runtime application code
 
@@ -206,21 +202,19 @@ Responsibilities:
 - UI behavior
 - chat/webhook integration
 - pricing, offer, and invoice calculations
-
-This layer may add behavior, but it should not redefine the shared data contract.
+- PDF generation and artifact handling
 
 Current important runtime split:
 - `booking_finance.js`
-  - offer editing, generation, PDF mail drafts, finance mutations
-- `booking_booking_confirmation.js`
-  - public generated-offer access
-  - public PDF access
-  - booking confirmation
-- `generated_offer_artifacts.js`
-  - frozen PDF artifact creation and lookup
+  - offer editing, generation, Gmail draft creation, finance mutations, management approval
 - `booking_confirmation.js`
-  - acceptance-token state
-  - acceptance-token verification
+  - public generated-offer access, PDF delivery, and confirmation-flow status responses
+- `travel_plan_templates.js`
+  - template CRUD and apply flow
+- `booking_confirmation.js` in `domain/`
+  - customer confirmation flow normalization
+  - booking confirmation token state
+  - startup migration for legacy generated offers
 
 ### Layer 4: Persistence
 
@@ -229,80 +223,39 @@ Owned by storage adapters.
 Current local/runtime persistence is:
 - JSON store for bookings and related runtime data
 - per-tour folders for tours and images
-- invoice files/assets
+- per-template folders for standard travel plans
+- per-artifact folders for invoices, generated offers, travel-plan PDFs, and attachments
 
-Persistence is allowed to have storage-specific normalization, but that normalization must still map back to the modeled runtime shape.
+## Confirmation Boundary
 
-## Runtime Responsibilities by Area
+The current intended confirmation split for new data is:
+- `customer_confirmation_flow`
+  - customer-facing setup
+  - currently deposit payment only
+- `booking_confirmation`
+  - immutable evidence record
+  - currently `DEPOSIT_PAYMENT` or `MANAGEMENT`
 
-### Backend
+Management approval is not modeled as a customer flow.
+Instead, the generated offer can freeze a management approver snapshot and later write a `booking_confirmation` with method `MANAGEMENT`.
 
-The backend is responsible for:
-- authentication and authorization
-- booking workflows
-- stage transitions
-- ATP staff assignment rules
-- pricing normalization and calculations
-- invoice creation and PDF generation
-- generated-offer artifact freezing and serving
-- public generated-offer access and acceptance
-- acceptance-token verification
-- chat/webhook ingestion
-- persistence
+Compatibility note:
+- some legacy public click-confirmation behavior still exists in runtime migration and handler code for older stored offers
+- new offers are intended to confirm through deposit payment or internal management approval
 
-The backend should use generated enums and transport shapes instead of maintaining handwritten parallel catalogs.
+## Travel Plan Template Boundary
 
-Additional backend rule:
-- read endpoints must not perform hidden persistence migrations
-- backfills and token-state normalization belong in startup/bootstrap or explicit migrations
+Templates are a separate entity because they are reusable reference material, not live customer records.
 
-### Frontend
-
-The frontend is responsible for:
-- public booking form
-- public tours catalog
-- public booking-confirmationance page
-- backend workspace pages
-- booking detail page
-- tour edit page
-
-The frontend should use generated request builders, generated enums, and generated transport models whenever possible.
-
-### Mobile
-
-Mobile is currently secondary, but the architectural rule is already defined:
-- mobile should consume the same generated contract
-- mobile should use the same booking-owned person vocabulary
-- mobile must not reintroduce removed master-data concepts
-
-Current implementation note:
-- the active iOS target is intentionally reduced to bootstrap, auth, and a minimal shell
-- use `documentation/backend/mobileApp.md` as the current-state mobile reference
-
-## Current Domain Shape
-
-The active data shape is centered on the booking.
-
-Key implications:
-- a booking owns its contact and traveler data
-- person changes are local to that booking
-- cross-booking deduplication is not the primary write model
-- inbound website data already fits the booking shape
-
-Advantages:
-- simpler permissions
-- fewer cross-record write conflicts
-- easier inbound form handling
-- easier maintenance
-
-Tradeoff:
-- duplicates across bookings are allowed
-
-This tradeoff is intentional.
+Phase 1 behavior:
+- templates are created from an existing booking travel plan
+- only published templates can be applied to a booking
+- applying a template replaces the booking travel plan by copy
+- templates are not live-linked to bookings after apply
 
 ## Concurrency Model
 
-The active backend no longer uses a single booking-wide hash for optimistic locking.
+The active backend does not use a single booking-wide hash for optimistic locking.
 
 Instead, each writable booking section has its own integer revision counter:
 - `core_revision`
@@ -314,67 +267,6 @@ Instead, each writable booking section has its own integer revision counter:
 - `invoices_revision`
 
 Rules:
-- endpoints must validate only the revision for the section they mutate
+- endpoints validate only the revision for the section they mutate
 - a write increments only that section revision
 - `updated_at` remains an audit/display field and must not be used for conflict detection
-- on a conflict, the frontend should tell the user to reload; it should not silently overwrite with server state
-
-## Where Handwritten Code Is Still Acceptable
-
-Not everything has to be generated.
-
-Handwritten code is still the right place for:
-- authorization rules
-- workflow transitions
-- storage adapters
-- pricing calculations
-- PDF rendering
-- webhook integration
-- UI layout and interaction
-
-But handwritten code should not become the source of truth for:
-- enum definitions
-- transport field names
-- endpoint shapes
-- shared domain naming
-
-## Exceptions
-
-Some current endpoints or behaviors are still partly handwritten outside the modeled transport layer.
-
-Examples:
-- Meta webhook endpoints
-- offer exchange-rate preview endpoint
-- some ATP staff write flows
-- some tour upload behavior
-
-These are acceptable only if they remain explicitly documented and do not drift into shadow schemas.
-
-Current explicitly acceptable handwritten runtime concerns:
-- auth/session handling
-- webhook signature handling
-- PDF rendering implementation
-- startup backfills for internal persisted metadata
-
-## Naming Rules
-
-The active architecture should consistently use:
-- `person` / `persons`
-- `booking person`
-- `booking-owned`
-
-Avoid:
-- `people`
-- removed legacy master-data labels
-- duplicate runtime vocabularies for the same concept
-
-## Practical Review Rule
-
-When changing the system, ask these questions in order:
-
-1. Should this change start in `model/`?
-2. Should the generator own this shape or enum?
-3. Is the backend/frontend adding behavior, not redefining shared meaning?
-4. Does the final runtime still reflect booking-owned persons?
-
-If the answer to the first two is yes, the change should not start in handwritten runtime code.

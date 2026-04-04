@@ -10,11 +10,11 @@ Create a Gmail draft from the ATP backend so ATP staff can:
 
 This is intentionally a **draft creation** flow, not an automatic send flow.
 
-It is also intentionally separate from the public booking-confirmationance flow.
+It is also intentionally separate from the generated-offer confirmation flow.
 
 Current backend booking UI distinction:
 - `Email` in the generated-offers table creates a Gmail draft with the frozen PDF attachment
-- `Copy link` / `Email link` in the accept-link column are separate helpers for the public acceptance flow
+- generated-offer confirmation is handled separately from Gmail draft creation
 
 ## Recommended Architecture
 
@@ -191,7 +191,7 @@ That means:
 
 ### Booking confirmation relationship
 
-Generated-offer email and generated-booking confirmation are separate workflows.
+Generated-offer email and booking confirmation are separate workflows.
 
 Email draft flow:
 - ATP staff prepares outbound customer communication
@@ -200,10 +200,10 @@ Email draft flow:
 - draft creation does not by itself mark the offer as accepted
 
 Booking confirmation flow:
-- customer uses a dedicated public booking confirmation link
-- the link opens the public acceptance page `booking-confirmation.html`
-- the link is based on a public booking confirmation token
-- acceptance is tied to the frozen generated-offer snapshot and frozen PDF
+- new offers are intended to confirm either by deposit payment or by internal management approval
+- `booking-confirmation.html` remains the token-gated public generated-offer access page
+- direct public click-confirmation is no longer used
+- confirmation is tied to the frozen generated-offer snapshot and frozen PDF
 
 This separation is intentional:
 - Gmail handles staff communication workflow
@@ -225,20 +225,12 @@ ATP staff then:
 - optionally changes the text
 - sends it manually
 
-If ATP later includes an booking confirmation link in the email body, that link should point to the dedicated public acceptance page and tokenized acceptance flow, not to a mutable booking page.
+If ATP later includes a booking confirmation link in the email body, that link should point to the dedicated public generated-offer access page and tokenized confirmation flow, not to a mutable booking page.
 
-### Acceptance-link helpers
+### Generated-offer link helpers
 
-The backend workspace exposes separate acceptance-link actions for generated offers:
-- `Copy link`
-- `Email link`
-
-These actions build a public acceptance URL from the generated offer read model.
-
-They do not:
-- create a Gmail draft automatically
-- mark the offer as sent
-- mark the offer as accepted
+The backend workspace keeps generated-offer communication and generated-offer confirmation as separate concerns.
+The Gmail draft flow does not itself confirm the booking, and booking confirmation does not itself create a Gmail draft.
 
 ## Browser Behavior
 

@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-04-04T09:49:25Z
+# 2026-04-04T10:55:08Z
 
 ---
 openapi: 3.1.0
@@ -785,22 +785,14 @@ components:
       enum:
       - DEPOSIT_PAYMENT
       - MANAGEMENT
-      - PORTAL_CLICK
-      - ESIGN
       x-enum-catalog:
       - code: DEPOSIT_PAYMENT
       - code: MANAGEMENT
-      - code: PORTAL_CLICK
-      - code: ESIGN
       x-enum-options:
       - value: DEPOSIT_PAYMENT
         label: DEPOSIT_PAYMENT
       - value: MANAGEMENT
         label: MANAGEMENT
-      - value: PORTAL_CLICK
-        label: PORTAL_CLICK
-      - value: ESIGN
-        label: ESIGN
     TravelPlanTemplateStatus:
       type: string
       enum:

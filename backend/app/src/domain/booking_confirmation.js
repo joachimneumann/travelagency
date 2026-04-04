@@ -314,6 +314,49 @@ export function backfillGeneratedOfferBookingConfirmationState(store, { now = nu
   return changed;
 }
 
+export function pruneLegacyGeneratedOfferConfirmationState(store) {
+  const bookings = Array.isArray(store?.bookings) ? store.bookings : [];
+  const removedGeneratedOfferIds = [];
+  let changed = false;
+
+  for (const booking of bookings) {
+    const generatedOffers = Array.isArray(booking?.generated_offers) ? booking.generated_offers : [];
+    const retainedGeneratedOffers = [];
+
+    for (const generatedOffer of generatedOffers) {
+      const bookingConfirmationMethod = normalizeBookingConfirmationText(generatedOffer?.booking_confirmation?.method).toUpperCase();
+      const hasCustomerConfirmationFlow = generatedOffer?.customer_confirmation_flow && typeof generatedOffer.customer_confirmation_flow === "object";
+      const hasManagementApprover = Boolean(normalizeBookingConfirmationText(generatedOffer?.management_approver_atp_staff_id));
+      const hasLegacyMethod = bookingConfirmationMethod === "PORTAL_CLICK" || bookingConfirmationMethod === "ESIGN";
+      const hasLegacyPublicConfirmationShape = !generatedOffer?.booking_confirmation && !hasCustomerConfirmationFlow && !hasManagementApprover;
+
+      if (hasLegacyMethod || hasLegacyPublicConfirmationShape) {
+        removedGeneratedOfferIds.push(normalizeBookingConfirmationText(generatedOffer?.id));
+        changed = true;
+        continue;
+      }
+
+      retainedGeneratedOffers.push(generatedOffer);
+    }
+
+    if (retainedGeneratedOffers.length !== generatedOffers.length) {
+      booking.generated_offers = retainedGeneratedOffers;
+    }
+    if (
+      normalizeBookingConfirmationText(booking?.confirmed_generated_offer_id)
+      && !retainedGeneratedOffers.some((generatedOffer) => normalizeBookingConfirmationText(generatedOffer?.id) === normalizeBookingConfirmationText(booking.confirmed_generated_offer_id))
+    ) {
+      booking.confirmed_generated_offer_id = null;
+      changed = true;
+    }
+  }
+
+  return {
+    changed,
+    removedGeneratedOfferIds: removedGeneratedOfferIds.filter(Boolean)
+  };
+}
+
 export function buildGeneratedOfferTransportFields(generatedOffer, { secret = "", includeBookingConfirmationToken = false } = {}) {
   if (!generatedOffer || typeof generatedOffer !== "object") return {};
   const {
@@ -422,9 +465,13 @@ export function buildPublicGeneratedOfferCustomerConfirmationFlowView(generatedO
 
 export function buildGeneratedOfferBookingConfirmationPublicSummary(bookingConfirmation) {
   if (!bookingConfirmation || typeof bookingConfirmation !== "object") return null;
+  const normalizedMethod = normalizeBookingConfirmationText(bookingConfirmation.method).toUpperCase();
+  const fallbackMethod = normalizeBookingConfirmationText(bookingConfirmation.management_approver_atp_staff_id)
+    ? "MANAGEMENT"
+    : "DEPOSIT_PAYMENT";
   return {
     accepted_at: normalizeBookingConfirmationText(bookingConfirmation.accepted_at) || new Date().toISOString(),
-    method: normalizeBookingConfirmationText(bookingConfirmation.method).toUpperCase() || "PORTAL_CLICK",
+    method: normalizedMethod || fallbackMethod,
     ...(normalizeBookingConfirmationText(bookingConfirmation.management_approver_atp_staff_id)
       ? { management_approver_atp_staff_id: normalizeBookingConfirmationText(bookingConfirmation.management_approver_atp_staff_id) }
       : {}),

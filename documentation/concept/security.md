@@ -83,7 +83,7 @@ Relevant code:
 - `backend/app/src/domain/booking_confirmation.js`
 
 Current behavior:
-- public booking confirmation requires a dedicated booking confirmation token
+- public generated-offer access and public generated-offer PDFs require a dedicated booking confirmation token
 
 This is materially better than a public flow that trusts only `booking_id` and `generated_offer_id`.
 

@@ -1760,6 +1760,11 @@ test("generated offer actions are gated behind a clean page state", async () => 
     /customer_confirmation_flow/,
     "Generated-offer creation should use the renamed customer confirmation flow field"
   );
+  assert.doesNotMatch(
+    offersSource,
+    /booking confirmation route/,
+    "Generated-offer UI copy should use customer confirmation flow wording instead of the removed route term"
+  );
   assert.match(
     bookingSource,
     /id="pricing_management_approval_btn"/,
@@ -2877,6 +2882,7 @@ test("travel plan templates are wired through backend navigation, routes, and bo
   const bookingTravelPlanPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan.js");
   const routesPath = path.resolve(__dirname, "..", "..", "..", "backend", "app", "src", "http", "routes.js");
   const handlersPath = path.resolve(__dirname, "..", "..", "..", "backend", "app", "src", "http", "handlers", "travel_plan_templates.js");
+  const domainPath = path.resolve(__dirname, "..", "..", "..", "backend", "app", "src", "domain", "travel_plan_templates.js");
   const [
     navSource,
     pageSource,
@@ -2884,7 +2890,8 @@ test("travel plan templates are wired through backend navigation, routes, and bo
     bookingLibrarySource,
     bookingTravelPlanSource,
     routesSource,
-    handlersSource
+    handlersSource,
+    domainSource
   ] = await Promise.all([
     readFile(navPath, "utf8"),
     readFile(pagePath, "utf8"),
@@ -2892,16 +2899,19 @@ test("travel plan templates are wired through backend navigation, routes, and bo
     readFile(bookingLibraryPath, "utf8"),
     readFile(bookingTravelPlanPath, "utf8"),
     readFile(routesPath, "utf8"),
-    readFile(handlersPath, "utf8")
+    readFile(handlersPath, "utf8"),
+    readFile(domainPath, "utf8")
   ]);
 
   assert.match(navSource, /standard-travel-plans\.html/, "Backend nav should link to the dedicated standard travel plans page");
   assert.match(pageSource, /id="standardTravelPlansTable"/, "The standard travel plans page should expose the templates table");
   assert.match(pageScriptSource, /\/api\/v1\/travel-plan-templates/, "The standard travel plans page should load templates from the dedicated backend endpoint");
+  assert.match(pageScriptSource, /const DESTINATION_COUNTRY_CODES = Object\.freeze\(\["VN", "TH", "KH", "LA"\]\)/, "The standard travel plans UI should limit destinations to the four supported country codes");
   assert.match(bookingLibrarySource, /bookingTravelPlanTemplateApplyRequest/, "The booking travel-plan library should apply standard travel plans through the dedicated endpoint");
   assert.match(bookingTravelPlanSource, /data-travel-plan-open-template-import/, "The booking travel-plan footer should expose a standard travel plan action");
   assert.match(routesSource, /\/api\/v1\/travel-plan-templates/, "HTTP routes should include the standard travel plan endpoints");
   assert.match(handlersSource, /Only published travel plan templates can be applied/, "Template apply handler should enforce published templates");
+  assert.match(domainSource, /enumValueSetFor\("CountryCode"\)[\s\S]*normalizeText\(value\)\.toUpperCase\(\)[\s\S]*COUNTRY_CODE_SET\.has\(value\)/, "Template destination normalization should store CountryCode values instead of tour destination slugs");
 });
 
 test("contract tests use an isolated temp store instead of the runtime store.json", async () => {

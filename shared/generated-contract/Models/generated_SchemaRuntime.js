@@ -3871,9 +3871,7 @@
   "isArray": false,
   "enumValues": [
     "DEPOSIT_PAYMENT",
-    "MANAGEMENT",
-    "PORTAL_CLICK",
-    "ESIGN"
+    "MANAGEMENT"
   ],
   "options": [
     {
@@ -3883,14 +3881,6 @@
     {
       "value": "MANAGEMENT",
       "label": "MANAGEMENT"
-    },
-    {
-      "value": "PORTAL_CLICK",
-      "label": "PORTAL_CLICK"
-    },
-    {
-      "value": "ESIGN",
-      "label": "ESIGN"
     }
   ]
 },

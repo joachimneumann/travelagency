@@ -2,7 +2,7 @@
 
 ## Core Decision
 
-AsiaTravelPlan now uses a booking-owned person structure.
+AsiaTravelPlan uses a booking-owned operational data model.
 
 This means:
 - no separate shared person-master-data entity
@@ -50,6 +50,7 @@ Current language meaning:
 `BookingPerson`
 - `id`
 - `name`
+- `gender?`
 - `emails[]`
 - `phone_numbers[]`
 - `preferred_language`
@@ -104,17 +105,32 @@ Multiple roles are allowed on the same person.
 - `created_at`
 - `updated_at`
 
+## BookingTravelPlan
+
+`BookingTravelPlan`
+- `days[]`
+- `offer_component_links[]`
+- `attachments[]`
+
+Current travel-plan notes:
+- day and service IDs are booking-local operational IDs
+- service images can carry an optional `image_subtitle`
+- travel-plan PDFs can be generated independently from generated offers
+- travel-plan PDFs can optionally include a `Who is traveling` section
+
 ## BookingOffer
 
 `BookingOffer`
 - `currency`
 - `status`
+- `payment_terms`
 - `category_rules[]`
 - `components[]`
 - `totals`
 - `quotation_summary`
+- `pdf_personalization`
 
-The offer model now separates:
+The offer model separates:
 - internal arithmetic totals
 - customer-facing quotation totals
 
@@ -124,10 +140,10 @@ The offer model now separates:
 - `details`
 - `quantity`
 - `unit_amount_cents`
-  this is the unit price before tax
+  - unit price before tax
 - `unit_tax_amount_cents`
 - `unit_total_amount_cents`
-  this is the unit price including tax
+  - unit price including tax
 - `tax_rate_basis_points`
 - `line_net_amount_cents`
 - `line_tax_amount_cents`
@@ -150,14 +166,11 @@ Notes:
 - `grand_total_amount_cents`
 - `tax_breakdown[]`
 
-`tax_breakdown[]`
-- one entry per tax-rate bucket used in the offer
-- contains net, tax, and gross totals for that rate
-
 ATP quotation semantics:
 - customer-facing line prices are tax-inclusive
-- the quotation still exposes tax transparently in the summary
+- the quotation exposes tax transparently when tax is non-zero
 - mixed tax rates are supported through `tax_breakdown[]`
+- zero-tax offers omit the quotation tax summary in the customer PDF
 
 ## GeneratedBookingOffer
 
@@ -174,22 +187,51 @@ ATP quotation semantics:
 - `total_price_cents`
 - `offer`
 - `travel_plan`
+- `management_approver_atp_staff_id?`
+- `management_approver_label?`
 - `pdf_frozen_at`
 - `pdf_sha256`
-- `booking_confirmation_token_nonce`
-- `booking_confirmation_token_created_at`
-- `booking_confirmation_token_expires_at`
-- `booking_confirmation_token_revoked_at`
-- `acceptance`
+- `customer_confirmation_flow?`
+- `booking_confirmation_token_nonce?`
+- `booking_confirmation_token_created_at?`
+- `booking_confirmation_token_expires_at?`
+- `booking_confirmation_token_revoked_at?`
+- `booking_confirmation?`
 
 Meaning:
 - this is the frozen customer-facing commercial snapshot
 - it stores the exact offer and travel plan as generated at that moment
 - the PDF artifact is frozen from this snapshot at generation time
+- the generated offer can optionally freeze who may later approve it internally
 
 Important boundary:
 - transport fields such as `pdf_url` and `public_booking_confirmation_token` are not part of this entity
 - those belong to the API read model only
+
+## GeneratedOfferCustomerConfirmationFlow
+
+`GeneratedOfferCustomerConfirmationFlow`
+- `mode`
+- `status`
+- `selected_at?`
+- `selected_by_atp_staff_id?`
+- `expires_at?`
+- `customer_message_snapshot?`
+- `deposit_rule?`
+
+Meaning:
+- this is customer-facing confirmation setup attached to a generated offer
+- it is not itself the final confirmation evidence record
+
+For new data, the intended mode is:
+- `DEPOSIT_PAYMENT`
+
+`deposit_rule`
+- `payment_term_line_id`
+- `payment_term_label`
+- `required_amount_cents`
+- `currency`
+- `aggregation_mode`
 
 ## GeneratedOfferBookingConfirmation
 
@@ -211,16 +253,49 @@ Important boundary:
 - `offer_snapshot_sha256`
 - `ip_address?`
 - `user_agent?`
+- `management_approver_atp_staff_id?`
 - `deposit_payment_id?`
+- `accepted_payment_term_line_id?`
+- `accepted_payment_ids?`
+- `accepted_amount_cents?`
+- `accepted_currency?`
 
 Meaning:
-- this is the immutable evidence record for accepting one frozen generated offer
-- it stores what was accepted, how it was accepted, and what exact PDF/snapshot hashes were involved
-- it is written only after acceptance-token verification
+- this is the immutable evidence record for confirming one frozen generated offer
+- it stores what was confirmed, how it was confirmed, and what exact PDF/snapshot hashes were involved
 
-Current implementation note:
-- booking confirmation is token-gated
-- challenge-state throttling details are not stored inside `GeneratedOfferBookingConfirmation`
+Current intended methods for new data:
+- `DEPOSIT_PAYMENT`
+- `MANAGEMENT`
+
+Compatibility note:
+- older stored data may still contain legacy confirmation methods until an explicit historical migration rule is chosen
+
+## TravelPlanTemplate
+
+`TravelPlanTemplate`
+- `id`
+- `title`
+- `description?`
+- `status`
+- `destinations?`
+- `travel_styles?`
+- `source_booking_id?`
+- `created_by_atp_staff_id?`
+- `travel_plan`
+- `created_at?`
+- `updated_at?`
+
+Meaning:
+- this is a reusable standard travel plan
+- it is stored independently from bookings
+- it is currently created from an existing booking travel plan
+- applying a template copies its travel plan into a booking with fresh booking-local IDs
+
+Current lifecycle:
+- `draft`
+- `published`
+- `archived`
 
 ## API Read Models
 
@@ -229,7 +304,8 @@ Current implementation note:
 - `pdf_url`
 - `public_booking_confirmation_token`
 - `public_booking_confirmation_expires_at`
-- acceptance data projected for UI/API consumption
+- `customer_confirmation_flow`
+- `booking_confirmation`
 
 `BookingReadModel`
 - booking response shape used for list, detail, activity, and invoice responses
@@ -237,47 +313,12 @@ Current implementation note:
 - generated-offer email capability flags
 - generated offers projected as `GeneratedBookingOfferReadModel[]`
 
+`TravelPlanTemplateReadModel`
+- staff-facing template library shape
+- derived template counts such as `day_count` and `service_count`
+- optional source-booking label and thumbnail
+
 Important boundary:
-- these are transport models, not persisted entities
-- they may contain derived links, capability tokens, and UI-facing summaries that must not be written back into `Booking` or `GeneratedBookingOffer`
+- response-only fields must stay in the read models
+- persistence-only token state must stay on the entity side
 
-## Invariants
-
-- `booking.persons[]` is the editable person source of truth for that booking
-- `web_form_submission` remains the original inbound snapshot
-- optimistic concurrency is section-based, not booking-wide
-- each writable booking subresource carries its own revision counter
-- `updated_at` is for audit/display only and is not used for conflict detection
-- one booking may list fewer or more persons than `number_of_travelers`
-- UI may warn when those counts differ, but the model allows it
-- a booking should usually have one `primary_contact`
-- a generated offer is an immutable snapshot once created
-- the generated-offer PDF is frozen at generation time
-- `confirmed_generated_offer_id` may point to at most one confirmed generated offer per booking
-- public booking confirmation is authorized by a dedicated booking confirmation token, not by `booking_id` and `generated_offer_id` alone
-- public generated-offer links and PDF URLs belong to API read models, not persisted entities
-
-## Conflict Detection
-
-The active conflict model uses optimistic locking with integer revision counters.
-
-- core edits use `core_revision`
-- notes use `notes_revision`
-- persons use `persons_revision`
-- travel plan uses `travel_plan_revision`
-- pricing uses `pricing_revision`
-- offer uses `offer_revision`
-- invoices use `invoices_revision`
-
-When the backend returns a conflict because another device already wrote a newer revision, the frontend should stop the edit and ask the user to reload the page. It should not silently refresh the booking or retry automatically.
-
-## Why This Shape
-
-Advantages:
-- simpler data structure
-- easier permission separation for ATP staff
-- no cross-booking write conflicts
-- inbound web form already matches the booking shape
-
-Tradeoff:
-- duplicates across bookings are allowed by design

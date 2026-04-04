@@ -1,6 +1,8 @@
 import { normalizeText } from "../lib/text.js";
+import { enumValueSetFor } from "../lib/generated_catalogs.js";
 
 const TEMPLATE_STATUSES = new Set(["draft", "published", "archived"]);
+const COUNTRY_CODE_SET = enumValueSetFor("CountryCode");
 
 function normalizeOptionalText(value) {
   const normalized = normalizeText(value);
@@ -42,7 +44,6 @@ function deriveTemplateTimeLabel(service) {
 export function createTravelPlanTemplateHelpers({
   normalizeBookingTravelPlan,
   normalizeStringArray,
-  normalizeTourDestinationCode,
   normalizeTourStyleCode,
   randomUUID,
   nowIso
@@ -53,9 +54,13 @@ export function createTravelPlanTemplateHelpers({
   }
 
   function normalizeDestinations(values) {
-    return normalizeStringArray(values)
-      .map((value) => normalizeTourDestinationCode(value))
-      .filter(Boolean);
+    return Array.from(
+      new Set(
+        normalizeStringArray(values)
+          .map((value) => normalizeText(value).toUpperCase())
+          .filter((value) => value && COUNTRY_CODE_SET.has(value))
+      )
+    );
   }
 
   function normalizeTravelStyles(values) {

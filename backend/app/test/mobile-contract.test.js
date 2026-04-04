@@ -4111,44 +4111,25 @@ test("public generated booking confirmation finalizes the frozen offer and store
       }
     }
   );
-  assert.equal(acceptResult.status, 200);
-  assert.equal(acceptResult.body.confirmed, true);
-  assert.equal(acceptResult.body.status, "CONFIRMED");
-  assert.equal(acceptResult.body.booking_confirmation.method, "PORTAL_CLICK");
-  assert.equal(typeof acceptResult.body.booking_confirmation.accepted_by_name, "undefined");
-  assert.equal(typeof acceptResult.body.booking_confirmation.accepted_by_email, "undefined");
-  assert.equal(typeof acceptResult.body.booking_confirmation.offer_pdf_sha256, "undefined");
-  assert.equal(typeof acceptResult.body.booking_confirmation.offer_snapshot_sha256, "undefined");
+  assert.equal(acceptResult.status, 409);
+  assert.match(String(acceptResult.body.error || ""), /no longer supports public booking confirmation/i);
 
   const detailResult = await requestJson(
     endpointPath("booking_detail").replace("{booking_id}", bookingId),
     apiHeaders()
   );
   assert.equal(detailResult.status, 200);
-  assert.equal(detailResult.body.booking.confirmed_generated_offer_id, generatedOfferId);
-  assert.equal(detailResult.body.booking.generated_offers[0].booking_confirmation.method, "PORTAL_CLICK");
-  assert.equal(detailResult.body.booking.generated_offers[0].booking_confirmation.accepted_by_name, "Test User");
-  assert.equal(detailResult.body.booking.generated_offers[0].booking_confirmation.accepted_by_email, "test@example.com");
-  assert.equal(detailResult.body.booking.generated_offers[0].booking_confirmation.offer_pdf_sha256.length, 64);
-  assert.equal(detailResult.body.booking.generated_offers[0].booking_confirmation.offer_snapshot_sha256.length, 64);
-  const acceptedDateOnly = detailResult.body.booking.generated_offers[0].booking_confirmation.accepted_at.slice(0, 10);
-  const finalDueDate = new Date(`${acceptedDateOnly}T00:00:00.000Z`);
-  finalDueDate.setUTCDate(finalDueDate.getUTCDate() + 14);
-  assert.equal(detailResult.body.booking.pricing_revision, 1);
-  assert.equal(detailResult.body.booking.pricing.payments.length, 2);
-  assert.equal(detailResult.body.booking.pricing.payments[0].label, "Deposit");
-  assert.equal(detailResult.body.booking.pricing.payments[0].due_date, acceptedDateOnly);
-  assert.equal(detailResult.body.booking.pricing.payments[0].status, "PENDING");
-  assert.equal(detailResult.body.booking.pricing.payments[1].label, "Final payment");
-  assert.equal(detailResult.body.booking.pricing.payments[1].due_date, finalDueDate.toISOString().slice(0, 10));
-  assert.equal(detailResult.body.booking.pricing.payments[1].status, "PENDING");
+  assert.equal(typeof detailResult.body.booking.confirmed_generated_offer_id, "undefined");
+  assert.equal(typeof detailResult.body.booking.generated_offers[0].booking_confirmation, "undefined");
+  assert.equal(detailResult.body.booking.pricing_revision, 0);
+  assert.equal(detailResult.body.booking.pricing.payments.length, 0);
 
   const store = JSON.parse(await readFile(STORE_PATH, "utf8"));
   const bookingRecord = store.bookings.find((item) => item.id === bookingId);
   assert.ok(bookingRecord);
-  assert.equal(bookingRecord.confirmed_generated_offer_id, generatedOfferId);
-  assert.equal(bookingRecord.generated_offers[0].booking_confirmation.accepted_by_name, "Test User");
-  assert.equal(bookingRecord.pricing.payments.length, 2);
+  assert.equal(typeof bookingRecord.confirmed_generated_offer_id, "undefined");
+  assert.equal(typeof bookingRecord.generated_offers[0].booking_confirmation, "undefined");
+  assert.equal(bookingRecord.pricing.payments.length, 0);
 });
 
 test("deposit receipt freezes the accepted customer record and keeps it stable after later offer edits", async () => {

@@ -19,12 +19,13 @@ The current active domain vocabulary includes:
 - booking person
 - ATP staff
 - tour
+- travel plan template
 - pricing
 - invoice
 - activity
-- currencies and languages
 - generated offers
-- generated-booking confirmation
+- customer confirmation flow
+- booking confirmation
 
 It does not include separate shared person-master-data entities outside the booking.
 
@@ -52,8 +53,9 @@ Generated from the model:
 Important generated transport types:
 - `BookingReadModel`
 - `GeneratedBookingOfferReadModel`
+- `TravelPlanTemplateReadModel`
 - `TranslationStatusSummary`
-- public generated-offer access/accept request and response payloads
+- public generated-offer access request and response payloads
 
 Current repository note:
 - the active iOS target does not currently keep generated Swift artifacts checked in
@@ -65,14 +67,15 @@ Handwritten runtime logic:
 - backend business logic
 - frontend pages and UI behavior
 - authentication and authorization
-- storage adapters
+- persistence orchestration and storage adapters
 
 ### Layer 4: Persistence
 
 Current persistence:
-- JSON store for local/runtime use
-- booking-centered records
-- tours and invoices as separate persisted assets
+- JSON store for bookings and related runtime state
+- per-folder persisted assets for tours
+- per-folder persisted assets for travel plan templates
+- PDF and attachment folders for generated offer, invoice, and travel-plan artifacts
 
 ## Derivation Flow
 
@@ -91,13 +94,16 @@ Backend:
 - persistence orchestration
 - chat/webhook integration
 - generated-offer freezing and serving
-- generated-booking confirmation
+- deposit-based customer confirmation
+- management approval
+- travel-plan template CRUD and apply flow
 
 Frontend:
 - public website interactions
-- public booking-confirmationance page
+- public generated-offer access page
 - backend booking workspace
-- booking detail page
+- backend booking list page
+- backend standard travel plans page
 - tour editing page
 
 ## Current Exceptions
@@ -113,48 +119,100 @@ The important current handler split is:
   - finance and offer mutation flow
   - generated-offer creation
   - generated-offer Gmail draft flow
-- `backend/app/src/http/handlers/booking_booking_confirmation.js`
+  - management approval
+- `backend/app/src/http/handlers/booking_confirmation.js`
   - public generated-offer access
   - public generated-offer PDF
-  - public acceptance
-- `backend/app/src/domain/generated_offer_artifacts.js`
-  - frozen generated-offer PDF artifact logic
+  - token-gated confirmation-flow status responses
+- `backend/app/src/http/handlers/travel_plan_templates.js`
+  - template CRUD
+  - apply-template-to-booking flow
 - `backend/app/src/domain/booking_confirmation.js`
-  - acceptance-token lifecycle
-  - acceptance-token verification
+  - customer confirmation flow normalization
+  - booking confirmation token lifecycle
+  - startup migration and state backfill for legacy generated offers
+- `backend/app/src/domain/travel_plan_templates.js`
+  - template normalization
+  - clone-from-booking and clone-into-booking logic
 - `frontend/pages/booking-confirmation.html`
-  - public acceptance page
-- `frontend/scripts/pages/booking_confirmation.js`
   - token-gated public generated-offer read flow
+- `frontend/pages/standard-travel-plans.html`
+  - staff template library page
 
-The backend startup path in `backend/app/src/server.js` performs explicit acceptance-token-state backfill for legacy stored generated offers.
+The backend startup path in `backend/app/src/server.js` performs explicit writeback migrations for legacy stored generated offers before serving requests.
 This backfill is done at startup, not during booking GET requests.
 
-## Generated Offer and Acceptance Boundary
+## Generated Offer and Confirmation Boundary
 
 The persisted entity and the transport read model are intentionally different.
 
 Persisted generated offer entity:
 - language
 - frozen PDF metadata
-- internal acceptance-token state
-- acceptance record
+- internal booking-confirmation token state
+- optional `customer_confirmation_flow`
+- optional `booking_confirmation`
+- optional frozen management approver snapshot
 
 Generated read model:
 - `pdf_url`
 - `public_booking_confirmation_token`
 - `public_booking_confirmation_expires_at`
+- `customer_confirmation_flow`
 - booking translation summaries and generated-offer capability flags exposed through `BookingReadModel`
 
 These read models are consumed by:
 - authenticated backend booking screens
-- the public booking-confirmationance page
+- the public generated-offer access page
 
 This prevents public transport fields from becoming stored source-of-truth fields.
+
+## Confirmation Model
+
+The current intended confirmation model for new data is:
+- `customer_confirmation_flow`
+  - customer-facing setup
+  - currently only `DEPOSIT_PAYMENT`
+- `booking_confirmation`
+  - immutable evidence record for the final confirmation result
+  - currently `DEPOSIT_PAYMENT` or `MANAGEMENT`
+
+Management approval is intentionally not modeled as a customer flow.
+Instead, the generated offer can freeze:
+- `management_approver_atp_staff_id`
+- `management_approver_label`
+
+and the actual confirmation record is written later with method `MANAGEMENT`.
+
+Compatibility note:
+- legacy public click-confirmation support still exists in runtime migration and handler code for older generated offers
+- new offers are intended to confirm either by deposit payment or by management approval
+
+## Travel Plan Template Model
+
+`TravelPlanTemplate` is a dedicated entity.
+It is not implemented as a fake booking.
+
+Phase 1 behavior:
+- templates are created from an existing booking travel plan
+- templates are stored independently from bookings
+- published templates can replace a booking travel plan by copy
+- copied template content gets fresh booking travel-plan IDs
+- templates are not live-linked back to bookings after apply
+
+Template lifecycle:
+- `draft`
+- `published`
+- `archived`
 
 ## Naming Rule
 
 The active runtime, model, and docs should consistently use:
 - `person` / `persons`
-- not `people`
-- not legacy shared master-data labels from the earlier architecture
+- `customer_confirmation_flow`
+- `booking_confirmation`
+
+and should avoid reintroducing:
+- `people`
+- `booking_confirmation_route`
+- `acceptance_route`

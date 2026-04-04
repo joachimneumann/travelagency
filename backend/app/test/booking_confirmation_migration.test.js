@@ -1,12 +1,16 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { backfillGeneratedOfferBookingConfirmationState } from "../src/domain/booking_confirmation.js";
+import {
+  backfillGeneratedOfferBookingConfirmationState,
+  pruneLegacyGeneratedOfferConfirmationState
+} from "../src/domain/booking_confirmation.js";
 
-test("generated-offer booking confirmation backfill migrates legacy confirmation fields once", () => {
+test("generated-offer startup migration removes legacy public-confirmation offers after field backfill", () => {
   const store = {
     bookings: [
       {
         id: "booking_legacy_confirmation",
+        confirmed_generated_offer_id: "generated_offer_legacy_confirmation",
         generated_offers: [
           {
             id: "generated_offer_legacy_confirmation",
@@ -53,4 +57,12 @@ test("generated-offer booking confirmation backfill migrates legacy confirmation
   assert.equal("public_acceptance_token_created_at" in migratedOffer, false);
   assert.equal("public_acceptance_token_expires_at" in migratedOffer, false);
   assert.equal("public_acceptance_token_revoked_at" in migratedOffer, false);
+
+  const pruned = pruneLegacyGeneratedOfferConfirmationState(store);
+  assert.deepEqual(pruned, {
+    changed: true,
+    removedGeneratedOfferIds: ["generated_offer_legacy_confirmation"]
+  });
+  assert.deepEqual(store.bookings[0].generated_offers, []);
+  assert.equal(store.bookings[0].confirmed_generated_offer_id, null);
 });

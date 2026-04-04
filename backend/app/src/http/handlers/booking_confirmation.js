@@ -3,10 +3,6 @@ import { validatePublicGeneratedOfferAcceptRequest } from "../../../Generated/AP
 import {
   buildGeneratedOfferBookingConfirmationPublicSummary,
   buildPublicGeneratedOfferCustomerConfirmationFlowView,
-  buildGeneratedOfferSnapshotHash,
-  buildBookingConfirmationStatement,
-  buildBookingConfirmationTermsSnapshot,
-  BOOKING_CONFIRMATION_TERMS_VERSION,
   readGeneratedOfferBookingConfirmationTokenState,
   verifyBookingConfirmationToken,
   synchronizeGeneratedOfferCustomerConfirmationFlowStatus
@@ -19,47 +15,14 @@ export function createBookingConfirmationHandlers(deps) {
     readStore,
     persistStore,
     normalizeText,
-    normalizeBookingPricing,
     nowIso,
-    addActivity,
-    formatMoney,
-    incrementBookingRevision,
-    convertBookingPricingToBaseCurrency,
-    randomUUID,
     bookingConfirmationTokenConfig,
-    getBookingContactProfile,
-    getRequestIpAddress,
     normalizeGeneratedOfferSnapshot,
     ensureFrozenGeneratedOfferPdf,
     sendFileWithCache
   } = deps;
 
   const bookingConfirmationTokenSecret = normalizeText(bookingConfirmationTokenConfig?.secret);
-
-  function requestUserAgent(req) {
-    const raw = req?.headers?.["user-agent"];
-    return normalizeText(Array.isArray(raw) ? raw[0] : raw);
-  }
-
-  function resolveBookingConfirmationContact(booking, payload = {}) {
-    const contactProfile = getBookingContactProfile(booking);
-    const acceptedByName = normalizeText(payload?.accepted_by_name || contactProfile?.name);
-    const acceptedByEmail = normalizeText(payload?.accepted_by_email || contactProfile?.email);
-    const acceptedByPhone = normalizeText(payload?.accepted_by_phone || contactProfile?.phone_number);
-    const acceptedByPersonId = normalizeText(payload?.accepted_by_person_id);
-
-    if (!acceptedByName) {
-      return { ok: false, error: "accepted_by_name is required." };
-    }
-
-    return {
-      ok: true,
-      acceptedByName,
-      acceptedByEmail: acceptedByEmail || null,
-      acceptedByPhone: acceptedByPhone || null,
-      acceptedByPersonId: acceptedByPersonId || null
-    };
-  }
 
   function buildPublicGeneratedOfferAccessResponse({ booking, generatedOffer, bookingConfirmationToken }) {
     const normalizedGeneratedOffer = normalizeGeneratedOfferSnapshot(generatedOffer, booking);
@@ -124,180 +87,6 @@ export function createBookingConfirmationHandlers(deps) {
       secret: bookingConfirmationTokenSecret,
       now: nowIso()
     });
-  }
-
-  function toDateOnly(value) {
-    const normalized = normalizeText(value);
-    if (!normalized) return null;
-    const directMatch = normalized.match(/^(\d{4}-\d{2}-\d{2})/);
-    if (directMatch) return directMatch[1];
-    const parsed = new Date(normalized);
-    if (Number.isNaN(parsed.getTime())) return null;
-    return parsed.toISOString().slice(0, 10);
-  }
-
-  function shiftDateOnly(value, days) {
-    const baseDate = toDateOnly(value);
-    if (!baseDate) return null;
-    const parsed = new Date(`${baseDate}T00:00:00.000Z`);
-    if (Number.isNaN(parsed.getTime())) return null;
-    parsed.setUTCDate(parsed.getUTCDate() + (Number.isFinite(Number(days)) ? Math.round(Number(days)) : 0));
-    return parsed.toISOString().slice(0, 10);
-  }
-
-  function resolveAcceptedOfferPaymentDueDate(line, booking, acceptedAt) {
-    const dueRule = line?.due_rule && typeof line.due_rule === "object" ? line.due_rule : {};
-    const dueType = normalizeText(dueRule.type).toUpperCase();
-    const days = Number.isFinite(Number(dueRule.days)) ? Number(dueRule.days) : 0;
-
-    if (dueType === "FIXED_DATE") {
-      return toDateOnly(dueRule.fixed_date);
-    }
-    if (dueType === "DAYS_AFTER_ACCEPTANCE") {
-      return shiftDateOnly(acceptedAt, days);
-    }
-    if (dueType === "DAYS_BEFORE_TRIP_START") {
-      return shiftDateOnly(booking?.travel_start_day, -days);
-    }
-    if (dueType === "DAYS_AFTER_TRIP_START") {
-      return shiftDateOnly(booking?.travel_start_day, days);
-    }
-    if (dueType === "DAYS_AFTER_TRIP_END") {
-      return shiftDateOnly(booking?.travel_end_day, days);
-    }
-    return toDateOnly(acceptedAt);
-  }
-
-  function buildAcceptedOfferSeedPricing({ booking, normalizedSnapshot, acceptedAt }) {
-    const paymentTerms = normalizedSnapshot?.payment_terms;
-    const lines = Array.isArray(paymentTerms?.lines) ? paymentTerms.lines : [];
-    if (!lines.length) return null;
-
-    return {
-      currency: normalizeText(paymentTerms?.currency || normalizedSnapshot?.currency) || "USD",
-      agreed_net_amount_cents: Math.max(0, Math.round(Number(normalizedSnapshot?.total_price_cents || 0))),
-      adjustments: [],
-      payments: lines.map((line, index) => {
-        const label = normalizeText(line?.label) || `Payment ${index + 1}`;
-        const dueDate = resolveAcceptedOfferPaymentDueDate(line, booking, acceptedAt);
-        const notes = normalizeText(line?.description);
-        return {
-          id: `pricing_payment_${randomUUID()}`,
-          label,
-          ...(dueDate ? { due_date: dueDate } : {}),
-          net_amount_cents: Math.max(0, Math.round(Number(line?.resolved_amount_cents || 0))),
-          tax_rate_basis_points: 0,
-          status: "PENDING",
-          paid_at: null,
-          ...(notes ? { notes } : {})
-        };
-      })
-    };
-  }
-
-  async function seedAcceptedOfferPricing({ booking, normalizedSnapshot, acceptedAt }) {
-    const seedPricing = buildAcceptedOfferSeedPricing({ booking, normalizedSnapshot, acceptedAt });
-    if (!seedPricing) return false;
-
-    const currentPricing = await convertBookingPricingToBaseCurrency(booking?.pricing || {});
-    if (Array.isArray(currentPricing?.payments) && currentPricing.payments.length > 0) {
-      return false;
-    }
-
-    const convertedSeedPricing = await convertBookingPricingToBaseCurrency(seedPricing);
-    const nextPricing = normalizeBookingPricing({
-      ...currentPricing,
-      currency: convertedSeedPricing.currency,
-      agreed_net_amount_cents: Number(currentPricing?.agreed_net_amount_cents || 0) > 0
-        ? currentPricing.agreed_net_amount_cents
-        : convertedSeedPricing.agreed_net_amount_cents,
-      payments: convertedSeedPricing.payments
-    });
-
-    if (JSON.stringify(nextPricing) === JSON.stringify(currentPricing)) {
-      return false;
-    }
-
-    booking.pricing = nextPricing;
-    incrementBookingRevision(booking, "pricing_revision");
-    return true;
-  }
-
-  async function finalizeGeneratedOfferBookingConfirmation({
-    req,
-    store,
-    booking,
-    generatedOffer,
-    acceptedByName,
-    acceptedByEmail = null,
-    acceptedByPhone = null,
-    acceptedByPersonId = null,
-    language,
-    method
-  }) {
-    if (normalizeText(booking?.confirmed_generated_offer_id) && normalizeText(booking.confirmed_generated_offer_id) !== generatedOffer.id) {
-      return { ok: false, status: 409, error: "Another generated offer has already been confirmed for this booking." };
-    }
-
-    if (generatedOffer?.booking_confirmation && typeof generatedOffer.booking_confirmation === "object") {
-      if (!normalizeText(booking?.confirmed_generated_offer_id)) {
-        booking.confirmed_generated_offer_id = generatedOffer.id;
-      }
-      if (generatedOffer?.customer_confirmation_flow && typeof generatedOffer.customer_confirmation_flow === "object") {
-        generatedOffer.customer_confirmation_flow.status = "CONFIRMED";
-      }
-      if (!normalizeText(booking?.confirmed_generated_offer_id) || generatedOffer?.customer_confirmation_flow?.status === "CONFIRMED") {
-        await persistStore(store);
-      }
-      return { ok: true, booking_confirmation: generatedOffer.booking_confirmation, unchanged: true };
-    }
-
-    const normalizedSnapshot = normalizeGeneratedOfferSnapshot(generatedOffer, booking);
-    const frozenPdf = await ensureFrozenGeneratedOfferPdf(generatedOffer, booking, { store });
-    const bookingConfirmation = {
-      id: `booking_confirmation_${randomUUID()}`,
-      accepted_at: nowIso(),
-      accepted_by_name: acceptedByName,
-      ...(acceptedByEmail ? { accepted_by_email: acceptedByEmail } : {}),
-      ...(acceptedByPhone ? { accepted_by_phone: acceptedByPhone } : {}),
-      ...(acceptedByPersonId ? { accepted_by_person_id: acceptedByPersonId } : {}),
-      language: normalizePdfLang(language || normalizedSnapshot.lang || booking?.customer_language || "en"),
-      method,
-      statement_snapshot: buildBookingConfirmationStatement({
-        bookingName: normalizeText(booking?.name || booking?.web_form_submission?.booking_name),
-        formattedTotal: formatMoney(normalizedSnapshot.total_price_cents, normalizedSnapshot.currency)
-      }),
-      terms_version: BOOKING_CONFIRMATION_TERMS_VERSION,
-      terms_snapshot: buildBookingConfirmationTermsSnapshot(),
-      offer_currency: normalizedSnapshot.currency,
-      offer_total_price_cents: Number(normalizedSnapshot.total_price_cents || 0),
-      offer_pdf_sha256: normalizeText(generatedOffer?.pdf_sha256 || frozenPdf?.sha256),
-      offer_snapshot_sha256: buildGeneratedOfferSnapshotHash(normalizedSnapshot),
-      ip_address: normalizeText(getRequestIpAddress(req)),
-      user_agent: requestUserAgent(req)
-    };
-
-    generatedOffer.booking_confirmation = bookingConfirmation;
-    if (generatedOffer?.customer_confirmation_flow && typeof generatedOffer.customer_confirmation_flow === "object") {
-      generatedOffer.customer_confirmation_flow.status = "CONFIRMED";
-    }
-    booking.confirmed_generated_offer_id = generatedOffer.id;
-    await seedAcceptedOfferPricing({
-      booking,
-      normalizedSnapshot,
-      acceptedAt: bookingConfirmation.accepted_at
-    });
-    booking.offer_revision = (Number.isInteger(Number(booking.offer_revision)) ? Number(booking.offer_revision) : 0) + 1;
-    booking.updated_at = nowIso();
-    addActivity(
-      store,
-      booking.id,
-      "BOOKING_CONFIRMED",
-      "public_api",
-      `Generated booking confirmed (${formatMoney(bookingConfirmation.offer_total_price_cents, bookingConfirmation.offer_currency)})`
-    );
-    await persistStore(store);
-    return { ok: true, booking_confirmation: bookingConfirmation, unchanged: false };
   }
 
   async function handleGetPublicGeneratedOfferAccess(req, res, [bookingId, generatedOfferId]) {
@@ -449,39 +238,18 @@ export function createBookingConfirmationHandlers(deps) {
       return;
     }
 
-    if (normalizeText(booking?.confirmed_generated_offer_id) && normalizeText(booking.confirmed_generated_offer_id) !== generatedOffer.id) {
-      sendJson(res, 409, { error: "Another generated offer has already been confirmed for this booking." });
+    if (!generatedOffer?.customer_confirmation_flow && normalizeText(generatedOffer?.management_approver_atp_staff_id)) {
+      sendJson(res, 409, { error: "This offer is confirmed internally by the assigned management approver, not by public booking confirmation." });
       return;
     }
 
-    const contact = resolveBookingConfirmationContact(booking, payload);
-    if (!contact.ok) {
-      sendJson(res, 422, { error: contact.error });
+    if (!generatedOffer?.customer_confirmation_flow) {
+      sendJson(res, 409, { error: "This offer no longer supports public booking confirmation." });
       return;
     }
 
-    const finalized = await finalizeGeneratedOfferBookingConfirmation({
-      req,
-      store,
-      booking,
-      generatedOffer,
-      acceptedByName: contact.acceptedByName,
-      acceptedByEmail: contact.acceptedByEmail,
-      acceptedByPhone: contact.acceptedByPhone,
-      acceptedByPersonId: contact.acceptedByPersonId,
-      language: normalizePdfLang(payload?.language || generatedOffer?.lang || booking?.customer_language || "en"),
-      method: "PORTAL_CLICK"
-    });
-    if (!finalized.ok) {
-      sendJson(res, finalized.status || 422, { error: finalized.error || "Could not finalize booking confirmation." });
-      return;
-    }
-    sendJson(res, 200, buildPublicGeneratedOfferAcceptResponse({
-      bookingId,
-      generatedOfferId,
-      generatedOffer,
-        bookingConfirmation: finalized.booking_confirmation
-      }));
+    sendJson(res, 409, { error: "This offer no longer supports public booking confirmation." });
+    return;
   }
 
   return {

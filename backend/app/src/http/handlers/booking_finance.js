@@ -271,7 +271,7 @@ export function createBookingFinanceHandlers(deps) {
       };
     }
 
-    throw new Error("Invalid generated booking confirmation route.");
+    throw new Error("Invalid generated customer confirmation flow.");
   }
 
   function resolveGeneratedOfferManagementApprover(booking) {
@@ -885,7 +885,7 @@ export function createBookingFinanceHandlers(deps) {
       generatedOffer.management_approver_label = approverLabel;
     }
     try {
-      const bookingConfirmationRoute = buildGeneratedOfferCustomerConfirmationFlow({
+      const customerConfirmationFlow = buildGeneratedOfferCustomerConfirmationFlow({
         generatedOffer,
         booking,
         offerSnapshot,
@@ -893,12 +893,12 @@ export function createBookingFinanceHandlers(deps) {
         principal,
         now
       });
-      if (bookingConfirmationRoute) {
-        generatedOffer.customer_confirmation_flow = bookingConfirmationRoute;
+      if (customerConfirmationFlow) {
+        generatedOffer.customer_confirmation_flow = customerConfirmationFlow;
         ensureGeneratedOfferBookingConfirmationTokenState(generatedOffer, { now });
       }
     } catch (error) {
-      sendJson(res, 422, { error: String(error?.message || error || "Invalid generated booking confirmation route.") });
+      sendJson(res, 422, { error: String(error?.message || error || "Invalid generated customer confirmation flow.") });
       return;
     }
 
