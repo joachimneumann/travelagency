@@ -2,7 +2,7 @@
 set -euo pipefail
 
 EXPECTED_HOSTNAME="${EXPECTED_HOSTNAME:-atp}"
-TARGET_ROOT="${TARGET_ROOT:-/srv/production}"
+TARGET_ROOT="${TARGET_ROOT:-/srv/placeholder}"
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SOURCE_ROOT="${SOURCE_ROOT:-$ROOT_DIR/production}"
 STAGE_DIR="$(mktemp -d "${TMPDIR:-/tmp}/asiatravelplan-static.XXXXXX")"
@@ -19,7 +19,7 @@ Usage:
 
 Environment overrides:
   EXPECTED_HOSTNAME   Hostname required for execution (default: atp)
-  TARGET_ROOT         Static site target directory (default: /srv/production)
+  TARGET_ROOT         Static site target directory (default: /srv/placeholder)
   SOURCE_ROOT         Static source directory (default: <repo>/production)
 
 This script must be executed on the production server.
