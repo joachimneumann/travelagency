@@ -45,7 +45,7 @@ Can you add a feature to the booking.html page, in the danger zone at the bottom
 Clone Booking with a "new title" textfield.
 When pressed, the booking should be cloned following the rules set in the cloning script (new IDs)
 
-Improve the english texts (not only spelling and grammar, also writing style) in "services"/"title" and "services"/"details" of booking booking_feb687e7-68cd-47ac-b51d-ac74f135ac2c in backend/app/data/store.json
+ I would like to have some standard predefined travel plans from which the staff may select one after they receive a booking. How should we implement these standard travel plans?
 
 
 Travel plan

@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-04-04T10:55:08Z
+# 2026-04-04T15:11:12Z
 
 ---
 openapi: 3.1.0
@@ -471,9 +471,25 @@ components:
         label: other
     BookingPersonGender:
       type: string
-      enum: []
-      x-enum-catalog: []
-      x-enum-options: []
+      enum:
+      - male
+      - female
+      - other
+      - prefer_not_to_say
+      x-enum-catalog:
+      - code: male
+      - code: female
+      - code: other
+      - code: prefer_not_to_say
+      x-enum-options:
+      - value: male
+        label: male
+      - value: female
+        label: female
+      - value: other
+        label: other
+      - value: prefer_not_to_say
+        label: prefer_not_to_say
     TravelPlanTimingKind:
       type: string
       enum:

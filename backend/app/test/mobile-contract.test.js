@@ -4279,6 +4279,13 @@ test("deposit receipt freezes the accepted customer record and keeps it stable a
   const createdBooking = await createSeedBooking();
   const bookingId = createdBooking.id;
 
+  const storeBeforeGenerate = JSON.parse(await readFile(STORE_PATH, "utf8"));
+  const bookingBeforeGenerate = storeBeforeGenerate.bookings.find((item) => item.id === bookingId);
+  assert.ok(bookingBeforeGenerate);
+  bookingBeforeGenerate.assigned_keycloak_user_id = "kc-joachim";
+  bookingBeforeGenerate.assigned_keycloak_user_label = "Joachim";
+  await writeFile(STORE_PATH, `${JSON.stringify(storeBeforeGenerate, null, 2)}\n`, "utf8");
+
   const offerPatchResult = await requestJson(
     endpointPath("booking_offer").replace("{booking_id}", bookingId),
     apiHeaders(),
@@ -4397,25 +4404,18 @@ test("deposit receipt freezes the accepted customer record and keeps it stable a
   );
   assert.equal(generateResult.status, 201);
   const generatedOffer = generateResult.body.booking.generated_offers[0];
-  assert.equal(typeof generatedOffer.public_booking_confirmation_token, "string");
-
-  const storeBeforeAccept = JSON.parse(await readFile(STORE_PATH, "utf8"));
-  const bookingBeforeAccept = storeBeforeAccept.bookings.find((item) => item.id === bookingId);
-  assert.ok(bookingBeforeAccept);
-  delete bookingBeforeAccept.generated_offers[0].customer_confirmation_flow;
-  await writeFile(STORE_PATH, `${JSON.stringify(storeBeforeAccept, null, 2)}\n`, "utf8");
+  assert.equal(generatedOffer.management_approver_atp_staff_id, "kc-joachim");
 
   const acceptResult = await requestJson(
-    endpointPath("public_generated_booking_confirmation")
+    endpointPath("booking_generated_offer_update")
       .replace("{booking_id}", bookingId)
       .replace("{generated_offer_id}", generatedOffer.id),
-    {},
+    apiHeaders(),
     {
-      method: "POST",
+      method: "PATCH",
       body: {
-        booking_confirmation_token: generatedOffer.public_booking_confirmation_token,
-        accepted_by_name: "Test User",
-        language: "en"
+        expected_offer_revision: generateResult.body.booking.offer_revision,
+        confirm_as_management: true
       }
     }
   );
@@ -4510,9 +4510,16 @@ test("deposit receipt freezes the accepted customer record and keeps it stable a
   assert.equal(bookingRecord.accepted_travel_plan_snapshot.days[0].services[0].title, "Airport pickup");
 });
 
-test("public generated booking confirmation enforces uniqueness per booking", async () => {
+test("management confirmation enforces uniqueness per booking", async () => {
   const createdBooking = await createSeedBooking();
   const bookingId = createdBooking.id;
+
+  const storeBeforeGenerate = JSON.parse(await readFile(STORE_PATH, "utf8"));
+  const bookingBeforeGenerate = storeBeforeGenerate.bookings.find((item) => item.id === bookingId);
+  assert.ok(bookingBeforeGenerate);
+  bookingBeforeGenerate.assigned_keycloak_user_id = "kc-joachim";
+  bookingBeforeGenerate.assigned_keycloak_user_label = "Joachim";
+  await writeFile(STORE_PATH, `${JSON.stringify(storeBeforeGenerate, null, 2)}\n`, "utf8");
 
   const firstOfferPatchResult = await requestJson(
     endpointPath("booking_offer").replace("{booking_id}", bookingId),
@@ -4558,7 +4565,6 @@ test("public generated booking confirmation enforces uniqueness per booking", as
   assert.equal(firstGenerateResult.status, 201);
   const firstGeneratedOffer = firstGenerateResult.body.booking.generated_offers[0];
   const firstGeneratedOfferId = firstGeneratedOffer.id;
-  assert.equal(typeof firstGeneratedOffer.public_booking_confirmation_token, "string");
 
   const secondOfferPatchResult = await requestJson(
     endpointPath("booking_offer").replace("{booking_id}", bookingId),
@@ -4604,41 +4610,33 @@ test("public generated booking confirmation enforces uniqueness per booking", as
   assert.equal(secondGenerateResult.body.booking.generated_offers.length, 2);
   const secondGeneratedOffer = secondGenerateResult.body.booking.generated_offers[1];
   const secondGeneratedOfferId = secondGeneratedOffer.id;
-  assert.equal(typeof secondGeneratedOffer.public_booking_confirmation_token, "string");
-
-  const storeBeforeLegacyUniqueness = JSON.parse(await readFile(STORE_PATH, "utf8"));
-  const bookingBeforeLegacyUniqueness = storeBeforeLegacyUniqueness.bookings.find((item) => item.id === bookingId);
-  assert.ok(bookingBeforeLegacyUniqueness);
-  delete bookingBeforeLegacyUniqueness.generated_offers[0].customer_confirmation_flow;
-  delete bookingBeforeLegacyUniqueness.generated_offers[1].customer_confirmation_flow;
-  await writeFile(STORE_PATH, `${JSON.stringify(storeBeforeLegacyUniqueness, null, 2)}\n`, "utf8");
 
   const firstAcceptResult = await requestJson(
-    endpointPath("public_generated_booking_confirmation")
+    endpointPath("booking_generated_offer_update")
       .replace("{booking_id}", bookingId)
       .replace("{generated_offer_id}", firstGeneratedOfferId),
-    {},
+    apiHeaders(),
     {
-      method: "POST",
+      method: "PATCH",
       body: {
-        booking_confirmation_token: firstGeneratedOffer.public_booking_confirmation_token,
-        accepted_by_name: "Test User"
+        expected_offer_revision: secondGenerateResult.body.booking.offer_revision,
+        confirm_as_management: true
       }
     }
   );
   assert.equal(firstAcceptResult.status, 200);
-  assert.equal(firstAcceptResult.body.confirmed, true);
+  assert.equal(firstAcceptResult.body.booking.confirmed_generated_offer_id, firstGeneratedOfferId);
 
   const secondAcceptResult = await requestJson(
-    endpointPath("public_generated_booking_confirmation")
+    endpointPath("booking_generated_offer_update")
       .replace("{booking_id}", bookingId)
       .replace("{generated_offer_id}", secondGeneratedOfferId),
-    {},
+    apiHeaders(),
     {
-      method: "POST",
+      method: "PATCH",
       body: {
-        booking_confirmation_token: secondGeneratedOffer.public_booking_confirmation_token,
-        accepted_by_name: "Test User"
+        expected_offer_revision: firstAcceptResult.body.booking.offer_revision,
+        confirm_as_management: true
       }
     }
   );
@@ -5090,6 +5088,25 @@ test("public generated offer access and public pdf require a valid booking confi
         offer: {
           ...createdBooking.offer,
           currency: createdBooking.preferred_currency,
+          payment_terms: {
+            currency: createdBooking.preferred_currency,
+            basis_total_amount_cents: 9900,
+            lines: [
+              {
+                id: "payment_term_public_access_deposit",
+                kind: "DEPOSIT",
+                label: "Deposit",
+                sequence: 1,
+                amount_spec: {
+                  mode: "FIXED_AMOUNT",
+                  fixed_amount_cents: 3300
+                },
+                due_rule: {
+                  type: "ON_ACCEPTANCE"
+                }
+              }
+            ]
+          },
           components: [
             {
               id: "offer_component_public_access",
@@ -5117,7 +5134,13 @@ test("public generated offer access and public pdf require a valid booking confi
       method: "POST",
       body: {
         expected_offer_revision: offerPatchResult.body.booking.offer_revision,
-        comment: "Public acceptance access"
+        comment: "Public acceptance access",
+        customer_confirmation_flow: {
+          mode: "DEPOSIT_PAYMENT",
+          deposit_rule: {
+            payment_term_line_id: "payment_term_public_access_deposit"
+          }
+        }
       }
     }
   );

@@ -1470,10 +1470,28 @@
   "typeName": "BookingPersonGender",
   "isArray": false,
   "enumValues": [
-
+    "male",
+    "female",
+    "other",
+    "prefer_not_to_say"
   ],
   "options": [
-
+    {
+      "value": "male",
+      "label": "male"
+    },
+    {
+      "value": "female",
+      "label": "female"
+    },
+    {
+      "value": "other",
+      "label": "other"
+    },
+    {
+      "value": "prefer_not_to_say",
+      "label": "prefer_not_to_say"
+    }
   ]
 },
   FIELD_13: {

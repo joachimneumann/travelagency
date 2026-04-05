@@ -52,6 +52,7 @@ import (
 		BookingSourceChannel:                enumModel.#BookingSourceChannel
 		BookingReferralKind:                 enumModel.#BookingReferralKind
 		BookingPersonRole:                   enumModel.#BookingPersonRole
+		BookingPersonGender:                 enumModel.#BookingPersonGender
 		TravelPlanTimingKind:                enumModel.#TravelPlanTimingKind
 		TravelPlanServiceKind:                  enumModel.#TravelPlanServiceKind
 		TravelPlanFinancialCoverageStatus:   enumModel.#TravelPlanFinancialCoverageStatus

@@ -576,17 +576,17 @@ test("booking person gender enum stays in sync across model and generated contra
   );
   assert.match(
     openapi,
-    /BookingPersonGender:[\s\S]*enum:[\s\S]*- male[\s\S]*- female[\s\S]*- other[\s\S]*- prefer_not_to_say[\s\S]*BookingPerson:[\s\S]*gender:[\s\S]*BookingPersonGender/,
+    /BookingPersonGender:[\s\S]*enum:[\s\S]*- male[\s\S]*- female[\s\S]*- other[\s\S]*- prefer_not_to_say[\s\S]*BookingPerson:[\s\S]*gender:[\s\S]*"\$ref": "#\/components\/schemas\/BookingPersonGender"/,
     "OpenAPI should expose the BookingPersonGender enum and the BookingPerson.gender property"
   );
   assert.match(
     schemaRuntime,
-    /FIELD_137:[\s\S]*"typeName": "BookingPersonGender"[\s\S]*"male"[\s\S]*"female"[\s\S]*"other"[\s\S]*"prefer_not_to_say"/,
+    /"typeName": "BookingPersonGender"[\s\S]*"male"[\s\S]*"female"[\s\S]*"other"[\s\S]*"prefer_not_to_say"/,
     "Generated schema runtime should expose BookingPersonGender as a shared enum field"
   );
   assert.match(
     generatedBooking,
-    /schemaField\(\{"name":"date_of_birth"[\s\S]*schemaField\(\{"name":"gender","required":false,"wireName":"gender"\}, SHARED_FIELD_DEFS\.FIELD_137\)[\s\S]*schemaField\(\{"name":"nationality"/,
+    /schemaField\(\{"name":"date_of_birth"[\s\S]*schemaField\(\{"name":"gender","required":false,"wireName":"gender"\}, SHARED_FIELD_DEFS\.FIELD_\d+\)[\s\S]*schemaField\(\{"name":"nationality"/,
     "Generated booking schema should include the gender field in BookingPerson"
   );
 });
@@ -914,8 +914,8 @@ test("service titles remain optional across save validation and UI state", async
   );
   assert.match(
     travelPlanSource,
-    /travel-plan-service__overview-main[\s\S]*booking\.travel_plan\.kind_label[\s\S]*booking\.travel_plan\.item_title[\s\S]*(booking\.location|booking\.travel_plan\.location_optional)/,
-    "Service editing should still show kind first, with title and location below it"
+    /booking\.travel_plan\.item_title[\s\S]*(booking\.travel_plan\.item_notes|booking\.travel_plan\.item_details)[\s\S]*booking\.travel_plan\.kind_label[\s\S]*(booking\.location|booking\.travel_plan\.location_optional)/,
+    "Service editing should keep title and details ahead of kind and location in the service overview"
   );
   assert.doesNotMatch(
     validationSource,
@@ -1082,7 +1082,7 @@ test("travel plan footer exposes clean-state-gated preview and create actions ba
   );
   assert.match(
     travelPlanSource,
-    /travel-plan-footer__new-day[\s\S]*data-travel-plan-add-day[\s\S]*els\.travel_plan_pdf_workspace[\s\S]*travel-plan-footer__workspace[\s\S]*travel-plan-footer__preview[\s\S]*data-travel-plan-preview-pdf[\s\S]*travel-plan-footer__content[\s\S]*travel-plan-footer__existing-pdfs[\s\S]*data-travel-plan-create-pdf[\s\S]*travel-plan-footer__attachments/,
+    /travel-plan-footer__action-rows[\s\S]*data-travel-plan-add-day[\s\S]*els\.travel_plan_pdf_workspace[\s\S]*travel-plan-footer__workspace[\s\S]*travel-plan-footer__preview[\s\S]*data-travel-plan-preview-pdf[\s\S]*travel-plan-footer__content[\s\S]*travel-plan-footer__existing-pdfs[\s\S]*data-travel-plan-create-pdf[\s\S]*travel-plan-footer__attachments/,
     "The travel-plan UI should keep day actions in the footer while rendering preview, existing PDFs, create action, and attachments inside the dedicated Travel plan PDF workspace"
   );
   assert.doesNotMatch(
