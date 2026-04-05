@@ -24,13 +24,16 @@
   @site_root path /
   rewrite @site_root /frontend/pages/index.html
 
+  @legacy_backend_page path /backend.html
+  redir @legacy_backend_page /bookings.html 302
+
   @persons_page path /persons.html
   handle @persons_page {
     rewrite * /frontend/pages/persons.html
     file_server
   }
 
-  @html_pages path /index.html /404.html /backend.html /booking.html /persons.html /tour.html /tours.html /standard-travel-plans.html /settings.html /emergency.html /privacy.html /booking-confirmation.html /traveler-details.html
+  @html_pages path /index.html /404.html /bookings.html /booking.html /persons.html /tour.html /tours.html /standard-travel-plans.html /settings.html /emergency.html /privacy.html /booking-confirmation.html /traveler-details.html
   rewrite @html_pages /frontend/pages{path}
 
   @backend path /auth/* /api/* /public/v1/* /integrations/*

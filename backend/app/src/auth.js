@@ -47,7 +47,7 @@ export function createAuth({ port }) {
   }
 
   function getLoginRedirect(returnTo) {
-    return `/auth/login?return_to=${encodeURIComponent(returnTo || "/backend.html")}`;
+    return `/auth/login?return_to=${encodeURIComponent(returnTo || "/bookings.html")}`;
   }
 
   function hasSession(req) {
@@ -263,7 +263,7 @@ export function createAuth({ port }) {
     return { ok: true };
   }
 
-  function buildSafeReturnTo(value, fallback = "/backend.html") {
+  function buildSafeReturnTo(value, fallback = "/bookings.html") {
     const raw = normalizeText(value);
     if (!raw) return fallback;
 
@@ -302,7 +302,7 @@ export function createAuth({ port }) {
     const requestHost = extractHost(req.headers.host);
     const quickLoginAllowedHost =
       requestHost === "staging.asiatravelplan.com" || requestHost === "localhost" || requestHost === "127.0.0.1";
-    const returnTo = buildSafeReturnTo(requestUrl.searchParams.get("return_to"), "/backend.html");
+    const returnTo = buildSafeReturnTo(requestUrl.searchParams.get("return_to"), "/bookings.html");
     const quickLoginRequested =
       quickLoginAllowedHost && normalizeText(requestUrl.searchParams.get("quick_login")) === "1";
     const quickLoginUser = normalizeText(requestUrl.searchParams.get("quick_login_user")) || "joachim";
@@ -417,7 +417,7 @@ export function createAuth({ port }) {
     });
     setSessionCookie(res, sid);
 
-    redirect(res, requestState.return_to || "/backend.html");
+    redirect(res, requestState.return_to || "/bookings.html");
   }
 
   async function handleAuthLogout(req, res) {
@@ -428,7 +428,7 @@ export function createAuth({ port }) {
     clearSessionCookie(res);
 
     const requestUrl = new URL(req.url, "http://localhost");
-    const returnTo = buildSafeReturnTo(requestUrl.searchParams.get("return_to"), "/backend.html");
+    const returnTo = buildSafeReturnTo(requestUrl.searchParams.get("return_to"), "/bookings.html");
     if (!cfg.keycloakEnabled) {
       redirect(res, returnTo);
       return;
@@ -450,7 +450,7 @@ export function createAuth({ port }) {
       }
       logoutUrl.searchParams.set(
         "post_logout_redirect_uri",
-        returnTo || cfg.keycloakPostLogoutRedirectUri || "/backend.html"
+        returnTo || cfg.keycloakPostLogoutRedirectUri || "/bookings.html"
       );
       redirect(res, logoutUrl.toString());
       return;

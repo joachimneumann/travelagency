@@ -54,7 +54,7 @@ export function resolveBackendSectionHref(section) {
         ? "emergency.html"
       : normalizedSection === "settings"
         ? "settings.html"
-        : "backend.html";
+        : "bookings.html";
   const url = new URL(pathname, window.location.origin);
   const lang = currentLang();
   if (lang) url.searchParams.set("lang", lang);

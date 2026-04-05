@@ -15,7 +15,7 @@ Local backend features:
 - Keycloak login
 
 Local admin pages:
-- `http://localhost:8080/backend.html`
+- `http://localhost:8080/bookings.html`
 - `http://localhost:8080/booking.html?id=<booking_id>`
 - `http://localhost:8080/tour.html?id=<tour_id>`
 
@@ -92,7 +92,7 @@ The submitted contact becomes the initial booking person and can later be refine
 
 ## Backend UI
 
-`backend.html`
+`bookings.html`
 - bookings table
 - tours table
 - Keycloak-backed assignment controls inside booking detail
@@ -120,7 +120,7 @@ There is no customer page and no travel-group page.
 
 ## Verification Checklist
 
-1. Open `backend.html`.
+1. Open `bookings.html`.
 2. Confirm bookings load.
 3. Open a booking.
 4. Confirm persons summary renders from `booking.persons`.

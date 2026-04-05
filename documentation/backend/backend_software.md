@@ -44,7 +44,7 @@ Key data rule:
 ## Active UI Surface
 
 Backend pages:
-- `backend.html`
+- `bookings.html`
 - `booking.html`
 - `tour.html`
 

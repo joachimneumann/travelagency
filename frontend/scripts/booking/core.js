@@ -354,7 +354,7 @@ export function createBookingCoreModule(ctx) {
     if (hasUnsavedBookingChanges?.() && !window.confirm(bookingT("booking.discard_navigation_confirm", "Discard unsaved edits and leave this page?"))) {
       return;
     }
-    const fallbackHref = normalizeText(els.back?.href) || withBackendLang("/backend.html", { section: "bookings" });
+    const fallbackHref = normalizeText(els.back?.href) || withBackendLang("/bookings.html", { section: "bookings" });
     window.location.href = fallbackHref;
   }
 
@@ -1471,7 +1471,7 @@ export function createBookingCoreModule(ctx) {
     if (els.deleteBtn) els.deleteBtn.disabled = false;
     if (!result?.deleted) return;
 
-    window.location.href = withBackendLang("/backend.html", { section: "bookings" });
+    window.location.href = withBackendLang("/bookings.html", { section: "bookings" });
   }
 
   async function cloneBooking() {

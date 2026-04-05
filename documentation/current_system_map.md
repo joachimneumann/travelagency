@@ -72,7 +72,7 @@ Public site entry:
 - `frontend/scripts/main.js`
 
 Backend workspace entry:
-- `frontend/pages/backend.html`
+- `frontend/pages/bookings.html`
 - `frontend/scripts/pages/booking_list.js`
 
 Booking detail workspace:

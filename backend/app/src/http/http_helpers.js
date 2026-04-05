@@ -57,7 +57,7 @@ export function createHttpHelpers({ corsOrigin }) {
 
   function sendBackendNotFound(res, pathname) {
     const safePath = normalizeText(pathname) || "/";
-    const backHref = safePath.startsWith("/backend") ? "/backend.html" : "/";
+    const backHref = safePath.startsWith("/backend") || safePath.startsWith("/bookings") ? "/bookings.html" : "/";
     const backLabel = safePath.startsWith("/backend") ? "Back to backend" : "Back to website";
     sendHtml(
       res,

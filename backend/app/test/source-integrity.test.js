@@ -1303,7 +1303,7 @@ test("travel-plan PDF personalization exposes children policy and exclusions fie
 });
 
 test("backend bookings page exposes an internal create-booking modal backed by a protected API route", async () => {
-  const bookingListPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "backend.html");
+  const bookingListPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "bookings.html");
   const bookingListScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking_list.js");
   const routesPath = path.resolve(__dirname, "..", "src", "http", "routes.js");
   const openApiPath = path.resolve(__dirname, "..", "..", "..", "api", "generated", "openapi.yaml");
@@ -1317,7 +1317,7 @@ test("backend bookings page exposes an internal create-booking modal backed by a
   assert.match(
     pageSource,
     /id="bookingCreateOpenBtn"[\s\S]*id="bookingCreateModal"[\s\S]*id="bookingCreateTitleInput"[\s\S]*id="bookingCreateSubmitBtn"/,
-    "backend.html should expose create-booking controls and the modal form"
+    "bookings.html should expose create-booking controls and the modal form"
   );
   assert.match(
     scriptSource,
@@ -2749,7 +2749,7 @@ test("booking travel-plan translate contract accepts explicit source and target 
 test("backend list pages have dedicated entrypoints and are served by caddy", async () => {
   const frontendRoot = path.resolve(__dirname, "..", "..", "..", "frontend");
   const deployRoot = path.resolve(__dirname, "..", "..", "..", "deploy");
-  const backendHtml = await readFile(path.join(frontendRoot, "pages", "backend.html"), "utf8");
+  const bookingsHtml = await readFile(path.join(frontendRoot, "pages", "bookings.html"), "utf8");
   const toursHtml = await readFile(path.join(frontendRoot, "pages", "tours.html"), "utf8");
   const standardTravelPlansHtml = await readFile(path.join(frontendRoot, "pages", "standard-travel-plans.html"), "utf8");
   const settingsHtml = await readFile(path.join(frontendRoot, "pages", "settings.html"), "utf8");
@@ -2758,9 +2758,9 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
   const stagingCaddy = await readFile(path.join(deployRoot, "Caddyfile"), "utf8");
 
   assert.match(
-    backendHtml,
+    bookingsHtml,
     /frontend\/scripts\/pages\/booking_list\.js/,
-    "backend.html should mount the bookings page script"
+    "bookings.html should mount the bookings page script"
   );
   assert.match(
     toursHtml,
@@ -2784,7 +2784,8 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
   );
 
   for (const source of [localCaddy, stagingCaddy]) {
-    assert.match(source, /\/backend\.html/, "Caddy should serve backend.html");
+    assert.match(source, /\/bookings\.html/, "Caddy should serve bookings.html");
+    assert.match(source, /\/backend\.html/, "Caddy should keep redirecting legacy backend.html");
     assert.match(source, /\/tours\.html/, "Caddy should serve tours.html");
     assert.match(source, /\/standard-travel-plans\.html/, "Caddy should serve standard-travel-plans.html");
     assert.match(source, /\/settings\.html/, "Caddy should serve settings.html");
@@ -2927,8 +2928,8 @@ test("runtime links use direct tours and settings pages instead of backend secti
     );
     assert.doesNotMatch(
       source,
-      /withBackendLang\(\s*"\/backend\.html"\s*,\s*\{\s*section\s*:\s*"(tours|standard-travel-plans|settings|emergency)"/,
-      `${path.basename(filePath)} should not build tours/standard-travel-plans/settings/emergency routes through backend.html`
+      /withBackendLang\(\s*"\/(backend|bookings)\.html"\s*,\s*\{\s*section\s*:\s*"(tours|standard-travel-plans|settings|emergency)"/,
+      `${path.basename(filePath)} should not build tours/standard-travel-plans/settings/emergency routes through the bookings entry page`
     );
   }
 });
