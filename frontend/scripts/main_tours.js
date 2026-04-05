@@ -360,12 +360,10 @@ export function createFrontendToursController(ctx) {
       const image = resolveTourImage(item);
       const normalizedTitle = resolveLocalizedFrontendText(item?.title, lang);
       const normalizedShortDescription = resolveLocalizedFrontendText(item?.short_description, lang);
-      const normalizedHighlights = resolveLocalizedFrontendStringArray(item?.highlights, lang);
       return {
         ...item,
         title: normalizedTitle,
         short_description: normalizedShortDescription,
-        highlights: normalizedHighlights,
         image
       };
     });

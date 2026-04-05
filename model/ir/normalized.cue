@@ -136,7 +136,6 @@ IR: {
 				{name: "seasonality_start_month", kind: "enum", typeName: "MonthCode", required: false},
 				{name: "seasonality_end_month", kind: "enum", typeName: "MonthCode", required: false},
 				{name: "short_description", kind: "scalar", typeName: "string", required: false},
-				{name: "highlights", kind: "scalar", typeName: "string", required: false, isArray: true},
 				{name: "image", kind: "scalar", typeName: "string", required: false},
 				{name: "created_at", kind: "scalar", typeName: "Timestamp", required: false},
 				{name: "updated_at", kind: "scalar", typeName: "Timestamp", required: false},
@@ -2178,7 +2177,6 @@ IR: {
 				{name: "seasonality_start_month", kind: "enum", typeName: "MonthCode", required: false},
 				{name: "seasonality_end_month", kind: "enum", typeName: "MonthCode", required: false},
 				{name: "short_description", kind: "scalar", typeName: "string", required: false},
-				{name: "highlights", kind: "scalar", typeName: "string", required: false, isArray: true},
 				{name: "image", kind: "scalar", typeName: "string", required: false},
 			]
 		},

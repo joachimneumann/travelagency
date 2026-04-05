@@ -1006,7 +1006,6 @@
   "tour.error.duplicate_title": "Đã tồn tại tour có tiêu đề \"{title}\" (ID: {id}). Vui lòng sử dụng tiêu đề khác.",
   "tour.error.forbidden": "Bạn không có quyền truy cập tour.",
   "tour.error.load_public_images": "Không thể tải ảnh tour công khai.",
-  "tour.highlights_label": "Điểm nổi bật (mỗi dòng một mục)",
   "tour.id_label": "ID (chỉ đọc)",
   "tour.image_help": "Ảnh sẽ được chuyển sang WebP và thay đổi kích thước tối đa 1000px tự động.",
   "tour.new_title": "Tour mới",

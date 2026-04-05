@@ -107,8 +107,7 @@ const state = {
     styles: []
   },
   localizedContent: {
-    short_description_i18n: {},
-    highlights_i18n: {}
+    short_description_i18n: {}
   }
 };
 
@@ -133,7 +132,6 @@ const els = {
   seasonalityStartMonth: document.getElementById("tour_seasonality_start_month"),
   seasonalityEndMonth: document.getElementById("tour_seasonality_end_month"),
   shortDescriptionEditor: document.getElementById("tour_short_description_editor"),
-  highlightsEditor: document.getElementById("tour_highlights_editor"),
   changeImageBtn: document.getElementById("tour_change_image_btn"),
   imageUpload: document.getElementById("tour_image_upload"),
   heroImage: document.getElementById("tour_hero_image")
@@ -269,14 +267,6 @@ function getLocalizedTextarea(field, lang) {
 }
 
 function buildTourTranslationEntries(field, sourceText) {
-  if (field === "highlights_i18n") {
-    const lines = String(sourceText || "")
-      .split(/\r?\n/)
-      .map((value) => value.trim())
-      .filter(Boolean);
-    return Object.fromEntries(lines.map((line, index) => [`line_${index}`, line]));
-  }
-
   const value = String(sourceText || "").trim();
   return value ? { value } : {};
 }
@@ -310,25 +300,10 @@ async function requestTourTranslation(field, targetLang, sourceText) {
 function applyTranslatedTourField(field, targetLang, translatedEntries) {
   const targetInput = getLocalizedTextarea(field, targetLang);
   if (!targetInput || !translatedEntries) return;
-
-  if (field === "highlights_i18n") {
-    const translatedLines = Object.entries(translatedEntries)
-      .sort((left, right) => {
-        const leftIndex = Number(String(left[0]).replace(/^line_/, ""));
-        const rightIndex = Number(String(right[0]).replace(/^line_/, ""));
-        return leftIndex - rightIndex;
-      })
-      .map(([, value]) => String(value || "").trim())
-      .filter(Boolean);
-    targetInput.value = translatedLines.join("\n");
-    return;
-  }
-
   targetInput.value = String(translatedEntries.value || "").trim();
 }
 
-function renderLocalizedTourEditor(field, { label, rows = 3, multiline = false } = {}) {
-  const mount = field === "short_description_i18n" ? els.shortDescriptionEditor : els.highlightsEditor;
+function renderLocalizedTourEditor(field, mount, { label, rows = 3, multiline = false } = {}) {
   if (!mount) return;
   const editingLang = currentTourEditingLang();
   const rowsHtml = orderedTourTextLanguages().map((language) => {
@@ -375,14 +350,9 @@ function renderLocalizedTourEditor(field, { label, rows = 3, multiline = false }
 }
 
 function renderLocalizedTourEditors() {
-  renderLocalizedTourEditor("short_description_i18n", {
+  renderLocalizedTourEditor("short_description_i18n", els.shortDescriptionEditor, {
     label: backendT("tour.description_label", "Description"),
     rows: 3
-  });
-  renderLocalizedTourEditor("highlights_i18n", {
-    label: backendT("tour.highlights_label", "Highlights (one per line)"),
-    rows: 4,
-    multiline: true
   });
 }
 
@@ -572,10 +542,6 @@ async function loadTour() {
   state.localizedContent.short_description_i18n = normalizeLocalizedTextMap(
     tour.short_description_i18n || { en: tour.short_description || "" }
   );
-  state.localizedContent.highlights_i18n = normalizeLocalizedTextMap(
-    tour.highlights_i18n || { en: Array.isArray(tour.highlights) ? tour.highlights.join("\n") : "" },
-    { multiline: true }
-  );
   renderLocalizedTourEditors();
   setPendingHeroImagePreview(null);
   renderHeroImage();
@@ -602,9 +568,7 @@ async function initializeNewTourForm() {
     seasonality_start_month: "",
     seasonality_end_month: "",
     short_description: "",
-    highlights: [],
     short_description_i18n: {},
-    highlights_i18n: {},
     image: ""
   };
 
@@ -614,7 +578,6 @@ async function initializeNewTourForm() {
   setInput("tour_seasonality_start_month", "");
   setInput("tour_seasonality_end_month", "");
   state.localizedContent.short_description_i18n = {};
-  state.localizedContent.highlights_i18n = {};
   renderLocalizedTourEditors();
   setPendingHeroImagePreview(null);
   renderHeroImage();
@@ -729,8 +692,7 @@ async function submitForm(event) {
     priority: toNumberOrNull(getInput("tour_priority")),
     seasonality_start_month: getInput("tour_seasonality_start_month"),
     seasonality_end_month: getInput("tour_seasonality_end_month"),
-    short_description_i18n: readLocalizedTextareas("short_description_i18n"),
-    highlights_i18n: readLocalizedTextareas("highlights_i18n", { multiline: true })
+    short_description_i18n: readLocalizedTextareas("short_description_i18n")
   };
 
   if (!payload.title || !payload.destinations.length || !payload.styles.length) {

@@ -271,7 +271,6 @@ export function createApplicationRoutes({
     normalizeTourForStorage: tourHelpers.normalizeTourForStorage,
     resolveLocalizedText: tourHelpers.resolveLocalizedText,
     setLocalizedTextForLang: tourHelpers.setLocalizedTextForLang,
-    setLocalizedStringArrayForLang: tourHelpers.setLocalizedStringArrayForLang,
     translateEntries: runtime.translationClient.translateEntries,
     normalizeTourLang,
     normalizeTourDestinationCode,

@@ -13,6 +13,7 @@ import {
   pruneLegacyGeneratedOfferConfirmationState
 } from "./domain/booking_confirmation.js";
 import { collapseGeneratedOfferPaymentTermsState } from "./domain/generated_offer_artifacts.js";
+import { migratePersistedTourState } from "./domain/tours_support.js";
 import { createBackendServices } from "./bootstrap/services.js";
 import { createApplicationRoutes } from "./bootstrap/application_handlers.js";
 import {
@@ -119,6 +120,17 @@ async function pruneDirectoryContents(targetDir) {
     const absolutePath = path.join(normalizedTargetDir, entry.name);
     await rm(absolutePath, { recursive: entry.isDirectory(), force: true }).catch(() => {});
   }));
+}
+
+async function backfillPersistedTourState() {
+  const tours = await services.storeUtils.readTours();
+  let changed = false;
+  for (const tour of tours) {
+    if (!migratePersistedTourState(tour)) continue;
+    changed = true;
+    await services.storeUtils.persistTour(services.tourHelpers.normalizeTourForStorage(tour));
+  }
+  return changed;
 }
 
 const services = createBackendServices({
@@ -229,6 +241,7 @@ export async function createBackendHandler({ port = PORT } = {}) {
   await moveDirectoryIfNeeded(RUNTIME_PATHS.legacyGeneratedOffersDir, RUNTIME_PATHS.generatedOffersDir);
   await moveDirectoryIfNeeded(RUNTIME_PATHS.legacyBookingTravelPlanAttachmentsDir, RUNTIME_PATHS.bookingTravelPlanAttachmentsDir);
   await services.storeUtils.ensureStorage();
+  await backfillPersistedTourState();
   await services.travelPlanPdfArtifacts.migrateLegacyTravelPlanPdfStorage();
   await pruneDirectoryContents(RUNTIME_PATHS.travelPlanPdfPreviewDir);
   await services.atpStaffDirectory.ensureStorage();

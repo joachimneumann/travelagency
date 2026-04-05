@@ -17,7 +17,6 @@ export function createTourHandlers(deps) {
     normalizeTourForStorage,
     resolveLocalizedText,
     setLocalizedTextForLang,
-    setLocalizedStringArrayForLang,
     translateEntries,
     normalizeTourLang,
     normalizeTourDestinationCode,
@@ -89,8 +88,7 @@ export function createTourHandlers(deps) {
     const stored = normalizeTourForStorage(tour);
     return {
       ...normalizeTourForRead(stored, { lang }),
-      short_description_i18n: localizedTextareaMap(stored.short_description),
-      highlights_i18n: localizedTextareaMap(stored.highlights, { multiline: true })
+      short_description_i18n: localizedTextareaMap(stored.short_description)
     };
   }
 
@@ -116,12 +114,6 @@ export function createTourHandlers(deps) {
     if (payload.seasonality_end_month !== undefined) {
       next.seasonality_end_month = normalizeText(payload.seasonality_end_month);
     }
-    if (payload.highlights_i18n !== undefined) {
-      next.highlights = payload.highlights_i18n;
-    } else if (payload.highlights !== undefined || isCreate) {
-      next.highlights = setLocalizedStringArrayForLang(current.highlights, payload.highlights, lang);
-    }
-
     if (payload.priority !== undefined || isCreate) {
       const priority = safeInt(payload.priority);
       next.priority = priority === null ? 50 : priority;
@@ -159,8 +151,7 @@ export function createTourHandlers(deps) {
         ...readModel.destinations,
         ...destinationCodes,
         ...readModel.styles,
-        ...styleCodes,
-        ...(Array.isArray(readModel.highlights) ? readModel.highlights : [])
+        ...styleCodes
       ]
         .filter(Boolean)
         .join(" ")

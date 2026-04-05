@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-04-04T15:11:12Z
+# 2026-04-05T14:15:32Z
 
 ---
 openapi: 3.1.0
@@ -4038,10 +4038,6 @@ components:
         short_description:
           type: string
           nullable: true
-        highlights:
-          type: array
-          items:
-            type: string
         image:
           type: string
           nullable: true
@@ -7567,10 +7563,6 @@ components:
         short_description:
           type: string
           nullable: true
-        highlights:
-          type: array
-          items:
-            type: string
         image:
           type: string
           nullable: true

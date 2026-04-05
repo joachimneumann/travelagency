@@ -6390,7 +6390,6 @@ test("tour editor can manage tours while staff cannot access tour endpoints", as
         destinations: ["vietnam"],
         styles: ["culture"],
         short_description: "Editor-created tour",
-        highlights: ["One highlight"],
         priority: 42
       }
     }
@@ -6524,13 +6523,12 @@ test("tour delete is blocked while bookings still reference the tour", async () 
       apiHeaders("atp_tour_editor", "tour-editor", "kc-tour-editor"),
       {
         method: "POST",
-        body: {
-          title: "Tour delete guard test",
-          destinations: ["vietnam"],
-          styles: ["culture"],
-          short_description: "Tour kept by booking reference",
-          highlights: ["Still referenced"]
-        }
+      body: {
+        title: "Tour delete guard test",
+        destinations: ["vietnam"],
+        styles: ["culture"],
+        short_description: "Tour kept by booking reference"
+      }
       }
     );
     assert.equal(createResult.status, 201);

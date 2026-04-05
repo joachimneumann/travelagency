@@ -1006,7 +1006,6 @@
   "tour.error.duplicate_title": "A tour titled \"{title}\" already exists (ID: {id}). Please use a different title.",
   "tour.error.forbidden": "You do not have access to tours.",
   "tour.error.load_public_images": "Could not load public tour images.",
-  "tour.highlights_label": "Highlights (one per line)",
   "tour.id_label": "ID (read-only)",
   "tour.image_help": "Image is converted to WebP and resized to max 1000px automatically.",
   "tour.new_title": "New tour",

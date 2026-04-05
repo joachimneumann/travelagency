@@ -314,6 +314,24 @@ test("backend startup writes back legacy generated-offer confirmation fields bef
   );
 });
 
+test("backend startup removes legacy tour highlights from persisted tour records before serving requests", async () => {
+  const serverPath = path.resolve(__dirname, "..", "src", "server.js");
+  const toursSupportPath = path.resolve(__dirname, "..", "src", "domain", "tours_support.js");
+  const serverSource = await readFile(serverPath, "utf8");
+  const toursSupportSource = await readFile(toursSupportPath, "utf8");
+
+  assert.match(
+    toursSupportSource,
+    /export function migratePersistedTourState\(tour\) \{[\s\S]*"highlights" in tour[\s\S]*delete tour\.highlights;/,
+    "Tour migration should strip legacy highlights from persisted tour records"
+  );
+  assert.match(
+    serverSource,
+    /async function backfillPersistedTourState\(\) \{[\s\S]*readTours\(\)[\s\S]*migratePersistedTourState\(tour\)[\s\S]*persistTour\(services\.tourHelpers\.normalizeTourForStorage\(tour\)\)[\s\S]*\}[\s\S]*await backfillPersistedTourState\(\);/,
+    "Backend startup should write back tour migrations before serving requests"
+  );
+});
+
 test("booking page initial customer language prefers the saved booking customer language", async () => {
   const bookingPageLanguagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking_page_language.js");
   const source = await readFile(bookingPageLanguagePath, "utf8");

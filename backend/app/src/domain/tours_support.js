@@ -27,18 +27,17 @@ function hasLocalizedContent(value) {
   });
 }
 
-export function createTourHelpers({ toursDir, safeInt }) {
-  function normalizeHighlights(value) {
-    if (Array.isArray(value)) return value.map((entry) => normalizeText(entry)).filter(Boolean);
-    const normalized = normalizeText(value);
-    return normalized
-      ? normalized
-          .split(/\r?\n|,/) 
-          .map((entry) => normalizeText(entry))
-          .filter(Boolean)
-      : [];
+export function migratePersistedTourState(tour) {
+  if (!tour || typeof tour !== "object") return false;
+  let changed = false;
+  if ("highlights" in tour) {
+    delete tour.highlights;
+    changed = true;
   }
+  return changed;
+}
 
+export function createTourHelpers({ toursDir, safeInt }) {
   function normalizeLocalizedTextMap(value) {
     if (value && typeof value === "object" && !Array.isArray(value)) {
       const entries = Object.entries(value)
@@ -48,19 +47,6 @@ export function createTourHelpers({ toursDir, safeInt }) {
     }
     const normalized = normalizeText(value);
     return normalized ? { en: normalized } : {};
-  }
-
-  function normalizeLocalizedStringArrayMap(value) {
-    if (value && typeof value === "object" && !Array.isArray(value)) {
-      const next = {};
-      for (const [lang, items] of Object.entries(value)) {
-        const normalizedItems = normalizeHighlights(items);
-        if (normalizedItems.length) next[normalizeTourLang(lang)] = normalizedItems;
-      }
-      return next;
-    }
-    const normalizedItems = normalizeHighlights(value);
-    return normalizedItems.length ? { en: normalizedItems } : {};
   }
 
   function resolveLocalizedText(value, lang = "en") {
@@ -75,32 +61,11 @@ export function createTourHelpers({ toursDir, safeInt }) {
     return "";
   }
 
-  function resolveLocalizedStringArray(value, lang = "en") {
-    if (Array.isArray(value)) return normalizeHighlights(value);
-    if (!value || typeof value !== "object") return [];
-    const normalizedLang = normalizeTourLang(lang);
-    const candidates = [normalizedLang, "en", ...Object.keys(value)];
-    for (const candidate of candidates) {
-      const items = normalizeHighlights(value[candidate]);
-      if (items.length) return items;
-    }
-    return [];
-  }
-
   function setLocalizedTextForLang(existingValue, inputValue, lang = "en") {
     const next = normalizeLocalizedTextMap(existingValue);
     const normalizedLang = normalizeTourLang(lang);
     const normalizedText = normalizeText(inputValue);
     if (normalizedText) next[normalizedLang] = normalizedText;
-    else delete next[normalizedLang];
-    return next;
-  }
-
-  function setLocalizedStringArrayForLang(existingValue, inputValue, lang = "en") {
-    const next = normalizeLocalizedStringArrayMap(existingValue);
-    const normalizedLang = normalizeTourLang(lang);
-    const normalizedItems = normalizeHighlights(inputValue);
-    if (normalizedItems.length) next[normalizedLang] = normalizedItems;
     else delete next[normalizedLang];
     return next;
   }
@@ -160,7 +125,6 @@ export function createTourHelpers({ toursDir, safeInt }) {
     next.image = toTourImagePublicUrl(next.image);
     next.seasonality_start_month = normalizeText(next.seasonality_start_month);
     next.seasonality_end_month = normalizeText(next.seasonality_end_month);
-    next.highlights = normalizeLocalizedStringArrayMap(next.highlights);
     next.priority = safeInt(next.priority) ?? 50;
     delete next.travel_duration_days;
     delete next.budget_lower_usd;
@@ -186,7 +150,6 @@ export function createTourHelpers({ toursDir, safeInt }) {
         toTourImagePublicUrl(stored.image),
         normalizeText(stored.updated_at || stored.created_at)
       ),
-      highlights: resolveLocalizedStringArray(stored.highlights, normalizedLang),
       priority: safeInt(stored.priority) ?? 50
     };
   }
@@ -216,13 +179,9 @@ export function createTourHelpers({ toursDir, safeInt }) {
   }
 
   return {
-    normalizeHighlights,
     normalizeLocalizedTextMap,
-    normalizeLocalizedStringArrayMap,
     resolveLocalizedText,
-    resolveLocalizedStringArray,
     setLocalizedTextForLang,
-    setLocalizedStringArrayForLang,
     tourDestinations,
     tourDestinationCodes,
     tourStyles,

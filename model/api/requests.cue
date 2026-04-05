@@ -449,7 +449,6 @@ import (
 	seasonality_start_month?: enums.#MonthCode
 	seasonality_end_month?:   enums.#MonthCode
 	short_description?:       string
-	highlights?: [...string] | string
 	image?: string
 }
 
