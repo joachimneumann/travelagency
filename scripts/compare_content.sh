@@ -3,7 +3,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 REMOTE_HOST="${REMOTE_HOST:-atp}"
-REMOTE_CONTENT_ROOT="${REMOTE_CONTENT_ROOT:-/srv/asiatravelplan/content}"
+REMOTE_CONTENT_ROOT="${REMOTE_CONTENT_ROOT:-/srv/asiatravelplan-staging/content}"
 
 IGNORE_FIND_ARGS=(
   "!"

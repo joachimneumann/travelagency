@@ -13,11 +13,48 @@
     </script>
     <script src="/frontend/scripts/shared/localhost_diagnostics.js"></script>
     <link rel="stylesheet" href="assets/css/styles.css" />
+    <style>
+      .backend-tours-controls {
+        display: grid;
+        gap: 1rem;
+        align-items: end;
+      }
+
+      .backend-tours-controls__row {
+        display: grid;
+        gap: 1rem;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        align-items: end;
+      }
+
+      .backend-tours-controls__row--actions {
+        grid-template-columns: minmax(0, 220px) minmax(0, 1fr) auto auto;
+      }
+
+      .backend-tours-controls__row .field {
+        margin-bottom: 0;
+      }
+
+      .backend-tours-controls__status {
+        justify-self: end;
+      }
+
+      @media (max-width: 980px) {
+        .backend-tours-controls__row,
+        .backend-tours-controls__row--actions {
+          grid-template-columns: 1fr;
+        }
+
+        .backend-tours-controls__status {
+          justify-self: start;
+        }
+      }
+    </style>
   </head>
   <body class="backend-list-page">
     <header class="header" id="top">
       <div class="container header-wrap">
-        <a class="brand" id="backendHomeLink" href="backend.html" aria-label="AsiaTravelPlan backend home">
+        <a class="brand" id="backendHomeLink" href="bookings.html" aria-label="AsiaTravelPlan backend home">
           <img class="brand-logo" src="assets/img/logo-asiatravelplan.svg" alt="AsiaTravelPlan" width="320" height="76" />
         </a>
 
@@ -33,28 +70,32 @@
           <section class="backend-section" id="toursPanel">
             <div id="toursMatrixMount" class="backend-tour-matrix" aria-live="polite"></div>
             <p id="toursMatrixTotal" class="backend-tour-matrix__total"></p>
-            <div class="backend-controls">
-              <div class="field">
-                <label for="toursDestination" data-i18n-id="backend.tours.destination_label">Destination</label>
-                <select id="toursDestination">
-                  <option value="all" data-i18n-id="backend.tours.all_destinations">All destinations</option>
-                </select>
+            <div class="backend-controls backend-tours-controls">
+              <div class="backend-tours-controls__row">
+                <div class="field">
+                  <label for="toursDestination" data-i18n-id="backend.tours.destination_label">Destination</label>
+                  <select id="toursDestination">
+                    <option value="all" data-i18n-id="backend.tours.all_destinations">All destinations</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="toursStyle" data-i18n-id="backend.tours.style_label">Style</label>
+                  <select id="toursStyle">
+                    <option value="all" data-i18n-id="backend.tours.all_styles">All styles</option>
+                  </select>
+                </div>
               </div>
-              <div class="field">
-                <label for="toursStyle" data-i18n-id="backend.tours.style_label">Style</label>
-                <select id="toursStyle">
-                  <option value="all" data-i18n-id="backend.tours.all_styles">All styles</option>
-                </select>
+              <div class="backend-tours-controls__row backend-tours-controls__row--actions">
+                <button class="btn btn-ghost" id="toursClearFiltersBtn" type="button" data-i18n-id="backend.tours.clear_filters">Clear filters</button>
+                <div class="field">
+                  <label for="toursSearch" data-i18n-id="backend.tours.search_label">Search tours</label>
+                  <input id="toursSearch" type="text" placeholder="id, title, country, style..." data-i18n-placeholder-id="backend.tours.search_placeholder" />
+                </div>
+                <button class="btn btn-ghost" id="toursSearchBtn" type="button" data-i18n-id="common.search">Search</button>
+                <button class="btn btn-primary" id="toursCreateBtn" type="button" data-i18n-id="backend.tours.new_tour">New Web Site Tour</button>
               </div>
-              <button class="btn btn-ghost" id="toursClearFiltersBtn" type="button" data-i18n-id="backend.tours.clear_filters">Clear filters</button>
-              <div class="field">
-                <label for="toursSearch" data-i18n-id="backend.tours.search_label">Search tours</label>
-                <input id="toursSearch" type="text" placeholder="id, title, country, style..." data-i18n-placeholder-id="backend.tours.search_placeholder" />
-              </div>
-              <button class="btn btn-ghost" id="toursSearchBtn" type="button" data-i18n-id="common.search">Search</button>
-              <button class="btn btn-primary" id="toursCreateBtn" type="button" data-i18n-id="backend.tours.new_tour">New tour</button>
               <span id="toursCountInfo" class="micro"></span>
-              <span id="toursActionStatus" class="micro" role="status" aria-live="polite"></span>
+              <span id="toursActionStatus" class="micro backend-tours-controls__status" role="status" aria-live="polite"></span>
             </div>
             <div class="backend-table-wrap">
               <table class="backend-table" id="toursTable"></table>

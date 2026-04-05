@@ -44,9 +44,9 @@ Key data rule:
 ## Active UI Surface
 
 Backend pages:
-- `backend.html`
+- `bookings.html`
 - `booking.html`
-- `tour.html`
+- `marketing_tour.html`
 
 Removed from active scope:
 - standalone person detail CRUD page

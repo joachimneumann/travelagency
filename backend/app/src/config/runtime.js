@@ -51,7 +51,10 @@ export const ATP_STAFF_PHOTOS_DIR = path.resolve(
 export const LEGACY_REPO_ATP_STAFF_PROFILES_PATH = path.join(LEGACY_REPO_ATP_STAFF_ROOT, "staff.json");
 export const LEGACY_REPO_ATP_STAFF_PHOTOS_DIR = path.join(LEGACY_REPO_ATP_STAFF_ROOT, "photos");
 export const KEYCLOAK_USER_SNAPSHOT_PATH = path.join(DATA_ROOT, "keycloak_users_snapshot.json");
-export const COUNTRY_REFERENCE_INFO_PATH = path.join(DATA_ROOT, "country_reference_info.json");
+export const LEGACY_COUNTRY_REFERENCE_INFO_PATH = path.join(DATA_ROOT, "country_reference_info.json");
+export const COUNTRY_REFERENCE_INFO_PATH = resolveConfigPathFromRepoRoot(
+  normalizeText(process.env.COUNTRY_REFERENCE_INFO_PATH || path.join("content", "country_reference_info.json"))
+);
 export const BOOKING_TRAVEL_PLAN_ATTACHMENTS_DIR = path.join(PDFS_ROOT, "attachments");
 export const TEMP_UPLOAD_DIR = path.join(DATA_ROOT, "tmp");
 export const TRAVEL_PLAN_PDF_PREVIEW_DIR = path.join(TEMP_UPLOAD_DIR, "travel_plan_previews");
@@ -270,6 +273,7 @@ export const RUNTIME_PATHS = Object.freeze({
   legacyRepoAtpStaffProfilesPath: LEGACY_REPO_ATP_STAFF_PROFILES_PATH,
   legacyRepoAtpStaffPhotosDir: LEGACY_REPO_ATP_STAFF_PHOTOS_DIR,
   keycloakUserSnapshotPath: KEYCLOAK_USER_SNAPSHOT_PATH,
+  legacyCountryReferenceInfoPath: LEGACY_COUNTRY_REFERENCE_INFO_PATH,
   countryReferenceInfoPath: COUNTRY_REFERENCE_INFO_PATH,
   bookingTravelPlanAttachmentsDir: BOOKING_TRAVEL_PLAN_ATTACHMENTS_DIR,
   tempUploadDir: TEMP_UPLOAD_DIR,

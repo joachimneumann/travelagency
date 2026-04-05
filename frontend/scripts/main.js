@@ -607,7 +607,7 @@ function setupBackendLogin() {
   if (!els.backendLoginBtn) return;
 
   els.backendLoginBtn.addEventListener("click", () => {
-    const backendUrl = withLangUrl("/backend.html");
+    const backendUrl = withLangUrl("/bookings.html");
     if (state.websiteAuthenticated) {
       window.location.href = backendUrl;
       return;
@@ -641,7 +641,7 @@ function setupHiddenBackendQuickLogin() {
     event.preventDefault();
     event.stopPropagation();
 
-    const backendUrl = withLangUrl("/backend.html");
+    const backendUrl = withLangUrl("/bookings.html");
     const loginParams = new URLSearchParams({
       return_to: backendUrl,
       quick_login: "1"

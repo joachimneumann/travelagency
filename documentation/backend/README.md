@@ -74,9 +74,9 @@ Implemented now:
 - Meta webhook ingestion linked to bookings
 
 Administrative pages:
-- `/backend.html`
+- `/bookings.html`
 - `/booking.html`
-- `/tour.html`
+- `/marketing_tour.html`
 
 ## API Endpoints
 

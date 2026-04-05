@@ -3,12 +3,12 @@ cd /arv/asiatravelplan
 
 
 ## export to ATP
-rsync -av content/atp_staff/ atp:/srv/asiatravelplan/content/atp_staff/
-rsync -av content/tours/ atp:/srv/asiatravelplan/content/tours/
+rsync -av content/atp_staff/ atp:/srv/asiatravelplan-staging/content/atp_staff/
+rsync -av content/tours/ atp:/srv/asiatravelplan-staging/content/tours/
 
 ## import from ATP
-rsync -av atp:/srv/asiatravelplan/content/atp_staff/ content/atp_staff/
-rsync -av atp:/srv/asiatravelplan/content/tours/ content/tours/
+rsync -av atp:/srv/asiatravelplan-staging/content/atp_staff/ content/atp_staff/
+rsync -av atp:/srv/asiatravelplan-staging/content/tours/ content/tours/
 
 
 ## compare local content vs ATP

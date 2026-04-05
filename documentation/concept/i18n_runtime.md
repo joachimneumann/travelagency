@@ -69,12 +69,12 @@ That split is real and must be understood before changing booking language behav
 
 ## 4. Tour Language Model
 
-Current runtime behavior in `tour.html` and `tours.html`:
+Current runtime behavior in `marketing_tour.html` and `marketing_tours.html`:
 
 - the top-right backend language is the source language for localized tour editing
-- `tour.html` orders localized fields with the active backend language first, then the other `EN`/`VI` language, then the remaining customer-content languages
+- `marketing_tour.html` orders localized fields with the active backend language first, then the other `EN`/`VI` language, then the remaining customer-content languages
 - tour translation requests send explicit `source_lang` and `target_lang`
-- `tours.html` list/view language already follows the backend `lang` query parameter
+- `marketing_tours.html` list/view language already follows the backend `lang` query parameter
 
 Tours do not use a separate persisted editing-language field.
 

@@ -351,7 +351,7 @@ function renderLocalizedTourEditor(field, mount, { label, rows = 3, multiline = 
 
 function renderLocalizedTourEditors() {
   renderLocalizedTourEditor("short_description_i18n", els.shortDescriptionEditor, {
-    label: backendT("tour.description_label", "Description"),
+    label: backendT("tour.description_label", "Web Site Tour Description"),
     rows: 3
   });
 }
@@ -752,7 +752,7 @@ async function submitForm(event) {
   if (els.imageUpload) els.imageUpload.value = "";
   if (is_create) {
     state.allowPageUnload = true;
-    window.location.href = withBackendLang("/tour.html", { id: state.id });
+    window.location.href = withBackendLang("/marketing_tour.html", { id: state.id });
     return;
   }
   await loadTour();
@@ -800,7 +800,7 @@ async function loadAuthStatus() {
       userLabel: els.userLabel,
       authUser: payload.user || null,
       logKey: "tour-page",
-      pageName: "tour.html",
+      pageName: "marketing_tour.html",
       authMeUrl: request.url,
       extraDetails: {
         roles: state.roles,
@@ -821,7 +821,7 @@ async function loadAuthStatus() {
 }
 
 function redirectToBackendLogin() {
-  const returnTo = `${window.location.origin}${withBackendLang("/tour.html", { id: state.id })}`;
+  const returnTo = `${window.location.origin}${withBackendLang("/marketing_tour.html", { id: state.id })}`;
   const loginParams = new URLSearchParams({
     return_to: returnTo,
     prompt: "login"

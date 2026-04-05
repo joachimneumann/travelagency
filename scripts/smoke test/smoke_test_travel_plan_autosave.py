@@ -175,7 +175,7 @@ def extract_session_cookie(cookie_file_path):
 
 
 def authenticate_local_session(backend_port, username, password):
-    login_url = f"http://localhost:{backend_port}/auth/login?return_to=http://localhost:8080/backend.html"
+    login_url = f"http://localhost:{backend_port}/auth/login?return_to=http://localhost:8080/bookings.html"
     with tempfile.NamedTemporaryFile(prefix="atp-smoke-cookies-", suffix=".txt", delete=False) as handle:
         cookie_file = handle.name
 

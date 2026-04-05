@@ -191,7 +191,7 @@ export async function loadBackendPageAuthState({
   computePermissions = () => ({}),
   hasPageAccess = () => true,
   logKey = "backend-page",
-  pageName = "backend.html",
+  pageName = "bookings.html",
   expectedRolesAnyOf = [],
   likelyCause = "The user is authenticated in Keycloak but does not have the ATP roles required to access this page."
 } = {}) {

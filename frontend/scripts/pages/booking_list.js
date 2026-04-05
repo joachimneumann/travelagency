@@ -374,7 +374,7 @@ async function init() {
       }),
       hasPageAccess: (permissions) => permissions.canReadBookings,
       logKey: "backend-bookings",
-      pageName: "backend.html",
+      pageName: "bookings.html",
       expectedRolesAnyOf: [ROLES.ADMIN, ROLES.MANAGER, ROLES.ACCOUNTANT, ROLES.STAFF],
       likelyCause: "The user is authenticated in Keycloak but does not have the ATP roles required to read bookings."
     });

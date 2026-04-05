@@ -72,7 +72,7 @@ Public site entry:
 - `frontend/scripts/main.js`
 
 Backend workspace entry:
-- `frontend/pages/backend.html`
+- `frontend/pages/bookings.html`
 - `frontend/scripts/pages/booking_list.js`
 
 Booking detail workspace:
@@ -80,7 +80,7 @@ Booking detail workspace:
 - `frontend/scripts/pages/booking.js`
 
 Tour editor:
-- `frontend/pages/tour.html`
+- `frontend/pages/marketing_tour.html`
 - `frontend/scripts/pages/tour.js`
 
 Booking page feature modules:

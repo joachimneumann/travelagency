@@ -230,4 +230,4 @@ if [[ -n "$(git status --porcelain)" ]]; then
 fi
 
 remote_args="$(printf "%q " "${SERVICES[@]}")"
-ssh atp "bash -lc 'cd /srv/asiatravelplan && git pull --ff-only && $REMOTE_SCRIPT ${remote_args}'"
+ssh atp "bash -lc 'cd /srv/asiatravelplan-staging && git pull --ff-only && $REMOTE_SCRIPT ${remote_args}'"
