@@ -34,7 +34,7 @@
 asiatravelplan.com {
   import security_headers
   encode zstd gzip
-  root * /srv/placeholder
+  root * /placeholder
 
   @legacy_backend_page path /backend.html
   handle @legacy_backend_page {
