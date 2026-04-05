@@ -17,7 +17,7 @@ Local backend features:
 Local admin pages:
 - `http://localhost:8080/bookings.html`
 - `http://localhost:8080/booking.html?id=<booking_id>`
-- `http://localhost:8080/tour.html?id=<tour_id>`
+- `http://localhost:8080/marketing_tour.html?id=<tour_id>`
 
 ## Start Locally
 
@@ -125,5 +125,5 @@ There is no customer page and no travel-group page.
 3. Open a booking.
 4. Confirm persons summary renders from `booking.persons`.
 5. Confirm stages and ATP staff assignment work according to role.
-6. Open `tour.html` and confirm tours still load.
+6. Open `marketing_tour.html` and confirm tours still load.
 7. If Gmail draft config is set, use the generated-offer `email` action and confirm Gmail opens the Drafts view with the new draft available.

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-STAGING_ROOT="${STAGING_ROOT:-/srv/asiatravelplan}"
+STAGING_ROOT="${STAGING_ROOT:-/srv/asiatravelplan-staging}"
 STORAGE_BOX_USER="${STORAGE_BOX_USER:-}"
 STORAGE_BOX_HOST="${STORAGE_BOX_HOST:-}"
 STORAGE_BOX_KEY="${STORAGE_BOX_KEY:-$HOME/.ssh/storage_box_backup}"
@@ -28,7 +28,7 @@ Safety:
   --yes   Required to actually restore over the current staging files
 
 Optional environment variables:
-  STAGING_ROOT         Root of the staging checkout (default: /srv/asiatravelplan)
+  STAGING_ROOT         Root of the staging checkout (default: /srv/asiatravelplan-staging)
   STORAGE_BOX_KEY      SSH private key path (default: ~/.ssh/storage_box_backup)
   BACKUP_PREFIX        Remote snapshot folder prefix (default: staging/snapshots)
   LOCAL_TMP_ROOT       Local temp directory root (default: /tmp)

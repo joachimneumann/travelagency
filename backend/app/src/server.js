@@ -106,6 +106,16 @@ async function moveDirectoryIfNeeded(sourceDir, targetDir) {
   await rename(normalizedSourceDir, normalizedTargetDir);
 }
 
+async function moveFileIfNeeded(sourcePath, targetPath) {
+  const normalizedSourcePath = String(sourcePath || "").trim();
+  const normalizedTargetPath = String(targetPath || "").trim();
+  if (!normalizedSourcePath || !normalizedTargetPath || normalizedSourcePath === normalizedTargetPath) return;
+  if (!(await pathExists(normalizedSourcePath))) return;
+  if (await pathExists(normalizedTargetPath)) return;
+  await mkdir(path.dirname(normalizedTargetPath), { recursive: true });
+  await rename(normalizedSourcePath, normalizedTargetPath);
+}
+
 async function pruneDirectoryContents(targetDir) {
   const normalizedTargetDir = String(targetDir || "").trim();
   if (!normalizedTargetDir) return;
@@ -240,6 +250,7 @@ export async function createBackendHandler({ port = PORT } = {}) {
   await moveDirectoryIfNeeded(RUNTIME_PATHS.legacyInvoicesDir, RUNTIME_PATHS.invoicesDir);
   await moveDirectoryIfNeeded(RUNTIME_PATHS.legacyGeneratedOffersDir, RUNTIME_PATHS.generatedOffersDir);
   await moveDirectoryIfNeeded(RUNTIME_PATHS.legacyBookingTravelPlanAttachmentsDir, RUNTIME_PATHS.bookingTravelPlanAttachmentsDir);
+  await moveFileIfNeeded(RUNTIME_PATHS.legacyCountryReferenceInfoPath, RUNTIME_PATHS.countryReferenceInfoPath);
   await services.storeUtils.ensureStorage();
   await backfillPersistedTourState();
   await services.travelPlanPdfArtifacts.migrateLegacyTravelPlanPdfStorage();

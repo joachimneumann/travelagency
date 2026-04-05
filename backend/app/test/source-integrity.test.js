@@ -314,6 +314,26 @@ test("backend startup writes back legacy generated-offer confirmation fields bef
   );
 });
 
+test("country reference info lives under content and startup migrates the legacy runtime file", async () => {
+  const runtimePath = path.resolve(__dirname, "..", "src", "config", "runtime.js");
+  const serverPath = path.resolve(__dirname, "..", "src", "server.js");
+  const [runtimeSource, serverSource] = await Promise.all([
+    readFile(runtimePath, "utf8"),
+    readFile(serverPath, "utf8")
+  ]);
+
+  assert.match(
+    runtimeSource,
+    /LEGACY_COUNTRY_REFERENCE_INFO_PATH = path\.join\(DATA_ROOT, "country_reference_info\.json"\);[\s\S]*COUNTRY_REFERENCE_INFO_PATH = resolveConfigPathFromRepoRoot\([\s\S]*path\.join\("content", "country_reference_info\.json"\)/,
+    "Country reference info should now live under content while still keeping the old runtime path as a migration source"
+  );
+  assert.match(
+    serverSource,
+    /moveFileIfNeeded\(RUNTIME_PATHS\.legacyCountryReferenceInfoPath, RUNTIME_PATHS\.countryReferenceInfoPath\);/,
+    "Backend startup should move the legacy country reference file into content before serving requests"
+  );
+});
+
 test("backend startup removes legacy tour highlights from persisted tour records before serving requests", async () => {
   const serverPath = path.resolve(__dirname, "..", "src", "server.js");
   const toursSupportPath = path.resolve(__dirname, "..", "src", "domain", "tours_support.js");
@@ -2239,7 +2259,7 @@ test("travel plan PDF personalization exposes and persists traveler-list toggles
 
 test("tour page reads month options from the generated catalogs layer", async () => {
   const tourPageModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "tour.js");
-  const tourPageHtmlPath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "tour.html");
+  const tourPageHtmlPath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "marketing_tour.html");
   const generatedCatalogsPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "shared", "generated_catalogs.js");
   const tourSource = await readFile(tourPageModulePath, "utf8");
   const tourHtml = await readFile(tourPageHtmlPath, "utf8");
@@ -2750,7 +2770,7 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
   const frontendRoot = path.resolve(__dirname, "..", "..", "..", "frontend");
   const deployRoot = path.resolve(__dirname, "..", "..", "..", "deploy");
   const bookingsHtml = await readFile(path.join(frontendRoot, "pages", "bookings.html"), "utf8");
-  const toursHtml = await readFile(path.join(frontendRoot, "pages", "tours.html"), "utf8");
+  const marketingToursHtml = await readFile(path.join(frontendRoot, "pages", "marketing_tours.html"), "utf8");
   const standardTravelPlansHtml = await readFile(path.join(frontendRoot, "pages", "standard-travel-plans.html"), "utf8");
   const settingsHtml = await readFile(path.join(frontendRoot, "pages", "settings.html"), "utf8");
   const emergencyHtml = await readFile(path.join(frontendRoot, "pages", "emergency.html"), "utf8");
@@ -2763,9 +2783,9 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
     "bookings.html should mount the bookings page script"
   );
   assert.match(
-    toursHtml,
+    marketingToursHtml,
     /frontend\/scripts\/pages\/tours_list\.js/,
-    "tours.html should mount the tours page script"
+    "marketing_tours.html should mount the tours page script"
   );
   assert.match(
     standardTravelPlansHtml,
@@ -2786,7 +2806,10 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
   for (const source of [localCaddy, stagingCaddy]) {
     assert.match(source, /\/bookings\.html/, "Caddy should serve bookings.html");
     assert.match(source, /\/backend\.html/, "Caddy should keep redirecting legacy backend.html");
-    assert.match(source, /\/tours\.html/, "Caddy should serve tours.html");
+    assert.match(source, /\/marketing_tours\.html/, "Caddy should serve marketing_tours.html");
+    assert.match(source, /\/tours\.html/, "Caddy should keep redirecting legacy tours.html");
+    assert.match(source, /\/marketing_tour\.html/, "Caddy should serve marketing_tour.html");
+    assert.match(source, /\/tour\.html/, "Caddy should keep redirecting legacy tour.html");
     assert.match(source, /\/standard-travel-plans\.html/, "Caddy should serve standard-travel-plans.html");
     assert.match(source, /\/settings\.html/, "Caddy should serve settings.html");
     assert.match(source, /\/emergency\.html/, "Caddy should serve emergency.html");
@@ -2913,7 +2936,7 @@ test("runtime links use direct tours and settings pages instead of backend secti
     path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "emergency.js"),
     path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "tour.js"),
     path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "shared", "nav.js"),
-    path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "tours.html"),
+    path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "marketing_tours.html"),
     path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "standard-travel-plans.html"),
     path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "settings.html"),
     path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "emergency.html")

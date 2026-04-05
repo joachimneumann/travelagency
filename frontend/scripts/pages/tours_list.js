@@ -148,7 +148,7 @@ async function init() {
     }),
     hasPageAccess: (permissions) => permissions.canReadTours,
     logKey: "backend-tours",
-    pageName: "tours.html",
+    pageName: "marketing_tours.html",
     expectedRolesAnyOf: [ROLES.ADMIN, ROLES.ACCOUNTANT, ROLES.TOUR_EDITOR],
     likelyCause: "The user is authenticated in Keycloak but does not have the ATP roles required to access tours."
   });

@@ -46,7 +46,7 @@ Key data rule:
 Backend pages:
 - `bookings.html`
 - `booking.html`
-- `tour.html`
+- `marketing_tour.html`
 
 Removed from active scope:
 - standalone person detail CRUD page

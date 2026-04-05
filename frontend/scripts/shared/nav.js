@@ -10,8 +10,8 @@ function buildIconMarkup(icon) {
 
 const EMERGENCY_NAV_ICON = `
   <svg class="backend-section-nav__icon-svg" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
-    <rect x="24" y="10" width="16" height="44" rx="4" fill="#d92d20"></rect>
-    <rect x="10" y="24" width="44" height="16" rx="4" fill="#d92d20"></rect>
+    <rect x="24" y="10" width="16" height="44" rx="4" fill="rgb(180,180,180)"></rect>
+    <rect x="10" y="24" width="44" height="16" rx="4" fill="rgb(180,180,180)"></rect>
   </svg>
 `;
 
@@ -47,7 +47,7 @@ export function resolveBackendSectionHref(section) {
   const normalizedSection = String(section || "bookings").trim() || "bookings";
   const pathname =
     normalizedSection === "tours"
-      ? "tours.html"
+      ? "marketing_tours.html"
       : normalizedSection === "standard-travel-plans"
         ? "standard-travel-plans.html"
       : normalizedSection === "emergency"
@@ -105,7 +105,7 @@ export function mountBackendNav(mount, options = {}) {
           ${buildSectionButton("bookings", backendT("nav.bookings", "Bookings"), { type: "image", src: "assets/img/profile_booking.png", size: "large" })}
           ${buildSectionButton("standard-travel-plans", backendT("nav.standard_travel_plans", "Standard travel plans"), { type: "image", src: "assets/img/standardTravelPlan.png", size: "large" })}
           ${buildSectionButton("settings", backendT("nav.settings", "Reports and Settings"), { type: "image", src: "assets/img/profile_person.png", size: "large" })}
-          ${buildSectionButton("tours", backendT("nav.tours", "Tours"), { type: "image", src: "assets/img/hat.png", size: "large" })}
+          ${buildSectionButton("tours", "Marketing Tour", { type: "image", src: "assets/img/marketing_tours.png", size: "large" })}
           ${buildSectionButton("emergency", backendT("nav.emergency", "Emergency"), EMERGENCY_NAV_ICON)}
         </div>
       </div>

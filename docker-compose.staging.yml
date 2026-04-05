@@ -85,5 +85,11 @@ services:
 
 volumes:
   caddy_data:
+    external: true
+    name: asiatravelplan_caddy_data
   caddy_config:
+    external: true
+    name: asiatravelplan_caddy_config
   postgres_data:
+    external: true
+    name: asiatravelplan_postgres_data

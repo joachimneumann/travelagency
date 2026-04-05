@@ -80,7 +80,7 @@ Booking detail workspace:
 - `frontend/scripts/pages/booking.js`
 
 Tour editor:
-- `frontend/pages/tour.html`
+- `frontend/pages/marketing_tour.html`
 - `frontend/scripts/pages/tour.js`
 
 Booking page feature modules:

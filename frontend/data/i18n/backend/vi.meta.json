@@ -400,9 +400,9 @@
     "updated_at": "2026-03-30T23:51:31.875Z"
   },
   "backend.tours.new_tour": {
-    "source_hash": "645547c7ed0c5aec5b07192022c21c1d9b0c099d5d92177d840343aa82c59f4e",
+    "source_hash": "0ce60bcf7ee2350c8dab340671eec1dd62bd7a0b115f0e34fc6fdf8f8f6679ab",
     "origin": "machine",
-    "updated_at": "2026-03-30T23:51:31.875Z"
+    "updated_at": "2026-04-05T19:19:05.664Z"
   },
   "backend.tours.no_results": {
     "source_hash": "7e7ccc2b8f7051e851d0d1667699d810832d6c26a154e4ee388e104317043360",
@@ -4995,9 +4995,9 @@
     "updated_at": "2026-03-30T23:51:31.875Z"
   },
   "tour.description_label": {
-    "source_hash": "526e0087cc3f254d9f86f6c7d8e23d954c4dfda2b312efc29194ae8a860106ba",
+    "source_hash": "0396e42a30a3606fc7f4216bc85d29a886d7f028ef96c085f4aa06a397a1c259",
     "origin": "machine",
-    "updated_at": "2026-03-30T23:51:31.875Z"
+    "updated_at": "2026-04-05T19:19:05.664Z"
   },
   "tour.destinations_label": {
     "source_hash": "72eb63f032e47e349e8901353e08ba91cfb9d1f78d08d070c60bae0e9b4e038d",

@@ -18,7 +18,7 @@
 }
 
 (staging_html_no_cache_headers) {
-  @staging_html path / /index.html /404.html /bookings.html /booking.html /persons.html /tour.html /tours.html /standard-travel-plans.html /settings.html /emergency.html /privacy.html /booking-confirmation.html /traveler-details.html
+  @staging_html path / /index.html /404.html /bookings.html /booking.html /persons.html /marketing_tour.html /marketing_tours.html /standard-travel-plans.html /settings.html /emergency.html /privacy.html /booking-confirmation.html /traveler-details.html
   header @staging_html {
     Cache-Control "no-store, no-cache, must-revalidate"
     Pragma "no-cache"
@@ -34,16 +34,34 @@
 asiatravelplan.com {
   import security_headers
   encode zstd gzip
-  root * /srv/production
+  root * /srv/placeholder
 
   @legacy_backend_page path /backend.html
-  redir @legacy_backend_page /bookings.html 302
+  handle @legacy_backend_page {
+    redir * /bookings.html 302
+  }
+
+  @legacy_marketing_tours_page path /tours.html
+  handle @legacy_marketing_tours_page {
+    redir * /marketing_tours.html 302
+  }
+
+  @legacy_marketing_tour_page path /tour.html
+  handle @legacy_marketing_tour_page {
+    redir * /marketing_tour.html 302
+  }
 
   @booking_confirmation_page path /booking-confirmation.html
-  rewrite @booking_confirmation_page /frontend/pages/booking-confirmation.html
+  handle @booking_confirmation_page {
+    rewrite * /frontend/pages/booking-confirmation.html
+    file_server
+  }
 
   @traveler_details_page path /traveler-details.html
-  rewrite @traveler_details_page /frontend/pages/traveler-details.html
+  handle @traveler_details_page {
+    rewrite * /frontend/pages/traveler-details.html
+    file_server
+  }
 
   @manifest path /site.webmanifest
   header @manifest Content-Type "application/manifest+json"
@@ -71,10 +89,25 @@ staging.asiatravelplan.com {
   }
 
   @site_root path /
-  rewrite @site_root /frontend/pages/index.html
+  handle @site_root {
+    rewrite * /frontend/pages/index.html
+    file_server
+  }
 
   @legacy_backend_page path /backend.html
-  redir @legacy_backend_page /bookings.html 302
+  handle @legacy_backend_page {
+    redir * /bookings.html 302
+  }
+
+  @legacy_marketing_tours_page path /tours.html
+  handle @legacy_marketing_tours_page {
+    redir * /marketing_tours.html 302
+  }
+
+  @legacy_marketing_tour_page path /tour.html
+  handle @legacy_marketing_tour_page {
+    redir * /marketing_tour.html 302
+  }
 
   @persons_page path /persons.html
   handle @persons_page {
@@ -82,8 +115,11 @@ staging.asiatravelplan.com {
     file_server
   }
 
-  @html_pages path /index.html /404.html /bookings.html /booking.html /persons.html /tour.html /tours.html /standard-travel-plans.html /settings.html /emergency.html /privacy.html /booking-confirmation.html /traveler-details.html
-  rewrite @html_pages /frontend/pages{path}
+  @html_pages path /index.html /404.html /bookings.html /booking.html /persons.html /marketing_tour.html /marketing_tours.html /standard-travel-plans.html /settings.html /emergency.html /privacy.html /booking-confirmation.html /traveler-details.html
+  handle @html_pages {
+    rewrite * /frontend/pages{path}
+    file_server
+  }
 
   @staging_access path /staging-access/*
   handle @staging_access {

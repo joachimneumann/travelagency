@@ -76,7 +76,7 @@ Implemented now:
 Administrative pages:
 - `/bookings.html`
 - `/booking.html`
-- `/tour.html`
+- `/marketing_tour.html`
 
 ## API Endpoints
 
