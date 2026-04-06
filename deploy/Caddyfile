@@ -27,14 +27,46 @@
 }
 
 (staging_static_cache_headers) {
-  @staging_static path /assets/* /frontend/scripts/* /frontend/data/* /shared/* /site.webmanifest
+  @staging_static path /assets/* /frontend/scripts/* /frontend/data/* /frontend/Generated/* /shared/* /site.webmanifest
   header @staging_static Cache-Control "public, max-age=300, stale-while-revalidate=600, must-revalidate"
+}
+
+(production_html_no_cache_headers) {
+  @production_html path /bookings.html /booking.html /persons.html /marketing_tour.html /marketing_tours.html /standard-travel-plans.html /settings.html /emergency.html /privacy.html /booking-confirmation.html /traveler-details.html
+  header @production_html {
+    Cache-Control "no-store, no-cache, must-revalidate"
+    Pragma "no-cache"
+    Expires "0"
+  }
+}
+
+(production_static_cache_headers) {
+  @production_static path /assets/* /frontend/scripts/* /frontend/data/* /frontend/Generated/* /shared/*
+  header @production_static Cache-Control "public, max-age=300, stale-while-revalidate=600, must-revalidate"
 }
 
 asiatravelplan.com {
   import security_headers
+  import production_html_no_cache_headers
+  import production_static_cache_headers
   encode zstd gzip
   root * /placeholder
+
+  handle_errors {
+    @page_not_found expression {err.status_code} == 404
+    rewrite @page_not_found /404.html
+    file_server
+  }
+
+  @site_root path / /index.html /404.html
+  handle @site_root {
+    file_server
+  }
+
+  handle_path /placeholder-assets/* {
+    root * /placeholder/assets
+    file_server
+  }
 
   @legacy_backend_page path /backend.html
   handle @legacy_backend_page {
@@ -53,14 +85,41 @@ asiatravelplan.com {
 
   @booking_confirmation_page path /booking-confirmation.html
   handle @booking_confirmation_page {
+    root * /production-app
     rewrite * /frontend/pages/booking-confirmation.html
     file_server
   }
 
   @traveler_details_page path /traveler-details.html
   handle @traveler_details_page {
+    root * /production-app
     rewrite * /frontend/pages/traveler-details.html
     file_server
+  }
+
+  @production_html_pages path /bookings.html /booking.html /persons.html /marketing_tour.html /marketing_tours.html /standard-travel-plans.html /settings.html /emergency.html /privacy.html
+  handle @production_html_pages {
+    root * /production-app
+    rewrite * /frontend/pages{path}
+    file_server
+  }
+
+  @production_app_static path /assets/* /frontend/scripts/* /frontend/data/* /frontend/Generated/* /shared/*
+  handle @production_app_static {
+    root * /production-app
+    file_server {
+      hide /production-app/.git /production-app/.gitignore /production-app/backend /production-app/deploy /production-app/documentation /production-app/scripts /production-app/docker-compose*.yml /production-app/.env* /production-app/README* /production-app/AGENTS.md
+    }
+  }
+
+  @production_backend path /auth/* /api/* /public/v1/* /integrations/*
+  handle @production_backend {
+    reverse_proxy host.docker.internal:8788
+  }
+
+  @production_keycloak path /keycloak/*
+  handle @production_keycloak {
+    reverse_proxy host.docker.internal:8082
   }
 
   @manifest path /site.webmanifest

@@ -77,6 +77,22 @@ body::before {
   text-transform: var(--text-transform-caps);
 }
 
+.simple-backend-link {
+  color: var(--text-muted);
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: 0.03em;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: color 180ms ease, border-color 180ms ease;
+}
+
+.simple-backend-link:hover,
+.simple-backend-link:focus-visible {
+  color: var(--text-strong);
+  border-color: currentColor;
+}
+
 @media (max-width: 640px) {
   .simple-shell {
     width: min(100% - 1rem, 920px);

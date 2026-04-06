@@ -48,7 +48,7 @@ function writeCachedAuthMe(payload) {
 
 export function buildAuthLogoutHref({ apiBase = "", returnTo = "" } = {}) {
   const authBase = resolveAuthBase(apiBase);
-  const resolvedReturnTo = String(returnTo || `${window.location.origin}/index.html`);
+  const resolvedReturnTo = String(returnTo || `${window.location.origin}/`);
   return `${authBase}/auth/logout?return_to=${encodeURIComponent(resolvedReturnTo)}`;
 }
 
@@ -64,14 +64,14 @@ export function wireAuthLogoutLink(link, { apiBase = "", returnTo = "" } = {}) {
       event.preventDefault();
       const fallbackHref = buildAuthLogoutHref({
         apiBase,
-        returnTo: String(link.dataset.logoutReturnTo || returnTo || `${window.location.origin}/index.html`)
+        returnTo: String(link.dataset.logoutReturnTo || returnTo || `${window.location.origin}/`)
       });
       link.href = fallbackHref;
       window.location.assign(fallbackHref);
     });
     link.dataset.logoutBound = "true";
   }
-  link.dataset.logoutReturnTo = String(returnTo || `${window.location.origin}/index.html`);
+  link.dataset.logoutReturnTo = String(returnTo || `${window.location.origin}/`);
   return href;
 }
 

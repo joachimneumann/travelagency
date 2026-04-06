@@ -97,6 +97,7 @@ payload = {
     "implicitFlowEnabled": False,
     "redirectUris": [
         redirect_uri,
+        post_logout,
         f"{frontend_localhost}/*",
         f"{frontend_loopback}/*",
         f"{backend_origin}/*",
@@ -111,7 +112,7 @@ payload = {
     "adminUrl": frontend_loopback,
     "secret": client_secret,
     "attributes": {
-        "post.logout.redirect.uris": "+"
+        "post.logout.redirect.uris": post_logout
     }
 }
 print(json.dumps(payload))

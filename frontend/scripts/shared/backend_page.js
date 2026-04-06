@@ -173,7 +173,7 @@ export async function initializeBackendPageChrome({
   }
 
   if (navElements.logoutLink) {
-    const returnTo = `${window.location.origin}${withBackendLang("/index.html")}`;
+    const returnTo = `${window.location.origin}/`;
     wireAuthLogoutLink(navElements.logoutLink, { apiBase: apiOrigin, returnTo });
   }
 
@@ -190,6 +190,7 @@ export async function loadBackendPageAuthState({
   refreshNav = refreshBackendNavElements,
   computePermissions = () => ({}),
   hasPageAccess = () => true,
+  redirectToLoginWhenUnauthenticated = true,
   logKey = "backend-page",
   pageName = "bookings.html",
   expectedRolesAnyOf = [],
@@ -202,10 +203,17 @@ export async function loadBackendPageAuthState({
     const { request, response, payload } = await fetchAuthMe(apiOrigin);
     if (!response.ok || !payload?.authenticated) {
       if (userLabel) userLabel.textContent = "";
+      if (redirectToLoginWhenUnauthenticated) {
+        const authBase = String(apiOrigin || window.location.origin).replace(/\/$/, "");
+        const loginUrl = new URL(`${authBase}/auth/login`);
+        loginUrl.searchParams.set("return_to", window.location.href);
+        window.location.replace(loginUrl.toString());
+      }
       return {
         authUser: null,
         roles: [],
         permissions: {},
+        redirectedToLogin: Boolean(redirectToLoginWhenUnauthenticated),
         request,
         response,
         payload

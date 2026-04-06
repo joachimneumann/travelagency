@@ -729,7 +729,7 @@ async function init() {
 
   if (els.homeLink) els.homeLink.href = backHref;
   if (els.logoutLink) {
-    const returnTo = `${window.location.origin}${withBackendLang("/index.html")}`;
+    const returnTo = `${window.location.origin}/`;
     wireAuthLogoutLink(els.logoutLink, { apiBase: apiOrigin, returnTo });
   }
 

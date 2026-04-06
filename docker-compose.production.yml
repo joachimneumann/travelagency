@@ -1,38 +1,19 @@
 services:
-  caddy:
-    image: caddy:2
-    restart: unless-stopped
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
-      - ./:/srv:ro
-      - /srv/placeholder:/placeholder:ro
-      - /srv/asiatravelplan:/production-app:ro
-      - caddy_data:/data
-      - caddy_config:/config
-    depends_on:
-      backend:
-        condition: service_started
-      keycloak:
-        condition: service_healthy
-
   backend:
     build:
       context: .
       dockerfile: backend/Dockerfile.staging
-    image: asiatravelplan-backend-staging:latest
+    image: asiatravelplan-backend-production:latest
     user: "1000:1000"
     restart: unless-stopped
     working_dir: /srv/backend/app
+    ports:
+      - "8788:8787"
     volumes:
       - ./backend/app/data:/srv/backend/app/data
       - ./content:/srv/content
     env_file:
-      - .env.staging
+      - .env.production
     depends_on:
       postgres:
         condition: service_healthy
@@ -44,6 +25,8 @@ services:
     restart: unless-stopped
     command:
       - start
+    ports:
+      - "8082:8080"
     environment:
       KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN}
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
@@ -54,7 +37,8 @@ services:
       KC_PROXY_HEADERS: xforwarded
       KC_HTTP_ENABLED: "true"
       KC_HEALTH_ENABLED: "true"
-      KC_HOSTNAME: auth-staging.asiatravelplan.com
+      KC_HOSTNAME: asiatravelplan.com
+      KC_HTTP_RELATIVE_PATH: /keycloak
     volumes:
       - ./backend/keycloak-theme/asiatravelplan:/opt/keycloak/themes/asiatravelplan:ro
     depends_on:
@@ -64,7 +48,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "exec 3<>/dev/tcp/127.0.0.1/9000 && printf 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && grep '200' <&3",
+          "exec 3<>/dev/tcp/127.0.0.1/9000 && printf 'GET /keycloak/health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && grep '200' <&3",
         ]
       interval: 10s
       timeout: 5s
@@ -88,12 +72,5 @@ services:
       start_period: 10s
 
 volumes:
-  caddy_data:
-    external: true
-    name: asiatravelplan_caddy_data
-  caddy_config:
-    external: true
-    name: asiatravelplan_caddy_config
   postgres_data:
-    external: true
-    name: asiatravelplan_postgres_data
+    name: asiatravelplan_production_postgres_data

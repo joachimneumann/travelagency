@@ -381,6 +381,7 @@ export function createAuth({ port }) {
     const tokenPayload = await tokenResponse.json();
     const accessToken = normalizeText(tokenPayload.access_token);
     const idToken = normalizeText(tokenPayload.id_token);
+    const refreshToken = normalizeText(tokenPayload.refresh_token);
     if (!accessToken) {
       sendJson(res, 400, { error: "Missing access token in callback" });
       return;
@@ -413,6 +414,7 @@ export function createAuth({ port }) {
       roles,
       access_token: accessToken,
       id_token: idToken || "",
+      refresh_token: refreshToken || "",
       expires_at: Date.now() + sessionMaxAgeMs
     });
     setSessionCookie(res, sid);
@@ -422,14 +424,13 @@ export function createAuth({ port }) {
 
   async function handleAuthLogout(req, res) {
     const session = getSessionFromRequest(req);
-    if (session?.sid) {
-      sessions.delete(session.sid);
-    }
-    clearSessionCookie(res);
-
     const requestUrl = new URL(req.url, "http://localhost");
     const returnTo = buildSafeReturnTo(requestUrl.searchParams.get("return_to"), "/bookings.html");
     if (!cfg.keycloakEnabled) {
+      if (session?.sid) {
+        sessions.delete(session.sid);
+      }
+      clearSessionCookie(res);
       redirect(res, returnTo);
       return;
     }
@@ -437,6 +438,28 @@ export function createAuth({ port }) {
     try {
       const discovery = await getKeycloakDiscovery();
       const endSessionEndpoint = normalizeText(discovery?.end_session_endpoint);
+
+      if (session?.refresh_token && endSessionEndpoint) {
+        try {
+          await fetch(endSessionEndpoint, {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: new URLSearchParams({
+              client_id: cfg.keycloakClientId,
+              client_secret: cfg.keycloakClientSecret,
+              refresh_token: String(session.refresh_token)
+            })
+          });
+        } catch {
+          // Fall back to front-channel logout redirect below.
+        }
+      }
+
+      if (session?.sid) {
+        sessions.delete(session.sid);
+      }
+      clearSessionCookie(res);
+
       if (!endSessionEndpoint) {
         redirect(res, returnTo);
         return;
@@ -445,9 +468,8 @@ export function createAuth({ port }) {
       const logoutUrl = new URL(endSessionEndpoint);
       if (session?.id_token) {
         logoutUrl.searchParams.set("id_token_hint", String(session.id_token));
-      } else {
-        logoutUrl.searchParams.set("client_id", cfg.keycloakClientId);
       }
+      logoutUrl.searchParams.set("client_id", cfg.keycloakClientId);
       logoutUrl.searchParams.set(
         "post_logout_redirect_uri",
         returnTo || cfg.keycloakPostLogoutRedirectUri || "/bookings.html"
@@ -455,6 +477,10 @@ export function createAuth({ port }) {
       redirect(res, logoutUrl.toString());
       return;
     } catch {
+      if (session?.sid) {
+        sessions.delete(session.sid);
+      }
+      clearSessionCookie(res);
       redirect(res, returnTo);
     }
   }
