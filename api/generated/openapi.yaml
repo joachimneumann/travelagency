@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-04-06T17:02:44Z
+# 2026-04-06T18:14:02Z
 
 ---
 openapi: 3.1.0
@@ -4028,14 +4028,6 @@ components:
           nullable: true
         status:
           "$ref": "#/components/schemas/TravelPlanTemplateStatus"
-        destinations:
-          type: array
-          items:
-            "$ref": "#/components/schemas/CountryCode"
-        travel_styles:
-          type: array
-          items:
-            type: string
         source_booking_id:
           type: string
           nullable: true
@@ -4428,6 +4420,10 @@ components:
       type: object
       required: []
       properties:
+        destinations:
+          type: array
+          items:
+            "$ref": "#/components/schemas/CountryCode"
         days:
           type: array
           items:
@@ -4436,6 +4432,38 @@ components:
           type: array
           items:
             "$ref": "#/components/schemas/BookingTravelPlanAttachment"
+    BaseBooking:
+      type: object
+      required: []
+      properties:
+        name:
+          type: string
+          nullable: true
+        travel_styles:
+          type: array
+          items:
+            type: string
+        travel_plan:
+          "$ref": "#/components/schemas/BookingTravelPlan"
+          nullable: true
+    BaseBookingWithPersons:
+      type: object
+      required: []
+      properties:
+        name:
+          type: string
+          nullable: true
+        travel_styles:
+          type: array
+          items:
+            type: string
+        travel_plan:
+          "$ref": "#/components/schemas/BookingTravelPlan"
+          nullable: true
+        persons:
+          type: array
+          items:
+            "$ref": "#/components/schemas/BookingPerson"
     PricingAdjustment:
       type: object
       required:
@@ -5396,10 +5424,6 @@ components:
           type: string
           format: date-time
           nullable: true
-        destinations:
-          type: array
-          items:
-            "$ref": "#/components/schemas/CountryCode"
         travel_styles:
           type: array
           items:
@@ -5889,10 +5913,6 @@ components:
           type: string
           format: date-time
           nullable: true
-        destinations:
-          type: array
-          items:
-            "$ref": "#/components/schemas/CountryCode"
         travel_styles:
           type: array
           items:
@@ -6460,14 +6480,6 @@ components:
           nullable: true
         status:
           "$ref": "#/components/schemas/TravelPlanTemplateStatus"
-        destinations:
-          type: array
-          items:
-            "$ref": "#/components/schemas/CountryCode"
-        travel_styles:
-          type: array
-          items:
-            type: string
         source_booking_id:
           type: string
           nullable: true
@@ -7016,10 +7028,6 @@ components:
           type: array
           items:
             "$ref": "#/components/schemas/CountryCode"
-        travel_styles:
-          type: array
-          items:
-            type: string
         source_booking_id:
           type: string
           nullable: true
@@ -9065,11 +9073,6 @@ paths:
         schema:
           type: string
       - name: destination
-        in: query
-        required: false
-        schema:
-          type: string
-      - name: style
         in: query
         required: false
         schema:

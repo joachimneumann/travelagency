@@ -47,6 +47,14 @@ When pressed, the booking should be cloned following the rules set in the clonin
 Database structure around travelplan, inclusing destinations and style
 What is copied when a travel plan is copied?
 What is copied when a booking is copied?
+Datenstructue (cue)
+service
+day can have 0+ services
+before tour
+after tour day
+Travel plan has days and destinations
+Rumpf Booking as XXX (see clone script) plaus traveler?
+booking has rumpf booking and more
 
 Travel plan
 ===========

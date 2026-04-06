@@ -3,6 +3,10 @@ import {
   validateBookingSourceUpdateRequest,
   validateTranslationEntriesRequest
 } from "../../../Generated/API/generated_APIModels.js";
+import {
+  getBookingTravelPlanDestinations,
+  setBookingTravelPlanDestinations
+} from "../../lib/booking_persons.js";
 import { enumValueSetFor } from "../../lib/generated_catalogs.js";
 import { normalizeBookingPdfPersonalization } from "../../lib/booking_pdf_personalization.js";
 import {
@@ -276,8 +280,8 @@ export function createBookingCoreHandlers(deps) {
     const currentReferralStaffUserId = normalizeText(booking?.referral_staff_user_id) || null;
     const nextDestinations = payload?.destinations !== undefined
       ? normalizeCountryCodes(payload.destinations, normalizeText)
-      : normalizeCountryCodes(booking?.destinations, normalizeText);
-    const currentDestinations = normalizeCountryCodes(booking?.destinations, normalizeText);
+      : getBookingTravelPlanDestinations(booking);
+    const currentDestinations = getBookingTravelPlanDestinations(booking);
     const nextTravelStyles = payload?.travel_styles !== undefined
       ? canonicalBookingTravelStyles(normalizeStringArray(payload.travel_styles))
       : canonicalBookingTravelStyles(normalizeStringArray(booking?.travel_styles));
@@ -318,7 +322,7 @@ export function createBookingCoreHandlers(deps) {
     booking.referral_kind = nextReferralKind || null;
     booking.referral_label = nextReferralLabel;
     booking.referral_staff_user_id = nextReferralStaffUserId;
-    booking.destinations = nextDestinations;
+    setBookingTravelPlanDestinations(booking, nextDestinations);
     booking.travel_styles = nextTravelStyles;
     booking.pdf_personalization = nextPdfPersonalization;
     incrementBookingRevision(booking, "core_revision");

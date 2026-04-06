@@ -225,7 +225,6 @@ import (
 	description?: string
 	status?:      enums.#TravelPlanTemplateStatus
 	destinations?: [...enums.#CountryCode]
-	travel_styles?: [...string]
 	source_booking_id?: common.#Identifier
 	travel_plan?:       entities.#BookingTravelPlan
 	actor?:             string

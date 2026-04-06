@@ -1,8 +1,10 @@
 import { normalizeText } from "../lib/text.js";
 import {
+  enumValueSetFor,
   TRAVEL_PLAN_SERVICE_KIND_VALUES,
   TRAVEL_PLAN_TIMING_KIND_VALUES
 } from "../lib/generated_catalogs.js";
+import { normalizeTourDestinationCode } from "./tour_catalog_i18n.js";
 import { normalizeTravelPlanTranslationMeta } from "./booking_translation.js";
 import {
   normalizeBookingContentLang,
@@ -12,6 +14,13 @@ import {
 
 const TRAVEL_PLAN_SERVICE_KINDS = new Set(TRAVEL_PLAN_SERVICE_KIND_VALUES);
 const TRAVEL_PLAN_TIMING_KINDS = new Set(TRAVEL_PLAN_TIMING_KIND_VALUES);
+const COUNTRY_CODE_SET = enumValueSetFor("CountryCode");
+const DESTINATION_COUNTRY_CODE_BY_TOUR_CODE = Object.freeze({
+  vietnam: "VN",
+  thailand: "TH",
+  cambodia: "KH",
+  laos: "LA"
+});
 
 function normalizeOptionalText(value) {
   const normalized = normalizeText(value);
@@ -32,6 +41,23 @@ function normalizeOptionalBoolean(value, fallback = null) {
   if (value === true) return true;
   if (value === false) return false;
   return fallback;
+}
+
+function normalizeCountryCodes(values) {
+  return Array.from(
+    new Set(
+      (Array.isArray(values) ? values : [])
+        .map((value) => {
+          const normalizedText = normalizeOptionalText(value);
+          if (!normalizedText) return "";
+          const directCode = normalizedText.toUpperCase();
+          if (COUNTRY_CODE_SET.has(directCode)) return directCode;
+          const tourCode = normalizeTourDestinationCode(normalizedText);
+          return DESTINATION_COUNTRY_CODE_BY_TOUR_CODE[tourCode] || directCode;
+        })
+        .filter((value) => value && COUNTRY_CODE_SET.has(value))
+    )
+  );
 }
 
 function normalizeTravelPlanServiceImageSourceAttribution(rawAttribution) {
@@ -174,6 +200,7 @@ function normalizeTimingKind(value) {
 
 function buildDefaultTravelPlan() {
   return {
+    destinations: [],
     days: [],
     attachments: []
   };
@@ -309,6 +336,7 @@ export function createTravelPlanHelpers() {
     const days = normalizeTravelPlanDays(source.days, options);
 
     return normalizeTravelPlanTranslationMeta({
+      destinations: normalizeCountryCodes(source.destinations),
       days,
       attachments: normalizeTravelPlanAttachments(source.attachments)
     });

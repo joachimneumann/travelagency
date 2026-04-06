@@ -1,8 +1,32 @@
 import { normalizeText } from "../lib/text.js";
 import { extractTravelPlanPdfPersonalization } from "../lib/booking_pdf_personalization.js";
+import { normalizeTourDestinationCode } from "./tour_catalog_i18n.js";
 
 function cloneJson(value) {
   return value == null ? value : JSON.parse(JSON.stringify(value));
+}
+
+const DESTINATION_COUNTRY_CODE_BY_TOUR_CODE = Object.freeze({
+  vietnam: "VN",
+  thailand: "TH",
+  cambodia: "KH",
+  laos: "LA"
+});
+
+function normalizeCountryCodes(values) {
+  return Array.from(
+    new Set(
+      (Array.isArray(values) ? values : [])
+        .map((value) => {
+          const normalized = normalizeText(value);
+          if (!normalized) return "";
+          if (normalized.length === 2) return normalized.toUpperCase();
+          const tourCode = normalizeTourDestinationCode(normalized);
+          return DESTINATION_COUNTRY_CODE_BY_TOUR_CODE[tourCode] || normalized.toUpperCase();
+        })
+        .filter(Boolean)
+    )
+  );
 }
 
 function zeroOfferTotals() {
@@ -71,6 +95,18 @@ function resetSourceMetadata(booking, { sourceBookingId, nextName }) {
   };
 }
 
+function canonicalizeTravelPlanDestinations(booking) {
+  const nextDestinations = normalizeCountryCodes(booking?.travel_plan?.destinations || booking?.destinations);
+  const currentTravelPlan = booking?.travel_plan && typeof booking.travel_plan === "object" && !Array.isArray(booking.travel_plan)
+    ? booking.travel_plan
+    : {};
+  booking.travel_plan = {
+    ...currentTravelPlan,
+    destinations: nextDestinations
+  };
+  delete booking.destinations;
+}
+
 function resetOffer(booking) {
   const offer = booking.offer && typeof booking.offer === "object" ? booking.offer : {};
   const currency = resolveCloneCurrency(booking);
@@ -81,6 +117,7 @@ function resetOffer(booking) {
     offer_detail_level_internal: normalizeText(offer.offer_detail_level_internal).toLowerCase() || "trip",
     offer_detail_level_visible: normalizeText(offer.offer_detail_level_visible).toLowerCase() || "trip",
     category_rules: Array.isArray(offer.category_rules) ? cloneJson(offer.category_rules) : [],
+    components: [],
     additional_items: [],
     totals: zeroOfferTotals(),
     quotation_summary: zeroOfferQuotationSummary(),
@@ -250,6 +287,7 @@ export function cloneBookingForTesting(sourceBooking, options = {}) {
   cloned.assigned_keycloak_user_id = null;
   cloned.stage = "NEW_BOOKING";
   cloned.preferred_currency = resolveCloneCurrency(cloned);
+  canonicalizeTravelPlanDestinations(cloned);
 
   resetSourceMetadata(cloned, {
     sourceBookingId: normalizeText(sourceBooking.id) || "unknown booking",

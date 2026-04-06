@@ -1,5 +1,6 @@
 import { normalizeText } from "./text.js";
 import {
+  normalizeTourDestinationCode,
   normalizeTourStyleCode,
   normalizeTourStyleLabels,
   sortTourStyleCodes
@@ -61,6 +62,22 @@ function normalizeStringArray(value) {
   }
   const single = optionalText(value);
   return single ? [single] : [];
+}
+
+const DESTINATION_COUNTRY_CODE_BY_TOUR_CODE = Object.freeze({
+  vietnam: "VN",
+  thailand: "TH",
+  cambodia: "KH",
+  laos: "LA"
+});
+
+function normalizeCountryCodes(value) {
+  return Array.from(new Set(normalizeStringArray(value).map((entry) => {
+    const directCode = optionalUppercaseText(entry);
+    if (directCode && directCode.length === 2) return directCode;
+    const tourCode = normalizeTourDestinationCode(entry);
+    return DESTINATION_COUNTRY_CODE_BY_TOUR_CODE[tourCode] || directCode;
+  }).filter(Boolean)));
 }
 
 function compactObject(value) {
@@ -247,6 +264,22 @@ export function normalizeSingleBookingPersonPayload(bookingId, person, fallbackI
   }))[0] || null;
 }
 
+export function getBookingTravelPlanDestinations(booking) {
+  return normalizeCountryCodes(booking?.travel_plan?.destinations || booking?.destinations);
+}
+
+export function setBookingTravelPlanDestinations(booking, destinations) {
+  const nextDestinations = normalizeCountryCodes(destinations);
+  const currentTravelPlan = booking?.travel_plan && typeof booking.travel_plan === "object" && !Array.isArray(booking.travel_plan)
+    ? booking.travel_plan
+    : {};
+  booking.travel_plan = {
+    ...currentTravelPlan,
+    destinations: nextDestinations
+  };
+  return booking.travel_plan;
+}
+
 function normalizeWebFormSubmission(booking) {
   const submission = booking?.web_form_submission;
   const source = booking?.source;
@@ -255,7 +288,7 @@ function normalizeWebFormSubmission(booking) {
   }
   return compactObject({
     ...submission,
-    destinations: normalizeStringArray(submission?.destinations || booking?.destinations),
+    destinations: normalizeStringArray(submission?.destinations || getBookingTravelPlanDestinations(booking)),
     travel_style: normalizeTourStyleLabels(submission?.travel_style || booking?.travel_styles, "en"),
     booking_name: optionalText(submission?.booking_name || booking?.name),
     tour_id: optionalText(submission?.tour_id || source?.tour_id),
@@ -288,19 +321,26 @@ export function normalizeStoredBookingRecord(booking, _store = {}) {
     last_action: booking?.last_action,
     last_action_at: booking?.last_action_at
   }, booking?.stage);
-  const normalizedDestinations = normalizeStringArray(booking?.destinations);
+  const normalizedDestinations = getBookingTravelPlanDestinations(booking);
   const normalizedTravelStyles = sortTourStyleCodes(
     normalizeStringArray(booking?.travel_styles)
       .map((value) => normalizeTourStyleCode(value))
       .filter(Boolean)
   );
   const {
+    destinations: _legacyDestinations,
     public_traveler_details_token_nonce: _legacyTravelerDetailsTokenNonce,
     public_traveler_details_token_created_at: _legacyTravelerDetailsTokenCreatedAt,
     public_traveler_details_token_expires_at: _legacyTravelerDetailsTokenExpiresAt,
     public_traveler_details_token_revoked_at: _legacyTravelerDetailsTokenRevokedAt,
     ...bookingWithoutLegacyFields
   } = booking || {};
+  const normalizedTravelPlan = booking?.travel_plan && typeof booking.travel_plan === "object" && !Array.isArray(booking.travel_plan)
+    ? {
+        ...booking.travel_plan,
+        destinations: normalizedDestinations
+      }
+    : (normalizedDestinations.length ? { destinations: normalizedDestinations } : booking?.travel_plan);
   const normalizedBooking = {
     ...bookingWithoutLegacyFields,
     customer_language: optionalLanguageCode(booking?.customer_language || booking?.web_form_submission?.preferred_language),
@@ -334,11 +374,11 @@ export function normalizeStoredBookingRecord(booking, _store = {}) {
       booking?.traveler_details_token_revoked_at
       || booking?.public_traveler_details_token_revoked_at
     ),
-    destinations: normalizedDestinations,
     travel_styles: normalizedTravelStyles,
     number_of_travelers: optionalInt(booking?.number_of_travelers ?? booking?.web_form_submission?.number_of_travelers),
     preferred_currency: optionalUppercaseText(booking?.preferred_currency || booking?.web_form_submission?.preferred_currency),
     notes: optionalText(booking?.notes),
+    travel_plan: normalizedTravelPlan,
     web_form_submission: normalizeWebFormSubmission(booking),
     persons: getBookingPersons(booking)
   };

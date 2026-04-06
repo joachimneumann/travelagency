@@ -45,7 +45,6 @@ function deriveTemplateTimeLabel(service) {
 export function createTravelPlanTemplateHelpers({
   normalizeBookingTravelPlan,
   normalizeStringArray,
-  normalizeTourStyleCode,
   randomUUID,
   nowIso
 }) {
@@ -62,12 +61,6 @@ export function createTravelPlanTemplateHelpers({
           .filter((value) => value && COUNTRY_CODE_SET.has(value))
       )
     );
-  }
-
-  function normalizeTravelStyles(values) {
-    return normalizeStringArray(values)
-      .map((value) => normalizeTourStyleCode(value) || normalizeText(value))
-      .filter(Boolean);
   }
 
   function normalizeTemplateTravelPlan(rawTravelPlan) {
@@ -92,6 +85,7 @@ export function createTravelPlanTemplateHelpers({
     const normalized = normalizeBookingTravelPlan(rawTravelPlan, null, { strictReferences: false });
     const createdAt = nowIso();
     return {
+      destinations: normalizeDestinations(normalized?.destinations),
       days: (Array.isArray(normalized?.days) ? normalized.days : []).map((day, dayIndex) => ({
         id: `travel_plan_template_day_${randomUUID()}`,
         day_number: dayIndex + 1,
@@ -147,6 +141,7 @@ export function createTravelPlanTemplateHelpers({
     const normalized = normalizeTemplateTravelPlan(rawTravelPlan);
     const createdAt = nowIso();
     return {
+      destinations: normalizeDestinations(normalized?.destinations),
       days: (Array.isArray(normalized?.days) ? normalized.days : []).map((day, dayIndex) => ({
         ...cloneJson(day),
         id: `travel_plan_day_${randomUUID()}`,
@@ -180,16 +175,23 @@ export function createTravelPlanTemplateHelpers({
       ? template
       : {};
     const pdfPersonalization = extractTravelPlanPdfPersonalization(source.pdf_personalization);
+    const normalizedTravelPlan = normalizeTemplateTravelPlan(source.travel_plan);
+    const normalizedDestinations = normalizeDestinations(
+      Array.isArray(normalizedTravelPlan?.destinations) && normalizedTravelPlan.destinations.length
+        ? normalizedTravelPlan.destinations
+        : source.destinations
+    );
     return {
       id: normalizeText(source.id),
       title: normalizeText(source.title),
       description: normalizeOptionalText(source.description),
       status: normalizeTravelPlanTemplateStatus(source.status),
-      destinations: normalizeDestinations(source.destinations),
-      travel_styles: normalizeTravelStyles(source.travel_styles),
       source_booking_id: normalizeOptionalText(source.source_booking_id),
       created_by_atp_staff_id: normalizeOptionalText(source.created_by_atp_staff_id),
-      travel_plan: normalizeTemplateTravelPlan(source.travel_plan),
+      travel_plan: {
+        ...normalizedTravelPlan,
+        destinations: normalizedDestinations
+      },
       ...(pdfPersonalization?.travel_plan ? { pdf_personalization: pdfPersonalization } : {}),
       created_at: normalizeOptionalText(source.created_at),
       updated_at: normalizeOptionalText(source.updated_at)

@@ -3,7 +3,7 @@
   "generatorVersion": "0.1.0",
   "modulePath": "travelagency.local/model",
   "defaultCurrency": "USD",
-  "generatedAt": "2026-04-06T17:02:44Z",
+  "generatedAt": "2026-04-06T18:14:02Z",
   "languages": [
     "en",
     "ar",
@@ -1047,12 +1047,6 @@
           "location": "query",
           "required": false,
           "typeName": "CountryCode"
-        },
-        {
-          "name": "style",
-          "location": "query",
-          "required": false,
-          "typeName": "TourStyleCode"
         },
         {
           "name": "page",

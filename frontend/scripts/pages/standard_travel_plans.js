@@ -6,8 +6,7 @@ import {
 } from "../shared/api.js";
 import { GENERATED_APP_ROLES } from "../../Generated/Models/generated_Roles.js";
 import {
-  COUNTRY_CODE_OPTIONS,
-  TOUR_STYLE_CODE_OPTIONS
+  COUNTRY_CODE_OPTIONS
 } from "../shared/generated_catalogs.js";
 import { buildBookingHref } from "../shared/links.js";
 import { renderPagination } from "../shared/pagination.js";
@@ -36,7 +35,6 @@ const els = {
   search: document.getElementById("standardTravelPlansSearch"),
   status: document.getElementById("standardTravelPlansStatus"),
   destination: document.getElementById("standardTravelPlansDestination"),
-  style: document.getElementById("standardTravelPlansStyle"),
   searchBtn: document.getElementById("standardTravelPlansSearchBtn"),
   clearFiltersBtn: document.getElementById("standardTravelPlansClearFiltersBtn"),
   createBtn: document.getElementById("standardTravelPlansCreateBtn"),
@@ -55,7 +53,6 @@ const els = {
   descriptionInput: document.getElementById("travelPlanTemplateDescriptionInput"),
   formStatusInput: document.getElementById("travelPlanTemplateStatusInput"),
   formDestinationsInput: document.getElementById("travelPlanTemplateDestinationsInput"),
-  formTravelStylesInput: document.getElementById("travelPlanTemplateTravelStylesInput"),
   selectedBooking: document.getElementById("travelPlanTemplateSelectedBooking"),
   bookingSearchInput: document.getElementById("travelPlanTemplateBookingSearchInput"),
   bookingSearchBtn: document.getElementById("travelPlanTemplateBookingSearchBtn"),
@@ -90,7 +87,6 @@ const state = {
     search: "",
     status: "all",
     destination: "all",
-    style: "all",
     loadToken: 0
   },
   modal: {
@@ -202,13 +198,6 @@ function renderCatalogOptions() {
     `;
     els.destination.value = state.list.destination;
   }
-  if (els.style instanceof HTMLSelectElement) {
-    els.style.innerHTML = `
-      <option value="all">${escapeHtml(backendT("backend.standard_travel_plans.all_styles", "All travel styles"))}</option>
-      ${TOUR_STYLE_CODE_OPTIONS.map((option) => `<option value="${escapeHtml(option.value)}">${escapeHtml(option.label || option.value)}</option>`).join("")}
-    `;
-    els.style.value = state.list.style;
-  }
   if (els.formDestinationsInput instanceof HTMLSelectElement) {
     els.formDestinationsInput.innerHTML = DESTINATION_COUNTRY_OPTIONS
       .map((option) => `<option value="${escapeHtml(option.value)}">${escapeHtml(option.label || option.value)}</option>`)
@@ -216,15 +205,6 @@ function renderCatalogOptions() {
   } else if (els.formDestinationsInput instanceof HTMLElement) {
     els.formDestinationsInput.innerHTML = DESTINATION_COUNTRY_OPTIONS
       .map((option) => renderCheckboxOption("travelPlanTemplateDestination", option.value, option.label || option.value))
-      .join("");
-  }
-  if (els.formTravelStylesInput instanceof HTMLSelectElement) {
-    els.formTravelStylesInput.innerHTML = TOUR_STYLE_CODE_OPTIONS
-      .map((option) => `<option value="${escapeHtml(option.value)}">${escapeHtml(option.label || option.value)}</option>`)
-      .join("");
-  } else if (els.formTravelStylesInput instanceof HTMLElement) {
-    els.formTravelStylesInput.innerHTML = TOUR_STYLE_CODE_OPTIONS
-      .map((option) => renderCheckboxOption("travelPlanTemplateStyle", option.value, option.label || option.value))
       .join("");
   }
 }
@@ -279,13 +259,12 @@ function setModalBusyState(isBusy) {
     els.descriptionInput,
     els.formStatusInput,
     els.formDestinationsInput,
-    els.formTravelStylesInput,
     els.bookingSearchInput,
     els.bookingSearchBtn
   ].forEach((element) => {
     if (element) element.disabled = Boolean(isBusy);
   });
-  [els.formDestinationsInput, els.formTravelStylesInput].forEach((container) => {
+  [els.formDestinationsInput].forEach((container) => {
     if (!(container instanceof HTMLElement)) return;
     Array.from(container.querySelectorAll('input[type="checkbox"]')).forEach((input) => {
       if (input instanceof HTMLInputElement) input.disabled = Boolean(isBusy);
@@ -306,7 +285,6 @@ function resetModalState() {
   if (els.form) els.form.reset();
   if (els.formStatusInput instanceof HTMLSelectElement) els.formStatusInput.value = "draft";
   setSelectValues(els.formDestinationsInput, []);
-  setSelectValues(els.formTravelStylesInput, []);
   if (els.bookingSearchInput) els.bookingSearchInput.value = "";
   setModalStatus("");
   renderSelectedSourceBooking();
@@ -332,8 +310,7 @@ function openTemplateModal(template = null) {
   if (els.formStatusInput instanceof HTMLSelectElement) {
     els.formStatusInput.value = normalizeText(template?.status) || "draft";
   }
-  setSelectValues(els.formDestinationsInput, template?.destinations || []);
-  setSelectValues(els.formTravelStylesInput, template?.travel_styles || []);
+  setSelectValues(els.formDestinationsInput, template?.travel_plan?.destinations || []);
   renderSelectedSourceBooking();
   els.modal.hidden = false;
   window.setTimeout(() => {
@@ -430,21 +407,14 @@ function bindControls() {
     state.list.destination = normalizeText(els.destination?.value) || "all";
     void loadTemplates();
   });
-  els.style?.addEventListener("change", () => {
-    state.list.page = 1;
-    state.list.style = normalizeText(els.style?.value) || "all";
-    void loadTemplates();
-  });
   els.clearFiltersBtn?.addEventListener("click", () => {
     state.list.page = 1;
     state.list.search = "";
     state.list.status = "all";
     state.list.destination = "all";
-    state.list.style = "all";
     if (els.search) els.search.value = "";
     if (els.status) els.status.value = "all";
     if (els.destination) els.destination.value = "all";
-    if (els.style) els.style.value = "all";
     void loadTemplates();
   });
   els.createBtn?.addEventListener("click", () => openTemplateModal());
@@ -505,7 +475,6 @@ async function loadTemplates() {
   if (state.list.search) params.set("q", state.list.search);
   if (state.list.status !== "all") params.set("status", state.list.status);
   if (state.list.destination !== "all") params.set("destination", state.list.destination);
-  if (state.list.style !== "all") params.set("style", state.list.style);
   params.set("page", String(state.list.page));
   params.set("page_size", String(state.list.pageSize));
   const payload = await fetchApi(withBackendApiLang(`/api/v1/travel-plan-templates?${params.toString()}`));
@@ -645,7 +614,6 @@ async function saveTemplate() {
     description: normalizeText(els.descriptionInput?.value) || null,
     status: normalizeText(els.formStatusInput?.value) || "draft",
     destinations: selectedValues(els.formDestinationsInput),
-    travel_styles: selectedValues(els.formTravelStylesInput),
     ...(shouldRefreshFromSource || !state.modal.editingId ? { source_booking_id: sourceBookingId } : {})
   };
   const isEditing = Boolean(state.modal.editingId);

@@ -17,7 +17,11 @@ import {
   ensureGeneratedOfferBookingConfirmationTokenState,
   synchronizeGeneratedOfferCustomerConfirmationFlowStatus
 } from "../../domain/booking_confirmation.js";
-import { normalizeTourStyleCode, sortTourStyleCodes } from "../../domain/tour_catalog_i18n.js";
+import {
+  normalizeTourDestinationCode,
+  normalizeTourStyleCode,
+  sortTourStyleCodes
+} from "../../domain/tour_catalog_i18n.js";
 import { createBookingQueryModule } from "./booking_query.js";
 import { createBookingChatHandlers } from "./booking_chat.js";
 import { createBookingCoreHandlers } from "./booking_core.js";
@@ -31,12 +35,25 @@ import { createBookingTravelPlanHandlers } from "./booking_travel_plan.js";
 import { enumValueSetFor } from "../../lib/generated_catalogs.js";
 
 const COUNTRY_CODE_SET = enumValueSetFor("CountryCode");
+const DESTINATION_COUNTRY_CODE_BY_TOUR_CODE = Object.freeze({
+  vietnam: "VN",
+  thailand: "TH",
+  cambodia: "KH",
+  laos: "LA"
+});
 
 function normalizeCountryCodes(items, normalizeText) {
   return Array.from(
     new Set(
       (Array.isArray(items) ? items : [])
-        .map((item) => normalizeText(item).toUpperCase())
+        .map((item) => {
+          const normalized = normalizeText(item);
+          if (!normalized) return "";
+          const directCode = normalized.toUpperCase();
+          if (COUNTRY_CODE_SET.has(directCode)) return directCode;
+          const tourCode = normalizeTourDestinationCode(normalized);
+          return DESTINATION_COUNTRY_CODE_BY_TOUR_CODE[tourCode] || directCode;
+        })
         .filter((item) => item && COUNTRY_CODE_SET.has(item))
     )
   );
@@ -837,8 +854,9 @@ export function createBookingHandlers(deps) {
       return;
     }
 
+    const normalizedDestinations = normalizeCountryCodes(payload.destinations, normalizeText);
     const submission = {
-      destinations: normalizeStringArray(payload.destinations),
+      destinations: normalizedDestinations,
       travel_style: canonicalBookingTravelStyles(payload.travel_style),
       booking_name: initialBookingName,
       tour_id: normalizeText(payload.tour_id) || null,
@@ -878,7 +896,6 @@ export function createBookingHandlers(deps) {
       stage: STAGES.NEW_BOOKING,
       assigned_keycloak_user_id: null,
       service_level_agreement_due_at: computeServiceLevelAgreementDueAt(STAGES.NEW_BOOKING),
-      destinations: submission.destinations,
       travel_styles: canonicalBookingTravelStyles(submission.travel_style),
       web_form_travel_month: submission.travel_month,
       travel_start_day: null,
@@ -887,7 +904,10 @@ export function createBookingHandlers(deps) {
       preferred_currency: preferredCurrency,
       notes: submission.notes,
       persons: [],
-      travel_plan: defaultBookingTravelPlan(),
+      travel_plan: {
+        ...defaultBookingTravelPlan(),
+        destinations: normalizedDestinations
+      },
       web_form_submission: submission,
       pricing: defaultBookingPricing(),
       offer: defaultBookingOffer(preferredCurrency),
@@ -951,7 +971,6 @@ export function createBookingHandlers(deps) {
       stage: STAGES.NEW_BOOKING,
       assigned_keycloak_user_id: normalizeText(principal?.sub) || null,
       service_level_agreement_due_at: computeServiceLevelAgreementDueAt(STAGES.NEW_BOOKING),
-      destinations: normalizeCountryCodes(payload?.destinations, normalizeText),
       travel_styles: canonicalBookingTravelStyles(payload?.travel_styles),
       web_form_travel_month: null,
       travel_start_day: null,
@@ -960,7 +979,10 @@ export function createBookingHandlers(deps) {
       preferred_currency: preferredCurrency,
       notes: "",
       persons: [],
-      travel_plan: defaultBookingTravelPlan(),
+      travel_plan: {
+        ...defaultBookingTravelPlan(),
+        destinations: normalizeCountryCodes(payload?.destinations, normalizeText)
+      },
       pricing: defaultBookingPricing(),
       offer: defaultBookingOffer(preferredCurrency),
       generated_offers: [],

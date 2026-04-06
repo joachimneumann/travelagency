@@ -255,6 +255,10 @@ function travelStyleLabels(values) {
   return normalizeTravelStyleArray(values).map((value) => TRAVEL_STYLE_LABEL_BY_VALUE.get(value) || value);
 }
 
+function bookingDestinations(booking) {
+  return normalizeCodeArray(booking?.travel_plan?.destinations);
+}
+
 function normalizePdfTextField(value, mapValue) {
   const normalizedMap = normalizeLocalizedEditorMap(mapValue ?? value, "en");
   return {
@@ -424,7 +428,7 @@ export function createBookingCoreModule(ctx) {
 
   function computedPdfCountryLabel(booking = state.booking) {
     const draft = ensureCoreDraft();
-    const labels = destinationLabels(Array.isArray(draft.destinations) && draft.destinations.length ? draft.destinations : booking?.destinations);
+    const labels = destinationLabels(Array.isArray(draft.destinations) && draft.destinations.length ? draft.destinations : bookingDestinations(booking));
     return labels.join(", ");
   }
 
@@ -705,7 +709,7 @@ export function createBookingCoreModule(ctx) {
       draft.referral_label = normalizeText(state.booking.referral_label) || "";
       draft.referral_staff_user_id = normalizeText(state.booking.referral_staff_user_id) || "";
       draft.milestone_action_key = savedMilestoneActionKey(state.booking);
-      draft.destinations = normalizeCodeArray(state.booking.destinations);
+      draft.destinations = bookingDestinations(state.booking);
       draft.travel_styles = normalizeTravelStyleArray(state.booking.travel_styles);
       draft.pdf_personalization = normalizePdfPersonalization(state.booking.pdf_personalization);
     }
@@ -747,7 +751,7 @@ export function createBookingCoreModule(ctx) {
       referral_label: normalizeText(state.booking?.referral_label) || "",
       referral_staff_user_id: normalizeText(state.booking?.referral_staff_user_id) || "",
       milestone_action_key: savedMilestoneActionKey(state.booking),
-      destinations: state.booking?.destinations,
+      destinations: bookingDestinations(state.booking),
       travel_styles: state.booking?.travel_styles,
       pdf_personalization: state.booking?.pdf_personalization
     });
@@ -1619,7 +1623,7 @@ export function createBookingCoreModule(ctx) {
       || nextReferralKind !== (normalizeText(latestBooking.referral_kind).toLowerCase() || "none")
       || nextReferralLabel !== (normalizeText(latestBooking.referral_label) || null)
       || nextReferralStaffUserId !== (normalizeText(latestBooking.referral_staff_user_id) || null)
-      || JSON.stringify(nextDestinations) !== JSON.stringify(normalizeCodeArray(latestBooking.destinations))
+      || JSON.stringify(nextDestinations) !== JSON.stringify(bookingDestinations(latestBooking))
       || JSON.stringify(nextTravelStyles) !== JSON.stringify(normalizeTravelStyleArray(latestBooking.travel_styles))
       || JSON.stringify(nextPdfPersonalization) !== JSON.stringify(normalizePdfPersonalization(latestBooking.pdf_personalization))
     ) {

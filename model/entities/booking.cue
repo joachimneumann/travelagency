@@ -113,9 +113,18 @@ import (
 	offer?:       #BookingPdfPersonalizationScoped
 }
 
-#Booking: {
-	id:                              common.#Identifier
+#BaseBooking: {
 	name?:                           string
+	travel_styles?:                  [...string]
+	travel_plan?:                    #BookingTravelPlan
+}
+
+#BaseBookingWithPersons: #BaseBooking & {
+	persons?: [...#BookingPerson]
+}
+
+#Booking: #BaseBookingWithPersons & {
+	id:                              common.#Identifier
 	image?:                          string
 	core_revision?:                  >=0 & int
 	notes_revision?:                 >=0 & int
@@ -139,8 +148,6 @@ import (
 	referral_label?:                 string
 	referral_staff_user_id?:         common.#Identifier
 	service_level_agreement_due_at?: common.#Timestamp
-	destinations?: [...enums.#CountryCode]
-	travel_styles?: [...string]
 	pdf_personalization?: #BookingPdfPersonalization
 	travel_start_day?:            common.#DateOnly
 	travel_end_day?:              common.#DateOnly
@@ -157,8 +164,6 @@ import (
 	accepted_offer_artifact_ref?:   common.#Identifier
 	accepted_travel_plan_artifact_ref?: common.#Identifier
 	notes?:                       string
-	persons?: [...#BookingPerson]
-	travel_plan?:         #BookingTravelPlan
 	web_form_submission?: #BookingWebFormSubmission
 	pricing:              #BookingPricing
 	offer:                #BookingOffer

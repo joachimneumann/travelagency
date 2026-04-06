@@ -764,11 +764,6 @@ package api
 			required: false
 			typeName: "CountryCode"
 		}, {
-			name:     "style"
-			location: "query"
-			required: false
-			typeName: "TourStyleCode"
-		}, {
 			name:     "page"
 			location: "query"
 			required: false

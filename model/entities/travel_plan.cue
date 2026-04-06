@@ -90,6 +90,7 @@ import (
 }
 
 #BookingTravelPlan: {
+	destinations?: [...enums.#CountryCode]
 	days?: [...#BookingTravelPlanDay]
 	attachments?: [...#BookingTravelPlanAttachment]
 }

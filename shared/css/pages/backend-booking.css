@@ -2029,11 +2029,18 @@
   border-top: 1px solid var(--line-danger-soft);
 }
 
+.booking-danger-zone__actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(18rem, 28rem);
+  align-items: start;
+  gap: 1rem 1.5rem;
+}
+
 .booking-danger-zone__clone {
   display: grid;
   gap: 0.7rem;
-  max-width: 28rem;
-  margin-bottom: 0.95rem;
+  justify-self: end;
+  width: min(100%, 28rem);
 }
 
 .booking-danger-zone__clone .field {
@@ -2048,17 +2055,8 @@
 }
 
 .booking-danger-zone__clone-btn {
+  justify-self: end;
   width: fit-content;
-  background: transparent;
-  border-color: var(--warning-border-strong);
-  color: var(--warning-text-strong);
-}
-
-.booking-danger-zone__clone-btn:hover,
-.booking-danger-zone__clone-btn:focus-visible {
-  background: var(--warning-surface-soft);
-  border-color: var(--warning-border-strong);
-  color: var(--warning-text-strong);
 }
 
 .booking-data-panel {
@@ -2067,6 +2065,7 @@
 }
 
 .booking-danger-zone__delete {
+  justify-self: start;
   background: var(--error);
   border-color: var(--error);
   color: var(--surface);
@@ -2084,6 +2083,19 @@
     grid-template-columns: 1fr;
     justify-items: center;
     text-align: center;
+  }
+
+  .booking-danger-zone__actions {
+    grid-template-columns: 1fr;
+  }
+
+  .booking-danger-zone__clone {
+    justify-self: stretch;
+    width: 100%;
+  }
+
+  .booking-danger-zone__clone-btn {
+    justify-self: start;
   }
 
   .booking-person-card__content {

@@ -1,6 +1,7 @@
 import {
   getBookingPersons,
-  getBookingPrimaryContact
+  getBookingPrimaryContact,
+  getBookingTravelPlanDestinations
 } from "../../lib/booking_persons.js";
 import {
   normalizeBookingContentLang,
@@ -77,7 +78,7 @@ export function createBookingQueryModule(deps) {
       normalizeText(booking?.stage),
       normalizeText(booking?.notes),
       normalizeText(booking?.assigned_keycloak_user_id),
-      ...normalizeStringArray(booking?.destinations),
+      ...getBookingTravelPlanDestinations(booking),
       ...normalizeStringArray(booking?.travel_styles),
       normalizeText(contact.name),
       normalizeText(contact.email),

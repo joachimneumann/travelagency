@@ -18,6 +18,8 @@ import (
 		BookingPersonAddress:                           entityModel.#BookingPersonAddress
 		BookingPersonConsent:                           entityModel.#BookingPersonConsent
 		BookingPersonDocument:                          entityModel.#BookingPersonDocument
+		BaseBooking:                                    entityModel.#BaseBooking
+		BaseBookingWithPersons:                         entityModel.#BaseBookingWithPersons
 		BookingTravelPlan:                              entityModel.#BookingTravelPlan
 		BookingTravelPlanDay:                           entityModel.#BookingTravelPlanDay
 		BookingTravelPlanAttachment:                    entityModel.#BookingTravelPlanAttachment

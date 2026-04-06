@@ -1000,21 +1000,23 @@
 
           <section class="booking-danger-zone">
             <h2 class="section-title u-title-compact" data-i18n-id="booking.danger_zone">DANGER ZONE</h2>
-            <div class="booking-danger-zone__clone">
-              <div class="field">
-                <label for="booking_clone_title_input" id="booking_clone_title_label">New title</label>
-                <input id="booking_clone_title_input" type="text" autocomplete="off" />
+            <div class="booking-danger-zone__actions">
+              <button class="btn booking-danger-zone__delete" id="booking_delete_btn" type="button" data-i18n-id="booking.delete_booking" data-requires-clean-state>Delete booking</button>
+              <div class="booking-danger-zone__clone">
+                <button class="btn btn-primary booking-danger-zone__clone-btn" id="booking_clone_btn" type="button" data-requires-clean-state>Clone booking</button>
+                <div class="field">
+                  <label for="booking_clone_title_input" id="booking_clone_title_label">New title</label>
+                  <input id="booking_clone_title_input" type="text" autocomplete="off" />
+                </div>
+                <label class="booking-danger-zone__checkbox" for="booking_clone_include_travelers_input">
+                  <input id="booking_clone_include_travelers_input" type="checkbox" />
+                  <span id="booking_clone_include_travelers_label">Include travelers</span>
+                </label>
+                <div class="backend-controls">
+                  <span id="booking_clone_status" class="micro"></span>
+                </div>
               </div>
-              <label class="booking-danger-zone__checkbox" for="booking_clone_include_travelers_input">
-                <input id="booking_clone_include_travelers_input" type="checkbox" />
-                <span id="booking_clone_include_travelers_label">Include travelers</span>
-              </label>
-              <div class="backend-controls">
-                <span id="booking_clone_status" class="micro"></span>
-              </div>
-              <button class="btn booking-danger-zone__clone-btn" id="booking_clone_btn" type="button" data-requires-clean-state>Clone booking</button>
             </div>
-            <button class="btn booking-danger-zone__delete" id="booking_delete_btn" type="button" data-i18n-id="booking.delete_booking" data-requires-clean-state>Delete booking</button>
           </section>
           </div>
         </div>

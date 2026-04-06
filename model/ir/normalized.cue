@@ -149,8 +149,6 @@ IR: {
 				{name: "title", kind: "scalar", typeName: "string", required: true},
 				{name: "description", kind: "scalar", typeName: "string", required: false},
 				{name: "status", kind: "enum", typeName: "TravelPlanTemplateStatus", required: true},
-				{name: "destinations", kind: "enum", typeName: "CountryCode", required: false, isArray: true},
-				{name: "travel_styles", kind: "scalar", typeName: "string", required: false, isArray: true},
 				{name: "source_booking_id", kind: "scalar", typeName: "Identifier", required: false},
 				{name: "created_by_atp_staff_id", kind: "scalar", typeName: "Identifier", required: false},
 				{name: "travel_plan", kind: "entity", typeName: "BookingTravelPlan", required: true},
@@ -361,8 +359,32 @@ IR: {
 			module:     "entities"
 			sourceType: "entities.#BookingTravelPlan"
 			fields: [
+				{name: "destinations", kind: "enum", typeName: "CountryCode", required: false, isArray: true},
 				{name: "days", kind: "entity", typeName: "BookingTravelPlanDay", required: false, isArray: true},
 				{name: "attachments", kind: "entity", typeName: "BookingTravelPlanAttachment", required: false, isArray: true},
+			]
+		},
+		{
+			name:       "BaseBooking"
+			domain:     "booking"
+			module:     "entities"
+			sourceType: "entities.#BaseBooking"
+			fields: [
+				{name: "name", kind: "scalar", typeName: "string", required: false},
+				{name: "travel_styles", kind: "scalar", typeName: "string", required: false, isArray: true},
+				{name: "travel_plan", kind: "entity", typeName: "BookingTravelPlan", required: false},
+			]
+		},
+		{
+			name:       "BaseBookingWithPersons"
+			domain:     "booking"
+			module:     "entities"
+			sourceType: "entities.#BaseBookingWithPersons"
+			fields: [
+				{name: "name", kind: "scalar", typeName: "string", required: false},
+				{name: "travel_styles", kind: "scalar", typeName: "string", required: false, isArray: true},
+				{name: "travel_plan", kind: "entity", typeName: "BookingTravelPlan", required: false},
+				{name: "persons", kind: "entity", typeName: "BookingPerson", required: false, isArray: true},
 			]
 		},
 		{
@@ -846,7 +868,6 @@ IR: {
 				{name: "offer_revision", kind: "scalar", typeName: "int", required: false},
 				{name: "invoices_revision", kind: "scalar", typeName: "int", required: false},
 				{name: "service_level_agreement_due_at", kind: "scalar", typeName: "Timestamp", required: false},
-				{name: "destinations", kind: "enum", typeName: "CountryCode", required: false, isArray: true},
 				{name: "travel_styles", kind: "scalar", typeName: "string", required: false, isArray: true},
 				{name: "travel_start_day", kind: "scalar", typeName: "DateOnly", required: false},
 				{name: "travel_end_day", kind: "scalar", typeName: "DateOnly", required: false},
@@ -1095,7 +1116,6 @@ IR: {
 				{name: "offer_revision", kind: "scalar", typeName: "int", required: false},
 				{name: "invoices_revision", kind: "scalar", typeName: "int", required: false},
 				{name: "service_level_agreement_due_at", kind: "scalar", typeName: "Timestamp", required: false},
-				{name: "destinations", kind: "enum", typeName: "CountryCode", required: false, isArray: true},
 				{name: "travel_styles", kind: "scalar", typeName: "string", required: false, isArray: true},
 				{name: "travel_start_day", kind: "scalar", typeName: "DateOnly", required: false},
 				{name: "travel_end_day", kind: "scalar", typeName: "DateOnly", required: false},
@@ -1463,8 +1483,6 @@ IR: {
 				{name: "title", kind: "scalar", typeName: "string", required: true},
 				{name: "description", kind: "scalar", typeName: "string", required: false},
 				{name: "status", kind: "enum", typeName: "TravelPlanTemplateStatus", required: true},
-				{name: "destinations", kind: "enum", typeName: "CountryCode", required: false, isArray: true},
-				{name: "travel_styles", kind: "scalar", typeName: "string", required: false, isArray: true},
 				{name: "source_booking_id", kind: "scalar", typeName: "Identifier", required: false},
 				{name: "source_booking_name", kind: "scalar", typeName: "string", required: false},
 				{name: "created_by_atp_staff_id", kind: "scalar", typeName: "Identifier", required: false},
@@ -1844,7 +1862,6 @@ IR: {
 				{name: "description", kind: "scalar", typeName: "string", required: false},
 				{name: "status", kind: "enum", typeName: "TravelPlanTemplateStatus", required: false},
 				{name: "destinations", kind: "enum", typeName: "CountryCode", required: false, isArray: true},
-				{name: "travel_styles", kind: "scalar", typeName: "string", required: false, isArray: true},
 				{name: "source_booking_id", kind: "scalar", typeName: "Identifier", required: false},
 				{name: "travel_plan", kind: "entity", typeName: "BookingTravelPlan", required: false},
 				{name: "actor", kind: "scalar", typeName: "string", required: false},

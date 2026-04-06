@@ -202,8 +202,6 @@ import (
 	title:        string
 	description?: string
 	status:       enums.#TravelPlanTemplateStatus
-	destinations?: [...enums.#CountryCode]
-	travel_styles?: [...string]
 	source_booking_id?:       common.#Identifier
 	source_booking_name?:     string
 	created_by_atp_staff_id?: common.#Identifier
@@ -421,7 +419,6 @@ import (
 	assigned_keycloak_user_label?:                    string
 	assigned_atp_staff?:                              entities.#AtpStaffProfile
 	service_level_agreement_due_at?:                  common.#Timestamp
-	destinations?: [...enums.#CountryCode]
 	travel_styles?: [...string]
 	pdf_personalization?:          entities.#BookingPdfPersonalization
 	travel_start_day?:             common.#DateOnly

@@ -30,7 +30,6 @@ function buildSourceBooking() {
     number_of_travelers: 2,
     preferred_currency: "USD",
     customer_language: "de",
-    destinations: ["VN", "KH"],
     travel_styles: ["culture", "food"],
     pdf_personalization: {
       travel_plan: {
@@ -136,6 +135,7 @@ function buildSourceBooking() {
       total_price_cents: 10000
     },
     travel_plan: {
+      destinations: ["VN", "KH"],
       days: [
         {
           id: "travel_plan_day_1",
@@ -198,7 +198,7 @@ test("cloneBookingForTesting keeps only approved metadata and clears commercial 
   assert.equal(cloned.image, "booking_images/source.webp");
   assert.equal(cloned.customer_language, "de");
   assert.equal(cloned.preferred_currency, "USD");
-  assert.deepEqual(cloned.destinations, ["VN", "KH"]);
+  assert.deepEqual(cloned.travel_plan.destinations, ["VN", "KH"]);
   assert.deepEqual(cloned.travel_styles, ["culture", "food"]);
   assert.equal(cloned.source_channel, null);
   assert.equal(cloned.referral_kind, null);

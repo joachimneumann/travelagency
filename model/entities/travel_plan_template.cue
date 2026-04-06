@@ -10,8 +10,6 @@ import (
 	title:                    string & !=""
 	description?:             string
 	status:                   *"draft" | enums.#TravelPlanTemplateStatus
-	destinations?:            [...enums.#CountryCode]
-	travel_styles?:           [...string]
 	source_booking_id?:       common.#Identifier
 	created_by_atp_staff_id?: common.#Identifier
 	travel_plan:              #BookingTravelPlan

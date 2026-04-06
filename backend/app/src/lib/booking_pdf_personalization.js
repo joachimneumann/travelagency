@@ -3,6 +3,7 @@ import {
   resolveLocalizedText
 } from "../domain/booking_content_i18n.js";
 import { normalizeTourStyleLabels } from "../domain/tour_catalog_i18n.js";
+import { getBookingTravelPlanDestinations } from "./booking_persons.js";
 import { enumOptionsFor } from "./generated_catalogs.js";
 import { normalizeText } from "./text.js";
 
@@ -146,7 +147,7 @@ export function resolveBookingPdfPersonalizationText(personalization, scope, fie
 
 export function resolveBookingPdfCountryLabels(booking) {
   return unique(
-    (Array.isArray(booking?.destinations) ? booking.destinations : [])
+    getBookingTravelPlanDestinations(booking)
       .map((value) => normalizeText(value).toUpperCase())
       .filter(Boolean)
       .map((code) => COUNTRY_LABEL_BY_CODE.get(code) || code)

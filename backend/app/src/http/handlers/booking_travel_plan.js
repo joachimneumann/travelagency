@@ -131,12 +131,16 @@ export function createBookingTravelPlanHandlers(deps) {
       sourceLang: normalizedSourceLang,
       strictReferences: false
     });
+    const nextDestinations = Array.isArray(nextTravelPlan?.destinations)
+      ? nextNormalized.destinations
+      : existingNormalized.destinations;
     const existingDaysById = new Map(
       (Array.isArray(existingNormalized?.days) ? existingNormalized.days : []).map((day) => [day.id, day])
     );
 
     return {
       ...nextNormalized,
+      destinations: nextDestinations,
       days: (Array.isArray(nextNormalized?.days) ? nextNormalized.days : []).map((day) => {
         const existingDay = existingDaysById.get(day.id);
         const existingItemsById = new Map(
@@ -703,6 +707,9 @@ export function createBookingTravelPlanHandlers(deps) {
         translateEntries,
         nowIso()
       );
+      if (!Array.isArray(translatedTravelPlan?.destinations) && Array.isArray(booking?.travel_plan?.destinations)) {
+        translatedTravelPlan.destinations = [...booking.travel_plan.destinations];
+      }
       const nextTravelPlanJson = JSON.stringify(translatedTravelPlan);
       const currentTravelPlanJson = JSON.stringify(booking.travel_plan || null);
       if (nextTravelPlanJson === currentTravelPlanJson) {

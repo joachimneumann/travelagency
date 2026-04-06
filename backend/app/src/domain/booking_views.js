@@ -1,5 +1,9 @@
 import { normalizeText } from "../lib/text.js";
-import { getBookingPersons, getBookingPrimaryContact } from "../lib/booking_persons.js";
+import {
+  getBookingPersons,
+  getBookingPrimaryContact,
+  getBookingTravelPlanDestinations
+} from "../lib/booking_persons.js";
 import {
   normalizeBookingContentLang,
   normalizeBookingSourceLang
@@ -591,7 +595,7 @@ export function createBookingViewHelpers({
       const persons = getBookingPersons(booking);
       const haystack = [
         booking.id,
-        ...normalizeStringArray(booking.destinations),
+        ...getBookingTravelPlanDestinations(booking),
         ...normalizeStringArray(booking.travel_styles),
         booking.notes,
         contact.name,

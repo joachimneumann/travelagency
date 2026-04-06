@@ -2,6 +2,7 @@ import {
   validateTravelPlanServiceImportRequest
 } from "../../../Generated/API/generated_APIModels.js";
 import { normalizeTourStyleCode } from "../../domain/tour_catalog_i18n.js";
+import { getBookingTravelPlanDestinations } from "../../lib/booking_persons.js";
 import {
   cloneTravelPlanLocalizedMap,
   parseTravelPlanQueryInt
@@ -421,12 +422,12 @@ export function createBookingTravelPlanImportHandlers(deps) {
     for (const booking of Array.isArray(store.bookings) ? store.bookings : []) {
       if (!canAccessBooking(principal, booking)) continue;
       if (country) {
-        const bookingCountries = new Set((Array.isArray(booking?.destinations) ? booking.destinations : []).map((code) => normalizeText(code).toUpperCase()).filter(Boolean));
+        const bookingCountries = new Set(getBookingTravelPlanDestinations(booking).map((code) => normalizeText(code).toUpperCase()).filter(Boolean));
         if (!bookingCountries.has(country)) continue;
       }
       if (destination) {
         const bookingDestinations = [
-          ...(Array.isArray(booking?.destinations) ? booking.destinations : []),
+          ...getBookingTravelPlanDestinations(booking),
           ...(Array.isArray(booking?.web_form_submission?.destinations) ? booking.web_form_submission.destinations : [])
         ].map((value) => normalizeText(value).toLowerCase()).filter(Boolean);
         if (!bookingDestinations.some((value) => value.includes(destination))) continue;
@@ -490,12 +491,12 @@ export function createBookingTravelPlanImportHandlers(deps) {
     for (const booking of Array.isArray(store.bookings) ? store.bookings : []) {
       if (!canAccessBooking(principal, booking)) continue;
       if (country) {
-        const bookingCountries = new Set((Array.isArray(booking?.destinations) ? booking.destinations : []).map((code) => normalizeText(code).toUpperCase()).filter(Boolean));
+        const bookingCountries = new Set(getBookingTravelPlanDestinations(booking).map((code) => normalizeText(code).toUpperCase()).filter(Boolean));
         if (!bookingCountries.has(country)) continue;
       }
       if (destination) {
         const bookingDestinations = [
-          ...(Array.isArray(booking?.destinations) ? booking.destinations : []),
+          ...getBookingTravelPlanDestinations(booking),
           ...(Array.isArray(booking?.web_form_submission?.destinations) ? booking.web_form_submission.destinations : [])
         ].map((value) => normalizeText(value).toLowerCase()).filter(Boolean);
         if (!bookingDestinations.some((value) => value.includes(destination))) continue;
@@ -551,12 +552,12 @@ export function createBookingTravelPlanImportHandlers(deps) {
     for (const booking of Array.isArray(store.bookings) ? store.bookings : []) {
       if (!canAccessBooking(principal, booking)) continue;
       if (country) {
-        const bookingCountries = new Set((Array.isArray(booking?.destinations) ? booking.destinations : []).map((code) => normalizeText(code).toUpperCase()).filter(Boolean));
+        const bookingCountries = new Set(getBookingTravelPlanDestinations(booking).map((code) => normalizeText(code).toUpperCase()).filter(Boolean));
         if (!bookingCountries.has(country)) continue;
       }
       if (destination) {
         const bookingDestinations = [
-          ...(Array.isArray(booking?.destinations) ? booking.destinations : []),
+          ...getBookingTravelPlanDestinations(booking),
           ...(Array.isArray(booking?.web_form_submission?.destinations) ? booking.web_form_submission.destinations : [])
         ].map((value) => normalizeText(value).toLowerCase()).filter(Boolean);
         if (!bookingDestinations.some((value) => value.includes(destination))) continue;

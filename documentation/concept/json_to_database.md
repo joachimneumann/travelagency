@@ -187,7 +187,6 @@ Recommended columns:
 - `referral_label`
 - `referral_staff_user_id`
 - `service_level_agreement_due_at`
-- `destinations`
 - `travel_styles`
 - `travel_start_day`
 - `travel_end_day`
@@ -216,6 +215,7 @@ Notes:
 - `search_text` is a denormalized search column for fast list filtering.
 - `web_form_submission_jsonb` stays as an immutable audit snapshot.
 - accepted snapshots remain JSONB because they represent frozen historical state.
+- travel-plan destinations belong to the `travel_plan` aggregate and should be stored in `booking_travel_plans`, not as a root booking column.
 
 ## 2. `booking_persons`
 
@@ -356,9 +356,33 @@ Columns:
 - `totals_gross_amount_cents`
 - `totals_total_price_cents`
 - `totals_items_count`
-- `quotation_summary_jsonb`
-- `discount_jsonb`
 - `payment_terms_notes`
+- `payment_terms_currency`
+- `trip_price_label`
+- `trip_price_amount_cents`
+- `trip_price_tax_rate_basis_points`
+- `trip_price_currency`
+- `trip_price_notes`
+- `trip_price_line_net_amount_cents`
+- `trip_price_line_tax_amount_cents`
+- `trip_price_line_gross_amount_cents`
+- `trip_price_line_total_amount_cents`
+- `quotation_summary_tax_included`
+- `quotation_summary_subtotal_net_amount_cents`
+- `quotation_summary_total_tax_amount_cents`
+- `quotation_summary_grand_total_amount_cents`
+- `discount_reason`
+- `discount_amount_cents`
+- `discount_currency`
+- `discount_line_net_amount_cents`
+- `discount_line_tax_amount_cents`
+- `discount_line_gross_amount_cents`
+
+Notes:
+
+- `trip_price_internal` is flattened into nullable columns on `booking_offers` because it is a single optional object.
+- `quotation_summary.tax_breakdown` is stored in `booking_offer_tax_buckets`.
+- the optional `discount` object is flattened into nullable columns on `booking_offers`.
 
 ### `booking_offer_category_rules`
 
@@ -420,17 +444,40 @@ Columns:
 - `due_rule_days`
 - `description`
 
+### `booking_offer_tax_buckets`
+
+- `booking_id`
+- `tax_rate_basis_points`
+- `net_amount_cents`
+- `tax_amount_cents`
+- `gross_amount_cents`
+- `items_count`
+
 ## 7. Live travel plan tables
+
+### `booking_travel_plans`
+
+One current travel-plan root row per booking.
+
+- `booking_id`
+- `destinations`
+
+Notes:
+
+- `booking_travel_plans.booking_id` is both the primary key and the foreign key to `bookings.id`.
+- days and attachments belong to the travel plan, not directly to the booking.
 
 ### `booking_travel_plan_days`
 
 - `id`
-- `booking_id`
+- `travel_plan_booking_id`
 - `day_number`
 - `date`
+- `date_string`
 - `title`
 - `overnight_location`
 - `notes`
+- `source_type`
 - `source_booking_id`
 - `source_day_id`
 - `copied_at`
@@ -440,7 +487,6 @@ Columns:
 ### `booking_travel_plan_services`
 
 - `id`
-- `booking_id`
 - `day_id`
 - `timing_kind`
 - `time_label`
@@ -453,6 +499,7 @@ Columns:
 - `supplier_id`
 - `start_time`
 - `end_time`
+- `source_type`
 - `source_booking_id`
 - `source_day_id`
 - `source_service_id`
@@ -465,11 +512,13 @@ Notes:
 
 - `supplier_id` remains a nullable plain text reference in v1, not a foreign key.
 - The current JSON architecture keeps `copied_from` nested; PostgreSQL flattens that provenance into nullable columns for validation and querying.
+- `sort_order` preserves the original per-day array order because the CUE model stores services as an ordered list.
 
 ### `booking_travel_plan_service_images`
 
+One optional image row per service.
+
 - `id`
-- `booking_id`
 - `service_id`
 - `storage_path`
 - `caption`
@@ -479,14 +528,18 @@ Notes:
 - `is_customer_visible`
 - `width_px`
 - `height_px`
-- `source_attribution_jsonb`
-- `focal_point_jsonb`
+- `source_name`
+- `source_url`
+- `source_photographer`
+- `source_license`
+- `focal_point_x`
+- `focal_point_y`
 - `created_at`
 
 ### `booking_travel_plan_attachments`
 
 - `id`
-- `booking_id`
+- `travel_plan_booking_id`
 - `filename`
 - `storage_path`
 - `page_count`
@@ -513,7 +566,6 @@ Recommended columns:
 - `management_approver_label`
 - `pdf_frozen_at`
 - `pdf_sha256`
-- `pdf_storage_path`
 - `booking_confirmation_token_nonce`
 - `booking_confirmation_token_created_at`
 - `booking_confirmation_token_expires_at`
@@ -546,8 +598,7 @@ Recommended columns:
 - `sent_to_recipient_at`
 - `total_amount_cents`
 - `due_amount_cents`
-- `pdf_storage_path`
-- `translation_meta_jsonb`
+- `pdf_url`
 - `created_at`
 - `updated_at`
 
@@ -629,8 +680,6 @@ Columns:
 - `created_at`
 - `sent_to_customer`
 - `comment`
-- `customer_language`
-- `travel_plan_revision`
 - `storage_path`
 
 ## 13. `import_runs`
@@ -658,20 +707,26 @@ The following is the first-pass relational model for migration planning. It shou
 - `bookings` is the root operational aggregate.
 - Use `booking_id` as the foreign key from booking-owned child tables.
 - Model `booking_pricing` and `booking_offers` as 1:1 tables with `bookings`, using `booking_id` as the table key.
+- Model `booking_travel_plans` as a 1:1 table with `bookings`, using `booking_id` as the table key.
 - Model `booking_invoices` as children of `bookings`, and `booking_invoice_components` as children of `booking_invoices`.
-- Model live travel-plan data as `bookings -> booking_travel_plan_days -> booking_travel_plan_services`, with service images hanging off services.
-- Model generated artifacts as children of `bookings`: `booking_generated_offers`, `booking_travel_plan_attachments`, and `travel_plan_pdf_artifacts`.
+- Model live travel-plan data as `bookings -> booking_travel_plans -> booking_travel_plan_days -> booking_travel_plan_services -> booking_travel_plan_service_images`.
+- Model `booking_travel_plan_attachments` as children of `booking_travel_plans`.
+- Model generated offer and PDF artifacts as children of `bookings`: `booking_generated_offers` and `travel_plan_pdf_artifacts`.
 - `booking_payments.origin_generated_offer_id` should be a nullable foreign key to `booking_generated_offers.id`.
 - `booking_payments.origin_payment_term_line_id` should be a nullable foreign key to `booking_offer_payment_term_lines.id`.
 - `bookings.confirmed_generated_offer_id` should be a nullable foreign key to `booking_generated_offers.id`.
 - `bookings.accepted_offer_artifact_ref` should be treated as a nullable foreign key to `booking_generated_offers.id`.
 - `bookings.accepted_travel_plan_artifact_ref` should be treated as a nullable foreign key to `travel_plan_pdf_artifacts.id`.
+- `booking_travel_plan_days.travel_plan_booking_id` should be a foreign key to `booking_travel_plans.booking_id`.
+- `booking_travel_plan_services.day_id` should be a foreign key to `booking_travel_plan_days.id`.
+- `booking_travel_plan_service_images.service_id` should be a foreign key to `booking_travel_plan_services.id`.
+- `booking_travel_plan_attachments.travel_plan_booking_id` should be a foreign key to `booking_travel_plans.booking_id`.
 - `booking_travel_plan_services.supplier_id` should remain a nullable plain text reference in v1.
 - `chat_conversations.channel_account_id` should be a foreign key to `chat_channel_accounts.id`.
 - `chat_conversations.booking_id` should remain nullable so conversations can exist before a booking is linked.
 - `chat_events.conversation_id` should be a foreign key to `chat_conversations.id`.
 - `import_runs` is standalone audit data and should not depend on booking-owned tables.
-- Binary file references such as `image`, `photo_ref`, `document_picture_ref`, `storage_path`, and `pdf_storage_path` remain plain path/reference fields in v1, not foreign keys to a binary asset table.
+- Binary file references such as `image`, `photo_ref`, `document_picture_ref`, `storage_path`, and PDF file reference fields remain plain path/reference fields in v1, not foreign keys to a binary asset table.
 - External identity references such as `assigned_keycloak_user_id`, `referral_staff_user_id`, `deposit_confirmed_by_atp_staff_id`, `deposit_receipt_draft_confirmed_by_atp_staff_id`, `management_approver_atp_staff_id`, and similar staff/user IDs should remain plain text references in v1 because those source systems stay outside PostgreSQL.
 
 ### First-pass delete behavior
@@ -691,6 +746,7 @@ erDiagram
     BOOKINGS ||--o{ BOOKING_PERSONS : has
     BOOKING_PERSONS ||--o{ BOOKING_PERSON_DOCUMENTS : has
     BOOKING_PERSONS ||--o{ BOOKING_PERSON_CONSENTS : has
+    BOOKINGS ||--|| BOOKING_TRAVEL_PLANS : has
     BOOKINGS ||--o{ BOOKING_ACTIVITIES : has
 ```
 
@@ -702,10 +758,10 @@ erDiagram
     BOOKINGS ||--o{ BOOKING_PRICING_ADJUSTMENTS : has
     BOOKINGS ||--|| BOOKING_OFFERS : has
     BOOKINGS ||--o{ BOOKING_OFFER_CATEGORY_RULES : has
-    BOOKINGS ||--o{ BOOKING_OFFER_COMPONENTS : has
     BOOKINGS ||--o{ BOOKING_OFFER_DAY_PRICES : has
     BOOKINGS ||--o{ BOOKING_OFFER_ADDITIONAL_ITEMS : has
     BOOKINGS ||--o{ BOOKING_OFFER_PAYMENT_TERM_LINES : has
+    BOOKINGS ||--o{ BOOKING_OFFER_TAX_BUCKETS : has
     BOOKINGS ||--o{ BOOKING_GENERATED_OFFERS : has
     BOOKINGS ||--o{ BOOKING_PAYMENTS : has
     BOOKING_GENERATED_OFFERS o|--o{ BOOKING_PAYMENTS : originates
@@ -718,10 +774,11 @@ erDiagram
 
 ```mermaid
 erDiagram
-    BOOKINGS ||--o{ BOOKING_TRAVEL_PLAN_DAYS : has
+    BOOKINGS ||--|| BOOKING_TRAVEL_PLANS : has
+    BOOKING_TRAVEL_PLANS ||--o{ BOOKING_TRAVEL_PLAN_DAYS : has
     BOOKING_TRAVEL_PLAN_DAYS ||--o{ BOOKING_TRAVEL_PLAN_SERVICES : has
-    BOOKING_TRAVEL_PLAN_SERVICES ||--o{ BOOKING_TRAVEL_PLAN_SERVICE_IMAGES : has
-    BOOKINGS ||--o{ BOOKING_TRAVEL_PLAN_ATTACHMENTS : has
+    BOOKING_TRAVEL_PLAN_SERVICES ||--o| BOOKING_TRAVEL_PLAN_SERVICE_IMAGES : has
+    BOOKING_TRAVEL_PLANS ||--o{ BOOKING_TRAVEL_PLAN_ATTACHMENTS : has
     BOOKINGS ||--o{ TRAVEL_PLAN_PDF_ARTIFACTS : has
     BOOKINGS o|--o{ BOOKING_GENERATED_OFFERS : confirms
     BOOKINGS o|--o{ TRAVEL_PLAN_PDF_ARTIFACTS : accepts
@@ -786,14 +843,23 @@ Create indexes for real access paths already visible in the current application.
 
 - `booking_persons_booking_id_idx` on `booking_id`
 
+### `booking_travel_plans`
+
+- primary key on `booking_id`
+
 ### `booking_travel_plan_days`
 
-- unique `booking_travel_plan_days_booking_day_uidx` on `(booking_id, day_number)`
+- `booking_travel_plan_days_travel_plan_idx` on `travel_plan_booking_id`
+- unique `booking_travel_plan_days_travel_plan_day_uidx` on `(travel_plan_booking_id, day_number)`
 
 ### `booking_travel_plan_services`
 
-- `booking_travel_plan_services_booking_kind_idx` on `(booking_id, kind)`
 - `booking_travel_plan_services_day_id_idx` on `day_id`
+- `booking_travel_plan_services_day_kind_idx` on `(day_id, kind)`
+
+### `booking_travel_plan_service_images`
+
+- unique `booking_travel_plan_service_images_service_id_uidx` on `service_id`
 
 ### `booking_activities`
 
@@ -911,19 +977,20 @@ Insert in dependency order inside transactions:
 7. booking payments
 8. current booking offers
 9. current offer child rows
-10. live travel-plan days
-11. live travel-plan services
-12. live travel-plan service images
-13. live travel-plan attachments
-14. generated offers
-15. invoices
-16. invoice components
-17. activities
-18. chat channel accounts
-19. chat conversations
-20. chat events
-21. travel plan PDF artifacts
-22. import run summary
+10. booking travel plans
+11. live travel-plan days
+12. live travel-plan services
+13. live travel-plan service images
+14. live travel-plan attachments
+15. generated offers
+16. invoices
+17. invoice components
+18. activities
+19. chat channel accounts
+20. chat conversations
+21. chat events
+22. travel plan PDF artifacts
+23. import run summary
 
 ## Import behavior
 

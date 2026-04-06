@@ -405,7 +405,6 @@ function assertBookingShape(booking) {
   assert.equal(typeof booking.persons[0].name, "string");
   assert.ok(Array.isArray(booking.persons[0].roles));
   assert.equal(typeof booking.preferred_currency, "string");
-  assert.ok(Array.isArray(booking.destinations));
   assert.ok(Array.isArray(booking.travel_styles));
   assert.equal(typeof booking.offer, "object");
   assert.equal(typeof booking.offer.offer_detail_level_internal, "string");
@@ -421,6 +420,7 @@ function assertBookingShape(booking) {
   assert.ok(Array.isArray(booking.offer.visible_pricing.additional_items));
   assert.equal(typeof booking.travel_plan_revision, "number");
   assert.equal(typeof booking.travel_plan, "object");
+  assert.ok(Array.isArray(booking.travel_plan.destinations));
   assert.ok(Array.isArray(booking.travel_plan.days));
   if (booking.service_level_agreement_due_at) assertISODateLike(booking.service_level_agreement_due_at, "booking.service_level_agreement_due_at");
   if (booking.created_at) assertISODateLike(booking.created_at, "booking.created_at");
@@ -484,6 +484,7 @@ test("booking clone endpoint applies the shared clone policy and can include tra
   bookingRecord.accepted_deposit_currency = "USD";
   bookingRecord.deposit_received_at = "2026-03-25T09:15:00.000Z";
   bookingRecord.travel_plan = {
+    destinations: ["VN", "KH"],
     days: [
       {
         id: "travel_day_1",
@@ -572,7 +573,7 @@ test("booking clone endpoint applies the shared clone policy and can include tra
   assert.equal(cloneWithoutTravelers.body.booking.assigned_keycloak_user_id, null);
   assert.deepEqual(cloneWithoutTravelers.body.booking.persons, []);
   assert.equal(cloneWithoutTravelers.body.booking.customer_language, "de");
-  assert.deepEqual(cloneWithoutTravelers.body.booking.destinations, ["Vietnam", "Cambodia"]);
+  assert.deepEqual(cloneWithoutTravelers.body.booking.travel_plan.destinations, ["VN", "KH"]);
   assert.deepEqual(cloneWithoutTravelers.body.booking.travel_styles, ["culture", "gastronomic-experiences"]);
   assert.equal(cloneWithoutTravelers.body.booking.source_channel, null);
   assert.equal(cloneWithoutTravelers.body.booking.referral_kind, null);
@@ -617,7 +618,7 @@ test("backend booking create endpoint creates an internal booking and assigns st
   assert.equal(result.body.booking.name, "Kuala Lumpur Family Planning");
   assert.equal(result.body.booking.customer_language, "ms");
   assert.equal(result.body.booking.preferred_currency, "USD");
-  assert.deepEqual(result.body.booking.destinations, ["MY", "SG"]);
+  assert.deepEqual(result.body.booking.travel_plan.destinations, ["MY", "SG"]);
   assert.deepEqual(result.body.booking.travel_styles, ["culture", "family-friendly"]);
   assert.equal(result.body.booking.assigned_keycloak_user_id, "kc-staff");
   assert.equal(result.body.booking.web_form_submission, undefined);
@@ -657,7 +658,7 @@ test("public booking discovery-call request can be created without destinations 
 
   assert.equal(result.status, 201);
   assertBookingShape(result.body.booking);
-  assert.deepEqual(result.body.booking.destinations, []);
+  assert.deepEqual(result.body.booking.travel_plan.destinations, []);
   assert.deepEqual(result.body.booking.travel_styles, []);
   assert.equal(result.body.booking.persons.length, 1);
   assert.equal(result.body.booking.persons[0].name, "Discovery Caller");
@@ -3397,7 +3398,10 @@ test("booking travel plan pdf renders personalized copy and accommodation line",
   const bookingRecord = store.bookings.find((item) => item.id === bookingId);
   assert.ok(bookingRecord);
 
-  bookingRecord.destinations = ["VN", "KH"];
+  bookingRecord.travel_plan = {
+    ...(bookingRecord.travel_plan || {}),
+    destinations: ["VN", "KH"]
+  };
   bookingRecord.pdf_personalization = {
     travel_plan: {
       subtitle: "12 days in Vietnam and Cambodia",
@@ -5370,7 +5374,7 @@ test("booking source update persists trip context and pdf personalization", asyn
     }
   );
   assert.equal(sourceUpdateResult.status, 200);
-  assert.deepEqual(sourceUpdateResult.body.booking.destinations, ["VN", "KH"]);
+  assert.deepEqual(sourceUpdateResult.body.booking.travel_plan.destinations, ["VN", "KH"]);
   assert.deepEqual(sourceUpdateResult.body.booking.travel_styles, ["grand-expeditions", "culture"]);
   assert.equal(
     sourceUpdateResult.body.booking.pdf_personalization.travel_plan.subtitle,
@@ -5398,7 +5402,7 @@ test("booking source update persists trip context and pdf personalization", asyn
     apiHeaders()
   );
   assert.equal(detailAfter.status, 200);
-  assert.deepEqual(detailAfter.body.booking.destinations, ["VN", "KH"]);
+  assert.deepEqual(detailAfter.body.booking.travel_plan.destinations, ["VN", "KH"]);
   assert.deepEqual(detailAfter.body.booking.travel_styles, ["grand-expeditions", "culture"]);
   assert.equal(
     detailAfter.body.booking.pdf_personalization.travel_plan.welcome,

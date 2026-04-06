@@ -28,7 +28,6 @@ export function createTravelPlanTemplateHandlers(deps) {
     canEditBooking,
     normalizeText,
     normalizeTourDestinationCode,
-    normalizeTourStyleCode,
     nowIso,
     randomUUID,
     buildTravelPlanTemplateReadModel,
@@ -67,13 +66,12 @@ export function createTravelPlanTemplateHandlers(deps) {
     const status = normalizeTravelPlanTemplateStatus(query.get("status"));
     const hasStatus = normalizeText(query.get("status"));
     const destination = normalizeTourDestinationCode(query.get("destination"));
-    const style = normalizeTourStyleCode(query.get("style"));
 
     return items.filter((template) => {
       const stored = normalizeTravelPlanTemplateForStorage(template);
       if (hasStatus && stored.status !== status) return false;
-      if (destination && !stored.destinations.includes(destination)) return false;
-      if (style && !stored.travel_styles.includes(style)) return false;
+      const destinations = Array.isArray(stored?.travel_plan?.destinations) ? stored.travel_plan.destinations : [];
+      if (destination && !destinations.includes(destination)) return false;
       if (!normalizedQuery) return true;
       const sourceBookingName = normalizeText(bookingById.get(stored.source_booking_id)?.name);
       const haystack = [
@@ -208,7 +206,6 @@ export function createTravelPlanTemplateHandlers(deps) {
       description: payload?.description,
       status: payload?.status,
       destinations: payload?.destinations,
-      travel_styles: payload?.travel_styles,
       source_booking_id: sourceBookingId || null,
       created_by_atp_staff_id: normalizeText(principal?.sub),
       travel_plan: nextTravelPlan,
@@ -280,8 +277,7 @@ export function createTravelPlanTemplateHandlers(deps) {
       title: payload?.title !== undefined ? payload.title : existing.title,
       description: payload?.description !== undefined ? payload.description : existing.description,
       status: payload?.status !== undefined ? payload.status : existing.status,
-      destinations: payload?.destinations !== undefined ? payload.destinations : existing.destinations,
-      travel_styles: payload?.travel_styles !== undefined ? payload.travel_styles : existing.travel_styles,
+      destinations: payload?.destinations !== undefined ? payload.destinations : existing?.travel_plan?.destinations,
       source_booking_id: nextSourceBookingId,
       travel_plan: nextTravelPlan,
       pdf_personalization: nextPdfPersonalization,
