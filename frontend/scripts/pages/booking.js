@@ -356,6 +356,7 @@ const els = {
   personModalHotelRoomSmoker: document.getElementById("booking_person_modal_hotel_room_smoker"),
   personModalHotelRoomPreference: document.getElementById("booking_person_modal_hotel_room_preference"),
   personModalRoles: document.getElementById("booking_person_modal_roles"),
+  personModalConsents: document.getElementById("booking_person_modal_consents"),
   personModalAddressLine1: document.getElementById("booking_person_modal_address_line_1"),
   personModalAddressLine2: document.getElementById("booking_person_modal_address_line_2"),
   personModalCity: document.getElementById("booking_person_modal_city"),

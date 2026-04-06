@@ -80,6 +80,20 @@ export function createBookingPersonsModule(ctx) {
     "other",
     "prefer_not_to_say"
   ]);
+  const PERSON_CONSENT_TYPES = Object.freeze([
+    "privacy_policy",
+    "profiling",
+    "marketing_email",
+    "marketing_whatsapp"
+  ]);
+  const REQUIRED_PERSON_CONSENT_TYPES = Object.freeze([
+    "privacy_policy",
+    "profiling"
+  ]);
+  const PERSON_CONSENT_STATUSES = Object.freeze([
+    "granted",
+    "withdrawn"
+  ]);
 
   function normalizePersonLanguageCode(value) {
     const raw = normalizeText(value);
@@ -140,6 +154,135 @@ export function createBookingPersonsModule(ctx) {
         `<option value="${escapeHtml(gender)}"${gender === current ? " selected" : ""}>${escapeHtml(formatPersonGenderLabel(gender))}</option>`
       ))
     ].join("");
+  }
+
+  function normalizePersonConsentType(value) {
+    const normalized = normalizeText(value).toLowerCase();
+    return PERSON_CONSENT_TYPES.includes(normalized) ? normalized : "";
+  }
+
+  function normalizePersonConsentStatus(value) {
+    const normalized = normalizeText(value).toLowerCase();
+    return PERSON_CONSENT_STATUSES.includes(normalized) ? normalized : "granted";
+  }
+
+  function formatPersonConsentLabel(value) {
+    const normalized = normalizePersonConsentType(value);
+    if (normalized === "privacy_policy") return bookingT("booking.persons.consent.privacy_policy", "Privacy policy");
+    if (normalized === "profiling") return bookingT("booking.persons.consent.profiling", "Personalization");
+    if (normalized === "marketing_email") return bookingT("booking.persons.consent.marketing_email", "Marketing email");
+    if (normalized === "marketing_whatsapp") return bookingT("booking.persons.consent.marketing_whatsapp", "Marketing WhatsApp");
+    return "";
+  }
+
+  function formatPersonConsentDescription(value) {
+    const normalized = normalizePersonConsentType(value);
+    if (normalized === "privacy_policy") {
+      return bookingT("booking.persons.consent.privacy_policy_hint", "Agreement to store and use traveler data for trip operations.");
+    }
+    if (normalized === "profiling") {
+      return bookingT("booking.persons.consent.profiling_hint", "Permission to personalize offers based on traveler preferences.");
+    }
+    if (normalized === "marketing_email") {
+      return bookingT("booking.persons.consent.marketing_email_hint", "Permission to send future offers and updates by email.");
+    }
+    if (normalized === "marketing_whatsapp") {
+      return bookingT("booking.persons.consent.marketing_whatsapp_hint", "Permission to send future offers and updates via WhatsApp.");
+    }
+    return "";
+  }
+
+  function formatPersonConsentStatusLabel(value) {
+    const normalized = normalizePersonConsentStatus(value);
+    if (normalized === "withdrawn") return bookingT("booking.persons.consent.status.withdrawn", "Consent not given");
+    return bookingT("booking.persons.consent.status.granted", "Consent given");
+  }
+
+  function isRequiredPersonConsentType(value) {
+    return REQUIRED_PERSON_CONSENT_TYPES.includes(normalizePersonConsentType(value));
+  }
+
+  function normalizePersonConsentRecord(consent, personId, fallbackType = "", index = 0) {
+    if (!consent || typeof consent !== "object" || Array.isArray(consent)) return null;
+    const consentType = normalizePersonConsentType(consent.consent_type || fallbackType);
+    if (!consentType) return null;
+    const timestamp = new Date().toISOString();
+    return {
+      id: normalizeText(consent.id) || `${normalizeText(personId) || bookingId || "booking"}_${consentType}_consent_${index + 1}`,
+      consent_type: consentType,
+      status: normalizePersonConsentStatus(consent.status),
+      captured_via: normalizeText(consent.captured_via),
+      captured_at: normalizeText(consent.captured_at) || timestamp,
+      evidence_ref: normalizeText(consent.evidence_ref),
+      updated_at: normalizeText(consent.updated_at) || normalizeText(consent.captured_at) || timestamp
+    };
+  }
+
+  function normalizePersonConsentDrafts(consents, personId = "") {
+    const normalizedConsents = (Array.isArray(consents) ? consents : [])
+      .map((consent, index) => normalizePersonConsentRecord(consent, personId, consent?.consent_type, index))
+      .filter(Boolean)
+      .sort((left, right) => PERSON_CONSENT_TYPES.indexOf(left.consent_type) - PERSON_CONSENT_TYPES.indexOf(right.consent_type));
+    const byType = new Map(normalizedConsents.map((consent) => [consent.consent_type, consent]));
+    return PERSON_CONSENT_TYPES.map((consentType, index) => (
+      byType.get(consentType) || normalizePersonConsentRecord({
+        consent_type: consentType,
+        status: "granted",
+        captured_via: "booking_person_modal_default"
+      }, personId, consentType, index)
+    )).filter(Boolean);
+  }
+
+  function getPersonConsent(draft, consentType) {
+    const normalizedType = normalizePersonConsentType(consentType);
+    if (!normalizedType) return null;
+    return (Array.isArray(draft?.consents) ? draft.consents : []).find(
+      (consent) => normalizePersonConsentType(consent?.consent_type) === normalizedType
+    ) || null;
+  }
+
+  function getPersonConsentStatus(draft, consentType) {
+    return normalizePersonConsentStatus(getPersonConsent(draft, consentType)?.status);
+  }
+
+  function setPersonConsentStatus(draft, consentType, status, capturedVia = "booking_person_modal") {
+    if (!draft || typeof draft !== "object") return;
+    const normalizedType = normalizePersonConsentType(consentType);
+    const normalizedStatus = normalizePersonConsentStatus(status);
+    if (!normalizedType) return;
+    draft.consents = normalizePersonConsentDrafts(draft.consents, draft.id);
+    const consentIndex = draft.consents.findIndex((consent) => normalizePersonConsentType(consent?.consent_type) === normalizedType);
+    if (normalizedStatus === "unknown" && consentIndex < 0) {
+      return;
+    }
+    const timestamp = new Date().toISOString();
+    const existing = consentIndex >= 0 ? draft.consents[consentIndex] : null;
+    const nextRecord = normalizePersonConsentRecord({
+      ...existing,
+      consent_type: normalizedType,
+      status: normalizedStatus,
+      captured_via: capturedVia,
+      captured_at: normalizeText(existing?.captured_at) || timestamp,
+      updated_at: timestamp
+    }, draft.id, normalizedType, consentIndex >= 0 ? consentIndex : draft.consents.length);
+    if (!nextRecord) return;
+    if (consentIndex >= 0) {
+      draft.consents[consentIndex] = nextRecord;
+    } else {
+      draft.consents.push(nextRecord);
+    }
+    draft.consents = normalizePersonConsentDrafts(draft.consents, draft.id);
+  }
+
+  function buildPersonConsentPayloads(consents, personId = "") {
+    return normalizePersonConsentDrafts(consents, personId);
+  }
+
+  function renderPersonConsentStatusOptions(currentValue = "") {
+    const current = normalizePersonConsentStatus(currentValue);
+    return PERSON_CONSENT_STATUSES.map((status) => (
+      `<option value="${escapeHtml(status)}"${status === current ? " selected" : ""}>${escapeHtml(formatPersonConsentStatusLabel(status))}</option>`
+    )).join("");
   }
 
   function buildTravelerMismatchMessage(booking) {
@@ -216,7 +359,7 @@ export function createBookingPersonsModule(ctx) {
       nationality: normalizeText(person.nationality) || "",
       address: person.address && typeof person.address === "object" ? { ...person.address } : {},
       roles: normalizeStringList(person.roles),
-      consents: Array.isArray(person.consents) ? person.consents.map((consent) => ({ ...consent })) : [],
+      consents: normalizePersonConsentDrafts(person.consents, normalizeText(person.id)),
       documents: Array.isArray(person.documents)
         ? person.documents.map((document) => normalizePersonDocumentDraft(document, normalizeText(document?.document_type) || "other"))
         : [],
@@ -565,7 +708,7 @@ export function createBookingPersonsModule(ctx) {
       nationality: normalizeText(draft?.nationality).toUpperCase() || undefined,
       address: Object.keys(cleanedAddress).length ? cleanedAddress : undefined,
       roles: normalizeStringList(draft?.roles),
-      consents: Array.isArray(draft?.consents) ? draft.consents.map((consent) => ({ ...consent })) : [],
+      consents: buildPersonConsentPayloads(draft?.consents, normalizeText(draft?.id) || `${bookingId || "booking"}_person_${index + 1}`),
       documents: (Array.isArray(draft?.documents) ? draft.documents : [])
         .map((document, document_index) => buildDocumentPayloadFromDraft(document, draft?.id, bookingId || "booking", document_index))
         .filter(Boolean),
@@ -1126,6 +1269,26 @@ export function createBookingPersonsModule(ctx) {
         </label>
       `).join("");
     }
+    if (els.personModalConsents) {
+      els.personModalConsents.innerHTML = PERSON_CONSENT_TYPES.map((consentType) => `
+        <div class="booking-person-modal__consent-row">
+          <div class="booking-person-modal__consent-copy">
+            <span class="booking-person-modal__consent-label-line">
+              <strong>${escapeHtml(formatPersonConsentLabel(consentType))}</strong>
+              ${isRequiredPersonConsentType(consentType)
+    ? `<span class="booking-person-modal__consent-required">${escapeHtml(bookingT("booking.required_placeholder", "required"))}</span>`
+    : ""}
+            </span>
+            <span class="micro booking-person-modal__consent-description">${escapeHtml(formatPersonConsentDescription(consentType))}</span>
+          </div>
+          <div class="field">
+            <select data-person-consent-type="${escapeHtml(consentType)}" ${canEdit ? "" : "disabled"}>
+              ${renderPersonConsentStatusOptions(getPersonConsentStatus(draft, consentType))}
+            </select>
+          </div>
+        </div>
+      `).join("");
+    }
 
     const passport = getPersonDocument(draft, "passport") || normalizePersonDocumentDraft({}, "passport");
     const nationalId = getPersonDocument(draft, "national_id") || normalizePersonDocumentDraft({}, "national_id");
@@ -1398,6 +1561,11 @@ export function createBookingPersonsModule(ctx) {
       if (target.checked) nextRoles.add(role);
       else nextRoles.delete(role);
       draft.roles = Array.from(nextRoles);
+    } else if (target.dataset.personConsentType) {
+      setPersonConsentStatus(draft, target.dataset.personConsentType, target.value);
+      if (target instanceof HTMLSelectElement) {
+        target.value = getPersonConsentStatus(draft, target.dataset.personConsentType);
+      }
     } else if (target.dataset.addressField) {
       draft.address = draft.address && typeof draft.address === "object" ? draft.address : {};
       const field = String(target.dataset.addressField || "");

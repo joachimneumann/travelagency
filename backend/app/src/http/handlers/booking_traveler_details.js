@@ -14,6 +14,8 @@ const PRIVATE_CACHE_HEADERS = Object.freeze({
 });
 
 const PUBLIC_TRAVELER_DOCUMENT_TYPES = new Set(["passport", "national_id"]);
+const PUBLIC_TRAVELER_CONSENT_TYPES = new Set(["privacy_policy", "marketing_email", "marketing_whatsapp", "profiling"]);
+const PUBLIC_TRAVELER_CONSENT_STATUSES = new Set(["granted", "withdrawn", "unknown"]);
 const DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 function parseDateOnly(value) {
@@ -99,6 +101,23 @@ function buildPublicDocumentInput(document, personId, documentIndex) {
   };
 }
 
+function buildPublicConsentInput(consent, personId, consentIndex) {
+  const consentType = String(consent?.consent_type || "").trim().toLowerCase();
+  const consentStatus = String(consent?.status || "").trim().toLowerCase();
+  if (!PUBLIC_TRAVELER_CONSENT_TYPES.has(consentType)) return null;
+  if (!PUBLIC_TRAVELER_CONSENT_STATUSES.has(consentStatus)) return null;
+  const timestamp = new Date().toISOString();
+  return {
+    id: String(consent?.id || `${personId}_consent_${consentIndex + 1}`).trim(),
+    consent_type: consentType,
+    status: consentStatus,
+    captured_via: String(consent?.captured_via || "traveler_details_portal").trim(),
+    captured_at: String(consent?.captured_at || timestamp).trim(),
+    evidence_ref: String(consent?.evidence_ref || "").trim(),
+    updated_at: String(consent?.updated_at || consent?.captured_at || timestamp).trim()
+  };
+}
+
 function buildPublicAddressInput(address) {
   if (!address || typeof address !== "object" || Array.isArray(address)) return undefined;
   const nextAddress = {
@@ -129,6 +148,17 @@ function buildPublicVisiblePerson(bookingId, person) {
     ...(String(normalized.gender || "").trim() ? { gender: normalized.gender } : {}),
     ...(String(normalized.nationality || "").trim() ? { nationality: normalized.nationality } : {}),
     ...(normalized.address ? { address: normalized.address } : {}),
+    ...(Array.isArray(normalized.consents) && normalized.consents.length ? {
+      consents: normalized.consents.map((consent) => ({
+        id: consent.id,
+        consent_type: consent.consent_type,
+        status: consent.status,
+        ...(String(consent.captured_via || "").trim() ? { captured_via: consent.captured_via } : {}),
+        ...(String(consent.captured_at || "").trim() ? { captured_at: consent.captured_at } : {}),
+        ...(String(consent.evidence_ref || "").trim() ? { evidence_ref: consent.evidence_ref } : {}),
+        ...(String(consent.updated_at || "").trim() ? { updated_at: consent.updated_at } : {})
+      }))
+    } : {}),
     ...(Array.isArray(normalized.documents) && normalized.documents.length ? {
       documents: normalized.documents.map((document) => ({
         id: document.id,
@@ -169,6 +199,9 @@ function collectPublicTravelerDetailsPayload(booking, personId, rawPerson) {
   const documents = (Array.isArray(rawPerson.documents) ? rawPerson.documents : [])
     .map((document, documentIndex) => buildPublicDocumentInput(document, personId, documentIndex))
     .filter(Boolean);
+  const consents = (Array.isArray(rawPerson.consents) ? rawPerson.consents : [])
+    .map((consent, consentIndex) => buildPublicConsentInput(consent, personId, consentIndex))
+    .filter(Boolean);
   const candidate = {
     id: String(personId || "").trim(),
     name: String(rawPerson.name || "").trim(),
@@ -183,6 +216,7 @@ function collectPublicTravelerDetailsPayload(booking, personId, rawPerson) {
     gender: String(rawPerson.gender || "").trim().toLowerCase(),
     nationality: String(rawPerson.nationality || "").trim().toUpperCase(),
     address: buildPublicAddressInput(rawPerson.address),
+    consents,
     documents
   };
 
@@ -255,10 +289,10 @@ function buildStoredPersonOverwrite(existingPerson, normalizedPerson) {
     ...(normalizedPerson.gender ? { gender: normalizedPerson.gender } : {}),
     ...(normalizedPerson.nationality ? { nationality: normalizedPerson.nationality } : {}),
     ...(normalizedPerson.address ? { address: normalizedPerson.address } : {}),
+    ...(Array.isArray(normalizedPerson?.consents) ? { consents: normalizedPerson.consents } : {}),
     ...(preservedDocuments ? { documents: preservedDocuments } : {}),
     ...(existingPerson?.photo_ref ? { photo_ref: existingPerson.photo_ref } : {}),
     ...(Array.isArray(existingPerson?.roles) ? { roles: existingPerson.roles } : {}),
-    ...(Array.isArray(existingPerson?.consents) ? { consents: existingPerson.consents } : {}),
     ...(existingPerson?.notes ? { notes: existingPerson.notes } : {})
   };
 }

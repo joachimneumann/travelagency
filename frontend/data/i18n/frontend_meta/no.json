@@ -949,6 +949,416 @@
     "origin": "legacy",
     "updated_at": "2026-04-02T15:10:10.635Z"
   },
+  "traveler_details.page_title_default": {
+    "source_hash": "99e952bf1d98989aa756921e86873f24eb06ed9eb0118a257e893b595b4fa30c",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.page_meta_description": {
+    "source_hash": "188bdbc254e49044d336e3953b242d17b6ce45fecc572846ff7a5702624e0053",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.kicker": {
+    "source_hash": "4d298211cedc01ea1aa9f2bda2d03a525bf14a128a03ec55524f0f692b05ced7",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.title_default": {
+    "source_hash": "dd44722184c9cd21c75dda59b3bda9e7f41c7585c5972ad93dead179c2a2e6a8",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.title_with_number": {
+    "source_hash": "6127bd3a024bab6e3a864ceb45fcfaff4e9dfd4e7abf1b012bc09c8e02f828be",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.intro": {
+    "source_hash": "49e3e87eaf95b9019a05f549239ecea64f3241fe951d8081f651a0ecfbf10ee8",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.loading": {
+    "source_hash": "e6fba0548824a61a43322a46087022df7841a85354aff8a8c485294e62a573fa",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.submit": {
+    "source_hash": "eaa008405cbd303a62ff911c0ee18ad44fec109df701fc3d8de5a7382a8ae41e",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.full_name": {
+    "source_hash": "f13a64ba2fea87ef6360c1f2e9bcd3286cc1551a90cb62a8d9345ebf97fbc29f",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.date_of_birth": {
+    "source_hash": "eb4c4e239122d42d1ca7a7af175d6fe393926cb14aaab56b7ab7fc056b2ccb86",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.email": {
+    "source_hash": "969ccbd3cf6300ecd5c880459d81ae9027df7517563184a1b8b15282db230621",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.phone_number": {
+    "source_hash": "306f1bb20677a622fc38185239e89a940f6c1727e440a2b359d7d0e1bf600644",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.preferred_language": {
+    "source_hash": "140071feea59fe87b44a9926688d77c2c3b810328cb9cdbc064c826cafaf2205",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.preferred_language_placeholder": {
+    "source_hash": "71a202e247217cea345210f334794edc727449c48507b5234ab73099284c4ba5",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.nationality": {
+    "source_hash": "8fb1b6a148c218138d7ce8a6c9babf02e3b63fdff61ab066107299ea212d338e",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.nationality_placeholder": {
+    "source_hash": "5305ab836dd296365fd549aeb09c9287caee6bc32fb7f5d1587e1b9f0032591a",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.gender": {
+    "source_hash": "a04630ef8bc3da8c864af0161fde9d42cc9c801a27228b3cf7c07237dec5a612",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.gender_placeholder": {
+    "source_hash": "148f37edb635db59a6733d7ead71af65d7c3643029e78e5a245f72c7fc9b7182",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.gender_male": {
+    "source_hash": "03f8c1273e3da99bb315fe7b71c8e45159c826e6d3f42eecd4612078248f73a1",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.gender_female": {
+    "source_hash": "e8cca808ae5aaa03a7fc3060856e6d4ad776fb1cb8cfe441a9bd240988cde151",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.gender_other": {
+    "source_hash": "f97e9da0e3b879f0a9df979ae260a5f7e1371edb127c1862d4f861981166cdc1",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.gender_prefer_not_to_say": {
+    "source_hash": "51fcc57e9bf9e07daec711378ec1eed588eadb2d0dc0fbaf4b06ff9e019024f8",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.food_preferences": {
+    "source_hash": "48469aa7fd8942852f9b93fad2dea50779d27cddd5b956d8fc8ed8afa6d47b92",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.food_preferences_placeholder": {
+    "source_hash": "680ad04f5c52cddc0373db27fbfa6c68c9f3df5ce1e0edf2a155d9c1326ae51f",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.allergies": {
+    "source_hash": "c21b6d2a61441b9ae0aa5bf7b839f80441e4afbc47b962db7ee4d0e0ae894401",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.allergies_placeholder": {
+    "source_hash": "9084c274a505c9229b9ab5322d08bc490fd1f29681b7b3b10f7bcbcdfba177ee",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.hotel_room_smoking_preference": {
+    "source_hash": "38e05f35e32244815d83abf671eb5091ce2057f640cb722b03f95a65fa3797a9",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.non_smoker": {
+    "source_hash": "653537a2707953191149be7c6a7faa3447072c93c3665a614666b26f828dba50",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.smoker": {
+    "source_hash": "119096d2823dd87da52f1eae54e26da827bb364824589cd216fd9191d363d2ff",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.hotel_room_preference": {
+    "source_hash": "d5f95b079a7044a8ba7e7a9491f21119386fbfdb8ee522ac087b7194c41eb7b4",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.sharing_room_ok": {
+    "source_hash": "809f300a2e027987f1ba46605c5f5e12aa27eb7178cd09c3aeda18f6ecb314b3",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.single_room": {
+    "source_hash": "6c6077ed8c53bfd92c8292b5374acfc760bc52d187d167907a6fc6855631626d",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.consents": {
+    "source_hash": "f013f78bc026afedee8473b131ba68b198b65de5b3986e898e7bca411eece48f",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.consent_privacy_policy": {
+    "source_hash": "ba445cff3898a3f24f415f90fbef1c8169ea21949a40680c5e1c5975843d1b5e",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.consent_profiling": {
+    "source_hash": "f4e08fefef74dc824feb50edc480b6eb746be855416a3a53882ca29800e683f5",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.consent_marketing_email": {
+    "source_hash": "380959bbe21c7e1a01fb0b9b5a6eda228a95497bc44d4909ed2e7ad6fb5b949d",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.consent_marketing_whatsapp": {
+    "source_hash": "2d2aa1917b2b5d9adfe7926909d7bf03fecbad2cb01162c8126ef9a8aa239e5c",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.consent_privacy_policy_hint": {
+    "source_hash": "66a4adbb2854ec499dac6c1ad931a9fe2a7c612d5001ad678440abd5b8aba90c",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.consent_profiling_hint": {
+    "source_hash": "b66311577e7de2bf1b43d5ac49aae1d266f932d025a30e2e81ee39eb3ceffea0",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.consent_marketing_email_hint": {
+    "source_hash": "a906b453a3c92e997301a435b223a4adeae5cdf2745a6ad18a918906b51d5c23",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.consent_marketing_whatsapp_hint": {
+    "source_hash": "64fd779c5a9643d6a04009134392f23922e17a43cdbb9179adac3609eea33667",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.consent_status_granted": {
+    "source_hash": "c341f78cfffc98dc0b3f4abbb93a7b60ef878ea516b4a2c24467e7fe1f80a9d9",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.consent_status_withdrawn": {
+    "source_hash": "fe905d993f29f0d7f442b361fa5a64e0e675f7e4bb5f27bc38ce53133b570bf6",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.consent_required": {
+    "source_hash": "4850b174b713d88cfc63de107830d5388929020e78abc91fc19bba7a6821625f",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.consent_required_notice": {
+    "source_hash": "8b91caee352f32a1f4d871abfe36ca710628427223f7f7ab1d59d52f942d0013",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.address_line_1": {
+    "source_hash": "ee760b6e81b981e281c2da3d92275df98277feab4c98b7549fb0f40fb07d9ad9",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.address_line_2": {
+    "source_hash": "350b2b85c4af17248574a3d55d07aee1489588a78eea78cdaf6610dfdd0d153d",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.postal_code": {
+    "source_hash": "ae53cea8228bcfc350fef961189a32a592e06ccffa52a8b991f88841cbac8de4",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.city": {
+    "source_hash": "fc33f73246f48295702f404001e74d56f14d2f82689b2816422dc1a4c2ec4fb2",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.country_of_residence": {
+    "source_hash": "4e10e9c903124990bce95ade16fc48667de0879bbf542f98b3d8a5d1fd95b8e4",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.country_placeholder": {
+    "source_hash": "c28f2f096992c8789f637e9f931de6612eaef56a5f5a35bebe8b184dcf877817",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.state_region_optional": {
+    "source_hash": "9f284f6ca4252dcd128ac0a3e86d321efe4669a5bebb367ba3db707a4fb331b9",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.travel_document": {
+    "source_hash": "13524d4330fd801dfbc621e4520a8bdfa9796bcbd10462ee64eeacc6aa6da666",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.passport": {
+    "source_hash": "3173c1c8cfe02e326ce2f6de5471b2011f5ebb6324d5433503a7a9d66f35bb21",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.id_card": {
+    "source_hash": "a9b67b281d22cef04052f2a47222b9f562a141a17c84ae028e1bbf07d9d9545e",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.document_type_aria": {
+    "source_hash": "5c69221e2779869be85ac6f42b205e1a91c6437becc38a38b8ba95399ac18ee1",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.no_document_image_uploaded": {
+    "source_hash": "4bfc9bd364f5ce038cb34e25a25fd73461ca477164b31144a8af71b43c0c7cbb",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.upload_passport_image": {
+    "source_hash": "4e518f14232d1b28ca7b8078f38bc3e38efdef0bd39b0df399eb951bbf1c1461",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.upload_id_card_image": {
+    "source_hash": "3dbb13c5e36e95da826518f4aed4db7ae677f765ac5563ee9ce2d3db9ed85d79",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.document_number": {
+    "source_hash": "d7dd3314871dbf3a01013ee9c2f4c925a6ff3a6b5920e0f6c64cab6d97072935",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.holder_name": {
+    "source_hash": "1476afd9f3c87b5a3055fb4daa06da24f0fdd25a5cce12b91fcd7c808b9dd571",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.issuing_country": {
+    "source_hash": "b195b09894d5fb5c3985eb843d71205fccd464cef035c00da6cc3d813b1ac245",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.issuing_country_placeholder": {
+    "source_hash": "eb0f71a8763ca0e5cf3bf7d0e12ea505e6b0ff08f245ce82d65b9fdcffafc1fb",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.issued_on": {
+    "source_hash": "0167aecc6b5ec82d2ce3b5e4c6eb12bed1a522e40cfa29fb4f8723f4c01967a3",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.expires_on": {
+    "source_hash": "71712ec2f7ba4ba8cd78deb147ebfb7dc96ce8a0944890095047ae7d2161f9ef",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.no_expiration_date": {
+    "source_hash": "30fd634a388761beb47c1ffce69642b148a88e133ddb5e8054a7ffa89d6a8b3e",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.document_image": {
+    "source_hash": "40de52c175ddc42b95691f216dedd6360036b19c8a3b96ef7005c76e8e96f89a",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.document_image_preview": {
+    "source_hash": "6c06bd3c4f79548745c9f3c2228a5ca052cbbeb8d80ed3f152181584c46cc9fe",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.document_image_uploading": {
+    "source_hash": "de807679d33753fe3cf58b2ac1cfc1764153c714a30391ddb3ad71eae876dbe0",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.document_image_uploaded": {
+    "source_hash": "9ce697bd8cfa152a72575dd8662363d329ce50052aa690d3458ca3fb98d1ea7a",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.could_not_upload_document_image": {
+    "source_hash": "83be1327a1f54b2d90ee49851de357817133e0dc4b5b8874b4baca9e5dffa463",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.traveler_details_not_loaded": {
+    "source_hash": "e677a70008bb164e9568dcbf06d0b3b0b155cd1b46fe4ba8cbd7f20eeff46645",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.traveler_name_required": {
+    "source_hash": "a0052e63514f7265c3aafcb3544ddf3f65dbff2c400ae4dded48e4516b978106",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.traveler_date_of_birth_invalid": {
+    "source_hash": "907776ef502bfd17b52c89ce29869bcfccfa0857782dfb6f3428243f9b0151f3",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.traveler_document_issued_on_invalid": {
+    "source_hash": "3c64dfc2027cc414a3cab0fe786ef858e78933e87e52ae4aae076ea9e8364724",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.traveler_document_expires_on_invalid": {
+    "source_hash": "e3d97ee432b7c2e6ad7d5b839f45dca1eefa75daa5823d2edd59ed89953e610d",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.saving_traveler_details": {
+    "source_hash": "3a77fa0988c044a6c414b24e9833825e13c57fdda4a48c0825bb8f82d055de0f",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.traveler_details_saved": {
+    "source_hash": "198001962a141b539af1ec8b405b7ac61a1e98463e57ef8566c142a0064a79bc",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.traveler_details_save_failed": {
+    "source_hash": "8d9ffc5cda5ec15160ea63e821507c85d33e90aadefd8fdd301efa40dd713cff",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.traveler_details_invalid_link": {
+    "source_hash": "e138f67732b0ea50093c6e2be0d96beb0f42e978858420d23d89dc14cb4a62c4",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.traveler_details_expired": {
+    "source_hash": "e5cfe5043e7b6f5f5ddfec66546234d7ee3390bfb2699da40053139de697bb80",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
+  "traveler_details.traveler_details_load_failed": {
+    "source_hash": "ca4650e6979ac158e0e80ea5488eedfa19befffdc2982e99e7ff31740deae37c",
+    "origin": "machine",
+    "updated_at": "2026-04-06T08:55:44.713Z"
+  },
   "language.name.english": {
     "source_hash": "ba118bf7fc9c1aedc1edb28a0aa86e0b43b681f222af6616e13c43be87815b06",
     "origin": "legacy",

@@ -5,8 +5,10 @@ import {
 } from "../shared/api.js";
 import { GENERATED_LANGUAGE_CODES } from "../../Generated/Models/generated_Language.js";
 import {
+  FRONTEND_LANGUAGE_CODES,
   languageByApiValue,
-  languageByCode
+  languageByCode,
+  languageDirection
 } from "../../../shared/generated/language_catalog.js";
 import { COUNTRY_CODE_OPTIONS } from "../shared/generated_catalogs.js";
 
@@ -21,24 +23,22 @@ const BOOKING_PERSON_GENDER_OPTIONS = Object.freeze([
   "other",
   "prefer_not_to_say"
 ]);
-const TRAVELER_DETAILS_TRANSLATIONS = Object.freeze({
-  en: {
-    gender: "Gender",
-    gender_placeholder: "Select gender",
-    gender_male: "Male",
-    gender_female: "Female",
-    gender_other: "Other",
-    gender_prefer_not_to_say: "Prefer not to say"
-  },
-  vi: {
-    gender: "Giới tính",
-    gender_placeholder: "Chọn giới tính",
-    gender_male: "Nam",
-    gender_female: "Nữ",
-    gender_other: "Khác",
-    gender_prefer_not_to_say: "Không muốn tiết lộ"
-  }
-});
+const PERSON_CONSENT_TYPES = Object.freeze([
+  "privacy_policy",
+  "profiling",
+  "marketing_email",
+  "marketing_whatsapp"
+]);
+const REQUIRED_PERSON_CONSENT_TYPES = Object.freeze([
+  "privacy_policy",
+  "profiling"
+]);
+const PERSON_CONSENT_STATUSES = Object.freeze([
+  "granted",
+  "withdrawn"
+]);
+const FRONTEND_I18N_BASE_PATH = "/frontend/data/i18n/frontend";
+const DEFAULT_FRONTEND_LANGUAGE = "en";
 
 const state = {
   bookingId: normalizeText(query.get("booking_id")),
@@ -46,10 +46,13 @@ const state = {
   token: normalizeText(query.get("token")),
   access: null,
   traveler: null,
+  i18nLang: DEFAULT_FRONTEND_LANGUAGE,
+  dict: {},
   saving: false
 };
 
 const els = {
+  kicker: document.getElementById("traveler_details_kicker"),
   title: document.getElementById("traveler_details_title"),
   intro: document.getElementById("traveler_details_intro"),
   error: document.getElementById("traveler_details_error"),
@@ -59,22 +62,80 @@ const els = {
   list: document.getElementById("traveler_details_list"),
   actions: document.getElementById("traveler_details_actions"),
   saveBtn: document.getElementById("traveler_details_save_btn"),
-  status: document.getElementById("traveler_details_status")
+  status: document.getElementById("traveler_details_status"),
+  metaDescription: document.getElementById("traveler_details_meta_description")
 };
 
 function travelerDetailsLang() {
-  const normalized = normalizeText(
+  return normalizeTravelerDetailsFrontendLang(
     query.get("lang")
     || state.access?.customer_language
     || document.documentElement.lang
-    || "en"
-  ).toLowerCase();
-  return normalized === "vi" ? "vi" : "en";
+    || DEFAULT_FRONTEND_LANGUAGE
+  );
 }
 
-function travelerDetailsT(key, fallback) {
-  const catalog = TRAVELER_DETAILS_TRANSLATIONS[travelerDetailsLang()] || TRAVELER_DETAILS_TRANSLATIONS.en;
-  return catalog?.[key] || fallback;
+function normalizeTravelerDetailsFrontendLang(value) {
+  const normalized = normalizeText(value).toLowerCase();
+  return FRONTEND_LANGUAGE_CODES.includes(normalized) ? normalized : DEFAULT_FRONTEND_LANGUAGE;
+}
+
+async function loadTravelerDetailsDictionary(lang) {
+  const normalizedLang = normalizeTravelerDetailsFrontendLang(lang);
+  try {
+    const response = await fetch(`${FRONTEND_I18N_BASE_PATH}/${encodeURIComponent(normalizedLang)}.json`);
+    if (response.ok) {
+      const payload = await response.json();
+      if (payload && typeof payload === "object" && !Array.isArray(payload)) {
+        return payload;
+      }
+    }
+  } catch {
+    // Fall through to default language below.
+  }
+
+  if (normalizedLang !== DEFAULT_FRONTEND_LANGUAGE) {
+    try {
+      const response = await fetch(`${FRONTEND_I18N_BASE_PATH}/${DEFAULT_FRONTEND_LANGUAGE}.json`);
+      if (response.ok) {
+        const payload = await response.json();
+        if (payload && typeof payload === "object" && !Array.isArray(payload)) {
+          return payload;
+        }
+      }
+    } catch {
+      // Ignore and return empty dictionary below.
+    }
+  }
+
+  return {};
+}
+
+async function ensureTravelerDetailsLanguage(lang) {
+  const normalizedLang = normalizeTravelerDetailsFrontendLang(lang);
+  if (state.i18nLang === normalizedLang && state.dict && Object.keys(state.dict).length) {
+    applyTravelerDetailsLanguagePresentation(normalizedLang);
+    return normalizedLang;
+  }
+  state.dict = await loadTravelerDetailsDictionary(normalizedLang);
+  state.i18nLang = normalizedLang;
+  applyTravelerDetailsLanguagePresentation(normalizedLang);
+  return normalizedLang;
+}
+
+function applyTravelerDetailsLanguagePresentation(lang) {
+  const normalizedLang = normalizeTravelerDetailsFrontendLang(lang);
+  const direction = languageDirection(normalizedLang, "ltr");
+  document.documentElement.lang = normalizedLang;
+  document.documentElement.dir = direction;
+  document.documentElement.dataset.languageDirection = direction;
+  document.documentElement.dataset.languageCode = normalizedLang;
+  document.body?.classList.toggle("frontend-language-rtl", direction === "rtl");
+}
+
+function travelerDetailsT(key, fallback, replacements = {}) {
+  const template = state.dict?.[`traveler_details.${key}`] || fallback;
+  return String(template || "").replace(/\{(\w+)\}/g, (_, token) => String(replacements?.[token] ?? ""));
 }
 
 function normalizeTravelerLanguageCode(value) {
@@ -95,7 +156,7 @@ function formatTravelerLanguageLabel(value) {
 function renderTravelerLanguageOptions(currentValue = "") {
   const current = normalizeTravelerLanguageCode(currentValue);
   return [
-    `<option value="">Select language</option>`,
+    `<option value="">${escapeHtml(travelerDetailsT("preferred_language_placeholder", "Select language"))}</option>`,
     ...GENERATED_LANGUAGE_CODES.map((language) => (
       `<option value="${escapeHtml(language)}"${language === current ? " selected" : ""}>${escapeHtml(formatTravelerLanguageLabel(language))}</option>`
     ))
@@ -139,6 +200,129 @@ function renderTravelerGenderOptions(currentValue = "") {
       `<option value="${escapeHtml(gender)}"${gender === current ? " selected" : ""}>${escapeHtml(formatTravelerGenderLabel(gender))}</option>`
     ))
   ].join("");
+}
+
+function normalizeTravelerConsentType(value) {
+  const normalized = normalizeText(value).toLowerCase();
+  return PERSON_CONSENT_TYPES.includes(normalized) ? normalized : "";
+}
+
+function normalizeTravelerConsentStatus(value) {
+  const normalized = normalizeText(value).toLowerCase();
+  return PERSON_CONSENT_STATUSES.includes(normalized) ? normalized : "granted";
+}
+
+function formatTravelerConsentLabel(value) {
+  const normalized = normalizeTravelerConsentType(value);
+  if (normalized === "privacy_policy") return travelerDetailsT("consent_privacy_policy", "Privacy policy");
+  if (normalized === "profiling") return travelerDetailsT("consent_profiling", "Personalization");
+  if (normalized === "marketing_email") return travelerDetailsT("consent_marketing_email", "Marketing email");
+  if (normalized === "marketing_whatsapp") return travelerDetailsT("consent_marketing_whatsapp", "Marketing WhatsApp");
+  return "";
+}
+
+function formatTravelerConsentHint(value) {
+  const normalized = normalizeTravelerConsentType(value);
+  if (normalized === "privacy_policy") return travelerDetailsT("consent_privacy_policy_hint", "Agreement to store and use traveler data for trip operations.");
+  if (normalized === "profiling") return travelerDetailsT("consent_profiling_hint", "Permission to personalize offers based on traveler preferences.");
+  if (normalized === "marketing_email") return travelerDetailsT("consent_marketing_email_hint", "Permission to send future offers and updates by email.");
+  if (normalized === "marketing_whatsapp") return travelerDetailsT("consent_marketing_whatsapp_hint", "Permission to send future offers and updates via WhatsApp.");
+  return "";
+}
+
+function formatTravelerConsentStatusLabel(value) {
+  const normalized = normalizeTravelerConsentStatus(value);
+  if (normalized === "withdrawn") return travelerDetailsT("consent_status_withdrawn", "Consent not given");
+  return travelerDetailsT("consent_status_granted", "Consent given");
+}
+
+function isRequiredTravelerConsentType(value) {
+  return REQUIRED_PERSON_CONSENT_TYPES.includes(normalizeTravelerConsentType(value));
+}
+
+function requiredTravelerConsentsAccepted(traveler) {
+  return REQUIRED_PERSON_CONSENT_TYPES.every((consentType) => (
+    getTravelerConsentStatus(traveler, consentType) === "granted"
+  ));
+}
+
+function normalizeTravelerConsentRecord(consent, personId, fallbackType = "", index = 0) {
+  if (!consent || typeof consent !== "object" || Array.isArray(consent)) return null;
+  const consentType = normalizeTravelerConsentType(consent.consent_type || fallbackType);
+  if (!consentType) return null;
+  const timestamp = new Date().toISOString();
+  return {
+    id: normalizeText(consent.id) || `${normalizeText(personId) || "traveler"}_${consentType}_consent_${index + 1}`,
+    consent_type: consentType,
+    status: normalizeTravelerConsentStatus(consent.status),
+    captured_via: normalizeText(consent.captured_via),
+    captured_at: normalizeText(consent.captured_at) || timestamp,
+    evidence_ref: normalizeText(consent.evidence_ref),
+    updated_at: normalizeText(consent.updated_at) || normalizeText(consent.captured_at) || timestamp
+  };
+}
+
+function normalizeTravelerConsentDrafts(consents, personId = "") {
+  const normalizedConsents = (Array.isArray(consents) ? consents : [])
+    .map((consent, index) => normalizeTravelerConsentRecord(consent, personId, consent?.consent_type, index))
+    .filter(Boolean)
+    .sort((left, right) => PERSON_CONSENT_TYPES.indexOf(left.consent_type) - PERSON_CONSENT_TYPES.indexOf(right.consent_type));
+  const byType = new Map(normalizedConsents.map((consent) => [consent.consent_type, consent]));
+  return PERSON_CONSENT_TYPES.map((consentType, index) => (
+    byType.get(consentType) || normalizeTravelerConsentRecord({
+      consent_type: consentType,
+      status: "granted",
+      captured_via: "traveler_details_portal_default"
+    }, personId, consentType, index)
+  )).filter(Boolean);
+}
+
+function getTravelerConsent(traveler, consentType) {
+  const normalizedType = normalizeTravelerConsentType(consentType);
+  if (!normalizedType) return null;
+  return (Array.isArray(traveler?.consents) ? traveler.consents : []).find(
+    (consent) => normalizeTravelerConsentType(consent?.consent_type) === normalizedType
+  ) || null;
+}
+
+function getTravelerConsentStatus(traveler, consentType) {
+  return normalizeTravelerConsentStatus(getTravelerConsent(traveler, consentType)?.status);
+}
+
+function setTravelerConsentStatus(traveler, consentType, status, capturedVia = "traveler_details_portal") {
+  if (!traveler || typeof traveler !== "object") return;
+  const normalizedType = normalizeTravelerConsentType(consentType);
+  const normalizedStatus = normalizeTravelerConsentStatus(status);
+  if (!normalizedType) return;
+  traveler.consents = normalizeTravelerConsentDrafts(traveler.consents, traveler.id);
+  const consentIndex = traveler.consents.findIndex((consent) => normalizeTravelerConsentType(consent?.consent_type) === normalizedType);
+  if (normalizedStatus === "unknown" && consentIndex < 0) {
+    return;
+  }
+  const timestamp = new Date().toISOString();
+  const existing = consentIndex >= 0 ? traveler.consents[consentIndex] : null;
+  const nextRecord = normalizeTravelerConsentRecord({
+    ...existing,
+    consent_type: normalizedType,
+    status: normalizedStatus,
+    captured_via: capturedVia,
+    captured_at: normalizeText(existing?.captured_at) || timestamp,
+    updated_at: timestamp
+  }, traveler.id, normalizedType, consentIndex >= 0 ? consentIndex : traveler.consents.length);
+  if (!nextRecord) return;
+  if (consentIndex >= 0) {
+    traveler.consents[consentIndex] = nextRecord;
+  } else {
+    traveler.consents.push(nextRecord);
+  }
+  traveler.consents = normalizeTravelerConsentDrafts(traveler.consents, traveler.id);
+}
+
+function renderTravelerConsentStatusOptions(currentValue = "") {
+  const current = normalizeTravelerConsentStatus(currentValue);
+  return PERSON_CONSENT_STATUSES.map((status) => (
+    `<option value="${escapeHtml(status)}"${status === current ? " selected" : ""}>${escapeHtml(formatTravelerConsentStatusLabel(status))}</option>`
+  )).join("");
 }
 
 function parseDateOnly(value) {
@@ -246,6 +430,7 @@ function createTravelerDraft(traveler = {}) {
       postal_code: normalizeText(traveler.address?.postal_code),
       country_code: normalizeText(traveler.address?.country_code).toUpperCase()
     },
+    consents: normalizeTravelerConsentDrafts(traveler.consents, normalizeText(traveler.id) || state.personId || "traveler"),
     documents: {
       passport: normalizeDocumentDraft(
         (Array.isArray(traveler.documents) ? traveler.documents : []).find((document) => normalizeText(document?.document_type) === "passport"),
@@ -331,6 +516,7 @@ function buildTravelerPayload(traveler) {
         country_code: normalizeText(traveler.address?.country_code).toUpperCase()
       }
     } : {}),
+    consents: normalizeTravelerConsentDrafts(traveler.consents, traveler.id),
     documents: hasDocument
       ? [{
           ...document,
@@ -356,7 +542,29 @@ async function fileToBase64(file) {
 }
 
 function documentTypeLabel(documentType = "passport") {
-  return documentType === "national_id" ? "ID card" : "Passport";
+  return documentType === "national_id"
+    ? travelerDetailsT("id_card", "ID card")
+    : travelerDetailsT("passport", "Passport");
+}
+
+function applyTravelerDetailsChromeCopy() {
+  const defaultTitle = travelerDetailsT("page_title_default", "Traveler Details");
+  if (els.kicker) els.kicker.textContent = travelerDetailsT("kicker", "Traveler details");
+  if (els.title && !state.access) els.title.textContent = travelerDetailsT("title_default", "Tell us about your travelers");
+  if (els.intro) {
+    els.intro.textContent = travelerDetailsT(
+      "intro",
+      "This information helps us prepare your journey smoothly. If you prefer, you can also provide it later, at the beginning of your trip. The link to this page expires in 24 hours to protect your privacy."
+    );
+  }
+  if (els.loading) els.loading.textContent = travelerDetailsT("loading", "Loading traveler details...");
+  if (els.saveBtn) els.saveBtn.textContent = travelerDetailsT("submit", "Send traveler details to Asia Travel Plan");
+  if (els.metaDescription instanceof HTMLMetaElement) {
+    els.metaDescription.content = travelerDetailsT("page_meta_description", "Fill in your traveler details for AsiaTravelPlan.");
+  }
+  if (!state.access) {
+    document.title = `${defaultTitle} | AsiaTravelPlan`;
+  }
 }
 
 function travelerCardMarkup(traveler) {
@@ -365,39 +573,43 @@ function travelerCardMarkup(traveler) {
   const documentType = normalizeSelectedDocumentType(traveler, traveler.selected_document_type);
   const documentLabel = documentTypeLabel(documentType);
   const supportsNoExpirationDate = documentType === "national_id";
-  const documentSectionLabel = supportsNationalId ? "Travel document" : "Passport";
-  const uploadLabel = documentType === "national_id" ? "Upload ID card image" : "Upload passport image";
+  const documentSectionLabel = supportsNationalId
+    ? travelerDetailsT("travel_document", "Travel document")
+    : travelerDetailsT("passport", "Passport");
+  const uploadLabel = documentType === "national_id"
+    ? travelerDetailsT("upload_id_card_image", "Upload ID card image")
+    : travelerDetailsT("upload_passport_image", "Upload passport image");
   const imagePreviewMarkup = document.document_picture_ref
-    ? `<img src="${escapeHtml(document.document_picture_ref)}" alt="${escapeHtml(`${documentLabel} image preview`)}" />`
-    : `<span class="micro traveler-details-document__picture-empty">No document image uploaded.</span>`;
+    ? `<img src="${escapeHtml(document.document_picture_ref)}" alt="${escapeHtml(travelerDetailsT("document_image_preview", "{label} image preview", { label: documentLabel }))}" />`
+    : `<span class="micro traveler-details-document__picture-empty">${escapeHtml(travelerDetailsT("no_document_image_uploaded", "No document image uploaded."))}</span>`;
   return `
     <div class="traveler-details-card__grid">
       <div class="field">
-        <label for="traveler_name">Full name</label>
+        <label for="traveler_name">${escapeHtml(travelerDetailsT("full_name", "Full name"))}</label>
         <input id="traveler_name" data-field="name" type="text" value="${escapeHtml(traveler.name)}" autocomplete="name" />
       </div>
       <div class="field">
-        <label for="traveler_date_of_birth">Date of birth</label>
+        <label for="traveler_date_of_birth">${escapeHtml(travelerDetailsT("date_of_birth", "Date of birth"))}</label>
         <input id="traveler_date_of_birth" data-field="date_of_birth" type="date" value="${escapeHtml(traveler.date_of_birth)}" />
       </div>
       <div class="field">
-        <label for="traveler_email">Email</label>
+        <label for="traveler_email">${escapeHtml(travelerDetailsT("email", "Email"))}</label>
         <input id="traveler_email" data-field="email" type="email" value="${escapeHtml(traveler.email)}" autocomplete="email" />
       </div>
       <div class="field">
-        <label for="traveler_phone">Phone number</label>
+        <label for="traveler_phone">${escapeHtml(travelerDetailsT("phone_number", "Phone number"))}</label>
         <input id="traveler_phone" data-field="phone" type="tel" value="${escapeHtml(traveler.phone)}" autocomplete="tel" />
       </div>
       <div class="field">
-        <label for="traveler_preferred_language">Preferred language</label>
+        <label for="traveler_preferred_language">${escapeHtml(travelerDetailsT("preferred_language", "Preferred language"))}</label>
         <select id="traveler_preferred_language" data-field="preferred_language">
           ${renderTravelerLanguageOptions(traveler.preferred_language)}
         </select>
       </div>
       <div class="field">
-        <label for="traveler_nationality">Nationality</label>
+        <label for="traveler_nationality">${escapeHtml(travelerDetailsT("nationality", "Nationality"))}</label>
         <select id="traveler_nationality" data-field="nationality">
-          ${renderCountryOptions(traveler.nationality, "Select nationality")}
+          ${renderCountryOptions(traveler.nationality, travelerDetailsT("nationality_placeholder", "Select nationality"))}
         </select>
       </div>
       <div class="field">
@@ -407,57 +619,82 @@ function travelerCardMarkup(traveler) {
         </select>
       </div>
       <div class="field">
-        <label for="traveler_food_preferences">Food preferences</label>
-        <input id="traveler_food_preferences" data-field="food_preferences" type="text" value="${escapeHtml(traveler.food_preferences.join(", "))}" placeholder="Vegetarian, vegan, halal..." />
+        <label for="traveler_food_preferences">${escapeHtml(travelerDetailsT("food_preferences", "Food preferences"))}</label>
+        <input id="traveler_food_preferences" data-field="food_preferences" type="text" value="${escapeHtml(traveler.food_preferences.join(", "))}" placeholder="${escapeHtml(travelerDetailsT("food_preferences_placeholder", "Vegetarian, vegan, halal..."))}" />
       </div>
       <div class="field">
-        <label for="traveler_allergies">Allergies</label>
-        <input id="traveler_allergies" data-field="allergies" type="text" value="${escapeHtml(traveler.allergies.join(", "))}" placeholder="Peanuts, shellfish..." />
+        <label for="traveler_allergies">${escapeHtml(travelerDetailsT("allergies", "Allergies"))}</label>
+        <input id="traveler_allergies" data-field="allergies" type="text" value="${escapeHtml(traveler.allergies.join(", "))}" placeholder="${escapeHtml(travelerDetailsT("allergies_placeholder", "Peanuts, shellfish..."))}" />
       </div>
       <div class="field">
-        <label for="traveler_hotel_room_smoker">Hotel room smoking preference</label>
+        <label for="traveler_hotel_room_smoker">${escapeHtml(travelerDetailsT("hotel_room_smoking_preference", "Hotel room smoking preference"))}</label>
         <select id="traveler_hotel_room_smoker" data-field="hotel_room_smoker">
-          <option value="false"${traveler.hotel_room_smoker === true ? "" : " selected"}>Non-smoker</option>
-          <option value="true"${traveler.hotel_room_smoker === true ? " selected" : ""}>Smoker</option>
+          <option value="false"${traveler.hotel_room_smoker === true ? "" : " selected"}>${escapeHtml(travelerDetailsT("non_smoker", "Non-smoker"))}</option>
+          <option value="true"${traveler.hotel_room_smoker === true ? " selected" : ""}>${escapeHtml(travelerDetailsT("smoker", "Smoker"))}</option>
         </select>
       </div>
       <div class="field">
-        <label for="traveler_hotel_room_preference">Hotel room preference</label>
+        <label for="traveler_hotel_room_preference">${escapeHtml(travelerDetailsT("hotel_room_preference", "Hotel room preference"))}</label>
         <select id="traveler_hotel_room_preference" data-field="hotel_room_sharing_ok">
-          <option value="true"${traveler.hotel_room_sharing_ok !== false ? " selected" : ""}>Sharing room ok</option>
-          <option value="false"${traveler.hotel_room_sharing_ok === false ? " selected" : ""}>Single room</option>
+          <option value="true"${traveler.hotel_room_sharing_ok !== false ? " selected" : ""}>${escapeHtml(travelerDetailsT("sharing_room_ok", "Sharing room ok"))}</option>
+          <option value="false"${traveler.hotel_room_sharing_ok === false ? " selected" : ""}>${escapeHtml(travelerDetailsT("single_room", "Single room"))}</option>
         </select>
       </div>
     </div>
+
+    <div class="traveler-details-document__head">
+      <h3 class="traveler-details-document__title">${escapeHtml(travelerDetailsT("consents", "Consents"))}</h3>
+    </div>
+    <div class="traveler-details-consent-list">
+      ${PERSON_CONSENT_TYPES.map((consentType) => `
+        <div class="traveler-details-consent-row">
+          <div class="traveler-details-consent-row__copy">
+            <span class="traveler-details-consent-row__label-line">
+              <strong>${escapeHtml(formatTravelerConsentLabel(consentType))}</strong>
+              ${isRequiredTravelerConsentType(consentType)
+    ? `<span class="traveler-details-consent-row__required">${escapeHtml(travelerDetailsT("consent_required", "Required"))}</span>`
+    : ""}
+            </span>
+            <span class="micro traveler-details-consent-row__hint">${escapeHtml(formatTravelerConsentHint(consentType))}</span>
+          </div>
+          <div class="field">
+            <select data-consent-type="${escapeHtml(consentType)}">
+              ${renderTravelerConsentStatusOptions(getTravelerConsentStatus(traveler, consentType))}
+            </select>
+          </div>
+        </div>
+      `).join("")}
+    </div>
+    <p class="micro traveler-details-consent-list__notice">${escapeHtml(travelerDetailsT("consent_required_notice", "Privacy policy and Personalization are required to continue."))}</p>
 
     <div class="traveler-details-document__head">
       <h3 class="traveler-details-document__title" aria-hidden="true"></h3>
     </div>
     <div class="traveler-details-card__grid traveler-details-card__grid--document traveler-details-card__grid--address">
       <div class="field traveler-details-card__field--full">
-        <label for="traveler_address_line_1">Address line 1</label>
+        <label for="traveler_address_line_1">${escapeHtml(travelerDetailsT("address_line_1", "Address line 1"))}</label>
         <input id="traveler_address_line_1" data-address-field="line_1" type="text" value="${escapeHtml(traveler.address.line_1)}" autocomplete="address-line1" />
       </div>
       <div class="field traveler-details-card__field--full">
-        <label for="traveler_address_line_2">Address line 2</label>
+        <label for="traveler_address_line_2">${escapeHtml(travelerDetailsT("address_line_2", "Address line 2"))}</label>
         <input id="traveler_address_line_2" data-address-field="line_2" type="text" value="${escapeHtml(traveler.address.line_2)}" autocomplete="address-line2" />
       </div>
       <div class="field traveler-details-card__field--narrow">
-        <label for="traveler_postal_code">Postal code</label>
+        <label for="traveler_postal_code">${escapeHtml(travelerDetailsT("postal_code", "Postal code"))}</label>
         <input id="traveler_postal_code" data-address-field="postal_code" type="text" value="${escapeHtml(traveler.address.postal_code)}" autocomplete="postal-code" />
       </div>
       <div class="field traveler-details-card__field--wide">
-        <label for="traveler_city">City</label>
+        <label for="traveler_city">${escapeHtml(travelerDetailsT("city", "City"))}</label>
         <input id="traveler_city" data-address-field="city" type="text" value="${escapeHtml(traveler.address.city)}" autocomplete="address-level2" />
       </div>
       <div class="field traveler-details-card__field--narrow">
-        <label for="traveler_country_code">Country of residence</label>
+        <label for="traveler_country_code">${escapeHtml(travelerDetailsT("country_of_residence", "Country of residence"))}</label>
         <select id="traveler_country_code" data-address-field="country_code">
-          ${renderCountryOptions(traveler.address.country_code, "Select country")}
+          ${renderCountryOptions(traveler.address.country_code, travelerDetailsT("country_placeholder", "Select country"))}
         </select>
       </div>
       <div class="field traveler-details-card__field--wide">
-        <label for="traveler_state_region">State / region (optional)</label>
+        <label for="traveler_state_region">${escapeHtml(travelerDetailsT("state_region_optional", "State / region (optional)"))}</label>
         <input id="traveler_state_region" data-address-field="state_region" type="text" value="${escapeHtml(traveler.address.state_region)}" autocomplete="address-level1" />
       </div>
     </div>
@@ -470,62 +707,62 @@ function travelerCardMarkup(traveler) {
       <div class="traveler-details-card__grid traveler-details-card__grid--document">
         <div class="field traveler-details-card__field--full">
           <label>${escapeHtml(documentSectionLabel)}</label>
-          <div class="booking-person-modal__document-switch traveler-details-document__switch" role="tablist" aria-label="${escapeHtml(documentSectionLabel)} type">
+          <div class="booking-person-modal__document-switch traveler-details-document__switch" role="tablist" aria-label="${escapeHtml(travelerDetailsT("document_type_aria", "{label} type", { label: documentSectionLabel }))}">
             <button
               class="booking-person-modal__document-switch-btn${documentType === "passport" ? " is-active" : ""}"
               type="button"
               data-document-switch="passport"
               aria-selected="${documentType === "passport" ? "true" : "false"}"
-            >Passport</button>
+            >${escapeHtml(travelerDetailsT("passport", "Passport"))}</button>
             <button
               class="booking-person-modal__document-switch-btn${documentType === "national_id" ? " is-active" : ""}"
               type="button"
               data-document-switch="national_id"
               aria-selected="${documentType === "national_id" ? "true" : "false"}"
-            >ID card</button>
+            >${escapeHtml(travelerDetailsT("id_card", "ID card"))}</button>
           </div>
         </div>
       </div>
       ` : ""}
       <div class="traveler-details-card__grid traveler-details-card__grid--document traveler-details-card__grid--document-two-up">
         <div class="field">
-          <label for="traveler_document_number">${escapeHtml(documentLabel)} number</label>
+          <label for="traveler_document_number">${escapeHtml(travelerDetailsT("document_number", "{label} number", { label: documentLabel }))}</label>
           <input id="traveler_document_number" data-document-field="document_number" type="text" value="${escapeHtml(document.document_number)}" />
         </div>
         <div class="field">
-          <label for="traveler_document_holder_name">Holder name</label>
+          <label for="traveler_document_holder_name">${escapeHtml(travelerDetailsT("holder_name", "Holder name"))}</label>
           <input id="traveler_document_holder_name" data-document-field="holder_name" type="text" value="${escapeHtml(document.holder_name)}" />
         </div>
       </div>
       <div class="traveler-details-card__grid traveler-details-card__grid--document traveler-details-card__grid--document-fields">
         <div class="field">
-          <label for="traveler_issuing_country">Issuing country</label>
+          <label for="traveler_issuing_country">${escapeHtml(travelerDetailsT("issuing_country", "Issuing country"))}</label>
           <select id="traveler_issuing_country" data-document-field="issuing_country">
-            ${renderCountryOptions(document.issuing_country, "Select issuing country")}
+            ${renderCountryOptions(document.issuing_country, travelerDetailsT("issuing_country_placeholder", "Select issuing country"))}
           </select>
         </div>
         <div class="field">
-          <label for="traveler_issued_on">Issued on</label>
+          <label for="traveler_issued_on">${escapeHtml(travelerDetailsT("issued_on", "Issued on"))}</label>
           <input id="traveler_issued_on" data-document-field="issued_on" type="date" value="${escapeHtml(document.issued_on)}" />
         </div>
         <div class="field">
-          <label for="traveler_expires_on">Expires on</label>
+          <label for="traveler_expires_on">${escapeHtml(travelerDetailsT("expires_on", "Expires on"))}</label>
           <input id="traveler_expires_on" data-document-field="expires_on" type="date" value="${escapeHtml(document.expires_on)}"${supportsNoExpirationDate && document.no_expiration_date ? " disabled" : ""} />
           <div class="traveler-details-document__checkbox-wrap">
           ${supportsNoExpirationDate ? `
             <label class="traveler-details-document__checkbox">
               <input type="checkbox" data-document-field="no_expiration_date"${document.no_expiration_date ? " checked" : ""} />
-              No expiration date
+              ${escapeHtml(travelerDetailsT("no_expiration_date", "No expiration date"))}
             </label>
           ` : `
-            <span class="traveler-details-document__checkbox traveler-details-document__checkbox--placeholder" aria-hidden="true">No expiration date</span>
+            <span class="traveler-details-document__checkbox traveler-details-document__checkbox--placeholder" aria-hidden="true">${escapeHtml(travelerDetailsT("no_expiration_date", "No expiration date"))}</span>
           `}
           </div>
         </div>
       </div>
       <div class="traveler-details-card__grid traveler-details-card__grid--document">
         <div class="field traveler-details-document__picture-field traveler-details-card__field--full">
-          <label for="traveler_document_picture_input">${escapeHtml(`${documentLabel} image`)}</label>
+          <label for="traveler_document_picture_input">${escapeHtml(travelerDetailsT("document_image", "{label} image", { label: documentLabel }))}</label>
           <button class="btn btn-secondary" id="traveler_document_picture_upload_btn" type="button" data-document-picture-upload="${escapeHtml(documentType)}">${escapeHtml(uploadLabel)}</button>
           <input id="traveler_document_picture_input" type="file" accept="image/*" hidden />
           <div class="traveler-details-document__picture-preview">
@@ -546,20 +783,26 @@ function render() {
   const access = state.access;
   const bookingName = normalizeText(access?.booking_name);
   const travelerNumber = Number(access?.traveler_number);
+  applyTravelerDetailsLanguagePresentation(state.i18nLang || travelerDetailsLang());
+  applyTravelerDetailsChromeCopy();
   if (bookingName && Number.isInteger(travelerNumber) && travelerNumber >= 1) {
-    const heading = `Traveler ${travelerNumber}: ${bookingName}`;
+    const heading = travelerDetailsT("title_with_number", "Traveler {number}: {booking}", {
+      number: travelerNumber,
+      booking: bookingName
+    });
     els.title.textContent = heading;
     document.title = `${heading} | AsiaTravelPlan`;
   } else if (bookingName) {
     els.title.textContent = bookingName;
     document.title = `${bookingName} | AsiaTravelPlan`;
   }
-  if (access?.customer_language) {
-    document.documentElement.lang = normalizeText(query.get("lang") || access.customer_language || "en").toLowerCase() || "en";
-  }
   els.loading.hidden = Boolean(access);
   els.content.hidden = !access;
-  els.saveBtn.disabled = state.saving;
+  const canSubmit = requiredTravelerConsentsAccepted(state.traveler);
+  els.saveBtn.disabled = state.saving || !canSubmit;
+  els.saveBtn.title = !canSubmit
+    ? travelerDetailsT("consent_required_notice", "Privacy policy and Personalization are required to continue.")
+    : "";
   renderTravelerCard();
 }
 
@@ -598,6 +841,14 @@ function handleTravelerFormInput(event) {
     state.traveler.address[field] = field === "country_code"
       ? normalizeText(target.value).toUpperCase()
       : normalizeText(target.value);
+    return;
+  }
+
+  if (target.hasAttribute("data-consent-type")) {
+    setTravelerConsentStatus(state.traveler, target.dataset.consentType, target.value);
+    if (target instanceof HTMLSelectElement) {
+      target.value = getTravelerConsentStatus(state.traveler, target.dataset.consentType);
+    }
     return;
   }
 
@@ -660,19 +911,22 @@ function handleTravelerFormClick(event) {
 
 function validateTravelerDraft() {
   const traveler = state.traveler;
-  if (!traveler) return "Traveler details could not be loaded.";
+  if (!traveler) return travelerDetailsT("traveler_details_not_loaded", "Traveler details could not be loaded.");
   if (!normalizeText(traveler.name)) {
-    return "Traveler needs a full name.";
+    return travelerDetailsT("traveler_name_required", "Traveler needs a full name.");
+  }
+  if (!requiredTravelerConsentsAccepted(traveler)) {
+    return travelerDetailsT("consent_required_notice", "Privacy policy and Personalization are required to continue.");
   }
   if (normalizeText(traveler.date_of_birth) && !parseDateOnly(traveler.date_of_birth)) {
-    return "Traveler date of birth must use YYYY-MM-DD.";
+    return travelerDetailsT("traveler_date_of_birth_invalid", "Traveler date of birth must use YYYY-MM-DD.");
   }
   const document = activeDocumentForDraft(traveler);
   if (normalizeText(document.issued_on) && !parseDateOnly(document.issued_on)) {
-    return "Traveler travel document issue date must use YYYY-MM-DD.";
+    return travelerDetailsT("traveler_document_issued_on_invalid", "Traveler travel document issue date must use YYYY-MM-DD.");
   }
   if (!document.no_expiration_date && normalizeText(document.expires_on) && !parseDateOnly(document.expires_on)) {
-    return "Traveler travel document expiry date must use YYYY-MM-DD.";
+    return travelerDetailsT("traveler_document_expires_on_invalid", "Traveler travel document expiry date must use YYYY-MM-DD.");
   }
   return "";
 }
@@ -683,7 +937,9 @@ async function uploadActiveDocumentPicture(input) {
   if (!file) return;
 
   const documentType = normalizeSelectedDocumentType(state.traveler, state.traveler.selected_document_type);
-  setStatus(`Uploading ${documentTypeLabel(documentType).toLowerCase()} image...`);
+  setStatus(travelerDetailsT("document_image_uploading", "Uploading {label} image...", {
+    label: documentTypeLabel(documentType)
+  }));
   try {
     const result = await requestJson(`/documents/${encodeURIComponent(documentType)}/picture`, {
       method: "POST",
@@ -693,16 +949,18 @@ async function uploadActiveDocumentPicture(input) {
       }
     });
     if (!result.ok || !result.payload) {
-      const message = normalizeText(result.payload?.error) || "Could not upload the document image.";
+      const message = normalizeText(result.payload?.error) || travelerDetailsT("could_not_upload_document_image", "Could not upload the document image.");
       setStatus(message, "error");
       return;
     }
     state.access = result.payload;
     state.traveler = createTravelerDraft(result.payload.person);
     render();
-    setStatus(`${documentTypeLabel(documentType)} image uploaded.`, "success");
+    setStatus(travelerDetailsT("document_image_uploaded", "{label} image uploaded.", {
+      label: documentTypeLabel(documentType)
+    }), "success");
   } catch {
-    setStatus("Could not upload the document image.", "error");
+    setStatus(travelerDetailsT("could_not_upload_document_image", "Could not upload the document image."), "error");
   } finally {
     input.value = "";
   }
@@ -717,7 +975,7 @@ async function saveTravelerDetails() {
 
   state.saving = true;
   render();
-  setStatus("Saving traveler details...");
+  setStatus(travelerDetailsT("saving_traveler_details", "Saving traveler details..."));
   try {
     const result = await requestJson("/traveler-details", {
       method: "PATCH",
@@ -727,16 +985,19 @@ async function saveTravelerDetails() {
     });
     if (!result.ok || !result.payload) {
       const message = normalizeText(result.payload?.error)
-        || (result.status === 410 ? "This traveler details link has expired." : "Could not save traveler details.");
+        || (result.status === 410
+          ? travelerDetailsT("traveler_details_expired", "This traveler details link has expired.")
+          : travelerDetailsT("traveler_details_save_failed", "Could not save traveler details."));
       setStatus(message, "error");
       return;
     }
     state.access = result.payload;
+    await ensureTravelerDetailsLanguage(travelerDetailsLang());
     state.traveler = createTravelerDraft(result.payload.person);
-    setStatus("Your details have been transmitted to AsiaTravePlan.", "success");
+    setStatus(travelerDetailsT("traveler_details_saved", "Your details have been transmitted to Asia Travel Plan."), "success");
     render();
   } catch {
-    setStatus("Could not save traveler details.", "error");
+    setStatus(travelerDetailsT("traveler_details_save_failed", "Could not save traveler details."), "error");
   } finally {
     state.saving = false;
     render();
@@ -745,17 +1006,20 @@ async function saveTravelerDetails() {
 
 async function loadTravelerDetails() {
   if (!state.bookingId || !state.personId || !state.token) {
-    setError("This traveler details link is invalid.");
+    setError(travelerDetailsT("traveler_details_invalid_link", "This traveler details link is invalid."));
     return;
   }
   const result = await requestJson("/traveler-details/access");
   if (!result.ok || !result.payload) {
     const message = normalizeText(result.payload?.error)
-      || (result.status === 410 ? "This traveler details link has expired." : "Could not load traveler details.");
+      || (result.status === 410
+        ? travelerDetailsT("traveler_details_expired", "This traveler details link has expired.")
+        : travelerDetailsT("traveler_details_load_failed", "Could not load traveler details."));
     setError(message);
     return;
   }
   state.access = result.payload;
+  await ensureTravelerDetailsLanguage(travelerDetailsLang());
   state.traveler = createTravelerDraft(result.payload.person);
   setStatus("");
   render();
@@ -775,4 +1039,10 @@ els.form?.addEventListener("submit", (event) => {
   void saveTravelerDetails();
 });
 
-void loadTravelerDetails();
+async function initTravelerDetailsPage() {
+  await ensureTravelerDetailsLanguage(travelerDetailsLang());
+  applyTravelerDetailsChromeCopy();
+  await loadTravelerDetails();
+}
+
+void initTravelerDetailsPage();
