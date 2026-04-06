@@ -57,9 +57,7 @@ test("travel plan translation status counts customer-facing fields only", () => 
             location: "Noi Bai Airport",
             location_i18n: { en: "Noi Bai Airport" },
             details: "Meet your driver and transfer to the hotel.",
-            details_i18n: { en: "Meet your driver and transfer to the hotel." },
-            financial_note: "internal only",
-            financial_note_i18n: { en: "internal only" }
+            details_i18n: { en: "Meet your driver and transfer to the hotel." }
           }
         ]
       }

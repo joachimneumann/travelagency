@@ -13,7 +13,6 @@ import {
   bookingSourceLanguageLabel,
   bookingT
 } from "./i18n.js";
-import { formatMoneyDisplay } from "./pricing.js";
 import { renderBookingSectionHeader } from "./sections.js";
 import {
   mergeDualLocalizedPayload,
@@ -22,18 +21,14 @@ import {
   resolveLocalizedEditorBranchText
 } from "./localized_editor.js";
 import {
-  TRAVEL_PLAN_OFFER_COVERAGE_TYPE_OPTIONS,
   TRAVEL_PLAN_SERVICE_KIND_OPTIONS
 } from "../shared/generated_catalogs.js";
 import {
   countTravelPlanServices,
   createEmptyTravelPlan,
   createEmptyTravelPlanDay,
-  createEmptyTravelPlanOfferComponentLink,
   createEmptyTravelPlanService,
-  getLinkableOfferComponents,
   TRAVEL_PLAN_TIMING_KIND_OPTIONS,
-  getTravelPlanServiceCoverageStatus,
   normalizeTravelPlanDraft
 } from "./travel_plan_helpers.js";
 import {
@@ -88,15 +83,6 @@ export function createBookingTravelPlanModule(ctx) {
     url.searchParams.set("content_lang", query.content_lang);
     url.searchParams.set("source_lang", query.source_lang);
     return url.toString();
-  }
-
-  function currentInternalOfferDetailLevel() {
-    const explicit = String(state.offerDraft?.offer_detail_level_internal || state.booking?.offer?.offer_detail_level_internal || "").trim().toLowerCase();
-    if (explicit === "component" || explicit === "day" || explicit === "trip") return explicit;
-    if (Array.isArray(state.offerDraft?.components) && state.offerDraft.components.length) return "component";
-    if (Array.isArray(state.offerDraft?.days_internal) && state.offerDraft.days_internal.length) return "day";
-    if (state.offerDraft?.trip_price_internal && typeof state.offerDraft.trip_price_internal === "object") return "trip";
-    return "trip";
   }
 
   function findDraftDay(dayId) {
@@ -200,20 +186,11 @@ export function createBookingTravelPlanModule(ctx) {
 
   function validateTravelPlanDraft(plan) {
     return validateTravelPlanDraftState(plan, {
-      getOfferComponentsForLinks,
       validTimingKinds: new Set(TRAVEL_PLAN_TIMING_KIND_OPTIONS.map((option) => option.value)),
       validItemKinds: new Set(TRAVEL_PLAN_SERVICE_KIND_OPTIONS.map((option) => option.value)),
-      validCoverageTypes: new Set(TRAVEL_PLAN_OFFER_COVERAGE_TYPE_OPTIONS.map((option) => option.value)),
       splitDateTimeValue,
       isValidIsoCalendarDate
     });
-  }
-
-  function getOfferComponentsForLinks() {
-    const offerDraftComponents = Array.isArray(state.offerDraft?.components) ? state.offerDraft.components : [];
-    const bookingOfferComponents = Array.isArray(state.booking?.offer?.components) ? state.booking.offer.components : [];
-    const sourceComponents = state.dirty?.offer ? offerDraftComponents : bookingOfferComponents;
-    return getLinkableOfferComponents(sourceComponents);
   }
 
   function setTravelPlanDirty(isDirty, diagnostic = undefined) {
@@ -228,20 +205,16 @@ export function createBookingTravelPlanModule(ctx) {
     };
   }
 
-  function normalizeTravelPlanState(plan = state.travelPlanDraft, offerComponents = getOfferComponentsForLinks()) {
-    return normalizeTravelPlanDraft(plan, offerComponents, getTravelPlanNormalizationOptions());
+  function normalizeTravelPlanState(plan = state.travelPlanDraft) {
+    return normalizeTravelPlanDraft(plan, getTravelPlanNormalizationOptions());
   }
 
   function buildTravelPlanPayload(plan = state.travelPlanDraft) {
-    return normalizeTravelPlanState({
-      ...plan,
-      offer_component_links: (Array.isArray(plan?.offer_component_links) ? plan.offer_component_links : [])
-        .filter((link) => String(link?.offer_component_id || "").trim())
-    }, getOfferComponentsForLinks());
+    return normalizeTravelPlanState(plan);
   }
 
   function getTravelPlanSnapshot(plan = state.travelPlanDraft) {
-    return JSON.stringify(normalizeTravelPlanState(plan, getOfferComponentsForLinks()));
+    return JSON.stringify(normalizeTravelPlanState(plan));
   }
 
   function hasSharedBookingStylesheetLoaded() {
@@ -366,7 +339,7 @@ export function createBookingTravelPlanModule(ctx) {
   }
 
   function updateTravelPlanDirtyState() {
-    const normalizedDraft = normalizeTravelPlanState(state.travelPlanDraft, getOfferComponentsForLinks());
+    const normalizedDraft = normalizeTravelPlanState(state.travelPlanDraft);
     const nextSnapshot = JSON.stringify(normalizedDraft);
     const isDirty = nextSnapshot !== state.originalTravelPlanSnapshot;
     state.travelPlanDraft = normalizedDraft;
@@ -403,14 +376,14 @@ export function createBookingTravelPlanModule(ctx) {
   }
 
   function applyBookingPayload() {
-    state.travelPlanDraft = normalizeTravelPlanState(state.booking?.travel_plan || createEmptyTravelPlan(), getOfferComponentsForLinks());
+    state.travelPlanDraft = normalizeTravelPlanState(state.booking?.travel_plan || createEmptyTravelPlan());
     state.travelPlanCollapsedServiceIds = new Set(
       (Array.isArray(state.travelPlanDraft?.days) ? state.travelPlanDraft.days : [])
         .flatMap((day) => (Array.isArray(day?.services) ? day.services : []))
         .map((item) => String(item?.id || "").trim())
         .filter(Boolean)
     );
-    state.originalTravelPlanState = normalizeTravelPlanState(state.travelPlanDraft, getOfferComponentsForLinks());
+    state.originalTravelPlanState = normalizeTravelPlanState(state.travelPlanDraft);
     state.originalTravelPlanSnapshot = JSON.stringify(state.originalTravelPlanState);
     setTravelPlanDirty(false, null);
     travelPlanStatus("");
@@ -569,20 +542,6 @@ export function createBookingTravelPlanModule(ctx) {
       primary: bookingT("booking.travel_plan", "Travel plan"),
       secondary: secondary.join(" · ")
     };
-  }
-
-  function coverageBadgeLabel(status) {
-    switch (status) {
-      case "covered":
-        return bookingT("booking.travel_plan.coverage.covered", "Covered");
-      case "partially_covered":
-        return bookingT("booking.travel_plan.coverage.partially_covered", "Partially covered");
-      case "not_applicable":
-        return bookingT("booking.travel_plan.coverage.not_applicable", "Not applicable");
-      case "not_covered":
-      default:
-        return bookingT("booking.travel_plan.coverage.not_covered", "Not covered");
-    }
   }
 
   function ensureTravelPlanCollapsedServiceIds() {
@@ -889,68 +848,6 @@ export function createBookingTravelPlanModule(ctx) {
       ));
     }
     return parts.join(" · ");
-  }
-
-  function toggleTravelPlanServiceFinancialCoverageNeeded(itemId) {
-    syncTravelPlanDraftFromDom();
-    const normalizedId = String(itemId || "").trim();
-    if (!normalizedId) return;
-    const item = (Array.isArray(state.travelPlanDraft?.days) ? state.travelPlanDraft.days : [])
-      .flatMap((day) => (Array.isArray(day?.services) ? day.services : []))
-      .find((entry) => String(entry?.id || "").trim() === normalizedId);
-    if (!item) return;
-    const hasLinkedOfferComponents = (Array.isArray(state.travelPlanDraft?.offer_component_links) ? state.travelPlanDraft.offer_component_links : [])
-      .some((link) => String(link?.travel_plan_service_id || "").trim() === normalizedId && String(link?.offer_component_id || "").trim());
-    if (hasLinkedOfferComponents) return;
-    item.financial_coverage_needed = item.financial_coverage_needed === false;
-    state.travelPlanDraft = normalizeTravelPlanState(state.travelPlanDraft, getOfferComponentsForLinks());
-    updateTravelPlanDirtyState();
-    renderBookingSectionHeader(els.travel_plan_panel_summary, travelPlanSummary());
-    renderTravelPlanPanel();
-  }
-
-  function offerComponentsForTravelPlanDay(dayNumber, selectedId = "") {
-    const normalizedSelectedId = String(selectedId || "").trim();
-    const normalizedDayNumber = Number.isInteger(Number(dayNumber)) && Number(dayNumber) >= 1
-      ? Number(dayNumber)
-      : null;
-    return getOfferComponentsForLinks().filter((component) => {
-      const componentId = String(component?.id || "").trim();
-      if (componentId && componentId === normalizedSelectedId) return true;
-      const componentDayNumber = Number.parseInt(component?.day_number, 10);
-      if (!Number.isInteger(componentDayNumber) || componentDayNumber < 1) return true;
-      if (!normalizedDayNumber) return false;
-      return componentDayNumber === normalizedDayNumber;
-    });
-  }
-
-  function offerComponentSelectOptions(selectedId = "", dayNumber = null) {
-    const selected = String(selectedId || "").trim();
-    const options = [`<option value="">${escapeHtml(bookingT("booking.travel_plan.select_offer_component", "Select offer component"))}</option>`];
-    for (const component of offerComponentsForTravelPlanDay(dayNumber, selectedId)) {
-      const labelParts = [];
-      const category = String(component?.category || "").trim();
-      const details = String(component?.details || component?.label || "").trim();
-      const componentDayNumber = Number.parseInt(component?.day_number, 10);
-      if (category) labelParts.push(category.replace(/_/g, " ").toLowerCase());
-      if (details) labelParts.push(details);
-      if (Number.isInteger(componentDayNumber) && componentDayNumber >= 1) {
-        labelParts.push(bookingT("booking.offer.day_number.day", "Day {day}", { day: componentDayNumber }));
-      } else {
-        labelParts.push(bookingT("booking.offer.day_number.not_applicable", "Not applicable"));
-      }
-      labelParts.push(formatMoneyDisplay(component?.line_total_amount_cents || 0, component?.currency || state.booking?.offer?.currency || "USD"));
-      options.push(
-        `<option value="${escapeHtml(component.id)}"${component.id === selected ? " selected" : ""}>${escapeHtml(labelParts.join(" · "))}</option>`
-      );
-    }
-    return options.join("");
-  }
-
-  function coverageTypeOptions(selectedValue = "full") {
-    return TRAVEL_PLAN_OFFER_COVERAGE_TYPE_OPTIONS.map((option) => (
-      `<option value="${escapeHtml(option.value)}"${option.value === selectedValue ? " selected" : ""}>${escapeHtml(bookingT(`booking.travel_plan.coverage_type.${option.value}`, option.label))}</option>`
-    )).join("");
   }
 
   function itemKindOptions(selectedValue = "other") {
@@ -1297,52 +1194,13 @@ export function createBookingTravelPlanModule(ctx) {
     `;
   }
 
-  function renderTravelPlanLinkRows(itemId, dayNumber = null) {
-    const itemLinks = (Array.isArray(state.travelPlanDraft?.offer_component_links) ? state.travelPlanDraft.offer_component_links : [])
-      .filter((link) => link.travel_plan_service_id === itemId);
-    const selectableOfferComponents = offerComponentsForTravelPlanDay(dayNumber);
-
-    if (!itemLinks.length) {
-      return `
-        <div class="travel-plan-link-empty">
-          ${selectableOfferComponents.length
-            ? escapeHtml(bookingT("booking.travel_plan.no_linked_components", "No linked offer components yet."))
-            : escapeHtml(bookingT("booking.travel_plan.no_day_matching_offer_components", "No offer components match this day."))}
-        </div>
-      `;
-    }
-
-    return itemLinks.map((link) => `
-      <div class="travel-plan-link-row" data-travel-plan-link="${escapeHtml(link.id)}">
-        <select data-travel-plan-link-component="${escapeHtml(link.id)}">
-          ${offerComponentSelectOptions(link.offer_component_id, dayNumber)}
-        </select>
-        <select data-travel-plan-link-coverage-type="${escapeHtml(link.id)}">
-          ${coverageTypeOptions(link.coverage_type)}
-        </select>
-        <button class="btn btn-ghost offer-remove-btn" data-travel-plan-remove-link="${escapeHtml(link.id)}" type="button" aria-label="${escapeHtml(bookingT("booking.travel_plan.remove_linked_offer_component", "Remove linked offer component"))}">&times;</button>
-      </div>
-    `).join("");
-  }
-
   function renderTravelPlanService(day, item, itemIndex) {
-    const links = (Array.isArray(state.travelPlanDraft?.offer_component_links) ? state.travelPlanDraft.offer_component_links : [])
-      .filter((link) => link.travel_plan_service_id === item.id && link.offer_component_id);
-    const hasLinkedOfferComponents = links.length > 0;
-    const noFinancialCoverageNeeded = item.financial_coverage_needed === false;
-    const coverageStatus = getTravelPlanServiceCoverageStatus(item.kind, links, item.financial_coverage_needed);
-    const showFinancialCoverage = currentInternalOfferDetailLevel() === "component";
-    const coverageLabel = coverageBadgeLabel(coverageStatus);
     const collapsed = isTravelPlanServiceCollapsed(item.id);
     const sourceTitle = resolveLocalizedDraftBranchText(item.title_i18n ?? item.title, bookingSourceLang(), "").trim();
     const collapsedTitle = sourceTitle || bookingT("booking.travel_plan.item_heading", "Service {item}", { item: itemIndex + 1 });
     const timingSummary = travelPlanTimingSummary(day, item).trim();
-    const shouldShowCoverageBadge = showFinancialCoverage && coverageStatus !== "not_applicable";
-    const coverageBadge = !shouldShowCoverageBadge
-      ? ""
-      : `<span class="travel-plan-coverage-badge travel-plan-coverage-badge--${escapeHtml(coverageStatus.replace(/_/g, "-"))}" data-travel-plan-coverage-badge="${escapeHtml(item.id)}">${escapeHtml(coverageLabel)}</span>`;
     return `
-      <div class="travel-plan-service travel-plan-service--${escapeHtml(coverageStatus.replace(/_/g, "-"))}${collapsed ? " travel-plan-service--collapsed" : ""}" data-travel-plan-service="${escapeHtml(item.id)}" data-travel-plan-financial-coverage-needed="${noFinancialCoverageNeeded ? "false" : "true"}">
+      <div class="travel-plan-service${collapsed ? " travel-plan-service--collapsed" : ""}" data-travel-plan-service="${escapeHtml(item.id)}">
         <div class="travel-plan-service__rail">
           <button
             class="btn btn-ghost travel-plan-service__toggle"
@@ -1359,7 +1217,6 @@ export function createBookingTravelPlanModule(ctx) {
             <div class="travel-plan-service__title" data-travel-plan-toggle-item-area="${escapeHtml(item.id)}">
               <span class="travel-plan-service__collapsed-title">${escapeHtml(collapsedTitle)}</span>
               <span class="travel-plan-service__collapsed-timing"${timingSummary ? "" : " hidden"}>${escapeHtml(timingSummary)}</span>
-              ${coverageBadge}
             </div>
             <div class="travel-plan-service__actions">
               <button class="btn btn-ghost travel-plan-move-btn" data-travel-plan-move-item-up="${escapeHtml(item.id)}" type="button" aria-label="${escapeHtml(bookingT("booking.travel_plan.move_item_up", "Move service up"))}">&#8593;</button>
@@ -1436,23 +1293,6 @@ export function createBookingTravelPlanModule(ctx) {
           <div class="travel-plan-grid travel-plan-grid--item travel-plan-grid--item-timing travel-plan-grid--item-timing-${escapeHtml(String(item.timing_kind || "label").trim() || "label")}">
             ${renderTravelPlanTimingFields(day, item)}
           </div>
-          <div class="travel-plan-grid travel-plan-grid--item">
-            <div class="field">
-              <label for="travel_plan_financial_note_${escapeHtml(item.id)}">${escapeHtml(bookingT("booking.travel_plan.financial_note", "ATP internal Notes"))}</label>
-              <textarea class="booking-text-field booking-text-field--internal" id="travel_plan_financial_note_${escapeHtml(item.id)}" data-travel-plan-service-field="financial_note" rows="3" placeholder="${escapeHtml(bookingT("booking.travel_plan.financial_note_placeholder", "Supplier information / Financial notes"))}">${escapeHtml(item.financial_note || "")}</textarea>
-            </div>
-          </div>
-          ${showFinancialCoverage ? `<div class="travel-plan-links">
-            <div class="travel-plan-links__head">
-              <h4>${escapeHtml(bookingT("booking.travel_plan.financial_coverage", "Financial coverage"))}</h4>
-              <div class="travel-plan-links__actions">
-                <button class="btn btn-ghost travel-plan-link-add-btn" data-travel-plan-add-link="${escapeHtml(item.id)}" type="button">${escapeHtml(bookingT("booking.travel_plan.link_offer_component", "Add offer component"))}</button>
-                <button class="btn btn-ghost travel-plan-link-toggle-btn${noFinancialCoverageNeeded ? " travel-plan-link-toggle-btn--active" : ""}" data-travel-plan-toggle-no-coverage="${escapeHtml(item.id)}" type="button" aria-pressed="${noFinancialCoverageNeeded ? "true" : "false"}"${hasLinkedOfferComponents ? ` disabled title="${escapeHtml(bookingT("booking.travel_plan.no_financial_coverage_blocked", "Remove linked offer components first."))}"` : ""}>${escapeHtml(bookingT("booking.travel_plan.no_financial_coverage_needed", "No financial coverage needed"))}</button>
-              </div>
-            </div>
-            ${renderTravelPlanLinkRows(item.id, day.day_number)}
-          </div>
-          ` : ""}
           </div>
           </div>
         </div>
@@ -1660,8 +1500,6 @@ export function createBookingTravelPlanModule(ctx) {
           String(itemNode.querySelector('[data-travel-plan-service-field="end_time_date"]')?.value || day.date || "").trim(),
           String(itemNode.querySelector('[data-travel-plan-service-field="end_time_time"]')?.value || "").trim()
         );
-        item.financial_coverage_needed = itemNode.getAttribute("data-travel-plan-financial-coverage-needed") !== "false";
-        item.financial_note = String(itemNode.querySelector('[data-travel-plan-service-field="financial_note"]')?.value || "").trim();
         item.image_subtitle = String(itemNode.querySelector('[data-travel-plan-service-field="image_subtitle"]')?.value || "").trim();
         item.image = previousItem?.image && typeof previousItem.image === "object" && !Array.isArray(previousItem.image)
           ? previousItem.image
@@ -1671,25 +1509,13 @@ export function createBookingTravelPlanModule(ctx) {
       });
       return day;
     });
-    draft.offer_component_links = Array.from(els.travel_plan_editor.querySelectorAll("[data-travel-plan-link]")).map((linkNode) => ({
-      id: String(linkNode.getAttribute("data-travel-plan-link") || "").trim(),
-      travel_plan_service_id: String(linkNode.closest("[data-travel-plan-service]")?.getAttribute("data-travel-plan-service") || "").trim(),
-      offer_component_id: String(linkNode.querySelector("[data-travel-plan-link-component]")?.value || "").trim(),
-      coverage_type: String(linkNode.querySelector("[data-travel-plan-link-coverage-type]")?.value || "full").trim()
-    }));
     draft.attachments = Array.isArray(state.travelPlanDraft?.attachments) ? state.travelPlanDraft.attachments : [];
-    state.travelPlanDraft = normalizeTravelPlanState(draft, getOfferComponentsForLinks());
+    state.travelPlanDraft = normalizeTravelPlanState(draft);
     return state.travelPlanDraft;
   }
 
   function findDayIndex(dayId) {
     return (Array.isArray(state.travelPlanDraft?.days) ? state.travelPlanDraft.days : []).findIndex((day) => day.id === dayId);
-  }
-
-  function removeItemLinks(itemId) {
-    state.travelPlanDraft.offer_component_links = (Array.isArray(state.travelPlanDraft.offer_component_links)
-      ? state.travelPlanDraft.offer_component_links
-      : []).filter((link) => link.travel_plan_service_id !== itemId);
   }
 
   function addDay() {
@@ -1708,10 +1534,7 @@ export function createBookingTravelPlanModule(ctx) {
     const dayIndex = findDayIndex(dayId);
     if (dayIndex < 0) return;
     if (!window.confirm(bookingT("booking.travel_plan.remove_day_confirm", "Remove this day and all its services?"))) return;
-    const [removedDay] = state.travelPlanDraft.days.splice(dayIndex, 1);
-    for (const item of Array.isArray(removedDay?.services) ? removedDay.services : []) {
-      removeItemLinks(item.id);
-    }
+    state.travelPlanDraft.days.splice(dayIndex, 1);
     renderTravelPlanPanel();
     renderOfferPanel?.();
   }
@@ -1733,7 +1556,6 @@ export function createBookingTravelPlanModule(ctx) {
       const itemIndex = (Array.isArray(day.services) ? day.services : []).findIndex((item) => item.id === itemId);
       if (itemIndex < 0) continue;
       day.services.splice(itemIndex, 1);
-      removeItemLinks(itemId);
       renderTravelPlanPanel();
       return;
     }
@@ -1752,15 +1574,6 @@ export function createBookingTravelPlanModule(ctx) {
       renderTravelPlanPanel();
       return;
     }
-  }
-
-  function addLink(itemId) {
-    syncTravelPlanDraftFromDom();
-    state.travelPlanDraft.offer_component_links = Array.isArray(state.travelPlanDraft.offer_component_links)
-      ? state.travelPlanDraft.offer_component_links
-      : [];
-    state.travelPlanDraft.offer_component_links.push(createEmptyTravelPlanOfferComponentLink(itemId));
-    renderTravelPlanPanel();
   }
 
   function openTravelPlanPdf() {
@@ -1900,14 +1713,6 @@ export function createBookingTravelPlanModule(ctx) {
     }).finally(() => {
       setBookingPageOverlay(els, false);
     });
-  }
-
-  function removeLink(linkId) {
-    syncTravelPlanDraftFromDom();
-    state.travelPlanDraft.offer_component_links = (Array.isArray(state.travelPlanDraft.offer_component_links)
-      ? state.travelPlanDraft.offer_component_links
-      : []).filter((link) => link.id !== linkId);
-    renderTravelPlanPanel();
   }
 
   async function persistTravelPlan() {
@@ -2183,8 +1988,6 @@ export function createBookingTravelPlanModule(ctx) {
         const shouldRerender = Boolean(
           target?.matches?.('[data-travel-plan-service-field="timing_kind"]')
           || target?.matches?.('[data-travel-plan-service-field="kind"]')
-          || target?.matches?.("[data-travel-plan-link-component]")
-          || target?.matches?.("[data-travel-plan-link-coverage-type]")
         );
         if (shouldRerender) {
           renderTravelPlanPanel();
@@ -2251,14 +2054,6 @@ export function createBookingTravelPlanModule(ctx) {
           moveItem(button.getAttribute("data-travel-plan-move-item-down"), "down");
           return;
         }
-        if (button.hasAttribute("data-travel-plan-add-link")) {
-          addLink(button.getAttribute("data-travel-plan-add-link"));
-          return;
-        }
-        if (button.hasAttribute("data-travel-plan-toggle-no-coverage")) {
-          toggleTravelPlanServiceFinancialCoverageNeeded(button.getAttribute("data-travel-plan-toggle-no-coverage"));
-          return;
-        }
         if (button.hasAttribute("data-travel-plan-add-image")) {
           travelPlanImagesModule.triggerTravelPlanServiceImagePicker(
             button.getAttribute("data-travel-plan-day-id"),
@@ -2292,9 +2087,6 @@ export function createBookingTravelPlanModule(ctx) {
         if (button.hasAttribute("data-travel-plan-apply-next-day")) {
           applySuggestedTravelPlanDayDate(button);
           return;
-        }
-        if (button.hasAttribute("data-travel-plan-remove-link")) {
-          removeLink(button.getAttribute("data-travel-plan-remove-link"));
         }
       });
       els.travel_plan_editor.addEventListener("focusout", (event) => {
@@ -2368,7 +2160,7 @@ export function createBookingTravelPlanModule(ctx) {
 
   function renderTravelPlanPanel() {
     if (!els.travel_plan_panel || !els.travel_plan_editor || !state.booking) return;
-    state.travelPlanDraft = normalizeTravelPlanState(state.travelPlanDraft || state.booking.travel_plan, getOfferComponentsForLinks());
+    state.travelPlanDraft = normalizeTravelPlanState(state.travelPlanDraft || state.booking.travel_plan);
     syncTravelPlanCollapsedServiceIds();
     renderBookingSectionHeader(els.travel_plan_panel_summary, travelPlanSummary());
     const hasDays = Array.isArray(state.travelPlanDraft.days) && state.travelPlanDraft.days.length > 0;

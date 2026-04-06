@@ -1,7 +1,5 @@
 import { normalizeText } from "../lib/text.js";
 import {
-  TRAVEL_PLAN_FINANCIAL_COVERAGE_STATUS_VALUES,
-  TRAVEL_PLAN_OFFER_COVERAGE_TYPE_VALUES,
   TRAVEL_PLAN_SERVICE_KIND_VALUES,
   TRAVEL_PLAN_TIMING_KIND_VALUES
 } from "../lib/generated_catalogs.js";
@@ -14,8 +12,6 @@ import {
 
 const TRAVEL_PLAN_SERVICE_KINDS = new Set(TRAVEL_PLAN_SERVICE_KIND_VALUES);
 const TRAVEL_PLAN_TIMING_KINDS = new Set(TRAVEL_PLAN_TIMING_KIND_VALUES);
-const TRAVEL_PLAN_FINANCIAL_COVERAGE_STATUSES = new Set(TRAVEL_PLAN_FINANCIAL_COVERAGE_STATUS_VALUES);
-const TRAVEL_PLAN_OFFER_COVERAGE_TYPES = new Set(TRAVEL_PLAN_OFFER_COVERAGE_TYPE_VALUES);
 
 function normalizeOptionalText(value) {
   const normalized = normalizeText(value);
@@ -176,42 +172,11 @@ function normalizeTimingKind(value) {
   return TRAVEL_PLAN_TIMING_KINDS.has(normalized) ? normalized : "label";
 }
 
-function normalizeCoverageType(value) {
-  const normalized = normalizeText(value).toLowerCase();
-  return TRAVEL_PLAN_OFFER_COVERAGE_TYPES.has(normalized) ? normalized : "full";
-}
-
-function normalizeFinancialCoverageStatus(value) {
-  const normalized = normalizeText(value).toLowerCase();
-  return TRAVEL_PLAN_FINANCIAL_COVERAGE_STATUSES.has(normalized) ? normalized : null;
-}
-
-function normalizeFinancialCoverageNeeded(value) {
-  return value !== false;
-}
-
 function buildDefaultTravelPlan() {
   return {
     days: [],
-    offer_component_links: [],
     attachments: []
   };
-}
-
-function buildDerivedCoverageStatus(kind, links, financialCoverageNeeded = true) {
-  if (!Array.isArray(links) || links.length === 0) {
-    if (financialCoverageNeeded === false) {
-      return "not_applicable";
-    }
-    return kind === "free_time" ? "not_applicable" : "not_covered";
-  }
-  if (links.some((link) => link.coverage_type === "full")) {
-    return "covered";
-  }
-  if (links.some((link) => link.coverage_type === "partial")) {
-    return "partially_covered";
-  }
-  return kind === "free_time" ? "not_applicable" : "not_covered";
 }
 
 function normalizeItemTiming(rawItem) {
@@ -285,10 +250,6 @@ function normalizeTravelPlanDays(days, options = {}) {
         const title_i18n = normalizeLocalizedTextMap(rawItem?.title_i18n ?? rawItem?.title, contentLang);
         const details_i18n = normalizeLocalizedTextMap(rawItem?.details_i18n ?? rawItem?.details, contentLang);
         const location_i18n = normalizeLocalizedTextMap(rawItem?.location_i18n ?? rawItem?.location, contentLang);
-        const financial_note_i18n = normalizeLocalizedTextMap(
-          rawItem?.financial_note_i18n ?? rawItem?.financial_note,
-          contentLang
-        );
         return {
           id: normalizeText(rawItem.id) || `travel_plan_service_${dayIndex + 1}_${itemIndex + 1}`,
           timing_kind: timing.timing_kind,
@@ -306,10 +267,6 @@ function normalizeTravelPlanDays(days, options = {}) {
           supplier_id: normalizeOptionalText(rawItem.supplier_id),
           start_time: timing.start_time,
           end_time: timing.end_time,
-          financial_coverage_needed: normalizeFinancialCoverageNeeded(rawItem.financial_coverage_needed),
-          financial_coverage_status: normalizeFinancialCoverageStatus(rawItem.financial_coverage_status),
-          financial_note: resolveLocalizedText(financial_note_i18n, flatLang, "", { sourceLang }) || null,
-          financial_note_i18n,
           image: normalizeTravelPlanServiceImage(rawItem.image ?? rawItem.images, dayIndex, itemIndex),
           copied_from: normalizeTravelPlanServiceCopiedFrom(rawItem.copied_from)
         };
@@ -338,70 +295,19 @@ function normalizeTravelPlanDays(days, options = {}) {
     });
 }
 
-function normalizeTravelPlanLinks(links) {
-  const sourceLinks = Array.isArray(links) ? links : [];
-  return sourceLinks.map((link, index) => {
-    const rawLink = link && typeof link === "object" && !Array.isArray(link) ? link : {};
-    return {
-      id: normalizeText(rawLink.id) || `travel_plan_offer_link_${index + 1}`,
-      travel_plan_service_id: normalizeText(rawLink.travel_plan_service_id) || normalizeText(rawLink.travel_plan_item_id),
-      offer_component_id: normalizeText(rawLink.offer_component_id),
-      coverage_type: normalizeCoverageType(rawLink.coverage_type)
-    };
-  });
-}
-
 export function createTravelPlanHelpers() {
   function defaultBookingTravelPlan() {
     return buildDefaultTravelPlan();
   }
 
   function normalizeBookingTravelPlan(rawTravelPlan, offer = null, options = {}) {
-    const strictReferences = options?.strictReferences === true;
     const source = rawTravelPlan && typeof rawTravelPlan === "object" && !Array.isArray(rawTravelPlan)
       ? rawTravelPlan
       : {};
     const days = normalizeTravelPlanDays(source.days, options);
-    const links = normalizeTravelPlanLinks(source.offer_component_links);
-    const itemIdSet = new Set(days.flatMap((day) => day.services.map((item) => item.id)));
-    const offerComponentIdSet = new Set(
-      (Array.isArray(offer?.components) ? offer.components : [])
-        .map((component) => normalizeText(component?.id))
-        .filter(Boolean)
-    );
-
-    const validLinks = links.filter((link) => {
-      const hasItem = itemIdSet.has(link.travel_plan_service_id);
-      const hasOfferComponent = offerComponentIdSet.has(link.offer_component_id);
-      return hasItem && hasOfferComponent;
-    });
-    const returnedLinks = strictReferences ? links : validLinks;
-
-    const linksByItemId = new Map();
-    for (const link of validLinks) {
-      const current = linksByItemId.get(link.travel_plan_service_id) || [];
-      current.push(link);
-      linksByItemId.set(link.travel_plan_service_id, current);
-    }
-
-    const normalizedDays = days.map((day) => ({
-      ...day,
-      services: day.services.map((item) => {
-        const itemLinks = linksByItemId.get(item.id) || [];
-        const financialCoverageNeeded = itemLinks.length > 0
-          ? true
-          : item.financial_coverage_needed;
-        return {
-          ...item,
-          financial_coverage_needed: financialCoverageNeeded !== false,
-          financial_coverage_status: buildDerivedCoverageStatus(item.kind, itemLinks, financialCoverageNeeded)
-        };
-      })
-    }));
 
     return normalizeTravelPlanTranslationMeta({
-      days: normalizedDays,
-      offer_component_links: returnedLinks,
+      days,
       attachments: normalizeTravelPlanAttachments(source.attachments)
     });
   }
@@ -410,17 +316,11 @@ export function createTravelPlanHelpers() {
     const normalized = normalizeBookingTravelPlan(rawTravelPlan, offer, { strictReferences: true });
     const dayIds = new Set();
     const itemIds = new Set();
-    const linkIds = new Set();
     const imageIds = new Set();
     const attachmentIds = new Set();
     const supplierIds = new Set(
       (Array.isArray(options?.supplierIds) ? options.supplierIds : [])
         .map((supplierId) => normalizeText(supplierId))
-        .filter(Boolean)
-    );
-    const offerComponentIds = new Set(
-      (Array.isArray(offer?.components) ? offer.components : [])
-        .map((component) => normalizeText(component?.id))
         .filter(Boolean)
     );
 
@@ -504,31 +404,6 @@ export function createTravelPlanHelpers() {
       }
       if (!(Number.isInteger(attachment.page_count) && attachment.page_count > 0)) {
         return { ok: false, error: `Travel-plan attachment ${attachment.id} has an invalid page count.` };
-      }
-    }
-
-    for (const link of normalized.offer_component_links) {
-      if (!normalizeText(link.id)) {
-        return { ok: false, error: "Every travel-plan offer link needs an id." };
-      }
-      if (linkIds.has(link.id)) {
-        return { ok: false, error: `Travel-plan offer link id ${link.id} is duplicated.` };
-      }
-      linkIds.add(link.id);
-      if (!itemIds.has(link.travel_plan_service_id)) {
-        return {
-          ok: false,
-          error: `Travel-plan offer link ${link.id} references unknown service ${link.travel_plan_service_id}.`
-        };
-      }
-      if (!offerComponentIds.has(link.offer_component_id)) {
-        return {
-          ok: false,
-          error: `Travel-plan offer link ${link.id} references unknown offer component ${link.offer_component_id}.`
-        };
-      }
-      if (!TRAVEL_PLAN_OFFER_COVERAGE_TYPES.has(link.coverage_type)) {
-        return { ok: false, error: `Travel-plan offer link ${link.id} has an invalid coverage type.` };
       }
     }
 

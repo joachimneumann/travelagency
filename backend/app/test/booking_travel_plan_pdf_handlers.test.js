@@ -22,7 +22,7 @@ function buildTravelPlanHandlerHarness(tempDir, overrides = {}) {
   const booking = {
     id: "booking_pdf_handler",
     travel_plan_revision: 3,
-    travel_plan: { days: [], offer_component_links: [] },
+    travel_plan: { days: [] },
     offer: {},
     generated_offers: []
   };
@@ -50,8 +50,8 @@ function buildTravelPlanHandlerHarness(tempDir, overrides = {}) {
     buildBookingDetailResponse: async () => ({ booking }),
     incrementBookingRevision: () => {},
     validateBookingTravelPlanInput: (travelPlan) => ({ ok: true, travel_plan: travelPlan }),
-    normalizeBookingTravelPlan: (travelPlan) => travelPlan || { days: [], offer_component_links: [] },
-    buildBookingTravelPlanReadModel: () => ({ days: [], offer_component_links: [] }),
+    normalizeBookingTravelPlan: (travelPlan) => travelPlan || { days: [] },
+    buildBookingTravelPlanReadModel: () => ({ days: [] }),
     writeTravelPlanPdf: async (_booking, _snapshot, { outputPath }) => ({ outputPath }),
     persistBookingTravelPlanPdfArtifact: async () => ({
       id: "2026-03-23-1",

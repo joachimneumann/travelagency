@@ -47,11 +47,11 @@ import (
 }
 
 #BookingCreateRequest: {
-	name:                          string
-	preferred_language:            enums.#LanguageCode
-	preferred_currency:            enums.#CurrencyCode
-	destinations?:                 [...enums.#CountryCode]
-	travel_styles?:                [...string]
+	name:               string
+	preferred_language: enums.#LanguageCode
+	preferred_currency: enums.#CurrencyCode
+	destinations?: [...enums.#CountryCode]
+	travel_styles?: [...string]
 	primary_contact_name?:         string
 	primary_contact_email?:        common.#Email
 	primary_contact_phone_number?: string & !=""
@@ -76,15 +76,15 @@ import (
 }
 
 #BookingSourceUpdateRequest: {
-	expected_core_revision?:  >=0 & int
-	source_channel:           enums.#BookingSourceChannel
-	referral_kind:            enums.#BookingReferralKind
-	referral_label?:          string
-	referral_staff_user_id?:  common.#Identifier
-	destinations?:            [...enums.#CountryCode]
-	travel_styles?:           [...string]
-	pdf_personalization?:     entities.#BookingPdfPersonalization
-	actor?:                   string
+	expected_core_revision?: >=0 & int
+	source_channel:          enums.#BookingSourceChannel
+	referral_kind:           enums.#BookingReferralKind
+	referral_label?:         string
+	referral_staff_user_id?: common.#Identifier
+	destinations?: [...enums.#CountryCode]
+	travel_styles?: [...string]
+	pdf_personalization?: entities.#BookingPdfPersonalization
+	actor?:               string
 }
 
 #BookingImageUploadRequest: #EvidenceUpload & {
@@ -169,13 +169,13 @@ import (
 }
 
 #TravelPlanServiceSearchRequest: {
-	q?:           string
-	destination?: string
-	country?:     enums.#CountryCode
-	style?:       string
+	q?:            string
+	destination?:  string
+	country?:      enums.#CountryCode
+	style?:        string
 	service_kind?: enums.#TravelPlanServiceKind
-	limit?:       >=0 & int
-	offset?:      >=0 & int
+	limit?:        >=0 & int
+	offset?:       >=0 & int
 }
 
 #TravelPlanDayImportRequest: {
@@ -198,7 +198,6 @@ import (
 	include_customer_visible_images_only: *false | bool
 	include_notes:                        *true | bool
 	include_translations:                 *true | bool
-	include_offer_links:                  *false | bool
 	actor?:                               string
 }
 
@@ -222,11 +221,11 @@ import (
 }
 
 #TravelPlanTemplateUpsertRequest: {
-	title?:             string
-	description?:       string
-	status?:            enums.#TravelPlanTemplateStatus
-	destinations?:      [...enums.#CountryCode]
-	travel_styles?:     [...string]
+	title?:       string
+	description?: string
+	status?:      enums.#TravelPlanTemplateStatus
+	destinations?: [...enums.#CountryCode]
+	travel_styles?: [...string]
 	source_booking_id?: common.#Identifier
 	travel_plan?:       entities.#BookingTravelPlan
 	actor?:             string
@@ -294,7 +293,7 @@ import (
 #BookingDepositReceiptDraftUpdateRequest: {
 	deposit_received_at?:               common.#Timestamp
 	deposit_confirmed_by_atp_staff_id?: common.#Identifier
-	deposit_reference?:                string
+	deposit_reference?:                 string
 }
 
 #BookingOfferUpdateRequest: {
@@ -311,10 +310,10 @@ import (
 }
 
 #BookingGenerateOfferRequest: {
-	expected_offer_revision?: >=0 & int
-	comment?:                 string
-	actor?:                   string
-	customer_confirmation_flow?:        #BookingGenerateOfferCustomerConfirmationFlowRequest
+	expected_offer_revision?:    >=0 & int
+	comment?:                    string
+	actor?:                      string
+	customer_confirmation_flow?: #BookingGenerateOfferCustomerConfirmationFlowRequest
 }
 
 #BookingGenerateOfferDepositBookingConfirmationRuleRequest: {
@@ -348,12 +347,12 @@ import (
 }
 
 #PublicGeneratedOfferAcceptRequest: {
-	booking_confirmation_token:       string & !=""
-	accepted_by_name?:      string
-	accepted_by_email?:     common.#Email
-	accepted_by_phone?:     string
-	accepted_by_person_id?: common.#Identifier
-	language?:              enums.#LanguageCode
+	booking_confirmation_token: string & !=""
+	accepted_by_name?:          string
+	accepted_by_email?:         common.#Email
+	accepted_by_phone?:         string
+	accepted_by_person_id?:     common.#Identifier
+	language?:                  enums.#LanguageCode
 }
 
 #PublicTravelerDetailsUpdateRequest: {
@@ -384,14 +383,14 @@ import (
 
 #AtpStaffProfileUpdateRequest: {
 	languages: [...enums.#LanguageCode]
-	destinations?:               [...enums.#CountryCode]
-	full_name?:                  string
-	position?:                   string
+	destinations?: [...enums.#CountryCode]
+	full_name?: string
+	position?:  string
 	position_i18n?: [...entities.#AtpStaffLocalizedTextEntry]
-	friendly_short_name?: string
-	team_order?: int | null
+	friendly_short_name?:      string
+	team_order?:               int | null
 	appears_in_team_web_page?: bool
-	description?:                string
+	description?:              string
 	description_i18n?: [...entities.#AtpStaffLocalizedTextEntry]
 	short_description?: string
 	short_description_i18n?: [...entities.#AtpStaffLocalizedTextEntry]
@@ -399,7 +398,7 @@ import (
 
 #AtpStaffPhotoUploadRequest: #EvidenceUpload
 
-#OfferExchangeRateComponent: {
+#OfferExchangeRateLine: {
 	id?:                    common.#Identifier
 	category:               enums.#OfferCategory
 	quantity:               >0 & int
@@ -410,7 +409,7 @@ import (
 #OfferExchangeRatesRequest: {
 	from_currency: enums.#CurrencyCode
 	to_currency:   enums.#CurrencyCode
-	components?: [...#OfferExchangeRateComponent]
+	lines?: [...#OfferExchangeRateLine]
 }
 
 #BookingActivityCreateRequest: {
@@ -445,11 +444,11 @@ import (
 	title?: string
 	destinations?: [...enums.#CountryCode]
 	styles?: [...enums.#TourStyleCode]
-	priority?: int
+	priority?:                int
 	seasonality_start_month?: enums.#MonthCode
 	seasonality_end_month?:   enums.#MonthCode
 	short_description?:       string
-	image?: string
+	image?:                   string
 }
 
 #TourTranslateFieldsRequest: #TranslationEntriesRequest

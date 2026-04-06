@@ -366,29 +366,6 @@ Columns:
 - `category`
 - `tax_rate_basis_points`
 
-### `booking_offer_components`
-
-- `id`
-- `booking_id`
-- `category`
-- `label`
-- `details`
-- `day_number`
-- `quantity`
-- `unit_amount_cents`
-- `unit_tax_amount_cents`
-- `unit_total_amount_cents`
-- `tax_rate_basis_points`
-- `currency`
-- `line_net_amount_cents`
-- `line_tax_amount_cents`
-- `line_gross_amount_cents`
-- `line_total_amount_cents`
-- `notes`
-- `sort_order`
-- `created_at`
-- `updated_at`
-
 ### `booking_offer_day_prices`
 
 - `id`
@@ -476,9 +453,6 @@ Columns:
 - `supplier_id`
 - `start_time`
 - `end_time`
-- `financial_coverage_needed`
-- `financial_coverage_status`
-- `financial_note`
 - `source_booking_id`
 - `source_day_id`
 - `source_service_id`
@@ -508,14 +482,6 @@ Notes:
 - `source_attribution_jsonb`
 - `focal_point_jsonb`
 - `created_at`
-
-### `booking_travel_plan_offer_component_links`
-
-- `id`
-- `booking_id`
-- `travel_plan_service_id`
-- `offer_component_id`
-- `coverage_type`
 
 ### `booking_travel_plan_attachments`
 
@@ -693,7 +659,7 @@ The following is the first-pass relational model for migration planning. It shou
 - Use `booking_id` as the foreign key from booking-owned child tables.
 - Model `booking_pricing` and `booking_offers` as 1:1 tables with `bookings`, using `booking_id` as the table key.
 - Model `booking_invoices` as children of `bookings`, and `booking_invoice_components` as children of `booking_invoices`.
-- Model live travel-plan data as `bookings -> booking_travel_plan_days -> booking_travel_plan_services`, with service images and offer-component links hanging off services.
+- Model live travel-plan data as `bookings -> booking_travel_plan_days -> booking_travel_plan_services`, with service images hanging off services.
 - Model generated artifacts as children of `bookings`: `booking_generated_offers`, `booking_travel_plan_attachments`, and `travel_plan_pdf_artifacts`.
 - `booking_payments.origin_generated_offer_id` should be a nullable foreign key to `booking_generated_offers.id`.
 - `booking_payments.origin_payment_term_line_id` should be a nullable foreign key to `booking_offer_payment_term_lines.id`.
@@ -755,8 +721,6 @@ erDiagram
     BOOKINGS ||--o{ BOOKING_TRAVEL_PLAN_DAYS : has
     BOOKING_TRAVEL_PLAN_DAYS ||--o{ BOOKING_TRAVEL_PLAN_SERVICES : has
     BOOKING_TRAVEL_PLAN_SERVICES ||--o{ BOOKING_TRAVEL_PLAN_SERVICE_IMAGES : has
-    BOOKING_TRAVEL_PLAN_SERVICES ||--o{ BOOKING_TRAVEL_PLAN_OFFER_COMPONENT_LINKS : maps
-    BOOKING_OFFER_COMPONENTS ||--o{ BOOKING_TRAVEL_PLAN_OFFER_COMPONENT_LINKS : linked_by
     BOOKINGS ||--o{ BOOKING_TRAVEL_PLAN_ATTACHMENTS : has
     BOOKINGS ||--o{ TRAVEL_PLAN_PDF_ARTIFACTS : has
     BOOKINGS o|--o{ BOOKING_GENERATED_OFFERS : confirms
@@ -950,17 +914,16 @@ Insert in dependency order inside transactions:
 10. live travel-plan days
 11. live travel-plan services
 12. live travel-plan service images
-13. live travel-plan offer-component links
-14. live travel-plan attachments
-15. generated offers
-16. invoices
-17. invoice components
-18. activities
-19. chat channel accounts
-20. chat conversations
-21. chat events
-22. travel plan PDF artifacts
-23. import run summary
+13. live travel-plan attachments
+14. generated offers
+15. invoices
+16. invoice components
+17. activities
+18. chat channel accounts
+19. chat conversations
+20. chat events
+21. travel plan PDF artifacts
+22. import run summary
 
 ## Import behavior
 

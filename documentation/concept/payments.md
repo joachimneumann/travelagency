@@ -1,4 +1,4 @@
-OK, the next step after the travel plan (and segments) and the offer (and offer components) is the acceptance of the offer by the client.
+OK, the next step after the travel plan (and segments) and the offer is the acceptance of the offer by the client.
 
 Think about a model that allows to safely store the acceptance of the offer. Should we request a signed document? Is that typical in the industry?
 

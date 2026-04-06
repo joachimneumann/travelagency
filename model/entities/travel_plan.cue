@@ -52,30 +52,20 @@ import (
 }
 
 #BookingTravelPlanService: {
-	id:                        common.#Identifier
-	timing_kind:               *"label" | enums.#TravelPlanTimingKind
-	time_label?:               string
-	time_point?:               string
-	kind:                      enums.#TravelPlanServiceKind
-	title?:                    string
-	details?:                  string
-	image_subtitle?:           string
-	location?:                 string
-	supplier_id?:              common.#Identifier
-	start_time?:               string
-	end_time?:                 string
-	financial_coverage_needed?: *true | bool
-	financial_coverage_status: *"not_covered" | enums.#TravelPlanFinancialCoverageStatus
-	financial_note?:           string
-	image?:                    #BookingTravelPlanServiceImage
-	copied_from?: #BookingTravelPlanServiceCopiedFrom
-}
-
-#BookingTravelPlanOfferComponentLink: {
-	id:                     common.#Identifier
-	travel_plan_service_id: common.#Identifier
-	offer_component_id:     common.#Identifier
-	coverage_type:          *"full" | enums.#TravelPlanOfferCoverageType
+	id:              common.#Identifier
+	timing_kind:     *"label" | enums.#TravelPlanTimingKind
+	time_label?:     string
+	time_point?:     string
+	kind:            enums.#TravelPlanServiceKind
+	title?:          string
+	details?:        string
+	image_subtitle?: string
+	location?:       string
+	supplier_id?:    common.#Identifier
+	start_time?:     string
+	end_time?:       string
+	image?:          #BookingTravelPlanServiceImage
+	copied_from?:    #BookingTravelPlanServiceCopiedFrom
 }
 
 #BookingTravelPlanAttachment: {
@@ -94,12 +84,11 @@ import (
 	title:               string
 	overnight_location?: string
 	services?: [...#BookingTravelPlanService]
-	notes?: string
-	copied_from?:        #BookingTravelPlanDayCopiedFrom
+	notes?:       string
+	copied_from?: #BookingTravelPlanDayCopiedFrom
 }
 
 #BookingTravelPlan: {
 	days?: [...#BookingTravelPlanDay]
-	offer_component_links?: [...#BookingTravelPlanOfferComponentLink]
 	attachments?: [...#BookingTravelPlanAttachment]
 }

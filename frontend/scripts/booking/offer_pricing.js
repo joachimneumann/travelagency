@@ -12,7 +12,7 @@ import {
 import { bookingContentLang, bookingContentLanguageOption, bookingSourceLang, bookingT } from "./i18n.js";
 import { renderLocalizedStackedField, requestBookingFieldTranslation, resolveLocalizedEditorBranchText } from "./localized_editor.js";
 
-export function createBookingOfferComponentsModule(ctx) {
+export function createBookingOfferPricingModule(ctx) {
   const {
     state,
     els,
@@ -1040,28 +1040,13 @@ export function createBookingOfferComponentsModule(ctx) {
     });
   }
 
-  function addOfferComponent() {
+  function addOfferPricingRow() {
     if (!state.permissions.canEditBooking || !state.offerDraft) return;
-    state.offerDraft.offer_detail_level_internal = "component";
-    const category = normalizeOfferCategory("OTHER");
-    const nextIndex = Array.isArray(state.offerDraft?.components) ? state.offerDraft.components.length : 0;
-    state.offerDraft.components.push({
-      id: "",
-      category,
-      label: "",
-      details: "",
-      details_i18n: {},
-      day_number: null,
-      quantity: 1,
-      unit_amount_cents: 0,
-      tax_rate_basis_points: getOfferCategoryTaxRateBasisPoints(category),
-      currency: state.offerDraft.currency,
-      notes: "",
-      sort_order: state.offerDraft.components.length
-    });
-    offerCategoryEditorIndexes.add(nextIndex);
-    setOfferSaveEnabled(true);
-    renderOfferComponentsTable();
+    if (currentOfferInternalDetailLevel() === "day") {
+      addOfferDayInternal();
+      return;
+    }
+    addOfferAdditionalItem();
   }
 
   function addOfferDayInternal() {
@@ -1470,7 +1455,7 @@ export function createBookingOfferComponentsModule(ctx) {
       input.addEventListener("change", syncOfferInputTotals);
     });
     els.offer_components_table.querySelectorAll("[data-offer-add-component]").forEach((button) => {
-      button.addEventListener("click", addOfferComponent);
+      button.addEventListener("click", addOfferPricingRow);
     });
     els.offer_components_table.querySelectorAll("[data-localized-translate]").forEach((button) => {
       button.addEventListener("click", async () => {
@@ -2276,13 +2261,13 @@ export function createBookingOfferComponentsModule(ctx) {
   }
 
   return {
-    addOfferComponent,
+    addOfferPricingRow,
     clearPendingTotals,
     collectOfferPayload,
     handleOfferCurrencyChange,
     handleOfferInternalDetailLevelChange,
     handleOfferVisibleDetailLevelChange,
-    renderOfferComponentsTable,
+    renderOfferPricingTable: renderOfferComponentsTable,
     resetComponentUiState,
     resolveOfferTotalCents,
     updateOfferCurrencyHint,

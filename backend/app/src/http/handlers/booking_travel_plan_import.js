@@ -107,10 +107,6 @@ function copyItemForImport(sourceItem, options = {}) {
     supplier_id: options.normalizeText(sourceItem?.supplier_id),
     start_time: options.normalizeText(sourceItem?.start_time),
     end_time: options.normalizeText(sourceItem?.end_time),
-    financial_coverage_needed: sourceItem?.financial_coverage_needed !== false,
-    financial_coverage_status: options.normalizeText(sourceItem?.financial_coverage_status) || "not_covered",
-    financial_note: includeNotes ? options.normalizeText(sourceItem?.financial_note) : null,
-    financial_note_i18n: includeNotes && includeTranslations ? cloneTravelPlanLocalizedMap(sourceItem?.financial_note_i18n) : undefined,
     image: importedImage,
     copied_from: {
       source_type: "booking_travel_plan_service",
@@ -169,10 +165,7 @@ function copyDayForImport(sourceDay, options = {}) {
         : importedItem.timing_kind,
       time_point: null,
       start_time: null,
-      end_time: null,
-      financial_coverage_needed: false,
-      financial_note: null,
-      financial_note_i18n: includeTranslations ? {} : undefined
+      end_time: null
     };
   });
 
@@ -687,24 +680,6 @@ export function createBookingTravelPlanImportHandlers(deps) {
       targetItems.push(importedItem);
     }
 
-    const sourceLinks = (Array.isArray(sourceTravelPlan?.offer_component_links) ? sourceTravelPlan.offer_component_links : [])
-      .filter((link) => link.travel_plan_service_id === sourceItemId);
-    const targetOfferComponentIds = new Set(
-      (Array.isArray(targetBooking?.offer?.components) ? targetBooking.offer.components : [])
-        .map((component) => normalizeText(component?.id))
-        .filter(Boolean)
-    );
-    const importedLinks = payload.include_offer_links === true
-      ? sourceLinks
-        .filter((link) => targetOfferComponentIds.has(normalizeText(link.offer_component_id)))
-        .map((link) => ({
-          id: `travel_plan_offer_link_${randomUUID()}`,
-          travel_plan_service_id: importedItem.id,
-          offer_component_id: normalizeText(link.offer_component_id),
-          coverage_type: normalizeText(link.coverage_type) || "full"
-        }))
-      : [];
-
     const nextTravelPlan = {
       ...targetTravelPlan,
       days: targetDays.map((day, index) => (
@@ -714,11 +689,7 @@ export function createBookingTravelPlanImportHandlers(deps) {
             services: targetItems
           }
           : day
-      )),
-      offer_component_links: [
-        ...(Array.isArray(targetTravelPlan?.offer_component_links) ? targetTravelPlan.offer_component_links : []),
-        ...importedLinks
-      ]
+      ))
     };
 
     const check = validateBookingTravelPlanInput(
@@ -828,8 +799,7 @@ export function createBookingTravelPlanImportHandlers(deps) {
 
     const nextTravelPlan = {
       ...targetTravelPlan,
-      days: [...targetDays, importedDay],
-      offer_component_links: Array.isArray(targetTravelPlan?.offer_component_links) ? targetTravelPlan.offer_component_links : []
+      days: [...targetDays, importedDay]
     };
 
     const check = validateBookingTravelPlanInput(
@@ -942,7 +912,6 @@ export function createBookingTravelPlanImportHandlers(deps) {
     const nextTravelPlan = {
       ...targetTravelPlan,
       days: [...targetDays, ...importedDays],
-      offer_component_links: Array.isArray(targetTravelPlan?.offer_component_links) ? targetTravelPlan.offer_component_links : [],
       attachments: Array.isArray(targetTravelPlan?.attachments) ? targetTravelPlan.attachments : []
     };
 

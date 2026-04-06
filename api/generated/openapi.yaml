@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-04-05T14:15:32Z
+# 2026-04-06T11:42:07Z
 
 ---
 openapi: 3.1.0
@@ -548,40 +548,6 @@ components:
         label: border_crossing
       - value: other
         label: other
-    TravelPlanFinancialCoverageStatus:
-      type: string
-      enum:
-      - not_applicable
-      - not_covered
-      - partially_covered
-      - covered
-      x-enum-catalog:
-      - code: not_applicable
-      - code: not_covered
-      - code: partially_covered
-      - code: covered
-      x-enum-options:
-      - value: not_applicable
-        label: not_applicable
-      - value: not_covered
-        label: not_covered
-      - value: partially_covered
-        label: partially_covered
-      - value: covered
-        label: covered
-    TravelPlanOfferCoverageType:
-      type: string
-      enum:
-      - full
-      - partial
-      x-enum-catalog:
-      - code: full
-      - code: partial
-      x-enum-options:
-      - value: full
-        label: full
-      - value: partial
-        label: partial
     SupplierCategory:
       type: string
       enum:
@@ -687,18 +653,14 @@ components:
       enum:
       - trip
       - day
-      - component
       x-enum-catalog:
       - code: trip
       - code: day
-      - code: component
       x-enum-options:
       - value: trip
         label: trip
       - value: day
         label: day
-      - value: component
-        label: component
     OfferPaymentTermKind:
       type: string
       enum:
@@ -4369,7 +4331,6 @@ components:
       - id
       - timing_kind
       - kind
-      - financial_coverage_status
       properties:
         id:
           type: string
@@ -4404,33 +4365,12 @@ components:
         end_time:
           type: string
           nullable: true
-        financial_coverage_status:
-          "$ref": "#/components/schemas/TravelPlanFinancialCoverageStatus"
-        financial_note:
-          type: string
-          nullable: true
         image:
           "$ref": "#/components/schemas/BookingTravelPlanServiceImage"
           nullable: true
         copied_from:
           "$ref": "#/components/schemas/BookingTravelPlanServiceCopiedFrom"
           nullable: true
-    BookingTravelPlanOfferComponentLink:
-      type: object
-      required:
-      - id
-      - travel_plan_service_id
-      - offer_component_id
-      - coverage_type
-      properties:
-        id:
-          type: string
-        travel_plan_service_id:
-          type: string
-        offer_component_id:
-          type: string
-        coverage_type:
-          "$ref": "#/components/schemas/TravelPlanOfferCoverageType"
     BookingTravelPlanDay:
       type: object
       required:
@@ -4489,10 +4429,6 @@ components:
           type: array
           items:
             "$ref": "#/components/schemas/BookingTravelPlanDay"
-        offer_component_links:
-          type: array
-          items:
-            "$ref": "#/components/schemas/BookingTravelPlanOfferComponentLink"
         attachments:
           type: array
           items:
@@ -4722,66 +4658,6 @@ components:
           "$ref": "#/components/schemas/OfferCategory"
         tax_rate_basis_points:
           type: integer
-    BookingOfferComponent:
-      type: object
-      required:
-      - id
-      - category
-      - label
-      - quantity
-      - unit_amount_cents
-      - tax_rate_basis_points
-      - currency
-      properties:
-        id:
-          type: string
-        category:
-          "$ref": "#/components/schemas/OfferCategory"
-        label:
-          type: string
-        details:
-          type: string
-          nullable: true
-        quantity:
-          type: integer
-        unit_amount_cents:
-          "$ref": "#/components/schemas/MoneyAmount"
-        unit_tax_amount_cents:
-          "$ref": "#/components/schemas/MoneyAmount"
-          nullable: true
-        unit_total_amount_cents:
-          "$ref": "#/components/schemas/MoneyAmount"
-          nullable: true
-        tax_rate_basis_points:
-          type: integer
-        currency:
-          "$ref": "#/components/schemas/ATPCurrencyCode"
-        line_net_amount_cents:
-          "$ref": "#/components/schemas/MoneyAmount"
-          nullable: true
-        line_tax_amount_cents:
-          "$ref": "#/components/schemas/MoneyAmount"
-          nullable: true
-        line_gross_amount_cents:
-          "$ref": "#/components/schemas/MoneyAmount"
-          nullable: true
-        line_total_amount_cents:
-          type: integer
-          nullable: true
-        notes:
-          type: string
-          nullable: true
-        sort_order:
-          type: integer
-          nullable: true
-        created_at:
-          type: string
-          format: date-time
-          nullable: true
-        updated_at:
-          type: string
-          format: date-time
-          nullable: true
     BookingOfferDiscount:
       type: object
       required:
@@ -5130,10 +5006,6 @@ components:
           type: array
           items:
             "$ref": "#/components/schemas/BookingOfferCategoryRule"
-        components:
-          type: array
-          items:
-            "$ref": "#/components/schemas/BookingOfferComponent"
         trip_price_internal:
           "$ref": "#/components/schemas/BookingOfferTripPriceInternal"
           nullable: true
@@ -5782,10 +5654,6 @@ components:
           type: array
           items:
             "$ref": "#/components/schemas/BookingOfferVisibleDayPriceReadModel"
-        components:
-          type: array
-          items:
-            "$ref": "#/components/schemas/BookingOfferComponent"
         additional_items:
           type: array
           items:
@@ -5813,10 +5681,6 @@ components:
           type: array
           items:
             "$ref": "#/components/schemas/BookingOfferCategoryRule"
-        components:
-          type: array
-          items:
-            "$ref": "#/components/schemas/BookingOfferComponent"
         trip_price_internal:
           "$ref": "#/components/schemas/BookingOfferTripPriceInternal"
           nullable: true
@@ -6560,10 +6424,10 @@ components:
           type: number
         total_price_cents:
           type: integer
-        converted_components:
+        converted_lines:
           type: array
           items:
-            "$ref": "#/components/schemas/BookingOfferComponent"
+            "$ref": "#/components/schemas/BookingOfferAdditionalItem"
         warning:
           type: string
           nullable: true
@@ -7206,7 +7070,6 @@ components:
       - include_customer_visible_images_only
       - include_notes
       - include_translations
-      - include_offer_links
       properties:
         expected_travel_plan_revision:
           type: integer
@@ -7225,8 +7088,6 @@ components:
         include_notes:
           type: boolean
         include_translations:
-          type: boolean
-        include_offer_links:
           type: boolean
         actor:
           type: string
@@ -7400,7 +7261,7 @@ components:
         deposit_rule:
           "$ref": "#/components/schemas/BookingGenerateOfferDepositBookingConfirmationRuleRequest"
           nullable: true
-    OfferExchangeRateComponent:
+    OfferExchangeRateLine:
       type: object
       required:
       - category
@@ -7429,10 +7290,10 @@ components:
           "$ref": "#/components/schemas/ATPCurrencyCode"
         to_currency:
           "$ref": "#/components/schemas/ATPCurrencyCode"
-        components:
+        lines:
           type: array
           items:
-            "$ref": "#/components/schemas/OfferExchangeRateComponent"
+            "$ref": "#/components/schemas/OfferExchangeRateLine"
     BookingActivityCreateRequest:
       type: object
       required:

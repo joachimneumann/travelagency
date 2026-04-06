@@ -179,7 +179,7 @@ test("booking page keeps critical init handlers wired to real local functions", 
     "updateNoteSaveButtonState",
     "savePricing",
     "handleOfferCurrencyChange",
-    "addOfferComponent",
+    "addOfferPricingRow",
     "saveOffer",
     "updatePricingDirtyState",
     "loadInvoices",
@@ -1593,7 +1593,7 @@ test("offer detail level select uses literal detail level values instead of curr
   assert.match(
     offersSource,
     /function populateOfferDetailLevelSelect\(select, selectedValue, \{ disableFinerThan = null \} = \{\}\) \{[\s\S]*select\.innerHTML = html;[\s\S]*select\.value = normalizedSelected;/,
-    "Offer detail level selects should keep the literal component/day/trip value after rendering options"
+    "Offer detail level selects should keep the literal day/trip value after rendering options"
   );
   assert.doesNotMatch(
     offersSource,
@@ -1603,8 +1603,8 @@ test("offer detail level select uses literal detail level values instead of curr
 });
 
 test("offer editor preserves explicit zero tax rates and keeps zero-tax rows out of the summary", async () => {
-  const offerComponentsModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "offer_components.js");
-  const source = await readFile(offerComponentsModulePath, "utf8");
+  const offerPricingModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "offer_pricing.js");
+  const source = await readFile(offerPricingModulePath, "utf8");
 
   assert.match(
     source,
@@ -2068,7 +2068,7 @@ test("booking page wires the dedicated travel-plan module and section", async ()
   );
 });
 
-test("travel-plan module preserves add/remove/reorder and offer-link editing helpers", async () => {
+test("travel-plan module preserves add/remove/reorder editing helpers", async () => {
   const travelPlanModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan.js");
   const travelPlanHelpersPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan_helpers.js");
   const generatedCatalogsPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "shared", "generated_catalogs.js");
@@ -2076,7 +2076,7 @@ test("travel-plan module preserves add/remove/reorder and offer-link editing hel
   const helperSource = await readFile(travelPlanHelpersPath, "utf8");
   const generatedCatalogs = await import(`${pathToFileURL(generatedCatalogsPath).href}?test=${Date.now()}`);
 
-  for (const helperName of ["addDay", "removeDay", "addItem", "removeItem", "moveItem", "addLink", "removeLink"]) {
+  for (const helperName of ["addDay", "removeDay", "addItem", "removeItem", "moveItem"]) {
     assert.match(
       source,
       new RegExp(`function ${helperName}\\(`),

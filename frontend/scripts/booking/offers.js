@@ -7,7 +7,7 @@ import {
 import { bookingSourceLang, bookingT } from "./i18n.js";
 import { renderBookingSectionHeader } from "./sections.js";
 import { createBookingGeneratedOffersModule } from "./offer_generated_offers.js";
-import { createBookingOfferComponentsModule } from "./offer_components.js";
+import { createBookingOfferPricingModule } from "./offer_pricing.js";
 import { createBookingOfferPaymentTermsModule } from "./offer_payment_terms.js";
 import { createBookingOfferSaveController } from "./offer_save.js";
 import {
@@ -18,11 +18,9 @@ import {
 const DEFAULT_OFFER_TAX_RATE_BASIS_POINTS = 1000;
 const OFFER_DETAIL_LEVEL_ORDER = Object.freeze({
   trip: 1,
-  day: 2,
-  component: 3
+  day: 2
 });
 const OFFER_DETAIL_LEVEL_OPTIONS = Object.freeze([
-  { value: "component", label: "Per component" },
   { value: "day", label: "Per day" },
   { value: "trip", label: "Per trip" }
 ]);
@@ -67,7 +65,6 @@ export function createBookingOfferModule(ctx) {
   function inferInternalOfferDetailLevel(source, fallback = "trip") {
     const explicit = String(source?.offer_detail_level_internal || "").trim().toLowerCase();
     if (Object.prototype.hasOwnProperty.call(OFFER_DETAIL_LEVEL_ORDER, explicit)) return explicit;
-    if (Array.isArray(source?.components) && source.components.length) return "component";
     if (Array.isArray(source?.days_internal) && source.days_internal.length) return "day";
     if (source?.trip_price_internal && typeof source.trip_price_internal === "object") return "trip";
     return fallback;
@@ -134,15 +131,11 @@ export function createBookingOfferModule(ctx) {
     const detailLevelEffects = {
       trip: bookingT(
         "booking.offer.internal_detail_level_warning_effect_trip",
-        "The offer will keep one trip total only. Day rows, component rows, surcharges, and discounts will be deleted."
+        "The offer will keep one trip total only. Day rows, surcharges, and discounts will be deleted."
       ),
       day: bookingT(
         "booking.offer.internal_detail_level_warning_effect_day",
-        "The offer will keep day rows only. If you switch from trip, every day starts at 0 and the previous total becomes one surcharge. If you switch from component, components are deleted and summed into days, with undated components moved into one surcharge."
-      ),
-      component: bookingT(
-        "booking.offer.internal_detail_level_warning_effect_component",
-        "The offer will keep component rows only. If you switch from trip, one component row per travel-plan day starts at 0 and the previous total becomes one surcharge. If you switch from day, one component row per travel-plan day is created from the day totals."
+        "The offer will keep day rows only. If you switch from trip, every day starts at 0 and the previous total becomes one surcharge."
       )
     };
     els.offer_detail_level_confirm_message.textContent = bookingT(
@@ -230,10 +223,6 @@ export function createBookingOfferModule(ctx) {
       if (!Object.values(value).some((candidate) => String(candidate || "").trim())) return;
       if (!String(value[lang] || "").trim()) missing += 1;
     };
-    const offerComponents = Array.isArray(booking?.offer?.components) ? booking.offer.components : [];
-    offerComponents.forEach((component) => {
-      considerField(component?.details_i18n);
-    });
     const travelDays = Array.isArray(booking?.travel_plan?.days) ? booking.travel_plan.days : [];
     travelDays.forEach((day) => {
       considerField(day?.title_i18n);
@@ -289,7 +278,7 @@ export function createBookingOfferModule(ctx) {
     ensureOfferCleanState,
     setOfferStatus
   });
-  const offerComponentsModule = createBookingOfferComponentsModule({
+  const offerPricingModule = createBookingOfferPricingModule({
     state,
     els,
     apiOrigin,
@@ -316,11 +305,11 @@ export function createBookingOfferModule(ctx) {
     getBookingRevision,
     clearOfferStatus,
     setOfferStatus,
-    collectOfferPayload: () => offerComponentsModule.collectOfferPayload(),
+    collectOfferPayload: () => offerPricingModule.collectOfferPayload(),
     applyOfferBookingResponse,
     debugOffer,
-    clearPendingTotals: () => offerComponentsModule.clearPendingTotals(),
-    updateOfferTotalsInDom: () => offerComponentsModule.updateOfferTotalsInDom(),
+    clearPendingTotals: () => offerPricingModule.clearPendingTotals(),
+    updateOfferTotalsInDom: () => offerPricingModule.updateOfferTotalsInDom(),
     logOfferPaymentTermDueTypeMismatch: (offer, booking) => paymentTermsModule.logOfferPaymentTermDueTypeMismatch(offer, booking),
     setOfferSaveEnabled
   });
@@ -537,19 +526,6 @@ export function createBookingOfferModule(ctx) {
     if (!els.offer_visible_pricing_hint) return;
     const internalDetailLevel = normalizeOfferDetailLevel(state.offerDraft?.offer_detail_level_internal, "trip");
     const visibleDetailLevel = normalizeOfferDetailLevel(state.offerDraft?.offer_detail_level_visible, internalDetailLevel);
-    const components = Array.isArray(state.offerDraft?.components) ? state.offerDraft.components : [];
-    const missingDayAssignments = internalDetailLevel === "component"
-      && visibleDetailLevel === "day"
-      && components.some((component) => !Number.isInteger(Number(component?.day_number)) || Number(component?.day_number) < 1);
-    if (missingDayAssignments) {
-      els.offer_visible_pricing_hint.textContent = bookingT(
-        "booking.offer.visible_pricing_day_requires_day_numbers",
-        "Customer-visible day pricing needs every internal component assigned to a day."
-      );
-      els.offer_visible_pricing_hint.classList.remove("booking-inline-status--success");
-      els.offer_visible_pricing_hint.classList.add("booking-inline-status--error");
-      return;
-    }
     els.offer_visible_pricing_hint.textContent = bookingT(
       "booking.offer.visible_pricing_hint",
       "Customer documents will show {detailLevel} pricing. Additional items stay visible as separate lines.",
@@ -587,23 +563,23 @@ export function createBookingOfferModule(ctx) {
   }
 
   function resolveOfferTotalCents() {
-    return offerComponentsModule.resolveOfferTotalCents();
+    return offerPricingModule.resolveOfferTotalCents();
   }
 
-  function addOfferComponent() {
-    return offerComponentsModule.addOfferComponent();
+  function addOfferPricingRow() {
+    return offerPricingModule.addOfferPricingRow();
   }
 
-  function renderOfferComponentsTable() {
-    return offerComponentsModule.renderOfferComponentsTable();
+  function renderOfferPricingTable() {
+    return offerPricingModule.renderOfferPricingTable();
   }
 
   function updateOfferTotalsInDom() {
-    return offerComponentsModule.updateOfferTotalsInDom();
+    return offerPricingModule.updateOfferTotalsInDom();
   }
 
   function collectOfferPayload() {
-    return offerComponentsModule.collectOfferPayload();
+    return offerPricingModule.collectOfferPayload();
   }
 
   async function applyOfferBookingResponse(response, { reloadActivities = false } = {}) {
@@ -623,18 +599,11 @@ export function createBookingOfferModule(ctx) {
     if (!els.offer_panel || !state.booking) return;
     const offer = cloneOffer(state.booking.offer || {});
     state.offerDraft = offer;
-    offerComponentsModule.resetComponentUiState();
+    offerPricingModule.resetComponentUiState();
     debugOffer("render panel", {
       booking_id: state.booking.id,
       offer: {
         currency: offer.currency,
-        components: offer.components.map((component) => ({
-          id: component.id,
-          category: component.category,
-          details: component.details,
-          quantity: component.quantity,
-          unit_amount_cents: component.unit_amount_cents
-        })),
         discount: offer.discount
           ? {
               reason: offer.discount.reason,
@@ -653,12 +622,12 @@ export function createBookingOfferModule(ctx) {
     }
     ensureOfferDetailLevelEventsBound();
     syncOfferDetailLevelControls();
-    offerComponentsModule.updateOfferCurrencyHint(currency);
+    offerPricingModule.updateOfferCurrencyHint(currency);
     updateOfferPanelSummary(resolveOfferTotalCents(), currency);
     generatedOffersModule.updateBookingConfirmationPanelSummary();
     setOfferSaveEnabled(false);
 
-    renderOfferComponentsTable();
+    renderOfferPricingTable();
     generatedOffersModule.renderGeneratedOffersTable();
     clearOfferStatus();
   }
@@ -669,16 +638,16 @@ export function createBookingOfferModule(ctx) {
 
   return {
     renderOfferPanel,
-    addOfferComponent,
-    handleOfferCurrencyChange: () => offerComponentsModule.handleOfferCurrencyChange(),
+    addOfferPricingRow,
+    handleOfferCurrencyChange: () => offerPricingModule.handleOfferCurrencyChange(),
     handleOfferInternalDetailLevelChange: () => {
       const nextValue = els.offer_detail_level_internal_input?.value;
-      offerComponentsModule.handleOfferInternalDetailLevelChange(nextValue);
+      offerPricingModule.handleOfferInternalDetailLevelChange(nextValue);
       syncOfferDetailLevelControls();
     },
     handleOfferVisibleDetailLevelChange: () => {
       const nextValue = els.offer_detail_level_visible_input?.value;
-      offerComponentsModule.handleOfferVisibleDetailLevelChange(nextValue);
+      offerPricingModule.handleOfferVisibleDetailLevelChange(nextValue);
       syncOfferDetailLevelControls();
     },
     saveOffer

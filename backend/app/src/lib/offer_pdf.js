@@ -260,22 +260,7 @@ function buildOfferTableRows(generatedOffer, formatMoneyValue, lang) {
   const currency = generatedOffer?.currency || offer?.currency;
   const discount = offer?.discount && typeof offer.discount === "object" ? offer.discount : null;
 
-  const componentRows = safeArray(offer?.components).map((component) => ({
-    category: categoryLabel(component),
-    categoryTax: formatTaxRateLabel(component?.tax_rate_basis_points, lang),
-    details: textOrNull(component?.details) || "—",
-    quantity: String(Number(component?.quantity || 1)),
-    unitText: formatMoneyValue(
-      component?.unit_total_amount_cents ?? component?.unit_amount_cents,
-      currency
-    ),
-    totalText: formatMoneyValue(
-      component?.line_gross_amount_cents ?? component?.line_total_amount_cents,
-      currency
-    )
-  }));
-
-  let mainRows = componentRows;
+  let mainRows = [];
   if (visiblePricing?.detail_level === "trip" && visiblePricing?.trip_price) {
     const tripPrice = visiblePricing.trip_price;
     const customTripLabel = textOrNull(tripPrice?.label) && !isSyntheticTripTotalLabel(tripPrice?.label)
@@ -355,7 +340,6 @@ function deriveOfferQuotationSummary(offer) {
   if (provided) return provided;
 
   const internalDetailLevel = normalizeText(source?.offer_detail_level_internal).toLowerCase() || "trip";
-  const components = internalDetailLevel === "component" ? safeArray(source.components) : [];
   const dayPrices = internalDetailLevel === "day" ? safeArray(source.days_internal) : [];
   const tripPrice = internalDetailLevel === "trip" && source?.trip_price_internal ? source.trip_price_internal : null;
   const additionalItems = safeArray(source.additional_items);
@@ -365,7 +349,6 @@ function deriveOfferQuotationSummary(offer) {
   let totalTax = 0;
   let totalGross = 0;
   const chargeLines = [
-    ...components,
     ...dayPrices,
     ...(tripPrice ? [tripPrice] : []),
     ...additionalItems

@@ -198,12 +198,12 @@ import (
 }
 
 #TravelPlanTemplateReadModel: {
-	id:                       common.#Identifier
-	title:                    string
-	description?:             string
-	status:                   enums.#TravelPlanTemplateStatus
-	destinations?:            [...enums.#CountryCode]
-	travel_styles?:           [...string]
+	id:           common.#Identifier
+	title:        string
+	description?: string
+	status:       enums.#TravelPlanTemplateStatus
+	destinations?: [...enums.#CountryCode]
+	travel_styles?: [...string]
 	source_booking_id?:       common.#Identifier
 	source_booking_name?:     string
 	created_by_atp_staff_id?: common.#Identifier
@@ -229,7 +229,7 @@ import (
 	to_currency:       string
 	exchange_rate:     number
 	total_price_cents: int
-	converted_components: [...entities.#BookingOfferComponent]
+	converted_lines: [...entities.#BookingOfferAdditionalItem]
 	warning?: string
 }
 
@@ -264,11 +264,11 @@ import (
 }
 
 #GeneratedOfferBookingConfirmationPublicSummary: {
-	accepted_at:            common.#Timestamp
-	method:                 enums.#BookingConfirmationMethod
+	accepted_at:                       common.#Timestamp
+	method:                            enums.#BookingConfirmationMethod
 	management_approver_atp_staff_id?: common.#Identifier
-	accepted_amount_cents?: >=0 & int
-	accepted_currency?:     enums.#CurrencyCode
+	accepted_amount_cents?:            >=0 & int
+	accepted_currency?:                enums.#CurrencyCode
 }
 
 #PublicGeneratedOfferDepositBookingConfirmationRuleView: {
@@ -298,40 +298,38 @@ import (
 }
 
 #BookingOfferVisibleTripPriceReadModel: {
-	label?: string
-	amount_cents:           common.#MoneyAmount
-	currency:               enums.#CurrencyCode
-	line_net_amount_cents:  common.#MoneyAmount
-	line_tax_amount_cents:  common.#MoneyAmount
+	label?:                  string
+	amount_cents:            common.#MoneyAmount
+	currency:                enums.#CurrencyCode
+	line_net_amount_cents:   common.#MoneyAmount
+	line_tax_amount_cents:   common.#MoneyAmount
 	line_gross_amount_cents: common.#MoneyAmount
 }
 
 #BookingOfferVisibleDayPriceReadModel: {
-	day_number?: >0 & int
-	label?: string
-	amount_cents:           common.#MoneyAmount
-	currency:               enums.#CurrencyCode
-	line_net_amount_cents:  common.#MoneyAmount
-	line_tax_amount_cents:  common.#MoneyAmount
+	day_number?:             >0 & int
+	label?:                  string
+	amount_cents:            common.#MoneyAmount
+	currency:                enums.#CurrencyCode
+	line_net_amount_cents:   common.#MoneyAmount
+	line_tax_amount_cents:   common.#MoneyAmount
 	line_gross_amount_cents: common.#MoneyAmount
 }
 
 #BookingOfferVisiblePricingReadModel: {
-	detail_level:     enums.#OfferDetailLevel
-	derivable:        bool
-	trip_price?:      #BookingOfferVisibleTripPriceReadModel
-	days:             [...#BookingOfferVisibleDayPriceReadModel]
-	components:       [...entities.#BookingOfferComponent]
+	detail_level: enums.#OfferDetailLevel
+	derivable:    bool
+	trip_price?:  #BookingOfferVisibleTripPriceReadModel
+	days: [...#BookingOfferVisibleDayPriceReadModel]
 	additional_items: [...entities.#BookingOfferAdditionalItem]
 }
 
 #BookingOfferReadModel: {
-	currency: enums.#CurrencyCode
-	status?:  "DRAFT" | "APPROVED" | "OFFER_SENT"
+	currency:                    enums.#CurrencyCode
+	status?:                     "DRAFT" | "APPROVED" | "OFFER_SENT"
 	offer_detail_level_internal: enums.#OfferDetailLevel
 	offer_detail_level_visible:  enums.#OfferDetailLevel
 	category_rules: [...entities.#BookingOfferCategoryRule]
-	components: [...entities.#BookingOfferComponent]
 	trip_price_internal?: entities.#BookingOfferTripPriceInternal
 	days_internal?: [...entities.#BookingOfferDayPriceInternal]
 	additional_items?: [...entities.#BookingOfferAdditionalItem]
@@ -344,37 +342,37 @@ import (
 }
 
 #BookingAcceptedRecordReadModel: {
-	available:                        bool
-	deposit_received_at?:             common.#Timestamp
+	available:                          bool
+	deposit_received_at?:               common.#Timestamp
 	deposit_confirmed_by_atp_staff_id?: common.#Identifier
-	deposit_confirmed_by_label?:      string
-	accepted_deposit_amount_cents?:   >=0 & int
-	accepted_deposit_currency?:       enums.#CurrencyCode
-	accepted_deposit_reference?:      string
-	offer?:                           #BookingOfferReadModel
-	payment_terms?:                   #BookingOfferPaymentTermsReadModel
-	travel_plan?:                     entities.#BookingTravelPlan
-	offer_artifact_ref?:              common.#Identifier
-	travel_plan_artifact_ref?:        common.#Identifier
+	deposit_confirmed_by_label?:        string
+	accepted_deposit_amount_cents?:     >=0 & int
+	accepted_deposit_currency?:         enums.#CurrencyCode
+	accepted_deposit_reference?:        string
+	offer?:                             #BookingOfferReadModel
+	payment_terms?:                     #BookingOfferPaymentTermsReadModel
+	travel_plan?:                       entities.#BookingTravelPlan
+	offer_artifact_ref?:                common.#Identifier
+	travel_plan_artifact_ref?:          common.#Identifier
 }
 
 #GeneratedBookingOfferReadModel: {
-	id:                            common.#Identifier
-	booking_id:                    common.#Identifier
-	version:                       >=1 & int
-	filename:                      string & !=""
-	lang:                          enums.#LanguageCode
-	comment?:                      string
-	created_at:                    common.#Timestamp
-	created_by?:                   string
-	currency:                      enums.#CurrencyCode
-	total_price_cents:             int
-	payment_terms?:                #BookingOfferPaymentTermsReadModel
-	offer:                         #BookingOfferReadModel
-	travel_plan?:                  entities.#BookingTravelPlan
-	management_approver_atp_staff_id?:      common.#Identifier
-	management_approver_label?:             string
-	pdf_url:                       string & !=""
+	id:                                      common.#Identifier
+	booking_id:                              common.#Identifier
+	version:                                 >=1 & int
+	filename:                                string & !=""
+	lang:                                    enums.#LanguageCode
+	comment?:                                string
+	created_at:                              common.#Timestamp
+	created_by?:                             string
+	currency:                                enums.#CurrencyCode
+	total_price_cents:                       int
+	payment_terms?:                          #BookingOfferPaymentTermsReadModel
+	offer:                                   #BookingOfferReadModel
+	travel_plan?:                            entities.#BookingTravelPlan
+	management_approver_atp_staff_id?:       common.#Identifier
+	management_approver_label?:              string
+	pdf_url:                                 string & !=""
 	customer_confirmation_flow?:             entities.#GeneratedOfferCustomerConfirmationFlow
 	public_booking_confirmation_token?:      string & !=""
 	public_booking_confirmation_expires_at?: common.#Timestamp
@@ -396,44 +394,44 @@ import (
 }
 
 #BookingReadModel: {
-	id:                              common.#Identifier
-	name?:                           string
-	image?:                          string
-	core_revision?:                  >=0 & int
-	notes_revision?:                 >=0 & int
-	persons_revision?:               >=0 & int
-	travel_plan_revision?:           >=0 & int
-	pricing_revision?:               >=0 & int
-	offer_revision?:                 >=0 & int
-	invoices_revision?:              >=0 & int
-	stage:                           enums.#BookingStage
-	deposit_received_at?:            common.#Timestamp
-	deposit_confirmed_by_atp_staff_id?: common.#Identifier
-	deposit_receipt_draft_received_at?: common.#Timestamp
+	id:                                               common.#Identifier
+	name?:                                            string
+	image?:                                           string
+	core_revision?:                                   >=0 & int
+	notes_revision?:                                  >=0 & int
+	persons_revision?:                                >=0 & int
+	travel_plan_revision?:                            >=0 & int
+	pricing_revision?:                                >=0 & int
+	offer_revision?:                                  >=0 & int
+	invoices_revision?:                               >=0 & int
+	stage:                                            enums.#BookingStage
+	deposit_received_at?:                             common.#Timestamp
+	deposit_confirmed_by_atp_staff_id?:               common.#Identifier
+	deposit_receipt_draft_received_at?:               common.#Timestamp
 	deposit_receipt_draft_confirmed_by_atp_staff_id?: common.#Identifier
-	deposit_receipt_draft_reference?: string
-	milestones?:                     entities.#BookingMilestones
-	last_action?:                    enums.#BookingMilestoneAction
-	last_action_at?:                 common.#Timestamp
-	assigned_keycloak_user_id?:      common.#Identifier
-	source_channel?:                 enums.#BookingSourceChannel
-	referral_kind?:                  enums.#BookingReferralKind
-	referral_label?:                 string
-	referral_staff_user_id?:         common.#Identifier
-	assigned_keycloak_user_label?:   string
-	assigned_atp_staff?:             entities.#AtpStaffProfile
-	service_level_agreement_due_at?: common.#Timestamp
+	deposit_receipt_draft_reference?:                 string
+	milestones?:                                      entities.#BookingMilestones
+	last_action?:                                     enums.#BookingMilestoneAction
+	last_action_at?:                                  common.#Timestamp
+	assigned_keycloak_user_id?:                       common.#Identifier
+	source_channel?:                                  enums.#BookingSourceChannel
+	referral_kind?:                                   enums.#BookingReferralKind
+	referral_label?:                                  string
+	referral_staff_user_id?:                          common.#Identifier
+	assigned_keycloak_user_label?:                    string
+	assigned_atp_staff?:                              entities.#AtpStaffProfile
+	service_level_agreement_due_at?:                  common.#Timestamp
 	destinations?: [...enums.#CountryCode]
 	travel_styles?: [...string]
-	pdf_personalization?: entities.#BookingPdfPersonalization
-	travel_start_day?:            common.#DateOnly
-	travel_end_day?:              common.#DateOnly
-	number_of_travelers?:         >=0 & int
-	preferred_currency?:          enums.#CurrencyCode
-	customer_language?:           enums.#LanguageCode
+	pdf_personalization?:          entities.#BookingPdfPersonalization
+	travel_start_day?:             common.#DateOnly
+	travel_end_day?:               common.#DateOnly
+	number_of_travelers?:          >=0 & int
+	preferred_currency?:           enums.#CurrencyCode
+	customer_language?:            enums.#LanguageCode
 	confirmed_generated_offer_id?: common.#Identifier
-	accepted_record?:             #BookingAcceptedRecordReadModel
-	notes?:                       string
+	accepted_record?:              #BookingAcceptedRecordReadModel
+	notes?:                        string
 	persons?: [...entities.#BookingPerson]
 	travel_plan?:         entities.#BookingTravelPlan
 	web_form_submission?: entities.#BookingWebFormSubmission
@@ -457,29 +455,29 @@ import (
 }
 
 #PublicGeneratedOfferAccessResponse: {
-	booking_id:                    common.#Identifier
-	generated_offer_id:            common.#Identifier
-	booking_name?:                 string
-	lang:                          enums.#LanguageCode
-	currency:                      enums.#CurrencyCode
-	total_price_cents:             int
-	comment?:                      string
-	created_at:                    common.#Timestamp
-	pdf_url?:                      string & !=""
-	payment_terms?:                #BookingOfferPaymentTermsReadModel
+	booking_id:                              common.#Identifier
+	generated_offer_id:                      common.#Identifier
+	booking_name?:                           string
+	lang:                                    enums.#LanguageCode
+	currency:                                enums.#CurrencyCode
+	total_price_cents:                       int
+	comment?:                                string
+	created_at:                              common.#Timestamp
+	pdf_url?:                                string & !=""
+	payment_terms?:                          #BookingOfferPaymentTermsReadModel
 	customer_confirmation_flow?:             #PublicGeneratedOfferCustomerConfirmationFlowView
 	public_booking_confirmation_expires_at?: common.#Timestamp
-	confirmed:                     bool
+	confirmed:                               bool
 	booking_confirmation?:                   #GeneratedOfferBookingConfirmationPublicSummary
 }
 
 #PublicGeneratedOfferAcceptResponse: {
-	booking_id:           common.#Identifier
-	generated_offer_id:   common.#Identifier
-	confirmed:            bool
-	status:               "CONFIRMED"
-	customer_confirmation_flow?:    #PublicGeneratedOfferCustomerConfirmationFlowView
-	booking_confirmation?:          #GeneratedOfferBookingConfirmationPublicSummary
+	booking_id:                  common.#Identifier
+	generated_offer_id:          common.#Identifier
+	confirmed:                   bool
+	status:                      "CONFIRMED"
+	customer_confirmation_flow?: #PublicGeneratedOfferCustomerConfirmationFlowView
+	booking_confirmation?:       #GeneratedOfferBookingConfirmationPublicSummary
 }
 
 #PublicTravelerDetailsAccessResponse: {

@@ -84,10 +84,11 @@ Customer-facing editable content is stored as language-keyed maps.
 
 Examples:
 
-- booking offer components
-  - `label_i18n`
-  - `details_i18n`
-  - `notes_i18n`
+- booking offer line items
+  - `trip_price_internal.label_i18n`
+  - `days_internal[].label_i18n`
+  - `additional_items[].label_i18n`
+  - `additional_items[].details_i18n`
 - booking travel plan
   - `title_i18n`
   - `overnight_location_i18n`

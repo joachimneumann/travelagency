@@ -1,5 +1,7 @@
 # Offer Detail Level
 
+> Note: this concept document predates the current model simplification. The active model now allows only `trip` and `day` offer detail levels; `component` mode and travel-plan coverage linking are no longer part of the model and this document still needs a full rewrite.
+
 ## Goal
 
 Separate:
@@ -80,8 +82,8 @@ With two fields:
 
 ### Core fields
 
-- `offer_detail_level_internal: "trip" | "day" | "component"`
-- `offer_detail_level_visible: "trip" | "day" | "component"`
+- `offer_detail_level_internal: "trip" | "day"`
+- `offer_detail_level_visible: "trip" | "day"`
 - `currency`
 - `discounts[]`
 - `taxes[]`
@@ -183,8 +185,6 @@ Recommended pipeline:
   - `main_subtotal = trip_price_internal.amount`
 - if `offer_detail_level_internal = day`
   - `main_subtotal = sum(days_internal[].amount)`
-- if `offer_detail_level_internal = component`
-  - `main_subtotal = sum(component totals)`
 
 ### Additional items subtotal
 
@@ -206,7 +206,6 @@ The backend should enforce:
 
 Recommended helper order:
 
-- `component = 3`
 - `day = 2`
 - `trip = 1`
 
@@ -252,16 +251,6 @@ Visible:
 - taxes
 - payment terms
 
-#### Internal `component`
-
-Visible:
-
-- component pricing editor
-- additional items
-- discounts
-- taxes
-- payment terms
-
 ### Visible preview sections
 
 The customer preview and PDF preview should reflect `offer_detail_level_visible`.
@@ -272,8 +261,6 @@ Examples:
   show one main trip total
 - visible `day`
   show one customer-facing line per day
-- visible `component`
-  show detailed visible components
 
 ## PDF Behavior
 
@@ -295,14 +282,6 @@ Show:
 - all `additional_items[]` as separate visible lines
 - subtotal / discount / tax / total
 
-### Visible `component`
-
-Show:
-
-- detailed customer-visible line items
-- all `additional_items[]` as separate visible lines
-- subtotal / discount / tax / total
-
 Important rule:
 
 - PDF presentation must not redefine totals
@@ -316,18 +295,14 @@ Recommended service-side linkage fields:
 
 - `offer_link_mode`
   - `none`
-  - `component`
   - `day`
   - `trip`
-- `linked_offer_component_ids[]`
 - `linked_day_number?`
 
 Interpretation:
 
 - `none`
   no direct commercial linkage
-- `component`
-  covered by internal components
 - `day`
   covered by day-level commercial structure
 - `trip`

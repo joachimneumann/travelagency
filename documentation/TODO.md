@@ -44,6 +44,10 @@ Can you add a feature to the booking.html page, in the danger zone at the bottom
 Clone Booking with a "new title" textfield.
 When pressed, the booking should be cloned following the rules set in the cloning script (new IDs)
 
+Database structure around travelplan, inclusing destinations and style
+What is copied when a travel plan is copied?
+What is copied when a booking is copied?
+
 Travel plan
 ===========
 * Copy whole travel plan from another booking

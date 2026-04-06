@@ -14,8 +14,7 @@ test("travel plan validation allows blank day titles", () => {
         title: "",
         services: []
       }
-    ],
-    offer_component_links: []
+    ]
   });
 
   assert.equal(result.ok, true);
@@ -38,8 +37,7 @@ test("travel plan validation allows blank service titles", () => {
           }
         ]
       }
-    ],
-    offer_component_links: []
+    ]
   });
 
   assert.equal(result.ok, true);

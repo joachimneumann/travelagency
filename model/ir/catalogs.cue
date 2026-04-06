@@ -14,8 +14,6 @@ IR: {
 		bookingPersonGenders: [for gender in enumModel.BookingPersonGenderCatalog {{code: gender}}]
 		travelPlanTimingKinds: [for kind in enumModel.TravelPlanTimingKindCatalog {{code: kind}}]
 		travelPlanServiceKinds: [for kind in enumModel.TravelPlanServiceKindCatalog {{code: kind}}]
-		travelPlanFinancialCoverageStatuses: [for status in enumModel.TravelPlanFinancialCoverageStatusCatalog {{code: status}}]
-		travelPlanOfferCoverageTypes: [for coverageType in enumModel.TravelPlanOfferCoverageTypeCatalog {{code: coverageType}}]
 		supplierCategories: [for category in enumModel.SupplierCategoryCatalog {{code: category}}]
 		paymentStatuses: [for status in enumModel.PaymentStatusCatalog {{code: status}}]
 		pricingAdjustmentTypes: [for adjustmentType in enumModel.PricingAdjustmentTypeCatalog {{code: adjustmentType}}]

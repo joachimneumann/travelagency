@@ -28,8 +28,7 @@ export function createPricingHelpers({
 }) {
   const OFFER_DETAIL_LEVEL_ORDER = Object.freeze({
     trip: 1,
-    day: 2,
-    component: 3
+    day: 2
   });
 
   function normalizeAmountCents(value, fallback = 0) {
@@ -55,7 +54,6 @@ export function createPricingHelpers({
   function inferInternalOfferDetailLevel(source, fallback = "trip") {
     const explicit = normalizeText(source?.offer_detail_level_internal).toLowerCase();
     if (Object.prototype.hasOwnProperty.call(OFFER_DETAIL_LEVEL_ORDER, explicit)) return explicit;
-    if (Array.isArray(source?.components) && source.components.length) return "component";
     if (Array.isArray(source?.days_internal) && source.days_internal.length) return "day";
     if (source?.trip_price_internal && typeof source.trip_price_internal === "object") return "trip";
     return fallback;
@@ -71,15 +69,15 @@ export function createPricingHelpers({
     return clamp(number, 0, 100000);
   }
 
-  function computeOfferComponentAmounts(component, overrides = {}) {
-    const category = normalizeOfferCategory(overrides.category ?? component?.category);
-    const quantity = Math.max(1, safeInt(overrides.quantity ?? component?.quantity) || 1);
+  function computeOfferLineAmounts(line, overrides = {}) {
+    const category = normalizeOfferCategory(overrides.category ?? line?.category);
+    const quantity = Math.max(1, safeInt(overrides.quantity ?? line?.quantity) || 1);
     const unitNetAmountCents = Math.max(0, normalizeAmountCents(
-      overrides.unit_amount_cents ?? overrides.unitAmountCents ?? component?.unit_amount_cents,
+      overrides.unit_amount_cents ?? overrides.unitAmountCents ?? line?.unit_amount_cents,
       0
     ));
     const taxRateBasisPoints = clampOfferTaxRateBasisPoints(
-      overrides.tax_rate_basis_points ?? overrides.taxRateBasisPoints ?? component?.tax_rate_basis_points,
+      overrides.tax_rate_basis_points ?? overrides.taxRateBasisPoints ?? line?.tax_rate_basis_points,
       defaultOfferTaxRateBasisPoints
     );
     const sign = offerCategorySign(category);
@@ -168,9 +166,7 @@ export function createPricingHelpers({
   function buildOfferChargeLines(offer) {
     const internalDetailLevel = normalizeOfferDetailLevel(offer?.offer_detail_level_internal);
     const lines = [];
-    if (internalDetailLevel === "component") {
-      lines.push(...(Array.isArray(offer?.components) ? offer.components : []));
-    } else if (internalDetailLevel === "day") {
+    if (internalDetailLevel === "day") {
       lines.push(...(Array.isArray(offer?.days_internal) ? offer.days_internal : []));
     } else if (internalDetailLevel === "trip" && offer?.trip_price_internal) {
       lines.push(offer.trip_price_internal);
@@ -223,7 +219,7 @@ export function createPricingHelpers({
       ? (offer?.trip_price_internal ? 1 : 0)
       : internalDetailLevel === "day"
         ? (Array.isArray(offer?.days_internal) ? offer.days_internal.length : 0)
-        : (Array.isArray(offer?.components) ? offer.components.length : 0);
+        : 0;
     const additionalItemsCount = Array.isArray(offer?.additional_items) ? offer.additional_items.length : 0;
     const hasDiscount = offer?.discount && normalizeAmountCents(offer.discount?.amount_cents, 0) > 0;
     const totals = buildOfferChargeLines(offer).reduce((acc, component) => {
@@ -311,7 +307,6 @@ export function createPricingHelpers({
       detail_level: visibleDetailLevel,
       derivable: true,
       days: [],
-      components: [],
       additional_items: visibleAdditionalItems
     };
 
@@ -335,7 +330,7 @@ export function createPricingHelpers({
       projection.trip_price = createVisibleProjectionLine({
         label: "Trip total",
         currency,
-        lines: [...normalizedOffer.components, ...foldedCarryOverItems]
+        lines: foldedCarryOverItems
       });
       return projection;
     }
@@ -352,30 +347,10 @@ export function createPricingHelpers({
         );
         return projection;
       }
-      const components = Array.isArray(normalizedOffer.components) ? normalizedOffer.components : [];
-      if (components.some((component) => !Number.isInteger(component?.day_number) || component.day_number < 1)) {
-        projection.derivable = false;
-        return projection;
-      }
-      const byDay = new Map();
-      for (const component of components) {
-        const dayNumber = Number(component.day_number);
-        const bucket = byDay.get(dayNumber) || [];
-        bucket.push(component);
-        byDay.set(dayNumber, bucket);
-      }
-      projection.days = Array.from(byDay.entries())
-        .sort((left, right) => left[0] - right[0])
-        .map(([dayNumber, lines]) => createVisibleProjectionLine({
-          label: `Day ${dayNumber}`,
-          dayNumber,
-          currency,
-          lines
-        }));
+      projection.derivable = false;
       return projection;
     }
 
-    projection.components = Array.isArray(normalizedOffer.components) ? normalizedOffer.components : [];
     return projection;
   }
 
@@ -681,7 +656,6 @@ export function createPricingHelpers({
         category,
         tax_rate_basis_points: defaultOfferTaxRateBasisPoints
       })),
-      components: [],
       additional_items: [],
       totals: computeBookingOfferTotals(null),
       quotation_summary: computeBookingOfferQuotationSummary(null),
@@ -704,51 +678,6 @@ export function createPricingHelpers({
     )
       ? internalDetailLevel
       : requestedVisibleDetailLevel;
-    const contentLang = normalizeBookingContentLang(options?.contentLang || options?.lang || "en");
-    const flatLang = normalizeBookingContentLang(options?.flatLang || options?.lang || "en");
-    const sourceLang = normalizeBookingContentLang(options?.sourceLang || contentLang);
-    const sourceComponents = Array.isArray(source.components) ? source.components : [];
-    const legacyDiscountComponent = source.discount
-      ? null
-      : sourceComponents.find((component) => normalizeOfferCategory(component?.category) === offerCategories.DISCOUNTS_CREDITS);
-    const normalizedComponents = sourceComponents
-      .filter((component) => normalizeOfferCategory(component?.category) !== offerCategories.DISCOUNTS_CREDITS)
-      .map((component, index) => {
-        const computedAmounts = computeOfferComponentAmounts(component);
-        const normalizedDayNumber = Number.parseInt(component?.day_number, 10);
-        const label_i18n = normalizeLocalizedTextMap(component?.label_i18n ?? component?.label, contentLang);
-        const details_i18n = normalizeLocalizedTextMap(
-          component?.details_i18n ?? component?.details ?? component?.description,
-          contentLang
-        );
-        const notes_i18n = normalizeLocalizedTextMap(component?.notes_i18n ?? component?.notes, contentLang);
-        return {
-          id: normalizeText(component?.id) || `offer_component_${index + 1}`,
-          category: computedAmounts.category,
-          label: resolveLocalizedText(label_i18n, flatLang, "", { sourceLang }),
-          label_i18n,
-          details: resolveLocalizedText(details_i18n, flatLang, "", { sourceLang }),
-          details_i18n,
-          day_number: Number.isInteger(normalizedDayNumber) && normalizedDayNumber >= 1 ? normalizedDayNumber : null,
-          quantity: computedAmounts.quantity,
-          unit_amount_cents: computedAmounts.unit_amount_cents,
-          unit_net_amount_cents: computedAmounts.unit_net_amount_cents,
-          unit_tax_amount_cents: computedAmounts.unit_tax_amount_cents,
-          unit_total_amount_cents: computedAmounts.unit_total_amount_cents,
-          tax_rate_basis_points: computedAmounts.tax_rate_basis_points,
-          currency,
-          notes: resolveLocalizedText(notes_i18n, flatLang, "", { sourceLang }),
-          notes_i18n,
-          sort_order: Number.isFinite(Number(component?.sort_order)) ? Number(component.sort_order) : index,
-          created_at: component?.created_at || null,
-          updated_at: component?.updated_at || null,
-          line_net_amount_cents: computedAmounts.line_net_amount_cents,
-          line_tax_amount_cents: computedAmounts.line_tax_amount_cents,
-          line_gross_amount_cents: computedAmounts.line_gross_amount_cents,
-          line_total_amount_cents: computedAmounts.line_total_amount_cents
-        };
-      });
-    const components = internalDetailLevel === "component" ? normalizedComponents : [];
     const tripPriceInternal = internalDetailLevel === "trip"
       ? normalizeBookingOfferTripPriceInternal(source.trip_price_internal, currency)
       : null;
@@ -758,18 +687,7 @@ export function createPricingHelpers({
     const additionalItems = normalizeBookingOfferAdditionalItems(source.additional_items, currency);
 
     const discount = normalizeBookingOfferDiscount(
-      source.discount || (legacyDiscountComponent
-        ? {
-            reason:
-              legacyDiscountComponent?.details
-              ?? legacyDiscountComponent?.description
-              ?? legacyDiscountComponent?.notes
-              ?? legacyDiscountComponent?.label,
-            amount_cents: Math.abs(
-              computeOfferComponentAmounts(legacyDiscountComponent).line_gross_amount_cents
-            )
-          }
-        : null),
+      source.discount,
       currency
     );
 
@@ -790,7 +708,6 @@ export function createPricingHelpers({
           ? categoryRulesByCode.get(category)
           : defaultOfferTaxRateBasisPoints
       })),
-      components,
       ...(tripPriceInternal ? { trip_price_internal: tripPriceInternal } : {}),
       days_internal: daysInternal,
       additional_items: additionalItems,
@@ -1072,7 +989,7 @@ export function createPricingHelpers({
     return major * rate * toScale;
   }
 
-  function convertOfferLineAmountForCurrency(component, rates, fromCurrency, toCurrency) {
+  function convertOfferLineAmountForCurrency(line, rates, fromCurrency, toCurrency) {
     const sourceCurrency = safeCurrency(fromCurrency) || baseCurrency;
     const targetCurrency = safeCurrency(toCurrency) || baseCurrency;
 
@@ -1091,9 +1008,9 @@ export function createPricingHelpers({
     })();
 
     if (sourceCurrency === targetCurrency) {
-      const computedAmounts = computeOfferComponentAmounts(component);
+      const computedAmounts = computeOfferLineAmounts(line);
       return {
-        id: String(component?.id || ""),
+        id: String(line?.id || ""),
         category: computedAmounts.category,
         quantity: computedAmounts.quantity,
         tax_rate_basis_points: computedAmounts.tax_rate_basis_points,
@@ -1114,8 +1031,8 @@ export function createPricingHelpers({
     const fromScale = 10 ** fromDefinition.decimal_places;
     const toDefinition = getCurrencyDefinition(targetCurrency);
     const toScale = 10 ** toDefinition.decimal_places;
-    const safeQuantity = Math.max(1, safeInt(component?.quantity) || 1);
-    const unitAmountCents = Math.max(0, Number(component?.unit_amount_cents || 0));
+    const safeQuantity = Math.max(1, safeInt(line?.quantity) || 1);
+    const unitAmountCents = Math.max(0, Number(line?.unit_amount_cents || 0));
     const sourceToBaseRate = sourceCurrency === baseCurrency ? 1 : normalizedRates.sourceToBaseRate;
     const baseToTargetRate = targetCurrency === baseCurrency ? 1 : normalizedRates.baseToTargetRate;
 
@@ -1126,13 +1043,13 @@ export function createPricingHelpers({
     const roundedUnitBaseMajor = roundedUnitBaseMinor / baseScale;
     const convertedUnitMajor = roundedUnitBaseMajor * baseToTargetRate;
     const convertedUnitMinor = Math.max(0, Math.round(convertedUnitMajor * toScale));
-    const computedAmounts = computeOfferComponentAmounts(component, {
+    const computedAmounts = computeOfferLineAmounts(line, {
       quantity: safeQuantity,
       unitAmountCents: convertedUnitMinor
     });
 
     return {
-      id: String(component?.id || ""),
+      id: String(line?.id || ""),
       category: computedAmounts.category,
       quantity: computedAmounts.quantity,
       tax_rate_basis_points: computedAmounts.tax_rate_basis_points,
@@ -1286,10 +1203,7 @@ export function createPricingHelpers({
       };
     }
 
-    const [convertedComponentAmounts, convertedAdditionalItemAmounts, convertedDayAmounts, convertedTripAmount, convertedDiscountAmount] = await Promise.all([
-      Promise.all(
-        normalized.components.map((component) => convertMinorUnits(component.unit_amount_cents, sourceCurrency, displayCurrency))
-      ),
+    const [convertedAdditionalItemAmounts, convertedDayAmounts, convertedTripAmount, convertedDiscountAmount] = await Promise.all([
       Promise.all(
         (Array.isArray(normalized.additional_items) ? normalized.additional_items : []).map((item) =>
           convertMinorUnits(item.unit_amount_cents, sourceCurrency, displayCurrency)
@@ -1311,14 +1225,6 @@ export function createPricingHelpers({
     return {
       ...Object.fromEntries(Object.entries(normalized).filter(([key]) => key !== "payment_terms")),
       currency: displayCurrency,
-      components: normalized.components.map((component, index) => ({
-        ...component,
-        ...computeOfferComponentAmounts(component, {
-          quantity: component?.quantity,
-          unitAmountCents: convertedComponentAmounts[index]
-        }),
-        currency: displayCurrency,
-      })),
       ...(normalized.trip_price_internal
         ? {
             trip_price_internal: {
@@ -1378,14 +1284,14 @@ export function createPricingHelpers({
     if (!fromCurrency) return { ok: false, error: "from_currency is required and must be a valid currency." };
     if (!toCurrency) return { ok: false, error: "to_currency is required and must be a valid currency." };
 
-    const inputComponents = Array.isArray(payload.components) ? payload.components : [];
-    const components = [];
+    const inputLines = Array.isArray(payload.lines) ? payload.lines : [];
+    const lines = [];
 
-    for (let index = 0; index < inputComponents.length; index++) {
-      const row = inputComponents[index];
+    for (let index = 0; index < inputLines.length; index++) {
+      const row = inputLines[index];
       const rawAmount = normalizeAmountCents(row?.unit_amount_cents, 0);
       if (!Number.isFinite(rawAmount) || rawAmount < 0) {
-        return { ok: false, error: `Component ${index + 1} has an invalid unit_amount_cents.` };
+        return { ok: false, error: `Line ${index + 1} has an invalid unit_amount_cents.` };
       }
       const category = normalizeOfferCategory(row?.category);
       const taxRateBasisPoints = clampOfferTaxRateBasisPoints(
@@ -1393,8 +1299,8 @@ export function createPricingHelpers({
         defaultOfferTaxRateBasisPoints
       );
       const quantity = Math.max(1, safeInt(row?.quantity) || 1);
-      components.push({
-        id: normalizeText(row?.id) || `component_${index}`,
+      lines.push({
+        id: normalizeText(row?.id) || `line_${index}`,
         unit_amount_cents: rawAmount,
         category,
         tax_rate_basis_points: taxRateBasisPoints,
@@ -1402,7 +1308,7 @@ export function createPricingHelpers({
       });
     }
 
-    return { ok: true, fromCurrency, toCurrency, components };
+    return { ok: true, fromCurrency, toCurrency, lines };
   }
 
   function formatMoney(amountCents, currency) {
@@ -1510,16 +1416,6 @@ export function createPricingHelpers({
         error: "Visible offer detail level cannot be more specific than internal offer detail level."
       };
     }
-    const inputComponents = Array.isArray(rawOffer.components) ? rawOffer.components : [];
-    for (let index = 0; index < inputComponents.length; index++) {
-      const category = normalizeOfferCategory(inputComponents[index]?.category);
-      if (category === offerCategories.DISCOUNTS_CREDITS) {
-        return {
-          ok: false,
-          error: `Component ${index + 1} uses discounts_credits, which is not allowed in offer components. Use offer.discount instead.`
-        };
-      }
-    }
     const inputAdditionalItems = Array.isArray(rawOffer.additional_items) ? rawOffer.additional_items : [];
     for (let index = 0; index < inputAdditionalItems.length; index++) {
       const category = normalizeOfferCategory(inputAdditionalItems[index]?.category);
@@ -1596,7 +1492,7 @@ export function createPricingHelpers({
     normalizeOfferCategory,
     offerCategorySign,
     clampOfferTaxRateBasisPoints,
-    computeOfferComponentAmounts,
+    computeOfferLineAmounts,
     computeBookingOfferTotals,
     computeBookingPricingSummary,
     defaultBookingPricing,

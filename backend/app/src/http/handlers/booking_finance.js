@@ -134,64 +134,12 @@ export function createBookingFinanceHandlers(deps) {
   function mergeOfferForLang(existingOffer, nextOffer, lang, preferredCurrency, sourceLang = "en") {
     const normalizedLang = normalizeBookingContentLang(lang);
     const normalizedSourceLang = normalizeBookingSourceLang(sourceLang);
-    const existingNormalized = normalizeBookingOffer(existingOffer, preferredCurrency, {
-      contentLang: normalizedLang,
-      flatLang: normalizedLang,
-      sourceLang: normalizedSourceLang
-    });
     const nextNormalized = normalizeBookingOffer(nextOffer, preferredCurrency, {
       contentLang: normalizedLang,
       flatLang: normalizedLang,
       sourceLang: normalizedSourceLang
     });
-    const existingById = new Map(
-      (Array.isArray(existingNormalized?.components) ? existingNormalized.components : []).map((component) => [component.id, component])
-    );
-
-    return {
-      ...nextNormalized,
-      components: (Array.isArray(nextNormalized.components) ? nextNormalized.components : []).map((component) => {
-        const existingComponent = existingById.get(component.id);
-        const labelField = mergeLocalizedTextField(
-          existingComponent?.label_i18n ?? existingComponent?.label,
-          component.label,
-          normalizedLang,
-          {
-            fallbackLang: normalizedLang,
-            defaultLang: normalizedSourceLang
-          }
-        );
-        const detailsField = mergeEditableLocalizedTextField(
-          existingComponent?.details_i18n ?? existingComponent?.details,
-          component.details,
-          component.details_i18n,
-          normalizedLang,
-          {
-            sourceLang: normalizedSourceLang,
-            defaultLang: normalizedSourceLang,
-            pruneExtraTranslationsOnSourceChange: true
-          }
-        );
-        const notesField = mergeLocalizedTextField(
-          existingComponent?.notes_i18n ?? existingComponent?.notes,
-          component.notes,
-          normalizedLang,
-          {
-            fallbackLang: normalizedLang,
-            defaultLang: normalizedSourceLang
-          }
-        );
-        return {
-          ...component,
-          label: labelField.text,
-          label_i18n: labelField.map,
-          details: detailsField.text,
-          details_i18n: detailsField.map,
-          notes: notesField.text,
-          notes_i18n: notesField.map
-        };
-      })
-    };
+    return nextNormalized;
   }
 
   function sendTranslationError(res, error) {
@@ -762,14 +710,14 @@ export function createBookingFinanceHandlers(deps) {
       return;
     }
 
-    const { fromCurrency, toCurrency, components } = check;
-    if (!Array.isArray(components) || components.length === 0) {
+    const { fromCurrency, toCurrency, lines } = check;
+    if (!Array.isArray(lines) || lines.length === 0) {
       sendJson(res, 200, {
         from_currency: fromCurrency,
         to_currency: toCurrency,
         exchange_rate: 1,
         total_price_cents: 0,
-        converted_components: []
+        converted_lines: []
       });
       return;
     }
@@ -799,8 +747,8 @@ export function createBookingFinanceHandlers(deps) {
       }
     }
 
-    const convertedComponents = components.map((component) =>
-      convertOfferLineAmountForCurrency(component, { sourceToBaseRate, baseToTargetRate }, fromCurrency, toCurrency)
+    const convertedLines = lines.map((line) =>
+      convertOfferLineAmountForCurrency(line, { sourceToBaseRate, baseToTargetRate }, fromCurrency, toCurrency)
     );
     const combinedRate = sourceToBaseRate * baseToTargetRate;
 
@@ -808,12 +756,12 @@ export function createBookingFinanceHandlers(deps) {
       from_currency: fromCurrency,
       to_currency: toCurrency,
       exchange_rate: combinedRate,
-      total_price_cents: convertedComponents.reduce(
-        (sum, component) =>
-          sum + (Number.isFinite(component.line_total_amount_cents) ? Number(component.line_total_amount_cents) : 0),
+      total_price_cents: convertedLines.reduce(
+        (sum, line) =>
+          sum + (Number.isFinite(line.line_total_amount_cents) ? Number(line.line_total_amount_cents) : 0),
         0
       ),
-      converted_components: convertedComponents,
+      converted_lines: convertedLines,
       ...(warnings.size > 0 ? { warning: [...warnings].join(" ") } : {})
     };
     sendJson(res, 200, responsePayload);

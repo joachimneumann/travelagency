@@ -237,7 +237,6 @@ const state = {
     title: "",
     summary: "",
     days: [],
-    offer_component_links: [],
     attachments: []
   },
   offerDraft: {
@@ -1445,8 +1444,8 @@ function disarmDepositReceiptConfirmation() {
   return pricingModule.disarmDepositReceiptConfirmation?.();
 }
 
-function addOfferComponent() {
-  return offerModule.addOfferComponent();
+function addOfferPricingRow() {
+  return offerModule.addOfferPricingRow();
 }
 
 function handleOfferCurrencyChange() {

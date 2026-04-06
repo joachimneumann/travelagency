@@ -1,5 +1,4 @@
 import {
-  TRAVEL_PLAN_OFFER_COVERAGE_TYPE_OPTIONS,
   TRAVEL_PLAN_SERVICE_KIND_OPTIONS,
   TRAVEL_PLAN_TIMING_KIND_OPTIONS as GENERATED_TRAVEL_PLAN_TIMING_KIND_OPTIONS
 } from "../shared/generated_catalogs.js";
@@ -11,7 +10,6 @@ import {
 } from "./i18n.js";
 import {
   buildDualLocalizedPayload,
-  normalizeLocalizedEditorMap,
   resolveLocalizedEditorBranchText,
   resolveLocalizedEditorText
 } from "./localized_editor.js";
@@ -58,13 +56,6 @@ function normalizeTimingKind(value) {
   return TRAVEL_PLAN_TIMING_KIND_OPTIONS.some((option) => option.value === normalized)
     ? normalized
     : "label";
-}
-
-function normalizeCoverageType(value) {
-  const normalized = normalizeOptionalText(value).toLowerCase();
-  return TRAVEL_PLAN_OFFER_COVERAGE_TYPE_OPTIONS.some((option) => option.value === normalized)
-    ? normalized
-    : "full";
 }
 
 function normalizeItemTiming(rawItem) {
@@ -240,10 +231,6 @@ export function createEmptyTravelPlanService() {
     supplier_id: "",
     start_time: "",
     end_time: "",
-    financial_coverage_needed: true,
-    financial_coverage_status: "not_covered",
-    financial_note: "",
-    financial_note_i18n: {},
     image: null,
     copied_from: null
   };
@@ -265,19 +252,9 @@ export function createEmptyTravelPlanDay(index = 0) {
   };
 }
 
-export function createEmptyTravelPlanOfferComponentLink(itemId = "") {
-  return {
-    id: travelPlanId("travel_plan_offer_link"),
-    travel_plan_service_id: String(itemId || "").trim(),
-    offer_component_id: "",
-    coverage_type: "full"
-  };
-}
-
 export function createEmptyTravelPlan() {
   return {
     days: [],
-    offer_component_links: [],
     attachments: []
   };
 }
@@ -287,47 +264,21 @@ export function getTravelPlanServiceKindLabel(kind) {
   return bookingT(`booking.travel_plan.kind.${kind}`, option?.label || "Other");
 }
 
-export function getTravelPlanCoverageTypeLabel(coverageType) {
-  const option = TRAVEL_PLAN_OFFER_COVERAGE_TYPE_OPTIONS.find((entry) => entry.value === coverageType);
-  return bookingT(`booking.travel_plan.coverage_type.${coverageType}`, option?.label || "Full");
-}
-
-export function getTravelPlanServiceCoverageStatus(kind, links = [], financialCoverageNeeded = true) {
-  if (!Array.isArray(links) || links.length === 0) {
-    if (financialCoverageNeeded === false) {
-      return "not_applicable";
-    }
-    return normalizeItemKind(kind) === "free_time" ? "not_applicable" : "not_covered";
-  }
-  if (links.some((link) => normalizeCoverageType(link?.coverage_type) === "full")) {
-    return "covered";
-  }
-  if (links.some((link) => normalizeCoverageType(link?.coverage_type) === "partial")) {
-    return "partially_covered";
-  }
-  return normalizeItemKind(kind) === "free_time" ? "not_applicable" : "not_covered";
-}
-
 export function normalizeTravelPlanDraft(plan, offerComponents = [], options = {}) {
   const source = plan && typeof plan === "object" ? plan : {};
+  const normalizedOptions = Array.isArray(offerComponents) ? options : (offerComponents || {});
   const targetLang = normalizeBookingContentLang(
-    options?.targetLang
-    || options?.contentLang
+    normalizedOptions?.targetLang
+    || normalizedOptions?.contentLang
     || String(window.__BOOKING_CONTENT_LANG || "en").trim()
     || "en"
   );
   const sourceLang = normalizeBookingSourceLang(
-    options?.sourceLang
-    || options?.editingLang
+    normalizedOptions?.sourceLang
+    || normalizedOptions?.editingLang
     || bookingSourceLang("en")
     || "en"
   );
-  const linkableOfferComponentIds = new Set(
-    (Array.isArray(offerComponents) ? offerComponents : [])
-      .map((component) => String(component?.id || "").trim())
-      .filter(Boolean)
-  );
-
   const days = (Array.isArray(source.days) ? source.days : [])
     .map((day, dayIndex) => {
       const rawDay = day && typeof day === "object" ? day : {};
@@ -380,7 +331,6 @@ export function normalizeTravelPlanDraft(plan, offerComponents = [], options = {
             targetLang,
             sourceLang
           ).map;
-          const financialNoteMap = normalizeLocalizedEditorMap(rawItem.financial_note_i18n ?? rawItem.financial_note, sourceLang);
           return {
             id: String(rawItem.id || travelPlanId("travel_plan_service")),
             timing_kind: timing.timing_kind,
@@ -398,10 +348,6 @@ export function normalizeTravelPlanDraft(plan, offerComponents = [], options = {
             supplier_id: normalizeOptionalText(rawItem.supplier_id),
             start_time: timing.start_time,
             end_time: timing.end_time,
-            financial_coverage_needed: rawItem.financial_coverage_needed !== false,
-            financial_note: resolveLocalizedEditorText(financialNoteMap, sourceLang, ""),
-            financial_note_i18n: financialNoteMap,
-            financial_coverage_status: "not_covered",
             image: normalizeItemImage(rawItem.image ?? rawItem.images),
             copied_from: normalizeCopiedFrom(rawItem.copied_from)
           };
@@ -417,47 +363,8 @@ export function normalizeTravelPlanDraft(plan, offerComponents = [], options = {
       };
     });
 
-  const itemIdSet = new Set(days.flatMap((day) => day.services.map((item) => item.id)));
-  const offer_component_links = (Array.isArray(source.offer_component_links) ? source.offer_component_links : [])
-    .map((link) => {
-      const rawLink = link && typeof link === "object" ? link : {};
-      return {
-        id: String(rawLink.id || travelPlanId("travel_plan_offer_link")),
-        travel_plan_service_id: String(rawLink.travel_plan_service_id || rawLink.travel_plan_item_id || "").trim(),
-        offer_component_id: String(rawLink.offer_component_id || "").trim(),
-        coverage_type: normalizeCoverageType(rawLink.coverage_type)
-      };
-    })
-    .filter((link) => {
-      if (!itemIdSet.has(link.travel_plan_service_id)) return false;
-      if (!link.offer_component_id) return true;
-      return linkableOfferComponentIds.has(link.offer_component_id);
-    });
-
-  const linksByItemId = new Map();
-  for (const link of offer_component_links) {
-    if (!link.offer_component_id) continue;
-    const list = linksByItemId.get(link.travel_plan_service_id) || [];
-    list.push(link);
-    linksByItemId.set(link.travel_plan_service_id, list);
-  }
-
   return {
-    days: days.map((day) => ({
-      ...day,
-      services: day.services.map((item) => ({
-        ...item,
-        financial_coverage_needed: (linksByItemId.get(item.id) || []).length > 0
-          ? true
-          : item.financial_coverage_needed !== false,
-        financial_coverage_status: getTravelPlanServiceCoverageStatus(
-          item.kind,
-          linksByItemId.get(item.id) || [],
-          (linksByItemId.get(item.id) || []).length > 0 ? true : item.financial_coverage_needed
-        )
-      }))
-    })),
-    offer_component_links,
+    days,
     attachments: normalizeTravelPlanAttachments(source.attachments)
   };
 }
@@ -467,16 +374,4 @@ export function countTravelPlanServices(plan) {
     (sum, day) => sum + (Array.isArray(day?.services) ? day.services.length : 0),
     0
   );
-}
-
-export function countUncoveredTravelPlanServices(plan) {
-  return (Array.isArray(plan?.days) ? plan.days : []).reduce(
-    (sum, day) =>
-      sum + (Array.isArray(day?.services) ? day.services.filter((item) => item?.financial_coverage_status === "not_covered").length : 0),
-    0
-  );
-}
-
-export function getLinkableOfferComponents(offerComponents = []) {
-  return (Array.isArray(offerComponents) ? offerComponents : []).filter((component) => String(component?.id || "").trim());
 }

@@ -81,7 +81,6 @@ function resetOffer(booking) {
     offer_detail_level_internal: normalizeText(offer.offer_detail_level_internal).toLowerCase() || "trip",
     offer_detail_level_visible: normalizeText(offer.offer_detail_level_visible).toLowerCase() || "trip",
     category_rules: Array.isArray(offer.category_rules) ? cloneJson(offer.category_rules) : [],
-    components: [],
     additional_items: [],
     totals: zeroOfferTotals(),
     quotation_summary: zeroOfferQuotationSummary(),
@@ -159,8 +158,6 @@ function remapTravelPlan(booking, randomUUID) {
       };
     });
   }
-
-  travelPlan.offer_component_links = [];
 
   if (Array.isArray(travelPlan.attachments)) {
     travelPlan.attachments = travelPlan.attachments.map((attachment) => ({

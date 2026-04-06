@@ -49,8 +49,6 @@ IR: {
 		BookingPersonGender: {catalog: "bookingPersonGenders"}
 		TravelPlanTimingKind: {catalog: "travelPlanTimingKinds"}
 		TravelPlanServiceKind: {catalog: "travelPlanServiceKinds"}
-		TravelPlanFinancialCoverageStatus: {catalog: "travelPlanFinancialCoverageStatuses"}
-		TravelPlanOfferCoverageType: {catalog: "travelPlanOfferCoverageTypes"}
 		SupplierCategory: {catalog: "supplierCategories"}
 		PaymentStatus: {catalog: "paymentStatuses"}
 		PricingAdjustmentType: {catalog: "pricingAdjustmentTypes"}
@@ -323,22 +321,8 @@ IR: {
 				{name: "supplier_id", kind: "scalar", typeName: "Identifier", required: false},
 				{name: "start_time", kind: "scalar", typeName: "string", required: false},
 				{name: "end_time", kind: "scalar", typeName: "string", required: false},
-				{name: "financial_coverage_status", kind: "enum", typeName: "TravelPlanFinancialCoverageStatus", required: true},
-				{name: "financial_note", kind: "scalar", typeName: "string", required: false},
 				{name: "image", kind: "entity", typeName: "BookingTravelPlanServiceImage", required: false},
 				{name: "copied_from", kind: "entity", typeName: "BookingTravelPlanServiceCopiedFrom", required: false},
-			]
-		},
-		{
-			name:       "BookingTravelPlanOfferComponentLink"
-			domain:     "booking"
-			module:     "entities"
-			sourceType: "entities.#BookingTravelPlanOfferComponentLink"
-			fields: [
-				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
-				{name: "travel_plan_service_id", kind: "scalar", typeName: "Identifier", required: true},
-				{name: "offer_component_id", kind: "scalar", typeName: "Identifier", required: true},
-				{name: "coverage_type", kind: "enum", typeName: "TravelPlanOfferCoverageType", required: true},
 			]
 		},
 		{
@@ -377,7 +361,6 @@ IR: {
 			sourceType: "entities.#BookingTravelPlan"
 			fields: [
 				{name: "days", kind: "entity", typeName: "BookingTravelPlanDay", required: false, isArray: true},
-				{name: "offer_component_links", kind: "entity", typeName: "BookingTravelPlanOfferComponentLink", required: false, isArray: true},
 				{name: "attachments", kind: "entity", typeName: "BookingTravelPlanAttachment", required: false, isArray: true},
 			]
 		},
@@ -496,32 +479,6 @@ IR: {
 			fields: [
 				{name: "category", kind: "enum", typeName: "OfferCategory", required: true},
 				{name: "tax_rate_basis_points", kind: "scalar", typeName: "int", required: true},
-			]
-		},
-		{
-			name:       "BookingOfferComponent"
-			domain:     "booking"
-			module:     "entities"
-			sourceType: "entities.#BookingOfferComponent"
-			fields: [
-				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
-				{name: "category", kind: "enum", typeName: "OfferCategory", required: true},
-				{name: "label", kind: "scalar", typeName: "string", required: true},
-				{name: "details", kind: "scalar", typeName: "string", required: false},
-				{name: "quantity", kind: "scalar", typeName: "int", required: true},
-				{name: "unit_amount_cents", kind: "transport", typeName: "MoneyAmount", required: true},
-				{name: "unit_tax_amount_cents", kind: "transport", typeName: "MoneyAmount", required: false},
-				{name: "unit_total_amount_cents", kind: "transport", typeName: "MoneyAmount", required: false},
-				{name: "tax_rate_basis_points", kind: "scalar", typeName: "int", required: true},
-				{name: "currency", kind: "enum", typeName: "CurrencyCode", required: true},
-				{name: "line_net_amount_cents", kind: "transport", typeName: "MoneyAmount", required: false},
-				{name: "line_tax_amount_cents", kind: "transport", typeName: "MoneyAmount", required: false},
-				{name: "line_gross_amount_cents", kind: "transport", typeName: "MoneyAmount", required: false},
-				{name: "line_total_amount_cents", kind: "scalar", typeName: "int", required: false},
-				{name: "notes", kind: "scalar", typeName: "string", required: false},
-				{name: "sort_order", kind: "scalar", typeName: "int", required: false},
-				{name: "created_at", kind: "scalar", typeName: "Timestamp", required: false},
-				{name: "updated_at", kind: "scalar", typeName: "Timestamp", required: false},
 			]
 		},
 		{
@@ -728,7 +685,6 @@ IR: {
 				{name: "offer_detail_level_internal", kind: "enum", typeName: "OfferDetailLevel", required: true},
 				{name: "offer_detail_level_visible", kind: "enum", typeName: "OfferDetailLevel", required: true},
 				{name: "category_rules", kind: "entity", typeName: "BookingOfferCategoryRule", required: true, isArray: true},
-				{name: "components", kind: "entity", typeName: "BookingOfferComponent", required: true, isArray: true},
 				{name: "trip_price_internal", kind: "entity", typeName: "BookingOfferTripPriceInternal", required: false},
 				{name: "days_internal", kind: "entity", typeName: "BookingOfferDayPriceInternal", required: false, isArray: true},
 				{name: "additional_items", kind: "entity", typeName: "BookingOfferAdditionalItem", required: false, isArray: true},
@@ -1033,7 +989,6 @@ IR: {
 				{name: "derivable", kind: "scalar", typeName: "bool", required: true},
 				{name: "trip_price", kind: "transport", typeName: "BookingOfferVisibleTripPriceReadModel", required: false},
 				{name: "days", kind: "transport", typeName: "BookingOfferVisibleDayPriceReadModel", required: true, isArray: true},
-				{name: "components", kind: "entity", typeName: "BookingOfferComponent", required: true, isArray: true},
 				{name: "additional_items", kind: "entity", typeName: "BookingOfferAdditionalItem", required: true, isArray: true},
 			]
 		},
@@ -1048,7 +1003,6 @@ IR: {
 				{name: "offer_detail_level_internal", kind: "enum", typeName: "OfferDetailLevel", required: true},
 				{name: "offer_detail_level_visible", kind: "enum", typeName: "OfferDetailLevel", required: true},
 				{name: "category_rules", kind: "entity", typeName: "BookingOfferCategoryRule", required: true, isArray: true},
-				{name: "components", kind: "entity", typeName: "BookingOfferComponent", required: true, isArray: true},
 				{name: "trip_price_internal", kind: "entity", typeName: "BookingOfferTripPriceInternal", required: false},
 				{name: "days_internal", kind: "entity", typeName: "BookingOfferDayPriceInternal", required: false, isArray: true},
 				{name: "additional_items", kind: "entity", typeName: "BookingOfferAdditionalItem", required: false, isArray: true},
@@ -1485,7 +1439,7 @@ IR: {
 				{name: "to_currency", kind: "scalar", typeName: "string", required: true},
 				{name: "exchange_rate", kind: "scalar", typeName: "float", required: true},
 				{name: "total_price_cents", kind: "scalar", typeName: "int", required: true},
-				{name: "converted_components", kind: "entity", typeName: "BookingOfferComponent", required: true, isArray: true},
+				{name: "converted_lines", kind: "entity", typeName: "BookingOfferAdditionalItem", required: true, isArray: true},
 				{name: "warning", kind: "scalar", typeName: "string", required: false},
 			]
 		},
@@ -1934,7 +1888,6 @@ IR: {
 				{name: "include_customer_visible_images_only", kind: "scalar", typeName: "bool", required: true},
 				{name: "include_notes", kind: "scalar", typeName: "bool", required: true},
 				{name: "include_translations", kind: "scalar", typeName: "bool", required: true},
-				{name: "include_offer_links", kind: "scalar", typeName: "bool", required: true},
 				{name: "actor", kind: "scalar", typeName: "string", required: false},
 			]
 		},
@@ -2075,10 +2028,10 @@ IR: {
 			]
 		},
 		{
-			name:       "OfferExchangeRateComponent"
+			name:       "OfferExchangeRateLine"
 			domain:     "api"
 			module:     "api"
-			sourceType: "api.#OfferExchangeRateComponent"
+			sourceType: "api.#OfferExchangeRateLine"
 			fields: [
 				{name: "id", kind: "scalar", typeName: "Identifier", required: false},
 				{name: "category", kind: "enum", typeName: "OfferCategory", required: true},
@@ -2095,7 +2048,7 @@ IR: {
 			fields: [
 				{name: "from_currency", kind: "enum", typeName: "CurrencyCode", required: true},
 				{name: "to_currency", kind: "enum", typeName: "CurrencyCode", required: true},
-				{name: "components", kind: "transport", typeName: "OfferExchangeRateComponent", required: false, isArray: true},
+				{name: "lines", kind: "transport", typeName: "OfferExchangeRateLine", required: false, isArray: true},
 			]
 		},
 		{

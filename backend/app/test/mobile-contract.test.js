@@ -422,7 +422,6 @@ function assertBookingShape(booking) {
   assert.equal(typeof booking.travel_plan_revision, "number");
   assert.equal(typeof booking.travel_plan, "object");
   assert.ok(Array.isArray(booking.travel_plan.days));
-  assert.ok(Array.isArray(booking.travel_plan.offer_component_links));
   if (booking.service_level_agreement_due_at) assertISODateLike(booking.service_level_agreement_due_at, "booking.service_level_agreement_due_at");
   if (booking.created_at) assertISODateLike(booking.created_at, "booking.created_at");
   if (booking.updated_at) assertISODateLike(booking.updated_at, "booking.updated_at");
@@ -503,14 +502,6 @@ test("booking clone endpoint applies the shared clone policy and can include tra
         ]
       }
     ],
-    offer_component_links: [
-      {
-        id: "travel_link_1",
-        travel_plan_service_id: "travel_service_1",
-        offer_component_id: "offer_component_1",
-        coverage_type: "full"
-      }
-    ],
     attachments: [
       {
         id: "attachment_1",
@@ -588,7 +579,6 @@ test("booking clone endpoint applies the shared clone policy and can include tra
   assert.deepEqual(cloneWithoutTravelers.body.booking.accepted_record, { available: false });
   assert.equal(cloneWithoutTravelers.body.booking.travel_plan.days[0].services[0].image.storage_path, "booking_images/source/service.webp");
   assert.equal(cloneWithoutTravelers.body.booking.travel_plan.attachments[0].storage_path, "booking_source/voucher.pdf");
-  assert.equal(cloneWithoutTravelers.body.booking.travel_plan.offer_component_links.length, 0);
   assert.deepEqual(cloneWithoutTravelers.body.booking.pricing.adjustments, []);
   assert.deepEqual(cloneWithoutTravelers.body.booking.pricing.payments, []);
   assert.equal(cloneWithoutTravelers.body.booking.web_form_submission.booking_name, "Cloned without travelers");
@@ -1511,7 +1501,7 @@ test("booking offer patch accepts an explicit offer discount with a reason", asy
   assert.equal(detailAfter.body.booking.offer.total_price_cents, 10500);
 });
 
-test("booking travel plan patch persists days, links, and derived financial coverage", async () => {
+test("booking travel plan patch persists days and services", async () => {
   const createdBooking = await createSeedBooking();
   const bookingId = createdBooking.id;
 
@@ -1579,8 +1569,7 @@ test("booking travel plan patch persists days, links, and derived financial cove
                   timing_kind: "point",
                   time_point: "19:00",
                   kind: "transport",
-                  title: "Airport transfer",
-                  financial_coverage_status: "not_covered"
+                  title: "Airport transfer"
                 },
                 {
                   id: "travel_plan_service_2",
@@ -1588,8 +1577,7 @@ test("booking travel plan patch persists days, links, and derived financial cove
                   start_time: "14:00",
                   end_time: "15:00",
                   kind: "accommodation",
-                  title: "Hotel check-in",
-                  financial_coverage_status: "not_covered"
+                  title: "Hotel check-in"
                 },
                 {
                   id: "travel_plan_service_3",
@@ -1607,20 +1595,6 @@ test("booking travel plan patch persists days, links, and derived financial cove
                 }
               ]
             }
-          ],
-          offer_component_links: [
-            {
-              id: "travel_plan_offer_link_1",
-              travel_plan_service_id: "travel_plan_service_1",
-              offer_component_id: "offer_component_transfer_1",
-              coverage_type: "partial"
-            },
-            {
-              id: "travel_plan_offer_link_2",
-              travel_plan_service_id: "travel_plan_service_2",
-              offer_component_id: "offer_component_room_1",
-              coverage_type: "full"
-            }
           ]
         }
       }
@@ -1629,7 +1603,6 @@ test("booking travel plan patch persists days, links, and derived financial cove
   assert.equal(travelPlanPatchResult.status, 200);
   assert.equal(travelPlanPatchResult.body.booking.travel_plan_revision, 1);
   assert.equal(travelPlanPatchResult.body.booking.travel_plan.days.length, 1);
-  assert.equal(travelPlanPatchResult.body.booking.travel_plan.offer_component_links.length, 2);
   assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].services[0].timing_kind, "point");
   assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].services[0].time_point, "19:00");
   assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].services[0].time_label, null);
@@ -1638,33 +1611,12 @@ test("booking travel plan patch persists days, links, and derived financial cove
   assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].services[1].end_time, "15:00");
   assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].services[2].timing_kind, "label");
   assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].services[2].time_label, "Evening");
-  assert.equal(
-    travelPlanPatchResult.body.booking.travel_plan.days[0].services[0].financial_coverage_status,
-    "partially_covered"
-  );
-  assert.equal(
-    travelPlanPatchResult.body.booking.travel_plan.days[0].services[1].financial_coverage_status,
-    "covered"
-  );
-  assert.equal(
-    travelPlanPatchResult.body.booking.travel_plan.days[0].services[2].financial_coverage_status,
-    "not_applicable"
-  );
-  assert.equal(
-    travelPlanPatchResult.body.booking.travel_plan.days[0].services[3].financial_coverage_status,
-    "not_covered"
-  );
-
   const detailAfter = await requestJson(
     endpointPath("booking_detail").replace("{booking_id}", bookingId),
     apiHeaders()
   );
   assert.equal(detailAfter.status, 200);
   assert.equal(detailAfter.body.booking.travel_plan.days[0].title, "Arrival");
-  assert.equal(
-    detailAfter.body.booking.travel_plan.days[0].services[0].financial_coverage_status,
-    "partially_covered"
-  );
   assert.equal(detailAfter.body.booking.travel_plan.days[0].services[0].time_point, "19:00");
 
   const activitiesAfter = await requestJson(
@@ -1697,8 +1649,7 @@ test("booking travel plan patch rejects stale revisions", async () => {
               title: "Arrival",
               services: []
             }
-          ],
-          offer_component_links: []
+          ]
         }
       }
     }
@@ -1720,8 +1671,7 @@ test("booking travel plan patch rejects stale revisions", async () => {
               title: "Arrival",
               services: []
             }
-          ],
-          offer_component_links: []
+          ]
         }
       }
     }
@@ -1730,7 +1680,7 @@ test("booking travel plan patch rejects stale revisions", async () => {
   assert.equal(stalePatch.body.code, "BOOKING_REVISION_MISMATCH");
 });
 
-test("booking travel plan patch allows blank service titles and still rejects invalid items and unknown offer links", async () => {
+test("booking travel plan patch allows blank service titles and still rejects invalid items and unknown suppliers", async () => {
   const createdBooking = await createSeedBooking();
   const bookingId = createdBooking.id;
 
@@ -1755,8 +1705,7 @@ test("booking travel plan patch allows blank service titles and still rejects in
                 }
               ]
             }
-          ],
-          offer_component_links: []
+          ]
         }
       }
     }
@@ -1787,8 +1736,7 @@ test("booking travel plan patch allows blank service titles and still rejects in
                 }
               ]
             }
-          ],
-          offer_component_links: []
+          ]
         }
       }
     }
@@ -1818,8 +1766,7 @@ test("booking travel plan patch allows blank service titles and still rejects in
                 }
               ]
             }
-          ],
-          offer_component_links: []
+          ]
         }
       }
     }
@@ -1827,42 +1774,6 @@ test("booking travel plan patch allows blank service titles and still rejects in
   assert.equal(invalidSupplierResult.status, 422);
   assert.match(String(invalidSupplierResult.body.error || ""), /unknown supplier/i);
 
-  const invalidLinkResult = await requestJson(
-    endpointPath("booking_travel_plan").replace("{booking_id}", bookingId),
-    apiHeaders(),
-    {
-      method: "PATCH",
-      body: {
-        expected_travel_plan_revision: nextTravelPlanRevision,
-        travel_plan: {
-          days: [
-            {
-              id: "travel_plan_day_1",
-              day_number: 1,
-              title: "Arrival",
-              services: [
-                {
-                  id: "travel_plan_service_1",
-                  kind: "transport",
-                  title: "Airport transfer"
-                }
-              ]
-            }
-          ],
-          offer_component_links: [
-            {
-              id: "travel_plan_offer_link_1",
-              travel_plan_service_id: "travel_plan_service_1",
-              offer_component_id: "offer_component_missing",
-              coverage_type: "full"
-            }
-          ]
-        }
-      }
-    }
-  );
-  assert.equal(invalidLinkResult.status, 422);
-  assert.match(String(invalidLinkResult.body.error || ""), /unknown offer component/i);
 });
 
 test("services can be searched and imported from another booking", async () => {
@@ -1895,7 +1806,6 @@ test("services can be searched and imported from another booking", async () => {
             title: "Boutique hotel check-in",
             details: "Private transfer and riverside hotel check-in.",
             location: "Hoi An",
-            financial_note: "",
             image: {
               id: "source_item_image_1",
               storage_path: "/public/v1/booking-images/source/item-1.webp",
@@ -1908,8 +1818,7 @@ test("services can be searched and imported from another booking", async () => {
         ],
         notes: ""
       }
-    ],
-    offer_component_links: []
+    ]
   };
   targetRecord.travel_plan = {
     days: [
@@ -1922,8 +1831,7 @@ test("services can be searched and imported from another booking", async () => {
         services: [],
         notes: ""
       }
-    ],
-    offer_component_links: []
+    ]
   };
   await writeFile(STORE_PATH, `${JSON.stringify(store, null, 2)}\n`, "utf8");
 
@@ -2007,10 +1915,6 @@ test("days can be searched and imported from another booking with cleared timing
             details_i18n: { en: "Guided hike", de: "Gefuhrte Wanderung" },
             location: "Bach Ma",
             location_i18n: { en: "Bach Ma", de: "Bach Ma" },
-            financial_coverage_needed: true,
-            financial_coverage_status: "covered",
-            financial_note: "Covered by package",
-            financial_note_i18n: { en: "Covered by package", de: "Im Paket enthalten" },
             image: {
               id: "source_day_service_image_1",
               storage_path: "/public/v1/booking-images/source/day-service-1.webp",
@@ -2023,14 +1927,6 @@ test("days can be searched and imported from another booking with cleared timing
         ],
         notes: "Bring water",
         notes_i18n: { en: "Bring water", de: "Wasser mitbringen" }
-      }
-    ],
-    offer_component_links: [
-      {
-        id: "source_day_link_1",
-        travel_plan_service_id: "source_day_service_1",
-        offer_component_id: "missing_component",
-        coverage_type: "full"
       }
     ]
   };
@@ -2045,8 +1941,7 @@ test("days can be searched and imported from another booking with cleared timing
         services: [],
         notes: ""
       }
-    ],
-    offer_component_links: []
+    ]
   };
   await writeFile(STORE_PATH, `${JSON.stringify(store, null, 2)}\n`, "utf8");
 
@@ -2088,17 +1983,12 @@ test("days can be searched and imported from another booking with cleared timing
   assert.deepEqual(importedDay.notes_i18n, { en: "Bring water", de: "Wasser mitbringen" });
   assert.equal(importedDay.copied_from.source_booking_id, sourceBooking.id);
   assert.equal(importedDay.copied_from.source_day_id, "source_day_copy_1");
-  assert.equal(importResult.body.booking.travel_plan.offer_component_links.length, 0);
-
   const importedService = importedDay.services[0];
   assert.equal(importedService.title, "Canyon walk");
   assert.deepEqual(importedService.title_i18n, { en: "Canyon walk", de: "Canyon-Wanderung" });
   assert.equal(importedService.time_point, null);
   assert.equal(importedService.start_time, null);
   assert.equal(importedService.end_time, null);
-  assert.equal(importedService.financial_coverage_needed, false);
-  assert.equal(importedService.financial_note, null);
-  assert.equal(importedService.financial_coverage_status, "not_applicable");
   assert.equal(importedService.copied_from.source_booking_id, sourceBooking.id);
   assert.equal(importedService.copied_from.source_day_id, "source_day_copy_1");
   assert.equal(importedService.copied_from.source_service_id, "source_day_service_1");
@@ -2142,10 +2032,6 @@ test("travel plans can be searched and appended from another booking with groupe
             details_i18n: { en: "Private transfer", de: "Privater Transfer" },
             location: "Hue Airport",
             location_i18n: { en: "Hue Airport", de: "Flughafen Hue" },
-            financial_coverage_needed: true,
-            financial_coverage_status: "covered",
-            financial_note: "Supplier already confirmed",
-            financial_note_i18n: { en: "Supplier already confirmed", de: "Lieferant bereits bestatigt" },
             image: {
               id: "source_plan_service_image_1",
               storage_path: "/public/v1/booking-images/source/plan-service-1.webp",
@@ -2176,21 +2062,10 @@ test("travel plans can be searched and appended from another booking with groupe
             kind: "activity",
             title: "Lantern cave walk",
             details: "Guided cave visit",
-            location: "Phong Nha",
-            financial_coverage_needed: true,
-            financial_coverage_status: "covered",
-            financial_note: "Paid by source booking"
+            location: "Phong Nha"
           }
         ],
         notes: "Bring water"
-      }
-    ],
-    offer_component_links: [
-      {
-        id: "source_plan_link_1",
-        travel_plan_service_id: "source_plan_service_1",
-        offer_component_id: "missing_component",
-        coverage_type: "full"
       }
     ],
     attachments: [
@@ -2230,7 +2105,6 @@ test("travel plans can be searched and appended from another booking with groupe
         notes: ""
       }
     ],
-    offer_component_links: [],
     attachments: []
   };
   targetRecord.pdf_personalization = {
@@ -2276,7 +2150,6 @@ test("travel plans can be searched and appended from another booking with groupe
 
   assert.equal(importResult.status, 200);
   assert.equal(importResult.body.booking.travel_plan.days.length, 3);
-  assert.equal(importResult.body.booking.travel_plan.offer_component_links.length, 0);
   assert.equal(importResult.body.booking.travel_plan.attachments.length, 0);
   assert.equal(importResult.body.booking.pdf_personalization.travel_plan.subtitle, "Source subtitle marker");
   assert.equal(importResult.body.booking.pdf_personalization.travel_plan.subtitle_i18n.de, "Quelluntertitel Marker");
@@ -2304,7 +2177,6 @@ test("travel plans can be searched and appended from another booking with groupe
   assert.equal(importedFirstService.time_point, "2026-07-11T09:30");
   assert.equal(importedSecondService.start_time, "2026-07-13T08:00");
   assert.equal(importedSecondService.end_time, "2026-07-13T11:30");
-  assert.equal(importedFirstService.financial_note, "Supplier already confirmed");
   assert.equal(importedFirstService.copied_from.source_service_id, "source_plan_service_1");
   assert.equal(importedSecondService.copied_from.source_service_id, "source_plan_service_2");
   assert.equal(importedFirstService.copied_from.import_batch_id, importedDays[0].copied_from.import_batch_id);
@@ -2348,8 +2220,7 @@ test("published standard travel plan apply copies travel-plan PDF personalizatio
         ],
         notes: ""
       }
-    ],
-    offer_component_links: []
+    ]
   };
   sourceRecord.pdf_personalization = {
     travel_plan: {
@@ -2372,8 +2243,7 @@ test("published standard travel plan apply copies travel-plan PDF personalizatio
         services: [],
         notes: ""
       }
-    ],
-    offer_component_links: []
+    ]
   };
   targetRecord.pdf_personalization = {
     travel_plan: {
@@ -2447,7 +2317,6 @@ test("service image can be deleted", async () => {
             title: "Citadel visit",
             details: "Guided walk",
             location: "Hue",
-            financial_note: "",
             image: {
               id: "item_image_a",
               storage_path: "/public/v1/booking-images/a.webp",
@@ -2459,8 +2328,7 @@ test("service image can be deleted", async () => {
         ],
         notes: ""
       }
-    ],
-    offer_component_links: []
+    ]
   };
   await writeFile(STORE_PATH, `${JSON.stringify(store, null, 2)}\n`, "utf8");
 
@@ -2504,7 +2372,6 @@ test("service image upload keeps exactly one image", { skip: !HAS_MAGICK }, asyn
             title: "Photo item",
             details: "",
             location: "Hanoi",
-            financial_note: "",
             image: {
               id: "travel_item_upload_image_1",
               storage_path: "/public/v1/booking-images/old.webp",
@@ -2516,8 +2383,7 @@ test("service image upload keeps exactly one image", { skip: !HAS_MAGICK }, asyn
         ],
         notes: ""
       }
-    ],
-    offer_component_links: []
+    ]
   };
   await writeFile(STORE_PATH, `${JSON.stringify(store, null, 2)}\n`, "utf8");
 
@@ -2570,13 +2436,11 @@ test("travel plan PDF attachments normalize non-A4 uploads and append to travel-
                   kind: "accommodation",
                   title: "Riverside hotel check-in",
                   details: "Private transfer and hotel arrival.",
-                  location: "Hoi An",
-                  financial_coverage_status: "not_covered"
+                  location: "Hoi An"
                 }
               ]
             }
-          ],
-          offer_component_links: []
+          ]
         }
       }
     }
@@ -3004,8 +2868,7 @@ test("suppliers can be created and updated, and travel plan supplier references 
                 }
               ]
             }
-          ],
-          offer_component_links: []
+          ]
         }
       }
     }
@@ -3038,8 +2901,7 @@ test("suppliers can be created and updated, and travel plan supplier references 
                 }
               ]
             }
-          ],
-          offer_component_links: []
+          ]
         }
       }
     }
@@ -3117,14 +2979,6 @@ test("booking generated offers store immutable snapshots", async () => {
                   location: "Hoi An"
                 }
               ]
-            }
-          ],
-          offer_component_links: [
-            {
-              id: "travel_plan_offer_link_1",
-              travel_plan_service_id: "travel_plan_service_2",
-              offer_component_id: "offer_component_room_1",
-              coverage_type: "full"
             }
           ]
         }
@@ -3216,8 +3070,7 @@ test("booking generated offers store immutable snapshots", async () => {
                 }
               ]
             }
-          ],
-          offer_component_links: []
+          ]
         }
       }
     }
@@ -3295,14 +3148,6 @@ test("booking detail normalizes generated-offer travel plan snapshots against th
                 }
               ]
             }
-          ],
-          offer_component_links: [
-            {
-              id: "travel_plan_offer_link_1",
-              travel_plan_service_id: "travel_plan_service_1",
-              offer_component_id: "offer_component_room_1",
-              coverage_type: "full"
-            }
           ]
         }
       }
@@ -3330,7 +3175,6 @@ test("booking detail normalizes generated-offer travel plan snapshots against th
   const generatedOfferRecord = bookingRecord.generated_offers.find((item) => item.id === generatedOfferId);
   assert.ok(generatedOfferRecord);
   assert.equal(Object.prototype.hasOwnProperty.call(generatedOfferRecord, "payment_terms"), false);
-  delete generatedOfferRecord.travel_plan.days[0].services[0].financial_coverage_status;
   await writeFile(STORE_PATH, `${JSON.stringify(store, null, 2)}\n`, "utf8");
 
   const detailResult = await requestJson(
@@ -3338,9 +3182,9 @@ test("booking detail normalizes generated-offer travel plan snapshots against th
     apiHeaders()
   );
   assert.equal(detailResult.status, 200);
-  assert.equal(
-    detailResult.body.booking.generated_offers[0].travel_plan.days[0].services[0].financial_coverage_status,
-    "covered"
+  assert.deepEqual(
+    detailResult.body.booking.generated_offers[0].travel_plan.days[0].services[0],
+    generatedOfferRecord.travel_plan.days[0].services[0]
   );
 });
 
@@ -3430,11 +3274,9 @@ test("booking travel plan pdf endpoint returns itinerary content without travele
         title: "PublicItemMarker731",
         location: "Hoi An",
         details: "PublicDetailsMarker731",
-        financial_note: "FinanceMarker731",
         images: []
       }]
-    }],
-    offer_component_links: []
+    }]
   };
   await writeFile(STORE_PATH, `${JSON.stringify(store, null, 2)}\n`, "utf8");
 
@@ -3494,8 +3336,7 @@ test("booking travel plan pdf includes the assigned ATP guide section with the g
         title: "GuideOrderServiceMarker",
         images: []
       }]
-    }],
-    offer_component_links: []
+    }]
   };
   await writeFile(STORE_PATH, `${JSON.stringify(store, null, 2)}\n`, "utf8");
 
@@ -3607,8 +3448,7 @@ test("booking travel plan pdf renders personalized copy and accommodation line",
           images: []
         }
       ]
-    }],
-    offer_component_links: []
+    }]
   };
   await writeFile(STORE_PATH, `${JSON.stringify(store, null, 2)}\n`, "utf8");
 
@@ -3813,8 +3653,7 @@ test("booking generated offer pdf wiring includes the assigned ATP guide section
         title: "OfferGuideOrderServiceMarker",
         images: []
       }]
-    }],
-    offer_component_links: []
+    }]
   };
   await writeFile(STORE_PATH, `${JSON.stringify(store, null, 2)}\n`, "utf8");
 
@@ -4383,8 +4222,7 @@ test("deposit receipt freezes the accepted customer record and keeps it stable a
                 }
               ]
             }
-          ],
-          offer_component_links: []
+          ]
         }
       }
     }

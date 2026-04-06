@@ -96,7 +96,6 @@ export function createTravelPlanTemplateHandlers(deps) {
       ok: true,
       travel_plan: {
         ...check.travel_plan,
-        offer_component_links: [],
         attachments: []
       }
     };

@@ -109,7 +109,6 @@ Multiple roles are allowed on the same person.
 
 `BookingTravelPlan`
 - `days[]`
-- `offer_component_links[]`
 - `attachments[]`
 
 Current travel-plan notes:
@@ -125,7 +124,10 @@ Current travel-plan notes:
 - `status`
 - `payment_terms`
 - `category_rules[]`
-- `components[]`
+- `trip_price_internal?`
+- `days_internal[]`
+- `additional_items[]`
+- `discount?`
 - `totals`
 - `quotation_summary`
 - `pdf_personalization`
@@ -134,13 +136,18 @@ The offer model separates:
 - internal arithmetic totals
 - customer-facing quotation totals
 
-`components[]`
-- `category`
+`days_internal[]`
+- `day_number`
+- `label`
+- `amount_cents`
+- `tax_rate_basis_points`
+
+`additional_items[]`
+- `category?`
 - `label`
 - `details`
 - `quantity`
 - `unit_amount_cents`
-  - unit price before tax
 - `unit_tax_amount_cents`
 - `unit_total_amount_cents`
   - unit price including tax
@@ -321,4 +328,3 @@ Current lifecycle:
 Important boundary:
 - response-only fields must stay in the read models
 - persistence-only token state must stay on the entity side
-

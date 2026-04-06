@@ -10,34 +10,12 @@ import (
 	tax_rate_basis_points: >=0 & <=100000 & int
 }
 
-#BookingOfferComponent: {
-	id:                       common.#Identifier
-	category:                 enums.#OfferCategory
-	label:                    string & !=""
-	details?:                 string
-	day_number?:              >0 & int
-	quantity:                 >0 & int
-	unit_amount_cents:        common.#NonNegativeMoneyAmount
-	unit_tax_amount_cents?:   common.#MoneyAmount
-	unit_total_amount_cents?: common.#MoneyAmount
+#BookingOfferTripPriceInternal: {
+	label?:                   string
+	amount_cents:             common.#NonNegativeMoneyAmount
 	tax_rate_basis_points:    >=0 & <=100000 & int
 	currency:                 enums.#CurrencyCode
-	line_net_amount_cents?:   common.#MoneyAmount
-	line_tax_amount_cents?:   common.#MoneyAmount
-	line_gross_amount_cents?: common.#MoneyAmount
-	line_total_amount_cents?: int
 	notes?:                   string
-	sort_order?:              int
-	created_at?:              common.#Timestamp
-	updated_at?:              common.#Timestamp
-}
-
-#BookingOfferTripPriceInternal: {
-	label?: string
-	amount_cents: common.#NonNegativeMoneyAmount
-	tax_rate_basis_points: >=0 & <=100000 & int
-	currency: enums.#CurrencyCode
-	notes?: string
 	line_net_amount_cents?:   common.#MoneyAmount
 	line_tax_amount_cents?:   common.#MoneyAmount
 	line_gross_amount_cents?: common.#MoneyAmount
@@ -45,14 +23,14 @@ import (
 }
 
 #BookingOfferDayPriceInternal: {
-	id?: common.#Identifier
-	day_number: >0 & int
-	label?: string
-	amount_cents: common.#NonNegativeMoneyAmount
-	tax_rate_basis_points: >=0 & <=100000 & int
-	currency: enums.#CurrencyCode
-	notes?: string
-	sort_order?: int
+	id?:                      common.#Identifier
+	day_number:               >0 & int
+	label?:                   string
+	amount_cents:             common.#NonNegativeMoneyAmount
+	tax_rate_basis_points:    >=0 & <=100000 & int
+	currency:                 enums.#CurrencyCode
+	notes?:                   string
+	sort_order?:              int
 	line_net_amount_cents?:   common.#MoneyAmount
 	line_tax_amount_cents?:   common.#MoneyAmount
 	line_gross_amount_cents?: common.#MoneyAmount
@@ -169,13 +147,10 @@ import (
 #BookingOffer: {
 	currency: enums.#CurrencyCode
 	status?:  "DRAFT" | "APPROVED" | "OFFER_SENT"
-	// Internal detail level is canonical and destructive:
-	// only the rows for the selected internal mode remain active.
+	// Internal detail level is canonical and limited to trip/day pricing.
 	offer_detail_level_internal: enums.#OfferDetailLevel
 	offer_detail_level_visible:  enums.#OfferDetailLevel
 	category_rules: [...#BookingOfferCategoryRule]
-	// Components are active only when offer_detail_level_internal == "component".
-	components: [...#BookingOfferComponent]
 	// Trip price is active only when offer_detail_level_internal == "trip".
 	trip_price_internal?: #BookingOfferTripPriceInternal
 	// Day prices are active only when offer_detail_level_internal == "day".
@@ -211,32 +186,32 @@ import (
 }
 
 #GeneratedOfferBookingConfirmation: {
-	id:                             common.#Identifier
-	accepted_at:                    common.#Timestamp
-	accepted_by_name?:              string & !=""
-	accepted_by_email?:             common.#Email
-	accepted_by_phone?:             string
-	accepted_by_person_id?:         common.#Identifier
-	language:                       enums.#LanguageCode
-	method:                         enums.#BookingConfirmationMethod
-	statement_snapshot:             string & !=""
-	terms_version?:                 string & !=""
-	terms_snapshot:                 string & !=""
-	offer_currency:                 enums.#CurrencyCode
-	offer_total_price_cents:        int
-	offer_pdf_sha256:               string & =~"^[a-f0-9]{64}$"
-	offer_snapshot_sha256:          string & =~"^[a-f0-9]{64}$"
-	ip_address?:                    string
-	user_agent?:                    string
+	id:                                common.#Identifier
+	accepted_at:                       common.#Timestamp
+	accepted_by_name?:                 string & !=""
+	accepted_by_email?:                common.#Email
+	accepted_by_phone?:                string
+	accepted_by_person_id?:            common.#Identifier
+	language:                          enums.#LanguageCode
+	method:                            enums.#BookingConfirmationMethod
+	statement_snapshot:                string & !=""
+	terms_version?:                    string & !=""
+	terms_snapshot:                    string & !=""
+	offer_currency:                    enums.#CurrencyCode
+	offer_total_price_cents:           int
+	offer_pdf_sha256:                  string & =~"^[a-f0-9]{64}$"
+	offer_snapshot_sha256:             string & =~"^[a-f0-9]{64}$"
+	ip_address?:                       string
+	user_agent?:                       string
 	management_approver_atp_staff_id?: common.#Identifier
-	deposit_payment_id?:            common.#Identifier
-	accepted_payment_term_line_id?: common.#Identifier
+	deposit_payment_id?:               common.#Identifier
+	accepted_payment_term_line_id?:    common.#Identifier
 	accepted_payment_ids?: [...common.#Identifier]
 	accepted_amount_cents?: >=0 & int
 	accepted_currency?:     enums.#CurrencyCode
 
 	if method == "MANAGEMENT" {
-		accepted_by_name: string & !=""
+		accepted_by_name:                 string & !=""
 		management_approver_atp_staff_id: common.#Identifier
 	}
 
@@ -249,22 +224,22 @@ import (
 }
 
 #GeneratedBookingOffer: {
-	id:                           common.#Identifier
-	booking_id:                   common.#Identifier
-	version:                      >=1 & int
-	filename:                     string & !=""
-	lang:                         enums.#LanguageCode
-	comment?:                     string
-	created_at:                   common.#Timestamp
-	created_by?:                  string
-	currency:                     enums.#CurrencyCode
-	total_price_cents:            int
-	offer:                        #BookingOffer
-	travel_plan?:                 #BookingTravelPlan
+	id:                                     common.#Identifier
+	booking_id:                             common.#Identifier
+	version:                                >=1 & int
+	filename:                               string & !=""
+	lang:                                   enums.#LanguageCode
+	comment?:                               string
+	created_at:                             common.#Timestamp
+	created_by?:                            string
+	currency:                               enums.#CurrencyCode
+	total_price_cents:                      int
+	offer:                                  #BookingOffer
+	travel_plan?:                           #BookingTravelPlan
 	management_approver_atp_staff_id?:      common.#Identifier
 	management_approver_label?:             string
-	pdf_frozen_at?:               common.#Timestamp
-	pdf_sha256?:                  string & =~"^[a-f0-9]{64}$"
+	pdf_frozen_at?:                         common.#Timestamp
+	pdf_sha256?:                            string & =~"^[a-f0-9]{64}$"
 	customer_confirmation_flow?:            #GeneratedOfferCustomerConfirmationFlow
 	booking_confirmation_token_nonce?:      string & !=""
 	booking_confirmation_token_created_at?: common.#Timestamp

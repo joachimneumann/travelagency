@@ -7,7 +7,6 @@ import {
 } from "../../../Generated/API/generated_APIModels.js";
 import {
   mergeEditableLocalizedTextField,
-  mergeLocalizedTextField,
   normalizeBookingContentLang,
   normalizeBookingSourceLang
 } from "../../domain/booking_content_i18n.js";
@@ -232,16 +231,6 @@ export function createBookingTravelPlanHandlers(deps) {
                 pruneExtraTranslationsOnSourceChange: true
               }
             );
-            const financialNoteField = mergeLocalizedTextField(
-              existingItem?.financial_note_i18n ?? existingItem?.financial_note,
-              item.financial_note,
-              normalizedLang,
-              {
-                fallbackLang: normalizedLang,
-                defaultLang: normalizedSourceLang
-              }
-            );
-
             return {
               ...item,
               time_label: item.timing_kind === "label" ? (timeLabelField.text || null) : null,
@@ -251,9 +240,7 @@ export function createBookingTravelPlanHandlers(deps) {
               details: detailsField.text || null,
               details_i18n: detailsField.map,
               location: locationField.text || null,
-              location_i18n: locationField.map,
-              financial_note: financialNoteField.text || null,
-              financial_note_i18n: financialNoteField.map
+              location_i18n: locationField.map
             };
           })
         };

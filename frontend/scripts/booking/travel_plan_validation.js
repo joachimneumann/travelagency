@@ -1,18 +1,14 @@
 import { bookingT } from "./i18n.js";
 
 export function validateTravelPlanDraft(plan, {
-  getOfferComponentsForLinks,
   validTimingKinds,
   validItemKinds,
-  validCoverageTypes,
   splitDateTimeValue,
   isValidIsoCalendarDate
 }) {
   const normalizedPlan = plan && typeof plan === "object" ? plan : {};
   const dayIds = new Set();
   const itemIds = new Set();
-  const linkIds = new Set();
-  const offerComponentIds = new Set(getOfferComponentsForLinks().map((component) => String(component?.id || "").trim()).filter(Boolean));
 
   for (const day of Array.isArray(normalizedPlan.days) ? normalizedPlan.days : []) {
     const dayId = String(day?.id || "").trim();
@@ -146,63 +142,6 @@ export function validateTravelPlanDraft(plan, {
           };
         }
       }
-    }
-  }
-
-  for (const link of Array.isArray(normalizedPlan.offer_component_links) ? normalizedPlan.offer_component_links : []) {
-    const linkId = String(link?.id || "").trim();
-    if (!linkId) {
-      return {
-        ok: false,
-        error: bookingT("booking.travel_plan.validation.link_id_missing", "Every travel-plan offer link needs an id.")
-      };
-    }
-    if (linkIds.has(linkId)) {
-      return {
-        ok: false,
-        error: bookingT(
-          "booking.travel_plan.validation.link_id_duplicate",
-          "Travel-plan offer link id {id} is duplicated.",
-          { id: linkId }
-        )
-      };
-    }
-    linkIds.add(linkId);
-
-    const itemId = String(link?.travel_plan_service_id || "").trim();
-    if (!itemIds.has(itemId)) {
-      return {
-        ok: false,
-        error: bookingT(
-          "booking.travel_plan.validation.link_item_unknown",
-          "Travel-plan offer link {id} references unknown service {item}.",
-          { id: linkId, item: itemId }
-        )
-      };
-    }
-
-    const componentId = String(link?.offer_component_id || "").trim();
-    if (!offerComponentIds.has(componentId)) {
-      return {
-        ok: false,
-        error: bookingT(
-          "booking.travel_plan.validation.link_offer_unknown",
-          "Travel-plan offer link {id} references unknown offer component {component}.",
-          { id: linkId, component: componentId }
-        )
-      };
-    }
-
-    const coverageType = String(link?.coverage_type || "").trim();
-    if (!validCoverageTypes.has(coverageType)) {
-      return {
-        ok: false,
-        error: bookingT(
-          "booking.travel_plan.validation.link_coverage_invalid",
-          "Travel-plan offer link {id} has an invalid coverage type.",
-          { id: linkId }
-        )
-      };
     }
   }
 

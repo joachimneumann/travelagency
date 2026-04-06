@@ -77,22 +77,9 @@ function createFieldDescriptor({
 }
 
 function collectOfferFieldDescriptors(offer, options = {}) {
-  const normalizedSourceLang = normalizeBookingContentLang(options?.sourceLang || DEFAULT_BOOKING_CONTENT_LANG);
-  const normalizedTargetLang = normalizeBookingContentLang(options?.targetLang || options?.lang || DEFAULT_BOOKING_CONTENT_LANG);
-  const components = Array.isArray(offer?.components) ? offer.components : [];
-  return components.flatMap((component, index) => {
-    const componentId = normalizeText(component?.id) || `component_${index + 1}`;
-    const details = createFieldDescriptor({
-      key: `offer.${componentId}.details`,
-      holder: component,
-      mapField: "details_i18n",
-      plainField: "details",
-      sourceLang: normalizedSourceLang,
-      targetLang: normalizedTargetLang,
-      emptyValue: ""
-    });
-    return details ? [details] : [];
-  });
+  void offer;
+  void options;
+  return [];
 }
 
 function collectTravelPlanFieldDescriptors(travelPlan, options = {}) {

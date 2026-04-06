@@ -74,7 +74,6 @@ export function createTravelPlanTemplateHelpers({
     const normalized = normalizeBookingTravelPlan(rawTravelPlan, null, { strictReferences: false });
     return {
       ...normalized,
-      offer_component_links: [],
       attachments: [],
       days: (Array.isArray(normalized?.days) ? normalized.days : []).map((day) => ({
         ...day,
@@ -125,10 +124,6 @@ export function createTravelPlanTemplateHelpers({
             supplier_id: normalizeOptionalText(service?.supplier_id),
             start_time: null,
             end_time: null,
-            financial_coverage_needed: service?.financial_coverage_needed !== false,
-            financial_coverage_status: normalizeText(service?.financial_coverage_status).toLowerCase() || "not_covered",
-            financial_note: normalizeOptionalText(service?.financial_note),
-            financial_note_i18n: cloneJson(service?.financial_note_i18n),
             image: image
               ? {
                   ...cloneJson(image),
@@ -142,7 +137,6 @@ export function createTravelPlanTemplateHelpers({
           };
         })
       })),
-      offer_component_links: [],
       attachments: []
     };
   }
@@ -175,7 +169,6 @@ export function createTravelPlanTemplateHelpers({
           };
         })
       })),
-      offer_component_links: [],
       attachments: []
     };
   }

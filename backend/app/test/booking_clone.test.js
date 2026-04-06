@@ -155,14 +155,6 @@ function buildSourceBooking() {
           ]
         }
       ],
-      offer_component_links: [
-        {
-          id: "travel_plan_offer_link_1",
-          travel_plan_service_id: "travel_plan_service_1",
-          offer_component_id: "offer_component_1",
-          coverage_type: "full"
-        }
-      ],
       attachments: [{ id: "travel_plan_attachment_1", storage_path: "booking_travel_plan_attachments/doc.pdf" }]
     },
     pricing: {
@@ -282,7 +274,6 @@ test("cloneBookingForTesting keeps only approved metadata and clears commercial 
   assert.equal(cloned.travel_plan.attachments.length, 1);
   assert.equal(cloned.travel_plan.attachments[0].storage_path, "booking_travel_plan_attachments/doc.pdf");
   assert.notEqual(cloned.travel_plan.attachments[0].id, "travel_plan_attachment_1");
-  assert.equal(cloned.travel_plan.offer_component_links.length, 0);
 
   assert.equal(cloned.pricing.currency, "USD");
   assert.equal(cloned.pricing.agreed_net_amount_cents, 0);

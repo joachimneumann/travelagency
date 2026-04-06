@@ -7,9 +7,8 @@ function cloneJson(value) {
 function hasMeaningfulTravelPlan(travelPlan) {
   if (!travelPlan || typeof travelPlan !== "object") return false;
   const days = Array.isArray(travelPlan.days) ? travelPlan.days : [];
-  const links = Array.isArray(travelPlan.offer_component_links) ? travelPlan.offer_component_links : [];
   const attachments = Array.isArray(travelPlan.attachments) ? travelPlan.attachments : [];
-  return days.length > 0 || links.length > 0 || attachments.length > 0;
+  return days.length > 0 || attachments.length > 0;
 }
 
 function findConfirmedGeneratedOffer(booking) {
