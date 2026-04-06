@@ -2821,8 +2821,8 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
   );
   assert.match(
     stagingCaddy,
-    /@staging_static path \/assets\/\* \/frontend\/scripts\/\* \/frontend\/data\/\* \/shared\/\* \/site\.webmanifest/,
-    "Staging should explicitly mark frontend scripts, dictionaries, shared bundles, and assets as cacheable static files"
+    /@staging_static path \/assets\/\* \/frontend\/scripts\/\* \/frontend\/data\/\* \/frontend\/Generated\/\* \/shared\/\* \/site\.webmanifest/,
+    "Staging should explicitly mark frontend scripts, dictionaries, generated bundles, shared bundles, and assets as cacheable static files"
   );
   assert.doesNotMatch(
     stagingCaddy,
