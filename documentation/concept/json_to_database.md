@@ -32,7 +32,6 @@ Operational runtime data currently persisted in `backend/app/data/store.json` an
 - generated booking offers
 - invoices
 - booking activities
-- suppliers
 - chat channel accounts
 - chat conversations
 - chat events
@@ -87,11 +86,15 @@ It currently contains these top-level collections:
 - `chat_conversations`
 - `chat_events`
 
+For avoidance of doubt, `suppliers` still exists in the current JSON store, but it is deferred from the v1 PostgreSQL model because the feature is not materially used yet.
+
 ### Current runtime file metadata outside `store.json`
 
 Additional metadata already lives outside the main store file:
 
 - travel plan PDF manifests under `backend/app/data/pdfs/travel_plans/<booking_id>/manifest.json`
+
+Within `store.json`, travel-plan provenance such as `copied_from` remains a nested object in the current JSON architecture. Only the PostgreSQL model flattens that structure into explicit columns.
 
 ### Current content storage to keep unchanged
 
@@ -451,7 +454,11 @@ Columns:
 - `title`
 - `overnight_location`
 - `notes`
-- `copied_from_jsonb`
+- `source_booking_id`
+- `source_day_id`
+- `copied_at`
+- `copied_by_atp_staff_id`
+- `import_batch_id`
 
 ### `booking_travel_plan_services`
 
@@ -472,8 +479,18 @@ Columns:
 - `financial_coverage_needed`
 - `financial_coverage_status`
 - `financial_note`
-- `copied_from_jsonb`
+- `source_booking_id`
+- `source_day_id`
+- `source_service_id`
+- `copied_at`
+- `copied_by_atp_staff_id`
+- `import_batch_id`
 - `sort_order`
+
+Notes:
+
+- `supplier_id` remains a nullable plain text reference in v1, not a foreign key.
+- The current JSON architecture keeps `copied_from` nested; PostgreSQL flattens that provenance into nullable columns for validation and querying.
 
 ### `booking_travel_plan_service_images`
 
@@ -591,21 +608,7 @@ Columns:
 - `detail`
 - `created_at`
 
-## 11. `suppliers`
-
-Columns:
-
-- `id`
-- `name`
-- `contact`
-- `emergency_phone`
-- `email`
-- `country`
-- `category`
-- `created_at`
-- `updated_at`
-
-## 12. Chat tables
+## 11. Chat tables
 
 ### `chat_channel_accounts`
 
@@ -647,7 +650,7 @@ Columns:
 - `payload_jsonb`
 - `created_at`
 
-## 13. `travel_plan_pdf_artifacts`
+## 12. `travel_plan_pdf_artifacts`
 
 This replaces per-booking `manifest.json` files as the system of record for travel-plan PDF metadata.
 
@@ -664,7 +667,7 @@ Columns:
 - `travel_plan_revision`
 - `storage_path`
 
-## 14. `import_runs`
+## 13. `import_runs`
 
 Used for auditability and replay safety of the one-time JSON import.
 
@@ -697,7 +700,7 @@ The following is the first-pass relational model for migration planning. It shou
 - `bookings.confirmed_generated_offer_id` should be a nullable foreign key to `booking_generated_offers.id`.
 - `bookings.accepted_offer_artifact_ref` should be treated as a nullable foreign key to `booking_generated_offers.id`.
 - `bookings.accepted_travel_plan_artifact_ref` should be treated as a nullable foreign key to `travel_plan_pdf_artifacts.id`.
-- `booking_travel_plan_services.supplier_id` should be a nullable foreign key to `suppliers.id`.
+- `booking_travel_plan_services.supplier_id` should remain a nullable plain text reference in v1.
 - `chat_conversations.channel_account_id` should be a foreign key to `chat_channel_accounts.id`.
 - `chat_conversations.booking_id` should remain nullable so conversations can exist before a booking is linked.
 - `chat_events.conversation_id` should be a foreign key to `chat_conversations.id`.
@@ -708,162 +711,66 @@ The following is the first-pass relational model for migration planning. It shou
 ### First-pass delete behavior
 
 - Prefer `ON DELETE CASCADE` for booking-owned child tables.
-- Prefer `ON DELETE RESTRICT` for shared reference tables such as `suppliers` and `chat_channel_accounts`.
+- Prefer `ON DELETE RESTRICT` for shared reference tables such as `chat_channel_accounts`.
 - For nullable cross-references from `bookings` or `booking_payments` to generated artifacts, prefer `ON DELETE SET NULL` if deletion is allowed at all.
 
-### Mermaid ER diagram
+### Mermaid ER diagrams
 
-This diagram is a documentation aid. The migration SQL remains the source of truth.
+These diagrams are documentation aids. The migration SQL remains the source of truth.
+
+#### Booking core and people
 
 ```mermaid
 erDiagram
-    BOOKINGS {
-      text id PK
-      text confirmed_generated_offer_id
-      text accepted_offer_artifact_ref
-      text accepted_travel_plan_artifact_ref
-    }
-    BOOKING_PERSONS {
-      text id PK
-      text booking_id FK
-    }
-    BOOKING_PERSON_DOCUMENTS {
-      text id PK
-      text booking_person_id FK
-    }
-    BOOKING_PERSON_CONSENTS {
-      text id PK
-      text booking_person_id FK
-    }
-    BOOKING_PRICING {
-      text booking_id PK
-    }
-    BOOKING_PRICING_ADJUSTMENTS {
-      text id PK
-      text booking_id FK
-    }
-    BOOKING_PAYMENTS {
-      text id PK
-      text booking_id FK
-      text origin_generated_offer_id FK
-      text origin_payment_term_line_id FK
-    }
-    BOOKING_OFFERS {
-      text booking_id PK
-    }
-    BOOKING_OFFER_CATEGORY_RULES {
-      text booking_id FK
-      text category
-    }
-    BOOKING_OFFER_COMPONENTS {
-      text id PK
-      text booking_id FK
-    }
-    BOOKING_OFFER_DAY_PRICES {
-      text id PK
-      text booking_id FK
-    }
-    BOOKING_OFFER_ADDITIONAL_ITEMS {
-      text id PK
-      text booking_id FK
-    }
-    BOOKING_OFFER_PAYMENT_TERM_LINES {
-      text id PK
-      text booking_id FK
-    }
-    BOOKING_TRAVEL_PLAN_DAYS {
-      text id PK
-      text booking_id FK
-    }
-    BOOKING_TRAVEL_PLAN_SERVICES {
-      text id PK
-      text booking_id FK
-      text day_id FK
-      text supplier_id FK
-    }
-    BOOKING_TRAVEL_PLAN_SERVICE_IMAGES {
-      text id PK
-      text booking_id FK
-      text service_id FK
-    }
-    BOOKING_TRAVEL_PLAN_OFFER_COMPONENT_LINKS {
-      text id PK
-      text booking_id FK
-      text travel_plan_service_id FK
-      text offer_component_id FK
-    }
-    BOOKING_TRAVEL_PLAN_ATTACHMENTS {
-      text id PK
-      text booking_id FK
-    }
-    BOOKING_GENERATED_OFFERS {
-      text id PK
-      text booking_id FK
-    }
-    BOOKING_INVOICES {
-      text id PK
-      text booking_id FK
-    }
-    BOOKING_INVOICE_COMPONENTS {
-      text id PK
-      text invoice_id FK
-    }
-    BOOKING_ACTIVITIES {
-      text id PK
-      text booking_id FK
-    }
-    SUPPLIERS {
-      text id PK
-    }
-    CHAT_CHANNEL_ACCOUNTS {
-      text id PK
-    }
-    CHAT_CONVERSATIONS {
-      text id PK
-      text channel_account_id FK
-      text booking_id FK
-    }
-    CHAT_EVENTS {
-      text id PK
-      text conversation_id FK
-    }
-    TRAVEL_PLAN_PDF_ARTIFACTS {
-      text id PK
-      text booking_id FK
-    }
-    IMPORT_RUNS {
-      text id PK
-    }
-
     BOOKINGS ||--o{ BOOKING_PERSONS : has
     BOOKING_PERSONS ||--o{ BOOKING_PERSON_DOCUMENTS : has
     BOOKING_PERSONS ||--o{ BOOKING_PERSON_CONSENTS : has
+    BOOKINGS ||--o{ BOOKING_ACTIVITIES : has
+```
+
+#### Pricing, offers, payments, and invoices
+
+```mermaid
+erDiagram
     BOOKINGS ||--|| BOOKING_PRICING : has
     BOOKINGS ||--o{ BOOKING_PRICING_ADJUSTMENTS : has
-    BOOKINGS ||--o{ BOOKING_PAYMENTS : has
     BOOKINGS ||--|| BOOKING_OFFERS : has
     BOOKINGS ||--o{ BOOKING_OFFER_CATEGORY_RULES : has
     BOOKINGS ||--o{ BOOKING_OFFER_COMPONENTS : has
     BOOKINGS ||--o{ BOOKING_OFFER_DAY_PRICES : has
     BOOKINGS ||--o{ BOOKING_OFFER_ADDITIONAL_ITEMS : has
     BOOKINGS ||--o{ BOOKING_OFFER_PAYMENT_TERM_LINES : has
-    BOOKINGS ||--o{ BOOKING_TRAVEL_PLAN_DAYS : has
-    BOOKING_TRAVEL_PLAN_DAYS ||--o{ BOOKING_TRAVEL_PLAN_SERVICES : has
-    SUPPLIERS ||--o{ BOOKING_TRAVEL_PLAN_SERVICES : referenced_by
-    BOOKING_TRAVEL_PLAN_SERVICES ||--o{ BOOKING_TRAVEL_PLAN_SERVICE_IMAGES : has
-    BOOKING_TRAVEL_PLAN_SERVICES ||--o{ BOOKING_TRAVEL_PLAN_OFFER_COMPONENT_LINKS : maps
-    BOOKING_OFFER_COMPONENTS ||--o{ BOOKING_TRAVEL_PLAN_OFFER_COMPONENT_LINKS : linked_by
-    BOOKINGS ||--o{ BOOKING_TRAVEL_PLAN_ATTACHMENTS : has
     BOOKINGS ||--o{ BOOKING_GENERATED_OFFERS : has
+    BOOKINGS ||--o{ BOOKING_PAYMENTS : has
     BOOKING_GENERATED_OFFERS o|--o{ BOOKING_PAYMENTS : originates
     BOOKING_OFFER_PAYMENT_TERM_LINES o|--o{ BOOKING_PAYMENTS : schedules
     BOOKINGS ||--o{ BOOKING_INVOICES : has
     BOOKING_INVOICES ||--o{ BOOKING_INVOICE_COMPONENTS : has
-    BOOKINGS ||--o{ BOOKING_ACTIVITIES : has
-    BOOKINGS o|--o{ CHAT_CONVERSATIONS : linked_to
-    CHAT_CHANNEL_ACCOUNTS ||--o{ CHAT_CONVERSATIONS : owns
-    CHAT_CONVERSATIONS ||--o{ CHAT_EVENTS : has
+```
+
+#### Travel plan and artifacts
+
+```mermaid
+erDiagram
+    BOOKINGS ||--o{ BOOKING_TRAVEL_PLAN_DAYS : has
+    BOOKING_TRAVEL_PLAN_DAYS ||--o{ BOOKING_TRAVEL_PLAN_SERVICES : has
+    BOOKING_TRAVEL_PLAN_SERVICES ||--o{ BOOKING_TRAVEL_PLAN_SERVICE_IMAGES : has
+    BOOKING_TRAVEL_PLAN_SERVICES ||--o{ BOOKING_TRAVEL_PLAN_OFFER_COMPONENT_LINKS : maps
+    BOOKING_OFFER_COMPONENTS ||--o{ BOOKING_TRAVEL_PLAN_OFFER_COMPONENT_LINKS : linked_by
+    BOOKINGS ||--o{ BOOKING_TRAVEL_PLAN_ATTACHMENTS : has
     BOOKINGS ||--o{ TRAVEL_PLAN_PDF_ARTIFACTS : has
+    BOOKINGS o|--o{ BOOKING_GENERATED_OFFERS : confirms
+    BOOKINGS o|--o{ TRAVEL_PLAN_PDF_ARTIFACTS : accepts
+```
+
+#### Chat and supporting references
+
+```mermaid
+erDiagram
+    CHAT_CHANNEL_ACCOUNTS ||--o{ CHAT_CONVERSATIONS : owns
+    BOOKINGS o|--o{ CHAT_CONVERSATIONS : linked_to
+    CHAT_CONVERSATIONS ||--o{ CHAT_EVENTS : has
+    IMPORT_RUNS
 ```
 
 ## Table Design Decisions
@@ -876,7 +783,6 @@ erDiagram
 - live travel plan rows
 - invoices and components
 - activities
-- suppliers
 - chat records
 - travel plan PDF artifact metadata
 
@@ -922,7 +828,7 @@ Create indexes for real access paths already visible in the current application.
 
 ### `booking_travel_plan_services`
 
-- `booking_travel_plan_services_booking_supplier_kind_idx` on `(booking_id, supplier_id, kind)`
+- `booking_travel_plan_services_booking_kind_idx` on `(booking_id, kind)`
 - `booking_travel_plan_services_day_id_idx` on `day_id`
 
 ### `booking_activities`
@@ -1032,30 +938,29 @@ It must not modify the source JSON files.
 
 Insert in dependency order inside transactions:
 
-1. suppliers
-2. bookings
-3. booking persons
-4. booking person documents
-5. booking person consents
-6. booking pricing
-7. booking pricing adjustments
-8. booking payments
-9. current booking offers
-10. current offer child rows
-11. live travel-plan days
-12. live travel-plan services
-13. live travel-plan service images
-14. live travel-plan offer-component links
-15. live travel-plan attachments
-16. generated offers
-17. invoices
-18. invoice components
-19. activities
-20. chat channel accounts
-21. chat conversations
-22. chat events
-23. travel plan PDF artifacts
-24. import run summary
+1. bookings
+2. booking persons
+3. booking person documents
+4. booking person consents
+5. booking pricing
+6. booking pricing adjustments
+7. booking payments
+8. current booking offers
+9. current offer child rows
+10. live travel-plan days
+11. live travel-plan services
+12. live travel-plan service images
+13. live travel-plan offer-component links
+14. live travel-plan attachments
+15. generated offers
+16. invoices
+17. invoice components
+18. activities
+19. chat channel accounts
+20. chat conversations
+21. chat events
+22. travel plan PDF artifacts
+23. import run summary
 
 ## Import behavior
 
@@ -1076,7 +981,6 @@ After import, verify counts for:
 - persons
 - documents
 - consents
-- suppliers
 - invoices
 - invoice components
 - activities
