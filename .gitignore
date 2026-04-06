@@ -23,6 +23,7 @@ content/**
 !content/tours/.gitkeep
 
 backup/atp_staff/staff.json.audit.log
+logs/
 
 __pycache__/
 *.xcuserstate
