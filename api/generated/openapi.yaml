@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-04-06T11:42:07Z
+# 2026-04-06T17:02:44Z
 
 ---
 openapi: 3.1.0
@@ -4384,6 +4384,9 @@ components:
         date:
           type: string
           format: date
+          nullable: true
+        date_string:
+          type: string
           nullable: true
         title:
           type: string

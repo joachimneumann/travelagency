@@ -81,6 +81,7 @@ import (
 	id:                  common.#Identifier
 	day_number:          >0 & int
 	date?:               common.#DateOnly
+	date_string?:        string
 	title:               string
 	overnight_location?: string
 	services?: [...#BookingTravelPlanService]

@@ -78,6 +78,7 @@ export function createTravelPlanTemplateHelpers({
       days: (Array.isArray(normalized?.days) ? normalized.days : []).map((day) => ({
         ...day,
         date: null,
+        date_string: normalizeOptionalText(day?.date_string),
         copied_from: null,
         services: (Array.isArray(day?.services) ? day.services : []).map((service) => ({
           ...service,
@@ -95,6 +96,7 @@ export function createTravelPlanTemplateHelpers({
         id: `travel_plan_template_day_${randomUUID()}`,
         day_number: dayIndex + 1,
         date: null,
+        date_string: normalizeOptionalText(day?.date_string),
         title: normalizeText(day?.title),
         title_i18n: cloneJson(day?.title_i18n),
         overnight_location: normalizeOptionalText(day?.overnight_location),

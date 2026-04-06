@@ -241,6 +241,7 @@ export function createEmptyTravelPlanDay(index = 0) {
     id: travelPlanId("travel_plan_day"),
     day_number: Math.max(1, Number(index) + 1),
     date: "",
+    date_string: "",
     title: "",
     title_i18n: {},
     overnight_location: "",
@@ -282,10 +283,12 @@ export function normalizeTravelPlanDraft(plan, offerComponents = [], options = {
   const days = (Array.isArray(source.days) ? source.days : [])
     .map((day, dayIndex) => {
       const rawDay = day && typeof day === "object" ? day : {};
+      const normalizedDate = normalizeOptionalText(rawDay.date);
       return {
         id: String(rawDay.id || travelPlanId("travel_plan_day")),
         day_number: dayIndex + 1,
-        date: normalizeOptionalText(rawDay.date),
+        date: normalizedDate,
+        date_string: normalizedDate ? "" : normalizeOptionalText(rawDay.date_string),
         title: resolveLocalizedEditorText(rawDay.title_i18n ?? rawDay.title, sourceLang, ""),
         title_i18n: buildDualLocalizedPayload(
           resolveLocalizedEditorText(rawDay.title_i18n ?? rawDay.title, sourceLang, ""),

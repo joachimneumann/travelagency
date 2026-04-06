@@ -278,11 +278,13 @@ function normalizeTravelPlanDays(days, options = {}) {
         contentLang
       );
       const notes_i18n = normalizeLocalizedTextMap(day?.notes_i18n ?? day?.notes, contentLang);
+      const normalizedDate = normalizeOptionalText(day.date);
 
       return {
         id: normalizeText(day.id) || `travel_plan_day_${dayIndex + 1}`,
         day_number: dayIndex + 1,
-        date: normalizeOptionalText(day.date),
+        date: normalizedDate,
+        date_string: normalizedDate ? null : normalizeOptionalText(day?.date_string),
         title: resolveLocalizedText(title_i18n, flatLang, "", { sourceLang }),
         title_i18n,
         overnight_location: resolveLocalizedText(overnight_location_i18n, flatLang, "", { sourceLang }) || null,

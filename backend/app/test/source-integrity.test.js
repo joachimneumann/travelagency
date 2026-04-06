@@ -2205,6 +2205,47 @@ test("travel-plan service image subtitle stays wired across model, API, backend,
   );
 });
 
+test("travel-plan day date presets stay wired across model, API, backend, and UI", async () => {
+  const modelPath = path.resolve(__dirname, "..", "..", "..", "model", "entities", "travel_plan.cue");
+  const openApiPath = path.resolve(__dirname, "..", "..", "..", "api", "generated", "openapi.yaml");
+  const backendPath = path.resolve(__dirname, "..", "..", "..", "backend", "app", "src", "domain", "travel_plan.js");
+  const helperPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan_helpers.js");
+  const uiPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan.js");
+  const [modelSource, openApiSource, backendSource, helperSource, uiSource] = await Promise.all([
+    readFile(modelPath, "utf8"),
+    readFile(openApiPath, "utf8"),
+    readFile(backendPath, "utf8"),
+    readFile(helperPath, "utf8"),
+    readFile(uiPath, "utf8")
+  ]);
+
+  assert.match(
+    modelSource,
+    /date_string\?:\s+string/,
+    "The travel-plan day model should expose an optional date_string field for preset labels"
+  );
+  assert.match(
+    openApiSource,
+    /BookingTravelPlanDay:[\s\S]*date_string:\n\s+type: string\n\s+nullable: true/,
+    "The OpenAPI contract should expose the optional travel-plan day date_string"
+  );
+  assert.match(
+    backendSource,
+    /date_string: normalizedDate \? null : normalizeOptionalText\(day\?\.date_string\)/,
+    "The backend travel-plan normalizer should persist the optional day date_string when no concrete date is set"
+  );
+  assert.match(
+    helperSource,
+    /date_string: normalizedDate \? "" : normalizeOptionalText\(rawDay\.date_string\)/,
+    "The frontend travel-plan helper should normalize the optional day date_string"
+  );
+  assert.match(
+    uiSource,
+    /data-travel-plan-day-field="date_string"|data-travel-plan-set-date-string/,
+    "The booking travel-plan UI should expose the day date preset controls and hidden date_string field"
+  );
+});
+
 test("travel plan PDF personalization exposes and persists traveler-list toggles for both PDF types", async () => {
   const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
   const bookingCorePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "core.js");

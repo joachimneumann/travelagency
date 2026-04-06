@@ -297,6 +297,12 @@
   min-height: 2.5rem;
 }
 
+.travel-plan-day__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
 .travel-plan-day__head-copy {
   display: grid;
   gap: 0.3rem;
@@ -321,7 +327,7 @@
   margin: 0;
 }
 
-.travel-plan-day__date-suggestion {
+.travel-plan-day__date-shortcuts {
   display: inline-flex;
   align-items: center;
   gap: 0.55rem;
@@ -329,16 +335,17 @@
   margin-left: 0.25rem;
 }
 
-.travel-plan-day__date-suggestion-label {
-  color: inherit;
-  font: inherit;
-}
-
-.travel-plan-day__date-suggestion-btn {
+.travel-plan-day__date-shortcut {
   min-height: 0;
   padding: 0.28rem 0.7rem;
   border-radius: 999px;
   font-size: inherit;
+}
+
+.booking-detail-page .travel-plan-day__date-shortcut.is-active {
+  background: var(--travelplan_day_color);
+  color: var(--travel-plan-accent-text);
+  border-color: var(--travel-plan-accent-border-hover);
 }
 
 .travel-plan-day__head h3 {
@@ -880,6 +887,19 @@
   gap: 0.4rem;
 }
 
+.booking-detail-page .travel-plan-service__actions :is(.travel-plan-move-btn, .offer-remove-btn) {
+  color: var(--travel-plan-service-button-text);
+  border-color: var(--travel-plan-accent-border-strong);
+}
+
+.booking-detail-page .travel-plan-service__actions :is(.travel-plan-move-btn, .offer-remove-btn):hover,
+.booking-detail-page .travel-plan-service__actions :is(.travel-plan-move-btn, .offer-remove-btn):focus-visible {
+  background: var(--travel-plan-service-button-bg);
+  color: var(--travel-plan-service-button-text);
+  border-color: var(--travel-plan-accent-border-hover);
+  box-shadow: 0 8px 16px var(--travel-plan-accent-shadow);
+}
+
 .travel-plan-service__body {
   overflow: hidden;
   opacity: 1;
@@ -922,6 +942,19 @@
   height: 34px;
   padding: 0;
   border-radius: 8px;
+}
+
+.booking-detail-page .travel-plan-day__actions :is(.travel-plan-move-btn--day, .offer-remove-btn.travel-plan-move-btn--day) {
+  color: var(--travel-plan-accent-text);
+  border-color: var(--travel-plan-accent-border-strong);
+}
+
+.booking-detail-page .travel-plan-day__actions :is(.travel-plan-move-btn--day, .offer-remove-btn.travel-plan-move-btn--day):hover,
+.booking-detail-page .travel-plan-day__actions :is(.travel-plan-move-btn--day, .offer-remove-btn.travel-plan-move-btn--day):focus-visible {
+  background: var(--travelplan_day_color);
+  color: var(--travel-plan-accent-text);
+  border-color: var(--travel-plan-accent-border-hover);
+  box-shadow: 0 8px 16px var(--travel-plan-accent-shadow);
 }
 
 .travel-plan-coverage-badge {

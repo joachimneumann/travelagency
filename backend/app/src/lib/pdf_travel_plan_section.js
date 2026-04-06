@@ -109,6 +109,20 @@ function formatTravelPlanDateTime(rawValue, lang, fallbackDayDate, formatPdfDate
   return raw;
 }
 
+function formatTravelPlanDayDateLabel(day, lang, formatPdfDateOnly, pdfT) {
+  const date = formatTravelPlanDate(day?.date, lang, formatPdfDateOnly);
+  if (date) return date;
+  const dateString = normalizeText(day?.date_string);
+  if (!dateString) return "";
+  if (dateString === "before_trip") {
+    return pdfT(lang, "travel_plan.date_string.before_trip", "Before the trip");
+  }
+  if (dateString === "after_trip") {
+    return pdfT(lang, "travel_plan.date_string.after_trip", "After the trip");
+  }
+  return dateString;
+}
+
 function formatTravelPlanTiming(item, lang, dayDate, formatPdfDateOnly) {
   const timingKind = normalizeText(item?.timing_kind) || "label";
   if (timingKind === "point") {
@@ -395,7 +409,7 @@ function drawTravelPlanItemStack(doc, startY, contentWidth, pageLayout, fonts, l
 }
 
 function drawTravelPlanDayHeader(doc, y, day, fonts, lang, deps, { compact = false } = {}) {
-  const dateLabel = formatTravelPlanDate(day?.date, lang, deps.formatPdfDateOnly);
+  const dateLabel = formatTravelPlanDayDateLabel(day, lang, deps.formatPdfDateOnly, deps.pdfT);
   const titleText = dayHeading(day, lang, deps.pdfT);
   const titleWidth = doc.page.width - deps.pageMargin * 2 - 150;
   const titleHeight = measureTextHeight(doc, titleText, {
