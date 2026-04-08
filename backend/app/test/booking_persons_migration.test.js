@@ -33,7 +33,7 @@ test("store utils backfill missing booking persons from the public submission an
         web_form_submission: {
           name: "Joachim Neumann",
           email: "info@asiatravelplan.com",
-          phone_number: "+84337942446",
+          phone_number: "+84354999192",
           preferred_language: "en",
           booking_name: "Discovery call"
         },

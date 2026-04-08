@@ -116,7 +116,7 @@ export const COMPANY_PROFILE = Object.freeze({
   name: "AsiaTravelPlan",
   website: "asiatravelplan.com",
   address: "alley 378 Cua Dai, 550000 Hoi An, Vietnam",
-  whatsapp: "+84 337942446",
+  whatsapp: "+84 354999192",
   email: "info@asiatravelplan.com",
   bankDetails: Object.freeze({
     accountHolder: "NGUYEN THI XUAN",
