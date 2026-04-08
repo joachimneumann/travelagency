@@ -5463,6 +5463,7 @@ test("booking source update persists trip context and pdf personalization", asyn
               en: "We would be happy to refine anything together.",
               de: "Wir verfeinern alles gern gemeinsam mit Ihnen."
             },
+            include_cancellation_policy: false,
             include_who_is_traveling: false
           }
         },
@@ -5480,6 +5481,10 @@ test("booking source update persists trip context and pdf personalization", asyn
   assert.equal(
     sourceUpdateResult.body.booking.pdf_personalization.offer.closing,
     "We would be happy to refine anything together."
+  );
+  assert.equal(
+    sourceUpdateResult.body.booking.pdf_personalization.offer.include_cancellation_policy,
+    false
   );
   assert.equal(
     sourceUpdateResult.body.booking.pdf_personalization.travel_plan.subtitle_i18n.de,
@@ -5512,6 +5517,10 @@ test("booking source update persists trip context and pdf personalization", asyn
   assert.equal(
     detailAfter.body.booking.pdf_personalization.travel_plan.include_who_is_traveling,
     true
+  );
+  assert.equal(
+    detailAfter.body.booking.pdf_personalization.offer.include_cancellation_policy,
+    false
   );
   assert.equal(
     detailAfter.body.booking.pdf_personalization.offer.include_who_is_traveling,

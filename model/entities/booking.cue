@@ -105,6 +105,7 @@ import (
 	whats_not_included_i18n?:  [string]: string
 	closing?:                  string
 	closing_i18n?:             [string]: string
+	include_cancellation_policy?: bool
 	include_who_is_traveling?: bool
 }
 

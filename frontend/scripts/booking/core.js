@@ -267,6 +267,39 @@ function normalizePdfTextField(value, mapValue) {
   };
 }
 
+const OFFER_CANCELLATION_POLICY_SECTIONS = Object.freeze([
+  Object.freeze({
+    minTravelers: 1,
+    maxTravelers: 10,
+    heading: "For 1-10 travellers:",
+    lines: Object.freeze([
+      "If cancellation is made 14 days prior to travel date, no cancellation fee will be charged.",
+      "If cancellation is made 7-14 days prior to travel date, 30% of total fee will be charged.",
+      "If cancellation is made 0-7 days prior to travel date, 50% of total fee will be charged."
+    ])
+  }),
+  Object.freeze({
+    minTravelers: 11,
+    maxTravelers: 20,
+    heading: "For 11-20 travellers:",
+    lines: Object.freeze([
+      "If cancellation is made 21 days prior to travel date, no cancellation fee will be charged.",
+      "If cancellation is made 10-21 days prior to travel date, 30% of total fee will be charged.",
+      "If cancellation is made 0-10 days prior to travel date, 50% of total fee will be charged."
+    ])
+  }),
+  Object.freeze({
+    minTravelers: 21,
+    maxTravelers: Infinity,
+    heading: "For 21 travellers or above:",
+    lines: Object.freeze([
+      "If cancellation is made 30 days prior to travel date, no cancellation fee will be charged.",
+      "If cancellation is made 15-30 days prior to travel date, 30% of total fee will be charged.",
+      "If cancellation is made 0-15 days prior to travel date, 50% of total fee will be charged."
+    ])
+  })
+]);
+
 function normalizePdfPersonalization(value) {
   const raw = value && typeof value === "object" && !Array.isArray(value) ? value : {};
   const travelPlan = raw.travel_plan && typeof raw.travel_plan === "object" && !Array.isArray(raw.travel_plan) ? raw.travel_plan : {};
@@ -300,6 +333,7 @@ function normalizePdfPersonalization(value) {
       welcome_i18n: offerWelcome.i18n,
       closing: offerClosing.text,
       closing_i18n: offerClosing.i18n,
+      include_cancellation_policy: offer.include_cancellation_policy !== false,
       include_who_is_traveling: offer.include_who_is_traveling !== false
     }
   };
@@ -662,6 +696,23 @@ export function createBookingCoreModule(ctx) {
       computedOfferWelcomePlaceholder(),
       4
     );
+    if (els.pdfOfferIncludeCancellationPolicyMount instanceof HTMLElement) {
+      els.pdfOfferIncludeCancellationPolicyMount.innerHTML = `
+        <div class="booking-pdf-panel__toggle">
+          <label class="booking-pdf-panel__toggle-label" for="booking_pdf_offer_include_cancellation_policy">
+            <input
+              id="booking_pdf_offer_include_cancellation_policy"
+              type="checkbox"
+              data-booking-pdf-toggle="offer.include_cancellation_policy"
+              ${offer.include_cancellation_policy !== false ? "checked" : ""}
+              ${disabled ? "disabled" : ""}
+            />
+            <span>${escapeHtml(bookingT("booking.pdf.offer.include_cancellation_policy", "Include cancellation policy"))}</span>
+          </label>
+          <div class="micro">${offerCancellationPolicyPreviewMarkup()}</div>
+        </div>
+      `;
+    }
     renderField(
       els.pdfOfferClosingMount,
       "offer",
@@ -718,6 +769,38 @@ export function createBookingCoreModule(ctx) {
       state.originalNote = draft.notes;
     }
     return draft;
+  }
+
+  function offerCancellationPolicyPreviewMarkup() {
+    const travelerCount = resolveOfferCancellationPolicyTravelerCount(state.booking);
+    const section = OFFER_CANCELLATION_POLICY_SECTIONS.find((entry) => (
+      Number.isInteger(travelerCount)
+      && travelerCount >= entry.minTravelers
+      && travelerCount <= entry.maxTravelers
+    )) || null;
+    if (!section) {
+      return `<div class="booking-pdf-panel__policy-section">${escapeHtml("Set traveler count to show the applicable cancellation policy section.")}</div>`;
+    }
+    return `<div class="booking-pdf-panel__policy-section">`
+      + `<strong>${escapeHtml(section.heading)}</strong><br />`
+      + `${section.lines.map((line) => escapeHtml(line)).join("<br />")}`
+      + `</div>`;
+  }
+
+  function resolveOfferCancellationPolicyTravelerCount(booking) {
+    const explicit = Number.parseInt(
+      booking?.number_of_travelers ?? booking?.web_form_submission?.number_of_travelers,
+      10
+    );
+    if (Number.isInteger(explicit) && explicit > 0) return explicit;
+    const travelerCount = (Array.isArray(booking?.persons) ? booking.persons : []).filter((person) => (
+      person
+      && typeof person === "object"
+      && !Array.isArray(person)
+      && Array.isArray(person.roles)
+      && person.roles.includes("traveler")
+    )).length;
+    return travelerCount > 0 ? travelerCount : null;
   }
 
   function normalizeCoreComparableState(values = {}) {
@@ -819,6 +902,7 @@ export function createBookingCoreModule(ctx) {
         welcome_i18n: readLocalizedBookingPdfField("offer", "welcome", draft.pdf_personalization?.offer?.welcome_i18n).i18n,
         closing: readLocalizedBookingPdfField("offer", "closing", draft.pdf_personalization?.offer?.closing_i18n).text,
         closing_i18n: readLocalizedBookingPdfField("offer", "closing", draft.pdf_personalization?.offer?.closing_i18n).i18n,
+        include_cancellation_policy: els.pdfPersonalizationPanel?.querySelector('[data-booking-pdf-toggle="offer.include_cancellation_policy"]')?.checked !== false,
         include_who_is_traveling: els.pdfPersonalizationPanel?.querySelector('[data-booking-pdf-toggle="offer.include_who_is_traveling"]')?.checked !== false
       }
     };

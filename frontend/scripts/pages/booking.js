@@ -396,6 +396,7 @@ const els = {
   pdfTravelPlanIncludeWhoIsTravelingMount: document.getElementById("booking_pdf_travel_plan_include_who_is_traveling_mount"),
   pdfOfferSubtitleMount: document.getElementById("booking_pdf_offer_subtitle_mount"),
   pdfOfferWelcomeMount: document.getElementById("booking_pdf_offer_welcome_mount"),
+  pdfOfferIncludeCancellationPolicyMount: document.getElementById("booking_pdf_offer_include_cancellation_policy_mount"),
   pdfOfferClosingMount: document.getElementById("booking_pdf_offer_closing_mount"),
   pdfOfferIncludeWhoIsTravelingMount: document.getElementById("booking_pdf_offer_include_who_is_traveling_mount"),
   pdfCustomerReference: document.getElementById("booking_pdf_customer_reference"),

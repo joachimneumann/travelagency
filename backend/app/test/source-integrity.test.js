@@ -1322,6 +1322,59 @@ test("travel-plan PDF personalization exposes children policy and exclusions fie
   );
 });
 
+test("offer PDF personalization exposes a cancellation-policy toggle and renders the fixed section before the closing block", async () => {
+  const bookingModelPath = path.resolve(__dirname, "..", "..", "..", "model", "entities", "booking.cue");
+  const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
+  const bookingPageScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking.js");
+  const bookingCorePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "core.js");
+  const bookingPdfPersonalizationPath = path.resolve(__dirname, "..", "src", "lib", "booking_pdf_personalization.js");
+  const offerPdfPath = path.resolve(__dirname, "..", "src", "lib", "offer_pdf.js");
+  const [bookingModelSource, bookingPageSource, bookingPageScriptSource, bookingCoreSource, personalizationSource, offerPdfSource] = await Promise.all([
+    readFile(bookingModelPath, "utf8"),
+    readFile(bookingPagePath, "utf8"),
+    readFile(bookingPageScriptPath, "utf8"),
+    readFile(bookingCorePath, "utf8"),
+    readFile(bookingPdfPersonalizationPath, "utf8"),
+    readFile(offerPdfPath, "utf8")
+  ]);
+
+  assert.match(
+    bookingModelSource,
+    /include_cancellation_policy\?: bool/,
+    "Booking PDF personalization should model the fixed cancellation-policy toggle"
+  );
+  assert.match(
+    bookingPageSource,
+    /id="booking_pdf_offer_welcome_mount"[\s\S]*id="booking_pdf_offer_include_cancellation_policy_mount"[\s\S]*id="booking_pdf_offer_closing_mount"/,
+    "booking.html should place the Offer cancellation-policy toggle before the closing field"
+  );
+  assert.match(
+    bookingPageScriptSource,
+    /pdfOfferWelcomeMount[\s\S]*pdfOfferIncludeCancellationPolicyMount[\s\S]*pdfOfferClosingMount/,
+    "booking page script should expose the Offer cancellation-policy mount"
+  );
+  assert.match(
+    bookingCoreSource,
+    /include_cancellation_policy:\s*offer\.include_cancellation_policy !== false/,
+    "booking core should normalize the Offer cancellation-policy toggle"
+  );
+  assert.match(
+    bookingCoreSource,
+    /data-booking-pdf-toggle="offer\.include_cancellation_policy"/,
+    "booking core should render the Offer cancellation-policy checkbox"
+  );
+  assert.match(
+    personalizationSource,
+    /include_cancellation_policy:\s*offerIncludeCancellationPolicy/,
+    "backend PDF personalization should preserve the Offer cancellation-policy toggle"
+  );
+  assert.match(
+    offerPdfSource,
+    /resolveOfferCancellationPolicyTravelerCount[\s\S]*resolveOfferCancellationPolicySection[\s\S]*resolveOfferCancellationPolicyText[\s\S]*pdfT\(lang, "offer\.cancellation_policy_title", "Cancellation policy"\)[\s\S]*cancellationPolicyText[\s\S]*buildClosingBody/s,
+    "offer_pdf.js should derive one cancellation-policy section from traveler count and render it before the closing body"
+  );
+});
+
 test("backend bookings page exposes an internal create-booking modal backed by a protected API route", async () => {
   const bookingListPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "bookings.html");
   const bookingListScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking_list.js");

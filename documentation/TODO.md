@@ -53,8 +53,32 @@ day can have 0+ services
 before tour
 after tour day
 Travel plan has days and destinations
-Rumpf Booking as XXX (see clone script) plaus traveler?
+Core Booking
+Core Booking with traveler
+Booking
 booking has rumpf booking and more
+
+
+In the travel plan PDF configuration, add a section "Cancellation policy" with a default value:
+
+
+Cancellation policy
+===================
+
+For group of 1-10 persons:
+If cancellation is made 14 days prior to travel date, 0% of total fee will be charged.
+If cancellation is made 7-14 days prior to travel date, 30% of total fee will be charged.
+If cancellation is made 0-7 days prior to travel date, 50% of total fee will be charged.
+
+For group of 11-20 persons:
+If cancellation is made 21 days prior to travel date, 0% of total fee will be charged.
+If cancellation is made 10-21 days prior to travel date, 30% of total fee will be charged.
+If cancellation is made 0-10 days prior to travel date, 50% of total fee will be charged.
+
+For group of 21 persons or above:
+If cancellation is made 30 days prior to travel date, 0% of total fee will be charged.
+If cancellation is made 15-30 days prior to travel date, 30% of total fee will be charged.
+If cancellation is made 0-15 days prior to travel date, 50% of total fee will be charged.
 
 Travel plan
 ===========

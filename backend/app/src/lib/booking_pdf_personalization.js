@@ -51,6 +51,7 @@ export function normalizeBookingPdfPersonalization(value, { flatLang = "en", sou
   const travelPlan = raw.travel_plan && typeof raw.travel_plan === "object" && !Array.isArray(raw.travel_plan) ? raw.travel_plan : {};
   const offer = raw.offer && typeof raw.offer === "object" && !Array.isArray(raw.offer) ? raw.offer : {};
   const travelPlanIncludeWhoIsTraveling = travelPlan.include_who_is_traveling === true;
+  const offerIncludeCancellationPolicy = offer.include_cancellation_policy !== false;
   const offerIncludeWhoIsTraveling = offer.include_who_is_traveling !== false;
 
   return compactObject({
@@ -106,6 +107,7 @@ export function normalizeBookingPdfPersonalization(value, { flatLang = "en", sou
             closing_i18n: normalizePdfTextField(offer.closing, offer.closing_i18n, { flatLang, sourceLang }).i18n
           }
         : {}),
+      include_cancellation_policy: offerIncludeCancellationPolicy,
       include_who_is_traveling: offerIncludeWhoIsTraveling
     })
   }) || {};

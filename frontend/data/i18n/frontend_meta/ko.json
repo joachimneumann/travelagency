@@ -639,10 +639,15 @@
     "origin": "legacy",
     "updated_at": "2026-04-02T15:09:21.822Z"
   },
-  "footer.address": {
-    "source_hash": "2ca5c365f9f6e2d184e472f58877c78667a1e106ed083c098ad742c119a3474a",
-    "origin": "legacy",
-    "updated_at": "2026-04-02T15:09:21.822Z"
+  "footer.head_office": {
+    "source_hash": "9c747373dce687b9db277bd9cecd5dfa9f01efc394e407afc86e3b892f8c5877",
+    "origin": "machine",
+    "updated_at": "2026-04-08T11:43:50.095Z"
+  },
+  "footer.hanoi_office": {
+    "source_hash": "a8ac53ac41f58847a40b91916d03777329f048f783647083a339e045d81c9966",
+    "origin": "machine",
+    "updated_at": "2026-04-08T11:43:50.095Z"
   },
   "footer.whatsapp": {
     "source_hash": "22c52a991bc44aa91cbfa63457f4d7abe26f8971458c9f08021a283850730a67",
@@ -655,7 +660,7 @@
     "updated_at": "2026-04-02T15:09:21.822Z"
   },
   "footer.license": {
-    "source_hash": "a88661df033ff44aeee01b0ef80f9f01a360c072c34051db7716a355e832e607",
+    "source_hash": "c24d2f34d4d4ec443a8cee8c179217d676720992a634f6c9c0782d2a88783905",
     "origin": "legacy",
     "updated_at": "2026-04-02T15:09:21.822Z"
   },

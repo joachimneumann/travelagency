@@ -2165,8 +2165,100 @@ function buildSupplementaryClosingNotes(generatedOffer, attachmentCount = 0, lan
   return notes;
 }
 
+const OFFER_CANCELLATION_POLICY_SECTIONS = Object.freeze([
+  Object.freeze({
+    minTravelers: 1,
+    maxTravelers: 10,
+    heading: "For 1-10 travellers:",
+    lines: Object.freeze([
+      "If cancellation is made 14 days prior to travel date, no cancellation fee will be charged.",
+      "If cancellation is made 7-14 days prior to travel date, 30% of total fee will be charged.",
+      "If cancellation is made 0-7 days prior to travel date, 50% of total fee will be charged."
+    ])
+  }),
+  Object.freeze({
+    minTravelers: 11,
+    maxTravelers: 20,
+    heading: "For 11-20 travellers:",
+    lines: Object.freeze([
+      "If cancellation is made 21 days prior to travel date, no cancellation fee will be charged.",
+      "If cancellation is made 10-21 days prior to travel date, 30% of total fee will be charged.",
+      "If cancellation is made 0-10 days prior to travel date, 50% of total fee will be charged."
+    ])
+  }),
+  Object.freeze({
+    minTravelers: 21,
+    maxTravelers: Infinity,
+    heading: "For 21 travellers or above:",
+    lines: Object.freeze([
+      "If cancellation is made 30 days prior to travel date, no cancellation fee will be charged.",
+      "If cancellation is made 15-30 days prior to travel date, 30% of total fee will be charged.",
+      "If cancellation is made 0-15 days prior to travel date, 50% of total fee will be charged."
+    ])
+  })
+]);
+
+function resolveOfferCancellationPolicyTravelerCount(booking) {
+  const explicit = Number.parseInt(
+    booking?.number_of_travelers ?? booking?.web_form_submission?.number_of_travelers,
+    10
+  );
+  if (Number.isInteger(explicit) && explicit > 0) return explicit;
+  const travelerCount = (Array.isArray(booking?.persons) ? booking.persons : []).filter((person) => (
+    person
+    && typeof person === "object"
+    && !Array.isArray(person)
+    && Array.isArray(person.roles)
+    && person.roles.includes("traveler")
+  )).length;
+  return travelerCount > 0 ? travelerCount : null;
+}
+
+function resolveOfferCancellationPolicySection(booking) {
+  if (booking?.pdf_personalization?.offer?.include_cancellation_policy === false) return null;
+  const travelerCount = resolveOfferCancellationPolicyTravelerCount(booking);
+  if (!Number.isInteger(travelerCount)) return null;
+  return OFFER_CANCELLATION_POLICY_SECTIONS.find((section) => (
+    travelerCount >= section.minTravelers
+    && travelerCount <= section.maxTravelers
+  )) || null;
+}
+
+function resolveOfferCancellationPolicyText(booking) {
+  const section = resolveOfferCancellationPolicySection(booking);
+  if (!section) return "";
+  return `${section.heading}\n${section.lines.join("\n")}`;
+}
+
 function estimateClosingHeight(doc, fonts, lang, generatedOffer, formatMoneyValue, attachmentCount = 0) {
   const textWidth = doc.page.width - PAGE_MARGIN * 2;
+  const cancellationPolicyText = textOrNull(resolveOfferCancellationPolicyText(generatedOffer?.__booking_for_offer_pdf || null));
+  let height = 0;
+
+  if (cancellationPolicyText) {
+    doc
+      .font(pdfFontName("bold", fonts))
+      .fontSize(11.2);
+    height += doc.heightOfString(
+      pdfT(lang, "offer.cancellation_policy_title", "Cancellation policy"),
+      pdfTextOptions(lang, {
+        width: textWidth,
+        lineGap: 1
+      })
+    );
+    height += 4;
+    doc
+      .font(pdfFontName("regular", fonts))
+      .fontSize(11);
+    height += doc.heightOfString(
+      cancellationPolicyText,
+      pdfTextOptions(lang, {
+        width: textWidth,
+        lineGap: 2
+      })
+    );
+    height += 14;
+  }
 
   doc
     .font(pdfFontName("regular", fonts))
@@ -2201,10 +2293,44 @@ function estimateClosingHeight(doc, fonts, lang, generatedOffer, formatMoneyValu
     align: pdfTextAlign(lang)
   });
 
-  return bodyHeight + attachmentHeight + 18 + regardsHeight + 18 + teamHeight + 10;
+  return height + bodyHeight + attachmentHeight + 18 + regardsHeight + 18 + teamHeight + 10;
 }
 
 function drawClosing(doc, startY, fonts, lang, generatedOffer, formatMoneyValue, attachmentCount = 0) {
+  const cancellationPolicyText = textOrNull(resolveOfferCancellationPolicyText(generatedOffer?.__booking_for_offer_pdf || null));
+  let y = startY;
+
+  if (cancellationPolicyText) {
+    doc
+      .font(pdfFontName("bold", fonts))
+      .fontSize(11.2)
+      .fillColor(PDF_COLORS.textStrong)
+      .text(
+        pdfT(lang, "offer.cancellation_policy_title", "Cancellation policy"),
+        PAGE_MARGIN,
+        y,
+        pdfTextOptions(lang, {
+          width: doc.page.width - PAGE_MARGIN * 2,
+          lineGap: 1
+        })
+      );
+    y = doc.y + 4;
+    doc
+      .font(pdfFontName("regular", fonts))
+      .fontSize(11)
+      .fillColor(PDF_COLORS.textMutedStrong)
+      .text(
+        cancellationPolicyText,
+        PAGE_MARGIN,
+        y,
+        pdfTextOptions(lang, {
+          width: doc.page.width - PAGE_MARGIN * 2,
+          lineGap: 2
+        })
+      );
+    y = doc.y + 14;
+  }
+
   doc
     .font(pdfFontName("regular", fonts))
     .fontSize(11)
@@ -2212,7 +2338,7 @@ function drawClosing(doc, startY, fonts, lang, generatedOffer, formatMoneyValue,
     .text(
       buildClosingBody(generatedOffer, formatMoneyValue, lang),
       PAGE_MARGIN,
-      startY,
+      y,
       pdfTextOptions(lang, {
         width: doc.page.width - PAGE_MARGIN * 2,
         lineGap: 2
