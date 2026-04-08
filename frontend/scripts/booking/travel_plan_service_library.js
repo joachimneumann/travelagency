@@ -132,6 +132,20 @@ export function createBookingTravelPlanServiceLibraryModule(deps) {
     return firstDate || lastDate || "";
   }
 
+  function templateDays(item) {
+    return Array.isArray(item?.travel_plan?.days) ? item.travel_plan.days : [];
+  }
+
+  function templateServices(item) {
+    return templateDays(item).flatMap((day) => (Array.isArray(day?.services) ? day.services : []));
+  }
+
+  function templateThumbnailUrl(item) {
+    const services = templateServices(item);
+    const thumbnailService = services.find((service) => String(service?.image?.storage_path || "").trim()) || services[0] || null;
+    return String(thumbnailService?.image?.storage_path || "").trim();
+  }
+
   function renderTravelPlanServiceLibraryResults(items = []) {
     if (!els.travelPlanServiceLibraryResults) return;
     const rows = Array.isArray(items) ? items : [];
@@ -158,34 +172,39 @@ export function createBookingTravelPlanServiceLibraryModule(deps) {
       const templateActionLabel = currentTravelPlanHasDays()
         ? bookingT("booking.travel_plan.append", "Append")
         : bookingT("booking.travel_plan.use_action", "Use");
-      els.travelPlanServiceLibraryResults.innerHTML = rows.map((item) => `
-        <article class="travel-plan-library-card">
-          <div class="travel-plan-library-card__media">
-            ${item.thumbnail_url
-              ? `<img src="${escapeHtml(resolveTravelPlanImageSrc(item.thumbnail_url, apiOrigin))}" alt="${escapeHtml(item.title || bookingT("booking.travel_plan.standard_travel_plans", "Standard travel plans"))}" loading="lazy" />`
-              : `<div class="travel-plan-library-card__placeholder">${escapeHtml(bookingT("booking.travel_plan.no_image", "No image"))}</div>`}
-          </div>
-          <div class="travel-plan-library-card__content">
-            <div class="travel-plan-library-card__eyebrow">
-              ${escapeHtml(item.source_booking_name || item.source_booking_id || "")}
+      els.travelPlanServiceLibraryResults.innerHTML = rows.map((item) => {
+        const destinations = Array.isArray(item?.destinations) ? item.destinations : [];
+        const days = templateDays(item);
+        const services = templateServices(item);
+        const thumbnailUrl = templateThumbnailUrl(item);
+        return `
+          <article class="travel-plan-library-card">
+            <div class="travel-plan-library-card__media">
+              ${thumbnailUrl
+                ? `<img src="${escapeHtml(resolveTravelPlanImageSrc(thumbnailUrl, apiOrigin))}" alt="${escapeHtml(item.title || bookingT("booking.travel_plan.standard_travel_plans", "Standard travel plans"))}" loading="lazy" />`
+                : `<div class="travel-plan-library-card__placeholder">${escapeHtml(bookingT("booking.travel_plan.no_image", "No image"))}</div>`}
             </div>
-            <h3>${escapeHtml(item.title || bookingT("booking.travel_plan.standard_travel_plans", "Standard travel plans"))}</h3>
-            <p>${escapeHtml(item.description || "")}</p>
-            <div class="travel-plan-library-card__meta">
-              ${Number.isFinite(Number(item.day_count)) ? `<span>${escapeHtml(bookingT(Number(item.day_count) === 1 ? "booking.travel_plan.summary.day" : "booking.travel_plan.summary.days", "{count} days", { count: Number(item.day_count) }))}</span>` : ""}
-              ${Number.isFinite(Number(item.service_count)) ? `<span>${escapeHtml(bookingT(Number(item.service_count) === 1 ? "booking.travel_plan.summary.item" : "booking.travel_plan.summary.items", "{count} services", { count: Number(item.service_count) }))}</span>` : ""}
+            <div class="travel-plan-library-card__content">
+              <div class="travel-plan-library-card__eyebrow">
+                ${escapeHtml(destinations.join(", "))}
+              </div>
+              <h3>${escapeHtml(item.title || bookingT("booking.travel_plan.standard_travel_plans", "Standard travel plans"))}</h3>
+              <div class="travel-plan-library-card__meta">
+                <span>${escapeHtml(bookingT(days.length === 1 ? "booking.travel_plan.summary.day" : "booking.travel_plan.summary.days", "{count} days", { count: days.length }))}</span>
+                <span>${escapeHtml(bookingT(services.length === 1 ? "booking.travel_plan.summary.item" : "booking.travel_plan.summary.items", "{count} services", { count: services.length }))}</span>
+              </div>
             </div>
-          </div>
-          <div class="travel-plan-library-card__actions">
-            <button
-              class="btn btn-primary"
-              data-travel-plan-apply-template="${escapeHtml(item.id || "")}"
-              data-requires-clean-state
-              type="button"
-            >${escapeHtml(templateActionLabel)}</button>
-          </div>
-        </article>
-      `).join("");
+            <div class="travel-plan-library-card__actions">
+              <button
+                class="btn btn-primary"
+                data-travel-plan-apply-template="${escapeHtml(item.id || "")}"
+                data-requires-clean-state
+                type="button"
+              >${escapeHtml(templateActionLabel)}</button>
+            </div>
+          </article>
+        `;
+      }).join("");
       return;
     }
     if (isPlanLibraryMode()) {
@@ -389,7 +408,6 @@ export function createBookingTravelPlanServiceLibraryModule(deps) {
           baseURL: apiOrigin,
           query: {
             ...(query ? { q: query } : {}),
-            status: "published",
             page_size: 30
           }
         })

@@ -754,11 +754,6 @@ package api
 			required: false
 			typeName: "string"
 		}, {
-			name:     "status"
-			location: "query"
-			required: false
-			typeName: "TravelPlanTemplateStatus"
-		}, {
 			name:     "destination"
 			location: "query"
 			required: false

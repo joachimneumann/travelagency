@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { Readable, Writable } from "node:stream";
-import { mkdtemp, mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, readdir, rm, stat, writeFile } from "node:fs/promises";
 import { spawnSync } from "node:child_process";
 import os from "node:os";
 import path from "node:path";
@@ -14,6 +14,7 @@ const __dirname = path.dirname(__filename);
 const CONTRACT_META_PATH = path.resolve(__dirname, "..", "..", "..", "api", "generated", "mobile-api.meta.json");
 const TEST_DATA_DIR = await mkdtemp(path.join(os.tmpdir(), "travelagency-contract-test-"));
 const STORE_PATH = path.join(TEST_DATA_DIR, "store.json");
+const TRAVEL_PLAN_TEMPLATES_DIR = path.resolve(__dirname, "..", "..", "..", "content", "travel_plan_templates");
 
 process.env.KEYCLOAK_ENABLED = "true";
 process.env.INSECURE_TEST_AUTH = "true";
@@ -313,6 +314,25 @@ async function resetStore() {
     chat_conversations: [],
     chat_events: []
   }, null, 2)}\n`, "utf8");
+}
+
+async function removeTravelPlanTemplatesByTitlePrefix(prefix) {
+  const normalizedPrefix = String(prefix || "").trim();
+  if (!normalizedPrefix) return;
+  const entries = await readdir(TRAVEL_PLAN_TEMPLATES_DIR, { withFileTypes: true }).catch(() => []);
+  for (const entry of entries) {
+    if (!entry?.isDirectory?.()) continue;
+    const templatePath = path.join(TRAVEL_PLAN_TEMPLATES_DIR, entry.name, "template.json");
+    let parsed = null;
+    try {
+      parsed = JSON.parse(await readFile(templatePath, "utf8"));
+    } catch {
+      continue;
+    }
+    const title = String(parsed?.title || "").trim();
+    if (!title.startsWith(normalizedPrefix)) continue;
+    await rm(path.join(TRAVEL_PLAN_TEMPLATES_DIR, entry.name), { recursive: true, force: true });
+  }
 }
 
 async function createSeedBooking() {
@@ -2187,112 +2207,185 @@ test("travel plans can be searched and appended from another booking with groupe
   assert.equal(importedFirstService.image.storage_path, "/public/v1/booking-images/source/plan-service-1.webp");
 });
 
-test("published standard travel plan apply copies travel-plan PDF personalization from the source template", async () => {
+test("standard travel plan apply copies the travel plan without storing extra template metadata", async () => {
+  await removeTravelPlanTemplatesByTitlePrefix("Template copy marker");
   const sourceBooking = await createSeedBooking();
   const targetBooking = await createPublicBooking({
     name: "Template Target User",
     email: "template-target@example.com"
   });
+  const templateTitle = `Template copy marker ${sourceBooking.id}`;
+  try {
+    const store = JSON.parse(await readFile(STORE_PATH, "utf8"));
+    const sourceRecord = store.bookings.find((item) => item.id === sourceBooking.id);
+    const targetRecord = store.bookings.find((item) => item.id === targetBooking.id);
+    assert.ok(sourceRecord);
+    assert.ok(targetRecord);
+
+    sourceRecord.travel_plan = {
+      days: [
+        {
+          id: "template_source_day_1",
+          day_number: 1,
+          date: "2026-08-01",
+          title: "Template day marker",
+          overnight_location: "Siem Reap",
+          services: [
+            {
+              id: "template_source_service_1",
+              timing_kind: "label",
+              time_label: "Morning",
+              kind: "activity",
+              title: "Template service marker",
+              details: "Template service details",
+              location: "Siem Reap"
+            }
+          ],
+          notes: ""
+        }
+      ]
+    };
+    targetRecord.travel_plan = {
+      days: [
+        {
+          id: "template_target_day_1",
+          day_number: 1,
+          date: "2026-08-10",
+          title: "Old target day",
+          overnight_location: "Da Nang",
+          services: [],
+          notes: ""
+        }
+      ]
+    };
+    targetRecord.pdf_personalization = {
+      travel_plan: {
+        subtitle: "Old target subtitle"
+      },
+      offer: {
+        closing: "Target offer closing marker"
+      }
+    };
+    await writeFile(STORE_PATH, `${JSON.stringify(store, null, 2)}\n`, "utf8");
+
+    const templateCreateResult = await requestJson(
+      endpointPath("travel_plan_template_create"),
+      apiHeaders(),
+      {
+        method: "POST",
+        body: {
+          title: templateTitle,
+          source_booking_id: sourceBooking.id
+        }
+      }
+    );
+    assert.equal(templateCreateResult.status, 201);
+    assert.equal(templateCreateResult.body.template.title, templateTitle);
+    assert.deepEqual(templateCreateResult.body.template.destinations, []);
+    assert.ok(templateCreateResult.body.template.travel_plan);
+    assert.ok(!("source_booking_id" in templateCreateResult.body.template));
+    assert.ok(!("description" in templateCreateResult.body.template));
+    assert.ok(!("created_at" in templateCreateResult.body.template));
+    assert.ok(!("updated_at" in templateCreateResult.body.template));
+
+    const applyResult = await requestJson(
+      endpointPath("booking_travel_plan_template_apply")
+        .replace("{booking_id}", targetBooking.id)
+        .replace("{template_id}", templateCreateResult.body.template.id),
+      apiHeaders(),
+      {
+        method: "POST",
+        body: {
+          expected_travel_plan_revision: targetBooking.travel_plan_revision
+        }
+      }
+    );
+    assert.equal(applyResult.status, 200);
+    assert.equal(applyResult.body.booking.travel_plan.days.length, 1);
+    assert.equal(applyResult.body.booking.travel_plan.days[0].title, "Template day marker");
+    assert.equal(applyResult.body.booking.travel_plan.days[0].services[0].title, "Template service marker");
+    assert.equal(applyResult.body.booking.pdf_personalization.travel_plan.subtitle, "Old target subtitle");
+    assert.equal(applyResult.body.booking.pdf_personalization.offer.closing, "Target offer closing marker");
+  } finally {
+    await removeTravelPlanTemplatesByTitlePrefix("Template copy marker");
+  }
+});
+
+test("standard travel plan titles must be unique", async () => {
+  const sourceBooking = await createSeedBooking();
+  const primaryTitle = `Summer Escape ${sourceBooking.id}`;
+  const secondaryTitle = `Mekong Explorer ${sourceBooking.id}`;
 
   const store = JSON.parse(await readFile(STORE_PATH, "utf8"));
   const sourceRecord = store.bookings.find((item) => item.id === sourceBooking.id);
-  const targetRecord = store.bookings.find((item) => item.id === targetBooking.id);
   assert.ok(sourceRecord);
-  assert.ok(targetRecord);
-
   sourceRecord.travel_plan = {
     days: [
       {
-        id: "template_source_day_1",
+        id: "duplicate_title_day_1",
         day_number: 1,
-        date: "2026-08-01",
-        title: "Template day marker",
-        overnight_location: "Siem Reap",
-        services: [
-          {
-            id: "template_source_service_1",
-            timing_kind: "label",
-            time_label: "Morning",
-            kind: "activity",
-            title: "Template service marker",
-            details: "Template service details",
-            location: "Siem Reap"
-          }
-        ],
-        notes: ""
-      }
-    ]
-  };
-  sourceRecord.pdf_personalization = {
-    travel_plan: {
-      subtitle: "Template subtitle marker",
-      welcome: "Template welcome marker",
-      children_policy: "Template children marker",
-      whats_not_included: "Template exclusions marker",
-      closing: "Template closing marker",
-      include_who_is_traveling: true
-    }
-  };
-  targetRecord.travel_plan = {
-    days: [
-      {
-        id: "template_target_day_1",
-        day_number: 1,
-        date: "2026-08-10",
-        title: "Old target day",
-        overnight_location: "Da Nang",
+        date: "2026-08-15",
+        title: "Duplicate title source day",
+        overnight_location: "Bangkok",
         services: [],
         notes: ""
       }
     ]
   };
-  targetRecord.pdf_personalization = {
-    travel_plan: {
-      subtitle: "Old target subtitle"
-    },
-    offer: {
-      closing: "Target offer closing marker"
-    }
-  };
   await writeFile(STORE_PATH, `${JSON.stringify(store, null, 2)}\n`, "utf8");
 
-  const templateCreateResult = await requestJson(
+  const firstCreateResult = await requestJson(
     endpointPath("travel_plan_template_create"),
     apiHeaders(),
     {
       method: "POST",
       body: {
-        title: "Template copy marker",
-        status: "published",
+        title: primaryTitle,
         source_booking_id: sourceBooking.id
       }
     }
   );
-  assert.equal(templateCreateResult.status, 201);
+  assert.equal(firstCreateResult.status, 201);
 
-  const applyResult = await requestJson(
-    endpointPath("booking_travel_plan_template_apply")
-      .replace("{booking_id}", targetBooking.id)
-      .replace("{template_id}", templateCreateResult.body.template.id),
+  const secondCreateResult = await requestJson(
+    endpointPath("travel_plan_template_create"),
     apiHeaders(),
     {
       method: "POST",
       body: {
-        expected_travel_plan_revision: targetBooking.travel_plan_revision
+        title: secondaryTitle,
+        source_booking_id: sourceBooking.id
       }
     }
   );
-  assert.equal(applyResult.status, 200);
-  assert.equal(applyResult.body.booking.travel_plan.days.length, 1);
-  assert.equal(applyResult.body.booking.travel_plan.days[0].title, "Template day marker");
-  assert.equal(applyResult.body.booking.travel_plan.days[0].services[0].title, "Template service marker");
-  assert.equal(applyResult.body.booking.pdf_personalization.travel_plan.subtitle, "Template subtitle marker");
-  assert.equal(applyResult.body.booking.pdf_personalization.travel_plan.welcome, "Template welcome marker");
-  assert.equal(applyResult.body.booking.pdf_personalization.travel_plan.children_policy, "Template children marker");
-  assert.equal(applyResult.body.booking.pdf_personalization.travel_plan.whats_not_included, "Template exclusions marker");
-  assert.equal(applyResult.body.booking.pdf_personalization.travel_plan.closing, "Template closing marker");
-  assert.equal(applyResult.body.booking.pdf_personalization.travel_plan.include_who_is_traveling, true);
-  assert.equal(applyResult.body.booking.pdf_personalization.offer.closing, "Target offer closing marker");
+  assert.equal(secondCreateResult.status, 201);
+
+  const duplicateCreateResult = await requestJson(
+    endpointPath("travel_plan_template_create"),
+    apiHeaders(),
+    {
+      method: "POST",
+      body: {
+        title: `  ${primaryTitle.toLowerCase()}  `,
+        source_booking_id: sourceBooking.id
+      }
+    }
+  );
+  assert.equal(duplicateCreateResult.status, 409);
+  assert.equal(duplicateCreateResult.body.error, "A standard tour with this title already exists.");
+
+  const duplicatePatchResult = await requestJson(
+    endpointPath("travel_plan_template_update").replace("{template_id}", secondCreateResult.body.template.id),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        title: primaryTitle.toUpperCase()
+      }
+    }
+  );
+  assert.equal(duplicatePatchResult.status, 409);
+  assert.equal(duplicatePatchResult.body.error, "A standard tour with this title already exists.");
 });
 
 test("service image can be deleted", async () => {
@@ -3629,7 +3722,7 @@ test("booking generated offer pdf renders customer-visible day pricing while kee
   assert.match(source, /additional_items/);
 });
 
-test("booking generated offer pdf wiring includes the assigned ATP guide section", async () => {
+test("booking generated offer pdf wiring keeps the commercial summary before the detailed appendix", async () => {
   const createdBooking = await createSeedBooking({
     destinations: ["Thailand"],
     travel_style: ["Wellness", "Beach"]
@@ -3713,7 +3806,7 @@ test("booking generated offer pdf wiring includes the assigned ATP guide section
       method: "POST",
       body: {
         expected_offer_revision: offerPatchResult.body.booking.offer_revision,
-        comment: "Guide PDF section check"
+        comment: "Offer PDF structure check"
       }
     }
   );
@@ -3731,16 +3824,20 @@ test("booking generated offer pdf wiring includes the assigned ATP guide section
   assert.equal(pdfResult.headers["content-type"], "application/pdf");
   assert.match(String(pdfResult.headers["content-disposition"] || ""), /ATP offer \d{4}-\d{2}-\d{2}\.pdf/);
   const source = await readFile(path.join(__dirname, "..", "src", "lib", "offer_pdf.js"), "utf8");
-  assert.match(source, /resolveAtpGuidePdfContext/);
   assert.ok(
-    source.indexOf("y = drawTravelPlanOverview(doc, generatedOffer, booking, y, fonts, lang, itemThumbnailMap);")
-      < source.indexOf("y = drawGuideSection(doc, y, fonts, lang, guideContext, guidePhoto);"),
-    "Expected guide section to be rendered after the travel plan section in the offer PDF writer"
+    source.indexOf("y = drawOfferItinerarySummary(doc, generatedOffer, booking, y, fonts, lang);")
+      < source.indexOf("y = drawOfferTable(doc, generatedOffer, y, renderMoney, fonts, lang);"),
+    "Expected the offer PDF writer to render the short itinerary summary before the financial overview"
   );
   assert.ok(
-    source.indexOf("y = drawGuideSection(doc, y, fonts, lang, guideContext, guidePhoto);")
-      < source.indexOf("y = drawOfferTable(doc, generatedOffer, y, renderMoney, fonts, lang);"),
-    "Expected guide section to be rendered before the financial offer details in the offer PDF writer"
+    source.indexOf("y = drawPaymentTerms(doc, generatedOffer, y, renderMoney, fonts, lang);")
+      < source.indexOf("y = drawBankDetails(doc, companyProfile, y, fonts, lang);"),
+    "Expected the offer PDF writer to render bank details after payment terms"
+  );
+  assert.ok(
+    source.indexOf("y = drawClosing(doc, y, fonts, lang, generatedOffer, renderMoney, {")
+      < source.indexOf("y = drawOfferDetailedTravelPlanAppendix(doc, generatedOffer, booking, y, fonts, lang, itemThumbnailMap);"),
+    "Expected the detailed travel-plan appendix to be rendered after the commercial offer sections"
   );
 });
 

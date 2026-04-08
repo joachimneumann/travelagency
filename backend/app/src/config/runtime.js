@@ -117,7 +117,14 @@ export const COMPANY_PROFILE = Object.freeze({
   website: "asiatravelplan.com",
   address: "alley 378 Cua Dai, 550000 Hoi An, Vietnam",
   whatsapp: "+84 337942446",
-  email: "info@asiatravelplan.com"
+  email: "info@asiatravelplan.com",
+  bankDetails: Object.freeze({
+    accountHolder: "NGUYEN THI XUAN",
+    bankName: "Vietcombank (VCB)",
+    accountNumber: "1000234500123",
+    branch: "",
+    swiftCode: "VCBVVNVX"
+  })
 });
 
 export function resolveConfigPathFromRepoRoot(rawPath) {

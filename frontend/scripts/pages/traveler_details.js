@@ -39,6 +39,16 @@ const PERSON_CONSENT_STATUSES = Object.freeze([
 ]);
 const FRONTEND_I18N_BASE_PATH = "/frontend/data/i18n/frontend";
 const DEFAULT_FRONTEND_LANGUAGE = "en";
+const TRAVELER_DETAILS_TRANSLATIONS = Object.freeze({
+  en: Object.freeze({
+    gender: "Gender",
+    gender_placeholder: "Select gender"
+  }),
+  vi: Object.freeze({
+    gender: "Giới tính",
+    gender_placeholder: "Chọn giới tính"
+  })
+});
 
 const state = {
   bookingId: normalizeText(query.get("booking_id")),
@@ -133,8 +143,10 @@ function applyTravelerDetailsLanguagePresentation(lang) {
   document.body?.classList.toggle("frontend-language-rtl", direction === "rtl");
 }
 
-function travelerDetailsT(key, fallback, replacements = {}) {
-  const template = state.dict?.[`traveler_details.${key}`] || fallback;
+function travelerDetailsT(key, fallback) {
+  const replacements = arguments[2] || {};
+  const inlineFallback = TRAVELER_DETAILS_TRANSLATIONS[state.i18nLang]?.[key];
+  const template = state.dict?.[`traveler_details.${key}`] || inlineFallback || fallback;
   return String(template || "").replace(/\{(\w+)\}/g, (_, token) => String(replacements?.[token] ?? ""));
 }
 
@@ -573,9 +585,7 @@ function travelerCardMarkup(traveler) {
   const documentType = normalizeSelectedDocumentType(traveler, traveler.selected_document_type);
   const documentLabel = documentTypeLabel(documentType);
   const supportsNoExpirationDate = documentType === "national_id";
-  const documentSectionLabel = supportsNationalId
-    ? travelerDetailsT("travel_document", "Travel document")
-    : travelerDetailsT("passport", "Passport");
+  const documentSectionLabel = supportsNationalId ? "Travel document" : "Passport";
   const uploadLabel = documentType === "national_id"
     ? travelerDetailsT("upload_id_card_image", "Upload ID card image")
     : travelerDetailsT("upload_passport_image", "Upload passport image");
@@ -606,12 +616,12 @@ function travelerCardMarkup(traveler) {
           ${renderTravelerLanguageOptions(traveler.preferred_language)}
         </select>
       </div>
-      <div class="field">
-        <label for="traveler_nationality">${escapeHtml(travelerDetailsT("nationality", "Nationality"))}</label>
-        <select id="traveler_nationality" data-field="nationality">
-          ${renderCountryOptions(traveler.nationality, travelerDetailsT("nationality_placeholder", "Select nationality"))}
-        </select>
-      </div>
+          <div class="field">
+            <label for="traveler_nationality">${escapeHtml(travelerDetailsT("nationality", "Nationality"))}</label>
+            <select id="traveler_nationality" data-field="nationality">
+              ${renderCountryOptions(traveler.nationality, "Select nationality")}
+            </select>
+          </div>
       <div class="field">
         <label for="traveler_gender">${escapeHtml(travelerDetailsT("gender", "Gender"))}</label>
         <select id="traveler_gender" data-field="gender">
@@ -690,7 +700,7 @@ function travelerCardMarkup(traveler) {
       <div class="field traveler-details-card__field--narrow">
         <label for="traveler_country_code">${escapeHtml(travelerDetailsT("country_of_residence", "Country of residence"))}</label>
         <select id="traveler_country_code" data-address-field="country_code">
-          ${renderCountryOptions(traveler.address.country_code, travelerDetailsT("country_placeholder", "Select country"))}
+          ${renderCountryOptions(traveler.address.country_code, "Select country")}
         </select>
       </div>
       <div class="field traveler-details-card__field--wide">
@@ -738,20 +748,20 @@ function travelerCardMarkup(traveler) {
         <div class="field">
           <label for="traveler_issuing_country">${escapeHtml(travelerDetailsT("issuing_country", "Issuing country"))}</label>
           <select id="traveler_issuing_country" data-document-field="issuing_country">
-            ${renderCountryOptions(document.issuing_country, travelerDetailsT("issuing_country_placeholder", "Select issuing country"))}
+            ${renderCountryOptions(document.issuing_country, "Select issuing country")}
           </select>
         </div>
         <div class="field">
           <label for="traveler_issued_on">${escapeHtml(travelerDetailsT("issued_on", "Issued on"))}</label>
           <input id="traveler_issued_on" data-document-field="issued_on" type="date" value="${escapeHtml(document.issued_on)}" />
         </div>
-        <div class="field">
-          <label for="traveler_expires_on">${escapeHtml(travelerDetailsT("expires_on", "Expires on"))}</label>
-          <input id="traveler_expires_on" data-document-field="expires_on" type="date" value="${escapeHtml(document.expires_on)}"${supportsNoExpirationDate && document.no_expiration_date ? " disabled" : ""} />
-          <div class="traveler-details-document__checkbox-wrap">
-          ${supportsNoExpirationDate ? `
-            <label class="traveler-details-document__checkbox">
-              <input type="checkbox" data-document-field="no_expiration_date"${document.no_expiration_date ? " checked" : ""} />
+            <div class="field">
+              <label for="traveler_expires_on">Expires on</label>
+              <input id="traveler_expires_on" data-document-field="expires_on" type="date" value="${escapeHtml(document.expires_on)}"${supportsNoExpirationDate && document.no_expiration_date ? " disabled" : ""} />
+              <div class="traveler-details-document__checkbox-wrap">
+              ${supportsNoExpirationDate ? `
+                <label class="traveler-details-document__checkbox">
+                  <input type="checkbox" data-document-field="no_expiration_date"${document.no_expiration_date ? " checked" : ""} />
               ${escapeHtml(travelerDetailsT("no_expiration_date", "No expiration date"))}
             </label>
           ` : `
@@ -786,10 +796,7 @@ function render() {
   applyTravelerDetailsLanguagePresentation(state.i18nLang || travelerDetailsLang());
   applyTravelerDetailsChromeCopy();
   if (bookingName && Number.isInteger(travelerNumber) && travelerNumber >= 1) {
-    const heading = travelerDetailsT("title_with_number", "Traveler {number}: {booking}", {
-      number: travelerNumber,
-      booking: bookingName
-    });
+    const heading = `Traveler ${travelerNumber}: ${bookingName}`;
     els.title.textContent = heading;
     document.title = `${heading} | AsiaTravelPlan`;
   } else if (bookingName) {

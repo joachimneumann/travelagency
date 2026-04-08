@@ -18,7 +18,7 @@
 }
 
 (staging_html_no_cache_headers) {
-  @staging_html path / /index.html /404.html /bookings.html /booking.html /persons.html /marketing_tour.html /marketing_tours.html /standard-travel-plans.html /settings.html /emergency.html /privacy.html /booking-confirmation.html /traveler-details.html
+  @staging_html path / /index.html /404.html /bookings.html /booking.html /persons.html /marketing_tour.html /marketing_tours.html /standard-travel-plans.html /standard-travel-plan.html /settings.html /emergency.html /privacy.html /booking-confirmation.html /traveler-details.html
   header @staging_html {
     Cache-Control "no-store, no-cache, must-revalidate"
     Pragma "no-cache"
@@ -32,7 +32,7 @@
 }
 
 (production_html_no_cache_headers) {
-  @production_html path /bookings.html /booking.html /persons.html /marketing_tour.html /marketing_tours.html /standard-travel-plans.html /settings.html /emergency.html /privacy.html /booking-confirmation.html /traveler-details.html
+  @production_html path /bookings.html /booking.html /persons.html /marketing_tour.html /marketing_tours.html /standard-travel-plans.html /standard-travel-plan.html /settings.html /emergency.html /privacy.html /booking-confirmation.html /traveler-details.html
   header @production_html {
     Cache-Control "no-store, no-cache, must-revalidate"
     Pragma "no-cache"
@@ -97,7 +97,7 @@ asiatravelplan.com {
     file_server
   }
 
-  @production_html_pages path /bookings.html /booking.html /persons.html /marketing_tour.html /marketing_tours.html /standard-travel-plans.html /settings.html /emergency.html /privacy.html
+  @production_html_pages path /bookings.html /booking.html /persons.html /marketing_tour.html /marketing_tours.html /standard-travel-plans.html /standard-travel-plan.html /settings.html /emergency.html /privacy.html
   handle @production_html_pages {
     root * /production-app
     rewrite * /frontend/pages{path}
@@ -174,7 +174,7 @@ staging.asiatravelplan.com {
     file_server
   }
 
-  @html_pages path /index.html /404.html /bookings.html /booking.html /persons.html /marketing_tour.html /marketing_tours.html /standard-travel-plans.html /settings.html /emergency.html /privacy.html /booking-confirmation.html /traveler-details.html
+  @html_pages path /index.html /404.html /bookings.html /booking.html /persons.html /marketing_tour.html /marketing_tours.html /standard-travel-plans.html /standard-travel-plan.html /settings.html /emergency.html /privacy.html /booking-confirmation.html /traveler-details.html
   handle @html_pages {
     rewrite * /frontend/pages{path}
     file_server

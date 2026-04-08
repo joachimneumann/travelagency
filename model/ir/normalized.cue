@@ -60,7 +60,6 @@ IR: {
 		GeneratedOfferCustomerConfirmationFlowMode: {catalog: "generatedOfferCustomerConfirmationFlowModes"}
 		GeneratedOfferCustomerConfirmationFlowStatus: {catalog: "generatedOfferCustomerConfirmationFlowStatuses"}
 		BookingConfirmationMethod: {catalog: "bookingConfirmationMethods"}
-		TravelPlanTemplateStatus: {catalog: "travelPlanTemplateStatuses"}
 		TourStyleCode: {catalog: "tourStyles"}
 		CountryCode: {catalog: "countries"}
 		TimezoneCode: {catalog: "timezones"}
@@ -147,13 +146,8 @@ IR: {
 			fields: [
 				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
 				{name: "title", kind: "scalar", typeName: "string", required: true},
-				{name: "description", kind: "scalar", typeName: "string", required: false},
-				{name: "status", kind: "enum", typeName: "TravelPlanTemplateStatus", required: true},
-				{name: "source_booking_id", kind: "scalar", typeName: "Identifier", required: false},
-				{name: "created_by_atp_staff_id", kind: "scalar", typeName: "Identifier", required: false},
+				{name: "destinations", kind: "enum", typeName: "CountryCode", required: true, isArray: true},
 				{name: "travel_plan", kind: "entity", typeName: "BookingTravelPlan", required: true},
-				{name: "created_at", kind: "scalar", typeName: "Timestamp", required: false},
-				{name: "updated_at", kind: "scalar", typeName: "Timestamp", required: false},
 			]
 		},
 		{
@@ -1481,17 +1475,8 @@ IR: {
 			fields: [
 				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
 				{name: "title", kind: "scalar", typeName: "string", required: true},
-				{name: "description", kind: "scalar", typeName: "string", required: false},
-				{name: "status", kind: "enum", typeName: "TravelPlanTemplateStatus", required: true},
-				{name: "source_booking_id", kind: "scalar", typeName: "Identifier", required: false},
-				{name: "source_booking_name", kind: "scalar", typeName: "string", required: false},
-				{name: "created_by_atp_staff_id", kind: "scalar", typeName: "Identifier", required: false},
+				{name: "destinations", kind: "enum", typeName: "CountryCode", required: true, isArray: true},
 				{name: "travel_plan", kind: "entity", typeName: "BookingTravelPlan", required: true},
-				{name: "day_count", kind: "scalar", typeName: "int", required: true},
-				{name: "service_count", kind: "scalar", typeName: "int", required: true},
-				{name: "thumbnail_url", kind: "scalar", typeName: "string", required: false},
-				{name: "created_at", kind: "scalar", typeName: "Timestamp", required: false},
-				{name: "updated_at", kind: "scalar", typeName: "Timestamp", required: false},
 			]
 		},
 		{
@@ -1859,8 +1844,6 @@ IR: {
 			sourceType: "api.#TravelPlanTemplateUpsertRequest"
 			fields: [
 				{name: "title", kind: "scalar", typeName: "string", required: false},
-				{name: "description", kind: "scalar", typeName: "string", required: false},
-				{name: "status", kind: "enum", typeName: "TravelPlanTemplateStatus", required: false},
 				{name: "destinations", kind: "enum", typeName: "CountryCode", required: false, isArray: true},
 				{name: "source_booking_id", kind: "scalar", typeName: "Identifier", required: false},
 				{name: "travel_plan", kind: "entity", typeName: "BookingTravelPlan", required: false},

@@ -50,7 +50,7 @@ export function createBookingTravelPlanImagesModule(deps) {
     return item.images.find((image) => image?.is_primary) || item.images[0] || null;
   }
 
-  function renderTravelPlanServiceImages(day, item, { variant = "default" } = {}) {
+  function renderTravelPlanServiceImages(day, item, { variant = "default", editable = true } = {}) {
     const image = resolveCurrentItemImage(item);
     const copiedFrom = item?.copied_from || null;
     const copiedFromText = copiedFrom?.source_booking_id
@@ -70,8 +70,8 @@ export function createBookingTravelPlanImagesModule(deps) {
     const changePictureLabel = image
       ? bookingT("booking.travel_plan.change_picture", "Change picture")
       : bookingT("booking.travel_plan.add_picture", "Add picture");
-    return `
-      <div class="travel-plan-images${variant === "sidebar" ? " travel-plan-images--sidebar" : ""}">
+    const heroMedia = editable
+      ? `
         <button
           class="travel-plan-images__hero-button"
           data-travel-plan-add-image="${escapeHtml(item.id)}"
@@ -87,6 +87,20 @@ export function createBookingTravelPlanImagesModule(deps) {
             loading="lazy"
           />
         </button>
+      `
+      : `
+        <div class="travel-plan-images__hero-static" aria-label="${escapeHtml(primaryPreviewAlt)}">
+          <img
+            class="travel-plan-images__hero-image"
+            src="${escapeHtml(primaryPreviewSrc)}"
+            alt="${escapeHtml(primaryPreviewAlt)}"
+            loading="lazy"
+          />
+        </div>
+      `;
+    return `
+      <div class="travel-plan-images${variant === "sidebar" ? " travel-plan-images--sidebar" : ""}">
+        ${heroMedia}
         ${copiedFromText ? `<p class="travel-plan-images__copied-from">${escapeHtml(copiedFromText)}</p>` : ""}
       </div>
     `;

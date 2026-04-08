@@ -28,7 +28,8 @@ export function createPricingHelpers({
 }) {
   const OFFER_DETAIL_LEVEL_ORDER = Object.freeze({
     trip: 1,
-    day: 2
+    day: 2,
+    component: 3
   });
 
   function normalizeAmountCents(value, fallback = 0) {
@@ -54,6 +55,7 @@ export function createPricingHelpers({
   function inferInternalOfferDetailLevel(source, fallback = "trip") {
     const explicit = normalizeText(source?.offer_detail_level_internal).toLowerCase();
     if (Object.prototype.hasOwnProperty.call(OFFER_DETAIL_LEVEL_ORDER, explicit)) return explicit;
+    if (Array.isArray(source?.components) && source.components.length) return "component";
     if (Array.isArray(source?.days_internal) && source.days_internal.length) return "day";
     if (source?.trip_price_internal && typeof source.trip_price_internal === "object") return "trip";
     return fallback;
@@ -166,7 +168,9 @@ export function createPricingHelpers({
   function buildOfferChargeLines(offer) {
     const internalDetailLevel = normalizeOfferDetailLevel(offer?.offer_detail_level_internal);
     const lines = [];
-    if (internalDetailLevel === "day") {
+    if (internalDetailLevel === "component") {
+      lines.push(...(Array.isArray(offer?.components) ? offer.components : []));
+    } else if (internalDetailLevel === "day") {
       lines.push(...(Array.isArray(offer?.days_internal) ? offer.days_internal : []));
     } else if (internalDetailLevel === "trip" && offer?.trip_price_internal) {
       lines.push(offer.trip_price_internal);
@@ -219,7 +223,9 @@ export function createPricingHelpers({
       ? (offer?.trip_price_internal ? 1 : 0)
       : internalDetailLevel === "day"
         ? (Array.isArray(offer?.days_internal) ? offer.days_internal.length : 0)
-        : 0;
+        : internalDetailLevel === "component"
+          ? (Array.isArray(offer?.components) ? offer.components.length : 0)
+          : 0;
     const additionalItemsCount = Array.isArray(offer?.additional_items) ? offer.additional_items.length : 0;
     const hasDiscount = offer?.discount && normalizeAmountCents(offer.discount?.amount_cents, 0) > 0;
     const totals = buildOfferChargeLines(offer).reduce((acc, component) => {
@@ -296,6 +302,7 @@ export function createPricingHelpers({
     const visibleDetailLevel = normalizeOfferDetailLevel(normalizedOffer?.offer_detail_level_visible);
     const internalDetailLevel = normalizeOfferDetailLevel(normalizedOffer?.offer_detail_level_internal);
     const currency = safeCurrency(normalizedOffer?.currency || baseCurrency);
+    const components = Array.isArray(normalizedOffer?.components) ? normalizedOffer.components : [];
     const additionalItems = Array.isArray(normalizedOffer?.additional_items) ? normalizedOffer.additional_items : [];
     const foldedCarryOverItems = visibleDetailLevel === "trip"
       ? additionalItems.filter((item) => isSyntheticCarryOverAdditionalItem(item))
@@ -307,6 +314,7 @@ export function createPricingHelpers({
       detail_level: visibleDetailLevel,
       derivable: true,
       days: [],
+      components: [],
       additional_items: visibleAdditionalItems
     };
 
@@ -324,6 +332,14 @@ export function createPricingHelpers({
           label: "Trip total",
           currency,
           lines: [...normalizedOffer.days_internal, ...foldedCarryOverItems]
+        });
+        return projection;
+      }
+      if (internalDetailLevel === "component") {
+        projection.trip_price = createVisibleProjectionLine({
+          label: "Trip total",
+          currency,
+          lines: [...components, ...foldedCarryOverItems]
         });
         return projection;
       }
@@ -345,6 +361,38 @@ export function createPricingHelpers({
             lines: [dayPrice]
           })
         );
+        return projection;
+      }
+      if (internalDetailLevel === "component") {
+        const groupedComponents = new Map();
+        for (const component of components) {
+          const dayNumber = Number.parseInt(component?.day_number, 10);
+          if (!Number.isInteger(dayNumber) || dayNumber < 1) {
+            projection.derivable = false;
+            projection.days = [];
+            return projection;
+          }
+          const existing = groupedComponents.get(dayNumber) || [];
+          existing.push(component);
+          groupedComponents.set(dayNumber, existing);
+        }
+        projection.days = Array.from(groupedComponents.entries())
+          .sort((left, right) => left[0] - right[0])
+          .map(([dayNumber, dayComponents]) => createVisibleProjectionLine({
+            label: `Day ${dayNumber}`,
+            dayNumber,
+            currency,
+            lines: dayComponents
+          }));
+        return projection;
+      }
+      projection.derivable = false;
+      return projection;
+    }
+
+    if (visibleDetailLevel === "component") {
+      if (internalDetailLevel === "component") {
+        projection.components = components;
         return projection;
       }
       projection.derivable = false;
@@ -618,6 +666,44 @@ export function createPricingHelpers({
     });
   }
 
+  function normalizeBookingOfferComponents(rawComponents, currency, options = {}) {
+    const contentLang = normalizeBookingContentLang(options?.contentLang || options?.lang || "en");
+    const flatLang = normalizeBookingContentLang(options?.flatLang || options?.lang || "en");
+    const sourceLang = normalizeBookingContentLang(options?.sourceLang || contentLang);
+    return (Array.isArray(rawComponents) ? rawComponents : []).map((component, index) => {
+      const computedAmounts = computeOfferLineAmounts(component);
+      const normalizedDayNumber = Number.parseInt(component?.day_number, 10);
+      const details_i18n = normalizeLocalizedTextMap(
+        component?.details_i18n ?? component?.details ?? component?.description,
+        contentLang
+      );
+      const details = resolveLocalizedText(details_i18n, flatLang, "", { sourceLang });
+      return {
+        id: normalizeText(component?.id) || `offer_component_${index + 1}`,
+        category: normalizeOfferCategory(component?.category),
+        ...(normalizeText(component?.label) ? { label: normalizeText(component.label) } : {}),
+        ...(details ? { details } : {}),
+        ...(details_i18n && Object.keys(details_i18n).length ? { details_i18n } : {}),
+        ...(Number.isInteger(normalizedDayNumber) && normalizedDayNumber >= 1 ? { day_number: normalizedDayNumber } : {}),
+        quantity: computedAmounts.quantity,
+        unit_amount_cents: computedAmounts.unit_amount_cents,
+        unit_net_amount_cents: computedAmounts.unit_net_amount_cents,
+        unit_tax_amount_cents: computedAmounts.unit_tax_amount_cents,
+        unit_total_amount_cents: computedAmounts.unit_total_amount_cents,
+        tax_rate_basis_points: computedAmounts.tax_rate_basis_points,
+        currency: safeCurrency(component?.currency || currency),
+        line_net_amount_cents: computedAmounts.line_net_amount_cents,
+        line_tax_amount_cents: computedAmounts.line_tax_amount_cents,
+        line_gross_amount_cents: computedAmounts.line_gross_amount_cents,
+        line_total_amount_cents: computedAmounts.line_total_amount_cents,
+        ...(normalizeText(component?.notes) ? { notes: normalizeText(component.notes) } : {}),
+        sort_order: Number.isFinite(Number(component?.sort_order)) ? Number(component.sort_order) : index,
+        created_at: component?.created_at || null,
+        updated_at: component?.updated_at || null
+      };
+    });
+  }
+
   function normalizeBookingOfferAdditionalItems(rawItems, currency) {
     return (Array.isArray(rawItems) ? rawItems : []).map((item, index) => {
       const computedAmounts = computeOfferAdditionalItemAmounts(item);
@@ -656,6 +742,8 @@ export function createPricingHelpers({
         category,
         tax_rate_basis_points: defaultOfferTaxRateBasisPoints
       })),
+      components: [],
+      days_internal: [],
       additional_items: [],
       totals: computeBookingOfferTotals(null),
       quotation_summary: computeBookingOfferQuotationSummary(null),
@@ -678,6 +766,9 @@ export function createPricingHelpers({
     )
       ? internalDetailLevel
       : requestedVisibleDetailLevel;
+    const components = internalDetailLevel === "component"
+      ? normalizeBookingOfferComponents(source.components, currency, options)
+      : [];
     const tripPriceInternal = internalDetailLevel === "trip"
       ? normalizeBookingOfferTripPriceInternal(source.trip_price_internal, currency)
       : null;
@@ -708,6 +799,7 @@ export function createPricingHelpers({
           ? categoryRulesByCode.get(category)
           : defaultOfferTaxRateBasisPoints
       })),
+      components,
       ...(tripPriceInternal ? { trip_price_internal: tripPriceInternal } : {}),
       days_internal: daysInternal,
       additional_items: additionalItems,
@@ -1203,7 +1295,12 @@ export function createPricingHelpers({
       };
     }
 
-    const [convertedAdditionalItemAmounts, convertedDayAmounts, convertedTripAmount, convertedDiscountAmount] = await Promise.all([
+    const [convertedComponentAmounts, convertedAdditionalItemAmounts, convertedDayAmounts, convertedTripAmount, convertedDiscountAmount] = await Promise.all([
+      Promise.all(
+        (Array.isArray(normalized.components) ? normalized.components : []).map((component) =>
+          convertMinorUnits(component.unit_amount_cents, sourceCurrency, displayCurrency)
+        )
+      ),
       Promise.all(
         (Array.isArray(normalized.additional_items) ? normalized.additional_items : []).map((item) =>
           convertMinorUnits(item.unit_amount_cents, sourceCurrency, displayCurrency)
@@ -1225,6 +1322,20 @@ export function createPricingHelpers({
     return {
       ...Object.fromEntries(Object.entries(normalized).filter(([key]) => key !== "payment_terms")),
       currency: displayCurrency,
+      ...(Array.isArray(normalized.components)
+        ? {
+            components: normalized.components.map((component, index) => ({
+              ...component,
+              ...computeOfferLineAmounts(component, {
+                category: component?.category,
+                quantity: component?.quantity,
+                unitAmountCents: convertedComponentAmounts[index],
+                taxRateBasisPoints: component?.tax_rate_basis_points
+              }),
+              currency: displayCurrency
+            }))
+          }
+        : {}),
       ...(normalized.trip_price_internal
         ? {
             trip_price_internal: {
@@ -1284,7 +1395,9 @@ export function createPricingHelpers({
     if (!fromCurrency) return { ok: false, error: "from_currency is required and must be a valid currency." };
     if (!toCurrency) return { ok: false, error: "to_currency is required and must be a valid currency." };
 
-    const inputLines = Array.isArray(payload.lines) ? payload.lines : [];
+    const inputLines = Array.isArray(payload.lines)
+      ? payload.lines
+      : (Array.isArray(payload.components) ? payload.components : []);
     const lines = [];
 
     for (let index = 0; index < inputLines.length; index++) {
@@ -1417,6 +1530,16 @@ export function createPricingHelpers({
       };
     }
     const inputAdditionalItems = Array.isArray(rawOffer.additional_items) ? rawOffer.additional_items : [];
+    const inputComponents = Array.isArray(rawOffer.components) ? rawOffer.components : [];
+    for (let index = 0; index < inputComponents.length; index++) {
+      const category = normalizeOfferCategory(inputComponents[index]?.category);
+      if (category === offerCategories.DISCOUNTS_CREDITS) {
+        return {
+          ok: false,
+          error: `Component ${index + 1} uses discounts_credits, which is not allowed in offer components. Use offer.discount instead.`
+        };
+      }
+    }
     for (let index = 0; index < inputAdditionalItems.length; index++) {
       const category = normalizeOfferCategory(inputAdditionalItems[index]?.category);
       if (category === offerCategories.DISCOUNTS_CREDITS) {

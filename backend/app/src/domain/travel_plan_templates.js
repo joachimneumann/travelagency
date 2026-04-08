@@ -1,8 +1,6 @@
 import { normalizeText } from "../lib/text.js";
 import { enumValueSetFor } from "../lib/generated_catalogs.js";
-import { extractTravelPlanPdfPersonalization } from "../lib/booking_pdf_personalization.js";
 
-const TEMPLATE_STATUSES = new Set(["draft", "published", "archived"]);
 const COUNTRY_CODE_SET = enumValueSetFor("CountryCode");
 
 function normalizeOptionalText(value) {
@@ -48,11 +46,6 @@ export function createTravelPlanTemplateHelpers({
   randomUUID,
   nowIso
 }) {
-  function normalizeTravelPlanTemplateStatus(value) {
-    const normalized = normalizeText(value).toLowerCase();
-    return TEMPLATE_STATUSES.has(normalized) ? normalized : "draft";
-  }
-
   function normalizeDestinations(values) {
     return Array.from(
       new Set(
@@ -174,7 +167,6 @@ export function createTravelPlanTemplateHelpers({
     const source = template && typeof template === "object" && !Array.isArray(template)
       ? template
       : {};
-    const pdfPersonalization = extractTravelPlanPdfPersonalization(source.pdf_personalization);
     const normalizedTravelPlan = normalizeTemplateTravelPlan(source.travel_plan);
     const normalizedDestinations = normalizeDestinations(
       Array.isArray(normalizedTravelPlan?.destinations) && normalizedTravelPlan.destinations.length
@@ -184,38 +176,20 @@ export function createTravelPlanTemplateHelpers({
     return {
       id: normalizeText(source.id),
       title: normalizeText(source.title),
-      description: normalizeOptionalText(source.description),
-      status: normalizeTravelPlanTemplateStatus(source.status),
-      source_booking_id: normalizeOptionalText(source.source_booking_id),
-      created_by_atp_staff_id: normalizeOptionalText(source.created_by_atp_staff_id),
+      destinations: normalizedDestinations,
       travel_plan: {
         ...normalizedTravelPlan,
         destinations: normalizedDestinations
-      },
-      ...(pdfPersonalization?.travel_plan ? { pdf_personalization: pdfPersonalization } : {}),
-      created_at: normalizeOptionalText(source.created_at),
-      updated_at: normalizeOptionalText(source.updated_at)
+      }
     };
   }
 
-  function buildTravelPlanTemplateReadModel(template, options = {}) {
+  function buildTravelPlanTemplateReadModel(template) {
     const stored = normalizeTravelPlanTemplateForStorage(template);
-    const { pdf_personalization: ignoredPdfPersonalization, ...publicTemplate } = stored;
-    const days = Array.isArray(stored?.travel_plan?.days) ? stored.travel_plan.days : [];
-    const services = days.flatMap((day) => (Array.isArray(day?.services) ? day.services : []));
-    const thumbnail = services.find((service) => firstImageFromService(service)) || services[0] || null;
-    const thumbnailUrl = normalizeOptionalText(firstImageFromService(thumbnail)?.storage_path);
-    return {
-      ...publicTemplate,
-      source_booking_name: normalizeOptionalText(options.sourceBookingName),
-      day_count: days.length,
-      service_count: services.length,
-      thumbnail_url: thumbnailUrl
-    };
+    return stored;
   }
 
   return {
-    normalizeTravelPlanTemplateStatus,
     normalizeTravelPlanTemplateForStorage,
     buildTravelPlanTemplateReadModel,
     cloneBookingTravelPlanAsTemplate,

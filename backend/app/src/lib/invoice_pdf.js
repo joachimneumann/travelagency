@@ -137,6 +137,24 @@ function componentRowTotal(component) {
   return Math.max(0, Number(component?.quantity || 0)) * Math.max(0, Number(component?.unit_amount_cents || 0));
 }
 
+function companyProfileHeaderLines(companyProfile) {
+  if (!companyProfile) return [];
+  const bankDetails = companyProfile?.bankDetails && typeof companyProfile.bankDetails === "object"
+    ? companyProfile.bankDetails
+    : {};
+  return [
+    normalizeText(companyProfile.address),
+    normalizeText(companyProfile.email),
+    normalizeText(companyProfile.website),
+    normalizeText(companyProfile.whatsapp),
+    normalizeText(bankDetails.bankName) ? `Bank: ${normalizeText(bankDetails.bankName)}` : "",
+    normalizeText(bankDetails.branch) ? `Branch: ${normalizeText(bankDetails.branch)}` : "",
+    normalizeText(bankDetails.accountHolder) ? `Account holder: ${normalizeText(bankDetails.accountHolder)}` : "",
+    normalizeText(bankDetails.accountNumber) ? `Account number: ${normalizeText(bankDetails.accountNumber)}` : "",
+    normalizeText(bankDetails.swiftCode) ? `SWIFT: ${normalizeText(bankDetails.swiftCode)}` : ""
+  ].filter(Boolean);
+}
+
 export function createInvoicePdfWriter({ invoicePdfPath, companyProfile = null }) {
   return async function writeInvoicePdf(invoice, invoiceParty, booking) {
     const lang = normalizePdfLang(invoice?.lang || booking?.customer_language || booking?.web_form_submission?.preferred_language || "en");
@@ -150,6 +168,10 @@ export function createInvoicePdfWriter({ invoicePdfPath, companyProfile = null }
     const recipient = invoice?.recipient_snapshot || invoiceParty || {};
     const currency = normalizeText(invoice?.currency) || "USD";
     const components = Array.isArray(invoice?.components) ? invoice.components : [];
+    const companyHeaderLines = companyProfileHeaderLines(companyProfile);
+    const companyHeaderHeight = companyProfile
+      ? Math.max(106, 42 + companyHeaderLines.length * 16)
+      : 106;
 
     await new Promise((resolve, reject) => {
       const doc = new PDFDocument({
@@ -180,22 +202,22 @@ export function createInvoicePdfWriter({ invoicePdfPath, companyProfile = null }
         }), PAGE_MARGIN, y, { width: 320 });
 
       if (companyProfile) {
+        const rightColumnX = doc.page.width - PAGE_MARGIN - 220;
         doc
           .font(pdfFontName("bold", fonts))
           .fontSize(12)
           .fillColor(PDF_COLORS.textStrong)
-          .text(companyProfile.name, doc.page.width - PAGE_MARGIN - 220, y, { width: 220, align: "right" });
+          .text(companyProfile.name, rightColumnX, y, { width: 220, align: "right" });
         doc
           .font(pdfFontName("regular", fonts))
           .fontSize(10)
-          .fillColor(PDF_COLORS.textMuted)
-          .text(companyProfile.address, doc.page.width - PAGE_MARGIN - 220, y + 18, { width: 220, align: "right" })
-          .text(companyProfile.email, doc.page.width - PAGE_MARGIN - 220, y + 50, { width: 220, align: "right" })
-          .text(companyProfile.website, doc.page.width - PAGE_MARGIN - 220, y + 66, { width: 220, align: "right" })
-          .text(companyProfile.whatsapp, doc.page.width - PAGE_MARGIN - 220, y + 82, { width: 220, align: "right" });
+          .fillColor(PDF_COLORS.textMuted);
+        companyHeaderLines.forEach((line, index) => {
+          doc.text(line, rightColumnX, y + 18 + (index * 16), { width: 220, align: "right" });
+        });
       }
 
-      y += 106;
+      y += companyHeaderHeight;
       drawDivider(doc, y);
       y += 20;
 

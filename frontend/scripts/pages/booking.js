@@ -15,6 +15,7 @@ import {
   normalizeText,
   resolveApiUrl
 } from "../shared/api.js";
+import { createBookingStyleDirtyBarController } from "../shared/booking_style_dirty_bar.js";
 import { createBookingPageLanguageController } from "./booking_page_language.js";
 import { createBookingPageDataController } from "./booking_page_data.js";
 import { resolveBackendSectionHref } from "../shared/nav.js";
@@ -215,7 +216,8 @@ const state = {
     canChangeAssignment: false,
     canReadAssignmentDirectory: false,
     canChangeStage: false,
-    canEditBooking: false
+    canEditBooking: false,
+    canEditTemplates: false
   },
   booking: null,
   latestActivityAt: "",
@@ -256,6 +258,11 @@ const state = {
   }
 };
 
+state.standardTourModal = {
+  open: false,
+  saving: false
+};
+
 state.dirty = { core: false, note: false, persons: false, travel_plan: false, offer: false, payment_terms: false, pricing: false, invoice: false };
 state.dirtyDiagnostics = {};
 state.originalTravelPlanSnapshot = "";
@@ -280,6 +287,7 @@ const els = {
   booking_page_overlay_text: document.getElementById("travel_plan_translate_overlay_text"),
   homeLink: document.getElementById("backendHomeLink"),
   back: document.getElementById("backToBackend"),
+  backBtn: document.getElementById("backToBackend"),
   dirtyBar: document.getElementById("booking_dirty_bar"),
   dirtyBarTitle: document.getElementById("booking_dirty_bar_title"),
   dirtyBarSummary: document.getElementById("booking_dirty_bar_summary"),
@@ -408,9 +416,17 @@ const els = {
   travel_plan_pdf_workspace: document.getElementById("travel_plan_pdf_workspace"),
   travel_plan_editor: document.getElementById("travel_plan_editor"),
   travel_plan_translate_all_btn: document.getElementById("travel_plan_translate_all_btn"),
+  travel_plan_save_standard_tour_btn: document.getElementById("travel_plan_save_standard_tour_btn"),
   travel_plan_status: document.getElementById("travel_plan_status"),
   travel_plan_translate_overlay: document.getElementById("travel_plan_translate_overlay"),
   travel_plan_translate_overlay_text: document.getElementById("travel_plan_translate_overlay_text"),
+  travelPlanStandardTourModal: document.getElementById("travel_plan_standard_tour_modal"),
+  travelPlanStandardTourForm: document.getElementById("travel_plan_standard_tour_form"),
+  travelPlanStandardTourStatus: document.getElementById("travel_plan_standard_tour_status"),
+  travelPlanStandardTourTitleInput: document.getElementById("travel_plan_standard_tour_title_input"),
+  travelPlanStandardTourCloseBtn: document.getElementById("travel_plan_standard_tour_close_btn"),
+  travelPlanStandardTourCancelBtn: document.getElementById("travel_plan_standard_tour_cancel_btn"),
+  travelPlanStandardTourSubmitBtn: document.getElementById("travel_plan_standard_tour_submit_btn"),
   pricing_panel: document.getElementById("pricing_panel"),
   pricingPanelSummary: document.getElementById("pricing_panel_summary"),
   pricing_summary_table: document.getElementById("pricing_summary_table"),
@@ -577,38 +593,73 @@ function dirtySectionLabels() {
   return labels;
 }
 
-function updatePageDirtyBar() {
+const bookingDirtyBarController = createBookingStyleDirtyBarController({
+  els,
+  backendT,
+  readState: () => ({
+    saving: state.pageSaveInFlight,
+    discarding: state.pageDiscardInFlight,
+    status: state.pageDirtyBarStatus,
+    error: state.pageSaveActionError
+  }),
+  getDirtySectionLabels: dirtySectionLabels,
+  onSave: () => {
+    logBookingSave("[booking-save] Save button clicked.", {
+      booking_id: state.id || null,
+      dirty: { ...state.dirty },
+      has_unsaved_changes: hasUnsavedBookingChanges(),
+      page_save_in_flight: state.pageSaveInFlight,
+      page_discard_in_flight: state.pageDiscardInFlight
+    });
+    void savePageEdits();
+  },
+  onDiscard: () => {
+    void discardPageEdits();
+  },
+  onBack: closeBookingDetailScreen
+});
+
+function syncPageDirtyBarShellState() {
   if (!els.dirtyBar || !els.dirtyBarSummary || !els.saveEditsBtn || !els.discardEditsBtn) return;
-  const labels = dirtySectionLabels();
-  const isDirty = labels.length > 0;
-  const isSaving = state.pageSaveInFlight;
-  const isDiscarding = state.pageDiscardInFlight;
+  const isDirty = hasUnsavedBookingChanges();
+  const isSaving = state.pageSaveInFlight === true;
+  const isDiscarding = state.pageDiscardInFlight === true;
   const isBusy = isSaving || isDiscarding;
+  const labels = dirtySectionLabels();
   els.dirtyBar.classList.toggle("booking-dirty-bar--dirty", isDirty);
   els.dirtyBar.hidden = false;
-  if (els.dirtyBarTitle) {
-    if (isSaving) {
-      els.dirtyBarTitle.textContent = backendT("booking.page_save.saving", "Saving edits...");
-    } else if (isDiscarding) {
-      els.dirtyBarTitle.textContent = backendT("booking.page_discard.running", "Discarding edits...");
-    } else if (isDirty) {
-      els.dirtyBarTitle.textContent = backendT("booking.page_save.unsaved", "Unsaved edits");
-    } else if (state.pageDirtyBarStatus === "saved") {
-      els.dirtyBarTitle.textContent = backendT("booking.page_save.saved", "All edits saved");
-    } else if (state.pageDirtyBarStatus === "discarded") {
-      els.dirtyBarTitle.textContent = backendT("booking.page_discard.saved", "All edits reverted");
-    } else {
-      els.dirtyBarTitle.textContent = backendT("booking.page_save.clean", "No unsaved edits");
-    }
-  }
   els.dirtyBarSummary.textContent = isDirty
     ? backendT("booking.page_save.summary", "Changed sections: {sections}", { sections: labels.join(", ") })
     : "";
-  if (els.saveErrorHint) {
-    els.saveErrorHint.textContent = state.pageSaveActionError || "";
-  }
   els.saveEditsBtn.disabled = isBusy || !isDirty;
   els.discardEditsBtn.disabled = isBusy || !isDirty;
+}
+
+function pageDirtyBarStatusLabel() {
+  if (state.pageSaveInFlight) {
+    return backendT("booking.page_save.saving", "Saving edits...");
+  }
+  if (state.pageDiscardInFlight) {
+    return backendT("booking.page_discard.running", "Discarding edits...");
+  }
+  if (state.pageDirtyBarStatus === "saved") {
+    return backendT("booking.page_save.saved", "All edits saved");
+  }
+  if (state.pageDirtyBarStatus === "discarded") {
+    return backendT("booking.page_discard.saved", "All edits reverted");
+  }
+  if (hasUnsavedBookingChanges()) {
+    return backendT("booking.page_save.unsaved", "Unsaved edits");
+  }
+  return backendT("booking.page_save.clean", "No unsaved edits");
+}
+
+function updatePageDirtyBar() {
+  syncPageDirtyBarShellState();
+  if (els.dirtyBarTitle) {
+    els.dirtyBarTitle.textContent = pageDirtyBarStatusLabel();
+  }
+  bookingDirtyBarController.render();
 }
 
 function cleanStateBlockMessage() {
@@ -647,6 +698,7 @@ function updateCleanStateActionAvailability() {
       hintNode.textContent = blocked ? message : "";
     }
   });
+  syncStandardTourAction();
 }
 
 const bookingLanguageController = createBookingPageLanguageController({
@@ -754,6 +806,7 @@ async function init() {
   renderOfferCurrencyMenu(els.offer_currency_input, els.offerCurrencyMenuMount);
   populateContentLanguageSelect();
   setupBookingFilterPanels();
+  bookingDirtyBarController.bind();
   updatePageDirtyBar();
 
   if (els.heroCopyBtn) els.heroCopyBtn.addEventListener("click", copyHeroIdToClipboard);
@@ -763,7 +816,6 @@ async function init() {
       await uploadBookingPhoto();
     });
   }
-  if (els.back) els.back.addEventListener("click", closeBookingDetailScreen);
   if (els.titleEditBtn) els.titleEditBtn.addEventListener("click", startBookingTitleEdit);
   if (els.titleInput) {
     els.titleInput.addEventListener("input", updateCoreDirtyState);
@@ -816,19 +868,25 @@ async function init() {
     });
   }
   if (els.cloneBtn) els.cloneBtn.addEventListener("click", cloneBooking);
+  if (els.travel_plan_save_standard_tour_btn) {
+    els.travel_plan_save_standard_tour_btn.addEventListener("click", openStandardTourModal);
+  }
+  els.travelPlanStandardTourCloseBtn?.addEventListener("click", closeStandardTourModal);
+  els.travelPlanStandardTourCancelBtn?.addEventListener("click", closeStandardTourModal);
+  els.travelPlanStandardTourForm?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    void saveStandardTourFromBooking();
+  });
+  els.travelPlanStandardTourModal?.addEventListener("click", (event) => {
+    if (event.target === els.travelPlanStandardTourModal) closeStandardTourModal();
+  });
+  els.travelPlanStandardTourModal?.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape") return;
+    event.preventDefault();
+    closeStandardTourModal();
+  });
   if (els.noteInput) els.noteInput.addEventListener("input", updateNoteSaveButtonState);
   if (els.noteInput) els.noteInput.addEventListener("change", updateNoteSaveButtonState);
-  if (els.discardEditsBtn) els.discardEditsBtn.addEventListener("click", discardPageEdits);
-  if (els.saveEditsBtn) els.saveEditsBtn.addEventListener("click", () => {
-    logBookingSave("[booking-save] Save button clicked.", {
-      booking_id: state.id || null,
-      dirty: { ...state.dirty },
-      has_unsaved_changes: hasUnsavedBookingChanges(),
-      page_save_in_flight: state.pageSaveInFlight,
-      page_discard_in_flight: state.pageDiscardInFlight
-    });
-    void savePageEdits();
-  });
   if (els.personModal) {
     els.personModal.addEventListener("click", async (event) => {
       const actionButton = event.target instanceof Element
@@ -1001,6 +1059,7 @@ function copyHeroIdToClipboard() {
 function renderBookingData() {
   const result = coreModule.renderBookingData();
   syncContentLanguageSelector();
+  syncStandardTourAction();
   updateCleanStateActionAvailability();
   return result;
 }
@@ -1398,8 +1457,122 @@ function renderOfferPanel() {
 
 function renderTravelPlanPanel() {
   const result = travelPlanModule.renderTravelPlanPanel();
+  syncStandardTourAction();
   updateCleanStateActionAvailability();
   return result;
+}
+
+function hasSavedTravelPlanDays() {
+  return Array.isArray(state.booking?.travel_plan?.days) && state.booking.travel_plan.days.length > 0;
+}
+
+function setStandardTourModalStatus(message = "") {
+  if (!(els.travelPlanStandardTourStatus instanceof HTMLElement)) return;
+  els.travelPlanStandardTourStatus.textContent = message;
+}
+
+function setStandardTourModalBusyState(isBusy) {
+  const nextBusy = Boolean(isBusy);
+  state.standardTourModal.saving = nextBusy;
+  [
+    els.travelPlanStandardTourTitleInput,
+    els.travelPlanStandardTourCloseBtn,
+    els.travelPlanStandardTourCancelBtn,
+    els.travelPlanStandardTourSubmitBtn
+  ].forEach((element) => {
+    if (element) element.disabled = nextBusy;
+  });
+  syncStandardTourAction();
+}
+
+function syncStandardTourAction() {
+  const button = els.travel_plan_save_standard_tour_btn;
+  if (!(button instanceof HTMLButtonElement)) return;
+  const canEditTemplates = Boolean(state.permissions.canEditTemplates);
+  const hasSavedPlan = hasSavedTravelPlanDays();
+  button.hidden = !canEditTemplates;
+  button.dataset.cleanStateBaseDisabled = (!canEditTemplates || !hasSavedPlan || state.standardTourModal.saving) ? "true" : "false";
+  if (!canEditTemplates) {
+    button.title = "";
+    return;
+  }
+  if (!hasSavedPlan) {
+    button.disabled = true;
+    button.title = backendT("booking.travel_plan.save_as_standard_tour_disabled", "Save at least one travel-plan day first.");
+    return;
+  }
+  if (button.dataset.cleanStateBlocked !== "true") {
+    button.disabled = state.standardTourModal.saving;
+    button.title = "";
+  }
+}
+
+function resetStandardTourModal() {
+  state.standardTourModal.open = false;
+  state.standardTourModal.saving = false;
+  els.travelPlanStandardTourForm?.reset();
+  setStandardTourModalStatus("");
+  syncStandardTourAction();
+}
+
+function openStandardTourModal() {
+  if (!(els.travelPlanStandardTourModal instanceof HTMLElement)) return;
+  if (!state.permissions.canEditTemplates || !hasSavedTravelPlanDays() || hasUnsavedBookingChanges()) return;
+  resetStandardTourModal();
+  state.standardTourModal.open = true;
+  const bookingName = normalizeText(state.booking?.name || state.booking?.web_form_submission?.booking_name || state.booking?.id);
+  if (els.travelPlanStandardTourTitleInput instanceof HTMLInputElement) {
+    els.travelPlanStandardTourTitleInput.value = bookingName;
+  }
+  els.travelPlanStandardTourModal.hidden = false;
+  window.setTimeout(() => {
+    els.travelPlanStandardTourTitleInput?.focus?.();
+    els.travelPlanStandardTourTitleInput?.select?.();
+  }, 0);
+  syncStandardTourAction();
+}
+
+function closeStandardTourModal() {
+  if (!(els.travelPlanStandardTourModal instanceof HTMLElement) || state.standardTourModal.saving) return;
+  els.travelPlanStandardTourModal.hidden = true;
+  resetStandardTourModal();
+  els.travel_plan_save_standard_tour_btn?.focus?.();
+}
+
+async function saveStandardTourFromBooking() {
+  if (state.standardTourModal.saving) return;
+  clearError();
+  const bookingId = normalizeText(state.booking?.id);
+  const title = normalizeText(els.travelPlanStandardTourTitleInput?.value);
+  if (!title) {
+    setStandardTourModalStatus(backendT("backend.standard_travel_plans.validation.title_required", "Title is required."));
+    els.travelPlanStandardTourTitleInput?.focus?.();
+    return;
+  }
+  if (!bookingId || !hasSavedTravelPlanDays()) {
+    setStandardTourModalStatus(backendT("booking.travel_plan.save_as_standard_tour_missing_plan", "Save the travel plan before creating a standard tour."));
+    return;
+  }
+
+  setStandardTourModalBusyState(true);
+  setStandardTourModalStatus(backendT("backend.standard_travel_plans.saving", "Saving..."));
+  const payload = await fetchApi("/api/v1/travel-plan-templates", {
+    method: "POST",
+    body: {
+      title,
+      source_booking_id: bookingId
+    }
+  });
+  setStandardTourModalBusyState(false);
+  if (!payload?.template) {
+    setStandardTourModalStatus(backendT("booking.error.request_failed", "Request failed"));
+    return;
+  }
+  closeStandardTourModal();
+  setStatus(backendT(
+    "booking.travel_plan.standard_tour_created",
+    "Standard tour created. It now appears in Standard Travel Plans."
+  ));
 }
 
 function updateInvoiceDirtyState() {

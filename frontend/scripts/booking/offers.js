@@ -18,9 +18,11 @@ import {
 const DEFAULT_OFFER_TAX_RATE_BASIS_POINTS = 1000;
 const OFFER_DETAIL_LEVEL_ORDER = Object.freeze({
   trip: 1,
-  day: 2
+  day: 2,
+  component: 3
 });
 const OFFER_DETAIL_LEVEL_OPTIONS = Object.freeze([
+  { value: "component", label: "Per component" },
   { value: "day", label: "Per day" },
   { value: "trip", label: "Per trip" }
 ]);
@@ -65,6 +67,7 @@ export function createBookingOfferModule(ctx) {
   function inferInternalOfferDetailLevel(source, fallback = "trip") {
     const explicit = String(source?.offer_detail_level_internal || "").trim().toLowerCase();
     if (Object.prototype.hasOwnProperty.call(OFFER_DETAIL_LEVEL_ORDER, explicit)) return explicit;
+    if (Array.isArray(source?.components) && source.components.length) return "component";
     if (Array.isArray(source?.days_internal) && source.days_internal.length) return "day";
     if (source?.trip_price_internal && typeof source.trip_price_internal === "object") return "trip";
     return fallback;
@@ -129,6 +132,10 @@ export function createBookingOfferModule(ctx) {
     const normalizedNextValue = normalizeOfferDetailLevel(nextValue, currentValue);
     pendingInternalDetailLevelSelection = { nextValue: normalizedNextValue, resolver: null };
     const detailLevelEffects = {
+      component: bookingT(
+        "booking.offer.internal_detail_level_warning_effect_component",
+        "The offer will keep component rows only. Trip totals or day rows will be rebuilt into editable component rows."
+      ),
       trip: bookingT(
         "booking.offer.internal_detail_level_warning_effect_trip",
         "The offer will keep one trip total only. Day rows, surcharges, and discounts will be deleted."

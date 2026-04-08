@@ -1,0 +1,66 @@
+import {
+  escapeHtml,
+  normalizeText
+} from "./api.js";
+import { createBookingTravelPlanModule } from "../booking/travel_plan.js";
+import {
+  initializeBookingSection,
+  setBookingSectionOpen
+} from "../booking/sections.js";
+
+export function createStandardTravelPlanEditor({
+  state,
+  els,
+  apiOrigin,
+  fetchApi,
+  onDirtyChange
+} = {}) {
+  const travelPlanModule = createBookingTravelPlanModule({
+    state,
+    els,
+    apiOrigin,
+    fetchBookingMutation: (url, options = {}) => fetchApi(url, options),
+    getBookingRevision: () => "",
+    renderBookingHeader: () => {},
+    renderBookingData: () => {},
+    renderOfferPanel: () => {},
+    loadActivities: async () => {},
+    escapeHtml,
+    formatDateTime: (value) => normalizeText(value),
+    setBookingSectionDirty: () => {
+      onDirtyChange?.();
+    },
+    setPageSaveActionError: () => {},
+    hasUnsavedBookingChanges: () => false,
+    features: {
+      dayImport: false,
+      planImport: false,
+      templateImport: false,
+      serviceImport: false,
+      imageUpload: false
+    }
+  });
+
+  function bind() {
+    initializeBookingSection(els?.travel_plan_panel);
+    setBookingSectionOpen(els?.travel_plan_panel, true, { animate: false });
+    travelPlanModule.bindEvents();
+  }
+
+  function applyTemplate(template) {
+    state.booking = {
+      id: normalizeText(template?.id),
+      travel_plan: template?.travel_plan || { days: [], attachments: [] },
+      translation_enabled: false,
+      travel_plan_translation_status: {}
+    };
+    travelPlanModule.applyBookingPayload();
+    travelPlanModule.renderTravelPlanPanel();
+  }
+
+  return {
+    applyTemplate,
+    bind,
+    collectPayload: (options) => travelPlanModule.collectTravelPlanPayload(options)
+  };
+}

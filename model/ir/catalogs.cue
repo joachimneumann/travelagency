@@ -25,7 +25,6 @@ IR: {
 		generatedOfferCustomerConfirmationFlowModes: [for mode in enumModel.GeneratedOfferCustomerConfirmationFlowModeCatalog {{code: mode}}]
 		generatedOfferCustomerConfirmationFlowStatuses: [for status in enumModel.GeneratedOfferCustomerConfirmationFlowStatusCatalog {{code: status}}]
 		bookingConfirmationMethods: [for method in enumModel.BookingConfirmationMethodCatalog {{code: method}}]
-		travelPlanTemplateStatuses: [for status in enumModel.TravelPlanTemplateStatusCatalog {{code: status}}]
 		tourStyles: [for style in enumModel.TourStyleCatalog {{
 			code:  style
 			label: enumModel.TourStyleNameCatalog[style]

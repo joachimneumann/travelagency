@@ -1540,6 +1540,47 @@ test("staging PDF font stack includes Japanese and Chinese smoke coverage paths"
   }
 });
 
+test("invoice PDFs can read shared company bank details from runtime config", async () => {
+  const runtimeConfigPath = path.resolve(__dirname, "..", "src", "config", "runtime.js");
+  const invoicePdfPath = path.resolve(__dirname, "..", "src", "lib", "invoice_pdf.js");
+  const [runtimeConfigSource, invoicePdfSource] = await Promise.all([
+    readFile(runtimeConfigPath, "utf8"),
+    readFile(invoicePdfPath, "utf8")
+  ]);
+
+  assert.match(
+    runtimeConfigSource,
+    /COMPANY_PROFILE = Object\.freeze\(\{[\s\S]*bankDetails:\s*Object\.freeze\(\{[\s\S]*accountHolder:[\s\S]*bankName:[\s\S]*accountNumber:[\s\S]*branch:[\s\S]*swiftCode:/,
+    "Runtime config should expose a shared company bank-details block for invoice rendering"
+  );
+  assert.match(
+    invoicePdfSource,
+    /function companyProfileHeaderLines\(companyProfile\) \{[\s\S]*companyProfile\.bankDetails[\s\S]*Account holder:[\s\S]*Account number:[\s\S]*SWIFT:/,
+    "Invoice PDF generation should render company bank details from the shared runtime company profile"
+  );
+});
+
+test("offer PDFs render a short itinerary summary, bank details, and a detailed travel-plan appendix", async () => {
+  const offerPdfPath = path.resolve(__dirname, "..", "src", "lib", "offer_pdf.js");
+  const offerPdfSource = await readFile(offerPdfPath, "utf8");
+
+  assert.match(
+    offerPdfSource,
+    /function drawOfferItinerarySummary\(doc, generatedOffer, booking, startY, fonts, lang\) \{[\s\S]*resolveOfferDaySummary\(day, lang\)/,
+    "Offer PDFs should summarize the itinerary with compact per-day rows instead of reusing the full travel-plan section in the main commercial flow"
+  );
+  assert.match(
+    offerPdfSource,
+    /function drawBankDetails\(doc, companyProfile, startY, fonts, lang\) \{[\s\S]*resolveCompanyBankDetailRows\(companyProfile, lang\)/,
+    "Offer PDFs should expose a dedicated bank-details section sourced from the shared company profile"
+  );
+  assert.match(
+    offerPdfSource,
+    /function drawOfferDetailedTravelPlanAppendix\(doc, generatedOffer, booking, startY, fonts, lang, itemThumbnailMap\) \{[\s\S]*drawTravelPlanDaysSection\(/,
+    "Offer PDFs should append the detailed travel plan as a separate appendix section"
+  );
+});
+
 test("travel-plan PDF removes the old hero subtitle and in-body section title, and suggests the new download filename", async () => {
   const travelPlanPdfPath = path.resolve(__dirname, "..", "src", "lib", "travel_plan_pdf.js");
   const bookingTravelPlanHandlerPath = path.resolve(__dirname, "..", "src", "http", "handlers", "booking_travel_plan.js");
@@ -2813,6 +2854,7 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
   const bookingsHtml = await readFile(path.join(frontendRoot, "pages", "bookings.html"), "utf8");
   const marketingToursHtml = await readFile(path.join(frontendRoot, "pages", "marketing_tours.html"), "utf8");
   const standardTravelPlansHtml = await readFile(path.join(frontendRoot, "pages", "standard-travel-plans.html"), "utf8");
+  const standardTravelPlanHtml = await readFile(path.join(frontendRoot, "pages", "standard-travel-plan.html"), "utf8");
   const settingsHtml = await readFile(path.join(frontendRoot, "pages", "settings.html"), "utf8");
   const emergencyHtml = await readFile(path.join(frontendRoot, "pages", "emergency.html"), "utf8");
   const localCaddy = await readFile(path.join(deployRoot, "Caddyfile.local"), "utf8");
@@ -2834,6 +2876,11 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
     "standard-travel-plans.html should mount the standard travel plans page script"
   );
   assert.match(
+    standardTravelPlanHtml,
+    /frontend\/scripts\/pages\/standard_travel_plan\.js/,
+    "standard-travel-plan.html should mount the standard travel plan detail page script"
+  );
+  assert.match(
     settingsHtml,
     /frontend\/scripts\/pages\/settings_list\.js/,
     "settings.html should mount the settings page script"
@@ -2852,6 +2899,7 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
     assert.match(source, /\/marketing_tour\.html/, "Caddy should serve marketing_tour.html");
     assert.match(source, /\/tour\.html/, "Caddy should keep redirecting legacy tour.html");
     assert.match(source, /\/standard-travel-plans\.html/, "Caddy should serve standard-travel-plans.html");
+    assert.match(source, /\/standard-travel-plan\.html/, "Caddy should serve standard-travel-plan.html");
     assert.match(source, /\/settings\.html/, "Caddy should serve settings.html");
     assert.match(source, /\/emergency\.html/, "Caddy should serve emergency.html");
   }
@@ -2973,12 +3021,14 @@ test("runtime links use direct tours and settings pages instead of backend secti
     path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking_list.js"),
     path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "tours_list.js"),
     path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "standard_travel_plans.js"),
+    path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "standard_travel_plan.js"),
     path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "settings_list.js"),
     path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "emergency.js"),
     path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "tour.js"),
     path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "shared", "nav.js"),
     path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "marketing_tours.html"),
     path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "standard-travel-plans.html"),
+    path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "standard-travel-plan.html"),
     path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "settings.html"),
     path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "emergency.html")
   ];
@@ -3032,9 +3082,10 @@ test("travel plan templates are wired through backend navigation, routes, and bo
   assert.match(pageScriptSource, /\/api\/v1\/travel-plan-templates/, "The standard travel plans page should load templates from the dedicated backend endpoint");
   assert.match(pageScriptSource, /const DESTINATION_COUNTRY_CODES = Object\.freeze\(\["VN", "TH", "KH", "LA"\]\)/, "The standard travel plans UI should limit destinations to the four supported country codes");
   assert.match(bookingLibrarySource, /bookingTravelPlanTemplateApplyRequest/, "The booking travel-plan library should apply standard travel plans through the dedicated endpoint");
+  assert.doesNotMatch(bookingLibrarySource, /status:\s*"published"/, "The booking travel-plan library should not filter standard travel plans by status");
   assert.match(bookingTravelPlanSource, /data-travel-plan-open-template-import/, "The booking travel-plan footer should expose a standard travel plan action");
   assert.match(routesSource, /\/api\/v1\/travel-plan-templates/, "HTTP routes should include the standard travel plan endpoints");
-  assert.match(handlersSource, /Only published travel plan templates can be applied/, "Template apply handler should enforce published templates");
+  assert.doesNotMatch(handlersSource, /Only published travel plan templates can be applied/, "Template apply handler should not enforce template status");
   assert.match(domainSource, /enumValueSetFor\("CountryCode"\)[\s\S]*normalizeText\(value\)\.toUpperCase\(\)[\s\S]*COUNTRY_CODE_SET\.has\(value\)/, "Template destination normalization should store CountryCode values instead of tour destination slugs");
 });
 

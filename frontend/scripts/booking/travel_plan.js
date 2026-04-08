@@ -68,9 +68,21 @@ export function createBookingTravelPlanModule(ctx) {
     formatDateTime,
     setBookingSectionDirty,
     setPageSaveActionError,
-    hasUnsavedBookingChanges
+    hasUnsavedBookingChanges,
+    features = {}
   } = ctx;
   let lastMissingTravelPlanControlsDiagnosticKey = "";
+
+  function isFeatureEnabled(key, defaultValue = true) {
+    if (!Object.prototype.hasOwnProperty.call(features, key)) return defaultValue;
+    return features[key] !== false;
+  }
+
+  const allowDayImport = isFeatureEnabled("dayImport");
+  const allowPlanImport = isFeatureEnabled("planImport");
+  const allowTemplateImport = isFeatureEnabled("templateImport");
+  const allowServiceImport = isFeatureEnabled("serviceImport");
+  const allowImageUpload = isFeatureEnabled("imageUpload");
 
   function logTravelPlanSave(message, details = {}) {
     const payload = details && typeof details === "object" ? { ...details } : { details };
@@ -1351,7 +1363,10 @@ export function createBookingTravelPlanModule(ctx) {
               </div>
             </div>
             <div class="travel-plan-service__overview-media">
-              ${travelPlanImagesModule.renderTravelPlanServiceImages(day, item, { variant: "sidebar" })}
+              ${travelPlanImagesModule.renderTravelPlanServiceImages(day, item, {
+                variant: "sidebar",
+                editable: allowImageUpload && state.permissions.canEditBooking
+              })}
               <div class="field travel-plan-service__image-subtitle-field">
                 <label for="travel_plan_image_subtitle_${escapeHtml(item.id)}">${escapeHtml(bookingT("booking.travel_plan.image_subtitle_optional", "Image subtitle (optional)"))}</label>
                 <input
@@ -1495,7 +1510,9 @@ export function createBookingTravelPlanModule(ctx) {
                   <span class="travel-plan-add-btn__icon" aria-hidden="true">+</span>
                   <span class="travel-plan-add-btn__label">${escapeHtml(bookingT("booking.travel_plan.new_item", "New service"))}</span>
                 </button>
-                <button class="btn travel-plan-day-add-btn travel-plan-day-add-btn--service" data-travel-plan-open-import="${escapeHtml(day.id)}" data-requires-clean-state type="button">${escapeHtml(bookingT("booking.travel_plan.insert_existing", "Copy existing service"))}</button>
+                ${allowServiceImport
+                  ? `<button class="btn travel-plan-day-add-btn travel-plan-day-add-btn--service" data-travel-plan-open-import="${escapeHtml(day.id)}" data-requires-clean-state type="button">${escapeHtml(bookingT("booking.travel_plan.insert_existing", "Copy existing service"))}</button>`
+                  : ""}
               </div>
             </div>
           </div>
@@ -1958,6 +1975,29 @@ export function createBookingTravelPlanModule(ctx) {
     return await persistTravelPlan();
   }
 
+  function collectTravelPlanPayload({ focusFirstInvalid = true } = {}) {
+    const dateFieldValidation = validateTravelPlanDateFieldsInDom({ allowPartial: false, focusFirstInvalid });
+    if (!dateFieldValidation.ok) {
+      return {
+        ok: false,
+        error: dateFieldValidation.message || bookingT("booking.travel_plan.invalid_date", "Please fix the invalid date.")
+      };
+    }
+    syncTravelPlanDraftFromDom();
+    const travelPlanPayload = buildTravelPlanPayload();
+    const validation = validateTravelPlanDraft(travelPlanPayload);
+    if (!validation.ok) {
+      return {
+        ok: false,
+        error: validation.error || bookingT("booking.travel_plan.invalid", "Travel plan is invalid.")
+      };
+    }
+    return {
+      ok: true,
+      payload: travelPlanPayload
+    };
+  }
+
   async function translateTravelPlanField(button) {
     if (!state.permissions.canEditBooking || !state.booking?.id) return;
     const editor = button.closest(".localized-pair");
@@ -2302,23 +2342,32 @@ export function createBookingTravelPlanModule(ctx) {
     const bookingPlanLabel = hasDays
       ? bookingT("booking.travel_plan.append_existing_plan", "Append a Travel Plan from another Booking")
       : bookingT("booking.travel_plan.use_existing_plan", "Use a Travel Plan from another Booking");
+    const primaryActionRowClass = allowDayImport
+      ? "travel-plan-footer__action-row travel-plan-footer__action-row--double"
+      : "travel-plan-footer__action-row";
     els.travel_plan_editor.innerHTML = `
       ${(Array.isArray(state.travelPlanDraft.days) ? state.travelPlanDraft.days : []).map((day, dayIndex) => renderTravelPlanDay(day, dayIndex)).join("") || `<p class="travel-plan-empty">${escapeHtml(bookingT("booking.travel_plan.no_days", "No travel-plan days yet."))}</p>`}
       <div class="travel-plan-footer">
         <div class="travel-plan-footer__action-rows">
-          <div class="travel-plan-footer__action-row travel-plan-footer__action-row--double">
+          <div class="${primaryActionRowClass}">
             <button class="btn btn-ghost booking-offer-add-btn travel-plan-add-day-btn travel-plan-add-day-btn--combined" data-travel-plan-add-day type="button">
               <span class="travel-plan-add-btn__icon" aria-hidden="true">+</span>
               <span class="travel-plan-add-btn__label">${escapeHtml(bookingT("booking.travel_plan.new_day", "New day"))}</span>
             </button>
-            <button class="btn travel-plan-day-add-btn travel-plan-day-add-btn--service travel-plan-day-add-btn--day-copy" data-travel-plan-open-day-import data-requires-clean-state type="button">${escapeHtml(bookingT("booking.travel_plan.insert_existing_day", "Copy existing day"))}</button>
+            ${allowDayImport
+              ? `<button class="btn travel-plan-day-add-btn travel-plan-day-add-btn--service travel-plan-day-add-btn--day-copy" data-travel-plan-open-day-import data-requires-clean-state type="button">${escapeHtml(bookingT("booking.travel_plan.insert_existing_day", "Copy existing day"))}</button>`
+              : ""}
           </div>
-          <div class="travel-plan-footer__action-row">
-            <button class="btn travel-plan-day-add-btn travel-plan-day-add-btn--service travel-plan-day-add-btn--day-copy" data-travel-plan-open-template-import data-requires-clean-state type="button">${escapeHtml(standardTemplateLabel)}</button>
-          </div>
-          <div class="travel-plan-footer__action-row">
-            <button class="btn travel-plan-day-add-btn travel-plan-day-add-btn--service travel-plan-day-add-btn--day-copy" data-travel-plan-open-plan-import data-requires-clean-state type="button">${escapeHtml(bookingPlanLabel)}</button>
-          </div>
+          ${allowTemplateImport
+            ? `<div class="travel-plan-footer__action-row">
+                <button class="btn travel-plan-day-add-btn travel-plan-day-add-btn--service travel-plan-day-add-btn--day-copy" data-travel-plan-open-template-import data-requires-clean-state type="button">${escapeHtml(standardTemplateLabel)}</button>
+              </div>`
+            : ""}
+          ${allowPlanImport
+            ? `<div class="travel-plan-footer__action-row">
+                <button class="btn travel-plan-day-add-btn travel-plan-day-add-btn--service travel-plan-day-add-btn--day-copy" data-travel-plan-open-plan-import data-requires-clean-state type="button">${escapeHtml(bookingPlanLabel)}</button>
+              </div>`
+            : ""}
         </div>
       </div>
     `;
@@ -2353,6 +2402,7 @@ export function createBookingTravelPlanModule(ctx) {
   return {
     applyBookingPayload,
     bindEvents,
+    collectTravelPlanPayload,
     renderTravelPlanPanel,
     updateTravelPlanDirtyState,
     saveTravelPlan

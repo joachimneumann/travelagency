@@ -29,7 +29,6 @@ import { normalizeText } from "./text.js";
 import { resolveLocalizedText } from "../domain/booking_content_i18n.js";
 import {
   resolveAtpGuideIntroName,
-  resolveAtpGuidePdfContext,
   resolveAtpGuideShortDescriptionText,
   resolveAtpStaffFullName
 } from "./atp_staff_pdf.js";
@@ -401,6 +400,164 @@ function deriveOfferQuotationSummary(offer) {
     grand_total_amount_cents: totalGross,
     tax_breakdown: Array.from(buckets.values()).sort((left, right) => left.tax_rate_basis_points - right.tax_rate_basis_points)
   };
+}
+
+function offerHasTaxSummary(generatedOffer) {
+  const quotationSummary = deriveOfferQuotationSummary(generatedOffer?.offer);
+  return Number(quotationSummary?.total_tax_amount_cents || 0) !== 0;
+}
+
+function shouldRenderCompactOfferFinancialSummary(generatedOffer) {
+  const visibleDetailLevel = normalizeText(generatedOffer?.offer?.visible_pricing?.detail_level).toLowerCase();
+  return !offerHasTaxSummary(generatedOffer) && visibleDetailLevel === "trip";
+}
+
+function buildCompactOfferFinancialRows(generatedOffer, formatMoneyValue, lang) {
+  const tripLabel = pdfT(lang, "offer.trip_label", "Trip");
+  return buildOfferTableRows(generatedOffer, formatMoneyValue, lang).map((row) => {
+    const details = textOrNull(row?.details);
+    const hasDetails = Boolean(details && details !== "—");
+    const isTripRow = textOrNull(row?.category) === tripLabel;
+    const label = isTripRow
+      ? textOrNull(row?.categoryTax) || tripLabel
+      : (hasDetails ? details : textOrNull(row?.category) || textOrNull(row?.categoryTax) || tripLabel);
+    const meta = isTripRow || textOrNull(row?.category) === label
+      ? ""
+      : textOrNull(row?.category);
+    return {
+      label,
+      meta,
+      value: textOrNull(row?.totalText) || ""
+    };
+  }).filter((row) => row.label && row.value);
+}
+
+function measureCompactOfferFinancialRowHeight(doc, row, fonts, lang, labelWidth, amountWidth) {
+  doc.font(pdfFontName("bold", fonts)).fontSize(10.8);
+  const labelHeight = doc.heightOfString(row.label, pdfTextOptions(lang, {
+    width: labelWidth,
+    lineGap: 1
+  }));
+  doc.font(pdfFontName("bold", fonts)).fontSize(10.8);
+  const valueHeight = doc.heightOfString(row.value, {
+    width: amountWidth,
+    align: "right"
+  });
+  let totalHeight = Math.max(labelHeight, valueHeight);
+  if (row.meta) {
+    doc.font(pdfFontName("regular", fonts)).fontSize(9.2);
+    totalHeight += 3 + doc.heightOfString(row.meta, pdfTextOptions(lang, {
+      width: labelWidth,
+      lineGap: 1
+    }));
+  }
+  return Math.max(20, totalHeight);
+}
+
+function estimateCompactOfferFinancialSummaryHeight(doc, generatedOffer, formatMoneyValue, fonts, lang) {
+  const rows = buildCompactOfferFinancialRows(generatedOffer, formatMoneyValue, lang);
+  const includeTotalRow = rows.length > 1;
+  const contentWidth = doc.page.width - PAGE_MARGIN * 2;
+  const amountWidth = 132;
+  const labelWidth = contentWidth - amountWidth - 20;
+
+  let height = 18;
+  rows.forEach((row) => {
+    height += measureCompactOfferFinancialRowHeight(doc, row, fonts, lang, labelWidth, amountWidth) + 10;
+  });
+  if (includeTotalRow) {
+    height += 24 + 12;
+  }
+  return height + 10;
+}
+
+function drawCompactOfferFinancialSummary(doc, generatedOffer, startY, formatMoneyValue, fonts, lang, options = {}) {
+  const rows = buildCompactOfferFinancialRows(generatedOffer, formatMoneyValue, lang);
+  const contentWidth = doc.page.width - PAGE_MARGIN * 2;
+  const amountWidth = 132;
+  const labelWidth = contentWidth - amountWidth - 20;
+  const includeTotalRow = rows.length > 1;
+  const quotationSummary = deriveOfferQuotationSummary(generatedOffer?.offer);
+  const totalValueText = formatMoneyValue(
+    quotationSummary?.grand_total_amount_cents ?? generatedOffer?.total_price_cents,
+    generatedOffer?.currency
+  );
+
+  let y = startY;
+  const redrawSectionHeader = (pdfDoc, nextY) => {
+    pdfDoc
+      .font(pdfFontName("bold", fonts))
+      .fontSize(13)
+      .fillColor(PDF_COLORS.textStrong)
+      .text(options.sectionTitle || resolveOfferFinancialSectionTitle(generatedOffer, lang), PAGE_MARGIN, nextY, {
+        width: contentWidth,
+        align: pdfTextAlign(lang)
+      });
+    return nextY + 18;
+  };
+
+  y = redrawSectionHeader(doc, y);
+
+  rows.forEach((row) => {
+    const rowHeight = measureCompactOfferFinancialRowHeight(doc, row, fonts, lang, labelWidth, amountWidth);
+    y = ensureSpace(doc, y, rowHeight + 10, redrawSectionHeader);
+
+    doc
+      .font(pdfFontName("bold", fonts))
+      .fontSize(10.8)
+      .fillColor(PDF_COLORS.textStrong)
+      .text(row.label, PAGE_MARGIN, y, pdfTextOptions(lang, {
+        width: labelWidth,
+        lineGap: 1
+      }))
+      .text(row.value, doc.page.width - PAGE_MARGIN - amountWidth, y, {
+        width: amountWidth,
+        align: "right"
+      });
+
+    if (row.meta) {
+      doc
+        .font(pdfFontName("regular", fonts))
+        .fontSize(9.2)
+        .fillColor(PDF_COLORS.textMuted)
+        .text(row.meta, PAGE_MARGIN, y + doc.currentLineHeight(true) + 3, pdfTextOptions(lang, {
+          width: labelWidth,
+          lineGap: 1
+        }));
+    }
+
+    y += rowHeight + 10;
+  });
+
+  if (!includeTotalRow) {
+    return y + 2;
+  }
+
+  y = ensureSpace(doc, y, 36, redrawSectionHeader);
+  doc
+    .save()
+    .moveTo(PAGE_MARGIN, y)
+    .lineTo(doc.page.width - PAGE_MARGIN, y)
+    .lineWidth(1)
+    .strokeColor(PDF_COLORS.line)
+    .stroke()
+    .restore();
+
+  y += 12;
+  doc
+    .font(pdfFontName("bold", fonts))
+    .fontSize(11.4)
+    .fillColor(PDF_COLORS.textStrong)
+    .text(pdfT(lang, "offer.table.total", "Total"), PAGE_MARGIN, y, {
+      width: labelWidth,
+      align: pdfTextAlign(lang)
+    })
+    .text(totalValueText, doc.page.width - PAGE_MARGIN - amountWidth, y, {
+      width: amountWidth,
+      align: "right"
+    });
+
+  return doc.y + 12;
 }
 
 async function resolveBookingHeroTitle(booking, lang, readTours) {
@@ -802,11 +959,324 @@ function drawGuideSection(doc, startY, fonts, lang, guideContext, guidePhoto) {
   return startY + cardHeight + 20;
 }
 
-function drawTravelPlanOverview(doc, generatedOffer, booking, startY, fonts, lang, itemThumbnailMap) {
+function resolveTravelPlanDayItems(day) {
+  const services = safeArray(day?.services);
+  if (services.length) return services;
+  return safeArray(day?.items);
+}
+
+function resolveOfferDayDateLabel(day, lang) {
+  const date = textOrNull(day?.date);
+  if (date) return formatFriendlyDateOnly(date, lang);
+  const dateString = textOrNull(day?.date_string);
+  if (!dateString) return "";
+  if (dateString === "before_trip") {
+    return pdfT(lang, "travel_plan.date_string.before_trip", "Before the trip");
+  }
+  if (dateString === "after_trip") {
+    return pdfT(lang, "travel_plan.date_string.after_trip", "After the trip");
+  }
+  return dateString;
+}
+
+function resolveOfferDaySummary(day, lang) {
+  const title = textOrNull(day?.title);
+  const items = resolveTravelPlanDayItems(day);
+  const firstItem = items.find((item) => textOrNull(item?.title) || textOrNull(item?.location)) || null;
+  const firstItemLabel = textOrNull(firstItem?.title) || textOrNull(firstItem?.location);
+  const overnightLocation = textOrNull(day?.overnight_location);
+  const parts = [
+    title,
+    firstItemLabel && firstItemLabel !== title ? firstItemLabel : "",
+    overnightLocation
+      ? pdfT(lang, "offer.overnight_in", "Overnight in {location}", { location: overnightLocation })
+      : ""
+  ].filter(Boolean);
+  return parts.join(" · ") || pdfT(lang, "offer.itinerary_day_fallback", "Detailed routing will be confirmed with you.");
+}
+
+function drawOfferItinerarySummary(doc, generatedOffer, booking, startY, fonts, lang) {
   const travelPlan = generatedOffer?.travel_plan || booking?.travel_plan;
+  const days = safeArray(travelPlan?.days);
+  const sectionTitle = pdfT(lang, "offer.itinerary_overview_title", "Itinerary overview");
+  const contentWidth = doc.page.width - PAGE_MARGIN * 2;
+
+  let y = startY;
+  const redrawSectionHeader = (pdfDoc, nextY) => {
+    pdfDoc
+      .font(pdfFontName("bold", fonts))
+      .fontSize(13)
+      .fillColor(PDF_COLORS.textStrong)
+      .text(sectionTitle, PAGE_MARGIN, nextY, {
+        width: contentWidth,
+        align: pdfTextAlign(lang)
+      });
+    return nextY + 20;
+  };
+
+  y = redrawSectionHeader(doc, y);
+
+  if (!days.length) {
+    doc
+      .font(pdfFontName("regular", fonts))
+      .fontSize(10.5)
+      .fillColor(PDF_COLORS.textMuted)
+      .text(pdfT(lang, "travel_plan.empty", "No travel plan is available yet."), PAGE_MARGIN, y, pdfTextOptions(lang, {
+        width: contentWidth
+      }));
+    return doc.y + 14;
+  }
+
+  for (const day of days) {
+    const dayLabel = pdfT(lang, "offer.day_label", "Day {day}", {
+      day: Number(day?.day_number || 0) || 1
+    });
+    const dateLabel = resolveOfferDayDateLabel(day, lang);
+    const summary = resolveOfferDaySummary(day, lang);
+    const prefixText = [dayLabel, dateLabel].filter(Boolean).join(" · ");
+
+    doc.font(pdfFontName("regular", fonts)).fontSize(9.8);
+
+    if (!summary) {
+      const lineHeight = doc.heightOfString(prefixText, pdfTextOptions(lang, {
+        width: contentWidth,
+        lineGap: 1
+      }));
+
+      y = ensureSpace(doc, y, lineHeight + 10, redrawSectionHeader);
+
+      doc
+        .font(pdfFontName("regular", fonts))
+        .fontSize(9.8)
+        .fillColor(PDF_COLORS.textMutedStrong)
+        .text(prefixText, PAGE_MARGIN, y, pdfTextOptions(lang, {
+          width: contentWidth,
+          lineGap: 1
+        }));
+
+      y = doc.y + 6;
+      continue;
+    }
+
+    const prefixWithSeparator = `${prefixText} · `;
+    const prefixWidth = Math.min(
+      doc.widthOfString(prefixWithSeparator),
+      Math.max(96, contentWidth - 120)
+    );
+    const summaryWidth = Math.max(120, contentWidth - prefixWidth);
+    const lineHeight = Math.max(
+      doc.currentLineHeight(true),
+      doc.heightOfString(summary, pdfTextOptions(lang, {
+        width: summaryWidth,
+        lineGap: 1
+      }))
+    );
+
+    y = ensureSpace(doc, y, lineHeight + 10, redrawSectionHeader);
+
+    doc
+      .font(pdfFontName("regular", fonts))
+      .fontSize(9.8)
+      .fillColor(PDF_COLORS.textMutedStrong)
+      .text(prefixWithSeparator, PAGE_MARGIN, y, {
+        lineBreak: false
+      })
+      .text(summary, PAGE_MARGIN + prefixWidth, y, pdfTextOptions(lang, {
+        width: summaryWidth,
+        lineGap: 1
+      }));
+
+    y = doc.y + 6;
+  }
+
+  return y + 8;
+}
+
+function resolveCompanyBankDetailRows(companyProfile, lang) {
+  const bankDetails = companyProfile?.bankDetails && typeof companyProfile.bankDetails === "object"
+    ? companyProfile.bankDetails
+    : {};
+  return [
+    {
+      label: pdfT(lang, "offer.bank_details.account_holder", "Account holder"),
+      value: textOrNull(bankDetails.accountHolder)
+    },
+    {
+      label: pdfT(lang, "offer.bank_details.bank_name", "Bank name"),
+      value: textOrNull(bankDetails.bankName)
+    },
+    {
+      label: pdfT(lang, "offer.bank_details.branch", "Branch"),
+      value: textOrNull(bankDetails.branch)
+    },
+    {
+      label: pdfT(lang, "offer.bank_details.account_number", "Account number"),
+      value: textOrNull(bankDetails.accountNumber)
+    },
+    {
+      label: pdfT(lang, "offer.bank_details.swift_code", "SWIFT"),
+      value: textOrNull(bankDetails.swiftCode)
+    }
+  ].filter((row) => row.value);
+}
+
+function measureBankDetailsCardHeight(doc, rows, fonts, lang, cardWidth) {
+  const labelWidth = 148;
+  const valueWidth = cardWidth - labelWidth - 42;
+  let total = 18 + 16;
+  for (const row of rows) {
+    doc.font(pdfFontName("bold", fonts)).fontSize(10.2);
+    const labelHeight = doc.heightOfString(row.label, pdfTextOptions(lang, { width: labelWidth }));
+    doc.font(pdfFontName("regular", fonts)).fontSize(10.4);
+    const valueHeight = doc.heightOfString(row.value, pdfTextOptions(lang, {
+      width: valueWidth,
+      lineGap: 1
+    }));
+    total += Math.max(18, Math.max(labelHeight, valueHeight)) + 10;
+  }
+  return total + 10;
+}
+
+function resolveBankDetailsSectionTitle(companyProfile, lang) {
+  return pdfT(lang, "offer.bank_details_title", "Deposit payment details", {
+    company: textOrNull(companyProfile?.name) || "AsiaTravelPlan"
+  });
+}
+
+function resolveBankDetailsIntroText(companyProfile, lang) {
+  const companyName = textOrNull(companyProfile?.name) || "AsiaTravelPlan";
+  return pdfT(
+    lang,
+    "offer.bank_details_intro",
+    "If you accept this offer, please transfer the deposit to {company} using these bank details.",
+    { company: companyName }
+  );
+}
+
+function estimateBankDetailsHeight(doc, companyProfile, fonts, lang) {
+  const rows = resolveCompanyBankDetailRows(companyProfile, lang);
+  if (!rows.length) return 0;
+  const cardWidth = doc.page.width - PAGE_MARGIN * 2;
+  doc.font(pdfFontName("regular", fonts)).fontSize(10);
+  const introHeight = doc.heightOfString(resolveBankDetailsIntroText(companyProfile, lang), pdfTextOptions(lang, {
+    width: cardWidth,
+    lineGap: 1
+  }));
+  return 18 + introHeight + 12 + measureBankDetailsCardHeight(doc, rows, fonts, lang, cardWidth) + 10;
+}
+
+function drawBankDetails(doc, companyProfile, startY, fonts, lang) {
+  const rows = resolveCompanyBankDetailRows(companyProfile, lang);
+  if (!rows.length) return startY;
+
+  const sectionTitle = resolveBankDetailsSectionTitle(companyProfile, lang);
+  const introText = resolveBankDetailsIntroText(companyProfile, lang);
+  const cardWidth = doc.page.width - PAGE_MARGIN * 2;
+  const labelWidth = 148;
+  const valueWidth = cardWidth - labelWidth - 42;
+  let y = startY;
+
+  const redrawSectionHeader = (pdfDoc, nextY) => {
+    pdfDoc
+      .font(pdfFontName("bold", fonts))
+      .fontSize(13)
+      .fillColor(PDF_COLORS.textStrong)
+      .text(sectionTitle, PAGE_MARGIN, nextY, {
+        width: cardWidth,
+        align: pdfTextAlign(lang)
+      });
+    return nextY + 18;
+  };
+
+  y = redrawSectionHeader(doc, y);
+
+  doc
+    .font(pdfFontName("regular", fonts))
+    .fontSize(10)
+    .fillColor(PDF_COLORS.textMutedStrong);
+  const introHeight = doc.heightOfString(introText, pdfTextOptions(lang, {
+    width: cardWidth,
+    lineGap: 1
+  }));
+  const cardHeight = measureBankDetailsCardHeight(doc, rows, fonts, lang, cardWidth);
+  y = ensureSpace(doc, y, introHeight + 12 + cardHeight + 8, redrawSectionHeader);
+
+  doc
+    .font(pdfFontName("regular", fonts))
+    .fontSize(10)
+    .fillColor(PDF_COLORS.textMutedStrong)
+    .text(introText, PAGE_MARGIN, y, pdfTextOptions(lang, {
+      width: cardWidth,
+      lineGap: 1
+    }));
+
+  y = doc.y + 12;
+
+  doc
+    .save()
+    .roundedRect(PAGE_MARGIN, y, cardWidth, cardHeight, 14)
+    .fill(PDF_COLORS.surface)
+    .restore();
+
+  let rowY = y + 18;
+  rows.forEach((row, index) => {
+    doc
+      .font(pdfFontName("bold", fonts))
+      .fontSize(10.2)
+      .fillColor(PDF_COLORS.textMutedStrong)
+      .text(row.label, PAGE_MARGIN + 14, rowY, pdfTextOptions(lang, {
+        width: labelWidth
+      }));
+    doc
+      .font(pdfFontName("regular", fonts))
+      .fontSize(10.4)
+      .fillColor(PDF_COLORS.textStrong)
+      .text(row.value, PAGE_MARGIN + 14 + labelWidth + 14, rowY, pdfTextOptions(lang, {
+        width: valueWidth,
+        lineGap: 1
+      }));
+
+    const rowBottom = Math.max(
+      doc.y,
+      rowY
+        + doc.heightOfString(row.label, pdfTextOptions(lang, { width: labelWidth }))
+    );
+
+    rowY = rowBottom + 10;
+
+    if (index < rows.length - 1) {
+      doc
+        .save()
+        .moveTo(PAGE_MARGIN + 14, rowY - 4)
+        .lineTo(doc.page.width - PAGE_MARGIN - 14, rowY - 4)
+        .lineWidth(0.5)
+        .strokeColor(PDF_COLORS.line)
+        .stroke()
+        .restore();
+    }
+  });
+
+  return y + cardHeight + 10;
+}
+
+function drawOfferDetailedTravelPlanAppendix(doc, generatedOffer, booking, startY, fonts, lang, itemThumbnailMap) {
+  const travelPlan = generatedOffer?.travel_plan || booking?.travel_plan;
+  const days = safeArray(travelPlan?.days);
+  if (!days.length) return startY;
+
+  doc
+    .font(pdfFontName("bold", fonts))
+    .fontSize(18)
+    .fillColor(PDF_COLORS.textStrong)
+    .text(pdfT(lang, "offer.detailed_travel_plan_title", "Detailed travel plan"), PAGE_MARGIN, startY, pdfTextOptions(lang, {
+      width: doc.page.width - PAGE_MARGIN * 2
+    }));
+
+  const nextY = doc.y + 10;
+
   return drawTravelPlanDaysSection({
     doc,
-    startY,
+    startY: nextY,
     plan: travelPlan,
     itemThumbnailMap,
     fonts,
@@ -819,9 +1289,10 @@ function drawTravelPlanOverview(doc, generatedOffer, booking, startY, fonts, lan
     pageMargin: PAGE_MARGIN,
     bottomLimit: () => doc.page.height - PAGE_MARGIN - 24,
     addContinuationPage: () => startSectionOnNewPage(doc),
-    sectionTitle: pdfT(lang, "offer.travel_plan_title", "Travel plan overview"),
+    sectionTitle: pdfT(lang, "offer.detailed_travel_plan_title", "Detailed travel plan"),
     emptyStateMessage: pdfT(lang, "travel_plan.empty", "No travel plan is available yet."),
-    sectionTitleFontSize: 13
+    sectionTitleFontSize: 18,
+    renderSectionTitle: false
   });
 }
 
@@ -900,6 +1371,10 @@ function measureOfferTableRowHeight(doc, row, columns, isTripVisibleDetail, font
 }
 
 function estimateOfferTableHeight(doc, generatedOffer, formatMoneyValue, fonts, lang) {
+  if (shouldRenderCompactOfferFinancialSummary(generatedOffer)) {
+    return estimateCompactOfferFinancialSummaryHeight(doc, generatedOffer, formatMoneyValue, fonts, lang);
+  }
+
   const { columns, isTripVisibleDetail } = resolveOfferTableColumns(generatedOffer, lang);
   let height = 18;
   height += TABLE_HEADER_HEIGHT + 10;
@@ -1103,6 +1578,17 @@ function drawPaymentTermsSummaryCard(doc, startY, rows, fonts, lang) {
   return startY + cardHeight;
 }
 
+function shouldRenderPaymentTermsSummaryCard(generatedOffer) {
+  return offerHasTaxSummary(generatedOffer);
+}
+
+function resolveOfferFinancialSectionTitle(generatedOffer, lang) {
+  if (offerHasTaxSummary(generatedOffer)) {
+    return pdfT(lang, "offer.financial_overview_title", "Financial overview");
+  }
+  return pdfT(lang, "offer.price_and_payment_title", "Price and payment");
+}
+
 function formatPaymentTermAmountSpecForPdf(amountSpec, currency, formatMoneyValue, lang) {
   const mode = normalizeText(amountSpec?.mode).toUpperCase();
   if (mode === "PERCENTAGE_OF_OFFER_TOTAL") {
@@ -1148,12 +1634,13 @@ function formatPaymentTermDueRuleForPdf(dueRule, lang) {
   return pdfT(lang, "offer.payment_term.due_on_acceptance", "Due on acceptance");
 }
 
-function drawPaymentTerms(doc, generatedOffer, startY, formatMoneyValue, fonts, lang) {
+function drawPaymentTerms(doc, generatedOffer, startY, formatMoneyValue, fonts, lang, options = {}) {
   const paymentTerms = generatedOffer?.payment_terms || generatedOffer?.offer?.payment_terms;
   const lines = safeArray(paymentTerms?.lines);
   if (!lines.length) return startY;
 
   const currency = generatedOffer?.currency || paymentTerms?.currency;
+  const renderSectionHeader = options.renderSectionHeader !== false;
   const sectionTitle = pdfT(lang, "offer.payment_terms_title", "Payment terms");
   const cardWidth = doc.page.width - PAGE_MARGIN * 2;
   const labelWidth = 230;
@@ -1161,7 +1648,7 @@ function drawPaymentTerms(doc, generatedOffer, startY, formatMoneyValue, fonts, 
   const metaWidth = cardWidth - labelWidth - amountWidth - 32;
 
   let y = startY;
-  const redrawSectionHeader = (pdfDoc, nextY) => {
+  const redrawSectionHeader = renderSectionHeader ? (pdfDoc, nextY) => {
     pdfDoc
       .font(pdfFontName("bold", fonts))
       .fontSize(13)
@@ -1171,9 +1658,9 @@ function drawPaymentTerms(doc, generatedOffer, startY, formatMoneyValue, fonts, 
         align: pdfTextAlign(lang)
       });
     return nextY + 18;
-  };
+  } : null;
 
-  y = redrawSectionHeader(doc, y);
+  y = renderSectionHeader ? redrawSectionHeader(doc, y) : y + 6;
 
   for (const [index, line] of lines.entries()) {
     const label = textOrNull(line?.label)
@@ -1195,7 +1682,7 @@ function drawPaymentTerms(doc, generatedOffer, startY, formatMoneyValue, fonts, 
     const amountHeight = doc.heightOfString(amountText, { width: amountWidth, align: "right" });
     const rowHeight = Math.max(34, Math.max(labelHeight + metaHeight + 4, amountHeight) + descriptionHeight + 18);
 
-    y = ensureSpace(doc, y, rowHeight + 8, redrawSectionHeader);
+    y = ensureSpace(doc, y, rowHeight + 8, redrawSectionHeader || undefined);
     doc
       .save()
       .roundedRect(PAGE_MARGIN, y, cardWidth, rowHeight, 12)
@@ -1243,30 +1730,32 @@ function drawPaymentTerms(doc, generatedOffer, startY, formatMoneyValue, fonts, 
     y += rowHeight + 8;
   }
 
-  const basisTotal = Number(paymentTerms?.basis_total_amount_cents || generatedOffer?.total_price_cents || 0);
-  const scheduledTotal = Number(
-    paymentTerms?.scheduled_total_amount_cents
-    || lines.reduce((sum, line) => sum + Math.max(0, Number(line?.resolved_amount_cents || 0)), 0)
-  );
-  const summaryRows = [
-    {
-      label: pdfT(lang, "offer.payment_terms.basis_total", "Offer total"),
-      value: formatMoneyValue(basisTotal, currency)
-    },
-    {
-      label: pdfT(lang, "offer.payment_terms.scheduled_total", "Scheduled total"),
-      value: formatMoneyValue(scheduledTotal, currency)
-    }
-  ];
-  const summaryCardHeight = 18 + 18 + 14
-    + summaryRows.reduce((sum, row) => sum + (row.isTotal ? 26 : 22), 0)
-    + (summaryRows.some((row) => row.isTotal) ? 15 : 0);
-  y = ensureSpace(doc, y, summaryCardHeight + 8, redrawSectionHeader);
-  y = drawPaymentTermsSummaryCard(doc, y, summaryRows, fonts, lang);
+  if (shouldRenderPaymentTermsSummaryCard(generatedOffer)) {
+    const basisTotal = Number(paymentTerms?.basis_total_amount_cents || generatedOffer?.total_price_cents || 0);
+    const scheduledTotal = Number(
+      paymentTerms?.scheduled_total_amount_cents
+      || lines.reduce((sum, line) => sum + Math.max(0, Number(line?.resolved_amount_cents || 0)), 0)
+    );
+    const summaryRows = [
+      {
+        label: pdfT(lang, "offer.payment_terms.basis_total", "Offer total"),
+        value: formatMoneyValue(basisTotal, currency)
+      },
+      {
+        label: pdfT(lang, "offer.payment_terms.scheduled_total", "Scheduled total"),
+        value: formatMoneyValue(scheduledTotal, currency)
+      }
+    ];
+    const summaryCardHeight = 18 + 18 + 14
+      + summaryRows.reduce((sum, row) => sum + (row.isTotal ? 26 : 22), 0)
+      + (summaryRows.some((row) => row.isTotal) ? 15 : 0);
+    y = ensureSpace(doc, y, summaryCardHeight + 8, redrawSectionHeader || undefined);
+    y = drawPaymentTermsSummaryCard(doc, y, summaryRows, fonts, lang);
+  }
 
   const notes = textOrNull(paymentTerms?.notes);
   if (notes) {
-    y = ensureSpace(doc, y + 8, 54, redrawSectionHeader);
+    y = ensureSpace(doc, y + 8, 54, redrawSectionHeader || undefined);
     doc
       .font(pdfFontName("bold", fonts))
       .fontSize(11)
@@ -1311,40 +1800,47 @@ function measurePaymentTermCardHeight(doc, line, currency, formatMoneyValue, fon
 }
 
 function estimatePaymentTermsHeight(doc, generatedOffer, formatMoneyValue, fonts, lang) {
+  return estimatePaymentTermsHeightWithOptions(doc, generatedOffer, formatMoneyValue, fonts, lang);
+}
+
+function estimatePaymentTermsHeightWithOptions(doc, generatedOffer, formatMoneyValue, fonts, lang, options = {}) {
   const paymentTerms = generatedOffer?.payment_terms || generatedOffer?.offer?.payment_terms;
   const lines = safeArray(paymentTerms?.lines);
   if (!lines.length) return 0;
 
   const currency = generatedOffer?.currency || paymentTerms?.currency;
+  const renderSectionHeader = options.renderSectionHeader !== false;
   const cardWidth = doc.page.width - PAGE_MARGIN * 2;
   const labelWidth = 230;
   const amountWidth = 118;
   const metaWidth = cardWidth - labelWidth - amountWidth - 32;
 
-  let height = 18;
+  let height = renderSectionHeader ? 18 : 6;
   for (const line of lines) {
     height += measurePaymentTermCardHeight(doc, line, currency, formatMoneyValue, fonts, lang, cardWidth, labelWidth, amountWidth, metaWidth) + 8;
   }
 
-  const basisTotal = Number(paymentTerms?.basis_total_amount_cents || generatedOffer?.total_price_cents || 0);
-  const scheduledTotal = Number(
-    paymentTerms?.scheduled_total_amount_cents
-    || lines.reduce((sum, line) => sum + Math.max(0, Number(line?.resolved_amount_cents || 0)), 0)
-  );
-  const summaryRows = [
-    {
-      label: pdfT(lang, "offer.payment_terms.basis_total", "Offer total"),
-      value: formatMoneyValue(basisTotal, currency)
-    },
-    {
-      label: pdfT(lang, "offer.payment_terms.scheduled_total", "Scheduled total"),
-      value: formatMoneyValue(scheduledTotal, currency)
-    }
-  ];
-  const summaryCardHeight = 18 + 18 + 14
-    + summaryRows.reduce((sum, row) => sum + (row.isTotal ? 26 : 22), 0)
-    + (summaryRows.some((row) => row.isTotal) ? 15 : 0);
-  height += summaryCardHeight;
+  if (shouldRenderPaymentTermsSummaryCard(generatedOffer)) {
+    const basisTotal = Number(paymentTerms?.basis_total_amount_cents || generatedOffer?.total_price_cents || 0);
+    const scheduledTotal = Number(
+      paymentTerms?.scheduled_total_amount_cents
+      || lines.reduce((sum, line) => sum + Math.max(0, Number(line?.resolved_amount_cents || 0)), 0)
+    );
+    const summaryRows = [
+      {
+        label: pdfT(lang, "offer.payment_terms.basis_total", "Offer total"),
+        value: formatMoneyValue(basisTotal, currency)
+      },
+      {
+        label: pdfT(lang, "offer.payment_terms.scheduled_total", "Scheduled total"),
+        value: formatMoneyValue(scheduledTotal, currency)
+      }
+    ];
+    const summaryCardHeight = 18 + 18 + 14
+      + summaryRows.reduce((sum, row) => sum + (row.isTotal ? 26 : 22), 0)
+      + (summaryRows.some((row) => row.isTotal) ? 15 : 0);
+    height += summaryCardHeight;
+  }
 
   const notes = textOrNull(paymentTerms?.notes);
   if (notes) {
@@ -1361,7 +1857,11 @@ function estimatePaymentTermsHeight(doc, generatedOffer, formatMoneyValue, fonts
   return height + 10;
 }
 
-function drawOfferTable(doc, generatedOffer, startY, formatMoneyValue, fonts, lang) {
+function drawOfferTable(doc, generatedOffer, startY, formatMoneyValue, fonts, lang, options = {}) {
+  if (shouldRenderCompactOfferFinancialSummary(generatedOffer)) {
+    return drawCompactOfferFinancialSummary(doc, generatedOffer, startY, formatMoneyValue, fonts, lang, options);
+  }
+
   const visibleDetailLevel = normalizeText(generatedOffer?.offer?.visible_pricing?.detail_level).toLowerCase();
   const isTripVisibleDetail = visibleDetailLevel === "trip";
   const columns = isTripVisibleDetail
@@ -1382,7 +1882,7 @@ function drawOfferTable(doc, generatedOffer, startY, formatMoneyValue, fonts, la
     .font(pdfFontName("bold", fonts))
     .fontSize(13)
     .fillColor(PDF_COLORS.textStrong)
-    .text(pdfT(lang, "offer.table_title", "Offer details"), PAGE_MARGIN, y, {
+    .text(options.sectionTitle || resolveOfferFinancialSectionTitle(generatedOffer, lang), PAGE_MARGIN, y, {
       width: doc.page.width - PAGE_MARGIN * 2,
       align: pdfTextAlign(lang)
     });
@@ -1496,7 +1996,7 @@ function drawOfferTable(doc, generatedOffer, startY, formatMoneyValue, fonts, la
   }
 
   const quotationSummary = deriveOfferQuotationSummary(generatedOffer?.offer);
-  const hasTaxSummary = Number(quotationSummary?.total_tax_amount_cents || 0) !== 0;
+  const hasTaxSummary = offerHasTaxSummary(generatedOffer);
   const totalLabel = hasTaxSummary
     ? pdfT(lang, "offer.total", "Total (including tax)")
     : pdfT(lang, "offer.table.total", "Total");
@@ -1642,12 +2142,27 @@ function resolveOfferWelcomeText(booking, lang) {
   return "This is your current offer. Please let us know if you would like to adjust anything.";
 }
 
-function buildAttachmentClosingNote(attachmentCount, lang) {
+function buildSupplementaryClosingNotes(generatedOffer, attachmentCount = 0, lang) {
+  const notes = [];
+  const includeDetailedTravelPlanAppendix = safeArray(
+    generatedOffer?.travel_plan?.days || generatedOffer?.__booking_for_offer_pdf?.travel_plan?.days
+  ).length > 0;
+  if (includeDetailedTravelPlanAppendix) {
+    notes.push(pdfT(
+      lang,
+      "offer.appendix_note",
+      "The detailed travel plan follows in the appendix at the end of this document."
+    ));
+  }
   const count = Number(attachmentCount) || 0;
-  if (count <= 0) return "";
-  return count === 1
-    ? pdfT(lang, "pdf.attachment_note_single", "Please also find the attached additional PDF at the end of this document.")
-    : pdfT(lang, "pdf.attachment_note_multiple", "Please also find the attached additional PDFs at the end of this document.");
+  if (count > 0) {
+    notes.push(
+      count === 1
+        ? pdfT(lang, "pdf.attachment_note_single", "Please also find the attached additional PDF at the end of this document.")
+        : pdfT(lang, "pdf.attachment_note_multiple", "Please also find the attached additional PDFs at the end of this document.")
+    );
+  }
+  return notes;
 }
 
 function estimateClosingHeight(doc, fonts, lang, generatedOffer, formatMoneyValue, attachmentCount = 0) {
@@ -1664,13 +2179,11 @@ function estimateClosingHeight(doc, fonts, lang, generatedOffer, formatMoneyValu
     })
   );
 
-  const attachmentNote = buildAttachmentClosingNote(attachmentCount, lang);
-  const attachmentHeight = attachmentNote
-    ? doc.heightOfString(attachmentNote, pdfTextOptions(lang, {
-      width: textWidth,
-      lineGap: 2
-    })) + (11 * 0.8)
-    : 0;
+  const noteHeights = buildSupplementaryClosingNotes(generatedOffer, attachmentCount, lang).map((note) => doc.heightOfString(note, pdfTextOptions(lang, {
+    width: textWidth,
+    lineGap: 2
+  })) + (11 * 0.8));
+  const attachmentHeight = noteHeights.reduce((sum, height) => sum + height, 0);
 
   doc
     .font(pdfFontName("regular", fonts))
@@ -1706,15 +2219,14 @@ function drawClosing(doc, startY, fonts, lang, generatedOffer, formatMoneyValue,
       })
     );
 
-  const attachmentNote = buildAttachmentClosingNote(attachmentCount, lang);
-  if (attachmentNote) {
+  buildSupplementaryClosingNotes(generatedOffer, attachmentCount, lang).forEach((note) => {
     doc
       .moveDown(0.8)
-      .text(attachmentNote, PAGE_MARGIN, doc.y, pdfTextOptions(lang, {
+      .text(note, PAGE_MARGIN, doc.y, pdfTextOptions(lang, {
         width: doc.page.width - PAGE_MARGIN * 2,
         lineGap: 2
       }));
-  }
+  });
 
   const signY = doc.y + 18;
   doc
@@ -1758,17 +2270,10 @@ export function createOfferPdfWriter({
     const renderMoney = (amountCents, currency) => fallbackFormatMoney(currency, amountCents, lang);
     const outputPath = generatedOfferPdfPath(generatedOffer.id);
     await mkdir(path.dirname(outputPath), { recursive: true });
-    const attachmentPaths = resolveOfferAttachmentPaths(generatedOffer, booking, travelPlanAttachmentsDir);
-
-    const guideContext = await resolveAtpGuidePdfContext({
-      booking,
-      generatedOffer,
-      resolveAssignedAtpStaffProfile,
-      resolveAtpStaffPhotoDiskPath
-    });
+      const attachmentPaths = resolveOfferAttachmentPaths(generatedOffer, booking, travelPlanAttachmentsDir);
 
     const offerTravelPlan = generatedOffer?.travel_plan || booking?.travel_plan || null;
-    const [logoImage, heroPath, baseFonts, accentFonts, heroTitle, guidePhoto, itemThumbnailMap] = await Promise.all([
+    const [logoImage, heroPath, fonts, heroTitle, itemThumbnailMap] = await Promise.all([
       rasterizeImage(logoPath, { width: 1000 }),
       resolveBookingImageForPdf({ booking, bookingImagesDir, readTours, resolveTourImageDiskPath }),
       resolvePdfFontsForLang({
@@ -1776,30 +2281,11 @@ export function createOfferPdfWriter({
         regularCandidates: PDF_FONT_REGULAR_CANDIDATES,
         boldCandidates: PDF_FONT_BOLD_CANDIDATES
       }),
-      resolvePdfFontsForLang({
-        lang: "vi",
-        sampleText: [
-          textOrNull(resolveAtpStaffFullName(guideContext?.profile)),
-          textOrNull(resolveAtpGuideIntroName(guideContext?.profile))
-        ].filter(Boolean).join(" "),
-        regularCandidates: PDF_FONT_REGULAR_CANDIDATES,
-        boldCandidates: PDF_FONT_BOLD_CANDIDATES
-      }),
       resolveBookingHeroTitle(booking, lang, readTours),
-      guideContext?.photoDiskPath
-        ? rasterizeImage(guideContext.photoDiskPath, {
-            width: 420,
-            height: 420
-          }).catch(() => null)
-        : null,
       buildTravelPlanItemThumbnailMap(offerTravelPlan, bookingImagesDir)
     ]);
-    const fonts = {
-      ...(baseFonts || {}),
-      accentRegular: accentFonts?.regular || null,
-      accentBold: accentFonts?.bold || accentFonts?.regular || null
-    };
-    const heroImage = await rasterizeImage(heroPath || fallbackImagePath, { width: 1200, height: 780 });
+      const heroImage = await rasterizeImage(heroPath || fallbackImagePath, { width: 1200, height: 780 });
+      const hasDetailedTravelPlanAppendix = safeArray(generatedOffer?.travel_plan?.days || booking?.travel_plan?.days).length > 0;
 
     await new Promise((resolve, reject) => {
       const doc = new PDFDocument({
@@ -1840,24 +2326,47 @@ export function createOfferPdfWriter({
           pdfT
         });
       }
-      if (safeArray(generatedOffer?.travel_plan?.days || booking?.travel_plan?.days).length) {
-        y = startSectionOnNewPage(doc);
-        y = drawTravelPlanOverview(doc, generatedOffer, booking, y, fonts, lang, itemThumbnailMap);
+      if (hasDetailedTravelPlanAppendix) {
+        y = keepSectionTogetherIfPossible(doc, y, 160);
+        y = drawOfferItinerarySummary(doc, generatedOffer, booking, y, fonts, lang);
       }
-      y = ensureSpace(doc, y, estimateGuideSectionHeight(doc, guideContext, fonts, lang) + 10);
-      y = drawGuideSection(doc, y, fonts, lang, guideContext, guidePhoto);
-      y = keepSectionTogetherIfPossible(doc, y, estimateOfferTableHeight(doc, generatedOffer, renderMoney, fonts, lang));
-      y = drawOfferTable(doc, generatedOffer, y, renderMoney, fonts, lang);
-      if (safeArray(generatedOffer?.payment_terms?.lines || generatedOffer?.offer?.payment_terms?.lines).length) {
+      const paymentTermsLines = safeArray(generatedOffer?.payment_terms?.lines || generatedOffer?.offer?.payment_terms?.lines);
+      const mergeFinancialOverviewAndPaymentTerms = !offerHasTaxSummary(generatedOffer) && paymentTermsLines.length > 0;
+      if (mergeFinancialOverviewAndPaymentTerms) {
+        y = keepSectionTogetherIfPossible(
+          doc,
+          y,
+          estimateOfferTableHeight(doc, generatedOffer, renderMoney, fonts, lang)
+            + estimatePaymentTermsHeightWithOptions(doc, generatedOffer, renderMoney, fonts, lang, {
+              renderSectionHeader: false
+            })
+        );
+        y = drawOfferTable(doc, generatedOffer, y, renderMoney, fonts, lang, {
+          sectionTitle: resolveOfferFinancialSectionTitle(generatedOffer, lang)
+        });
+        y = drawPaymentTerms(doc, generatedOffer, y, renderMoney, fonts, lang, {
+          renderSectionHeader: false
+        });
+      } else {
+        y = keepSectionTogetherIfPossible(doc, y, estimateOfferTableHeight(doc, generatedOffer, renderMoney, fonts, lang));
+        y = drawOfferTable(doc, generatedOffer, y, renderMoney, fonts, lang);
+      }
+      if (!mergeFinancialOverviewAndPaymentTerms && paymentTermsLines.length) {
         y = keepSectionTogetherIfPossible(doc, y, estimatePaymentTermsHeight(doc, generatedOffer, renderMoney, fonts, lang));
         y = drawPaymentTerms(doc, generatedOffer, y, renderMoney, fonts, lang);
       }
-      y = keepSectionTogetherIfPossible(
-        doc,
-        y + 18,
-        estimateClosingHeight(doc, fonts, lang, generatedOffer, renderMoney, attachmentPaths.length)
-      );
-      y = drawClosing(doc, y, fonts, lang, generatedOffer, renderMoney, attachmentPaths.length);
+      const bankDetailsHeight = estimateBankDetailsHeight(doc, companyProfile, fonts, lang);
+      if (bankDetailsHeight > 0) {
+        y = keepSectionTogetherIfPossible(doc, y, bankDetailsHeight);
+        y = drawBankDetails(doc, companyProfile, y, fonts, lang);
+      }
+          y = keepSectionTogetherIfPossible(doc, y + 18, estimateClosingHeight(doc, fonts, lang, generatedOffer, renderMoney, attachmentPaths.length));
+          y = drawClosing(doc, y, fonts, lang, generatedOffer, renderMoney, attachmentPaths.length);
+
+      if (hasDetailedTravelPlanAppendix) {
+        y = startSectionOnNewPage(doc);
+        y = drawOfferDetailedTravelPlanAppendix(doc, generatedOffer, booking, y, fonts, lang, itemThumbnailMap);
+      }
 
       drawDivider(doc, doc.page.height - PAGE_MARGIN - 12);
       doc

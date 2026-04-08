@@ -222,8 +222,6 @@ import (
 
 #TravelPlanTemplateUpsertRequest: {
 	title?:       string
-	description?: string
-	status?:      enums.#TravelPlanTemplateStatus
 	destinations?: [...enums.#CountryCode]
 	source_booking_id?: common.#Identifier
 	travel_plan?:       entities.#BookingTravelPlan

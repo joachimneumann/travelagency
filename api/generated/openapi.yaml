@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-04-06T18:14:02Z
+# 2026-04-07T11:37:06Z
 
 ---
 openapi: 3.1.0
@@ -771,23 +771,6 @@ components:
         label: DEPOSIT_PAYMENT
       - value: MANAGEMENT
         label: MANAGEMENT
-    TravelPlanTemplateStatus:
-      type: string
-      enum:
-      - draft
-      - published
-      - archived
-      x-enum-catalog:
-      - code: draft
-      - code: published
-      - code: archived
-      x-enum-options:
-      - value: draft
-        label: draft
-      - value: published
-        label: published
-      - value: archived
-        label: archived
     TourStyleCode:
       type: string
       enum:
@@ -4016,34 +3999,18 @@ components:
       required:
       - id
       - title
-      - status
       - travel_plan
       properties:
         id:
           type: string
         title:
           type: string
-        description:
-          type: string
-          nullable: true
-        status:
-          "$ref": "#/components/schemas/TravelPlanTemplateStatus"
-        source_booking_id:
-          type: string
-          nullable: true
-        created_by_atp_staff_id:
-          type: string
-          nullable: true
+        destinations:
+          type: array
+          items:
+            "$ref": "#/components/schemas/CountryCode"
         travel_plan:
           "$ref": "#/components/schemas/BookingTravelPlan"
-        created_at:
-          type: string
-          format: date-time
-          nullable: true
-        updated_at:
-          type: string
-          format: date-time
-          nullable: true
     Supplier:
       type: object
       required:
@@ -6466,46 +6433,18 @@ components:
       required:
       - id
       - title
-      - status
       - travel_plan
-      - day_count
-      - service_count
       properties:
         id:
           type: string
         title:
           type: string
-        description:
-          type: string
-          nullable: true
-        status:
-          "$ref": "#/components/schemas/TravelPlanTemplateStatus"
-        source_booking_id:
-          type: string
-          nullable: true
-        source_booking_name:
-          type: string
-          nullable: true
-        created_by_atp_staff_id:
-          type: string
-          nullable: true
+        destinations:
+          type: array
+          items:
+            "$ref": "#/components/schemas/CountryCode"
         travel_plan:
           "$ref": "#/components/schemas/BookingTravelPlan"
-        day_count:
-          type: integer
-        service_count:
-          type: integer
-        thumbnail_url:
-          type: string
-          nullable: true
-        created_at:
-          type: string
-          format: date-time
-          nullable: true
-        updated_at:
-          type: string
-          format: date-time
-          nullable: true
     TravelPlanTemplateListResponse:
       type: object
       required:
@@ -7017,12 +6956,6 @@ components:
       properties:
         title:
           type: string
-          nullable: true
-        description:
-          type: string
-          nullable: true
-        status:
-          "$ref": "#/components/schemas/TravelPlanTemplateStatus"
           nullable: true
         destinations:
           type: array
@@ -9063,11 +8996,6 @@ paths:
       - bearerAuth: []
       parameters:
       - name: q
-        in: query
-        required: false
-        schema:
-          type: string
-      - name: status
         in: query
         required: false
         schema:

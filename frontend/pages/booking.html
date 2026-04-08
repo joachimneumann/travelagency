@@ -105,6 +105,26 @@
         margin-top: 1rem;
       }
 
+      .standard-tour-modal__panel {
+        max-width: 38rem;
+      }
+
+      .standard-tour-modal__form {
+        display: grid;
+        gap: 1rem;
+      }
+
+      .standard-tour-modal__status {
+        min-height: 1.4rem;
+        color: #7c2d12;
+      }
+
+      .standard-tour-modal__actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.65rem;
+      }
+
       @media (max-width: 720px) {
         .offer-detail-level-panel__stack {
           width: 100%;
@@ -733,6 +753,7 @@
             <div class="booking-section__body">
               <div class="backend-controls travel-plan-actions">
                 <button class="btn btn-ghost" id="travel_plan_translate_all_btn" type="button" data-i18n-id="booking.travel_plan.translate_everything">Translate everything</button>
+                <button class="btn btn-ghost" id="travel_plan_save_standard_tour_btn" type="button" hidden data-requires-clean-state data-i18n-id="booking.travel_plan.save_as_standard_tour">Save as standard tour</button>
                 <span id="travel_plan_status" class="micro booking-inline-status"></span>
               </div>
               <div id="travel_plan_editor"></div>
@@ -1001,9 +1022,7 @@
           <section class="booking-danger-zone">
             <h2 class="section-title u-title-compact" data-i18n-id="booking.danger_zone">DANGER ZONE</h2>
             <div class="booking-danger-zone__actions">
-              <button class="btn booking-danger-zone__delete" id="booking_delete_btn" type="button" data-i18n-id="booking.delete_booking" data-requires-clean-state>Delete booking</button>
               <div class="booking-danger-zone__clone">
-                <button class="btn btn-primary booking-danger-zone__clone-btn" id="booking_clone_btn" type="button" data-requires-clean-state>Clone booking</button>
                 <div class="field">
                   <label for="booking_clone_title_input" id="booking_clone_title_label">New title</label>
                   <input id="booking_clone_title_input" type="text" autocomplete="off" />
@@ -1012,10 +1031,12 @@
                   <input id="booking_clone_include_travelers_input" type="checkbox" />
                   <span id="booking_clone_include_travelers_label">Include travelers</span>
                 </label>
+                <button class="btn btn-primary booking-danger-zone__clone-btn" id="booking_clone_btn" type="button" data-requires-clean-state>Clone booking</button>
                 <div class="backend-controls">
                   <span id="booking_clone_status" class="micro"></span>
                 </div>
               </div>
+              <button class="btn booking-danger-zone__delete" id="booking_delete_btn" type="button" data-i18n-id="booking.delete_booking" data-requires-clean-state>Delete booking</button>
             </div>
           </section>
           </div>
@@ -1028,6 +1049,28 @@
       <div class="booking-page-overlay__panel" role="status" aria-live="assertive">
         <span class="booking-page-overlay__spinner" aria-hidden="true"></span>
         <span class="booking-page-overlay__text" id="travel_plan_translate_overlay_text" data-i18n-id="booking.translation.translating_overlay_generic">Translating... Please wait.</span>
+      </div>
+    </div>
+
+    <div class="modal standard-tour-modal" id="travel_plan_standard_tour_modal" hidden role="dialog" aria-modal="true" aria-labelledby="travel_plan_standard_tour_title">
+      <div class="modal-panel standard-tour-modal__panel" role="document">
+        <div class="modal-head">
+          <h2 id="travel_plan_standard_tour_title" data-i18n-id="booking.travel_plan.standard_tour_modal_title">Save as standard tour</h2>
+          <button class="btn btn-ghost" id="travel_plan_standard_tour_close_btn" type="button" aria-label="Close standard tour dialog" data-i18n-aria-label-id="booking.travel_plan.close_standard_tour_dialog">&times;</button>
+        </div>
+        <div class="modal-body">
+          <form id="travel_plan_standard_tour_form" class="standard-tour-modal__form">
+            <p id="travel_plan_standard_tour_status" class="micro standard-tour-modal__status" aria-live="polite"></p>
+            <div class="field">
+              <label for="travel_plan_standard_tour_title_input" data-i18n-id="backend.standard_travel_plans.form.title">Title</label>
+              <input id="travel_plan_standard_tour_title_input" name="title" type="text" autocomplete="off" required />
+            </div>
+            <div class="standard-tour-modal__actions">
+              <button class="btn btn-ghost" id="travel_plan_standard_tour_cancel_btn" type="button" data-i18n-id="common.cancel">Cancel</button>
+              <button class="btn btn-primary" id="travel_plan_standard_tour_submit_btn" type="submit" data-i18n-id="common.save">Save</button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
 

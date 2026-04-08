@@ -717,7 +717,8 @@ export function createBookingFinanceHandlers(deps) {
         to_currency: toCurrency,
         exchange_rate: 1,
         total_price_cents: 0,
-        converted_lines: []
+        converted_lines: [],
+        converted_components: []
       });
       return;
     }
@@ -762,6 +763,7 @@ export function createBookingFinanceHandlers(deps) {
         0
       ),
       converted_lines: convertedLines,
+      converted_components: convertedLines,
       ...(warnings.size > 0 ? { warning: [...warnings].join(" ") } : {})
     };
     sendJson(res, 200, responsePayload);

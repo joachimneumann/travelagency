@@ -2,11 +2,6 @@ import {
   validateBookingTravelPlanTemplateApplyRequest,
   validateTravelPlanTemplateUpsertRequest
 } from "../../../Generated/API/generated_APIModels.js";
-import {
-  extractTravelPlanPdfPersonalization,
-  normalizeBookingPdfPersonalization,
-  replaceTravelPlanPdfPersonalization
-} from "../../lib/booking_pdf_personalization.js";
 
 function parsePositiveInt(value, fallback) {
   const parsed = Number.parseInt(value, 10);
@@ -32,7 +27,6 @@ export function createTravelPlanTemplateHandlers(deps) {
     randomUUID,
     buildTravelPlanTemplateReadModel,
     normalizeTravelPlanTemplateForStorage,
-    normalizeTravelPlanTemplateStatus,
     cloneBookingTravelPlanAsTemplate,
     cloneTemplateTravelPlanForBooking,
     normalizeTemplateTravelPlan,
@@ -48,7 +42,7 @@ export function createTravelPlanTemplateHandlers(deps) {
 
   function buildTemplateResponse(template, options = {}) {
     return {
-      template: buildTravelPlanTemplateReadModel(template, options)
+      template: buildTravelPlanTemplateReadModel(template)
     };
   }
 
@@ -61,24 +55,17 @@ export function createTravelPlanTemplateHandlers(deps) {
     };
   }
 
-  function filterTemplates(items, query, { bookingById }) {
+  function filterTemplates(items, query) {
     const normalizedQuery = normalizeText(query.get("q")).toLowerCase();
-    const status = normalizeTravelPlanTemplateStatus(query.get("status"));
-    const hasStatus = normalizeText(query.get("status"));
     const destination = normalizeTourDestinationCode(query.get("destination"));
 
     return items.filter((template) => {
       const stored = normalizeTravelPlanTemplateForStorage(template);
-      if (hasStatus && stored.status !== status) return false;
-      const destinations = Array.isArray(stored?.travel_plan?.destinations) ? stored.travel_plan.destinations : [];
-      if (destination && !destinations.includes(destination)) return false;
+      if (destination && !stored.destinations.includes(destination)) return false;
       if (!normalizedQuery) return true;
-      const sourceBookingName = normalizeText(bookingById.get(stored.source_booking_id)?.name);
       const haystack = [
         stored.title,
-        stored.description,
-        stored.source_booking_id,
-        sourceBookingName
+        ...stored.destinations
       ].map((value) => normalizeText(value).toLowerCase()).filter(Boolean).join(" ");
       return haystack.includes(normalizedQuery);
     });
@@ -99,28 +86,36 @@ export function createTravelPlanTemplateHandlers(deps) {
     };
   }
 
+  function normalizeTemplateTitleKey(value) {
+    return normalizeText(value).toLowerCase();
+  }
+
+  function findTemplateByTitle(templates, title, excludedTemplateId = "") {
+    const titleKey = normalizeTemplateTitleKey(title);
+    const excludedId = normalizeText(excludedTemplateId);
+    if (!titleKey) return null;
+    return (Array.isArray(templates) ? templates : [])
+      .map((template) => normalizeTravelPlanTemplateForStorage(template))
+      .find((template) => (
+        template.id !== excludedId
+        && normalizeTemplateTitleKey(template.title) === titleKey
+      )) || null;
+  }
+
   async function handleListTravelPlanTemplates(req, res) {
     const principal = getPrincipal(req);
     if (!canReadTravelPlanTemplates(principal)) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
     }
-    const [templates, store] = await Promise.all([readTravelPlanTemplates(), readStore()]);
+    const templates = await readTravelPlanTemplates();
     const requestUrl = new URL(req.url, "http://localhost");
     const page = parsePositiveInt(requestUrl.searchParams.get("page"), 1);
     const pageSize = Math.min(100, parsePositiveInt(requestUrl.searchParams.get("page_size"), 20));
-    const bookingById = new Map((Array.isArray(store?.bookings) ? store.bookings : []).map((booking) => [booking.id, booking]));
-    const filtered = filterTemplates(templates, requestUrl.searchParams, { bookingById })
-      .sort((left, right) => String(right.updated_at || right.created_at || "").localeCompare(String(left.updated_at || left.created_at || "")));
+    const filtered = filterTemplates(templates, requestUrl.searchParams)
+      .sort((left, right) => String(left.title || "").localeCompare(String(right.title || "")));
     const offset = (page - 1) * pageSize;
-    const items = filtered.slice(offset, offset + pageSize).map((template) => {
-      const stored = normalizeTravelPlanTemplateForStorage(template);
-      const sourceBooking = bookingById.get(stored.source_booking_id);
-      const sourceBookingName = sourceBooking && canAccessBooking(principal, sourceBooking)
-        ? normalizeText(sourceBooking.name)
-        : "";
-      return buildTravelPlanTemplateReadModel(stored, { sourceBookingName });
-    });
+    const items = filtered.slice(offset, offset + pageSize).map((template) => buildTravelPlanTemplateReadModel(template));
     sendJson(res, 200, {
       items,
       total: filtered.length
@@ -133,18 +128,14 @@ export function createTravelPlanTemplateHandlers(deps) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
     }
-    const [templates, store] = await Promise.all([readTravelPlanTemplates(), readStore()]);
+    const templates = await readTravelPlanTemplates();
     const stored = templates.map((template) => normalizeTravelPlanTemplateForStorage(template))
       .find((template) => template.id === templateId);
     if (!stored) {
       sendJson(res, 404, { error: "Travel plan template not found" });
       return;
     }
-    const sourceBooking = (Array.isArray(store?.bookings) ? store.bookings : []).find((booking) => booking.id === stored.source_booking_id);
-    const sourceBookingName = sourceBooking && canAccessBooking(principal, sourceBooking)
-      ? normalizeText(sourceBooking.name)
-      : "";
-    sendJson(res, 200, buildTemplateResponse(stored, { sourceBookingName }));
+    sendJson(res, 200, buildTemplateResponse(stored));
   }
 
   async function handleCreateTravelPlanTemplate(req, res) {
@@ -163,15 +154,18 @@ export function createTravelPlanTemplateHandlers(deps) {
       return;
     }
 
-    const store = await readStore();
+    const [store, templates] = await Promise.all([readStore(), readTravelPlanTemplates()]);
     const title = normalizeText(payload?.title);
     if (!title) {
       sendJson(res, 422, { error: "title is required" });
       return;
     }
+    if (findTemplateByTitle(templates, title)) {
+      sendJson(res, 409, { error: "A standard tour with this title already exists." });
+      return;
+    }
 
     let nextTravelPlan = null;
-    let nextPdfPersonalization = {};
     const sourceBookingId = normalizeText(payload?.source_booking_id);
     if (sourceBookingId) {
       const sourceContext = findSourceBookingContext(store, principal, sourceBookingId);
@@ -187,7 +181,6 @@ export function createTravelPlanTemplateHandlers(deps) {
         return;
       }
       nextTravelPlan = cloneBookingTravelPlanAsTemplate(sourcePlan);
-      nextPdfPersonalization = extractTravelPlanPdfPersonalization(sourceContext.booking?.pdf_personalization);
     } else if (payload?.travel_plan) {
       const check = validateTemplateTravelPlan(payload.travel_plan, store);
       if (!check.ok) {
@@ -203,20 +196,11 @@ export function createTravelPlanTemplateHandlers(deps) {
     const template = normalizeTravelPlanTemplateForStorage({
       id: `travel_plan_template_${randomUUID()}`,
       title,
-      description: payload?.description,
-      status: payload?.status,
       destinations: payload?.destinations,
-      source_booking_id: sourceBookingId || null,
-      created_by_atp_staff_id: normalizeText(principal?.sub),
-      travel_plan: nextTravelPlan,
-      pdf_personalization: nextPdfPersonalization,
-      created_at: nowIso(),
-      updated_at: nowIso()
+      travel_plan: nextTravelPlan
     });
     await persistTravelPlanTemplate(template);
-    sendJson(res, 201, buildTemplateResponse(template, {
-      sourceBookingName: normalizeText((Array.isArray(store?.bookings) ? store.bookings : []).find((booking) => booking.id === template.source_booking_id)?.name)
-    }));
+    sendJson(res, 201, buildTemplateResponse(template));
   }
 
   async function handlePatchTravelPlanTemplate(req, res, [templateId]) {
@@ -242,10 +226,17 @@ export function createTravelPlanTemplateHandlers(deps) {
       sendJson(res, 404, { error: "Travel plan template not found" });
       return;
     }
+    const nextTitle = payload?.title !== undefined ? normalizeText(payload.title) : normalizeText(existing.title);
+    if (!nextTitle) {
+      sendJson(res, 422, { error: "title is required" });
+      return;
+    }
+    if (findTemplateByTitle(templates, nextTitle, templateId)) {
+      sendJson(res, 409, { error: "A standard tour with this title already exists." });
+      return;
+    }
 
     let nextTravelPlan = existing.travel_plan;
-    let nextSourceBookingId = existing.source_booking_id;
-    let nextPdfPersonalization = existing.pdf_personalization;
     const requestedSourceBookingId = normalizeText(payload?.source_booking_id);
     if (requestedSourceBookingId) {
       const sourceContext = findSourceBookingContext(store, principal, requestedSourceBookingId);
@@ -261,8 +252,6 @@ export function createTravelPlanTemplateHandlers(deps) {
         return;
       }
       nextTravelPlan = cloneBookingTravelPlanAsTemplate(sourcePlan);
-      nextSourceBookingId = requestedSourceBookingId;
-      nextPdfPersonalization = extractTravelPlanPdfPersonalization(sourceContext.booking?.pdf_personalization);
     } else if (payload?.travel_plan) {
       const check = validateTemplateTravelPlan(payload.travel_plan, store);
       if (!check.ok) {
@@ -274,20 +263,12 @@ export function createTravelPlanTemplateHandlers(deps) {
 
     const updated = normalizeTravelPlanTemplateForStorage({
       ...existing,
-      title: payload?.title !== undefined ? payload.title : existing.title,
-      description: payload?.description !== undefined ? payload.description : existing.description,
-      status: payload?.status !== undefined ? payload.status : existing.status,
+      title: nextTitle,
       destinations: payload?.destinations !== undefined ? payload.destinations : existing?.travel_plan?.destinations,
-      source_booking_id: nextSourceBookingId,
-      travel_plan: nextTravelPlan,
-      pdf_personalization: nextPdfPersonalization,
-      updated_at: nowIso()
+      travel_plan: nextTravelPlan
     });
     await persistTravelPlanTemplate(updated);
-    const sourceBooking = (Array.isArray(store?.bookings) ? store.bookings : []).find((booking) => booking.id === updated.source_booking_id);
-    sendJson(res, 200, buildTemplateResponse(updated, {
-      sourceBookingName: sourceBooking && canAccessBooking(principal, sourceBooking) ? normalizeText(sourceBooking.name) : ""
-    }));
+    sendJson(res, 200, buildTemplateResponse(updated));
   }
 
   async function handleDeleteTravelPlanTemplate(req, res, [templateId]) {
@@ -338,10 +319,6 @@ export function createTravelPlanTemplateHandlers(deps) {
       sendJson(res, 404, { error: "Travel plan template not found" });
       return;
     }
-    if (template.status !== "published") {
-      sendJson(res, 422, { error: "Only published travel plan templates can be applied." });
-      return;
-    }
 
     const nextTravelPlan = cloneTemplateTravelPlanForBooking(template.travel_plan);
     const check = validateBookingTravelPlanInput(nextTravelPlan, booking.offer, {
@@ -352,19 +329,8 @@ export function createTravelPlanTemplateHandlers(deps) {
       return;
     }
 
-    const currentPdfPersonalization = normalizeBookingPdfPersonalization(booking?.pdf_personalization);
-    const nextPdfPersonalization = replaceTravelPlanPdfPersonalization(
-      booking?.pdf_personalization,
-      template?.pdf_personalization
-    );
-    const pdfPersonalizationChanged = JSON.stringify(nextPdfPersonalization) !== JSON.stringify(currentPdfPersonalization);
-
     booking.travel_plan = check.travel_plan;
     incrementBookingRevision(booking, "travel_plan_revision");
-    booking.pdf_personalization = nextPdfPersonalization;
-    if (pdfPersonalizationChanged) {
-      incrementBookingRevision(booking, "core_revision");
-    }
     booking.updated_at = nowIso();
     addActivity(
       store,

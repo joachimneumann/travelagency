@@ -316,7 +316,6 @@ export function createApplicationRoutes({
     randomUUID,
     buildTravelPlanTemplateReadModel: travelPlanTemplateHelpers.buildTravelPlanTemplateReadModel,
     normalizeTravelPlanTemplateForStorage: travelPlanTemplateHelpers.normalizeTravelPlanTemplateForStorage,
-    normalizeTravelPlanTemplateStatus: travelPlanTemplateHelpers.normalizeTravelPlanTemplateStatus,
     cloneBookingTravelPlanAsTemplate: travelPlanTemplateHelpers.cloneBookingTravelPlanAsTemplate,
     cloneTemplateTravelPlanForBooking: travelPlanTemplateHelpers.cloneTemplateTravelPlanForBooking,
     normalizeTemplateTravelPlan: travelPlanTemplateHelpers.normalizeTemplateTravelPlan,

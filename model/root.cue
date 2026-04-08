@@ -66,7 +66,6 @@ import (
 		GeneratedOfferCustomerConfirmationFlowMode:   enumModel.#GeneratedOfferCustomerConfirmationFlowMode
 		GeneratedOfferCustomerConfirmationFlowStatus: enumModel.#GeneratedOfferCustomerConfirmationFlowStatus
 		BookingConfirmationMethod:                    enumModel.#BookingConfirmationMethod
-		TravelPlanTemplateStatus:                     enumModel.#TravelPlanTemplateStatus
 		TourStyleCode:                                enumModel.#TourStyleCode
 		CountryCode:                                  enumModel.#CountryCode
 		TimezoneCode:                                 enumModel.#TimezoneCode

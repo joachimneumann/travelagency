@@ -48,7 +48,7 @@
     file_server
   }
 
-  @html_pages path /index.html /404.html /bookings.html /booking.html /persons.html /marketing_tour.html /marketing_tours.html /standard-travel-plans.html /settings.html /emergency.html /privacy.html /booking-confirmation.html /traveler-details.html
+  @html_pages path /index.html /404.html /bookings.html /booking.html /persons.html /marketing_tour.html /marketing_tours.html /standard-travel-plans.html /standard-travel-plan.html /settings.html /emergency.html /privacy.html /booking-confirmation.html /traveler-details.html
   handle @html_pages {
     rewrite * /frontend/pages{path}
     file_server
