@@ -107,6 +107,7 @@ const state = {
     styles: []
   },
   localizedContent: {
+    title_i18n: {},
     short_description_i18n: {}
   }
 };
@@ -117,8 +118,6 @@ const els = {
   logoutLink: null,
   userLabel: null,
   title: document.getElementById("tour_title"),
-  titleInput: document.getElementById("tour_title_input"),
-  titleEditBtn: document.getElementById("tour_title_edit_btn"),
   subtitle: document.getElementById("tour_subtitle"),
   error: document.getElementById("tour_error"),
   titleError: document.getElementById("tour_titleError"),
@@ -131,7 +130,7 @@ const els = {
   styleChoices: document.getElementById("tour_style_choices"),
   seasonalityStartMonth: document.getElementById("tour_seasonality_start_month"),
   seasonalityEndMonth: document.getElementById("tour_seasonality_end_month"),
-  shortDescriptionEditor: document.getElementById("tour_short_description_editor"),
+  localizedContentEditor: document.getElementById("tour_localized_content_editor"),
   changeImageBtn: document.getElementById("tour_change_image_btn"),
   imageUpload: document.getElementById("tour_image_upload"),
   heroImage: document.getElementById("tour_hero_image")
@@ -149,9 +148,6 @@ function hasAnyRoleInList(roleList, ...roles) {
 function captureTourFormSnapshot() {
   if (!els.form) return "";
   const controls = Array.from(els.form.querySelectorAll("input, select, textarea"));
-  if (els.titleInput && !els.form.contains(els.titleInput)) {
-    controls.unshift(els.titleInput);
-  }
   const snapshot = controls.map((control, index) => {
     const key = control.id || control.name || `${control.tagName.toLowerCase()}-${index}`;
     let value = "";
@@ -258,21 +254,43 @@ function localizedFieldValue(field, lang) {
   return "";
 }
 
-function localizedTextareaId(field, lang) {
+function localizedFieldId(field, lang) {
   return `tour_${field}_${normalizeTourTextLang(lang)}`;
 }
 
-function getLocalizedTextarea(field, lang) {
-  return document.getElementById(localizedTextareaId(field, lang));
+function getLocalizedField(field, lang) {
+  return document.getElementById(localizedFieldId(field, lang));
 }
 
-function buildTourTranslationEntries(field, sourceText) {
-  const value = String(sourceText || "").trim();
-  return value ? { value } : {};
+function resolveLocalizedTextMapValue(value, preferredLangs = [], fallbackValue = "") {
+  const normalizedMap = normalizeLocalizedTextMap(value);
+  const candidates = [
+    ...preferredLangs.map((lang) => normalizeTourTextLang(lang)),
+    ...Object.keys(normalizedMap),
+    "vi",
+    "en"
+  ];
+  for (const lang of candidates) {
+    const value = String(normalizedMap?.[lang] ?? "").trim();
+    if (value) return value;
+  }
+  return normalizeText(fallbackValue);
 }
 
-async function requestTourTranslation(field, targetLang, sourceText) {
-  const entries = buildTourTranslationEntries(field, sourceText);
+function resolveLocalizedFieldText(field, preferredLangs = [], fallbackValue = "") {
+  return resolveLocalizedTextMapValue(state.localizedContent?.[field], preferredLangs, fallbackValue);
+}
+
+function buildTourTranslationEntries(sourceValues) {
+  return Object.fromEntries(
+    Object.entries(sourceValues || {})
+      .map(([key, value]) => [String(key || "").trim(), String(value || "").trim()])
+      .filter(([key, value]) => Boolean(key && value))
+  );
+}
+
+async function requestTourTranslation(targetLang, sourceValues) {
+  const entries = buildTourTranslationEntries(sourceValues);
   if (!Object.keys(entries).length) return null;
   const sourceLang = currentTourEditingLang();
 
@@ -297,28 +315,37 @@ async function requestTourTranslation(field, targetLang, sourceText) {
     : null;
 }
 
-function applyTranslatedTourField(field, targetLang, translatedEntries) {
-  const targetInput = getLocalizedTextarea(field, targetLang);
-  if (!targetInput || !translatedEntries) return;
-  targetInput.value = String(translatedEntries.value || "").trim();
+function applyTranslatedTourFields(targetLang, translatedEntries) {
+  if (!translatedEntries) return;
+  const titleInput = getLocalizedField("title_i18n", targetLang);
+  const descriptionInput = getLocalizedField("short_description_i18n", targetLang);
+  if (titleInput && translatedEntries.title) {
+    titleInput.value = String(translatedEntries.title || "").trim();
+  }
+  if (descriptionInput && translatedEntries.short_description) {
+    descriptionInput.value = String(translatedEntries.short_description || "").trim();
+  }
 }
 
-function renderLocalizedTourEditor(field, mount, { label, rows = 3, multiline = false } = {}) {
-  if (!mount) return;
+function renderLocalizedTourContentEditor() {
+  if (!els.localizedContentEditor) return;
   const editingLang = currentTourEditingLang();
   const rowsHtml = orderedTourTextLanguages().map((language) => {
     const lang = normalizeTourTextLang(language?.code);
-    const textareaId = localizedTextareaId(field, lang);
-    const value = localizedFieldValue(field, lang);
+    const direction = String(language?.direction || "ltr");
+    const titleId = localizedFieldId("title_i18n", lang);
+    const descriptionId = localizedFieldId("short_description_i18n", lang);
+    const titleValue = localizedFieldValue("title_i18n", lang);
+    const descriptionValue = localizedFieldValue("short_description_i18n", lang);
     const buttonLabel = lang === editingLang
       ? `
-        <button type="button" class="btn btn-ghost tour-localized-group__translate-all-btn" data-tour-translate-all="${escapeHtml(field)}">
+        <button type="button" class="btn btn-ghost tour-localized-group__translate-all-btn" data-tour-translate-all="true">
           ${escapeHtml(backendT("tour.translation.translate_all", "{source} → ALL", {
             source: tourLanguageShortLabel(editingLang)
           }))}
         </button>
       `
-      : `<button type="button" class="btn btn-ghost tour-localized-group__translate-btn" data-tour-translate-field="${escapeHtml(field)}" data-target-lang="${escapeHtml(lang)}">${escapeHtml(backendT("tour.translation.translate_one", "{source} → {target}", {
+      : `<button type="button" class="btn btn-ghost tour-localized-group__translate-btn" data-tour-translate-lang="${escapeHtml(lang)}">${escapeHtml(backendT("tour.translation.translate_one", "{source} → {target}", {
         source: tourLanguageShortLabel(editingLang),
         target: tourLanguageShortLabel(lang)
       }))}</button>`;
@@ -326,41 +353,53 @@ function renderLocalizedTourEditor(field, mount, { label, rows = 3, multiline = 
       <div class="tour-localized-group__row">
         <div class="tour-localized-group__code-cell">${buttonLabel}</div>
         <div class="tour-localized-group__field">
-          <textarea
-            id="${escapeHtml(textareaId)}"
-            data-tour-i18n-field="${escapeHtml(field)}"
-            data-tour-i18n-lang="${escapeHtml(lang)}"
-            rows="${escapeHtml(String(rows))}"
-            spellcheck="true"
-            dir="${escapeHtml(String(language?.direction || "ltr"))}"
-          >${escapeHtml(value)}</textarea>
+          <div class="tour-localized-content">
+            <div class="tour-localized-content__field">
+              <label class="field-label" for="${escapeHtml(titleId)}">${escapeHtml(backendT("backend.table.title", "Title"))}</label>
+              <input
+                class="tour-localized-content__title"
+                id="${escapeHtml(titleId)}"
+                data-tour-i18n-field="title_i18n"
+                data-tour-i18n-lang="${escapeHtml(lang)}"
+                type="text"
+                spellcheck="true"
+                dir="${escapeHtml(direction)}"
+                value="${escapeHtml(titleValue)}"
+              />
+            </div>
+            <div class="tour-localized-content__field">
+              <label class="field-label" for="${escapeHtml(descriptionId)}">${escapeHtml(backendT("tour.description_label", "Web Site Tour Description"))}</label>
+              <textarea
+                class="tour-localized-content__description"
+                id="${escapeHtml(descriptionId)}"
+                data-tour-i18n-field="short_description_i18n"
+                data-tour-i18n-lang="${escapeHtml(lang)}"
+                rows="3"
+                spellcheck="true"
+                dir="${escapeHtml(direction)}"
+              >${escapeHtml(descriptionValue)}</textarea>
+            </div>
+          </div>
         </div>
       </div>
     `;
   }).join("");
 
-  mount.innerHTML = `
-    <div class="tour-localized-group${multiline ? " tour-localized-group--multiline" : ""}">
+  els.localizedContentEditor.innerHTML = `
+    <div class="tour-localized-group tour-localized-group--multiline tour-localized-group--content">
       <div class="tour-localized-group__header">
-        <label class="tour-localized-group__label" for="${escapeHtml(localizedTextareaId(field, editingLang))}">${escapeHtml(label)}</label>
+        <label class="tour-localized-group__label" for="${escapeHtml(localizedFieldId("title_i18n", editingLang))}">${escapeHtml(backendT("tour.content_label", "Website title and description"))}</label>
       </div>
       ${rowsHtml}
     </div>
   `;
 }
 
-function renderLocalizedTourEditors() {
-  renderLocalizedTourEditor("short_description_i18n", els.shortDescriptionEditor, {
-    label: backendT("tour.description_label", "Web Site Tour Description"),
-    rows: 3
-  });
-}
-
-function readLocalizedTextareas(field, { multiline = false } = {}) {
+function readLocalizedFields(field, { multiline = false } = {}) {
   const next = {};
   for (const language of tourTextLanguages()) {
     const lang = normalizeTourTextLang(language?.code);
-    const value = String(getLocalizedTextarea(field, lang)?.value ?? "");
+    const value = String(getLocalizedField(field, lang)?.value ?? "");
     const normalizedValue = multiline ? value : value.trim();
     if (multiline ? normalizedValue.trim() : normalizedValue) {
       next[lang] = normalizedValue;
@@ -369,43 +408,74 @@ function readLocalizedTextareas(field, { multiline = false } = {}) {
   return next;
 }
 
-async function translateTourField(button) {
-  const field = normalizeText(button?.getAttribute("data-tour-translate-field"));
-  const targetLang = normalizeTourTextLang(button?.getAttribute("data-target-lang"));
-  const sourceLang = currentTourEditingLang();
-  const sourceInput = getLocalizedTextarea(field, sourceLang);
-  const targetInput = getLocalizedTextarea(field, targetLang);
-  if (!field || !sourceInput || !targetInput || targetLang === sourceLang) return;
+function syncLocalizedFieldState() {
+  state.localizedContent.title_i18n = readLocalizedFields("title_i18n");
+  state.localizedContent.short_description_i18n = readLocalizedFields("short_description_i18n");
+}
 
-  const sourceText = String(sourceInput.value || "");
-  if (!Object.keys(buildTourTranslationEntries(field, sourceText)).length) {
+function updateHeaderTitle() {
+  if (!els.title) return;
+  const rawTitle = resolveLocalizedFieldText("title_i18n", ["vi", "en"], state.tour?.title);
+  els.title.textContent = rawTitle || (state.is_create_mode ? backendT("tour.new_title", "New tour") : backendT("nav.tours", "Tour"));
+}
+
+function clearTranslatedTourTarget(targetLang) {
+  const titleInput = getLocalizedField("title_i18n", targetLang);
+  const descriptionInput = getLocalizedField("short_description_i18n", targetLang);
+  if (titleInput) titleInput.value = "";
+  if (descriptionInput) descriptionInput.value = "";
+}
+
+function focusPrimaryTitleField() {
+  const candidates = [currentTourEditingLang(), "vi", "en"];
+  for (const lang of candidates) {
+    const input = getLocalizedField("title_i18n", lang);
+    if (input) {
+      input.focus();
+      return;
+    }
+  }
+}
+
+async function translateTourContent(button) {
+  const targetLang = normalizeTourTextLang(button?.getAttribute("data-tour-translate-lang"));
+  const sourceLang = currentTourEditingLang();
+  if (!targetLang || targetLang === sourceLang) return;
+
+  const sourceEntries = buildTourTranslationEntries({
+    title: getLocalizedField("title_i18n", sourceLang)?.value,
+    short_description: getLocalizedField("short_description_i18n", sourceLang)?.value
+  });
+  if (!Object.keys(sourceEntries).length) {
     setStatus(backendT("tour.translation.missing_source", "Add {sourceLanguage} text first.", {
       sourceLanguage: tourLanguageLabel(sourceLang)
     }));
     return;
   }
 
-  targetInput.value = "";
+  clearTranslatedTourTarget(targetLang);
   updateTourDirtyState();
   setStatus(backendT("tour.translation.translating", "Translating from {sourceLanguage}...", {
     sourceLanguage: tourLanguageLabel(sourceLang)
   }));
-  const translatedEntries = await requestTourTranslation(field, targetLang, sourceText);
+  const translatedEntries = await requestTourTranslation(targetLang, sourceEntries);
   if (!translatedEntries) return;
-  applyTranslatedTourField(field, targetLang, translatedEntries);
+  applyTranslatedTourFields(targetLang, translatedEntries);
+  syncLocalizedFieldState();
+  updateHeaderTitle();
 
   updateTourDirtyState();
   setStatus(backendT("tour.translation.done", "Translation updated."));
 }
 
-async function translateAllTourField(button) {
-  const field = normalizeText(button?.getAttribute("data-tour-translate-all"));
+async function translateAllTourContent(button) {
+  if (!button) return;
   const sourceLang = currentTourEditingLang();
-  const sourceInput = getLocalizedTextarea(field, sourceLang);
-  if (!field || !sourceInput) return;
-
-  const sourceText = String(sourceInput.value || "");
-  if (!Object.keys(buildTourTranslationEntries(field, sourceText)).length) {
+  const sourceEntries = buildTourTranslationEntries({
+    title: getLocalizedField("title_i18n", sourceLang)?.value,
+    short_description: getLocalizedField("short_description_i18n", sourceLang)?.value
+  });
+  if (!Object.keys(sourceEntries).length) {
     setStatus(backendT("tour.translation.missing_source", "Add {sourceLanguage} text first.", {
       sourceLanguage: tourLanguageLabel(sourceLang)
     }));
@@ -418,20 +488,21 @@ async function translateAllTourField(button) {
   if (!targets.length) return;
 
   for (const targetLang of targets) {
-    const targetInput = getLocalizedTextarea(field, targetLang);
-    if (targetInput) targetInput.value = "";
+    clearTranslatedTourTarget(targetLang);
   }
   updateTourDirtyState();
   setStatus(backendT("tour.translation.translating_all", "Translating all languages from {sourceLanguage}...", {
     sourceLanguage: tourLanguageLabel(sourceLang)
   }));
   for (const targetLang of targets) {
-    const translatedEntries = await requestTourTranslation(field, targetLang, sourceText);
+    const translatedEntries = await requestTourTranslation(targetLang, sourceEntries);
     if (!translatedEntries) return;
-    applyTranslatedTourField(field, targetLang, translatedEntries);
+    applyTranslatedTourFields(targetLang, translatedEntries);
+    syncLocalizedFieldState();
     updateTourDirtyState();
   }
 
+  updateHeaderTitle();
   updateTourDirtyState();
   setStatus(backendT("tour.translation.all_done", "All translations updated."));
 }
@@ -472,32 +543,30 @@ async function init() {
   if (els.form) {
     els.form.addEventListener("submit", submitForm);
     const scheduleTourDirtyState = () => window.setTimeout(updateTourDirtyState, 0);
-    els.form.addEventListener("input", scheduleTourDirtyState);
+    els.form.addEventListener("input", (event) => {
+      const field = event.target instanceof HTMLElement ? event.target.getAttribute("data-tour-i18n-field") : "";
+      if (field === "title_i18n" || field === "short_description_i18n") {
+        syncLocalizedFieldState();
+        if (field === "title_i18n") {
+          clearTitleError();
+          updateHeaderTitle();
+        }
+      }
+      scheduleTourDirtyState();
+    });
     els.form.addEventListener("change", scheduleTourDirtyState);
     els.form.addEventListener("click", (event) => {
       const translateAllButton = event.target.closest("[data-tour-translate-all]");
       if (translateAllButton) {
         event.preventDefault();
-        void translateAllTourField(translateAllButton);
+        void translateAllTourContent(translateAllButton);
         return;
       }
-      const button = event.target.closest("[data-tour-translate-field]");
+      const button = event.target.closest("[data-tour-translate-lang]");
       if (!button) return;
       event.preventDefault();
-      void translateTourField(button);
+      void translateTourContent(button);
     });
-  }
-  if (els.titleEditBtn) {
-    els.titleEditBtn.addEventListener("click", startTourTitleEdit);
-  }
-  if (els.titleInput) {
-    const scheduleTourDirtyState = () => window.setTimeout(updateTourDirtyState, 0);
-    els.titleInput.addEventListener("input", () => {
-      clearTitleError();
-      scheduleTourDirtyState();
-    });
-    els.titleInput.addEventListener("keydown", handleTourTitleInputKeydown);
-    els.titleInput.addEventListener("blur", commitTourTitleEdit);
   }
   if (els.changeImageBtn && els.imageUpload) {
     els.changeImageBtn.addEventListener("click", () => {
@@ -532,6 +601,12 @@ async function loadTour() {
   state.options.styles = Array.isArray(payload.options?.styles) ? payload.options.styles : [];
 
   const tour = state.tour;
+  state.localizedContent.title_i18n = normalizeLocalizedTextMap(
+    tour.title_i18n || { en: tour.title || "" }
+  );
+  state.localizedContent.short_description_i18n = normalizeLocalizedTextMap(
+    tour.short_description_i18n || { en: tour.short_description || "" }
+  );
   const destinations = tour_destinations(tour);
   const styles = tour_styles(tour);
   updateHeader(tour, destinations, styles);
@@ -539,10 +614,7 @@ async function loadTour() {
   setInput("tour_priority", toInputNumber(tour.priority));
   setInput("tour_seasonality_start_month", tour.seasonality_start_month || "");
   setInput("tour_seasonality_end_month", tour.seasonality_end_month || "");
-  state.localizedContent.short_description_i18n = normalizeLocalizedTextMap(
-    tour.short_description_i18n || { en: tour.short_description || "" }
-  );
-  renderLocalizedTourEditors();
+  renderLocalizedTourContentEditor();
   setPendingHeroImagePreview(null);
   renderHeroImage();
 
@@ -560,6 +632,7 @@ async function initializeNewTourForm() {
   state.tour = {
     id: "",
     title: "",
+    title_i18n: {},
     destinations: [],
     destination_codes: [],
     styles: [],
@@ -572,13 +645,14 @@ async function initializeNewTourForm() {
     image: ""
   };
 
+  state.localizedContent.title_i18n = {};
+  state.localizedContent.short_description_i18n = {};
   updateHeader({ title: backendT("tour.new_title", "New tour") }, [], []);
   if (els.subtitle) els.subtitle.textContent = backendT("tour.create_subtitle", "Create a new tour");
   setInput("tour_priority", "50");
   setInput("tour_seasonality_start_month", "");
   setInput("tour_seasonality_end_month", "");
-  state.localizedContent.short_description_i18n = {};
-  renderLocalizedTourEditors();
+  renderLocalizedTourContentEditor();
   setPendingHeroImagePreview(null);
   renderHeroImage();
   renderDestinationChoices([]);
@@ -684,15 +758,21 @@ async function submitForm(event) {
 
   const selectedDestinationCountries = getCheckedValues("destinationCountryChoice");
   const selectedStyles = getCheckedValues("styleChoice");
+  const title_i18n = readLocalizedFields("title_i18n");
+  const short_description_i18n = readLocalizedFields("short_description_i18n");
+  state.localizedContent.title_i18n = title_i18n;
+  state.localizedContent.short_description_i18n = short_description_i18n;
+  const resolvedTitle = resolveLocalizedTextMapValue(title_i18n, ["vi", "en", currentTourEditingLang()]);
 
   const payload = {
-    title: getTourTitleInputValue(),
+    title: resolvedTitle,
+    title_i18n,
     destinations: selectedDestinationCountries,
     styles: selectedStyles,
     priority: toNumberOrNull(getInput("tour_priority")),
     seasonality_start_month: getInput("tour_seasonality_start_month"),
     seasonality_end_month: getInput("tour_seasonality_end_month"),
-    short_description_i18n: readLocalizedTextareas("short_description_i18n")
+    short_description_i18n
   };
 
   if (!payload.title || !payload.destinations.length || !payload.styles.length) {
@@ -700,7 +780,7 @@ async function submitForm(event) {
     return;
   }
 
-  const duplicate = await findDuplicateTourTitle(payload.title, state.id);
+  const duplicate = await findDuplicateTourTitle(title_i18n, state.id);
   if (duplicate) {
     setTitleError(backendT(
       "tour.error.duplicate_title",
@@ -708,10 +788,7 @@ async function submitForm(event) {
       { title: duplicate.title || payload.title, id: duplicate.id }
     ));
     setStatus(backendT("tour.status.duplicate", "Save blocked due to duplicate title."));
-    if (els.titleInput) {
-      startTourTitleEdit();
-      els.titleInput.focus();
-    }
+    focusPrimaryTitleField();
     return;
   }
 
@@ -727,6 +804,12 @@ async function submitForm(event) {
   if (!result) return;
   if (!result.tour) return;
   state.tour = result.tour;
+  state.localizedContent.title_i18n = normalizeLocalizedTextMap(
+    result.tour.title_i18n || { en: result.tour.title || "" }
+  );
+  state.localizedContent.short_description_i18n = normalizeLocalizedTextMap(
+    result.tour.short_description_i18n || { en: result.tour.short_description || "" }
+  );
   state.id = String(result.tour.id || "");
   state.is_create_mode = false;
   updateHeader(state.tour, tour_destinations(state.tour), tour_styles(state.tour));
@@ -830,13 +913,6 @@ function redirectToBackendLogin() {
 }
 
 function applyTourPermissions() {
-  if (els.titleEditBtn) {
-    els.titleEditBtn.hidden = !state.permissions.canEditTours;
-    els.titleEditBtn.disabled = !state.permissions.canEditTours;
-  }
-  if (els.titleInput) {
-    els.titleInput.disabled = !state.permissions.canEditTours;
-  }
   if (state.permissions.canEditTours) return;
   if (els.changeImageBtn) els.changeImageBtn.disabled = true;
   if (els.imageUpload) els.imageUpload.disabled = true;
@@ -849,7 +925,34 @@ function applyTourPermissions() {
   setStatus(backendT("tour.status.read_only", "Read-only access."));
 }
 
-async function findDuplicateTourTitle(title, currentTourId) {
+function collectDuplicateTitleCandidates(titleMap) {
+  const normalizedMap = normalizeLocalizedTextMap(titleMap);
+  const orderedLangs = [currentTourEditingLang(), "vi", "en", ...Object.keys(normalizedMap)];
+  const seen = new Set();
+  return orderedLangs
+    .map((lang) => normalizeTourTextLang(lang))
+    .filter((lang) => {
+      if (!lang || seen.has(lang)) return false;
+      seen.add(lang);
+      return true;
+    })
+    .map((lang) => ({ lang, title: String(normalizedMap[lang] || "").trim() }))
+    .filter((entry) => Boolean(entry.title));
+}
+
+async function findDuplicateTourTitle(titleMap, currentTourId) {
+  const candidates = collectDuplicateTitleCandidates(titleMap);
+  if (!candidates.length) return null;
+
+  for (const candidate of candidates) {
+    const duplicate = await findDuplicateTourTitleForLang(candidate.title, currentTourId, candidate.lang);
+    if (duplicate) return duplicate;
+  }
+
+  return null;
+}
+
+async function findDuplicateTourTitleForLang(title, currentTourId, lang) {
   const normalizedTitle = normalizeCompareText(title);
   if (!normalizedTitle) return null;
 
@@ -865,7 +968,9 @@ async function findDuplicateTourTitle(title, currentTourId) {
     });
 
     const request = toursRequest({ baseURL: apiOrigin, query: Object.fromEntries(query.entries()) });
-    const payload = await fetchApi(withApiLang(request.url));
+    const requestUrl = new URL(request.url, window.location.origin);
+    if (lang) requestUrl.searchParams.set("lang", lang);
+    const payload = await fetchApi(`${requestUrl.pathname}${requestUrl.search}`);
     if (!payload) return null;
 
     const items = Array.isArray(payload.items) ? payload.items : [];
@@ -941,19 +1046,7 @@ function updateHeroImage(src) {
 }
 
 function updateHeader(tour, destinations, styles) {
-  const rawTitle = normalizeText(tour?.title);
-  if (els.title) {
-    els.title.textContent = rawTitle || (state.is_create_mode ? backendT("tour.new_title", "New tour") : backendT("nav.tours", "Tour"));
-    els.title.hidden = false;
-  }
-  if (els.titleInput && document.activeElement !== els.titleInput) {
-    els.titleInput.value = rawTitle;
-    els.titleInput.hidden = true;
-  }
-  if (els.titleEditBtn) {
-    els.titleEditBtn.hidden = !state.permissions.canEditTours;
-    els.titleEditBtn.disabled = !state.permissions.canEditTours;
-  }
+  updateHeaderTitle();
   if (!els.subtitle) return;
   const destText = destinations.length ? destinations.join(", ") : "-";
   const styleText = styles.length ? styles.join(", ") : "-";
@@ -961,41 +1054,6 @@ function updateHeader(tour, destinations, styles) {
     destinations: destText,
     styles: styleText
   });
-}
-
-function getTourTitleInputValue() {
-  return normalizeText(els.titleInput?.value);
-}
-
-function startTourTitleEdit() {
-  if (!state.permissions.canEditTours || !els.title || !els.titleInput) return;
-  els.titleInput.value = normalizeText(els.titleInput.value || els.title.textContent);
-  els.title.hidden = true;
-  els.titleInput.hidden = false;
-  els.titleInput.focus();
-  els.titleInput.select();
-}
-
-function commitTourTitleEdit() {
-  if (!els.title || !els.titleInput) return;
-  const value = getTourTitleInputValue();
-  els.title.textContent = value || (state.is_create_mode ? backendT("tour.new_title", "New tour") : backendT("nav.tours", "Tour"));
-  els.title.hidden = false;
-  els.titleInput.hidden = true;
-  updateTourDirtyState();
-}
-
-function handleTourTitleInputKeydown(event) {
-  if (event.key === "Enter") {
-    event.preventDefault();
-    commitTourTitleEdit();
-  } else if (event.key === "Escape") {
-    event.preventDefault();
-    if (els.titleInput) {
-      els.titleInput.value = normalizeText(state.tour?.title);
-    }
-    commitTourTitleEdit();
-  }
 }
 
 function tour_destinations(tour) {

@@ -4939,6 +4939,11 @@
     "origin": "machine",
     "updated_at": "2026-03-30T23:51:31.875Z"
   },
+  "tour.content_label": {
+    "source_hash": "3399b38e45d3525de1c18c92d03a0bb2ba327028f046c56d55ad1c2257dc455e",
+    "origin": "manual",
+    "updated_at": "2026-04-09T00:00:00.000Z"
+  },
   "tour.create_subtitle": {
     "source_hash": "407a78fc70e5e96d2bba90683df34b715e8da84bd4461153c339652c25d934ef",
     "origin": "machine",

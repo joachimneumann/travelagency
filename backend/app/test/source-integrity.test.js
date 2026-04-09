@@ -2421,13 +2421,18 @@ test("tour page reads month options from the generated catalogs layer", async ()
   );
   assert.match(
     tourHtml,
-    /id="tour_title_edit_btn"/,
-    "Tour page should expose the header pen button for inline title editing"
+    /id="tour_localized_content_editor"/,
+    "Tour page should render the combined localized title and description editor mount"
   );
   assert.doesNotMatch(
     tourHtml,
-    /id="tour_titleInput"/,
-    "Tour page should no longer render the old form title text field"
+    /id="tour_title_edit_btn"/,
+    "Tour page should no longer render the inline header pen button"
+  );
+  assert.doesNotMatch(
+    tourHtml,
+    /id="tour_title_input"/,
+    "Tour page should no longer render the old header title input"
   );
   assert.match(
     tourSource,

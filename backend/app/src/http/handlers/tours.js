@@ -88,6 +88,7 @@ export function createTourHandlers(deps) {
     const stored = normalizeTourForStorage(tour);
     return {
       ...normalizeTourForRead(stored, { lang }),
+      title_i18n: localizedTextareaMap(stored.title),
       short_description_i18n: localizedTextareaMap(stored.short_description)
     };
   }
@@ -97,7 +98,11 @@ export function createTourHandlers(deps) {
     const next = { ...current };
 
     if (isCreate || payload.id !== undefined) next.id = normalizeText(payload.id) || next.id;
-    if (isCreate || payload.title !== undefined) next.title = setLocalizedTextForLang(current.title, payload.title, lang);
+    if (payload.title_i18n !== undefined) {
+      next.title = payload.title_i18n;
+    } else if (isCreate || payload.title !== undefined) {
+      next.title = setLocalizedTextForLang(current.title, payload.title, lang);
+    }
     if (payload.short_description_i18n !== undefined) {
       next.short_description = payload.short_description_i18n;
     } else if (payload.short_description !== undefined) {

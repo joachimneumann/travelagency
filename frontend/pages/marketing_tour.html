@@ -30,8 +30,6 @@
         <div class="container">
           <div class="tour-header__title-row">
             <h1 class="section-title tour-header__title" id="tour_title">Tour</h1>
-            <input class="tour-header__title-input" id="tour_title_input" type="text" hidden />
-            <button class="tour-header__title-edit" id="tour_title_edit_btn" type="button" aria-label="Edit tour title" data-i18n-aria-label-id="tour.edit_title">&#9998;</button>
           </div>
           <div id="tour_titleError" class="form-error" role="alert" aria-live="polite"></div>
           <p class="section-booking" id="tour_subtitle" data-i18n-id="tour.subtitle_loading">Loading tour...</p>
@@ -80,7 +78,7 @@
               <input id="tour_priority" name="priority" type="number" min="0" max="100" step="1" />
             </div>
             <div class="field full">
-              <div id="tour_short_description_editor"></div>
+              <div id="tour_localized_content_editor"></div>
             </div>
           </form>
         </div>

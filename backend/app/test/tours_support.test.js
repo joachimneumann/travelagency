@@ -44,3 +44,36 @@ test("tour admin options can include catalog travel styles that no tour uses yet
   );
 });
 
+test("tour helpers resolve localized titles with vietnamese then english fallback", () => {
+  const viTour = helpers.normalizeTourForRead(
+    {
+      id: "tour_1",
+      title: {
+        en: "English title",
+        vi: "Tieu de tieng Viet"
+      },
+      short_description: {
+        en: "English description"
+      },
+      destinations: ["vietnam"],
+      styles: ["culture"]
+    },
+    { lang: "vi" }
+  );
+
+  assert.equal(viTour.title, "Tieu de tieng Viet");
+
+  const fallbackTour = helpers.normalizeTourForRead(
+    {
+      id: "tour_2",
+      title: {
+        en: "English title only"
+      },
+      destinations: ["vietnam"],
+      styles: ["culture"]
+    },
+    { lang: "vi" }
+  );
+
+  assert.equal(fallbackTour.title, "English title only");
+});
