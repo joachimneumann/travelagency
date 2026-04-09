@@ -20,6 +20,8 @@ import {
   normalizeBookingSourceLang
 } from "../../domain/booking_content_i18n.js";
 import {
+  collectOfferTranslationFieldChanges,
+  markOfferTranslationFieldsManual,
   markOfferTranslationManual,
   translateOfferFromSourceLanguage
 } from "../../domain/booking_translation.js";
@@ -595,7 +597,17 @@ export function createBookingFinanceHandlers(deps) {
       sourceLang
     );
     if (contentLang !== sourceLang) {
-      markOfferTranslationManual(mergedOffer, contentLang, nowIso(), sourceLang);
+      const changedTranslationKeys = collectOfferTranslationFieldChanges(
+        booking.offer,
+        mergedOffer,
+        contentLang,
+        sourceLang
+      );
+      if (changedTranslationKeys.length) {
+        markOfferTranslationFieldsManual(mergedOffer, contentLang, nowIso(), changedTranslationKeys, sourceLang);
+      } else {
+        markOfferTranslationManual(mergedOffer, contentLang, nowIso(), sourceLang);
+      }
     }
     const nextOfferBase = await convertBookingOfferToBaseCurrency(mergedOffer);
     const nextOfferJson = JSON.stringify(nextOfferBase);

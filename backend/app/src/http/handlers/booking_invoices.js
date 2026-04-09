@@ -10,6 +10,8 @@ import {
 } from "../../domain/booking_content_i18n.js";
 import {
   buildInvoiceTranslationStatus,
+  collectInvoiceTranslationFieldChanges,
+  markInvoiceTranslationFieldsManual,
   markInvoiceTranslationManual,
   translateInvoiceFromSourceLanguage
 } from "../../domain/booking_translation.js";
@@ -322,6 +324,7 @@ export function createBookingInvoiceHandlers(deps) {
       sendJson(res, 404, { error: "Invoice not found" });
       return;
     }
+    const previousInvoice = JSON.parse(JSON.stringify(invoice));
 
     const invoiceParty = getInvoicePartyForBooking(booking);
     const contentLang = requestContentLang(req, payload, invoice, booking?.customer_language || booking?.web_form_submission?.preferred_language || "en");
@@ -421,7 +424,17 @@ export function createBookingInvoiceHandlers(deps) {
       invoice.total_amount_cents = totalAmountCents;
       invoice.due_amount_cents = dueAmountCents;
       if (contentLang !== sourceLang && contentFieldsUpdated) {
-        markInvoiceTranslationManual(invoice, contentLang, nowIso(), sourceLang);
+        const changedTranslationKeys = collectInvoiceTranslationFieldChanges(
+          previousInvoice,
+          invoice,
+          contentLang,
+          sourceLang
+        );
+        if (changedTranslationKeys.length) {
+          markInvoiceTranslationFieldsManual(invoice, contentLang, nowIso(), changedTranslationKeys, sourceLang);
+        } else {
+          markInvoiceTranslationManual(invoice, contentLang, nowIso(), sourceLang);
+        }
       }
       invoice.version = Number(invoice.version || 1) + 1;
       await writeInvoicePdf(

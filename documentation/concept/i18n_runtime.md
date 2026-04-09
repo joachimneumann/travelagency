@@ -122,6 +122,7 @@ Current runtime pattern:
 - the map is the durable multilingual source
 - the flat string is a resolved branch for the requested language context
 - translation status metadata stores source-language hashes so stale translations can be detected
+- booking section translation metadata can now also store per-language `manual_keys` so manually improved target fields survive later auto-translation runs
 
 ## 6. Translation Flow
 
@@ -136,6 +137,11 @@ The translation runtime then:
 2. translates only fields that have source content
 3. writes the target-language branch back into the localized map
 4. updates translation metadata with `source_lang`, `source_hash`, `origin`, and `updated_at`
+
+Current manual-override rule:
+
+- a manual edit in a target language can lock that specific field key for that target language
+- later auto-translation skips locked target fields and refreshes only the remaining machine-managed fields
 
 Important current rule:
 
@@ -175,6 +181,8 @@ The active implementation now matches the intended source-language model:
 - `shared/generated/language_catalog.js`
 - `frontend/scripts/shared/backend_i18n.js`
 - `frontend/scripts/shared/frontend_i18n.js`
+- `scripts/sync_backend_i18n.mjs`
+- `scripts/sync_frontend_i18n.mjs`
 - `frontend/scripts/booking/i18n.js`
 - `frontend/scripts/booking/localized_editor.js`
 - `frontend/scripts/pages/booking_page_language.js`
@@ -189,3 +197,8 @@ The active implementation now matches the intended source-language model:
 - `backend/app/src/http/handlers/booking_invoices.js`
 - `backend/app/src/http/handlers/tours.js`
 - `backend/app/src/lib/pdf_i18n.js`
+
+Static dictionary override paths:
+
+- `frontend/data/i18n/backend_overrides/<lang>.json`
+- `frontend/data/i18n/frontend_overrides/<lang>.json`

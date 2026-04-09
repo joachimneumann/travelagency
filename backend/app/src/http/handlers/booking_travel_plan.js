@@ -11,6 +11,8 @@ import {
   normalizeBookingSourceLang
 } from "../../domain/booking_content_i18n.js";
 import {
+  collectTravelPlanTranslationFieldChanges,
+  markTravelPlanTranslationFieldsManual,
   markTravelPlanTranslationManual,
   translateTravelPlanFromSourceLanguage
 } from "../../domain/booking_translation.js";
@@ -650,7 +652,17 @@ export function createBookingTravelPlanHandlers(deps) {
     const sourceLang = requestSourceLang(req, payload);
     const mergedTravelPlan = mergeTravelPlanForLang(booking.travel_plan, check.travel_plan, booking.offer, contentLang, sourceLang);
     if (contentLang !== sourceLang) {
-      markTravelPlanTranslationManual(mergedTravelPlan, contentLang, nowIso(), sourceLang);
+      const changedTranslationKeys = collectTravelPlanTranslationFieldChanges(
+        booking.travel_plan,
+        mergedTravelPlan,
+        contentLang,
+        sourceLang
+      );
+      if (changedTranslationKeys.length) {
+        markTravelPlanTranslationFieldsManual(mergedTravelPlan, contentLang, nowIso(), changedTranslationKeys, sourceLang);
+      } else {
+        markTravelPlanTranslationManual(mergedTravelPlan, contentLang, nowIso(), sourceLang);
+      }
     }
     const nextTravelPlanJson = JSON.stringify(mergedTravelPlan);
     const currentTravelPlanJson = JSON.stringify(booking.travel_plan || null);

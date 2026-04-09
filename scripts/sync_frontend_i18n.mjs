@@ -15,6 +15,7 @@ const __dirname = path.dirname(__filename);
 const ROOT = path.resolve(__dirname, "..");
 const FRONTEND_I18N_DIR = path.join(ROOT, "frontend", "data", "i18n", "frontend");
 const FRONTEND_I18N_META_DIR = path.join(ROOT, "frontend", "data", "i18n", "frontend_meta");
+const FRONTEND_I18N_OVERRIDE_DIR = path.join(ROOT, "frontend", "data", "i18n", "frontend_overrides");
 
 const DEFAULT_SOURCE_LANG = "en";
 const DEFAULT_OPENAI_TRANSLATION_MODEL = "gpt-4o-mini";
@@ -100,6 +101,10 @@ function metadataPath(lang) {
   return path.join(FRONTEND_I18N_META_DIR, `${lang}.json`);
 }
 
+function overridePath(lang) {
+  return path.join(FRONTEND_I18N_OVERRIDE_DIR, `${lang}.json`);
+}
+
 async function readJsonFile(filePath, fallback = {}) {
   try {
     const raw = await readFile(filePath, "utf8");
@@ -150,6 +155,39 @@ function summarizeKeys(keys, limit = 8) {
   if (!keys.length) return "";
   const head = keys.slice(0, limit).join(", ");
   return keys.length > limit ? `${head}, ...` : head;
+}
+
+function normalizeOverrideEntries(source, overrides) {
+  return orderedObjectFromSourceKeys(
+    source,
+    Object.fromEntries(
+      Object.entries(overrides || {})
+        .map(([key, value]) => [key, normalizeText(value)])
+        .filter(([key, value]) => Boolean(key && value))
+    )
+  );
+}
+
+function applyManualOverrides(source, target, meta, overrides, timestamp = "") {
+  const normalizedOverrides = normalizeOverrideEntries(source, overrides);
+  const nextTarget = { ...(target || {}) };
+  const nextMeta = { ...(meta || {}) };
+  const effectiveTimestamp = normalizeText(timestamp) || new Date().toISOString();
+
+  for (const [key, value] of Object.entries(normalizedOverrides)) {
+    nextTarget[key] = value;
+    nextMeta[key] = {
+      source_hash: sourceHash(source[key]),
+      origin: "manual_override",
+      updated_at: normalizeText(nextMeta[key]?.updated_at) || effectiveTimestamp
+    };
+  }
+
+  return {
+    target: nextTarget,
+    meta: nextMeta,
+    overrideKeys: Object.keys(normalizedOverrides)
+  };
 }
 
 function collectSyncState(source, target, meta) {
@@ -331,7 +369,9 @@ async function runCheck(options) {
   for (const targetLang of targetLangs) {
     const target = await readJsonFile(dictionaryPath(targetLang));
     const meta = await readJsonFile(metadataPath(targetLang));
-    const state = collectSyncState(source, target, meta);
+    const overrides = await readJsonFile(overridePath(targetLang));
+    const effective = applyManualOverrides(source, target, meta, overrides);
+    const state = collectSyncState(source, effective.target, effective.meta);
     printCheckSummary(targetLang, state);
     if (!state.ok) exitCode = 1;
   }
@@ -348,14 +388,20 @@ async function runTranslate(options) {
   let translatorSession = null;
   let totalTranslatedKeys = 0;
   let translatedTargets = 0;
+  let totalOverrideKeys = 0;
 
   for (const targetLang of targetLangs) {
     const target = await readJsonFile(dictionaryPath(targetLang));
     const meta = await readJsonFile(metadataPath(targetLang));
-    const state = collectSyncState(source, target, meta);
+    const overrides = await readJsonFile(overridePath(targetLang));
+    const effective = applyManualOverrides(source, target, meta, overrides);
+    totalOverrideKeys += effective.overrideKeys.length;
+    const overrideKeySet = new Set(effective.overrideKeys);
+    const state = collectSyncState(source, effective.target, effective.meta);
     const translationKeys = options.forceAll
-      ? Object.keys(source)
-      : [...new Set([...state.missingTranslations, ...state.staleTranslations])];
+      ? Object.keys(source).filter((key) => !overrideKeySet.has(key))
+      : [...new Set([...state.missingTranslations, ...state.staleTranslations])]
+        .filter((key) => !overrideKeySet.has(key));
     const translationSourceEntries = Object.fromEntries(
       translationKeys.map((key) => [key, source[key]])
     );
@@ -405,10 +451,11 @@ async function runTranslate(options) {
       };
     }
 
-    await writeJsonFile(dictionaryPath(targetLang), orderedObjectFromSourceKeys(source, nextTarget));
-    await writeJsonFile(metadataPath(targetLang), orderedObjectFromSourceKeys(source, nextMeta));
+    const withOverrides = applyManualOverrides(source, nextTarget, nextMeta, overrides, timestamp);
+    await writeJsonFile(dictionaryPath(targetLang), orderedObjectFromSourceKeys(source, withOverrides.target));
+    await writeJsonFile(metadataPath(targetLang), orderedObjectFromSourceKeys(source, withOverrides.meta));
 
-    const nextState = collectSyncState(source, nextTarget, nextMeta);
+    const nextState = collectSyncState(source, withOverrides.target, withOverrides.meta);
     if (!nextState.ok) {
       printCheckSummary(targetLang, nextState);
       return 1;
@@ -426,6 +473,7 @@ async function runTranslate(options) {
       `- Mode: ${options.forceAll ? "full refresh" : "incremental"}`,
       `- Targets translated: ${translatedTargets}`,
       `- Translated keys: ${totalTranslatedKeys}`,
+      `- Manual override keys: ${totalOverrideKeys}`,
       `- Metadata refreshed: ${Object.keys(source).length * targetLangs.length}`
     ].join("\n")
   );
