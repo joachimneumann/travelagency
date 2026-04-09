@@ -1,0 +1,57 @@
+{
+  "id": "tour_4978f477-57f7-42ff-8114-2ee337e8c135",
+  "title": {
+    "en": "Ha Long Bay Cruise",
+    "ar": "رحلة خليج ها لونج",
+    "fr": "Croisière dans la baie d'Ha Long",
+    "zh": "下龙湾游轮",
+    "ja": "ハロン湾クルーズ",
+    "ko": "하롱베이 크루즈",
+    "vi": "Du thuyền Vịnh Hạ Long",
+    "ms": "Pelayaran Teluk Ha Long",
+    "de": "Halong-Bucht-Kreuzfahrt",
+    "es": "Crucero por la bahía de Ha Long",
+    "it": "Crociera nella Baia di Ha Long",
+    "ru": "Круиз по заливу Халонг",
+    "nl": "Ha Long Bay-cruise",
+    "pl": "Rejs po zatoce Ha Long",
+    "da": "Ha Long Bay krydstogt",
+    "sv": "Ha Long Bay kryssning",
+    "no": "Ha Long Bay Cruise"
+  },
+  "short_description": {
+    "en": "Ha Long luxury cruise tour 2 days 1 night or 3 days 2 nights on a 5-star cruise: enjoy private space amidst poetic nature, explore magical caves to the Sunset Party at sunset. Experience kayaking, visit fishing villages and eat seafood specialties.",
+    "ar": "جولة ها لونج البحرية الفاخرة لمدة يومين وليلة واحدة أو 3 أيام وليلتين في رحلة بحرية 5 نجوم: استمتع بمساحة خاصة وسط الطبيعة الشعرية، واستكشف الكهوف السحرية وحفلة غروب الشمس عند غروب الشمس. يمكنك تجربة التجديف بالكاياك وزيارة قرى الصيد وتناول المأكولات البحرية.",
+    "fr": "Croisière de luxe à Ha Long 2 jours 1 nuit ou 3 jours 2 nuits en croisière 5 étoiles : profitez d'un espace privé au milieu d'une nature poétique, explorez des grottes magiques jusqu'à la Sunset Party au coucher du soleil. Faites du kayak, visitez des villages de pêcheurs et dégustez des spécialités de fruits de mer.",
+    "zh": "下龙湾豪华游轮之旅2天1夜或3天2夜五星级游轮：在诗意的大自然中享受私人空间，探索神奇的洞穴，参加日落时分的日落派对。体验皮划艇、参观渔村、品尝海鲜特色菜。",
+    "ja": "ハロンの豪華クルーズ ツアー 5 つ星クルーズの 1 泊 2 日または 2 泊 3 日: 詩的な自然に囲まれたプライベートな空間を満喫し、魔法の洞窟を探索し、日没時のサンセット パーティーまでお楽しみください。カヤックを体験したり、漁村を訪れたり、シーフードの名物料理を食べたりしましょう。",
+    "ko": "하롱 럭셔리 크루즈 투어 5성급 크루즈로 1박 2일 또는 2박 3일: 시적인 자연 속에서 개인 공간을 즐기고, 일몰 시 마법의 동굴을 탐험하고 일몰 파티를 즐겨보세요. 카약을 경험하고, 어촌을 방문하고, 해산물 특선 요리를 맛보세요.",
+    "vi": "Du thuyền Hạ Long sang trọng 2 ngày 1 đêm hoặc 3 ngày 2 đêm trên du thuyền 5 sao: tận hưởng không gian riêng tư giữa thiên nhiên thơ mộng, khám phá hang động huyền ảo đến bữa tiệc Sunset Party lúc hoàng hôn. Trải nghiệm chèo thuyền kayak, tham quan làng chài và ăn đặc sản hải sản.",
+    "ms": "Lawatan pelayaran mewah Ha Long 2 hari 1 malam atau 3 hari 2 malam dengan pelayaran 5 bintang: nikmati ruang peribadi di tengah-tengah alam puitis, terokai gua ajaib ke Pesta Matahari Terbenam pada waktu matahari terbenam. Alami pengalaman berkayak, melawat perkampungan nelayan dan makan kepakaran makanan laut.",
+    "de": "Ha Long Luxuskreuzfahrttour 2 Tage 1 Nacht oder 3 Tage 2 Nächte auf einer 5-Sterne-Kreuzfahrt: Genießen Sie Privatsphäre inmitten poetischer Natur, erkunden Sie magische Höhlen bis hin zur Sunset Party bei Sonnenuntergang. Erleben Sie Kajakfahren, besuchen Sie Fischerdörfer und essen Sie Meeresfrüchtespezialitäten.",
+    "es": "Tour en crucero de lujo por Ha Long 2 días 1 noche o 3 días 2 noches en un crucero de 5 estrellas: disfrute de un espacio privado en medio de la naturaleza poética, explore cuevas mágicas y disfrute de la Sunset Party al atardecer. Experimente el kayak, visite pueblos de pescadores y coma especialidades de mariscos.",
+    "it": "Tour in crociera di lusso Ha Long 2 giorni 1 notte o 3 giorni 2 notti in crociera a 5 stelle: goditi lo spazio privato in mezzo alla natura poetica, esplora magiche grotte fino al Sunset Party al tramonto. Prova il kayak, visita i villaggi di pescatori e mangia specialità di pesce.",
+    "ru": "Роскошный круизный тур по Халонгу 2 дня и 1 ночь или 3 дня и 2 ночи в 5-звездочном круизе: наслаждайтесь уединением среди поэтической природы, исследуйте волшебные пещеры и отправляйтесь на вечеринку Sunset Party на закате. Поплавайте на каяках, посетите рыбацкие деревни и отведайте блюда из морепродуктов.",
+    "nl": "Ha Long luxe cruisetour 2 dagen 1 nacht of 3 dagen 2 nachten op een 5-sterrencruise: geniet van privéruimte te midden van poëtische natuur, verken magische grotten en de Sunset Party bij zonsondergang. Ervaar kajakken, bezoek vissersdorpjes en eet visspecialiteiten.",
+    "pl": "Luksusowy rejs Ha Long na 2 dni, 1 noc lub 3 dni, 2 noce podczas pięciogwiazdkowego rejsu: ciesz się prywatną przestrzenią pośród poetyckiej przyrody, zwiedzaj magiczne jaskinie na Sunset Party o zachodzie słońca. Przeżyj pływanie kajakiem, odwiedź wioski rybackie i zjedz specjały z owoców morza.",
+    "da": "Ha Long luksuskrydstogtstur 2 dage 1 nat eller 3 dage 2 nætter på et 5-stjernet krydstogt: nyd privat rum midt i poetisk natur, udforsk magiske huler til Sunset Party ved solnedgang. Oplev kajaksejlads, besøg fiskerlandsbyer og spis fiske- og skaldyrsspecialiteter.",
+    "sv": "Ha Long lyxkryssningstur 2 dagar 1 natt eller 3 dagar 2 nätter på en 5-stjärnig kryssning: njut av privat utrymme mitt i poetisk natur, utforska magiska grottor till Sunset Party vid solnedgången. Upplev kajakpaddling, besök fiskebyar och ät skaldjursspecialiteter.",
+    "no": "Ha Long luksuscruisetur 2 dager 1 natt eller 3 dager 2 netter på et 5-stjerners cruise: nyt privat rom midt i poetisk natur, utforsk magiske grotter til Sunset Party ved solnedgang. Opplev kajakkpadling, besøk fiskevær og spis sjømatspesialiteter."
+  },
+  "destinations": [
+    "vietnam"
+  ],
+  "styles": [
+    "beach",
+    "budget",
+    "culture",
+    "family",
+    "luxury"
+  ],
+  "seasonality_start_month": "jan",
+  "seasonality_end_month": "dec",
+  "priority": 100,
+  "image": "/public/v1/tour-images/tour_4978f477-57f7-42ff-8114-2ee337e8c135/tour_4978f477-57f7-42ff-8114-2ee337e8c135.webp",
+  "created_at": "2026-04-03T11:00:28.709Z",
+  "updated_at": "2026-04-09T08:30:26.783Z"
+}

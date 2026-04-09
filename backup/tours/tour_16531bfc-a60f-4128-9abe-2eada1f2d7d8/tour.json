@@ -1,0 +1,58 @@
+{
+  "id": "tour_16531bfc-a60f-4128-9abe-2eada1f2d7d8",
+  "title": {
+    "en": "Danang, Hue, Hoi An",
+    "ar": "دانانج، هوي، هوي آن",
+    "fr": "Danang, Hué, Hoi An",
+    "zh": "岘港、顺化、会安",
+    "ja": "ダナン、フエ、ホイアン",
+    "ko": "다낭, 후에, 호이안",
+    "vi": "Đà Nẵng, Huế, Hội An",
+    "ms": "Danang, Hue, Hoi An",
+    "de": "Danang, Hue, Hoi An",
+    "es": "Danang, Hue, Hoi An",
+    "it": "Danang, Tonalità, Hoi An",
+    "ru": "Дананг, Хюэ, Хойан",
+    "nl": "Danang, Hué, Hoi An",
+    "pl": "Danang, Hue, Hoi An",
+    "da": "Danang, Hue, Hoi An",
+    "sv": "Danang, Hue, Hoi An",
+    "no": "Danang, Hue, Hoi An"
+  },
+  "short_description": {
+    "en": "Welcome you to the Central region, where centuries-old historical values ​​blend with modern luxury. This is not just a trip, but absolute enjoyment in secluded space and personalized service.",
+    "ar": "أرحب بكم في المنطقة الوسطى، حيث تمتزج القيم التاريخية التي تعود إلى قرون مع الفخامة الحديثة. هذه ليست مجرد رحلة، ولكنها متعة مطلقة في مساحة منعزلة وخدمة شخصية.",
+    "fr": "Bienvenue dans la région Centre, où les valeurs historiques séculaires se mêlent au luxe moderne. Il ne s'agit pas seulement d'un voyage, mais d'un plaisir absolu dans un espace isolé et d'un service personnalisé.",
+    "zh": "欢迎您来到中部地区，这里有着数百年的历史价值与现代奢华的融合。这不仅仅是一次旅行，而是幽静空间和个性化服务的绝对享受。",
+    "ja": "何世紀にもわたる歴史的価値観とモダンな贅沢が融合した中部地域へようこそ。これは単なる旅行ではなく、人里離れた空間と個別のサービスでの絶対的な楽しみです。",
+    "ko": "수세기의 역사적 가치와 현대적인 럭셔리가 조화를 이루는 중부 지역에 오신 것을 환영합니다. 단순한 여행이 아닌, 한적한 공간과 맞춤형 서비스에서의 절대적인 즐거움을 선사합니다.",
+    "vi": "Chào mừng bạn đến với miền Trung, nơi những giá trị lịch sử hàng thế kỷ hòa quyện cùng sự sang trọng hiện đại. Đây không chỉ là một chuyến đi mà còn là sự tận hưởng tuyệt đối trong không gian tách biệt và dịch vụ được cá nhân hóa.",
+    "ms": "Mengalu-alukan anda ke wilayah Tengah, di mana nilai sejarah berkurun lamanya digabungkan dengan kemewahan moden. Ini bukan sekadar perjalanan, tetapi keseronokan mutlak dalam ruang terpencil dan perkhidmatan peribadi.",
+    "de": "Willkommen in der Zentralregion, wo jahrhundertealte historische Werte mit modernem Luxus verschmelzen. Dies ist nicht nur eine Reise, sondern ein absoluter Genuss in abgeschiedener Umgebung und persönlichem Service.",
+    "es": "Le damos la bienvenida a la región Central, donde los valores históricos centenarios se combinan con el lujo moderno. Esto no es sólo un viaje, sino un disfrute absoluto en un espacio apartado y un servicio personalizado.",
+    "it": "Benvenuto nella regione centrale, dove valori storici secolari si fondono con il lusso moderno. Questo non è solo un viaggio, ma un divertimento assoluto in uno spazio appartato e un servizio personalizzato.",
+    "ru": "Добро пожаловать в Центральный регион, где многовековые исторические ценности сочетаются с современной роскошью. Это не просто путешествие, а абсолютное наслаждение от уединенного пространства и индивидуального обслуживания.",
+    "nl": "Heten u welkom in de regio Centraal, waar eeuwenoude historische waarden samengaan met moderne luxe. Dit is niet zomaar een reis, maar absoluut genieten in een afgelegen ruimte en persoonlijke service.",
+    "pl": "Witamy Państwa w Regionie Centralnym, gdzie wielowiekowe wartości historyczne łączą się z nowoczesnym luksusem. To nie tylko wycieczka, ale absolutna przyjemność w zacisznej przestrzeni i spersonalizowana obsługa.",
+    "da": "Byder dig velkommen til den centrale region, hvor århundreder gamle historiske værdier blandes med moderne luksus. Dette er ikke bare en tur, men absolut nydelse i afsondret rum og personlig service.",
+    "sv": "Välkommen till den centrala regionen, där månghundraåriga historiska värden blandas med modern lyx. Detta är inte bara en resa, utan absolut njutning i avskilt utrymme och personlig service.",
+    "no": "Velkommen til den sentrale regionen, hvor århundregamle historiske verdier blandes med moderne luksus. Dette er ikke bare en tur, men absolutt nytelse i avsidesliggende rom og personlig service."
+  },
+  "destinations": [
+    "vietnam"
+  ],
+  "styles": [
+    "grand-expeditions",
+    "beach",
+    "culture",
+    "family",
+    "gastronomic-experiences",
+    "luxury"
+  ],
+  "seasonality_start_month": "apr",
+  "seasonality_end_month": "oct",
+  "priority": 97,
+  "image": "/public/v1/tour-images/tour_16531bfc-a60f-4128-9abe-2eada1f2d7d8/tour_16531bfc-a60f-4128-9abe-2eada1f2d7d8.webp",
+  "created_at": "2026-04-06T02:54:41.519Z",
+  "updated_at": "2026-04-09T08:29:51.014Z"
+}

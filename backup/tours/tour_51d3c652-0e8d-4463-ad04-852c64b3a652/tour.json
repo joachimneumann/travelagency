@@ -1,0 +1,58 @@
+{
+  "id": "tour_51d3c652-0e8d-4463-ad04-852c64b3a652",
+  "title": {
+    "en": "Hanoi, Sapa, Ha Long Bay, Ninh Binh",
+    "ar": "هانوي، سابا، خليج ها لونج، نينه بينه",
+    "fr": "Hanoï, Sapa, Baie d'Ha Long, Ninh Binh",
+    "zh": "河内、沙巴、下龙湾、宁平",
+    "ja": "ハノイ、サパ、ハロン湾、ニンビン",
+    "ko": "하노이, 사파, 하롱베이, 닌빈",
+    "vi": "Hà Nội, Sapa, Vịnh Hạ Long, Ninh Bình",
+    "ms": "Hanoi, Sapa, Teluk Ha Long, Ninh Binh",
+    "de": "Hanoi, Sapa, Halong-Bucht, Ninh Binh",
+    "es": "Hanoi, Sapa, Bahía de Ha Long, Ninh Binh",
+    "it": "Hanoi, Sapa, Baia di Ha Long, Ninh Binh",
+    "ru": "Ханой, Сапа, залив Халонг, Нинь Бинь",
+    "nl": "Hanoi, Sapa, Ha Longbaai, Ninh Binh",
+    "pl": "Hanoi, Sapa, Zatoka Ha Long, Ninh Binh",
+    "da": "Hanoi, Sapa, Ha Long Bay, Ninh Binh",
+    "sv": "Hanoi, Sapa, Ha Long Bay, Ninh Binh",
+    "no": "Hanoi, Sapa, Ha Long Bay, Ninh Binh"
+  },
+  "short_description": {
+    "en": "The journey takes you from the thousand-year-old capital of Hanoi with the ancient features of its 36 streets to misty Sapa, where there is the majestic Fansipan peak and stretching terraced fields. Next is the world's natural wonder Ha Long Bay with thousands of magical limestone islands in the blue sea and Ninh Binh, which is known as \"Ha Long on land\" with the charming landscape complex of Trang An.",
+    "ar": "تأخذك الرحلة من العاصمة هانوي التي يبلغ عمرها ألف عام مع المعالم القديمة لشوارعها الـ 36 إلى سابا الضبابية، حيث توجد قمة فانسيبان المهيبة والحقول الممتدة. التالي هو خليج ها لونج، أعجوبة العالم الطبيعية مع الآلاف من جزر الحجر الجيري السحرية في البحر الأزرق ونينه بينه، والتي تُعرف باسم \"ها لونج على الأرض\" مع مجمع المناظر الطبيعية الساحر في ترانج آن.",
+    "fr": "Le voyage vous emmène de la capitale millénaire de Hanoi avec les caractéristiques anciennes de ses 36 rues jusqu'à Sapa brumeuse, où se trouvent le majestueux pic Fansipan et ses champs en terrasses qui s'étendent. Viennent ensuite la merveille naturelle du monde, la baie d'Ha Long, avec des milliers d'îles calcaires magiques dans la mer bleue, et Ninh Binh, connue sous le nom de « Ha Long sur terre », avec le charmant complexe paysager de Trang An.",
+    "zh": "旅程将带您从拥有36条街道的千年古都河内，前往云雾缭绕的沙巴，那里有雄伟的番西邦峰和绵延的梯田。接下来是世界自然奇观下龙湾，蔚蓝的大海中拥有数千个神奇的石灰岩岛屿，还有素有“陆上下龙”之称的宁平，拥有长安迷人的风景群。",
+    "ja": "この旅では、36 の通りの古代の面影が残る千年の首都ハノイから、雄大なファンシーパン峰と広がる段々畑がある霧深いサパまで連れて行きます。次に、青い海に浮かぶ何千もの魔法のような石灰岩の島々がある世界の自然の驚異ハロン湾と、チャンアンの魅力的な景観複合体を持つ「陸のハロン」として知られるニンビンです。",
+    "ko": "이 여행은 36개 거리의 고대 특징을 지닌 천년의 수도 하노이에서 장엄한 판시판 봉우리와 펼쳐진 계단식 들판이 있는 안개가 자욱한 사파까지 이동합니다. 다음은 푸른 바다에 수천 개의 마법 같은 석회암 섬이 있는 세계 자연의 경이로움을 선사하는 하롱베이와 짱안(Trang An)의 매력적인 조경 단지가 있어 '육지의 하롱'으로 알려진 닌빈(Ninh Binh)입니다.",
+    "vi": "Hành trình sẽ đưa bạn từ thủ đô ngàn năm tuổi của Hà Nội với nét cổ kính với 36 phố phường đến Sapa mù sương, nơi có đỉnh Phanxipan hùng vĩ và những thửa ruộng bậc thang trải dài. Tiếp theo là kỳ quan thiên nhiên thế giới Vịnh Hạ Long với hàng nghìn đảo đá vôi huyền ảo giữa biển xanh và Ninh Bình nơi được mệnh danh là “Hạ Long trên cạn” với quần thể danh thắng Tràng An hữu tình.",
+    "ms": "Perjalanan membawa anda dari ibu kota Hanoi yang berusia ribuan tahun dengan ciri-ciri kuno 36 jalannya ke Sapa yang berkabus, di mana terdapat puncak Fansipan yang megah dan padang teres yang terbentang. Seterusnya ialah keajaiban alam semula jadi dunia Teluk Ha Long dengan beribu-ribu pulau batu kapur ajaib di laut biru dan Ninh Binh, yang dikenali sebagai \"Ha Long di darat\" dengan kompleks landskap Trang An yang menawan.",
+    "de": "Die Reise führt Sie von der tausend Jahre alten Hauptstadt Hanoi mit den antiken Merkmalen ihrer 36 Straßen ins neblige Sapa, wo sich der majestätische Fansipan-Gipfel und ausgedehnte Terrassenfelder befinden. Als nächstes folgt das Weltnaturwunder Ha Long Bay mit Tausenden magischen Kalksteininseln im blauen Meer und Ninh Binh, das als „Ha Long an Land“ bekannt ist, mit dem bezaubernden Landschaftskomplex von Trang An.",
+    "es": "El viaje le llevará desde la capital milenaria de Hanoi, con las características antiguas de sus 36 calles, hasta la brumosa Sapa, donde se encuentra el majestuoso pico Fansipan y extensos campos en terrazas. A continuación se encuentra la maravilla natural del mundo, la Bahía de Ha Long, con miles de mágicas islas de piedra caliza en el mar azul, y Ninh Binh, conocida como \"Ha Long en tierra\", con el encantador complejo paisajístico de Trang An.",
+    "it": "Il viaggio ti porta dalla millenaria capitale Hanoi con le antiche caratteristiche delle sue 36 strade alla nebbiosa Sapa, dove si trova il maestoso picco Fansipan e si estendono campi terrazzati. La prossima è la meraviglia naturale del mondo, la Baia di Ha Long, con migliaia di magiche isole calcaree nel mare blu e Ninh Binh, conosciuta come \"Ha Long sulla terraferma\" con l'incantevole complesso paesaggistico di Trang An.",
+    "ru": "Путешествие приведет вас из тысячелетней столицы Ханоя с древними чертами ее 36 улиц в туманную Сапу, где находится величественный пик Фансипан и простирающиеся террасные поля. Далее следует природное чудо света — залив Халонг с тысячами волшебных известняковых островов в синем море и Ниньбинь, известный как «Халонг на суше», с очаровательным ландшафтным комплексом Транг Ан.",
+    "nl": "De reis brengt je van de duizend jaar oude hoofdstad Hanoi met de eeuwenoude kenmerken van zijn 36 straten naar het mistige Sapa, waar de majestueuze Fansipan-piek en uitgestrekte terrasvelden te vinden zijn. Het volgende is 's werelds natuurwonder Ha Long Bay met duizenden magische kalkstenen eilanden in de blauwe zee en Ninh Binh, dat bekend staat als \"Ha Long op het land\" met het charmante landschapscomplex van Trang An.",
+    "pl": "Podróż zabierze Cię z tysiącletniej stolicy Hanoi ze starożytnymi 36 ulicami do mglistej Sapa, gdzie znajduje się majestatyczny szczyt Fansipan i rozciągające się tarasowo pola. Dalej znajduje się cud natury na świecie Zatoka Ha Long z tysiącami magicznych wapiennych wysp na błękitnym morzu oraz Ninh Binh, znane jako „Ha Long na lądzie” z uroczym kompleksem krajobrazowym Trang An.",
+    "da": "Rejsen tager dig fra den tusind år gamle hovedstad i Hanoi med de ældgamle træk ved dens 36 gader til diset Sapa, hvor der er den majestætiske Fansipan-top og strækker terrassemarker. Dernæst er verdens naturlige vidunder Ha Long Bay med tusindvis af magiske kalkstensøer i det blå hav og Ninh Binh, der er kendt som \"Ha Long på land\" med det charmerende landskabskompleks Trang An.",
+    "sv": "Resan tar dig från den tusenåriga huvudstaden Hanoi med de uråldriga kännetecknen av dess 36 gator till dimmiga Sapa, där det finns den majestätiska Fansipan-toppen och utsträckta terrasserade fält. Nästa är världens naturliga under Ha Long Bay med tusentals magiska kalkstensöar i det blå havet och Ninh Binh, som är känt som \"Ha Long på land\" med det charmiga landskapskomplexet Trang An.",
+    "no": "Reisen tar deg fra den tusen år gamle hovedstaden i Hanoi med de eldgamle egenskapene til sine 36 gater til tåkete Sapa, hvor det er den majestetiske Fansipan-toppen og utstrakte terrassemarker. Neste er verdens naturlige vidunder Ha Long Bay med tusenvis av magiske kalksteinsøyer i det blå havet og Ninh Binh, som er kjent som «Ha Long på land» med det sjarmerende landskapskomplekset Trang An."
+  },
+  "destinations": [
+    "vietnam"
+  ],
+  "styles": [
+    "grand-expeditions",
+    "beach",
+    "culture",
+    "family",
+    "gastronomic-experiences",
+    "luxury"
+  ],
+  "seasonality_start_month": "apr",
+  "seasonality_end_month": "sep",
+  "priority": 100,
+  "image": "/public/v1/tour-images/tour_51d3c652-0e8d-4463-ad04-852c64b3a652/tour_51d3c652-0e8d-4463-ad04-852c64b3a652.webp",
+  "created_at": "2026-04-09T03:37:52.367Z",
+  "updated_at": "2026-04-09T08:31:42.651Z"
+}
