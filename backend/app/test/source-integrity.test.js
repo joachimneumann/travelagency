@@ -1067,6 +1067,11 @@ test("travel plan images cap inline previews and open in a full-size modal", asy
   );
   assert.match(
     travelPlanImagesSource,
+    /class="travel-plan-images__hero-remove"[\s\S]*data-travel-plan-remove-image="[^"]*"[\s\S]*data-travel-plan-day-id="[^"]*"[\s\S]*data-travel-plan-service-id="[^"]*"[\s\S]*data-requires-clean-state/,
+    "Travel plan services should render a clean-state-gated remove action directly on the hero image frame"
+  );
+  assert.match(
+    travelPlanImagesSource,
     /function openTravelPlanImagePreview\(src, alt = ""\)[\s\S]*modal\.hidden = false;[\s\S]*function bindTravelPlanImagePreviewModal\(\)[\s\S]*event\.preventDefault\(\);[\s\S]*event\.stopPropagation\(\);/,
     "The travel plan image module should manage opening and closing the preview modal"
   );
@@ -1077,13 +1082,13 @@ test("travel plan images cap inline previews and open in a full-size modal", asy
   );
   assert.match(
     travelPlanStyles,
-    /\.travel-plan-images__hero-button \{[\s\S]*width: min\(100%, 18rem\);[\s\S]*aspect-ratio: 1 \/ 1;[\s\S]*\.travel-plan-images__hero-image \{[\s\S]*width: 100%;[\s\S]*height: 100%;[\s\S]*object-fit: contain;/,
+    /\.travel-plan-images__hero-frame \{[\s\S]*width: min\(100%, 18rem\);[\s\S]*\.travel-plan-images__hero-button \{[\s\S]*width: 100%;[\s\S]*aspect-ratio: 1 \/ 1;[\s\S]*\.travel-plan-images__hero-image \{[\s\S]*width: 100%;[\s\S]*height: 100%;[\s\S]*object-fit: contain;/,
     "The travel plan hero image should use a single fixed frame and contain-fit the uploaded image without cropping"
   );
   assert.doesNotMatch(
     travelPlanImagesSource,
-    /travel-plan-images__list|travel-plan-image-card__preview|data-travel-plan-remove-image/,
-    "Travel plan services should no longer render a duplicate image card, primary badge row, or delete button beneath the hero image"
+    /travel-plan-images__list|travel-plan-image-card__preview/,
+    "Travel plan services should no longer render a duplicate image card or primary badge row beneath the hero image"
   );
   assert.match(
     travelPlanStyles,
@@ -1960,7 +1965,7 @@ test("generated offer actions are gated behind a clean page state", async () => 
   );
 });
 
-test("persons and travel plan editors no longer autosave from local interactions", async () => {
+test("persons and travel plan editors no longer autosave from local interactions while service image changes use clean-state mutations", async () => {
   const personsModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "persons.js");
   const travelPlanModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan.js");
   const travelPlanImagesModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan_images.js");
@@ -1978,20 +1983,20 @@ test("persons and travel plan editors no longer autosave from local interactions
     /createQueuedAutosaveController|scheduleTravelPlanAutosave/,
     "Travel plan edits should stay local until the page save bar is used"
   );
-  assert.doesNotMatch(
+  assert.match(
     travelPlanImagesSource,
-    /bookingTravelPlanServiceImageDeleteRequest/,
-    "Travel plan image removal should stay in the local draft until the page save bar is used"
+    /bookingTravelPlanServiceImageDeleteRequest[\s\S]*function removeTravelPlanServiceImage\(dayId, itemId, imageId\)\s*\{[\s\S]*ensureTravelPlanReadyForMutation\(\)[\s\S]*bookingTravelPlanServiceImageDeleteRequest\([\s\S]*applyTravelPlanMutationBooking\(result\.booking,\s*\{\s*preserveCollapsedState:\s*true\s*\}\)[\s\S]*loadActivities\(\)/,
+    "Removing a travel plan image should use the dedicated delete endpoint, refresh persisted booking state, and keep the editor collapse state stable"
   );
   assert.match(
     travelPlanImagesSource,
-    /function removeTravelPlanServiceImage\(dayId, itemId, imageId\)\s*\{[\s\S]*syncTravelPlanDraftFromDom\?\.\(\);[\s\S]*item\.image = null;[\s\S]*renderTravelPlanPanel\?\.\(\);/,
-    "Removing a travel plan image should mutate the local draft and rerender instead of persisting immediately"
+    /bookingTravelPlanServiceImageUploadRequest[\s\S]*applyTravelPlanMutationBooking\(result\.booking,\s*\{\s*preserveCollapsedState:\s*true\s*\}\)/,
+    "Uploading a travel plan image should also preserve the current service collapse state"
   );
-  assert.doesNotMatch(
+  assert.match(
     travelPlanImagesSource,
     /data-travel-plan-remove-image="\$\{escapeHtml\(image\.id\)\}"[\s\S]*data-requires-clean-state/,
-    "Travel plan image removal should remain available while the page has other unsaved edits"
+    "Travel plan image removal should be blocked while the page has other unsaved edits"
   );
 });
 

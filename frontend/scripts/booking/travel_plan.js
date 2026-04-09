@@ -112,12 +112,12 @@ export function createBookingTravelPlanModule(ctx) {
     return raw.replace(/["\\]/g, "\\$&");
   }
 
-  function applyTravelPlanMutationBooking(booking) {
+  function applyTravelPlanMutationBooking(booking, options = {}) {
     if (!booking) return;
     state.booking = booking;
     renderBookingHeader();
     renderBookingData();
-    applyBookingPayload();
+    applyBookingPayload(options);
     renderTravelPlanPanel();
   }
 
@@ -387,14 +387,31 @@ export function createBookingTravelPlanModule(ctx) {
     return true;
   }
 
-  function applyBookingPayload() {
+  function applyBookingPayload({ preserveCollapsedState = false } = {}) {
+    const previousCollapsedServiceIds = preserveCollapsedState && state.travelPlanCollapsedServiceIds instanceof Set
+      ? new Set(state.travelPlanCollapsedServiceIds)
+      : null;
+    const previousCollapsedDayIds = preserveCollapsedState && state.travelPlanCollapsedDayIds instanceof Set
+      ? new Set(state.travelPlanCollapsedDayIds)
+      : null;
     state.travelPlanDraft = normalizeTravelPlanState(state.booking?.travel_plan || createEmptyTravelPlan());
-    state.travelPlanCollapsedServiceIds = new Set(
-      (Array.isArray(state.travelPlanDraft?.days) ? state.travelPlanDraft.days : [])
-        .flatMap((day) => (Array.isArray(day?.services) ? day.services : []))
-        .map((item) => String(item?.id || "").trim())
-        .filter(Boolean)
-    );
+    const activeServiceIds = (
+      Array.isArray(state.travelPlanDraft?.days) ? state.travelPlanDraft.days : []
+    )
+      .flatMap((day) => (Array.isArray(day?.services) ? day.services : []))
+      .map((item) => String(item?.id || "").trim())
+      .filter(Boolean);
+    state.travelPlanCollapsedServiceIds = previousCollapsedServiceIds
+      ? new Set(activeServiceIds.filter((itemId) => previousCollapsedServiceIds.has(itemId)))
+      : new Set(activeServiceIds);
+    const activeDayIds = (
+      Array.isArray(state.travelPlanDraft?.days) ? state.travelPlanDraft.days : []
+    )
+      .map((day) => String(day?.id || "").trim())
+      .filter(Boolean);
+    state.travelPlanCollapsedDayIds = previousCollapsedDayIds
+      ? new Set(activeDayIds.filter((dayId) => previousCollapsedDayIds.has(dayId)))
+      : new Set(activeDayIds);
     state.originalTravelPlanState = normalizeTravelPlanState(state.travelPlanDraft);
     state.originalTravelPlanSnapshot = JSON.stringify(state.originalTravelPlanState);
     setTravelPlanDirty(false, null);

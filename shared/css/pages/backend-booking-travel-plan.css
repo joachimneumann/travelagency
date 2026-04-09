@@ -1020,6 +1020,12 @@
   gap: 0.8rem;
 }
 
+.travel-plan-images__hero-frame {
+  position: relative;
+  justify-self: end;
+  width: min(100%, 18rem);
+}
+
 .travel-plan-images__hero-button {
   appearance: none;
   border: 1px solid var(--line);
@@ -1031,11 +1037,21 @@
   position: relative;
   overflow: hidden;
   border-radius: 1rem;
-  justify-self: end;
-  width: min(100%, 18rem);
+  width: 100%;
   aspect-ratio: 1 / 1;
   display: grid;
   place-items: center;
+}
+
+.travel-plan-images__hero-static {
+  border: 1px solid var(--line);
+  background: var(--surface-muted);
+  border-radius: 1rem;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
 }
 
 .travel-plan-images__hero-button::before,
@@ -1093,6 +1109,34 @@
   box-sizing: border-box;
   display: block;
   pointer-events: none;
+}
+
+.travel-plan-images__hero-remove {
+  position: absolute;
+  top: 0.7rem;
+  right: 0.7rem;
+  z-index: 1;
+  border: 1px solid color-mix(in srgb, var(--text-black) 14%, transparent);
+  background: color-mix(in srgb, var(--surface) 94%, transparent);
+  color: var(--text-strong);
+  border-radius: 999px;
+  min-height: 2rem;
+  padding: 0.25rem 0.7rem;
+  font-size: 0.9rem;
+  font-weight: var(--font-weight-semibold);
+  line-height: 1;
+  cursor: pointer;
+}
+
+.travel-plan-images__hero-remove:hover,
+.travel-plan-images__hero-remove:focus-visible {
+  background: var(--surface);
+  border-color: var(--focus-ring);
+}
+
+.travel-plan-images__hero-remove:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
 }
 
 .travel-plan-images__head {
@@ -1400,8 +1444,12 @@
     width: 100%;
   }
 
-  .travel-plan-images__hero-button {
+  .travel-plan-images__hero-frame {
     justify-self: stretch;
+    width: 100%;
+  }
+
+  .travel-plan-images__hero-button {
     width: 100%;
   }
 

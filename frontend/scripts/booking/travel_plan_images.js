@@ -1,4 +1,5 @@
 import {
+  bookingTravelPlanServiceImageDeleteRequest,
   bookingTravelPlanServiceImageUploadRequest
 } from "../../Generated/API/generated_APIRequestFactory.js";
 import { bookingT } from "./i18n.js";
@@ -33,11 +34,8 @@ export function createBookingTravelPlanImagesModule(deps) {
     getBookingRevision,
     escapeHtml,
     ensureTravelPlanReadyForMutation,
-    finalizeTravelPlanMutation,
     findDraftItem,
-    syncTravelPlanDraftFromDom,
     applyTravelPlanMutationBooking,
-    renderTravelPlanPanel,
     loadActivities,
     travelPlanStatus
   } = deps;
@@ -72,21 +70,34 @@ export function createBookingTravelPlanImagesModule(deps) {
       : bookingT("booking.travel_plan.add_picture", "Add picture");
     const heroMedia = editable
       ? `
-        <button
-          class="travel-plan-images__hero-button"
-          data-travel-plan-add-image="${escapeHtml(item.id)}"
-          data-travel-plan-day-id="${escapeHtml(day.id)}"
-          data-requires-clean-state
-          type="button"
-          aria-label="${escapeHtml(changePictureLabel)}"
-        >
-          <img
-            class="travel-plan-images__hero-image"
-            src="${escapeHtml(primaryPreviewSrc)}"
-            alt="${escapeHtml(primaryPreviewAlt)}"
-            loading="lazy"
-          />
-        </button>
+        <div class="travel-plan-images__hero-frame">
+          <button
+            class="travel-plan-images__hero-button"
+            data-travel-plan-add-image="${escapeHtml(item.id)}"
+            data-travel-plan-day-id="${escapeHtml(day.id)}"
+            data-requires-clean-state
+            type="button"
+            aria-label="${escapeHtml(changePictureLabel)}"
+          >
+            <img
+              class="travel-plan-images__hero-image"
+              src="${escapeHtml(primaryPreviewSrc)}"
+              alt="${escapeHtml(primaryPreviewAlt)}"
+              loading="lazy"
+            />
+          </button>
+          ${image ? `
+            <button
+              class="travel-plan-images__hero-remove"
+              data-travel-plan-remove-image="${escapeHtml(image.id)}"
+              data-travel-plan-day-id="${escapeHtml(day.id)}"
+              data-travel-plan-service-id="${escapeHtml(item.id)}"
+              data-requires-clean-state
+              type="button"
+              aria-label="${escapeHtml(bookingT("common.remove", "Remove"))}"
+            >${escapeHtml(bookingT("common.remove", "Remove"))}</button>
+          ` : ""}
+        </div>
       `
       : `
         <div class="travel-plan-images__hero-static" aria-label="${escapeHtml(primaryPreviewAlt)}">
@@ -149,22 +160,37 @@ export function createBookingTravelPlanImagesModule(deps) {
       body: request.body
     });
     if (!result?.booking) return;
-    applyTravelPlanMutationBooking(result.booking);
+    applyTravelPlanMutationBooking(result.booking, { preserveCollapsedState: true });
     await loadActivities();
     travelPlanStatus(bookingT("booking.travel_plan.image_uploaded", "Image uploaded."), "success");
   }
 
-  function removeTravelPlanServiceImage(dayId, itemId, imageId) {
-    if (!state.permissions.canEditBooking) return;
-    syncTravelPlanDraftFromDom?.();
+  async function removeTravelPlanServiceImage(dayId, itemId, imageId) {
+    if (!state.permissions.canEditBooking || !dayId || !itemId || !imageId) return;
     const item = findDraftItem(dayId, itemId);
-    const currentImage = item?.image && typeof item.image === "object" && !Array.isArray(item.image)
-      ? item.image
-      : null;
+    const currentImage = resolveCurrentItemImage(item);
     if (!item || !currentImage || currentImage.id !== imageId) return;
-    item.image = null;
-    travelPlanStatus("");
-    renderTravelPlanPanel?.();
+    if (!(await ensureTravelPlanReadyForMutation())) return;
+    travelPlanStatus(bookingT("booking.travel_plan.removing_image", "Removing image..."), "info");
+    const request = bookingTravelPlanServiceImageDeleteRequest({
+      baseURL: apiOrigin,
+      params: {
+        booking_id: state.booking.id,
+        day_id: dayId,
+        service_id: itemId
+      },
+      body: {
+        expected_travel_plan_revision: getBookingRevision("travel_plan_revision")
+      }
+    });
+    const result = await fetchBookingMutation(request.url, {
+      method: request.method,
+      body: request.body
+    });
+    if (!result?.booking) return;
+    applyTravelPlanMutationBooking(result.booking, { preserveCollapsedState: true });
+    await loadActivities();
+    travelPlanStatus(bookingT("booking.travel_plan.image_removed", "Image removed."), "success");
   }
 
   function openTravelPlanImagePreview(src, alt = "") {
