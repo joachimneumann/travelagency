@@ -4224,6 +4224,10 @@ textarea:focus-visible {
   gap: 0.32rem;
 }
 
+.tour-localized-group--content .tour-localized-group__row + .tour-localized-group__row {
+  padding-top: 1.5lh;
+}
+
 .tour-localized-content__field label {
   margin: 0;
 }

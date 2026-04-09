@@ -355,7 +355,6 @@ function renderLocalizedTourContentEditor() {
         <div class="tour-localized-group__field">
           <div class="tour-localized-content">
             <div class="tour-localized-content__field">
-              <label class="field-label" for="${escapeHtml(titleId)}">${escapeHtml(backendT("backend.table.title", "Title"))}</label>
               <input
                 class="tour-localized-content__title"
                 id="${escapeHtml(titleId)}"
@@ -368,7 +367,6 @@ function renderLocalizedTourContentEditor() {
               />
             </div>
             <div class="tour-localized-content__field">
-              <label class="field-label" for="${escapeHtml(descriptionId)}">${escapeHtml(backendT("tour.description_label", "Web Site Tour Description"))}</label>
               <textarea
                 class="tour-localized-content__description"
                 id="${escapeHtml(descriptionId)}"
