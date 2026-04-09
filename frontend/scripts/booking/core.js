@@ -300,6 +300,12 @@ const OFFER_CANCELLATION_POLICY_SECTIONS = Object.freeze([
   })
 ]);
 
+function offerCancellationPolicyHeadingLabel(section) {
+  return String(section?.heading || "")
+    .replace(/^For\s+/u, "")
+    .replace(/:\s*$/u, "");
+}
+
 function normalizePdfPersonalization(value) {
   const raw = value && typeof value === "object" && !Array.isArray(value) ? value : {};
   const travelPlan = raw.travel_plan && typeof raw.travel_plan === "object" && !Array.isArray(raw.travel_plan) ? raw.travel_plan : {};
@@ -781,8 +787,13 @@ export function createBookingCoreModule(ctx) {
     if (!section) {
       return `<div class="booking-pdf-panel__policy-section">${escapeHtml("Set traveler count to show the applicable cancellation policy section.")}</div>`;
     }
+    const title = bookingT(
+      "booking.pdf.offer.cancellation_policy_preview_title",
+      "Cancellation policy ({travelerRange})",
+      { travelerRange: offerCancellationPolicyHeadingLabel(section) }
+    );
     return `<div class="booking-pdf-panel__policy-section">`
-      + `<strong>${escapeHtml(section.heading)}</strong><br />`
+      + `<strong>${escapeHtml(title)}</strong><br />`
       + `${section.lines.map((line) => escapeHtml(line)).join("<br />")}`
       + `</div>`;
   }

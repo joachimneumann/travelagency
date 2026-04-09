@@ -1375,8 +1375,8 @@ test("offer PDF personalization exposes a cancellation-policy toggle and renders
   );
   assert.match(
     offerPdfSource,
-    /resolveOfferCancellationPolicyTravelerCount[\s\S]*resolveOfferCancellationPolicySection[\s\S]*resolveOfferCancellationPolicyText[\s\S]*pdfT\(lang, "offer\.cancellation_policy_title", "Cancellation policy"\)[\s\S]*cancellationPolicyText[\s\S]*buildClosingBody/s,
-    "offer_pdf.js should derive one cancellation-policy section from traveler count and render it before the closing body"
+    /resolveOfferCancellationPolicyTravelerCount[\s\S]*resolveOfferCancellationPolicySection[\s\S]*resolveOfferCancellationPolicyTitle[\s\S]*pdfT\(lang, "offer\.cancellation_policy_title", "Cancellation policy"\)[\s\S]*resolveOfferCancellationPolicyText[\s\S]*cancellationPolicyTitle[\s\S]*cancellationPolicyText[\s\S]*buildClosingBody/s,
+    "offer_pdf.js should derive one cancellation-policy section from traveler count, build a combined title, and render it before the closing body"
   );
 });
 
@@ -3115,6 +3115,7 @@ test("travel plan templates are wired through backend navigation, routes, and bo
   const navPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "shared", "nav.js");
   const pagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "standard-travel-plans.html");
   const pageScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "standard_travel_plans.js");
+  const detailScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "standard_travel_plan.js");
   const bookingLibraryPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan_service_library.js");
   const bookingTravelPlanPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan.js");
   const routesPath = path.resolve(__dirname, "..", "..", "..", "backend", "app", "src", "http", "routes.js");
@@ -3124,6 +3125,7 @@ test("travel plan templates are wired through backend navigation, routes, and bo
     navSource,
     pageSource,
     pageScriptSource,
+    detailScriptSource,
     bookingLibrarySource,
     bookingTravelPlanSource,
     routesSource,
@@ -3133,6 +3135,7 @@ test("travel plan templates are wired through backend navigation, routes, and bo
     readFile(navPath, "utf8"),
     readFile(pagePath, "utf8"),
     readFile(pageScriptPath, "utf8"),
+    readFile(detailScriptPath, "utf8"),
     readFile(bookingLibraryPath, "utf8"),
     readFile(bookingTravelPlanPath, "utf8"),
     readFile(routesPath, "utf8"),
@@ -3141,9 +3144,12 @@ test("travel plan templates are wired through backend navigation, routes, and bo
   ]);
 
   assert.match(navSource, /standard-travel-plans\.html/, "Backend nav should link to the dedicated standard travel plans page");
+  assert.match(navSource, /const canReadStandardTravelPlans = hasAnyRole\(resolvedRoles, "atp_tour_editor"\);/, "Backend nav should only show standard travel plans to atp_tour_editor users");
   assert.match(pageSource, /id="standardTravelPlansTable"/, "The standard travel plans page should expose the templates table");
   assert.match(pageScriptSource, /\/api\/v1\/travel-plan-templates/, "The standard travel plans page should load templates from the dedicated backend endpoint");
   assert.match(pageScriptSource, /const DESTINATION_COUNTRY_CODES = Object\.freeze\(\["VN", "TH", "KH", "LA"\]\)/, "The standard travel plans UI should limit destinations to the four supported country codes");
+  assert.match(pageScriptSource, /expectedRolesAnyOf:\s*\[ROLES\.TOUR_EDITOR\]/, "The standard travel plans list page should require the atp_tour_editor role");
+  assert.match(detailScriptSource, /expectedRolesAnyOf:\s*\[ROLES\.TOUR_EDITOR\]/, "The standard travel plan detail page should require the atp_tour_editor role");
   assert.match(bookingLibrarySource, /bookingTravelPlanTemplateApplyRequest/, "The booking travel-plan library should apply standard travel plans through the dedicated endpoint");
   assert.doesNotMatch(bookingLibrarySource, /status:\s*"published"/, "The booking travel-plan library should not filter standard travel plans by status");
   assert.match(bookingTravelPlanSource, /data-travel-plan-open-template-import/, "The booking travel-plan footer should expose a standard travel plan action");
@@ -3280,4 +3286,61 @@ test("offer exchange paths do not keep temporary debug logging", async () => {
 
   assert.doesNotMatch(pricingSource, /\[offer-exchange-debug\]/, "frontend offer exchange debug logs should be removed");
   assert.doesNotMatch(financeSource, /\[offer-exchange-debug backend\]/, "backend offer exchange debug logs should be removed");
+});
+
+test("website backend login goes directly to auth login instead of logout-to-login chaining", async () => {
+  const mainPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "main.js");
+  const mainSource = await readFile(mainPath, "utf8");
+
+  assert.match(
+    mainSource,
+    /const loginUrl = `\$\{API_BASE_ORIGIN\}\/auth\/login\?\$\{loginParams\.toString\(\)\}`[\s\S]*window\.location\.href = loginUrl;/,
+    "website backend login should navigate straight to auth/login with prompt=login"
+  );
+  assert.doesNotMatch(
+    mainSource,
+    /auth\/logout\?return_to=.*auth\/login/,
+    "website backend login should not chain through auth/logout before auth/login"
+  );
+});
+
+test("backend auth normalizes token roles and derives callback URLs from the active request origin", async () => {
+  const authPath = path.resolve(__dirname, "..", "src", "auth.js");
+  const authSource = await readFile(authPath, "utf8");
+
+  assert.match(
+    authSource,
+    /RETURN_TO_ALLOWED_ORIGINS \|\| `http:\/\/localhost:8080,http:\/\/127\.0\.0\.1:8080,http:\/\/localhost:\$\{port\},http:\/\/127\.0\.0\.1:\$\{port\}`/,
+    "auth.js should allow both localhost and 127.0.0.1 origins by default for local return_to values"
+  );
+  assert.match(
+    authSource,
+    /function resolveAuthRedirectUri\(req\)[\s\S]*new URL\("\/auth\/callback", requestOrigin\)\.toString\(\)/,
+    "auth.js should derive the auth callback URL from the current request origin"
+  );
+  assert.match(
+    authSource,
+    /authRequests\.set\(state,\s*\{[\s\S]*redirect_uri:\s*redirectUri[\s\S]*created_at:\s*Date\.now\(\)/,
+    "auth.js should persist the request-specific redirect URI in the auth request state"
+  );
+  assert.match(
+    authSource,
+    /redirect_uri:\s*normalizeText\(requestState\.redirect_uri\) \|\| cfg\.keycloakRedirectUri/,
+    "auth.js should use the stored request-specific redirect URI during the token exchange"
+  );
+  assert.match(
+    authSource,
+    /\.map\(\(role\) => normalizeText\(role\)\.toLowerCase\(\)\)/,
+    "auth.js should normalize live token role names before permission checks"
+  );
+  assert.match(
+    authSource,
+    /function normalizeLogoutReturnTo\(value\)[\s\S]*isRootLikePath\(parsedRaw\.pathname\)[\s\S]*isRootLikePath\(parsedConfigured\.pathname\)[\s\S]*return configured;/,
+    "auth.js should normalize root and index.html logout return URLs to the configured Keycloak post-logout redirect"
+  );
+  assert.match(
+    authSource,
+    /function sameLogoutOriginAlias\(left,\s*right\)[\s\S]*isLoopbackHost\(left\.hostname\)[\s\S]*isLoopbackHost\(right\.hostname\)/,
+    "auth.js should treat localhost and 127.0.0.1 as equivalent loopback origins for logout redirect normalization"
+  );
 });

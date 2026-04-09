@@ -62,6 +62,19 @@ booking has rumpf booking and more
 In the travel plan PDF configuration, add a section "Cancellation policy" with a default value:
 
 
+in the payments sections, after the deposit has been received and this is confirmed, add a table with Deposit receipt PDFs and a button "create deposit confirmation PDF".
+
+The Deposit confirmation PDF shall contain:
+
+Payment Confirmation					
+This document confirms receipt of a deposit payment of $400.00.					
+					
+Thank you for your payment. AsiaTravelPlan looks forward to supporting you throughout your journey.					
+					
+AsiaTravelPlan				AsiaTravelPlan	
+Director's Signature				Tour Coordinator's Signature	
+					
+                    
 Cancellation policy
 ===================
 

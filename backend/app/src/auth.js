@@ -20,7 +20,7 @@ export function createAuth({ port }) {
     ),
     insecureTestAuth: parseBoolEnv("INSECURE_TEST_AUTH", false),
     returnToAllowedOrigins: new Set(
-      String(process.env.RETURN_TO_ALLOWED_ORIGINS || `http://localhost:8080,http://localhost:${port}`)
+      String(process.env.RETURN_TO_ALLOWED_ORIGINS || `http://localhost:8080,http://127.0.0.1:8080,http://localhost:${port},http://127.0.0.1:${port}`)
         .split(",")
         .map((value) => normalizeText(value))
         .filter(Boolean)
@@ -206,7 +206,11 @@ export function createAuth({ port }) {
       const shortName = raw.split("/").filter(Boolean).pop() || raw;
       return [raw, shortName];
     });
-    return Array.from(new Set([...realmRoles, ...clientRoles, ...mappedRoles, ...groupAliases])).filter(Boolean);
+    return Array.from(new Set(
+      [...realmRoles, ...clientRoles, ...mappedRoles, ...groupAliases]
+        .map((role) => normalizeText(role).toLowerCase())
+        .filter(Boolean)
+    ));
   }
 
   async function getKeycloakDiscovery() {
@@ -281,6 +285,67 @@ export function createAuth({ port }) {
     return fallback;
   }
 
+  function isRootLikePath(pathname) {
+    return pathname === "/" || pathname === "/index.html";
+  }
+
+  function isLoopbackHost(hostname) {
+    return hostname === "localhost" || hostname === "127.0.0.1";
+  }
+
+  function sameLogoutOriginAlias(left, right) {
+    if (left.origin === right.origin) return true;
+    return (
+      left.protocol === right.protocol &&
+      left.port === right.port &&
+      isLoopbackHost(left.hostname) &&
+      isLoopbackHost(right.hostname)
+    );
+  }
+
+  function normalizeLogoutReturnTo(value) {
+    const raw = normalizeText(value);
+    const configured = normalizeText(cfg.keycloakPostLogoutRedirectUri);
+    if (!raw) return configured || "/bookings.html";
+    if (!configured) return raw;
+
+    try {
+      const parsedRaw = new URL(raw, "http://localhost");
+      const parsedConfigured = new URL(configured, "http://localhost");
+      if (
+        sameLogoutOriginAlias(parsedRaw, parsedConfigured) &&
+        isRootLikePath(parsedRaw.pathname) &&
+        isRootLikePath(parsedConfigured.pathname) &&
+        !parsedRaw.search &&
+        !parsedRaw.hash
+      ) {
+        return configured;
+      }
+    } catch {
+      // Ignore and fall back to the validated caller-provided value.
+    }
+
+    return raw;
+  }
+
+  function getRequestOrigin(req) {
+    const forwardedProto = normalizeText(req.headers["x-forwarded-proto"]);
+    const proto = forwardedProto || (req.socket?.encrypted ? "https" : "http");
+    const host = normalizeText(req.headers["x-forwarded-host"] || req.headers.host);
+    if (!host) return "";
+    return `${proto}://${host}`;
+  }
+
+  function resolveAuthRedirectUri(req) {
+    const requestOrigin = getRequestOrigin(req);
+    if (!requestOrigin) return cfg.keycloakRedirectUri;
+    try {
+      return new URL("/auth/callback", requestOrigin).toString();
+    } catch {
+      return cfg.keycloakRedirectUri;
+    }
+  }
+
   function sendJson(res, status, payload) {
     res.writeHead(status, { "Content-Type": "application/json; charset=utf-8" });
     res.end(JSON.stringify(payload));
@@ -303,6 +368,7 @@ export function createAuth({ port }) {
     const quickLoginAllowedHost =
       requestHost === "staging.asiatravelplan.com" || requestHost === "localhost" || requestHost === "127.0.0.1";
     const returnTo = buildSafeReturnTo(requestUrl.searchParams.get("return_to"), "/bookings.html");
+    const redirectUri = resolveAuthRedirectUri(req);
     const quickLoginRequested =
       quickLoginAllowedHost && normalizeText(requestUrl.searchParams.get("quick_login")) === "1";
     const quickLoginUser = normalizeText(requestUrl.searchParams.get("quick_login_user")) || "joachim";
@@ -310,6 +376,7 @@ export function createAuth({ port }) {
     const state = randomUUID();
     authRequests.set(state, {
       return_to: returnTo,
+      redirect_uri: redirectUri,
       quick_login: quickLoginRequested,
       quick_login_user: quickLoginRequested ? quickLoginUser : undefined,
       created_at: Date.now()
@@ -320,7 +387,7 @@ export function createAuth({ port }) {
     authUrl.searchParams.set("client_id", cfg.keycloakClientId);
     authUrl.searchParams.set("response_type", "code");
     authUrl.searchParams.set("scope", "openid profile email");
-    authUrl.searchParams.set("redirect_uri", cfg.keycloakRedirectUri);
+    authUrl.searchParams.set("redirect_uri", redirectUri);
     authUrl.searchParams.set("state", state);
     if (quickLoginRequested) {
       authUrl.searchParams.set("quick_login", "1");
@@ -362,7 +429,7 @@ export function createAuth({ port }) {
     const body = new URLSearchParams({
       grant_type: "authorization_code",
       code,
-      redirect_uri: cfg.keycloakRedirectUri,
+      redirect_uri: normalizeText(requestState.redirect_uri) || cfg.keycloakRedirectUri,
       client_id: cfg.keycloakClientId,
       client_secret: cfg.keycloakClientSecret
     });
@@ -426,12 +493,13 @@ export function createAuth({ port }) {
     const session = getSessionFromRequest(req);
     const requestUrl = new URL(req.url, "http://localhost");
     const returnTo = buildSafeReturnTo(requestUrl.searchParams.get("return_to"), "/bookings.html");
+    const logoutReturnTo = normalizeLogoutReturnTo(returnTo);
     if (!cfg.keycloakEnabled) {
       if (session?.sid) {
         sessions.delete(session.sid);
       }
       clearSessionCookie(res);
-      redirect(res, returnTo);
+      redirect(res, logoutReturnTo);
       return;
     }
 
@@ -461,7 +529,7 @@ export function createAuth({ port }) {
       clearSessionCookie(res);
 
       if (!endSessionEndpoint) {
-        redirect(res, returnTo);
+        redirect(res, logoutReturnTo);
         return;
       }
 
@@ -472,7 +540,7 @@ export function createAuth({ port }) {
       logoutUrl.searchParams.set("client_id", cfg.keycloakClientId);
       logoutUrl.searchParams.set(
         "post_logout_redirect_uri",
-        returnTo || cfg.keycloakPostLogoutRedirectUri || "/bookings.html"
+        logoutReturnTo || cfg.keycloakPostLogoutRedirectUri || "/bookings.html"
       );
       redirect(res, logoutUrl.toString());
       return;
@@ -481,7 +549,7 @@ export function createAuth({ port }) {
         sessions.delete(session.sid);
       }
       clearSessionCookie(res);
-      redirect(res, returnTo);
+      redirect(res, logoutReturnTo);
     }
   }
 

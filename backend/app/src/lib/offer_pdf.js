@@ -2224,14 +2224,31 @@ function resolveOfferCancellationPolicySection(booking) {
   )) || null;
 }
 
+function resolveOfferCancellationPolicyHeadingLabel(section) {
+  return String(section?.heading || "")
+    .replace(/^For\s+/u, "")
+    .replace(/:\s*$/u, "");
+}
+
+function resolveOfferCancellationPolicyTitle(lang, booking) {
+  const section = resolveOfferCancellationPolicySection(booking);
+  const title = pdfT(lang, "offer.cancellation_policy_title", "Cancellation policy");
+  if (!section) return title;
+  return `${title} (${resolveOfferCancellationPolicyHeadingLabel(section)})`;
+}
+
 function resolveOfferCancellationPolicyText(booking) {
   const section = resolveOfferCancellationPolicySection(booking);
   if (!section) return "";
-  return `${section.heading}\n${section.lines.join("\n")}`;
+  return section.lines.join("\n");
 }
 
 function estimateClosingHeight(doc, fonts, lang, generatedOffer, formatMoneyValue, attachmentCount = 0) {
   const textWidth = doc.page.width - PAGE_MARGIN * 2;
+  const cancellationPolicyTitle = resolveOfferCancellationPolicyTitle(
+    lang,
+    generatedOffer?.__booking_for_offer_pdf || null
+  );
   const cancellationPolicyText = textOrNull(resolveOfferCancellationPolicyText(generatedOffer?.__booking_for_offer_pdf || null));
   let height = 0;
 
@@ -2240,7 +2257,7 @@ function estimateClosingHeight(doc, fonts, lang, generatedOffer, formatMoneyValu
       .font(pdfFontName("bold", fonts))
       .fontSize(11.2);
     height += doc.heightOfString(
-      pdfT(lang, "offer.cancellation_policy_title", "Cancellation policy"),
+      cancellationPolicyTitle,
       pdfTextOptions(lang, {
         width: textWidth,
         lineGap: 1
@@ -2297,6 +2314,10 @@ function estimateClosingHeight(doc, fonts, lang, generatedOffer, formatMoneyValu
 }
 
 function drawClosing(doc, startY, fonts, lang, generatedOffer, formatMoneyValue, attachmentCount = 0) {
+  const cancellationPolicyTitle = resolveOfferCancellationPolicyTitle(
+    lang,
+    generatedOffer?.__booking_for_offer_pdf || null
+  );
   const cancellationPolicyText = textOrNull(resolveOfferCancellationPolicyText(generatedOffer?.__booking_for_offer_pdf || null));
   let y = startY;
 
@@ -2306,7 +2327,7 @@ function drawClosing(doc, startY, fonts, lang, generatedOffer, formatMoneyValue,
       .fontSize(11.2)
       .fillColor(PDF_COLORS.textStrong)
       .text(
-        pdfT(lang, "offer.cancellation_policy_title", "Cancellation policy"),
+        cancellationPolicyTitle,
         PAGE_MARGIN,
         y,
         pdfTextOptions(lang, {

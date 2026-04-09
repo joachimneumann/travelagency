@@ -40,9 +40,7 @@ const GENERATED_ROLE_LOOKUP = Object.freeze(
 );
 
 const ROLES = Object.freeze({
-  ADMIN: GENERATED_ROLE_LOOKUP.ADMIN,
-  MANAGER: GENERATED_ROLE_LOOKUP.MANAGER,
-  ATP_STAFF: GENERATED_ROLE_LOOKUP.ATP_STAFF
+  TOUR_EDITOR: GENERATED_ROLE_LOOKUP.TOUR_EDITOR
 });
 
 const els = {
@@ -255,14 +253,14 @@ async function init() {
     apiOrigin,
     refreshNav: refreshBackendNavElements,
     computePermissions: (roles) => ({
-      canReadTemplates: hasAnyRoleInList(roles, ROLES.ADMIN, ROLES.MANAGER, ROLES.ATP_STAFF),
-      canEditTemplates: hasAnyRoleInList(roles, ROLES.ADMIN, ROLES.MANAGER, ROLES.ATP_STAFF)
+      canReadTemplates: hasAnyRoleInList(roles, ROLES.TOUR_EDITOR),
+      canEditTemplates: hasAnyRoleInList(roles, ROLES.TOUR_EDITOR)
     }),
     hasPageAccess: (permissions) => permissions.canReadTemplates,
     logKey: "backend-standard-travel-plan",
     pageName: "standard-travel-plan.html",
-    expectedRolesAnyOf: [ROLES.ADMIN, ROLES.MANAGER, ROLES.ATP_STAFF],
-    likelyCause: "The user is authenticated in Keycloak but does not have the ATP roles required to access standard travel plans."
+    expectedRolesAnyOf: [ROLES.TOUR_EDITOR],
+    likelyCause: "The user is authenticated in Keycloak but does not have the atp_tour_editor role required to access standard travel plans."
   });
 
   state.authUser = authState.authUser;

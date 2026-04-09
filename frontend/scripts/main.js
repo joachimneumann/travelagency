@@ -617,8 +617,7 @@ function setupBackendLogin() {
       prompt: "login"
     });
     const loginUrl = `${API_BASE_ORIGIN}/auth/login?${loginParams.toString()}`;
-    const freshLoginUrl = `${API_BASE_ORIGIN}/auth/logout?return_to=${encodeURIComponent(loginUrl)}`;
-    window.location.href = freshLoginUrl;
+    window.location.href = loginUrl;
   });
 }
 
