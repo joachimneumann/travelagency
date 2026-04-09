@@ -113,6 +113,9 @@ const state = {
 };
 
 const els = {
+  pageBody: document.body,
+  pageHeader: document.getElementById("top"),
+  mainContent: document.getElementById("main-content"),
   homeLink: document.getElementById("backendHomeLink"),
   back: document.getElementById("backToBackend"),
   logoutLink: null,
@@ -133,7 +136,9 @@ const els = {
   localizedContentEditor: document.getElementById("tour_localized_content_editor"),
   changeImageBtn: document.getElementById("tour_change_image_btn"),
   imageUpload: document.getElementById("tour_image_upload"),
-  heroImage: document.getElementById("tour_hero_image")
+  heroImage: document.getElementById("tour_hero_image"),
+  pageOverlay: document.getElementById("tour_translate_overlay"),
+  pageOverlayText: document.getElementById("tour_translate_overlay_text")
 };
 
 function refreshBackendNavElements() {
@@ -411,9 +416,14 @@ function syncLocalizedFieldState() {
   state.localizedContent.short_description_i18n = readLocalizedFields("short_description_i18n");
 }
 
+function preferredTourHeaderLangs() {
+  const selectedLang = normalizeTourTextLang(currentBackendLang());
+  return selectedLang === "vi" ? ["vi", "en"] : ["en", "vi"];
+}
+
 function updateHeaderTitle() {
   if (!els.title) return;
-  const rawTitle = resolveLocalizedFieldText("title_i18n", ["vi", "en"], state.tour?.title);
+  const rawTitle = resolveLocalizedFieldText("title_i18n", preferredTourHeaderLangs(), state.tour?.title);
   els.title.textContent = rawTitle || (state.is_create_mode ? backendT("tour.new_title", "New tour") : backendT("nav.tours", "Tour"));
 }
 
@@ -489,15 +499,20 @@ async function translateAllTourContent(button) {
     clearTranslatedTourTarget(targetLang);
   }
   updateTourDirtyState();
+  setTourPageOverlay(true, backendT("tour.translation.translating_all_overlay", "Translating all languages. Please wait."));
   setStatus(backendT("tour.translation.translating_all", "Translating all languages from {sourceLanguage}...", {
     sourceLanguage: tourLanguageLabel(sourceLang)
   }));
-  for (const targetLang of targets) {
-    const translatedEntries = await requestTourTranslation(targetLang, sourceEntries);
-    if (!translatedEntries) return;
-    applyTranslatedTourFields(targetLang, translatedEntries);
-    syncLocalizedFieldState();
-    updateTourDirtyState();
+  try {
+    for (const targetLang of targets) {
+      const translatedEntries = await requestTourTranslation(targetLang, sourceEntries);
+      if (!translatedEntries) return;
+      applyTranslatedTourFields(targetLang, translatedEntries);
+      syncLocalizedFieldState();
+      updateTourDirtyState();
+    }
+  } finally {
+    setTourPageOverlay(false);
   }
 
   updateHeaderTitle();
@@ -1014,6 +1029,36 @@ function clearTitleError() {
 function setStatus(message) {
   if (!els.status) return;
   els.status.textContent = message;
+}
+
+function setTourPageOverlay(isVisible, message = "") {
+  if (els.pageOverlayText) {
+    els.pageOverlayText.textContent = String(
+      message || backendT("tour.translation.translating_all_overlay", "Translating all languages. Please wait.")
+    ).trim();
+  }
+  if (els.pageBody instanceof HTMLElement) {
+    els.pageBody.classList.toggle("tour-detail-page--translation-busy", Boolean(isVisible));
+  }
+  if (els.pageHeader instanceof HTMLElement) {
+    els.pageHeader.inert = Boolean(isVisible);
+    els.pageHeader.setAttribute("aria-busy", isVisible ? "true" : "false");
+  }
+  if (els.mainContent instanceof HTMLElement) {
+    els.mainContent.inert = Boolean(isVisible);
+    els.mainContent.setAttribute("aria-busy", isVisible ? "true" : "false");
+  }
+  if (!(els.pageOverlay instanceof HTMLElement)) return;
+  if (isVisible) {
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+    els.pageOverlay.hidden = false;
+    els.pageOverlay.setAttribute("aria-hidden", "false");
+    return;
+  }
+  els.pageOverlay.hidden = true;
+  els.pageOverlay.setAttribute("aria-hidden", "true");
 }
 
 function setPendingHeroImagePreview(file) {
