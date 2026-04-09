@@ -1025,5 +1025,6 @@
   "tour.translation.translate_all": "{source} → ALL",
   "tour.translation.translate_one": "{source} → {target}",
   "tour.translation.translating": "Translating from {sourceLanguage}...",
+  "tour.translation.translating_all_overlay": "Translating all languages. Please wait.",
   "tour.translation.translating_all": "Translating all languages from {sourceLanguage}..."
 }

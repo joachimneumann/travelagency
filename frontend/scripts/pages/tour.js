@@ -13,8 +13,7 @@ import {
   createApiFetcher,
   escapeHtml,
   logBrowserConsoleError,
-  resolveApiUrl,
-  setDirtySurface
+  resolveApiUrl
 } from "../shared/api.js";
 import { wireAuthLogoutLink } from "../shared/auth.js";
 import { createSnapshotDirtyTracker } from "../shared/edit_state.js";
@@ -125,6 +124,7 @@ const els = {
   error: document.getElementById("tour_error"),
   titleError: document.getElementById("tour_titleError"),
   form: document.getElementById("tour_form"),
+  dirtyBar: document.getElementById("tour_dirty_bar"),
   status: document.getElementById("tour_formStatus"),
   cancel: document.getElementById("tour_cancel_btn"),
   destinationHidden: document.getElementById("tour_destinations"),
@@ -171,7 +171,9 @@ function captureTourFormSnapshot() {
 const tourDirtyTracker = createSnapshotDirtyTracker({
   captureSnapshot: () => captureTourFormSnapshot(),
   isEnabled: () => state.permissions.canEditTours,
-  onDirtyChange: (isDirty) => setDirtySurface(els.form, isDirty)
+  onDirtyChange: (isDirty) => {
+    els.dirtyBar?.classList.toggle("booking-dirty-bar--dirty", isDirty);
+  }
 });
 
 function updateTourDirtyState() {
@@ -533,8 +535,12 @@ async function init() {
   const backHref = resolveBackendSectionHref("tours");
 
   if (els.homeLink) els.homeLink.href = backHref;
-  if (els.back) els.back.href = backHref;
   if (els.cancel) els.cancel.href = backHref;
+  if (els.back) {
+    els.back.addEventListener("click", () => {
+      window.location.href = backHref;
+    });
+  }
   if (els.logoutLink) {
     const returnTo = `${window.location.origin}/`;
     wireAuthLogoutLink(els.logoutLink, { apiBase, returnTo });

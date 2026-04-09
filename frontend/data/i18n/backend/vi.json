@@ -1025,5 +1025,6 @@
   "tour.translation.translate_all": "{source} → Tất cả",
   "tour.translation.translate_one": "{source} → {target}",
   "tour.translation.translating": "Đang dịch từ {sourceLanguage}...",
+  "tour.translation.translating_all_overlay": "Đang dịch tất cả các ngôn ngữ. Vui lòng chờ.",
   "tour.translation.translating_all": "Đang dịch tất cả ngôn ngữ từ {sourceLanguage}..."
 }

@@ -4195,10 +4195,6 @@ textarea:focus-visible {
   gap: 0.8rem;
 }
 
-.backend-tour-form.backend-dirty-surface {
-  background-color: var(--accent-tint-medium);
-}
-
 .tour-detail-page .tour-header__title-row {
   display: flex;
   align-items: center;

@@ -14,7 +14,7 @@
     <script src="/frontend/scripts/shared/localhost_diagnostics.js"></script>
     <link rel="stylesheet" href="assets/css/styles.css" />
   </head>
-  <body class="tour-detail-page">
+  <body class="booking-detail-page tour-detail-page">
     <header class="header" id="top">
       <div class="container header-wrap">
         <a class="brand" id="backendHomeLink" href="bookings.html" aria-label="AsiaTravelPlan backend home">
@@ -28,59 +28,71 @@
     <main id="main-content">
       <section class="section">
         <div class="container">
-          <div class="tour-header__title-row">
-            <h1 class="section-title tour-header__title" id="tour_title">Tour</h1>
-          </div>
-          <div id="tour_titleError" class="form-error" role="alert" aria-live="polite"></div>
-          <p class="section-booking" id="tour_subtitle" data-i18n-id="tour.subtitle_loading">Loading tour...</p>
-
-          <div id="tour_error" class="backend-message" role="alert" aria-live="assertive"></div>
-
-          <form id="tour_form" class="backend-tour-form">
-            <div class="backend-controls">
-              <button class="btn btn-primary" id="tour_save_btn" type="submit" data-i18n-id="tour.save_changes">Save Changes</button>
-              <a class="btn btn-ghost" id="tour_cancel_btn" href="bookings.html" data-i18n-id="tour.cancel">Cancel</a>
-              <span id="tour_formStatus" class="micro"></span>
-            </div>
-            <div class="field full">
-              <div class="tour-hero-row">
-                <button class="tour-hero-image-button" id="tour_change_image_btn" type="button" data-i18n-aria-label-id="tour.change_image" aria-label="Change image">
-                  <img id="tour_hero_image" src="assets/img/profile_booking.png" alt="" class="tour-hero-image empty" />
-                </button>
-                <p class="micro" data-i18n-id="tour.image_help">Image is converted to WebP and resized to max 1000px automatically.</p>
+          <div class="booking-detail-page__bar-top-gap" aria-hidden="true"></div>
+          <div class="booking-dirty-bar-row">
+            <div class="booking-dirty-bar" id="tour_dirty_bar">
+              <div class="booking-dirty-bar__panel">
+                <div class="booking-dirty-bar__actions">
+                  <a class="btn btn-ghost" id="tour_cancel_btn" href="bookings.html" data-i18n-id="tour.cancel">Cancel</a>
+                  <button class="btn btn-primary" id="tour_save_btn" type="submit" form="tour_form" data-i18n-id="tour.save_changes">Save Changes</button>
+                </div>
               </div>
-              <input id="tour_image_upload" name="tour_image_upload" type="file" accept="image/*" class="u-file-input-hidden" />
             </div>
-            <div class="field">
-              <label for="tour_seasonality_start_month" data-i18n-id="tour.seasonality_start">Seasonality Start Month</label>
-              <select id="tour_seasonality_start_month" name="seasonality_start_month">
-                <option value=""></option>
-              </select>
+            <button class="booking-dirty-bar-row__back" id="backToBackend" type="button" aria-label="Back to tours">Back</button>
+          </div>
+          <div class="booking-detail-page__bar-gap" aria-hidden="true"></div>
+          <div class="booking-detail-page__scroll">
+            <div class="booking-page-shell">
+              <div class="tour-header__title-row">
+                <h1 class="section-title tour-header__title" id="tour_title">Tour</h1>
+              </div>
+              <div id="tour_titleError" class="form-error" role="alert" aria-live="polite"></div>
+              <p class="section-booking" id="tour_subtitle" data-i18n-id="tour.subtitle_loading">Loading tour...</p>
+
+              <div id="tour_error" class="backend-message" role="alert" aria-live="assertive"></div>
+
+              <form id="tour_form" class="backend-tour-form">
+                <div class="field full">
+                  <div class="tour-hero-row">
+                    <button class="tour-hero-image-button" id="tour_change_image_btn" type="button" data-i18n-aria-label-id="tour.change_image" aria-label="Change image">
+                      <img id="tour_hero_image" src="assets/img/profile_booking.png" alt="" class="tour-hero-image empty" />
+                    </button>
+                    <p class="micro" data-i18n-id="tour.image_help">Image is converted to WebP and resized to max 1000px automatically.</p>
+                  </div>
+                  <input id="tour_image_upload" name="tour_image_upload" type="file" accept="image/*" class="u-file-input-hidden" />
+                </div>
+                <div class="field">
+                  <label for="tour_seasonality_start_month" data-i18n-id="tour.seasonality_start">Seasonality Start Month</label>
+                  <select id="tour_seasonality_start_month" name="seasonality_start_month">
+                    <option value=""></option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="tour_seasonality_end_month" data-i18n-id="tour.seasonality_end">Seasonality End Month</label>
+                  <select id="tour_seasonality_end_month" name="seasonality_end_month">
+                    <option value=""></option>
+                  </select>
+                </div>
+                <div class="field">
+                  <span class="field-label" data-i18n-id="tour.destinations_label">Destinations</span>
+                  <input id="tour_destinations" name="destinations" type="hidden" required />
+                  <div id="tour_destination_choices" class="backend-checkbox-grid"></div>
+                </div>
+                <div class="field">
+                  <span class="field-label" data-i18n-id="tour.styles_label">Tour Styles</span>
+                  <input id="tour_styles" name="styles" type="hidden" required />
+                  <div id="tour_style_choices" class="backend-checkbox-grid"></div>
+                </div>
+                <div class="field">
+                  <label for="tour_priority" data-i18n-id="tour.priority_label">Web page ranking priority (0-100)</label>
+                  <input id="tour_priority" name="priority" type="number" min="0" max="100" step="1" />
+                </div>
+                <div class="field full">
+                  <div id="tour_localized_content_editor"></div>
+                </div>
+              </form>
             </div>
-            <div class="field">
-              <label for="tour_seasonality_end_month" data-i18n-id="tour.seasonality_end">Seasonality End Month</label>
-              <select id="tour_seasonality_end_month" name="seasonality_end_month">
-                <option value=""></option>
-              </select>
-            </div>
-            <div class="field">
-              <span class="field-label" data-i18n-id="tour.destinations_label">Destinations</span>
-              <input id="tour_destinations" name="destinations" type="hidden" required />
-              <div id="tour_destination_choices" class="backend-checkbox-grid"></div>
-            </div>
-            <div class="field">
-              <span class="field-label" data-i18n-id="tour.styles_label">Tour Styles</span>
-              <input id="tour_styles" name="styles" type="hidden" required />
-              <div id="tour_style_choices" class="backend-checkbox-grid"></div>
-            </div>
-            <div class="field">
-              <label for="tour_priority" data-i18n-id="tour.priority_label">Web page ranking priority (0-100)</label>
-              <input id="tour_priority" name="priority" type="number" min="0" max="100" step="1" />
-            </div>
-            <div class="field full">
-              <div id="tour_localized_content_editor"></div>
-            </div>
-          </form>
+          </div>
         </div>
       </section>
     </main>
@@ -88,7 +100,7 @@
     <div class="booking-page-overlay" id="tour_translate_overlay" hidden aria-hidden="true">
       <div class="booking-page-overlay__panel" role="status" aria-live="assertive">
         <span class="booking-page-overlay__spinner" aria-hidden="true"></span>
-        <span class="booking-page-overlay__text" id="tour_translate_overlay_text">Translating... Please wait.</span>
+        <span class="booking-page-overlay__text" id="tour_translate_overlay_text" data-i18n-id="tour.translation.translating_all_overlay">Translating all languages. Please wait.</span>
       </div>
     </div>
 

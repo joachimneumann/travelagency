@@ -5129,6 +5129,11 @@
     "origin": "machine",
     "updated_at": "2026-03-30T23:51:31.875Z"
   },
+  "tour.translation.translating_all_overlay": {
+    "source_hash": "b16212eeb5fc0cf55bc4eba63d0de235a0edaf06b85aded752de2cf41cbcde09",
+    "origin": "machine",
+    "updated_at": "2026-04-09T08:41:51.623Z"
+  },
   "tour.translation.translating_all": {
     "source_hash": "ed6a80783bd9e313219034fbfe0e39e830a37aedc694afe90d423796a8cfe0e8",
     "origin": "machine",
