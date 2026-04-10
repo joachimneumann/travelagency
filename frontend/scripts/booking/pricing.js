@@ -130,11 +130,13 @@ export function createBookingPricingModule(ctx) {
     renderBookingData,
     loadActivities,
     escapeHtml,
+    formatDateTime,
     captureControlSnapshot,
     setBookingSectionDirty,
     setPageSaveActionError,
     hasUnsavedBookingChanges
   } = ctx;
+  let bookingConfirmationPdfBusy = false;
 
   function pricingRevision() {
     if (typeof getBookingRevision === "function") {
@@ -218,6 +220,14 @@ export function createBookingPricingModule(ctx) {
     return currentOfferPaymentTermLines().length > 0;
   }
 
+  function acceptedRecordAvailable() {
+    return state.booking?.accepted_record?.available === true;
+  }
+
+  function currentBookingConfirmationPdfs() {
+    return Array.isArray(state.booking?.booking_confirmation_pdfs) ? state.booking.booking_confirmation_pdfs : [];
+  }
+
   function hasConfiguredDepositPaymentTerm() {
     return currentOfferPaymentTermLines().some((line) => (
       String(line?.kind || "").trim().toUpperCase() === "DEPOSIT"
@@ -279,6 +289,19 @@ export function createBookingPricingModule(ctx) {
     if (!message) return;
     const normalizedType = type === "error" || type === "success" ? type : "info";
     els.pricing_deposit_action_hint.classList.add(`booking-inline-status--${normalizedType}`);
+  }
+
+  function setBookingConfirmationPdfStatus(message, type = "info") {
+    if (!els.booking_confirmation_pdf_status) return;
+    els.booking_confirmation_pdf_status.textContent = message || "";
+    els.booking_confirmation_pdf_status.classList.remove(
+      "booking-inline-status--error",
+      "booking-inline-status--success",
+      "booking-inline-status--info"
+    );
+    if (!message) return;
+    const normalizedType = type === "error" || type === "success" ? type : "info";
+    els.booking_confirmation_pdf_status.classList.add(`booking-inline-status--${normalizedType}`);
   }
 
   function updatePricingDirtyState() {
@@ -577,6 +600,73 @@ export function createBookingPricingModule(ctx) {
     );
   }
 
+  function renderBookingConfirmationPdfSection() {
+    if (!(els.booking_confirmation_pdf_section instanceof HTMLElement)) return;
+    const visible = bookingHasRecordedDeposit() && acceptedRecordAvailable();
+    els.booking_confirmation_pdf_section.hidden = !visible;
+    if (!visible) {
+      if (els.booking_confirmation_pdfs_table) {
+        els.booking_confirmation_pdfs_table.innerHTML = "";
+      }
+      setBookingConfirmationPdfStatus("");
+      return;
+    }
+
+    if (els.create_booking_confirmation_btn instanceof HTMLButtonElement) {
+      els.create_booking_confirmation_btn.hidden = !state.permissions.canEditBooking;
+      els.create_booking_confirmation_btn.disabled = bookingConfirmationPdfBusy || !state.permissions.canEditBooking;
+      els.create_booking_confirmation_btn.textContent = bookingConfirmationPdfBusy
+        ? bookingT("booking.pricing.booking_confirmation_creating", "Creating...")
+        : "create Booking confirmation";
+    }
+
+    if (!els.booking_confirmation_pdfs_table) return;
+    const pdfs = currentBookingConfirmationPdfs();
+    const canEdit = Boolean(state.permissions?.canEditBooking);
+    const rows = pdfs.length
+      ? pdfs
+        .slice()
+        .sort((left, right) => String(right.created_at || "").localeCompare(String(left.created_at || "")))
+        .map((pdf) => `
+          <tr>
+            <td><a href="${escapeHtml(pdf.pdf_url || "#")}" target="_blank" rel="noopener">${escapeHtml(pdf.filename || "Booking confirmation PDF")}</a></td>
+            <td>${escapeHtml(`${Math.max(1, Number(pdf.page_count || 1))}`)}</td>
+            <td>${escapeHtml(typeof formatDateTime === "function" ? formatDateTime(pdf.created_at) : String(pdf.created_at || "-"))}</td>
+            ${canEdit ? `
+              <td class="generated-offers-col-actions">
+                <button
+                  class="btn btn-ghost offer-remove-btn"
+                  type="button"
+                  data-booking-confirmation-delete-pdf="${escapeHtml(pdf.id)}"
+                  title="${escapeHtml(bookingT("booking.pricing.delete_booking_confirmation_pdf", "Delete booking confirmation PDF"))}"
+                  aria-label="${escapeHtml(bookingT("booking.pricing.delete_booking_confirmation_pdf", "Delete booking confirmation PDF"))}"
+                  ${bookingConfirmationPdfBusy ? "disabled" : ""}
+                >×</button>
+              </td>
+            ` : ""}
+          </tr>
+        `).join("")
+      : `<tr><td colspan="${canEdit ? 4 : 3}">${escapeHtml(bookingT("booking.pricing.no_booking_confirmations", "No booking confirmation PDFs yet."))}</td></tr>`;
+    els.booking_confirmation_pdfs_table.innerHTML = `
+      <thead>
+        <tr>
+          <th>${escapeHtml(bookingT("booking.pdf", "PDF"))}</th>
+          <th>${escapeHtml(bookingT("booking.pages", "Pages"))}</th>
+          <th>${escapeHtml(bookingT("booking.date", "Date"))}</th>
+          ${canEdit ? `<th class="generated-offers-col-actions">${escapeHtml(bookingT("backend.table.actions", "Actions"))}</th>` : ""}
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    `;
+    if (canEdit) {
+      els.booking_confirmation_pdfs_table.querySelectorAll("[data-booking-confirmation-delete-pdf]").forEach((button) => {
+        button.addEventListener("click", () => {
+          void deleteBookingConfirmationPdf(button.getAttribute("data-booking-confirmation-delete-pdf"));
+        });
+      });
+    }
+  }
+
   function nextPricingFromPaymentTerms(basePricing) {
     const pricing = clonePricing(basePricing || {});
     const paymentTerms = currentOfferPaymentTerms();
@@ -811,6 +901,7 @@ export function createBookingPricingModule(ctx) {
       if (els.pricing_adjustments_table) els.pricing_adjustments_table.innerHTML = "";
       if (els.pricing_payments_table) els.pricing_payments_table.innerHTML = "";
       setPricingDepositHint("");
+      renderBookingConfirmationPdfSection();
       clearPricingStatus();
       markPricingSnapshotClean();
       return;
@@ -829,6 +920,7 @@ export function createBookingPricingModule(ctx) {
       els.pricing_agreed_net_input.disabled = !state.permissions.canEditBooking;
     }
     renderDepositReceiptControls(pricing);
+    renderBookingConfirmationPdfSection();
     renderPricingSummaryTable(pricing);
     renderPricingAdjustmentsTable();
     renderPricingPaymentsTable();
@@ -1016,12 +1108,82 @@ export function createBookingPricingModule(ctx) {
     return true;
   }
 
+  async function createBookingConfirmationPdf() {
+    if (!state.booking || !state.permissions.canEditBooking || bookingConfirmationPdfBusy) return false;
+    if (!bookingHasRecordedDeposit() || !acceptedRecordAvailable()) return false;
+    bookingConfirmationPdfBusy = true;
+    setBookingConfirmationPdfStatus(
+      bookingT("booking.pricing.booking_confirmation_creating", "Creating booking confirmation PDF..."),
+      "info"
+    );
+    renderBookingConfirmationPdfSection();
+    const result = await fetchBookingMutation(
+      `/api/v1/bookings/${encodeURIComponent(state.booking.id)}/booking-confirmation/pdfs`,
+      {
+        method: "POST",
+        body: { actor: state.user || null }
+      }
+    );
+    bookingConfirmationPdfBusy = false;
+    renderBookingConfirmationPdfSection();
+    if (!result?.booking) {
+      setBookingConfirmationPdfStatus(
+        bookingT("booking.pricing.booking_confirmation_create_failed", "Could not create booking confirmation PDF."),
+        "error"
+      );
+      return false;
+    }
+    state.booking = result.booking;
+    renderBookingHeader();
+    renderBookingData();
+    renderActionControls?.();
+    renderPricingPanel({ preserveDraft: true });
+    setBookingConfirmationPdfStatus("");
+    await loadActivities();
+    return true;
+  }
+
+  async function deleteBookingConfirmationPdf(artifactId) {
+    if (!state.booking || !state.permissions.canEditBooking || !artifactId) return false;
+    if (!window.confirm(bookingT("booking.pricing.delete_booking_confirmation_pdf_confirm", "Delete this booking confirmation PDF?"))) {
+      return false;
+    }
+    setBookingConfirmationPdfStatus("", "info");
+    const result = await fetchBookingMutation(
+      `/api/v1/bookings/${encodeURIComponent(state.booking.id)}/booking-confirmation/pdfs/${encodeURIComponent(artifactId)}`,
+      {
+        method: "DELETE",
+        body: { actor: state.user || null }
+      }
+    );
+    if (!result?.booking) {
+      setBookingConfirmationPdfStatus(
+        bookingT("booking.pricing.booking_confirmation_delete_failed", "Could not delete booking confirmation PDF."),
+        "error"
+      );
+      return false;
+    }
+    state.booking = result.booking;
+    renderBookingHeader();
+    renderBookingData();
+    renderActionControls?.();
+    renderPricingPanel({ preserveDraft: true });
+    setBookingConfirmationPdfStatus(
+      bookingT("booking.pricing.booking_confirmation_deleted", "Booking confirmation PDF deleted."),
+      "success"
+    );
+    await loadActivities();
+    return true;
+  }
+
   return {
     updatePricingDirtyState,
     markPricingSnapshotClean,
     renderPricingPanel,
     savePricing,
     confirmGeneratedOfferByManagement,
+    createBookingConfirmationPdf,
+    deleteBookingConfirmationPdf,
     applyDefaultDepositReceiptDraft,
     disarmDepositReceiptConfirmation,
     refreshDepositReceiptActionState: () => renderDepositReceiptActionState()

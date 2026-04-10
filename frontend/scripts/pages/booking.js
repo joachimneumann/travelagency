@@ -441,6 +441,10 @@ const els = {
   pricing_deposit_action_hint: document.getElementById("pricing_deposit_action_hint"),
   pricing_deposit_hint_row: document.getElementById("pricing_deposit_hint_row"),
   pricing_deposit_hint: document.getElementById("pricing_deposit_hint"),
+  booking_confirmation_pdf_section: document.getElementById("booking_confirmation_pdf_section"),
+  booking_confirmation_pdfs_table: document.getElementById("booking_confirmation_pdfs_table"),
+  create_booking_confirmation_btn: document.getElementById("create_booking_confirmation_btn"),
+  booking_confirmation_pdf_status: document.getElementById("booking_confirmation_pdf_status"),
   pricing_currency_input: document.getElementById("pricing_currency_input"),
   pricing_agreed_net_label: document.getElementById("pricing_agreed_net_label"),
   pricing_agreed_net_input: document.getElementById("pricing_agreed_net_input"),
@@ -940,6 +944,11 @@ async function init() {
   if (els.pricing_management_approval_btn) {
     els.pricing_management_approval_btn.addEventListener("click", async () => {
       await confirmGeneratedOfferByManagementFromPricing();
+    });
+  }
+  if (els.create_booking_confirmation_btn) {
+    els.create_booking_confirmation_btn.addEventListener("click", async () => {
+      await createBookingConfirmationPdfFromPricing();
     });
   }
   if (els.offer_currency_input)
@@ -1610,6 +1619,10 @@ function confirmGeneratedOfferByManagementFromPricing() {
   return pricingModule.confirmGeneratedOfferByManagement?.();
 }
 
+function createBookingConfirmationPdfFromPricing() {
+  return pricingModule.createBookingConfirmationPdf?.();
+}
+
 function applyDefaultDepositReceiptDraft() {
   return pricingModule.applyDefaultDepositReceiptDraft();
 }
@@ -1871,6 +1884,7 @@ const pricingModule = createBookingPricingModule({
   renderBookingData,
   loadActivities,
   escapeHtml,
+  formatDateTime,
   captureControlSnapshot,
   setBookingSectionDirty,
   setPageSaveActionError: (message) => {
