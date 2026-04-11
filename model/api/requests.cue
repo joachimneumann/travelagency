@@ -419,14 +419,24 @@ import (
 #BookingInvoiceUpsertRequest: {
 	expected_invoices_revision?: >=0 & int
 	invoice_number?:             string
+	document_kind?:              string
+	payment_id?:                 common.#Identifier
 	currency?:                   enums.#CurrencyCode
 	issue_date?:                 common.#DateOnly
 	due_date?:                   common.#DateOnly
 	title?:                      string
+	subtitle?:                   string
+	intro?:                      string
 	notes?:                      string
+	closing?:                    string
 	components?: [...entities.#InvoiceComponent]
 	due_amount_cents?:  common.#NonNegativeMoneyAmount
 	sent_to_recipient?: bool
+	payment_received_at?: common.#Timestamp
+	payment_confirmed_by_atp_staff_id?: common.#Identifier
+	payment_confirmed_by_label?: string
+	payment_reference?: string
+	pdf_personalization?: entities.#BookingPdfPersonalizationScoped
 }
 
 #BookingInvoiceTranslateRequest: {

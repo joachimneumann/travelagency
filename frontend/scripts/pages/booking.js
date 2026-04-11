@@ -396,6 +396,7 @@ const els = {
   travelStylesOptions: document.getElementById("booking_travel_styles_options"),
   travelPlanPdfPersonalizationPanel: document.getElementById("travel_plan_pdf_personalization_panel"),
   offerPdfPersonalizationPanel: document.getElementById("offer_pdf_personalization_panel"),
+  bookingConfirmationPdfPersonalizationPanel: document.getElementById("booking_confirmation_pdf_personalization_panel"),
   pdfTravelPlanSubtitleMount: null,
   pdfTravelPlanWelcomeMount: null,
   pdfTravelPlanChildrenPolicyMount: null,
@@ -411,6 +412,10 @@ const els = {
   pdfOfferClosingMount: null,
   pdfOfferIncludeWhoIsTravelingMount: null,
   pdfOfferReference: null,
+  pdfBookingConfirmationSubtitleMount: null,
+  pdfBookingConfirmationWelcomeMount: null,
+  pdfBookingConfirmationClosingMount: null,
+  pdfBookingConfirmationReference: null,
   contentLanguageField: document.getElementById("booking_content_language_field"),
   contentLanguageMenuMount: document.getElementById("booking_content_language_menu_mount"),
   contentLanguageSelect: document.getElementById("booking_content_language_select"),
@@ -419,8 +424,6 @@ const els = {
   bookingFlowNextStep: document.getElementById("booking_flow_next_step"),
   proposalWorkspace: document.getElementById("proposal_workspace"),
   proposalWorkspaceSummary: document.getElementById("proposal_workspace_summary"),
-  paymentsWorkspace: document.getElementById("payments_workspace"),
-  paymentsWorkspaceSummary: document.getElementById("payments_workspace_summary"),
   lastActionDetail: document.getElementById("booking_last_action_detail"),
   milestoneActionsBefore: document.getElementById("booking_milestone_actions_before"),
   milestoneActionsAfter: document.getElementById("booking_milestone_actions_after"),
@@ -463,6 +466,11 @@ const els = {
   booking_confirmation_pdfs_table: document.getElementById("booking_confirmation_pdfs_table"),
   create_booking_confirmation_btn: document.getElementById("create_booking_confirmation_btn"),
   booking_confirmation_pdf_status: document.getElementById("booking_confirmation_pdf_status"),
+  paymentDepositSection: document.getElementById("payment_deposit_section"),
+  paymentDepositSectionTitle: document.getElementById("payment_deposit_section_title"),
+  paymentDepositSectionStatus: document.getElementById("payment_deposit_section_status"),
+  paymentDepositSectionSummary: document.getElementById("payment_deposit_section_summary"),
+  paymentDepositSectionAmount: document.getElementById("payment_deposit_section_amount"),
   paymentsBookingConfirmationCard: document.getElementById("payments_booking_confirmation_card"),
   paymentsMilestonesOverview: document.getElementById("payments_milestones_overview"),
   pricing_currency_input: document.getElementById("pricing_currency_input"),
@@ -873,7 +881,7 @@ async function init() {
       renderActionControls();
     });
   }
-  [els.travelPlanPdfPersonalizationPanel, els.offerPdfPersonalizationPanel].filter(Boolean).forEach((panel) => {
+  [els.travelPlanPdfPersonalizationPanel, els.offerPdfPersonalizationPanel, els.bookingConfirmationPdfPersonalizationPanel].filter(Boolean).forEach((panel) => {
     panel.addEventListener("input", updateCoreDirtyState);
     panel.addEventListener("change", updateCoreDirtyState);
   });
@@ -933,11 +941,13 @@ async function init() {
   }
   if (els.pricing_panel) {
     const schedulePricingDirtyState = () => window.setTimeout(updatePricingDirtyState, 0);
-    els.pricing_panel.addEventListener("input", () => {
+    els.pricing_panel.addEventListener("input", (event) => {
+      if (event.target instanceof Element && event.target.closest("[data-payment-pdf-personalization]")) return;
       disarmDepositReceiptConfirmation();
       schedulePricingDirtyState();
     });
     els.pricing_panel.addEventListener("change", (event) => {
+      if (event.target instanceof Element && event.target.closest("[data-payment-pdf-personalization]")) return;
       if (event.target === els.pricing_deposit_confirmed_by_select) {
         if (String(els.pricing_deposit_confirmed_by_select?.value || "").trim()) {
           delete els.pricing_deposit_confirmed_by_select.dataset.userClearedSelection;
@@ -952,6 +962,13 @@ async function init() {
       const button = event.target instanceof Element ? event.target.closest("button") : null;
       if (!(button instanceof HTMLButtonElement)) return;
       if (button.closest(".booking-section__head, .backend-section__head")) return;
+      if (
+        button.closest("[data-payment-pdf-personalization]")
+        || button.hasAttribute("data-payment-document-create")
+        || button.hasAttribute("data-payment-record-received")
+      ) {
+        return;
+      }
       schedulePricingDirtyState();
     });
   }
@@ -1551,7 +1568,6 @@ function renderCommercialFlowGuide() {
     paymentTerms: currentFlowPaymentTerms()
   });
   const proposalTotal = formatMoneyDisplay(currentProposalTotalCents(), currentFlowCurrency());
-  const outstandingTotal = formatMoneyDisplay(currentOutstandingGrossAmountCents(), currentFlowCurrency());
   const needsCleanState = ["generate_offer", "mark_proposal_sent"].includes(String(flow.nextStep.key || ""));
   const blockedByDirtyState = needsCleanState && hasUnsavedBookingChanges();
   const nextReason = blockedByDirtyState
@@ -1600,18 +1616,6 @@ function renderCommercialFlowGuide() {
     els.proposalWorkspaceSummary.textContent = `${backendT("booking.flow.proposal_total", "Total {total}", { total: proposalTotal })} - ${proposalStatus} - ${sentDetail}`;
   }
 
-  if (els.paymentsWorkspaceSummary) {
-    const paymentStatus = !flow.proposalSent
-      ? backendT("booking.flow.payment_status_waiting_proposal", "Waiting for proposal to be sent")
-      : !flow.depositReceivedAt
-        ? backendT("booking.flow.payment_status_deposit_pending", "Deposit pending")
-        : flow.fullyPaid
-          ? backendT("booking.flow.payment_status_fully_paid", "Fully paid")
-          : flow.nextOpenMilestone
-            ? backendT("booking.flow.payment_status_open_milestone", "{label} is open", { label: flow.nextOpenMilestone.label })
-            : backendT("booking.flow.payment_status_deposit_confirmed", "Deposit confirmed");
-    els.paymentsWorkspaceSummary.textContent = `${backendT("booking.flow.outstanding", "Outstanding {total}", { total: outstandingTotal })} - ${paymentStatus} - ${flow.nextStep.actionLabel}`;
-  }
 }
 
 function renderStaticSectionHeaders() {
@@ -1795,6 +1799,7 @@ function renderInvoiceMoneyLabels() {
 function loadInvoices() {
   const result = invoicesModule.loadInvoices();
   Promise.resolve(result).finally(() => {
+    renderPricingPanel({ preserveDraft: true });
     renderCommercialFlowGuide();
     updateCleanStateActionAvailability();
   });
@@ -2083,6 +2088,7 @@ const pricingModule = createBookingPricingModule({
   renderActionControls,
   renderBookingData,
   loadActivities,
+  loadPaymentDocuments: () => loadInvoices(),
   escapeHtml,
   formatDateTime,
   captureControlSnapshot,

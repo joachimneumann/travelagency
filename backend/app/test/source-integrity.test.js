@@ -824,6 +824,47 @@ test("booking page orders the visible sections in the requested workflow sequenc
   }
 });
 
+test("payments uses pricing_panel as the standalone collapsible section", async () => {
+  const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
+  const bookingPageSource = await readFile(bookingPagePath, "utf8");
+
+  assert.match(
+    bookingPageSource,
+    /<section id="pricing_panel" class="booking-section">/,
+    "Payments should use pricing_panel itself as the collapsible section wrapper"
+  );
+  assert.doesNotMatch(
+    bookingPageSource,
+    /id="payments_workspace"|id="payments_workspace_summary"|id="payments_workspace_title"/,
+    "The redundant payments workspace wrapper and heading should be removed"
+  );
+});
+
+test("payments removes the standalone invoice panel and renders request/confirmation PDF subsections per milestone", async () => {
+  const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
+  const pricingScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "pricing.js");
+  const [bookingPageSource, pricingScriptSource] = await Promise.all([
+    readFile(bookingPagePath, "utf8"),
+    readFile(pricingScriptPath, "utf8")
+  ]);
+
+  assert.doesNotMatch(
+    bookingPageSource,
+    /id="invoice_panel"/,
+    "The old standalone invoice editor should be removed from the Payments section"
+  );
+  assert.match(
+    pricingScriptSource,
+    /function paymentRequestSectionMarkup[\s\S]*booking-payment-document--request[\s\S]*PAYMENT_DOCUMENT_KIND_REQUEST/,
+    "The pricing module should render a dedicated payment-request subsection for each non-deposit milestone"
+  );
+  assert.match(
+    pricingScriptSource,
+    /function paymentConfirmationSectionMarkup[\s\S]*booking-payment-document--confirmation[\s\S]*data-payment-record-received[\s\S]*PAYMENT_DOCUMENT_KIND_CONFIRMATION/,
+    "The pricing module should render a dedicated payment-confirmation subsection with receipt logic for each non-deposit milestone"
+  );
+});
+
 test("booking page replaces the stage dropdown with a derived status block and milestone actions", async () => {
   const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
   const bookingCorePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "core.js");
@@ -1347,8 +1388,8 @@ test("travel-plan PDF personalization exposes children policy and exclusions fie
   );
   assert.match(
     bookingCoreSource,
-    /children_policy:\s*readLocalizedBookingPdfField\("travel_plan", "children_policy"[\s\S]*whats_not_included:\s*readLocalizedBookingPdfField\("travel_plan", "whats_not_included"/,
-    "booking core dirty tracking should persist the new travel-plan PDF personalization fields"
+    /function buildPdfPersonalizationBranchDraft\(scope, existingBranch = \{\}\) \{[\s\S]*readLocalizedBookingPdfField\(scope, item\.field/ ,
+    "booking core dirty tracking should persist PDF personalization fields through the shared branch builder"
   );
   assert.match(
     travelPlanPdfSource,
@@ -1422,8 +1463,8 @@ test("offer PDF personalization exposes a cancellation-policy toggle and renders
   );
   assert.match(
     bookingCoreSource,
-    /readLocalizedBookingPdfField\("offer", "children_policy"[\s\S]*readLocalizedBookingPdfField\("offer", "whats_not_included"/s,
-    "booking core should persist localized Offer children-policy and exclusion fields"
+    /draft\.pdf_personalization = Object\.fromEntries\([\s\S]*BOOKING_PDF_PERSONALIZATION_PANELS\.map/,
+    "booking core should persist localized Offer fields through the shared panel config"
   );
   assert.match(
     personalizationSource,
@@ -1439,6 +1480,74 @@ test("offer PDF personalization exposes a cancellation-policy toggle and renders
     offerPdfSource,
     /resolveOfferChildrenPolicyText[\s\S]*resolveOfferWhatsNotIncludedText[\s\S]*resolveOfferCancellationPolicyTravelerCount[\s\S]*resolveOfferCancellationPolicySection[\s\S]*resolveOfferCancellationPolicyTitle[\s\S]*pdfT\(lang, "offer\.cancellation_policy_title", "Cancellation policy"\)[\s\S]*resolveOfferCancellationPolicyText[\s\S]*offer\.children_policy_title[\s\S]*offer\.whats_not_included_title[\s\S]*buildClosingBody/s,
     "offer_pdf.js should resolve Offer children-policy and exclusion text alongside the fixed cancellation-policy section before the closing body"
+  );
+});
+
+test("booking confirmation PDF personalization lives inside the Deposit payment article and drives booking confirmation PDFs", async () => {
+  const bookingModelPath = path.resolve(__dirname, "..", "..", "..", "model", "entities", "booking.cue");
+  const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
+  const bookingPageScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking.js");
+  const bookingCorePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "core.js");
+  const pdfPanelModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "pdf_personalization_panel.js");
+  const bookingPdfPersonalizationPath = path.resolve(__dirname, "..", "src", "lib", "booking_pdf_personalization.js");
+  const bookingConfirmationPdfPath = path.resolve(__dirname, "..", "src", "lib", "booking_confirmation_pdf.js");
+  const [
+    bookingModelSource,
+    bookingPageSource,
+    bookingPageScriptSource,
+    bookingCoreSource,
+    pdfPanelModuleSource,
+    personalizationSource,
+    bookingConfirmationPdfSource
+  ] = await Promise.all([
+    readFile(bookingModelPath, "utf8"),
+    readFile(bookingPagePath, "utf8"),
+    readFile(bookingPageScriptPath, "utf8"),
+    readFile(bookingCorePath, "utf8"),
+    readFile(pdfPanelModulePath, "utf8"),
+    readFile(bookingPdfPersonalizationPath, "utf8"),
+    readFile(bookingConfirmationPdfPath, "utf8")
+  ]);
+
+  assert.match(
+    bookingModelSource,
+    /booking_confirmation\?:\s+#BookingPdfPersonalizationScoped/,
+    "Booking PDF personalization should model a dedicated booking-confirmation scope"
+  );
+  assert.match(
+    bookingPageSource,
+    /id="payment_deposit_section"[\s\S]*id="payments_booking_confirmation_card"[\s\S]*id="booking_confirmation_pdfs_table"[\s\S]*id="booking_confirmation_pdf_personalization_panel"[\s\S]*id="create_booking_confirmation_btn"/,
+    "The Deposit payment article should group the deposit logic, confirmation PDFs, personalization panel, and create action"
+  );
+  assert.match(
+    bookingPageScriptSource,
+    /bookingConfirmationPdfPersonalizationPanel[\s\S]*renderBookingPdfPersonalizationPanels\(els\)[\s\S]*resolveBookingPdfPersonalizationElements\(document\)/,
+    "booking page script should render and resolve the reusable booking-confirmation PDF personalization panel"
+  );
+  assert.match(
+    bookingPageScriptSource,
+    /\[els\.travelPlanPdfPersonalizationPanel, els\.offerPdfPersonalizationPanel, els\.bookingConfirmationPdfPersonalizationPanel\]/,
+    "booking page script should wire core dirty tracking to the booking-confirmation PDF personalization panel"
+  );
+  assert.match(
+    pdfPanelModuleSource,
+    /scope:\s*"booking_confirmation"[\s\S]*field:\s*"subtitle"[\s\S]*field:\s*"welcome"[\s\S]*field:\s*"closing"/,
+    "The reusable PDF personalization panel config should define booking-confirmation subtitle, welcome, and closing fields"
+  );
+  assert.match(
+    bookingCoreSource,
+    /booking_confirmation:\s*\{\s*subtitle:\s*bookingConfirmationSubtitle\.text[\s\S]*include_closing:\s*resolvePdfTextFieldEnabled\(bookingConfirmation, "booking_confirmation", "closing", bookingConfirmationClosing\)/,
+    "booking core should normalize the booking-confirmation personalization branch"
+  );
+  assert.match(
+    personalizationSource,
+    /PDF_TEXT_FIELD_CONFIG[\s\S]*booking_confirmation:\s*Object\.freeze\(\{[\s\S]*welcome:\s*Object\.freeze\(\{[\s\S]*closing:\s*Object\.freeze\(\{[\s\S]*normalizeBookingPdfPersonalization[\s\S]*PDF_PERSONALIZATION_SCOPES/,
+    "backend PDF personalization should preserve the booking-confirmation personalization branch"
+  );
+  assert.match(
+    bookingConfirmationPdfSource,
+    /resolveBookingConfirmationSubtitleText[\s\S]*resolveBookingConfirmationWelcomeText[\s\S]*resolveBookingConfirmationClosingText[\s\S]*const subtitleText = resolveBookingConfirmationSubtitleText[\s\S]*const welcomeText = resolveBookingConfirmationWelcomeText[\s\S]*const closingText = resolveBookingConfirmationClosingText/,
+    "booking_confirmation_pdf.js should resolve booking-confirmation subtitle, welcome, and closing text from the personalization scope"
   );
 });
 

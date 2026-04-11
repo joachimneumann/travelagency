@@ -8,6 +8,10 @@ import {
   formatPdfMoney,
   normalizePdfLang
 } from "./pdf_i18n.js";
+import {
+  resolveBookingPdfPersonalizationFlag,
+  resolveBookingPdfPersonalizationText
+} from "./booking_pdf_personalization.js";
 import { resolvePdfFontsForLang } from "./pdf_font_resolver.js";
 import { getBookingPersons } from "./booking_persons.js";
 import { pdfTheme } from "./style_tokens.js";
@@ -168,6 +172,10 @@ function safeText(value, fallback = "-") {
   return normalized || fallback;
 }
 
+function textOrEmpty(value) {
+  return normalizeText(value) || "";
+}
+
 function normalizeCurrency(value, fallback = "USD") {
   const normalized = normalizeText(value).toUpperCase();
   return normalized || fallback;
@@ -211,6 +219,36 @@ function buildTravelPlanRows(booking, lang) {
 
 function moneyLabel(amountCents, currency, lang) {
   return formatPdfMoney(Math.max(0, Math.round(Number(amountCents || 0))), currency, lang);
+}
+
+function resolveBookingConfirmationSubtitleText(booking, lang) {
+  if (!resolveBookingPdfPersonalizationFlag(booking?.pdf_personalization, "booking_confirmation", "include_subtitle", { sourceLang: lang })) {
+    return "";
+  }
+  return textOrEmpty(
+    resolveBookingPdfPersonalizationText(booking?.pdf_personalization, "booking_confirmation", "subtitle", lang, { sourceLang: lang })
+  );
+}
+
+function resolveBookingConfirmationWelcomeText(booking, lang, depositAmountCents, currency) {
+  if (!resolveBookingPdfPersonalizationFlag(booking?.pdf_personalization, "booking_confirmation", "include_welcome", { sourceLang: lang })) {
+    return "";
+  }
+  const override = textOrEmpty(
+    resolveBookingPdfPersonalizationText(booking?.pdf_personalization, "booking_confirmation", "welcome", lang, { sourceLang: lang })
+  );
+  if (override) return override;
+  return `This document confirms receipt of a deposit payment of ${moneyLabel(depositAmountCents, currency, lang)}.`;
+}
+
+function resolveBookingConfirmationClosingText(booking, lang) {
+  if (!resolveBookingPdfPersonalizationFlag(booking?.pdf_personalization, "booking_confirmation", "include_closing", { sourceLang: lang })) {
+    return "";
+  }
+  const override = textOrEmpty(
+    resolveBookingPdfPersonalizationText(booking?.pdf_personalization, "booking_confirmation", "closing", lang, { sourceLang: lang })
+  );
+  return override || "Thank you for your payment. AsiaTravelPlan looks forward to supporting you throughout your journey.";
 }
 
 function drawMetaRow(doc, label, value, x, y, width, fonts) {
@@ -298,6 +336,9 @@ export function createBookingConfirmationPdfWriter({
     const remainingBalanceCents = Math.max(0, totalAmountCents - depositAmountCents);
     const travelerLabel = travelerNames(booking).join(", ");
     const planRows = buildTravelPlanRows(booking, lang);
+    const subtitleText = resolveBookingConfirmationSubtitleText(booking, lang);
+    const welcomeText = resolveBookingConfirmationWelcomeText(booking, lang, depositAmountCents, currency);
+    const closingText = resolveBookingConfirmationClosingText(booking, lang);
 
     await new Promise((resolve, reject) => {
       const doc = new PDFDocument({
@@ -327,7 +368,20 @@ export function createBookingConfirmationPdfWriter({
         .text(bookingTitle(booking), PAGE_MARGIN, y, {
           width: doc.page.width - PAGE_MARGIN * 2
         });
-      y = doc.y + 16;
+      y = doc.y + 8;
+
+      if (subtitleText) {
+        doc
+          .font(pdfFontName("regular", fonts))
+          .fontSize(11)
+          .fillColor(PDF_COLORS.textMutedStrong)
+          .text(subtitleText, PAGE_MARGIN, y, {
+            width: doc.page.width - PAGE_MARGIN * 2
+          });
+        y = doc.y + 12;
+      } else {
+        y += 8;
+      }
 
       y = drawMetaRow(doc, "Who is traveling:", travelerLabel || "-", PAGE_MARGIN, y, doc.page.width - PAGE_MARGIN * 2, fonts) + 8;
       y += 4;
@@ -385,21 +439,15 @@ export function createBookingConfirmationPdfWriter({
         .font(pdfFontName("regular", fonts))
         .fontSize(10.5)
         .fillColor(PDF_COLORS.textMutedStrong)
-        .text(
-          `This document confirms receipt of a deposit payment of ${moneyLabel(depositAmountCents, currency, lang)}.`,
-          PAGE_MARGIN,
-          y,
-          { width: doc.page.width - PAGE_MARGIN * 2 }
-        );
+        .text(welcomeText, PAGE_MARGIN, y, { width: doc.page.width - PAGE_MARGIN * 2 });
       y = doc.y + 16;
-      doc
-        .text(
-          "Thank you for your payment. AsiaTravelPlan looks forward to supporting you throughout your journey.",
-          PAGE_MARGIN,
-          y,
-          { width: doc.page.width - PAGE_MARGIN * 2 }
-        );
-      y = doc.y + 28;
+      if (closingText) {
+        doc
+          .text(closingText, PAGE_MARGIN, y, { width: doc.page.width - PAGE_MARGIN * 2 });
+        y = doc.y + 28;
+      } else {
+        y += 12;
+      }
 
       const signatureWidth = (doc.page.width - PAGE_MARGIN * 2 - 24) / 2;
       const leftX = PAGE_MARGIN;

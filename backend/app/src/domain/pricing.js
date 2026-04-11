@@ -841,11 +841,15 @@ export function createPricingHelpers({
     const payments = (Array.isArray(source.payments) ? source.payments : []).map((payment, index) => ({
       id: normalizeText(payment?.id) || `pricing_payment_${index + 1}`,
       label: normalizeText(payment?.label),
+      origin_payment_term_line_id: normalizeText(payment?.origin_payment_term_line_id) || null,
       due_date: normalizeText(payment?.due_date) || null,
       net_amount_cents: normalizeAmountCents(payment?.net_amount_cents, 0),
       tax_rate_basis_points: clampOfferTaxRateBasisPoints(payment?.tax_rate_basis_points, 0),
       status: normalizeText(payment?.status).toUpperCase() || paymentStatuses.PENDING,
       paid_at: payment?.paid_at || null,
+      received_at: payment?.received_at || null,
+      confirmed_by_atp_staff_id: normalizeText(payment?.confirmed_by_atp_staff_id) || null,
+      reference: normalizeText(payment?.reference) || null,
       notes: normalizeText(payment?.notes),
       tax_amount_cents: normalizeAmountCents(payment?.tax_amount_cents, 0),
       gross_amount_cents: normalizeAmountCents(payment?.gross_amount_cents, normalizeAmountCents(payment?.net_amount_cents, 0))

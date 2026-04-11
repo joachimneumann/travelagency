@@ -51,8 +51,35 @@ const PDF_TEXT_FIELD_CONFIG = Object.freeze({
     children_policy: Object.freeze({ defaultChecked: false, enableWhenTextPresent: true }),
     whats_not_included: Object.freeze({ defaultChecked: false, enableWhenTextPresent: true }),
     closing: Object.freeze({ defaultChecked: true, enableWhenTextPresent: true })
+  }),
+  booking_confirmation: Object.freeze({
+    subtitle: Object.freeze({ defaultChecked: false, enableWhenTextPresent: true }),
+    welcome: Object.freeze({ defaultChecked: true, enableWhenTextPresent: true }),
+    closing: Object.freeze({ defaultChecked: true, enableWhenTextPresent: true })
+  }),
+  payment_request_installment: Object.freeze({
+    subtitle: Object.freeze({ defaultChecked: false, enableWhenTextPresent: true }),
+    welcome: Object.freeze({ defaultChecked: true, enableWhenTextPresent: true }),
+    closing: Object.freeze({ defaultChecked: true, enableWhenTextPresent: true })
+  }),
+  payment_confirmation_installment: Object.freeze({
+    subtitle: Object.freeze({ defaultChecked: false, enableWhenTextPresent: true }),
+    welcome: Object.freeze({ defaultChecked: true, enableWhenTextPresent: true }),
+    closing: Object.freeze({ defaultChecked: true, enableWhenTextPresent: true })
+  }),
+  payment_request_final: Object.freeze({
+    subtitle: Object.freeze({ defaultChecked: false, enableWhenTextPresent: true }),
+    welcome: Object.freeze({ defaultChecked: true, enableWhenTextPresent: true }),
+    closing: Object.freeze({ defaultChecked: true, enableWhenTextPresent: true })
+  }),
+  payment_confirmation_final: Object.freeze({
+    subtitle: Object.freeze({ defaultChecked: false, enableWhenTextPresent: true }),
+    welcome: Object.freeze({ defaultChecked: true, enableWhenTextPresent: true }),
+    closing: Object.freeze({ defaultChecked: true, enableWhenTextPresent: true })
   })
 });
+
+const PDF_PERSONALIZATION_SCOPES = Object.freeze(Object.keys(PDF_TEXT_FIELD_CONFIG));
 
 function hasNormalizedPdfTextContent(fieldValue) {
   if (!fieldValue || typeof fieldValue !== "object") return false;
@@ -78,103 +105,37 @@ function normalizePdfTextField(value, mapValue, { flatLang = "en", sourceLang = 
   });
 }
 
+function normalizePdfPersonalizationBranch(rawBranch, scope, { flatLang = "en", sourceLang = "en" } = {}) {
+  const branch = rawBranch && typeof rawBranch === "object" && !Array.isArray(rawBranch) ? rawBranch : {};
+  const fieldConfigs = PDF_TEXT_FIELD_CONFIG?.[scope] || {};
+  const normalizedBranch = {};
+  for (const field of Object.keys(fieldConfigs)) {
+    const normalizedField = normalizePdfTextField(branch?.[field], branch?.[`${field}_i18n`], { flatLang, sourceLang });
+    if (normalizedField) {
+      normalizedBranch[field] = normalizedField.text;
+      normalizedBranch[`${field}_i18n`] = normalizedField.i18n;
+    }
+    normalizedBranch[`include_${field}`] = resolvePdfTextFieldEnabled(branch, scope, field, normalizedField);
+  }
+  if (scope === "travel_plan") {
+    normalizedBranch.include_who_is_traveling = branch.include_who_is_traveling === true;
+  }
+  if (scope === "offer") {
+    normalizedBranch.include_cancellation_policy = branch.include_cancellation_policy !== false;
+    normalizedBranch.include_who_is_traveling = branch.include_who_is_traveling !== false;
+  }
+  return compactObject(normalizedBranch);
+}
+
 export function normalizeBookingPdfPersonalization(value, { flatLang = "en", sourceLang = "en" } = {}) {
   const raw = value && typeof value === "object" && !Array.isArray(value) ? value : {};
-  const travelPlan = raw.travel_plan && typeof raw.travel_plan === "object" && !Array.isArray(raw.travel_plan) ? raw.travel_plan : {};
-  const offer = raw.offer && typeof raw.offer === "object" && !Array.isArray(raw.offer) ? raw.offer : {};
-  const travelPlanSubtitle = normalizePdfTextField(travelPlan.subtitle, travelPlan.subtitle_i18n, { flatLang, sourceLang });
-  const travelPlanWelcome = normalizePdfTextField(travelPlan.welcome, travelPlan.welcome_i18n, { flatLang, sourceLang });
-  const travelPlanChildrenPolicy = normalizePdfTextField(travelPlan.children_policy, travelPlan.children_policy_i18n, { flatLang, sourceLang });
-  const travelPlanWhatsNotIncluded = normalizePdfTextField(travelPlan.whats_not_included, travelPlan.whats_not_included_i18n, { flatLang, sourceLang });
-  const travelPlanClosing = normalizePdfTextField(travelPlan.closing, travelPlan.closing_i18n, { flatLang, sourceLang });
-  const travelPlanIncludeWhoIsTraveling = travelPlan.include_who_is_traveling === true;
-  const offerSubtitle = normalizePdfTextField(offer.subtitle, offer.subtitle_i18n, { flatLang, sourceLang });
-  const offerWelcome = normalizePdfTextField(offer.welcome, offer.welcome_i18n, { flatLang, sourceLang });
-  const offerIncludeCancellationPolicy = offer.include_cancellation_policy !== false;
-  const offerIncludeWhoIsTraveling = offer.include_who_is_traveling !== false;
-  const offerChildrenPolicy = normalizePdfTextField(offer.children_policy, offer.children_policy_i18n, { flatLang, sourceLang });
-  const offerWhatsNotIncluded = normalizePdfTextField(offer.whats_not_included, offer.whats_not_included_i18n, { flatLang, sourceLang });
-  const offerClosing = normalizePdfTextField(offer.closing, offer.closing_i18n, { flatLang, sourceLang });
-
-  return compactObject({
-    travel_plan: compactObject({
-      ...(travelPlanSubtitle
-        ? {
-            subtitle: travelPlanSubtitle.text,
-            subtitle_i18n: travelPlanSubtitle.i18n
-          }
-        : {}),
-      include_subtitle: resolvePdfTextFieldEnabled(travelPlan, "travel_plan", "subtitle", travelPlanSubtitle),
-      ...(travelPlanWelcome
-        ? {
-            welcome: travelPlanWelcome.text,
-            welcome_i18n: travelPlanWelcome.i18n
-          }
-        : {}),
-      include_welcome: resolvePdfTextFieldEnabled(travelPlan, "travel_plan", "welcome", travelPlanWelcome),
-      ...(travelPlanChildrenPolicy
-        ? {
-            children_policy: travelPlanChildrenPolicy.text,
-            children_policy_i18n: travelPlanChildrenPolicy.i18n
-          }
-        : {}),
-      include_children_policy: resolvePdfTextFieldEnabled(travelPlan, "travel_plan", "children_policy", travelPlanChildrenPolicy),
-      ...(travelPlanWhatsNotIncluded
-        ? {
-            whats_not_included: travelPlanWhatsNotIncluded.text,
-            whats_not_included_i18n: travelPlanWhatsNotIncluded.i18n
-          }
-        : {}),
-      include_whats_not_included: resolvePdfTextFieldEnabled(travelPlan, "travel_plan", "whats_not_included", travelPlanWhatsNotIncluded),
-      ...(travelPlanClosing
-        ? {
-            closing: travelPlanClosing.text,
-            closing_i18n: travelPlanClosing.i18n
-          }
-        : {}),
-      include_closing: resolvePdfTextFieldEnabled(travelPlan, "travel_plan", "closing", travelPlanClosing),
-      include_who_is_traveling: travelPlanIncludeWhoIsTraveling
-    }),
-    offer: compactObject({
-      ...(offerSubtitle
-        ? {
-            subtitle: offerSubtitle.text,
-            subtitle_i18n: offerSubtitle.i18n
-          }
-        : {}),
-      include_subtitle: resolvePdfTextFieldEnabled(offer, "offer", "subtitle", offerSubtitle),
-      ...(offerWelcome
-        ? {
-            welcome: offerWelcome.text,
-            welcome_i18n: offerWelcome.i18n
-          }
-        : {}),
-      include_welcome: resolvePdfTextFieldEnabled(offer, "offer", "welcome", offerWelcome),
-      ...(offerChildrenPolicy
-        ? {
-            children_policy: offerChildrenPolicy.text,
-            children_policy_i18n: offerChildrenPolicy.i18n
-          }
-        : {}),
-      include_children_policy: resolvePdfTextFieldEnabled(offer, "offer", "children_policy", offerChildrenPolicy),
-      ...(offerWhatsNotIncluded
-        ? {
-            whats_not_included: offerWhatsNotIncluded.text,
-            whats_not_included_i18n: offerWhatsNotIncluded.i18n
-          }
-        : {}),
-      include_whats_not_included: resolvePdfTextFieldEnabled(offer, "offer", "whats_not_included", offerWhatsNotIncluded),
-      ...(offerClosing
-        ? {
-            closing: offerClosing.text,
-            closing_i18n: offerClosing.i18n
-          }
-        : {}),
-      include_closing: resolvePdfTextFieldEnabled(offer, "offer", "closing", offerClosing),
-      include_cancellation_policy: offerIncludeCancellationPolicy,
-      include_who_is_traveling: offerIncludeWhoIsTraveling
-    })
-  }) || {};
+  return compactObject(
+    Object.fromEntries(
+      PDF_PERSONALIZATION_SCOPES
+        .map((scope) => [scope, normalizePdfPersonalizationBranch(raw?.[scope], scope, { flatLang, sourceLang })])
+        .filter(([, branch]) => Boolean(branch))
+    )
+  ) || {};
 }
 
 export function extractTravelPlanPdfPersonalization(value, options = {}) {
@@ -190,13 +151,15 @@ export function extractTravelPlanPdfPersonalization(value, options = {}) {
 export function replaceTravelPlanPdfPersonalization(targetValue, sourceValue, options = {}) {
   const normalizedTarget = normalizeBookingPdfPersonalization(targetValue, options);
   const nextTravelPlan = extractTravelPlanPdfPersonalization(sourceValue, options);
-  const offer = normalizedTarget?.offer && typeof normalizedTarget.offer === "object" && !Array.isArray(normalizedTarget.offer)
-    ? cloneJson(normalizedTarget.offer)
-    : null;
-  return compactObject({
-    ...(offer ? { offer } : {}),
-    ...(nextTravelPlan?.travel_plan ? { travel_plan: cloneJson(nextTravelPlan.travel_plan) } : {})
-  }) || {};
+  const nextValue = Object.fromEntries(
+    Object.entries(normalizedTarget || {})
+      .filter(([scope]) => scope !== "travel_plan")
+      .map(([scope, branch]) => [scope, cloneJson(branch)])
+  );
+  if (nextTravelPlan?.travel_plan) {
+    nextValue.travel_plan = cloneJson(nextTravelPlan.travel_plan);
+  }
+  return compactObject(nextValue) || {};
 }
 
 export function resolveBookingPdfPersonalizationText(personalization, scope, field, lang = "en", options = {}) {

@@ -867,68 +867,80 @@
           </article>
           </section>
 
-          <section id="payments_workspace" class="booking-workspace" aria-labelledby="payments_workspace_title">
-            <div class="booking-workspace__head">
-              <div class="booking-workspace__copy">
-                <h2 id="payments_workspace_title" class="section-title u-title-compact">Payments</h2>
-                <p id="payments_workspace_summary" class="micro booking-workspace__summary"></p>
-              </div>
-            </div>
-          <article id="pricing_panel" class="booking-section">
+          <section id="pricing_panel" class="booking-section">
             <div class="booking-section__head">
               <button class="booking-section__summary booking-section__summary--inline-pad-16" id="pricing_panel_summary" type="button"></button>
             </div>
             <div class="booking-section__body">
-              <div id="payments_booking_confirmation_card" class="booking-flow-inline-card" hidden></div>
-              <div id="payments_milestones_overview" class="booking-flow-milestones" hidden></div>
+              <div class="booking-payment-sections">
+                <article id="payment_deposit_section" class="booking-payment-section booking-payment-section--deposit" hidden>
+                  <div class="booking-payment-section__head">
+                    <div class="booking-payment-section__copy">
+                      <div class="booking-payment-section__title-row">
+                        <h3 id="payment_deposit_section_title" class="booking-payment-section__title">Deposit</h3>
+                        <span id="payment_deposit_section_status" class="booking-flow-chip is-upcoming"></span>
+                      </div>
+                      <p id="payment_deposit_section_summary" class="micro booking-payment-section__summary"></p>
+                    </div>
+                    <div id="payment_deposit_section_amount" class="booking-payment-section__amount"></div>
+                  </div>
+                  <div class="booking-payment-section__body">
+                    <div id="payments_booking_confirmation_card" class="booking-flow-inline-card" hidden></div>
+
+                    <div class="backend-controls" id="pricing_deposit_controls" style="margin-bottom: 1rem;" hidden>
+                      <div class="field">
+                        <span class="field-label" id="pricing_deposit_amount_label" data-i18n-id="booking.pricing.deposit_amount">Deposit amount</span>
+                        <div id="pricing_deposit_amount" class="pricing-deposit-amount-text" aria-live="polite" aria-labelledby="pricing_deposit_amount_label"></div>
+                      </div>
+                      <div class="field">
+                        <label for="pricing_deposit_received_at_input" data-i18n-id="booking.pricing.deposit_received_at">Deposit received at</label>
+                        <input id="pricing_deposit_received_at_input" type="date" />
+                      </div>
+                      <div class="field">
+                        <label for="pricing_deposit_confirmed_by_select" data-i18n-id="booking.pricing.confirmed_by">Confirmed by</label>
+                        <select id="pricing_deposit_confirmed_by_select"></select>
+                      </div>
+                      <div class="field">
+                        <label for="pricing_deposit_reference_input" data-i18n-id="booking.pricing.deposit_reference">Deposit reference</label>
+                        <input id="pricing_deposit_reference_input" type="text" data-i18n-placeholder-id="booking.pricing.deposit_reference_placeholder" placeholder="Bank transfer ref / receipt no. (optional)" />
+                      </div>
+                      <div class="field field--compact-action">
+                        <span class="field-label" aria-hidden="true">&nbsp;</span>
+                        <div class="pricing-deposit-actions">
+                          <button class="btn pricing-deposit-ack-btn" id="pricing_deposit_received_btn" type="button" data-i18n-id="booking.pricing.full_deposit_received">Full Deposit received</button>
+                          <button class="btn btn-ghost" id="pricing_management_approval_btn" type="button" data-i18n-id="booking.pricing.management_approval" hidden>Management approval</button>
+                        </div>
+                        <span id="pricing_deposit_action_hint" class="micro booking-inline-status"></span>
+                      </div>
+                    </div>
+
+                    <div class="backend-controls" id="pricing_deposit_hint_row" style="margin-bottom: 1rem;">
+                      <span id="pricing_deposit_hint" class="micro"></span>
+                    </div>
+
+                    <div id="booking_confirmation_pdf_section" class="booking-payment-document booking-payment-document--confirmation" style="margin-bottom: 1rem;" hidden>
+                      <div class="backend-controls" style="align-items: center; margin-top: 0.2rem;">
+                        <h3 style="margin: 0; font-size: 0.98rem; flex: 1;">Payment confirmation PDFs</h3>
+                      </div>
+                      <div class="backend-table-wrap" style="margin-bottom: 0.5rem;">
+                        <table class="backend-table" id="booking_confirmation_pdfs_table"></table>
+                      </div>
+                      <div id="booking_confirmation_pdf_personalization_panel"></div>
+                      <div class="backend-controls" style="justify-content: center; margin-bottom: 0.5rem;">
+                        <button class="btn btn-ghost booking-offer-add-btn" id="create_booking_confirmation_btn" type="button" data-payment-document-create="deposit:PAYMENT_CONFIRMATION">create Booking confirmation</button>
+                      </div>
+                      <div class="backend-controls">
+                        <span id="booking_confirmation_pdf_status" class="micro booking-inline-status"></span>
+                      </div>
+                    </div>
+                  </div>
+                </article>
+
+                <div id="payments_milestones_overview" class="booking-payment-sections__list" hidden></div>
+              </div>
+
               <div class="backend-table-wrap" style="margin-bottom: 1rem;">
                 <table class="backend-table" id="pricing_summary_table"></table>
-              </div>
-
-              <div class="backend-controls" id="pricing_deposit_controls" style="margin-bottom: 1rem;" hidden>
-                <div class="field">
-                  <span class="field-label" id="pricing_deposit_amount_label" data-i18n-id="booking.pricing.deposit_amount">Deposit amount</span>
-                  <div id="pricing_deposit_amount" class="pricing-deposit-amount-text" aria-live="polite" aria-labelledby="pricing_deposit_amount_label"></div>
-                </div>
-                <div class="field">
-                  <label for="pricing_deposit_received_at_input" data-i18n-id="booking.pricing.deposit_received_at">Deposit received at</label>
-                  <input id="pricing_deposit_received_at_input" type="date" />
-                </div>
-                <div class="field">
-                  <label for="pricing_deposit_confirmed_by_select" data-i18n-id="booking.pricing.confirmed_by">Confirmed by</label>
-                  <select id="pricing_deposit_confirmed_by_select"></select>
-                </div>
-                <div class="field">
-                  <label for="pricing_deposit_reference_input" data-i18n-id="booking.pricing.deposit_reference">Deposit reference</label>
-                  <input id="pricing_deposit_reference_input" type="text" data-i18n-placeholder-id="booking.pricing.deposit_reference_placeholder" placeholder="Bank transfer ref / receipt no. (optional)" />
-                </div>
-                <div class="field field--compact-action">
-                  <span class="field-label" aria-hidden="true">&nbsp;</span>
-                  <div class="pricing-deposit-actions">
-                    <button class="btn pricing-deposit-ack-btn" id="pricing_deposit_received_btn" type="button" data-i18n-id="booking.pricing.full_deposit_received">Full Deposit received</button>
-                    <button class="btn btn-ghost" id="pricing_management_approval_btn" type="button" data-i18n-id="booking.pricing.management_approval" hidden>Management approval</button>
-                  </div>
-                  <span id="pricing_deposit_action_hint" class="micro booking-inline-status"></span>
-                </div>
-              </div>
-
-              <div class="backend-controls" id="pricing_deposit_hint_row" style="margin-bottom: 1rem;">
-                <span id="pricing_deposit_hint" class="micro"></span>
-              </div>
-
-              <div id="booking_confirmation_pdf_section" style="margin-bottom: 1rem;" hidden>
-                <div class="backend-controls" style="align-items: center; margin-top: 0.2rem;">
-                  <h3 style="margin: 0; font-size: 0.98rem; flex: 1;">Booking confirmation PDFs</h3>
-                </div>
-                <div class="backend-table-wrap" style="margin-bottom: 0.5rem;">
-                  <table class="backend-table" id="booking_confirmation_pdfs_table"></table>
-                </div>
-                <div class="backend-controls" style="justify-content: center; margin-bottom: 0.5rem;">
-                  <button class="btn btn-ghost booking-offer-add-btn" id="create_booking_confirmation_btn" type="button">create Booking confirmation</button>
-                </div>
-                <div class="backend-controls">
-                  <span id="booking_confirmation_pdf_status" class="micro booking-inline-status"></span>
-                </div>
               </div>
 
               <div class="backend-controls">
@@ -960,63 +972,7 @@
                 <span id="pricing_status" class="micro"></span>
               </div>
 
-              <article id="invoice_panel" style="margin-top: 1rem;">
-                <h2 class="section-title" style="font-size: 1.05rem;" data-i18n-id="booking.invoices">Invoices</h2>
-                <div class="backend-controls">
-                  <div class="field">
-                    <label for="invoice_select" data-i18n-id="booking.invoice">Invoice</label>
-                    <select id="invoice_select">
-                      <option value="" data-i18n-id="booking.new_invoice">New invoice</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div class="backend-controls">
-                  <div class="field">
-                    <label for="invoice_number_input" data-i18n-id="booking.invoice_number">Invoice Number</label>
-                    <input id="invoice_number_input" type="text" placeholder="Auto-generated if empty" data-i18n-placeholder-id="booking.invoice_number_placeholder" />
-                  </div>
-                  <div class="field">
-                    <label for="invoice_currency_input" data-i18n-id="booking.currency">Currency</label>
-                    <select id="invoice_currency_input"></select>
-                  </div>
-                  <div class="field">
-                    <label for="invoice_issue_date_input" data-i18n-id="booking.issue_date">Issue Date</label>
-                    <input id="invoice_issue_date_input" type="date" />
-                    <button class="btn btn-ghost" id="invoice_issue_today_btn" type="button" style="width: fit-content; padding: 0.35rem 0.6rem;" data-i18n-id="booking.today">today</button>
-                  </div>
-                  <div class="field">
-                    <label for="invoice_due_date_input" data-i18n-id="booking.due_date">Due Date</label>
-                    <input id="invoice_due_date_input" type="date" />
-                    <button class="btn btn-ghost" id="invoice_due_month_btn" type="button" style="width: fit-content; padding: 0.35rem 0.6rem;" data-i18n-id="booking.in_one_month">in one month</button>
-                  </div>
-                </div>
-
-                <div class="field" id="invoice_title_field"></div>
-
-                <div class="field" id="invoice_components_field"></div>
-
-                <div class="field">
-                  <label for="invoice_due_amount_input" id="invoice_due_amount_label" data-i18n-id="booking.invoice_due_amount_optional">Due Amount (USD, optional)</label>
-                  <input id="invoice_due_amount_input" type="number" min="1" step="1" />
-                </div>
-                <div class="field">
-                  <label for="invoice_vat_input" data-i18n-id="booking.vat">VAT (%)</label>
-                  <input id="invoice_vat_input" type="number" min="0" max="100" step="0.01" value="0" />
-                </div>
-
-                <div class="field" id="invoice_notes_field"></div>
-
-                <div class="backend-controls">
-                  <span id="invoice_status" class="micro"></span>
-                </div>
-
-                <div class="backend-table-wrap" style="margin-top:0.7rem;">
-                  <table class="backend-table" id="invoices_table"></table>
-                </div>
-              </article>
             </div>
-          </article>
           </section>
 
           <article id="activities_panel" class="booking-section">

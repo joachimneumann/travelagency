@@ -29,14 +29,26 @@ import (
 	invoice_number?: string
 	version?:        >=1 & int
 	status?:         string & !=""
+	document_kind?:  string & !=""
+	payment_id?:     common.#Identifier
+	payment_term_line_id?: common.#Identifier
+	payment_kind?:   string & !=""
+	payment_label?:  string
 	currency:        enums.#CurrencyCode
 	issue_date?:     common.#DateOnly
 	due_date?:       common.#DateOnly
 	title?:          string
+	subtitle?:       string
+	intro?:          string
 	components: [...#InvoiceComponent]
 	notes?:                string
+	closing?:              string
 	sent_to_recipient?:    bool
 	sent_to_recipient_at?: common.#Timestamp
+	payment_received_at?:  common.#Timestamp
+	payment_confirmed_by_atp_staff_id?: common.#Identifier
+	payment_confirmed_by_label?: string
+	payment_reference?:    string
 	total_amount_cents?:   common.#NonNegativeMoneyAmount
 	due_amount_cents?:     common.#NonNegativeMoneyAmount
 	created_at?:           common.#Timestamp

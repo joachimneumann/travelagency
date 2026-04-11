@@ -969,6 +969,139 @@
   gap: 0.6rem;
 }
 
+.booking-detail-page .booking-payment-sections {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.booking-detail-page .booking-payment-sections__list {
+  display: grid;
+  gap: 1rem;
+}
+
+.booking-detail-page .booking-payment-section {
+  display: grid;
+  gap: 0.95rem;
+  padding: 1rem 1.05rem;
+  border: 1px solid rgba(221, 213, 200, 0.92);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.88);
+}
+
+.booking-detail-page .booking-payment-section__head {
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  align-items: start;
+}
+
+.booking-detail-page .booking-payment-section__copy {
+  min-width: 0;
+  display: grid;
+  gap: 0.28rem;
+}
+
+.booking-detail-page .booking-payment-section__title-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  align-items: center;
+}
+
+.booking-detail-page .booking-payment-section__title {
+  margin: 0;
+  color: var(--text-strong);
+  line-height: 1.25;
+}
+
+.booking-detail-page .booking-payment-section__summary,
+.booking-detail-page .booking-payment-section__meta {
+  margin: 0;
+  color: var(--text-muted-strong);
+  font-size: var(--booking-type-meta);
+}
+
+.booking-detail-page .booking-payment-section__body {
+  display: grid;
+  gap: 0.95rem;
+}
+
+.booking-detail-page .booking-payment-document {
+  display: grid;
+  gap: 0.9rem;
+  padding: 0.95rem 1rem;
+  border: 1px solid rgba(226, 218, 206, 0.92);
+  border-radius: 20px;
+  background: rgba(252, 249, 244, 0.88);
+}
+
+.booking-detail-page .booking-payment-document__head,
+.booking-detail-page .booking-payment-document__copy {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.booking-detail-page .booking-payment-document__title {
+  margin: 0;
+  color: var(--text-strong);
+  font-size: 1rem;
+  line-height: 1.25;
+}
+
+.booking-detail-page .booking-payment-document__summary,
+.booking-detail-page .booking-payment-document__hint {
+  margin: 0;
+  color: var(--text-muted-strong);
+  font-size: var(--booking-type-meta);
+}
+
+.booking-detail-page .booking-payment-document__receipt-grid {
+  gap: 0.85rem 1rem;
+  align-items: end;
+}
+
+.booking-detail-page .booking-payment-document__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.booking-detail-page .booking-payment-document__status {
+  min-height: 1.2rem;
+}
+
+.booking-detail-page .booking-payment-document .booking-collapsible[data-booking-pdf-panel] {
+  margin-bottom: 0;
+}
+
+.booking-detail-page .booking-payment-section__amount {
+  color: var(--text-strong);
+  font-size: 1rem;
+  font-weight: var(--booking-font-weight-strong);
+  white-space: nowrap;
+}
+
+.booking-detail-page .booking-payment-section__body .booking-flow-inline-card {
+  margin-bottom: 0;
+}
+
+.booking-detail-page .booking-payment-section.is-current {
+  border-color: rgba(197, 168, 118, 0.95);
+  background: rgba(255, 248, 231, 0.9);
+}
+
+.booking-detail-page .booking-payment-section.is-done {
+  border-color: rgba(158, 191, 158, 0.95);
+  background: rgba(238, 248, 235, 0.92);
+}
+
+.booking-detail-page .booking-payment-section:focus-visible {
+  outline: 2px solid rgba(78, 112, 142, 0.7);
+  outline-offset: 3px;
+}
+
 .booking-detail-page .booking-flow-milestone-card__actions {
   display: flex;
   flex-wrap: wrap;
@@ -1011,7 +1144,8 @@
   padding: 0 1rem 1rem;
 }
 
-.booking-detail-page .booking-flow-paid-group .booking-flow-milestone-card {
+.booking-detail-page .booking-flow-paid-group .booking-flow-milestone-card,
+.booking-detail-page .booking-flow-paid-group .booking-payment-section {
   margin: 0;
 }
 

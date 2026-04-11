@@ -6038,6 +6038,285 @@ test("booking invoice create/update and offer exchange-rates endpoints work", as
   assert.equal(typeof exchangeRatesResult.body.total_price_cents, "number");
 });
 
+test("booking invoice create supports milestone-linked payment request and confirmation PDFs", async () => {
+  const createdBooking = await createSeedBooking();
+  const booking_id = createdBooking.id;
+
+  const storeBeforeGenerate = JSON.parse(await readFile(STORE_PATH, "utf8"));
+  const bookingBeforeGenerate = storeBeforeGenerate.bookings.find((item) => item.id === booking_id);
+  assert.ok(bookingBeforeGenerate);
+  bookingBeforeGenerate.assigned_keycloak_user_id = "kc-joachim";
+  bookingBeforeGenerate.assigned_keycloak_user_label = "Joachim";
+  await writeFile(STORE_PATH, `${JSON.stringify(storeBeforeGenerate, null, 2)}\n`, "utf8");
+
+  const detailBefore = await requestJson(endpointPath("booking_detail").replace("{booking_id}", booking_id), apiHeaders());
+  assert.equal(detailBefore.status, 200);
+
+  const offerPatchResult = await requestJson(
+    endpointPath("booking_offer").replace("{booking_id}", booking_id),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_offer_revision: detailBefore.body.booking.offer_revision,
+        offer: {
+          ...detailBefore.body.booking.offer,
+          currency: createdBooking.preferred_currency,
+          payment_terms: {
+            currency: createdBooking.preferred_currency,
+            lines: [
+              {
+                id: "payment_term_docs_deposit",
+                kind: "DEPOSIT",
+                label: "Deposit",
+                sequence: 1,
+                amount_spec: {
+                  mode: "FIXED_AMOUNT",
+                  fixed_amount_cents: 9000
+                },
+                due_rule: {
+                  type: "ON_ACCEPTANCE"
+                }
+              },
+              {
+                id: "payment_term_docs_installment",
+                kind: "INSTALLMENT",
+                label: "Installment 1",
+                sequence: 2,
+                amount_spec: {
+                  mode: "FIXED_AMOUNT",
+                  fixed_amount_cents: 7000
+                },
+                due_rule: {
+                  type: "DAYS_AFTER_ACCEPTANCE",
+                  days: 30
+                }
+              },
+              {
+                id: "payment_term_docs_final",
+                kind: "FINAL_BALANCE",
+                label: "Final payment",
+                sequence: 3,
+                amount_spec: {
+                  mode: "REMAINING_BALANCE"
+                },
+                due_rule: {
+                  type: "DAYS_BEFORE_TRIP_START",
+                  days: 7
+                }
+              }
+            ]
+          },
+          components: [
+            {
+              id: "offer_component_payment_docs_1",
+              category: "OTHER",
+              label: "Main service",
+              details: "Payment document coverage",
+              quantity: 1,
+              unit_amount_cents: 30000,
+              tax_rate_basis_points: 1000,
+              currency: createdBooking.preferred_currency,
+              notes: null,
+              sort_order: 0
+            }
+          ]
+        }
+      }
+    }
+  );
+  assert.equal(offerPatchResult.status, 200);
+
+  const generateResult = await requestJson(
+    endpointPath("booking_generate_offer").replace("{booking_id}", booking_id),
+    apiHeaders(),
+    {
+      method: "POST",
+      body: {
+        expected_offer_revision: offerPatchResult.body.booking.offer_revision,
+        comment: "Payment milestone documents"
+      }
+    }
+  );
+  assert.equal(generateResult.status, 201);
+
+  const generatedOffer = generateResult.body.booking.generated_offers[0];
+  const acceptResult = await requestJson(
+    endpointPath("booking_generated_offer_update")
+      .replace("{booking_id}", booking_id)
+      .replace("{generated_offer_id}", generatedOffer.id),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_offer_revision: generateResult.body.booking.offer_revision,
+        confirm_as_management: true
+      }
+    }
+  );
+  assert.equal(acceptResult.status, 200);
+
+  const acceptedDetail = await requestJson(endpointPath("booking_detail").replace("{booking_id}", booking_id), apiHeaders());
+  assert.equal(acceptedDetail.status, 200);
+  const depositReceivedAt = `${acceptedDetail.body.booking.generated_offers[0].booking_confirmation.accepted_at.slice(0, 10)}T09:15:00.000Z`;
+
+  const depositReceiptPatchResult = await requestJson(
+    endpointPath("booking_pricing").replace("{booking_id}", booking_id),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_pricing_revision: acceptedDetail.body.booking.pricing_revision,
+        pricing: acceptedDetail.body.booking.pricing,
+        deposit_receipt: {
+          deposit_received_at: depositReceivedAt,
+          deposit_confirmed_by_atp_staff_id: "kc-joachim",
+          deposit_reference: "BANK-REF-DOCS"
+        }
+      }
+    }
+  );
+  assert.equal(depositReceiptPatchResult.status, 200);
+
+  const pricingWithReceipts = JSON.parse(JSON.stringify(depositReceiptPatchResult.body.booking.pricing));
+  const installmentPayment = pricingWithReceipts.payments.find((item) => item.label === "Installment 1");
+  const finalPayment = pricingWithReceipts.payments.find((item) => item.label === "Final payment");
+  assert.ok(installmentPayment);
+  assert.ok(finalPayment);
+
+  installmentPayment.status = "PAID";
+  installmentPayment.received_at = "2026-04-01T00:00:00.000Z";
+  installmentPayment.paid_at = "2026-04-01T00:00:00.000Z";
+  installmentPayment.confirmed_by_atp_staff_id = "kc-joachim";
+  installmentPayment.reference = "INSTALLMENT-REF-001";
+
+  finalPayment.status = "PAID";
+  finalPayment.net_amount_cents = 14000;
+  finalPayment.received_at = "2026-04-12T00:00:00.000Z";
+  finalPayment.paid_at = "2026-04-12T00:00:00.000Z";
+  finalPayment.confirmed_by_atp_staff_id = "kc-joachim";
+  finalPayment.reference = "FINAL-REF-001";
+
+  const pricingReceiptPatchResult = await requestJson(
+    endpointPath("booking_pricing").replace("{booking_id}", booking_id),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_pricing_revision: depositReceiptPatchResult.body.booking.pricing_revision,
+        pricing: pricingWithReceipts
+      }
+    }
+  );
+  assert.equal(pricingReceiptPatchResult.status, 200);
+
+  let invoicesRevision = pricingReceiptPatchResult.body.booking.invoices_revision;
+  async function createPaymentDocument({ payment_id, document_kind, pdf_personalization }) {
+    const result = await requestJson(
+      endpointPath("booking_invoice_create").replace("{booking_id}", booking_id),
+      apiHeaders(),
+      {
+        method: "POST",
+        body: {
+          expected_invoices_revision: invoicesRevision,
+          payment_id,
+          document_kind,
+          lang: "en",
+          content_lang: "en",
+          source_lang: "en",
+          pdf_personalization
+        }
+      }
+    );
+    invoicesRevision = result.body?.booking?.invoices_revision ?? invoicesRevision;
+    return result;
+  }
+
+  const installmentRequestResult = await createPaymentDocument({
+    payment_id: installmentPayment.id,
+    document_kind: "PAYMENT_REQUEST",
+    pdf_personalization: {
+      include_subtitle: true,
+      subtitle: "Installment request subtitle",
+      include_welcome: true,
+      welcome: "Please settle the installment payment.",
+      include_closing: true,
+      closing: "Thank you for arranging the installment."
+    }
+  });
+  assert.equal(installmentRequestResult.status, 201);
+  assert.equal(installmentRequestResult.body.invoice.document_kind, "PAYMENT_REQUEST");
+  assert.equal(installmentRequestResult.body.invoice.payment_kind, "INSTALLMENT");
+  assert.equal(installmentRequestResult.body.invoice.payment_id, installmentPayment.id);
+  assert.equal(installmentRequestResult.body.invoice.subtitle, "Installment request subtitle");
+  assert.equal(
+    installmentRequestResult.body.booking.pdf_personalization.payment_request_installment.subtitle,
+    "Installment request subtitle"
+  );
+
+  const installmentConfirmationResult = await createPaymentDocument({
+    payment_id: installmentPayment.id,
+    document_kind: "PAYMENT_CONFIRMATION",
+    pdf_personalization: {
+      include_subtitle: true,
+      subtitle: "Installment confirmation subtitle",
+      include_welcome: true,
+      welcome: "We confirm receipt of your installment payment.",
+      include_closing: true,
+      closing: "Thank you for your installment payment."
+    }
+  });
+  assert.equal(installmentConfirmationResult.status, 201);
+  assert.equal(installmentConfirmationResult.body.invoice.document_kind, "PAYMENT_CONFIRMATION");
+  assert.equal(installmentConfirmationResult.body.invoice.payment_kind, "INSTALLMENT");
+  assert.equal(installmentConfirmationResult.body.invoice.payment_received_at, "2026-04-01T00:00:00.000Z");
+  assert.equal(
+    installmentConfirmationResult.body.booking.pdf_personalization.payment_confirmation_installment.subtitle,
+    "Installment confirmation subtitle"
+  );
+
+  const finalRequestResult = await createPaymentDocument({
+    payment_id: finalPayment.id,
+    document_kind: "PAYMENT_REQUEST",
+    pdf_personalization: {
+      include_subtitle: true,
+      subtitle: "Final request subtitle",
+      include_welcome: true,
+      welcome: "Please arrange the final payment.",
+      include_closing: true,
+      closing: "Thank you for preparing the final payment."
+    }
+  });
+  assert.equal(finalRequestResult.status, 201, JSON.stringify(finalRequestResult.body));
+  assert.equal(finalRequestResult.body.invoice.document_kind, "PAYMENT_REQUEST");
+  assert.equal(finalRequestResult.body.invoice.payment_kind, "FINAL_BALANCE");
+  assert.equal(
+    finalRequestResult.body.booking.pdf_personalization.payment_request_final.subtitle,
+    "Final request subtitle"
+  );
+
+  const finalConfirmationResult = await createPaymentDocument({
+    payment_id: finalPayment.id,
+    document_kind: "PAYMENT_CONFIRMATION",
+    pdf_personalization: {
+      include_subtitle: true,
+      subtitle: "Final confirmation subtitle",
+      include_welcome: true,
+      welcome: "We confirm the final payment has been received.",
+      include_closing: true,
+      closing: "Thank you for completing the payment."
+    }
+  });
+  assert.equal(finalConfirmationResult.status, 201);
+  assert.equal(finalConfirmationResult.body.invoice.document_kind, "PAYMENT_CONFIRMATION");
+  assert.equal(finalConfirmationResult.body.invoice.payment_kind, "FINAL_BALANCE");
+  assert.equal(finalConfirmationResult.body.invoice.payment_received_at, "2026-04-12T00:00:00.000Z");
+  assert.equal(
+    finalConfirmationResult.body.booking.pdf_personalization.payment_confirmation_final.subtitle,
+    "Final confirmation subtitle"
+  );
+});
+
 test("booking invoice patch rejects currency change once invoice is sent", async () => {
   const createdBooking = await createSeedBooking();
   const booking_id = createdBooking.id;

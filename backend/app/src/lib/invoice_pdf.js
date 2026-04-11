@@ -117,6 +117,22 @@ function safeText(value, fallback = "-") {
   return normalized || fallback;
 }
 
+function invoiceDocumentKind(value) {
+  const normalized = normalizeText(value).toUpperCase();
+  return normalized || "INVOICE";
+}
+
+function invoiceSubjectLabel(invoice, lang) {
+  const kind = invoiceDocumentKind(invoice?.document_kind);
+  if (kind === "PAYMENT_REQUEST") {
+    return pdfT(lang, "payment.request.subject", "Payment request");
+  }
+  if (kind === "PAYMENT_CONFIRMATION") {
+    return pdfT(lang, "payment.confirmation.subject", "Payment confirmation");
+  }
+  return pdfT(lang, "invoice.subject", "Invoice");
+}
+
 function drawMetaRow(doc, label, value, x, y, width, fonts) {
   doc
     .font(pdfFontName("bold", fonts))
@@ -180,9 +196,9 @@ export function createInvoicePdfWriter({ invoicePdfPath, companyProfile = null }
         autoFirstPage: true,
         compress: false,
         info: {
-          Title: normalizeText(invoice?.title) || pdfT(lang, "invoice.subject", "Invoice"),
+          Title: normalizeText(invoice?.title) || invoiceSubjectLabel(invoice, lang),
           Author: companyProfile?.name || "Asia Travel Plan",
-          Subject: pdfT(lang, "invoice.subject", "Invoice")
+          Subject: invoiceSubjectLabel(invoice, lang)
         }
       });
       const stream = createWriteStream(outputPath);
@@ -200,6 +216,13 @@ export function createInvoicePdfWriter({ invoicePdfPath, companyProfile = null }
         .text(normalizeText(invoice?.title) || pdfT(lang, "invoice.title_fallback", "Invoice for {recipient}", {
           recipient: safeText(recipient?.name, pdfT(lang, "invoice.recipient_fallback", "recipient"))
         }), PAGE_MARGIN, y, { width: 320 });
+      if (normalizeText(invoice?.subtitle)) {
+        doc
+          .font(pdfFontName("regular", fonts))
+          .fontSize(11)
+          .fillColor(PDF_COLORS.textMutedStrong)
+          .text(invoice.subtitle, PAGE_MARGIN, doc.y + 4, { width: 320 });
+      }
 
       if (companyProfile) {
         const rightColumnX = doc.page.width - PAGE_MARGIN - 220;
@@ -226,6 +249,34 @@ export function createInvoicePdfWriter({ invoicePdfPath, companyProfile = null }
       y = drawMetaRow(doc, `${pdfT(lang, "invoice.issue_date", "Issue date")}:`, safeText(formatPdfDateOnly(invoice?.issue_date, lang, { day: "2-digit", month: "short", year: "numeric" }), safeText(invoice?.issue_date)), PAGE_MARGIN, y, leftWidth, fonts) + 6;
       y = drawMetaRow(doc, `${pdfT(lang, "invoice.due_date", "Due date")}:`, safeText(formatPdfDateOnly(invoice?.due_date, lang, { day: "2-digit", month: "short", year: "numeric" }), safeText(invoice?.due_date)), PAGE_MARGIN, y, leftWidth, fonts) + 6;
       y = drawMetaRow(doc, `${pdfT(lang, "invoice.booking", "Booking")}:`, safeText(invoice?.booking_snapshot?.name || booking?.name, safeText(booking?.id)), PAGE_MARGIN, y, leftWidth, fonts) + 6;
+      if (normalizeText(invoice?.payment_label)) {
+        y = drawMetaRow(doc, `${pdfT(lang, "payment.label", "Payment")}:`, safeText(invoice?.payment_label), PAGE_MARGIN, y, leftWidth, fonts) + 6;
+      }
+      if (normalizeText(invoice?.payment_received_at)) {
+        y = drawMetaRow(
+          doc,
+          `${pdfT(lang, "payment.received_at", "Received on")}:`,
+          safeText(formatPdfDateOnly(invoice?.payment_received_at, lang, { day: "2-digit", month: "short", year: "numeric" }), safeText(invoice?.payment_received_at)),
+          PAGE_MARGIN,
+          y,
+          leftWidth,
+          fonts
+        ) + 6;
+      }
+      if (normalizeText(invoice?.payment_confirmed_by_label || invoice?.payment_confirmed_by_atp_staff_id)) {
+        y = drawMetaRow(
+          doc,
+          `${pdfT(lang, "payment.confirmed_by", "Confirmed by")}:`,
+          safeText(invoice?.payment_confirmed_by_label || invoice?.payment_confirmed_by_atp_staff_id),
+          PAGE_MARGIN,
+          y,
+          leftWidth,
+          fonts
+        ) + 6;
+      }
+      if (normalizeText(invoice?.payment_reference)) {
+        y = drawMetaRow(doc, `${pdfT(lang, "payment.reference", "Reference")}:`, safeText(invoice?.payment_reference), PAGE_MARGIN, y, leftWidth, fonts) + 6;
+      }
       y = drawMetaRow(doc, `${pdfT(lang, "invoice.currency", "Currency")}:`, currency, PAGE_MARGIN, y, leftWidth, fonts) + 18;
 
       y = ensureSpace(doc, y, 86);
@@ -247,6 +298,16 @@ export function createInvoicePdfWriter({ invoicePdfPath, companyProfile = null }
         .text(`${pdfT(lang, "invoice.email", "Email")}: ${safeText(recipient?.email)}`, PAGE_MARGIN + 14, y + 46, { width: leftWidth / 2 - 18 })
         .text(`${pdfT(lang, "invoice.phone", "Phone")}: ${safeText(recipient?.phone_number)}`, PAGE_MARGIN + leftWidth / 2, y + 46, { width: leftWidth / 2 - 14 });
       y += 94;
+
+      if (normalizeText(invoice?.intro)) {
+        y = ensureSpace(doc, y, 60);
+        doc
+          .font(pdfFontName("regular", fonts))
+          .fontSize(10.8)
+          .fillColor(PDF_COLORS.textMutedStrong)
+          .text(invoice.intro, PAGE_MARGIN, y, { width: leftWidth, lineGap: 2 });
+        y = doc.y + 16;
+      }
 
       y = ensureSpace(doc, y, 90);
       doc
@@ -354,6 +415,16 @@ export function createInvoicePdfWriter({ invoicePdfPath, companyProfile = null }
           .fontSize(10.5)
           .fillColor(PDF_COLORS.textMutedStrong)
           .text(invoice.notes, PAGE_MARGIN, y, { width: leftWidth, lineGap: 2 });
+        y = doc.y + 16;
+      }
+
+      if (normalizeText(invoice?.closing)) {
+        y = ensureSpace(doc, y, 60);
+        doc
+          .font(pdfFontName("regular", fonts))
+          .fontSize(10.5)
+          .fillColor(PDF_COLORS.textMutedStrong)
+          .text(invoice.closing, PAGE_MARGIN, y, { width: leftWidth, lineGap: 2 });
       }
 
       drawDivider(doc, doc.page.height - PAGE_MARGIN - 12);

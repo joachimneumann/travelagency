@@ -180,6 +180,56 @@ const BOOKING_PDF_PERSONALIZATION_PANELS = Object.freeze([
         previewKey: ""
       })
     ])
+  }),
+  Object.freeze({
+    scope: "booking_confirmation",
+    panelElsKey: "bookingConfirmationPdfPersonalizationPanel",
+    referenceElsKey: "pdfBookingConfirmationReference",
+    referenceMountId: "booking_pdf_booking_confirmation_reference",
+    title: "PDF Texts",
+    variant: "collapsible",
+    initiallyOpen: false,
+    items: Object.freeze([
+      Object.freeze({
+        kind: "localized",
+        field: "subtitle",
+        includeField: "include_subtitle",
+        elsKey: "pdfBookingConfirmationSubtitleMount",
+        mountId: "booking_pdf_booking_confirmation_subtitle_mount",
+        rows: 2,
+        labelKey: "booking.pdf.booking_confirmation.subtitle",
+        labelFallback: "Payment confirmation subtitle",
+        placeholderKey: "subtitle",
+        defaultChecked: false,
+        enableWhenTextPresent: true
+      }),
+      Object.freeze({
+        kind: "localized",
+        field: "welcome",
+        includeField: "include_welcome",
+        elsKey: "pdfBookingConfirmationWelcomeMount",
+        mountId: "booking_pdf_booking_confirmation_welcome_mount",
+        rows: 3,
+        labelKey: "booking.pdf.booking_confirmation.welcome",
+        labelFallback: "Payment confirmation welcome",
+        placeholderKey: "",
+        defaultChecked: true,
+        enableWhenTextPresent: true
+      }),
+      Object.freeze({
+        kind: "localized",
+        field: "closing",
+        includeField: "include_closing",
+        elsKey: "pdfBookingConfirmationClosingMount",
+        mountId: "booking_pdf_booking_confirmation_closing_mount",
+        rows: 3,
+        labelKey: "booking.pdf.booking_confirmation.closing",
+        labelFallback: "Payment confirmation closing",
+        placeholderKey: "closing",
+        defaultChecked: true,
+        enableWhenTextPresent: true
+      })
+    ])
   })
 ]);
 

@@ -40,6 +40,9 @@ import (
 	tax_rate_basis_points:        >=0 & int
 	due_date?:                    common.#DateOnly
 	paid_at?:                     common.#Timestamp
+	received_at?:                 common.#Timestamp
+	confirmed_by_atp_staff_id?:   common.#Identifier
+	reference?:                   string
 	notes?:                       string
 	tax_amount_cents?:            common.#MoneyAmount
 	gross_amount_cents?:          common.#MoneyAmount
@@ -115,8 +118,13 @@ import (
 }
 
 #BookingPdfPersonalization: {
-	travel_plan?: #BookingPdfPersonalizationScoped
-	offer?:       #BookingPdfPersonalizationScoped
+	travel_plan?:                    #BookingPdfPersonalizationScoped
+	offer?:                          #BookingPdfPersonalizationScoped
+	booking_confirmation?:           #BookingPdfPersonalizationScoped
+	payment_request_installment?:    #BookingPdfPersonalizationScoped
+	payment_confirmation_installment?: #BookingPdfPersonalizationScoped
+	payment_request_final?:          #BookingPdfPersonalizationScoped
+	payment_confirmation_final?:     #BookingPdfPersonalizationScoped
 }
 
 #BaseBooking: {

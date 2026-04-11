@@ -15,6 +15,11 @@ import {
   markInvoiceTranslationManual,
   translateInvoiceFromSourceLanguage
 } from "../../domain/booking_translation.js";
+import {
+  normalizeBookingPdfPersonalization,
+  resolveBookingPdfPersonalizationFlag,
+  resolveBookingPdfPersonalizationText
+} from "../../lib/booking_pdf_personalization.js";
 
 export function createBookingInvoiceHandlers(deps) {
   const {
@@ -64,6 +69,18 @@ export function createBookingInvoiceHandlers(deps) {
 
   function buildDefaultInvoiceTitle(invoiceLike, lang) {
     const recipientName = normalizeText(invoiceLike?.recipient_snapshot?.name) || "recipient";
+    const documentKind = normalizeText(invoiceLike?.document_kind).toUpperCase();
+    const paymentLabel = normalizeText(invoiceLike?.payment_label);
+    if (documentKind === "PAYMENT_REQUEST") {
+      return paymentLabel
+        ? pdfT(lang, "payment.request.title", "Payment request for {payment}", { payment: paymentLabel })
+        : pdfT(lang, "payment.request.title_fallback", "Payment request");
+    }
+    if (documentKind === "PAYMENT_CONFIRMATION") {
+      return paymentLabel
+        ? pdfT(lang, "payment.confirmation.title", "Payment confirmation for {payment}", { payment: paymentLabel })
+        : pdfT(lang, "payment.confirmation.title_fallback", "Payment confirmation");
+    }
     return pdfT(lang, "invoice.title_fallback", "Invoice for {recipient}", {
       recipient: recipientName
     });
@@ -117,6 +134,200 @@ export function createBookingInvoiceHandlers(deps) {
     });
   }
 
+  function bookingPaymentTerms(booking) {
+    if (booking?.offer?.payment_terms && typeof booking.offer.payment_terms === "object") {
+      return booking.offer.payment_terms;
+    }
+    if (booking?.accepted_record?.payment_terms && typeof booking.accepted_record.payment_terms === "object") {
+      return booking.accepted_record.payment_terms;
+    }
+    if (booking?.accepted_payment_terms_snapshot && typeof booking.accepted_payment_terms_snapshot === "object") {
+      return booking.accepted_payment_terms_snapshot;
+    }
+    return null;
+  }
+
+  function normalizePaymentDocumentKind(value) {
+    const normalized = normalizeText(value).toUpperCase();
+    return normalized === "PAYMENT_CONFIRMATION" ? "PAYMENT_CONFIRMATION" : "PAYMENT_REQUEST";
+  }
+
+  function findBookingPayment(booking, paymentId) {
+    const normalizedPaymentId = normalizeText(paymentId);
+    if (!normalizedPaymentId) return null;
+    const payments = Array.isArray(booking?.pricing?.payments) ? booking.pricing.payments : [];
+    return payments.find((payment) => normalizeText(payment?.id) === normalizedPaymentId) || null;
+  }
+
+  function resolvePaymentLineKind(booking, payment) {
+    const paymentLabel = normalizeText(payment?.label);
+    const lineId = normalizeText(payment?.origin_payment_term_line_id);
+    const lines = Array.isArray(bookingPaymentTerms(booking)?.lines) ? bookingPaymentTerms(booking).lines : [];
+    if (lineId) {
+      const matchedLine = lines.find((line) => normalizeText(line?.id) === lineId);
+      const kind = normalizeText(matchedLine?.kind).toUpperCase();
+      if (kind) return kind;
+    }
+    if (paymentLabel.toLowerCase().includes("deposit")) return "DEPOSIT";
+    if (paymentLabel.toLowerCase().includes("final")) return "FINAL_BALANCE";
+    return "INSTALLMENT";
+  }
+
+  function defaultPaymentLabel(payment, paymentKind) {
+    const explicitLabel = normalizeText(payment?.label);
+    if (explicitLabel) return explicitLabel;
+    if (paymentKind === "DEPOSIT") return "Deposit";
+    if (paymentKind === "FINAL_BALANCE") return "Final payment";
+    return "Installment";
+  }
+
+  function paymentDocumentPersonalizationScope(paymentKind, documentKind) {
+    if (documentKind === "PAYMENT_CONFIRMATION" && paymentKind === "DEPOSIT") {
+      return "booking_confirmation";
+    }
+    if (paymentKind === "FINAL_BALANCE") {
+      return documentKind === "PAYMENT_CONFIRMATION"
+        ? "payment_confirmation_final"
+        : "payment_request_final";
+    }
+    return documentKind === "PAYMENT_CONFIRMATION"
+      ? "payment_confirmation_installment"
+      : "payment_request_installment";
+  }
+
+  function paymentDocumentDateOnly(value, fallback = "") {
+    const normalized = normalizeText(value);
+    if (!normalized) return fallback;
+    const dateOnly = normalized.match(/^(\d{4}-\d{2}-\d{2})/);
+    if (dateOnly) return dateOnly[1];
+    const parsed = new Date(normalized);
+    if (Number.isNaN(parsed.getTime())) return fallback;
+    return parsed.toISOString().slice(0, 10);
+  }
+
+  function buildPaymentDocumentPersonalizationBranch(branch, scope, contentLang, sourceLang) {
+    const normalized = normalizeBookingPdfPersonalization({ [scope]: branch }, {
+      flatLang: contentLang,
+      sourceLang
+    });
+    return normalized?.[scope] && typeof normalized[scope] === "object"
+      ? normalized[scope]
+      : null;
+  }
+
+  function resolvePaymentDocumentText(booking, scope, field, lang, fallback, sourceLang = "en") {
+    const includeField = `include_${field}`;
+    if (!resolveBookingPdfPersonalizationFlag(booking?.pdf_personalization, scope, includeField, { flatLang: lang, sourceLang })) {
+      return "";
+    }
+    const override = normalizeText(
+      resolveBookingPdfPersonalizationText(booking?.pdf_personalization, scope, field, lang, { sourceLang })
+    );
+    return override || fallback;
+  }
+
+  function buildPaymentDocumentComponents(paymentLabel, paymentAmountCents, contentLang, sourceLang) {
+    return mergeInvoiceComponentsForLang([], [{
+      description: paymentLabel,
+      quantity: 1,
+      unit_amount_cents: paymentAmountCents
+    }], contentLang, sourceLang);
+  }
+
+  function buildPaymentDocumentDraft({
+    booking,
+    payment,
+    paymentKind,
+    documentKind,
+    invoiceParty,
+    contentLang,
+    sourceLang,
+    documentLang,
+    now
+  }) {
+    const paymentLabel = defaultPaymentLabel(payment, paymentKind);
+    const paymentAmountCents = Math.max(0, Math.round(Number(payment?.net_amount_cents || 0)));
+    const scope = paymentDocumentPersonalizationScope(paymentKind, documentKind);
+    const resolvedIntroFallback = documentKind === "PAYMENT_CONFIRMATION"
+      ? `This document confirms receipt of payment for ${paymentLabel}.`
+      : payment?.due_date
+        ? `Please find the payment request for ${paymentLabel}, due on ${paymentDocumentDateOnly(payment?.due_date, paymentDocumentDateOnly(now))}.`
+        : `Please find the payment request for ${paymentLabel}.`;
+    const titleField = mergeEditableLocalizedTextField(
+      null,
+      buildDefaultInvoiceTitle({
+        document_kind: documentKind,
+        payment_label: paymentLabel,
+        recipient_snapshot: invoiceParty
+      }, documentLang),
+      null,
+      contentLang,
+      {
+        sourceLang,
+        defaultLang: sourceLang
+      }
+    );
+    const subtitle = resolvePaymentDocumentText(booking, scope, "subtitle", documentLang, "", sourceLang);
+    const intro = resolvePaymentDocumentText(
+      booking,
+      scope,
+      "welcome",
+      documentLang,
+      resolvedIntroFallback,
+      sourceLang
+    );
+    const closing = resolvePaymentDocumentText(
+      booking,
+      scope,
+      "closing",
+      documentLang,
+      documentKind === "PAYMENT_CONFIRMATION"
+        ? "Thank you for your payment."
+        : "Please contact us if you need any support with this payment.",
+      sourceLang
+    );
+    const components = buildPaymentDocumentComponents(paymentLabel, paymentAmountCents, contentLang, sourceLang);
+    const receivedAt = normalizeText(
+      payment?.received_at
+      || (paymentKind === "DEPOSIT" ? booking?.deposit_received_at : "")
+    );
+    const confirmedByAtpStaffId = normalizeText(
+      payment?.confirmed_by_atp_staff_id
+      || (paymentKind === "DEPOSIT" ? booking?.deposit_confirmed_by_atp_staff_id : "")
+    );
+    const paymentReference = normalizeText(
+      payment?.reference
+      || (paymentKind === "DEPOSIT" ? booking?.accepted_deposit_reference : "")
+    );
+    if (documentKind === "PAYMENT_CONFIRMATION" && (!receivedAt || !confirmedByAtpStaffId)) {
+      throw new Error("Payment receipt details must be recorded before a payment confirmation PDF can be created.");
+    }
+    const issueDate = documentKind === "PAYMENT_CONFIRMATION"
+      ? paymentDocumentDateOnly(receivedAt, paymentDocumentDateOnly(now))
+      : paymentDocumentDateOnly(now);
+    return {
+      document_kind: documentKind,
+      payment_id: normalizeText(payment?.id) || null,
+      payment_term_line_id: normalizeText(payment?.origin_payment_term_line_id) || null,
+      payment_kind: paymentKind,
+      payment_label: paymentLabel,
+      currency: safeCurrency(booking?.pricing?.currency || payment?.currency),
+      issue_date: issueDate || null,
+      due_date: documentKind === "PAYMENT_REQUEST" ? (normalizeText(payment?.due_date) || null) : null,
+      title: titleField.text || buildDefaultInvoiceTitle({ document_kind: documentKind, payment_label: paymentLabel, recipient_snapshot: invoiceParty }, documentLang),
+      title_i18n: titleField.map,
+      subtitle: subtitle || null,
+      intro: intro || null,
+      closing: closing || null,
+      components,
+      due_amount_cents: paymentAmountCents,
+      total_amount_cents: paymentAmountCents,
+      payment_received_at: receivedAt || null,
+      payment_confirmed_by_atp_staff_id: confirmedByAtpStaffId || null,
+      payment_reference: paymentReference || null
+    };
+  }
+
   function buildInvoiceReadModel(invoice, booking = null, options = {}) {
     const readLang = normalizeBookingContentLang(options?.lang || invoice?.lang || "en");
     const contentLang = normalizeBookingContentLang(invoice?.lang || readLang);
@@ -140,6 +351,18 @@ export function createBookingInvoiceHandlers(deps) {
       translation_status: buildInvoiceTranslationStatus(invoice, readLang, sourceLang),
       sent_to_recipient: Boolean(invoice.sent_to_recipient),
       sent_to_recipient_at: invoice.sent_to_recipient_at || null,
+      document_kind: normalizeText(invoice?.document_kind) || "INVOICE",
+      payment_id: normalizeText(invoice?.payment_id) || null,
+      payment_term_line_id: normalizeText(invoice?.payment_term_line_id) || null,
+      payment_kind: normalizeText(invoice?.payment_kind) || null,
+      payment_label: normalizeText(invoice?.payment_label) || null,
+      subtitle: normalizeText(invoice?.subtitle) || null,
+      intro: normalizeText(invoice?.intro) || null,
+      closing: normalizeText(invoice?.closing) || null,
+      payment_received_at: normalizeText(invoice?.payment_received_at) || null,
+      payment_confirmed_by_atp_staff_id: normalizeText(invoice?.payment_confirmed_by_atp_staff_id) || null,
+      payment_confirmed_by_label: normalizeText(invoice?.payment_confirmed_by_label) || null,
+      payment_reference: normalizeText(invoice?.payment_reference) || null,
       pdf_url: `/api/v1/invoices/${encodeURIComponent(invoice.id)}/pdf`
     };
   }
@@ -227,18 +450,68 @@ export function createBookingInvoiceHandlers(deps) {
     const contentLang = requestContentLang(req, payload, null, invoiceParty.preferred_language || "en");
     const sourceLang = requestSourceLang(req, payload);
     const documentLang = normalizePdfLang(payload.lang || invoiceParty.preferred_language || "en");
-    const mergedComponents = mergeInvoiceComponentsForLang([], payload.components, contentLang, sourceLang);
+    const paymentId = normalizeText(payload?.payment_id);
+    const requestedDocumentKind = normalizePaymentDocumentKind(payload?.document_kind);
+    const linkedPayment = paymentId ? findBookingPayment(booking, paymentId) : null;
+    if (paymentId && !linkedPayment) {
+      sendJson(res, 422, { error: "The selected payment milestone could not be found." });
+      return;
+    }
+    const paymentKind = linkedPayment ? resolvePaymentLineKind(booking, linkedPayment) : "";
+    if (linkedPayment && paymentKind === "DEPOSIT" && requestedDocumentKind === "PAYMENT_REQUEST") {
+      sendJson(res, 422, { error: "The deposit payment request is part of the proposal PDF, not a separate payment request document." });
+      return;
+    }
+    const personalizationScope = linkedPayment ? paymentDocumentPersonalizationScope(paymentKind, requestedDocumentKind) : "";
+    const previousPdfPersonalizationJson = JSON.stringify(booking?.pdf_personalization || null);
+    if (personalizationScope) {
+      const personalizationBranch = buildPaymentDocumentPersonalizationBranch(
+        payload?.pdf_personalization,
+        personalizationScope,
+        contentLang,
+        sourceLang
+      );
+      if (personalizationBranch) {
+        booking.pdf_personalization = normalizeBookingPdfPersonalization({
+          ...(booking?.pdf_personalization && typeof booking.pdf_personalization === "object" ? booking.pdf_personalization : {}),
+          [personalizationScope]: personalizationBranch
+        }, {
+          flatLang: contentLang,
+          sourceLang
+        });
+      }
+    }
+    const pdfPersonalizationChanged = JSON.stringify(booking?.pdf_personalization || null) !== previousPdfPersonalizationJson;
+
+    const paymentDocumentDraft = linkedPayment
+      ? buildPaymentDocumentDraft({
+          booking,
+          payment: linkedPayment,
+          paymentKind,
+          documentKind: requestedDocumentKind,
+          invoiceParty,
+          contentLang,
+          sourceLang,
+          documentLang,
+          now
+        })
+      : null;
+    const mergedComponents = paymentDocumentDraft
+      ? paymentDocumentDraft.components
+      : mergeInvoiceComponentsForLang([], payload.components, contentLang, sourceLang);
     if (!mergedComponents.length) {
       sendJson(res, 422, { error: "At least one invoice component is required" });
       return;
     }
     const totalAmountCents = computeInvoiceComponentTotal(mergedComponents);
-    const dueAmountCents = safeAmountCents(payload.due_amount_cents) ?? totalAmountCents;
+    const dueAmountCents = safeAmountCents(payload.due_amount_cents) ?? paymentDocumentDraft?.due_amount_cents ?? totalAmountCents;
     const titleField = mergeEditableLocalizedTextField(
       null,
-      normalizeText(payload.title) || pdfT(documentLang, "invoice.title_fallback", "Invoice for {recipient}", {
-        recipient: normalizeText(invoiceParty.name) || "recipient"
-      }),
+      normalizeText(payload.title)
+        || paymentDocumentDraft?.title
+        || pdfT(documentLang, "invoice.title_fallback", "Invoice for {recipient}", {
+          recipient: normalizeText(invoiceParty.name) || "recipient"
+        }),
       payload.title_i18n,
       contentLang,
       {
@@ -246,26 +519,44 @@ export function createBookingInvoiceHandlers(deps) {
         defaultLang: sourceLang
       }
     );
-    const notesField = mergeEditableLocalizedTextField(null, payload.notes, payload.notes_i18n, contentLang, {
-      sourceLang,
-      defaultLang: sourceLang
-    });
+    const notesField = mergeEditableLocalizedTextField(
+      null,
+      payload.notes ?? paymentDocumentDraft?.notes,
+      payload.notes_i18n,
+      contentLang,
+      {
+        sourceLang,
+        defaultLang: sourceLang
+      }
+    );
     const invoice = {
       id: `inv_${randomUUID()}`,
       booking_id: bookingId,
       invoice_number: normalizeText(payload.invoice_number) || nextInvoiceNumber(store),
       version: 1,
       status: "DRAFT",
+      document_kind: paymentDocumentDraft?.document_kind || normalizeText(payload.document_kind) || null,
+      payment_id: paymentDocumentDraft?.payment_id || null,
+      payment_term_line_id: paymentDocumentDraft?.payment_term_line_id || null,
+      payment_kind: paymentDocumentDraft?.payment_kind || null,
+      payment_label: paymentDocumentDraft?.payment_label || null,
       lang: documentLang,
-      currency: safeCurrency(payload.currency),
-      issue_date: normalizeText(payload.issue_date) || now.slice(0, 10),
-      due_date: normalizeText(payload.due_date) || null,
+      currency: safeCurrency(payload.currency || paymentDocumentDraft?.currency),
+      issue_date: normalizeText(payload.issue_date) || paymentDocumentDraft?.issue_date || now.slice(0, 10),
+      due_date: normalizeText(payload.due_date) || paymentDocumentDraft?.due_date || null,
       title: titleField.text || buildDefaultInvoiceTitle({ recipient_snapshot: invoiceParty }, documentLang),
       title_i18n: titleField.map,
+      subtitle: normalizeText(payload.subtitle) || paymentDocumentDraft?.subtitle || null,
+      intro: normalizeText(payload.intro) || paymentDocumentDraft?.intro || null,
       notes: notesField.text || null,
       notes_i18n: notesField.map,
+      closing: normalizeText(payload.closing) || paymentDocumentDraft?.closing || null,
       sent_to_recipient: false,
       sent_to_recipient_at: null,
+      payment_received_at: normalizeText(payload.payment_received_at) || paymentDocumentDraft?.payment_received_at || null,
+      payment_confirmed_by_atp_staff_id: normalizeText(payload.payment_confirmed_by_atp_staff_id) || paymentDocumentDraft?.payment_confirmed_by_atp_staff_id || null,
+      payment_confirmed_by_label: normalizeText(payload.payment_confirmed_by_label) || paymentDocumentDraft?.payment_confirmed_by_label || null,
+      payment_reference: normalizeText(payload.payment_reference) || paymentDocumentDraft?.payment_reference || null,
       recipient_snapshot: {
         name: invoiceParty.name || "Primary contact",
         email: invoiceParty.email || null,
@@ -288,8 +579,19 @@ export function createBookingInvoiceHandlers(deps) {
     await writeInvoicePdf(buildInvoiceReadModel(invoice, booking, { lang: documentLang, sourceLang }), invoiceParty, booking);
     store.invoices.push(invoice);
     incrementBookingRevision(booking, "invoices_revision");
+    if (pdfPersonalizationChanged) {
+      incrementBookingRevision(booking, "core_revision");
+    }
     booking.updated_at = now;
-    addActivity(store, booking.id, "INVOICE_UPDATED", actorLabel(principal, normalizeText(payload.actor) || "keycloak_user"), `Invoice ${invoice.invoice_number} created`);
+    addActivity(
+      store,
+      booking.id,
+      "INVOICE_UPDATED",
+      actorLabel(principal, normalizeText(payload.actor) || "keycloak_user"),
+      paymentDocumentDraft
+        ? `${requestedDocumentKind === "PAYMENT_CONFIRMATION" ? "Payment confirmation" : "Payment request"} ${invoice.invoice_number} created for ${paymentDocumentDraft.payment_label}`
+        : `Invoice ${invoice.invoice_number} created`
+    );
     await persistStore(store);
     sendJson(res, 201, {
       invoice: buildInvoiceReadModel(invoice, booking, { lang: contentLang, sourceLang }),
