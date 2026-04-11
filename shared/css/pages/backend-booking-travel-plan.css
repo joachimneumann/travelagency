@@ -1,5 +1,6 @@
 .booking-detail-page {
   --travelplan_day_color: rgba(12, 99, 180, 0.3);
+  --travelplan_day_surface: rgb(182, 208, 233);
   --travelplan_service_color: rgba(12, 99, 180, 0.1);
   --travelplan_day_text_color: #084f96;
   --travelplan_service_text_color: #488fd3;
@@ -74,12 +75,13 @@
 }
 
 .booking-detail-page #travel_plan_panel .booking-section__head {
-  background: var(--travelplan_day_color);
+  background: var(--travelplan_day_surface);
 }
 
 .booking-detail-page #travel_plan_panel .booking-section__summary {
   background: transparent;
   color: var(--text-black);
+  font-weight: var(--font-weight-bold);
 }
 
 .booking-detail-page #travel_plan_panel .booking-section__summary::after {
@@ -100,8 +102,34 @@
   background: var(--surface);
 }
 
+.booking-detail-page #travel_plan_panel :is(
+  .travel-plan-day__head h3,
+  .travel-plan-service__collapsed-title
+) {
+  font-weight: var(--font-weight-regular);
+}
+
+.booking-detail-page #travel_plan_panel .travel-plan-service__body {
+  font-weight: var(--font-weight-regular);
+}
+
+.booking-detail-page #travel_plan_panel .travel-plan-service__body :is(
+  .field label,
+  .field .field-label,
+  .travel-plan-images__title-wrap h4,
+  .travel-plan-links__head h4,
+  .travel-plan-images__hero-remove,
+  .travel-plan-coverage-badge
+) {
+  font-weight: inherit;
+}
+
+.booking-detail-page #travel_plan_panel .btn {
+  font-weight: var(--font-weight-regular);
+}
+
 .booking-detail-page #travel_plan_pdf_panel .booking-section__head {
-  background: var(--travelplan_day_color);
+  background: var(--travelplan_day_surface);
 }
 
 .booking-detail-page #travel_plan_pdf_panel .booking-section__summary {
@@ -141,6 +169,25 @@
   border: 0;
   background: transparent;
   box-shadow: none;
+}
+
+.booking-detail-page #travel_plan_pdf_panel .booking-collapsible[data-booking-pdf-panel] {
+  background: var(--travelplan_day_surface);
+}
+
+.booking-detail-page #travel_plan_pdf_panel .booking-collapsible[data-booking-pdf-panel] .booking-collapsible__head,
+.booking-detail-page #travel_plan_pdf_panel .booking-collapsible[data-booking-pdf-panel] .booking-collapsible__summary,
+.booking-detail-page #travel_plan_pdf_panel .booking-collapsible[data-booking-pdf-panel] .booking-collapsible__body {
+  background: var(--travelplan_day_surface);
+}
+
+.booking-detail-page #travel_plan_pdf_panel .booking-collapsible[data-booking-pdf-panel] .booking-collapsible__summary {
+  color: var(--text-black);
+  font-weight: var(--font-weight-bold);
+}
+
+.booking-detail-page #travel_plan_pdf_panel .booking-collapsible[data-booking-pdf-panel] .booking-collapsible__summary::after {
+  color: var(--text-black);
 }
 
 #travel_plan_editor {
@@ -344,7 +391,7 @@
 
 .booking-detail-page .travel-plan-day__date-shortcut.is-active {
   background: var(--travelplan_day_color);
-  color: var(--travel-plan-accent-text);
+  color: var(--text-black);
   border-color: var(--travel-plan-accent-border-hover);
 }
 
@@ -579,7 +626,7 @@
 .booking-detail-page .travel-plan-add-day-btn {
   background: var(--travelplan_day_color);
   border-color: var(--travel-plan-accent-border-strong);
-  color: var(--travel-plan-accent-text);
+  color: var(--text-black);
   box-shadow: none;
 }
 
@@ -587,7 +634,7 @@
 .booking-detail-page .travel-plan-add-day-btn:focus-visible {
   background: var(--travelplan_day_color);
   border-color: var(--travel-plan-accent-border-hover);
-  color: var(--travel-plan-accent-text);
+  color: var(--text-black);
   box-shadow: 0 8px 16px var(--travel-plan-accent-shadow);
 }
 
@@ -598,7 +645,8 @@
 .booking-detail-page .booking-offer-add-btn.travel-plan-pdf-btn {
   background: var(--travelplan_day_color);
   border-color: var(--travel-plan-accent-border-strong);
-  color: var(--travel-plan-accent-text);
+  color: var(--text-black);
+  font-weight: var(--font-weight-regular);
   box-shadow: none;
 }
 
@@ -606,7 +654,7 @@
 .booking-detail-page .booking-offer-add-btn.travel-plan-pdf-btn:focus-visible {
   background: var(--travelplan_day_color);
   border-color: var(--travel-plan-accent-border-hover);
-  color: var(--travel-plan-accent-text);
+  color: var(--text-black);
   box-shadow: 0 8px 16px var(--travel-plan-accent-shadow);
 }
 
@@ -1352,7 +1400,7 @@
   border-radius: 999px;
   border-color: var(--travel-plan-accent-border-strong);
   background: var(--travelplan_service_color);
-  color: var(--travel-plan-service-button-text);
+  color: var(--text-black);
   font-size: 1rem;
   font-weight: var(--font-weight-bold);
   box-shadow: none;
@@ -1366,19 +1414,19 @@
 .booking-detail-page .travel-plan-day-add-btn--service:focus-visible:not([disabled]) {
   border-color: var(--travel-plan-accent-border-hover);
   background: var(--travelplan_service_color);
-  color: var(--travel-plan-service-button-text);
+  color: var(--text-black);
   box-shadow: 0 8px 16px var(--travel-plan-accent-shadow);
 }
 
 .booking-detail-page .travel-plan-day-add-btn--day-copy {
   background: var(--travelplan_day_color);
-  color: var(--travel-plan-accent-text);
+  color: var(--text-black);
 }
 
 .booking-detail-page .travel-plan-day-add-btn--day-copy:hover:not([disabled]),
 .booking-detail-page .travel-plan-day-add-btn--day-copy:focus-visible:not([disabled]) {
   background: var(--travelplan_day_color);
-  color: var(--travel-plan-accent-text);
+  color: var(--text-black);
 }
 
 .travel-plan-link-row {

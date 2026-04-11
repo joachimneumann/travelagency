@@ -645,7 +645,7 @@ test("booking persons section summary shows traveler count with traveler names",
   );
 });
 
-test("booking page scrolls only inside the content region below the sticky control bar", async () => {
+test("booking page scrolls across the full main-content section while keeping the sticky control bar layout", async () => {
   const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
   const bookingStylesPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "pages", "backend-booking.css");
   const bookingSource = await readFile(bookingPagePath, "utf8");
@@ -673,13 +673,18 @@ test("booking page scrolls only inside the content region below the sticky contr
   );
   assert.match(
     bookingStyles,
-    /\.booking-detail-page \{\s*[\s\S]*overflow: hidden;[\s\S]*grid-template-rows: auto minmax\(0, 1fr\);/,
-    "The booking page should lock the page layout to the viewport instead of scrolling the full document"
+    /\.booking-detail-page \{\s*[\s\S]*height: 100dvh;[\s\S]*overflow-x: hidden;[\s\S]*overflow-y: hidden;[\s\S]*grid-template-rows: auto minmax\(0, 1fr\);/,
+    "The booking page should lock the viewport and reserve the remaining height for the main content section"
   );
   assert.match(
     bookingStyles,
-    /\.booking-detail-page \.section > \.container \{\s*[\s\S]*grid-template-rows: auto auto auto minmax\(0, 1fr\);/,
-    "The booking container should reserve dedicated rows above and below the sticky control bar"
+    /\.booking-detail-page #main-content > \.section \{\s*[\s\S]*display: grid;[\s\S]*grid-template-rows: auto auto auto minmax\(0, 1fr\);[\s\S]*overflow: hidden;[\s\S]*padding: 0 0 1rem;/,
+    "The booking section should reserve dedicated non-scrolling rows above a scrollable content track"
+  );
+  assert.match(
+    bookingStyles,
+    /\.booking-detail-page \.section > \.container \{\s*[\s\S]*display: contents;/,
+    "The booking container should flatten into the section grid so the dirty-bar row stays outside the scroll track"
   );
   assert.match(
     bookingStyles,
@@ -693,13 +698,18 @@ test("booking page scrolls only inside the content region below the sticky contr
   );
   assert.match(
     bookingStyles,
-    /\.booking-detail-page \.booking-detail-page__scroll \{\s*[\s\S]*overflow: auto;[\s\S]*-ms-overflow-style: none;[\s\S]*scrollbar-width: none;[\s\S]*padding: 0 0 2rem;/,
-    "The booking content below the sticky bar should scroll inside its own region without showing a native scrollbar"
+    /\.booking-detail-page \.booking-detail-page__scroll \{\s*[\s\S]*overflow: auto;[\s\S]*overscroll-behavior: contain;[\s\S]*-ms-overflow-style: none;[\s\S]*scrollbar-width: none;[\s\S]*padding: 0 0 2rem;/,
+    "The booking content track should scroll while the dirty-bar row stays outside that scroll region"
   );
   assert.match(
     bookingStyles,
     /\.booking-detail-page \.booking-detail-page__scroll::\-webkit\-scrollbar \{\s*[\s\S]*display: none;/,
-    "The booking scroll region should hide WebKit scrollbars"
+    "The booking content scroll track should hide WebKit scrollbars"
+  );
+  assert.match(
+    bookingStyles,
+    /\.booking-detail-page :is\(\.booking-dirty-bar-row, \.booking-page-shell\) \{\s*[\s\S]*width: min\(100%, 1080px\);[\s\S]*margin-inline: auto;/,
+    "The dirty-bar row and booking content should stay centered within the shared detail-page width"
   );
   assert.match(
     bookingStyles,
@@ -1022,6 +1032,16 @@ test("service titles remain optional across save validation and UI state", async
     /\.travel-plan-service__overview \{[\s\S]*grid-template-columns: minmax\(0, 1fr\) minmax\(0, 1fr\);/,
     "Travel plan styles should keep the service fields and image editor in a balanced two-column layout"
   );
+  assert.match(
+    travelPlanStyles,
+    /#travel_plan_panel \.booking-section__summary \{[\s\S]*font-weight: var\(--font-weight-bold\);[\s\S]*#travel_plan_panel :is\([\s\S]*\.travel-plan-day__head h3,[\s\S]*\.travel-plan-service__collapsed-title[\s\S]*\) \{[\s\S]*font-weight: var\(--font-weight-regular\);/,
+    "The Travel plan section header should be bold while the day and service headings remain regular-weight"
+  );
+  assert.match(
+    travelPlanStyles,
+    /#travel_plan_panel \.travel-plan-service__body \{[\s\S]*font-weight: var\(--font-weight-regular\);[\s\S]*#travel_plan_panel \.travel-plan-service__body :is\([\s\S]*\.field label,[\s\S]*\.field \.field-label,[\s\S]*\.travel-plan-images__title-wrap h4,[\s\S]*\.travel-plan-links__head h4,[\s\S]*\.travel-plan-images__hero-remove,[\s\S]*\.travel-plan-coverage-badge[\s\S]*\) \{[\s\S]*font-weight: inherit;/,
+    "Travel plan service contents should keep labels, titles, and badges at regular weight"
+  );
 });
 
 test("travel-plan services are single-day only across model, API, backend, and UI", async () => {
@@ -1152,9 +1172,13 @@ test("travel plan images cap inline previews and open in a full-size modal", asy
 test("travel plan footer exposes clean-state-gated preview and create actions backed by dedicated contract pdf endpoints", async () => {
   const travelPlanScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan.js");
   const bookingPageScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking.js");
+  const bookingTravelPlanStylesPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "pages", "backend-booking-travel-plan.css");
   const openApiPath = path.resolve(__dirname, "..", "..", "..", "api", "generated", "openapi.yaml");
-  const travelPlanSource = await readFile(travelPlanScriptPath, "utf8");
-  const bookingPageSource = await readFile(bookingPageScriptPath, "utf8");
+  const [travelPlanSource, bookingPageSource, bookingTravelPlanStyles] = await Promise.all([
+    readFile(travelPlanScriptPath, "utf8"),
+    readFile(bookingPageScriptPath, "utf8"),
+    readFile(bookingTravelPlanStylesPath, "utf8")
+  ]);
   const operations = await openApiPathOperations(openApiPath);
 
   assert.ok(
@@ -1194,6 +1218,31 @@ test("travel plan footer exposes clean-state-gated preview and create actions ba
     travelPlanSource,
     /function previewTravelPlanPdf\(\)[\s\S]*bookingTravelPlanPdfRequest\([\s\S]*query:\s*bookingLanguageQuery\(\)/,
     "Previewing a travel-plan PDF should use the preview GET request with explicit booking content/source language query parameters"
+  );
+  assert.match(
+    bookingTravelPlanStyles,
+    /\.booking-detail-page \.booking-offer-add-btn\.travel-plan-pdf-btn \{[\s\S]*color: var\(--text-black\);[\s\S]*font-weight: var\(--font-weight-regular\);[\s\S]*\.booking-detail-page \.booking-offer-add-btn\.travel-plan-pdf-btn:hover,[\s\S]*\.booking-detail-page \.booking-offer-add-btn\.travel-plan-pdf-btn:focus-visible \{[\s\S]*color: var\(--text-black\);/,
+    "The Travel plan PDF action buttons should use black regular-weight text across their default and hover states"
+  );
+  assert.match(
+    bookingTravelPlanStyles,
+    /\.booking-detail-page \.travel-plan-day-add-btn--service \{[\s\S]*color: var\(--text-black\);[\s\S]*\.booking-detail-page \.travel-plan-day-add-btn--service:hover:not\(\[disabled\]\),[\s\S]*\.booking-detail-page \.travel-plan-day-add-btn--service:focus-visible:not\(\[disabled\]\) \{[\s\S]*color: var\(--text-black\);/,
+    "The Travel plan service action buttons should use black text across their default and hover states"
+  );
+  assert.match(
+    bookingTravelPlanStyles,
+    /\.booking-detail-page \.travel-plan-add-day-btn \{[\s\S]*color: var\(--text-black\);[\s\S]*\.booking-detail-page \.travel-plan-add-day-btn:hover,[\s\S]*\.booking-detail-page \.travel-plan-add-day-btn:focus-visible \{[\s\S]*color: var\(--text-black\);/,
+    "The Travel plan new-day button should use black text across its default and hover states"
+  );
+  assert.match(
+    bookingTravelPlanStyles,
+    /\.booking-detail-page \.travel-plan-day-add-btn--day-copy \{[\s\S]*color: var\(--text-black\);[\s\S]*\.booking-detail-page \.travel-plan-day-add-btn--day-copy:hover:not\(\[disabled\]\),[\s\S]*\.booking-detail-page \.travel-plan-day-add-btn--day-copy:focus-visible:not\(\[disabled\]\) \{[\s\S]*color: var\(--text-black\);/,
+    "The Travel plan day-append buttons should use black text across their default and hover states"
+  );
+  assert.match(
+    bookingTravelPlanStyles,
+    /#travel_plan_panel \.btn \{[\s\S]*font-weight: var\(--font-weight-regular\);/,
+    "The main Travel plan panel buttons should use regular-weight text"
   );
   assert.match(
     bookingPageSource,
@@ -1339,13 +1388,15 @@ test("travel-plan PDF personalization exposes children policy and exclusions fie
   const bookingPageScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking.js");
   const bookingCorePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "core.js");
   const pdfPanelModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "pdf_personalization_panel.js");
+  const bookingTravelPlanStylesPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "pages", "backend-booking-travel-plan.css");
   const travelPlanPdfPath = path.resolve(__dirname, "..", "src", "lib", "travel_plan_pdf.js");
-  const [bookingModelSource, bookingPageSource, bookingPageScriptSource, bookingCoreSource, pdfPanelModuleSource, travelPlanPdfSource] = await Promise.all([
+  const [bookingModelSource, bookingPageSource, bookingPageScriptSource, bookingCoreSource, pdfPanelModuleSource, bookingTravelPlanStyles, travelPlanPdfSource] = await Promise.all([
     readFile(bookingModelPath, "utf8"),
     readFile(bookingPagePath, "utf8"),
     readFile(bookingPageScriptPath, "utf8"),
     readFile(bookingCorePath, "utf8"),
     readFile(pdfPanelModulePath, "utf8"),
+    readFile(bookingTravelPlanStylesPath, "utf8"),
     readFile(travelPlanPdfPath, "utf8")
   ]);
 
@@ -1371,8 +1422,18 @@ test("travel-plan PDF personalization exposes children policy and exclusions fie
   );
   assert.match(
     pdfPanelModuleSource,
-    /scope:\s*"travel_plan"[\s\S]*field:\s*"children_policy"[\s\S]*field:\s*"whats_not_included"[\s\S]*field:\s*"closing"/,
+    /scope:\s*"travel_plan"[\s\S]*field:\s*"subtitle"[\s\S]*field:\s*"children_policy"[\s\S]*field:\s*"whats_not_included"[\s\S]*field:\s*"closing"/,
     "The reusable PDF personalization panel config should define the travel-plan children policy, exclusions, and closing fields in order"
+  );
+  assert.doesNotMatch(
+    pdfPanelModuleSource,
+    /mountId:\s*"[^"]*travel[_-]plan[^"]*subtitle[^"]*"/,
+    "The reusable PDF personalization panel should no longer assign the legacy travel-plan subtitle mount id"
+  );
+  assert.match(
+    bookingTravelPlanStyles,
+    /--travelplan_day_surface:\s*rgb\(182,\s*208,\s*233\);[\s\S]*#travel_plan_pdf_panel \.booking-section__head \{[\s\S]*background: var\(--travelplan_day_surface\);[\s\S]*#travel_plan_pdf_panel \.booking-collapsible\[data-booking-pdf-panel\] \{[\s\S]*background: var\(--travelplan_day_surface\);[\s\S]*#travel_plan_pdf_panel \.booking-collapsible\[data-booking-pdf-panel\] \.booking-collapsible__head,[\s\S]*#travel_plan_pdf_panel \.booking-collapsible\[data-booking-pdf-panel\] \.booking-collapsible__summary,[\s\S]*#travel_plan_pdf_panel \.booking-collapsible\[data-booking-pdf-panel\] \.booking-collapsible__body \{[\s\S]*background: var\(--travelplan_day_surface\);[\s\S]*#travel_plan_pdf_panel \.booking-collapsible\[data-booking-pdf-panel\] \.booking-collapsible__summary \{[\s\S]*color: var\(--text-black\);[\s\S]*font-weight: var\(--font-weight-bold\);[\s\S]*#travel_plan_pdf_panel \.booking-collapsible\[data-booking-pdf-panel\] \.booking-collapsible__summary::after \{[\s\S]*color: var\(--text-black\);/,
+    "The Travel plan PDF texts panel should use the same opaque light blue surface as the Travel plan PDF section header with black bold summary text"
   );
   assert.match(
     bookingCoreSource,
@@ -2474,12 +2535,14 @@ test("travel-plan day date presets stay wired across model, API, backend, and UI
   const backendPath = path.resolve(__dirname, "..", "..", "..", "backend", "app", "src", "domain", "travel_plan.js");
   const helperPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan_helpers.js");
   const uiPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan.js");
-  const [modelSource, openApiSource, backendSource, helperSource, uiSource] = await Promise.all([
+  const travelPlanStylesPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "pages", "backend-booking-travel-plan.css");
+  const [modelSource, openApiSource, backendSource, helperSource, uiSource, travelPlanStyles] = await Promise.all([
     readFile(modelPath, "utf8"),
     readFile(openApiPath, "utf8"),
     readFile(backendPath, "utf8"),
     readFile(helperPath, "utf8"),
-    readFile(uiPath, "utf8")
+    readFile(uiPath, "utf8"),
+    readFile(travelPlanStylesPath, "utf8")
   ]);
 
   assert.match(
@@ -2506,6 +2569,11 @@ test("travel-plan day date presets stay wired across model, API, backend, and UI
     uiSource,
     /data-travel-plan-day-field="date_string"|data-travel-plan-set-date-string/,
     "The booking travel-plan UI should expose the day date preset controls and hidden date_string field"
+  );
+  assert.match(
+    travelPlanStyles,
+    /\.booking-detail-page \.travel-plan-day__date-shortcut\.is-active \{[\s\S]*color: var\(--text-black\);/,
+    "The active travel-plan day date preset should use black text"
   );
 });
 

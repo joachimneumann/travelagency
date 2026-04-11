@@ -13,7 +13,7 @@ const BOOKING_PDF_PERSONALIZATION_PANELS = Object.freeze([
         field: "subtitle",
         includeField: "include_subtitle",
         elsKey: "pdfTravelPlanSubtitleMount",
-        mountId: "booking_pdf_travel_plan_subtitle_mount",
+        mountDataKey: "travel-plan-subtitle",
         rows: 2,
         labelKey: "booking.pdf.travel_plan.subtitle",
         labelFallback: "Travel plan subtitle",
@@ -239,7 +239,11 @@ const BOOKING_PDF_PERSONALIZATION_PANEL_BY_SCOPE = Object.freeze(
 
 function buildPdfFieldMountsMarkup(config) {
   return config.items
-    .map((item) => `<div id="${item.mountId}"></div>`)
+    .map((item) => {
+      if (item.mountId) return `<div id="${item.mountId}"></div>`;
+      if (item.mountDataKey) return `<div data-booking-pdf-mount="${item.mountDataKey}"></div>`;
+      return "<div></div>";
+    })
     .join("");
 }
 
@@ -301,13 +305,22 @@ function findElementById(root, id) {
   return root.querySelector(`#${id}`);
 }
 
+function findElementBySelector(root, selector) {
+  if (!root || typeof root.querySelector !== "function") return null;
+  return root.querySelector(selector);
+}
+
 function resolvePdfPanelElement(config, root) {
   return findElementById(root, config.referenceMountId);
 }
 
 function resolvePdfItemElements(config, root) {
   return Object.fromEntries(
-    config.items.map((item) => [item.elsKey, findElementById(root, item.mountId)])
+    config.items.map((item) => {
+      if (item.mountId) return [item.elsKey, findElementById(root, item.mountId)];
+      if (item.mountDataKey) return [item.elsKey, findElementBySelector(root, `[data-booking-pdf-mount="${item.mountDataKey}"]`)];
+      return [item.elsKey, null];
+    })
   );
 }
 
