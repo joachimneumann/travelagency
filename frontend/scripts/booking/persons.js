@@ -309,20 +309,25 @@ export function createBookingPersonsModule(ctx) {
     els.personsMismatchWarning.hidden = !message;
   }
 
-  function renderPersonsSectionSummary(target, travelerCount, allTravelersHavePassportData) {
+  function renderPersonsSectionSummary(target, travelerCount) {
     if (!(target instanceof HTMLElement)) return;
+    const travelerNames = state.personDrafts
+      .filter((person) => !person?._is_new && isTravelingPerson(person))
+      .map((person) => normalizeText(person?.name))
+      .filter(Boolean)
+      .map((name) => getAbbreviatedPersonName(name))
+      .join(", ");
     const travelerCountLabel = bookingT(
       travelerCount === 1 ? "booking.persons.traveling_summary_one" : "booking.persons.traveling_summary_many",
       travelerCount === 1 ? "{count} Traveler" : "{count} Travelers",
-      { count: travelerCount }
+      {
+        count: travelerCount,
+        people: travelerNames || bookingT("booking.persons.this_person", "this person")
+      }
     );
     target.innerHTML = `
       <span class="backend-section-header booking-persons-summary">
         <span class="backend-section-header__primary">${escapeHtml(travelerCountLabel)}</span>
-        <span class="booking-persons-summary__passport${allTravelersHavePassportData ? " is-complete" : ""}">
-          <span class="booking-person-card__identity-check booking-persons-summary__passport-check" aria-hidden="true">&#10003;</span>
-          <span>${escapeHtml(bookingT("booking.passport", "Passport"))}</span>
-        </span>
       </span>
     `;
   }
@@ -336,8 +341,7 @@ export function createBookingPersonsModule(ctx) {
     const traveling = persons.filter((person) => isTravelingPerson(person));
     renderPersonsSectionSummary(
       els.personsPanelSummary,
-      traveling.length,
-      traveling.length > 0 && traveling.every((person) => personHasCompleteIdentityDocument(person, "passport"))
+      traveling.length
     );
   }
 

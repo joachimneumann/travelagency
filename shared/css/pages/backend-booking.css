@@ -103,27 +103,6 @@
   gap: 0.22rem;
 }
 
-.booking-detail-page .booking-persons-summary__passport {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.6rem;
-  color: var(--text-muted-strong);
-  font-size: var(--booking-type-meta);
-  font-weight: var(--font-weight-regular);
-}
-
-.booking-detail-page .booking-persons-summary__passport.is-complete {
-  color: var(--text-black-muted);
-}
-
-.booking-detail-page .booking-persons-summary__passport-check {
-  color: var(--text-muted-soft);
-}
-
-.booking-detail-page .booking-persons-summary__passport.is-complete .booking-persons-summary__passport-check {
-  color: var(--success-text-bright);
-}
-
 .booking-detail-page .field label,
 .booking-detail-page .field .field-label {
   font-size: var(--booking-type-label);

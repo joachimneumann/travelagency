@@ -629,26 +629,19 @@ test("booking person gender enum stays in sync across model and generated contra
   );
 });
 
-test("booking persons section summary shows traveler count plus passport completeness", async () => {
+test("booking persons section summary shows traveler count with traveler names", async () => {
   const personsScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "persons.js");
-  const bookingStylesPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "pages", "backend-booking.css");
   const personsSource = await readFile(personsScriptPath, "utf8");
-  const bookingStyles = await readFile(bookingStylesPath, "utf8");
 
   assert.match(
     personsSource,
-    /function renderPersonsSectionSummary\(target, travelerCount, allTravelersHavePassportData\) \{[\s\S]*booking-persons-summary[\s\S]*booking-person-card__identity-check booking-persons-summary__passport-check[\s\S]*bookingT\("booking\.passport", "Passport"\)/,
-    "Booking persons section summary should render a dedicated count-plus-passport indicator instead of plain text names"
+    /function renderPersonsSectionSummary\(target, travelerCount\) \{[\s\S]*getAbbreviatedPersonName\(name\)[\s\S]*booking\.persons\.traveling_summary_one[\s\S]*people: travelerNames \|\| bookingT\("booking\.persons\.this_person", "this person"\)/,
+    "Booking persons section summary should render traveler names inside the localized summary title"
   );
-  assert.match(
+  assert.doesNotMatch(
     personsSource,
-    /const traveling = persons\.filter\(\(person\) => isTravelingPerson\(person\)\);[\s\S]*renderPersonsSectionSummary\([\s\S]*traveling\.length[\s\S]*traveling\.length > 0 && traveling\.every\(\(person\) => personHasCompleteIdentityDocument\(person, "passport"\)\)/,
-    "Booking persons section summary should mark passport completeness only when every traveler has a complete passport"
-  );
-  assert.match(
-    bookingStyles,
-    /\.booking-detail-page \.booking-persons-summary__passport \{[\s\S]*color: var\(--text-muted-strong\);[\s\S]*\.booking-detail-page \.booking-persons-summary__passport-check \{[\s\S]*color: var\(--text-muted-soft\);[\s\S]*\.booking-detail-page \.booking-persons-summary__passport\.is-complete \.booking-persons-summary__passport-check \{[\s\S]*color: var\(--success-text-bright\);/,
-    "Booking persons section summary should use a muted passport check by default and the same bright success color when complete"
+    /function renderPersonsSectionSummary\(target, travelerCount\) \{[\s\S]*booking-persons-summary__passport[\s\S]*\}/,
+    "Booking persons section summary should no longer render the passport subtitle"
   );
 });
 
