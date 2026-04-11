@@ -8,6 +8,8 @@ import {
 } from "../../Generated/API/generated_APIRequestFactory.js";
 import { createSnapshotDirtyTracker } from "../shared/edit_state.js";
 import { bookingLang, bookingT } from "./i18n.js";
+import { renderBookingSectionHeader } from "./sections.js";
+import { derivePaymentFlowState } from "./payment_flow_state.js";
 
 const PRICING_SUMMARY_LABELS = Object.freeze({
   agreed_net_amount: ["booking.pricing.agreed_net_amount", "Agreed net amount"],
@@ -667,6 +669,135 @@ export function createBookingPricingModule(ctx) {
     }
   }
 
+  function currentFlowState(pricing) {
+    return derivePaymentFlowState({
+      booking: state.booking,
+      pricing,
+      paymentTerms: currentOfferPaymentTerms()
+    });
+  }
+
+  function updatePricingPanelSummary(pricing) {
+    if (!els.pricingPanelSummary) return;
+    const flow = currentFlowState(pricing);
+    const outstandingAmount = Number(pricing?.summary?.outstanding_gross_amount_cents || 0);
+    const secondary = !flow.proposalSent
+      ? bookingT("booking.pricing.summary_waiting_proposal", "Waiting for the proposal to be sent")
+      : !flow.depositReceivedAt
+        ? bookingT("booking.pricing.summary_deposit_pending", "Deposit pending")
+        : flow.fullyPaid
+          ? bookingT("booking.pricing.summary_fully_paid", "Fully paid")
+          : bookingT("booking.pricing.summary_outstanding", "Outstanding {amount}", {
+              amount: formatMoneyDisplay(outstandingAmount, pricing?.currency || currentOfferCurrency())
+            });
+    renderBookingSectionHeader(els.pricingPanelSummary, {
+      primary: bookingT("booking.payments", "Payments"),
+      secondary
+    });
+  }
+
+  function renderPaymentsBookingConfirmationCard(pricing) {
+    if (!(els.paymentsBookingConfirmationCard instanceof HTMLElement)) return;
+    const flow = currentFlowState(pricing);
+    const acceptedOffer = flow.acceptedOffer;
+    const depositMilestone = flow.milestones.find((milestone) => milestone.isDeposit) || null;
+    const depositAmountCents = Number(
+      state.booking?.accepted_record?.accepted_deposit_amount_cents
+      ?? depositMilestone?.netAmountCents
+      ?? 0
+    );
+    const currency = normalizeCurrencyCode(
+      state.booking?.accepted_record?.accepted_deposit_currency
+      || pricing?.currency
+      || currentOfferCurrency()
+    );
+    const statusTone = flow.depositReceivedAt ? "done" : flow.proposalSent ? "current" : "upcoming";
+    const statusLabel = flow.depositReceivedAt
+      ? bookingT("booking.pricing.deposit_confirmed", "Deposit confirmed")
+      : flow.proposalSent
+        ? bookingT("booking.pricing.deposit_pending_short", "Deposit pending")
+        : bookingT("booking.pricing.awaiting_proposal_send", "Waiting for sent proposal");
+    const details = [];
+    if (flow.depositReceivedAt) {
+      details.push(bookingT("booking.pricing.deposit_received_on", "Deposit received on {date}", {
+        date: typeof formatDateTime === "function" ? formatDateTime(flow.depositReceivedAt) : String(flow.depositReceivedAt)
+      }));
+    } else {
+      details.push(bookingT(
+        "booking.pricing.deposit_card_intro",
+        "Booking confirmation becomes active when the deposit payment is recorded."
+      ));
+    }
+    if (acceptedOffer?.pdf_url) {
+      details.push(bookingT("booking.pricing.accepted_offer_available", "Frozen accepted proposal PDF available."));
+    } else if (acceptedRecordAvailable()) {
+      details.push(bookingT("booking.pricing.accepted_offer_missing_link", "Accepted proposal artifact is frozen, but its PDF link is not available here."));
+    }
+    els.paymentsBookingConfirmationCard.hidden = false;
+    els.paymentsBookingConfirmationCard.innerHTML = `
+      <div class="booking-flow-inline-card__head">
+        <div>
+          <h3 class="booking-flow-inline-card__title">${escapeHtml(bookingT("booking.pricing.booking_confirmation_deposit", "Booking confirmation / Deposit"))}</h3>
+          <span class="booking-flow-chip is-${escapeHtml(statusTone)}">${escapeHtml(statusLabel)}</span>
+        </div>
+        <div class="booking-flow-inline-card__amount">${escapeHtml(formatMoneyDisplay(depositAmountCents, currency))}</div>
+      </div>
+      <p class="booking-flow-inline-card__body">${escapeHtml(details.join(" "))}</p>
+      <div class="booking-flow-inline-card__actions">
+        ${acceptedOffer?.pdf_url
+          ? `<a class="btn btn-ghost" href="${escapeHtml(acceptedOffer.pdf_url)}" target="_blank" rel="noopener">${escapeHtml(bookingT("booking.pricing.view_accepted_offer", "View accepted proposal PDF"))}</a>`
+          : ""}
+      </div>
+    `;
+  }
+
+  function renderPaymentsMilestonesOverview(pricing) {
+    if (!(els.paymentsMilestonesOverview instanceof HTMLElement)) return;
+    const flow = currentFlowState(pricing);
+    const milestones = flow.milestones.filter((milestone) => !milestone.isDeposit);
+    if (!milestones.length) {
+      els.paymentsMilestonesOverview.hidden = true;
+      els.paymentsMilestonesOverview.innerHTML = "";
+      return;
+    }
+    els.paymentsMilestonesOverview.hidden = false;
+    els.paymentsMilestonesOverview.innerHTML = milestones.map((milestone) => {
+      const statusTone = milestone.status === "PAID" ? "done" : flow.nextOpenMilestone?.id === milestone.id ? "current" : "upcoming";
+      const statusLabel = milestone.status === "PAID"
+        ? bookingT("booking.pricing.paid", "Paid")
+        : flow.nextOpenMilestone?.id === milestone.id
+          ? bookingT("booking.pricing.next_payment", "Next payment")
+          : bookingT("booking.pricing.pending", "Pending");
+      const body = milestone.status === "PAID"
+        ? bookingT("booking.pricing.payment_paid_on", "Paid on {date}", {
+            date: milestone.paidAt
+              ? (typeof formatDateTime === "function" ? formatDateTime(milestone.paidAt) : milestone.paidAt)
+              : bookingT("booking.pricing.payment_paid", "Paid")
+          })
+        : milestone.dueDate
+          ? bookingT("booking.pricing.payment_due_on", "Due on {date}. Use the schedule or invoice editor below to continue.", {
+              date: milestone.dueDate
+            })
+          : bookingT("booking.pricing.payment_due_unspecified", "Use the schedule or invoice editor below to continue this payment milestone.");
+      const footer = milestone.status === "PAID"
+        ? bookingT("booking.pricing.receipt_optional", "Optional receipt PDF")
+        : bookingT("booking.pricing.invoice_next_hint", "Invoice and payment updates happen below");
+      return `
+        <article class="booking-flow-milestone-card is-${escapeHtml(statusTone)}" data-payment-milestone-card="${escapeHtml(milestone.id)}" tabindex="-1">
+          <div class="booking-flow-milestone-card__head">
+            <div>
+              <h3 class="booking-flow-milestone-card__title">${escapeHtml(milestone.label)}</h3>
+              <span class="booking-flow-chip is-${escapeHtml(statusTone)}">${escapeHtml(statusLabel)}</span>
+            </div>
+            <div class="booking-flow-milestone-card__amount">${escapeHtml(formatMoneyDisplay(milestone.netAmountCents, pricing?.currency || currentOfferCurrency()))}</div>
+          </div>
+          <p class="booking-flow-milestone-card__body">${escapeHtml(body)}</p>
+          <p class="booking-flow-milestone-card__footer">${escapeHtml(footer)}</p>
+        </article>
+      `;
+    }).join("");
+  }
+
   function nextPricingFromPaymentTerms(basePricing) {
     const pricing = clonePricing(basePricing || {});
     const paymentTerms = currentOfferPaymentTerms();
@@ -891,6 +1022,7 @@ export function createBookingPricingModule(ctx) {
       : savedPricing;
     state.pricingDraft = pricing;
     setPricingControlsVisibility(paymentTermsAvailable);
+    updatePricingPanelSummary(pricing);
 
     if (!paymentTermsAvailable) {
       setDepositReceiptArmed(false);
@@ -900,6 +1032,14 @@ export function createBookingPricingModule(ctx) {
       }
       if (els.pricing_adjustments_table) els.pricing_adjustments_table.innerHTML = "";
       if (els.pricing_payments_table) els.pricing_payments_table.innerHTML = "";
+      if (els.paymentsBookingConfirmationCard instanceof HTMLElement) {
+        els.paymentsBookingConfirmationCard.hidden = true;
+        els.paymentsBookingConfirmationCard.innerHTML = "";
+      }
+      if (els.paymentsMilestonesOverview instanceof HTMLElement) {
+        els.paymentsMilestonesOverview.hidden = true;
+        els.paymentsMilestonesOverview.innerHTML = "";
+      }
       setPricingDepositHint("");
       renderBookingConfirmationPdfSection();
       clearPricingStatus();
@@ -920,6 +1060,8 @@ export function createBookingPricingModule(ctx) {
       els.pricing_agreed_net_input.disabled = !state.permissions.canEditBooking;
     }
     renderDepositReceiptControls(pricing);
+    renderPaymentsBookingConfirmationCard(pricing);
+    renderPaymentsMilestonesOverview(pricing);
     renderBookingConfirmationPdfSection();
     renderPricingSummaryTable(pricing);
     renderPricingAdjustmentsTable();

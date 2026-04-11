@@ -781,6 +781,224 @@
   box-shadow: none;
 }
 
+.booking-detail-page .booking-flow-guide,
+.booking-detail-page .booking-workspace {
+  display: grid;
+  gap: 1rem;
+  padding: 1.15rem 1.2rem 1.25rem;
+  border: 1px solid rgba(224, 216, 203, 0.92);
+  border-radius: 26px;
+  background: rgba(255, 251, 245, 0.9);
+  box-shadow: 0 16px 32px rgba(46, 42, 35, 0.05);
+}
+
+.booking-detail-page .booking-flow-guide__head,
+.booking-detail-page .booking-workspace__head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 360px);
+  gap: 1rem;
+  align-items: start;
+}
+
+.booking-detail-page .booking-workspace__head {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.booking-detail-page .booking-workspace__copy {
+  display: grid;
+  gap: 0.22rem;
+}
+
+.booking-detail-page .booking-workspace__summary,
+.booking-detail-page .booking-flow-guide__lead {
+  margin: 0;
+  color: var(--text-muted-strong);
+}
+
+.booking-detail-page .booking-flow-tracker {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.75rem;
+}
+
+.booking-detail-page .booking-flow-step {
+  display: grid;
+  gap: 0.3rem;
+  min-height: 88px;
+  padding: 0.85rem 0.9rem;
+  border: 1px solid rgba(218, 211, 200, 0.9);
+  border-radius: 18px;
+  background: rgba(252, 249, 243, 0.94);
+}
+
+.booking-detail-page .booking-flow-step.is-done {
+  border-color: rgba(158, 191, 158, 0.95);
+  background: rgba(236, 247, 235, 0.96);
+}
+
+.booking-detail-page .booking-flow-step.is-current {
+  border-color: rgba(197, 168, 118, 0.95);
+  background: rgba(255, 246, 227, 0.96);
+}
+
+.booking-detail-page .booking-flow-step.is-blocked {
+  border-color: rgba(205, 143, 120, 0.9);
+  background: rgba(255, 240, 233, 0.96);
+}
+
+.booking-detail-page .booking-flow-step__label {
+  color: var(--text-strong);
+  font-size: var(--booking-type-label);
+  font-weight: var(--booking-font-weight-strong);
+}
+
+.booking-detail-page .booking-flow-step__state {
+  color: var(--text-muted-strong);
+  font-size: var(--booking-type-meta);
+  text-transform: capitalize;
+}
+
+.booking-detail-page .booking-flow-next-step__card,
+.booking-detail-page .booking-flow-inline-card,
+.booking-detail-page .booking-flow-milestone-card {
+  display: grid;
+  gap: 0.65rem;
+  padding: 1rem 1.05rem;
+  border: 1px solid rgba(221, 213, 200, 0.92);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.booking-detail-page .booking-flow-next-step__headline,
+.booking-detail-page .booking-flow-inline-card__title,
+.booking-detail-page .booking-flow-milestone-card__title {
+  color: var(--text-strong);
+  line-height: 1.25;
+}
+
+.booking-detail-page .booking-flow-next-step__headline {
+  font-size: 1rem;
+}
+
+.booking-detail-page .booking-flow-next-step__reason,
+.booking-detail-page .booking-flow-inline-card__body,
+.booking-detail-page .booking-flow-milestone-card__body,
+.booking-detail-page .booking-flow-milestone-card__footer,
+.booking-detail-page .booking-flow-inline-card__meta {
+  margin: 0;
+  color: var(--text-muted-strong);
+  font-size: var(--booking-type-meta);
+}
+
+.booking-detail-page .booking-flow-next-step__button {
+  justify-self: start;
+}
+
+.booking-detail-page .booking-flow-chip {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(227, 222, 214, 0.92);
+  color: #564d43;
+  font-size: 0.82rem;
+  font-weight: var(--booking-font-weight-strong);
+}
+
+.booking-detail-page .booking-flow-chip.is-done {
+  background: rgba(218, 238, 214, 0.98);
+  color: #24522b;
+}
+
+.booking-detail-page .booking-flow-chip.is-current {
+  background: rgba(255, 232, 179, 0.98);
+  color: #724d00;
+}
+
+.booking-detail-page .booking-flow-chip.is-blocked {
+  background: rgba(255, 219, 204, 0.98);
+  color: #8a3f24;
+}
+
+.booking-detail-page .booking-flow-chip.is-upcoming {
+  background: rgba(232, 228, 222, 0.98);
+  color: #6a6053;
+}
+
+.booking-detail-page .booking-flow-inline-card {
+  margin-bottom: 1rem;
+}
+
+.booking-detail-page .booking-flow-inline-card__head,
+.booking-detail-page .booking-flow-milestone-card__head {
+  display: flex;
+  gap: 0.8rem;
+  justify-content: space-between;
+  align-items: start;
+}
+
+.booking-detail-page .booking-flow-inline-card__amount,
+.booking-detail-page .booking-flow-milestone-card__amount {
+  color: var(--text-strong);
+  font-size: 1rem;
+  font-weight: var(--booking-font-weight-strong);
+  white-space: nowrap;
+}
+
+.booking-detail-page .booking-flow-inline-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.booking-detail-page .booking-flow-milestones {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.booking-detail-page .booking-flow-milestone-card.is-current {
+  border-color: rgba(197, 168, 118, 0.95);
+  background: rgba(255, 248, 231, 0.96);
+}
+
+.booking-detail-page .booking-flow-milestone-card.is-done {
+  border-color: rgba(158, 191, 158, 0.95);
+  background: rgba(238, 248, 235, 0.96);
+}
+
+.booking-detail-page .booking-flow-milestone-card:focus-visible {
+  outline: 2px solid rgba(78, 112, 142, 0.7);
+  outline-offset: 3px;
+}
+
+.booking-detail-page .booking-workspace > .booking-section,
+.booking-detail-page .booking-workspace > .offer-detail-level-panel {
+  margin: 0;
+}
+
+.booking-detail-page .generated-offers-col-actions {
+  width: 1%;
+  white-space: nowrap;
+}
+
+.booking-detail-page .generated-offers-col-actions .btn {
+  margin-right: 0.4rem;
+}
+
+.booking-detail-page .generated-offers-status-badge.is-proposal-sent {
+  margin-left: 0.35rem;
+}
+
+@media (max-width: 900px) {
+  .booking-detail-page .booking-flow-guide__head,
+  .booking-detail-page .booking-workspace__head {
+    grid-template-columns: 1fr;
+  }
+}
+
 .booking-detail-page .booking-offer-controls {
   margin: 0;
   column-gap: 0.5rem;

@@ -23,6 +23,8 @@ import { createBookingWhatsAppController } from "../booking/whatsapp.js";
 import { initializeBookingSections, renderBookingSectionHeader } from "../booking/sections.js";
 import {
   createBookingPricingModule,
+  formatMoneyDisplay,
+  normalizeCurrencyCode,
   populateCurrencySelect as populateCurrencySelectFromModule
 } from "../booking/pricing.js";
 import { createBookingOfferModule } from "../booking/offers.js";
@@ -52,6 +54,7 @@ import {
   normalizeBookingContentLang,
   setBookingContentLang
 } from "../booking/i18n.js";
+import { derivePaymentFlowState } from "../booking/payment_flow_state.js";
 
 function backendT(id, fallback, vars) {
   if (typeof window.backendT === "function") {
@@ -403,6 +406,13 @@ const els = {
   contentLanguageField: document.getElementById("booking_content_language_field"),
   contentLanguageMenuMount: document.getElementById("booking_content_language_menu_mount"),
   contentLanguageSelect: document.getElementById("booking_content_language_select"),
+  bookingCommercialFlowGuide: document.getElementById("booking_commercial_flow_guide"),
+  bookingFlowTracker: document.getElementById("booking_flow_tracker"),
+  bookingFlowNextStep: document.getElementById("booking_flow_next_step"),
+  proposalWorkspace: document.getElementById("proposal_workspace"),
+  proposalWorkspaceSummary: document.getElementById("proposal_workspace_summary"),
+  paymentsWorkspace: document.getElementById("payments_workspace"),
+  paymentsWorkspaceSummary: document.getElementById("payments_workspace_summary"),
   lastActionDetail: document.getElementById("booking_last_action_detail"),
   milestoneActionsBefore: document.getElementById("booking_milestone_actions_before"),
   milestoneActionsAfter: document.getElementById("booking_milestone_actions_after"),
@@ -445,6 +455,8 @@ const els = {
   booking_confirmation_pdfs_table: document.getElementById("booking_confirmation_pdfs_table"),
   create_booking_confirmation_btn: document.getElementById("create_booking_confirmation_btn"),
   booking_confirmation_pdf_status: document.getElementById("booking_confirmation_pdf_status"),
+  paymentsBookingConfirmationCard: document.getElementById("payments_booking_confirmation_card"),
+  paymentsMilestonesOverview: document.getElementById("payments_milestones_overview"),
   pricing_currency_input: document.getElementById("pricing_currency_input"),
   pricing_agreed_net_label: document.getElementById("pricing_agreed_net_label"),
   pricing_agreed_net_input: document.getElementById("pricing_agreed_net_input"),
@@ -477,6 +489,7 @@ const els = {
   offer_payment_terms: document.getElementById("offer_payment_terms"),
   offer_quotation_summary: document.getElementById("offer_quotation_summary"),
   generated_offers_table: document.getElementById("generated_offers_table"),
+  generated_offers_overview: document.getElementById("generated_offers_overview"),
   offer_generation_route_mode: document.getElementById("offer_generation_route_mode"),
   generateOfferDirtyHint: document.getElementById("generate_offer_dirty_hint"),
   offer_payment_terms_notes: document.getElementById("offer_payment_terms_notes"),
@@ -577,6 +590,7 @@ function setBookingSectionDirty(sectionKey, isDirty, diagnostic = undefined) {
   updatePageDirtyBar();
   updateCleanStateActionAvailability();
   pricingModule.refreshDepositReceiptActionState?.();
+  renderCommercialFlowGuide();
 }
 
 function hasUnsavedBookingChanges() {
@@ -1417,6 +1431,178 @@ function resolveLatestActivityTimestamp(items = []) {
   return latestTimestamp;
 }
 
+function formatFlowDate(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+  return new Intl.DateTimeFormat(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric"
+  }).format(date);
+}
+
+function currentFlowPaymentTerms() {
+  if (state.offerDraft?.payment_terms && typeof state.offerDraft.payment_terms === "object") {
+    return state.offerDraft.payment_terms;
+  }
+  if (state.booking?.offer?.payment_terms && typeof state.booking.offer.payment_terms === "object") {
+    return state.booking.offer.payment_terms;
+  }
+  if (state.booking?.accepted_record?.payment_terms && typeof state.booking.accepted_record.payment_terms === "object") {
+    return state.booking.accepted_record.payment_terms;
+  }
+  return null;
+}
+
+function currentFlowPricing() {
+  if (state.pricingDraft && typeof state.pricingDraft === "object") return state.pricingDraft;
+  if (state.booking?.pricing && typeof state.booking.pricing === "object") return state.booking.pricing;
+  return null;
+}
+
+function currentProposalTotalCents() {
+  const draftDirect = Number(state.offerDraft?.total_price_cents);
+  if (Number.isFinite(draftDirect) && draftDirect > 0) return Math.max(0, Math.round(draftDirect));
+  const draftSummary = Number(state.offerDraft?.totals?.total_price_cents);
+  if (Number.isFinite(draftSummary) && draftSummary > 0) return Math.max(0, Math.round(draftSummary));
+  const bookingDirect = Number(state.booking?.offer?.total_price_cents);
+  if (Number.isFinite(bookingDirect) && bookingDirect > 0) return Math.max(0, Math.round(bookingDirect));
+  const bookingSummary = Number(state.booking?.offer?.totals?.total_price_cents);
+  if (Number.isFinite(bookingSummary) && bookingSummary > 0) return Math.max(0, Math.round(bookingSummary));
+  const acceptedDirect = Number(state.booking?.accepted_record?.offer?.total_price_cents);
+  return Number.isFinite(acceptedDirect) ? Math.max(0, Math.round(acceptedDirect)) : 0;
+}
+
+function currentFlowCurrency() {
+  return normalizeCurrencyCode(
+    currentFlowPricing()?.currency
+    || currentFlowPaymentTerms()?.currency
+    || state.offerDraft?.currency
+    || state.booking?.offer?.currency
+    || state.booking?.accepted_record?.accepted_deposit_currency
+    || state.booking?.preferred_currency
+    || "USD"
+  );
+}
+
+function currentOutstandingGrossAmountCents() {
+  const summary = currentFlowPricing()?.summary;
+  const value = Number(summary?.outstanding_gross_amount_cents);
+  return Number.isFinite(value) ? Math.max(0, Math.round(value)) : 0;
+}
+
+function scrollBookingSectionIntoView(element) {
+  if (!(element instanceof HTMLElement)) return;
+  element.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+async function runCommercialFlowAction(flow) {
+  if (!flow?.nextStep) return;
+  const actionKey = String(flow.nextStep.key || "");
+  if (actionKey === "generate_offer") {
+    scrollBookingSectionIntoView(els.booking_confirmation_panel);
+    if (els.generate_offer_btn instanceof HTMLButtonElement && !els.generate_offer_btn.disabled) {
+      els.generate_offer_btn.click();
+    }
+    return;
+  }
+  if (actionKey === "mark_proposal_sent") {
+    scrollBookingSectionIntoView(els.booking_confirmation_panel);
+    if (flow.nextStep.milestoneId) {
+      await offerModule.markGeneratedOfferAsSent?.(flow.nextStep.milestoneId);
+    }
+    return;
+  }
+  if (actionKey === "record_deposit") {
+    scrollBookingSectionIntoView(els.pricing_panel);
+    els.pricing_deposit_received_at_input?.focus();
+    return;
+  }
+  if (actionKey === "review_next_payment") {
+    scrollBookingSectionIntoView(els.pricing_panel);
+    const targetCard = els.paymentsMilestonesOverview?.querySelector?.(
+      `[data-payment-milestone-card="${CSS.escape(String(flow.nextStep.milestoneId || ""))}"]`
+    );
+    if (targetCard instanceof HTMLElement) {
+      targetCard.focus();
+      return;
+    }
+    els.pricing_payments_table?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+}
+
+function renderCommercialFlowGuide() {
+  if (!els.bookingFlowTracker || !els.bookingFlowNextStep || !state.booking) return;
+  const flow = derivePaymentFlowState({
+    booking: state.booking,
+    pricing: currentFlowPricing(),
+    paymentTerms: currentFlowPaymentTerms()
+  });
+  const proposalTotal = formatMoneyDisplay(currentProposalTotalCents(), currentFlowCurrency());
+  const outstandingTotal = formatMoneyDisplay(currentOutstandingGrossAmountCents(), currentFlowCurrency());
+  const needsCleanState = ["generate_offer", "mark_proposal_sent"].includes(String(flow.nextStep.key || ""));
+  const blockedByDirtyState = needsCleanState && hasUnsavedBookingChanges();
+  const nextReason = blockedByDirtyState
+    ? backendT("booking.flow.save_first", "Save current changes first before continuing.")
+    : flow.nextStep.reason;
+  const trackerMarkup = flow.tracker
+    .map((step) => `
+      <div class="booking-flow-step is-${escapeHtml(step.state)}" data-booking-flow-step="${escapeHtml(step.key)}">
+        <span class="booking-flow-step__label">${escapeHtml(step.label)}</span>
+        <span class="booking-flow-step__state">${escapeHtml(step.state.replace(/_/g, " "))}</span>
+      </div>
+    `)
+    .join("");
+  els.bookingFlowTracker.innerHTML = trackerMarkup;
+
+  const showActionButton = String(flow.nextStep.key || "") !== "none";
+  els.bookingFlowNextStep.innerHTML = `
+    <div class="booking-flow-next-step__card">
+      <span class="booking-flow-chip is-${escapeHtml(blockedByDirtyState ? "blocked" : "current")}">${escapeHtml(backendT("booking.flow.next_step", "Next step"))}</span>
+      <strong class="booking-flow-next-step__headline">${escapeHtml(flow.nextStep.headline || backendT("booking.flow.no_next_step", "No further payment action"))}</strong>
+      ${nextReason ? `<p class="booking-flow-next-step__reason">${escapeHtml(nextReason)}</p>` : ""}
+      ${showActionButton
+        ? `<button class="btn btn-ghost booking-flow-next-step__button" type="button" ${blockedByDirtyState ? "disabled" : ""}>${escapeHtml(flow.nextStep.actionLabel)}</button>`
+        : `<p class="booking-flow-next-step__reason">${escapeHtml(flow.nextStep.actionLabel)}</p>`}
+    </div>
+  `;
+  if (showActionButton) {
+    els.bookingFlowNextStep.querySelector(".booking-flow-next-step__button")?.addEventListener("click", () => {
+      void runCommercialFlowAction(flow);
+    });
+  }
+
+  if (els.proposalWorkspaceSummary) {
+    const proposalStatus = !flow.latestOffer
+      ? backendT("booking.flow.proposal_status_draft", "Draft proposal")
+      : flow.latestNeedsSending
+        ? backendT("booking.flow.proposal_status_revision_pending", "Updated draft ready to send")
+        : flow.proposalSent
+          ? backendT("booking.flow.proposal_status_sent", "Proposal sent")
+          : backendT("booking.flow.proposal_status_ready", "Proposal ready to send");
+    const sentDetail = flow.proposalSentAt
+      ? backendT("booking.flow.proposal_sent_on", "Sent on {date}", { date: formatFlowDate(flow.proposalSentAt) })
+      : flow.sentOffer
+        ? backendT("booking.flow.proposal_frozen", "Frozen by accepted offer artifact")
+        : flow.nextStep.actionLabel;
+    els.proposalWorkspaceSummary.textContent = `${backendT("booking.flow.proposal_total", "Total {total}", { total: proposalTotal })} - ${proposalStatus} - ${sentDetail}`;
+  }
+
+  if (els.paymentsWorkspaceSummary) {
+    const paymentStatus = !flow.proposalSent
+      ? backendT("booking.flow.payment_status_waiting_proposal", "Waiting for proposal to be sent")
+      : !flow.depositReceivedAt
+        ? backendT("booking.flow.payment_status_deposit_pending", "Deposit pending")
+        : flow.fullyPaid
+          ? backendT("booking.flow.payment_status_fully_paid", "Fully paid")
+          : flow.nextOpenMilestone
+            ? backendT("booking.flow.payment_status_open_milestone", "{label} is open", { label: flow.nextOpenMilestone.label })
+            : backendT("booking.flow.payment_status_deposit_confirmed", "Deposit confirmed");
+    els.paymentsWorkspaceSummary.textContent = `${backendT("booking.flow.outstanding", "Outstanding {total}", { total: outstandingTotal })} - ${paymentStatus} - ${flow.nextStep.actionLabel}`;
+  }
+}
+
 function renderStaticSectionHeaders() {
   renderBookingSectionHeader(els.personsPanelSummary, { primary: backendT("booking.no_persons", "No persons listed.") });
   renderBookingSectionHeader(els.travel_plan_panel_summary, {
@@ -1426,10 +1612,10 @@ function renderStaticSectionHeaders() {
   renderBookingSectionHeader(els.travel_plan_pdf_panel_summary, {
     primary: backendT("booking.travel_plan.travel_plan_pdf", "Travel plan PDF")
   });
-  renderBookingSectionHeader(els.offerPanelSummary, { primary: backendT("booking.offer", "Offer") });
-  renderBookingSectionHeader(els.offerPaymentTermsPanelSummary, { primary: backendT("booking.payment_terms", "Payment terms") });
+  renderBookingSectionHeader(els.offerPanelSummary, { primary: backendT("booking.proposal", "Proposal") });
+  renderBookingSectionHeader(els.offerPaymentTermsPanelSummary, { primary: backendT("booking.payment_plan", "Payment plan") });
   renderBookingSectionHeader(els.bookingConfirmationPanelSummary, {
-    primary: backendT("booking.booking_confirmation", "Booking confirmation"),
+    primary: backendT("booking.proposal_documents", "Proposal PDFs"),
     secondary: backendT("booking.booking_confirmation_none", "No generated offers yet.")
   });
   renderBookingSectionHeader(els.pricingPanelSummary, { primary: backendT("booking.payments", "Payments") });
@@ -1455,12 +1641,14 @@ async function loadActivities() {
 
 function renderPricingPanel(options = {}) {
   const result = pricingModule.renderPricingPanel(options);
+  renderCommercialFlowGuide();
   updateCleanStateActionAvailability();
   return result;
 }
 
 function renderOfferPanel() {
   const result = offerModule.renderOfferPanel();
+  renderCommercialFlowGuide();
   updateCleanStateActionAvailability();
   return result;
 }
@@ -1596,6 +1784,7 @@ function renderInvoiceMoneyLabels() {
 function loadInvoices() {
   const result = invoicesModule.loadInvoices();
   Promise.resolve(result).finally(() => {
+    renderCommercialFlowGuide();
     updateCleanStateActionAvailability();
   });
   return result;

@@ -222,6 +222,9 @@ function resetCommercialState(booking) {
   delete booking.accepted_generated_offer_id;
   delete booking.accepted_offer_artifact_ref;
   delete booking.accepted_travel_plan_artifact_ref;
+  delete booking.proposal_sent_at;
+  delete booking.proposal_sent_generated_offer_id;
+  delete booking.proposal_sent_by_atp_staff_id;
   delete booking.accepted_deposit_amount_cents;
   delete booking.accepted_deposit_currency;
   delete booking.deposit_received_at;

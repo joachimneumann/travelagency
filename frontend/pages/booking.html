@@ -811,6 +811,24 @@
             </div>
           </article>
 
+          <section id="booking_commercial_flow_guide" class="booking-flow-guide" aria-labelledby="booking_commercial_flow_title">
+            <div class="booking-flow-guide__head">
+              <div>
+                <h2 id="booking_commercial_flow_title" class="section-title u-title-compact">Proposal &amp; Payments</h2>
+                <p class="micro booking-flow-guide__lead">Track the current commercial step and the next ATP action.</p>
+              </div>
+              <div id="booking_flow_next_step" class="booking-flow-next-step" aria-live="polite"></div>
+            </div>
+            <div id="booking_flow_tracker" class="booking-flow-tracker" aria-live="polite"></div>
+          </section>
+
+          <section id="proposal_workspace" class="booking-workspace" aria-labelledby="proposal_workspace_title">
+            <div class="booking-workspace__head">
+              <div class="booking-workspace__copy">
+                <h2 id="proposal_workspace_title" class="section-title u-title-compact">Proposal</h2>
+                <p id="proposal_workspace_summary" class="micro booking-workspace__summary"></p>
+              </div>
+            </div>
           <article id="offer_detail_level_panel" class="offer-detail-level-panel">
             <div class="offer-detail-level-panel__layout">
               <div class="offer-detail-level-panel__stack">
@@ -863,6 +881,7 @@
               <button class="booking-section__summary booking-section__summary--inline-pad-16" id="booking_confirmation_panel_summary" type="button"></button>
             </div>
             <div class="booking-section__body">
+              <div id="generated_offers_overview" class="booking-flow-inline-card" hidden></div>
               <div class="backend-table-wrap" style="margin-bottom: 0.8rem;">
                 <table class="backend-table" id="generated_offers_table"></table>
               </div>
@@ -875,12 +894,22 @@
               <span id="offer_status" class="micro booking-inline-status"></span>
             </div>
           </article>
+          </section>
 
+          <section id="payments_workspace" class="booking-workspace" aria-labelledby="payments_workspace_title">
+            <div class="booking-workspace__head">
+              <div class="booking-workspace__copy">
+                <h2 id="payments_workspace_title" class="section-title u-title-compact">Payments</h2>
+                <p id="payments_workspace_summary" class="micro booking-workspace__summary"></p>
+              </div>
+            </div>
           <article id="pricing_panel" class="booking-section">
             <div class="booking-section__head">
               <button class="booking-section__summary booking-section__summary--inline-pad-16" id="pricing_panel_summary" type="button"></button>
             </div>
             <div class="booking-section__body">
+              <div id="payments_booking_confirmation_card" class="booking-flow-inline-card" hidden></div>
+              <div id="payments_milestones_overview" class="booking-flow-milestones" hidden></div>
               <div class="backend-table-wrap" style="margin-bottom: 1rem;">
                 <table class="backend-table" id="pricing_summary_table"></table>
               </div>
@@ -1017,6 +1046,7 @@
               </article>
             </div>
           </article>
+          </section>
 
           <article id="activities_panel" class="booking-section">
             <div class="booking-section__head">

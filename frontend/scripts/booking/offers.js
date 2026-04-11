@@ -250,7 +250,7 @@ export function createBookingOfferModule(ctx) {
 
   function updateOfferPanelSummary(totalCents, currency) {
     renderBookingSectionHeader(els.offerPanelSummary, {
-      primary: bookingT("booking.offer_total", "Offer {total}", { total: formatMoneyDisplay(totalCents, currency) })
+      primary: bookingT("booking.proposal_total", "Proposal {total}", { total: formatMoneyDisplay(totalCents, currency) })
     });
   }
 
@@ -646,6 +646,7 @@ export function createBookingOfferModule(ctx) {
   return {
     renderOfferPanel,
     addOfferPricingRow,
+    markGeneratedOfferAsSent: (generatedOfferId) => generatedOffersModule.markGeneratedOfferAsSent?.(generatedOfferId),
     handleOfferCurrencyChange: () => offerPricingModule.handleOfferCurrencyChange(),
     handleOfferInternalDetailLevelChange: () => {
       const nextValue = els.offer_detail_level_internal_input?.value;

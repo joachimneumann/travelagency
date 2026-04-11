@@ -41,15 +41,17 @@ export function createBookingOfferPaymentTermsModule(ctx) {
   function updateOfferPaymentTermsPanelSummary(paymentTerms = state.offerDraft?.payment_terms) {
     if (!els.offerPaymentTermsPanelSummary) return;
     const lines = Array.isArray(paymentTerms?.lines) ? paymentTerms.lines : [];
+    const currency = normalizeCurrencyCode(paymentTerms?.currency || state.offerDraft?.currency || state.booking?.preferred_currency || "USD");
+    const depositLine = lines.find((line) => normalizeOfferPaymentTermKindValue(line?.kind) === "DEPOSIT") || null;
+    const remainingCount = lines.filter((line) => normalizeOfferPaymentTermKindValue(line?.kind) !== "DEPOSIT").length;
     const secondary = lines.length
-      ? bookingT(
-          lines.length === 1 ? "booking.payment_terms_summary_single" : "booking.payment_terms_summary_count",
-          lines.length === 1 ? "{count} scheduled payment" : "{count} scheduled payments",
-          { count: String(lines.length) }
-        )
+      ? bookingT("booking.payment_plan_summary_compact", "Deposit {deposit}, {count} remaining milestone(s)", {
+          deposit: formatMoneyDisplay(depositLine?.resolved_amount_cents || 0, currency),
+          count: String(remainingCount)
+        })
       : bookingT("booking.payment_terms_summary_none", "No payment terms yet.");
     renderBookingSectionHeader(els.offerPaymentTermsPanelSummary, {
-      primary: bookingT("booking.payment_terms", "Payment terms"),
+      primary: bookingT("booking.payment_plan", "Payment plan"),
       secondary
     });
   }

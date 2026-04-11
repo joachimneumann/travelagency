@@ -371,6 +371,9 @@ export function createBookingViewHelpers({
     const offerDisplayCurrency = listMode
       ? safeCurrency(normalizedBooking?.offer?.currency || offerCurrency)
       : offerCurrency;
+    const proposalSentAt = normalizeText(normalizedBooking?.proposal_sent_at);
+    const proposalSentGeneratedOfferId = normalizeText(normalizedBooking?.proposal_sent_generated_offer_id);
+    const proposalSentByAtpStaffId = normalizeText(normalizedBooking?.proposal_sent_by_atp_staff_id);
     async function resolveKeycloakUserLabel(keycloakUserId) {
       const normalizedKeycloakUserId = normalizeText(keycloakUserId);
       if (!normalizedKeycloakUserId) return "";
@@ -382,6 +385,9 @@ export function createBookingViewHelpers({
       const assignableKeycloakUserLabels = await resolveAssignableKeycloakUserLabelMap().catch(() => new Map());
       return normalizeText(assignableKeycloakUserLabels?.get(normalizedKeycloakUserId)) || normalizedKeycloakUserId;
     }
+    const proposalSentByAtpStaffLabel = proposalSentByAtpStaffId
+      ? await resolveKeycloakUserLabel(proposalSentByAtpStaffId)
+      : "";
     async function buildAcceptedRecordReadModel() {
       const hasAcceptedRecord = Boolean(
         normalizeText(normalizedBooking?.deposit_received_at)
@@ -457,6 +463,10 @@ export function createBookingViewHelpers({
     return {
       ...normalizedBooking,
       stage: milestoneState.stage,
+      proposal_sent_at: proposalSentAt || undefined,
+      proposal_sent_generated_offer_id: proposalSentGeneratedOfferId || undefined,
+      proposal_sent_by_atp_staff_id: proposalSentByAtpStaffId || undefined,
+      ...(proposalSentByAtpStaffLabel ? { proposal_sent_by_atp_staff_label: proposalSentByAtpStaffLabel } : {}),
       deposit_received_at: normalizeText(normalizedBooking?.deposit_received_at)
         || normalizeText(milestoneState?.milestones?.deposit_received_at)
         || undefined,

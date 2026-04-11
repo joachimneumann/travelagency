@@ -1184,8 +1184,9 @@ export function createBookingFinanceHandlers(deps) {
     const currentGeneratedOffer = generatedOffers[index];
     const nextComment = normalizeText(payload?.comment) || null;
     const confirmAsManagement = payload?.confirm_as_management === true;
+    const markAsSent = payload?.mark_as_sent === true;
     const commentChanged = (currentGeneratedOffer.comment || null) !== nextComment;
-    if (!commentChanged && !confirmAsManagement) {
+    if (!commentChanged && !confirmAsManagement && !markAsSent) {
       sendJson(res, 200, { ...(await buildBookingDetailResponse(booking, req)), unchanged: true });
       return;
     }
@@ -1227,14 +1228,29 @@ export function createBookingFinanceHandlers(deps) {
       return;
     }
 
+    if (markAsSent) {
+      booking.proposal_sent_at = nowIso();
+      booking.proposal_sent_generated_offer_id = generatedOfferId;
+      const proposalSentByAtpStaffId = normalizeText(principal?.sub);
+      if (proposalSentByAtpStaffId) {
+        booking.proposal_sent_by_atp_staff_id = proposalSentByAtpStaffId;
+      } else {
+        delete booking.proposal_sent_by_atp_staff_id;
+      }
+    }
+
     incrementBookingRevision(booking, "offer_revision");
     booking.updated_at = nowIso();
     addActivity(
       store,
       booking.id,
-      "OFFER_UPDATED",
+      markAsSent && !commentChanged ? "OFFER_SENT" : "OFFER_UPDATED",
       actorLabel(principal, normalizeText(payload?.actor) || "keycloak_user"),
-      "Generated offer comment updated"
+      markAsSent && commentChanged
+        ? "Generated offer comment updated and proposal marked as sent"
+        : markAsSent
+          ? "Proposal marked as sent"
+          : "Generated offer comment updated"
     );
     await persistStore(store);
 
@@ -1275,6 +1291,11 @@ export function createBookingFinanceHandlers(deps) {
 
     const [removed] = generatedOffers.splice(index, 1);
     booking.generated_offers = generatedOffers;
+    if (normalizeText(booking?.proposal_sent_generated_offer_id) === generatedOfferId) {
+      delete booking.proposal_sent_at;
+      delete booking.proposal_sent_generated_offer_id;
+      delete booking.proposal_sent_by_atp_staff_id;
+    }
     incrementBookingRevision(booking, "offer_revision");
     booking.updated_at = nowIso();
     addActivity(
