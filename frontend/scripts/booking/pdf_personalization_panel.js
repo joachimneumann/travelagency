@@ -90,9 +90,9 @@ const BOOKING_PDF_PERSONALIZATION_PANELS = Object.freeze([
     panelElsKey: "offerPdfPersonalizationPanel",
     referenceElsKey: "pdfOfferReference",
     referenceMountId: "booking_pdf_offer_reference",
-    title: "Proposal PDF text",
-    variant: "static",
-    initiallyOpen: true,
+    title: "PDF Texts",
+    variant: "collapsible",
+    initiallyOpen: false,
     items: Object.freeze([
       Object.freeze({
         kind: "localized",

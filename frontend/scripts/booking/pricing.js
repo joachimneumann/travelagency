@@ -8,7 +8,7 @@ import {
 } from "../../Generated/API/generated_APIRequestFactory.js";
 import { createSnapshotDirtyTracker } from "../shared/edit_state.js";
 import { bookingLang, bookingT } from "./i18n.js";
-import { renderBookingSectionHeader } from "./sections.js";
+import { initializeBookingSections, renderBookingSectionHeader } from "./sections.js";
 import { derivePaymentFlowState } from "./payment_flow_state.js";
 
 const PRICING_SUMMARY_LABELS = Object.freeze({
@@ -696,11 +696,127 @@ export function createBookingPricingModule(ctx) {
     });
   }
 
+  function paymentMilestoneStatusTone(milestone, flow) {
+    if (milestone?.status === "PAID") return "done";
+    if (milestone?.isDeposit) return flow.proposalSent ? "current" : "upcoming";
+    return flow.nextOpenMilestone?.id === milestone?.id ? "current" : "upcoming";
+  }
+
+  function paymentMilestoneStatusLabel(milestone, flow) {
+    if (milestone?.isDeposit) {
+      if (milestone?.status === "PAID") return bookingT("booking.pricing.deposit_confirmed", "Deposit confirmed");
+      return flow.proposalSent
+        ? bookingT("booking.pricing.deposit_pending_short", "Deposit pending")
+        : bookingT("booking.pricing.awaiting_proposal_send", "Waiting for sent proposal");
+    }
+    if (milestone?.status === "PAID") return bookingT("booking.pricing.paid", "Paid");
+    return flow.nextOpenMilestone?.id === milestone?.id
+      ? bookingT("booking.pricing.next_payment", "Next payment")
+      : bookingT("booking.pricing.pending", "Pending");
+  }
+
+  function paymentMilestoneAmountLabel(milestone, pricing) {
+    if (milestone?.isDeposit) {
+      const depositAmountCents = Number(
+        state.booking?.accepted_record?.accepted_deposit_amount_cents
+        ?? milestone?.netAmountCents
+        ?? 0
+      );
+      const currency = normalizeCurrencyCode(
+        state.booking?.accepted_record?.accepted_deposit_currency
+        || pricing?.currency
+        || currentOfferCurrency()
+      );
+      return formatMoneyDisplay(depositAmountCents, currency);
+    }
+    return formatMoneyDisplay(milestone?.netAmountCents, pricing?.currency || currentOfferCurrency());
+  }
+
+  function paymentMilestoneBody(milestone, flow) {
+    if (milestone?.isDeposit) {
+      const details = [];
+      if (flow.depositReceivedAt) {
+        details.push(bookingT("booking.pricing.deposit_received_on", "Deposit received on {date}", {
+          date: typeof formatDateTime === "function" ? formatDateTime(flow.depositReceivedAt) : String(flow.depositReceivedAt)
+        }));
+      } else {
+        details.push(bookingT(
+          "booking.pricing.deposit_card_intro",
+          "Booking confirmation becomes active when the deposit payment is recorded."
+        ));
+      }
+      if (flow.acceptedOffer?.pdf_url) {
+        details.push(bookingT("booking.pricing.accepted_offer_available", "Frozen accepted proposal PDF available."));
+      } else if (acceptedRecordAvailable()) {
+        details.push(bookingT("booking.pricing.accepted_offer_missing_link", "Accepted proposal artifact is frozen, but its PDF link is not available here."));
+      }
+      return details.join(" ");
+    }
+    if (milestone?.status === "PAID") {
+      return bookingT("booking.pricing.payment_paid_on", "Paid on {date}", {
+        date: milestone?.paidAt
+          ? (typeof formatDateTime === "function" ? formatDateTime(milestone.paidAt) : milestone.paidAt)
+          : bookingT("booking.pricing.payment_paid", "Paid")
+      });
+    }
+    return milestone?.dueDate
+      ? bookingT("booking.pricing.payment_due_on", "Due on {date}. Use the schedule or invoice editor below to continue.", {
+          date: milestone.dueDate
+        })
+      : bookingT("booking.pricing.payment_due_unspecified", "Use the schedule or invoice editor below to continue this payment milestone.");
+  }
+
+  function paymentMilestoneFooter(milestone) {
+    if (milestone?.isDeposit) return "";
+    return milestone?.status === "PAID"
+      ? bookingT("booking.pricing.receipt_optional", "Optional receipt PDF")
+      : bookingT("booking.pricing.invoice_next_hint", "Invoice and payment updates happen below");
+  }
+
+  function paymentMilestoneActionsMarkup(milestone, flow) {
+    if (!milestone?.isDeposit || !flow.acceptedOffer?.pdf_url) return "";
+    return `
+      <div class="booking-flow-milestone-card__actions">
+        <a class="btn btn-ghost" href="${escapeHtml(flow.acceptedOffer.pdf_url)}" target="_blank" rel="noopener">${escapeHtml(bookingT("booking.pricing.view_accepted_offer", "View accepted proposal PDF"))}</a>
+      </div>
+    `;
+  }
+
+  function buildPaymentMilestoneCardMarkup(milestone, pricing, flow) {
+    const statusTone = paymentMilestoneStatusTone(milestone, flow);
+    const statusLabel = paymentMilestoneStatusLabel(milestone, flow);
+    const body = paymentMilestoneBody(milestone, flow);
+    const footer = paymentMilestoneFooter(milestone);
+    const actions = paymentMilestoneActionsMarkup(milestone, flow);
+    const title = milestone?.isDeposit
+      ? bookingT("booking.pricing.booking_confirmation_deposit", "Booking confirmation / Deposit")
+      : String(milestone?.label || bookingT("booking.payment", "Payment")).trim();
+    return `
+      <article class="booking-flow-milestone-card is-${escapeHtml(statusTone)}" data-payment-milestone-card="${escapeHtml(milestone?.id || "")}" tabindex="-1">
+        <div class="booking-flow-milestone-card__head">
+          <div>
+            <h3 class="booking-flow-milestone-card__title">${escapeHtml(title)}</h3>
+            <span class="booking-flow-chip is-${escapeHtml(statusTone)}">${escapeHtml(statusLabel)}</span>
+          </div>
+          <div class="booking-flow-milestone-card__amount">${escapeHtml(paymentMilestoneAmountLabel(milestone, pricing))}</div>
+        </div>
+        <p class="booking-flow-milestone-card__body">${escapeHtml(body)}</p>
+        ${footer ? `<p class="booking-flow-milestone-card__footer">${escapeHtml(footer)}</p>` : ""}
+        ${actions}
+      </article>
+    `;
+  }
+
   function renderPaymentsBookingConfirmationCard(pricing) {
     if (!(els.paymentsBookingConfirmationCard instanceof HTMLElement)) return;
     const flow = currentFlowState(pricing);
     const acceptedOffer = flow.acceptedOffer;
     const depositMilestone = flow.milestones.find((milestone) => milestone.isDeposit) || null;
+    if (flow.depositReceivedAt && depositMilestone) {
+      els.paymentsBookingConfirmationCard.hidden = true;
+      els.paymentsBookingConfirmationCard.innerHTML = "";
+      return;
+    }
     const depositAmountCents = Number(
       state.booking?.accepted_record?.accepted_deposit_amount_cents
       ?? depositMilestone?.netAmountCents
@@ -754,48 +870,39 @@ export function createBookingPricingModule(ctx) {
   function renderPaymentsMilestonesOverview(pricing) {
     if (!(els.paymentsMilestonesOverview instanceof HTMLElement)) return;
     const flow = currentFlowState(pricing);
-    const milestones = flow.milestones.filter((milestone) => !milestone.isDeposit);
+    const milestones = flow.milestones.filter((milestone) => !milestone.isDeposit || milestone.status === "PAID");
     if (!milestones.length) {
       els.paymentsMilestonesOverview.hidden = true;
       els.paymentsMilestonesOverview.innerHTML = "";
       return;
     }
-    els.paymentsMilestonesOverview.hidden = false;
-    els.paymentsMilestonesOverview.innerHTML = milestones.map((milestone) => {
-      const statusTone = milestone.status === "PAID" ? "done" : flow.nextOpenMilestone?.id === milestone.id ? "current" : "upcoming";
-      const statusLabel = milestone.status === "PAID"
-        ? bookingT("booking.pricing.paid", "Paid")
-        : flow.nextOpenMilestone?.id === milestone.id
-          ? bookingT("booking.pricing.next_payment", "Next payment")
-          : bookingT("booking.pricing.pending", "Pending");
-      const body = milestone.status === "PAID"
-        ? bookingT("booking.pricing.payment_paid_on", "Paid on {date}", {
-            date: milestone.paidAt
-              ? (typeof formatDateTime === "function" ? formatDateTime(milestone.paidAt) : milestone.paidAt)
-              : bookingT("booking.pricing.payment_paid", "Paid")
-          })
-        : milestone.dueDate
-          ? bookingT("booking.pricing.payment_due_on", "Due on {date}. Use the schedule or invoice editor below to continue.", {
-              date: milestone.dueDate
-            })
-          : bookingT("booking.pricing.payment_due_unspecified", "Use the schedule or invoice editor below to continue this payment milestone.");
-      const footer = milestone.status === "PAID"
-        ? bookingT("booking.pricing.receipt_optional", "Optional receipt PDF")
-        : bookingT("booking.pricing.invoice_next_hint", "Invoice and payment updates happen below");
-      return `
-        <article class="booking-flow-milestone-card is-${escapeHtml(statusTone)}" data-payment-milestone-card="${escapeHtml(milestone.id)}" tabindex="-1">
-          <div class="booking-flow-milestone-card__head">
-            <div>
-              <h3 class="booking-flow-milestone-card__title">${escapeHtml(milestone.label)}</h3>
-              <span class="booking-flow-chip is-${escapeHtml(statusTone)}">${escapeHtml(statusLabel)}</span>
-            </div>
-            <div class="booking-flow-milestone-card__amount">${escapeHtml(formatMoneyDisplay(milestone.netAmountCents, pricing?.currency || currentOfferCurrency()))}</div>
+    const openMilestones = milestones.filter((milestone) => milestone.status !== "PAID");
+    const paidMilestones = milestones.filter((milestone) => milestone.status === "PAID");
+    const activeMarkup = openMilestones.map((milestone) => buildPaymentMilestoneCardMarkup(milestone, pricing, flow)).join("");
+    const paidGroupMarkup = paidMilestones.length
+      ? `
+        <article id="payments_paid_group" class="booking-collapsible booking-flow-paid-group">
+          <div class="booking-collapsible__head">
+            <button class="booking-collapsible__summary booking-section__summary--inline-pad-16" type="button" data-payments-paid-summary></button>
           </div>
-          <p class="booking-flow-milestone-card__body">${escapeHtml(body)}</p>
-          <p class="booking-flow-milestone-card__footer">${escapeHtml(footer)}</p>
+          <div class="booking-collapsible__body">
+            <div class="booking-flow-paid-group__items">
+              ${paidMilestones.map((milestone) => buildPaymentMilestoneCardMarkup(milestone, pricing, flow)).join("")}
+            </div>
+          </div>
         </article>
-      `;
-    }).join("");
+      `
+      : "";
+    els.paymentsMilestonesOverview.hidden = false;
+    els.paymentsMilestonesOverview.innerHTML = `${activeMarkup}${paidGroupMarkup}`;
+    const paidSummary = els.paymentsMilestonesOverview.querySelector("[data-payments-paid-summary]");
+    if (paidSummary instanceof HTMLElement) {
+      renderBookingSectionHeader(paidSummary, {
+        primary: bookingT("booking.payments", "Payments"),
+        secondary: bookingT("booking.pricing.summary_fully_paid", "Fully paid")
+      });
+      initializeBookingSections(els.paymentsMilestonesOverview);
+    }
   }
 
   function nextPricingFromPaymentTerms(basePricing) {

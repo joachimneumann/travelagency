@@ -914,6 +914,24 @@ test("booking page records deposit receipt from the payments section instead of 
   );
 });
 
+test("payments overview groups fully paid milestones into a single collapsible block", async () => {
+  const pricingModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "pricing.js");
+  const bookingCssPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "pages", "backend-booking.css");
+  const pricingSource = await readFile(pricingModulePath, "utf8");
+  const bookingCssSource = await readFile(bookingCssPath, "utf8");
+
+  assert.match(
+    pricingSource,
+    /class="booking-collapsible booking-flow-paid-group"[\s\S]*data-payments-paid-summary[\s\S]*bookingT\("booking\.pricing\.summary_fully_paid", "Fully paid"\)/,
+    "Pricing overview should render fully paid milestones inside one collapsible paid-payments group"
+  );
+  assert.match(
+    bookingCssSource,
+    /\.booking-detail-page \.booking-flow-paid-group[\s\S]*\.booking-detail-page \.booking-flow-paid-group__items/,
+    "Payments stylesheet should style the grouped fully paid collapsible block"
+  );
+});
+
 test("booking page top control row keeps staff and customer language visually aligned", async () => {
   const bookingStylesPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "pages", "backend-booking.css");
   const bookingStyles = await readFile(bookingStylesPath, "utf8");
