@@ -1286,12 +1286,14 @@ test("travel-plan PDF personalization exposes children policy and exclusions fie
   const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
   const bookingPageScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking.js");
   const bookingCorePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "core.js");
+  const pdfPanelModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "pdf_personalization_panel.js");
   const travelPlanPdfPath = path.resolve(__dirname, "..", "src", "lib", "travel_plan_pdf.js");
-  const [bookingModelSource, bookingPageSource, bookingPageScriptSource, bookingCoreSource, travelPlanPdfSource] = await Promise.all([
+  const [bookingModelSource, bookingPageSource, bookingPageScriptSource, bookingCoreSource, pdfPanelModuleSource, travelPlanPdfSource] = await Promise.all([
     readFile(bookingModelPath, "utf8"),
     readFile(bookingPagePath, "utf8"),
     readFile(bookingPageScriptPath, "utf8"),
     readFile(bookingCorePath, "utf8"),
+    readFile(pdfPanelModulePath, "utf8"),
     readFile(travelPlanPdfPath, "utf8")
   ]);
 
@@ -1302,18 +1304,28 @@ test("travel-plan PDF personalization exposes children policy and exclusions fie
   );
   assert.match(
     bookingPageSource,
-    /id="booking_pdf_travel_plan_children_policy_mount"[\s\S]*id="booking_pdf_travel_plan_whats_not_included_mount"[\s\S]*id="booking_pdf_travel_plan_closing_mount"/,
-    "booking.html should place the travel-plan children policy and exclusions fields before the closing field"
+    /id="travel_plan_pdf_personalization_panel"[\s\S]*id="travel_plan_pdf_workspace"/,
+    "booking.html should keep a dedicated travel-plan PDF personalization container right above the PDF workspace"
+  );
+  assert.doesNotMatch(
+    bookingPageSource,
+    /id="booking_pdf_travel_plan_children_policy_mount"/,
+    "booking.html should not hand-copy the travel-plan PDF field mounts once the reusable panel renderer owns them"
   );
   assert.match(
     bookingPageScriptSource,
-    /pdfTravelPlanChildrenPolicyMount[\s\S]*pdfTravelPlanWhatsNotIncludedMount[\s\S]*pdfTravelPlanClosingMount/,
-    "booking page script should expose the new travel-plan PDF personalization mounts"
+    /travelPlanPdfPersonalizationPanel[\s\S]*renderBookingPdfPersonalizationPanels\(els\)[\s\S]*resolveBookingPdfPersonalizationElements\(document\)/,
+    "booking page script should render and then resolve the reusable PDF personalization panels"
+  );
+  assert.match(
+    pdfPanelModuleSource,
+    /scope:\s*"travel_plan"[\s\S]*field:\s*"children_policy"[\s\S]*field:\s*"whats_not_included"[\s\S]*field:\s*"closing"/,
+    "The reusable PDF personalization panel config should define the travel-plan children policy, exclusions, and closing fields in order"
   );
   assert.match(
     bookingCoreSource,
-    /"travel_plan",\s*"children_policy"[\s\S]*"travel_plan",\s*"whats_not_included"[\s\S]*"travel_plan",\s*"closing"/,
-    "booking core UI should render the new travel-plan PDF fields before the closing field"
+    /BOOKING_PDF_PERSONALIZATION_PANELS\.forEach\([\s\S]*panelConfig\.scope[\s\S]*item\.field/,
+    "booking core UI should iterate over the shared PDF personalization panel config"
   );
   assert.match(
     bookingCoreSource,
@@ -1332,13 +1344,15 @@ test("offer PDF personalization exposes a cancellation-policy toggle and renders
   const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
   const bookingPageScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking.js");
   const bookingCorePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "core.js");
+  const pdfPanelModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "pdf_personalization_panel.js");
   const bookingPdfPersonalizationPath = path.resolve(__dirname, "..", "src", "lib", "booking_pdf_personalization.js");
   const offerPdfPath = path.resolve(__dirname, "..", "src", "lib", "offer_pdf.js");
-  const [bookingModelSource, bookingPageSource, bookingPageScriptSource, bookingCoreSource, personalizationSource, offerPdfSource] = await Promise.all([
+  const [bookingModelSource, bookingPageSource, bookingPageScriptSource, bookingCoreSource, pdfPanelModuleSource, personalizationSource, offerPdfSource] = await Promise.all([
     readFile(bookingModelPath, "utf8"),
     readFile(bookingPagePath, "utf8"),
     readFile(bookingPageScriptPath, "utf8"),
     readFile(bookingCorePath, "utf8"),
+    readFile(pdfPanelModulePath, "utf8"),
     readFile(bookingPdfPersonalizationPath, "utf8"),
     readFile(offerPdfPath, "utf8")
   ]);
@@ -1350,13 +1364,23 @@ test("offer PDF personalization exposes a cancellation-policy toggle and renders
   );
   assert.match(
     bookingPageSource,
-    /id="booking_pdf_offer_welcome_mount"[\s\S]*id="booking_pdf_offer_include_cancellation_policy_mount"[\s\S]*id="booking_pdf_offer_closing_mount"/,
-    "booking.html should place the Offer cancellation-policy toggle before the closing field"
+    /id="offer_pdf_personalization_panel"[\s\S]*id="generated_offers_overview"/,
+    "booking.html should keep a dedicated Offer personalization container before the generated offers overview"
+  );
+  assert.doesNotMatch(
+    bookingPageSource,
+    /id="booking_pdf_offer_welcome_mount"/,
+    "booking.html should not hand-copy the Offer PDF field mounts once the reusable panel renderer owns them"
   );
   assert.match(
     bookingPageScriptSource,
-    /pdfOfferWelcomeMount[\s\S]*pdfOfferIncludeCancellationPolicyMount[\s\S]*pdfOfferClosingMount/,
-    "booking page script should expose the Offer cancellation-policy mount"
+    /offerPdfPersonalizationPanel[\s\S]*renderBookingPdfPersonalizationPanels\(els\)[\s\S]*resolveBookingPdfPersonalizationElements\(document\)/,
+    "booking page script should render and resolve the reusable Offer PDF personalization panel"
+  );
+  assert.match(
+    pdfPanelModuleSource,
+    /scope:\s*"offer"[\s\S]*field:\s*"welcome"[\s\S]*field:\s*"children_policy"[\s\S]*field:\s*"whats_not_included"[\s\S]*field:\s*"include_cancellation_policy"[\s\S]*field:\s*"closing"/,
+    "The reusable PDF personalization panel config should define the Offer fields and toggle in order"
   );
   assert.match(
     bookingCoreSource,
@@ -1365,8 +1389,23 @@ test("offer PDF personalization exposes a cancellation-policy toggle and renders
   );
   assert.match(
     bookingCoreSource,
-    /data-booking-pdf-toggle="offer\.include_cancellation_policy"/,
-    "booking core should render the Offer cancellation-policy checkbox"
+    /const renderToggle = \(mount, scope, config\) => \{[\s\S]*data-booking-pdf-toggle="\$\{scope\}\.\$\{config\.field\}"/,
+    "booking core should render Offer toggles through the shared checkbox renderer"
+  );
+  assert.match(
+    bookingCoreSource,
+    /config\.previewKey === "offer_cancellation_policy"/,
+    "booking core should keep the shared preview hook for the Offer cancellation-policy toggle"
+  );
+  assert.match(
+    bookingCoreSource,
+    /children_policy:\s*offerChildrenPolicy\.text[\s\S]*whats_not_included:\s*offerWhatsNotIncluded\.text/s,
+    "booking core should normalize the Offer children-policy and exclusion text fields"
+  );
+  assert.match(
+    bookingCoreSource,
+    /readLocalizedBookingPdfField\("offer", "children_policy"[\s\S]*readLocalizedBookingPdfField\("offer", "whats_not_included"/s,
+    "booking core should persist localized Offer children-policy and exclusion fields"
   );
   assert.match(
     personalizationSource,
@@ -1374,9 +1413,14 @@ test("offer PDF personalization exposes a cancellation-policy toggle and renders
     "backend PDF personalization should preserve the Offer cancellation-policy toggle"
   );
   assert.match(
+    personalizationSource,
+    /children_policy:\s*offerChildrenPolicy\.text[\s\S]*whats_not_included:\s*offerWhatsNotIncluded\.text/s,
+    "backend PDF personalization should preserve the Offer children-policy and exclusion fields"
+  );
+  assert.match(
     offerPdfSource,
-    /resolveOfferCancellationPolicyTravelerCount[\s\S]*resolveOfferCancellationPolicySection[\s\S]*resolveOfferCancellationPolicyTitle[\s\S]*pdfT\(lang, "offer\.cancellation_policy_title", "Cancellation policy"\)[\s\S]*resolveOfferCancellationPolicyText[\s\S]*cancellationPolicyTitle[\s\S]*cancellationPolicyText[\s\S]*buildClosingBody/s,
-    "offer_pdf.js should derive one cancellation-policy section from traveler count, build a combined title, and render it before the closing body"
+    /resolveOfferChildrenPolicyText[\s\S]*resolveOfferWhatsNotIncludedText[\s\S]*resolveOfferCancellationPolicyTravelerCount[\s\S]*resolveOfferCancellationPolicySection[\s\S]*resolveOfferCancellationPolicyTitle[\s\S]*pdfT\(lang, "offer\.cancellation_policy_title", "Cancellation policy"\)[\s\S]*resolveOfferCancellationPolicyText[\s\S]*offer\.children_policy_title[\s\S]*offer\.whats_not_included_title[\s\S]*buildClosingBody/s,
+    "offer_pdf.js should resolve Offer children-policy and exclusion text alongside the fixed cancellation-policy section before the closing body"
   );
 });
 
@@ -2348,22 +2392,31 @@ test("travel-plan day date presets stay wired across model, API, backend, and UI
 test("travel plan PDF personalization exposes and persists traveler-list toggles for both PDF types", async () => {
   const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
   const bookingCorePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "core.js");
+  const pdfPanelModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "pdf_personalization_panel.js");
   const bookingPdfPersonalizationPath = path.resolve(__dirname, "..", "..", "..", "backend", "app", "src", "lib", "booking_pdf_personalization.js");
   const travelPlanPdfPath = path.resolve(__dirname, "..", "..", "..", "backend", "app", "src", "lib", "travel_plan_pdf.js");
-  const pageSource = await readFile(bookingPagePath, "utf8");
-  const coreSource = await readFile(bookingCorePath, "utf8");
-  const personalizationSource = await readFile(bookingPdfPersonalizationPath, "utf8");
-  const travelPlanPdfSource = await readFile(travelPlanPdfPath, "utf8");
+  const [pageSource, coreSource, pdfPanelModuleSource, personalizationSource, travelPlanPdfSource] = await Promise.all([
+    readFile(bookingPagePath, "utf8"),
+    readFile(bookingCorePath, "utf8"),
+    readFile(pdfPanelModulePath, "utf8"),
+    readFile(bookingPdfPersonalizationPath, "utf8"),
+    readFile(travelPlanPdfPath, "utf8")
+  ]);
 
-  assert.match(
+  assert.doesNotMatch(
     pageSource,
     /id="booking_pdf_travel_plan_include_who_is_traveling_mount"/,
-    "booking.html should expose a mount for the Travel plan PDF traveler-list toggle"
+    "booking.html should not hand-copy the Travel plan PDF traveler-list toggle mount"
   );
-  assert.match(
+  assert.doesNotMatch(
     pageSource,
     /id="booking_pdf_offer_include_who_is_traveling_mount"/,
-    "booking.html should expose a mount for the Offer PDF traveler-list toggle"
+    "booking.html should not hand-copy the Offer PDF traveler-list toggle mount"
+  );
+  assert.match(
+    pdfPanelModuleSource,
+    /scope:\s*"travel_plan"[\s\S]*field:\s*"include_who_is_traveling"[\s\S]*scope:\s*"offer"[\s\S]*field:\s*"include_who_is_traveling"/,
+    "The reusable PDF personalization panel config should define traveler-list toggles for both PDF types"
   );
   assert.match(
     coreSource,
@@ -2377,8 +2430,8 @@ test("travel plan PDF personalization exposes and persists traveler-list toggles
   );
   assert.match(
     coreSource,
-    /data-booking-pdf-toggle="travel_plan\.include_who_is_traveling"/,
-    "booking core should render the Travel plan PDF traveler-list checkbox"
+    /const renderToggle = \(mount, scope, config\) => \{[\s\S]*data-booking-pdf-toggle="\$\{scope\}\.\$\{config\.field\}"/,
+    "booking core should render traveler-list toggles through the shared checkbox renderer"
   );
   assert.match(
     personalizationSource,
@@ -2392,8 +2445,8 @@ test("travel plan PDF personalization exposes and persists traveler-list toggles
   );
   assert.match(
     coreSource,
-    /data-booking-pdf-toggle="offer\.include_who_is_traveling"/,
-    "booking core should render the Offer PDF traveler-list checkbox"
+    /const checked = config\.defaultChecked === true[\s\S]*branch\?\.\[config\.field\] !== false[\s\S]*branch\?\.\[config\.field\] === true/,
+    "booking core should preserve both default-on and default-off checkbox behavior in the shared toggle renderer"
   );
 });
 

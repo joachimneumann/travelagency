@@ -37,6 +37,38 @@ function cloneJson(value) {
   return value == null ? value : JSON.parse(JSON.stringify(value));
 }
 
+const PDF_TEXT_FIELD_CONFIG = Object.freeze({
+  travel_plan: Object.freeze({
+    subtitle: Object.freeze({ defaultChecked: true, enableWhenTextPresent: true }),
+    welcome: Object.freeze({ defaultChecked: true, enableWhenTextPresent: true }),
+    children_policy: Object.freeze({ defaultChecked: false, enableWhenTextPresent: true }),
+    whats_not_included: Object.freeze({ defaultChecked: false, enableWhenTextPresent: true }),
+    closing: Object.freeze({ defaultChecked: true, enableWhenTextPresent: true })
+  }),
+  offer: Object.freeze({
+    subtitle: Object.freeze({ defaultChecked: true, enableWhenTextPresent: true }),
+    welcome: Object.freeze({ defaultChecked: true, enableWhenTextPresent: true }),
+    children_policy: Object.freeze({ defaultChecked: false, enableWhenTextPresent: true }),
+    whats_not_included: Object.freeze({ defaultChecked: false, enableWhenTextPresent: true }),
+    closing: Object.freeze({ defaultChecked: true, enableWhenTextPresent: true })
+  })
+});
+
+function hasNormalizedPdfTextContent(fieldValue) {
+  if (!fieldValue || typeof fieldValue !== "object") return false;
+  if (normalizeText(fieldValue.text)) return true;
+  return Object.keys(fieldValue.i18n || {}).length > 0;
+}
+
+function resolvePdfTextFieldEnabled(branch, scope, field, normalizedField) {
+  const includeField = `include_${field}`;
+  const explicitValue = branch?.[includeField];
+  if (typeof explicitValue === "boolean") return explicitValue;
+  const config = PDF_TEXT_FIELD_CONFIG?.[scope]?.[field] || {};
+  if (config.enableWhenTextPresent && hasNormalizedPdfTextContent(normalizedField)) return true;
+  return config.defaultChecked === true;
+}
+
 function normalizePdfTextField(value, mapValue, { flatLang = "en", sourceLang = "en" } = {}) {
   const map = normalizeLocalizedTextMap(mapValue ?? value, sourceLang);
   const text = resolveLocalizedText(map, flatLang, "", { sourceLang }) || null;
@@ -50,63 +82,95 @@ export function normalizeBookingPdfPersonalization(value, { flatLang = "en", sou
   const raw = value && typeof value === "object" && !Array.isArray(value) ? value : {};
   const travelPlan = raw.travel_plan && typeof raw.travel_plan === "object" && !Array.isArray(raw.travel_plan) ? raw.travel_plan : {};
   const offer = raw.offer && typeof raw.offer === "object" && !Array.isArray(raw.offer) ? raw.offer : {};
+  const travelPlanSubtitle = normalizePdfTextField(travelPlan.subtitle, travelPlan.subtitle_i18n, { flatLang, sourceLang });
+  const travelPlanWelcome = normalizePdfTextField(travelPlan.welcome, travelPlan.welcome_i18n, { flatLang, sourceLang });
+  const travelPlanChildrenPolicy = normalizePdfTextField(travelPlan.children_policy, travelPlan.children_policy_i18n, { flatLang, sourceLang });
+  const travelPlanWhatsNotIncluded = normalizePdfTextField(travelPlan.whats_not_included, travelPlan.whats_not_included_i18n, { flatLang, sourceLang });
+  const travelPlanClosing = normalizePdfTextField(travelPlan.closing, travelPlan.closing_i18n, { flatLang, sourceLang });
   const travelPlanIncludeWhoIsTraveling = travelPlan.include_who_is_traveling === true;
+  const offerSubtitle = normalizePdfTextField(offer.subtitle, offer.subtitle_i18n, { flatLang, sourceLang });
+  const offerWelcome = normalizePdfTextField(offer.welcome, offer.welcome_i18n, { flatLang, sourceLang });
   const offerIncludeCancellationPolicy = offer.include_cancellation_policy !== false;
   const offerIncludeWhoIsTraveling = offer.include_who_is_traveling !== false;
+  const offerChildrenPolicy = normalizePdfTextField(offer.children_policy, offer.children_policy_i18n, { flatLang, sourceLang });
+  const offerWhatsNotIncluded = normalizePdfTextField(offer.whats_not_included, offer.whats_not_included_i18n, { flatLang, sourceLang });
+  const offerClosing = normalizePdfTextField(offer.closing, offer.closing_i18n, { flatLang, sourceLang });
 
   return compactObject({
     travel_plan: compactObject({
-      ...(normalizePdfTextField(travelPlan.subtitle, travelPlan.subtitle_i18n, { flatLang, sourceLang })
+      ...(travelPlanSubtitle
         ? {
-            subtitle: normalizePdfTextField(travelPlan.subtitle, travelPlan.subtitle_i18n, { flatLang, sourceLang }).text,
-            subtitle_i18n: normalizePdfTextField(travelPlan.subtitle, travelPlan.subtitle_i18n, { flatLang, sourceLang }).i18n
+            subtitle: travelPlanSubtitle.text,
+            subtitle_i18n: travelPlanSubtitle.i18n
           }
         : {}),
-      ...(normalizePdfTextField(travelPlan.welcome, travelPlan.welcome_i18n, { flatLang, sourceLang })
+      include_subtitle: resolvePdfTextFieldEnabled(travelPlan, "travel_plan", "subtitle", travelPlanSubtitle),
+      ...(travelPlanWelcome
         ? {
-            welcome: normalizePdfTextField(travelPlan.welcome, travelPlan.welcome_i18n, { flatLang, sourceLang }).text,
-            welcome_i18n: normalizePdfTextField(travelPlan.welcome, travelPlan.welcome_i18n, { flatLang, sourceLang }).i18n
+            welcome: travelPlanWelcome.text,
+            welcome_i18n: travelPlanWelcome.i18n
           }
         : {}),
-      ...(normalizePdfTextField(travelPlan.children_policy, travelPlan.children_policy_i18n, { flatLang, sourceLang })
+      include_welcome: resolvePdfTextFieldEnabled(travelPlan, "travel_plan", "welcome", travelPlanWelcome),
+      ...(travelPlanChildrenPolicy
         ? {
-            children_policy: normalizePdfTextField(travelPlan.children_policy, travelPlan.children_policy_i18n, { flatLang, sourceLang }).text,
-            children_policy_i18n: normalizePdfTextField(travelPlan.children_policy, travelPlan.children_policy_i18n, { flatLang, sourceLang }).i18n
+            children_policy: travelPlanChildrenPolicy.text,
+            children_policy_i18n: travelPlanChildrenPolicy.i18n
           }
         : {}),
-      ...(normalizePdfTextField(travelPlan.whats_not_included, travelPlan.whats_not_included_i18n, { flatLang, sourceLang })
+      include_children_policy: resolvePdfTextFieldEnabled(travelPlan, "travel_plan", "children_policy", travelPlanChildrenPolicy),
+      ...(travelPlanWhatsNotIncluded
         ? {
-            whats_not_included: normalizePdfTextField(travelPlan.whats_not_included, travelPlan.whats_not_included_i18n, { flatLang, sourceLang }).text,
-            whats_not_included_i18n: normalizePdfTextField(travelPlan.whats_not_included, travelPlan.whats_not_included_i18n, { flatLang, sourceLang }).i18n
+            whats_not_included: travelPlanWhatsNotIncluded.text,
+            whats_not_included_i18n: travelPlanWhatsNotIncluded.i18n
           }
         : {}),
-      ...(normalizePdfTextField(travelPlan.closing, travelPlan.closing_i18n, { flatLang, sourceLang })
+      include_whats_not_included: resolvePdfTextFieldEnabled(travelPlan, "travel_plan", "whats_not_included", travelPlanWhatsNotIncluded),
+      ...(travelPlanClosing
         ? {
-            closing: normalizePdfTextField(travelPlan.closing, travelPlan.closing_i18n, { flatLang, sourceLang }).text,
-            closing_i18n: normalizePdfTextField(travelPlan.closing, travelPlan.closing_i18n, { flatLang, sourceLang }).i18n
+            closing: travelPlanClosing.text,
+            closing_i18n: travelPlanClosing.i18n
           }
         : {}),
+      include_closing: resolvePdfTextFieldEnabled(travelPlan, "travel_plan", "closing", travelPlanClosing),
       include_who_is_traveling: travelPlanIncludeWhoIsTraveling
     }),
     offer: compactObject({
-      ...(normalizePdfTextField(offer.subtitle, offer.subtitle_i18n, { flatLang, sourceLang })
+      ...(offerSubtitle
         ? {
-            subtitle: normalizePdfTextField(offer.subtitle, offer.subtitle_i18n, { flatLang, sourceLang }).text,
-            subtitle_i18n: normalizePdfTextField(offer.subtitle, offer.subtitle_i18n, { flatLang, sourceLang }).i18n
+            subtitle: offerSubtitle.text,
+            subtitle_i18n: offerSubtitle.i18n
           }
         : {}),
-      ...(normalizePdfTextField(offer.welcome, offer.welcome_i18n, { flatLang, sourceLang })
+      include_subtitle: resolvePdfTextFieldEnabled(offer, "offer", "subtitle", offerSubtitle),
+      ...(offerWelcome
         ? {
-            welcome: normalizePdfTextField(offer.welcome, offer.welcome_i18n, { flatLang, sourceLang }).text,
-            welcome_i18n: normalizePdfTextField(offer.welcome, offer.welcome_i18n, { flatLang, sourceLang }).i18n
+            welcome: offerWelcome.text,
+            welcome_i18n: offerWelcome.i18n
           }
         : {}),
-      ...(normalizePdfTextField(offer.closing, offer.closing_i18n, { flatLang, sourceLang })
+      include_welcome: resolvePdfTextFieldEnabled(offer, "offer", "welcome", offerWelcome),
+      ...(offerChildrenPolicy
         ? {
-            closing: normalizePdfTextField(offer.closing, offer.closing_i18n, { flatLang, sourceLang }).text,
-            closing_i18n: normalizePdfTextField(offer.closing, offer.closing_i18n, { flatLang, sourceLang }).i18n
+            children_policy: offerChildrenPolicy.text,
+            children_policy_i18n: offerChildrenPolicy.i18n
           }
         : {}),
+      include_children_policy: resolvePdfTextFieldEnabled(offer, "offer", "children_policy", offerChildrenPolicy),
+      ...(offerWhatsNotIncluded
+        ? {
+            whats_not_included: offerWhatsNotIncluded.text,
+            whats_not_included_i18n: offerWhatsNotIncluded.i18n
+          }
+        : {}),
+      include_whats_not_included: resolvePdfTextFieldEnabled(offer, "offer", "whats_not_included", offerWhatsNotIncluded),
+      ...(offerClosing
+        ? {
+            closing: offerClosing.text,
+            closing_i18n: offerClosing.i18n
+          }
+        : {}),
+      include_closing: resolvePdfTextFieldEnabled(offer, "offer", "closing", offerClosing),
       include_cancellation_policy: offerIncludeCancellationPolicy,
       include_who_is_traveling: offerIncludeWhoIsTraveling
     })
@@ -145,6 +209,15 @@ export function resolveBookingPdfPersonalizationText(personalization, scope, fie
   return resolveLocalizedText(branch?.[`${field}_i18n`] ?? branch?.[field], lang, "", {
     sourceLang: options?.sourceLang || "en"
   });
+}
+
+export function resolveBookingPdfPersonalizationFlag(personalization, scope, field, options = {}) {
+  const normalized = normalizeBookingPdfPersonalization(personalization, {
+    flatLang: options?.flatLang || "en",
+    sourceLang: options?.sourceLang || "en"
+  });
+  const branch = normalized?.[scope] && typeof normalized[scope] === "object" ? normalized[scope] : null;
+  return typeof branch?.[field] === "boolean" ? branch[field] : false;
 }
 
 export function resolveBookingPdfCountryLabels(booking) {

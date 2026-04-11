@@ -215,19 +215,24 @@ test("cloneBookingForTesting keeps only approved metadata and clears commercial 
         en: "Welcome to your trip",
         de: "Willkommen zu Ihrer Reise"
       },
+      include_subtitle: true,
       welcome: "This is your current travel plan.",
+      include_welcome: true,
       welcome_i18n: {
         en: "This is your current travel plan."
       },
       children_policy: "Children under 6 stay free.",
+      include_children_policy: true,
       children_policy_i18n: {
         en: "Children under 6 stay free."
       },
       whats_not_included: "International flights are not included.",
+      include_whats_not_included: true,
       whats_not_included_i18n: {
         en: "International flights are not included."
       },
       closing: "We would be happy to refine anything together.",
+      include_closing: true,
       closing_i18n: {
         en: "We would be happy to refine anything together."
       },

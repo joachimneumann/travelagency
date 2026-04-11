@@ -204,6 +204,7 @@ export function renderLocalizedStackedField({
   idBase,
   label,
   labelId = "",
+  showLabel = true,
   type = "input",
   rows = 3,
   commonData = {},
@@ -269,9 +270,9 @@ export function renderLocalizedStackedField({
   if (sameLanguage) {
     return `
       <div class="localized-pair localized-pair--single-language">
-        <div class="localized-pair__header">
+        ${showLabel ? `<div class="localized-pair__header">
           <label class="localized-pair__label" for="${escapeHtml(englishId)}"${labelId ? ` id="${escapeHtml(labelId)}"` : ""}>${escapeHtml(label)}</label>
-        </div>
+        </div>` : ""}
         <div class="localized-pair__field localized-pair__field--single">
           ${sourceControl}
         </div>
@@ -292,9 +293,9 @@ export function renderLocalizedStackedField({
 
   return `
     <div class="localized-pair">
-      <div class="localized-pair__header">
+      ${showLabel ? `<div class="localized-pair__header">
         <label class="localized-pair__label" for="${escapeHtml(englishId)}"${labelId ? ` id="${escapeHtml(labelId)}"` : ""}>${escapeHtml(label)}</label>
-      </div>
+      </div>` : ""}
       <div class="localized-pair__row">
         <span class="localized-pair__code" aria-hidden="true">${escapeHtml(sourceOption.shortLabel)}</span>
         <div class="localized-pair__field">

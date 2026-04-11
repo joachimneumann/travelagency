@@ -28,6 +28,7 @@ import {
   resolveAtpStaffFullName
 } from "./atp_staff_pdf.js";
 import {
+  resolveBookingPdfPersonalizationFlag,
   resolveBookingPdfCountryLabels,
   resolveBookingPdfPersonalizationText,
   resolveBookingPdfTravelStyleLabels
@@ -177,6 +178,9 @@ function travelPlanSectionTitle(lang) {
 }
 
 function resolveTravelPlanSubtitle(booking, plan, lang) {
+  if (!resolveBookingPdfPersonalizationFlag(booking?.pdf_personalization, "travel_plan", "include_subtitle", { sourceLang: lang })) {
+    return "";
+  }
   const override = textOrNull(resolveBookingPdfPersonalizationText(booking?.pdf_personalization, "travel_plan", "subtitle", lang, { sourceLang: lang }));
   if (override) return override;
   const dayCount = Array.isArray(plan?.days) ? plan.days.length : 0;
@@ -189,6 +193,9 @@ function resolveTravelPlanSubtitle(booking, plan, lang) {
 }
 
 function resolveTravelPlanWelcomeText(booking, lang) {
+  if (!resolveBookingPdfPersonalizationFlag(booking?.pdf_personalization, "travel_plan", "include_welcome", { sourceLang: lang })) {
+    return "";
+  }
   const override = textOrNull(resolveBookingPdfPersonalizationText(booking?.pdf_personalization, "travel_plan", "welcome", lang, { sourceLang: lang }));
   if (override) return override;
   const styles = resolveBookingPdfTravelStyleLabels(booking, lang);
@@ -199,6 +206,9 @@ function resolveTravelPlanWelcomeText(booking, lang) {
 }
 
 function resolveTravelPlanClosingText(booking, lang) {
+  if (!resolveBookingPdfPersonalizationFlag(booking?.pdf_personalization, "travel_plan", "include_closing", { sourceLang: lang })) {
+    return "";
+  }
   return (
     textOrNull(resolveBookingPdfPersonalizationText(booking?.pdf_personalization, "travel_plan", "closing", lang, { sourceLang: lang }))
     || pdfT(lang, "travel_plan.closing_body", "We would be happy to hear from you.")
@@ -206,12 +216,18 @@ function resolveTravelPlanClosingText(booking, lang) {
 }
 
 function resolveTravelPlanChildrenPolicyText(booking, lang) {
+  if (!resolveBookingPdfPersonalizationFlag(booking?.pdf_personalization, "travel_plan", "include_children_policy", { sourceLang: lang })) {
+    return "";
+  }
   return textOrNull(
     resolveBookingPdfPersonalizationText(booking?.pdf_personalization, "travel_plan", "children_policy", lang, { sourceLang: lang })
   );
 }
 
 function resolveTravelPlanWhatsNotIncludedText(booking, lang) {
+  if (!resolveBookingPdfPersonalizationFlag(booking?.pdf_personalization, "travel_plan", "include_whats_not_included", { sourceLang: lang })) {
+    return "";
+  }
   return textOrNull(
     resolveBookingPdfPersonalizationText(booking?.pdf_personalization, "travel_plan", "whats_not_included", lang, { sourceLang: lang })
   );

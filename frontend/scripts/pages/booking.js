@@ -55,6 +55,10 @@ import {
   setBookingContentLang
 } from "../booking/i18n.js";
 import { derivePaymentFlowState } from "../booking/payment_flow_state.js";
+import {
+  renderBookingPdfPersonalizationPanels,
+  resolveBookingPdfPersonalizationElements
+} from "../booking/pdf_personalization_panel.js";
 
 function backendT(id, fallback, vars) {
   if (typeof window.backendT === "function") {
@@ -390,19 +394,23 @@ const els = {
   travelStylesSummary: document.getElementById("booking_travel_styles_summary"),
   travelStylesPanel: document.getElementById("booking_travel_styles_panel"),
   travelStylesOptions: document.getElementById("booking_travel_styles_options"),
-  pdfPersonalizationPanel: document.getElementById("booking_pdf_personalization_panel"),
-  pdfTravelPlanSubtitleMount: document.getElementById("booking_pdf_travel_plan_subtitle_mount"),
-  pdfTravelPlanWelcomeMount: document.getElementById("booking_pdf_travel_plan_welcome_mount"),
-  pdfTravelPlanChildrenPolicyMount: document.getElementById("booking_pdf_travel_plan_children_policy_mount"),
-  pdfTravelPlanWhatsNotIncludedMount: document.getElementById("booking_pdf_travel_plan_whats_not_included_mount"),
-  pdfTravelPlanClosingMount: document.getElementById("booking_pdf_travel_plan_closing_mount"),
-  pdfTravelPlanIncludeWhoIsTravelingMount: document.getElementById("booking_pdf_travel_plan_include_who_is_traveling_mount"),
-  pdfOfferSubtitleMount: document.getElementById("booking_pdf_offer_subtitle_mount"),
-  pdfOfferWelcomeMount: document.getElementById("booking_pdf_offer_welcome_mount"),
-  pdfOfferIncludeCancellationPolicyMount: document.getElementById("booking_pdf_offer_include_cancellation_policy_mount"),
-  pdfOfferClosingMount: document.getElementById("booking_pdf_offer_closing_mount"),
-  pdfOfferIncludeWhoIsTravelingMount: document.getElementById("booking_pdf_offer_include_who_is_traveling_mount"),
-  pdfCustomerReference: document.getElementById("booking_pdf_customer_reference"),
+  travelPlanPdfPersonalizationPanel: document.getElementById("travel_plan_pdf_personalization_panel"),
+  offerPdfPersonalizationPanel: document.getElementById("offer_pdf_personalization_panel"),
+  pdfTravelPlanSubtitleMount: null,
+  pdfTravelPlanWelcomeMount: null,
+  pdfTravelPlanChildrenPolicyMount: null,
+  pdfTravelPlanWhatsNotIncludedMount: null,
+  pdfTravelPlanClosingMount: null,
+  pdfTravelPlanIncludeWhoIsTravelingMount: null,
+  pdfTravelPlanReference: null,
+  pdfOfferSubtitleMount: null,
+  pdfOfferWelcomeMount: null,
+  pdfOfferChildrenPolicyMount: null,
+  pdfOfferWhatsNotIncludedMount: null,
+  pdfOfferIncludeCancellationPolicyMount: null,
+  pdfOfferClosingMount: null,
+  pdfOfferIncludeWhoIsTravelingMount: null,
+  pdfOfferReference: null,
   contentLanguageField: document.getElementById("booking_content_language_field"),
   contentLanguageMenuMount: document.getElementById("booking_content_language_menu_mount"),
   contentLanguageSelect: document.getElementById("booking_content_language_select"),
@@ -519,6 +527,9 @@ const els = {
   invoice_status: document.getElementById("invoice_status"),
   invoices_table: document.getElementById("invoices_table")
 };
+
+renderBookingPdfPersonalizationPanels(els);
+Object.assign(els, resolveBookingPdfPersonalizationElements(document));
 
 const PERSON_MODAL_AUTOFILL_CONFIG = Object.freeze({
   booking_person_modal_passport_holder_name_autofill: { document_type: "passport", field: "holder_name", source: "name" },
@@ -862,10 +873,10 @@ async function init() {
       renderActionControls();
     });
   }
-  if (els.pdfPersonalizationPanel) {
-    els.pdfPersonalizationPanel.addEventListener("input", updateCoreDirtyState);
-    els.pdfPersonalizationPanel.addEventListener("change", updateCoreDirtyState);
-  }
+  [els.travelPlanPdfPersonalizationPanel, els.offerPdfPersonalizationPanel].filter(Boolean).forEach((panel) => {
+    panel.addEventListener("input", updateCoreDirtyState);
+    panel.addEventListener("change", updateCoreDirtyState);
+  });
   if (els.contentLanguageSelect) els.contentLanguageSelect.addEventListener("change", () => {
     void handleContentLanguageChange();
   });

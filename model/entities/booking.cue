@@ -97,14 +97,19 @@ import (
 #BookingPdfPersonalizationScoped: {
 	subtitle?:                 string
 	subtitle_i18n?:            [string]: string
+	include_subtitle?:         bool
 	welcome?:                  string
 	welcome_i18n?:             [string]: string
+	include_welcome?:          bool
 	children_policy?:          string
 	children_policy_i18n?:     [string]: string
+	include_children_policy?:  bool
 	whats_not_included?:       string
 	whats_not_included_i18n?:  [string]: string
+	include_whats_not_included?: bool
 	closing?:                  string
 	closing_i18n?:             [string]: string
+	include_closing?:          bool
 	include_cancellation_policy?: bool
 	include_who_is_traveling?: bool
 }

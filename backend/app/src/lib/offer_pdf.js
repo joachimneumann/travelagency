@@ -33,6 +33,7 @@ import {
   resolveAtpStaffFullName
 } from "./atp_staff_pdf.js";
 import {
+  resolveBookingPdfPersonalizationFlag,
   resolveBookingPdfCountryLabels,
   resolveBookingPdfPersonalizationText,
   resolveBookingPdfTravelStyleLabels
@@ -123,6 +124,12 @@ function safeArray(value) {
 function textOrNull(value) {
   const normalized = normalizeText(value);
   return normalized || null;
+}
+
+function measureOfferTextHeight(doc, text, { width, fontSize, fonts, lang, weight = "regular", lineGap = 0 }) {
+  if (!text) return 0;
+  doc.font(pdfFontName(weight, fonts)).fontSize(fontSize);
+  return doc.heightOfString(text, pdfTextOptions(lang, { width, lineGap }));
 }
 
 function isSyntheticTripTotalLabel(value) {
@@ -2091,6 +2098,9 @@ function drawOfferTable(doc, generatedOffer, startY, formatMoneyValue, fonts, la
 
 function buildClosingBody(generatedOffer, formatMoneyValue, lang) {
   const booking = generatedOffer?.__booking_for_offer_pdf || null;
+  if (!resolveBookingPdfPersonalizationFlag(booking?.pdf_personalization, "offer", "include_closing", { sourceLang: lang })) {
+    return "";
+  }
   const override = textOrNull(resolveBookingPdfPersonalizationText(booking?.pdf_personalization, "offer", "closing", lang, { sourceLang: lang }));
   if (override) return override;
   const routeMode = normalizeText(generatedOffer?.customer_confirmation_flow?.mode).toUpperCase();
@@ -2121,6 +2131,9 @@ function buildClosingBody(generatedOffer, formatMoneyValue, lang) {
 }
 
 function resolveOfferSubtitle(booking, generatedOffer, lang) {
+  if (!resolveBookingPdfPersonalizationFlag(booking?.pdf_personalization, "offer", "include_subtitle", { sourceLang: lang })) {
+    return "";
+  }
   const override = textOrNull(resolveBookingPdfPersonalizationText(booking?.pdf_personalization, "offer", "subtitle", lang, { sourceLang: lang }));
   if (override) return override;
   const dayCount = Array.isArray(generatedOffer?.travel_plan?.days) ? generatedOffer.travel_plan.days.length : 0;
@@ -2133,6 +2146,9 @@ function resolveOfferSubtitle(booking, generatedOffer, lang) {
 }
 
 function resolveOfferWelcomeText(booking, lang) {
+  if (!resolveBookingPdfPersonalizationFlag(booking?.pdf_personalization, "offer", "include_welcome", { sourceLang: lang })) {
+    return "";
+  }
   const override = textOrNull(resolveBookingPdfPersonalizationText(booking?.pdf_personalization, "offer", "welcome", lang, { sourceLang: lang }));
   if (override) return override;
   const styles = resolveBookingPdfTravelStyleLabels(booking, lang);
@@ -2140,6 +2156,24 @@ function resolveOfferWelcomeText(booking, lang) {
     return `This offer is based on your current ${styles.join(", ")} itinerary. Please let us know if you would like to adjust anything.`;
   }
   return "This is your current offer. Please let us know if you would like to adjust anything.";
+}
+
+function resolveOfferChildrenPolicyText(booking, lang) {
+  if (!resolveBookingPdfPersonalizationFlag(booking?.pdf_personalization, "offer", "include_children_policy", { sourceLang: lang })) {
+    return "";
+  }
+  return textOrNull(
+    resolveBookingPdfPersonalizationText(booking?.pdf_personalization, "offer", "children_policy", lang, { sourceLang: lang })
+  );
+}
+
+function resolveOfferWhatsNotIncludedText(booking, lang) {
+  if (!resolveBookingPdfPersonalizationFlag(booking?.pdf_personalization, "offer", "include_whats_not_included", { sourceLang: lang })) {
+    return "";
+  }
+  return textOrNull(
+    resolveBookingPdfPersonalizationText(booking?.pdf_personalization, "offer", "whats_not_included", lang, { sourceLang: lang })
+  );
 }
 
 function buildSupplementaryClosingNotes(generatedOffer, attachmentCount = 0, lang) {
@@ -2245,48 +2279,50 @@ function resolveOfferCancellationPolicyText(booking) {
 
 function estimateClosingHeight(doc, fonts, lang, generatedOffer, formatMoneyValue, attachmentCount = 0) {
   const textWidth = doc.page.width - PAGE_MARGIN * 2;
+  const booking = generatedOffer?.__booking_for_offer_pdf || null;
+  const childrenPolicyText = resolveOfferChildrenPolicyText(booking, lang);
+  const whatsNotIncludedText = resolveOfferWhatsNotIncludedText(booking, lang);
   const cancellationPolicyTitle = resolveOfferCancellationPolicyTitle(
     lang,
-    generatedOffer?.__booking_for_offer_pdf || null
+    booking
   );
-  const cancellationPolicyText = textOrNull(resolveOfferCancellationPolicyText(generatedOffer?.__booking_for_offer_pdf || null));
+  const cancellationPolicyText = textOrNull(resolveOfferCancellationPolicyText(booking));
   let height = 0;
+  const sections = [
+    {
+      title: pdfT(lang, "offer.children_policy_title", "Children's Policy"),
+      body: childrenPolicyText
+    },
+    {
+      title: pdfT(lang, "offer.whats_not_included_title", "What's not included"),
+      body: whatsNotIncludedText
+    },
+    {
+      title: cancellationPolicyTitle,
+      body: cancellationPolicyText
+    }
+  ].filter((section) => section.body);
 
-  if (cancellationPolicyText) {
+  for (const section of sections) {
     doc
       .font(pdfFontName("bold", fonts))
       .fontSize(11.2);
-    height += doc.heightOfString(
-      cancellationPolicyTitle,
-      pdfTextOptions(lang, {
-        width: textWidth,
-        lineGap: 1
-      })
-    );
+    height += doc.heightOfString(section.title, pdfTextOptions(lang, { width: textWidth, lineGap: 1 }));
     height += 4;
     doc
       .font(pdfFontName("regular", fonts))
       .fontSize(11);
-    height += doc.heightOfString(
-      cancellationPolicyText,
-      pdfTextOptions(lang, {
-        width: textWidth,
-        lineGap: 2
-      })
-    );
+    height += doc.heightOfString(section.body, pdfTextOptions(lang, { width: textWidth, lineGap: 2 }));
     height += 14;
   }
 
-  doc
-    .font(pdfFontName("regular", fonts))
-    .fontSize(11);
-  const bodyHeight = doc.heightOfString(
-    buildClosingBody(generatedOffer, formatMoneyValue, lang),
-    pdfTextOptions(lang, {
-      width: textWidth,
-      lineGap: 2
-    })
-  );
+  const bodyHeight = measureOfferTextHeight(doc, buildClosingBody(generatedOffer, formatMoneyValue, lang), {
+    width: textWidth,
+    fontSize: 11,
+    fonts,
+    lang,
+    lineGap: 2
+  });
 
   const noteHeights = buildSupplementaryClosingNotes(generatedOffer, attachmentCount, lang).map((note) => doc.heightOfString(note, pdfTextOptions(lang, {
     width: textWidth,
@@ -2297,60 +2333,77 @@ function estimateClosingHeight(doc, fonts, lang, generatedOffer, formatMoneyValu
   doc
     .font(pdfFontName("regular", fonts))
     .fontSize(11);
-  const regardsHeight = doc.heightOfString(pdfT(lang, "offer.closing_regards", "Warm regards,"), {
+  const regardsHeight = measureOfferTextHeight(doc, pdfT(lang, "offer.closing_regards", "Warm regards,"), {
     width: textWidth,
-    align: pdfTextAlign(lang)
+    fontSize: 11,
+    fonts,
+    lang
   });
 
-  doc
-    .font(pdfFontName("regular", fonts))
-    .fontSize(12);
-  const teamHeight = doc.heightOfString(pdfT(lang, "offer.closing_team", "Your Asia Travel Plan team."), {
+  const teamHeight = measureOfferTextHeight(doc, pdfT(lang, "offer.closing_team", "Your Asia Travel Plan team."), {
     width: textWidth,
-    align: pdfTextAlign(lang)
+    fontSize: 12,
+    fonts,
+    lang
   });
 
   return height + bodyHeight + attachmentHeight + 18 + regardsHeight + 18 + teamHeight + 10;
 }
 
+function drawOfferTitledParagraph(doc, startY, fonts, lang, title, text) {
+  if (!text) return startY;
+  doc
+    .font(pdfFontName("bold", fonts))
+    .fontSize(11.2)
+    .fillColor(PDF_COLORS.textStrong)
+    .text(title, PAGE_MARGIN, startY, pdfTextOptions(lang, {
+      width: doc.page.width - PAGE_MARGIN * 2,
+      lineGap: 1
+    }));
+  doc
+    .font(pdfFontName("regular", fonts))
+    .fontSize(11)
+    .fillColor(PDF_COLORS.textMutedStrong)
+    .text(text, PAGE_MARGIN, doc.y + 4, pdfTextOptions(lang, {
+      width: doc.page.width - PAGE_MARGIN * 2,
+      lineGap: 2
+    }));
+  return doc.y;
+}
+
 function drawClosing(doc, startY, fonts, lang, generatedOffer, formatMoneyValue, attachmentCount = 0) {
+  const booking = generatedOffer?.__booking_for_offer_pdf || null;
+  const childrenPolicyText = resolveOfferChildrenPolicyText(booking, lang);
+  const whatsNotIncludedText = resolveOfferWhatsNotIncludedText(booking, lang);
   const cancellationPolicyTitle = resolveOfferCancellationPolicyTitle(
     lang,
-    generatedOffer?.__booking_for_offer_pdf || null
+    booking
   );
-  const cancellationPolicyText = textOrNull(resolveOfferCancellationPolicyText(generatedOffer?.__booking_for_offer_pdf || null));
+  const cancellationPolicyText = textOrNull(resolveOfferCancellationPolicyText(booking));
   let y = startY;
 
-  if (cancellationPolicyText) {
-    doc
-      .font(pdfFontName("bold", fonts))
-      .fontSize(11.2)
-      .fillColor(PDF_COLORS.textStrong)
-      .text(
-        cancellationPolicyTitle,
-        PAGE_MARGIN,
-        y,
-        pdfTextOptions(lang, {
-          width: doc.page.width - PAGE_MARGIN * 2,
-          lineGap: 1
-        })
-      );
-    y = doc.y + 4;
-    doc
-      .font(pdfFontName("regular", fonts))
-      .fontSize(11)
-      .fillColor(PDF_COLORS.textMutedStrong)
-      .text(
-        cancellationPolicyText,
-        PAGE_MARGIN,
-        y,
-        pdfTextOptions(lang, {
-          width: doc.page.width - PAGE_MARGIN * 2,
-          lineGap: 2
-        })
-      );
-    y = doc.y + 14;
-  }
+  y = drawOfferTitledParagraph(
+    doc,
+    y,
+    fonts,
+    lang,
+    pdfT(lang, "offer.children_policy_title", "Children's Policy"),
+    childrenPolicyText
+  );
+  if (childrenPolicyText) y += 14;
+
+  y = drawOfferTitledParagraph(
+    doc,
+    y,
+    fonts,
+    lang,
+    pdfT(lang, "offer.whats_not_included_title", "What's not included"),
+    whatsNotIncludedText
+  );
+  if (whatsNotIncludedText) y += 14;
+
+  y = drawOfferTitledParagraph(doc, y, fonts, lang, cancellationPolicyTitle, cancellationPolicyText);
+  if (cancellationPolicyText) y += 14;
 
   doc
     .font(pdfFontName("regular", fonts))

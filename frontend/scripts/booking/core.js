@@ -20,6 +20,10 @@ import {
   resolveLocalizedEditorBranchText
 } from "./localized_editor.js";
 import {
+  BOOKING_PDF_PERSONALIZATION_PANELS,
+  getBookingPdfPersonalizationItemConfig
+} from "./pdf_personalization_panel.js";
+import {
   bookingContentLang,
   bookingContentLanguageLabel,
   bookingSourceLang,
@@ -306,6 +310,21 @@ function offerCancellationPolicyHeadingLabel(section) {
     .replace(/:\s*$/u, "");
 }
 
+function hasNormalizedPdfTextContent(fieldValue) {
+  if (!fieldValue || typeof fieldValue !== "object") return false;
+  if (String(fieldValue.text || "").trim()) return true;
+  return Object.keys(fieldValue.i18n || {}).length > 0;
+}
+
+function resolvePdfTextFieldEnabled(branch, scope, field, normalizedField) {
+  const config = getBookingPdfPersonalizationItemConfig(scope, field);
+  if (!config?.includeField) return true;
+  const explicitValue = branch?.[config.includeField];
+  if (typeof explicitValue === "boolean") return explicitValue;
+  if (config.enableWhenTextPresent && hasNormalizedPdfTextContent(normalizedField)) return true;
+  return config.defaultChecked === true;
+}
+
 function normalizePdfPersonalization(value) {
   const raw = value && typeof value === "object" && !Array.isArray(value) ? value : {};
   const travelPlan = raw.travel_plan && typeof raw.travel_plan === "object" && !Array.isArray(raw.travel_plan) ? raw.travel_plan : {};
@@ -317,28 +336,44 @@ function normalizePdfPersonalization(value) {
   const travelPlanClosing = normalizePdfTextField(travelPlan.closing, travelPlan.closing_i18n);
   const offerSubtitle = normalizePdfTextField(offer.subtitle, offer.subtitle_i18n);
   const offerWelcome = normalizePdfTextField(offer.welcome, offer.welcome_i18n);
+  const offerChildrenPolicy = normalizePdfTextField(offer.children_policy, offer.children_policy_i18n);
+  const offerWhatsNotIncluded = normalizePdfTextField(offer.whats_not_included, offer.whats_not_included_i18n);
   const offerClosing = normalizePdfTextField(offer.closing, offer.closing_i18n);
   return {
     travel_plan: {
       subtitle: travelPlanSubtitle.text,
       subtitle_i18n: travelPlanSubtitle.i18n,
+      include_subtitle: resolvePdfTextFieldEnabled(travelPlan, "travel_plan", "subtitle", travelPlanSubtitle),
       welcome: travelPlanWelcome.text,
       welcome_i18n: travelPlanWelcome.i18n,
+      include_welcome: resolvePdfTextFieldEnabled(travelPlan, "travel_plan", "welcome", travelPlanWelcome),
       children_policy: travelPlanChildrenPolicy.text,
       children_policy_i18n: travelPlanChildrenPolicy.i18n,
+      include_children_policy: resolvePdfTextFieldEnabled(travelPlan, "travel_plan", "children_policy", travelPlanChildrenPolicy),
       whats_not_included: travelPlanWhatsNotIncluded.text,
       whats_not_included_i18n: travelPlanWhatsNotIncluded.i18n,
+      include_whats_not_included: resolvePdfTextFieldEnabled(travelPlan, "travel_plan", "whats_not_included", travelPlanWhatsNotIncluded),
       closing: travelPlanClosing.text,
       closing_i18n: travelPlanClosing.i18n,
+      include_closing: resolvePdfTextFieldEnabled(travelPlan, "travel_plan", "closing", travelPlanClosing),
       include_who_is_traveling: travelPlan.include_who_is_traveling === true
     },
     offer: {
       subtitle: offerSubtitle.text,
       subtitle_i18n: offerSubtitle.i18n,
+      include_subtitle: resolvePdfTextFieldEnabled(offer, "offer", "subtitle", offerSubtitle),
       welcome: offerWelcome.text,
       welcome_i18n: offerWelcome.i18n,
+      include_welcome: resolvePdfTextFieldEnabled(offer, "offer", "welcome", offerWelcome),
+      children_policy: offerChildrenPolicy.text,
+      children_policy_i18n: offerChildrenPolicy.i18n,
+      include_children_policy: resolvePdfTextFieldEnabled(offer, "offer", "children_policy", offerChildrenPolicy),
+      whats_not_included: offerWhatsNotIncluded.text,
+      whats_not_included_i18n: offerWhatsNotIncluded.i18n,
+      include_whats_not_included: resolvePdfTextFieldEnabled(offer, "offer", "whats_not_included", offerWhatsNotIncluded),
       closing: offerClosing.text,
       closing_i18n: offerClosing.i18n,
+      include_closing: resolvePdfTextFieldEnabled(offer, "offer", "closing", offerClosing),
       include_cancellation_policy: offer.include_cancellation_policy !== false,
       include_who_is_traveling: offer.include_who_is_traveling !== false
     }
@@ -558,10 +593,11 @@ export function createBookingCoreModule(ctx) {
   }
 
   function readLocalizedBookingPdfField(scope, field, existingValue) {
-    const root = els.pdfPersonalizationPanel;
-    if (!(root instanceof HTMLElement)) return normalizePdfTextField(existingValue, existingValue?.i18n || existingValue);
-    const sourceInput = root.querySelector(`[data-booking-pdf-field="${scope}.${field}"][data-localized-role="source"]`);
-    const targetInput = root.querySelector(`[data-booking-pdf-field="${scope}.${field}"][data-localized-role="target"]`);
+    if (typeof document === "undefined" || !(document.querySelector instanceof Function)) {
+      return normalizePdfTextField(existingValue, existingValue?.i18n || existingValue);
+    }
+    const sourceInput = document.querySelector(`[data-booking-pdf-field="${scope}.${field}"][data-localized-role="source"]`);
+    const targetInput = document.querySelector(`[data-booking-pdf-field="${scope}.${field}"][data-localized-role="target"]`);
     const sourceValue = String(sourceInput?.value || "").trim();
     const localizedValue = String(targetInput?.value || "").trim();
     const payload = mergeDualLocalizedPayload(
@@ -573,6 +609,12 @@ export function createBookingCoreModule(ctx) {
       text: payload.text,
       i18n: payload.map
     };
+  }
+
+  function readBookingPdfToggle(toggleKey) {
+    if (typeof document === "undefined" || !(document.querySelector instanceof Function)) return undefined;
+    const input = document.querySelector(`[data-booking-pdf-toggle="${toggleKey}"]`);
+    return input instanceof HTMLInputElement ? input.checked : undefined;
   }
 
   function customerReferenceNote(booking = state.booking) {
@@ -611,13 +653,23 @@ export function createBookingCoreModule(ctx) {
 
     const travelPlan = normalizePdfPersonalization(draft.pdf_personalization).travel_plan;
     const offer = normalizePdfPersonalization(draft.pdf_personalization).offer;
+    const pdfBranches = {
+      travel_plan: travelPlan,
+      offer
+    };
     const renderField = (mount, scope, field, label, placeholder, rows = 2) => {
       if (!(mount instanceof HTMLElement)) return;
-      const branch = scope === "travel_plan" ? travelPlan : offer;
-      mount.innerHTML = renderLocalizedStackedField({
+      const branch = pdfBranches[scope] || {};
+      const config = getBookingPdfPersonalizationItemConfig(scope, field);
+      const includeField = config?.includeField || "";
+      const enabled = includeField
+        ? branch?.[includeField] !== false
+        : true;
+      const fieldMarkup = renderLocalizedStackedField({
         escapeHtml,
         idBase: `booking_pdf_${scope}_${field}`,
         label,
+        showLabel: false,
         type: rows > 1 ? "textarea" : "input",
         rows,
         commonData: { "booking-pdf-field": `${scope}.${field}` },
@@ -628,130 +680,94 @@ export function createBookingCoreModule(ctx) {
         disabled,
         translateEnabled: false
       });
+      mount.innerHTML = includeField
+        ? `
+          <div class="booking-pdf-panel__field">
+            <label class="booking-pdf-panel__toggle-label" for="booking_pdf_${scope}_${includeField}">
+              <input
+                id="booking_pdf_${scope}_${includeField}"
+                type="checkbox"
+                data-booking-pdf-toggle="${scope}.${includeField}"
+                ${enabled ? "checked" : ""}
+                ${disabled ? "disabled" : ""}
+              />
+              <span>${escapeHtml(label)}</span>
+            </label>
+            <div class="booking-pdf-panel__field-body">
+              ${fieldMarkup}
+            </div>
+          </div>
+        `
+        : fieldMarkup;
+    };
+    const resolvePlaceholder = (placeholderKey) => {
+      switch (placeholderKey) {
+        case "subtitle":
+          return computedPdfSubtitlePlaceholder();
+        case "travel_plan_welcome":
+          return computedTravelPlanWelcomePlaceholder();
+        case "offer_welcome":
+          return computedOfferWelcomePlaceholder();
+        case "closing":
+          return computedClosingPlaceholder();
+        default:
+          return "";
+      }
+    };
+    const renderToggle = (mount, scope, config) => {
+      if (!(mount instanceof HTMLElement)) return;
+      const branch = pdfBranches[scope] || {};
+      const checked = config.defaultChecked === true
+        ? branch?.[config.field] !== false
+        : branch?.[config.field] === true;
+      const previewMarkup = config.previewKey === "offer_cancellation_policy"
+        ? `<div class="micro">${offerCancellationPolicyPreviewMarkup()}</div>`
+        : "";
+      mount.innerHTML = `
+        <div class="booking-pdf-panel__toggle">
+          <label class="booking-pdf-panel__toggle-label" for="booking_pdf_${scope}_${config.field}">
+            <input
+              id="booking_pdf_${scope}_${config.field}"
+              type="checkbox"
+              data-booking-pdf-toggle="${scope}.${config.field}"
+              ${checked ? "checked" : ""}
+              ${disabled ? "disabled" : ""}
+            />
+            <span>${escapeHtml(bookingT(config.labelKey, config.labelFallback))}</span>
+          </label>
+          ${previewMarkup}
+        </div>
+      `;
     };
 
-    renderField(
-      els.pdfTravelPlanSubtitleMount,
-      "travel_plan",
-      "subtitle",
-      bookingT("booking.pdf.travel_plan.subtitle", "Travel plan subtitle"),
-      computedPdfSubtitlePlaceholder(),
-      2
-    );
-    renderField(
-      els.pdfTravelPlanWelcomeMount,
-      "travel_plan",
-      "welcome",
-      bookingT("booking.pdf.travel_plan.welcome", "Travel plan welcome"),
-      computedTravelPlanWelcomePlaceholder(),
-      4
-    );
-    renderField(
-      els.pdfTravelPlanChildrenPolicyMount,
-      "travel_plan",
-      "children_policy",
-      bookingT("booking.pdf.travel_plan.children_policy", "Children's Policy"),
-      "",
-      3
-    );
-    renderField(
-      els.pdfTravelPlanWhatsNotIncludedMount,
-      "travel_plan",
-      "whats_not_included",
-      bookingT("booking.pdf.travel_plan.whats_not_included", "What's not included"),
-      "",
-      3
-    );
-    renderField(
-      els.pdfTravelPlanClosingMount,
-      "travel_plan",
-      "closing",
-      bookingT("booking.pdf.travel_plan.closing", "Travel plan closing"),
-      computedClosingPlaceholder(),
-      3
-    );
-    if (els.pdfTravelPlanIncludeWhoIsTravelingMount instanceof HTMLElement) {
-      els.pdfTravelPlanIncludeWhoIsTravelingMount.innerHTML = `
-        <div class="booking-pdf-panel__toggle">
-          <label class="booking-pdf-panel__toggle-label" for="booking_pdf_travel_plan_include_who_is_traveling">
-            <input
-              id="booking_pdf_travel_plan_include_who_is_traveling"
-              type="checkbox"
-              data-booking-pdf-toggle="travel_plan.include_who_is_traveling"
-              ${travelPlan.include_who_is_traveling === true ? "checked" : ""}
-              ${disabled ? "disabled" : ""}
-            />
-            <span>${escapeHtml(bookingT("booking.pdf.travel_plan.include_who_is_traveling", "Include Who is traveling"))}</span>
-          </label>
-        </div>
-      `;
-    }
-    renderField(
-      els.pdfOfferSubtitleMount,
-      "offer",
-      "subtitle",
-      bookingT("booking.pdf.offer.subtitle", "Offer subtitle"),
-      computedPdfSubtitlePlaceholder(),
-      2
-    );
-    renderField(
-      els.pdfOfferWelcomeMount,
-      "offer",
-      "welcome",
-      bookingT("booking.pdf.offer.welcome", "Offer welcome"),
-      computedOfferWelcomePlaceholder(),
-      4
-    );
-    if (els.pdfOfferIncludeCancellationPolicyMount instanceof HTMLElement) {
-      els.pdfOfferIncludeCancellationPolicyMount.innerHTML = `
-        <div class="booking-pdf-panel__toggle">
-          <label class="booking-pdf-panel__toggle-label" for="booking_pdf_offer_include_cancellation_policy">
-            <input
-              id="booking_pdf_offer_include_cancellation_policy"
-              type="checkbox"
-              data-booking-pdf-toggle="offer.include_cancellation_policy"
-              ${offer.include_cancellation_policy !== false ? "checked" : ""}
-              ${disabled ? "disabled" : ""}
-            />
-            <span>${escapeHtml(bookingT("booking.pdf.offer.include_cancellation_policy", "Include cancellation policy"))}</span>
-          </label>
-          <div class="micro">${offerCancellationPolicyPreviewMarkup()}</div>
-        </div>
-      `;
-    }
-    renderField(
-      els.pdfOfferClosingMount,
-      "offer",
-      "closing",
-      bookingT("booking.pdf.offer.closing", "Offer closing"),
-      computedClosingPlaceholder(),
-      3
-    );
-    if (els.pdfOfferIncludeWhoIsTravelingMount instanceof HTMLElement) {
-      els.pdfOfferIncludeWhoIsTravelingMount.innerHTML = `
-        <div class="booking-pdf-panel__toggle">
-          <label class="booking-pdf-panel__toggle-label" for="booking_pdf_offer_include_who_is_traveling">
-            <input
-              id="booking_pdf_offer_include_who_is_traveling"
-              type="checkbox"
-              data-booking-pdf-toggle="offer.include_who_is_traveling"
-              ${offer.include_who_is_traveling !== false ? "checked" : ""}
-              ${disabled ? "disabled" : ""}
-            />
-            <span>${escapeHtml(bookingT("booking.pdf.travel_plan.include_who_is_traveling", "Include Who is traveling"))}</span>
-          </label>
-        </div>
-      `;
-    }
+    BOOKING_PDF_PERSONALIZATION_PANELS.forEach((panelConfig) => {
+      panelConfig.items.forEach((item) => {
+        const mount = els[item.elsKey];
+        if (item.kind === "localized") {
+          renderField(
+            mount,
+            panelConfig.scope,
+            item.field,
+            bookingT(item.labelKey, item.labelFallback),
+            resolvePlaceholder(item.placeholderKey),
+            item.rows
+          );
+          return;
+        }
+        renderToggle(mount, panelConfig.scope, item);
+      });
+    });
 
-    if (els.pdfCustomerReference) {
-      const submissionNote = customerReferenceNote();
-      els.pdfCustomerReference.innerHTML = `
+    const submissionNote = customerReferenceNote();
+    BOOKING_PDF_PERSONALIZATION_PANELS.forEach((panelConfig) => {
+      const mount = els[panelConfig.referenceElsKey];
+      if (!(mount instanceof HTMLElement)) return;
+      mount.innerHTML = `
         <div class="booking-pdf-reference__item">
           <div class="booking-pdf-reference__value">${escapeHtml(submissionNote || bookingT("booking.web_form.no_note", "(no note)"))}</div>
         </div>
       `;
-    }
+    });
   }
 
   function syncCoreDraftFromBooking({ force = false } = {}) {
@@ -895,26 +911,40 @@ export function createBookingCoreModule(ctx) {
         ...draft.pdf_personalization?.travel_plan,
         subtitle: readLocalizedBookingPdfField("travel_plan", "subtitle", draft.pdf_personalization?.travel_plan?.subtitle_i18n).text,
         subtitle_i18n: readLocalizedBookingPdfField("travel_plan", "subtitle", draft.pdf_personalization?.travel_plan?.subtitle_i18n).i18n,
+        include_subtitle: readBookingPdfToggle("travel_plan.include_subtitle") !== false,
         welcome: readLocalizedBookingPdfField("travel_plan", "welcome", draft.pdf_personalization?.travel_plan?.welcome_i18n).text,
         welcome_i18n: readLocalizedBookingPdfField("travel_plan", "welcome", draft.pdf_personalization?.travel_plan?.welcome_i18n).i18n,
+        include_welcome: readBookingPdfToggle("travel_plan.include_welcome") !== false,
         children_policy: readLocalizedBookingPdfField("travel_plan", "children_policy", draft.pdf_personalization?.travel_plan?.children_policy_i18n).text,
         children_policy_i18n: readLocalizedBookingPdfField("travel_plan", "children_policy", draft.pdf_personalization?.travel_plan?.children_policy_i18n).i18n,
+        include_children_policy: readBookingPdfToggle("travel_plan.include_children_policy") === true,
         whats_not_included: readLocalizedBookingPdfField("travel_plan", "whats_not_included", draft.pdf_personalization?.travel_plan?.whats_not_included_i18n).text,
         whats_not_included_i18n: readLocalizedBookingPdfField("travel_plan", "whats_not_included", draft.pdf_personalization?.travel_plan?.whats_not_included_i18n).i18n,
+        include_whats_not_included: readBookingPdfToggle("travel_plan.include_whats_not_included") === true,
         closing: readLocalizedBookingPdfField("travel_plan", "closing", draft.pdf_personalization?.travel_plan?.closing_i18n).text,
         closing_i18n: readLocalizedBookingPdfField("travel_plan", "closing", draft.pdf_personalization?.travel_plan?.closing_i18n).i18n,
-        include_who_is_traveling: els.pdfPersonalizationPanel?.querySelector('[data-booking-pdf-toggle="travel_plan.include_who_is_traveling"]')?.checked === true
+        include_closing: readBookingPdfToggle("travel_plan.include_closing") !== false,
+        include_who_is_traveling: readBookingPdfToggle("travel_plan.include_who_is_traveling") === true
       },
       offer: {
         ...draft.pdf_personalization?.offer,
         subtitle: readLocalizedBookingPdfField("offer", "subtitle", draft.pdf_personalization?.offer?.subtitle_i18n).text,
         subtitle_i18n: readLocalizedBookingPdfField("offer", "subtitle", draft.pdf_personalization?.offer?.subtitle_i18n).i18n,
+        include_subtitle: readBookingPdfToggle("offer.include_subtitle") !== false,
         welcome: readLocalizedBookingPdfField("offer", "welcome", draft.pdf_personalization?.offer?.welcome_i18n).text,
         welcome_i18n: readLocalizedBookingPdfField("offer", "welcome", draft.pdf_personalization?.offer?.welcome_i18n).i18n,
+        include_welcome: readBookingPdfToggle("offer.include_welcome") !== false,
+        children_policy: readLocalizedBookingPdfField("offer", "children_policy", draft.pdf_personalization?.offer?.children_policy_i18n).text,
+        children_policy_i18n: readLocalizedBookingPdfField("offer", "children_policy", draft.pdf_personalization?.offer?.children_policy_i18n).i18n,
+        include_children_policy: readBookingPdfToggle("offer.include_children_policy") === true,
+        whats_not_included: readLocalizedBookingPdfField("offer", "whats_not_included", draft.pdf_personalization?.offer?.whats_not_included_i18n).text,
+        whats_not_included_i18n: readLocalizedBookingPdfField("offer", "whats_not_included", draft.pdf_personalization?.offer?.whats_not_included_i18n).i18n,
+        include_whats_not_included: readBookingPdfToggle("offer.include_whats_not_included") === true,
         closing: readLocalizedBookingPdfField("offer", "closing", draft.pdf_personalization?.offer?.closing_i18n).text,
         closing_i18n: readLocalizedBookingPdfField("offer", "closing", draft.pdf_personalization?.offer?.closing_i18n).i18n,
-        include_cancellation_policy: els.pdfPersonalizationPanel?.querySelector('[data-booking-pdf-toggle="offer.include_cancellation_policy"]')?.checked !== false,
-        include_who_is_traveling: els.pdfPersonalizationPanel?.querySelector('[data-booking-pdf-toggle="offer.include_who_is_traveling"]')?.checked !== false
+        include_closing: readBookingPdfToggle("offer.include_closing") !== false,
+        include_cancellation_policy: readBookingPdfToggle("offer.include_cancellation_policy") !== false,
+        include_who_is_traveling: readBookingPdfToggle("offer.include_who_is_traveling") !== false
       }
     };
     if (draft.referral_kind === "none") {

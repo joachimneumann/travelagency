@@ -5458,6 +5458,16 @@ test("booking source update persists trip context and pdf personalization", asyn
             include_who_is_traveling: true
           },
           offer: {
+            children_policy: "Children policy marker for the offer.",
+            children_policy_i18n: {
+              en: "Children policy marker for the offer.",
+              de: "Kinderregel Marker fuer das Angebot."
+            },
+            whats_not_included: "Offer exclusions marker for flights and visas.",
+            whats_not_included_i18n: {
+              en: "Offer exclusions marker for flights and visas.",
+              de: "Angebotsausschluesse Marker fuer Fluege und Visa."
+            },
             closing: "We would be happy to refine anything together.",
             closing_i18n: {
               en: "We would be happy to refine anything together.",
@@ -5481,6 +5491,14 @@ test("booking source update persists trip context and pdf personalization", asyn
   assert.equal(
     sourceUpdateResult.body.booking.pdf_personalization.offer.closing,
     "We would be happy to refine anything together."
+  );
+  assert.equal(
+    sourceUpdateResult.body.booking.pdf_personalization.offer.children_policy,
+    "Children policy marker for the offer."
+  );
+  assert.equal(
+    sourceUpdateResult.body.booking.pdf_personalization.offer.whats_not_included,
+    "Offer exclusions marker for flights and visas."
   );
   assert.equal(
     sourceUpdateResult.body.booking.pdf_personalization.offer.include_cancellation_policy,
@@ -5519,6 +5537,14 @@ test("booking source update persists trip context and pdf personalization", asyn
     true
   );
   assert.equal(
+    detailAfter.body.booking.pdf_personalization.offer.children_policy_i18n.de,
+    "Kinderregel Marker fuer das Angebot."
+  );
+  assert.equal(
+    detailAfter.body.booking.pdf_personalization.offer.whats_not_included_i18n.de,
+    "Angebotsausschluesse Marker fuer Fluege und Visa."
+  );
+  assert.equal(
     detailAfter.body.booking.pdf_personalization.offer.include_cancellation_policy,
     false
   );
@@ -5530,6 +5556,85 @@ test("booking source update persists trip context and pdf personalization", asyn
     detailAfter.body.booking.pdf_personalization.offer.closing_i18n.de,
     "Wir verfeinern alles gern gemeinsam mit Ihnen."
   );
+});
+
+test("booking generated offer pdf accepts personalized children policy and exclusions", async () => {
+  const createdBooking = await createSeedBooking();
+  const bookingId = createdBooking.id;
+
+  const store = JSON.parse(await readFile(STORE_PATH, "utf8"));
+  const bookingRecord = store.bookings.find((item) => item.id === bookingId);
+  assert.ok(bookingRecord);
+  bookingRecord.pdf_personalization = {
+    ...(bookingRecord.pdf_personalization || {}),
+    offer: {
+      ...(bookingRecord.pdf_personalization?.offer || {}),
+      children_policy: "ChildrenPolicyMarker under 6 share existing bedding.",
+      children_policy_i18n: {
+        en: "ChildrenPolicyMarker under 6 share existing bedding."
+      },
+      whats_not_included: "ExclusionsMarker international flights visas and personal expenses.",
+      whats_not_included_i18n: {
+        en: "ExclusionsMarker international flights visas and personal expenses."
+      },
+      include_cancellation_policy: false
+    }
+  };
+  await writeFile(STORE_PATH, `${JSON.stringify(store, null, 2)}\n`, "utf8");
+
+  const offerPatchResult = await requestJson(
+    endpointPath("booking_offer").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_offer_revision: createdBooking.offer_revision,
+        offer: {
+          ...createdBooking.offer,
+          currency: createdBooking.preferred_currency,
+          components: [
+            {
+              id: "offer_component_personalized_pdf_1",
+              category: "ACTIVITIES",
+              label: "OfferPdfMarker",
+              details: "PersonalizedOfferPdfMarker",
+              quantity: 1,
+              unit_amount_cents: 18000,
+              tax_rate_basis_points: 1000,
+              currency: createdBooking.preferred_currency,
+              notes: null,
+              sort_order: 0
+            }
+          ]
+        }
+      }
+    }
+  );
+  assert.equal(offerPatchResult.status, 200);
+
+  const generateResult = await requestJson(
+    endpointPath("booking_generate_offer").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "POST",
+      body: {
+        expected_offer_revision: offerPatchResult.body.booking.offer_revision,
+        comment: "Offer personalization PDF check"
+      }
+    }
+  );
+  assert.equal(generateResult.status, 201);
+  const generatedOffer = generateResult.body.booking.generated_offers[0];
+
+  const pdfResult = await requestRaw(
+    endpointPath("booking_generated_offer_pdf")
+      .replace("{booking_id}", bookingId)
+      .replace("{generated_offer_id}", generatedOffer.id),
+    apiHeaders()
+  );
+  assert.equal(pdfResult.status, 200);
+  assert.equal(pdfResult.headers["content-type"], "application/pdf");
+  assert.match(pdfResult.body, /%PDF-/);
 });
 
 test("booking activity create uses the core revision", async () => {

@@ -743,3 +743,235 @@ Avoid in the first implementation:
 - changing PDF generation contracts unless required by the new UI
 
 The first pass should improve clarity and operator flow while preserving the current business model and storage model as much as possible.
+
+## PDF personalization schema proposal
+
+The PDF texts should be organized by inheritance, not by one completely separate text set per PDF artifact.
+
+### Goals
+
+- allow each PDF family to have its own tone and structure
+- allow deposit / installment / final-payment documents to differ where needed
+- avoid duplicating the same welcome / payment-instruction / closing text across many payment steps
+- keep compatibility with the current `pdf_personalization` structure
+
+### Design rules
+
+- keep `travel_plan` and `offer` as stored keys for now
+- `offer` remains the backend storage key even if the UI label is `Proposal`
+- add shared defaults for reusable payment text
+- add document-family defaults
+- add step-specific overrides only where necessary
+- freeze the resolved text into the generated PDF artifact snapshot when the PDF is created
+
+### Proposed schema shape
+
+This proposal intentionally stays close to the current flat-field pattern in `model/entities/booking.cue`.
+
+Recommended new model shape:
+
+```cue
+#BookingPdfPersonalizationScoped: {
+  subtitle?:                    string
+  subtitle_i18n?:               [string]: string
+  welcome?:                     string
+  welcome_i18n?:                [string]: string
+  intro?:                       string
+  intro_i18n?:                  [string]: string
+  children_policy?:             string
+  children_policy_i18n?:        [string]: string
+  whats_not_included?:          string
+  whats_not_included_i18n?:     [string]: string
+  payment_instructions?:        string
+  payment_instructions_i18n?:   [string]: string
+  confirmation?:                string
+  confirmation_i18n?:           [string]: string
+  next_steps?:                  string
+  next_steps_i18n?:             [string]: string
+  closing?:                     string
+  closing_i18n?:                [string]: string
+  include_cancellation_policy?: bool
+  include_who_is_traveling?:    bool
+}
+
+#BookingPaymentStepPdfPersonalization: {
+  request?:      #BookingPdfPersonalizationScoped
+  confirmation?: #BookingPdfPersonalizationScoped
+}
+
+#BookingPdfPersonalization: {
+  shared?: #BookingPdfPersonalizationScoped
+
+  travel_plan?:          #BookingPdfPersonalizationScoped
+  offer?:                #BookingPdfPersonalizationScoped
+  payment_request?:      #BookingPdfPersonalizationScoped
+  payment_confirmation?: #BookingPdfPersonalizationScoped
+
+  payment_steps?: {
+    deposit?:     #BookingPaymentStepPdfPersonalization
+    installment?: #BookingPaymentStepPdfPersonalization
+    final?:       #BookingPaymentStepPdfPersonalization
+  }
+}
+```
+
+### Meaning of the scopes
+
+- `shared`
+  - reusable text that should be available to several PDF families
+  - typical fields: `payment_instructions`, `next_steps`, `closing`
+- `travel_plan`
+  - customer-facing travel-plan PDF copy
+  - typical fields: `subtitle`, `welcome`, `children_policy`, `whats_not_included`, `closing`
+- `offer`
+  - customer-facing proposal PDF copy
+  - typical fields: `subtitle`, `welcome`, `children_policy`, `whats_not_included`, `closing`, `include_cancellation_policy`, `include_who_is_traveling`
+- `payment_request`
+  - default copy for any payment-request PDF
+  - typical fields: `intro`, `payment_instructions`, `next_steps`, `closing`
+- `payment_confirmation`
+  - default copy for any payment-confirmation PDF
+  - typical fields: `intro`, `confirmation`, `next_steps`, `closing`
+- `payment_steps.deposit.request`
+  - deposit-specific override for a payment request
+- `payment_steps.deposit.confirmation`
+  - deposit-specific override for a payment confirmation
+- `payment_steps.installment.request`
+  - installment-specific override for a payment request
+- `payment_steps.installment.confirmation`
+  - installment-specific override for a payment confirmation
+- `payment_steps.final.request`
+  - final-payment-specific override for a payment request
+- `payment_steps.final.confirmation`
+  - final-payment-specific override for a payment confirmation
+
+### Resolution order
+
+The renderer should resolve each text field from most specific to most general.
+
+Recommended resolution order:
+
+1. step-specific override
+2. document-family default
+3. shared default
+4. hardcoded PDF i18n fallback
+
+Examples:
+
+- travel-plan PDF `closing`
+  1. `travel_plan.closing`
+  2. `shared.closing`
+  3. `pdf_i18n.travel_plan.closing_body`
+- proposal / offer PDF `welcome`
+  1. `offer.welcome`
+  2. `shared.welcome`
+  3. hardcoded proposal fallback
+- deposit request block inside the proposal PDF
+  1. `payment_steps.deposit.request.intro`
+  2. `payment_request.intro`
+  3. `offer.closing` or the existing deposit-request fallback text
+- deposit confirmation PDF `next_steps`
+  1. `payment_steps.deposit.confirmation.next_steps`
+  2. `payment_confirmation.next_steps`
+  3. `shared.next_steps`
+  4. hardcoded fallback
+- installment request PDF `payment_instructions`
+  1. `payment_steps.installment.request.payment_instructions`
+  2. `payment_request.payment_instructions`
+  3. `shared.payment_instructions`
+  4. hardcoded fallback
+
+### Recommended document-to-scope mapping
+
+| PDF / block | Primary scope | Fallback scopes |
+| --- | --- | --- |
+| Travel plan PDF | `travel_plan` | `shared` |
+| Proposal / offer PDF | `offer` | `shared` |
+| Deposit request text inside proposal PDF | `payment_steps.deposit.request` | `payment_request` -> `offer` -> `shared` |
+| Deposit confirmation / booking confirmation PDF | `payment_steps.deposit.confirmation` | `payment_confirmation` -> `shared` |
+| Installment request PDF | `payment_steps.installment.request` | `payment_request` -> `shared` |
+| Installment confirmation PDF | `payment_steps.installment.confirmation` | `payment_confirmation` -> `shared` |
+| Final payment request PDF | `payment_steps.final.request` | `payment_request` -> `shared` |
+| Final payment confirmation PDF | `payment_steps.final.confirmation` | `payment_confirmation` -> `shared` |
+
+### Example stored data
+
+```json
+{
+  "pdf_personalization": {
+    "travel_plan": {
+      "subtitle": "Your current journey through Vietnam and Cambodia",
+      "welcome": "This is your latest travel plan. Let us know if you would like to refine anything.",
+      "children_policy": "Children under 6 share existing bedding unless otherwise stated.",
+      "whats_not_included": "International flights, personal insurance, and personal expenses.",
+      "closing": "We would be happy to refine the plan together."
+    },
+    "offer": {
+      "subtitle": "Your personalized Asia Travel Plan proposal",
+      "welcome": "This proposal is based on your current itinerary and preferences.",
+      "children_policy": "Children under 6 share existing bedding unless otherwise stated unless a room upgrade is requested.",
+      "whats_not_included": "International flights, personal insurance, visa costs, and personal expenses unless shown in the offer lines.",
+      "closing": "If this proposal feels right, we can confirm the next step right away.",
+      "include_cancellation_policy": true,
+      "include_who_is_traveling": true
+    },
+    "payment_request": {
+      "payment_instructions": "Please use the bank details below and mention your booking reference.",
+      "next_steps": "After payment arrives, we will confirm the next commercial step.",
+      "closing": "If you need any adjustment before paying, just let us know."
+    },
+    "payment_confirmation": {
+      "confirmation": "We confirm receipt of your payment.",
+      "next_steps": "We will now prepare the next booking step and keep you updated.",
+      "closing": "Thank you for your trust."
+    },
+    "payment_steps": {
+      "deposit": {
+        "request": {
+          "intro": "To confirm your booking, please pay the deposit shown below."
+        },
+        "confirmation": {
+          "confirmation": "We are pleased to confirm receipt of your deposit.",
+          "next_steps": "Your booking is now confirmed. We will guide you through the next payment milestone."
+        }
+      },
+      "final": {
+        "request": {
+          "next_steps": "After the final payment, all commercial steps for the booking are complete."
+        }
+      }
+    }
+  }
+}
+```
+
+### UI organization for editing
+
+The booking page should group these texts by inheritance level:
+
+1. `Shared PDF texts`
+2. `Travel plan PDF`
+3. `Proposal PDF`
+4. `Payment request PDFs`
+5. `Payment confirmation PDFs`
+6. `Advanced per-step overrides`
+
+The advanced per-step overrides should stay collapsed by default.
+
+Recommended behavior:
+
+- if a step override is empty, the system uses the family default automatically
+- ATP staff should only write a deposit / installment / final-specific text when that step truly needs different wording
+
+### Migration path
+
+Recommended implementation order:
+
+1. keep the current `travel_plan` and `offer` behavior unchanged
+2. extend `#BookingPdfPersonalizationScoped` with the new generic fields
+3. add `shared`, `payment_request`, `payment_confirmation`, and `payment_steps`
+4. add a small resolver helper that accepts an ordered list of scopes
+5. use that resolver in new payment-request and payment-confirmation PDF generators
+6. only later consider a deeper schema cleanup such as nested `{ text, i18n }` objects
+
+This keeps the first implementation compatible with existing data and avoids a large migration before the new payment PDFs exist.
