@@ -273,6 +273,15 @@ import (
 	actor?:                         string
 }
 
+#BookingConfirmationPdfArtifactCreateRequest: {
+	filename_suffix?: string
+	actor?:           string
+}
+
+#BookingConfirmationPdfArtifactDeleteRequest: {
+	actor?: string
+}
+
 #BookingPricingUpdateRequest: {
 	expected_pricing_revision?: >=0 & int
 	pricing:                    entities.#BookingPricing

@@ -1527,8 +1527,8 @@ test("offer PDF personalization exposes a cancellation-policy toggle and renders
   );
   assert.match(
     personalizationSource,
-    /children_policy:\s*offerChildrenPolicy\.text[\s\S]*whats_not_included:\s*offerWhatsNotIncluded\.text/s,
-    "backend PDF personalization should preserve the Offer children-policy and exclusion fields"
+    /offer: Object\.freeze\(\{[\s\S]*children_policy: Object\.freeze\([\s\S]*whats_not_included: Object\.freeze\([\s\S]*for \(const field of Object\.keys\(fieldConfigs\)\) \{[\s\S]*normalizedBranch\[field\] = normalizedField\.text;[\s\S]*normalizedBranch\[`include_\$\{field\}`\] = resolvePdfTextFieldEnabled\(branch, scope, field, normalizedField\);/s,
+    "backend PDF personalization should preserve the Offer children-policy and exclusion fields through the shared field-config loop"
   );
   assert.match(
     offerPdfSource,

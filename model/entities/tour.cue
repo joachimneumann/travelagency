@@ -6,15 +6,17 @@ import (
 )
 
 #Tour: {
-	id:     common.#Identifier
-	title?: string | [string]: string
-	destinations: [...string]
-	styles: [...string]
-	priority?: int
+	id:          common.#Identifier
+	title?:      string
+	title_i18n?: [string]: string
+	destinations: [...enums.#CountryCode]
+	styles:       [...enums.#TourStyleCode]
+	priority?:    int
 	seasonality_start_month?: enums.#MonthCode
 	seasonality_end_month?:   enums.#MonthCode
-	short_description?:       string | [string]: string
-	image?:      string
-	created_at?: common.#Timestamp
-	updated_at?: common.#Timestamp
+	short_description?:       string
+	short_description_i18n?:  [string]: string
+	image?:                   string
+	created_at?:              common.#Timestamp
+	updated_at?:              common.#Timestamp
 }

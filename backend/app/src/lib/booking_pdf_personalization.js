@@ -121,8 +121,12 @@ function normalizePdfPersonalizationBranch(rawBranch, scope, { flatLang = "en", 
     normalizedBranch.include_who_is_traveling = branch.include_who_is_traveling === true;
   }
   if (scope === "offer") {
-    normalizedBranch.include_cancellation_policy = branch.include_cancellation_policy !== false;
-    normalizedBranch.include_who_is_traveling = branch.include_who_is_traveling !== false;
+    const offerIncludeCancellationPolicy = branch.include_cancellation_policy !== false;
+    const offerIncludeWhoIsTraveling = branch.include_who_is_traveling !== false;
+    Object.assign(normalizedBranch, {
+      include_cancellation_policy: offerIncludeCancellationPolicy,
+      include_who_is_traveling: offerIncludeWhoIsTraveling
+    });
   }
   return compactObject(normalizedBranch);
 }

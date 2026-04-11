@@ -1035,6 +1035,59 @@ package api
 		}]
 	},
 	{
+		key:           "booking_confirmation_pdf_create"
+		path:          "/api/v1/bookings/{booking_id}/booking-confirmation/pdfs"
+		method:        "POST"
+		tag:           "Bookings"
+		authenticated: true
+		requestType:   "BookingConfirmationPdfArtifactCreateRequest"
+		responseType:  "BookingDetail"
+		parameters: [{
+			name:     "booking_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}]
+	},
+	{
+		key:           "booking_confirmation_pdf_artifact_pdf"
+		path:          "/api/v1/bookings/{booking_id}/booking-confirmation/pdfs/{artifact_id}/pdf"
+		method:        "GET"
+		tag:           "Bookings"
+		authenticated: true
+		parameters: [{
+			name:     "booking_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}, {
+			name:     "artifact_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}]
+	},
+	{
+		key:           "booking_confirmation_pdf_delete"
+		path:          "/api/v1/bookings/{booking_id}/booking-confirmation/pdfs/{artifact_id}"
+		method:        "DELETE"
+		tag:           "Bookings"
+		authenticated: true
+		requestType:   "BookingConfirmationPdfArtifactDeleteRequest"
+		responseType:  "BookingDetail"
+		parameters: [{
+			name:     "booking_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}, {
+			name:     "artifact_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}]
+	},
+	{
 		key:           "booking_offer"
 		path:          "/api/v1/bookings/{booking_id}/offer"
 		method:        "PATCH"
