@@ -7,6 +7,7 @@ This guide describes the current local setup with the booking-owned person model
 Local backend features:
 - public booking ingestion
 - public tours catalog
+- country-reference publication controls for the public website
 - booking pipeline and assignment
 - booking detail editing
 - booking-owned persons
@@ -18,6 +19,7 @@ Local admin pages:
 - `http://localhost:8080/bookings.html`
 - `http://localhost:8080/booking.html?id=<booking_id>`
 - `http://localhost:8080/marketing_tour.html?id=<tour_id>`
+- `http://localhost:8080/emergency.html`
 
 ## Start Locally
 
@@ -90,6 +92,13 @@ Stored on each booking:
 
 The submitted contact becomes the initial booking person and can later be refined on the booking itself.
 
+## Public tour visibility
+
+- `GET /public/v1/tours` is filtered by `content/country_reference_info.json`
+- each supported country can be hidden from the public website via `published_on_webpage`
+- when only one destination remains published, the homepage hides the destination selector and builds the hero title from that remaining country
+- public tours are served with `Cache-Control: no-store`, so destination publication changes appear on reload
+
 ## Backend UI
 
 `bookings.html`
@@ -111,6 +120,11 @@ The submitted contact becomes the initial booking person and can later be refine
 
 There is no customer page and no travel-group page.
 
+`emergency.html`
+- edit country practical tips and emergency contacts
+- control `published_on_webpage` for each supported destination
+- this page is currently the operational source of truth for homepage destination visibility
+
 ## Role Behavior
 
 - `atp_staff`: only assigned bookings, plus tour read/edit access
@@ -126,4 +140,5 @@ There is no customer page and no travel-group page.
 4. Confirm persons summary renders from `booking.persons`.
 5. Confirm stages and ATP staff assignment work according to role.
 6. Open `marketing_tour.html` and confirm tours still load.
-7. If Gmail draft config is set, use the generated-offer `email` action and confirm Gmail opens the Drafts view with the new draft available.
+7. Open `emergency.html`, change `published_on_webpage` for a country, and confirm a normal homepage reload reflects the destination visibility change.
+8. If Gmail draft config is set, use the generated-offer `email` action and confirm Gmail opens the Drafts view with the new draft available.

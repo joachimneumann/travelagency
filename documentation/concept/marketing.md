@@ -26,6 +26,12 @@
 - Offer a booking magnet: "Southeast Asia Route + Budget Guide".
 - Retarget users by viewed destination/style.
 
+Current implementation note:
+
+- homepage destination visibility is operationally controlled from the backend Emergency page via `published_on_webpage`
+- if only one destination is published, the homepage hero collapses to that country and removes the destination filter entirely
+- if multiple destinations are published, the hero title and destination filter are built from that published set
+
 ### Bottom Funnel (Conversion)
 
 - Keep discovery call as primary CTA.

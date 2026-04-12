@@ -4180,6 +4180,36 @@ textarea:focus-visible {
   color: var(--error-text);
 }
 
+.settings-destination-publication {
+  margin-top: 1rem;
+}
+
+.settings-destination-publication__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.settings-destination-publication__head > div > p,
+.settings-destination-publication__status {
+  margin: 0;
+}
+
+.settings-destination-publication__actions {
+  display: grid;
+  gap: 0.5rem;
+  justify-items: end;
+}
+
+.settings-destination-publication__status {
+  color: var(--text-muted);
+}
+
+.settings-destination-publication__status.is-error {
+  color: var(--error-text);
+}
+
 .backend-tour-form {
   display: grid;
   grid-template-columns: repeat(2, minmax(220px, 1fr));
@@ -4942,15 +4972,18 @@ textarea:focus-visible {
 
   .settings-staff-editor__hero,
   .settings-staff-editor__head,
+  .settings-destination-publication__head,
   .settings-staff-editor__photo-actions {
     grid-template-columns: none;
     flex-direction: column;
     align-items: stretch;
   }
 
-  .settings-staff-editor__head-actions {
+  .settings-staff-editor__head-actions,
+  .settings-destination-publication__actions {
     width: 100%;
     justify-content: space-between;
+    justify-items: stretch;
   }
 
   .settings-staff-editor__qualification-row {

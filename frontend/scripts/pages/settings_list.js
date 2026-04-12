@@ -4,14 +4,18 @@ import {
   fetchApiJson,
   normalizeText
 } from "../shared/api.js";
+import { DESTINATION_COUNTRY_CODE_SET } from "../../../shared/js/destination_country_codes.js";
 import { GENERATED_APP_ROLES } from "../../Generated/Models/generated_Roles.js";
 import {
+  countryReferenceInfoRequest,
+  countryReferenceInfoUpdateRequest,
   keycloakUserStaffProfileUpdateRequest,
   keycloakUserStaffProfileTranslateFieldsRequest,
   keycloakUserStaffProfilePictureUploadRequest,
   toursRequest
 } from "../../Generated/API/generated_APIRequestFactory.js";
 import {
+  COUNTRY_CODE_OPTIONS,
   enumOptionsFor
 } from "../shared/generated_catalogs.js";
 import {
@@ -35,8 +39,13 @@ const els = {
   logoutLink: document.getElementById("backendLogoutLink"),
   userLabel: document.getElementById("backendUserLabel"),
   error: document.getElementById("backendError"),
+  settingsPanel: document.getElementById("settingsPanel"),
   staffStatus: document.getElementById("staffStatus"),
   staffTable: document.getElementById("staffTable"),
+  websiteDestinationPublicationPanel: document.getElementById("websiteDestinationPublicationPanel"),
+  websiteDestinationPublicationStatus: document.getElementById("websiteDestinationPublicationStatus"),
+  websiteDestinationPublicationList: document.getElementById("websiteDestinationPublicationList"),
+  websiteDestinationPublicationSaveBtn: document.getElementById("websiteDestinationPublicationSaveBtn"),
   staffEditorPanel: document.getElementById("staffEditorPanel"),
   staffEditorStatus: document.getElementById("staffEditorStatus"),
   staffEditorCloseBtn: document.getElementById("staffEditorCloseBtn"),
@@ -150,6 +159,19 @@ const LANGUAGE_LABEL_BY_VALUE = new Map(
     .map((option) => [normalizeText(option?.value).toLowerCase(), normalizeText(option?.label) || normalizeText(option?.value).toUpperCase()])
 );
 
+const COUNTRY_OPTIONS = Object.freeze(
+  COUNTRY_CODE_OPTIONS
+    .map((option) => ({
+      value: normalizeText(option?.value).toUpperCase(),
+      label: normalizeText(option?.label) || normalizeText(option?.value).toUpperCase()
+    }))
+    .filter((option) => DESTINATION_COUNTRY_CODE_SET.has(option.value))
+    .filter((option) => option.value)
+    .sort((left, right) => left.label.localeCompare(right.label, "en", { sensitivity: "base" }))
+);
+
+const COUNTRY_LABEL_BY_VALUE = new Map(COUNTRY_OPTIONS.map((option) => [option.value, option.label]));
+
 const TOUR_DESTINATION_TO_COUNTRY_CODE = Object.freeze({
   vietnam: "VN",
   thailand: "TH",
@@ -164,11 +186,18 @@ const state = {
   roles: [],
   permissions: {
     canReadSettings: false,
-    canEditStaffProfiles: false
+    canReadStaffProfiles: false,
+    canEditStaffProfiles: false,
+    canReadWebsiteDestinationPublication: false,
+    canEditWebsiteDestinationPublication: false
   },
   keycloakUsers: [],
   staffProfilesByUsername: {},
   destinationOptions: [],
+  countryReferenceItems: [],
+  websiteDestinationPublicationInitialByCountry: {},
+  websiteDestinationPublicationDraftByCountry: {},
+  websiteDestinationPublicationSaving: false,
   selectedUsername: "",
   editorSaving: false,
   editor: {
@@ -192,6 +221,11 @@ function refreshBackendNavElements() {
 
 function hasAnyRoleInList(roleList, ...roles) {
   return roles.some((role) => roleList.includes(role));
+}
+
+function countryLabel(countryCode) {
+  const normalizedCountry = normalizeText(countryCode).toUpperCase();
+  return normalizeText(COUNTRY_LABEL_BY_VALUE.get(normalizedCountry)) || normalizedCountry;
 }
 
 function collectKeycloakRoleNames(user) {
@@ -234,6 +268,16 @@ function showEditorStatus(message, isError = false) {
 
 function clearEditorStatus() {
   showEditorStatus("", false);
+}
+
+function showWebsiteDestinationPublicationStatus(message, isError = false) {
+  if (!els.websiteDestinationPublicationStatus) return;
+  els.websiteDestinationPublicationStatus.textContent = normalizeText(message);
+  els.websiteDestinationPublicationStatus.classList.toggle("is-error", Boolean(isError));
+}
+
+function clearWebsiteDestinationPublicationStatus() {
+  showWebsiteDestinationPublicationStatus("", false);
 }
 
 function translationProviderLabelFromResponse(response) {
@@ -286,13 +330,16 @@ async function init() {
     apiOrigin,
     refreshNav: refreshBackendNavElements,
     computePermissions: (roles) => ({
-      canReadSettings: hasAnyRoleInList(roles, ROLES.ADMIN, ROLES.MANAGER, ROLES.ACCOUNTANT),
-      canEditStaffProfiles: roles.includes(ROLES.ADMIN)
+      canReadStaffProfiles: roles.includes(ROLES.ADMIN),
+      canEditStaffProfiles: roles.includes(ROLES.ADMIN),
+      canReadWebsiteDestinationPublication: roles.includes(ROLES.ADMIN),
+      canEditWebsiteDestinationPublication: roles.includes(ROLES.ADMIN),
+      canReadSettings: roles.includes(ROLES.ADMIN)
     }),
     hasPageAccess: (permissions) => permissions.canReadSettings,
     logKey: "backend-settings",
     pageName: "settings.html",
-    expectedRolesAnyOf: [ROLES.ADMIN, ROLES.MANAGER, ROLES.ACCOUNTANT],
+    expectedRolesAnyOf: [ROLES.ADMIN],
     likelyCause: "The user is authenticated in Keycloak but does not have the ATP roles required to read settings."
   });
 
@@ -300,14 +347,19 @@ async function init() {
   state.roles = authState.roles;
   state.permissions = {
     canReadSettings: Boolean(authState.permissions?.canReadSettings),
-    canEditStaffProfiles: Boolean(authState.permissions?.canEditStaffProfiles)
+    canReadStaffProfiles: Boolean(authState.permissions?.canReadStaffProfiles),
+    canEditStaffProfiles: Boolean(authState.permissions?.canEditStaffProfiles),
+    canReadWebsiteDestinationPublication: Boolean(authState.permissions?.canReadWebsiteDestinationPublication),
+    canEditWebsiteDestinationPublication: Boolean(authState.permissions?.canEditWebsiteDestinationPublication)
   };
 
+  renderPermissionScopedSections();
   updateStatusCopy();
   if (state.permissions.canReadSettings) {
     await Promise.all([
-      loadStaffDirectoryEntries(),
-      state.permissions.canEditStaffProfiles ? loadDestinationOptions() : Promise.resolve()
+      state.permissions.canReadStaffProfiles ? loadStaffDirectoryEntries() : Promise.resolve(),
+      state.permissions.canEditStaffProfiles ? loadDestinationOptions() : Promise.resolve(),
+      state.permissions.canReadWebsiteDestinationPublication ? loadWebsiteDestinationPublication() : Promise.resolve()
     ]);
   } else {
     showError(backendT("backend.settings.forbidden", "You do not have access to reports and settings."));
@@ -317,6 +369,10 @@ async function init() {
 function bindEvents() {
   els.staffTable?.addEventListener("click", handleStaffTableClick);
   els.staffTable?.addEventListener("keydown", handleStaffTableKeydown);
+  els.websiteDestinationPublicationList?.addEventListener("change", handleWebsiteDestinationPublicationToggle);
+  els.websiteDestinationPublicationSaveBtn?.addEventListener("click", () => {
+    void saveWebsiteDestinationPublication();
+  });
   els.staffEditorCloseBtn?.addEventListener("click", closeEditor);
   els.staffEditorSaveBtn?.addEventListener("click", saveSelectedStaffProfile);
   els.staffEditorPhotoBtn?.addEventListener("click", () => els.staffEditorPhotoInput?.click());
@@ -368,8 +424,27 @@ function bindEvents() {
   });
 }
 
+function renderPermissionScopedSections() {
+  if (els.settingsPanel) {
+    els.settingsPanel.hidden = !state.permissions.canReadStaffProfiles;
+  }
+  if (els.staffStatus) {
+    els.staffStatus.hidden = !state.permissions.canReadStaffProfiles;
+  }
+  if (els.websiteDestinationPublicationPanel) {
+    els.websiteDestinationPublicationPanel.hidden = !state.permissions.canReadWebsiteDestinationPublication;
+  }
+  if (!state.permissions.canEditStaffProfiles && els.staffEditorPanel) {
+    els.staffEditorPanel.hidden = true;
+  }
+}
+
 function updateStatusCopy() {
   if (!els.staffStatus) return;
+  if (!state.permissions.canReadStaffProfiles) {
+    els.staffStatus.textContent = "";
+    return;
+  }
   els.staffStatus.textContent = state.permissions.canEditStaffProfiles
     ? backendT("backend.users.status_editable", "Users are managed in Keycloak. ATP guide profile details can be edited here.")
     : backendT("backend.users.status", "Users are managed in Keycloak.");
@@ -458,6 +533,187 @@ async function loadDestinationOptions() {
     state.destinationOptions = [];
   }
   renderDestinationChecklist();
+}
+
+function normalizeCountryReferenceItems(items) {
+  return (Array.isArray(items) ? items : [])
+    .map((item) => ({
+      ...item,
+      country: normalizeText(item?.country).toUpperCase(),
+      published_on_webpage: item?.published_on_webpage !== false,
+      practical_tips: Array.isArray(item?.practical_tips) ? item.practical_tips.map((entry) => normalizeText(entry)).filter(Boolean) : [],
+      emergency_contacts: Array.isArray(item?.emergency_contacts) ? item.emergency_contacts.map((entry) => ({
+        label: normalizeText(entry?.label),
+        phone: normalizeText(entry?.phone),
+        ...(normalizeText(entry?.note) ? { note: normalizeText(entry.note) } : {})
+      })) : []
+    }))
+    .filter((item) => item.country && DESTINATION_COUNTRY_CODE_SET.has(item.country));
+}
+
+function publicationMapFromCountryReferenceItems(items) {
+  const defaults = Object.fromEntries(COUNTRY_OPTIONS.map((option) => [option.value, true]));
+  for (const item of normalizeCountryReferenceItems(items)) {
+    defaults[item.country] = item.published_on_webpage !== false;
+  }
+  return defaults;
+}
+
+function normalizeWebsiteDestinationPublicationDraft(draft) {
+  return Object.fromEntries(
+    COUNTRY_OPTIONS.map((option) => [option.value, draft?.[option.value] !== false])
+  );
+}
+
+function isWebsiteDestinationPublicationDirty() {
+  if (!state.permissions.canEditWebsiteDestinationPublication) return false;
+  return JSON.stringify(normalizeWebsiteDestinationPublicationDraft(state.websiteDestinationPublicationDraftByCountry))
+    !== JSON.stringify(normalizeWebsiteDestinationPublicationDraft(state.websiteDestinationPublicationInitialByCountry));
+}
+
+function updateWebsiteDestinationPublicationSaveButtonState() {
+  if (!els.websiteDestinationPublicationSaveBtn) return;
+  els.websiteDestinationPublicationSaveBtn.disabled = !state.permissions.canEditWebsiteDestinationPublication
+    || state.websiteDestinationPublicationSaving
+    || !isWebsiteDestinationPublicationDirty();
+}
+
+function renderWebsiteDestinationPublication() {
+  if (!els.websiteDestinationPublicationList) return;
+  if (!state.permissions.canReadWebsiteDestinationPublication) {
+    els.websiteDestinationPublicationList.innerHTML = "";
+    updateWebsiteDestinationPublicationSaveButtonState();
+    return;
+  }
+  const current = normalizeWebsiteDestinationPublicationDraft(state.websiteDestinationPublicationDraftByCountry);
+  els.websiteDestinationPublicationList.innerHTML = COUNTRY_OPTIONS
+    .map((option) => `<label class="settings-staff-editor__check-pill">
+      <input type="checkbox" data-website-destination-publication="${escapeHtml(option.value)}" ${current[option.value] !== false ? "checked" : ""} />
+      <span>${escapeHtml(countryLabel(option.value))}</span>
+    </label>`)
+    .join("");
+  updateWebsiteDestinationPublicationSaveButtonState();
+}
+
+async function loadWebsiteDestinationPublication() {
+  clearWebsiteDestinationPublicationStatus();
+  showWebsiteDestinationPublicationStatus(
+    backendT("backend.settings.website_destinations_loading", "Loading website destinations...")
+  );
+  try {
+    const request = countryReferenceInfoRequest({ baseURL: apiOrigin });
+    const payload = await fetchApi(request.url, { suppressNotFound: true });
+    if (!payload) {
+      showWebsiteDestinationPublicationStatus(
+        backendT("backend.settings.website_destinations_load_failed", "Could not load website destinations."),
+        true
+      );
+      renderWebsiteDestinationPublication();
+      return;
+    }
+    state.countryReferenceItems = normalizeCountryReferenceItems(payload?.items);
+    state.websiteDestinationPublicationInitialByCountry = publicationMapFromCountryReferenceItems(state.countryReferenceItems);
+    state.websiteDestinationPublicationDraftByCountry = { ...state.websiteDestinationPublicationInitialByCountry };
+    renderWebsiteDestinationPublication();
+    showWebsiteDestinationPublicationStatus(
+      backendT("backend.settings.website_destinations_status", "Destination publication is managed here.")
+    );
+  } catch (error) {
+    console.error("[backend-settings] Failed to load website destination publication controls.", {
+      error,
+      apiOrigin,
+      user: state.authUser?.username || state.authUser?.sub || null
+    });
+    state.countryReferenceItems = [];
+    state.websiteDestinationPublicationInitialByCountry = publicationMapFromCountryReferenceItems([]);
+    state.websiteDestinationPublicationDraftByCountry = { ...state.websiteDestinationPublicationInitialByCountry };
+    renderWebsiteDestinationPublication();
+    showWebsiteDestinationPublicationStatus(
+      backendT("backend.settings.website_destinations_load_failed", "Could not load website destinations."),
+      true
+    );
+  }
+}
+
+function handleWebsiteDestinationPublicationToggle(event) {
+  const input = event.target.closest("[data-website-destination-publication]");
+  if (!input) return;
+  const country = normalizeText(input.getAttribute("data-website-destination-publication")).toUpperCase();
+  if (!country || !DESTINATION_COUNTRY_CODE_SET.has(country)) return;
+  state.websiteDestinationPublicationDraftByCountry = {
+    ...normalizeWebsiteDestinationPublicationDraft(state.websiteDestinationPublicationDraftByCountry),
+    [country]: input.checked !== false
+  };
+  showWebsiteDestinationPublicationStatus(
+    backendT("backend.settings.website_destinations_unsaved", "Unsaved changes.")
+  );
+  updateWebsiteDestinationPublicationSaveButtonState();
+}
+
+async function saveWebsiteDestinationPublication() {
+  if (!state.permissions.canEditWebsiteDestinationPublication) return;
+  if (!isWebsiteDestinationPublicationDirty()) {
+    updateWebsiteDestinationPublicationSaveButtonState();
+    return;
+  }
+  clearError();
+  clearWebsiteDestinationPublicationStatus();
+  showWebsiteDestinationPublicationStatus(
+    backendT("backend.settings.website_destinations_saving", "Saving website destinations...")
+  );
+  state.websiteDestinationPublicationSaving = true;
+  updateWebsiteDestinationPublicationSaveButtonState();
+
+  try {
+    const currentItemsByCountry = new Map(
+      normalizeCountryReferenceItems(state.countryReferenceItems).map((item) => [item.country, item])
+    );
+    const draft = normalizeWebsiteDestinationPublicationDraft(state.websiteDestinationPublicationDraftByCountry);
+    const nextItems = COUNTRY_OPTIONS
+      .map((option) => {
+        const existing = currentItemsByCountry.get(option.value) || null;
+        const publishedOnWebpage = draft[option.value] !== false;
+        if (existing) {
+          return {
+            ...existing,
+            published_on_webpage: publishedOnWebpage
+          };
+        }
+        if (!publishedOnWebpage) {
+          return {
+            country: option.value,
+            published_on_webpage: false,
+            practical_tips: [],
+            emergency_contacts: []
+          };
+        }
+        return null;
+      })
+      .filter(Boolean);
+
+    const request = countryReferenceInfoUpdateRequest({ baseURL: apiOrigin });
+    const payload = await fetchApi(request.url, {
+      method: request.method,
+      body: { items: nextItems }
+    });
+    if (!payload) {
+      showWebsiteDestinationPublicationStatus(
+        backendT("backend.settings.website_destinations_save_failed", "Could not save website destinations."),
+        true
+      );
+      return;
+    }
+    state.countryReferenceItems = normalizeCountryReferenceItems(payload?.items);
+    state.websiteDestinationPublicationInitialByCountry = publicationMapFromCountryReferenceItems(state.countryReferenceItems);
+    state.websiteDestinationPublicationDraftByCountry = { ...state.websiteDestinationPublicationInitialByCountry };
+    renderWebsiteDestinationPublication();
+    showWebsiteDestinationPublicationStatus(
+      backendT("backend.settings.website_destinations_saved", "Website destinations saved.")
+    );
+  } finally {
+    state.websiteDestinationPublicationSaving = false;
+    updateWebsiteDestinationPublicationSaveButtonState();
+  }
 }
 
 async function loadStaffDirectoryEntries() {

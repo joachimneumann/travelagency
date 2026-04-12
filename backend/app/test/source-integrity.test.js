@@ -2884,6 +2884,62 @@ test("settings page staff translation follows the active backend source language
   );
 });
 
+test("settings page hosts destination publication controls while emergency no longer renders that checkbox", async () => {
+  const settingsPageModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "settings_list.js");
+  const settingsPageHtmlPath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "settings.html");
+  const emergencyPageModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "emergency.js");
+  const toursPageModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "tours_list.js");
+  const navPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "shared", "nav.js");
+  const [settingsSource, settingsHtml, emergencySource, toursSource, navSource] = await Promise.all([
+    readFile(settingsPageModulePath, "utf8"),
+    readFile(settingsPageHtmlPath, "utf8"),
+    readFile(emergencyPageModulePath, "utf8"),
+    readFile(toursPageModulePath, "utf8"),
+    readFile(navPath, "utf8")
+  ]);
+
+  assert.match(
+    settingsHtml,
+    /id="websiteDestinationPublicationPanel"[\s\S]*id="websiteDestinationPublicationStatus"[\s\S]*id="websiteDestinationPublicationSaveBtn"[\s\S]*id="websiteDestinationPublicationList"/,
+    "Settings page should expose a dedicated website destination publication section with status, save action, and checkbox list mounts"
+  );
+  assert.match(
+    settingsSource,
+    /countryReferenceInfoRequest|countryReferenceInfoUpdateRequest/,
+    "Settings page should use the generated country-reference API requests for website destination publication"
+  );
+  assert.match(
+    settingsSource,
+    /canReadStaffProfiles:\s*roles\.includes\(ROLES\.ADMIN\)[\s\S]*canEditStaffProfiles:\s*roles\.includes\(ROLES\.ADMIN\)[\s\S]*canReadWebsiteDestinationPublication:\s*roles\.includes\(ROLES\.ADMIN\)[\s\S]*canEditWebsiteDestinationPublication:\s*roles\.includes\(ROLES\.ADMIN\)[\s\S]*canReadSettings:\s*roles\.includes\(ROLES\.ADMIN\)[\s\S]*expectedRolesAnyOf:\s*\[ROLES\.ADMIN\]/,
+    "Settings page should now be admin-only, including the website destination publication section"
+  );
+  assert.match(
+    settingsSource,
+    /async function saveWebsiteDestinationPublication\(\) \{[\s\S]*published_on_webpage:[\s\S]*countryReferenceInfoUpdateRequest/,
+    "Settings page should save the published-on-webpage flags through the country-reference update route"
+  );
+  assert.match(
+    navSource,
+    /const canReadTours = hasAnyRole\(resolvedRoles, "atp_admin", "atp_accountant", "atp_tour_editor"\);[\s\S]*const canReadEmergency = hasAnyRole\(resolvedRoles, "atp_admin", "atp_tour_editor"\);[\s\S]*const canReadSettings = hasAnyRole\(resolvedRoles, "atp_admin"\);/,
+    "Backend nav should keep Marketing Tours and Emergency available to tour editors while Settings stays admin-only"
+  );
+  assert.match(
+    toursSource,
+    /canReadTours:\s*hasAnyRoleInList\(roles,\s*ROLES\.ADMIN,\s*ROLES\.ACCOUNTANT,\s*ROLES\.TOUR_EDITOR\)[\s\S]*expectedRolesAnyOf:\s*\[ROLES\.ADMIN,\s*ROLES\.ACCOUNTANT,\s*ROLES\.TOUR_EDITOR\]/,
+    "Marketing tours should remain readable for atp_tour_editor users"
+  );
+  assert.doesNotMatch(
+    emergencySource,
+    /data-emergency-published-on-webpage/,
+    "Emergency page should no longer render the published-on-webpage checkbox"
+  );
+  assert.match(
+    emergencySource,
+    /published_on_webpage:\s*previousItem\?\.published_on_webpage !== false/,
+    "Emergency page should preserve the existing publication flag when saving practical tips and emergency contacts"
+  );
+});
+
 test("offer and travel-plan PDFs prefer ATP staff full and friendly names in the guide section", async () => {
   const atpStaffPdfPath = path.resolve(__dirname, "..", "src", "lib", "atp_staff_pdf.js");
   const offerPdfPath = path.resolve(__dirname, "..", "src", "lib", "offer_pdf.js");

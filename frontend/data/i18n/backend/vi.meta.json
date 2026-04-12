@@ -44,6 +44,51 @@
     "origin": "machine",
     "updated_at": "2026-03-30T23:51:31.875Z"
   },
+  "backend.settings.website_destinations_heading": {
+    "source_hash": "d478b47358501fe2fffa27eb7f5b1f103abee2d3af9f3d5b42effea105eb357a",
+    "origin": "legacy",
+    "updated_at": "2026-04-12T09:39:36.381Z"
+  },
+  "backend.settings.website_destinations_intro": {
+    "source_hash": "a94f6f3e7d250f9421c186abedc2221a4a3b85991076e876e1e14227fa5a9bba",
+    "origin": "legacy",
+    "updated_at": "2026-04-12T09:39:36.381Z"
+  },
+  "backend.settings.website_destinations_load_failed": {
+    "source_hash": "f9dd0550a4ee3cb6b0764ccb116626d226166348f100116d8fe76a30a46af8c1",
+    "origin": "legacy",
+    "updated_at": "2026-04-12T09:39:36.381Z"
+  },
+  "backend.settings.website_destinations_save_failed": {
+    "source_hash": "ab1ac6a2381d4b91fe922b0dcc001fb9969da1e75175d1f5c8c03153e92e26f7",
+    "origin": "legacy",
+    "updated_at": "2026-04-12T09:39:36.381Z"
+  },
+  "backend.settings.website_destinations_loading": {
+    "source_hash": "53dc02b4e358524b99e0f4c2b8e1750efe2e249d7306d94cfa28ad19a5812805",
+    "origin": "legacy",
+    "updated_at": "2026-04-12T09:39:36.381Z"
+  },
+  "backend.settings.website_destinations_saved": {
+    "source_hash": "1cd936c9b4b41f0668e0d543f7979c18608364a911668ef9afc3094c5ef2d1ab",
+    "origin": "legacy",
+    "updated_at": "2026-04-12T09:39:36.381Z"
+  },
+  "backend.settings.website_destinations_saving": {
+    "source_hash": "b78682e2fc69e5665dd409e1e596aba33aae1cde1f876cc8c09effc96beeb6ed",
+    "origin": "legacy",
+    "updated_at": "2026-04-12T09:39:36.381Z"
+  },
+  "backend.settings.website_destinations_status": {
+    "source_hash": "35a910e5642c2951a4413842f8a92597284efb1d4042a7c4d5754a221d384f12",
+    "origin": "legacy",
+    "updated_at": "2026-04-12T09:39:36.381Z"
+  },
+  "backend.settings.website_destinations_unsaved": {
+    "source_hash": "efa5855ff509423001b33fbc7d60d614a183535a317d1427b44ae371c11bd669",
+    "origin": "legacy",
+    "updated_at": "2026-04-12T09:39:36.381Z"
+  },
   "backend.standard_travel_plans.all_destinations": {
     "source_hash": "0fc7d71eb828a862691b7273d6c7f34344de1aa2276b842d65ece2911df0961f",
     "origin": "legacy",

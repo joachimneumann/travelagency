@@ -51,21 +51,24 @@ Gmail draft creation for generated offers requires:
 
 Runtime JSON persistence:
 - `backend/app/data/store.json`
-- `backend/app/data/tours/<tour_id>/tour.json`
 - `backend/app/data/invoices/`
 - `backend/app/data/booking_images/`
 - `backend/app/data/booking_person_photos/`
+- `content/tours/<tour_id>/tour.json`
+- `content/country_reference_info.json`
 
 Notes:
 - `backend/app/data/store.json` is runtime data and is not tracked in Git
 - startup creates an empty store automatically if the file is missing
-- bookings, activities, invoices, chats, and tours are the active persisted domains
+- bookings, activities, invoices, and chats are the active operational store domains
+- tours and country reference info remain file-backed content domains
 
 ## Current Architecture
 
 Implemented now:
 - public booking ingestion
 - public tour catalog
+- country-reference publication controls for the public website
 - booking pipeline stages and assignment
 - booking notes, pricing, offer, activities, invoices
 - booking-owned persons
@@ -77,6 +80,7 @@ Administrative pages:
 - `/bookings.html`
 - `/booking.html`
 - `/marketing_tour.html`
+- `/emergency.html`
 
 ## API Endpoints
 
@@ -94,6 +98,11 @@ Public:
 - `GET /public/v1/booking-images/:path`
 - `GET /public/v1/booking-person-photos/:path`
 - `POST /public/v1/bookings`
+
+`GET /public/v1/tours` currently:
+- filters tours and destination options against `content/country_reference_info.json`
+- uses `published_on_webpage` as the source of truth for public destination visibility
+- responds with `Cache-Control: no-store` so publication changes appear immediately after reload
 
 Admin API:
 - `GET /api/v1/bookings`
@@ -129,6 +138,8 @@ Admin API:
 - `POST /api/v1/tours`
 - `PATCH /api/v1/tours/:tourId`
 - `POST /api/v1/tours/:tourId/image`
+- `GET /api/v1/country-reference-info`
+- `PATCH /api/v1/country-reference-info`
 
 ## Website Booking Form
 

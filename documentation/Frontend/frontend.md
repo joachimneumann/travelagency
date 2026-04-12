@@ -33,10 +33,6 @@
 
 - Brand logo (`assets/img/logo-asiatravelplan.svg`)
 - Mobile menu toggle button (`#navToggle`)
-- Filter controls embedded in nav:
-  - Destination select (`#navDestination`)
-  - Travel style select (`#navStyle`)
-  - Clear filters button (`#clearFilters`)
 - Anchor links:
   - `#why`
   - `#trust`
@@ -51,13 +47,13 @@
 - Poster image (`assets/video/rice field.webp`)
 - Video container is now full-bleed with no outer margin or rounded corners
 - A dark scrim sits over the video for legibility
-- Hero hides subtitle text below the H1 only when both filters are `All`; otherwise it shows the active filter title
-- Hero shows only a centered down-arrow link to `#tours`
-- Hero title remains centered without a boxed title tile; dynamic subtitle link is horizontally centered near the bottom of the hero
-- Hover/focus interaction at hero bottom highlights only the arrow circle (not the full subtitle link area)
-- Arrow click uses smooth scrolling with sticky-header offset so the hero exits view while top spacing in the tours section remains visible
-- H1:
-  - `Private holidays in Vietnam, Thailand, Cambodia and Laos`
+- H1 (`#heroTitle`) is generated from the published destination list returned by `GET /public/v1/tours`
+- Hero controls:
+  - destination multi-select (`#navDestinationWrap`) is shown only when more than one destination is published on the website
+  - travel-style multi-select (`#navStyleTrigger`)
+  - primary CTA button (`#viewToursBtn`)
+- If exactly one destination is published, the title collapses to that country and the destination selector is fully hidden
+- If multiple destinations are published, the title uses the localized published-destination list and the destination selector is shown
 
 ### 4.2 Tours (`#tours`)
 
@@ -68,27 +64,21 @@
 
 Behavior from JS:
 - Trips are loaded from backend `GET /public/v1/tours` (primary source)
-- Backend responses are cached in localStorage (`asiatravelplan_tours_cache_v1`) with TTL
-- Filter state from URL params/localStorage (`asiatravelplan_filters`)
+- Public tour requests use `cache: "no-store"` so Emergency publication changes appear after reload
+- Filter state persists via URL params and `localStorage` (`asiatravelplan_filters`)
 - URL sync with `?dest=...&style=...`
+- Destination filter options come only from destinations currently published on the website
+- Destination filters are automatically cleared when the destination selector is hidden because zero or one destinations remain
 - Dynamic page title and hidden tours heading/subtitle still update based on filters
 - On each new filter application, tours are ranked by `priority + random(0..50)` before display
-- Initially up to 3 tours are shown
-- If more tours exist, the first reveal button appears (capped at 3):
-- No active filters: `show more tours`
-- Style filter active: `show X more <style> tours` (example: `show 3 more grand expeditions tours`)
-- Destination-only filter active: `show X more tours in <destination>`
-- Only after clicking `Show more`, a `Show the remaining X tours` button can appear to reveal the rest
-- If exactly one tour remains, the second button label becomes `There is one more tour`
-- Progressive reveal buttons are horizontally centered below the tour grid
+- Initially up to 6 tours are shown
+- If more tours exist, one `Show all {count} tours` button reveals the remaining results
 - Card CTA opens booking modal and pre-fills destination/style
 - A bottom-page `Debug priority` button reveals per-tour ranking diagnostics for the current filter (`priority`, `random`, `sum`) in display order
 
 Current inventory:
-- 32 trip entries in backend tour storage (`backend/app/data/tours/<tour_id>/tour.json`)
-- Destinations represented: Vietnam, Thailand, Cambodia, Laos
-- Styles include: Grand Expeditions, Beach, Budget, Culture, Family, Gastronomic Experiences, Luxury
-- Multiple tours per country/style are supported with IDs in the form `trip-<country>-<style>-<variant>`
+- Tour source files live under `content/tours/<tour_id>/tour.json`
+- Public destination availability is further constrained by `content/country_reference_info.json`
 - Tour images are served by backend under `/public/v1/tour-images/<tour_id>/<tour_id>.webp`
 - Each tour entry includes `priority` (human-writable, intended range `0-100`)
 - Sync script never overwrites existing `priority`; only brand-new tours default to `50`
@@ -188,8 +178,10 @@ Two JSON-LD blocks:
 ## 9) Key dynamic/interactive features summary
 
 - Mobile menu toggle
-- Filterable tours with URL/localStorage persistence
-- Tour list progressive reveal (up to 3 initially, then incremental show-more controls)
+- Filterable tours with URL/localStorage persistence for active filters
+- Conditional hero destination selector based on published destinations
+- Dynamic hero title derived from the published destination list
+- Tour list progressive reveal (6 initially, then reveal all remaining)
 - Dynamic tours section heading/booking and document title
 - FAQ accordion
 - Tour image prewarm for faster first render

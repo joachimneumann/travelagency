@@ -50,11 +50,12 @@ Important backend areas:
 
 Runtime persistence is currently file-based:
 - `backend/app/data/store.json`
-- `backend/app/data/tours/`
 - `backend/app/data/generated_offers/`
 - `backend/app/data/invoices/`
 - `backend/app/data/booking_images/`
 - `backend/app/data/booking_person_photos/`
+- `content/tours/`
+- `content/country_reference_info.json`
 
 The backend is a raw Node HTTP server, not an Express app.
 
@@ -70,10 +71,13 @@ Frontend roots:
 Public site entry:
 - `frontend/pages/index.html`
 - `frontend/scripts/main.js`
+- `frontend/scripts/main_tours.js`
 
 Backend workspace entry:
 - `frontend/pages/bookings.html`
 - `frontend/scripts/pages/booking_list.js`
+- `frontend/pages/emergency.html`
+- `frontend/scripts/pages/emergency.js`
 
 Booking detail workspace:
 - `frontend/pages/booking.html`
@@ -82,6 +86,13 @@ Booking detail workspace:
 Tour editor:
 - `frontend/pages/marketing_tour.html`
 - `frontend/scripts/pages/tour.js`
+
+Public destination publication flow:
+- `content/country_reference_info.json`
+- `backend/app/src/http/handlers/tours.js`
+- `frontend/scripts/main_tours.js`
+
+This flow controls which destinations appear on the homepage and in the public tours payload.
 
 Booking page feature modules:
 - `frontend/scripts/booking/persons.js`

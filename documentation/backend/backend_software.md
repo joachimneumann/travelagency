@@ -14,6 +14,7 @@ The backend no longer uses separate shared master-data domains for booking conta
 Implemented now:
 - public booking ingestion
 - public tours catalog
+- country-reference publication controls for the public website
 - Keycloak-protected backend access
 - booking stage pipeline
 - ATP staff assignment
@@ -47,6 +48,7 @@ Backend pages:
 - `bookings.html`
 - `booking.html`
 - `marketing_tour.html`
+- `emergency.html`
 
 Removed from active scope:
 - standalone person detail CRUD page

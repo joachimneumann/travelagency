@@ -33,7 +33,7 @@ We only collect information needed to provide booking and trip-planning services
 - Usage data to improve the website and API reliability.
 
 ### Stored by the browser
-- `localStorage` values used for convenience features (for example, selected filters and cached tour data).
+- `localStorage` values used for convenience features (for example, selected filters and page settings).
 - Authentication cookies when you sign in.
 
 ## Cookies and session data

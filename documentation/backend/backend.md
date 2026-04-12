@@ -15,6 +15,7 @@ Active operational domains:
 - bookings
 - booking persons
 - tours
+- country reference / public destination visibility
 - ATP staff
 - activities
 - invoices
@@ -56,6 +57,7 @@ Not active domains:
 
 - maintain public tours
 - serve public tour images
+- control which destinations are published on the public website
 
 ## Architectural Requirement
 

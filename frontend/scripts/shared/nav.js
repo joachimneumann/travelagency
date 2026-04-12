@@ -75,7 +75,7 @@ function applyNavPermissions(mount, roles) {
   const canReadStandardTravelPlans = hasAnyRole(resolvedRoles, "atp_tour_editor");
   const canReadTours = hasAnyRole(resolvedRoles, "atp_admin", "atp_accountant", "atp_tour_editor");
   const canReadEmergency = hasAnyRole(resolvedRoles, "atp_admin", "atp_tour_editor");
-  const canReadSettings = hasAnyRole(resolvedRoles, "atp_admin", "atp_manager", "atp_accountant");
+  const canReadSettings = hasAnyRole(resolvedRoles, "atp_admin");
   mount
     .querySelectorAll(".backend-section-nav__item[data-backend-section]")
     .forEach((button) => {
