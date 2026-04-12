@@ -521,7 +521,7 @@ export function createBookingGeneratedOffersModule(ctx) {
     const missingTranslationCount = countMissingOfferPdfTranslations(state.booking, selectedLang);
     if (missingTranslationCount > 0 && !window.confirm(bookingT(
       "booking.offer.generate_missing_translation_confirm",
-      "Customer language is {language}, but {count} offer or travel-plan fields are not translated yet. The PDF shell will use {language}, and those fields will fall back to {sourceLanguage}. Generate anyway?",
+      "Customer language is {language}, but {count} travel-plan fields are not translated yet. The PDF shell will use {language}, and those fields will fall back to {sourceLanguage}. Generate anyway?",
       {
         language: bookingContentLanguageLabel(selectedLang),
         sourceLanguage: bookingSourceLanguageLabel(),

@@ -253,14 +253,13 @@ const state = {
     offer_detail_level_internal: "trip",
     offer_detail_level_visible: "trip",
     category_rules: [],
-    components: [],
     days_internal: [],
     additional_items: [],
     totals: {
       net_amount_cents: 0,
       tax_amount_cents: 0,
       gross_amount_cents: 0,
-      components_count: 0
+      items_count: 0
     }
   }
 };
@@ -499,9 +498,7 @@ const els = {
   offer_detail_level_confirm_cancel_btn: document.getElementById("offer_detail_level_confirm_cancel_btn"),
   offer_detail_level_confirm_accept_btn: document.getElementById("offer_detail_level_confirm_accept_btn"),
   offer_visible_pricing_hint: document.getElementById("offer_visible_pricing_hint"),
-  offer_components_table: document.getElementById("offer_components_table"),
-  offer_additional_items_table: document.getElementById("offer_additional_items_table"),
-  offer_discount_editor: document.getElementById("offer_discount_editor"),
+  offer_pricing_table: document.getElementById("offer_pricing_table"),
   offer_payment_terms: document.getElementById("offer_payment_terms"),
   offer_quotation_summary: document.getElementById("offer_quotation_summary"),
   generated_offers_table: document.getElementById("generated_offers_table"),

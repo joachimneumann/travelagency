@@ -62,19 +62,17 @@ export function createBookingOfferSaveController(ctx) {
           offer_revision: result.booking.offer_revision,
           offer: {
             currency: result.booking.offer?.currency,
-            discount: result.booking.offer?.discount
-              ? {
-                  reason: result.booking.offer.discount.reason,
-                  amount_cents: result.booking.offer.discount.amount_cents
-                }
-              : null,
-            components: Array.isArray(result.booking.offer?.components)
-              ? result.booking.offer.components.map((component) => ({
-                  id: component.id,
-                  category: component.category,
-                  details: component.details,
-                  quantity: component.quantity,
-                  unit_amount_cents: component.unit_amount_cents
+            discounts: Array.isArray(result.booking.offer?.discounts)
+              ? result.booking.offer.discounts.map((discount) => ({
+                  reason: discount.reason,
+                  amount_cents: discount.amount_cents
+                }))
+              : [],
+            days_internal: Array.isArray(result.booking.offer?.days_internal)
+              ? result.booking.offer.days_internal.map((dayPrice) => ({
+                  id: dayPrice.id,
+                  day_number: dayPrice.day_number,
+                  amount_cents: dayPrice.amount_cents
                 }))
               : []
           }

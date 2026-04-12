@@ -148,6 +148,16 @@ function isSyntheticAdditionalItemLabel(value) {
   return /^additional item(?:\s+\d+)?$/i.test(normalizeText(value));
 }
 
+function normalizeOfferDiscountsForPdf(offer) {
+  if (Array.isArray(offer?.discounts)) {
+    return offer.discounts.filter((discount) => discount && Number(discount?.amount_cents || 0) > 0);
+  }
+  if (offer?.discount && typeof offer.discount === "object" && Number(offer.discount?.amount_cents || 0) > 0) {
+    return [offer.discount];
+  }
+  return [];
+}
+
 function extractPublicRelativePath(publicUrl, prefix) {
   const normalizedUrl = normalizeText(publicUrl);
   if (!normalizedUrl) return null;
@@ -264,7 +274,7 @@ function buildOfferTableRows(generatedOffer, formatMoneyValue, lang) {
     ? offer.visible_pricing
     : null;
   const currency = generatedOffer?.currency || offer?.currency;
-  const discount = offer?.discount && typeof offer.discount === "object" ? offer.discount : null;
+  const discounts = normalizeOfferDiscountsForPdf(offer);
 
   let mainRows = [];
   if (visiblePricing?.detail_level === "trip" && visiblePricing?.trip_price) {
@@ -324,16 +334,14 @@ function buildOfferTableRows(generatedOffer, formatMoneyValue, lang) {
     };
   });
 
-  const discountRows = discount && Number(discount?.amount_cents || 0) > 0
-    ? [{
+  const discountRows = discounts.map((discount) => ({
         category: pdfT(lang, "offer.discount", "Discount"),
         categoryTax: pdfT(lang, "offer.discount_adjustment", "Final adjustment"),
         details: textOrNull(discount?.reason) || "—",
         quantity: "—",
         unitText: "—",
         totalText: formatMoneyValue(-Math.max(0, Number(discount?.amount_cents || 0)), currency)
-      }]
-    : [];
+      }));
 
   return [...mainRows, ...additionalItemRows, ...discountRows];
 }
@@ -349,7 +357,7 @@ function deriveOfferQuotationSummary(offer) {
   const dayPrices = internalDetailLevel === "day" ? safeArray(source.days_internal) : [];
   const tripPrice = internalDetailLevel === "trip" && source?.trip_price_internal ? source.trip_price_internal : null;
   const additionalItems = safeArray(source.additional_items);
-  const discount = source.discount && typeof source.discount === "object" ? source.discount : null;
+  const discounts = normalizeOfferDiscountsForPdf(source);
   const buckets = new Map();
   let subtotal = 0;
   let totalTax = 0;
@@ -384,8 +392,9 @@ function deriveOfferQuotationSummary(offer) {
     bucket.items_count += 1;
     buckets.set(basisPoints, bucket);
   }
-  if (discount && Number(discount?.amount_cents || 0) > 0) {
-    const amount = Math.max(0, Number(discount.amount_cents || 0));
+  for (const discount of discounts) {
+    const amount = Math.max(0, Number(discount?.amount_cents || 0));
+    if (amount <= 0) continue;
     subtotal -= amount;
     totalGross -= amount;
     const bucket = buckets.get(0) || {

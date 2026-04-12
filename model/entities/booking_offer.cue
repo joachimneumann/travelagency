@@ -60,12 +60,16 @@ import (
 }
 
 #BookingOfferDiscount: {
+	id?:                      common.#Identifier
 	reason:                   string & !=""
 	amount_cents:             common.#NonNegativeMoneyAmount
 	currency:                 enums.#CurrencyCode
 	line_net_amount_cents?:   common.#MoneyAmount
 	line_tax_amount_cents?:   common.#MoneyAmount
 	line_gross_amount_cents?: common.#MoneyAmount
+	sort_order?:              int
+	created_at?:              common.#Timestamp
+	updated_at?:              common.#Timestamp
 }
 
 #BookingOfferTaxBucket: {
@@ -155,9 +159,9 @@ import (
 	trip_price_internal?: #BookingOfferTripPriceInternal
 	// Day prices are active only when offer_detail_level_internal == "day".
 	days_internal?: [...#BookingOfferDayPriceInternal]
-	// Additional items and discount survive internal detail level transitions.
+	// Additional items and discounts survive internal detail level transitions.
 	additional_items?: [...#BookingOfferAdditionalItem]
-	discount?:          #BookingOfferDiscount
+	discounts?:         [...#BookingOfferDiscount]
 	totals:             #BookingOfferTotals
 	quotation_summary?: #BookingOfferQuotationSummary
 	payment_terms?:     #BookingOfferPaymentTerms

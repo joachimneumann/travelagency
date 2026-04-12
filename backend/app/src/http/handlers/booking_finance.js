@@ -1,6 +1,5 @@
 import {
-  validateBookingGenerateOfferRequest,
-  validateBookingOfferTranslateRequest
+  validateBookingGenerateOfferRequest
 } from "../../../Generated/API/generated_APIModels.js";
 import { readFile } from "node:fs/promises";
 import { createGmailDraftsClient } from "../../lib/gmail_drafts.js";
@@ -19,12 +18,6 @@ import {
   normalizeBookingContentLang,
   normalizeBookingSourceLang
 } from "../../domain/booking_content_i18n.js";
-import {
-  collectOfferTranslationFieldChanges,
-  markOfferTranslationFieldsManual,
-  markOfferTranslationManual,
-  translateOfferFromSourceLanguage
-} from "../../domain/booking_translation.js";
 import { freezeAcceptedCommercialRecord } from "../../domain/accepted_record.js";
 
 export function createBookingFinanceHandlers(deps) {
@@ -70,7 +63,6 @@ export function createBookingFinanceHandlers(deps) {
     rm,
     canAccessBooking,
     sendFileWithCache,
-    translateEntries,
     normalizeGeneratedOfferSnapshot,
     ensureFrozenGeneratedOfferPdf,
     path,
@@ -149,22 +141,6 @@ export function createBookingFinanceHandlers(deps) {
       sourceLang: normalizedSourceLang
     });
     return nextNormalized;
-  }
-
-  function sendTranslationError(res, error) {
-    if (error?.code === "TRANSLATION_NOT_CONFIGURED") {
-      sendJson(res, 503, { error: String(error.message || "Translation provider is not configured.") });
-      return;
-    }
-    if (error?.code === "TRANSLATION_SOURCE_LANGUAGE") {
-      sendJson(res, 422, { error: String(error.message || "The source language cannot be auto-translated.") });
-      return;
-    }
-    if (error?.code === "TRANSLATION_INVALID_RESPONSE" || error?.code === "TRANSLATION_REQUEST_FAILED") {
-      sendJson(res, 502, { error: String(error.message || "Translation request failed.") });
-      return;
-    }
-    sendJson(res, 500, { error: String(error?.message || error || "Translation failed.") });
   }
 
   function resolveGeneratedOfferBookingConfirmationPaymentLine(paymentTerms, requestedLineId = "") {
@@ -744,19 +720,6 @@ export function createBookingFinanceHandlers(deps) {
       booking.preferred_currency || booking.pricing?.currency || BASE_CURRENCY,
       sourceLang
     );
-    if (contentLang !== sourceLang) {
-      const changedTranslationKeys = collectOfferTranslationFieldChanges(
-        booking.offer,
-        mergedOffer,
-        contentLang,
-        sourceLang
-      );
-      if (changedTranslationKeys.length) {
-        markOfferTranslationFieldsManual(mergedOffer, contentLang, nowIso(), changedTranslationKeys, sourceLang);
-      } else {
-        markOfferTranslationManual(mergedOffer, contentLang, nowIso(), sourceLang);
-      }
-    }
     const nextOfferBase = await convertBookingOfferToBaseCurrency(mergedOffer);
     const nextOfferJson = JSON.stringify(nextOfferBase);
     const currentOfferJson = JSON.stringify(
@@ -791,62 +754,6 @@ export function createBookingFinanceHandlers(deps) {
     // }
 
     sendJson(res, 200, await buildBookingDetailResponse(booking, req));
-  }
-
-  async function handleTranslateBookingOfferFromEnglish(req, res, [bookingId]) {
-    let payload;
-    try {
-      payload = await readBodyJson(req);
-      validateBookingOfferTranslateRequest(payload);
-    } catch (error) {
-      sendJson(res, 400, { error: String(error?.message || "Invalid JSON payload") });
-      return;
-    }
-
-    const principal = getPrincipal(req);
-    const store = await readStore();
-    const booking = store.bookings.find((item) => item.id === bookingId);
-    if (!booking) {
-      sendJson(res, 404, { error: "Booking not found" });
-      return;
-    }
-    if (!canEditBooking(principal, booking)) {
-      sendJson(res, 403, { error: "Forbidden" });
-      return;
-    }
-    if (!(await assertExpectedRevision(req, payload, booking, "expected_offer_revision", "offer_revision", res))) return;
-
-    const contentLang = requestContentLang(req, payload);
-    const sourceLang = requestSourceLang(req, payload);
-    try {
-      const translatedOffer = await translateOfferFromSourceLanguage(
-        booking.offer,
-        sourceLang,
-        contentLang,
-        translateEntries,
-        nowIso()
-      );
-      const nextOfferBase = await convertBookingOfferToBaseCurrency(translatedOffer);
-      if (JSON.stringify(nextOfferBase) === JSON.stringify(booking.offer || null)) {
-        sendJson(res, 200, { ...(await buildBookingDetailResponse(booking, req)), unchanged: true });
-        return;
-      }
-
-      booking.offer = nextOfferBase;
-      incrementBookingRevision(booking, "offer_revision");
-      booking.updated_at = nowIso();
-      addActivity(
-        store,
-        booking.id,
-        "OFFER_TRANSLATED",
-        actorLabel(principal, normalizeText(payload?.actor) || "keycloak_user"),
-        `Offer translated from ${sourceLang} to ${contentLang}`
-      );
-      await persistStore(store);
-      sendJson(res, 200, await buildBookingDetailResponse(booking, req));
-    } catch (error) {
-      sendTranslationError(res, error);
-    }
   }
 
   async function handlePostOfferExchangeRates(req, res) {
@@ -1319,7 +1226,6 @@ export function createBookingFinanceHandlers(deps) {
     handleGetBookingConfirmationPdfArtifact,
     handleDeleteBookingConfirmationPdfArtifact,
     handlePatchBookingOffer,
-    handleTranslateBookingOfferFromEnglish,
     handlePostOfferExchangeRates,
     handleGenerateBookingOffer,
     handleGetGeneratedOfferPdf,

@@ -10,26 +10,18 @@ import { createBookingGeneratedOffersModule } from "./offer_generated_offers.js"
 import { createBookingOfferPricingModule } from "./offer_pricing.js";
 import { createBookingOfferPaymentTermsModule } from "./offer_payment_terms.js";
 import { createBookingOfferSaveController } from "./offer_save.js";
-import {
-  normalizeLocalizedEditorMap,
-  resolveLocalizedEditorText
-} from "./localized_editor.js";
 
 const DEFAULT_OFFER_TAX_RATE_BASIS_POINTS = 1000;
 const OFFER_DETAIL_LEVEL_ORDER = Object.freeze({
   trip: 1,
-  day: 2,
-  component: 3
+  day: 2
 });
 const OFFER_DETAIL_LEVEL_OPTIONS = Object.freeze([
-  { value: "component", label: "Per component" },
   { value: "day", label: "Per day" },
   { value: "trip", label: "Per trip" }
 ]);
 
 const OFFER_CATEGORIES = GENERATED_OFFER_CATEGORY_LIST.map((code) => ({ code }));
-
-const OFFER_COMPONENT_CATEGORIES = OFFER_CATEGORIES.filter((category) => category.code !== "DISCOUNTS_CREDITS");
 
 export function createBookingOfferModule(ctx) {
   const {
@@ -67,9 +59,13 @@ export function createBookingOfferModule(ctx) {
   function inferInternalOfferDetailLevel(source, fallback = "trip") {
     const explicit = String(source?.offer_detail_level_internal || "").trim().toLowerCase();
     if (Object.prototype.hasOwnProperty.call(OFFER_DETAIL_LEVEL_ORDER, explicit)) return explicit;
-    if (Array.isArray(source?.components) && source.components.length) return "component";
     if (Array.isArray(source?.days_internal) && source.days_internal.length) return "day";
     if (source?.trip_price_internal && typeof source.trip_price_internal === "object") return "trip";
+    if (Array.isArray(source?.components) && source.components.length) {
+      return source.components.every((component) => Number.isInteger(Number(component?.day_number)) && Number(component?.day_number) >= 1)
+        ? "day"
+        : "trip";
+    }
     return fallback;
   }
 
@@ -132,13 +128,9 @@ export function createBookingOfferModule(ctx) {
     const normalizedNextValue = normalizeOfferDetailLevel(nextValue, currentValue);
     pendingInternalDetailLevelSelection = { nextValue: normalizedNextValue, resolver: null };
     const detailLevelEffects = {
-      component: bookingT(
-        "booking.offer.internal_detail_level_warning_effect_component",
-        "The offer will keep component rows only. Trip totals or day rows will be rebuilt into editable component rows."
-      ),
       trip: bookingT(
         "booking.offer.internal_detail_level_warning_effect_trip",
-        "The offer will keep one trip total only. Day rows, surcharges, and discounts will be deleted."
+        "The offer will keep one trip total only. Existing day rows will be collapsed into that total."
       ),
       day: bookingT(
         "booking.offer.internal_detail_level_warning_effect_day",
@@ -219,10 +211,9 @@ export function createBookingOfferModule(ctx) {
   function countMissingOfferPdfTranslations(booking, lang) {
     if (!booking || lang === bookingSourceLang("en")) return 0;
     const normalizedLang = String(lang || "").trim().toLowerCase();
-    const offerSummary = booking?.offer_translation_status;
     const travelPlanSummary = booking?.travel_plan_translation_status;
-    if (offerSummary?.lang === normalizedLang || travelPlanSummary?.lang === normalizedLang) {
-      return Number(offerSummary?.missing_fields || 0) + Number(travelPlanSummary?.missing_fields || 0);
+    if (travelPlanSummary?.lang === normalizedLang) {
+      return Number(travelPlanSummary?.missing_fields || 0);
     }
     let missing = 0;
     const considerField = (value) => {
@@ -295,7 +286,6 @@ export function createBookingOfferModule(ctx) {
     paymentTermsModule,
     defaultOfferTaxRateBasisPoints: DEFAULT_OFFER_TAX_RATE_BASIS_POINTS,
     offerCategories: OFFER_CATEGORIES,
-    offerComponentCategories: OFFER_COMPONENT_CATEGORIES,
     setOfferSaveEnabled,
     setOfferStatus,
     getCountMissingOfferPdfTranslations: countMissingOfferPdfTranslations,
@@ -365,16 +355,112 @@ export function createBookingOfferModule(ctx) {
     };
   }
 
+  function computeLegacyOfferComponentAmounts(component) {
+    const quantity = Math.max(1, Number(component?.quantity || 1));
+    const unitAmountCents = Math.max(0, Number(component?.unit_amount_cents || 0));
+    const taxRateBasisPoints = Number.isFinite(Number(component?.tax_rate_basis_points))
+      ? Math.max(0, Math.round(Number(component.tax_rate_basis_points)))
+      : DEFAULT_OFFER_TAX_RATE_BASIS_POINTS;
+    const unitTaxAmountCents = Math.round((unitAmountCents * taxRateBasisPoints) / 10000);
+    return {
+      tax_rate_basis_points: taxRateBasisPoints,
+      line_net_amount_cents: quantity * unitAmountCents,
+      line_tax_amount_cents: quantity * unitTaxAmountCents,
+      line_gross_amount_cents: quantity * (unitAmountCents + unitTaxAmountCents)
+    };
+  }
+
+  function resolveLegacyAggregateTaxRateBasisPoints(lines) {
+    const normalizedLines = Array.isArray(lines) ? lines : [];
+    const populatedRates = normalizedLines
+      .filter((line) => Number(line?.line_gross_amount_cents || 0) > 0)
+      .map((line) => Math.max(0, Math.round(Number(line?.tax_rate_basis_points || 0))));
+    const uniqueRates = [...new Set(populatedRates)];
+    if (!uniqueRates.length) return 0;
+    if (uniqueRates.length === 1) return uniqueRates[0];
+    const netAmountCents = normalizedLines.reduce(
+      (sum, line) => sum + Math.max(0, Math.round(Number(line?.line_net_amount_cents || 0))),
+      0
+    );
+    const taxAmountCents = normalizedLines.reduce(
+      (sum, line) => sum + Math.max(0, Math.round(Number(line?.line_tax_amount_cents || 0))),
+      0
+    );
+    if (netAmountCents <= 0 || taxAmountCents <= 0) return 0;
+    return Math.max(0, Math.round((taxAmountCents * 10000) / netAmountCents));
+  }
+
+  function aggregateLegacyOfferComponents(components, overrides = {}) {
+    const normalizedLines = (Array.isArray(components) ? components : []).map((component) => computeLegacyOfferComponentAmounts(component));
+    if (!normalizedLines.length) return null;
+    return {
+      ...overrides,
+      amount_cents: normalizedLines.reduce(
+        (sum, line) => sum + Math.max(0, Math.round(Number(line?.line_net_amount_cents || 0))),
+        0
+      ),
+      tax_rate_basis_points: resolveLegacyAggregateTaxRateBasisPoints(normalizedLines),
+      currency: normalizeCurrencyCode(overrides.currency || state.booking?.preferred_currency || "USD"),
+      notes: String(overrides.notes || "").trim()
+    };
+  }
+
+  function deriveLegacyOfferDaysInternal(source) {
+    const sourceComponents = Array.isArray(source?.components) ? source.components : [];
+    if (!sourceComponents.length) return [];
+    if (!sourceComponents.every((component) => Number.isInteger(Number(component?.day_number)) && Number(component?.day_number) >= 1)) {
+      return [];
+    }
+    const groupedByDay = new Map();
+    sourceComponents.forEach((component) => {
+      const dayNumber = Number(component.day_number);
+      const existing = groupedByDay.get(dayNumber) || [];
+      existing.push(component);
+      groupedByDay.set(dayNumber, existing);
+    });
+    return Array.from(groupedByDay.entries())
+      .sort((left, right) => left[0] - right[0])
+      .map(([dayNumber, components], index) => aggregateLegacyOfferComponents(components, {
+        id: "",
+        day_number: dayNumber,
+        label: bookingT("booking.offer.day_number.day", "Day {day}", { day: dayNumber }),
+        currency: normalizeCurrencyCode(source.currency || state.booking?.preferred_currency || "USD"),
+        notes: "",
+        sort_order: index
+      }))
+      .filter(Boolean);
+  }
+
+  function deriveLegacyOfferTripPriceInternal(source) {
+    const sourceComponents = Array.isArray(source?.components) ? source.components : [];
+    if (!sourceComponents.length) return null;
+    return aggregateLegacyOfferComponents(sourceComponents, {
+      label: String(source?.trip_price_internal?.label || "").trim(),
+      currency: normalizeCurrencyCode(source.currency || state.booking?.preferred_currency || "USD"),
+      notes: String(source?.trip_price_internal?.notes || "").trim()
+    });
+  }
+
   function cloneOffer(offer) {
     const source = offer && typeof offer === "object" ? offer : {};
     const paymentTerms = cloneOfferPaymentTerms(source.payment_terms, source.currency || state.booking?.preferred_currency || "USD");
-    const discount = source.discount && typeof source.discount === "object"
-      ? {
-          reason: String(source.discount?.reason || "").trim(),
-          amount_cents: Math.max(0, Math.round(Number(source.discount?.amount_cents || 0))),
-          currency: normalizeCurrencyCode(source.discount?.currency || source.currency || state.booking?.preferred_currency || "USD")
-        }
-      : null;
+    const sourceDiscounts = Array.isArray(source.discounts) && source.discounts.length
+      ? source.discounts
+      : (source.discount && typeof source.discount === "object" ? [source.discount] : (Array.isArray(source.discounts) ? source.discounts : []));
+    const discounts = sourceDiscounts
+      .map((discount, index) => ({
+        id: String(discount?.id || ""),
+        reason: String(discount?.reason || "").trim(),
+        amount_cents: Math.max(0, Math.round(Number(discount?.amount_cents || 0))),
+        currency: normalizeCurrencyCode(discount?.currency || source.currency || state.booking?.preferred_currency || "USD"),
+        sort_order: Number.isFinite(Number(discount?.sort_order)) ? Number(discount.sort_order) : index
+      }))
+      .filter((discount) => discount.reason || discount.amount_cents > 0 || discount.id)
+      .map((discount, index) => ({
+        ...discount,
+        id: discount.id || `offer_discount_${index + 1}`,
+        sort_order: Number.isFinite(Number(discount.sort_order)) ? Number(discount.sort_order) : index
+      }));
     const categoryRulesByCode = new Map(
       (Array.isArray(source.category_rules) ? source.category_rules : []).map((rule) => [
         String(rule?.category || "").toUpperCase(),
@@ -396,8 +482,9 @@ export function createBookingOfferModule(ctx) {
       };
     });
 
-    const sourceComponents = Array.isArray(source.components) ? source.components : [];
-    const sourceDaysInternal = Array.isArray(source.days_internal) ? source.days_internal : [];
+    const sourceDaysInternal = Array.isArray(source.days_internal) && source.days_internal.length
+      ? source.days_internal
+      : deriveLegacyOfferDaysInternal(source);
     const sourceAdditionalItems = (Array.isArray(source.additional_items) ? source.additional_items : []).filter((item) => (
       item
       && typeof item === "object"
@@ -421,33 +508,8 @@ export function createBookingOfferModule(ctx) {
       offer_detail_level_internal: internalDetailLevel,
       offer_detail_level_visible: visibleDetailLevel,
       category_rules,
-      ...(discount ? { discount } : {}),
+      discounts,
       ...(paymentTerms ? { payment_terms: paymentTerms } : {}),
-      components: sourceComponents.map((component, index) => ({
-        id: String(component?.id || ""),
-        category: normalizeOfferCategory(component?.category),
-        label: String(component?.label || ""),
-        details: resolveLocalizedEditorText(
-          component?.details_i18n ?? component?.details ?? component?.description,
-          bookingSourceLang("en"),
-          ""
-        ),
-        details_i18n: normalizeLocalizedEditorMap(
-          component?.details_i18n ?? component?.details ?? component?.description,
-          bookingSourceLang("en")
-        ),
-        day_number: Number.isInteger(Number(component?.day_number)) && Number(component?.day_number) >= 1
-          ? Number(component.day_number)
-          : null,
-        quantity: Math.max(1, Number(component?.quantity || 1)),
-        unit_amount_cents: Math.max(0, Number(component?.unit_amount_cents || 0)),
-        tax_rate_basis_points: Number.isFinite(Number(component?.tax_rate_basis_points))
-          ? Math.max(0, Math.round(Number(component.tax_rate_basis_points)))
-          : DEFAULT_OFFER_TAX_RATE_BASIS_POINTS,
-        currency: normalizeCurrencyCode(component?.currency || source.currency || state.booking?.preferred_currency || "USD"),
-        notes: String(component?.notes || ""),
-        sort_order: Number.isFinite(Number(component?.sort_order)) ? Number(component.sort_order) : index
-      })),
       ...(source.trip_price_internal && typeof source.trip_price_internal === "object"
         ? {
             trip_price_internal: {
@@ -460,6 +522,8 @@ export function createBookingOfferModule(ctx) {
               notes: String(source.trip_price_internal?.notes || "").trim()
             }
           }
+        : internalDetailLevel === "trip"
+          ? { trip_price_internal: deriveLegacyOfferTripPriceInternal(source) }
         : {}),
       days_internal: sourceDaysInternal.map((dayPrice, index) => ({
         id: String(dayPrice?.id || ""),
@@ -496,7 +560,7 @@ export function createBookingOfferModule(ctx) {
         net_amount_cents: 0,
         tax_amount_cents: 0,
         gross_amount_cents: 0,
-        components_count: 0
+        items_count: 0
       }
     };
   }
@@ -535,7 +599,7 @@ export function createBookingOfferModule(ctx) {
     const visibleDetailLevel = normalizeOfferDetailLevel(state.offerDraft?.offer_detail_level_visible, internalDetailLevel);
     els.offer_visible_pricing_hint.textContent = bookingT(
       "booking.offer.visible_pricing_hint",
-      "Customer documents will show {detailLevel} pricing. Additional items stay visible as separate lines.",
+      "Customer documents will show {detailLevel} pricing. Adjustments stay visible as separate lines.",
       {
         detailLevel: OFFER_DETAIL_LEVEL_OPTIONS.find((option) => option.value === visibleDetailLevel)?.label.toLowerCase() || visibleDetailLevel
       }
@@ -606,17 +670,17 @@ export function createBookingOfferModule(ctx) {
     if (!els.offer_panel || !state.booking) return;
     const offer = cloneOffer(state.booking.offer || {});
     state.offerDraft = offer;
-    offerPricingModule.resetComponentUiState();
+    offerPricingModule.resetOfferPricingUiState();
     debugOffer("render panel", {
       booking_id: state.booking.id,
       offer: {
         currency: offer.currency,
-        discount: offer.discount
-          ? {
-              reason: offer.discount.reason,
-              amount_cents: offer.discount.amount_cents
-            }
-          : null
+        discounts: Array.isArray(offer.discounts)
+          ? offer.discounts.map((discount) => ({
+              reason: discount.reason,
+              amount_cents: discount.amount_cents
+            }))
+          : []
       }
     });
     const currency = normalizeCurrencyCode(offer.currency || state.booking.preferred_currency || "USD");

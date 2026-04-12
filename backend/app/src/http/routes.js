@@ -58,7 +58,6 @@ export const CONTRACT_ROUTE_DEFINITIONS = Object.freeze([
   { method: "GET", path: "/api/v1/bookings/{booking_id}/booking-confirmation/pdfs/{artifact_id}/pdf", handlerKey: "handleGetBookingConfirmationPdfArtifact" },
   { method: "DELETE", path: "/api/v1/bookings/{booking_id}/booking-confirmation/pdfs/{artifact_id}", handlerKey: "handleDeleteBookingConfirmationPdfArtifact" },
   { method: "PATCH", path: "/api/v1/bookings/{booking_id}/offer", handlerKey: "handlePatchBookingOffer" },
-  { method: "POST", path: "/api/v1/bookings/{booking_id}/offer/translate", handlerKey: "handleTranslateBookingOfferFromEnglish" },
   { method: "POST", path: "/api/v1/bookings/{booking_id}/generated-offers", handlerKey: "handleGenerateBookingOffer" },
   { method: "PATCH", path: "/api/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}", handlerKey: "handlePatchGeneratedBookingOffer" },
   { method: "DELETE", path: "/api/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}", handlerKey: "handleDeleteGeneratedBookingOffer" },

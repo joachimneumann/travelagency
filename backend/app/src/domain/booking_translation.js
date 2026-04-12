@@ -89,25 +89,6 @@ function createFieldDescriptor({
   };
 }
 
-function collectOfferFieldDescriptors(offer, options = {}) {
-  const normalizedSourceLang = normalizeBookingContentLang(options?.sourceLang || DEFAULT_BOOKING_CONTENT_LANG);
-  const normalizedTargetLang = normalizeBookingContentLang(options?.targetLang || options?.lang || DEFAULT_BOOKING_CONTENT_LANG);
-  const components = Array.isArray(offer?.components) ? offer.components : [];
-  return components.flatMap((component, index) => {
-    const componentId = normalizeText(component?.id) || `component_${index + 1}`;
-    const detailsDescriptor = createFieldDescriptor({
-      key: `offer.${componentId}.details`,
-      holder: component,
-      mapField: "details_i18n",
-      plainField: "details",
-      sourceLang: normalizedSourceLang,
-      targetLang: normalizedTargetLang,
-      emptyValue: ""
-    });
-    return detailsDescriptor ? [detailsDescriptor] : [];
-  });
-}
-
 function collectTravelPlanFieldDescriptors(travelPlan, options = {}) {
   const normalizedSourceLang = normalizeBookingContentLang(options?.sourceLang || DEFAULT_BOOKING_CONTENT_LANG);
   const normalizedTargetLang = normalizeBookingContentLang(options?.targetLang || options?.lang || DEFAULT_BOOKING_CONTENT_LANG);
@@ -389,12 +370,6 @@ async function translateSection(section, targetLang, translateEntries, timestamp
   );
 }
 
-export function normalizeOfferTranslationMeta(offer) {
-  const normalizedOffer = offer && typeof offer === "object" ? offer : {};
-  normalizedOffer.translation_meta = normalizeSectionTranslationMeta(normalizedOffer.translation_meta);
-  return normalizedOffer;
-}
-
 export function normalizeTravelPlanTranslationMeta(travelPlan) {
   const normalizedTravelPlan = travelPlan && typeof travelPlan === "object" ? travelPlan : {};
   normalizedTravelPlan.translation_meta = normalizeSectionTranslationMeta(normalizedTravelPlan.translation_meta);
@@ -407,10 +382,6 @@ export function normalizeInvoiceTranslationMeta(invoice) {
   return normalizedInvoice;
 }
 
-export function buildOfferTranslationStatus(offer, targetLang, sourceLang = DEFAULT_BOOKING_CONTENT_LANG) {
-  return buildTranslationSummary(offer, targetLang, collectOfferFieldDescriptors, sourceLang);
-}
-
 export function buildTravelPlanTranslationStatus(travelPlan, targetLang, sourceLang = DEFAULT_BOOKING_CONTENT_LANG) {
   return buildTranslationSummary(travelPlan, targetLang, collectTravelPlanFieldDescriptors, sourceLang);
 }
@@ -419,25 +390,12 @@ export function buildInvoiceTranslationStatus(invoice, targetLang, sourceLang = 
   return buildTranslationSummary(invoice, targetLang, collectInvoiceFieldDescriptors, sourceLang);
 }
 
-export function markOfferTranslationManual(offer, targetLang, timestamp, sourceLang = DEFAULT_BOOKING_CONTENT_LANG) {
-  return touchSectionTranslationMeta(offer, targetLang, "manual", timestamp, collectOfferFieldDescriptors, sourceLang);
-}
-
 export function markTravelPlanTranslationManual(travelPlan, targetLang, timestamp, sourceLang = DEFAULT_BOOKING_CONTENT_LANG) {
   return touchSectionTranslationMeta(travelPlan, targetLang, "manual", timestamp, collectTravelPlanFieldDescriptors, sourceLang);
 }
 
 export function markInvoiceTranslationManual(invoice, targetLang, timestamp, sourceLang = DEFAULT_BOOKING_CONTENT_LANG) {
   return touchSectionTranslationMeta(invoice, targetLang, "manual", timestamp, collectInvoiceFieldDescriptors, sourceLang);
-}
-
-export function markOfferTranslationFieldsManual(offer, targetLang, timestamp, keys, sourceLang = DEFAULT_BOOKING_CONTENT_LANG) {
-  const metaByLang = normalizeSectionTranslationMeta(offer?.translation_meta);
-  const normalizedTargetLang = normalizeBookingContentLang(targetLang);
-  const existingKeys = metaByLang[normalizedTargetLang]?.manual_keys;
-  return touchSectionTranslationMeta(offer, targetLang, "manual", timestamp, collectOfferFieldDescriptors, sourceLang, {
-    manualKeys: [...normalizeTranslationKeys(existingKeys), ...normalizeTranslationKeys(keys)]
-  });
 }
 
 export function markTravelPlanTranslationFieldsManual(travelPlan, targetLang, timestamp, keys, sourceLang = DEFAULT_BOOKING_CONTENT_LANG) {
@@ -458,10 +416,6 @@ export function markInvoiceTranslationFieldsManual(invoice, targetLang, timestam
   });
 }
 
-export function collectOfferTranslationFieldChanges(currentOffer, nextOffer, targetLang, sourceLang = DEFAULT_BOOKING_CONTENT_LANG) {
-  return collectChangedTranslationKeys(currentOffer, nextOffer, collectOfferFieldDescriptors, sourceLang, targetLang);
-}
-
 export function collectTravelPlanTranslationFieldChanges(currentTravelPlan, nextTravelPlan, targetLang, sourceLang = DEFAULT_BOOKING_CONTENT_LANG) {
   return collectChangedTranslationKeys(currentTravelPlan, nextTravelPlan, collectTravelPlanFieldDescriptors, sourceLang, targetLang);
 }
@@ -470,20 +424,12 @@ export function collectInvoiceTranslationFieldChanges(currentInvoice, nextInvoic
   return collectChangedTranslationKeys(currentInvoice, nextInvoice, collectInvoiceFieldDescriptors, sourceLang, targetLang);
 }
 
-export async function translateOfferFromSourceLanguage(offer, sourceLang, targetLang, translateEntries, timestamp) {
-  return translateSection(offer, targetLang, translateEntries, timestamp, collectOfferFieldDescriptors, sourceLang);
-}
-
 export async function translateTravelPlanFromSourceLanguage(travelPlan, sourceLang, targetLang, translateEntries, timestamp) {
   return translateSection(travelPlan, targetLang, translateEntries, timestamp, collectTravelPlanFieldDescriptors, sourceLang);
 }
 
 export async function translateInvoiceFromSourceLanguage(invoice, sourceLang, targetLang, translateEntries, timestamp) {
   return translateSection(invoice, targetLang, translateEntries, timestamp, collectInvoiceFieldDescriptors, sourceLang);
-}
-
-export async function translateOfferFromEnglish(offer, targetLang, translateEntries, timestamp) {
-  return translateOfferFromSourceLanguage(offer, DEFAULT_BOOKING_CONTENT_LANG, targetLang, translateEntries, timestamp);
 }
 
 export async function translateTravelPlanFromEnglish(travelPlan, targetLang, translateEntries, timestamp) {

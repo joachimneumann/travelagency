@@ -868,17 +868,6 @@
         ]
       },
       {
-        key: "booking_offer_translate",
-        path: "/api/v1/bookings/{booking_id}/offer/translate",
-        method: "POST",
-        authenticated: true,
-        requestType: "BookingOfferTranslateRequest",
-        responseType: "BookingDetail",
-        parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1)
-        ]
-      },
-      {
         key: "booking_generate_offer",
         path: "/api/v1/bookings/{booking_id}/generated-offers",
         method: "POST",

@@ -132,8 +132,6 @@ case "booking_confirmation_pdf_delete":
   return RequestFactory.bookingConfirmationPdfDeleteRequest(options);
 case "booking_offer":
   return RequestFactory.bookingOfferRequest(options);
-case "booking_offer_translate":
-  return RequestFactory.bookingOfferTranslateRequest(options);
 case "booking_generate_offer":
   return RequestFactory.bookingGenerateOfferRequest(options);
 case "booking_generated_offer_update":

@@ -1126,7 +1126,6 @@ IR: {
 				{name: "travel_plan_pdfs", kind: "transport", typeName: "BookingTravelPlanPdfReadModel", required: false, isArray: true},
 				{name: "generated_offers", kind: "transport", typeName: "GeneratedBookingOfferReadModel", required: false, isArray: true},
 				{name: "travel_plan_translation_status", kind: "transport", typeName: "TranslationStatusSummary", required: true},
-				{name: "offer_translation_status", kind: "transport", typeName: "TranslationStatusSummary", required: true},
 				{name: "generated_offer_email_enabled", kind: "scalar", typeName: "bool", required: true},
 				{name: "translation_enabled", kind: "scalar", typeName: "bool", required: true},
 				{name: "created_at", kind: "scalar", typeName: "Timestamp", required: true},
@@ -1981,17 +1980,6 @@ IR: {
 			fields: [
 				{name: "expected_offer_revision", kind: "scalar", typeName: "int", required: false},
 				{name: "offer", kind: "entity", typeName: "BookingOffer", required: true},
-				{name: "actor", kind: "scalar", typeName: "string", required: false},
-			]
-		},
-		{
-			name:       "BookingOfferTranslateRequest"
-			domain:     "api"
-			module:     "api"
-			sourceType: "api.#BookingOfferTranslateRequest"
-			fields: [
-				{name: "expected_offer_revision", kind: "scalar", typeName: "int", required: false},
-				{name: "lang", kind: "enum", typeName: "LanguageCode", required: true},
 				{name: "actor", kind: "scalar", typeName: "string", required: false},
 			]
 		},

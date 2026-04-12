@@ -94,22 +94,12 @@ function buildSourceBooking() {
     offer: {
       status: "OFFER_SENT",
       currency: "USD",
-      offer_detail_level_internal: "component",
-      offer_detail_level_visible: "component",
+      offer_detail_level_internal: "day",
+      offer_detail_level_visible: "day",
       category_rules: [
         {
           category: "OTHER",
           tax_rate_basis_points: 0
-        }
-      ],
-      components: [
-        {
-          id: "offer_component_1",
-          category: "OTHER",
-          label: "Other",
-          details: "Included service",
-          quantity: 1,
-          unit_amount_cents: 10000
         }
       ],
       additional_items: [{ id: "offer_additional_1", label: "Fee", quantity: 1, unit_amount_cents: 500 }],
@@ -242,7 +232,8 @@ test("cloneBookingForTesting keeps only approved metadata and clears commercial 
   assert.deepEqual(cloned.persons, []);
   assert.equal(cloned.offer.status, "DRAFT");
   assert.equal(cloned.offer.currency, "USD");
-  assert.deepEqual(cloned.offer.components, []);
+  assert.equal(cloned.offer.offer_detail_level_internal, "day");
+  assert.equal(cloned.offer.offer_detail_level_visible, "day");
   assert.deepEqual(cloned.offer.additional_items, []);
   assert.equal(cloned.offer.days_internal, undefined);
   assert.equal(cloned.offer.payment_terms, undefined);

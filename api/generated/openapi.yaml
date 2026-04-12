@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-04-11T14:11:47Z
+# 2026-04-12T06:39:58Z
 
 ---
 openapi: 3.1.0
@@ -5808,7 +5808,6 @@ components:
       - pricing
       - offer
       - travel_plan_translation_status
-      - offer_translation_status
       - generated_offer_email_enabled
       - translation_enabled
       - created_at
@@ -5930,8 +5929,6 @@ components:
           items:
             "$ref": "#/components/schemas/GeneratedBookingOfferReadModel"
         travel_plan_translation_status:
-          "$ref": "#/components/schemas/TranslationStatusSummary"
-        offer_translation_status:
           "$ref": "#/components/schemas/TranslationStatusSummary"
         generated_offer_email_enabled:
           type: boolean
@@ -7149,19 +7146,6 @@ components:
           nullable: true
         offer:
           "$ref": "#/components/schemas/BookingOffer"
-        actor:
-          type: string
-          nullable: true
-    BookingOfferTranslateRequest:
-      type: object
-      required:
-      - lang
-      properties:
-        expected_offer_revision:
-          type: integer
-          nullable: true
-        lang:
-          "$ref": "#/components/schemas/LanguageCode"
         actor:
           type: string
           nullable: true
@@ -9827,51 +9811,6 @@ paths:
       responses:
         '200':
           description: Success
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/BookingDetail"
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-  "/api/v1/bookings/{booking_id}/offer/translate":
-    post:
-      operationId: booking_offer_translate
-      summary: Booking Offer Translate
-      tags:
-      - Bookings
-      security:
-      - bearerAuth: []
-      parameters:
-      - name: booking_id
-        in: path
-        required: true
-        schema:
-          type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              "$ref": "#/components/schemas/BookingOfferTranslateRequest"
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/BookingDetail"
-        '201':
-          description: Created
           content:
             application/json:
               schema:

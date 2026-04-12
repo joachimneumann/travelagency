@@ -265,9 +265,9 @@ export function getTravelPlanServiceKindLabel(kind) {
   return bookingT(`booking.travel_plan.kind.${kind}`, option?.label || "Other");
 }
 
-export function normalizeTravelPlanDraft(plan, offerComponents = [], options = {}) {
+export function normalizeTravelPlanDraft(plan, options = {}) {
   const source = plan && typeof plan === "object" ? plan : {};
-  const normalizedOptions = Array.isArray(offerComponents) ? options : (offerComponents || {});
+  const normalizedOptions = options && typeof options === "object" ? options : {};
   const targetLang = normalizeBookingContentLang(
     normalizedOptions?.targetLang
     || normalizedOptions?.contentLang

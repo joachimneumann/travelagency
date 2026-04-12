@@ -443,7 +443,7 @@ def browser_wait_for_offer_editor(driver):
             return Boolean(
               document.querySelector('#offer_detail_level_internal_input')
               && document.querySelector('#offer_detail_level_visible_input')
-              && document.querySelector('#offer_components_table')
+              && document.querySelector('#offer_pricing_table')
             );
             """
         ),

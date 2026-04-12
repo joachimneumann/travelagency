@@ -2175,7 +2175,7 @@ textarea:focus-visible {
   --offer-col-min-width: 120px;
 }
 
-#offer_components_table {
+#offer_pricing_table {
   table-layout: fixed;
 }
 
@@ -2226,6 +2226,16 @@ textarea:focus-visible {
   min-width: 300px;
   padding-inline-start: 0.5rem;
   padding-inline-end: 0.5rem;
+}
+
+.backend-table .offer-col-name.offer-col-name--trip-mode {
+  width: 180px;
+  min-width: 180px;
+  max-width: 180px;
+}
+
+.backend-table .offer-col-details.offer-col-details--trip-mode {
+  min-width: 420px;
 }
 
 .backend-table .offer-col-category {
@@ -2347,29 +2357,8 @@ textarea:focus-visible {
   font-weight: var(--font-weight-regular);
 }
 
-.backend-table textarea[data-offer-component-details] {
-  width: calc(100% - 0.08rem);
-  margin-left: 0.08rem;
-  min-height: 42px;
-  resize: vertical;
-  line-height: 1.35;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-  box-sizing: border-box;
-}
-
-.backend-table textarea[data-offer-discount-reason] {
-  width: calc(100% - 0.08rem);
-  margin-left: 0.08rem;
-  min-height: 42px;
-  resize: vertical;
-  line-height: 1.35;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-  box-sizing: border-box;
-}
-
 .backend-table input[data-offer-day-note],
+.backend-table input[data-offer-trip-note],
 .backend-table input[data-offer-additional-details],
 .backend-table input[data-offer-discount-reason] {
   width: 100%;
@@ -2382,10 +2371,9 @@ textarea:focus-visible {
 .backend-table .offer-col-price-single input,
 .backend-table .offer-col-price-total input,
 .backend-table input[data-offer-day-note],
+.backend-table input[data-offer-trip-note],
 .backend-table input[data-offer-additional-details],
-.backend-table input[data-offer-discount-reason],
-.backend-table textarea[data-offer-component-details],
-.backend-table textarea[data-offer-discount-reason] {
+.backend-table input[data-offer-discount-reason] {
   border: 1px solid var(--line-soft-strong);
   border-radius: 12px;
   background: var(--white-alpha-96);
@@ -2400,10 +2388,9 @@ textarea:focus-visible {
 .backend-table .offer-col-price-single input:focus-visible,
 .backend-table .offer-col-price-total input:focus-visible,
 .backend-table input[data-offer-day-note]:focus-visible,
+.backend-table input[data-offer-trip-note]:focus-visible,
 .backend-table input[data-offer-additional-details]:focus-visible,
-.backend-table input[data-offer-discount-reason]:focus-visible,
-.backend-table textarea[data-offer-component-details]:focus-visible,
-.backend-table textarea[data-offer-discount-reason]:focus-visible {
+.backend-table input[data-offer-discount-reason]:focus-visible {
   outline: 3px solid var(--secondary-surface);
   outline-offset: 0;
   border-color: var(--secondary-strong);

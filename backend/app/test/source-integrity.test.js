@@ -1899,14 +1899,14 @@ test("travel-plan PDF removes the old hero subtitle and in-body section title, a
   );
 });
 
-test("offer component editor does not expose discounts_credits as a selectable category", async () => {
+test("offer detail level options only expose trip and day", async () => {
   const offersModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "offers.js");
   const offersSource = await readFile(offersModulePath, "utf8");
 
   assert.match(
     offersSource,
-    /const OFFER_COMPONENT_CATEGORIES = OFFER_CATEGORIES\.filter\(\(category\) => category\.code !== "DISCOUNTS_CREDITS"\);/,
-    "Offer component rows should not allow discounts_credits because that creates negative sellable line items"
+    /const OFFER_DETAIL_LEVEL_OPTIONS = Object\.freeze\(\[\s*\{ value: "day", label: "Per day" \},\s*\{ value: "trip", label: "Per trip" \}\s*\]\);/,
+    "Offer detail level controls should only expose the supported trip/day modes"
   );
 });
 
@@ -2135,7 +2135,7 @@ test("booking page logs reload-time dirty diagnostics and core comparisons ignor
   );
   assert.match(
     travelPlanHelpersSource,
-    /export function normalizeTravelPlanDraft\(plan, offerComponents = \[\], options = \{\}\) \{[\s\S]*const sourceLang = normalizeBookingSourceLang\([\s\S]*bookingSourceLang\("en"\)[\s\S]*resolveLocalizedEditorText\(rawDay\.title_i18n \?\? rawDay\.title, sourceLang, ""\)/,
+    /export function normalizeTravelPlanDraft\(plan, options = \{\}\) \{[\s\S]*const sourceLang = normalizeBookingSourceLang\([\s\S]*bookingSourceLang\("en"\)[\s\S]*resolveLocalizedEditorText\(rawDay\.title_i18n \?\? rawDay\.title, sourceLang, ""\)/,
     "Travel-plan helper normalization should accept an explicit source language and otherwise fall back to the selected ATP staff language"
   );
 });

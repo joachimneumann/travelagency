@@ -801,23 +801,6 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         return validateShape(value, BOOKING_OFFER_UPDATE_REQUEST_SCHEMA);
       }
 
-      export const BOOKING_OFFER_TRANSLATE_REQUEST_SCHEMA = {
-        name: "BookingOfferTranslateRequest",
-        domain: "api",
-        module: "api",
-        sourceType: "openapi.components.schemas.BookingOfferTranslateRequest",
-        requireOneOf: [],
-        fields: [
-    schemaField({"name":"expected_offer_revision","required":false,"wireName":"expected_offer_revision"}, SHARED_FIELD_DEFS.FIELD_18),
-    schemaField({"name":"lang","required":true,"wireName":"lang"}, SHARED_FIELD_DEFS.FIELD_11),
-    schemaField({"name":"actor","required":false,"wireName":"actor"}, SHARED_FIELD_DEFS.FIELD_1)
-        ]
-      };
-
-      export function validateBookingOfferTranslateRequest(value) {
-        return validateShape(value, BOOKING_OFFER_TRANSLATE_REQUEST_SCHEMA);
-      }
-
       export const BOOKING_GENERATE_OFFER_REQUEST_SCHEMA = {
         name: "BookingGenerateOfferRequest",
         domain: "api",
@@ -1236,7 +1219,6 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
     schemaField({"name":"travel_plan_pdfs","required":false,"wireName":"travel_plan_pdfs"}, SHARED_FIELD_DEFS.FIELD_97),
     schemaField({"name":"generated_offers","required":false,"wireName":"generated_offers"}, SHARED_FIELD_DEFS.FIELD_98),
     schemaField({"name":"travel_plan_translation_status","required":true,"wireName":"travel_plan_translation_status"}, SHARED_FIELD_DEFS.FIELD_99),
-    schemaField({"name":"offer_translation_status","required":true,"wireName":"offer_translation_status"}, SHARED_FIELD_DEFS.FIELD_99),
     schemaField({"name":"generated_offer_email_enabled","required":true,"wireName":"generated_offer_email_enabled"}, SHARED_FIELD_DEFS.FIELD_8),
     schemaField({"name":"translation_enabled","required":true,"wireName":"translation_enabled"}, SHARED_FIELD_DEFS.FIELD_8),
     schemaField({"name":"created_at","required":true,"wireName":"created_at"}, SHARED_FIELD_DEFS.FIELD_5),

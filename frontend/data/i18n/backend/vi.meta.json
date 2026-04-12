@@ -1920,9 +1920,9 @@
     "updated_at": "2026-03-30T23:51:31.875Z"
   },
   "booking.offer.generate_missing_translation_confirm": {
-    "source_hash": "e210873e74ef3483644a00545a82a5aa323075864764aadcd1319f5c4876874e",
+    "source_hash": "52a1a16fc05048962aa6235cae754d17a63bb79453f4e954cf373359eb0a561d",
     "origin": "machine",
-    "updated_at": "2026-03-30T23:51:31.875Z"
+    "updated_at": "2026-04-12T06:40:41.877Z"
   },
   "booking.offer.generating_pdf": {
     "source_hash": "ba6f410963f00a12f3f1266d9526974f2cb66e66d2aab708251474c001e65b2d",

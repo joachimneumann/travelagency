@@ -322,7 +322,7 @@ import (
 	trip_price_internal?: entities.#BookingOfferTripPriceInternal
 	days_internal?: [...entities.#BookingOfferDayPriceInternal]
 	additional_items?: [...entities.#BookingOfferAdditionalItem]
-	discount?:          entities.#BookingOfferDiscount
+	discounts?:         [...entities.#BookingOfferDiscount]
 	totals:             entities.#BookingOfferTotals
 	quotation_summary?: entities.#BookingOfferQuotationSummary
 	payment_terms?:     #BookingOfferPaymentTermsReadModel
@@ -428,7 +428,6 @@ import (
 	generated_offers?: [...#GeneratedBookingOfferReadModel]
 	travel_plan_pdfs?: [...#BookingTravelPlanPdfReadModel]
 	travel_plan_translation_status: #TranslationStatusSummary
-	offer_translation_status:       #TranslationStatusSummary
 	generated_offer_email_enabled:  bool
 	translation_enabled:            bool
 	created_at:                     common.#Timestamp

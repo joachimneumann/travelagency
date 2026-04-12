@@ -11,7 +11,6 @@ import {
 import { resolveBookingMilestoneState } from "./booking_milestones.js";
 import { isSuspiciousSentinelString } from "./booking_names.js";
 import {
-  buildOfferTranslationStatus,
   buildTravelPlanTranslationStatus
 } from "./booking_translation.js";
 import { buildGeneratedOfferTransportFields } from "./booking_confirmation.js";
@@ -512,7 +511,6 @@ export function createBookingViewHelpers({
         ...item,
         pdf_url: `/api/v1/bookings/${encodeURIComponent(normalizedBooking.id)}/booking-confirmation/pdfs/${encodeURIComponent(item.id)}/pdf`
       })),
-      offer_translation_status: buildOfferTranslationStatus(normalizedBooking.offer, lang, sourceLang),
       generated_offers: generatedOffers,
       generated_offer_email_enabled: isGeneratedOfferEmailEnabled(),
       translation_enabled: Boolean(translationEnabled)

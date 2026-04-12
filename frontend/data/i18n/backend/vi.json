@@ -383,7 +383,7 @@
   "booking.offer.error.generate_pdf": "Không thể tạo PDF báo giá.",
   "booking.offer.error.trip_amount": "Tổng chuyến yêu cầu một giá hợp lệ không âm.",
   "booking.offer.error.update_comment": "Không thể cập nhật bình luận của báo giá đã tạo.",
-  "booking.offer.generate_missing_translation_confirm": "Ngôn ngữ khách hàng là {language}, nhưng các trường {count} trong báo giá hoặc kế hoạch chuyến vẫn chưa được dịch. Mẫu PDF sẽ sử dụng {language}, và những trường đó sẽ quay về {sourceLanguage}. Vẫn tiếp tục tạo?",
+  "booking.offer.generate_missing_translation_confirm": "Ngôn ngữ khách hàng là {language}, nhưng các trường travel-plan {count} chưa được dịch. Mẫu PDF sẽ sử dụng {language}, và những trường đó sẽ dùng dự phòng {sourceLanguage}. Vẫn tạo chứ?",
   "booking.offer.generating_pdf": "Đang tạo PDF báo giá...",
   "booking.offer.generating_pdf_overlay": "Đang tạo PDF báo giá. Vui lòng đợi.",
   "booking.offer.gmail_not_configured": "Việc tạo bản nháp Gmail chưa được cấu hình cho môi trường này.",

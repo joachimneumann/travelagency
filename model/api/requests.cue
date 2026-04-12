@@ -308,13 +308,6 @@ import (
 	actor?:                   string
 }
 
-#BookingOfferTranslateRequest: {
-	expected_offer_revision?: >=0 & int
-	source_lang:              enums.#LanguageCode
-	target_lang:              enums.#LanguageCode
-	actor?:                   string
-}
-
 #BookingGenerateOfferRequest: {
 	expected_offer_revision?:    >=0 & int
 	comment?:                    string

@@ -110,23 +110,23 @@ function canonicalizeTravelPlanDestinations(booking) {
 function resetOffer(booking) {
   const offer = booking.offer && typeof booking.offer === "object" ? booking.offer : {};
   const currency = resolveCloneCurrency(booking);
+  const internalDetailLevel = normalizeText(offer.offer_detail_level_internal).toLowerCase() === "day" ? "day" : "trip";
+  const requestedVisibleDetailLevel = normalizeText(offer.offer_detail_level_visible).toLowerCase();
+  const visibleDetailLevel = internalDetailLevel === "day" && requestedVisibleDetailLevel === "day"
+    ? "day"
+    : "trip";
   booking.offer = {
-    ...offer,
     status: "DRAFT",
     currency,
-    offer_detail_level_internal: normalizeText(offer.offer_detail_level_internal).toLowerCase() || "trip",
-    offer_detail_level_visible: normalizeText(offer.offer_detail_level_visible).toLowerCase() || "trip",
+    offer_detail_level_internal: internalDetailLevel,
+    offer_detail_level_visible: visibleDetailLevel,
     category_rules: Array.isArray(offer.category_rules) ? cloneJson(offer.category_rules) : [],
-    components: [],
     additional_items: [],
+    discounts: [],
     totals: zeroOfferTotals(),
     quotation_summary: zeroOfferQuotationSummary(),
     total_price_cents: 0
   };
-  delete booking.offer.trip_price_internal;
-  delete booking.offer.days_internal;
-  delete booking.offer.payment_terms;
-  delete booking.offer.discount;
 }
 
 function remapServiceImages(service, randomUUID) {

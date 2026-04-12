@@ -360,6 +360,43 @@ async function createPublicBooking(overrides = {}) {
   return result.body.booking;
 }
 
+function buildTripOfferDraft(baseOffer, currency, amountCents, overrides = {}) {
+  return {
+    ...(baseOffer || {}),
+    currency,
+    offer_detail_level_internal: "trip",
+    offer_detail_level_visible: "trip",
+    trip_price_internal: {
+      label: "Trip total",
+      amount_cents: amountCents,
+      tax_rate_basis_points: 0,
+      currency
+    },
+    days_internal: [],
+    ...(overrides || {})
+  };
+}
+
+function buildDayOfferDraft(baseOffer, currency, dayAmounts, overrides = {}) {
+  return {
+    ...(baseOffer || {}),
+    currency,
+    offer_detail_level_internal: "day",
+    offer_detail_level_visible: "day",
+    trip_price_internal: null,
+    days_internal: (Array.isArray(dayAmounts) ? dayAmounts : []).map((amountCents, index) => ({
+      id: `offer_day_internal_${index + 1}`,
+      day_number: index + 1,
+      label: `Day ${index + 1}`,
+      amount_cents: amountCents,
+      tax_rate_basis_points: 0,
+      currency,
+      sort_order: index
+    })),
+    ...(overrides || {})
+  };
+}
+
 async function deleteBookingForTest(bookingId) {
   if (!bookingId) return;
   const detailResult = await requestJson(
@@ -429,14 +466,14 @@ function assertBookingShape(booking) {
   assert.equal(typeof booking.offer, "object");
   assert.equal(typeof booking.offer.offer_detail_level_internal, "string");
   assert.equal(typeof booking.offer.offer_detail_level_visible, "string");
-  assert.ok(Array.isArray(booking.offer.components));
+  assert.ok(booking.offer.trip_price_internal == null || typeof booking.offer.trip_price_internal === "object");
   assert.ok(Array.isArray(booking.offer.days_internal));
   assert.ok(Array.isArray(booking.offer.additional_items));
   assert.equal(typeof booking.offer.visible_pricing, "object");
   assert.equal(typeof booking.offer.visible_pricing.detail_level, "string");
   assert.equal(typeof booking.offer.visible_pricing.derivable, "boolean");
   assert.ok(Array.isArray(booking.offer.visible_pricing.days));
-  assert.ok(Array.isArray(booking.offer.visible_pricing.components));
+  assert.ok(booking.offer.visible_pricing.trip_price == null || typeof booking.offer.visible_pricing.trip_price === "object");
   assert.ok(Array.isArray(booking.offer.visible_pricing.additional_items));
   assert.equal(typeof booking.travel_plan_revision, "number");
   assert.equal(typeof booking.travel_plan, "object");
@@ -536,15 +573,16 @@ test("booking clone endpoint applies the shared clone policy and can include tra
   bookingRecord.offer = {
     currency: "USD",
     status: "OFFER_SENT",
-    offer_detail_level_internal: "component",
-    offer_detail_level_visible: "component",
+    offer_detail_level_internal: "day",
+    offer_detail_level_visible: "day",
     category_rules: [{ category: "OTHER", tax_rate_basis_points: 0 }],
-    components: [{
-      id: "offer_component_1",
-      category: "OTHER",
-      label: "Other",
-      quantity: 1,
-      unit_amount_cents: 10000
+    days_internal: [{
+      id: "offer_day_internal_1",
+      day_number: 1,
+      label: "Day 1",
+      amount_cents: 10000,
+      tax_rate_basis_points: 0,
+      currency: "USD"
     }],
     additional_items: [],
     totals: {
@@ -742,7 +780,6 @@ test("booking offer patch preserves selected currency", async () => {
   assert.equal(patchResult.status, 200);
   assert.equal(patchResult.body.booking.offer.currency, offerCurrency);
   assert.equal(patchResult.body.unchanged, true);
-  assert.ok(Array.isArray(patchResult.body.booking.offer.components));
   assert.equal(typeof patchResult.body.booking.offer.totals.gross_amount_cents, "number");
   const offer_revision_after_patch = patchResult.body.booking.offer_revision;
 
@@ -756,8 +793,7 @@ test("booking offer patch preserves selected currency", async () => {
         expected_offer_revision: offer_revision_after_patch,
         offer: {
           ...currentOffer,
-          currency: mismatchCurrency,
-          components: []
+          currency: mismatchCurrency
         }
       }
     }
@@ -807,57 +843,6 @@ test("booking offer patch rejects currency change once offer is sent", async () 
   assert.match(String(patchResult.body.error || ""), /currency/i);
 });
 
-test("booking offer patch persists added offer components", async () => {
-  const createdBooking = await createSeedBooking();
-  const bookingId = createdBooking.id;
-
-  const detailBefore = await requestJson(endpointPath("booking_detail").replace("{booking_id}", bookingId), apiHeaders());
-  assert.equal(detailBefore.status, 200);
-  const booking = detailBefore.body.booking;
-
-  const patchResult = await requestJson(
-    endpointPath("booking_offer").replace("{booking_id}", bookingId),
-    apiHeaders(),
-    {
-      method: "PATCH",
-      body: {
-        expected_offer_revision: booking.offer_revision,
-        offer: {
-          ...booking.offer,
-          currency: booking.preferred_currency,
-          offer_detail_level_internal: "component",
-          offer_detail_level_visible: "component",
-          components: [
-            {
-              id: "offer_component_room_1",
-              category: "ACCOMMODATION",
-              label: "Accommodation",
-              details: "Hotel room",
-              quantity: 2,
-              unit_amount_cents: 15000,
-              tax_rate_basis_points: 1000,
-              currency: booking.preferred_currency,
-              notes: null,
-              sort_order: 0
-            }
-          ]
-        }
-      }
-    }
-  );
-
-  assert.equal(patchResult.status, 200);
-  assert.equal(patchResult.body.booking.offer.components.length, 1);
-  assert.equal(patchResult.body.booking.offer.components[0].details, "Hotel room");
-  assert.equal(patchResult.body.booking.offer.components[0].quantity, 2);
-  assert.equal(patchResult.body.booking.offer.total_price_cents > 0, true);
-
-  const detailAfter = await requestJson(endpointPath("booking_detail").replace("{booking_id}", bookingId), apiHeaders());
-  assert.equal(detailAfter.status, 200);
-  assert.equal(detailAfter.body.booking.offer.components.length, 1);
-  assert.equal(detailAfter.body.booking.offer.components[0].details, "Hotel room");
-});
-
 test("booking offer patch persists internal trip detail level with additional items", async () => {
   const createdBooking = await createSeedBooking();
   const bookingId = createdBooking.id;
@@ -878,7 +863,6 @@ test("booking offer patch persists internal trip detail level with additional it
           currency: booking.preferred_currency,
           offer_detail_level_internal: "trip",
           offer_detail_level_visible: "trip",
-          components: [],
           trip_price_internal: {
             label: "Trip total",
             amount_cents: 50000,
@@ -907,7 +891,6 @@ test("booking offer patch persists internal trip detail level with additional it
   assert.equal(patchResult.status, 200);
   assert.equal(patchResult.body.booking.offer.offer_detail_level_internal, "trip");
   assert.equal(patchResult.body.booking.offer.offer_detail_level_visible, "trip");
-  assert.equal(patchResult.body.booking.offer.components.length, 0);
   assert.equal(patchResult.body.booking.offer.days_internal.length, 0);
   assert.equal(patchResult.body.booking.offer.additional_items.length, 1);
   assert.equal(patchResult.body.booking.offer.trip_price_internal.amount_cents, 50000);
@@ -934,20 +917,6 @@ test("booking offer patch treats explicit day internal detail level as authorita
           currency: createdBooking.preferred_currency,
           offer_detail_level_internal: "day",
           offer_detail_level_visible: "day",
-          components: [
-            {
-              id: "stale_component_1",
-              category: "ACCOMMODATION",
-              label: "Stale component",
-              details: "Ignored by explicit day mode",
-              day_number: 1,
-              quantity: 1,
-              unit_amount_cents: 999999,
-              tax_rate_basis_points: 1000,
-              currency: createdBooking.preferred_currency,
-              sort_order: 0
-            }
-          ],
           trip_price_internal: {
             label: "Old trip total",
             amount_cents: 888888,
@@ -995,92 +964,14 @@ test("booking offer patch treats explicit day internal detail level as authorita
 
   assert.equal(patchResult.status, 200);
   assert.equal(patchResult.body.booking.offer.offer_detail_level_internal, "day");
-  assert.equal(patchResult.body.booking.offer.components.length, 0);
   assert.equal(patchResult.body.booking.offer.days_internal.length, 2);
   assert.equal(patchResult.body.booking.offer.days_internal[0].amount_cents, 10000);
   assert.equal(patchResult.body.booking.offer.days_internal[1].amount_cents, 15000);
   assert.equal(patchResult.body.booking.offer.additional_items.length, 1);
   assert.equal(patchResult.body.booking.offer.additional_items[0].unit_amount_cents, 5000);
-  assert.equal(patchResult.body.booking.offer.discount.amount_cents, 2000);
+  assert.equal(patchResult.body.booking.offer.discounts.length, 1);
+  assert.equal(patchResult.body.booking.offer.discounts[0].amount_cents, 2000);
   assert.equal(patchResult.body.booking.offer.total_price_cents, 28000);
-});
-
-test("booking offer patch treats explicit component internal detail level as authoritative and preserves adjustments", async () => {
-  const createdBooking = await createSeedBooking();
-  const bookingId = createdBooking.id;
-
-  const patchResult = await requestJson(
-    endpointPath("booking_offer").replace("{booking_id}", bookingId),
-    apiHeaders(),
-    {
-      method: "PATCH",
-      body: {
-        expected_offer_revision: createdBooking.offer_revision,
-        offer: {
-          ...createdBooking.offer,
-          currency: createdBooking.preferred_currency,
-          offer_detail_level_internal: "component",
-          offer_detail_level_visible: "component",
-          components: [
-            {
-              id: "offer_component_real_1",
-              category: "ACCOMMODATION",
-              label: "Hotel",
-              details: "Real component",
-              day_number: 1,
-              quantity: 1,
-              unit_amount_cents: 12000,
-              tax_rate_basis_points: 0,
-              currency: createdBooking.preferred_currency,
-              sort_order: 0
-            }
-          ],
-          trip_price_internal: {
-            label: "Stale trip total",
-            amount_cents: 444444,
-            tax_rate_basis_points: 1000,
-            currency: createdBooking.preferred_currency
-          },
-          days_internal: [
-            {
-              id: "stale_day_internal_1",
-              day_number: 1,
-              label: "Stale day",
-              amount_cents: 333333,
-              tax_rate_basis_points: 0,
-              currency: createdBooking.preferred_currency
-            }
-          ],
-          additional_items: [
-            {
-              id: "offer_additional_keep_component_1",
-              label: "Existing surcharge",
-              quantity: 1,
-              unit_amount_cents: 3000,
-              tax_rate_basis_points: 0,
-              currency: createdBooking.preferred_currency,
-              sort_order: 0
-            }
-          ],
-          discount: {
-            reason: "Keep component discount",
-            amount_cents: 1000,
-            currency: createdBooking.preferred_currency
-          }
-        }
-      }
-    }
-  );
-
-  assert.equal(patchResult.status, 200);
-  assert.equal(patchResult.body.booking.offer.offer_detail_level_internal, "component");
-  assert.equal(patchResult.body.booking.offer.components.length, 1);
-  assert.equal(patchResult.body.booking.offer.components[0].unit_amount_cents, 12000);
-  assert.equal(patchResult.body.booking.offer.days_internal.length, 0);
-  assert.equal(patchResult.body.booking.offer.additional_items.length, 1);
-  assert.equal(patchResult.body.booking.offer.additional_items[0].unit_amount_cents, 3000);
-  assert.equal(patchResult.body.booking.offer.discount.amount_cents, 1000);
-  assert.equal(patchResult.body.booking.offer.total_price_cents, 14000);
 });
 
 test("booking offer patch rejects visible detail level more specific than internal detail level", async () => {
@@ -1101,19 +992,15 @@ test("booking offer patch rejects visible detail level more specific than intern
         offer: {
           ...booking.offer,
           currency: booking.preferred_currency,
-          offer_detail_level_internal: "day",
-          offer_detail_level_visible: "component",
-          components: [],
-          days_internal: [
-            {
-              id: "offer_day_internal_1",
-              day_number: 1,
-              label: "Day 1",
-              amount_cents: 25000,
-              tax_rate_basis_points: 1000,
-              currency: booking.preferred_currency
-            }
-          ],
+          offer_detail_level_internal: "trip",
+          offer_detail_level_visible: "day",
+          trip_price_internal: {
+            label: "Trip total",
+            amount_cents: 25000,
+            tax_rate_basis_points: 1000,
+            currency: booking.preferred_currency
+          },
+          days_internal: [],
           additional_items: []
         }
       }
@@ -1124,7 +1011,7 @@ test("booking offer patch rejects visible detail level more specific than intern
   assert.match(String(patchResult.body.error || ""), /visible offer detail level/i);
 });
 
-test("booking offer read model derives visible day projection from internal components", async () => {
+test("booking offer read model preserves visible day projection from internal days", async () => {
   const createdBooking = await createSeedBooking();
   const bookingId = createdBooking.id;
 
@@ -1140,36 +1027,7 @@ test("booking offer read model derives visible day projection from internal comp
       body: {
         expected_offer_revision: booking.offer_revision,
         offer: {
-          ...booking.offer,
-          currency: booking.preferred_currency,
-          offer_detail_level_internal: "component",
-          offer_detail_level_visible: "day",
-          components: [
-            {
-              id: "offer_component_day_1",
-              category: "ACCOMMODATION",
-              label: "Hotel",
-              details: "Night 1",
-              day_number: 1,
-              quantity: 1,
-              unit_amount_cents: 10000,
-              tax_rate_basis_points: 1000,
-              currency: booking.preferred_currency,
-              sort_order: 0
-            },
-            {
-              id: "offer_component_day_2",
-              category: "TRANSPORTATION",
-              label: "Transfer",
-              details: "Day 2 transfer",
-              day_number: 2,
-              quantity: 1,
-              unit_amount_cents: 20000,
-              tax_rate_basis_points: 1000,
-              currency: booking.preferred_currency,
-              sort_order: 1
-            }
-          ],
+          ...buildDayOfferDraft(booking.offer, booking.preferred_currency, [10000, 20000]),
           additional_items: [
             {
               id: "offer_additional_item_1",
@@ -1215,6 +1073,14 @@ test("booking offer patch preserves trip-relative payment-term due types", async
         offer: {
           ...booking.offer,
           currency: booking.preferred_currency,
+          offer_detail_level_internal: "trip",
+          offer_detail_level_visible: "trip",
+          trip_price_internal: {
+            label: "Trip total",
+            amount_cents: 33000,
+            tax_rate_basis_points: 0,
+            currency: booking.preferred_currency
+          },
           payment_terms: {
             currency: booking.preferred_currency,
             basis_total_amount_cents: booking.offer.total_price_cents || 0,
@@ -1247,21 +1113,7 @@ test("booking offer patch preserves trip-relative payment-term due types", async
                 }
               }
             ]
-          },
-          components: [
-            {
-              id: "offer_component_room_1",
-              category: "ACCOMMODATION",
-              label: "Accommodation",
-              details: "Hotel room",
-              quantity: 2,
-              unit_amount_cents: 15000,
-              tax_rate_basis_points: 1000,
-              currency: booking.preferred_currency,
-              notes: null,
-              sort_order: 0
-            }
-          ]
+          }
         }
       }
     }
@@ -1297,6 +1149,14 @@ test("booking offer patch normalizes installment numbering by installment ordina
         offer: {
           ...booking.offer,
           currency: booking.preferred_currency,
+          offer_detail_level_internal: "trip",
+          offer_detail_level_visible: "trip",
+          trip_price_internal: {
+            label: "Trip total",
+            amount_cents: 30000,
+            tax_rate_basis_points: 0,
+            currency: booking.preferred_currency
+          },
           payment_terms: {
             currency: booking.preferred_currency,
             lines: [
@@ -1341,21 +1201,7 @@ test("booking offer patch normalizes installment numbering by installment ordina
                 }
               }
             ]
-          },
-          components: [
-            {
-              id: "offer_component_installment_numbering_1",
-              category: "OTHER",
-              label: "Service",
-              details: "Numbering check",
-              quantity: 1,
-              unit_amount_cents: 30000,
-              tax_rate_basis_points: 1000,
-              currency: booking.preferred_currency,
-              notes: null,
-              sort_order: 0
-            }
-          ]
+          }
         }
       }
     }
@@ -1369,68 +1215,7 @@ test("booking offer patch normalizes installment numbering by installment ordina
   assert.equal(detailAfter.body.booking.offer.payment_terms.lines[1].label, "Installment 1");
 });
 
-test("booking offer patch persists component removal", async () => {
-  const createdBooking = await createSeedBooking();
-  const bookingId = createdBooking.id;
-
-  const addResult = await requestJson(
-    endpointPath("booking_offer").replace("{booking_id}", bookingId),
-    apiHeaders(),
-    {
-      method: "PATCH",
-      body: {
-        expected_offer_revision: createdBooking.offer_revision,
-        offer: {
-          ...createdBooking.offer,
-          currency: createdBooking.preferred_currency,
-          offer_detail_level_internal: "component",
-          offer_detail_level_visible: "component",
-          components: [
-            {
-              id: "offer_component_room_1",
-              category: "ACCOMMODATION",
-              label: "Accommodation",
-              details: "Hotel room",
-              quantity: 2,
-              unit_amount_cents: 15000,
-              tax_rate_basis_points: 1000,
-              currency: createdBooking.preferred_currency,
-              notes: null,
-              sort_order: 0
-            }
-          ]
-        }
-      }
-    }
-  );
-
-  assert.equal(addResult.status, 200);
-  assert.equal(addResult.body.booking.offer.components.length, 1);
-
-  const removeResult = await requestJson(
-    endpointPath("booking_offer").replace("{booking_id}", bookingId),
-    apiHeaders(),
-    {
-      method: "PATCH",
-      body: {
-        expected_offer_revision: addResult.body.booking.offer_revision,
-        offer: {
-          ...addResult.body.booking.offer,
-          components: []
-        }
-      }
-    }
-  );
-
-  assert.equal(removeResult.status, 200);
-  assert.equal(removeResult.body.booking.offer.components.length, 0);
-
-  const detailAfter = await requestJson(endpointPath("booking_detail").replace("{booking_id}", bookingId), apiHeaders());
-  assert.equal(detailAfter.status, 200);
-  assert.equal(detailAfter.body.booking.offer.components.length, 0);
-});
-
-test("booking offer patch rejects discounts_credits components", async () => {
+test("booking offer patch accepts multiple offer discounts with reasons", async () => {
   const createdBooking = await createSeedBooking();
   const bookingId = createdBooking.id;
 
@@ -1444,82 +1229,127 @@ test("booking offer patch rejects discounts_credits components", async () => {
         offer: {
           ...createdBooking.offer,
           currency: createdBooking.preferred_currency,
-          offer_detail_level_internal: "component",
-          offer_detail_level_visible: "component",
-          components: [
-            {
-              id: "offer_component_discount_1",
-              category: "DISCOUNTS_CREDITS",
-              label: "Discount / credit",
-              details: "Promo discount",
-              quantity: 2,
-              unit_amount_cents: 100,
-              tax_rate_basis_points: 1000,
-              currency: createdBooking.preferred_currency,
-              notes: null,
-              sort_order: 0
-            }
-          ]
-        }
-      }
-    }
-  );
-
-  assert.equal(patchResult.status, 422);
-  assert.match(String(patchResult.body.error || ""), /discounts_credits/i);
-});
-
-test("booking offer patch accepts an explicit offer discount with a reason", async () => {
-  const createdBooking = await createSeedBooking();
-  const bookingId = createdBooking.id;
-
-  const patchResult = await requestJson(
-    endpointPath("booking_offer").replace("{booking_id}", bookingId),
-    apiHeaders(),
-    {
-      method: "PATCH",
-      body: {
-        expected_offer_revision: createdBooking.offer_revision,
-        offer: {
-          ...createdBooking.offer,
-          currency: createdBooking.preferred_currency,
-          offer_detail_level_internal: "component",
-          offer_detail_level_visible: "component",
-          components: [
-            {
-              id: "offer_component_transport_1",
-              category: "TRANSPORTATION",
-              label: "Transportation",
-              details: "Airport transfer",
-              quantity: 1,
-              unit_amount_cents: 10000,
-              tax_rate_basis_points: 1000,
-              currency: createdBooking.preferred_currency,
-              notes: null,
-              sort_order: 0
-            }
-          ],
-          discount: {
-            reason: "Loyalty discount",
-            amount_cents: 500,
+          offer_detail_level_internal: "trip",
+          offer_detail_level_visible: "trip",
+          trip_price_internal: {
+            label: "Trip total",
+            amount_cents: 11000,
+            tax_rate_basis_points: 0,
             currency: createdBooking.preferred_currency
-          }
+          },
+          discounts: [
+            {
+              id: "offer_discount_loyalty",
+              reason: "Loyalty discount",
+              amount_cents: 500,
+              currency: createdBooking.preferred_currency,
+              sort_order: 0
+            },
+            {
+              id: "offer_discount_flash_sale",
+              reason: "Flash sale discount",
+              amount_cents: 300,
+              currency: createdBooking.preferred_currency,
+              sort_order: 1
+            }
+          ]
         }
       }
     }
   );
 
   assert.equal(patchResult.status, 200);
-  assert.equal(patchResult.body.booking.offer.components.length, 1);
-  assert.equal(patchResult.body.booking.offer.discount.reason, "Loyalty discount");
-  assert.equal(patchResult.body.booking.offer.discount.amount_cents, 500);
-  assert.equal(patchResult.body.booking.offer.total_price_cents, 10500);
-  assert.equal(patchResult.body.booking.offer.quotation_summary.grand_total_amount_cents, 10500);
+  assert.equal(patchResult.body.booking.offer.discounts.length, 2);
+  assert.equal(patchResult.body.booking.offer.discounts[0].reason, "Loyalty discount");
+  assert.equal(patchResult.body.booking.offer.discounts[0].amount_cents, 500);
+  assert.equal(patchResult.body.booking.offer.discounts[1].reason, "Flash sale discount");
+  assert.equal(patchResult.body.booking.offer.discounts[1].amount_cents, 300);
+  assert.equal(patchResult.body.booking.offer.total_price_cents, 10200);
+  assert.equal(patchResult.body.booking.offer.quotation_summary.grand_total_amount_cents, 10200);
 
   const detailAfter = await requestJson(endpointPath("booking_detail").replace("{booking_id}", bookingId), apiHeaders());
   assert.equal(detailAfter.status, 200);
-  assert.equal(detailAfter.body.booking.offer.discount.reason, "Loyalty discount");
-  assert.equal(detailAfter.body.booking.offer.total_price_cents, 10500);
+  assert.equal(detailAfter.body.booking.offer.discounts.length, 2);
+  assert.equal(detailAfter.body.booking.offer.discounts[0].reason, "Loyalty discount");
+  assert.equal(detailAfter.body.booking.offer.total_price_cents, 10200);
+});
+
+test("booking offer patch drops zero-amount surcharges and discounts", async () => {
+  const createdBooking = await createSeedBooking();
+  const bookingId = createdBooking.id;
+
+  const patchResult = await requestJson(
+    endpointPath("booking_offer").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_offer_revision: createdBooking.offer_revision,
+        offer: {
+          ...createdBooking.offer,
+          currency: createdBooking.preferred_currency,
+          offer_detail_level_internal: "trip",
+          offer_detail_level_visible: "trip",
+          trip_price_internal: {
+            label: "Trip total",
+            amount_cents: 10000,
+            tax_rate_basis_points: 0,
+            currency: createdBooking.preferred_currency
+          },
+          additional_items: [
+            {
+              id: "offer_additional_drop_zero",
+              label: "Zero surcharge",
+              quantity: 1,
+              unit_amount_cents: 0,
+              tax_rate_basis_points: 0,
+              currency: createdBooking.preferred_currency,
+              sort_order: 0
+            },
+            {
+              id: "offer_additional_keep",
+              label: "Keep surcharge",
+              quantity: 1,
+              unit_amount_cents: 500,
+              tax_rate_basis_points: 0,
+              currency: createdBooking.preferred_currency,
+              sort_order: 1
+            }
+          ],
+          discounts: [
+            {
+              id: "offer_discount_drop_zero",
+              reason: "Zero discount",
+              amount_cents: 0,
+              currency: createdBooking.preferred_currency,
+              sort_order: 0
+            },
+            {
+              id: "offer_discount_keep",
+              reason: "Keep discount",
+              amount_cents: 200,
+              currency: createdBooking.preferred_currency,
+              sort_order: 1
+            }
+          ]
+        }
+      }
+    }
+  );
+
+  assert.equal(patchResult.status, 200);
+  assert.equal(patchResult.body.booking.offer.additional_items.length, 1);
+  assert.equal(patchResult.body.booking.offer.additional_items[0].id, "offer_additional_keep");
+  assert.equal(patchResult.body.booking.offer.discounts.length, 1);
+  assert.equal(patchResult.body.booking.offer.discounts[0].id, "offer_discount_keep");
+  assert.equal(patchResult.body.booking.offer.total_price_cents, 10300);
+
+  const detailAfter = await requestJson(endpointPath("booking_detail").replace("{booking_id}", bookingId), apiHeaders());
+  assert.equal(detailAfter.status, 200);
+  assert.equal(detailAfter.body.booking.offer.additional_items.length, 1);
+  assert.equal(detailAfter.body.booking.offer.additional_items[0].id, "offer_additional_keep");
+  assert.equal(detailAfter.body.booking.offer.discounts.length, 1);
+  assert.equal(detailAfter.body.booking.offer.discounts[0].id, "offer_discount_keep");
 });
 
 test("booking travel plan patch persists days and services", async () => {
@@ -1533,38 +1363,7 @@ test("booking travel plan patch persists days and services", async () => {
       method: "PATCH",
       body: {
         expected_offer_revision: createdBooking.offer_revision,
-        offer: {
-          ...createdBooking.offer,
-          currency: createdBooking.preferred_currency,
-          offer_detail_level_internal: "component",
-          offer_detail_level_visible: "component",
-          components: [
-            {
-              id: "offer_component_transfer_1",
-              category: "TRANSPORTATION",
-              label: "Transportation",
-              details: "Airport transfer",
-              quantity: 1,
-              unit_amount_cents: 2500,
-              tax_rate_basis_points: 1000,
-              currency: createdBooking.preferred_currency,
-              notes: null,
-              sort_order: 0
-            },
-            {
-              id: "offer_component_room_1",
-              category: "ACCOMMODATION",
-              label: "Accommodation",
-              details: "First hotel night",
-              quantity: 1,
-              unit_amount_cents: 15000,
-              tax_rate_basis_points: 1000,
-              currency: createdBooking.preferred_currency,
-              notes: null,
-              sort_order: 1
-            }
-          ]
-        }
+        offer: buildTripOfferDraft(createdBooking.offer, createdBooking.preferred_currency, 19250)
       }
     }
   );
@@ -2551,26 +2350,7 @@ test("travel plan PDF attachments normalize non-A4 uploads and append to travel-
       method: "PATCH",
       body: {
         expected_offer_revision: createdBooking.offer_revision,
-        offer: {
-          ...createdBooking.offer,
-          currency: createdBooking.preferred_currency,
-          offer_detail_level_internal: "component",
-          offer_detail_level_visible: "component",
-          components: [
-            {
-              id: "offer_component_attachment_1",
-              category: "ACCOMMODATION",
-              label: "Accommodation",
-              details: "Hotel room",
-              quantity: 1,
-              unit_amount_cents: 15000,
-              tax_rate_basis_points: 1000,
-              currency: createdBooking.preferred_currency,
-              notes: null,
-              sort_order: 0
-            }
-          ]
-        }
+        offer: buildTripOfferDraft(createdBooking.offer, createdBooking.preferred_currency, 16500)
       }
     }
   );
@@ -3015,26 +2795,7 @@ test("booking generated offers store immutable snapshots", async () => {
       method: "PATCH",
       body: {
         expected_offer_revision: createdBooking.offer_revision,
-        offer: {
-          ...createdBooking.offer,
-          currency: createdBooking.preferred_currency,
-          offer_detail_level_internal: "component",
-          offer_detail_level_visible: "component",
-          components: [
-            {
-              id: "offer_component_room_1",
-              category: "ACCOMMODATION",
-              label: "Accommodation",
-              details: "Hotel room",
-              quantity: 2,
-              unit_amount_cents: 15000,
-              tax_rate_basis_points: 1000,
-              currency: createdBooking.preferred_currency,
-              notes: null,
-              sort_order: 0
-            }
-          ]
-        }
+        offer: buildTripOfferDraft(createdBooking.offer, createdBooking.preferred_currency, 30000)
       }
     }
   );
@@ -3098,8 +2859,7 @@ test("booking generated offers store immutable snapshots", async () => {
   const generatedOffer = generateResult.body.booking.generated_offers[0];
   assert.equal(generatedOffer.comment, "First customer offer");
   assert.equal(generatedOffer.version, 1);
-  assert.equal(generatedOffer.offer.components.length, 1);
-  assert.equal(generatedOffer.offer.components[0].details, "Hotel room");
+  assert.equal(generatedOffer.offer.trip_price_internal.amount_cents, 30000);
   assert.equal(generatedOffer.travel_plan.days.length, 1);
   assert.equal(generatedOffer.travel_plan.days[0].title, "Arrival in Hoi An");
   assert.equal(generatedOffer.travel_plan.days[0].services[0].title, "Airport transfer");
@@ -3115,25 +2875,7 @@ test("booking generated offers store immutable snapshots", async () => {
       method: "PATCH",
       body: {
         expected_offer_revision: generateResult.body.booking.offer_revision,
-        offer: {
-          ...generateResult.body.booking.offer,
-          offer_detail_level_internal: "component",
-          offer_detail_level_visible: "component",
-          components: [
-            {
-              id: "offer_component_room_1",
-              category: "ACCOMMODATION",
-              label: "Accommodation",
-              details: "Updated hotel room",
-              quantity: 3,
-              unit_amount_cents: 18000,
-              tax_rate_basis_points: 1000,
-              currency: createdBooking.preferred_currency,
-              notes: null,
-              sort_order: 0
-            }
-          ]
-        }
+        offer: buildTripOfferDraft(generateResult.body.booking.offer, createdBooking.preferred_currency, 54000)
       }
     }
   );
@@ -3177,10 +2919,10 @@ test("booking generated offers store immutable snapshots", async () => {
   );
   assert.equal(detailAfter.status, 200);
   assert.equal(detailAfter.body.booking.generated_offers.length, 1);
-  assert.equal(detailAfter.body.booking.generated_offers[0].offer.components[0].details, "Hotel room");
+  assert.equal(detailAfter.body.booking.generated_offers[0].offer.trip_price_internal.amount_cents, 30000);
   assert.equal(detailAfter.body.booking.generated_offers[0].travel_plan.days[0].title, "Arrival in Hoi An");
   assert.equal(detailAfter.body.booking.generated_offers[0].travel_plan.days[0].services[0].title, "Airport transfer");
-  assert.equal(detailAfter.body.booking.offer.components[0].details, "Updated hotel room");
+  assert.equal(detailAfter.body.booking.offer.trip_price_internal.amount_cents, 54000);
   assert.equal(detailAfter.body.booking.travel_plan.days[0].title, "Updated arrival plan");
   assert.equal(detailAfter.body.booking.travel_plan.days[0].services[0].title, "Updated airport transfer");
 });
@@ -3196,26 +2938,7 @@ test("booking detail normalizes generated-offer travel plan snapshots against th
       method: "PATCH",
       body: {
         expected_offer_revision: createdBooking.offer_revision,
-        offer: {
-          ...createdBooking.offer,
-          currency: createdBooking.preferred_currency,
-          offer_detail_level_internal: "component",
-          offer_detail_level_visible: "component",
-          components: [
-            {
-              id: "offer_component_room_1",
-              category: "ACCOMMODATION",
-              label: "Accommodation",
-              details: "Hotel room",
-              quantity: 1,
-              unit_amount_cents: 12000,
-              tax_rate_basis_points: 1000,
-              currency: createdBooking.preferred_currency,
-              notes: null,
-              sort_order: 0
-            }
-          ]
-        }
+        offer: buildTripOfferDraft(createdBooking.offer, createdBooking.preferred_currency, 12000)
       }
     }
   );
@@ -3640,36 +3363,7 @@ test("booking generated offer pdf renders customer-visible day pricing while kee
       body: {
         expected_offer_revision: createdBooking.offer_revision,
         offer: {
-          ...createdBooking.offer,
-          currency: createdBooking.preferred_currency,
-          offer_detail_level_internal: "component",
-          offer_detail_level_visible: "day",
-          components: [
-            {
-              id: "offer_component_hidden_day_1",
-              category: "ACCOMMODATION",
-              label: "Accommodation",
-              details: "HiddenComponentMarkerAlpha",
-              day_number: 1,
-              quantity: 1,
-              unit_amount_cents: 12000,
-              tax_rate_basis_points: 1000,
-              currency: createdBooking.preferred_currency,
-              sort_order: 0
-            },
-            {
-              id: "offer_component_hidden_day_2",
-              category: "TRANSPORTATION",
-              label: "Transfer",
-              details: "HiddenComponentMarkerBeta",
-              day_number: 2,
-              quantity: 1,
-              unit_amount_cents: 8000,
-              tax_rate_basis_points: 1000,
-              currency: createdBooking.preferred_currency,
-              sort_order: 1
-            }
-          ],
+          ...buildDayOfferDraft(createdBooking.offer, createdBooking.preferred_currency, [12000, 8000]),
           additional_items: [
             {
               id: "offer_additional_item_visible_pdf",
@@ -4083,11 +3777,7 @@ test("public generated booking confirmation finalizes the frozen offer and store
       method: "PATCH",
       body: {
         expected_offer_revision: createdBooking.offer_revision,
-        offer: {
-          ...createdBooking.offer,
-          currency: createdBooking.preferred_currency,
-          offer_detail_level_internal: "component",
-          offer_detail_level_visible: "component",
+        offer: buildTripOfferDraft(createdBooking.offer, createdBooking.preferred_currency, 13200, {
           payment_terms: {
             currency: createdBooking.preferred_currency,
             basis_total_amount_cents: 13200,
@@ -4119,22 +3809,8 @@ test("public generated booking confirmation finalizes the frozen offer and store
                 }
               }
             ]
-          },
-          components: [
-            {
-              id: "offer_component_acceptance_1",
-              category: "ACCOMMODATION",
-              label: "Accommodation",
-              details: "Accepted hotel room",
-              quantity: 1,
-              unit_amount_cents: 12000,
-              tax_rate_basis_points: 1000,
-              currency: createdBooking.preferred_currency,
-              notes: null,
-              sort_order: 0
-            }
-          ]
-        }
+          }
+        })
       }
     }
   );

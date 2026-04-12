@@ -1103,21 +1103,6 @@ package api
 		}]
 	},
 	{
-		key:           "booking_offer_translate"
-		path:          "/api/v1/bookings/{booking_id}/offer/translate"
-		method:        "POST"
-		tag:           "Bookings"
-		authenticated: true
-		requestType:   "BookingOfferTranslateRequest"
-		responseType:  "BookingDetail"
-		parameters: [{
-			name:     "booking_id"
-			location: "path"
-			required: true
-			typeName: "Identifier"
-		}]
-	},
-	{
 		key:           "booking_generate_offer"
 		path:          "/api/v1/bookings/{booking_id}/generated-offers"
 		method:        "POST"

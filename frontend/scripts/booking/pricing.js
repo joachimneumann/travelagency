@@ -390,8 +390,7 @@ export function createBookingPricingModule(ctx) {
       ?? 0
     );
     const useDraftCurrency = Boolean(
-      (Array.isArray(state.offerDraft?.components) && state.offerDraft.components.length > 0)
-      || (state.offerDraft?.payment_terms && typeof state.offerDraft.payment_terms === "object")
+      (state.offerDraft?.payment_terms && typeof state.offerDraft.payment_terms === "object")
       || (Number.isFinite(draftTotal) && draftTotal > 0)
     );
     return normalizeCurrencyCode(
@@ -403,19 +402,6 @@ export function createBookingPricingModule(ctx) {
       || state.booking?.preferred_currency
       || "USD"
     );
-  }
-
-  function currentOfferComponents() {
-    if (Array.isArray(state.offerDraft?.components) && state.offerDraft.components.length > 0) {
-      return state.offerDraft.components;
-    }
-    if (Array.isArray(state.booking?.offer?.components)) {
-      return state.booking.offer.components;
-    }
-    if (Array.isArray(state.booking?.accepted_record?.offer?.components)) {
-      return state.booking.accepted_record.offer.components;
-    }
-    return [];
   }
 
   function currentOfferTotalPriceCents() {

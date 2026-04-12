@@ -1032,23 +1032,6 @@ export function bookingOfferRequest({ baseURL = '', params = {}, query = {}, bod
   };
 }
 
-export function bookingOfferTranslatePath(params = {}) {
-  return buildPath("/api/v1/bookings/{booking_id}/offer/translate", params);
-}
-
-export function bookingOfferTranslateRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
-  const path = bookingOfferTranslatePath(params);
-  const url = buildURL(baseURL, path, query);
-  return {
-    key: "booking_offer_translate",
-    method: "POST",
-    authenticated: true,
-    url,
-    headers,
-    body
-  };
-}
-
 export function bookingGenerateOfferPath(params = {}) {
   return buildPath("/api/v1/bookings/{booking_id}/generated-offers", params);
 }

@@ -2,41 +2,13 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   buildInvoiceTranslationStatus,
-  buildOfferTranslationStatus,
   buildTravelPlanTranslationStatus,
   collectTravelPlanTranslationFieldChanges,
   markInvoiceTranslationManual,
-  markOfferTranslationManual,
   markTravelPlanTranslationFieldsManual,
   markTravelPlanTranslationManual,
   translateTravelPlanFromSourceLanguage
 } from "../src/domain/booking_translation.js";
-
-test("offer translation status becomes stale after English source changes", () => {
-  const offer = {
-    components: [
-      {
-        id: "comp_1",
-        details: "Airport pickup",
-        details_i18n: { en: "Airport pickup" }
-      }
-    ]
-  };
-
-  markOfferTranslationManual(offer, "de", "2026-03-14T10:00:00.000Z");
-  offer.components[0].details_i18n.de = "Flughafenabholung";
-
-  const readyStatus = buildOfferTranslationStatus(offer, "de");
-  assert.equal(readyStatus.status, "reviewed");
-  assert.equal(readyStatus.missing_fields, 0);
-
-  offer.components[0].details_i18n.en = "Private airport pickup";
-  offer.components[0].details = "Private airport pickup";
-
-  const staleStatus = buildOfferTranslationStatus(offer, "de");
-  assert.equal(staleStatus.status, "stale");
-  assert.equal(staleStatus.stale, true);
-});
 
 test("travel plan translation status counts customer-facing fields only", () => {
   const travelPlan = {
@@ -102,38 +74,6 @@ test("invoice translation status tracks title, notes, and component descriptions
   assert.equal(readyStatus.translated_fields, 3);
   assert.equal(readyStatus.missing_fields, 0);
   assert.equal(readyStatus.status, "reviewed");
-});
-
-test("translation status uses the configured source language instead of assuming English", () => {
-  const offer = {
-    components: [
-      {
-        id: "comp_vi_1",
-        details: "Don san bay rieng",
-        details_i18n: {
-          vi: "Don san bay rieng",
-          de: "Privater Flughafentransfer"
-        }
-      }
-    ]
-  };
-
-  markOfferTranslationManual(offer, "de", "2026-03-16T10:00:00.000Z", "vi");
-
-  const sourceStatus = buildOfferTranslationStatus(offer, "vi", "vi");
-  assert.equal(sourceStatus.status, "source");
-  assert.equal(sourceStatus.source_lang, "vi");
-
-  const targetStatus = buildOfferTranslationStatus(offer, "de", "vi");
-  assert.equal(targetStatus.status, "reviewed");
-  assert.equal(targetStatus.source_lang, "vi");
-
-  offer.components[0].details_i18n.vi = "Don san bay VIP";
-  offer.components[0].details = "Don san bay VIP";
-
-  const staleStatus = buildOfferTranslationStatus(offer, "de", "vi");
-  assert.equal(staleStatus.status, "stale");
-  assert.equal(staleStatus.stale, true);
 });
 
 test("travel plan manual target edits are tracked per field", () => {

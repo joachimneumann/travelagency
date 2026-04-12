@@ -383,7 +383,7 @@
   "booking.offer.error.generate_pdf": "Could not generate offer PDF.",
   "booking.offer.error.trip_amount": "Trip total requires a valid non-negative price.",
   "booking.offer.error.update_comment": "Could not update generated offer comment.",
-  "booking.offer.generate_missing_translation_confirm": "Customer language is {language}, but {count} offer or travel-plan fields are not translated yet. The PDF shell will use {language}, and those fields will fall back to {sourceLanguage}. Generate anyway?",
+  "booking.offer.generate_missing_translation_confirm": "Customer language is {language}, but {count} travel-plan fields are not translated yet. The PDF shell will use {language}, and those fields will fall back to {sourceLanguage}. Generate anyway?",
   "booking.offer.generating_pdf": "Generating offer PDF...",
   "booking.offer.generating_pdf_overlay": "Generating offer PDF. Please wait.",
   "booking.offer.gmail_not_configured": "Gmail draft creation is not configured for this environment.",
