@@ -81,7 +81,6 @@ let teamSectionRevealObserved = false;
 
 const INITIAL_VISIBLE_TOURS = 6;
 const SHOW_MORE_BATCH = 3;
-const TOURS_CACHE_TTL_MS = 5 * 60 * 1000;
 const BACKEND_BASE_URL = window.ASIATRAVELPLAN_API_BASE ? window.ASIATRAVELPLAN_API_BASE.replace(/\/$/, "") : "";
 const API_BASE_ORIGIN = BACKEND_BASE_URL || window.location.origin;
 const ATP_STAFF_TEAM_URL = `${API_BASE_ORIGIN}/public/v1/team`;
@@ -89,6 +88,7 @@ const els = {
   navToggle: document.getElementById("navToggle"),
   siteNav: document.getElementById("siteNav"),
   brandLogoLink: document.getElementById("brandLogoLink"),
+  navDestinationWrap: document.getElementById("navDestinationWrap"),
   navDestinationTrigger: document.getElementById("navDestinationTrigger"),
   navDestinationSummary: document.getElementById("navDestinationSummary"),
   navDestinationPanel: document.getElementById("navDestinationPanel"),
@@ -100,6 +100,7 @@ const els = {
   backendLoginContainer: document.getElementById("backendLoginContainer"),
   headerBackendLoginMount: document.getElementById("headerBackendLoginMount"),
   footerBackendLoginMount: document.getElementById("footerBackendLoginMount"),
+  heroTitle: document.getElementById("heroTitle"),
   backendLoginBtn: document.getElementById("backendLoginBtn"),
   backendLoginBtnTitle: document.getElementById("backendLoginBtnTitle"),
   backendLoginBtnSubtitle: document.getElementById("backendLoginBtnSubtitle"),
@@ -198,7 +199,6 @@ const toursController = createFrontendToursController({
   backendBaseUrl: BACKEND_BASE_URL,
   initialVisibleTours: INITIAL_VISIBLE_TOURS,
   showMoreBatch: SHOW_MORE_BATCH,
-  toursCacheTtlMs: TOURS_CACHE_TTL_MS,
   frontendT,
   currentFrontendLang,
   preferredCurrencyForFrontendLang,

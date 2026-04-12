@@ -114,6 +114,7 @@ IR: {
 			sourceType: "entities.#CountryPracticalInfo"
 			fields: [
 				{name: "country", kind: "enum", typeName: "CountryCode", required: true},
+				{name: "published_on_webpage", kind: "scalar", typeName: "bool", required: true},
 				{name: "practical_tips", kind: "scalar", typeName: "string", required: true, isArray: true},
 				{name: "emergency_contacts", kind: "entity", typeName: "CountryEmergencyContact", required: true, isArray: true},
 				{name: "updated_at", kind: "scalar", typeName: "Timestamp", required: false},

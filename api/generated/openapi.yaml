@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-04-12T06:39:58Z
+# 2026-04-12T08:22:20Z
 
 ---
 openapi: 3.1.0
@@ -3938,9 +3938,12 @@ components:
       type: object
       required:
       - country
+      - published_on_webpage
       properties:
         country:
           "$ref": "#/components/schemas/CountryCode"
+        published_on_webpage:
+          type: boolean
         practical_tips:
           type: array
           items:

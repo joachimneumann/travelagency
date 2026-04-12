@@ -21,6 +21,7 @@ export function createCountryReferenceHandlers(deps) {
   function contentSignature(item) {
     return JSON.stringify({
       country: normalizeText(item?.country).toUpperCase(),
+      published_on_webpage: item?.published_on_webpage !== false,
       practical_tips: Array.isArray(item?.practical_tips) ? item.practical_tips.map((entry) => normalizeText(entry)).filter(Boolean) : [],
       emergency_contacts: Array.isArray(item?.emergency_contacts)
         ? item.emergency_contacts.map((entry) => ({
@@ -65,6 +66,9 @@ export function createCountryReferenceHandlers(deps) {
         return { ok: false, error: `Country ${country} appears more than once.` };
       }
       seenCountries.add(country);
+      if (rawItem.published_on_webpage !== undefined && typeof rawItem.published_on_webpage !== "boolean") {
+        return { ok: false, error: `Country ${country} must use a boolean published_on_webpage flag.` };
+      }
 
       const practical_tips = Array.from(
         new Set((Array.isArray(rawItem.practical_tips) ? rawItem.practical_tips : []).map((entry) => normalizeText(entry)).filter(Boolean))
@@ -93,6 +97,7 @@ export function createCountryReferenceHandlers(deps) {
 
       normalizedItems.push({
         country,
+        published_on_webpage: rawItem.published_on_webpage !== false,
         practical_tips,
         emergency_contacts
       });
@@ -111,6 +116,7 @@ export function createCountryReferenceHandlers(deps) {
     const payload = await readCountryPracticalInfo();
     const items = sortCountryItems(payload.items).map((item) => ({
       country: normalizeText(item?.country).toUpperCase(),
+      published_on_webpage: item?.published_on_webpage !== false,
       practical_tips: Array.isArray(item?.practical_tips) ? item.practical_tips.map((entry) => normalizeText(entry)).filter(Boolean) : [],
       emergency_contacts: Array.isArray(item?.emergency_contacts)
         ? item.emergency_contacts.map((entry) => ({

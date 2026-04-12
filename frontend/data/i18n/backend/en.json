@@ -102,6 +102,7 @@
   "backend.emergency.no_countries": "No countries yet.",
   "backend.emergency.not_saved_yet": "Not saved yet",
   "backend.emergency.practical_tips": "Practical tips",
+  "backend.emergency.published_on_webpage": "Published on webpage",
   "backend.emergency.practical_tips_hint": "Write one practical tip per line.",
   "backend.emergency.practical_tips_placeholder": "One tip per line",
   "backend.emergency.ready": "Emergency information loaded.",

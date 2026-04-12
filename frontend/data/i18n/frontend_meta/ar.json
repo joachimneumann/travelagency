@@ -114,6 +114,11 @@
     "origin": "legacy",
     "updated_at": "2026-04-02T15:09:07.177Z"
   },
+  "hero.title_with_destinations": {
+    "source_hash": "7ea1252a585bacaed9e59b417cee7ab44d68a0703fb9d3054cdda72b9c4af950",
+    "origin": "legacy",
+    "updated_at": "2026-04-12T08:48:24.787Z"
+  },
   "filters.destination_label": {
     "source_hash": "293d404a500f5f9a149916d810ff4f4231bd5d6ecd25eb0f55a867e2095eca48",
     "origin": "legacy",

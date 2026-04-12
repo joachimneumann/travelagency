@@ -22,6 +22,7 @@
   "backend.button_short": "Backend",
   "backend.button_full": "Backend AsiaTravelPlan",
   "hero.title": "Ky nghi rieng tai Viet Nam, Thai Lan, Campuchia va Lao",
+  "hero.title_with_destinations": "Ky nghi rieng tai {destinations}",
   "filters.destination_label": "Diem den",
   "filters.style_label": "Phong cach du lich",
   "filters.all_destinations": "Tat ca diem den",

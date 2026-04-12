@@ -13,7 +13,6 @@ export function createFrontendToursController(ctx) {
     backendBaseUrl,
     initialVisibleTours,
     showMoreBatch,
-    toursCacheTtlMs,
     frontendT,
     currentFrontendLang,
     preferredCurrencyForFrontendLang,
@@ -32,10 +31,6 @@ export function createFrontendToursController(ctx) {
 
   function normalizeFrontendTourLang(value) {
     return normalizeLanguageCode(value, { allowedCodes: FRONTEND_LANGUAGE_CODES, fallback: "en" });
-  }
-
-  function toursCacheKey(lang = currentFrontendLang()) {
-    return `asiatravelplan_tours_cache_v7:${normalizeFrontendTourLang(lang)}`;
   }
 
   function normalizeFilterSelection(value) {
@@ -91,7 +86,7 @@ export function createFrontendToursController(ctx) {
     return (Array.isArray(values) ? values : []).map((value) => filterLabel(kind, value)).filter(Boolean);
   }
 
-  function normalizeSelectionToCodes(values, kind) {
+  function normalizeSelectionToCodes(values, kind, { allowUnknown = true } = {}) {
     const options = filterOptionList(kind);
     return Array.from(new Set((Array.isArray(values) ? values : [values])
       .map((value) => normalizeText(value))
@@ -103,7 +98,9 @@ export function createFrontendToursController(ctx) {
           const label = normalizeText(option.label).toLowerCase();
           return lower === code || lower === label;
         });
-        return normalizeText(match?.code || lower).toLowerCase();
+        const matchedCode = normalizeText(match?.code).toLowerCase();
+        if (matchedCode) return matchedCode;
+        return allowUnknown ? lower : "";
       })
       .filter(Boolean)));
   }
@@ -129,9 +126,15 @@ export function createFrontendToursController(ctx) {
     return normalizeSelectionToCodes(Array.isArray(trip?.styles) ? trip.styles : [], "style");
   }
 
+  function shouldShowHeroDestinationFilter(destinations = filterOptionList("destination")) {
+    return destinations.length > 1;
+  }
+
   function normalizeActiveFiltersFromOptions() {
-    state.filters.dest = normalizeSelectionToCodes(state.filters.dest, "destination");
-    state.filters.style = normalizeSelectionToCodes(state.filters.style, "style");
+    state.filters.dest = shouldShowHeroDestinationFilter()
+      ? normalizeSelectionToCodes(state.filters.dest, "destination", { allowUnknown: false })
+      : [];
+    state.filters.style = normalizeSelectionToCodes(state.filters.style, "style", { allowUnknown: false });
   }
 
   function setFilterCheckboxes(container, values) {
@@ -243,6 +246,33 @@ export function createFrontendToursController(ctx) {
     } else {
       els.showMoreTours.hidden = true;
     }
+  }
+
+  function formatLocalizedList(values, lang = currentFrontendLang()) {
+    const items = (Array.isArray(values) ? values : []).map((value) => normalizeText(value)).filter(Boolean);
+    if (!items.length) return "";
+    try {
+      return new Intl.ListFormat(normalizeFrontendTourLang(lang), {
+        style: "long",
+        type: "conjunction"
+      }).format(items);
+    } catch {
+      if (items.length === 1) return items[0];
+      if (items.length === 2) return `${items[0]} and ${items[1]}`;
+      return `${items.slice(0, -1).join(", ")}, and ${items[items.length - 1]}`;
+    }
+  }
+
+  function updateHeroTitle() {
+    if (!els.heroTitle) return;
+    const publishedDestinationLabels = filterOptionList("destination").map((option) => option.label);
+    if (!publishedDestinationLabels.length) {
+      els.heroTitle.textContent = frontendT("hero.title", "Private holidays in Vietnam, Thailand, Cambodia and Laos");
+      return;
+    }
+    els.heroTitle.textContent = frontendT("hero.title_with_destinations", "Private holidays in {destinations}", {
+      destinations: formatLocalizedList(publishedDestinationLabels)
+    });
   }
 
   function updateTitlesForFilters() {
@@ -378,53 +408,17 @@ export function createFrontendToursController(ctx) {
     };
   }
 
-  function getCachedTours() {
-    try {
-      const raw = localStorage.getItem(toursCacheKey());
-      if (!raw) return null;
-      const parsed = JSON.parse(raw);
-      const ts = Number(parsed?.ts || 0);
-      if (!parsed || typeof parsed !== "object") return null;
-      if (Date.now() - ts > toursCacheTtlMs) return null;
-      if (!Array.isArray(parsed.items)) return null;
-      return normalizeToursPayloadForFrontend(parsed);
-    } catch {
-      return null;
-    }
-  }
-
-  function setCachedTours(payload) {
-    try {
-      localStorage.setItem(
-        toursCacheKey(),
-        JSON.stringify({
-          ts: Date.now(),
-          items: Array.isArray(payload?.items) ? payload.items : [],
-          available_destinations: Array.isArray(payload?.available_destinations) ? payload.available_destinations : [],
-          available_styles: Array.isArray(payload?.available_styles) ? payload.available_styles : []
-        })
-      );
-    } catch {
-      // ignore cache write issues
-    }
-  }
-
   async function loadTrips() {
-    const cached = getCachedTours();
-    if (cached) return cached;
-
     const toursRequest = publicToursRequest({
       baseURL: apiBaseOrigin,
       query: { lang: currentFrontendLang() }
     });
-    const response = await fetch(toursRequest.url);
+    const response = await fetch(toursRequest.url, { cache: "no-store" });
     if (!response.ok) {
       throw new Error(`Backend tours request failed with status ${response.status}.`);
     }
     const payload = await response.json();
-    const normalizedPayload = normalizeToursPayloadForFrontend(payload);
-    setCachedTours(normalizedPayload);
-    return normalizedPayload;
+    return normalizeToursPayloadForFrontend(payload);
   }
 
   function renderTrips(trips) {
@@ -768,6 +762,8 @@ export function createFrontendToursController(ctx) {
     const styles = filterOptionList("style");
     const bookingDestinations = destinations.map((option) => option.label);
     const bookingStyles = styles.map((option) => option.label);
+    const destinationFilterWrap = els.navDestinationWrap;
+    const showDestinationFilter = shouldShowHeroDestinationFilter(destinations);
 
     if (els.navDestinationOptions) {
       els.navDestinationOptions.innerHTML = [
@@ -775,6 +771,12 @@ export function createFrontendToursController(ctx) {
         ...destinations.map((destination) => renderFilterCheckbox("destination", destination.code, destination.label))
       ].join("");
     }
+
+    if (destinationFilterWrap instanceof HTMLElement) {
+      destinationFilterWrap.hidden = !showDestinationFilter;
+    }
+    if (els.navDestinationPanel) els.navDestinationPanel.hidden = true;
+    if (els.navDestinationTrigger) els.navDestinationTrigger.setAttribute("aria-expanded", "false");
 
     if (els.navStyleOptions) {
       els.navStyleOptions.innerHTML = [
@@ -794,6 +796,8 @@ export function createFrontendToursController(ctx) {
         .map((style) => renderFilterCheckbox("bookingStyle", style, style))
         .join("");
     }
+
+    updateHeroTitle();
   }
 
   function setupFilterSelectPanels() {

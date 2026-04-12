@@ -22,6 +22,7 @@
   "backend.button_short": "Backend",
   "backend.button_full": "Backend AsiaTravelPlan",
   "hero.title": "Vacances privees au Vietnam, en Thailande, au Cambodge et au Laos",
+  "hero.title_with_destinations": "Vacances privees en {destinations}",
   "filters.destination_label": "Destination",
   "filters.style_label": "Style de voyage",
   "filters.all_destinations": "Toutes les destinations",

@@ -22,6 +22,7 @@
   "backend.button_short": "الفريق",
   "backend.button_full": "بوابة AsiaTravelPlan",
   "hero.title": "عطلات خاصة في فيتنام وتايلاند وكمبوديا ولاوس",
+  "hero.title_with_destinations": "عطلات خاصة في {destinations}",
   "filters.destination_label": "الوجهة",
   "filters.style_label": "أسلوب السفر",
   "filters.all_destinations": "كل الوجهات",

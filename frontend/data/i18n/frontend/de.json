@@ -22,6 +22,7 @@
   "backend.button_short": "Backend",
   "backend.button_full": "AsiaTravelPlan Backend",
   "hero.title": "Privaturlaub in Vietnam, Thailand, Kambodscha und Laos",
+  "hero.title_with_destinations": "Privaturlaub in {destinations}",
   "filters.destination_label": "Ziel",
   "filters.style_label": "Reisestil",
   "filters.all_destinations": "Alle Ziele",

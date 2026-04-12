@@ -22,6 +22,7 @@
   "backend.button_short": "Backend",
   "backend.button_full": "AsiaTravelPlan Backend",
   "hero.title": "Percutian peribadi di Vietnam, Thailand, Kemboja dan Laos",
+  "hero.title_with_destinations": "Percutian peribadi di {destinations}",
   "filters.destination_label": "Destinasi",
   "filters.style_label": "Gaya perjalanan",
   "filters.all_destinations": "Semua destinasi",

@@ -5,6 +5,7 @@ import { normalizeText } from "./text.js";
 const DEFAULT_COUNTRY_PRACTICAL_INFO = Object.freeze([
   {
     country: "VN",
+    published_on_webpage: true,
     practical_tips: [
       "Carry small cash for markets, taxis, and smaller family-run cafes outside the main tourist zones.",
       "During hot months, schedule walking-heavy sightseeing early and keep the middle of the day lighter.",
@@ -18,6 +19,7 @@ const DEFAULT_COUNTRY_PRACTICAL_INFO = Object.freeze([
   },
   {
     country: "TH",
+    published_on_webpage: true,
     practical_tips: [
       "Temples require shoulders and knees to be covered, so a light layer is worth carrying on day trips.",
       "Traffic can change transfer times sharply in Bangkok and Phuket, so avoid planning tight back-to-back appointments.",
@@ -31,6 +33,7 @@ const DEFAULT_COUNTRY_PRACTICAL_INFO = Object.freeze([
   },
   {
     country: "KH",
+    published_on_webpage: true,
     practical_tips: [
       "Temple mornings start early; lighter clothing, water, and sun protection make Siem Reap days much more comfortable.",
       "US dollars are still widely used, but small change often comes back in local currency, so keep both handy.",
@@ -44,6 +47,7 @@ const DEFAULT_COUNTRY_PRACTICAL_INFO = Object.freeze([
   },
   {
     country: "LA",
+    published_on_webpage: true,
     practical_tips: [
       "Travel days in Laos are best kept intentionally light because mountain roads and river timing can shift the pace.",
       "ATMs are available in main towns, but carrying some cash before moving into smaller areas is still sensible.",
@@ -73,6 +77,7 @@ function normalizeCountryPracticalInfo(item) {
   if (!country) return null;
   return {
     country,
+    published_on_webpage: item?.published_on_webpage !== false,
     practical_tips: Array.from(new Set((Array.isArray(item?.practical_tips) ? item.practical_tips : []).map((tip) => normalizeText(tip)).filter(Boolean))),
     emergency_contacts: (Array.isArray(item?.emergency_contacts) ? item.emergency_contacts : []).map(normalizeEmergencyContact).filter(Boolean),
     ...(normalizeText(item?.updated_at) ? { updated_at: normalizeText(item.updated_at) } : {})

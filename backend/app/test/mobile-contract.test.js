@@ -6522,6 +6522,107 @@ test("admin and tour editor can manage country emergency references while staff 
   assert.equal(staffList.status, 403);
 });
 
+test("public tours only expose destinations published on webpage and hide unpublished-only tours", async () => {
+  const editorHeaders = apiHeaders("atp_tour_editor", "tour-editor", "kc-tour-editor");
+  const countryReferencePath = endpointPath("country_reference_info");
+  const countryReferenceUpdatePath = endpointPath("country_reference_info_update");
+  let originalCountryItems = [];
+  let visibleTourId = "";
+  let hiddenTourId = "";
+
+  try {
+    const currentCountryReference = await requestJson(countryReferencePath, editorHeaders);
+    assert.equal(currentCountryReference.status, 200);
+    originalCountryItems = Array.isArray(currentCountryReference.body.items) ? currentCountryReference.body.items : [];
+
+    const publishedOnlyVietnam = originalCountryItems.map((item) => ({
+      ...item,
+      published_on_webpage: item.country === "VN"
+    }));
+    const updateCountryReference = await requestJson(
+      countryReferenceUpdatePath,
+      editorHeaders,
+      {
+        method: "PATCH",
+        body: {
+          items: publishedOnlyVietnam
+        }
+      }
+    );
+    assert.equal(updateCountryReference.status, 200);
+
+    const visibleTourResult = await requestJson(
+      endpointPath("tour_create"),
+      editorHeaders,
+      {
+        method: "POST",
+        body: {
+          title: "Public Vietnam destination visibility test",
+          destinations: ["vietnam"],
+          styles: ["culture"],
+          short_description: "Visible public test tour"
+        }
+      }
+    );
+    assert.equal(visibleTourResult.status, 201);
+    visibleTourId = visibleTourResult.body.tour.id;
+
+    const hiddenTourResult = await requestJson(
+      endpointPath("tour_create"),
+      editorHeaders,
+      {
+        method: "POST",
+        body: {
+          title: "Public Laos destination visibility test",
+          destinations: ["laos"],
+          styles: ["culture"],
+          short_description: "Hidden public test tour"
+        }
+      }
+    );
+    assert.equal(hiddenTourResult.status, 201);
+    hiddenTourId = hiddenTourResult.body.tour.id;
+
+    const publicTours = await requestJson(`${endpointPath("public_tours")}?lang=en`);
+    assert.equal(publicTours.status, 200);
+    assert.equal(publicTours.headers["cache-control"], "no-store");
+    assert.equal(publicTours.headers.etag, undefined);
+    assert.deepEqual(
+      publicTours.body.available_destinations.map((item) => String(item?.code || item || "").toLowerCase()).filter(Boolean),
+      ["vietnam"]
+    );
+    assert.ok(publicTours.body.items.some((item) => item.id === visibleTourId));
+    assert.ok(!publicTours.body.items.some((item) => item.id === hiddenTourId));
+    assert.ok(
+      publicTours.body.items.every((item) => !(Array.isArray(item?.destination_codes) ? item.destination_codes : []).includes("laos"))
+    );
+
+    const publicLaosTours = await requestJson(`${endpointPath("public_tours")}?lang=en&destination=laos`);
+    assert.equal(publicLaosTours.status, 200);
+    assert.equal(publicLaosTours.body.items.length, 0);
+
+    const publicVietnamTours = await requestJson(`${endpointPath("public_tours")}?lang=en&destination=vietnam`);
+    assert.equal(publicVietnamTours.status, 200);
+    assert.ok(publicVietnamTours.body.items.some((item) => item.id === visibleTourId));
+  } finally {
+    await deleteTourForTest(hiddenTourId);
+    await deleteTourForTest(visibleTourId);
+    if (originalCountryItems.length) {
+      const restoreCountryReference = await requestJson(
+        countryReferenceUpdatePath,
+        editorHeaders,
+        {
+          method: "PATCH",
+          body: {
+            items: originalCountryItems
+          }
+        }
+      );
+      assert.equal(restoreCountryReference.status, 200);
+    }
+  }
+});
+
 test("tour delete is blocked while bookings still reference the tour", async () => {
   let tourId = "";
   let bookingId = "";

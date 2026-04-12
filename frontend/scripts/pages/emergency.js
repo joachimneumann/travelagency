@@ -142,6 +142,7 @@ function updateControls() {
 function buildEmptyCountryItem(country) {
   return {
     country: normalizeText(country).toUpperCase(),
+    published_on_webpage: true,
     practical_tips: [],
     emergency_contacts: [],
     updated_at: null
@@ -242,6 +243,12 @@ function renderItems() {
 
         <div class="backend-section__body emergency-country-card__body">
         <div class="field full">
+          <label class="backend-checkbox-item">
+            <input type="checkbox" data-emergency-published-on-webpage ${item?.published_on_webpage !== false ? "checked" : ""} />
+            <span data-i18n-id="backend.emergency.published_on_webpage">Published on webpage</span>
+          </label>
+        </div>
+        <div class="field full">
           <label class="field-label" data-i18n-id="backend.emergency.practical_tips">Practical tips</label>
           <textarea
             rows="5"
@@ -296,8 +303,10 @@ function readItemsFromDom() {
         phone: contact.phone,
         ...(contact.note ? { note: contact.note } : {})
       }));
+    const publishedOnWebpage = card.querySelector("[data-emergency-published-on-webpage]")?.checked !== false;
     return {
       country,
+      published_on_webpage: publishedOnWebpage,
       practical_tips: practicalTips,
       emergency_contacts: emergencyContacts,
       updated_at: normalizeText(previousItem?.updated_at) || null

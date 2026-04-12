@@ -102,6 +102,7 @@
   "backend.emergency.no_countries": "Chưa có quốc gia nào.",
   "backend.emergency.not_saved_yet": "Chưa lưu",
   "backend.emergency.practical_tips": "Lời khuyên thiết thực",
+  "backend.emergency.published_on_webpage": "Xuất bản trên trang web",
   "backend.emergency.practical_tips_hint": "Viết mỗi mẹo trên một dòng.",
   "backend.emergency.practical_tips_placeholder": "Mỗi mẹo trên một dòng",
   "backend.emergency.ready": "Thông tin khẩn cấp đã được tải.",

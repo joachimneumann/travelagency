@@ -22,6 +22,7 @@
   "backend.button_short": "Zaplecze",
   "backend.button_full": "Zaplecze AsiaTravelPlan",
   "hero.title": "Prywatne wakacje w Wietnamie, Tajlandii, Kambodży i Laosie",
+  "hero.title_with_destinations": "Prywatne wakacje w {destinations}",
   "filters.destination_label": "Miejsce docelowe",
   "filters.style_label": "Styl podróży",
   "filters.all_destinations": "Wszystkie miejsca docelowe",

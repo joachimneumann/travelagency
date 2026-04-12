@@ -1,5 +1,9 @@
 import { validateTourTranslateFieldsRequest } from "../../../Generated/API/generated_APIModels.js";
 import { execImageMagick } from "../../lib/imagemagick.js";
+import {
+  DESTINATION_COUNTRY_CODES,
+  DESTINATION_COUNTRY_TO_TOUR_DESTINATION_CODE
+} from "../../../../../shared/js/destination_country_codes.js";
 
 export function createTourHandlers(deps) {
   const {
@@ -21,7 +25,6 @@ export function createTourHandlers(deps) {
     normalizeTourLang,
     normalizeTourDestinationCode,
     normalizeTourStyleCode,
-    createHash,
     getPrincipal,
     canReadTours,
     paginate,
@@ -29,6 +32,7 @@ export function createTourHandlers(deps) {
     buildPaginatedListResponse,
     canEditTours,
     readBodyJson,
+    readCountryPracticalInfo,
     nowIso,
     randomUUID,
     persistTour,
@@ -235,9 +239,37 @@ export function createTourHandlers(deps) {
     return tourFolder;
   }
 
+  function publishedWebpageDestinationCodes(countryReferencePayload) {
+    const publishedCountryCodes = new Set(DESTINATION_COUNTRY_CODES);
+    for (const item of Array.isArray(countryReferencePayload?.items) ? countryReferencePayload.items : []) {
+      const countryCode = normalizeText(item?.country).toUpperCase();
+      if (!countryCode) continue;
+      if (item?.published_on_webpage === false) publishedCountryCodes.delete(countryCode);
+      else publishedCountryCodes.add(countryCode);
+    }
+    return new Set(
+      Array.from(publishedCountryCodes)
+        .map((countryCode) => normalizeTourDestinationCode(DESTINATION_COUNTRY_TO_TOUR_DESTINATION_CODE[countryCode]))
+        .filter(Boolean)
+    );
+  }
+
+  function normalizeTourForPublicWebpage(tour, publishedDestinationCodes) {
+    const stored = normalizeTourForStorage(tour);
+    const visibleDestinations = tourDestinationCodes(stored).filter((code) => publishedDestinationCodes.has(code));
+    if (!visibleDestinations.length) return null;
+    return {
+      ...stored,
+      destinations: visibleDestinations
+    };
+  }
+
   async function handlePublicListTours(req, res) {
     const lang = requestLang(req.url);
-    const tours = (await readTours()).map((tour) => normalizeTourForStorage(tour));
+    const publishedDestinationCodes = publishedWebpageDestinationCodes(await readCountryPracticalInfo());
+    const tours = (await readTours())
+      .map((tour) => normalizeTourForPublicWebpage(tour, publishedDestinationCodes))
+      .filter(Boolean);
     const requestUrl = new URL(req.url, "http://localhost");
     const destination = normalizeTourDestinationCode(requestUrl.searchParams.get("destination"));
     const style = normalizeTourStyleCode(requestUrl.searchParams.get("style"));
@@ -264,22 +296,7 @@ export function createTourHandlers(deps) {
         total_pages: Math.max(1, Math.ceil(filtered.length / limit))
       }
     };
-    const payloadText = JSON.stringify(payload);
-    const etag = `W/"${createHash("sha1").update(payloadText).digest("hex")}"`;
-    const ifNoneMatch = normalizeText(req.headers["if-none-match"]);
-
-    const cacheHeaders = {
-      "Cache-Control": "public, max-age=120, stale-while-revalidate=600, must-revalidate",
-      ETag: etag
-    };
-
-    if (ifNoneMatch === etag) {
-      res.writeHead(304, cacheHeaders);
-      res.end();
-      return;
-    }
-
-    sendJson(res, 200, payload, cacheHeaders);
+    sendJson(res, 200, payload, { "Cache-Control": "no-store" });
   }
 
   async function handleListTours(req, res) {

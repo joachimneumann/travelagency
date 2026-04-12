@@ -439,6 +439,10 @@ html[data-language-direction="rtl"] .home-page .meta span {
   position: relative;
 }
 
+.select-wrap[hidden] {
+  display: none;
+}
+
 .select-wrap > label {
   display: block;
   text-align: left;

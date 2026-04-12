@@ -3278,13 +3278,13 @@ test("frontend language switching updates the homepage in place instead of forci
   );
   assert.match(
     mainToursSource,
-    /const toursRequest = publicToursRequest\({[\s\S]*query: \{ lang: currentFrontendLang\(\) \}[\s\S]*const response = await fetch\(toursRequest\.url\);/,
-    "Homepage tour loading should stop forcing uncached cache-busted requests on every language change"
+    /const toursRequest = publicToursRequest\({[\s\S]*query: \{ lang: currentFrontendLang\(\) \}[\s\S]*const response = await fetch\(toursRequest\.url, \{ cache: "no-store" \}\);/,
+    "Homepage tour loading should explicitly bypass browser caches so published destination changes show up immediately after reload"
   );
   assert.doesNotMatch(
     mainToursSource,
-    /tripsRequestVersion|cache:\s*"no-store"/,
-    "Homepage tour loading should not carry a per-load version cache buster or no-store fetch mode"
+    /toursCacheKey|getCachedTours|setCachedTours|tripsRequestVersion/,
+    "Homepage tour loading should no longer keep a localStorage-backed tours cache or a request-version cache buster"
   );
 });
 
@@ -3317,6 +3317,55 @@ test("homepage tour cards clamp long descriptions and open the shared detail pop
     siteCssSource,
     /\.tour-desc \{[\s\S]*-webkit-line-clamp: 4;[\s\S]*min-height: calc\(1\.55em \* 4\);/,
     "Tour descriptions should clamp to a fixed-height preview so cards stay aligned"
+  );
+});
+
+test("homepage hero title follows published destinations and only hides the destination picker when one destination remains", async () => {
+  const mainToursPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "main_tours.js");
+  const homepagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "index.html");
+  const frontendEnI18nPath = path.resolve(__dirname, "..", "..", "..", "frontend", "data", "i18n", "frontend", "en.json");
+  const siteCssPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "site.css");
+  const [mainToursSource, homepageSource, frontendEnI18nSource, siteCssSource] = await Promise.all([
+    readFile(mainToursPath, "utf8"),
+    readFile(homepagePath, "utf8"),
+    readFile(frontendEnI18nPath, "utf8"),
+    readFile(siteCssPath, "utf8")
+  ]);
+
+  assert.match(
+    homepageSource,
+    /id="heroTitle"[\s\S]*id="navDestinationWrap" class="select-wrap" hidden/,
+    "Homepage hero should expose a dedicated title mount and keep the destination dropdown hidden in the hero markup"
+  );
+  assert.match(
+    frontendEnI18nSource,
+    /"hero\.title_with_destinations": "Private holidays in \{destinations\}"/,
+    "Frontend hero copy should expose a destination-aware title template"
+  );
+  assert.match(
+    mainToursSource,
+    /function formatLocalizedList\([\s\S]*new Intl\.ListFormat\([\s\S]*type: "conjunction"/,
+    "Homepage hero titles should format the published destination labels as a locale-aware list"
+  );
+  assert.match(
+    mainToursSource,
+    /function updateHeroTitle\(\) \{[\s\S]*filterOptionList\("destination"\)\.map\(\(option\) => option\.label\)[\s\S]*frontendT\("hero\.title_with_destinations", "Private holidays in \{destinations\}"/,
+    "Homepage hero title should derive its visible country list from the published destination options returned by the tours payload"
+  );
+  assert.match(
+    mainToursSource,
+    /function shouldShowHeroDestinationFilter\(destinations = filterOptionList\("destination"\)\) \{[\s\S]*return destinations\.length > 1;[\s\S]*function normalizeActiveFiltersFromOptions\(\) \{[\s\S]*state\.filters\.dest = shouldShowHeroDestinationFilter\(\)\s*\?[\s\S]*normalizeSelectionToCodes\(state\.filters\.dest, "destination", \{ allowUnknown: false \}\)[\s\S]*:\s*\[\];[\s\S]*state\.filters\.style = normalizeSelectionToCodes\(state\.filters\.style, "style", \{ allowUnknown: false \}\);/,
+    "Homepage should only keep destination filters when the hero destination dropdown is actually visible"
+  );
+  assert.match(
+    mainToursSource,
+    /const destinationFilterWrap = els\.navDestinationWrap;[\s\S]*const showDestinationFilter = shouldShowHeroDestinationFilter\(destinations\);[\s\S]*destinationFilterWrap\.hidden = !showDestinationFilter;[\s\S]*els\.navDestinationPanel\.hidden = true;/,
+    "Homepage filter rendering should hide the whole destination picker in the hero whenever only one published destination remains"
+  );
+  assert.match(
+    siteCssSource,
+    /\.select-wrap\[hidden\]\s*\{[\s\S]*display:\s*none;/,
+    "Hidden select wrappers should stay hidden even though the base select-wrap class uses display:flex"
   );
 });
 

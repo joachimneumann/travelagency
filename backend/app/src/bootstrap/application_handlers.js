@@ -290,6 +290,7 @@ export function createApplicationRoutes({
     buildPaginatedListResponse,
     canEditTours,
     readBodyJson: httpHelpers.readBodyJson,
+    readCountryPracticalInfo: countryReferenceStore.readCountryPracticalInfo,
     nowIso: support.nowIso,
     randomUUID,
     persistTour: storeUtils.persistTour,

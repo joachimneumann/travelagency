@@ -22,6 +22,7 @@
   "backend.button_short": "Бэкэнд",
   "backend.button_full": "АзияTravelPlan Backend",
   "hero.title": "Частный отдых во Вьетнаме, Таиланде, Камбодже и Лаосе",
+  "hero.title_with_destinations": "Частный отдых в {destinations}",
   "filters.destination_label": "Место назначения",
   "filters.style_label": "Стиль путешествия",
   "filters.all_destinations": "Все направления",

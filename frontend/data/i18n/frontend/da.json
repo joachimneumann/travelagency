@@ -22,6 +22,7 @@
   "backend.button_short": "Backend",
   "backend.button_full": "AsiaTravelPlan Backend",
   "hero.title": "Private ferier i Vietnam, Thailand, Cambodja og Laos",
+  "hero.title_with_destinations": "Private ferier i {destinations}",
   "filters.destination_label": "Bestemmelsessted",
   "filters.style_label": "Rejsestil",
   "filters.all_destinations": "Alle destinationer",
