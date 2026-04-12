@@ -2701,23 +2701,6 @@ textarea:focus-visible {
   margin: 0 0 0.9rem;
 }
 
-.offer-payment-terms__title {
-  margin-bottom: 0.65rem;
-  font-size: var(--font-size-caption);
-  font-weight: var(--font-weight-bold);
-  letter-spacing: var(--tracking-wide);
-  text-transform: var(--text-transform-caps);
-  color: var(--text-muted-strong);
-}
-
-.offer-payment-terms__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  margin-bottom: 0.65rem;
-}
-
 .offer-payment-terms__rows {
   display: grid;
   gap: 0.7rem;
@@ -2727,7 +2710,6 @@ textarea:focus-visible {
   table-layout: fixed;
 }
 
-.backend-table th.offer-payment-term-col-kind,
 .backend-table th.offer-payment-term-col-label,
 .backend-table th.offer-payment-term-col-amount,
 .backend-table th.offer-payment-term-col-value,
@@ -2735,16 +2717,6 @@ textarea:focus-visible {
 .backend-table th.offer-payment-term-col-resolved,
 .backend-table th.offer-payment-term-col-actions {
   white-space: nowrap;
-}
-
-.backend-table .offer-payment-term-col-kind {
-  width: 132px;
-  min-width: 132px;
-}
-
-.backend-table .offer-payment-term-col-label {
-  width: 170px;
-  min-width: 170px;
 }
 
 .backend-table .offer-payment-term-col-amount {
@@ -2760,8 +2732,8 @@ textarea:focus-visible {
 }
 
 .backend-table .offer-payment-term-col-due {
-  width: 220px;
-  min-width: 220px;
+  width: 320px;
+  min-width: 320px;
 }
 
 .backend-table .offer-payment-term-col-actions {
@@ -2770,8 +2742,6 @@ textarea:focus-visible {
   text-align: center;
 }
 
-.backend-table .offer-payment-term-col-kind select,
-.backend-table .offer-payment-term-col-label input,
 .backend-table .offer-payment-term-col-amount select,
 .backend-table .offer-payment-term-col-value input,
 .backend-table .offer-payment-term-col-due select,
@@ -2787,8 +2757,6 @@ textarea:focus-visible {
   box-sizing: border-box;
 }
 
-.backend-table .offer-payment-term-col-kind select:focus-visible,
-.backend-table .offer-payment-term-col-label input:focus-visible,
 .backend-table .offer-payment-term-col-amount select:focus-visible,
 .backend-table .offer-payment-term-col-value input:focus-visible,
 .backend-table .offer-payment-term-col-due select:focus-visible,
@@ -2823,13 +2791,28 @@ textarea:focus-visible {
 }
 
 .offer-payment-terms__due-editor {
-  display: grid;
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
   gap: 0.42rem;
 }
 
 .offer-payment-terms__due-editor select,
 .offer-payment-terms__due-editor input {
-  width: 100%;
+  width: auto;
+}
+
+.offer-payment-terms__due-editor select {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.offer-payment-terms__due-editor input {
+  flex: 0 0 10.5rem;
+}
+
+.offer-payment-terms__due-editor input[data-offer-payment-term-days] {
+  flex-basis: 5.5rem;
 }
 
 .offer-payment-terms__table-row td {
@@ -2841,8 +2824,27 @@ textarea:focus-visible {
 }
 
 .offer-payment-terms__add-cell {
-  padding: 0.45rem 0.5rem 0.3rem;
-  text-align: center;
+  padding: 0.4rem 0.5rem 0.15rem 0;
+  text-align: left;
+}
+
+.offer-payment-terms__add-row--deposit .offer-payment-terms__add-cell {
+  padding-top: 0.2rem;
+  padding-bottom: 0.1rem;
+}
+
+.offer-payment-terms__add-row--installment td {
+  border-bottom: 1px solid var(--line);
+}
+
+.offer-payment-terms__add-row--installment .offer-payment-terms__add-cell {
+  padding-top: 0.1rem;
+  padding-bottom: 0.55rem;
+}
+
+.offer-payment-terms__add-button {
+  min-width: 17rem;
+  justify-content: center;
 }
 
 .offer-payment-terms__description-row td {
@@ -3004,6 +3006,11 @@ textarea:focus-visible {
   justify-content: flex-end;
 }
 
+.offer-payment-terms__label-text {
+  justify-content: flex-start;
+  font-weight: var(--font-weight-semibold);
+}
+
 .offer-payment-terms__empty {
   padding: 0.8rem 0.5rem;
   color: var(--text-muted-strong);
@@ -3024,6 +3031,11 @@ textarea:focus-visible {
   margin-top: 0.85rem;
   padding-top: 0.65rem;
   border-top: 1px solid var(--line-muted-soft);
+}
+
+.offer-payment-terms__status {
+  display: block;
+  margin: 0.55rem 0 0;
 }
 
 .offer-payment-terms__summary-label,
@@ -3068,19 +3080,7 @@ textarea:focus-visible {
   white-space: pre-wrap;
 }
 
-@media (max-width: 1180px) {
-  .backend-table .offer-payment-term-col-kind {
-    width: 120px;
-    min-width: 120px;
-  }
-}
-
 @media (max-width: 720px) {
-  .offer-payment-terms__header {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
   .backend-table.offer-payment-terms__table {
     table-layout: auto;
   }

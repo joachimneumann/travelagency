@@ -1239,6 +1239,10 @@ export function createBookingOfferPricingModule(ctx) {
           index: String(fixedDateErrors.index + 1)
         }));
       }
+      const paymentTermsTotalError = paymentTermsModule.validateOfferPaymentTermsTotal(paymentTermsDraft);
+      if (paymentTermsTotalError) {
+        throw new Error(paymentTermsTotalError);
+      }
     }
     return {
       status: String(state.offerDraft?.status || "DRAFT").trim().toUpperCase(),

@@ -256,6 +256,7 @@ export function createBookingOfferModule(ctx) {
     els,
     escapeHtml,
     setOfferSaveEnabled,
+    setOfferStatus,
     clearOfferStatus,
     resolveOfferTotalCents: () => resolveOfferTotalCents(),
     renderOfferGenerationControls: () => {}

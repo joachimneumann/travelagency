@@ -930,6 +930,11 @@ test("payments removes the standalone invoice panel and renders request/receipt 
     /booking-payment-receipt__amount-display[\s\S]*data-payment-received-at[\s\S]*data-payment-confirmed-by[\s\S]*data-payment-reference/,
     "The pricing module should render a display-only received amount plus the receipt detail controls inside each payment section"
   );
+  assert.match(
+    pricingScriptSource,
+    /const hasAnyValue = Boolean\(\s*receivedAt\s*\|\|\s*confirmedByAtpStaffId\s*\|\|\s*reference\s*\);/,
+    "Receipt validation should only treat actual receipt-detail fields as proof that receipt details were entered"
+  );
 });
 
 test("saving proposal payment terms rerenders payment-step sections without a full page reload", async () => {
@@ -949,6 +954,66 @@ test("saving proposal payment terms rerenders payment-step sections without a fu
     offerModuleSource,
     /async function applyOfferBookingResponse[\s\S]*renderOfferPanel\(\);[\s\S]*renderPricingPanel\?\.\(\{ markDerivedChangesDirty: true \}\);/,
     "Saving the offer/payment plan should rerender payment-step sections and mark derived payment changes dirty without a page refresh"
+  );
+});
+
+test("offer payment terms keep add-deposit and add-installment controls above final payment", async () => {
+  const paymentTermsPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "offer_payment_terms.js");
+  const paymentTermsStylesPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "site.css");
+  const offerPricingPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "offer_pricing.js");
+  const paymentTermsSource = await readFile(paymentTermsPath, "utf8");
+  const paymentTermsStylesSource = await readFile(paymentTermsStylesPath, "utf8");
+  const offerPricingSource = await readFile(offerPricingPath, "utf8");
+
+  assert.match(
+    paymentTermsSource,
+    /const editableRows = \[\s*depositRows \|\| renderOfferPaymentTermAddRow\("deposit",[\s\S]*installmentRows,[\s\S]*renderOfferPaymentTermAddRow\("installment",[\s\S]*\]\.filter\(Boolean\)\.join\(""\);/,
+    "Editable payment terms should render add-deposit first, then add-installment, with final payment shown only in the summary"
+  );
+  assert.match(
+    paymentTermsSource,
+    /if \(action === "deposit"\) \{[\s\S]*const hasDeposit = currentLines\.some\(\(line\) => normalizeOfferPaymentTermKindValue\(line\?\.kind\) === "DEPOSIT"\);[\s\S]*if \(hasDeposit\) return;[\s\S]*nextLines\.splice\(0,\s*0,\s*createDefaultOfferPaymentDepositLine\(1\)\);/,
+    "Adding a deposit should replace the add-deposit row with a single deposit line"
+  );
+  assert.match(
+    paymentTermsSource,
+    /\.filter\(\(line\) => normalizeOfferPaymentTermKindValue\(line\?\.kind\) !== "FINAL_BALANCE"\)/,
+    "The table body should not render a duplicate final-payment line above the summary"
+  );
+  assert.doesNotMatch(
+    paymentTermsSource,
+    /data-offer-payment-term-kind=/,
+    "Editable payment terms should not render a leftmost kind dropdown for deposit or installment rows"
+  );
+  assert.doesNotMatch(
+    paymentTermsSource,
+    /data-offer-payment-term-label=/,
+    "Editable payment terms should render deposit and installment labels as plain text instead of editable fields"
+  );
+  assert.doesNotMatch(
+    paymentTermsStylesSource,
+    /\.backend-table \.offer-payment-term-col-label \{\s*width:/,
+    "Payment-plan label column should not keep a fixed width that pushes the amount-mode dropdown too far right"
+  );
+  assert.match(
+    paymentTermsStylesSource,
+    /\.offer-payment-terms__due-editor \{\s*display: flex;[\s\S]*flex-wrap: nowrap;/,
+    "Payment-plan due editors should keep the due-type dropdown and days input on the same row"
+  );
+  assert.match(
+    paymentTermsSource,
+    /function validateOfferPaymentTermsTotal\(paymentTerms = state\.offerDraft\?\.payment_terms\)[\s\S]*scheduledAmountCents[\s\S]*basisTotalAmountCents/,
+    "Payment terms should expose a shared validator that detects deposits and installments exceeding the offer total"
+  );
+  assert.match(
+    paymentTermsSource,
+    /renderOfferPaymentTermsValidationMarkup\(validateOfferPaymentTermsTotal\(displayTerms\)\)/,
+    "Payment-plan total validation should render its error message directly inside the payment plan section"
+  );
+  assert.match(
+    offerPricingSource,
+    /const paymentTermsTotalError = paymentTermsModule\.validateOfferPaymentTermsTotal\(paymentTermsDraft\);[\s\S]*throw new Error\(paymentTermsTotalError\);/,
+    "Offer save should block when deposit and installment amounts exceed the offer total"
   );
 });
 
@@ -1013,7 +1078,7 @@ test("payment-flow PDF editors reuse the shared booking PDF panel helpers and st
   );
   assert.match(
     pricingScriptSource,
-    /function paymentReceiptFieldValues\([\s\S]*const hasAnyValue = Boolean\([\s\S]*receivedAt[\s\S]*confirmedByAtpStaffId[\s\S]*reference[\s\S]*received_amount_cents[\s\S]*const fallbackAmount = Math\.max\(0, Math\.round\(Number\(payment\?\.net_amount_cents \|\| 0\)\)\);[\s\S]*const parsedAmount = hasAnyValue \? fallbackAmount : null/,
+    /function paymentReceiptFieldValues\([\s\S]*const hasAnyValue = Boolean\([\s\S]*receivedAt[\s\S]*confirmedByAtpStaffId[\s\S]*reference[\s\S]*const fallbackAmount = Math\.max\(0, Math\.round\(Number\(payment\?\.net_amount_cents \|\| 0\)\)\);[\s\S]*const parsedAmount = hasAnyValue \? fallbackAmount : null/,
     "Payment receipt parsing should derive the received amount from the scheduled amount instead of a user-edited amount field"
   );
   assert.match(

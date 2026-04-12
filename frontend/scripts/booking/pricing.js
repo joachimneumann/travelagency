@@ -754,7 +754,6 @@ export function createBookingPricingModule(ctx) {
       receivedAt
       || confirmedByAtpStaffId
       || reference
-      || Number.isFinite(Number(payment?.received_amount_cents))
     );
     const fallbackAmount = Math.max(0, Math.round(Number(payment?.net_amount_cents || 0)));
     const parsedAmount = hasAnyValue ? fallbackAmount : null;

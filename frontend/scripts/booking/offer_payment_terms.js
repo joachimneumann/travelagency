@@ -10,15 +10,10 @@ import { renderBookingSectionHeader } from "./sections.js";
 import {
   OFFER_PAYMENT_AMOUNT_MODE_CATALOG,
   OFFER_PAYMENT_DUE_TYPE_CATALOG,
-  OFFER_PAYMENT_TERM_KIND_CATALOG,
   normalizeGeneratedEnumValue
 } from "../shared/generated_catalogs.js";
 
-const OFFER_PAYMENT_TERM_KINDS = OFFER_PAYMENT_TERM_KIND_CATALOG;
 const OFFER_PAYMENT_AMOUNT_MODES = OFFER_PAYMENT_AMOUNT_MODE_CATALOG;
-const OFFER_PAYMENT_EDITABLE_TERM_KINDS = Object.freeze(
-  OFFER_PAYMENT_TERM_KINDS.filter((kind) => kind !== "FINAL_BALANCE")
-);
 const OFFER_PAYMENT_EDITABLE_AMOUNT_MODES = Object.freeze(
   OFFER_PAYMENT_AMOUNT_MODES.filter((mode) => mode !== "REMAINING_BALANCE")
 );
@@ -33,6 +28,7 @@ export function createBookingOfferPaymentTermsModule(ctx) {
     els,
     escapeHtml,
     setOfferSaveEnabled,
+    setOfferStatus,
     clearOfferStatus,
     resolveOfferTotalCents,
     renderOfferGenerationControls
@@ -503,11 +499,63 @@ export function createBookingOfferPaymentTermsModule(ctx) {
     `;
   }
 
+  function renderOfferPaymentTermsValidationMarkup(message = "") {
+    const normalizedMessage = String(message || "").trim();
+    return `
+      <div
+        class="micro booking-inline-status offer-payment-terms__status ${normalizedMessage ? "booking-inline-status--error" : ""}"
+        data-offer-payment-terms-status
+      >${escapeHtml(normalizedMessage)}</div>
+    `;
+  }
+
+  function validateOfferPaymentTermsTotal(paymentTerms = state.offerDraft?.payment_terms) {
+    const draft = paymentTerms && typeof paymentTerms === "object" ? paymentTerms : null;
+    if (!draft) return "";
+    const currency = normalizeCurrencyCode(draft.currency || state.offerDraft?.currency || state.booking?.preferred_currency || "USD");
+    const basisTotalAmountCents = Math.max(0, Math.round(Number(draft.basis_total_amount_cents || 0)));
+    const scheduledAmountCents = (Array.isArray(draft.lines) ? draft.lines : [])
+      .filter((line) => normalizeOfferPaymentTermKindValue(line?.kind) !== "FINAL_BALANCE")
+      .reduce((sum, line) => sum + Math.max(0, Math.round(Number(line?.resolved_amount_cents || 0))), 0);
+    if (scheduledAmountCents <= basisTotalAmountCents) return "";
+    return bookingT(
+      "booking.offer.payment_terms.error.total_exceeded",
+      "Deposit and installments total {scheduled}, which exceeds the offer total {offerTotal}.",
+      {
+        scheduled: formatMoneyDisplay(scheduledAmountCents, currency),
+        offerTotal: formatMoneyDisplay(basisTotalAmountCents, currency)
+      }
+    );
+  }
+
+  function syncOfferPaymentTermsValidationStatus(paymentTerms = state.offerDraft?.payment_terms) {
+    const message = validateOfferPaymentTermsTotal(paymentTerms);
+    const statusNode = els.offer_payment_terms?.querySelector("[data-offer-payment-terms-status]");
+    const previousValidationMessage = statusNode instanceof HTMLElement ? String(statusNode.textContent || "").trim() : "";
+    if (statusNode instanceof HTMLElement) {
+      statusNode.textContent = message;
+      statusNode.classList.toggle("booking-inline-status--error", Boolean(message));
+    }
+    if (message) {
+      if (els.offer_status?.textContent !== message) {
+        setOfferStatus?.(message, "error");
+      }
+      return false;
+    }
+    if (
+      !String(els.offer_status?.textContent || "").trim()
+      || (previousValidationMessage && els.offer_status?.textContent === previousValidationMessage)
+    ) {
+      clearOfferStatus();
+    }
+    return true;
+  }
+
   function renderOfferPaymentTermAddRow(action, label) {
     return `
-      <tr class="offer-payment-terms__add-row">
-        <td colspan="7" class="offer-payment-terms__add-cell">
-          <button class="btn btn-ghost" type="button" data-offer-payment-term-add="${escapeHtml(action)}">${escapeHtml(label)}</button>
+      <tr class="offer-payment-terms__add-row offer-payment-terms__add-row--${escapeHtml(action)}">
+        <td colspan="6" class="offer-payment-terms__add-cell">
+          <button class="btn btn-ghost offer-payment-terms__add-button" type="button" data-offer-payment-term-add="${escapeHtml(action)}">${escapeHtml(label)}</button>
         </td>
       </tr>
     `;
@@ -560,14 +608,13 @@ export function createBookingOfferPaymentTermsModule(ctx) {
       const rows = lines
         .slice()
         .sort((left, right) => (Number(left?.sequence || 0) - Number(right?.sequence || 0)))
+        .filter((line) => normalizeOfferPaymentTermKindValue(line?.kind) !== "FINAL_BALANCE")
         .map((line, index) => {
-          const kindLabel = formatPaymentTermKindLabel(line?.kind, "", {
+          const label = String(line?.label || "").trim() || formatPaymentTermKindLabel(line?.kind, "", {
             installmentNumber: resolveOfferPaymentTermInstallmentNumber(lines, index)
           });
-          const label = String(line?.label || "").trim() || kindLabel;
           return `
             <tr class="offer-payment-terms__table-row">
-              <td class="offer-payment-term-col-kind">${escapeHtml(kindLabel)}</td>
               <td class="offer-payment-term-col-label">${escapeHtml(label)}</td>
               <td class="offer-payment-term-col-amount">${escapeHtml(formatPaymentTermAmountModeLabel(line?.amount_spec?.mode))}</td>
               <td class="offer-payment-term-col-value">${escapeHtml(formatPaymentTermAmountValueDisplay(line, currency))}</td>
@@ -579,25 +626,12 @@ export function createBookingOfferPaymentTermsModule(ctx) {
         })
         .join("");
       els.offer_payment_terms.innerHTML = `
-        <div class="offer-payment-terms__header">
-          <div class="offer-payment-terms__title">${escapeHtml(bookingT("booking.offer.payment_terms.title", "Payment terms"))}</div>
-        </div>
         <div class="backend-table-wrap offer-payment-terms__table-wrap">
           <table class="backend-table offer-payment-terms__table">
-            <thead>
-              <tr>
-                <th class="offer-payment-term-col-kind">${escapeHtml(bookingT("booking.offer.payment_terms.kind", "Type"))}</th>
-                <th class="offer-payment-term-col-label">${escapeHtml(bookingT("booking.offer.payment_terms.label", "Label"))}</th>
-                <th class="offer-payment-term-col-amount">${escapeHtml(bookingT("booking.offer.payment_terms.basis", "Basis"))}</th>
-                <th class="offer-payment-term-col-value">${escapeHtml(bookingT("booking.offer.payment_terms.amount_value", "Value"))}</th>
-                <th class="offer-payment-term-col-due">${escapeHtml(bookingT("booking.offer.payment_terms.due_rule", "Due"))}</th>
-                <th class="offer-payment-term-col-resolved">${escapeHtml(bookingT("booking.offer.payment_terms.resolved_amount", "Amount"))}</th>
-                <th class="offer-payment-term-col-actions"></th>
-              </tr>
-            </thead>
             <tbody>${rows}</tbody>
           </table>
         </div>
+        ${renderOfferPaymentTermsValidationMarkup(validateOfferPaymentTermsTotal(displayTerms))}
         ${renderOfferPaymentTermsSummaryRows(displayTerms, currency)}
       `;
       els.offer_payment_terms.hidden = false;
@@ -613,8 +647,6 @@ export function createBookingOfferPaymentTermsModule(ctx) {
       const isFinalBalance = normalizedKind === "FINAL_BALANCE";
       const installmentNumber = resolveOfferPaymentTermInstallmentNumber(lines, index);
       const kindLabel = formatPaymentTermKindLabel(line?.kind, "", { installmentNumber });
-      const kindFieldId = buildOfferPaymentTermFieldId("kind", index);
-      const labelFieldId = buildOfferPaymentTermFieldId("label", index);
       const amountModeFieldId = buildOfferPaymentTermFieldId("amount_mode", index);
       const fixedAmountFieldId = buildOfferPaymentTermFieldId("fixed_amount", index);
       const percentageFieldId = buildOfferPaymentTermFieldId("percentage", index);
@@ -653,25 +685,8 @@ export function createBookingOfferPaymentTermsModule(ctx) {
         index,
         markup: `
         <tr class="offer-payment-terms__table-row">
-          <td class="offer-payment-term-col-kind">
-            ${isFinalBalance
-              ? `<div class="offer-payment-terms__static offer-payment-terms__static--empty"></div>`
-              : `<select
-                  id="${kindFieldId}"
-                  name="${buildOfferPaymentTermFieldName("kind", index)}"
-                  data-offer-payment-term-kind="${index}"
-                >
-                  ${OFFER_PAYMENT_EDITABLE_TERM_KINDS.map((kind) => `<option value="${escapeHtml(kind)}" ${kind === line.kind ? "selected" : ""}>${escapeHtml(formatPaymentTermKindLabel(kind, "", { installmentNumber: resolveOfferPaymentTermInstallmentNumber(lines, index, kind) }))}</option>`).join("")}
-                </select>`}
-          </td>
           <td class="offer-payment-term-col-label">
-            <input
-              id="${labelFieldId}"
-              name="${buildOfferPaymentTermFieldName("label", index)}"
-              type="text"
-              data-offer-payment-term-label="${index}"
-              value="${escapeHtml(String(line?.label || kindLabel))}"
-            />
+            <div class="offer-payment-terms__static offer-payment-terms__label-text">${escapeHtml(String(line?.label || kindLabel))}</div>
           </td>
           <td class="offer-payment-term-col-amount">
             ${isFinalBalance
@@ -734,38 +749,23 @@ export function createBookingOfferPaymentTermsModule(ctx) {
       .filter((entry) => entry.kind === "INSTALLMENT")
       .map((entry) => entry.markup)
       .join("");
-    const finalBalanceRow = rowEntries.find((entry) => entry.kind === "FINAL_BALANCE")?.markup || "";
     const editableRows = [
       depositRows || renderOfferPaymentTermAddRow("deposit", bookingT("booking.offer.payment_terms.add_deposit", "Add deposit")),
       installmentRows,
-      renderOfferPaymentTermAddRow("installment", bookingT("booking.offer.payment_terms.add_installment", "Add Installment")),
-      finalBalanceRow
+      renderOfferPaymentTermAddRow("installment", bookingT("booking.offer.payment_terms.add_installment", "Add Installment"))
     ].filter(Boolean).join("");
 
     els.offer_payment_terms.innerHTML = `
-      <div class="offer-payment-terms__header">
-        <div class="offer-payment-terms__title">${escapeHtml(bookingT("booking.offer.payment_terms.title", "Payment terms"))}</div>
-      </div>
       <div class="backend-table-wrap offer-payment-terms__table-wrap">
         <table class="backend-table offer-payment-terms__table">
-          <thead>
-            <tr>
-              <th class="offer-payment-term-col-kind">${escapeHtml(bookingT("booking.offer.payment_terms.kind", "Type"))}</th>
-              <th class="offer-payment-term-col-label">${escapeHtml(bookingT("booking.offer.payment_terms.label", "Label"))}</th>
-              <th class="offer-payment-term-col-amount">${escapeHtml(bookingT("booking.offer.payment_terms.basis", "Basis"))}</th>
-              <th class="offer-payment-term-col-value">${escapeHtml(bookingT("booking.offer.payment_terms.amount_value", "Value"))}</th>
-              <th class="offer-payment-term-col-due">${escapeHtml(bookingT("booking.offer.payment_terms.due_rule", "Due"))}</th>
-              <th class="offer-payment-term-col-resolved">${escapeHtml(bookingT("booking.offer.payment_terms.resolved_amount", "Amount"))}</th>
-              <th class="offer-payment-term-col-actions"></th>
-            </tr>
-          </thead>
           <tbody>
             ${lines.length
               ? editableRows
-              : `<tr><td colspan="7" class="offer-payment-terms__empty">${escapeHtml(bookingT("booking.offer.payment_terms.empty", "No payment terms yet."))}</td></tr>`}
+              : `<tr><td colspan="6" class="offer-payment-terms__empty">${escapeHtml(bookingT("booking.offer.payment_terms.empty", "No payment terms yet."))}</td></tr>`}
           </tbody>
         </table>
       </div>
+      ${renderOfferPaymentTermsValidationMarkup(validateOfferPaymentTermsTotal(displayTerms))}
       ${renderOfferPaymentTermsSummaryRows(displayTerms, currency)}
     `;
     els.offer_payment_terms.hidden = false;
@@ -773,7 +773,7 @@ export function createBookingOfferPaymentTermsModule(ctx) {
 
     const markDirty = () => {
       setOfferSaveEnabled(true);
-      clearOfferStatus();
+      syncOfferPaymentTermsValidationStatus(state.offerDraft?.payment_terms);
     };
     const syncComputedOnly = () => {
       state.offerDraft.payment_terms = normalizeOfferPaymentTermsDraft(
@@ -837,36 +837,6 @@ export function createBookingOfferPaymentTermsModule(ctx) {
         markDirty();
         renderOfferPaymentTerms();
       });
-    });
-    els.offer_payment_terms.querySelectorAll("[data-offer-payment-term-kind]").forEach((input) => {
-      input.addEventListener("change", () => {
-        const index = Number(input.getAttribute("data-offer-payment-term-kind"));
-        withLine(index, (line) => {
-          const nextKind = normalizeOfferPaymentTermKindValue(input.value);
-          const currentLines = Array.isArray(state.offerDraft?.payment_terms?.lines) ? state.offerDraft.payment_terms.lines : [];
-          const previousDefaultLabel = formatPaymentTermKindLabel(line.kind, "", {
-            installmentNumber: resolveOfferPaymentTermInstallmentNumber(currentLines, index, line.kind)
-          });
-          line.kind = nextKind;
-          if (!String(line.label || "").trim() || String(line.label || "").trim() === previousDefaultLabel) {
-            line.label = formatPaymentTermKindLabel(nextKind, "", {
-              installmentNumber: resolveOfferPaymentTermInstallmentNumber(currentLines, index, nextKind)
-            });
-          }
-        });
-        markDirty();
-        renderOfferPaymentTerms();
-      });
-    });
-    els.offer_payment_terms.querySelectorAll("[data-offer-payment-term-label]").forEach((input) => {
-      input.addEventListener("input", () => {
-        const index = Number(input.getAttribute("data-offer-payment-term-label"));
-        withLine(index, (line) => {
-          line.label = input.value;
-        });
-        markDirty();
-      });
-      input.addEventListener("change", syncComputedChanges);
     });
     els.offer_payment_terms.querySelectorAll("[data-offer-payment-term-amount-mode]").forEach((input) => {
       input.addEventListener("change", () => {
@@ -999,6 +969,7 @@ export function createBookingOfferPaymentTermsModule(ctx) {
     offerPaymentDueTypeUsesFixedDate,
     renderOfferPaymentTerms,
     resolveOfferPaymentTermInstallmentNumber,
+    validateOfferPaymentTermsTotal,
     updateOfferPaymentTermsInDom
   };
 }
