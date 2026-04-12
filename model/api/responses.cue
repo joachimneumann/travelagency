@@ -279,7 +279,6 @@ import (
 #BookingOfferPaymentTermsReadModel: {
 	currency: enums.#CurrencyCode
 	lines: [...#BookingOfferPaymentTermLineReadModel]
-	notes?:                       string
 	basis_total_amount_cents:     >=0 & int
 	scheduled_total_amount_cents: >=0 & int
 }

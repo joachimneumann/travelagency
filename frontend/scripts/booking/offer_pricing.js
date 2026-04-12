@@ -515,6 +515,11 @@ export function createBookingOfferPricingModule(ctx) {
     };
   }
 
+  function isSyntheticCarryOverAdditionalItem(item) {
+    const details = String(item?.details || "").trim().toLowerCase();
+    return details === "carry-over surcharge" || details === "carry over surcharge";
+  }
+
   function hasMeaningfulAdditionalItem(item) {
     if (!item || typeof item !== "object") return false;
     return Boolean(
@@ -591,14 +596,17 @@ export function createBookingOfferPricingModule(ctx) {
     const existingDiscounts = cloneDiscounts();
 
     if (toDetailLevel === "trip") {
+      const foldedCarryOverGross = existingAdditionalItems
+        .filter((item) => isSyntheticCarryOverAdditionalItem(item))
+        .reduce((sum, item) => sum + Math.max(0, Math.round(computeOfferAdditionalItemLineTotals(item).line_gross_amount_cents || 0)), 0);
       state.offerDraft.trip_price_internal = {
         ...createEmptyTripPriceInternal(),
         label: bookingT("booking.offer.trip_total", "Trip total"),
-        amount_cents: currentMainGross,
+        amount_cents: currentMainGross + foldedCarryOverGross,
         tax_rate_basis_points: 0
       };
       state.offerDraft.days_internal = [];
-      state.offerDraft.additional_items = existingAdditionalItems;
+      state.offerDraft.additional_items = existingAdditionalItems.filter((item) => !isSyntheticCarryOverAdditionalItem(item));
       state.offerDraft.discounts = existingDiscounts;
       return;
     }
@@ -1212,7 +1220,6 @@ export function createBookingOfferPricingModule(ctx) {
       cloneOfferPaymentTerms(state.offerDraft?.payment_terms, currency),
       currency
     );
-    const paymentTermsNotes = String(paymentTermsDraft?.notes || "").trim();
     if (paymentTermsDraft) {
       const percentageErrors = paymentTermsDraft.lines
         .map((line, index) => ({ line, index }))
@@ -1243,7 +1250,7 @@ export function createBookingOfferPricingModule(ctx) {
       ...(internalDetailLevel === "trip" && tripPriceInternal ? { trip_price_internal: tripPriceInternal } : {}),
       additional_items: additionalItems,
       ...(discounts.length ? { discounts } : {}),
-      ...(paymentTermsDraft && (paymentTermsDraft.lines.length || paymentTermsNotes)
+      ...(paymentTermsDraft && paymentTermsDraft.lines.length
         ? {
 	            payment_terms: {
 	              currency: paymentTermsDraft.currency,
@@ -1266,15 +1273,13 @@ export function createBookingOfferPricingModule(ctx) {
 	                  ...(paymentTermsModule.offerPaymentDueTypeUsesFixedDate(line?.due_rule?.type) && String(line?.due_rule?.fixed_date || "").trim()
                     ? { fixed_date: String(line.due_rule.fixed_date).trim() }
                     : {}),
-                  ...(paymentTermsModule.offerPaymentDueTypeUsesDays(line?.due_rule?.type)
-                    ? { days: Math.max(0, Math.round(Number(line?.due_rule?.days || 0))) }
-                    : {})
-                },
-                ...(String(line?.description || "").trim() ? { description: String(line.description).trim() } : {})
-              })),
-              ...(paymentTermsNotes ? { notes: paymentTermsNotes } : {})
-            }
-          }
+	                  ...(paymentTermsModule.offerPaymentDueTypeUsesDays(line?.due_rule?.type)
+	                    ? { days: Math.max(0, Math.round(Number(line?.due_rule?.days || 0))) }
+	                    : {})
+	                }
+	              }))
+	            }
+	          }
         : {})
     };
   }

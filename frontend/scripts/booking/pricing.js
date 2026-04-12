@@ -681,7 +681,7 @@ export function createBookingPricingModule(ctx) {
     const linkedOfferId = String(payment?.received_generated_offer_id || payment?.origin_generated_offer_id || "").trim();
     const generatedOffer = linkedOfferId ? (generatedOfferById(linkedOfferId) || latestGeneratedOffer()) : latestGeneratedOffer();
     if (!generatedOffer) {
-      return `<div class="micro">${escapeHtml(bookingT("booking.pricing.snapshot_pending", "The payment snapshot will link to the latest generated proposal PDF after this payment is saved."))}</div>`;
+      return `<div class="micro">${escapeHtml(bookingT("booking.pricing.snapshot_pending", "The payment snapshot will link to the latest generated offer PDF after this payment is saved."))}</div>`;
     }
     const paymentTerms = generatedOffer?.offer?.payment_terms || state.booking?.offer?.payment_terms || state.booking?.accepted_payment_terms_snapshot || null;
     const paymentTermCount = Array.isArray(paymentTerms?.lines) ? paymentTerms.lines.length : 0;
@@ -1000,7 +1000,7 @@ export function createBookingPricingModule(ctx) {
         </div>
         <div class="booking-section__body">
           <div class="booking-payment-section__body">
-            <p class="micro">${escapeHtml(bookingT("booking.pricing.deposit_setup_required", "Create a proposal payment plan before working with payment requests and receipts."))}</p>
+            <p class="micro">${escapeHtml(bookingT("booking.pricing.deposit_setup_required", "Create an offer payment plan before working with payment requests and receipts."))}</p>
           </div>
         </div>
       </article>

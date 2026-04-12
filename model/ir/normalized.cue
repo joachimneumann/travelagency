@@ -564,7 +564,6 @@ IR: {
 				{name: "sequence", kind: "scalar", typeName: "int", required: true},
 				{name: "amount_spec", kind: "entity", typeName: "BookingOfferPaymentAmountSpec", required: true},
 				{name: "due_rule", kind: "entity", typeName: "BookingOfferPaymentDueRule", required: true},
-				{name: "description", kind: "scalar", typeName: "string", required: false},
 			]
 		},
 		{
@@ -575,7 +574,6 @@ IR: {
 			fields: [
 				{name: "currency", kind: "enum", typeName: "CurrencyCode", required: true},
 				{name: "lines", kind: "entity", typeName: "BookingOfferPaymentTermLine", required: true, isArray: true},
-				{name: "notes", kind: "scalar", typeName: "string", required: false},
 			]
 		},
 		{

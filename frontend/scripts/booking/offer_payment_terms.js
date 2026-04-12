@@ -307,29 +307,30 @@ export function createBookingOfferPaymentTermsModule(ctx) {
     return bookingT("booking.offer.payment_terms.remaining_balance", "Remaining balance");
   }
 
-  function createDefaultOfferPaymentTermLine(sequence) {
+  function createDefaultOfferPaymentDepositLine(sequence = 1) {
     const numericSequence = Math.max(1, Math.round(Number(sequence || 1)));
-    if (numericSequence === 1) {
-      return {
-        id: "",
-        kind: "DEPOSIT",
-        label: formatPaymentTermKindLabel("DEPOSIT"),
-        sequence: numericSequence,
-        amount_spec: {
-          mode: "PERCENTAGE_OF_OFFER_TOTAL",
-          percentage_basis_points: 3000
-        },
-        resolved_amount_cents: 0,
-        due_rule: {
-          type: "ON_ACCEPTANCE"
-        },
-        description: ""
-      };
-    }
+    return {
+      id: "",
+      kind: "DEPOSIT",
+      label: formatPaymentTermKindLabel("DEPOSIT"),
+      sequence: numericSequence,
+      amount_spec: {
+        mode: "PERCENTAGE_OF_OFFER_TOTAL",
+        percentage_basis_points: 3000
+      },
+      resolved_amount_cents: 0,
+      due_rule: {
+        type: "ON_ACCEPTANCE"
+      }
+    };
+  }
+
+  function createDefaultOfferPaymentInstallmentLine(sequence, installmentNumber = 1) {
+    const numericSequence = Math.max(1, Math.round(Number(sequence || 1)));
     return {
       id: "",
       kind: "INSTALLMENT",
-      label: formatPaymentTermKindLabel("INSTALLMENT", "", { installmentNumber: Math.max(1, numericSequence - 1) }),
+      label: formatPaymentTermKindLabel("INSTALLMENT", "", { installmentNumber: Math.max(1, installmentNumber) }),
       sequence: numericSequence,
       amount_spec: {
         mode: "FIXED_AMOUNT",
@@ -338,8 +339,7 @@ export function createBookingOfferPaymentTermsModule(ctx) {
       resolved_amount_cents: 0,
       due_rule: {
         type: "ON_ACCEPTANCE"
-      },
-      description: ""
+      }
     };
   }
 
@@ -422,8 +422,7 @@ export function createBookingOfferPaymentTermsModule(ctx) {
         sequence,
         amount_spec: amountSpec,
         resolved_amount_cents: resolvedAmountCents,
-        due_rule: dueRule,
-        description: String(line?.description || "")
+        due_rule: dueRule
       };
     });
 
@@ -455,7 +454,6 @@ export function createBookingOfferPaymentTermsModule(ctx) {
         }
         return dueRule;
       })(),
-      description: String(finalLineTemplate?.description || "")
     };
     lines.push(finalLine);
 
@@ -463,8 +461,7 @@ export function createBookingOfferPaymentTermsModule(ctx) {
       currency,
       basis_total_amount_cents: basisTotalAmountCents,
       lines,
-      scheduled_total_amount_cents: lines.reduce((sum, line) => sum + Math.max(0, Number(line?.resolved_amount_cents || 0)), 0),
-      notes: String(source?.notes || "")
+      scheduled_total_amount_cents: lines.reduce((sum, line) => sum + Math.max(0, Number(line?.resolved_amount_cents || 0)), 0)
     };
   }
 
@@ -484,23 +481,35 @@ export function createBookingOfferPaymentTermsModule(ctx) {
     if (existing) return existing;
     const draft = normalizeOfferPaymentTermsDraft({
       currency: state.offerDraft?.currency || state.booking?.preferred_currency || "USD",
-      lines: [createDefaultFinalOfferPaymentTermLine(1)],
-      notes: ""
+      lines: [createDefaultFinalOfferPaymentTermLine(1)]
     });
     state.offerDraft.payment_terms = draft;
     return draft;
   }
 
   function renderOfferPaymentTermsSummaryRows(paymentTerms, currency) {
+    const finalPaymentLine = (Array.isArray(paymentTerms?.lines) ? paymentTerms.lines : []).find(
+      (line) => normalizeOfferPaymentTermKindValue(line?.kind) === "FINAL_BALANCE"
+    ) || null;
     return `
+      <div class="offer-payment-terms__summary">
+        <span class="offer-payment-terms__summary-label">${escapeHtml(bookingT("booking.offer.payment_terms.final_balance", "Final payment"))}</span>
+        <span class="offer-payment-terms__summary-value" data-offer-payment-terms-final-payment>${escapeHtml(formatMoneyDisplay(finalPaymentLine?.resolved_amount_cents || paymentTerms?.basis_total_amount_cents || 0, currency))}</span>
+      </div>
       <div class="offer-payment-terms__summary">
         <span class="offer-payment-terms__summary-label">${escapeHtml(bookingT("booking.offer.payment_terms.basis_total", "Offer total"))}</span>
         <span class="offer-payment-terms__summary-value" data-offer-payment-terms-basis-total>${escapeHtml(formatMoneyDisplay(paymentTerms?.basis_total_amount_cents || 0, currency))}</span>
       </div>
-      <div class="offer-payment-terms__summary">
-        <span class="offer-payment-terms__summary-label">${escapeHtml(bookingT("booking.offer.payment_terms.scheduled_total", "Scheduled total"))}</span>
-        <span class="offer-payment-terms__summary-value" data-offer-payment-terms-scheduled-total>${escapeHtml(formatMoneyDisplay(paymentTerms?.scheduled_total_amount_cents || 0, currency))}</span>
-      </div>
+    `;
+  }
+
+  function renderOfferPaymentTermAddRow(action, label) {
+    return `
+      <tr class="offer-payment-terms__add-row">
+        <td colspan="7" class="offer-payment-terms__add-cell">
+          <button class="btn btn-ghost" type="button" data-offer-payment-term-add="${escapeHtml(action)}">${escapeHtml(label)}</button>
+        </td>
+      </tr>
     `;
   }
 
@@ -515,59 +524,17 @@ export function createBookingOfferPaymentTermsModule(ctx) {
       const line = paymentTerms.lines[index];
       node.textContent = formatMoneyDisplay(line?.resolved_amount_cents || 0, currency);
     });
+    const finalPaymentLine = (Array.isArray(paymentTerms?.lines) ? paymentTerms.lines : []).find(
+      (line) => normalizeOfferPaymentTermKindValue(line?.kind) === "FINAL_BALANCE"
+    ) || null;
+    const finalNode = els.offer_payment_terms.querySelector("[data-offer-payment-terms-final-payment]");
     const basisNode = els.offer_payment_terms.querySelector("[data-offer-payment-terms-basis-total]");
-    const scheduledNode = els.offer_payment_terms.querySelector("[data-offer-payment-terms-scheduled-total]");
+    if (finalNode) {
+      finalNode.textContent = formatMoneyDisplay(finalPaymentLine?.resolved_amount_cents || paymentTerms?.basis_total_amount_cents || 0, currency);
+    }
     if (basisNode) {
       basisNode.textContent = formatMoneyDisplay(paymentTerms.basis_total_amount_cents || 0, currency);
     }
-    if (scheduledNode) {
-      scheduledNode.textContent = formatMoneyDisplay(paymentTerms.scheduled_total_amount_cents || 0, currency);
-    }
-  }
-
-  function renderOfferPaymentTermsNotes() {
-    if (!els.offer_payment_terms_notes) return;
-    const readOnly = !state.permissions.canEditBooking;
-    const paymentTerms = getOfferPaymentTermsDraft();
-    const notes = String(paymentTerms?.notes || "").trim();
-    if (readOnly && !notes) {
-      els.offer_payment_terms_notes.hidden = true;
-      els.offer_payment_terms_notes.innerHTML = "";
-      return;
-    }
-    if (readOnly) {
-      els.offer_payment_terms_notes.innerHTML = `
-        <div class="offer-payment-terms-notes__card">
-          <div class="offer-payment-terms-notes__title">${escapeHtml(bookingT("booking.offer.payment_terms.notes", "Notes (ATP internal)"))}</div>
-          <div class="offer-payment-terms-notes__text">${escapeHtml(notes)}</div>
-        </div>
-      `;
-      els.offer_payment_terms_notes.hidden = false;
-      return;
-    }
-    els.offer_payment_terms_notes.innerHTML = `
-      <label class="offer-payment-terms__field offer-payment-terms-notes__field">
-        <span>${escapeHtml(bookingT("booking.offer.payment_terms.notes", "Notes (ATP internal)"))}</span>
-        <textarea class="booking-text-field booking-text-field--customer" rows="2" data-offer-payment-terms-notes>${escapeHtml(String(paymentTerms?.notes || ""))}</textarea>
-      </label>
-    `;
-    els.offer_payment_terms_notes.hidden = false;
-    els.offer_payment_terms_notes.querySelectorAll("[data-offer-payment-terms-notes]").forEach((input) => {
-      input.addEventListener("input", () => {
-        const draft = ensureOfferPaymentTermsDraft();
-        draft.notes = input.value;
-        state.offerDraft.payment_terms = normalizeOfferPaymentTermsDraft(draft, draft.currency);
-        setOfferSaveEnabled(true);
-        clearOfferStatus();
-      });
-      input.addEventListener("change", () => {
-        const draft = ensureOfferPaymentTermsDraft();
-        draft.notes = input.value;
-        state.offerDraft.payment_terms = normalizeOfferPaymentTermsDraft(draft, draft.currency);
-        setOfferSaveEnabled(true);
-        clearOfferStatus();
-      });
-    });
   }
 
   function renderOfferPaymentTerms() {
@@ -581,10 +548,6 @@ export function createBookingOfferPaymentTermsModule(ctx) {
       }
       els.offer_payment_terms.hidden = true;
       els.offer_payment_terms.innerHTML = "";
-      if (els.offer_payment_terms_notes) {
-        els.offer_payment_terms_notes.hidden = true;
-        els.offer_payment_terms_notes.innerHTML = "";
-      }
       return;
     }
     if (els.offer_payment_terms_panel) {
@@ -602,7 +565,6 @@ export function createBookingOfferPaymentTermsModule(ctx) {
             installmentNumber: resolveOfferPaymentTermInstallmentNumber(lines, index)
           });
           const label = String(line?.label || "").trim() || kindLabel;
-          const description = String(line?.description || "").trim();
           return `
             <tr class="offer-payment-terms__table-row">
               <td class="offer-payment-term-col-kind">${escapeHtml(kindLabel)}</td>
@@ -612,13 +574,6 @@ export function createBookingOfferPaymentTermsModule(ctx) {
               <td class="offer-payment-term-col-due">${escapeHtml(formatOfferPaymentDueRule(line?.due_rule))}</td>
               <td class="offer-payment-term-col-resolved">${escapeHtml(formatMoneyDisplay(line?.resolved_amount_cents || 0, currency))}</td>
               <td class="offer-payment-term-col-actions"></td>
-            </tr>
-            <tr class="offer-payment-terms__description-row">
-              <td class="offer-payment-terms__description-cell" colspan="6">
-                <div class="offer-payment-terms__description-title">${escapeHtml(bookingT("booking.offer.payment_terms.customer_note", "Note for customer"))}</div>
-                <div class="offer-payment-terms__description-text">${description ? escapeHtml(description) : " "}</div>
-              </td>
-              <td class="offer-payment-terms__description-spacer"></td>
             </tr>
           `;
         })
@@ -643,21 +598,19 @@ export function createBookingOfferPaymentTermsModule(ctx) {
             <tbody>${rows}</tbody>
           </table>
         </div>
-        <div class="offer-payment-terms__card">
-          ${renderOfferPaymentTermsSummaryRows(displayTerms, currency)}
-        </div>
+        ${renderOfferPaymentTermsSummaryRows(displayTerms, currency)}
       `;
       els.offer_payment_terms.hidden = false;
-      renderOfferPaymentTermsNotes();
       renderOfferGenerationControls?.();
       return;
     }
 
     const amountStep = isWholeUnitCurrency(currency) ? "1" : "0.01";
-    const rows = lines.map((line, index) => {
+    const rowEntries = lines.map((line, index) => {
       const amountMode = normalizeOfferPaymentAmountModeValue(line?.amount_spec?.mode);
       const dueType = normalizeOfferPaymentDueTypeValue(line?.due_rule?.type);
-      const isFinalBalance = normalizeOfferPaymentTermKindValue(line?.kind) === "FINAL_BALANCE";
+      const normalizedKind = normalizeOfferPaymentTermKindValue(line?.kind);
+      const isFinalBalance = normalizedKind === "FINAL_BALANCE";
       const installmentNumber = resolveOfferPaymentTermInstallmentNumber(lines, index);
       const kindLabel = formatPaymentTermKindLabel(line?.kind, "", { installmentNumber });
       const kindFieldId = buildOfferPaymentTermFieldId("kind", index);
@@ -668,7 +621,6 @@ export function createBookingOfferPaymentTermsModule(ctx) {
       const dueTypeFieldId = buildOfferPaymentTermFieldId("due_type", index);
       const fixedDateFieldId = buildOfferPaymentTermFieldId("fixed_date", index);
       const daysFieldId = buildOfferPaymentTermFieldId("days", index);
-      const descriptionFieldId = buildOfferPaymentTermFieldId("description", index);
       const dueEditor = `<div class="offer-payment-terms__due-editor" data-offer-payment-term-due-editor="${index}">
             <select
               id="${dueTypeFieldId}"
@@ -696,7 +648,10 @@ export function createBookingOfferPaymentTermsModule(ctx) {
               ${offerPaymentDueTypeUsesDays(dueType) ? "" : "hidden"}
             />
           </div>`;
-      return `
+      return {
+        kind: normalizedKind,
+        index,
+        markup: `
         <tr class="offer-payment-terms__table-row">
           <td class="offer-payment-term-col-kind">
             ${isFinalBalance
@@ -768,26 +723,28 @@ export function createBookingOfferPaymentTermsModule(ctx) {
               : `<button class="btn btn-ghost offer-remove-btn" type="button" data-offer-payment-term-remove="${index}" title="${escapeHtml(bookingT("booking.offer.payment_terms.remove", "Remove payment term"))}" aria-label="${escapeHtml(bookingT("booking.offer.payment_terms.remove", "Remove payment term"))}">×</button>`}
           </td>
         </tr>
-        <tr class="offer-payment-terms__description-row">
-          <td class="offer-payment-terms__description-cell" colspan="6">
-            <div class="offer-payment-terms__description-title">${escapeHtml(bookingT("booking.offer.payment_terms.customer_note", "Note for customer"))}</div>
-            <textarea
-              id="${descriptionFieldId}"
-              name="${buildOfferPaymentTermFieldName("description", index)}"
-              class="booking-text-field booking-text-field--customer"
-              rows="2"
-              data-offer-payment-term-description="${index}"
-            >${escapeHtml(String(line?.description || ""))}</textarea>
-          </td>
-          <td class="offer-payment-terms__description-spacer"></td>
-        </tr>
-      `;
-    }).join("");
+      `
+      };
+    });
+    const depositRows = rowEntries
+      .filter((entry) => entry.kind === "DEPOSIT")
+      .map((entry) => entry.markup)
+      .join("");
+    const installmentRows = rowEntries
+      .filter((entry) => entry.kind === "INSTALLMENT")
+      .map((entry) => entry.markup)
+      .join("");
+    const finalBalanceRow = rowEntries.find((entry) => entry.kind === "FINAL_BALANCE")?.markup || "";
+    const editableRows = [
+      depositRows || renderOfferPaymentTermAddRow("deposit", bookingT("booking.offer.payment_terms.add_deposit", "Add deposit")),
+      installmentRows,
+      renderOfferPaymentTermAddRow("installment", bookingT("booking.offer.payment_terms.add_installment", "Add Installment")),
+      finalBalanceRow
+    ].filter(Boolean).join("");
 
     els.offer_payment_terms.innerHTML = `
       <div class="offer-payment-terms__header">
         <div class="offer-payment-terms__title">${escapeHtml(bookingT("booking.offer.payment_terms.title", "Payment terms"))}</div>
-        <button class="btn btn-ghost" type="button" data-offer-payment-term-add>${escapeHtml(bookingT("booking.offer.payment_terms.add", "Add deposit / installment"))}</button>
       </div>
       <div class="backend-table-wrap offer-payment-terms__table-wrap">
         <table class="backend-table offer-payment-terms__table">
@@ -804,17 +761,14 @@ export function createBookingOfferPaymentTermsModule(ctx) {
           </thead>
           <tbody>
             ${lines.length
-              ? rows
+              ? editableRows
               : `<tr><td colspan="7" class="offer-payment-terms__empty">${escapeHtml(bookingT("booking.offer.payment_terms.empty", "No payment terms yet."))}</td></tr>`}
           </tbody>
         </table>
       </div>
-      <div class="offer-payment-terms__card offer-payment-terms__card--summary">
-        ${renderOfferPaymentTermsSummaryRows(displayTerms, currency)}
-      </div>
+      ${renderOfferPaymentTermsSummaryRows(displayTerms, currency)}
     `;
     els.offer_payment_terms.hidden = false;
-    renderOfferPaymentTermsNotes();
     renderOfferGenerationControls?.();
 
     const markDirty = () => {
@@ -849,14 +803,24 @@ export function createBookingOfferPaymentTermsModule(ctx) {
       button.addEventListener("click", () => {
         const draft = ensureOfferPaymentTermsDraft();
         const currentLines = Array.isArray(draft.lines) ? draft.lines : [];
+        const action = String(button.getAttribute("data-offer-payment-term-add") || "").trim().toLowerCase();
         const finalIndex = currentLines.findIndex((line) => normalizeOfferPaymentTermKindValue(line?.kind) === "FINAL_BALANCE");
-        const nonFinalCount = currentLines.filter((line) => normalizeOfferPaymentTermKindValue(line?.kind) !== "FINAL_BALANCE").length;
-        const nextLine = createDefaultOfferPaymentTermLine(nonFinalCount + 1);
         const nextLines = [...currentLines];
-        if (finalIndex >= 0) {
-          nextLines.splice(finalIndex, 0, nextLine);
+        if (action === "deposit") {
+          const hasDeposit = currentLines.some((line) => normalizeOfferPaymentTermKindValue(line?.kind) === "DEPOSIT");
+          if (hasDeposit) return;
+          nextLines.splice(0, 0, createDefaultOfferPaymentDepositLine(1));
         } else {
-          nextLines.push(nextLine, createDefaultFinalOfferPaymentTermLine(nonFinalCount + 2));
+          const installmentCount = currentLines.filter((line) => normalizeOfferPaymentTermKindValue(line?.kind) === "INSTALLMENT").length;
+          const nextLine = createDefaultOfferPaymentInstallmentLine(
+            finalIndex >= 0 ? finalIndex + 1 : currentLines.length + 1,
+            installmentCount + 1
+          );
+          if (finalIndex >= 0) {
+            nextLines.splice(finalIndex, 0, nextLine);
+          } else {
+            nextLines.push(nextLine, createDefaultFinalOfferPaymentTermLine(currentLines.length + 2));
+          }
         }
         draft.lines = nextLines;
         state.offerDraft.payment_terms = normalizeOfferPaymentTermsDraft(draft, draft.currency);
@@ -1014,16 +978,6 @@ export function createBookingOfferPaymentTermsModule(ctx) {
         const index = Number(input.getAttribute("data-offer-payment-term-days"));
         withLine(index, (line) => {
           line.due_rule.days = Math.max(0, Math.round(Number(input.value || 0)));
-        });
-        markDirty();
-      });
-      input.addEventListener("change", syncComputedChanges);
-    });
-    els.offer_payment_terms.querySelectorAll("[data-offer-payment-term-description]").forEach((input) => {
-      input.addEventListener("input", () => {
-        const index = Number(input.getAttribute("data-offer-payment-term-description"));
-        withLine(index, (line) => {
-          line.description = input.value;
         });
         markDirty();
       });

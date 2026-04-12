@@ -2085,6 +2085,22 @@ test("offer detail level select uses literal detail level values instead of curr
   );
 });
 
+test("switching offer detail level back to trip folds synthetic carry-over surcharge into the trip total", async () => {
+  const offerPricingModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "offer_pricing.js");
+  const source = await readFile(offerPricingModulePath, "utf8");
+
+  assert.match(
+    source,
+    /function isSyntheticCarryOverAdditionalItem\(item\) \{[\s\S]*carry-over surcharge[\s\S]*carry over surcharge/,
+    "Offer pricing should explicitly recognize the synthetic carry-over surcharge rows created by the destructive detail-level switch"
+  );
+  assert.match(
+    source,
+    /if \(toDetailLevel === "trip"\) \{[\s\S]*foldedCarryOverGross[\s\S]*amount_cents: currentMainGross \+ foldedCarryOverGross[\s\S]*additional_items = existingAdditionalItems\.filter\(\(item\) => !isSyntheticCarryOverAdditionalItem\(item\)\)/,
+    "Switching back to trip should fold any synthetic carry-over surcharge into the trip total instead of keeping it as a separate adjustment row"
+  );
+});
+
 test("offer editor preserves explicit zero tax rates and keeps zero-tax rows out of the summary", async () => {
   const offerPricingModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "offer_pricing.js");
   const source = await readFile(offerPricingModulePath, "utf8");

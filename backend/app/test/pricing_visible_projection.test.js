@@ -78,6 +78,44 @@ test("trip visible pricing folds synthetic carry-over surcharge into trip total"
   assert.equal(projection.additional_items[0].id, "real_addon");
 });
 
+test("trip internal pricing folds synthetic carry-over surcharge into trip total and removes it from adjustments", () => {
+  const helpers = buildPricingHelpers();
+  const offer = helpers.normalizeBookingOffer({
+    currency: "USD",
+    offer_detail_level_internal: "trip",
+    offer_detail_level_visible: "trip",
+    trip_price_internal: {
+      id: "trip_total",
+      label: "Trip total",
+      amount_cents: 1000,
+      tax_rate_basis_points: 0
+    },
+    additional_items: [
+      {
+        id: "carry_over",
+        label: "Additional item",
+        details: "Carry-over surcharge",
+        quantity: 1,
+        unit_amount_cents: 200,
+        tax_rate_basis_points: 0
+      },
+      {
+        id: "real_addon",
+        label: "Visa",
+        details: "Border fee",
+        quantity: 1,
+        unit_amount_cents: 300,
+        tax_rate_basis_points: 0
+      }
+    ]
+  });
+
+  assert.equal(offer.trip_price_internal?.line_gross_amount_cents, 1200);
+  assert.equal(offer.additional_items.length, 1);
+  assert.equal(offer.additional_items[0].id, "real_addon");
+  assert.equal(offer.total_price_cents, 1500);
+});
+
 test("legacy component trip fallback preserves tax amounts in quotation summary", () => {
   const helpers = buildPricingHelpers();
   const offer = helpers.normalizeBookingOffer({

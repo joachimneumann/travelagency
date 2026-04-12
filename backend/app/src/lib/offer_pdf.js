@@ -1686,17 +1686,12 @@ function drawPaymentTerms(doc, generatedOffer, startY, formatMoneyValue, fonts, 
       formatPaymentTermAmountSpecForPdf(line?.amount_spec, currency, formatMoneyValue, lang),
       formatPaymentTermDueRuleForPdf(line?.due_rule, lang)
     ].filter(Boolean).join(" · ");
-    const description = textOrNull(line?.description);
-
     doc.font(pdfFontName("bold", fonts)).fontSize(10.6);
     const labelHeight = doc.heightOfString(label, pdfTextOptions(lang, { width: labelWidth }));
     doc.font(pdfFontName("regular", fonts)).fontSize(10);
     const metaHeight = meta ? doc.heightOfString(meta, pdfTextOptions(lang, { width: metaWidth })) : 0;
-    const descriptionHeight = description
-      ? doc.heightOfString(description, pdfTextOptions(lang, { width: cardWidth - 28, lineGap: 1 }))
-      : 0;
     const amountHeight = doc.heightOfString(amountText, { width: amountWidth, align: "right" });
-    const rowHeight = Math.max(34, Math.max(labelHeight + metaHeight + 4, amountHeight) + descriptionHeight + 18);
+    const rowHeight = Math.max(34, Math.max(labelHeight + metaHeight + 4, amountHeight) + 18);
 
     y = ensureSpace(doc, y, rowHeight + 8, redrawSectionHeader || undefined);
     doc
@@ -1732,34 +1727,20 @@ function drawPaymentTerms(doc, generatedOffer, startY, formatMoneyValue, fonts, 
         }));
     }
 
-    if (description) {
-      doc
-        .font(pdfFontName("regular", fonts))
-        .fontSize(9.8)
-        .fillColor(PDF_COLORS.textMutedStrong)
-        .text(description, PAGE_MARGIN + 14, y + 26 + metaHeight + 4, pdfTextOptions(lang, {
-          width: cardWidth - 28,
-          lineGap: 1
-        }));
-    }
-
     y += rowHeight + 8;
   }
 
   if (shouldRenderPaymentTermsSummaryCard(generatedOffer)) {
     const basisTotal = Number(paymentTerms?.basis_total_amount_cents || generatedOffer?.total_price_cents || 0);
-    const scheduledTotal = Number(
-      paymentTerms?.scheduled_total_amount_cents
-      || lines.reduce((sum, line) => sum + Math.max(0, Number(line?.resolved_amount_cents || 0)), 0)
-    );
+    const finalPaymentLine = lines.find((line) => String(line?.kind || "").trim().toUpperCase() === "FINAL_BALANCE") || null;
     const summaryRows = [
+      {
+        label: pdfT(lang, "offer.payment_terms.final_balance", "Final payment"),
+        value: formatMoneyValue(finalPaymentLine?.resolved_amount_cents || basisTotal, currency)
+      },
       {
         label: pdfT(lang, "offer.payment_terms.basis_total", "Offer total"),
         value: formatMoneyValue(basisTotal, currency)
-      },
-      {
-        label: pdfT(lang, "offer.payment_terms.scheduled_total", "Scheduled total"),
-        value: formatMoneyValue(scheduledTotal, currency)
       }
     ];
     const summaryCardHeight = 18 + 18 + 14
@@ -1767,27 +1748,6 @@ function drawPaymentTerms(doc, generatedOffer, startY, formatMoneyValue, fonts, 
       + (summaryRows.some((row) => row.isTotal) ? 15 : 0);
     y = ensureSpace(doc, y, summaryCardHeight + 8, redrawSectionHeader || undefined);
     y = drawPaymentTermsSummaryCard(doc, y, summaryRows, fonts, lang);
-  }
-
-  const notes = textOrNull(paymentTerms?.notes);
-  if (notes) {
-    y = ensureSpace(doc, y + 8, 54, redrawSectionHeader || undefined);
-    doc
-      .font(pdfFontName("bold", fonts))
-      .fontSize(11)
-      .fillColor(PDF_COLORS.textMutedStrong)
-      .text(pdfT(lang, "offer.payment_terms.notes", "Notes"), PAGE_MARGIN, y + 8, pdfTextOptions(lang, {
-        width: cardWidth
-      }));
-    doc
-      .font(pdfFontName("regular", fonts))
-      .fontSize(10)
-      .fillColor(PDF_COLORS.textMutedStrong)
-      .text(notes, PAGE_MARGIN, y + 24, pdfTextOptions(lang, {
-        width: cardWidth,
-        lineGap: 1
-      }));
-    y = doc.y + 8;
   }
 
   return y + 10;
@@ -1801,18 +1761,13 @@ function measurePaymentTermCardHeight(doc, line, currency, formatMoneyValue, fon
     formatPaymentTermAmountSpecForPdf(line?.amount_spec, currency, formatMoneyValue, lang),
     formatPaymentTermDueRuleForPdf(line?.due_rule, lang)
   ].filter(Boolean).join(" · ");
-  const description = textOrNull(line?.description);
-
   doc.font(pdfFontName("bold", fonts)).fontSize(10.6);
   const labelHeight = doc.heightOfString(label, pdfTextOptions(lang, { width: labelWidth }));
   doc.font(pdfFontName("regular", fonts)).fontSize(10);
   const metaHeight = meta ? doc.heightOfString(meta, pdfTextOptions(lang, { width: metaWidth })) : 0;
-  const descriptionHeight = description
-    ? doc.heightOfString(description, pdfTextOptions(lang, { width: cardWidth - 28, lineGap: 1 }))
-    : 0;
   const amountHeight = doc.heightOfString(amountText, { width: amountWidth, align: "right" });
 
-  return Math.max(34, Math.max(labelHeight + metaHeight + 4, amountHeight) + descriptionHeight + 18);
+  return Math.max(34, Math.max(labelHeight + metaHeight + 4, amountHeight) + 18);
 }
 
 function estimatePaymentTermsHeight(doc, generatedOffer, formatMoneyValue, fonts, lang) {
@@ -1838,18 +1793,15 @@ function estimatePaymentTermsHeightWithOptions(doc, generatedOffer, formatMoneyV
 
   if (shouldRenderPaymentTermsSummaryCard(generatedOffer)) {
     const basisTotal = Number(paymentTerms?.basis_total_amount_cents || generatedOffer?.total_price_cents || 0);
-    const scheduledTotal = Number(
-      paymentTerms?.scheduled_total_amount_cents
-      || lines.reduce((sum, line) => sum + Math.max(0, Number(line?.resolved_amount_cents || 0)), 0)
-    );
+    const finalPaymentLine = lines.find((line) => String(line?.kind || "").trim().toUpperCase() === "FINAL_BALANCE") || null;
     const summaryRows = [
+      {
+        label: pdfT(lang, "offer.payment_terms.final_balance", "Final payment"),
+        value: formatMoneyValue(finalPaymentLine?.resolved_amount_cents || basisTotal, currency)
+      },
       {
         label: pdfT(lang, "offer.payment_terms.basis_total", "Offer total"),
         value: formatMoneyValue(basisTotal, currency)
-      },
-      {
-        label: pdfT(lang, "offer.payment_terms.scheduled_total", "Scheduled total"),
-        value: formatMoneyValue(scheduledTotal, currency)
       }
     ];
     const summaryCardHeight = 18 + 18 + 14

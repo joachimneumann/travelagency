@@ -241,7 +241,7 @@ export function createBookingOfferModule(ctx) {
 
   function updateOfferPanelSummary(totalCents, currency) {
     renderBookingSectionHeader(els.offerPanelSummary, {
-      primary: bookingT("booking.proposal_total", "Proposal {total}", { total: formatMoneyDisplay(totalCents, currency) })
+      primary: bookingT("booking.proposal_total", "Offer {total}", { total: formatMoneyDisplay(totalCents, currency) })
     });
   }
 
@@ -324,8 +324,7 @@ export function createBookingOfferModule(ctx) {
                 ? { days: Math.max(0, Math.round(Number(line.due_rule.days))) }
                 : {})
             }
-          : { type: "ON_ACCEPTANCE" },
-        ...(String(line?.description || "").trim() ? { description: String(line.description).trim() } : {})
+          : { type: "ON_ACCEPTANCE" }
       }))
       .sort((left, right) => (left.sequence - right.sequence) || String(left.id || "").localeCompare(String(right.id || "")));
     return {
@@ -334,8 +333,7 @@ export function createBookingOfferModule(ctx) {
       lines,
       scheduled_total_amount_cents: Number.isFinite(Number(source.scheduled_total_amount_cents))
         ? Math.max(0, Math.round(Number(source.scheduled_total_amount_cents)))
-        : lines.reduce((sum, line) => sum + Math.max(0, Number(line?.resolved_amount_cents || 0)), 0),
-      ...(String(source.notes || "").trim() ? { notes: String(source.notes).trim() } : {})
+        : lines.reduce((sum, line) => sum + Math.max(0, Number(line?.resolved_amount_cents || 0)), 0)
     };
   }
 

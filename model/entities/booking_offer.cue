@@ -127,7 +127,6 @@ import (
 	sequence:     >=1 & int
 	amount_spec:  #BookingOfferPaymentAmountSpec
 	due_rule:     #BookingOfferPaymentDueRule
-	description?: string
 
 	if kind == "FINAL_BALANCE" {
 		amount_spec: {
@@ -145,7 +144,6 @@ import (
 #BookingOfferPaymentTerms: {
 	currency: enums.#CurrencyCode
 	lines: [...#BookingOfferPaymentTermLine]
-	notes?: string
 }
 
 #BookingOffer: {

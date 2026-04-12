@@ -463,7 +463,6 @@ const els = {
   offer_payment_terms: document.getElementById("offer_payment_terms"),
   offer_quotation_summary: document.getElementById("offer_quotation_summary"),
   offer_generation_route_mode: document.getElementById("offer_generation_route_mode"),
-  offer_payment_terms_notes: document.getElementById("offer_payment_terms_notes"),
   offer_status: document.getElementById("offer_status"),
   activities_table: document.getElementById("activities_table"),
   activitiesPanelSummary: document.getElementById("activities_panel_summary"),
@@ -1375,7 +1374,7 @@ function renderStaticSectionHeaders() {
   renderBookingSectionHeader(els.travel_plan_pdf_panel_summary, {
     primary: backendT("booking.travel_plan.travel_plan_pdf", "Travel plan PDF")
   });
-  renderBookingSectionHeader(els.offerPanelSummary, { primary: backendT("booking.proposal", "Proposal") });
+  renderBookingSectionHeader(els.offerPanelSummary, { primary: backendT("booking.proposal", "Offer") });
   renderBookingSectionHeader(els.offerPaymentTermsPanelSummary, { primary: backendT("booking.payment_plan", "Payment plan") });
   renderBookingSectionHeader(els.activitiesPanelSummary, { primary: backendT("booking.activities", "Activities") });
 }

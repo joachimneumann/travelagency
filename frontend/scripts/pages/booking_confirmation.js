@@ -227,17 +227,14 @@ function renderPaymentTerms() {
     return;
   }
   const currency = paymentTerms.currency || state.access?.currency || "USD";
+  const finalPaymentLine = lines.find((line) => normalizeText(line?.kind).toUpperCase() === "FINAL_BALANCE") || null;
   const rows = lines.map((line) => `
     <tr>
       <td>${escapeHtml(line.label || "Payment")}</td>
       <td>${escapeHtml(formatPaymentDueRule(line?.due_rule))}</td>
       <td class="booking-confirmation-payment-terms__amount">${escapeHtml(formatMoney(line?.resolved_amount_cents || 0, currency))}</td>
-    </tr>
-    ${normalizeText(line?.description)
-      ? `<tr class="booking-confirmation-payment-terms__note-row"><td colspan="3"><span class="booking-confirmation-payment-terms__note-label">Note for customer</span>${escapeHtml(line.description)}</td></tr>`
-      : ""}`
+    </tr>`
   ).join("");
-  const notes = normalizeText(paymentTerms?.notes);
   els.paymentTerms.innerHTML = `
     <div class="booking-confirmation-payment-terms__header">
       <h2 class="booking-confirmation-payment-terms__title">Payment terms</h2>
@@ -256,15 +253,14 @@ function renderPaymentTerms() {
     </div>
     <div class="booking-confirmation-payment-terms__summary">
       <div class="booking-confirmation-payment-terms__summary-row">
+        <span>Final payment</span>
+        <strong>${escapeHtml(formatMoney(finalPaymentLine?.resolved_amount_cents || paymentTerms?.basis_total_amount_cents || state.access?.total_price_cents || 0, currency))}</strong>
+      </div>
+      <div class="booking-confirmation-payment-terms__summary-row">
         <span>Offer total</span>
         <strong>${escapeHtml(formatMoney(paymentTerms?.basis_total_amount_cents || state.access?.total_price_cents || 0, currency))}</strong>
       </div>
-      <div class="booking-confirmation-payment-terms__summary-row">
-        <span>Scheduled total</span>
-        <strong>${escapeHtml(formatMoney(paymentTerms?.scheduled_total_amount_cents || 0, currency))}</strong>
-      </div>
     </div>
-    ${notes ? `<p class="booking-confirmation-payment-terms__notes">${escapeHtml(notes)}</p>` : ""}
   `;
   els.paymentTerms.hidden = false;
 }

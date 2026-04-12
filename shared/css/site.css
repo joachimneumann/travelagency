@@ -2701,15 +2701,6 @@ textarea:focus-visible {
   margin: 0 0 0.9rem;
 }
 
-.offer-payment-terms__card {
-  width: 100%;
-  margin-left: 0;
-  padding: 0.85rem 1rem 0.95rem;
-  border: 1px solid var(--line-soft);
-  border-radius: 16px;
-  background: var(--white-alpha-92);
-}
-
 .offer-payment-terms__title {
   margin-bottom: 0.65rem;
   font-size: var(--font-size-caption);
@@ -2843,6 +2834,15 @@ textarea:focus-visible {
 
 .offer-payment-terms__table-row td {
   vertical-align: middle;
+}
+
+.offer-payment-terms__add-row td {
+  border-bottom: none;
+}
+
+.offer-payment-terms__add-cell {
+  padding: 0.45rem 0.5rem 0.3rem;
+  text-align: center;
 }
 
 .offer-payment-terms__description-row td {

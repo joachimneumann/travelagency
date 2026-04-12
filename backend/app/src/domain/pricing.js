@@ -574,17 +574,13 @@ export function createPricingHelpers({
         resolved_amount_cents: resolvedAmountCents,
         due_rule: normalizeOfferPaymentDueRule(line?.due_rule)
       };
-      const description = normalizeText(line?.description);
-      if (description) normalizedLine.description = description;
       return normalizedLine;
     });
 
-    const notes = normalizeText(source.notes);
     const normalized = {
       currency: safeCurrency(currency),
       lines
     };
-    if (notes) normalized.notes = notes;
     return normalized;
   }
 
@@ -829,7 +825,25 @@ export function createPricingHelpers({
       (internalDetailLevel === "day" && !normalizedDaysInternal.length && legacyDaysInternal.length > 0)
       || (internalDetailLevel === "trip" && !normalizedTripPriceInternal && Boolean(legacyTripPriceInternal))
     );
-    const additionalItems = normalizeBookingOfferAdditionalItems(source.additional_items, currency);
+    const normalizedAdditionalItems = normalizeBookingOfferAdditionalItems(source.additional_items, currency);
+    const foldedCarryOverItems = internalDetailLevel === "trip"
+      ? normalizedAdditionalItems.filter((item) => isSyntheticCarryOverAdditionalItem(item))
+      : [];
+    const additionalItems = foldedCarryOverItems.length
+      ? normalizedAdditionalItems.filter((item) => !isSyntheticCarryOverAdditionalItem(item))
+      : normalizedAdditionalItems;
+    const tripPriceInternalWithFoldedCarryOver = internalDetailLevel === "trip" && foldedCarryOverItems.length
+      ? aggregateLegacyOfferLines(
+          [tripPriceInternal, ...foldedCarryOverItems].filter(Boolean),
+          {
+            id: normalizeText(tripPriceInternal?.id) || "offer_trip_internal_folded",
+            label: normalizeText(tripPriceInternal?.label) || "Trip total",
+            notes: normalizeText(tripPriceInternal?.notes),
+            currency,
+            sortOrder: Number.isFinite(Number(tripPriceInternal?.sort_order)) ? Number(tripPriceInternal.sort_order) : 0
+          }
+        )
+      : tripPriceInternal;
     const rawDiscounts = Array.isArray(source.discounts) ? source.discounts : [];
     const discounts = normalizeBookingOfferDiscounts(
       rawDiscounts.length
@@ -855,7 +869,7 @@ export function createPricingHelpers({
           ? categoryRulesByCode.get(category)
           : defaultOfferTaxRateBasisPoints
       })),
-      ...(tripPriceInternal ? { trip_price_internal: tripPriceInternal } : {}),
+      ...(tripPriceInternalWithFoldedCarryOver ? { trip_price_internal: tripPriceInternalWithFoldedCarryOver } : {}),
       days_internal: daysInternal,
       additional_items: additionalItems,
       discounts
