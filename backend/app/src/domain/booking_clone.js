@@ -49,21 +49,6 @@ function zeroOfferQuotationSummary() {
   };
 }
 
-function zeroPricingSummary() {
-  return {
-    agreed_net_amount_cents: 0,
-    adjustments_delta_cents: 0,
-    adjusted_net_amount_cents: 0,
-    scheduled_net_amount_cents: 0,
-    unscheduled_net_amount_cents: 0,
-    scheduled_tax_amount_cents: 0,
-    scheduled_gross_amount_cents: 0,
-    paid_gross_amount_cents: 0,
-    outstanding_gross_amount_cents: 0,
-    is_schedule_balanced: true
-  };
-}
-
 function resolveCloneCurrency(booking) {
   return normalizeText(
     booking?.preferred_currency
@@ -210,10 +195,7 @@ function resetPricing(booking) {
   booking.pricing = {
     ...pricing,
     currency,
-    agreed_net_amount_cents: 0,
-    adjustments: [],
-    payments: [],
-    summary: zeroPricingSummary()
+    payments: []
   };
 }
 

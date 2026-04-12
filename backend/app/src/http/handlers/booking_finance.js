@@ -51,21 +51,14 @@ export function createBookingFinanceHandlers(deps) {
     convertOfferLineAmountForCurrency,
     randomUUID,
     generatedOfferPdfPath,
-    writeBookingConfirmationPdf,
     gmailDraftsConfig,
     getBookingContactProfile,
-    listBookingConfirmationPdfs,
-    persistBookingConfirmationPdfArtifact,
-    resolveBookingConfirmationPdfArtifact,
-    deleteBookingConfirmationPdfArtifact,
     listBookingTravelPlanPdfs,
     rm,
     canAccessBooking,
     sendFileWithCache,
     normalizeGeneratedOfferSnapshot,
     ensureFrozenGeneratedOfferPdf,
-    path,
-    TEMP_UPLOAD_DIR
   } = deps;
 
   let gmailDraftsClient = null;
@@ -266,8 +259,6 @@ export function createBookingFinanceHandlers(deps) {
 
     return {
       currency: normalizeText(paymentTerms?.currency || normalizedSnapshot?.currency) || "USD",
-      agreed_net_amount_cents: Math.max(0, Math.round(Number(normalizedSnapshot?.total_price_cents || 0))),
-      adjustments: [],
       payments: lines.map((line, index) => {
         const label = normalizeText(line?.label) || `Payment ${index + 1}`;
         const dueDate = resolveAcceptedOfferPaymentDueDate(line, booking, acceptedAt);
@@ -300,9 +291,6 @@ export function createBookingFinanceHandlers(deps) {
     const nextPricing = normalizeBookingPricing({
       ...currentPricing,
       currency: convertedSeedPricing.currency,
-      agreed_net_amount_cents: Number(currentPricing?.agreed_net_amount_cents || 0) > 0
-        ? currentPricing.agreed_net_amount_cents
-        : convertedSeedPricing.agreed_net_amount_cents,
       payments: convertedSeedPricing.payments
     });
 
@@ -455,147 +443,6 @@ export function createBookingFinanceHandlers(deps) {
     );
     await persistStore(store);
     return { ok: true, bookingConfirmation, unchanged: false };
-  }
-
-  function bookingConfirmationPdfTempOutputPath(bookingId, prefix = "booking-confirmation") {
-    const tempRoot = String(TEMP_UPLOAD_DIR || "").trim();
-    return path.join(tempRoot, `${prefix}-${bookingId}-${randomUUID()}.pdf`);
-  }
-
-  async function handlePostBookingConfirmationPdf(req, res, [bookingId]) {
-    let payload = {};
-    try {
-      payload = await readBodyJson(req);
-    } catch {
-      payload = {};
-    }
-
-    const principal = getPrincipal(req);
-    const store = await readStore();
-    const booking = store.bookings.find((item) => item.id === bookingId);
-    if (!booking) {
-      sendJson(res, 404, { error: "Booking not found" });
-      return;
-    }
-    if (!canEditBooking(principal, booking)) {
-      sendJson(res, 403, { error: "Forbidden" });
-      return;
-    }
-    if (!normalizeText(booking?.deposit_received_at)) {
-      sendJson(res, 422, { error: "A deposit must be recorded before a booking confirmation PDF can be created." });
-      return;
-    }
-    if (!booking?.accepted_offer_snapshot || !Number.isFinite(Number(booking?.accepted_deposit_amount_cents))) {
-      sendJson(res, 422, { error: "The accepted booking snapshot is missing. Reconfirm the deposit first." });
-      return;
-    }
-    if (typeof writeBookingConfirmationPdf !== "function") {
-      sendJson(res, 500, { error: "Booking confirmation PDF generation is not configured." });
-      return;
-    }
-    if (typeof persistBookingConfirmationPdfArtifact !== "function") {
-      sendJson(res, 500, { error: "Booking confirmation PDF storage is not configured." });
-      return;
-    }
-
-    const tempPdfPath = bookingConfirmationPdfTempOutputPath(booking.id);
-    let renderedPath = tempPdfPath;
-    try {
-      const result = await writeBookingConfirmationPdf(booking, {
-        outputPath: tempPdfPath
-      });
-      renderedPath = String(result?.outputPath || tempPdfPath).trim() || tempPdfPath;
-      const artifact = await persistBookingConfirmationPdfArtifact(booking.id, renderedPath, {
-        createdAt: nowIso(),
-        suffix: normalizeText(payload?.filename_suffix)
-      });
-      if (!artifact?.id) {
-        throw new Error("Booking confirmation PDF artifact was not created.");
-      }
-      booking.updated_at = nowIso();
-      addActivity(
-        store,
-        booking.id,
-        "PAYMENT_UPDATED",
-        actorLabel(principal, normalizeText(payload?.actor) || "keycloak_user"),
-        "Booking confirmation PDF generated"
-      );
-      await persistStore(store);
-      sendJson(res, 201, await buildBookingDetailResponse(booking, req));
-    } catch (error) {
-      sendJson(res, 500, { error: "Could not create booking confirmation PDF", detail: String(error?.message || error) });
-    } finally {
-      await rm(renderedPath, { force: true }).catch(() => {});
-      if (renderedPath !== tempPdfPath) {
-        await rm(tempPdfPath, { force: true }).catch(() => {});
-      }
-    }
-  }
-
-  async function handleGetBookingConfirmationPdfArtifact(req, res, [bookingId, artifactId]) {
-    const principal = getPrincipal(req);
-    const store = await readStore();
-    const booking = store.bookings.find((item) => item.id === bookingId);
-    if (!booking) {
-      sendJson(res, 404, { error: "Booking not found" });
-      return;
-    }
-    if (!canAccessBooking(principal, booking)) {
-      sendJson(res, 403, { error: "Forbidden" });
-      return;
-    }
-    if (typeof resolveBookingConfirmationPdfArtifact !== "function") {
-      sendJson(res, 500, { error: "Booking confirmation PDF storage is not configured." });
-      return;
-    }
-    const artifact = await resolveBookingConfirmationPdfArtifact(bookingId, artifactId);
-    if (!artifact?.storage_path) {
-      sendJson(res, 404, { error: "Booking confirmation PDF not found" });
-      return;
-    }
-    await sendFileWithCache(req, res, artifact.storage_path, "private, max-age=0, no-store", {
-      "Content-Disposition": `inline; filename="${String(artifact.filename || `${artifact.id}.pdf`).replace(/"/g, "")}"`
-    });
-  }
-
-  async function handleDeleteBookingConfirmationPdfArtifact(req, res, [bookingId, artifactId]) {
-    let payload = {};
-    try {
-      payload = await readBodyJson(req);
-    } catch {
-      payload = {};
-    }
-
-    const principal = getPrincipal(req);
-    const store = await readStore();
-    const booking = store.bookings.find((item) => item.id === bookingId);
-    if (!booking) {
-      sendJson(res, 404, { error: "Booking not found" });
-      return;
-    }
-    if (!canEditBooking(principal, booking)) {
-      sendJson(res, 403, { error: "Forbidden" });
-      return;
-    }
-    if (typeof deleteBookingConfirmationPdfArtifact !== "function") {
-      sendJson(res, 500, { error: "Booking confirmation PDF storage is not configured." });
-      return;
-    }
-    const deletedArtifact = await deleteBookingConfirmationPdfArtifact(bookingId, artifactId);
-    if (!deletedArtifact?.id) {
-      sendJson(res, 404, { error: "Booking confirmation PDF not found" });
-      return;
-    }
-    booking.updated_at = nowIso();
-    addActivity(
-      store,
-      booking.id,
-      "PAYMENT_UPDATED",
-      actorLabel(principal, normalizeText(payload?.actor) || "keycloak_user"),
-      "Booking confirmation PDF deleted"
-    );
-    await persistStore(store);
-    sendJson(res, 200, await buildBookingDetailResponse(booking, req));
   }
 
   async function handlePatchBookingPricing(req, res, [bookingId]) {
@@ -1247,9 +1094,6 @@ export function createBookingFinanceHandlers(deps) {
 
   return {
     handlePatchBookingPricing,
-    handlePostBookingConfirmationPdf,
-    handleGetBookingConfirmationPdfArtifact,
-    handleDeleteBookingConfirmationPdfArtifact,
     handlePatchBookingOffer,
     handlePostOfferExchangeRates,
     handleGenerateBookingOffer,

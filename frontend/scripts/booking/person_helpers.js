@@ -81,7 +81,7 @@ export function buildDocumentPayloadFromDraft(document, person_id, booking_id, i
     no_expiration_date: normalized.no_expiration_date === true ? true : undefined,
     expires_on: normalized.no_expiration_date === true ? undefined : normalizeText(normalized.expires_on) || undefined,
     created_at: normalizeText(normalized.created_at) || timestamp,
-    updated_at: timestamp
+    updated_at: normalizeText(normalized.updated_at) || normalizeText(normalized.created_at) || timestamp
   };
 }
 

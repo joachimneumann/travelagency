@@ -54,25 +54,9 @@ import (
 	updated_at?:                  common.#Timestamp
 }
 
-#BookingPricingSummary: {
-	agreed_net_amount_cents:        common.#NonNegativeMoneyAmount
-	adjustments_delta_cents:        common.#MoneyAmount
-	adjusted_net_amount_cents:      common.#MoneyAmount
-	scheduled_net_amount_cents:     common.#NonNegativeMoneyAmount
-	unscheduled_net_amount_cents:   common.#MoneyAmount
-	scheduled_tax_amount_cents:     common.#MoneyAmount
-	scheduled_gross_amount_cents:   common.#MoneyAmount
-	paid_gross_amount_cents:        common.#MoneyAmount
-	outstanding_gross_amount_cents: common.#MoneyAmount
-	is_schedule_balanced:           bool
-}
-
 #BookingPricing: {
-	currency:                enums.#CurrencyCode
-	agreed_net_amount_cents: common.#NonNegativeMoneyAmount
-	adjustments: [...#PricingAdjustment]
+	currency: enums.#CurrencyCode
 	payments: [...#BookingPayment]
-	summary: #BookingPricingSummary
 }
 
 #BookingActivityType: enums.#BookingActivityType

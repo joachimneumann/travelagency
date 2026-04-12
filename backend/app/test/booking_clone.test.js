@@ -145,21 +145,7 @@ function buildSourceBooking() {
     },
     pricing: {
       currency: "USD",
-      agreed_net_amount_cents: 10000,
-      adjustments: [{ id: "pricing_adjustment_1", type: "SURCHARGE", amount_cents: 500 }],
-      payments: [{ id: "pricing_payment_1", label: "Deposit", status: "PAID", paid_at: "2026-03-01T00:00:00.000Z" }],
-      summary: {
-        agreed_net_amount_cents: 10000,
-        adjustments_delta_cents: 500,
-        adjusted_net_amount_cents: 10500,
-        scheduled_net_amount_cents: 10000,
-        unscheduled_net_amount_cents: 500,
-        scheduled_tax_amount_cents: 0,
-        scheduled_gross_amount_cents: 10000,
-        paid_gross_amount_cents: 10000,
-        outstanding_gross_amount_cents: 0,
-        is_schedule_balanced: false
-      }
+      payments: [{ id: "pricing_payment_1", label: "Deposit", status: "PAID", paid_at: "2026-03-01T00:00:00.000Z" }]
     },
     generated_offers: [{ id: "generated_offer_1" }]
   };
@@ -267,21 +253,7 @@ test("cloneBookingForTesting keeps only approved metadata and clears commercial 
   assert.notEqual(cloned.travel_plan.attachments[0].id, "travel_plan_attachment_1");
 
   assert.equal(cloned.pricing.currency, "USD");
-  assert.equal(cloned.pricing.agreed_net_amount_cents, 0);
-  assert.deepEqual(cloned.pricing.adjustments, []);
   assert.deepEqual(cloned.pricing.payments, []);
-  assert.deepEqual(cloned.pricing.summary, {
-    agreed_net_amount_cents: 0,
-    adjustments_delta_cents: 0,
-    adjusted_net_amount_cents: 0,
-    scheduled_net_amount_cents: 0,
-    unscheduled_net_amount_cents: 0,
-    scheduled_tax_amount_cents: 0,
-    scheduled_gross_amount_cents: 0,
-    paid_gross_amount_cents: 0,
-    outstanding_gross_amount_cents: 0,
-    is_schedule_balanced: true
-  });
 });
 
 test("cloneBookingForTesting can include travelers while keeping file refs", () => {

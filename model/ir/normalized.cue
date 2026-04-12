@@ -458,34 +458,13 @@ IR: {
 			]
 		},
 		{
-			name:       "BookingPricingSummary"
-			domain:     "booking"
-			module:     "entities"
-			sourceType: "entities.#BookingPricingSummary"
-			fields: [
-				{name: "agreed_net_amount_cents", kind: "transport", typeName: "MoneyAmount", required: true},
-				{name: "adjustments_delta_cents", kind: "transport", typeName: "MoneyAmount", required: true},
-				{name: "adjusted_net_amount_cents", kind: "transport", typeName: "MoneyAmount", required: true},
-				{name: "scheduled_net_amount_cents", kind: "transport", typeName: "MoneyAmount", required: true},
-				{name: "unscheduled_net_amount_cents", kind: "transport", typeName: "MoneyAmount", required: true},
-				{name: "scheduled_tax_amount_cents", kind: "transport", typeName: "MoneyAmount", required: true},
-				{name: "scheduled_gross_amount_cents", kind: "transport", typeName: "MoneyAmount", required: true},
-				{name: "paid_gross_amount_cents", kind: "transport", typeName: "MoneyAmount", required: true},
-				{name: "outstanding_gross_amount_cents", kind: "transport", typeName: "MoneyAmount", required: true},
-				{name: "is_schedule_balanced", kind: "scalar", typeName: "bool", required: true},
-			]
-		},
-		{
 			name:       "BookingPricing"
 			domain:     "booking"
 			module:     "entities"
 			sourceType: "entities.#BookingPricing"
 			fields: [
 				{name: "currency", kind: "enum", typeName: "CurrencyCode", required: true},
-				{name: "agreed_net_amount_cents", kind: "transport", typeName: "MoneyAmount", required: true},
-				{name: "adjustments", kind: "entity", typeName: "PricingAdjustment", required: true, isArray: true},
 				{name: "payments", kind: "entity", typeName: "BookingPayment", required: true, isArray: true},
-				{name: "summary", kind: "entity", typeName: "BookingPricingSummary", required: true},
 			]
 		},
 		{

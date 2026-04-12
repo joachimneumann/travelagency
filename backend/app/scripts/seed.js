@@ -139,8 +139,6 @@ async function main() {
       },
       pricing: {
         currency: preferredCurrency,
-        agreed_net_amount_cents: 0,
-        adjustments: [],
         payments: []
       },
       offer: {

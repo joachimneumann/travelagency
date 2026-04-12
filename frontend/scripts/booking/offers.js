@@ -6,7 +6,6 @@ import {
 } from "./pricing.js";
 import { bookingSourceLang, bookingT } from "./i18n.js";
 import { renderBookingSectionHeader } from "./sections.js";
-import { createBookingGeneratedOffersModule } from "./offer_generated_offers.js";
 import { createBookingOfferPricingModule } from "./offer_pricing.js";
 import { createBookingOfferPaymentTermsModule } from "./offer_payment_terms.js";
 import { createBookingOfferSaveController } from "./offer_save.js";
@@ -33,6 +32,7 @@ export function createBookingOfferModule(ctx) {
     getBookingRevision,
     renderBookingHeader,
     renderBookingData,
+    renderPricingPanel,
     renderTravelPlanPanel,
     loadActivities,
     escapeHtml,
@@ -251,10 +251,6 @@ export function createBookingOfferModule(ctx) {
     setBookingSectionDirty("payment_terms", isDirty);
   }
 
-  function ensureOfferCleanState() {
-    return offerSaveController?.ensureOfferCleanState() ?? Promise.resolve(true);
-  }
-
   const paymentTermsModule = createBookingOfferPaymentTermsModule({
     state,
     els,
@@ -262,19 +258,7 @@ export function createBookingOfferModule(ctx) {
     setOfferSaveEnabled,
     clearOfferStatus,
     resolveOfferTotalCents: () => resolveOfferTotalCents(),
-    renderOfferGenerationControls: () => generatedOffersModule.renderOfferGenerationControls()
-  });
-  const generatedOffersModule = createBookingGeneratedOffersModule({
-    state,
-    els,
-    apiOrigin,
-    escapeHtml,
-    fetchBookingMutation,
-    getBookingRevision,
-    applyOfferBookingResponse,
-    countMissingOfferPdfTranslations,
-    ensureOfferCleanState,
-    setOfferStatus
+    renderOfferGenerationControls: () => {}
   });
   const offerPricingModule = createBookingOfferPricingModule({
     state,
@@ -660,6 +644,7 @@ export function createBookingOfferModule(ctx) {
     renderBookingData();
     renderTravelPlanPanel?.();
     renderOfferPanel();
+    renderPricingPanel?.({ markDerivedChangesDirty: true });
     if (reloadActivities) {
       await loadActivities();
     }
@@ -695,11 +680,9 @@ export function createBookingOfferModule(ctx) {
     syncOfferDetailLevelControls();
     offerPricingModule.updateOfferCurrencyHint(currency);
     updateOfferPanelSummary(resolveOfferTotalCents(), currency);
-    generatedOffersModule.updateBookingConfirmationPanelSummary();
     setOfferSaveEnabled(false);
 
     renderOfferPricingTable();
-    generatedOffersModule.renderGeneratedOffersTable();
     clearOfferStatus();
   }
 

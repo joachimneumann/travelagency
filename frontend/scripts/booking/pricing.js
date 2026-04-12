@@ -9,6 +9,7 @@ import {
 import { createSnapshotDirtyTracker } from "../shared/edit_state.js";
 import {
   bookingContentLang,
+  bookingLanguageQuery,
   bookingLang,
   bookingSourceLang,
   bookingT
@@ -19,23 +20,15 @@ import {
   resolveLocalizedEditorBranchText
 } from "./localized_editor.js";
 import {
+  buildBookingPdfPanelBodyMarkup,
   buildBookingCollapsibleSectionMarkup,
   buildBookingPdfToggleFieldMarkup
 } from "./pdf_personalization_panel.js";
-import { initializeBookingSections, renderBookingSectionHeader } from "./sections.js";
-
-const PRICING_SUMMARY_LABELS = Object.freeze({
-  agreed_net_amount: ["booking.pricing.agreed_net_amount", "Agreed net amount"],
-  adjustments_delta: ["booking.pricing.adjustments_delta", "Adjustments delta"],
-  adjusted_net_amount: ["booking.pricing.adjusted_net_amount", "Adjusted net amount"],
-  scheduled_net_amount: ["booking.pricing.scheduled_net_amount", "Scheduled net amount"],
-  unscheduled_net_amount: ["booking.pricing.unscheduled_net_amount", "Unscheduled net amount"],
-  scheduled_tax_amount: ["booking.pricing.scheduled_tax_amount", "Scheduled tax amount"],
-  scheduled_gross_amount: ["booking.pricing.scheduled_gross_amount", "Scheduled gross amount"],
-  paid_gross_amount: ["booking.pricing.paid_gross_amount", "Paid gross amount"],
-  outstanding_gross_amount: ["booking.pricing.outstanding_gross_amount", "Outstanding gross amount"],
-  schedule_balanced: ["booking.pricing.schedule_balanced", "Schedule balanced"]
-});
+import {
+  buildBookingPdfDocumentSectionMarkup,
+  buildBookingPdfWorkspaceMarkup
+} from "./pdf_workspace.js";
+import { initializeBookingSections } from "./sections.js";
 
 const PAYMENT_DOCUMENT_KIND_REQUEST = "PAYMENT_REQUEST";
 const PAYMENT_DOCUMENT_KIND_CONFIRMATION = "PAYMENT_CONFIRMATION";
@@ -77,16 +70,6 @@ const PAYMENT_DOCUMENT_PANEL_CONFIG = Object.freeze({
     ])
   })
 });
-
-function pricingSummaryLabel(key) {
-  const entry = PRICING_SUMMARY_LABELS[key];
-  return entry ? bookingT(entry[0], entry[1]) : key;
-}
-
-function pricingAdjustmentTypeLabel(type) {
-  const normalized = String(type || "").trim().toUpperCase();
-  return bookingT(`booking.pricing.adjustment_type.${normalized.toLowerCase()}`, normalized);
-}
 
 export function getCurrencyDefinitions() {
   return GENERATED_CURRENCIES;
@@ -169,12 +152,6 @@ export function setSelectValue(selectEl, rawValue) {
   selectEl.value = value;
 }
 
-function normalizeAmount(value, fallback = 0) {
-  const number = Number(value);
-  if (!Number.isFinite(number)) return fallback;
-  return Math.round(number);
-}
-
 function normalizeDateInputValue(value) {
   const normalized = String(value || "").trim();
   if (!normalized) return "";
@@ -193,11 +170,6 @@ function normalizeLocalDateToIso(value) {
 function dateOnlyToIsoDateTime(value) {
   const normalized = normalizeLocalDateToIso(value);
   return normalized ? `${normalized}T00:00:00.000Z` : null;
-}
-
-function formatTaxRatePercent(basisPoints) {
-  const value = Number(basisPoints || 0) / 100;
-  return Number.isInteger(value) ? String(value) : value.toFixed(2);
 }
 
 function paymentSectionKey(paymentId, sectionKind) {
@@ -227,6 +199,16 @@ export function createBookingPricingModule(ctx) {
   const paymentSectionBusyKeys = new Set();
   const paymentSectionStatusByKey = new Map();
 
+  function withBookingLanguageQuery(urlLike) {
+    const normalizedUrl = String(urlLike || "").trim();
+    if (!normalizedUrl) return "";
+    const url = new URL(normalizedUrl, window.location.origin);
+    const query = bookingLanguageQuery();
+    url.searchParams.set("content_lang", query.content_lang);
+    url.searchParams.set("source_lang", query.source_lang);
+    return url.toString();
+  }
+
   function pricingRevision() {
     if (typeof getBookingRevision === "function") {
       return getBookingRevision("pricing_revision");
@@ -236,7 +218,7 @@ export function createBookingPricingModule(ctx) {
   }
 
   const pricingDirtyTracker = createSnapshotDirtyTracker({
-    captureSnapshot: () => captureControlSnapshot(els.pricing_panel),
+    captureSnapshot: () => captureControlSnapshot(els.paymentsWorkspace || els.paymentFlowSections),
     isEnabled: () => state.permissions.canEditBooking && Boolean(state.booking),
     onDirtyChange: (isDirty) => setBookingSectionDirty("pricing", isDirty)
   });
@@ -244,10 +226,7 @@ export function createBookingPricingModule(ctx) {
   function clonePricing(pricing) {
     return JSON.parse(JSON.stringify({
       currency: pricing?.currency || "USD",
-      agreed_net_amount_cents: pricing?.agreed_net_amount_cents || 0,
-      adjustments: Array.isArray(pricing?.adjustments) ? pricing.adjustments : [],
-      payments: Array.isArray(pricing?.payments) ? pricing.payments : [],
-      summary: pricing?.summary || null
+      payments: Array.isArray(pricing?.payments) ? pricing.payments : []
     }));
   }
 
@@ -287,69 +266,12 @@ export function createBookingPricingModule(ctx) {
     );
   }
 
-  function currentOfferTotalPriceCents() {
-    const draftDirect = Number(state.offerDraft?.total_price_cents);
-    if (Number.isFinite(draftDirect) && draftDirect > 0) return Math.max(0, Math.round(draftDirect));
-    const draftSummary = Number(state.offerDraft?.totals?.total_price_cents);
-    if (Number.isFinite(draftSummary) && draftSummary > 0) return Math.max(0, Math.round(draftSummary));
-    const bookingDirect = Number(state.booking?.offer?.total_price_cents);
-    if (Number.isFinite(bookingDirect) && bookingDirect > 0) return Math.max(0, Math.round(bookingDirect));
-    const bookingSummary = Number(state.booking?.offer?.totals?.total_price_cents);
-    if (Number.isFinite(bookingSummary) && bookingSummary > 0) return Math.max(0, Math.round(bookingSummary));
-    const acceptedDirect = Number(state.booking?.accepted_record?.offer?.total_price_cents);
-    return Number.isFinite(acceptedDirect) ? Math.max(0, Math.round(acceptedDirect)) : 0;
-  }
-
   function resolvePaymentTermLineAmount(line, fallbackAmount = 0) {
     const resolved = Number(line?.resolved_amount_cents);
     if (Number.isFinite(resolved)) return Math.max(0, Math.round(resolved));
     const fixed = Number(line?.amount_spec?.fixed_amount_cents);
     if (Number.isFinite(fixed)) return Math.max(0, Math.round(fixed));
     return Math.max(0, Math.round(Number(fallbackAmount || 0) || 0));
-  }
-
-  function pricingSummary(pricing) {
-    const adjustments = Array.isArray(pricing?.adjustments) ? pricing.adjustments : [];
-    const payments = Array.isArray(pricing?.payments) ? pricing.payments : [];
-    const agreed = normalizeAmount(pricing?.agreed_net_amount_cents, 0);
-    const adjustmentDelta = adjustments.reduce((sum, adjustment) => sum + normalizeAmount(adjustment?.amount_cents, 0), 0);
-    const adjusted = agreed + adjustmentDelta;
-    const scheduledNet = payments.reduce((sum, payment) => sum + normalizeAmount(payment?.net_amount_cents, 0), 0);
-    const scheduledTax = payments.reduce((sum, payment) => {
-      const fallbackTax = Math.round((normalizeAmount(payment?.net_amount_cents, 0) * Number(payment?.tax_rate_basis_points || 0)) / 10000);
-      return sum + normalizeAmount(payment?.tax_amount_cents, fallbackTax);
-    }, 0);
-    const scheduledGross = payments.reduce((sum, payment) => {
-      const netAmount = normalizeAmount(payment?.net_amount_cents, 0);
-      const fallbackTax = Math.round((netAmount * Number(payment?.tax_rate_basis_points || 0)) / 10000);
-      return sum + normalizeAmount(payment?.gross_amount_cents, netAmount + fallbackTax);
-    }, 0);
-    const paidGross = payments
-      .filter((payment) => String(payment?.status || "").trim().toUpperCase() === "PAID")
-      .reduce((sum, payment) => {
-        const netAmount = normalizeAmount(payment?.net_amount_cents, 0);
-        const fallbackTax = Math.round((netAmount * Number(payment?.tax_rate_basis_points || 0)) / 10000);
-        return sum + normalizeAmount(payment?.received_amount_cents, payment?.gross_amount_cents, netAmount + fallbackTax);
-      }, 0);
-    return {
-      agreed_net_amount_cents: agreed,
-      adjustments_delta_cents: adjustmentDelta,
-      adjusted_net_amount_cents: adjusted,
-      scheduled_net_amount_cents: scheduledNet,
-      unscheduled_net_amount_cents: adjusted - scheduledNet,
-      scheduled_tax_amount_cents: scheduledTax,
-      scheduled_gross_amount_cents: scheduledGross,
-      paid_gross_amount_cents: paidGross,
-      outstanding_gross_amount_cents: Math.max(0, scheduledGross - paidGross),
-      is_schedule_balanced: scheduledNet === adjusted
-    };
-  }
-
-  function pricingWithSummary(pricing) {
-    return {
-      ...pricing,
-      summary: pricingSummary(pricing)
-    };
   }
 
   function paymentTermLineForPayment(payment) {
@@ -441,10 +363,6 @@ export function createBookingPricingModule(ctx) {
     return Array.isArray(state.invoices) ? state.invoices : [];
   }
 
-  function currentBookingConfirmationPdfs() {
-    return Array.isArray(state.booking?.booking_confirmation_pdfs) ? state.booking.booking_confirmation_pdfs : [];
-  }
-
   function paymentDocumentScope(payment, documentKind) {
     const kind = paymentKind(payment);
     if (documentKind === PAYMENT_DOCUMENT_KIND_REQUEST) {
@@ -464,6 +382,10 @@ export function createBookingPricingModule(ctx) {
       .replace(/[^a-z0-9_-]+/gi, "_")
       .toLowerCase();
     return `payment_pdf_${base}_${String(documentKind || "").trim().toLowerCase()}`;
+  }
+
+  function paymentDocumentPersonalizationPanelId(prefix) {
+    return `${prefix}_personalization_panel`;
   }
 
   function paymentSectionState(paymentId, sectionKind) {
@@ -537,6 +459,11 @@ export function createBookingPricingModule(ctx) {
     return nextBranch;
   }
 
+  function paymentDocumentPersonalizationChanged(scope, prefix) {
+    return JSON.stringify(collectPaymentDocumentPersonalization(scope, prefix))
+      !== JSON.stringify(paymentDocumentBranch(scope));
+  }
+
   function paymentDocumentsFor(payment, documentKind) {
     const paymentId = String(payment?.id || "").trim();
     if (!paymentId) return [];
@@ -546,48 +473,146 @@ export function createBookingPricingModule(ctx) {
     ));
   }
 
-  function paymentDocumentTableMarkup(payment, documentKind, { includeLegacyDepositRows = false } = {}) {
-    const docs = paymentDocumentsFor(payment, documentKind)
+  function sortedPaymentDocumentsFor(payment, documentKind) {
+    return paymentDocumentsFor(payment, documentKind)
       .slice()
       .sort((left, right) => String(right.updated_at || right.created_at || "").localeCompare(String(left.updated_at || left.created_at || "")));
-    const rows = docs.map((doc) => `
-      <tr>
-        <td><a href="${escapeHtml(doc.pdf_url || "#")}" target="_blank" rel="noopener">${escapeHtml(doc.invoice_number || doc.title || doc.id || bookingT("booking.pdf", "PDF"))}</a></td>
-        <td>${escapeHtml(typeof formatDateTime === "function" ? formatDateTime(doc.updated_at || doc.created_at) : String(doc.updated_at || doc.created_at || "-"))}</td>
-      </tr>
-    `);
-    if (includeLegacyDepositRows) {
-      rows.push(...currentBookingConfirmationPdfs()
-        .slice()
-        .sort((left, right) => String(right.created_at || "").localeCompare(String(left.created_at || "")))
-        .map((pdf) => `
+  }
+
+  function latestPaymentDocumentFor(payment, documentKind) {
+    return sortedPaymentDocumentsFor(payment, documentKind)[0] || null;
+  }
+
+  function openPaymentDocumentUrl(urlLike) {
+    const url = withBookingLanguageQuery(urlLike);
+    if (!url) return false;
+    const link = document.createElement("a");
+    link.href = url;
+    link.target = "_blank";
+    link.rel = "noopener";
+    link.click();
+    return true;
+  }
+
+  function paymentDocumentTableMarkup(payment, documentKind) {
+    const docs = sortedPaymentDocumentsFor(payment, documentKind);
+    const body = docs.length
+      ? docs.map((doc) => `
           <tr>
-            <td><a href="${escapeHtml(pdf.pdf_url || "#")}" target="_blank" rel="noopener">${escapeHtml(pdf.filename || bookingT("booking.pdf", "PDF"))}</a></td>
-            <td>${escapeHtml(typeof formatDateTime === "function" ? formatDateTime(pdf.created_at) : String(pdf.created_at || "-"))}</td>
+            <td class="travel-plan-existing-pdfs-col-document">
+              <a
+                class="travel-plan-existing-pdfs__link"
+                href="${escapeHtml(withBookingLanguageQuery(doc.pdf_url || ""))}"
+                target="_blank"
+                rel="noopener"
+              >${escapeHtml(doc.invoice_number || doc.title || doc.id || bookingT("booking.pdf", "PDF"))}</a>
+            </td>
+            <td class="travel-plan-existing-pdfs-col-date">${escapeHtml(typeof formatDateTime === "function" ? formatDateTime(doc.updated_at || doc.created_at) : String(doc.updated_at || doc.created_at || "-"))}</td>
           </tr>
-        `));
-    }
-    const body = rows.length
-      ? rows.join("")
-      : `<tr><td colspan="2">${escapeHtml(bookingT("booking.no_documents", "No PDFs yet."))}</td></tr>`;
+        `).join("")
+      : `<tr><td class="travel-plan-existing-pdfs__empty" colspan="2">${escapeHtml(bookingT("booking.no_documents", "No PDFs yet."))}</td></tr>`;
     return `
-      <div class="backend-table-wrap">
-        <table class="backend-table">
-          <thead>
-            <tr>
-              <th>${escapeHtml(bookingT("booking.pdf", "PDF"))}</th>
-              <th>${escapeHtml(bookingT("booking.updated", "Updated"))}</th>
-            </tr>
-          </thead>
-          <tbody>${body}</tbody>
-        </table>
+      <div class="travel-plan-existing-pdfs booking-payment-document-table">
+        <div class="backend-table-wrap travel-plan-existing-pdfs__table-wrap">
+          <table class="backend-table travel-plan-existing-pdfs__table">
+            <thead>
+              <tr>
+                <th class="travel-plan-existing-pdfs-col-document">${escapeHtml(bookingT("booking.pdf", "PDF"))}</th>
+                <th class="travel-plan-existing-pdfs-col-date">${escapeHtml(bookingT("booking.date", "Date"))}</th>
+              </tr>
+            </thead>
+            <tbody>${body}</tbody>
+          </table>
+        </div>
       </div>
     `;
   }
 
-  function paymentDocumentPersonalizationPanelMarkup(scope, prefix) {
+  function paymentDocumentAttachmentsMarkup() {
+    const attachmentHint = bookingT(
+      "booking.pricing.payment_pdf_attachments_unavailable",
+      "Payment PDF attachments are not available yet."
+    );
+    return `
+      <div class="travel-plan-attachments booking-payment-document-attachments">
+        <div class="backend-table-wrap travel-plan-attachments__table-wrap">
+          <table class="backend-table travel-plan-attachments__table">
+            <thead>
+              <tr>
+                <th class="travel-plan-attachments-col-document">${escapeHtml(bookingT("booking.pdf_attachments", "PDF Attachments"))}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="travel-plan-attachments__empty">${escapeHtml(bookingT("booking.pricing.no_payment_pdf_attachments", "No PDF attachments yet."))}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        ${state.permissions.canEditBooking ? `
+          <div class="travel-plan-attachments__actions">
+            <button
+              class="btn btn-ghost booking-offer-add-btn travel-plan-pdf-btn travel-plan-attachments__upload-btn"
+              type="button"
+              disabled
+              title="${escapeHtml(attachmentHint)}"
+            >${escapeHtml(bookingT("booking.travel_plan.upload_additional_pdfs", "Add attachment"))}</button>
+          </div>
+          <span class="micro booking-inline-status booking-inline-status--info booking-payment-document__attachment-hint">${escapeHtml(attachmentHint)}</span>
+        ` : ""}
+      </div>
+    `;
+  }
+
+  function paymentDocumentPreviewButtonMarkup(paymentId, documentKind, disabled, busy) {
+    return `
+      <button
+        class="btn btn-ghost booking-offer-add-btn travel-plan-pdf-btn travel-plan-pdf-btn--preview"
+        type="button"
+        data-payment-document-preview="${escapeHtml(`${paymentId}:${documentKind}`)}"
+        ${disabled ? "disabled" : ""}
+      >${escapeHtml(busy ? bookingT("booking.pricing.creating_pdf", "Creating...") : bookingT("booking.travel_plan.preview_pdf", "Preview PDF"))}</button>
+    `;
+  }
+
+  function paymentDocumentCreateButtonMarkup(paymentId, documentKind, disabled, busy) {
+    return `
+      <button
+        class="btn btn-ghost booking-offer-add-btn travel-plan-pdf-btn"
+        type="button"
+        data-payment-document-create="${escapeHtml(`${paymentId}:${documentKind}`)}"
+        ${disabled ? "disabled" : ""}
+      >${escapeHtml(busy ? bookingT("booking.pricing.creating_pdf", "Creating...") : bookingT("booking.travel_plan.create_pdf", "Create PDF"))}</button>
+    `;
+  }
+
+  function paymentDocumentStatusMarkup(paymentId, sectionKind) {
+    const markup = paymentSectionStatusMarkup(paymentId, sectionKind);
+    return markup ? `<div class="booking-payment-document__status-wrap">${markup}</div>` : "";
+  }
+
+  function paymentDocumentWorkspaceMarkup(payment, documentKind, paymentId, sectionKind, options = {}) {
+    const busy = paymentSectionBusy(paymentId, sectionKind);
+    const disabledReason = String(options?.disabledReason || "").trim();
+    const sectionDisabled = Boolean(disabledReason);
+    const previewDisabled = sectionDisabled || !paymentId || (!state.permissions.canEditBooking && !latestPaymentDocumentFor(payment, documentKind));
+    const createDisabled = sectionDisabled || !state.permissions.canEditBooking || !paymentId || busy;
+    return buildBookingPdfWorkspaceMarkup({
+      escapeHtml,
+      previewButtonMarkup: paymentDocumentPreviewButtonMarkup(paymentId, documentKind, previewDisabled || busy, busy),
+      previewStatusMarkup: disabledReason
+        ? `<span class="micro booking-inline-status booking-inline-status--info">${escapeHtml(disabledReason)}</span>`
+        : paymentDocumentStatusMarkup(paymentId, sectionKind),
+      documentsMarkup: paymentDocumentTableMarkup(payment, documentKind),
+      createButtonMarkup: paymentDocumentCreateButtonMarkup(paymentId, documentKind, createDisabled, busy),
+      attachmentsMarkup: paymentDocumentAttachmentsMarkup()
+    });
+  }
+
+  function paymentDocumentPersonalizationPanelMarkup(scope, prefix, options = {}) {
     const config = paymentDocumentPanelConfig(scope);
     const branch = paymentDocumentBranch(scope);
+    const disabled = options?.disabled === true || !state.permissions.canEditBooking;
     const fieldsMarkup = config.items.map((item) => {
       const enabled = branch?.[item.includeField] !== false && (item.defaultChecked === true || branch?.[item.includeField] === true);
       const fieldMarkup = renderLocalizedStackedField({
@@ -602,7 +627,7 @@ export function createBookingPricingModule(ctx) {
         localizedValue: resolveLocalizedEditorBranchText(branch?.[`${item.field}_i18n`] ?? branch?.[item.field], bookingContentLang(), ""),
         englishPlaceholder: "",
         localizedPlaceholder: "",
-        disabled: !state.permissions.canEditBooking,
+        disabled,
         translateEnabled: false
       });
       return buildBookingPdfToggleFieldMarkup({
@@ -612,33 +637,23 @@ export function createBookingPricingModule(ctx) {
         dataAttributeName: "payment-pdf-toggle",
         dataAttributeValue: `${prefix}.${item.includeField}`,
         checked: enabled,
-        disabled: !state.permissions.canEditBooking,
+        disabled,
         fieldMarkup
       });
     }).join("");
     return buildBookingCollapsibleSectionMarkup({
+      id: paymentDocumentPersonalizationPanelId(prefix),
       escapeHtml,
-      title: bookingT("booking.pdf_texts_personalization", "PDF Texts for personalization"),
-      className: "booking-payment-document-panel",
+      title: bookingT("booking.pdf_texts", "PDF Texts"),
+      tagName: "div",
       dataAttributes: {
-        paymentPdfPersonalization: "true",
-        bookingPdfPanel: "true"
+        bookingPdfPanel: "travel_plan"
       },
-      bodyMarkup: `
-        <div class="booking-pdf-panel__body">
-          <div class="booking-pdf-panel__fields">
-            ${fieldsMarkup}
-          </div>
-        </div>
-      `
-    });
-  }
-
-  function paymentDocumentAttachmentsMarkup() {
-    return buildBookingCollapsibleSectionMarkup({
-      escapeHtml,
-      title: bookingT("booking.pdf_attachments", "PDF Attachments"),
-      bodyMarkup: `<p class="micro">${escapeHtml(bookingT("booking.pdf_attachments_empty", "No attachments yet."))}</p>`
+      bodyMarkup: buildBookingPdfPanelBodyMarkup({
+        variant: "collapsible",
+        fieldsMarkup,
+        escapeHtml
+      })
     });
   }
 
@@ -723,14 +738,9 @@ export function createBookingPricingModule(ctx) {
 
   function paymentReceiptFieldValues(payment, { strict = true } = {}) {
     const paymentId = String(payment?.id || "").trim();
-    const currency = normalizeCurrencyCode(state.pricingDraft?.currency || currentOfferCurrency());
-    const amountInput = paymentFieldInput("data-payment-received-amount", paymentId);
     const dateInput = paymentFieldInput("data-payment-received-at", paymentId);
     const confirmedByInput = paymentFieldInput("data-payment-confirmed-by", paymentId);
     const referenceInput = paymentFieldInput("data-payment-reference", paymentId);
-    const amountRaw = amountInput instanceof HTMLInputElement
-      ? String(amountInput.value || "").trim()
-      : (Number.isFinite(Number(payment?.received_amount_cents)) ? String(payment.received_amount_cents) : "");
     const receivedAt = dateInput instanceof HTMLInputElement
       ? normalizeLocalDateToIso(dateInput.value || "")
       : normalizeDateInputValue(payment?.received_at);
@@ -740,17 +750,15 @@ export function createBookingPricingModule(ctx) {
     const reference = referenceInput instanceof HTMLInputElement
       ? String(referenceInput.value || "").trim()
       : String(payment?.reference || "").trim();
-    const hasAnyValue = Boolean(amountRaw || receivedAt || confirmedByAtpStaffId || reference);
-    const parsedAmount = amountRaw ? parseMoneyInputValue(amountRaw, currency) : null;
-    if (strict && amountRaw && !Number.isFinite(parsedAmount)) {
-      throw new Error(bookingT("booking.pricing.error.payment_received_amount", "Received amount for {payment} is invalid.", {
-        payment: paymentTitle(payment, 0)
-      }));
-    }
+    const hasAnyValue = Boolean(
+      receivedAt
+      || confirmedByAtpStaffId
+      || reference
+      || Number.isFinite(Number(payment?.received_amount_cents))
+    );
+    const fallbackAmount = Math.max(0, Math.round(Number(payment?.net_amount_cents || 0)));
+    const parsedAmount = hasAnyValue ? fallbackAmount : null;
     if (strict && hasAnyValue) {
-      if (!amountRaw) {
-        throw new Error(bookingT("booking.pricing.error.payment_received_amount_required", "Amount received is required once receipt details are entered."));
-      }
       if (!receivedAt) {
         throw new Error(bookingT("booking.pricing.error.payment_received_date_required", "When received is required once receipt details are entered."));
       }
@@ -773,10 +781,19 @@ export function createBookingPricingModule(ctx) {
     };
   }
 
+  function paymentConfirmationDisabledReason(payment) {
+    const receipt = paymentReceiptFieldValues(payment, { strict: false });
+    if (receipt.hasRecordedReceipt) return "";
+    return bookingT(
+      "booking.pricing.customer_receipt_requires_payment_received",
+      "Fill in Payment received before working with the Customer receipt PDF."
+    );
+  }
+
   function nextPricingFromPaymentTerms(basePricing) {
     const pricing = clonePricing(basePricing || {});
     const lines = currentOfferPaymentTermLines();
-    if (!lines.length) return pricingWithSummary(pricing);
+    if (!lines.length) return pricing;
 
     const currency = currentOfferCurrency();
     const existingPayments = Array.isArray(pricing.payments) ? pricing.payments : [];
@@ -824,78 +841,52 @@ export function createBookingPricingModule(ctx) {
       };
     });
 
-    return pricingWithSummary({
+    return {
       ...pricing,
       currency,
-      agreed_net_amount_cents: Number(pricing.agreed_net_amount_cents || 0) > 0
-        ? Math.round(Number(pricing.agreed_net_amount_cents || 0))
-        : currentOfferTotalPriceCents(),
-      adjustments: Array.isArray(pricing.adjustments) ? pricing.adjustments : [],
       payments
-    });
+    };
   }
 
-  function paymentDocumentSectionMarkup(payment, index, documentKind, title, { includeLegacyDepositRows = false } = {}) {
+  function paymentDocumentSectionMarkup(payment, index, documentKind, title) {
     const paymentId = String(payment?.id || "").trim();
     const scope = paymentDocumentScope(payment, documentKind);
     const prefix = paymentDocumentPanelPrefix(payment, documentKind);
     const sectionKind = documentKind === PAYMENT_DOCUMENT_KIND_CONFIRMATION ? "confirmation" : "request";
+    const disabledReason = documentKind === PAYMENT_DOCUMENT_KIND_CONFIRMATION
+      ? paymentConfirmationDisabledReason(payment)
+      : "";
     const variantClass = documentKind === PAYMENT_DOCUMENT_KIND_CONFIRMATION
       ? "booking-payment-document--confirmation"
       : "booking-payment-document--request";
-    const busy = paymentSectionBusy(paymentId, sectionKind);
-    const buttonLabel = busy ? bookingT("booking.pricing.creating_pdf", "Creating...") : bookingT("booking.pricing.new_pdf", "new PDF");
-    return buildBookingCollapsibleSectionMarkup({
-      escapeHtml,
+    return buildBookingPdfDocumentSectionMarkup({
       title,
-      className: `booking-payment-document ${variantClass}`,
-      bodyMarkup: `
-        ${paymentDocumentPersonalizationPanelMarkup(scope, prefix)}
-        ${paymentDocumentAttachmentsMarkup()}
-        ${paymentDocumentTableMarkup(payment, documentKind, { includeLegacyDepositRows })}
-        <div class="booking-payment-document__actions">
-          <button
-            class="btn btn-ghost booking-offer-add-btn"
-            type="button"
-            data-payment-document-create="${escapeHtml(`${paymentId}:${documentKind}`)}"
-            ${!state.permissions.canEditBooking || !paymentId || busy ? "disabled" : ""}
-          >${escapeHtml(buttonLabel)}</button>
-          ${paymentSectionStatusMarkup(paymentId, sectionKind)}
-        </div>
-      `
+      escapeHtml,
+      className: [variantClass, disabledReason ? "is-disabled" : ""].filter(Boolean).join(" "),
+      personalizationMarkup: paymentDocumentPersonalizationPanelMarkup(scope, prefix, { disabled: Boolean(disabledReason) }),
+      workspaceMarkup: paymentDocumentWorkspaceMarkup(payment, documentKind, paymentId, sectionKind, { disabledReason })
     });
   }
 
   function paymentReceivedSectionMarkup(payment, index, pricing) {
     const paymentId = String(payment?.id || "").trim();
     const currency = normalizeCurrencyCode(pricing?.currency || currentOfferCurrency());
-    const receivedAmountValue = Boolean(payment?.received_at && payment?.confirmed_by_atp_staff_id) || Number.isFinite(Number(payment?.received_amount_cents))
-      ? formatMoneyInputValue(
-          Number.isFinite(Number(payment?.received_amount_cents)) ? payment.received_amount_cents : payment.net_amount_cents,
-          currency
-        )
-      : "";
-    const receivedAmountPlaceholder = formatMoneyInputValue(payment?.net_amount_cents || 0, currency);
+    const receivedAmountValue = formatMoneyInputValue(payment?.net_amount_cents || 0, currency);
     return `
-      <section class="booking-payment-document booking-payment-document--receipt">
-        <div class="booking-payment-document__head">
-          <div class="booking-payment-document__copy">
-            <h4 class="booking-payment-document__title">${escapeHtml(bookingT("booking.pricing.payment_received", "Payment received"))}</h4>
+      <section class="booking-payment-receipt booking-payment-document--receipt">
+        <div class="booking-payment-receipt__head">
+          <div class="booking-payment-receipt__copy">
+            <h4 class="booking-payment-receipt__title">${escapeHtml(bookingT("booking.pricing.payment_received", "Payment received"))}</h4>
           </div>
         </div>
-        <div class="backend-controls booking-payment-document__receipt-grid">
+        <div class="backend-controls booking-payment-receipt__grid">
           <div class="field">
             <label for="payment_received_amount_${escapeHtml(paymentId)}">${escapeHtml(bookingT("booking.pricing.amount_received", "Amount received"))}</label>
-            <input
+            <div
               id="payment_received_amount_${escapeHtml(paymentId)}"
-              type="number"
-              min="0"
-              step="${isWholeUnitCurrency(currency) ? "1" : "0.01"}"
-              data-payment-received-amount="${escapeHtml(paymentId)}"
-              value="${escapeHtml(receivedAmountValue)}"
-              placeholder="${escapeHtml(receivedAmountPlaceholder)}"
-              ${!state.permissions.canEditBooking ? "disabled" : ""}
-            />
+              class="booking-payment-receipt__amount-display"
+              aria-readonly="true"
+            >${escapeHtml(receivedAmountValue)}</div>
           </div>
           <div class="field">
             <label for="payment_received_at_${escapeHtml(paymentId)}">${escapeHtml(bookingT("booking.pricing.when_received", "When received"))}</label>
@@ -934,34 +925,45 @@ export function createBookingPricingModule(ctx) {
     `;
   }
 
-  function paymentStageMarkup(payment, index, pricing) {
-    const kind = paymentKind(payment);
+  function paymentSectionSummaryMarkup(payment, index, pricing) {
     const amountLabel = formatMoneyDisplay(payment?.net_amount_cents || 0, pricing?.currency || currentOfferCurrency());
-    const receiptTableNeedsLegacyRows = kind === "DEPOSIT";
     return `
-      <article class="booking-payment-section">
-        <div class="booking-payment-section__head">
-          <div class="booking-payment-section__copy">
-            <h3 class="booking-payment-section__title">${escapeHtml(paymentTitle(payment, index))}</h3>
-            <p class="micro booking-payment-section__summary">${escapeHtml(paymentSummaryText(payment))}</p>
-          </div>
-          <div class="booking-payment-section__amount">${escapeHtml(amountLabel)}</div>
+      <span class="booking-payment-section__head">
+        <span class="booking-payment-section__copy">
+          <span class="booking-payment-section__title">${escapeHtml(paymentTitle(payment, index))}</span>
+          <span class="micro booking-payment-section__summary">${escapeHtml(paymentSummaryText(payment))}</span>
+        </span>
+        <span class="booking-payment-section__amount">${escapeHtml(amountLabel)}</span>
+      </span>
+    `;
+  }
+
+  function paymentStageMarkup(payment, index, pricing) {
+    return `
+      <article class="booking-section booking-payment-step-panel is-open" data-payment-id="${escapeHtml(String(payment?.id || "").trim())}">
+        <div class="booking-section__head">
+          <button
+            class="booking-section__summary booking-section__summary--inline-pad-16"
+            id="payment_section_summary_${escapeHtml(String(payment?.id || index + 1).trim())}"
+            type="button"
+          >${paymentSectionSummaryMarkup(payment, index, pricing)}</button>
         </div>
-        <div class="booking-payment-section__body">
-          ${paymentDocumentSectionMarkup(
-            payment,
-            index,
-            PAYMENT_DOCUMENT_KIND_REQUEST,
-            bookingT("booking.pricing.request_pdfs", "Request PDFs")
-          )}
-          ${paymentReceivedSectionMarkup(payment, index, pricing)}
-          ${paymentDocumentSectionMarkup(
-            payment,
-            index,
-            PAYMENT_DOCUMENT_KIND_CONFIRMATION,
-            bookingT("booking.pricing.customer_receipt", "Customer Receipt"),
-            { includeLegacyDepositRows: receiptTableNeedsLegacyRows }
-          )}
+        <div class="booking-section__body">
+          <div class="booking-payment-section__body">
+            ${paymentDocumentSectionMarkup(
+              payment,
+              index,
+              PAYMENT_DOCUMENT_KIND_REQUEST,
+              bookingT("booking.pricing.request_pdfs", "Request PDFs")
+            )}
+            ${paymentReceivedSectionMarkup(payment, index, pricing)}
+            ${paymentDocumentSectionMarkup(
+              payment,
+              index,
+              PAYMENT_DOCUMENT_KIND_CONFIRMATION,
+              bookingT("booking.pricing.customer_receipt", "Customer Receipt")
+            )}
+          </div>
         </div>
       </article>
     `;
@@ -981,178 +983,42 @@ export function createBookingPricingModule(ctx) {
     bindPaymentDocumentActions(els.paymentFlowSections);
   }
 
-  function updatePricingPanelSummary(pricing) {
-    if (!els.pricingPanelSummary) return;
-    const paymentCount = Array.isArray(pricing?.payments) ? pricing.payments.length : 0;
-    const summary = pricing?.summary || pricingSummary(pricing || {});
-    const secondary = paymentCount
-      ? bookingT("booking.pricing.summary_count_outstanding", "{count} payment(s), outstanding {amount}", {
-          count: String(paymentCount),
-          amount: formatMoneyDisplay(summary.outstanding_gross_amount_cents || 0, pricing?.currency || currentOfferCurrency())
-        })
-      : bookingT("booking.pricing.no_payments", "No payments scheduled");
-    renderBookingSectionHeader(els.pricingPanelSummary, {
-      primary: bookingT("booking.payments", "Payments"),
-      secondary
-    });
-  }
-
-  function renderPricingSummaryTable(pricing) {
-    if (!els.pricing_summary_table) return;
-    const summary = pricing?.summary || pricingSummary(pricing || {});
-    const rows = [
-      ["adjustments_delta", summary.adjustments_delta_cents],
-      ["scheduled_tax_amount", summary.scheduled_tax_amount_cents],
-      ["paid_gross_amount", summary.paid_gross_amount_cents],
-      ["outstanding_gross_amount", summary.outstanding_gross_amount_cents]
-    ]
-      .filter(([, value]) => Number(value || 0) !== 0)
-      .map(([key, value]) => `<tr><th>${escapeHtml(pricingSummaryLabel(key))}</th><td>${escapeHtml(formatMoneyDisplay(value, pricing?.currency || currentOfferCurrency()))}</td></tr>`);
-    if (summary.is_schedule_balanced === false) {
-      rows.push(`<tr><th>${escapeHtml(pricingSummaryLabel("schedule_balanced"))}</th><td>${escapeHtml(bookingT("common.no", "No"))}</td></tr>`);
-    }
-    els.pricing_summary_table.innerHTML = `<tbody>${rows.join("") || `<tr><td colspan="2">${escapeHtml(bookingT("booking.pricing.no_totals", "No payment totals yet"))}</td></tr>`}</tbody>`;
-  }
-
-  function addPricingAdjustmentRow() {
-    state.pricingDraft.adjustments.push({
-      id: "",
-      type: "DISCOUNT",
-      label: "",
-      amount_cents: 0,
-      note: null
-    });
-    renderPricingAdjustmentsTable();
-  }
-
-  function removePricingAdjustmentRow(index) {
-    state.pricingDraft.adjustments.splice(index, 1);
-    renderPricingAdjustmentsTable();
-  }
-
-  function renderPricingAdjustmentsTable() {
-    if (!els.pricing_adjustments_table) return;
-    const readOnly = !state.permissions.canEditBooking;
-    const items = Array.isArray(state.pricingDraft.adjustments) ? state.pricingDraft.adjustments : [];
-    const currency = normalizeCurrencyCode(state.pricingDraft.currency);
-    const header = `<thead><tr><th>${escapeHtml(bookingT("booking.pricing.label", "Label"))}</th><th>${escapeHtml(bookingT("booking.pricing.type", "Type"))}</th><th>${escapeHtml(bookingT("booking.pricing.amount_currency", "Amount ({currency})", { currency }))}</th><th>${escapeHtml(bookingT("booking.notes", "Notes"))}</th>${readOnly ? "" : "<th></th>"}</tr></thead>`;
-    const rows = items
-      .map((item, index) => `<tr>
-      <td><input data-pricing-adjustment-label="${index}" type="text" value="${escapeHtml(item.label || "")}" ${readOnly ? "disabled" : ""} /></td>
-      <td>
-        <select data-pricing-adjustment-type="${index}" ${readOnly ? "disabled" : ""}>
-          ${["DISCOUNT", "CREDIT", "SURCHARGE"].map((type) => `<option value="${type}" ${item.type === type ? "selected" : ""}>${escapeHtml(pricingAdjustmentTypeLabel(type))}</option>`).join("")}
-        </select>
-      </td>
-      <td><input data-pricing-adjustment-amount="${index}" type="number" min="0" step="${isWholeUnitCurrency(currency) ? "1" : "0.01"}" value="${escapeHtml(formatMoneyInputValue(item.amount_cents || 0, currency))}" ${readOnly ? "disabled" : ""} /></td>
-      <td><input class="booking-text-field booking-text-field--internal" data-pricing-adjustment-note="${index}" type="text" value="${escapeHtml(item.note || item.notes || "")}" ${readOnly ? "disabled" : ""} /></td>
-      ${readOnly ? "" : `<td><button class="btn btn-ghost" type="button" data-pricing-remove-adjustment="${index}">${escapeHtml(bookingT("common.remove", "Remove"))}</button></td>`}
-    </tr>`)
-      .join("");
-    const addRow = readOnly ? "" : `<tr><td colspan="5"><button class="btn btn-ghost" type="button" data-pricing-add-adjustment>${escapeHtml(bookingT("common.add", "Add"))}</button></td></tr>`;
-    els.pricing_adjustments_table.innerHTML = `${header}<tbody>${(rows || `<tr><td colspan="${readOnly ? 4 : 5}">${escapeHtml(bookingT("booking.pricing.no_adjustments", "No adjustments"))}</td></tr>`) + addRow}</tbody>`;
-    if (!readOnly) {
-      els.pricing_adjustments_table.querySelector("[data-pricing-add-adjustment]")?.addEventListener("click", addPricingAdjustmentRow);
-      els.pricing_adjustments_table.querySelectorAll("[data-pricing-remove-adjustment]").forEach((button) => {
-        button.addEventListener("click", () => {
-          removePricingAdjustmentRow(Number(button.getAttribute("data-pricing-remove-adjustment")));
-        });
-      });
-    }
-  }
-
-  function renderPricingPaymentsTable() {
-    if (!els.pricing_payments_table) return;
-    const currency = normalizeCurrencyCode(state.pricingDraft.currency || currentOfferCurrency());
-    const items = Array.isArray(state.pricingDraft.payments) ? state.pricingDraft.payments : [];
-    const rows = items
-      .map((payment, index) => `
-        <tr>
-          <td>${escapeHtml(paymentTitle(payment, index))}</td>
-          <td>${escapeHtml(normalizeDateInputValue(payment?.due_date) || "-")}</td>
-          <td>${escapeHtml(formatMoneyDisplay(payment?.net_amount_cents || 0, currency))}</td>
-          <td>${escapeHtml(formatTaxRatePercent(payment?.tax_rate_basis_points || 0))}</td>
-          <td>${escapeHtml(String(payment?.notes || "").trim() || "-")}</td>
-        </tr>
-      `)
-      .join("");
-    els.pricing_payments_table.innerHTML = `
-      <thead>
-        <tr>
-          <th>${escapeHtml(bookingT("booking.pricing.label", "Label"))}</th>
-          <th>${escapeHtml(bookingT("booking.due_date", "Due date"))}</th>
-          <th>${escapeHtml(bookingT("booking.pricing.net_currency", "Net ({currency})", { currency }))}</th>
-          <th>${escapeHtml(bookingT("booking.pricing.tax_percent", "Tax %"))}</th>
-          <th>${escapeHtml(bookingT("booking.notes", "Notes"))}</th>
-        </tr>
-      </thead>
-      <tbody>${rows || `<tr><td colspan="5">${escapeHtml(bookingT("booking.pricing.no_payments", "No payments scheduled"))}</td></tr>`}</tbody>
-    `;
-  }
-
-  function setPricingStatus(message) {
-    if (!els.pricing_status) return;
-    els.pricing_status.textContent = message || "";
-  }
-
-  function clearPricingStatus() {
-    setPricingStatus("");
-  }
-
   function renderPaymentFoundationMessage() {
     if (!(els.paymentFlowSections instanceof HTMLElement)) return;
     els.paymentFlowSections.hidden = false;
     els.paymentFlowSections.innerHTML = `
-      <article class="booking-payment-section">
-        <div class="booking-payment-section__body">
-          <p class="micro">${escapeHtml(bookingT("booking.pricing.deposit_setup_required", "Create a proposal payment plan before working with payment requests and receipts."))}</p>
+      <article class="booking-section booking-payment-step-panel is-open">
+        <div class="booking-section__head">
+          <button class="booking-section__summary booking-section__summary--inline-pad-16" type="button">
+            <span class="booking-payment-section__head">
+              <span class="booking-payment-section__copy">
+                <span class="booking-payment-section__title">${escapeHtml(bookingT("booking.payments", "Payments"))}</span>
+                <span class="micro booking-payment-section__summary">${escapeHtml(bookingT("booking.pricing.no_payments", "No payments scheduled"))}</span>
+              </span>
+            </span>
+          </button>
+        </div>
+        <div class="booking-section__body">
+          <div class="booking-payment-section__body">
+            <p class="micro">${escapeHtml(bookingT("booking.pricing.deposit_setup_required", "Create a proposal payment plan before working with payment requests and receipts."))}</p>
+          </div>
         </div>
       </article>
     `;
-  }
-
-  function collectAdjustmentsPayload(currency) {
-    return Array.from(document.querySelectorAll("[data-pricing-adjustment-label]")).map((input) => {
-      const index = Number(input.getAttribute("data-pricing-adjustment-label"));
-      const type = String(document.querySelector(`[data-pricing-adjustment-type="${index}"]`)?.value || "DISCOUNT").trim().toUpperCase();
-      const label = String(document.querySelector(`[data-pricing-adjustment-label="${index}"]`)?.value || "").trim();
-      const amount = parseMoneyInputValue(document.querySelector(`[data-pricing-adjustment-amount="${index}"]`)?.value || "0", currency);
-      const note = String(document.querySelector(`[data-pricing-adjustment-note="${index}"]`)?.value || "").trim();
-      if (!label) {
-        throw new Error(bookingT("booking.pricing.error.adjustment_label", "Adjustment {index} requires a label.", { index: index + 1 }));
-      }
-      if (!["DISCOUNT", "CREDIT", "SURCHARGE"].includes(type)) {
-        throw new Error(bookingT("booking.pricing.error.adjustment_type", "Adjustment {index} has an invalid type.", { index: index + 1 }));
-      }
-      if (!Number.isFinite(amount) || amount < 0) {
-        throw new Error(bookingT("booking.pricing.error.adjustment_amount", "Adjustment {index} requires a valid non-negative amount.", { index: index + 1 }));
-      }
-      return {
-        id: state.pricingDraft.adjustments[index]?.id || "",
-        type,
-        label,
-        amount_cents: Math.round(amount),
-        note: note || null
-      };
-    });
+    initializeBookingSections(els.paymentFlowSections);
   }
 
   function collectPricingPayload(options = {}) {
     const strict = options?.strict !== false;
     const suppressErrors = options?.suppressErrors === true;
     try {
-      const currency = normalizeCurrencyCode(els.pricing_currency_input?.value || state.pricingDraft?.currency || "USD");
-      const agreedNet = parseMoneyInputValue(els.pricing_agreed_net_input?.value || "0", currency);
-      if (!Number.isFinite(agreedNet) || agreedNet < 0) {
-        throw new Error(bookingT("booking.pricing.error.agreed_net_non_negative", "Agreed net amount must be zero or positive."));
-      }
-      const adjustments = collectAdjustmentsPayload(currency);
+      const currency = normalizeCurrencyCode(state.pricingDraft?.currency || currentOfferCurrency());
       const payments = (Array.isArray(state.pricingDraft?.payments) ? state.pricingDraft.payments : []).map((payment, index) => {
         const receipt = paymentReceiptFieldValues(payment, { strict });
         const taxRateBasisPoints = Number.isFinite(Number(payment?.tax_rate_basis_points))
           ? Math.max(0, Math.round(Number(payment.tax_rate_basis_points)))
           : 0;
-        const netAmountCents = normalizeAmount(payment?.net_amount_cents, 0);
+        const netAmountCents = Math.max(0, Math.round(Number(payment?.net_amount_cents || 0)));
         const taxAmountCents = Math.round((netAmountCents * taxRateBasisPoints) / 10000);
         const grossAmountCents = netAmountCents + taxAmountCents;
         return {
@@ -1175,12 +1041,10 @@ export function createBookingPricingModule(ctx) {
           notes: String(payment?.notes || "").trim() || null
         };
       });
-      return pricingWithSummary({
+      return {
         currency,
-        agreed_net_amount_cents: Math.round(agreedNet),
-        adjustments,
         payments
-      });
+      };
     } catch (error) {
       if (suppressErrors) return null;
       throw error;
@@ -1210,13 +1074,22 @@ export function createBookingPricingModule(ctx) {
     });
   }
 
-  async function createPaymentDocument(paymentId, documentKind) {
+  async function createPaymentDocument(paymentId, documentKind, options = {}) {
     const payment = findPaymentById(paymentId, state.pricingDraft) || findPaymentById(paymentId, state.booking?.pricing);
     if (!payment || !state.permissions.canEditBooking) return false;
     const sectionKind = documentKind === PAYMENT_DOCUMENT_KIND_CONFIRMATION ? "confirmation" : "request";
+    const disabledReason = documentKind === PAYMENT_DOCUMENT_KIND_CONFIRMATION
+      ? paymentConfirmationDisabledReason(payment)
+      : "";
+    if (disabledReason) {
+      setPaymentSectionState(paymentId, sectionKind, disabledReason, "info");
+      renderPricingPanel({ preserveDraft: true });
+      return false;
+    }
     const scope = paymentDocumentScope(payment, documentKind);
     const prefix = paymentDocumentPanelPrefix(payment, documentKind);
     const pdfPersonalization = collectPaymentDocumentPersonalization(scope, prefix);
+    const openAfterCreate = options?.openAfterCreate === true;
     setPaymentSectionState(paymentId, sectionKind, "");
     if (state.dirty.pricing) {
       const saved = await savePricing();
@@ -1240,9 +1113,11 @@ export function createBookingPricingModule(ctx) {
       setPaymentSectionState(
         paymentId,
         sectionKind,
-        documentKind === PAYMENT_DOCUMENT_KIND_CONFIRMATION
-          ? bookingT("booking.pricing.payment_confirmation_create_failed", "Could not create the customer receipt PDF.")
-          : bookingT("booking.pricing.payment_request_create_failed", "Could not create the payment request PDF."),
+        typeof options?.errorMessage === "string" && options.errorMessage.trim()
+          ? options.errorMessage.trim()
+          : (documentKind === PAYMENT_DOCUMENT_KIND_CONFIRMATION
+              ? bookingT("booking.pricing.payment_confirmation_create_failed", "Could not create the customer receipt PDF.")
+              : bookingT("booking.pricing.payment_request_create_failed", "Could not create the payment request PDF.")),
         "error"
       );
       renderPricingPanel({ preserveDraft: true });
@@ -1253,12 +1128,17 @@ export function createBookingPricingModule(ctx) {
     renderBookingData();
     renderActionControls?.();
     await loadPaymentDocuments?.();
+    if (openAfterCreate) {
+      openPaymentDocumentUrl(result.invoice?.pdf_url || "");
+    }
     setPaymentSectionState(
       paymentId,
       sectionKind,
-      documentKind === PAYMENT_DOCUMENT_KIND_CONFIRMATION
-        ? bookingT("booking.pricing.payment_confirmation_created", "Customer receipt PDF created.")
-        : bookingT("booking.pricing.payment_request_created", "Payment request PDF created."),
+      typeof options?.successMessage === "string" && options.successMessage.trim()
+        ? options.successMessage.trim()
+        : (documentKind === PAYMENT_DOCUMENT_KIND_CONFIRMATION
+            ? bookingT("booking.pricing.payment_confirmation_created", "Customer receipt PDF created.")
+            : bookingT("booking.pricing.payment_request_created", "Payment request PDF created.")),
       "success"
     );
     renderPricingPanel({ preserveDraft: false });
@@ -1266,8 +1146,57 @@ export function createBookingPricingModule(ctx) {
     return true;
   }
 
+  async function previewPaymentDocument(paymentId, documentKind) {
+    const payment = findPaymentById(paymentId, state.pricingDraft) || findPaymentById(paymentId, state.booking?.pricing);
+    if (!payment) return false;
+    const sectionKind = documentKind === PAYMENT_DOCUMENT_KIND_CONFIRMATION ? "confirmation" : "request";
+    const scope = paymentDocumentScope(payment, documentKind);
+    const prefix = paymentDocumentPanelPrefix(payment, documentKind);
+    const latestDocument = latestPaymentDocumentFor(payment, documentKind);
+    const needsFreshDocument =
+      state.permissions.canEditBooking
+      && (
+        state.dirty.pricing
+        || paymentDocumentPersonalizationChanged(scope, prefix)
+        || !latestDocument
+      );
+
+    if (needsFreshDocument) {
+      return await createPaymentDocument(paymentId, documentKind, {
+        openAfterCreate: true,
+        successMessage: bookingT("booking.pricing.preview_pdf_ready", "Preview PDF opened."),
+        errorMessage: bookingT("booking.pricing.preview_pdf_failed", "Could not open the preview PDF.")
+      });
+    }
+
+    if (latestDocument?.pdf_url && openPaymentDocumentUrl(latestDocument.pdf_url)) {
+      setPaymentSectionState(paymentId, sectionKind, bookingT("booking.pricing.preview_pdf_ready", "Preview PDF opened."), "success");
+      renderPricingPanel({ preserveDraft: true });
+      return true;
+    }
+
+    setPaymentSectionState(
+      paymentId,
+      sectionKind,
+      bookingT("booking.pricing.preview_pdf_failed", "Could not open the preview PDF."),
+      "error"
+    );
+    renderPricingPanel({ preserveDraft: true });
+    return false;
+  }
+
   function bindPaymentDocumentActions(root) {
     if (!(root instanceof HTMLElement)) return;
+    root.querySelectorAll("[data-payment-document-preview]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const raw = String(button.getAttribute("data-payment-document-preview") || "").trim();
+        const separatorIndex = raw.lastIndexOf(":");
+        if (separatorIndex <= 0) return;
+        const paymentId = raw.slice(0, separatorIndex);
+        const documentKind = raw.slice(separatorIndex + 1);
+        void previewPaymentDocument(paymentId, documentKind);
+      });
+    });
     root.querySelectorAll("[data-payment-document-create]").forEach((button) => {
       button.addEventListener("click", () => {
         const raw = String(button.getAttribute("data-payment-document-create") || "").trim();
@@ -1289,41 +1218,23 @@ export function createBookingPricingModule(ctx) {
   }
 
   function renderPricingPanel(options = {}) {
-    if (!els.pricing_panel || !state.booking) return;
+    if (!(els.paymentFlowSections instanceof HTMLElement) || !state.booking) return;
     const preserveDraft = options?.preserveDraft === true;
     const markDerivedChangesDirty = options?.markDerivedChangesDirty === true;
-    const savedPricing = pricingWithSummary(clonePricing(state.booking?.pricing || {}));
+    const savedPricing = clonePricing(state.booking?.pricing || {});
     const draftSource = preserveDraft && state.dirty.pricing
       ? (collectPricingPayload({ strict: false, suppressErrors: true }) || state.pricingDraft || savedPricing)
       : savedPricing;
     const pricing = hasPaymentTermsFoundation()
       ? nextPricingFromPaymentTerms(draftSource)
-      : pricingWithSummary(clonePricing(draftSource));
+      : clonePricing(draftSource);
     state.pricingDraft = pricing;
-    updatePricingPanelSummary(pricing);
-
-    const currency = normalizeCurrencyCode(pricing.currency || currentOfferCurrency());
-    if (els.pricing_currency_input) {
-      els.pricing_currency_input.value = currency;
-      els.pricing_currency_input.disabled = !state.permissions.canEditBooking;
-    }
-    if (els.pricing_agreed_net_label) {
-      els.pricing_agreed_net_label.textContent = bookingT("booking.pricing.agreed_net_amount_currency", "Agreed net amount ({currency})", { currency });
-    }
-    if (els.pricing_agreed_net_input) {
-      els.pricing_agreed_net_input.value = formatMoneyInputValue(pricing.agreed_net_amount_cents || 0, currency);
-      els.pricing_agreed_net_input.disabled = !state.permissions.canEditBooking;
-    }
 
     if (hasPaymentTermsFoundation()) {
       renderPaymentFlowSections(pricing);
     } else {
       renderPaymentFoundationMessage();
     }
-    renderPricingSummaryTable(pricing);
-    renderPricingAdjustmentsTable();
-    renderPricingPaymentsTable();
-    clearPricingStatus();
 
     if (preserveDraft && state.dirty.pricing) {
       pricingDirtyTracker.setDirty(true);
@@ -1337,13 +1248,11 @@ export function createBookingPricingModule(ctx) {
 
   async function savePricing() {
     if (!state.booking || !state.permissions.canEditBooking) return false;
-    clearPricingStatus();
     let pricing;
     try {
       pricing = collectPricingPayload({ strict: true });
     } catch (error) {
       const message = String(error?.message || error);
-      setPricingStatus(message);
       setPageSaveActionError?.(message);
       return false;
     }

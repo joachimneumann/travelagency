@@ -280,19 +280,36 @@ export function buildBookingCollapsibleSectionInnerMarkup({ title, bodyMarkup = 
 }
 
 export function buildBookingCollapsibleSectionMarkup({
+  id = "",
   title,
   bodyMarkup = "",
   className = "",
   dataAttributes = {},
+  bodyClassName = "",
+  tagName = "article",
   escapeHtml
 } = {}) {
   const escape = resolveEscapeHtml(escapeHtml);
+  const normalizedTagName = /^[a-z][a-z0-9-]*$/i.test(String(tagName || "").trim())
+    ? String(tagName || "").trim().toLowerCase()
+    : "article";
   const classes = ["booking-collapsible", className].filter(Boolean).join(" ");
   const attributes = buildDataAttributesMarkup(dataAttributes, escape);
+  const bodyClasses = ["booking-collapsible__body", bodyClassName].filter(Boolean).join(" ");
+  const idAttribute = String(id || "").trim() ? ` id="${escape(String(id || "").trim())}"` : "";
   return `
-    <article class="${escape(classes)}"${attributes ? ` ${attributes}` : ""}>
-      ${buildBookingCollapsibleSectionInnerMarkup({ title, bodyMarkup, escapeHtml: escape })}
-    </article>
+    <${normalizedTagName}${idAttribute} class="${escape(classes)}"${attributes ? ` ${attributes}` : ""}>
+      <div class="booking-collapsible__head">
+        <button class="booking-collapsible__summary booking-section__summary--inline-pad-16" type="button">
+          <span class="backend-section-header">
+            <span class="backend-section-header__primary">${escape(title || "")}</span>
+          </span>
+        </button>
+      </div>
+      <div class="${escape(bodyClasses)}">
+        ${bodyMarkup}
+      </div>
+    </${normalizedTagName}>
   `;
 }
 
@@ -381,19 +398,35 @@ function buildPdfReferenceMarkup(config) {
   `;
 }
 
-function buildPdfPanelBodyMarkup(config) {
-  const titleMarkup = config.variant === "static"
-    ? `<h3 class="booking-pdf-panel__title">${config.title}</h3>`
+export function buildBookingPdfPanelBodyMarkup({
+  title = "",
+  variant = "collapsible",
+  fieldsMarkup = "",
+  referenceMarkup = "",
+  escapeHtml
+} = {}) {
+  const escape = resolveEscapeHtml(escapeHtml);
+  const titleMarkup = variant === "static"
+    ? `<h3 class="booking-pdf-panel__title">${escape(title)}</h3>`
     : "";
   return `
     <div class="booking-pdf-panel__body">
       ${titleMarkup}
       <div class="booking-pdf-panel__fields">
-        ${buildPdfFieldMountsMarkup(config)}
+        ${fieldsMarkup}
       </div>
-      ${buildPdfReferenceMarkup(config)}
+      ${referenceMarkup}
     </div>
   `;
+}
+
+function buildPdfPanelBodyMarkup(config) {
+  return buildBookingPdfPanelBodyMarkup({
+    title: config.title,
+    variant: config.variant,
+    fieldsMarkup: buildPdfFieldMountsMarkup(config),
+    referenceMarkup: buildPdfReferenceMarkup(config)
+  });
 }
 
 function renderCollapsiblePdfPanel(panel, config) {

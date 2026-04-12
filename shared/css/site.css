@@ -3257,23 +3257,6 @@ textarea:focus-visible {
   padding-inline: 0.25rem;
 }
 
-.booking-generated-offer-route {
-  display: flex;
-  justify-content: flex-start;
-  margin: 0 0 0.9rem;
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-}
-
-.booking-generated-offers-actions {
-  display: flex;
-  justify-content: flex-start;
-  align-self: end;
-  margin-bottom: 0;
-}
-
 .offer-remove-btn {
   min-width: 34px;
   height: 34px;
@@ -3860,14 +3843,6 @@ textarea:focus-visible {
   .booking-confirmation-route__header,
   .booking-confirmation-payment-terms__summary-row {
     grid-template-columns: 1fr;
-  }
-
-  .booking-generated-offers-actions {
-    justify-content: stretch;
-  }
-
-  .booking-generated-offers-actions .btn {
-    width: 100%;
   }
 
   .traveler-details-actions {

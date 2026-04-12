@@ -38,7 +38,6 @@ export function createBookingViewHelpers({
   keycloakDisplayName,
   resolveAssignedAtpStaffProfile,
   listBookingTravelPlanPdfs,
-  listBookingConfirmationPdfs,
   sendJson
 }) {
   const bookingConfirmationTokenSecret = normalizeText(bookingConfirmationTokenConfig?.secret);
@@ -330,9 +329,6 @@ export function createBookingViewHelpers({
     const travelPlanPdfs = !listMode && typeof listBookingTravelPlanPdfs === "function"
       ? await listBookingTravelPlanPdfs(normalizedBooking.id).catch(() => [])
       : [];
-    const bookingConfirmationPdfs = !listMode && typeof listBookingConfirmationPdfs === "function"
-      ? await listBookingConfirmationPdfs(normalizedBooking.id).catch(() => [])
-      : [];
     let assignedKeycloakUserLabel = assignedKeycloakUserId
       ? normalizeText(assignedAtpStaff?.name)
       : "";
@@ -461,10 +457,6 @@ export function createBookingViewHelpers({
         ...item,
         sent_to_customer: item?.sent_to_customer === true,
         pdf_url: `/api/v1/bookings/${encodeURIComponent(normalizedBooking.id)}/travel-plan/pdfs/${encodeURIComponent(item.id)}/pdf`
-      })),
-      booking_confirmation_pdfs: bookingConfirmationPdfs.map((item) => ({
-        ...item,
-        pdf_url: `/api/v1/bookings/${encodeURIComponent(normalizedBooking.id)}/booking-confirmation/pdfs/${encodeURIComponent(item.id)}/pdf`
       })),
       generated_offers: generatedOffers,
       generated_offer_email_enabled: isGeneratedOfferEmailEnabled(),

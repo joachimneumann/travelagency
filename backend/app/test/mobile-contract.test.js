@@ -450,11 +450,7 @@ function assertBookingShape(booking) {
   assert.equal(typeof booking.id, "string");
   assert.equal(typeof booking.pricing, "object");
   assert.equal(typeof booking.pricing.currency, "string");
-  assert.equal(typeof booking.pricing.agreed_net_amount_cents, "number");
-  assert.ok(Array.isArray(booking.pricing.adjustments));
   assert.ok(Array.isArray(booking.pricing.payments));
-  assert.equal(typeof booking.pricing.summary, "object");
-  assert.equal(typeof booking.pricing.summary.is_schedule_balanced, "boolean");
   assert.ok(Array.isArray(booking.persons));
   assert.ok(booking.persons.length > 0);
   assert.equal(typeof booking.persons[0].id, "string");
@@ -597,21 +593,7 @@ test("booking clone endpoint applies the shared clone policy and can include tra
   };
   bookingRecord.pricing = {
     currency: "USD",
-    agreed_net_amount_cents: 10000,
-    adjustments: [{ id: "pricing_adjustment_1", type: "SURCHARGE", amount_cents: 500 }],
-    payments: [{ id: "pricing_payment_1", label: "Deposit", status: "PAID", paid_at: "2026-03-25T09:15:00.000Z" }],
-    summary: {
-      agreed_net_amount_cents: 10000,
-      adjustments_delta_cents: 500,
-      adjusted_net_amount_cents: 10500,
-      scheduled_net_amount_cents: 10000,
-      unscheduled_net_amount_cents: 500,
-      scheduled_tax_amount_cents: 0,
-      scheduled_gross_amount_cents: 10000,
-      paid_gross_amount_cents: 10000,
-      outstanding_gross_amount_cents: 0,
-      is_schedule_balanced: false
-    }
+    payments: [{ id: "pricing_payment_1", label: "Deposit", status: "PAID", paid_at: "2026-03-25T09:15:00.000Z" }]
   };
   await writeFile(STORE_PATH, `${JSON.stringify(store, null, 2)}\n`, "utf8");
 
@@ -631,7 +613,6 @@ test("booking clone endpoint applies the shared clone policy and can include tra
   assert.deepEqual(cloneWithoutTravelers.body.booking.accepted_record, { available: false });
   assert.equal(cloneWithoutTravelers.body.booking.travel_plan.days[0].services[0].image.storage_path, "booking_images/source/service.webp");
   assert.equal(cloneWithoutTravelers.body.booking.travel_plan.attachments[0].storage_path, "booking_source/voucher.pdf");
-  assert.deepEqual(cloneWithoutTravelers.body.booking.pricing.adjustments, []);
   assert.deepEqual(cloneWithoutTravelers.body.booking.pricing.payments, []);
   assert.equal(cloneWithoutTravelers.body.booking.web_form_submission.booking_name, "Cloned without travelers");
   assert.equal(cloneWithoutTravelers.body.booking.web_form_submission.notes, `cloned from ${createdBooking.id}`);
@@ -5720,7 +5701,8 @@ test("booking invoice create/update and offer exchange-rates endpoints work", as
 });
 
 test("booking invoice create supports payment-linked request and confirmation PDFs", async () => {
-  const createdBooking = await createSeedBooking();
+  await resetStore();
+  const createdBooking = await createPublicBooking({ preferred_currency: "EUR" });
   const booking_id = createdBooking.id;
 
   const storeBeforeGenerate = JSON.parse(await readFile(STORE_PATH, "utf8"));
@@ -5878,6 +5860,7 @@ test("booking invoice create supports payment-linked request and confirmation PD
   installmentPayment.status = "PAID";
   installmentPayment.received_at = "2026-04-01T00:00:00.000Z";
   installmentPayment.paid_at = "2026-04-01T00:00:00.000Z";
+  installmentPayment.received_amount_cents = 6800;
   installmentPayment.confirmed_by_atp_staff_id = "kc-joachim";
   installmentPayment.reference = "INSTALLMENT-REF-001";
 
@@ -5885,6 +5868,7 @@ test("booking invoice create supports payment-linked request and confirmation PD
   finalPayment.net_amount_cents = 14000;
   finalPayment.received_at = "2026-04-12T00:00:00.000Z";
   finalPayment.paid_at = "2026-04-12T00:00:00.000Z";
+  finalPayment.received_amount_cents = 13850;
   finalPayment.confirmed_by_atp_staff_id = "kc-joachim";
   finalPayment.reference = "FINAL-REF-001";
 
@@ -5939,6 +5923,8 @@ test("booking invoice create supports payment-linked request and confirmation PD
   assert.equal(installmentRequestResult.body.invoice.document_kind, "PAYMENT_REQUEST");
   assert.equal(installmentRequestResult.body.invoice.payment_kind, "INSTALLMENT");
   assert.equal(installmentRequestResult.body.invoice.payment_id, installmentPayment.id);
+  assert.equal(installmentRequestResult.body.invoice.currency, createdBooking.preferred_currency);
+  assert.equal(installmentRequestResult.body.invoice.total_amount_cents, installmentPayment.net_amount_cents);
   assert.equal(installmentRequestResult.body.invoice.subtitle, "Installment request subtitle");
   assert.equal(
     installmentRequestResult.body.booking.pdf_personalization.payment_request_installment.subtitle,
@@ -5960,6 +5946,8 @@ test("booking invoice create supports payment-linked request and confirmation PD
   assert.equal(installmentConfirmationResult.status, 201);
   assert.equal(installmentConfirmationResult.body.invoice.document_kind, "PAYMENT_CONFIRMATION");
   assert.equal(installmentConfirmationResult.body.invoice.payment_kind, "INSTALLMENT");
+  assert.equal(installmentConfirmationResult.body.invoice.currency, createdBooking.preferred_currency);
+  assert.equal(installmentConfirmationResult.body.invoice.total_amount_cents, 6800);
   assert.equal(installmentConfirmationResult.body.invoice.payment_received_at, "2026-04-01T00:00:00.000Z");
   assert.equal(
     installmentConfirmationResult.body.booking.pdf_personalization.payment_confirmation_installment.subtitle,
@@ -5981,6 +5969,8 @@ test("booking invoice create supports payment-linked request and confirmation PD
   assert.equal(finalRequestResult.status, 201, JSON.stringify(finalRequestResult.body));
   assert.equal(finalRequestResult.body.invoice.document_kind, "PAYMENT_REQUEST");
   assert.equal(finalRequestResult.body.invoice.payment_kind, "FINAL_BALANCE");
+  assert.equal(finalRequestResult.body.invoice.currency, createdBooking.preferred_currency);
+  assert.equal(finalRequestResult.body.invoice.total_amount_cents, 14000);
   assert.equal(
     finalRequestResult.body.booking.pdf_personalization.payment_request_final.subtitle,
     "Final request subtitle"
@@ -6001,11 +5991,203 @@ test("booking invoice create supports payment-linked request and confirmation PD
   assert.equal(finalConfirmationResult.status, 201);
   assert.equal(finalConfirmationResult.body.invoice.document_kind, "PAYMENT_CONFIRMATION");
   assert.equal(finalConfirmationResult.body.invoice.payment_kind, "FINAL_BALANCE");
+  assert.equal(finalConfirmationResult.body.invoice.currency, createdBooking.preferred_currency);
+  assert.equal(finalConfirmationResult.body.invoice.total_amount_cents, 13850);
   assert.equal(finalConfirmationResult.body.invoice.payment_received_at, "2026-04-12T00:00:00.000Z");
   assert.equal(
     finalConfirmationResult.body.booking.pdf_personalization.payment_confirmation_final.subtitle,
     "Final confirmation subtitle"
   );
+});
+
+test("first payment request freezes the accepted commercial snapshot before a receipt is recorded", async () => {
+  await resetStore();
+  const createdBooking = await createPublicBooking({ preferred_currency: "EUR" });
+  const bookingId = createdBooking.id;
+
+  const detailBefore = await requestJson(
+    endpointPath("booking_detail").replace("{booking_id}", bookingId),
+    apiHeaders()
+  );
+  assert.equal(detailBefore.status, 200);
+
+  const offerPatchResult = await requestJson(
+    endpointPath("booking_offer").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_offer_revision: detailBefore.body.booking.offer_revision,
+        offer: {
+          ...buildTripOfferDraft(detailBefore.body.booking.offer, createdBooking.preferred_currency, 24000),
+          payment_terms: {
+            currency: createdBooking.preferred_currency,
+            lines: [
+              {
+                id: "payment_term_first_request_deposit",
+                kind: "DEPOSIT",
+                label: "Deposit",
+                sequence: 1,
+                amount_spec: {
+                  mode: "FIXED_AMOUNT",
+                  fixed_amount_cents: 8000
+                },
+                due_rule: {
+                  type: "ON_ACCEPTANCE"
+                }
+              },
+              {
+                id: "payment_term_first_request_final",
+                kind: "FINAL_BALANCE",
+                label: "Final payment",
+                sequence: 2,
+                amount_spec: {
+                  mode: "REMAINING_BALANCE"
+                },
+                due_rule: {
+                  type: "DAYS_BEFORE_TRIP_START",
+                  days: 7
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  );
+  assert.equal(offerPatchResult.status, 200);
+
+  const travelPlanPatchResult = await requestJson(
+    endpointPath("booking_travel_plan").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_travel_plan_revision: offerPatchResult.body.booking.travel_plan_revision,
+        travel_plan: {
+          days: [
+            {
+              id: "travel_plan_day_first_request",
+              day_number: 1,
+              title: "Arrival",
+              overnight_location: "Hoi An",
+              services: [
+                {
+                  id: "travel_plan_service_first_request",
+                  timing_kind: "point",
+                  time_point: "19:00",
+                  kind: "transport",
+                  title: "Original airport pickup"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  );
+  assert.equal(travelPlanPatchResult.status, 200);
+
+  const pricingPatchResult = await requestJson(
+    endpointPath("booking_pricing").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_pricing_revision: travelPlanPatchResult.body.booking.pricing_revision,
+        pricing: {
+          currency: createdBooking.preferred_currency,
+          payments: [
+            {
+              id: "pricing_payment_first_request_deposit",
+              label: "Deposit",
+              origin_payment_term_line_id: "payment_term_first_request_deposit",
+              due_date: "2026-05-01",
+              net_amount_cents: 8000,
+              tax_rate_basis_points: 0,
+              status: "PENDING",
+              paid_at: null
+            }
+          ]
+        }
+      }
+    }
+  );
+  assert.equal(pricingPatchResult.status, 200);
+  assert.equal(pricingPatchResult.body.booking.pricing.currency, createdBooking.preferred_currency);
+
+  const firstPaymentRequestResult = await requestJson(
+    endpointPath("booking_invoice_create").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "POST",
+      body: {
+        expected_invoices_revision: pricingPatchResult.body.booking.invoices_revision,
+        payment_id: "pricing_payment_first_request_deposit",
+        document_kind: "PAYMENT_REQUEST",
+        lang: "en",
+        content_lang: "en",
+        source_lang: "en"
+      }
+    }
+  );
+  assert.equal(firstPaymentRequestResult.status, 201, JSON.stringify(firstPaymentRequestResult.body));
+  assert.equal(firstPaymentRequestResult.body.invoice.currency, createdBooking.preferred_currency);
+  assert.equal(firstPaymentRequestResult.body.invoice.total_amount_cents, 8000);
+  assert.equal(firstPaymentRequestResult.body.booking.accepted_record.available, true);
+  assert.equal(firstPaymentRequestResult.body.booking.accepted_record.payment_terms.lines[0].label, "Deposit");
+  assert.equal(
+    firstPaymentRequestResult.body.booking.accepted_record.travel_plan.days[0].services[0].title,
+    "Original airport pickup"
+  );
+
+  const storeAfterFirstRequest = JSON.parse(await readFile(STORE_PATH, "utf8"));
+  const mutableBookingRecord = storeAfterFirstRequest.bookings.find((item) => item.id === bookingId);
+  assert.ok(mutableBookingRecord);
+  mutableBookingRecord.offer.payment_terms.lines[0].label = "Changed after first request";
+  mutableBookingRecord.travel_plan.days[0].services[0].title = "Changed airport pickup";
+  await writeFile(STORE_PATH, `${JSON.stringify(storeAfterFirstRequest, null, 2)}\n`, "utf8");
+
+  const detailAfterMutation = await requestJson(
+    endpointPath("booking_detail").replace("{booking_id}", bookingId),
+    apiHeaders()
+  );
+  assert.equal(detailAfterMutation.status, 200);
+  assert.equal(detailAfterMutation.body.booking.offer.payment_terms.lines[0].label, "Changed after first request");
+  assert.equal(detailAfterMutation.body.booking.accepted_record.payment_terms.lines[0].label, "Deposit");
+  assert.equal(
+    detailAfterMutation.body.booking.accepted_record.travel_plan.days[0].services[0].title,
+    "Original airport pickup"
+  );
+
+  const receiptPatchResult = await requestJson(
+    endpointPath("booking_pricing").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_pricing_revision: detailAfterMutation.body.booking.pricing_revision,
+        pricing: {
+          ...detailAfterMutation.body.booking.pricing,
+          payments: detailAfterMutation.body.booking.pricing.payments.map((payment) => (
+            payment.id === "pricing_payment_first_request_deposit"
+              ? {
+                ...payment,
+                status: "PAID",
+                paid_at: "2026-05-01T08:00:00.000Z",
+                received_at: "2026-05-01T08:00:00.000Z",
+                received_amount_cents: 7900,
+                confirmed_by_atp_staff_id: "kc-joachim",
+                reference: "FIRST-REQ-REF-001"
+              }
+              : payment
+          ))
+        }
+      }
+    }
+  );
+  assert.equal(receiptPatchResult.status, 200, JSON.stringify(receiptPatchResult.body));
+  assert.equal(receiptPatchResult.body.booking.accepted_record.accepted_deposit_currency, createdBooking.preferred_currency);
 });
 
 test("booking invoice patch rejects currency change once invoice is sent", async () => {

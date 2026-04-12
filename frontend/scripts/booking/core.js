@@ -301,6 +301,18 @@ function normalizePdfPersonalization(value) {
   };
 }
 
+function normalizeManagedPdfPersonalization(value) {
+  const normalized = normalizePdfPersonalization(value);
+  return Object.fromEntries(
+    BOOKING_PDF_PERSONALIZATION_PANELS.map((panelConfig) => [
+      panelConfig.scope,
+      normalized?.[panelConfig.scope] && typeof normalized[panelConfig.scope] === "object"
+        ? normalized[panelConfig.scope]
+        : {}
+    ])
+  );
+}
+
 export function createBookingCoreModule(ctx) {
   const {
     state,
@@ -558,6 +570,26 @@ export function createBookingCoreModule(ctx) {
     return nextBranch;
   }
 
+  function readManagedPdfPersonalizationDraft(value) {
+    const nextPdfPersonalization = normalizePdfPersonalization(value);
+    BOOKING_PDF_PERSONALIZATION_PANELS.forEach((panelConfig) => {
+      nextPdfPersonalization[panelConfig.scope] = buildPdfPersonalizationBranchDraft(
+        panelConfig.scope,
+        nextPdfPersonalization[panelConfig.scope]
+      );
+    });
+    return nextPdfPersonalization;
+  }
+
+  function mergeManagedPdfPersonalization(value, managedValue) {
+    const nextPdfPersonalization = normalizePdfPersonalization(value);
+    const managedPdfPersonalization = normalizeManagedPdfPersonalization(managedValue);
+    BOOKING_PDF_PERSONALIZATION_PANELS.forEach((panelConfig) => {
+      nextPdfPersonalization[panelConfig.scope] = managedPdfPersonalization[panelConfig.scope];
+    });
+    return nextPdfPersonalization;
+  }
+
   function customerReferenceNote(booking = state.booking) {
     return normalizeText(booking?.web_form_submission?.notes);
   }
@@ -776,7 +808,7 @@ export function createBookingCoreModule(ctx) {
         : "",
       destinations: JSON.stringify(normalizeCodeArray(values.destinations)),
       travel_styles: JSON.stringify(normalizeTravelStyleArray(values.travel_styles)),
-      pdf_personalization: JSON.stringify(normalizePdfPersonalization(values.pdf_personalization))
+      pdf_personalization: JSON.stringify(normalizeManagedPdfPersonalization(values.pdf_personalization))
     };
   }
 
@@ -833,12 +865,7 @@ export function createBookingCoreModule(ctx) {
     if (els.referralStaffSelect) draft.referral_staff_user_id = normalizeText(els.referralStaffSelect.value) || "";
     draft.destinations = normalizeCodeArray(readCheckedValues(els.destinationsOptions, "booking-destination-option"));
     draft.travel_styles = normalizeTravelStyleArray(readCheckedValues(els.travelStylesOptions, "booking-travel-style-option"));
-    draft.pdf_personalization = Object.fromEntries(
-      BOOKING_PDF_PERSONALIZATION_PANELS.map((panelConfig) => [
-        panelConfig.scope,
-        buildPdfPersonalizationBranchDraft(panelConfig.scope, draft.pdf_personalization?.[panelConfig.scope])
-      ])
-    );
+    draft.pdf_personalization = readManagedPdfPersonalizationDraft(draft.pdf_personalization);
     if (draft.referral_kind === "none") {
       draft.referral_label = "";
       draft.referral_staff_user_id = "";
@@ -1236,13 +1263,29 @@ export function createBookingCoreModule(ctx) {
       els.referralLabelInput.disabled = !state.permissions.canEditBooking || !showReferralLabel;
     }
     if (els.referralStaffSelect) {
+      const selectedReferralStaffId = normalizeText(draft.referral_staff_user_id) || "";
+      const knownReferralStaff = new Map(
+        (state.keycloakUsers || [])
+          .map((user) => [String(user?.id || "").trim(), user])
+          .filter(([id]) => Boolean(id))
+      );
+      if (selectedReferralStaffId && !knownReferralStaff.has(selectedReferralStaffId)) {
+        const fallbackReferralUser = resolveCurrentAuthKeycloakUser(selectedReferralStaffId);
+        knownReferralStaff.set(selectedReferralStaffId, {
+          ...(fallbackReferralUser && typeof fallbackReferralUser === "object" ? fallbackReferralUser : {}),
+          id: selectedReferralStaffId,
+          name: resolveAtpStaffDisplayName(fallbackReferralUser) || selectedReferralStaffId,
+          username: normalizeText(fallbackReferralUser?.username) || null,
+          full_name: normalizeText(fallbackReferralUser?.full_name) || ""
+        });
+      }
       const staffOptions = [`<option value="">${escapeHtml(bookingT("booking.referral.staff_placeholder", "Select ATP staff"))}</option>`]
-        .concat((state.keycloakUsers || []).map((user) => (
+        .concat([...knownReferralStaff.values()].map((user) => (
           `<option value="${escapeHtml(user.id)}">${escapeHtml(resolveAtpStaffDisplayName(user) || user.id)}</option>`
         )))
         .join("");
       els.referralStaffSelect.innerHTML = staffOptions;
-      els.referralStaffSelect.value = normalizeText(draft.referral_staff_user_id) || "";
+      els.referralStaffSelect.value = selectedReferralStaffId;
       els.referralStaffSelect.hidden = !showReferralStaff;
       els.referralStaffSelect.disabled = !state.permissions.canEditBooking || !showReferralStaff;
     }
@@ -1516,7 +1559,10 @@ export function createBookingCoreModule(ctx) {
       : null;
     const nextDestinations = normalizeCodeArray(draft.destinations);
     const nextTravelStyles = normalizeTravelStyleArray(draft.travel_styles);
-    const nextPdfPersonalization = normalizePdfPersonalization(draft.pdf_personalization);
+    const nextPdfPersonalization = mergeManagedPdfPersonalization(
+      latestBooking.pdf_personalization,
+      draft.pdf_personalization
+    );
     if (
       nextSourceChannel !== (normalizeText(latestBooking.source_channel).toLowerCase() || "other")
       || nextReferralKind !== (normalizeText(latestBooking.referral_kind).toLowerCase() || "none")
@@ -1524,7 +1570,8 @@ export function createBookingCoreModule(ctx) {
       || nextReferralStaffUserId !== (normalizeText(latestBooking.referral_staff_user_id) || null)
       || JSON.stringify(nextDestinations) !== JSON.stringify(bookingDestinations(latestBooking))
       || JSON.stringify(nextTravelStyles) !== JSON.stringify(normalizeTravelStyleArray(latestBooking.travel_styles))
-      || JSON.stringify(nextPdfPersonalization) !== JSON.stringify(normalizePdfPersonalization(latestBooking.pdf_personalization))
+      || JSON.stringify(normalizeManagedPdfPersonalization(nextPdfPersonalization))
+        !== JSON.stringify(normalizeManagedPdfPersonalization(latestBooking.pdf_personalization))
     ) {
       const request = bookingSourceRequest({ baseURL: apiOrigin, params: { booking_id: latestBooking.id } });
       const result = await fetchBookingMutation(request.url, {

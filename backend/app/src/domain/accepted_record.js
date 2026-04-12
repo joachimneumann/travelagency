@@ -31,12 +31,8 @@ function selectLatestTravelPlanArtifact(artifacts) {
   return sorted.find((artifact) => artifact?.sent_to_customer === true) || sorted[0] || null;
 }
 
-export async function freezeAcceptedCommercialRecord(booking, deps = {}) {
+async function resolveAcceptedCommercialSnapshot(booking, deps = {}, options = {}) {
   const {
-    now = new Date().toISOString(),
-    depositReceivedAt = "",
-    depositConfirmedByAtpStaffId = "",
-    depositReference = "",
     baseCurrency = "USD",
     normalizeGeneratedOfferSnapshot,
     normalizeBookingOffer,
@@ -44,22 +40,19 @@ export async function freezeAcceptedCommercialRecord(booking, deps = {}) {
     buildBookingOfferPaymentTermsReadModel,
     listBookingTravelPlanPdfs
   } = deps;
+  const {
+    allowDraftSource = false
+  } = options;
 
-  const resolvedDepositReceivedAt = normalizeText(
-    depositReceivedAt
-    || booking?.deposit_received_at
-  );
-  if (!resolvedDepositReceivedAt) {
-    throw new Error("Deposit receipt requires deposit_received_at.");
-  }
-
-  const resolvedConfirmedById = normalizeText(
-    depositConfirmedByAtpStaffId
-    || booking?.deposit_confirmed_by_atp_staff_id
-  );
-  if (!resolvedConfirmedById) {
-    throw new Error("Deposit receipt requires deposit_confirmed_by_atp_staff_id.");
-  }
+  const acceptedOfferSnapshot = booking?.accepted_offer_snapshot && typeof booking.accepted_offer_snapshot === "object"
+    ? cloneJson(booking.accepted_offer_snapshot)
+    : null;
+  const acceptedPaymentTermsSnapshot = booking?.accepted_payment_terms_snapshot && typeof booking.accepted_payment_terms_snapshot === "object"
+    ? cloneJson(booking.accepted_payment_terms_snapshot)
+    : null;
+  const acceptedTravelPlanSnapshot = booking?.accepted_travel_plan_snapshot && typeof booking.accepted_travel_plan_snapshot === "object"
+    ? cloneJson(booking.accepted_travel_plan_snapshot)
+    : null;
 
   const confirmedGeneratedOffer = findConfirmedGeneratedOffer(booking);
   const normalizedConfirmedGeneratedOffer = confirmedGeneratedOffer && typeof normalizeGeneratedOfferSnapshot === "function"
@@ -72,20 +65,25 @@ export async function freezeAcceptedCommercialRecord(booking, deps = {}) {
     || booking?.pricing?.currency
     || baseCurrency
   ).toUpperCase() || baseCurrency;
-  const offerSnapshot = normalizedConfirmedGeneratedOffer?.offer
-    ? cloneJson(normalizedConfirmedGeneratedOffer.offer)
-    : (typeof normalizeBookingOffer === "function"
-      ? normalizeBookingOffer(booking?.offer, fallbackCurrency)
-      : cloneJson(booking?.offer));
+  const offerSnapshot = acceptedOfferSnapshot
+    || (normalizedConfirmedGeneratedOffer?.offer
+      ? cloneJson(normalizedConfirmedGeneratedOffer.offer)
+      : null)
+    || (allowDraftSource
+      ? (typeof normalizeBookingOffer === "function"
+        ? normalizeBookingOffer(booking?.offer, fallbackCurrency)
+        : cloneJson(booking?.offer))
+      : null);
   if (!offerSnapshot || typeof offerSnapshot !== "object") {
-    throw new Error("Deposit receipt requires an offer before it can be recorded.");
+    throw new Error("Payment receipt requires an accepted commercial snapshot. Create the first payment request or confirmation before recording the receipt.");
   }
 
-  const paymentTermsSnapshot = offerSnapshot?.payment_terms && typeof offerSnapshot.payment_terms === "object"
-    ? cloneJson(offerSnapshot.payment_terms)
-    : null;
+  const paymentTermsSnapshot = acceptedPaymentTermsSnapshot
+    || (offerSnapshot?.payment_terms && typeof offerSnapshot.payment_terms === "object"
+      ? cloneJson(offerSnapshot.payment_terms)
+      : null);
   if (!paymentTermsSnapshot) {
-    throw new Error("Deposit receipt requires payment terms before it can be recorded.");
+    throw new Error("Payment receipt requires accepted payment terms. Create the first payment request or confirmation before recording the receipt.");
   }
 
   const paymentTermsReadModel = typeof buildBookingOfferPaymentTermsReadModel === "function"
@@ -100,12 +98,16 @@ export async function freezeAcceptedCommercialRecord(booking, deps = {}) {
     throw new Error("Deposit receipt requires at least one payment term.");
   }
 
-  const normalizedTravelPlan = normalizedConfirmedGeneratedOffer?.travel_plan
-    ? cloneJson(normalizedConfirmedGeneratedOffer.travel_plan)
-    : (typeof normalizeBookingTravelPlan === "function"
-      ? normalizeBookingTravelPlan(booking?.travel_plan, offerSnapshot, { strictReferences: false })
-      : cloneJson(booking?.travel_plan));
-  const acceptedTravelPlanSnapshot = hasMeaningfulTravelPlan(normalizedTravelPlan) ? cloneJson(normalizedTravelPlan) : null;
+  const normalizedTravelPlan = acceptedTravelPlanSnapshot
+    || (normalizedConfirmedGeneratedOffer?.travel_plan
+      ? cloneJson(normalizedConfirmedGeneratedOffer.travel_plan)
+      : null)
+    || (allowDraftSource
+      ? (typeof normalizeBookingTravelPlan === "function"
+        ? normalizeBookingTravelPlan(booking?.travel_plan, offerSnapshot, { strictReferences: false })
+        : cloneJson(booking?.travel_plan))
+      : null);
+  const resolvedAcceptedTravelPlanSnapshot = hasMeaningfulTravelPlan(normalizedTravelPlan) ? cloneJson(normalizedTravelPlan) : null;
   const travelPlanArtifacts = typeof listBookingTravelPlanPdfs === "function"
     ? await listBookingTravelPlanPdfs(booking?.id).catch(() => [])
     : [];
@@ -113,21 +115,6 @@ export async function freezeAcceptedCommercialRecord(booking, deps = {}) {
 
   let changed = false;
   let acceptedRecordCreated = false;
-
-  if (normalizeText(booking?.deposit_received_at) !== resolvedDepositReceivedAt) {
-    booking.deposit_received_at = resolvedDepositReceivedAt;
-    changed = true;
-  }
-  if (normalizeText(booking?.deposit_confirmed_by_atp_staff_id) !== resolvedConfirmedById) {
-    booking.deposit_confirmed_by_atp_staff_id = resolvedConfirmedById;
-    changed = true;
-  }
-
-  const normalizedReference = normalizeText(depositReference);
-  if (!normalizeText(booking?.accepted_deposit_reference) && normalizedReference) {
-    booking.accepted_deposit_reference = normalizedReference;
-    changed = true;
-  }
 
   if (!booking?.accepted_offer_snapshot) {
     booking.accepted_offer_snapshot = cloneJson(offerSnapshot);
@@ -139,8 +126,8 @@ export async function freezeAcceptedCommercialRecord(booking, deps = {}) {
     changed = true;
     acceptedRecordCreated = true;
   }
-  if (!booking?.accepted_travel_plan_snapshot && acceptedTravelPlanSnapshot) {
-    booking.accepted_travel_plan_snapshot = acceptedTravelPlanSnapshot;
+  if (!booking?.accepted_travel_plan_snapshot && resolvedAcceptedTravelPlanSnapshot) {
+    booking.accepted_travel_plan_snapshot = resolvedAcceptedTravelPlanSnapshot;
     changed = true;
     acceptedRecordCreated = true;
   }
@@ -168,6 +155,58 @@ export async function freezeAcceptedCommercialRecord(booking, deps = {}) {
     booking.accepted_travel_plan_artifact_ref = normalizeText(latestTravelPlanArtifact.id);
     changed = true;
     acceptedRecordCreated = true;
+  }
+
+  return {
+    changed,
+    acceptedRecordCreated
+  };
+}
+
+export async function ensureAcceptedCommercialSnapshot(booking, deps = {}, options = {}) {
+  return resolveAcceptedCommercialSnapshot(booking, deps, options);
+}
+
+export async function freezeAcceptedCommercialRecord(booking, deps = {}) {
+  const {
+    depositReceivedAt = "",
+    depositConfirmedByAtpStaffId = "",
+    depositReference = ""
+  } = deps;
+
+  const resolvedDepositReceivedAt = normalizeText(
+    depositReceivedAt
+    || booking?.deposit_received_at
+  );
+  if (!resolvedDepositReceivedAt) {
+    throw new Error("Deposit receipt requires deposit_received_at.");
+  }
+
+  const resolvedConfirmedById = normalizeText(
+    depositConfirmedByAtpStaffId
+    || booking?.deposit_confirmed_by_atp_staff_id
+  );
+  if (!resolvedConfirmedById) {
+    throw new Error("Deposit receipt requires deposit_confirmed_by_atp_staff_id.");
+  }
+
+  const snapshotUpdate = await resolveAcceptedCommercialSnapshot(booking, deps, { allowDraftSource: false });
+  let changed = snapshotUpdate.changed;
+  const acceptedRecordCreated = snapshotUpdate.acceptedRecordCreated;
+
+  if (normalizeText(booking?.deposit_received_at) !== resolvedDepositReceivedAt) {
+    booking.deposit_received_at = resolvedDepositReceivedAt;
+    changed = true;
+  }
+  if (normalizeText(booking?.deposit_confirmed_by_atp_staff_id) !== resolvedConfirmedById) {
+    booking.deposit_confirmed_by_atp_staff_id = resolvedConfirmedById;
+    changed = true;
+  }
+
+  const normalizedReference = normalizeText(depositReference);
+  if (!normalizeText(booking?.accepted_deposit_reference) && normalizedReference) {
+    booking.accepted_deposit_reference = normalizedReference;
+    changed = true;
   }
 
   return {

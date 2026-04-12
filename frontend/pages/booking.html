@@ -791,6 +791,7 @@
                 <table class="backend-table" id="offer_pricing_table"></table>
               </div>
               <div id="offer_quotation_summary" class="offer-quotation-summary" hidden></div>
+              <span id="offer_status" class="micro booking-inline-status"></span>
             </div>
           </article>
 
@@ -803,72 +804,11 @@
               <div id="offer_payment_terms_notes" class="offer-payment-terms-notes" hidden></div>
             </div>
           </article>
-
-          <article id="booking_confirmation_panel" class="booking-section">
-            <div class="booking-section__head">
-              <button class="booking-section__summary booking-section__summary--inline-pad-16" id="booking_confirmation_panel_summary" type="button"></button>
-            </div>
-            <div class="booking-section__body">
-              <div id="offer_pdf_personalization_panel"></div>
-              <div id="generated_offers_overview" class="booking-flow-inline-card" hidden></div>
-              <div class="backend-table-wrap" style="margin-bottom: 0.8rem;">
-                <table class="backend-table" id="generated_offers_table"></table>
-              </div>
-              <div class="booking-generated-offer-route">
-                <div class="booking-generated-offers-actions">
-                  <button class="btn btn-ghost booking-offer-add-btn" id="generate_offer_btn" type="button" data-requires-clean-state data-clean-state-hint-id="generate_offer_dirty_hint" data-i18n-id="booking.offer.create_new_pdf">Create New PDF</button>
-                  <span id="generate_offer_dirty_hint" class="micro booking-inline-status booking-generated-offers-actions__hint"></span>
-                </div>
-              </div>
-              <span id="offer_status" class="micro booking-inline-status"></span>
-            </div>
-          </article>
           </section>
 
-          <section id="pricing_panel" class="booking-section">
-            <div class="booking-section__head">
-              <button class="booking-section__summary booking-section__summary--inline-pad-16" id="pricing_panel_summary" type="button"></button>
-            </div>
-            <div class="booking-section__body">
-              <div class="booking-payment-sections">
-                <div id="payment_flow_sections" class="booking-payment-sections__list" hidden></div>
-              </div>
-
-              <div class="backend-table-wrap" style="margin-bottom: 1rem;">
-                <table class="backend-table" id="pricing_summary_table"></table>
-              </div>
-
-              <div class="backend-controls">
-                <div class="field">
-                  <label for="pricing_currency_input" data-i18n-id="booking.currency">Currency</label>
-                  <select id="pricing_currency_input"></select>
-                </div>
-                <div class="field">
-                  <label for="pricing_agreed_net_input" id="pricing_agreed_net_label" data-i18n-id="booking.pricing.agreed_net_amount">Agreed Net Amount (USD)</label>
-                  <input id="pricing_agreed_net_input" type="number" min="0" step="1" />
-                </div>
-              </div>
-
-              <div class="backend-controls" style="align-items: center; margin-top: 0.6rem;">
-                <h3 style="margin: 0; font-size: 0.98rem; flex: 1;" data-i18n-id="booking.adjustments">Adjustments</h3>
-              </div>
-              <div class="backend-table-wrap" style="margin-bottom: 1rem;">
-                <table class="backend-table" id="pricing_adjustments_table"></table>
-              </div>
-
-              <div class="backend-controls" style="align-items: center; margin-top: 0.6rem;">
-                <h3 style="margin: 0; font-size: 0.98rem; flex: 1;" data-i18n-id="booking.payment_schedule">Payment Schedule</h3>
-              </div>
-              <div class="backend-table-wrap" style="margin-bottom: 1rem;">
-                <table class="backend-table" id="pricing_payments_table"></table>
-              </div>
-
-              <div class="backend-controls">
-                <span id="pricing_status" class="micro"></span>
-              </div>
-
-            </div>
-          </section>
+          <div id="payments_workspace" class="booking-payment-sections">
+            <div id="payment_flow_sections" class="booking-payment-sections__list" hidden></div>
+          </div>
 
           <article id="activities_panel" class="booking-section">
             <div class="booking-section__head">

@@ -20,6 +20,7 @@ import {
   resolveBookingPdfPersonalizationFlag,
   resolveBookingPdfPersonalizationText
 } from "../../lib/booking_pdf_personalization.js";
+import { ensureAcceptedCommercialSnapshot } from "../../domain/accepted_record.js";
 
 export function createBookingInvoiceHandlers(deps) {
   const {
@@ -47,7 +48,14 @@ export function createBookingInvoiceHandlers(deps) {
     getBookingContactProfile,
     invoicePdfPath,
     sendFileWithCache,
-    translateEntries
+    translateEntries,
+    BASE_CURRENCY,
+    normalizeGeneratedOfferSnapshot,
+    normalizeBookingOffer,
+    normalizeBookingTravelPlan,
+    buildBookingOfferPaymentTermsReadModel,
+    listBookingTravelPlanPdfs,
+    convertMinorUnits
   } = deps;
 
   function requestContentLang(req, payload = null, invoice = null, fallback = "en") {
@@ -234,7 +242,27 @@ export function createBookingInvoiceHandlers(deps) {
     }], contentLang, sourceLang);
   }
 
-  function buildPaymentDocumentDraft({
+  function resolvePaymentDocumentCurrency(booking) {
+    return safeCurrency(
+      bookingPaymentTerms(booking)?.currency
+      || booking?.accepted_deposit_currency
+      || booking?.offer?.currency
+      || booking?.preferred_currency
+      || booking?.pricing?.currency
+      || BASE_CURRENCY
+    );
+  }
+
+  async function convertPaymentAmountForDocument(amountCents, booking, customerCurrency) {
+    const normalizedAmountCents = Math.max(0, Math.round(Number(amountCents || 0)));
+    const sourceCurrency = safeCurrency(booking?.pricing?.currency || customerCurrency || BASE_CURRENCY);
+    if (sourceCurrency === customerCurrency) {
+      return normalizedAmountCents;
+    }
+    return convertMinorUnits(normalizedAmountCents, sourceCurrency, customerCurrency);
+  }
+
+  async function buildPaymentDocumentDraft({
     booking,
     payment,
     paymentKind,
@@ -246,7 +274,14 @@ export function createBookingInvoiceHandlers(deps) {
     now
   }) {
     const paymentLabel = defaultPaymentLabel(payment, paymentKind);
-    const paymentAmountCents = Math.max(0, Math.round(Number(payment?.net_amount_cents || 0)));
+    const customerCurrency = resolvePaymentDocumentCurrency(booking);
+    const scheduledAmountCents = await convertPaymentAmountForDocument(payment?.net_amount_cents, booking, customerCurrency);
+    const receivedAmountCents = Number.isFinite(Number(payment?.received_amount_cents))
+      ? await convertPaymentAmountForDocument(payment.received_amount_cents, booking, customerCurrency)
+      : null;
+    const paymentAmountCents = documentKind === "PAYMENT_CONFIRMATION"
+      ? (receivedAmountCents ?? scheduledAmountCents)
+      : scheduledAmountCents;
     const scope = paymentDocumentPersonalizationScope(paymentKind, documentKind);
     const resolvedIntroFallback = documentKind === "PAYMENT_CONFIRMATION"
       ? `This document confirms receipt of payment for ${paymentLabel}.`
@@ -311,7 +346,7 @@ export function createBookingInvoiceHandlers(deps) {
       payment_term_line_id: normalizeText(payment?.origin_payment_term_line_id) || null,
       payment_kind: paymentKind,
       payment_label: paymentLabel,
-      currency: safeCurrency(booking?.pricing?.currency || payment?.currency),
+      currency: customerCurrency,
       issue_date: issueDate || null,
       due_date: documentKind === "PAYMENT_REQUEST" ? (normalizeText(payment?.due_date) || null) : null,
       title: titleField.text || buildDefaultInvoiceTitle({ document_kind: documentKind, payment_label: paymentLabel, recipient_snapshot: invoiceParty }, documentLang),
@@ -479,8 +514,27 @@ export function createBookingInvoiceHandlers(deps) {
     }
     const pdfPersonalizationChanged = JSON.stringify(booking?.pdf_personalization || null) !== previousPdfPersonalizationJson;
 
+    let acceptedSnapshotUpdate = { changed: false, acceptedRecordCreated: false };
+    if (linkedPayment) {
+      try {
+        acceptedSnapshotUpdate = await ensureAcceptedCommercialSnapshot(booking, {
+          baseCurrency: BASE_CURRENCY,
+          normalizeGeneratedOfferSnapshot,
+          normalizeBookingOffer,
+          normalizeBookingTravelPlan,
+          buildBookingOfferPaymentTermsReadModel,
+          listBookingTravelPlanPdfs
+        }, {
+          allowDraftSource: true
+        });
+      } catch (error) {
+        sendJson(res, 422, { error: String(error?.message || error) });
+        return;
+      }
+    }
+
     const paymentDocumentDraft = linkedPayment
-      ? buildPaymentDocumentDraft({
+      ? await buildPaymentDocumentDraft({
           booking,
           payment: linkedPayment,
           paymentKind,
@@ -575,7 +629,7 @@ export function createBookingInvoiceHandlers(deps) {
     await writeInvoicePdf(buildInvoiceReadModel(invoice, booking, { lang: documentLang, sourceLang }), invoiceParty, booking);
     store.invoices.push(invoice);
     incrementBookingRevision(booking, "invoices_revision");
-    if (pdfPersonalizationChanged) {
+    if (pdfPersonalizationChanged || acceptedSnapshotUpdate.changed) {
       incrementBookingRevision(booking, "core_revision");
     }
     booking.updated_at = now;

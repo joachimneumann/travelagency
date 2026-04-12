@@ -947,57 +947,6 @@ export function bookingPricingRequest({ baseURL = '', params = {}, query = {}, b
   };
 }
 
-export function bookingConfirmationPdfCreatePath(params = {}) {
-  return buildPath("/api/v1/bookings/{booking_id}/booking-confirmation/pdfs", params);
-}
-
-export function bookingConfirmationPdfCreateRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
-  const path = bookingConfirmationPdfCreatePath(params);
-  const url = buildURL(baseURL, path, query);
-  return {
-    key: "booking_confirmation_pdf_create",
-    method: "POST",
-    authenticated: true,
-    url,
-    headers,
-    body
-  };
-}
-
-export function bookingConfirmationPdfArtifactPdfPath(params = {}) {
-  return buildPath("/api/v1/bookings/{booking_id}/booking-confirmation/pdfs/{artifact_id}/pdf", params);
-}
-
-export function bookingConfirmationPdfArtifactPdfRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
-  const path = bookingConfirmationPdfArtifactPdfPath(params);
-  const url = buildURL(baseURL, path, query);
-  return {
-    key: "booking_confirmation_pdf_artifact_pdf",
-    method: "GET",
-    authenticated: true,
-    url,
-    headers,
-    body
-  };
-}
-
-export function bookingConfirmationPdfDeletePath(params = {}) {
-  return buildPath("/api/v1/bookings/{booking_id}/booking-confirmation/pdfs/{artifact_id}", params);
-}
-
-export function bookingConfirmationPdfDeleteRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
-  const path = bookingConfirmationPdfDeletePath(params);
-  const url = buildURL(baseURL, path, query);
-  return {
-    key: "booking_confirmation_pdf_delete",
-    method: "DELETE",
-    authenticated: true,
-    url,
-    headers,
-    body
-  };
-}
-
 export function bookingOfferPath(params = {}) {
   return buildPath("/api/v1/bookings/{booking_id}/offer", params);
 }

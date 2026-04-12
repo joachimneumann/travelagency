@@ -238,7 +238,7 @@ const state = {
   selectedInvoiceId: "",
   originalNote: "",
   pricingDraft: {
-    adjustments: [],
+    currency: "USD",
     payments: []
   },
   travelPlanDraft: {
@@ -439,22 +439,12 @@ const els = {
   travelPlanStandardTourCloseBtn: document.getElementById("travel_plan_standard_tour_close_btn"),
   travelPlanStandardTourCancelBtn: document.getElementById("travel_plan_standard_tour_cancel_btn"),
   travelPlanStandardTourSubmitBtn: document.getElementById("travel_plan_standard_tour_submit_btn"),
-  pricing_panel: document.getElementById("pricing_panel"),
-  pricingPanelSummary: document.getElementById("pricing_panel_summary"),
-  pricing_summary_table: document.getElementById("pricing_summary_table"),
+  paymentsWorkspace: document.getElementById("payments_workspace"),
   paymentFlowSections: document.getElementById("payment_flow_sections"),
-  pricing_currency_input: document.getElementById("pricing_currency_input"),
-  pricing_agreed_net_label: document.getElementById("pricing_agreed_net_label"),
-  pricing_agreed_net_input: document.getElementById("pricing_agreed_net_input"),
-  pricing_adjustments_table: document.getElementById("pricing_adjustments_table"),
-  pricing_payments_table: document.getElementById("pricing_payments_table"),
-  pricing_status: document.getElementById("pricing_status"),
   offer_panel: document.getElementById("offer_panel"),
   offerPanelSummary: document.getElementById("offer_panel_summary"),
   offer_payment_terms_panel: document.getElementById("offer_payment_terms_panel"),
   offerPaymentTermsPanelSummary: document.getElementById("offer_payment_terms_panel_summary"),
-  booking_confirmation_panel: document.getElementById("booking_confirmation_panel"),
-  bookingConfirmationPanelSummary: document.getElementById("booking_confirmation_panel_summary"),
   offer_detail_level_panel: document.getElementById("offer_detail_level_panel"),
   offer_currency_input: document.getElementById("offer_currency_input"),
   offerCurrencyMenuMount: document.getElementById("booking_currency_menu_mount"),
@@ -472,12 +462,8 @@ const els = {
   offer_pricing_table: document.getElementById("offer_pricing_table"),
   offer_payment_terms: document.getElementById("offer_payment_terms"),
   offer_quotation_summary: document.getElementById("offer_quotation_summary"),
-  generated_offers_table: document.getElementById("generated_offers_table"),
-  generated_offers_overview: document.getElementById("generated_offers_overview"),
   offer_generation_route_mode: document.getElementById("offer_generation_route_mode"),
-  generateOfferDirtyHint: document.getElementById("generate_offer_dirty_hint"),
   offer_payment_terms_notes: document.getElementById("offer_payment_terms_notes"),
-  generate_offer_btn: document.getElementById("generate_offer_btn"),
   offer_status: document.getElementById("offer_status"),
   activities_table: document.getElementById("activities_table"),
   activitiesPanelSummary: document.getElementById("activities_panel_summary"),
@@ -804,7 +790,6 @@ async function init() {
 
   initializeBookingSections(document);
   renderStaticSectionHeaders();
-  populateCurrencySelectFromModule(els.pricing_currency_input);
   populateCurrencySelectFromModule(els.offer_currency_input);
   populateCurrencySelectFromModule(els.invoice_currency_input);
   renderOfferCurrencyMenu(els.offer_currency_input, els.offerCurrencyMenuMount);
@@ -896,15 +881,16 @@ async function init() {
       }
     });
   }
-  if (els.pricing_panel) {
+  const pricingDirtyRoot = els.paymentsWorkspace;
+  if (pricingDirtyRoot) {
     const schedulePricingDirtyState = () => window.setTimeout(updatePricingDirtyState, 0);
-    els.pricing_panel.addEventListener("input", (event) => {
+    pricingDirtyRoot.addEventListener("input", () => {
       schedulePricingDirtyState();
     });
-    els.pricing_panel.addEventListener("change", (event) => {
+    pricingDirtyRoot.addEventListener("change", () => {
       schedulePricingDirtyState();
     });
-    els.pricing_panel.addEventListener("click", (event) => {
+    pricingDirtyRoot.addEventListener("click", (event) => {
       const button = event.target instanceof Element ? event.target.closest("button") : null;
       if (!(button instanceof HTMLButtonElement)) return;
       if (button.closest(".booking-section__head, .backend-section__head")) return;
@@ -1391,11 +1377,6 @@ function renderStaticSectionHeaders() {
   });
   renderBookingSectionHeader(els.offerPanelSummary, { primary: backendT("booking.proposal", "Proposal") });
   renderBookingSectionHeader(els.offerPaymentTermsPanelSummary, { primary: backendT("booking.payment_plan", "Payment plan") });
-  renderBookingSectionHeader(els.bookingConfirmationPanelSummary, {
-    primary: backendT("booking.proposal_documents", "Proposal PDFs"),
-    secondary: backendT("booking.booking_confirmation_none", "No generated offers yet.")
-  });
-  renderBookingSectionHeader(els.pricingPanelSummary, { primary: backendT("booking.payments", "Payments") });
   renderBookingSectionHeader(els.activitiesPanelSummary, { primary: backendT("booking.activities", "Activities") });
 }
 
@@ -1873,6 +1854,7 @@ const offerModule = createBookingOfferModule({
   getBookingRevision,
   renderBookingHeader,
   renderBookingData,
+  renderPricingPanel,
   loadActivities,
   escapeHtml,
   setBookingSectionDirty

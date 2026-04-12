@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-04-12T12:47:26Z
+# 2026-04-12T13:52:37Z
 
 ---
 openapi: 3.1.0
@@ -4554,61 +4554,17 @@ components:
           type: string
           format: date-time
           nullable: true
-    BookingPricingSummary:
-      type: object
-      required:
-      - agreed_net_amount_cents
-      - adjustments_delta_cents
-      - adjusted_net_amount_cents
-      - scheduled_net_amount_cents
-      - unscheduled_net_amount_cents
-      - scheduled_tax_amount_cents
-      - scheduled_gross_amount_cents
-      - paid_gross_amount_cents
-      - outstanding_gross_amount_cents
-      - is_schedule_balanced
-      properties:
-        agreed_net_amount_cents:
-          "$ref": "#/components/schemas/MoneyAmount"
-        adjustments_delta_cents:
-          "$ref": "#/components/schemas/MoneyAmount"
-        adjusted_net_amount_cents:
-          "$ref": "#/components/schemas/MoneyAmount"
-        scheduled_net_amount_cents:
-          "$ref": "#/components/schemas/MoneyAmount"
-        unscheduled_net_amount_cents:
-          "$ref": "#/components/schemas/MoneyAmount"
-        scheduled_tax_amount_cents:
-          "$ref": "#/components/schemas/MoneyAmount"
-        scheduled_gross_amount_cents:
-          "$ref": "#/components/schemas/MoneyAmount"
-        paid_gross_amount_cents:
-          "$ref": "#/components/schemas/MoneyAmount"
-        outstanding_gross_amount_cents:
-          "$ref": "#/components/schemas/MoneyAmount"
-        is_schedule_balanced:
-          type: boolean
     BookingPricing:
       type: object
       required:
       - currency
-      - agreed_net_amount_cents
-      - summary
       properties:
         currency:
           "$ref": "#/components/schemas/ATPCurrencyCode"
-        agreed_net_amount_cents:
-          "$ref": "#/components/schemas/MoneyAmount"
-        adjustments:
-          type: array
-          items:
-            "$ref": "#/components/schemas/PricingAdjustment"
         payments:
           type: array
           items:
             "$ref": "#/components/schemas/BookingPayment"
-        summary:
-          "$ref": "#/components/schemas/BookingPricingSummary"
     BookingOfferCategoryRule:
       type: object
       required:
@@ -9474,133 +9430,6 @@ paths:
           application/json:
             schema:
               "$ref": "#/components/schemas/BookingPricingUpdateRequest"
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/BookingDetail"
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-  "/api/v1/bookings/{booking_id}/booking-confirmation/pdfs":
-    post:
-      operationId: booking_confirmation_pdf_create
-      summary: Booking Confirmation Pdf Create
-      tags:
-      - Bookings
-      security:
-      - bearerAuth: []
-      parameters:
-      - name: booking_id
-        in: path
-        required: true
-        schema:
-          type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              "$ref": "#/components/schemas/BookingConfirmationPdfArtifactCreateRequest"
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/BookingDetail"
-        '201':
-          description: Created
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/BookingDetail"
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-  "/api/v1/bookings/{booking_id}/booking-confirmation/pdfs/{artifact_id}/pdf":
-    get:
-      operationId: booking_confirmation_pdf_artifact_pdf
-      summary: Booking Confirmation Pdf Artifact Pdf
-      tags:
-      - Bookings
-      security:
-      - bearerAuth: []
-      parameters:
-      - name: booking_id
-        in: path
-        required: true
-        schema:
-          type: string
-      - name: artifact_id
-        in: path
-        required: true
-        schema:
-          type: string
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                type: object
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-  "/api/v1/bookings/{booking_id}/booking-confirmation/pdfs/{artifact_id}":
-    delete:
-      operationId: booking_confirmation_pdf_delete
-      summary: Booking Confirmation Pdf Delete
-      tags:
-      - Bookings
-      security:
-      - bearerAuth: []
-      parameters:
-      - name: booking_id
-        in: path
-        required: true
-        schema:
-          type: string
-      - name: artifact_id
-        in: path
-        required: true
-        schema:
-          type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              "$ref": "#/components/schemas/BookingConfirmationPdfArtifactDeleteRequest"
       responses:
         '200':
           description: Success

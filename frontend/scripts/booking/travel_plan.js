@@ -47,6 +47,7 @@ import { createBookingTravelPlanImagesModule } from "./travel_plan_images.js";
 import { createBookingTravelPlanAttachmentsModule } from "./travel_plan_attachments.js";
 import { createBookingTravelPlanServiceLibraryModule } from "./travel_plan_service_library.js";
 import { createBookingTravelPlanPdfsModule } from "./travel_plan_pdfs.js";
+import { buildBookingPdfWorkspaceMarkup } from "./pdf_workspace.js";
 import {
   retranslateConfirmText,
   translationBusyText
@@ -2389,25 +2390,14 @@ export function createBookingTravelPlanModule(ctx) {
       </div>
     `;
     if (els.travel_plan_pdf_workspace) {
-      els.travel_plan_pdf_workspace.innerHTML = `
-        <div class="travel-plan-footer__workspace">
-          <div class="travel-plan-footer__preview">
-            <button class="btn btn-ghost booking-offer-add-btn travel-plan-pdf-btn travel-plan-pdf-btn--preview" data-travel-plan-preview-pdf data-requires-clean-state data-clean-state-hint-id="travel_plan_pdf_dirty_hint" type="button">${escapeHtml(bookingT("booking.travel_plan.preview_pdf", "Preview"))}</button>
-            <span id="travel_plan_pdf_dirty_hint" class="micro booking-inline-status travel-plan-pdf-actions__hint"></span>
-          </div>
-          <div class="travel-plan-footer__content">
-            <div class="travel-plan-footer__existing-pdfs">
-              ${travelPlanPdfsModule.renderTravelPlanPdfsTable()}
-              <div class="travel-plan-footer__table-action">
-                <button class="btn btn-ghost booking-offer-add-btn travel-plan-pdf-btn" data-travel-plan-create-pdf data-requires-clean-state data-clean-state-hint-id="travel_plan_pdf_dirty_hint" type="button">${escapeHtml(bookingT("booking.travel_plan.create_pdf", "Create PDF"))}</button>
-              </div>
-            </div>
-            <div class="travel-plan-footer__attachments">
-              ${travelPlanAttachmentsModule.renderTravelPlanAttachments(state.travelPlanDraft)}
-            </div>
-          </div>
-        </div>
-      `;
+      els.travel_plan_pdf_workspace.innerHTML = buildBookingPdfWorkspaceMarkup({
+        escapeHtml,
+        previewButtonMarkup: `<button class="btn btn-ghost booking-offer-add-btn travel-plan-pdf-btn travel-plan-pdf-btn--preview" data-travel-plan-preview-pdf data-requires-clean-state data-clean-state-hint-id="travel_plan_pdf_dirty_hint" type="button">${escapeHtml(bookingT("booking.travel_plan.preview_pdf", "Preview"))}</button>`,
+        previewStatusMarkup: `<span id="travel_plan_pdf_dirty_hint" class="micro booking-inline-status travel-plan-pdf-actions__hint"></span>`,
+        documentsMarkup: travelPlanPdfsModule.renderTravelPlanPdfsTable(),
+        createButtonMarkup: `<button class="btn btn-ghost booking-offer-add-btn travel-plan-pdf-btn" data-travel-plan-create-pdf data-requires-clean-state data-clean-state-hint-id="travel_plan_pdf_dirty_hint" type="button">${escapeHtml(bookingT("booking.travel_plan.create_pdf", "Create PDF"))}</button>`,
+        attachmentsMarkup: travelPlanAttachmentsModule.renderTravelPlanAttachments(state.travelPlanDraft)
+      });
     }
     syncTravelPlanCollapsibleUi(false);
     syncTravelPlanDayDateShortcutButtons();

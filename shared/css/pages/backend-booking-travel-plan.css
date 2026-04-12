@@ -164,30 +164,53 @@
   display: grid;
 }
 
-.booking-detail-page #travel_plan_pdf_panel #booking_pdf_personalization_panel {
+.booking-detail-page #travel_plan_pdf_panel #travel_plan_pdf_personalization_panel {
   padding: 0;
   border: 0;
   background: transparent;
   box-shadow: none;
 }
 
-.booking-detail-page #travel_plan_pdf_panel .booking-collapsible[data-booking-pdf-panel] {
+.booking-detail-page #travel_plan_pdf_panel .booking-collapsible[data-booking-pdf-panel="travel_plan"],
+.booking-detail-page .booking-pdf-document-section .booking-collapsible[data-booking-pdf-panel="travel_plan"] {
   background: var(--travelplan_day_surface);
 }
 
-.booking-detail-page #travel_plan_pdf_panel .booking-collapsible[data-booking-pdf-panel] .booking-collapsible__head,
-.booking-detail-page #travel_plan_pdf_panel .booking-collapsible[data-booking-pdf-panel] .booking-collapsible__summary,
-.booking-detail-page #travel_plan_pdf_panel .booking-collapsible[data-booking-pdf-panel] .booking-collapsible__body {
+.booking-detail-page #travel_plan_pdf_panel .booking-collapsible[data-booking-pdf-panel="travel_plan"] > .booking-collapsible__head,
+.booking-detail-page #travel_plan_pdf_panel .booking-collapsible[data-booking-pdf-panel="travel_plan"] > .booking-collapsible__head > .booking-collapsible__summary,
+.booking-detail-page #travel_plan_pdf_panel .booking-collapsible[data-booking-pdf-panel="travel_plan"] > .booking-collapsible__body,
+.booking-detail-page .booking-pdf-document-section .booking-collapsible[data-booking-pdf-panel="travel_plan"] > .booking-collapsible__head,
+.booking-detail-page .booking-pdf-document-section .booking-collapsible[data-booking-pdf-panel="travel_plan"] > .booking-collapsible__head > .booking-collapsible__summary,
+.booking-detail-page .booking-pdf-document-section .booking-collapsible[data-booking-pdf-panel="travel_plan"] > .booking-collapsible__body {
   background: var(--travelplan_day_surface);
 }
 
-.booking-detail-page #travel_plan_pdf_panel .booking-collapsible[data-booking-pdf-panel] .booking-collapsible__summary {
+.booking-detail-page #travel_plan_pdf_panel .booking-collapsible[data-booking-pdf-panel="travel_plan"] > .booking-collapsible__head,
+.booking-detail-page .booking-pdf-document-section .booking-collapsible[data-booking-pdf-panel="travel_plan"] > .booking-collapsible__head {
+  min-height: 0;
+}
+
+.booking-detail-page #travel_plan_pdf_panel .booking-collapsible[data-booking-pdf-panel="travel_plan"] > .booking-collapsible__head > .booking-collapsible__summary,
+.booking-detail-page .booking-pdf-document-section .booking-collapsible[data-booking-pdf-panel="travel_plan"] > .booking-collapsible__head > .booking-collapsible__summary {
   color: var(--text-black);
   font-weight: var(--font-weight-bold);
+  align-items: center;
+  min-height: 0;
+  padding-top: 0.82rem;
+  padding-bottom: 0.82rem;
 }
 
-.booking-detail-page #travel_plan_pdf_panel .booking-collapsible[data-booking-pdf-panel] .booking-collapsible__summary::after {
+.booking-detail-page #travel_plan_pdf_panel .booking-collapsible[data-booking-pdf-panel="travel_plan"] > .booking-collapsible__head > .booking-collapsible__summary::after,
+.booking-detail-page .booking-pdf-document-section .booking-collapsible[data-booking-pdf-panel="travel_plan"] > .booking-collapsible__head > .booking-collapsible__summary::after {
   color: var(--text-black);
+}
+
+.booking-detail-page #travel_plan_pdf_panel .booking-collapsible[data-booking-pdf-panel="travel_plan"]:not(.is-open) > .booking-collapsible__body,
+.booking-detail-page .booking-pdf-document-section .booking-collapsible[data-booking-pdf-panel="travel_plan"]:not(.is-open) > .booking-collapsible__body {
+  height: 0 !important;
+  padding-top: 0;
+  padding-bottom: 0;
+  opacity: 0;
 }
 
 #travel_plan_editor {

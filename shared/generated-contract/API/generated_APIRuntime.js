@@ -811,41 +811,6 @@
         ]
       },
       {
-        key: "booking_confirmation_pdf_create",
-        path: "/api/v1/bookings/{booking_id}/booking-confirmation/pdfs",
-        method: "POST",
-        authenticated: true,
-        requestType: "BookingConfirmationPdfArtifactCreateRequest",
-        responseType: "BookingDetail",
-        parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1)
-        ]
-      },
-      {
-        key: "booking_confirmation_pdf_artifact_pdf",
-        path: "/api/v1/bookings/{booking_id}/booking-confirmation/pdfs/{artifact_id}/pdf",
-        method: "GET",
-        authenticated: true,
-        requestType: null,
-        responseType: null,
-        parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_20)
-        ]
-      },
-      {
-        key: "booking_confirmation_pdf_delete",
-        path: "/api/v1/bookings/{booking_id}/booking-confirmation/pdfs/{artifact_id}",
-        method: "DELETE",
-        authenticated: true,
-        requestType: "BookingConfirmationPdfArtifactDeleteRequest",
-        responseType: "BookingDetail",
-        parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_20)
-        ]
-      },
-      {
         key: "booking_offer",
         path: "/api/v1/bookings/{booking_id}/offer",
         method: "PATCH",

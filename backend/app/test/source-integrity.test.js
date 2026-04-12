@@ -223,6 +223,39 @@ test("booking page uses a page-level dirty bar instead of local section save but
   assert.doesNotMatch(bookingSource, /id="invoice_create_btn"/, "Invoice form should no longer expose a local save button");
 });
 
+test("travel plan and payment PDFs share the same workspace helper", async () => {
+  const repoRoot = path.resolve(__dirname, "..", "..", "..");
+  const travelPlanPath = path.join(repoRoot, "frontend", "scripts", "booking", "travel_plan.js");
+  const pricingPath = path.join(repoRoot, "frontend", "scripts", "booking", "pricing.js");
+  const helperPath = path.join(repoRoot, "frontend", "scripts", "booking", "pdf_workspace.js");
+  const [travelPlanSource, pricingSource, helperSource] = await Promise.all([
+    readFile(travelPlanPath, "utf8"),
+    readFile(pricingPath, "utf8"),
+    readFile(helperPath, "utf8")
+  ]);
+
+  assert.match(
+    helperSource,
+    /export function buildBookingPdfWorkspaceMarkup\(/,
+    "PDF workspace helper should expose the shared Travel-plan layout builder"
+  );
+  assert.match(
+    helperSource,
+    /export function buildBookingPdfDocumentSectionMarkup\(/,
+    "PDF workspace helper should also expose the shared PDF document-section builder"
+  );
+  assert.match(
+    travelPlanSource,
+    /buildBookingPdfWorkspaceMarkup\(/,
+    "Travel plan PDF workspace should render through the shared workspace helper"
+  );
+  assert.match(
+    pricingSource,
+    /buildBookingPdfWorkspaceMarkup\([\s\S]*buildBookingPdfDocumentSectionMarkup\(/,
+    "Payment request and receipt sections should render through the shared workspace helpers"
+  );
+});
+
 test("discovery-call bookings without a selected tour use a neutral fallback image instead of a fake tour id", async () => {
   const bookingCorePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "core.js");
   const bookingListPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking_list.js");
@@ -583,6 +616,17 @@ test("booking person modal exposes separate passport and ID card document image 
   );
 });
 
+test("person document payloads preserve stored timestamps so the persons section stays clean after load", async () => {
+  const personHelpersPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "person_helpers.js");
+  const personHelpersSource = await readFile(personHelpersPath, "utf8");
+
+  assert.match(
+    personHelpersSource,
+    /function buildDocumentPayloadFromDraft[\s\S]*created_at: normalizeText\(normalized\.created_at\) \|\| timestamp,[\s\S]*updated_at: normalizeText\(normalized\.updated_at\) \|\| normalizeText\(normalized\.created_at\) \|\| timestamp/,
+    "Person document payload serialization should preserve stored timestamps instead of generating a new updated_at value on every snapshot"
+  );
+});
+
 test("booking person gender enum stays in sync across model and generated contracts", async () => {
   const modelEnumPath = path.resolve(__dirname, "..", "..", "..", "model", "enums", "booking_person_gender.cue");
   const modelEntityPath = path.resolve(__dirname, "..", "..", "..", "model", "entities", "booking_person.cue");
@@ -666,10 +710,10 @@ test("booking page scrolls across the full main-content section while keeping th
     /class="booking-detail-page__bar-gap"/,
     "Booking markup should include a dedicated gap element below the sticky control bar"
   );
-  assert.match(
+  assert.doesNotMatch(
     bookingSource,
-    /id="generate_offer_dirty_hint" class="micro booking-inline-status booking-generated-offers-actions__hint"/,
-    "The booking page should render the generated-offer dirty hint with a dedicated hint class"
+    /id="generate_offer_dirty_hint"|booking-generated-offers-actions__hint/,
+    "The booking page should no longer render the removed standalone generated-offer dirty hint"
   );
   assert.match(
     bookingStyles,
@@ -711,15 +755,10 @@ test("booking page scrolls across the full main-content section while keeping th
     /\.booking-detail-page :is\(\.booking-dirty-bar-row, \.booking-page-shell\) \{\s*[\s\S]*width: min\(100%, 1080px\);[\s\S]*margin-inline: auto;/,
     "The dirty-bar row and booking content should stay centered within the shared detail-page width"
   );
-  assert.match(
+  assert.doesNotMatch(
     bookingStyles,
-    /\.booking-detail-page \.booking-generated-offers-actions \{\s*[\s\S]*display: grid;[\s\S]*justify-items: center;[\s\S]*gap: 0\.35rem;/,
-    "The generated-offer action block should stack the clean-state hint below the button"
-  );
-  assert.match(
-    bookingStyles,
-    /\.booking-detail-page \.booking-generated-offers-actions__hint \{\s*[\s\S]*display: block;[\s\S]*margin: 0;[\s\S]*color: var\(--error-text-strong\);[\s\S]*text-align: center;/,
-    "The generated-offer clean-state hint should render as centered red helper text under the button"
+    /\.booking-detail-page \.booking-generated-offers-actions(?:__hint)? \{/,
+    "The booking page styles should no longer keep dead standalone generated-offer action styles"
   );
 });
 
@@ -804,8 +843,7 @@ test("booking page orders the visible sections in the requested workflow sequenc
     "persons_editor_panel",
     "offer_panel",
     "offer_payment_terms_panel",
-    "booking_confirmation_panel",
-    "pricing_panel",
+    "payments_workspace",
     "activities_panel",
     "booking_data_view"
   ];
@@ -827,19 +865,30 @@ test("booking page orders the visible sections in the requested workflow sequenc
   }
 });
 
-test("payments uses pricing_panel as the standalone collapsible section", async () => {
+test("booking page removes the standalone proposal PDFs section", async () => {
+  const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
+  const bookingPageSource = await readFile(bookingPagePath, "utf8");
+
+  assert.doesNotMatch(
+    bookingPageSource,
+    /id="booking_confirmation_panel"|id="booking_confirmation_panel_summary"|id="generated_offers_table"|id="generate_offer_btn"/,
+    "Proposal PDFs should no longer render as a standalone booking section"
+  );
+});
+
+test("payments use a shared workspace root for payment-step sections only", async () => {
   const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
   const bookingPageSource = await readFile(bookingPagePath, "utf8");
 
   assert.match(
     bookingPageSource,
-    /<section id="pricing_panel" class="booking-section">/,
-    "Payments should use pricing_panel itself as the collapsible section wrapper"
+    /id="payments_workspace"[\s\S]*id="payment_flow_sections"/,
+    "Payments should keep the shared workspace root for payment-step sections"
   );
   assert.doesNotMatch(
     bookingPageSource,
-    /id="payments_workspace"|id="payments_workspace_summary"|id="payments_workspace_title"/,
-    "The redundant payments workspace wrapper and heading should be removed"
+    /id="pricing_panel"|id="pricing_panel_summary"|id="pricing_summary_table"|id="pricing_adjustments_table"|id="pricing_payments_table"/,
+    "Payments should no longer render a standalone pricing summary section"
   );
 });
 
@@ -858,34 +907,63 @@ test("payments removes the standalone invoice panel and renders request/receipt 
   );
   assert.match(
     bookingPageSource,
-    /id="payment_flow_sections"/,
-    "Payments should expose a dedicated per-payment flow container"
+    /id="payments_workspace"[\s\S]*id="payment_flow_sections"/,
+    "Payments should expose a dedicated per-payment flow container outside the pricing summary section"
   );
   assert.match(
     pricingScriptSource,
-    /function paymentDocumentSectionMarkup[\s\S]*booking-payment-document--request[\s\S]*PAYMENT_DOCUMENT_KIND_REQUEST/,
-    "The pricing module should render a dedicated payment-request subsection for each payment"
+    /captureSnapshot: \(\) => captureControlSnapshot\(els\.paymentsWorkspace \|\| els\.paymentFlowSections\)/,
+    "Pricing dirty tracking should snapshot the shared payments workspace so payment-step edits stay in the save flow"
   );
   assert.match(
     pricingScriptSource,
-    /function paymentDocumentSectionMarkup[\s\S]*booking-payment-document--confirmation[\s\S]*PAYMENT_DOCUMENT_KIND_CONFIRMATION/,
-    "The pricing module should render a dedicated customer-receipt subsection for each payment"
+    /function paymentStageMarkup[\s\S]*class="booking-section booking-payment-step-panel is-open"[\s\S]*PAYMENT_DOCUMENT_KIND_REQUEST/,
+    "The pricing module should render each payment as its own booking section with a payment-request subsection"
   );
   assert.match(
     pricingScriptSource,
-    /data-payment-received-amount[\s\S]*data-payment-received-at[\s\S]*data-payment-confirmed-by[\s\S]*data-payment-reference/,
-    "The pricing module should render receipt inputs inside each payment section"
+    /function paymentStageMarkup[\s\S]*PAYMENT_DOCUMENT_KIND_CONFIRMATION/,
+    "The pricing module should render a dedicated customer-receipt subsection inside each payment section"
+  );
+  assert.match(
+    pricingScriptSource,
+    /booking-payment-receipt__amount-display[\s\S]*data-payment-received-at[\s\S]*data-payment-confirmed-by[\s\S]*data-payment-reference/,
+    "The pricing module should render a display-only received amount plus the receipt detail controls inside each payment section"
+  );
+});
+
+test("saving proposal payment terms rerenders payment-step sections without a full page reload", async () => {
+  const bookingPageScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking.js");
+  const offerModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "offers.js");
+  const [bookingPageScriptSource, offerModuleSource] = await Promise.all([
+    readFile(bookingPageScriptPath, "utf8"),
+    readFile(offerModulePath, "utf8")
+  ]);
+
+  assert.match(
+    bookingPageScriptSource,
+    /const offerModule = createBookingOfferModule\(\{[\s\S]*renderPricingPanel,[\s\S]*\}\);/,
+    "The booking page should give the offer module access to the payment-workspace renderer"
+  );
+  assert.match(
+    offerModuleSource,
+    /async function applyOfferBookingResponse[\s\S]*renderOfferPanel\(\);[\s\S]*renderPricingPanel\?\.\(\{ markDerivedChangesDirty: true \}\);/,
+    "Saving the offer/payment plan should rerender payment-step sections and mark derived payment changes dirty without a page refresh"
   );
 });
 
 test("payment-flow PDF editors reuse the shared booking PDF panel helpers and styles", async () => {
   const pricingScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "pricing.js");
   const pdfPanelModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "pdf_personalization_panel.js");
+  const pdfWorkspaceModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "pdf_workspace.js");
   const bookingStylesPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "pages", "backend-booking.css");
-  const [pricingScriptSource, pdfPanelModuleSource, bookingStylesSource] = await Promise.all([
+  const bookingTravelPlanStylesPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "pages", "backend-booking-travel-plan.css");
+  const [pricingScriptSource, pdfPanelModuleSource, pdfWorkspaceModuleSource, bookingStylesSource, bookingTravelPlanStyles] = await Promise.all([
     readFile(pricingScriptPath, "utf8"),
     readFile(pdfPanelModulePath, "utf8"),
-    readFile(bookingStylesPath, "utf8")
+    readFile(pdfWorkspaceModulePath, "utf8"),
+    readFile(bookingStylesPath, "utf8"),
+    readFile(bookingTravelPlanStylesPath, "utf8")
   ]);
 
   assert.match(
@@ -905,18 +983,63 @@ test("payment-flow PDF editors reuse the shared booking PDF panel helpers and st
   );
   assert.match(
     pricingScriptSource,
-    /function paymentDocumentPersonalizationPanelMarkup[\s\S]*buildBookingPdfToggleFieldMarkup\([\s\S]*buildBookingCollapsibleSectionMarkup\(/,
+    /function paymentDocumentPersonalizationPanelMarkup[\s\S]*buildBookingPdfToggleFieldMarkup\([\s\S]*buildBookingCollapsibleSectionMarkup\([\s\S]*bookingPdfPanel:\s*"travel_plan"/,
     "Payment-flow personalization panels should reuse the shared booking PDF field and section markup"
+  );
+  assert.doesNotMatch(
+    pricingScriptSource,
+    /function paymentDocumentPersonalizationPanelMarkup[\s\S]*className:\s*"is-open"/,
+    "Payment-flow PDF texts should start collapsed like the Travel plan PDF personalization panel"
   );
   assert.match(
     pricingScriptSource,
-    /function paymentDocumentAttachmentsMarkup\(\)[\s\S]*buildBookingCollapsibleSectionMarkup\(/,
-    "Payment-flow attachment sections should reuse the shared booking collapsible-section markup"
+    /import\s*\{[\s\S]*buildBookingPdfDocumentSectionMarkup,[\s\S]*buildBookingPdfWorkspaceMarkup[\s\S]*\}\s*from "\.\/pdf_workspace\.js";/,
+    "Payment-flow PDF sections should import the shared workspace and section builders"
+  );
+  assert.match(
+    pdfWorkspaceModuleSource,
+    /export function buildBookingPdfDocumentSectionMarkup\(/,
+    "The shared PDF workspace module should export the shared document-section builder"
+  );
+  assert.match(
+    pricingScriptSource,
+    /function paymentDocumentSectionMarkup[\s\S]*buildBookingPdfDocumentSectionMarkup\([\s\S]*paymentDocumentPersonalizationPanelMarkup[\s\S]*paymentDocumentWorkspaceMarkup/,
+    "Payment-flow request and receipt wrappers should reuse the shared PDF document-section builder"
+  );
+  assert.match(
+    pricingScriptSource,
+    /function paymentConfirmationDisabledReason\([\s\S]*hasRecordedReceipt[\s\S]*Fill in Payment received before working with the Customer receipt PDF\./,
+    "Customer receipt sections should stay disabled until the payment-received fields are complete"
+  );
+  assert.match(
+    pricingScriptSource,
+    /function paymentReceiptFieldValues\([\s\S]*const hasAnyValue = Boolean\([\s\S]*receivedAt[\s\S]*confirmedByAtpStaffId[\s\S]*reference[\s\S]*received_amount_cents[\s\S]*const fallbackAmount = Math\.max\(0, Math\.round\(Number\(payment\?\.net_amount_cents \|\| 0\)\)\);[\s\S]*const parsedAmount = hasAnyValue \? fallbackAmount : null/,
+    "Payment receipt parsing should derive the received amount from the scheduled amount instead of a user-edited amount field"
+  );
+  assert.match(
+    pricingScriptSource,
+    /id="payment_received_amount_\$\{escapeHtml\(paymentId\)\}"[\s\S]*class="booking-payment-receipt__amount-display"[\s\S]*aria-readonly="true"/,
+    "The Payment received amount should render as a non-editable display value"
   );
   assert.match(
     bookingStylesSource,
-    /\.booking-detail-page \.booking-collapsible\[data-booking-pdf-panel\][\s\S]*\.booking-detail-page \.booking-payment-document \.booking-collapsible\[data-booking-pdf-panel\]/,
-    "Payment-flow PDF sections should rely on the shared booking PDF panel CSS selectors"
+    /\.booking-detail-page \.booking-payment-receipt__amount-display \{[\s\S]*color: var\(--text-muted-strong\);[\s\S]*font-weight: var\(--booking-font-weight-bold\);[\s\S]*pointer-events: none;/,
+    "The Payment received amount display should stay bold, gray, and non-clickable"
+  );
+  assert.match(
+    pricingScriptSource,
+    /function createPaymentDocument[\s\S]*documentKind === PAYMENT_DOCUMENT_KIND_CONFIRMATION[\s\S]*paymentConfirmationDisabledReason\(payment\)[\s\S]*setPaymentSectionState\(paymentId, sectionKind, disabledReason, "info"\)/,
+    "Customer receipt preview and create actions should short-circuit before posting when payment receipt data is incomplete"
+  );
+  assert.match(
+    bookingTravelPlanStyles,
+    /#travel_plan_pdf_panel \.booking-collapsible\[data-booking-pdf-panel="travel_plan"\],[\s\S]*\.booking-pdf-document-section \.booking-collapsible\[data-booking-pdf-panel="travel_plan"\] \{[\s\S]*background: var\(--travelplan_day_surface\);/,
+    "Payment-flow PDF texts should reuse the Travel plan PDF personalization panel theme selectors"
+  );
+  assert.match(
+    bookingStylesSource,
+    /\.booking-detail-page \.booking-pdf-document-section\.is-disabled \{[\s\S]*background: rgba\(248, 250, 252, 0\.92\);/,
+    "Disabled customer receipt sections should have a dedicated muted surface treatment"
   );
 });
 
@@ -950,6 +1073,11 @@ test("booking page removes the stage and milestone control layer", async () => {
     bookingCoreSource,
     /knownOwners\.values\(\)\]\.map\(\(user\) => `<option value="\$\{escapeHtml\(user\.id\)\}">\$\{escapeHtml\(resolveAtpStaffDisplayName\(user\) \|\| user\.id\)\}<\/option>`\)/,
     "Booking assignee options should render ATP staff full names in the booking owner dropdown"
+  );
+  assert.match(
+    bookingCoreSource,
+    /if \(selectedReferralStaffId && !knownReferralStaff\.has\(selectedReferralStaffId\)\) \{[\s\S]*knownReferralStaff\.set\(selectedReferralStaffId,[\s\S]*els\.referralStaffSelect\.value = selectedReferralStaffId;/,
+    "Booking core should preserve the saved referral ATP-staff selection even when that user is missing from the loaded assignment directory"
   );
 });
 
@@ -1217,8 +1345,8 @@ test("travel plan footer exposes clean-state-gated preview and create actions ba
   );
   assert.match(
     travelPlanSource,
-    /travel-plan-footer__action-rows[\s\S]*data-travel-plan-add-day[\s\S]*els\.travel_plan_pdf_workspace[\s\S]*travel-plan-footer__workspace[\s\S]*travel-plan-footer__preview[\s\S]*data-travel-plan-preview-pdf[\s\S]*travel-plan-footer__content[\s\S]*travel-plan-footer__existing-pdfs[\s\S]*data-travel-plan-create-pdf[\s\S]*travel-plan-footer__attachments/,
-    "The travel-plan UI should keep day actions in the footer while rendering preview, existing PDFs, create action, and attachments inside the dedicated Travel plan PDF workspace"
+    /travel-plan-footer__action-rows[\s\S]*data-travel-plan-add-day[\s\S]*els\.travel_plan_pdf_workspace[\s\S]*buildBookingPdfWorkspaceMarkup\(\{[\s\S]*data-travel-plan-preview-pdf[\s\S]*documentsMarkup:[\s\S]*renderTravelPlanPdfsTable\(\)[\s\S]*data-travel-plan-create-pdf[\s\S]*attachmentsMarkup:[\s\S]*renderTravelPlanAttachments/,
+    "The travel-plan UI should keep day actions in the footer while rendering preview, existing PDFs, create action, and attachments through the dedicated shared PDF workspace"
   );
   assert.doesNotMatch(
     travelPlanSource,
@@ -1448,7 +1576,7 @@ test("travel-plan PDF personalization exposes children policy and exclusions fie
   );
   assert.match(
     bookingTravelPlanStyles,
-    /--travelplan_day_surface:\s*rgb\(182,\s*208,\s*233\);[\s\S]*#travel_plan_pdf_panel \.booking-section__head \{[\s\S]*background: var\(--travelplan_day_surface\);[\s\S]*#travel_plan_pdf_panel \.booking-collapsible\[data-booking-pdf-panel\] \{[\s\S]*background: var\(--travelplan_day_surface\);[\s\S]*#travel_plan_pdf_panel \.booking-collapsible\[data-booking-pdf-panel\] \.booking-collapsible__head,[\s\S]*#travel_plan_pdf_panel \.booking-collapsible\[data-booking-pdf-panel\] \.booking-collapsible__summary,[\s\S]*#travel_plan_pdf_panel \.booking-collapsible\[data-booking-pdf-panel\] \.booking-collapsible__body \{[\s\S]*background: var\(--travelplan_day_surface\);[\s\S]*#travel_plan_pdf_panel \.booking-collapsible\[data-booking-pdf-panel\] \.booking-collapsible__summary \{[\s\S]*color: var\(--text-black\);[\s\S]*font-weight: var\(--font-weight-bold\);[\s\S]*#travel_plan_pdf_panel \.booking-collapsible\[data-booking-pdf-panel\] \.booking-collapsible__summary::after \{[\s\S]*color: var\(--text-black\);/,
+    /--travelplan_day_surface:\s*rgb\(182,\s*208,\s*233\);[\s\S]*#travel_plan_pdf_panel \.booking-section__head \{[\s\S]*background: var\(--travelplan_day_surface\);[\s\S]*#travel_plan_pdf_panel \.booking-collapsible\[data-booking-pdf-panel="travel_plan"\],[\s\S]*\.booking-pdf-document-section \.booking-collapsible\[data-booking-pdf-panel="travel_plan"\] \{[\s\S]*background: var\(--travelplan_day_surface\);[\s\S]*#travel_plan_pdf_panel \.booking-collapsible\[data-booking-pdf-panel="travel_plan"\] > \.booking-collapsible__head,[\s\S]*#travel_plan_pdf_panel \.booking-collapsible\[data-booking-pdf-panel="travel_plan"\] > \.booking-collapsible__head > \.booking-collapsible__summary,[\s\S]*#travel_plan_pdf_panel \.booking-collapsible\[data-booking-pdf-panel="travel_plan"\] > \.booking-collapsible__body,[\s\S]*\.booking-pdf-document-section \.booking-collapsible\[data-booking-pdf-panel="travel_plan"\] > \.booking-collapsible__head,[\s\S]*\.booking-pdf-document-section \.booking-collapsible\[data-booking-pdf-panel="travel_plan"\] > \.booking-collapsible__head > \.booking-collapsible__summary,[\s\S]*\.booking-pdf-document-section \.booking-collapsible\[data-booking-pdf-panel="travel_plan"\] > \.booking-collapsible__body \{[\s\S]*background: var\(--travelplan_day_surface\);[\s\S]*#travel_plan_pdf_panel \.booking-collapsible\[data-booking-pdf-panel="travel_plan"\] > \.booking-collapsible__head > \.booking-collapsible__summary,[\s\S]*\.booking-pdf-document-section \.booking-collapsible\[data-booking-pdf-panel="travel_plan"\] > \.booking-collapsible__head > \.booking-collapsible__summary \{[\s\S]*color: var\(--text-black\);[\s\S]*font-weight: var\(--font-weight-bold\);[\s\S]*#travel_plan_pdf_panel \.booking-collapsible\[data-booking-pdf-panel="travel_plan"\] > \.booking-collapsible__head > \.booking-collapsible__summary::after,[\s\S]*\.booking-pdf-document-section \.booking-collapsible\[data-booking-pdf-panel="travel_plan"\] > \.booking-collapsible__head > \.booking-collapsible__summary::after \{[\s\S]*color: var\(--text-black\);/,
     "The Travel plan PDF texts panel should use the same opaque light blue surface as the Travel plan PDF section header with black bold summary text"
   );
   assert.match(
@@ -1491,10 +1619,10 @@ test("offer PDF personalization exposes a cancellation-policy toggle and renders
     /include_cancellation_policy\?: bool/,
     "Booking PDF personalization should model the fixed cancellation-policy toggle"
   );
-  assert.match(
+  assert.doesNotMatch(
     bookingPageSource,
-    /id="offer_pdf_personalization_panel"[\s\S]*id="generated_offers_overview"/,
-    "booking.html should keep a dedicated Offer personalization container before the generated offers overview"
+    /id="offer_pdf_personalization_panel"|id="generated_offers_overview"/,
+    "booking.html should not render the removed standalone Offer PDF controls"
   );
   assert.doesNotMatch(
     bookingPageSource,
@@ -1533,8 +1661,18 @@ test("offer PDF personalization exposes a cancellation-policy toggle and renders
   );
   assert.match(
     bookingCoreSource,
-    /draft\.pdf_personalization = Object\.fromEntries\([\s\S]*BOOKING_PDF_PERSONALIZATION_PANELS\.map/,
-    "booking core should persist localized Offer fields through the shared panel config"
+    /function readManagedPdfPersonalizationDraft\(value\) \{[\s\S]*BOOKING_PDF_PERSONALIZATION_PANELS\.forEach\([\s\S]*buildPdfPersonalizationBranchDraft\(/,
+    "booking core should persist localized Offer fields through the shared panel config without dropping unrelated PDF branches"
+  );
+  assert.match(
+    bookingCoreSource,
+    /pdf_personalization:\s*JSON\.stringify\(normalizeManagedPdfPersonalization\(values\.pdf_personalization\)\)/,
+    "booking core dirty tracking should compare only the proposal-managed PDF personalization scopes"
+  );
+  assert.match(
+    bookingCoreSource,
+    /const nextPdfPersonalization = mergeManagedPdfPersonalization\([\s\S]*latestBooking\.pdf_personalization[\s\S]*draft\.pdf_personalization[\s\S]*\);/,
+    "booking core saves should merge proposal PDF edits into the latest booking PDF personalization payload"
   );
   assert.match(
     personalizationSource,
@@ -2161,33 +2299,16 @@ test("booking page logs reload-time dirty diagnostics and core comparisons ignor
   );
 });
 
-test("generated offer actions are gated behind a clean page state", async () => {
+test("standalone generated offer controls are removed from the booking page", async () => {
   const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
-  const offersModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "offer_generated_offers.js");
-  const pricingModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "pricing.js");
+  const offersModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "offers.js");
   const bookingSource = await readFile(bookingPagePath, "utf8");
   const offersSource = await readFile(offersModulePath, "utf8");
-  const pricingSource = await readFile(pricingModulePath, "utf8");
 
-  assert.match(
+  assert.doesNotMatch(
     bookingSource,
-    /id="generate_offer_btn"[^>]*data-requires-clean-state/,
-    "The new-offer button should be disabled until pending page edits are saved or discarded"
-  );
-  assert.match(
-    offersSource,
-    /data-generated-offer-save-comment="[^"]+"[^>]*data-requires-clean-state[\s\S]*data-generated-offer-delete="[^"]+"[^>]*data-requires-clean-state/,
-    "Generated-offer comment save and delete controls should be disabled while the page is dirty"
-  );
-  assert.match(
-    offersSource,
-    /ensureOfferCleanState/,
-    "Generated-offer actions should call the explicit clean-state guard before mutating generated offers"
-  );
-  assert.match(
-    offersSource,
-    /customer_confirmation_flow/,
-    "Generated-offer creation should use the renamed customer confirmation flow field"
+    /id="generate_offer_btn"|id="generate_offer_dirty_hint"|data-generated-offer-save-comment=|data-generated-offer-delete=|data-generated-offer-email=|booking-generated-offers-actions__hint/,
+    "The removed standalone generated-offer controls should no longer render in booking.html"
   );
   assert.doesNotMatch(
     bookingSource,
@@ -2195,19 +2316,9 @@ test("generated offer actions are gated behind a clean page state", async () => 
     "The Payments section should no longer expose the old management-approval action"
   );
   assert.doesNotMatch(
-    pricingSource,
-    /confirm_as_management:\s*true/,
-    "Management confirmation should no longer be triggered from the Payments module"
-  );
-  assert.doesNotMatch(
     offersSource,
-    /generated-offers-col-route|data-generated-offer-copy-link|data-generated-offer-email-draft|data-generated-offer-confirm-management/,
-    "The generated-offers table should no longer render the Route column or its related management and link actions"
-  );
-  assert.doesNotMatch(
-    offersSource,
-    /window\.prompt\(bookingT\("booking\.offer\.comment_prompt"/,
-    "Generating a new offer should no longer interrupt ATP staff with a comment prompt popup"
+    /offer_generated_offers/,
+    "The standalone generated-offer module should no longer be wired into the offer page"
   );
 });
 
@@ -2246,14 +2357,14 @@ test("persons and travel plan editors no longer autosave from local interactions
   );
 });
 
-test("generated offer email action is gated by the booking capability flag", async () => {
-  const offersModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "offer_generated_offers.js");
+test("offer page no longer wires standalone generated-offer email actions", async () => {
+  const offersModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "offers.js");
   const offersSource = await readFile(offersModulePath, "utf8");
 
-  assert.match(
+  assert.doesNotMatch(
     offersSource,
-    /const emailActionEnabled = canEdit && Boolean\(state\.booking\?\.generated_offer_email_enabled\);/,
-    "Generated-offer email action should only render when the backend exposes Gmail-draft capability"
+    /generated_offer_email_enabled/,
+    "The offer page should not render or gate removed standalone generated-offer email actions"
   );
 });
 

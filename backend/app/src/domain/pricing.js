@@ -628,54 +628,10 @@ export function createPricingHelpers({
     };
   }
 
-  function computeBookingPricingSummary(pricing) {
-    const normalized = pricing && typeof pricing === "object" ? pricing : {};
-    const agreed = normalizeAmountCents(normalized.agreed_net_amount_cents, 0);
-    const adjustmentDelta = (Array.isArray(normalized.adjustments) ? normalized.adjustments : []).reduce(
-      (sum, adjustment) => sum + normalizeAmountCents(adjustment?.amount_cents, 0),
-      0
-    );
-    const adjusted = agreed + adjustmentDelta;
-    const scheduledNet = (Array.isArray(normalized.payments) ? normalized.payments : []).reduce(
-      (sum, payment) => sum + normalizeAmountCents(payment?.net_amount_cents, 0),
-      0
-    );
-    const scheduledTax = (Array.isArray(normalized.payments) ? normalized.payments : []).reduce(
-      (sum, payment) => sum + normalizeAmountCents(payment?.tax_amount_cents, 0),
-      0
-    );
-    const scheduledGross = (Array.isArray(normalized.payments) ? normalized.payments : []).reduce(
-      (sum, payment) => sum + normalizeAmountCents(payment?.gross_amount_cents, normalizeAmountCents(payment?.net_amount_cents, 0)),
-      0
-    );
-    const paidGross = (Array.isArray(normalized.payments) ? normalized.payments : [])
-      .filter((payment) => normalizeText(payment?.status).toUpperCase() === paymentStatuses.PAID)
-      .reduce((sum, payment) => sum + normalizeAmountCents(
-        payment?.received_amount_cents,
-        payment?.gross_amount_cents,
-        normalizeAmountCents(payment?.net_amount_cents, 0)
-      ), 0);
-    return {
-      agreed_net_amount_cents: agreed,
-      adjustments_delta_cents: adjustmentDelta,
-      adjusted_net_amount_cents: adjusted,
-      scheduled_net_amount_cents: scheduledNet,
-      unscheduled_net_amount_cents: adjusted - scheduledNet,
-      scheduled_tax_amount_cents: scheduledTax,
-      scheduled_gross_amount_cents: scheduledGross,
-      paid_gross_amount_cents: paidGross,
-      outstanding_gross_amount_cents: Math.max(0, scheduledGross - paidGross),
-      is_schedule_balanced: scheduledNet === adjusted
-    };
-  }
-
   function defaultBookingPricing() {
     return {
       currency: baseCurrency,
-      agreed_net_amount_cents: 0,
-      adjustments: [],
-      payments: [],
-      summary: computeBookingPricingSummary(null)
+      payments: []
     };
   }
 
@@ -930,15 +886,6 @@ export function createPricingHelpers({
   function normalizeBookingPricing(rawPricing) {
     const source = rawPricing && typeof rawPricing === "object" ? rawPricing : {};
     const currency = safeCurrency(source.currency || baseCurrency);
-    const adjustments = (Array.isArray(source.adjustments) ? source.adjustments : []).map((adjustment, index) => ({
-      id: normalizeText(adjustment?.id) || `pricing_adjustment_${index + 1}`,
-      type: normalizeText(adjustment?.type).toUpperCase() || pricingAdjustmentTypes.DISCOUNT,
-      label: normalizeText(adjustment?.label),
-      amount_cents: normalizeAmountCents(adjustment?.amount_cents, 0),
-      note: normalizeText(adjustment?.note),
-      created_at: adjustment?.created_at || null,
-      updated_at: adjustment?.updated_at || null
-    }));
     const payments = (Array.isArray(source.payments) ? source.payments : []).map((payment, index) => ({
       id: normalizeText(payment?.id) || `pricing_payment_${index + 1}`,
       label: normalizeText(payment?.label),
@@ -960,15 +907,9 @@ export function createPricingHelpers({
       tax_amount_cents: normalizeAmountCents(payment?.tax_amount_cents, 0),
       gross_amount_cents: normalizeAmountCents(payment?.gross_amount_cents, normalizeAmountCents(payment?.net_amount_cents, 0))
     }));
-    const pricing = {
-      currency,
-      agreed_net_amount_cents: normalizeAmountCents(source.agreed_net_amount_cents, 0),
-      adjustments,
-      payments
-    };
     return {
-      ...pricing,
-      summary: computeBookingPricingSummary(pricing)
+      currency,
+      payments
     };
   }
   function getFallbackExchangeRate(fromCurrency, toCurrency) {
@@ -1298,6 +1239,33 @@ export function createPricingHelpers({
     return convertMinorUnits(amountCents, bookingCurrency, baseCurrency);
   }
 
+  async function convertPricingPaymentForCurrency(payment, sourceCurrency, targetCurrency) {
+    const normalizedPayment = payment && typeof payment === "object"
+      ? payment
+      : normalizeBookingPricing({ payments: [payment] }).payments[0];
+    const [
+      netAmountCents,
+      taxAmountCents,
+      grossAmountCents,
+      receivedAmountCents
+    ] = await Promise.all([
+      convertMinorUnits(normalizedPayment?.net_amount_cents, sourceCurrency, targetCurrency),
+      convertMinorUnits(normalizedPayment?.tax_amount_cents, sourceCurrency, targetCurrency),
+      convertMinorUnits(normalizedPayment?.gross_amount_cents, sourceCurrency, targetCurrency),
+      normalizedPayment?.received_amount_cents == null
+        ? Promise.resolve(null)
+        : convertMinorUnits(normalizedPayment.received_amount_cents, sourceCurrency, targetCurrency)
+    ]);
+
+    return {
+      ...normalizedPayment,
+      net_amount_cents: netAmountCents,
+      tax_amount_cents: taxAmountCents,
+      gross_amount_cents: grossAmountCents,
+      received_amount_cents: receivedAmountCents
+    };
+  }
+
   function getOfferCurrencyForStorage(offer) {
     return safeCurrency(offer?.currency || baseCurrency);
   }
@@ -1307,40 +1275,9 @@ export function createPricingHelpers({
   }
 
   async function convertBookingPricingToBaseCurrency(pricing) {
-    const normalized = normalizeBookingPricing(pricing);
-    const sourceCurrency = getPricingCurrencyForStorage(normalized);
-    if (sourceCurrency === baseCurrency) {
-      return {
-        ...normalized,
-        currency: baseCurrency
-      };
-    }
-
-    const [agreedNetAmount, adjustments, payments] = await Promise.all([
-      convertMinorUnits(normalized.agreed_net_amount_cents, sourceCurrency, baseCurrency),
-      Promise.all(
-        normalized.adjustments.map((adjustment) =>
-          convertMinorUnits(adjustment.amount_cents, sourceCurrency, baseCurrency)
-        )
-      ),
-      Promise.all(
-        normalized.payments.map((payment) => convertMinorUnits(payment.net_amount_cents, sourceCurrency, baseCurrency))
-      )
-    ]);
-
-    return {
-      ...normalized,
-      currency: baseCurrency,
-      agreed_net_amount_cents: agreedNetAmount,
-      adjustments: normalized.adjustments.map((adjustment, index) => ({
-        ...adjustment,
-        amount_cents: adjustments[index]
-      })),
-      payments: normalized.payments.map((payment, index) => ({
-        ...payment,
-        net_amount_cents: payments[index]
-      }))
-    };
+    // Payment operations stay in customer currency end-to-end.
+    // The helper name is kept for compatibility with the surrounding call sites.
+    return normalizeBookingPricing(pricing);
   }
 
   async function convertBookingOfferToBaseCurrency(offer) {
@@ -1361,36 +1298,18 @@ export function createPricingHelpers({
     if (sourceCurrency === displayCurrency) {
       return {
         ...normalized,
-        currency: displayCurrency,
-        totals: normalized.totals || computeBookingPricingSummary(normalized),
-        total_price_cents: normalized.total_price_cents ?? (normalized.totals?.total_price_cents || 0)
+        currency: displayCurrency
       };
     }
 
-    const [agreedNetAmount, adjustments, payments] = await Promise.all([
-      convertMinorUnits(normalized.agreed_net_amount_cents, sourceCurrency, displayCurrency),
-      Promise.all(
-        normalized.adjustments.map((adjustment) =>
-          convertMinorUnits(adjustment.amount_cents, sourceCurrency, displayCurrency)
-        )
-      ),
-      Promise.all(
-        normalized.payments.map((payment) => convertMinorUnits(payment.net_amount_cents, sourceCurrency, displayCurrency))
-      )
-    ]);
+    const payments = await Promise.all(
+      normalized.payments.map((payment) => convertPricingPaymentForCurrency(payment, sourceCurrency, displayCurrency))
+    );
 
     return {
       ...normalized,
       currency: displayCurrency,
-      agreed_net_amount_cents: agreedNetAmount,
-      adjustments: normalized.adjustments.map((adjustment, index) => ({
-        ...adjustment,
-        amount_cents: adjustments[index]
-      })),
-      payments: normalized.payments.map((payment, index) => ({
-        ...payment,
-        net_amount_cents: payments[index]
-      }))
+      payments
     };
   }
 
@@ -1739,11 +1658,7 @@ export function createPricingHelpers({
   }
 
   async function buildBookingPricingReadModel(pricing, targetCurrency = baseCurrency) {
-    const converted = await convertPricingForDisplay(pricing, targetCurrency);
-    return {
-      ...converted,
-      summary: computeBookingPricingSummary(converted)
-    };
+    return convertPricingForDisplay(pricing, targetCurrency);
   }
 
   function validateBookingPricingInput(rawPricing) {
@@ -1770,7 +1685,6 @@ export function createPricingHelpers({
     clampOfferTaxRateBasisPoints,
     computeOfferLineAmounts,
     computeBookingOfferTotals,
-    computeBookingPricingSummary,
     defaultBookingPricing,
     defaultBookingOffer,
     normalizeBookingOffer,
@@ -1784,6 +1698,7 @@ export function createPricingHelpers({
     validateBookingPricingInput,
     convertOfferLineAmountForCurrency,
     resolveExchangeRateWithFallback,
+    convertMinorUnits,
     convertBookingPricingToBaseCurrency,
     convertBookingOfferToBaseCurrency,
     convertPricingForDisplay,

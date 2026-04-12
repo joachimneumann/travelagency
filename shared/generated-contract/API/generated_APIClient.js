@@ -122,12 +122,6 @@ case "booking_travel_plan_pdf_delete":
   return RequestFactory.bookingTravelPlanPdfDeleteRequest(options);
 case "booking_pricing":
   return RequestFactory.bookingPricingRequest(options);
-case "booking_confirmation_pdf_create":
-  return RequestFactory.bookingConfirmationPdfCreateRequest(options);
-case "booking_confirmation_pdf_artifact_pdf":
-  return RequestFactory.bookingConfirmationPdfArtifactPdfRequest(options);
-case "booking_confirmation_pdf_delete":
-  return RequestFactory.bookingConfirmationPdfDeleteRequest(options);
 case "booking_offer":
   return RequestFactory.bookingOfferRequest(options);
 case "booking_generate_offer":
