@@ -513,8 +513,7 @@ def render_js_roles_module(roles, header = JS_RUNTIME_HEADER)
   JS
 end
 
-def render_js_booking_module(types, stages, payment_statuses, adjustment_types, offer_categories, shared_field_names, header = JS_RUNTIME_HEADER)
-  stage_codes = catalog_codes(stages)
+def render_js_booking_module(types, payment_statuses, adjustment_types, offer_categories, shared_field_names, header = JS_RUNTIME_HEADER)
   payment_status_codes = catalog_codes(payment_statuses)
   adjustment_type_codes = catalog_codes(adjustment_types)
   offer_category_codes = catalog_codes(offer_categories)
@@ -522,7 +521,6 @@ def render_js_booking_module(types, stages, payment_statuses, adjustment_types, 
   <<~JS
     #{header}
     import { SHARED_FIELD_DEFS, schemaField, validateShape } from './generated_SchemaRuntime.js';
-    export const GENERATED_BOOKING_STAGES = Object.freeze(#{js_literal(stage_codes)});
     export const GENERATED_PAYMENT_STATUSES = Object.freeze(#{js_literal(payment_status_codes)});
     export const GENERATED_PRICING_ADJUSTMENT_TYPES = Object.freeze(#{js_literal(adjustment_type_codes)});
     export const GENERATED_OFFER_CATEGORIES = Object.freeze(#{js_literal(offer_category_codes)});
@@ -748,13 +746,10 @@ def render_swift_roles(roles, header = SWIFT_RUNTIME_HEADER)
   SWIFT
 end
 
-def render_swift_booking(stages, payment_statuses, adjustment_types, offer_categories, types = [], header = SWIFT_RUNTIME_HEADER)
-  stage_codes = catalog_codes(stages)
+def render_swift_booking(payment_statuses, adjustment_types, offer_categories, types = [], header = SWIFT_RUNTIME_HEADER)
   payment_status_codes = catalog_codes(payment_statuses)
   adjustment_type_codes = catalog_codes(adjustment_types)
   offer_category_codes = catalog_codes(offer_categories)
-
-  stage_cases = stage_codes.map { |entry| "    case #{swift_enum_case_identifier(entry)} = \"#{entry}\"" }.join("\n")
   payment_cases = payment_status_codes.map { |entry| "    case #{swift_enum_case_identifier(entry)} = \"#{entry}\"" }.join("\n")
   adjustment_cases = adjustment_type_codes.map { |entry| "    case #{swift_enum_case_identifier(entry)} = \"#{entry}\"" }.join("\n")
   offer_category_cases = offer_category_codes.map { |entry| "    case #{swift_enum_case_identifier(entry)} = \"#{entry}\"" }.join("\n")
@@ -763,9 +758,6 @@ def render_swift_booking(stages, payment_statuses, adjustment_types, offer_categ
     import Foundation
 
     #{header}
-    enum GeneratedBookingStage: String, CaseIterable, Codable, Hashable {
-#{stage_cases}
-    }
 
     enum GeneratedPaymentStatus: String, CaseIterable, Codable, Hashable {
 #{payment_cases}
@@ -1362,7 +1354,6 @@ endpoints = ir.dig('api', 'endpoints') || []
 currency_entries = ir.fetch('catalogs').fetch('currencies')
 language_codes = catalog_codes(ir.fetch('catalogs').fetch('languages'))
 roles = ir.fetch('catalogs').fetch('roles')
-stages = ir.fetch('catalogs').fetch('stages')
 payment_statuses = ir.fetch('catalogs').fetch('paymentStatuses')
 adjustment_types = ir.fetch('catalogs').fetch('pricingAdjustmentTypes')
 offer_categories = ir.fetch('catalogs').fetch('offerCategories')
@@ -1386,7 +1377,6 @@ write_file(
       languages: language_codes,
       currencies: currency_entries,
       roles: roles,
-      stages: stages,
       paymentStatuses: payment_statuses,
       pricingAdjustmentTypes: adjustment_types,
       offerCategories: offer_categories,
@@ -1426,11 +1416,10 @@ frontend_currency_catalog = openapi_schemas.fetch('ATPCurrencyCode').fetch('x-cu
 frontend_language_codes = openapi_schemas.fetch('LanguageCode').fetch('enum')
 frontend_generic_swift_enums = openapi_schemas.each_with_object({}) do |(name, schema), acc|
   next unless schema.is_a?(Hash) && schema['enum'].is_a?(Array)
-  next if %w[LanguageCode ATPCurrencyCode ATPStaffRole BookingStage PaymentStatus PricingAdjustmentType OfferCategory].include?(name)
+  next if %w[LanguageCode ATPCurrencyCode ATPStaffRole PaymentStatus PricingAdjustmentType OfferCategory].include?(name)
   acc[name] = schema['enum']
 end
 frontend_roles = openapi_schemas.fetch('ATPStaffRole').fetch('enum')
-frontend_stages = openapi_schemas.fetch('BookingStage').fetch('enum')
 frontend_payment_statuses = openapi_schemas.fetch('PaymentStatus').fetch('enum')
 frontend_adjustment_types = openapi_schemas.fetch('PricingAdjustmentType').fetch('enum')
 frontend_offer_categories = openapi_schemas.fetch('OfferCategory').fetch('enum')
@@ -1511,7 +1500,6 @@ shared_model_outputs = {
   'generated_Roles.js' => render_js_roles_module(frontend_roles, JS_OPENAPI_HEADER),
   'generated_Booking.js' => render_js_booking_module(
     frontend_booking_types,
-    frontend_stages,
     frontend_payment_statuses,
     frontend_adjustment_types,
     frontend_offer_categories,
@@ -1570,7 +1558,6 @@ ios_model_outputs = {
   'generated_FormConstraints.swift' => render_swift_form_constraints(frontend_traveler_constraints, SWIFT_OPENAPI_HEADER),
   'generated_Roles.swift' => render_swift_roles(frontend_roles, SWIFT_OPENAPI_HEADER),
   'generated_Booking.swift' => render_swift_booking(
-    frontend_stages,
     frontend_payment_statuses,
     frontend_adjustment_types,
     frontend_offer_categories,

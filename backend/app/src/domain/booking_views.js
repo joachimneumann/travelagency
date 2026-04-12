@@ -8,7 +8,6 @@ import {
   normalizeBookingContentLang,
   normalizeBookingSourceLang
 } from "./booking_content_i18n.js";
-import { resolveBookingMilestoneState } from "./booking_milestones.js";
 import { isSuspiciousSentinelString } from "./booking_names.js";
 import {
   buildTravelPlanTranslationStatus
@@ -18,8 +17,6 @@ import { normalizeBookingPdfPersonalization } from "../lib/booking_pdf_personali
 
 export function createBookingViewHelpers({
   baseCurrency,
-  stages,
-  stageOrder,
   appRoles,
   gmailDraftsConfig,
   bookingConfirmationTokenConfig,
@@ -30,7 +27,6 @@ export function createBookingViewHelpers({
   nowIso,
   safeCurrency,
   safeOptionalInt,
-  computeServiceLevelAgreementDueAt,
   randomUUID,
   clamp,
   safeInt,
@@ -121,25 +117,12 @@ export function createBookingViewHelpers({
     return phones.some((phone) => isLikelyPhoneMatch(phone, normalizedContact));
   }
 
-  function activeBookingStages() {
-    return new Set([
-      stages.NEW_BOOKING,
-      stages.TRAVEL_PLAN_SENT,
-      stages.OFFER_SENT,
-      stages.NEGOTIATION_STARTED,
-      stages.DEPOSIT_REQUEST_SENT,
-      stages.IN_PROGRESS
-    ]);
-  }
-
   function resolveBookingForExternalContact(store, externalContactId) {
     if (!externalContactId) return null;
     const matches = (Array.isArray(store?.bookings) ? store.bookings : [])
       .filter((booking) => bookingContactMatches(booking, externalContactId))
       .sort((a, b) => String(b.updated_at || b.created_at || "").localeCompare(String(a.updated_at || a.created_at || "")));
-    if (!matches.length) return null;
-    const active = matches.find((booking) => activeBookingStages().has(booking.stage));
-    return active || matches[0];
+    return matches[0] || null;
   }
 
   function resolveBookingContactByExternalContact(store, externalContactId) {
@@ -162,9 +145,7 @@ export function createBookingViewHelpers({
     const matches = (Array.isArray(store?.bookings) ? store.bookings : [])
       .filter((booking) => normalizeText(booking.id) === normalizedBookingId)
       .sort((a, b) => String(b.updated_at || b.created_at || "").localeCompare(String(a.updated_at || a.created_at || "")));
-    if (!matches.length) return null;
-    const active = matches.find((booking) => activeBookingStages().has(booking.stage));
-    return active || matches[0];
+    return matches[0] || null;
   }
 
   function getMetaConversationOpenUrl(channel, externalContactId) {
@@ -237,7 +218,7 @@ export function createBookingViewHelpers({
     return hasRole(principal, appRoles.ADMIN) || hasRole(principal, appRoles.MANAGER);
   }
 
-  function canChangeBookingStage(principal, booking) {
+  function canEditBooking(principal, booking) {
     if (hasRole(principal, appRoles.ADMIN) || hasRole(principal, appRoles.MANAGER)) {
       return true;
     }
@@ -268,11 +249,6 @@ export function createBookingViewHelpers({
     }
     return false;
   }
-
-  function canEditBooking(principal, booking) {
-    return canChangeBookingStage(principal, booking);
-  }
-
   function isGeneratedOfferEmailEnabled() {
     return Boolean(
       normalizeText(gmailDraftsConfig?.serviceAccountJsonPath)
@@ -314,6 +290,11 @@ export function createBookingViewHelpers({
   async function buildBookingReadModel(booking, options = {}) {
     const {
       idempotency_key: _idempotencyKey,
+      stage: _legacyStage,
+      milestones: _legacyMilestones,
+      last_action: _legacyLastAction,
+      last_action_at: _legacyLastActionAt,
+      service_level_agreement_due_at: _legacyServiceLevelAgreementDueAt,
       web_form_travel_month: _webFormTravelMonth,
       traveler_details_token_nonce: _travelerDetailsTokenNonce,
       traveler_details_token_created_at: _travelerDetailsTokenCreatedAt,
@@ -331,11 +312,6 @@ export function createBookingViewHelpers({
     const listMode = options?.listMode === true;
     const preferredCurrency = safeCurrency(normalizedBooking?.preferred_currency || normalizedBooking?.pricing?.currency || baseCurrency);
     const offerCurrency = safeCurrency(normalizedBooking?.offer?.currency || preferredCurrency);
-    const milestoneState = resolveBookingMilestoneState({
-      milestones: normalizedBooking?.milestones,
-      last_action: normalizedBooking?.last_action,
-      last_action_at: normalizedBooking?.last_action_at
-    }, normalizedBooking?.stage);
     const generatedOffers = listMode
       ? []
       : await Promise.all(
@@ -370,9 +346,6 @@ export function createBookingViewHelpers({
     const offerDisplayCurrency = listMode
       ? safeCurrency(normalizedBooking?.offer?.currency || offerCurrency)
       : offerCurrency;
-    const proposalSentAt = normalizeText(normalizedBooking?.proposal_sent_at);
-    const proposalSentGeneratedOfferId = normalizeText(normalizedBooking?.proposal_sent_generated_offer_id);
-    const proposalSentByAtpStaffId = normalizeText(normalizedBooking?.proposal_sent_by_atp_staff_id);
     async function resolveKeycloakUserLabel(keycloakUserId) {
       const normalizedKeycloakUserId = normalizeText(keycloakUserId);
       if (!normalizedKeycloakUserId) return "";
@@ -384,9 +357,6 @@ export function createBookingViewHelpers({
       const assignableKeycloakUserLabels = await resolveAssignableKeycloakUserLabelMap().catch(() => new Map());
       return normalizeText(assignableKeycloakUserLabels?.get(normalizedKeycloakUserId)) || normalizedKeycloakUserId;
     }
-    const proposalSentByAtpStaffLabel = proposalSentByAtpStaffId
-      ? await resolveKeycloakUserLabel(proposalSentByAtpStaffId)
-      : "";
     async function buildAcceptedRecordReadModel() {
       const hasAcceptedRecord = Boolean(
         normalizeText(normalizedBooking?.deposit_received_at)
@@ -461,26 +431,11 @@ export function createBookingViewHelpers({
     const acceptedRecord = listMode ? undefined : await buildAcceptedRecordReadModel();
     return {
       ...normalizedBooking,
-      stage: milestoneState.stage,
-      proposal_sent_at: proposalSentAt || undefined,
-      proposal_sent_generated_offer_id: proposalSentGeneratedOfferId || undefined,
-      proposal_sent_by_atp_staff_id: proposalSentByAtpStaffId || undefined,
-      ...(proposalSentByAtpStaffLabel ? { proposal_sent_by_atp_staff_label: proposalSentByAtpStaffLabel } : {}),
       deposit_received_at: normalizeText(normalizedBooking?.deposit_received_at)
-        || normalizeText(milestoneState?.milestones?.deposit_received_at)
         || undefined,
       deposit_confirmed_by_atp_staff_id: normalizeText(normalizedBooking?.deposit_confirmed_by_atp_staff_id) || undefined,
-      deposit_receipt_draft_received_at: normalizeText(normalizedBooking?.deposit_receipt_draft_received_at) || undefined,
-      deposit_receipt_draft_confirmed_by_atp_staff_id: normalizeText(normalizedBooking?.deposit_receipt_draft_confirmed_by_atp_staff_id) || undefined,
-      deposit_receipt_draft_reference: normalizeText(normalizedBooking?.deposit_receipt_draft_reference) || undefined,
-      milestones: milestoneState.milestones,
-      last_action: milestoneState.lastAction,
-      last_action_at: milestoneState.lastActionAt,
       ...(assignedKeycloakUserLabel ? { assigned_keycloak_user_label: assignedKeycloakUserLabel } : {}),
       ...(assignedAtpStaff ? { assigned_atp_staff: assignedAtpStaff } : {}),
-      service_level_agreement_due_at: milestoneState.lastAction
-        ? computeServiceLevelAgreementDueAt(milestoneState.stage, new Date(milestoneState.lastActionAt))
-        : normalizedBooking?.service_level_agreement_due_at,
       customer_language: normalizeBookingContentLang(
         normalizedBooking?.customer_language
         || normalizedBooking?.web_form_submission?.preferred_language
@@ -517,14 +472,8 @@ export function createBookingViewHelpers({
     };
   }
 
-  function normalizeStageFilter(value) {
-    const stage = normalizeText(value).toUpperCase();
-    return stageOrder.includes(stage) ? stage : "";
-  }
-
   function filterAndSortBookings(store, query, deps = {}) {
     const { ensureMetaChatCollections = () => {} } = deps;
-    const stage = normalizeStageFilter(query.get("stage"));
     const assignedKeycloakUserId = normalizeText(query.get("assigned_keycloak_user_id"));
     const rawSearch = normalizeText(query.get("search")).toLowerCase();
     const rawSearchNoSpace = rawSearch.replace(/\s+/g, "");
@@ -603,7 +552,6 @@ export function createBookingViewHelpers({
     }
 
     const filtered = store.bookings.filter((booking) => {
-      if (stage && booking.stage !== stage) return false;
       if (assignedKeycloakUserId && getBookingAssignedKeycloakUserId(booking) !== assignedKeycloakUserId) return false;
       if (!search) return true;
 
@@ -619,7 +567,6 @@ export function createBookingViewHelpers({
         contact.phone_number,
         ...persons.flatMap((person) => [person.name, ...person.emails, ...person.phone_numbers]),
         bookingChatTextMap.get(booking.id),
-        booking.service_level_agreement_due_at,
         JSON.stringify(booking.pricing),
         JSON.stringify(booking.offer)
       ]
@@ -663,12 +610,6 @@ export function createBookingViewHelpers({
           return String(a.created_at || "").localeCompare(String(b.created_at || ""));
         case "updated_at_desc":
           return String(b.updated_at || "").localeCompare(String(a.updated_at || ""));
-        case "service_level_agreement_due_at_asc":
-          return String(a.service_level_agreement_due_at || "9999-12-31T23:59:59.999Z").localeCompare(
-            String(b.service_level_agreement_due_at || "9999-12-31T23:59:59.999Z")
-          );
-        case "service_level_agreement_due_at_desc":
-          return String(b.service_level_agreement_due_at || "").localeCompare(String(a.service_level_agreement_due_at || ""));
         case "created_at_desc":
         default:
           return String(b.created_at || "").localeCompare(String(a.created_at || ""));
@@ -677,7 +618,7 @@ export function createBookingViewHelpers({
 
     return {
       items: sorted,
-      filters: { stage: stage || null, assigned_keycloak_user_id: assignedKeycloakUserId || null, search: search || null },
+      filters: { assigned_keycloak_user_id: assignedKeycloakUserId || null, search: search || null },
       sort
     };
   }
@@ -706,7 +647,6 @@ export function createBookingViewHelpers({
     addActivity,
     canReadAllBookings,
     canChangeBookingAssignment,
-    canChangeBookingStage,
     actorLabel,
     syncBookingAssignmentFields,
     getBookingAssignedKeycloakUserId,

@@ -10,7 +10,6 @@ function buildSourceBooking() {
   return {
     id: "booking_source",
     name: "Source Booking",
-    stage: "PAYMENT_CONFIRMED",
     assigned_keycloak_user_id: "kc-joachim",
     core_revision: 8,
     notes_revision: 3,
@@ -57,9 +56,6 @@ function buildSourceBooking() {
     deposit_received_at: "2026-03-01T00:00:00.000Z",
     deposit_confirmed_by_atp_staff_id: "kc-joachim",
     accepted_deposit_reference: "BANK-REF-1",
-    deposit_receipt_draft_received_at: "2026-02-28T00:00:00.000Z",
-    deposit_receipt_draft_confirmed_by_atp_staff_id: "kc-joachim",
-    deposit_receipt_draft_reference: "DRAFT-REF-1",
     accepted_offer_snapshot: { total_price_cents: 12300 },
     accepted_payment_terms_snapshot: { lines: [{ id: "payment_term_old" }] },
     accepted_travel_plan_snapshot: { days: [{ id: "travel_plan_day_old" }] },
@@ -180,7 +176,6 @@ test("cloneBookingForTesting keeps only approved metadata and clears commercial 
   });
 
   assert.equal(cloned.id, "booking_uuid_1");
-  assert.equal(cloned.stage, "NEW_BOOKING");
   assert.equal(cloned.assigned_keycloak_user_id, null);
   assert.equal(cloned.created_at, "2026-03-29T00:00:00.000Z");
   assert.equal(cloned.updated_at, "2026-03-29T00:00:00.000Z");

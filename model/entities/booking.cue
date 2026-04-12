@@ -41,12 +41,14 @@ import (
 	due_date?:                    common.#DateOnly
 	paid_at?:                     common.#Timestamp
 	received_at?:                 common.#Timestamp
+	received_amount_cents?:       common.#NonNegativeMoneyAmount
 	confirmed_by_atp_staff_id?:   common.#Identifier
 	reference?:                   string
 	notes?:                       string
 	tax_amount_cents?:            common.#MoneyAmount
 	gross_amount_cents?:          common.#MoneyAmount
 	origin_generated_offer_id?:   common.#Identifier
+	received_generated_offer_id?: common.#Identifier
 	origin_payment_term_line_id?: common.#Identifier
 	created_at?:                  common.#Timestamp
 	updated_at?:                  common.#Timestamp
@@ -71,17 +73,6 @@ import (
 	adjustments: [...#PricingAdjustment]
 	payments: [...#BookingPayment]
 	summary: #BookingPricingSummary
-}
-
-#BookingMilestones: {
-	new_booking_at?:         common.#Timestamp
-	travel_plan_sent_at?:    common.#Timestamp
-	offer_sent_at?:          common.#Timestamp
-	negotiation_started_at?: common.#Timestamp
-	deposit_request_sent_at?: common.#Timestamp
-	deposit_received_at?:    common.#Timestamp
-	booking_lost_at?:        common.#Timestamp
-	trip_completed_at?:      common.#Timestamp
 }
 
 #BookingActivityType: enums.#BookingActivityType
@@ -147,21 +138,13 @@ import (
 	pricing_revision?:               >=0 & int
 	offer_revision?:                 >=0 & int
 	invoices_revision?:              >=0 & int
-	stage:                           enums.#BookingStage
 	deposit_received_at?:            common.#Timestamp
 	deposit_confirmed_by_atp_staff_id?: common.#Identifier
-	deposit_receipt_draft_received_at?: common.#Timestamp
-	deposit_receipt_draft_confirmed_by_atp_staff_id?: common.#Identifier
-	deposit_receipt_draft_reference?: string
-	milestones?:                     #BookingMilestones
-	last_action?:                    enums.#BookingMilestoneAction
-	last_action_at?:                 common.#Timestamp
 	assigned_keycloak_user_id?:      common.#Identifier
 	source_channel?:                 enums.#BookingSourceChannel
 	referral_kind?:                  enums.#BookingReferralKind
 	referral_label?:                 string
 	referral_staff_user_id?:         common.#Identifier
-	service_level_agreement_due_at?: common.#Timestamp
 	pdf_personalization?: #BookingPdfPersonalization
 	travel_start_day?:            common.#DateOnly
 	travel_end_day?:              common.#DateOnly

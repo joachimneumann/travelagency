@@ -1879,8 +1879,7 @@ export function createBookingPersonsModule(ctx) {
         : Number.isInteger(Number(state.booking?.persons_revision))
           ? Math.max(0, Number(state.booking.persons_revision))
           : 0,
-      updated_at: normalizeText(booking.updated_at) || normalizeText(state.booking?.updated_at) || "",
-      last_action_at: normalizeText(booking.last_action_at) || normalizeText(state.booking?.last_action_at) || ""
+      updated_at: normalizeText(booking.updated_at) || normalizeText(state.booking?.updated_at) || ""
     };
     state.personDrafts = getBookingPersons(state.booking).map(clonePersonDraft);
     previousDrafts.forEach((draft, index) => {

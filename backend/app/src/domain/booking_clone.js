@@ -222,17 +222,11 @@ function resetCommercialState(booking) {
   delete booking.accepted_generated_offer_id;
   delete booking.accepted_offer_artifact_ref;
   delete booking.accepted_travel_plan_artifact_ref;
-  delete booking.proposal_sent_at;
-  delete booking.proposal_sent_generated_offer_id;
-  delete booking.proposal_sent_by_atp_staff_id;
   delete booking.accepted_deposit_amount_cents;
   delete booking.accepted_deposit_currency;
   delete booking.deposit_received_at;
   delete booking.deposit_confirmed_by_atp_staff_id;
   delete booking.accepted_deposit_reference;
-  delete booking.deposit_receipt_draft_received_at;
-  delete booking.deposit_receipt_draft_confirmed_by_atp_staff_id;
-  delete booking.deposit_receipt_draft_reference;
   delete booking.accepted_offer_snapshot;
   delete booking.accepted_payment_terms_snapshot;
   delete booking.accepted_travel_plan_snapshot;
@@ -283,12 +277,7 @@ export function cloneBookingForTesting(sourceBooking, options = {}) {
   cloned.idempotency_key = null;
   cloned.created_at = nextNow;
   cloned.updated_at = nextNow;
-  cloned.last_action = null;
-  cloned.last_action_at = null;
-  cloned.milestones = {};
-  cloned.service_level_agreement_due_at = null;
   cloned.assigned_keycloak_user_id = null;
-  cloned.stage = "NEW_BOOKING";
   cloned.preferred_currency = resolveCloneCurrency(cloned);
   canonicalizeTravelPlanDestinations(cloned);
 

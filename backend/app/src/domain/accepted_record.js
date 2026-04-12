@@ -42,14 +42,12 @@ export async function freezeAcceptedCommercialRecord(booking, deps = {}) {
     normalizeBookingOffer,
     normalizeBookingTravelPlan,
     buildBookingOfferPaymentTermsReadModel,
-    listBookingTravelPlanPdfs,
-    computeServiceLevelAgreementDueAt
+    listBookingTravelPlanPdfs
   } = deps;
 
   const resolvedDepositReceivedAt = normalizeText(
     depositReceivedAt
     || booking?.deposit_received_at
-    || booking?.milestones?.deposit_received_at
   );
   if (!resolvedDepositReceivedAt) {
     throw new Error("Deposit receipt requires deposit_received_at.");
@@ -129,35 +127,6 @@ export async function freezeAcceptedCommercialRecord(booking, deps = {}) {
   if (!normalizeText(booking?.accepted_deposit_reference) && normalizedReference) {
     booking.accepted_deposit_reference = normalizedReference;
     changed = true;
-  }
-
-  const nextMilestones = {
-    ...(booking?.milestones && typeof booking.milestones === "object" ? booking.milestones : {}),
-    deposit_received_at: resolvedDepositReceivedAt
-  };
-  if (JSON.stringify(nextMilestones) !== JSON.stringify(booking?.milestones || {})) {
-    booking.milestones = nextMilestones;
-    changed = true;
-  }
-
-  if (normalizeText(booking?.last_action) !== "DEPOSIT_RECEIVED") {
-    booking.last_action = "DEPOSIT_RECEIVED";
-    changed = true;
-  }
-  if (normalizeText(booking?.last_action_at) !== resolvedDepositReceivedAt) {
-    booking.last_action_at = resolvedDepositReceivedAt;
-    changed = true;
-  }
-  if (normalizeText(booking?.stage) !== "IN_PROGRESS") {
-    booking.stage = "IN_PROGRESS";
-    changed = true;
-  }
-  if (typeof computeServiceLevelAgreementDueAt === "function") {
-    const nextServiceLevelAgreementDueAt = computeServiceLevelAgreementDueAt("IN_PROGRESS", new Date(resolvedDepositReceivedAt));
-    if (normalizeText(booking?.service_level_agreement_due_at) !== normalizeText(nextServiceLevelAgreementDueAt)) {
-      booking.service_level_agreement_due_at = nextServiceLevelAgreementDueAt;
-      changed = true;
-    }
   }
 
   if (!booking?.accepted_offer_snapshot) {

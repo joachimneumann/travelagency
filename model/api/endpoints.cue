@@ -379,21 +379,6 @@ package api
 		}]
 	},
 	{
-		key:           "booking_milestone_action"
-		path:          "/api/v1/bookings/{booking_id}/milestone-actions"
-		method:        "POST"
-		tag:           "Bookings"
-		authenticated: true
-		requestType:   "BookingMilestoneActionRequest"
-		responseType:  "BookingDetail"
-		parameters: [{
-			name:     "booking_id"
-			location: "path"
-			required: true
-			typeName: "Identifier"
-		}]
-	},
-	{
 		key:           "booking_translate_fields"
 		path:          "/api/v1/bookings/{booking_id}/translate-fields"
 		method:        "POST"

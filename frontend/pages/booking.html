@@ -255,30 +255,6 @@
               <article id="booking_actions_panel" class="booking-control-deck" style="margin-bottom: 1rem;">
                 <div class="booking-control-deck__fields">
                 </div>
-                <div class="booking-status-panel">
-                  <div class="booking-status-panel__head">
-                    <h2 class="booking-status-panel__title" hidden data-i18n-id="booking.status_title">Booking status</h2>
-                    <div id="booking_milestone_actions" hidden></div>
-                    <div class="micro booking-milestone-actions__last-action" id="booking_last_action_detail" hidden></div>
-                  </div>
-                  <div class="booking-status-panel__phase booking-status-panel__phase--before" id="booking_status_phase_before">
-                    <div class="booking-status-panel__phase-copy">
-                      <div class="booking-status-panel__phase-label" data-i18n-id="booking.status.before_deposit">Before deposit received</div>
-                    </div>
-                    <div class="booking-milestone-actions" id="booking_milestone_actions_before"></div>
-                  </div>
-                  <div class="booking-status-panel__divider">
-                    <div class="booking-status-panel__divider-line"></div>
-                    <div class="booking-status-panel__divider-badge" data-i18n-id="booking.status.deposit_received">Deposit Received</div>
-                    <div class="booking-status-panel__divider-line"></div>
-                  </div>
-                  <div class="booking-status-panel__phase booking-status-panel__phase--after" id="booking_status_phase_after">
-                    <div class="booking-status-panel__phase-copy">
-                      <div class="booking-status-panel__phase-label" data-i18n-id="booking.status.after_deposit">After deposit received</div>
-                    </div>
-                    <div class="booking-milestone-actions" id="booking_milestone_actions_after"></div>
-                  </div>
-                </div>
               </article>
               <div id="detail_error" class="backend-message" role="alert" aria-live="assertive"></div>
 
@@ -781,17 +757,6 @@
             </div>
           </article>
 
-          <section id="booking_commercial_flow_guide" class="booking-flow-guide" aria-labelledby="booking_commercial_flow_title">
-            <div class="booking-flow-guide__head">
-              <div>
-                <h2 id="booking_commercial_flow_title" class="section-title u-title-compact">Proposal &amp; Payments</h2>
-                <p class="micro booking-flow-guide__lead">Track the current commercial step and the next ATP action.</p>
-              </div>
-              <div id="booking_flow_next_step" class="booking-flow-next-step" aria-live="polite"></div>
-            </div>
-            <div id="booking_flow_tracker" class="booking-flow-tracker" aria-live="polite"></div>
-          </section>
-
           <section id="proposal_workspace" class="booking-workspace" aria-labelledby="proposal_workspace_title">
             <div class="booking-workspace__head">
               <div class="booking-workspace__copy">
@@ -866,70 +831,7 @@
             </div>
             <div class="booking-section__body">
               <div class="booking-payment-sections">
-                <article id="payment_deposit_section" class="booking-payment-section booking-payment-section--deposit" hidden>
-                  <div class="booking-payment-section__head">
-                    <div class="booking-payment-section__copy">
-                      <div class="booking-payment-section__title-row">
-                        <h3 id="payment_deposit_section_title" class="booking-payment-section__title">Deposit</h3>
-                        <span id="payment_deposit_section_status" class="booking-flow-chip is-upcoming"></span>
-                      </div>
-                      <p id="payment_deposit_section_summary" class="micro booking-payment-section__summary"></p>
-                    </div>
-                    <div id="payment_deposit_section_amount" class="booking-payment-section__amount"></div>
-                  </div>
-                  <div class="booking-payment-section__body">
-                    <div id="payments_booking_confirmation_card" class="booking-flow-inline-card" hidden></div>
-
-                    <div class="backend-controls" id="pricing_deposit_controls" style="margin-bottom: 1rem;" hidden>
-                      <div class="field">
-                        <span class="field-label" id="pricing_deposit_amount_label" data-i18n-id="booking.pricing.deposit_amount">Deposit amount</span>
-                        <div id="pricing_deposit_amount" class="pricing-deposit-amount-text" aria-live="polite" aria-labelledby="pricing_deposit_amount_label"></div>
-                      </div>
-                      <div class="field">
-                        <label for="pricing_deposit_received_at_input" data-i18n-id="booking.pricing.deposit_received_at">Deposit received at</label>
-                        <input id="pricing_deposit_received_at_input" type="date" />
-                      </div>
-                      <div class="field">
-                        <label for="pricing_deposit_confirmed_by_select" data-i18n-id="booking.pricing.confirmed_by">Confirmed by</label>
-                        <select id="pricing_deposit_confirmed_by_select"></select>
-                      </div>
-                      <div class="field">
-                        <label for="pricing_deposit_reference_input" data-i18n-id="booking.pricing.deposit_reference">Deposit reference</label>
-                        <input id="pricing_deposit_reference_input" type="text" data-i18n-placeholder-id="booking.pricing.deposit_reference_placeholder" placeholder="Bank transfer ref / receipt no. (optional)" />
-                      </div>
-                      <div class="field field--compact-action">
-                        <span class="field-label" aria-hidden="true">&nbsp;</span>
-                        <div class="pricing-deposit-actions">
-                          <button class="btn pricing-deposit-ack-btn" id="pricing_deposit_received_btn" type="button" data-i18n-id="booking.pricing.full_deposit_received">Full Deposit received</button>
-                          <button class="btn btn-ghost" id="pricing_management_approval_btn" type="button" data-i18n-id="booking.pricing.management_approval" hidden>Management approval</button>
-                        </div>
-                        <span id="pricing_deposit_action_hint" class="micro booking-inline-status"></span>
-                      </div>
-                    </div>
-
-                    <div class="backend-controls" id="pricing_deposit_hint_row" style="margin-bottom: 1rem;">
-                      <span id="pricing_deposit_hint" class="micro"></span>
-                    </div>
-
-                    <div id="booking_confirmation_pdf_section" class="booking-payment-document booking-payment-document--confirmation" style="margin-bottom: 1rem;" hidden>
-                      <div class="backend-controls" style="align-items: center; margin-top: 0.2rem;">
-                        <h3 style="margin: 0; font-size: 0.98rem; flex: 1;">Payment confirmation PDFs</h3>
-                      </div>
-                      <div class="backend-table-wrap" style="margin-bottom: 0.5rem;">
-                        <table class="backend-table" id="booking_confirmation_pdfs_table"></table>
-                      </div>
-                      <div id="booking_confirmation_pdf_personalization_panel"></div>
-                      <div class="backend-controls" style="justify-content: center; margin-bottom: 0.5rem;">
-                        <button class="btn btn-ghost booking-offer-add-btn" id="create_booking_confirmation_btn" type="button" data-payment-document-create="deposit:PAYMENT_CONFIRMATION">create Booking confirmation</button>
-                      </div>
-                      <div class="backend-controls">
-                        <span id="booking_confirmation_pdf_status" class="micro booking-inline-status"></span>
-                      </div>
-                    </div>
-                  </div>
-                </article>
-
-                <div id="payments_milestones_overview" class="booking-payment-sections__list" hidden></div>
+                <div id="payment_flow_sections" class="booking-payment-sections__list" hidden></div>
               </div>
 
               <div class="backend-table-wrap" style="margin-bottom: 1rem;">

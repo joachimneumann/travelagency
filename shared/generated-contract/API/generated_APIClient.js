@@ -58,8 +58,6 @@ case "booking_image":
   return RequestFactory.bookingImageRequest(options);
 case "booking_owner":
   return RequestFactory.bookingOwnerRequest(options);
-case "booking_milestone_action":
-  return RequestFactory.bookingMilestoneActionRequest(options);
 case "booking_translate_fields":
   return RequestFactory.bookingTranslateFieldsRequest(options);
 case "booking_person_create":

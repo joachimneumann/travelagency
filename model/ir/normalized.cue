@@ -42,7 +42,6 @@ IR: {
 		MonthCode: {catalog: "months"}
 		CurrencyCode: {catalog: "currencies"}
 		ATPStaffRole: {catalog: "roles"}
-		BookingStage: {catalog: "stages"}
 		BookingSourceChannel: {catalog: "bookingSourceChannels"}
 		BookingReferralKind: {catalog: "bookingReferralKinds"}
 		BookingPersonRole: {catalog: "bookingPersonRoles"}
@@ -821,22 +820,6 @@ IR: {
 			]
 		},
 		{
-			name:       "BookingMilestones"
-			domain:     "booking"
-			module:     "entities"
-			sourceType: "entities.#BookingMilestones"
-			fields: [
-				{name: "new_booking_at", kind: "scalar", typeName: "Timestamp", required: false},
-				{name: "travel_plan_sent_at", kind: "scalar", typeName: "Timestamp", required: false},
-				{name: "offer_sent_at", kind: "scalar", typeName: "Timestamp", required: false},
-				{name: "negotiation_started_at", kind: "scalar", typeName: "Timestamp", required: false},
-				{name: "deposit_request_sent_at", kind: "scalar", typeName: "Timestamp", required: false},
-				{name: "deposit_received_at", kind: "scalar", typeName: "Timestamp", required: false},
-				{name: "booking_lost_at", kind: "scalar", typeName: "Timestamp", required: false},
-				{name: "trip_completed_at", kind: "scalar", typeName: "Timestamp", required: false},
-			]
-		},
-		{
 			name:       "Booking"
 			domain:     "booking"
 			module:     "entities"
@@ -845,10 +828,6 @@ IR: {
 				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
 				{name: "name", kind: "scalar", typeName: "string", required: false},
 				{name: "image", kind: "scalar", typeName: "string", required: false},
-				{name: "stage", kind: "enum", typeName: "BookingStage", required: true},
-				{name: "milestones", kind: "entity", typeName: "BookingMilestones", required: false},
-				{name: "last_action", kind: "enum", typeName: "BookingMilestoneAction", required: false},
-				{name: "last_action_at", kind: "scalar", typeName: "Timestamp", required: false},
 				{name: "assigned_keycloak_user_id", kind: "scalar", typeName: "Identifier", required: false},
 				{name: "source_channel", kind: "enum", typeName: "BookingSourceChannel", required: false},
 				{name: "referral_kind", kind: "enum", typeName: "BookingReferralKind", required: false},
@@ -862,7 +841,6 @@ IR: {
 				{name: "pricing_revision", kind: "scalar", typeName: "int", required: false},
 				{name: "offer_revision", kind: "scalar", typeName: "int", required: false},
 				{name: "invoices_revision", kind: "scalar", typeName: "int", required: false},
-				{name: "service_level_agreement_due_at", kind: "scalar", typeName: "Timestamp", required: false},
 				{name: "travel_styles", kind: "scalar", typeName: "string", required: false, isArray: true},
 				{name: "travel_start_day", kind: "scalar", typeName: "DateOnly", required: false},
 				{name: "travel_end_day", kind: "scalar", typeName: "DateOnly", required: false},
@@ -1092,10 +1070,6 @@ IR: {
 				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
 				{name: "name", kind: "scalar", typeName: "string", required: false},
 				{name: "image", kind: "scalar", typeName: "string", required: false},
-				{name: "stage", kind: "enum", typeName: "BookingStage", required: true},
-				{name: "milestones", kind: "entity", typeName: "BookingMilestones", required: false},
-				{name: "last_action", kind: "enum", typeName: "BookingMilestoneAction", required: false},
-				{name: "last_action_at", kind: "scalar", typeName: "Timestamp", required: false},
 				{name: "assigned_keycloak_user_id", kind: "scalar", typeName: "Identifier", required: false},
 				{name: "source_channel", kind: "enum", typeName: "BookingSourceChannel", required: false},
 				{name: "referral_kind", kind: "enum", typeName: "BookingReferralKind", required: false},
@@ -1110,7 +1084,6 @@ IR: {
 				{name: "pricing_revision", kind: "scalar", typeName: "int", required: false},
 				{name: "offer_revision", kind: "scalar", typeName: "int", required: false},
 				{name: "invoices_revision", kind: "scalar", typeName: "int", required: false},
-				{name: "service_level_agreement_due_at", kind: "scalar", typeName: "Timestamp", required: false},
 				{name: "travel_styles", kind: "scalar", typeName: "string", required: false, isArray: true},
 				{name: "travel_start_day", kind: "scalar", typeName: "DateOnly", required: false},
 				{name: "travel_end_day", kind: "scalar", typeName: "DateOnly", required: false},
@@ -1139,7 +1112,6 @@ IR: {
 			module:     "api"
 			sourceType: "api.#BookingListFilters"
 			fields: [
-				{name: "stage", kind: "scalar", typeName: "string", required: false},
 				{name: "assigned_keycloak_user_id", kind: "scalar", typeName: "Identifier", required: false},
 				{name: "search", kind: "scalar", typeName: "string", required: false},
 			]
@@ -1711,17 +1683,6 @@ IR: {
 				{name: "mime_type", kind: "scalar", typeName: "string", required: false},
 				{name: "data_base64", kind: "scalar", typeName: "string", required: true},
 				{name: "expected_core_revision", kind: "scalar", typeName: "int", required: false},
-				{name: "actor", kind: "scalar", typeName: "string", required: false},
-			]
-		},
-		{
-			name:       "BookingMilestoneActionRequest"
-			domain:     "api"
-			module:     "api"
-			sourceType: "api.#BookingMilestoneActionRequest"
-			fields: [
-				{name: "expected_core_revision", kind: "scalar", typeName: "int", required: false},
-				{name: "action", kind: "enum", typeName: "BookingMilestoneAction", required: true},
 				{name: "actor", kind: "scalar", typeName: "string", required: false},
 			]
 		},

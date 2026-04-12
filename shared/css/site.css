@@ -2200,7 +2200,7 @@ textarea:focus-visible {
   text-align: center;
 }
 
-.backend-table th.booking-list-col-stage,
+.backend-table th.booking-list-col-payments,
 .backend-table th.booking-list-col-staff {
   text-align: left;
 }

@@ -359,11 +359,6 @@
     "origin": "machine",
     "updated_at": "2026-03-30T23:51:31.875Z"
   },
-  "backend.table.stage": {
-    "source_hash": "de838855e4a6e04ea2f284b246a07a1126e7fcd151be9449e112006ad7db5c50",
-    "origin": "machine",
-    "updated_at": "2026-03-30T23:51:31.875Z"
-  },
   "backend.table.status": {
     "source_hash": "920e413c7d411b61ef3e8c63b1cb6ad058d5f95f8b481dbafe60248387d8c355",
     "origin": "machine",
@@ -1529,61 +1524,6 @@
     "origin": "machine",
     "updated_at": "2026-03-30T23:51:31.875Z"
   },
-  "booking.milestone.action.booking_lost": {
-    "source_hash": "93abcdcf3727192b5d3cb3887fc233105991e78ab6c71c99ed0a59abac8e7b9f",
-    "origin": "machine",
-    "updated_at": "2026-03-30T23:51:31.875Z"
-  },
-  "booking.milestone.action.deposit_received": {
-    "source_hash": "d03a680437fd2a29a2c3c23c528bf2d6ba5de3c84ea87221804f8eafb1d9f396",
-    "origin": "machine",
-    "updated_at": "2026-03-30T23:51:31.875Z"
-  },
-  "booking.milestone.action.deposit_request_sent": {
-    "source_hash": "3ae5f8a038fca14ee663e5dfa3c25310a58148b2d4f74bb7984088ce707ad7c3",
-    "origin": "machine",
-    "updated_at": "2026-03-30T23:51:31.875Z"
-  },
-  "booking.milestone.action.in_progress": {
-    "source_hash": "c1f88e9d6c4145cf0530ae020155384d5688d70ed82a07a35d783bbc4b32238c",
-    "origin": "machine",
-    "updated_at": "2026-03-30T23:51:31.875Z"
-  },
-  "booking.milestone.action.negotiation_started": {
-    "source_hash": "3e18e2dab6f2bdb77a8888916f368ab87ad7a23534560f8159744aff0e245aff",
-    "origin": "machine",
-    "updated_at": "2026-03-30T23:51:31.875Z"
-  },
-  "booking.milestone.action.new_booking": {
-    "source_hash": "f439e95643ea7efa6d55f84e8c873f74c9c969d652bfb957de19428c255e28cd",
-    "origin": "machine",
-    "updated_at": "2026-03-30T23:51:31.875Z"
-  },
-  "booking.milestone.action.offer_sent": {
-    "source_hash": "b6ae2906fef7e5d09e88f9f38c88b84f99bd26195606377db9efbcab58f21f21",
-    "origin": "machine",
-    "updated_at": "2026-03-30T23:51:31.875Z"
-  },
-  "booking.milestone.action.travel_plan_sent": {
-    "source_hash": "92d76dd1d7fd4964c9889db4476f46019c6e7e299cbef4383d3b827c0ea82bdb",
-    "origin": "machine",
-    "updated_at": "2026-03-30T23:51:31.875Z"
-  },
-  "booking.milestone.action.trip_completed": {
-    "source_hash": "212c7a10945c1d4e3fd9a6281cf80b4787e7c8306c58b89f08494630bdb6b7b5",
-    "origin": "machine",
-    "updated_at": "2026-03-30T23:51:31.875Z"
-  },
-  "booking.milestone.last_action_at": {
-    "source_hash": "b9ab696ebf47cdf906962f89a09f7b2e4022749c382848b0d0b7cb8114d86f16",
-    "origin": "machine",
-    "updated_at": "2026-03-30T23:51:31.875Z"
-  },
-  "booking.milestone.pending_action": {
-    "source_hash": "5566a7837ec620692ef5fe3e2dfd6793dd066dca7333b48ae5bf2e97ca153ff9",
-    "origin": "machine",
-    "updated_at": "2026-03-30T23:51:31.875Z"
-  },
   "booking.name": {
     "source_hash": "dcd1d5223f73b3a965c07e3ff5dbee3eedcfedb806686a05b9b3868a2c3d6d50",
     "origin": "machine",
@@ -2296,11 +2236,6 @@
   },
   "booking.offer.single": {
     "source_hash": "8888a029aaf60b70574640efd1655343d1c46c692918c113c16f44f606477253",
-    "origin": "machine",
-    "updated_at": "2026-03-30T23:51:31.875Z"
-  },
-  "booking.offer.status.awaiting_payment": {
-    "source_hash": "7c2788959f353f288cee2f72aecf42a73f65597ec2576429743c6d701ec5a4d9",
     "origin": "machine",
     "updated_at": "2026-03-30T23:51:31.875Z"
   },
@@ -3399,83 +3334,8 @@
     "origin": "machine",
     "updated_at": "2026-03-30T23:51:31.875Z"
   },
-  "booking.stage.deposit_request_sent": {
-    "source_hash": "15c173929c5f188bd9a7e39563902b8e7187798760e65f2007f26eabb7b7fd75",
-    "origin": "machine",
-    "updated_at": "2026-03-30T23:51:31.875Z"
-  },
-  "booking.stage.in_progress": {
-    "source_hash": "c1f88e9d6c4145cf0530ae020155384d5688d70ed82a07a35d783bbc4b32238c",
-    "origin": "machine",
-    "updated_at": "2026-03-30T23:51:31.875Z"
-  },
-  "booking.stage.lost": {
-    "source_hash": "51e1357de85bd2722c615b640005b4febe239f68ba9520ec77ea62cd14d9ebdc",
-    "origin": "machine",
-    "updated_at": "2026-03-30T23:51:31.875Z"
-  },
-  "booking.stage.negotiation_started": {
-    "source_hash": "e6775e5d8c407cbfe80918c637af05c8d44e32ff39b051c59947debb4c36b9ee",
-    "origin": "machine",
-    "updated_at": "2026-03-30T23:51:31.875Z"
-  },
-  "booking.stage.new_booking": {
-    "source_hash": "f439e95643ea7efa6d55f84e8c873f74c9c969d652bfb957de19428c255e28cd",
-    "origin": "machine",
-    "updated_at": "2026-03-30T23:51:31.875Z"
-  },
-  "booking.stage.offer_sent": {
-    "source_hash": "b6ae2906fef7e5d09e88f9f38c88b84f99bd26195606377db9efbcab58f21f21",
-    "origin": "machine",
-    "updated_at": "2026-03-30T23:51:31.875Z"
-  },
-  "booking.stage.travel_plan_sent": {
-    "source_hash": "92d76dd1d7fd4964c9889db4476f46019c6e7e299cbef4383d3b827c0ea82bdb",
-    "origin": "machine",
-    "updated_at": "2026-03-30T23:51:31.875Z"
-  },
-  "booking.stage.trip_completed": {
-    "source_hash": "212c7a10945c1d4e3fd9a6281cf80b4787e7c8306c58b89f08494630bdb6b7b5",
-    "origin": "machine",
-    "updated_at": "2026-03-30T23:51:31.875Z"
-  },
-  "booking.stage_label": {
-    "source_hash": "de838855e4a6e04ea2f284b246a07a1126e7fcd151be9449e112006ad7db5c50",
-    "origin": "machine",
-    "updated_at": "2026-03-30T23:51:31.875Z"
-  },
   "booking.state_region": {
     "source_hash": "7df75983e407466cf6c193ad71b181f2531157772be4668db06e0f69cf95f995",
-    "origin": "machine",
-    "updated_at": "2026-03-30T23:51:31.875Z"
-  },
-  "booking.status": {
-    "source_hash": "920e413c7d411b61ef3e8c63b1cb6ad058d5f95f8b481dbafe60248387d8c355",
-    "origin": "machine",
-    "updated_at": "2026-03-30T23:51:31.875Z"
-  },
-  "booking.status.after_deposit": {
-    "source_hash": "9d2d887d4e8673190e8f5c91745a3e274191f6eb2ad7203dafaed528ee3828ed",
-    "origin": "machine",
-    "updated_at": "2026-03-30T23:51:31.875Z"
-  },
-  "booking.status.before_deposit": {
-    "source_hash": "961cb280d910a0cdc2937e6c51c7c7bf3c575f2dc572aa8530906abbe7b9ed32",
-    "origin": "machine",
-    "updated_at": "2026-03-30T23:51:31.875Z"
-  },
-  "booking.status.deposit_received": {
-    "source_hash": "2cfde1b21ca4f46ce2cccf0eb869e0601c5210ea8c900b44e072f37cdae996a7",
-    "origin": "machine",
-    "updated_at": "2026-03-30T23:51:31.875Z"
-  },
-  "booking.status_label": {
-    "source_hash": "27ad17b7c82ecf34a494f1e764ff1e0d91a0c0c2045175a276d90ac20df7085b",
-    "origin": "machine",
-    "updated_at": "2026-03-30T23:51:31.875Z"
-  },
-  "booking.status_title": {
-    "source_hash": "27ad17b7c82ecf34a494f1e764ff1e0d91a0c0c2045175a276d90ac20df7085b",
     "origin": "machine",
     "updated_at": "2026-03-30T23:51:31.875Z"
   },

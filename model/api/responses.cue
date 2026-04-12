@@ -99,7 +99,6 @@ import (
 	related_bookings?: [...{
 		booking_id: common.#Identifier
 		name?:      string
-		stage?:     string
 	}]
 	last_event_at?:  common.#Timestamp
 	latest_preview?: string
@@ -125,7 +124,6 @@ import (
 }
 
 #BookingListFilters: {
-	stage?:                     string
 	assigned_keycloak_user_id?: common.#Identifier
 	search?:                    string
 }
@@ -393,15 +391,8 @@ import (
 	pricing_revision?:                                >=0 & int
 	offer_revision?:                                  >=0 & int
 	invoices_revision?:                               >=0 & int
-	stage:                                            enums.#BookingStage
 	deposit_received_at?:                             common.#Timestamp
 	deposit_confirmed_by_atp_staff_id?:               common.#Identifier
-	deposit_receipt_draft_received_at?:               common.#Timestamp
-	deposit_receipt_draft_confirmed_by_atp_staff_id?: common.#Identifier
-	deposit_receipt_draft_reference?:                 string
-	milestones?:                                      entities.#BookingMilestones
-	last_action?:                                     enums.#BookingMilestoneAction
-	last_action_at?:                                  common.#Timestamp
 	assigned_keycloak_user_id?:                       common.#Identifier
 	source_channel?:                                  enums.#BookingSourceChannel
 	referral_kind?:                                   enums.#BookingReferralKind
@@ -409,7 +400,6 @@ import (
 	referral_staff_user_id?:                          common.#Identifier
 	assigned_keycloak_user_label?:                    string
 	assigned_atp_staff?:                              entities.#AtpStaffProfile
-	service_level_agreement_due_at?:                  common.#Timestamp
 	travel_styles?: [...string]
 	pdf_personalization?:          entities.#BookingPdfPersonalization
 	travel_start_day?:             common.#DateOnly

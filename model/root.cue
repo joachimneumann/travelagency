@@ -49,7 +49,6 @@ import (
 		CurrencyCode:                                 enumModel.#CurrencyCode
 		CurrencyMeta:                                 enumModel.#CurrencyMeta
 		ATPStaffRole:                                 enumModel.#ATPStaffRole
-		BookingStage:                                 enumModel.#BookingStage
 		BookingSourceChannel:                         enumModel.#BookingSourceChannel
 		BookingReferralKind:                          enumModel.#BookingReferralKind
 		BookingPersonRole:                            enumModel.#BookingPersonRole
@@ -143,7 +142,6 @@ import (
 		BookingCustomerLanguageUpdateRequest:                      apiModel.#BookingCustomerLanguageUpdateRequest
 		BookingSourceUpdateRequest:                                apiModel.#BookingSourceUpdateRequest
 		BookingImageUploadRequest:                                 apiModel.#BookingImageUploadRequest
-		BookingMilestoneActionRequest:                             apiModel.#BookingMilestoneActionRequest
 		BookingOwnerUpdateRequest:                                 apiModel.#BookingOwnerUpdateRequest
 		BookingCloneRequest:                                       apiModel.#BookingCloneRequest
 		BookingPersonCreateRequest:                                apiModel.#BookingPersonCreateRequest
@@ -152,7 +150,6 @@ import (
 		BookingPersonPhotoUploadRequest:                           apiModel.#BookingPersonPhotoUploadRequest
 		BookingNotesUpdateRequest:                                 apiModel.#BookingNotesUpdateRequest
 		BookingTravelPlanUpdateRequest:                            apiModel.#BookingTravelPlanUpdateRequest
-		BookingDepositReceiptUpdateRequest:                        apiModel.#BookingDepositReceiptUpdateRequest
 		BookingPricingUpdateRequest:                               apiModel.#BookingPricingUpdateRequest
 		TravelPlanDaySearchRequest:                                apiModel.#TravelPlanDaySearchRequest
 		TravelPlanDayImportRequest:                                apiModel.#TravelPlanDayImportRequest

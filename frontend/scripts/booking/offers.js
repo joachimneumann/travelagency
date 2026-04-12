@@ -710,7 +710,6 @@ export function createBookingOfferModule(ctx) {
   return {
     renderOfferPanel,
     addOfferPricingRow,
-    markGeneratedOfferAsSent: (generatedOfferId) => generatedOffersModule.markGeneratedOfferAsSent?.(generatedOfferId),
     handleOfferCurrencyChange: () => offerPricingModule.handleOfferCurrencyChange(),
     handleOfferInternalDetailLevelChange: () => {
       const nextValue = els.offer_detail_level_internal_input?.value;

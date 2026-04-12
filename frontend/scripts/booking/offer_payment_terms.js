@@ -45,7 +45,7 @@ export function createBookingOfferPaymentTermsModule(ctx) {
     const depositLine = lines.find((line) => normalizeOfferPaymentTermKindValue(line?.kind) === "DEPOSIT") || null;
     const remainingCount = lines.filter((line) => normalizeOfferPaymentTermKindValue(line?.kind) !== "DEPOSIT").length;
     const secondary = lines.length
-      ? bookingT("booking.payment_plan_summary_compact", "Deposit {deposit}, {count} remaining milestone(s)", {
+      ? bookingT("booking.payment_plan_summary_compact", "Deposit {deposit}, {count} remaining payment(s)", {
           deposit: formatMoneyDisplay(depositLine?.resolved_amount_cents || 0, currency),
           count: String(remainingCount)
         })

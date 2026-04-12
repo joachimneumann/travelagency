@@ -843,7 +843,7 @@ test("payments uses pricing_panel as the standalone collapsible section", async 
   );
 });
 
-test("payments removes the standalone invoice panel and renders request/confirmation PDF subsections per milestone", async () => {
+test("payments removes the standalone invoice panel and renders request/receipt subsections per payment", async () => {
   const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
   const pricingScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "pricing.js");
   const [bookingPageSource, pricingScriptSource] = await Promise.all([
@@ -857,18 +857,70 @@ test("payments removes the standalone invoice panel and renders request/confirma
     "The old standalone invoice editor should be removed from the Payments section"
   );
   assert.match(
-    pricingScriptSource,
-    /function paymentRequestSectionMarkup[\s\S]*booking-payment-document--request[\s\S]*PAYMENT_DOCUMENT_KIND_REQUEST/,
-    "The pricing module should render a dedicated payment-request subsection for each non-deposit milestone"
+    bookingPageSource,
+    /id="payment_flow_sections"/,
+    "Payments should expose a dedicated per-payment flow container"
   );
   assert.match(
     pricingScriptSource,
-    /function paymentConfirmationSectionMarkup[\s\S]*booking-payment-document--confirmation[\s\S]*data-payment-record-received[\s\S]*PAYMENT_DOCUMENT_KIND_CONFIRMATION/,
-    "The pricing module should render a dedicated payment-confirmation subsection with receipt logic for each non-deposit milestone"
+    /function paymentDocumentSectionMarkup[\s\S]*booking-payment-document--request[\s\S]*PAYMENT_DOCUMENT_KIND_REQUEST/,
+    "The pricing module should render a dedicated payment-request subsection for each payment"
+  );
+  assert.match(
+    pricingScriptSource,
+    /function paymentDocumentSectionMarkup[\s\S]*booking-payment-document--confirmation[\s\S]*PAYMENT_DOCUMENT_KIND_CONFIRMATION/,
+    "The pricing module should render a dedicated customer-receipt subsection for each payment"
+  );
+  assert.match(
+    pricingScriptSource,
+    /data-payment-received-amount[\s\S]*data-payment-received-at[\s\S]*data-payment-confirmed-by[\s\S]*data-payment-reference/,
+    "The pricing module should render receipt inputs inside each payment section"
   );
 });
 
-test("booking page replaces the stage dropdown with a derived status block and milestone actions", async () => {
+test("payment-flow PDF editors reuse the shared booking PDF panel helpers and styles", async () => {
+  const pricingScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "pricing.js");
+  const pdfPanelModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "pdf_personalization_panel.js");
+  const bookingStylesPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "pages", "backend-booking.css");
+  const [pricingScriptSource, pdfPanelModuleSource, bookingStylesSource] = await Promise.all([
+    readFile(pricingScriptPath, "utf8"),
+    readFile(pdfPanelModulePath, "utf8"),
+    readFile(bookingStylesPath, "utf8")
+  ]);
+
+  assert.match(
+    pricingScriptSource,
+    /import\s*\{[\s\S]*buildBookingCollapsibleSectionMarkup,[\s\S]*buildBookingPdfToggleFieldMarkup[\s\S]*\}\s*from "\.\/pdf_personalization_panel\.js";/,
+    "Payment-flow PDF sections should import the shared booking PDF panel builders"
+  );
+  assert.match(
+    pdfPanelModuleSource,
+    /export function buildBookingCollapsibleSectionMarkup\(/,
+    "The shared PDF personalization module should export the shared collapsible-section builder"
+  );
+  assert.match(
+    pdfPanelModuleSource,
+    /export function buildBookingPdfToggleFieldMarkup\(/,
+    "The shared PDF personalization module should export the shared toggle-field builder"
+  );
+  assert.match(
+    pricingScriptSource,
+    /function paymentDocumentPersonalizationPanelMarkup[\s\S]*buildBookingPdfToggleFieldMarkup\([\s\S]*buildBookingCollapsibleSectionMarkup\(/,
+    "Payment-flow personalization panels should reuse the shared booking PDF field and section markup"
+  );
+  assert.match(
+    pricingScriptSource,
+    /function paymentDocumentAttachmentsMarkup\(\)[\s\S]*buildBookingCollapsibleSectionMarkup\(/,
+    "Payment-flow attachment sections should reuse the shared booking collapsible-section markup"
+  );
+  assert.match(
+    bookingStylesSource,
+    /\.booking-detail-page \.booking-collapsible\[data-booking-pdf-panel\][\s\S]*\.booking-detail-page \.booking-payment-document \.booking-collapsible\[data-booking-pdf-panel\]/,
+    "Payment-flow PDF sections should rely on the shared booking PDF panel CSS selectors"
+  );
+});
+
+test("booking page removes the stage and milestone control layer", async () => {
   const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
   const bookingCorePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "core.js");
   const bookingPageSource = await readFile(bookingPagePath, "utf8");
@@ -879,30 +931,15 @@ test("booking page replaces the stage dropdown with a derived status block and m
     /id="booking_stage_select"/,
     "Booking page should no longer expose a manual stage dropdown"
   );
-  assert.match(
-    bookingPageSource,
-    /id="booking_milestone_actions"[\s\S]*id="booking_last_action_detail"/,
-    "Booking page should render milestone action buttons and a last-action line in place of the old stage select"
-  );
   assert.doesNotMatch(
     bookingPageSource,
-    /id="booking_status_summary"|data-i18n-id="booking\.status_label"/,
-    "Booking page should no longer render the old booking-status title or summary block"
+    /id="booking_milestone_actions"|id="booking_last_action_detail"|id="booking_flow_tracker"|id="booking_flow_next_step"|data-i18n-id="booking\.status_label"/,
+    "Booking page should no longer render milestone buttons, last-action copy, or next-step tracking"
   );
   assert.doesNotMatch(
     bookingCoreSource,
-    /bookingStageRequest|stageSelect/,
-    "Booking core should no longer save a manual stage selection from the booking page"
-  );
-  assert.match(
-    bookingCoreSource,
-    /function recordBookingMilestoneAction\(actionKey\) \{[\s\S]*ensureCoreDraft\(\)\.milestone_action_key = normalizedAction;[\s\S]*updateCoreDirtyState\(\);[\s\S]*renderActionControls\(\);/,
-    "Booking core should treat milestone changes as local draft edits until page save"
-  );
-  assert.match(
-    bookingCoreSource,
-    /async function saveCoreEdits\(\) \{[\s\S]*bookingCustomerLanguageRequest[\s\S]*bookingMilestoneActionRequest/,
-    "Booking core should persist both customer-language and milestone draft changes through the page save flow"
+    /bookingStageRequest|stageSelect|bookingMilestoneActionRequest|recordBookingMilestoneAction|milestone_action_key/,
+    "Booking core should no longer persist stage or milestone actions from the booking page"
   );
   assert.match(
     bookingCoreSource,
@@ -914,65 +951,44 @@ test("booking page replaces the stage dropdown with a derived status block and m
     /knownOwners\.values\(\)\]\.map\(\(user\) => `<option value="\$\{escapeHtml\(user\.id\)\}">\$\{escapeHtml\(resolveAtpStaffDisplayName\(user\) \|\| user\.id\)\}<\/option>`\)/,
     "Booking assignee options should render ATP staff full names in the booking owner dropdown"
   );
-  const bookingStylesPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "pages", "backend-booking.css");
-  const bookingStyles = await readFile(bookingStylesPath, "utf8");
-  assert.match(
-    bookingStyles,
-    /\.booking-milestone-actions__btn--current \{\s*[\s\S]*border-color: var\(--success-line\);[\s\S]*background: var\(--success-surface-alpha\);[\s\S]*color: var\(--success-text-strong\);/,
-    "The active booking milestone button should use the shared success-green styling"
-  );
 });
 
-test("booking page records deposit receipt from the payments section instead of a top milestone action", async () => {
+test("booking page records payment receipts through the pricing payload only", async () => {
   const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
-  const bookingCorePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "core.js");
   const pricingModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "pricing.js");
   const bookingPageSource = await readFile(bookingPagePath, "utf8");
-  const bookingCoreSource = await readFile(bookingCorePath, "utf8");
   const pricingSource = await readFile(pricingModulePath, "utf8");
 
-  assert.match(
+  assert.doesNotMatch(
     bookingPageSource,
-    /id="pricing_deposit_controls"[\s\S]*id="pricing_deposit_received_at_input"[\s\S]*id="pricing_deposit_confirmed_by_select"[\s\S]*id="pricing_deposit_reference_input"/,
-    "Payments section should expose dedicated deposit receipt inputs"
+    /id="pricing_deposit_controls"|id="pricing_deposit_received_at_input"|id="pricing_deposit_confirmed_by_select"|id="pricing_deposit_reference_input"/,
+    "Payments should no longer expose a dedicated deposit-only receipt strip"
   );
   assert.match(
-    bookingCoreSource,
-    /actions: \["NEW_BOOKING", "TRAVEL_PLAN_SENT", "OFFER_SENT", "NEGOTIATION_STARTED", "DEPOSIT_REQUEST_SENT"\][\s\S]*actions: \["IN_PROGRESS", "TRIP_COMPLETED"\][\s\S]*actions: \["BOOKING_LOST"\]/,
-    "Top milestone controls should no longer render a Deposit received action"
+    pricingSource,
+    /function paymentReceiptFieldValues\(payment, \{ strict = true \} = \{\}\)[\s\S]*received_amount_cents[\s\S]*confirmed_by_atp_staff_id[\s\S]*reference/,
+    "Pricing module should collect receipt details directly from each payment section"
+  );
+  assert.match(
+    pricingSource,
+    /async function savePricing\(\) \{[\s\S]*expected_pricing_revision:[\s\S]*pricing,[\s\S]*actor: state\.user/,
+    "Pricing save should persist the full payment state through the pricing endpoint"
   );
   assert.doesNotMatch(
-    bookingCoreSource,
-    /actions: \[[^\]]*DEPOSIT_RECEIVED[^\]]*\]/,
-    "Deposit received should stay out of the visible top milestone rows"
-  );
-  assert.match(
     pricingSource,
-    /function collectDepositReceiptPayload\(\) \{[\s\S]*deposit_received_at[\s\S]*deposit_confirmed_by_atp_staff_id[\s\S]*deposit_reference[\s\S]*\}/,
-    "Pricing module should collect deposit receipt details from the payments section"
-  );
-  assert.match(
-    pricingSource,
-    /async function savePricing\(\) \{[\s\S]*collectDepositReceiptPayload\(\)[\s\S]*deposit_receipt: depositReceipt/,
-    "Pricing save should persist deposit receipt details through the pricing endpoint"
+    /deposit_receipt|collectDepositReceiptPayload/,
+    "Pricing should no longer use the old deposit-receipt helper payload"
   );
 });
 
-test("payments overview groups fully paid milestones into a single collapsible block", async () => {
+test("payments no longer depend on the old flow-state helper module", async () => {
   const pricingModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "pricing.js");
-  const bookingCssPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "pages", "backend-booking.css");
   const pricingSource = await readFile(pricingModulePath, "utf8");
-  const bookingCssSource = await readFile(bookingCssPath, "utf8");
 
-  assert.match(
+  assert.doesNotMatch(
     pricingSource,
-    /class="booking-collapsible booking-flow-paid-group"[\s\S]*data-payments-paid-summary[\s\S]*bookingT\("booking\.pricing\.summary_fully_paid", "Fully paid"\)/,
-    "Pricing overview should render fully paid milestones inside one collapsible paid-payments group"
-  );
-  assert.match(
-    bookingCssSource,
-    /\.booking-detail-page \.booking-flow-paid-group[\s\S]*\.booking-detail-page \.booking-flow-paid-group__items/,
-    "Payments stylesheet should style the grouped fully paid collapsible block"
+    /payment_flow_state|derivePaymentFlowState|booking-flow-paid-group|summary_fully_paid/,
+    "Pricing should render payment sections directly without the old flow-state grouping logic"
   );
 });
 
@@ -1502,7 +1518,7 @@ test("offer PDF personalization exposes a cancellation-policy toggle and renders
   );
   assert.match(
     bookingCoreSource,
-    /const renderToggle = \(mount, scope, config\) => \{[\s\S]*data-booking-pdf-toggle="\$\{scope\}\.\$\{config\.field\}"/,
+    /const renderToggle = \(mount, scope, config\) => \{[\s\S]*mount\.innerHTML = buildBookingPdfToggleMarkup\([\s\S]*dataAttributeName: "booking-pdf-toggle"[\s\S]*dataAttributeValue: `\$\{scope\}\.\$\{config\.field\}`/,
     "booking core should render Offer toggles through the shared checkbox renderer"
   );
   assert.match(
@@ -1570,8 +1586,13 @@ test("booking confirmation PDF personalization lives inside the Deposit payment 
   );
   assert.match(
     bookingPageSource,
-    /id="payment_deposit_section"[\s\S]*id="payments_booking_confirmation_card"[\s\S]*id="booking_confirmation_pdfs_table"[\s\S]*id="booking_confirmation_pdf_personalization_panel"[\s\S]*id="create_booking_confirmation_btn"/,
-    "The Deposit payment article should group the deposit logic, confirmation PDFs, personalization panel, and create action"
+    /id="payment_flow_sections"/,
+    "The booking page should expose the new payment-flow mount for request and receipt sections"
+  );
+  assert.doesNotMatch(
+    bookingPageSource,
+    /id="payment_deposit_section"|id="payments_booking_confirmation_card"|id="booking_confirmation_pdfs_table"|id="booking_confirmation_pdf_personalization_panel"|id="create_booking_confirmation_btn"/,
+    "The old standalone deposit and booking-confirmation payment widgets should be removed"
   );
   assert.match(
     bookingPageScriptSource,
@@ -2168,15 +2189,15 @@ test("generated offer actions are gated behind a clean page state", async () => 
     /customer_confirmation_flow/,
     "Generated-offer creation should use the renamed customer confirmation flow field"
   );
-  assert.match(
+  assert.doesNotMatch(
     bookingSource,
     /id="pricing_management_approval_btn"/,
-    "The Payments section should expose the dedicated management approval action next to the deposit receipt action"
+    "The Payments section should no longer expose the old management-approval action"
   );
-  assert.match(
+  assert.doesNotMatch(
     pricingSource,
     /confirm_as_management:\s*true/,
-    "Management confirmation should be triggered from the Payments module"
+    "Management confirmation should no longer be triggered from the Payments module"
   );
   assert.doesNotMatch(
     offersSource,
@@ -2279,15 +2300,13 @@ test("contract route definitions stay in sync with generated OpenAPI", async () 
   );
 });
 
-test("booking stage catalogs no longer expose the legacy Won stage", async () => {
-  const modelPath = path.resolve(__dirname, "..", "..", "..", "model", "enums", "booking_stage.cue");
+test("booking stage artifacts are removed from the model and generated contract", async () => {
+  const modelPath = path.resolve(__dirname, "..", "..", "..", "model", "root.cue");
   const runtimePath = path.resolve(__dirname, "..", "src", "config", "runtime.js");
   const openApiPath = path.resolve(__dirname, "..", "..", "..", "api", "generated", "openapi.yaml");
   const mobileMetaPath = path.resolve(__dirname, "..", "..", "..", "api", "generated", "mobile-api.meta.json");
   const generatedBookingPath = path.resolve(__dirname, "..", "..", "..", "shared", "generated-contract", "Models", "generated_Booking.js");
   const generatedSchemaRuntimePath = path.resolve(__dirname, "..", "..", "..", "shared", "generated-contract", "Models", "generated_SchemaRuntime.js");
-  const enI18nPath = path.resolve(__dirname, "..", "..", "..", "frontend", "data", "i18n", "backend", "en.json");
-  const viI18nPath = path.resolve(__dirname, "..", "..", "..", "frontend", "data", "i18n", "backend", "vi.json");
 
   const [
     modelSource,
@@ -2295,28 +2314,42 @@ test("booking stage catalogs no longer expose the legacy Won stage", async () =>
     openApiSource,
     mobileMetaSource,
     generatedBookingSource,
-    generatedSchemaRuntimeSource,
-    enI18nSource,
-    viI18nSource
+    generatedSchemaRuntimeSource
   ] = await Promise.all([
     readFile(modelPath, "utf8"),
     readFile(runtimePath, "utf8"),
     readFile(openApiPath, "utf8"),
     readFile(mobileMetaPath, "utf8"),
     readFile(generatedBookingPath, "utf8"),
-    readFile(generatedSchemaRuntimePath, "utf8"),
-    readFile(enI18nPath, "utf8"),
-    readFile(viI18nPath, "utf8")
+    readFile(generatedSchemaRuntimePath, "utf8")
   ]);
 
-  assert.doesNotMatch(modelSource, /"WON"/, "The booking stage model should not include Won");
-  assert.doesNotMatch(runtimeSource, /\[STAGES\.WON\]/, "Runtime SLA mapping should not include Won");
-  assert.doesNotMatch(openApiSource, /\bWON\b/, "Generated OpenAPI should not include Won");
-  assert.doesNotMatch(mobileMetaSource, /"code": "WON"/, "Mobile bootstrap metadata should not include Won");
-  assert.doesNotMatch(generatedBookingSource, /"WON"/, "Generated booking stage list should not include Won");
-  assert.doesNotMatch(generatedSchemaRuntimeSource, /"WON"/, "Generated schema runtime should not include Won");
-  assert.doesNotMatch(enI18nSource, /"booking\.stage\.won"/, "English backend i18n should not expose Won");
-  assert.doesNotMatch(viI18nSource, /"booking\.stage\.won"/, "Vietnamese backend i18n should not expose Won");
+  assert.doesNotMatch(modelSource, /BookingStage|BookingMilestoneActionRequest/, "The model root should not export stage or milestone-action types");
+  assert.doesNotMatch(runtimeSource, /computeServiceLevelAgreementDueAt/, "Runtime config should no longer ship stage-derived SLA helpers");
+  assert.doesNotMatch(openApiSource, /BookingStage|BookingMilestoneActionRequest|\/milestone-actions/, "Generated OpenAPI should not expose stage or milestone-action artifacts");
+  assert.doesNotMatch(mobileMetaSource, /"stages"\s*:/, "Mobile bootstrap metadata should drop the legacy stages catalog entirely");
+  assert.doesNotMatch(generatedBookingSource, /BookingStage|BookingMilestones|GENERATED_BOOKING_STAGES/, "Generated booking models should not reference booking stages or milestones");
+  assert.doesNotMatch(generatedSchemaRuntimeSource, /BookingStage|BookingMilestones|BookingMilestoneAction/, "Generated schema runtime should not register booking stage artifacts");
+});
+
+test("booking read models and backend startup strip legacy stage persistence fields", async () => {
+  const bookingViewsPath = path.resolve(__dirname, "..", "src", "domain", "booking_views.js");
+  const serverPath = path.resolve(__dirname, "..", "src", "server.js");
+  const [bookingViewsSource, serverSource] = await Promise.all([
+    readFile(bookingViewsPath, "utf8"),
+    readFile(serverPath, "utf8")
+  ]);
+
+  assert.match(
+    bookingViewsSource,
+    /stage:\s*_legacyStage,[\s\S]*milestones:\s*_legacyMilestones,[\s\S]*last_action:\s*_legacyLastAction,[\s\S]*last_action_at:\s*_legacyLastActionAt,[\s\S]*service_level_agreement_due_at:\s*_legacyServiceLevelAgreementDueAt,[\s\S]*\.\.\.normalizedBooking/,
+    "Booking read models should drop legacy stage persistence fields before spreading the normalized booking payload"
+  );
+  assert.match(
+    serverSource,
+    /function pruneLegacyBookingState\(store\) \{[\s\S]*delete booking\.stage;[\s\S]*delete booking\.milestones;[\s\S]*delete booking\.last_action;[\s\S]*delete booking\.last_action_at;[\s\S]*delete booking\.service_level_agreement_due_at;[\s\S]*\}[\s\S]*const prunedLegacyBookingState = pruneLegacyBookingState\(startupStore\);[\s\S]*\|\| prunedLegacyBookingState[\s\S]*persistStore\(startupStore\)/,
+    "Backend startup should prune persisted legacy booking stage fields before serving requests"
+  );
 });
 
 test("booking init awaits page load and handles async init failures", async () => {
@@ -2618,7 +2651,7 @@ test("travel plan PDF personalization exposes and persists traveler-list toggles
   );
   assert.match(
     coreSource,
-    /const renderToggle = \(mount, scope, config\) => \{[\s\S]*data-booking-pdf-toggle="\$\{scope\}\.\$\{config\.field\}"/,
+    /const renderToggle = \(mount, scope, config\) => \{[\s\S]*mount\.innerHTML = buildBookingPdfToggleMarkup\([\s\S]*dataAttributeName: "booking-pdf-toggle"[\s\S]*dataAttributeValue: `\$\{scope\}\.\$\{config\.field\}`/,
     "booking core should render traveler-list toggles through the shared checkbox renderer"
   );
   assert.match(

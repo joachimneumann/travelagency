@@ -454,14 +454,10 @@ export function createBookingInvoiceHandlers(deps) {
     const requestedDocumentKind = normalizePaymentDocumentKind(payload?.document_kind);
     const linkedPayment = paymentId ? findBookingPayment(booking, paymentId) : null;
     if (paymentId && !linkedPayment) {
-      sendJson(res, 422, { error: "The selected payment milestone could not be found." });
+      sendJson(res, 422, { error: "The selected payment could not be found." });
       return;
     }
     const paymentKind = linkedPayment ? resolvePaymentLineKind(booking, linkedPayment) : "";
-    if (linkedPayment && paymentKind === "DEPOSIT" && requestedDocumentKind === "PAYMENT_REQUEST") {
-      sendJson(res, 422, { error: "The deposit payment request is part of the proposal PDF, not a separate payment request document." });
-      return;
-    }
     const personalizationScope = linkedPayment ? paymentDocumentPersonalizationScope(paymentKind, requestedDocumentKind) : "";
     const previousPdfPersonalizationJson = JSON.stringify(booking?.pdf_personalization || null);
     if (personalizationScope) {

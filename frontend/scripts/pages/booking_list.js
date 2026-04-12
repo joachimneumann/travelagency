@@ -135,16 +135,15 @@ function refreshBackendNavElements() {
   els.userLabel = document.getElementById("backendUserLabel");
 }
 
-function bookingStageLabel(stage) {
-  const normalized = String(stage || "").trim().toLowerCase();
-  return backendT(
-    `booking.stage.${normalized}`,
-    String(stage || "")
-      .toLowerCase()
-      .split("_")
-      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-      .join(" ")
-  );
+function bookingPaymentsLabel(booking) {
+  const payments = Array.isArray(booking?.pricing?.payments) ? booking.pricing.payments : [];
+  const count = payments.length;
+  if (count <= 0) {
+    return backendT("backend.table.payments_none", "No payment plan");
+  }
+  return backendT("backend.table.payments_count", "{count} planned payment(s)", {
+    count: String(count)
+  });
 }
 
 function hasAnyRoleInList(roleList, ...roles) {
@@ -622,7 +621,7 @@ function renderBookings(items) {
     els.bookingsClearSearchBtn.hidden = !(!items.length && String(state.bookings.search || "").trim());
   }
 
-  const header = `<thead><tr><th>${escapeHtml(backendT("backend.table.id", "ID"))}</th><th>${escapeHtml(backendT("backend.table.booking_name", "Booking Name"))}</th><th class="booking-list-col-stage">${escapeHtml(backendT("backend.table.stage", "Stage"))}</th><th class="booking-list-col-staff">${escapeHtml(backendT("backend.table.staff", "ATP staff"))}</th></tr></thead>`;
+  const header = `<thead><tr><th>${escapeHtml(backendT("backend.table.id", "ID"))}</th><th>${escapeHtml(backendT("backend.table.booking_name", "Booking Name"))}</th><th class="booking-list-col-payments">${escapeHtml(backendT("backend.table.payments", "Payments"))}</th><th class="booking-list-col-staff">${escapeHtml(backendT("backend.table.staff", "ATP staff"))}</th></tr></thead>`;
   const rows = items
     .map((booking) => {
       const bookingHref = buildBookingHref(booking.id);
@@ -643,7 +642,7 @@ function renderBookings(items) {
             </div>
           </div>
         </td>
-        <td>${escapeHtml(bookingStageLabel(booking.stage || "-"))}</td>
+        <td>${escapeHtml(bookingPaymentsLabel(booking))}</td>
         <td>${escapeHtml(resolveAssignedKeycloakUserLabel(booking))}</td>
       </tr>`;
     })

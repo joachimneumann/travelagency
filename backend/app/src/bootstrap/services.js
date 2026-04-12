@@ -98,8 +98,6 @@ export function createBackendServices({
 
   const bookingViewHelpers = createBookingViewHelpers({
     baseCurrency: runtime.baseCurrency,
-    stages: runtime.stages,
-    stageOrder: runtime.stageOrder,
     appRoles: runtime.appRoles,
     gmailDraftsConfig: runtime.gmailDraftsConfig,
     bookingConfirmationTokenConfig: runtime.bookingConfirmationTokenConfig,
@@ -111,7 +109,6 @@ export function createBackendServices({
     nowIso: support.nowIso,
     safeCurrency: pricingHelpers.safeCurrency,
     safeOptionalInt: support.safeOptionalInt,
-    computeServiceLevelAgreementDueAt: runtime.computeServiceLevelAgreementDueAt,
     randomUUID: support.randomUUID,
     clamp: support.clamp,
     safeInt: support.safeInt,

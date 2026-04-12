@@ -75,7 +75,6 @@ export function createBookingQueryModule(deps) {
     return [
       normalizeText(booking?.id),
       normalizeText(booking?.name),
-      normalizeText(booking?.stage),
       normalizeText(booking?.notes),
       normalizeText(booking?.assigned_keycloak_user_id),
       ...getBookingTravelPlanDestinations(booking),
@@ -103,10 +102,6 @@ export function createBookingQueryModule(deps) {
         return list.sort((a, b) => String(a.updated_at || "").localeCompare(String(b.updated_at || "")));
       case "updated_at_desc":
         return list.sort((a, b) => String(b.updated_at || "").localeCompare(String(a.updated_at || "")));
-      case "stage_asc":
-        return list.sort((a, b) => String(a.stage || "").localeCompare(String(b.stage || "")));
-      case "stage_desc":
-        return list.sort((a, b) => String(b.stage || "").localeCompare(String(a.stage || "")));
       case "created_at_desc":
       default:
         return list.sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")));
@@ -114,14 +109,12 @@ export function createBookingQueryModule(deps) {
   }
 
   function filterBookings(store, searchParams) {
-    const stage = normalizeText(searchParams.get("stage")).toUpperCase();
     const assignedKeycloakUserId = normalizeText(searchParams.get("assigned_keycloak_user_id"));
     const rawSearch = normalizeText(searchParams.get("search")).toLowerCase();
     const sort = normalizeText(searchParams.get("sort")) || "created_at_desc";
 
     const items = sortBookings(
       (Array.isArray(store.bookings) ? store.bookings : []).filter((booking) => {
-        if (stage && normalizeText(booking.stage).toUpperCase() !== stage) return false;
         if (assignedKeycloakUserId && getBookingAssignedKeycloakUserId(booking) !== assignedKeycloakUserId) return false;
         if (rawSearch && !getBookingSearchTerms(booking).includes(rawSearch)) return false;
         return true;
@@ -132,7 +125,6 @@ export function createBookingQueryModule(deps) {
     return {
       items,
       filters: {
-        stage: stage || null,
         assigned_keycloak_user_id: assignedKeycloakUserId || null,
         search: rawSearch || null
       },

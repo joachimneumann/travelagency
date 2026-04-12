@@ -10,11 +10,6 @@ import {
 import { enumValueSetFor } from "../../lib/generated_catalogs.js";
 import { normalizeBookingPdfPersonalization } from "../../lib/booking_pdf_personalization.js";
 import {
-  applyBookingMilestoneAction,
-  bookingMilestoneMeta,
-  validateBookingMilestoneAction
-} from "../../domain/booking_milestones.js";
-import {
   normalizeBookingContentLang
 } from "../../domain/booking_content_i18n.js";
 
@@ -37,12 +32,10 @@ export function createBookingCoreHandlers(deps) {
     readStore,
     getPrincipal,
     canEditBooking,
-    canChangeBookingStage,
     canChangeBookingAssignment,
     canAccessBooking,
     normalizeText,
     nowIso,
-    computeServiceLevelAgreementDueAt,
     addActivity,
     actorLabel,
     persistStore,
@@ -70,62 +63,6 @@ export function createBookingCoreHandlers(deps) {
     return Object.entries(entries || {})
       .map(([key, value]) => ({ key: normalizeText(key), value: normalizeText(value) }))
       .filter((entry) => Boolean(entry.key && entry.value));
-  }
-
-  async function handlePostBookingMilestoneAction(req, res, [bookingId]) {
-    let payload;
-    try {
-      payload = await readBodyJson(req);
-    } catch (error) {
-      sendJson(res, 400, { error: String(error?.message || "Invalid JSON payload") });
-      return;
-    }
-    if (!bookingMilestoneMeta(payload?.action)) {
-      sendJson(res, 422, { error: "Invalid milestone action" });
-      return;
-    }
-
-    const principal = getPrincipal(req);
-    const store = await readStore();
-    const booking = store.bookings.find((item) => item.id === bookingId);
-    if (!booking) {
-      sendJson(res, 404, { error: "Booking not found" });
-      return;
-    }
-    if (!canChangeBookingStage(principal, booking)) {
-      sendJson(res, 403, { error: "Forbidden" });
-      return;
-    }
-    if (!(await assertExpectedRevision(req, payload, booking, "expected_core_revision", "core_revision", res))) return;
-
-    const milestoneValidation = validateBookingMilestoneAction(booking, payload.action);
-    if (!milestoneValidation?.ok) {
-      sendJson(res, milestoneValidation?.status || 422, { error: milestoneValidation?.error || "Invalid milestone action" });
-      return;
-    }
-
-    const milestoneUpdate = applyBookingMilestoneAction(booking, payload.action, {
-      now: nowIso(),
-      computeServiceLevelAgreementDueAt
-    });
-    if (!milestoneUpdate) {
-      sendJson(res, 422, { error: "Invalid milestone action" });
-      return;
-    }
-
-    incrementBookingRevision(booking, "core_revision");
-    booking.updated_at = milestoneUpdate.timestamp;
-
-    addActivity(
-      store,
-      booking.id,
-      "BOOKING_MILESTONE_UPDATED",
-      actorLabel(principal, normalizeText(payload.actor) || "keycloak_user"),
-      milestoneUpdate.detail
-    );
-    await persistStore(store);
-
-    sendJson(res, 200, await buildBookingDetailResponse(booking, req));
   }
 
   async function handlePatchBookingName(req, res, [bookingId]) {
@@ -563,7 +500,6 @@ export function createBookingCoreHandlers(deps) {
   }
 
   return {
-    handlePostBookingMilestoneAction,
     handlePatchBookingName,
     handlePatchBookingCustomerLanguage,
     handlePatchBookingSource,

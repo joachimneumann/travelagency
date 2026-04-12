@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-04-12T08:22:20Z
+# 2026-04-12T12:47:26Z
 
 ---
 openapi: 3.1.0
@@ -337,43 +337,6 @@ components:
         label: atp_staff
       - value: atp_tour_editor
         label: atp_tour_editor
-    BookingStage:
-      type: string
-      enum:
-      - NEW_BOOKING
-      - TRAVEL_PLAN_SENT
-      - OFFER_SENT
-      - NEGOTIATION_STARTED
-      - DEPOSIT_REQUEST_SENT
-      - IN_PROGRESS
-      - TRIP_COMPLETED
-      - LOST
-      x-enum-catalog:
-      - code: NEW_BOOKING
-      - code: TRAVEL_PLAN_SENT
-      - code: OFFER_SENT
-      - code: NEGOTIATION_STARTED
-      - code: DEPOSIT_REQUEST_SENT
-      - code: IN_PROGRESS
-      - code: TRIP_COMPLETED
-      - code: LOST
-      x-enum-options:
-      - value: NEW_BOOKING
-        label: NEW_BOOKING
-      - value: TRAVEL_PLAN_SENT
-        label: TRAVEL_PLAN_SENT
-      - value: OFFER_SENT
-        label: OFFER_SENT
-      - value: NEGOTIATION_STARTED
-        label: NEGOTIATION_STARTED
-      - value: DEPOSIT_REQUEST_SENT
-        label: DEPOSIT_REQUEST_SENT
-      - value: IN_PROGRESS
-        label: IN_PROGRESS
-      - value: TRIP_COMPLETED
-        label: TRIP_COMPLETED
-      - value: LOST
-        label: LOST
     BookingSourceChannel:
       type: string
       enum:
@@ -3878,9 +3841,6 @@ components:
     MoneyAmount:
       type: object
       description: Defined in model (referenced as MoneyAmount).
-    BookingMilestoneAction:
-      type: object
-      description: Defined in model (referenced as BookingMilestoneAction).
     AtpStaffLocalizedTextEntry:
       type: object
       required:
@@ -5285,47 +5245,10 @@ components:
           type: string
           format: date-time
           nullable: true
-    BookingMilestones:
-      type: object
-      required: []
-      properties:
-        new_booking_at:
-          type: string
-          format: date-time
-          nullable: true
-        travel_plan_sent_at:
-          type: string
-          format: date-time
-          nullable: true
-        offer_sent_at:
-          type: string
-          format: date-time
-          nullable: true
-        negotiation_started_at:
-          type: string
-          format: date-time
-          nullable: true
-        deposit_request_sent_at:
-          type: string
-          format: date-time
-          nullable: true
-        deposit_received_at:
-          type: string
-          format: date-time
-          nullable: true
-        booking_lost_at:
-          type: string
-          format: date-time
-          nullable: true
-        trip_completed_at:
-          type: string
-          format: date-time
-          nullable: true
     Booking:
       type: object
       required:
       - id
-      - stage
       - pricing
       - offer
       - created_at
@@ -5338,18 +5261,6 @@ components:
           nullable: true
         image:
           type: string
-          nullable: true
-        stage:
-          "$ref": "#/components/schemas/BookingStage"
-        milestones:
-          "$ref": "#/components/schemas/BookingMilestones"
-          nullable: true
-        last_action:
-          "$ref": "#/components/schemas/BookingMilestoneAction"
-          nullable: true
-        last_action_at:
-          type: string
-          format: date-time
           nullable: true
         assigned_keycloak_user_id:
           type: string
@@ -5389,10 +5300,6 @@ components:
           nullable: true
         invoices_revision:
           type: integer
-          nullable: true
-        service_level_agreement_due_at:
-          type: string
-          format: date-time
           nullable: true
         travel_styles:
           type: array
@@ -5807,7 +5714,6 @@ components:
       type: object
       required:
       - id
-      - stage
       - pricing
       - offer
       - travel_plan_translation_status
@@ -5823,18 +5729,6 @@ components:
           nullable: true
         image:
           type: string
-          nullable: true
-        stage:
-          "$ref": "#/components/schemas/BookingStage"
-        milestones:
-          "$ref": "#/components/schemas/BookingMilestones"
-          nullable: true
-        last_action:
-          "$ref": "#/components/schemas/BookingMilestoneAction"
-          nullable: true
-        last_action_at:
-          type: string
-          format: date-time
           nullable: true
         assigned_keycloak_user_id:
           type: string
@@ -5877,10 +5771,6 @@ components:
           nullable: true
         invoices_revision:
           type: integer
-          nullable: true
-        service_level_agreement_due_at:
-          type: string
-          format: date-time
           nullable: true
         travel_styles:
           type: array
@@ -5947,9 +5837,6 @@ components:
       type: object
       required: []
       properties:
-        stage:
-          type: string
-          nullable: true
         assigned_keycloak_user_id:
           type: string
           nullable: true
@@ -6797,19 +6684,6 @@ components:
         expected_core_revision:
           type: integer
           nullable: true
-        actor:
-          type: string
-          nullable: true
-    BookingMilestoneActionRequest:
-      type: object
-      required:
-      - action
-      properties:
-        expected_core_revision:
-          type: integer
-          nullable: true
-        action:
-          "$ref": "#/components/schemas/BookingMilestoneAction"
         actor:
           type: string
           nullable: true
@@ -8162,51 +8036,6 @@ paths:
       responses:
         '200':
           description: Success
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/BookingDetail"
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-  "/api/v1/bookings/{booking_id}/milestone-actions":
-    post:
-      operationId: booking_milestone_action
-      summary: Booking Milestone Action
-      tags:
-      - Bookings
-      security:
-      - bearerAuth: []
-      parameters:
-      - name: booking_id
-        in: path
-        required: true
-        schema:
-          type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              "$ref": "#/components/schemas/BookingMilestoneActionRequest"
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/BookingDetail"
-        '201':
-          description: Created
           content:
             application/json:
               schema:

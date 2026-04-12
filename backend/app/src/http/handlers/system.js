@@ -4,7 +4,6 @@ import { normalizeText } from "../../lib/text.js";
 export function createSystemHandlers({
   sendJson,
   nowIso,
-  stageOrder,
   mobileAppConfig,
   mobileContractMetaPath,
   backendGeneratedRequestFactoryPath
@@ -38,7 +37,6 @@ export function createSystemHandlers({
     sendJson(res, 200, {
       ok: true,
       service: "asiatravelplan-backend",
-      stage_values: stageOrder,
       timestamp: nowIso()
     });
   }

@@ -8,7 +8,6 @@ const __dirname = path.dirname(__filename);
 const APP_ROOT = path.resolve(__dirname, "..");
 const DATA_PATH = path.join(APP_ROOT, "data", "store.json");
 
-const STAGES = ["NEW", "QUALIFIED", "PROPOSAL_SENT", "NEGOTIATION", "INVOICE_SENT", "PAYMENT_RECEIVED", "LOST", "POST_TRIP"];
 const DESTINATIONS = ["Vietnam", "Thailand", "Cambodia", "Laos"];
 const STYLES = ["Grand Expeditions", "Culture", "Family", "Gastronomic Experiences", "Luxury", "Beach", "Budget"];
 const LANGUAGES = ["en", "vi", "fr", "de", "es"];
@@ -47,22 +46,6 @@ function buildEmail(name, i) {
   return `${base}.${i}@example.com`;
 }
 
-function stageServiceLevelAgreement(stage, fromIso) {
-  const map = {
-    NEW: 2,
-    QUALIFIED: 8,
-    PROPOSAL_SENT: 24,
-    NEGOTIATION: 48,
-    INVOICE_SENT: 24,
-    PAYMENT_RECEIVED: 0,
-    LOST: 0,
-    POST_TRIP: 0
-  };
-  const hours = map[stage] || 0;
-  if (!hours) return null;
-  return new Date(new Date(fromIso).getTime() + hours * 60 * 60 * 1000).toISOString();
-}
-
 async function readJson(filePath) {
   const raw = await readFile(filePath, "utf8");
   return JSON.parse(raw);
@@ -97,7 +80,6 @@ async function main() {
     const preferredCurrency = pick(CURRENCIES);
     const destinations = [pick(DESTINATIONS)];
     const travelStyles = [pick(STYLES)];
-    const stage = pick(STAGES);
     const createdAt = nowMinusHours(randomInt(2, 24 * 40));
     const updatedAt = new Date(new Date(createdAt).getTime() + randomInt(1, 120) * 60 * 1000).toISOString();
     const budget = pick(BUDGETS);
@@ -127,9 +109,7 @@ async function main() {
 
     const booking = {
       id: bookingId,
-      stage,
       assigned_keycloak_user_id: null,
-      service_level_agreement_due_at: stageServiceLevelAgreement(stage, updatedAt),
       destinations,
       destination: destinations,
       travel_styles: travelStyles,

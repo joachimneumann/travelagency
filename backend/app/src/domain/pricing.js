@@ -650,7 +650,11 @@ export function createPricingHelpers({
     );
     const paidGross = (Array.isArray(normalized.payments) ? normalized.payments : [])
       .filter((payment) => normalizeText(payment?.status).toUpperCase() === paymentStatuses.PAID)
-      .reduce((sum, payment) => sum + normalizeAmountCents(payment?.gross_amount_cents, normalizeAmountCents(payment?.net_amount_cents, 0)), 0);
+      .reduce((sum, payment) => sum + normalizeAmountCents(
+        payment?.received_amount_cents,
+        payment?.gross_amount_cents,
+        normalizeAmountCents(payment?.net_amount_cents, 0)
+      ), 0);
     return {
       agreed_net_amount_cents: agreed,
       adjustments_delta_cents: adjustmentDelta,
@@ -939,12 +943,17 @@ export function createPricingHelpers({
       id: normalizeText(payment?.id) || `pricing_payment_${index + 1}`,
       label: normalizeText(payment?.label),
       origin_payment_term_line_id: normalizeText(payment?.origin_payment_term_line_id) || null,
+      origin_generated_offer_id: normalizeText(payment?.origin_generated_offer_id) || null,
       due_date: normalizeText(payment?.due_date) || null,
       net_amount_cents: normalizeAmountCents(payment?.net_amount_cents, 0),
       tax_rate_basis_points: clampOfferTaxRateBasisPoints(payment?.tax_rate_basis_points, 0),
       status: normalizeText(payment?.status).toUpperCase() || paymentStatuses.PENDING,
       paid_at: payment?.paid_at || null,
       received_at: payment?.received_at || null,
+      received_amount_cents: Number.isFinite(Number(payment?.received_amount_cents))
+        ? Math.max(0, normalizeAmountCents(payment?.received_amount_cents, 0))
+        : null,
+      received_generated_offer_id: normalizeText(payment?.received_generated_offer_id) || null,
       confirmed_by_atp_staff_id: normalizeText(payment?.confirmed_by_atp_staff_id) || null,
       reference: normalizeText(payment?.reference) || null,
       notes: normalizeText(payment?.notes),

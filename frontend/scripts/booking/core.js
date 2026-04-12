@@ -2,7 +2,6 @@ import {
   bookingCustomerLanguageRequest,
   bookingDeleteRequest,
   bookingImageRequest,
-  bookingMilestoneActionRequest,
   bookingNameRequest,
   bookingNotesRequest,
   bookingOwnerRequest,
@@ -21,6 +20,8 @@ import {
 } from "./localized_editor.js";
 import {
   BOOKING_PDF_PERSONALIZATION_PANELS,
+  buildBookingPdfToggleFieldMarkup,
+  buildBookingPdfToggleMarkup,
   getBookingPdfPersonalizationItemConfig
 } from "./pdf_personalization_panel.js";
 import {
@@ -45,104 +46,6 @@ function labelizeKey(key) {
 function webFormFieldLabel(key) {
   return bookingT(`booking.web_form.${key}`, labelizeKey(key));
 }
-
-const BOOKING_MILESTONE_ACTIONS = Object.freeze([
-  Object.freeze({
-    key: "NEW_BOOKING",
-    field: "new_booking_at",
-    stage: "NEW_BOOKING",
-    labelKey: "booking.milestone.action.new_booking",
-    labelFallback: "New booking"
-  }),
-  Object.freeze({
-    key: "TRAVEL_PLAN_SENT",
-    field: "travel_plan_sent_at",
-    stage: "TRAVEL_PLAN_SENT",
-    labelKey: "booking.milestone.action.travel_plan_sent",
-    labelFallback: "Travel plan sent"
-  }),
-  Object.freeze({
-    key: "OFFER_SENT",
-    field: "offer_sent_at",
-    stage: "OFFER_SENT",
-    labelKey: "booking.milestone.action.offer_sent",
-    labelFallback: "Offer sent"
-  }),
-  Object.freeze({
-    key: "NEGOTIATION_STARTED",
-    field: "negotiation_started_at",
-    stage: "NEGOTIATION_STARTED",
-    labelKey: "booking.milestone.action.negotiation_started",
-    labelFallback: "Negotiation"
-  }),
-  Object.freeze({
-    key: "DEPOSIT_REQUEST_SENT",
-    field: "deposit_request_sent_at",
-    stage: "DEPOSIT_REQUEST_SENT",
-    labelKey: "booking.milestone.action.deposit_request_sent",
-    labelFallback: "Deposit requested"
-  }),
-  Object.freeze({
-    key: "DEPOSIT_RECEIVED",
-    field: "deposit_received_at",
-    stage: "IN_PROGRESS",
-    labelKey: "booking.milestone.action.deposit_received",
-    labelFallback: "Deposit received",
-    hiddenFromStageControls: true
-  }),
-  Object.freeze({
-    key: "IN_PROGRESS",
-    field: null,
-    stage: "IN_PROGRESS",
-    labelKey: "booking.milestone.action.in_progress",
-    labelFallback: "In progress"
-  }),
-  Object.freeze({
-    key: "BOOKING_LOST",
-    field: "booking_lost_at",
-    stage: "LOST",
-    labelKey: "booking.milestone.action.booking_lost",
-    labelFallback: "Booking lost"
-  }),
-  Object.freeze({
-    key: "TRIP_COMPLETED",
-    field: "trip_completed_at",
-    stage: "TRIP_COMPLETED",
-    labelKey: "booking.milestone.action.trip_completed",
-    labelFallback: "Trip completed"
-  })
-]);
-
-const BOOKING_MILESTONE_ACTION_BY_KEY = Object.freeze(
-  Object.fromEntries(BOOKING_MILESTONE_ACTIONS.map((action) => [action.key, action]))
-);
-
-const BOOKING_STAGE_FALLBACKS = Object.freeze({
-  NEW_BOOKING: Object.freeze({
-    currentActionKey: "NEW_BOOKING"
-  }),
-  TRAVEL_PLAN_SENT: Object.freeze({
-    currentActionKey: "TRAVEL_PLAN_SENT"
-  }),
-  OFFER_SENT: Object.freeze({
-    currentActionKey: "OFFER_SENT"
-  }),
-  NEGOTIATION_STARTED: Object.freeze({
-    currentActionKey: "NEGOTIATION_STARTED"
-  }),
-  DEPOSIT_REQUEST_SENT: Object.freeze({
-    currentActionKey: "DEPOSIT_REQUEST_SENT"
-  }),
-  IN_PROGRESS: Object.freeze({
-    currentActionKey: "IN_PROGRESS"
-  }),
-  LOST: Object.freeze({
-    currentActionKey: "BOOKING_LOST"
-  }),
-  TRIP_COMPLETED: Object.freeze({
-    currentActionKey: "TRIP_COMPLETED"
-  })
-});
 
 const BOOKING_SOURCE_CHANNEL_OPTIONS = Object.freeze([
   Object.freeze({ value: "other", labelKey: "booking.source_channel.option.other", labelFallback: "Other" }),
@@ -490,7 +393,6 @@ export function createBookingCoreModule(ctx) {
         referral_kind: "none",
         referral_label: "",
         referral_staff_user_id: "",
-        milestone_action_key: "",
         destinations: [],
         travel_styles: [],
         pdf_personalization: normalizePdfPersonalization(),
@@ -506,10 +408,6 @@ export function createBookingCoreModule(ctx) {
       || booking?.web_form_submission?.preferred_language
       || "en"
     );
-  }
-
-  function savedMilestoneActionKey(booking = state.booking) {
-    return resolveStatusPresentation(booking).currentActionKey;
   }
 
   function computedPdfDayCount(booking = state.booking) {
@@ -726,23 +624,16 @@ export function createBookingCoreModule(ctx) {
         translateEnabled: false
       });
       mount.innerHTML = includeField
-        ? `
-          <div class="booking-pdf-panel__field">
-            <label class="booking-pdf-panel__toggle-label" for="booking_pdf_${scope}_${includeField}">
-              <input
-                id="booking_pdf_${scope}_${includeField}"
-                type="checkbox"
-                data-booking-pdf-toggle="${scope}.${includeField}"
-                ${enabled ? "checked" : ""}
-                ${disabled ? "disabled" : ""}
-              />
-              <span>${escapeHtml(label)}</span>
-            </label>
-            <div class="booking-pdf-panel__field-body">
-              ${fieldMarkup}
-            </div>
-          </div>
-        `
+        ? buildBookingPdfToggleFieldMarkup({
+          escapeHtml,
+          label,
+          inputId: `booking_pdf_${scope}_${includeField}`,
+          dataAttributeName: "booking-pdf-toggle",
+          dataAttributeValue: `${scope}.${includeField}`,
+          checked: enabled,
+          disabled,
+          fieldMarkup
+        })
         : fieldMarkup;
     };
     const resolvePlaceholder = (placeholderKey) => {
@@ -768,21 +659,16 @@ export function createBookingCoreModule(ctx) {
       const previewMarkup = config.previewKey === "offer_cancellation_policy"
         ? `<div class="micro">${offerCancellationPolicyPreviewMarkup()}</div>`
         : "";
-      mount.innerHTML = `
-        <div class="booking-pdf-panel__toggle">
-          <label class="booking-pdf-panel__toggle-label" for="booking_pdf_${scope}_${config.field}">
-            <input
-              id="booking_pdf_${scope}_${config.field}"
-              type="checkbox"
-              data-booking-pdf-toggle="${scope}.${config.field}"
-              ${checked ? "checked" : ""}
-              ${disabled ? "disabled" : ""}
-            />
-            <span>${escapeHtml(bookingT(config.labelKey, config.labelFallback))}</span>
-          </label>
-          ${previewMarkup}
-        </div>
-      `;
+      mount.innerHTML = buildBookingPdfToggleMarkup({
+        escapeHtml,
+        label: bookingT(config.labelKey, config.labelFallback),
+        inputId: `booking_pdf_${scope}_${config.field}`,
+        dataAttributeName: "booking-pdf-toggle",
+        dataAttributeValue: `${scope}.${config.field}`,
+        checked,
+        disabled,
+        previewMarkup
+      });
     };
 
     BOOKING_PDF_PERSONALIZATION_PANELS.forEach((panelConfig) => {
@@ -826,7 +712,6 @@ export function createBookingCoreModule(ctx) {
       draft.referral_kind = normalizeText(state.booking.referral_kind).toLowerCase() || "none";
       draft.referral_label = normalizeText(state.booking.referral_label) || "";
       draft.referral_staff_user_id = normalizeText(state.booking.referral_staff_user_id) || "";
-      draft.milestone_action_key = savedMilestoneActionKey(state.booking);
       draft.destinations = bookingDestinations(state.booking);
       draft.travel_styles = normalizeTravelStyleArray(state.booking.travel_styles);
       draft.pdf_personalization = normalizePdfPersonalization(state.booking.pdf_personalization);
@@ -889,7 +774,6 @@ export function createBookingCoreModule(ctx) {
       referral_staff_user_id: referralKind === "atp_staff"
         ? normalizeText(values.referral_staff_user_id) || ""
         : "",
-      milestone_action_key: normalizeText(values.milestone_action_key).toUpperCase(),
       destinations: JSON.stringify(normalizeCodeArray(values.destinations)),
       travel_styles: JSON.stringify(normalizeTravelStyleArray(values.travel_styles)),
       pdf_personalization: JSON.stringify(normalizePdfPersonalization(values.pdf_personalization))
@@ -905,7 +789,6 @@ export function createBookingCoreModule(ctx) {
       referral_kind: normalizeText(state.booking?.referral_kind).toLowerCase() || "none",
       referral_label: normalizeText(state.booking?.referral_label) || "",
       referral_staff_user_id: normalizeText(state.booking?.referral_staff_user_id) || "",
-      milestone_action_key: savedMilestoneActionKey(state.booking),
       destinations: bookingDestinations(state.booking),
       travel_styles: state.booking?.travel_styles,
       pdf_personalization: state.booking?.pdf_personalization
@@ -922,7 +805,6 @@ export function createBookingCoreModule(ctx) {
       referral_kind: normalizeText(draft.referral_kind).toLowerCase() || "none",
       referral_label: normalizeText(draft.referral_label) || "",
       referral_staff_user_id: normalizeText(draft.referral_staff_user_id) || "",
-      milestone_action_key: normalizeText(draft.milestone_action_key || savedMilestoneActionKey(state.booking)).toUpperCase(),
       destinations: draft.destinations,
       travel_styles: draft.travel_styles,
       pdf_personalization: draft.pdf_personalization
@@ -966,7 +848,6 @@ export function createBookingCoreModule(ctx) {
       draft.referral_label = "";
     }
     draft.customer_language = normalizeBookingContentLang(draft.customer_language || savedCustomerLanguage(state.booking));
-    draft.milestone_action_key = normalizeText(draft.milestone_action_key || savedMilestoneActionKey(state.booking)).toUpperCase();
     const savedState = state.booking ? coreComparableStateFromBooking() : null;
     const draftState = state.booking ? coreComparableStateFromDraft() : null;
     const changedFields = savedState && draftState
@@ -988,12 +869,6 @@ export function createBookingCoreModule(ctx) {
     return isDirty;
   }
 
-  function milestoneActionLabel(actionKey) {
-    const meta = BOOKING_MILESTONE_ACTION_BY_KEY[normalizeText(actionKey).toUpperCase()];
-    if (!meta) return "";
-    return bookingT(meta.labelKey, meta.labelFallback);
-  }
-
   function referralModeConfig(referralKind) {
     return REFERRAL_MODE_CONFIG[normalizeText(referralKind).toLowerCase()] || null;
   }
@@ -1008,44 +883,6 @@ export function createBookingCoreModule(ctx) {
       || normalizeText(user?.username)
       || normalizeText(user?.id)
       || "";
-  }
-
-  function resolveStatusPresentation(booking) {
-    const milestones = booking?.milestones && typeof booking.milestones === "object" ? booking.milestones : null;
-    const currentAction = BOOKING_MILESTONE_ACTION_BY_KEY[normalizeText(booking?.last_action).toUpperCase()] || null;
-    const currentTimestamp = normalizeText(booking?.last_action_at) || normalizeText(currentAction ? milestones?.[currentAction.field] : "");
-    const depositRecorded = Boolean(
-      normalizeText(booking?.deposit_received_at)
-      || normalizeText(milestones?.deposit_received_at)
-    );
-
-    if (currentAction) {
-      const currentActionKey = currentAction.key === "DEPOSIT_RECEIVED" ? "IN_PROGRESS" : currentAction.key;
-      const lastActionLabel = currentAction.key === "DEPOSIT_RECEIVED"
-        ? bookingT("booking.milestone.action.deposit_received", "Deposit received")
-        : milestoneActionLabel(currentActionKey);
-      return {
-        currentActionKey,
-        lastAction: currentTimestamp
-          ? bookingT(
-              "booking.milestone.last_action_at",
-              "Last action: {action} on {date}",
-              {
-                action: lastActionLabel,
-                date: formatDateTime(currentTimestamp)
-              }
-            )
-          : lastActionLabel
-      };
-    }
-
-    const fallback = BOOKING_STAGE_FALLBACKS[normalizeText(booking?.stage).toUpperCase()] || BOOKING_STAGE_FALLBACKS.NEW_BOOKING;
-    return {
-      currentActionKey: depositRecorded && fallback.currentActionKey === "DEPOSIT_REQUEST_SENT"
-        ? "IN_PROGRESS"
-        : fallback.currentActionKey,
-      lastAction: ""
-    };
   }
 
   function formatRelativeActionTime(value) {
@@ -1121,8 +958,7 @@ export function createBookingCoreModule(ctx) {
       const shortId = bookingId ? bookingId.slice(-6) : "-";
       const latestHeaderTimestamp = resolveNewestBookingTimestamp(
         state.latestActivityAt,
-        state.booking?.updated_at,
-        state.booking?.last_action_at
+        state.booking?.updated_at
       );
       const relativeLastAction = formatRelativeActionTime(latestHeaderTimestamp);
       const lastUpdatedLabel = relativeLastAction
@@ -1331,9 +1167,6 @@ export function createBookingCoreModule(ctx) {
   function renderActionControls() {
     if (!state.booking) return;
     const draft = syncCoreDraftFromBooking();
-    const statusPresentation = resolveStatusPresentation(state.booking);
-    const draftMilestoneActionKey = normalizeText(draft.milestone_action_key).toUpperCase() || statusPresentation.currentActionKey;
-    const hasPendingMilestoneChange = draftMilestoneActionKey !== statusPresentation.currentActionKey;
 
     if (els.ownerSelect) {
       const currentOwnerId = normalizeText(draft.assigned_keycloak_user_id) || normalizeText(state.booking.assigned_keycloak_user_id);
@@ -1412,75 +1245,6 @@ export function createBookingCoreModule(ctx) {
       els.referralStaffSelect.value = normalizeText(draft.referral_staff_user_id) || "";
       els.referralStaffSelect.hidden = !showReferralStaff;
       els.referralStaffSelect.disabled = !state.permissions.canEditBooking || !showReferralStaff;
-    }
-
-    if (els.lastActionDetail) {
-      const text = hasPendingMilestoneChange
-        ? bookingT("booking.milestone.pending_action", "Unsaved status: {action}", {
-            action: milestoneActionLabel(draftMilestoneActionKey)
-          })
-        : statusPresentation.lastAction;
-      els.lastActionDetail.textContent = text;
-      els.lastActionDetail.hidden = !text;
-    }
-    if (els.milestoneActionsBefore || els.milestoneActionsAfter) {
-      const hasRecordedDeposit = Boolean(
-        normalizeText(state.booking?.deposit_received_at)
-        || normalizeText(state.booking?.milestones?.deposit_received_at)
-      );
-      const renderActionRows = (actionRows) => actionRows.map((row) => {
-        const rowButtons = row.actions.map((actionKey) => {
-          const action = BOOKING_MILESTONE_ACTION_BY_KEY[actionKey];
-          if (!action) return "";
-          const disabled = !state.permissions.canChangeStage || !row.isEnabled;
-          const isCurrent = draftMilestoneActionKey === action.key && !disabled;
-          const classes = [
-            "btn",
-            "btn-ghost",
-            "booking-milestone-actions__btn",
-            isCurrent ? "booking-milestone-actions__btn--current" : "",
-            action.key === "BOOKING_LOST" ? "booking-milestone-actions__btn--lost" : ""
-          ].filter(Boolean).join(" ");
-          return `<button
-            class="${classes}"
-            type="button"
-            data-booking-milestone-action="${escapeHtml(action.key)}"
-            aria-pressed="${isCurrent ? "true" : "false"}"
-            ${disabled ? " disabled" : ""}
-          >${escapeHtml(milestoneActionLabel(action.key))}</button>`;
-        }).join("");
-        return `<div class="${row.className}">${rowButtons}</div>`;
-      }).join("");
-      if (els.milestoneActionsBefore) {
-        els.milestoneActionsBefore.innerHTML = renderActionRows([
-          {
-            className: "booking-milestone-actions__row",
-            actions: ["NEW_BOOKING", "TRAVEL_PLAN_SENT", "OFFER_SENT", "NEGOTIATION_STARTED", "DEPOSIT_REQUEST_SENT"],
-            isEnabled: !hasRecordedDeposit
-          },
-          {
-            className: "booking-milestone-actions__row booking-milestone-actions__row--terminal",
-            actions: ["BOOKING_LOST"],
-            isEnabled: !hasRecordedDeposit
-          }
-        ]);
-      }
-      if (els.milestoneActionsAfter) {
-        els.milestoneActionsAfter.innerHTML = renderActionRows([
-          {
-            className: "booking-milestone-actions__row",
-            actions: ["IN_PROGRESS", "TRIP_COMPLETED"],
-            isEnabled: hasRecordedDeposit
-          },
-          {
-            className: "booking-milestone-actions__row booking-milestone-actions__row--terminal",
-            actions: ["BOOKING_LOST"],
-            isEnabled: hasRecordedDeposit
-          }
-        ]);
-      }
-      els.bookingStatusPhaseBefore?.classList.toggle("booking-status-panel__phase--inactive", hasRecordedDeposit);
-      els.bookingStatusPhaseAfter?.classList.toggle("booking-status-panel__phase--inactive", !hasRecordedDeposit);
     }
     if (els.noteInput) {
       els.noteInput.disabled = !state.permissions.canEditBooking;
@@ -1782,41 +1546,12 @@ export function createBookingCoreModule(ctx) {
       state.booking = latestBooking;
     }
 
-    const nextMilestoneActionKey = normalizeText(draft.milestone_action_key).toUpperCase();
-    if (nextMilestoneActionKey && nextMilestoneActionKey !== savedMilestoneActionKey(latestBooking)) {
-      const request = bookingMilestoneActionRequest({
-        baseURL: apiOrigin,
-        params: { booking_id: latestBooking.id }
-      });
-      const result = await fetchBookingMutation(request.url, {
-        method: request.method,
-        body: {
-          expected_core_revision: Number(latestBooking.core_revision || 0),
-          action: nextMilestoneActionKey,
-          actor: state.user
-        }
-      });
-      if (!result?.booking) return false;
-      latestBooking = result.booking;
-      state.booking = latestBooking;
-    }
-
     setBookingSectionDirty("core", false);
     syncCoreDraftFromBooking({ force: true });
     renderBookingHeader();
     renderBookingData();
     renderActionControls();
     renderPersonsEditor();
-    return true;
-  }
-
-  async function recordBookingMilestoneAction(actionKey) {
-    if (!state.permissions.canChangeStage || !state.booking) return false;
-    const normalizedAction = normalizeText(actionKey).toUpperCase();
-    if (!BOOKING_MILESTONE_ACTION_BY_KEY[normalizedAction]) return false;
-    ensureCoreDraft().milestone_action_key = normalizedAction;
-    updateCoreDirtyState();
-    renderActionControls();
     return true;
   }
 
@@ -1947,7 +1682,6 @@ export function createBookingCoreModule(ctx) {
     copyHeroIdToClipboard,
     deleteBooking,
     cloneBooking,
-    recordBookingMilestoneAction,
     applyBookingPayload
   };
 }

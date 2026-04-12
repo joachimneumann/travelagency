@@ -17,11 +17,9 @@ import { migratePersistedTourState } from "./domain/tours_support.js";
 import { createBackendServices } from "./bootstrap/services.js";
 import { createApplicationRoutes } from "./bootstrap/application_handlers.js";
 import {
-  ALLOWED_STAGE_TRANSITIONS,
   APP_ROLES,
   BASE_CURRENCY,
   COMPANY_PROFILE,
-  computeServiceLevelAgreementDueAt,
   CORS_ORIGIN,
   DEFAULT_OFFER_TAX_RATE_BASIS_POINTS,
   EXCHANGE_RATE_OVERRIDES,
@@ -40,8 +38,6 @@ import {
   PORT,
   PRICING_ADJUSTMENT_TYPES,
   RUNTIME_PATHS,
-  STAGES,
-  STAGE_ORDER,
   STAGING_ACCESS_CONFIG,
   TRAVELER_DETAILS_TOKEN_CONFIG,
   TRANSLATION_CLIENT,
@@ -143,12 +139,40 @@ async function backfillPersistedTourState() {
   return changed;
 }
 
+function pruneLegacyBookingState(store) {
+  const bookings = Array.isArray(store?.bookings) ? store.bookings : [];
+  let changed = false;
+  for (const booking of bookings) {
+    if (!booking || typeof booking !== "object") continue;
+    if (Object.prototype.hasOwnProperty.call(booking, "stage")) {
+      delete booking.stage;
+      changed = true;
+    }
+    if (Object.prototype.hasOwnProperty.call(booking, "milestones")) {
+      delete booking.milestones;
+      changed = true;
+    }
+    if (Object.prototype.hasOwnProperty.call(booking, "last_action")) {
+      delete booking.last_action;
+      changed = true;
+    }
+    if (Object.prototype.hasOwnProperty.call(booking, "last_action_at")) {
+      delete booking.last_action_at;
+      changed = true;
+    }
+    if (Object.prototype.hasOwnProperty.call(booking, "service_level_agreement_due_at")) {
+      delete booking.service_level_agreement_due_at;
+      changed = true;
+    }
+  }
+  return changed;
+}
+
 const services = createBackendServices({
   runtime: {
     appRoles: APP_ROLES,
     baseCurrency: BASE_CURRENCY,
     companyProfile: COMPANY_PROFILE,
-    computeServiceLevelAgreementDueAt,
     defaultOfferTaxRateBasisPoints: DEFAULT_OFFER_TAX_RATE_BASIS_POINTS,
     exchangeRateOverrides: EXCHANGE_RATE_OVERRIDES,
     fxRateCacheTtlMs: FX_RATE_CACHE_TTL_MS,
@@ -163,8 +187,6 @@ const services = createBackendServices({
     offerCategoryOrder: OFFER_CATEGORY_ORDER,
     paymentStatuses: PAYMENT_STATUSES,
     pricingAdjustmentTypes: PRICING_ADJUSTMENT_TYPES,
-    stageOrder: STAGE_ORDER,
-    stages: STAGES,
     translationEnabled: TRANSLATION_ENABLED
   },
   collections: {
@@ -210,7 +232,6 @@ const services = createBackendServices({
 const systemHandlers = createSystemHandlers({
   sendJson: httpHelpers.sendJson,
   nowIso,
-  stageOrder: STAGE_ORDER,
   mobileAppConfig: MOBILE_APP_CONFIG,
   mobileContractMetaPath: RUNTIME_PATHS.mobileContractMetaPath,
   backendGeneratedRequestFactoryPath: RUNTIME_PATHS.backendGeneratedRequestFactoryPath
@@ -219,10 +240,6 @@ const systemHandlers = createSystemHandlers({
 const applicationRuntime = Object.freeze({
   appRoles: APP_ROLES,
   baseCurrency: BASE_CURRENCY,
-  stages: STAGES,
-  stageOrder: STAGE_ORDER,
-  allowedStageTransitions: ALLOWED_STAGE_TRANSITIONS,
-  computeServiceLevelAgreementDueAt,
   gmailDraftsConfig: GMAIL_DRAFTS_CONFIG,
   bookingConfirmationTokenConfig: BOOKING_CONFIRMATION_TOKEN_CONFIG,
   travelerDetailsTokenConfig: TRAVELER_DETAILS_TOKEN_CONFIG,
@@ -261,6 +278,7 @@ export async function createBackendHandler({ port = PORT } = {}) {
   const startupStore = await services.storeUtils.readStore();
   const backfilledBookingPersons = startupStore.__bookingPersonsWritebackNeeded === true;
   const backfilledBookingOffers = startupStore.__bookingOfferWritebackNeeded === true;
+  const prunedLegacyBookingState = pruneLegacyBookingState(startupStore);
   const collapsedGeneratedOfferPaymentTerms = collapseGeneratedOfferPaymentTermsState(startupStore);
   const backfilledGeneratedOfferBookingConfirmationState = backfillGeneratedOfferBookingConfirmationState(startupStore, {
     now: nowIso(),
@@ -279,6 +297,7 @@ export async function createBackendHandler({ port = PORT } = {}) {
     || collapsedGeneratedOfferPaymentTerms
     || backfilledBookingPersons
     || backfilledBookingOffers
+    || prunedLegacyBookingState
     || prunedLegacyGeneratedOffers.changed
   ) {
     await services.storeUtils.persistStore(startupStore);

@@ -423,17 +423,6 @@
         ]
       },
       {
-        key: "booking_milestone_action",
-        path: "/api/v1/bookings/{booking_id}/milestone-actions",
-        method: "POST",
-        authenticated: true,
-        requestType: "BookingMilestoneActionRequest",
-        responseType: "BookingDetail",
-        parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1)
-        ]
-      },
-      {
         key: "booking_translate_fields",
         path: "/api/v1/bookings/{booking_id}/translate-fields",
         method: "POST",

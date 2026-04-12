@@ -199,9 +199,6 @@ function renderCustomerFlowCard() {
     customerConfirmationFlow?.status,
     isDeposit ? "AWAITING_PAYMENT" : "OPEN"
   );
-  const statusLabel = normalizeText(customerFlowStatus)
-    ? normalizeText(String(customerFlowStatus).replace(/_/g, " ").toLowerCase()).replace(/^\w/, (char) => char.toUpperCase())
-    : (isDeposit ? "Awaiting payment" : "Open");
   const depositMeta = isDeposit && customerConfirmationFlow?.deposit_rule
     ? `
       <div class="booking-confirmation-route__meta">
@@ -213,7 +210,6 @@ function renderCustomerFlowCard() {
   els.customerFlow.innerHTML = `
     <div class="booking-confirmation-route__header">
       <h2 class="booking-confirmation-route__title">${escapeHtml(customerFlowTitle)}</h2>
-      <span class="booking-confirmation-route__status">${escapeHtml(statusLabel)}</span>
     </div>
     <p class="booking-confirmation-route__body">${escapeHtml(normalizeText(customerConfirmationFlow?.customer_message_snapshot) || defaultMessage)}</p>
     ${depositMeta}

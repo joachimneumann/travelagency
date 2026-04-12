@@ -5,7 +5,6 @@ import {
   normalizeTourStyleLabels,
   sortTourStyleCodes
 } from "../domain/tour_catalog_i18n.js";
-import { resolveBookingMilestoneState } from "../domain/booking_milestones.js";
 import {
   CUSTOMER_CONTENT_LANGUAGE_CODES,
   languageByApiValue,
@@ -316,11 +315,6 @@ function normalizeWebFormSubmission(booking) {
 }
 
 export function normalizeStoredBookingRecord(booking, _store = {}) {
-  const milestoneState = resolveBookingMilestoneState({
-    milestones: booking?.milestones,
-    last_action: booking?.last_action,
-    last_action_at: booking?.last_action_at
-  }, booking?.stage);
   const normalizedDestinations = getBookingTravelPlanDestinations(booking);
   const normalizedTravelStyles = sortTourStyleCodes(
     normalizeStringArray(booking?.travel_styles)
@@ -354,10 +348,6 @@ export function normalizeStoredBookingRecord(booking, _store = {}) {
     offer_revision: nonNegativeInt(booking?.offer_revision, 0),
     invoices_revision: nonNegativeInt(booking?.invoices_revision, 0),
     assigned_keycloak_user_id: optionalText(booking?.assigned_keycloak_user_id),
-    service_level_agreement_due_at: optionalText(booking?.service_level_agreement_due_at),
-    milestones: milestoneState.milestones,
-    last_action: milestoneState.lastAction,
-    last_action_at: milestoneState.lastActionAt,
     traveler_details_token_nonce: optionalText(
       booking?.traveler_details_token_nonce
       || booking?.public_traveler_details_token_nonce
@@ -386,7 +376,6 @@ export function normalizeStoredBookingRecord(booking, _store = {}) {
   return compactObject({
     ...normalizedBooking,
     id: optionalText(normalizedBooking.id),
-    stage: optionalText(milestoneState.stage || normalizedBooking.stage),
     travel_start_day: optionalText(normalizedBooking.travel_start_day),
     travel_end_day: optionalText(normalizedBooking.travel_end_day),
     source: undefined,

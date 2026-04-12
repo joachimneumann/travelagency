@@ -13,18 +13,8 @@ import {
   bookingLang
 } from "./i18n.js";
 import { formatMoneyDisplay } from "./pricing.js";
-import {
-  normalizeGeneratedOfferCustomerConfirmationFlowStatus
-} from "../shared/booking_confirmation_catalog.js";
 import { renderBookingSectionHeader } from "./sections.js";
 import { setBookingPageOverlay } from "./page_overlay.js";
-import {
-  latestProposalNeedsSending,
-  proposalWasSent,
-  resolveLatestGeneratedOffer,
-  resolveProposalSentOffer,
-  resolveProposalSentAt
-} from "./payment_flow_state.js";
 
 const GMAIL_TAB_NAME = "asiatravelplan_gmail_drafts";
 let gmailWindowHandle = null;
@@ -122,15 +112,10 @@ export function createBookingGeneratedOffersModule(ctx) {
   function updateBookingConfirmationPanelSummary() {
     if (!els.bookingConfirmationPanelSummary) return;
     const generatedOffers = Array.isArray(state.booking?.generated_offers) ? state.booking.generated_offers : [];
-    const proposalSentAt = resolveProposalSentAt(state.booking);
     const secondary = generatedOffers.length
-      ? proposalSentAt
-        ? bookingT("booking.offer.summary_sent", "Proposal sent on {date}", {
-            date: formatGeneratedOfferDate(proposalSentAt)
-          })
-        : bookingT("booking.booking_confirmation_summary_count", "{count} generated offer(s)", {
-            count: String(generatedOffers.length)
-          })
+      ? bookingT("booking.booking_confirmation_summary_count", "{count} generated offer(s)", {
+          count: String(generatedOffers.length)
+        })
       : bookingT("booking.booking_confirmation_none", "No generated offers yet.");
     renderBookingSectionHeader(els.bookingConfirmationPanelSummary, {
       primary: bookingT("booking.proposal_documents", "Proposal PDFs"),
@@ -166,74 +151,18 @@ export function createBookingGeneratedOffersModule(ctx) {
     return message;
   }
 
-  function resolveGeneratedOfferStatus(generatedOffer) {
-    const bookingConfirmation = generatedOffer?.booking_confirmation;
-    if (bookingConfirmation && typeof bookingConfirmation === "object") {
-      return {
-        tone: "confirmed",
-        label: bookingT("booking.offer.status.confirmed", "Confirmed"),
-        detail: bookingConfirmation.accepted_at
-          ? bookingT("booking.offer.status.confirmed_on", "Confirmed on {date}", {
-              date: formatGeneratedOfferDate(bookingConfirmation.accepted_at)
-            })
-          : ""
-      };
-    }
+  function latestGeneratedOffer(booking) {
+    return (Array.isArray(booking?.generated_offers) ? booking.generated_offers : [])
+      .slice()
+      .sort((left, right) => String(right?.created_at || "").localeCompare(String(left?.created_at || "")))[0] || null;
+  }
 
-    const routeStatus = normalizeGeneratedOfferCustomerConfirmationFlowStatus(
-      generatedOffer?.customer_confirmation_flow?.status,
-      generatedOffer?.customer_confirmation_flow?.mode === "DEPOSIT_PAYMENT" ? "AWAITING_PAYMENT" : "OPEN"
-    );
-    if (routeStatus === "AWAITING_PAYMENT") {
-      return {
-        tone: "open",
-        variant: "awaiting-payment",
-        label: bookingT("booking.offer.status.awaiting_payment", "Awaiting payment"),
-        detail: ""
-      };
-    }
-    if (routeStatus === "EXPIRED") {
-      return {
-        tone: "expired",
-        variant: "expired",
-        label: bookingT("booking.offer.status.expired", "Expired"),
-        detail: ""
-      };
-    }
-    if (routeStatus === "REVOKED") {
-      return {
-        tone: "unavailable",
-        variant: "revoked",
-        label: bookingT("booking.offer.status.revoked", "Revoked"),
-        detail: ""
-      };
-    }
-
-    const expiresAtMs = Date.parse(String(generatedOffer?.public_booking_confirmation_expires_at || ""));
-    if (Number.isFinite(expiresAtMs) && expiresAtMs <= Date.now()) {
-      return {
-        tone: "expired",
-        variant: "expired",
-        label: bookingT("booking.offer.status.expired", "Expired"),
-        detail: ""
-      };
-    }
-
-    if (String(generatedOffer?.public_booking_confirmation_token || "").trim()) {
-      return {
-        tone: "open",
-        variant: "open",
-        label: bookingT("booking.offer.status.open", "Open"),
-        detail: ""
-      };
-    }
-
-    return {
-      tone: "unavailable",
-      variant: "unavailable",
-      label: bookingT("booking.offer.status.unavailable", "Unavailable"),
-      detail: ""
-    };
+  function confirmedGeneratedOffer(booking) {
+    const confirmedId = String(booking?.confirmed_generated_offer_id || "").trim();
+    if (!confirmedId) return null;
+    return (Array.isArray(booking?.generated_offers) ? booking.generated_offers : []).find(
+      (item) => String(item?.id || "").trim() === confirmedId
+    ) || null;
   }
 
   function renderOfferGenerationControls() {
@@ -256,56 +185,24 @@ export function createBookingGeneratedOffersModule(ctx) {
 
   function renderGeneratedOffersOverview() {
     if (!(els.generated_offers_overview instanceof HTMLElement)) return;
-    const latestOffer = resolveLatestGeneratedOffer(state.booking);
-    const sentOffer = resolveProposalSentOffer(state.booking);
-    const proposalSentAt = resolveProposalSentAt(state.booking);
-    const sentByLabel = String(state.booking?.proposal_sent_by_atp_staff_label || "").trim();
-    const showMarkLatestAction = state.permissions.canEditBooking && Boolean(latestOffer);
-    const overviewTone = !latestOffer
-      ? "blocked"
-      : latestProposalNeedsSending(state.booking)
-        ? "current"
-        : proposalWasSent(state.booking)
-          ? "done"
-          : "current";
-    const overviewLabel = !latestOffer
-      ? bookingT("booking.offer.proposal_pdf_missing", "No proposal PDF yet")
-      : latestProposalNeedsSending(state.booking)
-        ? bookingT("booking.offer.latest_not_sent", "Latest proposal PDF not marked as sent")
-        : proposalWasSent(state.booking)
-          ? bookingT("booking.offer.proposal_sent", "Proposal sent")
-          : bookingT("booking.offer.ready_to_send", "Proposal ready to send");
-    const detail = !latestOffer
-      ? bookingT("booking.offer.proposal_pdf_missing_detail", "Generate a customer-facing proposal PDF before sending the proposal.")
-      : proposalSentAt
-        ? bookingT("booking.offer.proposal_sent_detail", "Sent on {date}{person}", {
-            date: formatGeneratedOfferDate(proposalSentAt),
-            person: sentByLabel ? ` by ${sentByLabel}` : ""
-          })
-        : sentOffer
-          ? bookingT("booking.offer.proposal_sent_frozen_detail", "The accepted offer artifact is the current sent proposal.")
-          : bookingT("booking.offer.proposal_send_prompt", "Mark the sent proposal manually so ATP can see which PDF went to the customer.");
+    const latestOffer = latestGeneratedOffer(state.booking);
+    const confirmedOffer = confirmedGeneratedOffer(state.booking);
     els.generated_offers_overview.hidden = false;
     els.generated_offers_overview.innerHTML = `
       <div class="booking-flow-inline-card__head">
-        <span class="booking-flow-chip is-${escapeHtml(overviewTone)}">${escapeHtml(overviewLabel)}</span>
+        <strong>${escapeHtml(latestOffer
+          ? bookingT("booking.offer.latest_pdf_available", "Latest proposal PDF available")
+          : bookingT("booking.offer.proposal_pdf_missing", "No proposal PDF yet"))}</strong>
         ${latestOffer ? `<span class="booking-flow-inline-card__meta">${escapeHtml(bookingT("booking.offer.latest_pdf", "Latest PDF: {date}", {
           date: formatGeneratedOfferDate(latestOffer.created_at)
         }))}</span>` : ""}
       </div>
-      <p class="booking-flow-inline-card__body">${escapeHtml(detail)}</p>
-      ${showMarkLatestAction
-        ? `<div class="booking-flow-inline-card__actions">
-            <button class="btn btn-ghost" type="button" data-generated-offer-mark-latest-sent ${latestProposalNeedsSending(state.booking) ? "" : proposalWasSent(state.booking) ? "disabled" : ""} data-requires-clean-state>
-              ${escapeHtml(bookingT("booking.offer.mark_latest_sent", "Mark latest proposal as sent"))}
-            </button>
-          </div>`
-        : ""}
+      <p class="booking-flow-inline-card__body">${escapeHtml(!latestOffer
+        ? bookingT("booking.offer.proposal_pdf_missing_detail", "Generate a customer-facing proposal PDF when the proposal is ready.")
+        : confirmedOffer?.id
+          ? bookingT("booking.offer.confirmed_pdf_detail", "A confirmed proposal PDF is linked to this booking.")
+          : bookingT("booking.offer.latest_pdf_detail", "Proposal PDFs stay available here and in the payment sections for snapshot references."))}</p>
     `;
-    els.generated_offers_overview.querySelector("[data-generated-offer-mark-latest-sent]")?.addEventListener("click", () => {
-      if (!latestOffer?.id) return;
-      void markGeneratedOfferAsSent(latestOffer.id);
-    });
   }
 
   function renderGeneratedOffersTable() {
@@ -316,38 +213,35 @@ export function createBookingGeneratedOffersModule(ctx) {
     renderGeneratedOffersOverview();
     const canEdit = state.permissions.canEditBooking;
     const emailActionEnabled = canEdit && Boolean(state.booking?.generated_offer_email_enabled);
-    const statusHeader = `<th class="generated-offers-col-status">${escapeHtml(bookingT("booking.status", "Status"))}</th>`;
     const emailHeader = emailActionEnabled ? `<th class="generated-offers-col-email">${escapeHtml(bookingT("booking.email", "Email"))}</th>` : "";
     const actionHeader = canEdit ? '<th class="generated-offers-col-actions"></th>' : "";
-    const emptyColspan = 6 + (emailActionEnabled ? 1 : 0) + (canEdit ? 1 : 0);
+    const emptyColspan = 5 + (emailActionEnabled ? 1 : 0) + (canEdit ? 1 : 0);
     const rows = items.length
       ? items
         .slice()
         .sort((left, right) => String(right.created_at || "").localeCompare(String(left.created_at || "")))
         .map((item) => {
           const pdfUrl = item?.pdf_url ? withBookingLanguageQuery(item.pdf_url) : "";
-          const offerStatus = resolveGeneratedOfferStatus(item);
-          const proposalSent = String(state.booking?.proposal_sent_generated_offer_id || "").trim() === String(item?.id || "").trim();
+          const isConfirmed = String(state.booking?.confirmed_generated_offer_id || "").trim() === String(item?.id || "").trim();
+          const lifecycleDetail = item?.booking_confirmation?.accepted_at
+            ? bookingT("booking.offer.status.confirmed_on", "Confirmed on {date}", {
+                date: formatGeneratedOfferDate(item.booking_confirmation.accepted_at)
+              })
+            : "";
           return `<tr>
           <td class="generated-offers-col-link">${pdfUrl ? `<a href="${escapeHtml(pdfUrl)}" target="_blank" rel="noopener">${escapeHtml(bookingT("booking.offer.document", "Offer"))}</a>` : "-"}</td>
           ${emailActionEnabled
             ? `<td class="generated-offers-col-email"><button class="btn btn-ghost" type="button" data-generated-offer-email="${escapeHtml(item.id)}" data-requires-clean-state>${escapeHtml(bookingT("booking.email", "Email"))}</button></td>`
             : ""}
-          <td class="generated-offers-col-status">
-            <span class="generated-offers-status-badge is-${escapeHtml(offerStatus.tone)}${offerStatus.variant ? ` is-${escapeHtml(offerStatus.variant)}` : ""}">${escapeHtml(offerStatus.label)}</span>
-            ${proposalSent ? `<span class="generated-offers-status-badge is-confirmed is-proposal-sent">${escapeHtml(bookingT("booking.offer.sent_badge", "Sent proposal"))}</span>` : ""}
-            ${offerStatus.detail ? `<div class="generated-offers-status-meta">${escapeHtml(offerStatus.detail)}</div>` : ""}
-          </td>
           <td class="generated-offers-col-language">${escapeHtml(bookingContentLanguageLabel(item.lang || "en"))}</td>
           <td class="generated-offers-col-total">${escapeHtml(formatMoneyDisplay(item.total_price_cents || 0, item.currency || state.offerDraft?.currency || "USD"))}</td>
-          <td class="generated-offers-col-date">${escapeHtml(formatGeneratedOfferDate(item.created_at))}</td>
+          <td class="generated-offers-col-date">${escapeHtml(isConfirmed && lifecycleDetail ? lifecycleDetail : formatGeneratedOfferDate(item.created_at))}</td>
           <td class="generated-offers-col-comment">${canEdit
             ? `<textarea data-generated-offer-comment-input="${escapeHtml(item.id)}" rows="2">${escapeHtml(item.comment || "")}</textarea>
                <button class="btn btn-ghost" type="button" data-generated-offer-save-comment="${escapeHtml(item.id)}" data-requires-clean-state>${escapeHtml(bookingT("common.save", "Save"))}</button>`
             : (escapeHtml(item.comment || "") || "-")}</td>
           ${canEdit
             ? `<td class="generated-offers-col-actions">
-                <button class="btn btn-ghost" type="button" data-generated-offer-mark-sent="${escapeHtml(item.id)}" data-requires-clean-state ${proposalSent ? "disabled" : ""}>${escapeHtml(proposalSent ? bookingT("booking.offer.marked_sent", "Marked sent") : bookingT("booking.offer.mark_as_sent", "Mark sent"))}</button>
                 <button class="btn btn-ghost offer-remove-btn" type="button" data-generated-offer-delete="${escapeHtml(item.id)}" data-requires-clean-state title="${escapeHtml(bookingT("booking.offer.delete_generated", "Delete generated offer"))}" aria-label="${escapeHtml(bookingT("booking.offer.delete_generated", "Delete generated offer"))}">×</button>
               </td>`
             : ""}
@@ -355,7 +249,7 @@ export function createBookingGeneratedOffersModule(ctx) {
         })
         .join("")
       : `<tr><td colspan="${emptyColspan}">${escapeHtml(bookingT("booking.offer.no_generated", "No generated offers yet"))}</td></tr>`;
-    els.generated_offers_table.innerHTML = `<thead><tr><th class="generated-offers-col-link">${escapeHtml(bookingT("booking.offer.document", "Offer"))}</th>${emailHeader}${statusHeader}<th class="generated-offers-col-language">${escapeHtml(bookingT("booking.language", "Language"))}</th><th class="generated-offers-col-total">${escapeHtml(bookingT("booking.total", "Total"))}</th><th class="generated-offers-col-date">${escapeHtml(bookingT("booking.date", "Date"))}</th><th>${escapeHtml(bookingT("booking.comments", "Comments"))}</th>${actionHeader}</tr></thead><tbody>${rows}</tbody>`;
+    els.generated_offers_table.innerHTML = `<thead><tr><th class="generated-offers-col-link">${escapeHtml(bookingT("booking.offer.document", "Offer"))}</th>${emailHeader}<th class="generated-offers-col-language">${escapeHtml(bookingT("booking.language", "Language"))}</th><th class="generated-offers-col-total">${escapeHtml(bookingT("booking.total", "Total"))}</th><th class="generated-offers-col-date">${escapeHtml(bookingT("booking.date", "Date"))}</th><th>${escapeHtml(bookingT("booking.comments", "Comments"))}</th>${actionHeader}</tr></thead><tbody>${rows}</tbody>`;
 
     if (canEdit) {
       els.generated_offers_table.querySelectorAll("[data-generated-offer-save-comment]").forEach((button) => {
@@ -369,11 +263,6 @@ export function createBookingGeneratedOffersModule(ctx) {
       els.generated_offers_table.querySelectorAll("[data-generated-offer-delete]").forEach((button) => {
         button.addEventListener("click", () => {
           void deleteGeneratedOffer(button.getAttribute("data-generated-offer-delete"));
-        });
-      });
-      els.generated_offers_table.querySelectorAll("[data-generated-offer-mark-sent]").forEach((button) => {
-        button.addEventListener("click", () => {
-          void markGeneratedOfferAsSent(button.getAttribute("data-generated-offer-mark-sent"));
         });
       });
       els.generated_offers_table.querySelectorAll("[data-generated-offer-email]").forEach((button) => {
@@ -487,33 +376,6 @@ export function createBookingGeneratedOffersModule(ctx) {
     setOfferStatus(response?.detail || response?.error || bookingT("booking.offer.error.create_gmail_draft", "Could not create Gmail draft."));
   }
 
-  async function markGeneratedOfferAsSent(generatedOfferId) {
-    if (!state.permissions.canEditBooking || !state.booking?.id || !generatedOfferId) return false;
-    if (!(await ensureOfferCleanState())) return false;
-    const request = bookingGeneratedOfferUpdateRequest({
-      baseURL: apiOrigin,
-      params: {
-        booking_id: state.booking.id,
-        generated_offer_id: generatedOfferId
-      }
-    });
-    const response = await fetchBookingMutation(request.url, {
-      method: request.method,
-      body: {
-        expected_offer_revision: getBookingRevision("offer_revision"),
-        mark_as_sent: true,
-        actor: state.user || null
-      }
-    });
-    if (await applyOfferBookingResponse(response, { reloadActivities: true })) {
-      setOfferStatus(bookingT("booking.offer.sent_success", "Proposal marked as sent."), "success");
-      return true;
-    }
-    if (!response) return false;
-    setOfferStatus(response?.detail || response?.error || bookingT("booking.offer.sent_failed", "Could not mark the proposal as sent."), "error");
-    return false;
-  }
-
   async function handleGenerateOffer() {
     if (!state.permissions.canEditBooking || !state.booking?.id) return;
     syncOfferGenerationControlsState();
@@ -568,7 +430,6 @@ export function createBookingGeneratedOffersModule(ctx) {
   return {
     renderGeneratedOffersTable,
     renderOfferGenerationControls,
-    updateBookingConfirmationPanelSummary,
-    markGeneratedOfferAsSent
+    updateBookingConfirmationPanelSummary
   };
 }

@@ -6,7 +6,6 @@ import { createTranslationClient } from "../lib/translation_client.js";
 import { nowIso } from "../lib/request_utils.js";
 import { normalizeText } from "../lib/text.js";
 import {
-  GENERATED_BOOKING_STAGES,
   GENERATED_OFFER_CATEGORIES,
   GENERATED_PAYMENT_STATUSES,
   GENERATED_PRICING_ADJUSTMENT_TYPES
@@ -159,9 +158,6 @@ export const TRANSLATION_CLIENT = createTranslationClient({
   googleFallbackEnabled: GOOGLE_TRANSLATE_FALLBACK_ENABLED
 });
 
-export const STAGES = Object.freeze(Object.fromEntries(GENERATED_BOOKING_STAGES.map((value) => [value, value])));
-export const STAGE_ORDER = GENERATED_BOOKING_STAGES;
-
 const GENERATED_APP_ROLE_LOOKUP = Object.freeze(
   Object.fromEntries(
     GENERATED_APP_ROLES.map((value) => [String(value).replace(/^atp_/, "").toUpperCase(), value])
@@ -184,26 +180,6 @@ export const PAYMENT_STATUSES = Object.freeze(Object.fromEntries(GENERATED_PAYME
 export const OFFER_CATEGORIES = Object.freeze(Object.fromEntries(GENERATED_OFFER_CATEGORIES.map((value) => [value, value])));
 export const OFFER_CATEGORY_ORDER = GENERATED_OFFER_CATEGORIES;
 export const DEFAULT_OFFER_TAX_RATE_BASIS_POINTS = 1000;
-export const ALLOWED_STAGE_TRANSITIONS = Object.freeze(
-  Object.fromEntries(STAGE_ORDER.map((stage) => [stage, STAGE_ORDER]))
-);
-
-const SERVICE_LEVEL_AGREEMENT_HOURS = {
-  [STAGES.NEW_BOOKING]: 2,
-  [STAGES.TRAVEL_PLAN_SENT]: 8,
-  [STAGES.OFFER_SENT]: 24,
-  [STAGES.NEGOTIATION_STARTED]: 48,
-  [STAGES.DEPOSIT_REQUEST_SENT]: 24,
-  [STAGES.IN_PROGRESS]: 0,
-  [STAGES.LOST]: 0,
-  [STAGES.TRIP_COMPLETED]: 0
-};
-
-export function computeServiceLevelAgreementDueAt(stage, from = new Date()) {
-  const hours = SERVICE_LEVEL_AGREEMENT_HOURS[stage] ?? 0;
-  if (!hours) return null;
-  return new Date(from.getTime() + hours * 60 * 60 * 1000).toISOString();
-}
 
 function normalizeExchangeRatePairKey(value) {
   const cleaned = String(value).toUpperCase().replace(/\s+/g, "");

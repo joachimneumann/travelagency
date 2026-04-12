@@ -92,12 +92,6 @@ import (
 	actor?:                  string
 }
 
-#BookingMilestoneActionRequest: {
-	expected_core_revision?: >=0 & int
-	action:                  enums.#BookingMilestoneAction
-	actor?:                  string
-}
-
 #BookingOwnerUpdateRequest: {
 	expected_core_revision?:    >=0 & int
 	assigned_keycloak_user_id?: common.#Identifier
@@ -285,21 +279,7 @@ import (
 #BookingPricingUpdateRequest: {
 	expected_pricing_revision?: >=0 & int
 	pricing:                    entities.#BookingPricing
-	deposit_receipt?:           #BookingDepositReceiptUpdateRequest
-	deposit_receipt_draft?:     #BookingDepositReceiptDraftUpdateRequest
 	actor?:                     string
-}
-
-#BookingDepositReceiptUpdateRequest: {
-	deposit_received_at:               common.#Timestamp
-	deposit_confirmed_by_atp_staff_id: common.#Identifier
-	deposit_reference?:                string
-}
-
-#BookingDepositReceiptDraftUpdateRequest: {
-	deposit_received_at?:               common.#Timestamp
-	deposit_confirmed_by_atp_staff_id?: common.#Identifier
-	deposit_reference?:                 string
 }
 
 #BookingOfferUpdateRequest: {

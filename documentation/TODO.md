@@ -58,23 +58,77 @@ Core Booking with traveler
 Booking
 booking has rumpf booking and more
 
+I want to change the Status visibility and payment logic. Update the document payment to reflect this logic. You may completely rewrite the payments.md file.
+======
+- completely remove the Stage logic (before versus after deposit paid), remove all of these stages:
+Before deposit received
+New booking
+Travel plan sent
+Offer sent
+Negotiation
+Deposit requested
+Booking lost
+Deposit Received
+After deposit received
+In progress
+Trip completed
+Booking lost
+- remove all booking milestones / status from the model, code and UI
+- remove all buttons
+- remove all badge/status, e.g., Awaiting payment
+
+- completely remove the next steps logic (Proposal in progress, Proposal sent, Booking confirmation / Deposit pending, Deposit confirmed, Remaining payments, Fully paid)
+
+Center the logic around the financial flow:
+Depost, optional installment payments and final payment
+
+Each stage (deposit, installments payments and final payment according to the payment plan) has:
+1. A section for PDF generation to ask for the money (initially collapsed):
+1.1: PDF Texts for personalization (initially collapsed)
+1.2: PDF Attachments  (initially empty and collapsed)
+1.3: Table of generated PDFs
+1.4: A button: "new PDF"
+2. A Payment received section:
+2.2: Amount received
+2.3: When received (date)
+2.4: Confirmed by (ATP staff drop down)
+2.5: Receipt reference (text field)
+2.6: Snapshot of the offer (last generated PDF, offer parameters) at the time when the payment has been received
+3. A Customer Receipt section (initially collapsed)
+3.1: PDF Texts for personalization (initially collapsed)
+3.2: PDF Attachments  (initially empty and collapsed)
+3.3: Table of generated PDFs
+3.4: A button: "new PDF"
+
+
+
+Proposal & Payments
+===================
+remove the Track the current commercial step and the next ATP action.
+
 
 In the travel plan PDF configuration, add a section "Cancellation policy" with a default value:
 
 
-in the payments sections, after the deposit has been received and this is confirmed, add a table with Deposit receipt PDFs and a button "create deposit confirmation PDF".
+In the payments sections, after the deposit has been received and this is confirmed, add a table with Booking confirmations PDFs and a button "create Booking confirmation".
 
-The Deposit confirmation PDF shall contain:
+The Booking confirmation PDF shall contain:
 
-Payment Confirmation					
-This document confirms receipt of a deposit payment of $400.00.					
+- AsiaTravelPlan header
+- Title of the booking
+- who is traveling
+- short table of travel plan (one line per day)
+- Your AsiaTravelPlan Contact: name and WhatsApp /Phone
+- Total Amount, Deposit Received, Remaining Balance
+- and the Deposit Payment Confirmation:
+"This document confirms receipt of a deposit payment of XXXX".
 					
 Thank you for your payment. AsiaTravelPlan looks forward to supporting you throughout your journey.					
 					
-AsiaTravelPlan				AsiaTravelPlan	
+AsiaTravelPlan				            AsiaTravelPlan	
 Director's Signature				Tour Coordinator's Signature	
 					
-                    
+
 Cancellation policy
 ===================
 
@@ -163,10 +217,13 @@ When the deposit paymen has been arrived, I am not sure if I want to we freeze t
 Freeze travel plan and offer after receiving deposit payment. In payments allow additional items with description to alter the travel plan. Allow creating a modified travel plan. 
 
 
+
+# PDF texts
+In the PDF texts section of each PDF generation, there is checkbox and a title for each text to the right of the title add a "select text" button. When pressed, show a pop-up that offers the following texts: A predefined AsiaTravelPlan standard text and all non-empty texts from the same field in the PDF texts in this booking.
+
 # review
 
-
-Conduct a comprehensive code review with a focus on travel plan, offer components and offer acceptance 
+Conduct a comprehensive code review with a focus on payment flow and snapshots when a payment has been received.
 
 Specifically:
 	1.	PDF Storage & Structure

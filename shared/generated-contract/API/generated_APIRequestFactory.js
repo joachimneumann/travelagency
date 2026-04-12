@@ -403,23 +403,6 @@ export function bookingOwnerRequest({ baseURL = '', params = {}, query = {}, bod
   };
 }
 
-export function bookingMilestoneActionPath(params = {}) {
-  return buildPath("/api/v1/bookings/{booking_id}/milestone-actions", params);
-}
-
-export function bookingMilestoneActionRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
-  const path = bookingMilestoneActionPath(params);
-  const url = buildURL(baseURL, path, query);
-  return {
-    key: "booking_milestone_action",
-    method: "POST",
-    authenticated: true,
-    url,
-    headers,
-    body
-  };
-}
-
 export function bookingTranslateFieldsPath(params = {}) {
   return buildPath("/api/v1/bookings/{booking_id}/translate-fields", params);
 }

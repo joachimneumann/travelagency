@@ -76,8 +76,6 @@ export function createBookingHandlers(deps) {
     nowIso,
     safeCurrency,
     BASE_CURRENCY,
-    STAGES,
-    computeServiceLevelAgreementDueAt,
     safeInt,
     defaultBookingPricing,
     defaultBookingOffer,
@@ -97,9 +95,6 @@ export function createBookingHandlers(deps) {
     isLikelyPhoneMatch,
     buildChatEventReadModel,
     getMetaConversationOpenUrl,
-    STAGE_ORDER,
-    ALLOWED_STAGE_TRANSITIONS,
-    canChangeBookingStage,
     actorLabel,
     canChangeBookingAssignment,
     syncBookingAssignmentFields,
@@ -453,8 +448,7 @@ export function createBookingHandlers(deps) {
 
     return matches.map((candidate) => ({
       booking_id: candidate.id,
-      name: normalizeText(candidate.name) || null,
-      stage: normalizeText(candidate.stage) || null
+      name: normalizeText(candidate.name) || null
     }));
   }
 
@@ -554,7 +548,6 @@ export function createBookingHandlers(deps) {
   });
 
   const {
-    handlePostBookingMilestoneAction,
     handlePatchBookingName,
     handlePatchBookingCustomerLanguage,
     handlePatchBookingSource,
@@ -569,16 +562,10 @@ export function createBookingHandlers(deps) {
     readStore,
     getPrincipal,
     canEditBooking,
-    canChangeBookingStage,
     canChangeBookingAssignment,
     canAccessBooking,
     normalizeText,
     nowIso,
-    safeInt,
-    STAGE_ORDER,
-    ALLOWED_STAGE_TRANSITIONS,
-    STAGES,
-    computeServiceLevelAgreementDueAt,
     addActivity,
     actorLabel,
     persistStore,
@@ -700,7 +687,6 @@ export function createBookingHandlers(deps) {
     assertExpectedRevision,
     buildBookingDetailResponse,
     incrementBookingRevision,
-    computeServiceLevelAgreementDueAt,
     validateBookingPricingInput,
     convertBookingPricingToBaseCurrency,
     normalizeBookingPricing,
@@ -909,9 +895,7 @@ export function createBookingHandlers(deps) {
       pricing_revision: 0,
       offer_revision: 0,
       invoices_revision: 0,
-      stage: STAGES.NEW_BOOKING,
       assigned_keycloak_user_id: null,
-      service_level_agreement_due_at: computeServiceLevelAgreementDueAt(STAGES.NEW_BOOKING),
       travel_styles: canonicalBookingTravelStyles(submission.travel_style),
       web_form_travel_month: submission.travel_month,
       travel_start_day: null,
@@ -984,9 +968,7 @@ export function createBookingHandlers(deps) {
       pricing_revision: 0,
       offer_revision: 0,
       invoices_revision: 0,
-      stage: STAGES.NEW_BOOKING,
       assigned_keycloak_user_id: normalizeText(principal?.sub) || null,
-      service_level_agreement_due_at: computeServiceLevelAgreementDueAt(STAGES.NEW_BOOKING),
       travel_styles: canonicalBookingTravelStyles(payload?.travel_styles),
       web_form_travel_month: null,
       travel_start_day: null,
@@ -1161,7 +1143,6 @@ export function createBookingHandlers(deps) {
     handlePatchBookingCustomerLanguage,
     handlePatchBookingSource,
     handleUploadBookingImage,
-    handlePostBookingMilestoneAction,
     handlePatchBookingOwner,
     handleTranslateBookingFields,
     handleCreateBookingPerson,

@@ -36,7 +36,6 @@ export function createBookingFinanceHandlers(deps) {
     assertExpectedRevision,
     buildBookingDetailResponse,
     incrementBookingRevision,
-    computeServiceLevelAgreementDueAt,
     validateBookingPricingInput,
     convertBookingPricingToBaseCurrency,
     normalizeBookingPricing,
@@ -260,6 +259,10 @@ export function createBookingFinanceHandlers(deps) {
     const paymentTerms = normalizedSnapshot?.payment_terms;
     const lines = Array.isArray(paymentTerms?.lines) ? paymentTerms.lines : [];
     if (!lines.length) return null;
+    const originGeneratedOfferId = normalizeText(
+      booking?.confirmed_generated_offer_id
+      || booking?.accepted_offer_artifact_ref
+    ) || null;
 
     return {
       currency: normalizeText(paymentTerms?.currency || normalizedSnapshot?.currency) || "USD",
@@ -272,6 +275,7 @@ export function createBookingFinanceHandlers(deps) {
         return {
           id: `pricing_payment_${randomUUID()}`,
           label,
+          ...(originGeneratedOfferId ? { origin_generated_offer_id: originGeneratedOfferId } : {}),
           ...(dueDate ? { due_date: dueDate } : {}),
           net_amount_cents: Math.max(0, Math.round(Number(line?.resolved_amount_cents || 0))),
           tax_rate_basis_points: 0,
@@ -309,6 +313,82 @@ export function createBookingFinanceHandlers(deps) {
     booking.pricing = nextPricing;
     incrementBookingRevision(booking, "pricing_revision");
     return true;
+  }
+
+  function latestGeneratedOfferId(booking) {
+    const generatedOffers = Array.isArray(booking?.generated_offers) ? booking.generated_offers : [];
+    return generatedOffers
+      .slice()
+      .sort((left, right) => String(right?.created_at || "").localeCompare(String(left?.created_at || "")))
+      .map((item) => normalizeText(item?.id))
+      .find(Boolean) || "";
+  }
+
+  function bookingPaymentTerms(booking) {
+    if (booking?.offer?.payment_terms && typeof booking.offer.payment_terms === "object") {
+      return booking.offer.payment_terms;
+    }
+    if (booking?.accepted_payment_terms_snapshot && typeof booking.accepted_payment_terms_snapshot === "object") {
+      return booking.accepted_payment_terms_snapshot;
+    }
+    return null;
+  }
+
+  function findDepositPaymentLineId(booking) {
+    const lines = Array.isArray(bookingPaymentTerms(booking)?.lines) ? bookingPaymentTerms(booking).lines : [];
+    return normalizeText(
+      lines.find((line) => normalizeText(line?.kind).toUpperCase() === "DEPOSIT")?.id
+    );
+  }
+
+  function isDepositBookingPayment(payment, booking) {
+    const depositLineId = findDepositPaymentLineId(booking);
+    const paymentLineId = normalizeText(payment?.origin_payment_term_line_id);
+    if (depositLineId && paymentLineId && depositLineId === paymentLineId) return true;
+    return normalizeText(payment?.label).toLowerCase().includes("deposit");
+  }
+
+  function findDepositBookingPayment(pricing, booking) {
+    const payments = Array.isArray(pricing?.payments) ? pricing.payments : [];
+    return payments.find((payment) => isDepositBookingPayment(payment, booking)) || null;
+  }
+
+  function attachPaymentReceiptSnapshots(booking, currentPricing, nextPricing) {
+    if (!nextPricing || typeof nextPricing !== "object") return;
+    const currentPaymentsById = new Map(
+      (Array.isArray(currentPricing?.payments) ? currentPricing.payments : [])
+        .map((payment) => [normalizeText(payment?.id), payment])
+        .filter(([paymentId]) => Boolean(paymentId))
+    );
+    const fallbackGeneratedOfferId = latestGeneratedOfferId(booking)
+      || normalizeText(booking?.confirmed_generated_offer_id)
+      || normalizeText(booking?.accepted_offer_artifact_ref);
+    nextPricing.payments = (Array.isArray(nextPricing?.payments) ? nextPricing.payments : []).map((payment) => {
+      const paymentId = normalizeText(payment?.id);
+      const currentPayment = currentPaymentsById.get(paymentId) || null;
+      const hasReceiptDetails = Boolean(
+        normalizeText(payment?.received_at)
+        && normalizeText(payment?.confirmed_by_atp_staff_id)
+      );
+      const nextReceivedAmount = Number.isFinite(Number(payment?.received_amount_cents))
+        ? Math.max(0, Math.round(Number(payment.received_amount_cents)))
+        : hasReceiptDetails
+          ? Math.max(0, Math.round(Number(payment?.net_amount_cents || 0)))
+          : null;
+      return {
+        ...payment,
+        received_amount_cents: hasReceiptDetails
+          ? nextReceivedAmount
+          : null,
+        received_generated_offer_id: hasReceiptDetails
+          ? normalizeText(payment?.received_generated_offer_id)
+            || normalizeText(currentPayment?.received_generated_offer_id)
+            || normalizeText(payment?.origin_generated_offer_id)
+            || fallbackGeneratedOfferId
+            || null
+          : null
+      };
+    });
   }
 
   async function finalizeManagementGeneratedOfferConfirmation({ req, payload, store, booking, generatedOffer, principal }) {
@@ -546,40 +626,30 @@ export function createBookingFinanceHandlers(deps) {
       return;
     }
 
-    const depositReceiptPayload = payload?.deposit_receipt && typeof payload.deposit_receipt === "object"
-      ? payload.deposit_receipt
-      : null;
-    const depositReceiptDraftPayload = payload?.deposit_receipt_draft && typeof payload.deposit_receipt_draft === "object"
-      ? payload.deposit_receipt_draft
-      : null;
-    const normalizedDepositReceipt = depositReceiptPayload
+    const currentPricing = normalizeBookingPricing(booking.pricing);
+    const nextPricingBase = await convertBookingPricingToBaseCurrency(check.pricing);
+    attachPaymentReceiptSnapshots(booking, currentPricing, nextPricingBase);
+    const depositPayment = findDepositBookingPayment(nextPricingBase, booking);
+    const normalizedDepositReceipt = depositPayment && normalizeText(depositPayment?.received_at)
       ? {
-        deposit_received_at: normalizeText(depositReceiptPayload?.deposit_received_at),
-        deposit_confirmed_by_atp_staff_id: normalizeText(depositReceiptPayload?.deposit_confirmed_by_atp_staff_id),
-        deposit_reference: normalizeText(depositReceiptPayload?.deposit_reference)
-      }
-      : null;
-    const normalizedDepositReceiptDraft = depositReceiptDraftPayload
-      ? {
-        deposit_received_at: normalizeText(depositReceiptDraftPayload?.deposit_received_at),
-        deposit_confirmed_by_atp_staff_id: normalizeText(depositReceiptDraftPayload?.deposit_confirmed_by_atp_staff_id),
-        deposit_reference: normalizeText(depositReceiptDraftPayload?.deposit_reference)
+        deposit_received_at: normalizeText(depositPayment?.received_at),
+        deposit_confirmed_by_atp_staff_id: normalizeText(depositPayment?.confirmed_by_atp_staff_id),
+        deposit_reference: normalizeText(depositPayment?.reference)
       }
       : null;
     if (normalizedDepositReceipt) {
       if (!normalizedDepositReceipt.deposit_received_at) {
-        sendJson(res, 422, { error: "deposit_receipt.deposit_received_at is required." });
+        sendJson(res, 422, { error: "Deposit payment received_at is required." });
         return;
       }
       if (!normalizedDepositReceipt.deposit_confirmed_by_atp_staff_id) {
-        sendJson(res, 422, { error: "deposit_receipt.deposit_confirmed_by_atp_staff_id is required." });
+        sendJson(res, 422, { error: "Deposit payment confirmed_by_atp_staff_id is required." });
         return;
       }
     }
 
-    const nextPricingBase = await convertBookingPricingToBaseCurrency(check.pricing);
     const nextPricingJson = JSON.stringify(nextPricingBase);
-    const currentPricingJson = JSON.stringify(normalizeBookingPricing(booking.pricing));
+    const currentPricingJson = JSON.stringify(currentPricing);
     const pricingChanged = nextPricingJson !== currentPricingJson;
     const acceptedRecordAvailable = Boolean(
       booking?.accepted_offer_snapshot
@@ -593,12 +663,7 @@ export function createBookingFinanceHandlers(deps) {
       && normalizeText(booking?.accepted_deposit_reference) === normalizedDepositReceipt.deposit_reference
       && acceptedRecordAvailable
     );
-    const depositReceiptDraftUnchanged = !normalizedDepositReceiptDraft || (
-      normalizeText(booking?.deposit_receipt_draft_received_at) === normalizedDepositReceiptDraft.deposit_received_at
-      && normalizeText(booking?.deposit_receipt_draft_confirmed_by_atp_staff_id) === normalizedDepositReceiptDraft.deposit_confirmed_by_atp_staff_id
-      && normalizeText(booking?.deposit_receipt_draft_reference) === normalizedDepositReceiptDraft.deposit_reference
-    );
-    if (!pricingChanged && depositReceiptUnchanged && depositReceiptDraftUnchanged) {
+    if (!pricingChanged && depositReceiptUnchanged) {
       sendJson(res, 200, { ...(await buildBookingDetailResponse(booking, req)), unchanged: true });
       return;
     }
@@ -616,43 +681,16 @@ export function createBookingFinanceHandlers(deps) {
           normalizeBookingOffer,
           normalizeBookingTravelPlan,
           buildBookingOfferPaymentTermsReadModel,
-          listBookingTravelPlanPdfs,
-          computeServiceLevelAgreementDueAt
+          listBookingTravelPlanPdfs
         });
       } catch (error) {
         sendJson(res, 422, { error: String(error?.message || error) });
         return;
       }
     }
-    const draftChanged = Boolean(normalizedDepositReceiptDraft) && (
-      normalizeText(booking?.deposit_receipt_draft_received_at) !== normalizedDepositReceiptDraft.deposit_received_at
-      || normalizeText(booking?.deposit_receipt_draft_confirmed_by_atp_staff_id) !== normalizedDepositReceiptDraft.deposit_confirmed_by_atp_staff_id
-      || normalizeText(booking?.deposit_receipt_draft_reference) !== normalizedDepositReceiptDraft.deposit_reference
-    );
 
     booking.pricing = nextPricingBase;
-    if (receiptUpdate?.changed) {
-      delete booking.deposit_receipt_draft_received_at;
-      delete booking.deposit_receipt_draft_confirmed_by_atp_staff_id;
-      delete booking.deposit_receipt_draft_reference;
-    } else if (normalizedDepositReceiptDraft) {
-      if (normalizedDepositReceiptDraft.deposit_received_at) {
-        booking.deposit_receipt_draft_received_at = normalizedDepositReceiptDraft.deposit_received_at;
-      } else {
-        delete booking.deposit_receipt_draft_received_at;
-      }
-      if (normalizedDepositReceiptDraft.deposit_confirmed_by_atp_staff_id) {
-        booking.deposit_receipt_draft_confirmed_by_atp_staff_id = normalizedDepositReceiptDraft.deposit_confirmed_by_atp_staff_id;
-      } else {
-        delete booking.deposit_receipt_draft_confirmed_by_atp_staff_id;
-      }
-      if (normalizedDepositReceiptDraft.deposit_reference) {
-        booking.deposit_receipt_draft_reference = normalizedDepositReceiptDraft.deposit_reference;
-      } else {
-        delete booking.deposit_receipt_draft_reference;
-      }
-    }
-    if (pricingChanged || draftChanged) {
+    if (pricingChanged) {
       incrementBookingRevision(booking, "pricing_revision");
     }
     if (receiptUpdate?.changed) {
@@ -1091,9 +1129,8 @@ export function createBookingFinanceHandlers(deps) {
     const currentGeneratedOffer = generatedOffers[index];
     const nextComment = normalizeText(payload?.comment) || null;
     const confirmAsManagement = payload?.confirm_as_management === true;
-    const markAsSent = payload?.mark_as_sent === true;
     const commentChanged = (currentGeneratedOffer.comment || null) !== nextComment;
-    if (!commentChanged && !confirmAsManagement && !markAsSent) {
+    if (!commentChanged && !confirmAsManagement) {
       sendJson(res, 200, { ...(await buildBookingDetailResponse(booking, req)), unchanged: true });
       return;
     }
@@ -1135,29 +1172,14 @@ export function createBookingFinanceHandlers(deps) {
       return;
     }
 
-    if (markAsSent) {
-      booking.proposal_sent_at = nowIso();
-      booking.proposal_sent_generated_offer_id = generatedOfferId;
-      const proposalSentByAtpStaffId = normalizeText(principal?.sub);
-      if (proposalSentByAtpStaffId) {
-        booking.proposal_sent_by_atp_staff_id = proposalSentByAtpStaffId;
-      } else {
-        delete booking.proposal_sent_by_atp_staff_id;
-      }
-    }
-
     incrementBookingRevision(booking, "offer_revision");
     booking.updated_at = nowIso();
     addActivity(
       store,
       booking.id,
-      markAsSent && !commentChanged ? "OFFER_SENT" : "OFFER_UPDATED",
+      "OFFER_UPDATED",
       actorLabel(principal, normalizeText(payload?.actor) || "keycloak_user"),
-      markAsSent && commentChanged
-        ? "Generated offer comment updated and proposal marked as sent"
-        : markAsSent
-          ? "Proposal marked as sent"
-          : "Generated offer comment updated"
+      "Generated offer comment updated"
     );
     await persistStore(store);
 
@@ -1195,14 +1217,17 @@ export function createBookingFinanceHandlers(deps) {
       sendJson(res, 409, { error: "Confirmed generated offers cannot be deleted." });
       return;
     }
+    const hasRecordedPaymentSnapshot = (Array.isArray(booking?.pricing?.payments) ? booking.pricing.payments : []).some((payment) => (
+      normalizeText(payment?.received_generated_offer_id) === generatedOfferId
+      || (normalizeText(payment?.origin_generated_offer_id) === generatedOfferId && normalizeText(payment?.received_at))
+    ));
+    if (hasRecordedPaymentSnapshot) {
+      sendJson(res, 409, { error: "Generated offers linked to recorded payments cannot be deleted." });
+      return;
+    }
 
     const [removed] = generatedOffers.splice(index, 1);
     booking.generated_offers = generatedOffers;
-    if (normalizeText(booking?.proposal_sent_generated_offer_id) === generatedOfferId) {
-      delete booking.proposal_sent_at;
-      delete booking.proposal_sent_generated_offer_id;
-      delete booking.proposal_sent_by_atp_staff_id;
-    }
     incrementBookingRevision(booking, "offer_revision");
     booking.updated_at = nowIso();
     addActivity(

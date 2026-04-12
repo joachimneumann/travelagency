@@ -313,8 +313,7 @@ export function createBookingWhatsAppController({
         if (!bookingId || merged.has(bookingId)) continue;
         merged.set(bookingId, {
           booking_id: bookingId,
-          name: normalizeText(relatedBooking?.name) || bookingId,
-          stage: normalizeText(relatedBooking?.stage) || ""
+          name: normalizeText(relatedBooking?.name) || bookingId
         });
       }
     }

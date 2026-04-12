@@ -3,7 +3,7 @@
   "generatorVersion": "0.1.0",
   "modulePath": "travelagency.local/model",
   "defaultCurrency": "USD",
-  "generatedAt": "2026-04-12T08:22:20Z",
+  "generatedAt": "2026-04-12T12:47:26Z",
   "languages": [
     "en",
     "ar",
@@ -120,32 +120,6 @@
     },
     {
       "code": "atp_tour_editor"
-    }
-  ],
-  "stages": [
-    {
-      "code": "NEW_BOOKING"
-    },
-    {
-      "code": "TRAVEL_PLAN_SENT"
-    },
-    {
-      "code": "OFFER_SENT"
-    },
-    {
-      "code": "NEGOTIATION_STARTED"
-    },
-    {
-      "code": "DEPOSIT_REQUEST_SENT"
-    },
-    {
-      "code": "IN_PROGRESS"
-    },
-    {
-      "code": "TRIP_COMPLETED"
-    },
-    {
-      "code": "LOST"
     }
   ],
   "paymentStatuses": [
@@ -592,23 +566,6 @@
       "tag": "Bookings",
       "authenticated": true,
       "requestType": "BookingOwnerUpdateRequest",
-      "responseType": "BookingDetail",
-      "parameters": [
-        {
-          "name": "booking_id",
-          "location": "path",
-          "required": true,
-          "typeName": "Identifier"
-        }
-      ]
-    },
-    {
-      "key": "booking_milestone_action",
-      "path": "/api/v1/bookings/{booking_id}/milestone-actions",
-      "method": "POST",
-      "tag": "Bookings",
-      "authenticated": true,
-      "requestType": "BookingMilestoneActionRequest",
       "responseType": "BookingDetail",
       "parameters": [
         {

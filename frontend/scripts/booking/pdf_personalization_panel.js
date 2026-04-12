@@ -237,6 +237,129 @@ const BOOKING_PDF_PERSONALIZATION_PANEL_BY_SCOPE = Object.freeze(
   Object.fromEntries(BOOKING_PDF_PERSONALIZATION_PANELS.map((config) => [config.scope, config]))
 );
 
+function escapePanelHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function resolveEscapeHtml(escapeHtml) {
+  return typeof escapeHtml === "function" ? escapeHtml : escapePanelHtml;
+}
+
+function buildDataAttributesMarkup(dataAttributes = {}, escapeHtml = escapePanelHtml) {
+  return Object.entries(dataAttributes)
+    .filter(([, value]) => value !== undefined && value !== null && value !== false)
+    .map(([key, value]) => {
+      const attributeName = `data-${String(key || "")
+        .trim()
+        .replace(/[A-Z]/g, (match) => `-${match.toLowerCase()}`)}`;
+      if (value === true) return attributeName;
+      return `${attributeName}="${escapeHtml(String(value))}"`;
+    })
+    .join(" ");
+}
+
+export function buildBookingCollapsibleSectionInnerMarkup({ title, bodyMarkup = "", escapeHtml } = {}) {
+  const escape = resolveEscapeHtml(escapeHtml);
+  return `
+    <div class="booking-collapsible__head">
+      <button class="booking-collapsible__summary booking-section__summary--inline-pad-16" type="button">
+        <span class="backend-section-header">
+          <span class="backend-section-header__primary">${escape(title || "")}</span>
+        </span>
+      </button>
+    </div>
+    <div class="booking-collapsible__body">
+      ${bodyMarkup}
+    </div>
+  `;
+}
+
+export function buildBookingCollapsibleSectionMarkup({
+  title,
+  bodyMarkup = "",
+  className = "",
+  dataAttributes = {},
+  escapeHtml
+} = {}) {
+  const escape = resolveEscapeHtml(escapeHtml);
+  const classes = ["booking-collapsible", className].filter(Boolean).join(" ");
+  const attributes = buildDataAttributesMarkup(dataAttributes, escape);
+  return `
+    <article class="${escape(classes)}"${attributes ? ` ${attributes}` : ""}>
+      ${buildBookingCollapsibleSectionInnerMarkup({ title, bodyMarkup, escapeHtml: escape })}
+    </article>
+  `;
+}
+
+export function buildBookingPdfToggleFieldMarkup({
+  label,
+  inputId,
+  dataAttributeName,
+  dataAttributeValue,
+  checked = false,
+  disabled = false,
+  fieldMarkup = "",
+  escapeHtml
+} = {}) {
+  const escape = resolveEscapeHtml(escapeHtml);
+  const attributeName = String(dataAttributeName || "").trim();
+  const attributeMarkup = attributeName
+    ? ` data-${attributeName}="${escape(String(dataAttributeValue || ""))}"`
+    : "";
+  return `
+    <div class="booking-pdf-panel__field">
+      <label class="booking-pdf-panel__toggle-label" for="${escape(inputId || "")}">
+        <input
+          id="${escape(inputId || "")}"
+          type="checkbox"${attributeMarkup}
+          ${checked ? " checked" : ""}
+          ${disabled ? " disabled" : ""}
+        />
+        <span>${escape(label || "")}</span>
+      </label>
+      <div class="booking-pdf-panel__field-body">
+        ${fieldMarkup}
+      </div>
+    </div>
+  `;
+}
+
+export function buildBookingPdfToggleMarkup({
+  label,
+  inputId,
+  dataAttributeName,
+  dataAttributeValue,
+  checked = false,
+  disabled = false,
+  previewMarkup = "",
+  escapeHtml
+} = {}) {
+  const escape = resolveEscapeHtml(escapeHtml);
+  const attributeName = String(dataAttributeName || "").trim();
+  const attributeMarkup = attributeName
+    ? ` data-${attributeName}="${escape(String(dataAttributeValue || ""))}"`
+    : "";
+  return `
+    <div class="booking-pdf-panel__toggle">
+      <label class="booking-pdf-panel__toggle-label" for="${escape(inputId || "")}">
+        <input
+          id="${escape(inputId || "")}"
+          type="checkbox"${attributeMarkup}
+          ${checked ? " checked" : ""}
+          ${disabled ? " disabled" : ""}
+        />
+        <span>${escape(label || "")}</span>
+      </label>
+      ${previewMarkup}
+    </div>
+  `;
+}
+
 function buildPdfFieldMountsMarkup(config) {
   return config.items
     .map((item) => {
@@ -277,18 +400,10 @@ function renderCollapsiblePdfPanel(panel, config) {
   panel.className = "booking-collapsible";
   panel.dataset.bookingPdfPanel = config.scope;
   panel.classList.toggle("is-open", config.initiallyOpen === true);
-  panel.innerHTML = `
-    <div class="booking-collapsible__head">
-      <button class="booking-collapsible__summary booking-section__summary--inline-pad-16" type="button">
-        <span class="backend-section-header">
-          <span class="backend-section-header__primary">${config.title}</span>
-        </span>
-      </button>
-    </div>
-    <div class="booking-collapsible__body">
-      ${buildPdfPanelBodyMarkup(config)}
-    </div>
-  `;
+  panel.innerHTML = buildBookingCollapsibleSectionInnerMarkup({
+    title: config.title,
+    bodyMarkup: buildPdfPanelBodyMarkup(config)
+  });
 }
 
 function renderStaticPdfPanel(panel, config) {
