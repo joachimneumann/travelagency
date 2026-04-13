@@ -274,6 +274,16 @@
     "origin": "legacy",
     "updated_at": "2026-04-02T15:09:31.781Z"
   },
+  "tours.view.none": {
+    "source_hash": "e1cf35f575c51c55a6f50fdb3347e9c1669358ecc3efbaf0177b22384af0d21a",
+    "origin": "legacy",
+    "updated_at": "2026-04-13T19:28:32.147Z"
+  },
+  "tours.view.count": {
+    "source_hash": "82681211e98d7bb7236327c6e03b80b36ecfc0f8fa4e4662971547acd4917cff",
+    "origin": "legacy",
+    "updated_at": "2026-04-13T19:28:32.147Z"
+  },
   "tour.card.from_price": {
     "source_hash": "174fc8f831e3b4486836e4e797e4fe5a418b429dddd821b032f8cd4f3a366e95",
     "origin": "legacy",
@@ -355,14 +365,14 @@
     "updated_at": "2026-04-02T15:09:31.781Z"
   },
   "how.card2.title": {
-    "source_hash": "6777e5689cc83e0271e784bafc66467b59919c84d727d32aedaffde2cf6dc39c",
-    "origin": "legacy",
-    "updated_at": "2026-04-02T15:09:31.781Z"
+    "source_hash": "a2b8215cf1aea28fb1267958a7b4df9a6dce81193b9cb1eca14da492f28fb400",
+    "origin": "machine",
+    "updated_at": "2026-04-13T19:28:32.147Z"
   },
   "how.card2.body": {
-    "source_hash": "86c91af5a46eb013792d44814b3c6d1b9434fa69ddc0ba05a449328a171cc927",
-    "origin": "legacy",
-    "updated_at": "2026-04-02T15:09:31.781Z"
+    "source_hash": "bba08f6f79d55775dd0e52c763ffb434eb25d9aa419a9425c39c43f89b9a689f",
+    "origin": "machine",
+    "updated_at": "2026-04-13T19:28:32.147Z"
   },
   "how.card3.title": {
     "source_hash": "d3f369684482f3ba0169d6bd1b9dec7f266f627b1709343946cccd862f79cd48",
@@ -390,29 +400,29 @@
     "updated_at": "2026-04-02T15:09:31.781Z"
   },
   "why.item1": {
-    "source_hash": "aeff9a08a23d52b2b2e9167cad8b1a2629b4635a00ebd543cf33a9038beb00d6",
-    "origin": "legacy",
-    "updated_at": "2026-04-02T15:09:31.781Z"
+    "source_hash": "eca4c47570a1958b138158dbb3b8853e345fa99b37f5f1b0da896df6ae94ca7e",
+    "origin": "machine",
+    "updated_at": "2026-04-13T19:28:32.147Z"
   },
   "why.item2": {
-    "source_hash": "c174bfb93c887f554ae6c97da46784a4438fcf11a33695adc6f8a3cf529df4ed",
-    "origin": "legacy",
-    "updated_at": "2026-04-02T15:09:31.781Z"
+    "source_hash": "1398d90cc2d041c22708f2d87e762f7e8e1535ec38f45fb23f9a5c4ec82fe223",
+    "origin": "machine",
+    "updated_at": "2026-04-13T19:28:32.147Z"
   },
   "why.item3": {
-    "source_hash": "7147467d87f21a9bc7e4ea65358dc8bc6045d90a12dc6fa476e7c2bea28b909f",
-    "origin": "legacy",
-    "updated_at": "2026-04-02T15:09:31.781Z"
+    "source_hash": "9032ce288b27671c7c82b2c19ae2025b254c9e1343e8c42466609d20c610c62f",
+    "origin": "machine",
+    "updated_at": "2026-04-13T19:28:32.147Z"
   },
   "why.item4": {
-    "source_hash": "feab5cb0714f97bcf7e9f7bb122de720f592b7b4315730554f94c9997fd93349",
-    "origin": "legacy",
-    "updated_at": "2026-04-02T15:09:31.781Z"
+    "source_hash": "331e3fb630ee5baa6351dc24c570ce4c6034024dd01307c8cc8ca06431a27a3e",
+    "origin": "machine",
+    "updated_at": "2026-04-13T19:28:32.147Z"
   },
   "why.caption": {
-    "source_hash": "ae26f0cd7fd5eef4f71d53e2026ff631932275c0611075b42e9b7fcd6d6d80d3",
-    "origin": "legacy",
-    "updated_at": "2026-04-02T15:09:31.781Z"
+    "source_hash": "5783929e049ca66ca27501734ae6619c7b7ad135be8847e443150e23c0ed808e",
+    "origin": "machine",
+    "updated_at": "2026-04-13T19:28:32.147Z"
   },
   "trust.heading": {
     "source_hash": "5d8c71abc527284cd463aa58f3f48098af5ab2f4225a744aa930a4b0e27d7395",
@@ -430,24 +440,24 @@
     "updated_at": "2026-04-12T18:00:48.257Z"
   },
   "trust.metric2.value": {
-    "source_hash": "8a0440639c7e9f848be4fd99e0f53c08e80e345c86269012eb48e5584f7631e6",
-    "origin": "legacy",
-    "updated_at": "2026-04-02T15:09:31.781Z"
+    "source_hash": "0b509e6d4c97d169f054897e72a9d70905e12c89ef711215e5f1f66f529a719d",
+    "origin": "machine",
+    "updated_at": "2026-04-13T19:28:32.147Z"
   },
   "trust.metric2.label": {
-    "source_hash": "8d247049bb0a965b2e93448743d22fa6953c8024a66adb4ef1a4d64d27f0bee6",
+    "source_hash": "fc323057949664e3108834228a56f8e342a80c68b0ed5e48071610926ef8f868",
     "origin": "machine",
-    "updated_at": "2026-04-12T18:00:48.257Z"
+    "updated_at": "2026-04-13T19:28:32.147Z"
   },
   "trust.metric3.value": {
-    "source_hash": "194d44bc9c66ee31a09d0d924feaa7a8e2f1e39506e98c073a842d39abf2888f",
-    "origin": "legacy",
-    "updated_at": "2026-04-02T15:09:31.781Z"
+    "source_hash": "8be6871a215d214e7a30b2944cf4dcdd97f5a3bf4d72853f2029c51e48c4aac3",
+    "origin": "machine",
+    "updated_at": "2026-04-13T19:28:32.147Z"
   },
   "trust.metric3.label": {
-    "source_hash": "5bb7b6b0843532cf160cb6517473b3bdc3fb17cddda22c8d6a716ab0d8b04cc3",
-    "origin": "legacy",
-    "updated_at": "2026-04-02T15:09:31.781Z"
+    "source_hash": "1c035d156b131d5de3a84ee342e1fea8d5c72bf37420f8aa3c9b051721d3ea2c",
+    "origin": "machine",
+    "updated_at": "2026-04-13T19:28:32.147Z"
   },
   "trust.review1.quote": {
     "source_hash": "97bbf548e10d564d1170632a428c58157557ef07e1abb0d7d2827314d2805d30",
