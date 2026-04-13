@@ -34,7 +34,7 @@ const PAYMENT_DOCUMENT_KIND_REQUEST = "PAYMENT_REQUEST";
 const PAYMENT_DOCUMENT_KIND_CONFIRMATION = "PAYMENT_CONFIRMATION";
 
 const PAYMENT_DOCUMENT_PANEL_CONFIG = Object.freeze({
-  booking_confirmation: Object.freeze({
+  payment_confirmation_deposit: Object.freeze({
     items: Object.freeze([
       Object.freeze({ field: "subtitle", includeField: "include_subtitle", label: "Payment confirmation subtitle", rows: 2, defaultChecked: false }),
       Object.freeze({ field: "welcome", includeField: "include_welcome", label: "Payment confirmation welcome", rows: 3, defaultChecked: true }),
@@ -368,12 +368,12 @@ export function createBookingPricingModule(ctx) {
     if (documentKind === PAYMENT_DOCUMENT_KIND_REQUEST) {
       return kind === "FINAL_BALANCE" ? "payment_request_final" : "payment_request_installment";
     }
-    if (kind === "DEPOSIT") return "booking_confirmation";
+    if (kind === "DEPOSIT") return "payment_confirmation_deposit";
     return kind === "FINAL_BALANCE" ? "payment_confirmation_final" : "payment_confirmation_installment";
   }
 
   function paymentDocumentPanelConfig(scope) {
-    return PAYMENT_DOCUMENT_PANEL_CONFIG[String(scope || "").trim()] || PAYMENT_DOCUMENT_PANEL_CONFIG.booking_confirmation;
+    return PAYMENT_DOCUMENT_PANEL_CONFIG[String(scope || "").trim()] || PAYMENT_DOCUMENT_PANEL_CONFIG.payment_confirmation_deposit;
   }
 
   function paymentDocumentPanelPrefix(payment, documentKind) {

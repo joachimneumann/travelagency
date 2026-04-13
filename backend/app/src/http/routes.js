@@ -6,7 +6,6 @@ export const CONTRACT_ROUTE_DEFINITIONS = Object.freeze([
   { method: "POST", path: "/api/v1/bookings", handlerKey: "handleCreateBackendBooking" },
   { method: "GET", path: "/public/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}/access", handlerKey: "handleGetPublicGeneratedOfferAccess" },
   { method: "GET", path: "/public/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}/pdf", handlerKey: "handleGetPublicGeneratedOfferPdf" },
-  { method: "POST", path: "/public/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}/accept", handlerKey: "handlePublicAcceptGeneratedOffer" },
   { method: "GET", path: "/public/v1/bookings/{booking_id}/persons/{person_id}/traveler-details/access", handlerKey: "handleGetPublicTravelerDetailsAccess" },
   { method: "PATCH", path: "/public/v1/bookings/{booking_id}/persons/{person_id}/traveler-details", handlerKey: "handlePatchPublicTravelerDetails" },
   { method: "POST", path: "/public/v1/bookings/{booking_id}/persons/{person_id}/documents/{document_type}/picture", handlerKey: "handleUploadPublicTravelerDocumentPicture" },

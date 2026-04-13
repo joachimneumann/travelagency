@@ -316,15 +316,6 @@ import (
 	actor?: string
 }
 
-#PublicGeneratedOfferAcceptRequest: {
-	booking_confirmation_token: string & !=""
-	accepted_by_name?:          string
-	accepted_by_email?:         common.#Email
-	accepted_by_phone?:         string
-	accepted_by_person_id?:     common.#Identifier
-	language?:                  enums.#LanguageCode
-}
-
 #PublicTravelerDetailsUpdateRequest: {
 	person: entities.#BookingPerson
 }

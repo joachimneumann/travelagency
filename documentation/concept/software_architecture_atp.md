@@ -134,7 +134,6 @@ The important current handler split is:
 - `backend/app/src/domain/travel_plan_templates.js`
   - template normalization
   - clone-from-booking and clone-into-booking logic
-- `frontend/pages/booking-confirmation.html`
   - token-gated public generated-offer read flow
 - `frontend/pages/standard-travel-plans.html`
   - staff template library page

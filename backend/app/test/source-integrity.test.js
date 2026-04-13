@@ -1756,36 +1756,33 @@ test("offer PDF personalization exposes a cancellation-policy toggle and renders
   );
 });
 
-test("booking confirmation PDF personalization lives inside the Deposit payment article and drives booking confirmation PDFs", async () => {
+test("deposit payment confirmation PDF personalization lives inside the payment flow and uses the renamed scope", async () => {
   const bookingModelPath = path.resolve(__dirname, "..", "..", "..", "model", "entities", "booking.cue");
   const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
   const bookingPageScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking.js");
   const bookingCorePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "core.js");
   const pdfPanelModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "pdf_personalization_panel.js");
   const bookingPdfPersonalizationPath = path.resolve(__dirname, "..", "src", "lib", "booking_pdf_personalization.js");
-  const bookingConfirmationPdfPath = path.resolve(__dirname, "..", "src", "lib", "booking_confirmation_pdf.js");
   const [
     bookingModelSource,
     bookingPageSource,
     bookingPageScriptSource,
     bookingCoreSource,
     pdfPanelModuleSource,
-    personalizationSource,
-    bookingConfirmationPdfSource
+    personalizationSource
   ] = await Promise.all([
     readFile(bookingModelPath, "utf8"),
     readFile(bookingPagePath, "utf8"),
     readFile(bookingPageScriptPath, "utf8"),
     readFile(bookingCorePath, "utf8"),
     readFile(pdfPanelModulePath, "utf8"),
-    readFile(bookingPdfPersonalizationPath, "utf8"),
-    readFile(bookingConfirmationPdfPath, "utf8")
+    readFile(bookingPdfPersonalizationPath, "utf8")
   ]);
 
   assert.match(
     bookingModelSource,
-    /booking_confirmation\?:\s+#BookingPdfPersonalizationScoped/,
-    "Booking PDF personalization should model a dedicated booking-confirmation scope"
+    /payment_confirmation_deposit\?:\s+#BookingPdfPersonalizationScoped/,
+    "Booking PDF personalization should model a dedicated deposit payment-confirmation scope"
   );
   assert.match(
     bookingPageSource,
@@ -1799,33 +1796,33 @@ test("booking confirmation PDF personalization lives inside the Deposit payment 
   );
   assert.match(
     bookingPageScriptSource,
-    /bookingConfirmationPdfPersonalizationPanel[\s\S]*renderBookingPdfPersonalizationPanels\(els\)[\s\S]*resolveBookingPdfPersonalizationElements\(document\)/,
-    "booking page script should render and resolve the reusable booking-confirmation PDF personalization panel"
+    /renderBookingPdfPersonalizationPanels\(els\)[\s\S]*resolveBookingPdfPersonalizationElements\(document\)/,
+    "booking page script should render and resolve the reusable PDF personalization panels"
+  );
+  assert.doesNotMatch(
+    bookingPageScriptSource,
+    /bookingConfirmationPdfPersonalizationPanel|pdfBookingConfirmationSubtitleMount|pdfBookingConfirmationReference/,
+    "booking page script should no longer keep standalone booking-confirmation panel references"
   );
   assert.match(
     bookingPageScriptSource,
-    /\[els\.travelPlanPdfPersonalizationPanel, els\.offerPdfPersonalizationPanel, els\.bookingConfirmationPdfPersonalizationPanel\]/,
-    "booking page script should wire core dirty tracking to the booking-confirmation PDF personalization panel"
+    /\[els\.travelPlanPdfPersonalizationPanel,\s*els\.offerPdfPersonalizationPanel\]/,
+    "booking page script should keep dirty tracking wired only to the static travel-plan and offer PDF panels"
   );
   assert.match(
     pdfPanelModuleSource,
-    /scope:\s*"booking_confirmation"[\s\S]*field:\s*"subtitle"[\s\S]*field:\s*"welcome"[\s\S]*field:\s*"closing"/,
-    "The reusable PDF personalization panel config should define booking-confirmation subtitle, welcome, and closing fields"
+    /scope:\s*"payment_confirmation_deposit"[\s\S]*field:\s*"subtitle"[\s\S]*field:\s*"welcome"[\s\S]*field:\s*"closing"/,
+    "The reusable PDF personalization panel config should define deposit payment-confirmation subtitle, welcome, and closing fields"
   );
   assert.match(
     bookingCoreSource,
-    /booking_confirmation:\s*\{\s*subtitle:\s*bookingConfirmationSubtitle\.text[\s\S]*include_closing:\s*resolvePdfTextFieldEnabled\(bookingConfirmation, "booking_confirmation", "closing", bookingConfirmationClosing\)/,
-    "booking core should normalize the booking-confirmation personalization branch"
+    /payment_confirmation_deposit:\s*\{\s*subtitle:\s*paymentConfirmationDepositSubtitle\.text[\s\S]*include_closing:\s*resolvePdfTextFieldEnabled\(paymentConfirmationDeposit, "payment_confirmation_deposit", "closing", paymentConfirmationDepositClosing\)/,
+    "booking core should normalize the deposit payment-confirmation personalization branch"
   );
   assert.match(
     personalizationSource,
-    /PDF_TEXT_FIELD_CONFIG[\s\S]*booking_confirmation:\s*Object\.freeze\(\{[\s\S]*welcome:\s*Object\.freeze\(\{[\s\S]*closing:\s*Object\.freeze\(\{[\s\S]*normalizeBookingPdfPersonalization[\s\S]*PDF_PERSONALIZATION_SCOPES/,
-    "backend PDF personalization should preserve the booking-confirmation personalization branch"
-  );
-  assert.match(
-    bookingConfirmationPdfSource,
-    /resolveBookingConfirmationSubtitleText[\s\S]*resolveBookingConfirmationWelcomeText[\s\S]*resolveBookingConfirmationClosingText[\s\S]*const subtitleText = resolveBookingConfirmationSubtitleText[\s\S]*const welcomeText = resolveBookingConfirmationWelcomeText[\s\S]*const closingText = resolveBookingConfirmationClosingText/,
-    "booking_confirmation_pdf.js should resolve booking-confirmation subtitle, welcome, and closing text from the personalization scope"
+    /PDF_TEXT_FIELD_CONFIG[\s\S]*payment_confirmation_deposit:\s*Object\.freeze\(\{[\s\S]*normalizeBookingPdfPersonalization\([\s\S]*raw\?\.booking_confirmation/,
+    "backend PDF personalization should preserve the renamed deposit payment-confirmation branch and accept the legacy booking-confirmation alias"
   );
 });
 

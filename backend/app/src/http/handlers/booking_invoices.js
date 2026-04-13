@@ -191,7 +191,7 @@ export function createBookingInvoiceHandlers(deps) {
 
   function paymentDocumentPersonalizationScope(paymentKind, documentKind) {
     if (documentKind === "PAYMENT_CONFIRMATION" && paymentKind === "DEPOSIT") {
-      return "booking_confirmation";
+      return "payment_confirmation_deposit";
     }
     if (paymentKind === "FINAL_BALANCE") {
       return documentKind === "PAYMENT_CONFIRMATION"

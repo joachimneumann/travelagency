@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs";
+import { existsSync, statSync } from "node:fs";
 import { access, appendFile, copyFile, mkdir, readdir, readFile, rename, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import {
@@ -129,9 +129,34 @@ function pictureFilenameFromStoredValue(value, username = "", photosDir = "") {
   return normalizedCandidate;
 }
 
+function withAssetVersion(value, version) {
+  const normalizedValue = normalizeText(value);
+  const normalizedVersion = normalizeText(version);
+  if (!normalizedValue || !normalizedVersion) return normalizedValue;
+  const absolute = /^https?:\/\//i.test(normalizedValue);
+  const url = new URL(normalizedValue, "http://localhost");
+  url.searchParams.set("v", normalizedVersion);
+  return absolute ? url.toString() : `${url.pathname}${url.search}${url.hash}`;
+}
+
+function pictureVersionForFilename(filename, username = "", photosDir = "") {
+  const resolved = pictureFilenameFromStoredValue(filename, username, photosDir);
+  if (!resolved || !photosDir) return "";
+  try {
+    const stats = statSync(path.join(photosDir, resolved));
+    return String(Math.trunc(stats.mtimeMs));
+  } catch {
+    return "";
+  }
+}
+
 function pictureRefForFilename(filename, username = "", photosDir = "") {
   const resolved = pictureFilenameFromStoredValue(filename, username, photosDir);
-  return resolved ? `/public/v1/atp-staff-photos/${encodeURIComponent(resolved)}` : "";
+  if (!resolved) return "";
+  return withAssetVersion(
+    `/public/v1/atp-staff-photos/${encodeURIComponent(resolved)}`,
+    pictureVersionForFilename(resolved, username, photosDir)
+  );
 }
 
 function normalizeStoredProfile(profile) {

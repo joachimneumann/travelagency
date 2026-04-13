@@ -447,15 +447,6 @@ import (
 	booking_confirmation?:                   #GeneratedOfferBookingConfirmationPublicSummary
 }
 
-#PublicGeneratedOfferAcceptResponse: {
-	booking_id:                  common.#Identifier
-	generated_offer_id:          common.#Identifier
-	confirmed:                   bool
-	status:                      "CONFIRMED"
-	customer_confirmation_flow?: #PublicGeneratedOfferCustomerConfirmationFlowView
-	booking_confirmation?:       #GeneratedOfferBookingConfirmationPublicSummary
-}
-
 #PublicTravelerDetailsAccessResponse: {
 	booking_id:                          common.#Identifier
 	person_id:                           common.#Identifier

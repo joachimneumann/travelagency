@@ -8,8 +8,8 @@ test("public ATP staff team endpoint returns merged public profiles", async () =
     getPrincipal: () => null,
     canEditAtpStaffProfiles: () => false,
     readBodyJson: async () => ({}),
-    sendJson: (_res, status, body) => {
-      calls.push({ status, body });
+    sendJson: (_res, status, body, headers = {}) => {
+      calls.push({ status, body, headers });
     },
     listPublicAtpStaffProfiles: async () => [{
       username: "joachim",
@@ -46,4 +46,5 @@ test("public ATP staff team endpoint returns merged public profiles", async () =
   assert.equal(calls[0].body.items[0].username, "joachim");
   assert.equal(calls[0].body.items[0].team_order, 1);
   assert.equal(calls[0].body.items[0].position, "Founder");
+  assert.equal(calls[0].headers["Cache-Control"], "no-store");
 });

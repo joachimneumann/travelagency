@@ -32,7 +32,6 @@ import { createBookingInvoiceHandlers } from "./booking_invoices.js";
 import { createBookingPeopleHandlers } from "./booking_people.js";
 import { createBookingTravelerDetailsHandlers } from "./booking_traveler_details.js";
 import { createBookingTravelPlanHandlers } from "./booking_travel_plan.js";
-import { BOOKING_CONFIRMATION_PDF_ARTIFACTS_DIRNAME } from "../../lib/booking_confirmation_pdf_artifacts.js";
 import { enumValueSetFor } from "../../lib/generated_catalogs.js";
 
 const COUNTRY_CODE_SET = enumValueSetFor("CountryCode");
@@ -487,7 +486,6 @@ export function createBookingHandlers(deps) {
         }
       })
     );
-    await rm(path.join(GENERATED_OFFERS_DIR, BOOKING_CONFIRMATION_PDF_ARTIFACTS_DIRNAME, bookingId), { recursive: true, force: true }).catch(() => {});
     await rm(path.join(TRAVEL_PLAN_PDFS_DIR, bookingId), { recursive: true, force: true }).catch(() => {});
     await rm(path.join(BOOKING_TRAVEL_PLAN_ATTACHMENTS_DIR, bookingId), { recursive: true, force: true }).catch(() => {});
   }
@@ -711,8 +709,7 @@ export function createBookingHandlers(deps) {
 
   const {
     handleGetPublicGeneratedOfferAccess,
-    handleGetPublicGeneratedOfferPdf,
-    handlePublicAcceptGeneratedOffer
+    handleGetPublicGeneratedOfferPdf
   } = createBookingConfirmationHandlers({
     readBodyJson,
     sendJson,
@@ -1169,7 +1166,6 @@ export function createBookingHandlers(deps) {
     handleGenerateBookingOffer,
     handleGetPublicGeneratedOfferAccess,
     handleGetPublicGeneratedOfferPdf,
-    handlePublicAcceptGeneratedOffer,
     handlePostBookingPersonTravelerDetailsLink,
     handleGetPublicTravelerDetailsAccess,
     handlePatchPublicTravelerDetails,

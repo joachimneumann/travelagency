@@ -141,7 +141,6 @@ Use these terms consistently:
 Keep this distinct from the generated-booking confirmation flow:
 - `booking confirmation token`: capability token scoped to one frozen generated offer
 - `booking confirmation record`: immutable commercial acceptance evidence
-- `booking-confirmation.html`: separate public acceptance page for the frozen generated-offer snapshot and PDF
 
 Do not call the week-long invitation token a booking confirmation token.
 

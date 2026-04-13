@@ -3,7 +3,7 @@
   "generatorVersion": "0.1.0",
   "modulePath": "travelagency.local/model",
   "defaultCurrency": "USD",
-  "generatedAt": "2026-04-12T13:52:37Z",
+  "generatedAt": "2026-04-13T04:54:22Z",
   "languages": [
     "en",
     "ar",
@@ -225,29 +225,6 @@
           "location": "query",
           "required": true,
           "typeName": "string"
-        }
-      ]
-    },
-    {
-      "key": "public_generated_booking_confirmation",
-      "path": "/public/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}/accept",
-      "method": "POST",
-      "tag": "Public",
-      "authenticated": false,
-      "requestType": "PublicGeneratedOfferAcceptRequest",
-      "responseType": "PublicGeneratedOfferAcceptResponse",
-      "parameters": [
-        {
-          "name": "booking_id",
-          "location": "path",
-          "required": true,
-          "typeName": "Identifier"
-        },
-        {
-          "name": "generated_offer_id",
-          "location": "path",
-          "required": true,
-          "typeName": "Identifier"
         }
       ]
     },

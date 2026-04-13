@@ -121,6 +121,8 @@ export function createAtpStaffHandlers(deps) {
       sendJson(res, 200, {
         items,
         total: items.length
+      }, {
+        "Cache-Control": "no-store"
       });
     } catch (error) {
       sendJson(res, 500, { error: String(error?.message || error || "Could not load ATP staff team") });

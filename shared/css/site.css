@@ -3276,243 +3276,6 @@ textarea:focus-visible {
   border-color: var(--accent);
 }
 
-.booking-confirmation-page {
-  min-height: 100vh;
-  background:
-    radial-gradient(circle at top left, var(--accent-glow), transparent 26rem),
-    linear-gradient(180deg, var(--surface-page-warm) 0%, var(--surface-page-warm-alt) 100%);
-}
-
-.booking-confirmation-shell {
-  max-width: 860px;
-}
-
-.booking-confirmation-card {
-  padding: clamp(1.4rem, 2.4vw, 2rem);
-}
-
-.booking-confirmation-kicker {
-  margin: 0 0 0.45rem;
-  font-size: var(--font-size-body-sm);
-  font-weight: var(--font-weight-bold);
-  letter-spacing: var(--tracking-caps);
-  text-transform: var(--text-transform-caps);
-  color: var(--text-muted-strong);
-}
-
-.booking-confirmation-heading-spacer {
-  height: 1.35rem;
-}
-
-.booking-confirmation-intro {
-  margin: 0 0 1rem;
-  color: var(--text-muted-strong);
-}
-
-.booking-confirmation-loading {
-  color: var(--text-muted-strong);
-}
-
-.booking-confirmation-summary {
-  display: grid;
-  gap: 0.65rem;
-  margin-bottom: 1rem;
-}
-
-.booking-confirmation-summary__row {
-  display: grid;
-  grid-template-columns: minmax(0, 12rem) minmax(0, 1fr);
-  gap: 0.8rem;
-  align-items: start;
-}
-
-.booking-confirmation-summary__label {
-  font-weight: var(--font-weight-bold);
-  color: var(--text-strong-alt);
-}
-
-.booking-confirmation-summary__value {
-  color: var(--text-strong-alt);
-}
-
-.booking-confirmation-summary__value.is-total {
-  font-size: var(--font-size-title-md);
-  font-weight: var(--font-weight-bold);
-}
-
-.booking-confirmation-summary__comment {
-  white-space: pre-wrap;
-}
-
-.booking-confirmation-route,
-.booking-confirmation-payment-terms {
-  margin-bottom: 1rem;
-  padding: 1rem 1.1rem;
-  border: 1px solid var(--line-soft);
-  border-radius: 16px;
-  background: var(--white-alpha-80);
-}
-
-.booking-confirmation-route__header,
-.booking-confirmation-payment-terms__summary-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 0.8rem;
-  align-items: baseline;
-}
-
-.booking-confirmation-route__title,
-.booking-confirmation-payment-terms__title {
-  margin: 0;
-  color: var(--text-strong-alt);
-}
-
-.booking-confirmation-route__status {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.24rem 0.6rem;
-  border-radius: 999px;
-  background: var(--info-surface-alpha);
-  color: var(--info-text);
-  font-size: var(--font-size-caption);
-  font-weight: var(--font-weight-bold);
-}
-
-.booking-confirmation-route__body {
-  margin: 0.7rem 0 0;
-  color: var(--text-muted-strong);
-  line-height: 1.55;
-}
-
-.booking-confirmation-route__meta {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.7rem 1rem;
-  margin-top: 0.85rem;
-}
-
-.booking-confirmation-route__meta div {
-  display: grid;
-  gap: 0.18rem;
-}
-
-.booking-confirmation-route__meta strong {
-  color: var(--text-strong-alt);
-  font-size: var(--font-size-caption);
-}
-
-.booking-confirmation-payment-terms__header {
-  margin-bottom: 0.8rem;
-}
-
-.booking-confirmation-payment-terms__amount {
-  text-align: right;
-  white-space: nowrap;
-}
-
-.booking-confirmation-payment-terms__note-row td {
-  background: var(--surface-subtle);
-  color: var(--text-muted-strong);
-  font-size: var(--font-size-body-sm);
-}
-
-.booking-confirmation-payment-terms__note-label {
-  display: inline-block;
-  margin-right: 0.55rem;
-  color: var(--text-strong-alt);
-  font-weight: var(--font-weight-bold);
-}
-
-.booking-confirmation-payment-terms__summary {
-  display: grid;
-  gap: 0.35rem;
-  margin-top: 0.85rem;
-  padding-top: 0.75rem;
-  border-top: 1px solid var(--line-soft);
-}
-
-.booking-confirmation-payment-terms__notes {
-  margin: 0.8rem 0 0;
-  color: var(--text-muted-strong);
-  line-height: 1.55;
-  white-space: pre-wrap;
-}
-
-.booking-confirmation-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.6rem;
-  margin-bottom: 1rem;
-}
-
-.booking-confirmation-form {
-  display: grid;
-  gap: 0.85rem;
-}
-
-.booking-confirmation-form__grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 0.8rem;
-}
-
-.booking-confirmation-form__hint {
-  margin: -0.1rem 0 0;
-  color: var(--text-muted-strong);
-}
-
-.booking-confirmation-form__status {
-  min-height: 1.2rem;
-  color: var(--text-muted-strong);
-}
-
-.booking-confirmation-form__status.is-error {
-  color: var(--error-text);
-  font-weight: var(--font-weight-bold);
-}
-
-.booking-confirmation-form__status.is-success {
-  color: var(--success-text-deep);
-  font-weight: var(--font-weight-bold);
-}
-
-.booking-confirmation-otp {
-  display: grid;
-  gap: 0.8rem;
-  padding: 1rem;
-  border: 1px solid var(--line-soft);
-  border-radius: 16px;
-  background: var(--white-alpha-72);
-}
-
-.booking-confirmation-otp__meta {
-  color: var(--text-muted-strong);
-}
-
-.booking-confirmation-otp__actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.6rem;
-  align-items: center;
-}
-
-.booking-confirmation-result {
-  padding: 1rem;
-  border-radius: 16px;
-  border: 1px solid var(--line-soft);
-  background: var(--white-alpha-72);
-}
-
-.booking-confirmation-result__title {
-  margin: 0 0 0.4rem;
-}
-
-.booking-confirmation-result__detail {
-  margin: 0.2rem 0 0;
-  color: var(--text-muted-strong);
-}
-
 .traveler-details-page {
   min-height: 100vh;
   background:
@@ -3528,8 +3291,21 @@ textarea:focus-visible {
   padding: clamp(1.4rem, 2.4vw, 2rem);
 }
 
+.traveler-details-kicker {
+  margin: 0 0 0.45rem;
+  font-size: var(--font-size-body-sm);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--tracking-caps);
+  text-transform: var(--text-transform-caps);
+  color: var(--text-muted-strong);
+}
+
 .traveler-details-intro {
   margin: 0 0 1rem;
+  color: var(--text-muted-strong);
+}
+
+.traveler-details-loading {
   color: var(--text-muted-strong);
 }
 
@@ -3823,8 +3599,6 @@ textarea:focus-visible {
 
 @media (max-width: 720px) {
   .booking-generated-offer-route,
-  .booking-confirmation-form__grid,
-  .booking-confirmation-summary__row,
   .traveler-details-summary__row,
   .traveler-details-card__grid,
   .traveler-details-card__grid--document-fields {
@@ -3836,12 +3610,6 @@ textarea:focus-visible {
   }
 
   .traveler-details-consent-row {
-    grid-template-columns: 1fr;
-  }
-
-  .booking-confirmation-route__meta,
-  .booking-confirmation-route__header,
-  .booking-confirmation-payment-terms__summary-row {
     grid-template-columns: 1fr;
   }
 

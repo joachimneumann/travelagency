@@ -203,18 +203,6 @@
         ]
       },
       {
-        key: "public_generated_booking_confirmation",
-        path: "/public/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}/accept",
-        method: "POST",
-        authenticated: false,
-        requestType: "PublicGeneratedOfferAcceptRequest",
-        responseType: "PublicGeneratedOfferAcceptResponse",
-        parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_2)
-        ]
-      },
-      {
         key: "public_generated_offer_pdf",
         path: "/public/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}/pdf",
         method: "GET",

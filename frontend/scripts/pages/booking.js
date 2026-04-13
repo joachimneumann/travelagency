@@ -394,7 +394,6 @@ const els = {
   travelStylesOptions: document.getElementById("booking_travel_styles_options"),
   travelPlanPdfPersonalizationPanel: document.getElementById("travel_plan_pdf_personalization_panel"),
   offerPdfPersonalizationPanel: document.getElementById("offer_pdf_personalization_panel"),
-  bookingConfirmationPdfPersonalizationPanel: document.getElementById("booking_confirmation_pdf_personalization_panel"),
   pdfTravelPlanSubtitleMount: null,
   pdfTravelPlanWelcomeMount: null,
   pdfTravelPlanChildrenPolicyMount: null,
@@ -410,10 +409,6 @@ const els = {
   pdfOfferClosingMount: null,
   pdfOfferIncludeWhoIsTravelingMount: null,
   pdfOfferReference: null,
-  pdfBookingConfirmationSubtitleMount: null,
-  pdfBookingConfirmationWelcomeMount: null,
-  pdfBookingConfirmationClosingMount: null,
-  pdfBookingConfirmationReference: null,
   contentLanguageField: document.getElementById("booking_content_language_field"),
   contentLanguageMenuMount: document.getElementById("booking_content_language_menu_mount"),
   contentLanguageSelect: document.getElementById("booking_content_language_select"),
@@ -831,7 +826,7 @@ async function init() {
       renderActionControls();
     });
   }
-  [els.travelPlanPdfPersonalizationPanel, els.offerPdfPersonalizationPanel, els.bookingConfirmationPdfPersonalizationPanel].filter(Boolean).forEach((panel) => {
+  [els.travelPlanPdfPersonalizationPanel, els.offerPdfPersonalizationPanel].filter(Boolean).forEach((panel) => {
     panel.addEventListener("input", updateCoreDirtyState);
     panel.addEventListener("change", updateCoreDirtyState);
   });

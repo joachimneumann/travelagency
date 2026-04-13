@@ -232,8 +232,10 @@ function normalizePdfPersonalization(value) {
   const raw = value && typeof value === "object" && !Array.isArray(value) ? value : {};
   const travelPlan = raw.travel_plan && typeof raw.travel_plan === "object" && !Array.isArray(raw.travel_plan) ? raw.travel_plan : {};
   const offer = raw.offer && typeof raw.offer === "object" && !Array.isArray(raw.offer) ? raw.offer : {};
-  const bookingConfirmation = raw.booking_confirmation && typeof raw.booking_confirmation === "object" && !Array.isArray(raw.booking_confirmation)
-    ? raw.booking_confirmation
+  const paymentConfirmationDeposit = raw.payment_confirmation_deposit && typeof raw.payment_confirmation_deposit === "object" && !Array.isArray(raw.payment_confirmation_deposit)
+    ? raw.payment_confirmation_deposit
+    : raw.booking_confirmation && typeof raw.booking_confirmation === "object" && !Array.isArray(raw.booking_confirmation)
+      ? raw.booking_confirmation
     : {};
   const travelPlanSubtitle = normalizePdfTextField(travelPlan.subtitle, travelPlan.subtitle_i18n);
   const travelPlanWelcome = normalizePdfTextField(travelPlan.welcome, travelPlan.welcome_i18n);
@@ -245,9 +247,9 @@ function normalizePdfPersonalization(value) {
   const offerChildrenPolicy = normalizePdfTextField(offer.children_policy, offer.children_policy_i18n);
   const offerWhatsNotIncluded = normalizePdfTextField(offer.whats_not_included, offer.whats_not_included_i18n);
   const offerClosing = normalizePdfTextField(offer.closing, offer.closing_i18n);
-  const bookingConfirmationSubtitle = normalizePdfTextField(bookingConfirmation.subtitle, bookingConfirmation.subtitle_i18n);
-  const bookingConfirmationWelcome = normalizePdfTextField(bookingConfirmation.welcome, bookingConfirmation.welcome_i18n);
-  const bookingConfirmationClosing = normalizePdfTextField(bookingConfirmation.closing, bookingConfirmation.closing_i18n);
+  const paymentConfirmationDepositSubtitle = normalizePdfTextField(paymentConfirmationDeposit.subtitle, paymentConfirmationDeposit.subtitle_i18n);
+  const paymentConfirmationDepositWelcome = normalizePdfTextField(paymentConfirmationDeposit.welcome, paymentConfirmationDeposit.welcome_i18n);
+  const paymentConfirmationDepositClosing = normalizePdfTextField(paymentConfirmationDeposit.closing, paymentConfirmationDeposit.closing_i18n);
   return {
     ...raw,
     travel_plan: {
@@ -287,16 +289,16 @@ function normalizePdfPersonalization(value) {
       include_cancellation_policy: offer.include_cancellation_policy !== false,
       include_who_is_traveling: offer.include_who_is_traveling !== false
     },
-    booking_confirmation: {
-      subtitle: bookingConfirmationSubtitle.text,
-      subtitle_i18n: bookingConfirmationSubtitle.i18n,
-      include_subtitle: resolvePdfTextFieldEnabled(bookingConfirmation, "booking_confirmation", "subtitle", bookingConfirmationSubtitle),
-      welcome: bookingConfirmationWelcome.text,
-      welcome_i18n: bookingConfirmationWelcome.i18n,
-      include_welcome: resolvePdfTextFieldEnabled(bookingConfirmation, "booking_confirmation", "welcome", bookingConfirmationWelcome),
-      closing: bookingConfirmationClosing.text,
-      closing_i18n: bookingConfirmationClosing.i18n,
-      include_closing: resolvePdfTextFieldEnabled(bookingConfirmation, "booking_confirmation", "closing", bookingConfirmationClosing)
+    payment_confirmation_deposit: {
+      subtitle: paymentConfirmationDepositSubtitle.text,
+      subtitle_i18n: paymentConfirmationDepositSubtitle.i18n,
+      include_subtitle: resolvePdfTextFieldEnabled(paymentConfirmationDeposit, "payment_confirmation_deposit", "subtitle", paymentConfirmationDepositSubtitle),
+      welcome: paymentConfirmationDepositWelcome.text,
+      welcome_i18n: paymentConfirmationDepositWelcome.i18n,
+      include_welcome: resolvePdfTextFieldEnabled(paymentConfirmationDeposit, "payment_confirmation_deposit", "welcome", paymentConfirmationDepositWelcome),
+      closing: paymentConfirmationDepositClosing.text,
+      closing_i18n: paymentConfirmationDepositClosing.i18n,
+      include_closing: resolvePdfTextFieldEnabled(paymentConfirmationDeposit, "payment_confirmation_deposit", "closing", paymentConfirmationDepositClosing)
     }
   };
 }
@@ -626,11 +628,11 @@ export function createBookingCoreModule(ctx) {
 
     const travelPlan = normalizePdfPersonalization(draft.pdf_personalization).travel_plan;
     const offer = normalizePdfPersonalization(draft.pdf_personalization).offer;
-    const bookingConfirmation = normalizePdfPersonalization(draft.pdf_personalization).booking_confirmation;
+    const paymentConfirmationDeposit = normalizePdfPersonalization(draft.pdf_personalization).payment_confirmation_deposit;
     const pdfBranches = {
       travel_plan: travelPlan,
       offer,
-      booking_confirmation: bookingConfirmation
+      payment_confirmation_deposit: paymentConfirmationDeposit
     };
     const renderField = (mount, scope, field, label, placeholder, rows = 2) => {
       if (!(mount instanceof HTMLElement)) return;

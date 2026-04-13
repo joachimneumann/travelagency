@@ -2986,13 +2986,6 @@ test("contract metadata exposes the generated offer gmail draft endpoint", async
   );
 });
 
-test("contract metadata exposes the public generated booking confirmation endpoint", async () => {
-  assert.equal(
-    endpointPath("public_generated_booking_confirmation"),
-    "/public/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}/accept"
-  );
-});
-
 test("contract metadata exposes the public generated offer access endpoints", async () => {
   assert.equal(
     endpointPath("public_generated_offer_access"),
@@ -3738,131 +3731,6 @@ test("booking generated offers support management confirmation by the frozen app
   assert.equal(bookingAfterConfirm.generated_offers[0].booking_confirmation.method, "MANAGEMENT");
   assert.equal(bookingAfterConfirm.generated_offers[0].booking_confirmation.accepted_by_name, "Joachim");
   assert.equal(bookingAfterConfirm.generated_offers[0].booking_confirmation.management_approver_atp_staff_id, "kc-joachim");
-});
-
-test("public generated booking confirmation finalizes the frozen offer and stores the booking pointer", async () => {
-  const createdBooking = await createSeedBooking();
-  const bookingId = createdBooking.id;
-
-  const offerPatchResult = await requestJson(
-    endpointPath("booking_offer").replace("{booking_id}", bookingId),
-    apiHeaders(),
-    {
-      method: "PATCH",
-      body: {
-        expected_offer_revision: createdBooking.offer_revision,
-        offer: buildTripOfferDraft(createdBooking.offer, createdBooking.preferred_currency, 13200, {
-          payment_terms: {
-            currency: createdBooking.preferred_currency,
-            basis_total_amount_cents: 13200,
-            lines: [
-              {
-                id: "payment_term_acceptance_deposit",
-                kind: "DEPOSIT",
-                label: "Deposit",
-                sequence: 1,
-                amount_spec: {
-                  mode: "FIXED_AMOUNT",
-                  fixed_amount_cents: 3300
-                },
-                due_rule: {
-                  type: "ON_ACCEPTANCE"
-                }
-              },
-              {
-                id: "payment_term_acceptance_final",
-                kind: "FINAL_BALANCE",
-                label: "Final payment",
-                sequence: 2,
-                amount_spec: {
-                  mode: "REMAINING_BALANCE"
-                },
-                due_rule: {
-                  type: "DAYS_AFTER_ACCEPTANCE",
-                  days: 14
-                }
-              }
-            ]
-          }
-        })
-      }
-    }
-  );
-  assert.equal(offerPatchResult.status, 200);
-
-  const generateResult = await requestJson(
-    endpointPath("booking_generate_offer").replace("{booking_id}", bookingId),
-    apiHeaders(),
-    {
-      method: "POST",
-      body: {
-        expected_offer_revision: offerPatchResult.body.booking.offer_revision,
-        comment: "Acceptance flow offer"
-      }
-    }
-  );
-  assert.equal(generateResult.status, 201);
-  const generatedOffer = generateResult.body.booking.generated_offers[0];
-  const generatedOfferId = generatedOffer.id;
-  assert.equal(typeof generatedOffer.public_booking_confirmation_token, "string");
-  assert.ok(generatedOffer.public_booking_confirmation_token.length > 20);
-
-  const blockedResult = await requestJson(
-    endpointPath("public_generated_booking_confirmation")
-      .replace("{booking_id}", bookingId)
-      .replace("{generated_offer_id}", generatedOfferId),
-    {},
-    {
-      method: "POST",
-      body: {
-        booking_confirmation_token: generatedOffer.public_booking_confirmation_token,
-        accepted_by_name: "Test User",
-        language: "en"
-      }
-    }
-  );
-  assert.equal(blockedResult.status, 409);
-  assert.match(String(blockedResult.body.error || ""), /deposit payment/i);
-
-  const storeBeforeLegacyAccept = JSON.parse(await readFile(STORE_PATH, "utf8"));
-  const bookingBeforeLegacyAccept = storeBeforeLegacyAccept.bookings.find((item) => item.id === bookingId);
-  assert.ok(bookingBeforeLegacyAccept);
-  delete bookingBeforeLegacyAccept.generated_offers[0].customer_confirmation_flow;
-  await writeFile(STORE_PATH, `${JSON.stringify(storeBeforeLegacyAccept, null, 2)}\n`, "utf8");
-
-  const acceptResult = await requestJson(
-    endpointPath("public_generated_booking_confirmation")
-      .replace("{booking_id}", bookingId)
-      .replace("{generated_offer_id}", generatedOfferId),
-    {},
-    {
-      method: "POST",
-      body: {
-        booking_confirmation_token: generatedOffer.public_booking_confirmation_token,
-        accepted_by_name: "Test User",
-        language: "en"
-      }
-    }
-  );
-  assert.equal(acceptResult.status, 409);
-  assert.match(String(acceptResult.body.error || ""), /no longer supports public booking confirmation/i);
-
-  const detailResult = await requestJson(
-    endpointPath("booking_detail").replace("{booking_id}", bookingId),
-    apiHeaders()
-  );
-  assert.equal(detailResult.status, 200);
-  assert.equal(typeof detailResult.body.booking.confirmed_generated_offer_id, "undefined");
-  assert.equal(typeof detailResult.body.booking.generated_offers[0].booking_confirmation, "undefined");
-  assert.equal(detailResult.body.booking.pricing_revision, 0);
-  assert.equal(detailResult.body.booking.pricing.payments.length, 0);
-
-  const store = JSON.parse(await readFile(STORE_PATH, "utf8"));
-  const bookingRecord = store.bookings.find((item) => item.id === bookingId);
-  assert.ok(bookingRecord);
-  assert.equal(typeof bookingRecord.confirmed_generated_offer_id, "undefined");
-  assert.equal(typeof bookingRecord.generated_offers[0].booking_confirmation, "undefined");
-  assert.equal(bookingRecord.pricing.payments.length, 0);
 });
 
 test("deposit receipt freezes the accepted customer record and keeps it stable after later offer edits", async () => {
@@ -4657,22 +4525,6 @@ test("public generated offer access exposes deposit confirmation flow and blocks
   assert.equal(accessResult.body.payment_terms.lines.length, 2);
   assert.equal(accessResult.body.booking_confirmation, undefined);
 
-  const acceptResult = await requestJson(
-    endpointPath("public_generated_booking_confirmation")
-      .replace("{booking_id}", bookingId)
-      .replace("{generated_offer_id}", generatedOffer.id),
-    {},
-    {
-      method: "POST",
-      body: {
-        booking_confirmation_token: generatedOffer.public_booking_confirmation_token,
-        accepted_by_name: "Deposit User",
-        accepted_by_email: "deposit@example.com"
-      }
-    }
-  );
-  assert.equal(acceptResult.status, 409);
-  assert.match(String(acceptResult.body.error || ""), /deposit payment/i);
 });
 
 test("public generated offer access and public pdf require a valid booking confirmation token", async () => {
@@ -6505,7 +6357,10 @@ test("admin can upload and reset ATP staff profile pictures", { skip: !HAS_MAGIC
     }
   );
   assert.equal(uploadResult.status, 200);
-  assert.match(String(uploadResult.body.user.staff_profile.picture_ref || ""), /joachim\.webp$/);
+  assert.match(
+    String(uploadResult.body.user.staff_profile.picture_ref || ""),
+    /joachim\.webp(?:\?v=\d+)?$/
+  );
 
   const uploadedPhotoPath = path.join(TEST_DATA_DIR, "content", "atp_staff", "photos", "joachim.webp");
   const uploadedPhotoStat = await stat(uploadedPhotoPath);
@@ -6517,7 +6372,10 @@ test("admin can upload and reset ATP staff profile pictures", { skip: !HAS_MAGIC
     { method: "DELETE" }
   );
   assert.equal(deleteResult.status, 200);
-  assert.match(String(deleteResult.body.user.staff_profile.picture_ref || ""), /joachim\.svg$/);
+  assert.match(
+    String(deleteResult.body.user.staff_profile.picture_ref || ""),
+    /joachim\.svg(?:\?v=\d+)?$/
+  );
 });
 
 test("assigned staff only sees their own bookings while admin sees all", async () => {

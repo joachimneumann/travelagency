@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-04-12T13:52:37Z
+# 2026-04-13T04:54:22Z
 
 ---
 openapi: 3.1.0
@@ -4704,9 +4704,6 @@ components:
           "$ref": "#/components/schemas/BookingOfferPaymentAmountSpec"
         due_rule:
           "$ref": "#/components/schemas/BookingOfferPaymentDueRule"
-        description:
-          type: string
-          nullable: true
     BookingOfferPaymentTerms:
       type: object
       required:
@@ -4718,9 +4715,6 @@ components:
           type: array
           items:
             "$ref": "#/components/schemas/BookingOfferPaymentTermLine"
-        notes:
-          type: string
-          nullable: true
     GeneratedOfferDepositBookingConfirmationRule:
       type: object
       required:
@@ -7337,43 +7331,6 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/PublicGeneratedOfferAccessResponse"
-  "/public/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}/accept":
-    post:
-      operationId: public_generated_booking_confirmation
-      summary: Public Generated Booking Confirmation
-      tags:
-      - Public
-      security: []
-      parameters:
-      - name: booking_id
-        in: path
-        required: true
-        schema:
-          type: string
-      - name: generated_offer_id
-        in: path
-        required: true
-        schema:
-          type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              "$ref": "#/components/schemas/PublicGeneratedOfferAcceptRequest"
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/PublicGeneratedOfferAcceptResponse"
-        '201':
-          description: Created
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/PublicGeneratedOfferAcceptResponse"
   "/public/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}/pdf":
     get:
       operationId: public_generated_offer_pdf

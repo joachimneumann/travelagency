@@ -20,8 +20,6 @@ case "public_bookings":
   return RequestFactory.publicBookingsRequest(options);
 case "public_generated_offer_access":
   return RequestFactory.publicGeneratedOfferAccessRequest(options);
-case "public_generated_booking_confirmation":
-  return RequestFactory.publicGeneratedBookingConfirmationRequest(options);
 case "public_generated_offer_pdf":
   return RequestFactory.publicGeneratedOfferPdfRequest(options);
 case "public_traveler_details_access":

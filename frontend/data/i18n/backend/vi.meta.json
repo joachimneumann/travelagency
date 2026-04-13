@@ -1004,21 +1004,6 @@
     "origin": "machine",
     "updated_at": "2026-03-30T23:51:31.875Z"
   },
-  "booking.booking_confirmation_none": {
-    "source_hash": "be2850cd410d0436d96860502737673125295dbaf9ac85ddd3c50a95a3e7a707",
-    "origin": "machine",
-    "updated_at": "2026-03-30T23:51:31.875Z"
-  },
-  "booking.booking_confirmation_summary_confirmed": {
-    "source_hash": "c239e99bea97f65f3a6237383e01466488d26968c2d1fd686dac8e992e1d370f",
-    "origin": "machine",
-    "updated_at": "2026-03-30T23:51:31.875Z"
-  },
-  "booking.booking_confirmation_summary_count": {
-    "source_hash": "76b687d73c8fcad343fbf86d8b79adea6396e08e6d62cfd63aa9f64ac8074a2f",
-    "origin": "machine",
-    "updated_at": "2026-03-30T23:51:31.875Z"
-  },
   "booking.change_picture": {
     "source_hash": "63fcbcd9a60fcf28fb706073923e9cb09efb206b1fcbe17f11cb66ea65c60885",
     "origin": "machine",
@@ -1629,31 +1614,6 @@
     "origin": "machine",
     "updated_at": "2026-03-30T23:51:31.875Z"
   },
-  "booking.offer.booking_confirmation_email_body": {
-    "source_hash": "6445270594f5d2b99c7789809d0080e7c47e16dd701a2abe939c552d3cb419c0",
-    "origin": "machine",
-    "updated_at": "2026-03-30T23:51:31.875Z"
-  },
-  "booking.offer.booking_confirmation_email_opening": {
-    "source_hash": "0310797fa0b36f8b41e902239c7415a688d3e6d75b5597f9437bcc1f6546f91f",
-    "origin": "machine",
-    "updated_at": "2026-03-30T23:51:31.875Z"
-  },
-  "booking.offer.booking_confirmation_email_subject": {
-    "source_hash": "a95d04b307c487a2e43889f3bc190bf1c033cec82fc99b5be942624525cfe0b3",
-    "origin": "machine",
-    "updated_at": "2026-03-30T23:51:31.875Z"
-  },
-  "booking.offer.booking_confirmation_link": {
-    "source_hash": "c14aedcc400fa53897da10c9f3b150cfabcbf7376e8fe1dc9eef7b28a7a38f33",
-    "origin": "machine",
-    "updated_at": "2026-03-30T23:51:31.875Z"
-  },
-  "booking.offer.booking_confirmation_link_copied": {
-    "source_hash": "02b423d4169c4d14d6b5db35bf08924fa4792f84ff97525a68dda6661695967b",
-    "origin": "machine",
-    "updated_at": "2026-03-30T23:51:31.875Z"
-  },
   "booking.offer.carry_over_surcharge": {
     "source_hash": "c06fcb9a339139ef33f31a420773a818e6fe0af52482489f6353297f2b48b8b1",
     "origin": "machine",
@@ -1701,11 +1661,6 @@
   },
   "booking.offer.copy_link": {
     "source_hash": "dbf362d4f210c780513a9258278d4d07abe8a224f84ba7ad775d819039342e77",
-    "origin": "machine",
-    "updated_at": "2026-03-30T23:51:31.875Z"
-  },
-  "booking.offer.copy_link_prompt": {
-    "source_hash": "6a08bfa73ce9229e753c3734621529416ba5fa5be15d57dc2eba7d3b236086d9",
     "origin": "machine",
     "updated_at": "2026-03-30T23:51:31.875Z"
   },
@@ -1784,11 +1739,6 @@
     "origin": "machine",
     "updated_at": "2026-03-30T23:51:31.875Z"
   },
-  "booking.offer.email_booking_confirmation_link": {
-    "source_hash": "d5efc51753744b618d25c892ad742e886a8eb470d4d22f74e3bcba3d2872cc90",
-    "origin": "machine",
-    "updated_at": "2026-03-30T23:51:31.875Z"
-  },
   "booking.offer.email_customer_page": {
     "source_hash": "90b89c5c2b443df2fccbf2bf3eeae287d4f79e7f33d761b18437aa2729ffbf99",
     "origin": "machine",
@@ -1806,21 +1756,6 @@
   },
   "booking.offer.error.additional_item_quantity": {
     "source_hash": "05b103d850f009e7c5f8d5ef7aa38987217e1580ffaae890ebc1172a7c62dbeb",
-    "origin": "machine",
-    "updated_at": "2026-03-30T23:51:31.875Z"
-  },
-  "booking.offer.error.booking_confirmation_link_copy": {
-    "source_hash": "36c398351ecb3b4e9b44ce41d1e94882018b02059c9ece76d5fceb51bd73d7f2",
-    "origin": "machine",
-    "updated_at": "2026-03-30T23:51:31.875Z"
-  },
-  "booking.offer.error.booking_confirmation_link_email_missing": {
-    "source_hash": "03db4638e4752967622b8f690b0ed2c1b664c8a05ebf8c9c47f38ff5142d0b1e",
-    "origin": "machine",
-    "updated_at": "2026-03-30T23:51:31.875Z"
-  },
-  "booking.offer.error.booking_confirmation_link_unavailable": {
-    "source_hash": "714929e9438c88420af622e246b2c589224fd7de18a65e791ec2edc3ac5e5067",
     "origin": "machine",
     "updated_at": "2026-03-30T23:51:31.875Z"
   },

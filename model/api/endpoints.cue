@@ -72,26 +72,6 @@ package api
 		}]
 	},
 	{
-		key:           "public_generated_booking_confirmation"
-		path:          "/public/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}/accept"
-		method:        "POST"
-		tag:           "Public"
-		authenticated: false
-		requestType:   "PublicGeneratedOfferAcceptRequest"
-		responseType:  "PublicGeneratedOfferAcceptResponse"
-		parameters: [{
-			name:     "booking_id"
-			location: "path"
-			required: true
-			typeName: "Identifier"
-		}, {
-			name:     "generated_offer_id"
-			location: "path"
-			required: true
-			typeName: "Identifier"
-		}]
-	},
-	{
 		key:           "public_generated_offer_pdf"
 		path:          "/public/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}/pdf"
 		method:        "GET"

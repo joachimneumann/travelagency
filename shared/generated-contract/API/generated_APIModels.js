@@ -117,46 +117,6 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         return validateShape(value, PUBLIC_GENERATED_OFFER_ACCESS_RESPONSE_SCHEMA);
       }
 
-      export const PUBLIC_GENERATED_OFFER_ACCEPT_REQUEST_SCHEMA = {
-        name: "PublicGeneratedOfferAcceptRequest",
-        domain: "api",
-        module: "api",
-        sourceType: "openapi.components.schemas.PublicGeneratedOfferAcceptRequest",
-        requireOneOf: [],
-        fields: [
-    schemaField({"name":"booking_confirmation_token","required":true,"wireName":"booking_confirmation_token"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"accepted_by_name","required":false,"wireName":"accepted_by_name"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"accepted_by_email","required":false,"wireName":"accepted_by_email"}, SHARED_FIELD_DEFS.FIELD_20),
-    schemaField({"name":"accepted_by_phone","required":false,"wireName":"accepted_by_phone"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"accepted_by_person_id","required":false,"wireName":"accepted_by_person_id"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"language","required":false,"wireName":"language"}, SHARED_FIELD_DEFS.FIELD_11)
-        ]
-      };
-
-      export function validatePublicGeneratedOfferAcceptRequest(value) {
-        return validateShape(value, PUBLIC_GENERATED_OFFER_ACCEPT_REQUEST_SCHEMA);
-      }
-
-      export const PUBLIC_GENERATED_OFFER_ACCEPT_RESPONSE_SCHEMA = {
-        name: "PublicGeneratedOfferAcceptResponse",
-        domain: "api",
-        module: "api",
-        sourceType: "openapi.components.schemas.PublicGeneratedOfferAcceptResponse",
-        requireOneOf: [],
-        fields: [
-    schemaField({"name":"booking_id","required":true,"wireName":"booking_id"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"generated_offer_id","required":true,"wireName":"generated_offer_id"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"confirmed","required":true,"wireName":"confirmed"}, SHARED_FIELD_DEFS.FIELD_8),
-    schemaField({"name":"status","required":true,"wireName":"status"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"customer_confirmation_flow","required":false,"wireName":"customer_confirmation_flow"}, SHARED_FIELD_DEFS.FIELD_52),
-    schemaField({"name":"booking_confirmation","required":false,"wireName":"booking_confirmation"}, SHARED_FIELD_DEFS.FIELD_53)
-        ]
-      };
-
-      export function validatePublicGeneratedOfferAcceptResponse(value) {
-        return validateShape(value, PUBLIC_GENERATED_OFFER_ACCEPT_RESPONSE_SCHEMA);
-      }
-
       export const EVIDENCE_UPLOAD_SCHEMA = {
         name: "EvidenceUpload",
         domain: "api",
@@ -1888,8 +1848,7 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         requireOneOf: [],
         fields: [
     schemaField({"name":"currency","required":true,"wireName":"currency"}, SHARED_FIELD_DEFS.FIELD_19),
-    schemaField({"name":"lines","required":false,"wireName":"lines"}, SHARED_FIELD_DEFS.FIELD_117),
-    schemaField({"name":"notes","required":false,"wireName":"notes"}, SHARED_FIELD_DEFS.FIELD_1)
+    schemaField({"name":"lines","required":false,"wireName":"lines"}, SHARED_FIELD_DEFS.FIELD_117)
         ]
       };
 
@@ -2082,8 +2041,7 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
     schemaField({"name":"label","required":true,"wireName":"label"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"sequence","required":true,"wireName":"sequence"}, SHARED_FIELD_DEFS.FIELD_18),
     schemaField({"name":"amount_spec","required":true,"wireName":"amount_spec"}, SHARED_FIELD_DEFS.FIELD_113),
-    schemaField({"name":"due_rule","required":true,"wireName":"due_rule"}, SHARED_FIELD_DEFS.FIELD_114),
-    schemaField({"name":"description","required":false,"wireName":"description"}, SHARED_FIELD_DEFS.FIELD_1)
+    schemaField({"name":"due_rule","required":true,"wireName":"due_rule"}, SHARED_FIELD_DEFS.FIELD_114)
         ]
       };
 

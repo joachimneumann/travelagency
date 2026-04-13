@@ -2,20 +2,22 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import os from "node:os";
 import path from "node:path";
-import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, rm, utimes, writeFile } from "node:fs/promises";
 import { createAtpStaffDirectory } from "../src/lib/atp_staff_directory.js";
 
-function buildDirectory(rootDir) {
+function buildDirectory(rootDir, options = {}) {
   const dataPath = path.join(rootDir, "content", "atp_staff", "staff.json");
   const photosDir = path.join(rootDir, "content", "atp_staff", "photos");
   const keycloakUsersSnapshotPath = path.join(rootDir, "content", "atp_staff", "keycloak_users.json");
   const writeQueueRef = { current: Promise.resolve() };
+  const allowedUsers = Array.isArray(options.allowedUsers) ? options.allowedUsers : [];
+  const assignableUsers = Array.isArray(options.assignableUsers) ? options.assignableUsers : allowedUsers;
   const keycloakDirectory = {
     async listAllowedUsers() {
-      return [];
+      return allowedUsers;
     },
     async listAssignableUsers() {
-      return [];
+      return assignableUsers;
     }
   };
 
@@ -29,7 +31,7 @@ function buildDirectory(rootDir) {
       keycloakUsersSnapshotPath,
       keycloakDirectory,
       writeQueueRef,
-      staffRoleNames: []
+      staffRoleNames: Array.isArray(options.staffRoleNames) ? options.staffRoleNames : []
     })
   };
 }
@@ -101,6 +103,47 @@ test("ATP staff ensureStorage does not overwrite profiles when the existing file
     );
 
     assert.equal(await readFile(ctx.dataPath, "utf8"), invalidJson);
+  } finally {
+    await rm(rootDir, { recursive: true, force: true });
+  }
+});
+
+test("ATP staff response profiles version picture refs from the photo mtime", async () => {
+  const rootDir = await mkdtemp(path.join(os.tmpdir(), "travelagency-atp-staff-version-"));
+  try {
+    const ctx = buildDirectory(rootDir, {
+      allowedUsers: [{
+        id: "kc-joachim",
+        username: "joachim",
+        name: "Joachim Neumann"
+      }]
+    });
+    await mkdir(path.dirname(ctx.dataPath), { recursive: true });
+    await mkdir(ctx.photosDir, { recursive: true });
+    await writeFile(ctx.dataPath, `${JSON.stringify({
+      staff: {
+        joachim: {
+          name: "Joachim Neumann",
+          picture: "joachim.webp"
+        }
+      }
+    }, null, 2)}\n`, "utf8");
+
+    const photoPath = path.join(ctx.photosDir, "joachim.webp");
+    await writeFile(photoPath, "first-version", "utf8");
+    await utimes(photoPath, new Date("2026-04-13T10:00:00.000Z"), new Date("2026-04-13T10:00:00.000Z"));
+
+    const firstEntry = await ctx.directory.buildDirectoryEntryForUsername("joachim");
+    const firstRef = String(firstEntry?.staff_profile?.picture_ref || "");
+    assert.match(firstRef, /^\/public\/v1\/atp-staff-photos\/joachim\.webp\?v=\d+$/);
+
+    await writeFile(photoPath, "second-version", "utf8");
+    await utimes(photoPath, new Date("2026-04-13T10:05:00.000Z"), new Date("2026-04-13T10:05:00.000Z"));
+
+    const secondEntry = await ctx.directory.buildDirectoryEntryForUsername("joachim");
+    const secondRef = String(secondEntry?.staff_profile?.picture_ref || "");
+    assert.match(secondRef, /^\/public\/v1\/atp-staff-photos\/joachim\.webp\?v=\d+$/);
+    assert.notEqual(secondRef, firstRef);
   } finally {
     await rm(rootDir, { recursive: true, force: true });
   }

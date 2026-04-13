@@ -92,11 +92,11 @@ import (
 	include_who_is_traveling?: bool
 }
 
-#BookingPdfPersonalization: {
-	travel_plan?:                    #BookingPdfPersonalizationScoped
-	offer?:                          #BookingPdfPersonalizationScoped
-	booking_confirmation?:           #BookingPdfPersonalizationScoped
-	payment_request_installment?:    #BookingPdfPersonalizationScoped
+	#BookingPdfPersonalization: {
+		travel_plan?:                    #BookingPdfPersonalizationScoped
+		offer?:                          #BookingPdfPersonalizationScoped
+		payment_confirmation_deposit?:   #BookingPdfPersonalizationScoped
+		payment_request_installment?:    #BookingPdfPersonalizationScoped
 	payment_confirmation_installment?: #BookingPdfPersonalizationScoped
 	payment_request_final?:          #BookingPdfPersonalizationScoped
 	payment_confirmation_final?:     #BookingPdfPersonalizationScoped

@@ -80,23 +80,6 @@ export function publicGeneratedOfferAccessRequest({ baseURL = '', params = {}, q
   };
 }
 
-export function publicGeneratedBookingConfirmationPath(params = {}) {
-  return buildPath("/public/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}/accept", params);
-}
-
-export function publicGeneratedBookingConfirmationRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
-  const path = publicGeneratedBookingConfirmationPath(params);
-  const url = buildURL(baseURL, path, query);
-  return {
-    key: "public_generated_booking_confirmation",
-    method: "POST",
-    authenticated: false,
-    url,
-    headers,
-    body
-  };
-}
-
 export function publicGeneratedOfferPdfPath(params = {}) {
   return buildPath("/public/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}/pdf", params);
 }

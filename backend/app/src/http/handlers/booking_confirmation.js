@@ -1,5 +1,4 @@
 import { normalizePdfLang } from "../../lib/pdf_i18n.js";
-import { validatePublicGeneratedOfferAcceptRequest } from "../../../Generated/API/generated_APIModels.js";
 import {
   buildGeneratedOfferBookingConfirmationPublicSummary,
   buildPublicGeneratedOfferCustomerConfirmationFlowView,
@@ -46,22 +45,6 @@ export function createBookingConfirmationHandlers(deps) {
       ...(bookingConfirmationTokenState.expiresAt ? { public_booking_confirmation_expires_at: bookingConfirmationTokenState.expiresAt } : {}),
       confirmed: Boolean(generatedOffer?.booking_confirmation),
       ...(bookingConfirmationSummary ? { booking_confirmation: bookingConfirmationSummary } : {})
-    };
-  }
-
-  function buildPublicGeneratedOfferAcceptResponse({
-    bookingId,
-    generatedOfferId,
-    generatedOffer = null,
-    bookingConfirmation = null
-  }) {
-    return {
-      booking_id: bookingId,
-      generated_offer_id: generatedOfferId,
-      confirmed: Boolean(bookingConfirmation),
-      status: "CONFIRMED",
-      ...(generatedOffer ? { customer_confirmation_flow: buildPublicGeneratedOfferCustomerConfirmationFlowView(generatedOffer, { now: nowIso() }) } : {}),
-      ...(bookingConfirmation ? { booking_confirmation: buildGeneratedOfferBookingConfirmationPublicSummary(bookingConfirmation) } : {})
     };
   }
 
@@ -167,94 +150,8 @@ export function createBookingConfirmationHandlers(deps) {
     });
   }
 
-  async function handlePublicAcceptGeneratedOffer(req, res, [bookingId, generatedOfferId]) {
-    let payload = {};
-    try {
-      payload = await readBodyJson(req);
-      validatePublicGeneratedOfferAcceptRequest(payload);
-    } catch (error) {
-      sendJson(res, 400, { error: String(error?.message || "Invalid JSON payload") });
-      return;
-    }
-
-    const store = await readStore();
-    const booking = store.bookings.find((item) => item.id === bookingId);
-    if (!booking) {
-      sendJson(res, 404, { error: "Booking not found" });
-      return;
-    }
-
-    const generatedOffer = (Array.isArray(booking.generated_offers) ? booking.generated_offers : []).find(
-      (item) => item.id === generatedOfferId
-    );
-    if (!generatedOffer) {
-      sendJson(res, 404, { error: "Generated offer not found" });
-      return;
-    }
-    if (synchronizeGeneratedOfferCustomerConfirmationFlowStatus(generatedOffer, { now: nowIso() })) {
-      await persistStore(store);
-    }
-
-    const bookingConfirmationTokenState = readGeneratedOfferBookingConfirmationTokenState(generatedOffer);
-    if (bookingConfirmationTokenState.revokedAt) {
-      sendJson(res, 403, { error: "The booking confirmation token is invalid." });
-      return;
-    }
-
-    const tokenVerification = verifyBookingConfirmationToken(payload?.booking_confirmation_token, {
-      bookingId,
-      generatedOfferId,
-      nonce: bookingConfirmationTokenState.nonce,
-      expiresAt: bookingConfirmationTokenState.expiresAt,
-      secret: bookingConfirmationTokenSecret,
-      now: nowIso()
-    });
-    if (!tokenVerification.ok) {
-      const status = tokenVerification.code === "TOKEN_NOT_CONFIGURED"
-        ? 503
-        : tokenVerification.code === "TOKEN_EXPIRED"
-          ? 410
-          : 403;
-      sendJson(res, status, { error: tokenVerification.error || "The booking confirmation token is invalid." });
-      return;
-    }
-
-    if (generatedOffer?.booking_confirmation && typeof generatedOffer.booking_confirmation === "object") {
-      if (!normalizeText(booking?.confirmed_generated_offer_id)) {
-        booking.confirmed_generated_offer_id = generatedOffer.id;
-        await persistStore(store);
-      }
-      sendJson(res, 200, buildPublicGeneratedOfferAcceptResponse({
-        bookingId,
-        generatedOfferId,
-        generatedOffer,
-        bookingConfirmation: generatedOffer.booking_confirmation
-      }));
-      return;
-    }
-
-    if (normalizeText(generatedOffer?.customer_confirmation_flow?.mode).toUpperCase() === "DEPOSIT_PAYMENT") {
-      sendJson(res, 409, { error: "This offer is confirmed by the required deposit payment, not by public booking confirmation." });
-      return;
-    }
-
-    if (!generatedOffer?.customer_confirmation_flow && normalizeText(generatedOffer?.management_approver_atp_staff_id)) {
-      sendJson(res, 409, { error: "This offer is confirmed internally by the assigned management approver, not by public booking confirmation." });
-      return;
-    }
-
-    if (!generatedOffer?.customer_confirmation_flow) {
-      sendJson(res, 409, { error: "This offer no longer supports public booking confirmation." });
-      return;
-    }
-
-    sendJson(res, 409, { error: "This offer no longer supports public booking confirmation." });
-    return;
-  }
-
   return {
     handleGetPublicGeneratedOfferAccess,
-    handleGetPublicGeneratedOfferPdf,
-    handlePublicAcceptGeneratedOffer
+    handleGetPublicGeneratedOfferPdf
   };
 }

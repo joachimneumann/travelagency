@@ -201,7 +201,6 @@ Email draft flow:
 
 Booking confirmation flow:
 - new offers are intended to confirm either by deposit payment or by internal management approval
-- `booking-confirmation.html` remains the token-gated public generated-offer access page
 - direct public click-confirmation is no longer used
 - confirmation is tied to the frozen generated-offer snapshot and frozen PDF
 
@@ -225,7 +224,7 @@ ATP staff then:
 - optionally changes the text
 - sends it manually
 
-If ATP later includes a booking confirmation link in the email body, that link should point to the dedicated public generated-offer access page and tokenized confirmation flow, not to a mutable booking page.
+If ATP later includes a generated-offer link in the email body, that link should point to the dedicated public generated-offer access page and tokenized PDF-access flow, not to a mutable booking page.
 
 ### Generated-offer link helpers
 

@@ -8,8 +8,6 @@ import {
   normalizeTourStyleCode
 } from "../domain/tour_catalog_i18n.js";
 import { createMetaWebhookHandlers } from "../integrations/meta_webhook.js";
-import { createBookingConfirmationPdfWriter } from "../lib/booking_confirmation_pdf.js";
-import { createBookingConfirmationPdfArtifacts } from "../lib/booking_confirmation_pdf_artifacts.js";
 import { createInvoicePdfWriter } from "../lib/invoice_pdf.js";
 import { createOfferPdfWriter } from "../lib/offer_pdf.js";
 import { createTravelPlanPdfWriter } from "../lib/travel_plan_pdf.js";
@@ -92,9 +90,6 @@ export function createBackendServices({
     travelPlanPdfsDir: collections.travelPlanPdfsDir,
     generatedOffersDir: collections.generatedOffersDir
   });
-  const bookingConfirmationPdfArtifacts = createBookingConfirmationPdfArtifacts({
-    generatedOffersDir: collections.generatedOffersDir
-  });
 
   const bookingViewHelpers = createBookingViewHelpers({
     baseCurrency: runtime.baseCurrency,
@@ -120,7 +115,6 @@ export function createBackendServices({
     keycloakDisplayName: keycloakDirectory.toDisplayName,
     resolveAssignedAtpStaffProfile: atpStaffDirectory.resolveAssignedStaffProfile,
     listBookingTravelPlanPdfs: travelPlanPdfArtifacts.listBookingTravelPlanPdfs,
-    listBookingConfirmationPdfs: bookingConfirmationPdfArtifacts.listBookingConfirmationPdfs,
     sendJson: httpHelpers.sendJson
   });
 
@@ -199,10 +193,6 @@ export function createBackendServices({
     travelPlanAttachmentsDir: collections.bookingTravelPlanAttachmentsDir,
     companyProfile: runtime.companyProfile
   });
-  const writeBookingConfirmationPdf = createBookingConfirmationPdfWriter({
-    companyProfile: runtime.companyProfile,
-    logoPath: collections.logoPngPath
-  });
 
   return {
     pricingHelpers,
@@ -214,11 +204,9 @@ export function createBackendServices({
     atpStaffDirectory,
     countryReferenceStore,
     travelPlanPdfArtifacts,
-    bookingConfirmationPdfArtifacts,
     metaWebhookHandlers,
     tourHelpers,
     writeInvoicePdf,
-    writeBookingConfirmationPdf,
     writeGeneratedOfferPdf,
     writeTravelPlanPdf
   };

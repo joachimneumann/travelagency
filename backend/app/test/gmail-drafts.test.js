@@ -6,7 +6,6 @@ import { mkdtemp, writeFile, rm } from "node:fs/promises";
 import { generateKeyPairSync } from "node:crypto";
 import { createGmailDraftsClient } from "../src/lib/gmail_drafts.js";
 import { createBookingFinanceHandlers } from "../src/http/handlers/booking_finance.js";
-import { createBookingConfirmationHandlers } from "../src/http/handlers/booking_confirmation.js";
 
 function decodeBase64Url(value) {
   const padded = String(value).replace(/-/g, "+").replace(/_/g, "/");

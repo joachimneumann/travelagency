@@ -52,7 +52,7 @@ const PDF_TEXT_FIELD_CONFIG = Object.freeze({
     whats_not_included: Object.freeze({ defaultChecked: false, enableWhenTextPresent: true }),
     closing: Object.freeze({ defaultChecked: true, enableWhenTextPresent: true })
   }),
-  booking_confirmation: Object.freeze({
+  payment_confirmation_deposit: Object.freeze({
     subtitle: Object.freeze({ defaultChecked: false, enableWhenTextPresent: true }),
     welcome: Object.freeze({ defaultChecked: true, enableWhenTextPresent: true }),
     closing: Object.freeze({ defaultChecked: true, enableWhenTextPresent: true })
@@ -133,10 +133,18 @@ function normalizePdfPersonalizationBranch(rawBranch, scope, { flatLang = "en", 
 
 export function normalizeBookingPdfPersonalization(value, { flatLang = "en", sourceLang = "en" } = {}) {
   const raw = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+  const normalizedRaw = {
+    ...raw,
+    payment_confirmation_deposit: raw?.payment_confirmation_deposit && typeof raw.payment_confirmation_deposit === "object" && !Array.isArray(raw.payment_confirmation_deposit)
+      ? raw.payment_confirmation_deposit
+      : raw?.booking_confirmation && typeof raw.booking_confirmation === "object" && !Array.isArray(raw.booking_confirmation)
+        ? raw.booking_confirmation
+        : raw?.payment_confirmation_deposit
+  };
   return compactObject(
     Object.fromEntries(
       PDF_PERSONALIZATION_SCOPES
-        .map((scope) => [scope, normalizePdfPersonalizationBranch(raw?.[scope], scope, { flatLang, sourceLang })])
+        .map((scope) => [scope, normalizePdfPersonalizationBranch(normalizedRaw?.[scope], scope, { flatLang, sourceLang })])
         .filter(([, branch]) => Boolean(branch))
     )
   ) || {};
