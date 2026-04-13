@@ -117,6 +117,7 @@
 }
 
 .home-page .trust-strip {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   position: relative;
   z-index: 2;
   margin-top: -3rem;

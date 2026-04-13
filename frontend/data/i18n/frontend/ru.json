@@ -54,6 +54,8 @@
   "tours.show_remaining.many": "Показать оставшиеся туры: {count}",
   "tours.debug_header": "Фильтр: {dest}, {style}",
   "tours.debug_empty": "В текущем фильтре нет туров.",
+  "tours.view.none": "Нет подходящих туров",
+  "tours.view.count": "Показать {count} туров",
   "tour.card.from_price": "От {price}",
   "tour.card.custom_quote": "Персонализированное предложение",
   "tour.card.days": "{days} дней",

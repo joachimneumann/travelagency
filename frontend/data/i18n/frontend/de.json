@@ -54,6 +54,8 @@
   "tours.show_remaining.many": "Zeigt die verbleibenden {count} Touren an",
   "tours.debug_header": "Filter: {dest}, {style}",
   "tours.debug_empty": "Keine Touren im aktuellen Filter.",
+  "tours.view.none": "Keine passenden Touren",
+  "tours.view.count": "{count} Touren ansehen",
   "tour.card.from_price": "Ab {price}",
   "tour.card.custom_quote": "Individuelles Angebot",
   "tour.card.days": "{days} Tage",

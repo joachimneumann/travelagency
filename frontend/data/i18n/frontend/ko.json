@@ -54,6 +54,8 @@
   "tours.show_remaining.many": "남은 투어 {count}개 보기",
   "tours.debug_header": "필터: {dest}, {style}",
   "tours.debug_empty": "현재 필터에 투어가 없습니다.",
+  "tours.view.none": "일치하는 투어가 없습니다",
+  "tours.view.count": "{count}개 투어 보기",
   "tour.card.from_price": "{price}부터",
   "tour.card.custom_quote": "맞춤 견적",
   "tour.card.days": "{days}일",

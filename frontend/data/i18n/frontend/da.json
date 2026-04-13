@@ -54,6 +54,8 @@
   "tours.show_remaining.many": "Vis de resterende {count} ture",
   "tours.debug_header": "Filter: {dest}, {style}",
   "tours.debug_empty": "Ingen ture i det aktuelle filter.",
+  "tours.view.none": "Ingen matchende ture",
+  "tours.view.count": "Se {count} ture",
   "tour.card.from_price": "Fra {price}",
   "tour.card.custom_quote": "Tilpasset tilbud",
   "tour.card.days": "{days} dage",

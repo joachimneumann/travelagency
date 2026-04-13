@@ -54,6 +54,8 @@
   "tours.show_remaining.many": "Visa de återstående {count} turerna",
   "tours.debug_header": "Filter: {dest}, {style}",
   "tours.debug_empty": "Inga turer i aktuellt filter.",
+  "tours.view.none": "Inga matchande turer",
+  "tours.view.count": "Visa {count} turer",
   "tour.card.from_price": "Från {price}",
   "tour.card.custom_quote": "Anpassad offert",
   "tour.card.days": "{days} dagar",

@@ -54,6 +54,8 @@
   "tours.show_remaining.many": "Tunjuk baki {count} lawatan",
   "tours.debug_header": "Penapis: {dest}, {style}",
   "tours.debug_empty": "Tiada lawatan dalam penapis semasa.",
+  "tours.view.none": "Tiada lawatan yang sepadan",
+  "tours.view.count": "Lihat {count} lawatan",
   "tour.card.from_price": "Dari {price}",
   "tour.card.custom_quote": "Sebut harga tersuai",
   "tour.card.days": "{days} hari",

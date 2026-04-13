@@ -54,6 +54,8 @@
   "tours.show_remaining.many": "Toon de resterende {count} tours",
   "tours.debug_header": "Filter: {dest}, {style}",
   "tours.debug_empty": "Geen tours in huidige filter.",
+  "tours.view.none": "Geen passende tours",
+  "tours.view.count": "{count} tours bekijken",
   "tour.card.from_price": "Vanaf {price}",
   "tour.card.custom_quote": "Aangepaste offerte",
   "tour.card.days": "{days} dagen",

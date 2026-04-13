@@ -54,6 +54,8 @@
   "tours.show_remaining.many": "Afficher les {count} circuits restants",
   "tours.debug_header": "Filtre : {dest}, {style}",
   "tours.debug_empty": "Aucun circuit dans le filtre actuel.",
+  "tours.view.none": "Aucun circuit correspondant",
+  "tours.view.count": "Voir {count} circuits",
   "tour.card.from_price": "A partir de {price}",
   "tour.card.custom_quote": "Devis sur mesure",
   "tour.card.days": "{days} jours",

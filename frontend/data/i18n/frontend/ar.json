@@ -54,6 +54,8 @@
   "tours.show_remaining.many": "عرض الجولات المتبقية وعددها {count}",
   "tours.debug_header": "الفلاتر: {dest}، {style}",
   "tours.debug_empty": "لا توجد جولات ضمن الفلتر الحالي.",
+  "tours.view.none": "لا توجد جولات مطابقة",
+  "tours.view.count": "عرض {count} جولات",
   "tour.card.from_price": "ابتداءً من {price}",
   "tour.card.custom_quote": "عرض سعر مخصص",
   "tour.card.days": "{days} أيام",

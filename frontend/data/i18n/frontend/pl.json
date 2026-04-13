@@ -54,6 +54,8 @@
   "tours.show_remaining.many": "Pokaż pozostałe wycieczki ({count}).",
   "tours.debug_header": "Filtruj: {dest}, {style}",
   "tours.debug_empty": "Brak wycieczek w bieżącym filtrze.",
+  "tours.view.none": "Brak pasujących wycieczek",
+  "tours.view.count": "Zobacz {count} wycieczek",
   "tour.card.from_price": "Od {price}",
   "tour.card.custom_quote": "Niestandardowy cytat",
   "tour.card.days": "{days} dni",
