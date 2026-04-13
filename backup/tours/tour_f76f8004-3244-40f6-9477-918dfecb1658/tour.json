@@ -1,0 +1,26 @@
+{
+  "id": "tour_f76f8004-3244-40f6-9477-918dfecb1658",
+  "title": {
+    "vi": "CỐ ĐÔ HOA LƯ - TRÀNG AN - HANG MÚA"
+  },
+  "short_description": {
+    "vi": "Hành trình đưa bạn tìm về cội nguồn lịch sử tại Cố đô Hoa Lư cổ kính, trước khi hòa mình vào cảnh sắc \"Hạ Long trên cạn\" kỳ ảo của di sản thiên nhiên Tràng An.\nĐiểm nhấn khép lại chuyến đi là trải nghiệm chinh phục đỉnh Hang Múa, nơi bạn có thể thu trọn vào tầm mắt bức tranh non nước Ninh Bình hùng vĩ và thơ mộng từ trên cao."
+  },
+  "destinations": [
+    "vietnam"
+  ],
+  "styles": [
+    "budget",
+    "culture",
+    "family",
+    "gastronomic-experiences",
+    "luxury",
+    "wellness"
+  ],
+  "seasonality_start_month": "",
+  "seasonality_end_month": "",
+  "priority": 50,
+  "image": "/public/v1/tour-images/tour_f76f8004-3244-40f6-9477-918dfecb1658/tour_f76f8004-3244-40f6-9477-918dfecb1658.webp",
+  "created_at": "2026-04-13T10:18:33.599Z",
+  "updated_at": "2026-04-13T10:18:39.079Z"
+}

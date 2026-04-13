@@ -1,0 +1,56 @@
+{
+  "id": "tour_3d160d2f-62ea-43a4-8ca6-3acb6dcd30df",
+  "title": {
+    "en": "Da Nang - Marble Mountains - Hoi An Ancient Town",
+    "ar": "دا نانغ - جبال الرخام - مدينة هوي آن القديمة",
+    "fr": "Da Nang - Montagnes de Marbre - Ancienne ville de Hoi An",
+    "zh": "岘港 - 大理石山 - 会安古城",
+    "ja": "ダナン - マーブル マウンテン - ホイアンの古代都市",
+    "ko": "다낭 - 오행산 - 호이안 고대 도시",
+    "vi": "Đà Nẵng - Ngũ Hành Sơn - Phố cổ Hội An",
+    "ms": "Da Nang - Pergunungan Marmar - Bandar Purba Hoi An",
+    "de": "Da Nang – Marmorberge – Altstadt von Hoi An",
+    "es": "Da Nang - Montañas de Mármol - Ciudad antigua de Hoi An",
+    "it": "Da Nang - Montagne di marmo - Città antica di Hoi An",
+    "ru": "Дананг - Мраморные горы - Древний город Хойан",
+    "nl": "Da Nang - Marble Mountains - Oude stad Hoi An",
+    "pl": "Da Nang - Góry Marmurowe - Starożytne Miasto Hoi An",
+    "da": "Da Nang - Marmorbjerge - Hoi An gammel by",
+    "sv": "Da Nang - Marmorbergen - Hoi An Ancient Town",
+    "no": "Da Nang - Marmorfjellene - Hoi An gammel by"
+  },
+  "short_description": {
+    "en": "Hoi An is one of the most charming destinations in the Central region, where time seems to stop among the small ancient streets with characteristic golden walls and sparkling lanterns at night.",
+    "ar": "تعتبر هوي آن واحدة من أكثر الوجهات الساحرة في المنطقة الوسطى، حيث يبدو أن الزمن يتوقف بين الشوارع القديمة الصغيرة ذات الجدران الذهبية المميزة والفوانيس المتلألئة في الليل.",
+    "fr": "Hoi An est l'une des destinations les plus charmantes de la région centrale, où le temps semble s'arrêter parmi les petites rues anciennes aux murs dorés caractéristiques et aux lanternes scintillantes la nuit.",
+    "zh": "会安是中部地区最迷人的目的地之一，这里的时间似乎停止在古老的小街道上，这里有特色的金色墙壁和夜晚闪闪发光的灯笼。",
+    "ja": "ホイアンは中部地域で最も魅力的な目的地の 1 つで、夜になると特徴的な金色の壁と輝くランタンのある古い小さな通りの間で時間が止まっているように感じます。",
+    "ko": "호이안은 특징적인 황금빛 벽과 밤에 반짝이는 등불이 있는 작은 고대 거리들 사이에서 시간이 멈춘 것 같은 중부 지역에서 가장 매력적인 여행지 중 하나입니다.",
+    "vi": "Hội An là một trong những điểm đến quyến rũ nhất miền Trung, nơi thời gian như ngừng lại giữa những con phố cổ nhỏ nhắn với bức tường vàng đặc trưng và ánh đèn lồng lung linh khi đêm về.",
+    "ms": "Hoi An ialah salah satu destinasi paling menawan di wilayah Tengah, di mana masa seolah-olah berhenti di antara jalan-jalan kecil purba dengan ciri-ciri dinding emas dan tanglung berkilauan pada waktu malam.",
+    "de": "Hoi An ist eines der bezauberndsten Reiseziele in der Zentralregion, wo in den kleinen alten Straßen mit charakteristischen goldenen Mauern und nachts funkelnden Laternen die Zeit stehenzubleiben scheint.",
+    "es": "Hoi An es uno de los destinos con más encanto de la región Central, donde el tiempo parece detenerse entre las pequeñas calles antiguas con características paredes doradas y faroles brillantes por la noche.",
+    "it": "Hoi An è una delle destinazioni più affascinanti della regione Centrale, dove il tempo sembra fermarsi tra le stradine antiche con le caratteristiche pareti dorate e le lanterne scintillanti di notte.",
+    "ru": "Хойан — одно из самых очаровательных мест в центральном регионе, где время словно останавливается среди маленьких старинных улочек с характерными золотыми стенами и сверкающими фонарями по ночам.",
+    "nl": "Hoi An is een van de meest charmante bestemmingen in de centrale regio, waar de tijd lijkt te stoppen tussen de kleine oude straatjes met karakteristieke gouden muren en sprankelende lantaarns in de nacht.",
+    "pl": "Hoi An to jedno z najbardziej urokliwych miejsc w regionie centralnym, gdzie czas zdaje się zatrzymywać wśród małych, starożytnych uliczek z charakterystycznymi złotymi ścianami i błyszczącymi latarniami nocą.",
+    "da": "Hoi An er en af ​​de mest charmerende destinationer i den centrale region, hvor tiden synes at stoppe mellem de små gamle gader med karakteristiske gyldne vægge og funklende lanterner om natten.",
+    "sv": "Hoi An är ett av de charmigaste resmålen i den centrala regionen, där tiden verkar stanna bland de små gamla gatorna med karaktäristiska gyllene väggar och gnistrande lyktor på natten.",
+    "no": "Hoi An er en av de mest sjarmerende destinasjonene i den sentrale regionen, hvor tiden ser ut til å stoppe opp blant de små eldgamle gatene med karakteristiske gyldne vegger og glitrende lykter om natten."
+  },
+  "destinations": [
+    "vietnam"
+  ],
+  "styles": [
+    "culture",
+    "family",
+    "luxury",
+    "wellness"
+  ],
+  "seasonality_start_month": "jan",
+  "seasonality_end_month": "dec",
+  "priority": 50,
+  "image": "/public/v1/tour-images/tour_3d160d2f-62ea-43a4-8ca6-3acb6dcd30df/tour_3d160d2f-62ea-43a4-8ca6-3acb6dcd30df.webp",
+  "created_at": "2026-04-13T09:06:18.834Z",
+  "updated_at": "2026-04-13T09:06:20.149Z"
+}

@@ -1,0 +1,59 @@
+{
+  "id": "tour_2761ca85-860b-4f19-8c6d-7bcc288e4159",
+  "title": {
+    "en": "Ha Long Bay",
+    "ar": "خليج ها لونج",
+    "fr": "Baie d'Ha Long",
+    "zh": "下龙湾",
+    "ja": "ハロン湾",
+    "ko": "하롱베이",
+    "vi": "Vịnh Hạ Long",
+    "ms": "Teluk Ha Long",
+    "de": "Halong-Bucht",
+    "es": "Bahía de Ha Long",
+    "it": "Baia di Ha Long",
+    "ru": "Халонг Бэй",
+    "nl": "Ha Long-baai",
+    "pl": "Zatoka Ha Long",
+    "da": "Ha Long bugten",
+    "sv": "Ha Long Bay",
+    "no": "Ha Long Bay"
+  },
+  "short_description": {
+    "en": "Ha Long Bay is not only the pride of Vietnam but also a world natural wonder that has been twice recognized by UNESCO. This place is like a giant watercolor painting, created from nature's ingenious arrangement between rock and water.",
+    "ar": "لا يعد خليج ها لونج مصدر فخر لفيتنام فحسب، بل يعد أيضًا أحد عجائب الطبيعة العالمية التي تم الاعتراف بها مرتين من قبل اليونسكو. هذا المكان يشبه لوحة مائية عملاقة، تم إنشاؤها من ترتيب الطبيعة المبتكر بين الصخور والمياه.",
+    "fr": "La baie d’Ha Long est non seulement la fierté du Vietnam mais aussi une merveille naturelle mondiale reconnue à deux reprises par l’UNESCO. Cet endroit est comme une aquarelle géante, créée à partir de l’ingénieux arrangement naturel entre la roche et l’eau.",
+    "zh": "下龙湾不仅是越南的骄傲，也是两次被联合国教科文组织认可的世界自然奇观。这里就像一幅巨大的水彩画，是大自然在岩石和水之间巧妙的排列而成的。",
+    "ja": "ハロン湾はベトナムの誇りであるだけでなく、ユネスコに二度認定された世界の自然の驚異でもあります。この場所は、岩と水の間の自然の巧妙な配置によって作成された巨大な水彩画のような場所です。",
+    "ko": "하롱베이는 베트남의 자랑일 뿐만 아니라 유네스코가 두 번이나 인정한 세계 자연의 경이로움이기도 합니다. 이곳은 바위와 물 사이의 자연의 독창적인 배열로 만들어진 거대한 수채화 그림과 같습니다.",
+    "vi": "Vịnh Hạ Long không chỉ là niềm tự hào của Việt Nam mà còn là một kỳ quan thiên nhiên thế giới đã hai lần được UNESCO công nhận. Nơi đây giống như một bức tranh thủy mặc khổng lồ, được tạo nên từ sự sắp đặt tài tình của tạo hóa giữa đá và nước.",
+    "ms": "Teluk Ha Long bukan sahaja kebanggaan Vietnam tetapi juga keajaiban alam semula jadi dunia yang telah dua kali diiktiraf oleh UNESCO. Tempat ini seperti lukisan cat air gergasi, dicipta daripada susunan cerdik alam antara batu dan air.",
+    "de": "Die Halong-Bucht ist nicht nur der Stolz Vietnams, sondern auch ein Weltnaturwunder, das bereits zweimal von der UNESCO anerkannt wurde. Dieser Ort ist wie ein riesiges Aquarellgemälde, entstanden aus der genialen Anordnung der Natur zwischen Felsen und Wasser.",
+    "es": "La bahía de Ha Long no es sólo el orgullo de Vietnam, sino también una maravilla natural mundial reconocida dos veces por la UNESCO. Este lugar es como una pintura de acuarela gigante, creada a partir de la ingeniosa disposición de la naturaleza entre la roca y el agua.",
+    "it": "La baia di Ha Long non è solo l'orgoglio del Vietnam, ma anche una meraviglia naturale mondiale riconosciuta due volte dall'UNESCO. Questo posto è come un gigantesco dipinto ad acquerello, creato dall'ingegnosa disposizione della natura tra roccia e acqua.",
+    "ru": "Бухта Халонг – это не только гордость Вьетнама, но и чудо природы мира, дважды признанное ЮНЕСКО. Это место похоже на гигантскую акварельную картину, созданную на основе гениального сочетания камня и воды.",
+    "nl": "Ha Long Bay is niet alleen de trots van Vietnam, maar ook een natuurwonder dat tweemaal door UNESCO is erkend. Deze plek lijkt op een gigantisch aquarelschilderij, gemaakt op basis van de ingenieuze opstelling van de natuur tussen rots en water.",
+    "pl": "Zatoka Ha Long to nie tylko duma Wietnamu, ale także światowy cud natury, który został dwukrotnie uznany przez UNESCO. To miejsce przypomina gigantyczną akwarelę, stworzoną z pomysłowego połączenia natury pomiędzy skałą i wodą.",
+    "da": "Ha Long Bay er ikke kun Vietnams stolthed, men også et verdensnaturvidunder, der er blevet anerkendt to gange af UNESCO. Dette sted er som et kæmpe akvarelmaleri, skabt ud fra naturens geniale arrangement mellem sten og vand.",
+    "sv": "Ha Long Bay är inte bara Vietnams stolthet utan också ett världsnaturunder som har erkänts två gånger av UNESCO. Denna plats är som en gigantisk akvarellmålning, skapad av naturens geniala arrangemang mellan sten och vatten.",
+    "no": "Ha Long Bay er ikke bare Vietnams stolthet, men også et verdensnaturunder som har blitt anerkjent to ganger av UNESCO. Dette stedet er som et gigantisk akvarellmaleri, laget av naturens geniale arrangement mellom stein og vann."
+  },
+  "destinations": [
+    "vietnam"
+  ],
+  "styles": [
+    "beach",
+    "budget",
+    "culture",
+    "family",
+    "gastronomic-experiences",
+    "luxury",
+    "wellness"
+  ],
+  "seasonality_start_month": "apr",
+  "seasonality_end_month": "nov",
+  "priority": 50,
+  "image": "/public/v1/tour-images/tour_2761ca85-860b-4f19-8c6d-7bcc288e4159/tour_2761ca85-860b-4f19-8c6d-7bcc288e4159.webp",
+  "created_at": "2026-04-13T04:48:49.101Z",
+  "updated_at": "2026-04-13T04:48:50.018Z"
+}
