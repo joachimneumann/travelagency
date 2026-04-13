@@ -5,6 +5,8 @@ import {
   normalizeLanguageCode
 } from "../../shared/generated/language_catalog.js";
 
+const DEFAULT_TOUR_IMAGE = "/assets/img/marketing_tours.png";
+
 export function createFrontendToursController(ctx) {
   const {
     state,
@@ -380,7 +382,7 @@ export function createFrontendToursController(ctx) {
 
   function resolveTourImage(item) {
     const raw = String(item?.image || "").trim();
-    if (!raw) return raw;
+    if (!raw) return DEFAULT_TOUR_IMAGE;
     return absolutizeBackendUrl(raw);
   }
 
