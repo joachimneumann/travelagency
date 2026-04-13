@@ -778,16 +778,19 @@ function getCheckedValues(inputName) {
 function buildTourSaveValidationMessage({ title = "", destinations = [], styles = [] }) {
   const missing = [];
   if (!normalizeText(title)) {
-    missing.push("title");
+    missing.push(backendT("tour.validation.title", "Title"));
   }
   if (!Array.isArray(destinations) || !destinations.length) {
-    missing.push("at least one destination country");
+    missing.push(backendT("tour.validation.destination_country_required", "at least one destination country"));
   }
   if (!Array.isArray(styles) || !styles.length) {
-    missing.push("at least one style");
+    missing.push(backendT("tour.validation.style_required", "at least one style"));
   }
   if (!missing.length) return "";
-  return `${backendT("tour.status.required", "Title, at least one Destination Country, and at least one Style are required.")} Missing: ${missing.join(", ")}.`;
+  return backendT("tour.status.required_with_missing", "{base} Missing: {fields}.", {
+    base: backendT("tour.status.required", "Title, at least one Destination Country, and at least one Style are required."),
+    fields: missing.join(", ")
+  });
 }
 
 async function submitForm(event) {
