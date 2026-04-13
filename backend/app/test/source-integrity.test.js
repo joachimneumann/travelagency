@@ -2890,6 +2890,11 @@ test("tour page reads month options from the generated catalogs layer", async ()
     /id="tour_localized_content_editor"/,
     "Tour page should render the combined localized title and description editor mount"
   );
+  assert.match(
+    tourHtml,
+    /id="tour_formStatus"/,
+    "Tour page should render the save-status mount that tour.js writes validation and save feedback into"
+  );
   assert.doesNotMatch(
     tourHtml,
     /id="tour_title_edit_btn"/,
@@ -2904,6 +2909,11 @@ test("tour page reads month options from the generated catalogs layer", async ()
     tourSource,
     /els\.imageUpload\.addEventListener\("change", \(\) => \{[\s\S]*setPendingHeroImagePreview\(file\);[\s\S]*renderHeroImage\(\);[\s\S]*tour\.status\.selected_image/,
     "Tour page should preview a newly selected hero image immediately before save"
+  );
+  assert.match(
+    tourSource,
+    /function buildTourSaveValidationMessage\([\s\S]*showError\(validationMessage\);[\s\S]*setStatus\(validationMessage\);/,
+    "Tour save validation should show a visible blocking reason instead of failing silently"
   );
   assert.match(
     tourSource,

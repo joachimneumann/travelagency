@@ -563,6 +563,8 @@ async function init() {
     els.form.addEventListener("submit", submitForm);
     const scheduleTourDirtyState = () => window.setTimeout(updateTourDirtyState, 0);
     els.form.addEventListener("input", (event) => {
+      clearError();
+      setStatus("");
       const field = event.target instanceof HTMLElement ? event.target.getAttribute("data-tour-i18n-field") : "";
       if (field === "title_i18n" || field === "short_description_i18n") {
         syncLocalizedFieldState();
@@ -573,7 +575,11 @@ async function init() {
       }
       scheduleTourDirtyState();
     });
-    els.form.addEventListener("change", scheduleTourDirtyState);
+    els.form.addEventListener("change", () => {
+      clearError();
+      setStatus("");
+      scheduleTourDirtyState();
+    });
     els.form.addEventListener("click", (event) => {
       const translateAllButton = event.target.closest("[data-tour-translate-all]");
       if (translateAllButton) {
@@ -769,6 +775,21 @@ function getCheckedValues(inputName) {
   return Array.from(document.querySelectorAll(`input[name="${inputName}"]:checked`)).map((el) => String(el.value || "").trim());
 }
 
+function buildTourSaveValidationMessage({ title = "", destinations = [], styles = [] }) {
+  const missing = [];
+  if (!normalizeText(title)) {
+    missing.push("title");
+  }
+  if (!Array.isArray(destinations) || !destinations.length) {
+    missing.push("at least one destination country");
+  }
+  if (!Array.isArray(styles) || !styles.length) {
+    missing.push("at least one style");
+  }
+  if (!missing.length) return "";
+  return `${backendT("tour.status.required", "Title, at least one Destination Country, and at least one Style are required.")} Missing: ${missing.join(", ")}.`;
+}
+
 async function submitForm(event) {
   event.preventDefault();
   if (!state.permissions.canEditTours) return;
@@ -794,18 +815,26 @@ async function submitForm(event) {
     short_description_i18n
   };
 
-  if (!payload.title || !payload.destinations.length || !payload.styles.length) {
-    setStatus(backendT("tour.status.required", "Title, at least one Destination Country, and at least one Style are required."));
+  const validationMessage = buildTourSaveValidationMessage({
+    title: payload.title,
+    destinations: payload.destinations,
+    styles: payload.styles
+  });
+  if (validationMessage) {
+    showError(validationMessage);
+    setStatus(validationMessage);
     return;
   }
 
   const duplicate = await findDuplicateTourTitle(title_i18n, state.id);
   if (duplicate) {
-    setTitleError(backendT(
+    const duplicateMessage = backendT(
       "tour.error.duplicate_title",
       "A tour titled \"{title}\" already exists (ID: {id}). Please use a different title.",
       { title: duplicate.title || payload.title, id: duplicate.id }
-    ));
+    );
+    setTitleError(duplicateMessage);
+    showError(duplicateMessage);
     setStatus(backendT("tour.status.duplicate", "Save blocked due to duplicate title."));
     focusPrimaryTitleField();
     return;
