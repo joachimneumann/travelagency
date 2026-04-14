@@ -797,7 +797,11 @@ export function createBookingHandlers(deps) {
     normalizeBookingTravelPlan,
     buildBookingOfferPaymentTermsReadModel,
     listBookingTravelPlanPdfs,
-    convertMinorUnits
+    convertMinorUnits,
+    path,
+    TEMP_UPLOAD_DIR,
+    rm,
+    mkdir
   });
 
   async function handleCreateBooking(req, res) {

@@ -91,6 +91,12 @@
   border-color: rgba(255, 255, 255, 0.3);
 }
 
+.home-page .hero .filter-menu--hero .filter-select-panel {
+  background: var(--white-alpha-80);
+  border-color: rgba(255, 255, 255, 0.34);
+  backdrop-filter: blur(16px);
+}
+
 .home-page .hero .filter-menu--hero .btn-primary--hero {
   flex: 0 0 auto;
   min-height: 3.6rem;

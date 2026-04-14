@@ -958,6 +958,52 @@ test("payments removes the standalone invoice panel and renders request/receipt 
   );
 });
 
+test("payment pdf creation persists derived pricing payments before creating linked invoice documents", async () => {
+  const pricingPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "pricing.js");
+  const pricingSource = await readFile(pricingPath, "utf8");
+  assert.match(
+    pricingSource,
+    /function persistedPaymentById\(paymentId, pricing = state\.booking\?\.pricing\) \{/,
+    "Pricing flow should expose a helper for checking whether a payment already exists in persisted booking pricing"
+  );
+  assert.match(
+    pricingSource,
+    /const needsPersistedPayment = !persistedPaymentById\(paymentId\);[\s\S]*if \(state\.dirty\.pricing \|\| needsPersistedPayment\) \{/,
+    "Payment PDF creation should save pricing when the requested payment only exists in the derived draft state"
+  );
+});
+
+test("payment pdf previews stream transient preview files instead of storing invoices", async () => {
+  const pricingPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "pricing.js");
+  const invoiceHandlerPath = path.resolve(__dirname, "..", "src", "http", "handlers", "booking_invoices.js");
+  const invoicePdfPath = path.resolve(__dirname, "..", "src", "lib", "invoice_pdf.js");
+  const [pricingSource, invoiceHandlerSource, invoicePdfSource] = await Promise.all([
+    readFile(pricingPath, "utf8"),
+    readFile(invoiceHandlerPath, "utf8"),
+    readFile(invoicePdfPath, "utf8")
+  ]);
+  assert.match(
+    pricingSource,
+    /query:\s*\{[\s\S]*preview:\s*"1"[\s\S]*\}[\s\S]*await previewLinkedPaymentDocument\(/,
+    "Pricing preview should call the invoice create route in preview mode instead of creating a stored invoice document"
+  );
+  assert.match(
+    invoiceHandlerSource,
+    /function requestPreviewMode\(req\) \{[\s\S]*searchParams\.get\("preview"\) === "1"[\s\S]*invoicePreviewTempOutputPath[\s\S]*sendFileWithCache[\s\S]*await rm\(renderedPath, \{ force: true \}\)/,
+    "Invoice handler should render preview PDFs through a temp file path and delete the preview file after streaming it"
+  );
+  assert.match(
+    invoicePdfSource,
+    /function drawPreviewWatermark\(doc, fonts, text = "Preview"\)[\s\S]*drawPreviewWatermark\(doc, fonts, previewWatermarkText\)/,
+    "Invoice preview PDFs should watermark each page"
+  );
+  assert.match(
+    invoiceHandlerSource,
+    /invoice_number:\s*preview \? "PREVIEW" :/,
+    "Invoice preview PDFs should render PREVIEW as the invoice number"
+  );
+});
+
 test("saving proposal payment terms rerenders payment-step sections without a full page reload", async () => {
   const bookingPageScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking.js");
   const offerModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "offers.js");
@@ -2068,9 +2114,11 @@ test("staging PDF font stack includes Japanese and Chinese smoke coverage paths"
 test("invoice PDFs keep the header focused on company contact details instead of bank account lines", async () => {
   const runtimeConfigPath = path.resolve(__dirname, "..", "src", "config", "runtime.js");
   const invoicePdfPath = path.resolve(__dirname, "..", "src", "lib", "invoice_pdf.js");
-  const [runtimeConfigSource, invoicePdfSource] = await Promise.all([
+  const companyHeaderPath = path.resolve(__dirname, "..", "src", "lib", "pdf_company_header.js");
+  const [runtimeConfigSource, invoicePdfSource, companyHeaderSource] = await Promise.all([
     readFile(runtimeConfigPath, "utf8"),
-    readFile(invoicePdfPath, "utf8")
+    readFile(invoicePdfPath, "utf8"),
+    readFile(companyHeaderPath, "utf8")
   ]);
 
   assert.match(
@@ -2080,13 +2128,18 @@ test("invoice PDFs keep the header focused on company contact details instead of
   );
   assert.match(
     invoicePdfSource,
-    /function companyProfileHeaderLines\(companyProfile\) \{[\s\S]*companyProfile\.address[\s\S]*companyProfile\.email[\s\S]*companyProfile\.website[\s\S]*companyProfile\.whatsapp[\s\S]*\]\.filter\(Boolean\);/,
-    "Invoice PDF generation should keep the header limited to company contact details"
+    /import \{ drawPdfCompanyHeader \} from "\.\/pdf_company_header\.js";[\s\S]*drawPdfCompanyHeader\(doc, \{/,
+    "Invoice PDF generation should reuse the shared company header helper"
+  );
+  assert.match(
+    companyHeaderSource,
+    /const addressText = profile\.address \|\| ""[\s\S]*pdfT\(lang, "header\.whatsapp", "WhatsApp"\)[\s\S]*pdfT\(lang, "header\.email", "Email"\)[\s\S]*profile\.website \|\| ""/,
+    "The shared company header helper should keep the header limited to company contact details"
   );
   assert.doesNotMatch(
-    invoicePdfSource,
+    companyHeaderSource,
     /Account holder:|Account number:|SWIFT:|Branch:|Bank:/,
-    "Invoice PDF header generation should no longer include bank-account lines"
+    "The shared company header helper should no longer include bank-account lines"
   );
 });
 

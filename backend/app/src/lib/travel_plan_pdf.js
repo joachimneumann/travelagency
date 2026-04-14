@@ -19,6 +19,7 @@ import { pdfTheme } from "./style_tokens.js";
 import { normalizeText } from "./text.js";
 import { resolvePdfFontsForLang } from "./pdf_font_resolver.js";
 import { drawMultifontText, measureMultifontTextHeight } from "./pdf_multifont_text.js";
+import { drawPdfCompanyHeader } from "./pdf_company_header.js";
 import { resolveLocalizedText } from "../domain/booking_content_i18n.js";
 import {
   resolveAtpGuideIntroName,
@@ -48,8 +49,6 @@ const MM_TO_POINTS = 72 / 25.4;
 const PAGE_SIZE = Object.freeze([210 * MM_TO_POINTS, 297 * MM_TO_POINTS]);
 const PAGE_MARGIN = 44;
 const PAGE_FOOTER_GAP = 28;
-const HEADER_LOGO_WIDTH = 250;
-const HEADER_LOGO_HEIGHT = 98;
 const HERO_IMAGE_WIDTH = 195;
 const HERO_IMAGE_HEIGHT = 128;
 const GUIDE_PHOTO_SIZE = 92;
@@ -371,54 +370,6 @@ function drawFooter(doc, fonts, companyProfile, lang) {
       doc.page.height - PAGE_MARGIN,
       { width: doc.page.width - PAGE_MARGIN * 2, align: "center" }
     );
-}
-
-function drawTopHeader(doc, companyProfile, logoImage, fonts, lang) {
-  const profile = companyProfile || {};
-  let y = PAGE_MARGIN;
-  let logoBottomY = y;
-  if (logoImage?.buffer) {
-    doc.image(logoImage.buffer, PAGE_MARGIN, y + 2, {
-      fit: [HEADER_LOGO_WIDTH, HEADER_LOGO_HEIGHT],
-      align: "left",
-      valign: "top"
-    });
-    logoBottomY = y + 2 + HEADER_LOGO_HEIGHT;
-  }
-
-  const rightColumnX = doc.page.width - PAGE_MARGIN - 220;
-  const rightColumnWidth = 220;
-  const addressY = y + 18;
-  const addressOptions = { width: rightColumnWidth, align: "right" };
-  doc
-    .font(pdfFontName("bold", fonts))
-    .fontSize(13)
-    .fillColor(PDF_COLORS.textStrong)
-    .text(profile.name || "Asia Travel Plan", rightColumnX, y, addressOptions);
-  doc
-    .font(pdfFontName("regular", fonts))
-    .fontSize(10)
-    .fillColor(PDF_COLORS.textMuted);
-  const addressText = profile.address || "";
-  const addressHeight = addressText
-    ? doc.heightOfString(addressText, addressOptions)
-    : 0;
-  const whatsappY = addressY + addressHeight + 2;
-  const emailY = whatsappY + 16;
-  const websiteY = emailY + 16;
-  doc
-    .text(addressText, rightColumnX, addressY, addressOptions)
-    .text(`${pdfT(lang, "header.whatsapp", "WhatsApp")}: ${profile.whatsapp || ""}`, rightColumnX, whatsappY, addressOptions)
-    .text(`${pdfT(lang, "header.email", "Email")}: ${profile.email || ""}`, rightColumnX, emailY, addressOptions)
-    .text(profile.website || "", rightColumnX, websiteY, addressOptions);
-
-  const websiteHeight = profile.website
-    ? doc.heightOfString(profile.website, addressOptions)
-    : 0;
-  const rightColumnBottomY = Math.max(websiteY + websiteHeight, emailY + 12, addressY + addressHeight);
-  const nextY = Math.max(logoBottomY, rightColumnBottomY) + 10;
-  drawDivider(doc, nextY);
-  return nextY + 18;
 }
 
 function resolveGuideSectionTitle(guideContext, lang) {
@@ -948,7 +899,15 @@ export function createTravelPlanPdfWriter({
           : addContinuationPage()
       );
 
-      let y = drawTopHeader(doc, companyProfile, logoImage, fonts, lang);
+      let y = drawPdfCompanyHeader(doc, {
+        companyProfile,
+        logoImage,
+        fonts,
+        lang,
+        pageMargin: PAGE_MARGIN,
+        colors: PDF_COLORS,
+        pdfFontName
+      });
       y = drawTravelPlanHero(doc, heroTitle, heroSubtitle, heroImage, y, fonts, lang);
       y = ensureSpace(y, estimateGuideSectionHeight(doc, guideContext, fonts, lang) + 10);
       y = drawGuideSection(doc, y, fonts, lang, guideContext, guidePhoto);

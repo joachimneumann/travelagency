@@ -1063,26 +1063,141 @@ export function createBookingPricingModule(ctx) {
   }
 
   async function createLinkedPaymentDocument(payment, documentKind, pdfPersonalization) {
+    const payload = {
+      expected_invoices_revision: getBookingRevision("invoices_revision"),
+      payment_id: String(payment?.id || "").trim(),
+      document_kind: documentKind,
+      lang: bookingContentLang(),
+      content_lang: bookingContentLang(),
+      source_lang: bookingSourceLang(),
+      payment_confirmed_by_label: documentKind === PAYMENT_DOCUMENT_KIND_CONFIRMATION
+        ? (resolveAtpStaffLabel(payment?.confirmed_by_atp_staff_id) || null)
+        : null,
+      pdf_personalization: pdfPersonalization,
+      actor: state.user || null
+    };
     const request = bookingInvoiceCreateRequest({
       baseURL: apiOrigin,
       params: { booking_id: state.booking.id }
     });
     return fetchBookingMutation(request.url, {
       method: request.method,
-      body: {
-        expected_invoices_revision: getBookingRevision("invoices_revision"),
-        payment_id: String(payment?.id || "").trim(),
-        document_kind: documentKind,
-        lang: bookingContentLang(),
-        content_lang: bookingContentLang(),
-        source_lang: bookingSourceLang(),
-        payment_confirmed_by_label: documentKind === PAYMENT_DOCUMENT_KIND_CONFIRMATION
-          ? (resolveAtpStaffLabel(payment?.confirmed_by_atp_staff_id) || null)
-          : null,
-        pdf_personalization: pdfPersonalization,
-        actor: state.user || null
+      body: payload
+    });
+  }
+
+  function openPaymentPreviewWindow() {
+    const previewWindow = window.open("", "_blank");
+    if (!previewWindow) return null;
+    previewWindow.document.title = bookingT("booking.travel_plan.preview_pdf", "Preview PDF");
+    previewWindow.document.documentElement.innerHTML = `
+      <head>
+        <title>${escapeHtml(bookingT("booking.travel_plan.preview_pdf", "Preview PDF"))}</title>
+        <style>
+          body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            background: rgba(245, 241, 232, 0.78);
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+          }
+          .booking-page-overlay__panel {
+            min-width: min(28rem, calc(100vw - 3rem));
+            max-width: 32rem;
+            display: grid;
+            justify-items: center;
+            gap: 0.9rem;
+            padding: 1.45rem 1.6rem;
+            border: 1px solid rgba(202, 191, 173, 0.9);
+            border-radius: 24px;
+            background: rgba(255, 255, 255, 0.96);
+            box-shadow: 0 24px 48px rgba(24, 35, 52, 0.16);
+            text-align: center;
+          }
+          .booking-page-overlay__spinner {
+            width: 2.2rem;
+            height: 2.2rem;
+            border: 3px solid rgba(202, 191, 173, 0.9);
+            border-top-color: rgba(84, 93, 105, 1);
+            border-radius: 999px;
+            animation: booking-inline-status-spin 0.8s linear infinite;
+          }
+          .booking-page-overlay__text {
+            color: rgba(35, 52, 73, 1);
+            font-size: 1rem;
+            font-weight: 600;
+          }
+          @keyframes booking-inline-status-spin {
+            to { transform: rotate(360deg); }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="booking-page-overlay__panel" role="status" aria-live="polite">
+          <span class="booking-page-overlay__spinner" aria-hidden="true"></span>
+          <span class="booking-page-overlay__text">${escapeHtml(bookingT("booking.pricing.creating_pdf", "Creating..."))}</span>
+        </div>
+      </body>
+    `;
+    return previewWindow;
+  }
+
+  async function previewLinkedPaymentDocument(payment, documentKind, pdfPersonalization, previewWindow) {
+    const request = bookingInvoiceCreateRequest({
+      baseURL: apiOrigin,
+      params: { booking_id: state.booking.id },
+      query: {
+        ...bookingLanguageQuery(),
+        preview: "1"
       }
     });
+    const payload = {
+      expected_invoices_revision: getBookingRevision("invoices_revision"),
+      payment_id: String(payment?.id || "").trim(),
+      document_kind: documentKind,
+      lang: bookingContentLang(),
+      content_lang: bookingContentLang(),
+      source_lang: bookingSourceLang(),
+      payment_confirmed_by_label: documentKind === PAYMENT_DOCUMENT_KIND_CONFIRMATION
+        ? (resolveAtpStaffLabel(payment?.confirmed_by_atp_staff_id) || null)
+        : null,
+      pdf_personalization: pdfPersonalization,
+      actor: state.user || null
+    };
+    const response = await fetch(request.url, {
+      method: request.method,
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
+    if (!response.ok) {
+      const errorPayload = await response.json().catch(() => null);
+      const requestFailed = bookingT("booking.error.request_failed", "Request failed");
+      const message = errorPayload?.detail
+        ? `${errorPayload.error || requestFailed}: ${errorPayload.detail}`
+        : errorPayload?.error || requestFailed;
+      throw new Error(message);
+    }
+    const pdfBlob = await response.blob();
+    const objectUrl = URL.createObjectURL(pdfBlob);
+    previewWindow.location.replace(objectUrl);
+    window.setTimeout(() => {
+      URL.revokeObjectURL(objectUrl);
+    }, 60_000);
+    return true;
+  }
+
+  function persistedPaymentById(paymentId, pricing = state.booking?.pricing) {
+    const normalizedId = String(paymentId || "").trim();
+    if (!normalizedId) return null;
+    return (Array.isArray(pricing?.payments) ? pricing.payments : []).find(
+      (payment) => String(payment?.id || "").trim() === normalizedId
+    ) || null;
   }
 
   async function createPaymentDocument(paymentId, documentKind, options = {}) {
@@ -1101,8 +1216,9 @@ export function createBookingPricingModule(ctx) {
     const prefix = paymentDocumentPanelPrefix(payment, documentKind);
     const pdfPersonalization = collectPaymentDocumentPersonalization(scope, prefix);
     const openAfterCreate = options?.openAfterCreate === true;
+    const needsPersistedPayment = !persistedPaymentById(paymentId);
     setPaymentSectionState(paymentId, sectionKind, "");
-    if (state.dirty.pricing) {
+    if (state.dirty.pricing || needsPersistedPayment) {
       const saved = await savePricing();
       if (!saved) {
         setPaymentSectionState(paymentId, sectionKind, bookingT("booking.pricing.save_before_pdf_failed", "Could not save payment details first."), "error");
@@ -1167,37 +1283,60 @@ export function createBookingPricingModule(ctx) {
     const sectionKind = documentKind === PAYMENT_DOCUMENT_KIND_CONFIRMATION ? "confirmation" : "request";
     const scope = paymentDocumentScope(payment, documentKind);
     const prefix = paymentDocumentPanelPrefix(payment, documentKind);
-    const latestDocument = latestPaymentDocumentFor(payment, documentKind);
-    const needsFreshDocument =
-      state.permissions.canEditBooking
-      && (
-        state.dirty.pricing
-        || paymentDocumentPersonalizationChanged(scope, prefix)
-        || !latestDocument
-      );
-
-    if (needsFreshDocument) {
-      return await createPaymentDocument(paymentId, documentKind, {
-        openAfterCreate: true,
-        suppressSuccessMessage: true,
-        errorMessage: bookingT("booking.pricing.preview_pdf_failed", "Could not open the preview PDF.")
-      });
+    const disabledReason = documentKind === PAYMENT_DOCUMENT_KIND_CONFIRMATION
+      ? paymentConfirmationDisabledReason(payment)
+      : "";
+    if (disabledReason) {
+      setPaymentSectionState(paymentId, sectionKind, disabledReason, "info");
+      renderPricingPanel({ preserveDraft: true });
+      return false;
     }
-
-    if (latestDocument?.pdf_url && openPaymentDocumentUrl(latestDocument.pdf_url)) {
+    const pdfPersonalization = collectPaymentDocumentPersonalization(scope, prefix);
+    const previewWindow = openPaymentPreviewWindow();
+    if (!previewWindow) {
+      setPaymentSectionState(paymentId, sectionKind, bookingT("booking.travel_plan.preview_popup_blocked", "Allow pop-ups to preview the PDF."), "error");
+      renderPricingPanel({ preserveDraft: true });
+      return false;
+    }
+    const needsPersistedPayment = !persistedPaymentById(paymentId);
+    setPaymentSectionState(paymentId, sectionKind, "");
+    if (state.dirty.pricing || needsPersistedPayment) {
+      const saved = await savePricing();
+      if (!saved) {
+        previewWindow.close();
+        setPaymentSectionState(paymentId, sectionKind, bookingT("booking.pricing.save_before_pdf_failed", "Could not save payment details first."), "error");
+        renderPricingPanel({ preserveDraft: true });
+        return false;
+      }
+    }
+    const latestPayment = findPaymentById(paymentId, state.booking?.pricing) || findPaymentById(paymentId, state.pricingDraft);
+    if (!latestPayment) {
+      previewWindow.close();
+      setPaymentSectionState(paymentId, sectionKind, bookingT("booking.pricing.payment_not_found", "This payment could not be found."), "error");
+      renderPricingPanel({ preserveDraft: true });
+      return false;
+    }
+    setPaymentSectionBusy(paymentId, sectionKind, true);
+    renderPricingPanel({ preserveDraft: true });
+    try {
+      await previewLinkedPaymentDocument(latestPayment, documentKind, pdfPersonalization, previewWindow);
+      setPaymentSectionBusy(paymentId, sectionKind, false);
       setPaymentSectionState(paymentId, sectionKind, "");
       renderPricingPanel({ preserveDraft: true });
       return true;
+    } catch (error) {
+      previewWindow.close();
+      setPaymentSectionBusy(paymentId, sectionKind, false);
+      setPaymentSectionState(
+        paymentId,
+        sectionKind,
+        String(error?.message || bookingT("booking.pricing.preview_pdf_failed", "Could not open the preview PDF.")),
+        "error"
+      );
+      renderPricingPanel({ preserveDraft: true });
+      return false;
     }
 
-    setPaymentSectionState(
-      paymentId,
-      sectionKind,
-      bookingT("booking.pricing.preview_pdf_failed", "Could not open the preview PDF."),
-      "error"
-    );
-    renderPricingPanel({ preserveDraft: true });
-    return false;
   }
 
   function bindPaymentDocumentActions(root) {

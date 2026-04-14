@@ -8,12 +8,13 @@ import {
   normalizePdfLang,
   pdfT
 } from "./pdf_i18n.js";
+import { drawPdfCompanyHeader } from "./pdf_company_header.js";
 import { resolvePdfFontsForLang } from "./pdf_font_resolver.js";
 import { pdfTheme } from "./style_tokens.js";
 import { normalizeText } from "./text.js";
 
 const PAGE_SIZE = "A4";
-const PAGE_MARGIN = 46;
+const PAGE_MARGIN = 44;
 const PDF_FONT_REGULAR = "ATPUnicodeRegular";
 const PDF_FONT_BOLD = "ATPUnicodeBold";
 
@@ -72,6 +73,24 @@ const PDF_COLORS = Object.freeze({
   textMuted: pdfTheme.textMuted,
   textMutedStrong: pdfTheme.textMutedStrong
 });
+
+function drawPreviewWatermark(doc, fonts, text = "Preview") {
+  const watermarkText = normalizeText(text) || "Preview";
+  const centerX = doc.page.width / 2;
+  const centerY = doc.page.height / 2;
+  doc
+    .save()
+    .rotate(-35, { origin: [centerX, centerY] })
+    .fillOpacity(0.18)
+    .font(pdfFontName("bold", fonts))
+    .fontSize(78)
+    .fillColor(PDF_COLORS.textMuted)
+    .text(watermarkText, centerX - 170, centerY - 40, {
+      width: 340,
+      align: "center"
+    })
+    .restore();
+}
 
 async function fileExists(filePath) {
   if (!filePath) return false;
@@ -153,20 +172,10 @@ function componentRowTotal(component) {
   return Math.max(0, Number(component?.quantity || 0)) * Math.max(0, Number(component?.unit_amount_cents || 0));
 }
 
-function companyProfileHeaderLines(companyProfile) {
-  if (!companyProfile) return [];
-  return [
-    normalizeText(companyProfile.address),
-    normalizeText(companyProfile.email),
-    normalizeText(companyProfile.website),
-    normalizeText(companyProfile.whatsapp)
-  ].filter(Boolean);
-}
-
-export function createInvoicePdfWriter({ invoicePdfPath, companyProfile = null }) {
-  return async function writeInvoicePdf(invoice, invoiceParty, booking) {
+export function createInvoicePdfWriter({ invoicePdfPath, companyProfile = null, logoPath = "" }) {
+  return async function writeInvoicePdf(invoice, invoiceParty, booking, options = {}) {
     const lang = normalizePdfLang(invoice?.lang || booking?.customer_language || booking?.web_form_submission?.preferred_language || "en");
-    const outputPath = invoicePdfPath(invoice.id, invoice.version || 1);
+    const outputPath = normalizeText(options?.outputPath) || invoicePdfPath(invoice.id, invoice.version || 1);
     await mkdir(path.dirname(outputPath), { recursive: true });
     const fonts = await resolvePdfFontsForLang({
       lang,
@@ -176,16 +185,18 @@ export function createInvoicePdfWriter({ invoicePdfPath, companyProfile = null }
     const recipient = invoice?.recipient_snapshot || invoiceParty || {};
     const currency = normalizeText(invoice?.currency) || "USD";
     const components = Array.isArray(invoice?.components) ? invoice.components : [];
-    const companyHeaderLines = companyProfileHeaderLines(companyProfile);
-    const companyHeaderHeight = companyProfile
-      ? Math.max(106, 42 + companyHeaderLines.length * 16)
-      : 106;
+    const logoImage = await fileExists(logoPath)
+      ? { path: logoPath }
+      : null;
+    const previewMode = options?.preview === true || invoice?.is_preview === true;
+    const previewWatermarkText = normalizeText(options?.previewWatermarkText) || normalizeText(invoice?.preview_watermark_text) || "Preview";
 
     await new Promise((resolve, reject) => {
       const doc = new PDFDocument({
         size: PAGE_SIZE,
         margin: 0,
         autoFirstPage: true,
+        bufferPages: previewMode,
         compress: false,
         info: {
           Title: normalizeText(invoice?.title) || invoiceSubjectLabel(invoice, lang),
@@ -200,7 +211,15 @@ export function createInvoicePdfWriter({ invoicePdfPath, companyProfile = null }
       doc.on("error", reject);
       registerPdfFonts(doc, fonts);
 
-      let y = PAGE_MARGIN;
+      let y = drawPdfCompanyHeader(doc, {
+        companyProfile,
+        logoImage,
+        fonts,
+        lang,
+        pageMargin: PAGE_MARGIN,
+        colors: PDF_COLORS,
+        pdfFontName
+      });
       doc
         .font(pdfFontName("bold", fonts))
         .fontSize(24)
@@ -215,26 +234,7 @@ export function createInvoicePdfWriter({ invoicePdfPath, companyProfile = null }
           .fillColor(PDF_COLORS.textMutedStrong)
           .text(invoice.subtitle, PAGE_MARGIN, doc.y + 4, { width: 320 });
       }
-
-      if (companyProfile) {
-        const rightColumnX = doc.page.width - PAGE_MARGIN - 220;
-        doc
-          .font(pdfFontName("bold", fonts))
-          .fontSize(12)
-          .fillColor(PDF_COLORS.textStrong)
-          .text(companyProfile.name, rightColumnX, y, { width: 220, align: "right" });
-        doc
-          .font(pdfFontName("regular", fonts))
-          .fontSize(10)
-          .fillColor(PDF_COLORS.textMuted);
-        companyHeaderLines.forEach((line, index) => {
-          doc.text(line, rightColumnX, y + 18 + (index * 16), { width: 220, align: "right" });
-        });
-      }
-
-      y += companyHeaderHeight;
-      drawDivider(doc, y);
-      y += 20;
+      y = doc.y + 20;
 
       const leftWidth = doc.page.width - PAGE_MARGIN * 2;
       y = drawMetaRow(doc, `${pdfT(lang, "invoice.number", "Invoice number")}:`, safeText(invoice?.invoice_number, invoice?.id), PAGE_MARGIN, y, leftWidth, fonts) + 6;
@@ -432,7 +432,19 @@ export function createInvoicePdfWriter({ invoicePdfPath, companyProfile = null }
           { width: doc.page.width - PAGE_MARGIN * 2, align: "center" }
         );
 
+      if (previewMode) {
+        const { start, count } = doc.bufferedPageRange();
+        for (let index = start; index < start + count; index += 1) {
+          doc.switchToPage(index);
+          drawPreviewWatermark(doc, fonts, previewWatermarkText);
+        }
+      }
+
       doc.end();
     });
+
+    return {
+      outputPath
+    };
   };
 }

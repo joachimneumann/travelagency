@@ -55,8 +55,16 @@ export function createBookingInvoiceHandlers(deps) {
     normalizeBookingTravelPlan,
     buildBookingOfferPaymentTermsReadModel,
     listBookingTravelPlanPdfs,
-    convertMinorUnits
+    convertMinorUnits,
+    path,
+    TEMP_UPLOAD_DIR,
+    rm,
+    mkdir
   } = deps;
+
+  function cloneJson(value) {
+    return value == null ? null : JSON.parse(JSON.stringify(value));
+  }
 
   function requestContentLang(req, payload = null, invoice = null, fallback = "en") {
     try {
@@ -158,6 +166,15 @@ export function createBookingInvoiceHandlers(deps) {
   function normalizePaymentDocumentKind(value) {
     const normalized = normalizeText(value).toUpperCase();
     return normalized === "PAYMENT_CONFIRMATION" ? "PAYMENT_CONFIRMATION" : "PAYMENT_REQUEST";
+  }
+
+  function requestPreviewMode(req) {
+    try {
+      const requestUrl = new URL(req?.url || "/", "http://localhost");
+      return requestUrl.searchParams.get("preview") === "1";
+    } catch {
+      return false;
+    }
   }
 
   function findBookingPayment(booking, paymentId) {
@@ -433,6 +450,189 @@ export function createBookingInvoiceHandlers(deps) {
     };
   }
 
+  function invoicePreviewTempOutputPath(bookingId, prefix = "invoice-preview") {
+    const tempRoot = String(TEMP_UPLOAD_DIR || "").trim();
+    return path.join(tempRoot, "invoice_previews", `${prefix}-${bookingId}-${randomUUID()}.pdf`);
+  }
+
+  function buildInvoicePreviewFilename(documentKind = "", nowValue = nowIso()) {
+    const normalizedDate = String(nowValue || "").trim().slice(0, 10);
+    const datePart = /^\d{4}-\d{2}-\d{2}$/.test(normalizedDate)
+      ? normalizedDate
+      : new Date().toISOString().slice(0, 10);
+    const suffix = normalizeText(documentKind).toUpperCase() === "PAYMENT_CONFIRMATION"
+      ? "payment-confirmation-preview"
+      : "payment-request-preview";
+    return `Asia Travel Plan ${datePart}-${suffix}.pdf`;
+  }
+
+  function invoiceBuildError(status, message) {
+    const error = new Error(String(message || "Invalid invoice payload"));
+    error.status = status;
+    return error;
+  }
+
+  async function buildInvoiceFromCreatePayload({ req, payload, store, booking, preview = false }) {
+    const now = nowIso();
+    const invoiceParty = getInvoicePartyForBooking(booking);
+    const contentLang = requestContentLang(req, payload, null, invoiceParty.preferred_language || "en");
+    const sourceLang = requestSourceLang(req, payload);
+    const documentLang = normalizePdfLang(payload.lang || invoiceParty.preferred_language || "en");
+    const workingBooking = preview ? cloneJson(booking) : booking;
+    const paymentId = normalizeText(payload?.payment_id);
+    const requestedDocumentKind = normalizePaymentDocumentKind(payload?.document_kind);
+    const linkedPayment = paymentId ? findBookingPayment(workingBooking, paymentId) : null;
+    if (paymentId && !linkedPayment) {
+      throw invoiceBuildError(422, "The selected payment could not be found.");
+    }
+    const paymentKind = linkedPayment ? resolvePaymentLineKind(workingBooking, linkedPayment) : "";
+    const personalizationScope = linkedPayment ? paymentDocumentPersonalizationScope(paymentKind, requestedDocumentKind) : "";
+    const previousPdfPersonalizationJson = JSON.stringify(workingBooking?.pdf_personalization || null);
+    if (personalizationScope) {
+      const personalizationBranch = buildPaymentDocumentPersonalizationBranch(
+        payload?.pdf_personalization,
+        personalizationScope,
+        contentLang,
+        sourceLang
+      );
+      if (personalizationBranch) {
+        workingBooking.pdf_personalization = normalizeBookingPdfPersonalization({
+          ...(workingBooking?.pdf_personalization && typeof workingBooking.pdf_personalization === "object" ? workingBooking.pdf_personalization : {}),
+          [personalizationScope]: personalizationBranch
+        }, {
+          flatLang: contentLang,
+          sourceLang
+        });
+      }
+    }
+    const pdfPersonalizationChanged = JSON.stringify(workingBooking?.pdf_personalization || null) !== previousPdfPersonalizationJson;
+
+    let acceptedSnapshotUpdate = { changed: false, acceptedRecordCreated: false };
+    if (linkedPayment) {
+      try {
+        acceptedSnapshotUpdate = await ensureAcceptedCommercialSnapshot(workingBooking, {
+          baseCurrency: BASE_CURRENCY,
+          normalizeGeneratedOfferSnapshot,
+          normalizeBookingOffer,
+          normalizeBookingTravelPlan,
+          buildBookingOfferPaymentTermsReadModel,
+          listBookingTravelPlanPdfs
+        }, {
+          allowDraftSource: true
+        });
+      } catch (error) {
+        throw invoiceBuildError(422, String(error?.message || error));
+      }
+    }
+
+    const paymentDocumentDraft = linkedPayment
+      ? await buildPaymentDocumentDraft({
+          booking: workingBooking,
+          payment: linkedPayment,
+          paymentKind,
+          documentKind: requestedDocumentKind,
+          invoiceParty,
+          contentLang,
+          sourceLang,
+          documentLang,
+          now
+        })
+      : null;
+    const mergedComponents = paymentDocumentDraft
+      ? paymentDocumentDraft.components
+      : mergeInvoiceComponentsForLang([], payload.components, contentLang, sourceLang);
+    if (!mergedComponents.length) {
+      throw invoiceBuildError(422, "At least one invoice component is required");
+    }
+    const totalAmountCents = computeInvoiceComponentTotal(mergedComponents);
+    const dueAmountCents = safeAmountCents(payload.due_amount_cents) ?? paymentDocumentDraft?.due_amount_cents ?? totalAmountCents;
+    const titleField = mergeEditableLocalizedTextField(
+      null,
+      normalizeText(payload.title)
+        || paymentDocumentDraft?.title
+        || pdfT(documentLang, "invoice.title_fallback", "Invoice for {recipient}", {
+          recipient: normalizeText(invoiceParty.name) || "recipient"
+        }),
+      payload.title_i18n,
+      contentLang,
+      {
+        sourceLang,
+        defaultLang: sourceLang
+      }
+    );
+    const notesField = mergeEditableLocalizedTextField(
+      null,
+      payload.notes ?? paymentDocumentDraft?.notes,
+      payload.notes_i18n,
+      contentLang,
+      {
+        sourceLang,
+        defaultLang: sourceLang
+      }
+    );
+    const invoice = {
+      id: preview ? `preview_inv_${randomUUID()}` : `inv_${randomUUID()}`,
+      booking_id: booking.id,
+      invoice_number: preview ? "PREVIEW" : (normalizeText(payload.invoice_number) || nextInvoiceNumber(store)),
+      version: 1,
+      status: "DRAFT",
+      document_kind: paymentDocumentDraft?.document_kind || normalizeText(payload.document_kind) || null,
+      payment_id: paymentDocumentDraft?.payment_id || null,
+      payment_term_line_id: paymentDocumentDraft?.payment_term_line_id || null,
+      payment_kind: paymentDocumentDraft?.payment_kind || null,
+      payment_label: paymentDocumentDraft?.payment_label || null,
+      lang: documentLang,
+      currency: safeCurrency(payload.currency || paymentDocumentDraft?.currency),
+      issue_date: normalizeText(payload.issue_date) || paymentDocumentDraft?.issue_date || now.slice(0, 10),
+      title: titleField.text || buildDefaultInvoiceTitle({ recipient_snapshot: invoiceParty }, documentLang),
+      title_i18n: titleField.map,
+      subtitle: normalizeText(payload.subtitle) || paymentDocumentDraft?.subtitle || null,
+      intro: normalizeText(payload.intro) || paymentDocumentDraft?.intro || null,
+      notes: notesField.text || null,
+      notes_i18n: notesField.map,
+      closing: normalizeText(payload.closing) || paymentDocumentDraft?.closing || null,
+      sent_to_recipient: false,
+      sent_to_recipient_at: null,
+      payment_received_at: normalizeText(payload.payment_received_at) || paymentDocumentDraft?.payment_received_at || null,
+      payment_confirmed_by_atp_staff_id: normalizeText(payload.payment_confirmed_by_atp_staff_id) || paymentDocumentDraft?.payment_confirmed_by_atp_staff_id || null,
+      payment_confirmed_by_label: normalizeText(payload.payment_confirmed_by_label) || paymentDocumentDraft?.payment_confirmed_by_label || null,
+      payment_reference: normalizeText(payload.payment_reference) || paymentDocumentDraft?.payment_reference || null,
+      recipient_snapshot: {
+        name: invoiceParty.name || "Primary contact",
+        email: invoiceParty.email || null,
+        phone_number: invoiceParty.phone_number || null
+      },
+      booking_snapshot: {
+        id: booking.id,
+        name: normalizeText(booking.name) || null
+      },
+      components: mergedComponents,
+      total_amount_cents: totalAmountCents,
+      due_amount_cents: dueAmountCents,
+      created_at: now,
+      updated_at: now,
+      is_preview: preview,
+      preview_watermark_text: preview ? "Preview" : null
+    };
+    if (contentLang !== sourceLang) {
+      markInvoiceTranslationManual(invoice, contentLang, now, sourceLang);
+    }
+
+    return {
+      now,
+      invoice,
+      invoiceParty,
+      contentLang,
+      sourceLang,
+      documentLang,
+      requestedDocumentKind,
+      paymentDocumentDraft,
+      pdfPersonalizationChanged,
+      acceptedSnapshotUpdate,
+      workingBooking
+    };
+  }
+
   async function handleListBookingInvoices(req, res, [bookingId]) {
     const store = await readStore();
     const booking = store.bookings.find((item) => item.id === bookingId);
@@ -475,154 +675,64 @@ export function createBookingInvoiceHandlers(deps) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
     }
-    if (!(await assertExpectedRevision(req, payload, booking, "expected_invoices_revision", "invoices_revision", res))) return;
+    const previewMode = requestPreviewMode(req);
+    if (!previewMode && !(await assertExpectedRevision(req, payload, booking, "expected_invoices_revision", "invoices_revision", res))) return;
 
-    const now = nowIso();
-    const invoiceParty = getInvoicePartyForBooking(booking);
-    const contentLang = requestContentLang(req, payload, null, invoiceParty.preferred_language || "en");
-    const sourceLang = requestSourceLang(req, payload);
-    const documentLang = normalizePdfLang(payload.lang || invoiceParty.preferred_language || "en");
-    const paymentId = normalizeText(payload?.payment_id);
-    const requestedDocumentKind = normalizePaymentDocumentKind(payload?.document_kind);
-    const linkedPayment = paymentId ? findBookingPayment(booking, paymentId) : null;
-    if (paymentId && !linkedPayment) {
-      sendJson(res, 422, { error: "The selected payment could not be found." });
+    let built;
+    try {
+      built = await buildInvoiceFromCreatePayload({
+        req,
+        payload,
+        store,
+        booking,
+        preview: previewMode
+      });
+    } catch (error) {
+      sendJson(res, error?.status || 500, { error: String(error?.message || error || "Could not build invoice.") });
       return;
     }
-    const paymentKind = linkedPayment ? resolvePaymentLineKind(booking, linkedPayment) : "";
-    const personalizationScope = linkedPayment ? paymentDocumentPersonalizationScope(paymentKind, requestedDocumentKind) : "";
-    const previousPdfPersonalizationJson = JSON.stringify(booking?.pdf_personalization || null);
-    if (personalizationScope) {
-      const personalizationBranch = buildPaymentDocumentPersonalizationBranch(
-        payload?.pdf_personalization,
-        personalizationScope,
-        contentLang,
-        sourceLang
-      );
-      if (personalizationBranch) {
-        booking.pdf_personalization = normalizeBookingPdfPersonalization({
-          ...(booking?.pdf_personalization && typeof booking.pdf_personalization === "object" ? booking.pdf_personalization : {}),
-          [personalizationScope]: personalizationBranch
-        }, {
-          flatLang: contentLang,
-          sourceLang
-        });
-      }
-    }
-    const pdfPersonalizationChanged = JSON.stringify(booking?.pdf_personalization || null) !== previousPdfPersonalizationJson;
 
-    let acceptedSnapshotUpdate = { changed: false, acceptedRecordCreated: false };
-    if (linkedPayment) {
+    const {
+      now,
+      invoice,
+      invoiceParty,
+      contentLang,
+      sourceLang,
+      documentLang,
+      requestedDocumentKind,
+      paymentDocumentDraft,
+      pdfPersonalizationChanged,
+      acceptedSnapshotUpdate,
+      workingBooking
+    } = built;
+    const renderedInvoice = buildInvoiceReadModel(invoice, workingBooking, { lang: documentLang, sourceLang });
+
+    if (previewMode) {
+      const previewPath = invoicePreviewTempOutputPath(booking.id, normalizeText(requestedDocumentKind).toLowerCase() || "invoice-preview");
+      let renderedPath = previewPath;
       try {
-        acceptedSnapshotUpdate = await ensureAcceptedCommercialSnapshot(booking, {
-          baseCurrency: BASE_CURRENCY,
-          normalizeGeneratedOfferSnapshot,
-          normalizeBookingOffer,
-          normalizeBookingTravelPlan,
-          buildBookingOfferPaymentTermsReadModel,
-          listBookingTravelPlanPdfs
-        }, {
-          allowDraftSource: true
+        await mkdir(path.dirname(previewPath), { recursive: true });
+        const result = await writeInvoicePdf(renderedInvoice, invoiceParty, workingBooking, {
+          outputPath: previewPath,
+          preview: true,
+          previewWatermarkText: "Preview"
+        });
+        renderedPath = normalizeText(result?.outputPath) || previewPath;
+        await sendFileWithCache(req, res, renderedPath, "private, max-age=0, no-store", {
+          "Content-Disposition": `inline; filename="${buildInvoicePreviewFilename(requestedDocumentKind, now).replace(/"/g, "")}"`
         });
       } catch (error) {
-        sendJson(res, 422, { error: String(error?.message || error) });
-        return;
+        sendJson(res, 500, { error: "Could not render invoice preview PDF", detail: String(error?.message || error) });
+      } finally {
+        await rm(renderedPath, { force: true }).catch(() => {});
+        if (renderedPath !== previewPath) {
+          await rm(previewPath, { force: true }).catch(() => {});
+        }
       }
-    }
-
-    const paymentDocumentDraft = linkedPayment
-      ? await buildPaymentDocumentDraft({
-          booking,
-          payment: linkedPayment,
-          paymentKind,
-          documentKind: requestedDocumentKind,
-          invoiceParty,
-          contentLang,
-          sourceLang,
-          documentLang,
-          now
-        })
-      : null;
-    const mergedComponents = paymentDocumentDraft
-      ? paymentDocumentDraft.components
-      : mergeInvoiceComponentsForLang([], payload.components, contentLang, sourceLang);
-    if (!mergedComponents.length) {
-      sendJson(res, 422, { error: "At least one invoice component is required" });
       return;
     }
-    const totalAmountCents = computeInvoiceComponentTotal(mergedComponents);
-    const dueAmountCents = safeAmountCents(payload.due_amount_cents) ?? paymentDocumentDraft?.due_amount_cents ?? totalAmountCents;
-    const titleField = mergeEditableLocalizedTextField(
-      null,
-      normalizeText(payload.title)
-        || paymentDocumentDraft?.title
-        || pdfT(documentLang, "invoice.title_fallback", "Invoice for {recipient}", {
-          recipient: normalizeText(invoiceParty.name) || "recipient"
-        }),
-      payload.title_i18n,
-      contentLang,
-      {
-        sourceLang,
-        defaultLang: sourceLang
-      }
-    );
-    const notesField = mergeEditableLocalizedTextField(
-      null,
-      payload.notes ?? paymentDocumentDraft?.notes,
-      payload.notes_i18n,
-      contentLang,
-      {
-        sourceLang,
-        defaultLang: sourceLang
-      }
-    );
-    const invoice = {
-      id: `inv_${randomUUID()}`,
-      booking_id: bookingId,
-      invoice_number: normalizeText(payload.invoice_number) || nextInvoiceNumber(store),
-      version: 1,
-      status: "DRAFT",
-      document_kind: paymentDocumentDraft?.document_kind || normalizeText(payload.document_kind) || null,
-      payment_id: paymentDocumentDraft?.payment_id || null,
-      payment_term_line_id: paymentDocumentDraft?.payment_term_line_id || null,
-      payment_kind: paymentDocumentDraft?.payment_kind || null,
-      payment_label: paymentDocumentDraft?.payment_label || null,
-      lang: documentLang,
-      currency: safeCurrency(payload.currency || paymentDocumentDraft?.currency),
-      issue_date: normalizeText(payload.issue_date) || paymentDocumentDraft?.issue_date || now.slice(0, 10),
-      title: titleField.text || buildDefaultInvoiceTitle({ recipient_snapshot: invoiceParty }, documentLang),
-      title_i18n: titleField.map,
-      subtitle: normalizeText(payload.subtitle) || paymentDocumentDraft?.subtitle || null,
-      intro: normalizeText(payload.intro) || paymentDocumentDraft?.intro || null,
-      notes: notesField.text || null,
-      notes_i18n: notesField.map,
-      closing: normalizeText(payload.closing) || paymentDocumentDraft?.closing || null,
-      sent_to_recipient: false,
-      sent_to_recipient_at: null,
-      payment_received_at: normalizeText(payload.payment_received_at) || paymentDocumentDraft?.payment_received_at || null,
-      payment_confirmed_by_atp_staff_id: normalizeText(payload.payment_confirmed_by_atp_staff_id) || paymentDocumentDraft?.payment_confirmed_by_atp_staff_id || null,
-      payment_confirmed_by_label: normalizeText(payload.payment_confirmed_by_label) || paymentDocumentDraft?.payment_confirmed_by_label || null,
-      payment_reference: normalizeText(payload.payment_reference) || paymentDocumentDraft?.payment_reference || null,
-      recipient_snapshot: {
-        name: invoiceParty.name || "Primary contact",
-        email: invoiceParty.email || null,
-        phone_number: invoiceParty.phone_number || null
-      },
-      booking_snapshot: {
-        id: booking.id,
-        name: normalizeText(booking.name) || null
-      },
-      components: mergedComponents,
-      total_amount_cents: totalAmountCents,
-      due_amount_cents: dueAmountCents,
-      created_at: now,
-      updated_at: now
-    };
-    if (contentLang !== sourceLang) {
-      markInvoiceTranslationManual(invoice, contentLang, now, sourceLang);
-    }
 
-    await writeInvoicePdf(buildInvoiceReadModel(invoice, booking, { lang: documentLang, sourceLang }), invoiceParty, booking);
+    await writeInvoicePdf(renderedInvoice, invoiceParty, booking);
     store.invoices.push(invoice);
     incrementBookingRevision(booking, "invoices_revision");
     if (pdfPersonalizationChanged || acceptedSnapshotUpdate.changed) {

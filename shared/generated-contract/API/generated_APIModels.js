@@ -877,7 +877,6 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
     schemaField({"name":"invoice_number","required":false,"wireName":"invoice_number"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"currency","required":false,"wireName":"currency"}, SHARED_FIELD_DEFS.FIELD_19),
     schemaField({"name":"issue_date","required":false,"wireName":"issue_date"}, SHARED_FIELD_DEFS.FIELD_7),
-    schemaField({"name":"due_date","required":false,"wireName":"due_date"}, SHARED_FIELD_DEFS.FIELD_7),
     schemaField({"name":"title","required":false,"wireName":"title"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"notes","required":false,"wireName":"notes"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"components","required":false,"wireName":"components"}, SHARED_FIELD_DEFS.FIELD_78),

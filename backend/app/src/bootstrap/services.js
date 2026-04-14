@@ -165,7 +165,8 @@ export function createBackendServices({
 
   const writeInvoicePdf = createInvoicePdfWriter({
     invoicePdfPath: pricingHelpers.invoicePdfPath,
-    companyProfile: runtime.companyProfile
+    companyProfile: runtime.companyProfile,
+    logoPath: collections.logoPngPath
   });
 
   const writeGeneratedOfferPdf = createOfferPdfWriter({
