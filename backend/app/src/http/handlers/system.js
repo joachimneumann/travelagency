@@ -4,11 +4,24 @@ import { normalizeText } from "../../lib/text.js";
 export function createSystemHandlers({
   sendJson,
   nowIso,
+  companyProfile,
   mobileAppConfig,
   mobileContractMetaPath,
   backendGeneratedRequestFactoryPath
 }) {
   let mobileContractMetaPromise = null;
+
+  function publicCompanyProfile() {
+    if (!companyProfile || typeof companyProfile !== "object") return null;
+    return {
+      name: normalizeText(companyProfile.name),
+      website: normalizeText(companyProfile.website),
+      address: normalizeText(companyProfile.address),
+      whatsapp: normalizeText(companyProfile.whatsapp),
+      email: normalizeText(companyProfile.email),
+      licenseNumber: normalizeText(companyProfile.licenseNumber)
+    };
+  }
 
   async function readMobileContractMeta() {
     if (!mobileContractMetaPromise) {
@@ -52,6 +65,7 @@ export function createSystemHandlers({
       api: {
         contract_version: normalizeText(contractMeta.modelVersion) || "unknown"
       },
+      company_profile: publicCompanyProfile(),
       features: {
         bookings: true,
         tours: false

@@ -232,6 +232,7 @@ const services = createBackendServices({
 const systemHandlers = createSystemHandlers({
   sendJson: httpHelpers.sendJson,
   nowIso,
+  companyProfile: COMPANY_PROFILE,
   mobileAppConfig: MOBILE_APP_CONFIG,
   mobileContractMetaPath: RUNTIME_PATHS.mobileContractMetaPath,
   backendGeneratedRequestFactoryPath: RUNTIME_PATHS.backendGeneratedRequestFactoryPath

@@ -117,12 +117,13 @@ export const COMPANY_PROFILE = Object.freeze({
   address: "alley 378 Cua Dai, 550000 Hoi An, Vietnam",
   whatsapp: "+84 354999192",
   email: "info@asiatravelplan.com",
+  licenseNumber: "4001328591",
   bankDetails: Object.freeze({
-    accountHolder: "NGUYEN THI XUAN",
-    bankName: "Vietcombank (VCB)",
-    accountNumber: "1000234500123",
-    branch: "",
-    swiftCode: "VCBVVNVX"
+    accountHolder: "CÔNG TY TNHH ASIA TRAVEL PLAN",
+    bankName: "Vietnam Joint Stock Commercial Bank for Industry and Trade (VietinBank)",
+    accountNumber: "119003054388",
+    branch: "378/51 Cua Dai, Hoi An Dong, Da Nang",
+    swiftCode: "ICBVVNVX484"
   })
 });
 

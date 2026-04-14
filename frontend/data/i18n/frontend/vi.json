@@ -134,7 +134,7 @@
   "footer.hanoi_office": "Văn phòng tại Hà Nội: 59 Đ. Lạc Long Quân, Nghĩa Đô, 100000 Hà Nội",
   "footer.whatsapp": "WhatsApp: +84 354999192",
   "footer.email": "Email: info@asiatravelplan.com",
-  "footer.license": "Giấy phép: 4001328591",
+  "footer.license": "Giấy phép: {licenseNumber}",
   "footer.social_title": "Mạng xã hội",
   "footer.instagram": "Instagram",
   "footer.facebook": "Facebook",

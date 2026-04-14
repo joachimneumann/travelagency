@@ -70,6 +70,7 @@ const state = {
   selectedTour: null,
   selectedTourDescriptionId: "",
   selectedTeamMemberUsername: "",
+  companyProfile: null,
   websiteAuthenticated: false,
   websiteAuthenticatedUser: ""
 };
@@ -84,6 +85,7 @@ const SHOW_MORE_BATCH = 3;
 const BACKEND_BASE_URL = window.ASIATRAVELPLAN_API_BASE ? window.ASIATRAVELPLAN_API_BASE.replace(/\/$/, "") : "";
 const API_BASE_ORIGIN = BACKEND_BASE_URL || window.location.origin;
 const ATP_STAFF_TEAM_URL = `${API_BASE_ORIGIN}/public/v1/team`;
+const PUBLIC_BOOTSTRAP_URL = `${API_BASE_ORIGIN}/public/v1/mobile/bootstrap`;
 const els = {
   navToggle: document.getElementById("navToggle"),
   siteNav: document.getElementById("siteNav"),
@@ -105,6 +107,7 @@ const els = {
   backendLoginBtnTitle: document.getElementById("backendLoginBtnTitle"),
   backendLoginBtnSubtitle: document.getElementById("backendLoginBtnSubtitle"),
   websiteAuthStatus: document.getElementById("websiteAuthStatus"),
+  footerLicense: document.getElementById("footerLicense"),
   viewToursBtn: document.getElementById("viewToursBtn"),
   activeFilters: document.getElementById("activeFilters"),
   toursTitle: document.getElementById("toursTitle"),
@@ -239,6 +242,7 @@ init();
 async function init() {
   await waitForFrontendI18n();
   state.lang = currentFrontendLang();
+  await loadPublicBootstrap();
   window.addEventListener("frontend-i18n-changed", () => {
     void handleFrontendLanguageChanged();
   });
@@ -532,8 +536,47 @@ function syncI18nManagedLabels() {
   if (privacyLink) {
     privacyLink.setAttribute("href", withLangUrl("/privacy.html"));
   }
+  syncFooterCompanyProfile();
   syncLocalizedControlLanguage();
   updateBackendButtonLabel({ authenticated: state.websiteAuthenticated, user: state.websiteAuthenticatedUser });
+}
+
+async function loadPublicBootstrap() {
+  try {
+    const response = await fetch(PUBLIC_BOOTSTRAP_URL, {
+      credentials: "same-origin",
+      cache: "default"
+    });
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    const payload = await response.json();
+    state.companyProfile = payload?.company_profile && typeof payload.company_profile === "object"
+      ? payload.company_profile
+      : null;
+  } catch (error) {
+    state.companyProfile = null;
+    logBrowserConsoleError("[frontend-home] Failed to load public bootstrap.", {
+      url: PUBLIC_BOOTSTRAP_URL,
+      page_url: window.location.href
+    }, error);
+  } finally {
+    syncFooterCompanyProfile();
+  }
+}
+
+function syncFooterCompanyProfile() {
+  if (!els.footerLicense) return;
+  const licenseNumber = normalizeText(state.companyProfile?.licenseNumber);
+  if (!licenseNumber) {
+    els.footerLicense.textContent = frontendT("footer.license", "License: {licenseNumber}", {
+      licenseNumber: ""
+    }).replace(/\s*[:：]\s*$/, "").trim();
+    return;
+  }
+  els.footerLicense.textContent = frontendT("footer.license", "License: {licenseNumber}", {
+    licenseNumber
+  });
 }
 
 function syncLocalizedControlLanguage() {

@@ -134,7 +134,7 @@
   "footer.hanoi_office": "河内办事处：59 Đ. Lạc Long Quân, Nghĩa Đô, 100000 Hà Nội",
   "footer.whatsapp": "WhatsApp：+84 354999192",
   "footer.email": "电子邮件：info@asiatravelplan.com",
-  "footer.license": "许可：4001328591",
+  "footer.license": "许可：{licenseNumber}",
   "footer.social_title": "社交",
   "footer.instagram": "Instagram",
   "footer.facebook": "Facebook",
