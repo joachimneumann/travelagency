@@ -627,6 +627,27 @@ test("person document payloads preserve stored timestamps so the persons section
   );
 });
 
+test("booking persons snapshot logic uses a stable timestamp seed instead of generating fresh timestamps on load", async () => {
+  const personsPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "persons.js");
+  const personsSource = await readFile(personsPath, "utf8");
+
+  assert.match(
+    personsSource,
+    /function resolveStablePersonTimestamp\(booking = state\.booking\)\s*\{[\s\S]*booking\?\.updated_at[\s\S]*booking\?\.created_at[\s\S]*DEFAULT_PERSON_TIMESTAMP[\s\S]*\}/,
+    "Booking persons snapshots should derive fallback timestamps from stable booking metadata"
+  );
+  assert.match(
+    personsSource,
+    /function normalizePersonConsentRecord\([\s\S]*const timestamp = normalizeText\(fallbackTimestamp\) \|\| DEFAULT_PERSON_TIMESTAMP;/,
+    "Consent normalization should reuse a stable fallback timestamp instead of new Date() during snapshot comparisons"
+  );
+  assert.match(
+    personsSource,
+    /function buildPersonPayloadFromDraft\([\s\S]*const timestampSeed = normalizeText\(options\?\.timestampSeed\) \|\| resolveStablePersonTimestamp\(options\?\.booking\);[\s\S]*buildPersonConsentPayloads\([\s\S]*timestampSeed[\s\S]*buildDocumentPayloadFromDraft\(\{[\s\S]*created_at: normalizeText\(document\?\.created_at\) \|\| timestampSeed,[\s\S]*updated_at: normalizeText\(document\?\.updated_at\) \|\| normalizeText\(document\?\.created_at\) \|\| timestampSeed/,
+    "Person payload serialization should feed a stable timestamp seed into consent and document payloads"
+  );
+});
+
 test("booking person gender enum stays in sync across model and generated contracts", async () => {
   const modelEnumPath = path.resolve(__dirname, "..", "..", "..", "model", "enums", "booking_person_gender.cue");
   const modelEntityPath = path.resolve(__dirname, "..", "..", "..", "model", "entities", "booking_person.cue");

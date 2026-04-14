@@ -94,6 +94,7 @@ export function createBookingPersonsModule(ctx) {
     "granted",
     "withdrawn"
   ]);
+  const DEFAULT_PERSON_TIMESTAMP = "1970-01-01T00:00:00.000Z";
 
   function normalizePersonLanguageCode(value) {
     const raw = normalizeText(value);
@@ -202,11 +203,15 @@ export function createBookingPersonsModule(ctx) {
     return REQUIRED_PERSON_CONSENT_TYPES.includes(normalizePersonConsentType(value));
   }
 
-  function normalizePersonConsentRecord(consent, personId, fallbackType = "", index = 0) {
+  function resolveStablePersonTimestamp(booking = state.booking) {
+    return normalizeText(booking?.updated_at) || normalizeText(booking?.created_at) || DEFAULT_PERSON_TIMESTAMP;
+  }
+
+  function normalizePersonConsentRecord(consent, personId, fallbackType = "", index = 0, fallbackTimestamp = resolveStablePersonTimestamp()) {
     if (!consent || typeof consent !== "object" || Array.isArray(consent)) return null;
     const consentType = normalizePersonConsentType(consent.consent_type || fallbackType);
     if (!consentType) return null;
-    const timestamp = new Date().toISOString();
+    const timestamp = normalizeText(fallbackTimestamp) || DEFAULT_PERSON_TIMESTAMP;
     return {
       id: normalizeText(consent.id) || `${normalizeText(personId) || bookingId || "booking"}_${consentType}_consent_${index + 1}`,
       consent_type: consentType,
@@ -218,9 +223,9 @@ export function createBookingPersonsModule(ctx) {
     };
   }
 
-  function normalizePersonConsentDrafts(consents, personId = "") {
+  function normalizePersonConsentDrafts(consents, personId = "", fallbackTimestamp = resolveStablePersonTimestamp()) {
     const normalizedConsents = (Array.isArray(consents) ? consents : [])
-      .map((consent, index) => normalizePersonConsentRecord(consent, personId, consent?.consent_type, index))
+      .map((consent, index) => normalizePersonConsentRecord(consent, personId, consent?.consent_type, index, fallbackTimestamp))
       .filter(Boolean)
       .sort((left, right) => PERSON_CONSENT_TYPES.indexOf(left.consent_type) - PERSON_CONSENT_TYPES.indexOf(right.consent_type));
     const byType = new Map(normalizedConsents.map((consent) => [consent.consent_type, consent]));
@@ -229,7 +234,7 @@ export function createBookingPersonsModule(ctx) {
         consent_type: consentType,
         status: "granted",
         captured_via: "booking_person_modal_default"
-      }, personId, consentType, index)
+      }, personId, consentType, index, fallbackTimestamp)
     )).filter(Boolean);
   }
 
@@ -274,8 +279,8 @@ export function createBookingPersonsModule(ctx) {
     draft.consents = normalizePersonConsentDrafts(draft.consents, draft.id);
   }
 
-  function buildPersonConsentPayloads(consents, personId = "") {
-    return normalizePersonConsentDrafts(consents, personId);
+  function buildPersonConsentPayloads(consents, personId = "", fallbackTimestamp = resolveStablePersonTimestamp()) {
+    return normalizePersonConsentDrafts(consents, personId, fallbackTimestamp);
   }
 
   function renderPersonConsentStatusOptions(currentValue = "") {
@@ -345,7 +350,8 @@ export function createBookingPersonsModule(ctx) {
     );
   }
 
-  function clonePersonDraft(person = {}, index = 0) {
+  function clonePersonDraft(person = {}, index = 0, options = {}) {
+    const timestampSeed = resolveStablePersonTimestamp(options?.booking);
     return {
       _is_new: false,
       id: normalizeText(person.id) || `${bookingId || "booking"}_person_${index + 1}`,
@@ -363,9 +369,16 @@ export function createBookingPersonsModule(ctx) {
       nationality: normalizeText(person.nationality) || "",
       address: person.address && typeof person.address === "object" ? { ...person.address } : {},
       roles: normalizeStringList(person.roles),
-      consents: normalizePersonConsentDrafts(person.consents, normalizeText(person.id)),
+      consents: normalizePersonConsentDrafts(person.consents, normalizeText(person.id), timestampSeed),
       documents: Array.isArray(person.documents)
-        ? person.documents.map((document) => normalizePersonDocumentDraft(document, normalizeText(document?.document_type) || "other"))
+        ? person.documents.map((document) => {
+            const normalizedDocument = normalizePersonDocumentDraft(document, normalizeText(document?.document_type) || "other");
+            if (documentHasAnyData(normalizedDocument)) {
+              normalizedDocument.created_at = normalizedDocument.created_at || timestampSeed;
+              normalizedDocument.updated_at = normalizedDocument.updated_at || normalizedDocument.created_at || timestampSeed;
+            }
+            return normalizedDocument;
+          })
         : [],
       notes: normalizeText(person.notes) || ""
     };
@@ -436,14 +449,18 @@ export function createBookingPersonsModule(ctx) {
     pruneEmptyPersonDocuments(draft);
   }
 
-  function serializePersonDrafts(drafts = state.personDrafts) {
+  function serializePersonDrafts(drafts = state.personDrafts, options = {}) {
+    const timestampSeed = resolveStablePersonTimestamp(options?.booking);
     return JSON.stringify(
-      (Array.isArray(drafts) ? drafts : []).map((draft, index) => buildPersonPayloadFromDraft(draft, index))
+      (Array.isArray(drafts) ? drafts : []).map((draft, index) => buildPersonPayloadFromDraft(draft, index, { timestampSeed }))
     );
   }
 
   function serializeSavedPersonDrafts(booking = state.booking) {
-    return serializePersonDrafts(getBookingPersons(booking).map(clonePersonDraft));
+    return serializePersonDrafts(
+      getBookingPersons(booking).map((person, index) => clonePersonDraft(person, index, { booking })),
+      { booking }
+    );
   }
 
   function markPersonsSnapshotClean(booking = state.booking) {
@@ -685,7 +702,8 @@ export function createBookingPersonsModule(ctx) {
     return !firstInvalidDescriptor;
   }
 
-  function buildPersonPayloadFromDraft(draft, index) {
+  function buildPersonPayloadFromDraft(draft, index, options = {}) {
+    const timestampSeed = normalizeText(options?.timestampSeed) || resolveStablePersonTimestamp(options?.booking);
     const address = draft?.address && typeof draft.address === "object" ? {
       line_1: normalizeText(draft.address.line_1),
       line_2: normalizeText(draft.address.line_2),
@@ -712,9 +730,17 @@ export function createBookingPersonsModule(ctx) {
       nationality: normalizeText(draft?.nationality).toUpperCase() || undefined,
       address: Object.keys(cleanedAddress).length ? cleanedAddress : undefined,
       roles: normalizeStringList(draft?.roles),
-      consents: buildPersonConsentPayloads(draft?.consents, normalizeText(draft?.id) || `${bookingId || "booking"}_person_${index + 1}`),
+      consents: buildPersonConsentPayloads(
+        draft?.consents,
+        normalizeText(draft?.id) || `${bookingId || "booking"}_person_${index + 1}`,
+        timestampSeed
+      ),
       documents: (Array.isArray(draft?.documents) ? draft.documents : [])
-        .map((document, document_index) => buildDocumentPayloadFromDraft(document, draft?.id, bookingId || "booking", document_index))
+        .map((document, document_index) => buildDocumentPayloadFromDraft({
+          ...document,
+          created_at: normalizeText(document?.created_at) || timestampSeed,
+          updated_at: normalizeText(document?.updated_at) || normalizeText(document?.created_at) || timestampSeed
+        }, draft?.id, bookingId || "booking", document_index))
         .filter(Boolean),
       notes: normalizeText(draft?.notes) || undefined
     };
@@ -751,13 +777,17 @@ export function createBookingPersonsModule(ctx) {
     const persons = getBookingPersons(booking);
     const personIndex = persons.findIndex((person) => normalizeText(person?.id) === normalizedPersonId);
     if (personIndex < 0) return null;
-    return buildPersonPayloadFromDraft(clonePersonDraft(persons[personIndex], personIndex), personIndex);
+    return buildPersonPayloadFromDraft(
+      clonePersonDraft(persons[personIndex], personIndex, { booking }),
+      personIndex,
+      { booking }
+    );
   }
 
   function isPersonDraftDirtyAgainstBooking(draft, booking = state.booking, fallbackIndex = 0) {
     if (!draft || typeof draft !== "object") return false;
     if (draft._is_new === true) return personDraftHasMeaningfulInput(draft);
-    const draftPayload = buildPersonPayloadFromDraft(draft, fallbackIndex);
+    const draftPayload = buildPersonPayloadFromDraft(draft, fallbackIndex, { booking });
     const storedPayload = buildStoredPersonPayload(booking, draft.id, fallbackIndex);
     if (!storedPayload) return true;
     return JSON.stringify(draftPayload) !== JSON.stringify(storedPayload);
@@ -901,7 +931,7 @@ export function createBookingPersonsModule(ctx) {
       method: request.method,
       body: {
         expected_persons_revision: getBookingRevision("persons_revision"),
-        person: buildPersonPayloadFromDraft(currentDraft, personIndex),
+        person: buildPersonPayloadFromDraft(currentDraft, personIndex, { booking: state.booking }),
         actor: state.user
       }
     });
@@ -914,7 +944,7 @@ export function createBookingPersonsModule(ctx) {
         )
       : "";
     state.booking = result.booking;
-    state.personDrafts = getBookingPersons(state.booking).map(clonePersonDraft);
+    state.personDrafts = getBookingPersons(state.booking).map((person, index) => clonePersonDraft(person, index, { booking: state.booking }));
     previousDrafts.forEach((draft, index) => {
       const draftId = normalizeText(draft?.id);
       if (!draftId || draftId === targetPersonId || draftId === createdPersonId) return;
@@ -962,8 +992,10 @@ export function createBookingPersonsModule(ctx) {
       if (isNewDraft && !personDraftHasMeaningfulInput(draft)) continue;
 
       const bookingPerson = getBookingPersons(latestBooking).find((person) => normalizeText(person.id) === targetPersonId) || null;
-      const bookingPayload = bookingPerson ? buildPersonPayloadFromDraft(clonePersonDraft(bookingPerson, index), index) : null;
-      const draftPayload = buildPersonPayloadFromDraft(draft, index);
+      const bookingPayload = bookingPerson
+        ? buildPersonPayloadFromDraft(clonePersonDraft(bookingPerson, index, { booking: latestBooking }), index, { booking: latestBooking })
+        : null;
+      const draftPayload = buildPersonPayloadFromDraft(draft, index, { booking: latestBooking });
       const hasChanges = isNewDraft || JSON.stringify(draftPayload) !== JSON.stringify(bookingPayload);
       if (!hasChanges) continue;
 
@@ -1043,7 +1075,7 @@ export function createBookingPersonsModule(ctx) {
     const storedPersons = getBookingPersons(state.booking);
     const storedIndex = storedPersons.findIndex((person) => normalizeText(person?.id) === targetPersonId);
     if (storedIndex < 0) return false;
-    state.personDrafts[personIndex] = clonePersonDraft(storedPersons[storedIndex], storedIndex);
+    state.personDrafts[personIndex] = clonePersonDraft(storedPersons[storedIndex], storedIndex, { booking: state.booking });
     setPersonModalActionStatus(bookingT("booking.persons.discarded_changes", "Traveler changes discarded"), targetPersonId);
     renderPersonsEditor();
     updatePersonsDirtyState();
@@ -1881,7 +1913,7 @@ export function createBookingPersonsModule(ctx) {
           : 0,
       updated_at: normalizeText(booking.updated_at) || normalizeText(state.booking?.updated_at) || ""
     };
-    state.personDrafts = getBookingPersons(state.booking).map(clonePersonDraft);
+    state.personDrafts = getBookingPersons(state.booking).map((person, index) => clonePersonDraft(person, index, { booking: state.booking }));
     previousDrafts.forEach((draft, index) => {
       const draftId = normalizeText(draft?.id);
       if (!draftId || draftId === normalizedFocusedPersonId) return;
@@ -1915,7 +1947,7 @@ export function createBookingPersonsModule(ctx) {
     if (payload?.booking) {
       state.booking = payload.booking;
     }
-    state.personDrafts = getBookingPersons(state.booking).map(clonePersonDraft);
+    state.personDrafts = getBookingPersons(state.booking).map((person, index) => clonePersonDraft(person, index, { booking: state.booking }));
     if (activePersonId) {
       state.active_person_index = state.personDrafts.findIndex((person) => person.id === activePersonId);
       if (state.active_person_index < 0) {
