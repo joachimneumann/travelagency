@@ -22,7 +22,10 @@ function extractPublicRelativePath(publicUrl, prefix) {
   const normalizedUrl = normalizeText(publicUrl);
   if (!normalizedUrl) return null;
   if (!normalizedUrl.startsWith(prefix)) return null;
-  return normalizedUrl.slice(prefix.length).replace(/^\/+/, "");
+  return normalizedUrl
+    .slice(prefix.length)
+    .replace(/^\/+/, "")
+    .replace(/[?#].*$/, "");
 }
 
 export async function resolveAtpGuidePdfContext({
@@ -43,7 +46,8 @@ export async function resolveAtpGuidePdfContext({
   );
 
   const photoRelativePath = extractPublicRelativePath(profile?.picture_ref, "/content/atp_staff/photos/")
-    || extractPublicRelativePath(profile?.picture_ref, "/public/v1/atp-staff-photos/");
+    || extractPublicRelativePath(profile?.picture_ref, "/public/v1/atp-staff-photos/")
+    || textOrNull(profile?.picture);
   const photoDiskPath = photoRelativePath && typeof resolveAtpStaffPhotoDiskPath === "function"
     ? resolveAtpStaffPhotoDiskPath(photoRelativePath)
     : null;

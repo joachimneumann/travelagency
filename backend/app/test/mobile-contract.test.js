@@ -3160,14 +3160,18 @@ test("booking travel plan pdf includes the assigned ATP guide section with the g
   );
   assert.equal(pdfResult.status, 200);
   const decodedText = normalizeExtractedPdfText(decodePdfHexText(pdfResult.body));
-  assert.match(decodedText, /OurteammemberJoachimCarlNeumannwillassistyou/);
+  assert.match(decodedText, /OurteammemberJoachimwillassistyou/);
   assert.match(
     decodedText,
     /Specializesinsoft-pacedSoutheastAsiaitineraries/
   );
   assert.ok(
-    decodedText.indexOf("GuideOrderDayMarker") < decodedText.indexOf("OurteammemberJoachimCarlNeumannwillassistyou"),
-    "Expected guide section after the travel plan section in the travel plan PDF"
+    decodedText.indexOf("OurteammemberJoachimwillassistyou") < decodedText.indexOf("GuideOrderDayMarker"),
+    "Expected the guide section title on the first page before the travel plan day section"
+  );
+  assert.ok(
+    decodedText.indexOf("Specializesinsoft-pacedSoutheastAsiaitineraries") < decodedText.indexOf("GuideOrderDayMarker"),
+    "Expected the detailed guide card body to move with the guide section before the travel plan day section"
   );
   assert.doesNotMatch(decodedText, /JoachimfromAsiaTravelPlanwillkeepthisroutecomfortableandwellpacedforyou/);
   assert.doesNotMatch(decodedText, /Languages:DE·EN·VI|Languages:DEENVI/);
@@ -5954,7 +5958,6 @@ test("first payment request freezes the accepted commercial snapshot before a re
               id: "pricing_payment_first_request_deposit",
               label: "Deposit",
               origin_payment_term_line_id: "payment_term_first_request_deposit",
-              due_date: "2026-05-01",
               net_amount_cents: 8000,
               tax_rate_basis_points: 0,
               status: "PENDING",

@@ -249,8 +249,6 @@ export function createBookingInvoicesModule(ctx) {
       els.invoice_number_input,
       els.invoice_issue_date_input,
       els.invoice_issue_today_btn,
-      els.invoice_due_date_input,
-      els.invoice_due_month_btn,
       els.invoice_due_amount_input,
       els.invoice_vat_input
     ].forEach((el) => {
@@ -358,7 +356,6 @@ export function createBookingInvoicesModule(ctx) {
     if (els.invoice_currency_input) setSelectValue(els.invoice_currency_input, invoice.currency || "USD");
     renderInvoiceLocalizedFields(invoice);
     if (els.invoice_issue_date_input) els.invoice_issue_date_input.value = normalizeDateInput(invoice.issue_date);
-    if (els.invoice_due_date_input) els.invoice_due_date_input.value = normalizeDateInput(invoice.due_date);
     if (els.invoice_due_amount_input) {
       els.invoice_due_amount_input.value = invoice.due_amount_cents
         ? formatMoneyInputValue(invoice.due_amount_cents, invoice.currency || "USD")
@@ -381,7 +378,6 @@ export function createBookingInvoicesModule(ctx) {
     if (els.invoice_currency_input) setSelectValue(els.invoice_currency_input, "USD");
     renderInvoiceLocalizedFields(null);
     if (els.invoice_issue_date_input) els.invoice_issue_date_input.value = "";
-    if (els.invoice_due_date_input) els.invoice_due_date_input.value = "";
     if (els.invoice_due_amount_input) els.invoice_due_amount_input.value = "";
     if (els.invoice_vat_input) els.invoice_vat_input.value = "0";
     clearInvoiceStatus();
@@ -494,7 +490,6 @@ export function createBookingInvoicesModule(ctx) {
       invoice_number: String(els.invoice_number_input?.value || "").trim(),
       currency,
       issue_date: String(els.invoice_issue_date_input?.value || "").trim(),
-      due_date: String(els.invoice_due_date_input?.value || "").trim(),
       title: titlePayload.text,
       title_i18n: titlePayload.map,
       notes: notesPayload.text || null,

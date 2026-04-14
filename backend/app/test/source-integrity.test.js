@@ -2065,7 +2065,7 @@ test("staging PDF font stack includes Japanese and Chinese smoke coverage paths"
   }
 });
 
-test("invoice PDFs can read shared company bank details from runtime config", async () => {
+test("invoice PDFs keep the header focused on company contact details instead of bank account lines", async () => {
   const runtimeConfigPath = path.resolve(__dirname, "..", "src", "config", "runtime.js");
   const invoicePdfPath = path.resolve(__dirname, "..", "src", "lib", "invoice_pdf.js");
   const [runtimeConfigSource, invoicePdfSource] = await Promise.all([
@@ -2076,12 +2076,17 @@ test("invoice PDFs can read shared company bank details from runtime config", as
   assert.match(
     runtimeConfigSource,
     /COMPANY_PROFILE = Object\.freeze\(\{[\s\S]*bankDetails:\s*Object\.freeze\(\{[\s\S]*accountHolder:[\s\S]*bankName:[\s\S]*accountNumber:[\s\S]*branch:[\s\S]*swiftCode:/,
-    "Runtime config should expose a shared company bank-details block for invoice rendering"
+    "Runtime config should continue exposing the shared company bank-details block"
   );
   assert.match(
     invoicePdfSource,
-    /function companyProfileHeaderLines\(companyProfile\) \{[\s\S]*companyProfile\.bankDetails[\s\S]*Account holder:[\s\S]*Account number:[\s\S]*SWIFT:/,
-    "Invoice PDF generation should render company bank details from the shared runtime company profile"
+    /function companyProfileHeaderLines\(companyProfile\) \{[\s\S]*companyProfile\.address[\s\S]*companyProfile\.email[\s\S]*companyProfile\.website[\s\S]*companyProfile\.whatsapp[\s\S]*\]\.filter\(Boolean\);/,
+    "Invoice PDF generation should keep the header limited to company contact details"
+  );
+  assert.doesNotMatch(
+    invoicePdfSource,
+    /Account holder:|Account number:|SWIFT:|Branch:|Bank:/,
+    "Invoice PDF header generation should no longer include bank-account lines"
   );
 });
 
@@ -3220,8 +3225,8 @@ test("offer and travel-plan PDFs prefer ATP staff full and friendly names in the
   );
   assert.match(
     travelPlanPdfSource,
-    /resolveAtpStaffFullName[\s\S]*resolveAtpGuideIntroName/,
-    "Travel-plan PDFs should use the ATP staff full name in the title and the friendly short name through the guide intro helper"
+    /resolveAtpGuideIntroName[\s\S]*resolveAtpStaffFullName/,
+    "Travel-plan PDFs should prefer the ATP staff short name in the title and still fall back to the full name when needed"
   );
   assert.doesNotMatch(
     offerPdfSource,

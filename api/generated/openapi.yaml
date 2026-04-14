@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-04-13T04:54:22Z
+# 2026-04-14T06:00:23Z
 
 ---
 openapi: 3.1.0
@@ -4466,10 +4466,6 @@ components:
           type: string
           format: date
           nullable: true
-        due_date:
-          type: string
-          format: date
-          nullable: true
         title:
           type: string
           nullable: true
@@ -4523,10 +4519,6 @@ components:
           "$ref": "#/components/schemas/MoneyAmount"
         tax_rate_basis_points:
           type: integer
-        due_date:
-          type: string
-          format: date
-          nullable: true
         paid_at:
           type: string
           format: date-time
@@ -7079,10 +7071,6 @@ components:
           "$ref": "#/components/schemas/ATPCurrencyCode"
           nullable: true
         issue_date:
-          type: string
-          format: date
-          nullable: true
-        due_date:
           type: string
           format: date
           nullable: true

@@ -38,7 +38,6 @@ import (
 	status:                       enums.#PaymentStatus
 	net_amount_cents:             common.#NonNegativeMoneyAmount
 	tax_rate_basis_points:        >=0 & int
-	due_date?:                    common.#DateOnly
 	paid_at?:                     common.#Timestamp
 	received_at?:                 common.#Timestamp
 	received_amount_cents?:       common.#NonNegativeMoneyAmount

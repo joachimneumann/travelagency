@@ -155,19 +155,11 @@ function componentRowTotal(component) {
 
 function companyProfileHeaderLines(companyProfile) {
   if (!companyProfile) return [];
-  const bankDetails = companyProfile?.bankDetails && typeof companyProfile.bankDetails === "object"
-    ? companyProfile.bankDetails
-    : {};
   return [
     normalizeText(companyProfile.address),
     normalizeText(companyProfile.email),
     normalizeText(companyProfile.website),
-    normalizeText(companyProfile.whatsapp),
-    normalizeText(bankDetails.bankName) ? `Bank: ${normalizeText(bankDetails.bankName)}` : "",
-    normalizeText(bankDetails.branch) ? `Branch: ${normalizeText(bankDetails.branch)}` : "",
-    normalizeText(bankDetails.accountHolder) ? `Account holder: ${normalizeText(bankDetails.accountHolder)}` : "",
-    normalizeText(bankDetails.accountNumber) ? `Account number: ${normalizeText(bankDetails.accountNumber)}` : "",
-    normalizeText(bankDetails.swiftCode) ? `SWIFT: ${normalizeText(bankDetails.swiftCode)}` : ""
+    normalizeText(companyProfile.whatsapp)
   ].filter(Boolean);
 }
 
@@ -247,7 +239,6 @@ export function createInvoicePdfWriter({ invoicePdfPath, companyProfile = null }
       const leftWidth = doc.page.width - PAGE_MARGIN * 2;
       y = drawMetaRow(doc, `${pdfT(lang, "invoice.number", "Invoice number")}:`, safeText(invoice?.invoice_number, invoice?.id), PAGE_MARGIN, y, leftWidth, fonts) + 6;
       y = drawMetaRow(doc, `${pdfT(lang, "invoice.issue_date", "Issue date")}:`, safeText(formatPdfDateOnly(invoice?.issue_date, lang, { day: "2-digit", month: "short", year: "numeric" }), safeText(invoice?.issue_date)), PAGE_MARGIN, y, leftWidth, fonts) + 6;
-      y = drawMetaRow(doc, `${pdfT(lang, "invoice.due_date", "Due date")}:`, safeText(formatPdfDateOnly(invoice?.due_date, lang, { day: "2-digit", month: "short", year: "numeric" }), safeText(invoice?.due_date)), PAGE_MARGIN, y, leftWidth, fonts) + 6;
       y = drawMetaRow(doc, `${pdfT(lang, "invoice.booking", "Booking")}:`, safeText(invoice?.booking_snapshot?.name || booking?.name, safeText(booking?.id)), PAGE_MARGIN, y, leftWidth, fonts) + 6;
       if (normalizeText(invoice?.payment_label)) {
         y = drawMetaRow(doc, `${pdfT(lang, "payment.label", "Payment")}:`, safeText(invoice?.payment_label), PAGE_MARGIN, y, leftWidth, fonts) + 6;

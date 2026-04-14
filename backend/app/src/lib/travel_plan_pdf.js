@@ -387,24 +387,58 @@ function drawTopHeader(doc, companyProfile, logoImage, fonts, lang) {
   }
 
   const rightColumnX = doc.page.width - PAGE_MARGIN - 220;
+  const rightColumnWidth = 220;
+  const addressY = y + 18;
+  const addressOptions = { width: rightColumnWidth, align: "right" };
   doc
     .font(pdfFontName("bold", fonts))
     .fontSize(13)
     .fillColor(PDF_COLORS.textStrong)
-    .text(profile.name || "Asia Travel Plan", rightColumnX, y, { width: 220, align: "right" });
+    .text(profile.name || "Asia Travel Plan", rightColumnX, y, addressOptions);
   doc
     .font(pdfFontName("regular", fonts))
     .fontSize(10)
-    .fillColor(PDF_COLORS.textMuted)
-    .text(profile.address || "", rightColumnX, y + 18, { width: 220, align: "right" })
-    .text(`${pdfT(lang, "header.whatsapp", "WhatsApp")}: ${profile.whatsapp || ""}`, rightColumnX, y + 50, { width: 220, align: "right" })
-    .text(`${pdfT(lang, "header.email", "Email")}: ${profile.email || ""}`, rightColumnX, y + 66, { width: 220, align: "right" })
-    .text(profile.website || "", rightColumnX, y + 82, { width: 220, align: "right" });
+    .fillColor(PDF_COLORS.textMuted);
+  const addressText = profile.address || "";
+  const addressHeight = addressText
+    ? doc.heightOfString(addressText, addressOptions)
+    : 0;
+  const whatsappY = addressY + addressHeight + 2;
+  const emailY = whatsappY + 16;
+  const websiteY = emailY + 16;
+  doc
+    .text(addressText, rightColumnX, addressY, addressOptions)
+    .text(`${pdfT(lang, "header.whatsapp", "WhatsApp")}: ${profile.whatsapp || ""}`, rightColumnX, whatsappY, addressOptions)
+    .text(`${pdfT(lang, "header.email", "Email")}: ${profile.email || ""}`, rightColumnX, emailY, addressOptions)
+    .text(profile.website || "", rightColumnX, websiteY, addressOptions);
 
-  const rightColumnBottomY = y + 98;
+  const websiteHeight = profile.website
+    ? doc.heightOfString(profile.website, addressOptions)
+    : 0;
+  const rightColumnBottomY = Math.max(websiteY + websiteHeight, emailY + 12, addressY + addressHeight);
   const nextY = Math.max(logoBottomY, rightColumnBottomY) + 10;
   drawDivider(doc, nextY);
   return nextY + 18;
+}
+
+function resolveGuideSectionTitle(guideContext, lang) {
+  const profile = guideContext?.profile || null;
+  const guideTitleName = textOrNull(resolveAtpGuideIntroName(profile)) || textOrNull(resolveAtpStaffFullName(profile));
+  return guideTitleName
+    ? pdfT(lang, "guide.section_title_named", "Our team member {name} will assist you", { name: guideTitleName })
+    : pdfT(lang, "guide.section_title_fallback", "Our team member will assist you");
+}
+
+function resolveGuideSectionBody(guideContext, lang) {
+  const profile = guideContext?.profile || null;
+  const qualificationText = textOrNull(resolveAtpGuideShortDescriptionText(guideContext, lang));
+  const introName = textOrNull(resolveAtpGuideIntroName(profile));
+  const introText = profile
+    ? pdfT(lang, "guide.intro_named", "{name} from Asia Travel Plan will keep this route comfortable and well paced for you.", {
+        name: introName || pdfT(lang, "guide.fallback_name", "Your ATP guide")
+      })
+    : pdfT(lang, "guide.intro_generic", "An ATP travel specialist will be assigned to keep this route comfortable, practical, and easy to follow.");
+  return qualificationText || introText;
 }
 
 function drawTravelPlanHero(doc, heroTitle, heroSubtitle, heroImage, startY, fonts, lang) {
@@ -644,40 +678,34 @@ function drawClosing(doc, startY, fonts, lang, {
   return doc.y + 10;
 }
 
-function estimateGuideSectionHeight(doc, guideContext, fonts, lang) {
+function estimateGuideSectionHeight(doc, guideContext, fonts, lang, options = {}) {
   const profile = guideContext?.profile || null;
-  const qualificationText = textOrNull(resolveAtpGuideShortDescriptionText(guideContext, lang));
-  const guideFullName = textOrNull(resolveAtpStaffFullName(profile));
-  const introName = textOrNull(resolveAtpGuideIntroName(profile));
-  const guideTitle = guideFullName
-    ? pdfT(lang, "guide.section_title_named", "Our team member {name} will assist you", { name: guideFullName })
-    : pdfT(lang, "guide.section_title_fallback", "Our team member will assist you");
+  const includeTitle = options?.includeTitle !== false;
+  const guideTitle = resolveGuideSectionTitle(guideContext, lang);
   const photoWidth = profile ? GUIDE_PHOTO_SIZE + 18 : 0;
   const textWidth = doc.page.width - PAGE_MARGIN * 2 - 30 - photoWidth;
   const titleChoices = mixedFontChoices("bold", fonts);
   const bodyChoices = mixedFontChoices("regular", fonts);
   let height = 26;
 
-  height += titleChoices.length
-    ? measureMultifontTextHeight(doc, guideTitle, {
-        width: textWidth,
-        fontSize: 13,
-        fontChoices: titleChoices
-      })
-    : measureTextHeight(doc, guideTitle, {
-        width: textWidth,
-        fontSize: 13,
-        fonts,
-        weight: "bold"
-      });
+  if (includeTitle) {
+    height += titleChoices.length
+      ? measureMultifontTextHeight(doc, guideTitle, {
+          width: textWidth,
+          fontSize: 13,
+          fontChoices: titleChoices
+        })
+      : measureTextHeight(doc, guideTitle, {
+          width: textWidth,
+          fontSize: 13,
+          fonts,
+          weight: "bold"
+        });
+    height += 6;
+  }
 
-  const introText = profile
-    ? pdfT(lang, "guide.intro_named", "{name} from Asia Travel Plan will keep this route comfortable and well paced for you.", {
-        name: introName || pdfT(lang, "guide.fallback_name", "Your ATP guide")
-      })
-    : pdfT(lang, "guide.intro_generic", "An ATP travel specialist will be assigned to keep this route comfortable, practical, and easy to follow.");
-  const bodyText = qualificationText || introText;
-  height += 6 + (
+  const bodyText = resolveGuideSectionBody(guideContext, lang);
+  height += (
     bodyChoices.length
       ? measureMultifontTextHeight(doc, bodyText, {
           width: textWidth,
@@ -696,16 +724,12 @@ function estimateGuideSectionHeight(doc, guideContext, fonts, lang) {
   return Math.max(height + 18, profile ? GUIDE_PHOTO_SIZE + 26 : 120);
 }
 
-function drawGuideSection(doc, startY, fonts, lang, guideContext, guidePhoto) {
+function drawGuideSection(doc, startY, fonts, lang, guideContext, guidePhoto, options = {}) {
   const profile = guideContext?.profile || null;
-  const qualificationText = textOrNull(resolveAtpGuideShortDescriptionText(guideContext, lang));
-  const guideFullName = textOrNull(resolveAtpStaffFullName(profile));
-  const introName = textOrNull(resolveAtpGuideIntroName(profile));
-  const guideTitle = guideFullName
-    ? pdfT(lang, "guide.section_title_named", "Our team member {name} will assist you", { name: guideFullName })
-    : pdfT(lang, "guide.section_title_fallback", "Our team member will assist you");
+  const includeTitle = options?.includeTitle !== false;
+  const guideTitle = resolveGuideSectionTitle(guideContext, lang);
   const cardWidth = doc.page.width - PAGE_MARGIN * 2;
-  const cardHeight = estimateGuideSectionHeight(doc, guideContext, fonts, lang);
+  const cardHeight = estimateGuideSectionHeight(doc, guideContext, fonts, lang, { includeTitle });
   const photoWidth = profile ? GUIDE_PHOTO_SIZE + 18 : 0;
   const textX = PAGE_MARGIN + 16;
   const textWidth = cardWidth - 32 - photoWidth;
@@ -740,28 +764,25 @@ function drawGuideSection(doc, startY, fonts, lang, guideContext, guidePhoto) {
   }
 
   let y = startY + 16;
-  if (titleChoices.length) {
-    y = drawMultifontText(doc, guideTitle, textX, y, {
-      width: textWidth,
-      fontSize: 13,
-      fontChoices: titleChoices,
-      fillColor: PDF_COLORS.textStrong
-    }) + 6;
-  } else {
-    doc
-      .font(pdfFontName("bold", fonts))
-      .fontSize(13)
-      .fillColor(PDF_COLORS.textStrong)
-      .text(guideTitle, textX, y, pdfTextOptions(lang, { width: textWidth }));
-    y = doc.y + 6;
+  if (includeTitle) {
+    if (titleChoices.length) {
+      y = drawMultifontText(doc, guideTitle, textX, y, {
+        width: textWidth,
+        fontSize: 13,
+        fontChoices: titleChoices,
+        fillColor: PDF_COLORS.textStrong
+      }) + 6;
+    } else {
+      doc
+        .font(pdfFontName("bold", fonts))
+        .fontSize(13)
+        .fillColor(PDF_COLORS.textStrong)
+        .text(guideTitle, textX, y, pdfTextOptions(lang, { width: textWidth }));
+      y = doc.y + 6;
+    }
   }
 
-  const introText = profile
-    ? pdfT(lang, "guide.intro_named", "{name} from Asia Travel Plan will keep this route comfortable and well paced for you.", {
-        name: introName || pdfT(lang, "guide.fallback_name", "Your ATP guide")
-      })
-    : pdfT(lang, "guide.intro_generic", "An ATP travel specialist will be assigned to keep this route comfortable, practical, and easy to follow.");
-  const bodyText = qualificationText || introText;
+  const bodyText = resolveGuideSectionBody(guideContext, lang);
 
   if (bodyChoices.length) {
     drawMultifontText(doc, bodyText, textX, y, {
@@ -929,6 +950,8 @@ export function createTravelPlanPdfWriter({
 
       let y = drawTopHeader(doc, companyProfile, logoImage, fonts, lang);
       y = drawTravelPlanHero(doc, heroTitle, heroSubtitle, heroImage, y, fonts, lang);
+      y = ensureSpace(y, estimateGuideSectionHeight(doc, guideContext, fonts, lang) + 10);
+      y = drawGuideSection(doc, y, fonts, lang, guideContext, guidePhoto);
       if (welcomeText) {
         y = ensureSpace(y + 6, 72);
         y = drawTextParagraph(doc, y + 6, welcomeText, fonts, lang, { fontSize: 11.2 }) + 12;
@@ -971,8 +994,6 @@ export function createTravelPlanPdfWriter({
         });
       }
 
-      y = ensureSpace(y, estimateGuideSectionHeight(doc, guideContext, fonts, lang) + 10);
-      y = drawGuideSection(doc, y, fonts, lang, guideContext, guidePhoto);
       y = ensureSpace(y + 8, measureTravelPlanEndingHeight(doc, fonts, lang, {
         childrenPolicyText,
         whatsNotIncludedText,

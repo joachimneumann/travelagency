@@ -36,7 +36,6 @@ import (
 	payment_label?:  string
 	currency:        enums.#CurrencyCode
 	issue_date?:     common.#DateOnly
-	due_date?:       common.#DateOnly
 	title?:          string
 	subtitle?:       string
 	intro?:          string

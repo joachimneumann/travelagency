@@ -285,9 +285,7 @@ export function createBookingInvoiceHandlers(deps) {
     const scope = paymentDocumentPersonalizationScope(paymentKind, documentKind);
     const resolvedIntroFallback = documentKind === "PAYMENT_CONFIRMATION"
       ? `This document confirms receipt of payment for ${paymentLabel}.`
-      : payment?.due_date
-        ? `Please find the payment request for ${paymentLabel}, due on ${paymentDocumentDateOnly(payment?.due_date, paymentDocumentDateOnly(now))}.`
-        : `Please find the payment request for ${paymentLabel}.`;
+      : `Please find the payment request for ${paymentLabel}.`;
     const titleField = mergeEditableLocalizedTextField(
       null,
       buildDefaultInvoiceTitle({
@@ -348,7 +346,6 @@ export function createBookingInvoiceHandlers(deps) {
       payment_label: paymentLabel,
       currency: customerCurrency,
       issue_date: issueDate || null,
-      due_date: documentKind === "PAYMENT_REQUEST" ? (normalizeText(payment?.due_date) || null) : null,
       title: titleField.text || buildDefaultInvoiceTitle({ document_kind: documentKind, payment_label: paymentLabel, recipient_snapshot: invoiceParty }, documentLang),
       title_i18n: titleField.map,
       subtitle: subtitle || null,
@@ -593,7 +590,6 @@ export function createBookingInvoiceHandlers(deps) {
       lang: documentLang,
       currency: safeCurrency(payload.currency || paymentDocumentDraft?.currency),
       issue_date: normalizeText(payload.issue_date) || paymentDocumentDraft?.issue_date || now.slice(0, 10),
-      due_date: normalizeText(payload.due_date) || paymentDocumentDraft?.due_date || null,
       title: titleField.text || buildDefaultInvoiceTitle({ recipient_snapshot: invoiceParty }, documentLang),
       title_i18n: titleField.map,
       subtitle: normalizeText(payload.subtitle) || paymentDocumentDraft?.subtitle || null,
@@ -698,7 +694,6 @@ export function createBookingInvoiceHandlers(deps) {
       payload.invoice_number !== undefined ||
       payload.currency !== undefined ||
       payload.issue_date !== undefined ||
-      payload.due_date !== undefined ||
       payload.title !== undefined ||
       payload.notes !== undefined ||
       payload.components !== undefined ||
@@ -737,9 +732,6 @@ export function createBookingInvoiceHandlers(deps) {
       }
       if (payload.issue_date !== undefined) {
         invoice.issue_date = normalizeText(payload.issue_date) || invoice.issue_date;
-      }
-      if (payload.due_date !== undefined) {
-        invoice.due_date = normalizeText(payload.due_date) || null;
       }
       if (payload.title !== undefined) {
         const titleField = mergeEditableLocalizedTextField(

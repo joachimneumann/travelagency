@@ -905,7 +905,6 @@ export function createPricingHelpers({
       label: normalizeText(payment?.label),
       origin_payment_term_line_id: normalizeText(payment?.origin_payment_term_line_id) || null,
       origin_generated_offer_id: normalizeText(payment?.origin_generated_offer_id) || null,
-      due_date: normalizeText(payment?.due_date) || null,
       net_amount_cents: normalizeAmountCents(payment?.net_amount_cents, 0),
       tax_rate_basis_points: clampOfferTaxRateBasisPoints(payment?.tax_rate_basis_points, 0),
       status: normalizeText(payment?.status).toUpperCase() || paymentStatuses.PENDING,

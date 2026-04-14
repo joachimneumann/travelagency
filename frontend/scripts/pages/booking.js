@@ -31,8 +31,7 @@ import { createBookingOfferModule } from "../booking/offers.js";
 import { createBookingTravelPlanModule } from "../booking/travel_plan.js";
 import {
   createBookingInvoicesModule,
-  formatDateInput as formatInvoiceDateInput,
-  plusOneMonthDateInput as plusOneMonthInvoiceDateInput
+  formatDateInput as formatInvoiceDateInput
 } from "../booking/invoices.js";
 import { createBookingCoreModule } from "../booking/core.js";
 import {
@@ -468,8 +467,6 @@ const els = {
   invoice_currency_input: document.getElementById("invoice_currency_input"),
   invoice_issue_date_input: document.getElementById("invoice_issue_date_input"),
   invoice_issue_today_btn: document.getElementById("invoice_issue_today_btn"),
-  invoice_due_date_input: document.getElementById("invoice_due_date_input"),
-  invoice_due_month_btn: document.getElementById("invoice_due_month_btn"),
   invoice_title_field: document.getElementById("invoice_title_field"),
   invoice_title_input: document.getElementById("invoice_title_input"),
   invoice_components_field: document.getElementById("invoice_components_field"),
@@ -924,11 +921,6 @@ async function init() {
   if (els.invoice_issue_today_btn) {
     els.invoice_issue_today_btn.addEventListener("click", () => {
       if (els.invoice_issue_date_input) els.invoice_issue_date_input.value = formatInvoiceDateInput(new Date());
-    });
-  }
-  if (els.invoice_due_month_btn) {
-    els.invoice_due_month_btn.addEventListener("click", () => {
-      if (els.invoice_due_date_input) els.invoice_due_date_input.value = plusOneMonthInvoiceDateInput(new Date());
     });
   }
 

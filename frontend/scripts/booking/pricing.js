@@ -28,7 +28,10 @@ import {
   buildBookingPdfDocumentSectionMarkup,
   buildBookingPdfWorkspaceMarkup
 } from "./pdf_workspace.js";
-import { initializeBookingSections } from "./sections.js";
+import {
+  initializeBookingSections,
+  setBookingSectionOpen
+} from "./sections.js";
 
 const PAYMENT_DOCUMENT_KIND_REQUEST = "PAYMENT_REQUEST";
 const PAYMENT_DOCUMENT_KIND_CONFIRMATION = "PAYMENT_CONFIRMATION";
@@ -301,13 +304,6 @@ export function createBookingPricingModule(ctx) {
     return bookingT("booking.pricing.installment_number", "Installment {count}", { count: String(installmentNumber || index + 1) });
   }
 
-  function paymentSummaryText(payment) {
-    const dueDate = normalizeDateInputValue(payment?.due_date);
-    return dueDate
-      ? bookingT("booking.pricing.payment_due_on", "Due on {date}.", { date: dueDate })
-      : bookingT("booking.pricing.payment_due_unspecified", "No due date set yet.");
-  }
-
   function buildAtpStaffOptions(selectedId = "") {
     const users = new Map();
     for (const user of Array.isArray(state.keycloakUsers) ? state.keycloakUsers : []) {
@@ -382,6 +378,30 @@ export function createBookingPricingModule(ctx) {
       .replace(/[^a-z0-9_-]+/gi, "_")
       .toLowerCase();
     return `payment_pdf_${base}_${String(documentKind || "").trim().toLowerCase()}`;
+  }
+
+  function paymentDocumentSectionKey(paymentId, sectionKind) {
+    return `${String(paymentId || "").trim()}:${String(sectionKind || "").trim()}`;
+  }
+
+  function captureOpenPaymentDocumentSections(root) {
+    if (!(root instanceof HTMLElement)) return new Set();
+    return new Set(
+      Array.from(root.querySelectorAll("[data-payment-document-section]"))
+        .filter((panel) => panel instanceof HTMLElement && panel.classList.contains("is-open"))
+        .map((panel) => String(panel.getAttribute("data-payment-document-section") || "").trim())
+        .filter(Boolean)
+    );
+  }
+
+  function restoreOpenPaymentDocumentSections(root, openKeys) {
+    if (!(root instanceof HTMLElement) || !(openKeys instanceof Set) || !openKeys.size) return;
+    root.querySelectorAll("[data-payment-document-section]").forEach((panel) => {
+      if (!(panel instanceof HTMLElement)) return;
+      const key = String(panel.getAttribute("data-payment-document-section") || "").trim();
+      if (!openKeys.has(key)) return;
+      setBookingSectionOpen(panel, true, { animate: false });
+    });
   }
 
   function paymentDocumentPersonalizationPanelId(prefix) {
@@ -529,10 +549,6 @@ export function createBookingPricingModule(ctx) {
   }
 
   function paymentDocumentAttachmentsMarkup() {
-    const attachmentHint = bookingT(
-      "booking.pricing.payment_pdf_attachments_unavailable",
-      "Payment PDF attachments are not available yet."
-    );
     return `
       <div class="travel-plan-attachments booking-payment-document-attachments">
         <div class="backend-table-wrap travel-plan-attachments__table-wrap">
@@ -555,10 +571,8 @@ export function createBookingPricingModule(ctx) {
               class="btn btn-ghost booking-offer-add-btn travel-plan-pdf-btn travel-plan-attachments__upload-btn"
               type="button"
               disabled
-              title="${escapeHtml(attachmentHint)}"
             >${escapeHtml(bookingT("booking.travel_plan.upload_additional_pdfs", "Add attachment"))}</button>
           </div>
-          <span class="micro booking-inline-status booking-inline-status--info booking-payment-document__attachment-hint">${escapeHtml(attachmentHint)}</span>
         ` : ""}
       </div>
     `;
@@ -813,16 +827,11 @@ export function createBookingPricingModule(ctx) {
         : 0;
       const taxAmountCents = Math.round((netAmountCents * taxRateBasisPoints) / 10000);
       const grossAmountCents = netAmountCents + taxAmountCents;
-      const dueType = String(line?.due_rule?.type || "").trim().toUpperCase();
-      const fixedDate = normalizeDateInputValue(line?.due_rule?.fixed_date);
       return {
         id: String(existing?.id || `pricing_payment_${index + 1}`).trim(),
         label: lineLabel || String(existing?.label || "").trim() || bookingT("booking.payment", "Payment"),
         origin_payment_term_line_id: lineId || String(existing?.origin_payment_term_line_id || "").trim() || null,
         origin_generated_offer_id: String(existing?.origin_generated_offer_id || "").trim() || null,
-        due_date: dueType === "FIXED_DATE"
-          ? (fixedDate || null)
-          : (normalizeDateInputValue(existing?.due_date) || null),
         net_amount_cents: netAmountCents,
         tax_rate_basis_points: taxRateBasisPoints,
         tax_amount_cents: taxAmountCents,
@@ -862,6 +871,9 @@ export function createBookingPricingModule(ctx) {
       title,
       escapeHtml,
       className: [variantClass, disabledReason ? "is-disabled" : ""].filter(Boolean).join(" "),
+      dataAttributes: {
+        paymentDocumentSection: paymentDocumentSectionKey(paymentId, sectionKind)
+      },
       personalizationMarkup: paymentDocumentPersonalizationPanelMarkup(scope, prefix, { disabled: Boolean(disabledReason) }),
       workspaceMarkup: paymentDocumentWorkspaceMarkup(payment, documentKind, paymentId, sectionKind, { disabledReason })
     });
@@ -930,7 +942,6 @@ export function createBookingPricingModule(ctx) {
       <span class="booking-payment-section__head">
         <span class="booking-payment-section__copy">
           <span class="booking-payment-section__title">${escapeHtml(paymentTitle(payment, index))}</span>
-          <span class="micro booking-payment-section__summary">${escapeHtml(paymentSummaryText(payment))}</span>
         </span>
         <span class="booking-payment-section__amount">${escapeHtml(amountLabel)}</span>
       </span>
@@ -953,14 +964,14 @@ export function createBookingPricingModule(ctx) {
               payment,
               index,
               PAYMENT_DOCUMENT_KIND_REQUEST,
-              bookingT("booking.pricing.request_pdfs", "Request PDFs")
+              bookingT("booking.pricing.request_pdfs", "Request payment")
             )}
             ${paymentReceivedSectionMarkup(payment, index, pricing)}
             ${paymentDocumentSectionMarkup(
               payment,
               index,
               PAYMENT_DOCUMENT_KIND_CONFIRMATION,
-              bookingT("booking.pricing.customer_receipt", "Customer Receipt")
+              bookingT("booking.pricing.customer_receipt", "Confirm payment")
             )}
           </div>
         </div>
@@ -970,6 +981,7 @@ export function createBookingPricingModule(ctx) {
 
   function renderPaymentFlowSections(pricing) {
     if (!(els.paymentFlowSections instanceof HTMLElement)) return;
+    const openPaymentDocumentSections = captureOpenPaymentDocumentSections(els.paymentFlowSections);
     const payments = Array.isArray(pricing?.payments) ? pricing.payments : [];
     if (!payments.length) {
       els.paymentFlowSections.hidden = true;
@@ -979,6 +991,7 @@ export function createBookingPricingModule(ctx) {
     els.paymentFlowSections.hidden = false;
     els.paymentFlowSections.innerHTML = payments.map((payment, index) => paymentStageMarkup(payment, index, pricing)).join("");
     initializeBookingSections(els.paymentFlowSections);
+    restoreOpenPaymentDocumentSections(els.paymentFlowSections, openPaymentDocumentSections);
     bindPaymentDocumentActions(els.paymentFlowSections);
   }
 
@@ -1025,7 +1038,6 @@ export function createBookingPricingModule(ctx) {
           label: String(payment?.label || paymentTitle(payment, index)).trim(),
           origin_payment_term_line_id: String(payment?.origin_payment_term_line_id || "").trim() || null,
           origin_generated_offer_id: String(payment?.origin_generated_offer_id || "").trim() || null,
-          due_date: normalizeDateInputValue(payment?.due_date) || null,
           net_amount_cents: netAmountCents,
           tax_rate_basis_points: taxRateBasisPoints,
           tax_amount_cents: taxAmountCents,
@@ -1130,16 +1142,20 @@ export function createBookingPricingModule(ctx) {
     if (openAfterCreate) {
       openPaymentDocumentUrl(result.invoice?.pdf_url || "");
     }
-    setPaymentSectionState(
-      paymentId,
-      sectionKind,
-      typeof options?.successMessage === "string" && options.successMessage.trim()
-        ? options.successMessage.trim()
-        : (documentKind === PAYMENT_DOCUMENT_KIND_CONFIRMATION
-            ? bookingT("booking.pricing.payment_confirmation_created", "Customer receipt PDF created.")
-            : bookingT("booking.pricing.payment_request_created", "Payment request PDF created.")),
-      "success"
-    );
+    if (options?.suppressSuccessMessage === true) {
+      setPaymentSectionState(paymentId, sectionKind, "");
+    } else {
+      setPaymentSectionState(
+        paymentId,
+        sectionKind,
+        typeof options?.successMessage === "string" && options.successMessage.trim()
+          ? options.successMessage.trim()
+          : (documentKind === PAYMENT_DOCUMENT_KIND_CONFIRMATION
+              ? bookingT("booking.pricing.payment_confirmation_created", "Customer receipt PDF created.")
+              : bookingT("booking.pricing.payment_request_created", "Payment request PDF created.")),
+        "success"
+      );
+    }
     renderPricingPanel({ preserveDraft: false });
     await loadActivities();
     return true;
@@ -1163,13 +1179,13 @@ export function createBookingPricingModule(ctx) {
     if (needsFreshDocument) {
       return await createPaymentDocument(paymentId, documentKind, {
         openAfterCreate: true,
-        successMessage: bookingT("booking.pricing.preview_pdf_ready", "Preview PDF opened."),
+        suppressSuccessMessage: true,
         errorMessage: bookingT("booking.pricing.preview_pdf_failed", "Could not open the preview PDF.")
       });
     }
 
     if (latestDocument?.pdf_url && openPaymentDocumentUrl(latestDocument.pdf_url)) {
-      setPaymentSectionState(paymentId, sectionKind, bookingT("booking.pricing.preview_pdf_ready", "Preview PDF opened."), "success");
+      setPaymentSectionState(paymentId, sectionKind, "");
       renderPricingPanel({ preserveDraft: true });
       return true;
     }

@@ -640,14 +640,9 @@
     "updated_at": "2026-04-02T15:09:17.313Z"
   },
   "footer.brand_body": {
-    "source_hash": "ee3029dcb078bd417101ab83cba773be3970f1098819e37c60a9fe22295e55b0",
-    "origin": "legacy",
-    "updated_at": "2026-04-02T15:09:17.313Z"
-  },
-  "footer.website": {
-    "source_hash": "70fb7941a2761f9d66b660cb44d778e7ca171a04f2528d3af27496d74cb67827",
-    "origin": "legacy",
-    "updated_at": "2026-04-02T15:09:17.313Z"
+    "source_hash": "fba63a0399549368e88b8fa5e27138d486356354983fbd8dad3ec036a07b3dae",
+    "origin": "machine",
+    "updated_at": "2026-04-14T05:25:24.196Z"
   },
   "footer.contact_title": {
     "source_hash": "2b5c3d26721ae9c350cf3009318b626f0fc8a90b4a2ac0ca8099c05aa849282e",
