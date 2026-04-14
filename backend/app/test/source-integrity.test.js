@@ -1004,6 +1004,73 @@ test("payment pdf previews stream transient preview files instead of storing inv
   );
 });
 
+test("deposit payment requests use a dedicated personalization scope and friendly deposit copy", async () => {
+  const bookingModelPath = path.resolve(__dirname, "..", "..", "..", "model", "entities", "booking.cue");
+  const pricingPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "pricing.js");
+  const personalizationPath = path.resolve(__dirname, "..", "src", "lib", "booking_pdf_personalization.js");
+  const invoiceHandlerPath = path.resolve(__dirname, "..", "src", "http", "handlers", "booking_invoices.js");
+  const invoicePdfPath = path.resolve(__dirname, "..", "src", "lib", "invoice_pdf.js");
+  const [bookingModelSource, pricingSource, personalizationSource, invoiceHandlerSource, invoicePdfSource] = await Promise.all([
+    readFile(bookingModelPath, "utf8"),
+    readFile(pricingPath, "utf8"),
+    readFile(personalizationPath, "utf8"),
+    readFile(invoiceHandlerPath, "utf8"),
+    readFile(invoicePdfPath, "utf8")
+  ]);
+  assert.match(
+    bookingModelSource,
+    /payment_request_deposit\?:\s+#BookingPdfPersonalizationScoped/,
+    "Booking PDF personalization should model a dedicated deposit payment-request scope"
+  );
+  assert.match(
+    pricingSource,
+    /payment_request_deposit: Object\.freeze\([\s\S]*Deposit request welcome[\s\S]*if \(kind === "DEPOSIT"\) return "payment_request_deposit";/,
+    "Deposit request PDFs should use a dedicated payment_request_deposit personalization scope in the pricing UI"
+  );
+  assert.match(
+    personalizationSource,
+    /payment_request_deposit: Object\.freeze\([\s\S]*welcome:[\s\S]*closing:/,
+    "Booking PDF personalization should normalize a dedicated deposit request branch"
+  );
+  assert.match(
+    invoiceHandlerSource,
+    /documentKind === "PAYMENT_REQUEST" && paymentKind === "DEPOSIT"[\s\S]*"We would be thrilled if you book this tour with us\. Please pay the deposit to confirm your booking"/,
+    "Deposit request documents should resolve a dedicated scope and the friendly deposit-request intro copy"
+  );
+  assert.match(
+    invoicePdfSource,
+    /function isDepositPaymentRequestDocument\(invoice\)[\s\S]*drawDepositPaymentSchedule[\s\S]*Please find your travel plan at the end of this PDF\.[\s\S]*drawTravelPlanDaysSection/,
+    "Deposit request PDFs should render a friendly first page and then continue with the travel plan section"
+  );
+});
+
+test("payment document classification prefers accepted payment terms once a commercial snapshot exists", async () => {
+  const invoiceHandlerPath = path.resolve(__dirname, "..", "src", "http", "handlers", "booking_invoices.js");
+  const financeHandlerPath = path.resolve(__dirname, "..", "src", "http", "handlers", "booking_finance.js");
+  const pricingPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "pricing.js");
+  const [invoiceHandlerSource, financeHandlerSource, pricingSource] = await Promise.all([
+    readFile(invoiceHandlerPath, "utf8"),
+    readFile(financeHandlerPath, "utf8"),
+    readFile(pricingPath, "utf8")
+  ]);
+
+  assert.match(
+    invoiceHandlerSource,
+    /function bookingPaymentTerms\(booking\) \{[\s\S]*accepted_record\?\.payment_terms[\s\S]*accepted_payment_terms_snapshot[\s\S]*booking\?\.offer\?\.payment_terms/s,
+    "Payment-linked invoice documents should classify payment kinds from the accepted payment terms before the live offer"
+  );
+  assert.match(
+    financeHandlerSource,
+    /function bookingPaymentTerms\(booking\) \{[\s\S]*accepted_payment_terms_snapshot[\s\S]*booking\?\.offer\?\.payment_terms/s,
+    "Receipt freezing should identify the deposit line from the accepted payment terms before the live offer"
+  );
+  assert.match(
+    pricingSource,
+    /function currentOfferPaymentTerms\(\) \{[\s\S]*accepted_record\?\.payment_terms[\s\S]*accepted_payment_terms_snapshot[\s\S]*draftTerms[\s\S]*state\.booking\?\.offer\?\.payment_terms/s,
+    "The pricing UI should classify payment rows from accepted payment terms before draft or live offer terms"
+  );
+});
+
 test("saving proposal payment terms rerenders payment-step sections without a full page reload", async () => {
   const bookingPageScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking.js");
   const offerModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "offers.js");
@@ -3635,6 +3702,11 @@ test("frontend language switching updates the homepage in place instead of forci
   );
   assert.match(
     mainSource,
+    /async function loadTeamMembers\(\) \{[\s\S]*fetch\("\/frontend\/data\/generated\/homepage\/public-team\.json", \{ cache: "default" \}\)/,
+    "Homepage team loading should read the generated public team payload from frontend data"
+  );
+  assert.match(
+    mainSource,
     /async function handleFrontendLanguageChanged\(\)[\s\S]*scheduleDeferredTourImagePrewarm\(state\.trips\)[\s\S]*renderFormStep\(\)/,
     "Homepage language refresh should requeue image prewarming after the localized tour list is refreshed"
   );
@@ -3645,13 +3717,23 @@ test("frontend language switching updates the homepage in place instead of forci
   );
   assert.match(
     mainToursSource,
-    /const toursRequest = publicToursRequest\({[\s\S]*query: \{ lang: currentFrontendLang\(\) \}[\s\S]*const response = await fetch\(toursRequest\.url, \{ cache: "no-store" \}\);/,
-    "Homepage tour loading should explicitly bypass browser caches so published destination changes show up immediately after reload"
+    /const lang = normalizeFrontendTourLang\(currentFrontendLang\(\)\);[\s\S]*fetch\(`\/frontend\/data\/generated\/homepage\/public-tours\.\$\{encodeURIComponent\(lang\)\}\.json`, \{ cache: "default" \}\);/,
+    "Homepage tour loading should read generated static per-language tour payloads from frontend data"
   );
   assert.doesNotMatch(
     mainToursSource,
     /toursCacheKey|getCachedTours|setCachedTours|tripsRequestVersion/,
     "Homepage tour loading should no longer keep a localStorage-backed tours cache or a request-version cache buster"
+  );
+  assert.doesNotMatch(
+    mainSource,
+    /\/public\/v1\/team/,
+    "Homepage source should no longer fetch the public team payload from the backend"
+  );
+  assert.doesNotMatch(
+    mainToursSource,
+    /\/public\/v1\/tours/,
+    "Homepage tours source should no longer fetch tour payloads from the backend"
   );
 });
 

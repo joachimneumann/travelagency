@@ -47,7 +47,7 @@
 - Poster image (`assets/video/rice field.webp`)
 - Video container is now full-bleed with no outer margin or rounded corners
 - A dark scrim sits over the video for legibility
-- H1 (`#heroTitle`) is generated from the published destination list returned by `GET /public/v1/tours`
+- H1 (`#heroTitle`) is generated from the published destination list in the generated static tours payload (`frontend/data/generated/homepage/public-tours.<lang>.json`)
 - Hero controls:
   - destination multi-select (`#navDestinationWrap`) is shown only when more than one destination is published on the website
   - travel-style multi-select (`#navStyleTrigger`)
@@ -63,8 +63,8 @@
 - Tour card thumbnails use `aspect-ratio: 1/1` (square) with full width and `object-fit: cover`
 
 Behavior from JS:
-- Trips are loaded from backend `GET /public/v1/tours` (primary source)
-- Public tour requests use `cache: "no-store"` so Emergency publication changes appear after reload
+- Trips are loaded from generated static frontend data files at `frontend/data/generated/homepage/public-tours.<lang>.json`
+- Team members are loaded from generated static frontend data at `frontend/data/generated/homepage/public-team.json`
 - Filter state persists via URL params and `localStorage` (`asiatravelplan_filters`)
 - URL sync with `?dest=...&style=...`
 - Destination filter options come only from destinations currently published on the website
@@ -79,10 +79,20 @@ Behavior from JS:
 Current inventory:
 - Tour source files live under `content/tours/<tour_id>/tour.json`
 - Public destination availability is further constrained by `content/country_reference_info.json`
-- Tour images are served by backend under `/public/v1/tour-images/<tour_id>/<tour_id>.webp`
+- Public homepage tour JSON is generated to `frontend/data/generated/homepage/public-tours.<lang>.json`
+- Public homepage team JSON is generated to `frontend/data/generated/homepage/public-team.json`
+- Tour images for the homepage are copied to `assets/generated/homepage/tours/<tour_id>/<file>`
+- Staff photos for the homepage are copied to `assets/generated/homepage/team/<file>`
 - Each tour entry includes `priority` (human-writable, intended range `0-100`)
 - Sync script never overwrites existing `priority`; only brand-new tours default to `50`
 - Maintenance helper script available at `assets/tours/to_webp.sh` for non-WebP conversion and cleanup
+
+Homepage source-of-truth model:
+- `content/tours/**` remains the editable tour source of truth
+- `content/atp_staff/staff.json` remains the editable public team source of truth
+- `content/atp_staff/photos/*` remains the editable staff photo source of truth
+- `backup/**` is backup only and is not used by runtime homepage generation
+- `scripts/generate_public_homepage_assets.mjs` regenerates the public homepage artifacts and should be rerun after changing tour/team homepage content
 
 ### 4.3 Trust strip (after tours)
 

@@ -57,6 +57,10 @@ const PDF_TEXT_FIELD_CONFIG = Object.freeze({
     welcome: Object.freeze({ defaultChecked: true, enableWhenTextPresent: true }),
     closing: Object.freeze({ defaultChecked: true, enableWhenTextPresent: true })
   }),
+  payment_request_deposit: Object.freeze({
+    welcome: Object.freeze({ defaultChecked: true, enableWhenTextPresent: true }),
+    closing: Object.freeze({ defaultChecked: true, enableWhenTextPresent: true })
+  }),
   payment_request_installment: Object.freeze({
     subtitle: Object.freeze({ defaultChecked: false, enableWhenTextPresent: true }),
     welcome: Object.freeze({ defaultChecked: true, enableWhenTextPresent: true }),

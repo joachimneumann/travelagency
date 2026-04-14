@@ -1,6 +1,6 @@
 /*
   Beginner-editable configuration:
-  - Tour catalog is loaded from backend endpoint /public/v1/tours
+  - Tour catalog is loaded from generated frontend data files
 */
 
 import { publicBookingsRequest } from "../Generated/API/generated_APIRequestFactory.js";
@@ -84,7 +84,6 @@ const INITIAL_VISIBLE_TOURS = 6;
 const SHOW_MORE_BATCH = 3;
 const BACKEND_BASE_URL = window.ASIATRAVELPLAN_API_BASE ? window.ASIATRAVELPLAN_API_BASE.replace(/\/$/, "") : "";
 const API_BASE_ORIGIN = BACKEND_BASE_URL || window.location.origin;
-const ATP_STAFF_TEAM_URL = `${API_BASE_ORIGIN}/public/v1/team`;
 const PUBLIC_BOOTSTRAP_URL = `${API_BASE_ORIGIN}/public/v1/mobile/bootstrap`;
 const els = {
   navToggle: document.getElementById("navToggle"),
@@ -198,7 +197,6 @@ const {
 const toursController = createFrontendToursController({
   state,
   els,
-  apiBaseOrigin: API_BASE_ORIGIN,
   backendBaseUrl: BACKEND_BASE_URL,
   initialVisibleTours: INITIAL_VISIBLE_TOURS,
   showMoreBatch: SHOW_MORE_BATCH,
@@ -278,7 +276,7 @@ async function init() {
       ? toursPayload.available_styles
       : [];
   } catch (error) {
-    console.error("Failed to load tours from backend API.", error);
+    console.error("Failed to load static homepage tours data.", error);
     state.trips = [];
     state.filterOptions.destinations = [];
     state.filterOptions.styles = [];
@@ -360,13 +358,12 @@ function normalizeTeamMemberProfile(profile) {
   const description = resolveLocalizedStaticValue(profile?.description_i18n ?? profile?.description);
   const shortDescription = resolveLocalizedStaticValue(profile?.short_description_i18n ?? profile?.short_description);
   const configuredPictureRef = resolveFrontendAssetUrl(profile?.picture_ref);
-  const fallbackPictureRef = `${API_BASE_ORIGIN}/public/v1/atp-staff-photos/${encodeURIComponent(`${normalizedUsername}.svg`)}`;
+  const fallbackPictureRef = `/assets/generated/homepage/team/${encodeURIComponent(`${normalizedUsername}.svg`)}`;
   if (!configuredPictureRef) {
     console.warn("[frontend-home] Team member picture_ref missing; using fallback staff photo URL.", {
       username: normalizedUsername,
       full_name: fullName,
       fallback_picture_ref: fallbackPictureRef,
-      team_api_url: ATP_STAFF_TEAM_URL,
       page_url: window.location.href
     });
   }
@@ -383,10 +380,7 @@ function normalizeTeamMemberProfile(profile) {
 
 async function loadTeamMembers() {
   try {
-    const response = await fetch(ATP_STAFF_TEAM_URL, {
-      credentials: "same-origin",
-      cache: "default"
-    });
+    const response = await fetch("/frontend/data/generated/homepage/public-team.json", { cache: "default" });
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`);
     }
@@ -402,7 +396,7 @@ async function loadTeamMembers() {
       els.teamSection.hidden = true;
     }
     logBrowserConsoleError("[frontend-home] Failed to load public ATP staff team content.", {
-      url: ATP_STAFF_TEAM_URL,
+      url: "/frontend/data/generated/homepage/public-team.json",
       page_url: window.location.href
     }, error);
   }
@@ -492,7 +486,7 @@ function renderTeamSection() {
         username,
         full_name: member?.fullName || "",
         image_src: image.currentSrc || image.src || "",
-        team_api_url: ATP_STAFF_TEAM_URL,
+        team_data_url: "/frontend/data/generated/homepage/public-team.json",
         page_url: window.location.href
       });
     });
@@ -804,7 +798,7 @@ async function handleFrontendLanguageChanged() {
 
     applyFilters();
   } catch (error) {
-    console.error("Failed to refresh localized tours after frontend language switch.", error);
+    console.error("Failed to refresh localized static tours after frontend language switch.", error);
   } finally {
     scheduleDeferredTourImagePrewarm(state.trips);
     renderFormStep();

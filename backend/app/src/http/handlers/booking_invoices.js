@@ -151,14 +151,14 @@ export function createBookingInvoiceHandlers(deps) {
   }
 
   function bookingPaymentTerms(booking) {
-    if (booking?.offer?.payment_terms && typeof booking.offer.payment_terms === "object") {
-      return booking.offer.payment_terms;
-    }
     if (booking?.accepted_record?.payment_terms && typeof booking.accepted_record.payment_terms === "object") {
       return booking.accepted_record.payment_terms;
     }
     if (booking?.accepted_payment_terms_snapshot && typeof booking.accepted_payment_terms_snapshot === "object") {
       return booking.accepted_payment_terms_snapshot;
+    }
+    if (booking?.offer?.payment_terms && typeof booking.offer.payment_terms === "object") {
+      return booking.offer.payment_terms;
     }
     return null;
   }
@@ -209,6 +209,9 @@ export function createBookingInvoiceHandlers(deps) {
   function paymentDocumentPersonalizationScope(paymentKind, documentKind) {
     if (documentKind === "PAYMENT_CONFIRMATION" && paymentKind === "DEPOSIT") {
       return "payment_confirmation_deposit";
+    }
+    if (documentKind === "PAYMENT_REQUEST" && paymentKind === "DEPOSIT") {
+      return "payment_request_deposit";
     }
     if (paymentKind === "FINAL_BALANCE") {
       return documentKind === "PAYMENT_CONFIRMATION"
@@ -302,7 +305,9 @@ export function createBookingInvoiceHandlers(deps) {
     const scope = paymentDocumentPersonalizationScope(paymentKind, documentKind);
     const resolvedIntroFallback = documentKind === "PAYMENT_CONFIRMATION"
       ? `This document confirms receipt of payment for ${paymentLabel}.`
-      : `Please find the payment request for ${paymentLabel}.`;
+      : (paymentKind === "DEPOSIT"
+          ? "We would be thrilled if you book this tour with us. Please pay the deposit to confirm your booking"
+          : `Please find the payment request for ${paymentLabel}.`);
     const titleField = mergeEditableLocalizedTextField(
       null,
       buildDefaultInvoiceTitle({
@@ -333,7 +338,9 @@ export function createBookingInvoiceHandlers(deps) {
       documentLang,
       documentKind === "PAYMENT_CONFIRMATION"
         ? "Thank you for your payment."
-        : "Please contact us if you need any support with this payment.",
+        : (paymentKind === "DEPOSIT"
+            ? "Best regards,\nYour Asia Travel Plan team."
+            : "Please contact us if you need any support with this payment."),
       sourceLang
     );
     const components = buildPaymentDocumentComponents(paymentLabel, paymentAmountCents, contentLang, sourceLang);

@@ -44,6 +44,11 @@ normalize_services() {
   done | awk '!seen[$0]++'
 }
 
+generate_public_homepage_assets() {
+  echo "Generating static homepage tours/team assets..."
+  node "$ROOT_DIR/scripts/generate_public_homepage_assets.mjs"
+}
+
 cd "$ROOT_DIR"
 
 if [[ ! -f "$ENV_FILE" ]]; then
@@ -52,6 +57,8 @@ if [[ ! -f "$ENV_FILE" ]]; then
 fi
 
 mapfile -t SERVICES < <(normalize_services "$@")
+
+generate_public_homepage_assets
 
 mkdir -p backend/app/data backend/app/data/tmp content logs
 if [[ ! -f backend/app/data/store.json ]]; then

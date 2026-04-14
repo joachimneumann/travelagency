@@ -279,11 +279,11 @@ export function createBookingFinanceHandlers(deps) {
   }
 
   function bookingPaymentTerms(booking) {
-    if (booking?.offer?.payment_terms && typeof booking.offer.payment_terms === "object") {
-      return booking.offer.payment_terms;
-    }
     if (booking?.accepted_payment_terms_snapshot && typeof booking.accepted_payment_terms_snapshot === "object") {
       return booking.accepted_payment_terms_snapshot;
+    }
+    if (booking?.offer?.payment_terms && typeof booking.offer.payment_terms === "object") {
+      return booking.offer.payment_terms;
     }
     return null;
   }

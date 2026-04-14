@@ -65,6 +65,11 @@ run_staging_tests() {
     node --test test/mobile-contract.test.js test/source-integrity.test.js
 }
 
+generate_public_homepage_assets() {
+  echo "Generating static homepage tours/team assets..."
+  node "$ROOT_DIR/scripts/generate_public_homepage_assets.mjs"
+}
+
 cd "$ROOT_DIR"
 
 if [[ ! -f "$ENV_FILE" ]]; then
@@ -80,6 +85,8 @@ git pull --ff-only
 if should_run_tests "${SERVICES[@]}"; then
   run_staging_tests
 fi
+
+generate_public_homepage_assets
 
 mkdir -p backend/app/data
 if [[ ! -f backend/app/data/store.json ]]; then

@@ -1,4 +1,3 @@
-import { publicToursRequest } from "../Generated/API/generated_APIRequestFactory.js";
 import { normalizeText } from "../../shared/js/text.js";
 import {
   FRONTEND_LANGUAGE_CODES,
@@ -11,7 +10,6 @@ export function createFrontendToursController(ctx) {
   const {
     state,
     els,
-    apiBaseOrigin,
     backendBaseUrl,
     initialVisibleTours,
     showMoreBatch,
@@ -411,13 +409,10 @@ export function createFrontendToursController(ctx) {
   }
 
   async function loadTrips() {
-    const toursRequest = publicToursRequest({
-      baseURL: apiBaseOrigin,
-      query: { lang: currentFrontendLang() }
-    });
-    const response = await fetch(toursRequest.url, { cache: "no-store" });
+    const lang = normalizeFrontendTourLang(currentFrontendLang());
+    const response = await fetch(`/frontend/data/generated/homepage/public-tours.${encodeURIComponent(lang)}.json`, { cache: "default" });
     if (!response.ok) {
-      throw new Error(`Backend tours request failed with status ${response.status}.`);
+      throw new Error(`Static tours request failed with status ${response.status}.`);
     }
     const payload = await response.json();
     return normalizeToursPayloadForFrontend(payload);

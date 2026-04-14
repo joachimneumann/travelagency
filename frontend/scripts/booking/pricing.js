@@ -44,6 +44,12 @@ const PAYMENT_DOCUMENT_PANEL_CONFIG = Object.freeze({
       Object.freeze({ field: "closing", includeField: "include_closing", label: "Payment confirmation closing", rows: 3, defaultChecked: true })
     ])
   }),
+  payment_request_deposit: Object.freeze({
+    items: Object.freeze([
+      Object.freeze({ field: "welcome", includeField: "include_welcome", label: "Deposit request welcome", rows: 4, defaultChecked: true }),
+      Object.freeze({ field: "closing", includeField: "include_closing", label: "Deposit request closing", rows: 3, defaultChecked: true })
+    ])
+  }),
   payment_request_installment: Object.freeze({
     items: Object.freeze([
       Object.freeze({ field: "subtitle", includeField: "include_subtitle", label: "Payment request subtitle", rows: 2, defaultChecked: false }),
@@ -235,15 +241,15 @@ export function createBookingPricingModule(ctx) {
 
   function currentOfferPaymentTerms() {
     const draftTerms = state.offerDraft?.payment_terms;
-    if (draftTerms && typeof draftTerms === "object") return draftTerms;
-    if (state.booking?.offer?.payment_terms && typeof state.booking.offer.payment_terms === "object") {
-      return state.booking.offer.payment_terms;
-    }
     if (state.booking?.accepted_record?.payment_terms && typeof state.booking.accepted_record.payment_terms === "object") {
       return state.booking.accepted_record.payment_terms;
     }
     if (state.booking?.accepted_payment_terms_snapshot && typeof state.booking.accepted_payment_terms_snapshot === "object") {
       return state.booking.accepted_payment_terms_snapshot;
+    }
+    if (draftTerms && typeof draftTerms === "object") return draftTerms;
+    if (state.booking?.offer?.payment_terms && typeof state.booking.offer.payment_terms === "object") {
+      return state.booking.offer.payment_terms;
     }
     return null;
   }
@@ -258,11 +264,13 @@ export function createBookingPricingModule(ctx) {
 
   function currentOfferCurrency() {
     return normalizeCurrencyCode(
-      state.offerDraft?.payment_terms?.currency
+      state.booking?.accepted_record?.payment_terms?.currency
+      || state.booking?.accepted_payment_terms_snapshot?.currency
+      || state.booking?.accepted_record?.accepted_deposit_currency
+      || state.offerDraft?.payment_terms?.currency
       || state.offerDraft?.currency
       || state.booking?.offer?.payment_terms?.currency
       || state.booking?.offer?.currency
-      || state.booking?.accepted_record?.accepted_deposit_currency
       || state.booking?.preferred_currency
       || state.booking?.pricing?.currency
       || "USD"
@@ -362,6 +370,7 @@ export function createBookingPricingModule(ctx) {
   function paymentDocumentScope(payment, documentKind) {
     const kind = paymentKind(payment);
     if (documentKind === PAYMENT_DOCUMENT_KIND_REQUEST) {
+      if (kind === "DEPOSIT") return "payment_request_deposit";
       return kind === "FINAL_BALANCE" ? "payment_request_final" : "payment_request_installment";
     }
     if (kind === "DEPOSIT") return "payment_confirmation_deposit";

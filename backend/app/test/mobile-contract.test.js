@@ -5708,8 +5708,10 @@ test("booking invoice create supports payment-linked request and confirmation PD
   assert.equal(depositReceiptPatchResult.status, 200);
 
   const pricingWithReceipts = JSON.parse(JSON.stringify(depositReceiptPatchResult.body.booking.pricing));
+  const depositPayment = pricingWithReceipts.payments.find((item) => item.label === "Deposit");
   const installmentPayment = pricingWithReceipts.payments.find((item) => item.label === "Installment 1");
   const finalPayment = pricingWithReceipts.payments.find((item) => item.label === "Final payment");
+  assert.ok(depositPayment);
   assert.ok(installmentPayment);
   assert.ok(finalPayment);
 
@@ -5762,6 +5764,31 @@ test("booking invoice create supports payment-linked request and confirmation PD
     invoicesRevision = result.body?.booking?.invoices_revision ?? invoicesRevision;
     return result;
   }
+
+  const depositRequestResult = await createPaymentDocument({
+    payment_id: depositPayment.id,
+    document_kind: "PAYMENT_REQUEST",
+    pdf_personalization: {
+      include_welcome: true,
+      welcome: "We would be thrilled if you book this tour with us. Please pay the deposit to confirm your booking",
+      include_closing: true,
+      closing: "Best regards,\nYour Asia Travel Plan team."
+    }
+  });
+  assert.equal(depositRequestResult.status, 201);
+  assert.equal(depositRequestResult.body.invoice.document_kind, "PAYMENT_REQUEST");
+  assert.equal(depositRequestResult.body.invoice.payment_kind, "DEPOSIT");
+  assert.equal(depositRequestResult.body.invoice.payment_id, depositPayment.id);
+  assert.equal(depositRequestResult.body.invoice.currency, createdBooking.preferred_currency);
+  assert.equal(depositRequestResult.body.invoice.total_amount_cents, depositPayment.net_amount_cents);
+  assert.equal(
+    depositRequestResult.body.invoice.intro,
+    "We would be thrilled if you book this tour with us. Please pay the deposit to confirm your booking"
+  );
+  assert.equal(
+    depositRequestResult.body.booking.pdf_personalization.payment_request_deposit.welcome,
+    "We would be thrilled if you book this tour with us. Please pay the deposit to confirm your booking"
+  );
 
   const installmentRequestResult = await createPaymentDocument({
     payment_id: installmentPayment.id,

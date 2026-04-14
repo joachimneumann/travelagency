@@ -163,12 +163,6 @@ export function createBackendServices({
     safeInt: support.safeInt
   });
 
-  const writeInvoicePdf = createInvoicePdfWriter({
-    invoicePdfPath: pricingHelpers.invoicePdfPath,
-    companyProfile: runtime.companyProfile,
-    logoPath: collections.logoPngPath
-  });
-
   const writeGeneratedOfferPdf = createOfferPdfWriter({
     generatedOfferPdfPath: pricingHelpers.generatedOfferPdfPath,
     bookingImagesDir: collections.bookingImagesDir,
@@ -193,6 +187,18 @@ export function createBackendServices({
     fallbackImagePath: collections.fallbackBookingImagePath,
     travelPlanAttachmentsDir: collections.bookingTravelPlanAttachmentsDir,
     companyProfile: runtime.companyProfile
+  });
+
+  const writeInvoicePdf = createInvoicePdfWriter({
+    invoicePdfPath: pricingHelpers.invoicePdfPath,
+    companyProfile: runtime.companyProfile,
+    logoPath: collections.logoPngPath,
+    bookingImagesDir: collections.bookingImagesDir,
+    resolveAssignedAtpStaffProfile: atpStaffDirectory.resolveAssignedStaffProfile,
+    resolveAtpStaffPhotoDiskPath: atpStaffDirectory.resolvePhotoDiskPath,
+    fallbackImagePath: collections.fallbackBookingImagePath,
+    buildBookingOfferPaymentTermsReadModel: pricingHelpers.buildBookingOfferPaymentTermsReadModel,
+    buildBookingTravelPlanReadModel: travelPlanHelpers.buildBookingTravelPlanReadModel
   });
 
   return {

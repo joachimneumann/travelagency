@@ -3,6 +3,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 source "$ROOT_DIR/scripts/lib/docker_runtime.sh"
+PUBLIC_HOMEPAGE_ASSET_GENERATOR="${PUBLIC_HOMEPAGE_ASSET_GENERATOR:-$ROOT_DIR/scripts/generate_public_homepage_assets.mjs}"
 
 FRONTEND_PORT="${FRONTEND_PORT:-8080}"
 FRONTEND_BIND="${FRONTEND_BIND:-localhost}"
@@ -32,6 +33,19 @@ require_cmd() {
     echo "Error: required command '$1' is not installed." >&2
     exit 1
   fi
+}
+
+generate_public_homepage_assets() {
+  if [ ! -f "$PUBLIC_HOMEPAGE_ASSET_GENERATOR" ]; then
+    echo "Error: homepage asset generator not found at $PUBLIC_HOMEPAGE_ASSET_GENERATOR" >&2
+    exit 1
+  fi
+
+  echo "Generating static homepage tours/team assets ..."
+  (
+    cd "$ROOT_DIR"
+    node "$PUBLIC_HOMEPAGE_ASSET_GENERATOR"
+  )
 }
 
 stop_listeners_on_port() {
@@ -73,9 +87,11 @@ stop_existing_frontend() {
 
 main() {
   ensure_local_docker_runtime
+  require_cmd node
   require_cmd lsof
   require_cmd curl
   stop_existing_frontend
+  generate_public_homepage_assets
 
   echo "Starting frontend on http://${FRONTEND_BIND}:${FRONTEND_PORT} ..."
   (

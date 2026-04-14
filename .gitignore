@@ -22,6 +22,9 @@ content/**
 !content/tours/
 !content/tours/.gitkeep
 
+frontend/data/generated/
+assets/generated/
+
 backup/atp_staff/staff.json.audit.log
 logs/
 
