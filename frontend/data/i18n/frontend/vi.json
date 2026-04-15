@@ -48,6 +48,7 @@
   "tours.show_more.default": "Xem thêm tour",
   "tours.show_more.generic_one": "Xem thêm 1 tour",
   "tours.show_more.generic_many": "Xem thêm {count} tour",
+  "tours.show_all.count": "Xem tất cả {count} tour",
   "tours.show_more.destination": "Xem thêm {count} tour tại {destination}",
   "tours.show_more.style": "Xem thêm {count} tour {styleLower}",
   "tours.show_remaining.one": "Còn 1 tour nữa",

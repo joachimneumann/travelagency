@@ -48,6 +48,7 @@
   "tours.show_more.default": "Vis flere turer",
   "tours.show_more.generic_one": "Vis 1 tur til",
   "tours.show_more.generic_many": "Vis {count} turer til",
+  "tours.show_all.count": "Vis alle {count} turene",
   "tours.show_more.destination": "Vis {count} turer til i {destination}",
   "tours.show_more.style": "Vis {count} flere {styleLower} turer",
   "tours.show_remaining.one": "Det er 1 tur til",

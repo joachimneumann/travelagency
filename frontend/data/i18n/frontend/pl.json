@@ -48,6 +48,7 @@
   "tours.show_more.default": "Pokaż więcej wycieczek",
   "tours.show_more.generic_one": "Pokaż jeszcze 1 wycieczkę",
   "tours.show_more.generic_many": "Pokaż jeszcze {count} wycieczek",
+  "tours.show_all.count": "Pokaż wszystkie {count} wycieczki",
   "tours.show_more.destination": "Pokaż jeszcze {count} wycieczek w {destination}",
   "tours.show_more.style": "Pokaż {count} więcej wycieczek {styleLower}",
   "tours.show_remaining.one": "Jest jeszcze 1 wycieczka",

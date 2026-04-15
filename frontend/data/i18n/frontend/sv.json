@@ -48,6 +48,7 @@
   "tours.show_more.default": "Visa fler turer",
   "tours.show_more.generic_one": "Visa 1 turné till",
   "tours.show_more.generic_many": "Visa {count} turer till",
+  "tours.show_all.count": "Visa alla {count} turer",
   "tours.show_more.destination": "Visa {count} turer till i {destination}",
   "tours.show_more.style": "Visa {count} fler {styleLower} turer",
   "tours.show_remaining.one": "Det finns 1 turné till",

@@ -48,6 +48,7 @@
   "tours.show_more.default": "Toon meer rondleidingen",
   "tours.show_more.generic_one": "Toon nog 1 rondleiding",
   "tours.show_more.generic_many": "Toon nog {count} tours",
+  "tours.show_all.count": "Toon alle {count} tours",
   "tours.show_more.destination": "Toon nog {count} tours in {destination}",
   "tours.show_more.style": "Toon nog {count} {styleLower} tours",
   "tours.show_remaining.one": "Er is nog 1 rondleiding",

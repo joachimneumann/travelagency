@@ -48,6 +48,7 @@
   "tours.show_more.default": "显示更多行程",
   "tours.show_more.generic_one": "再显示 1 个行程",
   "tours.show_more.generic_many": "再显示 {count} 个行程",
+  "tours.show_all.count": "显示全部 {count} 个行程",
   "tours.show_more.destination": "再显示 {count} 的 {destination} 个行程",
   "tours.show_more.style": "再显示 {count} 个 {styleLower} 行程",
   "tours.show_remaining.one": "还有 1 个行程",

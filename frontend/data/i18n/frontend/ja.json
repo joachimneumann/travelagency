@@ -48,6 +48,7 @@
   "tours.show_more.default": "さらにツアーを見る",
   "tours.show_more.generic_one": "あと 1 件のツアーを見る",
   "tours.show_more.generic_many": "あと {count} 件のツアーを見る",
+  "tours.show_all.count": "全{count}件のツアーを見る",
   "tours.show_more.destination": "{count} のツアーをあと {destination} 件見る",
   "tours.show_more.style": "{count} ツアーをあと {styleLower} 件見る",
   "tours.show_remaining.one": "あと 1 件のツアーがあります",

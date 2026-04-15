@@ -48,6 +48,7 @@
   "tours.show_more.default": "Afficher plus de circuits",
   "tours.show_more.generic_one": "Afficher encore 1 circuit",
   "tours.show_more.generic_many": "Afficher encore {count} circuits",
+  "tours.show_all.count": "Afficher les {count} circuits",
   "tours.show_more.destination": "Afficher encore {count} circuits a {destination}",
   "tours.show_more.style": "Afficher encore {count} circuits {styleLower}",
   "tours.show_remaining.one": "Il reste 1 circuit",

@@ -48,6 +48,7 @@
   "tours.show_more.default": "Mostrar más tours",
   "tours.show_more.generic_one": "Mostrar 1 recorrido más",
   "tours.show_more.generic_many": "Mostrar {count} recorridos más",
+  "tours.show_all.count": "Mostrar los {count} tours",
   "tours.show_more.destination": "Mostrar {count} tours más en {destination}",
   "tours.show_more.style": "Mostrar {count} recorridos más de {styleLower}",
   "tours.show_remaining.one": "Hay 1 recorrido más",

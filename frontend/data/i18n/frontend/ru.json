@@ -48,6 +48,7 @@
   "tours.show_more.default": "Показать больше туров",
   "tours.show_more.generic_one": "Показать еще 1 тур",
   "tours.show_more.generic_many": "Показать еще {count} туров",
+  "tours.show_all.count": "Показать все {count} туров",
   "tours.show_more.destination": "Показать еще {count} туров в {destination}",
   "tours.show_more.style": "Показать еще {count} туров {styleLower}",
   "tours.show_remaining.one": "Есть еще 1 тур",

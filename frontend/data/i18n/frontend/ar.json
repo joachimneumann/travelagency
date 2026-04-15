@@ -48,6 +48,7 @@
   "tours.show_more.default": "عرض المزيد من الجولات",
   "tours.show_more.generic_one": "عرض جولة إضافية واحدة",
   "tours.show_more.generic_many": "عرض {count} جولات إضافية",
+  "tours.show_all.count": "عرض كل {count} جولة",
   "tours.show_more.destination": "عرض {count} جولات إضافية في {destination}",
   "tours.show_more.style": "عرض {count} جولات {styleLower} إضافية",
   "tours.show_remaining.one": "توجد جولة إضافية واحدة",

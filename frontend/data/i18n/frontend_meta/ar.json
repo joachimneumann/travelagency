@@ -244,6 +244,11 @@
     "origin": "legacy",
     "updated_at": "2026-04-02T15:09:07.177Z"
   },
+  "tours.show_all.count": {
+    "source_hash": "eb5cf23bafd2435c1540cbaf1b7ce4c36b73d00f6785faa90cf810dedf95ede3",
+    "origin": "legacy",
+    "updated_at": "2026-04-15T19:30:37.209Z"
+  },
   "tours.show_more.destination": {
     "source_hash": "5137f4e249114f9bc399bb812ef4094c40d5586eebbcaad47230c231d7c9282a",
     "origin": "legacy",

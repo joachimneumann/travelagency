@@ -48,6 +48,7 @@
   "tours.show_more.default": "Vis flere ture",
   "tours.show_more.generic_one": "Vis 1 rundvisning mere",
   "tours.show_more.generic_many": "Vis {count} ture mere",
+  "tours.show_all.count": "Vis alle {count} ture",
   "tours.show_more.destination": "Vis {count} ture mere i {destination}",
   "tours.show_more.style": "Vis {count} flere {styleLower} ture",
   "tours.show_remaining.one": "Der er 1 tur mere",

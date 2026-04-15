@@ -48,6 +48,7 @@
   "tours.show_more.default": "투어 더 보기",
   "tours.show_more.generic_one": "투어 1개 더 보기",
   "tours.show_more.generic_many": "투어 {count}개 더 보기",
+  "tours.show_all.count": "투어 {count}개 모두 보기",
   "tours.show_more.destination": "{count} 투어 {destination}개 더 보기",
   "tours.show_more.style": "{count} 투어 {styleLower}개 더 보기",
   "tours.show_remaining.one": "투어가 1개 더 있습니다",

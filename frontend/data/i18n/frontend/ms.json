@@ -48,6 +48,7 @@
   "tours.show_more.default": "Tunjuk lagi lawatan",
   "tours.show_more.generic_one": "Tunjuk 1 lagi lawatan",
   "tours.show_more.generic_many": "Tunjuk {count} lagi lawatan",
+  "tours.show_all.count": "Tunjuk semua {count} lawatan",
   "tours.show_more.destination": "Tunjuk {count} lagi lawatan di {destination}",
   "tours.show_more.style": "Tunjuk {count} lagi lawatan {styleLower}",
   "tours.show_remaining.one": "Masih ada 1 lagi lawatan",
