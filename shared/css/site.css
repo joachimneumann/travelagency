@@ -944,12 +944,20 @@ textarea:focus-visible {
 }
 
 .tour-card {
+  --tour-card-title-lines: 2;
+  --tour-card-title-line-height: 1.28;
+  --tour-card-desc-lines: 4;
+  --tour-card-desc-line-height: 1.55;
+  --tour-card-tag-lines: 2;
+  --tour-card-tag-line-height: 1.2;
+  --tour-card-tag-vertical-padding: 0.36rem;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius);
   overflow: hidden;
   display: grid;
   grid-template-rows: auto 1fr;
+  height: 100%;
 }
 
 .tour-card img {
@@ -964,6 +972,7 @@ textarea:focus-visible {
   display: grid;
   gap: 0.72rem;
   grid-template-rows: auto auto 1fr auto;
+  align-content: start;
 }
 
 .tour-topline {
@@ -986,6 +995,12 @@ textarea:focus-visible {
 .tour-title {
   margin: 0;
   font-size: var(--font-size-title-sm);
+  line-height: var(--tour-card-title-line-height);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: var(--tour-card-title-lines);
+  overflow: hidden;
+  min-height: calc(1em * var(--tour-card-title-line-height) * var(--tour-card-title-lines));
 }
 
 .tour-title--topline {
@@ -997,12 +1012,12 @@ textarea:focus-visible {
   margin: 0;
   color: var(--muted);
   font-size: var(--font-size-body-sm);
-  line-height: 1.55;
+  line-height: var(--tour-card-desc-line-height);
   display: -webkit-box;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 4;
+  -webkit-line-clamp: var(--tour-card-desc-lines);
   overflow: hidden;
-  min-height: calc(1.55em * 4);
+  min-height: calc(1em * var(--tour-card-desc-line-height) * var(--tour-card-desc-lines));
 }
 
 .tour-desc-wrap {
@@ -1037,17 +1052,28 @@ textarea:focus-visible {
   flex-wrap: wrap;
   gap: 0.4rem;
   align-self: end;
+  align-content: flex-start;
+  min-height: calc(
+    (1em * var(--tour-card-tag-line-height) + var(--tour-card-tag-vertical-padding)) * var(--tour-card-tag-lines)
+    + 0.4rem
+  );
+  max-height: calc(
+    (1em * var(--tour-card-tag-line-height) + var(--tour-card-tag-vertical-padding)) * var(--tour-card-tag-lines)
+    + 0.4rem
+  );
+  overflow: hidden;
 }
 
 .tour-body > .btn {
-  align-self: stretch;
+  align-self: end;
+  margin-top: auto;
 }
 
 .tag {
   background: var(--surface-info-soft);
   color: var(--info-text-muted);
   font-size: 0.82rem;
-  line-height: 1.2;
+  line-height: var(--tour-card-tag-line-height);
   padding: 0.18rem 0.48rem;
   border-radius: 999px;
 }

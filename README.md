@@ -36,7 +36,7 @@ Read these in order:
 - Deployment:
   - `docker-compose.staging.yml`
   - `deploy/Caddyfile`
-  - `scripts/update_staging.sh`
+  - `scripts/deploy/update_staging.sh`
 
 ## Repository Map
 
@@ -61,7 +61,7 @@ Read these in order:
 - `documentation/`
   - architecture, backend, frontend, and concept docs
 - `scripts/`
-  - local start/restart/stop helpers and staging update scripts
+  - organized helper scripts by concern, indexed in `scripts/README.md`
 
 ## Common Commands
 
@@ -74,29 +74,29 @@ ruby tools/generator/generate_mobile_contract_artifacts.rb
 Start the local stack:
 
 ```bash
-./scripts/start_local_all.sh
+./scripts/local/start_local_all.sh
 ```
 
 Start backend only:
 
 ```bash
-./scripts/start_local_backend.sh
+./scripts/local/start_local_backend.sh
 ```
 
 Wipe all booking data locally:
 
 ```bash
-./scripts/wipe_local_bookings.sh --yes
+./scripts/content/wipe_local_bookings.sh --yes
 ```
 
 Update staging:
 
 ```bash
-./scripts/update_staging.sh backend
-./scripts/update_staging.sh caddy
-./scripts/update_staging.sh keycloak
-./scripts/update_staging.sh all
-./scripts/wipe_staging_bookings.sh --yes
+./scripts/deploy/update_staging.sh backend
+./scripts/deploy/update_staging.sh caddy
+./scripts/deploy/update_staging.sh keycloak
+./scripts/deploy/update_staging.sh all
+./scripts/content/wipe_staging_bookings.sh --yes
 ```
 
 ## Documentation Conventions
