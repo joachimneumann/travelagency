@@ -893,6 +893,11 @@ async function submitForm(event) {
   });
   if (!result) return;
   if (!result.tour) return;
+  let finalSaveStatus = homepageAssetSyncFailed(result)
+    ? homepageAssetSyncWarningMessage()
+    : (is_create
+      ? backendT("tour.status.created", "Tour created.")
+      : backendT("tour.status.updated", "Tour updated."));
   state.tour = result.tour;
   state.localizedContent.title_i18n = normalizeLocalizedTextMap(
     result.tour.title_i18n || { en: result.tour.title || "" }
@@ -917,11 +922,12 @@ async function submitForm(event) {
       }
     });
     if (!imageResult) return;
+    if (homepageAssetSyncFailed(imageResult)) {
+      finalSaveStatus = homepageAssetSyncWarningMessage();
+    }
   }
 
-  setStatus(is_create
-    ? backendT("tour.status.created", "Tour created.")
-    : backendT("tour.status.updated", "Tour updated."));
+  setStatus(finalSaveStatus);
   if (els.imageUpload) els.imageUpload.value = "";
   if (is_create) {
     state.allowPageUnload = true;
@@ -1106,6 +1112,17 @@ function clearTitleError() {
 function setStatus(message) {
   if (!els.status) return;
   els.status.textContent = message;
+}
+
+function homepageAssetSyncFailed(payload) {
+  return payload?.homepage_assets?.ok === false;
+}
+
+function homepageAssetSyncWarningMessage() {
+  return backendT(
+    "tour.status.public_sync_failed",
+    "Saved in backend, but refreshing the public homepage failed. Please retry or run the homepage asset generator."
+  );
 }
 
 function setTourPageOverlay(isVisible, message = "") {

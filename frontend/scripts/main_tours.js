@@ -410,7 +410,7 @@ export function createFrontendToursController(ctx) {
 
   async function loadTrips() {
     const lang = normalizeFrontendTourLang(currentFrontendLang());
-    const response = await fetch(`/frontend/data/generated/homepage/public-tours.${encodeURIComponent(lang)}.json`, { cache: "default" });
+    const response = await fetch(`/frontend/data/generated/homepage/public-tours.${encodeURIComponent(lang)}.json`, { cache: "no-store" });
     if (!response.ok) {
       throw new Error(`Static tours request failed with status ${response.status}.`);
     }
@@ -595,10 +595,18 @@ export function createFrontendToursController(ctx) {
   }
 
   function rankTripsByPriorityAndRandom(trips) {
+    const randomBoostByTripId = state.tourRandomBoostById && typeof state.tourRandomBoostById === "object"
+      ? state.tourRandomBoostById
+      : (state.tourRandomBoostById = {});
+
     return trips
       .map((trip) => {
+        const tripId = normalizeText(trip?.id);
         const basePriority = Number.isFinite(Number(trip.priority)) ? Number(trip.priority) : 50;
-        const randomBoost = Math.floor(Math.random() * 51);
+        if (!Number.isFinite(randomBoostByTripId[tripId])) {
+          randomBoostByTripId[tripId] = Math.floor(Math.random() * 51);
+        }
+        const randomBoost = randomBoostByTripId[tripId];
         return {
           trip,
           priority: basePriority,
@@ -606,7 +614,10 @@ export function createFrontendToursController(ctx) {
           score: basePriority + randomBoost
         };
       })
-      .sort((a, b) => b.score - a.score)
+      .sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score;
+        return String(a.trip?.id || "").localeCompare(String(b.trip?.id || ""));
+      })
       .map((entry) => entry);
   }
 

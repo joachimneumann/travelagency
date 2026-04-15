@@ -1,0 +1,24 @@
+cd ~/projects/travelagency
+cd /arv/asiatravelplan
+
+
+## export to ATP
+rsync -av content/atp_staff/ atp:/srv/asiatravelplan-staging/content/atp_staff/
+rsync -av content/tours/ atp:/srv/asiatravelplan-staging/content/tours/
+
+## import from ATP
+rsync -av atp:/srv/asiatravelplan-staging/content/atp_staff/ content/atp_staff/
+rsync -av atp:/srv/asiatravelplan-staging/content/tours/ content/tours/
+
+
+## compare local content vs ATP
+./scripts/content/compare_content.sh
+
+
+## copy to backup
+rsync -av content/atp_staff/ backup/atp_staff/
+rsync -av content/tours/ backup/tours/
+
+## restore from backup
+rsync -av backup/atp_staff/ content/atp_staff/
+rsync -av backup/tours/ content/tours/

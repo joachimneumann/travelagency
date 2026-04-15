@@ -380,7 +380,7 @@ function normalizeTeamMemberProfile(profile) {
 
 async function loadTeamMembers() {
   try {
-    const response = await fetch("/frontend/data/generated/homepage/public-team.json", { cache: "default" });
+    const response = await fetch("/frontend/data/generated/homepage/public-team.json", { cache: "no-store" });
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`);
     }

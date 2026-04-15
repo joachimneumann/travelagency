@@ -121,8 +121,8 @@ test("booking handlers do not contain duplicate top-level helper declarations", 
 
 test("backend ui i18n sync script passes and local backend startup is strict by default", async () => {
   const repoRoot = path.resolve(__dirname, "..", "..", "..");
-  const syncScriptPath = path.join(repoRoot, "scripts", "sync_backend_i18n.mjs");
-  const startLocalBackendPath = path.join(repoRoot, "scripts", "start_local_backend.sh");
+  const syncScriptPath = path.join(repoRoot, "scripts", "i18n", "sync_backend_i18n.mjs");
+  const startLocalBackendPath = path.join(repoRoot, "scripts", "local", "start_local_backend.sh");
   const startLocalBackendSource = await readFile(startLocalBackendPath, "utf8");
 
   await execFileAsync(process.execPath, [syncScriptPath, "check"], { cwd: repoRoot });
@@ -141,8 +141,8 @@ test("backend ui i18n sync script passes and local backend startup is strict by 
 
 test("translate wrapper covers backend and frontend i18n sync scripts", async () => {
   const repoRoot = path.resolve(__dirname, "..", "..", "..");
-  const frontendSyncScriptPath = path.join(repoRoot, "scripts", "sync_frontend_i18n.mjs");
-  const translateScriptPath = path.join(repoRoot, "scripts", "translate");
+  const frontendSyncScriptPath = path.join(repoRoot, "scripts", "i18n", "sync_frontend_i18n.mjs");
+  const translateScriptPath = path.join(repoRoot, "scripts", "i18n", "translate");
   const translateScriptSource = await readFile(translateScriptPath, "utf8");
 
   await execFileAsync(process.execPath, [frontendSyncScriptPath, "check"], { cwd: repoRoot });
@@ -3702,8 +3702,8 @@ test("frontend language switching updates the homepage in place instead of forci
   );
   assert.match(
     mainSource,
-    /async function loadTeamMembers\(\) \{[\s\S]*fetch\("\/frontend\/data\/generated\/homepage\/public-team\.json", \{ cache: "default" \}\)/,
-    "Homepage team loading should read the generated public team payload from frontend data"
+    /async function loadTeamMembers\(\) \{[\s\S]*fetch\("\/frontend\/data\/generated\/homepage\/public-team\.json", \{ cache: "no-store" \}\)/,
+    "Homepage team loading should bypass browser cache when reading the generated public team payload"
   );
   assert.match(
     mainSource,
@@ -3717,8 +3717,8 @@ test("frontend language switching updates the homepage in place instead of forci
   );
   assert.match(
     mainToursSource,
-    /const lang = normalizeFrontendTourLang\(currentFrontendLang\(\)\);[\s\S]*fetch\(`\/frontend\/data\/generated\/homepage\/public-tours\.\$\{encodeURIComponent\(lang\)\}\.json`, \{ cache: "default" \}\);/,
-    "Homepage tour loading should read generated static per-language tour payloads from frontend data"
+    /const lang = normalizeFrontendTourLang\(currentFrontendLang\(\)\);[\s\S]*fetch\(`\/frontend\/data\/generated\/homepage\/public-tours\.\$\{encodeURIComponent\(lang\)\}\.json`, \{ cache: "no-store" \}\);/,
+    "Homepage tour loading should bypass browser cache when reading generated per-language static tour payloads"
   );
   assert.doesNotMatch(
     mainToursSource,
@@ -3764,7 +3764,7 @@ test("homepage tour cards clamp long descriptions and open the shared detail pop
   );
   assert.match(
     siteCssSource,
-    /\.tour-desc \{[\s\S]*-webkit-line-clamp: 4;[\s\S]*min-height: calc\(1\.55em \* 4\);/,
+    /\.tour-desc \{[\s\S]*-webkit-line-clamp: var\(--tour-card-desc-lines\);[\s\S]*min-height: calc\(1em \* var\(--tour-card-desc-line-height\) \* var\(--tour-card-desc-lines\)\);/,
     "Tour descriptions should clamp to a fixed-height preview so cards stay aligned"
   );
 });
@@ -3929,7 +3929,7 @@ test("contract tests use an isolated temp store instead of the runtime store.jso
 });
 
 test("staging bootstrap does not seed legacy customer store data", async () => {
-  const filePath = path.resolve(__dirname, "..", "..", "..", "scripts", "update_staging.sh");
+  const filePath = path.resolve(__dirname, "..", "..", "..", "scripts", "deploy", "update_staging.sh");
   const source = await readFile(filePath, "utf8");
 
   assert.ok(!source.includes('"customers"'), "update_staging.sh should not bootstrap legacy customers collection");
@@ -3944,7 +3944,7 @@ test("staging backend bakes dependencies into the image and mounts only writable
   const repoRoot = path.resolve(__dirname, "..", "..", "..");
   const dockerfilePath = path.join(repoRoot, "backend", "Dockerfile.staging");
   const composePath = path.join(repoRoot, "docker-compose.staging.yml");
-  const updateStagingPath = path.join(repoRoot, "scripts", "update_staging.sh");
+  const updateStagingPath = path.join(repoRoot, "scripts", "deploy", "update_staging.sh");
   const dockerIgnorePath = path.join(repoRoot, ".dockerignore");
   const [dockerfileSource, composeSource, updateStagingSource, dockerIgnoreSource] = await Promise.all([
     readFile(dockerfilePath, "utf8"),

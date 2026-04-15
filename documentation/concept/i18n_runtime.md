@@ -181,8 +181,8 @@ The active implementation now matches the intended source-language model:
 - `shared/generated/language_catalog.js`
 - `frontend/scripts/shared/backend_i18n.js`
 - `frontend/scripts/shared/frontend_i18n.js`
-- `scripts/sync_backend_i18n.mjs`
-- `scripts/sync_frontend_i18n.mjs`
+- `scripts/i18n/sync_backend_i18n.mjs`
+- `scripts/i18n/sync_frontend_i18n.mjs`
 - `frontend/scripts/booking/i18n.js`
 - `frontend/scripts/booking/localized_editor.js`
 - `frontend/scripts/pages/booking_page_language.js`

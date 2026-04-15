@@ -228,9 +228,9 @@ Handlers, read models, and store normalization should reuse that module instead 
 ## Local Keycloak
 
 Helper scripts:
-- `scripts/start_local_keycloak.sh`
-- `scripts/stop_local_keycloak.sh`
-- `scripts/restart_local_keycloak.sh`
+- `scripts/local/start_local_keycloak.sh`
+- `scripts/local/stop_local_keycloak.sh`
+- `scripts/local/restart_local_keycloak.sh`
 - `node backend/app/scripts/prune_stale_content_translations.js`
   - dry-run by default
   - add `--write` to persist

@@ -34,14 +34,14 @@ Frontend:
 
 ```bash
 cd ~/projects/travelagency
-./scripts/start_local_frontend.sh
+./scripts/local/start_local_frontend.sh
 ```
 
 Optional local Keycloak:
 
 ```bash
 cd ~/projects/travelagency
-./scripts/start_local_keycloak.sh
+./scripts/local/start_local_keycloak.sh
 ```
 
 Recommended split-origin setup:

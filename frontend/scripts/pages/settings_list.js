@@ -270,6 +270,17 @@ function clearEditorStatus() {
   showEditorStatus("", false);
 }
 
+function homepageAssetSyncFailed(payload) {
+  return payload?.homepage_assets?.ok === false;
+}
+
+function homepageAssetSyncWarningMessage() {
+  return backendT(
+    "backend.users.public_sync_failed",
+    "ATP staff profile saved, but refreshing the public homepage failed. Please retry or run the homepage asset generator."
+  );
+}
+
 function showWebsiteDestinationPublicationStatus(message, isError = false) {
   if (!els.websiteDestinationPublicationStatus) return;
   els.websiteDestinationPublicationStatus.textContent = normalizeText(message);
@@ -1777,6 +1788,8 @@ async function saveSelectedStaffProfile() {
   updateEditorSaveButtonState();
   try {
     let latestUser = user;
+    let finalStatusMessage = backendT("backend.users.profile_saved", "ATP staff profile saved.");
+    let finalStatusIsError = false;
     if (profileDirty) {
       const request = keycloakUserStaffProfileUpdateRequest({
         baseURL: apiOrigin,
@@ -1798,6 +1811,10 @@ async function saveSelectedStaffProfile() {
       });
       if (!payload?.user) return;
       latestUser = payload.user;
+      if (homepageAssetSyncFailed(payload)) {
+        finalStatusMessage = homepageAssetSyncWarningMessage();
+        finalStatusIsError = true;
+      }
     }
     if (pendingPhoto?.dataBase64) {
       const pictureRequest = keycloakUserStaffProfilePictureUploadRequest({
@@ -1814,9 +1831,13 @@ async function saveSelectedStaffProfile() {
       });
       if (!picturePayload?.user) return;
       latestUser = picturePayload.user;
+      if (homepageAssetSyncFailed(picturePayload)) {
+        finalStatusMessage = homepageAssetSyncWarningMessage();
+        finalStatusIsError = true;
+      }
     }
     applyUpdatedUser(latestUser);
-    showEditorStatus(backendT("backend.users.profile_saved", "ATP staff profile saved."));
+    showEditorStatus(finalStatusMessage, finalStatusIsError);
   } finally {
     state.editorSaving = false;
     updateEditorSaveButtonState();

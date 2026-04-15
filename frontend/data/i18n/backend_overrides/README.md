@@ -8,4 +8,4 @@ Example:
 }
 ```
 
-`node scripts/sync_backend_i18n.mjs translate` will preserve these keys during future automatic translation runs and write them back into the generated backend dictionary.
+`node scripts/i18n/sync_backend_i18n.mjs translate` will preserve these keys during future automatic translation runs and write them back into the generated backend dictionary.

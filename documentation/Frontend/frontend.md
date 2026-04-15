@@ -92,7 +92,7 @@ Homepage source-of-truth model:
 - `content/atp_staff/staff.json` remains the editable public team source of truth
 - `content/atp_staff/photos/*` remains the editable staff photo source of truth
 - `backup/**` is backup only and is not used by runtime homepage generation
-- `scripts/generate_public_homepage_assets.mjs` regenerates the public homepage artifacts and should be rerun after changing tour/team homepage content
+- `scripts/assets/generate_public_homepage_assets.mjs` regenerates the public homepage artifacts and should be rerun after changing tour/team homepage content
 
 ### 4.3 Trust strip (after tours)
 

@@ -287,15 +287,15 @@ Update deployment:
 
 ```bash
 cd /home/asiatravelplan/travelagency
-./scripts/update_staging.sh backend
+./scripts/deploy/update_staging.sh backend
 ```
 
 Other useful variants:
 
 ```bash
-./scripts/update_staging.sh caddy
-./scripts/update_staging.sh keycloak
-./scripts/update_staging.sh all
+./scripts/deploy/update_staging.sh caddy
+./scripts/deploy/update_staging.sh keycloak
+./scripts/deploy/update_staging.sh all
 ```
 
 Behavior:

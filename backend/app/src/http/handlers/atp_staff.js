@@ -1,4 +1,5 @@
 import path from "node:path";
+import { existsSync } from "node:fs";
 import { stat } from "node:fs/promises";
 import { validateTranslationEntriesRequest } from "../../../Generated/API/generated_APIModels.js";
 import { normalizeText } from "../../lib/text.js";
@@ -85,6 +86,7 @@ export function createAtpStaffHandlers(deps) {
     updateAtpStaffProfileByUsername,
     setAtpStaffPictureRefByUsername,
     resetAtpStaffPictureByUsername,
+    repoRoot,
     translateEntries,
     translateEntriesWithMeta,
     execFile,
@@ -97,6 +99,42 @@ export function createAtpStaffHandlers(deps) {
     sendFileWithCache,
     randomUUID
   } = deps;
+
+  const PUBLIC_HOMEPAGE_ASSET_GENERATOR_CANDIDATES = Object.freeze([
+    path.join(repoRoot, "scripts", "assets", "generate_public_homepage_assets.mjs"),
+    path.join(repoRoot, "scripts", "generate_public_homepage_assets.mjs")
+  ]);
+  let publicHomepageAssetGenerationQueue = Promise.resolve();
+
+  async function regeneratePublicHomepageAssets(reason, details = {}) {
+    const task = async () => {
+      const generatorPath = PUBLIC_HOMEPAGE_ASSET_GENERATOR_CANDIDATES.find((candidate) => existsSync(candidate));
+      if (!generatorPath) {
+        throw new Error("Could not find generate_public_homepage_assets.mjs in expected script locations.");
+      }
+      await execFile(process.execPath, [generatorPath], {
+        cwd: repoRoot
+      });
+    };
+
+    publicHomepageAssetGenerationQueue = publicHomepageAssetGenerationQueue.then(task, task);
+
+    try {
+      await publicHomepageAssetGenerationQueue;
+      return { ok: true };
+    } catch (error) {
+      const message = String(error?.stderr || error?.message || error || "Static homepage asset generation failed.");
+      console.error("[backend-public-homepage-assets] Generation failed.", {
+        reason,
+        ...details,
+        error: message
+      });
+      return {
+        ok: false,
+        error: message
+      };
+    }
+  }
 
   async function handleListAtpStaffDirectoryEntries(req, res) {
     const principal = getPrincipal(req);
@@ -248,7 +286,11 @@ export function createAtpStaffHandlers(deps) {
       return;
     }
 
-    sendJson(res, 200, buildUserResponse(updated));
+    const homepageAssets = await regeneratePublicHomepageAssets("staff_profile_patch", { username });
+    sendJson(res, 200, {
+      ...buildUserResponse(updated),
+      homepage_assets: homepageAssets
+    });
   }
 
   async function handleTranslateAtpStaffProfileFields(req, res, [rawUsername]) {
@@ -408,7 +450,11 @@ export function createAtpStaffHandlers(deps) {
       return;
     }
 
-    sendJson(res, 200, buildUserResponse(updated));
+    const homepageAssets = await regeneratePublicHomepageAssets("staff_photo_upload", { username });
+    sendJson(res, 200, {
+      ...buildUserResponse(updated),
+      homepage_assets: homepageAssets
+    });
   }
 
   async function handleDeleteAtpStaffPhoto(req, res, [rawUsername]) {
@@ -437,7 +483,11 @@ export function createAtpStaffHandlers(deps) {
       return;
     }
 
-    sendJson(res, 200, buildUserResponse(updated));
+    const homepageAssets = await regeneratePublicHomepageAssets("staff_photo_delete", { username });
+    sendJson(res, 200, {
+      ...buildUserResponse(updated),
+      homepage_assets: homepageAssets
+    });
   }
 
   return {

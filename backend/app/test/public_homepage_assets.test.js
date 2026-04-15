@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import os from "node:os";
 import path from "node:path";
 import { mkdtemp, mkdir, readFile, stat, writeFile } from "node:fs/promises";
-import { generatePublicHomepageAssets } from "../../../scripts/generate_public_homepage_assets.mjs";
+import { generatePublicHomepageAssets } from "../../../scripts/assets/generate_public_homepage_assets.mjs";
 
 async function writeJson(filePath, value) {
   await mkdir(path.dirname(filePath), { recursive: true });

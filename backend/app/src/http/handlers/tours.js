@@ -1,4 +1,5 @@
 import { validateTourTranslateFieldsRequest } from "../../../Generated/API/generated_APIModels.js";
+import { existsSync } from "node:fs";
 import { execImageMagick } from "../../lib/imagemagick.js";
 import {
   DESTINATION_COUNTRY_CODES,
@@ -36,6 +37,7 @@ export function createTourHandlers(deps) {
     nowIso,
     randomUUID,
     persistTour,
+    repoRoot,
     resolveTourImageDiskPath,
     sendFileWithCache,
     mkdir,
@@ -46,6 +48,12 @@ export function createTourHandlers(deps) {
     writeFile,
     rm
   } = deps;
+
+  const PUBLIC_HOMEPAGE_ASSET_GENERATOR_CANDIDATES = Object.freeze([
+    path.join(repoRoot, "scripts", "assets", "generate_public_homepage_assets.mjs"),
+    path.join(repoRoot, "scripts", "generate_public_homepage_assets.mjs")
+  ]);
+  let publicHomepageAssetGenerationQueue = Promise.resolve();
 
   function nowMs() {
     return Date.now();
@@ -262,6 +270,36 @@ export function createTourHandlers(deps) {
     const tourFolder = path.resolve(toursRoot, normalizedTourId);
     if (tourFolder === toursRoot || !tourFolder.startsWith(`${toursRoot}${path.sep}`)) return "";
     return tourFolder;
+  }
+
+  async function regeneratePublicHomepageAssets(reason, details = {}) {
+    const task = async () => {
+      const generatorPath = PUBLIC_HOMEPAGE_ASSET_GENERATOR_CANDIDATES.find((candidate) => existsSync(candidate));
+      if (!generatorPath) {
+        throw new Error("Could not find generate_public_homepage_assets.mjs in expected script locations.");
+      }
+      await execFile(process.execPath, [generatorPath], {
+        cwd: repoRoot
+      });
+    };
+
+    publicHomepageAssetGenerationQueue = publicHomepageAssetGenerationQueue.then(task, task);
+
+    try {
+      await publicHomepageAssetGenerationQueue;
+      return { ok: true };
+    } catch (error) {
+      const message = String(error?.stderr || error?.message || error || "Static homepage asset generation failed.");
+      console.error("[backend-public-homepage-assets] Generation failed.", {
+        reason,
+        ...details,
+        error: message
+      });
+      return {
+        ok: false,
+        error: message
+      };
+    }
   }
 
   function publishedWebpageDestinationCodes(countryReferencePayload) {
@@ -502,7 +540,11 @@ export function createTourHandlers(deps) {
     }
 
     await persistTour(tour);
-    sendJson(res, 201, { tour: buildTourEditorResponse(tour, lang) });
+    const homepageAssets = await regeneratePublicHomepageAssets("tour_create", { tour_id: tour.id });
+    sendJson(res, 201, {
+      tour: buildTourEditorResponse(tour, lang),
+      homepage_assets: homepageAssets
+    });
   }
 
   async function handlePatchTour(req, res, [tourId]) {
@@ -545,7 +587,11 @@ export function createTourHandlers(deps) {
 
     tours[index] = updated;
     await persistTour(updated);
-    sendJson(res, 200, { tour: buildTourEditorResponse(updated, lang) });
+    const homepageAssets = await regeneratePublicHomepageAssets("tour_patch", { tour_id: updated.id });
+    sendJson(res, 200, {
+      tour: buildTourEditorResponse(updated, lang),
+      homepage_assets: homepageAssets
+    });
   }
 
   async function handleDeleteTour(req, res, [tourId]) {
@@ -579,9 +625,11 @@ export function createTourHandlers(deps) {
     }
 
     await rm(folderPath, { recursive: true, force: true });
+    const homepageAssets = await regeneratePublicHomepageAssets("tour_delete", { tour_id: tourId });
     sendJson(res, 200, {
       deleted: true,
-      tour_id: tourId
+      tour_id: tourId,
+      homepage_assets: homepageAssets
     });
   }
 
@@ -667,8 +715,12 @@ export function createTourHandlers(deps) {
     };
     tours[index] = updated;
     await persistTour(updated);
+    const homepageAssets = await regeneratePublicHomepageAssets("tour_image_upload", { tour_id: updated.id });
 
-    sendJson(res, 200, { tour: normalizeTourForRead(updated, { lang }) });
+    sendJson(res, 200, {
+      tour: normalizeTourForRead(updated, { lang }),
+      homepage_assets: homepageAssets
+    });
   }
 
   return {
