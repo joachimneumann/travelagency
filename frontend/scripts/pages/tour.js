@@ -478,6 +478,17 @@ async function translateTourContent(button) {
   setStatus(backendT("tour.translation.done", "Translation updated."));
 }
 
+function logTourTranslationBatchProgress(message, details = {}) {
+  const payload = Object.fromEntries(
+    Object.entries(details).filter(([, value]) => value !== undefined)
+  );
+  if (Object.keys(payload).length) {
+    console.log(`[tour-translation] ${message}`, payload);
+    return;
+  }
+  console.log(`[tour-translation] ${message}`);
+}
+
 async function translateAllTourContent(button) {
   if (!button) return;
   const sourceLang = currentTourEditingLang();
@@ -505,16 +516,44 @@ async function translateAllTourContent(button) {
   setStatus(backendT("tour.translation.translating_all", "Translating all languages from {sourceLanguage}...", {
     sourceLanguage: tourLanguageLabel(sourceLang)
   }));
+  logTourTranslationBatchProgress("Starting bulk translation", {
+    source_lang: sourceLang,
+    source_label: tourLanguageLabel(sourceLang),
+    total_targets: targets.length,
+    targets
+  });
   try {
-    for (const targetLang of targets) {
+    for (let index = 0; index < targets.length; index += 1) {
+      const targetLang = targets[index];
+      logTourTranslationBatchProgress("Translating language", {
+        step: `${index + 1}/${targets.length}`,
+        source_lang: sourceLang,
+        target_lang: targetLang,
+        target_label: tourLanguageLabel(targetLang)
+      });
       const translatedEntries = await requestTourTranslation(targetLang, sourceEntries);
       if (!translatedEntries) return;
       applyTranslatedTourFields(targetLang, translatedEntries);
       syncLocalizedFieldState();
       updateTourDirtyState();
+      logTourTranslationBatchProgress("Finished language", {
+        step: `${index + 1}/${targets.length}`,
+        source_lang: sourceLang,
+        target_lang: targetLang,
+        target_label: tourLanguageLabel(targetLang)
+      });
     }
+  } catch (error) {
+    logTourTranslationBatchProgress("Bulk translation failed", {
+      source_lang: sourceLang,
+      error: String(error?.message || error || "Unknown error")
+    });
+    throw error;
   } finally {
     setTourPageOverlay(false);
+    logTourTranslationBatchProgress("Bulk translation finished", {
+      source_lang: sourceLang
+    });
   }
 
   updateHeaderTitle();

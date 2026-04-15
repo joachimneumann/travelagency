@@ -1,6 +1,31 @@
 import { normalizeText } from "./text.js";
 import { normalizeLanguageCode, promptLanguageName } from "../../../../shared/generated/language_catalog.js";
 
+function nowMs() {
+  return Date.now();
+}
+
+function durationMs(startMs) {
+  return Math.max(0, nowMs() - Number(startMs || 0));
+}
+
+function summarizeEntries(entries) {
+  const normalizedEntries = Object.entries(entries || {})
+    .map(([key, value]) => [normalizeText(key), normalizeText(value)])
+    .filter(([key, value]) => Boolean(key && value));
+  return {
+    entryCount: normalizedEntries.length,
+    totalChars: normalizedEntries.reduce((sum, [key, value]) => sum + key.length + value.length, 0)
+  };
+}
+
+function logTranslationTiming(event, details = {}) {
+  const payload = Object.fromEntries(
+    Object.entries(details).filter(([, value]) => value !== undefined)
+  );
+  console.log(`[backend-translation] ${event}`, payload);
+}
+
 function parseJsonObject(text) {
   const normalized = normalizeText(text);
   if (!normalized) return null;
@@ -131,11 +156,23 @@ export function createTranslationClient({
   async function translateEntriesWithGoogle(entries, targetLang, options = {}) {
     const sourceLangCode = googleTranslateLangCode(options?.sourceLangCode || "en", "en");
     const targetLangCode = googleTranslateLangCode(targetLang, "en");
+    const traceId = normalizeText(options?.traceId);
+    const totalStartMs = nowMs();
     const translated = {};
+    const entryStats = summarizeEntries(entries);
+
+    logTranslationTiming("Google translation started", {
+      trace_id: traceId,
+      source_lang: sourceLangCode,
+      target_lang: targetLangCode,
+      entry_count: entryStats.entryCount,
+      total_chars: entryStats.totalChars
+    });
 
     for (const [key, value] of Object.entries(entries || {})) {
       const sourceText = normalizeText(value);
       if (!sourceText) continue;
+      const requestStartMs = nowMs();
       const params = new URLSearchParams({
         client: "gtx",
         sl: sourceLangCode,
@@ -157,7 +194,23 @@ export function createTranslationClient({
         throw error;
       }
       translated[key] = translatedText;
+      logTranslationTiming("Google translation entry finished", {
+        trace_id: traceId,
+        source_lang: sourceLangCode,
+        target_lang: targetLangCode,
+        key,
+        chars: sourceText.length,
+        duration_ms: durationMs(requestStartMs)
+      });
     }
+
+    logTranslationTiming("Google translation finished", {
+      trace_id: traceId,
+      source_lang: sourceLangCode,
+      target_lang: targetLangCode,
+      entry_count: Object.keys(translated).length,
+      duration_ms: durationMs(totalStartMs)
+    });
 
     return {
       entries: translated,
@@ -196,12 +249,27 @@ export function createTranslationClient({
     const targetLanguageName = promptLanguageName(targetLang, "English");
     const chunks = chunkEntries(normalizedEntries);
     const onChunkStart = typeof options?.onChunkStart === "function" ? options.onChunkStart : null;
+    const traceId = normalizeText(options?.traceId);
+    const totalStartMs = nowMs();
+    const entryStats = summarizeEntries(Object.fromEntries(normalizedEntries));
     const translated = {};
     let translatedCount = 0;
+
+    logTranslationTiming("OpenAI translation started", {
+      trace_id: traceId,
+      model: normalizedModel,
+      source_lang: sourceLang,
+      target_lang: targetLanguageName,
+      domain: domainLabel,
+      entry_count: entryStats.entryCount,
+      total_chars: entryStats.totalChars,
+      chunk_count: chunks.length
+    });
 
     for (let chunkIndex = 0; chunkIndex < chunks.length; chunkIndex += 1) {
       const chunk = chunks[chunkIndex];
       const chunkPayload = Object.fromEntries(chunk);
+      const chunkStartMs = nowMs();
       if (onChunkStart) {
         onChunkStart({
           chunkIndex,
@@ -211,6 +279,15 @@ export function createTranslationClient({
           keys: chunk.map(([key]) => key)
         });
       }
+      logTranslationTiming("OpenAI translation chunk started", {
+        trace_id: traceId,
+        model: normalizedModel,
+        chunk_index: chunkIndex + 1,
+        total_chunks: chunks.length,
+        entry_count: chunk.length,
+        keys: chunk.map(([key]) => key)
+      });
+      const responseStartMs = nowMs();
       const response = await fetch("https://api.openai.com/v1/responses", {
         method: "POST",
         headers: {
@@ -236,6 +313,7 @@ export function createTranslationClient({
           }
         })
       });
+      const responseDurationMs = durationMs(responseStartMs);
 
       if (!response.ok) {
         let detail = "";
@@ -246,6 +324,14 @@ export function createTranslationClient({
           // Ignore unreadable error bodies.
         }
         if (allowGoogleFallback) {
+          logTranslationTiming("OpenAI translation chunk failed, falling back to Google", {
+            trace_id: traceId,
+            model: normalizedModel,
+            chunk_index: chunkIndex + 1,
+            total_chunks: chunks.length,
+            http_status: response.status,
+            openai_duration_ms: responseDurationMs
+          });
           return translateEntriesWithGoogle(Object.fromEntries(normalizedEntries), targetLang, options);
         }
         const error = new Error(detail || `Translation request failed with HTTP ${response.status}.`);
@@ -253,10 +339,20 @@ export function createTranslationClient({
         throw error;
       }
 
+      const parseStartMs = nowMs();
       const payload = await response.json();
       const parsed = parseJsonObject(extractResponseOutputText(payload));
+      const parseDurationMs = durationMs(parseStartMs);
       if (!parsed) {
         if (allowGoogleFallback) {
+          logTranslationTiming("OpenAI translation chunk returned invalid JSON, falling back to Google", {
+            trace_id: traceId,
+            model: normalizedModel,
+            chunk_index: chunkIndex + 1,
+            total_chunks: chunks.length,
+            openai_duration_ms: responseDurationMs,
+            parse_duration_ms: parseDurationMs
+          });
           return translateEntriesWithGoogle(Object.fromEntries(normalizedEntries), targetLang, options);
         }
         const error = new Error("Translation provider returned an invalid JSON response.");
@@ -268,7 +364,26 @@ export function createTranslationClient({
         translated[key] = normalizeText(parsed[key]);
       }
       translatedCount += chunk.length;
+      logTranslationTiming("OpenAI translation chunk finished", {
+        trace_id: traceId,
+        model: normalizedModel,
+        chunk_index: chunkIndex + 1,
+        total_chunks: chunks.length,
+        entry_count: chunk.length,
+        http_duration_ms: responseDurationMs,
+        parse_duration_ms: parseDurationMs,
+        chunk_duration_ms: durationMs(chunkStartMs)
+      });
     }
+
+    logTranslationTiming("OpenAI translation finished", {
+      trace_id: traceId,
+      model: normalizedModel,
+      source_lang: sourceLang,
+      target_lang: targetLanguageName,
+      translated_count: translatedCount,
+      duration_ms: durationMs(totalStartMs)
+    });
 
     return {
       entries: translated,

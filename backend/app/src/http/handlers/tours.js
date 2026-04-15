@@ -47,6 +47,31 @@ export function createTourHandlers(deps) {
     rm
   } = deps;
 
+  function nowMs() {
+    return Date.now();
+  }
+
+  function durationMs(startMs) {
+    return Math.max(0, nowMs() - Number(startMs || 0));
+  }
+
+  function summarizeTranslationEntries(entries) {
+    const normalizedEntries = Object.entries(entries || {})
+      .map(([key, value]) => [normalizeText(key), normalizeText(value)])
+      .filter(([key, value]) => Boolean(key && value));
+    return {
+      entryCount: normalizedEntries.length,
+      totalChars: normalizedEntries.reduce((sum, [key, value]) => sum + key.length + value.length, 0)
+    };
+  }
+
+  function logTourTranslationTiming(event, details = {}) {
+    const payload = Object.fromEntries(
+      Object.entries(details).filter(([, value]) => value !== undefined)
+    );
+    console.log(`[backend-tour-translation] ${event}`, payload);
+  }
+
   function translationEntriesToObject(entries) {
     return Object.fromEntries(
       (Array.isArray(entries) ? entries : [])
@@ -372,13 +397,34 @@ export function createTourHandlers(deps) {
     const sourceLang = normalizeTourLang(payload.source_lang);
     const targetLang = normalizeTourLang(payload.target_lang);
     const entries = translationEntriesToObject(payload.entries);
+    const traceId = `tour_${randomUUID()}`;
+    const requestStartMs = nowMs();
+    const entryStats = summarizeTranslationEntries(entries);
+
+    logTourTranslationTiming("Request started", {
+      trace_id: traceId,
+      source_lang: sourceLang,
+      target_lang: targetLang,
+      entry_count: entryStats.entryCount,
+      total_chars: entryStats.totalChars
+    });
 
     if (!Object.keys(entries).length) {
+      logTourTranslationTiming("Request rejected: missing source fields", {
+        trace_id: traceId,
+        duration_ms: durationMs(requestStartMs)
+      });
       sendJson(res, 422, { error: "At least one source field is required." });
       return;
     }
 
     if (sourceLang === targetLang) {
+      logTourTranslationTiming("Request short-circuited: source equals target", {
+        trace_id: traceId,
+        source_lang: sourceLang,
+        target_lang: targetLang,
+        duration_ms: durationMs(requestStartMs)
+      });
       sendJson(res, 200, {
         source_lang: sourceLang,
         target_lang: targetLang,
@@ -391,7 +437,15 @@ export function createTourHandlers(deps) {
       const translatedEntries = await translateEntries(entries, targetLang, {
         sourceLangCode: sourceLang,
         domain: "tour marketing copy",
-        allowGoogleFallback: true
+        allowGoogleFallback: true,
+        traceId
+      });
+      logTourTranslationTiming("Request finished", {
+        trace_id: traceId,
+        source_lang: sourceLang,
+        target_lang: targetLang,
+        translated_entry_count: Object.keys(translatedEntries || {}).length,
+        duration_ms: durationMs(requestStartMs)
       });
       sendJson(res, 200, {
         source_lang: sourceLang,
@@ -399,6 +453,14 @@ export function createTourHandlers(deps) {
         entries: translationEntriesFromObject(translatedEntries)
       });
     } catch (error) {
+      logTourTranslationTiming("Request failed", {
+        trace_id: traceId,
+        source_lang: sourceLang,
+        target_lang: targetLang,
+        duration_ms: durationMs(requestStartMs),
+        error_code: normalizeText(error?.code),
+        error: String(error?.message || error || "Translation failed.")
+      });
       if (error?.code === "TRANSLATION_NOT_CONFIGURED") {
         sendJson(res, 503, { error: String(error.message || "Translation provider is not configured.") });
         return;
