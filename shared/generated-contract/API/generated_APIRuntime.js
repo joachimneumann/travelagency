@@ -9,7 +9,7 @@
   "typeName": "Identifier"
 },
   PARAM_2: {
-  "name": "generated_offer_id",
+  "name": "person_id",
   "location": "path",
   "required": true,
   "typeName": "Identifier"
@@ -21,103 +21,103 @@
   "typeName": "Identifier"
 },
   PARAM_4: {
-  "name": "person_id",
-  "location": "path",
-  "required": true,
-  "typeName": "Identifier"
-},
-  PARAM_5: {
   "name": "document_type",
   "location": "path",
   "required": true,
   "typeName": "Identifier"
 },
-  PARAM_6: {
+  PARAM_5: {
   "name": "lang",
   "location": "query",
   "required": false,
   "typeName": "Identifier"
 },
-  PARAM_7: {
+  PARAM_6: {
   "name": "attachment_id",
   "location": "path",
   "required": true,
   "typeName": "Identifier"
 },
-  PARAM_8: {
+  PARAM_7: {
   "name": "q",
   "location": "query",
   "required": false,
   "typeName": "Identifier"
 },
-  PARAM_9: {
+  PARAM_8: {
   "name": "destination",
   "location": "query",
   "required": false,
   "typeName": "Identifier"
 },
-  PARAM_10: {
+  PARAM_9: {
   "name": "country",
   "location": "query",
   "required": false,
   "typeName": "Identifier"
 },
-  PARAM_11: {
+  PARAM_10: {
   "name": "style",
   "location": "query",
   "required": false,
   "typeName": "Identifier"
 },
-  PARAM_12: {
+  PARAM_11: {
   "name": "limit",
   "location": "query",
   "required": false,
   "typeName": "Identifier"
 },
-  PARAM_13: {
+  PARAM_12: {
   "name": "offset",
   "location": "query",
   "required": false,
   "typeName": "Identifier"
 },
-  PARAM_14: {
+  PARAM_13: {
   "name": "service_kind",
   "location": "query",
   "required": false,
   "typeName": "Identifier"
 },
-  PARAM_15: {
+  PARAM_14: {
   "name": "page",
   "location": "query",
   "required": false,
   "typeName": "Identifier"
 },
-  PARAM_16: {
+  PARAM_15: {
   "name": "page_size",
   "location": "query",
   "required": false,
   "typeName": "Identifier"
 },
-  PARAM_17: {
+  PARAM_16: {
   "name": "template_id",
   "location": "path",
   "required": true,
   "typeName": "Identifier"
 },
-  PARAM_18: {
+  PARAM_17: {
   "name": "day_id",
   "location": "path",
   "required": true,
   "typeName": "Identifier"
 },
-  PARAM_19: {
+  PARAM_18: {
   "name": "service_id",
   "location": "path",
   "required": true,
   "typeName": "Identifier"
 },
-  PARAM_20: {
+  PARAM_19: {
   "name": "artifact_id",
+  "location": "path",
+  "required": true,
+  "typeName": "Identifier"
+},
+  PARAM_20: {
+  "name": "generated_offer_id",
   "location": "path",
   "required": true,
   "typeName": "Identifier"
@@ -190,32 +190,6 @@
         ]
       },
       {
-        key: "public_generated_offer_access",
-        path: "/public/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}/access",
-        method: "GET",
-        authenticated: false,
-        requestType: null,
-        responseType: "PublicGeneratedOfferAccessResponse",
-        parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_2),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_3)
-        ]
-      },
-      {
-        key: "public_generated_offer_pdf",
-        path: "/public/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}/pdf",
-        method: "GET",
-        authenticated: false,
-        requestType: null,
-        responseType: null,
-        parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_2),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_3)
-        ]
-      },
-      {
         key: "public_traveler_details_access",
         path: "/public/v1/bookings/{booking_id}/persons/{person_id}/traveler-details/access",
         method: "GET",
@@ -224,7 +198,7 @@
         responseType: "PublicTravelerDetailsAccessResponse",
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_4),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_2),
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_3)
         ]
       },
@@ -237,7 +211,7 @@
         responseType: "PublicTravelerDetailsUpdateResponse",
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_4),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_2),
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_3)
         ]
       },
@@ -250,8 +224,8 @@
         responseType: "PublicTravelerDetailsUpdateResponse",
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_2),
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_4),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_5),
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_3)
         ]
       },
@@ -264,7 +238,7 @@
         responseType: "BookingPersonTravelerDetailsLinkResponse",
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_4)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_2)
         ]
       },
       {
@@ -441,7 +415,7 @@
         responseType: "BookingDetail",
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_4)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_2)
         ]
       },
       {
@@ -453,7 +427,7 @@
         responseType: "BookingDetail",
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_4)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_2)
         ]
       },
       {
@@ -465,7 +439,7 @@
         responseType: "BookingDetail",
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_4)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_2)
         ]
       },
       {
@@ -477,8 +451,8 @@
         responseType: "BookingDetail",
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_4),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_5)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_2),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_4)
         ]
       },
       {
@@ -512,7 +486,7 @@
         responseType: null,
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_6)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_5)
         ]
       },
       {
@@ -524,7 +498,7 @@
         responseType: null,
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_7)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_6)
         ]
       },
       {
@@ -546,12 +520,12 @@
         requestType: null,
         responseType: "TravelPlanDaySearchResponse",
         parameters: [
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_7),
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_8),
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_9),
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_10),
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_11),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_12),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_13)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_12)
         ]
       },
       {
@@ -562,12 +536,12 @@
         requestType: null,
         responseType: "TravelPlanSearchResponse",
         parameters: [
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_7),
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_8),
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_9),
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_10),
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_11),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_12),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_13)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_12)
         ]
       },
       {
@@ -578,13 +552,13 @@
         requestType: null,
         responseType: "TravelPlanServiceSearchResponse",
         parameters: [
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_7),
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_8),
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_9),
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_10),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_13),
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_11),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_14),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_12),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_13)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_12)
         ]
       },
       {
@@ -617,10 +591,10 @@
         requestType: null,
         responseType: "TravelPlanTemplateListResponse",
         parameters: [
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_7),
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_8),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_9),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_15),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_16)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_14),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_15)
         ]
       },
       {
@@ -642,7 +616,7 @@
         requestType: null,
         responseType: "TravelPlanTemplateResponse",
         parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_17)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_16)
         ]
       },
       {
@@ -653,7 +627,7 @@
         requestType: "TravelPlanTemplateUpsertRequest",
         responseType: "TravelPlanTemplateResponse",
         parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_17)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_16)
         ]
       },
       {
@@ -664,7 +638,7 @@
         requestType: null,
         responseType: null,
         parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_17)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_16)
         ]
       },
       {
@@ -676,7 +650,7 @@
         responseType: "BookingDetail",
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_17)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_16)
         ]
       },
       {
@@ -688,7 +662,7 @@
         responseType: "BookingDetail",
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_18)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_17)
         ]
       },
       {
@@ -700,8 +674,8 @@
         responseType: "BookingDetail",
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_18),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_19)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_17),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_18)
         ]
       },
       {
@@ -713,8 +687,8 @@
         responseType: "BookingDetail",
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_18),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_19)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_17),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_18)
         ]
       },
       {
@@ -737,7 +711,7 @@
         responseType: "BookingDetail",
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_7)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_6)
         ]
       },
       {
@@ -760,7 +734,7 @@
         responseType: null,
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_20)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_19)
         ]
       },
       {
@@ -772,7 +746,7 @@
         responseType: "BookingDetail",
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_20)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_19)
         ]
       },
       {
@@ -784,7 +758,7 @@
         responseType: "BookingDetail",
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_20)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_19)
         ]
       },
       {
@@ -829,7 +803,7 @@
         responseType: "BookingDetail",
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_2)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_20)
         ]
       },
       {
@@ -841,7 +815,7 @@
         responseType: "BookingDetail",
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_2)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_20)
         ]
       },
       {
@@ -853,7 +827,7 @@
         responseType: null,
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_2)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_20)
         ]
       },
       {
@@ -865,7 +839,7 @@
         responseType: "BookingGeneratedOfferGmailDraftResponse",
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_2)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_20)
         ]
       },
       {
