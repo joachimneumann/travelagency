@@ -36,7 +36,7 @@ Read these in order:
 - Deployment:
   - `docker-compose.staging.yml`
   - `deploy/Caddyfile`
-  - `scripts/deploy/update_staging.sh`
+  - `scripts/staging/deploy_staging_all.sh`
 
 ## Repository Map
 
@@ -74,13 +74,13 @@ ruby tools/generator/generate_mobile_contract_artifacts.rb
 Start the local stack:
 
 ```bash
-./scripts/local/start_local_all.sh
+./scripts/local/deploy_local_all.sh
 ```
 
 Start backend only:
 
 ```bash
-./scripts/local/start_local_backend.sh
+./scripts/local/deploy_local_backend.sh
 ```
 
 Wipe all booking data locally:
@@ -92,10 +92,10 @@ Wipe all booking data locally:
 Update staging:
 
 ```bash
-./scripts/deploy/update_staging.sh backend
-./scripts/deploy/update_staging.sh caddy
-./scripts/deploy/update_staging.sh keycloak
-./scripts/deploy/update_staging.sh all
+./scripts/staging/deploy_staging_backend.sh
+./scripts/staging/deploy_staging_frontend.sh
+./scripts/staging/deploy_staging_backend_frontend.sh
+./scripts/staging/deploy_staging_all.sh
 ./scripts/content/wipe_staging_bookings.sh --yes
 ```
 
