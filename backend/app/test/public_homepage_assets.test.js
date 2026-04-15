@@ -16,12 +16,30 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
   const toursRoot = path.join(contentRoot, "tours");
   const staffRoot = path.join(contentRoot, "atp_staff");
   const frontendDataDir = path.join(root, "frontend", "data", "generated", "homepage");
+  const frontendI18nDir = path.join(root, "frontend", "data", "i18n", "frontend");
   const tourOutputDir = path.join(root, "assets", "generated", "homepage", "tours");
   const teamOutputDir = path.join(root, "assets", "generated", "homepage", "team");
+  const homepageHtmlPath = path.join(root, "frontend", "pages", "index.html");
+  const homepageCopyGlobalPath = path.join(frontendDataDir, "public-homepage-copy.global.js");
 
   await mkdir(path.join(toursRoot, "tour_alpha"), { recursive: true });
   await mkdir(path.join(toursRoot, "tour_hidden"), { recursive: true });
   await mkdir(path.join(staffRoot, "photos"), { recursive: true });
+  await mkdir(frontendI18nDir, { recursive: true });
+  await mkdir(path.dirname(homepageHtmlPath), { recursive: true });
+
+  await writeJson(path.join(frontendI18nDir, "en.json"), {
+    "hero.title": "Private holidays in Vietnam, Thailand, Cambodia and Laos",
+    "hero.title_with_destinations": "Private holidays in {destinations}"
+  });
+  await writeJson(path.join(frontendI18nDir, "de.json"), {
+    "hero.title": "Privaturlaub in Vietnam, Thailand, Kambodscha und Laos",
+    "hero.title_with_destinations": "Privaturlaub in {destinations}"
+  });
+  await writeFile(
+    homepageHtmlPath,
+    '<!doctype html><html><body><h1 id="heroTitle" class="hero-title-only" data-i18n-id="hero.title">Old title</h1></body></html>\n'
+  );
 
   await writeJson(path.join(contentRoot, "country_reference_info.json"), {
     items: [
@@ -85,12 +103,17 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
     frontendDataDir,
     tourOutputDir,
     teamOutputDir,
+    frontendI18nDir,
+    homepageCopyGlobalPath,
+    homepageHtmlPath,
     languages: ["en", "de"]
   });
 
   const publicToursEn = JSON.parse(await readFile(path.join(frontendDataDir, "public-tours.en.json"), "utf8"));
   const publicToursDe = JSON.parse(await readFile(path.join(frontendDataDir, "public-tours.de.json"), "utf8"));
   const publicTeam = JSON.parse(await readFile(path.join(frontendDataDir, "public-team.json"), "utf8"));
+  const homepageCopyGlobal = await readFile(homepageCopyGlobalPath, "utf8");
+  const homepageHtml = await readFile(homepageHtmlPath, "utf8");
 
   assert.equal(publicToursEn.items.length, 1);
   assert.equal(publicToursEn.items[0].id, "tour_alpha");
@@ -101,6 +124,10 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
   assert.equal(publicToursDe.items[0].title, "Alpha Reise");
   assert.equal(publicToursDe.items[0].short_description, "Alpha Beschreibung");
   assert.deepEqual(publicToursDe.available_styles, [{ code: "budget", label: "Budget" }]);
+  assert.match(homepageCopyGlobal, /heroTitleByLang/);
+  assert.match(homepageCopyGlobal, /"en": "Private holidays in Vietnam"/);
+  assert.match(homepageCopyGlobal, /"de": "Privaturlaub in Vietnam"/);
+  assert.match(homepageHtml, />Private holidays in Vietnam</);
 
   assert.equal(publicTeam.total, 1);
   assert.equal(publicTeam.items[0].username, "joachim");

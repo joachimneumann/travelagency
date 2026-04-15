@@ -1,5 +1,6 @@
 (function frontendI18nBootstrap() {
   const CATALOG = window.ASIATRAVELPLAN_LANGUAGE_CATALOG;
+  const GENERATED_HOMEPAGE_COPY = window.ASIATRAVELPLAN_PUBLIC_HOMEPAGE_COPY;
   const LANGUAGES = Array.isArray(CATALOG?.frontendLanguages)
     ? orderLanguageMenuItems(CATALOG.frontendLanguages.map((item) => ({
         code: item.code,
@@ -24,7 +25,10 @@
   };
 
   window.frontendT = function frontendT(id, fallback, vars) {
-    const template = String(state.dict[id] ?? fallback ?? id);
+    const overrideValue = generatedTranslationOverride(id);
+    const template = overrideValue
+      ? String(overrideValue)
+      : String(state.dict[id] ?? fallback ?? id);
     return interpolate(template, vars);
   };
 
@@ -158,6 +162,15 @@
     }
 
     return {};
+  }
+
+  function generatedTranslationOverride(id) {
+    const normalizedId = normalizeText(id);
+    if (normalizedId !== 'hero.title') return '';
+    const heroTitleByLang = GENERATED_HOMEPAGE_COPY?.heroTitleByLang;
+    if (!heroTitleByLang || typeof heroTitleByLang !== 'object') return '';
+    return normalizeText(heroTitleByLang[state.lang])
+      || normalizeText(heroTitleByLang[CONFIG.defaultLang]);
   }
 
   function mountLanguageMenu() {
