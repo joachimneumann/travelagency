@@ -2,11 +2,13 @@
   "id": "tour_8d0d1d98-a571-44bc-bbd3-db4c01410f03",
   "title": {
     "en": "TEST Cambodia Family Journey",
+    "ar": "اختبار رحلة عائلة كمبوديا",
     "fr": "TEST Voyage famille au Cambodge",
     "zh": "测试 柬埔寨家庭之旅",
     "ja": "テスト カンボジア 家族の旅",
     "ko": "테스트 캄보디아 가족 여행",
     "vi": "KIỂM THỬ Hành trình Gia đình Campuchia",
+    "ms": "UJIAN Perjalanan Keluarga Kemboja",
     "de": "TEST Familienreise nach Kambodscha",
     "es": "PRUEBA Viaje familiar a Camboya",
     "it": "TEST Viaggio in famiglia in Cambogia",
@@ -15,9 +17,7 @@
     "pl": "TEST Rodzinna podróż do Kambodży",
     "da": "TEST Familierejse til Cambodja",
     "sv": "TEST Familjeresa i Kambodja",
-    "no": "TEST Familiereise i Kambodsja",
-    "ar": "اختبار رحلة عائلة كمبوديا",
-    "ms": "UJIAN Perjalanan Keluarga Kemboja"
+    "no": "TEST Familiereise i Kambodsja"
   },
   "styles": [
     "family"
@@ -31,12 +31,14 @@
     "cambodia"
   ],
   "short_description": {
-    "en": "A Cambodia family itinerary focused on a balanced first-trip route, with family-friendly pacing and dependable on-trip logistics.",
+    "en": "A Cambodia family itinerary focused on a balanced first-trip route, with family-friendly pacing and dependable on-trip logistics!",
+    "ar": "يركز خط سير الرحلة العائلي في كمبوديا على مسار متوازن للرحلة الأولى، مع سرعة مناسبة للعائلة وخدمات لوجستية يمكن الاعتماد عليها أثناء الرحلة.",
     "fr": "Un itinéraire familial au Cambodge pensé pour un premier voyage équilibré, avec un rythme adapté aux familles et une logistique fiable sur place.",
     "zh": "这是一条以均衡的首次旅行路线为核心的柬埔寨家庭行程，包含适合家庭的节奏和可靠的在途后勤安排。",
     "ja": "初めての旅でもバランスのよい周遊ルートを軸にしたカンボジアの家族旅程で、家族にやさしいペースと信頼できる現地手配。",
     "ko": "균형 잡힌 첫 여행 동선에 초점을 맞춘 캄보디아 가족 일정으로, 가족 친화적인 속도와 믿을 수 있는 현지 운영.",
     "vi": "Đây là lịch trình gia đình tại Campuchia tập trung vào lộ trình cân bằng cho chuyến đi đầu tiên, với nhịp độ phù hợp cho gia đình và khâu vận hành đáng tin cậy trong suốt chuyến đi.",
+    "ms": "Jadual perjalanan keluarga Kemboja yang berfokus pada laluan lawatan pertama yang seimbang, dengan rentak mesra keluarga dan logistik perjalanan di lokasi yang boleh diharap.",
     "de": "Eine Familienreise durch Kambodscha konzentrierte sich auf eine ausgewogene Erstreiseroute mit familienfreundlichem Tempo und zuverlässiger Logistik während der Reise.",
     "es": "Un itinerario familiar por Camboya centrado en una ruta de primer viaje equilibrada, con un ritmo familiar y una logística confiable durante el viaje.",
     "it": "Un itinerario per famiglie in Cambogia incentrato su un primo viaggio equilibrato, con ritmi adatti alle famiglie e una logistica di viaggio affidabile.",
@@ -45,8 +47,7 @@
     "pl": "Rodzinny plan podróży do Kambodży skupiający się na zrównoważonej trasie pierwszej podróży, z przyjaznym rodzinom tempem i niezawodną logistyką podróży.",
     "da": "En Cambodia familierejseplan fokuserede på en afbalanceret første tur-rute med familievenligt tempo og pålidelig logistik på turen.",
     "sv": "En familjeväg i Kambodja fokuserade på en balanserad första resa med familjevänligt tempo och pålitlig logistik på resan.",
-    "no": "En Kambodsja familie reiserute fokusert på en balansert første tur rute, med familievennlig tempo og pålitelig logistikk på tur.",
-    "ar": "يركز خط سير الرحلة العائلي في كمبوديا على مسار متوازن للرحلة الأولى، مع سرعة مناسبة للعائلة وخدمات لوجستية يمكن الاعتماد عليها أثناء الرحلة.",
-    "ms": "Jadual perjalanan keluarga Kemboja yang berfokus pada laluan lawatan pertama yang seimbang, dengan rentak mesra keluarga dan logistik perjalanan di lokasi yang boleh diharap."
-  }
+    "no": "En Kambodsja familie reiserute fokusert på en balansert første tur rute, med familievennlig tempo og pålitelig logistikk på tur."
+  },
+  "updated_at": "2026-04-15T18:24:00.603Z"
 }

@@ -1,23 +1,23 @@
 {
   "id": "tour_8ebca8ac-8a9d-48a6-bbfd-61fb5c0c3f91",
   "title": {
-    "en": "Hello Hanoi",
-    "ar": "مرحبا هانوي",
-    "fr": "Bonjour Hanoï",
-    "zh": "你好河内",
-    "ja": "こんにちは、ハノイ",
-    "ko": "안녕하세요 하노이",
-    "vi": "Hello Hà Nội",
-    "ms": "Hello Hanoi",
-    "de": "Hallo Hanoi",
-    "es": "Hola Hanói",
-    "it": "Ciao Hanoi",
-    "ru": "Привет Ханой",
-    "nl": "Hallo Hanoi",
-    "pl": "Witaj Hanoi",
-    "da": "Hej Hanoi",
-    "sv": "Hej Hanoi",
-    "no": "Hei Hanoi"
+    "en": "City tour Hanoi",
+    "ar": "جولة في مدينة هانوي",
+    "fr": "Visite de la ville de Hanoï",
+    "zh": "城市游览河内",
+    "ja": "ハノイ市内観光",
+    "ko": "시티투어 하노이",
+    "vi": "City tour Hà Nội",
+    "ms": "Lawatan bandar Hanoi",
+    "de": "Stadtrundfahrt Hanoi",
+    "es": "Visita a la ciudad de Hanói",
+    "it": "Giro della città di Hanoi",
+    "ru": "Экскурсия по городу Ханой",
+    "nl": "Stadstour Hanoi",
+    "pl": "Wycieczka po mieście Hanoi",
+    "da": "Byrundtur Hanoi",
+    "sv": "Stadsrundtur Hanoi",
+    "no": "Bytur Hanoi"
   },
   "short_description": {
     "en": "Hanoi is not only the capital, but also the sacred soul of Vietnam, where the flow of time seems to linger in every breath of the streets.",
@@ -54,5 +54,5 @@
   "priority": 50,
   "image": "/public/v1/tour-images/tour_8ebca8ac-8a9d-48a6-bbfd-61fb5c0c3f91/tour_8ebca8ac-8a9d-48a6-bbfd-61fb5c0c3f91.webp",
   "created_at": "2026-04-13T04:43:22.714Z",
-  "updated_at": "2026-04-13T04:43:40.360Z"
+  "updated_at": "2026-04-14T09:43:34.052Z"
 }

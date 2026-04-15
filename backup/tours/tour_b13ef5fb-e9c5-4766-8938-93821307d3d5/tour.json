@@ -1,0 +1,55 @@
+{
+  "id": "tour_b13ef5fb-e9c5-4766-8938-93821307d3d5",
+  "title": {
+    "en": "HO CHI MINH – CU CHI TUNNELS – HO CHI MINH",
+    "ar": "هو تشي مينه – أنفاق كو تشي – هو تشي مينه",
+    "fr": "HO CHI MINH – TUNNELS DE CU CHI – HO CHI MINH",
+    "zh": "胡志明 – 古芝地道 – 胡志明",
+    "ja": "ホーチミン – クチトンネル – ホーチミン",
+    "ko": "호치민 – 구찌 터널 – 호치민",
+    "vi": "HO CHI MINH – CU CHI TUNNELS – HO CHI MINH",
+    "ms": "HO CHI MINH – TEROWONG CU CHI – HO CHI MINH",
+    "de": "HO CHI MINH – CU CHI TUNNEL – HO CHI MINH",
+    "es": "HO CHI MINH – TÚNELES DE CU CHI – HO CHI MINH",
+    "it": "HO CHI MINH – TUNNEL DI CU CHI – HO CHI MINH",
+    "ru": "ХО ШИ МИН – ТУННЕЛИ КУ ЧИ – ХО ШИ МИН",
+    "nl": "HO CHI MINH – CU CHI TUNNELS – HO CHI MINH",
+    "pl": "HO CHI MINH – TUNELE CU CHI – HO CHI MINH",
+    "da": "HO CHI MINH – CU CHI TUNNELER – HO CHI MINH",
+    "sv": "HO CHI MINH – CU CHI TUNNEL – HO CHI MINH",
+    "no": "HO CHI MINH – CU CHI TUNNELER – HO CHI MINH"
+  },
+  "short_description": {
+    "en": "Cu Chi Tunnels is a giant underground military defense system more than 250km long with 3 different depths, built entirely by human power during the resistance period. This place is not only a strategic base with full meeting rooms, hospitals, and kitchens, but also a brilliant symbol of the resilient will and unique guerrilla warfare art of the Vietnamese army and people.",
+    "ar": "أنفاق Cu Chi هي نظام دفاع عسكري عملاق تحت الأرض يزيد طوله عن 250 كيلومترًا وبثلاثة أعماق مختلفة، تم بناؤه بالكامل بواسطة القوة البشرية خلال فترة المقاومة. هذا المكان ليس مجرد قاعدة استراتيجية بها غرف اجتماعات كاملة ومستشفيات ومطابخ، ولكنه أيضًا رمز رائع للإرادة المرنة وفن حرب العصابات الفريد للجيش والشعب الفيتنامي.",
+    "fr": "Les tunnels de Cu Chi sont un système de défense militaire souterrain géant de plus de 250 km de long avec 3 profondeurs différentes, entièrement construit par la force humaine pendant la période de résistance. Cet endroit n'est pas seulement une base stratégique avec des salles de réunion complètes, des hôpitaux et des cuisines, mais aussi un brillant symbole de la volonté résiliente et de l'art unique de la guérilla de l'armée et du peuple vietnamiens.",
+    "zh": "古芝地道是一个巨大的地下军事防御系统，长250多公里，有3个不同的深度，完全由人力在抵抗时期建造。这里不仅是一个配备齐全的会议室、医院、厨房的战略基地，也是越南军民顽强意志和独特游击战争艺术的光辉象征。",
+    "ja": "クチ トンネルは、長さが 250 km を超え、3 つの異なる深さを持つ巨大な地下軍事防衛システムであり、レジスタンス時代に完全に人力によって建設されました。この場所は、充実した会議室、病院、厨房を備えた戦略拠点であるだけでなく、ベトナム軍とベトナム人民の屈強な意志と独特のゲリラ戦芸術の輝かしい象徴でもあります。",
+    "ko": "구찌 터널(Cu Chi Tunnels)은 저항 기간 동안 전적으로 인간의 힘으로 건설된 길이 250km가 넘는 3가지 깊이의 거대한 지하 군사 방어 시스템입니다. 이곳은 회의실, 병원, 주방을 갖춘 전략적 기지일 뿐만 아니라 베트남 군대와 인민의 강인한 의지와 독특한 게릴라전 기술을 빛나는 상징으로 보여줍니다.",
+    "vi": "Địa đạo Củ Chi là một hệ thống phòng thủ quân sự ngầm khổng lồ dài hơn 250km với 3 tầng sâu khác nhau, được xây dựng hoàn toàn bằng sức người trong thời kỳ kháng chiến. Nơi đây không chỉ là căn cứ chiến lược với đầy đủ phòng họp, bệnh viện, nhà bếp mà còn là biểu tượng rực rỡ cho ý chí kiên cường và nghệ thuật chiến tranh du kích độc đáo của quân dân Việt Nam.",
+    "ms": "Cu Chi Tunnels ialah sistem pertahanan tentera bawah tanah gergasi sepanjang lebih daripada 250km dengan 3 kedalaman berbeza, dibina sepenuhnya oleh kuasa manusia semasa tempoh penentangan. Tempat ini bukan sahaja pangkalan strategik dengan bilik mesyuarat penuh, hospital, dan dapur, tetapi juga simbol cemerlang kemahuan yang berdaya tahan dan seni perang gerila unik tentera dan rakyat Vietnam.",
+    "de": "Die Cu-Chi-Tunnel sind ein riesiges unterirdisches militärisches Verteidigungssystem mit einer Länge von mehr als 250 km und drei verschiedenen Tiefen, das während der Widerstandszeit vollständig von Menschenhand gebaut wurde. Dieser Ort ist nicht nur ein strategischer Stützpunkt mit voll ausgestatteten Besprechungsräumen, Krankenhäusern und Küchen, sondern auch ein brillantes Symbol für den widerstandsfähigen Willen und die einzigartige Guerillakriegskunst der vietnamesischen Armee und des vietnamesischen Volkes.",
+    "es": "Los túneles de Cu Chi son un gigantesco sistema de defensa militar subterráneo de más de 250 km de largo con 3 profundidades diferentes, construido íntegramente por fuerza humana durante el período de resistencia. Este lugar no es sólo una base estratégica con salas de reuniones, hospitales y cocinas completas, sino también un símbolo brillante de la voluntad resistente y el arte único de la guerra de guerrillas del ejército y el pueblo vietnamitas.",
+    "it": "I Tunnel di Cu Chi sono un gigantesco sistema di difesa militare sotterraneo lungo più di 250 km con 3 diverse profondità, costruito interamente dal potere umano durante il periodo della resistenza. Questo luogo non è solo una base strategica con sale riunioni complete, ospedali e cucine, ma anche un brillante simbolo della volontà resiliente e dell'arte unica della guerriglia dell'esercito e del popolo vietnamiti.",
+    "ru": "Туннели Ку Чи — это гигантская подземная военная оборонительная система длиной более 250 км с тремя разными уровнями глубины, построенная исключительно силами человека в период сопротивления. Это место является не только стратегической базой с полностью оборудованными конференц-залами, больницами и кухнями, но и блестящим символом стойкой воли и уникального искусства партизанской войны вьетнамской армии и народа.",
+    "nl": "Cu Chi Tunnels is een gigantisch ondergronds militair verdedigingssysteem van meer dan 250 km lang met 3 verschillende diepten, volledig gebouwd door menselijke kracht tijdens de verzetsperiode. Deze plek is niet alleen een strategische basis met volledige vergaderzalen, ziekenhuizen en keukens, maar ook een schitterend symbool van de veerkrachtige wil en de unieke kunst van guerrillaoorlogvoering van het Vietnamese leger en volk.",
+    "pl": "Tunele Cu Chi to gigantyczny podziemny wojskowy system obronny o długości ponad 250 km i 3 różnych głębokościach, zbudowany w całości siłą ludzką w okresie oporu. To miejsce to nie tylko strategiczna baza z pełnymi salami konferencyjnymi, szpitalami i kuchniami, ale także genialny symbol niezłomnej woli i wyjątkowej sztuki walki partyzanckiej armii i narodu wietnamskiego.",
+    "da": "Cu Chi Tunnels er et kæmpe underjordisk militært forsvarssystem, der er mere end 250 km langt med 3 forskellige dybder, bygget udelukkende af menneskelig magt under modstandsperioden. Dette sted er ikke kun en strategisk base med komplette mødelokaler, hospitaler og køkkener, men også et strålende symbol på den vietnamesiske hærs og folks modstandsdygtige vilje og unikke guerillakrigskunst.",
+    "sv": "Cu Chi Tunnels är ett gigantiskt underjordiskt militärt försvarssystem som är mer än 250 km långt med 3 olika djup, byggt helt av mänsklig kraft under motståndsperioden. Denna plats är inte bara en strategisk bas med fulla mötesrum, sjukhus och kök, utan också en lysande symbol för den vietnamesiska arméns och folkets motståndskraftiga vilja och unika gerillakrigföringskonst.",
+    "no": "Cu Chi Tunnels er et gigantisk underjordisk militært forsvarssystem som er mer enn 250 km langt med 3 forskjellige dybder, bygget utelukkende av menneskelig kraft under motstandsperioden. Dette stedet er ikke bare en strategisk base med fulle møterom, sykehus og kjøkken, men også et strålende symbol på den spenstige viljen og unike geriljakrigføringskunsten til den vietnamesiske hæren og folket."
+  },
+  "destinations": [
+    "vietnam"
+  ],
+  "styles": [
+    "budget",
+    "culture",
+    "family"
+  ],
+  "seasonality_start_month": "jan",
+  "seasonality_end_month": "dec",
+  "priority": 50,
+  "image": "/public/v1/tour-images/tour_b13ef5fb-e9c5-4766-8938-93821307d3d5/tour_b13ef5fb-e9c5-4766-8938-93821307d3d5.webp",
+  "created_at": "2026-04-15T03:49:55.892Z",
+  "updated_at": "2026-04-15T03:50:08.664Z"
+}

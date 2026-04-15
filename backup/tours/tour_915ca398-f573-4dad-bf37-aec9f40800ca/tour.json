@@ -1,0 +1,57 @@
+{
+  "id": "tour_915ca398-f573-4dad-bf37-aec9f40800ca",
+  "title": {
+    "en": "EXPLORE RURAL HOI AN: A JOURNEY INTO THE HEART OF THE RURAL REGION",
+    "ar": "اكتشف منطقة هوي آن الريفية: رحلة إلى قلب المنطقة الريفية",
+    "fr": "EXPLOREZ LA RURALE DE HOI AN : UN VOYAGE AU COEUR DE LA RÉGION RURALE",
+    "zh": "探索会安乡村：进入乡村地区中心的旅程",
+    "ja": "ホイアンの田舎を探索：田舎の中心部への旅",
+    "ko": "시골 호이안 탐험: 시골 지역의 중심부로의 여행",
+    "vi": "KHÁM PHÁ VÙNG NÔNG THÔN HỘI AN: HÀNH TRÌNH VÀO TRÁI TIM CỦA  VÙNG NÔNG THÔN",
+    "ms": "JELAJAHI LUAR BANDAR HOI AN: PERJALANAN KE HATI WILAYAH LUAR BANDAR",
+    "de": "ERKUNDEN SIE DAS LÄNDLICHE HOI AN: EINE REISE IN DAS HERZEN DER LÄNDLICHEN REGION",
+    "es": "EXPLORA HOI AN RURAL: UN VIAJE AL CORAZÓN DE LA REGIÓN RURAL",
+    "it": "ESPLORA HOI AN RURALE: UN VIAGGIO NEL CUORE DELLA REGIONE RURALE",
+    "ru": "ИССЛЕДУЙТЕ СЕЛЬСКИЙ ХОЙАН: ПУТЕШЕСТВИЕ В СЕРДЦЕ СЕЛЬСКОГО РЕГИОНА",
+    "nl": "ONTDEK LANDELIJKE HOI AN: EEN REIS NAAR HET HART VAN DE PLATTELANDSE REGIO",
+    "pl": "ODKRYJ WIEJSKIE HOI AN: PODRÓŻ DO SERCA REGIONU WIEJSKIEGO",
+    "da": "UDFORSK LANDdistrikterne HOI AN: EN REJSE IND I HJERTET AF LANDREGIONEN",
+    "sv": "UTFORSKA LANDSBYGGSREGNINGEN",
+    "no": "UTFORSK LANDLIGHETEN HOI AN: EN REISE INN I HJERTET AV LANDLIGHETEN"
+  },
+  "short_description": {
+    "en": "The countryside is where the soul finds peace between the scent of ripe rice and the sound of kite flutes in the afternoon breeze. Along with the slow pace of life here, it weaves a picture of peace and sophistication imbued with the soul of Vietnamese countryside.",
+    "ar": "الريف هو المكان الذي تجد فيه الروح السلام بين رائحة الأرز الناضج وصوت مزامير الطائرات الورقية في نسيم الظهيرة. وإلى جانب وتيرة الحياة البطيئة هنا، فإنها تنسج صورة للسلام والرقي مشبعة بروح الريف الفيتنامي.",
+    "fr": "La campagne est l'endroit où l'âme trouve la paix entre le parfum du riz mûr et le son des flûtes cerf-volant dans la brise de l'après-midi. Outre le rythme lent de la vie ici, il tisse une image de paix et de sophistication imprégnée de l'âme de la campagne vietnamienne.",
+    "zh": "乡村是在成熟的稻米香味和午后微风中的风筝笛声之间找到心灵平静的地方。伴随着这里缓慢的生活节奏，编织出一幅充满越南乡村灵魂的宁静与精致的画面。",
+    "ja": "田舎では、熟した米の香りと午後の風に吹かれる凧笛の音の間に魂が安らぎを感じます。ここでのゆっくりした生活のペースとともに、ベトナムの田舎の魂が染み込んだ平和と洗練のイメージが織り込まれています。",
+    "ko": "시골은 익은 쌀 향기와 오후 미풍에 연피리 소리 사이에서 영혼의 평화를 찾는 곳입니다. 이곳의 느린 삶의 속도와 함께 베트남 시골의 영혼이 스며든 평화로움과 세련미의 그림을 엮어냅니다.",
+    "vi": "Đồng quê là nơi tâm hồn tìm về sự an nhiên giữa hương lúa chín nồng và tiếng sáo diều vi vu trong gió chiều. Cùng nhịp sống chậm rãi nơi đây dệt nên một bức tranh thanh bình, nhuần nhị đậm chất hồn quê Việt.",
+    "ms": "Pedesaan adalah tempat jiwa mencari ketenangan antara haruman nasi masak dan bunyi serunai layang-layang ditiup angin petang. Seiring dengan rentak kehidupan yang perlahan di sini, ia menjalinkan gambaran keamanan dan kecanggihan yang disemai dengan jiwa desa Vietnam.",
+    "de": "Auf dem Land findet die Seele Frieden zwischen dem Duft von reifem Reis und dem Klang der Drachenflöten in der Nachmittagsbrise. Zusammen mit dem langsamen Tempo des Lebens hier vermittelt es ein Bild von Frieden und Kultiviertheit, durchdrungen von der Seele der vietnamesischen Landschaft.",
+    "es": "El campo es donde el alma encuentra la paz entre el aroma del arroz maduro y el sonido de las flautas de las cometas en la brisa de la tarde. Junto con el lento ritmo de vida aquí, teje una imagen de paz y sofisticación imbuida del alma del campo vietnamita.",
+    "it": "La campagna è il luogo in cui l'anima trova pace tra il profumo del riso maturo e il suono dei flauti degli aquiloni nella brezza pomeridiana. Insieme al ritmo lento della vita qui, si intreccia un quadro di pace e raffinatezza intriso dell’anima della campagna vietnamita.",
+    "ru": "Сельская местность – это место, где душа обретает покой между ароматом спелого риса и звуками воздушных змеев на послеполуденном ветерке. Наряду с медленным темпом жизни здесь создается картина умиротворения и изысканности, пропитанная душой вьетнамской сельской местности.",
+    "nl": "Op het platteland vindt de ziel vrede tussen de geur van rijpe rijst en het geluid van vliegerfluiten in de middagbries. Samen met het langzame tempo van het leven hier, weeft het een beeld van vrede en verfijning doordrenkt met de ziel van het Vietnamese platteland.",
+    "pl": "Wieś to miejsce, w którym dusza odnajduje spokój pomiędzy zapachem dojrzałego ryżu a dźwiękiem fletów latawców w popołudniowym wietrze. W połączeniu z wolnym tempem życia tutaj, tworzy to obraz spokoju i wyrafinowania przesiąkniętego duszą wietnamskiej wsi.",
+    "da": "Landskabet er, hvor sjælen finder fred mellem duften af ​​moden ris og lyden af ​​dragefløjter i eftermiddagsbrisen. Sammen med livets langsomme tempo her, væver det et billede af fred og sofistikering gennemsyret af sjælen i det vietnamesiske landskab.",
+    "sv": "Landsbygden är där själen finner frid mellan doften av moget ris och ljudet av drakflöjter i eftermiddagsbrisen. Tillsammans med livets långsamma tempo här, väver den en bild av fred och sofistikering genomsyrad av själen från den vietnamesiska landsbygden.",
+    "no": "Landsbygda er der sjelen finner fred mellom duften av moden ris og lyden av dragefløyter i ettermiddagsbrisen. Sammen med det langsomme tempoet i livet her, vever det et bilde av fred og raffinement gjennomsyret av sjelen til det vietnamesiske landskapet."
+  },
+  "destinations": [
+    "vietnam"
+  ],
+  "styles": [
+    "budget",
+    "culture",
+    "family",
+    "gastronomic-experiences",
+    "wellness"
+  ],
+  "seasonality_start_month": "mar",
+  "seasonality_end_month": "aug",
+  "priority": 50,
+  "image": "/public/v1/tour-images/tour_915ca398-f573-4dad-bf37-aec9f40800ca/tour_915ca398-f573-4dad-bf37-aec9f40800ca.webp",
+  "created_at": "2026-04-14T10:52:39.442Z",
+  "updated_at": "2026-04-14T10:52:59.431Z"
+}
