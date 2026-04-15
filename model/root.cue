@@ -11,8 +11,6 @@ import (
 	entities: {
 		Booking:                                        entityModel.#Booking
 		GeneratedBookingOffer:                          entityModel.#GeneratedBookingOffer
-		GeneratedOfferCustomerConfirmationFlow:         entityModel.#GeneratedOfferCustomerConfirmationFlow
-		GeneratedOfferDepositBookingConfirmationRule:   entityModel.#GeneratedOfferDepositBookingConfirmationRule
 		GeneratedOfferBookingConfirmation:              entityModel.#GeneratedOfferBookingConfirmation
 		BookingPerson:                                  entityModel.#BookingPerson
 		BookingPersonAddress:                           entityModel.#BookingPersonAddress
@@ -62,8 +60,6 @@ import (
 		OfferPaymentTermKind:                         enumModel.#OfferPaymentTermKind
 		OfferPaymentAmountMode:                       enumModel.#OfferPaymentAmountMode
 		OfferPaymentDueType:                          enumModel.#OfferPaymentDueType
-		GeneratedOfferCustomerConfirmationFlowMode:   enumModel.#GeneratedOfferCustomerConfirmationFlowMode
-		GeneratedOfferCustomerConfirmationFlowStatus: enumModel.#GeneratedOfferCustomerConfirmationFlowStatus
 		BookingConfirmationMethod:                    enumModel.#BookingConfirmationMethod
 		TourStyleCode:                                enumModel.#TourStyleCode
 		CountryCode:                                  enumModel.#CountryCode
@@ -124,8 +120,6 @@ import (
 		BookingCreateRequest:                                      apiModel.#BookingCreateRequest
 		TranslationStatusSummary:                                  apiModel.#TranslationStatusSummary
 		GeneratedOfferBookingConfirmationPublicSummary:            apiModel.#GeneratedOfferBookingConfirmationPublicSummary
-		PublicGeneratedOfferDepositBookingConfirmationRuleView:    apiModel.#PublicGeneratedOfferDepositBookingConfirmationRuleView
-		PublicGeneratedOfferCustomerConfirmationFlowView:          apiModel.#PublicGeneratedOfferCustomerConfirmationFlowView
 		BookingOfferPaymentTermLineReadModel:                      apiModel.#BookingOfferPaymentTermLineReadModel
 		BookingOfferPaymentTermsReadModel:                         apiModel.#BookingOfferPaymentTermsReadModel
 		BookingOfferReadModel:                                     apiModel.#BookingOfferReadModel
@@ -134,9 +128,6 @@ import (
 		BookingTravelPlanPdfReadModel:                             apiModel.#BookingTravelPlanPdfReadModel
 		TravelPlanPdfArtifactCreateResponse:                       apiModel.#TravelPlanPdfArtifactCreateResponse
 		BookingReadModel:                                          apiModel.#BookingReadModel
-		PublicGeneratedOfferAccessResponse:                        apiModel.#PublicGeneratedOfferAccessResponse
-		PublicGeneratedOfferAcceptRequest:                         apiModel.#PublicGeneratedOfferAcceptRequest
-		PublicGeneratedOfferAcceptResponse:                        apiModel.#PublicGeneratedOfferAcceptResponse
 		BookingDeleteRequest:                                      apiModel.#BookingDeleteRequest
 		BookingNameUpdateRequest:                                  apiModel.#BookingNameUpdateRequest
 		BookingCustomerLanguageUpdateRequest:                      apiModel.#BookingCustomerLanguageUpdateRequest
@@ -168,8 +159,6 @@ import (
 		TravelPlanPdfArtifactDeleteRequest:                        apiModel.#TravelPlanPdfArtifactDeleteRequest
 		BookingOfferUpdateRequest:                                 apiModel.#BookingOfferUpdateRequest
 		BookingGenerateOfferRequest:                               apiModel.#BookingGenerateOfferRequest
-		BookingGenerateOfferDepositBookingConfirmationRuleRequest: apiModel.#BookingGenerateOfferDepositBookingConfirmationRuleRequest
-		BookingGenerateOfferCustomerConfirmationFlowRequest:       apiModel.#BookingGenerateOfferCustomerConfirmationFlowRequest
 		OfferExchangeRateLine:                                     apiModel.#OfferExchangeRateLine
 		OfferExchangeRatesRequest:                                 apiModel.#OfferExchangeRatesRequest
 		BookingActivityCreateRequest:                              apiModel.#BookingActivityCreateRequest

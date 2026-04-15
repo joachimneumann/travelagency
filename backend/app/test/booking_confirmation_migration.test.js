@@ -42,14 +42,11 @@ test("generated-offer startup migration removes legacy public-confirmation offer
     method: "PORTAL_CLICK",
     accepted_at: "2026-04-04T00:00:00.000Z"
   });
-  assert.deepEqual(migratedOffer.customer_confirmation_flow, {
-    mode: "DEPOSIT_PAYMENT",
-    status: "CONFIRMED"
-  });
-  assert.equal(migratedOffer.booking_confirmation_token_nonce, "legacy-nonce");
-  assert.equal(migratedOffer.booking_confirmation_token_created_at, "2026-04-04T00:00:00.000Z");
-  assert.equal(migratedOffer.booking_confirmation_token_expires_at, "2026-04-11T00:00:00.000Z");
-  assert.equal(migratedOffer.booking_confirmation_token_revoked_at, "2026-04-05T00:00:00.000Z");
+  assert.equal("customer_confirmation_flow" in migratedOffer, false);
+  assert.equal("booking_confirmation_token_nonce" in migratedOffer, false);
+  assert.equal("booking_confirmation_token_created_at" in migratedOffer, false);
+  assert.equal("booking_confirmation_token_expires_at" in migratedOffer, false);
+  assert.equal("booking_confirmation_token_revoked_at" in migratedOffer, false);
 
   assert.equal("acceptance" in migratedOffer, false);
   assert.equal("acceptance_route" in migratedOffer, false);
@@ -60,9 +57,9 @@ test("generated-offer startup migration removes legacy public-confirmation offer
 
   const pruned = pruneLegacyGeneratedOfferConfirmationState(store);
   assert.deepEqual(pruned, {
-    changed: true,
-    removedGeneratedOfferIds: ["generated_offer_legacy_confirmation"]
+    changed: false,
+    removedGeneratedOfferIds: []
   });
-  assert.deepEqual(store.bookings[0].generated_offers, []);
-  assert.equal(store.bookings[0].confirmed_generated_offer_id, null);
+  assert.equal(store.bookings[0].generated_offers.length, 1);
+  assert.equal(store.bookings[0].confirmed_generated_offer_id, "generated_offer_legacy_confirmation");
 });

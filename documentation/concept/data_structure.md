@@ -198,11 +198,6 @@ ATP quotation semantics:
 - `management_approver_label?`
 - `pdf_frozen_at`
 - `pdf_sha256`
-- `customer_confirmation_flow?`
-- `booking_confirmation_token_nonce?`
-- `booking_confirmation_token_created_at?`
-- `booking_confirmation_token_expires_at?`
-- `booking_confirmation_token_revoked_at?`
 - `booking_confirmation?`
 
 Meaning:
@@ -212,33 +207,8 @@ Meaning:
 - the generated offer can optionally freeze who may later approve it internally
 
 Important boundary:
-- transport fields such as `pdf_url` and `public_booking_confirmation_token` are not part of this entity
+- transport fields such as `pdf_url` are not part of this entity
 - those belong to the API read model only
-
-## GeneratedOfferCustomerConfirmationFlow
-
-`GeneratedOfferCustomerConfirmationFlow`
-- `mode`
-- `status`
-- `selected_at?`
-- `selected_by_atp_staff_id?`
-- `expires_at?`
-- `customer_message_snapshot?`
-- `deposit_rule?`
-
-Meaning:
-- this is customer-facing confirmation setup attached to a generated offer
-- it is not itself the final confirmation evidence record
-
-For new data, the intended mode is:
-- `DEPOSIT_PAYMENT`
-
-`deposit_rule`
-- `payment_term_line_id`
-- `payment_term_label`
-- `required_amount_cents`
-- `currency`
-- `aggregation_mode`
 
 ## GeneratedOfferBookingConfirmation
 
@@ -309,9 +279,6 @@ Current lifecycle:
 `GeneratedBookingOfferReadModel`
 - customer/admin-facing generated-offer response shape
 - `pdf_url`
-- `public_booking_confirmation_token`
-- `public_booking_confirmation_expires_at`
-- `customer_confirmation_flow`
 - `booking_confirmation`
 
 `BookingReadModel`

@@ -148,30 +148,21 @@ The persisted entity and the transport read model are intentionally different.
 Persisted generated offer entity:
 - language
 - frozen PDF metadata
-- internal booking-confirmation token state
-- optional `customer_confirmation_flow`
 - optional `booking_confirmation`
 - optional frozen management approver snapshot
 
 Generated read model:
 - `pdf_url`
-- `public_booking_confirmation_token`
-- `public_booking_confirmation_expires_at`
-- `customer_confirmation_flow`
 - booking translation summaries and generated-offer capability flags exposed through `BookingReadModel`
 
 These read models are consumed by:
 - authenticated backend booking screens
-- the public generated-offer access page
 
 This prevents public transport fields from becoming stored source-of-truth fields.
 
 ## Confirmation Model
 
 The current intended confirmation model for new data is:
-- `customer_confirmation_flow`
-  - customer-facing setup
-  - currently only `DEPOSIT_PAYMENT`
 - `booking_confirmation`
   - immutable evidence record for the final confirmation result
   - currently `DEPOSIT_PAYMENT` or `MANAGEMENT`
@@ -184,8 +175,8 @@ Instead, the generated offer can freeze:
 and the actual confirmation record is written later with method `MANAGEMENT`.
 
 Compatibility note:
-- legacy public click-confirmation support still exists in runtime migration and handler code for older generated offers
-- new offers are intended to confirm either by deposit payment or by management approval
+- legacy public click-confirmation data is only stripped during startup migration for older generated offers
+- new offers confirm either by deposit payment or by management approval
 
 ## Travel Plan Template Model
 
@@ -208,7 +199,6 @@ Template lifecycle:
 
 The active runtime, model, and docs should consistently use:
 - `person` / `persons`
-- `customer_confirmation_flow`
 - `booking_confirmation`
 
 and should avoid reintroducing:

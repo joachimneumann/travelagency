@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-04-14T06:00:23Z
+# 2026-04-15T20:46:45Z
 
 ---
 openapi: 3.1.0
@@ -687,40 +687,6 @@ components:
         label: DAYS_AFTER_TRIP_START
       - value: DAYS_AFTER_TRIP_END
         label: DAYS_AFTER_TRIP_END
-    GeneratedOfferCustomerConfirmationFlowMode:
-      type: string
-      enum:
-      - DEPOSIT_PAYMENT
-      x-enum-catalog:
-      - code: DEPOSIT_PAYMENT
-      x-enum-options:
-      - value: DEPOSIT_PAYMENT
-        label: DEPOSIT_PAYMENT
-    GeneratedOfferCustomerConfirmationFlowStatus:
-      type: string
-      enum:
-      - OPEN
-      - AWAITING_PAYMENT
-      - CONFIRMED
-      - EXPIRED
-      - REVOKED
-      x-enum-catalog:
-      - code: OPEN
-      - code: AWAITING_PAYMENT
-      - code: CONFIRMED
-      - code: EXPIRED
-      - code: REVOKED
-      x-enum-options:
-      - value: OPEN
-        label: OPEN
-      - value: AWAITING_PAYMENT
-        label: AWAITING_PAYMENT
-      - value: CONFIRMED
-        label: CONFIRMED
-      - value: EXPIRED
-        label: EXPIRED
-      - value: REVOKED
-        label: REVOKED
     BookingConfirmationMethod:
       type: string
       enum:
@@ -4707,52 +4673,6 @@ components:
           type: array
           items:
             "$ref": "#/components/schemas/BookingOfferPaymentTermLine"
-    GeneratedOfferDepositBookingConfirmationRule:
-      type: object
-      required:
-      - payment_term_line_id
-      - payment_term_label
-      - required_amount_cents
-      - currency
-      - aggregation_mode
-      properties:
-        payment_term_line_id:
-          type: string
-        payment_term_label:
-          type: string
-        required_amount_cents:
-          type: integer
-        currency:
-          "$ref": "#/components/schemas/ATPCurrencyCode"
-        aggregation_mode:
-          type: string
-    GeneratedOfferCustomerConfirmationFlow:
-      type: object
-      required:
-      - mode
-      - status
-      - selected_at
-      - selected_by_atp_staff_id
-      properties:
-        mode:
-          "$ref": "#/components/schemas/GeneratedOfferCustomerConfirmationFlowMode"
-        status:
-          "$ref": "#/components/schemas/GeneratedOfferCustomerConfirmationFlowStatus"
-        selected_at:
-          type: string
-          format: date-time
-        selected_by_atp_staff_id:
-          type: string
-        expires_at:
-          type: string
-          format: date-time
-          nullable: true
-        customer_message_snapshot:
-          type: string
-          nullable: true
-        deposit_rule:
-          "$ref": "#/components/schemas/GeneratedOfferDepositBookingConfirmationRule"
-          nullable: true
     BookingOfferTripPriceInternal:
       type: object
       required:
@@ -5063,24 +4983,6 @@ components:
         pdf_sha256:
           type: string
           nullable: true
-        customer_confirmation_flow:
-          "$ref": "#/components/schemas/GeneratedOfferCustomerConfirmationFlow"
-          nullable: true
-        booking_confirmation_token_nonce:
-          type: string
-          nullable: true
-        booking_confirmation_token_created_at:
-          type: string
-          format: date-time
-          nullable: true
-        booking_confirmation_token_expires_at:
-          type: string
-          format: date-time
-          nullable: true
-        booking_confirmation_token_revoked_at:
-          type: string
-          format: date-time
-          nullable: true
         booking_confirmation:
           "$ref": "#/components/schemas/GeneratedOfferBookingConfirmation"
           nullable: true
@@ -5355,39 +5257,6 @@ components:
         accepted_currency:
           "$ref": "#/components/schemas/ATPCurrencyCode"
           nullable: true
-    PublicGeneratedOfferDepositBookingConfirmationRuleView:
-      type: object
-      required:
-      - payment_term_label
-      - required_amount_cents
-      - currency
-      properties:
-        payment_term_label:
-          type: string
-        required_amount_cents:
-          type: integer
-        currency:
-          "$ref": "#/components/schemas/ATPCurrencyCode"
-    PublicGeneratedOfferCustomerConfirmationFlowView:
-      type: object
-      required:
-      - mode
-      - status
-      properties:
-        mode:
-          "$ref": "#/components/schemas/GeneratedOfferCustomerConfirmationFlowMode"
-        status:
-          "$ref": "#/components/schemas/GeneratedOfferCustomerConfirmationFlowStatus"
-        expires_at:
-          type: string
-          format: date-time
-          nullable: true
-        customer_message_snapshot:
-          type: string
-          nullable: true
-        deposit_rule:
-          "$ref": "#/components/schemas/PublicGeneratedOfferDepositBookingConfirmationRuleView"
-          nullable: true
     BookingOfferPaymentTermLineReadModel:
       type: object
       required:
@@ -5606,16 +5475,6 @@ components:
           nullable: true
         pdf_url:
           type: string
-        customer_confirmation_flow:
-          "$ref": "#/components/schemas/GeneratedOfferCustomerConfirmationFlow"
-          nullable: true
-        public_booking_confirmation_token:
-          type: string
-          nullable: true
-        public_booking_confirmation_expires_at:
-          type: string
-          format: date-time
-          nullable: true
         booking_confirmation:
           "$ref": "#/components/schemas/GeneratedOfferBookingConfirmation"
           nullable: true
@@ -6104,37 +5963,8 @@ components:
         payment_terms:
           "$ref": "#/components/schemas/BookingOfferPaymentTermsReadModel"
           nullable: true
-        customer_confirmation_flow:
-          "$ref": "#/components/schemas/PublicGeneratedOfferCustomerConfirmationFlowView"
-          nullable: true
-        public_booking_confirmation_expires_at:
-          type: string
-          format: date-time
-          nullable: true
         confirmed:
           type: boolean
-        booking_confirmation:
-          "$ref": "#/components/schemas/GeneratedOfferBookingConfirmationPublicSummary"
-          nullable: true
-    PublicGeneratedOfferAcceptResponse:
-      type: object
-      required:
-      - booking_id
-      - generated_offer_id
-      - confirmed
-      - status
-      properties:
-        booking_id:
-          type: string
-        generated_offer_id:
-          type: string
-        confirmed:
-          type: boolean
-        status:
-          type: string
-        customer_confirmation_flow:
-          "$ref": "#/components/schemas/PublicGeneratedOfferCustomerConfirmationFlowView"
-          nullable: true
         booking_confirmation:
           "$ref": "#/components/schemas/GeneratedOfferBookingConfirmationPublicSummary"
           nullable: true
@@ -6981,33 +6811,6 @@ components:
         actor:
           type: string
           nullable: true
-        customer_confirmation_flow:
-          "$ref": "#/components/schemas/BookingGenerateOfferCustomerConfirmationFlowRequest"
-          nullable: true
-    BookingGenerateOfferDepositBookingConfirmationRuleRequest:
-      type: object
-      required:
-      - payment_term_line_id
-      properties:
-        payment_term_line_id:
-          type: string
-    BookingGenerateOfferCustomerConfirmationFlowRequest:
-      type: object
-      required:
-      - mode
-      properties:
-        mode:
-          "$ref": "#/components/schemas/GeneratedOfferCustomerConfirmationFlowMode"
-        expires_at:
-          type: string
-          format: date-time
-          nullable: true
-        customer_message_snapshot:
-          type: string
-          nullable: true
-        deposit_rule:
-          "$ref": "#/components/schemas/BookingGenerateOfferDepositBookingConfirmationRuleRequest"
-          nullable: true
     OfferExchangeRateLine:
       type: object
       required:
@@ -7289,66 +7092,6 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/BookingDetail"
-  "/public/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}/access":
-    get:
-      operationId: public_generated_offer_access
-      summary: Public Generated Offer Access
-      tags:
-      - Public
-      security: []
-      parameters:
-      - name: booking_id
-        in: path
-        required: true
-        schema:
-          type: string
-      - name: generated_offer_id
-        in: path
-        required: true
-        schema:
-          type: string
-      - name: token
-        in: query
-        required: true
-        schema:
-          type: string
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/PublicGeneratedOfferAccessResponse"
-  "/public/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}/pdf":
-    get:
-      operationId: public_generated_offer_pdf
-      summary: Public Generated Offer Pdf
-      tags:
-      - Public
-      security: []
-      parameters:
-      - name: booking_id
-        in: path
-        required: true
-        schema:
-          type: string
-      - name: generated_offer_id
-        in: path
-        required: true
-        schema:
-          type: string
-      - name: token
-        in: query
-        required: true
-        schema:
-          type: string
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                type: object
   "/public/v1/bookings/{booking_id}/persons/{person_id}/traveler-details/access":
     get:
       operationId: public_traveler_details_access

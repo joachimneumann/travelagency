@@ -141,13 +141,8 @@ export const GMAIL_DRAFTS_CONFIG = Object.freeze({
   impersonatedEmail: normalizeText(process.env.GOOGLE_IMPERSONATED_EMAIL || "")
 });
 
-export const BOOKING_CONFIRMATION_TOKEN_CONFIG = Object.freeze({
-  secret: normalizeText(process.env.BOOKING_CONFIRMATION_TOKEN_SECRET || process.env.OFFER_ACCEPTANCE_TOKEN_SECRET || ""),
-  ttlMs: Math.max(60, Number(process.env.BOOKING_CONFIRMATION_TOKEN_TTL_SECONDS || process.env.OFFER_ACCEPTANCE_TOKEN_TTL_SECONDS || 60 * 60 * 24 * 7) || 60) * 1000
-});
-
 export const TRAVELER_DETAILS_TOKEN_CONFIG = Object.freeze({
-  secret: normalizeText(process.env.TRAVELER_DETAILS_TOKEN_SECRET || process.env.BOOKING_CONFIRMATION_TOKEN_SECRET || process.env.OFFER_ACCEPTANCE_TOKEN_SECRET || ""),
+  secret: normalizeText(process.env.TRAVELER_DETAILS_TOKEN_SECRET || ""),
   ttlMs: Math.max(60, Number(process.env.TRAVELER_DETAILS_TOKEN_TTL_SECONDS || 60 * 60 * 24) || 60) * 1000
 });
 

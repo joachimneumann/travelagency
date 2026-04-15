@@ -174,7 +174,6 @@ export function createApplicationRoutes({
     invoicePdfPath: pricingHelpers.invoicePdfPath,
     generatedOfferPdfPath: pricingHelpers.generatedOfferPdfPath,
     gmailDraftsConfig: runtime.gmailDraftsConfig,
-    bookingConfirmationTokenConfig: runtime.bookingConfirmationTokenConfig,
     travelerDetailsTokenConfig: runtime.travelerDetailsTokenConfig,
     mkdir,
     path,

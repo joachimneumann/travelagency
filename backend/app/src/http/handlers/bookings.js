@@ -14,10 +14,6 @@ import { normalizePdfLang } from "../../lib/pdf_i18n.js";
 import { cloneBookingForTesting } from "../../domain/booking_clone.js";
 import { createGeneratedOfferArtifactHelpers } from "../../domain/generated_offer_artifacts.js";
 import {
-  ensureGeneratedOfferBookingConfirmationTokenState,
-  synchronizeGeneratedOfferCustomerConfirmationFlowStatus
-} from "../../domain/booking_confirmation.js";
-import {
   normalizeTourDestinationCode,
   normalizeTourStyleCode,
   sortTourStyleCodes
@@ -26,7 +22,6 @@ import { createBookingQueryModule } from "./booking_query.js";
 import { createBookingChatHandlers } from "./booking_chat.js";
 import { createBookingCoreHandlers } from "./booking_core.js";
 import { createBookingFinanceHandlers } from "./booking_finance.js";
-import { createBookingConfirmationHandlers } from "./booking_confirmation.js";
 import { createBookingMediaHandlers } from "./booking_media.js";
 import { createBookingInvoiceHandlers } from "./booking_invoices.js";
 import { createBookingPeopleHandlers } from "./booking_people.js";
@@ -132,7 +127,6 @@ export function createBookingHandlers(deps) {
     invoicePdfPath,
     generatedOfferPdfPath,
     gmailDraftsConfig,
-    bookingConfirmationTokenConfig,
     travelerDetailsTokenConfig,
     mkdir,
     path,
@@ -150,25 +144,6 @@ export function createBookingHandlers(deps) {
     translateEntries,
     resolveLocalizedTourText
   } = deps;
-
-  function syncBookingGeneratedOfferRouteStatuses(booking) {
-    const generatedOffers = Array.isArray(booking?.generated_offers) ? booking.generated_offers : [];
-    let changed = false;
-    const now = nowIso();
-    for (const generatedOffer of generatedOffers) {
-      if (ensureGeneratedOfferBookingConfirmationTokenState(generatedOffer, { now })) {
-        changed = true;
-      }
-      if (synchronizeGeneratedOfferCustomerConfirmationFlowStatus(generatedOffer, { now })) {
-        changed = true;
-      }
-    }
-    return changed;
-  }
-
-  function syncBookingPublicPortalState(booking) {
-    return syncBookingGeneratedOfferRouteStatuses(booking);
-  }
 
   function unique(values) {
     return Array.from(new Set((Array.isArray(values) ? values : []).filter(Boolean)));
@@ -708,31 +683,6 @@ export function createBookingHandlers(deps) {
   });
 
   const {
-    handleGetPublicGeneratedOfferAccess,
-    handleGetPublicGeneratedOfferPdf
-  } = createBookingConfirmationHandlers({
-    readBodyJson,
-    sendJson,
-    readStore,
-    persistStore,
-    normalizeText,
-    normalizeBookingPricing,
-    nowIso,
-    addActivity,
-    formatMoney,
-    incrementBookingRevision,
-    convertBookingPricingToBaseCurrency,
-    randomUUID,
-    gmailDraftsConfig,
-    bookingConfirmationTokenConfig,
-    getBookingContactProfile,
-    getRequestIpAddress,
-    normalizeGeneratedOfferSnapshot,
-    ensureFrozenGeneratedOfferPdf,
-    sendFileWithCache
-  });
-
-  const {
     handlePostBookingPersonTravelerDetailsLink,
     handleGetPublicTravelerDetailsAccess,
     handlePatchPublicTravelerDetails,
@@ -1041,10 +991,6 @@ export function createBookingHandlers(deps) {
       return;
     }
 
-    if (syncBookingPublicPortalState(booking)) {
-      await persistStore(store);
-    }
-
     sendJson(res, 200, await buildBookingDetailResponse(booking, req));
   }
 
@@ -1168,8 +1114,6 @@ export function createBookingHandlers(deps) {
     handlePatchBookingPricing,
     handlePatchBookingOffer,
     handleGenerateBookingOffer,
-    handleGetPublicGeneratedOfferAccess,
-    handleGetPublicGeneratedOfferPdf,
     handlePostBookingPersonTravelerDetailsLink,
     handleGetPublicTravelerDetailsAccess,
     handlePatchPublicTravelerDetails,

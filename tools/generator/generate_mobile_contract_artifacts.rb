@@ -60,7 +60,7 @@ SWIFT_OPENAPI_HEADER = <<~SWIFT.freeze
 SWIFT
 
 def sync_generated_language_catalog!
-  stdout, stderr, status = Open3.capture3('node', File.join(ROOT, 'scripts', 'generate_language_catalog.mjs'))
+  stdout, stderr, status = Open3.capture3('node', File.join(ROOT, 'scripts', 'assets', 'generate_language_catalog.mjs'))
   unless status.success?
     warn stdout unless stdout.to_s.empty?
     warn stderr unless stderr.to_s.empty?
@@ -69,7 +69,7 @@ def sync_generated_language_catalog!
 end
 
 def sync_generated_tour_style_catalog!
-  stdout, stderr, status = Open3.capture3('node', File.join(ROOT, 'scripts', 'generate_tour_style_catalog.mjs'))
+  stdout, stderr, status = Open3.capture3('node', File.join(ROOT, 'scripts', 'assets', 'generate_tour_style_catalog.mjs'))
   unless status.success?
     warn stdout unless stdout.to_s.empty?
     warn stderr unless stderr.to_s.empty?

@@ -99,8 +99,8 @@ Examples:
 - read models such as `TravelPlanTemplateReadModel`
 
 Important rule:
-- transport-only fields such as `pdf_url`, `public_booking_confirmation_token`, or translation summaries belong in `model/api/`
-- persisted entity state such as `booking_confirmation_token_nonce` belongs in `model/entities/`
+- transport-only fields such as `pdf_url` or translation summaries belong in `model/api/`
+- persisted entity state such as `booking_confirmation` belongs in `model/entities/`
 - transport-only data must not leak back into entity types
 
 ### `model/enums/` and `model/common/`
@@ -154,15 +154,11 @@ Examples:
 - `entities.#GeneratedBookingOffer`
   - persisted commercial snapshot
   - frozen PDF metadata
-  - internal booking-confirmation token lifecycle metadata
-  - optional `customer_confirmation_flow`
   - optional `booking_confirmation`
 - `api.#GeneratedBookingOfferReadModel`
   - customer/admin-facing response shape
   - `pdf_url`
-  - `public_booking_confirmation_token`
-  - `public_booking_confirmation_expires_at`
-  - `customer_confirmation_flow`
+  - `booking_confirmation`
 
 - `entities.#TravelPlanTemplate`
   - persisted reusable travel plan
@@ -208,12 +204,11 @@ Current important runtime split:
 - `booking_finance.js`
   - offer editing, generation, Gmail draft creation, finance mutations, management approval
 - `booking_confirmation.js`
-  - public generated-offer access, PDF delivery, and confirmation-flow status responses
+  - generated-offer confirmation snapshot helpers and legacy cleanup
 - `travel_plan_templates.js`
   - template CRUD and apply flow
 - `booking_confirmation.js` in `domain/`
-  - customer confirmation flow normalization
-  - booking confirmation token state
+  - booking confirmation snapshot helpers
   - startup migration for legacy generated offers
 
 ### Layer 4: Persistence
@@ -229,9 +224,6 @@ Current local/runtime persistence is:
 ## Confirmation Boundary
 
 The current intended confirmation split for new data is:
-- `customer_confirmation_flow`
-  - customer-facing setup
-  - currently deposit payment only
 - `booking_confirmation`
   - immutable evidence record
   - currently `DEPOSIT_PAYMENT` or `MANAGEMENT`

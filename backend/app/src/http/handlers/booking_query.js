@@ -177,13 +177,12 @@ export function createBookingQueryModule(deps) {
     }, {
       lang: resolveRequestedContentLang(options),
       sourceLang: resolveRequestedSourceLang(options),
-      includeBookingConfirmationToken: Boolean(options?.includeBookingConfirmationToken),
       listMode: options?.listMode === true
     });
   }
 
   async function buildBookingDetailResponse(booking, options = {}) {
-    return { booking: await buildBookingPayload(booking, { ...options, includeBookingConfirmationToken: true }) };
+    return { booking: await buildBookingPayload(booking, options) };
   }
 
   return {

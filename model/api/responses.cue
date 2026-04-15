@@ -258,20 +258,6 @@ import (
 	accepted_currency?:                enums.#CurrencyCode
 }
 
-#PublicGeneratedOfferDepositBookingConfirmationRuleView: {
-	payment_term_label:    string & !=""
-	required_amount_cents: >=0 & int
-	currency:              enums.#CurrencyCode
-}
-
-#PublicGeneratedOfferCustomerConfirmationFlowView: {
-	mode:                       enums.#GeneratedOfferCustomerConfirmationFlowMode
-	status:                     enums.#GeneratedOfferCustomerConfirmationFlowStatus
-	expires_at?:                common.#Timestamp
-	customer_message_snapshot?: string
-	deposit_rule?:              #PublicGeneratedOfferDepositBookingConfirmationRuleView
-}
-
 #BookingOfferPaymentTermLineReadModel: entities.#BookingOfferPaymentTermLine & {
 	resolved_amount_cents: >=0 & int
 }
@@ -359,9 +345,6 @@ import (
 	management_approver_atp_staff_id?:       common.#Identifier
 	management_approver_label?:              string
 	pdf_url:                                 string & !=""
-	customer_confirmation_flow?:             entities.#GeneratedOfferCustomerConfirmationFlow
-	public_booking_confirmation_token?:      string & !=""
-	public_booking_confirmation_expires_at?: common.#Timestamp
 	booking_confirmation?:                   entities.#GeneratedOfferBookingConfirmation
 }
 
@@ -428,23 +411,6 @@ import (
 	person_id:                   common.#Identifier
 	traveler_details_token:      string & !=""
 	traveler_details_expires_at: common.#Timestamp
-}
-
-#PublicGeneratedOfferAccessResponse: {
-	booking_id:                              common.#Identifier
-	generated_offer_id:                      common.#Identifier
-	booking_name?:                           string
-	lang:                                    enums.#LanguageCode
-	currency:                                enums.#CurrencyCode
-	total_price_cents:                       int
-	comment?:                                string
-	created_at:                              common.#Timestamp
-	pdf_url?:                                string & !=""
-	payment_terms?:                          #BookingOfferPaymentTermsReadModel
-	customer_confirmation_flow?:             #PublicGeneratedOfferCustomerConfirmationFlowView
-	public_booking_confirmation_expires_at?: common.#Timestamp
-	confirmed:                               bool
-	booking_confirmation?:                   #GeneratedOfferBookingConfirmationPublicSummary
 }
 
 #PublicTravelerDetailsAccessResponse: {

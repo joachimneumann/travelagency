@@ -166,27 +166,6 @@ import (
 	total_price_cents:  int
 }
 
-#GeneratedOfferDepositBookingConfirmationRule: {
-	payment_term_line_id:  common.#Identifier
-	payment_term_label:    string & !=""
-	required_amount_cents: >=0 & int
-	currency:              enums.#CurrencyCode
-	aggregation_mode:      "SUM_LINKED_PAID_PAYMENTS"
-}
-
-#GeneratedOfferCustomerConfirmationFlow: {
-	mode:                       enums.#GeneratedOfferCustomerConfirmationFlowMode
-	status:                     enums.#GeneratedOfferCustomerConfirmationFlowStatus
-	selected_at:                common.#Timestamp
-	selected_by_atp_staff_id:   common.#Identifier
-	expires_at?:                common.#Timestamp
-	customer_message_snapshot?: string
-
-	if mode == "DEPOSIT_PAYMENT" {
-		deposit_rule: #GeneratedOfferDepositBookingConfirmationRule
-	}
-}
-
 #GeneratedOfferBookingConfirmation: {
 	id:                                common.#Identifier
 	accepted_at:                       common.#Timestamp
@@ -242,10 +221,5 @@ import (
 	management_approver_label?:             string
 	pdf_frozen_at?:                         common.#Timestamp
 	pdf_sha256?:                            string & =~"^[a-f0-9]{64}$"
-	customer_confirmation_flow?:            #GeneratedOfferCustomerConfirmationFlow
-	booking_confirmation_token_nonce?:      string & !=""
-	booking_confirmation_token_created_at?: common.#Timestamp
-	booking_confirmation_token_expires_at?: common.#Timestamp
-	booking_confirmation_token_revoked_at?: common.#Timestamp
 	booking_confirmation?:                  #GeneratedOfferBookingConfirmation
 }

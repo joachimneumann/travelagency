@@ -31,7 +31,6 @@ import {
   META_WEBHOOK_CONFIG,
   MOBILE_APP_CONFIG,
   nowIso,
-  BOOKING_CONFIRMATION_TOKEN_CONFIG,
   OFFER_CATEGORIES,
   OFFER_CATEGORY_ORDER,
   PAYMENT_STATUSES,
@@ -179,7 +178,6 @@ const services = createBackendServices({
     generatedCurrencyDefinition: GENERATED_CURRENCY_HELPERS.generatedCurrencyDefinition,
     normalizeGeneratedCurrencyCode: GENERATED_CURRENCY_HELPERS.normalizeGeneratedCurrencyCode,
     gmailDraftsConfig: GMAIL_DRAFTS_CONFIG,
-    bookingConfirmationTokenConfig: BOOKING_CONFIRMATION_TOKEN_CONFIG,
     travelerDetailsTokenConfig: TRAVELER_DETAILS_TOKEN_CONFIG,
     keycloakDirectoryConfig: KEYCLOAK_DIRECTORY_CONFIG,
     metaWebhookConfig: META_WEBHOOK_CONFIG,
@@ -242,7 +240,6 @@ const applicationRuntime = Object.freeze({
   appRoles: APP_ROLES,
   baseCurrency: BASE_CURRENCY,
   gmailDraftsConfig: GMAIL_DRAFTS_CONFIG,
-  bookingConfirmationTokenConfig: BOOKING_CONFIRMATION_TOKEN_CONFIG,
   travelerDetailsTokenConfig: TRAVELER_DETAILS_TOKEN_CONFIG,
   execFile,
   paths: RUNTIME_PATHS,
@@ -281,10 +278,7 @@ export async function createBackendHandler({ port = PORT } = {}) {
   const backfilledBookingOffers = startupStore.__bookingOfferWritebackNeeded === true;
   const prunedLegacyBookingState = pruneLegacyBookingState(startupStore);
   const collapsedGeneratedOfferPaymentTerms = collapseGeneratedOfferPaymentTermsState(startupStore);
-  const backfilledGeneratedOfferBookingConfirmationState = backfillGeneratedOfferBookingConfirmationState(startupStore, {
-    now: nowIso(),
-    ttlMs: BOOKING_CONFIRMATION_TOKEN_CONFIG.ttlMs
-  });
+  const backfilledGeneratedOfferBookingConfirmationState = backfillGeneratedOfferBookingConfirmationState(startupStore);
   const prunedLegacyGeneratedOffers = pruneLegacyGeneratedOfferConfirmationState(startupStore);
   if (prunedLegacyGeneratedOffers.removedGeneratedOfferIds.length) {
     await Promise.all(

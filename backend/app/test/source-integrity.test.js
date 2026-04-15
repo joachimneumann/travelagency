@@ -329,7 +329,7 @@ test("backend startup writes back legacy offers with explicit offer detail level
   );
 });
 
-test("backend startup writes back legacy generated-offer confirmation fields before serving requests", async () => {
+test("backend startup strips obsolete public generated-offer confirmation fields before serving requests", async () => {
   const serverPath = path.resolve(__dirname, "..", "src", "server.js");
   const confirmationDomainPath = path.resolve(__dirname, "..", "src", "domain", "booking_confirmation.js");
   const serverSource = await readFile(serverPath, "utf8");
@@ -337,13 +337,13 @@ test("backend startup writes back legacy generated-offer confirmation fields bef
 
   assert.match(
     confirmationDomainSource,
-    /function migratePersistedGeneratedOfferBookingConfirmationState\(generatedOffer\) \{[\s\S]*customer_confirmation_flow[\s\S]*acceptance_route[\s\S]*booking_confirmation_token_nonce/,
-    "Generated-offer confirmation migration should rewrite legacy route and token field names into the current persisted shape"
+    /function migratePersistedGeneratedOfferBookingConfirmationState\(generatedOffer\) \{[\s\S]*acceptance_route[\s\S]*customer_confirmation_flow[\s\S]*booking_confirmation_token_nonce/,
+    "Generated-offer confirmation migration should strip obsolete public confirmation route and token fields from persisted offers"
   );
   assert.match(
     serverSource,
-    /backfillGeneratedOfferBookingConfirmationState\(startupStore,[\s\S]*persistStore\(startupStore\)/,
-    "Backend startup should persist legacy generated-offer confirmation field migrations before serving requests"
+    /const backfilledGeneratedOfferBookingConfirmationState = backfillGeneratedOfferBookingConfirmationState\(startupStore\);[\s\S]*backfilledGeneratedOfferBookingConfirmationState[\s\S]*persistStore\(startupStore\)/,
+    "Backend startup should persist obsolete generated-offer confirmation field cleanup before serving requests"
   );
 });
 

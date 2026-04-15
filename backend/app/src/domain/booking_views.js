@@ -19,7 +19,6 @@ export function createBookingViewHelpers({
   baseCurrency,
   appRoles,
   gmailDraftsConfig,
-  bookingConfirmationTokenConfig,
   translationEnabled,
   normalizeStringArray,
   normalizeEmail,
@@ -40,7 +39,6 @@ export function createBookingViewHelpers({
   listBookingTravelPlanPdfs,
   sendJson
 }) {
-  const bookingConfirmationTokenSecret = normalizeText(bookingConfirmationTokenConfig?.secret);
   let assignableKeycloakUserLabelsPromise = null;
 
   function resolveAssignableKeycloakUserLabelMap() {
@@ -256,10 +254,7 @@ export function createBookingViewHelpers({
   }
 
   function publicGeneratedOfferFields(generatedOffer, options = {}) {
-    return buildGeneratedOfferTransportFields(generatedOffer, {
-      secret: bookingConfirmationTokenSecret,
-      includeBookingConfirmationToken: Boolean(options?.includeBookingConfirmationToken)
-    });
+    return buildGeneratedOfferTransportFields(generatedOffer, options);
   }
 
   async function buildGeneratedOfferSnapshotReadModel(generatedOffer, defaultCurrency, options = {}) {
@@ -315,10 +310,7 @@ export function createBookingViewHelpers({
       ? []
       : await Promise.all(
         (Array.isArray(normalizedBooking?.generated_offers) ? normalizedBooking.generated_offers : []).map(async (generatedOffer) => ({
-          ...(await buildGeneratedOfferSnapshotReadModel(generatedOffer, offerCurrency, {
-            lang,
-            includeBookingConfirmationToken: Boolean(options?.includeBookingConfirmationToken)
-          })),
+          ...(await buildGeneratedOfferSnapshotReadModel(generatedOffer, offerCurrency, { lang })),
           pdf_url: `/api/v1/bookings/${encodeURIComponent(normalizedBooking.id)}/generated-offers/${encodeURIComponent(generatedOffer.id)}/pdf`
         }))
       );

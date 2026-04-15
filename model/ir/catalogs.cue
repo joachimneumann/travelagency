@@ -21,8 +21,6 @@ IR: {
 		offerPaymentTermKinds: [for kind in enumModel.OfferPaymentTermKindCatalog {{code: kind}}]
 		offerPaymentAmountModes: [for mode in enumModel.OfferPaymentAmountModeCatalog {{code: mode}}]
 		offerPaymentDueTypes: [for dueType in enumModel.OfferPaymentDueTypeCatalog {{code: dueType}}]
-		generatedOfferCustomerConfirmationFlowModes: [for mode in enumModel.GeneratedOfferCustomerConfirmationFlowModeCatalog {{code: mode}}]
-		generatedOfferCustomerConfirmationFlowStatuses: [for status in enumModel.GeneratedOfferCustomerConfirmationFlowStatusCatalog {{code: status}}]
 		bookingConfirmationMethods: [for method in enumModel.BookingConfirmationMethodCatalog {{code: method}}]
 		tourStyles: [for style in enumModel.TourStyleCatalog {{
 			code:  style

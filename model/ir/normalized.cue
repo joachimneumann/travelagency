@@ -56,8 +56,6 @@ IR: {
 		OfferPaymentTermKind: {catalog: "offerPaymentTermKinds"}
 		OfferPaymentAmountMode: {catalog: "offerPaymentAmountModes"}
 		OfferPaymentDueType: {catalog: "offerPaymentDueTypes"}
-		GeneratedOfferCustomerConfirmationFlowMode: {catalog: "generatedOfferCustomerConfirmationFlowModes"}
-		GeneratedOfferCustomerConfirmationFlowStatus: {catalog: "generatedOfferCustomerConfirmationFlowStatuses"}
 		BookingConfirmationMethod: {catalog: "bookingConfirmationMethods"}
 		TourStyleCode: {catalog: "tourStyles"}
 		CountryCode: {catalog: "countries"}
@@ -575,34 +573,6 @@ IR: {
 			]
 		},
 		{
-			name:       "GeneratedOfferDepositBookingConfirmationRule"
-			domain:     "booking"
-			module:     "entities"
-			sourceType: "entities.#GeneratedOfferDepositBookingConfirmationRule"
-			fields: [
-				{name: "payment_term_line_id", kind: "scalar", typeName: "Identifier", required: true},
-				{name: "payment_term_label", kind: "scalar", typeName: "string", required: true},
-				{name: "required_amount_cents", kind: "scalar", typeName: "int", required: true},
-				{name: "currency", kind: "enum", typeName: "CurrencyCode", required: true},
-				{name: "aggregation_mode", kind: "scalar", typeName: "string", required: true},
-			]
-		},
-		{
-			name:       "GeneratedOfferCustomerConfirmationFlow"
-			domain:     "booking"
-			module:     "entities"
-			sourceType: "entities.#GeneratedOfferCustomerConfirmationFlow"
-			fields: [
-				{name: "mode", kind: "enum", typeName: "GeneratedOfferCustomerConfirmationFlowMode", required: true},
-				{name: "status", kind: "enum", typeName: "GeneratedOfferCustomerConfirmationFlowStatus", required: true},
-				{name: "selected_at", kind: "scalar", typeName: "Timestamp", required: true},
-				{name: "selected_by_atp_staff_id", kind: "scalar", typeName: "Identifier", required: true},
-				{name: "expires_at", kind: "scalar", typeName: "Timestamp", required: false},
-				{name: "customer_message_snapshot", kind: "scalar", typeName: "string", required: false},
-				{name: "deposit_rule", kind: "entity", typeName: "GeneratedOfferDepositBookingConfirmationRule", required: false},
-			]
-		},
-		{
 			name:       "BookingOfferTripPriceInternal"
 			domain:     "booking"
 			module:     "entities"
@@ -740,11 +710,6 @@ IR: {
 				{name: "management_approver_label", kind: "scalar", typeName: "string", required: false},
 				{name: "pdf_frozen_at", kind: "scalar", typeName: "Timestamp", required: false},
 				{name: "pdf_sha256", kind: "scalar", typeName: "string", required: false},
-				{name: "customer_confirmation_flow", kind: "entity", typeName: "GeneratedOfferCustomerConfirmationFlow", required: false},
-				{name: "booking_confirmation_token_nonce", kind: "scalar", typeName: "string", required: false},
-				{name: "booking_confirmation_token_created_at", kind: "scalar", typeName: "Timestamp", required: false},
-				{name: "booking_confirmation_token_expires_at", kind: "scalar", typeName: "Timestamp", required: false},
-				{name: "booking_confirmation_token_revoked_at", kind: "scalar", typeName: "Timestamp", required: false},
 				{name: "booking_confirmation", kind: "entity", typeName: "GeneratedOfferBookingConfirmation", required: false},
 			]
 		},
@@ -868,30 +833,6 @@ IR: {
 			]
 		},
 		{
-			name:       "PublicGeneratedOfferDepositBookingConfirmationRuleView"
-			domain:     "api"
-			module:     "api"
-			sourceType: "api.#PublicGeneratedOfferDepositBookingConfirmationRuleView"
-			fields: [
-				{name: "payment_term_label", kind: "scalar", typeName: "string", required: true},
-				{name: "required_amount_cents", kind: "scalar", typeName: "int", required: true},
-				{name: "currency", kind: "enum", typeName: "CurrencyCode", required: true},
-			]
-		},
-		{
-			name:       "PublicGeneratedOfferCustomerConfirmationFlowView"
-			domain:     "api"
-			module:     "api"
-			sourceType: "api.#PublicGeneratedOfferCustomerConfirmationFlowView"
-			fields: [
-				{name: "mode", kind: "enum", typeName: "GeneratedOfferCustomerConfirmationFlowMode", required: true},
-				{name: "status", kind: "enum", typeName: "GeneratedOfferCustomerConfirmationFlowStatus", required: true},
-				{name: "expires_at", kind: "scalar", typeName: "Timestamp", required: false},
-				{name: "customer_message_snapshot", kind: "scalar", typeName: "string", required: false},
-				{name: "deposit_rule", kind: "transport", typeName: "PublicGeneratedOfferDepositBookingConfirmationRuleView", required: false},
-			]
-		},
-		{
 			name:       "BookingOfferPaymentTermLineReadModel"
 			domain:     "api"
 			module:     "api"
@@ -1006,9 +947,6 @@ IR: {
 				{name: "management_approver_atp_staff_id", kind: "scalar", typeName: "Identifier", required: false},
 				{name: "management_approver_label", kind: "scalar", typeName: "string", required: false},
 				{name: "pdf_url", kind: "scalar", typeName: "string", required: true},
-				{name: "customer_confirmation_flow", kind: "entity", typeName: "GeneratedOfferCustomerConfirmationFlow", required: false},
-				{name: "public_booking_confirmation_token", kind: "scalar", typeName: "string", required: false},
-				{name: "public_booking_confirmation_expires_at", kind: "scalar", typeName: "Timestamp", required: false},
 				{name: "booking_confirmation", kind: "entity", typeName: "GeneratedOfferBookingConfirmation", required: false},
 			]
 		},
@@ -1323,23 +1261,7 @@ IR: {
 				{name: "created_at", kind: "scalar", typeName: "Timestamp", required: true},
 				{name: "pdf_url", kind: "scalar", typeName: "string", required: false},
 				{name: "payment_terms", kind: "transport", typeName: "BookingOfferPaymentTermsReadModel", required: false},
-				{name: "customer_confirmation_flow", kind: "transport", typeName: "PublicGeneratedOfferCustomerConfirmationFlowView", required: false},
-				{name: "public_booking_confirmation_expires_at", kind: "scalar", typeName: "Timestamp", required: false},
 				{name: "confirmed", kind: "scalar", typeName: "bool", required: true},
-				{name: "booking_confirmation", kind: "transport", typeName: "GeneratedOfferBookingConfirmationPublicSummary", required: false},
-			]
-		},
-		{
-			name:       "PublicGeneratedOfferAcceptResponse"
-			domain:     "api"
-			module:     "api"
-			sourceType: "api.#PublicGeneratedOfferAcceptResponse"
-			fields: [
-				{name: "booking_id", kind: "scalar", typeName: "Identifier", required: true},
-				{name: "generated_offer_id", kind: "scalar", typeName: "Identifier", required: true},
-				{name: "confirmed", kind: "scalar", typeName: "bool", required: true},
-				{name: "status", kind: "scalar", typeName: "string", required: true},
-				{name: "customer_confirmation_flow", kind: "transport", typeName: "PublicGeneratedOfferCustomerConfirmationFlowView", required: false},
 				{name: "booking_confirmation", kind: "transport", typeName: "GeneratedOfferBookingConfirmationPublicSummary", required: false},
 			]
 		},
@@ -1929,28 +1851,6 @@ IR: {
 				{name: "expected_offer_revision", kind: "scalar", typeName: "int", required: false},
 				{name: "comment", kind: "scalar", typeName: "string", required: false},
 				{name: "actor", kind: "scalar", typeName: "string", required: false},
-				{name: "customer_confirmation_flow", kind: "transport", typeName: "BookingGenerateOfferCustomerConfirmationFlowRequest", required: false},
-			]
-		},
-		{
-			name:       "BookingGenerateOfferDepositBookingConfirmationRuleRequest"
-			domain:     "api"
-			module:     "api"
-			sourceType: "api.#BookingGenerateOfferDepositBookingConfirmationRuleRequest"
-			fields: [
-				{name: "payment_term_line_id", kind: "scalar", typeName: "Identifier", required: true},
-			]
-		},
-		{
-			name:       "BookingGenerateOfferCustomerConfirmationFlowRequest"
-			domain:     "api"
-			module:     "api"
-			sourceType: "api.#BookingGenerateOfferCustomerConfirmationFlowRequest"
-			fields: [
-				{name: "mode", kind: "enum", typeName: "GeneratedOfferCustomerConfirmationFlowMode", required: true},
-				{name: "expires_at", kind: "scalar", typeName: "Timestamp", required: false},
-				{name: "customer_message_snapshot", kind: "scalar", typeName: "string", required: false},
-				{name: "deposit_rule", kind: "transport", typeName: "BookingGenerateOfferDepositBookingConfirmationRuleRequest", required: false},
 			]
 		},
 		{

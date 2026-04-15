@@ -280,24 +280,9 @@ import (
 }
 
 #BookingGenerateOfferRequest: {
-	expected_offer_revision?:    >=0 & int
-	comment?:                    string
-	actor?:                      string
-	customer_confirmation_flow?: #BookingGenerateOfferCustomerConfirmationFlowRequest
-}
-
-#BookingGenerateOfferDepositBookingConfirmationRuleRequest: {
-	payment_term_line_id: common.#Identifier
-}
-
-#BookingGenerateOfferCustomerConfirmationFlowRequest: {
-	mode:                       enums.#GeneratedOfferCustomerConfirmationFlowMode
-	expires_at?:                common.#Timestamp
-	customer_message_snapshot?: string
-
-	if mode == "DEPOSIT_PAYMENT" {
-		deposit_rule: #BookingGenerateOfferDepositBookingConfirmationRuleRequest
-	}
+	expected_offer_revision?: >=0 & int
+	comment?:                 string
+	actor?:                   string
 }
 
 #BookingGeneratedOfferUpdateRequest: {

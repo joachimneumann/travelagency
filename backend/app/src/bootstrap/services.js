@@ -95,7 +95,6 @@ export function createBackendServices({
     baseCurrency: runtime.baseCurrency,
     appRoles: runtime.appRoles,
     gmailDraftsConfig: runtime.gmailDraftsConfig,
-    bookingConfirmationTokenConfig: runtime.bookingConfirmationTokenConfig,
     travelerDetailsTokenConfig: runtime.travelerDetailsTokenConfig,
     translationEnabled: runtime.translationEnabled,
     normalizeStringArray: support.normalizeStringArray,

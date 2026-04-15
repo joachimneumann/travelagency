@@ -2064,26 +2064,6 @@ function buildClosingBody(generatedOffer, formatMoneyValue, lang) {
   }
   const override = textOrNull(resolveBookingPdfPersonalizationText(booking?.pdf_personalization, "offer", "closing", lang, { sourceLang: lang }));
   if (override) return override;
-  const routeMode = normalizeText(generatedOffer?.customer_confirmation_flow?.mode).toUpperCase();
-  if (routeMode === "DEPOSIT_PAYMENT") {
-    const routeRule = generatedOffer?.customer_confirmation_flow?.deposit_rule && typeof generatedOffer.customer_confirmation_flow.deposit_rule === "object"
-      ? generatedOffer.customer_confirmation_flow.deposit_rule
-      : null;
-    const paymentLabel = textOrNull(routeRule?.payment_term_label) || pdfT(lang, "offer.payment_term.default_label", "Payment term {index}", { index: 1 });
-    const paymentAmount = formatMoneyValue(
-      Number(routeRule?.required_amount_cents || generatedOffer?.total_price_cents || 0),
-      routeRule?.currency || generatedOffer?.currency
-    );
-    return pdfT(
-      lang,
-      "offer.closing_body_deposit",
-      "To confirm this offer, please pay the {label} of {amount}. Once we receive this payment, we will confirm your booking and guide you through the next steps.",
-      {
-        label: paymentLabel,
-        amount: paymentAmount
-      }
-    );
-  }
   return pdfT(
     lang,
     "offer.closing_body",

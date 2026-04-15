@@ -566,13 +566,8 @@ Recommended columns:
 - `management_approver_label`
 - `pdf_frozen_at`
 - `pdf_sha256`
-- `booking_confirmation_token_nonce`
-- `booking_confirmation_token_created_at`
-- `booking_confirmation_token_expires_at`
-- `booking_confirmation_token_revoked_at`
 - `offer_snapshot_jsonb`
 - `travel_plan_snapshot_jsonb`
-- `customer_confirmation_flow_jsonb`
 - `booking_confirmation_jsonb`
 
 Notes:
