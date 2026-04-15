@@ -166,14 +166,14 @@ Reverse proxy configs:
 - `deploy/Caddyfile.local`
 
 Main local scripts:
-- `scripts/local/start_local_all.sh`
-- `scripts/local/start_local_backend.sh`
-- `scripts/local/start_local_frontend.sh`
-- `scripts/local/start_local_keycloak.sh`
-- matching `restart_*` and `stop_*` scripts
+- `scripts/local/deploy_local_all.sh`
+- `scripts/local/deploy_local_backend.sh`
+- `scripts/local/deploy_local_frontend.sh`
+- `scripts/local/deploy_local_backend_frontend.sh`
+- lower-level helpers remain under `scripts/local/start_*`, `restart_*`, and `stop_*`
 
 Main staging update script:
-- `scripts/deploy/update_staging.sh`
+- `scripts/staging/deploy_staging_all.sh`
 
 ## 6. Current Exceptions to the Clean Model-Driven Story
 

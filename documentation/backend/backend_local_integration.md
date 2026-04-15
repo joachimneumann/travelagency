@@ -34,7 +34,7 @@ Frontend:
 
 ```bash
 cd ~/projects/travelagency
-./scripts/local/start_local_frontend.sh
+./scripts/local/deploy_local_frontend.sh
 ```
 
 Optional local Keycloak:

@@ -76,13 +76,13 @@ def ensure_local_stack(backend_port, frontend_port, skip_restart):
         wait_for_http(backend_health_url, timeout_seconds=2)
     except Exception:  # noqa: BLE001
         log("Starting local backend ...")
-        run_local_script("scripts/local/start_local_backend.sh")
+        run_local_script("scripts/local/deploy_local_backend.sh")
 
     try:
         wait_for_http(frontend_root_url, timeout_seconds=2)
     except Exception:  # noqa: BLE001
         log("Starting local frontend ...")
-        run_local_script("scripts/local/start_local_frontend.sh")
+        run_local_script("scripts/local/deploy_local_frontend.sh")
 
     wait_for_http(backend_health_url)
     wait_for_http(frontend_root_url)
