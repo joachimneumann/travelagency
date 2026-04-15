@@ -8,11 +8,13 @@ if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
 Usage:
   ./scripts/production/deploy_production_all.sh
 
-Deploys the full production stack and static website.
+Deploys the full production stack, reloads Caddy, and publishes the static website.
 EOF
   exit 0
 fi
 
 "$ROOT_DIR/scripts/deploy/update_production.sh" all
+echo
+"$ROOT_DIR/scripts/production/deploy_production_caddy.sh"
 echo
 "$ROOT_DIR/scripts/deploy/deploy_static_website.sh"

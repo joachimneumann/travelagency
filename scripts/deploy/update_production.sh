@@ -17,6 +17,25 @@ Examples:
 EOF
 }
 
+should_run_tests() {
+  local service
+  for service in "$@"; do
+    case "$service" in
+      backend)
+        return 0
+        ;;
+    esac
+  done
+  return 1
+}
+
+run_production_tests() {
+  echo "Running production pre-deploy tests..."
+  docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" build backend
+  docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" run --rm --no-deps backend \
+    node --test test/mobile-contract.test.js test/source-integrity.test.js test/http_routes.test.js
+}
+
 normalize_services() {
   if [[ "$#" -eq 0 ]]; then
     printf '%s\n' backend
@@ -57,6 +76,10 @@ if [[ ! -f "$ENV_FILE" ]]; then
 fi
 
 mapfile -t SERVICES < <(normalize_services "$@")
+
+if should_run_tests "${SERVICES[@]}"; then
+  run_production_tests
+fi
 
 generate_public_homepage_assets
 

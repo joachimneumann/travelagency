@@ -525,9 +525,9 @@
     "updated_at": "2026-04-02T15:09:31.781Z"
   },
   "faq.a3": {
-    "source_hash": "94fab90bf4ee52cefb2197d5dbae1b7da6fa15b9994480119c0e731330af053c",
-    "origin": "legacy",
-    "updated_at": "2026-04-02T15:09:31.781Z"
+    "source_hash": "615ba1c05667e300ff8fb15507038a32619b28495d8ca75e3c90427da786d3fc",
+    "origin": "machine",
+    "updated_at": "2026-04-15T19:41:12.692Z"
   },
   "faq.q4": {
     "source_hash": "11f7eed90a13097ca9369b63504e6cf92660cf7c245b895bedc832a58e034c7c",
@@ -558,6 +558,16 @@
     "source_hash": "c75f5af9ed0206da7cdc609693fd6cb2d17552cfcd33be3d27a93e5f75d8de18",
     "origin": "legacy",
     "updated_at": "2026-04-02T15:09:31.781Z"
+  },
+  "faq.q7": {
+    "source_hash": "e71e7a61c56a5470a7fa7b5f5e6fd8f275dc7a7dbe500abe69631f1a2889ec97",
+    "origin": "machine",
+    "updated_at": "2026-04-15T19:41:12.692Z"
+  },
+  "faq.a7": {
+    "source_hash": "e7079a693dca9c3ee3930f1782e38cd4540c8264d74160ad25c6f5382d47906c",
+    "origin": "machine",
+    "updated_at": "2026-04-15T19:41:12.692Z"
   },
   "contact.heading": {
     "source_hash": "284ebcd1f34261804c0bcf1d98f5b9c5cdefaccd36289012d5c0d02293f9ba1f",

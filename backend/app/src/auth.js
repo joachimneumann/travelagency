@@ -578,9 +578,24 @@ export function createAuth({ port }) {
     });
   }
 
+  async function handleProductionAccessCheck(req, res) {
+    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, private");
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
+
+    if (!getSessionFromRequest(req)) {
+      redirect(res, "/");
+      return;
+    }
+
+    res.writeHead(204);
+    res.end();
+  }
+
   return {
     routes,
     handleAuthMe,
+    handleProductionAccessCheck,
     pruneState,
     isKeycloakEnabled,
     hasSession,

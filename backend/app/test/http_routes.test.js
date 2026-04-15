@@ -23,3 +23,15 @@ test("buildApiRoutes throws when a declared handler key is missing", () => {
     /Missing route handler.*handlePatchBookingCustomerLanguage/
   );
 });
+
+test("buildApiRoutes includes the production access check route", () => {
+  const handlers = new Proxy({}, {
+    get: () => () => {}
+  });
+
+  const routes = buildApiRoutes({ handlers });
+  assert.equal(
+    routes.some((route) => route.method === "GET" && route.pattern.test("/production-access/check")),
+    true
+  );
+});

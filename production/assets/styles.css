@@ -77,6 +77,29 @@ body::before {
   text-transform: var(--text-transform-caps);
 }
 
+.simple-login-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0.85rem 1.4rem;
+  border-radius: 999px;
+  border: 1px solid var(--line-dark-soft);
+  background: var(--surface-page);
+  color: var(--ink);
+  text-decoration: none;
+  font-weight: var(--font-weight-semibold);
+  box-shadow: 0 16px 36px var(--shadow-card-10);
+  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;
+}
+
+.simple-login-link:hover,
+.simple-login-link:focus-visible {
+  transform: translateY(-1px);
+  border-color: var(--line-dark);
+  box-shadow: 0 20px 42px var(--shadow-card-15);
+}
+
 @media (max-width: 640px) {
   .simple-shell {
     width: min(100% - 1rem, 920px);

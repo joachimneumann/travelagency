@@ -32,7 +32,7 @@
 }
 
 (production_html_no_cache_headers) {
-  @production_html path /bookings.html /booking.html /persons.html /marketing_tour.html /marketing_tours.html /standard-travel-plans.html /standard-travel-plan.html /settings.html /emergency.html /privacy.html /traveler-details.html
+  @production_html path /app-home.html /bookings.html /booking.html /persons.html /marketing_tour.html /marketing_tours.html /standard-travel-plans.html /standard-travel-plan.html /settings.html /emergency.html /privacy.html /traveler-details.html
   header @production_html {
     Cache-Control "no-store, no-cache, must-revalidate"
     Pragma "no-cache"
@@ -87,6 +87,16 @@ asiatravelplan.com {
   handle @traveler_details_page {
     root * /production-app
     rewrite * /frontend/pages/traveler-details.html
+    file_server
+  }
+
+  @production_authenticated_home path /app-home.html
+  forward_auth @production_authenticated_home host.docker.internal:8788 {
+    uri /production-access/check
+  }
+  handle @production_authenticated_home {
+    root * /production-app
+    rewrite * /frontend/pages/index.html
     file_server
   }
 
