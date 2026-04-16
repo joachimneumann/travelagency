@@ -1,0 +1,24 @@
+services:
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - /srv/asiatravelplan-staging:/srv:ro
+      - /srv/placeholder:/placeholder:ro
+      - /srv/asiatravelplan:/production-app:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  caddy_data:
+    external: true
+    name: asiatravelplan_caddy_data
+  caddy_config:
+    external: true
+    name: asiatravelplan_caddy_config
