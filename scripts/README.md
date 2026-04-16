@@ -49,3 +49,37 @@ Common entry points:
 ./scripts/i18n/translate check
 node scripts/assets/generate_public_homepage_assets.mjs
 ```
+
+## Server Deploy Layout
+
+Current `atp` layout:
+
+- production checkout: `/srv/asiatravelplan`
+- staging checkout: `/srv/asiatravelplan-staging`
+- production app compose project: `asiatravelplan`
+- staging app compose project: `asiatravelplan-staging`
+- shared public Caddy compose project: `asiatravelplan-public`
+
+The deploy scripts now pin the correct compose project names internally.
+Do not rely on a shell-wide `export COMPOSE_PROJECT_NAME=...` anymore.
+
+Canonical server commands:
+
+```bash
+# production app stack
+cd /srv/asiatravelplan
+./scripts/deploy/update_production.sh all
+./scripts/production/deploy_production_caddy.sh
+./scripts/production/deploy_production_frontend.sh
+
+# staging app stack
+cd /srv/asiatravelplan-staging
+./scripts/deploy/update_staging.sh all
+```
+
+Current public routing notes:
+
+- `asiatravelplan-public` owns ports `80` and `443`
+- staging backend is published on host port `8789`
+- staging Keycloak is published on host port `8083`
+- the public Caddy proxies staging traffic through those host ports

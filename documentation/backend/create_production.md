@@ -8,6 +8,33 @@ Status:
 - keep the placeholder page public for now
 - allow authenticated staff to reach the full homepage through a temporary authenticated entrypoint
 
+## Current Server Layout
+
+Current `atp` deployment layout:
+
+- production checkout: `/srv/asiatravelplan`
+- staging checkout: `/srv/asiatravelplan-staging`
+- production app compose project: `asiatravelplan`
+- staging app compose project: `asiatravelplan-staging`
+- shared public Caddy compose project: `asiatravelplan-public`
+
+Operational rule:
+- production deploys are run from `/srv/asiatravelplan`
+- staging deploys are run from `/srv/asiatravelplan-staging`
+- do not use a shell-wide `export COMPOSE_PROJECT_NAME=...`
+- the deploy scripts now pin the correct compose project names internally
+
+Shared public Caddy now lives outside the staging app stack:
+- it is started from `/srv/asiatravelplan/docker-compose.caddy.yml`
+- it serves both `asiatravelplan.com` and the staging hostnames
+- it owns public ports `80` and `443`
+
+Current staging proxy wiring for the shared public Caddy:
+- staging backend host port: `8789`
+- staging Keycloak host port: `8083`
+
+Those staging host ports are used only so the dedicated public Caddy can proxy into the staging app stack from its own compose project.
+
 ## Goal
 
 Production should be served from:
@@ -180,6 +207,22 @@ Normal production deploy after bootstrap:
 ./scripts/production/deploy_production_all.sh
 ```
 
+Current recommended production deploy on `atp`:
+
+```bash
+cd /srv/asiatravelplan
+./scripts/deploy/update_production.sh all
+./scripts/production/deploy_production_caddy.sh
+./scripts/production/deploy_production_frontend.sh
+```
+
+Current recommended staging deploy on `atp`:
+
+```bash
+cd /srv/asiatravelplan-staging
+./scripts/deploy/update_staging.sh all
+```
+
 ## Predeploy Validation To Add
 
 Before enabling the production route change, the plan is to run:
@@ -219,4 +262,3 @@ Alternative not recommended for this interim step:
 - make `/` itself dynamically switch between placeholder and full homepage based on login state
 
 That can work, but it introduces more routing and auth-coupling risk than needed for a one-week transition.
-
