@@ -1,3 +1,5 @@
+name: asiatravelplan-public
+
 services:
   caddy:
     image: caddy:2

@@ -4,6 +4,9 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 COMPOSE_FILE="docker-compose.staging.yml"
 ENV_FILE=".env.staging"
+PROJECT_NAME="${PROJECT_NAME:-asiatravelplan-staging}"
+
+source "$ROOT_DIR/scripts/lib/docker_runtime.sh"
 
 usage() {
   cat <<'EOF'
@@ -60,8 +63,8 @@ should_run_tests() {
 
 run_staging_tests() {
   echo "Running staging pre-deploy tests..."
-  docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" build backend
-  docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" run --rm --no-deps backend \
+  docker_compose -p "$PROJECT_NAME" --env-file "$ENV_FILE" -f "$COMPOSE_FILE" build backend
+  docker_compose -p "$PROJECT_NAME" --env-file "$ENV_FILE" -f "$COMPOSE_FILE" run --rm --no-deps backend \
     node --test test/mobile-contract.test.js test/source-integrity.test.js
 }
 
@@ -93,4 +96,4 @@ if [[ ! -f backend/app/data/store.json ]]; then
   printf '{}\n' > backend/app/data/store.json
 fi
 
-docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up -d --build --force-recreate "${SERVICES[@]}"
+docker_compose -p "$PROJECT_NAME" --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up -d --build --force-recreate "${SERVICES[@]}"

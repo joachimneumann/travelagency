@@ -6,6 +6,9 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 SOURCE_CADDYFILE="${SOURCE_CADDYFILE:-$ROOT_DIR/deploy/Caddyfile}"
 CADDY_COMPOSE_FILE="${CADDY_COMPOSE_FILE:-$ROOT_DIR/docker-compose.caddy.yml}"
 ENV_FILE="${ENV_FILE:-$ROOT_DIR/.env.production}"
+CADDY_PROJECT_NAME="${CADDY_PROJECT_NAME:-asiatravelplan-public}"
+
+source "$ROOT_DIR/scripts/lib/docker_runtime.sh"
 
 usage() {
   cat <<EOF
@@ -57,5 +60,5 @@ docker run --rm \
   caddy:2 \
   caddy validate --config /etc/caddy/Caddyfile
 
-docker compose --env-file "$ENV_FILE" -f "$CADDY_COMPOSE_FILE" up -d caddy
-echo "Shared public Caddy reloaded on $CURRENT_HOSTNAME using $CADDY_COMPOSE_FILE."
+docker_compose -p "$CADDY_PROJECT_NAME" --env-file "$ENV_FILE" -f "$CADDY_COMPOSE_FILE" up -d caddy
+echo "Shared public Caddy reloaded on $CURRENT_HOSTNAME using $CADDY_COMPOSE_FILE (project: $CADDY_PROJECT_NAME)."
