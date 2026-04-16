@@ -3773,11 +3773,13 @@ test("homepage hero title follows published destinations and only hides the dest
   const mainToursPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "main_tours.js");
   const homepagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "index.html");
   const frontendEnI18nPath = path.resolve(__dirname, "..", "..", "..", "frontend", "data", "i18n", "frontend", "en.json");
+  const frontendI18nScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "shared", "frontend_i18n.js");
   const siteCssPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "site.css");
-  const [mainToursSource, homepageSource, frontendEnI18nSource, siteCssSource] = await Promise.all([
+  const [mainToursSource, homepageSource, frontendEnI18nSource, frontendI18nScriptSource, siteCssSource] = await Promise.all([
     readFile(mainToursPath, "utf8"),
     readFile(homepagePath, "utf8"),
     readFile(frontendEnI18nPath, "utf8"),
+    readFile(frontendI18nScriptPath, "utf8"),
     readFile(siteCssPath, "utf8")
   ]);
 
@@ -3792,14 +3794,9 @@ test("homepage hero title follows published destinations and only hides the dest
     "Frontend hero copy should expose a destination-aware title template"
   );
   assert.match(
-    mainToursSource,
-    /function formatLocalizedList\([\s\S]*new Intl\.ListFormat\([\s\S]*type: "conjunction"/,
-    "Homepage hero titles should format the published destination labels as a locale-aware list"
-  );
-  assert.match(
-    mainToursSource,
-    /function updateHeroTitle\(\) \{[\s\S]*filterOptionList\("destination"\)\.map\(\(option\) => option\.label\)[\s\S]*frontendT\("hero\.title_with_destinations", "Private holidays in \{destinations\}"/,
-    "Homepage hero title should derive its visible country list from the published destination options returned by the tours payload"
+    frontendI18nScriptSource,
+    /function generatedTranslationOverride\(id\) \{[\s\S]*heroTitleByLang = GENERATED_HOMEPAGE_COPY\?\.heroTitleByLang[\s\S]*normalizeText\(heroTitleByLang\[state\.lang\]\)/,
+    "Homepage hero title should come from the deploy-generated homepage copy instead of being rebuilt from the live tours payload"
   );
   assert.match(
     mainToursSource,

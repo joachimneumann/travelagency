@@ -248,33 +248,6 @@ export function createFrontendToursController(ctx) {
     }
   }
 
-  function formatLocalizedList(values, lang = currentFrontendLang()) {
-    const items = (Array.isArray(values) ? values : []).map((value) => normalizeText(value)).filter(Boolean);
-    if (!items.length) return "";
-    try {
-      return new Intl.ListFormat(normalizeFrontendTourLang(lang), {
-        style: "long",
-        type: "conjunction"
-      }).format(items);
-    } catch {
-      if (items.length === 1) return items[0];
-      if (items.length === 2) return `${items[0]} and ${items[1]}`;
-      return `${items.slice(0, -1).join(", ")}, and ${items[items.length - 1]}`;
-    }
-  }
-
-  function updateHeroTitle() {
-    if (!els.heroTitle) return;
-    const publishedDestinationLabels = filterOptionList("destination").map((option) => option.label);
-    if (!publishedDestinationLabels.length) {
-      els.heroTitle.textContent = frontendT("hero.title", "Private holidays in Vietnam, Thailand, Cambodia and Laos");
-      return;
-    }
-    els.heroTitle.textContent = frontendT("hero.title_with_destinations", "Private holidays in {destinations}", {
-      destinations: formatLocalizedList(publishedDestinationLabels)
-    });
-  }
-
   function updateTitlesForFilters() {
     const dest = state.filters.dest;
     const style = state.filters.style;
@@ -804,8 +777,6 @@ export function createFrontendToursController(ctx) {
         .map((style) => renderFilterCheckbox("bookingStyle", style, style))
         .join("");
     }
-
-    updateHeroTitle();
   }
 
   function setupFilterSelectPanels() {

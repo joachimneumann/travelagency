@@ -236,7 +236,7 @@ When not logged in: do not show web page, show placeholder
 Production keycloak
 
 # Make a review
-Conduct a comprehensive code review with a focus on payment flow and snapshots when a payment has been received.
+Conduct a comprehensive code review with a focus on payment flow and snapshots when a payment has been received. Where can the ATP staff see this snapshot?
 
 Specifically:
 	1.	PDF Storage & Structure
@@ -260,31 +260,18 @@ Specifically:
 
 # web page
 
-improve this text:Why travelers choose AsiaTravelPlan
-* Structured customization: hotels, transport, guiding, and pace can be tuned clearly.
-* Honest pricing logic: what changes your quote is explained before payment.
-* Local execution: practical rerouting support if weather or operations shift.
-* Comfort-first routing for travelers who value quality over bargain stress.
+Also generate the hero title at deploy time, do not dynamically load it when the page refreshes
 
-Screenshot with team (new picture)
+# PDFs
 
-single-team support coverage
-improve: 24 hour response time
-initial route offer time
+I want to treat the Request payment PDFs and Confirm payment PDF different for the deposit payment step:
+The Request payment should a friendly document structured as follows:
 
-FAQ: remove Is $500 per week enough for a comfortable trip?
-Private or group travel: what is better?
-Can we combine all four countries in one route?What if weather disrupts our plan?
-
-48-72h
-initial route offer time—> 24 hours
-remove Claire, Australia
-remove Ben, Canada
-How quickly do you send itinerary options?—> How quickly do you respond to my questions / request? 24 hoursWhich months are best to travel in Vietnam?
-
-Which are the best destinations to visit in VietnamCan’t miss / must visit / must do?
-I want to use my phone in Vietnam, are SIM cards available?
-What if weather disrupts our plan?
-Is the food spicy in Vietnam?
-remove: Book your free discovery call
-improve caption: Real itinerary support from before departure to your return flight.remove combine Vietnam and Laoskeep Emily, USA + Oliver, UKreword “transparent scope”
+- Header as always
+- Tour title, picture and number of days
+- First-page guide section
+- Friendly worded table with deposit, optional installments and final payment and total amount
+- Friendly worded text: "We would be thrilled if you book this tour with us. Please pay the deposit to confirm your booking". Make this text editable in the PDF texts section in the Deposit financial step.
+- a text: Please find your travel plan at the end of this PDF.
+- final words (best regards, etc)
+- Bage break and Travel plan
