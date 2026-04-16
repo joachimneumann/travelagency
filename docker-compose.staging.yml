@@ -29,7 +29,7 @@ services:
     restart: unless-stopped
     working_dir: /srv/backend/app
     ports:
-      - "127.0.0.1:8789:8787"
+      - "8789:8787"
     volumes:
       - ./backend/app/data:/srv/backend/app/data
       - ./content:/srv/content
@@ -47,7 +47,7 @@ services:
     command:
       - start
     ports:
-      - "127.0.0.1:8083:8080"
+      - "8083:8080"
     environment:
       KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN}
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
