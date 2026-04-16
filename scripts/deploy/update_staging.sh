@@ -11,14 +11,13 @@ source "$ROOT_DIR/scripts/lib/docker_runtime.sh"
 usage() {
   cat <<'EOF'
 Usage:
-  ./scripts/deploy/update_staging.sh [backend|caddy|keycloak|all]...
+  ./scripts/deploy/update_staging.sh [backend|keycloak|all]...
 
 Examples:
   ./scripts/deploy/update_staging.sh backend
   ./scripts/deploy/update_staging.sh keycloak
-  ./scripts/deploy/update_staging.sh caddy
   ./scripts/deploy/update_staging.sh all
-  ./scripts/deploy/update_staging.sh backend caddy
+  ./scripts/deploy/update_staging.sh backend keycloak
 EOF
 }
 
@@ -30,11 +29,16 @@ normalize_services() {
 
   for arg in "$@"; do
     case "$arg" in
-      backend|caddy|keycloak)
+      backend|keycloak)
         printf '%s\n' "$arg"
         ;;
       all)
-        printf '%s\n' backend caddy keycloak
+        printf '%s\n' backend keycloak
+        ;;
+      caddy)
+        echo "Staging Caddy is no longer managed by update_staging.sh." >&2
+        echo "Use /srv/asiatravelplan/scripts/production/deploy_production_caddy.sh to reload the shared public Caddy stack (project asiatravelplan-public)." >&2
+        exit 1
         ;;
       -h|--help)
         usage
@@ -53,7 +57,7 @@ should_run_tests() {
   local service
   for service in "$@"; do
     case "$service" in
-      backend|caddy)
+      backend)
         return 0
         ;;
     esac

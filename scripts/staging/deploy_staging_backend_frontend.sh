@@ -8,9 +8,9 @@ if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
 Usage:
   ./scripts/staging/deploy_staging_backend_frontend.sh
 
-Deploys the staging backend and frontend/static surface.
+Deploys the staging backend and refreshes staged assets.
 EOF
   exit 0
 fi
 
-exec "$ROOT_DIR/scripts/deploy/update_staging.sh" backend caddy "$@"
+exec "$ROOT_DIR/scripts/deploy/update_staging.sh" backend "$@"

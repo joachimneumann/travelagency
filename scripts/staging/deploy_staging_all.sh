@@ -8,7 +8,7 @@ if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
 Usage:
   ./scripts/staging/deploy_staging_all.sh
 
-Deploys the full staging stack.
+Deploys the staging backend and Keycloak stack and refreshes staged assets.
 EOF
   exit 0
 fi

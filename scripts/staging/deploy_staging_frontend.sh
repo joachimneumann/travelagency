@@ -8,9 +8,13 @@ if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
 Usage:
   ./scripts/staging/deploy_staging_frontend.sh
 
-Deploys the staging frontend/static surface.
+Refreshes staging static assets from the current checkout.
 EOF
   exit 0
 fi
 
-exec "$ROOT_DIR/scripts/deploy/update_staging.sh" caddy "$@"
+cd "$ROOT_DIR"
+
+git fetch origin
+git pull --ff-only
+node "$ROOT_DIR/scripts/assets/generate_public_homepage_assets.mjs"
