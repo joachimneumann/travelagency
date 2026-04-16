@@ -185,11 +185,11 @@ staging.asiatravelplan.com {
 
   @staging_access path /staging-access/*
   handle @staging_access {
-    reverse_proxy backend:8787
+    reverse_proxy host.docker.internal:8789
   }
 
   @protected not path /staging-access/* /api/whatsapp/webhook /integrations/meta/webhook /site.webmanifest /assets/* /frontend/scripts/* /frontend/data/* /frontend/Generated/* /shared/*
-  forward_auth @protected backend:8787 {
+  forward_auth @protected host.docker.internal:8789 {
     uri /staging-access/check
   }
 
@@ -198,7 +198,7 @@ staging.asiatravelplan.com {
 
   @backend path /auth/* /api/* /public/v1/* /integrations/*
   handle @backend {
-    reverse_proxy backend:8787
+    reverse_proxy host.docker.internal:8789
   }
 
   @manifest path /site.webmanifest
@@ -222,12 +222,12 @@ api-staging.asiatravelplan.com {
   import security_headers
   import noindex_headers
   encode zstd gzip
-  reverse_proxy backend:8787
+  reverse_proxy host.docker.internal:8789
 }
 
 auth-staging.asiatravelplan.com {
   import security_headers
   import noindex_headers
   encode zstd gzip
-  reverse_proxy keycloak:8080
+  reverse_proxy host.docker.internal:8083
 }
