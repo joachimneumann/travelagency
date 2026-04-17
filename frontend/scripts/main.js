@@ -65,16 +65,17 @@ const state = {
   selectedTourDescriptionId: "",
   selectedTeamMemberUsername: "",
   companyProfile: null,
+  authStatusKnown: false,
   websiteAuthenticated: false,
   websiteAuthenticatedUser: ""
 };
 
 let lastBookingModalTrigger = null;
-let authStatusLoadScheduled = false;
 let publicBootstrapLoadScheduled = false;
 let tourImagePrewarmToken = 0;
 let teamSectionRevealObserved = false;
 let teamMembersLoadPromise = null;
+let authStatusLoadPromise = null;
 
 const DEFAULT_BOOKING_CURRENCY = "USD";
 const FALLBACK_MIN_TRAVELERS = 1;
@@ -394,8 +395,9 @@ async function init() {
   setupTeamSection();
   setupBackendLogin();
   setupHiddenBackendQuickLogin();
+  placeBackendLogin(false);
+  revealBackendLogin();
   scheduleDeferredPublicBootstrapLoad();
-  scheduleDeferredAuthStatusLoad();
   setupModal();
   setupFormNavigation();
   setupLiveValidationReset();
@@ -439,14 +441,6 @@ function scheduleDeferredTask(task, { timeout = 1200, fallbackDelayMs = 250 } = 
     return;
   }
   window.setTimeout(() => task(), fallbackDelayMs);
-}
-
-function scheduleDeferredAuthStatusLoad() {
-  if (authStatusLoadScheduled) return;
-  authStatusLoadScheduled = true;
-  scheduleDeferredTask(() => {
-    void loadWebsiteAuthStatus();
-  }, { timeout: 1500, fallbackDelayMs: 350 });
 }
 
 function scheduleDeferredPublicBootstrapLoad() {
@@ -829,7 +823,7 @@ function setupFAQ() {
 function setupBackendLogin() {
   if (!els.backendLoginBtn) return;
 
-  els.backendLoginBtn.addEventListener("click", () => {
+  const navigateToBackendDestination = () => {
     const backendUrl = withLangUrl("/bookings.html");
     if (state.websiteAuthenticated) {
       window.location.href = backendUrl;
@@ -841,6 +835,71 @@ function setupBackendLogin() {
     });
     const loginUrl = `${API_BASE_ORIGIN}/auth/login?${loginParams.toString()}`;
     window.location.href = loginUrl;
+  };
+
+  const primeWebsiteAuthStatus = () => {
+    if (state.authStatusKnown) return;
+    void loadWebsiteAuthStatus();
+  };
+
+  if (els.backendLoginBtn.dataset.authBound !== "1") {
+    els.backendLoginBtn.addEventListener("pointerenter", primeWebsiteAuthStatus);
+    els.backendLoginBtn.addEventListener("focus", primeWebsiteAuthStatus);
+    els.backendLoginBtn.addEventListener("touchstart", primeWebsiteAuthStatus, { passive: true });
+    els.backendLoginBtn.addEventListener("click", async () => {
+      els.backendLoginBtn.disabled = true;
+      try {
+        if (!state.authStatusKnown) {
+          await loadWebsiteAuthStatus();
+        }
+      } finally {
+        els.backendLoginBtn.disabled = false;
+      }
+      navigateToBackendDestination();
+    });
+    els.backendLoginBtn.dataset.authBound = "1";
+  }
+}
+
+function revealBackendLogin() {
+  els.backendLoginContainer?.classList.remove("backend-login--deferred");
+}
+
+async function loadWebsiteAuthStatus({ force = false } = {}) {
+  if (!els.backendLoginContainer) return false;
+  if (state.authStatusKnown && !force) return state.websiteAuthenticated;
+  if (authStatusLoadPromise && !force) return authStatusLoadPromise;
+
+  authStatusLoadPromise = (async () => {
+    try {
+      const { fetchAuthMe } = await ensureAuthRuntime();
+      const { response, payload } = await fetchAuthMe(BACKEND_BASE_URL);
+      if (!response.ok || !payload?.authenticated) {
+        state.websiteAuthenticated = false;
+        state.websiteAuthenticatedUser = "";
+        state.authStatusKnown = true;
+        placeBackendLogin(false);
+        updateBackendButtonLabel({ authenticated: false, user: "" });
+        return false;
+      }
+      const user = payload.user?.preferred_username || payload.user?.email || payload.user?.sub || "authenticated user";
+      state.websiteAuthenticated = true;
+      state.websiteAuthenticatedUser = user;
+      state.authStatusKnown = true;
+      placeBackendLogin(true);
+      updateBackendButtonLabel({ authenticated: true, user });
+      return true;
+    } catch {
+      state.websiteAuthenticated = false;
+      state.websiteAuthenticatedUser = "";
+      state.authStatusKnown = true;
+      placeBackendLogin(false);
+      updateBackendButtonLabel({ authenticated: false, user: "" });
+      return false;
+    } finally {
+      revealBackendLogin();
+      authStatusLoadPromise = null;
+    }
   });
 }
 
@@ -870,34 +929,6 @@ function setupHiddenBackendQuickLogin() {
     });
     window.location.href = `${BACKEND_BASE_URL}/auth/login?${loginParams.toString()}`;
   });
-}
-
-async function loadWebsiteAuthStatus() {
-  if (!els.backendLoginContainer) return;
-
-  try {
-    const { fetchAuthMe } = await ensureAuthRuntime();
-    const { response, payload } = await fetchAuthMe(BACKEND_BASE_URL);
-    if (!response.ok || !payload?.authenticated) {
-      state.websiteAuthenticated = false;
-      state.websiteAuthenticatedUser = "";
-      placeBackendLogin(false);
-      updateBackendButtonLabel({ authenticated: false, user: "" });
-      return;
-    }
-    const user = payload.user?.preferred_username || payload.user?.email || payload.user?.sub || "authenticated user";
-    state.websiteAuthenticated = true;
-    state.websiteAuthenticatedUser = user;
-    placeBackendLogin(true);
-    updateBackendButtonLabel({ authenticated: true, user });
-  } catch {
-    state.websiteAuthenticated = false;
-    state.websiteAuthenticatedUser = "";
-    placeBackendLogin(false);
-    updateBackendButtonLabel({ authenticated: false, user: "" });
-  } finally {
-    els.backendLoginContainer.classList.remove("backend-login--deferred");
-  }
 }
 
 function filterOptionEntries(kind) {

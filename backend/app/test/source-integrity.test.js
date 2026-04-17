@@ -3718,8 +3718,18 @@ test("frontend language switching updates the homepage in place instead of forci
   );
   assert.match(
     mainSource,
-    /async function init\(\)[\s\S]*scheduleDeferredAuthStatusLoad\(\)[\s\S]*scheduleDeferredTourImagePrewarm\(state\.trips\)/,
-    "Homepage init should defer auth status loading and tour image prewarming instead of doing them on the first critical render"
+    /async function init\(\)[\s\S]*placeBackendLogin\(false\);[\s\S]*revealBackendLogin\(\);[\s\S]*scheduleDeferredTourImagePrewarm\(state\.trips\)/,
+    "Homepage init should reveal the backend button without auto-loading auth status while still deferring non-critical follow-up work"
+  );
+  assert.match(
+    mainSource,
+    /function setupBackendLogin\(\) \{[\s\S]*pointerenter[\s\S]*focus[\s\S]*touchstart[\s\S]*if \(!state\.authStatusKnown\) \{[\s\S]*await loadWebsiteAuthStatus\(\);[\s\S]*navigateToBackendDestination\(\);/,
+    "Homepage backend login should load auth status only after explicit user interaction"
+  );
+  assert.doesNotMatch(
+    mainSource,
+    /scheduleDeferredAuthStatusLoad\(\)|scheduleDeferredTask\(\(\) => \{\s*void loadWebsiteAuthStatus\(\)/,
+    "Homepage should not automatically schedule website auth status loading on first render"
   );
   assert.match(
     mainSource,
