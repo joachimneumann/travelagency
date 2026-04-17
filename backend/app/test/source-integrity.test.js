@@ -646,7 +646,7 @@ test("booking persons snapshot logic uses a stable timestamp seed instead of gen
 
 test("booking person gender enum stays in sync across model and generated contracts", async () => {
   const modelEnumPath = path.resolve(__dirname, "..", "..", "..", "model", "enums", "booking_person_gender.cue");
-  const modelEntityPath = path.resolve(__dirname, "..", "..", "..", "model", "entities", "booking_person.cue");
+  const modelEntityPath = path.resolve(__dirname, "..", "..", "..", "model", "database", "booking_person.cue");
   const normalizedIrPath = path.resolve(__dirname, "..", "..", "..", "model", "ir", "normalized.cue");
   const openapiPath = path.resolve(__dirname, "..", "..", "..", "api", "generated", "openapi.yaml");
   const schemaRuntimePath = path.resolve(__dirname, "..", "..", "..", "shared", "generated-contract", "Models", "generated_SchemaRuntime.js");
@@ -996,7 +996,7 @@ test("payment pdf previews stream transient preview files instead of storing pay
 });
 
 test("deposit payment requests use a dedicated personalization scope and friendly deposit copy", async () => {
-  const bookingModelPath = path.resolve(__dirname, "..", "..", "..", "model", "entities", "booking.cue");
+  const bookingModelPath = path.resolve(__dirname, "..", "..", "..", "model", "database", "booking.cue");
   const paymentFlowPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "payment_flow.js");
   const personalizationPath = path.resolve(__dirname, "..", "src", "lib", "booking_pdf_personalization.js");
   const paymentDocumentHandlerPath = path.resolve(__dirname, "..", "src", "http", "handlers", "booking_payment_documents.js");
@@ -1379,7 +1379,7 @@ test("service titles remain optional across save validation and UI state", async
 });
 
 test("travel-plan services are single-day only across model, API, backend, and UI", async () => {
-  const modelPath = path.resolve(__dirname, "..", "..", "..", "model", "entities", "travel_plan.cue");
+  const modelPath = path.resolve(__dirname, "..", "..", "..", "model", "database", "travel_plan.cue");
   const travelPlanScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan.js");
   const travelPlanHelpersPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan_helpers.js");
   const travelPlanValidationPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan_validation.js");
@@ -1717,7 +1717,7 @@ test("booking danger zone exposes clone controls before delete", async () => {
 });
 
 test("travel-plan PDF personalization exposes children policy and exclusions fields and renders them before the closing block", async () => {
-  const bookingModelPath = path.resolve(__dirname, "..", "..", "..", "model", "entities", "booking.cue");
+  const bookingModelPath = path.resolve(__dirname, "..", "..", "..", "model", "database", "booking.cue");
   const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
   const bookingPageScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking.js");
   const bookingCorePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "core.js");
@@ -1787,7 +1787,7 @@ test("travel-plan PDF personalization exposes children policy and exclusions fie
 });
 
 test("offer PDF personalization exposes a cancellation-policy toggle and renders the fixed section before the closing block", async () => {
-  const bookingModelPath = path.resolve(__dirname, "..", "..", "..", "model", "entities", "booking.cue");
+  const bookingModelPath = path.resolve(__dirname, "..", "..", "..", "model", "database", "booking.cue");
   const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
   const bookingPageScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking.js");
   const bookingCorePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "core.js");
@@ -1882,7 +1882,7 @@ test("offer PDF personalization exposes a cancellation-policy toggle and renders
 });
 
 test("deposit payment confirmation PDF personalization lives inside the payment flow and uses the renamed scope", async () => {
-  const bookingModelPath = path.resolve(__dirname, "..", "..", "..", "model", "entities", "booking.cue");
+  const bookingModelPath = path.resolve(__dirname, "..", "..", "..", "model", "database", "booking.cue");
   const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
   const bookingPageScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking.js");
   const bookingCorePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "core.js");
@@ -2853,7 +2853,7 @@ test("travel-plan module preserves add/remove/reorder editing helpers", async ()
 });
 
 test("travel-plan service image subtitle stays wired across model, API, backend, and UI", async () => {
-  const modelPath = path.resolve(__dirname, "..", "..", "..", "model", "entities", "travel_plan.cue");
+  const modelPath = path.resolve(__dirname, "..", "..", "..", "model", "database", "travel_plan.cue");
   const openApiPath = path.resolve(__dirname, "..", "..", "..", "api", "generated", "openapi.yaml");
   const backendPath = path.resolve(__dirname, "..", "..", "..", "backend", "app", "src", "domain", "travel_plan.js");
   const helperPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan_helpers.js");
@@ -2894,7 +2894,7 @@ test("travel-plan service image subtitle stays wired across model, API, backend,
 });
 
 test("travel-plan day date presets stay wired across model, API, backend, and UI", async () => {
-  const modelPath = path.resolve(__dirname, "..", "..", "..", "model", "entities", "travel_plan.cue");
+  const modelPath = path.resolve(__dirname, "..", "..", "..", "model", "database", "travel_plan.cue");
   const openApiPath = path.resolve(__dirname, "..", "..", "..", "api", "generated", "openapi.yaml");
   const backendPath = path.resolve(__dirname, "..", "..", "..", "backend", "app", "src", "domain", "travel_plan.js");
   const helperPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan_helpers.js");

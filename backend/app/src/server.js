@@ -268,12 +268,14 @@ export async function createBackendHandler({ port = PORT } = {}) {
   await backfillPersistedTourState();
   await services.travelPlanPdfArtifacts.migrateLegacyTravelPlanPdfStorage();
   await pruneDirectoryContents(RUNTIME_PATHS.travelPlanPdfPreviewDir);
+  await pruneDirectoryContents(path.join(RUNTIME_PATHS.pdfsRoot, "invoices"));
   await services.atpStaffDirectory.ensureStorage();
   await services.countryReferenceStore.ensureStorage();
   await services.atpStaffDirectory.syncProfilesFromKeycloak().catch(() => []);
   const startupStore = await services.storeUtils.readStore();
   const backfilledBookingPersons = startupStore.__bookingPersonsWritebackNeeded === true;
   const backfilledBookingOffers = startupStore.__bookingOfferWritebackNeeded === true;
+  const legacyStoreWritebackNeeded = startupStore.__legacyStoreWritebackNeeded === true;
   const prunedLegacyBookingState = pruneLegacyBookingState(startupStore);
   const collapsedGeneratedOfferPaymentTerms = collapseGeneratedOfferPaymentTermsState(startupStore);
   const prunedLegacyGeneratedOfferState = pruneLegacyGeneratedOfferState(startupStore);
@@ -282,6 +284,7 @@ export async function createBackendHandler({ port = PORT } = {}) {
     || collapsedGeneratedOfferPaymentTerms
     || backfilledBookingPersons
     || backfilledBookingOffers
+    || legacyStoreWritebackNeeded
     || prunedLegacyBookingState
   ) {
     await services.storeUtils.persistStore(startupStore);

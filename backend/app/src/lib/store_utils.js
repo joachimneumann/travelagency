@@ -1,5 +1,6 @@
 import { mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { normalizeBookingPdfPersonalization } from "./booking_pdf_personalization.js";
 import { normalizeText } from "./text.js";
 import { normalizeStoredBookingRecord } from "./booking_persons.js";
 
@@ -65,14 +66,33 @@ export function createStoreUtils({
     parsed.chat_channel_accounts ||= [];
     parsed.chat_conversations ||= [];
     parsed.chat_events ||= [];
+    let legacyStoreWritebackNeeded = false;
+    if (Object.prototype.hasOwnProperty.call(parsed, "invoices")) {
+      delete parsed.invoices;
+      legacyStoreWritebackNeeded = true;
+    }
+    if (Object.prototype.hasOwnProperty.call(parsed, "suppliers")) {
+      delete parsed.suppliers;
+      legacyStoreWritebackNeeded = true;
+    }
     let bookingPersonsWritebackNeeded = false;
     let bookingOfferWritebackNeeded = false;
     const convertedBookings = await Promise.all(parsed.bookings.map(async (booking) => {
       const rawPersons = Array.isArray(booking?.persons) ? booking.persons : [];
       const rawOffer = booking?.offer && typeof booking.offer === "object" ? booking.offer : null;
+      const rawAcceptedTravelPlanSnapshot = booking?.accepted_travel_plan_snapshot && typeof booking.accepted_travel_plan_snapshot === "object"
+        ? booking.accepted_travel_plan_snapshot
+        : null;
+      const rawPdfPersonalization = booking?.pdf_personalization && typeof booking.pdf_personalization === "object"
+        ? booking.pdf_personalization
+        : null;
       const normalizedBooking = normalizeStoredBookingRecord(booking, parsed);
       if (JSON.stringify(rawPersons) !== JSON.stringify(Array.isArray(normalizedBooking?.persons) ? normalizedBooking.persons : [])) {
         bookingPersonsWritebackNeeded = true;
+      }
+      if (Object.prototype.hasOwnProperty.call(normalizedBooking, "invoices_revision")) {
+        delete normalizedBooking.invoices_revision;
+        legacyStoreWritebackNeeded = true;
       }
       syncBookingAssignmentFields(normalizedBooking);
       const normalizedOffer = normalizeBookingOffer(normalizedBooking.offer, getBookingPreferredCurrency(normalizedBooking));
@@ -83,6 +103,27 @@ export function createStoreUtils({
       normalizedBooking.travel_plan = normalizeBookingTravelPlan(normalizedBooking.travel_plan, normalizedBooking.offer, {
         strictReferences: false
       });
+      if (rawAcceptedTravelPlanSnapshot) {
+        const normalizedAcceptedTravelPlanSnapshot = normalizeBookingTravelPlan(rawAcceptedTravelPlanSnapshot, normalizedBooking.offer, {
+          strictReferences: false
+        });
+        if (JSON.stringify(rawAcceptedTravelPlanSnapshot) !== JSON.stringify(normalizedAcceptedTravelPlanSnapshot)) {
+          legacyStoreWritebackNeeded = true;
+        }
+        normalizedBooking.accepted_travel_plan_snapshot = normalizedAcceptedTravelPlanSnapshot;
+      }
+      const normalizedPdfPersonalization = normalizeBookingPdfPersonalization(rawPdfPersonalization, {
+        flatLang: normalizedBooking?.customer_language || "en",
+        sourceLang: "en"
+      });
+      if (JSON.stringify(rawPdfPersonalization || {}) !== JSON.stringify(normalizedPdfPersonalization || {})) {
+        legacyStoreWritebackNeeded = true;
+      }
+      if (normalizedPdfPersonalization && Object.keys(normalizedPdfPersonalization).length > 0) {
+        normalizedBooking.pdf_personalization = normalizedPdfPersonalization;
+      } else {
+        delete normalizedBooking.pdf_personalization;
+      }
       normalizedBooking.generated_offers = Array.isArray(normalizedBooking.generated_offers) ? normalizedBooking.generated_offers : [];
       normalizedBooking.offer = await convertBookingOfferToBaseCurrency(normalizedBooking.offer);
       return normalizedBooking;
@@ -96,6 +137,12 @@ export function createStoreUtils({
     });
     Object.defineProperty(parsed, "__bookingOfferWritebackNeeded", {
       value: bookingOfferWritebackNeeded,
+      enumerable: false,
+      configurable: true,
+      writable: true
+    });
+    Object.defineProperty(parsed, "__legacyStoreWritebackNeeded", {
+      value: legacyStoreWritebackNeeded,
       enumerable: false,
       configurable: true,
       writable: true
