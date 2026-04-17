@@ -2,6 +2,8 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+source "$ROOT_DIR/scripts/lib/load_repo_env.sh"
+load_repo_env "$ROOT_DIR"
 source "$ROOT_DIR/scripts/lib/docker_runtime.sh"
 FRONTEND_PORT="${FRONTEND_PORT:-8080}"
 COMPOSE_FILE="${COMPOSE_FILE:-$ROOT_DIR/docker-compose.local-caddy.yml}"

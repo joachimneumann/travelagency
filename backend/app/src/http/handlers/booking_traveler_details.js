@@ -386,17 +386,27 @@ export function createBookingTravelerDetailsHandlers(deps) {
       sendJson(res, 422, { error: "Traveler details links can only be created for travelers." });
       return;
     }
+    if (!travelerDetailsTokenSecret) {
+      sendJson(res, 503, { error: "Traveler details links are not configured." });
+      return;
+    }
 
     const expiresAt = resolveTravelerDetailsTokenExpiresAt({
       now: nowIso(),
       ttlMs: travelerDetailsTokenConfig?.ttlMs
     });
-    const token = buildTravelerDetailsToken({
-      bookingId,
-      personId,
-      expiresAt,
-      secret: travelerDetailsTokenSecret
-    });
+    let token;
+    try {
+      token = buildTravelerDetailsToken({
+        bookingId,
+        personId,
+        expiresAt,
+        secret: travelerDetailsTokenSecret
+      });
+    } catch (error) {
+      sendJson(res, 503, { error: String(error?.message || error || "Traveler details links are not configured.") });
+      return;
+    }
 
     sendJson(res, 200, {
       booking_id: bookingId,

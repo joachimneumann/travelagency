@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+source "$ROOT_DIR/scripts/lib/load_repo_env.sh"
+load_repo_env "$ROOT_DIR"
 BACKEND_PID_FILE="${BACKEND_PID_FILE:-/tmp/asiatravelplan-backend.pid}"
 BACKEND_PORT="${BACKEND_PORT:-8787}"
 

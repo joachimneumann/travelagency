@@ -2,6 +2,8 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+source "$ROOT_DIR/scripts/lib/load_repo_env.sh"
+load_repo_env "$ROOT_DIR"
 source "$ROOT_DIR/scripts/lib/docker_runtime.sh"
 source "$ROOT_DIR/scripts/local/local_i18n_preflight.sh"
 PUBLIC_HOMEPAGE_ASSET_GENERATOR="${PUBLIC_HOMEPAGE_ASSET_GENERATOR:-$ROOT_DIR/scripts/assets/generate_public_homepage_assets.mjs}"

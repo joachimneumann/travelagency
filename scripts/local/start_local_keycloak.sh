@@ -2,19 +2,9 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+source "$ROOT_DIR/scripts/lib/load_repo_env.sh"
+load_repo_env "$ROOT_DIR"
 source "$ROOT_DIR/scripts/lib/docker_runtime.sh"
-
-import_zsh_env() {
-  command -v zsh >/dev/null 2>&1 || return 0
-  local exported
-  exported="$(
-    zsh -lc 'typeset -px KEYCLOAK_BASE_URL KEYCLOAK_REALM KEYCLOAK_CLIENT_SECRET 2>/dev/null' 2>/dev/null || true
-  )"
-  [ -n "$exported" ] || return 0
-  eval "$exported"
-}
-
-import_zsh_env
 
 COMPOSE_FILE="${COMPOSE_FILE:-$ROOT_DIR/docker-compose.local-keycloak.yml}"
 COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-travelagency_keycloak}"

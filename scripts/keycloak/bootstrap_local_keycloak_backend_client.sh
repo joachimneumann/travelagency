@@ -1,27 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-import_zsh_env() {
-  command -v zsh >/dev/null 2>&1 || return 0
-  local assignments
-  assignments="$(
-    zsh -lc '
-      source ~/.zshrc >/dev/null 2>&1 || true
-      for var in KEYCLOAK_BASE_URL KEYCLOAK_REALM KEYCLOAK_CLIENT_ID KEYCLOAK_CLIENT_SECRET KEYCLOAK_REDIRECT_URI KEYCLOAK_POST_LOGOUT_REDIRECT_URI KEYCLOAK_ADMIN KEYCLOAK_ADMIN_PASSWORD FRONTEND_PORT BACKEND_PORT; do
-        if [[ -n ${(P)var-} ]]; then
-          print -r -- "$var=${(Pqqq)var}"
-        fi
-      done
-    ' 2>/dev/null || true
-  )"
-  [ -n "$assignments" ] || return 0
-  while IFS= read -r line; do
-    [ -n "$line" ] || continue
-    eval "export $line"
-  done <<< "$assignments"
-}
-
-import_zsh_env
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+source "$ROOT_DIR/scripts/lib/load_repo_env.sh"
+load_repo_env "$ROOT_DIR"
 
 require_cmd() {
   if ! command -v "$1" >/dev/null 2>&1; then

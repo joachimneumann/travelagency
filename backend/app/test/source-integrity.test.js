@@ -134,8 +134,23 @@ test("backend ui i18n sync script passes and local backend startup is strict by 
   );
   assert.match(
     startLocalBackendSource,
+    /load_repo_env "\$ROOT_DIR"/,
+    "Local backend startup should load repository env before applying defaults"
+  );
+  assert.match(
+    startLocalBackendSource,
     /run_local_i18n_preflight "\$ROOT_DIR"/,
     "Local backend startup should run the backend i18n sync check before booting"
+  );
+  assert.match(
+    startLocalBackendSource,
+    /TRAVELER_DETAILS_TOKEN_SECRET="\$\{TRAVELER_DETAILS_TOKEN_SECRET:-local-traveler-details-token-secret\}"/,
+    "Local backend startup should provide a default traveler-details token secret for local link generation"
+  );
+  assert.doesNotMatch(
+    startLocalBackendSource,
+    /\.zshrc/,
+    "Local backend startup should not depend on user shell startup files"
   );
 });
 

@@ -1,7 +1,6 @@
 backend/app/data/invoices/
 backend/app/data/store.json
-.env.staging
-.env.production
+.env
 staging_secrets/
 backend/app/node_modules/
 backend/app/data/*
