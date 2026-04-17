@@ -507,20 +507,24 @@
 
       const homepageCopyManifestUrl = "/frontend/data/generated/homepage/public-homepage-copy.manifest.json";
       const fallbackHomepageCopyUrl = "/frontend/data/generated/homepage/public-homepage-copy.global.js";
+      const fallbackHomepageInitialScriptUrl = "/frontend/scripts/main.js";
       let homepageCopyUrl = fallbackHomepageCopyUrl;
+      let homepageInitialScriptUrl = fallbackHomepageInitialScriptUrl;
 
       try {
         const response = await fetch(homepageCopyManifestUrl, { cache: "no-store" });
         if (response.ok) {
           const payload = await response.json();
           const configuredAssetUrl = String(payload?.assetUrl || "").trim();
+          const configuredInitialScriptUrl = String(payload?.initialScriptUrl || "").trim();
           if (configuredAssetUrl) homepageCopyUrl = configuredAssetUrl;
+          if (configuredInitialScriptUrl) homepageInitialScriptUrl = configuredInitialScriptUrl;
         }
       } catch {}
 
       await loadScript(homepageCopyUrl);
       await loadScript("/frontend/scripts/shared/frontend_i18n.js");
-      await loadScript("/frontend/scripts/main.js", { type: "module" });
+      await loadScript(homepageInitialScriptUrl, { type: "module" });
     </script>
     <script>
       (() => {

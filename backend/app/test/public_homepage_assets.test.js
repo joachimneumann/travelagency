@@ -24,6 +24,7 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
   const homepageHtmlPath = path.join(root, "frontend", "pages", "index.html");
   const homepageCopyGlobalPath = path.join(frontendDataDir, "public-homepage-copy.global.js");
   const homepageCopyManifestPath = path.join(frontendDataDir, "public-homepage-copy.manifest.json");
+  const homepageInitialBundlePath = path.join(frontendDataDir, "public-homepage-main.bundle.js");
 
   await mkdir(path.join(toursRoot, "tour_alpha"), { recursive: true });
   await mkdir(path.join(toursRoot, "tour_hidden"), { recursive: true });
@@ -117,6 +118,7 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
   const publicTeam = JSON.parse(await readFile(path.join(frontendDataDir, "public-team.json"), "utf8"));
   const homepageCopyGlobal = await readFile(homepageCopyGlobalPath, "utf8");
   const homepageCopyManifest = JSON.parse(await readFile(homepageCopyManifestPath, "utf8"));
+  const homepageInitialBundle = await readFile(homepageInitialBundlePath, "utf8");
   const homepageHtml = await readFile(homepageHtmlPath, "utf8");
 
   assert.equal(publicToursEn.items.length, 1);
@@ -135,7 +137,11 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
   assert.match(homepageCopyGlobal, /"en": "Private holidays in Vietnam"/);
   assert.match(homepageCopyGlobal, /"de": "Privaturlaub in Vietnam"/);
   assert.match(homepageCopyManifest.assetUrl, /^\/frontend\/data\/generated\/homepage\/public-homepage-copy\.global\.js\?v=/);
+  assert.match(homepageCopyManifest.initialScriptUrl, /^\/frontend\/data\/generated\/homepage\/public-homepage-main\.bundle\.js\?v=/);
   assert.equal(typeof homepageCopyManifest.version, "string");
+  assert.match(homepageInitialBundle, /function createFrontendToursController/);
+  assert.match(homepageInitialBundle, /import\("\/frontend\/scripts\/main_booking_form_options\.js"\)/);
+  assert.match(homepageInitialBundle, /import\("\/frontend\/scripts\/shared\/auth\.js"\)/);
   assert.match(homepageHtml, />Old title</);
   assert.doesNotMatch(homepageHtml, /public-homepage-copy\.global\.js\?v=/);
 
