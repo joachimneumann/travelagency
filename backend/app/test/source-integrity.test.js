@@ -3830,6 +3830,21 @@ test("homepage hero title follows published destinations and only hides the dest
     "Homepage hero should expose a dedicated title mount and keep the destination dropdown hidden in the hero markup"
   );
   assert.match(
+    homepageSource,
+    /<link rel="stylesheet" href="\/shared\/css\/tokens\.css" \/>[\s\S]*<link rel="stylesheet" href="\/shared\/css\/site-home-critical\.css" \/>[\s\S]*<link rel="stylesheet" href="\/shared\/css\/pages\/home-critical\.css" \/>[\s\S]*<link rel="preload" href="\/shared\/css\/site-home-deferred\.css" as="style"[\s\S]*<link rel="preload" href="\/shared\/css\/pages\/home-deferred\.css" as="style"/,
+    "Homepage should link the real shared CSS assets directly instead of routing critical and deferred styles through import wrappers"
+  );
+  assert.match(
+    homepageSource,
+    /<script defer src="\/shared\/generated\/language_catalog\.global\.js"><\/script>[\s\S]*<script defer src="\/frontend\/data\/generated\/homepage\/public-homepage-copy\.global\.js"><\/script>[\s\S]*<script defer src="\/frontend\/scripts\/shared\/frontend_i18n\.js"><\/script>[\s\S]*<script defer src="\/frontend\/data\/generated\/homepage\/public-homepage-main\.bundle\.js"><\/script>/,
+    "Homepage boot should use ordered deferred scripts so the browser can fetch i18n and main bundle assets in parallel"
+  );
+  assert.doesNotMatch(
+    homepageSource,
+    /const loadScript = \(src, \{ type = "text\/javascript" \} = \{\}\) => new Promise/,
+    "Homepage should no longer append the main bundle through a sequential inline script loader"
+  );
+  assert.match(
     frontendEnI18nSource,
     /"hero\.title_with_destinations": "Private holidays in \{destinations\}"/,
     "Frontend hero copy should expose a destination-aware title template"

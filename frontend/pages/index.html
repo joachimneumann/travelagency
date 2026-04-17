@@ -36,13 +36,25 @@
         window.ASIATRAVELPLAN_API_BASE = window.location.origin;
       }
     </script>
-    <script src="/frontend/scripts/shared/localhost_diagnostics.js"></script>
+    <script defer src="/frontend/scripts/shared/localhost_diagnostics.js"></script>
     <link rel="manifest" href="/site.webmanifest" />
     <link rel="preload" as="image" href="/assets/video/rice%20field.webp" fetchpriority="high" />
-
-    <link rel="stylesheet" href="/assets/css/home.css" />
-    <link rel="preload" href="/assets/css/home-deferred.css" as="style" onload="this.onload=null;this.rel='stylesheet'" />
-    <noscript><link rel="stylesheet" href="/assets/css/home-deferred.css" /></noscript>
+    <link rel="stylesheet" href="/shared/css/tokens.css" />
+    <link rel="stylesheet" href="/shared/css/base.css" />
+    <link rel="stylesheet" href="/shared/css/utilities.css" />
+    <link rel="stylesheet" href="/shared/css/components/backend-login.css" />
+    <link rel="stylesheet" href="/shared/css/site-home-critical.css" />
+    <link rel="stylesheet" href="/shared/css/pages/home-critical.css" />
+    <link rel="preload" href="/shared/css/site-home-deferred.css" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    <link rel="preload" href="/shared/css/pages/home-deferred.css" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript>
+      <link rel="stylesheet" href="/shared/css/site-home-deferred.css" />
+      <link rel="stylesheet" href="/shared/css/pages/home-deferred.css" />
+    </noscript>
+    <script defer src="/shared/generated/language_catalog.global.js"></script>
+    <script defer src="/frontend/data/generated/homepage/public-homepage-copy.global.js"></script>
+    <script defer src="/frontend/scripts/shared/frontend_i18n.js"></script>
+    <script defer src="/frontend/data/generated/homepage/public-homepage-main.bundle.js"></script>
   </head>
   <body class="home-page">
     <a class="skip-link" href="#main-content" data-i18n-id="skip.content">Skip to content</a>
@@ -491,24 +503,6 @@
         </div>
       </div>
     </div>
-    <script src="/shared/generated/language_catalog.global.js"></script>
-    <script type="module">
-      const loadScript = (src, { type = "text/javascript" } = {}) => new Promise((resolve, reject) => {
-        const script = document.createElement("script");
-        if (type === "module") {
-          script.type = "module";
-        }
-        script.async = false;
-        script.src = src;
-        script.onload = () => resolve(script);
-        script.onerror = () => reject(new Error(`Failed to load script: ${src}`));
-        document.head.appendChild(script);
-      });
-
-      await loadScript("/frontend/data/generated/homepage/public-homepage-copy.global.js");
-      await loadScript("/frontend/scripts/shared/frontend_i18n.js");
-      await loadScript("/frontend/data/generated/homepage/public-homepage-main.bundle.js", { type: "module" });
-    </script>
     <script>
       (() => {
         const heroVideo = document.querySelector(".hero-bg-video[data-deferred-autoplay]");
