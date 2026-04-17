@@ -33,6 +33,17 @@ export function createFrontendToursController(ctx) {
     return normalizeLanguageCode(value, { allowedCodes: FRONTEND_LANGUAGE_CODES, fallback: "en" });
   }
 
+  function generatedTourAssetUrlsByLang() {
+    const toursByLang = window.ASIATRAVELPLAN_PUBLIC_HOMEPAGE_COPY?.assetUrls?.toursByLang;
+    return toursByLang && typeof toursByLang === "object" ? toursByLang : {};
+  }
+
+  function publicToursDataUrl(lang) {
+    const normalizedLang = normalizeFrontendTourLang(lang);
+    return normalizeText(generatedTourAssetUrlsByLang()?.[normalizedLang])
+      || `/frontend/data/generated/homepage/public-tours.${encodeURIComponent(normalizedLang)}.json`;
+  }
+
   function normalizeFilterSelection(value) {
     if (Array.isArray(value)) {
       return value
@@ -383,7 +394,7 @@ export function createFrontendToursController(ctx) {
 
   async function loadTrips() {
     const lang = normalizeFrontendTourLang(currentFrontendLang());
-    const response = await fetch(`/frontend/data/generated/homepage/public-tours.${encodeURIComponent(lang)}.json`, { cache: "no-store" });
+    const response = await fetch(publicToursDataUrl(lang), { cache: "default" });
     if (!response.ok) {
       throw new Error(`Static tours request failed with status ${response.status}.`);
     }

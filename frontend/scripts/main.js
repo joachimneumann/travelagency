@@ -53,6 +53,7 @@ const state = {
   lang: currentFrontendLang(),
   trips: [],
   teamMembers: [],
+  teamMembersLoaded: false,
   filteredTrips: [],
   filterOptions: {
     destinations: [],
@@ -77,8 +78,10 @@ const state = {
 
 let lastBookingModalTrigger = null;
 let authStatusLoadScheduled = false;
+let publicBootstrapLoadScheduled = false;
 let tourImagePrewarmToken = 0;
 let teamSectionRevealObserved = false;
+let teamMembersLoadPromise = null;
 
 const INITIAL_VISIBLE_TOURS = 6;
 const SHOW_MORE_BATCH = 3;
@@ -240,7 +243,6 @@ init();
 async function init() {
   await waitForFrontendI18n();
   state.lang = currentFrontendLang();
-  await loadPublicBootstrap();
   window.addEventListener("frontend-i18n-changed", () => {
     void handleFrontendLanguageChanged();
   });
@@ -251,6 +253,7 @@ async function init() {
   setupTeamSection();
   setupBackendLogin();
   setupHiddenBackendQuickLogin();
+  scheduleDeferredPublicBootstrapLoad();
   scheduleDeferredAuthStatusLoad();
   setupModal();
   setupFormNavigation();
@@ -264,10 +267,7 @@ async function init() {
   state.filters.style = normalizeFilterSelection(urlFilters.style.length ? urlFilters.style : savedFilters?.style);
 
   try {
-    const [, toursPayload] = await Promise.all([
-      loadTeamMembers(),
-      loadTrips()
-    ]);
+    const toursPayload = await loadTrips();
     state.trips = Array.isArray(toursPayload?.items) ? toursPayload.items : [];
     state.filterOptions.destinations = Array.isArray(toursPayload?.available_destinations)
       ? toursPayload.available_destinations
@@ -309,6 +309,14 @@ function scheduleDeferredAuthStatusLoad() {
   }, { timeout: 1500, fallbackDelayMs: 350 });
 }
 
+function scheduleDeferredPublicBootstrapLoad() {
+  if (publicBootstrapLoadScheduled) return;
+  publicBootstrapLoadScheduled = true;
+  scheduleDeferredTask(() => {
+    void loadPublicBootstrap();
+  }, { timeout: 1800, fallbackDelayMs: 450 });
+}
+
 function scheduleDeferredTourImagePrewarm(tours) {
   const scheduledToken = ++tourImagePrewarmToken;
   const snapshot = Array.isArray(tours) ? tours.slice() : [];
@@ -339,6 +347,15 @@ function localizedEntriesFromStaticValue(value) {
   return normalized ? [{ lang: "en", value: normalized }] : [];
 }
 
+function generatedHomepageAssetUrls() {
+  const assetUrls = window.ASIATRAVELPLAN_PUBLIC_HOMEPAGE_COPY?.assetUrls;
+  return assetUrls && typeof assetUrls === "object" ? assetUrls : {};
+}
+
+function publicTeamDataUrl() {
+  return normalizeText(generatedHomepageAssetUrls()?.team) || "/frontend/data/generated/homepage/public-team.json";
+}
+
 function resolveLocalizedStaticValue(value, lang = state.lang || currentFrontendLang()) {
   const entries = localizedEntriesFromStaticValue(value);
   const normalizedLang = normalizeText(lang).toLowerCase() || "en";
@@ -352,7 +369,7 @@ function resolveLocalizedStaticValue(value, lang = state.lang || currentFrontend
 function normalizeTeamMemberProfile(profile) {
   const normalizedUsername = normalizeText(profile?.username).toLowerCase();
   if (!normalizedUsername || !profile || typeof profile !== "object") return null;
-  const fullName = normalizeText(profile?.full_name) || normalizeText(profile?.name) || normalizedUsername;
+  const fullName = normalizeText(profile?.full_name) || normalizedUsername;
   const role = resolveLocalizedStaticValue(profile?.position_i18n ?? profile?.position)
     || "Team member";
   const description = resolveLocalizedStaticValue(profile?.description_i18n ?? profile?.description);
@@ -373,33 +390,56 @@ function normalizeTeamMemberProfile(profile) {
     role,
     description,
     shortDescription,
-    pictureRef: configuredPictureRef || fallbackPictureRef,
-    appearsInTeamWebPage: profile?.appears_in_team_web_page !== false
+    pictureRef: configuredPictureRef || fallbackPictureRef
   };
 }
 
-async function loadTeamMembers() {
-  try {
-    const response = await fetch("/frontend/data/generated/homepage/public-team.json", { cache: "no-store" });
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-    const payload = await response.json();
-    const source = Array.isArray(payload?.items) ? payload.items : [];
-    state.teamMembers = source
-      .map((profile) => normalizeTeamMemberProfile(profile))
-      .filter((member) => member?.appearsInTeamWebPage);
-    renderTeamSection();
-  } catch (error) {
-    state.teamMembers = [];
-    if (els.teamSection instanceof HTMLElement) {
-      els.teamSection.hidden = true;
-    }
-    logBrowserConsoleError("[frontend-home] Failed to load public ATP staff team content.", {
-      url: "/frontend/data/generated/homepage/public-team.json",
-      page_url: window.location.href
-    }, error);
+async function loadTeamMembers({ force = false } = {}) {
+  if (state.teamMembersLoaded && !force) {
+    return state.teamMembers;
   }
+  if (teamMembersLoadPromise && !force) {
+    return teamMembersLoadPromise;
+  }
+
+  const dataUrl = publicTeamDataUrl();
+  const request = (async () => {
+    state.teamMembersLoaded = false;
+    try {
+      const response = await fetch(dataUrl, { cache: "default" });
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      const payload = await response.json();
+      const source = Array.isArray(payload?.items) ? payload.items : [];
+      state.teamMembers = source
+        .map((profile) => normalizeTeamMemberProfile(profile))
+        .filter(Boolean);
+      state.teamMembersLoaded = true;
+      renderTeamSection();
+      return state.teamMembers;
+    } catch (error) {
+      state.teamMembers = [];
+      state.teamMembersLoaded = false;
+      if (els.teamSection instanceof HTMLElement) {
+        els.teamSection.hidden = true;
+      }
+      logBrowserConsoleError("[frontend-home] Failed to load public ATP staff team content.", {
+        url: dataUrl,
+        page_url: window.location.href
+      }, error);
+      return [];
+    } finally {
+      teamMembersLoadPromise = null;
+    }
+  })();
+
+  teamMembersLoadPromise = request;
+  return request;
+}
+
+function ensureTeamMembersLoaded(options) {
+  return loadTeamMembers(options);
 }
 
 function setupTeamSection() {
@@ -427,16 +467,20 @@ function setupTeamSection() {
       for (const entry of entries) {
         if (!entry.isIntersecting) continue;
         els.teamSection?.classList.add("is-visible");
+        void ensureTeamMembersLoaded();
         observer.disconnect();
         break;
       }
     }, {
       threshold: 0.16,
-      rootMargin: "0px 0px -10% 0px"
+      rootMargin: "200px 0px -10% 0px"
     });
     observer.observe(els.teamSection);
   } else if (els.teamSection instanceof HTMLElement) {
     els.teamSection.classList.add("is-visible");
+    scheduleDeferredTask(() => {
+      void ensureTeamMembersLoaded();
+    }, { timeout: 2200, fallbackDelayMs: 650 });
   }
 }
 
@@ -486,7 +530,7 @@ function renderTeamSection() {
         username,
         full_name: member?.fullName || "",
         image_src: image.currentSrc || image.src || "",
-        team_data_url: "/frontend/data/generated/homepage/public-team.json",
+        team_data_url: publicTeamDataUrl(),
         page_url: window.location.href
       });
     });
@@ -764,10 +808,7 @@ async function handleFrontendLanguageChanged() {
   refreshLocalizedBookingFormOptions();
 
   try {
-    const [, toursPayload] = await Promise.all([
-      loadTeamMembers(),
-      loadTrips()
-    ]);
+    const toursPayload = await loadTrips();
     state.trips = Array.isArray(toursPayload?.items) ? toursPayload.items : [];
     state.filterOptions.destinations = Array.isArray(toursPayload?.available_destinations)
       ? toursPayload.available_destinations
@@ -797,6 +838,9 @@ async function handleFrontendLanguageChanged() {
     }
 
     applyFilters();
+    if (state.teamMembersLoaded) {
+      renderTeamSection();
+    }
   } catch (error) {
     console.error("Failed to refresh localized static tours after frontend language switch.", error);
   } finally {

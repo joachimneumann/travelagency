@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { copyFile, mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -47,6 +48,18 @@ function safeInt(value) {
 
 function jsonWithTrailingNewline(value) {
   return `${JSON.stringify(value, null, 2)}\n`;
+}
+
+function versionTokenForContent(value) {
+  return createHash("sha1").update(String(value ?? ""), "utf8").digest("hex").slice(0, 12);
+}
+
+function buildVersionedGeneratedDataUrl(filename, version, { publicPrefix = "/frontend/data/generated/homepage" } = {}) {
+  const normalizedFilename = normalizeText(filename);
+  if (!normalizedFilename) return "";
+  const baseUrl = `${String(publicPrefix || "").replace(/\/+$/, "")}/${encodeURIComponent(normalizedFilename)}`;
+  const normalizedVersion = normalizeText(version);
+  return normalizedVersion ? `${baseUrl}?v=${encodeURIComponent(normalizedVersion)}` : baseUrl;
 }
 
 function escapeHtml(value) {
@@ -237,19 +250,35 @@ async function writeHomepageCopyGlobalScript(outputPath, value) {
     ""
   ].join("\n");
   await writeFile(outputPath, source, "utf8");
+  return {
+    version: versionTokenForContent(source)
+  };
 }
 
-async function updateHomepageHtmlFallback(htmlPath, heroTitle) {
+async function updateHomepageHtmlFallback(htmlPath, { heroTitle, homepageCopyScriptVersion = "" } = {}) {
   const normalizedTitle = normalizeText(heroTitle);
-  if (!normalizedTitle) return;
   const html = await readFile(htmlPath, "utf8");
-  const markerPattern = /(<h1\s+id="heroTitle"[^>]*>)([\s\S]*?)(<\/h1>)/;
-  if (!markerPattern.test(html)) {
-    throw new Error(`Could not find heroTitle heading in ${htmlPath}.`);
+  let nextHtml = html;
+  if (normalizedTitle) {
+    const markerPattern = /(<h1\s+id="heroTitle"[^>]*>)([\s\S]*?)(<\/h1>)/;
+    if (!markerPattern.test(nextHtml)) {
+      throw new Error(`Could not find heroTitle heading in ${htmlPath}.`);
+    }
+    nextHtml = nextHtml.replace(markerPattern, (_, openTag, _currentText, closeTag) => {
+      return `${openTag}${escapeHtml(normalizedTitle)}${closeTag}`;
+    });
   }
-  const nextHtml = html.replace(markerPattern, (_, openTag, _currentText, closeTag) => {
-    return `${openTag}${escapeHtml(normalizedTitle)}${closeTag}`;
-  });
+  const normalizedScriptVersion = normalizeText(homepageCopyScriptVersion);
+  if (normalizedScriptVersion) {
+    const scriptPattern = /(<script\s+src="\/frontend\/data\/generated\/homepage\/public-homepage-copy\.global\.js)(?:\?v=[^"]*)?("><\/script>)/;
+    if (!scriptPattern.test(nextHtml)) {
+      throw new Error(`Could not find public homepage copy script tag in ${htmlPath}.`);
+    }
+    nextHtml = nextHtml.replace(
+      scriptPattern,
+      `$1?v=${encodeURIComponent(normalizedScriptVersion)}$2`
+    );
+  }
   await writeFile(htmlPath, nextHtml, "utf8");
 }
 
@@ -259,8 +288,6 @@ async function generateTourAssets({
   frontendDataDir = FRONTEND_DATA_DIR,
   countryReferenceInfoPath = COUNTRY_REFERENCE_INFO_PATH,
   frontendI18nDir = FRONTEND_I18N_DIR,
-  homepageCopyGlobalPath = HOMEPAGE_COPY_GLOBAL_PATH,
-  homepageHtmlPath = HOMEPAGE_HTML_PATH,
   languages = FRONTEND_LANGUAGE_CODES
 } = {}) {
   const tourHelpers = createTourHelpers({ toursDir: toursRoot, safeInt });
@@ -309,6 +336,7 @@ async function generateTourAssets({
     }))
     .filter(Boolean);
   const sortedPublicTours = [...publicTours].sort((left, right) => Number(right.priority || 0) - Number(left.priority || 0));
+  const assetUrlsByLang = {};
 
   for (const lang of languages) {
     const normalizedLang = normalizeTourLang(lang);
@@ -339,8 +367,12 @@ async function generateTourAssets({
         total_pages: 1
       }
     };
-    const outputPath = path.join(frontendDataDir, `${TOUR_FILE_PREFIX}${normalizedLang}${TOUR_FILE_SUFFIX}`);
-    await writeFile(outputPath, jsonWithTrailingNewline(payload), "utf8");
+    const filename = `${TOUR_FILE_PREFIX}${normalizedLang}${TOUR_FILE_SUFFIX}`;
+    const outputPath = path.join(frontendDataDir, filename);
+    const payloadSource = jsonWithTrailingNewline(payload);
+    const payloadVersion = versionTokenForContent(payloadSource);
+    await writeFile(outputPath, payloadSource, "utf8");
+    assetUrlsByLang[normalizedLang] = buildVersionedGeneratedDataUrl(filename, payloadVersion);
   }
 
   const heroTitleByLang = await buildHeroTitleByLang({
@@ -349,13 +381,12 @@ async function generateTourAssets({
     frontendI18nDir,
     languages
   });
-  await writeHomepageCopyGlobalScript(homepageCopyGlobalPath, { heroTitleByLang });
-  await updateHomepageHtmlFallback(homepageHtmlPath, heroTitleByLang.en || "");
 
   return {
     count: publicTours.length,
     languages: languages.map((lang) => normalizeTourLang(lang)),
-    heroTitleByLang
+    heroTitleByLang,
+    assetUrlsByLang
   };
 }
 
@@ -461,17 +492,7 @@ async function generateTeamAssets({
 
     items.push({
       username,
-      ...(normalizeText(rawProfile?.name) ? { name: normalizeText(rawProfile.name) } : {}),
-      ...(normalizeText(rawProfile?.full_name) ? { full_name: normalizeText(rawProfile.full_name) } : {}),
-      ...(normalizeText(rawProfile?.friendly_short_name) ? { friendly_short_name: normalizeText(rawProfile.friendly_short_name) } : {}),
-      ...(safeInt(rawProfile?.team_order) !== null ? { team_order: safeInt(rawProfile.team_order) } : {}),
-      ...(Array.isArray(rawProfile?.languages)
-        ? { languages: Array.from(new Set(rawProfile.languages.map((value) => normalizeText(value).toLowerCase()).filter(Boolean))) }
-        : {}),
-      ...(Array.isArray(rawProfile?.destinations)
-        ? { destinations: Array.from(new Set(rawProfile.destinations.map((value) => normalizeText(value).toUpperCase()).filter(Boolean))) }
-        : {}),
-      appears_in_team_web_page: true,
+      full_name: normalizeText(rawProfile?.full_name) || normalizeText(rawProfile?.name) || username,
       picture_ref: pictureRef,
       position: resolveLocalizedText(positionMap, "en", ""),
       position_i18n: localizedEntriesFromMap(positionMap),
@@ -487,10 +508,13 @@ async function generateTeamAssets({
     items: sortedItems,
     total: sortedItems.length
   };
-  await writeFile(outputFile, jsonWithTrailingNewline(payload), "utf8");
+  const payloadSource = jsonWithTrailingNewline(payload);
+  const payloadVersion = versionTokenForContent(payloadSource);
+  await writeFile(outputFile, payloadSource, "utf8");
 
   return {
-    count: sortedItems.length
+    count: sortedItems.length,
+    assetUrl: buildVersionedGeneratedDataUrl(path.basename(outputFile), payloadVersion)
   };
 }
 
@@ -513,8 +537,6 @@ export async function generatePublicHomepageAssets({
     frontendDataDir,
     countryReferenceInfoPath,
     frontendI18nDir,
-    homepageCopyGlobalPath,
-    homepageHtmlPath,
     languages
   });
   const team = await generateTeamAssets({
@@ -522,6 +544,17 @@ export async function generatePublicHomepageAssets({
     photosRoot: path.join(staffRoot, "photos"),
     outputRoot: teamOutputDir,
     outputFile: path.join(frontendDataDir, "public-team.json")
+  });
+  const homepageCopy = await writeHomepageCopyGlobalScript(homepageCopyGlobalPath, {
+    heroTitleByLang: tours.heroTitleByLang,
+    assetUrls: {
+      toursByLang: tours.assetUrlsByLang,
+      team: team.assetUrl
+    }
+  });
+  await updateHomepageHtmlFallback(homepageHtmlPath, {
+    heroTitle: tours.heroTitleByLang.en || "",
+    homepageCopyScriptVersion: homepageCopy.version
   });
   return { tours, team };
 }

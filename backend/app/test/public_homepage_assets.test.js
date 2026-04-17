@@ -38,7 +38,7 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
   });
   await writeFile(
     homepageHtmlPath,
-    '<!doctype html><html><body><h1 id="heroTitle" class="hero-title-only" data-i18n-id="hero.title">Old title</h1></body></html>\n'
+    '<!doctype html><html><body><h1 id="heroTitle" class="hero-title-only" data-i18n-id="hero.title">Old title</h1><script src="/frontend/data/generated/homepage/public-homepage-copy.global.js"></script></body></html>\n'
   );
 
   await writeJson(path.join(contentRoot, "country_reference_info.json"), {
@@ -125,15 +125,20 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
   assert.equal(publicToursDe.items[0].short_description, "Alpha Beschreibung");
   assert.deepEqual(publicToursDe.available_styles, [{ code: "budget", label: "Budget" }]);
   assert.match(homepageCopyGlobal, /heroTitleByLang/);
+  assert.match(homepageCopyGlobal, /assetUrls/);
+  assert.match(homepageCopyGlobal, /public-tours\.en\.json\?v=/);
+  assert.match(homepageCopyGlobal, /public-team\.json\?v=/);
   assert.match(homepageCopyGlobal, /"en": "Private holidays in Vietnam"/);
   assert.match(homepageCopyGlobal, /"de": "Privaturlaub in Vietnam"/);
   assert.match(homepageHtml, />Private holidays in Vietnam</);
+  assert.match(homepageHtml, /public-homepage-copy\.global\.js\?v=/);
 
   assert.equal(publicTeam.total, 1);
   assert.equal(publicTeam.items[0].username, "joachim");
+  assert.equal(publicTeam.items[0].full_name, "Joachim Neumann");
   assert.equal(publicTeam.items[0].position, "Founder");
   assert.match(publicTeam.items[0].picture_ref, /^\/assets\/generated\/homepage\/team\/joachim\.webp\?v=/);
-  assert.equal(publicTeam.items[0].appears_in_team_web_page, true);
+  assert.equal("appears_in_team_web_page" in publicTeam.items[0], false);
 
   const copiedTourAsset = await stat(path.join(tourOutputDir, "tour_alpha", "alpha.webp"));
   const copiedTeamAsset = await stat(path.join(teamOutputDir, "joachim.webp"));
