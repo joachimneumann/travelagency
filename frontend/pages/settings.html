@@ -148,6 +148,27 @@
               <div id="staffEditorShortDescription" class="settings-staff-editor__qualification-grid"></div>
             </div>
           </section>
+
+          <section class="backend-section emergency-editor" id="emergencyPanel" hidden>
+            <div class="emergency-editor__head">
+              <div>
+                <h2 class="section-title u-title-medium" data-i18n-id="backend.emergency.heading">Emergency</h2>
+                <p class="micro emergency-editor__intro" data-i18n-id="backend.emergency.intro">Internal country reference notes for ATP staff. This information is not yet used in customer-facing outputs.</p>
+              </div>
+              <p class="micro emergency-editor__status" id="emergencyStatus" role="status" aria-live="polite"></p>
+            </div>
+
+            <div class="backend-controls emergency-editor__controls">
+              <div class="field">
+                <label for="emergencyAddCountry" data-i18n-id="backend.emergency.add_country_label">Add country</label>
+                <select id="emergencyAddCountry"></select>
+              </div>
+              <button class="btn btn-ghost" id="emergencyAddCountryBtn" type="button" data-i18n-id="backend.emergency.add_country">Add country</button>
+              <button class="btn btn-primary" id="emergencySaveBtn" type="button" data-i18n-id="common.save" disabled>Save</button>
+            </div>
+
+            <div class="emergency-editor__list" id="emergencyList"></div>
+          </section>
         </div>
       </section>
     </main>

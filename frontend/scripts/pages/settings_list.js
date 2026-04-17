@@ -30,6 +30,7 @@ import {
   initializeBackendPageChrome,
   loadBackendPageAuthState
 } from "../shared/backend_page.js";
+import { initializeBackendCollapsibles } from "../shared/collapsible.js";
 
 const apiBase = getBackendApiBase();
 const apiOrigin = getBackendApiOrigin();
@@ -52,6 +53,12 @@ const els = {
   websiteDestinationPublicationStatus: document.getElementById("websiteDestinationPublicationStatus"),
   websiteDestinationPublicationList: document.getElementById("websiteDestinationPublicationList"),
   websiteDestinationPublicationSaveBtn: document.getElementById("websiteDestinationPublicationSaveBtn"),
+  emergencyPanel: document.getElementById("emergencyPanel"),
+  emergencyStatus: document.getElementById("emergencyStatus"),
+  emergencyList: document.getElementById("emergencyList"),
+  emergencyAddCountry: document.getElementById("emergencyAddCountry"),
+  emergencyAddCountryBtn: document.getElementById("emergencyAddCountryBtn"),
+  emergencySaveBtn: document.getElementById("emergencySaveBtn"),
   staffEditorPanel: document.getElementById("staffEditorPanel"),
   staffEditorStatus: document.getElementById("staffEditorStatus"),
   staffEditorCloseBtn: document.getElementById("staffEditorCloseBtn"),
@@ -196,7 +203,9 @@ const state = {
     canReadStaffProfiles: false,
     canEditStaffProfiles: false,
     canReadWebsiteDestinationPublication: false,
-    canEditWebsiteDestinationPublication: false
+    canEditWebsiteDestinationPublication: false,
+    canReadEmergency: false,
+    canEditEmergency: false
   },
   observabilityLoading: false,
   observability: {
@@ -212,6 +221,11 @@ const state = {
   websiteDestinationPublicationInitialByCountry: {},
   websiteDestinationPublicationDraftByCountry: {},
   websiteDestinationPublicationSaving: false,
+  emergencyItems: [],
+  emergencyLoaded: false,
+  emergencyDirty: false,
+  emergencySaving: false,
+  emergencyOpenCountries: new Set(),
   selectedUsername: "",
   editorSaving: false,
   editor: {
@@ -240,6 +254,12 @@ function hasAnyRoleInList(roleList, ...roles) {
 function countryLabel(countryCode) {
   const normalizedCountry = normalizeText(countryCode).toUpperCase();
   return normalizeText(COUNTRY_LABEL_BY_VALUE.get(normalizedCountry)) || normalizedCountry;
+}
+
+function applyBackendI18n(root) {
+  if (root && typeof window.backendI18n?.applyDataI18nAttributes === "function") {
+    window.backendI18n.applyDataI18nAttributes(root);
+  }
 }
 
 function collectKeycloakRoleNames(user) {
@@ -302,6 +322,13 @@ function countryReferenceHomepageAssetSyncWarningMessage() {
   );
 }
 
+function emergencyHomepageAssetSyncWarningMessage() {
+  return backendT(
+    "backend.emergency.public_sync_failed",
+    "Emergency information saved, but refreshing the public homepage failed. Please retry or run the homepage asset generator."
+  );
+}
+
 function showWebsiteDestinationPublicationStatus(message, isError = false) {
   if (!els.websiteDestinationPublicationStatus) return;
   els.websiteDestinationPublicationStatus.textContent = normalizeText(message);
@@ -310,6 +337,12 @@ function showWebsiteDestinationPublicationStatus(message, isError = false) {
 
 function clearWebsiteDestinationPublicationStatus() {
   showWebsiteDestinationPublicationStatus("", false);
+}
+
+function showEmergencyStatus(message = "", isError = false) {
+  if (!els.emergencyStatus) return;
+  els.emergencyStatus.textContent = normalizeText(message);
+  els.emergencyStatus.classList.toggle("is-error", Boolean(isError));
 }
 
 function showObservabilityStatus(message, isError = false) {
@@ -490,6 +523,8 @@ async function init() {
       canEditStaffProfiles: roles.includes(ROLES.ADMIN),
       canReadWebsiteDestinationPublication: roles.includes(ROLES.ADMIN),
       canEditWebsiteDestinationPublication: roles.includes(ROLES.ADMIN),
+      canReadEmergency: roles.includes(ROLES.ADMIN),
+      canEditEmergency: roles.includes(ROLES.ADMIN),
       canReadSettings: roles.includes(ROLES.ADMIN)
     }),
     hasPageAccess: (permissions) => permissions.canReadSettings,
@@ -507,7 +542,9 @@ async function init() {
     canReadStaffProfiles: Boolean(authState.permissions?.canReadStaffProfiles),
     canEditStaffProfiles: Boolean(authState.permissions?.canEditStaffProfiles),
     canReadWebsiteDestinationPublication: Boolean(authState.permissions?.canReadWebsiteDestinationPublication),
-    canEditWebsiteDestinationPublication: Boolean(authState.permissions?.canEditWebsiteDestinationPublication)
+    canEditWebsiteDestinationPublication: Boolean(authState.permissions?.canEditWebsiteDestinationPublication),
+    canReadEmergency: Boolean(authState.permissions?.canReadEmergency),
+    canEditEmergency: Boolean(authState.permissions?.canEditEmergency)
   };
 
   renderPermissionScopedSections();
@@ -517,7 +554,9 @@ async function init() {
       state.permissions.canReadObservability ? loadObservability() : Promise.resolve(),
       state.permissions.canReadStaffProfiles ? loadStaffDirectoryEntries() : Promise.resolve(),
       state.permissions.canEditStaffProfiles ? loadDestinationOptions() : Promise.resolve(),
-      state.permissions.canReadWebsiteDestinationPublication ? loadWebsiteDestinationPublication() : Promise.resolve()
+      (state.permissions.canReadWebsiteDestinationPublication || state.permissions.canReadEmergency)
+        ? loadWebsiteDestinationPublication()
+        : Promise.resolve()
     ]);
   } else {
     showError(backendT("backend.settings.forbidden", "You do not have access to reports and settings."));
@@ -533,6 +572,90 @@ function bindEvents() {
   els.websiteDestinationPublicationList?.addEventListener("change", handleWebsiteDestinationPublicationToggle);
   els.websiteDestinationPublicationSaveBtn?.addEventListener("click", () => {
     void saveWebsiteDestinationPublication();
+  });
+  els.emergencyAddCountryBtn?.addEventListener("click", handleAddEmergencyCountry);
+  els.emergencySaveBtn?.addEventListener("click", () => {
+    void saveEmergencyCountryReferenceInfo();
+  });
+  els.emergencyList?.addEventListener("click", (event) => {
+    const target = event.target instanceof Element ? event.target : null;
+    if (!target) return;
+
+    const toggleButton = target.closest("[data-emergency-toggle-country]");
+    if (toggleButton) {
+      window.requestAnimationFrame(() => {
+        syncExpandedEmergencyCountriesFromDom();
+      });
+    }
+
+    if (!state.permissions.canEditEmergency) return;
+
+    const removeCountryButton = target.closest("[data-emergency-remove-country]");
+    if (removeCountryButton) {
+      syncExpandedEmergencyCountriesFromDom();
+      syncEmergencyStateFromDom();
+      const country = normalizeText(removeCountryButton.getAttribute("data-emergency-remove-country")).toUpperCase();
+      state.emergencyItems = state.emergencyItems.filter((item) => normalizeText(item?.country).toUpperCase() !== country);
+      state.emergencyOpenCountries.delete(country);
+      state.emergencyDirty = true;
+      renderEmergencyEditor();
+      renderEmergencyAddCountryOptions();
+      showEmergencyStatus(backendT("backend.emergency.unsaved", "Unsaved changes."));
+      updateEmergencyControls();
+      return;
+    }
+
+    const addContactButton = target.closest("[data-emergency-add-contact]");
+    if (addContactButton) {
+      syncExpandedEmergencyCountriesFromDom();
+      syncEmergencyStateFromDom();
+      const country = normalizeText(addContactButton.getAttribute("data-emergency-add-contact")).toUpperCase();
+      state.emergencyItems = state.emergencyItems.map((item) => (
+        normalizeText(item?.country).toUpperCase() === country
+          ? {
+            ...item,
+            emergency_contacts: [
+              ...(Array.isArray(item?.emergency_contacts) ? item.emergency_contacts : []),
+              { label: "", phone: "", note: "" }
+            ]
+          }
+          : item
+      ));
+      state.emergencyDirty = true;
+      renderEmergencyEditor();
+      renderEmergencyAddCountryOptions();
+      showEmergencyStatus(backendT("backend.emergency.unsaved", "Unsaved changes."));
+      updateEmergencyControls();
+      return;
+    }
+
+    const removeContactButton = target.closest("[data-emergency-remove-contact]");
+    if (removeContactButton) {
+      syncExpandedEmergencyCountriesFromDom();
+      syncEmergencyStateFromDom();
+      const country = normalizeText(removeContactButton.getAttribute("data-emergency-remove-contact")).toUpperCase();
+      const contactIndex = Number(removeContactButton.getAttribute("data-contact-index"));
+      state.emergencyItems = state.emergencyItems.map((item) => {
+        if (normalizeText(item?.country).toUpperCase() !== country) return item;
+        const contacts = Array.isArray(item?.emergency_contacts) ? [...item.emergency_contacts] : [];
+        if (Number.isInteger(contactIndex) && contactIndex >= 0 && contactIndex < contacts.length) {
+          contacts.splice(contactIndex, 1);
+        }
+        return {
+          ...item,
+          emergency_contacts: contacts
+        };
+      });
+      state.emergencyDirty = true;
+      renderEmergencyEditor();
+      renderEmergencyAddCountryOptions();
+      showEmergencyStatus(backendT("backend.emergency.unsaved", "Unsaved changes."));
+      updateEmergencyControls();
+    }
+  });
+  els.emergencyList?.addEventListener("input", () => {
+    if (!state.permissions.canEditEmergency) return;
+    markEmergencyDirty();
   });
   els.staffEditorCloseBtn?.addEventListener("click", closeEditor);
   els.staffEditorSaveBtn?.addEventListener("click", saveSelectedStaffProfile);
@@ -597,6 +720,9 @@ function renderPermissionScopedSections() {
   }
   if (els.websiteDestinationPublicationPanel) {
     els.websiteDestinationPublicationPanel.hidden = !state.permissions.canReadWebsiteDestinationPublication;
+  }
+  if (els.emergencyPanel) {
+    els.emergencyPanel.hidden = !state.permissions.canReadEmergency;
   }
   if (!state.permissions.canEditStaffProfiles && els.staffEditorPanel) {
     els.staffEditorPanel.hidden = true;
@@ -715,6 +841,18 @@ function normalizeCountryReferenceItems(items) {
     .filter((item) => item.country && DESTINATION_COUNTRY_CODE_SET.has(item.country));
 }
 
+function cloneCountryReferenceItems(items) {
+  return normalizeCountryReferenceItems(items).map((item) => ({
+    ...item,
+    practical_tips: [...item.practical_tips],
+    emergency_contacts: (Array.isArray(item.emergency_contacts) ? item.emergency_contacts : []).map((entry) => ({
+      label: normalizeText(entry?.label),
+      phone: normalizeText(entry?.phone),
+      ...(normalizeText(entry?.note) ? { note: normalizeText(entry.note) } : {})
+    }))
+  }));
+}
+
 function publicationMapFromCountryReferenceItems(items) {
   const defaults = Object.fromEntries(COUNTRY_OPTIONS.map((option) => [option.value, true]));
   for (const item of normalizeCountryReferenceItems(items)) {
@@ -742,6 +880,272 @@ function updateWebsiteDestinationPublicationSaveButtonState() {
     || !isWebsiteDestinationPublicationDirty();
 }
 
+function buildEmptyEmergencyCountryItem(country) {
+  return {
+    country: normalizeText(country).toUpperCase(),
+    published_on_webpage: true,
+    practical_tips: [],
+    emergency_contacts: [],
+    updated_at: null
+  };
+}
+
+function getMissingEmergencyCountryOptions() {
+  const used = new Set(
+    (Array.isArray(state.emergencyItems) ? state.emergencyItems : [])
+      .map((item) => normalizeText(item?.country).toUpperCase())
+      .filter(Boolean)
+  );
+  return COUNTRY_OPTIONS.filter((option) => !used.has(option.value));
+}
+
+function updateEmergencyControls() {
+  const missingCountries = getMissingEmergencyCountryOptions();
+  if (els.emergencyAddCountryBtn) {
+    els.emergencyAddCountryBtn.disabled = !state.permissions.canEditEmergency || !missingCountries.length;
+  }
+  if (els.emergencyAddCountry) {
+    els.emergencyAddCountry.disabled = !state.permissions.canEditEmergency || !missingCountries.length;
+  }
+  if (els.emergencySaveBtn) {
+    els.emergencySaveBtn.disabled = !state.permissions.canEditEmergency
+      || !state.emergencyLoaded
+      || state.emergencySaving
+      || !state.emergencyDirty;
+  }
+}
+
+function renderEmergencyAddCountryOptions() {
+  if (!els.emergencyAddCountry) return;
+  const options = getMissingEmergencyCountryOptions();
+  if (!options.length) {
+    els.emergencyAddCountry.innerHTML = `<option value="">${escapeHtml(backendT("backend.emergency.all_countries_added", "All countries already added"))}</option>`;
+    return;
+  }
+  els.emergencyAddCountry.innerHTML = options
+    .map((option) => `<option value="${escapeHtml(option.value)}">${escapeHtml(option.label)} (${escapeHtml(option.value)})</option>`)
+    .join("");
+}
+
+function renderEmergencyContactRows(country, contacts) {
+  const normalizedContacts = Array.isArray(contacts) ? contacts : [];
+  if (!normalizedContacts.length) {
+    return `<p class="micro emergency-country-card__empty" data-i18n-id="backend.emergency.no_contacts">No emergency contacts yet.</p>`;
+  }
+  return normalizedContacts.map((contact, index) => `
+    <div class="emergency-contact-row" data-emergency-contact-row data-contact-index="${index}">
+      <input
+        type="text"
+        value="${escapeHtml(contact?.label || "")}"
+        placeholder="${escapeHtml(backendT("backend.emergency.contact_label_placeholder", "Police"))}"
+        data-emergency-contact-label
+      />
+      <input
+        type="text"
+        value="${escapeHtml(contact?.phone || "")}"
+        placeholder="${escapeHtml(backendT("backend.emergency.contact_phone_placeholder", "113"))}"
+        data-emergency-contact-phone
+      />
+      <input
+        type="text"
+        value="${escapeHtml(contact?.note || "")}"
+        placeholder="${escapeHtml(backendT("backend.emergency.contact_note_placeholder", "Optional note"))}"
+        data-emergency-contact-note
+      />
+      <button
+        class="btn btn-ghost emergency-contact-row__remove"
+        type="button"
+        aria-label="${escapeHtml(backendT("common.remove", "Remove"))}"
+        data-emergency-remove-contact="${escapeHtml(country)}"
+        data-contact-index="${index}"
+      >&times;</button>
+    </div>
+  `).join("");
+}
+
+function renderEmergencyEditor() {
+  if (!els.emergencyList) return;
+  if (!state.permissions.canReadEmergency) {
+    els.emergencyList.innerHTML = "";
+    updateEmergencyControls();
+    return;
+  }
+  const items = [...(Array.isArray(state.emergencyItems) ? state.emergencyItems : [])].sort((left, right) => {
+    const leftLabel = countryLabel(left?.country);
+    const rightLabel = countryLabel(right?.country);
+    return leftLabel.localeCompare(rightLabel, "en", { sensitivity: "base" })
+      || normalizeText(left?.country).localeCompare(normalizeText(right?.country), "en");
+  });
+  if (!items.length) {
+    els.emergencyList.innerHTML = `<p class="micro emergency-editor__empty" data-i18n-id="backend.emergency.no_countries">No countries yet.</p>`;
+    applyBackendI18n(els.emergencyList);
+    updateEmergencyControls();
+    return;
+  }
+
+  els.emergencyList.innerHTML = items.map((item) => {
+    const country = normalizeText(item?.country).toUpperCase();
+    const tips = Array.isArray(item?.practical_tips) ? item.practical_tips.map((entry) => normalizeText(entry)).filter(Boolean).join("\n") : "";
+    const updatedAt = normalizeText(item?.updated_at);
+    const updatedCopy = updatedAt
+      ? backendT("backend.emergency.updated_at", "Updated {value}", { value: formatDateTime(updatedAt) })
+      : backendT("backend.emergency.not_saved_yet", "Not saved yet");
+    const isOpen = state.emergencyOpenCountries.has(country);
+
+    return `
+      <article class="backend-section emergency-country-card${isOpen ? " is-open" : ""}" data-emergency-country-card data-country="${escapeHtml(country)}">
+        <div class="backend-section__head emergency-country-card__head">
+          <button
+            class="backend-section__summary emergency-country-card__summary"
+            type="button"
+            data-emergency-toggle-country="${escapeHtml(country)}"
+          >
+            <span class="backend-section-header emergency-country-card__header">
+              <span class="backend-section-header__primary emergency-country-card__title">${escapeHtml(countryLabel(country))} <span class="emergency-country-card__code">(${escapeHtml(country)})</span></span>
+              <span class="backend-section-header__secondary emergency-country-card__updated">${escapeHtml(updatedCopy)}</span>
+            </span>
+          </button>
+          <button
+            class="btn btn-ghost emergency-country-card__remove"
+            type="button"
+            aria-label="${escapeHtml(backendT("backend.emergency.remove_country", "Remove country"))}"
+            data-emergency-remove-country="${escapeHtml(country)}"
+          >&times;</button>
+        </div>
+
+        <div class="backend-section__body emergency-country-card__body">
+          <div class="field full">
+            <label class="field-label" data-i18n-id="backend.emergency.practical_tips">Practical tips</label>
+            <textarea
+              rows="5"
+              placeholder="${escapeHtml(backendT("backend.emergency.practical_tips_placeholder", "One tip per line"))}"
+              data-emergency-practical-tips
+            >${escapeHtml(tips)}</textarea>
+            <p class="micro" data-i18n-id="backend.emergency.practical_tips_hint">Write one practical tip per line.</p>
+          </div>
+
+          <div class="field full">
+            <div class="emergency-country-card__contacts-head">
+              <label class="field-label" data-i18n-id="backend.emergency.emergency_contacts">Emergency contacts</label>
+              <button
+                class="btn btn-ghost"
+                type="button"
+                data-emergency-add-contact="${escapeHtml(country)}"
+                data-i18n-id="backend.emergency.add_contact"
+              >Add contact</button>
+            </div>
+            <div class="emergency-country-card__contacts">
+              ${renderEmergencyContactRows(country, item?.emergency_contacts)}
+            </div>
+          </div>
+        </div>
+      </article>
+    `;
+  }).join("");
+  applyBackendI18n(els.emergencyList);
+  initializeBackendCollapsibles(els.emergencyList);
+  updateEmergencyControls();
+}
+
+function readEmergencyItemsFromDom() {
+  if (!els.emergencyList) return cloneCountryReferenceItems(state.emergencyItems);
+  const cards = Array.from(els.emergencyList.querySelectorAll("[data-emergency-country-card]"));
+  if (!cards.length) return cloneCountryReferenceItems(state.emergencyItems);
+  return cards.map((card) => {
+    const country = normalizeText(card.getAttribute("data-country")).toUpperCase();
+    const previousItem = (Array.isArray(state.emergencyItems) ? state.emergencyItems : [])
+      .find((item) => normalizeText(item?.country).toUpperCase() === country);
+    const practicalTips = (card.querySelector("[data-emergency-practical-tips]")?.value || "")
+      .split(/\r?\n/)
+      .map((entry) => normalizeText(entry))
+      .filter(Boolean);
+    const emergencyContacts = Array.from(card.querySelectorAll("[data-emergency-contact-row]"))
+      .map((row) => ({
+        label: normalizeText(row.querySelector("[data-emergency-contact-label]")?.value),
+        phone: normalizeText(row.querySelector("[data-emergency-contact-phone]")?.value),
+        note: normalizeText(row.querySelector("[data-emergency-contact-note]")?.value)
+      }))
+      .filter((contact) => contact.label || contact.phone || contact.note)
+      .map((contact) => ({
+        label: contact.label,
+        phone: contact.phone,
+        ...(contact.note ? { note: contact.note } : {})
+      }));
+    return {
+      country,
+      published_on_webpage: previousItem?.published_on_webpage !== false,
+      practical_tips: practicalTips,
+      emergency_contacts: emergencyContacts,
+      updated_at: normalizeText(previousItem?.updated_at) || null
+    };
+  }).sort((left, right) => countryLabel(left.country).localeCompare(countryLabel(right.country), "en", { sensitivity: "base" }));
+}
+
+function validateEmergencyItems(items) {
+  const seen = new Set();
+  for (const item of Array.isArray(items) ? items : []) {
+    const country = normalizeText(item?.country).toUpperCase();
+    if (!country) {
+      return backendT("backend.emergency.validation.country_required", "Each entry needs a country.");
+    }
+    if (seen.has(country)) {
+      return backendT("backend.emergency.validation.duplicate_country", "Each country can appear only once.");
+    }
+    seen.add(country);
+    const contacts = Array.isArray(item?.emergency_contacts) ? item.emergency_contacts : [];
+    for (const contact of contacts) {
+      const label = normalizeText(contact?.label);
+      const phone = normalizeText(contact?.phone);
+      const note = normalizeText(contact?.note);
+      if (!label && !phone && !note) continue;
+      if (!label || !phone) {
+        return backendT("backend.emergency.validation.contact_label_phone", "Each emergency contact needs both a label and a phone number.");
+      }
+    }
+  }
+  return "";
+}
+
+function syncEmergencyStateFromDom() {
+  state.emergencyItems = readEmergencyItemsFromDom();
+}
+
+function syncExpandedEmergencyCountriesFromDom() {
+  if (!els.emergencyList) return;
+  state.emergencyOpenCountries = new Set(
+    Array.from(els.emergencyList.querySelectorAll("[data-emergency-country-card]"))
+      .filter((card) => card.classList.contains("is-open"))
+      .map((card) => normalizeText(card.getAttribute("data-country")).toUpperCase())
+      .filter(Boolean)
+  );
+}
+
+function markEmergencyDirty() {
+  if (!state.emergencyLoaded) return;
+  state.emergencyDirty = true;
+  showEmergencyStatus(backendT("backend.emergency.unsaved", "Unsaved changes."));
+  updateEmergencyControls();
+}
+
+function syncCountryReferenceState(items) {
+  const normalizedItems = normalizeCountryReferenceItems(items);
+  state.countryReferenceItems = normalizedItems;
+  state.websiteDestinationPublicationInitialByCountry = publicationMapFromCountryReferenceItems(normalizedItems);
+  state.websiteDestinationPublicationDraftByCountry = { ...state.websiteDestinationPublicationInitialByCountry };
+  state.emergencyItems = cloneCountryReferenceItems(normalizedItems);
+  state.emergencyOpenCountries = state.emergencyLoaded
+    ? new Set(
+      [...state.emergencyOpenCountries]
+        .filter((country) => normalizedItems.some((item) => item.country === country))
+    )
+    : new Set(normalizedItems.map((item) => item.country).filter(Boolean));
+  state.emergencyLoaded = true;
+  state.emergencyDirty = false;
+  renderWebsiteDestinationPublication();
+  renderEmergencyAddCountryOptions();
+  renderEmergencyEditor();
+}
+
 function renderWebsiteDestinationPublication() {
   if (!els.websiteDestinationPublicationList) return;
   if (!state.permissions.canReadWebsiteDestinationPublication) {
@@ -764,6 +1168,7 @@ async function loadWebsiteDestinationPublication() {
   showWebsiteDestinationPublicationStatus(
     backendT("backend.settings.website_destinations_loading", "Loading website destinations...")
   );
+  showEmergencyStatus(backendT("backend.emergency.loading", "Loading emergency information..."));
   try {
     const request = countryReferenceInfoRequest({ baseURL: apiOrigin });
     const payload = await fetchApi(request.url, { suppressNotFound: true });
@@ -772,16 +1177,16 @@ async function loadWebsiteDestinationPublication() {
         backendT("backend.settings.website_destinations_load_failed", "Could not load website destinations."),
         true
       );
+      showEmergencyStatus(backendT("backend.emergency.load_failed", "Could not load emergency information."), true);
       renderWebsiteDestinationPublication();
+      renderEmergencyEditor();
       return;
     }
-    state.countryReferenceItems = normalizeCountryReferenceItems(payload?.items);
-    state.websiteDestinationPublicationInitialByCountry = publicationMapFromCountryReferenceItems(state.countryReferenceItems);
-    state.websiteDestinationPublicationDraftByCountry = { ...state.websiteDestinationPublicationInitialByCountry };
-    renderWebsiteDestinationPublication();
+    syncCountryReferenceState(payload?.items);
     showWebsiteDestinationPublicationStatus(
       backendT("backend.settings.website_destinations_status", "Destination publication is managed here.")
     );
+    showEmergencyStatus(backendT("backend.emergency.ready", "Emergency information loaded."));
   } catch (error) {
     console.error("[backend-settings] Failed to load website destination publication controls.", {
       error,
@@ -791,11 +1196,18 @@ async function loadWebsiteDestinationPublication() {
     state.countryReferenceItems = [];
     state.websiteDestinationPublicationInitialByCountry = publicationMapFromCountryReferenceItems([]);
     state.websiteDestinationPublicationDraftByCountry = { ...state.websiteDestinationPublicationInitialByCountry };
+    state.emergencyItems = [];
+    state.emergencyLoaded = false;
+    state.emergencyDirty = false;
+    state.emergencyOpenCountries = new Set();
     renderWebsiteDestinationPublication();
+    renderEmergencyAddCountryOptions();
+    renderEmergencyEditor();
     showWebsiteDestinationPublicationStatus(
       backendT("backend.settings.website_destinations_load_failed", "Could not load website destinations."),
       true
     );
+    showEmergencyStatus(backendT("backend.emergency.load_failed", "Could not load emergency information."), true);
   }
 }
 
@@ -822,6 +1234,7 @@ async function saveWebsiteDestinationPublication() {
   }
   clearError();
   clearWebsiteDestinationPublicationStatus();
+  syncEmergencyStateFromDom();
   showWebsiteDestinationPublicationStatus(
     backendT("backend.settings.website_destinations_saving", "Saving website destinations...")
   );
@@ -830,7 +1243,7 @@ async function saveWebsiteDestinationPublication() {
 
   try {
     const currentItemsByCountry = new Map(
-      normalizeCountryReferenceItems(state.countryReferenceItems).map((item) => [item.country, item])
+      normalizeCountryReferenceItems(state.emergencyItems).map((item) => [item.country, item])
     );
     const draft = normalizeWebsiteDestinationPublicationDraft(state.websiteDestinationPublicationDraftByCountry);
     const nextItems = COUNTRY_OPTIONS
@@ -867,20 +1280,110 @@ async function saveWebsiteDestinationPublication() {
       );
       return;
     }
-    state.countryReferenceItems = normalizeCountryReferenceItems(payload?.items);
-    state.websiteDestinationPublicationInitialByCountry = publicationMapFromCountryReferenceItems(state.countryReferenceItems);
-    state.websiteDestinationPublicationDraftByCountry = { ...state.websiteDestinationPublicationInitialByCountry };
-    renderWebsiteDestinationPublication();
+    syncCountryReferenceState(payload?.items);
     showWebsiteDestinationPublicationStatus(
       homepageAssetSyncFailed(payload)
         ? countryReferenceHomepageAssetSyncWarningMessage()
         : backendT("backend.settings.website_destinations_saved", "Website destinations saved."),
       homepageAssetSyncFailed(payload)
     );
+    showEmergencyStatus(
+      homepageAssetSyncFailed(payload)
+        ? emergencyHomepageAssetSyncWarningMessage()
+        : backendT("backend.emergency.saved", "Emergency information saved."),
+      homepageAssetSyncFailed(payload)
+    );
   } finally {
     state.websiteDestinationPublicationSaving = false;
     updateWebsiteDestinationPublicationSaveButtonState();
+    updateEmergencyControls();
   }
+}
+
+async function saveEmergencyCountryReferenceInfo() {
+  if (!state.permissions.canEditEmergency || state.emergencySaving) return;
+  clearError();
+  syncExpandedEmergencyCountriesFromDom();
+  syncEmergencyStateFromDom();
+  const validationError = validateEmergencyItems(state.emergencyItems);
+  if (validationError) {
+    showError(validationError);
+    showEmergencyStatus(validationError, true);
+    return;
+  }
+  state.emergencySaving = true;
+  updateEmergencyControls();
+  showEmergencyStatus(backendT("backend.emergency.saving", "Saving emergency information..."));
+
+  try {
+    const emergencyItemsByCountry = new Map(
+      normalizeCountryReferenceItems(state.emergencyItems).map((item) => [item.country, item])
+    );
+    const destinationDraft = normalizeWebsiteDestinationPublicationDraft(state.websiteDestinationPublicationDraftByCountry);
+    const nextItems = COUNTRY_OPTIONS
+      .map((option) => {
+        const existing = emergencyItemsByCountry.get(option.value) || null;
+        const publishedOnWebpage = destinationDraft[option.value] !== false;
+        if (existing) {
+          return {
+            ...existing,
+            published_on_webpage: publishedOnWebpage
+          };
+        }
+        if (!publishedOnWebpage) {
+          return {
+            country: option.value,
+            published_on_webpage: false,
+            practical_tips: [],
+            emergency_contacts: []
+          };
+        }
+        return null;
+      })
+      .filter(Boolean);
+    const request = countryReferenceInfoUpdateRequest({ baseURL: apiOrigin });
+    const payload = await fetchApi(request.url, {
+      method: request.method,
+      body: { items: nextItems }
+    });
+    if (!payload) {
+      updateEmergencyControls();
+      return;
+    }
+    syncCountryReferenceState(payload?.items);
+    showEmergencyStatus(
+      homepageAssetSyncFailed(payload)
+        ? emergencyHomepageAssetSyncWarningMessage()
+        : backendT("backend.emergency.saved", "Emergency information saved."),
+      homepageAssetSyncFailed(payload)
+    );
+    showWebsiteDestinationPublicationStatus(
+      homepageAssetSyncFailed(payload)
+        ? countryReferenceHomepageAssetSyncWarningMessage()
+        : backendT("backend.settings.website_destinations_status", "Destination publication is managed here."),
+      homepageAssetSyncFailed(payload)
+    );
+  } finally {
+    state.emergencySaving = false;
+    updateEmergencyControls();
+    updateWebsiteDestinationPublicationSaveButtonState();
+  }
+}
+
+function handleAddEmergencyCountry() {
+  if (!state.permissions.canEditEmergency) return;
+  syncExpandedEmergencyCountriesFromDom();
+  syncEmergencyStateFromDom();
+  const country = normalizeText(els.emergencyAddCountry?.value).toUpperCase();
+  if (!country) return;
+  if (state.emergencyItems.some((item) => normalizeText(item?.country).toUpperCase() === country)) return;
+  state.emergencyItems = cloneCountryReferenceItems([...state.emergencyItems, buildEmptyEmergencyCountryItem(country)]);
+  state.emergencyOpenCountries.add(country);
+  state.emergencyDirty = true;
+  renderEmergencyEditor();
+  renderEmergencyAddCountryOptions();
+  showEmergencyStatus(backendT("backend.emergency.unsaved", "Unsaved changes."));
+  updateEmergencyControls();
 }
 
 async function loadStaffDirectoryEntries() {

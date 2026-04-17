@@ -273,9 +273,7 @@
             ? "marketing_tours.html"
             : requestedSection === "standard-travel-plans"
               ? "standard-travel-plans.html"
-            : requestedSection === "settings"
-              ? "settings.html"
-              : "emergency.html";
+            : "settings.html";
         const target = new URL(pageName, window.location.origin);
         const lang = params.get("lang");
         if (lang) target.searchParams.set("lang", lang);
