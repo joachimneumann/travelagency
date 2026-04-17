@@ -100,7 +100,7 @@
         </video>
         <div class="hero-scrim" aria-hidden="true"></div>
         <div class="container hero-content">
-          <h1 id="heroTitle" class="hero-title-only" data-i18n-id="hero.title">Private holidays in Vietnam</h1>
+          <h1 id="heroTitle" class="hero-title-only" data-i18n-id="hero.title">Private holidays in Vietnam, Thailand, Cambodia and Laos</h1>
           <div class="filter-menu filter-menu--hero" aria-label="Primary browse menu" data-i18n-aria-label-id="a11y.browse_menu">
               <div id="navDestinationWrap" class="select-wrap" hidden>
               <button
@@ -492,8 +492,36 @@
       </div>
     </div>
     <script src="/shared/generated/language_catalog.global.js"></script>
-    <script src="/frontend/data/generated/homepage/public-homepage-copy.global.js?v=0ace33086ebe"></script>
-    <script src="/frontend/scripts/shared/frontend_i18n.js"></script>
+    <script type="module">
+      const loadScript = (src, { type = "text/javascript" } = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement("script");
+        if (type === "module") {
+          script.type = "module";
+        }
+        script.async = false;
+        script.src = src;
+        script.onload = () => resolve(script);
+        script.onerror = () => reject(new Error(`Failed to load script: ${src}`));
+        document.head.appendChild(script);
+      });
+
+      const homepageCopyManifestUrl = "/frontend/data/generated/homepage/public-homepage-copy.manifest.json";
+      const fallbackHomepageCopyUrl = "/frontend/data/generated/homepage/public-homepage-copy.global.js";
+      let homepageCopyUrl = fallbackHomepageCopyUrl;
+
+      try {
+        const response = await fetch(homepageCopyManifestUrl, { cache: "no-store" });
+        if (response.ok) {
+          const payload = await response.json();
+          const configuredAssetUrl = String(payload?.assetUrl || "").trim();
+          if (configuredAssetUrl) homepageCopyUrl = configuredAssetUrl;
+        }
+      } catch {}
+
+      await loadScript(homepageCopyUrl);
+      await loadScript("/frontend/scripts/shared/frontend_i18n.js");
+      await loadScript("/frontend/scripts/main.js", { type: "module" });
+    </script>
     <script>
       (() => {
         const heroVideo = document.querySelector(".hero-bg-video[data-deferred-autoplay]");
@@ -527,7 +555,6 @@
         }
       })();
     </script>
-    <script type="module" src="/frontend/scripts/main.js"></script>
 
     <script type="application/ld+json">
       {

@@ -23,6 +23,7 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
   const teamOutputDir = path.join(root, "assets", "generated", "homepage", "team");
   const homepageHtmlPath = path.join(root, "frontend", "pages", "index.html");
   const homepageCopyGlobalPath = path.join(frontendDataDir, "public-homepage-copy.global.js");
+  const homepageCopyManifestPath = path.join(frontendDataDir, "public-homepage-copy.manifest.json");
 
   await mkdir(path.join(toursRoot, "tour_alpha"), { recursive: true });
   await mkdir(path.join(toursRoot, "tour_hidden"), { recursive: true });
@@ -115,6 +116,7 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
   const publicToursDe = JSON.parse(await readFile(path.join(frontendDataDir, "public-tours.de.json"), "utf8"));
   const publicTeam = JSON.parse(await readFile(path.join(frontendDataDir, "public-team.json"), "utf8"));
   const homepageCopyGlobal = await readFile(homepageCopyGlobalPath, "utf8");
+  const homepageCopyManifest = JSON.parse(await readFile(homepageCopyManifestPath, "utf8"));
   const homepageHtml = await readFile(homepageHtmlPath, "utf8");
 
   assert.equal(publicToursEn.items.length, 1);
@@ -132,8 +134,10 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
   assert.match(homepageCopyGlobal, /public-team\.json\?v=/);
   assert.match(homepageCopyGlobal, /"en": "Private holidays in Vietnam"/);
   assert.match(homepageCopyGlobal, /"de": "Privaturlaub in Vietnam"/);
-  assert.match(homepageHtml, />Private holidays in Vietnam</);
-  assert.match(homepageHtml, /public-homepage-copy\.global\.js\?v=/);
+  assert.match(homepageCopyManifest.assetUrl, /^\/frontend\/data\/generated\/homepage\/public-homepage-copy\.global\.js\?v=/);
+  assert.equal(typeof homepageCopyManifest.version, "string");
+  assert.match(homepageHtml, />Old title</);
+  assert.doesNotMatch(homepageHtml, /public-homepage-copy\.global\.js\?v=/);
 
   assert.equal(publicTeam.total, 1);
   assert.equal(publicTeam.items[0].username, "joachim");

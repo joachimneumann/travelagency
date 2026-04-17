@@ -20,7 +20,6 @@ import { FRONTEND_LANGUAGE_CODES } from "../../shared/generated/language_catalog
 
 const ROOT_DIR = path.resolve(fileURLToPath(new URL("../..", import.meta.url)));
 const CONTENT_ROOT = path.join(ROOT_DIR, "content");
-const FRONTEND_PAGES_DIR = path.join(ROOT_DIR, "frontend", "pages");
 const FRONTEND_I18N_DIR = path.join(ROOT_DIR, "frontend", "data", "i18n", "frontend");
 const TOURS_ROOT = path.join(CONTENT_ROOT, "tours");
 const ATP_STAFF_ROOT = path.join(CONTENT_ROOT, "atp_staff");
@@ -32,9 +31,8 @@ const FRONTEND_DATA_DIR = GENERATED_HOMEPAGE_DATA_DIR;
 const TOUR_OUTPUT_DIR = path.join(GENERATED_HOMEPAGE_ASSETS_DIR, "tours");
 const TEAM_OUTPUT_DIR = path.join(GENERATED_HOMEPAGE_ASSETS_DIR, "team");
 const TEAM_OUTPUT_FILE = path.join(FRONTEND_DATA_DIR, "public-team.json");
-const HOMEPAGE_HTML_PATH = path.join(FRONTEND_PAGES_DIR, "index.html");
 const HOMEPAGE_COPY_GLOBAL_PATH = path.join(FRONTEND_DATA_DIR, "public-homepage-copy.global.js");
-const HOMEPAGE_COPY_GLOBAL_FILENAME = path.basename(HOMEPAGE_COPY_GLOBAL_PATH);
+const HOMEPAGE_COPY_MANIFEST_PATH = path.join(FRONTEND_DATA_DIR, "public-homepage-copy.manifest.json");
 const TOUR_FILE_PREFIX = "public-tours.";
 const TOUR_FILE_SUFFIX = ".json";
 const ALLOWED_ASSET_EXTENSIONS = new Set([".avif", ".gif", ".jpeg", ".jpg", ".png", ".svg", ".webp"]);
@@ -64,13 +62,6 @@ function buildVersionedGeneratedDataUrl(filename, version, { publicPrefix = "/fr
   const baseUrl = `${String(publicPrefix || "").replace(/\/+$/, "")}/${encodeURIComponent(normalizedFilename)}`;
   const normalizedVersion = normalizeText(version);
   return normalizedVersion ? `${baseUrl}?v=${encodeURIComponent(normalizedVersion)}` : baseUrl;
-}
-
-function escapeHtml(value) {
-  return String(value ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
 }
 
 function interpolateTemplate(template, vars) {
@@ -127,7 +118,8 @@ async function cleanGeneratedFrontendData(frontendDataDir) {
     const entryName = entry.name;
     if (
       entryName === "public-team.json"
-      || entryName === HOMEPAGE_COPY_GLOBAL_FILENAME
+      || entryName === path.basename(HOMEPAGE_COPY_GLOBAL_PATH)
+      || entryName === path.basename(HOMEPAGE_COPY_MANIFEST_PATH)
       || (entryName.startsWith(TOUR_FILE_PREFIX) && entryName.endsWith(TOUR_FILE_SUFFIX))
     ) {
       await rm(path.join(frontendDataDir, entryName), { force: true });
@@ -309,31 +301,12 @@ async function writeHomepageCopyGlobalScript(outputPath, value) {
   };
 }
 
-async function updateHomepageHtmlFallback(htmlPath, { heroTitle, homepageCopyScriptVersion = "" } = {}) {
-  const normalizedTitle = normalizeText(heroTitle);
-  const html = await readFile(htmlPath, "utf8");
-  let nextHtml = html;
-  if (normalizedTitle) {
-    const markerPattern = /(<h1\s+id="heroTitle"[^>]*>)([\s\S]*?)(<\/h1>)/;
-    if (!markerPattern.test(nextHtml)) {
-      throw new Error(`Could not find heroTitle heading in ${htmlPath}.`);
-    }
-    nextHtml = nextHtml.replace(markerPattern, (_, openTag, _currentText, closeTag) => {
-      return `${openTag}${escapeHtml(normalizedTitle)}${closeTag}`;
-    });
-  }
-  const normalizedScriptVersion = normalizeText(homepageCopyScriptVersion);
-  if (normalizedScriptVersion) {
-    const scriptPattern = /(<script\s+src="\/frontend\/data\/generated\/homepage\/public-homepage-copy\.global\.js)(?:\?v=[^"]*)?("><\/script>)/;
-    if (!scriptPattern.test(nextHtml)) {
-      throw new Error(`Could not find public homepage copy script tag in ${htmlPath}.`);
-    }
-    nextHtml = nextHtml.replace(
-      scriptPattern,
-      `$1?v=${encodeURIComponent(normalizedScriptVersion)}$2`
-    );
-  }
-  await writeFile(htmlPath, nextHtml, "utf8");
+async function writeHomepageCopyManifest(outputPath, { assetUrl = "", version = "" } = {}) {
+  await ensureDirectory(path.dirname(outputPath));
+  await writeFile(outputPath, jsonWithTrailingNewline({
+    assetUrl: normalizeText(assetUrl),
+    version: normalizeText(version)
+  }), "utf8");
 }
 
 async function generateTourAssets({
@@ -584,9 +557,11 @@ export async function generatePublicHomepageAssets({
   teamOutputDir = TEAM_OUTPUT_DIR,
   frontendI18nDir = FRONTEND_I18N_DIR,
   homepageCopyGlobalPath = HOMEPAGE_COPY_GLOBAL_PATH,
-  homepageHtmlPath = HOMEPAGE_HTML_PATH,
+  homepageCopyManifestPath = "",
   languages = FRONTEND_LANGUAGE_CODES
 } = {}) {
+  const resolvedHomepageCopyManifestPath = normalizeText(homepageCopyManifestPath)
+    || path.join(frontendDataDir, path.basename(HOMEPAGE_COPY_MANIFEST_PATH));
   await cleanGeneratedFrontendData(frontendDataDir);
   const tours = await generateTourAssets({
     toursRoot,
@@ -609,9 +584,9 @@ export async function generatePublicHomepageAssets({
       team: team.assetUrl
     }
   });
-  await updateHomepageHtmlFallback(homepageHtmlPath, {
-    heroTitle: tours.heroTitleByLang.en || "",
-    homepageCopyScriptVersion: homepageCopy.version
+  await writeHomepageCopyManifest(resolvedHomepageCopyManifestPath, {
+    assetUrl: buildVersionedGeneratedDataUrl(path.basename(homepageCopyGlobalPath), homepageCopy.version),
+    version: homepageCopy.version
   });
   return { tours, team };
 }
