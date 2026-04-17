@@ -8,7 +8,7 @@ SOURCE_CADDYFILE="${SOURCE_CADDYFILE:-$ROOT_DIR/deploy/Caddyfile}"
 SOURCE_CADDY_COMPOSE_FILE="${SOURCE_CADDY_COMPOSE_FILE:-$ROOT_DIR/docker-compose.caddy.yml}"
 CADDY_COMPOSE_FILE="${CADDY_COMPOSE_FILE:-$CADDY_ROOT/docker-compose.caddy.yml}"
 RUNTIME_CADDYFILE="${RUNTIME_CADDYFILE:-$CADDY_ROOT/deploy/Caddyfile}"
-ENV_FILE="${ENV_FILE:-$ROOT_DIR/.env.production}"
+ENV_FILE="${ENV_FILE:-$ROOT_DIR/.env}"
 CADDY_PROJECT_NAME="${CADDY_PROJECT_NAME:-asiatravelplan-public}"
 
 source "$ROOT_DIR/scripts/lib/docker_runtime.sh"
@@ -25,7 +25,7 @@ Environment overrides:
   SOURCE_CADDY_COMPOSE_FILE Source compose file in the checkout (default: docker-compose.caddy.yml)
   CADDY_COMPOSE_FILE      Runtime compose file path (default: /srv/asiatravelplan-public/docker-compose.caddy.yml)
   RUNTIME_CADDYFILE       Runtime Caddyfile path (default: /srv/asiatravelplan-public/deploy/Caddyfile)
-  ENV_FILE                Env file passed to docker compose (default: .env.production)
+  ENV_FILE                Env file passed to docker compose (default: .env)
 EOF
 }
 

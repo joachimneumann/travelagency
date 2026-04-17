@@ -30,6 +30,30 @@
         <div class="container">
           <div id="backendError" class="backend-message" role="alert" aria-live="assertive"></div>
 
+          <section class="backend-section settings-observability" id="settingsObservabilityPanel" hidden>
+            <div class="settings-observability__head">
+              <div>
+                <h2 class="section-title u-title-medium">Backend activity</h2>
+                <p class="micro">Shows current backend-process sessions and the most recently changed booking.</p>
+              </div>
+              <div class="settings-observability__actions">
+                <p class="micro settings-observability__status" id="settingsObservabilityStatus"></p>
+                <button class="btn btn-ghost" id="settingsObservabilityRefreshBtn" type="button">Refresh</button>
+              </div>
+            </div>
+            <div class="settings-observability__grid">
+              <article class="settings-observability__card">
+                <h3 class="u-title-small settings-observability__card-title">Who is logged in</h3>
+                <div id="settingsLoggedInUsers"></div>
+              </article>
+              <article class="settings-observability__card">
+                <h3 class="u-title-small settings-observability__card-title">Last changed booking</h3>
+                <div id="settingsLastChangedBooking"></div>
+              </article>
+            </div>
+            <p class="micro settings-observability__hint">Current-process only: this list is cleared when the backend restarts.</p>
+          </section>
+
           <div class="backend-table-wrap" id="settingsPanel">
             <table class="backend-table" id="staffTable"></table>
           </div>

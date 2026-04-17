@@ -3691,6 +3691,104 @@ textarea:focus-visible {
   text-align: center;
 }
 
+.settings-observability {
+  margin-bottom: 1rem;
+}
+
+.settings-observability__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.settings-observability__head > div > p,
+.settings-observability__status,
+.settings-observability__card-title,
+.settings-observability__hint {
+  margin: 0;
+}
+
+.settings-observability__actions {
+  display: grid;
+  gap: 0.5rem;
+  justify-items: end;
+}
+
+.settings-observability__status {
+  color: var(--text-muted);
+}
+
+.settings-observability__status.is-error {
+  color: var(--error-text);
+}
+
+.settings-observability__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.settings-observability__card {
+  display: grid;
+  gap: 0.9rem;
+  min-height: 100%;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface-muted-soft);
+}
+
+.settings-observability__card-title {
+  color: var(--text-strong);
+}
+
+.settings-observability__list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.settings-observability__list-item {
+  display: grid;
+  gap: 0.28rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.settings-observability__list-item:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.settings-observability__item-title {
+  color: var(--text-strong);
+  font-weight: var(--font-weight-semibold);
+}
+
+.settings-observability__item-meta,
+.settings-observability__empty,
+.settings-observability__booking-meta {
+  color: var(--text-muted-strong);
+}
+
+.settings-observability__booking {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.settings-observability__booking-link {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  font-weight: var(--font-weight-semibold);
+}
+
+.settings-observability__hint {
+  margin-top: 0.9rem;
+  color: var(--text-muted);
+}
+
 .settings-staff-table__username-cell {
   min-width: 170px;
   display: grid;
@@ -4739,6 +4837,7 @@ textarea:focus-visible {
     max-width: none;
   }
 
+  .settings-observability__head,
   .settings-staff-editor__hero,
   .settings-staff-editor__head,
   .settings-destination-publication__head,
@@ -4748,11 +4847,16 @@ textarea:focus-visible {
     align-items: stretch;
   }
 
+  .settings-observability__actions,
   .settings-staff-editor__head-actions,
   .settings-destination-publication__actions {
     width: 100%;
     justify-content: space-between;
     justify-items: stretch;
+  }
+
+  .settings-observability__grid {
+    grid-template-columns: 1fr;
   }
 
   .settings-staff-editor__qualification-row {

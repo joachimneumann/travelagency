@@ -3293,9 +3293,24 @@ test("settings page hosts destination publication controls while emergency no lo
     "Settings page should expose a dedicated website destination publication section with status, save action, and checkbox list mounts"
   );
   assert.match(
+    settingsHtml,
+    /id="settingsObservabilityPanel"[\s\S]*id="settingsObservabilityStatus"[\s\S]*id="settingsObservabilityRefreshBtn"[\s\S]*id="settingsLoggedInUsers"[\s\S]*id="settingsLastChangedBooking"/,
+    "Settings page should expose a backend activity section with a refresh action and mounts for active sessions plus the latest booking change"
+  );
+  assert.match(
     settingsSource,
     /countryReferenceInfoRequest|countryReferenceInfoUpdateRequest/,
     "Settings page should use the generated country-reference API requests for website destination publication"
+  );
+  assert.match(
+    settingsSource,
+    /canReadObservability:\s*roles\.includes\(ROLES\.ADMIN\)[\s\S]*loadObservability\(\)/,
+    "Settings page should gate backend activity behind the admin-only observability permission"
+  );
+  assert.match(
+    settingsSource,
+    /\/api\/v1\/settings\/observability/,
+    "Settings page should fetch the settings observability endpoint for backend activity"
   );
   assert.match(
     settingsSource,

@@ -23,6 +23,10 @@ export function createAccessHelpers({ auth, appRoles }) {
     return hasRole(principal, appRoles.ADMIN);
   }
 
+  function canReadSettings(principal) {
+    return hasRole(principal, appRoles.ADMIN);
+  }
+
   function canReadTours(principal) {
     return hasRole(principal, appRoles.ADMIN) ||
       hasRole(principal, appRoles.ACCOUNTANT) ||
@@ -59,6 +63,7 @@ export function createAccessHelpers({ auth, appRoles }) {
     canReadBackend,
     canViewKeycloakUsers,
     canEditAtpStaffProfiles,
+    canReadSettings,
     canReadTours,
     canEditTours,
     canReadCountryReferenceInfo,

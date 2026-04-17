@@ -3,7 +3,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 COMPOSE_FILE="docker-compose.production.yml"
-ENV_FILE=".env.production"
+ENV_FILE=".env"
 PROJECT_NAME="${PROJECT_NAME:-asiatravelplan}"
 
 source "$ROOT_DIR/scripts/lib/docker_runtime.sh"

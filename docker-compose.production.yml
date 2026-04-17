@@ -13,7 +13,7 @@ services:
       - ./backend/app/data:/srv/backend/app/data
       - ./content:/srv/content
     env_file:
-      - .env.production
+      - .env
     depends_on:
       postgres:
         condition: service_healthy

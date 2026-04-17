@@ -174,6 +174,34 @@ export function createAuth({ port }) {
     };
   }
 
+  function msToIso(value) {
+    const timestamp = Number(value);
+    if (!Number.isFinite(timestamp) || timestamp <= 0) return null;
+    try {
+      return new Date(timestamp).toISOString();
+    } catch {
+      return null;
+    }
+  }
+
+  function listActiveSessions() {
+    pruneState();
+    return Array.from(sessions.entries())
+      .map(([sid, session]) => ({
+        sid,
+        sub: String(session?.sub || ""),
+        name: String(session?.name || ""),
+        given_name: String(session?.given_name || ""),
+        family_name: String(session?.family_name || ""),
+        preferred_username: String(session?.preferred_username || ""),
+        email: String(session?.email || ""),
+        roles: Array.isArray(session?.roles) ? session.roles : [],
+        created_at: msToIso(session?.created_at),
+        expires_at: msToIso(session?.expires_at)
+      }))
+      .sort((left, right) => String(right.created_at || "").localeCompare(String(left.created_at || "")));
+  }
+
   function getInsecureTestPrincipal(req) {
     if (!cfg.insecureTestAuth) return null;
     const roles = String(req.headers["x-test-roles"] || "")
@@ -482,6 +510,7 @@ export function createAuth({ port }) {
       access_token: accessToken,
       id_token: idToken || "",
       refresh_token: refreshToken || "",
+      created_at: Date.now(),
       expires_at: Date.now() + sessionMaxAgeMs
     });
     setSessionCookie(res, sid);
@@ -600,6 +629,7 @@ export function createAuth({ port }) {
     isKeycloakEnabled,
     hasSession,
     getSessionPrincipal,
+    listActiveSessions,
     getLoginRedirect,
     authorizeApiRequest
   };

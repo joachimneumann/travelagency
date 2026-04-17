@@ -2,6 +2,7 @@ import {
   createApiFetcher,
   escapeHtml,
   fetchApiJson,
+  formatDateTime,
   normalizeText
 } from "../shared/api.js";
 import { DESTINATION_COUNTRY_CODE_SET } from "../../../shared/js/destination_country_codes.js";
@@ -39,6 +40,11 @@ const els = {
   logoutLink: document.getElementById("backendLogoutLink"),
   userLabel: document.getElementById("backendUserLabel"),
   error: document.getElementById("backendError"),
+  settingsObservabilityPanel: document.getElementById("settingsObservabilityPanel"),
+  settingsObservabilityStatus: document.getElementById("settingsObservabilityStatus"),
+  settingsObservabilityRefreshBtn: document.getElementById("settingsObservabilityRefreshBtn"),
+  settingsLoggedInUsers: document.getElementById("settingsLoggedInUsers"),
+  settingsLastChangedBooking: document.getElementById("settingsLastChangedBooking"),
   settingsPanel: document.getElementById("settingsPanel"),
   staffStatus: document.getElementById("staffStatus"),
   staffTable: document.getElementById("staffTable"),
@@ -185,11 +191,19 @@ const state = {
   authUser: null,
   roles: [],
   permissions: {
+    canReadObservability: false,
     canReadSettings: false,
     canReadStaffProfiles: false,
     canEditStaffProfiles: false,
     canReadWebsiteDestinationPublication: false,
     canEditWebsiteDestinationPublication: false
+  },
+  observabilityLoading: false,
+  observability: {
+    loggedInUsers: [],
+    sessionCount: 0,
+    userCount: 0,
+    latestChangedBooking: null
   },
   keycloakUsers: [],
   staffProfilesByUsername: {},
@@ -291,6 +305,130 @@ function clearWebsiteDestinationPublicationStatus() {
   showWebsiteDestinationPublicationStatus("", false);
 }
 
+function showObservabilityStatus(message, isError = false) {
+  if (!els.settingsObservabilityStatus) return;
+  els.settingsObservabilityStatus.textContent = normalizeText(message);
+  els.settingsObservabilityStatus.classList.toggle("is-error", Boolean(isError));
+}
+
+function clearObservabilityStatus() {
+  showObservabilityStatus("", false);
+}
+
+function updateObservabilityRefreshButtonState() {
+  if (!els.settingsObservabilityRefreshBtn) return;
+  els.settingsObservabilityRefreshBtn.disabled = !state.permissions.canReadObservability || state.observabilityLoading;
+}
+
+function formatObservabilityDateTime(value) {
+  return normalizeText(value) ? formatDateTime(value) : backendT("common.not_available", "Not available");
+}
+
+function bookingLinkHref(bookingId) {
+  const normalizedBookingId = normalizeText(bookingId);
+  if (!normalizedBookingId) return "#";
+  const url = new URL("booking.html", window.location.origin);
+  url.searchParams.set("id", normalizedBookingId);
+  const lang = typeof window.backendI18n?.getLang === "function" ? normalizeText(window.backendI18n.getLang()) : "";
+  if (lang) url.searchParams.set("lang", lang);
+  return `${url.pathname}${url.search}`;
+}
+
+function renderObservability() {
+  if (els.settingsLoggedInUsers) {
+    const users = Array.isArray(state.observability.loggedInUsers) ? state.observability.loggedInUsers : [];
+    if (!users.length) {
+      els.settingsLoggedInUsers.innerHTML = `<p class="micro settings-observability__empty">${escapeHtml(backendT("backend.settings.observability.no_sessions", "No active backend sessions."))}</p>`;
+    } else {
+      els.settingsLoggedInUsers.innerHTML = `<div class="settings-observability__list">${users.map((user) => {
+        const displayName = normalizeText(user?.name) || normalizeText(user?.preferred_username) || normalizeText(user?.email) || normalizeText(user?.sub) || "-";
+        const username = normalizeText(user?.preferred_username);
+        const sessionsLabel = backendT("backend.settings.observability.sessions", "{count} session(s)", {
+          count: Number(user?.session_count || 0)
+        });
+        const roles = Array.isArray(user?.roles) ? user.roles.map((role) => normalizeText(role)).filter(Boolean).join(", ") : "";
+        const metaParts = [
+          username ? `username: ${username}` : "",
+          sessionsLabel,
+          `latest login: ${formatObservabilityDateTime(user?.latest_login_at)}`,
+          roles ? `roles: ${roles}` : ""
+        ].filter(Boolean);
+        return `<div class="settings-observability__list-item">
+          <div class="settings-observability__item-title">${escapeHtml(displayName)}</div>
+          <div class="micro settings-observability__item-meta">${escapeHtml(metaParts.join(" | "))}</div>
+        </div>`;
+      }).join("")}</div>`;
+    }
+  }
+
+  if (els.settingsLastChangedBooking) {
+    const booking = state.observability.latestChangedBooking;
+    if (!booking?.id) {
+      els.settingsLastChangedBooking.innerHTML = `<p class="micro settings-observability__empty">${escapeHtml(backendT("backend.settings.observability.no_bookings", "No booking changes yet."))}</p>`;
+    } else {
+      const bookingTitle = normalizeText(booking?.name) || normalizeText(booking?.id);
+      const actor = normalizeText(booking?.last_activity?.actor);
+      const detail = normalizeText(booking?.last_activity?.detail);
+      const metaParts = [
+        `updated: ${formatObservabilityDateTime(booking?.updated_at)}`
+      ];
+      if (actor) metaParts.push(`actor: ${actor}`);
+      if (booking?.assigned_keycloak_user_id) metaParts.push(`assigned: ${booking.assigned_keycloak_user_id}`);
+      els.settingsLastChangedBooking.innerHTML = `<div class="settings-observability__booking">
+        <a class="settings-observability__booking-link" href="${escapeHtml(bookingLinkHref(booking.id))}">${escapeHtml(bookingTitle)}</a>
+        <div class="micro settings-observability__booking-meta">${escapeHtml(metaParts.join(" | "))}</div>
+        ${detail ? `<div class="micro settings-observability__booking-meta">${escapeHtml(detail)}</div>` : ""}
+      </div>`;
+    }
+  }
+
+  updateObservabilityRefreshButtonState();
+}
+
+async function loadObservability() {
+  if (!state.permissions.canReadObservability) {
+    renderObservability();
+    return;
+  }
+
+  clearObservabilityStatus();
+  showObservabilityStatus(backendT("backend.settings.observability.loading", "Loading backend activity..."));
+  state.observabilityLoading = true;
+  updateObservabilityRefreshButtonState();
+
+  try {
+    const payload = await fetchApiJson(`${apiOrigin}/api/v1/settings/observability`, {
+      onError: (message) => showObservabilityStatus(message, true),
+      connectionErrorMessage: backendT("booking.error.connect", "Could not connect to backend API."),
+      includeDetailInError: false
+    });
+
+    if (!payload) {
+      renderObservability();
+      return;
+    }
+
+    state.observability = {
+      loggedInUsers: Array.isArray(payload?.logged_in_users) ? payload.logged_in_users : [],
+      sessionCount: Number(payload?.session_count || 0),
+      userCount: Number(payload?.user_count || 0),
+      latestChangedBooking: payload?.latest_changed_booking && typeof payload.latest_changed_booking === "object"
+        ? payload.latest_changed_booking
+        : null
+    };
+    renderObservability();
+    showObservabilityStatus(
+      backendT("backend.settings.observability.loaded", "{users} user(s), {sessions} session(s)", {
+        users: state.observability.userCount,
+        sessions: state.observability.sessionCount
+      })
+    );
+  } finally {
+    state.observabilityLoading = false;
+    updateObservabilityRefreshButtonState();
+  }
+}
+
 function translationProviderLabelFromResponse(response) {
   return normalizeText(response?.headers?.get("x-atp-translation-provider-label"));
 }
@@ -341,6 +479,7 @@ async function init() {
     apiOrigin,
     refreshNav: refreshBackendNavElements,
     computePermissions: (roles) => ({
+      canReadObservability: roles.includes(ROLES.ADMIN),
       canReadStaffProfiles: roles.includes(ROLES.ADMIN),
       canEditStaffProfiles: roles.includes(ROLES.ADMIN),
       canReadWebsiteDestinationPublication: roles.includes(ROLES.ADMIN),
@@ -357,6 +496,7 @@ async function init() {
   state.authUser = authState.authUser;
   state.roles = authState.roles;
   state.permissions = {
+    canReadObservability: Boolean(authState.permissions?.canReadObservability),
     canReadSettings: Boolean(authState.permissions?.canReadSettings),
     canReadStaffProfiles: Boolean(authState.permissions?.canReadStaffProfiles),
     canEditStaffProfiles: Boolean(authState.permissions?.canEditStaffProfiles),
@@ -368,6 +508,7 @@ async function init() {
   updateStatusCopy();
   if (state.permissions.canReadSettings) {
     await Promise.all([
+      state.permissions.canReadObservability ? loadObservability() : Promise.resolve(),
       state.permissions.canReadStaffProfiles ? loadStaffDirectoryEntries() : Promise.resolve(),
       state.permissions.canEditStaffProfiles ? loadDestinationOptions() : Promise.resolve(),
       state.permissions.canReadWebsiteDestinationPublication ? loadWebsiteDestinationPublication() : Promise.resolve()
@@ -378,6 +519,9 @@ async function init() {
 }
 
 function bindEvents() {
+  els.settingsObservabilityRefreshBtn?.addEventListener("click", () => {
+    void loadObservability();
+  });
   els.staffTable?.addEventListener("click", handleStaffTableClick);
   els.staffTable?.addEventListener("keydown", handleStaffTableKeydown);
   els.websiteDestinationPublicationList?.addEventListener("change", handleWebsiteDestinationPublicationToggle);
@@ -436,6 +580,9 @@ function bindEvents() {
 }
 
 function renderPermissionScopedSections() {
+  if (els.settingsObservabilityPanel) {
+    els.settingsObservabilityPanel.hidden = !state.permissions.canReadObservability;
+  }
   if (els.settingsPanel) {
     els.settingsPanel.hidden = !state.permissions.canReadStaffProfiles;
   }

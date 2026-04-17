@@ -30,6 +30,7 @@ export function createApplicationRoutes({
     getPrincipal,
     canViewKeycloakUsers,
     canEditAtpStaffProfiles,
+    canReadSettings,
     canReadTours,
     canEditTours,
     canReadCountryReferenceInfo,
@@ -94,6 +95,87 @@ export function createApplicationRoutes({
       return false;
     }
     return true;
+  }
+
+  async function handleGetSettingsObservability(req, res) {
+    const principal = getPrincipal(req);
+    if (!canReadSettings(principal)) {
+      httpHelpers.sendJson(res, 403, { error: "Forbidden" });
+      return;
+    }
+
+    const store = await storeUtils.readStore();
+    const activeSessions = auth.listActiveSessions();
+    const usersByKey = new Map();
+
+    for (const session of activeSessions) {
+      const key = support.normalizeText(session?.sub)
+        || support.normalizeText(session?.preferred_username).toLowerCase()
+        || support.normalizeText(session?.email).toLowerCase()
+        || support.normalizeText(session?.sid);
+      if (!key) continue;
+
+      const previous = usersByKey.get(key);
+      const mergedRoles = Array.from(new Set([
+        ...(Array.isArray(previous?.roles) ? previous.roles : []),
+        ...(Array.isArray(session?.roles) ? session.roles : [])
+      ]));
+
+      const createdAt = support.normalizeText(session?.created_at) || null;
+      const expiresAt = support.normalizeText(session?.expires_at) || null;
+      usersByKey.set(key, {
+        sub: support.normalizeText(session?.sub) || null,
+        preferred_username: support.normalizeText(session?.preferred_username) || null,
+        name: support.normalizeText(session?.name) || null,
+        email: support.normalizeText(session?.email) || null,
+        roles: mergedRoles,
+        session_count: Number(previous?.session_count || 0) + 1,
+        latest_login_at: String(createdAt || "") > String(previous?.latest_login_at || "") ? createdAt : (previous?.latest_login_at || null),
+        latest_expires_at: String(expiresAt || "") > String(previous?.latest_expires_at || "") ? expiresAt : (previous?.latest_expires_at || null)
+      });
+    }
+
+    const loggedInUsers = Array.from(usersByKey.values())
+      .sort((left, right) => {
+        const rightStamp = String(right?.latest_login_at || "");
+        const leftStamp = String(left?.latest_login_at || "");
+        if (rightStamp !== leftStamp) return rightStamp.localeCompare(leftStamp);
+        const rightLabel = support.normalizeText(right?.preferred_username || right?.email || right?.name || "");
+        const leftLabel = support.normalizeText(left?.preferred_username || left?.email || left?.name || "");
+        return leftLabel.localeCompare(rightLabel, "en", { sensitivity: "base" });
+      });
+
+    const bookings = Array.isArray(store?.bookings) ? [...store.bookings] : [];
+    const latestBooking = bookings.sort(
+      (left, right) => String(right?.updated_at || right?.created_at || "").localeCompare(String(left?.updated_at || left?.created_at || ""))
+    )[0] || null;
+
+    let latestChangedBooking = null;
+    if (latestBooking) {
+      const lastActivity = (Array.isArray(store?.activities) ? store.activities : [])
+        .filter((activity) => support.normalizeText(activity?.booking_id) === support.normalizeText(latestBooking.id))
+        .sort((left, right) => String(right?.created_at || "").localeCompare(String(left?.created_at || "")))[0] || null;
+
+      latestChangedBooking = {
+        id: support.normalizeText(latestBooking.id),
+        name: support.normalizeText(latestBooking.name) || null,
+        updated_at: support.normalizeText(latestBooking.updated_at || latestBooking.created_at) || null,
+        assigned_keycloak_user_id: support.normalizeText(latestBooking.assigned_keycloak_user_id) || null,
+        last_activity: lastActivity ? {
+          type: support.normalizeText(lastActivity.type) || null,
+          actor: support.normalizeText(lastActivity.actor) || null,
+          detail: support.normalizeText(lastActivity.detail) || null,
+          created_at: support.normalizeText(lastActivity.created_at) || null
+        } : null
+      };
+    }
+
+    httpHelpers.sendJson(res, 200, {
+      logged_in_users: loggedInUsers,
+      session_count: activeSessions.length,
+      user_count: loggedInUsers.length,
+      latest_changed_booking: latestChangedBooking
+    });
   }
 
   const bookingHandlers = createBookingHandlers({
@@ -321,6 +403,7 @@ export function createApplicationRoutes({
       handleStagingAccessCheck: stagingAccessHandlers.handleStagingAccessCheck,
       handleStagingAccessLogout: stagingAccessHandlers.handleStagingAccessLogout,
       handleMobileBootstrap: systemHandlers.handleMobileBootstrap,
+      handleGetSettingsObservability,
       ...bookingHandlers,
       ...atpStaffHandlers,
       ...keycloakUserHandlers,

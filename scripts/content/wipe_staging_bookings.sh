@@ -3,7 +3,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 COMPOSE_FILE="docker-compose.staging.yml"
-ENV_FILE=".env.staging"
+ENV_FILE=".env"
 
 source "$ROOT_DIR/scripts/lib/docker_runtime.sh"
 

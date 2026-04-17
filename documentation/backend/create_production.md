@@ -187,13 +187,13 @@ This order ensures:
 Initial bootstrap on the production host:
 
 ```bash
-cp .env.production.example .env.production
-# fill all production secrets in .env.production
+cp .env.production.example .env
+# fill all production secrets in .env
 
 ./scripts/deploy/update_production.sh all
 
 set -a
-source .env.production
+source .env
 set +a
 ./scripts/keycloak/bootstrap_keycloak_backend_realm.sh
 
@@ -233,8 +233,8 @@ Before enabling the production route change, the plan is to run:
 Recommended checks:
 
 ```bash
-docker compose --env-file .env.production -f docker-compose.production.yml build backend
-docker compose --env-file .env.production -f docker-compose.production.yml run --rm --no-deps backend \
+docker compose --env-file .env -f docker-compose.production.yml build backend
+docker compose --env-file .env -f docker-compose.production.yml run --rm --no-deps backend \
   node --test test/mobile-contract.test.js test/source-integrity.test.js
 ```
 

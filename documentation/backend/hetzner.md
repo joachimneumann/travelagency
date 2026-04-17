@@ -202,7 +202,7 @@ Copy the example env file on the server:
 
 ```bash
 cd /home/asiatravelplan/travelagency
-cp .env.staging.example .env.staging
+cp .env.staging.example .env
 ```
 
 ## 8) Review the included Caddy routing
@@ -216,9 +216,9 @@ Important:
 - frontend auth/API calls use same-origin routing on `staging.asiatravelplan.com`
 - this avoids the cookie/CORS issues you saw locally
 
-## 9) Configure `.env.staging`
+## 9) Configure `.env`
 
-Edit `/home/asiatravelplan/travelagency/.env.staging` and replace the placeholder secrets.
+Edit `/home/asiatravelplan/travelagency/.env` and replace the placeholder secrets.
 
 Important values in the included example:
 - `KEYCLOAK_BASE_URL=https://auth-staging.asiatravelplan.com`
@@ -251,7 +251,7 @@ curl -i https://api-staging.asiatravelplan.com/health
 ## 11) Configure Keycloak client for backend login
 
 1. Open: `https://auth-staging.asiatravelplan.com`
-2. Login with admin user from `.env.staging`
+2. Login with admin user from `.env`
 3. Create or edit client `asiatravelplan-backend`
 
 Set in Keycloak client:
@@ -265,7 +265,7 @@ Set in Keycloak client:
   - `https://staging.asiatravelplan.com`
   - `https://api-staging.asiatravelplan.com`
 
-Copy the client secret and update `.env.staging` (`KEYCLOAK_CLIENT_SECRET`).
+Copy the client secret and update `.env` (`KEYCLOAK_CLIENT_SECRET`).
 
 Restart backend after secret update:
 
@@ -339,7 +339,7 @@ docker compose -f docker-compose.staging.yml exec -T postgres \
 ## 15) Security minimum checklist
 
 - Change all default passwords.
-- Keep `.env.staging` only on server.
+- Keep `.env` only on server.
 - Disable root SSH password login.
 - Keep firewall enabled.
 - Use regular backups.
