@@ -75,6 +75,8 @@ let publicBootstrapLoadPromise = null;
 let publicBootstrapLoaded = false;
 let footerBootstrapObserved = false;
 let tourImagePrewarmToken = 0;
+let tourSectionPrewarmObserved = false;
+let tourSectionPrewarmTriggered = false;
 let teamSectionRevealObserved = false;
 let teamMembersLoadPromise = null;
 let authStatusLoadPromise = null;
@@ -150,6 +152,7 @@ const els = {
   tourGrid: document.getElementById("tourGrid"),
   tourActions: document.getElementById("tourActions"),
   showMoreTours: document.getElementById("showMoreTours"),
+  toursSection: document.getElementById("tours"),
   debugPriorityBtn: document.getElementById("debugPriorityBtn"),
   debugPriorityOutput: document.getElementById("debugPriorityOutput"),
   noResultsMessage: document.getElementById("noResultsMessage"),
@@ -433,7 +436,7 @@ async function init() {
   applyFilters();
   setupFilterEvents();
   prefillBookingFormWithFilters();
-  scheduleDeferredTourImagePrewarm(state.trips);
+  setupTourSectionImagePrewarm();
 }
 
 function scheduleDeferredTask(task, { timeout = 1200, fallbackDelayMs = 250 } = {}) {
@@ -445,13 +448,45 @@ function scheduleDeferredTask(task, { timeout = 1200, fallbackDelayMs = 250 } = 
   window.setTimeout(() => task(), fallbackDelayMs);
 }
 
-function scheduleDeferredTourImagePrewarm(tours) {
+function nextTourImagesToPrewarm() {
+  const visibleCount = Math.max(0, Number(state.visibleToursCount) || 0);
+  return (Array.isArray(state.filteredTrips) ? state.filteredTrips : []).slice(visibleCount, visibleCount + 6);
+}
+
+function triggerTourSectionImagePrewarm() {
+  if (tourSectionPrewarmTriggered) return;
+  tourSectionPrewarmTriggered = true;
   const scheduledToken = ++tourImagePrewarmToken;
-  const snapshot = Array.isArray(tours) ? tours.slice() : [];
+  const snapshot = nextTourImagesToPrewarm();
   scheduleDeferredTask(() => {
     if (scheduledToken !== tourImagePrewarmToken) return;
     prewarmTourImages(snapshot);
-  }, { timeout: 2000, fallbackDelayMs: 500 });
+  }, { timeout: 1500, fallbackDelayMs: 300 });
+}
+
+function setupTourSectionImagePrewarm() {
+  if (!(els.toursSection instanceof HTMLElement) || tourSectionPrewarmObserved) return;
+  tourSectionPrewarmObserved = true;
+
+  if ("IntersectionObserver" in window) {
+    const observer = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue;
+        triggerTourSectionImagePrewarm();
+        observer.disconnect();
+        break;
+      }
+    }, {
+      threshold: 0.18,
+      rootMargin: "0px 0px -12% 0px"
+    });
+    observer.observe(els.toursSection);
+    return;
+  }
+
+  scheduleDeferredTask(() => {
+    triggerTourSectionImagePrewarm();
+  }, { timeout: 3500, fallbackDelayMs: 1200 });
 }
 
 function localizedEntriesFromStaticValue(value) {
@@ -1051,7 +1086,7 @@ async function handleFrontendLanguageChanged() {
   } catch (error) {
     console.error("Failed to refresh localized static tours after frontend language switch.", error);
   } finally {
-    scheduleDeferredTourImagePrewarm(state.trips);
+    tourSectionPrewarmTriggered = false;
     if (bookingRuntimeLoaded()) {
       renderFormStep();
     }

@@ -38,6 +38,10 @@ const HOMEPAGE_COPY_GLOBAL_FILENAME = path.basename(HOMEPAGE_COPY_GLOBAL_PATH);
 const TOUR_FILE_PREFIX = "public-tours.";
 const TOUR_FILE_SUFFIX = ".json";
 const ALLOWED_ASSET_EXTENSIONS = new Set([".avif", ".gif", ".jpeg", ".jpg", ".png", ".svg", ".webp"]);
+const HOMEPAGE_TOUR_IMAGE_SIZE = 720;
+const HOMEPAGE_TOUR_IMAGE_QUALITY = 68;
+const SHARP_MODULE_URL = pathToFileURL(path.join(ROOT_DIR, "backend", "app", "node_modules", "sharp", "lib", "index.js")).href;
+let sharpModulePromise = null;
 
 function safeInt(value) {
   const normalized = normalizeText(value);
@@ -149,6 +153,56 @@ async function copyAllowedFiles(sourceDir, destinationDir, { exclude = new Set()
     if (!isAllowedAssetFile(entry.name)) continue;
     await copyFile(path.join(sourceDir, entry.name), path.join(destinationDir, entry.name));
   }
+}
+
+function isRasterAssetFile(filename) {
+  const ext = path.extname(String(filename || "")).toLowerCase();
+  return Boolean(ext && ext !== ".svg" && ALLOWED_ASSET_EXTENSIONS.has(ext));
+}
+
+async function loadSharp() {
+  if (!sharpModulePromise) {
+    sharpModulePromise = import(SHARP_MODULE_URL).then((module) => module.default || module);
+  }
+  return sharpModulePromise;
+}
+
+async function generateHomepageTourAssets(sourceDir, destinationDir) {
+  await ensureDirectory(destinationDir);
+  const entries = await listDirectoryEntries(sourceDir);
+  const generatedPathBySourceName = new Map();
+
+  for (const entry of entries) {
+    if (!entry.isFile()) continue;
+    if (!isAllowedAssetFile(entry.name)) continue;
+
+    const sourcePath = path.join(sourceDir, entry.name);
+    if (!isRasterAssetFile(entry.name)) {
+      const destinationPath = path.join(destinationDir, entry.name);
+      await copyFile(sourcePath, destinationPath);
+      generatedPathBySourceName.set(entry.name, entry.name);
+      continue;
+    }
+
+    const outputName = `${path.parse(entry.name).name}.webp`;
+    const destinationPath = path.join(destinationDir, outputName);
+    const sharp = await loadSharp();
+    await sharp(sourcePath, { failOn: "none" })
+      .rotate()
+      .resize(HOMEPAGE_TOUR_IMAGE_SIZE, HOMEPAGE_TOUR_IMAGE_SIZE, {
+        fit: "cover",
+        position: "centre",
+        withoutEnlargement: true
+      })
+      .webp({
+        quality: HOMEPAGE_TOUR_IMAGE_QUALITY,
+        effort: 5
+      })
+      .toFile(destinationPath);
+    generatedPathBySourceName.set(entry.name, outputName);
+  }
+
+  return generatedPathBySourceName;
 }
 
 function visiblePublishedDestinationCodes(countryReferencePayload) {
@@ -301,6 +355,7 @@ async function generateTourAssets({
   await cleanGeneratedAssetDir(outputRoot);
   const tourDirectories = (await listDirectoryEntries(toursRoot)).filter((entry) => entry.isDirectory());
   const tours = [];
+  const generatedTourAssetPaths = new Map();
 
   for (const entry of tourDirectories) {
     const tourDir = path.join(toursRoot, entry.name);
@@ -316,9 +371,10 @@ async function generateTourAssets({
     if (!normalizeText(normalizedTour?.id)) {
       throw new Error(`Tour at ${tourPath} is missing an id.`);
     }
-    await copyAllowedFiles(tourDir, path.join(outputRoot, normalizedTour.id), {
-      exclude: new Set(["tour.json"])
-    });
+    const generatedPaths = await generateHomepageTourAssets(tourDir, path.join(outputRoot, normalizedTour.id));
+    for (const [sourceName, generatedName] of generatedPaths.entries()) {
+      generatedTourAssetPaths.set(`${normalizedTour.id}/${sourceName}`, `${normalizedTour.id}/${generatedName}`);
+    }
     tours.push(normalizedTour);
   }
 
@@ -344,8 +400,9 @@ async function generateTourAssets({
     for (const tour of sortedPublicTours) {
       const readModel = normalizeTourForRead(tour, { lang: normalizedLang });
       const assetRelativePath = extractTourAssetRelativePath(readModel.image, readModel.id);
-      const image = assetRelativePath
-        ? await versionedStaticAssetPath(assetRelativePath, outputRoot, {
+      const generatedAssetRelativePath = generatedTourAssetPaths.get(assetRelativePath) || assetRelativePath;
+      const image = generatedAssetRelativePath
+        ? await versionedStaticAssetPath(generatedAssetRelativePath, outputRoot, {
           publicPrefix: "/assets/generated/homepage/tours",
           version: normalizeText(readModel.updated_at || readModel.created_at)
         })

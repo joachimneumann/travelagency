@@ -10,6 +10,8 @@ async function writeJson(filePath, value) {
   await writeFile(filePath, `${JSON.stringify(value, null, 2)}\n`, "utf8");
 }
 
+const TINY_PNG_BASE64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aZ1EAAAAASUVORK5CYII=";
+
 test("generatePublicHomepageAssets writes static tours, team, and copied assets", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "public-homepage-assets-"));
   const contentRoot = path.join(root, "content");
@@ -54,11 +56,11 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
     short_description: { en: "Alpha description", de: "Alpha Beschreibung" },
     destinations: ["vietnam", "thailand"],
     styles: ["budget"],
-    image: "/public/v1/tour-images/tour_alpha/alpha.webp",
+    image: "/public/v1/tour-images/tour_alpha/alpha.png",
     priority: 80,
     updated_at: "2026-04-14T12:34:56.000Z"
   });
-  await writeFile(path.join(toursRoot, "tour_alpha", "alpha.webp"), "alpha-image");
+  await writeFile(path.join(toursRoot, "tour_alpha", "alpha.png"), Buffer.from(TINY_PNG_BASE64, "base64"));
 
   await writeJson(path.join(toursRoot, "tour_hidden", "tour.json"), {
     id: "tour_hidden",
@@ -66,11 +68,11 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
     short_description: { en: "Should not appear" },
     destinations: ["thailand"],
     styles: ["luxury"],
-    image: "/public/v1/tour-images/tour_hidden/hidden.webp",
+    image: "/public/v1/tour-images/tour_hidden/hidden.png",
     priority: 20,
     updated_at: "2026-04-14T10:00:00.000Z"
   });
-  await writeFile(path.join(toursRoot, "tour_hidden", "hidden.webp"), "hidden-image");
+  await writeFile(path.join(toursRoot, "tour_hidden", "hidden.png"), Buffer.from(TINY_PNG_BASE64, "base64"));
 
   await writeJson(path.join(staffRoot, "staff.json"), {
     staff: {

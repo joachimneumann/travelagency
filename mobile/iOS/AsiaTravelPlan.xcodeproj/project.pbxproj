@@ -21,6 +21,7 @@
 		7DA9198A5E4410171895AAEA /* AppShellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE625C0DB5CCBBA0C73F78C5 /* AppShellView.swift */; };
 		9A1D9F3FF3F7CBD4CA80E802 /* JWTDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0ED8DA5CFD1B6EA4E4CFEBD /* JWTDecoder.swift */; };
 		A384BC7C1793CAAFFEC585E8 /* StartupFailureView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F397906CA65B52533FA74F4 /* StartupFailureView.swift */; };
+		AAE67FCE2F925D90002223D8 /* x.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAE67FCD2F925D90002223D8 /* x.swift */; };
 		D30267FEDA8BFA1B9FF90FF4 /* AuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 955D44EF743F5683D5D704C1 /* AuthService.swift */; };
 		D9B9585B170EDB781EBE3542 /* AsiaTravelPlanApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55AE70FFBD662C8C212D926A /* AsiaTravelPlanApp.swift */; };
 		E7AB5196912B2335865D06F1 /* UnauthorizedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B25A1EDA04AC62E703FB8696 /* UnauthorizedView.swift */; };
@@ -44,6 +45,7 @@
 		900BC173B12C423CC62933D6 /* AuthSession.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AuthSession.swift; sourceTree = "<group>"; };
 		955D44EF743F5683D5D704C1 /* AuthService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AuthService.swift; sourceTree = "<group>"; };
 		988289272189CFEC229F7183 /* TokenStore.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TokenStore.swift; sourceTree = "<group>"; };
+		AAE67FCD2F925D90002223D8 /* x.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = x.swift; path = /Users/joachim/Desktop/x.swift; sourceTree = "<absolute>"; };
 		B25A1EDA04AC62E703FB8696 /* UnauthorizedView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UnauthorizedView.swift; sourceTree = "<group>"; };
 		DDB0FFFD16C2A8E46D62CC9A /* APIClient.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
 		DE5EA596C130169FD7578AD3 /* ClientProfile.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ClientProfile.swift; sourceTree = "<group>"; };
@@ -77,6 +79,7 @@
 		0FE96767A00859131745E8EA = {
 			isa = PBXGroup;
 			children = (
+				AAE67FCD2F925D90002223D8 /* x.swift */,
 				33D842A124A5D1AC7E4BDE4F /* AsiaTravelPlan */,
 				3B3C4D5A2F60729000CDDCC8 /* Recovered References */,
 				3B3C4D5C2F60729000CDDCC8 /* Products */,
@@ -234,6 +237,7 @@
 				D30267FEDA8BFA1B9FF90FF4 /* AuthService.swift in Sources */,
 				9A1D9F3FF3F7CBD4CA80E802 /* JWTDecoder.swift in Sources */,
 				F11595946789F99A18798B54 /* RoleService.swift in Sources */,
+				AAE67FCE2F925D90002223D8 /* x.swift in Sources */,
 				19E3C9027F5C147A895C807B /* SessionStore.swift in Sources */,
 				EBF476928EA320054E9AD5CB /* TokenStore.swift in Sources */,
 				58FD16722D8DCB0CA9311875 /* LoginViewModel.swift in Sources */,

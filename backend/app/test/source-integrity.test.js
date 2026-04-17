@@ -3718,8 +3718,13 @@ test("frontend language switching updates the homepage in place instead of forci
   );
   assert.match(
     mainSource,
-    /async function init\(\)[\s\S]*placeBackendLogin\(false\);[\s\S]*revealBackendLogin\(\);[\s\S]*scheduleDeferredTourImagePrewarm\(state\.trips\)/,
-    "Homepage init should reveal the backend button without auto-loading auth status while still deferring non-critical follow-up work"
+    /async function init\(\)[\s\S]*placeBackendLogin\(false\);[\s\S]*revealBackendLogin\(\);[\s\S]*setupTourSectionImagePrewarm\(\)/,
+    "Homepage init should reveal the backend button without auto-loading auth status and should wait for the tours section before prewarming more tour images"
+  );
+  assert.match(
+    mainSource,
+    /function setupTourSectionImagePrewarm\(\) \{[\s\S]*new IntersectionObserver[\s\S]*triggerTourSectionImagePrewarm\(\)[\s\S]*observer\.observe\(els\.toursSection\)/,
+    "Homepage should prewarm more tour images only after the tours section becomes visible"
   );
   assert.match(
     mainSource,
@@ -3743,8 +3748,8 @@ test("frontend language switching updates the homepage in place instead of forci
   );
   assert.match(
     mainSource,
-    /async function handleFrontendLanguageChanged\(\)[\s\S]*scheduleDeferredTourImagePrewarm\(state\.trips\)[\s\S]*renderFormStep\(\)/,
-    "Homepage language refresh should requeue image prewarming after the localized tour list is refreshed"
+    /async function handleFrontendLanguageChanged\(\)[\s\S]*applyFilters\(\)[\s\S]*tourSectionPrewarmTriggered = false;[\s\S]*renderFormStep\(\)/,
+    "Homepage language refresh should reset the tours-section prewarm state after the localized tour list is refreshed"
   );
   assert.match(
     bookingFormOptionsSource,
