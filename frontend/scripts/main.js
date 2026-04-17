@@ -71,7 +71,9 @@ const state = {
 };
 
 let lastBookingModalTrigger = null;
-let publicBootstrapLoadScheduled = false;
+let publicBootstrapLoadPromise = null;
+let publicBootstrapLoaded = false;
+let footerBootstrapObserved = false;
 let tourImagePrewarmToken = 0;
 let teamSectionRevealObserved = false;
 let teamMembersLoadPromise = null;
@@ -393,11 +395,11 @@ async function init() {
   setupMobileNav();
   setupFAQ();
   setupTeamSection();
+  setupFooterCompanyProfile();
   setupBackendLogin();
   setupHiddenBackendQuickLogin();
   placeBackendLogin(false);
   revealBackendLogin();
-  scheduleDeferredPublicBootstrapLoad();
   setupModal();
   setupFormNavigation();
   setupLiveValidationReset();
@@ -441,14 +443,6 @@ function scheduleDeferredTask(task, { timeout = 1200, fallbackDelayMs = 250 } = 
     return;
   }
   window.setTimeout(() => task(), fallbackDelayMs);
-}
-
-function scheduleDeferredPublicBootstrapLoad() {
-  if (publicBootstrapLoadScheduled) return;
-  publicBootstrapLoadScheduled = true;
-  scheduleDeferredTask(() => {
-    void loadPublicBootstrap();
-  }, { timeout: 1800, fallbackDelayMs: 450 });
 }
 
 function scheduleDeferredTourImagePrewarm(tours) {
@@ -618,6 +612,35 @@ function setupTeamSection() {
   }
 }
 
+function ensureFooterBootstrapLoaded(options) {
+  return loadPublicBootstrap(options);
+}
+
+function setupFooterCompanyProfile() {
+  syncFooterCompanyProfile();
+  if (!(els.footerLicense instanceof HTMLElement) || footerBootstrapObserved) return;
+  if ("IntersectionObserver" in window) {
+    footerBootstrapObserved = true;
+    const observer = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue;
+        void ensureFooterBootstrapLoaded();
+        observer.disconnect();
+        break;
+      }
+    }, {
+      threshold: 0.01,
+      rootMargin: "300px 0px 0px 0px"
+    });
+    observer.observe(els.footerLicense);
+    return;
+  }
+  footerBootstrapObserved = true;
+  scheduleDeferredTask(() => {
+    void ensureFooterBootstrapLoaded();
+  }, { timeout: 5000, fallbackDelayMs: 2500 });
+}
+
 function renderTeamSection() {
   if (!(els.teamSection instanceof HTMLElement) || !els.teamGrid || !els.teamDetail) return;
   const members = Array.isArray(state.teamMembers) ? state.teamMembers : [];
@@ -713,7 +736,10 @@ function syncI18nManagedLabels() {
   updateBackendButtonLabel({ authenticated: state.websiteAuthenticated, user: state.websiteAuthenticatedUser });
 }
 
-async function loadPublicBootstrap() {
+async function loadPublicBootstrap({ force = false } = {}) {
+  if (publicBootstrapLoaded && !force) return state.companyProfile;
+  if (publicBootstrapLoadPromise && !force) return publicBootstrapLoadPromise;
+  publicBootstrapLoadPromise = (async () => {
   try {
     const response = await fetch(PUBLIC_BOOTSTRAP_URL, {
       credentials: "same-origin",
@@ -726,6 +752,7 @@ async function loadPublicBootstrap() {
     state.companyProfile = payload?.company_profile && typeof payload.company_profile === "object"
       ? payload.company_profile
       : null;
+    publicBootstrapLoaded = true;
   } catch (error) {
     state.companyProfile = null;
     logBrowserConsoleError("[frontend-home] Failed to load public bootstrap.", {
@@ -734,7 +761,11 @@ async function loadPublicBootstrap() {
     }, error);
   } finally {
     syncFooterCompanyProfile();
+    publicBootstrapLoadPromise = null;
   }
+  return state.companyProfile;
+  })();
+  return publicBootstrapLoadPromise;
 }
 
 function syncFooterCompanyProfile() {
