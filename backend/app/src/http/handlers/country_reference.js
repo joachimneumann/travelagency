@@ -1,3 +1,5 @@
+import path from "node:path";
+import { existsSync } from "node:fs";
 import { DESTINATION_COUNTRY_CODE_SET } from "../../../../../shared/js/destination_country_codes.js";
 
 export function createCountryReferenceHandlers(deps) {
@@ -10,8 +12,16 @@ export function createCountryReferenceHandlers(deps) {
     readCountryPracticalInfo,
     persistCountryPracticalInfo,
     normalizeText,
-    nowIso
+    nowIso,
+    repoRoot,
+    execFile
   } = deps;
+
+  const PUBLIC_HOMEPAGE_ASSET_GENERATOR_CANDIDATES = Object.freeze([
+    path.join(repoRoot, "scripts", "assets", "generate_public_homepage_assets.mjs"),
+    path.join(repoRoot, "scripts", "generate_public_homepage_assets.mjs")
+  ]);
+  let publicHomepageAssetGenerationQueue = Promise.resolve();
 
   function normalizeOptionalText(value) {
     const normalized = normalizeText(value);
@@ -39,6 +49,36 @@ export function createCountryReferenceHandlers(deps) {
       const rightCountry = normalizeText(right?.country).toUpperCase();
       return leftCountry.localeCompare(rightCountry, "en");
     });
+  }
+
+  async function regeneratePublicHomepageAssets(reason, details = {}) {
+    const task = async () => {
+      const generatorPath = PUBLIC_HOMEPAGE_ASSET_GENERATOR_CANDIDATES.find((candidate) => existsSync(candidate));
+      if (!generatorPath) {
+        throw new Error("Could not find generate_public_homepage_assets.mjs in expected script locations.");
+      }
+      await execFile(process.execPath, [generatorPath], {
+        cwd: repoRoot
+      });
+    };
+
+    publicHomepageAssetGenerationQueue = publicHomepageAssetGenerationQueue.then(task, task);
+
+    try {
+      await publicHomepageAssetGenerationQueue;
+      return { ok: true };
+    } catch (error) {
+      const message = String(error?.stderr || error?.message || error || "Static homepage asset generation failed.");
+      console.error("[backend-public-homepage-assets] Generation failed.", {
+        reason,
+        ...details,
+        error: message
+      });
+      return {
+        ok: false,
+        error: message
+      };
+    }
   }
 
   function validateAndNormalizeCountryPracticalInfoList(rawItems) {
@@ -172,9 +212,13 @@ export function createCountryReferenceHandlers(deps) {
     });
 
     await persistCountryPracticalInfo({ items });
+    const homepageAssets = await regeneratePublicHomepageAssets("country_reference_patch", {
+      item_count: items.length
+    });
     sendJson(res, 200, {
       items,
-      total: items.length
+      total: items.length,
+      homepage_assets: homepageAssets
     });
   }
 

@@ -295,6 +295,13 @@ function homepageAssetSyncWarningMessage() {
   );
 }
 
+function countryReferenceHomepageAssetSyncWarningMessage() {
+  return backendT(
+    "backend.settings.public_sync_failed",
+    "Settings saved, but refreshing the public homepage failed. Please retry or run the homepage asset generator."
+  );
+}
+
 function showWebsiteDestinationPublicationStatus(message, isError = false) {
   if (!els.websiteDestinationPublicationStatus) return;
   els.websiteDestinationPublicationStatus.textContent = normalizeText(message);
@@ -346,12 +353,10 @@ function renderObservability() {
         const sessionsLabel = backendT("backend.settings.observability.sessions", "{count} session(s)", {
           count: Number(user?.session_count || 0)
         });
-        const roles = Array.isArray(user?.roles) ? user.roles.map((role) => normalizeText(role)).filter(Boolean).join(", ") : "";
         const metaParts = [
           username ? `username: ${username}` : "",
           sessionsLabel,
-          `latest login: ${formatObservabilityDateTime(user?.latest_login_at)}`,
-          roles ? `roles: ${roles}` : ""
+          `latest login: ${formatObservabilityDateTime(user?.latest_login_at)}`
         ].filter(Boolean);
         return `<div class="settings-observability__list-item">
           <div class="settings-observability__item-title">${escapeHtml(displayName)}</div>
@@ -369,14 +374,15 @@ function renderObservability() {
       const bookingTitle = normalizeText(booking?.name) || normalizeText(booking?.id);
       const actor = normalizeText(booking?.last_activity?.actor);
       const detail = normalizeText(booking?.last_activity?.detail);
+      const changedBy = actor || backendT("common.not_available", "Not available");
       const metaParts = [
         `updated: ${formatObservabilityDateTime(booking?.updated_at)}`
       ];
-      if (actor) metaParts.push(`actor: ${actor}`);
       if (booking?.assigned_keycloak_user_id) metaParts.push(`assigned: ${booking.assigned_keycloak_user_id}`);
       els.settingsLastChangedBooking.innerHTML = `<div class="settings-observability__booking">
         <a class="settings-observability__booking-link" href="${escapeHtml(bookingLinkHref(booking.id))}">${escapeHtml(bookingTitle)}</a>
         <div class="micro settings-observability__booking-meta">${escapeHtml(metaParts.join(" | "))}</div>
+        <div class="micro settings-observability__booking-meta">${escapeHtml(`changed by: ${changedBy}`)}</div>
         ${detail ? `<div class="micro settings-observability__booking-meta">${escapeHtml(detail)}</div>` : ""}
       </div>`;
     }
@@ -866,7 +872,10 @@ async function saveWebsiteDestinationPublication() {
     state.websiteDestinationPublicationDraftByCountry = { ...state.websiteDestinationPublicationInitialByCountry };
     renderWebsiteDestinationPublication();
     showWebsiteDestinationPublicationStatus(
-      backendT("backend.settings.website_destinations_saved", "Website destinations saved.")
+      homepageAssetSyncFailed(payload)
+        ? countryReferenceHomepageAssetSyncWarningMessage()
+        : backendT("backend.settings.website_destinations_saved", "Website destinations saved."),
+      homepageAssetSyncFailed(payload)
     );
   } finally {
     state.websiteDestinationPublicationSaving = false;

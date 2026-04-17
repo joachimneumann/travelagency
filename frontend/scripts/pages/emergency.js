@@ -126,6 +126,17 @@ function setStatus(message = "", isError = false) {
   els.status.classList.toggle("is-error", Boolean(isError));
 }
 
+function homepageAssetSyncFailed(payload) {
+  return payload?.homepage_assets?.ok === false;
+}
+
+function homepageAssetSyncWarningMessage() {
+  return backendT(
+    "backend.emergency.public_sync_failed",
+    "Emergency information saved, but refreshing the public homepage failed. Please retry or run the homepage asset generator."
+  );
+}
+
 function updateControls() {
   const missingCountries = getMissingCountryOptions();
   if (els.addCountryBtn) {
@@ -400,7 +411,12 @@ async function saveCountryReferenceInfo() {
   state.isDirty = false;
   renderItems();
   renderAddCountryOptions();
-  setStatus(backendT("backend.emergency.saved", "Emergency information saved."));
+  setStatus(
+    homepageAssetSyncFailed(payload)
+      ? homepageAssetSyncWarningMessage()
+      : backendT("backend.emergency.saved", "Emergency information saved."),
+    homepageAssetSyncFailed(payload)
+  );
   updateControls();
 }
 

@@ -311,7 +311,9 @@ export function createApplicationRoutes({
     readCountryPracticalInfo: countryReferenceStore.readCountryPracticalInfo,
     persistCountryPracticalInfo: countryReferenceStore.persistCountryPracticalInfo,
     normalizeText: support.normalizeText,
-    nowIso: support.nowIso
+    nowIso: support.nowIso,
+    repoRoot: runtime.paths.repoRoot,
+    execFile: runtime.execFile
   });
 
   const tourHandlers = createTourHandlers({
