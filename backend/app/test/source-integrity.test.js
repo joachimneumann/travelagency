@@ -3728,8 +3728,8 @@ test("frontend language switching updates the homepage in place instead of forci
   );
   assert.match(
     mainSource,
-    /async function loadTeamMembers\(\) \{[\s\S]*fetch\("\/frontend\/data\/generated\/homepage\/public-team\.json", \{ cache: "no-store" \}\)/,
-    "Homepage team loading should bypass browser cache when reading the generated public team payload"
+    /function publicTeamDataUrl\(\) \{[\s\S]*generatedHomepageAssetUrls\(\)\?\.team[\s\S]*async function loadTeamMembers\(\{ force = false \} = \{\}\) \{[\s\S]*fetch\(dataUrl, \{ cache: "default" \}\)/,
+    "Homepage team loading should read the generated versioned team payload URL and allow normal browser caching"
   );
   assert.match(
     mainSource,
@@ -3743,8 +3743,8 @@ test("frontend language switching updates the homepage in place instead of forci
   );
   assert.match(
     mainToursSource,
-    /const lang = normalizeFrontendTourLang\(currentFrontendLang\(\)\);[\s\S]*fetch\(`\/frontend\/data\/generated\/homepage\/public-tours\.\$\{encodeURIComponent\(lang\)\}\.json`, \{ cache: "no-store" \}\);/,
-    "Homepage tour loading should bypass browser cache when reading generated per-language static tour payloads"
+    /function publicToursDataUrl\(lang\) \{[\s\S]*generatedTourAssetUrlsByLang\(\)\?\.\[normalizedLang\][\s\S]*async function loadTrips\(\) \{[\s\S]*const lang = normalizeFrontendTourLang\(currentFrontendLang\(\)\);[\s\S]*fetch\(publicToursDataUrl\(lang\), \{ cache: "default" \}\)/,
+    "Homepage tour loading should use generated versioned per-language URLs and allow normal browser caching"
   );
   assert.doesNotMatch(
     mainToursSource,
