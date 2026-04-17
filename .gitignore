@@ -24,6 +24,7 @@ content/**
 
 frontend/data/generated/
 assets/generated/
+tmp/
 
 backup/atp_staff/staff.json.audit.log
 logs/
