@@ -195,7 +195,7 @@ test("generated-offer Gmail drafts localize from the PDF dictionary", async () =
 
 test("browser pages load the generated language catalog before the i18n bootstrap", async () => {
   const pageChecks = [
-    ["frontend/pages/index.html", /language_catalog\.global\.js/, /frontend_i18n\.js/, /public-homepage-copy\.manifest\.json/],
+    ["frontend/pages/index.html", /language_catalog\.global\.js/, /frontend_i18n\.js/, /public-homepage-copy\.global\.js/],
     ["frontend/pages/bookings.html", /language_catalog\.global\.js/, /backend_i18n\.js/],
     ["frontend/pages/booking.html", /language_catalog\.global\.js/, /backend_i18n\.js/],
     ["frontend/pages/marketing_tour.html", /language_catalog\.global\.js/, /backend_i18n\.js/],

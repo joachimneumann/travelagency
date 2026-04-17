@@ -32,7 +32,6 @@ const TOUR_OUTPUT_DIR = path.join(GENERATED_HOMEPAGE_ASSETS_DIR, "tours");
 const TEAM_OUTPUT_DIR = path.join(GENERATED_HOMEPAGE_ASSETS_DIR, "team");
 const TEAM_OUTPUT_FILE = path.join(FRONTEND_DATA_DIR, "public-team.json");
 const HOMEPAGE_COPY_GLOBAL_PATH = path.join(FRONTEND_DATA_DIR, "public-homepage-copy.global.js");
-const HOMEPAGE_COPY_MANIFEST_PATH = path.join(FRONTEND_DATA_DIR, "public-homepage-copy.manifest.json");
 const HOMEPAGE_INITIAL_BUNDLE_PATH = path.join(FRONTEND_DATA_DIR, "public-homepage-main.bundle.js");
 const TOUR_FILE_PREFIX = "public-tours.";
 const TOUR_FILE_SUFFIX = ".json";
@@ -120,7 +119,7 @@ async function cleanGeneratedFrontendData(frontendDataDir) {
     if (
       entryName === "public-team.json"
       || entryName === path.basename(HOMEPAGE_COPY_GLOBAL_PATH)
-      || entryName === path.basename(HOMEPAGE_COPY_MANIFEST_PATH)
+      || entryName === "public-homepage-copy.manifest.json"
       || entryName === path.basename(HOMEPAGE_INITIAL_BUNDLE_PATH)
       || (entryName.startsWith(TOUR_FILE_PREFIX) && entryName.endsWith(TOUR_FILE_SUFFIX))
     ) {
@@ -301,15 +300,6 @@ async function writeHomepageCopyGlobalScript(outputPath, value) {
   return {
     version: versionTokenForContent(source)
   };
-}
-
-async function writeHomepageCopyManifest(outputPath, { assetUrl = "", version = "", initialScriptUrl = "" } = {}) {
-  await ensureDirectory(path.dirname(outputPath));
-  await writeFile(outputPath, jsonWithTrailingNewline({
-    assetUrl: normalizeText(assetUrl),
-    version: normalizeText(version),
-    initialScriptUrl: normalizeText(initialScriptUrl)
-  }), "utf8");
 }
 
 async function writeHomepageInitialBundleScript(outputPath) {
@@ -640,12 +630,9 @@ export async function generatePublicHomepageAssets({
   teamOutputDir = TEAM_OUTPUT_DIR,
   frontendI18nDir = FRONTEND_I18N_DIR,
   homepageCopyGlobalPath = HOMEPAGE_COPY_GLOBAL_PATH,
-  homepageCopyManifestPath = "",
   homepageInitialBundlePath = "",
   languages = FRONTEND_LANGUAGE_CODES
 } = {}) {
-  const resolvedHomepageCopyManifestPath = normalizeText(homepageCopyManifestPath)
-    || path.join(frontendDataDir, path.basename(HOMEPAGE_COPY_MANIFEST_PATH));
   const resolvedHomepageInitialBundlePath = normalizeText(homepageInitialBundlePath)
     || path.join(frontendDataDir, path.basename(HOMEPAGE_INITIAL_BUNDLE_PATH));
   await cleanGeneratedFrontendData(frontendDataDir);
@@ -670,12 +657,7 @@ export async function generatePublicHomepageAssets({
       team: team.assetUrl
     }
   });
-  const homepageInitialBundle = await writeHomepageInitialBundleScript(resolvedHomepageInitialBundlePath);
-  await writeHomepageCopyManifest(resolvedHomepageCopyManifestPath, {
-    assetUrl: buildVersionedGeneratedDataUrl(path.basename(homepageCopyGlobalPath), homepageCopy.version),
-    version: homepageCopy.version,
-    initialScriptUrl: buildVersionedGeneratedDataUrl(path.basename(resolvedHomepageInitialBundlePath), homepageInitialBundle.version)
-  });
+  await writeHomepageInitialBundleScript(resolvedHomepageInitialBundlePath);
   return { tours, team };
 }
 
