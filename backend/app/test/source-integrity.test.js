@@ -3324,8 +3324,8 @@ test("settings page hosts destination publication controls while emergency no lo
   );
   assert.match(
     navSource,
-    /const canReadTours = hasAnyRole\(resolvedRoles, "atp_admin", "atp_accountant", "atp_tour_editor"\);[\s\S]*const canReadEmergency = hasAnyRole\(resolvedRoles, "atp_admin", "atp_tour_editor"\);[\s\S]*const canReadSettings = hasAnyRole\(resolvedRoles, "atp_admin"\);/,
-    "Backend nav should keep Marketing Tours and Emergency available to tour editors while Settings stays admin-only"
+    /normalizedSection === "settings"[\s\S]*\? "settings\.html"[\s\S]*normalizedSection === "emergency"[\s\S]*\? "settings\.html"[\s\S]*const canReadTours = hasAnyRole\(resolvedRoles, "atp_admin", "atp_accountant", "atp_tour_editor"\);[\s\S]*const canReadSettings = hasAnyRole\(resolvedRoles, "atp_admin"\);/,
+    "Backend nav should keep Marketing Tours readable for tour editors while routing Emergency through the admin-only Settings area"
   );
   assert.match(
     toursSource,
