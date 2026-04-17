@@ -7,6 +7,7 @@ export function createStagingAccessHandlers({
   enabled,
   password,
   cookieSecret,
+  speedBypassToken,
   cookieName,
   maxAgeSeconds,
   redirect,
@@ -44,6 +45,22 @@ export function createStagingAccessHandlers({
     const actual = normalizeText(cookies[cookieName]);
     const expected = signStagingAccessCookie(password);
     return Boolean(actual && expected && safeEqualText(actual, expected));
+  }
+
+  function hasSpeedBypassAccess(req) {
+    if (!enabled) return true;
+    const expectedToken = normalizeText(speedBypassToken);
+    if (!expectedToken) return false;
+    try {
+      const forwardedPath = getForwardedPath(req);
+      const requestUrl = new URL(forwardedPath, "http://localhost");
+      const normalizedPath = normalizeReturnToPath(requestUrl.pathname, "/");
+      if (normalizedPath !== "/" && normalizedPath !== "/index.html") return false;
+      const actualToken = normalizeText(requestUrl.searchParams.get("test_speed"));
+      return Boolean(actualToken) && safeEqualText(actualToken, expectedToken);
+    } catch {
+      return false;
+    }
   }
 
   function setStagingAccessCookie(res) {
@@ -203,7 +220,7 @@ export function createStagingAccessHandlers({
   }
 
   async function handleStagingAccessCheck(req, res) {
-    if (!enabled || hasValidStagingAccess(req)) {
+    if (!enabled || hasValidStagingAccess(req) || hasSpeedBypassAccess(req)) {
       res.writeHead(204);
       res.end();
       return;

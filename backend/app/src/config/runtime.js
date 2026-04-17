@@ -73,6 +73,7 @@ export const STAGING_ACCESS_CONFIG = Object.freeze({
   enabled: String(process.env.STAGING_ACCESS_ENABLED || "").trim().toLowerCase() === "true",
   password: String(process.env.STAGING_ACCESS_PASSWORD || ""),
   cookieSecret: String(process.env.STAGING_ACCESS_COOKIE_SECRET || ""),
+  speedBypassToken: String(process.env.STAGING_ACCESS_SPEED_BYPASS_TOKEN || ""),
   cookieName: normalizeText(process.env.STAGING_ACCESS_COOKIE_NAME || "asiatravelplan_staging_access"),
   maxAgeSeconds: Math.max(60, Number(process.env.STAGING_ACCESS_MAX_AGE_SECONDS || 60 * 60 * 24 * 30) || 60)
 });

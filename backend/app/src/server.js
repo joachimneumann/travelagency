@@ -72,6 +72,7 @@ const stagingAccessHandlers = createStagingAccessHandlers({
   enabled: STAGING_ACCESS_CONFIG.enabled,
   password: STAGING_ACCESS_CONFIG.password,
   cookieSecret: STAGING_ACCESS_CONFIG.cookieSecret,
+  speedBypassToken: STAGING_ACCESS_CONFIG.speedBypassToken,
   cookieName: STAGING_ACCESS_CONFIG.cookieName,
   maxAgeSeconds: STAGING_ACCESS_CONFIG.maxAgeSeconds,
   redirect: httpHelpers.redirect,
