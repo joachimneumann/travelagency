@@ -28,6 +28,11 @@ The `scripts/` folder is organized by concern:
 Common entry points:
 
 ```bash
+./deploy_frontend
+./deploy_backend
+./deploy_keycloak
+./deploy_all
+
 ./scripts/local/deploy_local_all.sh
 ./scripts/local/deploy_local_backend.sh
 ./scripts/local/deploy_local_frontend.sh
@@ -56,6 +61,7 @@ Current `atp` layout:
 
 - production checkout: `/srv/asiatravelplan`
 - staging checkout: `/srv/asiatravelplan-staging`
+- public Caddy runtime root: `/srv/asiatravelplan-public`
 - production app compose project: `asiatravelplan`
 - staging app compose project: `asiatravelplan-staging`
 - shared public Caddy compose project: `asiatravelplan-public`
@@ -83,3 +89,21 @@ Current public routing notes:
 - staging backend is published on host port `8789`
 - staging Keycloak is published on host port `8083`
 - the public Caddy proxies staging traffic through those host ports
+
+## Directory-Aware Wrappers
+
+The repo root now includes four wrapper commands:
+
+```bash
+./deploy_frontend
+./deploy_backend
+./deploy_keycloak
+./deploy_all
+```
+
+They must be run from the checkout root itself, and they dispatch by current
+directory:
+
+- `/Users/joachim/projects/travelagency` -> local scripts
+- `/srv/asiatravelplan` -> production scripts
+- `/srv/asiatravelplan-staging` -> staging scripts

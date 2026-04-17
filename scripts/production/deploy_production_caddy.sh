@@ -3,8 +3,11 @@ set -euo pipefail
 
 EXPECTED_HOSTNAME="${EXPECTED_HOSTNAME:-atp}"
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+CADDY_ROOT="${CADDY_ROOT:-/srv/asiatravelplan-public}"
 SOURCE_CADDYFILE="${SOURCE_CADDYFILE:-$ROOT_DIR/deploy/Caddyfile}"
-CADDY_COMPOSE_FILE="${CADDY_COMPOSE_FILE:-$ROOT_DIR/docker-compose.caddy.yml}"
+SOURCE_CADDY_COMPOSE_FILE="${SOURCE_CADDY_COMPOSE_FILE:-$ROOT_DIR/docker-compose.caddy.yml}"
+CADDY_COMPOSE_FILE="${CADDY_COMPOSE_FILE:-$CADDY_ROOT/docker-compose.caddy.yml}"
+RUNTIME_CADDYFILE="${RUNTIME_CADDYFILE:-$CADDY_ROOT/deploy/Caddyfile}"
 ENV_FILE="${ENV_FILE:-$ROOT_DIR/.env.production}"
 CADDY_PROJECT_NAME="${CADDY_PROJECT_NAME:-asiatravelplan-public}"
 
@@ -16,10 +19,13 @@ Usage:
   ./scripts/production/deploy_production_caddy.sh
 
 Environment overrides:
-  EXPECTED_HOSTNAME  Hostname required for execution (default: atp)
-  SOURCE_CADDYFILE   Shared Caddy config file (default: deploy/Caddyfile)
-  CADDY_COMPOSE_FILE Docker Compose file that manages the shared public Caddy container (default: docker-compose.caddy.yml)
-  ENV_FILE           Env file passed to docker compose (default: .env.production)
+  EXPECTED_HOSTNAME       Hostname required for execution (default: atp)
+  CADDY_ROOT              Runtime root for the shared public Caddy stack (default: /srv/asiatravelplan-public)
+  SOURCE_CADDYFILE        Source Caddy config file in the checkout (default: deploy/Caddyfile)
+  SOURCE_CADDY_COMPOSE_FILE Source compose file in the checkout (default: docker-compose.caddy.yml)
+  CADDY_COMPOSE_FILE      Runtime compose file path (default: /srv/asiatravelplan-public/docker-compose.caddy.yml)
+  RUNTIME_CADDYFILE       Runtime Caddyfile path (default: /srv/asiatravelplan-public/deploy/Caddyfile)
+  ENV_FILE                Env file passed to docker compose (default: .env.production)
 EOF
 }
 
@@ -40,8 +46,8 @@ if [[ ! -f "$SOURCE_CADDYFILE" ]]; then
   exit 1
 fi
 
-if [[ ! -f "$CADDY_COMPOSE_FILE" ]]; then
-  echo "Missing Caddy compose file: $CADDY_COMPOSE_FILE" >&2
+if [[ ! -f "$SOURCE_CADDY_COMPOSE_FILE" ]]; then
+  echo "Missing source Caddy compose file: $SOURCE_CADDY_COMPOSE_FILE" >&2
   exit 1
 fi
 
@@ -55,10 +61,14 @@ if ! command -v docker >/dev/null 2>&1; then
   exit 1
 fi
 
+mkdir -p "$CADDY_ROOT/deploy"
+cp "$SOURCE_CADDYFILE" "$RUNTIME_CADDYFILE"
+cp "$SOURCE_CADDY_COMPOSE_FILE" "$CADDY_COMPOSE_FILE"
+
 docker run --rm \
-  -v "$SOURCE_CADDYFILE:/etc/caddy/Caddyfile:ro" \
+  -v "$RUNTIME_CADDYFILE:/etc/caddy/Caddyfile:ro" \
   caddy:2 \
   caddy validate --config /etc/caddy/Caddyfile
 
 docker_compose -p "$CADDY_PROJECT_NAME" --env-file "$ENV_FILE" -f "$CADDY_COMPOSE_FILE" up -d caddy
-echo "Shared public Caddy reloaded on $CURRENT_HOSTNAME using $CADDY_COMPOSE_FILE (project: $CADDY_PROJECT_NAME)."
+echo "Shared public Caddy reloaded on $CURRENT_HOSTNAME using runtime root $CADDY_ROOT (project: $CADDY_PROJECT_NAME)."
