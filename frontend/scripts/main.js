@@ -3,15 +3,8 @@
   - Tour catalog is loaded from generated frontend data files
 */
 
-import { publicBookingsRequest } from "../Generated/API/generated_APIRequestFactory.js";
-import {
-  PUBLIC_BOOKING_CREATE_REQUEST_SCHEMA,
-  validatePublicBookingCreateRequest
-} from "../Generated/API/generated_APIModels.js";
 import { normalizeText } from "../../shared/js/text.js";
 import { logBrowserConsoleError } from "./shared/api.js";
-import { fetchAuthMe } from "./shared/auth.js";
-import { createFrontendBookingFormOptionsController } from "./main_booking_form_options.js";
 import { createFrontendToursController } from "./main_tours.js";
 
 function frontendT(id, fallback, vars) {
@@ -82,6 +75,35 @@ let publicBootstrapLoadScheduled = false;
 let tourImagePrewarmToken = 0;
 let teamSectionRevealObserved = false;
 let teamMembersLoadPromise = null;
+
+const DEFAULT_BOOKING_CURRENCY = "USD";
+const FALLBACK_MIN_TRAVELERS = 1;
+const FALLBACK_MAX_TRAVELERS = 30;
+const MONTH_ABBREVIATION_TO_NUMBER = Object.freeze({
+  jan: 1,
+  feb: 2,
+  mar: 3,
+  apr: 4,
+  may: 5,
+  jun: 6,
+  jul: 7,
+  aug: 8,
+  sep: 9,
+  oct: 10,
+  nov: 11,
+  dec: 12
+});
+const bookingRuntime = {
+  controller: null,
+  publicBookingsRequest: null,
+  publicBookingCreateRequestSchema: null,
+  validatePublicBookingCreateRequest: null,
+  promise: null
+};
+const authRuntime = {
+  fetchAuthMe: null,
+  promise: null
+};
 
 const INITIAL_VISIBLE_TOURS = 6;
 const SHOW_MORE_BATCH = 3;
@@ -166,37 +188,157 @@ const els = {
   bookingSuccessCloseBtn: document.getElementById("bookingSuccessCloseBtn")
 };
 
-const bookingFormOptionsController = createFrontendBookingFormOptionsController({
-  els,
-  state,
-  frontendT,
-  currentFrontendLang,
-  syncLocalizedControlLanguage,
-  escapeHTML,
-  escapeAttr,
-  publicBookingCreateRequestSchema: PUBLIC_BOOKING_CREATE_REQUEST_SCHEMA
-});
-const {
-  DEFAULT_BOOKING_CURRENCY,
-  MAX_TRAVELERS,
-  MIN_TRAVELERS,
-  approximateDisplayAmountFromUSD,
-  buildFirstTravelMonthValue,
-  findBudgetOptionValueByLowerUSD,
-  findTravelDurationOptionByDays,
-  formatDisplayMoney,
-  getSelectedBudgetOption,
-  normalizeCurrencyCode,
-  parseTravelDurationRange,
-  preferredBookingLanguageForFrontendLang,
-  preferredCurrencyForFrontendLang,
-  preferredCurrencyForLanguageValue,
-  refreshLocalizedBookingFormOptions,
-  renderBudgetOptions,
-  setTravelMonthValue,
-  setupBookingBudgetOptions,
-  setupTravelMonthControls
-} = bookingFormOptionsController;
+function bookingController() {
+  return bookingRuntime.controller;
+}
+
+function bookingSchema() {
+  return bookingRuntime.publicBookingCreateRequestSchema;
+}
+
+function bookingRuntimeLoaded() {
+  return Boolean(bookingController());
+}
+
+async function ensureBookingRuntime() {
+  if (bookingController()) return bookingRuntime;
+  if (bookingRuntime.promise) return bookingRuntime.promise;
+
+  bookingRuntime.promise = (async () => {
+    const [
+      bookingModule,
+      requestFactoryModule,
+      apiModelsModule
+    ] = await Promise.all([
+      import("./main_booking_form_options.js"),
+      import("../Generated/API/generated_APIRequestFactory.js"),
+      import("../Generated/API/generated_APIModels.js")
+    ]);
+
+    bookingRuntime.publicBookingsRequest = requestFactoryModule.publicBookingsRequest;
+    bookingRuntime.publicBookingCreateRequestSchema = apiModelsModule.PUBLIC_BOOKING_CREATE_REQUEST_SCHEMA;
+    bookingRuntime.validatePublicBookingCreateRequest = apiModelsModule.validatePublicBookingCreateRequest;
+    bookingRuntime.controller = bookingModule.createFrontendBookingFormOptionsController({
+      els,
+      state,
+      frontendT,
+      currentFrontendLang,
+      syncLocalizedControlLanguage,
+      escapeHTML,
+      escapeAttr,
+      publicBookingCreateRequestSchema: bookingRuntime.publicBookingCreateRequestSchema
+    });
+
+    applyTravelerBoundsFromModel();
+    bookingController()?.setupTravelMonthControls?.();
+    bookingController()?.setupBookingBudgetOptions?.();
+
+    return bookingRuntime;
+  })().finally(() => {
+    bookingRuntime.promise = null;
+  });
+
+  return bookingRuntime.promise;
+}
+
+async function ensureAuthRuntime() {
+  if (typeof authRuntime.fetchAuthMe === "function") return authRuntime;
+  if (authRuntime.promise) return authRuntime.promise;
+
+  authRuntime.promise = import("./shared/auth.js")
+    .then((authModule) => {
+      authRuntime.fetchAuthMe = authModule.fetchAuthMe;
+      return authRuntime;
+    })
+    .finally(() => {
+      authRuntime.promise = null;
+    });
+
+  return authRuntime.promise;
+}
+
+function preferredCurrencyForFrontendLang(lang) {
+  return bookingController()?.preferredCurrencyForFrontendLang?.(lang) || DEFAULT_BOOKING_CURRENCY;
+}
+
+function approximateDisplayAmountFromUSD(amountUSD, currencyCode) {
+  return bookingController()?.approximateDisplayAmountFromUSD?.(amountUSD, currencyCode) ?? null;
+}
+
+function formatDisplayMoney(amount, currencyCode, locale) {
+  if (bookingController()?.formatDisplayMoney) {
+    return bookingController().formatDisplayMoney(amount, currencyCode, locale);
+  }
+  const normalizedAmount = Number(amount);
+  if (!Number.isFinite(normalizedAmount)) return "";
+  return new Intl.NumberFormat(locale || state.lang || currentFrontendLang() || "en", {
+    maximumFractionDigits: 0,
+    minimumFractionDigits: 0,
+    useGrouping: true
+  }).format(normalizedAmount);
+}
+
+function normalizeCurrencyCode(value) {
+  const normalized = bookingController()?.normalizeCurrencyCode?.(value);
+  if (normalized) return normalized;
+  const fallback = normalizeText(value).toUpperCase();
+  return fallback || DEFAULT_BOOKING_CURRENCY;
+}
+
+function preferredBookingLanguageForFrontendLang(lang) {
+  return bookingController()?.preferredBookingLanguageForFrontendLang?.(lang) || "en";
+}
+
+function preferredCurrencyForLanguageValue(value) {
+  return bookingController()?.preferredCurrencyForLanguageValue?.(value) || DEFAULT_BOOKING_CURRENCY;
+}
+
+function refreshLocalizedBookingFormOptions() {
+  bookingController()?.refreshLocalizedBookingFormOptions?.();
+}
+
+function setTravelMonthValue(value) {
+  bookingController()?.setTravelMonthValue?.(value);
+}
+
+function buildFirstTravelMonthValue(monthAbbreviation) {
+  const built = bookingController()?.buildFirstTravelMonthValue?.(monthAbbreviation);
+  if (built) return built;
+  const month = MONTH_ABBREVIATION_TO_NUMBER[normalizeText(monthAbbreviation).toLowerCase()];
+  if (!month) return "";
+  const now = new Date();
+  const currentMonth = now.getMonth() + 1;
+  const year = month >= currentMonth ? now.getFullYear() : now.getFullYear() + 1;
+  return `${year}-${String(month).padStart(2, "0")}`;
+}
+
+function parseTravelDurationRange(value) {
+  const parsed = bookingController()?.parseTravelDurationRange?.(value);
+  if (parsed) return parsed;
+  const normalized = normalizeText(value).toLowerCase();
+  if (!normalized || normalized === "not decided yet") {
+    return { min: null, max: null };
+  }
+  const plusMatch = normalized.match(/^(\d+)\+\s*days?$/);
+  if (plusMatch) {
+    return { min: Number.parseInt(plusMatch[1], 10), max: null };
+  }
+  const rangeMatch = normalized.match(/^(\d+)\s*-\s*(\d+)\s*days?$/);
+  if (rangeMatch) {
+    return {
+      min: Number.parseInt(rangeMatch[1], 10),
+      max: Number.parseInt(rangeMatch[2], 10)
+    };
+  }
+  return { min: null, max: null };
+}
+
+function getSelectedBudgetOption(currencyCode, value) {
+  return bookingController()?.getSelectedBudgetOption?.(currencyCode, value) || {
+    budgetLowerUSD: null,
+    budgetUpperUSD: null
+  };
+}
 const toursController = createFrontendToursController({
   state,
   els,
@@ -247,7 +389,6 @@ async function init() {
     void handleFrontendLanguageChanged();
   });
   syncI18nManagedLabels();
-  setupTravelMonthControls();
   setupMobileNav();
   setupFAQ();
   setupTeamSection();
@@ -259,7 +400,6 @@ async function init() {
   setupFormNavigation();
   setupLiveValidationReset();
   applyTravelerBoundsFromModel();
-  setupBookingBudgetOptions();
 
   const savedFilters = JSON.parse(localStorage.getItem("asiatravelplan_filters") || "null");
   const urlFilters = getFiltersFromURL();
@@ -644,8 +784,10 @@ function syncLocalizedControlLanguage() {
 function applyTravelerBoundsFromModel() {
   const travelersInput = document.getElementById("bookingTravelers");
   if (!travelersInput) return;
-  travelersInput.setAttribute("min", String(MIN_TRAVELERS));
-  travelersInput.setAttribute("max", String(MAX_TRAVELERS));
+  const minTravelers = Number(bookingController()?.MIN_TRAVELERS) || FALLBACK_MIN_TRAVELERS;
+  const maxTravelers = Number(bookingController()?.MAX_TRAVELERS) || FALLBACK_MAX_TRAVELERS;
+  travelersInput.setAttribute("min", String(minTravelers));
+  travelersInput.setAttribute("max", String(maxTravelers));
 }
 
 function setupMobileNav() {
@@ -734,6 +876,7 @@ async function loadWebsiteAuthStatus() {
   if (!els.backendLoginContainer) return;
 
   try {
+    const { fetchAuthMe } = await ensureAuthRuntime();
     const { response, payload } = await fetchAuthMe(BACKEND_BASE_URL);
     if (!response.ok || !payload?.authenticated) {
       state.websiteAuthenticated = false;
@@ -805,7 +948,9 @@ async function handleFrontendLanguageChanged() {
   );
 
   syncI18nManagedLabels();
-  refreshLocalizedBookingFormOptions();
+  if (bookingRuntimeLoaded()) {
+    refreshLocalizedBookingFormOptions();
+  }
 
   try {
     const toursPayload = await loadTrips();
@@ -845,7 +990,9 @@ async function handleFrontendLanguageChanged() {
     console.error("Failed to refresh localized static tours after frontend language switch.", error);
   } finally {
     scheduleDeferredTourImagePrewarm(state.trips);
-    renderFormStep();
+    if (bookingRuntimeLoaded()) {
+      renderFormStep();
+    }
   }
 }
 
@@ -921,11 +1068,12 @@ function setupModal() {
   if (!els.bookingModal) return;
 
   const openModalButtons = [els.openBookingModal, ...els.openModalButtons].filter(Boolean);
-  const resolveAndOpenBookingModalFromButton = (trigger) => {
+  const resolveAndOpenBookingModalFromButton = async (trigger) => {
+    await ensureBookingRuntime();
     const tripId = trigger?.getAttribute?.("data-trip-id");
     if (!tripId) {
       clearSelectedTourContext();
-      openBookingModal();
+      await openBookingModal();
       return;
     }
 
@@ -934,18 +1082,18 @@ function setupModal() {
       setBookingField("bookingDestination", tourDestinations(selected));
       setBookingField("bookingStyle", selected.styles || []);
       setSelectedTourContext(selected);
-      openBookingModal();
+      await openBookingModal();
       return;
     }
 
     clearSelectedTourContext();
-    openBookingModal();
+    await openBookingModal();
   };
 
   openModalButtons.forEach((button) => {
     button.addEventListener("click", () => {
       lastBookingModalTrigger = button;
-      resolveAndOpenBookingModalFromButton(button);
+      void resolveAndOpenBookingModalFromButton(button);
     });
   });
 
@@ -965,7 +1113,8 @@ function setupModal() {
   });
 }
 
-function openBookingModal() {
+async function openBookingModal() {
+  await ensureBookingRuntime();
   state.bookingSubmitted = false;
   state.formStep = 1;
   prefillBookingFormWithFilters();
@@ -1019,8 +1168,9 @@ function setupFormNavigation() {
     goToFormStep(state.formStep - 1);
   });
 
-  els.stepNext.addEventListener("click", () => {
+  els.stepNext.addEventListener("click", async () => {
     if (state.bookingSubmitted) return;
+    await ensureBookingRuntime();
     if (state.formStep < 3) {
       clearBookingFeedback();
       const valid = validateCurrentStep();
@@ -1031,7 +1181,7 @@ function setupFormNavigation() {
 
     const valid = validateCurrentStep();
     if (!valid) return;
-    submitBookingForm();
+    await submitBookingForm();
   });
 
   if (els.stepClose) {
@@ -1133,6 +1283,8 @@ function renderFormStep() {
 function validateCurrentStep() {
   const activeStep = els.bookingForm.querySelector(`.step[data-step="${state.formStep}"]`);
   if (!activeStep) return true;
+  const minTravelers = Number(bookingController()?.MIN_TRAVELERS) || FALLBACK_MIN_TRAVELERS;
+  const maxTravelers = Number(bookingController()?.MAX_TRAVELERS) || FALLBACK_MAX_TRAVELERS;
 
   let isValid = true;
   let travelersRangeError = "";
@@ -1175,8 +1327,8 @@ function validateCurrentStep() {
         field.classList.add("invalid");
         isValid = false;
         if (!travelersRangeError && (input.id === "bookingTravelers" || input.name === "number_of_travelers")) {
-          const minDisplay = min !== null ? min : MIN_TRAVELERS;
-          const maxDisplay = max !== null ? max : MAX_TRAVELERS;
+          const minDisplay = min !== null ? min : minTravelers;
+          const maxDisplay = max !== null ? max : maxTravelers;
           travelersRangeError = frontendT(
             "modal.error.travelers_between",
             "Travelers must be between {min} and {max}.",
@@ -1189,8 +1341,8 @@ function validateCurrentStep() {
 
   const stepInputs = Array.from(activeStep.querySelectorAll("input[name], select[name], textarea[name]"));
   const stepNames = new Set(stepInputs.map((input) => input.name).filter(Boolean));
-  const requireOneOfGroups = Array.isArray(PUBLIC_BOOKING_CREATE_REQUEST_SCHEMA?.requireOneOf)
-    ? PUBLIC_BOOKING_CREATE_REQUEST_SCHEMA.requireOneOf
+  const requireOneOfGroups = Array.isArray(bookingSchema()?.requireOneOf)
+    ? bookingSchema().requireOneOf
     : [];
   requireOneOfGroups.forEach((group) => {
     if (!Array.isArray(group) || !group.some((fieldName) => stepNames.has(fieldName))) return;
@@ -1216,6 +1368,7 @@ function validateCurrentStep() {
 }
 
 async function submitBookingForm() {
+  await ensureBookingRuntime();
   clearBookingFeedback();
   els.stepNext.disabled = true;
   els.stepBack.disabled = true;
@@ -1231,12 +1384,14 @@ async function submitBookingForm() {
     els.bookingBudget?.value || "not_decided_yet"
   );
   const selectedDurationRange = parseTravelDurationRange(els.bookingDuration?.value || "");
+  const minTravelers = Number(bookingController()?.MIN_TRAVELERS) || FALLBACK_MIN_TRAVELERS;
+  const maxTravelers = Number(bookingController()?.MAX_TRAVELERS) || FALLBACK_MAX_TRAVELERS;
 
-  if (rawTravelersValue && (!Number.isInteger(travelersValue) || travelersValue < MIN_TRAVELERS || travelersValue > MAX_TRAVELERS)) {
+  if (rawTravelersValue && (!Number.isInteger(travelersValue) || travelersValue < minTravelers || travelersValue > maxTravelers)) {
     renderBookingError(
       frontendT("modal.error.travelers_between", "Travelers must be between {min} and {max}.", {
-        min: MIN_TRAVELERS,
-        max: MAX_TRAVELERS
+        min: minTravelers,
+        max: maxTravelers
       })
     );
     els.stepNext.disabled = false;
@@ -1274,8 +1429,11 @@ async function submitBookingForm() {
   const idempotency_key = `booking_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
 
   try {
-    validatePublicBookingCreateRequest(payload);
-    const bookingRequest = publicBookingsRequest({ baseURL: API_BASE_ORIGIN });
+    bookingRuntime.validatePublicBookingCreateRequest?.(payload);
+    const bookingRequest = bookingRuntime.publicBookingsRequest?.({ baseURL: API_BASE_ORIGIN });
+    if (!bookingRequest) {
+      throw new Error("Booking request runtime is not available.");
+    }
     const response = await fetch(bookingRequest.url, {
       method: bookingRequest.method,
       headers: {
