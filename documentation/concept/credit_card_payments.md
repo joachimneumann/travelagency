@@ -5,24 +5,24 @@
 If card payments are added later, they should be attached to:
 - booking
 - offer
-- invoice
+- payment document
 
 They should not depend on a separate customer domain.
 
 ## Recommended Flow
 
 1. ATP staff prepares a booking-specific offer.
-2. The backend creates an invoice or payment request for that booking.
+2. The backend creates a payment document for that booking, typically a payment request.
 3. A payment link is shared with the booking contact.
 4. The booking contact reviews the booking-specific commercial details and pays.
-5. Payment status updates are written back to the booking pricing and invoice records.
+5. Payment status updates are written back to accepted booking payment fields and payment-document records.
 
 ## Data Ownership
 
 Use:
 - `booking.id`
 - `booking.persons[]`
-- invoice identifiers
+- payment-document identifiers
 
 Do not use:
 - separate master-data offer endpoints
@@ -30,10 +30,10 @@ Do not use:
 
 ## Public Link Idea
 
-A future public payment page could resolve a signed booking/invoice token and show:
+A future public payment page could resolve a signed booking/payment-document token and show:
 - booking title
 - line items
-- invoice amount
+- payment-document amount
 - currency
 - payment action
 
@@ -42,6 +42,6 @@ A future public payment page could resolve a signed booking/invoice token and sh
 This is a future design note only. The active backend currently supports:
 - pricing
 - offers
-- invoices
+- payment documents
 
 but not card processing.

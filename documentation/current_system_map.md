@@ -50,8 +50,8 @@ Important backend areas:
 
 Runtime persistence is currently file-based:
 - `backend/app/data/store.json`
-- `backend/app/data/generated_offers/`
-- `backend/app/data/invoices/`
+- `backend/app/data/pdfs/generated_offers/`
+- `backend/app/data/pdfs/payment_documents/`
 - `backend/app/data/booking_images/`
 - `backend/app/data/booking_person_photos/`
 - `content/tours/`
@@ -97,10 +97,13 @@ This flow controls which destinations appear on the homepage and in the public t
 Booking page feature modules:
 - `frontend/scripts/booking/persons.js`
 - `frontend/scripts/booking/offers.js`
-- `frontend/scripts/booking/pricing.js`
-- `frontend/scripts/booking/invoices.js`
+- `frontend/scripts/booking/payment_flow.js`
+- `frontend/scripts/booking/currency.js`
 - `frontend/scripts/booking/travel_plan.js`
 - `frontend/scripts/booking/whatsapp.js`
+
+The payment flow and payment-document creation now live inside:
+- `frontend/scripts/booking/payment_flow.js`
 
 Language/runtime i18n entrypoints:
 - `shared/generated/language_catalog.js`
@@ -147,7 +150,7 @@ Current key files:
 
 Not currently present in active mobile runtime:
 - generated Swift contract files
-- booking/tour/offer/invoice/person UI flows
+- booking/tour/offer/payment-document/person UI flows
 
 Authoritative mobile status doc:
 - `documentation/backend/mobileApp.md`

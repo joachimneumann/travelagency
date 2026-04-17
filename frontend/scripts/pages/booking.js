@@ -2,6 +2,7 @@ import { GENERATED_APP_ROLES } from "../../Generated/Models/generated_Roles.js";
 import { BOOKING_PERSON_SCHEMA } from "../../Generated/Models/generated_Booking.js";
 import {
   bookingActivitiesRequest,
+  bookingPaymentDocumentsRequest,
   bookingPersonCreateRequest,
   bookingPersonDeleteRequest,
   bookingPersonPhotoRequest,
@@ -22,17 +23,13 @@ import { resolveBackendSectionHref } from "../shared/nav.js";
 import { createBookingWhatsAppController } from "../booking/whatsapp.js";
 import { initializeBookingSections, renderBookingSectionHeader } from "../booking/sections.js";
 import {
-  createBookingPricingModule,
   formatMoneyDisplay,
   normalizeCurrencyCode,
   populateCurrencySelect as populateCurrencySelectFromModule
-} from "../booking/pricing.js";
+} from "../booking/currency.js";
+import { createBookingPaymentFlowModule } from "../booking/payment_flow.js";
 import { createBookingOfferModule } from "../booking/offers.js";
 import { createBookingTravelPlanModule } from "../booking/travel_plan.js";
-import {
-  createBookingInvoicesModule,
-  formatDateInput as formatInvoiceDateInput
-} from "../booking/invoices.js";
 import { createBookingCoreModule } from "../booking/core.js";
 import {
   formatPersonRoleLabel,
@@ -233,13 +230,8 @@ const state = {
   active_person_id: "",
   active_person_document_type: "passport",
   keycloakUsers: [],
-  invoices: [],
-  selectedInvoiceId: "",
+  paymentDocuments: [],
   originalNote: "",
-  pricingDraft: {
-    currency: "USD",
-    payments: []
-  },
   travelPlanDraft: {
     title: "",
     summary: "",
@@ -267,12 +259,10 @@ state.standardTourModal = {
   saving: false
 };
 
-state.dirty = { core: false, note: false, persons: false, travel_plan: false, offer: false, payment_terms: false, pricing: false, invoice: false };
+state.dirty = { core: false, note: false, persons: false, travel_plan: false, offer: false, payment_terms: false };
 state.dirtyDiagnostics = {};
 state.originalTravelPlanSnapshot = "";
 state.originalTravelPlanState = null;
-state.originalInvoiceSnapshot = "";
-state.pricingDepositReceiptArmed = false;
 state.pageSaveInFlight = false;
 state.pageDiscardInFlight = false;
 state.pageDirtyBarStatus = "";
@@ -460,25 +450,7 @@ const els = {
   offer_status: document.getElementById("offer_status"),
   activities_table: document.getElementById("activities_table"),
   activitiesPanelSummary: document.getElementById("activities_panel_summary"),
-  meta_chat_mount: document.getElementById("booking_whatsapp_mount"),
-  invoice_panel: document.getElementById("invoice_panel"),
-  invoice_select: document.getElementById("invoice_select"),
-  invoice_number_input: document.getElementById("invoice_number_input"),
-  invoice_currency_input: document.getElementById("invoice_currency_input"),
-  invoice_issue_date_input: document.getElementById("invoice_issue_date_input"),
-  invoice_issue_today_btn: document.getElementById("invoice_issue_today_btn"),
-  invoice_title_field: document.getElementById("invoice_title_field"),
-  invoice_title_input: document.getElementById("invoice_title_input"),
-  invoice_components_field: document.getElementById("invoice_components_field"),
-  invoice_components_input: document.getElementById("invoice_components_input"),
-  invoice_due_amount_input: document.getElementById("invoice_due_amount_input"),
-  invoice_due_amount_label: document.getElementById("invoice_due_amount_label"),
-  invoice_components_label: document.getElementById("invoice_components_label"),
-  invoice_vat_input: document.getElementById("invoice_vat_input"),
-  invoice_notes_field: document.getElementById("invoice_notes_field"),
-  invoice_notes_input: document.getElementById("invoice_notes_input"),
-  invoice_status: document.getElementById("invoice_status"),
-  invoices_table: document.getElementById("invoices_table")
+  meta_chat_mount: document.getElementById("booking_whatsapp_mount")
 };
 
 renderBookingPdfPersonalizationPanels(els);
@@ -569,8 +541,6 @@ function dirtySectionLabels() {
   if (state.dirty.persons) pushLabel(backendT("booking.dirty.persons", "Persons"));
   if (state.dirty.offer || state.dirty.payment_terms) pushLabel(backendT("booking.dirty.offer", "Offer"));
   if (state.dirty.travel_plan) pushLabel(backendT("booking.dirty.travel_plan", "Travel plan"));
-  if (state.dirty.pricing) pushLabel(backendT("booking.dirty.pricing", "Payments"));
-  if (state.dirty.invoice) pushLabel(backendT("booking.dirty.invoice", "Invoice"));
   return labels;
 }
 
@@ -782,7 +752,6 @@ async function init() {
   initializeBookingSections(document);
   renderStaticSectionHeaders();
   populateCurrencySelectFromModule(els.offer_currency_input);
-  populateCurrencySelectFromModule(els.invoice_currency_input);
   renderOfferCurrencyMenu(els.offer_currency_input, els.offerCurrencyMenuMount);
   populateContentLanguageSelect();
   setupBookingFilterPanels();
@@ -872,25 +841,6 @@ async function init() {
       }
     });
   }
-  const pricingDirtyRoot = els.paymentsWorkspace;
-  if (pricingDirtyRoot) {
-    const schedulePricingDirtyState = () => window.setTimeout(updatePricingDirtyState, 0);
-    pricingDirtyRoot.addEventListener("input", () => {
-      schedulePricingDirtyState();
-    });
-    pricingDirtyRoot.addEventListener("change", () => {
-      schedulePricingDirtyState();
-    });
-    pricingDirtyRoot.addEventListener("click", (event) => {
-      const button = event.target instanceof Element ? event.target.closest("button") : null;
-      if (!(button instanceof HTMLButtonElement)) return;
-      if (button.closest(".booking-section__head, .backend-section__head")) return;
-      if (button.hasAttribute("data-payment-document-create")) {
-        return;
-      }
-      schedulePricingDirtyState();
-    });
-  }
   if (els.offer_currency_input)
     els.offer_currency_input.addEventListener("change", () => {
       renderOfferCurrencyMenu(els.offer_currency_input, els.offerCurrencyMenuMount);
@@ -911,18 +861,6 @@ async function init() {
   travelPlanModule.bindEvents();
   document.addEventListener("keydown", handleBookingDetailKeydown, true);
   document.addEventListener("keydown", handlePageSaveKeydown, true);
-  if (els.invoice_select) els.invoice_select.addEventListener("change", onInvoiceSelectChange);
-  if (els.invoice_panel) {
-    const scheduleInvoiceDirtyState = () => window.setTimeout(updateInvoiceDirtyState, 0);
-    els.invoice_panel.addEventListener("input", scheduleInvoiceDirtyState);
-    els.invoice_panel.addEventListener("change", scheduleInvoiceDirtyState);
-  }
-  if (els.invoice_currency_input) els.invoice_currency_input.addEventListener("change", renderInvoiceMoneyLabels);
-  if (els.invoice_issue_today_btn) {
-    els.invoice_issue_today_btn.addEventListener("click", () => {
-      if (els.invoice_issue_date_input) els.invoice_issue_date_input.value = formatInvoiceDateInput(new Date());
-    });
-  }
 
   bindSectionNavigation("bookings");
   if (!state.id) {
@@ -1384,7 +1322,8 @@ async function loadActivities() {
 }
 
 function renderPricingPanel(options = {}) {
-  const result = pricingModule.renderPricingPanel(options);
+  void options;
+  const result = paymentFlowModule.renderPaymentFlowPanel();
   updateCleanStateActionAvailability();
   return result;
 }
@@ -1515,35 +1454,24 @@ async function saveStandardTourFromBooking() {
   ));
 }
 
-function updateInvoiceDirtyState() {
-  return invoicesModule.updateInvoiceDirtyState();
-}
-
-function renderInvoiceMoneyLabels() {
-  return invoicesModule.renderInvoiceMoneyLabels();
-}
-
-function loadInvoices() {
-  const result = invoicesModule.loadInvoices();
-  Promise.resolve(result).finally(() => {
-    renderPricingPanel({ preserveDraft: true });
+async function loadPaymentDocuments() {
+  if (!state.booking?.id) {
+    state.paymentDocuments = [];
+    renderPricingPanel();
     updateCleanStateActionAvailability();
+    return [];
+  }
+  const request = bookingPaymentDocumentsRequest({
+    baseURL: apiOrigin,
+    params: { booking_id: state.booking.id }
   });
-  return result;
-}
-
-function onInvoiceSelectChange() {
-  const result = invoicesModule.onInvoiceSelectChange();
+  const payload = await fetchApi(request.url, { suppressNotFound: true });
+  state.paymentDocuments = Array.isArray(payload?.items)
+    ? payload.items.slice().sort((left, right) => String(right.updated_at || right.created_at || "").localeCompare(String(left.updated_at || left.created_at || "")))
+    : [];
+  renderPricingPanel();
   updateCleanStateActionAvailability();
-  return result;
-}
-
-function createInvoice() {
-  return invoicesModule.createInvoice();
-}
-
-function savePricing() {
-  return pricingModule.savePricing();
+  return state.paymentDocuments;
 }
 
 function addOfferPricingRow() {
@@ -1564,14 +1492,6 @@ function handleOfferVisibleDetailLevelChange() {
 
 function saveOffer() {
   return offerModule.saveOffer();
-}
-
-function updatePricingDirtyState() {
-  return pricingModule.updatePricingDirtyState();
-}
-
-function markPricingSnapshotClean() {
-  return pricingModule.markPricingSnapshotClean();
 }
 
 function handlePageSaveKeydown(event) {
@@ -1641,16 +1561,6 @@ async function savePageEdits() {
       label: backendT("booking.dirty.travel_plan", "Travel plan"),
       run: () => travelPlanModule.saveTravelPlan()
     },
-    {
-      shouldRun: () => state.dirty.pricing,
-      label: backendT("booking.dirty.pricing", "Payments"),
-      run: () => savePricing()
-    },
-    {
-      shouldRun: () => state.dirty.invoice,
-      label: backendT("booking.dirty.invoice", "Invoice"),
-      run: () => createInvoice()
-    }
   ];
 
   try {
@@ -1788,7 +1698,7 @@ const fetchApi = createApiFetcher({
   connectionErrorMessage: backendT("booking.error.connect", "Could not connect to backend API.")
 });
 
-const pricingModule = createBookingPricingModule({
+const paymentFlowModule = createBookingPaymentFlowModule({
   state,
   els,
   apiOrigin,
@@ -1798,16 +1708,9 @@ const pricingModule = createBookingPricingModule({
   renderActionControls,
   renderBookingData,
   loadActivities,
-  loadPaymentDocuments: () => loadInvoices(),
+  loadPaymentDocuments,
   escapeHtml,
   formatDateTime,
-  captureControlSnapshot,
-  setBookingSectionDirty,
-  setPageSaveActionError: (message) => {
-    state.pageSaveActionError = normalizeText(message);
-    updatePageDirtyBar();
-  },
-  hasUnsavedBookingChanges
 });
 
 const travelPlanModule = createBookingTravelPlanModule({
@@ -1843,24 +1746,6 @@ const offerModule = createBookingOfferModule({
   renderPricingPanel,
   loadActivities,
   escapeHtml,
-  setBookingSectionDirty
-});
-
-const invoicesModule = createBookingInvoicesModule({
-  state,
-  els,
-  apiBase,
-  apiOrigin,
-  fetchApi,
-  fetchBookingMutation,
-  getBookingRevision,
-  renderBookingHeader,
-  renderBookingData,
-  renderOfferPanel,
-  renderPricingPanel,
-  escapeHtml,
-  formatDateTime,
-  captureControlSnapshot,
   setBookingSectionDirty
 });
 
@@ -1948,7 +1833,7 @@ const bookingPageDataController = createBookingPageDataController({
   renderTravelPlanPanel,
   renderOfferPanel,
   loadActivities,
-  loadInvoices,
+  loadPaymentDocuments,
   ensureTourImageLoaded,
   bookingWhatsAppRef: () => bookingWhatsApp
 });

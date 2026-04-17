@@ -234,8 +234,6 @@ function normalizePdfPersonalization(value) {
   const offer = raw.offer && typeof raw.offer === "object" && !Array.isArray(raw.offer) ? raw.offer : {};
   const paymentConfirmationDeposit = raw.payment_confirmation_deposit && typeof raw.payment_confirmation_deposit === "object" && !Array.isArray(raw.payment_confirmation_deposit)
     ? raw.payment_confirmation_deposit
-    : raw.booking_confirmation && typeof raw.booking_confirmation === "object" && !Array.isArray(raw.booking_confirmation)
-      ? raw.booking_confirmation
     : {};
   const travelPlanSubtitle = normalizePdfTextField(travelPlan.subtitle, travelPlan.subtitle_i18n);
   const travelPlanWelcome = normalizePdfTextField(travelPlan.welcome, travelPlan.welcome_i18n);

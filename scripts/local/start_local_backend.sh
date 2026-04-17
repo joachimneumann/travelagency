@@ -12,6 +12,7 @@ import_zsh_env() {
 import_zsh_env
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+source "$ROOT_DIR/scripts/local/local_i18n_preflight.sh"
 BACKEND_DIR="${BACKEND_DIR:-$ROOT_DIR/backend/app}"
 BACKEND_PID_FILE="${BACKEND_PID_FILE:-/tmp/asiatravelplan-backend.pid}"
 BACKEND_LOG_FILE="${BACKEND_LOG_FILE:-/tmp/asiatravelplan-backend.log}"
@@ -107,28 +108,6 @@ ensure_backend_deps() {
   (cd "$BACKEND_DIR" && npm ci --no-audit --no-fund)
 }
 
-check_backend_i18n() {
-  local sync_script="$ROOT_DIR/scripts/i18n/sync_backend_i18n.mjs"
-  if [ ! -f "$sync_script" ]; then
-    echo "Error: backend i18n sync script not found at $sync_script" >&2
-    exit 1
-  fi
-
-  if node "$sync_script" check; then
-    return
-  fi
-
-  echo "### Backend i18n sync failed for vi. ###" >&2
-  echo "Backend UI translations are out of sync." >&2
-  echo "Run: node scripts/i18n/sync_backend_i18n.mjs translate --target vi" >&2
-  if [ "$BACKEND_I18N_STRICT" = "0" ]; then
-    echo "Continuing because BACKEND_I18N_STRICT=0." >&2
-    return
-  fi
-  echo "Refusing to start because BACKEND_I18N_STRICT=${BACKEND_I18N_STRICT}." >&2
-  exit 1
-}
-
 stop_listeners_on_port() {
   local port="$1"
   local label="$2"
@@ -194,7 +173,7 @@ main() {
 {
   "bookings": [],
   "activities": [],
-  "invoices": [],
+  "payment_documents": [],
   "chat_channel_accounts": [],
   "chat_conversations": [],
   "chat_events": []
@@ -210,7 +189,14 @@ EOF
   fi
 
   ensure_backend_deps
-  check_backend_i18n
+  if run_local_i18n_preflight "$ROOT_DIR"; then
+    :
+  elif [ "$BACKEND_I18N_STRICT" = "0" ]; then
+    echo "Continuing because BACKEND_I18N_STRICT=0." >&2
+  else
+    echo "Refusing to start because BACKEND_I18N_STRICT=${BACKEND_I18N_STRICT}." >&2
+    exit 1
+  fi
 
   stop_existing_backend
 

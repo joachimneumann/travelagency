@@ -16,7 +16,7 @@ The system currently uses three separate language concerns:
   - currently supported: `en`, `vi`
   - implemented by `frontend/scripts/shared/backend_i18n.js`
 - customer content language
-  - the language of customer-facing booking, offer, travel-plan, invoice, and PDF content
+  - the language of customer-facing booking, offer, travel-plan, payment-document, and PDF content
   - defined by `shared/generated/language_catalog.js`
 
 These concerns must not be merged conceptually even when they share the same code value.
@@ -96,7 +96,7 @@ Examples:
   - `details_i18n`
   - `location_i18n`
   - `notes_i18n`
-- invoices
+- payment documents
   - `title_i18n`
   - `notes_i18n`
   - component `description_i18n`
@@ -156,7 +156,7 @@ Current runtime:
 
 - generated offers use `generatedOffer.lang`, then `booking.customer_language`, then other fallbacks
 - travel-plan PDFs use customer/document language
-- invoice PDFs use invoice/document language, then customer language fallbacks
+- payment-document PDFs use document language, then customer language fallbacks
 - PDF copy is translated through `backend/app/src/lib/pdf_i18n.js`
 
 Operational rule:
@@ -194,7 +194,7 @@ The active implementation now matches the intended source-language model:
 - `backend/app/src/http/handlers/booking_core.js`
 - `backend/app/src/http/handlers/booking_finance.js`
 - `backend/app/src/http/handlers/booking_travel_plan.js`
-- `backend/app/src/http/handlers/booking_invoices.js`
+- `backend/app/src/http/handlers/booking_payment_documents.js`
 - `backend/app/src/http/handlers/tours.js`
 - `backend/app/src/lib/pdf_i18n.js`
 

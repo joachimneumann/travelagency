@@ -344,9 +344,8 @@ export function normalizeStoredBookingRecord(booking, _store = {}) {
     notes_revision: nonNegativeInt(booking?.notes_revision, 0),
     persons_revision: nonNegativeInt(booking?.persons_revision, 0),
     travel_plan_revision: nonNegativeInt(booking?.travel_plan_revision, 0),
-    pricing_revision: nonNegativeInt(booking?.pricing_revision, 0),
     offer_revision: nonNegativeInt(booking?.offer_revision, 0),
-    invoices_revision: nonNegativeInt(booking?.invoices_revision, 0),
+    payment_documents_revision: nonNegativeInt(booking?.payment_documents_revision, 0),
     assigned_keycloak_user_id: optionalText(booking?.assigned_keycloak_user_id),
     traveler_details_token_nonce: optionalText(
       booking?.traveler_details_token_nonce

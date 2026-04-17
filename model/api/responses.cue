@@ -65,15 +65,14 @@ import (
 	booking:  #BookingReadModel
 }
 
-#BookingInvoicesResponse: {
-	items: [...entities.#BookingInvoice]
+#BookingPaymentDocumentsResponse: {
+	items: [...entities.#BookingPaymentDocument]
 	total: >=0 & int
 }
 
-#BookingInvoiceResponse: {
-	invoice:    entities.#BookingInvoice
-	booking:    #BookingReadModel
-	unchanged?: bool
+#BookingPaymentDocumentResponse: {
+	document: entities.#BookingPaymentDocument
+	booking:  #BookingReadModel
 }
 
 #BookingChatEvent: {
@@ -147,7 +146,6 @@ import (
 	overnight_location?:  string
 	thumbnail_url?:       common.#Url | string
 	image_count?:         >=0 & int
-	supplier_name?:       string
 	updated_at?:          common.#Timestamp
 }
 
@@ -250,14 +248,6 @@ import (
 	source_hash?:       string & !=""
 }
 
-#GeneratedOfferBookingConfirmationPublicSummary: {
-	accepted_at:                       common.#Timestamp
-	method:                            enums.#BookingConfirmationMethod
-	management_approver_atp_staff_id?: common.#Identifier
-	accepted_amount_cents?:            >=0 & int
-	accepted_currency?:                enums.#CurrencyCode
-}
-
 #BookingOfferPaymentTermLineReadModel: entities.#BookingOfferPaymentTermLine & {
 	resolved_amount_cents: >=0 & int
 }
@@ -342,10 +332,7 @@ import (
 	payment_terms?:                          #BookingOfferPaymentTermsReadModel
 	offer:                                   #BookingOfferReadModel
 	travel_plan?:                            entities.#BookingTravelPlan
-	management_approver_atp_staff_id?:       common.#Identifier
-	management_approver_label?:              string
 	pdf_url:                                 string & !=""
-	booking_confirmation?:                   entities.#GeneratedOfferBookingConfirmation
 }
 
 #BookingTravelPlanPdfReadModel: {
@@ -370,9 +357,8 @@ import (
 	notes_revision?:                                  >=0 & int
 	persons_revision?:                                >=0 & int
 	travel_plan_revision?:                            >=0 & int
-	pricing_revision?:                                >=0 & int
 	offer_revision?:                                  >=0 & int
-	invoices_revision?:                               >=0 & int
+	payment_documents_revision?:                      >=0 & int
 	deposit_received_at?:                             common.#Timestamp
 	deposit_confirmed_by_atp_staff_id?:               common.#Identifier
 	assigned_keycloak_user_id?:                       common.#Identifier
@@ -389,13 +375,11 @@ import (
 	number_of_travelers?:          >=0 & int
 	preferred_currency?:           enums.#CurrencyCode
 	customer_language?:            enums.#LanguageCode
-	confirmed_generated_offer_id?: common.#Identifier
 	accepted_record?:              #BookingAcceptedRecordReadModel
 	notes?:                        string
 	persons?: [...entities.#BookingPerson]
 	travel_plan?:         entities.#BookingTravelPlan
 	web_form_submission?: entities.#BookingWebFormSubmission
-	pricing:              entities.#BookingPricing
 	offer:                #BookingOfferReadModel
 	generated_offers?: [...#GeneratedBookingOfferReadModel]
 	travel_plan_pdfs?: [...#BookingTravelPlanPdfReadModel]
@@ -436,15 +420,6 @@ import (
 	privacy_notice?:                     string
 	person:                              entities.#BookingPerson
 	saved_at:                            common.#Timestamp
-}
-
-#SupplierListResponse: {
-	items: [...entities.#Supplier]
-	total: >=0 & int
-}
-
-#SupplierResponse: {
-	supplier: entities.#Supplier
 }
 
 #TourResponse: {

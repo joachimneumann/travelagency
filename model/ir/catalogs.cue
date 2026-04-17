@@ -13,7 +13,6 @@ IR: {
 		bookingPersonGenders: [for gender in enumModel.BookingPersonGenderCatalog {{code: gender}}]
 		travelPlanTimingKinds: [for kind in enumModel.TravelPlanTimingKindCatalog {{code: kind}}]
 		travelPlanServiceKinds: [for kind in enumModel.TravelPlanServiceKindCatalog {{code: kind}}]
-		supplierCategories: [for category in enumModel.SupplierCategoryCatalog {{code: category}}]
 		paymentStatuses: [for status in enumModel.PaymentStatusCatalog {{code: status}}]
 		pricingAdjustmentTypes: [for adjustmentType in enumModel.PricingAdjustmentTypeCatalog {{code: adjustmentType}}]
 		offerCategories: [for category in enumModel.OfferCategoryCatalog {{code: category}}]
@@ -21,7 +20,6 @@ IR: {
 		offerPaymentTermKinds: [for kind in enumModel.OfferPaymentTermKindCatalog {{code: kind}}]
 		offerPaymentAmountModes: [for mode in enumModel.OfferPaymentAmountModeCatalog {{code: mode}}]
 		offerPaymentDueTypes: [for dueType in enumModel.OfferPaymentDueTypeCatalog {{code: dueType}}]
-		bookingConfirmationMethods: [for method in enumModel.BookingConfirmationMethodCatalog {{code: method}}]
 		tourStyles: [for style in enumModel.TourStyleCatalog {{
 			code:  style
 			label: enumModel.TourStyleNameCatalog[style]

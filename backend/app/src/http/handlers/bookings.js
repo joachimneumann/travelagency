@@ -23,7 +23,7 @@ import { createBookingChatHandlers } from "./booking_chat.js";
 import { createBookingCoreHandlers } from "./booking_core.js";
 import { createBookingFinanceHandlers } from "./booking_finance.js";
 import { createBookingMediaHandlers } from "./booking_media.js";
-import { createBookingInvoiceHandlers } from "./booking_invoices.js";
+import { createBookingPaymentDocumentHandlers } from "./booking_payment_documents.js";
 import { createBookingPeopleHandlers } from "./booking_people.js";
 import { createBookingTravelerDetailsHandlers } from "./booking_traveler_details.js";
 import { createBookingTravelPlanHandlers } from "./booking_travel_plan.js";
@@ -71,7 +71,6 @@ export function createBookingHandlers(deps) {
     safeCurrency,
     BASE_CURRENCY,
     safeInt,
-    defaultBookingPricing,
     defaultBookingOffer,
     defaultBookingTravelPlan,
     addActivity,
@@ -94,10 +93,7 @@ export function createBookingHandlers(deps) {
     syncBookingAssignmentFields,
     getBookingAssignedKeycloakUserId,
     canEditBooking,
-    validateBookingPricingInput,
-    convertBookingPricingToBaseCurrency,
     convertMinorUnits,
-    normalizeBookingPricing,
     validateBookingOfferInput,
     convertBookingOfferToBaseCurrency,
     normalizeBookingOffer,
@@ -111,11 +107,11 @@ export function createBookingHandlers(deps) {
     resolveExchangeRateWithFallback,
     convertOfferLineAmountForCurrency,
     formatMoney,
-    normalizeInvoiceComponents,
-    computeInvoiceComponentTotal,
+    normalizePaymentDocumentComponents,
+    computePaymentDocumentComponentTotal,
     safeAmountCents,
-    nextInvoiceNumber,
-    writeInvoicePdf,
+    nextPaymentDocumentNumber,
+    writePaymentDocumentPdf,
     writeGeneratedOfferPdf,
     writeTravelPlanPdf,
     listBookingTravelPlanPdfs,
@@ -124,7 +120,7 @@ export function createBookingHandlers(deps) {
     updateBookingTravelPlanPdfArtifact,
     deleteBookingTravelPlanPdfArtifact,
     randomUUID,
-    invoicePdfPath,
+    paymentDocumentPdfPath,
     generatedOfferPdfPath,
     gmailDraftsConfig,
     travelerDetailsTokenConfig,
@@ -426,13 +422,13 @@ export function createBookingHandlers(deps) {
     const removedBooking = Array.isArray(store.bookings)
       ? store.bookings.find((booking) => booking.id === bookingId) || null
       : null;
-    const removedInvoices = Array.isArray(store.invoices)
-      ? store.invoices.filter((invoice) => invoice.booking_id === bookingId)
+    const removedPaymentDocuments = Array.isArray(store.payment_documents)
+      ? store.payment_documents.filter((document) => document.booking_id === bookingId)
       : [];
 
     store.bookings = Array.isArray(store.bookings) ? store.bookings.filter((booking) => booking.id !== bookingId) : [];
     store.activities = Array.isArray(store.activities) ? store.activities.filter((activity) => activity.booking_id !== bookingId) : [];
-    store.invoices = Array.isArray(store.invoices) ? store.invoices.filter((invoice) => invoice.booking_id !== bookingId) : [];
+    store.payment_documents = Array.isArray(store.payment_documents) ? store.payment_documents.filter((document) => document.booking_id !== bookingId) : [];
 
     ensureMetaChatCollections(store);
     for (const conversation of store.chat_conversations) {
@@ -443,9 +439,9 @@ export function createBookingHandlers(deps) {
     }
 
     await Promise.all(
-      removedInvoices.map(async (invoice) => {
+      removedPaymentDocuments.map(async (document) => {
         try {
-          await rm(invoicePdfPath(invoice.id, invoice.version), { force: true });
+          await rm(paymentDocumentPdfPath(document.id, document.version), { force: true });
         } catch {
           // Ignore stale file cleanup failures.
         }
@@ -629,7 +625,6 @@ export function createBookingHandlers(deps) {
   });
 
   const {
-    handlePatchBookingPricing,
     handlePatchBookingOffer,
     handlePostOfferExchangeRates,
     handleGenerateBookingOffer,
@@ -653,9 +648,6 @@ export function createBookingHandlers(deps) {
     assertExpectedRevision,
     buildBookingDetailResponse,
     incrementBookingRevision,
-    validateBookingPricingInput,
-    convertBookingPricingToBaseCurrency,
-    normalizeBookingPricing,
     validateBookingOfferInput,
     convertBookingOfferToBaseCurrency,
     normalizeBookingOffer,
@@ -710,12 +702,10 @@ export function createBookingHandlers(deps) {
   });
 
   const {
-    handleListBookingInvoices,
-    handleCreateBookingInvoice,
-    handlePatchBookingInvoice,
-    handleTranslateBookingInvoiceFromEnglish,
-    handleGetInvoicePdf
-  } = createBookingInvoiceHandlers({
+    handleListBookingPaymentDocuments,
+    handleCreateBookingPaymentDocument,
+    handleGetPaymentDocumentPdf
+  } = createBookingPaymentDocumentHandlers({
     readBodyJson,
     sendJson,
     readStore,
@@ -723,14 +713,14 @@ export function createBookingHandlers(deps) {
     canAccessBooking,
     canEditBooking,
     assertExpectedRevision,
-    normalizeInvoiceComponents,
-    computeInvoiceComponentTotal,
+    normalizePaymentDocumentComponents,
+    computePaymentDocumentComponentTotal,
     safeAmountCents,
-    nextInvoiceNumber,
+    nextPaymentDocumentNumber,
     safeCurrency,
     normalizeText,
     nowIso,
-    writeInvoicePdf,
+    writePaymentDocumentPdf,
     randomUUID,
     addActivity,
     actorLabel,
@@ -738,7 +728,7 @@ export function createBookingHandlers(deps) {
     buildBookingPayload,
     incrementBookingRevision,
     getBookingContactProfile,
-    invoicePdfPath,
+    paymentDocumentPdfPath,
     sendFileWithCache,
     translateEntries,
     BASE_CURRENCY,
@@ -838,9 +828,8 @@ export function createBookingHandlers(deps) {
       notes_revision: 0,
       persons_revision: 0,
       travel_plan_revision: 0,
-      pricing_revision: 0,
       offer_revision: 0,
-      invoices_revision: 0,
+      payment_documents_revision: 0,
       assigned_keycloak_user_id: null,
       travel_styles: canonicalBookingTravelStyles(submission.travel_style),
       web_form_travel_month: submission.travel_month,
@@ -855,7 +844,6 @@ export function createBookingHandlers(deps) {
         destinations: normalizedDestinations
       },
       web_form_submission: submission,
-      pricing: defaultBookingPricing(),
       offer: defaultBookingOffer(preferredCurrency),
       generated_offers: [],
       idempotency_key: idempotencyKey || null,
@@ -911,9 +899,8 @@ export function createBookingHandlers(deps) {
       notes_revision: 0,
       persons_revision: 0,
       travel_plan_revision: 0,
-      pricing_revision: 0,
       offer_revision: 0,
-      invoices_revision: 0,
+      payment_documents_revision: 0,
       assigned_keycloak_user_id: normalizeText(principal?.sub) || null,
       travel_styles: canonicalBookingTravelStyles(payload?.travel_styles),
       web_form_travel_month: null,
@@ -927,7 +914,6 @@ export function createBookingHandlers(deps) {
         ...defaultBookingTravelPlan(),
         destinations: normalizeCountryCodes(payload?.destinations, normalizeText)
       },
-      pricing: defaultBookingPricing(),
       offer: defaultBookingOffer(preferredCurrency),
       generated_offers: [],
       created_at: now,
@@ -1111,7 +1097,6 @@ export function createBookingHandlers(deps) {
     handleUploadBookingPersonPhoto,
     handleUploadBookingPersonDocumentPicture,
     handlePatchBookingNotes,
-    handlePatchBookingPricing,
     handlePatchBookingOffer,
     handleGenerateBookingOffer,
     handlePostBookingPersonTravelerDetailsLink,
@@ -1125,10 +1110,8 @@ export function createBookingHandlers(deps) {
     handlePostOfferExchangeRates,
     handleListActivities,
     handleCreateActivity,
-    handleListBookingInvoices,
-    handleCreateBookingInvoice,
-    handlePatchBookingInvoice,
-    handleTranslateBookingInvoiceFromEnglish,
-    handleGetInvoicePdf
+    handleListBookingPaymentDocuments,
+    handleCreateBookingPaymentDocument,
+    handleGetPaymentDocumentPdf
   };
 }

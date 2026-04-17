@@ -134,7 +134,7 @@ test("backend ui i18n sync script passes and local backend startup is strict by 
   );
   assert.match(
     startLocalBackendSource,
-    /node "\$sync_script" check/,
+    /run_local_i18n_preflight "\$ROOT_DIR"/,
     "Local backend startup should run the backend i18n sync check before booting"
   );
 });
@@ -177,16 +177,12 @@ test("booking page keeps critical init handlers wired to real local functions", 
     "saveCoreEdits",
     "saveNoteEdits",
     "updateNoteSaveButtonState",
-    "savePricing",
     "handleOfferCurrencyChange",
     "addOfferPricingRow",
     "saveOffer",
-    "updatePricingDirtyState",
-    "loadInvoices",
-    "onInvoiceSelectChange",
-    "renderInvoiceMoneyLabels",
-    "createInvoice",
-    "updateInvoiceDirtyState",
+    "loadPaymentDocuments",
+    "renderPricingPanel",
+    "savePageEdits",
     "renderTravelPlanPanel"
   ];
   for (const name of required) {
@@ -220,17 +216,17 @@ test("booking page uses a page-level dirty bar instead of local section save but
   assert.doesNotMatch(bookingSource, /booking-detail-page__topbar/, "Booking page should not render a separate close-button topbar");
   assert.doesNotMatch(bookingSource, /id="booking_note_save_btn"/, "Booking notes should no longer expose a local update button");
   assert.doesNotMatch(bookingSource, /id="pricing_save_btn"/, "Pricing should no longer expose a local save button");
-  assert.doesNotMatch(bookingSource, /id="invoice_create_btn"/, "Invoice form should no longer expose a local save button");
+  assert.doesNotMatch(bookingSource, /id="invoice_create_btn"/, "Payment documents should no longer expose the removed invoice save button");
 });
 
 test("travel plan and payment PDFs share the same workspace helper", async () => {
   const repoRoot = path.resolve(__dirname, "..", "..", "..");
   const travelPlanPath = path.join(repoRoot, "frontend", "scripts", "booking", "travel_plan.js");
-  const pricingPath = path.join(repoRoot, "frontend", "scripts", "booking", "pricing.js");
+  const paymentFlowPath = path.join(repoRoot, "frontend", "scripts", "booking", "payment_flow.js");
   const helperPath = path.join(repoRoot, "frontend", "scripts", "booking", "pdf_workspace.js");
-  const [travelPlanSource, pricingSource, helperSource] = await Promise.all([
+  const [travelPlanSource, paymentFlowSource, helperSource] = await Promise.all([
     readFile(travelPlanPath, "utf8"),
-    readFile(pricingPath, "utf8"),
+    readFile(paymentFlowPath, "utf8"),
     readFile(helperPath, "utf8")
   ]);
 
@@ -250,7 +246,7 @@ test("travel plan and payment PDFs share the same workspace helper", async () =>
     "Travel plan PDF workspace should render through the shared workspace helper"
   );
   assert.match(
-    pricingSource,
+    paymentFlowSource,
     /buildBookingPdfWorkspaceMarkup\([\s\S]*buildBookingPdfDocumentSectionMarkup\(/,
     "Payment request and receipt sections should render through the shared workspace helpers"
   );
@@ -329,21 +325,21 @@ test("backend startup writes back legacy offers with explicit offer detail level
   );
 });
 
-test("backend startup strips obsolete public generated-offer confirmation fields before serving requests", async () => {
+test("backend startup prunes legacy generated-offer confirmation fields before serving requests", async () => {
   const serverPath = path.resolve(__dirname, "..", "src", "server.js");
-  const confirmationDomainPath = path.resolve(__dirname, "..", "src", "domain", "booking_confirmation.js");
+  const cleanupDomainPath = path.resolve(__dirname, "..", "src", "domain", "generated_offer_cleanup.js");
   const serverSource = await readFile(serverPath, "utf8");
-  const confirmationDomainSource = await readFile(confirmationDomainPath, "utf8");
+  const cleanupDomainSource = await readFile(cleanupDomainPath, "utf8");
 
   assert.match(
-    confirmationDomainSource,
-    /function migratePersistedGeneratedOfferBookingConfirmationState\(generatedOffer\) \{[\s\S]*acceptance_route[\s\S]*customer_confirmation_flow[\s\S]*booking_confirmation_token_nonce/,
-    "Generated-offer confirmation migration should strip obsolete public confirmation route and token fields from persisted offers"
+    cleanupDomainSource,
+    /function cleanupGeneratedOffer\(generatedOffer\) \{[\s\S]*booking_confirmation[\s\S]*customer_confirmation_flow[\s\S]*public_booking_confirmation_token/,
+    "Generated-offer cleanup should strip obsolete confirmation fields from persisted offers"
   );
   assert.match(
     serverSource,
-    /const backfilledGeneratedOfferBookingConfirmationState = backfillGeneratedOfferBookingConfirmationState\(startupStore\);[\s\S]*backfilledGeneratedOfferBookingConfirmationState[\s\S]*persistStore\(startupStore\)/,
-    "Backend startup should persist obsolete generated-offer confirmation field cleanup before serving requests"
+    /const prunedLegacyGeneratedOfferState = pruneLegacyGeneratedOfferState\(startupStore\);[\s\S]*prunedLegacyGeneratedOfferState[\s\S]*persistStore\(startupStore\)/,
+    "Backend startup should persist legacy generated-offer cleanup before serving requests"
   );
 });
 
@@ -913,18 +909,18 @@ test("payments use a shared workspace root for payment-step sections only", asyn
   );
 });
 
-test("payments removes the standalone invoice panel and renders request/receipt subsections per payment", async () => {
+test("payments removes the standalone payment-document panel and renders request/receipt subsections per payment", async () => {
   const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
-  const pricingScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "pricing.js");
-  const [bookingPageSource, pricingScriptSource] = await Promise.all([
+  const paymentFlowPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "payment_flow.js");
+  const [bookingPageSource, paymentFlowSource] = await Promise.all([
     readFile(bookingPagePath, "utf8"),
-    readFile(pricingScriptPath, "utf8")
+    readFile(paymentFlowPath, "utf8")
   ]);
 
   assert.doesNotMatch(
     bookingPageSource,
     /id="invoice_panel"/,
-    "The old standalone invoice editor should be removed from the Payments section"
+    "The old standalone payment-document editor should be removed from the Payments section"
   );
   assert.match(
     bookingPageSource,
@@ -932,90 +928,85 @@ test("payments removes the standalone invoice panel and renders request/receipt 
     "Payments should expose a dedicated per-payment flow container outside the pricing summary section"
   );
   assert.match(
-    pricingScriptSource,
-    /captureSnapshot: \(\) => captureControlSnapshot\(els\.paymentsWorkspace \|\| els\.paymentFlowSections\)/,
-    "Pricing dirty tracking should snapshot the shared payments workspace so payment-step edits stay in the save flow"
-  );
-  assert.match(
-    pricingScriptSource,
+    paymentFlowSource,
     /function paymentStageMarkup[\s\S]*class="booking-section booking-payment-step-panel is-open"[\s\S]*PAYMENT_DOCUMENT_KIND_REQUEST/,
-    "The pricing module should render each payment as its own booking section with a payment-request subsection"
+    "The payment-flow module should render each payment as its own booking section with a payment-request subsection"
   );
   assert.match(
-    pricingScriptSource,
+    paymentFlowSource,
     /function paymentStageMarkup[\s\S]*PAYMENT_DOCUMENT_KIND_CONFIRMATION/,
-    "The pricing module should render a dedicated customer-receipt subsection inside each payment section"
+    "The payment-flow module should render a dedicated customer-receipt subsection inside each payment section"
   );
   assert.match(
-    pricingScriptSource,
+    paymentFlowSource,
     /booking-payment-receipt__amount-display[\s\S]*data-payment-received-at[\s\S]*data-payment-confirmed-by[\s\S]*data-payment-reference/,
-    "The pricing module should render a display-only received amount plus the receipt detail controls inside each payment section"
+    "The payment-flow module should render a display-only received amount plus the receipt detail controls inside each payment section"
   );
   assert.match(
-    pricingScriptSource,
+    paymentFlowSource,
     /const hasAnyValue = Boolean\(\s*receivedAt\s*\|\|\s*confirmedByAtpStaffId\s*\|\|\s*reference\s*\);/,
     "Receipt validation should only treat actual receipt-detail fields as proof that receipt details were entered"
   );
 });
 
-test("payment pdf creation persists derived pricing payments before creating linked invoice documents", async () => {
-  const pricingPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "pricing.js");
-  const pricingSource = await readFile(pricingPath, "utf8");
+test("payment pdf creation blocks until offer payment terms are saved and derives payments from current terms", async () => {
+  const paymentFlowPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "payment_flow.js");
+  const paymentFlowSource = await readFile(paymentFlowPath, "utf8");
   assert.match(
-    pricingSource,
-    /function persistedPaymentById\(paymentId, pricing = state\.booking\?\.pricing\) \{/,
-    "Pricing flow should expose a helper for checking whether a payment already exists in persisted booking pricing"
+    paymentFlowSource,
+    /function hasPendingOfferChanges\(\) \{[\s\S]*state\.dirty\.offer \|\| state\.dirty\.payment_terms/,
+    "Payment PDF creation should block until the offer and payment terms are saved"
   );
   assert.match(
-    pricingSource,
-    /const needsPersistedPayment = !persistedPaymentById\(paymentId\);[\s\S]*if \(state\.dirty\.pricing \|\| needsPersistedPayment\) \{/,
-    "Payment PDF creation should save pricing when the requested payment only exists in the derived draft state"
+    paymentFlowSource,
+    /function persistedPaymentById\(paymentId\) \{[\s\S]*currentPaymentLines\(\)\.find/,
+    "Payment PDF creation should derive selectable payments directly from the current payment-term lines"
   );
 });
 
-test("payment pdf previews stream transient preview files instead of storing invoices", async () => {
-  const pricingPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "pricing.js");
-  const invoiceHandlerPath = path.resolve(__dirname, "..", "src", "http", "handlers", "booking_invoices.js");
-  const invoicePdfPath = path.resolve(__dirname, "..", "src", "lib", "invoice_pdf.js");
-  const [pricingSource, invoiceHandlerSource, invoicePdfSource] = await Promise.all([
-    readFile(pricingPath, "utf8"),
-    readFile(invoiceHandlerPath, "utf8"),
-    readFile(invoicePdfPath, "utf8")
+test("payment pdf previews stream transient preview files instead of storing payment documents", async () => {
+  const paymentFlowPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "payment_flow.js");
+  const paymentDocumentHandlerPath = path.resolve(__dirname, "..", "src", "http", "handlers", "booking_payment_documents.js");
+  const paymentDocumentPdfPath = path.resolve(__dirname, "..", "src", "lib", "payment_document_pdf.js");
+  const [paymentFlowSource, paymentDocumentHandlerSource, paymentDocumentPdfSource] = await Promise.all([
+    readFile(paymentFlowPath, "utf8"),
+    readFile(paymentDocumentHandlerPath, "utf8"),
+    readFile(paymentDocumentPdfPath, "utf8")
   ]);
   assert.match(
-    pricingSource,
+    paymentFlowSource,
     /query:\s*\{[\s\S]*preview:\s*"1"[\s\S]*\}[\s\S]*await previewLinkedPaymentDocument\(/,
-    "Pricing preview should call the invoice create route in preview mode instead of creating a stored invoice document"
+    "Payment-flow preview should call the payment-document create route in preview mode instead of creating a stored payment document"
   );
   assert.match(
-    invoiceHandlerSource,
-    /function requestPreviewMode\(req\) \{[\s\S]*searchParams\.get\("preview"\) === "1"[\s\S]*invoicePreviewTempOutputPath[\s\S]*sendFileWithCache[\s\S]*await rm\(renderedPath, \{ force: true \}\)/,
-    "Invoice handler should render preview PDFs through a temp file path and delete the preview file after streaming it"
+    paymentDocumentHandlerSource,
+    /function requestPreviewMode\(req\) \{[\s\S]*searchParams\.get\("preview"\) === "1"[\s\S]*paymentDocumentPreviewTempOutputPath[\s\S]*sendFileWithCache[\s\S]*await rm\(renderedPath, \{ force: true \}\)/,
+    "Payment-document handler should render preview PDFs through a temp file path and delete the preview file after streaming it"
   );
   assert.match(
-    invoicePdfSource,
+    paymentDocumentPdfSource,
     /function drawPreviewWatermark\(doc, fonts, text = "Preview"\)[\s\S]*drawPreviewWatermark\(doc, fonts, previewWatermarkText\)/,
-    "Invoice preview PDFs should watermark each page"
+    "Payment-document preview PDFs should watermark each page"
   );
   assert.match(
-    invoiceHandlerSource,
-    /invoice_number:\s*preview \? "PREVIEW" :/,
-    "Invoice preview PDFs should render PREVIEW as the invoice number"
+    paymentDocumentHandlerSource,
+    /document_number:\s*preview \? "PREVIEW" :/,
+    "Payment-document preview PDFs should render PREVIEW as the document number"
   );
 });
 
 test("deposit payment requests use a dedicated personalization scope and friendly deposit copy", async () => {
   const bookingModelPath = path.resolve(__dirname, "..", "..", "..", "model", "entities", "booking.cue");
-  const pricingPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "pricing.js");
+  const paymentFlowPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "payment_flow.js");
   const personalizationPath = path.resolve(__dirname, "..", "src", "lib", "booking_pdf_personalization.js");
-  const invoiceHandlerPath = path.resolve(__dirname, "..", "src", "http", "handlers", "booking_invoices.js");
-  const invoicePdfPath = path.resolve(__dirname, "..", "src", "lib", "invoice_pdf.js");
-  const [bookingModelSource, pricingSource, personalizationSource, invoiceHandlerSource, invoicePdfSource] = await Promise.all([
+  const paymentDocumentHandlerPath = path.resolve(__dirname, "..", "src", "http", "handlers", "booking_payment_documents.js");
+  const paymentDocumentPdfPath = path.resolve(__dirname, "..", "src", "lib", "payment_document_pdf.js");
+  const [bookingModelSource, paymentFlowSource, personalizationSource, paymentDocumentHandlerSource, paymentDocumentPdfSource] = await Promise.all([
     readFile(bookingModelPath, "utf8"),
-    readFile(pricingPath, "utf8"),
+    readFile(paymentFlowPath, "utf8"),
     readFile(personalizationPath, "utf8"),
-    readFile(invoiceHandlerPath, "utf8"),
-    readFile(invoicePdfPath, "utf8")
+    readFile(paymentDocumentHandlerPath, "utf8"),
+    readFile(paymentDocumentPdfPath, "utf8")
   ]);
   assert.match(
     bookingModelSource,
@@ -1023,9 +1014,9 @@ test("deposit payment requests use a dedicated personalization scope and friendl
     "Booking PDF personalization should model a dedicated deposit payment-request scope"
   );
   assert.match(
-    pricingSource,
+    paymentFlowSource,
     /payment_request_deposit: Object\.freeze\([\s\S]*Deposit request welcome[\s\S]*if \(kind === "DEPOSIT"\) return "payment_request_deposit";/,
-    "Deposit request PDFs should use a dedicated payment_request_deposit personalization scope in the pricing UI"
+    "Deposit request PDFs should use a dedicated payment_request_deposit personalization scope in the payment-flow UI"
   );
   assert.match(
     personalizationSource,
@@ -1033,31 +1024,31 @@ test("deposit payment requests use a dedicated personalization scope and friendl
     "Booking PDF personalization should normalize a dedicated deposit request branch"
   );
   assert.match(
-    invoiceHandlerSource,
+    paymentDocumentHandlerSource,
     /documentKind === "PAYMENT_REQUEST" && paymentKind === "DEPOSIT"[\s\S]*"We would be thrilled if you book this tour with us\. Please pay the deposit to confirm your booking"/,
     "Deposit request documents should resolve a dedicated scope and the friendly deposit-request intro copy"
   );
   assert.match(
-    invoicePdfSource,
-    /function isDepositPaymentRequestDocument\(invoice\)[\s\S]*drawDepositPaymentSchedule[\s\S]*Please find your travel plan at the end of this PDF\.[\s\S]*drawTravelPlanDaysSection/,
+    paymentDocumentPdfSource,
+    /function isDepositPaymentRequestDocument\(document\)[\s\S]*drawDepositPaymentSchedule[\s\S]*Please find your travel plan at the end of this PDF\.[\s\S]*drawTravelPlanDaysSection/,
     "Deposit request PDFs should render a friendly first page and then continue with the travel plan section"
   );
 });
 
 test("payment document classification prefers accepted payment terms once a commercial snapshot exists", async () => {
-  const invoiceHandlerPath = path.resolve(__dirname, "..", "src", "http", "handlers", "booking_invoices.js");
+  const paymentDocumentHandlerPath = path.resolve(__dirname, "..", "src", "http", "handlers", "booking_payment_documents.js");
   const financeHandlerPath = path.resolve(__dirname, "..", "src", "http", "handlers", "booking_finance.js");
-  const pricingPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "pricing.js");
-  const [invoiceHandlerSource, financeHandlerSource, pricingSource] = await Promise.all([
-    readFile(invoiceHandlerPath, "utf8"),
+  const paymentFlowPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "payment_flow.js");
+  const [paymentDocumentHandlerSource, financeHandlerSource, paymentFlowSource] = await Promise.all([
+    readFile(paymentDocumentHandlerPath, "utf8"),
     readFile(financeHandlerPath, "utf8"),
-    readFile(pricingPath, "utf8")
+    readFile(paymentFlowPath, "utf8")
   ]);
 
   assert.match(
-    invoiceHandlerSource,
+    paymentDocumentHandlerSource,
     /function bookingPaymentTerms\(booking\) \{[\s\S]*accepted_record\?\.payment_terms[\s\S]*accepted_payment_terms_snapshot[\s\S]*booking\?\.offer\?\.payment_terms/s,
-    "Payment-linked invoice documents should classify payment kinds from the accepted payment terms before the live offer"
+    "Payment-linked documents should classify payment kinds from the accepted payment terms before the live offer"
   );
   assert.match(
     financeHandlerSource,
@@ -1065,9 +1056,9 @@ test("payment document classification prefers accepted payment terms once a comm
     "Receipt freezing should identify the deposit line from the accepted payment terms before the live offer"
   );
   assert.match(
-    pricingSource,
+    paymentFlowSource,
     /function currentOfferPaymentTerms\(\) \{[\s\S]*accepted_record\?\.payment_terms[\s\S]*accepted_payment_terms_snapshot[\s\S]*draftTerms[\s\S]*state\.booking\?\.offer\?\.payment_terms/s,
-    "The pricing UI should classify payment rows from accepted payment terms before draft or live offer terms"
+    "The payment-flow UI should classify payment rows from accepted payment terms before draft or live offer terms"
   );
 });
 
@@ -1152,13 +1143,13 @@ test("offer payment terms keep add-deposit and add-installment controls above fi
 });
 
 test("payment-flow PDF editors reuse the shared booking PDF panel helpers and styles", async () => {
-  const pricingScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "pricing.js");
+  const paymentFlowPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "payment_flow.js");
   const pdfPanelModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "pdf_personalization_panel.js");
   const pdfWorkspaceModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "pdf_workspace.js");
   const bookingStylesPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "pages", "backend-booking.css");
   const bookingTravelPlanStylesPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "pages", "backend-booking-travel-plan.css");
-  const [pricingScriptSource, pdfPanelModuleSource, pdfWorkspaceModuleSource, bookingStylesSource, bookingTravelPlanStyles] = await Promise.all([
-    readFile(pricingScriptPath, "utf8"),
+  const [paymentFlowSource, pdfPanelModuleSource, pdfWorkspaceModuleSource, bookingStylesSource, bookingTravelPlanStyles] = await Promise.all([
+    readFile(paymentFlowPath, "utf8"),
     readFile(pdfPanelModulePath, "utf8"),
     readFile(pdfWorkspaceModulePath, "utf8"),
     readFile(bookingStylesPath, "utf8"),
@@ -1166,7 +1157,7 @@ test("payment-flow PDF editors reuse the shared booking PDF panel helpers and st
   ]);
 
   assert.match(
-    pricingScriptSource,
+    paymentFlowSource,
     /import\s*\{[\s\S]*buildBookingCollapsibleSectionMarkup,[\s\S]*buildBookingPdfToggleFieldMarkup[\s\S]*\}\s*from "\.\/pdf_personalization_panel\.js";/,
     "Payment-flow PDF sections should import the shared booking PDF panel builders"
   );
@@ -1181,17 +1172,17 @@ test("payment-flow PDF editors reuse the shared booking PDF panel helpers and st
     "The shared PDF personalization module should export the shared toggle-field builder"
   );
   assert.match(
-    pricingScriptSource,
+    paymentFlowSource,
     /function paymentDocumentPersonalizationPanelMarkup[\s\S]*buildBookingPdfToggleFieldMarkup\([\s\S]*buildBookingCollapsibleSectionMarkup\([\s\S]*bookingPdfPanel:\s*"travel_plan"/,
     "Payment-flow personalization panels should reuse the shared booking PDF field and section markup"
   );
   assert.doesNotMatch(
-    pricingScriptSource,
+    paymentFlowSource,
     /function paymentDocumentPersonalizationPanelMarkup[\s\S]*className:\s*"is-open"/,
     "Payment-flow PDF texts should start collapsed like the Travel plan PDF personalization panel"
   );
   assert.match(
-    pricingScriptSource,
+    paymentFlowSource,
     /import\s*\{[\s\S]*buildBookingPdfDocumentSectionMarkup,[\s\S]*buildBookingPdfWorkspaceMarkup[\s\S]*\}\s*from "\.\/pdf_workspace\.js";/,
     "Payment-flow PDF sections should import the shared workspace and section builders"
   );
@@ -1201,22 +1192,22 @@ test("payment-flow PDF editors reuse the shared booking PDF panel helpers and st
     "The shared PDF workspace module should export the shared document-section builder"
   );
   assert.match(
-    pricingScriptSource,
+    paymentFlowSource,
     /function paymentDocumentSectionMarkup[\s\S]*buildBookingPdfDocumentSectionMarkup\([\s\S]*paymentDocumentPersonalizationPanelMarkup[\s\S]*paymentDocumentWorkspaceMarkup/,
     "Payment-flow request and receipt wrappers should reuse the shared PDF document-section builder"
   );
   assert.match(
-    pricingScriptSource,
+    paymentFlowSource,
     /function paymentConfirmationDisabledReason\([\s\S]*hasRecordedReceipt[\s\S]*Fill in Payment received before working with the Customer receipt PDF\./,
     "Customer receipt sections should stay disabled until the payment-received fields are complete"
   );
   assert.match(
-    pricingScriptSource,
-    /function paymentReceiptFieldValues\([\s\S]*const hasAnyValue = Boolean\([\s\S]*receivedAt[\s\S]*confirmedByAtpStaffId[\s\S]*reference[\s\S]*const fallbackAmount = Math\.max\(0, Math\.round\(Number\(payment\?\.net_amount_cents \|\| 0\)\)\);[\s\S]*const parsedAmount = hasAnyValue \? fallbackAmount : null/,
-    "Payment receipt parsing should derive the received amount from the scheduled amount instead of a user-edited amount field"
+    paymentFlowSource,
+    /function paymentReceiptFieldValues\([\s\S]*const hasAnyValue = Boolean\([\s\S]*receivedAt[\s\S]*confirmedByAtpStaffId[\s\S]*reference[\s\S]*return \{[\s\S]*hasRecordedReceipt[\s\S]*received_at[\s\S]*confirmed_by_atp_staff_id[\s\S]*reference/,
+    "Payment receipt parsing should only read receipt metadata fields from each payment section"
   );
   assert.match(
-    pricingScriptSource,
+    paymentFlowSource,
     /id="payment_received_amount_\$\{escapeHtml\(paymentId\)\}"[\s\S]*class="booking-payment-receipt__amount-display"[\s\S]*aria-readonly="true"/,
     "The Payment received amount should render as a non-editable display value"
   );
@@ -1226,7 +1217,7 @@ test("payment-flow PDF editors reuse the shared booking PDF panel helpers and st
     "The Payment received amount display should stay bold, gray, and non-clickable"
   );
   assert.match(
-    pricingScriptSource,
+    paymentFlowSource,
     /function createPaymentDocument[\s\S]*documentKind === PAYMENT_DOCUMENT_KIND_CONFIRMATION[\s\S]*paymentConfirmationDisabledReason\(payment\)[\s\S]*setPaymentSectionState\(paymentId, sectionKind, disabledReason, "info"\)/,
     "Customer receipt preview and create actions should short-circuit before posting when payment receipt data is incomplete"
   );
@@ -1280,11 +1271,11 @@ test("booking page removes the stage and milestone control layer", async () => {
   );
 });
 
-test("booking page records payment receipts through the pricing payload only", async () => {
+test("booking page records payment receipts through the payment-document payload", async () => {
   const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
-  const pricingModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "pricing.js");
+  const paymentFlowPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "payment_flow.js");
   const bookingPageSource = await readFile(bookingPagePath, "utf8");
-  const pricingSource = await readFile(pricingModulePath, "utf8");
+  const paymentFlowSource = await readFile(paymentFlowPath, "utf8");
 
   assert.doesNotMatch(
     bookingPageSource,
@@ -1292,30 +1283,30 @@ test("booking page records payment receipts through the pricing payload only", a
     "Payments should no longer expose a dedicated deposit-only receipt strip"
   );
   assert.match(
-    pricingSource,
-    /function paymentReceiptFieldValues\(payment, \{ strict = true \} = \{\}\)[\s\S]*received_amount_cents[\s\S]*confirmed_by_atp_staff_id[\s\S]*reference/,
-    "Pricing module should collect receipt details directly from each payment section"
+    paymentFlowSource,
+    /function paymentReceiptFieldValues\(payment, \{ strict = true \} = \{\}\)[\s\S]*received_at[\s\S]*confirmed_by_atp_staff_id[\s\S]*reference/,
+    "Payment-flow module should collect receipt details directly from each payment section"
   );
   assert.match(
-    pricingSource,
-    /async function savePricing\(\) \{[\s\S]*expected_pricing_revision:[\s\S]*pricing,[\s\S]*actor: state\.user/,
-    "Pricing save should persist the full payment state through the pricing endpoint"
+    paymentFlowSource,
+    /function paymentDocumentPayload\(payment, documentKind, pdfPersonalization, options = \{\}\) \{[\s\S]*expected_payment_documents_revision:[\s\S]*payment_received_at:[\s\S]*payment_confirmed_by_atp_staff_id:[\s\S]*payment_reference:/,
+    "Payment document creation should send receipt details in the payment-document create payload"
   );
   assert.doesNotMatch(
-    pricingSource,
+    paymentFlowSource,
     /deposit_receipt|collectDepositReceiptPayload/,
-    "Pricing should no longer use the old deposit-receipt helper payload"
+    "Payment flow should no longer use the old deposit-receipt helper payload"
   );
 });
 
 test("payments no longer depend on the old flow-state helper module", async () => {
-  const pricingModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "pricing.js");
-  const pricingSource = await readFile(pricingModulePath, "utf8");
+  const paymentFlowPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "payment_flow.js");
+  const paymentFlowSource = await readFile(paymentFlowPath, "utf8");
 
   assert.doesNotMatch(
-    pricingSource,
+    paymentFlowSource,
     /payment_flow_state|derivePaymentFlowState|booking-flow-paid-group|summary_fully_paid/,
-    "Pricing should render payment sections directly without the old flow-state grouping logic"
+    "Payment flow should render payment sections directly without the old flow-state grouping logic"
   );
 });
 
@@ -1953,10 +1944,15 @@ test("deposit payment confirmation PDF personalization lives inside the payment 
     /payment_confirmation_deposit:\s*\{\s*subtitle:\s*paymentConfirmationDepositSubtitle\.text[\s\S]*include_closing:\s*resolvePdfTextFieldEnabled\(paymentConfirmationDeposit, "payment_confirmation_deposit", "closing", paymentConfirmationDepositClosing\)/,
     "booking core should normalize the deposit payment-confirmation personalization branch"
   );
-  assert.match(
+  assert.doesNotMatch(
     personalizationSource,
-    /PDF_TEXT_FIELD_CONFIG[\s\S]*payment_confirmation_deposit:\s*Object\.freeze\(\{[\s\S]*normalizeBookingPdfPersonalization\([\s\S]*raw\?\.booking_confirmation/,
-    "backend PDF personalization should preserve the renamed deposit payment-confirmation branch and accept the legacy booking-confirmation alias"
+    /raw\?\.booking_confirmation/,
+    "backend PDF personalization should no longer accept the removed booking-confirmation alias"
+  );
+  assert.doesNotMatch(
+    bookingCoreSource,
+    /raw\.booking_confirmation/,
+    "booking core should no longer normalize the removed booking-confirmation alias"
   );
 });
 
@@ -2140,13 +2136,13 @@ test("staging PDF font stack includes Japanese and Chinese smoke coverage paths"
   const resolverPath = path.resolve(__dirname, "..", "src", "lib", "pdf_font_resolver.js");
   const offerPdfPath = path.resolve(__dirname, "..", "src", "lib", "offer_pdf.js");
   const travelPlanPdfPath = path.resolve(__dirname, "..", "src", "lib", "travel_plan_pdf.js");
-  const invoicePdfPath = path.resolve(__dirname, "..", "src", "lib", "invoice_pdf.js");
-  const [dockerfileSource, resolverSource, offerPdfSource, travelPlanPdfSource, invoicePdfSource] = await Promise.all([
+  const paymentDocumentPdfPath = path.resolve(__dirname, "..", "src", "lib", "payment_document_pdf.js");
+  const [dockerfileSource, resolverSource, offerPdfSource, travelPlanPdfSource, paymentDocumentPdfSource] = await Promise.all([
     readFile(dockerfilePath, "utf8"),
     readFile(resolverPath, "utf8"),
     readFile(offerPdfPath, "utf8"),
     readFile(travelPlanPdfPath, "utf8"),
-    readFile(invoicePdfPath, "utf8")
+    readFile(paymentDocumentPdfPath, "utf8")
   ]);
 
   assert.match(
@@ -2163,7 +2159,7 @@ test("staging PDF font stack includes Japanese and Chinese smoke coverage paths"
   for (const [source, label] of [
     [offerPdfSource, "Offer PDFs"],
     [travelPlanPdfSource, "Travel-plan PDFs"],
-    [invoicePdfSource, "Invoice PDFs"]
+    [paymentDocumentPdfSource, "Payment-document PDFs"]
   ]) {
     assert.match(
       source,
@@ -2178,13 +2174,13 @@ test("staging PDF font stack includes Japanese and Chinese smoke coverage paths"
   }
 });
 
-test("invoice PDFs keep the header focused on company contact details instead of bank account lines", async () => {
+test("payment-document PDFs keep the header focused on company contact details instead of bank account lines", async () => {
   const runtimeConfigPath = path.resolve(__dirname, "..", "src", "config", "runtime.js");
-  const invoicePdfPath = path.resolve(__dirname, "..", "src", "lib", "invoice_pdf.js");
+  const paymentDocumentPdfPath = path.resolve(__dirname, "..", "src", "lib", "payment_document_pdf.js");
   const companyHeaderPath = path.resolve(__dirname, "..", "src", "lib", "pdf_company_header.js");
-  const [runtimeConfigSource, invoicePdfSource, companyHeaderSource] = await Promise.all([
+  const [runtimeConfigSource, paymentDocumentPdfSource, companyHeaderSource] = await Promise.all([
     readFile(runtimeConfigPath, "utf8"),
-    readFile(invoicePdfPath, "utf8"),
+    readFile(paymentDocumentPdfPath, "utf8"),
     readFile(companyHeaderPath, "utf8")
   ]);
 
@@ -2194,9 +2190,9 @@ test("invoice PDFs keep the header focused on company contact details instead of
     "Runtime config should continue exposing the shared company bank-details block"
   );
   assert.match(
-    invoicePdfSource,
+    paymentDocumentPdfSource,
     /import \{ drawPdfCompanyHeader \} from "\.\/pdf_company_header\.js";[\s\S]*drawPdfCompanyHeader\(doc, \{/,
-    "Invoice PDF generation should reuse the shared company header helper"
+    "Payment-document PDF generation should reuse the shared company header helper"
   );
   assert.match(
     companyHeaderSource,
@@ -2340,7 +2336,7 @@ test("booking page save orchestrates dirty sections through existing section end
 
   assert.match(
     bookingSource,
-    /async function savePageEdits\(\)\s*\{[\s\S]*?saveCoreEdits\(\)[\s\S]*?saveNoteEdits\(\)[\s\S]*?personsModule\.saveAllPersonDrafts\(\)[\s\S]*?saveOffer\(\)[\s\S]*?travelPlanModule\.saveTravelPlan\(\)[\s\S]*?savePricing\(\)[\s\S]*?createInvoice\(\)[\s\S]*?state\.pendingSavedCustomerLanguage[\s\S]*?loadBookingPage\(\)/,
+    /async function savePageEdits\(\)\s*\{[\s\S]*?saveCoreEdits\(\)[\s\S]*?saveNoteEdits\(\)[\s\S]*?personsModule\.saveAllPersonDrafts\(\)[\s\S]*?saveOffer\(\)[\s\S]*?travelPlanModule\.saveTravelPlan\(\)[\s\S]*?state\.pendingSavedCustomerLanguage[\s\S]*?loadBookingPage\(\)/,
     "Page save should orchestrate the existing booking section endpoints in order"
   );
   assert.match(
@@ -4015,12 +4011,12 @@ test("generator no longer emits legacy ATPStaff model outputs or SourceAttributi
 });
 
 test("offer exchange paths do not keep temporary debug logging", async () => {
-  const pricingModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "pricing.js");
+  const paymentFlowPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "payment_flow.js");
   const financeHandlerPath = path.resolve(__dirname, "..", "src", "http", "handlers", "booking_finance.js");
-  const pricingSource = await readFile(pricingModulePath, "utf8");
+  const paymentFlowSource = await readFile(paymentFlowPath, "utf8");
   const financeSource = await readFile(financeHandlerPath, "utf8");
 
-  assert.doesNotMatch(pricingSource, /\[offer-exchange-debug\]/, "frontend offer exchange debug logs should be removed");
+  assert.doesNotMatch(paymentFlowSource, /\[offer-exchange-debug\]/, "frontend offer exchange debug logs should be removed");
   assert.doesNotMatch(financeSource, /\[offer-exchange-debug backend\]/, "backend offer exchange debug logs should be removed");
 });
 

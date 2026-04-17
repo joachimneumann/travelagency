@@ -56,7 +56,7 @@ function emptyStore(base = {}) {
     ...base,
     bookings: Array.isArray(base.bookings) ? base.bookings : [],
     activities: Array.isArray(base.activities) ? base.activities : [],
-    invoices: Array.isArray(base.invoices) ? base.invoices : [],
+    payment_documents: Array.isArray(base.payment_documents) ? base.payment_documents : [],
     chat_channel_accounts: Array.isArray(base.chat_channel_accounts) ? base.chat_channel_accounts : [],
     chat_conversations: Array.isArray(base.chat_conversations) ? base.chat_conversations : [],
     chat_events: Array.isArray(base.chat_events) ? base.chat_events : []
@@ -68,7 +68,7 @@ async function main() {
   const store = emptyStore(await readJson(DATA_PATH));
   store.bookings = [];
   store.activities = [];
-  store.invoices = [];
+  store.payment_documents = [];
 
   for (let i = 0; i < count; i += 1) {
     const firstName = pick(FIRST_NAMES);

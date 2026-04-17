@@ -938,21 +938,6 @@ package api
 		}]
 	},
 	{
-		key:           "booking_pricing"
-		path:          "/api/v1/bookings/{booking_id}/pricing"
-		method:        "PATCH"
-		tag:           "Bookings"
-		authenticated: true
-		requestType:   "BookingPricingUpdateRequest"
-		responseType:  "BookingDetail"
-		parameters: [{
-			name:     "booking_id"
-			location: "path"
-			required: true
-			typeName: "Identifier"
-		}]
-	},
-	{
 		key:           "booking_offer"
 		path:          "/api/v1/bookings/{booking_id}/offer"
 		method:        "PATCH"
@@ -1070,52 +1055,6 @@ package api
 		responseType:  "OfferExchangeRatesResponse"
 	},
 	{
-		key:           "suppliers"
-		path:          "/api/v1/suppliers"
-		method:        "GET"
-		tag:           "Suppliers"
-		authenticated: true
-		responseType:  "SupplierListResponse"
-	},
-	{
-		key:           "supplier_detail"
-		path:          "/api/v1/suppliers/{supplier_id}"
-		method:        "GET"
-		tag:           "Suppliers"
-		authenticated: true
-		responseType:  "SupplierResponse"
-		parameters: [{
-			name:     "supplier_id"
-			location: "path"
-			required: true
-			typeName: "Identifier"
-		}]
-	},
-	{
-		key:           "supplier_create"
-		path:          "/api/v1/suppliers"
-		method:        "POST"
-		tag:           "Suppliers"
-		authenticated: true
-		requestType:   "SupplierCreateRequest"
-		responseType:  "SupplierResponse"
-	},
-	{
-		key:           "supplier_update"
-		path:          "/api/v1/suppliers/{supplier_id}"
-		method:        "PATCH"
-		tag:           "Suppliers"
-		authenticated: true
-		requestType:   "SupplierUpdateRequest"
-		responseType:  "SupplierResponse"
-		parameters: [{
-			name:     "supplier_id"
-			location: "path"
-			required: true
-			typeName: "Identifier"
-		}]
-	},
-	{
 		key:           "country_reference_info"
 		path:          "/api/v1/country-reference-info"
 		method:        "GET"
@@ -1162,12 +1101,12 @@ package api
 		}]
 	},
 	{
-		key:           "booking_invoices"
-		path:          "/api/v1/bookings/{booking_id}/invoices"
+		key:           "booking_payment_documents"
+		path:          "/api/v1/bookings/{booking_id}/payment-documents"
 		method:        "GET"
 		tag:           "Bookings"
 		authenticated: true
-		responseType:  "BookingInvoicesResponse"
+		responseType:  "BookingPaymentDocumentsResponse"
 		parameters: [{
 			name:     "booking_id"
 			location: "path"
@@ -1176,13 +1115,13 @@ package api
 		}]
 	},
 	{
-		key:           "booking_invoice_create"
-		path:          "/api/v1/bookings/{booking_id}/invoices"
+		key:           "booking_payment_document_create"
+		path:          "/api/v1/bookings/{booking_id}/payment-documents"
 		method:        "POST"
 		tag:           "Bookings"
 		authenticated: true
-		requestType:   "BookingInvoiceUpsertRequest"
-		responseType:  "BookingInvoiceResponse"
+		requestType:   "BookingPaymentDocumentCreateRequest"
+		responseType:  "BookingPaymentDocumentResponse"
 		parameters: [{
 			name:     "booking_id"
 			location: "path"
@@ -1191,53 +1130,13 @@ package api
 		}]
 	},
 	{
-		key:           "booking_invoice_update"
-		path:          "/api/v1/bookings/{booking_id}/invoices/{invoice_id}"
-		method:        "PATCH"
-		tag:           "Bookings"
-		authenticated: true
-		requestType:   "BookingInvoiceUpsertRequest"
-		responseType:  "BookingInvoiceResponse"
-		parameters: [{
-			name:     "booking_id"
-			location: "path"
-			required: true
-			typeName: "Identifier"
-		}, {
-			name:     "invoice_id"
-			location: "path"
-			required: true
-			typeName: "Identifier"
-		}]
-	},
-	{
-		key:           "booking_invoice_translate"
-		path:          "/api/v1/bookings/{booking_id}/invoices/{invoice_id}/translate"
-		method:        "POST"
-		tag:           "Bookings"
-		authenticated: true
-		requestType:   "BookingInvoiceTranslateRequest"
-		responseType:  "BookingInvoiceResponse"
-		parameters: [{
-			name:     "booking_id"
-			location: "path"
-			required: true
-			typeName: "Identifier"
-		}, {
-			name:     "invoice_id"
-			location: "path"
-			required: true
-			typeName: "Identifier"
-		}]
-	},
-	{
-		key:           "invoice_pdf"
-		path:          "/api/v1/invoices/{invoice_id}/pdf"
+		key:           "payment_document_pdf"
+		path:          "/api/v1/payment-documents/{document_id}/pdf"
 		method:        "GET"
 		tag:           "Bookings"
 		authenticated: true
 		parameters: [{
-			name:     "invoice_id"
+			name:     "document_id"
 			location: "path"
 			required: true
 			typeName: "Identifier"

@@ -5,7 +5,7 @@ import {
   isWholeUnitCurrency,
   normalizeCurrencyCode,
   parseMoneyInputValue
-} from "./pricing.js";
+} from "./currency.js";
 import { renderBookingSectionHeader } from "./sections.js";
 import {
   OFFER_PAYMENT_AMOUNT_MODE_CATALOG,

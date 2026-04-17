@@ -110,7 +110,6 @@ export function createTravelPlanTemplateHelpers({
             image_subtitle: normalizeOptionalText(service?.image_subtitle),
             location: normalizeOptionalText(service?.location),
             location_i18n: cloneJson(service?.location_i18n),
-            supplier_id: normalizeOptionalText(service?.supplier_id),
             start_time: null,
             end_time: null,
             image: image

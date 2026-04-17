@@ -8,7 +8,7 @@ import {
   normalizeTourStyleCode
 } from "../domain/tour_catalog_i18n.js";
 import { createMetaWebhookHandlers } from "../integrations/meta_webhook.js";
-import { createInvoicePdfWriter } from "../lib/invoice_pdf.js";
+import { createPaymentDocumentPdfWriter } from "../lib/payment_document_pdf.js";
 import { createOfferPdfWriter } from "../lib/offer_pdf.js";
 import { createTravelPlanPdfWriter } from "../lib/travel_plan_pdf.js";
 import { createTravelPlanPdfArtifacts } from "../lib/travel_plan_pdf_artifacts.js";
@@ -42,7 +42,7 @@ export function createBackendServices({
     clamp: support.clamp,
     safeInt: support.safeInt,
     randomUUID: support.randomUUID,
-    invoicesDir: collections.invoicesDir,
+    paymentDocumentsDir: collections.paymentDocumentsDir,
     generatedOffersDir: collections.generatedOffersDir
   });
 
@@ -107,7 +107,6 @@ export function createBackendServices({
     clamp: support.clamp,
     safeInt: support.safeInt,
     buildBookingTravelPlanReadModel: travelPlanHelpers.buildBookingTravelPlanReadModel,
-    buildBookingPricingReadModel: pricingHelpers.buildBookingPricingReadModel,
     buildBookingOfferReadModel: pricingHelpers.buildBookingOfferReadModel,
     buildBookingOfferPaymentTermsReadModel: pricingHelpers.buildBookingOfferPaymentTermsReadModel,
     listAssignableKeycloakUsers: atpStaffDirectory.listCachedEligibleStaffUsers,
@@ -121,7 +120,7 @@ export function createBackendServices({
     dataPath: collections.dataPath,
     toursDir: collections.toursDir,
     travelPlanTemplatesDir: collections.travelPlanTemplatesDir,
-    invoicesDir: collections.invoicesDir,
+    paymentDocumentsDir: collections.paymentDocumentsDir,
     generatedOffersDir: collections.generatedOffersDir,
     travelPlanPdfsDir: collections.travelPlanPdfsDir,
     bookingImagesDir: collections.bookingImagesDir,
@@ -132,10 +131,8 @@ export function createBackendServices({
     writeQueueRef,
     syncBookingAssignmentFields: bookingViewHelpers.syncBookingAssignmentFields,
     normalizeBookingTravelPlan: travelPlanHelpers.normalizeBookingTravelPlan,
-    normalizeBookingPricing: pricingHelpers.normalizeBookingPricing,
     normalizeBookingOffer: pricingHelpers.normalizeBookingOffer,
     getBookingPreferredCurrency: pricingHelpers.getBookingPreferredCurrency,
-    convertBookingPricingToBaseCurrency: pricingHelpers.convertBookingPricingToBaseCurrency,
     convertBookingOfferToBaseCurrency: pricingHelpers.convertBookingOfferToBaseCurrency
   });
 
@@ -188,8 +185,8 @@ export function createBackendServices({
     companyProfile: runtime.companyProfile
   });
 
-  const writeInvoicePdf = createInvoicePdfWriter({
-    invoicePdfPath: pricingHelpers.invoicePdfPath,
+  const writePaymentDocumentPdf = createPaymentDocumentPdfWriter({
+    paymentDocumentPdfPath: pricingHelpers.paymentDocumentPdfPath,
     companyProfile: runtime.companyProfile,
     logoPath: collections.logoPngPath,
     bookingImagesDir: collections.bookingImagesDir,
@@ -212,7 +209,7 @@ export function createBackendServices({
     travelPlanPdfArtifacts,
     metaWebhookHandlers,
     tourHelpers,
-    writeInvoicePdf,
+    writePaymentDocumentPdf,
     writeGeneratedOfferPdf,
     writeTravelPlanPdf
   };

@@ -12,7 +12,6 @@ import { isSuspiciousSentinelString } from "./booking_names.js";
 import {
   buildTravelPlanTranslationStatus
 } from "./booking_translation.js";
-import { buildGeneratedOfferTransportFields } from "./booking_confirmation.js";
 import { normalizeBookingPdfPersonalization } from "../lib/booking_pdf_personalization.js";
 
 export function createBookingViewHelpers({
@@ -30,7 +29,6 @@ export function createBookingViewHelpers({
   clamp,
   safeInt,
   buildBookingTravelPlanReadModel,
-  buildBookingPricingReadModel,
   buildBookingOfferReadModel,
   buildBookingOfferPaymentTermsReadModel,
   listAssignableKeycloakUsers,
@@ -254,7 +252,43 @@ export function createBookingViewHelpers({
   }
 
   function publicGeneratedOfferFields(generatedOffer, options = {}) {
-    return buildGeneratedOfferTransportFields(generatedOffer, options);
+    if (!generatedOffer || typeof generatedOffer !== "object") return {};
+    const {
+      pdf_frozen_at: _pdfFrozenAt,
+      pdf_sha256: _pdfSha256,
+      booking_confirmation: _bookingConfirmation,
+      management_approver_atp_staff_id: _managementApproverAtpStaffId,
+      management_approver_label: _managementApproverLabel,
+      acceptance: _legacyAcceptance,
+      acceptance_route: _legacyAcceptanceRoute,
+      customer_confirmation_flow: _customerConfirmationFlow,
+      booking_confirmation_token_nonce: _bookingConfirmationTokenNonce,
+      booking_confirmation_token_created_at: _bookingConfirmationTokenCreatedAt,
+      booking_confirmation_token_expires_at: _bookingConfirmationTokenExpiresAt,
+      booking_confirmation_token_revoked_at: _bookingConfirmationTokenRevokedAt,
+      acceptance_token_nonce: _legacyAcceptanceTokenNonce,
+      acceptance_token_created_at: _legacyAcceptanceTokenCreatedAt,
+      acceptance_token_expires_at: _legacyAcceptanceTokenExpiresAt,
+      acceptance_token_revoked_at: _legacyAcceptanceTokenRevokedAt,
+      public_acceptance_token_nonce: _legacyPublicAcceptanceTokenNonce,
+      public_acceptance_token_created_at: _legacyPublicAcceptanceTokenCreatedAt,
+      public_acceptance_token_expires_at: _legacyPublicAcceptanceTokenExpiresAt,
+      public_acceptance_token_revoked_at: _legacyPublicAcceptanceTokenRevokedAt,
+      public_booking_confirmation_token_nonce: _legacyPublicBookingConfirmationTokenNonce,
+      public_booking_confirmation_token_created_at: _legacyPublicBookingConfirmationTokenCreatedAt,
+      public_booking_confirmation_token_expires_at: _legacyPublicBookingConfirmationTokenExpiresAt,
+      public_booking_confirmation_token_revoked_at: _legacyPublicBookingConfirmationTokenRevokedAt,
+      public_booking_confirmation_token: _legacyPublicBookingConfirmationToken,
+      public_booking_confirmation_expires_at: _legacyPublicBookingConfirmationExpiresAt,
+      ...transportFields
+    } = generatedOffer;
+    const normalizedComment = normalizeText(transportFields.comment);
+    if (normalizedComment) {
+      transportFields.comment = normalizedComment;
+    } else {
+      delete transportFields.comment;
+    }
+    return transportFields;
   }
 
   async function buildGeneratedOfferSnapshotReadModel(generatedOffer, defaultCurrency, options = {}) {
@@ -294,6 +328,8 @@ export function createBookingViewHelpers({
       traveler_details_token_created_at: _travelerDetailsTokenCreatedAt,
       traveler_details_token_expires_at: _travelerDetailsTokenExpiresAt,
       traveler_details_token_revoked_at: _travelerDetailsTokenRevokedAt,
+      confirmed_generated_offer_id: _legacyConfirmedGeneratedOfferId,
+      accepted_generated_offer_id: _legacyAcceptedGeneratedOfferId,
       public_traveler_details_token_nonce: _legacyTravelerDetailsTokenNonce,
       public_traveler_details_token_created_at: _legacyTravelerDetailsTokenCreatedAt,
       public_traveler_details_token_expires_at: _legacyTravelerDetailsTokenExpiresAt,
@@ -304,7 +340,7 @@ export function createBookingViewHelpers({
     const lang = normalizeBookingContentLang(options?.lang || "en");
     const sourceLang = normalizeBookingSourceLang(options?.sourceLang || "en");
     const listMode = options?.listMode === true;
-    const preferredCurrency = safeCurrency(normalizedBooking?.preferred_currency || normalizedBooking?.pricing?.currency || baseCurrency);
+    const preferredCurrency = safeCurrency(normalizedBooking?.preferred_currency || normalizedBooking?.offer?.currency || baseCurrency);
     const offerCurrency = safeCurrency(normalizedBooking?.offer?.currency || preferredCurrency);
     const generatedOffers = listMode
       ? []
@@ -328,9 +364,6 @@ export function createBookingViewHelpers({
       const assignedKeycloakUserLabels = await resolveAssignableKeycloakUserLabelMap().catch(() => new Map());
       assignedKeycloakUserLabel = normalizeText(assignedKeycloakUserLabels?.get(assignedKeycloakUserId)) || assignedKeycloakUserId;
     }
-    const pricingDisplayCurrency = listMode
-      ? safeCurrency(normalizedBooking?.pricing?.currency || preferredCurrency)
-      : preferredCurrency;
     const offerDisplayCurrency = listMode
       ? safeCurrency(normalizedBooking?.offer?.currency || offerCurrency)
       : offerCurrency;
@@ -439,7 +472,6 @@ export function createBookingViewHelpers({
         sourceLang
       }),
       travel_plan_translation_status: buildTravelPlanTranslationStatus(normalizedBooking.travel_plan, lang, sourceLang),
-      pricing: await buildBookingPricingReadModel(normalizedBooking.pricing, pricingDisplayCurrency),
       offer: await buildBookingOfferReadModel(normalizedBooking.offer, offerDisplayCurrency, {
         lang,
         sourceLang
@@ -551,7 +583,6 @@ export function createBookingViewHelpers({
         contact.phone_number,
         ...persons.flatMap((person) => [person.name, ...person.emails, ...person.phone_numbers]),
         bookingChatTextMap.get(booking.id),
-        JSON.stringify(booking.pricing),
         JSON.stringify(booking.offer)
       ]
         .filter(Boolean)

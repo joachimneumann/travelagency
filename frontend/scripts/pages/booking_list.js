@@ -136,8 +136,8 @@ function refreshBackendNavElements() {
 }
 
 function bookingPaymentsLabel(booking) {
-  const payments = Array.isArray(booking?.pricing?.payments) ? booking.pricing.payments : [];
-  const count = payments.length;
+  const paymentTerms = booking?.accepted_record?.payment_terms || booking?.offer?.payment_terms || null;
+  const count = Array.isArray(paymentTerms?.lines) ? paymentTerms.lines.length : 0;
   if (count <= 0) {
     return backendT("backend.table.payments_none", "No payment plan");
   }

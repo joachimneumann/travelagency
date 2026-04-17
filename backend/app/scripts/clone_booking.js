@@ -171,7 +171,7 @@ function parseStore(raw) {
   }
   parsed.bookings = Array.isArray(parsed.bookings) ? parsed.bookings : [];
   parsed.activities = Array.isArray(parsed.activities) ? parsed.activities : [];
-  parsed.invoices = Array.isArray(parsed.invoices) ? parsed.invoices : [];
+  parsed.payment_documents = Array.isArray(parsed.payment_documents) ? parsed.payment_documents : [];
   parsed.chat_conversations = Array.isArray(parsed.chat_conversations) ? parsed.chat_conversations : [];
   parsed.chat_events = Array.isArray(parsed.chat_events) ? parsed.chat_events : [];
   return parsed;
@@ -223,12 +223,12 @@ export async function cloneBookingsFromStore(options = {}) {
   };
 }
 
-function collectBookingArtifactPaths(booking, invoices = []) {
+function collectBookingArtifactPaths(booking, paymentDocuments = []) {
   const bookingImagePaths = new Set();
   const bookingPersonPhotoPaths = new Set();
   const attachmentPaths = new Set();
   const generatedOfferPdfPaths = new Set();
-  const invoicePdfPaths = new Set();
+  const paymentDocumentPdfPaths = new Set();
 
   function addPublicPath(ref, prefix, set) {
     const normalized = normalizeText(ref);
@@ -270,11 +270,11 @@ function collectBookingArtifactPaths(booking, invoices = []) {
     if (id) generatedOfferPdfPaths.add(`${id}.pdf`);
   }
 
-  for (const invoice of invoices) {
-    const id = normalizeText(invoice?.id);
-    const version = Number(invoice?.version || 1);
+  for (const document of paymentDocuments) {
+    const id = normalizeText(document?.id);
+    const version = Number(document?.version || 1);
     if (id && Number.isFinite(version) && version > 0) {
-      invoicePdfPaths.add(`${id}-v${version}.pdf`);
+      paymentDocumentPdfPaths.add(`${id}-v${version}.pdf`);
     }
   }
 
@@ -283,14 +283,14 @@ function collectBookingArtifactPaths(booking, invoices = []) {
     bookingPersonPhotoPaths: [...bookingPersonPhotoPaths],
     attachmentPaths: [...attachmentPaths],
     generatedOfferPdfPaths: [...generatedOfferPdfPaths],
-    invoicePdfPaths: [...invoicePdfPaths]
+    paymentDocumentPdfPaths: [...paymentDocumentPdfPaths]
   };
 }
 
 function extractBookingTransferPayload(store, bookingId) {
   const booking = store.bookings.find((item) => normalizeText(item?.id) === bookingId);
   if (!booking) throw new Error(`Booking not found: ${bookingId}`);
-  const invoices = (Array.isArray(store.invoices) ? store.invoices : [])
+  const paymentDocuments = (Array.isArray(store.payment_documents) ? store.payment_documents : [])
     .filter((item) => normalizeText(item?.booking_id) === bookingId);
   const activities = (Array.isArray(store.activities) ? store.activities : [])
     .filter((item) => normalizeText(item?.booking_id) === bookingId);
@@ -303,10 +303,10 @@ function extractBookingTransferPayload(store, bookingId) {
   return {
     booking,
     activities,
-    invoices,
+    paymentDocuments,
     chatConversations,
     chatEvents,
-    artifacts: collectBookingArtifactPaths(booking, invoices)
+    artifacts: collectBookingArtifactPaths(booking, paymentDocuments)
   };
 }
 
@@ -321,7 +321,7 @@ function mergeBookingTransferPayload(targetStore, payload, options = {}) {
 
   targetStore.bookings = targetStore.bookings.filter((item) => normalizeText(item?.id) !== bookingId);
   targetStore.activities = targetStore.activities.filter((item) => normalizeText(item?.booking_id) !== bookingId);
-  targetStore.invoices = targetStore.invoices.filter((item) => normalizeText(item?.booking_id) !== bookingId);
+  targetStore.payment_documents = targetStore.payment_documents.filter((item) => normalizeText(item?.booking_id) !== bookingId);
   const removedConversationIds = new Set(
     targetStore.chat_conversations
       .filter((item) => normalizeText(item?.booking_id) === bookingId)
@@ -333,7 +333,7 @@ function mergeBookingTransferPayload(targetStore, payload, options = {}) {
 
   targetStore.bookings.push(payload.booking);
   targetStore.activities.push(...payload.activities);
-  targetStore.invoices.push(...payload.invoices);
+  targetStore.payment_documents.push(...payload.paymentDocuments);
   targetStore.chat_conversations.push(...payload.chatConversations);
   targetStore.chat_events.push(...payload.chatEvents);
 }
@@ -434,7 +434,7 @@ async function copyOptionalArtifacts(sourceAdapter, targetAdapter, artifacts) {
     ["booking_person_photos", artifacts.bookingPersonPhotoPaths],
     [path.join("pdfs", "attachments"), artifacts.attachmentPaths],
     [path.join("pdfs", "generated_offers"), artifacts.generatedOfferPdfPaths],
-    [path.join("pdfs", "invoices"), artifacts.invoicePdfPaths]
+    [path.join("pdfs", "payment_documents"), artifacts.paymentDocumentPdfPaths]
   ];
 
   for (const [rootSegment, relativePaths] of artifactGroups) {

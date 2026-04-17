@@ -291,7 +291,6 @@ function normalizeTravelPlanDays(days, options = {}) {
           image_subtitle: normalizeOptionalText(rawItem.image_subtitle) || null,
           location: resolveLocalizedText(location_i18n, flatLang, "", { sourceLang }) || null,
           location_i18n,
-          supplier_id: normalizeOptionalText(rawItem.supplier_id),
           start_time: timing.start_time,
           end_time: timing.end_time,
           image: normalizeTravelPlanServiceImage(rawItem.image ?? rawItem.images, dayIndex, itemIndex),
@@ -348,12 +347,6 @@ export function createTravelPlanHelpers() {
     const itemIds = new Set();
     const imageIds = new Set();
     const attachmentIds = new Set();
-    const supplierIds = new Set(
-      (Array.isArray(options?.supplierIds) ? options.supplierIds : [])
-        .map((supplierId) => normalizeText(supplierId))
-        .filter(Boolean)
-    );
-
     for (const day of normalized.days) {
       if (!normalizeText(day.id)) {
         return { ok: false, error: "Every travel-plan day needs an id." };
@@ -382,9 +375,6 @@ export function createTravelPlanHelpers() {
         }
         if (!TRAVEL_PLAN_SERVICE_KINDS.has(item.kind)) {
           return { ok: false, error: `Day ${day.day_number}, Service ${itemNumber}: Kind is invalid.` };
-        }
-        if (normalizeText(item.supplier_id) && !supplierIds.has(item.supplier_id)) {
-          return { ok: false, error: `Day ${day.day_number}, Service ${itemNumber}: Unknown supplier ${item.supplier_id}.` };
         }
         if (item.timing_kind === "point" && !normalizeText(item.time_point)) {
           return { ok: false, error: `Day ${day.day_number}, Service ${itemNumber}: Time point is required.` };

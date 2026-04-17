@@ -114,8 +114,6 @@ case "booking_travel_plan_pdf_update":
   return RequestFactory.bookingTravelPlanPdfUpdateRequest(options);
 case "booking_travel_plan_pdf_delete":
   return RequestFactory.bookingTravelPlanPdfDeleteRequest(options);
-case "booking_pricing":
-  return RequestFactory.bookingPricingRequest(options);
 case "booking_offer":
   return RequestFactory.bookingOfferRequest(options);
 case "booking_generate_offer":
@@ -130,14 +128,6 @@ case "booking_generated_offer_gmail_draft":
   return RequestFactory.bookingGeneratedOfferGmailDraftRequest(options);
 case "offer_exchange_rates":
   return RequestFactory.offerExchangeRatesRequest(options);
-case "suppliers":
-  return RequestFactory.suppliersRequest(options);
-case "supplier_create":
-  return RequestFactory.supplierCreateRequest(options);
-case "supplier_detail":
-  return RequestFactory.supplierDetailRequest(options);
-case "supplier_update":
-  return RequestFactory.supplierUpdateRequest(options);
 case "country_reference_info":
   return RequestFactory.countryReferenceInfoRequest(options);
 case "country_reference_info_update":
@@ -146,16 +136,12 @@ case "booking_activities":
   return RequestFactory.bookingActivitiesRequest(options);
 case "booking_activity_create":
   return RequestFactory.bookingActivityCreateRequest(options);
-case "booking_invoices":
-  return RequestFactory.bookingInvoicesRequest(options);
-case "booking_invoice_create":
-  return RequestFactory.bookingInvoiceCreateRequest(options);
-case "booking_invoice_update":
-  return RequestFactory.bookingInvoiceUpdateRequest(options);
-case "booking_invoice_translate":
-  return RequestFactory.bookingInvoiceTranslateRequest(options);
-case "invoice_pdf":
-  return RequestFactory.invoicePdfRequest(options);
+case "booking_payment_documents":
+  return RequestFactory.bookingPaymentDocumentsRequest(options);
+case "booking_payment_document_create":
+  return RequestFactory.bookingPaymentDocumentCreateRequest(options);
+case "payment_document_pdf":
+  return RequestFactory.paymentDocumentPdfRequest(options);
 case "keycloak_users":
   return RequestFactory.keycloakUsersRequest(options);
 case "staff_profiles":

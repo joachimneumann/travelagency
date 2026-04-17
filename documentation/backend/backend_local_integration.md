@@ -11,7 +11,7 @@ Local backend features:
 - booking pipeline and assignment
 - booking detail editing
 - booking-owned persons
-- invoices and pricing
+- payment documents and pricing
 - Keycloak user assignment lookup
 - Keycloak login
 
@@ -78,7 +78,7 @@ This creates sample:
 - bookings
 - booking persons
 - activities
-- invoices
+- payment documents
 - tours
 
 ## Public Booking Flow
@@ -114,7 +114,7 @@ The submitted contact becomes the initial booking person and can later be refine
 - persons summary
 - offer
 - pricing
-- invoices
+- payment documents
 - activities
 - read-only Meta chat timeline
 

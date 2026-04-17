@@ -267,12 +267,6 @@ import (
 	actor?:                         string
 }
 
-#BookingPricingUpdateRequest: {
-	expected_pricing_revision?: >=0 & int
-	pricing:                    entities.#BookingPricing
-	actor?:                     string
-}
-
 #BookingOfferUpdateRequest: {
 	expected_offer_revision?: >=0 & int
 	offer:                    entities.#BookingOffer
@@ -288,7 +282,6 @@ import (
 #BookingGeneratedOfferUpdateRequest: {
 	expected_offer_revision?: >=0 & int
 	comment?:                 string
-	confirm_as_management?:   bool
 	actor?:                   string
 }
 
@@ -303,24 +296,6 @@ import (
 
 #PublicTravelerDetailsUpdateRequest: {
 	person: entities.#BookingPerson
-}
-
-#SupplierCreateRequest: {
-	name:             string
-	contact?:         string
-	emergency_phone?: string
-	email?:           common.#Email
-	country?:         enums.#CountryCode
-	category:         enums.#SupplierCategory
-}
-
-#SupplierUpdateRequest: {
-	name?:            string
-	contact?:         string
-	emergency_phone?: string
-	email?:           common.#Email
-	country?:         enums.#CountryCode
-	category?:        enums.#SupplierCategory
 }
 
 #CountryPracticalInfoUpdateRequest: {
@@ -365,33 +340,16 @@ import (
 	actor?:                  string
 }
 
-#BookingInvoiceUpsertRequest: {
-	expected_invoices_revision?: >=0 & int
-	invoice_number?:             string
-	document_kind?:              string
-	payment_id?:                 common.#Identifier
-	currency?:                   enums.#CurrencyCode
-	issue_date?:                 common.#DateOnly
-	title?:                      string
-	subtitle?:                   string
-	intro?:                      string
-	notes?:                      string
-	closing?:                    string
-	components?: [...entities.#InvoiceComponent]
-	due_amount_cents?:  common.#NonNegativeMoneyAmount
-	sent_to_recipient?: bool
-	payment_received_at?: common.#Timestamp
-	payment_confirmed_by_atp_staff_id?: common.#Identifier
-	payment_confirmed_by_label?: string
-	payment_reference?: string
-	pdf_personalization?: entities.#BookingPdfPersonalizationScoped
-}
-
-#BookingInvoiceTranslateRequest: {
-	expected_invoices_revision?: >=0 & int
-	source_lang:                 enums.#LanguageCode
-	target_lang:                 enums.#LanguageCode
-	actor?:                      string
+#BookingPaymentDocumentCreateRequest: {
+	expected_payment_documents_revision?: >=0 & int
+	document_kind?:                       string
+	payment_id?:                          common.#Identifier
+	payment_received_at?:                 common.#Timestamp
+	payment_confirmed_by_atp_staff_id?:   common.#Identifier
+	payment_reference?:                   string
+	payment_confirmed_by_label?:          string
+	pdf_personalization?:                 entities.#BookingPdfPersonalizationScoped
+	actor?:                               string
 }
 
 #TourUpsertRequest: {

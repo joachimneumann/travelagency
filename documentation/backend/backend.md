@@ -2,7 +2,7 @@
 
 ## Purpose
 
-AsiaTravelPlan needs an operational backend around bookings, tours, ATP staff, pricing, invoices, and communications.
+AsiaTravelPlan needs an operational backend around bookings, tours, ATP staff, pricing, payment documents, and communications.
 
 The current domain direction is intentionally simple:
 - each booking owns its own person data
@@ -18,7 +18,7 @@ Active operational domains:
 - country reference / public destination visibility
 - ATP staff
 - activities
-- invoices
+- payment documents
 - inbound chat threads linked to bookings
 
 Not active domains:
@@ -44,7 +44,7 @@ Not active domains:
 
 - pricing summary and payment schedule
 - structured offer components by category
-- invoices
+- payment-request and payment-confirmation documents generated from the payment flow
 - multi-currency handling through the generated currency model
 
 ### Operations workflow

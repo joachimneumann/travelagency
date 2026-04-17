@@ -44,15 +44,6 @@ export function createAccessHelpers({ auth, appRoles }) {
       hasRole(principal, appRoles.TOUR_EDITOR);
   }
 
-  function canReadSuppliers(principal) {
-    return canReadBackend(principal);
-  }
-
-  function canEditSuppliers(principal) {
-    return hasRole(principal, appRoles.ADMIN) ||
-      hasRole(principal, appRoles.MANAGER);
-  }
-
   function canReadTravelPlanTemplates(principal) {
     return hasRole(principal, appRoles.ADMIN) ||
       hasRole(principal, appRoles.MANAGER) ||
@@ -72,8 +63,6 @@ export function createAccessHelpers({ auth, appRoles }) {
     canEditTours,
     canReadCountryReferenceInfo,
     canEditCountryReferenceInfo,
-    canReadSuppliers,
-    canEditSuppliers,
     canReadTravelPlanTemplates,
     canEditTravelPlanTemplates
   };

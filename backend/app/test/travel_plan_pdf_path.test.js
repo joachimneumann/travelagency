@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import path from "node:path";
-import { resolveTravelPlanServiceThumbnailPath } from "../src/lib/travel_plan_pdf.js";
+import { resolveTravelPlanServiceThumbnailPath } from "../src/lib/pdf_travel_plan_section.js";
 
 test("travel plan pdf resolves activity image paths from public booking image urls", () => {
   const bookingImagesDir = "/srv/backend/app/data/booking_images";

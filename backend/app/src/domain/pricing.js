@@ -22,7 +22,7 @@ export function createPricingHelpers({
   clamp,
   safeInt,
   randomUUID,
-  invoicesDir,
+  paymentDocumentsDir,
   generatedOffersDir
 }) {
   const OFFER_DETAIL_LEVEL_ORDER = Object.freeze({
@@ -624,13 +624,6 @@ export function createPricingHelpers({
     };
   }
 
-  function defaultBookingPricing() {
-    return {
-      currency: baseCurrency,
-      payments: []
-    };
-  }
-
   function normalizeBookingOfferTripPriceInternal(rawTripPrice, currency) {
     const source = rawTripPrice && typeof rawTripPrice === "object" ? rawTripPrice : null;
     if (!source) return null;
@@ -897,34 +890,6 @@ export function createPricingHelpers({
     return ["DRAFT", "APPROVED", "OFFER_SENT"].includes(normalized) ? normalized : "DRAFT";
   }
 
-  function normalizeBookingPricing(rawPricing) {
-    const source = rawPricing && typeof rawPricing === "object" ? rawPricing : {};
-    const currency = safeCurrency(source.currency || baseCurrency);
-    const payments = (Array.isArray(source.payments) ? source.payments : []).map((payment, index) => ({
-      id: normalizeText(payment?.id) || `pricing_payment_${index + 1}`,
-      label: normalizeText(payment?.label),
-      origin_payment_term_line_id: normalizeText(payment?.origin_payment_term_line_id) || null,
-      origin_generated_offer_id: normalizeText(payment?.origin_generated_offer_id) || null,
-      net_amount_cents: normalizeAmountCents(payment?.net_amount_cents, 0),
-      tax_rate_basis_points: clampOfferTaxRateBasisPoints(payment?.tax_rate_basis_points, 0),
-      status: normalizeText(payment?.status).toUpperCase() || paymentStatuses.PENDING,
-      paid_at: payment?.paid_at || null,
-      received_at: payment?.received_at || null,
-      received_amount_cents: Number.isFinite(Number(payment?.received_amount_cents))
-        ? Math.max(0, normalizeAmountCents(payment?.received_amount_cents, 0))
-        : null,
-      received_generated_offer_id: normalizeText(payment?.received_generated_offer_id) || null,
-      confirmed_by_atp_staff_id: normalizeText(payment?.confirmed_by_atp_staff_id) || null,
-      reference: normalizeText(payment?.reference) || null,
-      notes: normalizeText(payment?.notes),
-      tax_amount_cents: normalizeAmountCents(payment?.tax_amount_cents, 0),
-      gross_amount_cents: normalizeAmountCents(payment?.gross_amount_cents, normalizeAmountCents(payment?.net_amount_cents, 0))
-    }));
-    return {
-      currency,
-      payments
-    };
-  }
   function getFallbackExchangeRate(fromCurrency, toCurrency) {
     const direct = exchangeRateOverrides[`${fromCurrency}->${toCurrency}`];
     if (Number.isFinite(direct) && direct > 0) return direct;
@@ -940,7 +905,7 @@ export function createPricingHelpers({
   }
 
   function getBookingPreferredCurrency(booking = null) {
-    return safeCurrency(booking?.preferred_currency || booking?.pricing?.currency || booking?.offer?.currency || baseCurrency);
+    return safeCurrency(booking?.preferred_currency || booking?.offer?.currency || baseCurrency);
   }
 
   function parseCurrencyForExchange(value) {
@@ -1252,45 +1217,8 @@ export function createPricingHelpers({
     return convertMinorUnits(amountCents, bookingCurrency, baseCurrency);
   }
 
-  async function convertPricingPaymentForCurrency(payment, sourceCurrency, targetCurrency) {
-    const normalizedPayment = payment && typeof payment === "object"
-      ? payment
-      : normalizeBookingPricing({ payments: [payment] }).payments[0];
-    const [
-      netAmountCents,
-      taxAmountCents,
-      grossAmountCents,
-      receivedAmountCents
-    ] = await Promise.all([
-      convertMinorUnits(normalizedPayment?.net_amount_cents, sourceCurrency, targetCurrency),
-      convertMinorUnits(normalizedPayment?.tax_amount_cents, sourceCurrency, targetCurrency),
-      convertMinorUnits(normalizedPayment?.gross_amount_cents, sourceCurrency, targetCurrency),
-      normalizedPayment?.received_amount_cents == null
-        ? Promise.resolve(null)
-        : convertMinorUnits(normalizedPayment.received_amount_cents, sourceCurrency, targetCurrency)
-    ]);
-
-    return {
-      ...normalizedPayment,
-      net_amount_cents: netAmountCents,
-      tax_amount_cents: taxAmountCents,
-      gross_amount_cents: grossAmountCents,
-      received_amount_cents: receivedAmountCents
-    };
-  }
-
   function getOfferCurrencyForStorage(offer) {
     return safeCurrency(offer?.currency || baseCurrency);
-  }
-
-  function getPricingCurrencyForStorage(pricing) {
-    return safeCurrency(pricing?.currency || baseCurrency);
-  }
-
-  async function convertBookingPricingToBaseCurrency(pricing) {
-    // Payment operations stay in customer currency end-to-end.
-    // The helper name is kept for compatibility with the surrounding call sites.
-    return normalizeBookingPricing(pricing);
   }
 
   async function convertBookingOfferToBaseCurrency(offer) {
@@ -1301,28 +1229,6 @@ export function createPricingHelpers({
         ...normalized.totals
       },
       total_price_cents: normalized.total_price_cents
-    };
-  }
-
-  async function convertPricingForDisplay(pricing, targetCurrency) {
-    const normalized = normalizeBookingPricing(pricing);
-    const sourceCurrency = getPricingCurrencyForStorage(normalized);
-    const displayCurrency = safeCurrency(targetCurrency || sourceCurrency);
-    if (sourceCurrency === displayCurrency) {
-      return {
-        ...normalized,
-        currency: displayCurrency
-      };
-    }
-
-    const payments = await Promise.all(
-      normalized.payments.map((payment) => convertPricingPaymentForCurrency(payment, sourceCurrency, displayCurrency))
-    );
-
-    return {
-      ...normalized,
-      currency: displayCurrency,
-      payments
     };
   }
 
@@ -1517,7 +1423,7 @@ export function createPricingHelpers({
     }).format(amount)}`;
   }
 
-  function normalizeInvoiceComponents(value, options = {}) {
+  function normalizePaymentDocumentComponents(value, options = {}) {
     const input = Array.isArray(value) ? value : [];
     const contentLang = normalizeBookingContentLang(options?.contentLang || options?.lang || "en");
     const flatLang = normalizeBookingContentLang(options?.flatLang || options?.lang || "en");
@@ -1533,7 +1439,7 @@ export function createPricingHelpers({
         const unitAmountCents = safeAmountCents(component?.unit_amount_cents);
         if (!description || !unitAmountCents) return null;
         return {
-          id: normalizeText(component?.id) || `inv_component_${randomUUID()}`,
+          id: normalizeText(component?.id) || `payment_document_component_${randomUUID()}`,
           description,
           description_i18n,
           quantity,
@@ -1544,16 +1450,16 @@ export function createPricingHelpers({
       .filter(Boolean);
   }
 
-  function computeInvoiceComponentTotal(components) {
+  function computePaymentDocumentComponentTotal(components) {
     return (Array.isArray(components) ? components : []).reduce(
       (sum, component) => sum + (safeAmountCents(component?.total_amount_cents) || 0),
       0
     );
   }
 
-  function nextInvoiceNumber(store) {
-    const max = (store.invoices || []).reduce((acc, invoice) => {
-      const match = String(invoice.invoice_number || "").match(/^ATP-(\d+)$/);
+  function nextPaymentDocumentNumber(store) {
+    const max = (store.payment_documents || []).reduce((acc, document) => {
+      const match = String(document.document_number || "").match(/^ATP-(\d+)$/);
       if (!match) return acc;
       const n = Number(match[1]);
       return Number.isFinite(n) ? Math.max(acc, n) : acc;
@@ -1561,8 +1467,8 @@ export function createPricingHelpers({
     return `ATP-${String(max + 1).padStart(6, "0")}`;
   }
 
-  function invoicePdfPath(invoiceId, version) {
-    return path.join(invoicesDir, `${invoiceId}-v${version}.pdf`);
+  function paymentDocumentPdfPath(documentId, version) {
+    return path.join(paymentDocumentsDir, `${documentId}-v${version}.pdf`);
   }
 
   function generatedOfferPdfPath(generatedOfferId) {
@@ -1636,10 +1542,10 @@ export function createPricingHelpers({
     try {
       const currentStatus = normalizeOfferStatus(booking?.offer?.status);
       const requestedCurrency = safeCurrency(
-        rawOffer?.currency || booking?.offer?.currency || booking?.preferred_currency || booking?.pricing?.currency || baseCurrency
+        rawOffer?.currency || booking?.offer?.currency || booking?.preferred_currency || baseCurrency
       );
       const currentCurrency = safeCurrency(
-        booking?.offer?.currency || booking?.preferred_currency || booking?.pricing?.currency || baseCurrency
+        booking?.offer?.currency || booking?.preferred_currency || baseCurrency
       );
       if (currentStatus !== "DRAFT" && requestedCurrency !== currentCurrency) {
         return {
@@ -1650,7 +1556,7 @@ export function createPricingHelpers({
       }
       const offer = normalizeBookingOffer(
         rawOffer,
-        rawOffer?.currency || booking?.offer?.currency || booking?.preferred_currency || booking?.pricing?.currency || baseCurrency
+        rawOffer?.currency || booking?.offer?.currency || booking?.preferred_currency || baseCurrency
       );
       const discounts = Array.isArray(offer.discounts) ? offer.discounts : [];
       for (const discount of discounts) {
@@ -1670,22 +1576,6 @@ export function createPricingHelpers({
     }
   }
 
-  async function buildBookingPricingReadModel(pricing, targetCurrency = baseCurrency) {
-    return convertPricingForDisplay(pricing, targetCurrency);
-  }
-
-  function validateBookingPricingInput(rawPricing) {
-    if (!rawPricing || typeof rawPricing !== "object") {
-      return { ok: false, error: "Pricing is required." };
-    }
-    try {
-      const pricing = normalizeBookingPricing(rawPricing);
-      return { ok: true, pricing };
-    } catch (error) {
-      return { ok: false, error: String(error?.message || error) };
-    }
-  }
-
   return {
     safeCurrency,
     getBookingPreferredCurrency,
@@ -1698,7 +1588,6 @@ export function createPricingHelpers({
     clampOfferTaxRateBasisPoints,
     computeOfferLineAmounts,
     computeBookingOfferTotals,
-    defaultBookingPricing,
     defaultBookingOffer,
     normalizeBookingOffer,
     normalizeOfferStatus,
@@ -1706,22 +1595,17 @@ export function createPricingHelpers({
     buildBookingOfferReadModel,
     buildVisiblePricingProjection,
     validateBookingOfferInput,
-    normalizeBookingPricing,
-    buildBookingPricingReadModel,
-    validateBookingPricingInput,
     convertOfferLineAmountForCurrency,
     resolveExchangeRateWithFallback,
     convertMinorUnits,
-    convertBookingPricingToBaseCurrency,
     convertBookingOfferToBaseCurrency,
-    convertPricingForDisplay,
     convertOfferForDisplay,
     validateOfferExchangeRequest,
     formatMoney,
-    normalizeInvoiceComponents,
-    computeInvoiceComponentTotal,
-    nextInvoiceNumber,
-    invoicePdfPath,
+    normalizePaymentDocumentComponents,
+    computePaymentDocumentComponentTotal,
+    nextPaymentDocumentNumber,
+    paymentDocumentPdfPath,
     generatedOfferPdfPath
   };
 }

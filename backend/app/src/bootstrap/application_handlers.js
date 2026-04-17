@@ -14,7 +14,6 @@ import { createBookingHandlers } from "../http/handlers/bookings.js";
 import { createBookingQueryModule } from "../http/handlers/booking_query.js";
 import { createCountryReferenceHandlers } from "../http/handlers/country_reference.js";
 import { createKeycloakUserHandlers } from "../http/handlers/keycloak_users.js";
-import { createSupplierHandlers } from "../http/handlers/suppliers.js";
 import { createTravelPlanTemplateHandlers } from "../http/handlers/travel_plan_templates.js";
 import { createTourHandlers } from "../http/handlers/tours.js";
 
@@ -35,8 +34,6 @@ export function createApplicationRoutes({
     canEditTours,
     canReadCountryReferenceInfo,
     canEditCountryReferenceInfo,
-    canReadSuppliers,
-    canEditSuppliers,
     canReadTravelPlanTemplates,
     canEditTravelPlanTemplates
   } = createAccessHelpers({
@@ -56,7 +53,7 @@ export function createApplicationRoutes({
     travelPlanPdfArtifacts,
     metaWebhookHandlers,
     tourHelpers,
-    writeInvoicePdf,
+    writePaymentDocumentPdf,
     writeGeneratedOfferPdf,
     writeTravelPlanPdf
   } = services;
@@ -115,7 +112,6 @@ export function createApplicationRoutes({
     safeCurrency: pricingHelpers.safeCurrency,
     BASE_CURRENCY: runtime.baseCurrency,
     safeInt: support.safeInt,
-    defaultBookingPricing: pricingHelpers.defaultBookingPricing,
     defaultBookingOffer: pricingHelpers.defaultBookingOffer,
     defaultBookingTravelPlan: travelPlanHelpers.defaultBookingTravelPlan,
     addActivity: bookingViewHelpers.addActivity,
@@ -141,10 +137,7 @@ export function createApplicationRoutes({
     syncBookingAssignmentFields: bookingViewHelpers.syncBookingAssignmentFields,
     getBookingAssignedKeycloakUserId: bookingViewHelpers.getBookingAssignedKeycloakUserId,
     canEditBooking: bookingViewHelpers.canEditBooking,
-    validateBookingPricingInput: pricingHelpers.validateBookingPricingInput,
-    convertBookingPricingToBaseCurrency: pricingHelpers.convertBookingPricingToBaseCurrency,
     convertMinorUnits: pricingHelpers.convertMinorUnits,
-    normalizeBookingPricing: pricingHelpers.normalizeBookingPricing,
     validateBookingOfferInput: pricingHelpers.validateBookingOfferInput,
     convertBookingOfferToBaseCurrency: pricingHelpers.convertBookingOfferToBaseCurrency,
     normalizeBookingOffer: pricingHelpers.normalizeBookingOffer,
@@ -158,11 +151,11 @@ export function createApplicationRoutes({
     resolveExchangeRateWithFallback: pricingHelpers.resolveExchangeRateWithFallback,
     convertOfferLineAmountForCurrency: pricingHelpers.convertOfferLineAmountForCurrency,
     formatMoney: pricingHelpers.formatMoney,
-    normalizeInvoiceComponents: pricingHelpers.normalizeInvoiceComponents,
-    computeInvoiceComponentTotal: pricingHelpers.computeInvoiceComponentTotal,
+    normalizePaymentDocumentComponents: pricingHelpers.normalizePaymentDocumentComponents,
+    computePaymentDocumentComponentTotal: pricingHelpers.computePaymentDocumentComponentTotal,
     safeAmountCents: pricingHelpers.safeAmountCents,
-    nextInvoiceNumber: pricingHelpers.nextInvoiceNumber,
-    writeInvoicePdf,
+    nextPaymentDocumentNumber: pricingHelpers.nextPaymentDocumentNumber,
+    writePaymentDocumentPdf,
     writeGeneratedOfferPdf,
     writeTravelPlanPdf,
     listBookingTravelPlanPdfs: travelPlanPdfArtifacts.listBookingTravelPlanPdfs,
@@ -171,7 +164,7 @@ export function createApplicationRoutes({
     updateBookingTravelPlanPdfArtifact: travelPlanPdfArtifacts.updateBookingTravelPlanPdfArtifact,
     deleteBookingTravelPlanPdfArtifact: travelPlanPdfArtifacts.deleteBookingTravelPlanPdfArtifact,
     randomUUID,
-    invoicePdfPath: pricingHelpers.invoicePdfPath,
+    paymentDocumentPdfPath: pricingHelpers.paymentDocumentPdfPath,
     generatedOfferPdfPath: pricingHelpers.generatedOfferPdfPath,
     gmailDraftsConfig: runtime.gmailDraftsConfig,
     travelerDetailsTokenConfig: runtime.travelerDetailsTokenConfig,
@@ -224,19 +217,6 @@ export function createApplicationRoutes({
     ATP_STAFF_PHOTOS_DIR: runtime.paths.atpStaffPhotosDir,
     resolveAtpStaffPhotoDiskPath: atpStaffDirectory.resolvePhotoDiskPath,
     sendFileWithCache: httpHelpers.sendFileWithCache,
-    randomUUID
-  });
-
-  const supplierHandlers = createSupplierHandlers({
-    readBodyJson: httpHelpers.readBodyJson,
-    sendJson: httpHelpers.sendJson,
-    readStore: storeUtils.readStore,
-    persistStore: storeUtils.persistStore,
-    normalizeText: support.normalizeText,
-    normalizeEmail: support.normalizeEmail,
-    getPrincipal,
-    canReadSuppliers,
-    canEditSuppliers,
     randomUUID
   });
 
@@ -345,7 +325,6 @@ export function createApplicationRoutes({
       ...atpStaffHandlers,
       ...keycloakUserHandlers,
       ...countryReferenceHandlers,
-      ...supplierHandlers,
       ...tourHandlers,
       ...travelPlanTemplateHandlers
     }

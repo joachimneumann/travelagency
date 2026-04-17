@@ -3,7 +3,7 @@ import {
   formatMoneyDisplay,
   normalizeCurrencyCode,
   setSelectValue
-} from "./pricing.js";
+} from "./currency.js";
 import { bookingSourceLang, bookingT } from "./i18n.js";
 import { renderBookingSectionHeader } from "./sections.js";
 import { createBookingOfferPricingModule } from "./offer_pricing.js";

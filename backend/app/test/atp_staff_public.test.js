@@ -6,6 +6,7 @@ test("public ATP staff team endpoint returns merged public profiles", async () =
   const calls = [];
   const handlers = createAtpStaffHandlers({
     getPrincipal: () => null,
+    canViewAtpStaffProfiles: () => true,
     canEditAtpStaffProfiles: () => false,
     readBodyJson: async () => ({}),
     sendJson: (_res, status, body, headers = {}) => {
@@ -28,13 +29,17 @@ test("public ATP staff team endpoint returns merged public profiles", async () =
     updateAtpStaffProfileByUsername: async () => null,
     setAtpStaffPictureRefByUsername: async () => null,
     resetAtpStaffPictureByUsername: async () => null,
+    repoRoot: process.cwd(),
     translateEntries: async () => ({}),
+    translateEntriesWithMeta: async () => ({ entries: {} }),
     execFile: () => {},
     mkdir: async () => {},
     writeFile: async () => {},
     rm: async () => {},
     TEMP_UPLOAD_DIR: "/tmp",
     ATP_STAFF_PHOTOS_DIR: "/tmp",
+    resolveAtpStaffPhotoDiskPath: () => null,
+    sendFileWithCache: async () => {},
     randomUUID: () => "uuid"
   });
 

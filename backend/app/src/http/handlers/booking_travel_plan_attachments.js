@@ -81,8 +81,10 @@ export function createBookingTravelPlanAttachmentHandlers(deps) {
     const generatedOffers = Array.isArray(booking?.generated_offers) ? booking.generated_offers : [];
     for (const generatedOffer of generatedOffers) {
       if (!generatedOffer || typeof generatedOffer !== "object") continue;
-      if (generatedOffer.booking_confirmation && typeof generatedOffer.booking_confirmation === "object") continue;
-      const pdfPath = generatedOfferPdfPath(normalizeText(generatedOffer.id));
+      const generatedOfferId = normalizeText(generatedOffer.id);
+      const linkedToAcceptedRecord = normalizeText(booking?.accepted_offer_artifact_ref) === generatedOfferId;
+      if (linkedToAcceptedRecord) continue;
+      const pdfPath = generatedOfferPdfPath(generatedOfferId);
       delete generatedOffer.pdf_frozen_at;
       delete generatedOffer.pdf_sha256;
       if (pdfPath) {
@@ -162,13 +164,7 @@ export function createBookingTravelPlanAttachmentHandlers(deps) {
       }
     ];
 
-    const check = validateBookingTravelPlanInput(
-      normalizedTravelPlan,
-      booking.offer,
-      {
-        supplierIds: Array.isArray(store.suppliers) ? store.suppliers.map((supplier) => supplier?.id) : []
-      }
-    );
+    const check = validateBookingTravelPlanInput(normalizedTravelPlan, booking.offer);
     if (!check.ok) {
       await rm(outputPath, { force: true }).catch(() => {});
       sendJson(res, 422, { error: check.error });
@@ -222,13 +218,7 @@ export function createBookingTravelPlanAttachmentHandlers(deps) {
     }
     normalizedTravelPlan.attachments = currentAttachments.filter((attachment) => attachment.id !== attachmentId);
 
-    const check = validateBookingTravelPlanInput(
-      normalizedTravelPlan,
-      booking.offer,
-      {
-        supplierIds: Array.isArray(store.suppliers) ? store.suppliers.map((supplier) => supplier?.id) : []
-      }
-    );
+    const check = validateBookingTravelPlanInput(normalizedTravelPlan, booking.offer);
     if (!check.ok) {
       sendJson(res, 422, { error: check.error });
       return;

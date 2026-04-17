@@ -20,7 +20,7 @@ Implemented now:
 - ATP staff assignment
 - booking notes
 - pricing and offer editing
-- invoice generation
+- payment-document generation inside the payment flow
 - booking activities
 - Meta chat ingestion linked to bookings
 
@@ -36,7 +36,7 @@ Generated contract flow:
 Milestone 1 is now defined as:
 - capture all incoming booking requests
 - store submitted contact/traveler data directly on the booking
-- manage bookings through stage, assignment, notes, pricing, offer, invoice, and activity workflows
+- manage bookings through stage, assignment, notes, pricing, offer, payment-document, and activity workflows
 
 Key data rule:
 - `booking.persons[]` is the editable person record set for that booking

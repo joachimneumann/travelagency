@@ -7,7 +7,7 @@ export function createStoreUtils({
   dataPath,
   toursDir,
   travelPlanTemplatesDir,
-  invoicesDir,
+  paymentDocumentsDir,
   generatedOffersDir,
   travelPlanPdfsDir,
   bookingImagesDir,
@@ -18,17 +18,15 @@ export function createStoreUtils({
   writeQueueRef,
   syncBookingAssignmentFields,
   normalizeBookingTravelPlan,
-  normalizeBookingPricing,
   normalizeBookingOffer,
   getBookingPreferredCurrency,
-  convertBookingPricingToBaseCurrency,
   convertBookingOfferToBaseCurrency
 }) {
   async function ensureStorage() {
     await mkdir(path.dirname(dataPath), { recursive: true });
     await mkdir(toursDir, { recursive: true });
     await mkdir(travelPlanTemplatesDir, { recursive: true });
-    await mkdir(invoicesDir, { recursive: true });
+    await mkdir(paymentDocumentsDir, { recursive: true });
     await mkdir(generatedOffersDir, { recursive: true });
     if (travelPlanPdfsDir) {
       await mkdir(travelPlanPdfsDir, { recursive: true });
@@ -47,9 +45,8 @@ export function createStoreUtils({
         dataPath,
         `${JSON.stringify({
           bookings: [],
-          suppliers: [],
           activities: [],
-          invoices: [],
+          payment_documents: [],
           chat_channel_accounts: [],
           chat_conversations: [],
           chat_events: []
@@ -63,9 +60,8 @@ export function createStoreUtils({
     const raw = await readFile(dataPath, "utf8");
     const parsed = JSON.parse(raw);
     parsed.bookings ||= [];
-    parsed.suppliers ||= [];
     parsed.activities ||= [];
-    parsed.invoices ||= [];
+    parsed.payment_documents ||= [];
     parsed.chat_channel_accounts ||= [];
     parsed.chat_conversations ||= [];
     parsed.chat_events ||= [];
@@ -79,7 +75,6 @@ export function createStoreUtils({
         bookingPersonsWritebackNeeded = true;
       }
       syncBookingAssignmentFields(normalizedBooking);
-      normalizedBooking.pricing = normalizeBookingPricing(normalizedBooking.pricing);
       const normalizedOffer = normalizeBookingOffer(normalizedBooking.offer, getBookingPreferredCurrency(normalizedBooking));
       if (rawOffer && JSON.stringify(rawOffer) !== JSON.stringify(normalizedOffer)) {
         bookingOfferWritebackNeeded = true;
@@ -89,7 +84,6 @@ export function createStoreUtils({
         strictReferences: false
       });
       normalizedBooking.generated_offers = Array.isArray(normalizedBooking.generated_offers) ? normalizedBooking.generated_offers : [];
-      normalizedBooking.pricing = await convertBookingPricingToBaseCurrency(normalizedBooking.pricing);
       normalizedBooking.offer = await convertBookingOfferToBaseCurrency(normalizedBooking.offer);
       return normalizedBooking;
     }));

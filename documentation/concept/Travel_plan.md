@@ -97,7 +97,7 @@ Validation rules:
 - `days` sorted by `day_number`
 - each segment must have `kind` and `title`
 - empty days/segments may exist only while editing on the frontend; backend should normalize obvious empty strings but keep legitimate blanks optional
-- no pricing/invoice fields inside `travel_plan`
+- no pricing/payment-document fields inside `travel_plan`
 
 ## Frontend Structure
 

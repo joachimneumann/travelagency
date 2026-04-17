@@ -34,7 +34,7 @@ For AsiaTravelPlan, the relevant subset is narrower:
 - activity timeline
 - notes and communication history
 - tasks, reminders, and Service Level Agreement follow-up
-- quoting / itinerary / invoice linkage
+- quoting / itinerary / payment-document linkage
 - reporting on funnel, conversion, response time, and source attribution
 
 ## 3. Core CRM Capability Areas
@@ -205,7 +205,7 @@ For a travel business, useful custom objects may include:
 - departure
 - supplier
 - guide
-- payment / invoice
+- payment / payment-document
 - traveler group
 
 ## 3.9 Service / Support Features
@@ -299,7 +299,7 @@ CRM systems increasingly win by being the operational center connected to everyt
 For AsiaTravelPlan, the highest-value integrations are probably:
 - email
 - WhatsApp or messaging proxy workflows
-- invoice / accounting flow
+- payment-document / accounting flow
 - payment status
 - itinerary / quote generation
 - website form capture
@@ -377,7 +377,7 @@ These are clearly justified:
 - reminders / Service Level Agreement follow-up
 - search, filters, and saved operational views
 - source attribution
-- invoice linkage
+- payment-document linkage
 - quote / itinerary linkage
 - role-based visibility
 - mobile booking access
@@ -418,7 +418,7 @@ That means the primary objects should be:
 - staff
 - tour
 - quote
-- invoice
+- payment document
 - later supplier / guide / departure / traveler group
 
 ## 8. Recommended Prioritization
@@ -446,7 +446,7 @@ A sensible order is:
 ### Phase 3: Revenue workflow
 - quotes
 - itinerary approval flow
-- invoice/payment linkage
+- payment-document/payment linkage
 - pipeline conversion reporting
 
 ### Phase 4: Service and retention

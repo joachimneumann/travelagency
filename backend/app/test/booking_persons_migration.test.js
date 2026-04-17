@@ -10,7 +10,7 @@ test("store utils backfill missing booking persons from the public submission an
   const dataDir = path.join(rootDir, "data");
   const dataPath = path.join(dataDir, "store.json");
   const toursDir = path.join(dataDir, "tours");
-  const invoicesDir = path.join(dataDir, "invoices");
+  const paymentDocumentsDir = path.join(dataDir, "payment_documents");
   const generatedOffersDir = path.join(dataDir, "generated_offers");
   const bookingImagesDir = path.join(dataDir, "booking_images");
   const bookingPersonPhotosDir = path.join(dataDir, "booking_person_photos");
@@ -41,9 +41,8 @@ test("store utils backfill missing booking persons from the public submission an
         updated_at: "2026-03-23T00:00:00.000Z"
       }
     ],
-    suppliers: [],
     activities: [],
-    invoices: [],
+    payment_documents: [],
     chat_channel_accounts: [],
     chat_conversations: [],
     chat_events: []
@@ -52,7 +51,7 @@ test("store utils backfill missing booking persons from the public submission an
   const storeUtils = createStoreUtils({
     dataPath,
     toursDir,
-    invoicesDir,
+    paymentDocumentsDir,
     generatedOffersDir,
     bookingImagesDir,
     bookingPersonPhotosDir,

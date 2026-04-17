@@ -105,7 +105,6 @@ function copyItemForImport(sourceItem, options = {}) {
     details_i18n: includeTranslations ? cloneTravelPlanLocalizedMap(sourceItem?.details_i18n) : undefined,
     location: options.normalizeText(sourceItem?.location),
     location_i18n: includeTranslations ? cloneTravelPlanLocalizedMap(sourceItem?.location_i18n) : undefined,
-    supplier_id: options.normalizeText(sourceItem?.supplier_id),
     start_time: options.normalizeText(sourceItem?.start_time),
     end_time: options.normalizeText(sourceItem?.end_time),
     image: importedImage,
@@ -295,7 +294,7 @@ function copyDayForTravelPlanImport(sourceDay, options = {}) {
   };
 }
 
-function buildSearchResult({ booking, day, item, supplierName = "", normalizeText }) {
+function buildSearchResult({ booking, day, item, normalizeText }) {
   const primaryImage = item?.image && typeof item.image === "object" && !Array.isArray(item.image)
     ? item.image
     : (
@@ -316,7 +315,6 @@ function buildSearchResult({ booking, day, item, supplierName = "", normalizeTex
     overnight_location: normalizeText(day?.overnight_location),
     thumbnail_url: normalizeText(primaryImage?.storage_path),
     image_count: primaryImage ? 1 : 0,
-    supplier_name: normalizeText(supplierName),
     updated_at: normalizeText(booking.updated_at || booking.created_at)
   };
 }
@@ -412,11 +410,6 @@ export function createBookingTravelPlanImportHandlers(deps) {
     const limit = parseTravelPlanQueryInt(requestUrl.searchParams.get("limit"), 20, { min: 1, max: 50 });
     const offset = parseTravelPlanQueryInt(requestUrl.searchParams.get("offset"), 0, { min: 0, max: 5000 });
     const contentLang = requestContentLang(req);
-    const supplierById = new Map(
-      (Array.isArray(store.suppliers) ? store.suppliers : [])
-        .map((supplier) => [normalizeText(supplier?.id), normalizeText(supplier?.name)])
-        .filter(([id]) => id)
-    );
 
     const items = [];
     for (const booking of Array.isArray(store.bookings) ? store.bookings : []) {
@@ -461,7 +454,6 @@ export function createBookingTravelPlanImportHandlers(deps) {
             booking,
             day,
             item,
-            supplierName: supplierById.get(normalizeText(item?.supplier_id)) || "",
             normalizeText
           }));
         }
@@ -695,13 +687,7 @@ export function createBookingTravelPlanImportHandlers(deps) {
       ))
     };
 
-    const check = validateBookingTravelPlanInput(
-      nextTravelPlan,
-      targetBooking.offer,
-      {
-        supplierIds: Array.isArray(store.suppliers) ? store.suppliers.map((supplier) => supplier?.id) : []
-      }
-    );
+    const check = validateBookingTravelPlanInput(nextTravelPlan, targetBooking.offer);
     if (!check.ok) {
       sendJson(res, 422, { error: check.error });
       return;
@@ -805,13 +791,7 @@ export function createBookingTravelPlanImportHandlers(deps) {
       days: [...targetDays, importedDay]
     };
 
-    const check = validateBookingTravelPlanInput(
-      nextTravelPlan,
-      targetBooking.offer,
-      {
-        supplierIds: Array.isArray(store.suppliers) ? store.suppliers.map((supplier) => supplier?.id) : []
-      }
-    );
+    const check = validateBookingTravelPlanInput(nextTravelPlan, targetBooking.offer);
     if (!check.ok) {
       sendJson(res, 422, { error: check.error });
       return;
@@ -918,13 +898,7 @@ export function createBookingTravelPlanImportHandlers(deps) {
       attachments: Array.isArray(targetTravelPlan?.attachments) ? targetTravelPlan.attachments : []
     };
 
-    const check = validateBookingTravelPlanInput(
-      nextTravelPlan,
-      targetBooking.offer,
-      {
-        supplierIds: Array.isArray(store.suppliers) ? store.suppliers.map((supplier) => supplier?.id) : []
-      }
-    );
+    const check = validateBookingTravelPlanInput(nextTravelPlan, targetBooking.offer);
     if (!check.ok) {
       sendJson(res, 422, { error: check.error });
       return;

@@ -8,7 +8,7 @@ import {
   isWholeUnitCurrency,
   normalizeCurrencyCode,
   parseMoneyInputValue
-} from "./pricing.js";
+} from "./currency.js";
 import { bookingSourceLang, bookingT } from "./i18n.js";
 import { resolveLocalizedEditorBranchText } from "./localized_editor.js";
 

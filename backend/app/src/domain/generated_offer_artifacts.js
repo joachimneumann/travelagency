@@ -1,5 +1,12 @@
 import { readFile } from "node:fs/promises";
-import { sha256Hex } from "./booking_confirmation.js";
+import { createHash } from "node:crypto";
+
+function sha256Hex(value) {
+  const buffer = Buffer.isBuffer(value) || value instanceof Uint8Array
+    ? Buffer.from(value)
+    : Buffer.from(String(value ?? ""), "utf8");
+  return createHash("sha256").update(buffer).digest("hex");
+}
 
 export function collapseGeneratedOfferPaymentTermsState(store) {
   const bookings = Array.isArray(store?.bookings) ? store.bookings : [];

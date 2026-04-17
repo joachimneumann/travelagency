@@ -10,14 +10,14 @@ test("wipe bookings script clears booking-owned store collections and artifacts"
   const dataDir = path.join(rootDir, "data");
   const storePath = path.join(dataDir, "store.json");
   const artifactDirs = [
-    path.join(dataDir, "pdfs", "invoices"),
+    path.join(dataDir, "pdfs", "payment_documents"),
     path.join(dataDir, "pdfs", "generated_offers"),
     path.join(dataDir, "pdfs", "travel_plans"),
     path.join(dataDir, "pdfs", "attachments"),
     path.join(dataDir, "booking_images"),
     path.join(dataDir, "booking_person_photos"),
     path.join(dataDir, "tmp", "travel_plan_previews"),
-    path.join(dataDir, "invoices"),
+    path.join(dataDir, "payment_documents"),
     path.join(dataDir, "generated_offers"),
     path.join(dataDir, "booking_travel_plan_attachments")
   ];
@@ -31,9 +31,8 @@ test("wipe bookings script clears booking-owned store collections and artifacts"
 
     await writeFile(storePath, `${JSON.stringify({
       bookings: [{ id: "booking_1" }],
-      suppliers: [{ id: "supplier_1" }],
       activities: [{ id: "activity_1", booking_id: "booking_1" }],
-      invoices: [{ id: "invoice_1", booking_id: "booking_1" }],
+      payment_documents: [{ id: "payment_document_1", booking_id: "booking_1" }],
       chat_channel_accounts: [{ id: "acct_1", channel: "whatsapp" }],
       chat_conversations: [{ id: "conv_1", booking_id: "booking_1" }],
       chat_events: [{ id: "evt_1", conversation_id: "conv_1" }],
@@ -48,17 +47,16 @@ test("wipe bookings script clears booking-owned store collections and artifacts"
 
     assert.equal(result.summary.bookings, 1);
     assert.equal(result.summary.activities, 1);
-    assert.equal(result.summary.invoices, 1);
+    assert.equal(result.summary.payment_documents, 1);
     assert.equal(result.summary.chat_conversations, 1);
     assert.equal(result.summary.chat_events, 1);
 
     const persisted = JSON.parse(await readFile(storePath, "utf8"));
     assert.deepEqual(persisted.bookings, []);
     assert.deepEqual(persisted.activities, []);
-    assert.deepEqual(persisted.invoices, []);
+    assert.deepEqual(persisted.payment_documents, []);
     assert.deepEqual(persisted.chat_conversations, []);
     assert.deepEqual(persisted.chat_events, []);
-    assert.deepEqual(persisted.suppliers, [{ id: "supplier_1" }]);
     assert.deepEqual(persisted.chat_channel_accounts, [{ id: "acct_1", channel: "whatsapp" }]);
     assert.deepEqual(persisted.extra_metadata, { keep: true });
 

@@ -73,9 +73,7 @@ export function createTravelPlanTemplateHandlers(deps) {
 
   function validateTemplateTravelPlan(rawTravelPlan, store) {
     const normalized = normalizeTemplateTravelPlan(rawTravelPlan);
-    const check = validateBookingTravelPlanInput(normalized, null, {
-      supplierIds: Array.isArray(store?.suppliers) ? store.suppliers.map((supplier) => supplier?.id) : []
-    });
+    const check = validateBookingTravelPlanInput(normalized, null);
     if (!check.ok) return check;
     return {
       ok: true,
@@ -321,9 +319,7 @@ export function createTravelPlanTemplateHandlers(deps) {
     }
 
     const nextTravelPlan = cloneTemplateTravelPlanForBooking(template.travel_plan);
-    const check = validateBookingTravelPlanInput(nextTravelPlan, booking.offer, {
-      supplierIds: Array.isArray(store.suppliers) ? store.suppliers.map((supplier) => supplier?.id) : []
-    });
+    const check = validateBookingTravelPlanInput(nextTravelPlan, booking.offer);
     if (!check.ok) {
       sendJson(res, 422, { error: check.error });
       return;

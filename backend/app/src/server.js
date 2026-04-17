@@ -9,9 +9,8 @@ import {
   normalizePhone
 } from "./domain/phone_matching.js";
 import {
-  backfillGeneratedOfferBookingConfirmationState,
-  pruneLegacyGeneratedOfferConfirmationState
-} from "./domain/booking_confirmation.js";
+  pruneLegacyGeneratedOfferState
+} from "./domain/generated_offer_cleanup.js";
 import { collapseGeneratedOfferPaymentTermsState } from "./domain/generated_offer_artifacts.js";
 import { migratePersistedTourState } from "./domain/tours_support.js";
 import { createBackendServices } from "./bootstrap/services.js";
@@ -191,7 +190,7 @@ const services = createBackendServices({
     dataPath: RUNTIME_PATHS.dataPath,
     toursDir: RUNTIME_PATHS.toursDir,
     travelPlanTemplatesDir: RUNTIME_PATHS.travelPlanTemplatesDir,
-    invoicesDir: RUNTIME_PATHS.invoicesDir,
+    paymentDocumentsDir: RUNTIME_PATHS.paymentDocumentsDir,
     generatedOffersDir: RUNTIME_PATHS.generatedOffersDir,
     travelPlanPdfsDir: RUNTIME_PATHS.travelPlanPdfsDir,
     bookingImagesDir: RUNTIME_PATHS.bookingImagesDir,
@@ -262,7 +261,6 @@ const applicationSupport = Object.freeze({
 
 export async function createBackendHandler({ port = PORT } = {}) {
   await moveDirectoryIfNeeded(RUNTIME_PATHS.legacyToursDir, RUNTIME_PATHS.toursDir);
-  await moveDirectoryIfNeeded(RUNTIME_PATHS.legacyInvoicesDir, RUNTIME_PATHS.invoicesDir);
   await moveDirectoryIfNeeded(RUNTIME_PATHS.legacyGeneratedOffersDir, RUNTIME_PATHS.generatedOffersDir);
   await moveDirectoryIfNeeded(RUNTIME_PATHS.legacyBookingTravelPlanAttachmentsDir, RUNTIME_PATHS.bookingTravelPlanAttachmentsDir);
   await moveFileIfNeeded(RUNTIME_PATHS.legacyCountryReferenceInfoPath, RUNTIME_PATHS.countryReferenceInfoPath);
@@ -278,22 +276,13 @@ export async function createBackendHandler({ port = PORT } = {}) {
   const backfilledBookingOffers = startupStore.__bookingOfferWritebackNeeded === true;
   const prunedLegacyBookingState = pruneLegacyBookingState(startupStore);
   const collapsedGeneratedOfferPaymentTerms = collapseGeneratedOfferPaymentTermsState(startupStore);
-  const backfilledGeneratedOfferBookingConfirmationState = backfillGeneratedOfferBookingConfirmationState(startupStore);
-  const prunedLegacyGeneratedOffers = pruneLegacyGeneratedOfferConfirmationState(startupStore);
-  if (prunedLegacyGeneratedOffers.removedGeneratedOfferIds.length) {
-    await Promise.all(
-      prunedLegacyGeneratedOffers.removedGeneratedOfferIds.map((generatedOfferId) => (
-        rm(services.pricingHelpers.generatedOfferPdfPath(generatedOfferId), { force: true }).catch(() => {})
-      ))
-    );
-  }
+  const prunedLegacyGeneratedOfferState = pruneLegacyGeneratedOfferState(startupStore);
   if (
-    backfilledGeneratedOfferBookingConfirmationState
+    prunedLegacyGeneratedOfferState
     || collapsedGeneratedOfferPaymentTerms
     || backfilledBookingPersons
     || backfilledBookingOffers
     || prunedLegacyBookingState
-    || prunedLegacyGeneratedOffers.changed
   ) {
     await services.storeUtils.persistStore(startupStore);
   }

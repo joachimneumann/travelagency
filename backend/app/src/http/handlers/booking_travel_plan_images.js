@@ -106,13 +106,7 @@ export function createBookingTravelPlanImageHandlers(deps) {
       image: nextImage
     };
 
-    const check = validateBookingTravelPlanInput(
-      normalizedTravelPlan,
-      booking.offer,
-      {
-        supplierIds: Array.isArray(store.suppliers) ? store.suppliers.map((supplier) => supplier?.id) : []
-      }
-    );
+    const check = validateBookingTravelPlanInput(normalizedTravelPlan, booking.offer);
     if (!check.ok) {
       sendJson(res, 422, { error: check.error });
       return;
@@ -175,13 +169,7 @@ export function createBookingTravelPlanImageHandlers(deps) {
       image: null
     };
 
-    const check = validateBookingTravelPlanInput(
-      normalizedTravelPlan,
-      booking.offer,
-      {
-        supplierIds: Array.isArray(store.suppliers) ? store.suppliers.map((supplier) => supplier?.id) : []
-      }
-    );
+    const check = validateBookingTravelPlanInput(normalizedTravelPlan, booking.offer);
     if (!check.ok) {
       sendJson(res, 422, { error: check.error });
       return;

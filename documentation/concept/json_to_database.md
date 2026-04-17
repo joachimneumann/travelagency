@@ -15,6 +15,43 @@ It is the authoritative design for:
 
 The goal is to change storage without changing the public API contract or the operational behavior of the application.
 
+## Target model layout
+
+This migration plan assumes a storage-intent split in the CUE model folder structure:
+
+```text
+model/
+  json/
+  database/
+  common/
+  enums/
+  api/
+```
+
+Meaning:
+
+- `model/json`
+  - CUE entities whose source of truth remains file-backed JSON content
+- `model/database`
+  - CUE entities whose source of truth is planned to be PostgreSQL
+- `model/common`
+  - shared primitives and reusable value shapes
+- `model/enums`
+  - shared controlled vocabularies
+- `model/api`
+  - request and response contracts
+
+Important boundary:
+
+- `model/common`, `model/enums`, and `model/api` are not database table groups
+- they remain shared schema layers used by both persistence buckets
+- database tables should be derived only from the operational entities in `model/database`
+
+Status note:
+
+- this is a target documentation structure
+- it does not imply that the repo folder move has already been implemented
+
 ## Scope
 
 ### Moves to PostgreSQL
@@ -25,18 +62,24 @@ Operational runtime data currently persisted in `backend/app/data/store.json` an
 - booking persons
 - booking person documents
 - booking person consents
-- booking pricing adjustments
-- booking payments
 - current booking offer and its child records
 - live booking travel plans and their child records
 - generated booking offers
-- invoices
+- payment documents
 - booking activities
 - chat channel accounts
 - chat conversations
 - chat events
 - travel plan PDF artifact metadata
 - JSON import run audit records
+
+These operational entities are the intended contents of `model/database`:
+
+- `booking.cue`
+- `booking_person.cue`
+- `booking_offer.cue`
+- `payment_document.cue`
+- `travel_plan.cue`
 
 ### Stays file-based
 
@@ -49,6 +92,13 @@ The `content/` folder remains JSON and asset based by design:
 - `content/standard_tours`
 - related images and documents under `content/`
 
+These content entities are the intended contents of `model/json`:
+
+- `atp_staff.cue`
+- `country_reference.cue`
+- `tour.cue`
+- `travel_plan_template.cue`
+
 ### Stays on disk, not in PostgreSQL
 
 Binary runtime files remain file-based in v1. No image, PDF, or other binary file bytes are stored in PostgreSQL in v1. PostgreSQL stores metadata and relative file paths only, rooted at `backend/app/data` (for example `pdfs/travel_plans/<booking_id>/<artifact_id>.pdf`):
@@ -57,7 +107,7 @@ Binary runtime files remain file-based in v1. No image, PDF, or other binary fil
 - traveler photos
 - traveler document pictures
 - generated offer PDFs
-- invoice PDFs
+- payment-document PDFs
 - travel plan PDFs
 - travel plan attachments
 
@@ -79,14 +129,11 @@ The current operational source of truth is:
 It currently contains these top-level collections:
 
 - `bookings`
-- `suppliers`
 - `activities`
-- `invoices`
+- `payment_documents`
 - `chat_channel_accounts`
 - `chat_conversations`
 - `chat_events`
-
-For avoidance of doubt, `suppliers` still exists in the current JSON store, but it is deferred from the v1 PostgreSQL model because the feature is not materially used yet.
 
 ### Current runtime file metadata outside `store.json`
 
@@ -105,6 +152,13 @@ The following remain file-backed and are not part of the database migration:
 - ATP staff in `content/atp_staff/staff.json`
 - country reference data in `content/country_reference_info.json`
 
+Mapped conceptual models:
+
+- `AtpStaffProfile` and `AtpStaffLocalizedTextEntry`
+- `CountryPracticalInfo` and `CountryEmergencyContact`
+- `Tour`
+- `TravelPlanTemplate`
+
 ## Guiding Principles
 
 - Keep all public REST endpoints and response shapes unchanged.
@@ -117,6 +171,14 @@ The following remain file-backed and are not part of the database migration:
 - Make rollback operationally safe by relying on database backups, not only `down.sql`.
 
 ## Target Backend Architecture
+
+## Persistence interpretation
+
+When deciding whether something belongs in PostgreSQL, use this rule:
+
+- if it is operational booking/runtime state, it belongs to `model/database` and is eligible for table design
+- if it is editable catalog, marketing, staff, or reference content under `content/`, it belongs to `model/json`
+- if it is a shared type, enum, or API contract, it does not itself imply persistence
 
 ## Storage mode
 
@@ -146,7 +208,7 @@ Replace direct `readStore()` and `persistStore()` usage with repository modules,
 
 - `booking_repository`
 - `supplier_repository`
-- `invoice_repository`
+- `payment_document_repository`
 - `chat_repository`
 - `travel_plan_pdf_repository`
 - `generated_offer_repository`
@@ -169,9 +231,8 @@ Recommended columns:
 - `notes_revision`
 - `persons_revision`
 - `travel_plan_revision`
-- `pricing_revision`
 - `offer_revision`
-- `invoices_revision`
+- `payment_documents_revision`
 - `stage`
 - `deposit_received_at`
 - `deposit_confirmed_by_atp_staff_id`
@@ -282,38 +343,17 @@ Recommended columns:
 - `evidence_ref`
 - `updated_at`
 
-## 5. Pricing tables
+## 5. Payment-flow data
 
-### `booking_pricing`
+The current system does not persist a standalone `booking_pricing` aggregate anymore.
 
-Recommended as a 1:1 table with `bookings`.
+The live payment flow is derived from `booking.offer.payment_terms` and frozen snapshots in the accepted record.
+Stored payment state is represented by:
 
-Columns:
-
-- `booking_id`
-- `currency`
-- `agreed_net_amount_cents`
-- `summary_agreed_net_amount_cents`
-- `summary_adjustments_delta_cents`
-- `summary_adjusted_net_amount_cents`
-- `summary_scheduled_net_amount_cents`
-- `summary_unscheduled_net_amount_cents`
-- `summary_scheduled_tax_amount_cents`
-- `summary_scheduled_gross_amount_cents`
-- `summary_paid_gross_amount_cents`
-- `summary_outstanding_gross_amount_cents`
-- `summary_is_schedule_balanced`
-
-### `booking_pricing_adjustments`
-
-Columns:
-
-- `id`
-- `booking_id`
-- `type`
-- `label`
-- `amount_cents`
-- `note`
+- booking-level accepted deposit fields on `bookings`
+- accepted payment-term snapshots on `bookings`
+- `booking_payment_documents`
+- `booking_payment_document_components`
 - `created_at`
 - `updated_at`
 
@@ -496,7 +536,6 @@ Notes:
 - `details`
 - `image_subtitle`
 - `location`
-- `supplier_id`
 - `start_time`
 - `end_time`
 - `source_type`
@@ -510,7 +549,6 @@ Notes:
 
 Notes:
 
-- `supplier_id` remains a nullable plain text reference in v1, not a foreign key.
 - The current JSON architecture keeps `copied_from` nested; PostgreSQL flattens that provenance into nullable columns for validation and querying.
 - `sort_order` preserves the original per-day array order because the CUE model stores services as an ordered list.
 
@@ -575,13 +613,13 @@ Notes:
 - snapshots stay JSONB because they are historical frozen data
 - `version` must be unique per booking
 
-## 9. `booking_invoices`
+## 9. `booking_payment_documents`
 
 Recommended columns:
 
 - `id`
 - `booking_id`
-- `invoice_number`
+- `document_number`
 - `version`
 - `status`
 - `currency`
@@ -597,10 +635,10 @@ Recommended columns:
 - `created_at`
 - `updated_at`
 
-### `booking_invoice_components`
+### `booking_payment_document_components`
 
 - `id`
-- `invoice_id`
+- `payment_document_id`
 - `description`
 - `quantity`
 - `unit_amount_cents`
@@ -701,9 +739,9 @@ The following is the first-pass relational model for migration planning. It shou
 
 - `bookings` is the root operational aggregate.
 - Use `booking_id` as the foreign key from booking-owned child tables.
-- Model `booking_pricing` and `booking_offers` as 1:1 tables with `bookings`, using `booking_id` as the table key.
+- Model `booking_offers` as a 1:1 table with `bookings`, using `booking_id` as the table key.
 - Model `booking_travel_plans` as a 1:1 table with `bookings`, using `booking_id` as the table key.
-- Model `booking_invoices` as children of `bookings`, and `booking_invoice_components` as children of `booking_invoices`.
+- Model `booking_payment_documents` as children of `bookings`, and `booking_payment_document_components` as children of `booking_payment_documents`.
 - Model live travel-plan data as `bookings -> booking_travel_plans -> booking_travel_plan_days -> booking_travel_plan_services -> booking_travel_plan_service_images`.
 - Model `booking_travel_plan_attachments` as children of `booking_travel_plans`.
 - Model generated offer and PDF artifacts as children of `bookings`: `booking_generated_offers` and `travel_plan_pdf_artifacts`.
@@ -716,7 +754,6 @@ The following is the first-pass relational model for migration planning. It shou
 - `booking_travel_plan_services.day_id` should be a foreign key to `booking_travel_plan_days.id`.
 - `booking_travel_plan_service_images.service_id` should be a foreign key to `booking_travel_plan_services.id`.
 - `booking_travel_plan_attachments.travel_plan_booking_id` should be a foreign key to `booking_travel_plans.booking_id`.
-- `booking_travel_plan_services.supplier_id` should remain a nullable plain text reference in v1.
 - `chat_conversations.channel_account_id` should be a foreign key to `chat_channel_accounts.id`.
 - `chat_conversations.booking_id` should remain nullable so conversations can exist before a booking is linked.
 - `chat_events.conversation_id` should be a foreign key to `chat_conversations.id`.
@@ -734,6 +771,39 @@ The following is the first-pass relational model for migration planning. It shou
 
 These diagrams are documentation aids. The migration SQL remains the source of truth.
 
+#### Operational table overview
+
+```mermaid
+erDiagram
+    BOOKINGS ||--o{ BOOKING_PERSONS : has
+    BOOKING_PERSONS ||--o{ BOOKING_PERSON_DOCUMENTS : has
+    BOOKING_PERSONS ||--o{ BOOKING_PERSON_CONSENTS : has
+    BOOKINGS ||--|| BOOKING_PRICING : has
+    BOOKINGS ||--o{ BOOKING_PRICING_ADJUSTMENTS : has
+    BOOKINGS ||--o{ BOOKING_PAYMENTS : has
+    BOOKINGS ||--|| BOOKING_OFFERS : has
+    BOOKINGS ||--o{ BOOKING_OFFER_CATEGORY_RULES : has
+    BOOKINGS ||--o{ BOOKING_OFFER_DAY_PRICES : has
+    BOOKINGS ||--o{ BOOKING_OFFER_ADDITIONAL_ITEMS : has
+    BOOKINGS ||--o{ BOOKING_OFFER_PAYMENT_TERM_LINES : has
+    BOOKINGS ||--o{ BOOKING_OFFER_TAX_BUCKETS : has
+    BOOKINGS ||--|| BOOKING_TRAVEL_PLANS : has
+    BOOKINGS ||--o{ BOOKING_GENERATED_OFFERS : has
+    BOOKINGS ||--o{ BOOKING_PAYMENT_DOCUMENTS : has
+    BOOKINGS ||--o{ BOOKING_ACTIVITIES : has
+    BOOKINGS ||--o{ TRAVEL_PLAN_PDF_ARTIFACTS : has
+    BOOKING_TRAVEL_PLANS ||--o{ BOOKING_TRAVEL_PLAN_DAYS : has
+    BOOKING_TRAVEL_PLAN_DAYS ||--o{ BOOKING_TRAVEL_PLAN_SERVICES : has
+    BOOKING_TRAVEL_PLAN_SERVICES ||--o| BOOKING_TRAVEL_PLAN_SERVICE_IMAGES : has
+    BOOKING_TRAVEL_PLANS ||--o{ BOOKING_TRAVEL_PLAN_ATTACHMENTS : has
+    BOOKING_PAYMENT_DOCUMENTS ||--o{ BOOKING_PAYMENT_DOCUMENT_COMPONENTS : has
+    CHAT_CHANNEL_ACCOUNTS ||--o{ CHAT_CONVERSATIONS : has
+    BOOKINGS o|--o{ CHAT_CONVERSATIONS : links
+    CHAT_CONVERSATIONS ||--o{ CHAT_EVENTS : has
+    BOOKING_GENERATED_OFFERS o|--o{ BOOKING_PAYMENTS : originates
+    BOOKING_OFFER_PAYMENT_TERM_LINES o|--o{ BOOKING_PAYMENTS : schedules
+```
+
 #### Booking core and people
 
 ```mermaid
@@ -745,7 +815,7 @@ erDiagram
     BOOKINGS ||--o{ BOOKING_ACTIVITIES : has
 ```
 
-#### Pricing, offers, payments, and invoices
+#### Pricing, offers, payments, and payment documents
 
 ```mermaid
 erDiagram
@@ -761,8 +831,8 @@ erDiagram
     BOOKINGS ||--o{ BOOKING_PAYMENTS : has
     BOOKING_GENERATED_OFFERS o|--o{ BOOKING_PAYMENTS : originates
     BOOKING_OFFER_PAYMENT_TERM_LINES o|--o{ BOOKING_PAYMENTS : schedules
-    BOOKINGS ||--o{ BOOKING_INVOICES : has
-    BOOKING_INVOICES ||--o{ BOOKING_INVOICE_COMPONENTS : has
+    BOOKINGS ||--o{ BOOKING_PAYMENT_DOCUMENTS : has
+    BOOKING_PAYMENT_DOCUMENTS ||--o{ BOOKING_PAYMENT_DOCUMENT_COMPONENTS : has
 ```
 
 #### Travel plan and artifacts
@@ -797,7 +867,7 @@ erDiagram
 - payments and adjustments
 - live offer rows
 - live travel plan rows
-- invoices and components
+- payment documents and components
 - activities
 - chat records
 - travel plan PDF artifact metadata
@@ -860,9 +930,9 @@ Create indexes for real access paths already visible in the current application.
 
 - `booking_activities_booking_created_idx` on `(booking_id, created_at desc)`
 
-### `booking_invoices`
+### `booking_payment_documents`
 
-- `booking_invoices_booking_created_idx` on `(booking_id, created_at desc)`
+- `booking_payment_documents_booking_created_idx` on `(booking_id, created_at desc)`
 
 ### `booking_generated_offers`
 
@@ -967,19 +1037,16 @@ Insert in dependency order inside transactions:
 2. booking persons
 3. booking person documents
 4. booking person consents
-5. booking pricing
-6. booking pricing adjustments
-7. booking payments
-8. current booking offers
-9. current offer child rows
-10. booking travel plans
-11. live travel-plan days
+5. current booking offers
+6. current offer child rows
+7. booking travel plans
+8. live travel-plan days
 12. live travel-plan services
 13. live travel-plan service images
 14. live travel-plan attachments
 15. generated offers
-16. invoices
-17. invoice components
+16. payment documents
+17. payment-document components
 18. activities
 19. chat channel accounts
 20. chat conversations
@@ -1006,8 +1073,8 @@ After import, verify counts for:
 - persons
 - documents
 - consents
-- invoices
-- invoice components
+- payment documents
+- payment-document components
 - activities
 - chat channel accounts
 - chat conversations
@@ -1122,7 +1189,7 @@ Include:
 - traveler photos
 - traveler document pictures
 - generated offer PDFs
-- invoice PDFs
+- payment-document PDFs
 - travel plan PDFs
 - travel plan attachments
 
@@ -1201,8 +1268,7 @@ Restore procedure:
 
 - booking list loads
 - booking detail loads
-- supplier list loads
-- invoice list and invoice PDF access work
+- payment-document list and payment-document PDF access work
 - generated offer PDF access works
 - travel plan PDF access works
 - chat history endpoint works
@@ -1240,9 +1306,9 @@ Add focused tests for:
 - booking list search
 - filtering by `stage`
 - filtering by `assigned_keycloak_user_id`
-- invoice create and update
+- payment-document create and PDF flows
 - generated-offer confirmation flow
-- travel-plan import and supplier references
+- travel-plan import flows
 - chat deduplication logic
 - travel-plan PDF artifact persistence
 
@@ -1277,7 +1343,7 @@ After cutover:
 
 1. monitor logs and error rates
 2. verify booking CRUD
-3. verify invoice flows
+3. verify payment-document flows
 4. verify generated-offer flows
 5. verify chat ingestion
 6. verify backup job success

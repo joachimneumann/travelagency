@@ -32,7 +32,7 @@ export const TRAVEL_PLAN_TEMPLATES_DIR = resolveConfigPathFromRepoRoot(
   normalizeText(process.env.TRAVEL_PLAN_TEMPLATES_DIR || path.join("content", "travel_plan_templates"))
 );
 export const PDFS_ROOT = path.join(DATA_ROOT, "pdfs");
-export const INVOICES_DIR = path.join(PDFS_ROOT, "invoices");
+export const PAYMENT_DOCUMENTS_DIR = path.join(PDFS_ROOT, "payment_documents");
 export const GENERATED_OFFERS_DIR = path.join(PDFS_ROOT, "generated_offers");
 export const TRAVEL_PLAN_PDFS_DIR = path.join(PDFS_ROOT, "travel_plans");
 export const BOOKING_IMAGES_DIR = path.join(DATA_ROOT, "booking_images");
@@ -62,7 +62,6 @@ export const FALLBACK_BOOKING_IMAGE_PATH = path.resolve(APP_ROOT, "..", "..", "a
 export const MOBILE_CONTRACT_META_PATH = path.resolve(APP_ROOT, "..", "..", "api", "generated", "mobile-api.meta.json");
 export const BACKEND_GENERATED_REQUEST_FACTORY_PATH = path.join(APP_ROOT, "Generated", "API", "generated_APIRequestFactory.js");
 
-export const LEGACY_INVOICES_DIR = path.join(DATA_ROOT, "invoices");
 export const LEGACY_GENERATED_OFFERS_DIR = path.join(DATA_ROOT, "generated_offers");
 export const LEGACY_BOOKING_TRAVEL_PLAN_ATTACHMENTS_DIR = path.join(DATA_ROOT, "booking_travel_plan_attachments");
 
@@ -241,7 +240,7 @@ export const RUNTIME_PATHS = Object.freeze({
   pdfsRoot: PDFS_ROOT,
   toursDir: TOURS_DIR,
   travelPlanTemplatesDir: TRAVEL_PLAN_TEMPLATES_DIR,
-  invoicesDir: INVOICES_DIR,
+  paymentDocumentsDir: PAYMENT_DOCUMENTS_DIR,
   generatedOffersDir: GENERATED_OFFERS_DIR,
   travelPlanPdfsDir: TRAVEL_PLAN_PDFS_DIR,
   bookingImagesDir: BOOKING_IMAGES_DIR,
@@ -257,7 +256,6 @@ export const RUNTIME_PATHS = Object.freeze({
   bookingTravelPlanAttachmentsDir: BOOKING_TRAVEL_PLAN_ATTACHMENTS_DIR,
   tempUploadDir: TEMP_UPLOAD_DIR,
   travelPlanPdfPreviewDir: TRAVEL_PLAN_PDF_PREVIEW_DIR,
-  legacyInvoicesDir: LEGACY_INVOICES_DIR,
   legacyGeneratedOffersDir: LEGACY_GENERATED_OFFERS_DIR,
   legacyBookingTravelPlanAttachmentsDir: LEGACY_BOOKING_TRAVEL_PLAN_ATTACHMENTS_DIR,
   logoPngPath: LOGO_PNG_PATH,

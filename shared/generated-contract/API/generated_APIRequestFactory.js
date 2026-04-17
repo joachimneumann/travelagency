@@ -879,23 +879,6 @@ export function bookingTravelPlanPdfDeleteRequest({ baseURL = '', params = {}, q
   };
 }
 
-export function bookingPricingPath(params = {}) {
-  return buildPath("/api/v1/bookings/{booking_id}/pricing", params);
-}
-
-export function bookingPricingRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
-  const path = bookingPricingPath(params);
-  const url = buildURL(baseURL, path, query);
-  return {
-    key: "booking_pricing",
-    method: "PATCH",
-    authenticated: true,
-    url,
-    headers,
-    body
-  };
-}
-
 export function bookingOfferPath(params = {}) {
   return buildPath("/api/v1/bookings/{booking_id}/offer", params);
 }
@@ -1015,74 +998,6 @@ export function offerExchangeRatesRequest({ baseURL = '', params = {}, query = {
   };
 }
 
-export function suppliersPath(params = {}) {
-  return buildPath("/api/v1/suppliers", params);
-}
-
-export function suppliersRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
-  const path = suppliersPath(params);
-  const url = buildURL(baseURL, path, query);
-  return {
-    key: "suppliers",
-    method: "GET",
-    authenticated: true,
-    url,
-    headers,
-    body
-  };
-}
-
-export function supplierCreatePath(params = {}) {
-  return buildPath("/api/v1/suppliers", params);
-}
-
-export function supplierCreateRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
-  const path = supplierCreatePath(params);
-  const url = buildURL(baseURL, path, query);
-  return {
-    key: "supplier_create",
-    method: "POST",
-    authenticated: true,
-    url,
-    headers,
-    body
-  };
-}
-
-export function supplierDetailPath(params = {}) {
-  return buildPath("/api/v1/suppliers/{supplier_id}", params);
-}
-
-export function supplierDetailRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
-  const path = supplierDetailPath(params);
-  const url = buildURL(baseURL, path, query);
-  return {
-    key: "supplier_detail",
-    method: "GET",
-    authenticated: true,
-    url,
-    headers,
-    body
-  };
-}
-
-export function supplierUpdatePath(params = {}) {
-  return buildPath("/api/v1/suppliers/{supplier_id}", params);
-}
-
-export function supplierUpdateRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
-  const path = supplierUpdatePath(params);
-  const url = buildURL(baseURL, path, query);
-  return {
-    key: "supplier_update",
-    method: "PATCH",
-    authenticated: true,
-    url,
-    headers,
-    body
-  };
-}
-
 export function countryReferenceInfoPath(params = {}) {
   return buildPath("/api/v1/country-reference-info", params);
 }
@@ -1151,15 +1066,15 @@ export function bookingActivityCreateRequest({ baseURL = '', params = {}, query 
   };
 }
 
-export function bookingInvoicesPath(params = {}) {
-  return buildPath("/api/v1/bookings/{booking_id}/invoices", params);
+export function bookingPaymentDocumentsPath(params = {}) {
+  return buildPath("/api/v1/bookings/{booking_id}/payment-documents", params);
 }
 
-export function bookingInvoicesRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
-  const path = bookingInvoicesPath(params);
+export function bookingPaymentDocumentsRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = bookingPaymentDocumentsPath(params);
   const url = buildURL(baseURL, path, query);
   return {
-    key: "booking_invoices",
+    key: "booking_payment_documents",
     method: "GET",
     authenticated: true,
     url,
@@ -1168,15 +1083,15 @@ export function bookingInvoicesRequest({ baseURL = '', params = {}, query = {}, 
   };
 }
 
-export function bookingInvoiceCreatePath(params = {}) {
-  return buildPath("/api/v1/bookings/{booking_id}/invoices", params);
+export function bookingPaymentDocumentCreatePath(params = {}) {
+  return buildPath("/api/v1/bookings/{booking_id}/payment-documents", params);
 }
 
-export function bookingInvoiceCreateRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
-  const path = bookingInvoiceCreatePath(params);
+export function bookingPaymentDocumentCreateRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = bookingPaymentDocumentCreatePath(params);
   const url = buildURL(baseURL, path, query);
   return {
-    key: "booking_invoice_create",
+    key: "booking_payment_document_create",
     method: "POST",
     authenticated: true,
     url,
@@ -1185,49 +1100,15 @@ export function bookingInvoiceCreateRequest({ baseURL = '', params = {}, query =
   };
 }
 
-export function bookingInvoiceUpdatePath(params = {}) {
-  return buildPath("/api/v1/bookings/{booking_id}/invoices/{invoice_id}", params);
+export function paymentDocumentPdfPath(params = {}) {
+  return buildPath("/api/v1/payment-documents/{document_id}/pdf", params);
 }
 
-export function bookingInvoiceUpdateRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
-  const path = bookingInvoiceUpdatePath(params);
+export function paymentDocumentPdfRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = paymentDocumentPdfPath(params);
   const url = buildURL(baseURL, path, query);
   return {
-    key: "booking_invoice_update",
-    method: "PATCH",
-    authenticated: true,
-    url,
-    headers,
-    body
-  };
-}
-
-export function bookingInvoiceTranslatePath(params = {}) {
-  return buildPath("/api/v1/bookings/{booking_id}/invoices/{invoice_id}/translate", params);
-}
-
-export function bookingInvoiceTranslateRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
-  const path = bookingInvoiceTranslatePath(params);
-  const url = buildURL(baseURL, path, query);
-  return {
-    key: "booking_invoice_translate",
-    method: "POST",
-    authenticated: true,
-    url,
-    headers,
-    body
-  };
-}
-
-export function invoicePdfPath(params = {}) {
-  return buildPath("/api/v1/invoices/{invoice_id}/pdf", params);
-}
-
-export function invoicePdfRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
-  const path = invoicePdfPath(params);
-  const url = buildURL(baseURL, path, query);
-  return {
-    key: "invoice_pdf",
+    key: "payment_document_pdf",
     method: "GET",
     authenticated: true,
     url,

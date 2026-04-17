@@ -40,7 +40,7 @@ export function createBookingPageDataController(ctx) {
     renderTravelPlanPanel,
     renderOfferPanel,
     loadActivities,
-    loadInvoices,
+    loadPaymentDocuments,
     ensureTourImageLoaded,
     bookingWhatsAppRef
   } = ctx;
@@ -263,7 +263,7 @@ export function createBookingPageDataController(ctx) {
     renderOfferPanel();
     await loadActivities();
     await bookingWhatsAppRef()?.load(state.booking);
-    await loadInvoices();
+    await loadPaymentDocuments();
     bookingWhatsAppRef()?.startAutoRefresh(() => state.booking);
     return true;
   }

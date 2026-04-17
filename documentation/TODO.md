@@ -258,9 +258,19 @@ Specifically:
 # payment plan exceeds total amount???
 
 
-# web page
+Does the current implementation use BookingConfirmationMethod, GeneratedOfferBookingConfirmationPublicSummary, backfillGeneratedOfferBookingConfirmationState,
+  pruneLegacyGeneratedOfferConfirmationState, 
+  BOOKING_CONFIRMATION_TERMS_VERSION, normalizeBookingConfirmationText, migratePersistedGeneratedOfferBookingConfirmationState and GeneratedOfferBookingConfirmation?
 
-Also generate the hero title at deploy time, do not dynamically load it when the page refreshes
+I want to completely remove all of theses fields from the model, the API calls and backend and frontend code dealing with Offer Confirmations or Booking Confirmations.
+
+
+I want to seperate the cue models into 
+1. Models that will remain to be implemented as json (atp_staff, destinations suppported on the web page and marketing_tours)
+2. Models that will late be stored in the postgres database.
+
+Propose a seperation by folder in the models and list the models that you deem to fall under in case 1. or 2.
+
 
 # PDFs
 

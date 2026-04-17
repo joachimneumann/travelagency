@@ -123,24 +123,18 @@
   "typeName": "Identifier"
 },
   PARAM_21: {
-  "name": "supplier_id",
+  "name": "document_id",
   "location": "path",
   "required": true,
   "typeName": "Identifier"
 },
   PARAM_22: {
-  "name": "invoice_id",
-  "location": "path",
-  "required": true,
-  "typeName": "Identifier"
-},
-  PARAM_23: {
   "name": "username",
   "location": "path",
   "required": true,
   "typeName": "Identifier"
 },
-  PARAM_24: {
+  PARAM_23: {
   "name": "tour_id",
   "location": "path",
   "required": true,
@@ -762,17 +756,6 @@
         ]
       },
       {
-        key: "booking_pricing",
-        path: "/api/v1/bookings/{booking_id}/pricing",
-        method: "PATCH",
-        authenticated: true,
-        requestType: "BookingPricingUpdateRequest",
-        responseType: "BookingDetail",
-        parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1)
-        ]
-      },
-      {
         key: "booking_offer",
         path: "/api/v1/bookings/{booking_id}/offer",
         method: "PATCH",
@@ -854,50 +837,6 @@
         ]
       },
       {
-        key: "suppliers",
-        path: "/api/v1/suppliers",
-        method: "GET",
-        authenticated: true,
-        requestType: null,
-        responseType: "SupplierListResponse",
-        parameters: [
-
-        ]
-      },
-      {
-        key: "supplier_create",
-        path: "/api/v1/suppliers",
-        method: "POST",
-        authenticated: true,
-        requestType: "SupplierCreateRequest",
-        responseType: "SupplierResponse",
-        parameters: [
-
-        ]
-      },
-      {
-        key: "supplier_detail",
-        path: "/api/v1/suppliers/{supplier_id}",
-        method: "GET",
-        authenticated: true,
-        requestType: null,
-        responseType: "SupplierResponse",
-        parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_21)
-        ]
-      },
-      {
-        key: "supplier_update",
-        path: "/api/v1/suppliers/{supplier_id}",
-        method: "PATCH",
-        authenticated: true,
-        requestType: "SupplierUpdateRequest",
-        responseType: "SupplierResponse",
-        parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_21)
-        ]
-      },
-      {
         key: "country_reference_info",
         path: "/api/v1/country-reference-info",
         method: "GET",
@@ -942,60 +881,36 @@
         ]
       },
       {
-        key: "booking_invoices",
-        path: "/api/v1/bookings/{booking_id}/invoices",
+        key: "booking_payment_documents",
+        path: "/api/v1/bookings/{booking_id}/payment-documents",
         method: "GET",
         authenticated: true,
         requestType: null,
-        responseType: "BookingInvoicesResponse",
+        responseType: "BookingPaymentDocumentsResponse",
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1)
         ]
       },
       {
-        key: "booking_invoice_create",
-        path: "/api/v1/bookings/{booking_id}/invoices",
+        key: "booking_payment_document_create",
+        path: "/api/v1/bookings/{booking_id}/payment-documents",
         method: "POST",
         authenticated: true,
-        requestType: "BookingInvoiceUpsertRequest",
-        responseType: "BookingInvoiceResponse",
+        requestType: "BookingPaymentDocumentCreateRequest",
+        responseType: "BookingPaymentDocumentResponse",
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1)
         ]
       },
       {
-        key: "booking_invoice_update",
-        path: "/api/v1/bookings/{booking_id}/invoices/{invoice_id}",
-        method: "PATCH",
-        authenticated: true,
-        requestType: "BookingInvoiceUpsertRequest",
-        responseType: "BookingInvoiceResponse",
-        parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_22)
-        ]
-      },
-      {
-        key: "booking_invoice_translate",
-        path: "/api/v1/bookings/{booking_id}/invoices/{invoice_id}/translate",
-        method: "POST",
-        authenticated: true,
-        requestType: "BookingInvoiceTranslateRequest",
-        responseType: "BookingInvoiceResponse",
-        parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_22)
-        ]
-      },
-      {
-        key: "invoice_pdf",
-        path: "/api/v1/invoices/{invoice_id}/pdf",
+        key: "payment_document_pdf",
+        path: "/api/v1/payment-documents/{document_id}/pdf",
         method: "GET",
         authenticated: true,
         requestType: null,
         responseType: null,
         parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_22)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_21)
         ]
       },
       {
@@ -1028,7 +943,7 @@
         requestType: "AtpStaffProfileUpdateRequest",
         responseType: "KeycloakUserStaffProfileEntryResponse",
         parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_23)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_22)
         ]
       },
       {
@@ -1039,7 +954,7 @@
         requestType: "TranslationEntriesRequest",
         responseType: "TranslationEntriesResponse",
         parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_23)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_22)
         ]
       },
       {
@@ -1050,7 +965,7 @@
         requestType: "AtpStaffPhotoUploadRequest",
         responseType: "KeycloakUserStaffProfileEntryResponse",
         parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_23)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_22)
         ]
       },
       {
@@ -1061,7 +976,7 @@
         requestType: null,
         responseType: "KeycloakUserStaffProfileEntryResponse",
         parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_23)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_22)
         ]
       },
       {
@@ -1094,7 +1009,7 @@
         requestType: null,
         responseType: "TourDetail",
         parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_24)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_23)
         ]
       },
       {
@@ -1105,7 +1020,7 @@
         requestType: "TourUpsertRequest",
         responseType: "TourResponse",
         parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_24)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_23)
         ]
       },
       {
@@ -1116,7 +1031,7 @@
         requestType: null,
         responseType: "TourDeleteResponse",
         parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_24)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_23)
         ]
       },
       {
@@ -1138,7 +1053,7 @@
         requestType: "EvidenceUpload",
         responseType: "TourResponse",
         parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_24)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_23)
         ]
       }
     ];

@@ -11,7 +11,6 @@ import (
 	entities: {
 		Booking:                                        entityModel.#Booking
 		GeneratedBookingOffer:                          entityModel.#GeneratedBookingOffer
-		GeneratedOfferBookingConfirmation:              entityModel.#GeneratedOfferBookingConfirmation
 		BookingPerson:                                  entityModel.#BookingPerson
 		BookingPersonAddress:                           entityModel.#BookingPersonAddress
 		BookingPersonConsent:                           entityModel.#BookingPersonConsent
@@ -27,11 +26,12 @@ import (
 		BookingTravelPlanServiceImageFocalPoint:        entityModel.#BookingTravelPlanServiceImageFocalPoint
 		BookingTravelPlanServiceCopiedFrom:             entityModel.#BookingTravelPlanServiceCopiedFrom
 		BookingOfferDiscount:                           entityModel.#BookingOfferDiscount
+		PaymentDocumentComponent:                       entityModel.#PaymentDocumentComponent
+		BookingPaymentDocument:                         entityModel.#BookingPaymentDocument
 		AtpStaffLocalizedTextEntry:                     entityModel.#AtpStaffLocalizedTextEntry
 		AtpStaffProfile:                                entityModel.#AtpStaffProfile
 		CountryEmergencyContact:                        entityModel.#CountryEmergencyContact
 		CountryPracticalInfo:                           entityModel.#CountryPracticalInfo
-		Supplier:                                       entityModel.#Supplier
 		Tour:                                           entityModel.#Tour
 		TravelPlanTemplate:                             entityModel.#TravelPlanTemplate
 	}
@@ -53,14 +53,12 @@ import (
 		BookingPersonGender:                          enumModel.#BookingPersonGender
 		TravelPlanTimingKind:                         enumModel.#TravelPlanTimingKind
 		TravelPlanServiceKind:                        enumModel.#TravelPlanServiceKind
-		SupplierCategory:                             enumModel.#SupplierCategory
 		PaymentStatus:                                enumModel.#PaymentStatus
 		PricingAdjustmentType:                        enumModel.#PricingAdjustmentType
 		OfferCategory:                                enumModel.#OfferCategory
 		OfferPaymentTermKind:                         enumModel.#OfferPaymentTermKind
 		OfferPaymentAmountMode:                       enumModel.#OfferPaymentAmountMode
 		OfferPaymentDueType:                          enumModel.#OfferPaymentDueType
-		BookingConfirmationMethod:                    enumModel.#BookingConfirmationMethod
 		TourStyleCode:                                enumModel.#TourStyleCode
 		CountryCode:                                  enumModel.#CountryCode
 		TimezoneCode:                                 enumModel.#TimezoneCode
@@ -85,8 +83,8 @@ import (
 		BookingActivitiesResponse:                                 apiModel.#BookingActivitiesResponse
 		BookingActivityResponse:                                   apiModel.#BookingActivityResponse
 		BookingDeleteResponse:                                     apiModel.#BookingDeleteResponse
-		BookingInvoicesResponse:                                   apiModel.#BookingInvoicesResponse
-		BookingInvoiceResponse:                                    apiModel.#BookingInvoiceResponse
+		BookingPaymentDocumentsResponse:                           apiModel.#BookingPaymentDocumentsResponse
+		BookingPaymentDocumentResponse:                            apiModel.#BookingPaymentDocumentResponse
 		BookingChatEvent:                                          apiModel.#BookingChatEvent
 		BookingChatConversation:                                   apiModel.#BookingChatConversation
 		BookingChatResponse:                                       apiModel.#BookingChatResponse
@@ -119,7 +117,6 @@ import (
 		PublicBookingCreateRequest:                                apiModel.#PublicBookingCreateRequest
 		BookingCreateRequest:                                      apiModel.#BookingCreateRequest
 		TranslationStatusSummary:                                  apiModel.#TranslationStatusSummary
-		GeneratedOfferBookingConfirmationPublicSummary:            apiModel.#GeneratedOfferBookingConfirmationPublicSummary
 		BookingOfferPaymentTermLineReadModel:                      apiModel.#BookingOfferPaymentTermLineReadModel
 		BookingOfferPaymentTermsReadModel:                         apiModel.#BookingOfferPaymentTermsReadModel
 		BookingOfferReadModel:                                     apiModel.#BookingOfferReadModel
@@ -141,7 +138,6 @@ import (
 		BookingPersonPhotoUploadRequest:                           apiModel.#BookingPersonPhotoUploadRequest
 		BookingNotesUpdateRequest:                                 apiModel.#BookingNotesUpdateRequest
 		BookingTravelPlanUpdateRequest:                            apiModel.#BookingTravelPlanUpdateRequest
-		BookingPricingUpdateRequest:                               apiModel.#BookingPricingUpdateRequest
 		TravelPlanDaySearchRequest:                                apiModel.#TravelPlanDaySearchRequest
 		TravelPlanDayImportRequest:                                apiModel.#TravelPlanDayImportRequest
 		TravelPlanSearchRequest:                                   apiModel.#TravelPlanSearchRequest
@@ -162,7 +158,7 @@ import (
 		OfferExchangeRateLine:                                     apiModel.#OfferExchangeRateLine
 		OfferExchangeRatesRequest:                                 apiModel.#OfferExchangeRatesRequest
 		BookingActivityCreateRequest:                              apiModel.#BookingActivityCreateRequest
-		BookingInvoiceUpsertRequest:                               apiModel.#BookingInvoiceUpsertRequest
+		BookingPaymentDocumentCreateRequest:                       apiModel.#BookingPaymentDocumentCreateRequest
 		CountryPracticalInfoUpdateRequest:                         apiModel.#CountryPracticalInfoUpdateRequest
 		AtpStaffProfileUpdateRequest:                              apiModel.#AtpStaffProfileUpdateRequest
 		AtpStaffPhotoUploadRequest:                                apiModel.#AtpStaffPhotoUploadRequest

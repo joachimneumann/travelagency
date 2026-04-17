@@ -52,7 +52,6 @@ function zeroOfferQuotationSummary() {
 function resolveCloneCurrency(booking) {
   return normalizeText(
     booking?.preferred_currency
-    || booking?.pricing?.currency
     || booking?.offer?.currency
     || booking?.web_form_submission?.preferred_currency
   ) || "USD";
@@ -189,17 +188,9 @@ function remapTravelPlan(booking, randomUUID) {
   }
 }
 
-function resetPricing(booking) {
-  const pricing = booking.pricing && typeof booking.pricing === "object" ? booking.pricing : {};
-  const currency = resolveCloneCurrency(booking);
-  booking.pricing = {
-    ...pricing,
-    currency,
-    payments: []
-  };
-}
-
 function resetCommercialState(booking) {
+  delete booking.pricing;
+  delete booking.pricing_revision;
   delete booking.confirmed_generated_offer_id;
   delete booking.accepted_generated_offer_id;
   delete booking.accepted_offer_artifact_ref;
@@ -253,9 +244,8 @@ export function cloneBookingForTesting(sourceBooking, options = {}) {
   cloned.notes_revision = 0;
   cloned.persons_revision = 0;
   cloned.travel_plan_revision = 0;
-  cloned.pricing_revision = 0;
   cloned.offer_revision = 0;
-  cloned.invoices_revision = 0;
+  cloned.payment_documents_revision = 0;
   cloned.idempotency_key = null;
   cloned.created_at = nextNow;
   cloned.updated_at = nextNow;
@@ -274,7 +264,6 @@ export function cloneBookingForTesting(sourceBooking, options = {}) {
   }
   resetOffer(cloned);
   remapTravelPlan(cloned, randomUUID);
-  resetPricing(cloned);
   resetCommercialState(cloned);
   resetPortalState(cloned);
 

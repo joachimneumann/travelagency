@@ -17,7 +17,7 @@ The API is not obviously vulnerable to classic SQL injection, because the curren
 There are also some good security choices already in place:
 - JWT verification uses `jose`
 - role-based authorization is enforced on `/api/v1/*`
-- invoice PDFs are served through authenticated endpoints
+- payment-document PDFs are served through authenticated endpoints
 - public generated-offer access and public generated-offer PDFs are gated by a dedicated booking confirmation token
 - booking image path resolution uses path-bound checks
 - image conversion uses `execFile(...)` instead of spawning a shell command string
@@ -72,7 +72,7 @@ This is the right pattern for filesystem-backed asset serving.
 
 ### 4. Booking-scoped access checks exist on most sensitive staff endpoints
 
-The booking, invoice, offer, and chat handlers generally check `canAccessBooking(...)` or `canEditBooking(...)` before serving or mutating data.
+The booking, payment-document, offer, and chat handlers generally check `canAccessBooking(...)` or `canEditBooking(...)` before serving or mutating data.
 
 That is an important baseline control and is better than trusting IDs in the URL alone.
 

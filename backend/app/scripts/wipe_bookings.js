@@ -72,14 +72,14 @@ export function resolveWipePaths({ storePath = "", dataDir = "" } = {}) {
     dataRoot: resolvedDataRoot,
     storePath: resolvedStorePath,
     resetDirectories: [
-      path.join(pdfRoot, "invoices"),
+      path.join(pdfRoot, "payment_documents"),
       path.join(pdfRoot, "generated_offers"),
       path.join(pdfRoot, "travel_plans"),
       path.join(pdfRoot, "attachments"),
       path.join(resolvedDataRoot, "booking_images"),
       path.join(resolvedDataRoot, "booking_person_photos"),
       path.join(tempRoot, "travel_plan_previews"),
-      path.join(resolvedDataRoot, "invoices"),
+      path.join(resolvedDataRoot, "payment_documents"),
       path.join(resolvedDataRoot, "generated_offers"),
       path.join(resolvedDataRoot, "booking_travel_plan_attachments")
     ]
@@ -106,7 +106,7 @@ function summarizeStore(store) {
   return {
     bookings: Array.isArray(store.bookings) ? store.bookings.length : 0,
     activities: Array.isArray(store.activities) ? store.activities.length : 0,
-    invoices: Array.isArray(store.invoices) ? store.invoices.length : 0,
+    payment_documents: Array.isArray(store.payment_documents) ? store.payment_documents.length : 0,
     chat_conversations: Array.isArray(store.chat_conversations) ? store.chat_conversations.length : 0,
     chat_events: Array.isArray(store.chat_events) ? store.chat_events.length : 0
   };
@@ -116,9 +116,8 @@ function buildWipedStore(store) {
   return {
     ...store,
     bookings: [],
-    suppliers: Array.isArray(store.suppliers) ? store.suppliers : [],
     activities: [],
-    invoices: [],
+    payment_documents: [],
     chat_channel_accounts: Array.isArray(store.chat_channel_accounts) ? store.chat_channel_accounts : [],
     chat_conversations: [],
     chat_events: []
@@ -183,7 +182,7 @@ export async function runCli(argv = process.argv.slice(2)) {
     [
       `bookings=${result.summary.bookings}`,
       `activities=${result.summary.activities}`,
-      `invoices=${result.summary.invoices}`,
+      `payment_documents=${result.summary.payment_documents}`,
       `chat_conversations=${result.summary.chat_conversations}`,
       `chat_events=${result.summary.chat_events}`
     ].join(" ")

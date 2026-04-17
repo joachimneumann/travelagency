@@ -31,7 +31,7 @@ The active operational domains are:
 - tours
 - travel plan templates
 - pricing
-- invoices
+- payment documents
 - activities
 - chat timelines linked to bookings
 - generated offers
@@ -197,7 +197,7 @@ Responsibilities:
 - persistence orchestration
 - UI behavior
 - chat/webhook integration
-- pricing, offer, and invoice calculations
+- pricing, offer, and payment-document calculations
 - PDF generation and artifact handling
 
 Current important runtime split:
@@ -219,7 +219,7 @@ Current local/runtime persistence is:
 - JSON store for bookings and related runtime data
 - per-tour folders for tours and images
 - per-template folders for standard travel plans
-- per-artifact folders for invoices, generated offers, travel-plan PDFs, and attachments
+- per-artifact folders for payment documents, generated offers, travel-plan PDFs, and attachments
 
 ## Confirmation Boundary
 
@@ -254,9 +254,8 @@ Instead, each writable booking section has its own integer revision counter:
 - `notes_revision`
 - `persons_revision`
 - `travel_plan_revision`
-- `pricing_revision`
 - `offer_revision`
-- `invoices_revision`
+- `payment_documents_revision`
 
 Rules:
 - endpoints validate only the revision for the section they mutate

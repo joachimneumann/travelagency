@@ -1,10 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
-  buildInvoiceTranslationStatus,
   buildTravelPlanTranslationStatus,
   collectTravelPlanTranslationFieldChanges,
-  markInvoiceTranslationManual,
   markTravelPlanTranslationFieldsManual,
   markTravelPlanTranslationManual,
   translateTravelPlanFromSourceLanguage
@@ -47,33 +45,6 @@ test("travel plan translation status counts customer-facing fields only", () => 
   assert.equal(status.translated_fields, 1);
   assert.equal(status.missing_fields, 6);
   assert.equal(status.status, "partial");
-});
-
-test("invoice translation status tracks title, notes, and component descriptions", () => {
-  const invoice = {
-    title: "Invoice for Joachim",
-    title_i18n: { en: "Invoice for Joachim" },
-    notes: "Please settle within seven days.",
-    notes_i18n: { en: "Please settle within seven days." },
-    components: [
-      {
-        id: "comp_1",
-        description: "Airport pickup",
-        description_i18n: { en: "Airport pickup" }
-      }
-    ]
-  };
-
-  markInvoiceTranslationManual(invoice, "ko", "2026-03-15T10:00:00.000Z");
-  invoice.title_i18n.ko = "Joachim 님 청구서";
-  invoice.notes_i18n.ko = "7일 이내에 결제해 주세요.";
-  invoice.components[0].description_i18n.ko = "공항 픽업";
-
-  const readyStatus = buildInvoiceTranslationStatus(invoice, "ko");
-  assert.equal(readyStatus.total_fields, 3);
-  assert.equal(readyStatus.translated_fields, 3);
-  assert.equal(readyStatus.missing_fields, 0);
-  assert.equal(readyStatus.status, "reviewed");
 });
 
 test("travel plan manual target edits are tracked per field", () => {

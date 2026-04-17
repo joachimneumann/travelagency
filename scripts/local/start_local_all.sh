@@ -12,6 +12,9 @@ import_zsh_env() {
 import_zsh_env
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+source "$ROOT_DIR/scripts/local/local_i18n_preflight.sh"
+
+run_local_i18n_preflight "$ROOT_DIR"
 
 "$ROOT_DIR/scripts/local/start_local_keycloak.sh"
 echo

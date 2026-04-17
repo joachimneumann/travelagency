@@ -31,7 +31,7 @@ function buildPricingHelpers() {
       return Number.isFinite(parsed) ? parsed : null;
     },
     randomUUID: () => "test-uuid",
-    invoicesDir: "/tmp",
+    paymentDocumentsDir: "/tmp",
     generatedOffersDir: "/tmp"
   });
 }

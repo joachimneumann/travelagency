@@ -34,9 +34,8 @@ function buildTravelPlanHandlerHarness(tempDir, overrides = {}) {
     },
     readStore: async () => ({
       bookings: [booking],
-      suppliers: [],
       activities: [],
-      invoices: []
+      payment_documents: []
     }),
     getPrincipal: () => ({ sub: "kc-user", roles: ["atp_staff"] }),
     canEditBooking: () => true,

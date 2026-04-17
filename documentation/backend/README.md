@@ -51,7 +51,7 @@ Gmail draft creation for generated offers requires:
 
 Runtime JSON persistence:
 - `backend/app/data/store.json`
-- `backend/app/data/invoices/`
+- `backend/app/data/pdfs/payment_documents/`
 - `backend/app/data/booking_images/`
 - `backend/app/data/booking_person_photos/`
 - `content/tours/<tour_id>/tour.json`
@@ -60,7 +60,7 @@ Runtime JSON persistence:
 Notes:
 - `backend/app/data/store.json` is runtime data and is not tracked in Git
 - startup creates an empty store automatically if the file is missing
-- bookings, activities, invoices, and chats are the active operational store domains
+- bookings, activities, payment documents, and chats are the active operational store domains
 - tours and country reference info remain file-backed content domains
 
 ## Current Architecture
@@ -70,7 +70,7 @@ Implemented now:
 - public tour catalog
 - country-reference publication controls for the public website
 - booking pipeline stages and assignment
-- booking notes, pricing, offer, activities, invoices
+- booking notes, offers, activities, and payment-flow documents
 - booking-owned persons
 - Keycloak-backed ATP user assignment
 - Keycloak-protected backend access
@@ -118,7 +118,6 @@ Admin API:
 - `DELETE /api/v1/bookings/:bookingId/persons/:personId`
 - `POST /api/v1/bookings/:bookingId/persons/:personId/photo`
 - `PATCH /api/v1/bookings/:bookingId/notes`
-- `PATCH /api/v1/bookings/:bookingId/pricing`
 - `PATCH /api/v1/bookings/:bookingId/offer`
 - `POST /api/v1/bookings/:bookingId/generated-offers`
 - `PATCH /api/v1/bookings/:bookingId/generated-offers/:generatedOfferId`
@@ -127,10 +126,9 @@ Admin API:
 - `POST /api/v1/bookings/:bookingId/generated-offers/:generatedOfferId/gmail-draft`
 - `GET /api/v1/bookings/:bookingId/activities`
 - `POST /api/v1/bookings/:bookingId/activities`
-- `GET /api/v1/bookings/:bookingId/invoices`
-- `POST /api/v1/bookings/:bookingId/invoices`
-- `PATCH /api/v1/bookings/:bookingId/invoices/:invoiceId`
-- `GET /api/v1/invoices/:invoiceId/pdf`
+- `GET /api/v1/bookings/:bookingId/payment-documents`
+- `POST /api/v1/bookings/:bookingId/payment-documents`
+- `GET /api/v1/payment-documents/:documentId/pdf`
 - `POST /api/v1/offers/exchange-rates`
 - `GET /api/v1/keycloak_users`
 - `GET /api/v1/tours`
@@ -180,8 +178,8 @@ Common `sort` values:
 
 Commercial document currency rules:
 - booking offer currency is editable only while `offer.status == "DRAFT"`
-- invoice currency is editable only while `invoice.status == "DRAFT"`
-- once an offer is approved/sent or an invoice is sent/paid/void, the backend rejects currency changes even if an old client tries to submit them
+- payment documents are generated from the booking/payment flow and do not have a standalone edit route
+- once an offer is approved/sent, later payment documents use the accepted commercial snapshot instead of a separately editable document currency
 
 The booking list and detail views use booking-owned people:
 - primary contact comes from `booking.persons`
@@ -194,9 +192,8 @@ Current request fields are:
 - `expected_core_revision` for booking core mutations such as `name`, `stage`, and `owner`
 - `expected_persons_revision` for booking person and person-photo mutations
 - `expected_notes_revision` for booking notes
-- `expected_pricing_revision` for pricing updates
 - `expected_offer_revision` for offer updates
-- `expected_invoices_revision` for invoice mutations
+- `expected_payment_documents_revision` for payment-document creation
 
 Generated-offer email drafts:
 - `POST /api/v1/bookings/:bookingId/generated-offers/:generatedOfferId/gmail-draft` creates a Gmail draft for the frozen generated-offer PDF

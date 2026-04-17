@@ -3,6 +3,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 source "$ROOT_DIR/scripts/lib/docker_runtime.sh"
+source "$ROOT_DIR/scripts/local/local_i18n_preflight.sh"
 PUBLIC_HOMEPAGE_ASSET_GENERATOR="${PUBLIC_HOMEPAGE_ASSET_GENERATOR:-$ROOT_DIR/scripts/assets/generate_public_homepage_assets.mjs}"
 
 FRONTEND_PORT="${FRONTEND_PORT:-8080}"
@@ -90,6 +91,7 @@ main() {
   require_cmd node
   require_cmd lsof
   require_cmd curl
+  run_local_i18n_preflight "$ROOT_DIR"
   stop_existing_frontend
   generate_public_homepage_assets
 

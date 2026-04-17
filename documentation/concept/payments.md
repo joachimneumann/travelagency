@@ -21,7 +21,7 @@ The payment experience is now driven only by the financial flow:
 
 ## Payment model
 
-The source of truth is the payment plan plus the persisted booking pricing payments.
+The source of truth is the payment plan plus persisted payment documents and accepted payment snapshots.
 
 Each payment row represents one financial step:
 

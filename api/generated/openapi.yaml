@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-04-15T20:46:45Z
+# 2026-04-17T07:50:35Z
 
 ---
 openapi: 3.1.0
@@ -26,7 +26,6 @@ tags:
 - name: Bookings
 - name: Travel plan templates
 - name: Offers
-- name: Suppliers
 - name: CountryReference
 - name: Tours
 components:
@@ -511,35 +510,6 @@ components:
         label: border_crossing
       - value: other
         label: other
-    SupplierCategory:
-      type: string
-      enum:
-      - hotel
-      - transport_operator
-      - guide
-      - activity_operator
-      - restaurant
-      - other
-      x-enum-catalog:
-      - code: hotel
-      - code: transport_operator
-      - code: guide
-      - code: activity_operator
-      - code: restaurant
-      - code: other
-      x-enum-options:
-      - value: hotel
-        label: hotel
-      - value: transport_operator
-        label: transport_operator
-      - value: guide
-        label: guide
-      - value: activity_operator
-        label: activity_operator
-      - value: restaurant
-        label: restaurant
-      - value: other
-        label: other
     PaymentStatus:
       type: string
       enum:
@@ -687,19 +657,6 @@ components:
         label: DAYS_AFTER_TRIP_START
       - value: DAYS_AFTER_TRIP_END
         label: DAYS_AFTER_TRIP_END
-    BookingConfirmationMethod:
-      type: string
-      enum:
-      - DEPOSIT_PAYMENT
-      - MANAGEMENT
-      x-enum-catalog:
-      - code: DEPOSIT_PAYMENT
-      - code: MANAGEMENT
-      x-enum-options:
-      - value: DEPOSIT_PAYMENT
-        label: DEPOSIT_PAYMENT
-      - value: MANAGEMENT
-        label: MANAGEMENT
     TourStyleCode:
       type: string
       enum:
@@ -3737,7 +3694,6 @@ components:
       - ASSIGNMENT_CHANGED
       - NOTE_UPDATED
       - TRAVEL_PLAN_UPDATED
-      - PRICING_UPDATED
       - OFFER_UPDATED
       - OFFER_TRANSLATED
       - OFFER_EMAIL_DRAFT_CREATED
@@ -3753,7 +3709,6 @@ components:
       - code: ASSIGNMENT_CHANGED
       - code: NOTE_UPDATED
       - code: TRAVEL_PLAN_UPDATED
-      - code: PRICING_UPDATED
       - code: OFFER_UPDATED
       - code: OFFER_TRANSLATED
       - code: OFFER_EMAIL_DRAFT_CREATED
@@ -3776,8 +3731,6 @@ components:
         label: NOTE_UPDATED
       - value: TRAVEL_PLAN_UPDATED
         label: TRAVEL_PLAN_UPDATED
-      - value: PRICING_UPDATED
-        label: PRICING_UPDATED
       - value: OFFER_UPDATED
         label: OFFER_UPDATED
       - value: OFFER_TRANSLATED
@@ -3940,32 +3893,6 @@ components:
             "$ref": "#/components/schemas/CountryCode"
         travel_plan:
           "$ref": "#/components/schemas/BookingTravelPlan"
-    Supplier:
-      type: object
-      required:
-      - id
-      - name
-      - category
-      properties:
-        id:
-          type: string
-        name:
-          type: string
-        contact:
-          type: string
-          nullable: true
-        emergency_phone:
-          type: string
-          nullable: true
-        email:
-          type: string
-          format: email
-          nullable: true
-        country:
-          "$ref": "#/components/schemas/CountryCode"
-          nullable: true
-        category:
-          "$ref": "#/components/schemas/SupplierCategory"
     BookingPersonAddress:
       type: object
       required: []
@@ -4244,9 +4171,6 @@ components:
         location:
           type: string
           nullable: true
-        supplier_id:
-          type: string
-          nullable: true
         start_time:
           type: string
           nullable: true
@@ -4387,7 +4311,7 @@ components:
           type: string
           format: date-time
           nullable: true
-    InvoiceComponent:
+    PaymentDocumentComponent:
       type: object
       required:
       - description
@@ -4406,7 +4330,7 @@ components:
         total_amount_cents:
           "$ref": "#/components/schemas/MoneyAmount"
           nullable: true
-    BookingInvoice:
+    BookingPaymentDocument:
       type: object
       required:
       - id
@@ -4417,13 +4341,28 @@ components:
         booking_id:
           type: string
           nullable: true
-        invoice_number:
+        document_number:
           type: string
           nullable: true
         version:
           type: integer
           nullable: true
         status:
+          type: string
+          nullable: true
+        document_kind:
+          type: string
+          nullable: true
+        payment_id:
+          type: string
+          nullable: true
+        payment_term_line_id:
+          type: string
+          nullable: true
+        payment_kind:
+          type: string
+          nullable: true
+        payment_label:
           type: string
           nullable: true
         currency:
@@ -4435,19 +4374,34 @@ components:
         title:
           type: string
           nullable: true
+        subtitle:
+          type: string
+          nullable: true
+        intro:
+          type: string
+          nullable: true
         components:
           type: array
           items:
-            "$ref": "#/components/schemas/InvoiceComponent"
+            "$ref": "#/components/schemas/PaymentDocumentComponent"
         notes:
           type: string
           nullable: true
-        sent_to_recipient:
-          type: boolean
+        closing:
+          type: string
           nullable: true
-        sent_to_recipient_at:
+        payment_received_at:
           type: string
           format: date-time
+          nullable: true
+        payment_confirmed_by_atp_staff_id:
+          type: string
+          nullable: true
+        payment_confirmed_by_label:
+          type: string
+          nullable: true
+        payment_reference:
+          type: string
           nullable: true
         total_amount_cents:
           "$ref": "#/components/schemas/MoneyAmount"
@@ -4466,63 +4420,6 @@ components:
         pdf_url:
           type: string
           nullable: true
-    BookingPayment:
-      type: object
-      required:
-      - id
-      - label
-      - status
-      - net_amount_cents
-      - tax_rate_basis_points
-      properties:
-        id:
-          type: string
-        label:
-          type: string
-        status:
-          "$ref": "#/components/schemas/PaymentStatus"
-        net_amount_cents:
-          "$ref": "#/components/schemas/MoneyAmount"
-        tax_rate_basis_points:
-          type: integer
-        paid_at:
-          type: string
-          format: date-time
-          nullable: true
-        notes:
-          type: string
-          nullable: true
-        tax_amount_cents:
-          "$ref": "#/components/schemas/MoneyAmount"
-          nullable: true
-        gross_amount_cents:
-          "$ref": "#/components/schemas/MoneyAmount"
-          nullable: true
-        origin_generated_offer_id:
-          type: string
-          nullable: true
-        origin_payment_term_line_id:
-          type: string
-          nullable: true
-        created_at:
-          type: string
-          format: date-time
-          nullable: true
-        updated_at:
-          type: string
-          format: date-time
-          nullable: true
-    BookingPricing:
-      type: object
-      required:
-      - currency
-      properties:
-        currency:
-          "$ref": "#/components/schemas/ATPCurrencyCode"
-        payments:
-          type: array
-          items:
-            "$ref": "#/components/schemas/BookingPayment"
     BookingOfferCategoryRule:
       type: object
       required:
@@ -4853,82 +4750,6 @@ components:
           nullable: true
         total_price_cents:
           type: integer
-    GeneratedOfferBookingConfirmation:
-      type: object
-      required:
-      - id
-      - accepted_at
-      - language
-      - method
-      - statement_snapshot
-      - terms_snapshot
-      - offer_currency
-      - offer_total_price_cents
-      - offer_pdf_sha256
-      - offer_snapshot_sha256
-      properties:
-        id:
-          type: string
-        accepted_at:
-          type: string
-          format: date-time
-        accepted_by_name:
-          type: string
-          nullable: true
-        accepted_by_email:
-          type: string
-          format: email
-          nullable: true
-        accepted_by_phone:
-          type: string
-          nullable: true
-        accepted_by_person_id:
-          type: string
-          nullable: true
-        language:
-          "$ref": "#/components/schemas/LanguageCode"
-        method:
-          "$ref": "#/components/schemas/BookingConfirmationMethod"
-        statement_snapshot:
-          type: string
-        terms_version:
-          type: string
-          nullable: true
-        terms_snapshot:
-          type: string
-        offer_currency:
-          "$ref": "#/components/schemas/ATPCurrencyCode"
-        offer_total_price_cents:
-          type: integer
-        offer_pdf_sha256:
-          type: string
-        offer_snapshot_sha256:
-          type: string
-        ip_address:
-          type: string
-          nullable: true
-        user_agent:
-          type: string
-          nullable: true
-        management_approver_atp_staff_id:
-          type: string
-          nullable: true
-        deposit_payment_id:
-          type: string
-          nullable: true
-        accepted_payment_term_line_id:
-          type: string
-          nullable: true
-        accepted_payment_ids:
-          type: array
-          items:
-            type: string
-        accepted_amount_cents:
-          type: integer
-          nullable: true
-        accepted_currency:
-          "$ref": "#/components/schemas/ATPCurrencyCode"
-          nullable: true
     GeneratedBookingOffer:
       type: object
       required:
@@ -4970,21 +4791,12 @@ components:
         travel_plan:
           "$ref": "#/components/schemas/BookingTravelPlan"
           nullable: true
-        management_approver_atp_staff_id:
-          type: string
-          nullable: true
-        management_approver_label:
-          type: string
-          nullable: true
         pdf_frozen_at:
           type: string
           format: date-time
           nullable: true
         pdf_sha256:
           type: string
-          nullable: true
-        booking_confirmation:
-          "$ref": "#/components/schemas/GeneratedOfferBookingConfirmation"
           nullable: true
     BookingActivity:
       type: object
@@ -5093,7 +4905,6 @@ components:
       type: object
       required:
       - id
-      - pricing
       - offer
       - created_at
       - updated_at
@@ -5136,13 +4947,10 @@ components:
         travel_plan_revision:
           type: integer
           nullable: true
-        pricing_revision:
-          type: integer
-          nullable: true
         offer_revision:
           type: integer
           nullable: true
-        invoices_revision:
+        payment_documents_revision:
           type: integer
           nullable: true
         travel_styles:
@@ -5166,9 +4974,6 @@ components:
         customer_language:
           "$ref": "#/components/schemas/LanguageCode"
           nullable: true
-        confirmed_generated_offer_id:
-          type: string
-          nullable: true
         notes:
           type: string
           nullable: true
@@ -5182,8 +4987,6 @@ components:
         web_form_submission:
           "$ref": "#/components/schemas/BookingWebFormSubmission"
           nullable: true
-        pricing:
-          "$ref": "#/components/schemas/BookingPricing"
         offer:
           "$ref": "#/components/schemas/BookingOffer"
         generated_offers:
@@ -5236,26 +5039,6 @@ components:
           type: boolean
         source_hash:
           type: string
-          nullable: true
-    GeneratedOfferBookingConfirmationPublicSummary:
-      type: object
-      required:
-      - accepted_at
-      - method
-      properties:
-        accepted_at:
-          type: string
-          format: date-time
-        method:
-          "$ref": "#/components/schemas/BookingConfirmationMethod"
-        management_approver_atp_staff_id:
-          type: string
-          nullable: true
-        accepted_amount_cents:
-          type: integer
-          nullable: true
-        accepted_currency:
-          "$ref": "#/components/schemas/ATPCurrencyCode"
           nullable: true
     BookingOfferPaymentTermLineReadModel:
       type: object
@@ -5467,17 +5250,8 @@ components:
         travel_plan:
           "$ref": "#/components/schemas/BookingTravelPlan"
           nullable: true
-        management_approver_atp_staff_id:
-          type: string
-          nullable: true
-        management_approver_label:
-          type: string
-          nullable: true
         pdf_url:
           type: string
-        booking_confirmation:
-          "$ref": "#/components/schemas/GeneratedOfferBookingConfirmation"
-          nullable: true
     BookingTravelPlanPdfReadModel:
       type: object
       required:
@@ -5515,7 +5289,6 @@ components:
       type: object
       required:
       - id
-      - pricing
       - offer
       - travel_plan_translation_status
       - generated_offer_email_enabled
@@ -5564,13 +5337,10 @@ components:
         travel_plan_revision:
           type: integer
           nullable: true
-        pricing_revision:
-          type: integer
-          nullable: true
         offer_revision:
           type: integer
           nullable: true
-        invoices_revision:
+        payment_documents_revision:
           type: integer
           nullable: true
         travel_styles:
@@ -5594,9 +5364,6 @@ components:
         customer_language:
           "$ref": "#/components/schemas/LanguageCode"
           nullable: true
-        confirmed_generated_offer_id:
-          type: string
-          nullable: true
         notes:
           type: string
           nullable: true
@@ -5610,8 +5377,6 @@ components:
         web_form_submission:
           "$ref": "#/components/schemas/BookingWebFormSubmission"
           nullable: true
-        pricing:
-          "$ref": "#/components/schemas/BookingPricing"
         offer:
           "$ref": "#/components/schemas/BookingOfferReadModel"
         travel_plan_pdfs:
@@ -5713,9 +5478,6 @@ components:
           nullable: true
         image_count:
           type: integer
-          nullable: true
-        supplier_name:
-          type: string
           nullable: true
         updated_at:
           type: string
@@ -5879,7 +5641,7 @@ components:
           "$ref": "#/components/schemas/BookingActivity"
         booking:
           "$ref": "#/components/schemas/BookingReadModel"
-    BookingInvoicesResponse:
+    BookingPaymentDocumentsResponse:
       type: object
       required:
       - total
@@ -5887,17 +5649,17 @@ components:
         items:
           type: array
           items:
-            "$ref": "#/components/schemas/BookingInvoice"
+            "$ref": "#/components/schemas/BookingPaymentDocument"
         total:
           type: integer
-    BookingInvoiceResponse:
+    BookingPaymentDocumentResponse:
       type: object
       required:
-      - invoice
+      - document
       - booking
       properties:
-        invoice:
-          "$ref": "#/components/schemas/BookingInvoice"
+        document:
+          "$ref": "#/components/schemas/BookingPaymentDocument"
         booking:
           "$ref": "#/components/schemas/BookingReadModel"
         unchanged:
@@ -5927,47 +5689,6 @@ components:
           type: array
           items:
             "$ref": "#/components/schemas/TranslationEntry"
-    PublicGeneratedOfferAccessResponse:
-      type: object
-      required:
-      - booking_id
-      - generated_offer_id
-      - lang
-      - currency
-      - total_price_cents
-      - created_at
-      - confirmed
-      properties:
-        booking_id:
-          type: string
-        generated_offer_id:
-          type: string
-        booking_name:
-          type: string
-          nullable: true
-        lang:
-          "$ref": "#/components/schemas/LanguageCode"
-        currency:
-          "$ref": "#/components/schemas/ATPCurrencyCode"
-        total_price_cents:
-          type: integer
-        comment:
-          type: string
-          nullable: true
-        created_at:
-          type: string
-          format: date-time
-        pdf_url:
-          type: string
-          nullable: true
-        payment_terms:
-          "$ref": "#/components/schemas/BookingOfferPaymentTermsReadModel"
-          nullable: true
-        confirmed:
-          type: boolean
-        booking_confirmation:
-          "$ref": "#/components/schemas/GeneratedOfferBookingConfirmationPublicSummary"
-          nullable: true
     BookingChatEvent:
       type: object
       required:
@@ -6362,29 +6083,6 @@ components:
       x-require-one-of:
       - - email
         - phone_number
-    PublicGeneratedOfferAcceptRequest:
-      type: object
-      required:
-      - booking_confirmation_token
-      properties:
-        booking_confirmation_token:
-          type: string
-        accepted_by_name:
-          type: string
-          nullable: true
-        accepted_by_email:
-          type: string
-          format: email
-          nullable: true
-        accepted_by_phone:
-          type: string
-          nullable: true
-        accepted_by_person_id:
-          type: string
-          nullable: true
-        language:
-          "$ref": "#/components/schemas/LanguageCode"
-          nullable: true
     BookingDeleteRequest:
       type: object
       required: []
@@ -6534,19 +6232,6 @@ components:
         notes:
           type: string
           nullable: true
-        actor:
-          type: string
-          nullable: true
-    BookingPricingUpdateRequest:
-      type: object
-      required:
-      - pricing
-      properties:
-        expected_pricing_revision:
-          type: integer
-          nullable: true
-        pricing:
-          "$ref": "#/components/schemas/BookingPricing"
         actor:
           type: string
           nullable: true
@@ -6860,38 +6545,37 @@ components:
         actor:
           type: string
           nullable: true
-    BookingInvoiceUpsertRequest:
+    BookingPaymentDocumentCreateRequest:
       type: object
       required: []
       properties:
-        expected_invoices_revision:
+        expected_payment_documents_revision:
           type: integer
           nullable: true
-        invoice_number:
+        document_kind:
           type: string
           nullable: true
-        currency:
-          "$ref": "#/components/schemas/ATPCurrencyCode"
-          nullable: true
-        issue_date:
-          type: string
-          format: date
-          nullable: true
-        title:
+        payment_id:
           type: string
           nullable: true
-        notes:
+        payment_received_at:
+          type: string
+          format: date-time
+          nullable: true
+        payment_confirmed_by_atp_staff_id:
           type: string
           nullable: true
-        components:
-          type: array
-          items:
-            "$ref": "#/components/schemas/InvoiceComponent"
-        due_amount_cents:
-          "$ref": "#/components/schemas/MoneyAmount"
+        payment_reference:
+          type: string
           nullable: true
-        sent_to_recipient:
-          type: boolean
+        payment_confirmed_by_label:
+          type: string
+          nullable: true
+        pdf_personalization:
+          type: string
+          nullable: true
+        actor:
+          type: string
           nullable: true
     AtpStaffProfileUpdateRequest:
       type: object
@@ -6927,19 +6611,6 @@ components:
           nullable: true
         data_base64:
           type: string
-    BookingInvoiceTranslateRequest:
-      type: object
-      required:
-      - lang
-      properties:
-        expected_invoices_revision:
-          type: integer
-          nullable: true
-        lang:
-          "$ref": "#/components/schemas/LanguageCode"
-        actor:
-          type: string
-          nullable: true
     TourUpsertRequest:
       type: object
       required: []
@@ -9098,45 +8769,6 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
-  "/api/v1/bookings/{booking_id}/pricing":
-    patch:
-      operationId: booking_pricing
-      summary: Booking Pricing
-      tags:
-      - Bookings
-      security:
-      - bearerAuth: []
-      parameters:
-      - name: booking_id
-        in: path
-        required: true
-        schema:
-          type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              "$ref": "#/components/schemas/BookingPricingUpdateRequest"
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/BookingDetail"
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
   "/api/v1/bookings/{booking_id}/offer":
     patch:
       operationId: booking_offer
@@ -9436,144 +9068,6 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
-  "/api/v1/suppliers":
-    get:
-      operationId: suppliers
-      summary: Suppliers
-      tags:
-      - Suppliers
-      security:
-      - bearerAuth: []
-      parameters: []
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/SupplierListResponse"
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-    post:
-      operationId: supplier_create
-      summary: Supplier Create
-      tags:
-      - Suppliers
-      security:
-      - bearerAuth: []
-      parameters: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              "$ref": "#/components/schemas/SupplierCreateRequest"
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/SupplierResponse"
-        '201':
-          description: Created
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/SupplierResponse"
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-  "/api/v1/suppliers/{supplier_id}":
-    get:
-      operationId: supplier_detail
-      summary: Supplier Detail
-      tags:
-      - Suppliers
-      security:
-      - bearerAuth: []
-      parameters:
-      - name: supplier_id
-        in: path
-        required: true
-        schema:
-          type: string
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/SupplierResponse"
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-    patch:
-      operationId: supplier_update
-      summary: Supplier Update
-      tags:
-      - Suppliers
-      security:
-      - bearerAuth: []
-      parameters:
-      - name: supplier_id
-        in: path
-        required: true
-        schema:
-          type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              "$ref": "#/components/schemas/SupplierUpdateRequest"
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/SupplierResponse"
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
   "/api/v1/country-reference-info":
     get:
       operationId: country_reference_info
@@ -9712,10 +9206,10 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
-  "/api/v1/bookings/{booking_id}/invoices":
+  "/api/v1/bookings/{booking_id}/payment-documents":
     get:
-      operationId: booking_invoices
-      summary: Booking Invoices
+      operationId: booking_payment_documents
+      summary: Booking Payment Documents
       tags:
       - Bookings
       security:
@@ -9732,7 +9226,7 @@ paths:
           content:
             application/json:
               schema:
-                "$ref": "#/components/schemas/BookingInvoicesResponse"
+                "$ref": "#/components/schemas/BookingPaymentDocumentsResponse"
         '401':
           description: Unauthorized
           content:
@@ -9746,8 +9240,8 @@ paths:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
     post:
-      operationId: booking_invoice_create
-      summary: Booking Invoice Create
+      operationId: booking_payment_document_create
+      summary: Booking Payment Document Create
       tags:
       - Bookings
       security:
@@ -9763,20 +9257,20 @@ paths:
         content:
           application/json:
             schema:
-              "$ref": "#/components/schemas/BookingInvoiceUpsertRequest"
+              "$ref": "#/components/schemas/BookingPaymentDocumentCreateRequest"
       responses:
         '200':
           description: Success
           content:
             application/json:
               schema:
-                "$ref": "#/components/schemas/BookingInvoiceResponse"
+                "$ref": "#/components/schemas/BookingPaymentDocumentResponse"
         '201':
           description: Created
           content:
             application/json:
               schema:
-                "$ref": "#/components/schemas/BookingInvoiceResponse"
+                "$ref": "#/components/schemas/BookingPaymentDocumentResponse"
         '401':
           description: Unauthorized
           content:
@@ -9789,110 +9283,16 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
-  "/api/v1/bookings/{booking_id}/invoices/{invoice_id}":
-    patch:
-      operationId: booking_invoice_update
-      summary: Booking Invoice Update
-      tags:
-      - Bookings
-      security:
-      - bearerAuth: []
-      parameters:
-      - name: booking_id
-        in: path
-        required: true
-        schema:
-          type: string
-      - name: invoice_id
-        in: path
-        required: true
-        schema:
-          type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              "$ref": "#/components/schemas/BookingInvoiceUpsertRequest"
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/BookingInvoiceResponse"
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-  "/api/v1/bookings/{booking_id}/invoices/{invoice_id}/translate":
-    post:
-      operationId: booking_invoice_translate
-      summary: Booking Invoice Translate
-      tags:
-      - Bookings
-      security:
-      - bearerAuth: []
-      parameters:
-      - name: booking_id
-        in: path
-        required: true
-        schema:
-          type: string
-      - name: invoice_id
-        in: path
-        required: true
-        schema:
-          type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              "$ref": "#/components/schemas/BookingInvoiceTranslateRequest"
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/BookingInvoiceResponse"
-        '201':
-          description: Created
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/BookingInvoiceResponse"
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-  "/api/v1/invoices/{invoice_id}/pdf":
+  "/api/v1/payment-documents/{document_id}/pdf":
     get:
-      operationId: invoice_pdf
-      summary: Invoice Pdf
+      operationId: payment_document_pdf
+      summary: Payment Document Pdf
       tags:
       - Bookings
       security:
       - bearerAuth: []
       parameters:
-      - name: invoice_id
+      - name: document_id
         in: path
         required: true
         schema:

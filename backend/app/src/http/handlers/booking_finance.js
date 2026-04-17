@@ -5,18 +5,11 @@ import { readFile } from "node:fs/promises";
 import { createGmailDraftsClient } from "../../lib/gmail_drafts.js";
 import { normalizePdfLang, pdfT } from "../../lib/pdf_i18n.js";
 import {
-  buildBookingConfirmationStatement,
-  buildBookingConfirmationTermsSnapshot,
-  BOOKING_CONFIRMATION_TERMS_VERSION,
-  buildGeneratedOfferSnapshotHash
-} from "../../domain/booking_confirmation.js";
-import {
   mergeEditableLocalizedTextField,
   mergeLocalizedTextField,
   normalizeBookingContentLang,
   normalizeBookingSourceLang
 } from "../../domain/booking_content_i18n.js";
-import { freezeAcceptedCommercialRecord } from "../../domain/accepted_record.js";
 
 export function createBookingFinanceHandlers(deps) {
   const {
@@ -34,9 +27,6 @@ export function createBookingFinanceHandlers(deps) {
     assertExpectedRevision,
     buildBookingDetailResponse,
     incrementBookingRevision,
-    validateBookingPricingInput,
-    convertBookingPricingToBaseCurrency,
-    normalizeBookingPricing,
     validateBookingOfferInput,
     convertBookingOfferToBaseCurrency,
     normalizeBookingOffer,
@@ -133,85 +123,6 @@ export function createBookingFinanceHandlers(deps) {
     return nextNormalized;
   }
 
-  function resolveGeneratedOfferManagementApprover(booking) {
-    const approverId = normalizeText(
-      booking?.assigned_keycloak_user_id
-      || booking?.assigned_atp_staff?.id
-      || booking?.assigned_atp_staff?.username
-    );
-    const approverLabel = normalizeText(
-      booking?.assigned_atp_staff?.full_name
-      || booking?.assigned_keycloak_user_label
-      || booking?.assigned_atp_staff?.username
-    );
-    return {
-      approverId: approverId || null,
-      approverLabel: approverLabel || approverId || null
-    };
-  }
-
-  function buildAcceptedOfferSeedPricing({ booking, normalizedSnapshot }) {
-    const paymentTerms = normalizedSnapshot?.payment_terms;
-    const lines = Array.isArray(paymentTerms?.lines) ? paymentTerms.lines : [];
-    if (!lines.length) return null;
-    const originGeneratedOfferId = normalizeText(
-      booking?.confirmed_generated_offer_id
-      || booking?.accepted_offer_artifact_ref
-    ) || null;
-
-    return {
-      currency: normalizeText(paymentTerms?.currency || normalizedSnapshot?.currency) || "USD",
-      payments: lines.map((line, index) => {
-        const label = normalizeText(line?.label) || `Payment ${index + 1}`;
-        const notes = normalizeText(line?.description);
-        return {
-          id: `pricing_payment_${randomUUID()}`,
-          label,
-          ...(originGeneratedOfferId ? { origin_generated_offer_id: originGeneratedOfferId } : {}),
-          net_amount_cents: Math.max(0, Math.round(Number(line?.resolved_amount_cents || 0))),
-          tax_rate_basis_points: 0,
-          status: "PENDING",
-          paid_at: null,
-          ...(notes ? { notes } : {})
-        };
-      })
-    };
-  }
-
-  async function seedAcceptedOfferPricing({ booking, normalizedSnapshot }) {
-    const seedPricing = buildAcceptedOfferSeedPricing({ booking, normalizedSnapshot });
-    if (!seedPricing) return false;
-
-    const currentPricing = await convertBookingPricingToBaseCurrency(booking?.pricing || {});
-    if (Array.isArray(currentPricing?.payments) && currentPricing.payments.length > 0) {
-      return false;
-    }
-
-    const convertedSeedPricing = await convertBookingPricingToBaseCurrency(seedPricing);
-    const nextPricing = normalizeBookingPricing({
-      ...currentPricing,
-      currency: convertedSeedPricing.currency,
-      payments: convertedSeedPricing.payments
-    });
-
-    if (JSON.stringify(nextPricing) === JSON.stringify(currentPricing)) {
-      return false;
-    }
-
-    booking.pricing = nextPricing;
-    incrementBookingRevision(booking, "pricing_revision");
-    return true;
-  }
-
-  function latestGeneratedOfferId(booking) {
-    const generatedOffers = Array.isArray(booking?.generated_offers) ? booking.generated_offers : [];
-    return generatedOffers
-      .slice()
-      .sort((left, right) => String(right?.created_at || "").localeCompare(String(left?.created_at || "")))
-      .map((item) => normalizeText(item?.id))
-      .find(Boolean) || "";
-  }
-
   function bookingPaymentTerms(booking) {
     if (booking?.accepted_payment_terms_snapshot && typeof booking.accepted_payment_terms_snapshot === "object") {
       return booking.accepted_payment_terms_snapshot;
@@ -220,236 +131,6 @@ export function createBookingFinanceHandlers(deps) {
       return booking.offer.payment_terms;
     }
     return null;
-  }
-
-  function findDepositPaymentLineId(booking) {
-    const lines = Array.isArray(bookingPaymentTerms(booking)?.lines) ? bookingPaymentTerms(booking).lines : [];
-    return normalizeText(
-      lines.find((line) => normalizeText(line?.kind).toUpperCase() === "DEPOSIT")?.id
-    );
-  }
-
-  function isDepositBookingPayment(payment, booking) {
-    const depositLineId = findDepositPaymentLineId(booking);
-    const paymentLineId = normalizeText(payment?.origin_payment_term_line_id);
-    if (depositLineId && paymentLineId && depositLineId === paymentLineId) return true;
-    return normalizeText(payment?.label).toLowerCase().includes("deposit");
-  }
-
-  function findDepositBookingPayment(pricing, booking) {
-    const payments = Array.isArray(pricing?.payments) ? pricing.payments : [];
-    return payments.find((payment) => isDepositBookingPayment(payment, booking)) || null;
-  }
-
-  function attachPaymentReceiptSnapshots(booking, currentPricing, nextPricing) {
-    if (!nextPricing || typeof nextPricing !== "object") return;
-    const currentPaymentsById = new Map(
-      (Array.isArray(currentPricing?.payments) ? currentPricing.payments : [])
-        .map((payment) => [normalizeText(payment?.id), payment])
-        .filter(([paymentId]) => Boolean(paymentId))
-    );
-    const fallbackGeneratedOfferId = latestGeneratedOfferId(booking)
-      || normalizeText(booking?.confirmed_generated_offer_id)
-      || normalizeText(booking?.accepted_offer_artifact_ref);
-    nextPricing.payments = (Array.isArray(nextPricing?.payments) ? nextPricing.payments : []).map((payment) => {
-      const paymentId = normalizeText(payment?.id);
-      const currentPayment = currentPaymentsById.get(paymentId) || null;
-      const hasReceiptDetails = Boolean(
-        normalizeText(payment?.received_at)
-        && normalizeText(payment?.confirmed_by_atp_staff_id)
-      );
-      const nextReceivedAmount = Number.isFinite(Number(payment?.received_amount_cents))
-        ? Math.max(0, Math.round(Number(payment.received_amount_cents)))
-        : hasReceiptDetails
-          ? Math.max(0, Math.round(Number(payment?.net_amount_cents || 0)))
-          : null;
-      return {
-        ...payment,
-        received_amount_cents: hasReceiptDetails
-          ? nextReceivedAmount
-          : null,
-        received_generated_offer_id: hasReceiptDetails
-          ? normalizeText(payment?.received_generated_offer_id)
-            || normalizeText(currentPayment?.received_generated_offer_id)
-            || normalizeText(payment?.origin_generated_offer_id)
-            || fallbackGeneratedOfferId
-            || null
-          : null
-      };
-    });
-  }
-
-  async function finalizeManagementGeneratedOfferConfirmation({ req, payload, store, booking, generatedOffer, principal }) {
-    if (normalizeText(booking?.confirmed_generated_offer_id) && normalizeText(booking.confirmed_generated_offer_id) !== generatedOffer.id) {
-      return { ok: false, status: 409, error: "Another generated offer has already been confirmed for this booking." };
-    }
-
-    if (generatedOffer?.booking_confirmation && typeof generatedOffer.booking_confirmation === "object") {
-      if (!normalizeText(booking?.confirmed_generated_offer_id)) {
-        booking.confirmed_generated_offer_id = generatedOffer.id;
-        await persistStore(store);
-      }
-      return { ok: true, bookingConfirmation: generatedOffer.booking_confirmation, unchanged: true };
-    }
-
-    const approverId = normalizeText(generatedOffer?.management_approver_atp_staff_id);
-    const approverLabel = normalizeText(generatedOffer?.management_approver_label);
-    if (!approverId || !approverLabel) {
-      return { ok: false, status: 422, error: "This generated offer has no management approver assigned." };
-    }
-    if (normalizeText(principal?.sub) !== approverId) {
-      return { ok: false, status: 403, error: "Only the assigned management approver can confirm this booking." };
-    }
-
-    const normalizedSnapshot = normalizeGeneratedOfferSnapshot(generatedOffer, booking);
-    const frozenPdf = await ensureFrozenGeneratedOfferPdf(generatedOffer, booking, { store });
-    const bookingConfirmation = {
-      id: `booking_confirmation_${randomUUID()}`,
-      accepted_at: nowIso(),
-      accepted_by_name: approverLabel,
-      language: normalizePdfLang(normalizedSnapshot.lang || booking?.customer_language || "en"),
-      method: "MANAGEMENT",
-      management_approver_atp_staff_id: approverId,
-      statement_snapshot: buildBookingConfirmationStatement({
-        bookingName: normalizeText(booking?.name || booking?.web_form_submission?.booking_name),
-        formattedTotal: formatMoney(normalizedSnapshot.total_price_cents, normalizedSnapshot.currency)
-      }),
-      terms_version: BOOKING_CONFIRMATION_TERMS_VERSION,
-      terms_snapshot: buildBookingConfirmationTermsSnapshot(),
-      offer_currency: normalizedSnapshot.currency,
-      offer_total_price_cents: Number(normalizedSnapshot.total_price_cents || 0),
-      offer_pdf_sha256: normalizeText(generatedOffer?.pdf_sha256 || frozenPdf?.sha256),
-      offer_snapshot_sha256: buildGeneratedOfferSnapshotHash(normalizedSnapshot)
-    };
-
-    generatedOffer.booking_confirmation = bookingConfirmation;
-    booking.confirmed_generated_offer_id = generatedOffer.id;
-    await seedAcceptedOfferPricing({
-      booking,
-      normalizedSnapshot
-    });
-    booking.offer_revision = (Number.isInteger(Number(booking.offer_revision)) ? Number(booking.offer_revision) : 0) + 1;
-    booking.updated_at = nowIso();
-    addActivity(
-      store,
-      booking.id,
-      "BOOKING_CONFIRMED",
-      actorLabel(principal, normalizeText(payload?.actor) || "keycloak_user"),
-      `Booking confirmed by management approver ${approverLabel}`
-    );
-    await persistStore(store);
-    return { ok: true, bookingConfirmation, unchanged: false };
-  }
-
-  async function handlePatchBookingPricing(req, res, [bookingId]) {
-    let payload;
-    try {
-      payload = await readBodyJson(req);
-    } catch {
-      sendJson(res, 400, { error: "Invalid JSON payload" });
-      return;
-    }
-
-    const principal = getPrincipal(req);
-    const store = await readStore();
-    const booking = store.bookings.find((item) => item.id === bookingId);
-    if (!booking) {
-      sendJson(res, 404, { error: "Booking not found" });
-      return;
-    }
-    if (!canEditBooking(principal, booking)) {
-      sendJson(res, 403, { error: "Forbidden" });
-      return;
-    }
-    if (!(await assertExpectedRevision(req, payload, booking, "expected_pricing_revision", "pricing_revision", res))) return;
-
-    const check = validateBookingPricingInput(payload.pricing);
-    if (!check.ok) {
-      sendJson(res, 422, { error: check.error });
-      return;
-    }
-
-    const currentPricing = normalizeBookingPricing(booking.pricing);
-    const nextPricingBase = await convertBookingPricingToBaseCurrency(check.pricing);
-    attachPaymentReceiptSnapshots(booking, currentPricing, nextPricingBase);
-    const depositPayment = findDepositBookingPayment(nextPricingBase, booking);
-    const normalizedDepositReceipt = depositPayment && normalizeText(depositPayment?.received_at)
-      ? {
-        deposit_received_at: normalizeText(depositPayment?.received_at),
-        deposit_confirmed_by_atp_staff_id: normalizeText(depositPayment?.confirmed_by_atp_staff_id),
-        deposit_reference: normalizeText(depositPayment?.reference)
-      }
-      : null;
-    if (normalizedDepositReceipt) {
-      if (!normalizedDepositReceipt.deposit_received_at) {
-        sendJson(res, 422, { error: "Deposit payment received_at is required." });
-        return;
-      }
-      if (!normalizedDepositReceipt.deposit_confirmed_by_atp_staff_id) {
-        sendJson(res, 422, { error: "Deposit payment confirmed_by_atp_staff_id is required." });
-        return;
-      }
-    }
-
-    const nextPricingJson = JSON.stringify(nextPricingBase);
-    const currentPricingJson = JSON.stringify(currentPricing);
-    const pricingChanged = nextPricingJson !== currentPricingJson;
-    const acceptedRecordAvailable = Boolean(
-      booking?.accepted_offer_snapshot
-      && booking?.accepted_payment_terms_snapshot
-      && Number.isFinite(Number(booking?.accepted_deposit_amount_cents))
-      && normalizeText(booking?.accepted_deposit_currency)
-    );
-    const depositReceiptUnchanged = !normalizedDepositReceipt || (
-      normalizeText(booking?.deposit_received_at) === normalizedDepositReceipt.deposit_received_at
-      && normalizeText(booking?.deposit_confirmed_by_atp_staff_id) === normalizedDepositReceipt.deposit_confirmed_by_atp_staff_id
-      && normalizeText(booking?.accepted_deposit_reference) === normalizedDepositReceipt.deposit_reference
-      && acceptedRecordAvailable
-    );
-    if (!pricingChanged && depositReceiptUnchanged) {
-      sendJson(res, 200, { ...(await buildBookingDetailResponse(booking, req)), unchanged: true });
-      return;
-    }
-
-    let receiptUpdate = null;
-    if (normalizedDepositReceipt) {
-      try {
-        receiptUpdate = await freezeAcceptedCommercialRecord(booking, {
-          now: nowIso(),
-          depositReceivedAt: normalizedDepositReceipt.deposit_received_at,
-          depositConfirmedByAtpStaffId: normalizedDepositReceipt.deposit_confirmed_by_atp_staff_id,
-          depositReference: normalizedDepositReceipt.deposit_reference,
-          baseCurrency: BASE_CURRENCY,
-          normalizeGeneratedOfferSnapshot,
-          normalizeBookingOffer,
-          normalizeBookingTravelPlan,
-          buildBookingOfferPaymentTermsReadModel,
-          listBookingTravelPlanPdfs
-        });
-      } catch (error) {
-        sendJson(res, 422, { error: String(error?.message || error) });
-        return;
-      }
-    }
-
-    booking.pricing = nextPricingBase;
-    if (pricingChanged) {
-      incrementBookingRevision(booking, "pricing_revision");
-    }
-    if (receiptUpdate?.changed) {
-      incrementBookingRevision(booking, "core_revision");
-    }
-    booking.updated_at = nowIso();
-    addActivity(
-      store,
-      booking.id,
-      "PRICING_UPDATED",
-      actorLabel(principal, normalizeText(payload.actor) || "keycloak_user"),
-      receiptUpdate?.detail || "Booking commercials updated"
-    );
-    await persistStore(store);
-
-    sendJson(res, 200, await buildBookingDetailResponse(booking, req));
   }
 
   async function handlePatchBookingOffer(req, res, [bookingId]) {
@@ -498,13 +179,13 @@ export function createBookingFinanceHandlers(deps) {
       booking.offer,
       check.offer,
       contentLang,
-      booking.preferred_currency || booking.pricing?.currency || BASE_CURRENCY,
+      booking.preferred_currency || BASE_CURRENCY,
       sourceLang
     );
     const nextOfferBase = await convertBookingOfferToBaseCurrency(mergedOffer);
     const nextOfferJson = JSON.stringify(nextOfferBase);
     const currentOfferJson = JSON.stringify(
-      normalizeBookingOffer(booking.offer, booking.preferred_currency || booking.pricing?.currency || BASE_CURRENCY)
+      normalizeBookingOffer(booking.offer, booking.preferred_currency || BASE_CURRENCY)
     );
     if (nextOfferJson === currentOfferJson) {
       sendJson(res, 200, { ...(await buildBookingDetailResponse(booking, req)), unchanged: true });
@@ -675,13 +356,6 @@ export function createBookingFinanceHandlers(deps) {
       offer: offerSnapshot,
       travel_plan: travelPlanSnapshot
     };
-    const { approverId, approverLabel } = resolveGeneratedOfferManagementApprover(booking);
-    if (approverId) {
-      generatedOffer.management_approver_atp_staff_id = approverId;
-    }
-    if (approverLabel) {
-      generatedOffer.management_approver_label = approverLabel;
-    }
     booking.generated_offers = [...existingGeneratedOffers, generatedOffer];
     await ensureFrozenGeneratedOfferPdf(generatedOffer, booking);
     incrementBookingRevision(booking, "offer_revision");
@@ -853,9 +527,8 @@ export function createBookingFinanceHandlers(deps) {
 
     const currentGeneratedOffer = generatedOffers[index];
     const nextComment = normalizeText(payload?.comment) || null;
-    const confirmAsManagement = payload?.confirm_as_management === true;
     const commentChanged = (currentGeneratedOffer.comment || null) !== nextComment;
-    if (!commentChanged && !confirmAsManagement) {
+    if (!commentChanged) {
       sendJson(res, 200, { ...(await buildBookingDetailResponse(booking, req)), unchanged: true });
       return;
     }
@@ -866,35 +539,6 @@ export function createBookingFinanceHandlers(deps) {
         comment: nextComment
       };
       booking.generated_offers = generatedOffers;
-    }
-
-    if (confirmAsManagement) {
-      const finalized = await finalizeManagementGeneratedOfferConfirmation({
-        req,
-        payload,
-        store,
-        booking,
-        generatedOffer: generatedOffers[index],
-        principal
-      });
-      if (!finalized.ok) {
-        sendJson(res, finalized.status || 422, { error: finalized.error || "Could not confirm generated offer." });
-        return;
-      }
-      if (commentChanged && finalized.unchanged) {
-        incrementBookingRevision(booking, "offer_revision");
-        booking.updated_at = nowIso();
-        addActivity(
-          store,
-          booking.id,
-          "OFFER_UPDATED",
-          actorLabel(principal, normalizeText(payload?.actor) || "keycloak_user"),
-          "Generated offer comment updated"
-        );
-        await persistStore(store);
-      }
-      sendJson(res, 200, await buildBookingDetailResponse(booking, req));
-      return;
     }
 
     incrementBookingRevision(booking, "offer_revision");
@@ -938,21 +582,21 @@ export function createBookingFinanceHandlers(deps) {
       sendJson(res, 404, { error: "Generated offer not found" });
       return;
     }
-    if (normalizeText(booking?.confirmed_generated_offer_id) === generatedOfferId) {
-      sendJson(res, 409, { error: "Confirmed generated offers cannot be deleted." });
-      return;
-    }
-    const hasRecordedPaymentSnapshot = (Array.isArray(booking?.pricing?.payments) ? booking.pricing.payments : []).some((payment) => (
-      normalizeText(payment?.received_generated_offer_id) === generatedOfferId
-      || (normalizeText(payment?.origin_generated_offer_id) === generatedOfferId && normalizeText(payment?.received_at))
-    ));
-    if (hasRecordedPaymentSnapshot) {
-      sendJson(res, 409, { error: "Generated offers linked to recorded payments cannot be deleted." });
-      return;
-    }
-
     const [removed] = generatedOffers.splice(index, 1);
     booking.generated_offers = generatedOffers;
+    if (normalizeText(booking?.accepted_offer_artifact_ref) === normalizeText(removed?.id)) {
+      delete booking.accepted_offer_artifact_ref;
+      delete booking.accepted_offer_snapshot;
+      delete booking.accepted_payment_terms_snapshot;
+      delete booking.accepted_travel_plan_snapshot;
+      delete booking.accepted_deposit_amount_cents;
+      delete booking.accepted_deposit_currency;
+      delete booking.accepted_deposit_reference;
+      delete booking.deposit_received_at;
+      delete booking.deposit_confirmed_by_atp_staff_id;
+      delete booking.accepted_travel_plan_artifact_ref;
+      incrementBookingRevision(booking, "core_revision");
+    }
     incrementBookingRevision(booking, "offer_revision");
     booking.updated_at = nowIso();
     addActivity(
@@ -971,7 +615,6 @@ export function createBookingFinanceHandlers(deps) {
   }
 
   return {
-    handlePatchBookingPricing,
     handlePatchBookingOffer,
     handlePostOfferExchangeRates,
     handleGenerateBookingOffer,

@@ -32,32 +32,6 @@ import (
 	submitted_at?:             common.#Timestamp
 }
 
-#BookingPayment: {
-	id:                           common.#Identifier
-	label:                        string & !=""
-	status:                       enums.#PaymentStatus
-	net_amount_cents:             common.#NonNegativeMoneyAmount
-	tax_rate_basis_points:        >=0 & int
-	paid_at?:                     common.#Timestamp
-	received_at?:                 common.#Timestamp
-	received_amount_cents?:       common.#NonNegativeMoneyAmount
-	confirmed_by_atp_staff_id?:   common.#Identifier
-	reference?:                   string
-	notes?:                       string
-	tax_amount_cents?:            common.#MoneyAmount
-	gross_amount_cents?:          common.#MoneyAmount
-	origin_generated_offer_id?:   common.#Identifier
-	received_generated_offer_id?: common.#Identifier
-	origin_payment_term_line_id?: common.#Identifier
-	created_at?:                  common.#Timestamp
-	updated_at?:                  common.#Timestamp
-}
-
-#BookingPricing: {
-	currency: enums.#CurrencyCode
-	payments: [...#BookingPayment]
-}
-
 #BookingActivityType: enums.#BookingActivityType
 
 #BookingActivity: {
@@ -69,7 +43,7 @@ import (
 	created_at: common.#Timestamp
 }
 
-#BookingInvoice: #Invoice
+#BookingPaymentDocument: #PaymentDocument
 
 #BookingPdfPersonalizationScoped: {
 	subtitle?:                 string
@@ -119,9 +93,8 @@ import (
 	notes_revision?:                 >=0 & int
 	persons_revision?:               >=0 & int
 	travel_plan_revision?:           >=0 & int
-	pricing_revision?:               >=0 & int
 	offer_revision?:                 >=0 & int
-	invoices_revision?:              >=0 & int
+	payment_documents_revision?:     >=0 & int
 	deposit_received_at?:            common.#Timestamp
 	deposit_confirmed_by_atp_staff_id?: common.#Identifier
 	assigned_keycloak_user_id?:      common.#Identifier
@@ -135,7 +108,6 @@ import (
 	number_of_travelers?:         >=0 & <=common.#MaxTravelers & int
 	preferred_currency?:          enums.#CurrencyCode
 	customer_language?:           enums.#LanguageCode
-	confirmed_generated_offer_id?: common.#Identifier
 	accepted_deposit_amount_cents?: common.#NonNegativeMoneyAmount
 	accepted_deposit_currency?:     enums.#CurrencyCode
 	accepted_deposit_reference?:    string
@@ -146,7 +118,6 @@ import (
 	accepted_travel_plan_artifact_ref?: common.#Identifier
 	notes?:                       string
 	web_form_submission?: #BookingWebFormSubmission
-	pricing:              #BookingPricing
 	offer:                #BookingOffer
 	generated_offers?: [...#GeneratedBookingOffer]
 	created_at: common.#Timestamp

@@ -12,7 +12,7 @@ This privacy policy covers the **AsiaTravelPlan** website and services (`asiatra
 
 ## About this service
 
-AsiaTravelPlan runs a static web frontend with an API-backed backend for travel enquiries, bookings, customer records, invoices, and internal operations.
+AsiaTravelPlan runs a static web frontend with an API-backed backend for travel enquiries, bookings, customer records, payment documents, and internal operations.
 
 - **Frontend**: HTML, CSS, JavaScript (site pages and scripts in this repository).
 - **Backend**: Node.js (Express-style HTTP API), PostgreSQL, Redis, and Keycloak authentication.

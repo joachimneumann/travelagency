@@ -88,7 +88,7 @@ The traveler may then:
 The traveler may not:
 - view booking notes
 - view pricing
-- view invoices
+- view payment documents
 - view activities
 - view ATP staff assignment details
 - see any other traveler record
@@ -114,7 +114,7 @@ Excluded fields should include:
 - internal workflow state
 - offer and pricing
 - payment state
-- invoice data
+- payment-document data
 - internal activity log
 - chat history
 - ATP staff internal identifiers

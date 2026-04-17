@@ -636,13 +636,7 @@ export function createBookingTravelPlanHandlers(deps) {
     }
     if (!(await assertExpectedRevision(req, payload, booking, "expected_travel_plan_revision", "travel_plan_revision", res))) return;
 
-    const check = validateBookingTravelPlanInput(
-      payload.travel_plan,
-      booking.offer,
-      {
-        supplierIds: Array.isArray(store.suppliers) ? store.suppliers.map((supplier) => supplier?.id) : []
-      }
-    );
+    const check = validateBookingTravelPlanInput(payload.travel_plan, booking.offer);
     if (!check.ok) {
       sendJson(res, 422, { error: check.error });
       return;

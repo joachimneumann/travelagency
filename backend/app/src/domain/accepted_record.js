@@ -11,13 +11,6 @@ function hasMeaningfulTravelPlan(travelPlan) {
   return days.length > 0 || attachments.length > 0;
 }
 
-function findConfirmedGeneratedOffer(booking) {
-  const confirmedGeneratedOfferId = normalizeText(booking?.confirmed_generated_offer_id);
-  if (!confirmedGeneratedOfferId) return null;
-  const generatedOffers = Array.isArray(booking?.generated_offers) ? booking.generated_offers : [];
-  return generatedOffers.find((generatedOffer) => normalizeText(generatedOffer?.id) === confirmedGeneratedOfferId) || null;
-}
-
 function findAcceptedDepositLine(lines) {
   const normalizedLines = Array.isArray(lines) ? lines : [];
   return normalizedLines.find((line) => normalizeText(line?.kind).toUpperCase() === "DEPOSIT") || normalizedLines[0] || null;
@@ -34,7 +27,6 @@ function selectLatestTravelPlanArtifact(artifacts) {
 async function resolveAcceptedCommercialSnapshot(booking, deps = {}, options = {}) {
   const {
     baseCurrency = "USD",
-    normalizeGeneratedOfferSnapshot,
     normalizeBookingOffer,
     normalizeBookingTravelPlan,
     buildBookingOfferPaymentTermsReadModel,
@@ -54,28 +46,19 @@ async function resolveAcceptedCommercialSnapshot(booking, deps = {}, options = {
     ? cloneJson(booking.accepted_travel_plan_snapshot)
     : null;
 
-  const confirmedGeneratedOffer = findConfirmedGeneratedOffer(booking);
-  const normalizedConfirmedGeneratedOffer = confirmedGeneratedOffer && typeof normalizeGeneratedOfferSnapshot === "function"
-    ? normalizeGeneratedOfferSnapshot(confirmedGeneratedOffer, booking)
-    : null;
-
   const fallbackCurrency = normalizeText(
     booking?.offer?.currency
     || booking?.preferred_currency
-    || booking?.pricing?.currency
     || baseCurrency
   ).toUpperCase() || baseCurrency;
   const offerSnapshot = acceptedOfferSnapshot
-    || (normalizedConfirmedGeneratedOffer?.offer
-      ? cloneJson(normalizedConfirmedGeneratedOffer.offer)
-      : null)
     || (allowDraftSource
       ? (typeof normalizeBookingOffer === "function"
         ? normalizeBookingOffer(booking?.offer, fallbackCurrency)
         : cloneJson(booking?.offer))
       : null);
   if (!offerSnapshot || typeof offerSnapshot !== "object") {
-    throw new Error("Payment receipt requires an accepted commercial snapshot. Create the first payment request or confirmation before recording the receipt.");
+    throw new Error("Payment receipt requires an accepted commercial snapshot. Create the first payment request before recording the receipt.");
   }
 
   const paymentTermsSnapshot = acceptedPaymentTermsSnapshot
@@ -83,7 +66,7 @@ async function resolveAcceptedCommercialSnapshot(booking, deps = {}, options = {
       ? cloneJson(offerSnapshot.payment_terms)
       : null);
   if (!paymentTermsSnapshot) {
-    throw new Error("Payment receipt requires accepted payment terms. Create the first payment request or confirmation before recording the receipt.");
+    throw new Error("Payment receipt requires accepted payment terms. Create the first payment request before recording the receipt.");
   }
 
   const paymentTermsReadModel = typeof buildBookingOfferPaymentTermsReadModel === "function"
@@ -99,9 +82,6 @@ async function resolveAcceptedCommercialSnapshot(booking, deps = {}, options = {
   }
 
   const normalizedTravelPlan = acceptedTravelPlanSnapshot
-    || (normalizedConfirmedGeneratedOffer?.travel_plan
-      ? cloneJson(normalizedConfirmedGeneratedOffer.travel_plan)
-      : null)
     || (allowDraftSource
       ? (typeof normalizeBookingTravelPlan === "function"
         ? normalizeBookingTravelPlan(booking?.travel_plan, offerSnapshot, { strictReferences: false })
@@ -143,11 +123,6 @@ async function resolveAcceptedCommercialSnapshot(booking, deps = {}, options = {
       || offerSnapshot?.currency
       || baseCurrency
     ).toUpperCase() || baseCurrency;
-    changed = true;
-    acceptedRecordCreated = true;
-  }
-  if (!normalizeText(booking?.accepted_offer_artifact_ref) && confirmedGeneratedOffer?.id) {
-    booking.accepted_offer_artifact_ref = normalizeText(confirmedGeneratedOffer.id);
     changed = true;
     acceptedRecordCreated = true;
   }

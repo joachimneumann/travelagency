@@ -15,9 +15,8 @@ function buildSourceBooking() {
     notes_revision: 3,
     persons_revision: 2,
     travel_plan_revision: 4,
-    pricing_revision: 5,
     offer_revision: 6,
-    invoices_revision: 1,
+    payment_documents_revision: 1,
     image: "booking_images/source.webp",
     notes: "Internal note",
     source_channel: "website",
@@ -143,10 +142,6 @@ function buildSourceBooking() {
       ],
       attachments: [{ id: "travel_plan_attachment_1", storage_path: "booking_travel_plan_attachments/doc.pdf" }]
     },
-    pricing: {
-      currency: "USD",
-      payments: [{ id: "pricing_payment_1", label: "Deposit", status: "PAID", paid_at: "2026-03-01T00:00:00.000Z" }]
-    },
     generated_offers: [{ id: "generated_offer_1" }]
   };
 }
@@ -252,8 +247,8 @@ test("cloneBookingForTesting keeps only approved metadata and clears commercial 
   assert.equal(cloned.travel_plan.attachments[0].storage_path, "booking_travel_plan_attachments/doc.pdf");
   assert.notEqual(cloned.travel_plan.attachments[0].id, "travel_plan_attachment_1");
 
-  assert.equal(cloned.pricing.currency, "USD");
-  assert.deepEqual(cloned.pricing.payments, []);
+  assert.equal(cloned.pricing, undefined);
+  assert.equal(cloned.pricing_revision, undefined);
 });
 
 test("cloneBookingForTesting can include travelers while keeping file refs", () => {
@@ -283,7 +278,7 @@ test("cloneBookingsFromStore forwards includeTravelers to the shared clone polic
     await writeFile(storePath, `${JSON.stringify({
       bookings: [buildSourceBooking()],
       activities: [],
-      invoices: [{ id: "invoice_1", booking_id: "booking_source" }],
+      payment_documents: [{ id: "payment_document_1", booking_id: "booking_source" }],
       chat_conversations: [{ id: "conv_1", booking_id: "booking_source" }],
       chat_events: [{ id: "evt_1", conversation_id: "conv_1" }]
     }, null, 2)}\n`, "utf8");
@@ -299,7 +294,7 @@ test("cloneBookingsFromStore forwards includeTravelers to the shared clone polic
     assert.ok(cloned);
     assert.equal(cloned.persons.length, 1);
     assert.equal(cloned.generated_offers.length, 0);
-    assert.equal(updatedStore.invoices.length, 1);
+    assert.equal(updatedStore.payment_documents.length, 1);
     assert.equal(updatedStore.chat_conversations.length, 1);
     assert.equal(updatedStore.chat_events.length, 1);
     assert.equal(updatedStore.activities.length, 1);
@@ -370,12 +365,12 @@ test("transferBookingOverSsh copies one booking and its booking-owned artifacts 
     await mkdir(path.join(remoteDataDir, "booking_person_photos", "booking_copy_me"), { recursive: true });
     await mkdir(path.join(remoteDataDir, "pdfs", "attachments", "booking_copy_me"), { recursive: true });
     await mkdir(path.join(remoteDataDir, "pdfs", "generated_offers"), { recursive: true });
-    await mkdir(path.join(remoteDataDir, "pdfs", "invoices"), { recursive: true });
+    await mkdir(path.join(remoteDataDir, "pdfs", "payment_documents"), { recursive: true });
 
     await writeFile(localStorePath, `${JSON.stringify({
       bookings: [{ id: "booking_existing_local" }],
       activities: [],
-      invoices: [],
+      payment_documents: [],
       chat_conversations: [],
       chat_events: []
     }, null, 2)}\n`, "utf8");
@@ -383,7 +378,7 @@ test("transferBookingOverSsh copies one booking and its booking-owned artifacts 
     await writeFile(remoteStorePath, `${JSON.stringify({
       bookings: [booking],
       activities: [{ id: "activity_1", booking_id: "booking_copy_me", type: "BOOKING_UPDATED" }],
-      invoices: [{ id: "invoice_1", booking_id: "booking_copy_me", version: 2 }],
+      payment_documents: [{ id: "payment_document_1", booking_id: "booking_copy_me", version: 2 }],
       chat_conversations: [{ id: "conv_1", booking_id: "booking_copy_me" }],
       chat_events: [{ id: "evt_1", conversation_id: "conv_1" }]
     }, null, 2)}\n`, "utf8");
@@ -394,7 +389,7 @@ test("transferBookingOverSsh copies one booking and its booking-owned artifacts 
     await writeFile(path.join(remoteDataDir, "booking_person_photos", "booking_copy_me", "passport.webp"), "passport", "utf8");
     await writeFile(path.join(remoteDataDir, "pdfs", "attachments", "booking_copy_me", "voucher.pdf"), "voucher", "utf8");
     await writeFile(path.join(remoteDataDir, "pdfs", "generated_offers", "generated_offer_1.pdf"), "offer-pdf", "utf8");
-    await writeFile(path.join(remoteDataDir, "pdfs", "invoices", "invoice_1-v2.pdf"), "invoice-pdf", "utf8");
+    await writeFile(path.join(remoteDataDir, "pdfs", "payment_documents", "payment_document_1-v2.pdf"), "payment-pdf", "utf8");
 
     const execCalls = [];
     const execFileImpl = async (command, args) => {
@@ -441,7 +436,7 @@ test("transferBookingOverSsh copies one booking and its booking-owned artifacts 
     assert.equal(localStore.bookings.length, 2);
     assert.equal(localStore.bookings.some((item) => item.id === "booking_copy_me"), true);
     assert.equal(localStore.activities.length, 1);
-    assert.equal(localStore.invoices.length, 1);
+    assert.equal(localStore.payment_documents.length, 1);
     assert.equal(localStore.chat_conversations.length, 1);
     assert.equal(localStore.chat_events.length, 1);
 
@@ -454,7 +449,7 @@ test("transferBookingOverSsh copies one booking and its booking-owned artifacts 
     assert.equal(await readFile(path.join(localDataDir, "booking_person_photos", "booking_copy_me", "passport.webp"), "utf8"), "passport");
     assert.equal(await readFile(path.join(localDataDir, "pdfs", "attachments", "booking_copy_me", "voucher.pdf"), "utf8"), "voucher");
     assert.equal(await readFile(path.join(localDataDir, "pdfs", "generated_offers", "generated_offer_1.pdf"), "utf8"), "offer-pdf");
-    assert.equal(await readFile(path.join(localDataDir, "pdfs", "invoices", "invoice_1-v2.pdf"), "utf8"), "invoice-pdf");
+    assert.equal(await readFile(path.join(localDataDir, "pdfs", "payment_documents", "payment_document_1-v2.pdf"), "utf8"), "payment-pdf");
     assert.equal(execCalls.some((call) => call[0] === "scp"), true);
   } finally {
     await rm(rootDir, { recursive: true, force: true });

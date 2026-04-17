@@ -61,7 +61,6 @@ import (
 	details?:        string
 	image_subtitle?: string
 	location?:       string
-	supplier_id?:    common.#Identifier
 	start_time?:     string
 	end_time?:       string
 	image?:          #BookingTravelPlanServiceImage

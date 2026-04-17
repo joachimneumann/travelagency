@@ -141,9 +141,7 @@ export function normalizeBookingPdfPersonalization(value, { flatLang = "en", sou
     ...raw,
     payment_confirmation_deposit: raw?.payment_confirmation_deposit && typeof raw.payment_confirmation_deposit === "object" && !Array.isArray(raw.payment_confirmation_deposit)
       ? raw.payment_confirmation_deposit
-      : raw?.booking_confirmation && typeof raw.booking_confirmation === "object" && !Array.isArray(raw.booking_confirmation)
-        ? raw.booking_confirmation
-        : raw?.payment_confirmation_deposit
+      : raw?.payment_confirmation_deposit
   };
   return compactObject(
     Object.fromEntries(

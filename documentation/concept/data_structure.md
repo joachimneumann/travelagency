@@ -9,6 +9,98 @@ This means:
 - no separate booking anchor entity outside the booking itself
 - the booking contains the contact and traveler information needed to operate that booking
 
+## Target model folder split
+
+This document distinguishes between persistence buckets and shared schema layers.
+
+Target folder layout:
+
+```text
+model/
+  json/
+  database/
+  common/
+  enums/
+  api/
+```
+
+Intended meaning:
+
+- `model/json`
+  - entities whose source of truth remains JSON files under `content/`
+- `model/database`
+  - entities whose source of truth is planned to move to PostgreSQL
+- `model/common`
+  - shared value types such as identifiers, timestamps, money, URLs, and constraints
+- `model/enums`
+  - shared controlled vocabularies used by both JSON-backed and database-backed models
+- `model/api`
+  - request, response, list, and read-model contracts for transport over HTTP
+
+Important boundary:
+
+- `model/common`, `model/enums`, and `model/api` are shared schema layers
+- they are not persistence buckets
+- they should not be interpreted as standalone PostgreSQL tables or standalone JSON content collections
+
+Status note:
+
+- this is the intended conceptual split
+- the repo may still temporarily use `model/entities` until the refactor is implemented
+
+## JSON-backed content models
+
+These models remain file-backed content and do not belong to the PostgreSQL migration scope:
+
+- `AtpStaffProfile`
+- `AtpStaffLocalizedTextEntry`
+- `CountryPracticalInfo`
+- `CountryEmergencyContact`
+- `Tour`
+- `TravelPlanTemplate`
+
+Planned file grouping:
+
+- `model/json/atp_staff.cue`
+- `model/json/country_reference.cue`
+- `model/json/tour.cue`
+- `model/json/travel_plan_template.cue`
+
+Operational meaning:
+
+- ATP staff profiles remain editable content under `content/atp_staff`
+- public destination support and publication flags remain editable content under `content/country_reference_info.json`
+- marketing tours remain editable content under `content/tours`
+- travel plan templates remain editable content under `content/travel_plan_templates`
+
+## Database-backed operational models
+
+These models are part of the booking-owned operational domain and belong in the PostgreSQL direction:
+
+- `Booking`
+- `BookingPerson`
+- `BookingPersonAddress`
+- `BookingPersonConsent`
+- `BookingPersonDocument`
+- `BookingOffer`
+- `GeneratedBookingOffer`
+- `PaymentDocument`
+- `PaymentDocumentComponent`
+- `PricingAdjustment`
+- `BookingTravelPlan`
+- `BookingTravelPlanDay`
+- `BookingTravelPlanService`
+- `BookingTravelPlanServiceImage`
+- `BookingTravelPlanAttachment`
+
+Planned file grouping:
+
+- `model/database/booking.cue`
+- `model/database/booking_person.cue`
+- `model/database/booking_offer.cue`
+- `model/database/payment_document.cue`
+- `model/database/travel_plan.cue`
+
 ## Booking
 
 `Booking`
@@ -17,13 +109,11 @@ This means:
 - `notes_revision`
 - `persons_revision`
 - `travel_plan_revision`
-- `pricing_revision`
 - `offer_revision`
-- `invoices_revision`
+- `payment_documents_revision`
 - stage, assignment, notes
-- commercial data such as pricing, offer, invoices
+- commercial data such as offer snapshots and payment documents
 - `customer_language`
-- `confirmed_generated_offer_id`
 - `number_of_travelers`
 - `web_form_submission`
 - `persons[]`
@@ -282,7 +372,7 @@ Current lifecycle:
 - `booking_confirmation`
 
 `BookingReadModel`
-- booking response shape used for list, detail, activity, and invoice responses
+- booking response shape used for list, detail, activity, and payment-document responses
 - translation status summaries
 - generated-offer email capability flags
 - generated offers projected as `GeneratedBookingOfferReadModel[]`

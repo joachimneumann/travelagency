@@ -21,7 +21,7 @@ The current active domain vocabulary includes:
 - tour
 - travel plan template
 - pricing
-- invoice
+- payment document
 - activity
 - generated offers
 - customer confirmation flow
@@ -75,7 +75,7 @@ Current persistence:
 - JSON store for bookings and related runtime state
 - per-folder persisted assets for tours
 - per-folder persisted assets for travel plan templates
-- PDF and attachment folders for generated offer, invoice, and travel-plan artifacts
+- PDF and attachment folders for generated offer, payment-document, and travel-plan artifacts
 
 ## Derivation Flow
 
@@ -90,7 +90,7 @@ Current persistence:
 Backend:
 - authorization
 - workflow and validation
-- pricing and invoice logic
+- pricing and payment-document logic
 - persistence orchestration
 - chat/webhook integration
 - generated-offer freezing and serving

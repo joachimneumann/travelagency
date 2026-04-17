@@ -355,7 +355,7 @@ function footerText(companyProfile, lang) {
       companyProfile.whatsapp
     ].filter(Boolean).join(" · ");
   }
-  return pdfT(lang, "invoice.footer", "Issued by Asia Travel Plan");
+  return pdfT(lang, "document.footer", "Issued by Asia Travel Plan");
 }
 
 function drawFooter(doc, fonts, companyProfile, lang) {

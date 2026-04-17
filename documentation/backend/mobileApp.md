@@ -17,7 +17,7 @@ Implemented now:
 Not implemented now:
 - booking list
 - booking detail
-- offer, invoice, activity, person, and chat UI
+- offer, payment-document, activity, person, and chat UI
 - tour editing
 - generated Swift contract files in the active tree
 
@@ -108,7 +108,7 @@ When mobile work resumes, it must follow the active web/backend vocabulary:
 - booking persons
 - ATP staff
 - tours
-- invoices
+- payment documents
 - activities
 
 Important rules:
@@ -124,7 +124,7 @@ If mobile work resumes, the next useful scope is:
 - booking stage changes where allowed
 - booking notes
 - booking activity visibility
-- booking invoice visibility
+- booking payment-document visibility
 - booking person summary visibility
 
 Still out of scope unless there is a strong reason:

@@ -185,20 +185,20 @@ function safeText(value, fallback = "-") {
   return normalized || fallback;
 }
 
-function invoiceDocumentKind(value) {
+function paymentDocumentKind(value) {
   const normalized = normalizeText(value).toUpperCase();
-  return normalized || "INVOICE";
+  return normalized || "PAYMENT_REQUEST";
 }
 
-function invoiceSubjectLabel(invoice, lang) {
-  const kind = invoiceDocumentKind(invoice?.document_kind);
+function paymentDocumentSubjectLabel(document, lang) {
+  const kind = paymentDocumentKind(document?.document_kind);
   if (kind === "PAYMENT_REQUEST") {
     return pdfT(lang, "payment.request.subject", "Payment request");
   }
   if (kind === "PAYMENT_CONFIRMATION") {
     return pdfT(lang, "payment.confirmation.subject", "Payment confirmation");
   }
-  return pdfT(lang, "invoice.subject", "Invoice");
+  return pdfT(lang, "document.subject", "Payment document");
 }
 
 function drawMetaRow(doc, label, value, x, y, width, fonts) {
@@ -230,7 +230,7 @@ function footerText(companyProfile, lang) {
       companyProfile.whatsapp
     ].filter(Boolean).join(" · ");
   }
-  return pdfT(lang, "invoice.footer", "Issued by Asia Travel Plan");
+  return pdfT(lang, "document.footer", "Issued by Asia Travel Plan");
 }
 
 function drawFooter(doc, fonts, companyProfile, lang) {
@@ -247,9 +247,9 @@ function drawFooter(doc, fonts, companyProfile, lang) {
     );
 }
 
-function isDepositPaymentRequestDocument(invoice) {
-  return invoiceDocumentKind(invoice?.document_kind) === "PAYMENT_REQUEST"
-    && normalizeText(invoice?.payment_kind).toUpperCase() === "DEPOSIT";
+function isDepositPaymentRequestDocument(document) {
+  return paymentDocumentKind(document?.document_kind) === "PAYMENT_REQUEST"
+    && normalizeText(document?.payment_kind).toUpperCase() === "DEPOSIT";
 }
 
 function resolveFriendlyPaymentSchedule(booking, buildBookingOfferPaymentTermsReadModel) {
@@ -264,7 +264,6 @@ function resolveFriendlyPaymentSchedule(booking, buildBookingOfferPaymentTermsRe
     paymentTermsSnapshot?.currency
     || offerSnapshot?.currency
     || booking?.preferred_currency
-    || booking?.pricing?.currency
     || "USD"
   ).toUpperCase() || "USD";
   const totalAmountCents = Math.max(0, Math.round(Number(
@@ -424,7 +423,7 @@ function friendlyScheduleRowLabel(line, installmentIndex, lang) {
   });
 }
 
-function drawDepositPaymentSchedule(doc, startY, schedule, invoiceCurrency, fonts, lang) {
+function drawDepositPaymentSchedule(doc, startY, schedule, documentCurrency, fonts, lang) {
   const rows = Array.isArray(schedule?.lines) ? schedule.lines : [];
   if (!rows.length) return startY;
   const leftWidth = doc.page.width - PAGE_MARGIN * 2;
@@ -468,7 +467,7 @@ function drawDepositPaymentSchedule(doc, startY, schedule, invoiceCurrency, font
       .fontSize(10.4)
       .fillColor(PDF_COLORS.textStrong)
       .text(rowLabel, PAGE_MARGIN + 12, y + 10, { width: leftWidth - 160 })
-      .text(formatPdfMoney(line?.resolved_amount_cents || 0, invoiceCurrency, lang), doc.page.width - PAGE_MARGIN - 132, y + 10, {
+      .text(formatPdfMoney(line?.resolved_amount_cents || 0, documentCurrency, lang), doc.page.width - PAGE_MARGIN - 132, y + 10, {
         width: 120,
         align: "right"
       });
@@ -483,7 +482,7 @@ function drawDepositPaymentSchedule(doc, startY, schedule, invoiceCurrency, font
       width: leftWidth - 140,
       align: "right"
     })
-    .text(formatPdfMoney(totalAmountCents, invoiceCurrency, lang), doc.page.width - PAGE_MARGIN - 132, y + 6, {
+    .text(formatPdfMoney(totalAmountCents, documentCurrency, lang), doc.page.width - PAGE_MARGIN - 132, y + 6, {
       width: 120,
       align: "right"
     });
@@ -520,8 +519,8 @@ function drawDepositTravelPlanRunningHeader(doc, booking, fonts, companyProfile,
   return PAGE_MARGIN + 36;
 }
 
-export function createInvoicePdfWriter({
-  invoicePdfPath,
+export function createPaymentDocumentPdfWriter({
+  paymentDocumentPdfPath,
   companyProfile = null,
   logoPath = "",
   bookingImagesDir = "",
@@ -531,24 +530,24 @@ export function createInvoicePdfWriter({
   buildBookingOfferPaymentTermsReadModel = null,
   buildBookingTravelPlanReadModel = null
 }) {
-  return async function writeInvoicePdf(invoice, invoiceParty, booking, options = {}) {
-    const lang = normalizePdfLang(invoice?.lang || booking?.customer_language || booking?.web_form_submission?.preferred_language || "en");
-    const outputPath = normalizeText(options?.outputPath) || invoicePdfPath(invoice.id, invoice.version || 1);
+  return async function writePaymentDocumentPdf(document, paymentDocumentParty, booking, options = {}) {
+    const lang = normalizePdfLang(document?.lang || booking?.customer_language || booking?.web_form_submission?.preferred_language || "en");
+    const outputPath = normalizeText(options?.outputPath) || paymentDocumentPdfPath(document.id, document.version || 1);
     await mkdir(path.dirname(outputPath), { recursive: true });
     const fonts = await resolvePdfFontsForLang({
       lang,
       regularCandidates: PDF_FONT_REGULAR_CANDIDATES,
       boldCandidates: PDF_FONT_BOLD_CANDIDATES
     });
-    const recipient = invoice?.recipient_snapshot || invoiceParty || {};
-    const currency = normalizeText(invoice?.currency) || "USD";
-    const components = Array.isArray(invoice?.components) ? invoice.components : [];
+    const recipient = document?.recipient_snapshot || paymentDocumentParty || {};
+    const currency = normalizeText(document?.currency) || "USD";
+    const components = Array.isArray(document?.components) ? document.components : [];
     const logoImage = await fileExists(logoPath)
       ? { path: logoPath }
       : null;
-    const previewMode = options?.preview === true || invoice?.is_preview === true;
-    const previewWatermarkText = normalizeText(options?.previewWatermarkText) || normalizeText(invoice?.preview_watermark_text) || "Preview";
-    const depositRequestMode = isDepositPaymentRequestDocument(invoice);
+    const previewMode = options?.preview === true || document?.is_preview === true;
+    const previewWatermarkText = normalizeText(options?.previewWatermarkText) || normalizeText(document?.preview_watermark_text) || "Preview";
+    const depositRequestMode = isDepositPaymentRequestDocument(document);
     const travelPlan = depositRequestMode
       ? resolveTravelPlanForDepositRequest(booking, buildBookingTravelPlanReadModel, lang)
       : null;
@@ -583,9 +582,9 @@ export function createInvoicePdfWriter({
         bufferPages: previewMode,
         compress: false,
         info: {
-          Title: normalizeText(invoice?.title) || invoiceSubjectLabel(invoice, lang),
+          Title: normalizeText(document?.title) || paymentDocumentSubjectLabel(document, lang),
           Author: companyProfile?.name || "Asia Travel Plan",
-          Subject: invoiceSubjectLabel(invoice, lang)
+          Subject: paymentDocumentSubjectLabel(document, lang)
         }
       });
       const stream = createWriteStream(outputPath);
@@ -608,11 +607,11 @@ export function createInvoicePdfWriter({
         y = drawDepositHero(doc, booking, travelPlan, heroImage, y, fonts, lang);
         y = drawGuideSection(doc, y, fonts, lang, guideContext, guidePhoto);
         y = drawDepositPaymentSchedule(doc, y, paymentSchedule, currency, fonts, lang);
-        y = drawParagraph(doc, y, normalizeText(invoice?.intro), fonts) + 14;
+        y = drawParagraph(doc, y, normalizeText(document?.intro), fonts) + 14;
         if (Array.isArray(travelPlan?.days) && travelPlan.days.length) {
           y = drawParagraph(doc, y, pdfT(lang, "payment.deposit_request.travel_plan_note", "Please find your travel plan at the end of this PDF."), fonts) + 14;
         }
-        y = drawParagraph(doc, y, normalizeText(invoice?.closing), fonts);
+        y = drawParagraph(doc, y, normalizeText(document?.closing), fonts);
         drawFooter(doc, fonts, companyProfile, lang);
 
         if (Array.isArray(travelPlan?.days) && travelPlan.days.length) {
@@ -660,51 +659,51 @@ export function createInvoicePdfWriter({
           .font(pdfFontName("bold", fonts))
           .fontSize(24)
           .fillColor(PDF_COLORS.textStrong)
-          .text(normalizeText(invoice?.title) || pdfT(lang, "invoice.title_fallback", "Invoice for {recipient}", {
-            recipient: safeText(recipient?.name, pdfT(lang, "invoice.recipient_fallback", "recipient"))
+          .text(normalizeText(document?.title) || pdfT(lang, "document.title_fallback", "Document for {recipient}", {
+            recipient: safeText(recipient?.name, pdfT(lang, "document.recipient_fallback", "recipient"))
           }), PAGE_MARGIN, y, { width: 320 });
-        if (normalizeText(invoice?.subtitle)) {
+        if (normalizeText(document?.subtitle)) {
           doc
             .font(pdfFontName("regular", fonts))
             .fontSize(11)
             .fillColor(PDF_COLORS.textMutedStrong)
-            .text(invoice.subtitle, PAGE_MARGIN, doc.y + 4, { width: 320 });
+            .text(document.subtitle, PAGE_MARGIN, doc.y + 4, { width: 320 });
         }
         y = doc.y + 20;
 
         const leftWidth = doc.page.width - PAGE_MARGIN * 2;
-        y = drawMetaRow(doc, `${pdfT(lang, "invoice.number", "Invoice number")}:`, safeText(invoice?.invoice_number, invoice?.id), PAGE_MARGIN, y, leftWidth, fonts) + 6;
-        y = drawMetaRow(doc, `${pdfT(lang, "invoice.issue_date", "Issue date")}:`, safeText(formatPdfDateOnly(invoice?.issue_date, lang, { day: "2-digit", month: "short", year: "numeric" }), safeText(invoice?.issue_date)), PAGE_MARGIN, y, leftWidth, fonts) + 6;
-        y = drawMetaRow(doc, `${pdfT(lang, "invoice.booking", "Booking")}:`, safeText(invoice?.booking_snapshot?.name || booking?.name, safeText(booking?.id)), PAGE_MARGIN, y, leftWidth, fonts) + 6;
-        if (normalizeText(invoice?.payment_label)) {
-          y = drawMetaRow(doc, `${pdfT(lang, "payment.label", "Payment")}:`, safeText(invoice?.payment_label), PAGE_MARGIN, y, leftWidth, fonts) + 6;
+        y = drawMetaRow(doc, `${pdfT(lang, "document.number", "Document number")}:`, safeText(document?.document_number, document?.id), PAGE_MARGIN, y, leftWidth, fonts) + 6;
+        y = drawMetaRow(doc, `${pdfT(lang, "document.issue_date", "Issue date")}:`, safeText(formatPdfDateOnly(document?.issue_date, lang, { day: "2-digit", month: "short", year: "numeric" }), safeText(document?.issue_date)), PAGE_MARGIN, y, leftWidth, fonts) + 6;
+        y = drawMetaRow(doc, `${pdfT(lang, "document.booking", "Booking")}:`, safeText(document?.booking_snapshot?.name || booking?.name, safeText(booking?.id)), PAGE_MARGIN, y, leftWidth, fonts) + 6;
+        if (normalizeText(document?.payment_label)) {
+          y = drawMetaRow(doc, `${pdfT(lang, "payment.label", "Payment")}:`, safeText(document?.payment_label), PAGE_MARGIN, y, leftWidth, fonts) + 6;
         }
-        if (normalizeText(invoice?.payment_received_at)) {
+        if (normalizeText(document?.payment_received_at)) {
           y = drawMetaRow(
             doc,
             `${pdfT(lang, "payment.received_at", "Received on")}:`,
-            safeText(formatPdfDateOnly(invoice?.payment_received_at, lang, { day: "2-digit", month: "short", year: "numeric" }), safeText(invoice?.payment_received_at)),
+            safeText(formatPdfDateOnly(document?.payment_received_at, lang, { day: "2-digit", month: "short", year: "numeric" }), safeText(document?.payment_received_at)),
             PAGE_MARGIN,
             y,
             leftWidth,
             fonts
           ) + 6;
         }
-        if (normalizeText(invoice?.payment_confirmed_by_label || invoice?.payment_confirmed_by_atp_staff_id)) {
+        if (normalizeText(document?.payment_confirmed_by_label || document?.payment_confirmed_by_atp_staff_id)) {
           y = drawMetaRow(
             doc,
             `${pdfT(lang, "payment.confirmed_by", "Confirmed by")}:`,
-            safeText(invoice?.payment_confirmed_by_label || invoice?.payment_confirmed_by_atp_staff_id),
+            safeText(document?.payment_confirmed_by_label || document?.payment_confirmed_by_atp_staff_id),
             PAGE_MARGIN,
             y,
             leftWidth,
             fonts
           ) + 6;
         }
-        if (normalizeText(invoice?.payment_reference)) {
-          y = drawMetaRow(doc, `${pdfT(lang, "payment.reference", "Reference")}:`, safeText(invoice?.payment_reference), PAGE_MARGIN, y, leftWidth, fonts) + 6;
+        if (normalizeText(document?.payment_reference)) {
+          y = drawMetaRow(doc, `${pdfT(lang, "payment.reference", "Reference")}:`, safeText(document?.payment_reference), PAGE_MARGIN, y, leftWidth, fonts) + 6;
         }
-        y = drawMetaRow(doc, `${pdfT(lang, "invoice.currency", "Currency")}:`, currency, PAGE_MARGIN, y, leftWidth, fonts) + 18;
+        y = drawMetaRow(doc, `${pdfT(lang, "document.currency", "Currency")}:`, currency, PAGE_MARGIN, y, leftWidth, fonts) + 18;
 
         y = ensureSpace(doc, y, 86);
         doc
@@ -716,23 +715,23 @@ export function createInvoicePdfWriter({
           .font(pdfFontName("bold", fonts))
           .fontSize(11)
           .fillColor(PDF_COLORS.textStrong)
-          .text(pdfT(lang, "invoice.recipient", "Recipient"), PAGE_MARGIN + 14, y + 12);
+          .text(pdfT(lang, "document.recipient", "Recipient"), PAGE_MARGIN + 14, y + 12);
         doc
           .font(pdfFontName("regular", fonts))
           .fontSize(10.5)
           .fillColor(PDF_COLORS.textMutedStrong)
           .text(safeText(recipient?.name, "-"), PAGE_MARGIN + 14, y + 30, { width: leftWidth - 28 })
-          .text(`${pdfT(lang, "invoice.email", "Email")}: ${safeText(recipient?.email)}`, PAGE_MARGIN + 14, y + 46, { width: leftWidth / 2 - 18 })
-          .text(`${pdfT(lang, "invoice.phone", "Phone")}: ${safeText(recipient?.phone_number)}`, PAGE_MARGIN + leftWidth / 2, y + 46, { width: leftWidth / 2 - 14 });
+          .text(`${pdfT(lang, "document.email", "Email")}: ${safeText(recipient?.email)}`, PAGE_MARGIN + 14, y + 46, { width: leftWidth / 2 - 18 })
+          .text(`${pdfT(lang, "document.phone", "Phone")}: ${safeText(recipient?.phone_number)}`, PAGE_MARGIN + leftWidth / 2, y + 46, { width: leftWidth / 2 - 14 });
         y += 94;
 
-        if (normalizeText(invoice?.intro)) {
+        if (normalizeText(document?.intro)) {
           y = ensureSpace(doc, y, 60);
           doc
             .font(pdfFontName("regular", fonts))
             .fontSize(10.8)
             .fillColor(PDF_COLORS.textMutedStrong)
-            .text(invoice.intro, PAGE_MARGIN, y, { width: leftWidth, lineGap: 2 });
+            .text(document.intro, PAGE_MARGIN, y, { width: leftWidth, lineGap: 2 });
           y = doc.y + 16;
         }
 
@@ -741,7 +740,7 @@ export function createInvoicePdfWriter({
           .font(pdfFontName("bold", fonts))
           .fontSize(13)
           .fillColor(PDF_COLORS.textStrong)
-          .text(pdfT(lang, "invoice.components", "Components"), PAGE_MARGIN, y);
+          .text(pdfT(lang, "document.components", "Components"), PAGE_MARGIN, y);
         y += 18;
 
         const columns = [
@@ -769,7 +768,7 @@ export function createInvoicePdfWriter({
             .font(pdfFontName("regular", fonts))
             .fontSize(10.5)
             .fillColor(PDF_COLORS.textMuted)
-            .text(pdfT(lang, "invoice.no_components", "No invoice components"), PAGE_MARGIN, y, { width: leftWidth });
+            .text(pdfT(lang, "document.no_components", "No document components"), PAGE_MARGIN, y, { width: leftWidth });
           y = doc.y + 18;
         } else {
           for (const component of components) {
@@ -806,11 +805,11 @@ export function createInvoicePdfWriter({
           .font(pdfFontName("bold", fonts))
           .fontSize(11)
           .fillColor(PDF_COLORS.textStrong)
-          .text(pdfT(lang, "invoice.total_amount", "Total amount"), doc.page.width - PAGE_MARGIN - totalLabelWidth - 150, y, {
+          .text(pdfT(lang, "document.total_amount", "Total amount"), doc.page.width - PAGE_MARGIN - totalLabelWidth - 150, y, {
             width: totalLabelWidth,
             align: "right"
           })
-          .text(formatPdfMoney(invoice?.total_amount_cents, currency, lang), doc.page.width - PAGE_MARGIN - 140, y, {
+          .text(formatPdfMoney(document?.total_amount_cents, currency, lang), doc.page.width - PAGE_MARGIN - 140, y, {
             width: 140,
             align: "right"
           });
@@ -819,39 +818,39 @@ export function createInvoicePdfWriter({
           .font(pdfFontName("bold", fonts))
           .fontSize(11)
           .fillColor(PDF_COLORS.textStrong)
-          .text(pdfT(lang, "invoice.due_amount", "Due amount"), doc.page.width - PAGE_MARGIN - totalLabelWidth - 150, y, {
+          .text(pdfT(lang, "document.due_amount", "Due amount"), doc.page.width - PAGE_MARGIN - totalLabelWidth - 150, y, {
             width: totalLabelWidth,
             align: "right"
           })
-          .text(formatPdfMoney(invoice?.due_amount_cents, currency, lang), doc.page.width - PAGE_MARGIN - 140, y, {
+          .text(formatPdfMoney(document?.due_amount_cents, currency, lang), doc.page.width - PAGE_MARGIN - 140, y, {
             width: 140,
             align: "right"
           });
         y += 28;
 
-        if (normalizeText(invoice?.notes)) {
+        if (normalizeText(document?.notes)) {
           y = ensureSpace(doc, y, 72);
           doc
             .font(pdfFontName("bold", fonts))
             .fontSize(11)
             .fillColor(PDF_COLORS.textStrong)
-            .text(pdfT(lang, "invoice.notes", "Notes"), PAGE_MARGIN, y);
+            .text(pdfT(lang, "document.notes", "Notes"), PAGE_MARGIN, y);
           y += 16;
           doc
             .font(pdfFontName("regular", fonts))
             .fontSize(10.5)
             .fillColor(PDF_COLORS.textMutedStrong)
-            .text(invoice.notes, PAGE_MARGIN, y, { width: leftWidth, lineGap: 2 });
+            .text(document.notes, PAGE_MARGIN, y, { width: leftWidth, lineGap: 2 });
           y = doc.y + 16;
         }
 
-        if (normalizeText(invoice?.closing)) {
+        if (normalizeText(document?.closing)) {
           y = ensureSpace(doc, y, 60);
           doc
             .font(pdfFontName("regular", fonts))
             .fontSize(10.5)
             .fillColor(PDF_COLORS.textMutedStrong)
-            .text(invoice.closing, PAGE_MARGIN, y, { width: leftWidth, lineGap: 2 });
+            .text(document.closing, PAGE_MARGIN, y, { width: leftWidth, lineGap: 2 });
         }
 
         drawFooter(doc, fonts, companyProfile, lang);
