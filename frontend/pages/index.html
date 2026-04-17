@@ -94,9 +94,8 @@
 
     <main id="main-content">
       <section class="hero hero-video" id="hero">
-        <video class="hero-bg-video" autoplay muted loop playsinline preload="metadata" poster="/assets/video/rice field.webp">
+        <video class="hero-bg-video" muted loop playsinline preload="none" poster="/assets/video/rice field.webp" data-deferred-autoplay>
           <source src="/assets/video/rice field.mp4" type="video/mp4" />
-          <source src="/assets/video/rice field.webm" type="video/webm" />
           <span data-i18n-id="hero.video_fallback">Your browser does not support HTML5 video.</span>
         </video>
         <div class="hero-scrim" aria-hidden="true"></div>
@@ -495,6 +494,39 @@
     <script src="/shared/generated/language_catalog.global.js"></script>
     <script src="/frontend/data/generated/homepage/public-homepage-copy.global.js?v=969f0ff4eb41"></script>
     <script src="/frontend/scripts/shared/frontend_i18n.js"></script>
+    <script>
+      (() => {
+        const heroVideo = document.querySelector(".hero-bg-video[data-deferred-autoplay]");
+        if (!heroVideo) return;
+        if (window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) return;
+
+        let playbackStarted = false;
+        const startPlayback = () => {
+          if (playbackStarted) return;
+          playbackStarted = true;
+          const playPromise = heroVideo.play();
+          if (playPromise && typeof playPromise.catch === "function") {
+            playPromise.catch(() => {
+              playbackStarted = false;
+            });
+          }
+        };
+
+        const schedulePlayback = () => {
+          if ("requestIdleCallback" in window) {
+            window.requestIdleCallback(startPlayback, { timeout: 2000 });
+            return;
+          }
+          window.setTimeout(startPlayback, 1200);
+        };
+
+        if (document.readyState === "complete") {
+          schedulePlayback();
+        } else {
+          window.addEventListener("load", schedulePlayback, { once: true });
+        }
+      })();
+    </script>
     <script type="module" src="/frontend/scripts/main.js"></script>
 
     <script type="application/ld+json">
