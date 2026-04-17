@@ -12,7 +12,8 @@
 @import "./components/backend-collapsible.css";
 @import "./components/backend-nav.css";
 @import "./components/backend-login.css";
-@import "./pages/home.css";
+@import "./pages/home-critical.css";
+@import "./pages/home-deferred.css";
 @import "./pages/backend-booking.css";
 @import "./pages/backend-booking-travel-plan.css";
 @import "./pages/backend-booking-whatsapp.css";
