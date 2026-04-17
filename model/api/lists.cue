@@ -1,6 +1,6 @@
 package api
 
-import entities "travelagency.local/model/entities"
+import jsonModel "travelagency.local/model/json"
 
 #BookingList: {
 	items: [...#BookingReadModel]
@@ -10,7 +10,7 @@ import entities "travelagency.local/model/entities"
 }
 
 #TourList: {
-	items: [...entities.#Tour]
+	items: [...jsonModel.#Tour]
 	pagination: #Pagination
 	filters?:   #TourListFilters
 	sort?:      string
@@ -24,6 +24,6 @@ import entities "travelagency.local/model/entities"
 }
 
 #TourDetail: {
-	tour:    entities.#Tour
+	tour:    jsonModel.#Tour
 	options: #TourOptions
 }

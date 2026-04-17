@@ -1,4 +1,4 @@
-package entities
+package database
 
 import (
 	common "travelagency.local/model/common"
@@ -80,10 +80,12 @@ import (
 	name?:                           string
 	travel_styles?:                  [...string]
 	travel_plan?:                    #BookingTravelPlan
+	...
 }
 
 #BaseBookingWithPersons: #BaseBooking & {
 	persons?: [...#BookingPerson]
+	...
 }
 
 #Booking: #BaseBookingWithPersons & {

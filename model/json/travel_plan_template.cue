@@ -1,7 +1,8 @@
-package entities
+package json
 
 import (
 	common "travelagency.local/model/common"
+	databaseModel "travelagency.local/model/database"
 	enums "travelagency.local/model/enums"
 )
 
@@ -9,5 +10,5 @@ import (
 	id:          common.#Identifier
 	title:       string & !=""
 	destinations: [...enums.#CountryCode] | []
-	travel_plan: #BookingTravelPlan
+	travel_plan: databaseModel.#BookingTravelPlan
 }

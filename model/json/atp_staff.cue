@@ -1,4 +1,4 @@
-package entities
+package json
 
 import (
 	enums "travelagency.local/model/enums"

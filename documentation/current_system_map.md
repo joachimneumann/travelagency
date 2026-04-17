@@ -7,7 +7,8 @@ Use it for orientation before editing code or reading older concept notes.
 ## 1. Source of Truth and Generation
 
 The active source of truth is the CUE model under:
-- `model/entities/`
+- `model/json/`
+- `model/database/`
 - `model/api/`
 - `model/enums/`
 - `model/common/`

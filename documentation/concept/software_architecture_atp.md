@@ -34,7 +34,8 @@ It does not include separate shared person-master-data entities outside the book
 ### Layer 1: Model
 
 Source files under:
-- `model/entities/`
+- `model/json/`
+- `model/database/`
 - `model/api/`
 - `model/enums/`
 - `model/common/`

@@ -78,7 +78,8 @@ This means the mobile target is not yet a flexible environment-driven app.
 ## Contract and Model Alignment
 
 The source of truth remains:
-- `model/entities/`
+- `model/json/`
+- `model/database/`
 - `model/api/`
 - `model/enums/`
 - `model/common/`

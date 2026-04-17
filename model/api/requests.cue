@@ -2,8 +2,9 @@ package api
 
 import (
 	common "travelagency.local/model/common"
+	databaseModel "travelagency.local/model/database"
 	enums "travelagency.local/model/enums"
-	entities "travelagency.local/model/entities"
+	jsonModel "travelagency.local/model/json"
 )
 
 #TravelerConstraints: {
@@ -83,7 +84,7 @@ import (
 	referral_staff_user_id?: common.#Identifier
 	destinations?: [...enums.#CountryCode]
 	travel_styles?: [...string]
-	pdf_personalization?: entities.#BookingPdfPersonalization
+	pdf_personalization?: databaseModel.#BookingPdfPersonalization
 	actor?:               string
 }
 
@@ -107,13 +108,13 @@ import (
 
 #BookingPersonCreateRequest: {
 	expected_persons_revision?: >=0 & int
-	person:                     entities.#BookingPerson
+	person:                     databaseModel.#BookingPerson
 	actor?:                     string
 }
 
 #BookingPersonUpdateRequest: {
 	expected_persons_revision?: >=0 & int
-	person:                     entities.#BookingPerson
+	person:                     databaseModel.#BookingPerson
 	actor?:                     string
 }
 
@@ -142,7 +143,7 @@ import (
 
 #BookingTravelPlanUpdateRequest: {
 	expected_travel_plan_revision?: >=0 & int
-	travel_plan:                    entities.#BookingTravelPlan
+	travel_plan:                    databaseModel.#BookingTravelPlan
 	actor?:                         string
 }
 
@@ -218,7 +219,7 @@ import (
 	title?:       string
 	destinations?: [...enums.#CountryCode]
 	source_booking_id?: common.#Identifier
-	travel_plan?:       entities.#BookingTravelPlan
+	travel_plan?:       databaseModel.#BookingTravelPlan
 	actor?:             string
 }
 
@@ -269,7 +270,7 @@ import (
 
 #BookingOfferUpdateRequest: {
 	expected_offer_revision?: >=0 & int
-	offer:                    entities.#BookingOffer
+	offer:                    databaseModel.#BookingOffer
 	actor?:                   string
 }
 
@@ -295,11 +296,11 @@ import (
 }
 
 #PublicTravelerDetailsUpdateRequest: {
-	person: entities.#BookingPerson
+	person: databaseModel.#BookingPerson
 }
 
 #CountryPracticalInfoUpdateRequest: {
-	items: [...entities.#CountryPracticalInfo]
+	items: [...jsonModel.#CountryPracticalInfo]
 }
 
 #AtpStaffProfileUpdateRequest: {
@@ -307,14 +308,14 @@ import (
 	destinations?: [...enums.#CountryCode]
 	full_name?: string
 	position?:  string
-	position_i18n?: [...entities.#AtpStaffLocalizedTextEntry]
+	position_i18n?: [...jsonModel.#AtpStaffLocalizedTextEntry]
 	friendly_short_name?:      string
 	team_order?:               int | null
 	appears_in_team_web_page?: bool
 	description?:              string
-	description_i18n?: [...entities.#AtpStaffLocalizedTextEntry]
+	description_i18n?: [...jsonModel.#AtpStaffLocalizedTextEntry]
 	short_description?: string
-	short_description_i18n?: [...entities.#AtpStaffLocalizedTextEntry]
+	short_description_i18n?: [...jsonModel.#AtpStaffLocalizedTextEntry]
 }
 
 #AtpStaffPhotoUploadRequest: #EvidenceUpload
@@ -335,7 +336,7 @@ import (
 
 #BookingActivityCreateRequest: {
 	expected_core_revision?: >=0 & int
-	type:                    entities.#BookingActivityType
+	type:                    databaseModel.#BookingActivityType
 	detail?:                 string
 	actor?:                  string
 }
@@ -348,7 +349,7 @@ import (
 	payment_confirmed_by_atp_staff_id?:   common.#Identifier
 	payment_reference?:                   string
 	payment_confirmed_by_label?:          string
-	pdf_personalization?:                 entities.#BookingPdfPersonalizationScoped
+	pdf_personalization?:                 databaseModel.#BookingPdfPersonalizationScoped
 	actor?:                               string
 }
 

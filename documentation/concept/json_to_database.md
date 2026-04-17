@@ -21,7 +21,8 @@ The current CUE model is organized like this:
 
 ```text
 model/
-  entities/
+  json/
+  database/
   common/
   enums/
   api/
@@ -29,8 +30,10 @@ model/
 
 Meaning:
 
-- `model/entities`
-  - domain entities, including both file-backed content entities and booking-owned operational entities
+- `model/json`
+  - source CUE files for file-backed content entities
+- `model/database`
+  - source CUE files for booking-owned operational entities
 - `model/common`
   - shared primitives and reusable value shapes
 - `model/enums`
@@ -42,7 +45,7 @@ Important boundary:
 
 - `model/common`, `model/enums`, and `model/api` are not database table groups
 - persistence decisions are made per entity and per runtime source of truth
-- PostgreSQL tables should be derived from the operational subset of `model/entities`, plus technical runtime metadata where needed
+- PostgreSQL tables should be derived from the operational subset of `model/database`, plus technical runtime metadata where needed
 
 ## Scope
 
@@ -65,7 +68,7 @@ Operational runtime data currently persisted in `backend/app/data/store.json` an
 - travel plan PDF artifact metadata
 - JSON import run audit records
 
-These are the current operational entity source files under `model/entities`:
+These are the current operational entity source files under `model/database`:
 
 - `booking.cue`
 - `booking_person.cue`
@@ -84,7 +87,7 @@ The `content/` folder remains JSON and asset based by design:
 - `content/standard_tours`
 - related images and documents under `content/`
 
-These content entities currently also live under `model/entities`:
+These content entities currently live under `model/json`:
 
 - `atp_staff.cue`
 - `country_reference.cue`

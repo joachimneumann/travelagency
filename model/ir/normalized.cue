@@ -19,7 +19,7 @@ import (
 #TypeDefinition: {
 	name:       string & !=""
 	domain:     "currency" | "booking" | "aux" | "api"
-	module:     "entities" | "api" | "common" | "enums"
+	module:     "json" | "database" | "api" | "common" | "enums"
 	sourceType: string & !=""
 	fields: [...#FieldDefinition]
 	requireOneOf?: [...[...string]]
@@ -68,8 +68,8 @@ IR: {
 		{
 			name:       "AtpStaffLocalizedTextEntry"
 			domain:     "aux"
-			module:     "entities"
-			sourceType: "entities.#AtpStaffLocalizedTextEntry"
+			module:     "json"
+			sourceType: "json.#AtpStaffLocalizedTextEntry"
 			fields: [
 				{name: "lang", kind: "enum", typeName: "LanguageCode", required: true},
 				{name: "value", kind: "scalar", typeName: "string", required: true},
@@ -78,8 +78,8 @@ IR: {
 		{
 			name:       "AtpStaffProfile"
 			domain:     "aux"
-			module:     "entities"
-			sourceType: "entities.#AtpStaffProfile"
+			module:     "json"
+			sourceType: "json.#AtpStaffProfile"
 			fields: [
 				{name: "username", kind: "scalar", typeName: "string", required: true},
 				{name: "name", kind: "scalar", typeName: "string", required: false},
@@ -94,8 +94,8 @@ IR: {
 		{
 			name:       "CountryEmergencyContact"
 			domain:     "aux"
-			module:     "entities"
-			sourceType: "entities.#CountryEmergencyContact"
+			module:     "json"
+			sourceType: "json.#CountryEmergencyContact"
 			fields: [
 				{name: "label", kind: "scalar", typeName: "string", required: true},
 				{name: "phone", kind: "scalar", typeName: "string", required: true},
@@ -105,8 +105,8 @@ IR: {
 		{
 			name:       "CountryPracticalInfo"
 			domain:     "aux"
-			module:     "entities"
-			sourceType: "entities.#CountryPracticalInfo"
+			module:     "json"
+			sourceType: "json.#CountryPracticalInfo"
 			fields: [
 				{name: "country", kind: "enum", typeName: "CountryCode", required: true},
 				{name: "published_on_webpage", kind: "scalar", typeName: "bool", required: true},
@@ -118,8 +118,8 @@ IR: {
 		{
 			name:       "Tour"
 			domain:     "aux"
-			module:     "entities"
-			sourceType: "entities.#Tour"
+			module:     "json"
+			sourceType: "json.#Tour"
 			fields: [
 				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
 				{name: "title", kind: "scalar", typeName: "string", required: false},
@@ -137,8 +137,8 @@ IR: {
 		{
 			name:       "TravelPlanTemplate"
 			domain:     "aux"
-			module:     "entities"
-			sourceType: "entities.#TravelPlanTemplate"
+			module:     "json"
+			sourceType: "json.#TravelPlanTemplate"
 			fields: [
 				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
 				{name: "title", kind: "scalar", typeName: "string", required: true},
@@ -149,8 +149,8 @@ IR: {
 		{
 			name:       "BookingPersonAddress"
 			domain:     "booking"
-			module:     "entities"
-			sourceType: "entities.#BookingPersonAddress"
+			module:     "database"
+			sourceType: "database.#BookingPersonAddress"
 			fields: [
 				{name: "line_1", kind: "scalar", typeName: "string", required: false},
 				{name: "line_2", kind: "scalar", typeName: "string", required: false},
@@ -163,8 +163,8 @@ IR: {
 		{
 			name:       "BookingPersonConsent"
 			domain:     "booking"
-			module:     "entities"
-			sourceType: "entities.#BookingPersonConsent"
+			module:     "database"
+			sourceType: "database.#BookingPersonConsent"
 			fields: [
 				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
 				{name: "consent_type", kind: "enum", typeName: "PersonConsentType", required: true},
@@ -178,8 +178,8 @@ IR: {
 		{
 			name:       "BookingPersonDocument"
 			domain:     "booking"
-			module:     "entities"
-			sourceType: "entities.#BookingPersonDocument"
+			module:     "database"
+			sourceType: "database.#BookingPersonDocument"
 			fields: [
 				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
 				{name: "document_type", kind: "enum", typeName: "PersonDocumentType", required: true},
@@ -197,8 +197,8 @@ IR: {
 		{
 			name:       "BookingPerson"
 			domain:     "booking"
-			module:     "entities"
-			sourceType: "entities.#BookingPerson"
+			module:     "database"
+			sourceType: "database.#BookingPerson"
 			fields: [
 				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
 				{name: "name", kind: "scalar", typeName: "string", required: true},
@@ -223,8 +223,8 @@ IR: {
 		{
 			name:       "BookingTravelPlanServiceImageSourceAttribution"
 			domain:     "booking"
-			module:     "entities"
-			sourceType: "entities.#BookingTravelPlanServiceImageSourceAttribution"
+			module:     "database"
+			sourceType: "database.#BookingTravelPlanServiceImageSourceAttribution"
 			fields: [
 				{name: "source_name", kind: "scalar", typeName: "string", required: false},
 				{name: "source_url", kind: "scalar", typeName: "string", required: false},
@@ -235,8 +235,8 @@ IR: {
 		{
 			name:       "BookingTravelPlanServiceImageFocalPoint"
 			domain:     "booking"
-			module:     "entities"
-			sourceType: "entities.#BookingTravelPlanServiceImageFocalPoint"
+			module:     "database"
+			sourceType: "database.#BookingTravelPlanServiceImageFocalPoint"
 			fields: [
 				{name: "x", kind: "scalar", typeName: "float", required: true},
 				{name: "y", kind: "scalar", typeName: "float", required: true},
@@ -245,8 +245,8 @@ IR: {
 		{
 			name:       "BookingTravelPlanServiceImage"
 			domain:     "booking"
-			module:     "entities"
-			sourceType: "entities.#BookingTravelPlanServiceImage"
+			module:     "database"
+			sourceType: "database.#BookingTravelPlanServiceImage"
 			fields: [
 				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
 				{name: "storage_path", kind: "scalar", typeName: "string", required: true},
@@ -265,8 +265,8 @@ IR: {
 		{
 			name:       "BookingTravelPlanServiceCopiedFrom"
 			domain:     "booking"
-			module:     "entities"
-			sourceType: "entities.#BookingTravelPlanServiceCopiedFrom"
+			module:     "database"
+			sourceType: "database.#BookingTravelPlanServiceCopiedFrom"
 			fields: [
 				{name: "source_type", kind: "scalar", typeName: "string", required: true},
 				{name: "source_booking_id", kind: "scalar", typeName: "Identifier", required: true},
@@ -279,8 +279,8 @@ IR: {
 		{
 			name:       "BookingTravelPlanService"
 			domain:     "booking"
-			module:     "entities"
-			sourceType: "entities.#BookingTravelPlanService"
+			module:     "database"
+			sourceType: "database.#BookingTravelPlanService"
 			fields: [
 				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
 				{name: "timing_kind", kind: "enum", typeName: "TravelPlanTimingKind", required: true},
@@ -300,8 +300,8 @@ IR: {
 		{
 			name:       "BookingTravelPlanDay"
 			domain:     "booking"
-			module:     "entities"
-			sourceType: "entities.#BookingTravelPlanDay"
+			module:     "database"
+			sourceType: "database.#BookingTravelPlanDay"
 			fields: [
 				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
 				{name: "day_number", kind: "scalar", typeName: "int", required: true},
@@ -316,8 +316,8 @@ IR: {
 		{
 			name:       "BookingTravelPlanAttachment"
 			domain:     "booking"
-			module:     "entities"
-			sourceType: "entities.#BookingTravelPlanAttachment"
+			module:     "database"
+			sourceType: "database.#BookingTravelPlanAttachment"
 			fields: [
 				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
 				{name: "filename", kind: "scalar", typeName: "string", required: true},
@@ -330,8 +330,8 @@ IR: {
 		{
 			name:       "BookingTravelPlan"
 			domain:     "booking"
-			module:     "entities"
-			sourceType: "entities.#BookingTravelPlan"
+			module:     "database"
+			sourceType: "database.#BookingTravelPlan"
 			fields: [
 				{name: "destinations", kind: "enum", typeName: "CountryCode", required: false, isArray: true},
 				{name: "days", kind: "entity", typeName: "BookingTravelPlanDay", required: false, isArray: true},
@@ -341,8 +341,8 @@ IR: {
 		{
 			name:       "BaseBooking"
 			domain:     "booking"
-			module:     "entities"
-			sourceType: "entities.#BaseBooking"
+			module:     "database"
+			sourceType: "database.#BaseBooking"
 			fields: [
 				{name: "name", kind: "scalar", typeName: "string", required: false},
 				{name: "travel_styles", kind: "scalar", typeName: "string", required: false, isArray: true},
@@ -352,8 +352,8 @@ IR: {
 		{
 			name:       "BaseBookingWithPersons"
 			domain:     "booking"
-			module:     "entities"
-			sourceType: "entities.#BaseBookingWithPersons"
+			module:     "database"
+			sourceType: "database.#BaseBookingWithPersons"
 			fields: [
 				{name: "name", kind: "scalar", typeName: "string", required: false},
 				{name: "travel_styles", kind: "scalar", typeName: "string", required: false, isArray: true},
@@ -364,8 +364,8 @@ IR: {
 		{
 			name:       "PricingAdjustment"
 			domain:     "booking"
-			module:     "entities"
-			sourceType: "entities.#PricingAdjustment"
+			module:     "database"
+			sourceType: "database.#PricingAdjustment"
 			fields: [
 				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
 				{name: "type", kind: "enum", typeName: "PricingAdjustmentType", required: true},
@@ -379,8 +379,8 @@ IR: {
 		{
 			name:       "PaymentDocumentComponent"
 			domain:     "booking"
-			module:     "entities"
-			sourceType: "entities.#PaymentDocumentComponent"
+			module:     "database"
+			sourceType: "database.#PaymentDocumentComponent"
 			fields: [
 				{name: "id", kind: "scalar", typeName: "Identifier", required: false},
 				{name: "description", kind: "scalar", typeName: "string", required: true},
@@ -392,8 +392,8 @@ IR: {
 		{
 			name:       "BookingPaymentDocument"
 			domain:     "booking"
-			module:     "entities"
-			sourceType: "entities.#BookingPaymentDocument"
+			module:     "database"
+			sourceType: "database.#BookingPaymentDocument"
 			fields: [
 				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
 				{name: "booking_id", kind: "scalar", typeName: "Identifier", required: false},
@@ -427,8 +427,8 @@ IR: {
 		{
 			name:       "BookingOfferCategoryRule"
 			domain:     "booking"
-			module:     "entities"
-			sourceType: "entities.#BookingOfferCategoryRule"
+			module:     "database"
+			sourceType: "database.#BookingOfferCategoryRule"
 			fields: [
 				{name: "category", kind: "enum", typeName: "OfferCategory", required: true},
 				{name: "tax_rate_basis_points", kind: "scalar", typeName: "int", required: true},
@@ -437,8 +437,8 @@ IR: {
 		{
 			name:       "BookingOfferDiscount"
 			domain:     "booking"
-			module:     "entities"
-			sourceType: "entities.#BookingOfferDiscount"
+			module:     "database"
+			sourceType: "database.#BookingOfferDiscount"
 			fields: [
 				{name: "reason", kind: "scalar", typeName: "string", required: true},
 				{name: "amount_cents", kind: "transport", typeName: "MoneyAmount", required: true},
@@ -451,8 +451,8 @@ IR: {
 		{
 			name:       "BookingOfferTaxBucket"
 			domain:     "booking"
-			module:     "entities"
-			sourceType: "entities.#BookingOfferTaxBucket"
+			module:     "database"
+			sourceType: "database.#BookingOfferTaxBucket"
 			fields: [
 				{name: "tax_rate_basis_points", kind: "scalar", typeName: "int", required: true},
 				{name: "net_amount_cents", kind: "transport", typeName: "MoneyAmount", required: true},
@@ -464,8 +464,8 @@ IR: {
 		{
 			name:       "BookingOfferTotals"
 			domain:     "booking"
-			module:     "entities"
-			sourceType: "entities.#BookingOfferTotals"
+			module:     "database"
+			sourceType: "database.#BookingOfferTotals"
 			fields: [
 				{name: "net_amount_cents", kind: "transport", typeName: "MoneyAmount", required: true},
 				{name: "tax_amount_cents", kind: "transport", typeName: "MoneyAmount", required: true},
@@ -477,8 +477,8 @@ IR: {
 		{
 			name:       "BookingOfferQuotationSummary"
 			domain:     "booking"
-			module:     "entities"
-			sourceType: "entities.#BookingOfferQuotationSummary"
+			module:     "database"
+			sourceType: "database.#BookingOfferQuotationSummary"
 			fields: [
 				{name: "tax_included", kind: "scalar", typeName: "bool", required: true},
 				{name: "subtotal_net_amount_cents", kind: "transport", typeName: "MoneyAmount", required: true},
@@ -490,8 +490,8 @@ IR: {
 		{
 			name:       "BookingOfferPaymentDueRule"
 			domain:     "booking"
-			module:     "entities"
-			sourceType: "entities.#BookingOfferPaymentDueRule"
+			module:     "database"
+			sourceType: "database.#BookingOfferPaymentDueRule"
 			fields: [
 				{name: "type", kind: "enum", typeName: "OfferPaymentDueType", required: true},
 				{name: "fixed_date", kind: "scalar", typeName: "DateOnly", required: false},
@@ -501,8 +501,8 @@ IR: {
 		{
 			name:       "BookingOfferPaymentAmountSpec"
 			domain:     "booking"
-			module:     "entities"
-			sourceType: "entities.#BookingOfferPaymentAmountSpec"
+			module:     "database"
+			sourceType: "database.#BookingOfferPaymentAmountSpec"
 			fields: [
 				{name: "mode", kind: "enum", typeName: "OfferPaymentAmountMode", required: true},
 				{name: "fixed_amount_cents", kind: "scalar", typeName: "int", required: false},
@@ -512,8 +512,8 @@ IR: {
 		{
 			name:       "BookingOfferPaymentTermLine"
 			domain:     "booking"
-			module:     "entities"
-			sourceType: "entities.#BookingOfferPaymentTermLine"
+			module:     "database"
+			sourceType: "database.#BookingOfferPaymentTermLine"
 			fields: [
 				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
 				{name: "kind", kind: "enum", typeName: "OfferPaymentTermKind", required: true},
@@ -526,8 +526,8 @@ IR: {
 		{
 			name:       "BookingOfferPaymentTerms"
 			domain:     "booking"
-			module:     "entities"
-			sourceType: "entities.#BookingOfferPaymentTerms"
+			module:     "database"
+			sourceType: "database.#BookingOfferPaymentTerms"
 			fields: [
 				{name: "currency", kind: "enum", typeName: "CurrencyCode", required: true},
 				{name: "lines", kind: "entity", typeName: "BookingOfferPaymentTermLine", required: true, isArray: true},
@@ -536,8 +536,8 @@ IR: {
 		{
 			name:       "BookingOfferTripPriceInternal"
 			domain:     "booking"
-			module:     "entities"
-			sourceType: "entities.#BookingOfferTripPriceInternal"
+			module:     "database"
+			sourceType: "database.#BookingOfferTripPriceInternal"
 			fields: [
 				{name: "label", kind: "scalar", typeName: "string", required: false},
 				{name: "amount_cents", kind: "scalar", typeName: "NonNegativeMoneyAmount", required: true},
@@ -553,8 +553,8 @@ IR: {
 		{
 			name:       "BookingOfferDayPriceInternal"
 			domain:     "booking"
-			module:     "entities"
-			sourceType: "entities.#BookingOfferDayPriceInternal"
+			module:     "database"
+			sourceType: "database.#BookingOfferDayPriceInternal"
 			fields: [
 				{name: "id", kind: "scalar", typeName: "Identifier", required: false},
 				{name: "day_number", kind: "scalar", typeName: "int", required: true},
@@ -573,8 +573,8 @@ IR: {
 		{
 			name:       "BookingOfferAdditionalItem"
 			domain:     "booking"
-			module:     "entities"
-			sourceType: "entities.#BookingOfferAdditionalItem"
+			module:     "database"
+			sourceType: "database.#BookingOfferAdditionalItem"
 			fields: [
 				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
 				{name: "label", kind: "scalar", typeName: "string", required: true},
@@ -600,8 +600,8 @@ IR: {
 		{
 			name:       "BookingOffer"
 			domain:     "booking"
-			module:     "entities"
-			sourceType: "entities.#BookingOffer"
+			module:     "database"
+			sourceType: "database.#BookingOffer"
 			fields: [
 				{name: "status", kind: "scalar", typeName: "string", required: false},
 				{name: "currency", kind: "enum", typeName: "CurrencyCode", required: true},
@@ -621,8 +621,8 @@ IR: {
 		{
 			name:       "GeneratedBookingOffer"
 			domain:     "booking"
-			module:     "entities"
-			sourceType: "entities.#GeneratedBookingOffer"
+			module:     "database"
+			sourceType: "database.#GeneratedBookingOffer"
 			fields: [
 				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
 				{name: "booking_id", kind: "scalar", typeName: "Identifier", required: true},
@@ -643,8 +643,8 @@ IR: {
 		{
 			name:       "BookingActivity"
 			domain:     "booking"
-			module:     "entities"
-			sourceType: "entities.#BookingActivity"
+			module:     "database"
+			sourceType: "database.#BookingActivity"
 			fields: [
 				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
 				{name: "booking_id", kind: "scalar", typeName: "Identifier", required: true},
@@ -657,8 +657,8 @@ IR: {
 		{
 			name:       "BookingWebFormSubmission"
 			domain:     "booking"
-			module:     "entities"
-			sourceType: "entities.#BookingWebFormSubmission"
+			module:     "database"
+			sourceType: "database.#BookingWebFormSubmission"
 			fields: [
 				{name: "destinations", kind: "enum", typeName: "CountryCode", required: false, isArray: true},
 				{name: "travel_style", kind: "scalar", typeName: "string", required: false, isArray: true},
@@ -689,8 +689,8 @@ IR: {
 		{
 			name:       "Booking"
 			domain:     "booking"
-			module:     "entities"
-			sourceType: "entities.#Booking"
+			module:     "database"
+			sourceType: "database.#Booking"
 			fields: [
 				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
 				{name: "name", kind: "scalar", typeName: "string", required: false},

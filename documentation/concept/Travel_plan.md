@@ -86,7 +86,7 @@ Update:
 - `backend/app/src/http/handlers/booking_query.js`
   - include `travel_plan` in the read model
 - CUE model and contract files:
-  - `model/entities/booking.cue`
+  - `model/database/booking.cue`
   - `model/api/requests.cue`
   - `model/api/responses.cue`
   - `model/api/endpoints.cue`

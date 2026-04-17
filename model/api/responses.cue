@@ -2,8 +2,9 @@ package api
 
 import (
 	common "travelagency.local/model/common"
-	entities "travelagency.local/model/entities"
+	databaseModel "travelagency.local/model/database"
 	enums "travelagency.local/model/enums"
+	jsonModel "travelagency.local/model/json"
 )
 
 #KeycloakUserDirectoryEntry: {
@@ -27,7 +28,7 @@ import (
 	username?: string
 	realm_roles?: [...string]
 	client_roles?: [...string]
-	staff_profile: entities.#AtpStaffProfile
+	staff_profile: jsonModel.#AtpStaffProfile
 }
 
 #KeycloakUserStaffProfileEntryResponse: {
@@ -40,12 +41,12 @@ import (
 }
 
 #PublicAtpStaffTeamResponse: {
-	items: [...entities.#AtpStaffProfile]
+	items: [...jsonModel.#AtpStaffProfile]
 	total: >=0 & int
 }
 
 #CountryPracticalInfoListResponse: {
-	items: [...entities.#CountryPracticalInfo]
+	items: [...jsonModel.#CountryPracticalInfo]
 	total: >=0 & int
 }
 
@@ -55,23 +56,23 @@ import (
 }
 
 #BookingActivitiesResponse: {
-	items: [...entities.#BookingActivity]
-	activities: [...entities.#BookingActivity]
+	items: [...databaseModel.#BookingActivity]
+	activities: [...databaseModel.#BookingActivity]
 	total: >=0 & int
 }
 
 #BookingActivityResponse: {
-	activity: entities.#BookingActivity
+	activity: databaseModel.#BookingActivity
 	booking:  #BookingReadModel
 }
 
 #BookingPaymentDocumentsResponse: {
-	items: [...entities.#BookingPaymentDocument]
+	items: [...databaseModel.#BookingPaymentDocument]
 	total: >=0 & int
 }
 
 #BookingPaymentDocumentResponse: {
-	document: entities.#BookingPaymentDocument
+	document: databaseModel.#BookingPaymentDocument
 	booking:  #BookingReadModel
 }
 
@@ -197,7 +198,7 @@ import (
 	id:           common.#Identifier
 	title:        string
 	destinations: [...enums.#CountryCode] | []
-	travel_plan:  entities.#BookingTravelPlan
+	travel_plan:  databaseModel.#BookingTravelPlan
 }
 
 #TravelPlanTemplateListResponse: {
@@ -214,7 +215,7 @@ import (
 	to_currency:       string
 	exchange_rate:     number
 	total_price_cents: int
-	converted_lines: [...entities.#BookingOfferAdditionalItem]
+	converted_lines: [...databaseModel.#BookingOfferAdditionalItem]
 	warning?: string
 }
 
@@ -248,7 +249,7 @@ import (
 	source_hash?:       string & !=""
 }
 
-#BookingOfferPaymentTermLineReadModel: entities.#BookingOfferPaymentTermLine & {
+#BookingOfferPaymentTermLineReadModel: databaseModel.#BookingOfferPaymentTermLine & {
 	resolved_amount_cents: >=0 & int
 }
 
@@ -283,7 +284,7 @@ import (
 	derivable:    bool
 	trip_price?:  #BookingOfferVisibleTripPriceReadModel
 	days: [...#BookingOfferVisibleDayPriceReadModel]
-	additional_items: [...entities.#BookingOfferAdditionalItem]
+	additional_items: [...databaseModel.#BookingOfferAdditionalItem]
 }
 
 #BookingOfferReadModel: {
@@ -291,13 +292,13 @@ import (
 	status?:                     "DRAFT" | "APPROVED" | "OFFER_SENT"
 	offer_detail_level_internal: enums.#OfferDetailLevel
 	offer_detail_level_visible:  enums.#OfferDetailLevel
-	category_rules: [...entities.#BookingOfferCategoryRule]
-	trip_price_internal?: entities.#BookingOfferTripPriceInternal
-	days_internal?: [...entities.#BookingOfferDayPriceInternal]
-	additional_items?: [...entities.#BookingOfferAdditionalItem]
-	discounts?:         [...entities.#BookingOfferDiscount]
-	totals:             entities.#BookingOfferTotals
-	quotation_summary?: entities.#BookingOfferQuotationSummary
+	category_rules: [...databaseModel.#BookingOfferCategoryRule]
+	trip_price_internal?: databaseModel.#BookingOfferTripPriceInternal
+	days_internal?: [...databaseModel.#BookingOfferDayPriceInternal]
+	additional_items?: [...databaseModel.#BookingOfferAdditionalItem]
+	discounts?:         [...databaseModel.#BookingOfferDiscount]
+	totals:             databaseModel.#BookingOfferTotals
+	quotation_summary?: databaseModel.#BookingOfferQuotationSummary
 	payment_terms?:     #BookingOfferPaymentTermsReadModel
 	visible_pricing:    #BookingOfferVisiblePricingReadModel
 	total_price_cents:  int
@@ -313,7 +314,7 @@ import (
 	accepted_deposit_reference?:        string
 	offer?:                             #BookingOfferReadModel
 	payment_terms?:                     #BookingOfferPaymentTermsReadModel
-	travel_plan?:                       entities.#BookingTravelPlan
+	travel_plan?:                       databaseModel.#BookingTravelPlan
 	offer_artifact_ref?:                common.#Identifier
 	travel_plan_artifact_ref?:          common.#Identifier
 }
@@ -331,7 +332,7 @@ import (
 	total_price_cents:                       int
 	payment_terms?:                          #BookingOfferPaymentTermsReadModel
 	offer:                                   #BookingOfferReadModel
-	travel_plan?:                            entities.#BookingTravelPlan
+	travel_plan?:                            databaseModel.#BookingTravelPlan
 	pdf_url:                                 string & !=""
 }
 
@@ -367,9 +368,9 @@ import (
 	referral_label?:                                  string
 	referral_staff_user_id?:                          common.#Identifier
 	assigned_keycloak_user_label?:                    string
-	assigned_atp_staff?:                              entities.#AtpStaffProfile
+	assigned_atp_staff?:                              jsonModel.#AtpStaffProfile
 	travel_styles?: [...string]
-	pdf_personalization?:          entities.#BookingPdfPersonalization
+	pdf_personalization?:          databaseModel.#BookingPdfPersonalization
 	travel_start_day?:             common.#DateOnly
 	travel_end_day?:               common.#DateOnly
 	number_of_travelers?:          >=0 & int
@@ -377,9 +378,9 @@ import (
 	customer_language?:            enums.#LanguageCode
 	accepted_record?:              #BookingAcceptedRecordReadModel
 	notes?:                        string
-	persons?: [...entities.#BookingPerson]
-	travel_plan?:         entities.#BookingTravelPlan
-	web_form_submission?: entities.#BookingWebFormSubmission
+	persons?: [...databaseModel.#BookingPerson]
+	travel_plan?:         databaseModel.#BookingTravelPlan
+	web_form_submission?: databaseModel.#BookingWebFormSubmission
 	offer:                #BookingOfferReadModel
 	generated_offers?: [...#GeneratedBookingOfferReadModel]
 	travel_plan_pdfs?: [...#BookingTravelPlanPdfReadModel]
@@ -406,7 +407,7 @@ import (
 	persons_revision:                    >=0 & int
 	public_traveler_details_expires_at?: common.#Timestamp
 	privacy_notice?:                     string
-	person:                              entities.#BookingPerson
+	person:                              databaseModel.#BookingPerson
 }
 
 #PublicTravelerDetailsUpdateResponse: {
@@ -418,12 +419,12 @@ import (
 	persons_revision:                    >=0 & int
 	public_traveler_details_expires_at?: common.#Timestamp
 	privacy_notice?:                     string
-	person:                              entities.#BookingPerson
+	person:                              databaseModel.#BookingPerson
 	saved_at:                            common.#Timestamp
 }
 
 #TourResponse: {
-	tour: entities.#Tour
+	tour: jsonModel.#Tour
 }
 
 #TourDeleteResponse: {

@@ -8,7 +8,7 @@ This is currently a marketing/publication control, not a content-delete mechanis
 
 ## Source of truth
 
-- Model: `model/entities/country_reference.cue`
+- Model: `model/json/country_reference.cue`
 - Runtime file: `content/country_reference_info.json`
 - Backend editor: `/emergency.html`
 - Field: `published_on_webpage`

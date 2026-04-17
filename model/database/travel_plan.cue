@@ -1,4 +1,4 @@
-package entities
+package database
 
 import (
 	common "travelagency.local/model/common"

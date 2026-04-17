@@ -3,37 +3,38 @@ package model
 import (
 	apiModel "travelagency.local/model/api"
 	commonModel "travelagency.local/model/common"
-	entityModel "travelagency.local/model/entities"
+	databaseModel "travelagency.local/model/database"
 	enumModel "travelagency.local/model/enums"
+	jsonModel "travelagency.local/model/json"
 )
 
 #AbstractModel: {
 	entities: {
-		Booking:                                        entityModel.#Booking
-		GeneratedBookingOffer:                          entityModel.#GeneratedBookingOffer
-		BookingPerson:                                  entityModel.#BookingPerson
-		BookingPersonAddress:                           entityModel.#BookingPersonAddress
-		BookingPersonConsent:                           entityModel.#BookingPersonConsent
-		BookingPersonDocument:                          entityModel.#BookingPersonDocument
-		BaseBooking:                                    entityModel.#BaseBooking
-		BaseBookingWithPersons:                         entityModel.#BaseBookingWithPersons
-		BookingTravelPlan:                              entityModel.#BookingTravelPlan
-		BookingTravelPlanDay:                           entityModel.#BookingTravelPlanDay
-		BookingTravelPlanAttachment:                    entityModel.#BookingTravelPlanAttachment
-		BookingTravelPlanService:                       entityModel.#BookingTravelPlanService
-		BookingTravelPlanServiceImage:                  entityModel.#BookingTravelPlanServiceImage
-		BookingTravelPlanServiceImageSourceAttribution: entityModel.#BookingTravelPlanServiceImageSourceAttribution
-		BookingTravelPlanServiceImageFocalPoint:        entityModel.#BookingTravelPlanServiceImageFocalPoint
-		BookingTravelPlanServiceCopiedFrom:             entityModel.#BookingTravelPlanServiceCopiedFrom
-		BookingOfferDiscount:                           entityModel.#BookingOfferDiscount
-		PaymentDocumentComponent:                       entityModel.#PaymentDocumentComponent
-		BookingPaymentDocument:                         entityModel.#BookingPaymentDocument
-		AtpStaffLocalizedTextEntry:                     entityModel.#AtpStaffLocalizedTextEntry
-		AtpStaffProfile:                                entityModel.#AtpStaffProfile
-		CountryEmergencyContact:                        entityModel.#CountryEmergencyContact
-		CountryPracticalInfo:                           entityModel.#CountryPracticalInfo
-		Tour:                                           entityModel.#Tour
-		TravelPlanTemplate:                             entityModel.#TravelPlanTemplate
+		Booking:                                        databaseModel.#Booking
+		GeneratedBookingOffer:                          databaseModel.#GeneratedBookingOffer
+		BookingPerson:                                  databaseModel.#BookingPerson
+		BookingPersonAddress:                           databaseModel.#BookingPersonAddress
+		BookingPersonConsent:                           databaseModel.#BookingPersonConsent
+		BookingPersonDocument:                          databaseModel.#BookingPersonDocument
+		BaseBooking:                                    databaseModel.#BaseBooking
+		BaseBookingWithPersons:                         databaseModel.#BaseBookingWithPersons
+		BookingTravelPlan:                              databaseModel.#BookingTravelPlan
+		BookingTravelPlanDay:                           databaseModel.#BookingTravelPlanDay
+		BookingTravelPlanAttachment:                    databaseModel.#BookingTravelPlanAttachment
+		BookingTravelPlanService:                       databaseModel.#BookingTravelPlanService
+		BookingTravelPlanServiceImage:                  databaseModel.#BookingTravelPlanServiceImage
+		BookingTravelPlanServiceImageSourceAttribution: databaseModel.#BookingTravelPlanServiceImageSourceAttribution
+		BookingTravelPlanServiceImageFocalPoint:        databaseModel.#BookingTravelPlanServiceImageFocalPoint
+		BookingTravelPlanServiceCopiedFrom:             databaseModel.#BookingTravelPlanServiceCopiedFrom
+		BookingOfferDiscount:                           databaseModel.#BookingOfferDiscount
+		PaymentDocumentComponent:                       databaseModel.#PaymentDocumentComponent
+		BookingPaymentDocument:                         databaseModel.#BookingPaymentDocument
+		AtpStaffLocalizedTextEntry:                     jsonModel.#AtpStaffLocalizedTextEntry
+		AtpStaffProfile:                                jsonModel.#AtpStaffProfile
+		CountryEmergencyContact:                        jsonModel.#CountryEmergencyContact
+		CountryPracticalInfo:                           jsonModel.#CountryPracticalInfo
+		Tour:                                           jsonModel.#Tour
+		TravelPlanTemplate:                             jsonModel.#TravelPlanTemplate
 	}
 
 	common: {

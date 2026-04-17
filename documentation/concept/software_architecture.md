@@ -45,7 +45,8 @@ The system intentionally does not use a separate shared master-data layer for co
 ### Model
 
 The source of truth lives under:
-- `model/entities/`
+- `model/json/`
+- `model/database/`
 - `model/api/`
 - `model/enums/`
 - `model/common/`
@@ -74,9 +75,9 @@ The architecture is designed to prevent that.
 
 ## Model Boundary
 
-### `model/entities/`
+### `model/json/` and `model/database/`
 
-Contains business entities and value objects.
+Contain the source CUE files for business entities and value objects.
 
 Examples:
 - `Booking`
@@ -85,6 +86,12 @@ Examples:
 - `GeneratedBookingOffer`
 
 These types describe what the business data means.
+
+Current split:
+- `model/json/`
+  - file-backed content entities such as ATP staff, country reference, tours, and travel plan templates
+- `model/database/`
+  - booking-owned operational entities such as bookings, persons, offers, travel plans, and payment documents
 
 ### `model/api/`
 
@@ -100,7 +107,7 @@ Examples:
 
 Important rule:
 - transport-only fields such as `pdf_url` or translation summaries belong in `model/api/`
-- persisted entity state such as `booking_confirmation` belongs in `model/entities/`
+- persisted entity state belongs in `model/json/` or `model/database/` depending on source of truth
 - transport-only data must not leak back into entity types
 
 ### `model/enums/` and `model/common/`
@@ -151,7 +158,7 @@ The runtime distinguishes between:
 - generated API read models
 
 Examples:
-- `entities.#GeneratedBookingOffer`
+- `database.#GeneratedBookingOffer`
   - persisted commercial snapshot
   - frozen PDF metadata
   - optional `booking_confirmation`
@@ -160,7 +167,7 @@ Examples:
   - `pdf_url`
   - `booking_confirmation`
 
-- `entities.#TravelPlanTemplate`
+- `json.#TravelPlanTemplate`
   - persisted reusable travel plan
 - `api.#TravelPlanTemplateReadModel`
   - derived counts and source-booking presentation data

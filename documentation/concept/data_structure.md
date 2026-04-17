@@ -15,7 +15,8 @@ The current CUE model is organized like this:
 
 ```text
 model/
-  entities/
+  json/
+  database/
   common/
   enums/
   api/
@@ -23,8 +24,10 @@ model/
 
 Meaning:
 
-- `model/entities`
-  - domain entities, including both file-backed content entities and booking-owned operational entities
+- `model/json`
+  - source CUE files for file-backed content entities
+- `model/database`
+  - source CUE files for booking-owned operational entities
 - `model/common`
   - shared value types such as identifiers, timestamps, money, URLs, and constraints
 - `model/enums`
@@ -51,10 +54,10 @@ These entities remain file-backed content and are not part of the booking-owned 
 
 Current file locations:
 
-- `model/entities/atp_staff.cue`
-- `model/entities/country_reference.cue`
-- `model/entities/tour.cue`
-- `model/entities/travel_plan_template.cue`
+- `model/json/atp_staff.cue`
+- `model/json/country_reference.cue`
+- `model/json/tour.cue`
+- `model/json/travel_plan_template.cue`
 
 Operational meaning:
 
@@ -84,11 +87,11 @@ These entities are part of the booking-owned operational domain:
 
 Current file locations:
 
-- `model/entities/booking.cue`
-- `model/entities/booking_person.cue`
-- `model/entities/booking_offer.cue`
-- `model/entities/payment_document.cue`
-- `model/entities/travel_plan.cue`
+- `model/database/booking.cue`
+- `model/database/booking_person.cue`
+- `model/database/booking_offer.cue`
+- `model/database/payment_document.cue`
+- `model/database/travel_plan.cue`
 
 ## Booking
 
