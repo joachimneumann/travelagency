@@ -51,7 +51,21 @@ test("booking English-master migration canonicalizes deterministic Vietnamese de
     },
     accepted_offer_snapshot: {
       trip_price_internal: { label: "Tổng chuyến đi" },
-      days_internal: [{ day_number: 3, label: "Ngày 3" }]
+      days_internal: [{ day_number: 3, label: "Ngày 3" }],
+      components: [
+        {
+          label: "",
+          label_i18n: {
+            en: "Transportation",
+            ms: "Pengangkutan"
+          },
+          details: "",
+          details_i18n: {
+            en: "Airport pickup",
+            ms: "Ambil di lapangan terbang"
+          }
+        }
+      ]
     },
     accepted_payment_terms_snapshot: {
       lines: [{ kind: "DEPOSIT", label: "Đặt cọc" }]
@@ -103,6 +117,14 @@ test("booking English-master migration canonicalizes deterministic Vietnamese de
   assert.equal(booking.offer.payment_terms.lines[2].label, "Final payment");
   assert.equal(booking.accepted_offer_snapshot.trip_price_internal.label, "Trip total");
   assert.equal(booking.accepted_offer_snapshot.days_internal[0].label, "Day 3");
+  assert.equal(booking.accepted_offer_snapshot.components[0].label, "Transportation");
+  assert.deepEqual(booking.accepted_offer_snapshot.components[0].label_i18n, {
+    ms: "Pengangkutan"
+  });
+  assert.equal(booking.accepted_offer_snapshot.components[0].details, "Airport pickup");
+  assert.deepEqual(booking.accepted_offer_snapshot.components[0].details_i18n, {
+    ms: "Ambil di lapangan terbang"
+  });
   assert.equal(booking.accepted_payment_terms_snapshot.lines[0].label, "Deposit");
   assert.equal(booking.generated_offers[0].offer.additional_items[0].label, "Additional item");
   assert.equal(booking.generated_offers[0].offer.additional_items[0].details, "Carry-over surcharge");

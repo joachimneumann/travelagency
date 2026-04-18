@@ -146,6 +146,8 @@ function migrateOfferLike(offer) {
   if (!offer || typeof offer !== "object" || Array.isArray(offer)) return 0;
   let fieldChanges = 0;
 
+  fieldChanges += migrateLocalizedFieldPairs(offer);
+
   if (offer.trip_price_internal && typeof offer.trip_price_internal === "object") {
     const nextLabel = canonicalTripOrDayLabel(offer.trip_price_internal.label);
     if (nextLabel && nextLabel !== offer.trip_price_internal.label) {
