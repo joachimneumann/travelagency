@@ -3993,7 +3993,7 @@ test("staging bootstrap does not seed legacy customer store data", async () => {
   );
 });
 
-test("staging backend bakes dependencies into the image and mounts only writable data roots", async () => {
+test("staging backend bakes dependencies into the image and mounts only the writable runtime roots it updates", async () => {
   const repoRoot = path.resolve(__dirname, "..", "..", "..");
   const dockerfilePath = path.join(repoRoot, "backend", "Dockerfile.staging");
   const composePath = path.join(repoRoot, "docker-compose.staging.yml");
@@ -4034,8 +4034,18 @@ test("staging backend bakes dependencies into the image and mounts only writable
   );
   assert.match(
     backendComposeBlock,
-    /- \.\/backend\/app\/data:\/srv\/backend\/app\/data[\s\S]*- \.\/content:\/srv\/content/,
-    "Staging backend should mount only the writable backend data and content roots"
+    /- \.\/backend\/app\/data:\/srv\/backend\/app\/data[\s\S]*- \.\/content:\/srv\/content[\s\S]*- \.\/frontend\/data\/generated\/homepage:\/srv\/frontend\/data\/generated\/homepage[\s\S]*- \.\/assets\/generated\/homepage:\/srv\/assets\/generated\/homepage/,
+    "Staging backend should mount the writable backend data, content, and shared generated homepage roots"
+  );
+  assert.match(
+    backendComposeBlock,
+    /PUBLIC_HOMEPAGE_FRONTEND_DATA_DIR: \/srv\/frontend\/data\/generated\/homepage[\s\S]*PUBLIC_HOMEPAGE_ASSETS_DIR: \/srv\/assets\/generated\/homepage/,
+    "Staging backend should point homepage generation at the same generated roots Caddy serves"
+  );
+  assert.match(
+    updateStagingSource,
+    /mkdir -p frontend\/data\/generated\/homepage assets\/generated\/homepage[\s\S]*generate_public_homepage_assets/,
+    "Staging deploy should create the shared generated homepage roots before running the homepage asset generator"
   );
   assert.doesNotMatch(
     updateStagingSource,

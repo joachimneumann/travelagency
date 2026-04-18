@@ -93,6 +93,8 @@ if should_run_tests "${SERVICES[@]}"; then
   run_staging_tests
 fi
 
+mkdir -p frontend/data/generated/homepage assets/generated/homepage
+
 generate_public_homepage_assets
 
 mkdir -p backend/app/data

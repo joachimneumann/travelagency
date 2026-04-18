@@ -33,8 +33,13 @@ services:
     volumes:
       - ./backend/app/data:/srv/backend/app/data
       - ./content:/srv/content
+      - ./frontend/data/generated/homepage:/srv/frontend/data/generated/homepage
+      - ./assets/generated/homepage:/srv/assets/generated/homepage
     env_file:
       - .env
+    environment:
+      PUBLIC_HOMEPAGE_FRONTEND_DATA_DIR: /srv/frontend/data/generated/homepage
+      PUBLIC_HOMEPAGE_ASSETS_DIR: /srv/assets/generated/homepage
     depends_on:
       postgres:
         condition: service_healthy
