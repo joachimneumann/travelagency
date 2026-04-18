@@ -1251,7 +1251,6 @@ textarea:focus-visible {
 
 .team-card:hover,
 .team-card:focus-visible {
-  transform: translateY(-8px);
   z-index: 2;
 }
 
@@ -1266,7 +1265,10 @@ textarea:focus-visible {
   border-radius: 18px;
   background: transparent;
   box-shadow: none;
-  transition: box-shadow 0.32s ease;
+  transform: scale(1);
+  transform-origin: center bottom;
+  transition: transform 0.9s cubic-bezier(0.16, 0.88, 0.2, 1), box-shadow 0.32s ease;
+  will-change: transform;
 }
 
 .team-card__photo {
@@ -1277,15 +1279,21 @@ textarea:focus-visible {
   display: block;
   background: transparent;
   border-radius: 18px;
-  transform: scale(0.888889);
-  transform-origin: center bottom;
-  transition: transform 0.9s cubic-bezier(0.16, 0.88, 0.2, 1), filter 0.45s ease;
-  will-change: transform;
+  transition: filter 0.45s ease;
+}
+
+.team-card:hover .team-card__photo-wrap,
+.team-card:focus-visible .team-card__photo-wrap {
+  transform: scale(1.05);
+}
+
+.team-card:focus-visible .team-card__photo-wrap {
+  outline: 2px solid var(--secondary);
+  outline-offset: 4px;
 }
 
 .team-card:hover .team-card__photo,
 .team-card:focus-visible .team-card__photo {
-  transform: scale(1);
   filter: saturate(1.03);
 }
 

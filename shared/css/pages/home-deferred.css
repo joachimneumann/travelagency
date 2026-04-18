@@ -139,11 +139,6 @@
   border-radius: 20px;
 }
 
-.home-page .team-card:hover,
-.home-page .team-card:focus-visible {
-  transform: translateY(-10px);
-}
-
 .home-page .faq-list {
   gap: 0.75rem;
 }
