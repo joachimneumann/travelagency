@@ -428,17 +428,22 @@ export function createFrontendToursController(ctx) {
         return `
           <article class="tour-card">
             <div class="tour-card__media">
-              <img
-                src="${escapeAttr(trip.image)}"
-                alt="${escapeAttr(frontendT("tour.card.image_alt", "{title} in {destinations}", {
-                  title: tripTitle,
-                  destinations: countriesLabel
-                }))}"
-                loading="${loading}"
-                fetchpriority="${fetchpriority}"
-                width="1200"
-                height="800"
-              />
+              <div class="tour-card__media-zoom">
+                <div class="tour-card__media-stage">
+                  <img
+                    class="tour-card__media-image"
+                    src="${escapeAttr(trip.image)}"
+                    alt="${escapeAttr(frontendT("tour.card.image_alt", "{title} in {destinations}", {
+                      title: tripTitle,
+                      destinations: countriesLabel
+                    }))}"
+                    loading="${loading}"
+                    fetchpriority="${fetchpriority}"
+                    width="1200"
+                    height="800"
+                  />
+                </div>
+              </div>
             </div>
             <div class="tour-body">
               <h3 class="tour-title tour-title--topline">${escapeHTML(tripTitle)}</h3>

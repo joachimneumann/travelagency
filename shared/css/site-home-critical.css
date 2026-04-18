@@ -642,29 +642,59 @@ textarea:focus-visible {
 .tour-card__media {
   position: relative;
   aspect-ratio: 1 / 1;
+  overflow: visible;
 }
 
-.tour-card__media img {
+.tour-card__media-zoom {
+  position: absolute;
+  inset: 0;
+  transform: scale(1);
+  transform-origin: center bottom;
+  transition: transform 0.9s cubic-bezier(0.16, 0.88, 0.2, 1);
+  will-change: transform;
+}
+
+.tour-card__media-stage {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: calc(var(--radius) - 1px) calc(var(--radius) - 1px) 0 0;
+  background: var(--surface-muted);
+  transition: border-radius 0.32s ease;
+}
+
+.tour-card__media-image {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transform: scale(1);
-  transform-origin: center bottom;
-  transition:
-    transform 0.9s cubic-bezier(0.16, 0.88, 0.2, 1),
-    filter 0.45s ease,
-    border-radius 0.32s ease;
-  will-change: transform;
-  border-radius: calc(var(--radius) - 1px) calc(var(--radius) - 1px) 0 0;
+  transition: filter 0.45s ease;
+  border-radius: inherit;
 }
 
-.tour-card:hover .tour-card__media img,
-.tour-card:focus-within .tour-card__media img {
+.tour-card:hover .tour-card__media-zoom,
+.tour-card:focus-within .tour-card__media-zoom,
+.tour-card__media:hover .tour-card__media-zoom,
+.tour-card__media:focus-within .tour-card__media-zoom,
+.tour-card__media-zoom:hover {
   transform: scale(1.05);
-  filter: saturate(1.03);
+}
+
+.tour-card:hover .tour-card__media-stage,
+.tour-card:focus-within .tour-card__media-stage,
+.tour-card__media:hover .tour-card__media-stage,
+.tour-card__media:focus-within .tour-card__media-stage,
+.tour-card__media-zoom:hover .tour-card__media-stage {
   border-radius: calc(var(--radius) - 1px);
+}
+
+.tour-card:hover .tour-card__media-image,
+.tour-card:focus-within .tour-card__media-image,
+.tour-card__media:hover .tour-card__media-image,
+.tour-card__media:focus-within .tour-card__media-image,
+.tour-card__media-zoom:hover .tour-card__media-image {
+  filter: saturate(1.03);
 }
 
 .tour-body {
