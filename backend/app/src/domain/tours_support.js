@@ -34,6 +34,13 @@ export function migratePersistedTourState(tour) {
     delete tour.highlights;
     changed = true;
   }
+  if (!Array.isArray(tour.pictures) || !tour.pictures.length) {
+    const legacyImage = normalizeText(tour.image);
+    if (legacyImage) {
+      tour.pictures = [legacyImage];
+      changed = true;
+    }
+  }
   return changed;
 }
 
@@ -98,6 +105,20 @@ export function createTourHelpers({ toursDir, safeInt }) {
     return `/public/v1/tour-images/${normalized.replace(/^\/+/, "")}`;
   }
 
+  function normalizeTourPictureList(values, fallbackValue = "") {
+    const items = Array.isArray(values)
+      ? values
+      : (values === undefined || values === null || values === "" ? [] : [values]);
+    const normalizedPictures = items
+      .map((value) => toTourImagePublicUrl(value))
+      .filter(Boolean);
+    if (normalizedPictures.length) {
+      return Array.from(new Set(normalizedPictures));
+    }
+    const fallbackPicture = toTourImagePublicUrl(fallbackValue);
+    return fallbackPicture ? [fallbackPicture] : [];
+  }
+
   function withAssetVersion(value, version) {
     const normalizedValue = normalizeText(value);
     const normalizedVersion = normalizeText(version);
@@ -122,7 +143,8 @@ export function createTourHelpers({ toursDir, safeInt }) {
     );
     next.destinations = tourDestinationCodes(next);
     next.styles = tourStyleCodes(next);
-    next.image = toTourImagePublicUrl(next.image);
+    next.pictures = normalizeTourPictureList(next.pictures, next.image);
+    next.image = next.pictures[0] || "";
     next.seasonality_start_month = normalizeText(next.seasonality_start_month);
     next.seasonality_end_month = normalizeText(next.seasonality_end_month);
     next.priority = safeInt(next.priority) ?? 50;
@@ -138,6 +160,8 @@ export function createTourHelpers({ toursDir, safeInt }) {
     const normalizedLang = normalizeTourLang(lang);
     const destinationCodes = tourDestinationCodes(stored);
     const styleCodes = tourStyleCodes(stored);
+    const version = normalizeText(stored.updated_at || stored.created_at);
+    const pictures = stored.pictures.map((picture) => withAssetVersion(toTourImagePublicUrl(picture), version));
     return {
       ...stored,
       title: resolveLocalizedText(stored.title, normalizedLang),
@@ -146,10 +170,8 @@ export function createTourHelpers({ toursDir, safeInt }) {
       destination_codes: destinationCodes,
       styles: styleCodes.map((code) => getTourStyleLabel(code, normalizedLang)),
       style_codes: styleCodes,
-      image: withAssetVersion(
-        toTourImagePublicUrl(stored.image),
-        normalizeText(stored.updated_at || stored.created_at)
-      ),
+      pictures,
+      image: pictures[0] || "",
       priority: safeInt(stored.priority) ?? 50
     };
   }

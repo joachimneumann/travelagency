@@ -3061,8 +3061,8 @@ test("tour page reads month options from the generated catalogs layer", async ()
   );
   assert.match(
     tourSource,
-    /els\.imageUpload\.addEventListener\("change", \(\) => \{[\s\S]*setPendingHeroImagePreview\(file\);[\s\S]*renderHeroImage\(\);[\s\S]*tour\.status\.selected_image/,
-    "Tour page should preview a newly selected hero image immediately before save"
+    /els\.pictureUpload\.addEventListener\("change", \(\) => \{[\s\S]*files\.map\(\(file\) => createPendingPictureDraftItem\(file\)\)[\s\S]*renderTourPictures\(\);[\s\S]*tour\.status\.selected_pictures/,
+    "Tour page should stage newly selected pictures in the gallery immediately before save"
   );
   assert.match(
     tourSource,
@@ -3071,8 +3071,8 @@ test("tour page reads month options from the generated catalogs layer", async ()
   );
   assert.match(
     tourSource,
-    /function setPendingHeroImagePreview\(file\) \{[\s\S]*URL\.createObjectURL\(file\)/,
-    "Tour page should stage a temporary object URL for the selected hero image"
+    /function createPendingPictureDraftItem\(file\) \{[\s\S]*URL\.createObjectURL\(file\)/,
+    "Tour page should stage a temporary object URL for each selected picture"
   );
 });
 
@@ -3096,8 +3096,8 @@ test("tour read models version public image URLs so immutable caching still refr
   );
   assert.match(
     toursSupportSource,
-    /image:\s*withAssetVersion\([\s\S]*toTourImagePublicUrl\(stored\.image\)[\s\S]*stored\.updated_at \|\| stored\.created_at/,
-    "Tour read models should version returned image URLs with the tour update timestamp"
+    /const pictures = stored\.pictures\.map\(\(picture\) => withAssetVersion\(toTourImagePublicUrl\(picture\), version\)\);[\s\S]*image:\s*pictures\[0\] \|\| ""/,
+    "Tour read models should version returned picture URLs with the tour update timestamp and derive image from the first picture"
   );
 });
 

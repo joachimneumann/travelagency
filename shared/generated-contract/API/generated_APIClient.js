@@ -144,6 +144,8 @@ case "payment_document_pdf":
   return RequestFactory.paymentDocumentPdfRequest(options);
 case "keycloak_users":
   return RequestFactory.keycloakUsersRequest(options);
+case "settings_observability":
+  return RequestFactory.settingsObservabilityRequest(options);
 case "staff_profiles":
   return RequestFactory.staffProfilesRequest(options);
 case "keycloak_user_staff_profile_update":
@@ -166,8 +168,10 @@ case "tour_delete":
   return RequestFactory.tourDeleteRequest(options);
 case "tour_translate_fields":
   return RequestFactory.tourTranslateFieldsRequest(options);
-case "tour_image":
-  return RequestFactory.tourImageRequest(options);
+case "tour_picture_upload":
+  return RequestFactory.tourPictureUploadRequest(options);
+case "tour_picture_delete":
+  return RequestFactory.tourPictureDeleteRequest(options);
       default:
             throw new Error(`Unknown generated endpoint ${key}`);
         }

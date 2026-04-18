@@ -16,6 +16,7 @@ import (
 	seasonality_end_month?:   enums.#MonthCode
 	short_description?:       string
 	short_description_i18n?:  [string]: string
+	pictures?:                [...string]
 	image?:                   string
 	created_at?:              common.#Timestamp
 	updated_at?:              common.#Timestamp

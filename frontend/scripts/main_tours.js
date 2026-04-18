@@ -427,17 +427,19 @@ export function createFrontendToursController(ctx) {
 
         return `
           <article class="tour-card">
-            <img
-              src="${escapeAttr(trip.image)}"
-              alt="${escapeAttr(frontendT("tour.card.image_alt", "{title} in {destinations}", {
-                title: tripTitle,
-                destinations: countriesLabel
-              }))}"
-              loading="${loading}"
-              fetchpriority="${fetchpriority}"
-              width="1200"
-              height="800"
-            />
+            <div class="tour-card__media">
+              <img
+                src="${escapeAttr(trip.image)}"
+                alt="${escapeAttr(frontendT("tour.card.image_alt", "{title} in {destinations}", {
+                  title: tripTitle,
+                  destinations: countriesLabel
+                }))}"
+                loading="${loading}"
+                fetchpriority="${fetchpriority}"
+                width="1200"
+                height="800"
+              />
+            </div>
             <div class="tour-body">
               <h3 class="tour-title tour-title--topline">${escapeHTML(tripTitle)}</h3>
               <div class="tour-desc-wrap">
@@ -538,6 +540,39 @@ export function createFrontendToursController(ctx) {
   function bindTourCardOpenHandlers() {
     if (!els.tourGrid) return;
     bindTourDescriptionDetail();
+
+    const cards = els.tourGrid.querySelectorAll(".tour-card");
+    cards.forEach((card) => {
+      if (!(card instanceof HTMLElement) || card.dataset.hoverDebugBound) return;
+      const image = card.querySelector(".tour-card__media img");
+      const title = card.querySelector(".tour-title")?.textContent?.trim() || "(untitled tour)";
+      const logHoverState = (phase) => {
+        const computedImageStyle = image instanceof HTMLElement ? window.getComputedStyle(image) : null;
+        console.log("[tour-card hover debug]", phase, {
+          title,
+          hovered: card.matches(":hover"),
+          focusWithin: card.matches(":focus-within"),
+          imageTransform: computedImageStyle?.transform || null,
+          imageTransformOrigin: computedImageStyle?.transformOrigin || null
+        });
+      };
+
+      card.addEventListener("mouseenter", () => {
+        logHoverState("mouseenter");
+      });
+      card.addEventListener("mouseleave", () => {
+        logHoverState("mouseleave");
+      });
+      card.addEventListener("focusin", () => {
+        logHoverState("focusin");
+      });
+      card.addEventListener("focusout", () => {
+        logHoverState("focusout");
+      });
+
+      card.dataset.hoverDebugBound = "1";
+      console.log("[tour-card hover debug] bound", { title });
+    });
 
     const descriptionButtons = els.tourGrid.querySelectorAll("[data-tour-desc-toggle]");
     descriptionButtons.forEach((button) => {

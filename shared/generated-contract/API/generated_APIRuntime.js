@@ -139,6 +139,12 @@
   "location": "path",
   "required": true,
   "typeName": "Identifier"
+},
+  PARAM_24: {
+  "name": "picture_name",
+  "location": "path",
+  "required": true,
+  "typeName": "Identifier"
 }
     });
 
@@ -925,6 +931,17 @@
         ]
       },
       {
+        key: "settings_observability",
+        path: "/api/v1/settings/observability",
+        method: "GET",
+        authenticated: true,
+        requestType: null,
+        responseType: "SettingsObservabilityResponse",
+        parameters: [
+
+        ]
+      },
+      {
         key: "staff_profiles",
         path: "/api/v1/staff-profiles",
         method: "GET",
@@ -1046,14 +1063,26 @@
         ]
       },
       {
-        key: "tour_image",
-        path: "/api/v1/tours/{tour_id}/image",
+        key: "tour_picture_upload",
+        path: "/api/v1/tours/{tour_id}/pictures",
         method: "POST",
         authenticated: true,
         requestType: "EvidenceUpload",
         responseType: "TourResponse",
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_23)
+        ]
+      },
+      {
+        key: "tour_picture_delete",
+        path: "/api/v1/tours/{tour_id}/pictures/{picture_name}",
+        method: "DELETE",
+        authenticated: true,
+        requestType: null,
+        responseType: "TourResponse",
+        parameters: [
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_23),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_24)
         ]
       }
     ];

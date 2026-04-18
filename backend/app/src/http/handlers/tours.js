@@ -149,6 +149,15 @@ export function createTourHandlers(deps) {
       next.destinations = normalizeDestinationCodes(payload.destinations);
     }
     if (isCreate || payload.styles !== undefined) next.styles = normalizeStyleCodes(payload.styles);
+    if (payload.pictures !== undefined) {
+      next.pictures = Array.from(
+        new Set(
+          (Array.isArray(payload.pictures) ? payload.pictures : [])
+            .map((value) => toTourImagePublicUrl(value))
+            .filter(Boolean)
+        )
+      );
+    }
     if (payload.image !== undefined) next.image = toTourImagePublicUrl(payload.image);
     if (payload.seasonality_start_month !== undefined) {
       next.seasonality_start_month = normalizeText(payload.seasonality_start_month);
@@ -270,6 +279,29 @@ export function createTourHandlers(deps) {
     const tourFolder = path.resolve(toursRoot, normalizedTourId);
     if (tourFolder === toursRoot || !tourFolder.startsWith(`${toursRoot}${path.sep}`)) return "";
     return tourFolder;
+  }
+
+  function tourPictureName(value) {
+    const normalized = normalizeText(value);
+    if (!normalized) return "";
+    const withoutQuery = normalized.split("?")[0];
+    const trimmed = withoutQuery.replace(/\/+$/, "");
+    return decodeURIComponent(trimmed.split("/").pop() || "");
+  }
+
+  function tourPictureRelativePath(value, tourId) {
+    const normalizedTourId = normalizeText(tourId);
+    if (!normalizedTourId) return "";
+    const normalized = normalizeText(value);
+    if (!normalized) return "";
+    const withoutQuery = normalized.split("?")[0];
+    const publicPrefix = `/public/v1/tour-images/${normalizedTourId}/`;
+    if (withoutQuery.startsWith(publicPrefix)) {
+      return `${normalizedTourId}/${withoutQuery.slice(publicPrefix.length).replace(/^\/+/, "")}`;
+    }
+    const bareValue = withoutQuery.replace(/^\/+/, "");
+    if (bareValue.startsWith(`${normalizedTourId}/`)) return bareValue;
+    return "";
   }
 
   async function regeneratePublicHomepageAssets(reason, details = {}) {
@@ -529,7 +561,6 @@ export function createTourHandlers(deps) {
     const now = nowIso();
     const tour = buildTourPayload(payload, { isCreate: true, lang });
     tour.id = `tour_${randomUUID()}`;
-    tour.image = toTourImagePublicUrl(tour.image);
     tour.created_at = now;
     tour.updated_at = now;
 
@@ -656,7 +687,7 @@ export function createTourHandlers(deps) {
     ]);
   }
 
-  async function handleUploadTourImage(req, res, [tourId]) {
+  async function handleUploadTourPicture(req, res, [tourId]) {
     const principal = getPrincipal(req);
     if (!canEditTours(principal)) {
       sendJson(res, 403, { error: "Forbidden" });
@@ -693,7 +724,7 @@ export function createTourHandlers(deps) {
     }
 
     const tempInputPath = path.join(TEMP_UPLOAD_DIR, `${tourId}-${randomUUID()}${path.extname(filename) || ".upload"}`);
-    const outputName = `${tourId}.webp`;
+    const outputName = `picture-${randomUUID()}.webp`;
     const outputRelativePath = `${tourId}/${outputName}`;
     const outputPath = path.join(TOURS_DIR, outputRelativePath);
 
@@ -708,17 +739,72 @@ export function createTourHandlers(deps) {
     }
 
     const publicPath = `/public/v1/tour-images/${outputRelativePath}`;
-    const updated = {
-      ...tours[index],
-      image: publicPath,
+    const current = normalizeTourForStorage(tours[index]);
+    const updated = normalizeTourForStorage({
+      ...current,
+      pictures: [...current.pictures, publicPath],
       updated_at: now
-    };
+    });
     tours[index] = updated;
     await persistTour(updated);
     const homepageAssets = await regeneratePublicHomepageAssets("tour_image_upload", { tour_id: updated.id });
 
     sendJson(res, 200, {
-      tour: normalizeTourForRead(updated, { lang }),
+      tour: buildTourEditorResponse(updated, lang),
+      homepage_assets: homepageAssets
+    });
+  }
+
+  async function handleDeleteTourPicture(req, res, [tourId, rawPictureName]) {
+    const principal = getPrincipal(req);
+    if (!canEditTours(principal)) {
+      sendJson(res, 403, { error: "Forbidden" });
+      return;
+    }
+
+    const pictureName = normalizeText(decodeURIComponent(rawPictureName || ""));
+    if (!pictureName) {
+      sendJson(res, 422, { error: "picture_name is required" });
+      return;
+    }
+    const safePictureName = path.basename(pictureName);
+    if (safePictureName !== pictureName) {
+      sendJson(res, 422, { error: "picture_name is invalid" });
+      return;
+    }
+
+    const lang = requestLang(req.url);
+    const tours = (await readTours()).map((tour) => normalizeTourForStorage(tour));
+    const index = tours.findIndex((item) => item.id === tourId);
+    if (index < 0) {
+      sendJson(res, 404, { error: "Tour not found" });
+      return;
+    }
+
+    const current = normalizeTourForStorage(tours[index]);
+    const retainedPictures = current.pictures.filter((picture) => tourPictureName(picture) !== pictureName);
+    const removedPicture = current.pictures.find((picture) => tourPictureName(picture) === pictureName) || "";
+    let updated = current;
+    if (retainedPictures.length !== current.pictures.length) {
+      updated = normalizeTourForStorage({
+        ...current,
+        pictures: retainedPictures,
+        updated_at: nowIso()
+      });
+      tours[index] = updated;
+      await persistTour(updated);
+    }
+
+    const relativePath = tourPictureRelativePath(removedPicture, tourId) || `${tourId}/${safePictureName}`;
+    await rm(path.join(TOURS_DIR, relativePath), { force: true }).catch(() => {});
+
+    const homepageAssets = await regeneratePublicHomepageAssets("tour_picture_delete", {
+      tour_id: updated.id,
+      picture_name: safePictureName
+    });
+
+    sendJson(res, 200, {
+      tour: buildTourEditorResponse(updated, lang),
       homepage_assets: homepageAssets
     });
   }
@@ -732,6 +818,7 @@ export function createTourHandlers(deps) {
     handlePatchTour,
     handleDeleteTour,
     handlePublicTourImage,
-    handleUploadTourImage
+    handleUploadTourPicture,
+    handleDeleteTourPicture
   };
 }

@@ -12,6 +12,99 @@
       }
     </script>
     <script src="/frontend/scripts/shared/localhost_diagnostics.js"></script>
+    <style>
+      .tour-picture-editor {
+        display: grid;
+        gap: 1rem;
+      }
+
+      .tour-picture-list {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 1rem;
+      }
+
+      .tour-picture-card {
+        display: grid;
+        grid-template-columns: clamp(180px, 24vw, 260px) minmax(0, 1fr) auto;
+        gap: 1rem;
+        align-items: center;
+        padding: 1rem;
+        border: 1px solid var(--line);
+        border-radius: 1rem;
+        background: var(--surface);
+      }
+
+      .tour-picture-card__frame {
+        position: relative;
+      }
+
+      .tour-picture-card__image {
+        width: 100%;
+        aspect-ratio: 1 / 1;
+        object-fit: cover;
+        border: 1px solid var(--line);
+        border-radius: 1rem;
+        background: var(--surface-muted);
+        display: block;
+      }
+
+      .tour-picture-card__meta {
+        display: grid;
+        gap: 0.35rem;
+        min-width: 0;
+        align-self: center;
+      }
+
+      .tour-picture-card__actions {
+        display: contents;
+      }
+
+      .tour-picture-card__name {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: normal;
+        overflow-wrap: anywhere;
+        min-width: 0;
+        color: var(--text-strong);
+      }
+
+      .tour-picture-card__order {
+        color: var(--text-soft);
+      }
+
+      .tour-picture-card__remove {
+        align-self: center;
+      }
+
+      .tour-picture-empty {
+        border: 1px dashed var(--line);
+        border-radius: 1rem;
+        padding: 1rem;
+        background: var(--surface-muted);
+      }
+
+      .tour-picture-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.75rem 1rem;
+      }
+
+      @media (max-width: 720px) {
+        .tour-picture-card {
+          grid-template-columns: minmax(0, 1fr);
+        }
+
+        .tour-picture-card__frame {
+          max-width: 320px;
+        }
+
+        .tour-picture-card__remove {
+          justify-self: start;
+        }
+      }
+    </style>
     <link rel="stylesheet" href="assets/css/styles.css" />
   </head>
   <body class="booking-detail-page tour-detail-page">
@@ -54,13 +147,14 @@
 
               <form id="tour_form" class="backend-tour-form">
                 <div class="field full">
-                  <div class="tour-hero-row">
-                    <button class="tour-hero-image-button" id="tour_change_image_btn" type="button" data-i18n-aria-label-id="tour.change_image" aria-label="Change image">
-                      <img id="tour_hero_image" src="assets/img/profile_booking.png" alt="" class="tour-hero-image empty" />
-                    </button>
-                    <p class="micro" data-i18n-id="tour.image_help">Image is converted to WebP and resized to max 1000px automatically.</p>
+                  <div class="tour-picture-editor">
+                    <div id="tour_picture_list" class="tour-picture-list" aria-live="polite"></div>
+                    <div class="tour-picture-toolbar">
+                      <button class="btn btn-ghost" id="tour_add_picture_btn" type="button" data-i18n-id="tour.add_picture">Add picture</button>
+                      <p class="micro" data-i18n-id="tour.picture_help">Pictures are converted to WebP and resized to max 1000px automatically.</p>
+                    </div>
                   </div>
-                  <input id="tour_image_upload" name="tour_image_upload" type="file" accept="image/*" class="u-file-input-hidden" />
+                  <input id="tour_picture_upload" name="tour_picture_upload" type="file" accept="image/*" multiple class="u-file-input-hidden" />
                 </div>
                 <div class="field">
                   <label for="tour_seasonality_start_month" data-i18n-id="tour.seasonality_start">Seasonality Start Month</label>

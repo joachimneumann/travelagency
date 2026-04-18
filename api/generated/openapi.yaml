@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-04-17T07:50:35Z
+# 2026-04-18T05:21:31Z
 
 ---
 openapi: 3.1.0
@@ -27,6 +27,7 @@ tags:
 - name: Travel plan templates
 - name: Offers
 - name: CountryReference
+- name: Settings
 - name: Tours
 components:
   securitySchemes:
@@ -3865,6 +3866,10 @@ components:
         short_description:
           type: string
           nullable: true
+        pictures:
+          type: array
+          items:
+            type: string
         image:
           type: string
           nullable: true
@@ -5778,6 +5783,92 @@ components:
             "$ref": "#/components/schemas/BookingChatConversation"
         conversation_total:
           type: integer
+    SettingsObservabilityLoggedInUser:
+      type: object
+      required:
+      - session_count
+      properties:
+        sub:
+          type: string
+          nullable: true
+        preferred_username:
+          type: string
+          nullable: true
+        name:
+          type: string
+          nullable: true
+        email:
+          type: string
+          format: email
+          nullable: true
+        roles:
+          type: array
+          items:
+            type: string
+        session_count:
+          type: integer
+        latest_login_at:
+          type: string
+          format: date-time
+          nullable: true
+        latest_expires_at:
+          type: string
+          format: date-time
+          nullable: true
+    SettingsObservabilityBookingActivity:
+      type: object
+      required: []
+      properties:
+        type:
+          type: string
+          nullable: true
+        actor:
+          type: string
+          nullable: true
+        detail:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          nullable: true
+    SettingsObservabilityLatestChangedBooking:
+      type: object
+      required:
+      - id
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+          nullable: true
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+        assigned_keycloak_user_id:
+          type: string
+          nullable: true
+        last_activity:
+          "$ref": "#/components/schemas/SettingsObservabilityBookingActivity"
+          nullable: true
+    SettingsObservabilityResponse:
+      type: object
+      required:
+      - session_count
+      - user_count
+      properties:
+        logged_in_users:
+          type: array
+          items:
+            "$ref": "#/components/schemas/SettingsObservabilityLoggedInUser"
+        session_count:
+          type: integer
+        user_count:
+          type: integer
+        latest_changed_booking:
+          "$ref": "#/components/schemas/SettingsObservabilityLatestChangedBooking"
+          nullable: true
     OfferExchangeRatesResponse:
       type: object
       required:
@@ -6641,6 +6732,10 @@ components:
         short_description:
           type: string
           nullable: true
+        pictures:
+          type: array
+          items:
+            type: string
         image:
           type: string
           nullable: true
@@ -9349,7 +9444,7 @@ paths:
       operationId: settings_observability
       summary: Settings Observability
       tags:
-      - Auth
+      - Settings
       security:
       - bearerAuth: []
       parameters: []
@@ -9359,8 +9454,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                additionalProperties: true
+                "$ref": "#/components/schemas/SettingsObservabilityResponse"
         '401':
           description: Unauthorized
           content:
@@ -9772,10 +9866,10 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
-  "/api/v1/tours/{tour_id}/image":
+  "/api/v1/tours/{tour_id}/pictures":
     post:
-      operationId: tour_image
-      summary: Tour Image
+      operationId: tour_picture_upload
+      summary: Tour Picture Upload
       tags:
       - Tours
       security:
@@ -9801,6 +9895,44 @@ paths:
                 "$ref": "#/components/schemas/TourResponse"
         '201':
           description: Created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/TourResponse"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/tours/{tour_id}/pictures/{picture_name}":
+    delete:
+      operationId: tour_picture_delete
+      summary: Tour Picture Delete
+      tags:
+      - Tours
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: tour_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: picture_name
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Success
           content:
             application/json:
               schema:

@@ -76,7 +76,8 @@ export const CONTRACT_ROUTE_DEFINITIONS = Object.freeze([
   { method: "POST", path: "/api/v1/tours", handlerKey: "handleCreateTour" },
   { method: "PATCH", path: "/api/v1/tours/{tour_id}", handlerKey: "handlePatchTour" },
   { method: "DELETE", path: "/api/v1/tours/{tour_id}", handlerKey: "handleDeleteTour" },
-  { method: "POST", path: "/api/v1/tours/{tour_id}/image", handlerKey: "handleUploadTourImage" },
+  { method: "POST", path: "/api/v1/tours/{tour_id}/pictures", handlerKey: "handleUploadTourPicture" },
+  { method: "DELETE", path: "/api/v1/tours/{tour_id}/pictures/{picture_name}", handlerKey: "handleDeleteTourPicture" },
   { method: "GET", path: "/auth/me", handlerKey: "handleAuthMe" }
 ]);
 

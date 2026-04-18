@@ -1134,6 +1134,23 @@ export function keycloakUsersRequest({ baseURL = '', params = {}, query = {}, bo
   };
 }
 
+export function settingsObservabilityPath(params = {}) {
+  return buildPath("/api/v1/settings/observability", params);
+}
+
+export function settingsObservabilityRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = settingsObservabilityPath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "settings_observability",
+    method: "GET",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
 export function staffProfilesPath(params = {}) {
   return buildPath("/api/v1/staff-profiles", params);
 }
@@ -1321,16 +1338,33 @@ export function tourTranslateFieldsRequest({ baseURL = '', params = {}, query = 
   };
 }
 
-export function tourImagePath(params = {}) {
-  return buildPath("/api/v1/tours/{tour_id}/image", params);
+export function tourPictureUploadPath(params = {}) {
+  return buildPath("/api/v1/tours/{tour_id}/pictures", params);
 }
 
-export function tourImageRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
-  const path = tourImagePath(params);
+export function tourPictureUploadRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = tourPictureUploadPath(params);
   const url = buildURL(baseURL, path, query);
   return {
-    key: "tour_image",
+    key: "tour_picture_upload",
     method: "POST",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function tourPictureDeletePath(params = {}) {
+  return buildPath("/api/v1/tours/{tour_id}/pictures/{picture_name}", params);
+}
+
+export function tourPictureDeleteRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = tourPictureDeletePath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "tour_picture_delete",
+    method: "DELETE",
     authenticated: true,
     url,
     headers,

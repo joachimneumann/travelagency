@@ -89,6 +89,10 @@ import (
 		BookingChatEvent:                                          apiModel.#BookingChatEvent
 		BookingChatConversation:                                   apiModel.#BookingChatConversation
 		BookingChatResponse:                                       apiModel.#BookingChatResponse
+		SettingsObservabilityLoggedInUser:                         apiModel.#SettingsObservabilityLoggedInUser
+		SettingsObservabilityBookingActivity:                      apiModel.#SettingsObservabilityBookingActivity
+		SettingsObservabilityLatestChangedBooking:                 apiModel.#SettingsObservabilityLatestChangedBooking
+		SettingsObservabilityResponse:                             apiModel.#SettingsObservabilityResponse
 		CatalogOption:                                             apiModel.#CatalogOption
 		TourOptions:                                               apiModel.#TourOptions
 		TourResponse:                                              apiModel.#TourResponse

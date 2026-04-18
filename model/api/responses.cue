@@ -113,6 +113,39 @@ import (
 	conversation_total: >=0 & int
 }
 
+#SettingsObservabilityLoggedInUser: {
+	sub?:               string
+	preferred_username?: string
+	name?:              string
+	email?:             common.#Email
+	roles?:             [...string]
+	session_count:      >=0 & int
+	latest_login_at?:   common.#Timestamp
+	latest_expires_at?: common.#Timestamp
+}
+
+#SettingsObservabilityBookingActivity: {
+	type?:       string
+	actor?:      string
+	detail?:     string
+	created_at?: common.#Timestamp
+}
+
+#SettingsObservabilityLatestChangedBooking: {
+	id:                        common.#Identifier
+	name?:                     string
+	updated_at?:               common.#Timestamp
+	assigned_keycloak_user_id?: common.#Identifier
+	last_activity?:            #SettingsObservabilityBookingActivity
+}
+
+#SettingsObservabilityResponse: {
+	logged_in_users:         [...#SettingsObservabilityLoggedInUser]
+	session_count:           >=0 & int
+	user_count:              >=0 & int
+	latest_changed_booking?: #SettingsObservabilityLatestChangedBooking
+}
+
 #CatalogOption: {
 	code:  string & !=""
 	label: string & !=""

@@ -364,6 +364,7 @@ import (
 	seasonality_end_month?:   enums.#MonthCode
 	short_description?:       string
 	short_description_i18n?: [string]: string
+	pictures?:                [...string]
 	image?:                   string
 }
 

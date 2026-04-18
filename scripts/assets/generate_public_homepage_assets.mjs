@@ -446,16 +446,25 @@ async function generateTourAssets({
     const localizedItems = [];
     for (const tour of sortedPublicTours) {
       const readModel = normalizeTourForRead(tour, { lang: normalizedLang });
-      const assetRelativePath = extractTourAssetRelativePath(readModel.image, readModel.id);
-      const generatedAssetRelativePath = generatedTourAssetPaths.get(assetRelativePath) || assetRelativePath;
-      const image = generatedAssetRelativePath
-        ? await versionedStaticAssetPath(generatedAssetRelativePath, outputRoot, {
-          publicPrefix: "/assets/generated/homepage/tours",
-          version: normalizeText(readModel.updated_at || readModel.created_at)
-        })
-        : "/assets/img/marketing_tours.png";
+      const pictureCandidates = Array.isArray(readModel.pictures) && readModel.pictures.length
+        ? readModel.pictures
+        : [readModel.image];
+      const pictures = [];
+      for (const picture of pictureCandidates) {
+        const assetRelativePath = extractTourAssetRelativePath(picture, readModel.id);
+        const generatedAssetRelativePath = generatedTourAssetPaths.get(assetRelativePath) || assetRelativePath;
+        if (!generatedAssetRelativePath) continue;
+        pictures.push(
+          await versionedStaticAssetPath(generatedAssetRelativePath, outputRoot, {
+            publicPrefix: "/assets/generated/homepage/tours",
+            version: normalizeText(readModel.updated_at || readModel.created_at)
+          })
+        );
+      }
+      const image = pictures[0] || "/assets/img/marketing_tours.png";
       localizedItems.push({
         ...readModel,
+        pictures,
         image
       });
     }

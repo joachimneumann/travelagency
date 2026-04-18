@@ -129,6 +129,7 @@ IR: {
 				{name: "seasonality_start_month", kind: "enum", typeName: "MonthCode", required: false},
 				{name: "seasonality_end_month", kind: "enum", typeName: "MonthCode", required: false},
 				{name: "short_description", kind: "scalar", typeName: "string", required: false},
+				{name: "pictures", kind: "scalar", typeName: "string", required: false, isArray: true},
 				{name: "image", kind: "scalar", typeName: "string", required: false},
 				{name: "created_at", kind: "scalar", typeName: "Timestamp", required: false},
 				{name: "updated_at", kind: "scalar", typeName: "Timestamp", required: false},
@@ -1198,6 +1199,59 @@ IR: {
 			]
 		},
 		{
+			name:       "SettingsObservabilityLoggedInUser"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#SettingsObservabilityLoggedInUser"
+			fields: [
+				{name: "sub", kind: "scalar", typeName: "string", required: false},
+				{name: "preferred_username", kind: "scalar", typeName: "string", required: false},
+				{name: "name", kind: "scalar", typeName: "string", required: false},
+				{name: "email", kind: "scalar", typeName: "Email", required: false},
+				{name: "roles", kind: "scalar", typeName: "string", required: false, isArray: true},
+				{name: "session_count", kind: "scalar", typeName: "int", required: true},
+				{name: "latest_login_at", kind: "scalar", typeName: "Timestamp", required: false},
+				{name: "latest_expires_at", kind: "scalar", typeName: "Timestamp", required: false},
+			]
+		},
+		{
+			name:       "SettingsObservabilityBookingActivity"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#SettingsObservabilityBookingActivity"
+			fields: [
+				{name: "type", kind: "scalar", typeName: "string", required: false},
+				{name: "actor", kind: "scalar", typeName: "string", required: false},
+				{name: "detail", kind: "scalar", typeName: "string", required: false},
+				{name: "created_at", kind: "scalar", typeName: "Timestamp", required: false},
+			]
+		},
+		{
+			name:       "SettingsObservabilityLatestChangedBooking"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#SettingsObservabilityLatestChangedBooking"
+			fields: [
+				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
+				{name: "name", kind: "scalar", typeName: "string", required: false},
+				{name: "updated_at", kind: "scalar", typeName: "Timestamp", required: false},
+				{name: "assigned_keycloak_user_id", kind: "scalar", typeName: "Identifier", required: false},
+				{name: "last_activity", kind: "transport", typeName: "SettingsObservabilityBookingActivity", required: false},
+			]
+		},
+		{
+			name:       "SettingsObservabilityResponse"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#SettingsObservabilityResponse"
+			fields: [
+				{name: "logged_in_users", kind: "transport", typeName: "SettingsObservabilityLoggedInUser", required: true, isArray: true},
+				{name: "session_count", kind: "scalar", typeName: "int", required: true},
+				{name: "user_count", kind: "scalar", typeName: "int", required: true},
+				{name: "latest_changed_booking", kind: "transport", typeName: "SettingsObservabilityLatestChangedBooking", required: false},
+			]
+		},
+		{
 			name:       "OfferExchangeRatesResponse"
 			domain:     "api"
 			module:     "api"
@@ -1803,6 +1857,7 @@ IR: {
 				{name: "seasonality_start_month", kind: "enum", typeName: "MonthCode", required: false},
 				{name: "seasonality_end_month", kind: "enum", typeName: "MonthCode", required: false},
 				{name: "short_description", kind: "scalar", typeName: "string", required: false},
+				{name: "pictures", kind: "scalar", typeName: "string", required: false, isArray: true},
 				{name: "image", kind: "scalar", typeName: "string", required: false},
 			]
 		},

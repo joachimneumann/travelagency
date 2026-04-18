@@ -2,7 +2,8 @@ import {
   authMeRequest,
   tourCreateRequest,
   tourDetailRequest,
-  tourImageRequest,
+  tourPictureDeleteRequest,
+  tourPictureUploadRequest,
   toursRequest,
   tourTranslateFieldsRequest,
   tourUpdateRequest
@@ -100,7 +101,7 @@ const state = {
   },
   allowPageUnload: false,
   tour: null,
-  pendingHeroImagePreviewUrl: "",
+  pictureDraftItems: [],
   options: {
     destinations: [],
     styles: []
@@ -134,9 +135,9 @@ const els = {
   seasonalityStartMonth: document.getElementById("tour_seasonality_start_month"),
   seasonalityEndMonth: document.getElementById("tour_seasonality_end_month"),
   localizedContentEditor: document.getElementById("tour_localized_content_editor"),
-  changeImageBtn: document.getElementById("tour_change_image_btn"),
-  imageUpload: document.getElementById("tour_image_upload"),
-  heroImage: document.getElementById("tour_hero_image"),
+  pictureList: document.getElementById("tour_picture_list"),
+  addPictureBtn: document.getElementById("tour_add_picture_btn"),
+  pictureUpload: document.getElementById("tour_picture_upload"),
   pageOverlay: document.getElementById("tour_translate_overlay"),
   pageOverlayText: document.getElementById("tour_translate_overlay_text")
 };
@@ -165,6 +166,14 @@ function captureTourFormSnapshot() {
     }
     return [key, value];
   });
+  snapshot.push([
+    "tour_pictures",
+    state.pictureDraftItems.map((item) => {
+      if (item.kind === "stored") return `stored:${item.picture}`;
+      const file = item.file;
+      return `pending:${file?.name || ""}:${file?.size || 0}:${file?.lastModified || 0}`;
+    })
+  ]);
   return JSON.stringify(snapshot);
 }
 
@@ -286,6 +295,103 @@ function resolveLocalizedTextMapValue(value, preferredLangs = [], fallbackValue 
 
 function resolveLocalizedFieldText(field, preferredLangs = [], fallbackValue = "") {
   return resolveLocalizedTextMapValue(state.localizedContent?.[field], preferredLangs, fallbackValue);
+}
+
+function normalizeTourPictures(tour) {
+  if (Array.isArray(tour?.pictures) && tour.pictures.length) {
+    return tour.pictures.map((value) => String(value || "").trim()).filter(Boolean);
+  }
+  const image = String(tour?.image || "").trim();
+  return image ? [image] : [];
+}
+
+function pictureNameFromValue(value) {
+  const normalized = String(value || "").trim();
+  if (!normalized) return "";
+  const withoutQuery = normalized.split("?")[0].replace(/\/+$/, "");
+  try {
+    return decodeURIComponent(withoutQuery.split("/").pop() || "");
+  } catch {
+    return withoutQuery.split("/").pop() || "";
+  }
+}
+
+function createStoredPictureDraftItem(picture, index = 0) {
+  const normalizedPicture = String(picture || "").trim();
+  return {
+    key: `stored:${normalizedPicture}:${index}`,
+    kind: "stored",
+    picture: normalizedPicture,
+    name: pictureNameFromValue(normalizedPicture) || `picture-${index + 1}`,
+    previewUrl: ""
+  };
+}
+
+function createPendingPictureDraftItem(file) {
+  const previewUrl = URL.createObjectURL(file);
+  return {
+    key: `pending:${file.name}:${file.size}:${file.lastModified}:${Math.random().toString(36).slice(2, 10)}`,
+    kind: "pending",
+    file,
+    name: file.name,
+    previewUrl
+  };
+}
+
+function revokePictureDraftItem(item) {
+  if (item?.kind === "pending" && item.previewUrl) {
+    URL.revokeObjectURL(item.previewUrl);
+  }
+}
+
+function replacePictureDraftItems(items) {
+  state.pictureDraftItems.forEach((item) => revokePictureDraftItem(item));
+  state.pictureDraftItems = items;
+}
+
+function syncPictureDraftItemsFromTour(tour) {
+  replacePictureDraftItems(normalizeTourPictures(tour).map((picture, index) => createStoredPictureDraftItem(picture, index)));
+  renderTourPictures();
+}
+
+function picturePreviewSrc(item) {
+  if (item?.kind === "pending") return item.previewUrl;
+  return absolutizeApiUrl(item?.picture || "");
+}
+
+function renderTourPictures() {
+  if (!els.pictureList) return;
+  if (!state.pictureDraftItems.length) {
+    els.pictureList.innerHTML = `<div class="tour-picture-empty micro">${escapeHtml(
+      backendT("tour.picture_empty", "No pictures added yet.")
+    )}</div>`;
+    return;
+  }
+
+  els.pictureList.innerHTML = state.pictureDraftItems
+    .map((item, index) => {
+      const removeDisabled = !state.permissions.canEditTours ? "disabled" : "";
+      const label = item.kind === "pending"
+        ? backendT("tour.status.selected_image", "Selected image: {file}", { file: item.name })
+        : item.name;
+      return `
+        <div class="tour-picture-card">
+          <div class="tour-picture-card__frame">
+            <img class="tour-picture-card__image" src="${escapeHtml(picturePreviewSrc(item))}" alt="" loading="lazy" />
+          </div>
+          <div class="tour-picture-card__actions">
+            <div class="tour-picture-card__meta">
+              <span class="tour-picture-card__name micro" title="${escapeHtml(label)}">${escapeHtml(label)}</span>
+              <span class="tour-picture-card__order micro">${escapeHtml(`#${index + 1}`)}</span>
+            </div>
+            <button class="btn btn-ghost tour-picture-card__remove" type="button" data-tour-remove-picture="${escapeHtml(item.key)}" ${removeDisabled}>
+              ${escapeHtml(backendT("tour.remove_picture", "Remove picture"))}
+            </button>
+          </div>
+        </div>
+      `;
+    })
+    .join("");
 }
 
 function buildTourTranslationEntries(sourceValues) {
@@ -632,17 +738,46 @@ async function init() {
       void translateTourContent(button);
     });
   }
-  if (els.changeImageBtn && els.imageUpload) {
-    els.changeImageBtn.addEventListener("click", () => {
-      els.imageUpload.click();
+  if (els.addPictureBtn && els.pictureUpload) {
+    els.addPictureBtn.addEventListener("click", () => {
+      els.pictureUpload.click();
     });
   }
-  if (els.imageUpload) {
-    els.imageUpload.addEventListener("change", () => {
-      const file = els.imageUpload.files?.[0];
-      setPendingHeroImagePreview(file);
-      renderHeroImage();
-      if (file) setStatus(backendT("tour.status.selected_image", "Selected image: {file}", { file: file.name }));
+  if (els.pictureUpload) {
+    els.pictureUpload.addEventListener("change", () => {
+      const files = Array.from(els.pictureUpload.files || []).filter((file) => file instanceof File);
+      if (!files.length) return;
+      state.pictureDraftItems = [
+        ...state.pictureDraftItems,
+        ...files.map((file) => createPendingPictureDraftItem(file))
+      ];
+      renderTourPictures();
+      setStatus(
+        backendT("tour.status.selected_pictures", "Selected {count} picture(s).", {
+          count: String(files.length)
+        })
+      );
+      els.pictureUpload.value = "";
+      updateTourDirtyState();
+    });
+  }
+  if (els.pictureList) {
+    els.pictureList.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-tour-remove-picture]");
+      if (!button || !state.permissions.canEditTours) return;
+      event.preventDefault();
+      const key = String(button.getAttribute("data-tour-remove-picture") || "").trim();
+      if (!key) return;
+      const nextItems = [];
+      for (const item of state.pictureDraftItems) {
+        if (item.key === key) {
+          revokePictureDraftItem(item);
+          continue;
+        }
+        nextItems.push(item);
+      }
+      state.pictureDraftItems = nextItems;
+      renderTourPictures();
       updateTourDirtyState();
     });
   }
@@ -679,8 +814,7 @@ async function loadTour() {
   setInput("tour_seasonality_start_month", tour.seasonality_start_month || "");
   setInput("tour_seasonality_end_month", tour.seasonality_end_month || "");
   renderLocalizedTourContentEditor();
-  setPendingHeroImagePreview(null);
-  renderHeroImage();
+  syncPictureDraftItemsFromTour(tour);
 
   renderDestinationChoices(tour_destination_codes(tour));
   renderStyleChoices(tour_style_codes(tour));
@@ -706,6 +840,7 @@ async function initializeNewTourForm() {
     seasonality_end_month: "",
     short_description: "",
     short_description_i18n: {},
+    pictures: [],
     image: ""
   };
 
@@ -717,8 +852,7 @@ async function initializeNewTourForm() {
   setInput("tour_seasonality_start_month", "");
   setInput("tour_seasonality_end_month", "");
   renderLocalizedTourContentEditor();
-  setPendingHeroImagePreview(null);
-  renderHeroImage();
+  syncPictureDraftItemsFromTour(state.tour);
   renderDestinationChoices([]);
   renderStyleChoices([]);
   applyTourPermissions();
@@ -842,6 +976,13 @@ async function submitForm(event) {
   const selectedStyles = getCheckedValues("styleChoice");
   const title_i18n = readLocalizedFields("title_i18n");
   const short_description_i18n = readLocalizedFields("short_description_i18n");
+  const draftPictureItems = [...state.pictureDraftItems];
+  const storedPictures = draftPictureItems
+    .filter((item) => item.kind === "stored")
+    .map((item) => item.picture)
+    .filter(Boolean);
+  const pendingPictures = draftPictureItems.filter((item) => item.kind === "pending");
+  const removedPictures = normalizeTourPictures(state.tour).filter((picture) => !storedPictures.includes(picture));
   state.localizedContent.title_i18n = title_i18n;
   state.localizedContent.short_description_i18n = short_description_i18n;
   const resolvedTitle = resolveLocalizedTextMapValue(title_i18n, ["vi", "en", currentTourEditingLang()]);
@@ -854,7 +995,8 @@ async function submitForm(event) {
     priority: toNumberOrNull(getInput("tour_priority")),
     seasonality_start_month: getInput("tour_seasonality_start_month"),
     seasonality_end_month: getInput("tour_seasonality_end_month"),
-    short_description_i18n
+    short_description_i18n,
+    pictures: storedPictures
   };
 
   const validationMessage = buildTourSaveValidationMessage({
@@ -909,26 +1051,57 @@ async function submitForm(event) {
   state.is_create_mode = false;
   updateHeader(state.tour, tour_destinations(state.tour), tour_styles(state.tour));
 
-  const file = els.imageUpload?.files?.[0] || null;
-  if (file) {
-    setStatus(backendT("tour.status.uploading_image", "Uploading image..."));
-    const base64 = await fileToBase64(file);
-    const imageRequest = tourImageRequest({ baseURL: apiOrigin, params: { tour_id: state.id } });
-    const imageResult = await fetchApi(withApiLang(imageRequest.url), {
-      method: imageRequest.method,
-      body: {
-        filename: file.name,
-        data_base64: base64
+  if (pendingPictures.length) {
+    for (let index = 0; index < pendingPictures.length; index += 1) {
+      const item = pendingPictures[index];
+      setStatus(
+        backendT("tour.status.uploading_picture_progress", "Uploading picture {current} of {total}...", {
+          current: String(index + 1),
+          total: String(pendingPictures.length)
+        })
+      );
+      const base64 = await fileToBase64(item.file);
+      const pictureRequest = tourPictureUploadRequest({ baseURL: apiOrigin, params: { tour_id: state.id } });
+      const pictureResult = await fetchApi(withApiLang(pictureRequest.url), {
+        method: pictureRequest.method,
+        body: {
+          filename: item.file.name,
+          data_base64: base64
+        }
+      });
+      if (!pictureResult) return;
+      if (homepageAssetSyncFailed(pictureResult)) {
+        finalSaveStatus = homepageAssetSyncWarningMessage();
       }
-    });
-    if (!imageResult) return;
-    if (homepageAssetSyncFailed(imageResult)) {
-      finalSaveStatus = homepageAssetSyncWarningMessage();
+      if (pictureResult.tour) {
+        state.tour = pictureResult.tour;
+      }
+    }
+  }
+
+  if (!is_create && removedPictures.length) {
+    for (const picture of removedPictures) {
+      const pictureName = pictureNameFromValue(picture);
+      if (!pictureName) continue;
+      setStatus(backendT("tour.status.removing_picture", "Removing picture..."));
+      const deleteRequest = tourPictureDeleteRequest({
+        baseURL: apiOrigin,
+        params: { tour_id: state.id, picture_name: pictureName }
+      });
+      const deleteResult = await fetchApi(withApiLang(deleteRequest.url), {
+        method: deleteRequest.method
+      });
+      if (!deleteResult) return;
+      if (homepageAssetSyncFailed(deleteResult)) {
+        finalSaveStatus = homepageAssetSyncWarningMessage();
+      }
+      if (deleteResult.tour) {
+        state.tour = deleteResult.tour;
+      }
     }
   }
 
   setStatus(finalSaveStatus);
-  if (els.imageUpload) els.imageUpload.value = "";
   if (is_create) {
     state.allowPageUnload = true;
     window.location.href = withBackendLang("/marketing_tour.html", { id: state.id });
@@ -1010,8 +1183,8 @@ function redirectToBackendLogin() {
 
 function applyTourPermissions() {
   if (state.permissions.canEditTours) return;
-  if (els.changeImageBtn) els.changeImageBtn.disabled = true;
-  if (els.imageUpload) els.imageUpload.disabled = true;
+  if (els.addPictureBtn) els.addPictureBtn.disabled = true;
+  if (els.pictureUpload) els.pictureUpload.disabled = true;
   if (els.form) {
     els.form.querySelectorAll("input, textarea, select, button").forEach((el) => {
       if (el.id === "tour_cancel_btn") return;
@@ -1153,33 +1326,6 @@ function setTourPageOverlay(isVisible, message = "") {
   }
   els.pageOverlay.hidden = true;
   els.pageOverlay.setAttribute("aria-hidden", "true");
-}
-
-function setPendingHeroImagePreview(file) {
-  if (state.pendingHeroImagePreviewUrl) {
-    URL.revokeObjectURL(state.pendingHeroImagePreviewUrl);
-    state.pendingHeroImagePreviewUrl = "";
-  }
-  if (!(file instanceof File)) return;
-  state.pendingHeroImagePreviewUrl = URL.createObjectURL(file);
-}
-
-function renderHeroImage() {
-  updateHeroImage(state.pendingHeroImagePreviewUrl || state.tour?.image || "");
-}
-
-function updateHeroImage(src) {
-  if (!els.heroImage) return;
-  const value = String(src || "").trim();
-  if (!value) {
-    els.heroImage.src = "assets/img/profile_booking.png";
-    els.heroImage.classList.add("empty");
-    return;
-  }
-  els.heroImage.src = /^(?:blob:|data:|https?:\/\/)/.test(value)
-    ? value
-    : absolutizeApiUrl(value);
-  els.heroImage.classList.remove("empty");
 }
 
 function updateHeader(tour, destinations, styles) {
