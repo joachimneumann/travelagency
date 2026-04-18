@@ -28,6 +28,17 @@ function englishCarryOverSurchargeLabel() {
   return "Carry-over surcharge";
 }
 
+function wrapEnglishTextInput(inputMarkup) {
+  return `
+    <div class="booking-text-field__with-prefix">
+      <span class="booking-text-field__lang-prefix" aria-hidden="true">EN</span>
+      <div class="booking-text-field__with-prefix-control">
+        ${inputMarkup}
+      </div>
+    </div>
+  `;
+}
+
 export function createBookingOfferPricingModule(ctx) {
   const {
     state,
@@ -841,7 +852,7 @@ export function createBookingOfferPricingModule(ctx) {
         <td class="offer-col-details">
           ${readOnly
             ? escapeHtml(String(dayPrice?.notes || ""))
-            : `<input data-offer-day-note type="text" value="${escapeHtml(String(dayPrice?.notes || ""))}" placeholder="${escapeHtml(bookingT("booking.offer.day_note_placeholder", "Note for the offer for this day"))}" />`}
+            : wrapEnglishTextInput(`<input data-offer-day-note type="text" value="${escapeHtml(String(dayPrice?.notes || ""))}" placeholder="${escapeHtml(bookingT("booking.offer.day_note_placeholder", "Note for the offer for this day"))}" />`)}
           <input data-offer-day-tax-rate type="hidden" value="${escapeHtml(formatTaxRateInputValue(dayPrice?.tax_rate_basis_points))}" />
         </td>
         <td class="offer-col-price-total">
@@ -863,7 +874,7 @@ export function createBookingOfferPricingModule(ctx) {
           <td class="offer-col-name"></td>
           <td class="offer-col-details">${readOnly
             ? escapeHtml(noteValue)
-            : `<input data-offer-additional-details type="text" value="${escapeHtml(noteValue)}" placeholder="${escapeHtml(bookingT("booking.offer.adjustment_note_placeholder", "Adjustment note"))}" />
+            : `${wrapEnglishTextInput(`<input data-offer-additional-details type="text" value="${escapeHtml(noteValue)}" placeholder="${escapeHtml(bookingT("booking.offer.adjustment_note_placeholder", "Adjustment note"))}" />`)}
                <input data-offer-additional-label type="hidden" value="${escapeHtml(String(item?.label || "").trim())}" />
                <input data-offer-additional-day-number type="hidden" value="${escapeHtml(String(item?.day_number || ""))}" />
                <input data-offer-additional-quantity type="hidden" value="${escapeHtml(String(Math.max(1, Number(item?.quantity || 1))))}" />
@@ -881,7 +892,7 @@ export function createBookingOfferPricingModule(ctx) {
           <td class="offer-col-name"></td>
           <td class="offer-col-details">${readOnly
             ? escapeHtml(String(discount.reason || ""))
-            : `<input data-offer-discount-reason type="text" value="${escapeHtml(String(discount.reason || ""))}" placeholder="${escapeHtml(bookingT("booking.offer.discount_reason_placeholder", "Reason for discount"))}" />`}</td>
+            : wrapEnglishTextInput(`<input data-offer-discount-reason type="text" value="${escapeHtml(String(discount.reason || ""))}" placeholder="${escapeHtml(bookingT("booking.offer.discount_reason_placeholder", "Reason for discount"))}" />`)}</td>
           <td class="offer-col-price-total"><div class="offer-total-cell">${readOnly
             ? `<span class="offer-price-value" data-offer-discount-total="${index}">${escapeHtml(formatMoneyDisplay(totals.line_gross_amount_cents, currency))}</span>`
             : `<input data-offer-discount-amount type="number" min="0" step="${isWholeUnitCurrency(currency) ? "1" : "0.01"}" value="${escapeHtml(formatMoneyInputValue(discount.amount_cents || 0, currency))}" />`}</div></td>
@@ -916,7 +927,7 @@ export function createBookingOfferPricingModule(ctx) {
       <td class="offer-col-details offer-col-details--trip-mode">
         ${readOnly
           ? escapeHtml(String(tripPrice?.notes || ""))
-          : `<input data-offer-trip-note type="text" value="${escapeHtml(String(tripPrice?.notes || ""))}" placeholder="${escapeHtml(bookingT("booking.offer.day_note_placeholder", "Note for the offer for this day"))}" />`}
+          : wrapEnglishTextInput(`<input data-offer-trip-note type="text" value="${escapeHtml(String(tripPrice?.notes || ""))}" placeholder="${escapeHtml(bookingT("booking.offer.day_note_placeholder", "Note for the offer for this day"))}" />`)}
         <input data-offer-trip-tax-rate type="hidden" value="${escapeHtml(formatTaxRateInputValue(tripPrice?.tax_rate_basis_points))}" />
       </td>
       <td class="offer-col-price-total">
@@ -936,7 +947,7 @@ export function createBookingOfferPricingModule(ctx) {
           <td class="offer-col-name offer-col-name--trip-mode">${escapeHtml(bookingT("booking.offer.pricing_adjustment_surcharge", "Surcharge"))}</td>
           <td class="offer-col-details offer-col-details--trip-mode">${readOnly
             ? escapeHtml(noteValue)
-            : `<input data-offer-additional-details type="text" value="${escapeHtml(noteValue)}" placeholder="${escapeHtml(bookingT("booking.offer.adjustment_note_placeholder", "Adjustment note"))}" />
+            : `${wrapEnglishTextInput(`<input data-offer-additional-details type="text" value="${escapeHtml(noteValue)}" placeholder="${escapeHtml(bookingT("booking.offer.adjustment_note_placeholder", "Adjustment note"))}" />`)}
                <input data-offer-additional-label type="hidden" value="${escapeHtml(String(item?.label || "").trim())}" />
                <input data-offer-additional-day-number type="hidden" value="${escapeHtml(String(item?.day_number || ""))}" />
                <input data-offer-additional-quantity type="hidden" value="${escapeHtml(String(Math.max(1, Number(item?.quantity || 1))))}" />
@@ -953,7 +964,7 @@ export function createBookingOfferPricingModule(ctx) {
           <td class="offer-col-name offer-col-name--trip-mode">${escapeHtml(bookingT("booking.offer.pricing_adjustment_discount", "Discount"))}</td>
           <td class="offer-col-details offer-col-details--trip-mode">${readOnly
             ? escapeHtml(String(discount.reason || ""))
-            : `<input data-offer-discount-reason type="text" value="${escapeHtml(String(discount.reason || ""))}" placeholder="${escapeHtml(bookingT("booking.offer.discount_reason_placeholder", "Reason for discount"))}" />`}</td>
+            : wrapEnglishTextInput(`<input data-offer-discount-reason type="text" value="${escapeHtml(String(discount.reason || ""))}" placeholder="${escapeHtml(bookingT("booking.offer.discount_reason_placeholder", "Reason for discount"))}" />`)}</td>
           <td class="offer-col-price-total"><div class="offer-total-cell">${readOnly
             ? `<span class="offer-price-value" data-offer-discount-total="${index}">${escapeHtml(formatMoneyDisplay(discountTotals.line_gross_amount_cents, currency))}</span>`
             : `<input data-offer-discount-amount type="number" min="0" step="${isWholeUnitCurrency(currency) ? "1" : "0.01"}" value="${escapeHtml(formatMoneyInputValue(discount.amount_cents || 0, currency))}" />`}</div></td>

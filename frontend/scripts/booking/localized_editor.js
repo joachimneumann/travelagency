@@ -106,6 +106,91 @@ function renderLocalizedControl({
   return `<input class="booking-text-field booking-text-field--customer" id="${escapeHtml(id)}" type="text" value="${escapeHtml(value)}"${data}${attrs}${placeholder ? ` placeholder="${escapeHtml(placeholder)}"` : ""} />`;
 }
 
+function translationDirectionLabel(sourceOption, targetOption) {
+  const sourceLabel = String(sourceOption?.shortLabel || DEFAULT_CONTENT_LANG).trim().toUpperCase();
+  const targetLabel = String(targetOption?.shortLabel || DEFAULT_CONTENT_LANG).trim().toUpperCase();
+  return `${sourceLabel} -> ${targetLabel}`;
+}
+
+function renderTranslationTrigger({
+  escapeHtml,
+  sourceOption,
+  targetOption,
+  translateData = "",
+  disabledAttr = "",
+  titleAttr = ""
+}) {
+  return `<button type="button" class="btn btn-ghost localized-pair__lang-button"${translateData}${disabledAttr}${titleAttr}>${escapeHtml(translationDirectionLabel(sourceOption, targetOption))}</button>`;
+}
+
+function renderSplitTranslationTrigger({
+  escapeHtml,
+  sourceOption,
+  targetOption,
+  translateData = "",
+  disabledAttr = "",
+  titleAttr = ""
+}) {
+  return `<button type="button" class="btn btn-ghost localized-editor__translate-btn localized-editor__translate-btn--direction"${translateData}${disabledAttr}${titleAttr}>${escapeHtml(translationDirectionLabel(sourceOption, targetOption))}</button>`;
+}
+
+function renderSourceCode(sourceOption, escapeHtml) {
+  return `<span class="localized-editor__source-code" aria-hidden="true">${escapeHtml(String(sourceOption?.shortLabel || DEFAULT_CONTENT_LANG).trim().toUpperCase())}</span>`;
+}
+
+function renderStackedSourceCode(sourceOption, escapeHtml) {
+  return `<span class="localized-pair__code" aria-hidden="true">${escapeHtml(String(sourceOption?.shortLabel || DEFAULT_CONTENT_LANG).trim().toUpperCase())}</span>`;
+}
+
+function renderSingleLanguageStackedField({
+  escapeHtml,
+  showLabel,
+  label,
+  labelId = "",
+  englishId,
+  sourceOption,
+  sourceControl
+}) {
+  return `
+    <div class="localized-pair localized-pair--single-language">
+      ${showLabel ? `<div class="localized-pair__header">
+        <label class="localized-pair__label" for="${escapeHtml(englishId)}"${labelId ? ` id="${escapeHtml(labelId)}"` : ""}>${escapeHtml(label)}</label>
+      </div>` : ""}
+      <div class="localized-pair__row localized-pair__row--single">
+        ${renderStackedSourceCode(sourceOption, escapeHtml)}
+        <div class="localized-pair__field localized-pair__field--single">
+          ${sourceControl}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderSingleLanguageSplitField({
+  escapeHtml,
+  label,
+  labelId = "",
+  englishId,
+  sourceOption,
+  sourceControl
+}) {
+  return `
+    <div class="localized-editor localized-editor--single-language">
+      <div class="localized-editor__header">
+        <label class="localized-editor__label" for="${escapeHtml(englishId)}"${labelId ? ` id="${escapeHtml(labelId)}"` : ""}>${escapeHtml(label)}</label>
+      </div>
+      <div class="localized-editor__grid localized-editor__grid--single">
+        <div class="localized-editor__pane localized-editor__pane--source">
+          <div class="localized-editor__pane-head">
+            ${renderSourceCode(sourceOption, escapeHtml)}
+          </div>
+          ${sourceControl}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 export function renderLocalizedSplitField({
   escapeHtml,
   idBase,
@@ -153,6 +238,16 @@ export function renderLocalizedSplitField({
   });
   const sharedAttrs = disabled ? " disabled" : "";
   const rightAttrs = rightDisabled ? " disabled" : "";
+  const translateDisabledReason = !translateEnabled
+    ? bookingT("booking.translation.disabled.not_configured", "Translation is not configured on this server.")
+    : rightDisabled
+      ? bookingT("booking.translation.disabled.no_permission", "Disabled: you do not have permission to edit this booking.")
+      : "";
+  const translateDisabledAttr = (!translateEnabled || rightDisabled) ? " disabled" : "";
+  const translateTitleAttr = translateDisabledReason ? ` title="${escapeHtml(translateDisabledReason)}"` : "";
+  const disabledHint = translateDisabledReason
+    ? `<p class="micro localized-editor__hint">${escapeHtml(translateDisabledReason)}</p>`
+    : "";
   const sourceControl = renderLocalizedControl({
     escapeHtml,
     inputTag,
@@ -174,25 +269,42 @@ export function renderLocalizedSplitField({
     placeholder: localizedPlaceholder
   });
 
+  if (sameLanguage) {
+    return renderSingleLanguageSplitField({
+      escapeHtml,
+      label,
+      labelId,
+      englishId,
+      sourceOption,
+      sourceControl
+    });
+  }
+
   return `
-    <div class="localized-editor ${sameLanguage ? "localized-editor--single-language" : ""}">
+    <div class="localized-editor">
       <div class="localized-editor__header">
         <label class="localized-editor__label" for="${escapeHtml(englishId)}"${labelId ? ` id="${escapeHtml(labelId)}"` : ""}>${escapeHtml(label)}</label>
       </div>
       <div class="localized-editor__grid">
         <div class="localized-editor__pane localized-editor__pane--source">
           <div class="localized-editor__pane-head">
-            <span class="localized-editor__lang"><span class="lang-flag ${escapeHtml(sourceOption.flagClass)}" aria-hidden="true"></span><span class="localized-editor__lang-code">${escapeHtml(sourceOption.shortLabel)}</span></span>
+            ${renderSourceCode(sourceOption, escapeHtml)}
           </div>
           ${sourceControl}
         </div>
-        <div class="localized-editor__pane localized-editor__pane--target ${sameLanguage ? "is-disabled" : ""}">
+        <div class="localized-editor__pane localized-editor__pane--target">
           <div class="localized-editor__pane-head">
-            <span class="localized-editor__lang"><span class="lang-flag ${escapeHtml(targetOption.flagClass)}" aria-hidden="true"></span><span class="localized-editor__lang-code">${escapeHtml(targetOption.shortLabel)}</span></span>
-            ${showTranslateButton && translateEnabled ? `<button type="button" class="btn btn-ghost localized-editor__translate-btn"${translateData}>${escapeHtml(bookingT("booking.translation.update_language", "Update {language}", { language: targetOption.label }))}</button>` : ""}
+            ${showTranslateButton ? renderSplitTranslationTrigger({
+              escapeHtml,
+              sourceOption,
+              targetOption,
+              translateData,
+              disabledAttr: translateDisabledAttr,
+              titleAttr: translateTitleAttr
+            }) : ""}
           </div>
           ${localizedControl}
-          ${sameLanguage ? `<p class="micro localized-editor__hint">${escapeHtml(bookingT("booking.translation.not_needed_for_matching_languages", "Master language matches customer language. No translation is needed."))}</p>` : ""}
+          ${disabledHint}
         </div>
       </div>
     </div>
@@ -268,16 +380,15 @@ export function renderLocalizedStackedField({
   });
 
   if (sameLanguage) {
-    return `
-      <div class="localized-pair localized-pair--single-language">
-        ${showLabel ? `<div class="localized-pair__header">
-          <label class="localized-pair__label" for="${escapeHtml(englishId)}"${labelId ? ` id="${escapeHtml(labelId)}"` : ""}>${escapeHtml(label)}</label>
-        </div>` : ""}
-        <div class="localized-pair__field localized-pair__field--single">
-          ${sourceControl}
-        </div>
-      </div>
-    `;
+    return renderSingleLanguageStackedField({
+      escapeHtml,
+      showLabel,
+      label,
+      labelId,
+      englishId,
+      sourceOption,
+      sourceControl
+    });
   }
 
   const forwardTranslateData = renderDataAttributes({
@@ -297,18 +408,22 @@ export function renderLocalizedStackedField({
         <label class="localized-pair__label" for="${escapeHtml(englishId)}"${labelId ? ` id="${escapeHtml(labelId)}"` : ""}>${escapeHtml(label)}</label>
       </div>` : ""}
       <div class="localized-pair__row">
-        <span class="localized-pair__code" aria-hidden="true">${escapeHtml(sourceOption.shortLabel)}</span>
+        ${renderStackedSourceCode(sourceOption, escapeHtml)}
         <div class="localized-pair__field">
           ${sourceControl}
         </div>
       </div>
-      <div class="localized-pair__row localized-pair__row--target">
-        <span class="localized-pair__code" aria-hidden="true">${escapeHtml(targetOption.shortLabel)}</span>
+      <div class="localized-pair__row localized-pair__row--target localized-pair__row--target-action">
+        ${renderTranslationTrigger({
+          escapeHtml,
+          sourceOption,
+          targetOption,
+          translateData: forwardTranslateData,
+          disabledAttr: translateDisabledAttr,
+          titleAttr: translateTitleAttr
+        })}
         <div class="localized-pair__field">
           ${localizedControl}
-          <div class="localized-pair__actions">
-            <button type="button" class="btn btn-ghost localized-pair__translate-btn"${forwardTranslateData}${translateDisabledAttr}${translateTitleAttr}>${escapeHtml(bookingT("booking.translation.update_language", "Update {language}", { language: targetOption.shortLabel }))}</button>
-          </div>
           ${disabledHint}
         </div>
       </div>

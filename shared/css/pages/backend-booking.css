@@ -422,6 +422,10 @@
   min-width: min(320px, 100%);
 }
 
+.booking-detail-page .booking-top-card__field--travel-style {
+  grid-column: 2 / span 2;
+}
+
 .booking-detail-page .booking-content-language-field,
 .booking-detail-page .booking-top-card__field--currency {
   width: 100%;
@@ -1266,6 +1270,10 @@
   .booking-detail-page .booking-top-card__fields {
     grid-template-columns: 1fr;
     gap: 1rem;
+  }
+
+  .booking-detail-page .booking-top-card__field--travel-style {
+    grid-column: auto;
   }
 
   .booking-detail-page .booking-source-panel {
