@@ -5,6 +5,8 @@ import {
 } from "../../shared/generated/language_catalog.js";
 
 const DEFAULT_TOUR_IMAGE = "/assets/img/marketing_tours.png";
+const TOUR_IMAGE_TRANSITION_MS = 2000;
+const tourCardImageTransitionTimers = new WeakMap();
 
 export function createFrontendToursController(ctx) {
   const {
@@ -368,16 +370,26 @@ export function createFrontendToursController(ctx) {
     return absolutizeBackendUrl(raw);
   }
 
+  function resolveTourPictures(item) {
+    const primaryImage = resolveTourImage(item);
+    const additionalPictures = Array.isArray(item?.pictures)
+      ? item.pictures.map((picture) => absolutizeBackendUrl(picture)).filter(Boolean)
+      : [];
+    return Array.from(new Set([primaryImage, ...additionalPictures]));
+  }
+
   function normalizeToursForFrontend(items) {
     const lang = currentFrontendLang();
     return (Array.isArray(items) ? items : []).map((item) => {
       const image = resolveTourImage(item);
+      const pictures = resolveTourPictures(item);
       const normalizedTitle = resolveLocalizedFrontendText(item?.title, lang);
       const normalizedShortDescription = resolveLocalizedFrontendText(item?.short_description, lang);
       return {
         ...item,
         title: normalizedTitle,
         short_description: normalizedShortDescription,
+        pictures,
         image
       };
     });
@@ -422,16 +434,30 @@ export function createFrontendToursController(ctx) {
         const countriesLabel = countries.join(", ");
         const ctaLabel = frontendT("tour.card.plan_trip", "Plan this trip");
         const moreLabel = frontendT("tour.card.more", "more");
+        const galleryLabel = frontendT("tour.card.gallery_next", "Show next picture for {title}", {
+          title: tripTitle
+        });
         const loading = index < 3 ? "eager" : "lazy";
         const fetchpriority = index < 3 ? "high" : "auto";
+        const gallery = Array.isArray(trip.pictures) && trip.pictures.length ? trip.pictures : [trip.image];
+        const galleryCount = gallery.length;
+        const mediaTag = galleryCount > 1 ? "button" : "div";
+        const mediaClass = galleryCount > 1 ? "tour-card__media tour-card__media-button" : "tour-card__media";
+        const mediaAttrs = galleryCount > 1
+          ? ` type="button" data-tour-image-cycle="1" data-tour-gallery-index="0" data-trip-id="${escapeAttr(trip.id)}" aria-label="${escapeAttr(galleryLabel)}"`
+          : "";
+        const galleryCounter = galleryCount > 1
+          ? `<span class="tour-card__media-counter" data-tour-image-counter>${escapeHTML(`1 / ${galleryCount}`)}</span>`
+          : "";
 
         return `
           <article class="tour-card">
-            <div class="tour-card__media">
+            <${mediaTag} class="${mediaClass}"${mediaAttrs}>
               <div class="tour-card__media-zoom">
                 <div class="tour-card__media-stage">
                   <img
-                    class="tour-card__media-image"
+                    class="tour-card__media-layer is-active"
+                    data-tour-media-layer="primary"
                     src="${escapeAttr(trip.image)}"
                     alt="${escapeAttr(frontendT("tour.card.image_alt", "{title} in {destinations}", {
                       title: tripTitle,
@@ -442,9 +468,20 @@ export function createFrontendToursController(ctx) {
                     width="1200"
                     height="800"
                   />
+                  <img
+                    class="tour-card__media-layer"
+                    data-tour-media-layer="secondary"
+                    src="${escapeAttr(trip.image)}"
+                    alt=""
+                    aria-hidden="true"
+                    loading="lazy"
+                    width="1200"
+                    height="800"
+                  />
                 </div>
               </div>
-            </div>
+              ${galleryCounter}
+            </${mediaTag}>
             <div class="tour-body">
               <h3 class="tour-title tour-title--topline">${escapeHTML(tripTitle)}</h3>
               <div class="tour-desc-wrap">
@@ -546,37 +583,13 @@ export function createFrontendToursController(ctx) {
     if (!els.tourGrid) return;
     bindTourDescriptionDetail();
 
-    const cards = els.tourGrid.querySelectorAll(".tour-card");
-    cards.forEach((card) => {
-      if (!(card instanceof HTMLElement) || card.dataset.hoverDebugBound) return;
-      const image = card.querySelector(".tour-card__media img");
-      const title = card.querySelector(".tour-title")?.textContent?.trim() || "(untitled tour)";
-      const logHoverState = (phase) => {
-        const computedImageStyle = image instanceof HTMLElement ? window.getComputedStyle(image) : null;
-        console.log("[tour-card hover debug]", phase, {
-          title,
-          hovered: card.matches(":hover"),
-          focusWithin: card.matches(":focus-within"),
-          imageTransform: computedImageStyle?.transform || null,
-          imageTransformOrigin: computedImageStyle?.transformOrigin || null
-        });
-      };
-
-      card.addEventListener("mouseenter", () => {
-        logHoverState("mouseenter");
+    const imageCycleButtons = els.tourGrid.querySelectorAll("[data-tour-image-cycle]");
+    imageCycleButtons.forEach((button) => {
+      if (!(button instanceof HTMLButtonElement) || button.dataset.imageCycleBound === "1") return;
+      button.addEventListener("click", () => {
+        cycleTourCardImage(button);
       });
-      card.addEventListener("mouseleave", () => {
-        logHoverState("mouseleave");
-      });
-      card.addEventListener("focusin", () => {
-        logHoverState("focusin");
-      });
-      card.addEventListener("focusout", () => {
-        logHoverState("focusout");
-      });
-
-      card.dataset.hoverDebugBound = "1";
-      console.log("[tour-card hover debug] bound", { title });
+      button.dataset.imageCycleBound = "1";
     });
 
     const descriptionButtons = els.tourGrid.querySelectorAll("[data-tour-desc-toggle]");
@@ -610,6 +623,80 @@ export function createFrontendToursController(ctx) {
 
       button.dataset.bookingBound = "1";
     });
+  }
+
+  function updateTourCardImageCounter(button, currentIndex, total) {
+    const counter = button.querySelector("[data-tour-image-counter]");
+    if (!(counter instanceof HTMLElement)) return;
+    counter.textContent = `${currentIndex + 1} / ${total}`;
+  }
+
+  function clearTourCardImageTransitionTimer(button) {
+    const activeTimer = tourCardImageTransitionTimers.get(button);
+    if (activeTimer) {
+      window.clearTimeout(activeTimer);
+      tourCardImageTransitionTimers.delete(button);
+    }
+  }
+
+  function commitActiveTourCardImageTransition(button) {
+    if (!(button instanceof HTMLButtonElement) || button.dataset.imageAnimating !== "1") return;
+
+    const primaryLayer = button.querySelector('[data-tour-media-layer="primary"]');
+    const secondaryLayer = button.querySelector('[data-tour-media-layer="secondary"]');
+    if (!(primaryLayer instanceof HTMLImageElement) || !(secondaryLayer instanceof HTMLImageElement)) return;
+
+    clearTourCardImageTransitionTimer(button);
+
+    if (secondaryLayer.src) {
+      primaryLayer.src = secondaryLayer.src;
+    }
+
+    primaryLayer.classList.remove("is-leaving");
+    secondaryLayer.classList.remove("is-entering");
+    button.dataset.imageAnimating = "0";
+  }
+
+  function cycleTourCardImage(button) {
+    if (!(button instanceof HTMLButtonElement)) return;
+
+    if (button.dataset.imageAnimating === "1") {
+      commitActiveTourCardImageTransition(button);
+    }
+
+    const tripId = normalizeText(button.getAttribute("data-trip-id"));
+    const trip = state.filteredTrips.find((item) => normalizeText(item?.id) === tripId)
+      || state.trips.find((item) => normalizeText(item?.id) === tripId)
+      || null;
+    const gallery = Array.isArray(trip?.pictures) && trip.pictures.length ? trip.pictures : [trip?.image || DEFAULT_TOUR_IMAGE];
+    if (gallery.length <= 1) return;
+
+    const currentIndex = Math.max(0, Number.parseInt(button.dataset.tourGalleryIndex || "0", 10) || 0) % gallery.length;
+    const nextIndex = (currentIndex + 1) % gallery.length;
+    const primaryLayer = button.querySelector('[data-tour-media-layer="primary"]');
+    const secondaryLayer = button.querySelector('[data-tour-media-layer="secondary"]');
+    if (!(primaryLayer instanceof HTMLImageElement) || !(secondaryLayer instanceof HTMLImageElement)) return;
+
+    button.dataset.imageAnimating = "1";
+    button.dataset.tourGalleryIndex = String(nextIndex);
+    secondaryLayer.src = String(gallery[nextIndex] || gallery[0] || DEFAULT_TOUR_IMAGE);
+    secondaryLayer.classList.remove("is-entering");
+    primaryLayer.classList.remove("is-leaving");
+
+    void secondaryLayer.offsetWidth;
+
+    secondaryLayer.classList.add("is-entering");
+    primaryLayer.classList.add("is-leaving");
+    updateTourCardImageCounter(button, nextIndex, gallery.length);
+
+    const transitionTimer = window.setTimeout(() => {
+      primaryLayer.src = secondaryLayer.src;
+      primaryLayer.classList.remove("is-leaving");
+      secondaryLayer.classList.remove("is-entering");
+      button.dataset.imageAnimating = "0";
+      tourCardImageTransitionTimers.delete(button);
+    }, TOUR_IMAGE_TRANSITION_MS);
+    tourCardImageTransitionTimers.set(button, transitionTimer);
   }
 
   function renderVisibleTrips() {
