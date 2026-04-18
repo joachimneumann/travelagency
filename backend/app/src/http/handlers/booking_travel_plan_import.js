@@ -384,6 +384,7 @@ export function createBookingTravelPlanImportHandlers(deps) {
     getPrincipal,
     canEditBooking,
     canAccessBooking,
+    canAccessTravelPlanImportSourceBooking,
     normalizeText,
     nowIso,
     addActivity,
@@ -413,7 +414,7 @@ export function createBookingTravelPlanImportHandlers(deps) {
 
     const items = [];
     for (const booking of Array.isArray(store.bookings) ? store.bookings : []) {
-      if (!canAccessBooking(principal, booking)) continue;
+      if (!canAccessTravelPlanImportSourceBooking(principal, booking)) continue;
       if (country) {
         const bookingCountries = new Set(getBookingTravelPlanDestinations(booking).map((code) => normalizeText(code).toUpperCase()).filter(Boolean));
         if (!bookingCountries.has(country)) continue;
@@ -481,7 +482,7 @@ export function createBookingTravelPlanImportHandlers(deps) {
 
     const items = [];
     for (const booking of Array.isArray(store.bookings) ? store.bookings : []) {
-      if (!canAccessBooking(principal, booking)) continue;
+      if (!canAccessTravelPlanImportSourceBooking(principal, booking)) continue;
       if (country) {
         const bookingCountries = new Set(getBookingTravelPlanDestinations(booking).map((code) => normalizeText(code).toUpperCase()).filter(Boolean));
         if (!bookingCountries.has(country)) continue;
@@ -542,7 +543,7 @@ export function createBookingTravelPlanImportHandlers(deps) {
 
     const items = [];
     for (const booking of Array.isArray(store.bookings) ? store.bookings : []) {
-      if (!canAccessBooking(principal, booking)) continue;
+      if (!canAccessTravelPlanImportSourceBooking(principal, booking)) continue;
       if (country) {
         const bookingCountries = new Set(getBookingTravelPlanDestinations(booking).map((code) => normalizeText(code).toUpperCase()).filter(Boolean));
         if (!bookingCountries.has(country)) continue;
@@ -615,7 +616,7 @@ export function createBookingTravelPlanImportHandlers(deps) {
     const sourceBookingId = normalizeText(payload.source_booking_id);
     const sourceItemId = normalizeText(payload.source_service_id) || normalizeText(payload.source_item_id);
     const sourceBooking = store.bookings.find((item) => item.id === sourceBookingId);
-    if (!sourceBooking || !canAccessBooking(principal, sourceBooking)) {
+    if (!sourceBooking || !canAccessTravelPlanImportSourceBooking(principal, sourceBooking)) {
       sendJson(res, 404, { error: "Source booking not found" });
       return;
     }
@@ -744,7 +745,7 @@ export function createBookingTravelPlanImportHandlers(deps) {
     const sourceBookingId = normalizeText(payload.source_booking_id);
     const sourceDayId = normalizeText(payload.source_day_id);
     const sourceBooking = store.bookings.find((item) => item.id === sourceBookingId);
-    if (!sourceBooking || !canAccessBooking(principal, sourceBooking)) {
+    if (!sourceBooking || !canAccessTravelPlanImportSourceBooking(principal, sourceBooking)) {
       sendJson(res, 404, { error: "Source booking not found" });
       return;
     }
@@ -847,7 +848,7 @@ export function createBookingTravelPlanImportHandlers(deps) {
 
     const sourceBookingId = normalizeText(payload.source_booking_id);
     const sourceBooking = store.bookings.find((item) => item.id === sourceBookingId);
-    if (!sourceBooking || !canAccessBooking(principal, sourceBooking)) {
+    if (!sourceBooking || !canAccessTravelPlanImportSourceBooking(principal, sourceBooking)) {
       sendJson(res, 404, { error: "Source booking not found" });
       return;
     }

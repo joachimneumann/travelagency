@@ -244,6 +244,11 @@ export function createBookingViewHelpers({
     }
     return false;
   }
+
+  function canAccessTravelPlanImportSourceBooking(principal, booking) {
+    if (canAccessBooking(principal, booking)) return true;
+    return hasRole(principal, appRoles.ATP_STAFF);
+  }
   function isGeneratedOfferEmailEnabled() {
     return Boolean(
       normalizeText(gmailDraftsConfig?.serviceAccountJsonPath)
@@ -666,6 +671,7 @@ export function createBookingViewHelpers({
     syncBookingAssignmentFields,
     getBookingAssignedKeycloakUserId,
     canAccessBooking,
+    canAccessTravelPlanImportSourceBooking,
     canEditBooking,
     buildBookingReadModel,
     filterAndSortBookings,

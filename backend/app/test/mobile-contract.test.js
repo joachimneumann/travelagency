@@ -1945,6 +1945,160 @@ test("travel plans can be searched and appended from another booking with groupe
   assert.equal(importedFirstService.image.storage_path, "/public/v1/booking-images/source/plan-service-1.webp");
 });
 
+test("staff can search and import travel plan library content from other staff bookings into their own booking", async () => {
+  const sourceBooking = await createSeedBooking();
+  const targetBooking = await createPublicBooking({
+    name: "Staff Target User",
+    email: "staff-target@example.com"
+  });
+
+  const store = JSON.parse(await readFile(STORE_PATH, "utf8"));
+  const sourceRecord = store.bookings.find((item) => item.id === sourceBooking.id);
+  const targetRecord = store.bookings.find((item) => item.id === targetBooking.id);
+  assert.ok(sourceRecord);
+  assert.ok(targetRecord);
+
+  sourceRecord.assigned_keycloak_user_id = "kc-joachim";
+  targetRecord.assigned_keycloak_user_id = "kc-staff";
+  sourceRecord.travel_plan = {
+    days: [
+      {
+        id: "shared_source_day_1",
+        day_number: 1,
+        date: "2026-08-03",
+        title: "Shared market day",
+        overnight_location: "Hoi An",
+        services: [
+          {
+            id: "shared_source_service_1",
+            timing_kind: "label",
+            time_label: "Morning",
+            kind: "activity",
+            title: "Lantern workshop",
+            details: "Hands-on lantern making with local artisans.",
+            location: "Hoi An Ancient Town",
+            image: {
+              id: "shared_source_service_image_1",
+              storage_path: "/public/v1/booking-images/source/shared-service-1.webp",
+              sort_order: 0,
+              is_primary: true,
+              is_customer_visible: true,
+              created_at: "2026-03-21T00:00:00Z"
+            }
+          }
+        ],
+        notes: "Great fit for family travelers"
+      }
+    ]
+  };
+  sourceRecord.pdf_personalization = {
+    travel_plan: {
+      subtitle: "Shared subtitle marker"
+    }
+  };
+  targetRecord.travel_plan = {
+    days: [
+      {
+        id: "staff_target_day_1",
+        day_number: 1,
+        date: "2026-08-10",
+        title: "Staff target arrival",
+        overnight_location: "Da Nang",
+        services: [],
+        notes: ""
+      }
+    ],
+    attachments: []
+  };
+  await writeFile(STORE_PATH, `${JSON.stringify(store, null, 2)}\n`, "utf8");
+
+  const staffHeaders = apiHeaders("atp_staff", "staff", "kc-staff");
+
+  const planSearchResult = await requestJson(
+    `${endpointPath("travel_plan_search")}?q=lantern`,
+    staffHeaders
+  );
+  assert.equal(planSearchResult.status, 200);
+  assert.ok(planSearchResult.body.items.some((item) => item.source_booking_id === sourceBooking.id));
+
+  const daySearchResult = await requestJson(
+    `${endpointPath("travel_plan_day_search")}?q=market`,
+    staffHeaders
+  );
+  assert.equal(daySearchResult.status, 200);
+  assert.ok(daySearchResult.body.items.some((item) => item.source_booking_id === sourceBooking.id));
+
+  const serviceSearchResult = await requestJson(
+    `${endpointPath("travel_plan_service_search")}?q=lantern&service_kind=activity`,
+    staffHeaders
+  );
+  assert.equal(serviceSearchResult.status, 200);
+  assert.ok(serviceSearchResult.body.items.some((item) => item.source_booking_id === sourceBooking.id));
+
+  const serviceImportResult = await requestJson(
+    endpointPath("booking_travel_plan_service_import")
+      .replace("{booking_id}", targetBooking.id)
+      .replace("{day_id}", "staff_target_day_1"),
+    staffHeaders,
+    {
+      method: "POST",
+      body: {
+        expected_travel_plan_revision: targetBooking.travel_plan_revision,
+        source_booking_id: sourceBooking.id,
+        source_service_id: "shared_source_service_1",
+        include_images: true,
+        include_customer_visible_images_only: false,
+        include_notes: true,
+        include_translations: true
+      }
+    }
+  );
+  assert.equal(serviceImportResult.status, 200);
+  assert.equal(serviceImportResult.body.booking.travel_plan.days[0].services[0].copied_from.source_booking_id, sourceBooking.id);
+
+  const targetAfterServiceImport = serviceImportResult.body.booking;
+
+  const dayImportResult = await requestJson(
+    endpointPath("booking_travel_plan_day_import").replace("{booking_id}", targetBooking.id),
+    staffHeaders,
+    {
+      method: "POST",
+      body: {
+        expected_travel_plan_revision: targetAfterServiceImport.travel_plan_revision,
+        source_booking_id: sourceBooking.id,
+        source_day_id: "shared_source_day_1",
+        include_images: true,
+        include_customer_visible_images_only: false,
+        include_notes: true,
+        include_translations: true
+      }
+    }
+  );
+  assert.equal(dayImportResult.status, 200);
+  assert.equal(dayImportResult.body.booking.travel_plan.days[1].copied_from.source_booking_id, sourceBooking.id);
+
+  const targetAfterDayImport = dayImportResult.body.booking;
+
+  const planImportResult = await requestJson(
+    endpointPath("booking_travel_plan_import").replace("{booking_id}", targetBooking.id),
+    staffHeaders,
+    {
+      method: "POST",
+      body: {
+        expected_travel_plan_revision: targetAfterDayImport.travel_plan_revision,
+        source_booking_id: sourceBooking.id,
+        include_images: true,
+        include_customer_visible_images_only: false,
+        include_notes: true,
+        include_translations: true
+      }
+    }
+  );
+  assert.equal(planImportResult.status, 200);
+  assert.equal(planImportResult.body.booking.travel_plan.days.length, 3);
+  assert.equal(planImportResult.body.booking.pdf_personalization.travel_plan.subtitle, "Shared subtitle marker");
+});
+
 test("standard travel plan apply copies the travel plan without storing extra template metadata", async () => {
   await removeTravelPlanTemplatesByTitlePrefix("Template copy marker");
   const sourceBooking = await createSeedBooking();

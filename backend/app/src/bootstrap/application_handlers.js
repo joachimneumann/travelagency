@@ -219,6 +219,7 @@ export function createApplicationRoutes({
     syncBookingAssignmentFields: bookingViewHelpers.syncBookingAssignmentFields,
     getBookingAssignedKeycloakUserId: bookingViewHelpers.getBookingAssignedKeycloakUserId,
     canEditBooking: bookingViewHelpers.canEditBooking,
+    canAccessTravelPlanImportSourceBooking: bookingViewHelpers.canAccessTravelPlanImportSourceBooking,
     convertMinorUnits: pricingHelpers.convertMinorUnits,
     validateBookingOfferInput: pricingHelpers.validateBookingOfferInput,
     convertBookingOfferToBaseCurrency: pricingHelpers.convertBookingOfferToBaseCurrency,
