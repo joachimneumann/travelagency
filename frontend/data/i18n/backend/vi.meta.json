@@ -4856,7 +4856,7 @@
   },
   "tour.priority_label": {
     "source_hash": "a331bce12b2ffa3285451d208e720950dd8666f77572c8343b66d918f1d50a26",
-    "origin": "machine",
+    "origin": "manual_override",
     "updated_at": "2026-03-30T23:51:31.875Z"
   },
   "tour.rating_label": {
