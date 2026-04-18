@@ -9,7 +9,7 @@ import {
   normalizeCurrencyCode,
   parseMoneyInputValue
 } from "./currency.js";
-import { bookingSourceLang, bookingT } from "./i18n.js";
+import { bookingSourceLang, bookingT, shouldShowBookingCustomerSourceCue } from "./i18n.js";
 import { resolveLocalizedEditorBranchText } from "./localized_editor.js";
 
 function englishTripTotalLabel() {
@@ -29,6 +29,7 @@ function englishCarryOverSurchargeLabel() {
 }
 
 function wrapEnglishTextInput(inputMarkup) {
+  if (!shouldShowBookingCustomerSourceCue()) return inputMarkup;
   return `
     <div class="booking-text-field__with-prefix">
       <span class="booking-text-field__lang-prefix" aria-hidden="true">EN</span>

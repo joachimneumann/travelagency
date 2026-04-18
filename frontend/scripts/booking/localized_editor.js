@@ -6,7 +6,8 @@ import {
   bookingSourceLang,
   bookingSourceLanguageOption,
   bookingT,
-  normalizeBookingContentLang
+  normalizeBookingContentLang,
+  shouldShowBookingCustomerSourceCue
 } from "./i18n.js";
 
 const DEFAULT_CONTENT_LANG = "en";
@@ -149,15 +150,16 @@ function renderSingleLanguageStackedField({
   labelId = "",
   englishId,
   sourceOption,
-  sourceControl
+  sourceControl,
+  showSourceCode = true
 }) {
   return `
     <div class="localized-pair localized-pair--single-language">
       ${showLabel ? `<div class="localized-pair__header">
         <label class="localized-pair__label" for="${escapeHtml(englishId)}"${labelId ? ` id="${escapeHtml(labelId)}"` : ""}>${escapeHtml(label)}</label>
       </div>` : ""}
-      <div class="localized-pair__row localized-pair__row--single">
-        ${renderStackedSourceCode(sourceOption, escapeHtml)}
+      <div class="localized-pair__row localized-pair__row--single${showSourceCode ? "" : " localized-pair__row--source-only"}">
+        ${showSourceCode ? renderStackedSourceCode(sourceOption, escapeHtml) : ""}
         <div class="localized-pair__field localized-pair__field--single">
           ${sourceControl}
         </div>
@@ -172,7 +174,8 @@ function renderSingleLanguageSplitField({
   labelId = "",
   englishId,
   sourceOption,
-  sourceControl
+  sourceControl,
+  showSourceCode = true
 }) {
   return `
     <div class="localized-editor localized-editor--single-language">
@@ -181,9 +184,9 @@ function renderSingleLanguageSplitField({
       </div>
       <div class="localized-editor__grid localized-editor__grid--single">
         <div class="localized-editor__pane localized-editor__pane--source">
-          <div class="localized-editor__pane-head">
+          ${showSourceCode ? `<div class="localized-editor__pane-head">
             ${renderSourceCode(sourceOption, escapeHtml)}
-          </div>
+          </div>` : ""}
           ${sourceControl}
         </div>
       </div>
@@ -217,6 +220,10 @@ export function renderLocalizedSplitField({
   const targetOption = bookingContentLanguageOption(normalizedTargetLang);
   const resolvedSourceValue = sourceValue !== undefined ? sourceValue : englishValue;
   const sameLanguage = normalizedTargetLang === normalizedSourceLang;
+  const showSourceCode = shouldShowBookingCustomerSourceCue({
+    contentLang: normalizedTargetLang,
+    sourceLang: normalizedSourceLang
+  });
   const rightDisabled = disabled || sameLanguage || localizedReadOnly;
   const showTranslateButton = !sameLanguage && !localizedReadOnly;
   const inputTag = type === "textarea" ? "textarea" : "input";
@@ -276,7 +283,8 @@ export function renderLocalizedSplitField({
       labelId,
       englishId,
       sourceOption,
-      sourceControl
+      sourceControl,
+      showSourceCode
     });
   }
 
@@ -287,9 +295,9 @@ export function renderLocalizedSplitField({
       </div>
       <div class="localized-editor__grid">
         <div class="localized-editor__pane localized-editor__pane--source">
-          <div class="localized-editor__pane-head">
+          ${showSourceCode ? `<div class="localized-editor__pane-head">
             ${renderSourceCode(sourceOption, escapeHtml)}
-          </div>
+          </div>` : ""}
           ${sourceControl}
         </div>
         <div class="localized-editor__pane localized-editor__pane--target">
@@ -338,6 +346,10 @@ export function renderLocalizedStackedField({
   const targetOption = bookingContentLanguageOption(normalizedTargetLang);
   const resolvedSourceValue = sourceValue !== undefined ? sourceValue : englishValue;
   const sameLanguage = normalizedTargetLang === normalizedSourceLang;
+  const showSourceCode = shouldShowBookingCustomerSourceCue({
+    contentLang: normalizedTargetLang,
+    sourceLang: normalizedSourceLang
+  });
   const inputTag = type === "textarea" ? "textarea" : "input";
   const englishId = `${idBase}_${sourceOption.code}`;
   const localizedId = `${idBase}_${targetOption.code}_target`;
@@ -387,7 +399,8 @@ export function renderLocalizedStackedField({
       labelId,
       englishId,
       sourceOption,
-      sourceControl
+      sourceControl,
+      showSourceCode
     });
   }
 
@@ -407,8 +420,8 @@ export function renderLocalizedStackedField({
       ${showLabel ? `<div class="localized-pair__header">
         <label class="localized-pair__label" for="${escapeHtml(englishId)}"${labelId ? ` id="${escapeHtml(labelId)}"` : ""}>${escapeHtml(label)}</label>
       </div>` : ""}
-      <div class="localized-pair__row">
-        ${renderStackedSourceCode(sourceOption, escapeHtml)}
+      <div class="localized-pair__row${showSourceCode ? "" : " localized-pair__row--source-only"}">
+        ${showSourceCode ? renderStackedSourceCode(sourceOption, escapeHtml) : ""}
         <div class="localized-pair__field">
           ${sourceControl}
         </div>

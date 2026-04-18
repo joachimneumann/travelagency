@@ -1666,6 +1666,10 @@ textarea:focus-visible {
   align-items: start;
 }
 
+.localized-pair__row--source-only {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .localized-pair__code {
   display: inline-block;
   padding-top: 0.92rem;

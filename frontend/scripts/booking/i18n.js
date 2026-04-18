@@ -117,6 +117,17 @@ export function bookingSourceLang(fallback = DEFAULT_BOOKING_SOURCE_LANG) {
   return normalizeBookingSourceLang(fallback || DEFAULT_BOOKING_SOURCE_LANG);
 }
 
+export function shouldShowBookingCustomerSourceCue({
+  contentLang = bookingContentLang(),
+  sourceLang = bookingSourceLang(),
+  backendLang = bookingLang()
+} = {}) {
+  const normalizedContentLang = normalizeBookingContentLang(contentLang || DEFAULT_BOOKING_CONTENT_LANG);
+  const normalizedSourceLang = normalizeBookingSourceLang(sourceLang || DEFAULT_BOOKING_SOURCE_LANG);
+  const normalizedBackendLang = normalizeLanguageCode(backendLang || bookingLang(), { fallback: "en" });
+  return !(normalizedBackendLang === "en" && normalizedContentLang === "en" && normalizedSourceLang === "en");
+}
+
 export function setBookingContentLang(value) {
   const normalized = normalizeBookingContentLang(value || DEFAULT_BOOKING_CONTENT_LANG);
   window.__BOOKING_CONTENT_LANG = normalized;
