@@ -12,6 +12,22 @@ import {
 import { bookingSourceLang, bookingT } from "./i18n.js";
 import { resolveLocalizedEditorBranchText } from "./localized_editor.js";
 
+function englishTripTotalLabel() {
+  return "Trip total";
+}
+
+function englishDayLabel(dayNumber) {
+  return `Day ${Math.max(1, Number(dayNumber || 1))}`;
+}
+
+function englishAdditionalItemLabel() {
+  return "Additional item";
+}
+
+function englishCarryOverSurchargeLabel() {
+  return "Carry-over surcharge";
+}
+
 export function createBookingOfferPricingModule(ctx) {
   const {
     state,
@@ -449,7 +465,7 @@ export function createBookingOfferPricingModule(ctx) {
 
   function createEmptyTripPriceInternal() {
     return {
-      label: bookingT("booking.offer.trip_total", "Trip total"),
+      label: englishTripTotalLabel(),
       amount_cents: 0,
       tax_rate_basis_points: defaultOfferTaxRateBasisPoints,
       currency: normalizeCurrencyCode(state.offerDraft?.currency || state.booking?.preferred_currency || "USD"),
@@ -462,7 +478,7 @@ export function createBookingOfferPricingModule(ctx) {
     return {
       id: "",
       day_number: normalizedDayNumber,
-      label: bookingT("booking.offer.day_number.day", "Day {day}", { day: normalizedDayNumber }),
+      label: englishDayLabel(normalizedDayNumber),
       amount_cents: 0,
       tax_rate_basis_points: defaultOfferTaxRateBasisPoints,
       currency: normalizeCurrencyCode(state.offerDraft?.currency || state.booking?.preferred_currency || "USD"),
@@ -502,8 +518,8 @@ export function createBookingOfferPricingModule(ctx) {
   function createSurchargeAdditionalItem(amountCents, details = "") {
     return {
       id: "",
-      label: bookingT("booking.offer.additional_item", "Additional item"),
-      details: String(details || "").trim() || bookingT("booking.offer.carry_over_surcharge", "Carry-over surcharge"),
+      label: englishAdditionalItemLabel(),
+      details: String(details || "").trim() || englishCarryOverSurchargeLabel(),
       day_number: null,
       quantity: 1,
       unit_amount_cents: Math.max(0, Math.round(Number(amountCents || 0))),
@@ -601,7 +617,7 @@ export function createBookingOfferPricingModule(ctx) {
         .reduce((sum, item) => sum + Math.max(0, Math.round(computeOfferAdditionalItemLineTotals(item).line_gross_amount_cents || 0)), 0);
       state.offerDraft.trip_price_internal = {
         ...createEmptyTripPriceInternal(),
-        label: bookingT("booking.offer.trip_total", "Trip total"),
+        label: englishTripTotalLabel(),
         amount_cents: currentMainGross + foldedCarryOverGross,
         tax_rate_basis_points: 0
       };
@@ -642,7 +658,7 @@ export function createBookingOfferPricingModule(ctx) {
           ...createEmptyDayPriceInternal(index + 1),
           ...(existing && typeof existing === "object" ? existing : {}),
           day_number: index + 1,
-          label: bookingT("booking.offer.day_number.day", "Day {day}", { day: index + 1 }),
+          label: englishDayLabel(index + 1),
           sort_order: index
         };
       });
@@ -819,7 +835,7 @@ export function createBookingOfferPricingModule(ctx) {
       return `<tr data-offer-day-price-row="${index}">
         <td class="offer-col-day offer-col-day--day-mode">
           <input data-offer-day-number type="hidden" value="${escapeHtml(String(dayNumber))}" />
-          <span>${escapeHtml(bookingT("booking.offer.day_number.day", "Day {day}", { day: dayNumber }))}</span>
+          <span>${escapeHtml(englishDayLabel(dayNumber))}</span>
         </td>
         <td class="offer-col-name"><span>${escapeHtml(dayName || bookingT("booking.no_details", "No details"))}</span></td>
         <td class="offer-col-details">
@@ -896,7 +912,7 @@ export function createBookingOfferPricingModule(ctx) {
       .filter(({ discount }) => !readOnly || (discount && (String(discount.reason || "").trim() || Number(discount.amount_cents || 0) > 0)));
     const header = `<thead><tr><th class="offer-col-name offer-col-name--trip-mode">${escapeHtml(bookingT("booking.offer.name", "Name"))}</th><th class="offer-col-details offer-col-details--trip-mode">${escapeHtml(bookingT("booking.offer.note", "Note"))}</th><th class="offer-col-price-total">${escapeHtml(bookingT("booking.offer.price_including_tax", "Price (incl. tax)"))}</th>${showActionsCol ? '<th class="offer-col-actions"></th>' : ""}</tr></thead>`;
     const tripRow = `<tr data-offer-trip-price-row="0">
-      <td class="offer-col-name offer-col-name--trip-mode"><span>${escapeHtml(String(tripPrice?.label || bookingT("booking.offer.trip_total", "Trip total") || ""))}</span></td>
+      <td class="offer-col-name offer-col-name--trip-mode"><span>${escapeHtml(String(tripPrice?.label || englishTripTotalLabel() || ""))}</span></td>
       <td class="offer-col-details offer-col-details--trip-mode">
         ${readOnly
           ? escapeHtml(String(tripPrice?.notes || ""))
@@ -1193,7 +1209,7 @@ export function createBookingOfferPricingModule(ctx) {
       const parsedDayNumber = Number.parseInt(String(item?.day_number || "").trim(), 10);
       return {
         id: String(item?.id || "").trim(),
-        label: String(item?.label || "").trim() || bookingT("booking.offer.additional_item", "Additional item"),
+        label: String(item?.label || "").trim() || englishAdditionalItemLabel(),
         ...(String(item?.details || "").trim() ? { details: String(item.details).trim() } : {}),
         ...(Number.isInteger(parsedDayNumber) && parsedDayNumber >= 1 ? { day_number: parsedDayNumber } : {}),
         quantity,

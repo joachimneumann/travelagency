@@ -155,7 +155,7 @@ export function createBookingTravelPlanModule(ctx) {
     const disabledReason = !state.permissions.canEditBooking
       ? bookingT("booking.translation.disabled.no_permission", "Disabled: you do not have permission to edit this booking.")
       : targetLang === sourceLang
-        ? bookingT("booking.translation.not_needed_for_matching_languages", "ATP staff language matches customer language. No translation is needed.")
+        ? bookingT("booking.translation.not_needed_for_matching_languages", "Master language matches customer language. No translation is needed.")
         : state.travelPlanDirty
           ? bookingT("booking.travel_plan.translate_everything_clean_state", "Save or discard unsaved travel-plan edits before translating everything.")
           : !status.has_source_content

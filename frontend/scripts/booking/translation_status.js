@@ -93,7 +93,7 @@ function disabledReasonText(normalizedStatus, sectionLabel, explicitReason = "")
   const sourceLang = normalizedLangCode(normalizedStatus.source_lang || bookingSourceLang("en"));
   const sourceLabel = languageLabel(sourceLang);
   if (normalizedStatus.lang === sourceLang) {
-    return bookingT("booking.translation.disabled.source_language", "Disabled: {language} is the ATP staff language.", {
+    return bookingT("booking.translation.disabled.source_language", "Disabled: {language} is the master customer-content language.", {
       language: sourceLabel
     });
   }
@@ -118,7 +118,7 @@ export function translationToolbarHtml({ status, sectionLabel, disabled = false,
   let description = "";
   switch (String(normalizedStatus.status || "").trim().toLowerCase()) {
     case "source":
-      description = bookingT("booking.translation.source_description", "{language} is the ATP staff language for {section}.", {
+      description = bookingT("booking.translation.source_description", "{language} is the master language for {section}.", {
         language: sourceLanguage,
         section: sectionLabel
       });

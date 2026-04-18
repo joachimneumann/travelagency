@@ -151,33 +151,36 @@ export function createBookingTravelPlanHandlers(deps) {
             .map((item) => [item.id, item])
         );
             const nextTitleField = mergeEditableLocalizedTextField(
-              existingDay?.title_i18n ?? existingDay?.title,
+              existingDay?.title_i18n,
               day.title,
               day.title_i18n,
               normalizedLang,
               {
+                existingText: existingDay?.title,
                 sourceLang: normalizedSourceLang,
                 defaultLang: normalizedSourceLang,
                 pruneExtraTranslationsOnSourceChange: true
               }
             );
             const nextOvernightField = mergeEditableLocalizedTextField(
-              existingDay?.overnight_location_i18n ?? existingDay?.overnight_location,
+              existingDay?.overnight_location_i18n,
               day.overnight_location,
               day.overnight_location_i18n,
               normalizedLang,
               {
+                existingText: existingDay?.overnight_location,
                 sourceLang: normalizedSourceLang,
                 defaultLang: normalizedSourceLang,
                 pruneExtraTranslationsOnSourceChange: true
               }
             );
             const nextNotesField = mergeEditableLocalizedTextField(
-              existingDay?.notes_i18n ?? existingDay?.notes,
+              existingDay?.notes_i18n,
               day.notes,
               day.notes_i18n,
               normalizedLang,
               {
+                existingText: existingDay?.notes,
                 sourceLang: normalizedSourceLang,
                 defaultLang: normalizedSourceLang,
                 pruneExtraTranslationsOnSourceChange: true
@@ -195,44 +198,48 @@ export function createBookingTravelPlanHandlers(deps) {
           services: (Array.isArray(day?.services) ? day.services : []).map((item) => {
             const existingItem = existingItemsById.get(item.id);
             const timeLabelField = mergeEditableLocalizedTextField(
-              existingItem?.time_label_i18n ?? existingItem?.time_label,
+              existingItem?.time_label_i18n,
               item.time_label,
               item.time_label_i18n,
               normalizedLang,
               {
+                existingText: existingItem?.time_label,
                 sourceLang: normalizedSourceLang,
                 defaultLang: normalizedSourceLang,
                 pruneExtraTranslationsOnSourceChange: true
               }
             );
             const titleItemField = mergeEditableLocalizedTextField(
-              existingItem?.title_i18n ?? existingItem?.title,
+              existingItem?.title_i18n,
               item.title,
               item.title_i18n,
               normalizedLang,
               {
+                existingText: existingItem?.title,
                 sourceLang: normalizedSourceLang,
                 defaultLang: normalizedSourceLang,
                 pruneExtraTranslationsOnSourceChange: true
               }
             );
             const detailsField = mergeEditableLocalizedTextField(
-              existingItem?.details_i18n ?? existingItem?.details,
+              existingItem?.details_i18n,
               item.details,
               item.details_i18n,
               normalizedLang,
               {
+                existingText: existingItem?.details,
                 sourceLang: normalizedSourceLang,
                 defaultLang: normalizedSourceLang,
                 pruneExtraTranslationsOnSourceChange: true
               }
             );
             const locationField = mergeEditableLocalizedTextField(
-              existingItem?.location_i18n ?? existingItem?.location,
+              existingItem?.location_i18n,
               item.location,
               item.location_i18n,
               normalizedLang,
               {
+                existingText: existingItem?.location,
                 sourceLang: normalizedSourceLang,
                 defaultLang: normalizedSourceLang,
                 pruneExtraTranslationsOnSourceChange: true

@@ -308,7 +308,10 @@ export function createBookingViewHelpers({
     const generatedOfferReadModel = await buildBookingOfferReadModel(
       generatedOffer?.offer,
       generatedOfferCurrency,
-      { lang: generatedLang }
+      {
+        lang: generatedLang,
+        sourceLang: "en"
+      }
     );
     return {
       ...generatedOfferTransportFields,
@@ -316,7 +319,10 @@ export function createBookingViewHelpers({
       total_price_cents: safeInt(generatedOffer?.total_price_cents) || safeInt(generatedOfferReadModel?.total_price_cents) || 0,
       ...(generatedOfferReadModel?.payment_terms ? { payment_terms: generatedOfferReadModel.payment_terms } : {}),
       offer: generatedOfferReadModel,
-      travel_plan: buildBookingTravelPlanReadModel(generatedOffer?.travel_plan, generatedOfferReadModel, { lang: generatedLang })
+      travel_plan: buildBookingTravelPlanReadModel(generatedOffer?.travel_plan, generatedOfferReadModel, {
+        lang: generatedLang,
+        sourceLang: "en"
+      })
     };
   }
 
@@ -401,7 +407,10 @@ export function createBookingViewHelpers({
         ? await buildBookingOfferReadModel(
           acceptedOfferSnapshot,
           safeCurrency(acceptedOfferSnapshot?.currency || normalizedBooking?.accepted_deposit_currency || preferredCurrency),
-          { lang }
+          {
+            lang,
+            sourceLang
+          }
         )
         : null;
       const acceptedPaymentTermsSnapshot = normalizedBooking?.accepted_payment_terms_snapshot && typeof normalizedBooking.accepted_payment_terms_snapshot === "object"
@@ -444,7 +453,7 @@ export function createBookingViewHelpers({
         ...(acceptedOfferReadModel ? { offer: acceptedOfferReadModel } : {}),
         ...(acceptedPaymentTerms ? { payment_terms: acceptedPaymentTerms } : {}),
         ...(acceptedTravelPlanSnapshot
-          ? { travel_plan: buildBookingTravelPlanReadModel(acceptedTravelPlanSnapshot, acceptedOfferSnapshot, { lang }) }
+          ? { travel_plan: buildBookingTravelPlanReadModel(acceptedTravelPlanSnapshot, acceptedOfferSnapshot, { lang, sourceLang }) }
           : {}),
         ...(normalizeText(normalizedBooking?.accepted_offer_artifact_ref)
           ? { offer_artifact_ref: normalizeText(normalizedBooking.accepted_offer_artifact_ref) }
@@ -469,7 +478,9 @@ export function createBookingViewHelpers({
       ),
       pdf_personalization: normalizeBookingPdfPersonalization(normalizedBooking?.pdf_personalization, {
         flatLang: lang,
-        sourceLang
+        sourceLang,
+        flatMode: "localized",
+        hydrateSourceIntoMaps: true
       }),
       preferred_currency: preferredCurrency,
       travel_plan: buildBookingTravelPlanReadModel(normalizedBooking.travel_plan, normalizedBooking.offer, {

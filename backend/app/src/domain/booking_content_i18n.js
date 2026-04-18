@@ -1,14 +1,13 @@
 import { normalizeText } from "../lib/text.js";
 import {
-  BACKEND_UI_LANGUAGE_CODES,
   CUSTOMER_CONTENT_LANGUAGE_CODES,
   normalizeLanguageCode
 } from "../../../../shared/generated/language_catalog.js";
 
 export const BOOKING_CONTENT_LANGUAGES = CUSTOMER_CONTENT_LANGUAGE_CODES;
 export const DEFAULT_BOOKING_CONTENT_LANG = "en";
-export const BOOKING_SOURCE_LANGUAGE_CODES = BACKEND_UI_LANGUAGE_CODES;
 export const DEFAULT_BOOKING_SOURCE_LANG = "en";
+export const BOOKING_SOURCE_LANGUAGE_CODES = Object.freeze([DEFAULT_BOOKING_SOURCE_LANG]);
 
 function unique(values) {
   return Array.from(new Set((Array.isArray(values) ? values : []).filter(Boolean)));
@@ -36,6 +35,46 @@ export function normalizeLocalizedTextMap(value, fallbackLang = DEFAULT_BOOKING_
   return normalized
     ? { [normalizeBookingContentLang(fallbackLang)]: normalized }
     : {};
+}
+
+export function normalizeStoredLocalizedTextMap(
+  mapValue,
+  plainValue = "",
+  sourceLang = DEFAULT_BOOKING_SOURCE_LANG,
+  options = {}
+) {
+  const normalizedSourceLang = normalizeBookingContentLang(sourceLang || DEFAULT_BOOKING_SOURCE_LANG);
+  const fallbackLang = normalizeBookingContentLang(options?.fallbackLang || normalizedSourceLang);
+  const next = normalizeLocalizedTextMap(mapValue, fallbackLang);
+  const normalizedPlainText = normalizeText(plainValue);
+  if (normalizedPlainText) next[normalizedSourceLang] = normalizedPlainText;
+  return next;
+}
+
+export function stripSourceLangFromLocalizedTextMap(value, sourceLang = DEFAULT_BOOKING_SOURCE_LANG) {
+  const normalizedSourceLang = normalizeBookingContentLang(sourceLang || DEFAULT_BOOKING_SOURCE_LANG);
+  const next = normalizeLocalizedTextMap(value, normalizedSourceLang);
+  delete next[normalizedSourceLang];
+  return next;
+}
+
+export function normalizeStoredLocalizedTextField(mapValue, plainValue = "", options = {}) {
+  const normalizedSourceLang = normalizeBookingContentLang(options?.sourceLang || DEFAULT_BOOKING_SOURCE_LANG);
+  const fallbackLang = normalizeBookingContentLang(options?.fallbackLang || normalizedSourceLang);
+  const flatLang = normalizeBookingContentLang(options?.flatLang || normalizedSourceLang);
+  const flatMode = options?.flatMode === "localized" ? "localized" : "source";
+  const fullMap = normalizeStoredLocalizedTextMap(mapValue, plainValue, normalizedSourceLang, { fallbackLang });
+  const sourceText = normalizeText(fullMap[normalizedSourceLang]);
+  const storedMap = stripSourceLangFromLocalizedTextMap(fullMap, normalizedSourceLang);
+  return {
+    fullMap,
+    sourceText: sourceText || "",
+    text: flatMode === "localized"
+      ? resolveLocalizedText(fullMap, flatLang, "", { sourceLang: normalizedSourceLang })
+      : (sourceText || ""),
+    map: options?.hydrateSourceIntoMap === true ? fullMap : storedMap,
+    storedMap
+  };
 }
 
 export function resolveLocalizedText(value, lang = DEFAULT_BOOKING_CONTENT_LANG, fallback = "", options = {}) {
@@ -73,14 +112,19 @@ export function mergeLocalizedTextField(existingValue, nextValue, lang = DEFAULT
   const preserveWhenUndefined = options?.preserveWhenUndefined === true;
   const defaultLang = normalizeBookingContentLang(options?.defaultLang || DEFAULT_BOOKING_CONTENT_LANG);
   const fallbackLang = normalizeBookingContentLang(options?.fallbackLang || lang || DEFAULT_BOOKING_CONTENT_LANG);
-  const existingMap = normalizeLocalizedTextMap(existingValue, fallbackLang);
+  const sourceLang = normalizeBookingContentLang(options?.sourceLang || defaultLang);
+  const existingMap = normalizeStoredLocalizedTextMap(existingValue, options?.existingText, sourceLang, { fallbackLang });
   const mergedMap = nextValue === undefined && preserveWhenUndefined
     ? existingMap
     : setLocalizedTextForLang(existingMap, nextValue, lang, { fallbackLang });
+  const normalizedField = normalizeStoredLocalizedTextField(mergedMap, "", {
+    sourceLang,
+    fallbackLang: defaultLang
+  });
 
   return {
-    map: mergedMap,
-    text: resolveLocalizedText(mergedMap, defaultLang, "")
+    map: normalizedField.storedMap,
+    text: normalizedField.sourceText
   };
 }
 
@@ -88,7 +132,9 @@ export function mergeEditableLocalizedTextField(existingValue, payloadValue, pay
   const normalizedTargetLang = normalizeBookingContentLang(targetLang || DEFAULT_BOOKING_CONTENT_LANG);
   const sourceLang = normalizeBookingContentLang(options?.sourceLang || DEFAULT_BOOKING_CONTENT_LANG);
   const defaultLang = normalizeBookingContentLang(options?.defaultLang || sourceLang || DEFAULT_BOOKING_CONTENT_LANG);
-  const existingMap = normalizeLocalizedTextMap(existingValue, defaultLang);
+  const existingMap = normalizeStoredLocalizedTextMap(existingValue, options?.existingText, sourceLang, {
+    fallbackLang: defaultLang
+  });
   let nextMap = existingMap;
   const rawPayloadMap = payloadMap && typeof payloadMap === "object" && !Array.isArray(payloadMap) ? payloadMap : null;
   const pruneExtraTranslationsOnSourceChange = options?.pruneExtraTranslationsOnSourceChange === true
@@ -131,8 +177,12 @@ export function mergeEditableLocalizedTextField(existingValue, payloadValue, pay
     nextMap = setLocalizedTextForLang(nextMap, payloadValue, sourceLang, { fallbackLang: defaultLang });
   }
 
+  const normalizedField = normalizeStoredLocalizedTextField(nextMap, "", {
+    sourceLang,
+    fallbackLang: defaultLang
+  });
   return {
-    map: nextMap,
-    text: resolveLocalizedText(nextMap, defaultLang, "", { sourceLang })
+    map: normalizedField.storedMap,
+    text: normalizedField.sourceText
   };
 }

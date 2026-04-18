@@ -3,8 +3,7 @@ import {
   mergeEditableLocalizedTextField,
   normalizeBookingContentLang,
   normalizeBookingSourceLang,
-  normalizeLocalizedTextMap,
-  resolveLocalizedText
+  normalizeStoredLocalizedTextField
 } from "../../domain/booking_content_i18n.js";
 import {
   normalizeBookingPdfPersonalization,
@@ -116,11 +115,12 @@ export function createBookingPaymentDocumentHandlers(deps) {
     }).map((component) => {
       const existingComponent = existingById.get(component.id);
       const descriptionField = mergeEditableLocalizedTextField(
-        existingComponent?.description_i18n ?? existingComponent?.description,
+        existingComponent?.description_i18n,
         component.description,
         component.description_i18n,
         normalizedLang,
         {
+          existingText: existingComponent?.description,
           sourceLang: normalizedSourceLang,
           defaultLang: normalizedSourceLang
         }
@@ -384,19 +384,33 @@ export function createBookingPaymentDocumentHandlers(deps) {
     const readLang = normalizeBookingContentLang(options?.lang || document?.lang || "en");
     const contentLang = normalizeBookingContentLang(document?.lang || readLang);
     const sourceLang = normalizeBookingSourceLang(options?.sourceLang || "en");
-    const titleI18n = normalizeLocalizedTextMap(document?.title_i18n ?? document?.title, contentLang);
-    const notesI18n = normalizeLocalizedTextMap(document?.notes_i18n ?? document?.notes, contentLang);
+    const titleField = normalizeStoredLocalizedTextField(document?.title_i18n, document?.title, {
+      sourceLang,
+      flatLang: readLang,
+      fallbackLang: contentLang,
+      flatMode: "localized",
+      hydrateSourceIntoMap: true
+    });
+    const notesField = normalizeStoredLocalizedTextField(document?.notes_i18n, document?.notes, {
+      sourceLang,
+      flatLang: readLang,
+      fallbackLang: contentLang,
+      flatMode: "localized",
+      hydrateSourceIntoMap: true
+    });
     return {
       ...document,
       lang: normalizePdfLang(document?.lang || readLang),
-      title: resolveLocalizedText(titleI18n, readLang, "", { sourceLang }) || buildDefaultDocumentTitle(document, readLang),
-      title_i18n: titleI18n,
-      notes: resolveLocalizedText(notesI18n, readLang, "", { sourceLang }) || null,
-      notes_i18n: notesI18n,
+      title: titleField.text || buildDefaultDocumentTitle(document, readLang),
+      title_i18n: titleField.map,
+      notes: notesField.text || null,
+      notes_i18n: notesField.map,
       components: normalizePaymentDocumentComponents(document?.components, {
         contentLang,
         flatLang: readLang,
-        sourceLang
+        sourceLang,
+        flatMode: "localized",
+        hydrateSourceIntoLocalizedMaps: true
       }),
       document_kind: normalizeText(document?.document_kind) || "PAYMENT_REQUEST",
       payment_id: normalizeText(document?.payment_id) || null,

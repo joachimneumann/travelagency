@@ -50,7 +50,7 @@ export function createBookingTravelPlanPdfsModule(deps) {
                 <th class="travel-plan-existing-pdfs-col-date">${escapeHtml(bookingT("booking.date", "Date"))}</th>
                 <th class="travel-plan-existing-pdfs-col-comment">${escapeHtml(bookingT("booking.comments", "Comments"))}</th>
                 <th class="travel-plan-existing-pdfs-col-sent">${escapeHtml(bookingT("booking.travel_plan.sent_to_customer", "Sent to customer"))}</th>
-                ${canEdit ? `<th class="travel-plan-existing-pdfs-col-actions">${escapeHtml(bookingT("backend.table.actions", "Actions"))}</th>` : ""}
+                ${canEdit ? `<th class="travel-plan-existing-pdfs-col-actions" aria-label="${escapeHtml(bookingT("backend.table.actions", "Actions"))}"></th>` : ""}
               </tr>
             </thead>
             <tbody>

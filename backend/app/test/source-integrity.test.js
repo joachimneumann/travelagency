@@ -2361,7 +2361,7 @@ test("booking page save orchestrates dirty sections through existing section end
   );
 });
 
-test("booking page derives ATP staff source language from the top-right backend language", async () => {
+test("booking page keeps English as the fixed booking source language while still sending explicit language query params", async () => {
   const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
   const bookingI18nPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "i18n.js");
   const bookingPageDataModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking_page_data.js");
@@ -2380,12 +2380,17 @@ test("booking page derives ATP staff source language from the top-right backend 
   assert.doesNotMatch(
     bookingSource,
     /id="booking_editing_language_field"/,
-    "booking.html should no longer render a separate editing-language field once the top-right ATP staff language owns that choice"
+    "booking.html should no longer render a separate editing-language field once booking source language is fixed to English"
   );
   assert.match(
     i18nSource,
+    /export function bookingSourceLang\(fallback = DEFAULT_BOOKING_SOURCE_LANG\) \{\s*return normalizeBookingSourceLang\(fallback \|\| DEFAULT_BOOKING_SOURCE_LANG\);\s*\}/,
+    "Booking i18n helpers should keep English as the fixed booking customer-content source language"
+  );
+  assert.doesNotMatch(
+    i18nSource,
     /export function bookingSourceLang\(fallback = DEFAULT_BOOKING_SOURCE_LANG\) \{[\s\S]*window\.backendI18n\?\.getLang/,
-    "Booking i18n helpers should derive the ATP staff source language from the active backend language selector"
+    "Booking source helpers should not derive customer-content source language from the active backend chrome language"
   );
   assert.match(
     bookingPageDataSource,
@@ -2395,7 +2400,7 @@ test("booking page derives ATP staff source language from the top-right backend 
   assert.doesNotMatch(
     bookingPageDataSource,
     /syncBookingEditingLanguageToSelectedStaffLanguage|bookingSourceLanguageRequest/,
-    "Booking page load should not mutate persisted booking state just to mirror the current ATP staff source language"
+    "Booking page load should not mutate persisted booking state just to mirror any backend chrome language"
   );
   assert.match(
     bookingPageDataSource,
@@ -2525,12 +2530,12 @@ test("booking page logs reload-time dirty diagnostics and core comparisons ignor
   assert.match(
     travelPlanSource,
     /function getTravelPlanNormalizationOptions\(\) \{[\s\S]*sourceLang:\s*bookingSourceLang\(\)/,
-    "Travel-plan normalization should derive its source language from the selected ATP staff language in the top-right selector"
+    "Travel-plan normalization should use the fixed English booking source language"
   );
   assert.match(
     travelPlanHelpersSource,
     /export function normalizeTravelPlanDraft\(plan, options = \{\}\) \{[\s\S]*const sourceLang = normalizeBookingSourceLang\([\s\S]*bookingSourceLang\("en"\)[\s\S]*resolveLocalizedEditorText\(rawDay\.title_i18n \?\? rawDay\.title, sourceLang, ""\)/,
-    "Travel-plan helper normalization should accept an explicit source language and otherwise fall back to the selected ATP staff language"
+    "Travel-plan helper normalization should accept an explicit source language and otherwise fall back to the fixed English booking source language"
   );
 });
 

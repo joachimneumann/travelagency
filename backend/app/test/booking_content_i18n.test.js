@@ -23,7 +23,6 @@ test("editing the English source prunes stale translations down to English and t
   );
 
   assert.deepEqual(result.map, {
-    en: "restaurant the eifel tour updated",
     fr: "visite correcte du restaurant Eiffel"
   });
   assert.equal(result.text, "restaurant the eifel tour updated");
@@ -47,11 +46,11 @@ test("editing only the current non-English translation preserves the other saved
   );
 
   assert.deepEqual(result.map, {
-    en: "restaurant the eifel tour",
     it: "visita al ristorante",
     de: "Restaurantbesuch",
     fr: "nouvelle traduction"
   });
+  assert.equal(result.text, "restaurant the eifel tour");
 });
 
 test("editing English while English is the selected language removes all non-English translations", () => {
@@ -69,34 +68,35 @@ test("editing English while English is the selected language removes all non-Eng
     { pruneExtraTranslationsOnEnglishChange: true }
   );
 
-  assert.deepEqual(result.map, {
-    en: "Private airport transfer"
-  });
+  assert.deepEqual(result.map, {});
   assert.equal(result.text, "Private airport transfer");
 });
 
-test("editing a Vietnamese source prunes stale translations down to Vietnamese and the current target", () => {
+test("editing a non-English translation reconstructs the English source from the plain field", () => {
   const result = mergeEditableLocalizedTextField(
     {
-      vi: "Don san bay",
-      de: "Flughafenabholung",
       fr: "Transfert aeroport"
     },
-    "Don san bay rieng",
+    "Transfert aeroport prive",
     {
-      vi: "Don san bay rieng",
-      de: "Privater Flughafentransfer"
+      fr: "Transfert aeroport prive"
     },
-    "de",
+    "fr",
     {
-      sourceLang: normalizeBookingSourceLang("vi"),
-      pruneExtraTranslationsOnSourceChange: true
+      existingText: "Airport transfer",
+      sourceLang: "en",
+      defaultLang: "en"
     }
   );
 
   assert.deepEqual(result.map, {
-    vi: "Don san bay rieng",
-    de: "Privater Flughafentransfer"
+    fr: "Transfert aeroport prive"
   });
-  assert.equal(result.text, "Don san bay rieng");
+  assert.equal(result.text, "Airport transfer");
+});
+
+test("booking source normalization always resolves back to English", () => {
+  assert.equal(normalizeBookingSourceLang("en"), "en");
+  assert.equal(normalizeBookingSourceLang("vi"), "en");
+  assert.equal(normalizeBookingSourceLang("de"), "en");
 });

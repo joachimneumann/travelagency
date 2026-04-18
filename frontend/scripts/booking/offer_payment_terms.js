@@ -22,6 +22,13 @@ const OFFER_PAYMENT_DAY_BASED_DUE_TYPES = Object.freeze(
   OFFER_PAYMENT_DUE_TYPES.filter((type) => type !== "ON_ACCEPTANCE" && type !== "FIXED_DATE")
 );
 
+function englishPaymentTermKindLabel(kind, installmentNumber = 1) {
+  const normalizedKind = String(kind || "").trim().toUpperCase();
+  if (normalizedKind === "DEPOSIT") return "Deposit";
+  if (normalizedKind === "FINAL_BALANCE") return "Final payment";
+  return `Installment ${Math.max(1, Number(installmentNumber || 1))}`;
+}
+
 export function createBookingOfferPaymentTermsModule(ctx) {
   const {
     state,
@@ -158,21 +165,17 @@ export function createBookingOfferPaymentTermsModule(ctx) {
   }
 
   function formatLegacyPaymentTermKindLabel(kind, sequence) {
-    const normalizedKind = String(kind || "").trim().toUpperCase();
-    if (normalizedKind === "DEPOSIT") return bookingT("booking.offer.payment_terms.deposit", "Deposit");
-    if (normalizedKind === "FINAL_BALANCE") return bookingT("booking.offer.payment_terms.final_balance", "Final payment");
-    return bookingT("booking.offer.payment_terms.installment_numbered", "Installment {number}", { number: String(sequence || 1) });
+    return englishPaymentTermKindLabel(kind, sequence);
   }
 
   function formatPaymentTermKindLabel(kind, fallbackLabel, options = {}) {
     const normalizedKind = String(kind || "").trim().toUpperCase();
     const explicitLabel = String(fallbackLabel || "").trim();
     if (explicitLabel) return explicitLabel;
-    if (normalizedKind === "DEPOSIT") return bookingT("booking.offer.payment_terms.deposit", "Deposit");
-    if (normalizedKind === "FINAL_BALANCE") return bookingT("booking.offer.payment_terms.final_balance", "Final payment");
-    return bookingT("booking.offer.payment_terms.installment_numbered", "Installment {number}", {
-      number: String(Math.max(1, Number(options.installmentNumber || 1)))
-    });
+    return englishPaymentTermKindLabel(
+      normalizedKind,
+      Math.max(1, Number(options.installmentNumber || 1))
+    );
   }
 
   function resolveOfferPaymentTermInstallmentNumber(lines, lineIndex, kindOverride = null) {

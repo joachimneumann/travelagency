@@ -1,5 +1,4 @@
 import {
-  BACKEND_UI_LANGUAGES,
   CUSTOMER_CONTENT_LANGUAGES,
   apiValueFromLanguageCode,
   normalizeLanguageCode
@@ -21,14 +20,19 @@ function sortLanguageOptions(entries) {
   });
 }
 
+const DEFAULT_BOOKING_CONTENT_LANG = "en";
+const DEFAULT_BOOKING_SOURCE_LANG = "en";
+
 export const BOOKING_SOURCE_LANGUAGE_OPTIONS = Object.freeze(
-  sortLanguageOptions(BACKEND_UI_LANGUAGES.map((entry) => ({
+  sortLanguageOptions(CUSTOMER_CONTENT_LANGUAGES
+    .filter((entry) => entry.code === DEFAULT_BOOKING_SOURCE_LANG)
+    .map((entry) => ({
     code: entry.code,
     label: entry.nativeLabel,
     shortLabel: entry.shortLabel,
     flagClass: entry.flagClass,
     apiValue: entry.apiValue
-  })))
+    })))
 );
 
 export const BOOKING_CONTENT_LANGUAGE_OPTIONS = Object.freeze(
@@ -40,9 +44,6 @@ export const BOOKING_CONTENT_LANGUAGE_OPTIONS = Object.freeze(
     apiValue: entry.apiValue
   })))
 );
-
-const DEFAULT_BOOKING_CONTENT_LANG = "en";
-const DEFAULT_BOOKING_SOURCE_LANG = "en";
 
 export function bookingT(id, fallback, vars) {
   if (typeof window.backendT === "function") {
@@ -113,12 +114,6 @@ export function bookingContentLang(fallback = DEFAULT_BOOKING_CONTENT_LANG) {
 }
 
 export function bookingSourceLang(fallback = DEFAULT_BOOKING_SOURCE_LANG) {
-  const backendCandidate = typeof window.backendI18n?.getLang === "function"
-    ? String(window.backendI18n.getLang() || "").trim()
-    : "";
-  if (backendCandidate) return normalizeBookingSourceLang(backendCandidate);
-  const documentLang = String(document.documentElement.lang || "").trim();
-  if (documentLang) return normalizeBookingSourceLang(documentLang);
   return normalizeBookingSourceLang(fallback || DEFAULT_BOOKING_SOURCE_LANG);
 }
 

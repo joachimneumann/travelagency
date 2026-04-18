@@ -7,6 +7,9 @@ import {
   markTravelPlanTranslationManual,
   translateTravelPlanFromSourceLanguage
 } from "../src/domain/booking_translation.js";
+import { createTravelPlanHelpers } from "../src/domain/travel_plan.js";
+
+const { normalizeBookingTravelPlan, buildBookingTravelPlanReadModel } = createTravelPlanHelpers();
 
 test("travel plan translation status counts customer-facing fields only", () => {
   const travelPlan = {
@@ -14,23 +17,23 @@ test("travel plan translation status counts customer-facing fields only", () => 
       {
         id: "day_1",
         title: "Arrival in Hanoi",
-        title_i18n: { en: "Arrival in Hanoi" },
+        title_i18n: {},
         overnight_location: "Hanoi",
-        overnight_location_i18n: { en: "Hanoi" },
+        overnight_location_i18n: {},
         notes: "Easy evening walk in the old quarter.",
-        notes_i18n: { en: "Easy evening walk in the old quarter." },
+        notes_i18n: {},
         services: [
           {
             id: "seg_1",
             timing_kind: "label",
             time_label: "Morning",
-            time_label_i18n: { en: "Morning" },
+            time_label_i18n: {},
             title: "Airport transfer",
-            title_i18n: { en: "Airport transfer" },
+            title_i18n: {},
             location: "Noi Bai Airport",
-            location_i18n: { en: "Noi Bai Airport" },
+            location_i18n: {},
             details: "Meet your driver and transfer to the hotel.",
-            details_i18n: { en: "Meet your driver and transfer to the hotel." }
+            details_i18n: {}
           }
         ]
       }
@@ -54,12 +57,10 @@ test("travel plan manual target edits are tracked per field", () => {
         id: "day_1",
         title: "Arrival in Hanoi",
         title_i18n: {
-          en: "Arrival in Hanoi",
           fr: "Arrivee a Hanoi"
         },
         overnight_location: "Hanoi",
         overnight_location_i18n: {
-          en: "Hanoi",
           fr: "Hanoi"
         },
         services: [
@@ -68,12 +69,10 @@ test("travel plan manual target edits are tracked per field", () => {
             timing_kind: "label",
             title: "Airport transfer",
             title_i18n: {
-              en: "Airport transfer",
               fr: "Transfert aeroport"
             },
             details: "Meet your driver.",
             details_i18n: {
-              en: "Meet your driver.",
               fr: "Rencontrez votre chauffeur."
             }
           }
@@ -97,17 +96,14 @@ test("travel plan manual field locks survive future auto-translation", async () 
         id: "day_1",
         title: "Arrival in Hanoi",
         title_i18n: {
-          en: "Arrival in Hanoi",
           fr: "Arrivee a Hanoi"
         },
         overnight_location: "Hanoi",
         overnight_location_i18n: {
-          en: "Hanoi",
           fr: "Hanoi"
         },
         notes: "Relax after check-in.",
         notes_i18n: {
-          en: "Relax after check-in.",
           fr: "Detendez-vous apres l'enregistrement."
         },
         services: [
@@ -116,22 +112,18 @@ test("travel plan manual field locks survive future auto-translation", async () 
             timing_kind: "label",
             time_label: "Morning",
             time_label_i18n: {
-              en: "Morning",
               fr: "Matin"
             },
             title: "Airport transfer",
             title_i18n: {
-              en: "Airport transfer",
               fr: "Transfert aeroport"
             },
             details: "Meet your driver and transfer to the hotel.",
             details_i18n: {
-              en: "Meet your driver and transfer to the hotel.",
               fr: "Rencontrez votre chauffeur et transfert a l'hotel."
             },
             location: "Noi Bai Airport",
             location_i18n: {
-              en: "Noi Bai Airport",
               fr: "Aeroport Noi Bai"
             }
           }
@@ -167,12 +159,65 @@ test("travel plan manual field locks survive future auto-translation", async () 
   assert.equal(translated.days[0].title_i18n.fr, "Arrivee privee a Hanoi");
   assert.equal(translated.days[0].notes_i18n.fr, "Notes machine");
   assert.equal(translated.days[0].services[0].title_i18n.fr, "Transfert machine");
+  assert.equal(Object.prototype.hasOwnProperty.call(translated.days[0].title_i18n, "en"), false);
   assert.deepEqual(translated.translation_meta.fr.manual_keys, ["travel_plan.day_1.title"]);
 
-  translated.days[0].title_i18n.en = "VIP arrival in Hanoi";
   translated.days[0].title = "VIP arrival in Hanoi";
 
   const status = buildTravelPlanTranslationStatus(translated, "fr");
   assert.equal(status.status, "reviewed");
   assert.equal(status.stale, false);
+});
+
+test("travel plan storage keeps English in plain fields while read models hydrate localized maps", () => {
+  const rawTravelPlan = {
+    days: [
+      {
+        id: "day_1",
+        title: "Explore Hoi An Ancient Town",
+        title_i18n: {
+          en: "Explore Hoi An Ancient Town",
+          ms: "Terokai Bandar Purba Hoi An"
+        },
+        services: [
+          {
+            id: "seg_1",
+            timing_kind: "label",
+            time_label: "Morning",
+            time_label_i18n: {
+              en: "Morning",
+              ms: "Pagi"
+            },
+            title: "Walking tour",
+            title_i18n: {
+              en: "Walking tour",
+              ms: "Lawatan berjalan kaki"
+            }
+          }
+        ]
+      }
+    ]
+  };
+
+  const stored = normalizeBookingTravelPlan(rawTravelPlan, null, { sourceLang: "en" });
+  assert.equal(stored.days[0].title, "Explore Hoi An Ancient Town");
+  assert.deepEqual(stored.days[0].title_i18n, {
+    ms: "Terokai Bandar Purba Hoi An"
+  });
+  assert.equal(stored.days[0].services[0].time_label, "Morning");
+  assert.deepEqual(stored.days[0].services[0].time_label_i18n, {
+    ms: "Pagi"
+  });
+
+  const readModel = buildBookingTravelPlanReadModel(rawTravelPlan, null, { lang: "ms", sourceLang: "en" });
+  assert.equal(readModel.days[0].title, "Terokai Bandar Purba Hoi An");
+  assert.deepEqual(readModel.days[0].title_i18n, {
+    en: "Explore Hoi An Ancient Town",
+    ms: "Terokai Bandar Purba Hoi An"
+  });
+  assert.equal(readModel.days[0].services[0].time_label, "Pagi");
+  assert.deepEqual(readModel.days[0].services[0].time_label_i18n, {
+    en: "Morning",
+    ms: "Pagi"
+  });
 });

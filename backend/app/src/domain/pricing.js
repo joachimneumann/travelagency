@@ -3,7 +3,7 @@ import { normalizeText } from "../lib/text.js";
 import { normalizeGeneratedEnumValue } from "../lib/generated_catalogs.js";
 import {
   normalizeBookingContentLang,
-  normalizeLocalizedTextMap,
+  normalizeStoredLocalizedTextField,
   resolveLocalizedText
 } from "./booking_content_i18n.js";
 
@@ -672,14 +672,23 @@ export function createPricingHelpers({
     const contentLang = normalizeBookingContentLang(options?.contentLang || options?.lang || "en");
     const flatLang = normalizeBookingContentLang(options?.flatLang || options?.lang || "en");
     const sourceLang = normalizeBookingContentLang(options?.sourceLang || contentLang);
+    const flatMode = options?.flatMode === "localized" ? "localized" : "source";
     return (Array.isArray(rawComponents) ? rawComponents : []).map((component, index) => {
       const computedAmounts = computeOfferLineAmounts(component);
       const normalizedDayNumber = Number.parseInt(component?.day_number, 10);
-      const details_i18n = normalizeLocalizedTextMap(
-        component?.details_i18n ?? component?.details ?? component?.description,
-        contentLang
+      const detailsField = normalizeStoredLocalizedTextField(
+        component?.details_i18n,
+        component?.details ?? component?.description,
+        {
+          sourceLang,
+          flatLang,
+          fallbackLang: contentLang,
+          flatMode,
+          hydrateSourceIntoMap: options?.hydrateSourceIntoLocalizedMaps === true
+        }
       );
-      const details = resolveLocalizedText(details_i18n, flatLang, "", { sourceLang });
+      const details_i18n = detailsField.map;
+      const details = detailsField.text;
       return {
         id: normalizeText(component?.id) || `offer_component_${index + 1}`,
         category: normalizeOfferCategory(component?.category),
@@ -1428,13 +1437,22 @@ export function createPricingHelpers({
     const contentLang = normalizeBookingContentLang(options?.contentLang || options?.lang || "en");
     const flatLang = normalizeBookingContentLang(options?.flatLang || options?.lang || "en");
     const sourceLang = normalizeBookingContentLang(options?.sourceLang || contentLang);
+    const flatMode = options?.flatMode === "localized" ? "localized" : "source";
     return input
       .map((component) => {
-        const description_i18n = normalizeLocalizedTextMap(
-          component?.description_i18n ?? component?.description,
-          contentLang
+        const descriptionField = normalizeStoredLocalizedTextField(
+          component?.description_i18n,
+          component?.description,
+          {
+            sourceLang,
+            flatLang,
+            fallbackLang: contentLang,
+            flatMode,
+            hydrateSourceIntoMap: options?.hydrateSourceIntoLocalizedMaps === true
+          }
         );
-        const description = resolveLocalizedText(description_i18n, flatLang, "", { sourceLang });
+        const description_i18n = descriptionField.map;
+        const description = descriptionField.text;
         const quantity = Math.max(1, safeInt(component?.quantity) || 1);
         const unitAmountCents = safeAmountCents(component?.unit_amount_cents);
         if (!description || !unitAmountCents) return null;
@@ -1476,7 +1494,11 @@ export function createPricingHelpers({
   }
 
   async function buildBookingOfferReadModel(rawOffer, preferredCurrency = baseCurrency, options = {}) {
-    const converted = await convertOfferForDisplay(rawOffer, preferredCurrency, options);
+    const converted = await convertOfferForDisplay(rawOffer, preferredCurrency, {
+      ...options,
+      flatMode: "localized",
+      hydrateSourceIntoLocalizedMaps: true
+    });
     const totals = computeBookingOfferTotals(converted);
     const visiblePricing = buildVisiblePricingProjection(converted);
     const quotationSummary = converted.quotation_summary || computeBookingOfferQuotationSummary(converted);

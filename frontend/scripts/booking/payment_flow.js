@@ -34,6 +34,13 @@ import {
 const PAYMENT_DOCUMENT_KIND_REQUEST = "PAYMENT_REQUEST";
 const PAYMENT_DOCUMENT_KIND_CONFIRMATION = "PAYMENT_CONFIRMATION";
 
+function englishPaymentTitle(kind, installmentNumber = 1) {
+  const normalizedKind = String(kind || "").trim().toUpperCase();
+  if (normalizedKind === "DEPOSIT") return "Deposit";
+  if (normalizedKind === "FINAL_BALANCE") return "Final payment";
+  return `Installment ${Math.max(1, Number(installmentNumber || 1))}`;
+}
+
 const PAYMENT_DOCUMENT_PANEL_CONFIG = Object.freeze({
   payment_confirmation_deposit: Object.freeze({
     items: Object.freeze([
@@ -248,13 +255,11 @@ export function createBookingPaymentFlowModule(ctx) {
     const explicit = String(payment?.label || "").trim();
     if (explicit) return explicit;
     const kind = paymentKind(payment);
-    if (kind === "DEPOSIT") return bookingT("booking.pricing.deposit", "Deposit");
-    if (kind === "FINAL_BALANCE") return bookingT("booking.pricing.final_payment", "Final payment");
     const installmentNumber = currentPaymentLines()
       .slice(0, index + 1)
       .filter((entry) => paymentKind(entry) === "INSTALLMENT")
       .length;
-    return bookingT("booking.pricing.installment_number", "Installment {count}", { count: String(installmentNumber || index + 1) });
+    return englishPaymentTitle(kind, installmentNumber || index + 1);
   }
 
   function buildAtpStaffOptions(selectedId = "") {

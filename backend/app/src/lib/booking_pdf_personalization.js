@@ -1,6 +1,5 @@
 import {
-  normalizeLocalizedTextMap,
-  resolveLocalizedText
+  normalizeStoredLocalizedTextField
 } from "../domain/booking_content_i18n.js";
 import { normalizeTourStyleLabels } from "../domain/tour_catalog_i18n.js";
 import { getBookingTravelPlanDestinations } from "./booking_persons.js";
@@ -100,21 +99,50 @@ function resolvePdfTextFieldEnabled(branch, scope, field, normalizedField) {
   return config.defaultChecked === true;
 }
 
-function normalizePdfTextField(value, mapValue, { flatLang = "en", sourceLang = "en" } = {}) {
-  const map = normalizeLocalizedTextMap(mapValue ?? value, sourceLang);
-  const text = resolveLocalizedText(map, flatLang, "", { sourceLang }) || null;
+function normalizePdfTextField(
+  value,
+  mapValue,
+  {
+    flatLang = "en",
+    sourceLang = "en",
+    flatMode = "source",
+    hydrateSourceIntoMaps = false
+  } = {}
+) {
+  const normalizedField = normalizeStoredLocalizedTextField(mapValue, value, {
+    sourceLang,
+    flatLang,
+    fallbackLang: sourceLang,
+    flatMode,
+    hydrateSourceIntoMap: hydrateSourceIntoMaps
+  });
+  const text = normalizeText(normalizedField.text) || null;
   return compactObject({
     text,
-    i18n: map
+    i18n: normalizedField.map
   });
 }
 
-function normalizePdfPersonalizationBranch(rawBranch, scope, { flatLang = "en", sourceLang = "en" } = {}) {
+function normalizePdfPersonalizationBranch(
+  rawBranch,
+  scope,
+  {
+    flatLang = "en",
+    sourceLang = "en",
+    flatMode = "source",
+    hydrateSourceIntoMaps = false
+  } = {}
+) {
   const branch = rawBranch && typeof rawBranch === "object" && !Array.isArray(rawBranch) ? rawBranch : {};
   const fieldConfigs = PDF_TEXT_FIELD_CONFIG?.[scope] || {};
   const normalizedBranch = {};
   for (const field of Object.keys(fieldConfigs)) {
-    const normalizedField = normalizePdfTextField(branch?.[field], branch?.[`${field}_i18n`], { flatLang, sourceLang });
+    const normalizedField = normalizePdfTextField(branch?.[field], branch?.[`${field}_i18n`], {
+      flatLang,
+      sourceLang,
+      flatMode,
+      hydrateSourceIntoMaps
+    });
     if (normalizedField) {
       normalizedBranch[field] = normalizedField.text;
       normalizedBranch[`${field}_i18n`] = normalizedField.i18n;
@@ -135,7 +163,15 @@ function normalizePdfPersonalizationBranch(rawBranch, scope, { flatLang = "en", 
   return compactObject(normalizedBranch);
 }
 
-export function normalizeBookingPdfPersonalization(value, { flatLang = "en", sourceLang = "en" } = {}) {
+export function normalizeBookingPdfPersonalization(
+  value,
+  {
+    flatLang = "en",
+    sourceLang = "en",
+    flatMode = "source",
+    hydrateSourceIntoMaps = false
+  } = {}
+) {
   const raw = value && typeof value === "object" && !Array.isArray(value) ? value : {};
   const normalizedRaw = {
     ...raw,
@@ -146,7 +182,12 @@ export function normalizeBookingPdfPersonalization(value, { flatLang = "en", sou
   return compactObject(
     Object.fromEntries(
       PDF_PERSONALIZATION_SCOPES
-        .map((scope) => [scope, normalizePdfPersonalizationBranch(normalizedRaw?.[scope], scope, { flatLang, sourceLang })])
+        .map((scope) => [scope, normalizePdfPersonalizationBranch(normalizedRaw?.[scope], scope, {
+          flatLang,
+          sourceLang,
+          flatMode,
+          hydrateSourceIntoMaps
+        })])
         .filter(([, branch]) => Boolean(branch))
     )
   ) || {};
@@ -183,9 +224,12 @@ export function resolveBookingPdfPersonalizationText(personalization, scope, fie
   });
   const branch = normalized?.[scope] && typeof normalized[scope] === "object" ? normalized[scope] : null;
   if (!branch) return "";
-  return resolveLocalizedText(branch?.[`${field}_i18n`] ?? branch?.[field], lang, "", {
-    sourceLang: options?.sourceLang || "en"
-  });
+  return normalizeStoredLocalizedTextField(branch?.[`${field}_i18n`], branch?.[field], {
+    sourceLang: options?.sourceLang || "en",
+    flatLang: lang,
+    fallbackLang: options?.sourceLang || "en",
+    flatMode: "localized"
+  }).text;
 }
 
 export function resolveBookingPdfPersonalizationFlag(personalization, scope, field, options = {}) {

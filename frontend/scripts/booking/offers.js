@@ -22,6 +22,14 @@ const OFFER_DETAIL_LEVEL_OPTIONS = Object.freeze([
 
 const OFFER_CATEGORIES = GENERATED_OFFER_CATEGORY_LIST.map((code) => ({ code }));
 
+function englishTripTotalLabel() {
+  return "Trip total";
+}
+
+function englishDayLabel(dayNumber) {
+  return `Day ${Math.max(1, Number(dayNumber || 1))}`;
+}
+
 export function createBookingOfferModule(ctx) {
   const {
     state,
@@ -406,7 +414,7 @@ export function createBookingOfferModule(ctx) {
       .map(([dayNumber, components], index) => aggregateLegacyOfferComponents(components, {
         id: "",
         day_number: dayNumber,
-        label: bookingT("booking.offer.day_number.day", "Day {day}", { day: dayNumber }),
+        label: englishDayLabel(dayNumber),
         currency: normalizeCurrencyCode(source.currency || state.booking?.preferred_currency || "USD"),
         notes: "",
         sort_order: index
@@ -418,7 +426,7 @@ export function createBookingOfferModule(ctx) {
     const sourceComponents = Array.isArray(source?.components) ? source.components : [];
     if (!sourceComponents.length) return null;
     return aggregateLegacyOfferComponents(sourceComponents, {
-      label: String(source?.trip_price_internal?.label || "").trim(),
+      label: String(source?.trip_price_internal?.label || "").trim() || englishTripTotalLabel(),
       currency: normalizeCurrencyCode(source.currency || state.booking?.preferred_currency || "USD"),
       notes: String(source?.trip_price_internal?.notes || "").trim()
     });
@@ -496,7 +504,7 @@ export function createBookingOfferModule(ctx) {
       ...(source.trip_price_internal && typeof source.trip_price_internal === "object"
         ? {
             trip_price_internal: {
-              label: String(source.trip_price_internal?.label || "").trim(),
+              label: String(source.trip_price_internal?.label || "").trim() || englishTripTotalLabel(),
               amount_cents: Math.max(0, Math.round(Number(source.trip_price_internal?.amount_cents || 0))),
               tax_rate_basis_points: Number.isFinite(Number(source.trip_price_internal?.tax_rate_basis_points))
                 ? Math.max(0, Math.round(Number(source.trip_price_internal.tax_rate_basis_points)))
@@ -513,7 +521,7 @@ export function createBookingOfferModule(ctx) {
         day_number: Number.isInteger(Number(dayPrice?.day_number)) && Number(dayPrice?.day_number) >= 1
           ? Number(dayPrice.day_number)
           : index + 1,
-        label: String(dayPrice?.label || "").trim(),
+        label: String(dayPrice?.label || "").trim() || englishDayLabel(dayPrice?.day_number || index + 1),
         amount_cents: Math.max(0, Math.round(Number(dayPrice?.amount_cents || 0))),
         tax_rate_basis_points: Number.isFinite(Number(dayPrice?.tax_rate_basis_points))
           ? Math.max(0, Math.round(Number(dayPrice.tax_rate_basis_points)))

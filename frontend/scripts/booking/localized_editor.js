@@ -192,7 +192,7 @@ export function renderLocalizedSplitField({
             ${showTranslateButton && translateEnabled ? `<button type="button" class="btn btn-ghost localized-editor__translate-btn"${translateData}>${escapeHtml(bookingT("booking.translation.update_language", "Update {language}", { language: targetOption.label }))}</button>` : ""}
           </div>
           ${localizedControl}
-          ${sameLanguage ? `<p class="micro localized-editor__hint">${escapeHtml(bookingT("booking.translation.not_needed_for_matching_languages", "ATP staff language matches customer language. No translation is needed."))}</p>` : ""}
+          ${sameLanguage ? `<p class="micro localized-editor__hint">${escapeHtml(bookingT("booking.translation.not_needed_for_matching_languages", "Master language matches customer language. No translation is needed."))}</p>` : ""}
         </div>
       </div>
     </div>

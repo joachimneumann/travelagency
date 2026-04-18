@@ -4,7 +4,8 @@ import { promptLanguageName } from "../../../../shared/generated/language_catalo
 import {
   DEFAULT_BOOKING_CONTENT_LANG,
   normalizeBookingContentLang,
-  normalizeLocalizedTextMap,
+  normalizeStoredLocalizedTextField,
+  normalizeStoredLocalizedTextMap,
   setLocalizedTextForLang
 } from "./booking_content_i18n.js";
 
@@ -65,26 +66,28 @@ function createFieldDescriptor({
   if (!enabled || !holder) return null;
   const normalizedSourceLang = normalizeBookingContentLang(sourceLang);
   const normalizedTargetLang = normalizeBookingContentLang(targetLang);
-  const map = normalizeLocalizedTextMap(holder?.[mapField] ?? holder?.[plainField], sourceLang);
+  const map = normalizeStoredLocalizedTextMap(holder?.[mapField], holder?.[plainField], normalizedSourceLang);
   const sourceText = normalizeText(map[normalizedSourceLang]);
   if (!sourceText) return null;
   return {
     key,
     sourceText,
     targetText() {
-      const currentMap = normalizeLocalizedTextMap(holder?.[mapField] ?? holder?.[plainField], sourceLang);
+      const currentMap = normalizeStoredLocalizedTextMap(holder?.[mapField], holder?.[plainField], normalizedSourceLang);
       return normalizeText(currentMap[normalizedTargetLang]);
     },
     apply(nextText) {
       const updatedMap = setLocalizedTextForLang(
-        normalizeLocalizedTextMap(holder?.[mapField] ?? holder?.[plainField], sourceLang),
+        normalizeStoredLocalizedTextMap(holder?.[mapField], holder?.[plainField], normalizedSourceLang),
         nextText,
         targetLang,
-        { fallbackLang: sourceLang }
+        { fallbackLang: normalizedSourceLang }
       );
-      holder[mapField] = updatedMap;
-      const resolved = normalizeText(updatedMap[normalizedTargetLang]);
-      holder[plainField] = resolved || emptyValue;
+      const normalizedField = normalizeStoredLocalizedTextField(updatedMap, "", {
+        sourceLang: normalizedSourceLang
+      });
+      holder[mapField] = normalizedField.storedMap;
+      holder[plainField] = normalizedField.sourceText || emptyValue;
     }
   };
 }

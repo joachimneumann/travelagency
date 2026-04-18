@@ -3325,9 +3325,9 @@
     "updated_at": "2026-03-30T23:51:31.875Z"
   },
   "booking.translation.disabled.source_language": {
-    "source_hash": "9a14c23e160152c24336fff993269fc1b6aa5003eff1829bb8a3f7cf37a70f25",
+    "source_hash": "5abc58c126979812b5079918213f362ed03707f1454164dff08c0e95918538b3",
     "origin": "machine",
-    "updated_at": "2026-03-30T23:51:31.875Z"
+    "updated_at": "2026-04-18T13:28:19.564Z"
   },
   "booking.translation.error": {
     "source_hash": "17299c73c63d51ea99288f64cf1700b970cbe1543bf38e0285c2c53b1a3b8220",
@@ -3395,9 +3395,9 @@
     "updated_at": "2026-03-30T23:51:31.875Z"
   },
   "booking.translation.source_description": {
-    "source_hash": "328b4ee46d1f57755ff5a22c0c0e615f1783994fc82c65865b50f7822bda7c46",
+    "source_hash": "d336cefe63725e4e9dc6f62cfa146fc880eb71b2320234fd763e6c319d90aea9",
     "origin": "machine",
-    "updated_at": "2026-03-30T23:51:31.875Z"
+    "updated_at": "2026-04-18T13:28:19.564Z"
   },
   "booking.translation.stale_description": {
     "source_hash": "4860de4dc144b27591409812fe169e6bf6f07a4163102f23f5460ec9a20222a2",
@@ -4924,15 +4924,15 @@
     "origin": "machine",
     "updated_at": "2026-03-30T23:51:31.875Z"
   },
-  "tour.status.removing_picture": {
-    "source_hash": "5c2ad8aacd15c0b5d961927fdfb8694aee8fb0de07bbb25599fb6bfe736717ba",
-    "origin": "manual",
-    "updated_at": "2026-04-18T00:00:00.000Z"
-  },
   "tour.status.read_only": {
     "source_hash": "14284bb92c375210ea5b39bf167581fa882bce6d00c844fadf4c18ffa7ac5013",
     "origin": "machine",
     "updated_at": "2026-03-30T23:51:31.875Z"
+  },
+  "tour.status.removing_picture": {
+    "source_hash": "5c2ad8aacd15c0b5d961927fdfb8694aee8fb0de07bbb25599fb6bfe736717ba",
+    "origin": "manual",
+    "updated_at": "2026-04-18T00:00:00.000Z"
   },
   "tour.status.required": {
     "source_hash": "91c4151cbab13cd76517ef9b9722f33d47a79a4f784706b5e8a2495e44260544",

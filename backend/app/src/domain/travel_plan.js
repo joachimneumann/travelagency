@@ -8,7 +8,7 @@ import { normalizeTourDestinationCode } from "./tour_catalog_i18n.js";
 import { normalizeTravelPlanTranslationMeta } from "./booking_translation.js";
 import {
   normalizeBookingContentLang,
-  normalizeLocalizedTextMap,
+  normalizeStoredLocalizedTextField,
   resolveLocalizedText
 } from "./booking_content_i18n.js";
 
@@ -249,11 +249,26 @@ function normalizeItemTiming(rawItem) {
   };
 }
 
+function normalizeTravelPlanLocalizedField(mapValue, plainValue, options = {}) {
+  const sourceLang = normalizeBookingContentLang(options?.sourceLang || "en");
+  const flatLang = normalizeBookingContentLang(options?.flatLang || sourceLang);
+  const contentLang = normalizeBookingContentLang(options?.contentLang || sourceLang);
+  const flatMode = options?.flatMode === "localized" ? "localized" : "source";
+  return normalizeStoredLocalizedTextField(mapValue, plainValue, {
+    sourceLang,
+    flatLang,
+    fallbackLang: contentLang,
+    flatMode,
+    hydrateSourceIntoMap: options?.hydrateSourceIntoLocalizedMaps === true
+  });
+}
+
 function normalizeTravelPlanDays(days, options = {}) {
   const sourceDays = Array.isArray(days) ? days : [];
   const contentLang = normalizeBookingContentLang(options?.contentLang || options?.lang || "en");
   const flatLang = normalizeBookingContentLang(options?.flatLang || options?.lang || "en");
   const sourceLang = normalizeBookingContentLang(options?.sourceLang || contentLang);
+  const flatMode = options?.flatMode === "localized" ? "localized" : "source";
   return [...sourceDays]
     .map((day, index) => ({
       raw: day && typeof day === "object" && !Array.isArray(day) ? day : {},
@@ -273,24 +288,48 @@ function normalizeTravelPlanDays(days, options = {}) {
       ).map((item, itemIndex) => {
         const rawItem = item && typeof item === "object" && !Array.isArray(item) ? item : {};
         const timing = normalizeItemTiming(rawItem);
-        const time_label_i18n = normalizeLocalizedTextMap(rawItem?.time_label_i18n ?? timing.time_label, contentLang);
-        const title_i18n = normalizeLocalizedTextMap(rawItem?.title_i18n ?? rawItem?.title, contentLang);
-        const details_i18n = normalizeLocalizedTextMap(rawItem?.details_i18n ?? rawItem?.details, contentLang);
-        const location_i18n = normalizeLocalizedTextMap(rawItem?.location_i18n ?? rawItem?.location, contentLang);
+        const timeLabelField = normalizeTravelPlanLocalizedField(rawItem?.time_label_i18n, timing.time_label, {
+          contentLang,
+          flatLang,
+          sourceLang,
+          flatMode,
+          hydrateSourceIntoLocalizedMaps: options?.hydrateSourceIntoLocalizedMaps === true
+        });
+        const titleField = normalizeTravelPlanLocalizedField(rawItem?.title_i18n, rawItem?.title, {
+          contentLang,
+          flatLang,
+          sourceLang,
+          flatMode,
+          hydrateSourceIntoLocalizedMaps: options?.hydrateSourceIntoLocalizedMaps === true
+        });
+        const detailsField = normalizeTravelPlanLocalizedField(rawItem?.details_i18n, rawItem?.details, {
+          contentLang,
+          flatLang,
+          sourceLang,
+          flatMode,
+          hydrateSourceIntoLocalizedMaps: options?.hydrateSourceIntoLocalizedMaps === true
+        });
+        const locationField = normalizeTravelPlanLocalizedField(rawItem?.location_i18n, rawItem?.location, {
+          contentLang,
+          flatLang,
+          sourceLang,
+          flatMode,
+          hydrateSourceIntoLocalizedMaps: options?.hydrateSourceIntoLocalizedMaps === true
+        });
         return {
           id: normalizeText(rawItem.id) || `travel_plan_service_${dayIndex + 1}_${itemIndex + 1}`,
           timing_kind: timing.timing_kind,
-          time_label: timing.timing_kind === "label" ? (resolveLocalizedText(time_label_i18n, flatLang, "", { sourceLang }) || null) : null,
-          time_label_i18n,
+          time_label: timing.timing_kind === "label" ? (timeLabelField.text || null) : null,
+          time_label_i18n: timeLabelField.map,
           time_point: timing.time_point,
           kind: normalizeItemKind(rawItem.kind),
-          title: resolveLocalizedText(title_i18n, flatLang, "", { sourceLang }),
-          title_i18n,
-          details: resolveLocalizedText(details_i18n, flatLang, "", { sourceLang }) || null,
-          details_i18n,
+          title: titleField.text,
+          title_i18n: titleField.map,
+          details: detailsField.text || null,
+          details_i18n: detailsField.map,
           image_subtitle: normalizeOptionalText(rawItem.image_subtitle) || null,
-          location: resolveLocalizedText(location_i18n, flatLang, "", { sourceLang }) || null,
-          location_i18n,
+          location: locationField.text || null,
+          location_i18n: locationField.map,
           start_time: timing.start_time,
           end_time: timing.end_time,
           image: normalizeTravelPlanServiceImage(rawItem.image ?? rawItem.images, dayIndex, itemIndex),
@@ -298,12 +337,31 @@ function normalizeTravelPlanDays(days, options = {}) {
         };
       });
 
-      const title_i18n = normalizeLocalizedTextMap(day?.title_i18n ?? day?.title, contentLang);
-      const overnight_location_i18n = normalizeLocalizedTextMap(
-        day?.overnight_location_i18n ?? day?.overnight_location,
-        contentLang
+      const titleField = normalizeTravelPlanLocalizedField(day?.title_i18n, day?.title, {
+        contentLang,
+        flatLang,
+        sourceLang,
+        flatMode,
+        hydrateSourceIntoLocalizedMaps: options?.hydrateSourceIntoLocalizedMaps === true
+      });
+      const overnightLocationField = normalizeTravelPlanLocalizedField(
+        day?.overnight_location_i18n,
+        day?.overnight_location,
+        {
+          contentLang,
+          flatLang,
+          sourceLang,
+          flatMode,
+          hydrateSourceIntoLocalizedMaps: options?.hydrateSourceIntoLocalizedMaps === true
+        }
       );
-      const notes_i18n = normalizeLocalizedTextMap(day?.notes_i18n ?? day?.notes, contentLang);
+      const notesField = normalizeTravelPlanLocalizedField(day?.notes_i18n, day?.notes, {
+        contentLang,
+        flatLang,
+        sourceLang,
+        flatMode,
+        hydrateSourceIntoLocalizedMaps: options?.hydrateSourceIntoLocalizedMaps === true
+      });
       const normalizedDate = normalizeOptionalText(day.date);
 
       return {
@@ -311,13 +369,13 @@ function normalizeTravelPlanDays(days, options = {}) {
         day_number: dayIndex + 1,
         date: normalizedDate,
         date_string: normalizedDate ? null : normalizeOptionalText(day?.date_string),
-        title: resolveLocalizedText(title_i18n, flatLang, "", { sourceLang }),
-        title_i18n,
-        overnight_location: resolveLocalizedText(overnight_location_i18n, flatLang, "", { sourceLang }) || null,
-        overnight_location_i18n,
+        title: titleField.text,
+        title_i18n: titleField.map,
+        overnight_location: overnightLocationField.text || null,
+        overnight_location_i18n: overnightLocationField.map,
         services,
-        notes: resolveLocalizedText(notes_i18n, flatLang, "", { sourceLang }) || null,
-        notes_i18n,
+        notes: notesField.text || null,
+        notes_i18n: notesField.map,
         copied_from: normalizeTravelPlanDayCopiedFrom(day?.copied_from)
       };
     });
@@ -332,7 +390,11 @@ export function createTravelPlanHelpers() {
     const source = rawTravelPlan && typeof rawTravelPlan === "object" && !Array.isArray(rawTravelPlan)
       ? rawTravelPlan
       : {};
-    const days = normalizeTravelPlanDays(source.days, options);
+    const flatMode = options?.flatMode === "localized" ? "localized" : "source";
+    const days = normalizeTravelPlanDays(source.days, {
+      ...options,
+      flatMode
+    });
 
     return normalizeTravelPlanTranslationMeta({
       destinations: normalizeCountryCodes(source.destinations),
@@ -431,7 +493,12 @@ export function createTravelPlanHelpers() {
   }
 
   function buildBookingTravelPlanReadModel(rawTravelPlan, offer = null, options = {}) {
-    return normalizeBookingTravelPlan(rawTravelPlan, offer, { ...options, strictReferences: false });
+    return normalizeBookingTravelPlan(rawTravelPlan, offer, {
+      ...options,
+      strictReferences: false,
+      flatMode: "localized",
+      hydrateSourceIntoLocalizedMaps: true
+    });
   }
 
   return {

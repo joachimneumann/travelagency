@@ -10,7 +10,8 @@ import {
 import { enumValueSetFor } from "../../lib/generated_catalogs.js";
 import { normalizeBookingPdfPersonalization } from "../../lib/booking_pdf_personalization.js";
 import {
-  normalizeBookingContentLang
+  normalizeBookingContentLang,
+  normalizeBookingSourceLang
 } from "../../domain/booking_content_i18n.js";
 
 const COUNTRY_CODE_SET = enumValueSetFor("CountryCode");
@@ -231,15 +232,15 @@ export function createBookingCoreHandlers(deps) {
     const nextPdfPersonalization = payload?.pdf_personalization !== undefined
       ? normalizeBookingPdfPersonalization(payload.pdf_personalization, {
           flatLang: preferredCustomerLang,
-          sourceLang: preferredCustomerLang
+          sourceLang: "en"
         })
       : normalizeBookingPdfPersonalization(booking?.pdf_personalization, {
           flatLang: preferredCustomerLang,
-          sourceLang: preferredCustomerLang
+          sourceLang: "en"
         });
     const currentPdfPersonalization = normalizeBookingPdfPersonalization(booking?.pdf_personalization, {
       flatLang: preferredCustomerLang,
-      sourceLang: preferredCustomerLang
+      sourceLang: "en"
     });
 
     if (
@@ -458,7 +459,7 @@ export function createBookingCoreHandlers(deps) {
       return;
     }
 
-    const sourceLang = normalizeBookingContentLang(payload.source_lang);
+    const sourceLang = normalizeBookingSourceLang(payload.source_lang);
     const targetLang = normalizeBookingContentLang(payload.target_lang);
     const entries = translationEntriesToObject(payload.entries);
     if (!Object.keys(entries).length) {
