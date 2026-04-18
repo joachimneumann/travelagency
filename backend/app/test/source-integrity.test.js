@@ -3950,6 +3950,22 @@ test("travel plan templates are wired through backend navigation, routes, and bo
   assert.match(domainSource, /enumValueSetFor\("CountryCode"\)[\s\S]*normalizeText\(value\)\.toUpperCase\(\)[\s\S]*COUNTRY_CODE_SET\.has\(value\)/, "Template destination normalization should store CountryCode values instead of tour destination slugs");
 });
 
+test("travel plan library cards keep media separate from copy and actions", async () => {
+  const travelPlanStylesPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "pages", "backend-booking-travel-plan.css");
+  const travelPlanStyles = await readFile(travelPlanStylesPath, "utf8");
+
+  assert.match(
+    travelPlanStyles,
+    /\.travel-plan-library-card \{[\s\S]*grid-template-columns: 140px minmax\(0, 1fr\);[\s\S]*grid-template-areas:\s*"media content"[\s\S]*"media actions";/,
+    "Travel-plan library cards should keep thumbnails in a dedicated column while content and actions occupy separate grid areas"
+  );
+  assert.match(
+    travelPlanStyles,
+    /\.travel-plan-library-card__content \{[\s\S]*overflow: hidden;[\s\S]*\.travel-plan-library-card__content h3 \{[\s\S]*overflow-wrap: anywhere;[\s\S]*\.travel-plan-library-card__content p \{[\s\S]*overflow-wrap: anywhere;/,
+    "Travel-plan library copy should wrap inside its own column instead of spilling across the thumbnail"
+  );
+});
+
 test("contract tests use an isolated temp store instead of the runtime store.json", async () => {
   const contractTestPath = path.resolve(__dirname, "mobile-contract.test.js");
   const source = await readFile(contractTestPath, "utf8");
