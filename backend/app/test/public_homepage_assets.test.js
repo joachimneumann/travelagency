@@ -135,6 +135,8 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
   assert.match(homepageCopyGlobal, /"en": "Private holidays in Vietnam"/);
   assert.match(homepageCopyGlobal, /"de": "Privaturlaub in Vietnam"/);
   assert.match(homepageInitialBundle, /function createFrontendToursController/);
+  assert.doesNotMatch(homepageInitialBundle, /function frontendT\(/);
+  assert.match(homepageInitialBundle, /const frontendT = \(id, fallback, vars\) => \{/);
   assert.match(homepageInitialBundle, /import\("\/frontend\/scripts\/main_booking_form_options\.js"\)/);
   assert.match(homepageInitialBundle, /import\("\/frontend\/scripts\/shared\/auth\.js"\)/);
   assert.match(homepageHtml, />Old title</);

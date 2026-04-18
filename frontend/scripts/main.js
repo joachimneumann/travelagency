@@ -7,7 +7,7 @@ import { normalizeText } from "../../shared/js/text.js";
 import { logBrowserConsoleError } from "./shared/api.js";
 import { createFrontendToursController } from "./main_tours.js";
 
-function frontendT(id, fallback, vars) {
+const frontendT = (id, fallback, vars) => {
   if (typeof window.frontendT === "function") {
     return window.frontendT(id, fallback, vars);
   }
@@ -17,7 +17,7 @@ function frontendT(id, fallback, vars) {
     const normalizedKey = String(key || "").trim();
     return normalizedKey in vars ? String(vars[normalizedKey]) : match;
   });
-}
+};
 
 async function waitForFrontendI18n() {
   await (window.__FRONTEND_I18N_PROMISE || Promise.resolve());
