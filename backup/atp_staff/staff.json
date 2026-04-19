@@ -2,7 +2,6 @@
   "staff": {
     "joachim": {
       "name": "Joachim Neumann",
-      "full_name": "Joachim Neumann",
       "position": {
         "ar": "مؤسس",
         "da": "Grundlægger",
@@ -79,7 +78,6 @@
     },
     "sang": {
       "name": "Ngọc Sáng Dương",
-      "full_name": "Dương Ngọc Sáng",
       "position": {
         "ar": "المؤسس المشارك والمدير العام",
         "da": "Medstifter og generaldirektør",
@@ -154,7 +152,6 @@
     },
     "ngoc": {
       "name": "Văn Ngọc Đào",
-      "full_name": "Đào Văn Ngọc",
       "position": {
         "ar": "المؤسس المشارك وقائد الجولة",
         "da": "Medstifter og rejseleder",
@@ -229,7 +226,6 @@
     },
     "xuan": {
       "name": "Thị Thanh Xuân Đỗ",
-      "full_name": "Đỗ Thị Thanh Xuân",
       "position": {
         "ar": "مدير المبيعات وأخصائي السفر",
         "da": "Salgs- og rejsespecialist",
@@ -304,7 +300,6 @@
     },
     "phuong": {
       "name": "Phương Lê Thị",
-      "full_name": "Phương Lê Thị",
       "position": {
         "ar": "ممثل – كاليدونيا الجديدة",
         "da": "Repræsentant – Ny Kaledonien",
@@ -377,7 +372,6 @@
     },
     "sang2": {
       "name": "sang2",
-      "full_name": "Dương Ngọc Sang",
       "position": {
         "ar": "مساعد السفر",
         "da": "Rejseassistent",
@@ -447,7 +441,6 @@
     },
     "ngoan": {
       "name": "Thị Ngoan Nguyễn",
-      "full_name": "Nguyễn Thị Ngoan",
       "position": {
         "en": "Travel Consultant"
       },
@@ -501,7 +494,6 @@
     },
     "thaoly": {
       "name": "Thị Thảo Ly Phan",
-      "full_name": "Phan Thị Thảo Ly",
       "position": {
         "ar": "أخصائي السفر",
         "da": "Rejsespecialist",
@@ -571,7 +563,6 @@
     },
     "van": {
       "name": "Thị Vân Nguyễn",
-      "full_name": "Nguyễn Thị Vân",
       "position": {
         "ar": "مؤسس",
         "da": "Grundlægger",

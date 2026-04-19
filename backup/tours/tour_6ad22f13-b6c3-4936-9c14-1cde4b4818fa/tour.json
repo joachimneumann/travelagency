@@ -53,5 +53,8 @@
   "priority": 50,
   "image": "/public/v1/tour-images/tour_6ad22f13-b6c3-4936-9c14-1cde4b4818fa/tour_6ad22f13-b6c3-4936-9c14-1cde4b4818fa.webp",
   "created_at": "2026-04-13T09:16:46.974Z",
-  "updated_at": "2026-04-14T10:07:02.900Z"
+  "updated_at": "2026-04-14T10:07:02.900Z",
+  "pictures": [
+    "/public/v1/tour-images/tour_6ad22f13-b6c3-4936-9c14-1cde4b4818fa/tour_6ad22f13-b6c3-4936-9c14-1cde4b4818fa.webp"
+  ]
 }

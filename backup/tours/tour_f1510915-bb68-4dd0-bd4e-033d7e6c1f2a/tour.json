@@ -20,8 +20,8 @@
     "ms": "UJIAN Pelarian Kesejahteraan Mekong Kemboja"
   },
   "styles": [
-    "wellness",
-    "luxury"
+    "luxury",
+    "wellness"
   ],
   "priority": 0,
   "seasonality_start_month": "nov",
@@ -50,5 +50,8 @@
     "ms": "Perjalanan Kemboja yang direka sekitar hari-hari bandar yang lebih lembut dan pemulihan di tepi sungai, menggabungkan penginapan butik dengan masa spa dan lawatan budaya yang tidak tergesa-gesa."
   },
   "image": "/public/v1/tour-images/tour_f1510915-bb68-4dd0-bd4e-033d7e6c1f2a/tour_f1510915-bb68-4dd0-bd4e-033d7e6c1f2a.webp",
-  "updated_at": "2026-03-23T06:33:50Z"
+  "updated_at": "2026-03-23T06:33:50Z",
+  "pictures": [
+    "/public/v1/tour-images/tour_f1510915-bb68-4dd0-bd4e-033d7e6c1f2a/tour_f1510915-bb68-4dd0-bd4e-033d7e6c1f2a.webp"
+  ]
 }

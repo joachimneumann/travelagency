@@ -50,5 +50,8 @@
     "no": "Et kort Laos-tilfluktssted bygget for restitusjon i stedet for kjørelengde, med en boutique-elvebase, utvalgte utflukter og spa-ledet nedetid."
   },
   "image": "/public/v1/tour-images/tour_5e82480b-9f5f-4975-af53-1a85c72e0dea/tour_5e82480b-9f5f-4975-af53-1a85c72e0dea.webp",
-  "updated_at": "2026-04-13T04:05:12.685Z"
+  "updated_at": "2026-04-13T04:05:12.685Z",
+  "pictures": [
+    "/public/v1/tour-images/tour_5e82480b-9f5f-4975-af53-1a85c72e0dea/tour_5e82480b-9f5f-4975-af53-1a85c72e0dea.webp"
+  ]
 }
