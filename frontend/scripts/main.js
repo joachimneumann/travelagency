@@ -401,8 +401,11 @@ async function init() {
   setupFooterCompanyProfile();
   setupBackendLogin();
   setupHiddenBackendQuickLogin();
-  placeBackendLogin(false);
+  placeBackendLogin(shouldLoadWebsiteAuthStatusOnInit());
   revealBackendLogin();
+  if (shouldLoadWebsiteAuthStatusOnInit()) {
+    void loadWebsiteAuthStatus();
+  }
   setupModal();
   setupFormNavigation();
   setupLiveValidationReset();
@@ -925,6 +928,10 @@ function setupBackendLogin() {
     });
     els.backendLoginBtn.dataset.authBound = "1";
   }
+}
+
+function shouldLoadWebsiteAuthStatusOnInit() {
+  return window.location.pathname === "/app-home.html";
 }
 
 function revealBackendLogin() {

@@ -3723,8 +3723,8 @@ test("frontend language switching updates the homepage in place instead of forci
   );
   assert.match(
     mainSource,
-    /async function init\(\)[\s\S]*placeBackendLogin\(false\);[\s\S]*revealBackendLogin\(\);[\s\S]*setupTourSectionImagePrewarm\(\)/,
-    "Homepage init should reveal the backend button without auto-loading auth status and should wait for the tours section before prewarming more tour images"
+    /async function init\(\)[\s\S]*placeBackendLogin\(shouldLoadWebsiteAuthStatusOnInit\(\)\);[\s\S]*revealBackendLogin\(\);[\s\S]*if \(shouldLoadWebsiteAuthStatusOnInit\(\)\) \{[\s\S]*void loadWebsiteAuthStatus\(\);[\s\S]*setupTourSectionImagePrewarm\(\)/,
+    "Homepage init should eagerly resolve auth only for the authenticated app-home route and should wait for the tours section before prewarming more tour images"
   );
   assert.match(
     mainSource,
@@ -3735,6 +3735,11 @@ test("frontend language switching updates the homepage in place instead of forci
     mainSource,
     /function setupBackendLogin\(\) \{[\s\S]*pointerenter[\s\S]*focus[\s\S]*touchstart[\s\S]*if \(!state\.authStatusKnown\) \{[\s\S]*await loadWebsiteAuthStatus\(\);[\s\S]*navigateToBackendDestination\(\);/,
     "Homepage backend login should load auth status only after explicit user interaction"
+  );
+  assert.match(
+    mainSource,
+    /function shouldLoadWebsiteAuthStatusOnInit\(\) \{[\s\S]*window\.location\.pathname === "\/app-home\.html"/,
+    "Homepage should only auto-load website auth status on the authenticated app-home route"
   );
   assert.doesNotMatch(
     mainSource,

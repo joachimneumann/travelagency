@@ -226,15 +226,6 @@ PDF generation in the payment flow:
 Do not re-implement the PDF generation in each step of the payment flow. Instead re-use javascript, html and CSS code.
 Test: CSS change: visible in all PDF texts?
 
-# Update page after payment plan change
-When the payment plan changes, inject or remove the corresponding sections into booking.html withour the user needing to refresh the page.
-
-# Deployment 
-Button backend access
-When logged in: show web page anf backend
-When not logged in: do not show web page, show placeholder
-Production keycloak
-
 # Make a review
 Conduct a comprehensive code review with a focus on payment flow and snapshots when a payment has been received. Where can the ATP staff see this snapshot?
 
