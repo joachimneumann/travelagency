@@ -31,6 +31,17 @@ function normalizeStringArray(value) {
   return Array.from(new Set(value.map((entry) => String(entry || "").trim()).filter(Boolean)));
 }
 
+function normalizeDocumentPictureRefs(document) {
+  return Array.from(new Set(
+    [
+      ...(Array.isArray(document?.document_picture_refs) ? document.document_picture_refs : []),
+      document?.document_picture_ref
+    ]
+      .map((entry) => String(entry || "").trim())
+      .filter(Boolean)
+  ));
+}
+
 function normalizePreferenceInput(value) {
   if (Array.isArray(value)) return normalizeStringArray(value);
   const normalized = String(value || "").trim();
@@ -89,11 +100,13 @@ function resolveTravelerNumber(booking, personId) {
 function buildPublicDocumentInput(document, personId, documentIndex) {
   const documentType = String(document?.document_type || "").trim().toLowerCase();
   if (!PUBLIC_TRAVELER_DOCUMENT_TYPES.has(documentType)) return null;
+  const documentPictureRefs = normalizeDocumentPictureRefs(document);
   return {
     id: String(document?.id || `${personId}_document_${documentIndex + 1}`).trim(),
     document_type: documentType,
     holder_name: String(document?.holder_name || "").trim(),
     document_number: String(document?.document_number || "").trim(),
+    ...(documentPictureRefs.length ? { document_picture_refs: documentPictureRefs } : {}),
     issuing_country: String(document?.issuing_country || "").trim().toUpperCase(),
     issued_on: String(document?.issued_on || "").trim(),
     no_expiration_date: document?.no_expiration_date === true,
@@ -165,11 +178,13 @@ function buildPublicVisiblePerson(bookingId, person) {
         document_type: document.document_type,
         ...(String(document.holder_name || "").trim() ? { holder_name: document.holder_name } : {}),
         ...(String(document.document_number || "").trim() ? { document_number: document.document_number } : {}),
+        ...(Array.isArray(document.document_picture_refs) && document.document_picture_refs.length
+          ? { document_picture_refs: document.document_picture_refs }
+          : {}),
         ...(String(document.issuing_country || "").trim() ? { issuing_country: document.issuing_country } : {}),
         ...(String(document.issued_on || "").trim() ? { issued_on: document.issued_on } : {}),
         ...(document.no_expiration_date === true ? { no_expiration_date: true } : {}),
-        ...(String(document.expires_on || "").trim() ? { expires_on: document.expires_on } : {}),
-        ...(String(document.document_picture_ref || "").trim() ? { document_picture_ref: document.document_picture_ref } : {})
+        ...(String(document.expires_on || "").trim() ? { expires_on: document.expires_on } : {})
       }))
     } : {})
   };
@@ -254,15 +269,19 @@ function buildStoredPersonOverwrite(existingPerson, normalizedPerson) {
     ? normalizedPerson.documents.map((document) => {
         const normalizedDocumentId = String(document?.id || "").trim();
         const normalizedDocumentType = String(document?.document_type || "").trim().toLowerCase();
-        const existingDocument = existingDocuments.find((candidate) => (
+      const existingDocument = existingDocuments.find((candidate) => (
           (normalizedDocumentId && String(candidate?.id || "").trim() === normalizedDocumentId)
           || (normalizedDocumentType && String(candidate?.document_type || "").trim().toLowerCase() === normalizedDocumentType)
         )) || null;
+        const documentPictureRefs = normalizeDocumentPictureRefs(document);
+        const existingDocumentPictureRefs = normalizeDocumentPictureRefs(existingDocument);
         return {
           ...document,
-          ...(String(existingDocument?.document_picture_ref || "").trim()
-            ? { document_picture_ref: String(existingDocument.document_picture_ref).trim() }
-            : {}),
+          ...(documentPictureRefs.length
+            ? { document_picture_refs: documentPictureRefs }
+            : existingDocumentPictureRefs.length
+              ? { document_picture_refs: existingDocumentPictureRefs }
+              : {}),
           created_at: String(existingDocument?.created_at || document?.created_at || "").trim() || document.created_at
         };
       })
@@ -339,11 +358,15 @@ export function createBookingTravelerDetailsHandlers(deps) {
     const nextDocuments = documents.map((document, index) => {
       if (String(document?.document_type || "").trim().toLowerCase() !== normalizedDocumentType) return document;
       found = true;
+      const documentPictureRefs = Array.from(new Set([
+        ...normalizeDocumentPictureRefs(document),
+        pictureRef
+      ]));
       return {
         ...document,
         id: String(document?.id || `${personId}_${normalizedDocumentType}_${index + 1}`).trim(),
         document_type: normalizedDocumentType,
-        document_picture_ref: pictureRef,
+        document_picture_refs: documentPictureRefs,
         created_at: String(document?.created_at || "").trim() || timestamp,
         updated_at: timestamp
       };
@@ -352,7 +375,7 @@ export function createBookingTravelerDetailsHandlers(deps) {
       nextDocuments.push({
         id: `${personId}_${normalizedDocumentType}`,
         document_type: normalizedDocumentType,
-        document_picture_ref: pictureRef,
+        document_picture_refs: [pictureRef],
         created_at: timestamp,
         updated_at: timestamp
       });

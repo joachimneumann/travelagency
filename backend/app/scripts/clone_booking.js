@@ -245,7 +245,12 @@ function collectBookingArtifactPaths(booking, paymentDocuments = []) {
   for (const person of Array.isArray(booking?.persons) ? booking.persons : []) {
     addPublicPath(person?.photo_ref, "/public/v1/booking-person-photos/", bookingPersonPhotoPaths);
     for (const document of Array.isArray(person?.documents) ? person.documents : []) {
-      addPublicPath(document?.document_picture_ref, "/public/v1/booking-person-photos/", bookingPersonPhotoPaths);
+      const pictureRefs = Array.isArray(document?.document_picture_refs)
+        ? document.document_picture_refs
+        : [document?.document_picture_ref];
+      for (const pictureRef of pictureRefs) {
+        addPublicPath(pictureRef, "/public/v1/booking-person-photos/", bookingPersonPhotoPaths);
+      }
     }
   }
 

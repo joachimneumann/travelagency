@@ -504,6 +504,31 @@ export function createBookingPersonsModule(ctx) {
       : bookingT("booking.passport", "Passport");
   }
 
+  function normalizeDocumentPictureRefs(document) {
+    return Array.from(new Set(
+      [
+        ...(Array.isArray(document?.document_picture_refs) ? document.document_picture_refs : []),
+        document?.document_picture_ref
+      ]
+        .map((value) => normalizeText(value))
+        .filter(Boolean)
+    ));
+  }
+
+  function renderPersonDocumentPicturePreview(documentType, pictureRefs, personLabel) {
+    if (!pictureRefs.length) {
+      return `<span class="micro booking-person-modal__document-picture-empty">${escapeHtml(
+        bookingT("booking.no_document_image", "No document image uploaded.")
+      )}</span>`;
+    }
+    return `<div class="booking-person-modal__document-picture-gallery">${pictureRefs.map((pictureRef, index) => `
+      <img
+        src="${escapeHtml(resolvePersonPhotoSrc(pictureRef))}"
+        alt="${escapeHtml(`${personLabel} ${documentTypeLabel(documentType)} ${index + 1}`)}"
+      />
+    `).join("")}</div>`;
+  }
+
   function personSupportsNationalId(draft) {
     return normalizeText(draft?.nationality).toUpperCase() === VIETNAM_COUNTRY_CODE;
   }
@@ -519,16 +544,14 @@ export function createBookingPersonsModule(ctx) {
       return {
         uploadButton: document.getElementById("booking_person_modal_national_id_picture_upload_btn"),
         input: document.getElementById("booking_person_modal_national_id_picture_input"),
-        previewImage: document.getElementById("booking_person_modal_national_id_picture_preview"),
-        emptyNode: document.getElementById("booking_person_modal_national_id_picture_empty"),
+        previewNode: document.getElementById("booking_person_modal_national_id_picture_preview"),
         statusNode: document.getElementById("booking_person_modal_national_id_picture_status")
       };
     }
     return {
       uploadButton: document.getElementById("booking_person_modal_passport_picture_upload_btn"),
       input: document.getElementById("booking_person_modal_passport_picture_input"),
-      previewImage: document.getElementById("booking_person_modal_passport_picture_preview"),
-      emptyNode: document.getElementById("booking_person_modal_passport_picture_empty"),
+      previewNode: document.getElementById("booking_person_modal_passport_picture_preview"),
       statusNode: document.getElementById("booking_person_modal_passport_picture_status")
     };
   }
@@ -1399,23 +1422,12 @@ export function createBookingPersonsModule(ctx) {
       : "";
 
     ["passport", "national_id"].forEach((documentType) => {
-      const { uploadButton, input, previewImage, emptyNode, statusNode } = getPersonDocumentPictureElements(documentType);
+      const { uploadButton, input, previewNode, statusNode } = getPersonDocumentPictureElements(documentType);
       const document = getPersonDocument(draft, documentType) || normalizePersonDocumentDraft({}, documentType);
-      const pictureRef = normalizeText(document.document_picture_ref);
+      const pictureRefs = normalizeDocumentPictureRefs(document);
 
-      if (previewImage instanceof HTMLImageElement) {
-        if (pictureRef) {
-          previewImage.src = resolvePersonPhotoSrc(pictureRef);
-          previewImage.alt = `${personLabel} ${documentTypeLabel(documentType)}`;
-        } else {
-          previewImage.removeAttribute("src");
-          previewImage.alt = "";
-        }
-        previewImage.hidden = !pictureRef;
-      }
-
-      if (emptyNode instanceof HTMLElement) {
-        emptyNode.hidden = Boolean(pictureRef);
+      if (previewNode instanceof HTMLElement) {
+        previewNode.innerHTML = renderPersonDocumentPicturePreview(documentType, pictureRefs, personLabel);
       }
 
       if (uploadButton instanceof HTMLButtonElement) {
@@ -1799,8 +1811,8 @@ export function createBookingPersonsModule(ctx) {
     const normalizedDocumentType = documentType === "national_id" ? "national_id" : "passport";
     if (!state.permissions.canEditBooking || !state.booking) return;
     const person = state.personDrafts[index];
-    const file = input?.files?.[0] || null;
-    if (!person || !file) return;
+    const files = Array.from(input?.files || []).filter(Boolean);
+    if (!person || !files.length) return;
     const personLabel = normalizeText(person.name) || bookingT("booking.unnamed_person", "Unnamed person");
 
     if (person._is_new) {
@@ -1817,6 +1829,8 @@ export function createBookingPersonsModule(ctx) {
       return;
     }
 
+    let uploadedCount = 0;
+    let activeDocumentType = state.active_person_document_type || normalizedDocumentType;
     try {
       setPersonDocumentPictureStatus(
         normalizedDocumentType,
@@ -1825,37 +1839,31 @@ export function createBookingPersonsModule(ctx) {
       );
       updatePersonDocumentPictureControls(person, state.permissions.canEditBooking, personLabel);
 
-      const base64 = await fileToBase64(file);
-      const request = bookingPersonDocumentPictureRequest({
-        baseURL: apiOrigin,
-        params: {
-          booking_id: state.booking.id,
-          person_id: person.id,
-          document_type: normalizedDocumentType
-        }
-      });
-      const activeDocumentType = state.active_person_document_type || normalizedDocumentType;
-      const result = await fetchBookingMutation(request.url, {
-        method: request.method,
-        body: {
-          expected_persons_revision: getBookingRevision("persons_revision"),
-          filename: file.name,
-          data_base64: base64,
-          actor: state.user
-        }
-      });
-      if (!result?.booking) {
-        setPersonDocumentPictureStatus(
-          normalizedDocumentType,
-          bookingT("booking.document_image.upload_failed", "Could not upload the document image."),
-          person.id
-        );
-        updatePersonDocumentPictureControls(person, state.permissions.canEditBooking, personLabel);
-        return;
+      for (const file of files) {
+        const base64 = await fileToBase64(file);
+        const request = bookingPersonDocumentPictureRequest({
+          baseURL: apiOrigin,
+          params: {
+            booking_id: state.booking.id,
+            person_id: person.id,
+            document_type: normalizedDocumentType
+          }
+        });
+        const result = await fetchBookingMutation(request.url, {
+          method: request.method,
+          body: {
+            expected_persons_revision: getBookingRevision("persons_revision"),
+            filename: file.name,
+            data_base64: base64,
+            actor: state.user
+          }
+        });
+        if (!result?.booking) throw new Error("document_upload_failed");
+        uploadedCount += 1;
+        applyBookingPayload(result);
+        state.active_person_document_type = activeDocumentType;
       }
 
-      applyBookingPayload(result);
-      state.active_person_document_type = activeDocumentType;
       renderBookingHeader();
       renderBookingData();
       renderActionControls();
@@ -1871,6 +1879,13 @@ export function createBookingPersonsModule(ctx) {
       );
       renderPersonModal();
     } catch {
+      if (uploadedCount > 0) {
+        renderBookingHeader();
+        renderBookingData();
+        renderActionControls();
+        renderPersonsEditor();
+        renderPersonModal();
+      }
       setPersonDocumentPictureStatus(
         normalizedDocumentType,
         bookingT("booking.document_image.upload_failed", "Could not upload the document image."),

@@ -31,6 +31,7 @@ function toDirectoryUser(user, roleSets = {}) {
   return {
     id,
     username,
+    first_name: firstName || null,
     name,
     active: user?.enabled !== false,
     ...normalizedRoleSets

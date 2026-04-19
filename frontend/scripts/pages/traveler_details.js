@@ -385,6 +385,17 @@ function normalizeSelectedDocumentType(traveler, requestedType = "") {
   return travelerSupportsNationalId(traveler) ? normalizedType : "passport";
 }
 
+function normalizeDocumentPictureRefs(document) {
+  return Array.from(new Set(
+    [
+      ...(Array.isArray(document?.document_picture_refs) ? document.document_picture_refs : []),
+      document?.document_picture_ref
+    ]
+      .map((entry) => normalizeText(entry))
+      .filter(Boolean)
+  ));
+}
+
 function emptyDocumentDraft(type = "passport") {
   return {
     document_type: type,
@@ -394,7 +405,7 @@ function emptyDocumentDraft(type = "passport") {
     issued_on: "",
     expires_on: "",
     no_expiration_date: false,
-    document_picture_ref: ""
+    document_picture_refs: []
   };
 }
 
@@ -408,7 +419,7 @@ function normalizeDocumentDraft(document, type = "passport") {
     issued_on: normalizeText(document?.issued_on),
     expires_on: normalizeText(document?.expires_on),
     no_expiration_date: type === "national_id" && document?.no_expiration_date === true,
-    document_picture_ref: normalizeText(document?.document_picture_ref)
+    document_picture_refs: normalizeDocumentPictureRefs(document)
   };
 }
 
@@ -469,6 +480,7 @@ function documentHasInput(document) {
   return [
     document?.holder_name,
     document?.document_number,
+    ...normalizeDocumentPictureRefs(document),
     document?.issuing_country,
     document?.issued_on,
     document?.expires_on,
@@ -559,6 +571,19 @@ function documentTypeLabel(documentType = "passport") {
     : travelerDetailsT("passport", "Passport");
 }
 
+function renderDocumentPicturePreviewMarkup(documentType, pictureRefs) {
+  const documentLabel = documentTypeLabel(documentType);
+  if (!pictureRefs.length) {
+    return `<span class="micro traveler-details-document__picture-empty">${escapeHtml(travelerDetailsT("no_document_image_uploaded", "No document image uploaded."))}</span>`;
+  }
+  return `<div class="traveler-details-document__picture-gallery">${pictureRefs.map((pictureRef, index) => `
+    <img
+      src="${escapeHtml(pictureRef)}"
+      alt="${escapeHtml(travelerDetailsT("document_image_preview", "{label} image preview", { label: `${documentLabel} ${index + 1}` }))}"
+    />
+  `).join("")}</div>`;
+}
+
 function applyTravelerDetailsChromeCopy() {
   const defaultTitle = travelerDetailsT("page_title_default", "Traveler Details");
   if (els.kicker) els.kicker.textContent = travelerDetailsT("kicker", "Traveler details");
@@ -589,9 +614,7 @@ function travelerCardMarkup(traveler) {
   const uploadLabel = documentType === "national_id"
     ? travelerDetailsT("upload_id_card_image", "Upload ID card image")
     : travelerDetailsT("upload_passport_image", "Upload passport image");
-  const imagePreviewMarkup = document.document_picture_ref
-    ? `<img src="${escapeHtml(document.document_picture_ref)}" alt="${escapeHtml(travelerDetailsT("document_image_preview", "{label} image preview", { label: documentLabel }))}" />`
-    : `<span class="micro traveler-details-document__picture-empty">${escapeHtml(travelerDetailsT("no_document_image_uploaded", "No document image uploaded."))}</span>`;
+  const imagePreviewMarkup = renderDocumentPicturePreviewMarkup(documentType, normalizeDocumentPictureRefs(document));
   return `
     <div class="traveler-details-card__grid">
       <div class="field">
@@ -774,7 +797,7 @@ function travelerCardMarkup(traveler) {
         <div class="field traveler-details-document__picture-field traveler-details-card__field--full">
           <label for="traveler_document_picture_input">${escapeHtml(travelerDetailsT("document_image", "{label} image", { label: documentLabel }))}</label>
           <button class="btn btn-secondary" id="traveler_document_picture_upload_btn" type="button" data-document-picture-upload="${escapeHtml(documentType)}">${escapeHtml(uploadLabel)}</button>
-          <input id="traveler_document_picture_input" type="file" accept="image/*" hidden />
+          <input id="traveler_document_picture_input" type="file" accept="image/*" multiple hidden />
           <div class="traveler-details-document__picture-preview">
             ${imagePreviewMarkup}
           </div>
@@ -940,28 +963,32 @@ function validateTravelerDraft() {
 
 async function uploadActiveDocumentPicture(input) {
   if (!(input instanceof HTMLInputElement) || !state.traveler) return;
-  const file = input.files?.[0] || null;
-  if (!file) return;
+  const files = Array.from(input.files || []).filter(Boolean);
+  if (!files.length) return;
 
   const documentType = normalizeSelectedDocumentType(state.traveler, state.traveler.selected_document_type);
   setStatus(travelerDetailsT("document_image_uploading", "Uploading {label} image...", {
     label: documentTypeLabel(documentType)
   }));
   try {
-    const result = await requestJson(`/documents/${encodeURIComponent(documentType)}/picture`, {
-      method: "POST",
-      body: {
-        filename: file.name,
-        data_base64: await fileToBase64(file)
+    let latestPayload = null;
+    for (const file of files) {
+      const result = await requestJson(`/documents/${encodeURIComponent(documentType)}/picture`, {
+        method: "POST",
+        body: {
+          filename: file.name,
+          data_base64: await fileToBase64(file)
+        }
+      });
+      if (!result.ok || !result.payload) {
+        const message = normalizeText(result.payload?.error) || travelerDetailsT("could_not_upload_document_image", "Could not upload the document image.");
+        setStatus(message, "error");
+        return;
       }
-    });
-    if (!result.ok || !result.payload) {
-      const message = normalizeText(result.payload?.error) || travelerDetailsT("could_not_upload_document_image", "Could not upload the document image.");
-      setStatus(message, "error");
-      return;
+      latestPayload = result.payload;
     }
-    state.access = result.payload;
-    state.traveler = createTravelerDraft(result.payload.person);
+    state.access = latestPayload;
+    state.traveler = createTravelerDraft(latestPayload.person);
     render();
     setStatus(travelerDetailsT("document_image_uploaded", "{label} image uploaded.", {
       label: documentTypeLabel(documentType)

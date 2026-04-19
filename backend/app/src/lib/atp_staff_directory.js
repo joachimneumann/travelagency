@@ -162,6 +162,7 @@ function pictureRefForFilename(filename, username = "", photosDir = "") {
 function normalizeStoredProfile(profile) {
   const username = normalizeText(profile?.username).toLowerCase();
   if (!username) return null;
+  const storedName = normalizeText(profile?.name) || normalizeText(profile?.full_name);
   const legacyExperienceDestinations = normalizeCountryCodes(
     (Array.isArray(profile?.experiences) ? profile.experiences : []).flatMap((experience) => experience?.countries || [])
   );
@@ -170,8 +171,7 @@ function normalizeStoredProfile(profile) {
   const shortDescription = normalizeShortDescriptionMap(profile?.short_description ?? profile?.short_description_i18n);
   return {
     username,
-    ...(normalizeText(profile?.name) ? { name: normalizeText(profile.name) } : {}),
-    ...(normalizeText(profile?.full_name) ? { full_name: normalizeText(profile.full_name) } : {}),
+    ...(storedName ? { name: storedName } : {}),
     ...(Object.keys(position).length ? { position } : {}),
     ...(normalizeText(profile?.friendly_short_name) ? { friendly_short_name: normalizeText(profile.friendly_short_name) } : {}),
     ...(normalizeTeamOrder(profile?.team_order) !== undefined ? { team_order: normalizeTeamOrder(profile?.team_order) } : {}),
@@ -191,20 +191,19 @@ function normalizeStoredProfile(profile) {
 }
 
 function defaultDisplayNameForUser(user) {
-  return normalizeText(user?.name)
+  return normalizeText(user?.first_name)
+    || normalizeText(user?.firstName)
+    || normalizeText(user?.name)
     || normalizeText([user?.firstName, user?.lastName].filter(Boolean).join(" "))
     || normalizeText(user?.username)
     || "ATP Staff";
 }
 
-function defaultFullNameForUser(user) {
-  return defaultDisplayNameForUser(user);
-}
-
 function defaultFriendlyShortNameForUser(user) {
-  return normalizeText(user?.firstName)
+  return normalizeText(user?.first_name)
+    || normalizeText(user?.firstName)
     || firstNameToken(user?.friendly_short_name)
-    || firstNameToken(defaultFullNameForUser(user))
+    || firstNameToken(defaultDisplayNameForUser(user))
     || normalizeText(user?.username)
     || "ATP";
 }
@@ -286,9 +285,11 @@ function normalizeKeycloakUserSnapshotEntry(user) {
   const id = normalizeText(user?.id);
   if (!id) return null;
   const username = normalizeText(user?.username).toLowerCase();
+  const firstName = normalizeText(user?.first_name) || normalizeText(user?.firstName);
   return {
     id,
     ...(username ? { username } : {}),
+    ...(firstName ? { first_name: firstName } : {}),
     ...(normalizeText(user?.name) ? { name: normalizeText(user.name) } : {}),
     active: user?.active !== false,
     roles: collectRoleNames(user),
@@ -318,7 +319,6 @@ function defaultStoredProfileForUser(user, photosDir = "") {
   return normalizeStoredProfile({
     username,
     name: defaultDisplayNameForUser(user),
-    full_name: defaultFullNameForUser(user),
     friendly_short_name: defaultFriendlyShortNameForUser(user),
     picture: preferredPictureFilenameForUsername(username, photosDir),
     languages: [],
@@ -348,10 +348,6 @@ function mergeStoredProfileWithUser(profile, user, photosDir = "") {
   const normalizedPosition = normalizePositionMap(normalizedProfile?.position);
   const normalizedDescription = normalizeDescriptionMap(normalizedProfile?.description);
   const normalizedShortDescription = normalizeShortDescriptionMap(normalizedProfile?.short_description);
-  const resolvedFullName = normalizeText(normalizedProfile?.full_name)
-    || normalizeText(defaultProfile?.full_name)
-    || normalizeText(user?.name)
-    || defaultProfile.name;
   const resolvedFriendlyShortName = normalizeText(normalizedProfile?.friendly_short_name)
     || normalizeText(defaultProfile?.friendly_short_name)
     || defaultFriendlyShortNameForUser(user || normalizedProfile || { username });
@@ -359,8 +355,7 @@ function mergeStoredProfileWithUser(profile, user, photosDir = "") {
     ...defaultProfile,
     ...normalizedProfile,
     username,
-    name: normalizeText(user?.name) || normalizeText(normalizedProfile?.name) || defaultProfile.name,
-    full_name: resolvedFullName,
+    name: normalizeText(normalizedProfile?.name) || normalizeText(defaultProfile?.name) || defaultDisplayNameForUser(user),
     position: Object.keys(normalizedPosition).length ? normalizedPosition : {},
     friendly_short_name: resolvedFriendlyShortName,
     ...(normalizeTeamOrder(normalizedProfile?.team_order) !== undefined
@@ -496,7 +491,7 @@ export function createAtpStaffDirectory({
     await mkdir(path.dirname(outputPath), { recursive: true });
     await writeFile(
       outputPath,
-      buildAvatarSvg(normalizeText(profile?.full_name) || normalizeText(profile?.name) || username, username),
+      buildAvatarSvg(normalizeText(profile?.name) || username, username),
       "utf8"
     );
     return true;
@@ -685,10 +680,48 @@ export function createAtpStaffDirectory({
 
   async function syncProfilesFromKeycloak() {
     await ensureStorage();
-    const users = await keycloakDirectory.listAllowedUsers().catch(() => []);
-    await syncKeycloakUserSnapshotFromUsers(users).catch(() => []);
-    const stored = await readProfiles().catch(() => ({ items: [] }));
-    return Array.isArray(stored?.items) ? stored.items : [];
+    let users = null;
+    try {
+      users = await keycloakDirectory.listAllowedUsers();
+    } catch {
+      users = null;
+    }
+    if (Array.isArray(users)) {
+      await syncKeycloakUserSnapshotFromUsers(users).catch(() => []);
+    }
+    const stored = await readProfiles().catch(() => ({ items: [], changed: false }));
+    const itemsByUsername = new Map(
+      (Array.isArray(stored?.items) ? stored.items : [])
+        .map((profile) => [normalizeText(profile?.username).toLowerCase(), profile])
+        .filter(([username, profile]) => Boolean(username && profile))
+    );
+    let changed = Boolean(stored?.changed);
+
+    for (const user of Array.isArray(users) ? users : []) {
+      const username = normalizeText(user?.username).toLowerCase();
+      if (!username) continue;
+      const current = itemsByUsername.get(username) || null;
+      const next = normalizeStoredProfile({
+        ...defaultStoredProfileForUser(user, photosDir),
+        ...(current && typeof current === "object" ? current : {}),
+        username,
+        name: defaultDisplayNameForUser(user)
+      });
+      if (!next) continue;
+      if (JSON.stringify(current) !== JSON.stringify(next)) {
+        changed = true;
+      }
+      itemsByUsername.set(username, next);
+      if (await writeAvatarIfMissing(next)) changed = true;
+    }
+
+    const nextItems = sortProfiles(Array.from(itemsByUsername.values()));
+    if (changed) {
+      await persistProfiles({ items: nextItems }, {
+        reason: "sync_profiles_from_keycloak"
+      });
+    }
+    return nextItems;
   }
 
   function resolvePhotoDiskPath(rawRelativePath) {
@@ -750,7 +783,7 @@ export function createAtpStaffDirectory({
     if (!profile?.username) return;
     await writeAvatarIfMissing({
       username: profile.username,
-      name: normalizeText(profile?.full_name) || normalizeText(profile?.name) || profile.username,
+      name: normalizeText(profile?.name) || profile.username,
       picture: pictureFilenameFromStoredValue(profile?.picture_ref, profile.username, photosDir)
     }).catch(() => {});
   }
@@ -787,8 +820,9 @@ export function createAtpStaffDirectory({
     const current = mergeStoredProfileWithUser(currentStored, user, photosDir);
     const nextStored = normalizeStoredProfile({
       username,
-      name: normalizeText(currentStored?.name) || normalizeText(current?.name) || defaultDisplayNameForUser(user),
-      full_name: input?.full_name !== undefined ? input.full_name : current?.full_name,
+      name: input?.name !== undefined
+        ? input.name
+        : normalizeText(currentStored?.name) || normalizeText(current?.name) || defaultDisplayNameForUser(user),
       position: input?.position_i18n !== undefined
         ? input.position_i18n
         : input?.position !== undefined
@@ -839,7 +873,6 @@ export function createAtpStaffDirectory({
     const nextStored = normalizeStoredProfile({
       username,
       name: normalizeText(currentStored?.name) || normalizeText(current?.name) || defaultDisplayNameForUser(user),
-      full_name: current?.full_name,
       position: current?.position,
       friendly_short_name: current?.friendly_short_name,
       team_order: current?.team_order,
@@ -874,9 +907,11 @@ export function createAtpStaffDirectory({
     if (!normalizedUserId) return null;
     await ensureStorage();
     const snapshot = await readKeycloakUserSnapshot().catch(() => ({ items: [] }));
-    const user = (Array.isArray(snapshot?.items) ? snapshot.items : [])
+    const userFromSnapshot = (Array.isArray(snapshot?.items) ? snapshot.items : [])
       .find((item) => normalizeText(item?.id) === normalizedUserId) || null;
-    if (!isEligibleStaffUser(user, allowedStaffRoleNames)) return null;
+    const user = userFromSnapshot || (await listAllAtpUsers().catch(() => []))
+      .find((item) => normalizeText(item?.id) === normalizedUserId) || null;
+    if (!user) return null;
     const username = normalizeText(user?.username).toLowerCase();
     const stored = username ? await readStoredProfileByUsername(username) : null;
     const profile = buildResponseProfile(stored, user, photosDir);

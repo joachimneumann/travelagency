@@ -12,7 +12,6 @@ import (
 #AtpStaffProfile: {
 	username:     string & !=""
 	name?:        string
-	full_name?:   string
 	position?:    string
 	position_i18n?: [...#AtpStaffLocalizedTextEntry]
 	friendly_short_name?: string

@@ -10,6 +10,8 @@ COMPOSE_FILE="${COMPOSE_FILE:-$ROOT_DIR/docker-compose.local-keycloak.yml}"
 COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-travelagency_keycloak}"
 KEYCLOAK_BASE_URL="${KEYCLOAK_BASE_URL:-http://localhost:8081}"
 KEYCLOAK_REALM="${KEYCLOAK_REALM:-master}"
+KEYCLOAK_ADMIN="${KEYCLOAK_ADMIN:-admin}"
+KEYCLOAK_ADMIN_PASSWORD="${KEYCLOAK_ADMIN_PASSWORD:-admin}"
 KEYCLOAK_DISCOVERY_URL="${KEYCLOAK_BASE_URL%/}/realms/${KEYCLOAK_REALM}/.well-known/openid-configuration"
 KEYCLOAK_READY_TIMEOUT_SECONDS="${KEYCLOAK_READY_TIMEOUT_SECONDS:-45}"
 
@@ -54,3 +56,11 @@ if [ -n "${KEYCLOAK_CLIENT_SECRET:-}" ]; then
 else
   echo "Skipping backend client bootstrap because KEYCLOAK_CLIENT_SECRET is not set."
 fi
+
+echo "Syncing ATP staff names from Keycloak ..."
+export KEYCLOAK_ENABLED="true"
+export KEYCLOAK_BASE_URL
+export KEYCLOAK_REALM
+export KEYCLOAK_ADMIN
+export KEYCLOAK_ADMIN_PASSWORD
+node "$ROOT_DIR/backend/app/scripts/sync_atp_staff_from_keycloak.js"

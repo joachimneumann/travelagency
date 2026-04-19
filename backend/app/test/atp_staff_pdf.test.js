@@ -11,7 +11,7 @@ test("resolveAtpGuidePdfContext strips cache-busting query params from picture_r
     resolveAssignedAtpStaffProfile: async () => ({
       username: "joachim",
       picture_ref: "/public/v1/atp-staff-photos/joachim.webp?v=1713075073000",
-      full_name: "Joachim Neumann",
+      name: "Joachim",
       friendly_short_name: "Joachim"
     }),
     resolveAtpStaffPhotoDiskPath: (relativePath) => `/photos/${relativePath}`

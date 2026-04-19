@@ -29,6 +29,17 @@ export function createBookingMediaHandlers(deps) {
   } = deps;
   const BOOKING_PERSON_DOCUMENT_TYPES = new Set(["passport", "national_id"]);
 
+  function normalizeDocumentPictureRefs(document) {
+    return Array.from(new Set(
+      [
+        ...(Array.isArray(document?.document_picture_refs) ? document.document_picture_refs : []),
+        document?.document_picture_ref
+      ]
+        .map((entry) => normalizeText(entry))
+        .filter(Boolean)
+    ));
+  }
+
   function upsertPersonDocumentPicture(person, documentType, pictureRef, timestamp) {
     const normalizedDocumentType = normalizeText(documentType).toLowerCase();
     const personId = normalizeText(person?.id) || "person";
@@ -37,11 +48,15 @@ export function createBookingMediaHandlers(deps) {
     const nextDocuments = documents.map((document, index) => {
       if (normalizeText(document?.document_type).toLowerCase() !== normalizedDocumentType) return document;
       found = true;
+      const documentPictureRefs = Array.from(new Set([
+        ...normalizeDocumentPictureRefs(document),
+        pictureRef
+      ]));
       return {
         ...document,
         id: normalizeText(document?.id) || `${personId}_${normalizedDocumentType}_${index + 1}`,
         document_type: normalizedDocumentType,
-        document_picture_ref: pictureRef,
+        document_picture_refs: documentPictureRefs,
         created_at: normalizeText(document?.created_at) || timestamp,
         updated_at: timestamp
       };
@@ -50,7 +65,7 @@ export function createBookingMediaHandlers(deps) {
       nextDocuments.push({
         id: `${personId}_${normalizedDocumentType}`,
         document_type: normalizedDocumentType,
-        document_picture_ref: pictureRef,
+        document_picture_refs: [pictureRef],
         created_at: timestamp,
         updated_at: timestamp
       });

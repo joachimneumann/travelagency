@@ -148,3 +148,39 @@ test("ATP staff response profiles version picture refs from the photo mtime", as
     await rm(rootDir, { recursive: true, force: true });
   }
 });
+
+test("ATP staff sync writes the Keycloak first name into the stored name field", async () => {
+  const rootDir = await mkdtemp(path.join(os.tmpdir(), "travelagency-atp-staff-sync-"));
+  try {
+    const ctx = buildDirectory(rootDir, {
+      allowedUsers: [{
+        id: "kc-joachim",
+        username: "joachim",
+        first_name: "Joachim",
+        name: "Joachim Neumann"
+      }]
+    });
+    await mkdir(path.dirname(ctx.dataPath), { recursive: true });
+    await mkdir(ctx.photosDir, { recursive: true });
+    await writeFile(ctx.dataPath, `${JSON.stringify({
+      staff: {
+        joachim: {
+          name: "Joachim Neumann",
+          friendly_short_name: "Joe",
+          languages: ["en"],
+          appears_in_team_web_page: true
+        }
+      }
+    }, null, 2)}\n`, "utf8");
+
+    const items = await ctx.directory.syncProfilesFromKeycloak();
+    const stored = JSON.parse(await readFile(ctx.dataPath, "utf8"));
+
+    assert.equal(items[0]?.name, "Joachim");
+    assert.equal(stored.staff.joachim.name, "Joachim");
+    assert.equal(stored.staff.joachim.friendly_short_name, "Joe");
+    assert.equal("full_name" in stored.staff.joachim, false);
+  } finally {
+    await rm(rootDir, { recursive: true, force: true });
+  }
+});

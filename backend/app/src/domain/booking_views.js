@@ -369,7 +369,7 @@ export function createBookingViewHelpers({
       ? await listBookingTravelPlanPdfs(normalizedBooking.id).catch(() => [])
       : [];
     let assignedKeycloakUserLabel = assignedKeycloakUserId
-      ? normalizeText(assignedAtpStaff?.name)
+      ? normalizeText(assignedAtpStaff?.full_name) || normalizeText(assignedAtpStaff?.name)
       : "";
     if (assignedKeycloakUserId && !assignedKeycloakUserLabel) {
       const assignedKeycloakUserLabels = await resolveAssignableKeycloakUserLabelMap().catch(() => new Map());
@@ -384,7 +384,7 @@ export function createBookingViewHelpers({
       const atpStaffProfile = typeof resolveAssignedAtpStaffProfile === "function"
         ? await resolveAssignedAtpStaffProfile(normalizedKeycloakUserId).catch(() => null)
         : null;
-      const profileLabel = normalizeText(atpStaffProfile?.name);
+      const profileLabel = normalizeText(atpStaffProfile?.full_name) || normalizeText(atpStaffProfile?.name);
       if (profileLabel) return profileLabel;
       const assignableKeycloakUserLabels = await resolveAssignableKeycloakUserLabelMap().catch(() => new Map());
       return normalizeText(assignableKeycloakUserLabels?.get(normalizedKeycloakUserId)) || normalizedKeycloakUserId;

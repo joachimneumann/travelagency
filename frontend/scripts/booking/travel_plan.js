@@ -197,6 +197,29 @@ export function createBookingTravelPlanModule(ctx) {
     }
   }
 
+  function firstTravelPlanDayHasSpecifiedDate(days = state.travelPlanDraft?.days) {
+    const firstDay = Array.isArray(days) ? days[0] : null;
+    return isValidIsoCalendarDate(firstDay?.date);
+  }
+
+  function syncTravelPlanRenumberDaysAction() {
+    if (!(els.travel_plan_renumber_days_btn instanceof HTMLButtonElement)) return;
+    const button = els.travel_plan_renumber_days_btn;
+    button.textContent = bookingT("booking.travel_plan.renumber_days", "Renumber days");
+    const canEdit = state.permissions.canEditBooking === true;
+    const hasFirstDate = firstTravelPlanDayHasSpecifiedDate();
+    button.disabled = !canEdit || !hasFirstDate;
+    if (!canEdit) {
+      button.title = bookingT("booking.translation.disabled.no_permission", "Disabled: you do not have permission to edit this booking.");
+      return;
+    }
+    if (!hasFirstDate) {
+      button.title = bookingT("booking.travel_plan.renumber_days_disabled", "Set a date on the first day to enable renumbering.");
+      return;
+    }
+    button.title = "";
+  }
+
   function validateTravelPlanDraft(plan) {
     return validateTravelPlanDraftState(plan, {
       validTimingKinds: new Set(TRAVEL_PLAN_TIMING_KIND_OPTIONS.map((option) => option.value)),
@@ -371,6 +394,7 @@ export function createBookingTravelPlanModule(ctx) {
       travelPlanStatus("");
     }
     syncTravelPlanTranslateButton();
+    syncTravelPlanRenumberDaysAction();
   }
 
   async function ensureTravelPlanReadyForMutation() {
@@ -1667,6 +1691,33 @@ export function createBookingTravelPlanModule(ctx) {
     renderOfferPanel?.();
   }
 
+  function renumberTravelPlanDays() {
+    if (!state.permissions.canEditBooking) return false;
+    syncTravelPlanDraftFromDom();
+    const days = Array.isArray(state.travelPlanDraft?.days) ? state.travelPlanDraft.days : [];
+    if (!days.length) return false;
+    const firstDayDate = String(days[0]?.date || "").trim();
+    if (!isValidIsoCalendarDate(firstDayDate)) {
+      syncTravelPlanRenumberDaysAction();
+      travelPlanStatus(
+        bookingT("booking.travel_plan.renumber_days_disabled", "Set a date on the first day to enable renumbering."),
+        "error"
+      );
+      return false;
+    }
+    let nextDate = firstDayDate;
+    for (let index = 1; index < days.length; index += 1) {
+      nextDate = nextIsoDate(nextDate);
+      if (!nextDate) break;
+      days[index].date = nextDate;
+      days[index].date_string = "";
+    }
+    state.travelPlanDraft.days = days;
+    renderTravelPlanPanel();
+    travelPlanStatus(bookingT("booking.travel_plan.renumber_days_done", "Days renumbered from the first day."), "success");
+    return true;
+  }
+
   function removeDay(dayId) {
     syncTravelPlanDraftFromDom();
     const dayIndex = findDayIndex(dayId);
@@ -2341,11 +2392,18 @@ export function createBookingTravelPlanModule(ctx) {
       });
       els.travel_plan_translate_all_btn.dataset.travelPlanBound = "true";
     }
+    if (els.travel_plan_renumber_days_btn instanceof HTMLButtonElement && els.travel_plan_renumber_days_btn.dataset.travelPlanBound !== "true") {
+      els.travel_plan_renumber_days_btn.addEventListener("click", () => {
+        renumberTravelPlanDays();
+      });
+      els.travel_plan_renumber_days_btn.dataset.travelPlanBound = "true";
+    }
     travelPlanServiceLibraryModule.bindTravelPlanServiceLibrary();
     travelPlanImagesModule.bindTravelPlanImageInput();
     travelPlanImagesModule.bindTravelPlanImagePreviewModal();
     travelPlanAttachmentsModule.bindTravelPlanAttachmentInput();
     syncTravelPlanTranslateButton();
+    syncTravelPlanRenumberDaysAction();
   }
 
   function renderTravelPlanPanel() {
@@ -2403,6 +2461,7 @@ export function createBookingTravelPlanModule(ctx) {
     syncTravelPlanDayDateShortcutButtons();
     updateTravelPlanDirtyState();
     syncTravelPlanTranslateButton();
+    syncTravelPlanRenumberDaysAction();
     scheduleTravelPlanControlsDiagnostic("renderTravelPlanPanel");
   }
 

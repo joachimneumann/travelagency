@@ -110,7 +110,7 @@ function renderLocalizedControl({
 function translationDirectionLabel(sourceOption, targetOption) {
   const sourceLabel = String(sourceOption?.shortLabel || DEFAULT_CONTENT_LANG).trim().toUpperCase();
   const targetLabel = String(targetOption?.shortLabel || DEFAULT_CONTENT_LANG).trim().toUpperCase();
-  return `${sourceLabel} -> ${targetLabel}`;
+  return `${sourceLabel}→${targetLabel}`;
 }
 
 function renderTranslationTrigger({

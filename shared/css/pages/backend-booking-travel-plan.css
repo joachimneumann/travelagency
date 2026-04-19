@@ -25,8 +25,16 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.35rem;
+  gap: 0.45rem;
   margin: 0 0 0.9rem;
+}
+
+.booking-detail-page .travel-plan-actions__buttons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  flex-wrap: nowrap;
 }
 
 .booking-detail-page .travel-plan-actions #travel_plan_status {
@@ -41,6 +49,25 @@
 .booking-detail-page .travel-plan-actions #travel_plan_status:empty {
   display: inline-flex;
   visibility: hidden;
+}
+
+.booking-detail-page .travel-plan-actions :is(#travel_plan_translate_all_btn, #travel_plan_save_standard_tour_btn, #travel_plan_renumber_days_btn),
+.booking-detail-page #travel_plan_panel .travel-plan-day__date-shortcut,
+.booking-detail-page #travel_plan_panel :is(.localized-pair__lang-button, .localized-editor__translate-btn--direction) {
+  border-color: var(--travel-plan-accent-border-strong);
+  background: var(--travel-plan-service-button-bg);
+  box-shadow: none;
+}
+
+.booking-detail-page .travel-plan-actions :is(#travel_plan_translate_all_btn, #travel_plan_save_standard_tour_btn, #travel_plan_renumber_days_btn):hover:not([disabled]),
+.booking-detail-page .travel-plan-actions :is(#travel_plan_translate_all_btn, #travel_plan_save_standard_tour_btn, #travel_plan_renumber_days_btn):focus-visible:not([disabled]),
+.booking-detail-page #travel_plan_panel .travel-plan-day__date-shortcut:hover:not([disabled]),
+.booking-detail-page #travel_plan_panel .travel-plan-day__date-shortcut:focus-visible:not([disabled]),
+.booking-detail-page #travel_plan_panel :is(.localized-pair__lang-button, .localized-editor__translate-btn--direction):hover:not([disabled]),
+.booking-detail-page #travel_plan_panel :is(.localized-pair__lang-button, .localized-editor__translate-btn--direction):focus-visible:not([disabled]) {
+  border-color: var(--travel-plan-accent-border-hover);
+  background: var(--travel-plan-service-button-bg);
+  box-shadow: 0 8px 16px var(--travel-plan-accent-shadow);
 }
 
 .booking-detail-page :is(
@@ -413,9 +440,9 @@
 }
 
 .booking-detail-page .travel-plan-day__date-shortcut.is-active {
-  background: var(--travelplan_day_color);
-  color: var(--text-black);
+  background: var(--travel-plan-service-button-bg);
   border-color: var(--travel-plan-accent-border-hover);
+  box-shadow: inset 0 0 0 1px var(--travel-plan-accent-border-hover);
 }
 
 .travel-plan-day__head h3 {

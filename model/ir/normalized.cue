@@ -83,7 +83,6 @@ IR: {
 			fields: [
 				{name: "username", kind: "scalar", typeName: "string", required: true},
 				{name: "name", kind: "scalar", typeName: "string", required: false},
-				{name: "full_name", kind: "scalar", typeName: "string", required: false},
 				{name: "friendly_short_name", kind: "scalar", typeName: "string", required: false},
 				{name: "team_order", kind: "scalar", typeName: "int", required: false},
 				{name: "picture_ref", kind: "scalar", typeName: "string", required: false},
@@ -186,7 +185,7 @@ IR: {
 				{name: "document_type", kind: "enum", typeName: "PersonDocumentType", required: true},
 				{name: "holder_name", kind: "scalar", typeName: "string", required: false},
 				{name: "document_number", kind: "scalar", typeName: "string", required: false},
-				{name: "document_picture_ref", kind: "scalar", typeName: "string", required: false},
+				{name: "document_picture_refs", kind: "scalar", typeName: "string", required: false, isArray: true},
 				{name: "issuing_country", kind: "enum", typeName: "CountryCode", required: false},
 				{name: "issued_on", kind: "scalar", typeName: "DateOnly", required: false},
 				{name: "no_expiration_date", kind: "scalar", typeName: "bool", required: false},
@@ -1827,7 +1826,7 @@ IR: {
 			fields: [
 				{name: "languages", kind: "enum", typeName: "LanguageCode", required: true, isArray: true},
 				{name: "destinations", kind: "enum", typeName: "CountryCode", required: false, isArray: true},
-				{name: "full_name", kind: "scalar", typeName: "string", required: false},
+				{name: "name", kind: "scalar", typeName: "string", required: false},
 				{name: "friendly_short_name", kind: "scalar", typeName: "string", required: false},
 				{name: "team_order", kind: "scalar", typeName: "int", required: false},
 			]

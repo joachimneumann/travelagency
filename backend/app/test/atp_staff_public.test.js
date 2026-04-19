@@ -14,8 +14,7 @@ test("public ATP staff team endpoint returns merged public profiles", async () =
     },
     listPublicAtpStaffProfiles: async () => [{
       username: "joachim",
-      name: "Joachim Neumann",
-      full_name: "Joachim Neumann",
+      name: "Joachim",
       team_order: 1,
       appears_in_team_web_page: true,
       picture_ref: "/content/atp_staff/photos/joachim.webp",
@@ -49,6 +48,7 @@ test("public ATP staff team endpoint returns merged public profiles", async () =
   assert.equal(calls[0].status, 200);
   assert.equal(calls[0].body.total, 1);
   assert.equal(calls[0].body.items[0].username, "joachim");
+  assert.equal(calls[0].body.items[0].name, "Joachim");
   assert.equal(calls[0].body.items[0].team_order, 1);
   assert.equal(calls[0].body.items[0].position, "Founder");
   assert.equal(calls[0].headers["Cache-Control"], "no-store");

@@ -135,15 +135,21 @@ function refreshBackendNavElements() {
   els.userLabel = document.getElementById("backendUserLabel");
 }
 
-function bookingPaymentsLabel(booking) {
-  const paymentTerms = booking?.accepted_record?.payment_terms || booking?.offer?.payment_terms || null;
-  const count = Array.isArray(paymentTerms?.lines) ? paymentTerms.lines.length : 0;
-  if (count <= 0) {
-    return backendT("backend.table.payments_none", "No payment plan");
-  }
-  return backendT("backend.table.payments_count", "{count} planned payment(s)", {
-    count: String(count)
-  });
+function formatBookingPlanSummary(booking) {
+  const days = Array.isArray(booking?.travel_plan?.days) ? booking.travel_plan.days : [];
+  const dayCount = days.length;
+  const activityCount = days.reduce((total, day) => (
+    total + (Array.isArray(day?.services) ? day.services.length : 0)
+  ), 0);
+
+  return {
+    days: backendT(
+      dayCount === 1 ? "booking.travel_plan.summary.day" : "booking.travel_plan.summary.days",
+      dayCount === 1 ? "{count} day" : "{count} days",
+      { count: String(dayCount) }
+    ),
+    activities: `${activityCount} ${backendT("booking.activities", "Activities")}`
+  };
 }
 
 function hasAnyRoleInList(roleList, ...roles) {
@@ -413,6 +419,8 @@ async function init() {
 function bindControls() {
   bindSearch(els.bookingsSearchBtn, els.bookingsSearch, state.bookings, loadBookings);
   populateCreateBookingOptions();
+  els.bookingsTable?.addEventListener("click", handleBookingsTableClick);
+  els.bookingsTable?.addEventListener("keydown", handleBookingsTableKeydown);
   if (els.bookingCreateOpenBtn) {
     els.bookingCreateOpenBtn.addEventListener("click", openCreateBookingModal);
   }
@@ -471,6 +479,34 @@ function bindSearch(searchBtn, searchInput, model, reloadFn) {
       reloadFn();
     });
   }
+}
+
+function resolveBookingRowTarget(target) {
+  if (!(target instanceof Element)) return null;
+  if (target.closest("a, button, input, select, textarea, summary, label")) return null;
+  const row = target.closest("[data-booking-href]");
+  return row instanceof HTMLElement ? row : null;
+}
+
+function openBookingFromRow(row) {
+  if (!(row instanceof HTMLElement)) return;
+  const href = normalizeText(row.getAttribute("data-booking-href"));
+  if (!href) return;
+  window.location.href = href;
+}
+
+function handleBookingsTableClick(event) {
+  const row = resolveBookingRowTarget(event.target);
+  if (!row) return;
+  openBookingFromRow(row);
+}
+
+function handleBookingsTableKeydown(event) {
+  if (event.key !== "Enter" && event.key !== " ") return;
+  const row = resolveBookingRowTarget(event.target);
+  if (!row) return;
+  event.preventDefault();
+  openBookingFromRow(row);
 }
 
 async function loadBookings() {
@@ -621,18 +657,20 @@ function renderBookings(items) {
     els.bookingsClearSearchBtn.hidden = !(!items.length && String(state.bookings.search || "").trim());
   }
 
-  const header = `<thead><tr><th>${escapeHtml(backendT("backend.table.id", "ID"))}</th><th>${escapeHtml(backendT("backend.table.booking_name", "Booking Name"))}</th><th class="booking-list-col-payments">${escapeHtml(backendT("backend.table.payments", "Payments"))}</th><th class="booking-list-col-staff">${escapeHtml(backendT("backend.table.staff", "ATP staff"))}</th></tr></thead>`;
   const rows = items
     .map((booking) => {
       const bookingHref = buildBookingHref(booking.id);
       const bookingName = normalizeText(booking.name) || "-";
+      const bookingPlanSummary = formatBookingPlanSummary(booking);
       const representativeTraveler = getRepresentativeTraveler(booking);
       const representativeMarkup = representativeTraveler
         ? renderRepresentativeTravelerMarkup(representativeTraveler)
         : "";
       const bookingImageMarkup = renderBookingImageMarkup(booking);
-      return `<tr>
-        <td><a href="${escapeHtml(bookingHref)}">${escapeHtml(shortId(booking.id))}</a></td>
+      const rowAriaLabel = backendT("backend.bookings.open_booking", "Open booking {name}", {
+        name: bookingName
+      });
+      return `<tr class="booking-list__row booking-list__row--clickable" data-booking-href="${escapeHtml(bookingHref)}" tabindex="0" role="link" aria-label="${escapeHtml(rowAriaLabel)}">
         <td>
           <div class="booking-list__name-cell">
             <span class="booking-list__booking-thumb">${bookingImageMarkup}</span>
@@ -642,22 +680,27 @@ function renderBookings(items) {
             </div>
           </div>
         </td>
-        <td>${escapeHtml(bookingPaymentsLabel(booking))}</td>
-        <td>${escapeHtml(resolveAssignedKeycloakUserLabel(booking))}</td>
+        <td class="booking-list__meta-cell">
+          <div class="booking-list__plan-summary">
+            <div class="booking-list__plan-primary">${escapeHtml(bookingPlanSummary.days)}</div>
+            <div class="booking-list__plan-secondary">${escapeHtml(bookingPlanSummary.activities)}</div>
+          </div>
+        </td>
+        <td class="booking-list__staff-cell">${escapeHtml(resolveAssignedKeycloakUserLabel(booking))}</td>
       </tr>`;
     })
     .join("");
 
   const body =
     rows ||
-    `<tr><td colspan="4">${escapeHtml(
+    `<tr><td colspan="3">${escapeHtml(
       backendT("backend.bookings.no_results", "No bookings found{suffix}", {
         suffix: state.bookings.search
           ? backendT("backend.bookings.search_suffix", ' for "{query}"', { query: state.bookings.search })
           : ""
       })
     )}</td></tr>`;
-  if (els.bookingsTable) els.bookingsTable.innerHTML = `${header}<tbody>${body}</tbody>`;
+  if (els.bookingsTable) els.bookingsTable.innerHTML = `<tbody>${body}</tbody>`;
 }
 
 function renderBookingImageMarkup(booking) {
@@ -708,11 +751,6 @@ function renderRepresentativeTravelerMarkup(person) {
 function resolveRepresentativePhotoSrc(photoRef) {
   const imagePath = normalizeText(photoRef) || "assets/img/profile_person.png";
   return /^assets\//.test(imagePath) ? imagePath : resolveApiUrl(apiBase, imagePath);
-}
-
-function shortId(value) {
-  const id = String(value || "");
-  return id.length > 6 ? id.slice(-6) : id;
 }
 
 function resolveAssignedKeycloakUserLabel(booking) {

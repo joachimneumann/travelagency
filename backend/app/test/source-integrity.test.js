@@ -3212,8 +3212,8 @@ test("settings page staff table shows separate realm and client Keycloak roles",
   );
   assert.match(
     html,
-    /id="staffEditorFullName"[\s\S]*id="staffEditorFriendlyShortName"[\s\S]*id="staffEditorTeamOrder"/,
-    "Settings page should expose editable ATP staff full-name, friendly-short-name, and team-order fields"
+    /id="staffEditorName"[\s\S]*id="staffEditorFriendlyShortName"[\s\S]*id="staffEditorTeamOrder"/,
+    "Settings page should expose editable ATP staff name, friendly-short-name, and team-order fields"
   );
   assert.match(
     html,
@@ -3227,8 +3227,8 @@ test("settings page staff table shows separate realm and client Keycloak roles",
   );
   assert.match(
     source,
-    /full_name:\s*normalizeText\(state\.editor\?\.fullName\)[\s\S]*friendly_short_name:\s*normalizeText\(state\.editor\?\.friendlyShortName\)[\s\S]*team_order:\s*teamOrder\.isSet \? teamOrder\.value : null/,
-    "Settings page should send the ATP staff full-name, friendly-short-name, and team-order fields when saving the profile"
+    /name:\s*normalizeText\(state\.editor\?\.name\)[\s\S]*friendly_short_name:\s*normalizeText\(state\.editor\?\.friendlyShortName\)[\s\S]*team_order:\s*teamOrder\.isSet \? teamOrder\.value : null/,
+    "Settings page should send the ATP staff name, friendly-short-name, and team-order fields when saving the profile"
   );
   assert.match(
     source,
@@ -3361,13 +3361,13 @@ test("offer and travel-plan PDFs prefer ATP staff full and friendly names in the
 
   assert.match(
     atpStaffPdfSource,
-    /export function resolveAtpStaffFullName\(profile\)[\s\S]*profile\?\.full_name/,
-    "ATP staff PDF helpers should read the dedicated staff-profile full name"
+    /export function resolveAtpStaffFullName\(profile\)[\s\S]*profile\?\.name/,
+    "ATP staff PDF helpers should read the ATP staff profile name field"
   );
   assert.doesNotMatch(
     atpStaffPdfSource,
-    /resolveAtpStaffFullName\(profile\)[\s\S]*profile\?\.name|resolveAtpStaffFriendlyShortName\(profile\)[\s\S]*profile\?\.name/,
-    "ATP staff PDF helpers should not fall back to the raw Keycloak name in the PDFs"
+    /resolveAtpStaffFullName\(profile\)[\s\S]*profile\?\.full_name/,
+    "ATP staff PDF helpers should no longer depend on the removed full_name field"
   );
   assert.match(
     offerPdfSource,

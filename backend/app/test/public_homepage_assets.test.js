@@ -78,7 +78,7 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
   await writeJson(path.join(staffRoot, "staff.json"), {
     staff: {
       joachim: {
-        full_name: "Joachim Neumann",
+        name: "Joachim",
         position: { en: "Founder", de: "Grunder" },
         description: { en: "Long intro", de: "Lange intro" },
         short_description: { en: "Short intro", de: "Kurze intro" },
@@ -89,7 +89,7 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
         appears_in_team_web_page: true
       },
       hidden: {
-        full_name: "Hidden Staff",
+        name: "Hidden",
         position: { en: "Hidden" },
         picture: "hidden.webp",
         appears_in_team_web_page: false
@@ -144,7 +144,7 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
 
   assert.equal(publicTeam.total, 1);
   assert.equal(publicTeam.items[0].username, "joachim");
-  assert.equal(publicTeam.items[0].full_name, "Joachim Neumann");
+  assert.equal(publicTeam.items[0].name, "Joachim");
   assert.equal(publicTeam.items[0].position, "Founder");
   assert.match(publicTeam.items[0].picture_ref, /^\/assets\/generated\/homepage\/team\/joachim\.webp\?v=/);
   assert.equal("appears_in_team_web_page" in publicTeam.items[0], false);

@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-04-18T05:21:31Z
+# 2026-04-19T05:41:21Z
 
 ---
 openapi: 3.1.0
@@ -3781,9 +3781,6 @@ components:
         name:
           type: string
           nullable: true
-        full_name:
-          type: string
-          nullable: true
         friendly_short_name:
           type: string
           nullable: true
@@ -3965,9 +3962,10 @@ components:
         document_number:
           type: string
           nullable: true
-        document_picture_ref:
-          type: string
-          nullable: true
+        document_picture_refs:
+          type: array
+          items:
+            type: string
         issuing_country:
           "$ref": "#/components/schemas/CountryCode"
           nullable: true
@@ -6680,7 +6678,7 @@ components:
           type: array
           items:
             "$ref": "#/components/schemas/CountryCode"
-        full_name:
+        name:
           type: string
           nullable: true
         friendly_short_name:

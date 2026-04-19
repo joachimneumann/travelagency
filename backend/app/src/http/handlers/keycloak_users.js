@@ -11,6 +11,7 @@ export function createKeycloakUserHandlers(deps) {
   function toKeycloakUserResponse(user) {
     return {
       id: user.id,
+      first_name: user.first_name || null,
       name: keycloakDisplayName(user) || null,
       username: user.username || null,
       active: user.active !== false,

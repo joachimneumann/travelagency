@@ -502,11 +502,8 @@
                           data-document-picture-upload="passport"
                           data-i18n-id="booking.upload_passport_image"
                         >Upload passport image</button>
-                        <input id="booking_person_modal_passport_picture_input" type="file" accept="image/*" hidden />
-                        <div class="booking-person-modal__document-picture-preview">
-                          <img id="booking_person_modal_passport_picture_preview" alt="" hidden />
-                          <span id="booking_person_modal_passport_picture_empty" class="micro" data-i18n-id="booking.no_document_image">No document image uploaded.</span>
-                        </div>
+                        <input id="booking_person_modal_passport_picture_input" type="file" accept="image/*" multiple hidden />
+                        <div id="booking_person_modal_passport_picture_preview" class="booking-person-modal__document-picture-preview"></div>
                         <span id="booking_person_modal_passport_picture_status" class="micro booking-person-modal__document-picture-status"></span>
                         <span id="booking_person_modal_passport_picture_dirty_hint" class="micro booking-person-modal__document-picture-hint"></span>
                       </div>
@@ -605,11 +602,8 @@
                           data-document-picture-upload="national_id"
                           data-i18n-id="booking.upload_id_image"
                         >Upload ID image</button>
-                        <input id="booking_person_modal_national_id_picture_input" type="file" accept="image/*" hidden />
-                        <div class="booking-person-modal__document-picture-preview">
-                          <img id="booking_person_modal_national_id_picture_preview" alt="" hidden />
-                          <span id="booking_person_modal_national_id_picture_empty" class="micro" data-i18n-id="booking.no_document_image">No document image uploaded.</span>
-                        </div>
+                        <input id="booking_person_modal_national_id_picture_input" type="file" accept="image/*" multiple hidden />
+                        <div id="booking_person_modal_national_id_picture_preview" class="booking-person-modal__document-picture-preview"></div>
                         <span id="booking_person_modal_national_id_picture_status" class="micro booking-person-modal__document-picture-status"></span>
                         <span id="booking_person_modal_national_id_picture_dirty_hint" class="micro booking-person-modal__document-picture-hint"></span>
                       </div>
@@ -728,8 +722,11 @@
             </div>
             <div class="booking-section__body">
               <div class="backend-controls travel-plan-actions">
-                <button class="btn btn-ghost" id="travel_plan_translate_all_btn" type="button" data-i18n-id="booking.travel_plan.translate_everything">Translate everything</button>
-                <button class="btn btn-ghost" id="travel_plan_save_standard_tour_btn" type="button" hidden data-requires-clean-state data-i18n-id="booking.travel_plan.save_as_standard_tour">Save as standard tour</button>
+                <div class="travel-plan-actions__buttons">
+                  <button class="btn btn-ghost" id="travel_plan_translate_all_btn" type="button" data-i18n-id="booking.travel_plan.translate_everything">Translate everything</button>
+                  <button class="btn btn-ghost" id="travel_plan_save_standard_tour_btn" type="button" hidden data-requires-clean-state data-i18n-id="booking.travel_plan.save_as_standard_tour">Save as standard tour</button>
+                  <button class="btn btn-ghost" id="travel_plan_renumber_days_btn" type="button">Renumber days</button>
+                </div>
                 <span id="travel_plan_status" class="micro booking-inline-status"></span>
               </div>
               <div id="travel_plan_editor"></div>

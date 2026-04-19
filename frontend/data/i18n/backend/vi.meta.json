@@ -679,6 +679,11 @@
     "origin": "machine",
     "updated_at": "2026-03-30T23:51:31.875Z"
   },
+  "backend.users.edit_in_keycloak": {
+    "source_hash": "ae954dc8de75dfc7237b367e96a10f0109399c70a228e8ae10bb48e3ba54d92f",
+    "origin": "manual_override",
+    "updated_at": "2026-04-19T12:40:00.000Z"
+  },
   "backend.users.friendly_short_name": {
     "source_hash": "3cb6097edd0c93f018d82e23044ad68337c85974c6606e208ba0cd06036579bd",
     "origin": "machine",
@@ -859,6 +864,11 @@
     "origin": "machine",
     "updated_at": "2026-03-30T23:51:31.875Z"
   },
+  "backend.users.status_not_active": {
+    "source_hash": "75fa42934c5b7fdcfa6c4928f5653238c92f009e041390082267ae0ffd8df2eb",
+    "origin": "manual_override",
+    "updated_at": "2026-04-19T12:25:00.000Z"
+  },
   "backend.users.status_missing_description": {
     "source_hash": "ab24cb71466e12fb4232662aaa042a49dd2957c93143f0308ee32f0129ebb6b0",
     "origin": "machine",
@@ -890,9 +900,9 @@
     "updated_at": "2026-03-30T23:51:31.875Z"
   },
   "backend.users.team_order_hint": {
-    "source_hash": "97f31a1d29c523a2b1214cea6b2849aba0320a95a0395e3612041227cba14b5f",
-    "origin": "machine",
-    "updated_at": "2026-03-30T23:51:31.875Z"
+    "source_hash": "5dba78798c2bb270c2c51a34700630257312690ebc5d7bff30dfc2bd233f4471",
+    "origin": "manual_override",
+    "updated_at": "2026-04-19T12:55:00.000Z"
   },
   "backend.users.team_order_invalid": {
     "source_hash": "b686c309f984313d5546a10a466e2a3686beb38ab8da81b9fcbd7a0d7e8b8fc3",
@@ -5038,5 +5048,20 @@
     "source_hash": "ed6a80783bd9e313219034fbfe0e39e830a37aedc694afe90d423796a8cfe0e8",
     "origin": "machine",
     "updated_at": "2026-03-30T23:51:31.875Z"
+  },
+  "booking.travel_plan.renumber_days": {
+    "source_hash": "5337c80697c07d79821d9543435b544339440c966d503a582d1c561659bf493e",
+    "origin": "manual_override",
+    "updated_at": "2026-04-19T12:15:00.000Z"
+  },
+  "booking.travel_plan.renumber_days_disabled": {
+    "source_hash": "24599879424a227b9145f1b950d5ec566945369208f200d1aec46127ffcd45b6",
+    "origin": "manual_override",
+    "updated_at": "2026-04-19T12:15:00.000Z"
+  },
+  "booking.travel_plan.renumber_days_done": {
+    "source_hash": "410cc49ac9387e42a4fd0ccfa1fe2fd4474fc1b44a5a3e999b73c6b8b795f309",
+    "origin": "manual_override",
+    "updated_at": "2026-04-19T12:15:00.000Z"
   }
 }

@@ -54,11 +54,6 @@
             <p class="micro settings-observability__hint">Current-process only: this list is cleared when the backend restarts.</p>
           </section>
 
-          <div class="backend-table-wrap" id="settingsPanel">
-            <table class="backend-table" id="staffTable"></table>
-          </div>
-          <p class="micro settings-staff-status" id="staffStatus" data-i18n-id="backend.users.status">Users are managed in Keycloak.</p>
-
           <section class="backend-section settings-destination-publication" id="websiteDestinationPublicationPanel" hidden>
             <div class="settings-destination-publication__head">
               <div>
@@ -72,6 +67,11 @@
             </div>
             <div class="settings-staff-editor__check-grid" id="websiteDestinationPublicationList"></div>
           </section>
+
+          <div class="backend-table-wrap" id="settingsPanel">
+            <table class="backend-table" id="staffTable"></table>
+          </div>
+          <p class="micro settings-staff-status" id="staffStatus" data-i18n-id="backend.users.status">Users are managed in Keycloak.</p>
 
           <section class="backend-section settings-staff-editor" id="staffEditorPanel" hidden>
             <div class="settings-staff-editor__head">
@@ -101,8 +101,9 @@
             </div>
 
             <div class="field full">
-              <label class="field-label" for="staffEditorFullName" data-i18n-id="backend.users.full_name">Full name</label>
-              <input id="staffEditorFullName" type="text" autocomplete="name" />
+              <span class="field-label" data-i18n-id="backend.table.name">Name</span>
+              <div class="settings-staff-editor__readonly-value" id="staffEditorNameValue">-</div>
+              <p class="micro settings-staff-editor__readonly-hint" data-i18n-id="backend.users.edit_in_keycloak">Edit in Keycloak.</p>
             </div>
 
             <div class="field full">
@@ -111,9 +112,11 @@
             </div>
 
             <div class="field full">
-              <label class="field-label" for="staffEditorTeamOrder" data-i18n-id="backend.users.team_order">Team order</label>
+              <label class="field-label settings-staff-editor__field-label-with-note" for="staffEditorTeamOrder">
+                <span data-i18n-id="backend.users.team_order">Team order</span>
+                <span class="settings-staff-editor__field-label-note" data-i18n-id="backend.users.team_order_hint">lower numbers will appear earlier on asiaTravel.com</span>
+              </label>
               <input id="staffEditorTeamOrder" type="number" step="1" inputmode="numeric" />
-              <p class="micro" data-i18n-id="backend.users.team_order_hint">Lower numbers appear first on the website team section. Leave blank to use alphabetical order.</p>
             </div>
 
             <div class="field full">

@@ -5,15 +5,6 @@ import (
 	enums "travelagency.local/model/enums"
 )
 
-#BookingPersonAddress: {
-	line_1?:       string
-	line_2?:       string
-	city?:         string
-	state_region?: string
-	postal_code?:  string
-	country_code?: enums.#CountryCode
-}
-
 #BookingPersonConsent: {
 	id:            common.#Identifier
 	consent_type:  enums.#PersonConsentType
@@ -29,7 +20,7 @@ import (
 	document_type:         enums.#PersonDocumentType
 	holder_name?:          string
 	document_number?:      string
-	document_picture_ref?: string
+	document_picture_refs?: [...string]
 	issuing_country?:      enums.#CountryCode
 	issued_on?:            common.#DateOnly
 	no_expiration_date?:   bool
@@ -39,6 +30,15 @@ import (
 }
 
 #BookingPerson: {
+	#Address: {
+		line_1?:       string
+		line_2?:       string
+		city?:         string
+		state_region?: string
+		postal_code?:  string
+		country_code?: enums.#CountryCode
+	}
+
 	id:   common.#Identifier
 	name: string
 
@@ -53,9 +53,11 @@ import (
 	date_of_birth?:      common.#DateOnly
 	gender?:             enums.#BookingPersonGender
 	nationality?:        enums.#CountryCode
-	address?:            #BookingPersonAddress
+	address?:            #Address
 	roles?: [...enums.#BookingPersonRole]
 	consents?: [...#BookingPersonConsent]
 	documents?: [...#BookingPersonDocument]
 	notes?: string
 }
+
+#BookingPersonAddress: #BookingPerson.#Address

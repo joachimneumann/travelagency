@@ -71,6 +71,18 @@ generate_public_homepage_assets() {
   node "$ROOT_DIR/scripts/assets/generate_public_homepage_assets.mjs"
 }
 
+should_sync_atp_staff() {
+  local service
+  for service in "$@"; do
+    case "$service" in
+      keycloak|backend)
+        return 0
+        ;;
+    esac
+  done
+  return 1
+}
+
 cd "$ROOT_DIR"
 
 if [[ ! -f "$ENV_FILE" ]]; then
@@ -92,3 +104,9 @@ if [[ ! -f backend/app/data/store.json ]]; then
 fi
 
 docker_compose -p "$PROJECT_NAME" --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up -d --build --force-recreate "${SERVICES[@]}"
+
+if should_sync_atp_staff "${SERVICES[@]}"; then
+  echo "Syncing ATP staff names from Keycloak ..."
+  docker_compose -p "$PROJECT_NAME" --env-file "$ENV_FILE" -f "$COMPOSE_FILE" run --rm --no-deps backend \
+    node scripts/sync_atp_staff_from_keycloak.js
+fi

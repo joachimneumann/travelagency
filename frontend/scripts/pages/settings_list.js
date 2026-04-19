@@ -68,7 +68,7 @@ const els = {
   staffEditorUsernameLine: document.getElementById("staffEditorUsernameLine"),
   staffEditorRolesLine: document.getElementById("staffEditorRolesLine"),
   staffEditorPhotoInput: document.getElementById("staffEditorPhotoInput"),
-  staffEditorFullName: document.getElementById("staffEditorFullName"),
+  staffEditorNameValue: document.getElementById("staffEditorNameValue"),
   staffEditorPosition: document.getElementById("staffEditorPosition"),
   staffEditorFriendlyShortName: document.getElementById("staffEditorFriendlyShortName"),
   staffEditorTeamOrder: document.getElementById("staffEditorTeamOrder"),
@@ -229,7 +229,7 @@ const state = {
   selectedUsername: "",
   editorSaving: false,
   editor: {
-    fullName: "",
+    name: "",
     friendlyShortName: "",
     teamOrder: "",
     appearsInTeamWebPage: true,
@@ -661,7 +661,6 @@ function bindEvents() {
   els.staffEditorSaveBtn?.addEventListener("click", saveSelectedStaffProfile);
   els.staffEditorPhotoBtn?.addEventListener("click", () => els.staffEditorPhotoInput?.click());
   els.staffEditorPhotoInput?.addEventListener("change", handleStaffPhotoSelected);
-  els.staffEditorFullName?.addEventListener("input", handleFullNameInput);
   els.staffEditorPosition?.addEventListener("input", handlePositionInput);
   els.staffEditorPosition?.addEventListener("click", (event) => {
     const translateAllButton = event.target.closest("[data-staff-translate-all]");
@@ -1417,8 +1416,7 @@ function renderStaff(items) {
     <th>${escapeHtml(backendT("backend.users.photo", "Picture"))}</th>
     <th>${escapeHtml(backendT("backend.table.username", "Username"))}</th>
     <th class="keycloak-roles-col">${escapeHtml(backendT("backend.table.roles", "Roles"))}</th>
-    <th>${escapeHtml(backendT("backend.table.status", "Status"))}</th>
-    <th class="backend-table-align-right">${escapeHtml(backendT("backend.table.active", "Active"))}</th>
+    <th class="settings-staff-table__status-col">${escapeHtml(backendT("backend.table.status", "Status"))}</th>
   </tr></thead>`;
 
   const rows = items
@@ -1427,10 +1425,16 @@ function renderStaff(items) {
       const profile = getStaffProfileForUsername(username) || {};
       const photoRef = resolveStaffPhotoUrl(profile?.picture_ref);
       const profileStatus = formatStaffProfileStatus(profile);
-      const displayName = normalizeText(profile?.full_name) || normalizeText(staff?.name) || "-";
+      const displayName = normalizeText(profile?.name) || normalizeText(staff?.name) || "-";
       const profileStatusClass = profileStatus === backendT("backend.users.status_complete", "complete")
         ? "settings-staff-table__status-pill settings-staff-table__status-pill--complete"
         : "settings-staff-table__status-pill settings-staff-table__status-pill--incomplete";
+      const statusPills = [
+        staff.active
+          ? ""
+          : `<span class="settings-staff-table__status-pill settings-staff-table__status-pill--inactive">${escapeHtml(backendT("backend.users.status_not_active", "not active"))}</span>`,
+        `<span class="${profileStatusClass}">${escapeHtml(profileStatus)}</span>`
+      ].filter(Boolean).join("");
       const isSelected = username && username === state.selectedUsername;
       const isClickable = Boolean(state.permissions.canEditStaffProfiles && username);
       const rowClasses = [
@@ -1441,18 +1445,17 @@ function renderStaff(items) {
         <td class="settings-staff-table__photo-cell">${photoRef
           ? `<img class="settings-staff-table__photo" src="${escapeHtml(photoRef)}" alt="${escapeHtml(staff?.name || username || "ATP staff")}" />`
           : `<div class="settings-staff-table__photo settings-staff-table__photo--placeholder"></div>`}</td>
-        <td class="settings-staff-table__username-cell">
-          <div class="settings-staff-table__username-display">${escapeHtml(displayName)}</div>
-          <div class="micro settings-staff-table__username-name">username: ${escapeHtml(username || "-")}</div>
-        </td>
-        <td class="keycloak-roles-col">${formatKeycloakRolesCell(staff)}</td>
-        <td><span class="${profileStatusClass}">${escapeHtml(profileStatus)}</span></td>
-        <td class="backend-table-align-right">${staff.active ? escapeHtml(backendT("common.yes", "Yes")) : escapeHtml(backendT("common.no", "No"))}</td>
-      </tr>`;
-    })
-    .join("");
+	        <td class="settings-staff-table__username-cell">
+	          <div class="settings-staff-table__username-display">${escapeHtml(displayName)}</div>
+	          <div class="micro settings-staff-table__username-name">username: ${escapeHtml(username || "-")}</div>
+	        </td>
+	        <td class="keycloak-roles-col">${formatKeycloakRolesCell(staff)}</td>
+	        <td><div class="settings-staff-table__status-cell">${statusPills}</div></td>
+	      </tr>`;
+	    })
+	    .join("");
 
-  const colSpan = 5;
+	  const colSpan = 4;
   els.staffTable.innerHTML = `${header}<tbody>${rows || `<tr><td colspan="${colSpan}">${escapeHtml(backendT("backend.users.no_results", "No Keycloak users found"))}</td></tr>`}</tbody>`;
 }
 
@@ -1504,7 +1507,7 @@ function cloneEditorProfile(user) {
     shortDescriptionByLang.en = normalizeText(profile.short_description);
   }
   return {
-    fullName: normalizeText(profile?.full_name),
+    name: normalizeText(profile?.name),
     friendlyShortName: normalizeText(profile?.friendly_short_name),
     teamOrder: profile?.team_order === null || profile?.team_order === undefined ? "" : String(profile.team_order),
     appearsInTeamWebPage: profile?.appears_in_team_web_page !== false,
@@ -1542,7 +1545,7 @@ function normalizeEditorProfile(profile) {
       .sort(([leftLang], [rightLang]) => leftLang.localeCompare(rightLang))
   );
   return {
-    fullName: normalizeText(profile?.fullName),
+    name: normalizeText(profile?.name),
     friendlyShortName: normalizeText(profile?.friendlyShortName),
     teamOrder: teamOrder.valid ? (teamOrder.isSet ? teamOrder.value : null) : INVALID_TEAM_ORDER,
     appearsInTeamWebPage: profile?.appearsInTeamWebPage !== false,
@@ -1590,7 +1593,7 @@ function closeEditor() {
   }
   state.selectedUsername = "";
   state.editor = {
-    fullName: "",
+    name: "",
     friendlyShortName: "",
     teamOrder: "",
     appearsInTeamWebPage: true,
@@ -1641,8 +1644,8 @@ function renderEditor() {
   if (els.staffEditorRolesLine) {
     els.staffEditorRolesLine.textContent = `${backendT("backend.table.roles", "Roles")}: ${formatKeycloakRoleList(getDisplayedKeycloakRoles(user))}`;
   }
-  if (els.staffEditorFullName) {
-    els.staffEditorFullName.value = normalizeText(state.editor?.fullName);
+  if (els.staffEditorNameValue) {
+    els.staffEditorNameValue.textContent = normalizeText(state.editor?.name) || normalizeText(user?.name) || "-";
   }
   if (els.staffEditorFriendlyShortName) {
     els.staffEditorFriendlyShortName.value = normalizeText(state.editor?.friendlyShortName);
@@ -1814,12 +1817,6 @@ function handleShortDescriptionInput(event) {
   }
   if (nextValue) state.editor.shortDescriptionByLang[lang] = nextValue;
   else delete state.editor.shortDescriptionByLang[lang];
-  clearEditorStatus();
-  updateEditorSaveButtonState();
-}
-
-function handleFullNameInput(event) {
-  state.editor.fullName = normalizeText(event.target?.value);
   clearEditorStatus();
   updateEditorSaveButtonState();
 }
@@ -2457,7 +2454,7 @@ async function saveSelectedStaffProfile() {
       const payload = await fetchApi(request.url, {
         method: request.method,
         body: {
-          full_name: normalizeText(state.editor?.fullName),
+          name: normalizeText(state.editor?.name),
           position_i18n: positionI18n,
           friendly_short_name: normalizeText(state.editor?.friendlyShortName),
           team_order: teamOrder.isSet ? teamOrder.value : null,

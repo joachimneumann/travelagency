@@ -29,39 +29,6 @@
         padding-bottom: 1.5rem;
       }
 
-      .backend-list-shell {
-        display: grid;
-        gap: 1rem;
-      }
-
-      .backend-list-hero {
-        padding: 1.4rem 1.5rem;
-        border: 1px solid rgba(148, 163, 184, 0.24);
-        border-radius: 32px;
-        background:
-          linear-gradient(135deg, rgba(255, 248, 237, 0.98), rgba(255, 255, 255, 0.98)),
-          #fff;
-        box-shadow:
-          0 20px 44px rgba(24, 35, 52, 0.08),
-          inset 0 1px 0 rgba(255, 255, 255, 0.82);
-      }
-
-      .backend-list-hero__title {
-        margin: 0 0 1rem;
-        font-size: clamp(2rem, 4vw, 3rem);
-        line-height: 0.98;
-        font-weight: 700;
-        color: #173329;
-      }
-
-      .backend-list-card {
-        padding: 1.35rem 1.5rem 1.5rem;
-        border: 1px solid rgba(148, 163, 184, 0.22);
-        border-radius: 32px;
-        background: rgba(255, 255, 255, 0.94);
-        box-shadow: 0 22px 46px rgba(24, 35, 52, 0.08);
-      }
-
       .backend-list-page .backend-controls {
         margin-bottom: 1rem;
         align-items: flex-end;
@@ -72,14 +39,14 @@
         border-radius: 22px;
       }
 
-      .backend-list-hero__actions {
+      .backend-list-controls {
         display: flex;
         flex-wrap: wrap;
         gap: 0.75rem;
         align-items: flex-end;
       }
 
-      .backend-list-hero__actions .field {
+      .backend-list-controls .field {
         flex: 1 1 320px;
         min-width: 220px;
       }
@@ -135,23 +102,56 @@
         background: rgba(248, 250, 252, 0.95);
       }
 
+      .backend-list-page #bookingsTable td {
+        vertical-align: middle;
+      }
+
+      .backend-list-page #bookingsTable .booking-list__row--clickable {
+        cursor: pointer;
+        transition: background-color 160ms ease;
+      }
+
+      .backend-list-page #bookingsTable .booking-list__row--clickable:hover td,
+      .backend-list-page #bookingsTable .booking-list__row--clickable:focus-visible td {
+        background: rgba(242, 235, 222, 0.9);
+      }
+
+      .backend-list-page #bookingsTable .booking-list__row--clickable:focus-visible {
+        outline: none;
+      }
+
+      .booking-list__meta-cell,
+      .booking-list__staff-cell {
+        white-space: nowrap;
+      }
+
+      .booking-list__plan-summary {
+        display: grid;
+        gap: 0.15rem;
+      }
+
+      .booking-list__plan-primary {
+        font-weight: 600;
+        color: #173329;
+      }
+
+      .booking-list__plan-secondary,
+      .booking-list__staff-cell {
+        color: #5f6b7a;
+      }
+
       @media (max-width: 720px) {
-        .backend-list-hero,
-        .backend-list-card {
-          border-radius: 24px;
-          padding-inline: 1rem;
-        }
-
-        .backend-list-hero__title {
-          font-size: 2.2rem;
-        }
-
         .backend-create-booking-modal__grid {
           grid-template-columns: 1fr;
         }
 
         .backend-create-booking-modal__filters {
           grid-template-columns: 1fr;
+        }
+
+        .booking-list__meta-cell,
+        .booking-list__staff-cell {
+          white-space: normal;
         }
       }
     </style>
@@ -171,27 +171,20 @@
       <section class="section">
         <div class="container">
           <div id="backendError" class="backend-message" role="alert" aria-live="assertive"></div>
-          <div class="backend-list-shell">
-            <section class="backend-list-hero" aria-label="Backend bookings search">
-              <h1 class="backend-list-hero__title" data-i18n-id="backend.bookings.title">Bookings</h1>
-              <div class="backend-controls backend-list-hero__actions">
-                <div class="field">
-                  <input id="bookingsSearch" type="text" placeholder="id, person, destination, assigned user, whatsapp chat..." data-i18n-placeholder-id="backend.bookings.search_placeholder" />
-                </div>
-                <button class="btn btn-ghost" id="bookingsSearchBtn" type="button" data-i18n-id="common.search">Search</button>
-                <button class="btn btn-ghost" id="bookingsClearSearchBtn" type="button" hidden data-i18n-id="backend.bookings.clear_search">Clear Search</button>
-                <button class="btn btn-primary" id="bookingCreateOpenBtn" type="button">New booking</button>
-                <span id="bookingsCountInfo" class="micro"></span>
-              </div>
-            </section>
-
-            <section class="backend-section backend-list-card" id="bookingsPanel">
-              <div class="backend-table-wrap">
-                <table class="backend-table" id="bookingsTable"></table>
-              </div>
-              <div class="backend-pagination" id="bookingsPagination" aria-label="Bookings pagination"></div>
-            </section>
+          <div class="backend-controls backend-list-controls">
+            <div class="field">
+              <input id="bookingsSearch" type="text" placeholder="id, person, destination, assigned user, whatsapp chat..." data-i18n-placeholder-id="backend.bookings.search_placeholder" />
+            </div>
+            <button class="btn btn-ghost" id="bookingsSearchBtn" type="button" data-i18n-id="common.search">Search</button>
+            <button class="btn btn-ghost" id="bookingsClearSearchBtn" type="button" hidden data-i18n-id="backend.bookings.clear_search">Clear Search</button>
+            <button class="btn btn-primary" id="bookingCreateOpenBtn" type="button">New booking</button>
+            <span id="bookingsCountInfo" class="micro"></span>
           </div>
+
+          <div class="backend-table-wrap">
+            <table class="backend-table" id="bookingsTable"></table>
+          </div>
+          <div class="backend-pagination" id="bookingsPagination" aria-label="Bookings pagination"></div>
         </div>
       </section>
     </main>

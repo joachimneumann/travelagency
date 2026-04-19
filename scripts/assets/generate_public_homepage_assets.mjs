@@ -564,8 +564,8 @@ function sortPublicProfiles(items) {
     }
     if (leftTeamOrder !== null) return -1;
     if (rightTeamOrder !== null) return 1;
-    const leftName = normalizeText(left?.name) || normalizeText(left?.full_name) || normalizeText(left?.username);
-    const rightName = normalizeText(right?.name) || normalizeText(right?.full_name) || normalizeText(right?.username);
+    const leftName = normalizeText(left?.name) || normalizeText(left?.username);
+    const rightName = normalizeText(right?.name) || normalizeText(right?.username);
     const byName = leftName.localeCompare(rightName);
     if (byName !== 0) return byName;
     return normalizeText(left?.username).localeCompare(normalizeText(right?.username));
@@ -605,7 +605,7 @@ async function generateTeamAssets({
 
     items.push({
       username,
-      full_name: normalizeText(rawProfile?.full_name) || normalizeText(rawProfile?.name) || username,
+      name: normalizeText(rawProfile?.name) || username,
       picture_ref: pictureRef,
       position: resolveLocalizedText(positionMap, "en", ""),
       position_i18n: localizedEntriesFromMap(positionMap),

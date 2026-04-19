@@ -901,10 +901,12 @@ export function createBookingCoreModule(ctx) {
   }
 
   function resolveAtpStaffDisplayName(user, fallbackProfile = null) {
-    return normalizeText(fallbackProfile?.full_name)
+    return normalizeText(fallbackProfile?.name)
+      || normalizeText(user?.staff_profile?.name)
+      || normalizeText(user?.first_name)
+      || normalizeText(fallbackProfile?.full_name)
       || normalizeText(user?.staff_profile?.full_name)
       || normalizeText(user?.full_name)
-      || normalizeText(fallbackProfile?.name)
       || normalizeText(user?.name)
       || displayKeycloakUser(user)
       || normalizeText(user?.username)

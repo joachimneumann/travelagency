@@ -64,7 +64,7 @@ export function resolveAtpGuideShortDescriptionText(guideContext, lang = "en") {
 }
 
 export function resolveAtpStaffFullName(profile) {
-  return textOrNull(profile?.full_name);
+  return textOrNull(profile?.name);
 }
 
 export function resolveAtpStaffFriendlyShortName(profile) {

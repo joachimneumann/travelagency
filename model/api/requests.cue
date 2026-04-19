@@ -306,7 +306,7 @@ import (
 #AtpStaffProfileUpdateRequest: {
 	languages: [...enums.#LanguageCode]
 	destinations?: [...enums.#CountryCode]
-	full_name?: string
+	name?: string
 	position?:  string
 	position_i18n?: [...jsonModel.#AtpStaffLocalizedTextEntry]
 	friendly_short_name?:      string

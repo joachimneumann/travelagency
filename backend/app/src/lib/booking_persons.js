@@ -110,6 +110,14 @@ function normalizePhoneNumbers(person) {
   return Array.from(new Set(values.map((entry) => optionalText(entry)).filter(Boolean)));
 }
 
+function normalizeDocumentPictureRefs(document) {
+  const values = [
+    ...(Array.isArray(document?.document_picture_refs) ? document.document_picture_refs : []),
+    document?.document_picture_ref
+  ];
+  return Array.from(new Set(values.map((entry) => optionalText(entry)).filter(Boolean)));
+}
+
 function normalizeAddress(person) {
   return compactObject({
     line_1: optionalText(person?.address?.line_1),
@@ -145,7 +153,7 @@ function normalizeDocument(document, fallbackId) {
     document_type: optionalText(document.document_type),
     holder_name: optionalText(document.holder_name),
     document_number: optionalText(document.document_number),
-    document_picture_ref: optionalText(document.document_picture_ref),
+    document_picture_refs: normalizeDocumentPictureRefs(document),
     issuing_country: optionalUppercaseText(document.issuing_country),
     issued_on: optionalText(document.issued_on),
     no_expiration_date: optionalBool(document.no_expiration_date),

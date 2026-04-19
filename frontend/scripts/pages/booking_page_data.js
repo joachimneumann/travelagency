@@ -61,7 +61,14 @@ export function createBookingPageDataController(ctx) {
     return (Array.isArray(assignableUsers) ? assignableUsers : []).map((user) => {
       const username = String(user?.username || "").trim().toLowerCase();
       const staffProfile = username ? profilesByUsername.get(username) || null : null;
-      const fullName = String(staffProfile?.full_name || user?.full_name || user?.name || "").trim() || null;
+      const fullName = String(
+        staffProfile?.name
+        || user?.first_name
+        || staffProfile?.full_name
+        || user?.full_name
+        || user?.name
+        || ""
+      ).trim() || null;
       return {
         ...user,
         staff_profile: staffProfile,

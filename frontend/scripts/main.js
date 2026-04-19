@@ -532,20 +532,20 @@ function resolveLocalizedStaticValue(value, lang = state.lang || currentFrontend
 function normalizeTeamMemberProfile(profile) {
   const normalizedUsername = normalizeText(profile?.username).toLowerCase();
   if (!normalizedUsername || !profile || typeof profile !== "object") return null;
-  const fullName = normalizeText(profile?.full_name) || normalizedUsername;
+  const fullName = normalizeText(profile?.name) || normalizedUsername;
   const role = resolveLocalizedStaticValue(profile?.position_i18n ?? profile?.position)
     || "Team member";
   const description = resolveLocalizedStaticValue(profile?.description_i18n ?? profile?.description);
   const shortDescription = resolveLocalizedStaticValue(profile?.short_description_i18n ?? profile?.short_description);
   const configuredPictureRef = resolveFrontendAssetUrl(profile?.picture_ref);
   const fallbackPictureRef = `/assets/generated/homepage/team/${encodeURIComponent(`${normalizedUsername}.svg`)}`;
-  if (!configuredPictureRef) {
-    console.warn("[frontend-home] Team member picture_ref missing; using fallback staff photo URL.", {
-      username: normalizedUsername,
-      full_name: fullName,
-      fallback_picture_ref: fallbackPictureRef,
-      page_url: window.location.href
-    });
+    if (!configuredPictureRef) {
+      console.warn("[frontend-home] Team member picture_ref missing; using fallback staff photo URL.", {
+        username: normalizedUsername,
+        name: fullName,
+        fallback_picture_ref: fallbackPictureRef,
+        page_url: window.location.href
+      });
   }
   return {
     username: normalizedUsername,
@@ -720,7 +720,7 @@ function renderTeamSection() {
       const member = members.find((entry) => entry.username === username) || null;
       console.warn("[frontend-home] Team member photo failed to load.", {
         username,
-        full_name: member?.fullName || "",
+        name: member?.fullName || "",
         image_src: image.currentSrc || image.src || "",
         team_data_url: publicTeamDataUrl(),
         page_url: window.location.href

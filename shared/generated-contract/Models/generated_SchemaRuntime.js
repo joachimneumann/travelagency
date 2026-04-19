@@ -1352,24 +1352,24 @@
   FIELD_7: {
   "kind": "scalar",
   "typeName": "string",
+  "isArray": true
+},
+  FIELD_8: {
+  "kind": "scalar",
+  "typeName": "string",
   "isArray": false,
   "format": "date"
 },
-  FIELD_8: {
+  FIELD_9: {
   "kind": "scalar",
   "typeName": "bool",
   "isArray": false
 },
-  FIELD_9: {
+  FIELD_10: {
   "kind": "scalar",
   "typeName": "string",
   "isArray": true,
   "format": "email"
-},
-  FIELD_10: {
-  "kind": "scalar",
-  "typeName": "string",
-  "isArray": true
 },
   FIELD_11: {
   "kind": "enum",

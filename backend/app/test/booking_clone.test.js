@@ -254,7 +254,7 @@ test("cloneBookingForTesting can include travelers while keeping file refs", () 
   assert.equal(cloned.persons[0].id, "booking_uuid_1_person_1");
   assert.equal(cloned.persons[0].photo_ref, "booking_person_photos/source.webp");
   assert.equal(cloned.persons[0].documents[0].id, "booking_uuid_1_person_1_document_1");
-  assert.equal(cloned.persons[0].documents[0].document_picture_ref, "booking_person_photos/passport.webp");
+  assert.deepEqual(cloned.persons[0].documents[0].document_picture_refs, ["booking_person_photos/passport.webp"]);
 });
 
 test("cloneBookingsFromStore forwards includeTravelers to the shared clone policy", async () => {

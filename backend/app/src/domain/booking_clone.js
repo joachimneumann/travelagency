@@ -29,6 +29,17 @@ function normalizeCountryCodes(values) {
   );
 }
 
+function normalizeDocumentPictureRefs(document) {
+  return Array.from(new Set(
+    [
+      ...(Array.isArray(document?.document_picture_refs) ? document.document_picture_refs : []),
+      document?.document_picture_ref
+    ]
+      .map((value) => normalizeText(value))
+      .filter(Boolean)
+  ));
+}
+
 function zeroOfferTotals() {
   return {
     net_amount_cents: 0,
@@ -144,10 +155,15 @@ function remapPersons(booking, bookingId) {
       }));
     }
     if (Array.isArray(next.documents)) {
-      next.documents = next.documents.map((document, documentIndex) => ({
-        ...document,
-        id: `${personId}_document_${documentIndex + 1}`
-      }));
+      next.documents = next.documents.map((document, documentIndex) => {
+        const documentPictureRefs = normalizeDocumentPictureRefs(document);
+        return {
+          ...document,
+          id: `${personId}_document_${documentIndex + 1}`,
+          ...(documentPictureRefs.length ? { document_picture_refs: documentPictureRefs } : {}),
+          document_picture_ref: undefined
+        };
+      });
     }
     return next;
   });

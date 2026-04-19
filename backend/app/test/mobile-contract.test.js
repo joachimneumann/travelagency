@@ -3103,7 +3103,7 @@ test("booking travel plan pdf includes the assigned ATP guide section with the g
   });
   const bookingId = createdBooking.id;
   const guideProfileUpdatePath = endpointPath("keycloak_user_staff_profile_update").replace("{username}", "joachim");
-  const guideFullName = "Joachim Carl Neumann";
+  const guideName = "Joachim";
   const guideFriendlyShortName = "Joachim";
   const guideShortDescription = "Specializes in soft-paced Southeast Asia itineraries with a strong eye for comfort.";
 
@@ -3138,7 +3138,7 @@ test("booking travel plan pdf includes the assigned ATP guide section with the g
     {
       method: "PATCH",
       body: {
-        full_name: guideFullName,
+        name: guideName,
         friendly_short_name: guideFriendlyShortName,
         languages: ["de", "en", "vi"],
         short_description: guideShortDescription,
@@ -3876,7 +3876,7 @@ test("deposit receipt freezes the accepted customer record and keeps it stable a
   assert.equal(depositReceiptResult.body.booking.accepted_record.available, true);
   assert.equal(depositReceiptResult.body.booking.accepted_record.deposit_received_at, depositReceivedAt);
   assert.equal(depositReceiptResult.body.booking.accepted_record.deposit_confirmed_by_atp_staff_id, "kc-joachim");
-  assert.equal(depositReceiptResult.body.booking.accepted_record.deposit_confirmed_by_label, "Joachim Neumann");
+  assert.equal(depositReceiptResult.body.booking.accepted_record.deposit_confirmed_by_label, "Joachim");
   assert.equal(depositReceiptResult.body.booking.accepted_record.accepted_deposit_amount_cents, 3300);
   assert.equal(depositReceiptResult.body.booking.accepted_record.accepted_deposit_currency, createdBooking.preferred_currency);
   assert.equal(depositReceiptResult.body.booking.accepted_record.accepted_deposit_reference, "BANK-REF-001");
@@ -4257,8 +4257,25 @@ test("public traveler details access and update use a signed temporary link", as
     );
     assert.equal(uploadResult.status, 200);
     const uploadedPassport = uploadResult.body.person.documents.find((document) => document.document_type === "passport");
-    assert.equal(typeof uploadedPassport?.document_picture_ref, "string");
-    assert.ok(uploadedPassport.document_picture_ref.includes("/public/v1/booking-person-photos/"));
+    assert.ok(Array.isArray(uploadedPassport?.document_picture_refs));
+    assert.equal(uploadedPassport.document_picture_refs.length, 1);
+    assert.ok(uploadedPassport.document_picture_refs[0].includes("/public/v1/booking-person-photos/"));
+
+    const secondUploadResult = await requestJson(
+      `${publicDocumentPicturePath.replace("{document_type}", "passport")}?token=${encodeURIComponent(linkResult.body.traveler_details_token)}`,
+      {},
+      {
+        method: "POST",
+        body: {
+          filename: "passport-2.png",
+          data_base64: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQAAAAA3bvkkAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAACYktHRAAB3YoTpAAAAAd0SU1FB+oDCgU5NQ3qg4IAAAAldEVYdGRhdGU6Y3JlYXRlADIwMjYtMDMtMTBUMDU6NTc6NTMrMDA6MDCtMWFJAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDI2LTAzLTEwVDA1OjU3OjUzKzAwOjAw3GzZ9QAAACh0RVh0ZGF0ZTp0aW1lc3RhbXAAMjAyNi0wMy0xMFQwNTo1Nzo1MyswMDowMIt5+CoAAAAKSURBVAjXY2gAAACCAIHdQ2r0AAAAAElFTkSuQmCC"
+        }
+      }
+    );
+    assert.equal(secondUploadResult.status, 200);
+    const updatedPassport = secondUploadResult.body.person.documents.find((document) => document.document_type === "passport");
+    assert.ok(Array.isArray(updatedPassport?.document_picture_refs));
+    assert.equal(updatedPassport.document_picture_refs.length, 2);
   }
 
   const invalidAccessResult = await requestJson(`${accessPath}?token=invalid-token`, {});
@@ -4860,8 +4877,30 @@ test("booking person document picture endpoint stores separate passport and ID c
   );
   assert.equal(passportResult.status, 200);
   const passportDocument = passportResult.body.booking.persons[0].documents.find((document) => document.document_type === "passport");
-  assert.equal(typeof passportDocument?.document_picture_ref, "string");
-  assert.ok(passportDocument.document_picture_ref.includes("/public/v1/booking-person-photos/"));
+  assert.ok(Array.isArray(passportDocument?.document_picture_refs));
+  assert.equal(passportDocument.document_picture_refs.length, 1);
+  assert.ok(passportDocument.document_picture_refs[0].includes("/public/v1/booking-person-photos/"));
+
+  const passportSecondResult = await requestJson(
+    endpointPath("booking_person_document_picture")
+      .replace("{booking_id}", booking_id)
+      .replace("{person_id}", original_person.id)
+      .replace("{document_type}", "passport"),
+    apiHeaders(),
+    {
+      method: "POST",
+      body: {
+        expected_persons_revision: passportResult.body.booking.persons_revision,
+        filename: "passport-2.png",
+        data_base64: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQAAAAA3bvkkAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAACYktHRAAB3YoTpAAAAAd0SU1FB+oDCgU5NQ3qg4IAAAAldEVYdGRhdGU6Y3JlYXRlADIwMjYtMDMtMTBUMDU6NTc6NTMrMDA6MDCtMWFJAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDI2LTAzLTEwVDA1OjU3OjUzKzAwOjAw3GzZ9QAAACh0RVh0ZGF0ZTp0aW1lc3RhbXAAMjAyNi0wMy0xMFQwNTo1Nzo1MyswMDowMIt5+CoAAAAKSURBVAjXY2gAAACCAIHdQ2r0AAAAAElFTkSuQmCC",
+        actor: "joachim"
+      }
+    }
+  );
+  assert.equal(passportSecondResult.status, 200);
+  const passportDocumentAfterSecondUpload = passportSecondResult.body.booking.persons[0].documents.find((document) => document.document_type === "passport");
+  assert.ok(Array.isArray(passportDocumentAfterSecondUpload?.document_picture_refs));
+  assert.equal(passportDocumentAfterSecondUpload.document_picture_refs.length, 2);
 
   const idCardResult = await requestJson(
     endpointPath("booking_person_document_picture")
@@ -4872,7 +4911,7 @@ test("booking person document picture endpoint stores separate passport and ID c
     {
       method: "POST",
       body: {
-        expected_persons_revision: passportResult.body.booking.persons_revision,
+        expected_persons_revision: passportSecondResult.body.booking.persons_revision,
         filename: "id-card.png",
         data_base64: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQAAAAA3bvkkAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAACYktHRAAB3YoTpAAAAAd0SU1FB+oDCgU5NQ3qg4IAAAAldEVYdGRhdGU6Y3JlYXRlADIwMjYtMDMtMTBUMDU6NTc6NTMrMDA6MDCtMWFJAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDI2LTAzLTEwVDA1OjU3OjUzKzAwOjAw3GzZ9QAAACh0RVh0ZGF0ZTp0aW1lc3RhbXAAMjAyNi0wMy0xMFQwNTo1Nzo1MyswMDowMIt5+CoAAAAKSURBVAjXY2gAAACCAIHdQ2r0AAAAAElFTkSuQmCC",
         actor: "joachim"
@@ -4881,8 +4920,9 @@ test("booking person document picture endpoint stores separate passport and ID c
   );
   assert.equal(idCardResult.status, 200);
   const idCardDocument = idCardResult.body.booking.persons[0].documents.find((document) => document.document_type === "national_id");
-  assert.equal(typeof idCardDocument?.document_picture_ref, "string");
-  assert.ok(idCardDocument.document_picture_ref.includes("/public/v1/booking-person-photos/"));
+  assert.ok(Array.isArray(idCardDocument?.document_picture_refs));
+  assert.equal(idCardDocument.document_picture_refs.length, 1);
+  assert.ok(idCardDocument.document_picture_refs[0].includes("/public/v1/booking-person-photos/"));
 });
 
 test("offer exchange-rates endpoint works", async () => {
@@ -5406,7 +5446,7 @@ test("admin can update ATP staff profile details while non-admin cannot", async 
   const profilePath = endpointPath("keycloak_user_staff_profile_update").replace("{username}", "joachim");
   const shortDescriptionEn = "Shapes calm Southeast Asia routes with realistic transfer windows and recovery time between highlights.";
   const shortDescriptionDe = "Plant ruhige Südostasien-Routen mit realistischen Transferzeiten und Erholungsphasen zwischen den Höhepunkten.";
-  const fullName = "Joachim Carl Neumann";
+  const name = "Joachim";
   const friendlyShortName = "Joachim";
   const teamOrder = 3;
 
@@ -5433,7 +5473,7 @@ test("admin can update ATP staff profile details while non-admin cannot", async 
     {
       method: "PATCH",
       body: {
-        full_name: fullName,
+        name,
         friendly_short_name: friendlyShortName,
         team_order: teamOrder,
         languages: ["de", "en", "vi"],
@@ -5453,7 +5493,7 @@ test("admin can update ATP staff profile details while non-admin cannot", async 
   );
   assert.equal(updateResult.status, 200);
   assert.equal(updateResult.body.user.username, "joachim");
-  assert.equal(updateResult.body.user.staff_profile.full_name, fullName);
+  assert.equal(updateResult.body.user.staff_profile.name, name);
   assert.equal(updateResult.body.user.staff_profile.friendly_short_name, friendlyShortName);
   assert.equal(updateResult.body.user.staff_profile.team_order, teamOrder);
   assert.deepEqual(updateResult.body.user.staff_profile.languages, ["de", "en", "vi"]);
@@ -5662,7 +5702,7 @@ test("assigned staff only sees their own bookings while admin sees all", async (
   assert.equal(assignResult.status, 200);
   assert.equal(assignResult.body.booking.assigned_keycloak_user_id, "kc-staff");
   assert.equal(assignResult.body.booking.assigned_atp_staff.username, "staff");
-  assert.equal(assignResult.body.booking.assigned_atp_staff.name, "Staff User");
+  assert.equal(assignResult.body.booking.assigned_atp_staff.name, "Staff");
 
   const detailAfterAssign = await requestJson(endpointPath("booking_detail").replace("{booking_id}", booking_id), apiHeaders());
   assert.equal(detailAfterAssign.status, 200);
@@ -5685,7 +5725,7 @@ test("assigned staff only sees their own bookings while admin sees all", async (
   const adminList = await requestJson(`${endpointPath("bookings")}?page=1&page_size=10&sort=created_at_desc`, apiHeaders("atp_admin", "admin", "kc-admin"));
   assert.equal(adminList.status, 200);
   assert.equal(adminList.body.items.length, 1);
-  assert.equal(adminList.body.items[0].assigned_keycloak_user_label, "Staff User");
+  assert.equal(adminList.body.items[0].assigned_keycloak_user_label, "Staff");
 
   const staffList = await requestJson(
     `${endpointPath("bookings")}?page=1&page_size=10&sort=created_at_desc`,
@@ -5694,7 +5734,7 @@ test("assigned staff only sees their own bookings while admin sees all", async (
   assert.equal(staffList.status, 200);
   assert.equal(staffList.body.items.length, 1);
   assert.equal(staffList.body.items[0].id, booking_id);
-  assert.equal(staffList.body.items[0].assigned_keycloak_user_label, "Staff User");
+  assert.equal(staffList.body.items[0].assigned_keycloak_user_label, "Staff");
 
   const otherStaffList = await requestJson(
     `${endpointPath("bookings")}?page=1&page_size=10&sort=created_at_desc`,

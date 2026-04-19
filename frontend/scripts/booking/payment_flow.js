@@ -279,7 +279,9 @@ export function createBookingPaymentFlowModule(ctx) {
       users.set(selectedId, { id: selectedId, username: selectedId, name: selectedId });
     }
     const optionLabel = (user) => String(
-      user?.staff_profile?.full_name
+      user?.staff_profile?.name
+      || user?.first_name
+      || user?.staff_profile?.full_name
       || user?.full_name
       || user?.name
       || user?.preferred_username
@@ -303,7 +305,9 @@ export function createBookingPaymentFlowModule(ctx) {
       (entry) => String(entry?.id || "").trim() === normalizedId
     );
     return String(
-      user?.staff_profile?.full_name
+      user?.staff_profile?.name
+      || user?.first_name
+      || user?.staff_profile?.full_name
       || user?.full_name
       || user?.name
       || user?.preferred_username

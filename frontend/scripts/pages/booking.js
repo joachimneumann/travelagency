@@ -413,6 +413,7 @@ const els = {
   travel_plan_editor: document.getElementById("travel_plan_editor"),
   travel_plan_translate_all_btn: document.getElementById("travel_plan_translate_all_btn"),
   travel_plan_save_standard_tour_btn: document.getElementById("travel_plan_save_standard_tour_btn"),
+  travel_plan_renumber_days_btn: document.getElementById("travel_plan_renumber_days_btn"),
   travel_plan_status: document.getElementById("travel_plan_status"),
   travel_plan_translate_overlay: document.getElementById("travel_plan_translate_overlay"),
   travel_plan_translate_overlay_text: document.getElementById("travel_plan_translate_overlay_text"),
@@ -1866,7 +1867,11 @@ async function loadAuthStatus() {
 
 function displayKeycloakUser(user) {
   if (!user || typeof user !== "object") return "";
-  return normalizeText(user.name) || normalizeText(user.username) || normalizeText(user.id) || "";
+  return normalizeText(user.first_name)
+    || normalizeText(user.name)
+    || normalizeText(user.username)
+    || normalizeText(user.id)
+    || "";
 }
 
 function resolveCurrentAuthKeycloakUser(expectedId = "") {

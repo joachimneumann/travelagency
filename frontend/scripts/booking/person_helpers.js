@@ -2,6 +2,17 @@ import { normalizeText, escapeHtml } from "../shared/api.js";
 import { isTravelingPerson, normalizeStringList } from "../shared/booking_persons.js";
 import { bookingT } from "./i18n.js";
 
+function normalizeDocumentPictureRefs(document) {
+  return Array.from(new Set(
+    [
+      ...(Array.isArray(document?.document_picture_refs) ? document.document_picture_refs : []),
+      document?.document_picture_ref
+    ]
+      .map((value) => normalizeText(value))
+      .filter(Boolean)
+  ));
+}
+
 export function collectPersonEmails(person) {
   return Array.from(
     new Set(
@@ -36,7 +47,7 @@ export function documentHasAnyData(document) {
   return [
     document.holder_name,
     document.document_number,
-    document.document_picture_ref,
+    ...normalizeDocumentPictureRefs(document),
     document.issuing_country,
     document.issued_on,
     document.expires_on,
@@ -50,7 +61,7 @@ export function normalizePersonDocumentDraft(document = {}, document_type = "pas
     document_type: normalizeText(document.document_type) || document_type,
     holder_name: normalizeText(document.holder_name) || "",
     document_number: normalizeText(document.document_number) || "",
-    document_picture_ref: normalizeText(document.document_picture_ref) || "",
+    document_picture_refs: normalizeDocumentPictureRefs(document),
     issuing_country: normalizeText(document.issuing_country).toUpperCase() || "",
     issued_on: normalizeText(document.issued_on) || "",
     no_expiration_date: document.no_expiration_date === true,
@@ -75,7 +86,7 @@ export function buildDocumentPayloadFromDraft(document, person_id, booking_id, i
     document_type: normalizeText(normalized.document_type) || "passport",
     holder_name: normalizeText(normalized.holder_name) || undefined,
     document_number: normalizeText(normalized.document_number) || undefined,
-    document_picture_ref: normalizeText(normalized.document_picture_ref) || undefined,
+    document_picture_refs: normalized.document_picture_refs.length ? normalized.document_picture_refs : undefined,
     issuing_country: normalizeText(normalized.issuing_country).toUpperCase() || undefined,
     issued_on: normalizeText(normalized.issued_on) || undefined,
     no_expiration_date: normalized.no_expiration_date === true ? true : undefined,
