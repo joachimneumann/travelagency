@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { copyFile, mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { createTourHelpers } from "../../backend/app/src/domain/tours_support.js";
@@ -39,8 +40,9 @@ const TOUR_FILE_SUFFIX = ".json";
 const ALLOWED_ASSET_EXTENSIONS = new Set([".avif", ".gif", ".jpeg", ".jpg", ".png", ".svg", ".webp"]);
 const HOMEPAGE_TOUR_IMAGE_SIZE = 720;
 const HOMEPAGE_TOUR_IMAGE_QUALITY = 68;
-const SHARP_MODULE_URL = pathToFileURL(path.join(ROOT_DIR, "backend", "app", "node_modules", "sharp", "lib", "index.js")).href;
+const backendAppRequire = createRequire(path.join(ROOT_DIR, "backend", "app", "package.json"));
 let sharpModulePromise = null;
+let hasWarnedAboutMissingSharp = false;
 
 function safeInt(value) {
   const normalized = normalizeText(value);
@@ -156,7 +158,22 @@ function isRasterAssetFile(filename) {
 
 async function loadSharp() {
   if (!sharpModulePromise) {
-    sharpModulePromise = import(SHARP_MODULE_URL).then((module) => module.default || module);
+    sharpModulePromise = (async () => {
+      try {
+        const sharpModulePath = backendAppRequire.resolve("sharp");
+        const module = await import(pathToFileURL(sharpModulePath).href);
+        return module.default || module;
+      } catch (error) {
+        if (!hasWarnedAboutMissingSharp) {
+          hasWarnedAboutMissingSharp = true;
+          console.warn(
+            `[homepage-assets] sharp is unavailable (${String(error?.message || error)}). `
+            + "Falling back to copying raster assets without resize/webp optimization."
+          );
+        }
+        return null;
+      }
+    })();
   }
   return sharpModulePromise;
 }
@@ -165,13 +182,14 @@ async function generateHomepageTourAssets(sourceDir, destinationDir) {
   await ensureDirectory(destinationDir);
   const entries = await listDirectoryEntries(sourceDir);
   const generatedPathBySourceName = new Map();
+  const sharp = await loadSharp();
 
   for (const entry of entries) {
     if (!entry.isFile()) continue;
     if (!isAllowedAssetFile(entry.name)) continue;
 
     const sourcePath = path.join(sourceDir, entry.name);
-    if (!isRasterAssetFile(entry.name)) {
+    if (!isRasterAssetFile(entry.name) || !sharp) {
       const destinationPath = path.join(destinationDir, entry.name);
       await copyFile(sourcePath, destinationPath);
       generatedPathBySourceName.set(entry.name, entry.name);
@@ -180,7 +198,6 @@ async function generateHomepageTourAssets(sourceDir, destinationDir) {
 
     const outputName = `${path.parse(entry.name).name}.webp`;
     const destinationPath = path.join(destinationDir, outputName);
-    const sharp = await loadSharp();
     await sharp(sourcePath, { failOn: "none" })
       .rotate()
       .resize(HOMEPAGE_TOUR_IMAGE_SIZE, HOMEPAGE_TOUR_IMAGE_SIZE, {
