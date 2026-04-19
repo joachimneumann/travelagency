@@ -3172,7 +3172,7 @@ test("travel style catalog stays generated from config and exposed through the g
   );
 });
 
-test("settings page staff table shows separate realm and client Keycloak roles", async () => {
+test("settings page staff table shows combined Keycloak roles and status pills", async () => {
   const settingsPageModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "settings_list.js");
   const settingsPageHtmlPath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "settings.html");
   const siteCssPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "site.css");
@@ -3187,12 +3187,12 @@ test("settings page staff table shows separate realm and client Keycloak roles",
   );
   assert.match(
     source,
-    /<th class="backend-table-align-right">\$\{escapeHtml\(backendT\("backend\.table\.active", "Active"\)\)\}<\/th>/,
-    "Settings user table should include an Active header column"
+    /<th class="settings-staff-table__status-col">\$\{escapeHtml\(backendT\("backend\.table\.status", "Status"\)\)\}<\/th>/,
+    "Settings user table should include a Status header column"
   );
   assert.match(
     source,
-    /formatKeycloakRoleList\(getDisplayedKeycloakRoles\(user\)\)/,
+    /<td class="keycloak-roles-col">\$\{formatKeycloakRolesCell\(staff\)\}<\/td>/,
     "Settings user table should display the combined realm and client roles in the Roles column"
   );
   assert.doesNotMatch(
@@ -3212,8 +3212,8 @@ test("settings page staff table shows separate realm and client Keycloak roles",
   );
   assert.match(
     html,
-    /id="staffEditorName"[\s\S]*id="staffEditorFriendlyShortName"[\s\S]*id="staffEditorTeamOrder"/,
-    "Settings page should expose editable ATP staff name, friendly-short-name, and team-order fields"
+    /id="staffEditorNameValue"[\s\S]*id="staffEditorFriendlyShortName"[\s\S]*id="staffEditorTeamOrder"/,
+    "Settings page should expose the read-only ATP staff name plus editable friendly-short-name and team-order fields"
   );
   assert.match(
     html,
