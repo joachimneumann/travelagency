@@ -1010,104 +1010,113 @@ async function submitForm(event) {
     return;
   }
 
-  const duplicate = await findDuplicateTourTitle(title_i18n, state.id);
-  if (duplicate) {
-    const duplicateMessage = backendT(
-      "tour.error.duplicate_title",
-      "A tour titled \"{title}\" already exists (ID: {id}). Please use a different title.",
-      { title: duplicate.title || payload.title, id: duplicate.id }
-    );
-    setTitleError(duplicateMessage);
-    showError(duplicateMessage);
-    setStatus(backendT("tour.status.duplicate", "Save blocked due to duplicate title."));
-    focusPrimaryTitleField();
-    return;
-  }
-
-  setStatus(backendT("tour.status.saving", "Saving..."));
-  const is_create = state.is_create_mode;
-  const request = is_create
-    ? tourCreateRequest({ baseURL: apiOrigin })
-    : tourUpdateRequest({ baseURL: apiOrigin, params: { tour_id: state.id } });
-  const result = await fetchApi(withApiLang(request.url), {
-    method: request.method,
-    body: payload
-  });
-  if (!result) return;
-  if (!result.tour) return;
-  let finalSaveStatus = homepageAssetSyncFailed(result)
-    ? homepageAssetSyncWarningMessage()
-    : (is_create
-      ? backendT("tour.status.created", "Tour created.")
-      : backendT("tour.status.updated", "Tour updated."));
-  state.tour = result.tour;
-  state.localizedContent.title_i18n = normalizeLocalizedTextMap(
-    result.tour.title_i18n || { en: result.tour.title || "" }
-  );
-  state.localizedContent.short_description_i18n = normalizeLocalizedTextMap(
-    result.tour.short_description_i18n || { en: result.tour.short_description || "" }
-  );
-  state.id = String(result.tour.id || "");
-  state.is_create_mode = false;
-  updateHeader(state.tour, tour_destinations(state.tour), tour_styles(state.tour));
-
-  if (pendingPictures.length) {
-    for (let index = 0; index < pendingPictures.length; index += 1) {
-      const item = pendingPictures[index];
-      setStatus(
-        backendT("tour.status.uploading_picture_progress", "Uploading picture {current} of {total}...", {
-          current: String(index + 1),
-          total: String(pendingPictures.length)
-        })
+  let keepPageOverlayVisible = false;
+  setTourPageOverlay(true, backendT("tour.status.saving_overlay", "Saving changes. Please wait."));
+  try {
+    const duplicate = await findDuplicateTourTitle(title_i18n, state.id);
+    if (duplicate) {
+      const duplicateMessage = backendT(
+        "tour.error.duplicate_title",
+        "A tour titled \"{title}\" already exists (ID: {id}). Please use a different title.",
+        { title: duplicate.title || payload.title, id: duplicate.id }
       );
-      const base64 = await fileToBase64(item.file);
-      const pictureRequest = tourPictureUploadRequest({ baseURL: apiOrigin, params: { tour_id: state.id } });
-      const pictureResult = await fetchApi(withApiLang(pictureRequest.url), {
-        method: pictureRequest.method,
-        body: {
-          filename: item.file.name,
-          data_base64: base64
+      setTitleError(duplicateMessage);
+      showError(duplicateMessage);
+      setStatus(backendT("tour.status.duplicate", "Save blocked due to duplicate title."));
+      focusPrimaryTitleField();
+      return;
+    }
+
+    setStatus(backendT("tour.status.saving", "Saving..."));
+    const is_create = state.is_create_mode;
+    const request = is_create
+      ? tourCreateRequest({ baseURL: apiOrigin })
+      : tourUpdateRequest({ baseURL: apiOrigin, params: { tour_id: state.id } });
+    const result = await fetchApi(withApiLang(request.url), {
+      method: request.method,
+      body: payload
+    });
+    if (!result) return;
+    if (!result.tour) return;
+    let finalSaveStatus = homepageAssetSyncFailed(result)
+      ? homepageAssetSyncWarningMessage()
+      : (is_create
+        ? backendT("tour.status.created", "Tour created.")
+        : backendT("tour.status.updated", "Tour updated."));
+    state.tour = result.tour;
+    state.localizedContent.title_i18n = normalizeLocalizedTextMap(
+      result.tour.title_i18n || { en: result.tour.title || "" }
+    );
+    state.localizedContent.short_description_i18n = normalizeLocalizedTextMap(
+      result.tour.short_description_i18n || { en: result.tour.short_description || "" }
+    );
+    state.id = String(result.tour.id || "");
+    state.is_create_mode = false;
+    updateHeader(state.tour, tour_destinations(state.tour), tour_styles(state.tour));
+
+    if (pendingPictures.length) {
+      for (let index = 0; index < pendingPictures.length; index += 1) {
+        const item = pendingPictures[index];
+        setStatus(
+          backendT("tour.status.uploading_picture_progress", "Uploading picture {current} of {total}...", {
+            current: String(index + 1),
+            total: String(pendingPictures.length)
+          })
+        );
+        const base64 = await fileToBase64(item.file);
+        const pictureRequest = tourPictureUploadRequest({ baseURL: apiOrigin, params: { tour_id: state.id } });
+        const pictureResult = await fetchApi(withApiLang(pictureRequest.url), {
+          method: pictureRequest.method,
+          body: {
+            filename: item.file.name,
+            data_base64: base64
+          }
+        });
+        if (!pictureResult) return;
+        if (homepageAssetSyncFailed(pictureResult)) {
+          finalSaveStatus = homepageAssetSyncWarningMessage();
         }
-      });
-      if (!pictureResult) return;
-      if (homepageAssetSyncFailed(pictureResult)) {
-        finalSaveStatus = homepageAssetSyncWarningMessage();
-      }
-      if (pictureResult.tour) {
-        state.tour = pictureResult.tour;
+        if (pictureResult.tour) {
+          state.tour = pictureResult.tour;
+        }
       }
     }
-  }
 
-  if (!is_create && removedPictures.length) {
-    for (const picture of removedPictures) {
-      const pictureName = pictureNameFromValue(picture);
-      if (!pictureName) continue;
-      setStatus(backendT("tour.status.removing_picture", "Removing picture..."));
-      const deleteRequest = tourPictureDeleteRequest({
-        baseURL: apiOrigin,
-        params: { tour_id: state.id, picture_name: pictureName }
-      });
-      const deleteResult = await fetchApi(withApiLang(deleteRequest.url), {
-        method: deleteRequest.method
-      });
-      if (!deleteResult) return;
-      if (homepageAssetSyncFailed(deleteResult)) {
-        finalSaveStatus = homepageAssetSyncWarningMessage();
-      }
-      if (deleteResult.tour) {
-        state.tour = deleteResult.tour;
+    if (!is_create && removedPictures.length) {
+      for (const picture of removedPictures) {
+        const pictureName = pictureNameFromValue(picture);
+        if (!pictureName) continue;
+        setStatus(backendT("tour.status.removing_picture", "Removing picture..."));
+        const deleteRequest = tourPictureDeleteRequest({
+          baseURL: apiOrigin,
+          params: { tour_id: state.id, picture_name: pictureName }
+        });
+        const deleteResult = await fetchApi(withApiLang(deleteRequest.url), {
+          method: deleteRequest.method
+        });
+        if (!deleteResult) return;
+        if (homepageAssetSyncFailed(deleteResult)) {
+          finalSaveStatus = homepageAssetSyncWarningMessage();
+        }
+        if (deleteResult.tour) {
+          state.tour = deleteResult.tour;
+        }
       }
     }
-  }
 
-  setStatus(finalSaveStatus);
-  if (is_create) {
-    state.allowPageUnload = true;
-    window.location.href = withBackendLang("/marketing_tour.html", { id: state.id });
-    return;
+    setStatus(finalSaveStatus);
+    if (is_create) {
+      state.allowPageUnload = true;
+      keepPageOverlayVisible = true;
+      window.location.href = withBackendLang("/marketing_tour.html", { id: state.id });
+      return;
+    }
+    await loadTour();
+  } finally {
+    if (!keepPageOverlayVisible) {
+      setTourPageOverlay(false);
+    }
   }
-  await loadTour();
 }
 
 async function fileToBase64(file) {
