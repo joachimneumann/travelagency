@@ -720,6 +720,8 @@ function redirectToBackendLogin() {
 
 async function init() {
   await waitForBackendI18n();
+  renderBookingPdfPersonalizationPanels(els);
+  Object.assign(els, resolveBookingPdfPersonalizationElements(document));
   window.addEventListener("backend-nav-mounted", refreshBackendNavRefs);
   await waitForBackendNavRefs();
   if (state.contentLangInitialized && state.contentLang) {

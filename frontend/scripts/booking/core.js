@@ -763,7 +763,10 @@ export function createBookingCoreModule(ctx) {
       && travelerCount <= entry.maxTravelers
     )) || null;
     if (!section) {
-      return `<div class="booking-pdf-panel__policy-section">${escapeHtml("Set traveler count to show the applicable cancellation policy section.")}</div>`;
+      return `<div class="booking-pdf-panel__policy-section">${escapeHtml(bookingT(
+        "booking.pdf.offer.cancellation_policy_preview_missing_travelers",
+        "Set traveler count to show the applicable cancellation policy section."
+      ))}</div>`;
     }
     const title = bookingT(
       "booking.pdf.offer.cancellation_policy_preview_title",

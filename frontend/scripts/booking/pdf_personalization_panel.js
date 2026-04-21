@@ -1,3 +1,5 @@
+import { bookingT } from "./i18n.js";
+
 const BOOKING_PDF_PERSONALIZATION_PANELS = Object.freeze([
   Object.freeze({
     scope: "travel_plan",
@@ -5,6 +7,7 @@ const BOOKING_PDF_PERSONALIZATION_PANELS = Object.freeze([
     referenceElsKey: "pdfTravelPlanReference",
     referenceMountId: "booking_pdf_travel_plan_reference",
     title: "PDF Texts",
+    titleKey: "booking.pdf_texts",
     variant: "collapsible",
     initiallyOpen: false,
     items: Object.freeze([
@@ -91,6 +94,7 @@ const BOOKING_PDF_PERSONALIZATION_PANELS = Object.freeze([
     referenceElsKey: "pdfOfferReference",
     referenceMountId: "booking_pdf_offer_reference",
     title: "PDF Texts",
+    titleKey: "booking.pdf_texts",
     variant: "collapsible",
     initiallyOpen: false,
     items: Object.freeze([
@@ -187,6 +191,7 @@ const BOOKING_PDF_PERSONALIZATION_PANELS = Object.freeze([
     referenceElsKey: "pdfPaymentConfirmationDepositReference",
     referenceMountId: "booking_pdf_payment_confirmation_deposit_reference",
     title: "PDF Texts",
+    titleKey: "booking.pdf_texts",
     variant: "collapsible",
     initiallyOpen: false,
     items: Object.freeze([
@@ -387,11 +392,16 @@ function buildPdfFieldMountsMarkup(config) {
     .join("");
 }
 
+function resolvePdfPanelTitle(config) {
+  return bookingT(config?.titleKey, config?.title || "");
+}
+
 function buildPdfReferenceMarkup(config) {
+  const title = bookingT("booking.pdf.reference.web_form_title", "Web form submission:");
   return `
     <aside class="booking-pdf-reference">
       <div class="booking-pdf-reference__head">
-        <h3 class="booking-pdf-reference__title booking-pdf-reference__title--compact" data-i18n-id="booking.pdf.reference.web_form_title">Web form submission:</h3>
+        <h3 class="booking-pdf-reference__title booking-pdf-reference__title--compact">${escapePanelHtml(title)}</h3>
       </div>
       <div id="${config.referenceMountId}"></div>
     </aside>
@@ -422,7 +432,7 @@ export function buildBookingPdfPanelBodyMarkup({
 
 function buildPdfPanelBodyMarkup(config) {
   return buildBookingPdfPanelBodyMarkup({
-    title: config.title,
+    title: resolvePdfPanelTitle(config),
     variant: config.variant,
     fieldsMarkup: buildPdfFieldMountsMarkup(config),
     referenceMarkup: buildPdfReferenceMarkup(config)
@@ -434,7 +444,7 @@ function renderCollapsiblePdfPanel(panel, config) {
   panel.dataset.bookingPdfPanel = config.scope;
   panel.classList.toggle("is-open", config.initiallyOpen === true);
   panel.innerHTML = buildBookingCollapsibleSectionInnerMarkup({
-    title: config.title,
+    title: resolvePdfPanelTitle(config),
     bodyMarkup: buildPdfPanelBodyMarkup(config)
   });
 }
