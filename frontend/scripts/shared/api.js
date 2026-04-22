@@ -74,7 +74,8 @@ export async function fetchApiJson(path, options = {}) {
     onError = null,
     onSuccess = null,
     connectionErrorMessage = "Could not connect to backend API.",
-    includeDetailInError = true
+    includeDetailInError = true,
+    cache = ""
   } = options;
   const url = resolveApiUrl(apiBase, path);
   const requestMeta = {
@@ -86,6 +87,7 @@ export async function fetchApiJson(path, options = {}) {
   try {
     const response = await fetch(url, {
       method,
+      ...(cache ? { cache } : {}),
       credentials: "include",
       headers: {
         ...(body ? { "Content-Type": "application/json" } : {})
@@ -152,7 +154,8 @@ export function createApiFetcher(config = {}) {
       includeDetailInError: options.includeDetailInError ?? includeDetailInError,
       onError,
       onSuccess,
-      connectionErrorMessage: options.connectionErrorMessage || connectionErrorMessage
+      connectionErrorMessage: options.connectionErrorMessage || connectionErrorMessage,
+      cache: options.cache
     });
   };
 }

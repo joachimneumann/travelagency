@@ -93,6 +93,7 @@
   "backend.tours.search_placeholder": "id, tiêu đề, quốc gia, phong cách...",
   "backend.tours.status.deleted": "Tour đã được xóa.",
   "backend.tours.status.deleting": "Đang xóa tour...",
+  "backend.tours.status.deleting_overlay": "Đang xóa tour. Vui lòng chờ.",
   "backend.tours.style_label": "Phong cách",
   "backend.emergency.add_contact": "Thêm liên hệ",
   "backend.emergency.add_country": "Thêm quốc gia",

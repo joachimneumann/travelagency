@@ -406,7 +406,7 @@ export function createFrontendToursController(ctx) {
 
   async function loadTrips() {
     const lang = normalizeFrontendTourLang(currentFrontendLang());
-    const response = await fetch(publicToursDataUrl(lang), { cache: "default" });
+    const response = await fetch(publicToursDataUrl(lang), { cache: "no-store" });
     if (!response.ok) {
       throw new Error(`Static tours request failed with status ${response.status}.`);
     }

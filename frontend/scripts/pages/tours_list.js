@@ -22,6 +22,9 @@ const apiBase = getBackendApiBase();
 const apiOrigin = getBackendApiOrigin();
 
 const els = {
+  pageBody: document.body,
+  pageHeader: document.getElementById("top"),
+  mainContent: document.getElementById("main-content"),
   homeLink: document.getElementById("backendHomeLink"),
   logoutLink: document.getElementById("backendLogoutLink"),
   userLabel: document.getElementById("backendUserLabel"),
@@ -42,7 +45,9 @@ const els = {
   tourDeleteModalMessage: document.getElementById("tourDeleteModalMessage"),
   tourDeleteModalCloseBtn: document.getElementById("tourDeleteModalCloseBtn"),
   tourDeleteModalCancelBtn: document.getElementById("tourDeleteModalCancelBtn"),
-  tourDeleteModalConfirmBtn: document.getElementById("tourDeleteModalConfirmBtn")
+  tourDeleteModalConfirmBtn: document.getElementById("tourDeleteModalConfirmBtn"),
+  deleteOverlay: document.getElementById("toursDeleteOverlay"),
+  deleteOverlayText: document.getElementById("toursDeleteOverlayText")
 };
 
 const GENERATED_ROLE_LOOKUP = Object.freeze(
@@ -105,6 +110,36 @@ function clearError() {
 function setActionStatus(message = "") {
   if (!els.toursActionStatus) return;
   els.toursActionStatus.textContent = message;
+}
+
+function setToursPageOverlay(isVisible, message = "") {
+  if (els.deleteOverlayText) {
+    els.deleteOverlayText.textContent = String(
+      message || backendT("backend.tours.status.deleting", "Deleting tour...")
+    ).trim();
+  }
+  if (els.pageBody instanceof HTMLElement) {
+    els.pageBody.classList.toggle("backend-list-page--busy", Boolean(isVisible));
+  }
+  if (els.pageHeader instanceof HTMLElement) {
+    els.pageHeader.inert = Boolean(isVisible);
+    els.pageHeader.setAttribute("aria-busy", isVisible ? "true" : "false");
+  }
+  if (els.mainContent instanceof HTMLElement) {
+    els.mainContent.inert = Boolean(isVisible);
+    els.mainContent.setAttribute("aria-busy", isVisible ? "true" : "false");
+  }
+  if (!(els.deleteOverlay instanceof HTMLElement)) return;
+  if (isVisible) {
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+    els.deleteOverlay.hidden = false;
+    els.deleteOverlay.setAttribute("aria-hidden", "false");
+    return;
+  }
+  els.deleteOverlay.hidden = true;
+  els.deleteOverlay.setAttribute("aria-hidden", "true");
 }
 
 function formatIntegerWithGrouping(value) {
@@ -272,7 +307,7 @@ async function loadTours() {
       pageSize: state.tours.pageSize
     })
   });
-  const payload = await fetchApi(withBackendApiLang(request.url));
+  const payload = await fetchApi(withBackendApiLang(request.url), { cache: "no-store" });
   if (!payload || loadToken !== state.tours.loadToken) return;
   const pagination = payload.pagination || {};
 
@@ -464,28 +499,36 @@ async function deleteTour(tourId, title) {
   state.tours.deletingId = tourId;
   setActionStatus(backendT("backend.tours.status.deleting", "Deleting tour..."));
   renderTours(state.tours.lastItems);
+  let keepPageOverlayVisible = false;
+  setToursPageOverlay(true, backendT("backend.tours.status.deleting_overlay", "Deleting tour. Please wait."));
 
-  const request = tourDeleteRequest({
-    baseURL: apiOrigin,
-    params: { tour_id: tourId }
-  });
-  const result = await fetchApiJson(withBackendApiLang(request.url), {
-    apiBase,
-    method: request.method,
-    includeDetailInError: false,
-    connectionErrorMessage: backendT("tour.error.connect", "Could not connect to backend API."),
-    onError: (message) => showError(message)
-  });
+  try {
+    const request = tourDeleteRequest({
+      baseURL: apiOrigin,
+      params: { tour_id: tourId }
+    });
+    const result = await fetchApiJson(withBackendApiLang(request.url), {
+      apiBase,
+      method: request.method,
+      includeDetailInError: false,
+      connectionErrorMessage: backendT("tour.error.connect", "Could not connect to backend API."),
+      onError: (message) => showError(message)
+    });
 
-  state.tours.deletingId = "";
-  if (!result?.deleted) {
-    renderTours(state.tours.lastItems);
-    return;
+    if (!result?.deleted) {
+      renderTours(state.tours.lastItems);
+      return;
+    }
+
+    clearError();
+    setActionStatus(backendT("backend.tours.status.deleted", "Tour deleted."));
+    keepPageOverlayVisible = true;
+    window.location.reload();
+  } finally {
+    state.tours.deletingId = "";
+    if (!keepPageOverlayVisible) {
+      setToursPageOverlay(false);
+      renderTours(state.tours.lastItems);
+    }
   }
-
-  clearError();
-  setActionStatus(backendT("backend.tours.status.deleted", "Tour deleted."));
-  const wouldLeavePageEmpty = state.tours.page > 1 && state.tours.total > 0 && state.tours.total - 1 <= (state.tours.page - 1) * state.tours.pageSize;
-  if (wouldLeavePageEmpty) state.tours.page = Math.max(1, state.tours.page - 1);
-  await loadTours();
 }

@@ -3768,8 +3768,8 @@ test("frontend language switching updates the homepage in place instead of forci
   );
   assert.match(
     mainToursSource,
-    /function publicToursDataUrl\(lang\) \{[\s\S]*generatedTourAssetUrlsByLang\(\)\?\.\[normalizedLang\][\s\S]*async function loadTrips\(\) \{[\s\S]*const lang = normalizeFrontendTourLang\(currentFrontendLang\(\)\);[\s\S]*fetch\(publicToursDataUrl\(lang\), \{ cache: "default" \}\)/,
-    "Homepage tour loading should use generated versioned per-language URLs and allow normal browser caching"
+    /function publicToursDataUrl\(lang\) \{[\s\S]*generatedTourAssetUrlsByLang\(\)\?\.\[normalizedLang\][\s\S]*async function loadTrips\(\) \{[\s\S]*const lang = normalizeFrontendTourLang\(currentFrontendLang\(\)\);[\s\S]*fetch\(publicToursDataUrl\(lang\), \{ cache: "no-store" \}\)/,
+    "Homepage tour loading should use generated versioned per-language URLs and bypass browser cache"
   );
   assert.doesNotMatch(
     mainToursSource,

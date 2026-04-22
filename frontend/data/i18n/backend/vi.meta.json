@@ -469,6 +469,11 @@
     "origin": "machine",
     "updated_at": "2026-03-30T23:51:31.875Z"
   },
+  "backend.tours.status.deleting_overlay": {
+    "source_hash": "740b5cc0eb76b18184f05134a99d077877355f1520c3dfff1045a88b6ab8e6f8",
+    "origin": "machine",
+    "updated_at": "2026-04-22T00:00:00.000Z"
+  },
   "backend.tours.style_label": {
     "source_hash": "7e744141b40ea5501412e42c8b40fd0b05f1608aa2e4073944ccccbd82f24ee8",
     "origin": "machine",
