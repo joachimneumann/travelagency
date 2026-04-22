@@ -62,6 +62,15 @@ deploy_context_resolve_entrypoint() {
     backend:production)
       printf '%s\n' "$root_dir/scripts/production/deploy_production_backend.sh"
       ;;
+    backend_frontend:local)
+      printf '%s\n' "$root_dir/scripts/local/deploy_local_backend_frontend.sh"
+      ;;
+    backend_frontend:staging)
+      printf '%s\n' "$root_dir/scripts/staging/deploy_staging_backend_frontend.sh"
+      ;;
+    backend_frontend:production)
+      printf '%s\n' "$root_dir/scripts/production/deploy_production_backend_frontend.sh"
+      ;;
     keycloak:local)
       printf '%s\n' "$root_dir/scripts/local/start_local_keycloak.sh"
       ;;

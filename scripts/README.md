@@ -30,6 +30,7 @@ Common entry points:
 ```bash
 ./deploy_frontend
 ./deploy_backend
+./deploy_backend_frontend
 ./deploy_keycloak
 ./deploy_all
 
@@ -92,11 +93,12 @@ Current public routing notes:
 
 ## Directory-Aware Wrappers
 
-The repo root now includes four wrapper commands:
+The repo root now includes five wrapper commands:
 
 ```bash
 ./deploy_frontend
 ./deploy_backend
+./deploy_backend_frontend
 ./deploy_keycloak
 ./deploy_all
 ```
@@ -107,3 +109,8 @@ directory:
 - `/Users/joachim/projects/travelagency` -> local scripts
 - `/srv/asiatravelplan` -> production scripts
 - `/srv/asiatravelplan-staging` -> staging scripts
+
+Use `./deploy_backend_frontend` instead of running `./deploy_backend` followed
+by `./deploy_frontend`. The combined wrapper dispatches to the environment's
+backend+frontend deploy entrypoint so shared work such as i18n checks, predeploy
+tests, `git pull`, and static homepage asset generation runs only once.
