@@ -35,7 +35,7 @@ export function createStandardTourEditor({
     features: {
       dayImport: false,
       planImport: false,
-      templateImport: false,
+      standardTourImport: false,
       serviceImport: false,
       imageUpload: false
     }
@@ -47,10 +47,10 @@ export function createStandardTourEditor({
     travelPlanModule.bindEvents();
   }
 
-  function applyTemplate(template) {
+  function applyStandardTour(standardTour) {
     state.booking = {
-      id: normalizeText(template?.id),
-      travel_plan: template?.travel_plan || { days: [], attachments: [] },
+      id: normalizeText(standardTour?.id),
+      travel_plan: standardTour?.travel_plan || { days: [], attachments: [] },
       translation_enabled: false,
       travel_plan_translation_status: {}
     };
@@ -59,7 +59,7 @@ export function createStandardTourEditor({
   }
 
   return {
-    applyTemplate,
+    applyStandardTour,
     bind,
     collectPayload: (options) => travelPlanModule.collectTravelPlanPayload(options)
   };

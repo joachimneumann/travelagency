@@ -496,7 +496,7 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         sourceType: "openapi.components.schemas.StandardTourResponse",
         requireOneOf: [],
         fields: [
-    schemaField({"name":"template","required":true,"wireName":"template"}, SHARED_FIELD_DEFS.FIELD_60)
+    schemaField({"name":"standard_tour","required":true,"wireName":"standard_tour"}, SHARED_FIELD_DEFS.FIELD_60)
         ]
       };
 

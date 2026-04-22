@@ -1301,7 +1301,7 @@ IR: {
 			module:     "api"
 			sourceType: "api.#StandardTourResponse"
 			fields: [
-				{name: "template", kind: "transport", typeName: "StandardTourReadModel", required: true},
+				{name: "standard_tour", kind: "transport", typeName: "StandardTourReadModel", required: true},
 			]
 		},
 		{

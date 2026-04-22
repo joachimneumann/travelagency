@@ -19,7 +19,7 @@ The backend system replaces that with structured booking data and generated arti
 
 For travel plans, the practical advantage is reuse:
 
-- a complete travel plan can be saved as a standard tour and applied to another booking
+- standard tours are maintained directly as reusable travel-plan content and can be applied to bookings
 - individual days from existing travel plans can be searched and reused
 - individual services from existing travel plans can be searched and reused
 - copied travel-plan content gets fresh booking-specific IDs, so it can be edited safely for the new customer

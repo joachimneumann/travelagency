@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-04-22T16:06:21Z
+# 2026-04-22T16:20:56Z
 
 ---
 openapi: 3.1.0
@@ -5928,9 +5928,9 @@ components:
     StandardTourResponse:
       type: object
       required:
-      - template
+      - standard_tour
       properties:
-        template:
+        standard_tour:
           "$ref": "#/components/schemas/StandardTourReadModel"
     MobileBootstrap:
       type: object

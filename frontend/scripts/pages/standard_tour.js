@@ -71,11 +71,11 @@ const state = {
   authUser: null,
   roles: [],
   permissions: {
-    canReadTemplates: false,
-    canEditTemplates: false,
+    canReadStandardTours: false,
+    canEditStandardTours: false,
     canEditBooking: false
   },
-  template: null,
+  standardTour: null,
   booking: null,
   travelPlanDraft: null,
   originalTravelPlanState: null,
@@ -154,7 +154,7 @@ function captureFormSnapshot() {
 
 const pageDirtyTracker = createSnapshotDirtyTracker({
   captureSnapshot: captureFormSnapshot,
-  isEnabled: () => state.permissions.canEditTemplates,
+  isEnabled: () => state.permissions.canEditStandardTours,
   onDirtyChange: (isDirty) => {
     state.pageIsDirty = Boolean(isDirty);
     setDirtySurface(els.form, isDirty);
@@ -178,10 +178,10 @@ function sameStringList(left, right) {
 
 function dirtySectionLabels() {
   const labels = [];
-  if (normalizeText(els.titleInput?.value) !== normalizeText(state.template?.title)) {
+  if (normalizeText(els.titleInput?.value) !== normalizeText(state.standardTour?.title)) {
     labels.push(backendT("backend.standard_tours.form.title", "Title"));
   }
-  if (!sameStringList(selectedDestinationValues(), state.template?.destinations || [])) {
+  if (!sameStringList(selectedDestinationValues(), state.standardTour?.destinations || [])) {
     labels.push(backendT("backend.standard_tours.form.destinations", "Destinations"));
   }
   if (state.travelPlanDirty) {
@@ -213,7 +213,7 @@ const dirtyBarController = createBookingStyleDirtyBarController({
   }),
   getDirtySectionLabels: dirtySectionLabels,
   onSave: () => {
-    void saveTemplate();
+    void saveStandardTour();
   },
   onDiscard: () => {
     discardEdits();
@@ -253,10 +253,10 @@ async function init() {
     apiOrigin,
     refreshNav: refreshBackendNavElements,
     computePermissions: (roles) => ({
-      canReadTemplates: hasAnyRoleInList(roles, ROLES.TOUR_EDITOR),
-      canEditTemplates: hasAnyRoleInList(roles, ROLES.TOUR_EDITOR)
+      canReadStandardTours: hasAnyRoleInList(roles, ROLES.TOUR_EDITOR),
+      canEditStandardTours: hasAnyRoleInList(roles, ROLES.TOUR_EDITOR)
     }),
-    hasPageAccess: (permissions) => permissions.canReadTemplates,
+    hasPageAccess: (permissions) => permissions.canReadStandardTours,
     logKey: "backend-standard-tour",
     pageName: "standard-tour.html",
     expectedRolesAnyOf: [ROLES.TOUR_EDITOR],
@@ -266,9 +266,9 @@ async function init() {
   state.authUser = authState.authUser;
   state.roles = authState.roles;
   state.permissions = {
-    canReadTemplates: Boolean(authState.permissions?.canReadTemplates),
-    canEditTemplates: Boolean(authState.permissions?.canEditTemplates),
-    canEditBooking: Boolean(authState.permissions?.canEditTemplates)
+    canReadStandardTours: Boolean(authState.permissions?.canReadStandardTours),
+    canEditStandardTours: Boolean(authState.permissions?.canEditStandardTours),
+    canEditBooking: Boolean(authState.permissions?.canEditStandardTours)
   };
   state.user = normalizeText(state.authUser?.id || state.authUser?.sub || state.authUser?.username) || "keycloak_user";
 
@@ -277,18 +277,18 @@ async function init() {
   dirtyBarController.bind();
   travelPlanEditor.bind();
 
-  if (!state.permissions.canReadTemplates) {
+  if (!state.permissions.canReadStandardTours) {
     showError(backendT("backend.standard_tours.forbidden", "You do not have access to standard tours."));
     return;
   }
 
-  await loadTemplate();
+  await loadStandardTour();
 }
 
 function bindControls() {
   els.form?.addEventListener("submit", (event) => {
     event.preventDefault();
-    void saveTemplate();
+    void saveStandardTour();
   });
   els.titleInput?.addEventListener("input", () => {
     state.pageDirtyBarStatus = "";
@@ -302,7 +302,7 @@ function bindControls() {
   });
 }
 
-async function loadTemplate() {
+async function loadStandardTour() {
   clearError();
   state.pageDirtyBarStatus = "";
   state.pageSaveActionError = "";
@@ -317,31 +317,31 @@ async function loadTemplate() {
   if (!payload?.standard_tour) {
     return;
   }
-  applyTemplate(payload.standard_tour);
+  applyStandardTour(payload.standard_tour);
 }
 
-function applyTemplate(template) {
-  state.template = template;
+function applyStandardTour(standardTour) {
+  state.standardTour = standardTour;
   state.booking = {
-    id: normalizeText(template?.id),
-    travel_plan: template?.travel_plan || { days: [], attachments: [] },
+    id: normalizeText(standardTour?.id),
+    travel_plan: standardTour?.travel_plan || { days: [], attachments: [] },
     translation_enabled: false,
     travel_plan_translation_status: {}
   };
   if (els.heading) {
-    els.heading.textContent = normalizeText(template?.title) || backendT("backend.standard_tours.detail_heading", "Standard tour");
+    els.heading.textContent = normalizeText(standardTour?.title) || backendT("backend.standard_tours.detail_heading", "Standard tour");
   }
   if (els.subtitle) {
-    const destinations = Array.isArray(template?.destinations) ? template.destinations : [];
+    const destinations = Array.isArray(standardTour?.destinations) ? standardTour.destinations : [];
     els.subtitle.textContent = destinations.length
       ? destinations.join(" · ")
       : backendT("backend.standard_tours.detail_subtitle", "Edit title, destinations, and travel plan.");
   }
   if (els.titleInput) {
-    els.titleInput.value = normalizeText(template?.title);
+    els.titleInput.value = normalizeText(standardTour?.title);
   }
-  setSelectedDestinationValues(template?.destinations || []);
-  travelPlanEditor.applyTemplate(template);
+  setSelectedDestinationValues(standardTour?.destinations || []);
+  travelPlanEditor.applyStandardTour(standardTour);
   state.pageDirtyBarStatus = "";
   state.pageSaveActionError = "";
   markSnapshotClean();
@@ -349,15 +349,15 @@ function applyTemplate(template) {
 }
 
 function discardEdits() {
-  if (!state.template || state.saving) return;
-  applyTemplate(state.template);
+  if (!state.standardTour || state.saving) return;
+  applyStandardTour(state.standardTour);
   state.pageDirtyBarStatus = "discarded";
   state.pageSaveActionError = "";
   updatePageDirtyBar();
 }
 
-async function saveTemplate() {
-  if (state.saving || !state.permissions.canEditTemplates || !state.id) return;
+async function saveStandardTour() {
+  if (state.saving || !state.permissions.canEditStandardTours || !state.id) return;
   clearError();
   state.pageSaveActionError = "";
   const title = normalizeText(els.titleInput?.value);
@@ -396,7 +396,7 @@ async function saveTemplate() {
   state.saving = false;
   updatePageDirtyBar();
   if (!payload?.standard_tour) return;
-  applyTemplate(payload.standard_tour);
+  applyStandardTour(payload.standard_tour);
   state.pageDirtyBarStatus = "saved";
   state.pageSaveActionError = "";
   updatePageDirtyBar();

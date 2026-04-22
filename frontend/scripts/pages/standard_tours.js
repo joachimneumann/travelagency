@@ -54,8 +54,8 @@ const state = {
   authUser: null,
   roles: [],
   permissions: {
-    canReadTemplates: false,
-    canEditTemplates: false
+    canReadStandardTours: false,
+    canEditStandardTours: false
   },
   list: {
     page: 1,
@@ -104,13 +104,13 @@ function renderCatalogOptions() {
   els.destination.value = state.list.destination;
 }
 
-function templateDetailHref(templateId) {
-  return withBackendLang("/standard-tour.html", { id: normalizeText(templateId) });
+function standardTourDetailHref(standardTourId) {
+  return withBackendLang("/standard-tour.html", { id: normalizeText(standardTourId) });
 }
 
-function findListTemplate(templateId) {
+function findListStandardTour(standardTourId) {
   return (Array.isArray(state.list.lastItems) ? state.list.lastItems : [])
-    .find((template) => normalizeText(template?.id) === normalizeText(templateId)) || null;
+    .find((standardTour) => normalizeText(standardTour?.id) === normalizeText(standardTourId)) || null;
 }
 
 const fetchApi = createApiFetcher({
@@ -136,10 +136,10 @@ async function init() {
     apiOrigin,
     refreshNav: refreshBackendNavElements,
     computePermissions: (roles) => ({
-      canReadTemplates: hasAnyRoleInList(roles, ROLES.TOUR_EDITOR),
-      canEditTemplates: hasAnyRoleInList(roles, ROLES.TOUR_EDITOR)
+      canReadStandardTours: hasAnyRoleInList(roles, ROLES.TOUR_EDITOR),
+      canEditStandardTours: hasAnyRoleInList(roles, ROLES.TOUR_EDITOR)
     }),
-    hasPageAccess: (permissions) => permissions.canReadTemplates,
+    hasPageAccess: (permissions) => permissions.canReadStandardTours,
     logKey: "backend-standard-tours",
     pageName: "standard-tours.html",
     expectedRolesAnyOf: [ROLES.TOUR_EDITOR],
@@ -149,15 +149,15 @@ async function init() {
   state.authUser = authState.authUser;
   state.roles = authState.roles;
   state.permissions = {
-    canReadTemplates: Boolean(authState.permissions?.canReadTemplates),
-    canEditTemplates: Boolean(authState.permissions?.canEditTemplates)
+    canReadStandardTours: Boolean(authState.permissions?.canReadStandardTours),
+    canEditStandardTours: Boolean(authState.permissions?.canEditStandardTours)
   };
 
   renderCatalogOptions();
   bindControls();
 
-  if (state.permissions.canReadTemplates) {
-    await loadTemplates();
+  if (state.permissions.canReadStandardTours) {
+    await loadStandardTours();
   } else {
     showError(backendT("backend.standard_tours.forbidden", "You do not have access to standard tours."));
   }
@@ -167,7 +167,7 @@ function bindControls() {
   els.searchBtn?.addEventListener("click", () => {
     state.list.page = 1;
     state.list.search = normalizeText(els.search?.value);
-    void loadTemplates();
+    void loadStandardTours();
   });
 
   els.search?.addEventListener("keydown", (event) => {
@@ -175,13 +175,13 @@ function bindControls() {
     event.preventDefault();
     state.list.page = 1;
     state.list.search = normalizeText(els.search?.value);
-    void loadTemplates();
+    void loadStandardTours();
   });
 
   els.destination?.addEventListener("change", () => {
     state.list.page = 1;
     state.list.destination = normalizeText(els.destination?.value) || "all";
-    void loadTemplates();
+    void loadStandardTours();
   });
 
   els.clearFiltersBtn?.addEventListener("click", () => {
@@ -190,20 +190,20 @@ function bindControls() {
     state.list.destination = "all";
     if (els.search) els.search.value = "";
     if (els.destination) els.destination.value = "all";
-    void loadTemplates();
+    void loadStandardTours();
   });
 
   els.table?.addEventListener("click", (event) => {
-    const button = event.target instanceof Element ? event.target.closest("button[data-template-delete]") : null;
+    const button = event.target instanceof Element ? event.target.closest("button[data-standard-tour-delete]") : null;
     if (!button) return;
-    const deleteId = normalizeText(button.getAttribute("data-template-delete"));
+    const deleteId = normalizeText(button.getAttribute("data-standard-tour-delete"));
     if (deleteId) {
-      void deleteTemplate(deleteId);
+      void deleteStandardTour(deleteId);
     }
   });
 }
 
-async function loadTemplates() {
+async function loadStandardTours() {
   clearError();
   const loadToken = ++state.list.loadToken;
   setActionStatus(backendT("backend.standard_tours.loading", "Loading..."));
@@ -218,13 +218,13 @@ async function loadTemplates() {
   state.list.total = total;
   state.list.totalPages = Math.max(1, Math.ceil(total / state.list.pageSize));
   state.list.lastItems = Array.isArray(payload.items) ? payload.items : [];
-  renderTemplatesTable();
+  renderStandardToursTable();
   renderPagination(els.pagination, {
     page: state.list.page,
     totalPages: state.list.totalPages
   }, (page) => {
     state.list.page = page;
-    void loadTemplates();
+    void loadStandardTours();
   });
   if (els.countInfo) {
     els.countInfo.textContent = backendT(
@@ -236,7 +236,7 @@ async function loadTemplates() {
   setActionStatus("");
 }
 
-function renderTemplatesTable() {
+function renderStandardToursTable() {
   if (!(els.table instanceof HTMLTableElement)) return;
   const items = Array.isArray(state.list.lastItems) ? state.list.lastItems : [];
   if (!items.length) {
@@ -267,20 +267,20 @@ function renderTemplatesTable() {
       </tr>
     </thead>
     <tbody>
-      ${items.map((template) => `
+      ${items.map((standardTour) => `
         <tr>
           <td>
-            <a class="backend-link" href="${escapeHtml(templateDetailHref(template.id || ""))}">
-              <strong>${escapeHtml(template.title || "")}</strong>
+            <a class="backend-link" href="${escapeHtml(standardTourDetailHref(standardTour.id || ""))}">
+              <strong>${escapeHtml(standardTour.title || "")}</strong>
             </a>
           </td>
-          <td>${escapeHtml((Array.isArray(template.destinations) ? template.destinations : []).join(", ") || "-")}</td>
-          <td>${escapeHtml(String(Array.isArray(template?.travel_plan?.days) ? template.travel_plan.days.length : 0))}</td>
-          <td>${escapeHtml(String((Array.isArray(template?.travel_plan?.days) ? template.travel_plan.days : []).flatMap((day) => (Array.isArray(day?.services) ? day.services : [])).length))}</td>
+          <td>${escapeHtml((Array.isArray(standardTour.destinations) ? standardTour.destinations : []).join(", ") || "-")}</td>
+          <td>${escapeHtml(String(Array.isArray(standardTour?.travel_plan?.days) ? standardTour.travel_plan.days.length : 0))}</td>
+          <td>${escapeHtml(String((Array.isArray(standardTour?.travel_plan?.days) ? standardTour.travel_plan.days : []).flatMap((day) => (Array.isArray(day?.services) ? day.services : [])).length))}</td>
           <td>
             <div class="backend-table__actions">
-              <a class="btn btn-ghost" href="${escapeHtml(templateDetailHref(template.id || ""))}">${escapeHtml(backendT("common.edit", "Edit"))}</a>
-              <button class="btn btn-ghost" type="button" data-template-delete="${escapeHtml(template.id || "")}">${escapeHtml(backendT("common.delete", "Delete"))}</button>
+              <a class="btn btn-ghost" href="${escapeHtml(standardTourDetailHref(standardTour.id || ""))}">${escapeHtml(backendT("common.edit", "Edit"))}</a>
+              <button class="btn btn-ghost" type="button" data-standard-tour-delete="${escapeHtml(standardTour.id || "")}">${escapeHtml(backendT("common.delete", "Delete"))}</button>
             </div>
           </td>
         </tr>
@@ -289,23 +289,23 @@ function renderTemplatesTable() {
   `;
 }
 
-async function deleteTemplate(templateId) {
-  if (!templateId) return;
-  const template = findListTemplate(templateId);
+async function deleteStandardTour(standardTourId) {
+  if (!standardTourId) return;
+  const standardTour = findListStandardTour(standardTourId);
   if (window.confirm(
     backendT(
       "backend.standard_tours.confirm_delete",
       "Delete standard tour “{title}”?",
-      { title: template?.title || templateId }
+      { title: standardTour?.title || standardTourId }
     )
   ) !== true) {
     return;
   }
   clearError();
-  const payload = await fetchApi(withBackendApiLang(`/api/v1/standard-tours/${encodeURIComponent(templateId)}`), {
+  const payload = await fetchApi(withBackendApiLang(`/api/v1/standard-tours/${encodeURIComponent(standardTourId)}`), {
     method: "DELETE"
   });
   if (!payload?.deleted) return;
   setActionStatus(backendT("backend.standard_tours.deleted", "Standard tour deleted."));
-  await loadTemplates();
+  await loadStandardTours();
 }

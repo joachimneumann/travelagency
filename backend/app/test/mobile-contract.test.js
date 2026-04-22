@@ -322,10 +322,10 @@ async function removeStandardToursByTitlePrefix(prefix) {
   const entries = await readdir(STANDARD_TOURS_DIR, { withFileTypes: true }).catch(() => []);
   for (const entry of entries) {
     if (!entry?.isDirectory?.()) continue;
-    const templatePath = path.join(STANDARD_TOURS_DIR, entry.name, "standard_tour.json");
+    const standardTourPath = path.join(STANDARD_TOURS_DIR, entry.name, "standard_tour.json");
     let parsed = null;
     try {
-      parsed = JSON.parse(await readFile(templatePath, "utf8"));
+      parsed = JSON.parse(await readFile(standardTourPath, "utf8"));
     } catch {
       continue;
     }
@@ -2099,14 +2099,14 @@ test("staff can search and import travel plan library content from other staff b
   assert.equal(planImportResult.body.booking.pdf_personalization.travel_plan.subtitle, "Shared subtitle marker");
 });
 
-test("standard tour apply copies the travel plan without storing extra template metadata", async () => {
-  await removeStandardToursByTitlePrefix("Template copy marker");
+test("standard tour apply copies the travel plan without storing extra standard-tour metadata", async () => {
+  await removeStandardToursByTitlePrefix("Standard tour copy marker");
   const sourceBooking = await createSeedBooking();
   const targetBooking = await createPublicBooking({
-    name: "Template Target User",
-    email: "template-target@example.com"
+    name: "Standard Tour Target User",
+    email: "standard-tour-target@example.com"
   });
-  const templateTitle = `Template copy marker ${sourceBooking.id}`;
+  const standardTourTitle = `Standard tour copy marker ${sourceBooking.id}`;
   try {
     const store = JSON.parse(await readFile(STORE_PATH, "utf8"));
     const sourceRecord = store.bookings.find((item) => item.id === sourceBooking.id);
@@ -2117,19 +2117,19 @@ test("standard tour apply copies the travel plan without storing extra template 
     sourceRecord.travel_plan = {
       days: [
         {
-          id: "template_source_day_1",
+          id: "standard_tour_source_day_1",
           day_number: 1,
           date: "2026-08-01",
-          title: "Template day marker",
+          title: "Standard tour day marker",
           overnight_location: "Siem Reap",
           services: [
             {
-              id: "template_source_service_1",
+              id: "standard_tour_source_service_1",
               timing_kind: "label",
               time_label: "Morning",
               kind: "activity",
-              title: "Template service marker",
-              details: "Template service details",
+              title: "Standard tour service marker",
+              details: "Standard tour service details",
               location: "Siem Reap"
             }
           ],
@@ -2140,7 +2140,7 @@ test("standard tour apply copies the travel plan without storing extra template 
     targetRecord.travel_plan = {
       days: [
         {
-          id: "template_target_day_1",
+          id: "standard_tour_target_day_1",
           day_number: 1,
           date: "2026-08-10",
           title: "Old target day",
@@ -2160,30 +2160,30 @@ test("standard tour apply copies the travel plan without storing extra template 
     };
     await writeFile(STORE_PATH, `${JSON.stringify(store, null, 2)}\n`, "utf8");
 
-    const templateCreateResult = await requestJson(
+    const standardTourCreateResult = await requestJson(
       endpointPath("standard_tour_create"),
       apiHeaders(),
       {
         method: "POST",
         body: {
-          title: templateTitle,
+          title: standardTourTitle,
           travel_plan: sourceRecord.travel_plan
         }
       }
     );
-    assert.equal(templateCreateResult.status, 201);
-    assert.equal(templateCreateResult.body.standard_tour.title, templateTitle);
-    assert.deepEqual(templateCreateResult.body.standard_tour.destinations, []);
-    assert.ok(templateCreateResult.body.standard_tour.travel_plan);
-    assert.ok(!("source_booking_id" in templateCreateResult.body.standard_tour));
-    assert.ok(!("description" in templateCreateResult.body.standard_tour));
-    assert.ok(!("created_at" in templateCreateResult.body.standard_tour));
-    assert.ok(!("updated_at" in templateCreateResult.body.standard_tour));
+    assert.equal(standardTourCreateResult.status, 201);
+    assert.equal(standardTourCreateResult.body.standard_tour.title, standardTourTitle);
+    assert.deepEqual(standardTourCreateResult.body.standard_tour.destinations, []);
+    assert.ok(standardTourCreateResult.body.standard_tour.travel_plan);
+    assert.ok(!("source_booking_id" in standardTourCreateResult.body.standard_tour));
+    assert.ok(!("description" in standardTourCreateResult.body.standard_tour));
+    assert.ok(!("created_at" in standardTourCreateResult.body.standard_tour));
+    assert.ok(!("updated_at" in standardTourCreateResult.body.standard_tour));
 
     const applyResult = await requestJson(
       endpointPath("booking_standard_tour_apply")
         .replace("{booking_id}", targetBooking.id)
-        .replace("{standard_tour_id}", templateCreateResult.body.standard_tour.id),
+        .replace("{standard_tour_id}", standardTourCreateResult.body.standard_tour.id),
       apiHeaders(),
       {
         method: "POST",
@@ -2194,12 +2194,12 @@ test("standard tour apply copies the travel plan without storing extra template 
     );
     assert.equal(applyResult.status, 200);
     assert.equal(applyResult.body.booking.travel_plan.days.length, 1);
-    assert.equal(applyResult.body.booking.travel_plan.days[0].title, "Template day marker");
-    assert.equal(applyResult.body.booking.travel_plan.days[0].services[0].title, "Template service marker");
+    assert.equal(applyResult.body.booking.travel_plan.days[0].title, "Standard tour day marker");
+    assert.equal(applyResult.body.booking.travel_plan.days[0].services[0].title, "Standard tour service marker");
     assert.equal(applyResult.body.booking.pdf_personalization.travel_plan.subtitle, "Old target subtitle");
     assert.equal(applyResult.body.booking.pdf_personalization.offer.closing, "Target offer closing marker");
   } finally {
-    await removeStandardToursByTitlePrefix("Template copy marker");
+    await removeStandardToursByTitlePrefix("Standard tour copy marker");
   }
 });
 

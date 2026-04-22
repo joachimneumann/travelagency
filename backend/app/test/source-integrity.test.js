@@ -3952,17 +3952,17 @@ test("standard tours are wired through backend navigation, routes, and booking a
 
   assert.match(navSource, /standard-tours\.html/, "Backend nav should link to the dedicated standard tours page");
   assert.match(navSource, /const canReadStandardTours = hasAnyRole\(resolvedRoles, "atp_tour_editor"\);/, "Backend nav should only show standard tours to atp_tour_editor users");
-  assert.match(pageSource, /id="standardToursTable"/, "The standard tours page should expose the templates table");
-  assert.match(pageScriptSource, /\/api\/v1\/standard-tours/, "The standard tours page should load templates from the dedicated backend endpoint");
+  assert.match(pageSource, /id="standardToursTable"/, "The standard tours page should expose the standard tours table");
+  assert.match(pageScriptSource, /\/api\/v1\/standard-tours/, "The standard tours page should load standard tours from the dedicated backend endpoint");
   assert.match(pageScriptSource, /const DESTINATION_COUNTRY_CODES = Object\.freeze\(\["VN", "TH", "KH", "LA"\]\)/, "The standard tours UI should limit destinations to the four supported country codes");
   assert.match(pageScriptSource, /expectedRolesAnyOf:\s*\[ROLES\.TOUR_EDITOR\]/, "The standard tours list page should require the atp_tour_editor role");
   assert.match(detailScriptSource, /expectedRolesAnyOf:\s*\[ROLES\.TOUR_EDITOR\]/, "The standard tour detail page should require the atp_tour_editor role");
   assert.match(bookingLibrarySource, /bookingStandardTourApplyRequest/, "The booking travel-plan library should apply standard tours through the dedicated endpoint");
   assert.doesNotMatch(bookingLibrarySource, /status:\s*"published"/, "The booking travel-plan library should not filter standard tours by status");
-  assert.match(bookingTravelPlanSource, /data-travel-plan-open-template-import/, "The booking travel-plan footer should expose a standard tour action");
+  assert.match(bookingTravelPlanSource, /data-travel-plan-open-standard-tour-import/, "The booking travel-plan footer should expose a standard tour action");
   assert.match(routesSource, /\/api\/v1\/standard-tours/, "HTTP routes should include the standard tour endpoints");
-  assert.doesNotMatch(handlersSource, /Only published standard tours can be applied/, "Template apply handler should not enforce template status");
-  assert.match(domainSource, /enumValueSetFor\("CountryCode"\)[\s\S]*normalizeText\(value\)\.toUpperCase\(\)[\s\S]*COUNTRY_CODE_SET\.has\(value\)/, "Template destination normalization should store CountryCode values instead of tour destination slugs");
+  assert.doesNotMatch(handlersSource, /Only published standard tours can be applied/, "Standard tour apply handler should not enforce standard tour status");
+  assert.match(domainSource, /enumValueSetFor\("CountryCode"\)[\s\S]*normalizeText\(value\)\.toUpperCase\(\)[\s\S]*COUNTRY_CODE_SET\.has\(value\)/, "Standard tour destination normalization should store CountryCode values instead of tour destination slugs");
 });
 
 test("travel plan library cards keep media separate from copy and actions", async () => {

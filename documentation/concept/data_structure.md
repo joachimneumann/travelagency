@@ -352,8 +352,8 @@ Meaning:
 - generated offers projected as `GeneratedBookingOfferReadModel[]`
 
 `StandardTourReadModel`
-- staff-facing template library shape
-- mirrors the template entity for transport use
+- staff-facing standard tour library shape
+- mirrors the standard tour entity for transport use
 
 Important boundary:
 - response-only fields such as `pdf_url`, `accepted_record`, and `travel_plan_pdfs` must stay in the read models

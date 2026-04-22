@@ -81,7 +81,7 @@ export function createBookingTravelPlanModule(ctx) {
 
   const allowDayImport = isFeatureEnabled("dayImport");
   const allowPlanImport = isFeatureEnabled("planImport");
-  const allowTemplateImport = isFeatureEnabled("templateImport");
+  const allowStandardTourImport = isFeatureEnabled("standardTourImport");
   const allowServiceImport = isFeatureEnabled("serviceImport");
   const allowImageUpload = isFeatureEnabled("imageUpload");
 
@@ -2279,7 +2279,7 @@ export function createBookingTravelPlanModule(ctx) {
           travelPlanServiceLibraryModule.openTravelPlanLibrary();
           return;
         }
-        if (button.hasAttribute("data-travel-plan-open-template-import")) {
+        if (button.hasAttribute("data-travel-plan-open-standard-tour-import")) {
           travelPlanServiceLibraryModule.openStandardTourLibrary();
           return;
         }
@@ -2412,7 +2412,7 @@ export function createBookingTravelPlanModule(ctx) {
     syncTravelPlanCollapsedServiceIds();
     renderBookingSectionHeader(els.travel_plan_panel_summary, travelPlanSummary());
     const hasDays = Array.isArray(state.travelPlanDraft.days) && state.travelPlanDraft.days.length > 0;
-    const standardTemplateLabel = hasDays
+    const standardTourLabel = hasDays
       ? bookingT("booking.travel_plan.append_standard_tour", "Append a Standard Tour")
       : bookingT("booking.travel_plan.use_standard_tour", "Use a Standard Tour");
     const bookingPlanLabel = hasDays
@@ -2434,9 +2434,9 @@ export function createBookingTravelPlanModule(ctx) {
               ? `<button class="btn travel-plan-day-add-btn travel-plan-day-add-btn--service travel-plan-day-add-btn--day-copy" data-travel-plan-open-day-import data-requires-clean-state type="button">${escapeHtml(bookingT("booking.travel_plan.insert_existing_day", "Copy existing day"))}</button>`
               : ""}
           </div>
-          ${allowTemplateImport
+          ${allowStandardTourImport
             ? `<div class="travel-plan-footer__action-row">
-                <button class="btn travel-plan-day-add-btn travel-plan-day-add-btn--service travel-plan-day-add-btn--day-copy" data-travel-plan-open-template-import data-requires-clean-state type="button">${escapeHtml(standardTemplateLabel)}</button>
+                <button class="btn travel-plan-day-add-btn travel-plan-day-add-btn--service travel-plan-day-add-btn--day-copy" data-travel-plan-open-standard-tour-import data-requires-clean-state type="button">${escapeHtml(standardTourLabel)}</button>
               </div>`
             : ""}
           ${allowPlanImport

@@ -19,7 +19,7 @@ Hệ thống backend thay thế quy trình đó bằng dữ liệu booking có c
 
 Với kế hoạch du lịch, lợi ích thực tế là khả năng tái sử dụng:
 
-- một kế hoạch du lịch hoàn chỉnh có thể được lưu thành kế hoạch du lịch tiêu chuẩn và áp dụng cho booking khác
+- standard tours được quản lý trực tiếp như nội dung kế hoạch du lịch tái sử dụng và có thể áp dụng vào bookings
 - từng ngày riêng lẻ từ các kế hoạch du lịch hiện có có thể được tìm kiếm và tái sử dụng
 - từng dịch vụ riêng lẻ từ các kế hoạch du lịch hiện có có thể được tìm kiếm và tái sử dụng
 - nội dung kế hoạch du lịch khi được sao chép sẽ nhận ID mới riêng cho booking mới, nên có thể chỉnh sửa an toàn cho khách hàng mới
