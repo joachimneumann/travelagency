@@ -1,23 +1,23 @@
 {
   "id": "tour_7aee1d33-cbd1-4d3c-ae0b-b738c0a7582d",
   "title": {
-    "en": "DA NANG - BA NA HILLS - DISCOVER THE GOLDEN BRIDGE",
-    "ar": "دا نانغ - تلال با نا - اكتشف الجسر الذهبي",
-    "fr": "DA NANG - BA NA HILLS - DÉCOUVREZ LE PONT D'OR",
+    "en": "Da Nang - Ba Na Hills - Discover Golden Bridge",
+    "ar": "دا نانج - تلال با نا - اكتشف الجسر الذهبي",
+    "fr": "Da Nang - Ba Na Hills - Découvrez Golden Bridge",
     "zh": "岘港 - 巴拿山 - 探索金桥",
-    "ja": "ダナン - バナヒルズ - ゴールデンブリッジを発見",
+    "ja": "ダナン - バナヒルズ - ゴールデンブリッジ発見",
     "ko": "다낭 - 바나힐 - 골든 브릿지 발견",
-    "vi": "ĐÀ NẴNG - BÀ NÀ HILLS - KHÁM PHÁ CẦU VÀNG",
-    "ms": "DA NANG - BA NA HILLS - TEMUI JAMBATAN EMAS",
-    "de": "DA NANG – BA NA HILLS – ENTDECKEN SIE DIE GOLDENE BRÜCKE",
-    "es": "DA NANG - BA NA HILLS - DESCUBRE EL PUENTE DE ORO",
-    "it": "DA NANG - COLLINE BA NA - SCOPRI IL PONTE D'ORO",
-    "ru": "ДАНАНГ – ХОЛМЫ БАНА – ОТКРОЙТЕ ДЛЯ СЕБЯ ЗОЛОТОЙ МОСТ",
-    "nl": "DA NANG - BA NA HEUVELS - ONTDEK DE GOUDEN BRUG",
-    "pl": "DA NANG - BA NA HILLS - ODKRYJ ZŁOTY MOST",
-    "da": "DA NANG - BA NA BAKKER - OPDAG DEN gyldne bro",
-    "sv": "DA NANG - BA NA HILLS - UPPTÄCK DEN GYLDEN BROEN",
-    "no": "DA NANG - BA NA HILLS - OPPDAG DEN GYLNE BROEN"
+    "vi": "Đà Nẵng - Bà Nà Hills - Khám Phá Cầu Vàng",
+    "ms": "Da Nang - Bukit Ba Na - Temui Jambatan Emas",
+    "de": "Da Nang – Ba Na Hills – Entdecken Sie die Goldene Brücke",
+    "es": "Da Nang - Colinas de Ba Na - Descubre el Puente Dorado",
+    "it": "Da Nang - Colline Ba Na - Scopri il Ponte d'Oro",
+    "ru": "Дананг - Холмы Бана - Откройте для себя Золотой мост",
+    "nl": "Da Nang - Ba Na Hills - Ontdek de Gouden Brug",
+    "pl": "Da Nang – Wzgórza Ba Na – Odkryj Złoty Most",
+    "da": "Da Nang - Ba Na Hills - Oplev Den Gyldne Bro",
+    "sv": "Da Nang - Ba Na Hills - Upptäck Gyllene bron",
+    "no": "Da Nang - Ba Na Hills - Oppdag Golden Bridge"
   },
   "short_description": {
     "en": "Ba Na Hills is the \"road to paradise\" famous for its four-season climate in one day and ancient French village architecture amid thousands of clouds. This place owns the iconic Golden Bridge and a cable car system with many world records, bringing the ultimate resort and entertainment experience to visitors.",
@@ -33,7 +33,7 @@
     "it": "Ba Na Hills è la \"strada verso il paradiso\" famosa per il suo clima di quattro stagioni in un giorno e l'architettura dell'antico villaggio francese tra migliaia di nuvole.\nQuesto luogo possiede l'iconico Golden Bridge e un sistema di funivie con molti record mondiali, offrendo ai visitatori la migliore esperienza di resort e intrattenimento.",
     "ru": "Ба-На-Хиллз — это «дорога в рай», известная своим климатом на четыре сезона за один день и старинной французской деревенской архитектурой среди тысяч облаков.\nЭто место владеет знаменитым Золотым мостом и системой канатной дороги, установившей множество мировых рекордов, что дает посетителям незабываемые впечатления от курорта и развлечений.",
     "nl": "Ba Na Hills is de 'weg naar het paradijs', beroemd om zijn vier seizoenenklimaat op één dag en de eeuwenoude Franse dorpsarchitectuur te midden van duizenden wolken.\nDeze plaats is eigenaar van de iconische Gouden Brug en een kabelbaansysteem met vele wereldrecords, waardoor bezoekers de ultieme resort- en entertainmentervaring krijgen.",
-    "pl": "Wzgórza Ba Na to „droga do raju” słynąca z czterosezonowego klimatu w ciągu jednego dnia i starożytnej francuskiej architektury wiejskiej pośród tysięcy chmur.\nTo miejsce posiada kultowy Złoty Most i system kolejek linowych z wieloma rekordami świata, zapewniając odwiedzającym najlepsze wrażenia z kurortu i rozrywki.",
+    "pl": "Wzgórza Ba Na to „droga do raju” słynąca z czterosezonowego klimatu w ciągu jednego dnia i starożytnej francuskiej architektury wiejskiej pośród tysięcy chmur.\nTo miejsce posiada kultowy Złoty Most i system kolejek linowych z wieloma rekordami świata, zapewniając odwiedzającym najlepsze wrażenia z wypoczynku i rozrywki.",
     "da": "Ba Na Hills er \"vejen til paradis\" berømt for sit fire-sæsonklima på én dag og gamle franske landsbyarkitektur midt i tusindvis af skyer.\nDette sted ejer den ikoniske Golden Bridge og et svævebanesystem med mange verdensrekorder, hvilket bringer den ultimative resort- og underholdningsoplevelse til besøgende.",
     "sv": "Ba Na Hills är \"vägen till paradiset\" känd för sitt fyrasäsongsklimat på en dag och antik fransk byarkitektur bland tusentals moln.\nDenna plats äger den ikoniska Golden Bridge och ett linbanasystem med många världsrekord, vilket ger besökarna den ultimata resort- och underhållningsupplevelsen.",
     "no": "Ba Na Hills er \"veien til paradis\" kjent for sitt fire-sesongs klima på én dag og eldgammel fransk landsbyarkitektur blant tusenvis av skyer.\nDette stedet eier den ikoniske Golden Bridge og et taubanesystem med mange verdensrekorder, noe som gir besøkende den ultimate ferie- og underholdningsopplevelsen."
@@ -53,10 +53,10 @@
   "seasonality_start_month": "apr",
   "seasonality_end_month": "nov",
   "priority": 50,
-  "image": "/public/v1/tour-images/tour_7aee1d33-cbd1-4d3c-ae0b-b738c0a7582d/tour_7aee1d33-cbd1-4d3c-ae0b-b738c0a7582d.webp",
+  "image": "/public/v1/tour-images/tour_7aee1d33-cbd1-4d3c-ae0b-b738c0a7582d/tour_7aee1d33-cbd1-4d3c-ae0b-b738c0a7582d.webp?v=2026-04-22T15%3A52%3A23.701Z",
   "created_at": "2026-04-13T08:57:00.020Z",
-  "updated_at": "2026-04-13T08:57:00.948Z",
+  "updated_at": "2026-04-22T15:53:03.593Z",
   "pictures": [
-    "/public/v1/tour-images/tour_7aee1d33-cbd1-4d3c-ae0b-b738c0a7582d/tour_7aee1d33-cbd1-4d3c-ae0b-b738c0a7582d.webp"
+    "/public/v1/tour-images/tour_7aee1d33-cbd1-4d3c-ae0b-b738c0a7582d/tour_7aee1d33-cbd1-4d3c-ae0b-b738c0a7582d.webp?v=2026-04-22T15%3A52%3A23.701Z"
   ]
 }

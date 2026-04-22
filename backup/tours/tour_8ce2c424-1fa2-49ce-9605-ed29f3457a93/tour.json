@@ -1,27 +1,27 @@
 {
   "id": "tour_8ce2c424-1fa2-49ce-9605-ed29f3457a93",
   "title": {
-    "en": "BA BE LAKE 2 DAYS 1 NIGHT",
-    "ar": "بحيرة بكالوريوس 2 أيام 1 ليلة",
-    "fr": "LAC BA BE 2 JOURS 1 NUIT",
-    "zh": "巴贝湖 2 天 1 夜",
-    "ja": "BA BE レイク 1泊2日",
-    "ko": "BA BE LAKE 1박 2일",
-    "vi": "HỒ BA BỂ 2 NGÀY 1 ĐÊM",
-    "ms": "TASIK BA BE 2 HARI 1 MALAM",
-    "de": "BA BE SEE 2 TAGE 1 NACHT",
-    "es": "LAGO BA BE 2 DÍAS 1 NOCHE",
-    "it": "BA BE LAGO 2 GIORNI 1 NOTTE",
-    "ru": "ОЗЕРО БА БЕ 2 ДНЯ 1 НОЧЬ",
-    "nl": "BA BE MEER 2 DAGEN 1 NACHT",
-    "pl": "BA BE JEZIORO 2 DNI 1 NOC",
-    "da": "BA BE LAKE 2 DAGE 1 NAT",
-    "sv": "BA BE LAKE 2 DAGAR 1 NATT",
-    "no": "BA BE LAKE 2 DAGER 1 NATT"
+    "en": "Ba Be Lake",
+    "ar": "بحيرة با بي",
+    "fr": "Lac Ba Be",
+    "zh": "巴贝湖",
+    "ja": "バベ湖",
+    "ko": "바베 호수",
+    "vi": "Hồ Ba Bể",
+    "ms": "Tasik Ba Be",
+    "de": "Ba-Be-See",
+    "es": "Lago Ba Be",
+    "it": "Lago Ba Be",
+    "ru": "Озеро Ба Бе",
+    "nl": "Ba Be-meer",
+    "pl": "Jezioro Ba Be",
+    "da": "Ba Be søen",
+    "sv": "Ba Be Lake",
+    "no": "Ba Be Lake"
   },
   "short_description": {
     "en": "Ba Be Lake, located in the national park of the same name in Bac Kan, is one of the world's largest and most beautiful natural freshwater mountain lakes. This place possesses a magnificent landscape with a harmonious combination of blue water surface, steep limestone cliffs and rich primary vegetation.",
-    "ar": "بحيرة با بي، التي تقع في الحديقة الوطنية التي تحمل نفس الاسم في باك كان، هي واحدة من أكبر وأجمل البحيرات الجبلية الطبيعية ذات المياه العذبة في العالم. يتمتع هذا المكان بمناظر طبيعية رائعة مع مزيج متناغم من سطح المياه الزرقاء ومنحدرات الحجر الجيري شديدة الانحدار والنباتات الأولية الغنية.",
+    "ar": "بحيرة با بي، التي تقع في الحديقة الوطنية التي تحمل الاسم نفسه في باك كان، هي واحدة من أكبر وأجمل البحيرات الجبلية الطبيعية ذات المياه العذبة في العالم. يتمتع هذا المكان بمناظر طبيعية رائعة مع مزيج متناغم من سطح المياه الزرقاء ومنحدرات الحجر الجيري شديدة الانحدار والنباتات الأولية الغنية.",
     "fr": "Le lac Ba Be, situé dans le parc national du même nom à Bac Kan, est l'un des plus grands et des plus beaux lacs naturels de montagne d'eau douce au monde. Cet endroit possède un paysage magnifique avec une combinaison harmonieuse de surface d'eau bleue, de falaises calcaires abruptes et d'une riche végétation primaire.",
     "zh": "巴贝湖（Ba Be Lake）位于北干（Bac Kan）同名国家公园内，是世界上最大、最美丽的天然淡水高山湖泊之一。这里风景壮丽，碧蓝的水面、陡峭的石灰岩悬崖和丰富的原生植被和谐地结合在一起。",
     "ja": "バベ湖は、バッカンの同名の国立公園内にあり、世界最大級で最も美しい天然の淡水山湖の 1 つです。この場所は、青い水面、石灰岩の切り立った崖、豊かな原生植物が調和した素晴らしい景観を持っています。",
@@ -49,10 +49,10 @@
   "seasonality_start_month": "apr",
   "seasonality_end_month": "oct",
   "priority": 50,
-  "image": "/public/v1/tour-images/tour_8ce2c424-1fa2-49ce-9605-ed29f3457a93/tour_8ce2c424-1fa2-49ce-9605-ed29f3457a93.webp",
+  "image": "/public/v1/tour-images/tour_8ce2c424-1fa2-49ce-9605-ed29f3457a93/tour_8ce2c424-1fa2-49ce-9605-ed29f3457a93.webp?v=2026-04-22T04%3A42%3A15.528Z",
   "created_at": "2026-04-15T03:58:02.218Z",
-  "updated_at": "2026-04-15T03:58:12.338Z",
+  "updated_at": "2026-04-22T14:40:44.140Z",
   "pictures": [
-    "/public/v1/tour-images/tour_8ce2c424-1fa2-49ce-9605-ed29f3457a93/tour_8ce2c424-1fa2-49ce-9605-ed29f3457a93.webp"
+    "/public/v1/tour-images/tour_8ce2c424-1fa2-49ce-9605-ed29f3457a93/tour_8ce2c424-1fa2-49ce-9605-ed29f3457a93.webp?v=2026-04-22T04%3A42%3A15.528Z"
   ]
 }

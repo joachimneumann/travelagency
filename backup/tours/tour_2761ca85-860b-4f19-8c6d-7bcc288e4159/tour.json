@@ -15,14 +15,14 @@
     "ru": "Халонг Бэй",
     "nl": "Ha Long-baai",
     "pl": "Zatoka Ha Long",
-    "da": "Ha Long bugten",
+    "da": "Ha Long Bay",
     "sv": "Ha Long Bay",
     "no": "Ha Long Bay"
   },
   "short_description": {
     "en": "Ha Long Bay is not only the pride of Vietnam but also a world natural wonder that has been twice recognized by UNESCO. This place is like a giant watercolor painting, created from nature's ingenious arrangement between rock and water.",
-    "ar": "لا يعد خليج ها لونج مصدر فخر لفيتنام فحسب، بل يعد أيضًا أحد عجائب الطبيعة العالمية التي تم الاعتراف بها مرتين من قبل اليونسكو. هذا المكان يشبه لوحة مائية عملاقة، تم إنشاؤها من ترتيب الطبيعة المبتكر بين الصخور والمياه.",
-    "fr": "La baie d’Ha Long est non seulement la fierté du Vietnam mais aussi une merveille naturelle mondiale reconnue à deux reprises par l’UNESCO. Cet endroit est comme une aquarelle géante, créée à partir de l’ingénieux arrangement naturel entre la roche et l’eau.",
+    "ar": "لا يعد خليج ها لونج مصدر فخر لفيتنام فحسب، بل يعد أيضًا إحدى عجائب الطبيعة العالمية التي تم الاعتراف بها مرتين من قبل اليونسكو. هذا المكان يشبه لوحة مائية عملاقة، تم إنشاؤها من ترتيب الطبيعة المبتكر بين الصخور والمياه.",
+    "fr": "La baie d’Ha Long n’est pas seulement la fierté du Vietnam mais aussi une merveille naturelle mondiale reconnue à deux reprises par l’UNESCO. Cet endroit est comme une aquarelle géante, créée à partir de l’ingénieux arrangement naturel entre la roche et l’eau.",
     "zh": "下龙湾不仅是越南的骄傲，也是两次被联合国教科文组织认可的世界自然奇观。这里就像一幅巨大的水彩画，是大自然在岩石和水之间巧妙的排列而成的。",
     "ja": "ハロン湾はベトナムの誇りであるだけでなく、ユネスコに二度認定された世界の自然の驚異でもあります。この場所は、岩と水の間の自然の巧妙な配置によって作成された巨大な水彩画のような場所です。",
     "ko": "하롱베이는 베트남의 자랑일 뿐만 아니라 유네스코가 두 번이나 인정한 세계 자연의 경이로움이기도 합니다. 이곳은 바위와 물 사이의 자연의 독창적인 배열로 만들어진 거대한 수채화 그림과 같습니다.",
@@ -53,19 +53,14 @@
   "seasonality_start_month": "apr",
   "seasonality_end_month": "nov",
   "priority": 50,
-  "image": "/public/v1/tour-images/tour_2761ca85-860b-4f19-8c6d-7bcc288e4159/picture-3703c201-c8d1-4b25-beb1-4f97a13dad3b.webp?v=2026-04-19T04%3A44%3A19.126Z",
+  "image": "/public/v1/tour-images/tour_2761ca85-860b-4f19-8c6d-7bcc288e4159/picture-9132130a-0b9b-49e1-bf5b-402d8ecfb721.webp?v=2026-04-19T04%3A46%3A15.744Z",
   "created_at": "2026-04-13T04:48:49.101Z",
-  "updated_at": "2026-04-19T04:46:15.744Z",
+  "updated_at": "2026-04-22T14:53:03.958Z",
   "pictures": [
-    "/public/v1/tour-images/tour_2761ca85-860b-4f19-8c6d-7bcc288e4159/picture-3703c201-c8d1-4b25-beb1-4f97a13dad3b.webp?v=2026-04-19T04%3A44%3A19.126Z",
-    "/public/v1/tour-images/tour_2761ca85-860b-4f19-8c6d-7bcc288e4159/picture-9132130a-0b9b-49e1-bf5b-402d8ecfb721.webp?v=2026-04-19T04%3A44%3A19.126Z",
-    "/public/v1/tour-images/tour_2761ca85-860b-4f19-8c6d-7bcc288e4159/picture-b192e714-0d40-4140-a337-612469ab42ee.webp?v=2026-04-19T04%3A44%3A19.126Z",
-    "/public/v1/tour-images/tour_2761ca85-860b-4f19-8c6d-7bcc288e4159/picture-13fc4f40-dacc-496d-9b2e-0a74a94ace7d.webp?v=2026-04-19T04%3A44%3A19.126Z",
-    "/public/v1/tour-images/tour_2761ca85-860b-4f19-8c6d-7bcc288e4159/picture-2bc6759d-32c5-4299-bb23-b823d3ebb14d.webp?v=2026-04-19T04%3A44%3A19.126Z",
-    "/public/v1/tour-images/tour_2761ca85-860b-4f19-8c6d-7bcc288e4159/picture-3708e1d2-cb10-4ef1-a217-4d2a0f969e24.webp?v=2026-04-19T04%3A44%3A19.126Z",
-    "/public/v1/tour-images/tour_2761ca85-860b-4f19-8c6d-7bcc288e4159/picture-cd39a152-a07f-47a4-aff1-7ca2aafcb3e8.webp?v=2026-04-19T04%3A44%3A19.126Z",
-    "/public/v1/tour-images/tour_2761ca85-860b-4f19-8c6d-7bcc288e4159/picture-43500bf7-8b75-4bff-b7b6-f0329e1e2a4e.webp?v=2026-04-19T04%3A44%3A19.126Z",
-    "/public/v1/tour-images/tour_2761ca85-860b-4f19-8c6d-7bcc288e4159/picture-1314d006-0ec4-4350-9e8f-a1deef5c3ab8.webp",
-    "/public/v1/tour-images/tour_2761ca85-860b-4f19-8c6d-7bcc288e4159/picture-a2f218a0-b0a8-41db-b06d-42aa1d96f6e3.webp"
+    "/public/v1/tour-images/tour_2761ca85-860b-4f19-8c6d-7bcc288e4159/picture-9132130a-0b9b-49e1-bf5b-402d8ecfb721.webp?v=2026-04-19T04%3A46%3A15.744Z",
+    "/public/v1/tour-images/tour_2761ca85-860b-4f19-8c6d-7bcc288e4159/picture-b192e714-0d40-4140-a337-612469ab42ee.webp?v=2026-04-19T04%3A46%3A15.744Z",
+    "/public/v1/tour-images/tour_2761ca85-860b-4f19-8c6d-7bcc288e4159/picture-3708e1d2-cb10-4ef1-a217-4d2a0f969e24.webp?v=2026-04-19T04%3A46%3A15.744Z",
+    "/public/v1/tour-images/tour_2761ca85-860b-4f19-8c6d-7bcc288e4159/picture-43500bf7-8b75-4bff-b7b6-f0329e1e2a4e.webp?v=2026-04-19T04%3A46%3A15.744Z",
+    "/public/v1/tour-images/tour_2761ca85-860b-4f19-8c6d-7bcc288e4159/picture-a2f218a0-b0a8-41db-b06d-42aa1d96f6e3.webp?v=2026-04-19T04%3A46%3A15.744Z"
   ]
 }

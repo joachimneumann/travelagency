@@ -1,26 +1,42 @@
 {
   "id": "tour_bb30a054-54a6-456a-bdc3-8a33e134a4c6",
   "title": {
-    "en": "HA NOI- SAPA 5D4N"
+    "en": "Hanoi - Sapa",
+    "ar": "هانوي - سابا",
+    "fr": "Hanoï - Sapa",
+    "zh": "河内 - 沙巴",
+    "ja": "ハノイ - サパ",
+    "ko": "하노이 - 사파",
+    "vi": "Hà Nội- Sapa",
+    "ms": "Hanoi - Sapa",
+    "de": "Hanoi – Sapa",
+    "es": "Hanói - Sapa",
+    "it": "Hanoi-Sapa",
+    "ru": "Ханой - Сапа",
+    "nl": "Hanoi-Sapa",
+    "pl": "Hanoi – Sapa",
+    "da": "Hanoi - Sapa",
+    "sv": "Hanoi - Sapa",
+    "no": "Hanoi - Sapa"
   },
   "short_description": {
-    "en": "This journey takes you away from the hustle and bustle of the capital to a misty town. Experience the feeling of standing on the summit of Fansipan, check in at the picturesque Cat Cat village, and enjoy the characteristic cool air of the Northwest highlands.",
-    "ar": "تأخذك هذه الرحلة بعيدًا عن صخب العاصمة إلى مدينة ضبابية. جرب شعور الوقوف على قمة فانسيبان، وقم بتسجيل الدخول في قرية كات كات الخلابة، واستمتع بالهواء البارد المميز للمرتفعات الشمالية الغربية.",
-    "fr": "Ce voyage vous emmène loin de l'agitation de la capitale vers une ville brumeuse. Découvrez la sensation de vous tenir au sommet du Fansipan, enregistrez-vous au pittoresque village de Cat Cat et profitez de l'air frais caractéristique des hauts plateaux du nord-ouest.",
-    "zh": "这次旅程将带您远离首都的喧嚣，来到一座雾气弥漫的小镇。体验站在番西邦山顶的感觉，打卡风景如画的猫猫村，享受西北高地特有的凉爽空气。",
-    "ja": "この旅は、首都の喧騒から離れ、霧の町へお連れします。ファンシーパンの頂上に立っている気分を味わい、絵のように美しいキャット キャット ビレッジにチェックインし、北西高原特有の冷たい空気を楽しみましょう。",
-    "ko": "이 여행은 수도의 번잡함에서 벗어나 안개가 자욱한 마을로 이동합니다. 판시판 정상에 서 있는 듯한 느낌을 경험하고, 그림 같은 깟깟마을에 체크인하고, 북서고원 특유의 시원한 공기를 즐겨보세요.",
+    "en": "This journey will take you away from the hustle and bustle of the capital to a misty town. Experience the feeling of standing on top of Fanxipan, check-in at the picturesque Cat Cat village and enjoy the cool air typical of the Northwest highlands.",
+    "ar": "ستأخذك هذه الرحلة بعيدًا عن صخب العاصمة إلى مدينة ضبابية. استمتع بشعور الوقوف على قمة Fanxipan، وقم بتسجيل الوصول في قرية Cat Cat الخلابة واستمتع بالهواء البارد النموذجي للمرتفعات الشمالية الغربية.",
+    "fr": "Ce voyage vous emmènera loin de l'agitation de la capitale vers une ville brumeuse. Découvrez la sensation de vous tenir au sommet de Fanxipan, enregistrez-vous au pittoresque village de Cat Cat et profitez de l'air frais typique des hauts plateaux du nord-ouest.",
+    "zh": "这次旅程将带您远离首都的喧嚣，来到一座雾气弥漫的小镇。体验站在梵西盘山顶的感觉，入住风景如画的猫猫村，享受西北高原特有的凉爽空气。",
+    "ja": "この旅は、首都の喧騒から離れ、霧の町へあなたを連れて行きます。樊西帆の頂上に立っている気分を味わい、絵のように美しい猫猫村にチェックインして、北西高地特有の涼しい空気を満喫してください。",
+    "ko": "이 여행은 수도의 번잡함에서 벗어나 안개가 자욱한 마을로 여러분을 데려갈 것입니다. 판시판(Fanxipan) 꼭대기에 서 있는 듯한 느낌을 경험하고, 그림처럼 아름다운 캣캣(Cat Cat) 마을에 체크인하고, 북서 고원의 전형적인 시원한 공기를 즐겨보세요.",
     "vi": "Hành trình này sẽ đưa bạn rời xa sự ồn ào, náo nhiệt của thủ đô để đến một thị trấn mù sương. Trải nghiệm cảm giác đứng trên đỉnh Fanxipan, check-in tại bản Cát Cát đẹp như tranh vẽ và tận hưởng không khí mát mẻ đặc trưng của vùng cao Tây Bắc.",
-    "ms": "Perjalanan ini membawa anda jauh dari kesibukan ibu kota ke bandar berkabus. Alami perasaan berdiri di puncak Fansipan, daftar masuk di perkampungan Cat Cat yang indah, dan nikmati udara sejuk khas tanah tinggi Barat Laut.",
-    "de": "Diese Reise entführt Sie vom Trubel der Hauptstadt in eine neblige Stadt. Erleben Sie das Gefühl, auf dem Gipfel des Fansipan zu stehen, checken Sie im malerischen Cat Cat-Dorf ein und genießen Sie die charakteristische kühle Luft des nordwestlichen Hochlandes.",
-    "es": "Este viaje te aleja del ajetreo y el bullicio de la capital hasta un pueblo brumoso. Experimente la sensación de estar en la cima de Fansipan, regístrese en el pintoresco pueblo de Cat Cat y disfrute del aire fresco característico de las tierras altas del noroeste.",
-    "it": "Questo viaggio ti porta lontano dal trambusto della capitale verso una città nebbiosa. Prova la sensazione di trovarti sulla cima del Fansipan, fai il check-in nel pittoresco villaggio di Cat Cat e goditi la caratteristica aria fresca degli altopiani nordoccidentali.",
-    "ru": "Это путешествие унесет вас от шума и суеты столицы в туманный город. Испытайте ощущение стояния на вершине Фансипана, загляните в живописную деревню Кэт-Кэт и насладитесь характерным прохладным воздухом северо-западного нагорья.",
-    "nl": "Deze reis neemt je mee weg van de drukte van de hoofdstad naar een mistige stad. Ervaar het gevoel alsof je op de top van Fansipan staat, check in bij het pittoreske Cat Cat-dorp en geniet van de karakteristieke koele lucht van de noordwestelijke hooglanden.",
-    "pl": "Ta podróż zabierze Cię z dala od zgiełku stolicy do zamglonego miasta. Poczuj się, jakbyś stał na szczycie Fansipan, zamelduj się w malowniczej wiosce Cat Cat i ciesz się charakterystycznym chłodnym powietrzem północno-zachodnich wyżyn.",
-    "da": "Denne rejse tager dig væk fra hovedstadens stress og jag til en tåget by. Oplev følelsen af ​​at stå på toppen af ​​Fansipan, tjek ind i den maleriske Cat Cat-landsby, og nyd den karakteristiske kølige luft i det nordvestlige højland.",
-    "sv": "Denna resa tar dig bort från huvudstadens liv och rörelse till en dimmig stad. Upplev känslan av att stå på toppen av Fansipan, checka in i den pittoreska byn Cat Cat och njut av den karakteristiska svala luften i nordvästra höglandet.",
-    "no": "Denne reisen tar deg bort fra hovedstadens kjas og mas til en tåkete by. Opplev følelsen av å stå på toppen av Fansipan, sjekk inn på den pittoreske Cat Cat-landsbyen og nyt den karakteristiske kjølige luften i det nordvestlige høylandet."
+    "ms": "Perjalanan ini akan membawa anda jauh dari kesibukan ibu kota ke bandar berkabus. Alami perasaan berdiri di atas Fanxipan, daftar masuk di perkampungan Cat Cat yang indah dan nikmati udara sejuk khas tanah tinggi Barat Laut.",
+    "de": "Diese Reise entführt Sie vom Trubel der Hauptstadt in eine neblige Stadt. Erleben Sie das Gefühl, auf dem Gipfel des Fanxipan zu stehen, checken Sie im malerischen Cat Cat-Dorf ein und genießen Sie die kühle Luft, die typisch für das nordwestliche Hochland ist.",
+    "es": "Este viaje te alejará del ajetreo y el bullicio de la capital hasta un pueblo brumoso. Experimente la sensación de estar en la cima de Fanxipan, regístrese en el pintoresco pueblo de Cat Cat y disfrute del aire fresco típico de las tierras altas del noroeste.",
+    "it": "Questo viaggio ti porterà lontano dal trambusto della capitale verso una città nebbiosa. Prova la sensazione di trovarti in cima al Fanxipan, fai il check-in presso il pittoresco villaggio di Cat Cat e goditi l'aria fresca tipica degli altopiani del nord-ovest.",
+    "ru": "Это путешествие унесет вас от шума и суеты столицы в туманный городок. Испытайте ощущение, стоя на вершине Фаньксипана, зарегистрируйтесь в живописной деревне Кэт-Кэт и насладитесь прохладным воздухом, типичным для северо-западного нагорья.",
+    "nl": "Deze reis neemt je mee weg van de drukte van de hoofdstad naar een mistige stad. Ervaar het gevoel bovenop Fanxipan te staan, check in in het pittoreske Cat Cat-dorp en geniet van de koele lucht die typisch is voor de noordwestelijke hooglanden.",
+    "pl": "Ta podróż zabierze Cię z dala od zgiełku stolicy do zamglonego miasta. Poczuj się, jakbyś stał na szczycie Fanxipan, zamelduj się w malowniczej wiosce Cat Cat i ciesz się chłodnym powietrzem typowym dla północno-zachodnich wyżyn.",
+    "da": "Denne rejse vil tage dig væk fra hovedstadens stress og jag til en tåget by. Oplev følelsen af ​​at stå på toppen af ​​Fanxipan, check-in i den maleriske Cat Cat-landsby og nyd den kølige luft, der er typisk for det nordvestlige højland.",
+    "sv": "Denna resa tar dig bort från huvudstadens liv och rörelse till en dimmig stad. Upplev känslan av att stå på toppen av Fanxipan, checka in i den pittoreska byn Cat Cat och njut av den svala luften som är typisk för nordvästra höglandet.",
+    "no": "Denne reisen tar deg bort fra hovedstadens kjas og mas til en tåkete by. Opplev følelsen av å stå på toppen av Fanxipan, sjekk inn på den pittoreske Cat Cat-landsbyen og nyt den kjølige luften som er typisk for det nordvestlige høylandet."
   },
   "destinations": [
     "vietnam"
@@ -32,14 +48,14 @@
     "gastronomic-experiences"
   ],
   "pictures": [
-    "/public/v1/tour-images/tour_bb30a054-54a6-456a-bdc3-8a33e134a4c6/picture-17a85a25-e9b6-4e20-9b3c-be5860224d58.webp?v=2026-04-18T08%3A37%3A02.895Z",
-    "/public/v1/tour-images/tour_bb30a054-54a6-456a-bdc3-8a33e134a4c6/picture-e57c5541-5c91-4f24-a2f3-dbfbc69926b2.webp?v=2026-04-18T08%3A37%3A02.895Z",
-    "/public/v1/tour-images/tour_bb30a054-54a6-456a-bdc3-8a33e134a4c6/picture-5379924b-f356-4f34-ab04-7a153dba01e8.webp?v=2026-04-18T08%3A37%3A02.895Z"
+    "/public/v1/tour-images/tour_bb30a054-54a6-456a-bdc3-8a33e134a4c6/picture-17a85a25-e9b6-4e20-9b3c-be5860224d58.webp?v=2026-04-22T04%3A34%3A01.935Z",
+    "/public/v1/tour-images/tour_bb30a054-54a6-456a-bdc3-8a33e134a4c6/picture-e57c5541-5c91-4f24-a2f3-dbfbc69926b2.webp?v=2026-04-22T04%3A34%3A01.935Z",
+    "/public/v1/tour-images/tour_bb30a054-54a6-456a-bdc3-8a33e134a4c6/picture-5379924b-f356-4f34-ab04-7a153dba01e8.webp?v=2026-04-22T04%3A34%3A01.935Z"
   ],
   "seasonality_start_month": "jan",
   "seasonality_end_month": "dec",
   "priority": 50,
-  "image": "/public/v1/tour-images/tour_bb30a054-54a6-456a-bdc3-8a33e134a4c6/picture-17a85a25-e9b6-4e20-9b3c-be5860224d58.webp?v=2026-04-18T08%3A37%3A02.895Z",
+  "image": "/public/v1/tour-images/tour_bb30a054-54a6-456a-bdc3-8a33e134a4c6/picture-17a85a25-e9b6-4e20-9b3c-be5860224d58.webp?v=2026-04-22T04%3A34%3A01.935Z",
   "created_at": "2026-04-18T08:35:52.218Z",
-  "updated_at": "2026-04-19T04:14:52.794Z"
+  "updated_at": "2026-04-22T14:51:51.349Z"
 }

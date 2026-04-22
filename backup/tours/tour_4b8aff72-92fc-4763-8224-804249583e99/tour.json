@@ -1,23 +1,23 @@
 {
   "id": "tour_4b8aff72-92fc-4763-8224-804249583e99",
   "title": {
-    "en": "A JOURNEY TO DISCOVER THE HERITAGE OF NORTHERN VIETNAM",
+    "en": "Journey to Discover the Heritage of Northern Vietnam",
     "ar": "رحلة لاكتشاف تراث شمال فيتنام",
-    "fr": "UN VOYAGE À LA DÉCOUVERTE DU PATRIMOINE DU NORD DU VIETNAM",
-    "zh": "探索越南北部遗产的旅程",
+    "fr": "Voyage à la découverte du patrimoine du nord du Vietnam",
+    "zh": "探索越南北部遗产之旅",
     "ja": "ベトナム北部の遺産を発見する旅",
-    "ko": "북부 베트남의 유산을 찾아 떠나는 여행",
-    "vi": "HÀNH TRÌNH KHÁM PHÁ DI SẢN MIỀN BẮC VIỆT NAM",
-    "ms": "PERJALANAN UNTUK MENEMUKAN WARISAN VIETNAM UTARA",
-    "de": "EINE REISE, UM DAS ERBE NORDVIETNAMS ZU ENTDECKEN",
-    "es": "UN VIAJE PARA DESCUBRIR EL PATRIMONIO DEL NORTE DE VIETNAM",
-    "it": "UN VIAGGIO ALLA SCOPERTA DEL PATRIMONIO DEL VIETNAM DEL NORD",
-    "ru": "ПУТЕШЕСТВИЕ ДЛЯ ОТКРЫТИЯ НАСЛЕДИЯ СЕВЕРНОГО ВЬЕТНАМА",
-    "nl": "EEN REIS OM HET ERFGOED VAN NOORD-VIETNAM TE ONTDEKKEN",
-    "pl": "PODRÓŻ DO ODKRYCIA DZIEDZICTWA PÓŁNOCNEGO WIETNAMU",
-    "da": "EN REJSE FOR AT OPDAGDE ARVEN I NORDVIETNAM",
-    "sv": "EN RESA FÖR ATT UPPTÄCKA ARVET I NORRA VIETNAM",
-    "no": "EN REISE FOR Å OPPDAGE ARVEN I NORD-VIETNAM"
+    "ko": "베트남 북부의 유산을 찾아 떠나는 여행",
+    "vi": "Hành Trình Khám Phá Di Sản Miền Bắc Việt Nam",
+    "ms": "Perjalanan untuk Menemui Warisan Vietnam Utara",
+    "de": "Reise zur Entdeckung des Erbes Nordvietnams",
+    "es": "Viaje para descubrir el patrimonio del norte de Vietnam",
+    "it": "Viaggio alla scoperta del patrimonio del Vietnam del Nord",
+    "ru": "Путешествие, чтобы открыть для себя наследие Северного Вьетнама",
+    "nl": "Reis om het erfgoed van Noord-Vietnam te ontdekken",
+    "pl": "Podróż w celu odkrycia dziedzictwa północnego Wietnamu",
+    "da": "Rejse for at opdage arven i det nordlige Vietnam",
+    "sv": "Resa för att upptäcka arvet i norra Vietnam",
+    "no": "Reis for å oppdage arven i Nord-Vietnam"
   },
   "short_description": {
     "en": "Sapa & Fansipan Peak: Charming \"town in the clouds\" with temperate climate. You will conquer the \"Roof of Indochina\" by cable group, admire the romantic Muong Hoa valley and experience unique indigenous culture. O Quy Ho Pass & Cau Kinh: One of the \"four great passes\" with thousands of winding roads. Here, you can challenge heights on the Dragon Cloud Glass Bridge and hunt clouds at famous check-in spots such as Lonely Tree. Ham Rong Mountain & Silver Waterfall: Natural attractions near Sapa town, where you can see the entire valley from above and admire the white waterfall pouring down from the ravine. Tam Dao: Considered the \"Da Lat of the North\", this misty town offers a relaxing space with romantic stops like Cau May, lush green farms and cafes with beautiful views of the clouds and sky. Trang An & Mua Cave: World heritage complex with a magical underwater cave system on a boat. Hang Mua is where you challenge 500 stone steps to fully capture the beauty of Tam Coc and the Ngo Dong river. Hoa Lu Ancient Capital & Bai Dinh Pagoda: Journey back to the origins in Vietnam's first capital and admire the largest pagoda complex in Southeast Asia with many impressive records, bringing a sense of peace and freedom.",
@@ -53,10 +53,10 @@
   "seasonality_start_month": "jan",
   "seasonality_end_month": "dec",
   "priority": 50,
-  "image": "/public/v1/tour-images/tour_4b8aff72-92fc-4763-8224-804249583e99/tour_4b8aff72-92fc-4763-8224-804249583e99.webp",
+  "image": "/public/v1/tour-images/tour_4b8aff72-92fc-4763-8224-804249583e99/tour_4b8aff72-92fc-4763-8224-804249583e99.webp?v=2026-04-14T07%3A49%3A37.412Z",
   "created_at": "2026-04-14T02:15:56.438Z",
-  "updated_at": "2026-04-14T07:49:37.412Z",
+  "updated_at": "2026-04-22T15:07:30.037Z",
   "pictures": [
-    "/public/v1/tour-images/tour_4b8aff72-92fc-4763-8224-804249583e99/tour_4b8aff72-92fc-4763-8224-804249583e99.webp"
+    "/public/v1/tour-images/tour_4b8aff72-92fc-4763-8224-804249583e99/tour_4b8aff72-92fc-4763-8224-804249583e99.webp?v=2026-04-14T07%3A49%3A37.412Z"
   ]
 }

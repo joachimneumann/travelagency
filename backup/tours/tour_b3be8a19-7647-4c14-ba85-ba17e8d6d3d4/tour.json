@@ -1,23 +1,23 @@
 {
   "id": "tour_b3be8a19-7647-4c14-ba85-ba17e8d6d3d4",
   "title": {
-    "en": "EXPLORE THE ANCIENT CAPITAL OF HUE",
-    "ar": "اكتشف العاصمة القديمة لمدينة هيو",
-    "fr": "EXPLOREZ L'ANCIENNE CAPITALE DE HUE",
+    "en": "Explore Hue Ancient Capital",
+    "ar": "اكتشف هيو العاصمة القديمة",
+    "fr": "Explorez l'ancienne capitale de Hue",
     "zh": "探索顺化古都",
     "ja": "古都フエを探索する",
-    "ko": "후에의 고대 수도를 탐험해보세요",
-    "vi": "KHÁM PHÁ CỐ ĐÔ HUẾ",
-    "ms": "TEROKA MODAL PURBA HUE",
-    "de": "ERKUNDEN SIE DIE ALTE HAUPTSTADT HUE",
-    "es": "EXPLORA LA ANTIGUA CAPITAL DE HUE",
-    "it": "ESPLORA L'ANTICA CAPITALE DI HUE",
-    "ru": "ИЗУЧИТЕ ДРЕВНЮЮ СТОЛИЦУ ХЮЭ",
-    "nl": "ONTDEK DE OUDE HOOFDSTAD VAN HUE",
-    "pl": "ODKRYJ STAROŻYTNĄ STOLICĘ HUE",
-    "da": "UDFORSK DEN ANTIKKE HOVEDSTAD HUE",
-    "sv": "UTFORSKA DEN ANTIKNA HOVEDSTADEN HUE",
-    "no": "UTFORSK DEN GAMLE HOVEDSTADEN HUE"
+    "ko": "후에(Hue) 고대 수도 탐험",
+    "vi": "Khám Phá Cố Đô Huế",
+    "ms": "Terokai Ibu Kota Purba Hue",
+    "de": "Erkunden Sie die antike Hauptstadt Hue",
+    "es": "Explora la antigua capital de Hue",
+    "it": "Esplora l'antica capitale di Hue",
+    "ru": "Исследуйте древнюю столицу Хюэ",
+    "nl": "Verken de oude hoofdstad van Hue",
+    "pl": "Poznaj starożytną stolicę Hue",
+    "da": "Udforsk Hue Ancient Capital",
+    "sv": "Utforska Hue Ancient Capital",
+    "no": "Utforsk Hue Ancient Capital"
   },
   "short_description": {
     "en": "The ancient capital of Hue is home to majestic royal relics and mausoleum complexes, bearing the heroic history of the Nguyen Dynasty. Coming here, you will be immersed in the quiet cultural heritage space, enjoy exquisite cuisine and feel the poetic beauty of the Perfume River.",
@@ -35,7 +35,7 @@
     "nl": "De oude hoofdstad Hue herbergt majestueuze koninklijke relikwieën en mausoleumcomplexen, die de heroïsche geschiedenis van de Nguyen-dynastie met zich meedragen.\n\nAls u hier komt, wordt u ondergedompeld in de rustige culturele erfgoedruimte, geniet u van de voortreffelijke keuken en voelt u de poëtische schoonheid van de Parfumrivier.",
     "pl": "W starożytnej stolicy Hue znajdują się majestatyczne relikwie królewskie i zespoły mauzoleów noszące heroiczną historię dynastii Nguyen.\n\nPrzybywając tutaj, zanurzysz się w cichej przestrzeni dziedzictwa kulturowego, skosztujesz wykwintnej kuchni i poczujesz poetyckie piękno Rzeki Perfum.",
     "da": "Den gamle hovedstad Hue er hjemsted for majestætiske kongelige relikvier og mausoleumskomplekser, der bærer Nguyen-dynastiets heroiske historie.\n\nNår du kommer her, vil du blive fordybet i det rolige kulturarvsrum, nyde udsøgt køkken og føle den poetiske skønhed ved Parfume-floden.",
-    "sv": "Den antika huvudstaden Hue är hem för majestätiska kungliga reliker och mausoleumkomplex som bär på Nguyendynastins heroiska historia.\n\nNär du kommer hit kommer du att fördjupas i det lugna kulturarvet, njuta av utsökt mat och känna den poetiska skönheten i Parfymfloden.",
+    "sv": "Den antika huvudstaden Hue är hem för majestätiska kungliga reliker och mausoleumkomplex som bär på Nguyendynastins heroiska historia.\n\nNär du kommer hit kommer du att vara nedsänkt i det lugna kulturarvsområdet, njuta av utsökt mat och känna den poetiska skönheten i Parfymfloden.",
     "no": "Den gamle hovedstaden Hue er hjemsted for majestetiske kongelige relikvier og mausoleumskomplekser, som bærer den heroiske historien til Nguyen-dynastiet.\n\nNår du kommer hit, vil du bli fordypet i det rolige kulturarvrommet, nyte utsøkt mat og føle den poetiske skjønnheten til Parfyme-elven."
   },
   "destinations": [
@@ -51,10 +51,10 @@
   "seasonality_start_month": "mar",
   "seasonality_end_month": "nov",
   "priority": 50,
-  "image": "/public/v1/tour-images/tour_b3be8a19-7647-4c14-ba85-ba17e8d6d3d4/tour_b3be8a19-7647-4c14-ba85-ba17e8d6d3d4.webp",
+  "image": "/public/v1/tour-images/tour_b3be8a19-7647-4c14-ba85-ba17e8d6d3d4/tour_b3be8a19-7647-4c14-ba85-ba17e8d6d3d4.webp?v=2026-04-13T09%3A01%3A20.740Z",
   "created_at": "2026-04-13T09:01:09.779Z",
-  "updated_at": "2026-04-13T09:01:20.740Z",
+  "updated_at": "2026-04-22T15:50:28.170Z",
   "pictures": [
-    "/public/v1/tour-images/tour_b3be8a19-7647-4c14-ba85-ba17e8d6d3d4/tour_b3be8a19-7647-4c14-ba85-ba17e8d6d3d4.webp"
+    "/public/v1/tour-images/tour_b3be8a19-7647-4c14-ba85-ba17e8d6d3d4/tour_b3be8a19-7647-4c14-ba85-ba17e8d6d3d4.webp?v=2026-04-13T09%3A01%3A20.740Z"
   ]
 }

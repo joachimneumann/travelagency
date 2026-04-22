@@ -1,23 +1,23 @@
 {
   "id": "tour_6ad22f13-b6c3-4936-9c14-1cde4b4818fa",
   "title": {
-    "en": "CHEN QUOC Pagoda - HO CHI MINH Mausoleum - ONE PILLAR Pagoda - VIETNAM MUSEUM OF ETHNOLOGY - 36 WARDS - QUOC TU GIAM TEMPLE - FIRE PRISON",
-    "ar": "معبد CHEN QUOC - ضريح HO CHI MINH - معبد ONE PILLAR - متحف فيتنام للإثنولوجيا - 36 جناحًا - معبد QUOC TU GIAM - سجن النار",
-    "fr": "Pagode CHEN QUOC - Mausolée HO CHI MINH - Pagode AU PILIER UNIQUE - MUSÉE D'ETHNOLOGIE DU VIETNAM - 36 QUARTIERS - TEMPLE QUOC TU GIAM - PRISON D'INCENDIE",
-    "zh": "陈国塔 - 胡志明陵 - 一柱塔 - 越南民族博物馆 - 36 个区 - 国子监寺 - 消防监狱",
-    "ja": "チェンコック塔 - ホーチミン廟 - 一柱寺 - ベトナム民族学博物館 - 36区 - クオックトゥギアム寺院 - 消防刑務所",
-    "ko": "CHEN QUOC 탑 - 호치민 영묘 - 한 기둥 탑 - 베트남 민족학 박물관 - 36개 병동 - QUOC TU GIAM 사원 - 소방 감옥",
-    "vi": "CHÙA CHẤN QUỐC - LĂNG HỒ CHÍ MINH - CHÙA MỘT CỘT - BẢO TÀNG DÂN TỘC HỌC VIỆT NAM - 36 PHỐ PHƯỜNG - VĂN MIẾU QUỐC TỬ GIÁM - NHÀ TÙ HỎA LÒ",
-    "ms": "Pagoda CHEN QUOC - Mausoleum HO CHI MINH - Pagoda SATU TIANG - MUZIUM ETNOLOGI VIETNAM - 36 WAD - KUIL QUOC TU GIAM - PENJARA API",
-    "de": "CHEN-QUOC-Pagode – HO-CHI-MINH-Mausoleum – EIN-SÄULEN-Pagode – VIETNAM-MUSEUM FÜR ETHNOLOGIE – 36 WEG – QUOC TU GIAM-TEMPEL – FEUERGEFÄNGNIS",
-    "es": "Pagoda CHEN QUOC - Mausoleo de HO CHI MINH - Pagoda de UN PILAR - MUSEO DE ETNOLOGÍA DE VIETNAM - 36 PALACIO - TEMPLO QUOC TU GIAM - PRISIÓN DE FUEGO",
-    "it": "Pagoda CHEN QUOC - Mausoleo di HO CHI MINH - Pagoda A UN PILASTRO - MUSEO DI ETNOLOGIA DEL VIETNAM - 36 REPARTI - TEMPIO DI QUOC TU GIAM - PRIGIONE DEL FUOCO",
-    "ru": "Пагода ЧЕН КУОК - Мавзолей ХО ШИ МИНА - Пагода на ОДНОМ КОЛОНЕ - ВЬЕТНАМСКИЙ МУЗЕЙ ЭТНОЛОГИИ - 36 ОТДЕЛЕНИЙ - ХРАМ КУОК ТУ ЗЯМ - ПОЖАРНАЯ ТЮРЬМА",
-    "nl": "CHEN QUOC Pagode - HO CHI MINH Mausoleum - ONE PILLAR Pagode - VIETNAM MUSEUM VOOR VOLKENKUNDE - 36 WARDS - QUOC TU GIAM TEMPEL - BRANDGEVANGENIS",
-    "pl": "Pagoda CHEN QUOC - Mauzoleum HO CHI MINH - Pagoda JEDEN FILAR - WIETNAM MUZEUM ETNOLOGII - 36 ODZIAŁÓW - ŚWIĄTYNIA QUOC TU GIAM - WIĘZIENIE OGNIOWE",
-    "da": "CHEN QUOC Pagoda - HO CHI MINH Mausoleum - ÉN SØJLE Pagoda - VIETNAM MUSEUM OF ETHNOLOGY - 36 AFDELINGER - QUOC TU GIAM TEMPEL - BRANDFÆNGSEL",
-    "sv": "CHEN QUOC Pagoda - HO CHI MINH-mausoleet - ONE PILLAR Pagoda - VIETNAM MUSEUM OF ETHNOLOGY - 36 AVDELNINGAR - QUOC TU GIAM TEMPEL - BRANDFÄNGELSE",
-    "no": "CHEN QUOC Pagoda - HO CHI MINH Mausoleum - ÉN SØYLE Pagoda - VIETNAM MUSEUM OF ETHNOLOGY - 36 WARDS - QUOC TU GIAM TEMPEL - BRANN FENGSEL"
+    "en": "Explore Hanoi",
+    "ar": "اكتشف هانوي",
+    "fr": "Explorez Hanoï",
+    "zh": "探索河内",
+    "ja": "ハノイを探索する",
+    "ko": "하노이 둘러보기",
+    "vi": "Khám phá Hà Nội",
+    "ms": "Terokai Hanoi",
+    "de": "Entdecken Sie Hanoi",
+    "es": "Explorar Hanói",
+    "it": "Esplora Hanoi",
+    "ru": "Откройте для себя направление Ханой",
+    "nl": "Verken Hanoi",
+    "pl": "Poznaj Hanoi",
+    "da": "Udforsk Hanoi",
+    "sv": "Utforska Hanoi",
+    "no": "Utforsk Hanoi"
   },
   "short_description": {
     "en": "This journey takes you through symbols of thousands of years of civilization, from the majesty of Uncle Ho's Mausoleum and the Temple of Literature to the ancient beauty of the One Pillar Pagoda and Tran Quoc Pagoda. You will relive the heroic history at Hoa Lo Prison, discover the identities of 54 ethnic groups and immerse yourself in the bustling rhythm of life typical of Hanoi's 36 streets.",
@@ -51,10 +51,10 @@
   "seasonality_start_month": "",
   "seasonality_end_month": "",
   "priority": 50,
-  "image": "/public/v1/tour-images/tour_6ad22f13-b6c3-4936-9c14-1cde4b4818fa/tour_6ad22f13-b6c3-4936-9c14-1cde4b4818fa.webp",
+  "image": "/public/v1/tour-images/tour_6ad22f13-b6c3-4936-9c14-1cde4b4818fa/tour_6ad22f13-b6c3-4936-9c14-1cde4b4818fa.webp?v=2026-04-22T14%3A58%3A42.283Z",
   "created_at": "2026-04-13T09:16:46.974Z",
-  "updated_at": "2026-04-14T10:07:02.900Z",
+  "updated_at": "2026-04-22T16:13:01.058Z",
   "pictures": [
-    "/public/v1/tour-images/tour_6ad22f13-b6c3-4936-9c14-1cde4b4818fa/tour_6ad22f13-b6c3-4936-9c14-1cde4b4818fa.webp"
+    "/public/v1/tour-images/tour_6ad22f13-b6c3-4936-9c14-1cde4b4818fa/tour_6ad22f13-b6c3-4936-9c14-1cde4b4818fa.webp?v=2026-04-22T14%3A58%3A42.283Z"
   ]
 }

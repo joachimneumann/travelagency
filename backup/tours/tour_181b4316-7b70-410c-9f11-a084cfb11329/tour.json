@@ -1,23 +1,23 @@
 {
   "id": "tour_181b4316-7b70-410c-9f11-a084cfb11329",
   "title": {
-    "en": "GREAT TIMING COC - TRANG AN - MUA CAVE",
-    "ar": "توقيت عظيم COC - ترانج آن - كهف موا",
-    "fr": "GREAT TIMING COC - TRANG AN - GROTTE DE MUA",
-    "zh": "绝佳时机 COC - 长安 - MUA 洞穴",
-    "ja": "素晴らしいタイミング COC - トランアン - ムア洞窟",
-    "ko": "훌륭한 타이밍 COC - Trang AN - MUA CAVE",
-    "vi": "TUYỆT TÌNH CỐC - TRÀNG AN - HANG MÚA",
-    "ms": "COC MASA HEBAT - TRANG AN - MUA CAVE",
-    "de": "Tolles Timing für COC – TRANG AN – MUA-HÖHLE",
-    "es": "EXCELENTE MOMENTO COC - TRANG AN - CUEVA MUA",
-    "it": "OTTIMO TEMPO COC - TRANG AN - MUA CAVE",
-    "ru": "GREAT TIMING COC – ПЕЩЕРА ЧАНГАН – МУА",
-    "nl": "GEWELDIGE TIMING COC - TRANG AN - MUA CAVE",
-    "pl": "WIELKI CZAS COC - TRANG AN - MUA CAVE",
-    "da": "FANTASTISK TIMING COC - TRANG AN - MUA CAVE",
-    "sv": "BRA TIDNING COC - TRANG AN - MUA CAVE",
-    "no": "FLOTT TIMING COC - TRANG AN - MUA CAVE"
+    "en": "Tuyet Tinh Coc - Trang An - Dancing Cave",
+    "ar": "تويت تينه كوك - ترانج آن - الكهف الراقص",
+    "fr": "Tuyet Tinh Coc - Trang An - Grotte dansante",
+    "zh": "雪静谷 - 长安 - 跳舞的洞穴",
+    "ja": "トゥエット・ティンコック - チャンアン - ダンシング・ケーブ",
+    "ko": "Tuyet Tinh Coc - Trang An - 춤추는 동굴",
+    "vi": "Tuyệt Tình Cốc - Tràng An - Hang Múa",
+    "ms": "Tuyet Tinh Coc - Trang An - Gua Menari",
+    "de": "Tuyet Tinh Coc – Trang An – Tanzende Höhle",
+    "es": "Tuyet Tinh Coc - Trang An - Cueva Danzante",
+    "it": "Tuyet Tinh Coc - Trang An - Grotta danzante",
+    "ru": "Туйет Тинь Кок - Транг Ан - Танцующая пещера",
+    "nl": "Tuyet Tinh Coc - Trang An - Dansende Grot",
+    "pl": "Tuyet Tinh Coc – Trang An – Tańcząca Jaskinia",
+    "da": "Tuyet Tinh Coc - Trang An - Dancing Cave",
+    "sv": "Tuyet Tinh Coc - Trang An - Dansgrotta",
+    "no": "Tuyet Tinh Coc - Trang An - Dancing Cave"
   },
   "short_description": {
     "en": "The journey takes you into the majestic beauty of Tuyet Tinh Coc with its emerald green lake, before taking a boat to explore the magical underwater cave system at Trang An heritage site. The trip ends with the experience of conquering the top of Hang Mua, where you can fully take in the majestic and poetic picture of Ninh Binh mountains and water from above.",
@@ -52,10 +52,10 @@
   "seasonality_start_month": "",
   "seasonality_end_month": "",
   "priority": 50,
-  "image": "/public/v1/tour-images/tour_181b4316-7b70-410c-9f11-a084cfb11329/tour_181b4316-7b70-410c-9f11-a084cfb11329.webp",
+  "image": "/public/v1/tour-images/tour_181b4316-7b70-410c-9f11-a084cfb11329/tour_181b4316-7b70-410c-9f11-a084cfb11329.webp?v=2026-04-14T10%3A33%3A11.360Z",
   "created_at": "2026-04-13T10:22:47.669Z",
-  "updated_at": "2026-04-14T10:33:11.360Z",
+  "updated_at": "2026-04-22T15:01:28.069Z",
   "pictures": [
-    "/public/v1/tour-images/tour_181b4316-7b70-410c-9f11-a084cfb11329/tour_181b4316-7b70-410c-9f11-a084cfb11329.webp"
+    "/public/v1/tour-images/tour_181b4316-7b70-410c-9f11-a084cfb11329/tour_181b4316-7b70-410c-9f11-a084cfb11329.webp?v=2026-04-14T10%3A33%3A11.360Z"
   ]
 }

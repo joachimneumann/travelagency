@@ -1,23 +1,23 @@
 {
   "id": "tour_8ebca8ac-8a9d-48a6-bbfd-61fb5c0c3f91",
   "title": {
-    "en": "City tour Hanoi",
-    "ar": "جولة في مدينة هانوي",
-    "fr": "Visite de la ville de Hanoï",
-    "zh": "城市游览河内",
-    "ja": "ハノイ市内観光",
-    "ko": "시티투어 하노이",
-    "vi": "City tour Hà Nội",
-    "ms": "Lawatan bandar Hanoi",
-    "de": "Stadtrundfahrt Hanoi",
-    "es": "Visita a la ciudad de Hanói",
-    "it": "Giro della città di Hanoi",
-    "ru": "Экскурсия по городу Ханой",
-    "nl": "Stadstour Hanoi",
-    "pl": "Wycieczka po mieście Hanoi",
-    "da": "Byrundtur Hanoi",
-    "sv": "Stadsrundtur Hanoi",
-    "no": "Bytur Hanoi"
+    "en": "Visit Hanoi",
+    "ar": "زيارة هانوي",
+    "fr": "Visiter Hanoï",
+    "zh": "游览河内",
+    "ja": "ハノイを訪問",
+    "ko": "하노이 방문",
+    "vi": "Tham Quan Hà Nội",
+    "ms": "Lawati Hanoi",
+    "de": "Besuchen Sie Hanoi",
+    "es": "Visita Hanói",
+    "it": "Visita Hanoi",
+    "ru": "Посетите Ханой",
+    "nl": "Bezoek Hanoi",
+    "pl": "Odwiedź Hanoi",
+    "da": "Besøg Hanoi",
+    "sv": "Besök Hanoi",
+    "no": "Besøk Hanoi"
   },
   "short_description": {
     "en": "Hanoi is not only the capital, but also the sacred soul of Vietnam, where the flow of time seems to linger in every breath of the streets.",
@@ -35,7 +35,7 @@
     "nl": "Hanoi is niet alleen de hoofdstad, maar ook de heilige ziel van Vietnam, waar de stroom van de tijd in elke ademtocht van de straten lijkt te blijven hangen.",
     "pl": "Hanoi to nie tylko stolica, ale także święta dusza Wietnamu, gdzie upływ czasu zdaje się wyczuwać każdy oddech ulic.",
     "da": "Hanoi er ikke kun hovedstaden, men også Vietnams hellige sjæl, hvor tidens strøm ser ud til at blive hængende i hvert et åndedrag i gaderne.",
-    "sv": "Hanoi är inte bara huvudstaden utan också Vietnams heliga själ, där tidens flöde tycks hänga kvar i varje andetag på gatorna.",
+    "sv": "Hanoi är inte bara huvudstaden utan också Vietnams heliga själ, där tidens flöde tycks dröja kvar i varje andetag på gatorna.",
     "no": "Hanoi er ikke bare hovedstaden, men også Vietnams hellige sjel, hvor tidens flyt ser ut til å henge i hvert eneste pust i gatene."
   },
   "destinations": [
@@ -52,10 +52,10 @@
   "seasonality_start_month": "jan",
   "seasonality_end_month": "dec",
   "priority": 50,
-  "image": "/public/v1/tour-images/tour_8ebca8ac-8a9d-48a6-bbfd-61fb5c0c3f91/tour_8ebca8ac-8a9d-48a6-bbfd-61fb5c0c3f91.webp",
+  "image": "/public/v1/tour-images/tour_8ebca8ac-8a9d-48a6-bbfd-61fb5c0c3f91/tour_8ebca8ac-8a9d-48a6-bbfd-61fb5c0c3f91.webp?v=2026-04-14T09%3A43%3A34.052Z",
   "created_at": "2026-04-13T04:43:22.714Z",
-  "updated_at": "2026-04-14T09:43:34.052Z",
+  "updated_at": "2026-04-22T15:05:20.579Z",
   "pictures": [
-    "/public/v1/tour-images/tour_8ebca8ac-8a9d-48a6-bbfd-61fb5c0c3f91/tour_8ebca8ac-8a9d-48a6-bbfd-61fb5c0c3f91.webp"
+    "/public/v1/tour-images/tour_8ebca8ac-8a9d-48a6-bbfd-61fb5c0c3f91/tour_8ebca8ac-8a9d-48a6-bbfd-61fb5c0c3f91.webp?v=2026-04-14T09%3A43%3A34.052Z"
   ]
 }

@@ -1,23 +1,23 @@
 {
   "id": "tour_5382af29-685f-4e65-9f33-87f263a95f45",
   "title": {
-    "en": "KHAI NGUYEN Pagoda - SON TAY OLD TOWN - DUONG LAM OLD VILLAGE - MIA Pagoda",
-    "ar": "معبد خاي نجوين - مدينة سون تاي القديمة - قرية دونج لام القديمة - معبد ميا باغودا",
-    "fr": "Pagode KHAI NGUYEN - VIEILLE VILLE DE SON TAY - VIEUX VILLAGE DE DUONG LAM - Pagode MIA",
-    "zh": "开元寺 - 山西古镇 - 阳林古村 - 米亚寺",
-    "ja": "カイグエンパゴダ - ソンタイ旧市街 - ズオンラム古い村 - MIAパゴダ",
-    "ko": "KHAI NGUYEN 탑 - SON TAY 올드 타운 - DUONG LAM 올드 빌리지 - MIA 탑",
-    "vi": "CHÙA KHAI NGUYÊN - PHỐ CỔ SƠN TÂY - LÀNG CỔ ĐƯỜNG LÂM - CHÙA MÍA",
-    "ms": "Pagoda KHAI NGUYEN - BANDAR LAMA SON TAY - KAMPUNG LAMA DUONG LAM - Pagoda MIA",
-    "de": "KHAI NGUYEN Pagode – ALTSTADT SON TAY – ALTES DORF DUONG LAM – MIA Pagode",
-    "es": "Pagoda KHAI NGUYEN - CASCO ANTIGUO DE SON TAY - PUEBLO ANTIGUO DE DUONG LAM - Pagoda MIA",
-    "it": "Pagoda KHAI NGUYEN - CITTÀ VECCHIA DI SON TAY - VECCHIO VILLAGGIO DI DUONG LAM - Pagoda MIA",
-    "ru": "Пагода КХАЙ НГУЕН - СТАРЫЙ ГОРОД СОН ТАЙ - СТАРАЯ ДЕРЕВНЯ ДУОНГ ЛАМ - Пагода МИА",
-    "nl": "KHAI NGUYEN-pagode - SON TAY OUDE STAD - DUONG LAM OUD DORP - MIA-pagode",
-    "pl": "Pagoda KHAI NGUYEN – STARE MIASTO SON TAY – DUONG LAM OLD VILLAGE – Pagoda MIA",
-    "da": "KHAI NGUYEN Pagoda - SON TAY OLD TOWN - DUONG LAM OLD VILLAGE - MIA Pagoda",
-    "sv": "KHAI NGUYEN Pagoda - SON TAY OLD TOWN - DUONG LAM OLD VILLAGE - MIA Pagoda",
-    "no": "KHAI NGUYEN Pagoda - SON TAY OLD TOWN - DUONG LAM OLD VILLAGE - MIA Pagoda"
+    "en": "Khai Nguyen Pagoda - Son Tay Old Town - Duong Lam Ancient Village - Mia Pagoda",
+    "ar": "معبد خاي نجوين - مدينة سون تاي القديمة - قرية دونج لام القديمة - معبد ميا",
+    "fr": "Pagode Khai Nguyen - Vieille ville de Son Tay - Ancien village de Duong Lam - Pagode Mia",
+    "zh": "开元寺 - 山西古城 - 阳林古村 - 米亚寺",
+    "ja": "カイ グエン パゴダ - ソンタイ旧市街 - ドゥオンラム古代村 - ミア パゴダ",
+    "ko": "카이 응웬 파고다 - 손떠이 구시가지 - 즈엉럼 고대 마을 - 미아 파고다",
+    "vi": "Chùa Khai Nguyên - Phố Cổ Sơn Tây - Làng Cổ Đường Lâm- Chùa Mía",
+    "ms": "Pagoda Khai Nguyen - Bandar Lama Son Tay - Kampung Purba Duong Lam - Pagoda Mia",
+    "de": "Khai-Nguyen-Pagode – Altstadt von Son Tay – Antikes Dorf Duong Lam – Mia-Pagode",
+    "es": "Pagoda Khai Nguyen - Casco antiguo de Son Tay - Pueblo antiguo de Duong Lam - Pagoda Mia",
+    "it": "Pagoda Khai Nguyen - Città vecchia di Son Tay - Antico villaggio di Duong Lam - Pagoda Mia",
+    "ru": "Пагода Кхай Нгуен - Старый город Сон Тай - Древняя деревня Дуонг Лам - Пагода Миа",
+    "nl": "Khai Nguyen-pagode - oude binnenstad van Son Tay - oud dorp Duong Lam - Mia-pagode",
+    "pl": "Pagoda Khai Nguyen – Stare Miasto Son Tay – Starożytna wioska Duong Lam – Pagoda Mia",
+    "da": "Khai Nguyen Pagoda - Son Tay Old Town - Duong Lam Ancient Village - Mia Pagoda",
+    "sv": "Khai Nguyen Pagoda - Son Tay Old Town - Duong Lam Ancient Village - Mia Pagoda",
+    "no": "Khai Nguyen Pagoda - Son Tay Old Town - Duong Lam Ancient Village - Mia Pagoda"
   },
   "short_description": {
     "en": "The journey takes you back to the peaceful space of Duong Lam ancient village with mossy laterite houses and the ancient, majestic beauty of Son Tay Citadel. You can also admire the sophistication of sculptural art at Mia Pagoda and the towering Amitabha Buddha statue at Khai Nguyen Pagoda, bringing a sense of peace in the land of Doai.",
@@ -52,10 +52,10 @@
   "seasonality_start_month": "jan",
   "seasonality_end_month": "may",
   "priority": 50,
-  "image": "/public/v1/tour-images/tour_5382af29-685f-4e65-9f33-87f263a95f45/tour_5382af29-685f-4e65-9f33-87f263a95f45.webp",
+  "image": "/public/v1/tour-images/tour_5382af29-685f-4e65-9f33-87f263a95f45/tour_5382af29-685f-4e65-9f33-87f263a95f45.webp?v=2026-04-22T15%3A40%3A21.945Z",
   "created_at": "2026-04-13T10:05:18.055Z",
-  "updated_at": "2026-04-13T10:06:04.451Z",
+  "updated_at": "2026-04-22T15:40:42.778Z",
   "pictures": [
-    "/public/v1/tour-images/tour_5382af29-685f-4e65-9f33-87f263a95f45/tour_5382af29-685f-4e65-9f33-87f263a95f45.webp"
+    "/public/v1/tour-images/tour_5382af29-685f-4e65-9f33-87f263a95f45/tour_5382af29-685f-4e65-9f33-87f263a95f45.webp?v=2026-04-22T15%3A40%3A21.945Z"
   ]
 }

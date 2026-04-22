@@ -1,23 +1,23 @@
 {
   "id": "tour_932143b3-7e73-4139-84e6-b6283c8a1a28",
   "title": {
-    "en": "HANOI – HA GIANG LOOP DISCOVERY 3D2N",
-    "ar": "هانوي – ها جيانج لوب ديسكفري 3D2N",
-    "fr": "HANOI – DÉCOUVERTE DE LA BOUCLE DE HA GIANG 3J2N",
-    "zh": "河内 – 河江环路探索 3 天 2 夜",
-    "ja": "ハノイ – ハザン ループ ディスカバリー 3D2N",
-    "ko": "하노이 – 하장 루프 디스커버리 3박 2일",
-    "vi": "HANOI – HA GIANG LOOP DISCOVERY 3D2N",
-    "ms": "HANOI – HA GIANG LOOP DISCOVERY 3H2N",
-    "de": "HANOI – HA GIANG LOOP DISCOVERY 3T2N",
-    "es": "HANOI – HA GIANG LOOP DESCUBRIMIENTO 3D2N",
-    "it": "HANOI – SCOPERTA DEL LOOP DI HA GIANG 3D2N",
-    "ru": "ХАНОЙ – HA GIANG LOOP DISCOVERY 3D2N",
-    "nl": "HANOI – HA GIANG LOOP ONTDEKKING 3D2N",
-    "pl": "HANOI – HA GIANG PĘTLA ODKRYCIE 3D2N",
-    "da": "HANOI – HA GIANG LOOP DISCOVERY 3D2N",
-    "sv": "HANOI – HA GIANG LOOP DISCOVERY 3D2N",
-    "no": "HANOI – HA GIANG LOOP DISCOVERY 3D2N"
+    "en": "Hanoi – Explore Ha Giang",
+    "ar": "هانوي – اكتشف ها جيانج",
+    "fr": "Hanoï – Explorez Ha Giang",
+    "zh": "河内 – 探索河江",
+    "ja": "ハノイ – ハザンを探索する",
+    "ko": "하노이 – 하장(Ha Giang) 탐험",
+    "vi": "Hà Nội – Khám Phá Hà Giang",
+    "ms": "Hanoi – Terokai Ha Giang",
+    "de": "Hanoi – Entdecken Sie Ha Giang",
+    "es": "Hanói – Explora Ha Giang",
+    "it": "Hanoi – Esplora Ha Giang",
+    "ru": "Ханой – Исследуйте Хазянг",
+    "nl": "Hanoi – Ontdek Ha Giang",
+    "pl": "Hanoi – poznaj Ha Giang",
+    "da": "Hanoi – Udforsk Ha Giang",
+    "sv": "Hanoi – Utforska Ha Giang",
+    "no": "Hanoi – Utforsk Ha Giang"
   },
   "short_description": {
     "en": "Ha Giang is the top land of the country, a place that makes everyone overwhelmed by the majestic beauty of the rolling limestone mountains and the legendary Ma Pi Leng pass. Dong Van Karst Plateau is not only a world geological heritage but also a colorful cultural space of the Mong, Lo Lo, Dao... ethnic groups with purple and pink buckwheat flowers covering the entire hillside.",
@@ -52,10 +52,10 @@
   "seasonality_start_month": "",
   "seasonality_end_month": "",
   "priority": 50,
-  "image": "/public/v1/tour-images/tour_932143b3-7e73-4139-84e6-b6283c8a1a28/tour_932143b3-7e73-4139-84e6-b6283c8a1a28.webp",
+  "image": "/public/v1/tour-images/tour_932143b3-7e73-4139-84e6-b6283c8a1a28/tour_932143b3-7e73-4139-84e6-b6283c8a1a28.webp?v=2026-04-22T04%3A48%3A28.173Z",
   "created_at": "2026-04-14T10:39:04.534Z",
-  "updated_at": "2026-04-14T10:39:05.005Z",
+  "updated_at": "2026-04-22T14:39:13.366Z",
   "pictures": [
-    "/public/v1/tour-images/tour_932143b3-7e73-4139-84e6-b6283c8a1a28/tour_932143b3-7e73-4139-84e6-b6283c8a1a28.webp"
+    "/public/v1/tour-images/tour_932143b3-7e73-4139-84e6-b6283c8a1a28/tour_932143b3-7e73-4139-84e6-b6283c8a1a28.webp?v=2026-04-22T04%3A48%3A28.173Z"
   ]
 }

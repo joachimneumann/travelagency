@@ -1,23 +1,23 @@
 {
   "id": "tour_f4ed5398-7f89-4800-9da9-deb29272c132",
   "title": {
-    "en": "EXPLORE TAM DAO - TAY THIEN",
+    "en": "Explore Tam Dao - Tay Thien",
     "ar": "اكتشف تام داو - تاي ثين",
-    "fr": "EXPLORER TAM DAO - TAY THIEN",
-    "zh": "探索 TAM DAO - 西天",
-    "ja": "タムダオを探索 - タイティエン",
-    "ko": "TAM DAO - TAY THIEN 살펴보기",
-    "vi": "KHÁM PHÁ TAM ĐẢO - TÂY THIÊN",
-    "ms": "TEROKA TAM DAO - TAY THIEN",
-    "de": "ENTDECKEN SIE TAM DAO - TAY THIEN",
-    "es": "EXPLORA TAM DAO - TAY THIEN",
-    "it": "ESPLORA TAM DAO - TAY THIEN",
-    "ru": "УЗНАЙТЕ ТАМ ДАО – ТАЙ ТЬЯН",
-    "nl": "ONTDEK TAM DAO - TAY THIEN",
-    "pl": "ODKRYJ TAM DAO - TAY THIEN",
-    "da": "UDFORSK TAM DAO - TAY THIEN",
-    "sv": "UTFORSKA TAM DAO - TAY THIEN",
-    "no": "UTFORSK TAM DAO - TAY THIEN"
+    "fr": "Explorez Tam Dao - Tay Thien",
+    "zh": "探索 Tam Dao - 西天",
+    "ja": "タムダオ - タイティエンを探索する",
+    "ko": "땀다오(Tam Dao) - Tay Thien 둘러보기",
+    "vi": "Khám Phá Tam Đảo - Tây Thiên",
+    "ms": "Terokai Tam Dao - Tay Thien",
+    "de": "Entdecken Sie Tam Dao – Tay Thien",
+    "es": "Explora Tam Dao - Tay Thien",
+    "it": "Esplora Tam Dao-Tay Thien",
+    "ru": "Откройте для себя направление Там Дао-Тай Тьен",
+    "nl": "Verken Tam Dao - Tay Thien",
+    "pl": "Poznaj Tam Dao – Tay Thien",
+    "da": "Udforsk Tam Dao - Tay Thien",
+    "sv": "Utforska Tam Dao - Tay Thien",
+    "no": "Utforsk Tam Dao - Tay Thien"
   },
   "short_description": {
     "en": "The journey takes you to the \"Da Lat of the North\" Tam Dao covered with clouds all year round, where the climate of four seasons rotates in one exciting day. Next is the peaceful space at Tay Thien scenic spot, where you can admire the majestic spiritual architectural complex and immerse yourself in the lush green mountains and forests.",
@@ -52,10 +52,10 @@
   "seasonality_start_month": "jan",
   "seasonality_end_month": "jul",
   "priority": 50,
-  "image": "/public/v1/tour-images/tour_f4ed5398-7f89-4800-9da9-deb29272c132/tour_f4ed5398-7f89-4800-9da9-deb29272c132.webp",
+  "image": "/public/v1/tour-images/tour_f4ed5398-7f89-4800-9da9-deb29272c132/tour_f4ed5398-7f89-4800-9da9-deb29272c132.webp?v=2026-04-13T10%3A11%3A25.116Z",
   "created_at": "2026-04-13T10:11:16.624Z",
-  "updated_at": "2026-04-13T10:11:25.116Z",
+  "updated_at": "2026-04-22T15:38:27.231Z",
   "pictures": [
-    "/public/v1/tour-images/tour_f4ed5398-7f89-4800-9da9-deb29272c132/tour_f4ed5398-7f89-4800-9da9-deb29272c132.webp"
+    "/public/v1/tour-images/tour_f4ed5398-7f89-4800-9da9-deb29272c132/tour_f4ed5398-7f89-4800-9da9-deb29272c132.webp?v=2026-04-13T10%3A11%3A25.116Z"
   ]
 }

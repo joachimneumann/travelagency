@@ -8,10 +8,10 @@
     "ja": "漆・帽子・香工芸村",
     "ko": "옻칠 – 모자 – 향 공예 마을",
     "vi": "Làng nghề Sơn Mài – Nón – Hương",
-    "ms": "Lacquer – Hat – Kampung kraf kemenyan",
+    "ms": "Lacquer – Topi – Kampung kraf kemenyan",
     "de": "Lack – Hut – Weihrauch-Handwerksdorf",
     "es": "Laca – Sombrero – Pueblo artesanal de incienso",
-    "it": "Lacca – Cappello – Villaggio artigianale dell’incenso",
+    "it": "Lacca – Cappello – Villaggio artigianale dell'incenso",
     "ru": "Лак – Шляпа – Деревня изготовления благовоний",
     "nl": "Lak – Hoed – Wierook ambachtsdorp",
     "pl": "Lakier – Kapelusz – Wioska kadzidła",
@@ -23,7 +23,7 @@
     "en": "The journey takes you into traditional craft villages, where the talented hands of artisans breathe life into sophisticated lacquer works and soulful Vietnamese conical hats. The atmosphere of the trip becomes more brilliant and relaxing when you stop at the incense village, where bundles of incense sticks bloom like colorful flowers, radiating a quiet fragrance in the heart of the heritage.",
     "ar": "تأخذك الرحلة إلى قرى الحرف التقليدية، حيث تبث أيدي الحرفيين الموهوبة الحياة في أعمال الطلاء المتطورة والقبعات الفيتنامية المخروطية المفعمة بالحيوية.\nوتصبح أجواء الرحلة أكثر تألقاً واسترخاء عندما تتوقف عند قرية البخور، حيث تتفتح حزم أعواد البخور كالزهور الملونة، تشع عطراً هادئاً في قلب التراث.",
     "fr": "Le voyage vous emmène dans des villages d'artisanat traditionnels, où les mains talentueuses des artisans donnent vie à des œuvres de laque sophistiquées et à des chapeaux coniques vietnamiens pleins d'âme.\nL'atmosphère du voyage devient plus lumineuse et relaxante lorsque l'on s'arrête au village de l'encens, où des fagots de bâtons d'encens s'épanouissent telles des fleurs colorées, dégageant un parfum tranquille au cœur du patrimoine.",
-    "zh": "旅程将带您进入传统手工艺村，工匠们的才华横溢的双手为精致的漆器作品和深情的越南圆锥形帽子注入了生命。\n当你停在香村时，旅途的气氛变得更加灿烂和轻松，一束束香像五颜六色的花朵一样绽放，在遗产的中心散发着安静的香气。",
+    "zh": "旅程将带您进入传统手工艺村，工匠们的才华横溢的双手为精致的漆器作品和深情的越南圆锥形帽子注入了生命。\n当你停在香村时，旅途的气氛变得更加灿烂和轻松，一束束香像五颜六色的花朵一样绽放，在遗产的中心散发着安静的香味。",
     "ja": "この旅では、伝統工芸の村を訪れます。そこでは、職人の才能ある手によって、洗練された漆工芸や魂のこもったベトナムの円錐形の帽子に命が吹き込まれています。\nお香の村に立ち寄ると、旅の雰囲気はさらに華やかでリラックスしたものになります。お香の束が色とりどりの花のように咲き誇り、遺産の中心で静かな香りを放ちます。",
     "ko": "이 여행은 장인의 재능 있는 손이 정교한 칠기 작품과 영혼이 담긴 베트남 원추형 모자에 생명을 불어넣는 전통 공예 마을로 여러분을 안내합니다.\n향단이 형형색색의 꽃처럼 피어나고, 유산의 중심에 은은한 향기를 발산하는 향마을에 들르면 여행의 분위기는 더욱 화사해지고 여유로워진다.",
     "vi": "Hành trình đưa bạn len lỏi vào những xóm nghề truyền thống, nơi đôi bàn tay tài hoa của các nghệ nhân thổi hồn vào các tác phẩm sơn mài tinh xảo và những chiếc nón lá hồn quê Việt.\nKhông gian chuyến đi thêm phần rực rỡ và thư thái khi bạn dừng chân tại làng hương, nơi những bó tăm nhang xòe nở như những đóa hoa thắm sắc, tỏa hương thơm trầm mặc giữa lòng di sản.",
@@ -50,10 +50,10 @@
   "seasonality_start_month": "jan",
   "seasonality_end_month": "dec",
   "priority": 50,
-  "image": "/public/v1/tour-images/tour_94d1fcb2-0ac0-4f49-b365-6ffeaf39216c/tour_94d1fcb2-0ac0-4f49-b365-6ffeaf39216c.webp",
+  "image": "/public/v1/tour-images/tour_94d1fcb2-0ac0-4f49-b365-6ffeaf39216c/tour_94d1fcb2-0ac0-4f49-b365-6ffeaf39216c.webp?v=2026-04-13T10%3A48%3A46.417Z",
   "created_at": "2026-04-13T10:48:46.170Z",
-  "updated_at": "2026-04-13T10:48:46.417Z",
+  "updated_at": "2026-04-22T15:34:51.885Z",
   "pictures": [
-    "/public/v1/tour-images/tour_94d1fcb2-0ac0-4f49-b365-6ffeaf39216c/tour_94d1fcb2-0ac0-4f49-b365-6ffeaf39216c.webp"
+    "/public/v1/tour-images/tour_94d1fcb2-0ac0-4f49-b365-6ffeaf39216c/tour_94d1fcb2-0ac0-4f49-b365-6ffeaf39216c.webp?v=2026-04-13T10%3A48%3A46.417Z"
   ]
 }

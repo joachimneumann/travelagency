@@ -1,23 +1,23 @@
 {
   "id": "tour_8d8c2598-ecf8-4c27-bb2e-c9449c93ab1d",
   "title": {
-    "en": "HUONG Pagoda - HUONG TIG DONG",
-    "ar": "معبد هونج - هوونج تيج دونج",
-    "fr": "Pagode HUONG - HUONG TIG DONG",
-    "zh": "香塔 - HUONG TIG DONG",
-    "ja": "フォーンパゴダ - フォーンティグドン",
-    "ko": "흐엉 파고다(HUONG Pagoda) - 흐엉 티그 동(HUONG TIG DONG)",
-    "vi": "CHÙA HƯƠNG- DỘNG HƯƠNG TÍCH",
-    "ms": "Pagoda HUONG - HUONG TIG DONG",
-    "de": "HUONG-Pagode - HUONG TIG DONG",
-    "es": "Pagoda HUONG - HUONG TIG DONG",
-    "it": "Pagoda HUONG - HUONG TIG DONG",
-    "ru": "Пагода ХУОНГ - ХУОНГ ТИГ ДОНГ",
-    "nl": "HUONG-pagode - HUONG TIG DONG",
-    "pl": "Pagoda HUONG – HUONG TIG DONG",
-    "da": "HUONG Pagoda - HUONG TIG DONG",
-    "sv": "HUONG Pagoda - HUONG TIG DONG",
-    "no": "HUONG Pagoda - HUONG TIG DONG"
+    "en": "Perfume Pagoda - Huong Tich Cave",
+    "ar": "معبد العطور - كهف هونج تيش",
+    "fr": "Pagode des Parfums - Grotte de Huong Tich",
+    "zh": "香水塔 - Huong Tich Cave",
+    "ja": "香水塔 - フォン ティッチ洞窟",
+    "ko": "향수 탑 - 흐엉틱 동굴",
+    "vi": "Chùa Hương- Động Hương Tích",
+    "ms": "Pagoda Minyak Wangi - Gua Huong Tich",
+    "de": "Parfümpagode – Huong-Tich-Höhle",
+    "es": "Pagoda del Perfume - Cueva Huong Tich",
+    "it": "Pagoda del Profumo - Grotta Huong Tich",
+    "ru": "Парфюмерная пагода - Пещера Хуонг Тич",
+    "nl": "Parfumpagode - Huong Tich-grot",
+    "pl": "Pagoda Perfum – Jaskinia Huong Tich",
+    "da": "Parfume Pagoda - Huong Tich Cave",
+    "sv": "Parfym Pagoda - Huong Tich Cave",
+    "no": "Parfyme Pagoda - Huong Tich Cave"
   },
   "short_description": {
     "en": "Perfume Pagoda and Huong Tich Cave are unique cultural and religious complexes, where you can take a boat down the romantic Yen stream to reach the pure Buddha land. Huong Tich Cave is also known as \"Nam Thien De Nhat Cave\", possessing majestic beauty with shimmering stalactites and stalactites and is the most sacred spiritual destination every spring.",
@@ -52,10 +52,10 @@
   "seasonality_start_month": "jan",
   "seasonality_end_month": "apr",
   "priority": 50,
-  "image": "/public/v1/tour-images/tour_8d8c2598-ecf8-4c27-bb2e-c9449c93ab1d/tour_8d8c2598-ecf8-4c27-bb2e-c9449c93ab1d.webp",
+  "image": "/public/v1/tour-images/tour_8d8c2598-ecf8-4c27-bb2e-c9449c93ab1d/tour_8d8c2598-ecf8-4c27-bb2e-c9449c93ab1d.webp?v=2026-04-13T09%3A33%3A30.324Z",
   "created_at": "2026-04-13T09:33:29.406Z",
-  "updated_at": "2026-04-13T09:33:30.324Z",
+  "updated_at": "2026-04-22T15:43:44.700Z",
   "pictures": [
-    "/public/v1/tour-images/tour_8d8c2598-ecf8-4c27-bb2e-c9449c93ab1d/tour_8d8c2598-ecf8-4c27-bb2e-c9449c93ab1d.webp"
+    "/public/v1/tour-images/tour_8d8c2598-ecf8-4c27-bb2e-c9449c93ab1d/tour_8d8c2598-ecf8-4c27-bb2e-c9449c93ab1d.webp?v=2026-04-13T09%3A33%3A30.324Z"
   ]
 }

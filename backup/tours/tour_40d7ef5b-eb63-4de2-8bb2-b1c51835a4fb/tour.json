@@ -1,23 +1,23 @@
 {
   "id": "tour_40d7ef5b-eb63-4de2-8bb2-b1c51835a4fb",
   "title": {
-    "en": "Symphony of flowers: Discover the romance of Da Lat",
-    "ar": "سيمفونية الزهور: اكتشف رومانسية دا لات",
-    "fr": "Symphonie de fleurs : découvrez la romance de Da Lat",
-    "zh": "花之交响曲：探索大叻的浪漫",
-    "ja": "花のシンフォニー: ダラットのロマンスを発見",
-    "ko": "꽃의 교향곡: 달랏의 낭만을 발견해보세요",
-    "vi": "Bản giao hưởng của hoa: Khám phá sự lãng mạn của Đà Lạt",
-    "ms": "Simfoni bunga: Temui percintaan Da Lat",
-    "de": "Symphonie der Blumen: Entdecken Sie die Romantik von Da Lat",
-    "es": "Sinfonía de flores: descubre el romance de Da Lat",
-    "it": "Sinfonia di fiori: scopri il romanticismo di Da Lat",
-    "ru": "Симфония цветов: откройте для себя романтику Далата",
-    "nl": "Symfonie van bloemen: Ontdek de romantiek van Da Lat",
-    "pl": "Symfonia kwiatów: odkryj romans Da Lat",
-    "da": "Symphony of flowers: Oplev romantikken i Da Lat",
-    "sv": "Symphony of flowers: Upptäck romantiken i Da Lat",
-    "no": "Symphony of flowers: Oppdag romantikken til Da Lat"
+    "en": "Symphony of Flowers and Discovering the Romance of Da Lat",
+    "ar": "سيمفونية الزهور واكتشاف رومانسية دا لات",
+    "fr": "Symphonie des fleurs et découverte de la romance de Da Lat",
+    "zh": "花之交响曲，发现大叻的浪漫",
+    "ja": "花のシンフォニーとダラットのロマンスの発見",
+    "ko": "꽃의 심포니와 달랏의 낭만을 발견하다",
+    "vi": "Bản Giao Hưởng Của Hoa Và Khám Phá Sự Lãng Mạn Của Đà Lạt",
+    "ms": "Simfoni Bunga dan Menemui Percintaan Da Lat",
+    "de": "Symphonie der Blumen und Entdeckung der Romantik von Da Lat",
+    "es": "Sinfonía de flores y descubrimiento del romance de Da Lat",
+    "it": "Sinfonia di fiori e scoperta del romanticismo di Da Lat",
+    "ru": "Симфония цветов и романтика Далата",
+    "nl": "Symfonie van bloemen en het ontdekken van de romantiek van Da Lat",
+    "pl": "Symfonia kwiatów i odkrywanie romansu Da Lat",
+    "da": "Symfoni af blomster og opdagelse af romantikken i Da Lat",
+    "sv": "Symphony of Flowers and Discovering the Romantic of Da Lat",
+    "no": "Symfoni av blomster og oppdagelse av romantikken til Da Lat"
   },
   "short_description": {
     "en": "Da Lat is a paradise of thousands of flowers and mist, a place with dreamy beauty like a sweet symphony of nature. This highland city attracts travelers with its cool temperate climate and nostalgic, romantic street corners.",
@@ -52,10 +52,10 @@
   "seasonality_start_month": "",
   "seasonality_end_month": "",
   "priority": 50,
-  "image": "/public/v1/tour-images/tour_40d7ef5b-eb63-4de2-8bb2-b1c51835a4fb/tour_40d7ef5b-eb63-4de2-8bb2-b1c51835a4fb.webp",
+  "image": "/public/v1/tour-images/tour_40d7ef5b-eb63-4de2-8bb2-b1c51835a4fb/tour_40d7ef5b-eb63-4de2-8bb2-b1c51835a4fb.webp?v=2026-04-14T01%3A35%3A56.528Z",
   "created_at": "2026-04-14T01:35:35.203Z",
-  "updated_at": "2026-04-14T01:35:56.528Z",
+  "updated_at": "2026-04-22T15:33:19.260Z",
   "pictures": [
-    "/public/v1/tour-images/tour_40d7ef5b-eb63-4de2-8bb2-b1c51835a4fb/tour_40d7ef5b-eb63-4de2-8bb2-b1c51835a4fb.webp"
+    "/public/v1/tour-images/tour_40d7ef5b-eb63-4de2-8bb2-b1c51835a4fb/tour_40d7ef5b-eb63-4de2-8bb2-b1c51835a4fb.webp?v=2026-04-14T01%3A35%3A56.528Z"
   ]
 }
