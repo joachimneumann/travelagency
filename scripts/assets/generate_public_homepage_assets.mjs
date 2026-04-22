@@ -531,16 +531,17 @@ function preferredPictureFilenameForStaff(username, photosDir) {
 function normalizePictureFilename(rawValue, username) {
   const normalized = normalizeText(rawValue);
   if (!normalized) return "";
-  const staticMatch = normalized.match(/\/content\/atp_staff\/photos\/([^/?#]+)$/i);
-  const legacyPublicMatch = normalized.match(/\/public\/v1\/atp-staff-photos\/([^/?#]+)$/i);
-  const staticAssetMatch = normalized.match(/\/assets\/(?:generated\/homepage\/)?team\/([^/?#]+)$/i);
+  const withoutCacheBuster = normalized.split(/[?#]/)[0];
+  const staticMatch = withoutCacheBuster.match(/\/content\/atp_staff\/photos\/([^/?#]+)$/i);
+  const legacyPublicMatch = withoutCacheBuster.match(/\/public\/v1\/atp-staff-photos\/([^/?#]+)$/i);
+  const staticAssetMatch = withoutCacheBuster.match(/\/assets\/(?:generated\/homepage\/)?team\/([^/?#]+)$/i);
   const candidate = staticMatch
     ? decodeURIComponent(staticMatch[1])
     : legacyPublicMatch
       ? decodeURIComponent(legacyPublicMatch[1])
       : staticAssetMatch
         ? decodeURIComponent(staticAssetMatch[1])
-        : path.basename(normalized);
+        : path.basename(withoutCacheBuster);
   const normalizedCandidate = normalizeText(candidate);
   if (!normalizedCandidate) return "";
   const normalizedUsername = normalizeText(username).toLowerCase();

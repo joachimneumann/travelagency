@@ -104,7 +104,7 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
       beta: {
         name: "Beta",
         position: { en: "Guide" },
-        picture: "beta.webp",
+        picture: "/assets/generated/homepage/team/beta.webp?v=12345",
         team_order: 2,
         appears_in_team_web_page: true
       }
@@ -165,6 +165,7 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
   assert.equal(publicTeam.items[0].team_order, 1);
   assert.equal(publicTeam.items[1].username, "beta");
   assert.equal(publicTeam.items[1].team_order, 2);
+  assert.match(publicTeam.items[1].picture_ref, /^\/assets\/generated\/homepage\/team\/beta\.webp\?v=/);
   assert.equal(publicTeam.items[2].username, "alpha");
   assert.equal(publicTeam.items[2].team_order, 10);
   assert.match(publicTeam.items[0].picture_ref, /^\/assets\/generated\/homepage\/team\/joachim\.webp\?v=/);
