@@ -90,7 +90,7 @@
   "backend.tours.new_tour": "Tạo tour trang web mới",
   "backend.tours.no_results": "Không tìm thấy tour",
   "backend.tours.search_label": "Tìm tour",
-  "backend.tours.search_placeholder": "id, tiêu đề, quốc gia, phong cách...",
+  "backend.tours.search_placeholder": "tiêu đề, đích đến, phong cách...",
   "backend.tours.status.deleted": "Tour đã được xóa.",
   "backend.tours.status.deleting": "Đang xóa tour...",
   "backend.tours.status.deleting_overlay": "Đang xóa tour. Vui lòng chờ.",

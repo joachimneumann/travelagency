@@ -90,7 +90,7 @@
   "backend.tours.new_tour": "New Web Site Tour",
   "backend.tours.no_results": "No tours found",
   "backend.tours.search_label": "Search tours",
-  "backend.tours.search_placeholder": "id, title, country, style...",
+  "backend.tours.search_placeholder": "title, destinations, style...",
   "backend.tours.status.deleted": "Tour deleted.",
   "backend.tours.status.deleting": "Deleting tour...",
   "backend.tours.status.deleting_overlay": "Deleting tour. Please wait.",

@@ -71,7 +71,7 @@ const state = {
   },
   tours: {
     page: 1,
-    pageSize: 10,
+    pageSize: 100,
     totalPages: 1,
     total: 0,
     lastItems: [],
@@ -148,11 +148,6 @@ function formatIntegerWithGrouping(value) {
     maximumFractionDigits: 0,
     useGrouping: true
   }).format(Number(value));
-}
-
-function shortId(value) {
-  const id = String(value || "");
-  return id.length > 6 ? id.slice(-6) : id;
 }
 
 const fetchApi = createApiFetcher({
@@ -243,11 +238,17 @@ function bindControls() {
   if (els.toursTable) {
     els.toursTable.addEventListener("click", (event) => {
       const button = event.target instanceof Element ? event.target.closest("[data-tour-delete]") : null;
-      if (!button) return;
-      const tourId = normalizeText(button.getAttribute("data-tour-delete"));
-      const title = normalizeText(button.getAttribute("data-tour-title"));
-      openDeleteModal(tourId, title, button);
+      if (button) {
+        const tourId = normalizeText(button.getAttribute("data-tour-delete"));
+        const title = normalizeText(button.getAttribute("data-tour-title"));
+        openDeleteModal(tourId, title, button);
+        return;
+      }
+      const row = resolveTourRowTarget(event.target);
+      if (!row) return;
+      openTourFromRow(row);
     });
+    els.toursTable.addEventListener("keydown", handleToursTableKeydown);
   }
 
   if (els.tourDeleteModalCloseBtn) {
@@ -272,6 +273,28 @@ function bindControls() {
       closeDeleteModal();
     });
   }
+}
+
+function resolveTourRowTarget(target) {
+  if (!(target instanceof Element)) return null;
+  if (target.closest("a, button, input, select, textarea, summary, label")) return null;
+  const row = target.closest("[data-tour-href]");
+  return row instanceof HTMLElement ? row : null;
+}
+
+function openTourFromRow(row) {
+  if (!(row instanceof HTMLElement)) return;
+  const href = normalizeText(row.getAttribute("data-tour-href"));
+  if (!href) return;
+  window.location.href = href;
+}
+
+function handleToursTableKeydown(event) {
+  if (event.key !== "Enter" && event.key !== " ") return;
+  const row = resolveTourRowTarget(event.target);
+  if (!row) return;
+  event.preventDefault();
+  openTourFromRow(row);
 }
 
 function bindSearch(searchBtn, searchInput, model, reloadFn) {
@@ -428,27 +451,30 @@ function renderToursMatrix(matrix, totalTours) {
 
 function renderTours(items) {
   const canEditTours = state.permissions.canEditTours;
-  const header = `<thead><tr><th>${escapeHtml(backendT("backend.table.id", "ID"))}</th><th>${escapeHtml(backendT("backend.table.title", "Title"))}</th><th>${escapeHtml(backendT("backend.table.country", "Country"))}</th><th>${escapeHtml(backendT("backend.table.styles", "Styles"))}</th><th>${escapeHtml(backendT("backend.table.updated", "Updated"))}</th>${canEditTours ? `<th>${escapeHtml(backendT("backend.table.actions", "Actions"))}</th>` : ""}</tr></thead>`;
+  const header = `<thead><tr><th class="tour-list__title-col">${escapeHtml(backendT("backend.table.title", "Title"))}</th><th class="tour-list__center-col">${escapeHtml(backendT("tour.destinations_label", "Destinations"))}</th><th class="tour-list__center-col">${escapeHtml(backendT("backend.table.styles", "Styles"))}</th><th class="tour-list__center-col">${escapeHtml(backendT("backend.table.updated", "Updated"))}</th>${canEditTours ? `<th class="tour-list__actions-col">${escapeHtml(backendT("backend.table.actions", "Actions"))}</th>` : ""}</tr></thead>`;
   const rows = items
     .map((tour) => {
       const styles = Array.isArray(tour.styles) ? tour.styles.join(", ") : "";
       const countries = Array.isArray(tour.destinations) ? tour.destinations.join(", ") : "";
       const href = buildTourEditHref(tour.id);
+      const title = tour.title || "-";
+      const rowAriaLabel = backendT("backend.tours.open_tour", "Open tour {name}", {
+        name: title
+      });
       const actionCell = canEditTours
-        ? `<td><button class="btn btn-ghost offer-remove-btn" type="button" data-tour-delete="${escapeHtml(tour.id)}" data-tour-title="${escapeHtml(tour.title || "")}" title="${escapeHtml(backendT("backend.tours.delete", "Delete"))}" aria-label="${escapeHtml(backendT("backend.tours.delete", "Delete"))}" ${state.tours.deletingId === tour.id ? "disabled" : ""}>&times;</button></td>`
+        ? `<td class="tour-list__actions-col"><button class="btn btn-ghost offer-remove-btn" type="button" data-tour-delete="${escapeHtml(tour.id)}" data-tour-title="${escapeHtml(tour.title || "")}" title="${escapeHtml(backendT("backend.tours.delete", "Delete"))}" aria-label="${escapeHtml(backendT("backend.tours.delete", "Delete"))}" ${state.tours.deletingId === tour.id ? "disabled" : ""}>&times;</button></td>`
         : "";
-      return `<tr>
-        <td><a href="${escapeHtml(href)}" title="${escapeHtml(tour.id)}">${escapeHtml(shortId(tour.id))}</a></td>
-        <td>${escapeHtml(tour.title || "-")}</td>
-        <td>${escapeHtml(countries || "-")}</td>
-        <td>${escapeHtml(styles || "-")}</td>
+      return `<tr class="tour-list__row tour-list__row--clickable" data-tour-href="${escapeHtml(href)}" tabindex="0" role="link" aria-label="${escapeHtml(rowAriaLabel)}">
+        <td class="tour-list__title-col">${escapeHtml(title)}</td>
+        <td class="tour-list__center-col">${escapeHtml(countries || "-")}</td>
+        <td class="tour-list__center-col">${escapeHtml(styles || "-")}</td>
         <td>${escapeHtml(formatDateTime(tour.updated_at || tour.created_at))}</td>
         ${actionCell}
       </tr>`;
     })
     .join("");
 
-  const body = rows || `<tr><td colspan="${canEditTours ? "6" : "5"}">${escapeHtml(backendT("backend.tours.no_results", "No tours found"))}</td></tr>`;
+  const body = rows || `<tr><td colspan="${canEditTours ? "5" : "4"}">${escapeHtml(backendT("backend.tours.no_results", "No tours found"))}</td></tr>`;
   if (els.toursTable) els.toursTable.innerHTML = `${header}<tbody>${body}</tbody>`;
 }
 

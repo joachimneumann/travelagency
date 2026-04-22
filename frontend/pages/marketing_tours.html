@@ -39,6 +39,36 @@
         justify-self: end;
       }
 
+      .backend-list-page #toursTable td {
+        vertical-align: middle;
+      }
+
+      .backend-list-page #toursTable .tour-list__row--clickable {
+        cursor: pointer;
+        transition: background-color 160ms ease;
+      }
+
+      .backend-list-page #toursTable .tour-list__row--clickable:hover td,
+      .backend-list-page #toursTable .tour-list__row--clickable:focus-visible td {
+        background: rgba(242, 235, 222, 0.97);
+      }
+
+      .backend-list-page #toursTable .tour-list__row--clickable:focus-visible {
+        outline: none;
+      }
+
+      .backend-list-page #toursTable .tour-list__title-col {
+        text-align: left;
+      }
+
+      .backend-list-page #toursTable .tour-list__actions-col {
+        text-align: center;
+      }
+
+      .backend-list-page #toursTable .tour-list__center-col {
+        text-align: center;
+      }
+
       @media (max-width: 980px) {
         .backend-tours-controls__row,
         .backend-tours-controls__row--actions {
@@ -89,7 +119,7 @@
                 <button class="btn btn-ghost" id="toursClearFiltersBtn" type="button" data-i18n-id="backend.tours.clear_filters">Clear filters</button>
                 <div class="field">
                   <label for="toursSearch" data-i18n-id="backend.tours.search_label">Search tours</label>
-                  <input id="toursSearch" type="text" placeholder="id, title, country, style..." data-i18n-placeholder-id="backend.tours.search_placeholder" />
+                  <input id="toursSearch" type="text" placeholder="title, destinations, style..." data-i18n-placeholder-id="backend.tours.search_placeholder" />
                 </div>
                 <button class="btn btn-ghost" id="toursSearchBtn" type="button" data-i18n-id="common.search">Search</button>
                 <button class="btn btn-primary" id="toursCreateBtn" type="button" data-i18n-id="backend.tours.new_tour">New Web Site Tour</button>
