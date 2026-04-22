@@ -800,9 +800,9 @@
     "updated_at": "2026-03-30T23:51:31.875Z"
   },
   "backend.users.team_order_hint": {
-    "source_hash": "5dba78798c2bb270c2c51a34700630257312690ebc5d7bff30dfc2bd233f4471",
-    "origin": "manual_override",
-    "updated_at": "2026-04-19T12:55:00.000Z"
+    "source_hash": "6632112dc4807a1290de71e470863aee2c4dd8233badee4629451603560fe922",
+    "origin": "machine",
+    "updated_at": "2026-04-22T17:42:25.216Z"
   },
   "backend.users.team_order_invalid": {
     "source_hash": "b686c309f984313d5546a10a466e2a3686beb38ab8da81b9fcbd7a0d7e8b8fc3",

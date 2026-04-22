@@ -141,16 +141,33 @@
 
 .home-page .faq-list {
   gap: 0.75rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
 }
 
 .home-page .faq-contact-layout {
-  grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.95fr);
+  grid-template-columns: minmax(0, 1fr);
   align-items: stretch;
 }
 
 .home-page .faq-contact-card {
   align-self: start;
+  justify-self: center;
+  width: min(100%, 760px);
   scroll-margin-top: 6rem;
+}
+
+.home-page .faq-group {
+  display: grid;
+  gap: 0.75rem;
+  align-content: start;
+}
+
+.home-page .faq-group-heading {
+  margin: 0.35rem 0 0.1rem;
+  font-size: var(--font-size-body);
+  line-height: 1.25;
+  color: var(--text-strong);
 }
 
 .home-page .faq-item {
@@ -178,6 +195,20 @@
   padding: 0 1.15rem 1.1rem;
 }
 
+.home-page .faq-answer ul {
+  margin: 0.75rem 0;
+  padding-left: 1.2rem;
+}
+
+.home-page .faq-answer li + li {
+  margin-top: 0.35rem;
+}
+
+.home-page .faq-answer a {
+  color: var(--accent-text-deep);
+  font-weight: var(--font-weight-semibold);
+}
+
 .home-page .contact-row {
   margin-top: 1rem;
 }
@@ -192,7 +223,8 @@
 }
 
 @media (max-width: 1024px) {
-  .home-page .faq-contact-layout {
+  .home-page .faq-contact-layout,
+  .home-page .faq-list {
     grid-template-columns: 1fr;
   }
 }

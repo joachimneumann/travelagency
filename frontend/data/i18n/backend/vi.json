@@ -159,7 +159,7 @@
   "backend.users.status_missing_position": "thiếu vị trí",
   "backend.users.status_missing_short_description": "thiếu mô tả ngắn",
   "backend.users.team_order": "Thứ tự đội ngũ",
-  "backend.users.team_order_hint": "Số nhỏ hơn sẽ xuất hiện sớm hơn trên asiaTravel.com.",
+  "backend.users.team_order_hint": "số thấp hơn sẽ xuất hiện sớm hơn trên trang web",
   "backend.users.team_order_invalid": "Thứ tự đội ngũ phải là một số nguyên.",
   "backend.users.translation.all_done": "Đã cập nhật tất cả bản dịch trình độ.",
   "backend.users.translation.done": "Đã dịch trình độ.",

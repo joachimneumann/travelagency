@@ -560,14 +560,144 @@
     "updated_at": "2026-04-02T15:09:07.177Z"
   },
   "faq.q7": {
-    "source_hash": "e71e7a61c56a5470a7fa7b5f5e6fd8f275dc7a7dbe500abe69631f1a2889ec97",
+    "source_hash": "42e82f3791811681c02797c98565cf00f67a569ab5c612bf312293576237929d",
     "origin": "machine",
-    "updated_at": "2026-04-15T19:40:57.404Z"
+    "updated_at": "2026-04-22T18:01:17.999Z"
   },
   "faq.a7": {
-    "source_hash": "e7079a693dca9c3ee3930f1782e38cd4540c8264d74160ad25c6f5382d47906c",
+    "source_hash": "fa2f71f7fce39954612b076494fcc228ec824b5aaaaed90e40c3a99babed9e4c",
     "origin": "machine",
-    "updated_at": "2026-04-15T19:40:57.404Z"
+    "updated_at": "2026-04-22T18:01:17.999Z"
+  },
+  "faq.group.planning": {
+    "source_hash": "976c80e96da22c3a4417ce279448d91c85394cae39e8dc6fef37cc1f9f675854",
+    "origin": "machine",
+    "updated_at": "2026-04-22T18:01:17.999Z"
+  },
+  "faq.group.booking_requirements": {
+    "source_hash": "74bdb3ca4c961ad2926f5ad212fbe49dc83daa967ca224f22b7eafe2ff5e9f32",
+    "origin": "machine",
+    "updated_at": "2026-04-22T18:01:17.999Z"
+  },
+  "faq.vn.best_time.q": {
+    "source_hash": "42e82f3791811681c02797c98565cf00f67a569ab5c612bf312293576237929d",
+    "origin": "machine",
+    "updated_at": "2026-04-22T18:01:17.999Z"
+  },
+  "faq.vn.best_time.a": {
+    "source_hash": "fa2f71f7fce39954612b076494fcc228ec824b5aaaaed90e40c3a99babed9e4c",
+    "origin": "machine",
+    "updated_at": "2026-04-22T18:01:17.999Z"
+  },
+  "faq.vn.year_round.q": {
+    "source_hash": "8ad55d09051c35d7c5740ee141db2444c42a41d912295acc08d3835a6e84d74d",
+    "origin": "machine",
+    "updated_at": "2026-04-22T18:01:17.999Z"
+  },
+  "faq.vn.year_round.a": {
+    "source_hash": "60aaabb1b4a1f2bcdf49ce98a041e9d2b0c3ae7bee14ade22e4dfb1e7ddfa5b7",
+    "origin": "machine",
+    "updated_at": "2026-04-22T18:01:17.999Z"
+  },
+  "faq.vn.days.q": {
+    "source_hash": "886f96d977f12221665c016c57e58f4832db23e5cd60406ddcaed2cab64e2590",
+    "origin": "machine",
+    "updated_at": "2026-04-22T18:01:17.999Z"
+  },
+  "faq.vn.days.a": {
+    "source_hash": "4b92a8d9d64c0c3ea97e39c35c08d8905befb9e25d4ed5a8c0ed47483c41560c",
+    "origin": "machine",
+    "updated_at": "2026-04-22T18:01:17.999Z"
+  },
+  "faq.vn.first_time.q": {
+    "source_hash": "38e8967eadc737a91d319471948905083ec4c8d2067863688c7335288eb1e7de",
+    "origin": "machine",
+    "updated_at": "2026-04-22T18:01:17.999Z"
+  },
+  "faq.vn.first_time.a": {
+    "source_hash": "8dc612687bf3029305e2dad20b646686d0843375705624e63b6fa7447ee47787",
+    "origin": "machine",
+    "updated_at": "2026-04-22T18:01:17.999Z"
+  },
+  "faq.vn.cost.q": {
+    "source_hash": "6fc9657cfc55abc312c42f2ec073d9d6a688c28e3871dfb3d8c8409791d7bec2",
+    "origin": "machine",
+    "updated_at": "2026-04-22T18:01:17.999Z"
+  },
+  "faq.vn.cost.a": {
+    "source_hash": "514a199a47c5ffb2fb860da87b7c06cd03ddcd13daf8deb20796f5448ecdcc3a",
+    "origin": "machine",
+    "updated_at": "2026-04-22T18:01:17.999Z"
+  },
+  "faq.vn.must_miss.q": {
+    "source_hash": "ea3d9d85581cf83c2ffc44fcdad8752d0fd25b4f471248f5cd3133659dd916dd",
+    "origin": "machine",
+    "updated_at": "2026-04-22T18:01:17.999Z"
+  },
+  "faq.vn.must_miss.a": {
+    "source_hash": "2cee069364c835049fb9a9a937e6b520d90ca12304a9a25af124a1d26d91b1a5",
+    "origin": "machine",
+    "updated_at": "2026-04-22T18:01:17.999Z"
+  },
+  "faq.vn.custom_private.q": {
+    "source_hash": "a82de8d97e1f54c2b6f8d9bd6fdc057225864da2312795c3590bc16aad638f95",
+    "origin": "machine",
+    "updated_at": "2026-04-22T18:01:17.999Z"
+  },
+  "faq.vn.custom_private.a": {
+    "source_hash": "80433591ae24dc336bb62984edde8a227d607c2e0942e8440553caa5a11fccd4",
+    "origin": "machine",
+    "updated_at": "2026-04-22T18:01:17.999Z"
+  },
+  "faq.vn.book.q": {
+    "source_hash": "8044e98f5adf60a6a4987a2d217827098daae78a93732bc4067301f3614a5feb",
+    "origin": "machine",
+    "updated_at": "2026-04-22T18:01:17.999Z"
+  },
+  "faq.vn.book.a": {
+    "source_hash": "6dc7e99ba79513c2d2c11c6931c7162a702feac99c2390e26a1ec307ab3aef21",
+    "origin": "machine",
+    "updated_at": "2026-04-22T18:01:17.999Z"
+  },
+  "faq.vn.deposit.q": {
+    "source_hash": "2efb27f91deeeb4a1fac20cdf553065cfc0ece50e92f13da5b042f574c721e2d",
+    "origin": "machine",
+    "updated_at": "2026-04-22T18:01:17.999Z"
+  },
+  "faq.vn.deposit.a": {
+    "source_hash": "9940868890541df2a373c52af745d99c60876224fe0ccf7d17f9781c9ba99419",
+    "origin": "machine",
+    "updated_at": "2026-04-22T18:01:17.999Z"
+  },
+  "faq.vn.visa.q": {
+    "source_hash": "a75dec80721513b154971f605207ced13980bfa76a8a58aef7cd316674fbf98e",
+    "origin": "machine",
+    "updated_at": "2026-04-22T18:01:17.999Z"
+  },
+  "faq.vn.visa.a": {
+    "source_hash": "8675f1e8b8399603ecabcb9667207eb1052e4298fa55bf085e32b26615bd9c7c",
+    "origin": "machine",
+    "updated_at": "2026-04-22T18:01:17.999Z"
+  },
+  "faq.vn.safe.q": {
+    "source_hash": "11fdb2fcacf733ab778dd5f5ab8fef0d08b54084fed935fc3586d5aa6f362985",
+    "origin": "machine",
+    "updated_at": "2026-04-22T18:01:17.999Z"
+  },
+  "faq.vn.safe.a": {
+    "source_hash": "bcd7f99817adba62cbf495a31ba0c17942716d34c232d52b1fa8e52dfcd59537",
+    "origin": "machine",
+    "updated_at": "2026-04-22T18:01:17.999Z"
+  },
+  "faq.vn.food.q": {
+    "source_hash": "c65de5adfea840c065a039d9494de7858e0f4292ba2b799bf7981d74cc8e6015",
+    "origin": "machine",
+    "updated_at": "2026-04-22T18:01:17.999Z"
+  },
+  "faq.vn.food.a": {
+    "source_hash": "863825f2de0c930059b4494e594d07ca54ea6790dafdf60f2dcb0b57ba24998c",
+    "origin": "machine",
+    "updated_at": "2026-04-22T18:01:17.999Z"
   },
   "contact.heading": {
     "source_hash": "284ebcd1f34261804c0bcf1d98f5b9c5cdefaccd36289012d5c0d02293f9ba1f",
