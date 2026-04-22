@@ -5515,7 +5515,7 @@ test("admin can update ATP staff profile details while non-admin cannot", async 
   assert.equal(updated.staff_profile, undefined);
 });
 
-test("public ATP staff team endpoint respects manual team order and supports clearing it", async () => {
+test("public ATP staff team endpoint respects manual team order and defaults cleared order to 10", async () => {
   const adminHeaders = apiHeaders("atp_admin", "admin", "kc-admin");
   const joachimProfilePath = endpointPath("keycloak_user_staff_profile_update").replace("{username}", "joachim");
   const staffProfilePath = endpointPath("keycloak_user_staff_profile_update").replace("{username}", "staff");
@@ -5568,7 +5568,7 @@ test("public ATP staff team endpoint respects manual team order and supports cle
     }
   );
   assert.equal(clearedStaffOrder.status, 200);
-  assert.equal(clearedStaffOrder.body.user.staff_profile.team_order, undefined);
+  assert.equal(clearedStaffOrder.body.user.staff_profile.team_order, 10);
 
   const teamAfterClear = await requestJson(publicTeamPath);
   assert.equal(teamAfterClear.status, 200);

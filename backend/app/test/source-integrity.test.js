@@ -3232,7 +3232,7 @@ test("settings page staff table shows combined Keycloak roles and status pills",
   );
   assert.match(
     source,
-    /name:\s*normalizeText\(state\.editor\?\.name\)[\s\S]*friendly_short_name:\s*normalizeText\(state\.editor\?\.friendlyShortName\)[\s\S]*team_order:\s*teamOrder\.isSet \? teamOrder\.value : null/,
+    /name:\s*normalizeText\(state\.editor\?\.name\)[\s\S]*friendly_short_name:\s*normalizeText\(state\.editor\?\.friendlyShortName\)[\s\S]*team_order:\s*teamOrder\.value/,
     "Settings page should send the ATP staff name, friendly-short-name, and team-order fields when saving the profile"
   );
   assert.match(

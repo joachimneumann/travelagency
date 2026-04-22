@@ -159,7 +159,7 @@
   "backend.users.status_missing_position": "missing position",
   "backend.users.status_missing_short_description": "missing short description",
   "backend.users.team_order": "Team order",
-  "backend.users.team_order_hint": "lower numbers will appear earlier on asiaTravel.com",
+  "backend.users.team_order_hint": "lower numbers will appear earlier on the web page",
   "backend.users.team_order_invalid": "Team order must be a whole number.",
   "backend.users.translation.all_done": "All qualification translations updated.",
   "backend.users.translation.done": "Qualification translated.",

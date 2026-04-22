@@ -35,6 +35,7 @@ const TEAM_OUTPUT_DIR = path.join(HOMEPAGE_ASSETS_DIR, "team");
 const TEAM_OUTPUT_FILE = path.join(FRONTEND_DATA_DIR, "public-team.json");
 const HOMEPAGE_COPY_GLOBAL_PATH = path.join(FRONTEND_DATA_DIR, "public-homepage-copy.global.js");
 const HOMEPAGE_INITIAL_BUNDLE_PATH = path.join(FRONTEND_DATA_DIR, "public-homepage-main.bundle.js");
+const DEFAULT_TEAM_ORDER = 10;
 const TOUR_FILE_PREFIX = "public-tours.";
 const TOUR_FILE_SUFFIX = ".json";
 const ALLOWED_ASSET_EXTENSIONS = new Set([".avif", ".gif", ".jpeg", ".jpg", ".png", ".svg", ".webp"]);
@@ -574,13 +575,11 @@ function localizedEntriesFromMap(value, normalizer = (text) => normalizeText(tex
 
 function sortPublicProfiles(items) {
   return [...items].sort((left, right) => {
-    const leftTeamOrder = safeInt(left?.team_order);
-    const rightTeamOrder = safeInt(right?.team_order);
-    if (leftTeamOrder !== null && rightTeamOrder !== null && leftTeamOrder !== rightTeamOrder) {
+    const leftTeamOrder = safeInt(left?.team_order) ?? DEFAULT_TEAM_ORDER;
+    const rightTeamOrder = safeInt(right?.team_order) ?? DEFAULT_TEAM_ORDER;
+    if (leftTeamOrder !== rightTeamOrder) {
       return leftTeamOrder - rightTeamOrder;
     }
-    if (leftTeamOrder !== null) return -1;
-    if (rightTeamOrder !== null) return 1;
     const leftName = normalizeText(left?.name) || normalizeText(left?.username);
     const rightName = normalizeText(right?.name) || normalizeText(right?.username);
     const byName = leftName.localeCompare(rightName);

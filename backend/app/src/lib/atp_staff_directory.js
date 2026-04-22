@@ -7,6 +7,8 @@ import {
 } from "../domain/booking_content_i18n.js";
 import { normalizeDisplayLineBreaks, normalizeText } from "./text.js";
 
+const DEFAULT_TEAM_ORDER = 10;
+
 function unique(items) {
   return Array.from(new Set((Array.isArray(items) ? items : []).filter(Boolean)));
 }
@@ -24,10 +26,11 @@ function normalizeAppearsInTeamWebPage(value, fallback = true) {
 }
 
 function normalizeTeamOrder(value) {
-  if (value === null || value === undefined || value === "") return undefined;
+  if (value === null || value === undefined || value === "") return DEFAULT_TEAM_ORDER;
   if (typeof value === "number" && Number.isInteger(value) && Number.isFinite(value)) return value;
   const normalized = normalizeText(value);
-  if (!normalized || !/^-?\d+$/.test(normalized)) return undefined;
+  if (!normalized) return DEFAULT_TEAM_ORDER;
+  if (!/^-?\d+$/.test(normalized)) return undefined;
   const parsed = Number.parseInt(normalized, 10);
   return Number.isFinite(parsed) ? parsed : undefined;
 }
@@ -257,8 +260,6 @@ function sortProfiles(items) {
     if (leftTeamOrder !== undefined && rightTeamOrder !== undefined && leftTeamOrder !== rightTeamOrder) {
       return leftTeamOrder - rightTeamOrder;
     }
-    if (leftTeamOrder !== undefined) return -1;
-    if (rightTeamOrder !== undefined) return 1;
     const leftName = normalizeText(left?.name) || left?.username || "";
     const rightName = normalizeText(right?.name) || right?.username || "";
     const byName = leftName.localeCompare(rightName);

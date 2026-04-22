@@ -193,6 +193,7 @@ const TOUR_DESTINATION_TO_COUNTRY_CODE = Object.freeze({
 });
 
 const INVALID_TEAM_ORDER = "__invalid_team_order__";
+const DEFAULT_TEAM_ORDER = 10;
 
 const state = {
   authUser: null,
@@ -776,7 +777,7 @@ function firstLocalizedProfileValue(entries, fallbackValue = "") {
 function parseTeamOrderInput(value) {
   const normalized = normalizeText(value);
   if (!normalized) {
-    return { valid: true, isSet: false, value: null };
+    return { valid: true, isSet: false, value: DEFAULT_TEAM_ORDER };
   }
   if (!/^-?\d+$/.test(normalized)) {
     return { valid: false, isSet: false, value: null };
@@ -1547,7 +1548,7 @@ function normalizeEditorProfile(profile) {
   return {
     name: normalizeText(profile?.name),
     friendlyShortName: normalizeText(profile?.friendlyShortName),
-    teamOrder: teamOrder.valid ? (teamOrder.isSet ? teamOrder.value : null) : INVALID_TEAM_ORDER,
+    teamOrder: teamOrder.valid ? teamOrder.value : INVALID_TEAM_ORDER,
     appearsInTeamWebPage: profile?.appearsInTeamWebPage !== false,
     languages: Array.from(new Set((Array.isArray(profile?.languages) ? profile.languages : []).map((code) => normalizeText(code).toLowerCase()).filter(Boolean))).sort(),
     destinations: Array.from(new Set((Array.isArray(profile?.destinations) ? profile.destinations : []).map((code) => normalizeText(code).toUpperCase()).filter(Boolean))).sort(),
@@ -2457,7 +2458,7 @@ async function saveSelectedStaffProfile() {
           name: normalizeText(state.editor?.name),
           position_i18n: positionI18n,
           friendly_short_name: normalizeText(state.editor?.friendlyShortName),
-          team_order: teamOrder.isSet ? teamOrder.value : null,
+          team_order: teamOrder.value,
           appears_in_team_web_page: state.editor?.appearsInTeamWebPage !== false,
           languages,
           destinations,

@@ -19,6 +19,8 @@ KEYCLOAK_BASE_URL="${KEYCLOAK_BASE_URL:-http://localhost:8081}"
 KEYCLOAK_REALM="${KEYCLOAK_REALM:-master}"
 KEYCLOAK_ADMIN="${KEYCLOAK_ADMIN:-admin}"
 KEYCLOAK_ADMIN_PASSWORD="${KEYCLOAK_ADMIN_PASSWORD:-admin}"
+LOCAL_KEYCLOAK_STAFF_PASSWORD="${LOCAL_KEYCLOAK_STAFF_PASSWORD:-atp}"
+ATP_STAFF_JSON_PATH="${ATP_STAFF_JSON_PATH:-$ROOT_DIR/content/atp_staff/staff.json}"
 
 TOKEN_ENDPOINT="${KEYCLOAK_BASE_URL%/}/realms/master/protocol/openid-connect/token"
 REALM_API="${KEYCLOAK_BASE_URL%/}/admin/realms/${KEYCLOAK_REALM}"
@@ -130,15 +132,56 @@ PY
     "${REALM_API}/users/${user_id}/role-mappings/realm" >/dev/null || true
 }
 
+ensure_staff_users_from_content() {
+  if [[ ! -f "$ATP_STAFF_JSON_PATH" ]]; then
+    echo "Error: ATP staff profile file not found at $ATP_STAFF_JSON_PATH" >&2
+    exit 1
+  fi
+
+  STAFF_JSON_PATH="$ATP_STAFF_JSON_PATH" python3 <<'PY' | while IFS=$'\t' read -r username email first_name last_name role_name; do
+import json
+import os
+import re
+import sys
+
+path = os.environ["STAFF_JSON_PATH"]
+with open(path, "r", encoding="utf-8") as handle:
+    payload = json.load(handle)
+
+staff = payload.get("staff") or {}
+if not isinstance(staff, dict):
+    sys.exit("staff.json must contain a staff object")
+
+def clean(value):
+    return str(value or "").strip()
+
+for username, profile in sorted(staff.items()):
+    username = clean(username).lower()
+    if not username:
+        continue
+    profile = profile if isinstance(profile, dict) else {}
+    name = clean(profile.get("name")) or username
+    parts = re.split(r"\s+", name)
+    if len(parts) > 1:
+        first_name = " ".join(parts[:-1])
+        last_name = parts[-1]
+    else:
+        first_name = name
+        last_name = ""
+    role_name = "atp_admin" if username == "joachim" else "atp_staff"
+    email = f"{username}@asiatravelplan.local"
+    print("\t".join([username, email, first_name, last_name, role_name]))
+PY
+    ensure_user "$username" "$email" "$first_name" "$last_name" "$LOCAL_KEYCLOAK_STAFF_PASSWORD" "$role_name"
+    echo "  $username / $LOCAL_KEYCLOAK_STAFF_PASSWORD ($role_name)"
+  done
+}
+
 for role in atp_admin atp_manager atp_accountant atp_staff; do
   ensure_realm_role "$role"
 done
 
 set_login_theme
 
-ensure_user "joachim" "joachim@asiatravelplan.local" "Joachim" "Neumann" "atp" "atp_admin"
-ensure_user "van" "van@asiatravelplan.local" "Van" "Nguyen" "atp" "atp_staff"
-
 echo "Configured local Keycloak realm '${KEYCLOAK_REALM}' with theme 'asiatravelplan' and demo users:"
-echo "  joachim / atp (atp_admin)"
-echo "  van / atp (atp_staff)"
+ensure_staff_users_from_content
