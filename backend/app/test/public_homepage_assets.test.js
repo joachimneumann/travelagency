@@ -107,6 +107,13 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
         picture: "/assets/generated/homepage/team/beta.webp?v=12345",
         team_order: 2,
         appears_in_team_web_page: true
+      },
+      gamma: {
+        name: "Gamma",
+        position: { en: "Guide" },
+        picture: "/assets/generated/homepage/team/stale-gamma.webp?v=12345",
+        team_order: 3,
+        appears_in_team_web_page: true
       }
     }
   });
@@ -114,6 +121,7 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
   await writeFile(path.join(staffRoot, "photos", "hidden.webp"), "hidden-image");
   await writeFile(path.join(staffRoot, "photos", "alpha.webp"), "alpha-image");
   await writeFile(path.join(staffRoot, "photos", "beta.webp"), "beta-image");
+  await writeFile(path.join(staffRoot, "photos", "gamma.webp"), "gamma-image");
 
   await generatePublicHomepageAssets({
     toursRoot,
@@ -158,7 +166,7 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
   assert.match(homepageHtml, />Old title</);
   assert.doesNotMatch(homepageHtml, /public-homepage-copy\.manifest\.json/);
 
-  assert.equal(publicTeam.total, 3);
+  assert.equal(publicTeam.total, 4);
   assert.equal(publicTeam.items[0].username, "joachim");
   assert.equal(publicTeam.items[0].name, "Joachim");
   assert.equal(publicTeam.items[0].position, "Founder");
@@ -166,8 +174,11 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
   assert.equal(publicTeam.items[1].username, "beta");
   assert.equal(publicTeam.items[1].team_order, 2);
   assert.match(publicTeam.items[1].picture_ref, /^\/assets\/generated\/homepage\/team\/beta\.webp\?v=/);
-  assert.equal(publicTeam.items[2].username, "alpha");
-  assert.equal(publicTeam.items[2].team_order, 10);
+  assert.equal(publicTeam.items[2].username, "gamma");
+  assert.equal(publicTeam.items[2].team_order, 3);
+  assert.match(publicTeam.items[2].picture_ref, /^\/assets\/generated\/homepage\/team\/gamma\.webp\?v=/);
+  assert.equal(publicTeam.items[3].username, "alpha");
+  assert.equal(publicTeam.items[3].team_order, 10);
   assert.match(publicTeam.items[0].picture_ref, /^\/assets\/generated\/homepage\/team\/joachim\.webp\?v=/);
   assert.equal("appears_in_team_web_page" in publicTeam.items[0], false);
 

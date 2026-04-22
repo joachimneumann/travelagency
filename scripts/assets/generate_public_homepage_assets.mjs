@@ -544,9 +544,7 @@ function normalizePictureFilename(rawValue) {
 async function resolveStaffPictureFilename(profile, username, photosDir) {
   const normalizedUsername = normalizeText(username).toLowerCase();
   const explicitFilename = normalizePictureFilename(profile?.picture ?? profile?.picture_ref);
-  const candidates = explicitFilename
-    ? [explicitFilename]
-    : [`${normalizedUsername}.webp`];
+  const candidates = Array.from(new Set([explicitFilename, `${normalizedUsername}.webp`].filter(Boolean)));
   for (const candidate of candidates) {
     if (!candidate) continue;
     if (!isRasterAssetFile(candidate)) continue;
