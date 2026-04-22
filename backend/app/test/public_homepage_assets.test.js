@@ -93,11 +93,27 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
         position: { en: "Hidden" },
         picture: "hidden.webp",
         appears_in_team_web_page: false
+      },
+      alpha: {
+        name: "Alpha",
+        position: { en: "Guide" },
+        picture: "alpha.webp",
+        team_order: 10,
+        appears_in_team_web_page: true
+      },
+      beta: {
+        name: "Beta",
+        position: { en: "Guide" },
+        picture: "beta.webp",
+        team_order: 2,
+        appears_in_team_web_page: true
       }
     }
   });
   await writeFile(path.join(staffRoot, "photos", "joachim.webp"), "joachim-image");
   await writeFile(path.join(staffRoot, "photos", "hidden.webp"), "hidden-image");
+  await writeFile(path.join(staffRoot, "photos", "alpha.webp"), "alpha-image");
+  await writeFile(path.join(staffRoot, "photos", "beta.webp"), "beta-image");
 
   await generatePublicHomepageAssets({
     toursRoot,
@@ -142,10 +158,15 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
   assert.match(homepageHtml, />Old title</);
   assert.doesNotMatch(homepageHtml, /public-homepage-copy\.manifest\.json/);
 
-  assert.equal(publicTeam.total, 1);
+  assert.equal(publicTeam.total, 3);
   assert.equal(publicTeam.items[0].username, "joachim");
   assert.equal(publicTeam.items[0].name, "Joachim");
   assert.equal(publicTeam.items[0].position, "Founder");
+  assert.equal(publicTeam.items[0].team_order, 1);
+  assert.equal(publicTeam.items[1].username, "beta");
+  assert.equal(publicTeam.items[1].team_order, 2);
+  assert.equal(publicTeam.items[2].username, "alpha");
+  assert.equal(publicTeam.items[2].team_order, 10);
   assert.match(publicTeam.items[0].picture_ref, /^\/assets\/generated\/homepage\/team\/joachim\.webp\?v=/);
   assert.equal("appears_in_team_web_page" in publicTeam.items[0], false);
 

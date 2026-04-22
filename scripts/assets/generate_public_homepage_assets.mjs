@@ -622,6 +622,7 @@ async function generateTeamAssets({
     items.push({
       username,
       name: normalizeText(rawProfile?.name) || username,
+      team_order: safeInt(rawProfile?.team_order) ?? DEFAULT_TEAM_ORDER,
       picture_ref: pictureRef,
       position: resolveLocalizedText(positionMap, "en", ""),
       position_i18n: localizedEntriesFromMap(positionMap),
