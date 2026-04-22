@@ -5643,7 +5643,7 @@ test("admin can translate ATP staff profile text from English to Malay", async (
   }
 });
 
-test("admin can upload and reset ATP staff profile pictures", { skip: !HAS_MAGICK }, async () => {
+test("admin can upload and delete ATP staff profile pictures without creating fallback avatars", { skip: !HAS_MAGICK }, async () => {
   const picturePath = endpointPath("keycloak_user_staff_profile_picture_upload").replace("{username}", "joachim");
 
   const uploadResult = await requestJson(
@@ -5674,10 +5674,7 @@ test("admin can upload and reset ATP staff profile pictures", { skip: !HAS_MAGIC
     { method: "DELETE" }
   );
   assert.equal(deleteResult.status, 200);
-  assert.match(
-    String(deleteResult.body.user.staff_profile.picture_ref || ""),
-    /joachim\.svg(?:\?v=\d+)?$/
-  );
+  assert.equal(String(deleteResult.body.user.staff_profile.picture_ref || ""), "");
 });
 
 test("assigned staff only sees their own bookings while admin sees all", async () => {

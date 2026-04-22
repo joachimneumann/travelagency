@@ -149,6 +149,40 @@ test("ATP staff response profiles version picture refs from the photo mtime", as
   }
 });
 
+test("ATP staff storage does not create fallback SVG avatar photos", async () => {
+  const rootDir = await mkdtemp(path.join(os.tmpdir(), "travelagency-atp-staff-no-avatar-"));
+  try {
+    const ctx = buildDirectory(rootDir, {
+      allowedUsers: [{
+        id: "kc-joachim",
+        username: "joachim",
+        name: "Joachim Neumann"
+      }]
+    });
+    await mkdir(path.dirname(ctx.dataPath), { recursive: true });
+    await mkdir(ctx.photosDir, { recursive: true });
+    await writeFile(ctx.dataPath, `${JSON.stringify({
+      staff: {
+        joachim: {
+          name: "Joachim Neumann",
+          appears_in_team_web_page: true
+        }
+      }
+    }, null, 2)}\n`, "utf8");
+
+    await ctx.directory.ensureStorage();
+    const entry = await ctx.directory.buildDirectoryEntryForUsername("joachim");
+
+    assert.equal(entry?.staff_profile?.picture_ref || "", "");
+    await assert.rejects(
+      readFile(path.join(ctx.photosDir, "joachim.svg"), "utf8"),
+      /ENOENT/
+    );
+  } finally {
+    await rm(rootDir, { recursive: true, force: true });
+  }
+});
+
 test("ATP staff sync writes the Keycloak first name into the stored name field", async () => {
   const rootDir = await mkdtemp(path.join(os.tmpdir(), "travelagency-atp-staff-sync-"));
   try {

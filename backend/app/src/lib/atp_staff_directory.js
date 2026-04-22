@@ -102,17 +102,12 @@ export function resolveAtpStaffShortDescriptionText(profile, lang = "en") {
   ));
 }
 
-function avatarPictureFilenameForUsername(username) {
-  const normalizedUsername = normalizeText(username).toLowerCase();
-  return normalizedUsername ? `${normalizedUsername}.svg` : "";
-}
-
 function preferredPictureFilenameForUsername(username, photosDir = "") {
   const normalizedUsername = normalizeText(username).toLowerCase();
   if (!normalizedUsername) return "";
   const webpFilename = `${normalizedUsername}.webp`;
   if (photosDir && existsSync(path.join(photosDir, webpFilename))) return webpFilename;
-  return avatarPictureFilenameForUsername(normalizedUsername);
+  return "";
 }
 
 function pictureFilenameFromStoredValue(value, username = "", photosDir = "") {
@@ -128,7 +123,6 @@ function pictureFilenameFromStoredValue(value, username = "", photosDir = "") {
   const normalizedCandidate = normalizeText(candidate);
   const preferredFilename = preferredPictureFilenameForUsername(username, photosDir);
   if (!normalizedCandidate) return preferredFilename;
-  if (normalizedCandidate === avatarPictureFilenameForUsername(username)) return preferredFilename;
   return normalizedCandidate;
 }
 
@@ -209,48 +203,6 @@ function defaultFriendlyShortNameForUser(user) {
     || firstNameToken(defaultDisplayNameForUser(user))
     || normalizeText(user?.username)
     || "ATP";
-}
-
-function initialsForName(name, username) {
-  const parts = normalizeText(name)
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2);
-  if (parts.length) {
-    return parts.map((part) => part.charAt(0).toUpperCase()).join("");
-  }
-  return normalizeText(username).slice(0, 2).toUpperCase() || "AT";
-}
-
-function colorPaletteForUsername(username) {
-  const palettes = [
-    ["#395b7a", "#6ca0a1", "#f2c777"],
-    ["#4e6b50", "#9fc17a", "#f4d7a2"],
-    ["#6a4f7b", "#c88ca8", "#f6d4b6"],
-    ["#6f5a3d", "#c99a6b", "#f0d7b5"]
-  ];
-  const source = normalizeText(username);
-  const hash = source.split("").reduce((sum, char) => sum + char.charCodeAt(0), 0);
-  return palettes[hash % palettes.length];
-}
-
-function buildAvatarSvg(name, username) {
-  const initials = initialsForName(name, username);
-  const [start, end, accent] = colorPaletteForUsername(username);
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="720" height="720" viewBox="0 0 720 720">
-  <defs>
-    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="${start}"/>
-      <stop offset="100%" stop-color="${end}"/>
-    </linearGradient>
-  </defs>
-  <rect width="720" height="720" rx="72" fill="url(#bg)"/>
-  <circle cx="564" cy="148" r="38" fill="${accent}" opacity="0.95"/>
-  <text x="360" y="406" text-anchor="middle" fill="#ffffff" font-size="220" font-family="Source Sans 3, Arial, sans-serif" font-weight="700">${initials}</text>
-  <text x="360" y="560" text-anchor="middle" fill="#ffffff" font-size="42" font-family="Source Sans 3, Arial, sans-serif" opacity="0.9">${name}</text>
-</svg>
-`;
 }
 
 function sortProfiles(items) {
@@ -481,23 +433,6 @@ export function createAtpStaffDirectory({
     return [];
   }
 
-  async function writeAvatarIfMissing(profile) {
-    const username = normalizeText(profile?.username).toLowerCase();
-    if (!username) return false;
-    const picture = pictureFilenameFromStoredValue(profile?.picture, username, photosDir);
-    const defaultPicture = avatarPictureFilenameForUsername(username);
-    if (picture && picture !== defaultPicture) return false;
-    const outputPath = path.join(photosDir, defaultPicture);
-    if (await fileExists(outputPath)) return false;
-    await mkdir(path.dirname(outputPath), { recursive: true });
-    await writeFile(
-      outputPath,
-      buildAvatarSvg(normalizeText(profile?.name) || username, username),
-      "utf8"
-    );
-    return true;
-  }
-
   async function readProfiles() {
     await waitForQueuedWrites();
     const raw = await readFile(dataPath, "utf8");
@@ -665,15 +600,17 @@ export function createAtpStaffDirectory({
     const payload = await readProfiles();
     let changed = Boolean(payload.changed);
     for (const profile of payload.items) {
-      if (await writeAvatarIfMissing(profile)) changed = true;
       if (!normalizeText(profile.picture)) {
-        profile.picture = preferredPictureFilenameForUsername(profile.username, photosDir);
-        changed = true;
+        const preferredPicture = preferredPictureFilenameForUsername(profile.username, photosDir);
+        if (preferredPicture) {
+          profile.picture = preferredPicture;
+          changed = true;
+        }
       }
     }
     if (changed) {
       await persistProfiles({ items: payload.items }, {
-        reason: "ensure_storage_normalize_and_avatar_backfill"
+        reason: "ensure_storage_normalize_and_picture_backfill"
       });
     }
     await ensureKeycloakUserSnapshotStorage();
@@ -713,7 +650,6 @@ export function createAtpStaffDirectory({
         changed = true;
       }
       itemsByUsername.set(username, next);
-      if (await writeAvatarIfMissing(next)) changed = true;
     }
 
     const nextItems = sortProfiles(Array.from(itemsByUsername.values()));
@@ -780,15 +716,6 @@ export function createAtpStaffDirectory({
       .find((profile) => normalizeText(profile?.username).toLowerCase() === username) || null;
   }
 
-  async function ensureAvatarForResponseProfile(profile) {
-    if (!profile?.username) return;
-    await writeAvatarIfMissing({
-      username: profile.username,
-      name: normalizeText(profile?.name) || profile.username,
-      picture: pictureFilenameFromStoredValue(profile?.picture_ref, profile.username, photosDir)
-    }).catch(() => {});
-  }
-
   async function buildDirectoryEntryForUsername(rawUsername) {
     const username = normalizeText(rawUsername).toLowerCase();
     if (!username) return null;
@@ -799,7 +726,6 @@ export function createAtpStaffDirectory({
     if (!user) return null;
     const stored = await readStoredProfileByUsername(username);
     const staffProfile = buildResponseProfile(stored, user, photosDir);
-    await ensureAvatarForResponseProfile(staffProfile);
     return {
       ...user,
       staff_profile: staffProfile
@@ -850,7 +776,6 @@ export function createAtpStaffDirectory({
     });
     if (!nextStored) return null;
     itemsByUsername.set(username, nextStored);
-    await writeAvatarIfMissing(nextStored);
     await persistProfiles({ items: sortProfiles(Array.from(itemsByUsername.values())) }, {
       reason: `update_profile_by_username:${username}`
     });
@@ -896,11 +821,32 @@ export function createAtpStaffDirectory({
     const username = normalizeText(rawUsername).toLowerCase();
     if (!username) return null;
     const user = await findEligibleStaffUserByUsername(username);
-    await writeAvatarIfMissing({
+    if (!user) return null;
+    await ensureStorage();
+    const stored = await readProfiles();
+    const itemsByUsername = new Map(stored.items.map((profile) => [profile.username, profile]));
+    const currentStored = itemsByUsername.get(username) || null;
+    const current = mergeStoredProfileWithUser(currentStored, user, photosDir);
+    const nextStored = normalizeStoredProfile({
+      ...(currentStored && typeof currentStored === "object" ? currentStored : {}),
       username,
-      name: normalizeText(user?.name) || username
+      name: normalizeText(currentStored?.name) || normalizeText(current?.name) || defaultDisplayNameForUser(user),
+      position: current?.position,
+      friendly_short_name: current?.friendly_short_name,
+      team_order: current?.team_order,
+      picture: "",
+      languages: current?.languages,
+      destinations: current?.destinations,
+      appears_in_team_web_page: normalizeAppearsInTeamWebPage(current?.appears_in_team_web_page, true),
+      description: current?.description,
+      short_description: current?.short_description
     });
-    return setPictureRefByUsername(username, preferredPictureFilenameForUsername(username, photosDir));
+    if (!nextStored) return null;
+    itemsByUsername.set(username, nextStored);
+    await persistProfiles({ items: sortProfiles(Array.from(itemsByUsername.values())) }, {
+      reason: `reset_picture_by_username:${username}`
+    });
+    return buildDirectoryEntryForUsername(username);
   }
 
   async function resolveAssignedStaffProfile(keycloakUserId) {
@@ -915,9 +861,7 @@ export function createAtpStaffDirectory({
     if (!user) return null;
     const username = normalizeText(user?.username).toLowerCase();
     const stored = username ? await readStoredProfileByUsername(username) : null;
-    const profile = buildResponseProfile(stored, user, photosDir);
-    await ensureAvatarForResponseProfile(profile);
-    return profile;
+    return buildResponseProfile(stored, user, photosDir);
   }
 
   async function listPublicTeamProfiles() {
@@ -936,7 +880,6 @@ export function createAtpStaffDirectory({
       if (!username) continue;
       const profile = buildResponseProfile(storedByUsername.get(username) || null, user, photosDir);
       if (!profile || profile.appears_in_team_web_page !== true) continue;
-      await ensureAvatarForResponseProfile(profile);
       items.push(profile);
     }
     return sortProfiles(items);
@@ -956,7 +899,6 @@ export function createAtpStaffDirectory({
       const username = normalizeText(user?.username).toLowerCase();
       if (!username) continue;
       const staffProfile = buildResponseProfile(storedByUsername.get(username) || null, user, photosDir);
-      await ensureAvatarForResponseProfile(staffProfile);
       items.push({
         ...user,
         staff_profile: staffProfile

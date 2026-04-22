@@ -175,3 +175,47 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
   assert.ok(copiedTourAsset.isFile());
   assert.ok(copiedTeamAsset.isFile());
 });
+
+test("generatePublicHomepageAssets fails when a visible staff photo is missing", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "public-homepage-assets-missing-photo-"));
+  const contentRoot = path.join(root, "content");
+  const toursRoot = path.join(contentRoot, "tours");
+  const staffRoot = path.join(contentRoot, "atp_staff");
+  const frontendDataDir = path.join(root, "frontend", "data", "generated", "homepage");
+  const frontendI18nDir = path.join(root, "frontend", "data", "i18n", "frontend");
+  const tourOutputDir = path.join(root, "assets", "generated", "homepage", "tours");
+  const teamOutputDir = path.join(root, "assets", "generated", "homepage", "team");
+
+  await mkdir(toursRoot, { recursive: true });
+  await mkdir(path.join(staffRoot, "photos"), { recursive: true });
+  await mkdir(frontendI18nDir, { recursive: true });
+
+  await writeJson(path.join(frontendI18nDir, "en.json"), {
+    "hero.title": "Private holidays in Vietnam",
+    "hero.title_with_destinations": "Private holidays in {destinations}"
+  });
+  await writeJson(path.join(contentRoot, "country_reference_info.json"), { items: [] });
+  await writeJson(path.join(staffRoot, "staff.json"), {
+    staff: {
+      vic: {
+        name: "Vic",
+        picture: "vic.webp",
+        appears_in_team_web_page: true
+      }
+    }
+  });
+
+  await assert.rejects(
+    generatePublicHomepageAssets({
+      toursRoot,
+      staffRoot,
+      countryReferenceInfoPath: path.join(contentRoot, "country_reference_info.json"),
+      frontendDataDir,
+      tourOutputDir,
+      teamOutputDir,
+      frontendI18nDir,
+      languages: ["en"]
+    }),
+    /Public staff profile "vic" is missing a usable picture file/
+  );
+});

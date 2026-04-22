@@ -541,14 +541,13 @@ function normalizeTeamMemberProfile(profile) {
   const description = resolveLocalizedStaticValue(profile?.description_i18n ?? profile?.description);
   const shortDescription = resolveLocalizedStaticValue(profile?.short_description_i18n ?? profile?.short_description);
   const configuredPictureRef = resolveFrontendAssetUrl(profile?.picture_ref);
-  const fallbackPictureRef = `/assets/generated/homepage/team/${encodeURIComponent(`${normalizedUsername}.svg`)}`;
-    if (!configuredPictureRef) {
-      console.warn("[frontend-home] Team member picture_ref missing; using fallback staff photo URL.", {
-        username: normalizedUsername,
-        name: fullName,
-        fallback_picture_ref: fallbackPictureRef,
-        page_url: window.location.href
-      });
+  if (!configuredPictureRef) {
+    console.warn("[frontend-home] Team member picture_ref missing; hiding staff profile.", {
+      username: normalizedUsername,
+      name: fullName,
+      page_url: window.location.href
+    });
+    return null;
   }
   return {
     username: normalizedUsername,
@@ -556,7 +555,7 @@ function normalizeTeamMemberProfile(profile) {
     role,
     description,
     shortDescription,
-    pictureRef: configuredPictureRef || fallbackPictureRef
+    pictureRef: configuredPictureRef
   };
 }
 
