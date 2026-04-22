@@ -74,6 +74,11 @@ ensure_user() {
   local role_name="$6"
   local user_id
 
+  if [ -z "$role_name" ]; then
+    echo "Error: role_name is required for local Keycloak user '$username'." >&2
+    return 1
+  fi
+
   user_id="$(
     curl -sS "${auth_header[@]}" "${REALM_API}/users?username=${username}" | \
       python3 -c 'import json,sys; data=json.load(sys.stdin); print(data[0]["id"] if data else "")'
@@ -111,6 +116,11 @@ PY
     )"
   fi
 
+  if [ -z "$user_id" ]; then
+    echo "Error: could not resolve Keycloak user id for '$username'." >&2
+    return 1
+  fi
+
   curl -sS --fail \
     -X PUT \
     "${auth_header[@]}" \
@@ -124,12 +134,20 @@ PY
       "${auth_header[@]}" \
       "${REALM_API}/roles/${role_name}"
   )"
-  curl -sS --fail \
-    -X POST \
-    "${auth_header[@]}" \
-    -H "Content-Type: application/json" \
-    -d "[${role_payload}]" \
-    "${REALM_API}/users/${user_id}/role-mappings/realm" >/dev/null || true
+
+  local role_already_assigned
+  role_already_assigned="$(
+    curl -sS --fail "${auth_header[@]}" "${REALM_API}/users/${user_id}/role-mappings/realm" | \
+      ROLE_NAME="$role_name" python3 -c 'import json,os,sys; role=os.environ["ROLE_NAME"]; print("1" if any(item.get("name") == role for item in json.load(sys.stdin)) else "0")'
+  )"
+  if [ "$role_already_assigned" != "1" ]; then
+    curl -sS --fail \
+      -X POST \
+      "${auth_header[@]}" \
+      -H "Content-Type: application/json" \
+      -d "[${role_payload}]" \
+      "${REALM_API}/users/${user_id}/role-mappings/realm" >/dev/null
+  fi
 }
 
 ensure_staff_users_from_content() {
@@ -138,10 +156,11 @@ ensure_staff_users_from_content() {
     exit 1
   fi
 
-  STAFF_JSON_PATH="$ATP_STAFF_JSON_PATH" python3 <<'PY' | while IFS=$'\t' read -r username email first_name last_name role_name; do
+  STAFF_JSON_PATH="$ATP_STAFF_JSON_PATH" python3 <<'PY' | while IFS= read -r staff_assignment; do
 import json
 import os
 import re
+import shlex
 import sys
 
 path = os.environ["STAFF_JSON_PATH"]
@@ -170,8 +189,16 @@ for username, profile in sorted(staff.items()):
         last_name = ""
     role_name = "atp_admin" if username == "joachim" else "atp_staff"
     email = f"{username}@asiatravelplan.local"
-    print("\t".join([username, email, first_name, last_name, role_name]))
+    fields = {
+        "username": username,
+        "email": email,
+        "first_name": first_name,
+        "last_name": last_name,
+        "role_name": role_name,
+    }
+    print(" ".join(f"{key}={shlex.quote(value)}" for key, value in fields.items()))
 PY
+    eval "$staff_assignment"
     ensure_user "$username" "$email" "$first_name" "$last_name" "$LOCAL_KEYCLOAK_STAFF_PASSWORD" "$role_name"
     echo "  $username / $LOCAL_KEYCLOAK_STAFF_PASSWORD ($role_name)"
   done
