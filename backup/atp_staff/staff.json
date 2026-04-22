@@ -367,7 +367,7 @@
         "zh": "在对旅行的终生热情的推动下，Sang 为每一次旅行带来了纪律、可靠性和适应性，无论旅行走到哪里，都将多样化的生活经验与专注、注重细节的支持结合起来。"
       }
     },
-    "phuong": {
+    "vic": {
       "name": "Lê Thị Phương",
       "position": {
         "ar": "ممثل – كاليدونيا الجديدة",
@@ -388,8 +388,8 @@
         "vi": "Đại diện – New Caledonia",
         "zh": "代表 – 新喀里多尼亚"
       },
-      "friendly_short_name": "Phương",
-      "picture": "phuong.webp",
+      "friendly_short_name": "Vic",
+      "picture": "vic.webp",
       "languages": [
         "vi",
         "en",
