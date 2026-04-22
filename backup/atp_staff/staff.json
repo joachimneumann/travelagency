@@ -320,6 +320,7 @@
         "zh": "旅行助理"
       },
       "friendly_short_name": "Sang",
+      "team_order": 10,
       "picture": "sang2.webp",
       "languages": [
         "vi"
@@ -389,6 +390,7 @@
         "zh": "代表 – 新喀里多尼亚"
       },
       "friendly_short_name": "Vic",
+      "team_order": 10,
       "picture": "vic.webp",
       "languages": [
         "vi",
@@ -439,12 +441,21 @@
         "zh": "Vic Phuong 结合了翻译、DMC 运营和旅行服务方面的经验，为国际客户提供清晰、高效的支持。她居住在新喀里多尼亚，精通四种语言，能够连接文化并确保全球无缝旅行体验。"
       }
     },
+    "vic": {
+      "name": "Lê Thị Phương",
+      "friendly_short_name": "Lê Thị Phương",
+      "team_order": 10,
+      "picture": "vic.svg",
+      "languages": [],
+      "appears_in_team_web_page": true
+    },
     "ngoan": {
       "name": "Nguyễn Thị Ngoan",
       "position": {
         "en": "Travel Consultant"
       },
       "friendly_short_name": "Ngoan",
+      "team_order": 10,
       "picture": "ngoan.webp",
       "languages": [
         "vi"
@@ -514,6 +525,7 @@
         "zh": "创始人"
       },
       "friendly_short_name": "Vân",
+      "team_order": 10,
       "picture": "van.webp",
       "languages": [
         "en",
@@ -549,6 +561,7 @@
         "zh": "旅游专家"
       },
       "friendly_short_name": "Ly",
+      "team_order": 10,
       "picture": "thaoly.webp",
       "languages": [
         "vi"
