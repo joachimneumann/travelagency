@@ -2586,8 +2586,7 @@ function getDisplayedKeycloakRoles(user) {
 }
 
 function formatKeycloakRolesCell(user) {
-  const items = getDisplayedKeycloakRoles(user);
-  return items.length ? items.map((role) => escapeHtml(role)).join("<br>") : "-";
+  return escapeHtml(formatKeycloakRoleList(getDisplayedKeycloakRoles(user)));
 }
 
 function fileToBase64(file) {

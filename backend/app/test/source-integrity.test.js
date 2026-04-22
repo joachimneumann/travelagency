@@ -3195,10 +3195,15 @@ test("settings page staff table shows combined Keycloak roles and status pills",
     /<td class="keycloak-roles-col">\$\{formatKeycloakRolesCell\(staff\)\}<\/td>/,
     "Settings user table should display the combined realm and client roles in the Roles column"
   );
+  assert.match(
+    source,
+    /function formatKeycloakRolesCell\(user\) \{[\s\S]*escapeHtml\(formatKeycloakRoleList\(getDisplayedKeycloakRoles\(user\)\)\)/,
+    "Settings user table should render the combined Keycloak roles as a comma-separated escaped string"
+  );
   assert.doesNotMatch(
     source,
-    /<strong>Client:<\/strong>|<strong>Realm:<\/strong>/,
-    "Settings user table should not render realm/client labels in the Roles column"
+    /<strong>Client:<\/strong>|<strong>Realm:<\/strong>|join\("<br>"\)/,
+    "Settings user table should not render realm/client labels or line-break-separated roles in the Roles column"
   );
   assert.match(
     css,
