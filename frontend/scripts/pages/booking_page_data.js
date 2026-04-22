@@ -215,8 +215,7 @@ export function createBookingPageDataController(ctx) {
         canChangeAssignment: hasAnyRole(roles.ADMIN, roles.MANAGER),
         canReadAssignmentDirectory: hasAnyRole(roles.ADMIN, roles.MANAGER, roles.ACCOUNTANT),
         canChangeStage: hasAnyRole(roles.ADMIN, roles.MANAGER, roles.STAFF),
-        canEditBooking: hasAnyRole(roles.ADMIN, roles.MANAGER, roles.STAFF),
-        canEditTemplates: hasAnyRole(roles.ADMIN, roles.MANAGER, roles.STAFF)
+        canEditBooking: hasAnyRole(roles.ADMIN, roles.MANAGER, roles.STAFF)
       };
     } catch (error) {
       state.user = "";

@@ -3,8 +3,8 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title data-i18n-id="backend.standard_travel_plans.detail_title">Standard travel plan</title>
-    <meta name="description" content="AsiaTravelPlan standard travel plan detail editor" />
+    <title data-i18n-id="backend.standard_tours.detail_title">Standard tour</title>
+    <meta name="description" content="AsiaTravelPlan standard tour detail editor" />
     <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml" />
     <script>
       if (!window.ASIATRAVELPLAN_API_BASE && ["localhost", "127.0.0.1"].includes(window.location.hostname)) {
@@ -74,27 +74,27 @@
                 </div>
               </div>
             </div>
-            <button class="booking-dirty-bar-row__back" id="backToBackend" type="button" aria-label="Back to standard travel plans">Back</button>
+            <button class="booking-dirty-bar-row__back" id="backToBackend" type="button" aria-label="Back to standard tours">Back</button>
           </div>
           <div class="booking-detail-page__bar-gap" aria-hidden="true"></div>
           <div class="booking-detail-page__scroll">
             <div class="booking-page-shell">
               <div class="standard-tour-detail__header">
-                <h1 class="section-title" id="standardTravelPlanHeading" data-i18n-id="backend.standard_travel_plans.detail_heading">Standard travel plan</h1>
-                <p class="standard-tour-detail__subtitle" id="standardTravelPlanSubtitle" data-i18n-id="backend.standard_travel_plans.detail_loading">Loading standard travel plan...</p>
+                <h1 class="section-title" id="standardTourHeading" data-i18n-id="backend.standard_tours.detail_heading">Standard tour</h1>
+                <p class="standard-tour-detail__subtitle" id="standardTourSubtitle" data-i18n-id="backend.standard_tours.detail_loading">Loading standard tour...</p>
               </div>
 
-              <div id="standardTravelPlanError" class="backend-message" role="alert" aria-live="assertive"></div>
+              <div id="standardTourError" class="backend-message" role="alert" aria-live="assertive"></div>
 
-              <form id="standardTravelPlanForm" class="standard-tour-detail__form backend-tour-form">
+              <form id="standardTourForm" class="standard-tour-detail__form backend-tour-form">
                 <div class="field full">
-                  <label for="standardTravelPlanTitleInput" data-i18n-id="backend.standard_travel_plans.form.title">Title</label>
-                  <input id="standardTravelPlanTitleInput" name="title" type="text" autocomplete="off" required />
+                  <label for="standardTourTitleInput" data-i18n-id="backend.standard_tours.form.title">Title</label>
+                  <input id="standardTourTitleInput" name="title" type="text" autocomplete="off" required />
                 </div>
 
                 <div class="field full standard-tour-detail__destinations">
-                  <span class="field-label" data-i18n-id="backend.standard_travel_plans.form.destinations">Destinations</span>
-                  <div id="standardTravelPlanDestinationsInput" class="filter-checkbox-list" role="group" aria-label="Template destinations"></div>
+                  <span class="field-label" data-i18n-id="backend.standard_tours.form.destinations">Destinations</span>
+                  <div id="standardTourDestinationsInput" class="filter-checkbox-list" role="group" aria-label="Standard tour destinations"></div>
                 </div>
 
                 <article id="travel_plan_panel" class="booking-section is-open">
@@ -120,8 +120,8 @@
     <script type="module">
       import { mountBackendNav } from "./frontend/scripts/shared/nav.js";
       await (window.__BACKEND_I18N_PROMISE || Promise.resolve());
-      mountBackendNav(document.getElementById("backendNavMount"), { currentSection: "standard-travel-plans" });
+      mountBackendNav(document.getElementById("backendNavMount"), { currentSection: "standard-tours" });
     </script>
-    <script type="module" src="frontend/scripts/pages/standard_travel_plan.js"></script>
+    <script type="module" src="frontend/scripts/pages/standard_tour.js"></script>
   </body>
 </html>

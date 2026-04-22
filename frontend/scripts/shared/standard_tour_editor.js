@@ -8,7 +8,7 @@ import {
   setBookingSectionOpen
 } from "../booking/sections.js";
 
-export function createStandardTravelPlanEditor({
+export function createStandardTourEditor({
   state,
   els,
   apiOrigin,
@@ -35,7 +35,7 @@ export function createStandardTravelPlanEditor({
     features: {
       dayImport: false,
       planImport: false,
-      templateImport: false,
+      standardTourImport: false,
       serviceImport: false,
       imageUpload: false
     }
@@ -47,10 +47,10 @@ export function createStandardTravelPlanEditor({
     travelPlanModule.bindEvents();
   }
 
-  function applyTemplate(template) {
+  function applyStandardTour(standardTour) {
     state.booking = {
-      id: normalizeText(template?.id),
-      travel_plan: template?.travel_plan || { days: [], attachments: [] },
+      id: normalizeText(standardTour?.id),
+      travel_plan: standardTour?.travel_plan || { days: [], attachments: [] },
       translation_enabled: false,
       travel_plan_translation_status: {}
     };
@@ -59,7 +59,7 @@ export function createStandardTravelPlanEditor({
   }
 
   return {
-    applyTemplate,
+    applyStandardTour,
     bind,
     collectPayload: (options) => travelPlanModule.collectTravelPlanPayload(options)
   };

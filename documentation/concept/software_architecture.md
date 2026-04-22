@@ -12,7 +12,7 @@ It is not a generic template. It describes the actual structure used in this rep
 - modeled read models for API responses
 - frozen generated-offer artifacts
 - customer confirmation flow and booking confirmation
-- standard travel plan templates
+- standard tours
 
 ## Architecture Summary
 
@@ -29,7 +29,7 @@ The active operational domains are:
 - booking persons
 - ATP staff
 - tours
-- travel plan templates
+- standard tours
 - pricing
 - payment documents
 - activities
@@ -62,7 +62,7 @@ This model defines:
 Important current domain decisions:
 - `booking.persons[]` is the editable person structure
 - `booking.web_form_submission` is the immutable inbound snapshot
-- `TravelPlanTemplate` is a separate reusable entity, not a fake booking
+- `StandardTour` is a separate reusable entity, not a fake booking
 
 ### Why This Matters
 
@@ -82,14 +82,14 @@ Contain the source CUE files for business entities and value objects.
 Examples:
 - `Booking`
 - `BookingPerson`
-- `TravelPlanTemplate`
+- `StandardTour`
 - `GeneratedBookingOffer`
 
 These types describe what the business data means.
 
 Current split:
 - `model/json/`
-  - file-backed content entities such as ATP staff, country reference, tours, and travel plan templates
+  - file-backed content entities such as ATP staff, country reference, tours, and standard tours
 - `model/database/`
   - booking-owned operational entities such as bookings, persons, offers, travel plans, and payment documents
 
@@ -103,7 +103,7 @@ Examples:
 - endpoint request and response envelopes
 - read models such as `BookingReadModel`
 - read models such as `GeneratedBookingOfferReadModel`
-- read models such as `TravelPlanTemplateReadModel`
+- read models such as `StandardTourReadModel`
 
 Important rule:
 - transport-only fields such as `pdf_url` or translation summaries belong in `model/api/`
@@ -167,9 +167,9 @@ Examples:
   - `pdf_url`
   - `booking_confirmation`
 
-- `json.#TravelPlanTemplate`
+- `json.#StandardTour`
   - persisted reusable travel plan
-- `api.#TravelPlanTemplateReadModel`
+- `api.#StandardTourReadModel`
   - derived counts and source-booking presentation data
 
 This split exists to stop response-only fields from becoming accidental persisted domain fields.
@@ -212,8 +212,8 @@ Current important runtime split:
   - offer editing, generation, Gmail draft creation, finance mutations, management approval
 - `booking_confirmation.js`
   - generated-offer confirmation snapshot helpers and legacy cleanup
-- `travel_plan_templates.js`
-  - template CRUD and apply flow
+- `standard_tours.js`
+  - standard tour CRUD and apply flow
 - `booking_confirmation.js` in `domain/`
   - booking confirmation snapshot helpers
   - startup migration for legacy generated offers
@@ -225,7 +225,7 @@ Owned by storage adapters.
 Current local/runtime persistence is:
 - JSON store for bookings and related runtime data
 - per-tour folders for tours and images
-- per-template folders for standard travel plans
+- per-standard-tour folders for standard tours
 - per-artifact folders for payment documents, generated offers, travel-plan PDFs, and attachments
 
 ## Confirmation Boundary
@@ -242,15 +242,15 @@ Compatibility note:
 - some legacy public click-confirmation behavior still exists in runtime migration and handler code for older stored offers
 - new offers are intended to confirm through deposit payment or internal management approval
 
-## Travel Plan Template Boundary
+## Standard Tour Boundary
 
-Templates are a separate entity because they are reusable reference material, not live customer records.
+Standard tours are separate entities because they are reusable reference material, not live customer records.
 
 Phase 1 behavior:
-- templates are created from an existing booking travel plan
-- only published templates can be applied to a booking
-- applying a template replaces the booking travel plan by copy
-- templates are not live-linked to bookings after apply
+- standard tours are maintained directly as reusable travel-plan content
+- only published standard tours can be applied to a booking
+- applying a standard tour replaces the booking travel plan by copy
+- standard tours are not live-linked to bookings after apply
 
 ## Concurrency Model
 

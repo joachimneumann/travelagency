@@ -227,20 +227,20 @@ import (
 	total: >=0 & int
 }
 
-#TravelPlanTemplateReadModel: {
+#StandardTourReadModel: {
 	id:           common.#Identifier
 	title:        string
 	destinations: [...enums.#CountryCode] | []
 	travel_plan:  databaseModel.#BookingTravelPlan
 }
 
-#TravelPlanTemplateListResponse: {
-	items: [...#TravelPlanTemplateReadModel]
+#StandardTourListResponse: {
+	items: [...#StandardTourReadModel]
 	total: >=0 & int
 }
 
-#TravelPlanTemplateResponse: {
-	template: #TravelPlanTemplateReadModel
+#StandardTourResponse: {
+	standard_tour: #StandardTourReadModel
 }
 
 #OfferExchangeRatesResponse: {

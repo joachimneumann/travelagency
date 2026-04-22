@@ -6,7 +6,7 @@ import (
 	enums "travelagency.local/model/enums"
 )
 
-#TravelPlanTemplate: {
+#StandardTour: {
 	id:          common.#Identifier
 	title:       string & !=""
 	destinations: [...enums.#CountryCode] | []

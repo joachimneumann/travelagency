@@ -19,7 +19,7 @@ Hệ thống backend thay thế quy trình đó bằng dữ liệu booking có c
 
 Với kế hoạch du lịch, lợi ích thực tế là khả năng tái sử dụng:
 
-- một kế hoạch du lịch hoàn chỉnh có thể được lưu thành kế hoạch du lịch tiêu chuẩn và áp dụng cho booking khác
+- standard tours được quản lý trực tiếp như nội dung kế hoạch du lịch tái sử dụng và có thể áp dụng vào bookings
 - từng ngày riêng lẻ từ các kế hoạch du lịch hiện có có thể được tìm kiếm và tái sử dụng
 - từng dịch vụ riêng lẻ từ các kế hoạch du lịch hiện có có thể được tìm kiếm và tái sử dụng
 - nội dung kế hoạch du lịch khi được sao chép sẽ nhận ID mới riêng cho booking mới, nên có thể chỉnh sửa an toàn cho khách hàng mới
@@ -167,7 +167,7 @@ Các khu vực top-level quan trọng:
 - `frontend/scripts/` - browser ES modules
 - `shared/css/` - CSS dùng chung và styles theo page/component
 - `shared/js/` - browser helpers dùng chung
-- `content/` - source nội dung có thể chỉnh sửa cho tours, staff, country reference, templates
+- `content/` - source nội dung có thể chỉnh sửa cho tours, standard tours, staff và country reference
 - `backup/` - chỉ là bản backup copy, không phải runtime source đang active
 - `assets/` - website assets và generated homepage media
 - `scripts/` - scripts cho local, staging, production, content, asset, i18n và utilities
@@ -319,7 +319,7 @@ Các access rules quan trọng trong runtime hiện tại:
 - accountant chủ yếu là read-only cho các booking operations
 - tour read access hiện dành cho admin, accountant và tour editor
 - tour edit access hiện dành cho admin và tour editor
-- standard travel plan templates có sẵn cho admin, manager và staff
+- standard tours có sẵn cho admin, manager và staff
 - Keycloak user directory visibility có sẵn cho admin, manager và accountant
 
 Access rules nằm ở:
@@ -482,7 +482,7 @@ CUE model là source of truth.
 
 Các folder quan trọng:
 
-- `model/json/` - file-backed content entities như tours, ATP staff, country reference, travel plan templates
+- `model/json/` - file-backed content entities như tours, standard tours, ATP staff và country reference
 - `model/database/` - operational entities như bookings, booking persons, offers, travel plans, payment documents
 - `model/api/` - transport request/response shapes và read models
 - `model/enums/` - currencies, languages, countries, roles, statuses, travel styles, payment kinds
@@ -548,7 +548,7 @@ Current persistence:
 - `content/tours/`
 - `content/atp_staff/`
 - `content/country_reference_info.json`
-- `content/travel_plan_templates/`
+- `content/standard_tours/`
 
 PostgreSQL tồn tại trong compose stack cho Keycloak. Dữ liệu booking/tour/content của ứng dụng hiện vẫn là file-backed.
 
@@ -569,8 +569,8 @@ Backend workspace pages:
 - `booking.html` - booking detail workspace
 - `marketing_tours.html` - tour list
 - `marketing_tour.html` - tour editor
-- `standard-travel-plans.html` - template list
-- `standard-travel-plan.html` - template editor
+- `standard-tours.html` - standard tour list
+- `standard-tour.html` - standard tour editor
 - `settings.html` - reports and settings
 - `traveler-details.html` - traveler-facing details flow
 
@@ -640,13 +640,13 @@ Các file quan trọng:
 - `backend/app/src/domain/travel_plan.js`
 - `backend/app/src/lib/travel_plan_pdf.js`
 
-Standard travel plans là reusable templates:
+Standard tours là reusable tour definitions:
 
-- được tạo từ một existing booking travel plan
+- được quản lý trực tiếp như reusable travel-plan content
 - được lưu độc lập với bookings
 - lifecycle gồm draft, published, archived
-- published templates có thể được áp dụng vào một booking bằng cách copy
-- templates không live-linked sau khi apply
+- published standard tours có thể được áp dụng vào một booking bằng cách copy
+- standard tours không live-linked sau khi apply
 
 ### Financial Flow
 
@@ -917,7 +917,7 @@ Các limitations này chỉ chấp nhận được khi chúng vẫn được nê
 - Payment document: request hoặc receipt PDF được generate từ payment flow.
 - Accepted commercial snapshot: frozen offer/payment terms được dùng cho các payment documents sau này.
 - Travel plan: structured itinerary thuộc sở hữu của booking.
-- Standard travel plan: reusable template được copy vào bookings.
+- Standard tour: reusable tour definition được copy vào bookings.
 - Tour: marketing catalog item được hiển thị trên public website khi published.
 - Country reference: thông tin vận hành theo quốc gia và public destination visibility.
 - Backend UI language: ngôn ngữ ATP staff dùng trong backend chrome và authoring.

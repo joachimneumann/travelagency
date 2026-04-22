@@ -190,7 +190,7 @@ const services = createBackendServices({
   collections: {
     dataPath: RUNTIME_PATHS.dataPath,
     toursDir: RUNTIME_PATHS.toursDir,
-    travelPlanTemplatesDir: RUNTIME_PATHS.travelPlanTemplatesDir,
+    standardToursDir: RUNTIME_PATHS.standardToursDir,
     paymentDocumentsDir: RUNTIME_PATHS.paymentDocumentsDir,
     generatedOffersDir: RUNTIME_PATHS.generatedOffersDir,
     travelPlanPdfsDir: RUNTIME_PATHS.travelPlanPdfsDir,

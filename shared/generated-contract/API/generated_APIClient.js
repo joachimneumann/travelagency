@@ -84,18 +84,18 @@ case "booking_travel_plan_day_import":
   return RequestFactory.bookingTravelPlanDayImportRequest(options);
 case "booking_travel_plan_import":
   return RequestFactory.bookingTravelPlanImportRequest(options);
-case "travel_plan_templates":
-  return RequestFactory.travelPlanTemplatesRequest(options);
-case "travel_plan_template_create":
-  return RequestFactory.travelPlanTemplateCreateRequest(options);
-case "travel_plan_template_detail":
-  return RequestFactory.travelPlanTemplateDetailRequest(options);
-case "travel_plan_template_update":
-  return RequestFactory.travelPlanTemplateUpdateRequest(options);
-case "travel_plan_template_delete":
-  return RequestFactory.travelPlanTemplateDeleteRequest(options);
-case "booking_travel_plan_template_apply":
-  return RequestFactory.bookingTravelPlanTemplateApplyRequest(options);
+case "standard_tours":
+  return RequestFactory.standardToursRequest(options);
+case "standard_tour_create":
+  return RequestFactory.standardTourCreateRequest(options);
+case "standard_tour_detail":
+  return RequestFactory.standardTourDetailRequest(options);
+case "standard_tour_update":
+  return RequestFactory.standardTourUpdateRequest(options);
+case "standard_tour_delete":
+  return RequestFactory.standardTourDeleteRequest(options);
+case "booking_standard_tour_apply":
+  return RequestFactory.bookingStandardTourApplyRequest(options);
 case "booking_travel_plan_service_import":
   return RequestFactory.bookingTravelPlanServiceImportRequest(options);
 case "booking_travel_plan_service_image_upload":

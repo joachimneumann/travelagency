@@ -1,6 +1,6 @@
 import { createPricingHelpers } from "../domain/pricing.js";
 import { createTravelPlanHelpers } from "../domain/travel_plan.js";
-import { createTravelPlanTemplateHelpers } from "../domain/travel_plan_templates.js";
+import { createStandardTourHelpers } from "../domain/standard_tours.js";
 import { createBookingViewHelpers } from "../domain/booking_views.js";
 import { createTourHelpers } from "../domain/tours_support.js";
 import {
@@ -47,7 +47,7 @@ export function createBackendServices({
   });
 
   const travelPlanHelpers = createTravelPlanHelpers();
-  const travelPlanTemplateHelpers = createTravelPlanTemplateHelpers({
+  const standardTourHelpers = createStandardTourHelpers({
     normalizeBookingTravelPlan: travelPlanHelpers.normalizeBookingTravelPlan,
     normalizeStringArray: support.normalizeStringArray,
     normalizeTourDestinationCode,
@@ -119,7 +119,7 @@ export function createBackendServices({
   const storeUtils = createStoreUtils({
     dataPath: collections.dataPath,
     toursDir: collections.toursDir,
-    travelPlanTemplatesDir: collections.travelPlanTemplatesDir,
+    standardToursDir: collections.standardToursDir,
     paymentDocumentsDir: collections.paymentDocumentsDir,
     generatedOffersDir: collections.generatedOffersDir,
     travelPlanPdfsDir: collections.travelPlanPdfsDir,
@@ -200,7 +200,7 @@ export function createBackendServices({
   return {
     pricingHelpers,
     travelPlanHelpers,
-    travelPlanTemplateHelpers,
+    standardTourHelpers,
     bookingViewHelpers,
     storeUtils,
     keycloakDirectory,

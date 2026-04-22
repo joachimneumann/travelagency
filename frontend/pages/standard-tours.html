@@ -3,8 +3,8 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title data-i18n-id="backend.standard_travel_plans.heading">Standard travel plans</title>
-    <meta name="description" content="AsiaTravelPlan standard travel plan templates" />
+    <title data-i18n-id="backend.standard_tours.heading">Standard tours</title>
+    <meta name="description" content="AsiaTravelPlan standard tours" />
     <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml" />
     <script>
       if (!window.ASIATRAVELPLAN_API_BASE && ["localhost", "127.0.0.1"].includes(window.location.hostname)) {
@@ -37,28 +37,28 @@
         <div class="container">
           <div id="backendError" class="backend-message" role="alert" aria-live="assertive"></div>
 
-          <section class="backend-section" id="standardTravelPlansPanel">
+          <section class="backend-section" id="standardToursPanel">
             <div class="backend-controls">
               <div class="field">
-                <label for="standardTravelPlansSearch" data-i18n-id="backend.standard_travel_plans.search_label">Search templates</label>
-                <input id="standardTravelPlansSearch" type="text" data-i18n-placeholder-id="backend.standard_travel_plans.search_placeholder" placeholder="title" />
+                <label for="standardToursSearch" data-i18n-id="backend.standard_tours.search_label">Search standard tours</label>
+                <input id="standardToursSearch" type="text" data-i18n-placeholder-id="backend.standard_tours.search_placeholder" placeholder="title" />
               </div>
               <div class="field">
-                <label for="standardTravelPlansDestination" data-i18n-id="backend.standard_travel_plans.destination_label">Destination</label>
-                <select id="standardTravelPlansDestination">
-                  <option value="all" data-i18n-id="backend.standard_travel_plans.all_destinations">All destinations</option>
+                <label for="standardToursDestination" data-i18n-id="backend.standard_tours.destination_label">Destination</label>
+                <select id="standardToursDestination">
+                  <option value="all" data-i18n-id="backend.standard_tours.all_destinations">All destinations</option>
                 </select>
               </div>
-              <button class="btn btn-ghost" id="standardTravelPlansSearchBtn" type="button" data-i18n-id="common.search">Search</button>
-              <button class="btn btn-ghost" id="standardTravelPlansClearFiltersBtn" type="button" data-i18n-id="backend.standard_travel_plans.clear_filters">Clear filters</button>
-              <span id="standardTravelPlansCountInfo" class="micro"></span>
-              <span id="standardTravelPlansActionStatus" class="micro" role="status" aria-live="polite"></span>
+              <button class="btn btn-ghost" id="standardToursSearchBtn" type="button" data-i18n-id="common.search">Search</button>
+              <button class="btn btn-ghost" id="standardToursClearFiltersBtn" type="button" data-i18n-id="backend.standard_tours.clear_filters">Clear filters</button>
+              <span id="standardToursCountInfo" class="micro"></span>
+              <span id="standardToursActionStatus" class="micro" role="status" aria-live="polite"></span>
             </div>
 
             <div class="backend-table-wrap">
-              <table class="backend-table" id="standardTravelPlansTable"></table>
+              <table class="backend-table" id="standardToursTable"></table>
             </div>
-            <div class="backend-pagination" id="standardTravelPlansPagination" aria-label="Standard travel plan pagination"></div>
+            <div class="backend-pagination" id="standardToursPagination" aria-label="Standard tour pagination"></div>
           </section>
         </div>
       </section>
@@ -69,8 +69,8 @@
     <script type="module">
       import { mountBackendNav } from "./frontend/scripts/shared/nav.js";
       await (window.__BACKEND_I18N_PROMISE || Promise.resolve());
-      mountBackendNav(document.getElementById("backendNavMount"), { currentSection: "standard-travel-plans" });
+      mountBackendNav(document.getElementById("backendNavMount"), { currentSection: "standard-tours" });
     </script>
-    <script type="module" src="frontend/scripts/pages/standard_travel_plans.js"></script>
+    <script type="module" src="frontend/scripts/pages/standard_tours.js"></script>
   </body>
 </html>

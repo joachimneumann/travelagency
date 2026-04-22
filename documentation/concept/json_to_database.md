@@ -81,10 +81,9 @@ These are the current operational entity source files under `model/database`:
 The `content/` folder remains JSON and asset based by design:
 
 - `content/tours`
-- `content/travel_plan_templates`
+- `content/standard_tours`
 - `content/atp_staff`
 - `content/country_reference_info.json`
-- `content/standard_tours`
 - related images and documents under `content/`
 
 These content entities currently live under `model/json`:
@@ -92,7 +91,7 @@ These content entities currently live under `model/json`:
 - `atp_staff.cue`
 - `country_reference.cue`
 - `tour.cue`
-- `travel_plan_template.cue`
+- `standard_tour.cue`
 
 ### Stays on disk, not in PostgreSQL
 
@@ -143,7 +142,7 @@ Within `store.json`, travel-plan provenance such as `copied_from` remains a nest
 The following remain file-backed and are not part of the database migration:
 
 - tours in `content/tours/<tour_id>/tour.json`
-- travel plan templates in `content/travel_plan_templates/<template_id>/template.json`
+- standard tours in `content/standard_tours/<standard_tour_id>/standard_tour.json`
 - ATP staff in `content/atp_staff/staff.json`
 - country reference data in `content/country_reference_info.json`
 
@@ -152,7 +151,7 @@ Mapped conceptual models:
 - `AtpStaffProfile` and `AtpStaffLocalizedTextEntry`
 - `CountryPracticalInfo` and `CountryEmergencyContact`
 - `Tour`
-- `TravelPlanTemplate`
+- `StandardTour`
 
 ## Guiding Principles
 
@@ -1057,7 +1056,7 @@ Do not import any `content/` JSON into PostgreSQL.
 These readers remain file-based:
 
 - tours
-- travel plan templates
+- standard tours
 - ATP staff
 - country reference info
 
