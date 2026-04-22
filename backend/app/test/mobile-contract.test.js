@@ -144,6 +144,18 @@ const handler = await createBackendHandler({ port: 8787 });
 const HAS_MAGICK = spawnSync("magick", ["-version"], { stdio: "ignore" }).status === 0;
 const TINY_PNG_BASE64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAGUExURXqnx////yb9JEMAAAABYktHRAH/Ai3eAAAAB3RJTUUH6gMXCTo1ja6mZwAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAyNi0wMy0yM1QwOTo1ODo1MyswMDowMLzSbEkAAAAldEVYdGRhdGU6bW9kaWZ5ADIwMjYtMDMtMjNUMDk6NTg6NTMrMDA6MDDNj9T1AAAAKHRFWHRkYXRlOnRpbWVzdGFtcAAyMDI2LTAzLTIzVDA5OjU4OjUzKzAwOjAwmpr1KgAAAApJREFUCNdjYAAAAAIAAeIhvDMAAAAASUVORK5CYII=";
 
+async function seedStaffPhoto(username) {
+  await mkdir(process.env.ATP_STAFF_PHOTOS_DIR, { recursive: true });
+  await writeFile(
+    path.join(process.env.ATP_STAFF_PHOTOS_DIR, `${username}.webp`),
+    Buffer.from(TINY_PNG_BASE64, "base64")
+  );
+}
+
+async function seedPublicStaffPhotos() {
+  await Promise.all(["accountant", "admin", "joachim", "staff", "tour-editor"].map(seedStaffPhoto));
+}
+
 function endpointPath(key) {
   const endpoint = contractMeta.endpoints.find((candidate) => candidate.key === key);
   assert.ok(endpoint, `Missing endpoint metadata for ${key}`);
@@ -3097,6 +3109,8 @@ test("booking travel plan pdf endpoint returns itinerary content without travele
 });
 
 test("booking travel plan pdf includes the assigned ATP guide section with the guide short description", async () => {
+  await seedPublicStaffPhotos();
+
   const createdBooking = await createSeedBooking({
     destinations: ["Vietnam", "Laos"],
     travel_style: ["Wellness", "Culture"]
@@ -5443,6 +5457,8 @@ test("staff profiles endpoint lists all keycloak users with ATP roles", async ()
 });
 
 test("admin can update ATP staff profile details while non-admin cannot", async () => {
+  await seedPublicStaffPhotos();
+
   const profilePath = endpointPath("keycloak_user_staff_profile_update").replace("{username}", "joachim");
   const shortDescriptionEn = "Shapes calm Southeast Asia routes with realistic transfer windows and recovery time between highlights.";
   const shortDescriptionDe = "Plant ruhige Südostasien-Routen mit realistischen Transferzeiten und Erholungsphasen zwischen den Höhepunkten.";
@@ -5516,6 +5532,8 @@ test("admin can update ATP staff profile details while non-admin cannot", async 
 });
 
 test("public ATP staff team endpoint respects manual team order and defaults cleared order to 10", async () => {
+  await seedPublicStaffPhotos();
+
   const adminHeaders = apiHeaders("atp_admin", "admin", "kc-admin");
   const joachimProfilePath = endpointPath("keycloak_user_staff_profile_update").replace("{username}", "joachim");
   const staffProfilePath = endpointPath("keycloak_user_staff_profile_update").replace("{username}", "staff");
@@ -5644,6 +5662,8 @@ test("admin can translate ATP staff profile text from English to Malay", async (
 });
 
 test("admin can upload and delete ATP staff profile pictures without creating fallback avatars", { skip: !HAS_MAGICK }, async () => {
+  await seedPublicStaffPhotos();
+
   const picturePath = endpointPath("keycloak_user_staff_profile_picture_upload").replace("{username}", "joachim");
 
   const uploadResult = await requestJson(
@@ -5668,13 +5688,30 @@ test("admin can upload and delete ATP staff profile pictures without creating fa
   const uploadedPhotoStat = await stat(uploadedPhotoPath);
   assert.ok(uploadedPhotoStat.size > 0);
 
-  const deleteResult = await requestJson(
-    endpointPath("keycloak_user_staff_profile_picture_delete").replace("{username}", "joachim"),
-    apiHeaders("atp_admin", "admin", "kc-admin"),
-    { method: "DELETE" }
-  );
+  const homepageGenerationErrors = [];
+  const originalConsoleError = console.error;
+  console.error = (...args) => {
+    if (args[0] === "[backend-public-homepage-assets] Generation failed.") {
+      homepageGenerationErrors.push(args);
+      return;
+    }
+    originalConsoleError(...args);
+  };
+  let deleteResult;
+  try {
+    deleteResult = await requestJson(
+      endpointPath("keycloak_user_staff_profile_picture_delete").replace("{username}", "joachim"),
+      apiHeaders("atp_admin", "admin", "kc-admin"),
+      { method: "DELETE" }
+    );
+  } finally {
+    console.error = originalConsoleError;
+  }
   assert.equal(deleteResult.status, 200);
   assert.equal(String(deleteResult.body.user.staff_profile.picture_ref || ""), "");
+  assert.equal(deleteResult.body.homepage_assets.ok, false);
+  assert.match(deleteResult.body.homepage_assets.error, /Public staff profile "joachim" is missing a usable picture file/);
+  assert.equal(homepageGenerationErrors.length, 1);
 });
 
 test("assigned staff only sees their own bookings while admin sees all", async () => {

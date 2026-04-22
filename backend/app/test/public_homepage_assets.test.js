@@ -200,11 +200,11 @@ test("generatePublicHomepageAssets fails when a visible staff photo is missing",
     staff: {
       vic: {
         name: "Vic",
-        picture: "vic.webp",
         appears_in_team_web_page: true
       }
     }
   });
+  await writeFile(path.join(staffRoot, "photos", "vic.svg"), "<svg xmlns=\"http://www.w3.org/2000/svg\"></svg>");
 
   await assert.rejects(
     generatePublicHomepageAssets({

@@ -20,12 +20,13 @@ import {
 import { FRONTEND_LANGUAGE_CODES } from "../../shared/generated/language_catalog.js";
 
 const ROOT_DIR = path.resolve(fileURLToPath(new URL("../..", import.meta.url)));
-const CONTENT_ROOT = path.join(ROOT_DIR, "content");
+const CONTENT_ROOT = normalizeText(process.env.PUBLIC_HOMEPAGE_CONTENT_ROOT) || path.join(ROOT_DIR, "content");
 const FRONTEND_I18N_DIR = path.join(ROOT_DIR, "frontend", "data", "i18n", "frontend");
-const TOURS_ROOT = path.join(CONTENT_ROOT, "tours");
-const ATP_STAFF_ROOT = path.join(CONTENT_ROOT, "atp_staff");
-const ATP_STAFF_PHOTOS_ROOT = path.join(ATP_STAFF_ROOT, "photos");
-const COUNTRY_REFERENCE_INFO_PATH = path.join(CONTENT_ROOT, "country_reference_info.json");
+const TOURS_ROOT = normalizeText(process.env.PUBLIC_HOMEPAGE_TOURS_ROOT) || path.join(CONTENT_ROOT, "tours");
+const ATP_STAFF_ROOT = normalizeText(process.env.PUBLIC_HOMEPAGE_STAFF_ROOT) || path.join(CONTENT_ROOT, "atp_staff");
+const ATP_STAFF_PROFILES_PATH = normalizeText(process.env.PUBLIC_HOMEPAGE_STAFF_PROFILES_PATH) || path.join(ATP_STAFF_ROOT, "staff.json");
+const ATP_STAFF_PHOTOS_ROOT = normalizeText(process.env.PUBLIC_HOMEPAGE_STAFF_PHOTOS_DIR) || path.join(ATP_STAFF_ROOT, "photos");
+const COUNTRY_REFERENCE_INFO_PATH = normalizeText(process.env.PUBLIC_HOMEPAGE_COUNTRY_REFERENCE_INFO_PATH) || path.join(CONTENT_ROOT, "country_reference_info.json");
 const GENERATED_HOMEPAGE_DATA_DIR = path.join(ROOT_DIR, "frontend", "data", "generated", "homepage");
 const GENERATED_HOMEPAGE_ASSETS_DIR = path.join(ROOT_DIR, "assets", "generated", "homepage");
 const FRONTEND_DATA_DIR = normalizeText(process.env.PUBLIC_HOMEPAGE_FRONTEND_DATA_DIR) || GENERATED_HOMEPAGE_DATA_DIR;
@@ -521,14 +522,7 @@ async function generateTourAssets({
   };
 }
 
-function preferredPictureFilenameForStaff(username, photosDir) {
-  const normalizedUsername = normalizeText(username).toLowerCase();
-  if (!normalizedUsername) return "";
-  const preferredCandidates = [`${normalizedUsername}.webp`, `${normalizedUsername}.svg`];
-  return preferredCandidates.find((candidate) => isAllowedAssetFile(candidate) && path.resolve(photosDir, candidate)) || "";
-}
-
-function normalizePictureFilename(rawValue, username) {
+function normalizePictureFilename(rawValue) {
   const normalized = normalizeText(rawValue);
   if (!normalized) return "";
   const withoutCacheBuster = normalized.split(/[?#]/)[0];
@@ -544,20 +538,18 @@ function normalizePictureFilename(rawValue, username) {
         : path.basename(withoutCacheBuster);
   const normalizedCandidate = normalizeText(candidate);
   if (!normalizedCandidate) return "";
-  const normalizedUsername = normalizeText(username).toLowerCase();
-  if (normalizedCandidate === `${normalizedUsername}.svg`) return normalizedCandidate;
   return normalizedCandidate;
 }
 
 async function resolveStaffPictureFilename(profile, username, photosDir) {
   const normalizedUsername = normalizeText(username).toLowerCase();
-  const explicitFilename = normalizePictureFilename(profile?.picture ?? profile?.picture_ref, normalizedUsername);
+  const explicitFilename = normalizePictureFilename(profile?.picture ?? profile?.picture_ref);
   const candidates = explicitFilename
     ? [explicitFilename]
-    : [`${normalizedUsername}.webp`, `${normalizedUsername}.svg`];
+    : [`${normalizedUsername}.webp`];
   for (const candidate of candidates) {
     if (!candidate) continue;
-    if (!isAllowedAssetFile(candidate)) continue;
+    if (!isRasterAssetFile(candidate)) continue;
     try {
       await stat(path.join(photosDir, candidate));
       return candidate;
@@ -591,6 +583,7 @@ function sortPublicProfiles(items) {
 
 async function generateTeamAssets({
   staffRoot = ATP_STAFF_ROOT,
+  staffProfilesPath = "",
   photosRoot = ATP_STAFF_PHOTOS_ROOT,
   outputRoot = TEAM_OUTPUT_DIR,
   outputFile = TEAM_OUTPUT_FILE
@@ -598,7 +591,8 @@ async function generateTeamAssets({
   await cleanGeneratedAssetDir(outputRoot);
   await copyAllowedFiles(photosRoot, outputRoot);
 
-  const staffPayload = await readJson(path.join(staffRoot, "staff.json"), { fallback: { staff: {} } });
+  const resolvedStaffProfilesPath = normalizeText(staffProfilesPath) || path.join(staffRoot, "staff.json");
+  const staffPayload = await readJson(resolvedStaffProfilesPath, { fallback: { staff: {} } });
   const staffMap = staffPayload && typeof staffPayload?.staff === "object" && !Array.isArray(staffPayload.staff)
     ? staffPayload.staff
     : {};
@@ -652,6 +646,8 @@ async function generateTeamAssets({
 export async function generatePublicHomepageAssets({
   toursRoot = TOURS_ROOT,
   staffRoot = ATP_STAFF_ROOT,
+  staffProfilesPath = "",
+  staffPhotosRoot = "",
   countryReferenceInfoPath = COUNTRY_REFERENCE_INFO_PATH,
   frontendDataDir = FRONTEND_DATA_DIR,
   tourOutputDir = TOUR_OUTPUT_DIR,
@@ -663,6 +659,10 @@ export async function generatePublicHomepageAssets({
 } = {}) {
   const resolvedHomepageInitialBundlePath = normalizeText(homepageInitialBundlePath)
     || path.join(frontendDataDir, path.basename(HOMEPAGE_INITIAL_BUNDLE_PATH));
+  const resolvedStaffProfilesPath = normalizeText(staffProfilesPath)
+    || (staffRoot === ATP_STAFF_ROOT ? ATP_STAFF_PROFILES_PATH : path.join(staffRoot, "staff.json"));
+  const resolvedStaffPhotosRoot = normalizeText(staffPhotosRoot)
+    || (staffRoot === ATP_STAFF_ROOT ? ATP_STAFF_PHOTOS_ROOT : path.join(staffRoot, "photos"));
   await cleanGeneratedFrontendData(frontendDataDir);
   const tours = await generateTourAssets({
     toursRoot,
@@ -674,7 +674,8 @@ export async function generatePublicHomepageAssets({
   });
   const team = await generateTeamAssets({
     staffRoot,
-    photosRoot: path.join(staffRoot, "photos"),
+    staffProfilesPath: resolvedStaffProfilesPath,
+    photosRoot: resolvedStaffPhotosRoot,
     outputRoot: teamOutputDir,
     outputFile: path.join(frontendDataDir, "public-team.json")
   });

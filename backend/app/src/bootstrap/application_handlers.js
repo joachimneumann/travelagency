@@ -297,6 +297,8 @@ export function createApplicationRoutes({
     writeFile,
     rm,
     TEMP_UPLOAD_DIR: runtime.paths.tempUploadDir,
+    ATP_STAFF_ROOT: runtime.paths.atpStaffRoot,
+    ATP_STAFF_PROFILES_PATH: runtime.paths.atpStaffProfilesPath,
     ATP_STAFF_PHOTOS_DIR: runtime.paths.atpStaffPhotosDir,
     resolveAtpStaffPhotoDiskPath: atpStaffDirectory.resolvePhotoDiskPath,
     sendFileWithCache: httpHelpers.sendFileWithCache,

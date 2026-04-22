@@ -94,6 +94,8 @@ export function createAtpStaffHandlers(deps) {
     writeFile,
     rm,
     TEMP_UPLOAD_DIR,
+    ATP_STAFF_ROOT,
+    ATP_STAFF_PROFILES_PATH,
     ATP_STAFF_PHOTOS_DIR,
     resolveAtpStaffPhotoDiskPath,
     sendFileWithCache,
@@ -106,6 +108,22 @@ export function createAtpStaffHandlers(deps) {
   ]);
   let publicHomepageAssetGenerationQueue = Promise.resolve();
 
+  function buildPublicHomepageAssetGeneratorEnv() {
+    const env = { ...process.env };
+    const staffRoot = normalizeText(ATP_STAFF_ROOT)
+      || (normalizeText(ATP_STAFF_PROFILES_PATH) ? path.dirname(ATP_STAFF_PROFILES_PATH) : "")
+      || (normalizeText(ATP_STAFF_PHOTOS_DIR) ? path.dirname(ATP_STAFF_PHOTOS_DIR) : "");
+    const staffProfilesPath = normalizeText(ATP_STAFF_PROFILES_PATH)
+      || (staffRoot ? path.join(staffRoot, "staff.json") : "");
+    const staffPhotosDir = normalizeText(ATP_STAFF_PHOTOS_DIR)
+      || (staffRoot ? path.join(staffRoot, "photos") : "");
+
+    if (staffRoot) env.PUBLIC_HOMEPAGE_STAFF_ROOT = staffRoot;
+    if (staffProfilesPath) env.PUBLIC_HOMEPAGE_STAFF_PROFILES_PATH = staffProfilesPath;
+    if (staffPhotosDir) env.PUBLIC_HOMEPAGE_STAFF_PHOTOS_DIR = staffPhotosDir;
+    return env;
+  }
+
   async function regeneratePublicHomepageAssets(reason, details = {}) {
     const task = async () => {
       const generatorPath = PUBLIC_HOMEPAGE_ASSET_GENERATOR_CANDIDATES.find((candidate) => existsSync(candidate));
@@ -113,7 +131,8 @@ export function createAtpStaffHandlers(deps) {
         throw new Error("Could not find generate_public_homepage_assets.mjs in expected script locations.");
       }
       await execFile(process.execPath, [generatorPath], {
-        cwd: repoRoot
+        cwd: repoRoot,
+        env: buildPublicHomepageAssetGeneratorEnv()
       });
     };
 
