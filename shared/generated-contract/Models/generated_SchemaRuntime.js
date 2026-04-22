@@ -3387,12 +3387,12 @@
 },
   FIELD_59: {
   "kind": "transport",
-  "typeName": "TravelPlanTemplateReadModel",
+  "typeName": "StandardTourReadModel",
   "isArray": true
 },
   FIELD_60: {
   "kind": "transport",
-  "typeName": "TravelPlanTemplateReadModel",
+  "typeName": "StandardTourReadModel",
   "isArray": false
 },
   FIELD_61: {

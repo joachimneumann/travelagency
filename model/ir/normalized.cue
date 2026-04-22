@@ -135,10 +135,10 @@ IR: {
 			]
 		},
 		{
-			name:       "TravelPlanTemplate"
+			name:       "StandardTour"
 			domain:     "aux"
 			module:     "json"
-			sourceType: "json.#TravelPlanTemplate"
+			sourceType: "json.#StandardTour"
 			fields: [
 				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
 				{name: "title", kind: "scalar", typeName: "string", required: true},
@@ -1274,10 +1274,10 @@ IR: {
 			]
 		},
 		{
-			name:       "TravelPlanTemplateReadModel"
+			name:       "StandardTourReadModel"
 			domain:     "api"
 			module:     "api"
-			sourceType: "api.#TravelPlanTemplateReadModel"
+			sourceType: "api.#StandardTourReadModel"
 			fields: [
 				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
 				{name: "title", kind: "scalar", typeName: "string", required: true},
@@ -1286,22 +1286,22 @@ IR: {
 			]
 		},
 		{
-			name:       "TravelPlanTemplateListResponse"
+			name:       "StandardTourListResponse"
 			domain:     "api"
 			module:     "api"
-			sourceType: "api.#TravelPlanTemplateListResponse"
+			sourceType: "api.#StandardTourListResponse"
 			fields: [
-				{name: "items", kind: "transport", typeName: "TravelPlanTemplateReadModel", required: true, isArray: true},
+				{name: "items", kind: "transport", typeName: "StandardTourReadModel", required: true, isArray: true},
 				{name: "total", kind: "scalar", typeName: "int", required: true},
 			]
 		},
 		{
-			name:       "TravelPlanTemplateResponse"
+			name:       "StandardTourResponse"
 			domain:     "api"
 			module:     "api"
-			sourceType: "api.#TravelPlanTemplateResponse"
+			sourceType: "api.#StandardTourResponse"
 			fields: [
-				{name: "template", kind: "transport", typeName: "TravelPlanTemplateReadModel", required: true},
+				{name: "template", kind: "transport", typeName: "StandardTourReadModel", required: true},
 			]
 		},
 		{
@@ -1608,23 +1608,22 @@ IR: {
 			]
 		},
 		{
-			name:       "TravelPlanTemplateUpsertRequest"
+			name:       "StandardTourUpsertRequest"
 			domain:     "api"
 			module:     "api"
-			sourceType: "api.#TravelPlanTemplateUpsertRequest"
+			sourceType: "api.#StandardTourUpsertRequest"
 			fields: [
 				{name: "title", kind: "scalar", typeName: "string", required: false},
 				{name: "destinations", kind: "enum", typeName: "CountryCode", required: false, isArray: true},
-				{name: "source_booking_id", kind: "scalar", typeName: "Identifier", required: false},
 				{name: "travel_plan", kind: "entity", typeName: "BookingTravelPlan", required: false},
 				{name: "actor", kind: "scalar", typeName: "string", required: false},
 			]
 		},
 		{
-			name:       "BookingTravelPlanTemplateApplyRequest"
+			name:       "BookingStandardTourApplyRequest"
 			domain:     "api"
 			module:     "api"
-			sourceType: "api.#BookingTravelPlanTemplateApplyRequest"
+			sourceType: "api.#BookingStandardTourApplyRequest"
 			fields: [
 				{name: "expected_travel_plan_revision", kind: "scalar", typeName: "int", required: false},
 				{name: "actor", kind: "scalar", typeName: "string", required: false},

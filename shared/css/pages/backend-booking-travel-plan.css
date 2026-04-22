@@ -51,7 +51,7 @@
   visibility: hidden;
 }
 
-.booking-detail-page .travel-plan-actions :is(#travel_plan_translate_all_btn, #travel_plan_save_standard_tour_btn, #travel_plan_renumber_days_btn),
+.booking-detail-page .travel-plan-actions :is(#travel_plan_translate_all_btn, #travel_plan_renumber_days_btn),
 .booking-detail-page #travel_plan_panel .travel-plan-day__date-shortcut,
 .booking-detail-page #travel_plan_panel :is(.localized-pair__lang-button, .localized-editor__translate-btn--direction) {
   border-color: var(--travel-plan-accent-border-strong);
@@ -59,8 +59,8 @@
   box-shadow: none;
 }
 
-.booking-detail-page .travel-plan-actions :is(#travel_plan_translate_all_btn, #travel_plan_save_standard_tour_btn, #travel_plan_renumber_days_btn):hover:not([disabled]),
-.booking-detail-page .travel-plan-actions :is(#travel_plan_translate_all_btn, #travel_plan_save_standard_tour_btn, #travel_plan_renumber_days_btn):focus-visible:not([disabled]),
+.booking-detail-page .travel-plan-actions :is(#travel_plan_translate_all_btn, #travel_plan_renumber_days_btn):hover:not([disabled]),
+.booking-detail-page .travel-plan-actions :is(#travel_plan_translate_all_btn, #travel_plan_renumber_days_btn):focus-visible:not([disabled]),
 .booking-detail-page #travel_plan_panel .travel-plan-day__date-shortcut:hover:not([disabled]),
 .booking-detail-page #travel_plan_panel .travel-plan-day__date-shortcut:focus-visible:not([disabled]),
 .booking-detail-page #travel_plan_panel :is(.localized-pair__lang-button, .localized-editor__translate-btn--direction):hover:not([disabled]),

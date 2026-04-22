@@ -30,14 +30,14 @@ const els = {
   logoutLink: document.getElementById("backendLogoutLink"),
   userLabel: document.getElementById("backendUserLabel"),
   error: document.getElementById("backendError"),
-  search: document.getElementById("standardTravelPlansSearch"),
-  destination: document.getElementById("standardTravelPlansDestination"),
-  searchBtn: document.getElementById("standardTravelPlansSearchBtn"),
-  clearFiltersBtn: document.getElementById("standardTravelPlansClearFiltersBtn"),
-  countInfo: document.getElementById("standardTravelPlansCountInfo"),
-  actionStatus: document.getElementById("standardTravelPlansActionStatus"),
-  table: document.getElementById("standardTravelPlansTable"),
-  pagination: document.getElementById("standardTravelPlansPagination")
+  search: document.getElementById("standardToursSearch"),
+  destination: document.getElementById("standardToursDestination"),
+  searchBtn: document.getElementById("standardToursSearchBtn"),
+  clearFiltersBtn: document.getElementById("standardToursClearFiltersBtn"),
+  countInfo: document.getElementById("standardToursCountInfo"),
+  actionStatus: document.getElementById("standardToursActionStatus"),
+  table: document.getElementById("standardToursTable"),
+  pagination: document.getElementById("standardToursPagination")
 };
 
 const GENERATED_ROLE_LOOKUP = Object.freeze(
@@ -98,14 +98,14 @@ function setActionStatus(message = "") {
 function renderCatalogOptions() {
   if (!(els.destination instanceof HTMLSelectElement)) return;
   els.destination.innerHTML = `
-    <option value="all">${escapeHtml(backendT("backend.standard_travel_plans.all_destinations", "All destinations"))}</option>
+    <option value="all">${escapeHtml(backendT("backend.standard_tours.all_destinations", "All destinations"))}</option>
     ${DESTINATION_COUNTRY_OPTIONS.map((option) => `<option value="${escapeHtml(option.value)}">${escapeHtml(option.label || option.value)}</option>`).join("")}
   `;
   els.destination.value = state.list.destination;
 }
 
 function templateDetailHref(templateId) {
-  return withBackendLang("/standard-travel-plan.html", { id: normalizeText(templateId) });
+  return withBackendLang("/standard-tour.html", { id: normalizeText(templateId) });
 }
 
 function findListTemplate(templateId) {
@@ -125,7 +125,7 @@ init();
 
 async function init() {
   const chrome = await initializeBackendPageChrome({
-    currentSection: "standard-travel-plans",
+    currentSection: "standard-tours",
     homeLink: els.homeLink,
     refreshNav: refreshBackendNavElements
   });
@@ -140,10 +140,10 @@ async function init() {
       canEditTemplates: hasAnyRoleInList(roles, ROLES.TOUR_EDITOR)
     }),
     hasPageAccess: (permissions) => permissions.canReadTemplates,
-    logKey: "backend-standard-travel-plans",
-    pageName: "standard-travel-plans.html",
+    logKey: "backend-standard-tours",
+    pageName: "standard-tours.html",
     expectedRolesAnyOf: [ROLES.TOUR_EDITOR],
-    likelyCause: "The user is authenticated in Keycloak but does not have the atp_tour_editor role required to access standard travel plans."
+    likelyCause: "The user is authenticated in Keycloak but does not have the atp_tour_editor role required to access standard tours."
   });
 
   state.authUser = authState.authUser;
@@ -159,7 +159,7 @@ async function init() {
   if (state.permissions.canReadTemplates) {
     await loadTemplates();
   } else {
-    showError(backendT("backend.standard_travel_plans.forbidden", "You do not have access to standard travel plans."));
+    showError(backendT("backend.standard_tours.forbidden", "You do not have access to standard tours."));
   }
 }
 
@@ -206,13 +206,13 @@ function bindControls() {
 async function loadTemplates() {
   clearError();
   const loadToken = ++state.list.loadToken;
-  setActionStatus(backendT("backend.standard_travel_plans.loading", "Loading..."));
+  setActionStatus(backendT("backend.standard_tours.loading", "Loading..."));
   const params = new URLSearchParams();
   if (state.list.search) params.set("q", state.list.search);
   if (state.list.destination !== "all") params.set("destination", state.list.destination);
   params.set("page", String(state.list.page));
   params.set("page_size", String(state.list.pageSize));
-  const payload = await fetchApi(withBackendApiLang(`/api/v1/travel-plan-templates?${params.toString()}`));
+  const payload = await fetchApi(withBackendApiLang(`/api/v1/standard-tours?${params.toString()}`));
   if (!payload || loadToken !== state.list.loadToken) return;
   const total = Number(payload.total || 0);
   state.list.total = total;
@@ -228,8 +228,8 @@ async function loadTemplates() {
   });
   if (els.countInfo) {
     els.countInfo.textContent = backendT(
-      "backend.standard_travel_plans.count",
-      "{count} template(s)",
+      "backend.standard_tours.count",
+      "{count} standard tour(s)",
       { count: total }
     );
   }
@@ -243,15 +243,15 @@ function renderTemplatesTable() {
     els.table.innerHTML = `
       <thead>
         <tr>
-          <th>${escapeHtml(backendT("backend.standard_travel_plans.form.title", "Title"))}</th>
-          <th>${escapeHtml(backendT("backend.standard_travel_plans.destination_label", "Destination"))}</th>
-          <th>${escapeHtml(backendT("backend.standard_travel_plans.day_count", "Days"))}</th>
-          <th>${escapeHtml(backendT("backend.standard_travel_plans.service_count", "Services"))}</th>
+          <th>${escapeHtml(backendT("backend.standard_tours.form.title", "Title"))}</th>
+          <th>${escapeHtml(backendT("backend.standard_tours.destination_label", "Destination"))}</th>
+          <th>${escapeHtml(backendT("backend.standard_tours.day_count", "Days"))}</th>
+          <th>${escapeHtml(backendT("backend.standard_tours.service_count", "Services"))}</th>
           <th>${escapeHtml(backendT("common.actions", "Actions"))}</th>
         </tr>
       </thead>
       <tbody>
-        <tr><td colspan="5">${escapeHtml(backendT("backend.standard_travel_plans.empty", "No standard travel plans found."))}</td></tr>
+        <tr><td colspan="5">${escapeHtml(backendT("backend.standard_tours.empty", "No standard tours found."))}</td></tr>
       </tbody>
     `;
     return;
@@ -259,10 +259,10 @@ function renderTemplatesTable() {
   els.table.innerHTML = `
     <thead>
       <tr>
-        <th>${escapeHtml(backendT("backend.standard_travel_plans.form.title", "Title"))}</th>
-        <th>${escapeHtml(backendT("backend.standard_travel_plans.destination_label", "Destination"))}</th>
-        <th>${escapeHtml(backendT("backend.standard_travel_plans.day_count", "Days"))}</th>
-        <th>${escapeHtml(backendT("backend.standard_travel_plans.service_count", "Services"))}</th>
+        <th>${escapeHtml(backendT("backend.standard_tours.form.title", "Title"))}</th>
+        <th>${escapeHtml(backendT("backend.standard_tours.destination_label", "Destination"))}</th>
+        <th>${escapeHtml(backendT("backend.standard_tours.day_count", "Days"))}</th>
+        <th>${escapeHtml(backendT("backend.standard_tours.service_count", "Services"))}</th>
         <th>${escapeHtml(backendT("common.actions", "Actions"))}</th>
       </tr>
     </thead>
@@ -294,18 +294,18 @@ async function deleteTemplate(templateId) {
   const template = findListTemplate(templateId);
   if (window.confirm(
     backendT(
-      "backend.standard_travel_plans.confirm_delete",
-      "Delete standard travel plan “{title}”?",
+      "backend.standard_tours.confirm_delete",
+      "Delete standard tour “{title}”?",
       { title: template?.title || templateId }
     )
   ) !== true) {
     return;
   }
   clearError();
-  const payload = await fetchApi(withBackendApiLang(`/api/v1/travel-plan-templates/${encodeURIComponent(templateId)}`), {
+  const payload = await fetchApi(withBackendApiLang(`/api/v1/standard-tours/${encodeURIComponent(templateId)}`), {
     method: "DELETE"
   });
   if (!payload?.deleted) return;
-  setActionStatus(backendT("backend.standard_travel_plans.deleted", "Standard travel plan deleted."));
+  setActionStatus(backendT("backend.standard_tours.deleted", "Standard tour deleted."));
   await loadTemplates();
 }

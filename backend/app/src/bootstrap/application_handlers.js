@@ -14,7 +14,7 @@ import { createBookingHandlers } from "../http/handlers/bookings.js";
 import { createBookingQueryModule } from "../http/handlers/booking_query.js";
 import { createCountryReferenceHandlers } from "../http/handlers/country_reference.js";
 import { createKeycloakUserHandlers } from "../http/handlers/keycloak_users.js";
-import { createTravelPlanTemplateHandlers } from "../http/handlers/travel_plan_templates.js";
+import { createStandardTourHandlers } from "../http/handlers/standard_tours.js";
 import { createTourHandlers } from "../http/handlers/tours.js";
 
 export function createApplicationRoutes({
@@ -35,8 +35,8 @@ export function createApplicationRoutes({
     canEditTours,
     canReadCountryReferenceInfo,
     canEditCountryReferenceInfo,
-    canReadTravelPlanTemplates,
-    canEditTravelPlanTemplates
+    canReadStandardTours,
+    canEditStandardTours
   } = createAccessHelpers({
     auth,
     appRoles: runtime.appRoles
@@ -45,7 +45,7 @@ export function createApplicationRoutes({
   const {
     pricingHelpers,
     travelPlanHelpers,
-    travelPlanTemplateHelpers,
+    standardTourHelpers,
     bookingViewHelpers,
     storeUtils,
     keycloakDirectory,
@@ -360,30 +360,27 @@ export function createApplicationRoutes({
     rm
   });
 
-  const travelPlanTemplateHandlers = createTravelPlanTemplateHandlers({
+  const standardTourHandlers = createStandardTourHandlers({
     readBodyJson: httpHelpers.readBodyJson,
     sendJson: httpHelpers.sendJson,
     readStore: storeUtils.readStore,
-    readTravelPlanTemplates: storeUtils.readTravelPlanTemplates,
-    persistTravelPlanTemplate: storeUtils.persistTravelPlanTemplate,
-    deleteTravelPlanTemplate: storeUtils.deleteTravelPlanTemplate,
+    readStandardTours: storeUtils.readStandardTours,
+    persistStandardTour: storeUtils.persistStandardTour,
+    deleteStandardTour: storeUtils.deleteStandardTour,
     getPrincipal,
-    canReadTravelPlanTemplates,
-    canEditTravelPlanTemplates,
-    canAccessBooking: bookingViewHelpers.canAccessBooking,
+    canReadStandardTours,
+    canEditStandardTours,
     canEditBooking: bookingViewHelpers.canEditBooking,
     normalizeText: support.normalizeText,
     normalizeTourDestinationCode,
     normalizeTourStyleCode,
     nowIso: support.nowIso,
     randomUUID,
-    buildTravelPlanTemplateReadModel: travelPlanTemplateHelpers.buildTravelPlanTemplateReadModel,
-    normalizeTravelPlanTemplateForStorage: travelPlanTemplateHelpers.normalizeTravelPlanTemplateForStorage,
-    cloneBookingTravelPlanAsTemplate: travelPlanTemplateHelpers.cloneBookingTravelPlanAsTemplate,
-    cloneTemplateTravelPlanForBooking: travelPlanTemplateHelpers.cloneTemplateTravelPlanForBooking,
-    normalizeTemplateTravelPlan: travelPlanTemplateHelpers.normalizeTemplateTravelPlan,
+    buildStandardTourReadModel: standardTourHelpers.buildStandardTourReadModel,
+    normalizeStandardTourForStorage: standardTourHelpers.normalizeStandardTourForStorage,
+    cloneStandardTourTravelPlanForBooking: standardTourHelpers.cloneStandardTourTravelPlanForBooking,
+    normalizeStandardTourTravelPlan: standardTourHelpers.normalizeStandardTourTravelPlan,
     validateBookingTravelPlanInput: travelPlanHelpers.validateBookingTravelPlanInput,
-    normalizeBookingTravelPlan: travelPlanHelpers.normalizeBookingTravelPlan,
     assertExpectedRevision,
     buildBookingDetailResponse: bookingQueryModule.buildBookingDetailResponse,
     incrementBookingRevision,
@@ -412,7 +409,7 @@ export function createApplicationRoutes({
       ...keycloakUserHandlers,
       ...countryReferenceHandlers,
       ...tourHandlers,
-      ...travelPlanTemplateHandlers
+      ...standardTourHandlers
     }
   });
 }

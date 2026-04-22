@@ -50,21 +50,21 @@ These entities remain file-backed content and are not part of the booking-owned 
 - `CountryPracticalInfo`
 - `CountryEmergencyContact`
 - `Tour`
-- `TravelPlanTemplate`
+- `StandardTour`
 
 Current file locations:
 
 - `model/json/atp_staff.cue`
 - `model/json/country_reference.cue`
 - `model/json/tour.cue`
-- `model/json/travel_plan_template.cue`
+- `model/json/standard_tour.cue`
 
 Operational meaning:
 
 - ATP staff profiles remain editable content under `content/atp_staff`
 - public destination support and publication flags remain editable content under `content/country_reference_info.json`
 - marketing tours remain editable content under `content/tours`
-- travel plan templates remain editable content under `content/travel_plan_templates`
+- standard tours remain editable content under `content/standard_tours`
 
 ## Booking-owned operational entities
 
@@ -322,19 +322,19 @@ Important boundary:
 - transport fields such as `pdf_url` are not part of this entity
 - those belong to the API read model only
 
-## TravelPlanTemplate
+## Standard Tour (`StandardTour`)
 
-`TravelPlanTemplate`
+`StandardTour`
 - `id`
 - `title`
 - `destinations`
 - `travel_plan`
 
 Meaning:
-- this is a reusable standard travel plan
+- this is a reusable standard tour
 - it is stored independently from bookings
-- it is currently created from an existing booking travel plan
-- applying a template copies its travel plan into a booking with fresh booking-local IDs
+- it is maintained directly as reusable travel-plan content
+- applying a standard tour copies its travel plan into a booking with fresh booking-local IDs
 
 ## API Read Models
 
@@ -351,7 +351,7 @@ Meaning:
 - generated-offer email capability flags
 - generated offers projected as `GeneratedBookingOfferReadModel[]`
 
-`TravelPlanTemplateReadModel`
+`StandardTourReadModel`
 - staff-facing template library shape
 - mirrors the template entity for transport use
 

@@ -93,7 +93,7 @@
   "typeName": "Identifier"
 },
   PARAM_16: {
-  "name": "template_id",
+  "name": "standard_tour_id",
   "location": "path",
   "required": true,
   "typeName": "Identifier"
@@ -584,12 +584,12 @@
         ]
       },
       {
-        key: "travel_plan_templates",
-        path: "/api/v1/travel-plan-templates",
+        key: "standard_tours",
+        path: "/api/v1/standard-tours",
         method: "GET",
         authenticated: true,
         requestType: null,
-        responseType: "TravelPlanTemplateListResponse",
+        responseType: "StandardTourListResponse",
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_7),
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_8),
@@ -598,41 +598,41 @@
         ]
       },
       {
-        key: "travel_plan_template_create",
-        path: "/api/v1/travel-plan-templates",
+        key: "standard_tour_create",
+        path: "/api/v1/standard-tours",
         method: "POST",
         authenticated: true,
-        requestType: "TravelPlanTemplateUpsertRequest",
-        responseType: "TravelPlanTemplateResponse",
+        requestType: "StandardTourUpsertRequest",
+        responseType: "StandardTourResponse",
         parameters: [
 
         ]
       },
       {
-        key: "travel_plan_template_detail",
-        path: "/api/v1/travel-plan-templates/{template_id}",
+        key: "standard_tour_detail",
+        path: "/api/v1/standard-tours/{standard_tour_id}",
         method: "GET",
         authenticated: true,
         requestType: null,
-        responseType: "TravelPlanTemplateResponse",
+        responseType: "StandardTourResponse",
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_16)
         ]
       },
       {
-        key: "travel_plan_template_update",
-        path: "/api/v1/travel-plan-templates/{template_id}",
+        key: "standard_tour_update",
+        path: "/api/v1/standard-tours/{standard_tour_id}",
         method: "PATCH",
         authenticated: true,
-        requestType: "TravelPlanTemplateUpsertRequest",
-        responseType: "TravelPlanTemplateResponse",
+        requestType: "StandardTourUpsertRequest",
+        responseType: "StandardTourResponse",
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_16)
         ]
       },
       {
-        key: "travel_plan_template_delete",
-        path: "/api/v1/travel-plan-templates/{template_id}",
+        key: "standard_tour_delete",
+        path: "/api/v1/standard-tours/{standard_tour_id}",
         method: "DELETE",
         authenticated: true,
         requestType: null,
@@ -642,11 +642,11 @@
         ]
       },
       {
-        key: "booking_travel_plan_template_apply",
-        path: "/api/v1/bookings/{booking_id}/travel-plan/templates/{template_id}/apply",
+        key: "booking_standard_tour_apply",
+        path: "/api/v1/bookings/{booking_id}/travel-plan/standard-tours/{standard_tour_id}/apply",
         method: "POST",
         authenticated: true,
-        requestType: "BookingTravelPlanTemplateApplyRequest",
+        requestType: "BookingStandardTourApplyRequest",
         responseType: "BookingDetail",
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),

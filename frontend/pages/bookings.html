@@ -259,13 +259,13 @@
         requestedSection === "tours"
         || requestedSection === "settings"
         || requestedSection === "emergency"
-        || requestedSection === "standard-travel-plans"
+        || requestedSection === "standard-tours"
       ) {
         const pageName =
           requestedSection === "tours"
             ? "marketing_tours.html"
-            : requestedSection === "standard-travel-plans"
-              ? "standard-travel-plans.html"
+            : requestedSection === "standard-tours"
+              ? "standard-tours.html"
             : "settings.html";
         const target = new URL(pageName, window.location.origin);
         const lang = params.get("lang");

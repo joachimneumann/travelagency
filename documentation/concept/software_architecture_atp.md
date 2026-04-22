@@ -19,7 +19,7 @@ The current active domain vocabulary includes:
 - booking person
 - ATP staff
 - tour
-- travel plan template
+- standard tour
 - pricing
 - payment document
 - activity
@@ -54,7 +54,7 @@ Generated from the model:
 Important generated transport types:
 - `BookingReadModel`
 - `GeneratedBookingOfferReadModel`
-- `TravelPlanTemplateReadModel`
+- `StandardTourReadModel`
 - `TranslationStatusSummary`
 - public generated-offer access request and response payloads
 
@@ -75,7 +75,7 @@ Handwritten runtime logic:
 Current persistence:
 - JSON store for bookings and related runtime state
 - per-folder persisted assets for tours
-- per-folder persisted assets for travel plan templates
+- per-folder persisted assets for standard tours
 - PDF and attachment folders for generated offer, payment-document, and travel-plan artifacts
 
 ## Derivation Flow
@@ -97,14 +97,14 @@ Backend:
 - generated-offer freezing and serving
 - deposit-based customer confirmation
 - management approval
-- travel-plan template CRUD and apply flow
+- standard tour CRUD and apply flow
 
 Frontend:
 - public website interactions
 - public generated-offer access page
 - backend booking workspace
 - backend booking list page
-- backend standard travel plans page
+- backend standard tours page
 - tour editing page
 
 ## Current Exceptions
@@ -125,19 +125,19 @@ The important current handler split is:
   - public generated-offer access
   - public generated-offer PDF
   - token-gated confirmation-flow status responses
-- `backend/app/src/http/handlers/travel_plan_templates.js`
-  - template CRUD
-  - apply-template-to-booking flow
+- `backend/app/src/http/handlers/standard_tours.js`
+  - standard tour CRUD
+  - apply-standard-tour-to-booking flow
 - `backend/app/src/domain/booking_confirmation.js`
   - customer confirmation flow normalization
   - booking confirmation token lifecycle
   - startup migration and state backfill for legacy generated offers
-- `backend/app/src/domain/travel_plan_templates.js`
-  - template normalization
+- `backend/app/src/domain/standard_tours.js`
+  - standard tour normalization
   - clone-from-booking and clone-into-booking logic
   - token-gated public generated-offer read flow
-- `frontend/pages/standard-travel-plans.html`
-  - staff template library page
+- `frontend/pages/standard-tours.html`
+  - staff standard tour library page
 
 The backend startup path in `backend/app/src/server.js` performs explicit writeback migrations for legacy stored generated offers before serving requests.
 This backfill is done at startup, not during booking GET requests.
@@ -179,19 +179,19 @@ Compatibility note:
 - legacy public click-confirmation data is only stripped during startup migration for older generated offers
 - new offers confirm either by deposit payment or by management approval
 
-## Travel Plan Template Model
+## Standard Tour Model
 
-`TravelPlanTemplate` is a dedicated entity.
+Standard tours are represented by the current `StandardTour` model type.
 It is not implemented as a fake booking.
 
 Phase 1 behavior:
-- templates are created from an existing booking travel plan
-- templates are stored independently from bookings
-- published templates can replace a booking travel plan by copy
-- copied template content gets fresh booking travel-plan IDs
-- templates are not live-linked back to bookings after apply
+- standard tours are maintained directly as reusable travel-plan content
+- standard tours are stored independently from bookings
+- published standard tours can replace a booking travel plan by copy
+- copied standard tour content gets fresh booking travel-plan IDs
+- standard tours are not live-linked back to bookings after apply
 
-Template lifecycle:
+Standard tour lifecycle:
 - `draft`
 - `published`
 - `archived`

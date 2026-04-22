@@ -455,11 +455,11 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         return validateShape(value, TRAVEL_PLAN_SERVICE_SEARCH_RESPONSE_SCHEMA);
       }
 
-      export const TRAVEL_PLAN_TEMPLATE_LIST_RESPONSE_SCHEMA = {
-        name: "TravelPlanTemplateListResponse",
+      export const STANDARD_TOUR_LIST_RESPONSE_SCHEMA = {
+        name: "StandardTourListResponse",
         domain: "api",
         module: "api",
-        sourceType: "openapi.components.schemas.TravelPlanTemplateListResponse",
+        sourceType: "openapi.components.schemas.StandardTourListResponse",
         requireOneOf: [],
         fields: [
     schemaField({"name":"items","required":false,"wireName":"items"}, SHARED_FIELD_DEFS.FIELD_59),
@@ -467,49 +467,48 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         ]
       };
 
-      export function validateTravelPlanTemplateListResponse(value) {
-        return validateShape(value, TRAVEL_PLAN_TEMPLATE_LIST_RESPONSE_SCHEMA);
+      export function validateStandardTourListResponse(value) {
+        return validateShape(value, STANDARD_TOUR_LIST_RESPONSE_SCHEMA);
       }
 
-      export const TRAVEL_PLAN_TEMPLATE_UPSERT_REQUEST_SCHEMA = {
-        name: "TravelPlanTemplateUpsertRequest",
+      export const STANDARD_TOUR_UPSERT_REQUEST_SCHEMA = {
+        name: "StandardTourUpsertRequest",
         domain: "api",
         module: "api",
-        sourceType: "openapi.components.schemas.TravelPlanTemplateUpsertRequest",
+        sourceType: "openapi.components.schemas.StandardTourUpsertRequest",
         requireOneOf: [],
         fields: [
     schemaField({"name":"title","required":false,"wireName":"title"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"destinations","required":false,"wireName":"destinations"}, SHARED_FIELD_DEFS.FIELD_17),
-    schemaField({"name":"source_booking_id","required":false,"wireName":"source_booking_id"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"travel_plan","required":false,"wireName":"travel_plan"}, SHARED_FIELD_DEFS.FIELD_57),
     schemaField({"name":"actor","required":false,"wireName":"actor"}, SHARED_FIELD_DEFS.FIELD_1)
         ]
       };
 
-      export function validateTravelPlanTemplateUpsertRequest(value) {
-        return validateShape(value, TRAVEL_PLAN_TEMPLATE_UPSERT_REQUEST_SCHEMA);
+      export function validateStandardTourUpsertRequest(value) {
+        return validateShape(value, STANDARD_TOUR_UPSERT_REQUEST_SCHEMA);
       }
 
-      export const TRAVEL_PLAN_TEMPLATE_RESPONSE_SCHEMA = {
-        name: "TravelPlanTemplateResponse",
+      export const STANDARD_TOUR_RESPONSE_SCHEMA = {
+        name: "StandardTourResponse",
         domain: "api",
         module: "api",
-        sourceType: "openapi.components.schemas.TravelPlanTemplateResponse",
+        sourceType: "openapi.components.schemas.StandardTourResponse",
         requireOneOf: [],
         fields: [
     schemaField({"name":"template","required":true,"wireName":"template"}, SHARED_FIELD_DEFS.FIELD_60)
         ]
       };
 
-      export function validateTravelPlanTemplateResponse(value) {
-        return validateShape(value, TRAVEL_PLAN_TEMPLATE_RESPONSE_SCHEMA);
+      export function validateStandardTourResponse(value) {
+        return validateShape(value, STANDARD_TOUR_RESPONSE_SCHEMA);
       }
 
-      export const BOOKING_TRAVEL_PLAN_TEMPLATE_APPLY_REQUEST_SCHEMA = {
-        name: "BookingTravelPlanTemplateApplyRequest",
+      export const BOOKING_STANDARD_TOUR_APPLY_REQUEST_SCHEMA = {
+        name: "BookingStandardTourApplyRequest",
         domain: "api",
         module: "api",
-        sourceType: "openapi.components.schemas.BookingTravelPlanTemplateApplyRequest",
+        sourceType: "openapi.components.schemas.BookingStandardTourApplyRequest",
         requireOneOf: [],
         fields: [
     schemaField({"name":"expected_travel_plan_revision","required":false,"wireName":"expected_travel_plan_revision"}, SHARED_FIELD_DEFS.FIELD_18),
@@ -517,8 +516,8 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         ]
       };
 
-      export function validateBookingTravelPlanTemplateApplyRequest(value) {
-        return validateShape(value, BOOKING_TRAVEL_PLAN_TEMPLATE_APPLY_REQUEST_SCHEMA);
+      export function validateBookingStandardTourApplyRequest(value) {
+        return validateShape(value, BOOKING_STANDARD_TOUR_APPLY_REQUEST_SCHEMA);
       }
 
       export const TRAVEL_PLAN_SERVICE_IMPORT_REQUEST_SCHEMA = {
@@ -1294,11 +1293,11 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         return validateShape(value, TRAVEL_PLAN_SERVICE_SEARCH_RESULT_SCHEMA);
       }
 
-      export const TRAVEL_PLAN_TEMPLATE_READ_MODEL_SCHEMA = {
-        name: "TravelPlanTemplateReadModel",
+      export const STANDARD_TOUR_READ_MODEL_SCHEMA = {
+        name: "StandardTourReadModel",
         domain: "api",
         module: "api",
-        sourceType: "openapi.components.schemas.TravelPlanTemplateReadModel",
+        sourceType: "openapi.components.schemas.StandardTourReadModel",
         requireOneOf: [],
         fields: [
     schemaField({"name":"id","required":true,"wireName":"id"}, SHARED_FIELD_DEFS.FIELD_1),
@@ -1308,8 +1307,8 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         ]
       };
 
-      export function validateTravelPlanTemplateReadModel(value) {
-        return validateShape(value, TRAVEL_PLAN_TEMPLATE_READ_MODEL_SCHEMA);
+      export function validateStandardTourReadModel(value) {
+        return validateShape(value, STANDARD_TOUR_READ_MODEL_SCHEMA);
       }
 
       export const BOOKING_TRAVEL_PLAN_PDF_READ_MODEL_SCHEMA = {

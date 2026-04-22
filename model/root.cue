@@ -34,7 +34,7 @@ import (
 		CountryEmergencyContact:                        jsonModel.#CountryEmergencyContact
 		CountryPracticalInfo:                           jsonModel.#CountryPracticalInfo
 		Tour:                                           jsonModel.#Tour
-		TravelPlanTemplate:                             jsonModel.#TravelPlanTemplate
+		StandardTour:                             jsonModel.#StandardTour
 	}
 
 	common: {
@@ -106,9 +106,9 @@ import (
 		TravelPlanSearchResponse:                                  apiModel.#TravelPlanSearchResponse
 		TravelPlanServiceSearchResult:                             apiModel.#TravelPlanServiceSearchResult
 		TravelPlanServiceSearchResponse:                           apiModel.#TravelPlanServiceSearchResponse
-		TravelPlanTemplateReadModel:                               apiModel.#TravelPlanTemplateReadModel
-		TravelPlanTemplateListResponse:                            apiModel.#TravelPlanTemplateListResponse
-		TravelPlanTemplateResponse:                                apiModel.#TravelPlanTemplateResponse
+		StandardTourReadModel:                               apiModel.#StandardTourReadModel
+		StandardTourListResponse:                            apiModel.#StandardTourListResponse
+		StandardTourResponse:                                apiModel.#StandardTourResponse
 		AuthenticatedUser:                                         apiModel.#AuthenticatedUser
 		AuthMeResponse:                                            apiModel.#AuthMeResponse
 		MobileBootstrap:                                           apiModel.#MobileBootstrap
@@ -147,8 +147,8 @@ import (
 		TravelPlanDayImportRequest:                                apiModel.#TravelPlanDayImportRequest
 		TravelPlanSearchRequest:                                   apiModel.#TravelPlanSearchRequest
 		TravelPlanImportRequest:                                   apiModel.#TravelPlanImportRequest
-		TravelPlanTemplateUpsertRequest:                           apiModel.#TravelPlanTemplateUpsertRequest
-		BookingTravelPlanTemplateApplyRequest:                     apiModel.#BookingTravelPlanTemplateApplyRequest
+		StandardTourUpsertRequest:                           apiModel.#StandardTourUpsertRequest
+		BookingStandardTourApplyRequest:                     apiModel.#BookingStandardTourApplyRequest
 		TravelPlanServiceSearchRequest:                            apiModel.#TravelPlanServiceSearchRequest
 		TravelPlanServiceImportRequest:                            apiModel.#TravelPlanServiceImportRequest
 		TravelPlanServiceImageUploadRequest:                       apiModel.#TravelPlanServiceImageUploadRequest

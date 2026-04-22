@@ -2280,7 +2280,7 @@ export function createBookingTravelPlanModule(ctx) {
           return;
         }
         if (button.hasAttribute("data-travel-plan-open-template-import")) {
-          travelPlanServiceLibraryModule.openTravelPlanTemplateLibrary();
+          travelPlanServiceLibraryModule.openStandardTourLibrary();
           return;
         }
         if (button.hasAttribute("data-travel-plan-open-import")) {
@@ -2413,8 +2413,8 @@ export function createBookingTravelPlanModule(ctx) {
     renderBookingSectionHeader(els.travel_plan_panel_summary, travelPlanSummary());
     const hasDays = Array.isArray(state.travelPlanDraft.days) && state.travelPlanDraft.days.length > 0;
     const standardTemplateLabel = hasDays
-      ? bookingT("booking.travel_plan.append_standard_template", "Append a Standard Travel Plan")
-      : bookingT("booking.travel_plan.use_standard_template", "Use a Standard Travel Plan");
+      ? bookingT("booking.travel_plan.append_standard_tour", "Append a Standard Tour")
+      : bookingT("booking.travel_plan.use_standard_tour", "Use a Standard Tour");
     const bookingPlanLabel = hasDays
       ? bookingT("booking.travel_plan.append_existing_plan", "Append a Travel Plan from another Booking")
       : bookingT("booking.travel_plan.use_existing_plan", "Use a Travel Plan from another Booking");

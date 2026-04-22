@@ -48,14 +48,14 @@ export function createAccessHelpers({ auth, appRoles }) {
       hasRole(principal, appRoles.TOUR_EDITOR);
   }
 
-  function canReadTravelPlanTemplates(principal) {
+  function canReadStandardTours(principal) {
     return hasRole(principal, appRoles.ADMIN) ||
       hasRole(principal, appRoles.MANAGER) ||
       hasRole(principal, appRoles.ATP_STAFF);
   }
 
-  function canEditTravelPlanTemplates(principal) {
-    return canReadTravelPlanTemplates(principal);
+  function canEditStandardTours(principal) {
+    return canReadStandardTours(principal);
   }
 
   return {
@@ -68,7 +68,7 @@ export function createAccessHelpers({ auth, appRoles }) {
     canEditTours,
     canReadCountryReferenceInfo,
     canEditCountryReferenceInfo,
-    canReadTravelPlanTemplates,
-    canEditTravelPlanTemplates
+    canReadStandardTours,
+    canEditStandardTours
   };
 }

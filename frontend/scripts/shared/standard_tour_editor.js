@@ -8,7 +8,7 @@ import {
   setBookingSectionOpen
 } from "../booking/sections.js";
 
-export function createStandardTravelPlanEditor({
+export function createStandardTourEditor({
   state,
   els,
   apiOrigin,

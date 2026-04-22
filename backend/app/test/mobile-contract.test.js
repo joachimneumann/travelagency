@@ -14,7 +14,7 @@ const __dirname = path.dirname(__filename);
 const CONTRACT_META_PATH = path.resolve(__dirname, "..", "..", "..", "api", "generated", "mobile-api.meta.json");
 const TEST_DATA_DIR = await mkdtemp(path.join(os.tmpdir(), "travelagency-contract-test-"));
 const STORE_PATH = path.join(TEST_DATA_DIR, "store.json");
-const TRAVEL_PLAN_TEMPLATES_DIR = path.resolve(__dirname, "..", "..", "..", "content", "travel_plan_templates");
+const STANDARD_TOURS_DIR = path.resolve(__dirname, "..", "..", "..", "content", "standard_tours");
 
 process.env.KEYCLOAK_ENABLED = "true";
 process.env.INSECURE_TEST_AUTH = "true";
@@ -316,13 +316,13 @@ async function resetStore() {
   }, null, 2)}\n`, "utf8");
 }
 
-async function removeTravelPlanTemplatesByTitlePrefix(prefix) {
+async function removeStandardToursByTitlePrefix(prefix) {
   const normalizedPrefix = String(prefix || "").trim();
   if (!normalizedPrefix) return;
-  const entries = await readdir(TRAVEL_PLAN_TEMPLATES_DIR, { withFileTypes: true }).catch(() => []);
+  const entries = await readdir(STANDARD_TOURS_DIR, { withFileTypes: true }).catch(() => []);
   for (const entry of entries) {
     if (!entry?.isDirectory?.()) continue;
-    const templatePath = path.join(TRAVEL_PLAN_TEMPLATES_DIR, entry.name, "template.json");
+    const templatePath = path.join(STANDARD_TOURS_DIR, entry.name, "standard_tour.json");
     let parsed = null;
     try {
       parsed = JSON.parse(await readFile(templatePath, "utf8"));
@@ -331,7 +331,7 @@ async function removeTravelPlanTemplatesByTitlePrefix(prefix) {
     }
     const title = String(parsed?.title || "").trim();
     if (!title.startsWith(normalizedPrefix)) continue;
-    await rm(path.join(TRAVEL_PLAN_TEMPLATES_DIR, entry.name), { recursive: true, force: true });
+    await rm(path.join(STANDARD_TOURS_DIR, entry.name), { recursive: true, force: true });
   }
 }
 
@@ -2099,8 +2099,8 @@ test("staff can search and import travel plan library content from other staff b
   assert.equal(planImportResult.body.booking.pdf_personalization.travel_plan.subtitle, "Shared subtitle marker");
 });
 
-test("standard travel plan apply copies the travel plan without storing extra template metadata", async () => {
-  await removeTravelPlanTemplatesByTitlePrefix("Template copy marker");
+test("standard tour apply copies the travel plan without storing extra template metadata", async () => {
+  await removeStandardToursByTitlePrefix("Template copy marker");
   const sourceBooking = await createSeedBooking();
   const targetBooking = await createPublicBooking({
     name: "Template Target User",
@@ -2161,29 +2161,29 @@ test("standard travel plan apply copies the travel plan without storing extra te
     await writeFile(STORE_PATH, `${JSON.stringify(store, null, 2)}\n`, "utf8");
 
     const templateCreateResult = await requestJson(
-      endpointPath("travel_plan_template_create"),
+      endpointPath("standard_tour_create"),
       apiHeaders(),
       {
         method: "POST",
         body: {
           title: templateTitle,
-          source_booking_id: sourceBooking.id
+          travel_plan: sourceRecord.travel_plan
         }
       }
     );
     assert.equal(templateCreateResult.status, 201);
-    assert.equal(templateCreateResult.body.template.title, templateTitle);
-    assert.deepEqual(templateCreateResult.body.template.destinations, []);
-    assert.ok(templateCreateResult.body.template.travel_plan);
-    assert.ok(!("source_booking_id" in templateCreateResult.body.template));
-    assert.ok(!("description" in templateCreateResult.body.template));
-    assert.ok(!("created_at" in templateCreateResult.body.template));
-    assert.ok(!("updated_at" in templateCreateResult.body.template));
+    assert.equal(templateCreateResult.body.standard_tour.title, templateTitle);
+    assert.deepEqual(templateCreateResult.body.standard_tour.destinations, []);
+    assert.ok(templateCreateResult.body.standard_tour.travel_plan);
+    assert.ok(!("source_booking_id" in templateCreateResult.body.standard_tour));
+    assert.ok(!("description" in templateCreateResult.body.standard_tour));
+    assert.ok(!("created_at" in templateCreateResult.body.standard_tour));
+    assert.ok(!("updated_at" in templateCreateResult.body.standard_tour));
 
     const applyResult = await requestJson(
-      endpointPath("booking_travel_plan_template_apply")
+      endpointPath("booking_standard_tour_apply")
         .replace("{booking_id}", targetBooking.id)
-        .replace("{template_id}", templateCreateResult.body.template.id),
+        .replace("{standard_tour_id}", templateCreateResult.body.standard_tour.id),
       apiHeaders(),
       {
         method: "POST",
@@ -2199,11 +2199,11 @@ test("standard travel plan apply copies the travel plan without storing extra te
     assert.equal(applyResult.body.booking.pdf_personalization.travel_plan.subtitle, "Old target subtitle");
     assert.equal(applyResult.body.booking.pdf_personalization.offer.closing, "Target offer closing marker");
   } finally {
-    await removeTravelPlanTemplatesByTitlePrefix("Template copy marker");
+    await removeStandardToursByTitlePrefix("Template copy marker");
   }
 });
 
-test("standard travel plan titles must be unique", async () => {
+test("standard tour titles must be unique", async () => {
   const sourceBooking = await createSeedBooking();
   const primaryTitle = `Summer Escape ${sourceBooking.id}`;
   const secondaryTitle = `Mekong Explorer ${sourceBooking.id}`;
@@ -2227,39 +2227,39 @@ test("standard travel plan titles must be unique", async () => {
   await writeFile(STORE_PATH, `${JSON.stringify(store, null, 2)}\n`, "utf8");
 
   const firstCreateResult = await requestJson(
-    endpointPath("travel_plan_template_create"),
+    endpointPath("standard_tour_create"),
     apiHeaders(),
     {
       method: "POST",
       body: {
         title: primaryTitle,
-        source_booking_id: sourceBooking.id
+        travel_plan: sourceRecord.travel_plan
       }
     }
   );
   assert.equal(firstCreateResult.status, 201);
 
   const secondCreateResult = await requestJson(
-    endpointPath("travel_plan_template_create"),
+    endpointPath("standard_tour_create"),
     apiHeaders(),
     {
       method: "POST",
       body: {
         title: secondaryTitle,
-        source_booking_id: sourceBooking.id
+        travel_plan: sourceRecord.travel_plan
       }
     }
   );
   assert.equal(secondCreateResult.status, 201);
 
   const duplicateCreateResult = await requestJson(
-    endpointPath("travel_plan_template_create"),
+    endpointPath("standard_tour_create"),
     apiHeaders(),
     {
       method: "POST",
       body: {
         title: `  ${primaryTitle.toLowerCase()}  `,
-        source_booking_id: sourceBooking.id
+        travel_plan: sourceRecord.travel_plan
       }
     }
   );
@@ -2267,7 +2267,7 @@ test("standard travel plan titles must be unique", async () => {
   assert.equal(duplicateCreateResult.body.error, "A standard tour with this title already exists.");
 
   const duplicatePatchResult = await requestJson(
-    endpointPath("travel_plan_template_update").replace("{template_id}", secondCreateResult.body.template.id),
+    endpointPath("standard_tour_update").replace("{standard_tour_id}", secondCreateResult.body.standard_tour.id),
     apiHeaders(),
     {
       method: "PATCH",

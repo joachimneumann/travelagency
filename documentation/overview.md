@@ -19,7 +19,7 @@ The backend system replaces that with structured booking data and generated arti
 
 For travel plans, the practical advantage is reuse:
 
-- a complete travel plan can be saved as a standard travel plan and applied to another booking
+- a complete travel plan can be saved as a standard tour and applied to another booking
 - individual days from existing travel plans can be searched and reused
 - individual services from existing travel plans can be searched and reused
 - copied travel-plan content gets fresh booking-specific IDs, so it can be edited safely for the new customer
@@ -167,7 +167,7 @@ Important top-level areas:
 - `frontend/scripts/` - browser ES modules
 - `shared/css/` - shared CSS and page/component styles
 - `shared/js/` - shared browser helpers
-- `content/` - editable content source for tours, staff, country reference, templates
+- `content/` - editable content source for tours, standard tours, staff, and country reference
 - `backup/` - backup copy only, not active runtime source
 - `assets/` - website assets and generated homepage media
 - `scripts/` - local, staging, production, content, asset, i18n, and utility scripts
@@ -319,7 +319,7 @@ Important access rules in the current runtime:
 - accountant is primarily read-only for booking operations
 - tour read access is currently admin, accountant, and tour editor
 - tour edit access is currently admin and tour editor
-- standard travel plan templates are available to admin, manager, and staff
+- standard tours are available to admin, manager, and staff
 - Keycloak user directory visibility is available to admin, manager, and accountant
 
 The access rules live in:
@@ -482,7 +482,7 @@ The CUE model is the source of truth.
 
 Important folders:
 
-- `model/json/` - file-backed content entities such as tours, ATP staff, country reference, travel plan templates
+- `model/json/` - file-backed content entities such as tours, standard tours, ATP staff, and country reference
 - `model/database/` - operational entities such as bookings, booking persons, offers, travel plans, payment documents
 - `model/api/` - transport request/response shapes and read models
 - `model/enums/` - currencies, languages, countries, roles, statuses, travel styles, payment kinds
@@ -548,7 +548,7 @@ Current persistence:
 - `content/tours/`
 - `content/atp_staff/`
 - `content/country_reference_info.json`
-- `content/travel_plan_templates/`
+- `content/standard_tours/`
 
 PostgreSQL exists in the compose stack for Keycloak. The application booking/tour/content data is currently still file-backed.
 
@@ -569,8 +569,8 @@ Backend workspace pages:
 - `booking.html` - booking detail workspace
 - `marketing_tours.html` - tour list
 - `marketing_tour.html` - tour editor
-- `standard-travel-plans.html` - template list
-- `standard-travel-plan.html` - template editor
+- `standard-tours.html` - standard tour list
+- `standard-tour.html` - standard tour editor
 - `settings.html` - reports and settings
 - `traveler-details.html` - traveler-facing details flow
 
@@ -640,13 +640,13 @@ Important files:
 - `backend/app/src/domain/travel_plan.js`
 - `backend/app/src/lib/travel_plan_pdf.js`
 
-Standard travel plans are reusable templates:
+Standard tours are reusable tour definitions:
 
-- created from an existing booking travel plan
+- maintained directly as reusable travel-plan content
 - stored independently from bookings
 - draft, published, archived lifecycle
-- published templates can be applied to a booking by copy
-- templates are not live-linked after apply
+- published standard tours can be applied to a booking by copy
+- standard tours are not live-linked after apply
 
 ### Financial Flow
 
@@ -917,7 +917,7 @@ These limitations are acceptable only while they remain explicit and aligned wit
 - Payment document: request or receipt PDF generated from the payment flow.
 - Accepted commercial snapshot: frozen offer/payment terms used for later payment documents.
 - Travel plan: booking-owned structured itinerary.
-- Standard travel plan: reusable template copied into bookings.
+- Standard tour: reusable tour definition copied into bookings.
 - Tour: marketing catalog item shown on the public website when published.
 - Country reference: country-level operational information and public destination visibility.
 - Backend UI language: language used by ATP staff in backend chrome and authoring.

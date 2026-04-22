@@ -1,6 +1,6 @@
 import {
-  travelPlanTemplateDetailRequest,
-  travelPlanTemplateUpdateRequest
+  standardTourDetailRequest,
+  standardTourUpdateRequest
 } from "../../Generated/API/generated_APIRequestFactory.js";
 import { GENERATED_APP_ROLES } from "../../Generated/Models/generated_Roles.js";
 import {
@@ -14,7 +14,7 @@ import { createBookingStyleDirtyBarController } from "../shared/booking_style_di
 import {
   COUNTRY_CODE_OPTIONS
 } from "../shared/generated_catalogs.js";
-import { createStandardTravelPlanEditor } from "../shared/standard_travel_plan_editor.js";
+import { createStandardTourEditor } from "../shared/standard_tour_editor.js";
 import {
   backendT,
   getBackendApiBase,
@@ -47,10 +47,10 @@ const els = {
   homeLink: document.getElementById("backendHomeLink"),
   logoutLink: document.getElementById("backendLogoutLink"),
   userLabel: document.getElementById("backendUserLabel"),
-  heading: document.getElementById("standardTravelPlanHeading"),
-  subtitle: document.getElementById("standardTravelPlanSubtitle"),
-  error: document.getElementById("standardTravelPlanError"),
-  form: document.getElementById("standardTravelPlanForm"),
+  heading: document.getElementById("standardTourHeading"),
+  subtitle: document.getElementById("standardTourSubtitle"),
+  error: document.getElementById("standardTourError"),
+  form: document.getElementById("standardTourForm"),
   backBtn: document.getElementById("backToBackend"),
   dirtyBar: document.getElementById("booking_dirty_bar"),
   dirtyBarTitle: document.getElementById("booking_dirty_bar_title"),
@@ -58,8 +58,8 @@ const els = {
   discardEditsBtn: document.getElementById("booking_discard_edits_btn"),
   saveEditsBtn: document.getElementById("booking_save_edits_btn"),
   saveErrorHint: document.getElementById("booking_save_error_hint"),
-  titleInput: document.getElementById("standardTravelPlanTitleInput"),
-  destinationsInput: document.getElementById("standardTravelPlanDestinationsInput"),
+  titleInput: document.getElementById("standardTourTitleInput"),
+  destinationsInput: document.getElementById("standardTourDestinationsInput"),
   travel_plan_panel: document.getElementById("travel_plan_panel"),
   travel_plan_panel_summary: document.getElementById("travel_plan_panel_summary"),
   travel_plan_editor: document.getElementById("travel_plan_editor"),
@@ -134,7 +134,7 @@ function renderDestinationChoices() {
   els.destinationsInput.innerHTML = DESTINATION_COUNTRY_OPTIONS.map((option) => {
     const value = escapeHtml(option.value);
     const label = escapeHtml(option.label || option.value);
-    const inputId = `standard_travel_plan_destination_${String(option.value || "").toLowerCase()}`;
+    const inputId = `standard_tour_destination_${String(option.value || "").toLowerCase()}`;
     return `
       <label class="filter-checkbox-option" for="${escapeHtml(inputId)}">
         <input id="${escapeHtml(inputId)}" type="checkbox" value="${value}" />
@@ -179,10 +179,10 @@ function sameStringList(left, right) {
 function dirtySectionLabels() {
   const labels = [];
   if (normalizeText(els.titleInput?.value) !== normalizeText(state.template?.title)) {
-    labels.push(backendT("backend.standard_travel_plans.form.title", "Title"));
+    labels.push(backendT("backend.standard_tours.form.title", "Title"));
   }
   if (!sameStringList(selectedDestinationValues(), state.template?.destinations || [])) {
-    labels.push(backendT("backend.standard_travel_plans.form.destinations", "Destinations"));
+    labels.push(backendT("backend.standard_tours.form.destinations", "Destinations"));
   }
   if (state.travelPlanDirty) {
     labels.push(backendT("booking.travel_plan", "Travel plan"));
@@ -219,11 +219,11 @@ const dirtyBarController = createBookingStyleDirtyBarController({
     discardEdits();
   },
   onBack: () => {
-    window.location.href = withBackendLang("/standard-travel-plans.html");
+    window.location.href = withBackendLang("/standard-tours.html");
   }
 });
 
-const travelPlanEditor = createStandardTravelPlanEditor({
+const travelPlanEditor = createStandardTourEditor({
   state,
   els,
   apiOrigin,
@@ -237,12 +237,12 @@ init();
 
 async function init() {
   if (!state.id) {
-    showError(backendT("backend.standard_travel_plans.missing_id", "Missing standard travel plan id."));
+    showError(backendT("backend.standard_tours.missing_id", "Missing standard tour id."));
     return;
   }
 
   const chrome = await initializeBackendPageChrome({
-    currentSection: "standard-travel-plans",
+    currentSection: "standard-tours",
     homeLink: els.homeLink,
     refreshNav: refreshBackendNavElements
   });
@@ -257,10 +257,10 @@ async function init() {
       canEditTemplates: hasAnyRoleInList(roles, ROLES.TOUR_EDITOR)
     }),
     hasPageAccess: (permissions) => permissions.canReadTemplates,
-    logKey: "backend-standard-travel-plan",
-    pageName: "standard-travel-plan.html",
+    logKey: "backend-standard-tour",
+    pageName: "standard-tour.html",
     expectedRolesAnyOf: [ROLES.TOUR_EDITOR],
-    likelyCause: "The user is authenticated in Keycloak but does not have the atp_tour_editor role required to access standard travel plans."
+    likelyCause: "The user is authenticated in Keycloak but does not have the atp_tour_editor role required to access standard tours."
   });
 
   state.authUser = authState.authUser;
@@ -278,7 +278,7 @@ async function init() {
   travelPlanEditor.bind();
 
   if (!state.permissions.canReadTemplates) {
-    showError(backendT("backend.standard_travel_plans.forbidden", "You do not have access to standard travel plans."));
+    showError(backendT("backend.standard_tours.forbidden", "You do not have access to standard tours."));
     return;
   }
 
@@ -307,17 +307,17 @@ async function loadTemplate() {
   state.pageDirtyBarStatus = "";
   state.pageSaveActionError = "";
   updatePageDirtyBar();
-  const request = travelPlanTemplateDetailRequest({
+  const request = standardTourDetailRequest({
     baseURL: apiOrigin,
-    params: { template_id: state.id }
+    params: { standard_tour_id: state.id }
   });
   const payload = await fetchApi(withBackendApiLang(request.url), {
     method: request.method
   });
-  if (!payload?.template) {
+  if (!payload?.standard_tour) {
     return;
   }
-  applyTemplate(payload.template);
+  applyTemplate(payload.standard_tour);
 }
 
 function applyTemplate(template) {
@@ -329,13 +329,13 @@ function applyTemplate(template) {
     travel_plan_translation_status: {}
   };
   if (els.heading) {
-    els.heading.textContent = normalizeText(template?.title) || backendT("backend.standard_travel_plans.detail_heading", "Standard travel plan");
+    els.heading.textContent = normalizeText(template?.title) || backendT("backend.standard_tours.detail_heading", "Standard tour");
   }
   if (els.subtitle) {
     const destinations = Array.isArray(template?.destinations) ? template.destinations : [];
     els.subtitle.textContent = destinations.length
       ? destinations.join(" · ")
-      : backendT("backend.standard_travel_plans.detail_subtitle", "Edit title, destinations, and travel plan.");
+      : backendT("backend.standard_tours.detail_subtitle", "Edit title, destinations, and travel plan.");
   }
   if (els.titleInput) {
     els.titleInput.value = normalizeText(template?.title);
@@ -362,7 +362,7 @@ async function saveTemplate() {
   state.pageSaveActionError = "";
   const title = normalizeText(els.titleInput?.value);
   if (!title) {
-    state.pageSaveActionError = backendT("backend.standard_travel_plans.validation.title_required", "Title is required.");
+    state.pageSaveActionError = backendT("backend.standard_tours.validation.title_required", "Title is required.");
     updatePageDirtyBar();
     els.titleInput?.focus?.();
     return;
@@ -370,7 +370,7 @@ async function saveTemplate() {
 
   const travelPlanResult = travelPlanEditor.collectPayload({ focusFirstInvalid: true });
   if (!travelPlanResult.ok) {
-    state.pageSaveActionError = travelPlanResult.error || backendT("backend.standard_travel_plans.validation.travel_plan_invalid", "Travel plan is invalid.");
+    state.pageSaveActionError = travelPlanResult.error || backendT("backend.standard_tours.validation.travel_plan_invalid", "Travel plan is invalid.");
     updatePageDirtyBar();
     return;
   }
@@ -379,9 +379,9 @@ async function saveTemplate() {
   state.pageDirtyBarStatus = "";
   updatePageDirtyBar();
 
-  const request = travelPlanTemplateUpdateRequest({
+  const request = standardTourUpdateRequest({
     baseURL: apiOrigin,
-    params: { template_id: state.id },
+    params: { standard_tour_id: state.id },
     body: {
       title,
       destinations: selectedDestinationValues(),
@@ -395,8 +395,8 @@ async function saveTemplate() {
 
   state.saving = false;
   updatePageDirtyBar();
-  if (!payload?.template) return;
-  applyTemplate(payload.template);
+  if (!payload?.standard_tour) return;
+  applyTemplate(payload.standard_tour);
   state.pageDirtyBarStatus = "saved";
   state.pageSaveActionError = "";
   updatePageDirtyBar();

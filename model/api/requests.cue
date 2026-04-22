@@ -215,15 +215,14 @@ import (
 	actor?:                               string
 }
 
-#TravelPlanTemplateUpsertRequest: {
-	title?:       string
+#StandardTourUpsertRequest: {
+	title?: string
 	destinations?: [...enums.#CountryCode]
-	source_booking_id?: common.#Identifier
-	travel_plan?:       databaseModel.#BookingTravelPlan
-	actor?:             string
+	travel_plan?: databaseModel.#BookingTravelPlan
+	actor?:       string
 }
 
-#BookingTravelPlanTemplateApplyRequest: {
+#BookingStandardTourApplyRequest: {
 	expected_travel_plan_revision?: >=0 & int
 	actor?:                         string
 }
@@ -306,8 +305,8 @@ import (
 #AtpStaffProfileUpdateRequest: {
 	languages: [...enums.#LanguageCode]
 	destinations?: [...enums.#CountryCode]
-	name?: string
-	position?:  string
+	name?:     string
+	position?: string
 	position_i18n?: [...jsonModel.#AtpStaffLocalizedTextEntry]
 	friendly_short_name?:      string
 	team_order?:               int | null
@@ -364,8 +363,8 @@ import (
 	seasonality_end_month?:   enums.#MonthCode
 	short_description?:       string
 	short_description_i18n?: [string]: string
-	pictures?:                [...string]
-	image?:                   string
+	pictures?: [...string]
+	image?: string
 }
 
 #TourTranslateFieldsRequest: #TranslationEntriesRequest
