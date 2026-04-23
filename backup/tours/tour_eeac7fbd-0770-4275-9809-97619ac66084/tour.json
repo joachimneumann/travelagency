@@ -7,7 +7,7 @@
     "zh": "沙巴 - Tam Dao - 河内 - 宁平",
     "ja": "サパ - タムダオ - ハノイ - ニンビン",
     "ko": "사파 - 땀다오 - 하노이 - 닌빈",
-    "vi": "Sapa- Tam Đảo- Hà Nội- Ninh Bình",
+    "vi": "Sapa - Tam Đảo - Hà Nội - Ninh Bình",
     "ms": "Sapa - Tam Dao - Hanoi - Ninh Binh",
     "de": "Sapa – Tam Dao – Hanoi – Ninh Binh",
     "es": "Sapa - Tam Dao - Hanói - Ninh Binh",
@@ -52,10 +52,10 @@
   "seasonality_start_month": "",
   "seasonality_end_month": "",
   "priority": 100,
-  "image": "/public/v1/tour-images/tour_eeac7fbd-0770-4275-9809-97619ac66084/tour_eeac7fbd-0770-4275-9809-97619ac66084.webp?v=2026-04-09T08%3A24%3A37.933Z",
+  "image": "/public/v1/tour-images/tour_eeac7fbd-0770-4275-9809-97619ac66084/tour_eeac7fbd-0770-4275-9809-97619ac66084.webp?v=2026-04-22T16%3A03%3A17.727Z",
   "created_at": "2026-04-09T03:29:39.112Z",
-  "updated_at": "2026-04-22T16:03:17.727Z",
+  "updated_at": "2026-04-23T01:22:03.379Z",
   "pictures": [
-    "/public/v1/tour-images/tour_eeac7fbd-0770-4275-9809-97619ac66084/tour_eeac7fbd-0770-4275-9809-97619ac66084.webp?v=2026-04-09T08%3A24%3A37.933Z"
+    "/public/v1/tour-images/tour_eeac7fbd-0770-4275-9809-97619ac66084/tour_eeac7fbd-0770-4275-9809-97619ac66084.webp?v=2026-04-22T16%3A03%3A17.727Z"
   ]
 }
