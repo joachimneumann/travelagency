@@ -1375,6 +1375,7 @@ function formatActiveFilterValue(values, kind) {
 
 function updateBookingModalTitle() {
   if (!els.bookingTitle) return;
+  const selectedTourTitle = normalizeText(state.selectedTour?.title);
   const dest = state.filters.dest;
   const style = state.filters.style;
   const destLabel = formatActiveFilterValue(dest, "destination");
@@ -1382,7 +1383,11 @@ function updateBookingModalTitle() {
   const styleLower = String(styleLabel || "").toLowerCase();
 
   let title = frontendT("modal.title.default", "Plan your trip with AsiaTravelPlan");
-  if (dest.length && style.length) {
+  if (selectedTourTitle) {
+    title = frontendT("modal.title.selected_tour", "Plan your trip with us: {tourTitle}", {
+      tourTitle: selectedTourTitle
+    });
+  } else if (dest.length && style.length) {
     title = frontendT("modal.title.destination_style", "Plan your {styleLower} tour in {destination}", {
       styleLower,
       destination: destLabel

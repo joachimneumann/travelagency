@@ -869,6 +869,11 @@
     "origin": "legacy",
     "updated_at": "2026-04-02T15:09:12.387Z"
   },
+  "modal.title.selected_tour": {
+    "source_hash": "18df75708a0603e2fa001b89caa9f9cda70d5109e81d0c0969643041ee15bc47",
+    "origin": "machine",
+    "updated_at": "2026-04-23T18:25:58.607Z"
+  },
   "modal.title.destination": {
     "source_hash": "8790aab9c41f954650346c6aafce0150ee29fb80723ef166812de7bf69c0c3da",
     "origin": "legacy",
@@ -885,9 +890,9 @@
     "updated_at": "2026-04-02T15:09:12.387Z"
   },
   "modal.intro": {
-    "source_hash": "77e5a36d9c88fb1c8f8b92a89c45c47d7ab336d53a7da9eb1e47de8b0a7d2db9",
-    "origin": "legacy",
-    "updated_at": "2026-04-02T15:09:12.387Z"
+    "source_hash": "98ae3260a381ac4befea0f29fffea24551124b1f766ece4274334649591a751b",
+    "origin": "machine",
+    "updated_at": "2026-04-23T18:25:58.607Z"
   },
   "modal.step1.month": {
     "source_hash": "268d1203168117d98ec79acd3d979b991986646a92b7abcefe12bf478ce40be7",
