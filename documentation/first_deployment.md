@@ -1,18 +1,45 @@
-# First Deployment
+# First Deployment Migration Plan
+
+Status: pending migration plan, not current production state.
 
 This plan covers the first production deployment after removing the temporary
 placeholder page. The target behavior is that `https://asiatravelplan.com/`
 serves the real public homepage from `frontend/pages/index.html`, matching
 staging, and no deploy script copies files into `/srv/placeholder`.
 
-## Current Target State
+## Current Placeholder State
+
+Before this migration, production still uses the placeholder setup:
+
+- `https://asiatravelplan.com/` serves the placeholder bundle from
+  `/srv/placeholder`.
+- `/placeholder-assets/*` is public.
+- `/app-home.html` serves the real homepage only after the temporary
+  `/production-access/check` forward-auth check.
+- production deploy wrappers still call
+  `scripts/deploy/deploy_static_website.sh`.
+- `docker-compose.caddy.yml` mounts `/srv/placeholder:/placeholder:ro`.
+
+Do not use this document as a normal production deploy checklist until the
+migration has been implemented and validated.
+
+## Target State After Migration
 
 - Production checkout: `/srv/asiatravelplan`
 - Staging checkout: `/srv/asiatravelplan-staging`
 - Public Caddy runtime root: `/srv/asiatravelplan-public`
 - Production app root mounted in Caddy as `/production-app`
 - Public homepage source: `frontend/pages/index.html`
-- Placeholder bundle: removed
+- Public metadata is served from the real site root:
+  - `site.webmanifest`
+  - `robots.txt`
+  - `sitemap.xml`
+- Placeholder bundle: removed from the repository
+- Placeholder runtime directory: no longer mounted or updated
+- `/placeholder-assets/*`: returns `404`
+- `/app-home.html`: redirects to `/` or returns `404`, based on the compatibility
+  decision made before deployment
+- `/production-access/check`: removed only after Caddy no longer references it
 
 ## Branch And Release Model
 
@@ -38,45 +65,96 @@ Normal flow:
 This keeps `main` moving forward while still giving production a precise,
 auditable release marker.
 
+## Compatibility Decision
+
+Choose the `/app-home.html` behavior before implementation:
+
+- Preferred first public rollout behavior: redirect `/app-home.html` to `/`.
+- Strict cleanup behavior: return `404` for `/app-home.html`.
+
+If `/production-access/check` is removed in the same release, deploy the updated
+Caddy configuration before restarting the backend. The safer alternative is to
+keep the backend route for one compatibility release, remove all Caddy references
+to it, smoke-test production, and delete the backend route in a follow-up release.
+
 ## Implementation Plan
 
 1. Update production Caddy routing.
-   - Serve `/` and `/index.html` from `/production-app/frontend/pages/index.html`.
+   - Serve `/` and `/index.html` from
+     `/production-app/frontend/pages/index.html`.
+   - Serve `/404.html` from `/production-app/frontend/pages/404.html`.
    - Keep backend HTML pages served from `/production-app/frontend/pages`.
-   - Keep static assets served from `/production-app`.
+   - Keep only the expected public static paths served from `/production-app`.
+   - Keep `/auth/*`, `/api/*`, `/public/v1/*`, and `/integrations/*` proxied to
+     the production backend.
+   - Keep `/keycloak/*` proxied to production Keycloak.
    - Remove `/placeholder` as the production root.
    - Remove `/placeholder-assets/*`.
-   - Remove the temporary authenticated `/app-home.html` route.
-   - Optionally keep `/app-home.html` as a redirect to `/` for old links.
+   - Remove the temporary authenticated `/app-home.html` route, or keep it only
+     as a redirect to `/`.
 
-2. Remove placeholder mounts.
+2. Make Caddy file serving allowlisted.
+   - Do not set `root * /production-app` with a broad final `file_server`.
+   - Use explicit matchers for public static paths such as `/assets/*`,
+     `/shared/*`, `/frontend/scripts/*`, `/frontend/data/*`,
+     `/frontend/Generated/*`, `/site.webmanifest`, `/robots.txt`, and
+     `/sitemap.xml`.
+   - Use explicit matchers for public HTML pages.
+   - End the production site block with a `404` response for unmatched paths.
+   - Keep `hide` rules for sensitive repo paths wherever `file_server` is used.
+   - Confirm these paths return `404`: `/.env`, `/.git/config`,
+     `/backend/app/src/server.js`, `/deploy/Caddyfile`, and
+     `/documentation/first_deployment.md`.
+
+3. Remove placeholder mounts.
    - Remove `/srv/placeholder:/placeholder:ro` from `docker-compose.caddy.yml`.
    - Remove the same stale mount from `docker-compose.staging.yml` if it is no
      longer needed.
 
-3. Stop publishing the placeholder bundle.
-   - Remove calls to `scripts/deploy/deploy_static_website.sh` from production
-     deploy wrappers.
+4. Stop publishing the placeholder bundle.
+   - Remove calls to `scripts/deploy/deploy_static_website.sh` from all
+     production deploy wrappers.
    - Retire or delete `scripts/deploy/deploy_static_website.sh`.
    - Ensure `./deploy_frontend` on `/srv/asiatravelplan` only regenerates
      homepage assets and does not copy anything into `/srv/placeholder`.
 
-4. Delete placeholder artifacts.
-   - Remove the `production/` placeholder bundle.
-   - Keep required public metadata in the real site root:
-     - `site.webmanifest`
-     - `robots.txt`
-     - `sitemap.xml`
+5. Define the new wrapper behavior.
+   - `scripts/production/deploy_production_frontend.sh` should run
+     `node scripts/assets/generate_public_homepage_assets.mjs`, verify
+     `frontend/data/generated/homepage/public-homepage-main.bundle.js`, and exit.
+   - `scripts/production/deploy_production_backend_frontend.sh` should run the
+     backend update path and reload Caddy if routing changed. It must not publish
+     the placeholder bundle.
+   - `scripts/production/deploy_production_all.sh` should run
+     `scripts/deploy/update_production.sh all` and
+     `scripts/production/deploy_production_caddy.sh`. It must not call
+     `scripts/deploy/deploy_static_website.sh`.
+   - Avoid duplicating homepage asset generation unless the duplicate run is
+     intentional and harmless.
 
-5. Remove the temporary app-home auth flow.
-   - Remove `/production-access/check` from backend routes.
+6. Move or recreate public metadata.
+   - Keep the real root `site.webmanifest`.
+   - Move or recreate `robots.txt` and `sitemap.xml` outside the `production/`
+     placeholder bundle before deleting `production/`.
+   - Verify manifest icon paths point to real production app assets, not
+     `placeholder-assets/*`.
+
+7. Delete placeholder artifacts.
+   - Remove the `production/` placeholder bundle after metadata has been moved.
+   - Remove stale references to `Coming Soon`, `placeholder-assets`, and
+     `/srv/placeholder` from active code, config, and scripts.
+
+8. Remove the temporary app-home auth flow.
+   - Remove `/production-access/check` from backend routes after Caddy no longer
+     references it.
    - Remove `handleProductionAccessCheck` and its handler wiring.
    - Remove tests that assert the temporary route exists.
-   - Remove `app-home.html` checks from homepage JavaScript.
-   - Regenerate homepage assets so generated bundles do not contain
-     `app-home.html`.
+   - Remove `app-home.html` checks from homepage JavaScript unless
+     `/app-home.html` remains as a compatibility alias.
+   - Regenerate homepage assets so generated bundles do not contain stale
+     `app-home.html` logic.
 
-6. Update documentation.
+9. Update related documentation.
    - Rewrite `documentation/backend/create_production.md` so it describes the
      real production setup, not the temporary placeholder rollout.
    - Update `scripts/README.md` so production frontend deploy no longer says it
@@ -92,6 +170,8 @@ node --test backend/app/test/source-integrity.test.js
 node --test backend/app/test/http_routes.test.js
 node --test backend/app/test/i18n_integrity.test.js
 node --check frontend/scripts/main.js
+node scripts/assets/generate_public_homepage_assets.mjs
+node --check frontend/data/generated/homepage/public-homepage-main.bundle.js
 git diff --check
 ```
 
@@ -107,23 +187,21 @@ docker run --rm \
 Run a leftover scan:
 
 ```bash
-rg -n "app-home|placeholder-assets|/srv/placeholder|/placeholder|production-access|deploy_static_website" .
+rg -n "app-home|placeholder-assets|/srv/placeholder|/placeholder|production-access|deploy_static_website|Coming Soon" .
 ```
 
-Only expected matches should remain. Ideally there should be none outside this
-deployment note and historical documentation.
+Only expected matches should remain. After the cleanup release, there should be
+no matches outside this migration note and historical documentation.
 
-## Production Deploy Sequence
-
-After the implementation is merged into the production checkout:
+Run an exposure scan on the Caddyfile and review every production `file_server`
+block:
 
 ```bash
-cd /srv/asiatravelplan
-git fetch origin
-git pull --ff-only
-./scripts/deploy/update_production.sh all
-./scripts/production/deploy_production_caddy.sh
+rg -n "root \* /production-app|file_server|respond 404|hide " deploy/Caddyfile
 ```
+
+The production site must not have a catch-all `file_server` rooted at
+`/production-app`.
 
 ## Production Tags
 
@@ -167,6 +245,40 @@ Operational rule:
 - do not move or reuse production tags after pushing them.
 - rollback means deploying an older production tag, not editing the tag.
 
+## Production Deploy Sequence
+
+Before changing public routing, preserve the current runtime Caddy files:
+
+```bash
+cd /srv/asiatravelplan-public
+cp deploy/Caddyfile deploy/Caddyfile.before-public-homepage
+cp docker-compose.caddy.yml docker-compose.caddy.yml.before-public-homepage
+```
+
+After the implementation is merged, tagged, and staging has been validated:
+
+```bash
+cd /srv/asiatravelplan
+git fetch origin --tags
+git checkout main
+git pull --ff-only
+test "$(git rev-parse HEAD)" = "$(git rev-parse production-2026-04-22-1)"
+
+node scripts/assets/generate_public_homepage_assets.mjs
+./scripts/production/deploy_production_caddy.sh
+./scripts/deploy/update_production.sh all
+```
+
+This order switches Caddy away from `/app-home.html` before the backend is
+restarted without the temporary `/production-access/check` route. If the backend
+route is intentionally kept for one compatibility release, the normal order is
+also acceptable:
+
+```bash
+./scripts/deploy/update_production.sh all
+./scripts/production/deploy_production_caddy.sh
+```
+
 If the frontend-only wrapper remains, it should be safe to run:
 
 ```bash
@@ -183,29 +295,79 @@ After deploy, verify:
 curl -I https://asiatravelplan.com/
 curl -I https://asiatravelplan.com/index.html
 curl -I https://asiatravelplan.com/site.webmanifest
+curl -I https://asiatravelplan.com/robots.txt
+curl -I https://asiatravelplan.com/sitemap.xml
 curl -I https://asiatravelplan.com/assets/img/logo-asiatravelplan.svg
+curl -I https://asiatravelplan.com/shared/css/tokens.css
+curl -I https://asiatravelplan.com/frontend/data/generated/homepage/public-homepage-main.bundle.js
+curl -I https://asiatravelplan.com/public/v1/tour-images/tour_915ca398-f573-4dad-bf37-aec9f40800ca/tour_915ca398-f573-4dad-bf37-aec9f40800ca.webp
 curl -I https://asiatravelplan.com/placeholder-assets/styles.css
 curl -I https://asiatravelplan.com/app-home.html
+curl -I https://asiatravelplan.com/.env
+curl -I https://asiatravelplan.com/backend/app/src/server.js
+curl -I https://asiatravelplan.com/deploy/Caddyfile
 ```
 
 Expected results:
 
-- `/` returns the real homepage.
+- `/` returns the real homepage, not the placeholder.
 - `/index.html` returns the real homepage.
 - `/site.webmanifest` returns the real manifest.
+- `/robots.txt` and `/sitemap.xml` resolve.
 - normal assets resolve from the production app.
+- generated homepage data resolves from the production app.
+- public tour images resolve through the backend.
 - `/placeholder-assets/*` returns `404`.
-- `/app-home.html` either redirects to `/` or returns `404`, depending on the
-  chosen compatibility behavior.
+- `/app-home.html` redirects to `/` or returns `404`, depending on the chosen
+  compatibility behavior.
+- sensitive repo paths return `404`.
+
+Check the homepage body:
+
+```bash
+curl -fsSL https://asiatravelplan.com/ | rg -q "Custom Southeast Asia Holidays"
+if curl -fsSL https://asiatravelplan.com/ | rg -q "Coming Soon|placeholder-assets"; then
+  echo "Placeholder content is still present" >&2
+  exit 1
+fi
+```
+
+Check the user flow in a browser:
+
+- public homepage loads without authentication.
+- backend login button still sends staff to the Keycloak login flow.
+- after login, staff can reach the backend landing page.
+- unauthenticated visitors cannot access backend HTML pages or APIs that require
+  authentication.
 
 ## Rollback
 
-If the production homepage fails after Caddy reload:
+Preferred rollback is to deploy the previous production tag:
 
-1. Revert the Caddyfile change in `/srv/asiatravelplan`.
-2. Run `./scripts/production/deploy_production_caddy.sh`.
-3. If needed, restore the previous placeholder deployment script and rerun the
-   old static publish step.
+```bash
+cd /srv/asiatravelplan
+git fetch origin --tags
+git switch --detach production-YYYY-MM-DD-N
+./scripts/production/deploy_production_caddy.sh
+./scripts/deploy/update_production.sh all
+```
 
-This rollback only restores routing. It does not change booking or customer
-data.
+If only Caddy routing needs to be restored and the old placeholder runtime files
+still exist:
+
+```bash
+cd /srv/asiatravelplan-public
+cp deploy/Caddyfile.before-public-homepage deploy/Caddyfile
+cp docker-compose.caddy.yml.before-public-homepage docker-compose.caddy.yml
+docker compose -p asiatravelplan-public \
+  --env-file /srv/asiatravelplan/.env \
+  -f docker-compose.caddy.yml \
+  up -d caddy
+```
+
+Do not delete `/srv/placeholder` on the production host until the public homepage
+cutover has passed smoke tests and the previous production tag rollback path is
+confirmed.
+
+This rollback only restores code and routing. It does not change booking or
+customer data.
