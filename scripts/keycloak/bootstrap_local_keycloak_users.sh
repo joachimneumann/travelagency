@@ -20,10 +20,38 @@ KEYCLOAK_REALM="${KEYCLOAK_REALM:-master}"
 KEYCLOAK_ADMIN="${KEYCLOAK_ADMIN:-admin}"
 KEYCLOAK_ADMIN_PASSWORD="${KEYCLOAK_ADMIN_PASSWORD:-admin}"
 LOCAL_KEYCLOAK_STAFF_PASSWORD="${LOCAL_KEYCLOAK_STAFF_PASSWORD:-atp}"
-ATP_STAFF_JSON_PATH="${ATP_STAFF_JSON_PATH:-$ROOT_DIR/content/atp_staff/staff.json}"
+DEFAULT_ATP_STAFF_JSON_PATH="$ROOT_DIR/content/atp_staff/staff.json"
+ATP_STAFF_JSON_PATH="${ATP_STAFF_JSON_PATH:-$DEFAULT_ATP_STAFF_JSON_PATH}"
 
 TOKEN_ENDPOINT="${KEYCLOAK_BASE_URL%/}/realms/master/protocol/openid-connect/token"
 REALM_API="${KEYCLOAK_BASE_URL%/}/admin/realms/${KEYCLOAK_REALM}"
+
+resolve_default_atp_staff_json_path() {
+  if [[ -f "$DEFAULT_ATP_STAFF_JSON_PATH" ]]; then
+    printf '%s\n' "$DEFAULT_ATP_STAFF_JSON_PATH"
+    return 0
+  fi
+
+  local common_dir=""
+  common_dir="$(git -C "$ROOT_DIR" rev-parse --git-common-dir 2>/dev/null || true)"
+  if [[ -z "$common_dir" ]]; then
+    printf '%s\n' "$DEFAULT_ATP_STAFF_JSON_PATH"
+    return 0
+  fi
+
+  if [[ "$common_dir" != /* ]]; then
+    common_dir="$(cd "$ROOT_DIR/$common_dir" && pwd)"
+  fi
+
+  local common_root="${common_dir%/.git}"
+  local fallback_path="$common_root/content/atp_staff/staff.json"
+  if [[ -f "$fallback_path" ]]; then
+    printf '%s\n' "$fallback_path"
+    return 0
+  fi
+
+  printf '%s\n' "$DEFAULT_ATP_STAFF_JSON_PATH"
+}
 
 ACCESS_TOKEN="$(
   curl -sS --fail \
@@ -151,6 +179,10 @@ PY
 }
 
 ensure_staff_users_from_content() {
+  if [[ "$ATP_STAFF_JSON_PATH" == "$DEFAULT_ATP_STAFF_JSON_PATH" ]]; then
+    ATP_STAFF_JSON_PATH="$(resolve_default_atp_staff_json_path)"
+  fi
+
   if [[ ! -f "$ATP_STAFF_JSON_PATH" ]]; then
     echo "Error: ATP staff profile file not found at $ATP_STAFF_JSON_PATH" >&2
     exit 1

@@ -53,6 +53,7 @@ export function createTourHandlers(deps) {
     path.join(repoRoot, "scripts", "assets", "generate_public_homepage_assets.mjs"),
     path.join(repoRoot, "scripts", "generate_public_homepage_assets.mjs")
   ]);
+  const TOUR_REEL_VIDEO_FILENAME = "video.mp4";
   let publicHomepageAssetGenerationQueue = Promise.resolve();
 
   function nowMs() {
@@ -126,7 +127,8 @@ export function createTourHandlers(deps) {
     return {
       ...normalizeTourForRead(stored, { lang }),
       title_i18n: localizedTextareaMap(stored.title),
-      short_description_i18n: localizedTextareaMap(stored.short_description)
+      short_description_i18n: localizedTextareaMap(stored.short_description),
+      reel_video: buildTourReelVideoMeta(stored)
     };
   }
 
@@ -279,6 +281,31 @@ export function createTourHandlers(deps) {
     const tourFolder = path.resolve(toursRoot, normalizedTourId);
     if (tourFolder === toursRoot || !tourFolder.startsWith(`${toursRoot}${path.sep}`)) return "";
     return tourFolder;
+  }
+
+  function resolveTourVideoDiskPath(tourId) {
+    const folderPath = resolveTourFolderPath(tourId);
+    if (!folderPath) return "";
+    return path.join(folderPath, TOUR_REEL_VIDEO_FILENAME);
+  }
+
+  function buildTourVideoEditorPreviewUrl(tour) {
+    const tourId = normalizeText(tour?.id);
+    if (!tourId) return "";
+    const version = normalizeText(tour?.updated_at || tour?.created_at);
+    const basePath = `/api/v1/tours/${encodeURIComponent(tourId)}/video`;
+    return version ? `${basePath}?v=${encodeURIComponent(version)}` : basePath;
+  }
+
+  function buildTourReelVideoMeta(tour) {
+    const tourId = normalizeText(tour?.id);
+    if (!tourId) return null;
+    const videoPath = resolveTourVideoDiskPath(tourId);
+    if (!videoPath || !existsSync(videoPath)) return null;
+    return {
+      filename: TOUR_REEL_VIDEO_FILENAME,
+      preview_url: buildTourVideoEditorPreviewUrl(tour)
+    };
   }
 
   function tourPictureName(value) {
@@ -673,6 +700,22 @@ export function createTourHandlers(deps) {
     await sendFileWithCache(req, res, absolutePath, "public, max-age=31536000, immutable");
   }
 
+  async function handleGetTourVideo(req, res, [tourId]) {
+    const principal = getPrincipal(req);
+    if (!canReadTours(principal)) {
+      sendJson(res, 403, { error: "Forbidden" });
+      return;
+    }
+
+    const videoPath = resolveTourVideoDiskPath(tourId);
+    if (!videoPath || !existsSync(videoPath)) {
+      sendJson(res, 404, { error: "Tour video not found" });
+      return;
+    }
+
+    await sendFileWithCache(req, res, videoPath, "private, no-store");
+  }
+
   async function processTourImageToWebp(inputPath, outputPath) {
     await mkdir(path.dirname(outputPath), { recursive: true });
     await execImageMagick(execFile, [
@@ -755,6 +798,79 @@ export function createTourHandlers(deps) {
     });
   }
 
+  async function handleUploadTourVideo(req, res, [tourId]) {
+    const principal = getPrincipal(req);
+    if (!canEditTours(principal)) {
+      sendJson(res, 403, { error: "Forbidden" });
+      return;
+    }
+
+    let payload;
+    try {
+      payload = await readBodyJson(req);
+    } catch {
+      sendJson(res, 400, { error: "Invalid JSON payload" });
+      return;
+    }
+
+    const filename = normalizeText(payload.filename) || `${tourId}.upload`;
+    const base64 = normalizeText(payload.data_base64);
+    if (!base64) {
+      sendJson(res, 422, { error: "data_base64 is required" });
+      return;
+    }
+
+    const lang = requestLang(req.url);
+    const tours = (await readTours()).map((tour) => normalizeTourForStorage(tour));
+    const index = tours.findIndex((item) => item.id === tourId);
+    if (index < 0) {
+      sendJson(res, 404, { error: "Tour not found" });
+      return;
+    }
+
+    const sourceBuffer = Buffer.from(base64, "base64");
+    if (!sourceBuffer.length) {
+      sendJson(res, 422, { error: "Invalid base64 video payload" });
+      return;
+    }
+
+    const tempInputPath = path.join(TEMP_UPLOAD_DIR, `${tourId}-${randomUUID()}${path.extname(filename) || ".upload"}`);
+    const outputPath = resolveTourVideoDiskPath(tourId);
+    if (!outputPath) {
+      sendJson(res, 500, { error: "Tour storage path is invalid" });
+      return;
+    }
+
+    try {
+      await mkdir(path.dirname(outputPath), { recursive: true });
+      await writeFile(tempInputPath, sourceBuffer);
+      await execFile("bash", [
+        path.join(repoRoot, "scripts", "content", "clipVideo"),
+        tempInputPath,
+        outputPath
+      ]);
+    } catch (error) {
+      sendJson(res, 500, { error: "Video normalization failed", detail: String(error?.stderr || error?.message || error) });
+      return;
+    } finally {
+      await rm(tempInputPath, { force: true });
+    }
+
+    const current = normalizeTourForStorage(tours[index]);
+    const updated = normalizeTourForStorage({
+      ...current,
+      updated_at: nowIso()
+    });
+    tours[index] = updated;
+    await persistTour(updated);
+    const homepageAssets = await regeneratePublicHomepageAssets("tour_video_upload", { tour_id: updated.id });
+
+    sendJson(res, 200, {
+      tour: buildTourEditorResponse(updated, lang),
+      homepage_assets: homepageAssets
+    });
+  }
+
   async function handleDeleteTourPicture(req, res, [tourId, rawPictureName]) {
     const principal = getPrincipal(req);
     if (!canEditTours(principal)) {
@@ -809,6 +925,44 @@ export function createTourHandlers(deps) {
     });
   }
 
+  async function handleDeleteTourVideo(req, res, [tourId]) {
+    const principal = getPrincipal(req);
+    if (!canEditTours(principal)) {
+      sendJson(res, 403, { error: "Forbidden" });
+      return;
+    }
+
+    const lang = requestLang(req.url);
+    const tours = (await readTours()).map((tour) => normalizeTourForStorage(tour));
+    const index = tours.findIndex((item) => item.id === tourId);
+    if (index < 0) {
+      sendJson(res, 404, { error: "Tour not found" });
+      return;
+    }
+
+    const videoPath = resolveTourVideoDiskPath(tourId);
+    if (!videoPath || !existsSync(videoPath)) {
+      sendJson(res, 404, { error: "Tour video not found" });
+      return;
+    }
+
+    await rm(videoPath, { force: true });
+
+    const current = normalizeTourForStorage(tours[index]);
+    const updated = normalizeTourForStorage({
+      ...current,
+      updated_at: nowIso()
+    });
+    tours[index] = updated;
+    await persistTour(updated);
+    const homepageAssets = await regeneratePublicHomepageAssets("tour_video_delete", { tour_id: updated.id });
+
+    sendJson(res, 200, {
+      tour: buildTourEditorResponse(updated, lang),
+      homepage_assets: homepageAssets
+    });
+  }
+
   return {
     handlePublicListTours,
     handleListTours,
@@ -817,8 +971,11 @@ export function createTourHandlers(deps) {
     handleCreateTour,
     handlePatchTour,
     handleDeleteTour,
+    handleGetTourVideo,
     handlePublicTourImage,
     handleUploadTourPicture,
-    handleDeleteTourPicture
+    handleDeleteTourPicture,
+    handleUploadTourVideo,
+    handleDeleteTourVideo
   };
 }

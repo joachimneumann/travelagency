@@ -91,6 +91,54 @@
         gap: 0.75rem 1rem;
       }
 
+      .tour-reel-editor {
+        display: grid;
+        gap: 1rem;
+      }
+
+      .tour-reel-card {
+        display: grid;
+        grid-template-columns: clamp(180px, 24vw, 260px) minmax(0, 1fr) auto;
+        gap: 1rem;
+        align-items: center;
+        padding: 1rem;
+        border: 1px solid var(--line);
+        border-radius: 1rem;
+        background: var(--surface);
+      }
+
+      .tour-reel-card__preview {
+        width: 100%;
+        aspect-ratio: 9 / 16;
+        border: 1px solid var(--line);
+        border-radius: 1rem;
+        background: var(--surface-muted);
+        object-fit: cover;
+        display: block;
+      }
+
+      .tour-reel-card__meta {
+        display: grid;
+        gap: 0.35rem;
+        min-width: 0;
+      }
+
+      .tour-reel-card__name {
+        overflow-wrap: anywhere;
+        color: var(--text-strong);
+      }
+
+      .tour-reel-card__hint {
+        color: var(--text-soft);
+      }
+
+      .tour-reel-empty {
+        border: 1px dashed var(--line);
+        border-radius: 1rem;
+        padding: 1rem;
+        background: var(--surface-muted);
+      }
+
       @media (max-width: 720px) {
         .tour-picture-card {
           grid-template-columns: minmax(0, 1fr);
@@ -102,6 +150,10 @@
 
         .tour-picture-card__remove {
           justify-self: start;
+        }
+
+        .tour-reel-card {
+          grid-template-columns: minmax(0, 1fr);
         }
       }
     </style>
@@ -155,6 +207,16 @@
                     </div>
                   </div>
                   <input id="tour_picture_upload" name="tour_picture_upload" type="file" accept="image/*" multiple class="u-file-input-hidden" />
+                </div>
+                <div class="field full">
+                  <div class="tour-reel-editor">
+                    <div id="tour_reel_video_card" aria-live="polite"></div>
+                    <div class="tour-picture-toolbar">
+                      <button class="btn btn-ghost" id="tour_add_reel_btn" type="button">Upload reel video</button>
+                      <p class="micro">One reel video per tour. Uploading a new file replaces the previous reel and stores it as a normalized portrait MP4.</p>
+                    </div>
+                  </div>
+                  <input id="tour_reel_upload" name="tour_reel_upload" type="file" accept="video/*" class="u-file-input-hidden" />
                 </div>
                 <div class="field">
                   <label for="tour_seasonality_start_month" data-i18n-id="tour.seasonality_start">Seasonality Start Month</label>

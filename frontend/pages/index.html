@@ -72,17 +72,30 @@
           />
         </a>
 
-        <button
-          class="nav-toggle"
-          id="navToggle"
-          type="button"
-          aria-expanded="false"
-          aria-controls="siteNav"
-          aria-label="Open navigation"
-          data-i18n-aria-label-id="a11y.open_nav"
-        >
-          ☰
-        </button>
+        <div class="header-mobile-actions">
+          <button
+            class="reels-toggle"
+            id="mobileReelToggle"
+            type="button"
+            aria-expanded="false"
+            aria-controls="mobileReelLayer"
+            hidden
+          >
+            Reels
+          </button>
+
+          <button
+            class="nav-toggle"
+            id="navToggle"
+            type="button"
+            aria-expanded="false"
+            aria-controls="siteNav"
+            aria-label="Open navigation"
+            data-i18n-aria-label-id="a11y.open_nav"
+          >
+            ☰
+          </button>
+        </div>
 
         <nav class="nav" id="siteNav" aria-label="Main navigation" data-i18n-aria-label-id="a11y.main_nav">
           <ul class="nav-list">
@@ -357,7 +370,7 @@
     <footer class="footer">
       <div class="container footer-grid">
         <section>
-          <h3 data-i18n-id="footer.brand_title">AsiaTravelPlan</h3>
+          <h3 id="footerBrandTitle" data-i18n-id="footer.brand_title">AsiaTravelPlan</h3>
           <p data-i18n-id="footer.brand_body">Tailor-made Southeast Asia journeys planned in Vietnam, with clear scope and trusted local support.</p>
           <div id="footerBackendLoginMount"></div>
         </section>
@@ -386,16 +399,16 @@
       </div>
     </footer>
 
+    <div class="mobile-reel-layer" id="mobileReelLayer" hidden aria-hidden="true">
+      <div class="mobile-reel-feed" id="mobileReelFeed" aria-live="polite"></div>
+    </div>
+
     <section class="debug-priority-wrap" aria-label="Debug tools" data-i18n-aria-label-id="a11y.debug_tools" hidden aria-hidden="true">
       <div class="container">
         <button class="btn btn-ghost" id="debugPriorityBtn" type="button" data-i18n-id="debug.button">Debug priority</button>
         <pre class="debug-priority-output" id="debugPriorityOutput" hidden></pre>
       </div>
     </section>
-
-    <div class="mobile-cta">
-      <button class="btn btn-primary" type="button" data-open-modal data-i18n-id="mobile.cta">Book a free discovery call</button>
-    </div>
 
     <div class="modal" id="bookingModal" hidden role="dialog" aria-modal="true" aria-labelledby="bookingTitle">
       <div class="modal-panel" role="document">

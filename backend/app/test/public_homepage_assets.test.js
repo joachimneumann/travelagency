@@ -139,6 +139,7 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
   const publicToursEn = JSON.parse(await readFile(path.join(frontendDataDir, "public-tours.en.json"), "utf8"));
   const publicToursDe = JSON.parse(await readFile(path.join(frontendDataDir, "public-tours.de.json"), "utf8"));
   const publicTeam = JSON.parse(await readFile(path.join(frontendDataDir, "public-team.json"), "utf8"));
+  const publicReels = JSON.parse(await readFile(path.join(root, "frontend", "data", "generated", "reels", "public-reels.json"), "utf8"));
   const homepageCopyGlobal = await readFile(homepageCopyGlobalPath, "utf8");
   const homepageInitialBundle = await readFile(homepageInitialBundlePath, "utf8");
   const homepageHtml = await readFile(homepageHtmlPath, "utf8");
@@ -147,21 +148,24 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
   assert.equal(publicToursEn.items[0].id, "tour_alpha");
   assert.deepEqual(publicToursEn.items[0].destination_codes, ["vietnam"]);
   assert.deepEqual(publicToursEn.available_destinations, [{ code: "vietnam", label: "Vietnam" }]);
-  assert.match(publicToursEn.items[0].image, /^\/assets\/generated\/homepage\/tours\/tour_alpha\/alpha\.webp\?v=/);
+  assert.match(publicToursEn.items[0].image, /^\/assets\/generated\/homepage\/tours\/tour_alpha\/alpha\.(png|webp)\?v=/);
 
   assert.equal(publicToursDe.items[0].title, "Alpha Reise");
   assert.equal(publicToursDe.items[0].short_description, "Alpha Beschreibung");
   assert.deepEqual(publicToursDe.available_styles, [{ code: "budget", label: "Budget" }]);
+  assert.deepEqual(publicReels, { items: [] });
   assert.match(homepageCopyGlobal, /heroTitleByLang/);
   assert.match(homepageCopyGlobal, /assetUrls/);
   assert.match(homepageCopyGlobal, /public-tours\.en\.json\?v=/);
   assert.match(homepageCopyGlobal, /public-team\.json\?v=/);
+  assert.match(homepageCopyGlobal, /public-reels\.json\?v=/);
   assert.match(homepageCopyGlobal, /"en": "Private holidays in Vietnam"/);
   assert.match(homepageCopyGlobal, /"de": "Privaturlaub in Vietnam"/);
   assert.match(homepageInitialBundle, /function createFrontendToursController/);
   assert.doesNotMatch(homepageInitialBundle, /function frontendT\(/);
   assert.match(homepageInitialBundle, /const frontendT = \(id, fallback, vars\) => \{/);
   assert.match(homepageInitialBundle, /import\("\/frontend\/scripts\/main_booking_form_options\.js"\)/);
+  assert.match(homepageInitialBundle, /import\("\/frontend\/scripts\/main_reels\.js"\)/);
   assert.match(homepageInitialBundle, /import\("\/frontend\/scripts\/shared\/auth\.js"\)/);
   assert.match(homepageHtml, />Old title</);
   assert.doesNotMatch(homepageHtml, /public-homepage-copy\.manifest\.json/);
@@ -182,7 +186,8 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
   assert.match(publicTeam.items[0].picture_ref, /^\/assets\/generated\/homepage\/team\/joachim\.webp\?v=/);
   assert.equal("appears_in_team_web_page" in publicTeam.items[0], false);
 
-  const copiedTourAsset = await stat(path.join(tourOutputDir, "tour_alpha", "alpha.webp"));
+  const copiedTourAssetName = path.basename(new URL(publicToursEn.items[0].image, "https://asiatravelplan.test").pathname);
+  const copiedTourAsset = await stat(path.join(tourOutputDir, "tour_alpha", copiedTourAssetName));
   const copiedTeamAsset = await stat(path.join(teamOutputDir, "joachim.webp"));
   assert.ok(copiedTourAsset.isFile());
   assert.ok(copiedTeamAsset.isFile());
