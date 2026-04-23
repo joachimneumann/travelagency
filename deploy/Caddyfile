@@ -27,8 +27,20 @@
 }
 
 (staging_static_cache_headers) {
-  @staging_static path /assets/* /frontend/scripts/* /frontend/data/* /frontend/Generated/* /shared/* /site.webmanifest
+  @staging_static {
+    path /assets/* /frontend/scripts/* /frontend/data/* /frontend/Generated/* /shared/* /site.webmanifest
+    not path /frontend/data/generated/homepage/*
+  }
   header @staging_static Cache-Control "public, max-age=300, stale-while-revalidate=600, must-revalidate"
+}
+
+(staging_generated_homepage_no_cache_headers) {
+  @staging_generated_homepage path /frontend/data/generated/homepage/*
+  header @staging_generated_homepage {
+    Cache-Control "no-store, no-cache, must-revalidate"
+    Pragma "no-cache"
+    Expires "0"
+  }
 }
 
 (production_html_no_cache_headers) {
@@ -41,14 +53,27 @@
 }
 
 (production_static_cache_headers) {
-  @production_static path /assets/* /frontend/scripts/* /frontend/data/* /frontend/Generated/* /shared/* /site.webmanifest /robots.txt /sitemap.xml
+  @production_static {
+    path /assets/* /frontend/scripts/* /frontend/data/* /frontend/Generated/* /shared/* /site.webmanifest /robots.txt /sitemap.xml
+    not path /frontend/data/generated/homepage/*
+  }
   header @production_static Cache-Control "public, max-age=300, stale-while-revalidate=600, must-revalidate"
+}
+
+(production_generated_homepage_no_cache_headers) {
+  @production_generated_homepage path /frontend/data/generated/homepage/*
+  header @production_generated_homepage {
+    Cache-Control "no-store, no-cache, must-revalidate"
+    Pragma "no-cache"
+    Expires "0"
+  }
 }
 
 asiatravelplan.com {
   import security_headers
   import production_html_no_cache_headers
   import production_static_cache_headers
+  import production_generated_homepage_no_cache_headers
   encode zstd gzip
 
   handle_errors {
@@ -146,6 +171,7 @@ staging.asiatravelplan.com {
   import noindex_headers
   import staging_html_no_cache_headers
   import staging_static_cache_headers
+  import staging_generated_homepage_no_cache_headers
   encode zstd gzip
   root * /srv
 

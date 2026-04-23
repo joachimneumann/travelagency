@@ -3684,8 +3684,23 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
   );
   assert.match(
     stagingCaddy,
-    /@staging_static path \/assets\/\* \/frontend\/scripts\/\* \/frontend\/data\/\* \/frontend\/Generated\/\* \/shared\/\* \/site\.webmanifest/,
-    "Staging should explicitly mark frontend scripts, dictionaries, generated bundles, shared bundles, and assets as cacheable static files"
+    /@staging_static \{[\s\S]*path \/assets\/\* \/frontend\/scripts\/\* \/frontend\/data\/\* \/frontend\/Generated\/\* \/shared\/\* \/site\.webmanifest[\s\S]*not path \/frontend\/data\/generated\/homepage\/\*/,
+    "Staging should cache static frontend files while excluding generated homepage data from the static cache"
+  );
+  assert.match(
+    stagingCaddy,
+    /@production_static \{[\s\S]*path \/assets\/\* \/frontend\/scripts\/\* \/frontend\/data\/\* \/frontend\/Generated\/\* \/shared\/\* \/site\.webmanifest \/robots\.txt \/sitemap\.xml[\s\S]*not path \/frontend\/data\/generated\/homepage\/\*/,
+    "Production should cache static frontend files while excluding generated homepage data from the static cache"
+  );
+  assert.match(
+    stagingCaddy,
+    /@staging_generated_homepage path \/frontend\/data\/generated\/homepage\/\*[\s\S]*Cache-Control "no-store, no-cache, must-revalidate"/,
+    "Staging generated homepage data should bypass browser caches after tour content saves"
+  );
+  assert.match(
+    stagingCaddy,
+    /@production_generated_homepage path \/frontend\/data\/generated\/homepage\/\*[\s\S]*Cache-Control "no-store, no-cache, must-revalidate"/,
+    "Production generated homepage data should bypass browser caches after tour content saves"
   );
   assert.doesNotMatch(
     stagingCaddy,
