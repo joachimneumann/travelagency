@@ -47,3 +47,16 @@ test("buildApiRoutes includes the settings observability route", () => {
     true
   );
 });
+
+test("buildApiRoutes includes tour reel video editor routes", () => {
+  const handlers = new Proxy({}, {
+    get: () => () => {}
+  });
+
+  const routes = buildApiRoutes({ handlers });
+  const matches = (method) => routes.some((route) => route.method === method && route.pattern.test("/api/v1/tours/tour_alpha/video"));
+
+  assert.equal(matches("GET"), true);
+  assert.equal(matches("POST"), true);
+  assert.equal(matches("DELETE"), true);
+});

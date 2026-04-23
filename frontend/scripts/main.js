@@ -67,7 +67,8 @@ const state = {
   companyProfile: null,
   authStatusKnown: false,
   websiteAuthenticated: false,
-  websiteAuthenticatedUser: ""
+  websiteAuthenticatedUser: "",
+  reelsModeOpen: false
 };
 
 let lastBookingModalTrigger = null;
@@ -80,10 +81,16 @@ let tourSectionPrewarmTriggered = false;
 let teamSectionRevealObserved = false;
 let teamMembersLoadPromise = null;
 let authStatusLoadPromise = null;
+let reelsUnlockTapTimes = [];
+let reelsRuntimePromise = null;
+let reelsRuntimeInstance = null;
 
 const DEFAULT_BOOKING_CURRENCY = "USD";
 const FALLBACK_MIN_TRAVELERS = 1;
 const FALLBACK_MAX_TRAVELERS = 30;
+const REELS_UNLOCK_KEY = "asiatravelplan_reels_unlocked";
+const REELS_UNLOCK_TAP_TARGET = 5;
+const REELS_UNLOCK_WINDOW_MS = 3000;
 const MONTH_ABBREVIATION_TO_NUMBER = Object.freeze({
   jan: 1,
   feb: 2,
@@ -117,8 +124,13 @@ const API_BASE_ORIGIN = BACKEND_BASE_URL || window.location.origin;
 const PUBLIC_BOOTSTRAP_URL = `${API_BASE_ORIGIN}/public/v1/mobile/bootstrap`;
 const WEBSITE_AUTH_CACHE_KEY = "asiatravelplan_backend_auth_me_v1";
 const els = {
+  pageBody: document.body,
+  pageHeader: document.querySelector(".header"),
   navToggle: document.getElementById("navToggle"),
   siteNav: document.getElementById("siteNav"),
+  mobileReelToggle: document.getElementById("mobileReelToggle"),
+  mobileReelLayer: document.getElementById("mobileReelLayer"),
+  mobileReelFeed: document.getElementById("mobileReelFeed"),
   brandLogoLink: document.getElementById("brandLogoLink"),
   navDestinationWrap: document.getElementById("navDestinationWrap"),
   navDestinationTrigger: document.getElementById("navDestinationTrigger"),
@@ -154,6 +166,9 @@ const els = {
   tourActions: document.getElementById("tourActions"),
   showMoreTours: document.getElementById("showMoreTours"),
   toursSection: document.getElementById("tours"),
+  mainContent: document.getElementById("main-content"),
+  footerBrandTitle: document.getElementById("footerBrandTitle"),
+  pageFooter: document.querySelector(".footer"),
   debugPriorityBtn: document.getElementById("debugPriorityBtn"),
   debugPriorityOutput: document.getElementById("debugPriorityOutput"),
   noResultsMessage: document.getElementById("noResultsMessage"),
@@ -397,11 +412,13 @@ async function init() {
   });
   syncI18nManagedLabels();
   setupMobileNav();
+  setupReelsUnlock();
+  setupReelsToggle();
   setupFAQ();
   setupTeamSection();
   setupFooterCompanyProfile();
   setupBackendLogin();
-  setupHiddenBackendQuickLogin();
+  setupBrandLogoLinkBehavior();
   applyWebsiteAuthState({ authenticated: false, user: "", known: false });
   primeBackendLoginFromCache();
   revealBackendLogin();
@@ -520,6 +537,178 @@ function generatedHomepageAssetUrls() {
 
 function publicTeamDataUrl() {
   return normalizeText(generatedHomepageAssetUrls()?.team) || "/frontend/data/generated/homepage/public-team.json";
+}
+
+function publicReelsDataUrl() {
+  return normalizeText(generatedHomepageAssetUrls()?.reels) || "/frontend/data/generated/reels/public-reels.json";
+}
+
+function isReelsUnlocked() {
+  try {
+    return window.sessionStorage.getItem(REELS_UNLOCK_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function setReelsUnlocked(value) {
+  try {
+    if (value) {
+      window.sessionStorage.setItem(REELS_UNLOCK_KEY, "1");
+    } else {
+      window.sessionStorage.removeItem(REELS_UNLOCK_KEY);
+    }
+  } catch {
+    // Ignore sessionStorage failures and leave reels hidden.
+  }
+}
+
+function reelsButtonDefaultLabel() {
+  return frontendT("reels.button", "Reels");
+}
+
+function reelsButtonCloseLabel() {
+  return "X";
+}
+
+function setReelsButtonActive(isActive) {
+  if (!els.mobileReelToggle) return;
+  const active = Boolean(isActive);
+  els.mobileReelToggle.classList.toggle("is-active", active);
+  els.mobileReelToggle.setAttribute("aria-expanded", String(active));
+  els.mobileReelToggle.textContent = active ? reelsButtonCloseLabel() : reelsButtonDefaultLabel();
+  els.mobileReelToggle.setAttribute(
+    "aria-label",
+    active
+      ? frontendT("reels.button.close_label", "Close reels")
+      : frontendT("reels.button.open_label", "Open reels")
+  );
+}
+
+function syncReelsButtonVisibility() {
+  if (!els.mobileReelToggle) return;
+  els.mobileReelToggle.hidden = !isReelsUnlocked();
+  setReelsButtonActive(state.reelsModeOpen);
+}
+
+function syncReelsLayerOffset() {
+  if (!(els.mobileReelLayer instanceof HTMLElement)) return;
+  const headerHeight = els.pageHeader instanceof HTMLElement
+    ? Math.ceil(els.pageHeader.getBoundingClientRect().height)
+    : 0;
+  els.mobileReelLayer.style.top = `${Math.max(0, headerHeight)}px`;
+}
+
+function syncBodyScrollLock() {
+  const bookingModalOpen = Boolean(els.bookingModal && !els.bookingModal.hidden);
+  document.body.style.overflow = bookingModalOpen || state.reelsModeOpen ? "hidden" : "";
+}
+
+function setMobileNavOpen(isOpen) {
+  if (!els.navToggle || !els.siteNav) return;
+  const open = Boolean(isOpen);
+  els.siteNav.classList.toggle("open", open);
+  els.navToggle.setAttribute("aria-expanded", String(open));
+}
+
+function setMobileNavToggleDisabled(disabled) {
+  if (!els.navToggle) return;
+  const isDisabled = Boolean(disabled);
+  els.navToggle.disabled = isDisabled;
+  els.navToggle.setAttribute("aria-disabled", String(isDisabled));
+}
+
+function setReelsModeOpen(isOpen) {
+  const open = Boolean(isOpen);
+  state.reelsModeOpen = open;
+  els.pageBody?.classList.toggle("home-page--reels-open", open);
+  if (els.mobileReelLayer) {
+    els.mobileReelLayer.hidden = !open;
+    els.mobileReelLayer.setAttribute("aria-hidden", open ? "false" : "true");
+  }
+  if (open) {
+    setMobileNavOpen(false);
+  }
+  setMobileNavToggleDisabled(open);
+  setReelsButtonActive(open);
+  syncReelsLayerOffset();
+  syncBodyScrollLock();
+}
+
+function registerReelsUnlockTap() {
+  const now = Date.now();
+  reelsUnlockTapTimes = reelsUnlockTapTimes.filter((time) => now - time <= REELS_UNLOCK_WINDOW_MS);
+  reelsUnlockTapTimes.push(now);
+  if (reelsUnlockTapTimes.length < REELS_UNLOCK_TAP_TARGET) return;
+  reelsUnlockTapTimes = [];
+  setReelsUnlocked(true);
+  syncReelsButtonVisibility();
+}
+
+function setupReelsUnlock() {
+  syncReelsButtonVisibility();
+  if (!(els.footerBrandTitle instanceof HTMLElement) || els.footerBrandTitle.dataset.reelsUnlockBound === "1") return;
+  els.footerBrandTitle.dataset.reelsUnlockBound = "1";
+  els.footerBrandTitle.addEventListener("click", registerReelsUnlockTap);
+}
+
+function loadReelsRuntime() {
+  if (!reelsRuntimePromise) {
+    reelsRuntimePromise = import("/frontend/scripts/main_reels.js")
+      .catch((error) => {
+        reelsRuntimePromise = null;
+        throw error;
+      });
+  }
+  return reelsRuntimePromise;
+}
+
+async function ensureReelsRuntime() {
+  if (reelsRuntimeInstance) return reelsRuntimeInstance;
+  const reelsModule = await loadReelsRuntime();
+  reelsRuntimeInstance = reelsModule.createReelsRuntime({
+    state,
+    els,
+    frontendT,
+    escapeHTML,
+    escapeAttr,
+    resolveLocalizedFrontendText,
+    tourDestinations,
+    publicReelsDataUrl,
+    setReelsModeOpen,
+    openBookingModalForTripId
+  });
+  return reelsRuntimeInstance;
+}
+
+function setupReelsToggle() {
+  if (!(els.mobileReelToggle instanceof HTMLButtonElement) || els.mobileReelToggle.dataset.reelsToggleBound === "1") return;
+  let toggleBusy = false;
+  els.mobileReelToggle.dataset.reelsToggleBound = "1";
+
+  els.mobileReelToggle.addEventListener("click", async () => {
+    if (els.mobileReelToggle.hidden || toggleBusy) return;
+    toggleBusy = true;
+    try {
+      const runtime = await ensureReelsRuntime();
+      if (state.reelsModeOpen) {
+        runtime.close();
+      } else {
+        await runtime.open();
+      }
+    } finally {
+      toggleBusy = false;
+    }
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape" || !state.reelsModeOpen || (els.bookingModal && !els.bookingModal.hidden)) return;
+    void ensureReelsRuntime().then((runtime) => {
+      runtime.close();
+    });
+  });
+
+  window.addEventListener("resize", syncReelsLayerOffset);
 }
 
 function resolveLocalizedStaticValue(value, lang = state.lang || currentFrontendLang()) {
@@ -861,8 +1050,9 @@ function setupMobileNav() {
   };
 
   els.navToggle.addEventListener("click", () => {
-    const isOpen = els.siteNav.classList.toggle("open");
-    els.navToggle.setAttribute("aria-expanded", String(isOpen));
+    if (els.navToggle.disabled) return;
+    const isOpen = !els.siteNav.classList.contains("open");
+    setMobileNavOpen(isOpen);
   });
 
   els.siteNav.addEventListener("click", (event) => {
@@ -1012,23 +1202,32 @@ function isLocalFrontend() {
   return window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
 }
 
-function setupHiddenBackendQuickLogin() {
-  if (!els.brandLogoLink || (!isStagingFrontend() && !isLocalFrontend())) return;
+function setupBrandLogoLinkBehavior() {
+  if (!(els.brandLogoLink instanceof HTMLElement) || els.brandLogoLink.dataset.brandLogoBound === "1") return;
+  els.brandLogoLink.dataset.brandLogoBound = "1";
 
   els.brandLogoLink.addEventListener("click", (event) => {
-    if (!event.metaKey) {
+    const allowQuickLogin = isStagingFrontend() || isLocalFrontend();
+    if (event.metaKey && allowQuickLogin) {
+      event.preventDefault();
+      event.stopPropagation();
+
+      const backendUrl = withLangUrl("/bookings.html");
+      const loginParams = new URLSearchParams({
+        return_to: backendUrl,
+        quick_login: "1"
+      });
+      window.location.href = `${BACKEND_BASE_URL}/auth/login?${loginParams.toString()}`;
       return;
     }
 
     event.preventDefault();
-    event.stopPropagation();
+    if (state.reelsModeOpen) return;
 
-    const backendUrl = withLangUrl("/bookings.html");
-    const loginParams = new URLSearchParams({
-      return_to: backendUrl,
-      quick_login: "1"
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth"
     });
-    window.location.href = `${BACKEND_BASE_URL}/auth/login?${loginParams.toString()}`;
   });
 }
 
@@ -1080,6 +1279,7 @@ async function handleFrontendLanguageChanged() {
   );
 
   syncI18nManagedLabels();
+  setReelsButtonActive(state.reelsModeOpen);
   if (bookingRuntimeLoaded()) {
     refreshLocalizedBookingFormOptions();
   }
@@ -1200,32 +1400,10 @@ function setupModal() {
   if (!els.bookingModal) return;
 
   const openModalButtons = [els.openBookingModal, ...els.openModalButtons].filter(Boolean);
-  const resolveAndOpenBookingModalFromButton = async (trigger) => {
-    await ensureBookingRuntime();
-    const tripId = trigger?.getAttribute?.("data-trip-id");
-    if (!tripId) {
-      clearSelectedTourContext();
-      await openBookingModal();
-      return;
-    }
-
-    const selected = state.trips.find((trip) => trip.id === tripId);
-    if (selected) {
-      setBookingField("bookingDestination", tourDestinations(selected));
-      setBookingField("bookingStyle", selected.styles || []);
-      setSelectedTourContext(selected);
-      await openBookingModal();
-      return;
-    }
-
-    clearSelectedTourContext();
-    await openBookingModal();
-  };
 
   openModalButtons.forEach((button) => {
     button.addEventListener("click", () => {
-      lastBookingModalTrigger = button;
-      void resolveAndOpenBookingModalFromButton(button);
+      void openBookingModalForTripId(button?.getAttribute?.("data-trip-id"), button);
     });
   });
 
@@ -1253,9 +1431,35 @@ async function openBookingModal() {
   clearBookingFeedback();
   renderFormStep();
   els.bookingModal.hidden = false;
-  document.body.style.overflow = "hidden";
+  syncBodyScrollLock();
   const firstInput = els.bookingForm.querySelector(".step.active input:not([type=\"hidden\"]), .step.active select, .step.active textarea");
   if (firstInput) firstInput.focus();
+}
+
+async function openBookingModalForTripId(tripId, trigger = null) {
+  await ensureBookingRuntime();
+  if (trigger instanceof HTMLElement) {
+    lastBookingModalTrigger = trigger;
+  }
+
+  const normalizedTripId = normalizeText(tripId);
+  if (!normalizedTripId) {
+    clearSelectedTourContext();
+    await openBookingModal();
+    return;
+  }
+
+  const selected = state.trips.find((trip) => normalizeText(trip?.id) === normalizedTripId);
+  if (selected) {
+    setBookingField("bookingDestination", tourDestinations(selected));
+    setBookingField("bookingStyle", selected.styles || []);
+    setSelectedTourContext(selected);
+    await openBookingModal();
+    return;
+  }
+
+  clearSelectedTourContext();
+  await openBookingModal();
 }
 
 function setSelectedTourContext(selectedTour) {
@@ -1286,7 +1490,7 @@ function closeBookingModal() {
     active.blur();
   }
   els.bookingModal.hidden = true;
-  document.body.style.overflow = "";
+  syncBodyScrollLock();
   if (lastBookingModalTrigger instanceof HTMLElement && document.contains(lastBookingModalTrigger)) {
     lastBookingModalTrigger.focus();
   }

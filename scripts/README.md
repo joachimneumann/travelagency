@@ -51,6 +51,7 @@ Common entry points:
 
 ./scripts/content/wipe_local_bookings.sh --yes
 ./scripts/content/wipe_staging_bookings.sh --yes
+./scripts/content/clipVideo assets/video/mountains.mp4
 
 ./scripts/i18n/translate check
 node scripts/assets/generate_public_homepage_assets.mjs
@@ -113,6 +114,10 @@ directory:
 - `/Users/joachim/projects/travelagency` -> local scripts
 - `/srv/asiatravelplan` -> production scripts
 - `/srv/asiatravelplan-staging` -> staging scripts
+
+Git worktrees attached to those repositories are treated as the same
+environment as their parent checkout. A worktree attached to
+`$HOME/projects/travelagency`, for example, dispatches to the local scripts.
 
 Use `./deploy_backend_frontend` instead of running `./deploy_backend` followed
 by `./deploy_frontend`. The combined wrapper dispatches to the environment's

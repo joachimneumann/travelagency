@@ -102,6 +102,7 @@ const state = {
   allowPageUnload: false,
   tour: null,
   pictureDraftItems: [],
+  reelVideoDraftItem: null,
   options: {
     destinations: [],
     styles: []
@@ -138,6 +139,9 @@ const els = {
   pictureList: document.getElementById("tour_picture_list"),
   addPictureBtn: document.getElementById("tour_add_picture_btn"),
   pictureUpload: document.getElementById("tour_picture_upload"),
+  reelVideoCard: document.getElementById("tour_reel_video_card"),
+  addReelVideoBtn: document.getElementById("tour_add_reel_btn"),
+  reelVideoUpload: document.getElementById("tour_reel_upload"),
   pageOverlay: document.getElementById("tour_translate_overlay"),
   pageOverlayText: document.getElementById("tour_translate_overlay_text")
 };
@@ -173,6 +177,14 @@ function captureTourFormSnapshot() {
       const file = item.file;
       return `pending:${file?.name || ""}:${file?.size || 0}:${file?.lastModified || 0}`;
     })
+  ]);
+  snapshot.push([
+    "tour_reel_video",
+    state.reelVideoDraftItem
+      ? (state.reelVideoDraftItem.kind === "stored"
+        ? `stored:${state.reelVideoDraftItem.previewUrl || state.reelVideoDraftItem.name}`
+        : `pending:${state.reelVideoDraftItem.file?.name || ""}:${state.reelVideoDraftItem.file?.size || 0}:${state.reelVideoDraftItem.file?.lastModified || 0}`)
+      : ""
   ]);
   return JSON.stringify(snapshot);
 }
@@ -338,7 +350,32 @@ function createPendingPictureDraftItem(file) {
   };
 }
 
+function createStoredReelVideoDraftItem(reelVideo) {
+  return {
+    key: `stored:${normalizeText(reelVideo?.preview_url || reelVideo?.filename || "video.mp4")}`,
+    kind: "stored",
+    name: normalizeText(reelVideo?.filename) || "video.mp4",
+    previewUrl: normalizeText(reelVideo?.preview_url)
+  };
+}
+
+function createPendingReelVideoDraftItem(file) {
+  return {
+    key: `pending:${file.name}:${file.size}:${file.lastModified}:${Math.random().toString(36).slice(2, 10)}`,
+    kind: "pending",
+    file,
+    name: file.name,
+    previewUrl: URL.createObjectURL(file)
+  };
+}
+
 function revokePictureDraftItem(item) {
+  if (item?.kind === "pending" && item.previewUrl) {
+    URL.revokeObjectURL(item.previewUrl);
+  }
+}
+
+function revokeReelVideoDraftItem(item) {
   if (item?.kind === "pending" && item.previewUrl) {
     URL.revokeObjectURL(item.previewUrl);
   }
@@ -349,14 +386,30 @@ function replacePictureDraftItems(items) {
   state.pictureDraftItems = items;
 }
 
+function replaceReelVideoDraftItem(item) {
+  revokeReelVideoDraftItem(state.reelVideoDraftItem);
+  state.reelVideoDraftItem = item || null;
+}
+
 function syncPictureDraftItemsFromTour(tour) {
   replacePictureDraftItems(normalizeTourPictures(tour).map((picture, index) => createStoredPictureDraftItem(picture, index)));
   renderTourPictures();
 }
 
+function syncReelVideoDraftItemFromTour(tour) {
+  const reelVideo = tour?.reel_video && typeof tour.reel_video === "object" ? tour.reel_video : null;
+  replaceReelVideoDraftItem(reelVideo ? createStoredReelVideoDraftItem(reelVideo) : null);
+  renderTourReelVideo();
+}
+
 function picturePreviewSrc(item) {
   if (item?.kind === "pending") return item.previewUrl;
   return absolutizeApiUrl(item?.picture || "");
+}
+
+function reelVideoPreviewSrc(item) {
+  if (item?.kind === "pending") return item.previewUrl;
+  return absolutizeApiUrl(item?.previewUrl || "");
 }
 
 function renderTourPictures() {
@@ -392,6 +445,41 @@ function renderTourPictures() {
       `;
     })
     .join("");
+}
+
+function renderTourReelVideo() {
+  if (!els.reelVideoCard) return;
+  const item = state.reelVideoDraftItem;
+  if (!item) {
+    els.reelVideoCard.innerHTML = `<div class="tour-reel-empty micro">No reel video uploaded yet.</div>`;
+    return;
+  }
+
+  const removeDisabled = !state.permissions.canEditTours ? "disabled" : "";
+  const previewSrc = reelVideoPreviewSrc(item);
+  const name = item.kind === "pending"
+    ? backendT("tour.status.selected_video", "Selected video: {file}", { file: item.name })
+    : item.name;
+  const hint = item.kind === "pending"
+    ? "This selected file will replace the stored reel video when you save."
+    : "This is the reel video currently stored for this tour.";
+  const preview = previewSrc
+    ? `<video class="tour-reel-card__preview" src="${escapeHtml(previewSrc)}" controls muted playsinline preload="metadata"></video>`
+    : `<div class="tour-reel-card__preview" aria-hidden="true"></div>`;
+  els.reelVideoCard.innerHTML = `
+    <div class="tour-reel-card">
+      <div class="tour-reel-card__frame">
+        ${preview}
+      </div>
+      <div class="tour-reel-card__meta">
+        <span class="tour-reel-card__name micro" title="${escapeHtml(name)}">${escapeHtml(name)}</span>
+        <span class="tour-reel-card__hint micro">${escapeHtml(hint)}</span>
+      </div>
+      <button class="btn btn-ghost tour-reel-card__remove" type="button" data-tour-remove-reel-video="true" ${removeDisabled}>
+        ${escapeHtml(backendT("tour.remove_reel_video", "Remove reel video"))}
+      </button>
+    </div>
+  `;
 }
 
 function buildTourTranslationEntries(sourceValues) {
@@ -761,6 +849,22 @@ async function init() {
       updateTourDirtyState();
     });
   }
+  if (els.addReelVideoBtn && els.reelVideoUpload) {
+    els.addReelVideoBtn.addEventListener("click", () => {
+      els.reelVideoUpload.click();
+    });
+  }
+  if (els.reelVideoUpload) {
+    els.reelVideoUpload.addEventListener("change", () => {
+      const [file] = Array.from(els.reelVideoUpload.files || []).filter((value) => value instanceof File);
+      if (!file) return;
+      replaceReelVideoDraftItem(createPendingReelVideoDraftItem(file));
+      renderTourReelVideo();
+      setStatus(backendT("tour.status.selected_video", "Selected video: {file}", { file: file.name }));
+      els.reelVideoUpload.value = "";
+      updateTourDirtyState();
+    });
+  }
   if (els.pictureList) {
     els.pictureList.addEventListener("click", (event) => {
       const button = event.target.closest("[data-tour-remove-picture]");
@@ -778,6 +882,16 @@ async function init() {
       }
       state.pictureDraftItems = nextItems;
       renderTourPictures();
+      updateTourDirtyState();
+    });
+  }
+  if (els.reelVideoCard) {
+    els.reelVideoCard.addEventListener("click", (event) => {
+      const button = event.target instanceof Element ? event.target.closest("[data-tour-remove-reel-video]") : null;
+      if (!button || !state.permissions.canEditTours) return;
+      event.preventDefault();
+      replaceReelVideoDraftItem(null);
+      renderTourReelVideo();
       updateTourDirtyState();
     });
   }
@@ -815,6 +929,7 @@ async function loadTour() {
   setInput("tour_seasonality_end_month", tour.seasonality_end_month || "");
   renderLocalizedTourContentEditor();
   syncPictureDraftItemsFromTour(tour);
+  syncReelVideoDraftItemFromTour(tour);
 
   renderDestinationChoices(tour_destination_codes(tour));
   renderStyleChoices(tour_style_codes(tour));
@@ -841,7 +956,8 @@ async function initializeNewTourForm() {
     short_description: "",
     short_description_i18n: {},
     pictures: [],
-    image: ""
+    image: "",
+    reel_video: null
   };
 
   state.localizedContent.title_i18n = {};
@@ -853,6 +969,7 @@ async function initializeNewTourForm() {
   setInput("tour_seasonality_end_month", "");
   renderLocalizedTourContentEditor();
   syncPictureDraftItemsFromTour(state.tour);
+  syncReelVideoDraftItemFromTour(state.tour);
   renderDestinationChoices([]);
   renderStyleChoices([]);
   applyTourPermissions();
@@ -983,6 +1100,10 @@ async function submitForm(event) {
     .filter(Boolean);
   const pendingPictures = draftPictureItems.filter((item) => item.kind === "pending");
   const removedPictures = normalizeTourPictures(state.tour).filter((picture) => !storedPictures.includes(picture));
+  const pendingReelVideo = state.reelVideoDraftItem?.kind === "pending" ? state.reelVideoDraftItem : null;
+  const storedReelVideo = state.reelVideoDraftItem?.kind === "stored" ? state.reelVideoDraftItem : null;
+  const hasStoredReelVideoOnServer = Boolean(state.tour?.reel_video);
+  const removedStoredReelVideo = !pendingReelVideo && !storedReelVideo && hasStoredReelVideoOnServer;
   state.localizedContent.title_i18n = title_i18n;
   state.localizedContent.short_description_i18n = short_description_i18n;
   const resolvedTitle = resolveLocalizedTextMapValue(title_i18n, ["vi", "en", currentTourEditingLang()]);
@@ -1104,6 +1225,37 @@ async function submitForm(event) {
       }
     }
 
+    if (pendingReelVideo) {
+      setStatus(backendT("tour.status.uploading_video", "Uploading reel video..."));
+      const base64 = await fileToBase64(pendingReelVideo.file);
+      const videoResult = await fetchApi(withApiLang(`/api/v1/tours/${encodeURIComponent(state.id)}/video`), {
+        method: "POST",
+        body: {
+          filename: pendingReelVideo.file.name,
+          data_base64: base64
+        }
+      });
+      if (!videoResult) return;
+      if (homepageAssetSyncFailed(videoResult)) {
+        finalSaveStatus = homepageAssetSyncWarningMessage();
+      }
+      if (videoResult.tour) {
+        state.tour = videoResult.tour;
+      }
+    } else if (!is_create && removedStoredReelVideo) {
+      setStatus(backendT("tour.status.removing_video", "Removing reel video..."));
+      const videoDeleteResult = await fetchApi(withApiLang(`/api/v1/tours/${encodeURIComponent(state.id)}/video`), {
+        method: "DELETE"
+      });
+      if (!videoDeleteResult) return;
+      if (homepageAssetSyncFailed(videoDeleteResult)) {
+        finalSaveStatus = homepageAssetSyncWarningMessage();
+      }
+      if (videoDeleteResult.tour) {
+        state.tour = videoDeleteResult.tour;
+      }
+    }
+
     setStatus(finalSaveStatus);
     if (is_create) {
       state.allowPageUnload = true;
@@ -1194,6 +1346,8 @@ function applyTourPermissions() {
   if (state.permissions.canEditTours) return;
   if (els.addPictureBtn) els.addPictureBtn.disabled = true;
   if (els.pictureUpload) els.pictureUpload.disabled = true;
+  if (els.addReelVideoBtn) els.addReelVideoBtn.disabled = true;
+  if (els.reelVideoUpload) els.reelVideoUpload.disabled = true;
   if (els.form) {
     els.form.querySelectorAll("input, textarea, select, button").forEach((el) => {
       if (el.id === "tour_cancel_btn") return;

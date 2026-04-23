@@ -4,26 +4,59 @@ deploy_context_root_dir() {
   cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd
 }
 
+deploy_context_git_common_dir() {
+  local root_dir="$1"
+  local common_dir=""
+
+  if ! common_dir="$(git -C "$root_dir" rev-parse --git-common-dir 2>/dev/null)"; then
+    return 0
+  fi
+
+  if [[ -z "$common_dir" ]]; then
+    return 0
+  fi
+
+  if [[ "$common_dir" != /* ]]; then
+    common_dir="$(cd "$root_dir/$common_dir" && pwd)"
+  fi
+
+  printf '%s\n' "$common_dir"
+}
+
+deploy_context_match_environment() {
+  local root_dir="$1"
+  local common_dir=""
+  common_dir="$(deploy_context_git_common_dir "$root_dir")"
+
+  if [[ "$root_dir" == "$HOME/projects/travelagency" || "$common_dir" == "$HOME/projects/travelagency/.git" ]]; then
+    printf '%s\n' local
+    return 0
+  fi
+
+  if [[ "$root_dir" == "/srv/asiatravelplan" || "$common_dir" == "/srv/asiatravelplan/.git" ]]; then
+    printf '%s\n' production
+    return 0
+  fi
+
+  if [[ "$root_dir" == "/srv/asiatravelplan-staging" || "$common_dir" == "/srv/asiatravelplan-staging/.git" ]]; then
+    printf '%s\n' staging
+    return 0
+  fi
+
+  return 1
+}
+
 deploy_context_environment() {
   local root_dir
   root_dir="$(deploy_context_root_dir)"
+  if deploy_context_match_environment "$root_dir"; then
+    return 0
+  fi
 
-  case "$root_dir" in
-    "$HOME/projects/travelagency")
-      printf '%s\n' local
-      ;;
-    /srv/asiatravelplan)
-      printf '%s\n' production
-      ;;
-    /srv/asiatravelplan-staging)
-      printf '%s\n' staging
-      ;;
-    *)
-      echo "Unsupported checkout root: $root_dir" >&2
-      echo "Supported roots: $HOME/projects/travelagency, /srv/asiatravelplan, /srv/asiatravelplan-staging" >&2
-      return 1
-      ;;
-  esac
+  echo "Unsupported checkout root: $root_dir" >&2
+  echo "Supported roots: $HOME/projects/travelagency, /srv/asiatravelplan, /srv/asiatravelplan-staging" >&2
+  echo "Git worktrees attached to those roots are also supported." >&2
+  return 1
 }
 
 deploy_context_require_root_pwd() {
@@ -108,6 +141,8 @@ This directory-aware wrapper must be run from one of these checkout roots:
   $HOME/projects/travelagency
   /srv/asiatravelplan
   /srv/asiatravelplan-staging
+
+Git worktrees attached to those checkouts are also supported.
 
 It dispatches "$component" to the existing environment-specific deploy script
 for the current checkout.

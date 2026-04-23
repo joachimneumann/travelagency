@@ -1,8 +1,10 @@
 import { createHash } from "node:crypto";
 import { copyFile, mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { execFile as execFileCallback } from "node:child_process";
 import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { promisify } from "node:util";
 import { createTourHelpers } from "../../backend/app/src/domain/tours_support.js";
 import {
   normalizeTourDestinationCode,
@@ -29,11 +31,16 @@ const ATP_STAFF_PHOTOS_ROOT = normalizeText(process.env.PUBLIC_HOMEPAGE_STAFF_PH
 const COUNTRY_REFERENCE_INFO_PATH = normalizeText(process.env.PUBLIC_HOMEPAGE_COUNTRY_REFERENCE_INFO_PATH) || path.join(CONTENT_ROOT, "country_reference_info.json");
 const GENERATED_HOMEPAGE_DATA_DIR = path.join(ROOT_DIR, "frontend", "data", "generated", "homepage");
 const GENERATED_HOMEPAGE_ASSETS_DIR = path.join(ROOT_DIR, "assets", "generated", "homepage");
+const GENERATED_REELS_DATA_DIR = path.join(ROOT_DIR, "frontend", "data", "generated", "reels");
+const GENERATED_REELS_ASSETS_DIR = path.join(ROOT_DIR, "assets", "generated", "reels");
 const FRONTEND_DATA_DIR = normalizeText(process.env.PUBLIC_HOMEPAGE_FRONTEND_DATA_DIR) || GENERATED_HOMEPAGE_DATA_DIR;
 const HOMEPAGE_ASSETS_DIR = normalizeText(process.env.PUBLIC_HOMEPAGE_ASSETS_DIR) || GENERATED_HOMEPAGE_ASSETS_DIR;
 const TOUR_OUTPUT_DIR = path.join(HOMEPAGE_ASSETS_DIR, "tours");
 const TEAM_OUTPUT_DIR = path.join(HOMEPAGE_ASSETS_DIR, "team");
 const TEAM_OUTPUT_FILE = path.join(FRONTEND_DATA_DIR, "public-team.json");
+const REELS_DATA_DIR = normalizeText(process.env.PUBLIC_REELS_FRONTEND_DATA_DIR) || GENERATED_REELS_DATA_DIR;
+const REELS_ASSETS_DIR = normalizeText(process.env.PUBLIC_REELS_ASSETS_DIR) || GENERATED_REELS_ASSETS_DIR;
+const REELS_MANIFEST_PATH = path.join(REELS_DATA_DIR, "public-reels.json");
 const HOMEPAGE_COPY_GLOBAL_PATH = path.join(FRONTEND_DATA_DIR, "public-homepage-copy.global.js");
 const HOMEPAGE_INITIAL_BUNDLE_PATH = path.join(FRONTEND_DATA_DIR, "public-homepage-main.bundle.js");
 const DEFAULT_TEAM_ORDER = 10;
@@ -42,7 +49,9 @@ const TOUR_FILE_SUFFIX = ".json";
 const ALLOWED_ASSET_EXTENSIONS = new Set([".avif", ".gif", ".jpeg", ".jpg", ".png", ".svg", ".webp"]);
 const HOMEPAGE_TOUR_IMAGE_SIZE = 720;
 const HOMEPAGE_TOUR_IMAGE_QUALITY = 68;
+const REEL_POSTER_WIDTH = 720;
 const backendAppRequire = createRequire(path.join(ROOT_DIR, "backend", "app", "package.json"));
+const execFile = promisify(execFileCallback);
 let sharpModulePromise = null;
 let hasWarnedAboutMissingSharp = false;
 
@@ -129,6 +138,17 @@ async function cleanGeneratedFrontendData(frontendDataDir) {
       || (entryName.startsWith(TOUR_FILE_PREFIX) && entryName.endsWith(TOUR_FILE_SUFFIX))
     ) {
       await rm(path.join(frontendDataDir, entryName), { force: true });
+    }
+  }
+}
+
+async function cleanGeneratedReelsData(reelsDataDir) {
+  await ensureDirectory(reelsDataDir);
+  const entries = await listDirectoryEntries(reelsDataDir);
+  for (const entry of entries) {
+    if (!entry.isFile()) continue;
+    if (entry.name === path.basename(REELS_MANIFEST_PATH)) {
+      await rm(path.join(reelsDataDir, entry.name), { force: true });
     }
   }
 }
@@ -404,6 +424,42 @@ async function writeHomepageInitialBundleScript(outputPath) {
   };
 }
 
+function resolveTourReelSourcePath(tour, toursRoot = TOURS_ROOT) {
+  const tourId = normalizeText(tour?.id);
+  if (!tourId) return "";
+  return path.join(toursRoot, tourId, "video.mp4");
+}
+
+async function extractReelPoster(sourcePath, posterPath) {
+  await ensureDirectory(path.dirname(posterPath));
+  await execFile("ffmpeg", [
+    "-y",
+    "-ss",
+    "0.3",
+    "-i",
+    sourcePath,
+    "-frames:v",
+    "1",
+    "-vf",
+    `scale=${REEL_POSTER_WIDTH}:-2:flags=lanczos`,
+    posterPath
+  ]);
+}
+
+async function probeReelDurationSeconds(sourcePath) {
+  const { stdout } = await execFile("ffprobe", [
+    "-v",
+    "error",
+    "-show_entries",
+    "format=duration",
+    "-of",
+    "default=noprint_wrappers=1:nokey=1",
+    sourcePath
+  ]);
+  const parsed = Number.parseFloat(String(stdout || "").trim());
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
 async function generateTourAssets({
   toursRoot = TOURS_ROOT,
   outputRoot = TOUR_OUTPUT_DIR,
@@ -520,7 +576,77 @@ async function generateTourAssets({
     count: publicTours.length,
     languages: languages.map((lang) => normalizeTourLang(lang)),
     heroTitleByLang,
-    assetUrlsByLang
+    assetUrlsByLang,
+    publicTours: sortedPublicTours
+  };
+}
+
+async function generateReelAssets({
+  publicTours = [],
+  toursRoot = TOURS_ROOT,
+  outputRoot = REELS_ASSETS_DIR,
+  reelsDataDir = REELS_DATA_DIR
+} = {}) {
+  await cleanGeneratedAssetDir(outputRoot);
+  await cleanGeneratedReelsData(reelsDataDir);
+
+  const items = [];
+  for (const tour of Array.isArray(publicTours) ? publicTours : []) {
+    const tourId = normalizeText(tour?.id);
+    if (!tourId) continue;
+    const sourcePath = resolveTourReelSourcePath(tour, toursRoot);
+    try {
+      const sourceStats = await stat(sourcePath);
+      if (!sourceStats.isFile()) continue;
+    } catch (error) {
+      if (error?.code === "ENOENT") continue;
+      throw error;
+    }
+
+    const videoRelativePath = path.join(tourId, "video.mp4");
+    const posterRelativePath = path.join(tourId, "poster.jpg");
+    const outputVideoPath = path.join(outputRoot, videoRelativePath);
+    const outputPosterPath = path.join(outputRoot, posterRelativePath);
+    await ensureDirectory(path.dirname(outputVideoPath));
+    await copyFile(sourcePath, outputVideoPath);
+    await extractReelPoster(outputVideoPath, outputPosterPath);
+
+    const version = normalizeText(tour?.updated_at || tour?.created_at);
+    items.push({
+      tourId,
+      videoUrl: await versionedStaticAssetPath(videoRelativePath, outputRoot, {
+        publicPrefix: "/assets/generated/reels",
+        version
+      }),
+      posterUrl: await versionedStaticAssetPath(posterRelativePath, outputRoot, {
+        publicPrefix: "/assets/generated/reels",
+        version
+      }),
+      duration: probeReelDurationSeconds(outputVideoPath)
+    });
+  }
+
+  const resolvedItems = [];
+  for (const item of items) {
+    resolvedItems.push({
+      ...item,
+      duration: await item.duration
+    });
+  }
+
+  const payload = {
+    items: resolvedItems
+  };
+  const payloadSource = jsonWithTrailingNewline(payload);
+  const payloadVersion = versionTokenForContent(payloadSource);
+  await ensureDirectory(reelsDataDir);
+  await writeFile(path.join(reelsDataDir, path.basename(REELS_MANIFEST_PATH)), payloadSource, "utf8");
+
+  return {
+    count: resolvedItems.length,
+    assetUrl: buildVersionedGeneratedDataUrl(path.basename(REELS_MANIFEST_PATH), payloadVersion, {
+      publicPrefix: "/frontend/data/generated/reels"
+    })
   };
 }
 
@@ -652,6 +778,8 @@ export async function generatePublicHomepageAssets({
   frontendDataDir = FRONTEND_DATA_DIR,
   tourOutputDir = TOUR_OUTPUT_DIR,
   teamOutputDir = TEAM_OUTPUT_DIR,
+  reelsDataDir = "",
+  reelOutputDir = "",
   frontendI18nDir = FRONTEND_I18N_DIR,
   homepageCopyGlobalPath = HOMEPAGE_COPY_GLOBAL_PATH,
   homepageInitialBundlePath = "",
@@ -659,6 +787,10 @@ export async function generatePublicHomepageAssets({
 } = {}) {
   const resolvedHomepageInitialBundlePath = normalizeText(homepageInitialBundlePath)
     || path.join(frontendDataDir, path.basename(HOMEPAGE_INITIAL_BUNDLE_PATH));
+  const resolvedReelsDataDir = normalizeText(reelsDataDir)
+    || path.resolve(frontendDataDir, "..", "reels");
+  const resolvedReelOutputDir = normalizeText(reelOutputDir)
+    || path.resolve(tourOutputDir, "..", "..", "reels");
   const resolvedStaffProfilesPath = normalizeText(staffProfilesPath)
     || (staffRoot === ATP_STAFF_ROOT ? ATP_STAFF_PROFILES_PATH : path.join(staffRoot, "staff.json"));
   const resolvedStaffPhotosRoot = normalizeText(staffPhotosRoot)
@@ -679,15 +811,22 @@ export async function generatePublicHomepageAssets({
     outputRoot: teamOutputDir,
     outputFile: path.join(frontendDataDir, "public-team.json")
   });
+  const reels = await generateReelAssets({
+    publicTours: tours.publicTours,
+    toursRoot,
+    outputRoot: resolvedReelOutputDir,
+    reelsDataDir: resolvedReelsDataDir
+  });
   const homepageCopy = await writeHomepageCopyGlobalScript(homepageCopyGlobalPath, {
     heroTitleByLang: tours.heroTitleByLang,
     assetUrls: {
       toursByLang: tours.assetUrlsByLang,
-      team: team.assetUrl
+      team: team.assetUrl,
+      reels: reels.assetUrl
     }
   });
   await writeHomepageInitialBundleScript(resolvedHomepageInitialBundlePath);
-  return { tours, team };
+  return { tours, team, reels };
 }
 
 async function runCli() {
