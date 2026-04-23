@@ -17,4 +17,5 @@ cd "$ROOT_DIR"
 
 git fetch origin
 git pull --ff-only
+"$ROOT_DIR/scripts/assets/prepare_runtime_brand_logo.sh" staging
 node "$ROOT_DIR/scripts/assets/generate_public_homepage_assets.mjs"

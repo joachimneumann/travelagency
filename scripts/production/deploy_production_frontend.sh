@@ -16,6 +16,7 @@ fi
 
 cd "$ROOT_DIR"
 echo "Generating production homepage frontend assets..."
+"$ROOT_DIR/scripts/assets/prepare_runtime_brand_logo.sh" production
 node "$ROOT_DIR/scripts/assets/generate_public_homepage_assets.mjs"
 
 if [[ ! -f "$HOMEPAGE_BUNDLE_PATH" ]]; then

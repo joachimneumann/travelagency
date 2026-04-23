@@ -7,6 +7,7 @@ load_repo_env "$ROOT_DIR"
 source "$ROOT_DIR/scripts/lib/docker_runtime.sh"
 source "$ROOT_DIR/scripts/local/local_i18n_preflight.sh"
 PUBLIC_HOMEPAGE_ASSET_GENERATOR="${PUBLIC_HOMEPAGE_ASSET_GENERATOR:-$ROOT_DIR/scripts/assets/generate_public_homepage_assets.mjs}"
+RUNTIME_BRAND_LOGO_PREPARER="${RUNTIME_BRAND_LOGO_PREPARER:-$ROOT_DIR/scripts/assets/prepare_runtime_brand_logo.sh}"
 
 FRONTEND_PORT="${FRONTEND_PORT:-8080}"
 FRONTEND_BIND="${FRONTEND_BIND:-localhost}"
@@ -49,6 +50,15 @@ generate_public_homepage_assets() {
     cd "$ROOT_DIR"
     node "$PUBLIC_HOMEPAGE_ASSET_GENERATOR"
   )
+}
+
+prepare_runtime_brand_logo() {
+  if [ ! -f "$RUNTIME_BRAND_LOGO_PREPARER" ]; then
+    echo "Error: runtime brand logo preparer not found at $RUNTIME_BRAND_LOGO_PREPARER" >&2
+    exit 1
+  fi
+
+  "$RUNTIME_BRAND_LOGO_PREPARER" local
 }
 
 stop_listeners_on_port() {
@@ -95,6 +105,7 @@ main() {
   require_cmd curl
   run_local_i18n_preflight "$ROOT_DIR"
   stop_existing_frontend
+  prepare_runtime_brand_logo
   generate_public_homepage_assets
 
   echo "Starting frontend on http://${FRONTEND_BIND}:${FRONTEND_PORT} ..."

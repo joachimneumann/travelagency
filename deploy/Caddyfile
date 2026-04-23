@@ -227,12 +227,6 @@ staging.asiatravelplan.com {
   @robots path /robots.txt
   rewrite @robots /robots-staging.txt
 
-  @staging_logo path /assets/img/logo-asiatravelplan.svg
-  handle @staging_logo {
-    rewrite * /assets/img/staging.png
-    file_server
-  }
-
   @backend path /auth/* /api/* /public/v1/* /integrations/*
   handle @backend {
     reverse_proxy host.docker.internal:8789

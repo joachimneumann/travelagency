@@ -3623,16 +3623,50 @@ test("booking travel-plan translate contract accepts explicit source and target 
 });
 
 test("backend list pages have dedicated entrypoints and are served by caddy", async () => {
+  const repoRoot = path.resolve(__dirname, "..", "..", "..");
   const frontendRoot = path.resolve(__dirname, "..", "..", "..", "frontend");
   const deployRoot = path.resolve(__dirname, "..", "..", "..", "deploy");
-  const bookingsHtml = await readFile(path.join(frontendRoot, "pages", "bookings.html"), "utf8");
-  const marketingToursHtml = await readFile(path.join(frontendRoot, "pages", "marketing_tours.html"), "utf8");
-  const standardToursHtml = await readFile(path.join(frontendRoot, "pages", "standard-tours.html"), "utf8");
-  const standardTourHtml = await readFile(path.join(frontendRoot, "pages", "standard-tour.html"), "utf8");
-  const settingsHtml = await readFile(path.join(frontendRoot, "pages", "settings.html"), "utf8");
-  const emergencyHtml = await readFile(path.join(frontendRoot, "pages", "emergency.html"), "utf8");
-  const localCaddy = await readFile(path.join(deployRoot, "Caddyfile.local"), "utf8");
-  const stagingCaddy = await readFile(path.join(deployRoot, "Caddyfile"), "utf8");
+  const [
+    bookingsHtml,
+    bookingHtml,
+    emergencyHtml,
+    indexHtml,
+    marketingTourHtml,
+    marketingToursHtml,
+    privacyHtml,
+    settingsHtml,
+    standardTourHtml,
+    standardToursHtml,
+    travelerDetailsHtml,
+    localCaddy,
+    stagingCaddy,
+    runtimeBrandLogoScript,
+    localFrontendScript,
+    stagingFrontendScript,
+    updateStagingScript,
+    productionFrontendScript,
+    updateProductionScript
+  ] = await Promise.all([
+    readFile(path.join(frontendRoot, "pages", "bookings.html"), "utf8"),
+    readFile(path.join(frontendRoot, "pages", "booking.html"), "utf8"),
+    readFile(path.join(frontendRoot, "pages", "emergency.html"), "utf8"),
+    readFile(path.join(frontendRoot, "pages", "index.html"), "utf8"),
+    readFile(path.join(frontendRoot, "pages", "marketing_tour.html"), "utf8"),
+    readFile(path.join(frontendRoot, "pages", "marketing_tours.html"), "utf8"),
+    readFile(path.join(frontendRoot, "pages", "privacy.html"), "utf8"),
+    readFile(path.join(frontendRoot, "pages", "settings.html"), "utf8"),
+    readFile(path.join(frontendRoot, "pages", "standard-tour.html"), "utf8"),
+    readFile(path.join(frontendRoot, "pages", "standard-tours.html"), "utf8"),
+    readFile(path.join(frontendRoot, "pages", "traveler-details.html"), "utf8"),
+    readFile(path.join(deployRoot, "Caddyfile.local"), "utf8"),
+    readFile(path.join(deployRoot, "Caddyfile"), "utf8"),
+    readFile(path.join(repoRoot, "scripts", "assets", "prepare_runtime_brand_logo.sh"), "utf8"),
+    readFile(path.join(repoRoot, "scripts", "local", "start_local_frontend.sh"), "utf8"),
+    readFile(path.join(repoRoot, "scripts", "staging", "deploy_staging_frontend.sh"), "utf8"),
+    readFile(path.join(repoRoot, "scripts", "deploy", "update_staging.sh"), "utf8"),
+    readFile(path.join(repoRoot, "scripts", "production", "deploy_production_frontend.sh"), "utf8"),
+    readFile(path.join(repoRoot, "scripts", "deploy", "update_production.sh"), "utf8")
+  ]);
 
   assert.match(
     bookingsHtml,
@@ -3663,6 +3697,70 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
     emergencyHtml,
     /frontend\/scripts\/pages\/emergency\.js/,
     "emergency.html should mount the emergency page script"
+  );
+  for (const source of [
+    bookingsHtml,
+    bookingHtml,
+    emergencyHtml,
+    indexHtml,
+    marketingTourHtml,
+    marketingToursHtml,
+    privacyHtml,
+    settingsHtml,
+    standardTourHtml,
+    standardToursHtml,
+    travelerDetailsHtml
+  ]) {
+    assert.match(
+      source,
+      /\/assets\/generated\/runtime\/brand-logo\.png/,
+      "Frontend entry pages should read the top-left brand logo from the generated runtime asset path"
+    );
+  }
+  assert.match(
+    runtimeBrandLogoScript,
+    /TARGET_DIR="\$ROOT_DIR\/assets\/generated\/runtime"[\s\S]*TARGET_PATH="\$TARGET_DIR\/brand-logo\.png"/,
+    "The runtime brand logo helper should write to the generated runtime logo path"
+  );
+  assert.match(
+    runtimeBrandLogoScript,
+    /production\)[\s\S]*SOURCE_PATH="\$ROOT_DIR\/assets\/img\/logo-asiatravelplan\.png"/,
+    "The runtime brand logo helper should use the production PNG for production deploys"
+  );
+  assert.match(
+    runtimeBrandLogoScript,
+    /staging\)[\s\S]*SOURCE_PATH="\$ROOT_DIR\/assets\/img\/staging\.png"/,
+    "The runtime brand logo helper should use staging.png for staging deploys"
+  );
+  assert.match(
+    runtimeBrandLogoScript,
+    /local\)[\s\S]*SOURCE_PATH="\$ROOT_DIR\/assets\/img\/local\.png"/,
+    "The runtime brand logo helper should use local.png for local deploys"
+  );
+  assert.match(
+    localFrontendScript,
+    /prepare_runtime_brand_logo[\s\S]*"\$RUNTIME_BRAND_LOGO_PREPARER" local/,
+    "Local frontend startup should prepare the local runtime logo before serving the site"
+  );
+  assert.match(
+    stagingFrontendScript,
+    /prepare_runtime_brand_logo\.sh" staging/,
+    "Staging frontend asset deploys should prepare the staging runtime logo"
+  );
+  assert.match(
+    updateStagingScript,
+    /prepare_runtime_brand_logo\(\)[\s\S]*"\$RUNTIME_BRAND_LOGO_PREPARER" staging[\s\S]*prepare_runtime_brand_logo[\s\S]*generate_public_homepage_assets/,
+    "Staging deploys should prepare the staging runtime logo before regenerating frontend assets"
+  );
+  assert.match(
+    productionFrontendScript,
+    /prepare_runtime_brand_logo\.sh" production/,
+    "Production frontend asset deploys should prepare the production runtime logo"
+  );
+  assert.match(
+    updateProductionScript,
+    /prepare_runtime_brand_logo\(\)[\s\S]*"\$RUNTIME_BRAND_LOGO_PREPARER" production[\s\S]*prepare_runtime_brand_logo[\s\S]*generate_public_homepage_assets/,
+    "Production deploys should prepare the production runtime logo before regenerating frontend assets"
   );
 
   for (const source of [localCaddy, stagingCaddy]) {
@@ -3716,15 +3814,15 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
     ].join("")),
     "Production Caddy should not serve the retired placeholder or reference the temporary production access check"
   );
+  assert.doesNotMatch(
+    stagingCaddy,
+    /@staging_logo path \/assets\/img\/logo-asiatravelplan\.svg|rewrite \* \/assets\/img\/staging\.png/,
+    "Staging Caddy should not own top-left logo swapping now that deploy scripts prepare the runtime logo"
+  );
   assert.match(
     stagingCaddy,
     /@site_root path \/[^\n]*[\s\S]*rewrite \* \/frontend\/pages\/index\.html/,
     "Production Caddy should serve the real homepage from the production app checkout"
-  );
-  assert.match(
-    stagingCaddy,
-    /staging\.asiatravelplan\.com \{[\s\S]*@staging_logo path \/assets\/img\/logo-asiatravelplan\.svg[\s\S]*handle @staging_logo \{[\s\S]*rewrite \* \/assets\/img\/staging\.png[\s\S]*file_server[\s\S]*\}/,
-    "Staging should swap the shared top-left logo asset to the staging badge image through a dedicated file-serving route"
   );
   assert.match(
     stagingCaddy,

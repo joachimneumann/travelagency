@@ -5,6 +5,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 COMPOSE_FILE="docker-compose.staging.yml"
 ENV_FILE=".env"
 PROJECT_NAME="${PROJECT_NAME:-asiatravelplan-staging}"
+RUNTIME_BRAND_LOGO_PREPARER="${RUNTIME_BRAND_LOGO_PREPARER:-$ROOT_DIR/scripts/assets/prepare_runtime_brand_logo.sh}"
 
 source "$ROOT_DIR/scripts/lib/docker_runtime.sh"
 
@@ -77,6 +78,11 @@ generate_public_homepage_assets() {
   node "$ROOT_DIR/scripts/assets/generate_public_homepage_assets.mjs"
 }
 
+prepare_runtime_brand_logo() {
+  echo "Preparing staging runtime brand logo..."
+  "$RUNTIME_BRAND_LOGO_PREPARER" staging
+}
+
 should_sync_atp_staff() {
   local service
   for service in "$@"; do
@@ -107,6 +113,7 @@ fi
 
 mkdir -p frontend/data/generated/homepage assets/generated/homepage
 
+prepare_runtime_brand_logo
 generate_public_homepage_assets
 
 mkdir -p backend/app/data
