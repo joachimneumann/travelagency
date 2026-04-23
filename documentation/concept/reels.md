@@ -18,9 +18,12 @@ The target outcome is:
 - use the same localized tour payload the homepage already uses for reel titles and booking context
 - keep reel ordering aligned with the same homepage ranking logic
 - allow the reel runtime to compute its own randomized order if needed
-- enable reels only on local and staging for now
-- never show or expose the reels UI or generated reel assets on production for now
-- allow editors to upload and manage tour-owned reel videos in production even while the public reels UI remains disabled there
+- keep the `Reels` button hidden by default
+- reveal the `Reels` button only through a secret footer activation flow
+- do not use environment detection to control reel visibility
+- lazy-load the reels runtime only when the visible `Reels` button is pressed
+- do not load reel video bytes during the normal homepage page load
+- allow editors to upload and manage tour-owned reel videos through the tour editor
 
 This document is a plan only. It does not describe finished implementation.
 
@@ -42,9 +45,9 @@ Current relevant behavior in the repo:
 
 Important deployment constraint:
 
-- production Caddy serves public assets from allowlisted static roots
-- production does not expose `/content/*`
-- generated reel assets must therefore never be runtime-loaded from `content/tours/...`
+- public static hosting serves public assets from allowlisted static roots
+- the public runtime should not direct-load reel media from `content/tours/...`
+- generated reel assets must therefore be runtime-loaded from generated public asset paths, not from `content/tours/...`
 
 Conclusion:
 
@@ -74,11 +77,65 @@ Desktop and tablet behavior:
 - keep the current homepage as the primary experience
 - do not show the reels toggle on larger screens
 
-Environment scope for now:
+### Secret Activation Mechanism
 
-- local: enabled
-- staging: enabled
-- production: disabled
+- the header `Reels` button is hidden by default
+- the footer title text `AsiaTravelPlan` acts as the secret activation target
+- tapping that footer title 5 times within 3 seconds reveals the header `Reels` button
+- this is only a hidden-entry UX mechanism, not a security boundary, and it is acceptable if someone discovers it by reading the JavaScript
+- the unlocked state should be stored in `sessionStorage`, so a fresh tab starts hidden again
+- the unlock flow should only reveal the button
+- the unlock flow must not fetch `public-reels.json`
+- the unlock flow must not load `main_reels.js`
+- the unlock flow must not load reel video bytes
+- only pressing the newly visible `Reels` button should lazy-load the reels runtime
+
+Recommended unlock-controller logic:
+
+- use a session-scoped storage key such as `asiatravelplan_reels_unlocked`
+- on homepage startup, read that key and immediately reveal the `Reels` button if it is already set
+- keep a small in-memory tap-timestamp buffer in `main.js`
+- on each tap on the footer title:
+  - drop timestamps older than 3 seconds
+  - append the current timestamp
+  - if the buffer now contains 5 taps, set the session key, clear the buffer, and reveal the `Reels` button
+- the unlock controller must not fetch reel metadata, import the reel runtime, or attach any video `src`
+
+Illustrative pseudocode:
+
+```js
+const REELS_UNLOCK_KEY = "asiatravelplan_reels_unlocked";
+const REELS_UNLOCK_TAP_TARGET = 5;
+const REELS_UNLOCK_WINDOW_MS = 3000;
+
+let reelsUnlockTapTimes = [];
+
+function isReelsUnlocked() {
+  return sessionStorage.getItem(REELS_UNLOCK_KEY) === "1";
+}
+
+function syncReelsButtonVisibility() {
+  const isUnlocked = isReelsUnlocked();
+  reelsButton.hidden = !isUnlocked;
+}
+
+function registerReelsUnlockTap() {
+  const now = Date.now();
+  reelsUnlockTapTimes = reelsUnlockTapTimes.filter(
+    (time) => now - time < REELS_UNLOCK_WINDOW_MS,
+  );
+  reelsUnlockTapTimes.push(now);
+
+  if (reelsUnlockTapTimes.length >= REELS_UNLOCK_TAP_TARGET) {
+    sessionStorage.setItem(REELS_UNLOCK_KEY, "1");
+    reelsUnlockTapTimes = [];
+    syncReelsButtonVisibility();
+  }
+}
+
+footerBrandTitle.addEventListener("click", registerReelsUnlockTap);
+syncReelsButtonVisibility();
+```
 
 ## Recommended Scope
 
@@ -89,7 +146,7 @@ Recommended first scope:
 3. reuse the existing booking modal exactly
 4. support up to 20 reels from generated media metadata
 5. add one header-level `Reels` toggle button on small screens only
-6. enable reels only on local and staging
+6. hide the `Reels` entry behind the secret footer-title activation flow
 7. keep the current homepage untouched on desktop and as the default entry view
 8. use the same homepage ranking logic already used for tours
 
@@ -169,16 +226,10 @@ Recommended source of truth:
 
 - `content/tours/<tour-key>/video.mp4`
 
-Recommended generated outputs for local and staging only:
+Recommended generated outputs:
 
 - `assets/generated/reels/`
 - `frontend/data/generated/reels/public-reels.json`
-
-Production rule:
-
-- do not generate these reel outputs in production
-- do not publish them in production
-- this production rule applies to public runtime assets only, not to editor-side upload/edit capability
 
 Recommended generated reel manifest contents:
 
@@ -225,22 +276,27 @@ Recommended split:
 
 - keep homepage entry at `frontend/scripts/main.js`
 - add a dedicated reel module, for example `frontend/scripts/main_reels.js`
+- `main.js` should own the secret footer-activation controller, the `Reels` button visibility state, and the lazy-load helper for the reel runtime
+- `main.js` should load the reel runtime with an absolute dynamic import such as `import("/frontend/scripts/main_reels.js")`
 - optionally extract shared homepage helpers into `frontend/scripts/shared/` if the reel layer needs cleaner boundaries
 
 Responsibilities of the reel module:
 
+- load only when the `Reels` button is pressed for the first time
 - load generated reel media metadata
 - use the same localized homepage tour payload already loaded for the current language
 - derive reel title text from that tour payload
-- render reel cards into the reel layer
+- render reel cards into the reel layer using poster-first placeholders
 - manage active reel detection with `IntersectionObserver`
 - play only the active video
 - pause/reset non-active videos as needed
-- manage nearby preloading
+- preload only the next reel
+- unload non-active, non-next reels by removing `src` and releasing the element back to poster/placeholder state
 - expose open/close behavior for reels mode
 - update the header `Reels` button into a red `X` while active
 - apply the same homepage ranking logic to the currently filtered homepage subset before filtering to tours that have reels
 - wire the booking CTA to open the existing modal for the active tour
+- rebind the existing `.mobile-cta` to the active reel `tourId` whenever the active reel changes
 - close `#siteNav` when reels open
 - disable the menu-toggle button while reels are open
 - reposition the existing `.mobile-cta` as an overlay on top of the reel video at the bottom of the screen
@@ -251,6 +307,32 @@ Responsibilities that remain in the homepage runtime:
 - mobile navigation behavior
 - global auth/backend button logic
 - existing booking modal lifecycle
+- initial homepage page load must not fetch reel media metadata or attach reel video sources
+
+Lazy-load and video-load rule:
+
+1. normal homepage load:
+   - do not fetch `public-reels.json`
+   - do not load reel video bytes
+   - do not load `main_reels.js`
+   - keep the header `Reels` button hidden until the secret activation succeeds
+2. secret activation:
+   - detect 5 taps on the footer title `AsiaTravelPlan` within 3 seconds
+   - store the unlocked state in `sessionStorage`
+   - reveal the header `Reels` button
+   - do not fetch `public-reels.json`
+   - do not load reel video bytes
+   - do not load `main_reels.js`
+3. first visible `Reels` button press:
+   - dynamically import `main_reels.js`
+   - fetch `frontend/data/generated/reels/public-reels.json`
+   - render reel cards with posters/placeholders
+   - attach `src` only to the active reel
+   - preload only the next reel
+4. subsequent reel changes:
+   - keep the active reel loaded
+   - preload only the next reel
+   - unload all other reels
 
 ## Booking Integration
 
@@ -309,7 +391,6 @@ Recommendation:
 - extend the tour editor/backend so editors can upload exactly one reel video per tour
 - support replacement and deletion of that video
 - keep reel source videos part of the same operational content unit as `content/tours/` for `rsync`, backup, and restore
-- allow the same editor-side video management in production even while the public reels UI and generated reel assets remain disabled there
 
 ### Workstream 2: Generated Reel Media Assets
 
@@ -338,9 +419,15 @@ Recommendation:
 ### Workstream 4: Homepage Reels Layer
 
 - update `frontend/pages/index.html`
-- add a header-level `Reels` button next to the menu-toggle button
+- add a header-level `Reels` button next to the menu-toggle button, hidden by default
+- add a stable footer target on the `AsiaTravelPlan` title for the secret activation flow
 - add a hidden fullscreen reel layer below the header
 - add a reel runtime module such as `frontend/scripts/main_reels.js`
+- keep `frontend/scripts/main.js` minimal for reels:
+  - add a secret-activation helper that counts taps on the footer title and reveals the `Reels` button after 5 taps within 3 seconds
+  - add a `loadReelsRuntime()` helper
+  - lazy-load `main_reels.js` only when the visible `Reels` button is pressed
+  - keep the dynamic import absolute so the generated homepage bundle can request `/frontend/scripts/main_reels.js` directly
 - when reels open:
   - show the reel layer
   - convert the `Reels` button into a red `X`
@@ -348,6 +435,7 @@ Recommendation:
   - close `#siteNav`
   - disable the menu-toggle button while reels are open
   - keep `.mobile-cta` visible as an overlay on top of the reel video at the bottom of the screen
+  - rebind `.mobile-cta` so it opens the booking modal for the active reel tour
 - when reels close:
   - hide the reel layer
   - restore the normal header button state
@@ -364,14 +452,14 @@ Recommendation:
   - booking-modal opener helpers
   - ranking helpers shared with tour display logic
   - language/tour-payload integration points
-  - environment gating helpers based on the existing hostname-based checks in `main.js`
+  - secret-unlock helpers based on footer tap tracking and `sessionStorage`
+- keep the lazy-loaded reel runtime boundary explicit so homepage base behavior stays small on initial page load
+- update `scripts/assets/generate_public_homepage_assets.mjs` as needed so the generated homepage bundle preserves the lazy-load hook in `main.js` and does not accidentally inline or break the on-demand `main_reels.js` import
 
-### Workstream 6: Deployment, Sync, and Backup Coverage
+### Workstream 6: Asset Generation, Sync, and Backup Coverage
 
-- update local and staging flows so reel assets are generated whenever public assets are generated
+- generate reel assets whenever public homepage assets are generated
 - update backend post-edit regeneration hooks so reel assets regenerate on relevant tour editor changes
-- ensure production does not generate or publish reel outputs
-- gate the public reels UI in the homepage runtime by using the existing hostname-based environment helpers in `frontend/scripts/main.js`
 - ensure reel source videos are covered by the same `rsync` workflows that already sync `content/tours/`
 - ensure reel source videos are covered by the same backup and restore workflows that already cover `content/tours/`
 - treat generated reel assets as rebuildable outputs, not the backup source of truth
@@ -380,39 +468,92 @@ Recommendation:
 
 - verify the homepage still opens the booking modal correctly
 - verify reels mode opens the modal with the same tour context as the homepage CTA for the same tour
+- verify the header `Reels` button is hidden on initial page load
+- verify tapping the footer title `AsiaTravelPlan` 5 times within 3 seconds reveals the header `Reels` button
+- verify secret activation alone does not fetch `frontend/data/generated/reels/public-reels.json`
+- verify secret activation alone does not request `main_reels.js`
+- verify secret activation alone does not load reel video bytes
+- verify `main_reels.js` is only requested after the `Reels` button is pressed
+- verify initial homepage load does not fetch `frontend/data/generated/reels/public-reels.json`
+- verify initial homepage load does not load reel video bytes
 - verify the header `Reels` button becomes a red `X` while reels are open
 - verify closing reels returns the user to the normal homepage without navigation
 - verify reel ordering uses the same homepage ranking logic on the currently filtered subset after filtering to tours with `video.mp4`
 - verify opening reels closes `#siteNav`
 - verify the menu-toggle button is disabled while reels are open
 - verify `.mobile-cta` overlays the reel video at the bottom of the screen while reels are open
-- verify generated reel assets are served only on local and staging
-- verify production does not publish or serve generated reel assets or reel manifest files
-- verify production does not render the public reels UI because the homepage runtime uses the existing hostname-based environment helpers in `main.js`
-- verify production editors can still upload, replace, and delete reel source videos
+- verify `.mobile-cta` opens the booking modal for the active reel tour, not a generic homepage booking flow
+- verify only the active reel and the next reel have video sources attached at runtime
+- verify non-active, non-next reels are unloaded back to posters/placeholders
 - verify no part of the public runtime fetches `/content/tours/.../video.mp4`
 - verify tour edits, tour image changes, reel video upload, reel video replacement, and reel video deletion all trigger reel regeneration through the same post-edit asset-sync path
 - verify reel source videos are included when `content/tours/` is synced, backed up, and restored
 
 Recommended implementation order:
 
-1. build tour-editor video support
-2. build reel-media generation and regeneration hooks
-3. add the in-page reels layer to `index.html`
-4. wire the header `Reels` button and red `X` toggle behavior
-5. verify on local and staging
-6. keep production disabled until quality and performance are proven
+1. Define the runtime contract.
+   - Keep the reel manifest limited to `tourId`, `videoUrl`, `posterUrl`, and `duration`.
+   - Keep localized reel titles out of the manifest and resolve them from the existing localized homepage tour payload.
+   - Make the secret activation behavior explicit: footer-title taps only reveal the `Reels` button and do not load the runtime.
+
+2. Build tour-editor video support first.
+   - Add one-video upload, replace, and delete support in the marketing-tour editor and backend.
+   - Store the source file only at `content/tours/<tour-key>/video.mp4`.
+
+3. Build reel-media generation second.
+   - Reuse `scripts/content/clipVideo` for normalization/transcoding where practical.
+   - Generate poster and duration metadata.
+   - Emit `assets/generated/reels/` and `frontend/data/generated/reels/public-reels.json` as part of the normal public asset pipeline.
+   - Hook reel regeneration into the same post-edit flow already used for tour edits and tour image changes.
+
+4. Wire homepage build integration before the UI.
+   - Keep `main.js` responsible for the secret activation flow, the `Reels` button visibility state, and the `loadReelsRuntime()` helper.
+   - Use an absolute dynamic import for `main_reels.js`.
+   - Update `scripts/assets/generate_public_homepage_assets.mjs` as needed so the generated homepage bundle preserves this lazy-load behavior.
+   - Verify the public homepage bundle can request `main_reels.js` on demand.
+
+5. Implement the secret activation flow in `main.js`.
+   - Keep the header `Reels` button hidden by default.
+   - Count taps on the footer title `AsiaTravelPlan`.
+   - Reveal the `Reels` button after 5 taps within 3 seconds.
+   - Store the unlocked state in `sessionStorage`.
+   - Verify this reveal step does not fetch the manifest, load the runtime, or load video bytes.
+
+6. Implement `main_reels.js`.
+   - Fetch `public-reels.json` only after the first `Reels` button press.
+   - Start from the currently filtered homepage subset.
+   - Apply the same homepage ranking logic.
+   - Filter to tours that have reel media.
+   - Render poster-first cards.
+   - Attach `src` only to the active reel.
+   - Preload only the next reel.
+   - Unload all other reels back to poster/placeholder state.
+
+7. Implement reels-mode UI state in `index.html` and `main.js`.
+   - Add the header `Reels` button and hidden reel layer.
+   - Open: show reels, switch to red `X`, close `#siteNav`, disable the menu-toggle button.
+   - Keep `.mobile-cta` visible as an overlay at the bottom of the reel video.
+   - Rebind `.mobile-cta` to the active reel `tourId` as the active reel changes.
+   - Close: reverse all of that cleanly.
 
 ## Acceptance Criteria
 
 The reels plan should be considered successfully implemented only if:
 
 - the public homepage remains `index.html`
+- the header `Reels` button is hidden on initial page load
+- tapping the footer title `AsiaTravelPlan` 5 times within 3 seconds reveals the header `Reels` button for the current session
 - a `Reels` button appears in the header next to the menu-toggle button on small screens
+- secret activation alone does not fetch reel manifest data
+- secret activation alone does not load reel video bytes
+- secret activation alone does not load `main_reels.js`
 - pressing `Reels` opens reels full screen below the header
 - while open, the `Reels` button becomes a red `X`
 - pressing the red `X` closes reels and returns the homepage to normal
 - the homepage does not navigate to a separate public reels page
+- `main_reels.js` is lazy-loaded only when the `Reels` button is pressed
+- normal homepage load does not fetch reel manifest data
+- normal homepage load does not load reel video bytes
 - booking button opens the existing booking modal
 - booking CTA opens the same form/context as the active tour on the homepage
 - source videos come from `content/tours/<tour-key>/video.mp4`
@@ -426,11 +567,8 @@ The reels plan should be considered successfully implemented only if:
 - opening reels closes `#siteNav`
 - the menu-toggle button is disabled while reels are open
 - the existing `.mobile-cta` is overlaid at the bottom of the video while reels are open
-- local and staging generate and serve reel assets
-- production does not show the reels UI
-- production does not generate or publish reel assets or reel manifest files
-- production editors can still upload and manage reel source videos
-- production does not depend on direct `/content/tours/.../video.mp4` access
+- only the active reel and the next reel are loaded at runtime
+- the public runtime does not depend on direct `/content/tours/.../video.mp4` access
 - reel source videos are included in the same `rsync`, backup, and restore flows as `content/tours/`
 
 ## Main Risks
@@ -482,17 +620,17 @@ Mitigation:
 - apply that logic to the current filtered subset rather than to a separate all-tours list
 - filter the ranked list down to tours that actually have reels
 
-### 5. Accidental Production Exposure
+### 5. Secret Activation Drift
 
 Risk:
 
-- reels could accidentally appear in production before they are ready
+- the hidden entry point could be accidentally triggered too easily or implemented inconsistently across sessions
 
 Mitigation:
 
-- gate the reels UI by using the existing hostname-based environment helpers in `main.js`
-- do not generate or publish reel assets in production
-- verify production behavior explicitly before release
+- keep the unlock gesture explicit: 5 taps on the footer title within 3 seconds
+- store the unlocked state only in `sessionStorage`
+- verify that unlock reveals only the button and does not load the runtime by itself
 
 ## Recommendation
 
@@ -505,7 +643,7 @@ Recommended product/technical direction:
 5. close reels back to the normal homepage without navigation
 6. reuse the existing booking modal and homepage tour payload
 7. treat each reel as tour-owned content stored at `content/tours/<tour-key>/video.mp4`
-8. generate reel media assets only for local and staging, while still allowing production editors to manage reel source videos
+8. hide the `Reels` entry behind the footer-title secret activation flow instead of environment detection
 9. keep reel source videos inside the existing `content/tours/` sync and backup model
 
 That is the cleanest path for the currently requested UX: reels behave like a fullscreen homepage mode rather than a separate public page.
