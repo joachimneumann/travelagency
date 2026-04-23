@@ -441,14 +441,6 @@
         "zh": "Vic Phuong 结合了翻译、DMC 运营和旅行服务方面的经验，为国际客户提供清晰、高效的支持。她居住在新喀里多尼亚，精通四种语言，能够连接文化并确保全球无缝旅行体验。"
       }
     },
-    "vic": {
-      "name": "Lê Thị Phương",
-      "friendly_short_name": "Lê Thị Phương",
-      "team_order": 10,
-      "picture": "vic.svg",
-      "languages": [],
-      "appears_in_team_web_page": true
-    },
     "ngoan": {
       "name": "Nguyễn Thị Ngoan",
       "position": {
