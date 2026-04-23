@@ -313,6 +313,18 @@ export function createAuth({ port }) {
     return fallback;
   }
 
+  function resolveForwardAuthReturnTo(req, fallback = "/bookings.html") {
+    const forwardedUri = normalizeText(req.headers["x-forwarded-uri"]);
+    if (forwardedUri) return buildSafeReturnTo(forwardedUri, fallback);
+
+    try {
+      const requestUrl = new URL(req.url, "http://localhost");
+      return buildSafeReturnTo(requestUrl.searchParams.get("return_to"), fallback);
+    } catch {
+      return fallback;
+    }
+  }
+
   function isRootLikePath(pathname) {
     return pathname === "/" || pathname === "/index.html";
   }
@@ -607,13 +619,13 @@ export function createAuth({ port }) {
     });
   }
 
-  async function handleProductionAccessCheck(req, res) {
+  async function handleBackendAccessCheck(req, res) {
     res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, private");
     res.setHeader("Pragma", "no-cache");
     res.setHeader("Expires", "0");
 
     if (!getSessionFromRequest(req)) {
-      redirect(res, "/");
+      redirect(res, getLoginRedirect(resolveForwardAuthReturnTo(req)));
       return;
     }
 
@@ -624,7 +636,7 @@ export function createAuth({ port }) {
   return {
     routes,
     handleAuthMe,
-    handleProductionAccessCheck,
+    handleBackendAccessCheck,
     pruneState,
     isKeycloakEnabled,
     hasSession,

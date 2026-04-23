@@ -193,6 +193,7 @@ async function generateHomepageTourAssets(sourceDir, destinationDir) {
     const sourcePath = path.join(sourceDir, entry.name);
     if (!isRasterAssetFile(entry.name) || !sharp) {
       const destinationPath = path.join(destinationDir, entry.name);
+      await ensureDirectory(path.dirname(destinationPath));
       await copyFile(sourcePath, destinationPath);
       generatedPathBySourceName.set(entry.name, entry.name);
       continue;
@@ -200,6 +201,7 @@ async function generateHomepageTourAssets(sourceDir, destinationDir) {
 
     const outputName = `${path.parse(entry.name).name}.webp`;
     const destinationPath = path.join(destinationDir, outputName);
+    await ensureDirectory(path.dirname(destinationPath));
     await sharp(sourcePath, { failOn: "none" })
       .rotate()
       .resize(HOMEPAGE_TOUR_IMAGE_SIZE, HOMEPAGE_TOUR_IMAGE_SIZE, {

@@ -1,6 +1,7 @@
 # First Deployment Migration Plan
 
-Status: pending migration plan, not current production state.
+Status: rollout implementation applied in this branch; pending production host
+tag, deploy, and smoke tests.
 
 This plan covers the first production deployment after removing the temporary
 placeholder page. The target behavior is that `https://asiatravelplan.com/`
@@ -14,11 +15,11 @@ Before this migration, production still uses the placeholder setup:
 - `https://asiatravelplan.com/` serves the placeholder bundle from
   `/srv/placeholder`.
 - `/placeholder-assets/*` is public.
-- `/app-home.html` serves the real homepage only after the temporary
+- `/app-home.html` used to serve the real homepage only after the temporary
   `/production-access/check` forward-auth check.
-- production deploy wrappers still call
+- production deploy wrappers used to call
   `scripts/deploy/deploy_static_website.sh`.
-- `docker-compose.caddy.yml` mounts `/srv/placeholder:/placeholder:ro`.
+- `docker-compose.caddy.yml` used to mount `/srv/placeholder:/placeholder:ro`.
 
 Do not use this document as a normal production deploy checklist until the
 migration has been implemented and validated.
@@ -37,9 +38,10 @@ migration has been implemented and validated.
 - Placeholder bundle: removed from the repository
 - Placeholder runtime directory: no longer mounted or updated
 - `/placeholder-assets/*`: returns `404`
-- `/app-home.html`: redirects to `/` or returns `404`, based on the compatibility
-  decision made before deployment
-- `/production-access/check`: removed only after Caddy no longer references it
+- `/app-home.html`: redirects to `/`
+- Backend HTML pages are protected by Caddy `forward_auth` through
+  `/backend-access/check`
+- `/production-access/check`: removed
 
 ## Branch And Release Model
 
@@ -67,15 +69,11 @@ auditable release marker.
 
 ## Compatibility Decision
 
-Choose the `/app-home.html` behavior before implementation:
+Chosen compatibility behavior:
 
-- Preferred first public rollout behavior: redirect `/app-home.html` to `/`.
-- Strict cleanup behavior: return `404` for `/app-home.html`.
-
-If `/production-access/check` is removed in the same release, deploy the updated
-Caddy configuration before restarting the backend. The safer alternative is to
-keep the backend route for one compatibility release, remove all Caddy references
-to it, smoke-test production, and delete the backend route in a follow-up release.
+- `/app-home.html` redirects to `/`.
+- Backend HTML pages are no longer public static responses; Caddy checks
+  `/backend-access/check` before serving them.
 
 ## Implementation Plan
 
@@ -84,14 +82,15 @@ to it, smoke-test production, and delete the backend route in a follow-up releas
      `/production-app/frontend/pages/index.html`.
    - Serve `/404.html` from `/production-app/frontend/pages/404.html`.
    - Keep backend HTML pages served from `/production-app/frontend/pages`.
+   - Protect backend HTML pages with Caddy `forward_auth` through
+     `/backend-access/check`.
    - Keep only the expected public static paths served from `/production-app`.
    - Keep `/auth/*`, `/api/*`, `/public/v1/*`, and `/integrations/*` proxied to
      the production backend.
    - Keep `/keycloak/*` proxied to production Keycloak.
    - Remove `/placeholder` as the production root.
    - Remove `/placeholder-assets/*`.
-   - Remove the temporary authenticated `/app-home.html` route, or keep it only
-     as a redirect to `/`.
+   - Keep `/app-home.html` only as a redirect to `/`.
 
 2. Make Caddy file serving allowlisted.
    - Do not set `root * /production-app` with a broad final `file_server`.
@@ -146,12 +145,11 @@ to it, smoke-test production, and delete the backend route in a follow-up releas
      `/srv/placeholder` from active code, config, and scripts.
 
 8. Remove the temporary app-home auth flow.
-   - Remove `/production-access/check` from backend routes after Caddy no longer
-     references it.
+   - Remove `/production-access/check` from backend routes.
+   - Add `/backend-access/check` for protected backend HTML page checks.
    - Remove `handleProductionAccessCheck` and its handler wiring.
    - Remove tests that assert the temporary route exists.
-   - Remove `app-home.html` checks from homepage JavaScript unless
-     `/app-home.html` remains as a compatibility alias.
+   - Remove `app-home.html` checks from homepage JavaScript.
    - Regenerate homepage assets so generated bundles do not contain stale
      `app-home.html` logic.
 
@@ -188,17 +186,19 @@ docker run --rm \
 Run a leftover scan:
 
 ```bash
-rg -n "app-home|placeholder-assets|/srv/placeholder|/placeholder|production-access|deploy_static_website|Coming Soon" .
+rg -n "placeholder-assets|/srv/placeholder|/placeholder|production-access|deploy_static_website|Coming Soon" .
 ```
 
 Only expected matches should remain. After the cleanup release, there should be
-no matches outside this migration note and historical documentation.
+no matches outside this migration note, current production routing docs, and
+historical documentation. Separately check `app-home` references; active code
+should keep only the production Caddy redirect.
 
 Run an exposure scan on the Caddyfile and review every production `file_server`
 block:
 
 ```bash
-rg -n "root \* /production-app|file_server|respond 404|hide " deploy/Caddyfile
+rg -n "root \* /production-app|file_server|respond 404|hide |backend-access" deploy/Caddyfile
 ```
 
 The production site must not have a catch-all `file_server` rooted at
@@ -265,19 +265,14 @@ git checkout main
 git pull --ff-only
 test "$(git rev-parse HEAD)" = "$(git rev-parse production-2026-04-22-1)"
 
-./scripts/production/deploy_production_caddy.sh
-./scripts/deploy/update_production.sh all
-```
-
-This order switches Caddy away from `/app-home.html` before the backend is
-restarted without the temporary `/production-access/check` route. If the backend
-route is intentionally kept for one compatibility release, the normal order is
-also acceptable:
-
-```bash
 ./scripts/deploy/update_production.sh all
 ./scripts/production/deploy_production_caddy.sh
 ```
+
+This order makes `/backend-access/check` available before Caddy starts using it
+for backend HTML pages. During the short gap before Caddy reloads,
+`/app-home.html` may no longer pass its old temporary auth check; after Caddy is
+reloaded it redirects to `/`.
 
 If the frontend-only wrapper remains, it should be safe to run:
 
@@ -301,6 +296,7 @@ curl -I https://asiatravelplan.com/assets/img/logo-asiatravelplan.svg
 curl -I https://asiatravelplan.com/shared/css/tokens.css
 curl -I https://asiatravelplan.com/frontend/data/generated/homepage/public-homepage-main.bundle.js
 curl -I https://asiatravelplan.com/public/v1/tour-images/tour_915ca398-f573-4dad-bf37-aec9f40800ca/tour_915ca398-f573-4dad-bf37-aec9f40800ca.webp
+curl -I https://asiatravelplan.com/bookings.html
 curl -I https://asiatravelplan.com/placeholder-assets/styles.css
 curl -I https://asiatravelplan.com/app-home.html
 curl -I https://asiatravelplan.com/.env
@@ -317,9 +313,10 @@ Expected results:
 - normal assets resolve from the production app.
 - generated homepage data resolves from the production app.
 - public tour images resolve through the backend.
+- unauthenticated `/bookings.html` redirects to `/auth/login` instead of serving
+  the backend HTML shell.
 - `/placeholder-assets/*` returns `404`.
-- `/app-home.html` redirects to `/` or returns `404`, depending on the chosen
-  compatibility behavior.
+- `/app-home.html` redirects to `/`.
 - sensitive repo paths return `404`.
 
 Check the homepage body:

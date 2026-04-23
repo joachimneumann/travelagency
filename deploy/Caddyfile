@@ -32,7 +32,7 @@
 }
 
 (production_html_no_cache_headers) {
-  @production_html path /app-home.html /bookings.html /booking.html /persons.html /marketing_tour.html /marketing_tours.html /standard-tours.html /standard-tour.html /settings.html /emergency.html /privacy.html /traveler-details.html
+  @production_html path / /index.html /404.html /app-home.html /bookings.html /booking.html /persons.html /marketing_tour.html /marketing_tours.html /standard-tours.html /standard-tour.html /settings.html /emergency.html /privacy.html /traveler-details.html
   header @production_html {
     Cache-Control "no-store, no-cache, must-revalidate"
     Pragma "no-cache"
@@ -41,7 +41,7 @@
 }
 
 (production_static_cache_headers) {
-  @production_static path /assets/* /frontend/scripts/* /frontend/data/* /frontend/Generated/* /shared/*
+  @production_static path /assets/* /frontend/scripts/* /frontend/data/* /frontend/Generated/* /shared/* /site.webmanifest /robots.txt /sitemap.xml
   header @production_static Cache-Control "public, max-age=300, stale-while-revalidate=600, must-revalidate"
 }
 
@@ -50,22 +50,25 @@ asiatravelplan.com {
   import production_html_no_cache_headers
   import production_static_cache_headers
   encode zstd gzip
-  root * /placeholder
 
   handle_errors {
     @page_not_found expression {err.status_code} == 404
-    rewrite @page_not_found /404.html
-    file_server
+    handle @page_not_found {
+      root * /production-app
+      rewrite * /frontend/pages/404.html
+      file_server {
+        hide /production-app/.git /production-app/.gitignore /production-app/backend /production-app/deploy /production-app/documentation /production-app/scripts /production-app/docker-compose*.yml /production-app/.env* /production-app/README* /production-app/AGENTS.md
+      }
+    }
   }
 
-  @site_root path / /index.html /404.html
+  @site_root path /
   handle @site_root {
-    file_server
-  }
-
-  handle_path /placeholder-assets/* {
-    root * /placeholder/assets
-    file_server
+    root * /production-app
+    rewrite * /frontend/pages/index.html
+    file_server {
+      hide /production-app/.git /production-app/.gitignore /production-app/backend /production-app/deploy /production-app/documentation /production-app/scripts /production-app/docker-compose*.yml /production-app/.env* /production-app/README* /production-app/AGENTS.md
+    }
   }
 
   @legacy_backend_page path /backend.html
@@ -83,31 +86,33 @@ asiatravelplan.com {
     redir * /marketing_tour.html 302
   }
 
-  @traveler_details_page path /traveler-details.html
-  handle @traveler_details_page {
-    root * /production-app
-    rewrite * /frontend/pages/traveler-details.html
-    file_server
+  @legacy_authenticated_home path /app-home.html
+  handle @legacy_authenticated_home {
+    redir * / 302
   }
 
-  @production_authenticated_home path /app-home.html
-  forward_auth @production_authenticated_home host.docker.internal:8788 {
-    uri /production-access/check
-  }
-  handle @production_authenticated_home {
-    root * /production-app
-    rewrite * /frontend/pages/index.html
-    file_server
-  }
-
-  @production_html_pages path /bookings.html /booking.html /persons.html /marketing_tour.html /marketing_tours.html /standard-tours.html /standard-tour.html /settings.html /emergency.html /privacy.html
-  handle @production_html_pages {
+  @production_public_html_pages path /index.html /404.html /privacy.html /traveler-details.html
+  handle @production_public_html_pages {
     root * /production-app
     rewrite * /frontend/pages{path}
-    file_server
+    file_server {
+      hide /production-app/.git /production-app/.gitignore /production-app/backend /production-app/deploy /production-app/documentation /production-app/scripts /production-app/docker-compose*.yml /production-app/.env* /production-app/README* /production-app/AGENTS.md
+    }
   }
 
-  @production_app_static path /assets/* /frontend/scripts/* /frontend/data/* /frontend/Generated/* /shared/*
+  @production_backend_html_pages path /bookings.html /booking.html /persons.html /marketing_tour.html /marketing_tours.html /standard-tours.html /standard-tour.html /settings.html /emergency.html
+  forward_auth @production_backend_html_pages host.docker.internal:8788 {
+    uri /backend-access/check
+  }
+  handle @production_backend_html_pages {
+    root * /production-app
+    rewrite * /frontend/pages{path}
+    file_server {
+      hide /production-app/.git /production-app/.gitignore /production-app/backend /production-app/deploy /production-app/documentation /production-app/scripts /production-app/docker-compose*.yml /production-app/.env* /production-app/README* /production-app/AGENTS.md
+    }
+  }
+
+  @production_app_static path /assets/* /frontend/scripts/* /frontend/data/* /frontend/Generated/* /shared/* /site.webmanifest /robots.txt /sitemap.xml
   handle @production_app_static {
     root * /production-app
     file_server {
@@ -128,7 +133,7 @@ asiatravelplan.com {
   @manifest path /site.webmanifest
   header @manifest Content-Type "application/manifest+json"
 
-  file_server
+  respond 404
 }
 
 www.asiatravelplan.com {

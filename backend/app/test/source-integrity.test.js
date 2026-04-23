@@ -3692,6 +3692,25 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
     /staging\.asiatravelplan\.com \{[\s\S]*import staging_cache_headers/,
     "Staging should no longer apply a global no-store policy to every response"
   );
+  assert.doesNotMatch(
+    stagingCaddy,
+    new RegExp([
+      "root \\* /place",
+      `holder|${["placeholder", "assets"].join("-")}|production-`,
+      "access"
+    ].join("")),
+    "Production Caddy should not serve the retired placeholder or reference the temporary production access check"
+  );
+  assert.match(
+    stagingCaddy,
+    /@site_root path \/[^\n]*[\s\S]*rewrite \* \/frontend\/pages\/index\.html/,
+    "Production Caddy should serve the real homepage from the production app checkout"
+  );
+  assert.match(
+    stagingCaddy,
+    /@production_backend_html_pages path \/bookings\.html[\s\S]*forward_auth @production_backend_html_pages host\.docker\.internal:8788 \{[\s\S]*uri \/backend-access\/check[\s\S]*respond 404/,
+    "Production Caddy should protect backend HTML pages with backend-access forward auth and end unmatched paths with 404"
+  );
 });
 
 test("frontend language switching updates the homepage in place instead of forcing a full page reload", async () => {
@@ -3728,8 +3747,8 @@ test("frontend language switching updates the homepage in place instead of forci
   );
   assert.match(
     mainSource,
-    /async function init\(\)[\s\S]*placeBackendLogin\(shouldLoadWebsiteAuthStatusOnInit\(\)\);[\s\S]*revealBackendLogin\(\);[\s\S]*if \(shouldLoadWebsiteAuthStatusOnInit\(\)\) \{[\s\S]*void loadWebsiteAuthStatus\(\);[\s\S]*setupTourSectionImagePrewarm\(\)/,
-    "Homepage init should eagerly resolve auth only for the authenticated app-home route and should wait for the tours section before prewarming more tour images"
+    /async function init\(\)[\s\S]*placeBackendLogin\(false\);[\s\S]*revealBackendLogin\(\);[\s\S]*setupTourSectionImagePrewarm\(\)/,
+    "Homepage init should not eagerly resolve backend auth and should wait for the tours section before prewarming more tour images"
   );
   assert.match(
     mainSource,
@@ -3741,10 +3760,10 @@ test("frontend language switching updates the homepage in place instead of forci
     /function setupBackendLogin\(\) \{[\s\S]*pointerenter[\s\S]*focus[\s\S]*touchstart[\s\S]*if \(!state\.authStatusKnown\) \{[\s\S]*await loadWebsiteAuthStatus\(\);[\s\S]*navigateToBackendDestination\(\);/,
     "Homepage backend login should load auth status only after explicit user interaction"
   );
-  assert.match(
+  assert.doesNotMatch(
     mainSource,
-    /function shouldLoadWebsiteAuthStatusOnInit\(\) \{[\s\S]*window\.location\.pathname === "\/app-home\.html"/,
-    "Homepage should only auto-load website auth status on the authenticated app-home route"
+    new RegExp(`${["shouldLoadWebsiteAuthStatus", "OnInit"].join("")}|/${["app", "home"].join("-")}\\.html`),
+    "Homepage should not contain the retired authenticated app-home route"
   );
   assert.doesNotMatch(
     mainSource,

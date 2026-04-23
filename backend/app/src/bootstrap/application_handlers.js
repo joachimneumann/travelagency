@@ -395,7 +395,7 @@ export function createApplicationRoutes({
     authRoutes: auth.routes,
     handlers: {
       handleAuthMe: auth.handleAuthMe,
-      handleProductionAccessCheck: auth.handleProductionAccessCheck,
+      handleBackendAccessCheck: auth.handleBackendAccessCheck,
       handleHealth: systemHandlers.handleHealth,
       handleMetaWebhookStatus: metaWebhookHandlers.handleMetaWebhookStatus,
       handleMetaWebhookVerify: metaWebhookHandlers.handleMetaWebhookVerify,

@@ -77,6 +77,8 @@ Canonical server commands:
 cd /srv/asiatravelplan
 ./scripts/deploy/update_production.sh all
 ./scripts/production/deploy_production_caddy.sh
+
+# production frontend asset refresh only
 ./scripts/production/deploy_production_frontend.sh
 
 # staging app stack
@@ -87,6 +89,8 @@ cd /srv/asiatravelplan-staging
 Current public routing notes:
 
 - `asiatravelplan-public` owns ports `80` and `443`
+- production `/` serves the real homepage from `/srv/asiatravelplan`
+- production backend HTML pages are protected by `/backend-access/check`
 - staging backend is published on host port `8789`
 - staging Keycloak is published on host port `8083`
 - the public Caddy proxies staging traffic through those host ports
@@ -113,4 +117,4 @@ directory:
 Use `./deploy_backend_frontend` instead of running `./deploy_backend` followed
 by `./deploy_frontend`. The combined wrapper dispatches to the environment's
 backend+frontend deploy entrypoint so shared work such as i18n checks, predeploy
-tests, `git pull`, and static homepage asset generation runs only once.
+tests, `git pull`, and public homepage asset generation runs only once.

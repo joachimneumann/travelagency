@@ -24,14 +24,14 @@ test("buildApiRoutes throws when a declared handler key is missing", () => {
   );
 });
 
-test("buildApiRoutes includes the production access check route", () => {
+test("buildApiRoutes includes the backend access check route", () => {
   const handlers = new Proxy({}, {
     get: () => () => {}
   });
 
   const routes = buildApiRoutes({ handlers });
   assert.equal(
-    routes.some((route) => route.method === "GET" && route.pattern.test("/production-access/check")),
+    routes.some((route) => route.method === "GET" && route.pattern.test("/backend-access/check")),
     true
   );
 });

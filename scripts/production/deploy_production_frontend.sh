@@ -9,8 +9,7 @@ if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
 Usage:
   ./scripts/production/deploy_production_frontend.sh
 
-Regenerates the authenticated homepage frontend assets and deploys the
-production placeholder/static website.
+Regenerates the production homepage frontend assets.
 EOF
   exit 0
 fi
@@ -23,5 +22,3 @@ if [[ ! -f "$HOMEPAGE_BUNDLE_PATH" ]]; then
   echo "Missing generated homepage bundle after asset generation: $HOMEPAGE_BUNDLE_PATH" >&2
   exit 1
 fi
-
-exec "$ROOT_DIR/scripts/deploy/deploy_static_website.sh" "$@"
