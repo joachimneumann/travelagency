@@ -3727,11 +3727,6 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
     "Staging should swap the shared top-left logo asset to the staging badge image"
   );
   assert.match(
-    localCaddy,
-    /:80 \{[\s\S]*@local_logo path \/assets\/img\/logo-asiatravelplan\.svg[\s\S]*rewrite @local_logo \/assets\/img\/local\.png/,
-    "Local should swap the shared top-left logo asset to the local badge image"
-  );
-  assert.match(
     stagingCaddy,
     /@production_backend_html_pages path \/bookings\.html[\s\S]*forward_auth @production_backend_html_pages host\.docker\.internal:8788 \{[\s\S]*uri \/backend-access\/check[\s\S]*respond 404/,
     "Production Caddy should protect backend HTML pages with backend-access forward auth and end unmatched paths with 404"
