@@ -13,7 +13,7 @@ The target outcome is:
 - show the reel page only on local and staging for now
 - never show or expose the reel page on production for now
 - reuse the existing booking action and booking modal already used on the homepage
-- link reels directly to marketing tours, with only some tours having a reel
+- let reels inherit their identity from marketing tours, with only some tours having a `video.mp4`
 
 This document is a plan only. It does not describe finished implementation.
 
@@ -25,8 +25,9 @@ Current relevant behavior in the repo:
 - the homepage booking flow already exists as a modal on that page
 - homepage buttons with `data-open-modal` already open the booking modal through `frontend/scripts/main.js`
 - public homepage tours/team content is already generated into static frontend files
-- source videos currently live in `content/videos/`
-- there is currently one video in `content/videos/`: `Hanoi Sapa Ninh Binh.mp4`
+- reel videos should be treated as tour-owned source content
+- the source location should be `content/tours/<tour-key>/video.mp4`
+- a tour has a reel only if its own folder contains that `video.mp4`
 
 Important deployment constraint:
 
@@ -36,8 +37,8 @@ Important deployment constraint:
 
 Conclusion:
 
-- `content/videos/` can be the editorial source of truth
-- but the reel page should not depend on `/content/videos/...` as the public runtime URL in production
+- `content/tours/<tour-key>/video.mp4` should be the editorial source of truth
+- but the reel page should not depend on `/content/tours/.../video.mp4` as the public runtime URL in production
 - reel videos should be copied/generated into static website content under `/assets/...`, with a generated manifest under `/frontend/data/...`
 - this should follow the same public-generation pattern already used for staff and tour data: content source files are transformed into static website assets plus generated frontend data
 
@@ -51,7 +52,7 @@ On phones, the website should offer an additional reel page that feels like a sh
 - the active card autoplaying muted
 - inactive cards paused
 - a persistent booking button at the top
-- a lightweight text overlay per reel using the linked marketing tour title
+- a lightweight text overlay per reel using the owning marketing tour title
 
 On desktop and tablet:
 
@@ -79,7 +80,7 @@ Recommended first scope:
 
 Not recommended for the first version:
 
-- serving raw files directly from `content/videos`
+- serving raw files directly from `content/tours/.../video.mp4`
 - a separate mobile domain
 - complex per-reel analytics before the feed is stable
 - custom gesture physics beyond native snap scrolling
@@ -94,7 +95,7 @@ Not recommended for the first version:
 - each reel occupies `100svh`
 - top area contains a fixed booking button with safe-area padding
 - each reel should contain:
-  - the linked marketing tour title from existing i18n tour data
+  - the owning marketing tour title from existing i18n tour data
   - a mute indicator
 - each reel should not contain:
   - a reel counter such as `1 / 20`
@@ -108,7 +109,7 @@ Not recommended for the first version:
 - videos loop continuously until the user swipes away
 - tap behavior should be minimal in v1:
   - tap video toggles pause/play
-  - booking button opens the same booking form flow as the linked marketing tour
+  - booking button opens the same booking form flow as the active tour that owns the current video
 
 ## Desktop behavior
 
@@ -159,7 +160,7 @@ This is the same overall approach already used for public staff and tour data.
 
 Recommended source of truth:
 
-- source videos: `content/videos/`
+- source videos: `content/tours/<tour-key>/video.mp4`
 
 Recommended generated outputs:
 
@@ -168,13 +169,19 @@ Recommended generated outputs:
 
 Recommended generated manifest contents:
 
-- list of reels linked to marketing tours
+- list of marketing tours that have a `video.mp4`
 - marketing tour key/id
 - public video URL
 - poster URL
 - duration
-- derived title/caption text from the linked tour's existing i18n title fields
+- derived title/caption text from the owning tour's existing i18n title fields
 - optional display metadata such as mute state defaults
+
+Recommended mental model:
+
+- the video belongs to the tour because it lives inside that tour's content folder
+- the reel manifest is generated from tours, not maintained as a separate reel-to-tour mapping layer
+- the booking action on the reel uses the same tour key/id the homepage already uses for that tour's CTA
 
 Reason:
 
@@ -185,49 +192,32 @@ Reason:
 
 ## Data model recommendation
 
-There are two reasonable directions:
+Recommended source structure:
 
-### Option A: file-name driven manifest generation
+- each marketing tour keeps its own reel at `content/tours/<tour-key>/video.mp4`
+- no separate reel ownership file is needed just to connect a video to a tour
 
-Source is just video files in `content/videos/`, with metadata inferred from filenames.
+Recommended generation rule:
 
-Pros:
+- start from the same ordered marketing-tour dataset/logic already used on the homepage
+- for each tour in that order, check whether `content/tours/<tour-key>/video.mp4` exists
+- if the file exists, include that tour in `public-reels.json`
+- if the file does not exist, that tour simply has no reel
 
-- fastest to start
-- low editorial overhead
+Recommended generated reel entry:
 
-Cons:
+- marketing tour key/id
+- public video URL generated from that tour-owned source file
+- poster URL
+- duration
+- derived title/caption text from that same tour's existing i18n title fields
 
-- weak linkage to marketing tours
-- poor control of inherited tour order
-- difficult to reuse existing i18n tour titles safely
+Why this is the easiest model:
 
-### Option B: explicit reel manifest in content
-
-Add a content file such as:
-
-- `content/reels.json`
-
-Each reel points to a file in `content/videos/` and to one marketing tour by stable key/id.
-
-Pros:
-
-- explicit marketing-tour linkage
-- captions can be derived from existing i18n marketing tour titles
-- easier to filter the ordered tour list down to tours that actually have reels
-- cleaner editorial workflow
-
-Cons:
-
-- one more maintained content file
-
-Recommendation:
-
-- use Option B
-- keep `content/videos/` as binary source
-- use a small explicit reel manifest that links reels to marketing tours
-- derive reel order from the same homepage marketing-tour ordering logic, then filter to tours that have reels
-- derive reel caption/title text from the linked marketing tour i18n title data
+- the reel-to-tour relationship is implicit in the file location
+- the booking relationship stays the same as the homepage because both use the same tour key/id
+- reel order naturally follows homepage tour order after filtering to tours that actually have videos
+- editors can understand ownership quickly: if a tour has `video.mp4`, that tour has a reel
 
 ## Frontend structure
 
@@ -265,7 +255,7 @@ Responsibilities of the reel module:
 - play only the active video
 - pause/reset non-active videos as needed
 - manage lightweight preloading for nearby videos
-- expose a booking CTA hook that opens the linked marketing tour booking form through the existing modal flow
+- expose a booking CTA hook that opens the active tour's booking form through the existing modal flow
 
 Responsibilities that remain in `main.js`:
 
@@ -300,10 +290,23 @@ The booking action should stay exactly aligned with the existing homepage.
 
 Recommendation:
 
-- the fixed top booking button on `reels.html` opens the same booking modal flow as the linked marketing tour
+- the fixed top booking button on `reels.html` opens the same booking modal flow as the active marketing tour
 - no new booking endpoint
 - no new booking modal
 - no separate reel-specific booking flow
+
+The intended linkage should be understood like this:
+
+1. a video lives inside one tour folder at `content/tours/<tour-key>/video.mp4`
+2. the reel generator emits a manifest entry for that same `<tour-key>`
+3. the active reel therefore already knows which marketing tour it belongs to
+4. the booking button passes that same `<tour-key>` into the existing booking modal opener
+
+In other words:
+
+- the video is not linked to booking directly
+- the video is linked to a tour by file ownership
+- booking is linked to that same tour exactly the same way the homepage tour cards already are
 
 This keeps:
 
@@ -311,7 +314,7 @@ This keeps:
 - existing language behavior
 - existing budget/month/traveler logic
 - existing backend integration
-- the same tour-specific booking context the user would get from the linked tour CTA
+- the same tour-specific booking context the user would get from that tour's homepage CTA
 
 ## SEO and indexing
 
@@ -368,25 +371,25 @@ The homepage already has frontend i18n infrastructure.
 Recommendation:
 
 - keep the reel shell text in frontend i18n
-- derive reel caption/title text from the linked marketing tour i18n title fields instead of storing duplicate freeform caption text
+- derive reel caption/title text from the owning marketing tour i18n title fields instead of storing duplicate freeform caption text
 
 For v1:
 
 - shell labels must be localized
-- per-reel captions are the linked marketing tour titles, using the existing i18n title data
+- per-reel captions are the owning marketing tour titles, using the existing i18n title data
 
 ## Rollout plan
 
 ## Phase 1: concept and data shape
 
 - define the reel manifest format
-- define reel entries as links from source videos to marketing tours
+- define reel entries as tours that own a `video.mp4`
 - define generated reel ordering as "homepage marketing-tour order filtered to tours with reels"
 - define generated output locations
 
 ## Phase 2: generation pipeline
 
-- add a generator that reads source videos from `content/videos/`
+- add a generator that reads source videos from `content/tours/<tour-key>/video.mp4`
 - copy/transcode them into static website content at `assets/generated/reels/`
 - generate posters
 - write `frontend/data/generated/reels/public-reels.json`
@@ -403,7 +406,7 @@ For v1:
 
 - extract or share the booking modal runtime
 - connect the fixed booking button on `reels.html`
-- verify it opens the same booking form/context as the linked marketing tour
+- verify it opens the same booking form/context as the active tour on the homepage
 
 ## Phase 5: mobile navigation integration
 
@@ -425,8 +428,8 @@ For v1:
 - verify only one video plays at a time
 - verify smooth swipe between many reels
 - verify active reels loop continuously until swiped away
-- verify booking CTA opens the same form/context as the linked marketing tour
-- verify reel captions match the linked marketing tour titles in the active language
+- verify booking CTA opens the same form/context as the active tour on the homepage
+- verify reel captions match the owning marketing tour titles in the active language
 - verify reel order matches homepage marketing-tour order after filtering to tours with reels
 - verify mute indicator is visible
 - verify no reel counter is shown
@@ -447,16 +450,16 @@ The reel page plan should be considered successfully implemented later only if:
 - production does not expose the reel page for now
 - desktop keeps the current homepage and does not show the reel nav item
 - booking button opens the existing booking modal
-- booking CTA opens the same form/context as the linked marketing tour
-- source videos come from `content/videos/` but are copied into generated static website content for public delivery
-- each reel is linked to a marketing tour
-- reel captions come from the linked marketing tour i18n titles
+- booking CTA opens the same form/context as the active tour on the homepage
+- source videos come from `content/tours/<tour-key>/video.mp4` but are copied into generated static website content for public delivery
+- each reel belongs to one marketing tour
+- reel captions come from the owning marketing tour i18n titles
 - reel order matches the existing homepage marketing-tour order, filtered to tours that have reels
 - active reels loop continuously until swiped away
 - a mute indicator is shown
 - no reel counter is shown
 - the system supports up to 20 reels without trying to play all videos at once
-- production does not depend on direct `/content/videos/...` access
+- production does not depend on direct `/content/tours/.../video.mp4` access
 
 ## Main risks
 
@@ -464,7 +467,7 @@ The reel page plan should be considered successfully implemented later only if:
 
 Risk:
 
-- direct `content/videos` URLs may work locally or on staging, but not in production
+- direct `content/tours/.../video.mp4` URLs may work locally or on staging, but not in production
 
 Mitigation:
 
@@ -539,8 +542,8 @@ Recommended product/technical direction:
 4. keep it disabled on production for now
 5. reuse the existing booking modal via shared frontend code
 6. introduce a generated public reel asset pipeline that copies videos into static website content
-7. use an explicit reel manifest that links each reel to a marketing tour
-8. derive reel title/caption and feed order from the linked marketing tours
+7. treat each reel as tour-owned content stored at `content/tours/<tour-key>/video.mp4`
+8. derive reel title/caption, booking context, and feed order from those same marketing tours
 9. keep reels looping continuously, show a mute indicator, and do not show a reel counter
 
 That is the cleanest path that fits the current repository structure and matches the requirement that the reel experience is one mobile-only menu item, while keeping it limited to local/staging until it is ready for production.
