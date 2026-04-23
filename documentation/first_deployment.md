@@ -129,8 +129,9 @@ to it, smoke-test production, and delete the backend route in a follow-up releas
      `scripts/deploy/update_production.sh all` and
      `scripts/production/deploy_production_caddy.sh`. It must not call
      `scripts/deploy/deploy_static_website.sh`.
-   - Avoid duplicating homepage asset generation unless the duplicate run is
-     intentional and harmless.
+   - Do not add a separate manual homepage asset generation step to the
+     production deploy sequence. `scripts/deploy/update_production.sh all`
+     already regenerates homepage assets.
 
 6. Move or recreate public metadata.
    - Keep the real root `site.webmanifest`.
@@ -264,7 +265,6 @@ git checkout main
 git pull --ff-only
 test "$(git rev-parse HEAD)" = "$(git rev-parse production-2026-04-22-1)"
 
-node scripts/assets/generate_public_homepage_assets.mjs
 ./scripts/production/deploy_production_caddy.sh
 ./scripts/deploy/update_production.sh all
 ```
