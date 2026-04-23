@@ -855,15 +855,29 @@ function applyTravelerBoundsFromModel() {
 function setupMobileNav() {
   if (!els.navToggle || !els.siteNav) return;
 
+  const closeMobileNav = () => {
+    els.siteNav.classList.remove("open");
+    els.navToggle.setAttribute("aria-expanded", "false");
+  };
+
   els.navToggle.addEventListener("click", () => {
     const isOpen = els.siteNav.classList.toggle("open");
     els.navToggle.setAttribute("aria-expanded", String(isOpen));
   });
 
+  els.siteNav.addEventListener("click", (event) => {
+    const target = event.target instanceof Element ? event.target : null;
+    if (!target) return;
+
+    const selectedItem = target.closest('a[href], #backendLoginBtn, [data-lang-option]');
+    if (!selectedItem || !els.siteNav.contains(selectedItem)) return;
+
+    closeMobileNav();
+  });
+
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
-      els.siteNav.classList.remove("open");
-      els.navToggle.setAttribute("aria-expanded", "false");
+      closeMobileNav();
     }
   });
 }
