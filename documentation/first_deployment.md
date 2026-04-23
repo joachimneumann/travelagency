@@ -295,7 +295,7 @@ curl -I https://asiatravelplan.com/sitemap.xml
 curl -I https://asiatravelplan.com/assets/img/logo-asiatravelplan.svg
 curl -I https://asiatravelplan.com/shared/css/tokens.css
 curl -I https://asiatravelplan.com/frontend/data/generated/homepage/public-homepage-main.bundle.js
-curl -I https://asiatravelplan.com/public/v1/tour-images/tour_915ca398-f573-4dad-bf37-aec9f40800ca/tour_915ca398-f573-4dad-bf37-aec9f40800ca.webp
+curl -I 'https://asiatravelplan.com/assets/generated/homepage/tours/tour_17d0e941-b5f4-4685-8fd6-c71d3655aeeb/tour_17d0e941-b5f4-4685-8fd6-c71d3655aeeb.webp?v=2026-04-22T15%3A58%3A19.568Z'
 curl -I https://asiatravelplan.com/bookings.html
 curl -I https://asiatravelplan.com/placeholder-assets/styles.css
 curl -I https://asiatravelplan.com/app-home.html
