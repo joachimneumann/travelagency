@@ -3762,8 +3762,8 @@ test("frontend language switching updates the homepage in place instead of forci
   );
   assert.match(
     mainSource,
-    /async function init\(\)[\s\S]*placeBackendLogin\(false\);[\s\S]*revealBackendLogin\(\);[\s\S]*setupTourSectionImagePrewarm\(\)/,
-    "Homepage init should not eagerly resolve backend auth and should wait for the tours section before prewarming more tour images"
+    /async function init\(\)[\s\S]*applyWebsiteAuthState\(\{ authenticated: false, user: "", known: false \}\);[\s\S]*primeBackendLoginFromCache\(\);[\s\S]*revealBackendLogin\(\);[\s\S]*void loadWebsiteAuthStatus\(\);[\s\S]*setupTourSectionImagePrewarm\(\)/,
+    "Homepage init should paint the backend login button immediately, refresh auth in the background, and wait for the tours section before prewarming more tour images"
   );
   assert.match(
     mainSource,
@@ -3773,7 +3773,12 @@ test("frontend language switching updates the homepage in place instead of forci
   assert.match(
     mainSource,
     /function setupBackendLogin\(\) \{[\s\S]*pointerenter[\s\S]*focus[\s\S]*touchstart[\s\S]*if \(!state\.authStatusKnown\) \{[\s\S]*await loadWebsiteAuthStatus\(\);[\s\S]*navigateToBackendDestination\(\);/,
-    "Homepage backend login should load auth status only after explicit user interaction"
+    "Homepage backend login clicks should wait for a pending auth status load before choosing the backend or login destination"
+  );
+  assert.match(
+    mainSource,
+    /const WEBSITE_AUTH_CACHE_KEY = "asiatravelplan_backend_auth_me_v1";[\s\S]*function primeBackendLoginFromCache\(\)[\s\S]*applyWebsiteAuthState\(\{ authenticated: true, user, known: false \}\);[\s\S]*authStatusLoadPromise = \(async \(\) => \{[\s\S]*return authStatusLoadPromise;/,
+    "Homepage should restore a cached backend user label immediately and return the live auth-status promise"
   );
   assert.doesNotMatch(
     mainSource,
@@ -3783,7 +3788,7 @@ test("frontend language switching updates the homepage in place instead of forci
   assert.doesNotMatch(
     mainSource,
     /scheduleDeferredAuthStatusLoad\(\)|scheduleDeferredTask\(\(\) => \{\s*void loadWebsiteAuthStatus\(\)/,
-    "Homepage should not automatically schedule website auth status loading on first render"
+    "Homepage should refresh website auth status directly instead of hiding it behind an idle callback"
   );
   assert.match(
     mainSource,

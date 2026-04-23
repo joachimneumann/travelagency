@@ -15,7 +15,8 @@
 }
 
 .backend-nav__logout {
-  display: block;
+  display: flex;
+  align-self: flex-start;
   width: max-content;
 }
 
@@ -29,7 +30,19 @@
   align-items: center;
   justify-content: center;
   gap: 0.05rem;
+  padding: 0.5rem 0.7rem;
+  border-radius: 8px;
+  color: var(--text);
+  font-size: var(--font-size-body-sm);
+  font-weight: var(--font-weight-semibold);
   line-height: 1.08;
+  text-align: center;
+  vertical-align: top;
+}
+
+.backend-nav__logout-link:hover,
+.backend-nav__logout-link:focus-visible {
+  background: var(--accent-soft);
 }
 
 .backend-nav__user {
@@ -62,6 +75,7 @@
 
 .backend-main-nav .backend-section-nav-wrap {
   margin-top: 0;
+  max-width: 100%;
 }
 
 .backend-section-nav-wrap {
@@ -186,7 +200,7 @@
 
   .backend-main-nav .backend-section-nav-wrap {
     width: auto;
-    margin-left: auto;
+    margin-left: 0;
   }
 
   .backend-main-nav .backend-section-nav-wrap,
@@ -225,12 +239,12 @@
 
   .backend-main-nav .backend-section-nav-wrap {
     margin-top: 0;
-    width: 100%;
+    width: auto;
   }
 
   .backend-main-nav .backend-section-nav {
     justify-content: flex-end;
-    width: 100%;
+    width: auto;
   }
 
   .backend-main-nav .backend-section-nav__item {

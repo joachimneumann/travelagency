@@ -91,6 +91,13 @@ export function mountBackendNav(mount, options = {}) {
 
   mount.innerHTML = `
     <nav class="nav backend-main-nav" aria-label="Backend navigation">
+      <div class="backend-nav__logout">
+        <a class="backend-nav__logout-link" id="backendLogoutLink" href="#">
+          <span class="backend-nav__logout-title">${backendT("nav.logout", "Logout")}</span>
+          <span class="backend-nav__user" id="backendUserLabel"></span>
+        </a>
+      </div>
+
       <div class="backend-section-nav-wrap">
         <div class="backend-section-nav" role="tablist" aria-label="${backendT("a11y.backend_sections", "Backend sections")}">
           ${buildSectionButton("bookings", backendT("nav.bookings", "Bookings"), { type: "image", src: "assets/img/profile_booking.png", size: "large" })}
@@ -103,12 +110,6 @@ export function mountBackendNav(mount, options = {}) {
       <div class="backend-nav__meta">
         <ul class="nav-list">
           <li class="backend-nav__website"><a href="${websiteHref}">${backendT("nav.website", "Website")}</a></li>
-          <li class="backend-nav__logout">
-            <a class="backend-nav__logout-link" id="backendLogoutLink" href="#">
-              <span class="backend-nav__logout-title">${backendT("nav.logout", "Logout")}</span>
-              <span class="backend-nav__user" id="backendUserLabel"></span>
-            </a>
-          </li>
           <li id="backendLangMenuMount"></li>
         </ul>
       </div>

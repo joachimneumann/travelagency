@@ -115,6 +115,7 @@ const SHOW_MORE_BATCH = 3;
 const BACKEND_BASE_URL = window.ASIATRAVELPLAN_API_BASE ? window.ASIATRAVELPLAN_API_BASE.replace(/\/$/, "") : "";
 const API_BASE_ORIGIN = BACKEND_BASE_URL || window.location.origin;
 const PUBLIC_BOOTSTRAP_URL = `${API_BASE_ORIGIN}/public/v1/mobile/bootstrap`;
+const WEBSITE_AUTH_CACHE_KEY = "asiatravelplan_backend_auth_me_v1";
 const els = {
   navToggle: document.getElementById("navToggle"),
   siteNav: document.getElementById("siteNav"),
@@ -401,8 +402,10 @@ async function init() {
   setupFooterCompanyProfile();
   setupBackendLogin();
   setupHiddenBackendQuickLogin();
-  placeBackendLogin(false);
+  applyWebsiteAuthState({ authenticated: false, user: "", known: false });
+  primeBackendLoginFromCache();
   revealBackendLogin();
+  void loadWebsiteAuthStatus();
   setupModal();
   setupFormNavigation();
   setupLiveValidationReset();
@@ -930,6 +933,36 @@ function revealBackendLogin() {
   els.backendLoginContainer?.classList.remove("backend-login--deferred");
 }
 
+function resolveWebsiteAuthUserLabel(authUser = null) {
+  return normalizeText(authUser?.preferred_username || authUser?.email || authUser?.sub);
+}
+
+function applyWebsiteAuthState({ authenticated, user = "", known = true } = {}) {
+  const resolvedUser = normalizeText(user);
+  state.websiteAuthenticated = Boolean(authenticated);
+  state.websiteAuthenticatedUser = state.websiteAuthenticated ? resolvedUser : "";
+  if (known) {
+    state.authStatusKnown = true;
+  }
+  placeBackendLogin(state.websiteAuthenticated);
+  updateBackendButtonLabel({
+    authenticated: state.websiteAuthenticated,
+    user: state.websiteAuthenticatedUser
+  });
+}
+
+function primeBackendLoginFromCache() {
+  try {
+    const cachedPayload = JSON.parse(window.sessionStorage.getItem(WEBSITE_AUTH_CACHE_KEY) || "null");
+    if (cachedPayload?.authenticated !== true || !cachedPayload.user) return;
+    const user = resolveWebsiteAuthUserLabel(cachedPayload.user);
+    if (!user) return;
+    applyWebsiteAuthState({ authenticated: true, user, known: false });
+  } catch {
+    // Ignore stale or unavailable session storage; the live auth check below is authoritative.
+  }
+}
+
 async function loadWebsiteAuthStatus({ force = false } = {}) {
   if (!els.backendLoginContainer) return false;
   if (state.authStatusKnown && !force) return state.websiteAuthenticated;
@@ -940,32 +973,21 @@ async function loadWebsiteAuthStatus({ force = false } = {}) {
       const { fetchAuthMe } = await ensureAuthRuntime();
       const { response, payload } = await fetchAuthMe(BACKEND_BASE_URL);
       if (!response.ok || !payload?.authenticated) {
-        state.websiteAuthenticated = false;
-        state.websiteAuthenticatedUser = "";
-        state.authStatusKnown = true;
-        placeBackendLogin(false);
-        updateBackendButtonLabel({ authenticated: false, user: "" });
+        applyWebsiteAuthState({ authenticated: false, user: "" });
         return false;
       }
-      const user = payload.user?.preferred_username || payload.user?.email || payload.user?.sub || "authenticated user";
-      state.websiteAuthenticated = true;
-      state.websiteAuthenticatedUser = user;
-      state.authStatusKnown = true;
-      placeBackendLogin(true);
-      updateBackendButtonLabel({ authenticated: true, user });
+      const user = resolveWebsiteAuthUserLabel(payload.user) || "authenticated user";
+      applyWebsiteAuthState({ authenticated: true, user });
       return true;
     } catch {
-      state.websiteAuthenticated = false;
-      state.websiteAuthenticatedUser = "";
-      state.authStatusKnown = true;
-      placeBackendLogin(false);
-      updateBackendButtonLabel({ authenticated: false, user: "" });
+      applyWebsiteAuthState({ authenticated: false, user: "" });
       return false;
     } finally {
       revealBackendLogin();
       authStatusLoadPromise = null;
     }
   });
+  return authStatusLoadPromise;
 }
 
 function isStagingFrontend() {
