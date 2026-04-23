@@ -3723,8 +3723,8 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
   );
   assert.match(
     stagingCaddy,
-    /staging\.asiatravelplan\.com \{[\s\S]*@staging_logo path \/assets\/img\/logo-asiatravelplan\.svg[\s\S]*rewrite @staging_logo \/assets\/img\/staging\.png/,
-    "Staging should swap the shared top-left logo asset to the staging badge image"
+    /staging\.asiatravelplan\.com \{[\s\S]*@staging_logo path \/assets\/img\/logo-asiatravelplan\.svg[\s\S]*handle @staging_logo \{[\s\S]*rewrite \* \/assets\/img\/staging\.png[\s\S]*file_server[\s\S]*\}/,
+    "Staging should swap the shared top-left logo asset to the staging badge image through a dedicated file-serving route"
   );
   assert.match(
     stagingCaddy,

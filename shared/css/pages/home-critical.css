@@ -163,6 +163,10 @@
 }
 
 @media (max-width: 760px) {
+  .home-page .hero-bg-video {
+    object-position: 68% center;
+  }
+
   .home-page .hero-content {
     align-items: center;
     text-align: center;
@@ -191,5 +195,11 @@
 
   .home-page .trust-tile {
     border-radius: 16px;
+  }
+}
+
+@media (max-width: 520px) {
+  .home-page .hero-bg-video {
+    object-position: 74% center;
   }
 }
