@@ -931,6 +931,9 @@ textarea:focus-visible {
     display: none;
     flex-direction: column;
     align-items: stretch;
+    max-height: calc(100vh - 69px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
   }
 
   .nav.open {
@@ -940,6 +943,27 @@ textarea:focus-visible {
   .nav-list {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  #frontendLangMenuMount,
+  #backendLangMenuMount {
+    align-items: flex-start;
+    width: 100%;
+  }
+
+  .lang-menu {
+    align-self: flex-start;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .lang-menu-panel {
+    position: static;
+    margin-top: 0.45rem;
+    max-width: calc(100vw - 2rem);
+    min-width: min(210px, calc(100vw - 2rem));
+    max-height: min(24rem, 60vh);
+    overflow-y: auto;
   }
 
   .filter-menu {
