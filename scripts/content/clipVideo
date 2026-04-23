@@ -1,0 +1,110 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  cat <<'EOF'
+Usage:
+  ./scripts/content/clipVideo <input-video> [output-video]
+
+Creates a portrait 9:16 MP4 optimized for mobile playback. The frame is
+center-cropped before resizing, so the remaining video always comes from the
+center of the original. Output is compressed and downscaled for smaller mobile-
+friendly files.
+
+Arguments:
+  input-video   Source video file
+  output-video  Optional output path (default: <input-base>.portrait.mp4)
+
+Examples:
+  ./scripts/content/clipVideo input.mov
+  ./scripts/content/clipVideo input.mov output/short.mp4
+EOF
+}
+
+require_command() {
+  local command_name="$1"
+  if ! command -v "$command_name" >/dev/null 2>&1; then
+    echo "Error: '$command_name' command not found." >&2
+    exit 1
+  fi
+}
+
+input_has_audio() {
+  local input_path="$1"
+  ffprobe \
+    -v error \
+    -select_streams a:0 \
+    -show_entries stream=codec_type \
+    -of csv=p=0 \
+    "$input_path" 2>/dev/null | grep -q .
+}
+
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+  usage
+  exit 0
+fi
+
+if [[ $# -lt 1 || $# -gt 2 ]]; then
+  usage >&2
+  exit 1
+fi
+
+require_command ffmpeg
+require_command ffprobe
+
+INPUT_PATH="$1"
+
+if [[ ! -f "$INPUT_PATH" ]]; then
+  echo "Error: input video not found: $INPUT_PATH" >&2
+  exit 1
+fi
+
+if [[ $# -eq 2 ]]; then
+  OUTPUT_PATH="$2"
+else
+  INPUT_DIR="$(dirname "$INPUT_PATH")"
+  INPUT_FILE="$(basename "$INPUT_PATH")"
+  INPUT_BASE="${INPUT_FILE%.*}"
+  OUTPUT_PATH="$INPUT_DIR/$INPUT_BASE.portrait.mp4"
+fi
+
+OUTPUT_DIR="$(dirname "$OUTPUT_PATH")"
+mkdir -p "$OUTPUT_DIR"
+
+FILTER_CHAIN="crop='if(gte(iw*16,ih*9),18*trunc(ih/32),18*trunc(iw/18))':'if(gte(iw*16,ih*9),32*trunc(ih/32),32*trunc(iw/18))',scale='if(gt(iw,720),720,iw)':-2:flags=lanczos,setsar=1"
+
+FFMPEG_ARGS=(
+  -y
+  -i "$INPUT_PATH"
+  -map 0:v:0
+  -vf "$FILTER_CHAIN"
+  -c:v libx264
+  -preset slow
+  -crf 28
+  -maxrate 1800k
+  -bufsize 3600k
+  -profile:v main
+  -level 3.1
+  -pix_fmt yuv420p
+  -r 30
+  -g 60
+  -bf 2
+  -map_metadata -1
+  -movflags +faststart
+)
+
+if input_has_audio "$INPUT_PATH"; then
+  FFMPEG_ARGS+=(
+    -map 0:a:0
+    -c:a aac
+    -b:a 96k
+    -ac 2
+    -ar 48000
+  )
+fi
+
+FFMPEG_ARGS+=("$OUTPUT_PATH")
+
+ffmpeg "${FFMPEG_ARGS[@]}"
+
+echo "Created portrait mobile video: $OUTPUT_PATH"

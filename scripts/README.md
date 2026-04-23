@@ -51,6 +51,7 @@ Common entry points:
 
 ./scripts/content/wipe_local_bookings.sh --yes
 ./scripts/content/wipe_staging_bookings.sh --yes
+./scripts/content/clipVideo assets/video/mountains.mp4
 
 ./scripts/i18n/translate check
 node scripts/assets/generate_public_homepage_assets.mjs
