@@ -54,6 +54,9 @@
     file_server
   }
 
+  @local_logo path /assets/img/logo-asiatravelplan.svg
+  rewrite @local_logo /assets/img/local.png
+
   @backend path /auth/* /api/* /public/v1/* /integrations/*
   handle @backend {
     reverse_proxy host.docker.internal:8787
