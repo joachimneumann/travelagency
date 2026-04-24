@@ -1197,7 +1197,7 @@ textarea:focus-visible {
 .team-section {
   display: grid;
   gap: 2.35rem;
-  margin: 3.4rem 0 2.7rem;
+  margin: 1rem 0 2.7rem;
 }
 
 .team-section__head {
@@ -1205,12 +1205,35 @@ textarea:focus-visible {
 }
 
 .team-section__title {
-  margin: 0;
+  margin: 0 0 0.7rem;
+  overflow: hidden;
 }
 
 .team-section__body {
+  display: grid;
+  grid-template-rows: 0fr;
   margin-bottom: 0;
   margin-top: 0.5rem;
+  transition: grid-template-rows 0.4s cubic-bezier(0.2, 0.9, 0.22, 1);
+}
+
+.team-section__body-inner {
+  min-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(-0.85rem);
+  transition:
+    opacity 0.24s ease,
+    transform 0.4s cubic-bezier(0.2, 0.9, 0.22, 1);
+}
+
+.team-section.is-expanded .team-section__body {
+  grid-template-rows: 1fr;
+}
+
+.team-section.is-expanded .team-section__body-inner {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .team-grid {
@@ -1244,7 +1267,7 @@ textarea:focus-visible {
   will-change: opacity, transform;
 }
 
-.team-section.is-visible .team-card {
+.team-section.is-expanded .team-card {
   opacity: 1;
   transform: translateY(0);
 }

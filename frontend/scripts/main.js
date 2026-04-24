@@ -47,6 +47,7 @@ const state = {
   trips: [],
   teamMembers: [],
   teamMembersLoaded: false,
+  teamSectionExpanded: false,
   filteredTrips: [],
   filterOptions: {
     destinations: [],
@@ -155,7 +156,9 @@ const els = {
   toursTitle: document.getElementById("toursTitle"),
   toursBooking: document.getElementById("toursBooking"),
   teamSection: document.getElementById("teamSection"),
+  teamSectionShell: document.getElementById("teamSectionShell"),
   teamSectionTitle: document.getElementById("teamSectionTitle"),
+  teamSectionToggleIcon: document.getElementById("teamSectionToggleIcon"),
   teamSectionBody: document.getElementById("teamSectionBody"),
   teamGrid: document.getElementById("teamGrid"),
   teamDetail: document.getElementById("teamDetail"),
@@ -796,9 +799,104 @@ function ensureTeamMembersLoaded(options) {
   return loadTeamMembers(options);
 }
 
+function hideTeamMemberDetail() {
+  if (!els.teamDetail) return;
+  els.teamDetail.hidden = true;
+  els.teamDetail.setAttribute("aria-hidden", "true");
+  els.teamDetail.innerHTML = "";
+}
+
+function setTeamSectionExpanded(isExpanded, { loadMembers = true } = {}) {
+  const nextExpanded = isExpanded === true;
+  if (state.teamSectionExpanded === nextExpanded) {
+    if (nextExpanded && loadMembers) {
+      void ensureTeamMembersLoaded();
+    }
+    syncTeamSectionExpandedState();
+    return;
+  }
+  state.teamSectionExpanded = nextExpanded;
+  if (!state.teamSectionExpanded) {
+    state.selectedTeamMemberUsername = "";
+  }
+  syncTeamSectionExpandedState();
+  if (state.teamSectionExpanded && loadMembers) {
+    void ensureTeamMembersLoaded();
+  }
+}
+
+function toggleTeamSection() {
+  setTeamSectionExpanded(!state.teamSectionExpanded);
+}
+
+function syncTeamSectionExpandedState() {
+  if (els.teamSectionShell instanceof HTMLElement) {
+    els.teamSectionShell.classList.toggle("open", state.teamSectionExpanded === true);
+  }
+  if (els.teamSection instanceof HTMLElement) {
+    els.teamSection.classList.toggle("is-expanded", state.teamSectionExpanded === true);
+  }
+  if (els.teamSectionTitle instanceof HTMLElement) {
+    els.teamSectionTitle.setAttribute("aria-expanded", state.teamSectionExpanded === true ? "true" : "false");
+  }
+  if (els.teamSectionToggleIcon instanceof HTMLElement) {
+    els.teamSectionToggleIcon.textContent = state.teamSectionExpanded === true ? "−" : "+";
+  }
+  if (els.teamSectionBody instanceof HTMLElement) {
+    els.teamSectionBody.setAttribute("aria-hidden", state.teamSectionExpanded === true ? "false" : "true");
+  }
+  if (!state.teamSectionExpanded) {
+    hideTeamMemberDetail();
+  }
+}
+
+function setupTeamNavigationExpansion() {
+  document.querySelectorAll('a[href="#trust"]').forEach((link) => {
+    if (!(link instanceof HTMLAnchorElement) || link.dataset.teamExpandBound === "1") return;
+    link.dataset.teamExpandBound = "1";
+    link.addEventListener("click", (event) => {
+      const alreadyAtTrust = window.location.hash === "#trust";
+      if (alreadyAtTrust && state.teamSectionExpanded) {
+        event.preventDefault();
+        setTeamSectionExpanded(false, { loadMembers: false });
+        document.getElementById("trust")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        return;
+      }
+      setTeamSectionExpanded(true);
+    });
+  });
+
+  if (window.location.hash === "#trust") {
+    setTeamSectionExpanded(true);
+  }
+
+  if (document.body?.dataset.teamHashBound === "1") return;
+  document.body.dataset.teamHashBound = "1";
+  window.addEventListener("hashchange", () => {
+    if (window.location.hash === "#trust") {
+      setTeamSectionExpanded(true);
+    }
+  });
+}
+
 function setupTeamSection() {
-  if (!els.teamGrid || els.teamGrid.dataset.teamBound === "1") return;
+  if (
+    !(els.teamGrid instanceof HTMLElement) ||
+    !(els.teamSection instanceof HTMLElement) ||
+    !(els.teamSectionTitle instanceof HTMLButtonElement) ||
+    !(els.teamSectionBody instanceof HTMLElement) ||
+    els.teamGrid.dataset.teamBound === "1"
+  ) return;
   els.teamGrid.dataset.teamBound = "1";
+  syncTeamSectionExpandedState();
+  setupTeamNavigationExpansion();
+  els.teamSectionTitle.addEventListener("focus", () => {
+    if (!els.teamSectionTitle.matches(":focus-visible")) return;
+    setTeamSectionExpanded(true);
+  });
+  els.teamSectionTitle.addEventListener("click", () => {
+    toggleTeamSection();
+  });
   const handleToggle = (element) => {
     const username = normalizeText(element?.getAttribute?.("data-team-member")).toLowerCase();
     if (!username) return;
@@ -874,15 +972,15 @@ function renderTeamSection() {
   const selected = members.find((member) => member.username === selectedUsername) || null;
 
   if (!members.length) {
+    setTeamSectionExpanded(false, { loadMembers: false });
     els.teamSection.hidden = true;
     els.teamGrid.innerHTML = "";
-    els.teamDetail.hidden = true;
-    els.teamDetail.setAttribute("aria-hidden", "true");
-    els.teamDetail.innerHTML = "";
+    hideTeamMemberDetail();
     return;
   }
 
   els.teamSection.hidden = false;
+  syncTeamSectionExpandedState();
   els.teamGrid.innerHTML = members.map((member, memberIndex) => {
     const isActive = member.username === selectedUsername;
     const role = member.role || frontendT("trust.team.role_fallback", "Team member");
@@ -920,9 +1018,7 @@ function renderTeamSection() {
   });
 
   if (!selected) {
-    els.teamDetail.hidden = true;
-    els.teamDetail.setAttribute("aria-hidden", "true");
-    els.teamDetail.innerHTML = "";
+    hideTeamMemberDetail();
     return;
   }
 

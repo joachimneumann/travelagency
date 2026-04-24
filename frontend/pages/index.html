@@ -236,10 +236,25 @@
 
       <section class="section" id="trust">
         <div class="container">
-          <h2 class="section-title" data-i18n-id="trust.heading">About Us</h2>
+          <h2 class="section-title faq-item team-section__title" id="teamSectionShell">
+            <button
+              class="faq-question team-section__toggle"
+              id="teamSectionTitle"
+              type="button"
+              aria-expanded="false"
+              aria-controls="teamSectionBody"
+            >
+              <span data-i18n-id="trust.heading">About Us</span>
+              <span class="team-section__toggle-icon" id="teamSectionToggleIcon" aria-hidden="true">+</span>
+            </button>
+          </h2>
 
-          <section class="team-section" id="teamSection">
-            <div class="team-grid" id="teamGrid" aria-live="polite"></div>
+          <section class="team-section" id="teamSection" aria-labelledby="teamSectionTitle">
+            <div class="team-section__body" id="teamSectionBody" aria-hidden="true">
+              <div class="team-section__body-inner">
+                <div class="team-grid" id="teamGrid" aria-live="polite"></div>
+              </div>
+            </div>
             <div class="team-detail-overlay" id="teamDetail" hidden></div>
           </section>
 
