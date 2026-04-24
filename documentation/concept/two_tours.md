@@ -44,59 +44,85 @@ Marketing tours currently contain marketing content only:
 
 ## Target Model
 
-Use one travel-plan shape for both booking and marketing-tour plans, with different validation and UI modes.
+Use CUE composition rather than an object-oriented inheritance model. The model should introduce a neutral base travel plan and then refine it for booking-specific needs.
 
-The existing `BookingTravelPlan` structure is a good base:
+The base plan should represent the reusable itinerary content:
 
-```text
-travel_plan
-  destinations[]
-  days[]
-    id
-    day_number
-    date?
-    date_string?
-    title
-    title_i18n?
-    overnight_location?
-    overnight_location_i18n?
-    notes?
-    notes_i18n?
-    services[]
-      id
-      timing_kind
-      time_label?
-      time_label_i18n?
-      kind
-      title?
-      title_i18n?
-      details?
-      details_i18n?
-      location?
-      location_i18n?
-      image?
+```cue
+#TravelPlan: {
+	video?: #TravelPlanVideo
+	days?: [...#TravelPlanDay]
+}
+
+#TravelPlanVideo: {
+	storage_path?: string
+	title?:        string
+}
+
+#TravelPlanDay: {
+	id:         common.#Identifier
+	day_number: >0 & int
+	title?:    string
+	services?: [...#TravelPlanService]
+	...
+}
+
+#TravelPlanService: {
+	id:    common.#Identifier
+	title: string
+	image?: #TravelPlanServiceImage
+	...
+}
 ```
 
-For marketing tours, apply stricter normalization:
+The booking plan should refine the base with operational fields:
 
-- `days.length` is the number of days. Do not add a separate duration field unless we later need empty-day scaffolding without day records.
-- Day `date` is always empty/null in storage.
-- Date-specific service fields (`time_point`, `start_time`, `end_time`) are either hidden in the UI or normalized away for v1.
-- `attachments` are always empty for marketing tours.
-- `copied_from` metadata is stripped for marketing tours.
-- Service images are allowed, but stored under the tour media tree, not booking media.
+```cue
+#BookingTravelPlan: #TravelPlan & {
+	days?: [...#BookingTravelPlanDay]
+	attachments?: [...#BookingTravelPlanAttachment]
+}
 
-The CUE layer should introduce a shared travel-plan type instead of continuing to make file-backed content import a booking-named type:
+#BookingTravelPlanDay: #TravelPlanDay & {
+	date?:        common.#DateOnly
+	date_string?: string
+	services?: [...#BookingTravelPlanService]
+}
 
-- Add a shared `#TravelPlan` and related day/service/image types, probably in `model/database/travel_plan.cue` initially to minimize churn.
-- Keep `#BookingTravelPlan` as an alias or wrapper for compatibility.
-- Add `#MarketingTourTravelPlan` as the constrained form used by `#Tour`.
-- Extend `model/json/tour.cue` with `travel_plan?: #MarketingTourTravelPlan`.
-- Remove `model/json/standard_tour.cue` after migration.
+#BookingTravelPlanService: #TravelPlanService & {
+	details?:      string
+	details_i18n?: [string]: string
+}
+```
+
+Marketing tours should use `#TravelPlan` directly at first. Add `#MarketingTourTravelPlan` only if marketing tours need constraints beyond the base, such as rejecting booking-only fields at schema level instead of only normalizing them in backend code.
+
+Important modeling decisions:
+
+- Keep the existing `details` field name for booking service descriptions. Do not rename it to `description` unless a separate API migration is planned.
+- The target base service has a required `title`. If current stored booking or standard-tour data has blank service titles, keep `title` temporarily optional in phase 1 and tighten it after a data audit/migration.
+- Keep `#BookingTravelPlan` as the operational type used by bookings, generated offers, accepted snapshots, and PDFs.
+- Add `travel_plan?: databaseModel.#TravelPlan` to `model/json/tour.cue`.
+- Make the base day/service structs open with `...` so booking-specific refinements can add fields without fighting CUE closed-struct behavior.
+- Move only genuinely shared fields into the base. Booking-only fields such as real dates, attachments, copied provenance, PDFs, and service `details` should stay on booking refinements.
+- Remove `model/json/standard_tour.cue` only after standard-tour content has been migrated.
 
 ## Backend Plan
 
-### 1. Split Generic Travel-Plan Logic From Booking Logic
+### 1. Refactor CUE Contracts Additively
+
+Do this before changing UI or removing standard tours.
+
+- Add neutral `#TravelPlan`, `#TravelPlanVideo`, `#TravelPlanDay`, `#TravelPlanService`, and `#TravelPlanServiceImage` types.
+- Refactor `#BookingTravelPlan`, `#BookingTravelPlanDay`, and `#BookingTravelPlanService` to compose the neutral base.
+- Keep booking field names stable, especially service `details`.
+- Keep existing booking API behavior stable after generated artifacts are regenerated.
+- Only then add `travel_plan?: databaseModel.#TravelPlan` to `#Tour`.
+- Represent the existing marketing-tour reel video as `travel_plan.video` when practical. The file can stay at `content/tours/{tour_id}/video.mp4` during the transition; the schema should not force a media move.
+
+This fixes the current conceptual problem where non-booking content depends on a booking-named travel-plan schema.
+
+### 2. Split Generic Travel-Plan Logic From Booking Logic
 
 Keep `backend/app/src/domain/travel_plan.js` as the normalization/validation center, but make the mode explicit:
 
@@ -108,9 +134,9 @@ Keep `backend/app/src/domain/travel_plan.js` as the normalization/validation cen
 
 Booking mode keeps real dates, attachments, copied provenance, and booking translation behavior.
 
-Marketing-tour mode strips dates, attachments, copied provenance, and booking-only metadata.
+Marketing-tour mode starts from the base `#TravelPlan` and strips accidental booking-only fields such as dates, attachments, copied provenance, and service `details`.
 
-### 2. Extend Marketing Tour APIs
+### 3. Extend Marketing Tour APIs
 
 Extend existing tour payloads instead of creating another top-level resource:
 
@@ -143,7 +169,7 @@ The stored `storage_path` should be:
 /public/v1/tour-images/{tour_id}/travel-plan-services/{generated_name}.webp
 ```
 
-### 3. Replace Standard-Tour Apply With Marketing-Tour Apply
+### 4. Replace Standard-Tour Apply With Marketing-Tour Apply
 
 Standard tours currently act as templates that can replace a booking travel plan. Marketing tours should take over that job.
 
@@ -163,7 +189,7 @@ It should clone the marketing-tour plan into the booking:
 
 Copying images is preferable to referencing `/public/v1/tour-images/...` from booking plans because the PDF renderer currently resolves service images from booking image storage. It also makes accepted booking snapshots less dependent on later marketing-tour edits.
 
-### 4. Retire Standard-Tour Backend
+### 5. Retire Standard-Tour Backend
 
 After migration and UI replacement:
 
@@ -176,15 +202,44 @@ After migration and UI replacement:
 
 ## Frontend Plan
 
-### 1. Turn The Standard-Tour Wrapper Into A Generic Adapter
+### 1. Make GUI Reuse A Hard Requirement
 
-The current `frontend/scripts/shared/standard_tour_editor.js` should become a generic travel-plan editor adapter, for example:
+There should be one shared travel-plan GUI implementation for the two remaining travel plans:
+
+- Booking travel plan
+- Marketing-tour travel plan
+
+The booking page and marketing-tour page should not each own their own day/service renderer. They should supply mode, state, endpoints, permissions, and feature flags to a shared editor core.
+
+The target split should be:
 
 ```text
-frontend/scripts/shared/travel_plan_editor_adapter.js
+frontend/scripts/shared/travel_plan_editor_core.js
+frontend/scripts/shared/travel_plan_editor_helpers.js
+frontend/scripts/shared/travel_plan_editor_images.js
+frontend/scripts/shared/travel_plan_editor_validation.js
+frontend/scripts/booking/travel_plan_adapter.js
+frontend/scripts/pages/tour_travel_plan_adapter.js
 ```
 
-The adapter should wrap `createBookingTravelPlanModule`, but accept a context:
+The current `frontend/scripts/booking/travel_plan.js` should be treated as the starting point for the shared core. Move reusable rendering and DOM behavior out of the booking folder instead of copying it into `tour.js`.
+
+The current `frontend/scripts/shared/standard_tour_editor.js` should be temporary scaffolding only. Its useful idea is the adapter pattern, not the file itself.
+
+### 2. GUI Reuse Rules
+
+These rules should be treated as implementation acceptance criteria:
+
+- A change to day or service markup should be made in one shared renderer and affect both booking and marketing-tour travel plans.
+- A change to add/remove/reorder/collapse behavior should be made in one shared event layer and affect both modes.
+- A shared travel-plan control should be added to the shared core first, then enabled or disabled through mode features.
+- Booking-specific code may add real dates, `details`, imports, attachments, PDFs, translation, and revision handling, but it should not fork the generic day/service editor.
+- Marketing-tour-specific code may map the plan to the tour page and tour endpoints, but it should not implement its own day/service renderer in `tour.js`.
+- The two adapters should be thin enough that most defects in travel-plan editing are fixed once in shared code.
+
+### 3. Shared Editor Core Contract
+
+The shared core should accept a context like this:
 
 ```text
 {
@@ -198,32 +253,104 @@ The adapter should wrap `createBookingTravelPlanModule`, but accept a context:
     imageUpload,
     attachments,
     pdfs,
-    translation
+    translation,
+    serviceDetails,
+    video
   },
   persistence: {
     saveTravelPlan,
     uploadServiceImage,
-    deleteServiceImage
+    deleteServiceImage,
+    uploadTravelPlanVideo,
+    deleteTravelPlanVideo
+  },
+  hooks: {
+    onDirtyChange,
+    onSaved,
+    onStatusChange
   }
 }
 ```
 
-Booking mode uses the existing booking endpoints and keeps all existing behavior.
+The shared core owns:
 
-Marketing-tour mode should use the same day/service rendering where possible, with these differences:
+- Rendering days and services.
+- Add/remove/reorder day behavior.
+- Add/remove/reorder service behavior.
+- Collapse/expand behavior.
+- Shared travel-plan normalization for UI state.
+- Shared DOM event binding.
+- Shared service image preview UI.
+- Optional travel-plan video UI when `features.video` is enabled.
+- Shared client-side validation that applies to both modes.
+- Shared empty/loading/status rendering.
+- Shared CSS class naming and mode class application.
+
+Adapters own:
+
+- Loading the parent entity.
+- Saving to booking or tour endpoints.
+- Revision handling when the parent entity has revisions.
+- Mapping API payloads into the shared editor state.
+- Mapping shared editor output back into API payloads.
+- Deciding which feature flags are enabled.
+- Parent-page dirty bar integration.
+- Parent-page permissions.
+
+The adapter boundary is important. The booking adapter should translate existing booking state into the shared editor state and back. The marketing-tour adapter should translate tour `travel_plan` state into the same shared editor state and back. The shared core should not know whether the parent entity is a booking or a tour except through `mode`, feature flags, and injected persistence functions.
+
+Persistence functions should only be required when the matching feature is enabled. For example, booking mode can set `video` to false and omit video persistence.
+
+### 4. Mode Differences
+
+Booking mode uses the shared core with all current booking behavior:
+
+- Real day dates.
+- Booking service `details`.
+- Travel-plan attachments.
+- Travel-plan PDFs.
+- Translation controls.
+- Booking day/plan/service imports.
+- Service images stored under booking image storage.
+- Travel-plan video hidden unless a later product decision enables it for bookings.
+- Booking revision conflict handling.
+- Booking activity log updates through backend handlers.
+
+Marketing-tour mode uses the same shared core with a smaller feature set:
 
 - Hide date controls.
+- Hide booking-only service `details` controls.
 - Hide renumber-days, attachments, PDFs, booking plan imports, booking day imports, and booking service imports.
 - Allow creating, reordering, and removing days/services.
 - Allow service image upload/delete through tour endpoints.
+- Allow one optional travel-plan video through tour video persistence.
 - Treat `days.length` as the displayed day count.
 
-### 2. Embed The Travel Plan In `marketing_tour.html`
+The DOM markup for a day and a service should come from the same renderer in both modes. Feature flags should remove individual controls, not fork the whole template.
+
+### 5. Shared Styling
+
+Use the existing travel-plan CSS as the shared visual base:
+
+```text
+shared/css/pages/backend-booking-travel-plan.css
+```
+
+Rename or reorganize only if useful, but do not create a second marketing-tour travel-plan stylesheet. Mode-specific CSS should be small and scoped by a mode class such as:
+
+```text
+travel-plan-editor--booking
+travel-plan-editor--marketing-tour
+```
+
+### 6. Embed The Travel Plan In `marketing_tour.html`
 
 Add the travel-plan panel to the marketing tour editor page below the current marketing fields:
 
-- Existing gallery/video/title/description/destination/style fields stay on the same page.
-- New travel-plan section uses the shared editor adapter.
+- Existing gallery/title/description/destination/style fields stay on the same page.
+- The existing optional tour video should be treated as the travel-plan video in the model. Because `video` belongs to the base `#TravelPlan`, expose it through the shared editor as a feature-flagged control.
+- The first implementation can keep the existing tour video endpoint and disk path, but the marketing-tour adapter should map it to `travel_plan.video`.
+- New travel-plan section uses the shared editor core through the marketing-tour adapter.
 - The page dirty bar should include both marketing fields and travel-plan changes.
 - Save should persist both marketing fields and travel plan, or call a dedicated tour travel-plan endpoint after the main save.
 
@@ -233,7 +360,7 @@ The tour page will need the mounts currently missing from `standard-tour.html` i
 - Image preview modal.
 - Travel-plan status mount.
 
-### 3. Update Booking Import UI
+### 7. Update Booking Import UI
 
 Replace "Standard tours" with "Marketing tours" wherever booking travel-plan templates are offered.
 
@@ -259,7 +386,7 @@ Public payload options:
 
 - Include a trimmed, localized `travel_plan` in `public-tours.{lang}.json`.
 - Strip internal IDs only if no frontend interactions need them; otherwise keep stable IDs.
-- Strip attachments, copied provenance, and all booking-only metadata.
+- Strip attachments, copied provenance, booking service `details`, and all booking-only metadata.
 - Convert service image URLs to generated static asset URLs.
 
 Public UI options:
@@ -272,11 +399,15 @@ The homepage asset generator must be taught to copy nested tour service images, 
 
 ## Migration Plan
 
-### 1. Add The New Field First
+### 1. Refactor The Base Model First
+
+Add neutral `#TravelPlan` CUE types and refactor `#BookingTravelPlan` to compose them before changing runtime behavior. This keeps the first step focused on model clarity and contract compatibility.
+
+### 2. Add The New Tour Field
 
 Add `travel_plan` to marketing tours while standard tours still exist. This makes the change backwards compatible and lets editors begin filling marketing-tour plans.
 
-### 2. Dry-Run Standard-Tour Migration
+### 3. Dry-Run Standard-Tour Migration
 
 Create a migration script that reads:
 
@@ -301,19 +432,19 @@ Matching should be conservative:
 - Use normalized title matching as a fallback.
 - If no match exists, create a new marketing tour draft with the standard-tour title and travel plan.
 
-### 3. Copy Plans Into Marketing Tours
+### 4. Copy Plans Into Marketing Tours
 
 For each migrated standard tour:
 
-- Normalize through marketing-tour mode.
-- Strip dates, attachments, and copied provenance.
+- Normalize through base `#TravelPlan` mode.
+- Strip dates, attachments, copied provenance, and booking service `details`.
 - Copy service images into the destination tour folder when the source file can be resolved.
 - Rewrite service image paths to `/public/v1/tour-images/...`.
 - Preserve the original standard tour ID in temporary migration metadata, for audit only.
 
 Do not delete `content/standard_tours` in the same step. Keep it until the migrated marketing tours have been reviewed.
 
-### 4. Switch Booking Template Import
+### 5. Switch Booking Template Import
 
 After marketing tours have travel plans:
 
@@ -321,7 +452,7 @@ After marketing tours have travel plans:
 - Replace the apply endpoint with the marketing-tour apply endpoint.
 - Remove the standard-tour navigation item.
 
-### 5. Remove Standard Tours
+### 6. Remove Standard Tours
 
 After testing and content review:
 
@@ -335,51 +466,65 @@ After testing and content review:
 
 ## Implementation Phases
 
-### Phase 1: Contracts And Normalization
+### Phase 1: Additive CUE Base Refactor
 
-- Add `travel_plan` to `Tour`.
-- Add marketing-tour travel-plan normalization/validation.
+- Add neutral `#TravelPlan` types in `model/database/travel_plan.cue`.
+- Refactor `#BookingTravelPlan` to compose the neutral base.
+- Keep booking-specific service text as `details`.
 - Keep standard tours operational.
 - Regenerate API artifacts.
-- Add tests for marketing-tour plan normalization.
+- Add tests that existing booking travel-plan payloads still validate and generated contracts remain compatible.
 
-### Phase 2: Marketing-Tour Backend Endpoints
+### Phase 2: Tour Travel-Plan Contracts And Normalization
+
+- Add `travel_plan` to `Tour`.
+- Map the existing optional tour video into `travel_plan.video` without requiring an immediate media storage move.
+- Add base travel-plan normalization for tour content.
+- Strip booking-only fields from marketing-tour plans.
+- Keep standard tours operational.
+- Add tests for base travel-plan and tour travel-plan normalization.
+
+### Phase 3: Marketing-Tour Backend Endpoints
 
 - Persist tour `travel_plan`.
 - Add tour travel-plan PATCH endpoint.
 - Add tour service-image upload/delete endpoints.
 - Add tests for save, image upload, image delete, and public image serving.
 
-### Phase 3: Shared Frontend Editor
+### Phase 4: Shared Frontend Editor
 
-- Replace `standard_tour_editor.js` with a generic adapter.
-- Keep booking behavior unchanged.
-- Mount the adapter in `marketing_tour.html`.
-- Hide marketing-tour date/booking-only controls.
-- Enable marketing-tour service image upload.
+- Extract shared rendering, DOM events, UI-state normalization, validation, image preview, and status rendering from `frontend/scripts/booking/travel_plan.js` into shared travel-plan editor modules.
+- Add the optional travel-plan video control to the shared modules as a feature-flagged capability, even if booking mode keeps it disabled.
+- Add a booking adapter that keeps existing booking behavior unchanged while delegating day/service rendering and generic interactions to the shared core.
+- Add a marketing-tour adapter that mounts the same shared core in `marketing_tour.html` and maps `tour.travel_plan` to the shared editor state.
+- Keep `frontend/scripts/pages/tour.js` responsible for marketing fields and parent-page save coordination only. It should not contain copied day/service rendering logic.
+- Hide marketing-tour date controls, service `details`, imports, attachments, PDFs, translation controls, and booking-only revision UI through feature flags.
+- Enable marketing-tour service image upload/delete by injecting tour persistence functions into the shared core.
+- Retire `standard_tour_editor.js` after the shared adapter path is working. Do not preserve it as a second implementation of the same travel-plan GUI.
+- Add a source-integrity or frontend test that prevents duplicate travel-plan day/service renderers from reappearing outside the shared core.
 
-### Phase 4: Booking Template Import
+### Phase 5: Booking Template Import
 
 - Add marketing-tour apply endpoint for bookings.
 - Copy tour service images into booking image storage during apply.
 - Update booking import UI labels and calls.
 - Add tests that applying a marketing tour creates a valid booking travel plan and renders service images in PDFs.
 
-### Phase 5: Content Migration
+### Phase 6: Content Migration
 
 - Dry-run migration and review report.
 - Apply migration.
 - Regenerate homepage assets.
 - Review migrated plans in the marketing-tour editor.
 
-### Phase 6: Remove Standard Tours
+### Phase 7: Remove Standard Tours
 
 - Remove standard-tour backend/frontend/contracts/navigation.
 - Remove or redirect standard-tour pages.
 - Remove standard-tour generated API methods.
 - Clean i18n and source-integrity tests.
 
-### Phase 7: Public Display
+### Phase 8: Public Display
 
 - Add localized travel-plan data to generated public tour JSON.
 - Add day-by-day plan display to the public tour detail overlay.
@@ -418,14 +563,24 @@ Frontend:
 - `frontend/pages/standard-tour.html`
 - `frontend/pages/standard-tours.html`
 - `frontend/scripts/pages/tour.js`
+- `frontend/scripts/pages/tour_travel_plan_adapter.js` new
 - `frontend/scripts/pages/tours_list.js`
 - `frontend/scripts/pages/standard_tour.js`
 - `frontend/scripts/pages/standard_tours.js`
 - `frontend/scripts/shared/standard_tour_editor.js`
+- `frontend/scripts/shared/travel_plan_editor_core.js` new
+- `frontend/scripts/shared/travel_plan_editor_helpers.js` new or moved from booking helpers
+- `frontend/scripts/shared/travel_plan_editor_images.js` new or moved from booking images
+- `frontend/scripts/shared/travel_plan_editor_validation.js` new or moved from booking validation
 - `frontend/scripts/shared/nav.js`
 - `frontend/scripts/booking/travel_plan.js`
+- `frontend/scripts/booking/travel_plan_adapter.js` new
+- `frontend/scripts/booking/travel_plan_attachments.js`
+- `frontend/scripts/booking/travel_plan_dates.js`
 - `frontend/scripts/booking/travel_plan_helpers.js`
 - `frontend/scripts/booking/travel_plan_images.js`
+- `frontend/scripts/booking/travel_plan_pdfs.js`
+- `frontend/scripts/booking/travel_plan_validation.js`
 - `frontend/scripts/booking/travel_plan_service_library.js`
 
 Styling and content:
@@ -449,8 +604,18 @@ Tests:
 
 ## Verification Checklist
 
+- Neutral `#TravelPlan` validates without booking service `details`.
+- `#BookingTravelPlan` still validates with service `details` and real day dates.
+- Booking and marketing-tour pages both import the same shared travel-plan editor core.
+- Day and service markup is rendered by shared code, not separately in booking and marketing-tour scripts.
+- Generic day/service add, remove, reorder, collapse, image-preview, status, and validation behavior is implemented once in shared modules.
+- `frontend/scripts/pages/tour.js` does not contain a copied travel-plan day/service renderer.
+- Mode feature flags are covered for at least booking mode and marketing-tour mode.
+- Both modes use the same travel-plan CSS base with scoped mode overrides only.
 - Existing booking travel-plan editing still saves, reloads, imports, uploads images, creates PDFs, and handles revision conflicts.
 - Marketing-tour editor can create days and services without dates.
+- Marketing-tour editor exposes the optional travel-plan video through the shared feature-flagged control and stores it as `travel_plan.video`.
+- Marketing-tour editor does not expose booking service `details` unless a later product decision adds a marketing-specific text field.
 - Marketing-tour service images upload, display, persist, and are served through `/public/v1/tour-images/...`.
 - Applying a marketing tour to a booking creates a booking-local copy of the plan.
 - Applied booking plans use booking-local image paths so travel-plan PDFs include service images.
