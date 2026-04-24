@@ -1,6 +1,7 @@
 import { normalizeText } from "../../shared/js/text.js";
 
 const ACTIVE_CARD_THRESHOLDS = [0.2, 0.4, 0.6, 0.8];
+const ACTIVE_VIDEO_WINDOW_RADIUS = 1;
 
 export function createReelsRuntime(ctx) {
   const {
@@ -24,6 +25,7 @@ export function createReelsRuntime(ctx) {
   let observer = null;
   let scrollSyncFrame = 0;
   const visibilityByIndex = new Map();
+  let lifecycleBound = false;
 
   function escapeHtml(value) {
     return typeof escapeHTML === "function" ? escapeHTML(value) : String(value ?? "");
@@ -138,9 +140,13 @@ export function createReelsRuntime(ctx) {
           <video
             class="mobile-reel-card__video"
             data-reel-video
+            autoplay
             muted
             loop
             playsinline
+            webkit-playsinline
+            disablepictureinpicture
+            disableremoteplayback
             preload="none"
             poster="${escapeAttribute(item.posterUrl)}"
           ></video>
@@ -181,8 +187,28 @@ export function createReelsRuntime(ctx) {
     video.load();
   }
 
+  function configureVideoElement(video) {
+    if (!(video instanceof HTMLVideoElement)) return;
+    video.defaultMuted = true;
+    video.muted = true;
+    video.loop = true;
+    video.autoplay = true;
+    video.playsInline = true;
+    video.controls = false;
+    video.setAttribute("muted", "");
+    video.setAttribute("autoplay", "");
+    video.setAttribute("loop", "");
+    video.setAttribute("playsinline", "");
+    video.setAttribute("webkit-playsinline", "");
+    video.setAttribute("disablepictureinpicture", "");
+    video.setAttribute("disableremoteplayback", "");
+    video.disablePictureInPicture = true;
+    video.disableRemotePlayback = true;
+  }
+
   function ensureVideoLoaded(video, item, { preload = "metadata" } = {}) {
     if (!(video instanceof HTMLVideoElement) || !item) return;
+    configureVideoElement(video);
     const currentSrc = normalizeText(video.dataset.reelSrcAttached);
     if (currentSrc !== item.videoUrl) {
       video.pause();
@@ -193,11 +219,29 @@ export function createReelsRuntime(ctx) {
     video.preload = preload;
   }
 
+  function tryPlayVideo(video, { allowRetry = true } = {}) {
+    if (!(video instanceof HTMLVideoElement)) return;
+    configureVideoElement(video);
+    const playPromise = video.play();
+    if (!allowRetry || !playPromise || typeof playPromise.catch !== "function") return;
+    playPromise.catch(() => {
+      const retryPlay = () => {
+        if (!video.isConnected) return;
+        window.requestAnimationFrame(() => {
+          void tryPlayVideo(video, { allowRetry: false });
+        });
+      };
+      video.addEventListener("loadedmetadata", retryPlay, { once: true });
+      video.addEventListener("canplay", retryPlay, { once: true });
+      video.addEventListener("canplaythrough", retryPlay, { once: true });
+    });
+  }
+
   function syncActiveVideoWindow() {
     cardElements.forEach((cardEl, index) => {
       const video = cardEl.querySelector("[data-reel-video]");
       const item = renderedItems[index];
-      const shouldLoad = index === activeIndex || index === activeIndex + 1;
+      const shouldLoad = activeIndex >= 0 && Math.abs(index - activeIndex) <= ACTIVE_VIDEO_WINDOW_RADIUS;
       cardEl.classList.toggle("is-active", index === activeIndex);
 
       if (!(video instanceof HTMLVideoElement) || !item) return;
@@ -208,10 +252,7 @@ export function createReelsRuntime(ctx) {
 
       ensureVideoLoaded(video, item, { preload: index === activeIndex ? "auto" : "metadata" });
       if (index === activeIndex) {
-        video.muted = true;
-        video.loop = true;
-        video.playsInline = true;
-        void video.play().catch(() => {});
+        tryPlayVideo(video);
       } else {
         video.pause();
       }
@@ -297,8 +338,28 @@ export function createReelsRuntime(ctx) {
     });
   }
 
+  function bindLifecycleEvents() {
+    if (lifecycleBound) return;
+    lifecycleBound = true;
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState !== "visible" || !state?.reelsModeOpen) return;
+      window.requestAnimationFrame(() => {
+        syncActiveVideoWindow();
+      });
+    });
+
+    window.addEventListener("pageshow", () => {
+      if (!state?.reelsModeOpen) return;
+      window.requestAnimationFrame(() => {
+        syncActiveVideoWindow();
+      });
+    });
+  }
+
   async function open() {
     bindFeedEvents();
+    bindLifecycleEvents();
     let manifestLoadFailed = false;
     try {
       await ensureManifest();
