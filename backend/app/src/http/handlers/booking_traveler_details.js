@@ -17,6 +17,7 @@ const PUBLIC_TRAVELER_DOCUMENT_TYPES = new Set(["passport", "national_id"]);
 const PUBLIC_TRAVELER_CONSENT_TYPES = new Set(["privacy_policy", "marketing_email", "marketing_whatsapp", "profiling"]);
 const PUBLIC_TRAVELER_CONSENT_STATUSES = new Set(["granted", "withdrawn", "unknown"]);
 const DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+const IMAGE_UPLOAD_BODY_MAX_BYTES = 16 * 1024 * 1024;
 
 function parseDateOnly(value) {
   const normalized = String(value || "").trim();
@@ -473,7 +474,7 @@ export function createBookingTravelerDetailsHandlers(deps) {
     try {
       payload = await readBodyJson(req);
     } catch (error) {
-      sendJson(res, 400, { error: error?.message || "Invalid JSON payload" }, PRIVATE_CACHE_HEADERS);
+      sendJson(res, error?.statusCode || 400, { error: error?.message || "Invalid JSON payload" }, PRIVATE_CACHE_HEADERS);
       return;
     }
 
@@ -530,9 +531,9 @@ export function createBookingTravelerDetailsHandlers(deps) {
   async function handleUploadPublicTravelerDocumentPicture(req, res, [bookingId, personId, rawDocumentType]) {
     let payload;
     try {
-      payload = await readBodyJson(req);
+      payload = await readBodyJson(req, { maxBytes: IMAGE_UPLOAD_BODY_MAX_BYTES });
     } catch (error) {
-      sendJson(res, 400, { error: error?.message || "Invalid JSON payload" }, PRIVATE_CACHE_HEADERS);
+      sendJson(res, error?.statusCode || 400, { error: error?.message || "Invalid JSON payload" }, PRIVATE_CACHE_HEADERS);
       return;
     }
 

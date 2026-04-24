@@ -1,3 +1,5 @@
+import { verifyTravelerDetailsToken } from "../../domain/traveler_details_portal.js";
+
 export function createBookingMediaHandlers(deps) {
   const {
     readBodyJson,
@@ -25,9 +27,12 @@ export function createBookingMediaHandlers(deps) {
     resolveBookingImageDiskPath,
     resolveBookingPersonPhotoDiskPath,
     sendFileWithCache,
-    getBookingPersons
+    getBookingPersons,
+    travelerDetailsTokenConfig
   } = deps;
   const BOOKING_PERSON_DOCUMENT_TYPES = new Set(["passport", "national_id"]);
+  const IMAGE_UPLOAD_BODY_MAX_BYTES = 16 * 1024 * 1024;
+  const PRIVATE_MEDIA_CACHE_CONTROL = "private, max-age=0, no-store";
 
   function normalizeDocumentPictureRefs(document) {
     return Array.from(new Set(
@@ -76,13 +81,63 @@ export function createBookingMediaHandlers(deps) {
     };
   }
 
+  function publicMediaSearchParams(req) {
+    try {
+      return new URL(req.url || "/", "http://localhost").searchParams;
+    } catch {
+      return new URLSearchParams();
+    }
+  }
+
+  function bookingPersonPhotoPathParts(rawRelativePath) {
+    const rawParts = String(rawRelativePath || "")
+      .split("/")
+      .map((part) => {
+        try {
+          return decodeURIComponent(part);
+        } catch {
+          return part;
+        }
+      })
+      .map((part) => normalizeText(part))
+      .filter(Boolean);
+    return {
+      bookingId: rawParts[0] || "",
+      filename: rawParts.length ? rawParts[rawParts.length - 1] : ""
+    };
+  }
+
+  function isAuthorizedForPublicBookingPersonPhoto(req, rawRelativePath) {
+    if (getPrincipal(req)) return true;
+
+    const searchParams = publicMediaSearchParams(req);
+    const pathParts = bookingPersonPhotoPathParts(rawRelativePath);
+    const bookingId = normalizeText(searchParams.get("booking_id")) || pathParts.bookingId;
+    const personId = normalizeText(searchParams.get("person_id"));
+    const token = normalizeText(searchParams.get("token"));
+    const tokenSecret = normalizeText(travelerDetailsTokenConfig?.secret);
+    if (!bookingId || !personId || !token || !tokenSecret) return false;
+    if (!pathParts.filename.startsWith(`${personId}-`)) return false;
+
+    return verifyTravelerDetailsToken(token, {
+      bookingId,
+      personId,
+      secret: tokenSecret,
+      now: nowIso()
+    }).ok;
+  }
+
   async function handlePublicBookingPersonPhoto(req, res, [rawRelativePath]) {
+    if (!isAuthorizedForPublicBookingPersonPhoto(req, rawRelativePath)) {
+      sendJson(res, 401, { error: "Unauthorized" });
+      return;
+    }
     const absolutePath = resolveBookingPersonPhotoDiskPath(rawRelativePath);
     if (!absolutePath) {
       sendJson(res, 404, { error: "Not found" });
       return;
     }
-    await sendFileWithCache(req, res, absolutePath, "public, max-age=31536000, immutable");
+    await sendFileWithCache(req, res, absolutePath, PRIVATE_MEDIA_CACHE_CONTROL);
   }
 
   async function handlePublicBookingImage(req, res, [rawRelativePath]) {
@@ -97,9 +152,9 @@ export function createBookingMediaHandlers(deps) {
   async function handleUploadBookingImage(req, res, [bookingId]) {
     let payload;
     try {
-      payload = await readBodyJson(req);
-    } catch {
-      sendJson(res, 400, { error: "Invalid JSON payload" });
+      payload = await readBodyJson(req, { maxBytes: IMAGE_UPLOAD_BODY_MAX_BYTES });
+    } catch (error) {
+      sendJson(res, error?.statusCode || 400, { error: error?.message || "Invalid JSON payload" });
       return;
     }
 
@@ -161,9 +216,9 @@ export function createBookingMediaHandlers(deps) {
   async function handleUploadBookingPersonPhoto(req, res, [bookingId, personId]) {
     let payload;
     try {
-      payload = await readBodyJson(req);
-    } catch {
-      sendJson(res, 400, { error: "Invalid JSON payload" });
+      payload = await readBodyJson(req, { maxBytes: IMAGE_UPLOAD_BODY_MAX_BYTES });
+    } catch (error) {
+      sendJson(res, error?.statusCode || 400, { error: error?.message || "Invalid JSON payload" });
       return;
     }
 
@@ -236,9 +291,9 @@ export function createBookingMediaHandlers(deps) {
   async function handleUploadBookingPersonDocumentPicture(req, res, [bookingId, personId, rawDocumentType]) {
     let payload;
     try {
-      payload = await readBodyJson(req);
-    } catch {
-      sendJson(res, 400, { error: "Invalid JSON payload" });
+      payload = await readBodyJson(req, { maxBytes: IMAGE_UPLOAD_BODY_MAX_BYTES });
+    } catch (error) {
+      sendJson(res, error?.statusCode || 400, { error: error?.message || "Invalid JSON payload" });
       return;
     }
 

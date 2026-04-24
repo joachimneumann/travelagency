@@ -8,6 +8,8 @@ import {
   publicBookingImagePath
 } from "./booking_travel_plan_shared.js";
 
+const IMAGE_UPLOAD_BODY_MAX_BYTES = 16 * 1024 * 1024;
+
 export function createBookingTravelPlanImageHandlers(deps) {
   const {
     readBodyJson,
@@ -37,10 +39,10 @@ export function createBookingTravelPlanImageHandlers(deps) {
   async function handleUploadTravelPlanServiceImage(req, res, [bookingId, dayId, itemId]) {
     let payload;
     try {
-      payload = await readBodyJson(req);
+      payload = await readBodyJson(req, { maxBytes: IMAGE_UPLOAD_BODY_MAX_BYTES });
       validateTravelPlanServiceImageUploadRequest(payload);
     } catch (error) {
-      sendJson(res, 400, { error: String(error?.message || "Invalid JSON payload") });
+      sendJson(res, error?.statusCode || 400, { error: String(error?.message || "Invalid JSON payload") });
       return;
     }
 

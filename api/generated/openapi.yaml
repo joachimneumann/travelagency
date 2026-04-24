@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-04-22T16:20:56Z
+# 2026-04-24T16:15:38Z
 
 ---
 openapi: 3.1.0
@@ -6804,8 +6804,7 @@ paths:
       summary: Auth Me
       tags:
       - Auth
-      security:
-      - bearerAuth: []
+      security: []
       parameters: []
       responses:
         '200':
@@ -6814,18 +6813,6 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/AuthMeResponse"
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
   "/public/v1/bookings":
     post:
       operationId: public_bookings

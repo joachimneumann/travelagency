@@ -187,3 +187,69 @@ test("store utils prune legacy invoice data and strict-normalize accepted travel
   assert.equal("booking_confirmation" in (persisted.bookings[0].pdf_personalization || {}), false);
   assert.equal("supplier_id" in persisted.bookings[0].accepted_travel_plan_snapshot.days[0].services[0], false);
 });
+
+test("store utils preserve independent concurrent booking writes", async () => {
+  const rootDir = await mkdtemp(path.join(os.tmpdir(), "travelagency-store-concurrency-"));
+  const dataDir = path.join(rootDir, "data");
+  const dataPath = path.join(dataDir, "store.json");
+
+  await mkdir(dataDir, { recursive: true });
+  await writeFile(dataPath, `${JSON.stringify({
+    bookings: [
+      {
+        id: "booking_a",
+        name: "Booking A",
+        preferred_currency: "USD",
+        customer_language: "en",
+        persons: [],
+        offer: { currency: "USD" },
+        travel_plan: { days: [] }
+      },
+      {
+        id: "booking_b",
+        name: "Booking B",
+        preferred_currency: "USD",
+        customer_language: "en",
+        persons: [],
+        offer: { currency: "USD" },
+        travel_plan: { days: [] }
+      }
+    ],
+    activities: [],
+    payment_documents: [],
+    chat_channel_accounts: [],
+    chat_conversations: [],
+    chat_events: []
+  }, null, 2)}\n`, "utf8");
+
+  const storeUtils = createStoreUtils({
+    dataPath,
+    toursDir: path.join(dataDir, "tours"),
+    paymentDocumentsDir: path.join(dataDir, "payment_documents"),
+    generatedOffersDir: path.join(dataDir, "generated_offers"),
+    bookingImagesDir: path.join(dataDir, "booking_images"),
+    bookingPersonPhotosDir: path.join(dataDir, "booking_person_photos"),
+    bookingTravelPlanAttachmentsDir: path.join(dataDir, "booking_travel_plan_attachments"),
+    tempUploadDir: path.join(dataDir, "tmp"),
+    writeQueueRef: { current: Promise.resolve() },
+    syncBookingAssignmentFields: () => {},
+    normalizeBookingTravelPlan: (value) => value,
+    normalizeBookingOffer: (value) => value,
+    getBookingPreferredCurrency: () => "USD",
+    convertBookingOfferToBaseCurrency: async (value) => value
+  });
+
+  const firstStore = await storeUtils.readStore();
+  const secondStore = await storeUtils.readStore();
+  firstStore.bookings.find((booking) => booking.id === "booking_a").name = "Booking A updated";
+  secondStore.bookings.find((booking) => booking.id === "booking_b").name = "Booking B updated";
+
+  await Promise.all([
+    storeUtils.persistStore(firstStore),
+    storeUtils.persistStore(secondStore)
+  ]);
+
+  const persisted = JSON.parse(await readFile(dataPath, "utf8"));
+  assert.equal(persisted.bookings.find((booking) => booking.id === "booking_a").name, "Booking A updated");
+  assert.equal(persisted.bookings.find((booking) => booking.id === "booking_b").name, "Booking B updated");
+});

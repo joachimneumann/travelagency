@@ -122,7 +122,7 @@ Important rules:
 If mobile work resumes, the next useful scope is:
 - booking list
 - booking detail
-- booking stage changes where allowed
+- booking assignment and follow-up state where allowed
 - booking notes
 - booking activity visibility
 - booking payment-document visibility
@@ -137,10 +137,11 @@ Still out of scope unless there is a strong reason:
 ## Roles
 
 Current expected role behavior:
-- `atp_staff`: assigned bookings only, plus tour read/edit access in the main system
-- `atp_manager`: all bookings, assignment changes, Keycloak user directory access, tour read/edit access
-- `atp_admin`: same booking and tour capabilities as manager
+- `atp_staff`: assigned bookings only; no tour access unless combined with another role
+- `atp_manager`: all bookings, assignment changes, and Keycloak user directory access; no tour access unless combined with another role
+- `atp_admin`: all booking, tour, country reference, settings, and staff-profile capabilities
 - `atp_accountant`: booking read access, tours read-only, Keycloak user directory access
+- `atp_tour_editor`: tour and country-reference editing; no booking access unless combined with another role
 
 ## Maintenance Notes
 

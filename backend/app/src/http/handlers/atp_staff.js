@@ -9,6 +9,7 @@ import { normalizeLanguageCode as normalizeCatalogLanguageCode } from "../../../
 
 const LANGUAGE_CODE_SET = enumValueSetFor("LanguageCode");
 const COUNTRY_CODE_SET = enumValueSetFor("CountryCode");
+const IMAGE_UPLOAD_BODY_MAX_BYTES = 16 * 1024 * 1024;
 
 function normalizeLanguageCodes(items) {
   return Array.from(
@@ -222,8 +223,8 @@ export function createAtpStaffHandlers(deps) {
     let payload;
     try {
       payload = await readBodyJson(req);
-    } catch {
-      sendJson(res, 400, { error: "Invalid JSON payload" });
+    } catch (error) {
+      sendJson(res, error?.statusCode || 400, { error: error?.message || "Invalid JSON payload" });
       return;
     }
 
@@ -417,9 +418,9 @@ export function createAtpStaffHandlers(deps) {
 
     let payload;
     try {
-      payload = await readBodyJson(req);
-    } catch {
-      sendJson(res, 400, { error: "Invalid JSON payload" });
+      payload = await readBodyJson(req, { maxBytes: IMAGE_UPLOAD_BODY_MAX_BYTES });
+    } catch (error) {
+      sendJson(res, error?.statusCode || 400, { error: error?.message || "Invalid JSON payload" });
       return;
     }
 

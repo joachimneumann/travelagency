@@ -171,7 +171,7 @@
         key: "auth_me",
         path: "/auth/me",
         method: "GET",
-        authenticated: true,
+        authenticated: false,
         requestType: null,
         responseType: "AuthMeResponse",
         parameters: [

@@ -1,6 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { createAtpStaffHandlers } from "../src/http/handlers/atp_staff.js";
+
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
 
 test("public ATP staff team endpoint returns merged public profiles", async () => {
   const calls = [];
@@ -28,7 +32,7 @@ test("public ATP staff team endpoint returns merged public profiles", async () =
     updateAtpStaffProfileByUsername: async () => null,
     setAtpStaffPictureRefByUsername: async () => null,
     resetAtpStaffPictureByUsername: async () => null,
-    repoRoot: process.cwd(),
+    repoRoot,
     translateEntries: async () => ({}),
     translateEntriesWithMeta: async () => ({ entries: {} }),
     execFile: () => {},
@@ -71,7 +75,7 @@ test("staff profile updates regenerate homepage assets with configured staff roo
     updateAtpStaffProfileByUsername: async (username) => ({ username, languages: ["en"] }),
     setAtpStaffPictureRefByUsername: async () => null,
     resetAtpStaffPictureByUsername: async () => null,
-    repoRoot: process.cwd(),
+    repoRoot,
     translateEntries: async () => ({}),
     translateEntriesWithMeta: async () => ({ entries: {} }),
     execFile: async (...args) => {

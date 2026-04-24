@@ -109,7 +109,7 @@ The submitted contact becomes the initial booking person and can later be refine
 `booking.html`
 - booking header
 - ATP staff assignment
-- stage change
+- operational follow-up fields
 - notes
 - persons summary
 - offer
@@ -127,10 +127,11 @@ There is no customer page and no travel-group page.
 
 ## Role Behavior
 
-- `atp_staff`: only assigned bookings, plus tour read/edit access
-- `atp_manager`: all bookings + assignment + Keycloak user directory access + tour read/edit access
-- `atp_admin`: same booking and tour capabilities as manager
+- `atp_staff`: only assigned bookings; no tour access unless combined with another role
+- `atp_manager`: all bookings + assignment + Keycloak user directory access; no tour access unless combined with another role
+- `atp_admin`: all booking, tour, country-reference, settings, and staff-profile capabilities
 - `atp_accountant`: all bookings read, tours read-only, Keycloak user directory access
+- `atp_tour_editor`: tour and country-reference editing; no booking access unless combined with another role
 
 ## Verification Checklist
 
@@ -138,7 +139,7 @@ There is no customer page and no travel-group page.
 2. Confirm bookings load.
 3. Open a booking.
 4. Confirm persons summary renders from `booking.persons`.
-5. Confirm stages and ATP staff assignment work according to role.
+5. Confirm ATP staff assignment works according to role.
 6. Open `marketing_tour.html` and confirm tours still load.
 7. Open `emergency.html`, change `published_on_webpage` for a country, and confirm a normal homepage reload reflects the destination visibility change.
 8. If Gmail draft config is set, use the generated-offer `email` action and confirm Gmail opens the Drafts view with the new draft available.

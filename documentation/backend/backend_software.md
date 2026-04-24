@@ -16,7 +16,7 @@ Implemented now:
 - public tours catalog
 - country-reference publication controls for the public website
 - Keycloak-protected backend access
-- booking stage pipeline
+- booking assignment and operational follow-up
 - ATP staff assignment
 - booking notes
 - pricing and offer editing
@@ -36,7 +36,7 @@ Generated contract flow:
 Milestone 1 is now defined as:
 - capture all incoming booking requests
 - store submitted contact/traveler data directly on the booking
-- manage bookings through stage, assignment, notes, pricing, offer, payment-document, and activity workflows
+- manage bookings through assignment, notes, pricing, offer, payment-document, and activity workflows
 
 Key data rule:
 - `booking.persons[]` is the editable person record set for that booking

@@ -571,6 +571,22 @@ function documentTypeLabel(documentType = "passport") {
     : travelerDetailsT("passport", "Passport");
 }
 
+function signedDocumentPictureUrl(pictureRef) {
+  const normalized = normalizeText(pictureRef);
+  if (!normalized) return "";
+  if (!normalized.includes("/public/v1/booking-person-photos/")) return normalized;
+
+  try {
+    const url = new URL(resolveApiUrl(apiOrigin, normalized), window.location.origin);
+    url.searchParams.set("token", state.token);
+    url.searchParams.set("booking_id", state.bookingId);
+    url.searchParams.set("person_id", state.personId);
+    return url.toString();
+  } catch {
+    return normalized;
+  }
+}
+
 function renderDocumentPicturePreviewMarkup(documentType, pictureRefs) {
   const documentLabel = documentTypeLabel(documentType);
   if (!pictureRefs.length) {
@@ -578,7 +594,7 @@ function renderDocumentPicturePreviewMarkup(documentType, pictureRefs) {
   }
   return `<div class="traveler-details-document__picture-gallery">${pictureRefs.map((pictureRef, index) => `
     <img
-      src="${escapeHtml(pictureRef)}"
+      src="${escapeHtml(signedDocumentPictureUrl(pictureRef))}"
       alt="${escapeHtml(travelerDetailsT("document_image_preview", "{label} image preview", { label: `${documentLabel} ${index + 1}` }))}"
     />
   `).join("")}</div>`;

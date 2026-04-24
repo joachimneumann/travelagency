@@ -4,6 +4,138 @@ import { normalizeBookingPdfPersonalization } from "./booking_pdf_personalizatio
 import { normalizeText } from "./text.js";
 import { normalizeStoredBookingRecord } from "./booking_persons.js";
 
+const STORE_SNAPSHOT = Symbol("asiatravelplan_store_snapshot");
+
+function cloneJson(value) {
+  return value === undefined ? undefined : JSON.parse(JSON.stringify(value));
+}
+
+function jsonEqual(left, right) {
+  return JSON.stringify(left) === JSON.stringify(right);
+}
+
+function collectionItemKey(item) {
+  return normalizeText(item?.id || item?.document_id || item?.booking_id);
+}
+
+function mergeObjectValue(baseValue, latestValue, nextValue) {
+  if (jsonEqual(nextValue, baseValue)) return cloneJson(latestValue);
+  if (jsonEqual(latestValue, baseValue)) return cloneJson(nextValue);
+  if (jsonEqual(latestValue, nextValue)) return cloneJson(nextValue);
+  if (
+    baseValue && typeof baseValue === "object" && !Array.isArray(baseValue)
+    && latestValue && typeof latestValue === "object" && !Array.isArray(latestValue)
+    && nextValue && typeof nextValue === "object" && !Array.isArray(nextValue)
+  ) {
+    return mergePlainObject(baseValue, latestValue, nextValue);
+  }
+  return cloneJson(nextValue);
+}
+
+function mergePlainObject(baseValue = {}, latestValue = {}, nextValue = {}) {
+  const result = { ...cloneJson(latestValue || {}) };
+  const keys = new Set([
+    ...Object.keys(baseValue || {}),
+    ...Object.keys(latestValue || {}),
+    ...Object.keys(nextValue || {})
+  ]);
+
+  for (const key of keys) {
+    const baseHas = Object.prototype.hasOwnProperty.call(baseValue || {}, key);
+    const latestHas = Object.prototype.hasOwnProperty.call(latestValue || {}, key);
+    const nextHas = Object.prototype.hasOwnProperty.call(nextValue || {}, key);
+    const baseEntry = baseHas ? baseValue[key] : undefined;
+    const latestEntry = latestHas ? latestValue[key] : undefined;
+    const nextEntry = nextHas ? nextValue[key] : undefined;
+
+    if (!nextHas) {
+      if (!baseHas) {
+        if (latestHas) result[key] = cloneJson(latestEntry);
+        continue;
+      }
+      if (!latestHas || jsonEqual(latestEntry, baseEntry)) {
+        delete result[key];
+        continue;
+      }
+      result[key] = cloneJson(latestEntry);
+      continue;
+    }
+
+    if (!latestHas && !baseHas) {
+      result[key] = cloneJson(nextEntry);
+      continue;
+    }
+
+    result[key] = mergeObjectValue(baseEntry, latestEntry, nextEntry);
+  }
+
+  return result;
+}
+
+function mergeCollectionByKey(baseItems = [], latestItems = [], nextItems = [], mergeItems = mergeObjectValue) {
+  const baseMap = new Map();
+  const latestMap = new Map();
+  const nextMap = new Map();
+  const keyOrder = [];
+
+  function addToMap(map, item, fallbackPrefix, index) {
+    const key = collectionItemKey(item) || `${fallbackPrefix}_${index}`;
+    if (!keyOrder.includes(key)) keyOrder.push(key);
+    map.set(key, item);
+  }
+
+  (Array.isArray(baseItems) ? baseItems : []).forEach((item, index) => addToMap(baseMap, item, "base", index));
+  (Array.isArray(latestItems) ? latestItems : []).forEach((item, index) => addToMap(latestMap, item, "latest", index));
+  (Array.isArray(nextItems) ? nextItems : []).forEach((item, index) => addToMap(nextMap, item, "next", index));
+
+  const merged = [];
+  for (const key of keyOrder) {
+    const baseHas = baseMap.has(key);
+    const latestHas = latestMap.has(key);
+    const nextHas = nextMap.has(key);
+    if (!nextHas && baseHas) continue;
+    if (!nextHas && !baseHas && latestHas) {
+      merged.push(cloneJson(latestMap.get(key)));
+      continue;
+    }
+    if (nextHas && !latestHas && !baseHas) {
+      merged.push(cloneJson(nextMap.get(key)));
+      continue;
+    }
+    if (nextHas && latestHas && !baseHas) {
+      merged.push(jsonEqual(nextMap.get(key), latestMap.get(key))
+        ? cloneJson(nextMap.get(key))
+        : mergeItems({}, latestMap.get(key), nextMap.get(key)));
+      continue;
+    }
+    if (nextHas && latestHas && baseHas) {
+      merged.push(mergeItems(baseMap.get(key), latestMap.get(key), nextMap.get(key)));
+    }
+  }
+
+  return merged;
+}
+
+function mergeStoreSnapshot(baseStore, latestStore, nextStore) {
+  const result = mergePlainObject(baseStore || {}, latestStore || {}, nextStore || {});
+  result.bookings = mergeCollectionByKey(
+    baseStore?.bookings,
+    latestStore?.bookings,
+    nextStore?.bookings,
+    mergePlainObject
+  );
+  for (const key of [
+    "activities",
+    "payment_documents",
+    "chat_channel_accounts",
+    "chat_conversations",
+    "chat_events"
+  ]) {
+    result[key] = mergeCollectionByKey(baseStore?.[key], latestStore?.[key], nextStore?.[key]);
+  }
+  return result;
+}
+
 export function createStoreUtils({
   dataPath,
   toursDir,
@@ -57,9 +189,17 @@ export function createStoreUtils({
     }
   }
 
-  async function readStore() {
-    const raw = await readFile(dataPath, "utf8");
-    const parsed = JSON.parse(raw);
+  function attachStoreSnapshot(store) {
+    Object.defineProperty(store, STORE_SNAPSHOT, {
+      value: cloneJson(store),
+      enumerable: false,
+      configurable: true,
+      writable: true
+    });
+    return store;
+  }
+
+  async function normalizeParsedStore(parsed) {
     parsed.bookings ||= [];
     parsed.activities ||= [];
     parsed.payment_documents ||= [];
@@ -150,10 +290,37 @@ export function createStoreUtils({
     return parsed;
   }
 
+  async function readStoreFromDisk() {
+    const raw = await readFile(dataPath, "utf8");
+    return await normalizeParsedStore(JSON.parse(raw));
+  }
+
+  async function readStore() {
+    await writeQueueRef.current.catch(() => {});
+    return attachStoreSnapshot(await readStoreFromDisk());
+  }
+
   async function persistStore(store) {
-    writeQueueRef.current = writeQueueRef.current.then(async () => {
-      const next = `${JSON.stringify(store, null, 2)}\n`;
+    const baseSnapshot = store?.[STORE_SNAPSHOT] ? cloneJson(store[STORE_SNAPSHOT]) : null;
+    const requestedStore = cloneJson(store);
+    writeQueueRef.current = writeQueueRef.current.catch(() => {}).then(async () => {
+      let nextStore = requestedStore;
+      if (baseSnapshot) {
+        const latestStore = await readStoreFromDisk();
+        if (!jsonEqual(latestStore, baseSnapshot)) {
+          nextStore = mergeStoreSnapshot(baseSnapshot, latestStore, requestedStore);
+        }
+      }
+      const next = `${JSON.stringify(nextStore, null, 2)}\n`;
       await writeFile(dataPath, next, "utf8");
+      if (store && typeof store === "object" && !Array.isArray(store)) {
+        Object.defineProperty(store, STORE_SNAPSHOT, {
+          value: cloneJson(nextStore),
+          enumerable: false,
+          configurable: true,
+          writable: true
+        });
+      }
     });
     await writeQueueRef.current;
   }

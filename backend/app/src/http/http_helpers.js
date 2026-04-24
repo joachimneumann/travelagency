@@ -4,6 +4,15 @@ import path from "node:path";
 import { inlineTheme } from "../lib/style_tokens.js";
 import { escapeHtml, normalizeText } from "../lib/text.js";
 
+const DEFAULT_JSON_BODY_MAX_BYTES = 5 * 1024 * 1024;
+
+function payloadTooLargeError(maxBytes) {
+  const error = new Error(`Request body exceeds ${maxBytes} bytes.`);
+  error.statusCode = 413;
+  error.code = "PAYLOAD_TOO_LARGE";
+  return error;
+}
+
 export function createHttpHelpers({ corsOrigin }) {
   function withCors(req, res) {
     const requestOrigin = normalizeText(req.headers.origin);
@@ -194,19 +203,36 @@ export function createHttpHelpers({ corsOrigin }) {
     stream.pipe(res);
   }
 
-  async function readBodyBuffer(req) {
+  async function readBodyBuffer(req, options = {}) {
+    const configuredMax = Number(options?.maxBytes ?? DEFAULT_JSON_BODY_MAX_BYTES);
+    const maxBytes = Number.isFinite(configuredMax) && configuredMax > 0
+      ? configuredMax
+      : DEFAULT_JSON_BODY_MAX_BYTES;
+    const contentLength = Number(req.headers?.["content-length"] || 0);
+    if (Number.isFinite(contentLength) && contentLength > maxBytes) {
+      throw payloadTooLargeError(maxBytes);
+    }
+
     const chunks = [];
-    for await (const chunk of req) chunks.push(chunk);
+    let totalBytes = 0;
+    for await (const chunk of req) {
+      const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+      totalBytes += buffer.length;
+      if (totalBytes > maxBytes) {
+        throw payloadTooLargeError(maxBytes);
+      }
+      chunks.push(buffer);
+    }
     return Buffer.concat(chunks);
   }
 
-  async function readBodyText(req) {
-    const buffer = await readBodyBuffer(req);
+  async function readBodyText(req, options = {}) {
+    const buffer = await readBodyBuffer(req, options);
     return buffer.toString("utf8").trim();
   }
 
-  async function readBodyJson(req) {
-    const text = await readBodyText(req);
+  async function readBodyJson(req, options = {}) {
+    const text = await readBodyText(req, options);
     if (!text) return {};
     return JSON.parse(text);
   }

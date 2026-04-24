@@ -236,7 +236,7 @@ PY
   done
 }
 
-for role in atp_admin atp_manager atp_accountant atp_staff; do
+for role in atp_admin atp_manager atp_accountant atp_staff atp_tour_editor; do
   ensure_realm_role "$role"
 done
 

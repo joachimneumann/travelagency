@@ -35,7 +35,7 @@ package api
 		path:          "/auth/me"
 		method:        "GET"
 		tag:           "Auth"
-		authenticated: true
+		authenticated: false
 		responseType:  "AuthMeResponse"
 	},
 	{

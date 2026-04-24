@@ -31,7 +31,7 @@ Not active domains:
 - capture website booking submissions
 - store the immutable inbound payload on the booking
 - create normalized booking persons from the submitted contact/traveler information
-- manage booking stage, assignment, notes, and service-level expectations
+- manage booking assignment, notes, and service-level expectations
 
 ### Booking-owned persons
 

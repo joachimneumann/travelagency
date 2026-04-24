@@ -3,7 +3,7 @@
   "generatorVersion": "0.1.0",
   "modulePath": "travelagency.local/model",
   "defaultCurrency": "USD",
-  "generatedAt": "2026-04-22T16:20:56Z",
+  "generatedAt": "2026-04-24T16:15:38Z",
   "languages": [
     "en",
     "ar",
@@ -188,7 +188,7 @@
       "path": "/auth/me",
       "method": "GET",
       "tag": "Auth",
-      "authenticated": true,
+      "authenticated": false,
       "responseType": "AuthMeResponse"
     },
     {

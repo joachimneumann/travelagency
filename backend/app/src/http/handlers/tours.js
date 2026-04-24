@@ -54,6 +54,8 @@ export function createTourHandlers(deps) {
     path.join(repoRoot, "scripts", "generate_public_homepage_assets.mjs")
   ]);
   const TOUR_REEL_VIDEO_FILENAME = "video.mp4";
+  const IMAGE_UPLOAD_BODY_MAX_BYTES = 16 * 1024 * 1024;
+  const VIDEO_UPLOAD_BODY_MAX_BYTES = 150 * 1024 * 1024;
   let publicHomepageAssetGenerationQueue = Promise.resolve();
 
   function nowMs() {
@@ -579,8 +581,8 @@ export function createTourHandlers(deps) {
     let payload;
     try {
       payload = await readBodyJson(req);
-    } catch {
-      sendJson(res, 400, { error: "Invalid JSON payload" });
+    } catch (error) {
+      sendJson(res, error?.statusCode || 400, { error: error?.message || "Invalid JSON payload" });
       return;
     }
 
@@ -614,8 +616,8 @@ export function createTourHandlers(deps) {
     let payload;
     try {
       payload = await readBodyJson(req);
-    } catch {
-      sendJson(res, 400, { error: "Invalid JSON payload" });
+    } catch (error) {
+      sendJson(res, error?.statusCode || 400, { error: error?.message || "Invalid JSON payload" });
       return;
     }
 
@@ -738,9 +740,9 @@ export function createTourHandlers(deps) {
     }
     let payload;
     try {
-      payload = await readBodyJson(req);
-    } catch {
-      sendJson(res, 400, { error: "Invalid JSON payload" });
+      payload = await readBodyJson(req, { maxBytes: IMAGE_UPLOAD_BODY_MAX_BYTES });
+    } catch (error) {
+      sendJson(res, error?.statusCode || 400, { error: error?.message || "Invalid JSON payload" });
       return;
     }
 
@@ -807,9 +809,9 @@ export function createTourHandlers(deps) {
 
     let payload;
     try {
-      payload = await readBodyJson(req);
-    } catch {
-      sendJson(res, 400, { error: "Invalid JSON payload" });
+      payload = await readBodyJson(req, { maxBytes: VIDEO_UPLOAD_BODY_MAX_BYTES });
+    } catch (error) {
+      sendJson(res, error?.statusCode || 400, { error: error?.message || "Invalid JSON payload" });
       return;
     }
 

@@ -8,6 +8,8 @@ import {
   resolveTravelPlanAttachmentAbsolutePath
 } from "../../lib/pdf_attachments.js";
 
+const PDF_UPLOAD_BODY_MAX_BYTES = 40 * 1024 * 1024;
+
 function normalizeAttachmentFilename(pathModule, normalizeText, rawFilename, fallbackId) {
   const basename = pathModule.basename(normalizeText(rawFilename) || `${fallbackId}.pdf`).trim();
   if (!basename) return `${fallbackId}.pdf`;
@@ -96,10 +98,10 @@ export function createBookingTravelPlanAttachmentHandlers(deps) {
   async function handleUploadTravelPlanAttachment(req, res, [bookingId]) {
     let payload;
     try {
-      payload = await readBodyJson(req);
+      payload = await readBodyJson(req, { maxBytes: PDF_UPLOAD_BODY_MAX_BYTES });
       validateTravelPlanAttachmentUploadRequest(payload);
     } catch (error) {
-      sendJson(res, 400, { error: String(error?.message || "Invalid JSON payload") });
+      sendJson(res, error?.statusCode || 400, { error: String(error?.message || "Invalid JSON payload") });
       return;
     }
 

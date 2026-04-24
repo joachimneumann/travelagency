@@ -3,6 +3,11 @@ import { createRemoteJWKSet, jwtVerify } from "jose";
 import { normalizeText } from "./lib/text.js";
 
 export function createAuth({ port }) {
+  const defaultAllowedTokenClientIds = [
+    normalizeText(process.env.KEYCLOAK_CLIENT_ID),
+    "asiatravelplan-ios"
+  ].filter(Boolean);
+  const allowedTokenClientIdsEnv = normalizeText(process.env.KEYCLOAK_ALLOWED_TOKEN_CLIENT_IDS);
   const cfg = {
     keycloakEnabled: parseBoolEnv("KEYCLOAK_ENABLED", false),
     keycloakBaseUrl: normalizeText(process.env.KEYCLOAK_BASE_URL),
@@ -14,6 +19,12 @@ export function createAuth({ port }) {
     keycloakForceLoginPrompt: parseBoolEnv("KEYCLOAK_FORCE_LOGIN_PROMPT", false),
     keycloakAllowedRoles: new Set(
       String(process.env.KEYCLOAK_ALLOWED_ROLES || "atp_admin,atp_manager,atp_accountant,atp_staff,atp_tour_editor")
+        .split(",")
+        .map((value) => normalizeText(value))
+        .filter(Boolean)
+    ),
+    keycloakAllowedTokenClientIds: new Set(
+      String(allowedTokenClientIdsEnv || defaultAllowedTokenClientIds.join(","))
         .split(",")
         .map((value) => normalizeText(value))
         .filter(Boolean)
@@ -241,6 +252,28 @@ export function createAuth({ port }) {
     ));
   }
 
+  function extractTokenClientIds(payload) {
+    const audience = Array.isArray(payload?.aud)
+      ? payload.aud
+      : payload?.aud
+        ? [payload.aud]
+        : [];
+    return Array.from(new Set(
+      [
+        payload?.azp,
+        payload?.client_id,
+        ...audience
+      ]
+        .map((value) => normalizeText(value))
+        .filter(Boolean)
+    ));
+  }
+
+  function tokenMatchesAllowedClient(payload) {
+    const tokenClientIds = extractTokenClientIds(payload);
+    return tokenClientIds.some((clientId) => cfg.keycloakAllowedTokenClientIds.has(clientId));
+  }
+
   async function getKeycloakDiscovery() {
     if (!cfg.keycloakEnabled) return null;
     if (!keycloakDiscoveryPromise) {
@@ -276,6 +309,9 @@ export function createAuth({ port }) {
     const { payload } = await jwtVerify(accessToken, keycloakJwks, {
       issuer: discovery.issuer
     });
+    if (!tokenMatchesAllowedClient(payload)) {
+      throw new Error("Token was not issued for an allowed Keycloak client");
+    }
     return payload;
   }
 

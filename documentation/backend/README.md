@@ -27,6 +27,7 @@ Important environment variables:
 - `KEYCLOAK_REALM`
 - `KEYCLOAK_CLIENT_ID`
 - `KEYCLOAK_CLIENT_SECRET`
+- `KEYCLOAK_ALLOWED_TOKEN_CLIENT_IDS`
 - `KEYCLOAK_REDIRECT_URI`
 - `KEYCLOAK_POST_LOGOUT_REDIRECT_URI`
 - `KEYCLOAK_ALLOWED_ROLES`
@@ -69,7 +70,7 @@ Implemented now:
 - public booking ingestion
 - public tour catalog
 - country-reference publication controls for the public website
-- booking pipeline stages and assignment
+- booking assignment and operational follow-up
 - booking notes, offers, activities, and payment-flow documents
 - booking-owned persons
 - Keycloak-backed ATP user assignment
@@ -94,30 +95,41 @@ Operational and integration:
 Public:
 - `GET /public/v1/mobile/bootstrap`
 - `GET /public/v1/tours`
+- `GET /public/v1/team`
 - `GET /public/v1/tour-images/:path`
 - `GET /public/v1/booking-images/:path`
 - `GET /public/v1/booking-person-photos/:path`
 - `POST /public/v1/bookings`
+- public traveler-details routes under `/public/v1/bookings/:bookingId/persons/:personId/traveler-details*`
 
 `GET /public/v1/tours` currently:
 - filters tours and destination options against `content/country_reference_info.json`
 - uses `published_on_webpage` as the source of truth for public destination visibility
 - responds with `Cache-Control: no-store` so publication changes appear immediately after reload
 
+`GET /public/v1/booking-person-photos/:path` serves traveler photos and document images only to an authenticated backend session or a valid traveler-details signed token. It uses private/no-store caching because these files can contain PII.
+
 Admin API:
 - `GET /api/v1/bookings`
+- `POST /api/v1/bookings`
 - `GET /api/v1/bookings/:bookingId`
 - `DELETE /api/v1/bookings/:bookingId`
+- `POST /api/v1/bookings/:bookingId/clone`
 - `GET /api/v1/bookings/:bookingId/chat`
 - `PATCH /api/v1/bookings/:bookingId/name`
+- `PATCH /api/v1/bookings/:bookingId/customer-language`
+- `PATCH /api/v1/bookings/:bookingId/source`
 - `POST /api/v1/bookings/:bookingId/image`
-- `PATCH /api/v1/bookings/:bookingId/stage`
 - `PATCH /api/v1/bookings/:bookingId/owner`
+- `POST /api/v1/bookings/:bookingId/translate-fields`
 - `POST /api/v1/bookings/:bookingId/persons`
 - `PATCH /api/v1/bookings/:bookingId/persons/:personId`
 - `DELETE /api/v1/bookings/:bookingId/persons/:personId`
 - `POST /api/v1/bookings/:bookingId/persons/:personId/photo`
+- `POST /api/v1/bookings/:bookingId/persons/:personId/documents/:documentType/picture`
+- `POST /api/v1/bookings/:bookingId/persons/:personId/traveler-details-link`
 - `PATCH /api/v1/bookings/:bookingId/notes`
+- travel-plan routes under `/api/v1/bookings/:bookingId/travel-plan*`
 - `PATCH /api/v1/bookings/:bookingId/offer`
 - `POST /api/v1/bookings/:bookingId/generated-offers`
 - `PATCH /api/v1/bookings/:bookingId/generated-offers/:generatedOfferId`
@@ -131,13 +143,23 @@ Admin API:
 - `GET /api/v1/payment-documents/:documentId/pdf`
 - `POST /api/v1/offers/exchange-rates`
 - `GET /api/v1/keycloak_users`
+- staff-profile routes under `/api/v1/keycloak_users/:username/staff-profile*`
+- `GET /api/v1/settings/observability`
 - `GET /api/v1/tours`
 - `GET /api/v1/tours/:tourId`
 - `POST /api/v1/tours`
 - `PATCH /api/v1/tours/:tourId`
-- `POST /api/v1/tours/:tourId/image`
+- `DELETE /api/v1/tours/:tourId`
+- `POST /api/v1/tours/translate-fields`
+- `POST /api/v1/tours/:tourId/pictures`
+- `DELETE /api/v1/tours/:tourId/pictures/:pictureName`
+- `GET /api/v1/tours/:tourId/video`
+- `POST /api/v1/tours/:tourId/video`
+- `DELETE /api/v1/tours/:tourId/video`
 - `GET /api/v1/country-reference-info`
 - `PATCH /api/v1/country-reference-info`
+
+The generated OpenAPI file at `api/generated/openapi.yaml` is the modeled transport source of truth. The tour video routes are runtime editor routes and must remain documented alongside the generated route list until they are moved into the model.
 
 ## Website Booking Form
 
@@ -163,7 +185,6 @@ Relevant website fields:
 `GET /api/v1/bookings` supports:
 - `page`
 - `page_size`
-- `stage`
 - `assigned_keycloak_user_id`
 - `search`
 - `sort`
@@ -173,8 +194,6 @@ Common `sort` values:
 - `created_at_asc`
 - `updated_at_desc`
 - `updated_at_asc`
-- `stage_asc`
-- `stage_desc`
 
 Commercial document currency rules:
 - booking offer currency is editable only while `offer.status == "DRAFT"`
@@ -189,7 +208,7 @@ The booking list and detail views use booking-owned people:
 Mutating booking endpoints use section-specific optimistic concurrency checks.
 
 Current request fields are:
-- `expected_core_revision` for booking core mutations such as `name`, `stage`, and `owner`
+- `expected_core_revision` for booking core mutations such as `name`, `customer_language`, `source`, and `owner`
 - `expected_persons_revision` for booking person and person-photo mutations
 - `expected_notes_revision` for booking notes
 - `expected_offer_revision` for offer updates
@@ -204,10 +223,11 @@ Generated-offer email drafts:
 ## Roles
 
 Current role behavior:
-- `atp_staff`: read and edit only assigned bookings, read tours, edit tours
-- `atp_manager`: read and edit all bookings, change assignment, view assignable Keycloak users, read tours, edit tours
-- `atp_admin`: same booking and tour capabilities as manager
+- `atp_staff`: read and edit only assigned bookings; no tour access unless combined with another role
+- `atp_manager`: read and edit all bookings, change assignment, and view assignable Keycloak users; no tour access unless combined with another role
+- `atp_admin`: read and edit all bookings, tours, country reference data, settings, and staff profiles
 - `atp_accountant`: read all bookings, read tours, view assignable Keycloak users, no booking editing, no tour editing
+- `atp_tour_editor`: read and edit tours and country reference data; no booking access unless combined with another role
 
 Booking assignment is stored as `booking.assigned_keycloak_user_id`, using the durable Keycloak user id directly.
 There is no local ATP user directory anymore.
@@ -244,6 +264,7 @@ Required local Keycloak client:
 - client id: `asiatravelplan-backend`
 - type: OpenID Connect confidential client
 - redirect URI: `http://localhost:8787/auth/callback`
+- bearer token clients: `KEYCLOAK_ALLOWED_TOKEN_CLIENT_IDS`, defaulting to `asiatravelplan-backend,asiatravelplan-ios`
 
 ## Notes
 

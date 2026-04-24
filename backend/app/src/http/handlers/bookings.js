@@ -510,7 +510,8 @@ export function createBookingHandlers(deps) {
     resolveBookingImageDiskPath,
     resolveBookingPersonPhotoDiskPath,
     sendFileWithCache,
-    getBookingPersons
+    getBookingPersons,
+    travelerDetailsTokenConfig
   });
 
   const {

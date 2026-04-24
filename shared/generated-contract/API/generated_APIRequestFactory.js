@@ -39,7 +39,7 @@ export function authMeRequest({ baseURL = '', params = {}, query = {}, body, hea
   return {
     key: "auth_me",
     method: "GET",
-    authenticated: true,
+    authenticated: false,
     url,
     headers,
     body
