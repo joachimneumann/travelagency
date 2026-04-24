@@ -7,6 +7,21 @@
   font-size: clamp(1.9rem, 3vw, 2.75rem);
 }
 
+.home-page #trust .team-section__toggle {
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  letter-spacing: inherit;
+  line-height: 1.05;
+}
+
+.home-page #trust .team-section__toggle-icon {
+  font-family: var(--font-family-base);
+  font-size: 1.1rem;
+  font-weight: var(--font-weight-bold);
+  line-height: 1;
+}
+
 .home-page .panel,
 .home-page .review-card,
 .home-page .contact-card,
