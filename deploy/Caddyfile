@@ -53,9 +53,15 @@
 }
 
 (production_static_cache_headers) {
+  @production_immutable_static {
+    path /assets/fonts/* /assets/generated/homepage/* /assets/generated/reels/*
+  }
+  header @production_immutable_static Cache-Control "public, max-age=31536000, immutable"
+
   @production_static {
     path /assets/* /frontend/scripts/* /frontend/data/* /frontend/Generated/* /shared/* /site.webmanifest /robots.txt /sitemap.xml
     not path /frontend/data/generated/homepage/*
+    not path /assets/fonts/* /assets/generated/homepage/* /assets/generated/reels/*
   }
   header @production_static Cache-Control "public, max-age=300, stale-while-revalidate=600, must-revalidate"
 }

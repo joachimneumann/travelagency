@@ -437,8 +437,8 @@ export function createFrontendToursController(ctx) {
         const galleryLabel = frontendT("tour.card.gallery_next", "Show next picture for {title}", {
           title: tripTitle
         });
-        const loading = index < 3 ? "eager" : "lazy";
-        const fetchpriority = index < 3 ? "high" : "auto";
+        const loading = index === 0 ? "eager" : "lazy";
+        const fetchpriority = "auto";
         const gallery = Array.isArray(trip.pictures) && trip.pictures.length ? trip.pictures : [trip.image];
         const galleryCount = gallery.length;
         const mediaTag = galleryCount > 1 ? "button" : "div";

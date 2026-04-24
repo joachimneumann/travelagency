@@ -35,8 +35,13 @@
       if (!window.ASIATRAVELPLAN_API_BASE && ["localhost", "127.0.0.1"].includes(window.location.hostname)) {
         window.ASIATRAVELPLAN_API_BASE = window.location.origin;
       }
+      if (["localhost", "127.0.0.1"].includes(window.location.hostname)) {
+        const diagnosticsScript = document.createElement("script");
+        diagnosticsScript.src = "/frontend/scripts/shared/localhost_diagnostics.js";
+        diagnosticsScript.defer = true;
+        document.head.append(diagnosticsScript);
+      }
     </script>
-    <script defer src="/frontend/scripts/shared/localhost_diagnostics.js"></script>
     <link rel="manifest" href="/site.webmanifest" />
     <link rel="preload" as="image" href="/assets/video/rice%20field.webp" fetchpriority="high" />
     <link rel="stylesheet" href="/shared/css/tokens.css" />
@@ -120,7 +125,7 @@
     <main id="main-content">
       <section class="hero hero-video" id="hero">
         <video class="hero-bg-video" muted loop playsinline preload="none" poster="/assets/video/rice field.webp" data-deferred-autoplay>
-          <source src="/assets/video/rice field.mp4" type="video/mp4" />
+          <source data-src="/assets/video/rice field.mp4" type="video/mp4" />
           <span data-i18n-id="hero.video_fallback">Your browser does not support HTML5 video.</span>
         </video>
         <div class="hero-scrim" aria-hidden="true"></div>
@@ -606,9 +611,26 @@
         if (!heroVideo) return;
         if (window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) return;
 
+        const heroVideoSource = heroVideo.querySelector("source[data-src]");
+        const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
         let playbackStarted = false;
+        let sourceAttached = false;
+
+        const shouldAutoplayVideo = () => {
+          if (connection?.saveData) return false;
+          return !/2g/i.test(String(connection?.effectiveType || ""));
+        };
+
+        const attachVideoSource = () => {
+          if (sourceAttached || !heroVideoSource?.dataset?.src) return;
+          heroVideoSource.src = heroVideoSource.dataset.src;
+          sourceAttached = true;
+          heroVideo.load();
+        };
+
         const startPlayback = () => {
-          if (playbackStarted) return;
+          if (playbackStarted || !shouldAutoplayVideo()) return;
+          attachVideoSource();
           playbackStarted = true;
           const playPromise = heroVideo.play();
           if (playPromise && typeof playPromise.catch === "function") {
@@ -618,18 +640,14 @@
           }
         };
 
-        const schedulePlayback = () => {
-          if ("requestIdleCallback" in window) {
-            window.requestIdleCallback(startPlayback, { timeout: 2000 });
-            return;
-          }
-          window.setTimeout(startPlayback, 1200);
-        };
+        ["pointerdown", "keydown", "touchstart"].forEach((eventName) => {
+          window.addEventListener(eventName, startPlayback, { once: true, passive: true });
+        });
 
         if (document.readyState === "complete") {
-          schedulePlayback();
+          startPlayback();
         } else {
-          window.addEventListener("load", schedulePlayback, { once: true });
+          window.addEventListener("load", startPlayback, { once: true });
         }
       })();
     </script>

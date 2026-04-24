@@ -3787,8 +3787,13 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
   );
   assert.match(
     stagingCaddy,
-    /@production_static \{[\s\S]*path \/assets\/\* \/frontend\/scripts\/\* \/frontend\/data\/\* \/frontend\/Generated\/\* \/shared\/\* \/site\.webmanifest \/robots\.txt \/sitemap\.xml[\s\S]*not path \/frontend\/data\/generated\/homepage\/\*/,
+    /@production_static \{[\s\S]*path \/assets\/\* \/frontend\/scripts\/\* \/frontend\/data\/\* \/frontend\/Generated\/\* \/shared\/\* \/site\.webmanifest \/robots\.txt \/sitemap\.xml[\s\S]*not path \/frontend\/data\/generated\/homepage\/\*[\s\S]*not path \/assets\/fonts\/\* \/assets\/generated\/homepage\/\* \/assets\/generated\/reels\/\*/,
     "Production should cache static frontend files while excluding generated homepage data from the static cache"
+  );
+  assert.match(
+    stagingCaddy,
+    /@production_immutable_static \{[\s\S]*path \/assets\/fonts\/\* \/assets\/generated\/homepage\/\* \/assets\/generated\/reels\/\*[\s\S]*header @production_immutable_static Cache-Control "public, max-age=31536000, immutable"/,
+    "Production should use long immutable caching for versioned generated assets and fonts"
   );
   assert.match(
     stagingCaddy,
@@ -3918,6 +3923,11 @@ test("frontend language switching updates the homepage in place instead of forci
     /function publicToursDataUrl\(lang\) \{[\s\S]*generatedTourAssetUrlsByLang\(\)\?\.\[normalizedLang\][\s\S]*async function loadTrips\(\) \{[\s\S]*const lang = normalizeFrontendTourLang\(currentFrontendLang\(\)\);[\s\S]*fetch\(publicToursDataUrl\(lang\), \{ cache: "no-store" \}\)/,
     "Homepage tour loading should use generated versioned per-language URLs and bypass browser cache"
   );
+  assert.match(
+    mainToursSource,
+    /const loading = index === 0 \? "eager" : "lazy";[\s\S]*const fetchpriority = "auto";/,
+    "Homepage tour cards should avoid marking multiple below-the-fold images as high priority"
+  );
   assert.doesNotMatch(
     mainToursSource,
     /toursCacheKey|getCachedTours|setCachedTours|tripsRequestVersion/,
@@ -3990,6 +4000,16 @@ test("homepage hero title follows published destinations and only hides the dest
     homepageSource,
     /<link rel="stylesheet" href="\/shared\/css\/tokens\.css" \/>[\s\S]*<link rel="stylesheet" href="\/shared\/css\/site-home-critical\.css" \/>[\s\S]*<link rel="stylesheet" href="\/shared\/css\/pages\/home-critical\.css" \/>[\s\S]*<link rel="preload" href="\/shared\/css\/site-home-deferred\.css" as="style"[\s\S]*<link rel="preload" href="\/shared\/css\/pages\/home-deferred\.css" as="style"/,
     "Homepage should link the real shared CSS assets directly instead of routing critical and deferred styles through import wrappers"
+  );
+  assert.doesNotMatch(
+    homepageSource,
+    /<script[^>]+src="\/frontend\/scripts\/shared\/localhost_diagnostics\.js"/,
+    "Homepage should not request localhost diagnostics in production"
+  );
+  assert.match(
+    homepageSource,
+    /<source data-src="\/assets\/video\/rice field\.mp4" type="video\/mp4" \/>[\s\S]*attachVideoSource\(\)[\s\S]*window\.addEventListener\("load", startPlayback, \{ once: true \}\)/,
+    "Homepage should keep the hero MP4 out of the initial request graph and attach it when initial page loading completes"
   );
   assert.match(
     homepageSource,

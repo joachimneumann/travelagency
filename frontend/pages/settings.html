@@ -11,7 +11,13 @@
         window.ASIATRAVELPLAN_API_BASE = window.location.origin;
       }
     </script>
-    <script src="/frontend/scripts/shared/localhost_diagnostics.js"></script>
+    <script>
+      if (["localhost", "127.0.0.1"].includes(window.location.hostname)) {
+        const diagnosticsScript = document.createElement("script");
+        diagnosticsScript.src = "/frontend/scripts/shared/localhost_diagnostics.js";
+        document.head.append(diagnosticsScript);
+      }
+    </script>
     <link rel="stylesheet" href="assets/css/styles.css" />
   </head>
   <body class="backend-list-page">
