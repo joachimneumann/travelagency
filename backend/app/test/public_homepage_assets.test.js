@@ -193,6 +193,51 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
   assert.ok(copiedTeamAsset.isFile());
 });
 
+test("generatePublicHomepageAssets falls back when a visible tour image is missing", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "public-homepage-assets-missing-tour-image-"));
+  const contentRoot = path.join(root, "content");
+  const toursRoot = path.join(contentRoot, "tours");
+  const staffRoot = path.join(contentRoot, "atp_staff");
+  const frontendDataDir = path.join(root, "frontend", "data", "generated", "homepage");
+  const frontendI18nDir = path.join(root, "frontend", "data", "i18n", "frontend");
+  const tourOutputDir = path.join(root, "assets", "generated", "homepage", "tours");
+  const teamOutputDir = path.join(root, "assets", "generated", "homepage", "team");
+
+  await mkdir(path.join(toursRoot, "tour_missing_image"), { recursive: true });
+  await mkdir(frontendI18nDir, { recursive: true });
+  await writeJson(path.join(frontendI18nDir, "en.json"), {
+    "hero.title": "Private holidays in Vietnam",
+    "hero.title_with_destinations": "Private holidays in {destinations}"
+  });
+  await writeJson(path.join(contentRoot, "country_reference_info.json"), { items: [] });
+  await writeJson(path.join(toursRoot, "tour_missing_image", "tour.json"), {
+    id: "tour_missing_image",
+    title: { en: "Missing image tour" },
+    short_description: { en: "Visible but stale image reference" },
+    destinations: ["vietnam"],
+    image: "/public/v1/tour-images/tour_missing_image/missing.png",
+    priority: 10,
+    updated_at: "2026-04-14T12:34:56.000Z"
+  });
+
+  await generatePublicHomepageAssets({
+    toursRoot,
+    staffRoot,
+    countryReferenceInfoPath: path.join(contentRoot, "country_reference_info.json"),
+    frontendDataDir,
+    tourOutputDir,
+    teamOutputDir,
+    frontendI18nDir,
+    languages: ["en"]
+  });
+
+  const publicToursEn = JSON.parse(await readFile(path.join(frontendDataDir, "public-tours.en.json"), "utf8"));
+  assert.equal(publicToursEn.items.length, 1);
+  assert.equal(publicToursEn.items[0].id, "tour_missing_image");
+  assert.deepEqual(publicToursEn.items[0].pictures, []);
+  assert.equal(publicToursEn.items[0].image, "/assets/img/marketing_tours.png");
+});
+
 test("generatePublicHomepageAssets fails when a visible staff photo is missing", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "public-homepage-assets-missing-photo-"));
   const contentRoot = path.join(root, "content");

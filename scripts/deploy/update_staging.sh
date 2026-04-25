@@ -6,6 +6,7 @@ COMPOSE_FILE="docker-compose.staging.yml"
 ENV_FILE=".env"
 PROJECT_NAME="${PROJECT_NAME:-asiatravelplan-staging}"
 RUNTIME_BRAND_LOGO_PREPARER="${RUNTIME_BRAND_LOGO_PREPARER:-$ROOT_DIR/scripts/assets/prepare_runtime_brand_logo.sh}"
+SKIP_TESTS="${SKIP_TESTS:-0}"
 
 source "$ROOT_DIR/scripts/lib/docker_runtime.sh"
 
@@ -19,6 +20,9 @@ Examples:
   ./scripts/deploy/update_staging.sh keycloak
   ./scripts/deploy/update_staging.sh all
   ./scripts/deploy/update_staging.sh backend keycloak
+
+To bypass staging pre-deploy tests for urgent backend deploys:
+  SKIP_TESTS=1 ./scripts/deploy/update_staging.sh backend
 EOF
 }
 
@@ -55,6 +59,10 @@ normalize_services() {
 }
 
 should_run_tests() {
+  if [[ "$SKIP_TESTS" == "1" ]]; then
+    return 1
+  fi
+
   local service
   for service in "$@"; do
     case "$service" in
@@ -97,18 +105,30 @@ should_sync_atp_staff() {
 
 cd "$ROOT_DIR"
 
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+  usage
+  exit 0
+fi
+
+SERVICES_OUTPUT="$(normalize_services "$@")"
+SERVICES=()
+while IFS= read -r service; do
+  [[ -z "$service" ]] && continue
+  SERVICES+=("$service")
+done <<< "$SERVICES_OUTPUT"
+
 if [[ ! -f "$ENV_FILE" ]]; then
   echo "$ENV_FILE is missing in $ROOT_DIR" >&2
   exit 1
 fi
-
-mapfile -t SERVICES < <(normalize_services "$@")
 
 git fetch origin
 git pull --ff-only
 
 if should_run_tests "${SERVICES[@]}"; then
   run_staging_tests
+elif [[ "$SKIP_TESTS" == "1" ]]; then
+  echo "Skipping staging pre-deploy tests because SKIP_TESTS=1."
 fi
 
 mkdir -p frontend/data/generated/homepage assets/generated/homepage

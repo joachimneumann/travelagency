@@ -305,6 +305,19 @@ async function versionedStaticAssetPath(relativePath, outputRoot, { publicPrefix
     : publicPath;
 }
 
+async function optionalVersionedStaticAssetPath(relativePath, outputRoot, options = {}) {
+  try {
+    return await versionedStaticAssetPath(relativePath, outputRoot, options);
+  } catch (error) {
+    if (!String(error?.message || "").startsWith("Missing generated asset:")) throw error;
+    console.warn("[homepage-assets] Skipping missing generated tour image.", {
+      relativePath: String(relativePath || "").replace(/^\/+/, ""),
+      detail: String(error?.message || error)
+    });
+    return "";
+  }
+}
+
 async function buildHeroTitleByLang({
   publicTours,
   collectTourOptions,
@@ -531,12 +544,11 @@ async function generateTourAssets({
         const assetRelativePath = extractTourAssetRelativePath(picture, readModel.id);
         const generatedAssetRelativePath = generatedTourAssetPaths.get(assetRelativePath) || assetRelativePath;
         if (!generatedAssetRelativePath) continue;
-        pictures.push(
-          await versionedStaticAssetPath(generatedAssetRelativePath, outputRoot, {
-            publicPrefix: "/assets/generated/homepage/tours",
-            version: normalizeText(readModel.updated_at || readModel.created_at)
-          })
-        );
+        const pictureUrl = await optionalVersionedStaticAssetPath(generatedAssetRelativePath, outputRoot, {
+          publicPrefix: "/assets/generated/homepage/tours",
+          version: normalizeText(readModel.updated_at || readModel.created_at)
+        });
+        if (pictureUrl) pictures.push(pictureUrl);
       }
       const image = pictures[0] || "/assets/img/marketing_tours.png";
       localizedItems.push({
