@@ -200,10 +200,14 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
   assert.match(generatedSitemap, /https:\/\/asiatravelplan\.com\/destinations\/vietnam/);
   assert.match(generatedSitemap, /https:\/\/asiatravelplan\.com\/travel-styles\/budget/);
   assert.match(generatedSitemap, /https:\/\/asiatravelplan\.com\/tours\/alpha-tour-alpha/);
+  assert.match(generatedSitemap, /https:\/\/asiatravelplan\.com\/privacy\.html/);
   assert.match(generatedDestinationHtml, /<h1>Private tours in Vietnam<\/h1>/);
+  assert.match(generatedDestinationHtml, /"@type":"WebPage"/);
   assert.match(generatedDestinationHtml, /<a href="\/tours\/alpha-tour-alpha">Alpha tour<\/a>/);
   assert.match(generatedStyleHtml, /<h1>Budget private tours<\/h1>/);
   assert.match(generatedTourHtml, /<title>Alpha tour \| AsiaTravelPlan<\/title>/);
+  assert.match(generatedTourHtml, /<meta name="twitter:title" content="Alpha tour \| AsiaTravelPlan" \/>/);
+  assert.match(generatedTourHtml, /"@type":"WebPage"/);
   assert.match(generatedTourHtml, /"@type":"TouristTrip"/);
   assert.doesNotMatch(homepageHtml, /public-homepage-copy\.manifest\.json/);
 

@@ -3899,6 +3899,8 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
     travelerDetailsHtml,
     localCaddy,
     stagingCaddy,
+    robotsSource,
+    sitemapSource,
     runtimeBrandLogoScript,
     localFrontendScript,
     stagingFrontendScript,
@@ -3920,6 +3922,8 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
     readFile(path.join(frontendRoot, "pages", "traveler-details.html"), "utf8"),
     readFile(path.join(deployRoot, "Caddyfile.local"), "utf8"),
     readFile(path.join(deployRoot, "Caddyfile"), "utf8"),
+    readFile(path.join(repoRoot, "robots.txt"), "utf8"),
+    readFile(path.join(repoRoot, "sitemap.xml"), "utf8"),
     readFile(path.join(repoRoot, "scripts", "assets", "prepare_runtime_brand_logo.sh"), "utf8"),
     readFile(path.join(repoRoot, "scripts", "local", "start_local_frontend.sh"), "utf8"),
     readFile(path.join(repoRoot, "scripts", "staging", "deploy_staging_frontend.sh"), "utf8"),
@@ -4072,6 +4076,21 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
     assert.match(source, /\/emergency\.html/, "Caddy should serve emergency.html");
   }
   assert.match(
+    robotsSource,
+    /Disallow: \/api\/[\s\S]*Disallow: \/auth\/[\s\S]*Disallow: \/bookings\.html[\s\S]*Disallow: \/settings\.html[\s\S]*Disallow: \/traveler-details\.html[\s\S]*Sitemap: https:\/\/asiatravelplan\.com\/sitemap\.xml/,
+    "Production robots.txt should point crawlers at the sitemap while excluding backend, auth, API, and traveler-detail URLs"
+  );
+  assert.match(
+    sitemapSource,
+    /<loc>https:\/\/asiatravelplan\.com\/<\/loc>[\s\S]*<loc>https:\/\/asiatravelplan\.com\/privacy\.html<\/loc>/,
+    "Tracked fallback sitemap should include stable public pages when the generated sitemap is unavailable"
+  );
+  assert.doesNotMatch(
+    sitemapSource,
+    /bookings\.html|settings\.html|traveler-details\.html/,
+    "Tracked fallback sitemap should not expose private or noindex pages"
+  );
+  assert.match(
     stagingCaddy,
     /Content-Security-Policy "default-src 'self';[\s\S]*object-src 'none';[\s\S]*frame-ancestors 'self';[\s\S]*script-src 'self' 'unsafe-inline';[\s\S]*style-src 'self' 'unsafe-inline';[\s\S]*img-src 'self' data: blob:;[\s\S]*connect-src 'self';[\s\S]*upgrade-insecure-requests"/,
     "Shared Caddy security headers should publish a CSP that limits resource origins while allowing current inline bootstraps"
@@ -4120,6 +4139,11 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
     stagingCaddy,
     /@production_generated_homepage path \/frontend\/data\/generated\/homepage\/\*[\s\S]*Cache-Control "public, max-age=60, stale-while-revalidate=300"/,
     "Production generated homepage data should use a short public cache instead of bypassing browser caches"
+  );
+  assert.match(
+    stagingCaddy,
+    /production_private_noindex_headers[\s\S]*path \/app-home\.html \/bookings\.html \/booking\.html \/persons\.html \/marketing_tour\.html \/marketing_tours\.html \/standard-tours\.html \/standard-tour\.html \/settings\.html \/emergency\.html \/traveler-details\.html \/auth\/\* \/api\/\* \/integrations\/\* \/keycloak\/\*[\s\S]*X-Robots-Tag "noindex, nofollow, noarchive"[\s\S]*import production_private_noindex_headers/,
+    "Production Caddy should send an X-Robots-Tag noindex header on private or utility routes"
   );
   assert.doesNotMatch(
     stagingCaddy,
@@ -4369,6 +4393,7 @@ test("homepage TravelAgency structured data mirrors footer contact details", asy
   const jsonLdBlocks = Array.from(homepageSource.matchAll(/<script type="application\/ld\+json">\s*([\s\S]*?)\s*<\/script>/g))
     .map((match) => JSON.parse(match[1]));
   const travelAgencySchema = jsonLdBlocks.find((schema) => schema?.["@type"] === "TravelAgency");
+  const faqSchema = jsonLdBlocks.find((schema) => schema?.["@type"] === "FAQPage");
   const footerPhone = homepageSource.match(/data-i18n-id="footer\.whatsapp">WhatsApp:\s*([^<]+)/)?.[1];
   const footerEmail = homepageSource.match(/data-i18n-id="footer\.email">Email:\s*([^<]+)/)?.[1];
   const footerFacebookUrl = homepageSource.match(/<a href="([^"]+)"[^>]*data-i18n-id="footer\.facebook"/)?.[1];
@@ -4405,6 +4430,15 @@ test("homepage TravelAgency structured data mirrors footer contact details", asy
     ]
   );
   assert.doesNotMatch(JSON.stringify(travelAgencySchema), /Ho Chi Minh City|\+84-90-000-0000/);
+  assert.ok(faqSchema, "Homepage should publish FAQPage JSON-LD for visible FAQ content");
+  assert.ok(
+    faqSchema.mainEntity?.length >= 8,
+    "Homepage FAQPage schema should cover the public planning and booking questions"
+  );
+  assert.ok(
+    faqSchema.mainEntity?.some((item) => item.name === "How do I book a tour?" && item.acceptedAnswer?.text?.includes("Fast response within 2 hours")),
+    "Homepage FAQPage schema should include the visible booking answer"
+  );
 });
 
 test("homepage hero title follows published destinations and only hides the destination picker when one destination remains", async () => {
