@@ -948,8 +948,13 @@ test("payments removes the standalone payment-document panel and renders request
   );
   assert.match(
     paymentFlowSource,
-    /function paymentStageMarkup[\s\S]*class="booking-section booking-payment-step-panel is-open"[\s\S]*PAYMENT_DOCUMENT_KIND_REQUEST/,
+    /function paymentStageMarkup[\s\S]*class="booking-section booking-payment-step-panel"[\s\S]*PAYMENT_DOCUMENT_KIND_REQUEST/,
     "The payment-flow module should render each payment as its own booking section with a payment-request subsection"
+  );
+  assert.doesNotMatch(
+    paymentFlowSource,
+    /function paymentStageMarkup[\s\S]*class="booking-section booking-payment-step-panel is-open"/,
+    "Payment-step panels should start collapsed instead of rendering open by default"
   );
   assert.match(
     paymentFlowSource,
@@ -2124,7 +2129,9 @@ test("offer and travel-plan PDFs localize guide, pricing summary, and payment-te
     "offer.discount",
     "offer.tax_rate",
     "offer.quotation_tax_summary",
-    "offer.payment_terms_title"
+    "offer.payment_terms_title",
+    "travel_plan.default_welcome_styles",
+    "travel_plan.default_welcome"
   ]) {
     assert.equal(
       keyOccurrenceCount(key),
@@ -2147,6 +2154,11 @@ test("offer and travel-plan PDFs localize guide, pricing summary, and payment-te
     travelPlanPdfSource,
     /pdfT\(lang,\s*"guide\.section_title_named",\s*"Our team member \{name\} will assist you"/,
     "Travel-plan PDFs should source the guide heading from the localized PDF dictionary"
+  );
+  assert.match(
+    travelPlanPdfSource,
+    /pdfT\(\s*lang,\s*"travel_plan\.default_welcome_styles"[\s\S]*pdfT\(\s*lang,\s*"travel_plan\.default_welcome"/,
+    "Travel-plan PDFs should source default welcome text from the localized PDF dictionary"
   );
 });
 
@@ -4305,6 +4317,22 @@ test("website backend login goes directly to auth login instead of logout-to-log
     mainSource,
     /auth\/logout\?return_to=.*auth\/login/,
     "website backend login should not chain through auth/logout before auth/login"
+  );
+});
+
+test("backend logout clears cached website auth state before navigation", async () => {
+  const sharedAuthPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "shared", "auth.js");
+  const sharedAuthSource = await readFile(sharedAuthPath, "utf8");
+
+  assert.match(
+    sharedAuthSource,
+    /export function clearCachedAuthMe\(\) \{[\s\S]*window\.sessionStorage\.removeItem\(BACKEND_AUTH_CACHE_KEY\);/,
+    "shared auth should expose a helper that clears the cached auth/me response"
+  );
+  assert.match(
+    sharedAuthSource,
+    /link\.addEventListener\("click", \(event\) => \{\s*clearCachedAuthMe\(\);[\s\S]*const targetHref/,
+    "logout links should clear cached auth state before following the logout href"
   );
 });
 

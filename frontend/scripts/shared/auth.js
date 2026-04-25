@@ -33,11 +33,19 @@ export function readCachedAuthMe() {
   }
 }
 
+export function clearCachedAuthMe() {
+  try {
+    window.sessionStorage.removeItem(BACKEND_AUTH_CACHE_KEY);
+  } catch {
+    // Ignore cache clear failures.
+  }
+}
+
 function writeCachedAuthMe(payload) {
   try {
     const normalized = normalizeCachedAuthPayload(payload);
     if (!normalized) {
-      window.sessionStorage.removeItem(BACKEND_AUTH_CACHE_KEY);
+      clearCachedAuthMe();
       return;
     }
     window.sessionStorage.setItem(BACKEND_AUTH_CACHE_KEY, JSON.stringify(normalized));
@@ -59,6 +67,7 @@ export function wireAuthLogoutLink(link, { apiBase = "", returnTo = "" } = {}) {
   link.dataset.logoutHref = href;
   if (link.dataset.logoutBound !== "true") {
     link.addEventListener("click", (event) => {
+      clearCachedAuthMe();
       const targetHref = String(link.getAttribute("href") || link.dataset.logoutHref || "").trim();
       if (targetHref && targetHref !== "#") return;
       event.preventDefault();

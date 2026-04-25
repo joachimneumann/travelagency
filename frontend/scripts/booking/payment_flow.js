@@ -14,6 +14,7 @@ import {
 } from "./currency.js";
 import {
   mergeDualLocalizedPayload,
+  normalizeLocalizedEditorMap,
   renderLocalizedStackedField,
   resolveLocalizedEditorBranchText
 } from "./localized_editor.js";
@@ -357,11 +358,31 @@ export function createBookingPaymentFlowModule(ctx) {
     );
   }
 
+  function captureOpenPaymentStepPanels(root) {
+    if (!(root instanceof HTMLElement)) return new Set();
+    return new Set(
+      Array.from(root.querySelectorAll("[data-payment-id]"))
+        .filter((panel) => panel instanceof HTMLElement && panel.classList.contains("is-open"))
+        .map((panel) => String(panel.getAttribute("data-payment-id") || "").trim())
+        .filter(Boolean)
+    );
+  }
+
   function restoreOpenPaymentDocumentSections(root, openKeys) {
     if (!(root instanceof HTMLElement) || !(openKeys instanceof Set) || !openKeys.size) return;
     root.querySelectorAll("[data-payment-document-section]").forEach((panel) => {
       if (!(panel instanceof HTMLElement)) return;
       const key = String(panel.getAttribute("data-payment-document-section") || "").trim();
+      if (!openKeys.has(key)) return;
+      setBookingSectionOpen(panel, true, { animate: false });
+    });
+  }
+
+  function restoreOpenPaymentStepPanels(root, openKeys) {
+    if (!(root instanceof HTMLElement) || !(openKeys instanceof Set) || !openKeys.size) return;
+    root.querySelectorAll("[data-payment-id]").forEach((panel) => {
+      if (!(panel instanceof HTMLElement)) return;
+      const key = String(panel.getAttribute("data-payment-id") || "").trim();
       if (!openKeys.has(key)) return;
       setBookingSectionOpen(panel, true, { animate: false });
     });
@@ -418,9 +439,26 @@ export function createBookingPaymentFlowModule(ctx) {
   function readPaymentPdfLocalizedField(prefix, field, existingValue) {
     const sourceInput = document.querySelector(`[data-payment-pdf-field="${prefix}.${field}"][data-localized-role="source"]`);
     const targetInput = document.querySelector(`[data-payment-pdf-field="${prefix}.${field}"][data-localized-role="target"]`);
+    if (!sourceInput) {
+      const preservedMap = normalizeLocalizedEditorMap(existingValue?.i18n ?? existingValue, bookingSourceLang());
+      return {
+        text: preservedMap[bookingSourceLang()] || "",
+        i18n: preservedMap
+      };
+    }
+    const sourceValue = String(sourceInput?.value || "").trim();
+    if (!(targetInput instanceof HTMLElement)) {
+      const nextMap = normalizeLocalizedEditorMap(existingValue?.i18n ?? existingValue, bookingSourceLang());
+      if (sourceValue) nextMap[bookingSourceLang()] = sourceValue;
+      else delete nextMap[bookingSourceLang()];
+      return {
+        text: sourceValue,
+        i18n: nextMap
+      };
+    }
     const payload = mergeDualLocalizedPayload(
       existingValue?.i18n ?? existingValue,
-      String(sourceInput?.value || "").trim(),
+      sourceValue,
       String(targetInput?.value || "").trim()
     );
     return {
@@ -599,11 +637,17 @@ export function createBookingPaymentFlowModule(ctx) {
         showLabel: false,
         type: item.rows > 1 ? "textarea" : "input",
         rows: item.rows,
-        commonData: { "payment-pdf-field": `${prefix}.${item.field}` },
+        commonData: {
+          "payment-pdf-field": `${prefix}.${item.field}`,
+          "payment-pdf-scope": scope,
+          "payment-pdf-prefix": prefix,
+          "payment-pdf-field-name": item.field
+        },
         sourceValue: resolveLocalizedEditorBranchText(branch?.[`${item.field}_i18n`] ?? branch?.[item.field], bookingSourceLang(), ""),
         localizedValue: resolveLocalizedEditorBranchText(branch?.[`${item.field}_i18n`] ?? branch?.[item.field], bookingContentLang(), ""),
         englishPlaceholder: "",
         localizedPlaceholder: "",
+        targetLang: bookingSourceLang(),
         disabled,
         translateEnabled: false
       });
@@ -845,7 +889,7 @@ export function createBookingPaymentFlowModule(ctx) {
 
   function paymentStageMarkup(payment, index, currency) {
     return `
-      <article class="booking-section booking-payment-step-panel is-open" data-payment-id="${escapeHtml(String(payment?.id || "").trim())}">
+      <article class="booking-section booking-payment-step-panel" data-payment-id="${escapeHtml(String(payment?.id || "").trim())}">
         <div class="booking-section__head">
           <button
             class="booking-section__summary booking-section__summary--inline-pad-16"
@@ -904,6 +948,7 @@ export function createBookingPaymentFlowModule(ctx) {
 
   function renderPaymentFlowSections() {
     if (!(els.paymentFlowSections instanceof HTMLElement)) return;
+    const openPaymentStepPanels = captureOpenPaymentStepPanels(els.paymentFlowSections);
     const openPaymentDocumentSections = captureOpenPaymentDocumentSections(els.paymentFlowSections);
     const payments = currentPaymentLines();
     const currency = currentOfferCurrency();
@@ -915,6 +960,7 @@ export function createBookingPaymentFlowModule(ctx) {
     els.paymentFlowSections.hidden = false;
     els.paymentFlowSections.innerHTML = payments.map((payment, index) => paymentStageMarkup(payment, index, currency)).join("");
     initializeBookingSections(els.paymentFlowSections);
+    restoreOpenPaymentStepPanels(els.paymentFlowSections, openPaymentStepPanels);
     restoreOpenPaymentDocumentSections(els.paymentFlowSections, openPaymentDocumentSections);
     bindPaymentDocumentActions(els.paymentFlowSections);
     bindPaymentReceiptDraftInputs(els.paymentFlowSections);
@@ -924,7 +970,7 @@ export function createBookingPaymentFlowModule(ctx) {
     if (!(els.paymentFlowSections instanceof HTMLElement)) return;
     els.paymentFlowSections.hidden = false;
     els.paymentFlowSections.innerHTML = `
-      <article class="booking-section booking-payment-step-panel is-open">
+      <article class="booking-section booking-payment-step-panel">
         <div class="booking-section__head">
           <button class="booking-section__summary booking-section__summary--inline-pad-16" type="button">
             <span class="booking-payment-section__head">

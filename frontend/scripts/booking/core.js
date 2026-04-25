@@ -526,7 +526,19 @@ export function createBookingCoreModule(ctx) {
     }
     const sourceInput = document.querySelector(`[data-booking-pdf-field="${scope}.${field}"][data-localized-role="source"]`);
     const targetInput = document.querySelector(`[data-booking-pdf-field="${scope}.${field}"][data-localized-role="target"]`);
+    if (!sourceInput) {
+      return normalizePdfTextField(existingValue, existingValue?.i18n || existingValue);
+    }
     const sourceValue = String(sourceInput?.value || "").trim();
+    if (!(targetInput instanceof HTMLElement)) {
+      const nextMap = normalizeLocalizedEditorMap(existingValue?.i18n ?? existingValue, bookingSourceLang());
+      if (sourceValue) nextMap[bookingSourceLang()] = sourceValue;
+      else delete nextMap[bookingSourceLang()];
+      return {
+        text: sourceValue,
+        i18n: nextMap
+      };
+    }
     const localizedValue = String(targetInput?.value || "").trim();
     const payload = mergeDualLocalizedPayload(
       existingValue?.i18n ?? existingValue,
@@ -647,11 +659,16 @@ export function createBookingCoreModule(ctx) {
         showLabel: false,
         type: rows > 1 ? "textarea" : "input",
         rows,
-        commonData: { "booking-pdf-field": `${scope}.${field}` },
+        commonData: {
+          "booking-pdf-field": `${scope}.${field}`,
+          "booking-pdf-scope": scope,
+          "booking-pdf-field-name": field
+        },
         sourceValue: resolveLocalizedEditorBranchText(branch?.[`${field}_i18n`] ?? branch?.[field], bookingSourceLang(), ""),
         localizedValue: resolveLocalizedEditorBranchText(branch?.[`${field}_i18n`] ?? branch?.[field], bookingContentLang(), ""),
         englishPlaceholder: placeholder,
         localizedPlaceholder: placeholder,
+        targetLang: bookingSourceLang(),
         disabled,
         translateEnabled: false
       });
@@ -1343,8 +1360,12 @@ export function createBookingCoreModule(ctx) {
     if (state.tour_image_tour_id === tourId) return;
 
     const request = tourDetailRequest({ baseURL: apiOrigin, params: { tour_id: tourId } });
-    const payload = await fetchApi(request.url);
-    if (!payload?.tour) return;
+    const payload = await fetchApi(request.url, { suppressNotFound: true });
+    if (!payload?.tour) {
+      state.tour_image_tour_id = tourId;
+      state.tour_image = "";
+      return;
+    }
     if (normalizeText(state.booking?.web_form_submission?.tour_id) !== tourId) return;
     state.tour_image_tour_id = tourId;
     state.tour_image = normalizeText(payload.tour.image) || "";

@@ -199,9 +199,18 @@ function resolveTravelPlanWelcomeText(booking, lang) {
   if (override) return override;
   const styles = resolveBookingPdfTravelStyleLabels(booking, lang);
   if (styles.length) {
-    return `This is your current ${styles.join(", ")} travel plan. Please let us know if you would like to modify anything.`;
+    return pdfT(
+      lang,
+      "travel_plan.default_welcome_styles",
+      "This is your current {styles} travel plan. Please let us know if you would like to modify anything.",
+      { styles: styles.join(", ") }
+    );
   }
-  return "This is your current travel plan. Please let us know if you would like to modify anything.";
+  return pdfT(
+    lang,
+    "travel_plan.default_welcome",
+    "This is your current travel plan. Please let us know if you would like to modify anything."
+  );
 }
 
 function resolveTravelPlanClosingText(booking, lang) {

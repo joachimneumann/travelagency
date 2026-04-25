@@ -783,9 +783,24 @@ async function init() {
     });
   }
   [els.travelPlanPdfPersonalizationPanel, els.offerPdfPersonalizationPanel].filter(Boolean).forEach((panel) => {
-    panel.addEventListener("input", updateCoreDirtyState);
-    panel.addEventListener("change", updateCoreDirtyState);
+    const handlePdfTextChange = () => {
+      updateCoreDirtyState();
+      travelPlanModule.renderTravelPlanTranslationPanel?.();
+    };
+    panel.addEventListener("input", handlePdfTextChange);
+    panel.addEventListener("change", handlePdfTextChange);
   });
+  if (els.paymentsWorkspace) {
+    const handlePaymentPdfTextChange = (event) => {
+      const target = event.target instanceof Element
+        ? event.target.closest("[data-payment-pdf-field]")
+        : null;
+      if (!target) return;
+      travelPlanModule.renderTravelPlanTranslationPanel?.();
+    };
+    els.paymentsWorkspace.addEventListener("input", handlePaymentPdfTextChange);
+    els.paymentsWorkspace.addEventListener("change", handlePaymentPdfTextChange);
+  }
   if (els.contentLanguageSelect) els.contentLanguageSelect.addEventListener("change", () => {
     void handleContentLanguageChange().then(() => {
       travelPlanModule.renderTravelPlanTranslationPanel?.();
@@ -1298,6 +1313,7 @@ async function loadActivities() {
 function renderPricingPanel(options = {}) {
   void options;
   const result = paymentFlowModule.renderPaymentFlowPanel();
+  travelPlanModule.renderTravelPlanTranslationPanel?.();
   updateCleanStateActionAvailability();
   return result;
 }
