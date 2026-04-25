@@ -241,7 +241,7 @@ Repository-root wrappers also exist:
 ./deploy_frontend
 ./deploy_backend
 ./deploy_keycloak
-./deploy_all
+./deploy/deploy
 ```
 
 They dispatch differently depending on whether they are run from the local checkout, staging checkout, or production checkout.
