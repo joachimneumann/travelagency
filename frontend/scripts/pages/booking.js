@@ -401,6 +401,8 @@ const els = {
   actionStatus: document.getElementById("booking_action_status"),
   travel_plan_panel: document.getElementById("travel_plan_panel"),
   travel_plan_panel_summary: document.getElementById("travel_plan_panel_summary"),
+  travel_plan_translation_section: document.getElementById("travel_plan_translation_section"),
+  travel_plan_translation_panel: document.getElementById("travel_plan_translation_panel"),
   travel_plan_pdf_panel: document.getElementById("travel_plan_pdf_panel"),
   travel_plan_pdf_panel_summary: document.getElementById("travel_plan_pdf_panel_summary"),
   travel_plan_pdf_workspace: document.getElementById("travel_plan_pdf_workspace"),
@@ -785,7 +787,9 @@ async function init() {
     panel.addEventListener("change", updateCoreDirtyState);
   });
   if (els.contentLanguageSelect) els.contentLanguageSelect.addEventListener("change", () => {
-    void handleContentLanguageChange();
+    void handleContentLanguageChange().then(() => {
+      travelPlanModule.renderTravelPlanTranslationPanel?.();
+    });
   });
   if (els.deleteBtn) els.deleteBtn.addEventListener("click", deleteBooking);
   if (els.cloneTitleInput) {

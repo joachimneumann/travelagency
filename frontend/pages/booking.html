@@ -710,12 +710,22 @@
             <div class="booking-section__body">
               <div class="backend-controls travel-plan-actions">
                 <div class="travel-plan-actions__buttons">
-                  <button class="btn btn-ghost" id="travel_plan_translate_all_btn" type="button" data-i18n-id="booking.travel_plan.translate_everything">Translate everything</button>
                   <button class="btn btn-ghost" id="travel_plan_renumber_days_btn" type="button" data-i18n-id="booking.travel_plan.renumber_days">Renumber days</button>
                 </div>
                 <span id="travel_plan_status" class="micro booking-inline-status"></span>
               </div>
               <div id="travel_plan_editor"></div>
+            </div>
+          </article>
+
+          <article id="travel_plan_translation_section" class="booking-section is-open" hidden>
+            <div class="booking-section__head">
+              <button class="booking-section__summary booking-section__summary--inline-pad-16" id="travel_plan_translation_summary" type="button">
+                <span data-i18n-id="booking.travel_plan.translation_review">Travel plan translations</span>
+              </button>
+            </div>
+            <div class="booking-section__body">
+              <div id="travel_plan_translation_panel" class="tour-travel-plan-translation"></div>
             </div>
           </article>
 

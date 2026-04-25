@@ -9,7 +9,7 @@ import {
   normalizeBookingSourceLang
 } from "./i18n.js";
 import {
-  buildDualLocalizedPayload,
+  mergeDualLocalizedPayload,
   resolveLocalizedEditorBranchText,
   resolveLocalizedEditorText
 } from "./localized_editor.js";
@@ -42,6 +42,64 @@ function travelPlanId(prefix) {
 
 function normalizeOptionalText(value) {
   return String(value || "").trim();
+}
+
+const TRAVEL_PLAN_TRANSLATION_ORIGINS = Object.freeze(new Set(["manual", "machine"]));
+
+function normalizeTranslationMetaOrigin(value) {
+  const normalized = normalizeOptionalText(value).toLowerCase();
+  return TRAVEL_PLAN_TRANSLATION_ORIGINS.has(normalized) ? normalized : "manual";
+}
+
+function normalizeTranslationMetaKeys(value) {
+  return Array.from(
+    new Set(
+      (Array.isArray(value) ? value : [])
+        .map((entry) => normalizeOptionalText(entry))
+        .filter(Boolean)
+    )
+  );
+}
+
+function normalizeTravelPlanTranslationMeta(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  const normalized = {};
+  for (const [lang, entry] of Object.entries(value)) {
+    if (!entry || typeof entry !== "object" || Array.isArray(entry)) continue;
+    const normalizedLang = normalizeBookingContentLang(lang);
+    const manualKeys = normalizeTranslationMetaKeys(entry?.manual_keys);
+    normalized[normalizedLang] = {
+      source_lang: normalizeBookingContentLang(entry?.source_lang || "en"),
+      source_hash: normalizeOptionalText(entry?.source_hash),
+      origin: normalizeTranslationMetaOrigin(entry?.origin),
+      updated_at: normalizeOptionalText(entry?.updated_at) || null,
+      ...(manualKeys.length ? { manual_keys: manualKeys } : {})
+    };
+  }
+  return normalized;
+}
+
+function hasOwnProperty(source, key) {
+  return Object.prototype.hasOwnProperty.call(source || {}, key);
+}
+
+function normalizeDraftLocalizedPayload(source, field, sourceLang, targetLang) {
+  const rawSource = source && typeof source === "object" ? source : {};
+  const mapValue = rawSource[`${field}_i18n`];
+  const hasPlainValue = hasOwnProperty(rawSource, field);
+  const plainValue = hasPlainValue ? normalizeOptionalText(rawSource[field]) : "";
+  const existingValue = mapValue ?? (hasPlainValue ? plainValue : "");
+  const sourceValue = hasPlainValue
+    ? plainValue
+    : resolveLocalizedEditorText(existingValue, sourceLang, "");
+  const localizedValue = targetLang === sourceLang
+    ? sourceValue
+    : resolveLocalizedEditorBranchText(existingValue, targetLang, "");
+  const merged = mergeDualLocalizedPayload(existingValue, sourceValue, localizedValue, targetLang, sourceLang);
+  return {
+    text: sourceValue,
+    map: merged.map
+  };
 }
 
 function normalizeItemKind(value) {
@@ -283,25 +341,18 @@ export function normalizeTravelPlanDraft(plan, options = {}) {
     .map((day, dayIndex) => {
       const rawDay = day && typeof day === "object" ? day : {};
       const normalizedDate = normalizeOptionalText(rawDay.date);
+      const titleField = normalizeDraftLocalizedPayload(rawDay, "title", sourceLang, targetLang);
+      const overnightLocationField = normalizeDraftLocalizedPayload(rawDay, "overnight_location", sourceLang, targetLang);
+      const notesField = normalizeDraftLocalizedPayload(rawDay, "notes", sourceLang, targetLang);
       return {
         id: String(rawDay.id || travelPlanId("travel_plan_day")),
         day_number: dayIndex + 1,
         date: normalizedDate,
         date_string: normalizedDate ? "" : normalizeOptionalText(rawDay.date_string),
-        title: resolveLocalizedEditorText(rawDay.title_i18n ?? rawDay.title, sourceLang, ""),
-        title_i18n: buildDualLocalizedPayload(
-          resolveLocalizedEditorText(rawDay.title_i18n ?? rawDay.title, sourceLang, ""),
-          resolveLocalizedEditorBranchText(rawDay.title_i18n ?? rawDay.title, targetLang, ""),
-          targetLang,
-          sourceLang
-        ).map,
-        overnight_location: resolveLocalizedEditorText(rawDay.overnight_location_i18n ?? rawDay.overnight_location, sourceLang, ""),
-        overnight_location_i18n: buildDualLocalizedPayload(
-          resolveLocalizedEditorText(rawDay.overnight_location_i18n ?? rawDay.overnight_location, sourceLang, ""),
-          resolveLocalizedEditorBranchText(rawDay.overnight_location_i18n ?? rawDay.overnight_location, targetLang, ""),
-          targetLang,
-          sourceLang
-        ).map,
+        title: titleField.text,
+        title_i18n: titleField.map,
+        overnight_location: overnightLocationField.text,
+        overnight_location_i18n: overnightLocationField.map,
         services: (
           Array.isArray(rawDay.services)
             ? rawDay.services
@@ -309,65 +360,44 @@ export function normalizeTravelPlanDraft(plan, options = {}) {
         ).map((item) => {
           const rawItem = item && typeof item === "object" ? item : {};
           const timing = normalizeItemTiming(rawItem);
-          const timeLabelMap = buildDualLocalizedPayload(
-            resolveLocalizedEditorText(rawItem.time_label_i18n ?? timing.time_label, sourceLang, ""),
-            resolveLocalizedEditorBranchText(rawItem.time_label_i18n ?? timing.time_label, targetLang, ""),
-            targetLang,
-            sourceLang
-          ).map;
-          const titleMap = buildDualLocalizedPayload(
-            resolveLocalizedEditorText(rawItem.title_i18n ?? rawItem.title, sourceLang, ""),
-            resolveLocalizedEditorBranchText(rawItem.title_i18n ?? rawItem.title, targetLang, ""),
-            targetLang,
-            sourceLang
-          ).map;
-          const detailsMap = buildDualLocalizedPayload(
-            resolveLocalizedEditorText(rawItem.details_i18n ?? rawItem.details, sourceLang, ""),
-            resolveLocalizedEditorBranchText(rawItem.details_i18n ?? rawItem.details, targetLang, ""),
-            targetLang,
-            sourceLang
-          ).map;
-          const locationMap = buildDualLocalizedPayload(
-            resolveLocalizedEditorText(rawItem.location_i18n ?? rawItem.location, sourceLang, ""),
-            resolveLocalizedEditorBranchText(rawItem.location_i18n ?? rawItem.location, targetLang, ""),
-            targetLang,
-            sourceLang
-          ).map;
+          const timeLabelField = normalizeDraftLocalizedPayload(rawItem, "time_label", sourceLang, targetLang);
+          const titleField = normalizeDraftLocalizedPayload(rawItem, "title", sourceLang, targetLang);
+          const detailsField = normalizeDraftLocalizedPayload(rawItem, "details", sourceLang, targetLang);
+          const locationField = normalizeDraftLocalizedPayload(rawItem, "location", sourceLang, targetLang);
           return {
             id: String(rawItem.id || travelPlanId("travel_plan_service")),
             timing_kind: timing.timing_kind,
-            time_label: resolveLocalizedEditorText(timeLabelMap, sourceLang, ""),
-            time_label_i18n: timeLabelMap,
+            time_label: timeLabelField.text,
+            time_label_i18n: timeLabelField.map,
             time_point: timing.time_point,
             kind: normalizeItemKind(rawItem.kind),
-            title: resolveLocalizedEditorText(titleMap, sourceLang, ""),
-            title_i18n: titleMap,
-            details: resolveLocalizedEditorText(detailsMap, sourceLang, ""),
-            details_i18n: detailsMap,
+            title: titleField.text,
+            title_i18n: titleField.map,
+            details: detailsField.text,
+            details_i18n: detailsField.map,
             image_subtitle: normalizeOptionalText(rawItem.image_subtitle),
-            location: resolveLocalizedEditorText(locationMap, sourceLang, ""),
-            location_i18n: locationMap,
+            location: locationField.text,
+            location_i18n: locationField.map,
             start_time: timing.start_time,
             end_time: timing.end_time,
             image: normalizeItemImage(rawItem.image ?? rawItem.images),
             copied_from: normalizeCopiedFrom(rawItem.copied_from)
           };
         }),
-        notes: resolveLocalizedEditorText(rawDay.notes_i18n ?? rawDay.notes, sourceLang, ""),
-        notes_i18n: buildDualLocalizedPayload(
-          resolveLocalizedEditorText(rawDay.notes_i18n ?? rawDay.notes, sourceLang, ""),
-          resolveLocalizedEditorBranchText(rawDay.notes_i18n ?? rawDay.notes, targetLang, ""),
-          targetLang,
-          sourceLang
-        ).map,
+        notes: notesField.text,
+        notes_i18n: notesField.map,
         copied_from: normalizeCopiedDayFrom(rawDay.copied_from)
       };
     });
 
-  return {
+  const normalized = {
     days,
     attachments: normalizeTravelPlanAttachments(source.attachments)
   };
+  if (hasOwnProperty(source, "translation_meta")) {
+    normalized.translation_meta = normalizeTravelPlanTranslationMeta(source.translation_meta);
+  }
+  return normalized;
 }
 
 export function countTravelPlanServices(plan) {

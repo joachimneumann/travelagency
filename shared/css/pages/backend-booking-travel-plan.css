@@ -155,6 +155,88 @@
   font-weight: var(--font-weight-regular);
 }
 
+.tour-travel-plan-translation {
+  display: grid;
+  gap: 1rem;
+}
+
+.tour-travel-plan-translation .tour-reel-empty {
+  border: 1px dashed var(--line);
+  border-radius: 1rem;
+  padding: 1rem;
+  background: var(--surface-muted);
+}
+
+.tour-travel-plan-translation__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.tour-travel-plan-translation__copy {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.tour-travel-plan-translation__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.tour-travel-plan-translation__list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.tour-travel-plan-translation__row {
+  display: grid;
+  grid-template-columns: minmax(150px, 0.7fr) minmax(130px, 0.5fr) minmax(0, 1fr) auto;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: 0.9rem;
+  background: var(--surface);
+}
+
+.tour-travel-plan-translation__status {
+  justify-self: start;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.2rem 0.55rem;
+  background: var(--surface-muted);
+}
+
+.tour-travel-plan-translation__review {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 0.75rem;
+  padding-top: 0.25rem;
+}
+
+.tour-travel-plan-translation__review-row {
+  display: grid;
+  grid-template-columns: minmax(150px, 0.5fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: start;
+}
+
+.tour-travel-plan-translation__source {
+  min-height: 2.75rem;
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  padding: 0.65rem;
+  background: var(--surface-muted);
+  white-space: pre-wrap;
+}
+
+.tour-travel-plan-translation__target {
+  width: 100%;
+}
+
 .booking-detail-page #travel_plan_pdf_panel .booking-section__head {
   background: var(--travelplan_day_surface);
 }
@@ -1628,6 +1710,11 @@
 
   .travel-plan-link-row {
     grid-template-columns: 1fr;
+  }
+
+  .tour-travel-plan-translation__row,
+  .tour-travel-plan-translation__review-row {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .travel-plan-day__head,

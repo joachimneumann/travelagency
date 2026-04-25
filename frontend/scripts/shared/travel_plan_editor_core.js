@@ -11,11 +11,13 @@ import {
   bookingContentLanguageOption,
   bookingSourceLang,
   bookingSourceLanguageLabel,
-  bookingT
+  bookingT,
+  normalizeBookingContentLang
 } from "../booking/i18n.js";
 import { renderBookingSectionHeader } from "../booking/sections.js";
 import {
   mergeDualLocalizedPayload,
+  normalizeLocalizedEditorMap,
   renderLocalizedStackedField,
   requestBookingFieldTranslation,
   resolveLocalizedEditorBranchText
@@ -312,6 +314,11 @@ export function createBookingTravelPlanModule(ctx) {
     if (allowPdfs) {
       next.attachments = Array.isArray(source.attachments) ? source.attachments : [];
     }
+    if (Object.prototype.hasOwnProperty.call(source, "translation_meta")) {
+      next.translation_meta = source.translation_meta && typeof source.translation_meta === "object" && !Array.isArray(source.translation_meta)
+        ? source.translation_meta
+        : {};
+    }
     return next;
   }
 
@@ -516,6 +523,7 @@ export function createBookingTravelPlanModule(ctx) {
     setTravelPlanDirty(false, null);
     travelPlanStatus("");
     travelPlanServiceLibraryModule.populateTravelPlanServiceLibraryKindOptions();
+    renderTravelPlanTranslationPanel();
   }
 
   function resolveLocalizedDraftBranchText(map, lang = "en", fallback = "") {
@@ -529,18 +537,13 @@ export function createBookingTravelPlanModule(ctx) {
       label,
       type,
       rows,
-      targetLang: bookingContentLang(),
+      targetLang: bookingSourceLang(),
       disabled: !state.permissions.canEditBooking,
-      translateEnabled: allowTranslation && Boolean(state.booking?.translation_enabled),
+      translateEnabled: false,
       sourceValue,
-      localizedValue,
+      localizedValue: "",
       commonData: {
         [dataScope]: field,
-        ...(dayId ? { "travel-plan-day-id": dayId } : {}),
-        ...(itemId ? { "travel-plan-service-id": itemId } : {})
-      },
-      translatePayload: {
-        "travel-plan-translate": field,
         ...(dayId ? { "travel-plan-day-id": dayId } : {}),
         ...(itemId ? { "travel-plan-service-id": itemId } : {})
       }
@@ -1635,7 +1638,16 @@ export function createBookingTravelPlanModule(ctx) {
       ? null
       : container?.querySelector(`[data-${dataScope}="${field}"][data-localized-lang="${targetLang}"][data-localized-role="target"]`);
     const sourceValue = String(sourceInput?.value || "").trim();
-    const localizedValue = targetLang === sourceLang ? "" : String(localizedInput?.value || "").trim();
+    if (!localizedInput) {
+      const nextMap = normalizeLocalizedEditorMap(existingValue, sourceLang);
+      if (sourceValue) nextMap[sourceLang] = sourceValue;
+      else delete nextMap[sourceLang];
+      return {
+        map: nextMap,
+        text: sourceValue
+      };
+    }
+    const localizedValue = String(localizedInput.value || "").trim();
     return mergeDualLocalizedPayload(existingValue, sourceValue, localizedValue, targetLang, sourceLang);
   }
 
@@ -1760,6 +1772,9 @@ export function createBookingTravelPlanModule(ctx) {
     });
     if (allowPdfs) {
       draft.attachments = Array.isArray(state.travelPlanDraft?.attachments) ? state.travelPlanDraft.attachments : [];
+    }
+    if (Object.prototype.hasOwnProperty.call(state.travelPlanDraft || {}, "translation_meta")) {
+      draft.translation_meta = state.travelPlanDraft.translation_meta;
     }
     state.travelPlanDraft = normalizeTravelPlanState(draft);
     return state.travelPlanDraft;
@@ -2282,6 +2297,381 @@ export function createBookingTravelPlanModule(ctx) {
     }
   }
 
+  const TRAVEL_PLAN_REVIEW_SOURCE_LANG = "en";
+
+  function normalizeReviewText(value) {
+    return String(value ?? "").trim();
+  }
+
+  function currentTravelPlanReviewTargetLang() {
+    return normalizeBookingContentLang(
+      state.coreDraft?.customer_language
+      || state.booking?.customer_language
+      || state.booking?.web_form_submission?.preferred_language
+      || bookingContentLang("en")
+    );
+  }
+
+  function travelPlanReviewManualKeys(plan, targetLang) {
+    return Array.from(
+      new Set(
+        (Array.isArray(plan?.translation_meta?.[targetLang]?.manual_keys) ? plan.translation_meta[targetLang].manual_keys : [])
+          .map((entry) => normalizeReviewText(entry))
+          .filter(Boolean)
+      )
+    );
+  }
+
+  function travelPlanReviewSourceHash(fields, { excludedKeys = [] } = {}) {
+    const excluded = new Set((Array.isArray(excludedKeys) ? excludedKeys : []).map((entry) => normalizeReviewText(entry)).filter(Boolean));
+    const source = JSON.stringify(
+      (Array.isArray(fields) ? fields : [])
+        .filter((field) => !excluded.has(field.key))
+        .map((field) => [field.key, field.sourceText])
+    );
+    let hash = 2166136261;
+    for (let index = 0; index < source.length; index += 1) {
+      hash ^= source.charCodeAt(index);
+      hash = Math.imul(hash, 16777619);
+    }
+    return `fnv1a_${(hash >>> 0).toString(16).padStart(8, "0")}`;
+  }
+
+  function travelPlanReviewFieldMap(holder, mapField) {
+    return normalizeLocalizedEditorMap(holder?.[mapField], TRAVEL_PLAN_REVIEW_SOURCE_LANG);
+  }
+
+  function collectTravelPlanReviewFields(plan, targetLang) {
+    const fields = [];
+    const days = Array.isArray(plan?.days) ? plan.days : [];
+    const normalizedTargetLang = normalizeBookingContentLang(targetLang || bookingContentLang("en"));
+
+    function addField({ holder, mapField, plainField, key, label }) {
+      if (!holder || !key) return;
+      const map = travelPlanReviewFieldMap(holder, mapField);
+      const sourceText = normalizeReviewText(holder?.[plainField]) || normalizeReviewText(map[TRAVEL_PLAN_REVIEW_SOURCE_LANG]);
+      if (!sourceText) return;
+      fields.push({
+        key,
+        label,
+        holder,
+        mapField,
+        plainField,
+        sourceText,
+        targetText: normalizeReviewText(map[normalizedTargetLang])
+      });
+    }
+
+    days.forEach((day, dayIndex) => {
+      const dayId = normalizeReviewText(day?.id) || `day_${dayIndex + 1}`;
+      const dayLabel = bookingT("booking.travel_plan.day_heading", "Day {day}", { day: String(dayIndex + 1) });
+      addField({
+        holder: day,
+        mapField: "title_i18n",
+        plainField: "title",
+        key: `travel_plan.${dayId}.title`,
+        label: `${dayLabel} · ${bookingT("booking.travel_plan.day_title", "Day Title")}`
+      });
+      addField({
+        holder: day,
+        mapField: "overnight_location_i18n",
+        plainField: "overnight_location",
+        key: `travel_plan.${dayId}.overnight_location`,
+        label: `${dayLabel} · ${bookingT("booking.travel_plan.location_optional", "Location (optional)")}`
+      });
+      addField({
+        holder: day,
+        mapField: "notes_i18n",
+        plainField: "notes",
+        key: `travel_plan.${dayId}.notes`,
+        label: `${dayLabel} · ${bookingT("booking.travel_plan.day_notes", "Day Details")}`
+      });
+
+      const services = Array.isArray(day?.services) ? day.services : [];
+      services.forEach((service, serviceIndex) => {
+        const serviceId = normalizeReviewText(service?.id) || `service_${dayIndex + 1}_${serviceIndex + 1}`;
+        const serviceLabel = `${dayLabel} · ${bookingT("booking.travel_plan.service_label", "Service")} ${serviceIndex + 1}`;
+        if (normalizeReviewText(service?.timing_kind || "label") === "label") {
+          addField({
+            holder: service,
+            mapField: "time_label_i18n",
+            plainField: "time_label",
+            key: `travel_plan.${dayId}.${serviceId}.time_label`,
+            label: `${serviceLabel} · ${bookingT("booking.travel_plan.time_label", "Time label")}`
+          });
+        }
+        addField({
+          holder: service,
+          mapField: "title_i18n",
+          plainField: "title",
+          key: `travel_plan.${dayId}.${serviceId}.title`,
+          label: `${serviceLabel} · ${bookingT("booking.travel_plan.service_title", "Title")}`
+        });
+        if (allowServiceDetails) {
+          addField({
+            holder: service,
+            mapField: "details_i18n",
+            plainField: "details",
+            key: `travel_plan.${dayId}.${serviceId}.details`,
+            label: `${serviceLabel} · ${bookingT("booking.travel_plan.item_notes", "Service Details")}`
+          });
+        }
+        addField({
+          holder: service,
+          mapField: "location_i18n",
+          plainField: "location",
+          key: `travel_plan.${dayId}.${serviceId}.location`,
+          label: `${serviceLabel} · ${bookingT("booking.travel_plan.location_optional", "Location (optional)")}`
+        });
+      });
+    });
+
+    return fields;
+  }
+
+  function setTravelPlanReviewFieldTranslation(holder, {
+    mapField,
+    plainField,
+    sourceText,
+    targetLang,
+    targetText
+  }) {
+    if (!holder || targetLang === TRAVEL_PLAN_REVIEW_SOURCE_LANG) return;
+    const sourceValue = normalizeReviewText(sourceText || holder?.[plainField]);
+    const targetValue = normalizeReviewText(targetText);
+    const merged = mergeDualLocalizedPayload(
+      holder?.[mapField] ?? holder?.[plainField],
+      sourceValue,
+      targetValue,
+      targetLang,
+      TRAVEL_PLAN_REVIEW_SOURCE_LANG
+    );
+    holder[plainField] = sourceValue;
+    holder[mapField] = merged.map;
+  }
+
+  function touchTravelPlanReviewMeta(plan, targetLang, origin = "machine", options = {}) {
+    if (!plan || targetLang === TRAVEL_PLAN_REVIEW_SOURCE_LANG) return;
+    const fields = collectTravelPlanReviewFields(plan, targetLang);
+    if (!fields.length) return;
+    const meta = plan.translation_meta && typeof plan.translation_meta === "object" && !Array.isArray(plan.translation_meta)
+      ? { ...plan.translation_meta }
+      : {};
+    const manualKeys = Object.prototype.hasOwnProperty.call(options, "manualKeys")
+      ? Array.from(new Set((Array.isArray(options.manualKeys) ? options.manualKeys : []).map((entry) => normalizeReviewText(entry)).filter(Boolean)))
+      : travelPlanReviewManualKeys(plan, targetLang);
+    meta[targetLang] = {
+      source_lang: TRAVEL_PLAN_REVIEW_SOURCE_LANG,
+      source_hash: travelPlanReviewSourceHash(fields, { excludedKeys: manualKeys }),
+      origin: manualKeys.length || origin === "manual" ? "manual" : "machine",
+      updated_at: new Date().toISOString(),
+      ...(manualKeys.length ? { manual_keys: manualKeys } : {})
+    };
+    plan.translation_meta = meta;
+  }
+
+  function travelPlanReviewStatus(plan, targetLang) {
+    const fields = collectTravelPlanReviewFields(plan, targetLang);
+    const totalFields = fields.length;
+    const translatedFields = fields.reduce((count, field) => count + (normalizeReviewText(field.targetText) ? 1 : 0), 0);
+    const missingFields = Math.max(0, totalFields - translatedFields);
+    const meta = plan?.translation_meta?.[targetLang] && typeof plan.translation_meta[targetLang] === "object"
+      ? plan.translation_meta[targetLang]
+      : null;
+    const sourceHash = travelPlanReviewSourceHash(fields, {
+      excludedKeys: travelPlanReviewManualKeys(plan, targetLang)
+    });
+    const stale = Boolean(meta?.source_hash) && meta.source_hash !== sourceHash;
+    let status = "missing";
+    if (targetLang === TRAVEL_PLAN_REVIEW_SOURCE_LANG) status = "source";
+    else if (!totalFields) status = "empty";
+    else if (!translatedFields) status = "missing";
+    else if (stale) status = "stale";
+    else if (missingFields > 0) status = "partial";
+    else if (meta?.origin === "machine") status = "machine";
+    else status = "current";
+    return {
+      status,
+      totalFields,
+      translatedFields,
+      missingFields,
+      stale
+    };
+  }
+
+  function travelPlanReviewStatusLabel(status) {
+    switch (status) {
+      case "empty":
+        return bookingT("tour.travel_plan_translation.status.empty", "No source text");
+      case "partial":
+        return bookingT("tour.travel_plan_translation.status.partial", "Partial");
+      case "stale":
+        return bookingT("tour.travel_plan_translation.status.stale", "Outdated");
+      case "machine":
+        return bookingT("tour.travel_plan_translation.status.machine", "Machine translated");
+      case "current":
+        return bookingT("tour.travel_plan_translation.status.current", "Reviewed");
+      default:
+        return bookingT("tour.travel_plan_translation.status.missing", "Missing");
+    }
+  }
+
+  function renderTravelPlanReviewFields(plan, targetLang) {
+    const fields = collectTravelPlanReviewFields(plan, targetLang);
+    if (!fields.length) {
+      return `<div class="tour-reel-empty micro">${escapeHtml(bookingT("tour.travel_plan_translation.no_source", "Add English travel-plan text before translating."))}</div>`;
+    }
+    return `
+      <div class="tour-travel-plan-translation__review">
+        ${fields.map((field) => `
+          <div class="tour-travel-plan-translation__review-row">
+            <div class="micro">${escapeHtml(field.label)}</div>
+            <div class="tour-travel-plan-translation__source">${escapeHtml(field.sourceText)}</div>
+            <textarea
+              class="booking-text-field tour-travel-plan-translation__target"
+              rows="2"
+              data-travel-plan-review-key="${escapeHtml(field.key)}"
+              data-travel-plan-review-lang="${escapeHtml(targetLang)}"
+              ${state.permissions.canEditBooking ? "" : "disabled"}
+            >${escapeHtml(field.targetText)}</textarea>
+          </div>
+        `).join("")}
+      </div>
+    `;
+  }
+
+  function renderTravelPlanTranslationPanel() {
+    const section = els.travel_plan_translation_section;
+    const panel = els.travel_plan_translation_panel;
+    if (!(section instanceof HTMLElement) || !(panel instanceof HTMLElement)) return;
+    const targetLang = currentTravelPlanReviewTargetLang();
+    if (targetLang === TRAVEL_PLAN_REVIEW_SOURCE_LANG) {
+      section.hidden = true;
+      panel.innerHTML = "";
+      return;
+    }
+    section.hidden = false;
+    const plan = state.travelPlanDraft || state.booking?.travel_plan || { days: [] };
+    const summary = travelPlanReviewStatus(plan, targetLang);
+    const sourceFields = collectTravelPlanReviewFields(plan, targetLang);
+    const canTranslate = state.permissions.canEditBooking && sourceFields.length > 0;
+    const progress = bookingT("tour.travel_plan_translation.progress", "{translated}/{total} fields", {
+      translated: String(summary.translatedFields),
+      total: String(summary.totalFields)
+    });
+    panel.innerHTML = `
+      <div class="tour-travel-plan-translation__header">
+        <div class="tour-travel-plan-translation__copy">
+          <strong>${escapeHtml(bookingT("tour.travel_plan_translation.title", "Translate the English travel plan"))}</strong>
+          <span class="micro">${escapeHtml(bookingT("tour.travel_plan_translation.help", "Keep the normal editor in English, then translate and review one customer language at a time."))}</span>
+        </div>
+        <div class="tour-travel-plan-translation__actions">
+          <button class="btn btn-ghost" type="button" data-travel-plan-review-translate-missing ${canTranslate ? "" : "disabled"}>
+            ${escapeHtml(bookingT("tour.travel_plan_translation.translate_missing", "Translate missing/outdated"))}
+          </button>
+          <button class="btn btn-ghost" type="button" data-travel-plan-review-translate-all ${canTranslate ? "" : "disabled"}>
+            ${escapeHtml(bookingT("tour.travel_plan_translation.translate_all", "Translate all"))}
+          </button>
+        </div>
+      </div>
+      <div class="tour-travel-plan-translation__list">
+        <div class="tour-travel-plan-translation__row">
+          <div>
+            <strong>${escapeHtml(bookingContentLanguageOption(targetLang).label)}</strong>
+            <div class="micro">${escapeHtml(bookingContentLanguageOption(targetLang).shortLabel)}</div>
+          </div>
+          <span class="micro tour-travel-plan-translation__status">${escapeHtml(travelPlanReviewStatusLabel(summary.status))}</span>
+          <span class="micro">${escapeHtml(progress)}</span>
+          <div class="tour-travel-plan-translation__actions"></div>
+          ${renderTravelPlanReviewFields(plan, targetLang)}
+        </div>
+      </div>
+    `;
+  }
+
+  function updateTravelPlanReviewField(targetLang, key, value, { rerender = false } = {}) {
+    const plan = state.travelPlanDraft || state.booking?.travel_plan || { days: [] };
+    const field = collectTravelPlanReviewFields(plan, targetLang).find((candidate) => candidate.key === key);
+    if (!field) return;
+    setTravelPlanReviewFieldTranslation(field.holder, {
+      mapField: field.mapField,
+      plainField: field.plainField,
+      sourceText: field.sourceText,
+      targetLang,
+      targetText: value
+    });
+    const manualKeys = new Set(travelPlanReviewManualKeys(plan, targetLang));
+    if (normalizeReviewText(value)) manualKeys.add(key);
+    else manualKeys.delete(key);
+    touchTravelPlanReviewMeta(plan, targetLang, "manual", { manualKeys: Array.from(manualKeys) });
+    state.travelPlanDraft = plan;
+    if (state.booking) state.booking.travel_plan = plan;
+    updateTravelPlanDirtyState();
+    if (rerender) renderTravelPlanTranslationPanel();
+  }
+
+  function applyTravelPlanReviewTranslations(plan, targetLang, translatedEntries, origin = "machine") {
+    const fields = collectTravelPlanReviewFields(plan, targetLang);
+    const manualKeys = origin === "machine" ? new Set(travelPlanReviewManualKeys(plan, targetLang)) : new Set();
+    for (const field of fields) {
+      if (manualKeys.has(field.key)) continue;
+      if (!Object.prototype.hasOwnProperty.call(translatedEntries || {}, field.key)) continue;
+      setTravelPlanReviewFieldTranslation(field.holder, {
+        mapField: field.mapField,
+        plainField: field.plainField,
+        sourceText: field.sourceText,
+        targetLang,
+        targetText: translatedEntries[field.key]
+      });
+    }
+    touchTravelPlanReviewMeta(plan, targetLang, origin, { manualKeys: Array.from(manualKeys) });
+  }
+
+  async function translateTravelPlanReview({ force = false } = {}) {
+    if (!state.permissions.canEditBooking || !state.booking?.id) return;
+    const targetLang = currentTravelPlanReviewTargetLang();
+    if (targetLang === TRAVEL_PLAN_REVIEW_SOURCE_LANG) return;
+    syncTravelPlanDraftFromDom();
+    const plan = state.travelPlanDraft || { days: [] };
+    const summary = travelPlanReviewStatus(plan, targetLang);
+    if (!force && !["missing", "partial", "stale"].includes(summary.status)) return;
+    const fields = collectTravelPlanReviewFields(plan, targetLang);
+    const sourceEntries = Object.fromEntries(fields.map((field) => [field.key, field.sourceText]));
+    if (!Object.keys(sourceEntries).length) {
+      travelPlanStatus(bookingT("tour.travel_plan_translation.no_source", "Add English travel-plan text before translating."), "info");
+      return;
+    }
+
+    travelPlanStatus(bookingT("tour.travel_plan_translation.translating", "Translating travel plan..."), "loading");
+    setTravelPlanTranslationOverlay(true, bookingT("tour.travel_plan_translation.translating_overlay", "Translating travel plan. Please wait."));
+    try {
+      const translatedEntries = await requestBookingFieldTranslation({
+        bookingId: state.booking.id,
+        entries: sourceEntries,
+        fetchBookingMutation,
+        apiBase: apiOrigin,
+        actor: state.user || "keycloak_user",
+        sourceLang: TRAVEL_PLAN_REVIEW_SOURCE_LANG,
+        targetLang
+      });
+      if (!translatedEntries) return;
+      applyTravelPlanReviewTranslations(plan, targetLang, translatedEntries, "machine");
+      state.travelPlanDraft = plan;
+      if (state.booking) state.booking.travel_plan = plan;
+      renderTravelPlanTranslationPanel();
+      updateTravelPlanDirtyState();
+      travelPlanStatus(bookingT("tour.travel_plan_translation.done", "Travel-plan translations updated."), "success");
+    } catch (error) {
+      logBrowserConsoleError("[travel-plan] Failed to translate travel-plan review fields.", {
+        booking_id: state.booking?.id || "",
+        target_lang: targetLang
+      }, error);
+      travelPlanStatus(error?.message || bookingT("booking.translation.error", "Could not translate this section."), "error");
+    } finally {
+      setTravelPlanTranslationOverlay(false);
+    }
+  }
+
   function bindEvents() {
     if (els.travel_plan_editor && els.travel_plan_editor.dataset.travelPlanBound !== "true") {
       els.travel_plan_editor.addEventListener("input", (event) => {
@@ -2295,6 +2685,7 @@ export function createBookingTravelPlanModule(ctx) {
         refreshTravelPlanVisibleHeadCopy(target);
         updateTravelPlanDirtyState();
         renderBookingSectionHeader(els.travel_plan_panel_summary, travelPlanSummary());
+        renderTravelPlanTranslationPanel();
       });
       els.travel_plan_editor.addEventListener("change", (event) => {
         let target = event.target;
@@ -2310,6 +2701,7 @@ export function createBookingTravelPlanModule(ctx) {
         refreshTravelPlanVisibleHeadCopy(target);
         updateTravelPlanDirtyState();
         renderBookingSectionHeader(els.travel_plan_panel_summary, travelPlanSummary());
+        renderTravelPlanTranslationPanel();
         const shouldRerender = Boolean(
           target?.matches?.('[data-travel-plan-service-field="timing_kind"]')
           || target?.matches?.('[data-travel-plan-service-field="kind"]')
@@ -2438,6 +2830,49 @@ export function createBookingTravelPlanModule(ctx) {
         warnIfTravelPlanControlsMissing("post-load-watchdog");
       }, 1500);
     }
+    if (els.travel_plan_translation_panel && els.travel_plan_translation_panel.dataset.travelPlanBound !== "true") {
+      els.travel_plan_translation_panel.addEventListener("input", (event) => {
+        const field = event.target instanceof HTMLElement
+          ? event.target.closest("[data-travel-plan-review-key]")
+          : null;
+        if (!field) return;
+        updateTravelPlanReviewField(
+          normalizeBookingContentLang(field.getAttribute("data-travel-plan-review-lang")),
+          normalizeReviewText(field.getAttribute("data-travel-plan-review-key")),
+          field.value || ""
+        );
+      });
+      els.travel_plan_translation_panel.addEventListener("change", (event) => {
+        const field = event.target instanceof HTMLElement
+          ? event.target.closest("[data-travel-plan-review-key]")
+          : null;
+        if (!field) return;
+        updateTravelPlanReviewField(
+          normalizeBookingContentLang(field.getAttribute("data-travel-plan-review-lang")),
+          normalizeReviewText(field.getAttribute("data-travel-plan-review-key")),
+          field.value || "",
+          { rerender: true }
+        );
+      });
+      els.travel_plan_translation_panel.addEventListener("click", (event) => {
+        const translateMissingButton = event.target instanceof Element
+          ? event.target.closest("[data-travel-plan-review-translate-missing]")
+          : null;
+        if (translateMissingButton) {
+          event.preventDefault();
+          void translateTravelPlanReview({ force: false });
+          return;
+        }
+        const translateAllButton = event.target instanceof Element
+          ? event.target.closest("[data-travel-plan-review-translate-all]")
+          : null;
+        if (translateAllButton) {
+          event.preventDefault();
+          void translateTravelPlanReview({ force: true });
+        }
+      });
+      els.travel_plan_translation_panel.dataset.travelPlanBound = "true";
+    }
     if (allowPdfs && els.travel_plan_pdf_workspace && els.travel_plan_pdf_workspace.dataset.travelPlanBound !== "true") {
       els.travel_plan_pdf_workspace.addEventListener("click", (event) => {
         const button = event.target instanceof Element ? event.target.closest("button") : null;
@@ -2565,6 +3000,7 @@ export function createBookingTravelPlanModule(ctx) {
     updateTravelPlanDirtyState();
     syncTravelPlanTranslateButton();
     syncTravelPlanRenumberDaysAction();
+    renderTravelPlanTranslationPanel();
     scheduleTravelPlanControlsDiagnostic("renderTravelPlanPanel");
   }
 
@@ -2573,6 +3009,7 @@ export function createBookingTravelPlanModule(ctx) {
     bindEvents,
     collectTravelPlanPayload,
     renderTravelPlanPanel,
+    renderTravelPlanTranslationPanel,
     updateTravelPlanDirtyState,
     saveTravelPlan
   };

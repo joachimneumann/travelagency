@@ -420,7 +420,8 @@ export function createTravelPlanHelpers() {
       flatMode
     }).map((day) => stripBookingFieldsFromTravelPlanDay(day));
     return normalizeTravelPlanTranslationMeta({
-      days
+      days,
+      translation_meta: source.translation_meta
     });
   }
 
@@ -441,7 +442,8 @@ export function createTravelPlanHelpers() {
     return normalizeTravelPlanTranslationMeta({
       destinations: normalizeCountryCodes(source.destinations),
       days,
-      attachments: normalizeTravelPlanAttachments(source.attachments)
+      attachments: normalizeTravelPlanAttachments(source.attachments),
+      translation_meta: source.translation_meta
     });
   }
 

@@ -54,3 +54,34 @@ test("travel plan PDF day heading falls back to the localized day label when tit
     "Day 2 - Arrival in Hanoi"
   );
 });
+
+test("marketing travel plan normalization preserves translation metadata", () => {
+  const { normalizeMarketingTourTravelPlan } = createTravelPlanHelpers();
+
+  const result = normalizeMarketingTourTravelPlan({
+    days: [
+      {
+        id: "day_1",
+        title: "Arrival",
+        services: []
+      }
+    ],
+    translation_meta: {
+      de: {
+        source_lang: "en",
+        source_hash: "hash_1",
+        origin: "machine",
+        updated_at: "2026-04-25T10:00:00.000Z"
+      }
+    }
+  });
+
+  assert.deepEqual(result.translation_meta, {
+    de: {
+      source_lang: "en",
+      source_hash: "hash_1",
+      origin: "machine",
+      updated_at: "2026-04-25T10:00:00.000Z"
+    }
+  });
+});

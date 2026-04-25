@@ -2538,8 +2538,8 @@ test("booking page logs reload-time dirty diagnostics and core comparisons ignor
   );
   assert.match(
     travelPlanHelpersSource,
-    /export function normalizeTravelPlanDraft\(plan, options = \{\}\) \{[\s\S]*const sourceLang = normalizeBookingSourceLang\([\s\S]*bookingSourceLang\("en"\)[\s\S]*resolveLocalizedEditorText\(rawDay\.title_i18n \?\? rawDay\.title, sourceLang, ""\)/,
-    "Travel-plan helper normalization should accept an explicit source language and otherwise fall back to the fixed English booking source language"
+    /function normalizeDraftLocalizedPayload\(source, field, sourceLang, targetLang\) \{[\s\S]*mergeDualLocalizedPayload\(existingValue, sourceValue, localizedValue, targetLang, sourceLang\)[\s\S]*export function normalizeTravelPlanDraft\(plan, options = \{\}\) \{[\s\S]*const sourceLang = normalizeBookingSourceLang\([\s\S]*bookingSourceLang\("en"\)[\s\S]*const titleField = normalizeDraftLocalizedPayload\(rawDay, "title", sourceLang, targetLang\)/,
+    "Travel-plan helper normalization should accept an explicit source language, fall back to the fixed English booking source language, and preserve localized maps"
   );
 });
 
@@ -2783,9 +2783,13 @@ test("booking page wires the dedicated travel-plan module and section", async ()
 test("travel-plan module preserves add/remove/reorder editing helpers", async () => {
   const travelPlanModulePath = travelPlanEditorCorePath();
   const travelPlanHelpersPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan_helpers.js");
+  const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
   const generatedCatalogsPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "shared", "generated_catalogs.js");
-  const source = await readFile(travelPlanModulePath, "utf8");
-  const helperSource = await readFile(travelPlanHelpersPath, "utf8");
+  const [source, helperSource, bookingPageSource] = await Promise.all([
+    readFile(travelPlanModulePath, "utf8"),
+    readFile(travelPlanHelpersPath, "utf8"),
+    readFile(bookingPagePath, "utf8")
+  ]);
   const generatedCatalogs = await import(`${pathToFileURL(generatedCatalogsPath).href}?test=${Date.now()}`);
 
   for (const helperName of ["addDay", "removeDay", "addItem", "removeItem", "moveItem"]) {
@@ -2847,8 +2851,18 @@ test("travel-plan module preserves add/remove/reorder editing helpers", async ()
   );
   assert.match(
     source,
-    /function renderTravelPlanLocalizedField\(\{[\s\S]*sourceValue = ""[\s\S]*renderLocalizedStackedField\(\{[\s\S]*sourceValue,/,
-    "travel_plan.js should forward localized sourceValue into the shared localized field renderer"
+    /function renderTravelPlanLocalizedField\(\{[\s\S]*sourceValue = ""[\s\S]*renderLocalizedStackedField\(\{[\s\S]*targetLang: bookingSourceLang\(\),[\s\S]*translateEnabled: false,[\s\S]*sourceValue,/,
+    "booking travel-plan editor fields should render only the English source fields without inline translation controls"
+  );
+  assert.match(
+    source,
+    /if \(!localizedInput\) \{[\s\S]*normalizeLocalizedEditorMap\(existingValue, sourceLang\)[\s\S]*nextMap\[sourceLang\] = sourceValue/,
+    "travel-plan DOM sync should preserve review-panel translations when inline target fields are absent"
+  );
+  assert.doesNotMatch(
+    bookingPageSource,
+    /travel_plan_translate_all_btn/,
+    "booking.html should not expose the old inline Translate everything travel-plan button"
   );
   assert.doesNotMatch(
     source,
@@ -3110,50 +3124,34 @@ test("tour read models version public image URLs so immutable caching still refr
   );
 });
 
-test("tour page uses the active backend language as the localized editor source", async () => {
+test("tour page keeps website content translations in the English-source review panel", async () => {
   const tourPageModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "tour.js");
-  const backendEnI18nPath = path.resolve(__dirname, "..", "..", "..", "frontend", "data", "i18n", "backend", "en.json");
-  const backendViI18nPath = path.resolve(__dirname, "..", "..", "..", "frontend", "data", "i18n", "backend", "vi.json");
-  const [tourSource, backendEnI18n, backendViI18n] = await Promise.all([
-    readFile(tourPageModulePath, "utf8"),
-    readFile(backendEnI18nPath, "utf8"),
-    readFile(backendViI18nPath, "utf8")
-  ]);
+  const tourSource = await readFile(tourPageModulePath, "utf8");
 
   assert.match(
     tourSource,
-    /function currentTourEditingLang\(\)\s*\{[\s\S]*currentBackendLang\(\)/,
-    "Tour page should derive its editing source from the current backend language selector"
+    /const TOUR_TRANSLATION_SOURCE_LANG = "en";/,
+    "Marketing-tour website content should use English as the fixed translation source"
   );
   assert.match(
     tourSource,
-    /const sourceLang = currentTourEditingLang\(\);[\s\S]*source_lang: sourceLang/,
-    "Tour field translation requests should send the active backend language as the source language"
-  );
-  assert.doesNotMatch(
-    tourSource,
-    /source_lang:\s*"en"/,
-    "Tour field translation requests must not hard-code English as the source language"
+    /function renderLocalizedTourContentEditor\(\)\s*\{[\s\S]*const lang = TOUR_TRANSLATION_SOURCE_LANG;/,
+    "The visible website title and description editor should render only the English source fields"
   );
   assert.match(
     tourSource,
-    /orderedTourTextLanguages\(\)\.map\([\s\S]*tour\.translation\.translate_one/,
-    "Tour localized editors should rebuild their translation buttons from the active editing language"
+    /key: "website\.title"[\s\S]*key: "website\.short_description"/,
+    "The translation review field collector should include website title and description"
   );
   assert.match(
     tourSource,
-    /const secondaryLang = editingLang === "vi" \? "en" : "vi";[\s\S]*tourLanguageShortLabel\(left\?\.code\)\.localeCompare/,
-    "Tour localized editors should place the EN\/VI pair first and sort the remaining languages alphabetically"
+    /requestTourTranslation\(targetLang, sourceEntries, \{\s*sourceLang: TRAVEL_PLAN_SOURCE_LANG\s*\}\)/,
+    "Review-panel translation requests should explicitly translate from the English source language"
   );
   assert.match(
-    backendEnI18n,
-    /"tour\.translation\.translate_one": "\{source\} → \{target\}"/,
-    "English backend strings should provide the dynamic tour translation button label"
-  );
-  assert.match(
-    backendViI18n,
-    /"tour\.translation\.translate_one": "\{source\} → \{target\}"/,
-    "Vietnamese backend strings should provide the dynamic tour translation button label"
+    tourSource,
+    /function readLocalizedFields\(field,[\s\S]*normalizeLocalizedTextMap\(state\.localizedContent\?\.\[field\]/,
+    "Saving should preserve translated website fields that are edited in the review panel instead of visible source inputs"
   );
 });
 

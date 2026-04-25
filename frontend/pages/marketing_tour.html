@@ -218,8 +218,8 @@
                   <div class="tour-reel-editor">
                     <div id="tour_reel_video_card" aria-live="polite"></div>
                     <div class="tour-picture-toolbar">
-                      <button class="btn btn-ghost" id="tour_add_reel_btn" type="button">Upload reel video</button>
-                      <p class="micro">One reel video per tour. Uploading a new file replaces the previous reel and stores it as a normalized portrait MP4.</p>
+                      <button class="btn btn-ghost" id="tour_add_reel_btn" type="button" data-i18n-id="tour.add_reel_video">Upload reel video</button>
+                      <p class="micro" data-i18n-id="tour.reel_video_help">One reel video per tour. Uploading a new file replaces the previous reel and stores it as a normalized portrait MP4.</p>
                     </div>
                   </div>
                   <input id="tour_reel_upload" name="tour_reel_upload" type="file" accept="video/*" class="u-file-input-hidden" />
@@ -263,6 +263,18 @@
                         <span id="travel_plan_status" class="micro booking-inline-status"></span>
                       </div>
                       <div id="travel_plan_editor"></div>
+                    </div>
+                  </article>
+                </div>
+                <div class="field full">
+                  <article id="tour_travel_plan_translation_section" class="booking-section is-open">
+                    <div class="booking-section__head">
+                      <button id="tour_travel_plan_translation_summary" class="booking-section__summary booking-section__summary--inline-pad-16" type="button">
+                        <span>Translations review</span>
+                      </button>
+                    </div>
+                    <div class="booking-section__body">
+                      <div id="tour_travel_plan_translation_panel" class="tour-travel-plan-translation"></div>
                     </div>
                   </article>
                 </div>
