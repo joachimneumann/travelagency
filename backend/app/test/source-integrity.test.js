@@ -4362,13 +4362,13 @@ test("homepage tour cards use fixed-height text areas without an inline more lin
   );
   assert.match(
     mainToursSource,
-    /async function animateTourDetailsOpen\(tripId\)[\s\S]*const previousRects = captureTourCardRects\(\)[\s\S]*const initialColumnIndex = tourGridColumnIndexForTrip\(tripId\)[\s\S]*await animateTourGridLayout\(previousRects, \{ excludedTripIds: \[tripId\] \}\);[\s\S]*await animateExpandedTourCardToLeft\(row\);[\s\S]*openingTourColumnIndexes\.delete\(tripId\);[\s\S]*await scrollTourCardFullyVisible\(tripId\);[\s\S]*const opensSideways = row\.classList\.contains\("tour-details-row--side-panel"\);[\s\S]*await animateTourDetailsRowHeight\(row, opensSideways \? collapsedHeight : expandedHeight, "open"\);[\s\S]*clearTourDetailsRowAnimation\(row, \{ preserveHeight: opensSideways \}\)/,
-    "Opening a tour should move only sibling cards first, animate the selected card left once, ensure it is visible, then expand sideways when space exists"
+    /async function animateTourDetailsOpen\(tripId\)[\s\S]*const previousRects = captureTourCardRects\(\)[\s\S]*const previousMediaSnapshots = captureTourCardMediaSnapshots\(\)[\s\S]*const initialColumnIndex = tourGridColumnIndexForTrip\(tripId\)[\s\S]*renderVisibleTrips\(\);[\s\S]*applyTourCardMediaSnapshots\(previousMediaSnapshots\);[\s\S]*await Promise\.all\(\[\s*animateTourGridLayout\(previousRects, \{ excludedTripIds: \[tripId\] \}\),\s*animateExpandedTourCardToLeft\(row\)\s*\]\);[\s\S]*openingTourColumnIndexes\.delete\(tripId\);[\s\S]*await scrollTourCardFullyVisible\(tripId\);[\s\S]*const opensSideways = row\.classList\.contains\("tour-details-row--side-panel"\);[\s\S]*await animateTourDetailsRowHeight\(row, opensSideways \? collapsedHeight : expandedHeight, "open"\);[\s\S]*clearTourDetailsRowAnimation\(row, \{ preserveHeight: opensSideways \}\)/,
+    "Opening a tour should keep card media visible, move sibling cards and the selected card left together, ensure it is visible, then expand sideways when space exists"
   );
   assert.match(
     mainToursSource,
-    /async function animateTourDetailsClose\(tripId\)[\s\S]*await animateTourDetailsRowHeight\(row, collapsedHeight, "close"\)[\s\S]*const previousRects = captureTourCardRects\(\)[\s\S]*await animateTourGridLayout\(previousRects\)/,
-    "Closing a tour should collapse details before moving sibling cards back into the row"
+    /function createOutgoingTourDetailsGhost\(row\)[\s\S]*const ghost = panel\.cloneNode\(true\)[\s\S]*position: "fixed"[\s\S]*function animateOutgoingTourDetailsGhost\(ghostState\)[\s\S]*async function animateTourDetailsClose\(tripId\)[\s\S]*const previousRects = captureTourCardRects\(\)[\s\S]*const previousMediaSnapshots = captureTourCardMediaSnapshots\(\)[\s\S]*const outgoingDetailsGhost = createOutgoingTourDetailsGhost\(row\)[\s\S]*renderVisibleTrips\(\);[\s\S]*applyTourCardMediaSnapshots\(previousMediaSnapshots\);[\s\S]*await Promise\.all\(\[\s*animateOutgoingTourDetailsGhost\(outgoingDetailsGhost\),\s*animateTourGridLayout\(previousRects\)\s*\]\)/,
+    "Closing a tour should keep card media visible, animate a closing details ghost, and move sibling cards back into the row at the same time"
   );
   assert.match(
     siteCssSource,
