@@ -44,7 +44,16 @@ export function migratePersistedTourState(tour) {
   return changed;
 }
 
-export function createTourHelpers({ toursDir, safeInt }) {
+export function createTourHelpers({ toursDir, safeInt, normalizeMarketingTourTravelPlan }) {
+  function normalizeTourTravelPlan(value, options = {}) {
+    if (typeof normalizeMarketingTourTravelPlan === "function") {
+      return normalizeMarketingTourTravelPlan(value, options);
+    }
+    return {
+      days: Array.isArray(value?.days) ? value.days : []
+    };
+  }
+
   function normalizeLocalizedTextMap(value) {
     if (value && typeof value === "object" && !Array.isArray(value)) {
       const entries = Object.entries(value)
@@ -145,6 +154,9 @@ export function createTourHelpers({ toursDir, safeInt }) {
     next.styles = tourStyleCodes(next);
     next.pictures = normalizeTourPictureList(next.pictures, next.image);
     next.image = next.pictures[0] || "";
+    if (next.travel_plan !== undefined) {
+      next.travel_plan = normalizeTourTravelPlan(next.travel_plan);
+    }
     next.seasonality_start_month = normalizeText(next.seasonality_start_month);
     next.seasonality_end_month = normalizeText(next.seasonality_end_month);
     next.priority = safeInt(next.priority) ?? 50;
@@ -162,6 +174,7 @@ export function createTourHelpers({ toursDir, safeInt }) {
     const styleCodes = tourStyleCodes(stored);
     const version = normalizeText(stored.updated_at || stored.created_at);
     const pictures = stored.pictures.map((picture) => withAssetVersion(toTourImagePublicUrl(picture), version));
+    const travelPlan = normalizeTourTravelPlan(stored.travel_plan);
     return {
       ...stored,
       title: resolveLocalizedText(stored.title, normalizedLang),
@@ -172,6 +185,7 @@ export function createTourHelpers({ toursDir, safeInt }) {
       style_codes: styleCodes,
       pictures,
       image: pictures[0] || "",
+      travel_plan: travelPlan,
       priority: safeInt(stored.priority) ?? 50
     };
   }
@@ -204,6 +218,7 @@ export function createTourHelpers({ toursDir, safeInt }) {
     normalizeLocalizedTextMap,
     resolveLocalizedText,
     setLocalizedTextForLang,
+    normalizeTourTravelPlan,
     tourDestinations,
     tourDestinationCodes,
     tourStyles,

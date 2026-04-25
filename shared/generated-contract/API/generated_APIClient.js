@@ -96,6 +96,8 @@ case "standard_tour_delete":
   return RequestFactory.standardTourDeleteRequest(options);
 case "booking_standard_tour_apply":
   return RequestFactory.bookingStandardTourApplyRequest(options);
+case "booking_tour_apply":
+  return RequestFactory.bookingTourApplyRequest(options);
 case "booking_travel_plan_service_import":
   return RequestFactory.bookingTravelPlanServiceImportRequest(options);
 case "booking_travel_plan_service_image_upload":
@@ -168,6 +170,12 @@ case "tour_delete":
   return RequestFactory.tourDeleteRequest(options);
 case "tour_translate_fields":
   return RequestFactory.tourTranslateFieldsRequest(options);
+case "tour_travel_plan_update":
+  return RequestFactory.tourTravelPlanUpdateRequest(options);
+case "tour_travel_plan_service_image_upload":
+  return RequestFactory.tourTravelPlanServiceImageUploadRequest(options);
+case "tour_travel_plan_service_image_delete":
+  return RequestFactory.tourTravelPlanServiceImageDeleteRequest(options);
 case "tour_picture_upload":
   return RequestFactory.tourPictureUploadRequest(options);
 case "tour_picture_delete":

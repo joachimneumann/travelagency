@@ -227,6 +227,16 @@ import (
 	actor?:                         string
 }
 
+#BookingTourApplyRequest: {
+	expected_travel_plan_revision?: >=0 & int
+	actor?:                         string
+}
+
+#TourTravelPlanUpdateRequest: {
+	travel_plan: databaseModel.#TravelPlan
+	actor?:      string
+}
+
 #TravelPlanServiceImageUploadRequest: #EvidenceUpload & {
 	expected_travel_plan_revision?: >=0 & int
 	actor?:                         string
@@ -364,7 +374,8 @@ import (
 	short_description?:       string
 	short_description_i18n?: [string]: string
 	pictures?: [...string]
-	image?: string
+	image?:       string
+	travel_plan?: databaseModel.#TravelPlan
 }
 
 #TourTranslateFieldsRequest: #TranslationEntriesRequest

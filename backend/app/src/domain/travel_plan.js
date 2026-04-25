@@ -200,10 +200,27 @@ function normalizeTimingKind(value) {
 
 function buildDefaultTravelPlan() {
   return {
+    days: []
+  };
+}
+
+function buildDefaultBookingTravelPlan() {
+  return {
+    ...buildDefaultTravelPlan(),
     destinations: [],
-    days: [],
     attachments: []
   };
+}
+
+function normalizeTravelPlanVideo(rawVideo) {
+  const source = rawVideo && typeof rawVideo === "object" && !Array.isArray(rawVideo)
+    ? rawVideo
+    : {};
+  const normalized = {
+    storage_path: normalizeOptionalText(source.storage_path),
+    title: normalizeOptionalText(source.title)
+  };
+  return Object.values(normalized).some(Boolean) ? normalized : null;
 }
 
 function normalizeItemTiming(rawItem) {
@@ -383,7 +400,45 @@ function normalizeTravelPlanDays(days, options = {}) {
 
 export function createTravelPlanHelpers() {
   function defaultBookingTravelPlan() {
-    return buildDefaultTravelPlan();
+    return buildDefaultBookingTravelPlan();
+  }
+
+  function stripBookingFieldsFromTravelPlanDay(day) {
+    const source = day && typeof day === "object" && !Array.isArray(day) ? day : {};
+    const { date, date_string, copied_from, ...baseDay } = source;
+    return {
+      ...baseDay,
+      services: (Array.isArray(source.services) ? source.services : []).map((service) => {
+        const serviceSource = service && typeof service === "object" && !Array.isArray(service) ? service : {};
+        const {
+          details,
+          details_i18n,
+          copied_from: serviceCopiedFrom,
+          ...baseService
+        } = serviceSource;
+        return baseService;
+      })
+    };
+  }
+
+  function normalizeTravelPlan(rawTravelPlan, options = {}) {
+    const source = rawTravelPlan && typeof rawTravelPlan === "object" && !Array.isArray(rawTravelPlan)
+      ? rawTravelPlan
+      : {};
+    const flatMode = options?.flatMode === "localized" ? "localized" : "source";
+    const days = normalizeTravelPlanDays(source.days, {
+      ...options,
+      flatMode
+    }).map((day) => stripBookingFieldsFromTravelPlanDay(day));
+    const video = normalizeTravelPlanVideo(source.video);
+    return normalizeTravelPlanTranslationMeta({
+      ...(video ? { video } : {}),
+      days
+    });
+  }
+
+  function normalizeMarketingTourTravelPlan(rawTravelPlan, options = {}) {
+    return normalizeTravelPlan(rawTravelPlan, options);
   }
 
   function normalizeBookingTravelPlan(rawTravelPlan, offer = null, options = {}) {
@@ -396,7 +451,9 @@ export function createTravelPlanHelpers() {
       flatMode
     });
 
+    const video = normalizeTravelPlanVideo(source.video);
     return normalizeTravelPlanTranslationMeta({
+      ...(video ? { video } : {}),
       destinations: normalizeCountryCodes(source.destinations),
       days,
       attachments: normalizeTravelPlanAttachments(source.attachments)
@@ -492,6 +549,19 @@ export function createTravelPlanHelpers() {
     return { ok: true, travel_plan: normalized };
   }
 
+  function validateMarketingTourTravelPlanInput(rawTravelPlan, options = {}) {
+    const normalized = normalizeMarketingTourTravelPlan(rawTravelPlan, options);
+    const check = validateBookingTravelPlanInput({
+      ...normalized,
+      attachments: []
+    }, null, options);
+    if (!check.ok) return check;
+    return {
+      ok: true,
+      travel_plan: normalized
+    };
+  }
+
   function buildBookingTravelPlanReadModel(rawTravelPlan, offer = null, options = {}) {
     return normalizeBookingTravelPlan(rawTravelPlan, offer, {
       ...options,
@@ -503,7 +573,10 @@ export function createTravelPlanHelpers() {
 
   return {
     defaultBookingTravelPlan,
+    normalizeTravelPlan,
+    normalizeMarketingTourTravelPlan,
     normalizeBookingTravelPlan,
+    validateMarketingTourTravelPlanInput,
     validateBookingTravelPlanInput,
     buildBookingTravelPlanReadModel
   };

@@ -2,11 +2,11 @@ import {
   bookingTravelPlanImportRequest,
   bookingTravelPlanDayImportRequest,
   bookingTravelPlanServiceImportRequest,
-  bookingStandardTourApplyRequest,
+  bookingTourApplyRequest,
   travelPlanSearchRequest,
   travelPlanDaySearchRequest,
   travelPlanServiceSearchRequest,
-  standardToursRequest
+  toursRequest
 } from "../../Generated/API/generated_APIRequestFactory.js";
 import { bookingT } from "./i18n.js";
 import { TRAVEL_PLAN_SERVICE_KIND_OPTIONS } from "../shared/generated_catalogs.js";
@@ -45,7 +45,7 @@ export function createBookingTravelPlanServiceLibraryModule(deps) {
   }
 
   function isStandardTourLibraryMode() {
-    return serviceLibraryState.mode === "standard_tour";
+    return serviceLibraryState.mode === "tour" || serviceLibraryState.mode === "standard_tour";
   }
 
   function setTravelPlanLibraryStatus(message, type = "info") {
@@ -80,7 +80,7 @@ export function createBookingTravelPlanServiceLibraryModule(deps) {
     }
     if (els.travelPlanServiceLibraryTitle instanceof HTMLElement) {
       if (isStandardTourLibraryMode()) {
-        els.travelPlanServiceLibraryTitle.textContent = bookingT("booking.travel_plan.standard_tours", "Standard tours");
+        els.travelPlanServiceLibraryTitle.textContent = bookingT("booking.travel_plan.marketing_tours", "Marketing tours");
       } else if (isPlanLibraryMode()) {
         els.travelPlanServiceLibraryTitle.textContent = bookingT("booking.travel_plan.existing_travel_plans", "Existing travel plans");
       } else {
@@ -143,7 +143,7 @@ export function createBookingTravelPlanServiceLibraryModule(deps) {
   function standardTourThumbnailUrl(item) {
     const services = standardTourServices(item);
     const thumbnailService = services.find((service) => String(service?.image?.storage_path || "").trim()) || services[0] || null;
-    return String(thumbnailService?.image?.storage_path || "").trim();
+    return String(thumbnailService?.image?.storage_path || item?.image || "").trim();
   }
 
   function renderTravelPlanServiceLibraryResults(items = []) {
@@ -154,12 +154,12 @@ export function createBookingTravelPlanServiceLibraryModule(deps) {
         <div class="travel-plan-library-modal__empty">
           ${escapeHtml(bookingT(
             isStandardTourLibraryMode()
-              ? "booking.travel_plan.no_standard_tours"
+              ? "booking.travel_plan.no_marketing_tours"
               : isPlanLibraryMode()
               ? "booking.travel_plan.no_existing_plans"
               : (isDayLibraryMode() ? "booking.travel_plan.no_existing_days" : "booking.travel_plan.no_existing_items"),
             isStandardTourLibraryMode()
-              ? "No matching standard tours found."
+              ? "No matching marketing tours found."
               : isPlanLibraryMode()
               ? "No matching travel plans found."
               : (isDayLibraryMode() ? "No matching days found." : "No matching services found.")
@@ -181,14 +181,14 @@ export function createBookingTravelPlanServiceLibraryModule(deps) {
           <article class="travel-plan-library-card">
             <div class="travel-plan-library-card__media">
               ${thumbnailUrl
-                ? `<img src="${escapeHtml(resolveTravelPlanImageSrc(thumbnailUrl, apiOrigin))}" alt="${escapeHtml(item.title || bookingT("booking.travel_plan.standard_tours", "Standard tours"))}" loading="lazy" />`
+                ? `<img src="${escapeHtml(resolveTravelPlanImageSrc(thumbnailUrl, apiOrigin))}" alt="${escapeHtml(item.title || bookingT("booking.travel_plan.marketing_tours", "Marketing tours"))}" loading="lazy" />`
                 : `<div class="travel-plan-library-card__placeholder">${escapeHtml(bookingT("booking.travel_plan.no_image", "No image"))}</div>`}
             </div>
             <div class="travel-plan-library-card__content">
               <div class="travel-plan-library-card__eyebrow">
                 ${escapeHtml(destinations.join(", "))}
               </div>
-              <h3>${escapeHtml(item.title || bookingT("booking.travel_plan.standard_tours", "Standard tours"))}</h3>
+              <h3>${escapeHtml(item.title || bookingT("booking.travel_plan.marketing_tours", "Marketing tours"))}</h3>
               <div class="travel-plan-library-card__meta">
                 <span>${escapeHtml(bookingT(days.length === 1 ? "booking.travel_plan.summary.day" : "booking.travel_plan.summary.days", "{count} days", { count: days.length }))}</span>
                 <span>${escapeHtml(bookingT(services.length === 1 ? "booking.travel_plan.summary.item" : "booking.travel_plan.summary.items", "{count} services", { count: services.length }))}</span>
@@ -197,7 +197,7 @@ export function createBookingTravelPlanServiceLibraryModule(deps) {
             <div class="travel-plan-library-card__actions">
               <button
                 class="btn btn-primary"
-                data-travel-plan-apply-standard-tour="${escapeHtml(item.id || "")}"
+                data-travel-plan-apply-tour="${escapeHtml(item.id || "")}"
                 data-requires-clean-state
                 type="button"
               >${escapeHtml(standardTourActionLabel)}</button>
@@ -372,7 +372,7 @@ export function createBookingTravelPlanServiceLibraryModule(deps) {
 
   function openStandardTourLibrary() {
     if (!state.permissions.canEditBooking || !els.travelPlanServiceLibraryModal) return;
-    serviceLibraryState.mode = "standard_tour";
+    serviceLibraryState.mode = "tour";
     serviceLibraryState.dayId = "";
     updateTravelPlanLibraryModeUi();
     serviceLibraryState.searchResults = [];
@@ -393,21 +393,21 @@ export function createBookingTravelPlanServiceLibraryModule(deps) {
     const kind = String(els.travelPlanServiceLibraryKind?.value || "").trim();
     setTravelPlanLibraryStatus(bookingT(
       isStandardTourLibraryMode()
-        ? "booking.travel_plan.searching_standard_tours"
+        ? "booking.travel_plan.searching_marketing_tours"
         : isPlanLibraryMode()
         ? "booking.travel_plan.searching_plans"
         : (isDayLibraryMode() ? "booking.travel_plan.searching_days" : "booking.travel_plan.searching_items"),
       isStandardTourLibraryMode()
-        ? "Searching standard tours..."
+        ? "Searching marketing tours..."
         : isPlanLibraryMode()
         ? "Searching travel plans..."
         : (isDayLibraryMode() ? "Searching days..." : "Searching services...")
     ), "info");
     const request = isStandardTourLibraryMode()
-      ? standardToursRequest({
+      ? toursRequest({
           baseURL: apiOrigin,
           query: {
-            ...(query ? { q: query } : {}),
+            ...(query ? { search: query } : {}),
             page_size: 30
           }
         })
@@ -437,12 +437,12 @@ export function createBookingTravelPlanServiceLibraryModule(deps) {
       if (!result) {
         setTravelPlanLibraryStatus(bookingT(
           isStandardTourLibraryMode()
-            ? "booking.travel_plan.standard_tour_search_failed"
+            ? "booking.travel_plan.marketing_tour_search_failed"
             : isPlanLibraryMode()
             ? "booking.travel_plan.plan_search_failed"
             : (isDayLibraryMode() ? "booking.travel_plan.day_search_failed" : "booking.travel_plan.search_failed"),
           isStandardTourLibraryMode()
-            ? "Could not search standard tours."
+            ? "Could not search marketing tours."
             : isPlanLibraryMode()
             ? "Could not search existing travel plans."
             : (isDayLibraryMode() ? "Could not search existing days." : "Could not search existing services.")
@@ -455,12 +455,12 @@ export function createBookingTravelPlanServiceLibraryModule(deps) {
         serviceLibraryState.searchResults.length
           ? bookingT(
               isStandardTourLibraryMode()
-                ? "booking.travel_plan.standard_tour_search_results_found"
+                ? "booking.travel_plan.marketing_tour_search_results_found"
                 : isPlanLibraryMode()
                 ? "booking.travel_plan.plan_search_results_found"
                 : (isDayLibraryMode() ? "booking.travel_plan.day_search_results_found" : "booking.travel_plan.search_results_found"),
               isStandardTourLibraryMode()
-                ? "{count} standard tour(s) found."
+                ? "{count} marketing tour(s) found."
                 : isPlanLibraryMode()
                 ? "{count} travel plan(s) found."
                 : (isDayLibraryMode() ? "{count} day(s) found." : "{count} service(s) found."),
@@ -468,12 +468,12 @@ export function createBookingTravelPlanServiceLibraryModule(deps) {
             )
           : bookingT(
               isStandardTourLibraryMode()
-                ? "booking.travel_plan.no_standard_tours"
+                ? "booking.travel_plan.no_marketing_tours"
                 : isPlanLibraryMode()
                 ? "booking.travel_plan.no_existing_plans"
                 : (isDayLibraryMode() ? "booking.travel_plan.no_existing_days" : "booking.travel_plan.no_existing_items"),
               isStandardTourLibraryMode()
-                ? "No matching standard tours found."
+                ? "No matching marketing tours found."
                 : isPlanLibraryMode()
                 ? "No matching travel plans found."
                 : (isDayLibraryMode() ? "No matching days found." : "No matching services found.")
@@ -582,8 +582,8 @@ export function createBookingTravelPlanServiceLibraryModule(deps) {
     await finalizeTravelPlanMutation(result, bookingT("booking.travel_plan.plan_imported", "Travel plan appended."));
   }
 
-  async function applyStandardTour(standardTourId) {
-    if (!standardTourId) return;
+  async function applyTour(tourId) {
+    if (!tourId) return;
     if (!(await ensureTravelPlanReadyForMutation())) return;
     const draftDays = Array.isArray(state.travelPlanDraft?.days) ? state.travelPlanDraft.days : [];
     const existingServiceCount = draftDays.reduce(
@@ -592,18 +592,18 @@ export function createBookingTravelPlanServiceLibraryModule(deps) {
     );
     if ((draftDays.length > 0 || existingServiceCount > 0) && window.confirm(
       bookingT(
-        "booking.travel_plan.confirm_replace_with_standard_tour",
-        "Use this standard tour and replace the current one?"
+        "booking.travel_plan.confirm_replace_with_marketing_tour",
+        "Use this marketing tour and replace the current travel plan?"
       )
     ) !== true) {
       return;
     }
-    setTravelPlanLibraryStatus(bookingT("booking.travel_plan.applying_standard_tour", "Applying standard tour..."), "info");
-    const request = bookingStandardTourApplyRequest({
+    setTravelPlanLibraryStatus(bookingT("booking.travel_plan.applying_marketing_tour", "Applying marketing tour..."), "info");
+    const request = bookingTourApplyRequest({
       baseURL: apiOrigin,
       params: {
         booking_id: state.booking.id,
-        standard_tour_id: standardTourId
+        tour_id: tourId
       },
       body: {
         expected_travel_plan_revision: getBookingRevision("travel_plan_revision"),
@@ -615,11 +615,15 @@ export function createBookingTravelPlanServiceLibraryModule(deps) {
       body: request.body
     });
     if (!result?.booking) {
-      setTravelPlanLibraryStatus(bookingT("booking.travel_plan.apply_standard_tour_failed", "Could not apply this standard tour."), "error");
+      setTravelPlanLibraryStatus(bookingT("booking.travel_plan.apply_marketing_tour_failed", "Could not apply this marketing tour."), "error");
       return;
     }
     closeTravelPlanServiceLibrary();
-    await finalizeTravelPlanMutation(result, bookingT("booking.travel_plan.standard_tour_applied", "Standard tour applied."));
+    await finalizeTravelPlanMutation(result, bookingT("booking.travel_plan.marketing_tour_applied", "Marketing tour applied."));
+  }
+
+  async function applyStandardTour(tourId) {
+    await applyTour(tourId);
   }
 
   function bindTravelPlanServiceLibrary() {
@@ -648,8 +652,11 @@ export function createBookingTravelPlanServiceLibraryModule(deps) {
           );
           return;
         }
-        if (button.hasAttribute("data-travel-plan-apply-standard-tour")) {
-          void applyStandardTour(button.getAttribute("data-travel-plan-apply-standard-tour"));
+        if (button.hasAttribute("data-travel-plan-apply-tour") || button.hasAttribute("data-travel-plan-apply-standard-tour")) {
+          void applyTour(
+            button.getAttribute("data-travel-plan-apply-tour")
+            || button.getAttribute("data-travel-plan-apply-standard-tour")
+          );
           return;
         }
         if (button.hasAttribute("data-travel-plan-import-source-plan-booking")) {
@@ -677,6 +684,7 @@ export function createBookingTravelPlanServiceLibraryModule(deps) {
     bindTravelPlanServiceLibrary,
     closeTravelPlanServiceLibrary,
     importTravelPlan,
+    applyTour,
     applyStandardTour,
     importTravelPlanDay,
     importTravelPlanService,

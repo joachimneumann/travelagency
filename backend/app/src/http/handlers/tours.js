@@ -1,10 +1,22 @@
-import { validateTourTranslateFieldsRequest } from "../../../Generated/API/generated_APIModels.js";
+import {
+  validateBookingTourApplyRequest,
+  validateTourTranslateFieldsRequest,
+  validateTourTravelPlanUpdateRequest,
+  validateTravelPlanServiceImageDeleteRequest,
+  validateTravelPlanServiceImageUploadRequest
+} from "../../../Generated/API/generated_APIModels.js";
 import { existsSync } from "node:fs";
 import { execImageMagick } from "../../lib/imagemagick.js";
 import {
   DESTINATION_COUNTRY_CODES,
-  DESTINATION_COUNTRY_TO_TOUR_DESTINATION_CODE
+  DESTINATION_COUNTRY_TO_TOUR_DESTINATION_CODE,
+  TOUR_DESTINATION_TO_COUNTRY_CODE
 } from "../../../../../shared/js/destination_country_codes.js";
+import {
+  findTravelPlanDayAndItem,
+  normalizeItemImageRef,
+  publicBookingImagePath
+} from "./booking_travel_plan_shared.js";
 
 export function createTourHandlers(deps) {
   const {
@@ -16,10 +28,15 @@ export function createTourHandlers(deps) {
     tourStyleCodes,
     readStore,
     readTours,
+    persistStore,
     sendJson,
     clamp,
     normalizeTourForRead,
     normalizeTourForStorage,
+    normalizeTourTravelPlan,
+    normalizeMarketingTourTravelPlan,
+    validateMarketingTourTravelPlanInput,
+    validateBookingTravelPlanInput,
     resolveLocalizedText,
     setLocalizedTextForLang,
     translateEntries,
@@ -32,6 +49,12 @@ export function createTourHandlers(deps) {
     collectTourOptions,
     buildPaginatedListResponse,
     canEditTours,
+    canEditBooking,
+    assertExpectedRevision,
+    buildBookingDetailResponse,
+    incrementBookingRevision,
+    addActivity,
+    actorLabel,
     readBodyJson,
     readCountryPracticalInfo,
     nowIso,
@@ -45,6 +68,7 @@ export function createTourHandlers(deps) {
     execFile,
     TEMP_UPLOAD_DIR,
     TOURS_DIR,
+    BOOKING_IMAGES_DIR,
     writeFile,
     rm
   } = deps;
@@ -130,6 +154,7 @@ export function createTourHandlers(deps) {
       ...normalizeTourForRead(stored, { lang }),
       title_i18n: localizedTextareaMap(stored.title),
       short_description_i18n: localizedTextareaMap(stored.short_description),
+      travel_plan: buildTourTravelPlanEditorValue(stored),
       reel_video: buildTourReelVideoMeta(stored)
     };
   }
@@ -163,6 +188,9 @@ export function createTourHandlers(deps) {
       );
     }
     if (payload.image !== undefined) next.image = toTourImagePublicUrl(payload.image);
+    if (payload.travel_plan !== undefined) {
+      next.travel_plan = normalizeMarketingTourTravelPlan(payload.travel_plan);
+    }
     if (payload.seasonality_start_month !== undefined) {
       next.seasonality_start_month = normalizeText(payload.seasonality_start_month);
     }
@@ -307,6 +335,20 @@ export function createTourHandlers(deps) {
     return {
       filename: TOUR_REEL_VIDEO_FILENAME,
       preview_url: buildTourVideoEditorPreviewUrl(tour)
+    };
+  }
+
+  function buildTourTravelPlanEditorValue(tour) {
+    const plan = normalizeTourTravelPlan(tour?.travel_plan);
+    const reelVideo = buildTourReelVideoMeta(tour);
+    if (!reelVideo) return plan;
+    return {
+      ...plan,
+      video: {
+        ...(plan.video || {}),
+        storage_path: reelVideo.preview_url,
+        title: normalizeText(plan.video?.title) || reelVideo.filename
+      }
     };
   }
 
@@ -654,6 +696,181 @@ export function createTourHandlers(deps) {
     });
   }
 
+  async function handlePatchTourTravelPlan(req, res, [tourId]) {
+    const principal = getPrincipal(req);
+    if (!canEditTours(principal)) {
+      sendJson(res, 403, { error: "Forbidden" });
+      return;
+    }
+    let payload;
+    try {
+      payload = await readBodyJson(req);
+      validateTourTravelPlanUpdateRequest(payload);
+    } catch (error) {
+      sendJson(res, error?.statusCode || 400, { error: String(error?.message || "Invalid JSON payload") });
+      return;
+    }
+
+    const lang = requestLang(req.url);
+    const tours = (await readTours()).map((tour) => normalizeTourForStorage(tour));
+    const index = tours.findIndex((item) => item.id === tourId);
+    if (index < 0) {
+      sendJson(res, 404, { error: "Tour not found" });
+      return;
+    }
+
+    const check = validateMarketingTourTravelPlanInput(payload.travel_plan);
+    if (!check.ok) {
+      sendJson(res, 422, { error: check.error });
+      return;
+    }
+
+    const updated = normalizeTourForStorage({
+      ...tours[index],
+      travel_plan: check.travel_plan,
+      updated_at: nowIso()
+    });
+    tours[index] = updated;
+    await persistTour(updated);
+    const homepageAssets = await regeneratePublicHomepageAssets("tour_travel_plan_patch", { tour_id: updated.id });
+    sendJson(res, 200, {
+      tour: buildTourEditorResponse(updated, lang),
+      homepage_assets: homepageAssets
+    });
+  }
+
+  function cloneJson(value) {
+    return value === undefined ? undefined : JSON.parse(JSON.stringify(value));
+  }
+
+  function bookingDestinationCodesFromTour(tour) {
+    return Array.from(
+      new Set(
+        tourDestinationCodes(tour)
+          .map((code) => TOUR_DESTINATION_TO_COUNTRY_CODE[code] || normalizeText(code).toUpperCase())
+          .filter((code) => DESTINATION_COUNTRY_CODES.includes(code))
+      )
+    );
+  }
+
+  async function copyTourServiceImageToBooking(image, { tourId, bookingId, serviceId, createdAt }) {
+    const sourceImage = image && typeof image === "object" && !Array.isArray(image) ? image : null;
+    const sourcePath = resolveTourServiceImageDiskPath(sourceImage?.storage_path, tourId);
+    if (!sourceImage || !sourcePath || !existsSync(sourcePath)) return null;
+    const outputName = `${serviceId}-${Date.now()}-${randomUUID()}.webp`;
+    const outputRelativePath = `${bookingId}/travel-plan-services/${outputName}`;
+    const outputPath = path.join(BOOKING_IMAGES_DIR, outputRelativePath);
+    try {
+      await processTourImageToWebp(sourcePath, outputPath);
+    } catch (error) {
+      console.warn("[tour-apply] Could not copy tour service image into booking storage.", {
+        tour_id: tourId,
+        booking_id: bookingId,
+        service_id: serviceId,
+        source_path: sourcePath,
+        error: String(error?.message || error)
+      });
+      return null;
+    }
+    return normalizeItemImageRef({
+      ...cloneJson(sourceImage),
+      id: `travel_plan_service_image_${randomUUID()}`,
+      storage_path: publicBookingImagePath(normalizeText, outputRelativePath),
+      sort_order: 0,
+      is_primary: true,
+      is_customer_visible: true,
+      created_at: normalizeText(sourceImage.created_at) || createdAt
+    });
+  }
+
+  async function cloneMarketingTourTravelPlanForBooking(tour, booking) {
+    const normalized = normalizeMarketingTourTravelPlan(tour?.travel_plan);
+    const createdAt = nowIso();
+    const bookingId = normalizeText(booking?.id);
+    return {
+      destinations: bookingDestinationCodesFromTour(tour),
+      days: await Promise.all((Array.isArray(normalized.days) ? normalized.days : []).map(async (day, dayIndex) => {
+        const nextDay = {
+          ...cloneJson(day),
+          id: `travel_plan_day_${randomUUID()}`,
+          day_number: dayIndex + 1,
+          date: null,
+          date_string: null,
+          copied_from: null
+        };
+        nextDay.services = await Promise.all((Array.isArray(day.services) ? day.services : []).map(async (service) => {
+          const nextServiceId = `travel_plan_service_${randomUUID()}`;
+          const nextImage = await copyTourServiceImageToBooking(service?.image, {
+            tourId: tour.id,
+            bookingId,
+            serviceId: nextServiceId,
+            createdAt
+          });
+          return {
+            ...cloneJson(service),
+            id: nextServiceId,
+            details: null,
+            details_i18n: {},
+            copied_from: null,
+            image: nextImage
+          };
+        }));
+        return nextDay;
+      })),
+      attachments: []
+    };
+  }
+
+  async function handleApplyTourToBooking(req, res, [bookingId, tourId]) {
+    let payload;
+    try {
+      payload = await readBodyJson(req);
+      validateBookingTourApplyRequest(payload);
+    } catch (error) {
+      sendJson(res, error?.statusCode || 400, { error: String(error?.message || "Invalid JSON payload") });
+      return;
+    }
+
+    const principal = getPrincipal(req);
+    const [store, tours] = await Promise.all([readStore(), readTours()]);
+    const booking = (Array.isArray(store?.bookings) ? store.bookings : []).find((item) => item.id === bookingId);
+    if (!booking) {
+      sendJson(res, 404, { error: "Booking not found" });
+      return;
+    }
+    if (!canEditBooking(principal, booking)) {
+      sendJson(res, 403, { error: "Forbidden" });
+      return;
+    }
+    if (!(await assertExpectedRevision(req, payload, booking, "expected_travel_plan_revision", "travel_plan_revision", res))) return;
+
+    const tour = tours.map((item) => normalizeTourForStorage(item)).find((item) => item.id === tourId);
+    if (!tour) {
+      sendJson(res, 404, { error: "Tour not found" });
+      return;
+    }
+
+    const nextTravelPlan = await cloneMarketingTourTravelPlanForBooking(tour, booking);
+    const check = validateBookingTravelPlanInput(nextTravelPlan, booking.offer);
+    if (!check.ok) {
+      sendJson(res, 422, { error: check.error });
+      return;
+    }
+
+    booking.travel_plan = check.travel_plan;
+    incrementBookingRevision(booking, "travel_plan_revision");
+    booking.updated_at = nowIso();
+    addActivity(
+      store,
+      booking.id,
+      "TRAVEL_PLAN_UPDATED",
+      actorLabel(principal, normalizeText(payload?.actor) || "keycloak_user"),
+      `Travel plan replaced from marketing tour ${resolveLocalizedText(tour.title, "en") || tour.id}`
+    );
+    await persistStore(store);
+    sendJson(res, 200, await buildBookingDetailResponse(booking, req));
+  }
+
   async function handleDeleteTour(req, res, [tourId]) {
     const principal = getPrincipal(req);
     if (!canEditTours(principal)) {
@@ -730,6 +947,185 @@ export function createTourHandlers(deps) {
       "82",
       outputPath
     ]);
+  }
+
+  function tourImageRelativePathFromStoragePath(storagePath, tourId) {
+    const normalizedTourId = normalizeText(tourId);
+    const normalized = normalizeText(storagePath).split("?")[0];
+    if (!normalizedTourId || !normalized) return "";
+    const publicPrefix = `/public/v1/tour-images/`;
+    if (normalized.startsWith(publicPrefix)) {
+      return normalized.slice(publicPrefix.length).replace(/^\/+/, "");
+    }
+    const bare = normalized.replace(/^\/+/, "");
+    if (bare.startsWith(`${normalizedTourId}/`)) return bare;
+    return "";
+  }
+
+  function resolveTourServiceImageDiskPath(storagePath, tourId) {
+    const relativePath = tourImageRelativePathFromStoragePath(storagePath, tourId);
+    if (!relativePath) return "";
+    const absolutePath = path.resolve(TOURS_DIR, relativePath);
+    const toursRoot = path.resolve(TOURS_DIR);
+    if (!absolutePath.startsWith(`${toursRoot}${path.sep}`)) return "";
+    return absolutePath;
+  }
+
+  async function handleUploadTourTravelPlanServiceImage(req, res, [tourId, dayId, serviceId]) {
+    const principal = getPrincipal(req);
+    if (!canEditTours(principal)) {
+      sendJson(res, 403, { error: "Forbidden" });
+      return;
+    }
+    let payload;
+    try {
+      payload = await readBodyJson(req, { maxBytes: IMAGE_UPLOAD_BODY_MAX_BYTES });
+      validateTravelPlanServiceImageUploadRequest(payload);
+    } catch (error) {
+      sendJson(res, error?.statusCode || 400, { error: String(error?.message || "Invalid JSON payload") });
+      return;
+    }
+
+    const lang = requestLang(req.url);
+    const tours = (await readTours()).map((tour) => normalizeTourForStorage(tour));
+    const index = tours.findIndex((item) => item.id === tourId);
+    if (index < 0) {
+      sendJson(res, 404, { error: "Tour not found" });
+      return;
+    }
+
+    const normalizedTravelPlan = normalizeMarketingTourTravelPlan(tours[index].travel_plan);
+    const { dayIndex, itemIndex, item } = findTravelPlanDayAndItem(normalizedTravelPlan, dayId, serviceId);
+    if (dayIndex < 0 || itemIndex < 0 || !item) {
+      sendJson(res, 404, { error: "Service not found" });
+      return;
+    }
+
+    const filename = normalizeText(payload.filename) || `${serviceId}.upload`;
+    const base64 = normalizeText(payload.data_base64);
+    if (!base64) {
+      sendJson(res, 422, { error: "data_base64 is required" });
+      return;
+    }
+    const sourceBuffer = Buffer.from(base64, "base64");
+    if (!sourceBuffer.length) {
+      sendJson(res, 422, { error: "Invalid base64 image payload" });
+      return;
+    }
+
+    const tempInputPath = path.join(TEMP_UPLOAD_DIR, `${serviceId}-${randomUUID()}${path.extname(filename) || ".upload"}`);
+    const outputName = `${serviceId}-${Date.now()}-${randomUUID()}.webp`;
+    const outputRelativePath = `${tourId}/travel-plan-services/${outputName}`;
+    const outputPath = path.join(TOURS_DIR, outputRelativePath);
+
+    try {
+      await writeFile(tempInputPath, sourceBuffer);
+      await processTourImageToWebp(tempInputPath, outputPath);
+    } catch (error) {
+      sendJson(res, 500, { error: "Image conversion failed", detail: String(error?.message || error) });
+      return;
+    } finally {
+      await rm(tempInputPath, { force: true });
+    }
+
+    const nextImage = normalizeItemImageRef({
+      id: `travel_plan_service_image_${randomUUID()}`,
+      storage_path: `/public/v1/tour-images/${outputRelativePath}`,
+      sort_order: 0,
+      is_primary: true,
+      is_customer_visible: true,
+      created_at: nowIso()
+    });
+
+    normalizedTravelPlan.days[dayIndex].services[itemIndex] = {
+      ...item,
+      image: nextImage
+    };
+
+    const check = validateMarketingTourTravelPlanInput(normalizedTravelPlan);
+    if (!check.ok) {
+      sendJson(res, 422, { error: check.error });
+      return;
+    }
+
+    const updated = normalizeTourForStorage({
+      ...tours[index],
+      travel_plan: check.travel_plan,
+      updated_at: nowIso()
+    });
+    tours[index] = updated;
+    await persistTour(updated);
+    const homepageAssets = await regeneratePublicHomepageAssets("tour_travel_plan_service_image_upload", { tour_id: updated.id });
+    sendJson(res, 200, {
+      tour: buildTourEditorResponse(updated, lang),
+      homepage_assets: homepageAssets
+    });
+  }
+
+  async function handleDeleteTourTravelPlanServiceImage(req, res, [tourId, dayId, serviceId]) {
+    const principal = getPrincipal(req);
+    if (!canEditTours(principal)) {
+      sendJson(res, 403, { error: "Forbidden" });
+      return;
+    }
+    let payload;
+    try {
+      payload = await readBodyJson(req);
+      validateTravelPlanServiceImageDeleteRequest(payload);
+    } catch (error) {
+      sendJson(res, error?.statusCode || 400, { error: String(error?.message || "Invalid JSON payload") });
+      return;
+    }
+
+    const lang = requestLang(req.url);
+    const tours = (await readTours()).map((tour) => normalizeTourForStorage(tour));
+    const index = tours.findIndex((item) => item.id === tourId);
+    if (index < 0) {
+      sendJson(res, 404, { error: "Tour not found" });
+      return;
+    }
+
+    const normalizedTravelPlan = normalizeMarketingTourTravelPlan(tours[index].travel_plan);
+    const { dayIndex, itemIndex, item } = findTravelPlanDayAndItem(normalizedTravelPlan, dayId, serviceId);
+    if (dayIndex < 0 || itemIndex < 0 || !item) {
+      sendJson(res, 404, { error: "Service not found" });
+      return;
+    }
+    const currentImage = item.image && typeof item.image === "object" && !Array.isArray(item.image)
+      ? item.image
+      : null;
+    if (!currentImage) {
+      sendJson(res, 404, { error: "Service image not set" });
+      return;
+    }
+
+    normalizedTravelPlan.days[dayIndex].services[itemIndex] = {
+      ...item,
+      image: null
+    };
+
+    const check = validateMarketingTourTravelPlanInput(normalizedTravelPlan);
+    if (!check.ok) {
+      sendJson(res, 422, { error: check.error });
+      return;
+    }
+
+    const imagePath = resolveTourServiceImageDiskPath(currentImage.storage_path, tourId);
+    const updated = normalizeTourForStorage({
+      ...tours[index],
+      travel_plan: check.travel_plan,
+      updated_at: nowIso()
+    });
+    tours[index] = updated;
+    await persistTour(updated);
+    if (imagePath && imagePath.includes(`${path.sep}travel-plan-services${path.sep}`)) {
+      await rm(imagePath, { force: true }).catch(() => {});
+    }
+    const homepageAssets = await regeneratePublicHomepageAssets("tour_travel_plan_service_image_delete", { tour_id: updated.id });
+    sendJson(res, 200, {
+      tour: buildTourEditorResponse(updated, lang),
+      homepage_assets: homepageAssets
+    });
   }
 
   async function handleUploadTourPicture(req, res, [tourId]) {
@@ -859,8 +1255,14 @@ export function createTourHandlers(deps) {
     }
 
     const current = normalizeTourForStorage(tours[index]);
+    const travelPlan = normalizeMarketingTourTravelPlan(current.travel_plan);
+    travelPlan.video = {
+      storage_path: `/api/v1/tours/${tourId}/video`,
+      title: filename
+    };
     const updated = normalizeTourForStorage({
       ...current,
+      travel_plan: travelPlan,
       updated_at: nowIso()
     });
     tours[index] = updated;
@@ -951,8 +1353,11 @@ export function createTourHandlers(deps) {
     await rm(videoPath, { force: true });
 
     const current = normalizeTourForStorage(tours[index]);
+    const travelPlan = normalizeMarketingTourTravelPlan(current.travel_plan);
+    delete travelPlan.video;
     const updated = normalizeTourForStorage({
       ...current,
+      travel_plan: travelPlan,
       updated_at: nowIso()
     });
     tours[index] = updated;
@@ -972,6 +1377,10 @@ export function createTourHandlers(deps) {
     handleTranslateTourFields,
     handleCreateTour,
     handlePatchTour,
+    handlePatchTourTravelPlan,
+    handleUploadTourTravelPlanServiceImage,
+    handleDeleteTourTravelPlanServiceImage,
+    handleApplyTourToBooking,
     handleDeleteTour,
     handleGetTourVideo,
     handlePublicTourImage,

@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-04-24T16:15:38Z
+# 2026-04-24T17:13:25Z
 
 ---
 openapi: 3.1.0
@@ -25,10 +25,10 @@ tags:
 - name: Auth
 - name: Bookings
 - name: Standard tours
+- name: Tours
 - name: Offers
 - name: CountryReference
 - name: Settings
-- name: Tours
 components:
   securitySchemes:
     bearerAuth:
@@ -3870,6 +3870,9 @@ components:
         image:
           type: string
           nullable: true
+        travel_plan:
+          "$ref": "#/components/schemas/TravelPlan"
+          nullable: true
         created_at:
           type: string
           format: date-time
@@ -3878,6 +3881,154 @@ components:
           type: string
           format: date-time
           nullable: true
+    TravelPlanVideo:
+      type: object
+      required: []
+      properties:
+        storage_path:
+          type: string
+          nullable: true
+        title:
+          type: string
+          nullable: true
+    TravelPlanServiceImageSourceAttribution:
+      type: object
+      required: []
+      properties:
+        source_name:
+          type: string
+          nullable: true
+        source_url:
+          type: string
+          nullable: true
+        photographer:
+          type: string
+          nullable: true
+        license:
+          type: string
+          nullable: true
+    TravelPlanServiceImageFocalPoint:
+      type: object
+      required:
+      - x
+      - y
+      properties:
+        x:
+          type: number
+        y:
+          type: number
+    TravelPlanServiceImage:
+      type: object
+      required:
+      - id
+      - storage_path
+      - sort_order
+      properties:
+        id:
+          type: string
+        storage_path:
+          type: string
+        caption:
+          type: string
+          nullable: true
+        alt_text:
+          type: string
+          nullable: true
+        sort_order:
+          type: integer
+        is_primary:
+          type: boolean
+          nullable: true
+        is_customer_visible:
+          type: boolean
+          nullable: true
+        width_px:
+          type: integer
+          nullable: true
+        height_px:
+          type: integer
+          nullable: true
+        source_attribution:
+          "$ref": "#/components/schemas/TravelPlanServiceImageSourceAttribution"
+          nullable: true
+        focal_point:
+          "$ref": "#/components/schemas/TravelPlanServiceImageFocalPoint"
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          nullable: true
+    TravelPlanService:
+      type: object
+      required:
+      - id
+      - timing_kind
+      - kind
+      properties:
+        id:
+          type: string
+        timing_kind:
+          "$ref": "#/components/schemas/TravelPlanTimingKind"
+        time_label:
+          type: string
+          nullable: true
+        time_point:
+          type: string
+          nullable: true
+        kind:
+          "$ref": "#/components/schemas/TravelPlanServiceKind"
+        title:
+          type: string
+          nullable: true
+        image_subtitle:
+          type: string
+          nullable: true
+        location:
+          type: string
+          nullable: true
+        start_time:
+          type: string
+          nullable: true
+        end_time:
+          type: string
+          nullable: true
+        image:
+          "$ref": "#/components/schemas/TravelPlanServiceImage"
+          nullable: true
+    TravelPlanDay:
+      type: object
+      required:
+      - id
+      - day_number
+      properties:
+        id:
+          type: string
+        day_number:
+          type: integer
+        title:
+          type: string
+          nullable: true
+        overnight_location:
+          type: string
+          nullable: true
+        services:
+          type: array
+          items:
+            "$ref": "#/components/schemas/TravelPlanService"
+        notes:
+          type: string
+          nullable: true
+    TravelPlan:
+      type: object
+      required: []
+      properties:
+        video:
+          "$ref": "#/components/schemas/TravelPlanVideo"
+          nullable: true
+        days:
+          type: array
+          items:
+            "$ref": "#/components/schemas/TravelPlanDay"
     StandardTour:
       type: object
       required:
@@ -6397,6 +6548,26 @@ components:
         actor:
           type: string
           nullable: true
+    BookingTourApplyRequest:
+      type: object
+      required: []
+      properties:
+        expected_travel_plan_revision:
+          type: integer
+          nullable: true
+        actor:
+          type: string
+          nullable: true
+    TourTravelPlanUpdateRequest:
+      type: object
+      required:
+      - travel_plan
+      properties:
+        travel_plan:
+          "$ref": "#/components/schemas/TravelPlan"
+        actor:
+          type: string
+          nullable: true
     TravelPlanServiceSearchRequest:
       type: object
       required: []
@@ -6733,6 +6904,9 @@ components:
             type: string
         image:
           type: string
+          nullable: true
+        travel_plan:
+          "$ref": "#/components/schemas/TravelPlan"
           nullable: true
     TourTranslateFieldsRequest:
       type: object
@@ -8434,6 +8608,56 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/bookings/{booking_id}/travel-plan/tours/{tour_id}/apply":
+    post:
+      operationId: booking_tour_apply
+      summary: Booking Tour Apply
+      tags:
+      - Tours
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: booking_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: tour_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/BookingTourApplyRequest"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingDetail"
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingDetail"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
   "/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/services/import":
     post:
       operationId: booking_travel_plan_service_import
@@ -9836,6 +10060,148 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/TranslationEntriesResponse"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/tours/{tour_id}/travel-plan":
+    patch:
+      operationId: tour_travel_plan_update
+      summary: Tour Travel Plan Update
+      tags:
+      - Tours
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: tour_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/TourTravelPlanUpdateRequest"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/TourResponse"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/tours/{tour_id}/travel-plan/days/{day_id}/services/{service_id}/image":
+    post:
+      operationId: tour_travel_plan_service_image_upload
+      summary: Tour Travel Plan Service Image Upload
+      tags:
+      - Tours
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: tour_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: day_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: service_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/TravelPlanServiceImageUploadRequest"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/TourResponse"
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/TourResponse"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: tour_travel_plan_service_image_delete
+      summary: Tour Travel Plan Service Image Delete
+      tags:
+      - Tours
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: tour_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: day_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: service_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/TravelPlanServiceImageDeleteRequest"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/TourResponse"
         '401':
           description: Unauthorized
           content:

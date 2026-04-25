@@ -21,6 +21,7 @@ import { createSnapshotDirtyTracker } from "../shared/edit_state.js";
 import { MONTH_CODE_CATALOG } from "../shared/generated_catalogs.js";
 import { resolveBackendSectionHref } from "../shared/nav.js";
 import { applyBackendUserLabel } from "../shared/backend_page.js";
+import { createTourTravelPlanAdapter } from "./tour_travel_plan_adapter.js";
 import {
   CUSTOMER_CONTENT_LANGUAGES,
   normalizeLanguageCode
@@ -97,10 +98,16 @@ const state = {
   roles: [],
   permissions: {
     canReadTours: false,
-    canEditTours: false
+    canEditTours: false,
+    canEditBooking: false
   },
   allowPageUnload: false,
   tour: null,
+  booking: null,
+  travelPlanDraft: null,
+  travelPlanDirty: false,
+  originalTravelPlanSnapshot: "",
+  originalTravelPlanState: null,
   pictureDraftItems: [],
   reelVideoDraftItem: null,
   options: {
@@ -142,9 +149,19 @@ const els = {
   reelVideoCard: document.getElementById("tour_reel_video_card"),
   addReelVideoBtn: document.getElementById("tour_add_reel_btn"),
   reelVideoUpload: document.getElementById("tour_reel_upload"),
+  travel_plan_panel: document.getElementById("travel_plan_panel"),
+  travel_plan_panel_summary: document.getElementById("travel_plan_panel_summary"),
+  travel_plan_editor: document.getElementById("travel_plan_editor"),
+  travel_plan_status: document.getElementById("travel_plan_status"),
+  travelPlanServiceImageInput: document.getElementById("travel_plan_service_image_input"),
+  travelPlanImagePreviewModal: document.getElementById("travel_plan_image_preview_modal"),
+  travelPlanImagePreviewCloseBtn: document.getElementById("travel_plan_image_preview_close_btn"),
+  travelPlanImagePreviewImage: document.getElementById("travel_plan_image_preview_image"),
   pageOverlay: document.getElementById("tour_translate_overlay"),
   pageOverlayText: document.getElementById("tour_translate_overlay_text")
 };
+
+let tourTravelPlanAdapter = null;
 
 function refreshBackendNavElements() {
   els.logoutLink = document.getElementById("backendLogoutLink");
@@ -185,6 +202,10 @@ function captureTourFormSnapshot() {
         ? `stored:${state.reelVideoDraftItem.previewUrl || state.reelVideoDraftItem.name}`
         : `pending:${state.reelVideoDraftItem.file?.name || ""}:${state.reelVideoDraftItem.file?.size || 0}:${state.reelVideoDraftItem.file?.lastModified || 0}`)
       : ""
+  ]);
+  snapshot.push([
+    "tour_travel_plan",
+    tourTravelPlanAdapter?.snapshot?.() || JSON.stringify(state.tour?.travel_plan || { days: [] })
   ]);
   return JSON.stringify(snapshot);
 }
@@ -791,6 +812,20 @@ async function init() {
     return;
   }
   renderMonthOptions();
+  tourTravelPlanAdapter = createTourTravelPlanAdapter({
+    state,
+    els,
+    apiOrigin,
+    fetchApi,
+    escapeHtml,
+    onDirtyChange: updateTourDirtyState,
+    onTourMutation: (tour) => {
+      state.tour = tour;
+      state.id = String(tour?.id || state.id || "");
+      state.is_create_mode = !state.id;
+    }
+  });
+  tourTravelPlanAdapter.bind();
 
   if (els.form) {
     els.form.addEventListener("submit", submitForm);
@@ -930,6 +965,7 @@ async function loadTour() {
   renderLocalizedTourContentEditor();
   syncPictureDraftItemsFromTour(tour);
   syncReelVideoDraftItemFromTour(tour);
+  tourTravelPlanAdapter?.applyTour(tour);
 
   renderDestinationChoices(tour_destination_codes(tour));
   renderStyleChoices(tour_style_codes(tour));
@@ -957,7 +993,8 @@ async function initializeNewTourForm() {
     short_description_i18n: {},
     pictures: [],
     image: "",
-    reel_video: null
+    reel_video: null,
+    travel_plan: { days: [] }
   };
 
   state.localizedContent.title_i18n = {};
@@ -970,6 +1007,7 @@ async function initializeNewTourForm() {
   renderLocalizedTourContentEditor();
   syncPictureDraftItemsFromTour(state.tour);
   syncReelVideoDraftItemFromTour(state.tour);
+  tourTravelPlanAdapter?.applyTour(state.tour);
   renderDestinationChoices([]);
   renderStyleChoices([]);
   applyTourPermissions();
@@ -1093,6 +1131,16 @@ async function submitForm(event) {
   const selectedStyles = getCheckedValues("styleChoice");
   const title_i18n = readLocalizedFields("title_i18n");
   const short_description_i18n = readLocalizedFields("short_description_i18n");
+  const travelPlanResult = tourTravelPlanAdapter?.collectPayload({ focusFirstInvalid: true }) || {
+    ok: true,
+    payload: state.tour?.travel_plan || { days: [] }
+  };
+  if (!travelPlanResult.ok) {
+    const message = travelPlanResult.error || backendT("tour.travel_plan_invalid", "Travel plan is invalid.");
+    showError(message);
+    setStatus(message);
+    return;
+  }
   const draftPictureItems = [...state.pictureDraftItems];
   const storedPictures = draftPictureItems
     .filter((item) => item.kind === "stored")
@@ -1117,7 +1165,8 @@ async function submitForm(event) {
     seasonality_start_month: getInput("tour_seasonality_start_month"),
     seasonality_end_month: getInput("tour_seasonality_end_month"),
     short_description_i18n,
-    pictures: storedPictures
+    pictures: storedPictures,
+    travel_plan: travelPlanResult.payload
   };
 
   const validationMessage = buildTourSaveValidationMessage({
@@ -1322,6 +1371,7 @@ async function loadAuthStatus() {
     });
     state.permissions.canReadTours = hasAnyRoleInList(state.roles, ROLES.ADMIN, ROLES.ACCOUNTANT, ROLES.TOUR_EDITOR);
     state.permissions.canEditTours = hasAnyRoleInList(state.roles, ROLES.ADMIN, ROLES.TOUR_EDITOR);
+    state.permissions.canEditBooking = state.permissions.canEditTours;
   } catch (error) {
     state.authenticated = false;
     if (els.userLabel) els.userLabel.textContent = "";

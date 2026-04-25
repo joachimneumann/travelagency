@@ -130,8 +130,104 @@ IR: {
 				{name: "short_description", kind: "scalar", typeName: "string", required: false},
 				{name: "pictures", kind: "scalar", typeName: "string", required: false, isArray: true},
 				{name: "image", kind: "scalar", typeName: "string", required: false},
+				{name: "travel_plan", kind: "entity", typeName: "TravelPlan", required: false},
 				{name: "created_at", kind: "scalar", typeName: "Timestamp", required: false},
 				{name: "updated_at", kind: "scalar", typeName: "Timestamp", required: false},
+			]
+		},
+		{
+			name:       "TravelPlanVideo"
+			domain:     "booking"
+			module:     "database"
+			sourceType: "database.#TravelPlanVideo"
+			fields: [
+				{name: "storage_path", kind: "scalar", typeName: "string", required: false},
+				{name: "title", kind: "scalar", typeName: "string", required: false},
+			]
+		},
+		{
+			name:       "TravelPlanServiceImageSourceAttribution"
+			domain:     "booking"
+			module:     "database"
+			sourceType: "database.#TravelPlanServiceImageSourceAttribution"
+			fields: [
+				{name: "source_name", kind: "scalar", typeName: "string", required: false},
+				{name: "source_url", kind: "scalar", typeName: "string", required: false},
+				{name: "photographer", kind: "scalar", typeName: "string", required: false},
+				{name: "license", kind: "scalar", typeName: "string", required: false},
+			]
+		},
+		{
+			name:       "TravelPlanServiceImageFocalPoint"
+			domain:     "booking"
+			module:     "database"
+			sourceType: "database.#TravelPlanServiceImageFocalPoint"
+			fields: [
+				{name: "x", kind: "scalar", typeName: "float", required: true},
+				{name: "y", kind: "scalar", typeName: "float", required: true},
+			]
+		},
+		{
+			name:       "TravelPlanServiceImage"
+			domain:     "booking"
+			module:     "database"
+			sourceType: "database.#TravelPlanServiceImage"
+			fields: [
+				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
+				{name: "storage_path", kind: "scalar", typeName: "string", required: true},
+				{name: "caption", kind: "scalar", typeName: "string", required: false},
+				{name: "alt_text", kind: "scalar", typeName: "string", required: false},
+				{name: "sort_order", kind: "scalar", typeName: "int", required: true},
+				{name: "is_primary", kind: "scalar", typeName: "bool", required: false},
+				{name: "is_customer_visible", kind: "scalar", typeName: "bool", required: false},
+				{name: "width_px", kind: "scalar", typeName: "int", required: false},
+				{name: "height_px", kind: "scalar", typeName: "int", required: false},
+				{name: "source_attribution", kind: "entity", typeName: "TravelPlanServiceImageSourceAttribution", required: false},
+				{name: "focal_point", kind: "entity", typeName: "TravelPlanServiceImageFocalPoint", required: false},
+				{name: "created_at", kind: "scalar", typeName: "Timestamp", required: false},
+			]
+		},
+		{
+			name:       "TravelPlanService"
+			domain:     "booking"
+			module:     "database"
+			sourceType: "database.#TravelPlanService"
+			fields: [
+				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
+				{name: "timing_kind", kind: "enum", typeName: "TravelPlanTimingKind", required: true},
+				{name: "time_label", kind: "scalar", typeName: "string", required: false},
+				{name: "time_point", kind: "scalar", typeName: "string", required: false},
+				{name: "kind", kind: "enum", typeName: "TravelPlanServiceKind", required: true},
+				{name: "title", kind: "scalar", typeName: "string", required: false},
+				{name: "image_subtitle", kind: "scalar", typeName: "string", required: false},
+				{name: "location", kind: "scalar", typeName: "string", required: false},
+				{name: "start_time", kind: "scalar", typeName: "string", required: false},
+				{name: "end_time", kind: "scalar", typeName: "string", required: false},
+				{name: "image", kind: "entity", typeName: "TravelPlanServiceImage", required: false},
+			]
+		},
+		{
+			name:       "TravelPlanDay"
+			domain:     "booking"
+			module:     "database"
+			sourceType: "database.#TravelPlanDay"
+			fields: [
+				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
+				{name: "day_number", kind: "scalar", typeName: "int", required: true},
+				{name: "title", kind: "scalar", typeName: "string", required: false},
+				{name: "overnight_location", kind: "scalar", typeName: "string", required: false},
+				{name: "services", kind: "entity", typeName: "TravelPlanService", required: false, isArray: true},
+				{name: "notes", kind: "scalar", typeName: "string", required: false},
+			]
+		},
+		{
+			name:       "TravelPlan"
+			domain:     "booking"
+			module:     "database"
+			sourceType: "database.#TravelPlan"
+			fields: [
+				{name: "video", kind: "entity", typeName: "TravelPlanVideo", required: false},
+				{name: "days", kind: "entity", typeName: "TravelPlanDay", required: false, isArray: true},
 			]
 		},
 		{
@@ -1630,6 +1726,26 @@ IR: {
 			]
 		},
 		{
+			name:       "BookingTourApplyRequest"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#BookingTourApplyRequest"
+			fields: [
+				{name: "expected_travel_plan_revision", kind: "scalar", typeName: "int", required: false},
+				{name: "actor", kind: "scalar", typeName: "string", required: false},
+			]
+		},
+		{
+			name:       "TourTravelPlanUpdateRequest"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#TourTravelPlanUpdateRequest"
+			fields: [
+				{name: "travel_plan", kind: "entity", typeName: "TravelPlan", required: true},
+				{name: "actor", kind: "scalar", typeName: "string", required: false},
+			]
+		},
+		{
 			name:       "TravelPlanServiceSearchRequest"
 			domain:     "api"
 			module:     "api"
@@ -1857,6 +1973,7 @@ IR: {
 				{name: "short_description", kind: "scalar", typeName: "string", required: false},
 				{name: "pictures", kind: "scalar", typeName: "string", required: false, isArray: true},
 				{name: "image", kind: "scalar", typeName: "string", required: false},
+				{name: "travel_plan", kind: "entity", typeName: "TravelPlan", required: false},
 			]
 		},
 		{

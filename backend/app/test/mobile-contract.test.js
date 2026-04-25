@@ -2215,6 +2215,114 @@ test("standard tour apply copies the travel plan without storing extra standard-
   }
 });
 
+test("marketing tour apply copies the marketing travel plan into a booking travel plan", async () => {
+  const targetBooking = await createPublicBooking({
+    name: "Marketing Tour Target User",
+    email: "marketing-tour-target@example.com"
+  });
+  const tourTitle = `Marketing tour apply marker ${targetBooking.id}`;
+  let tourId = "";
+  try {
+    const store = JSON.parse(await readFile(STORE_PATH, "utf8"));
+    const targetRecord = store.bookings.find((item) => item.id === targetBooking.id);
+    assert.ok(targetRecord);
+    targetRecord.travel_plan = {
+      days: [
+        {
+          id: "marketing_tour_target_day_1",
+          day_number: 1,
+          date: "2026-08-10",
+          title: "Old target day",
+          overnight_location: "Da Nang",
+          services: [],
+          notes: ""
+        }
+      ]
+    };
+    targetRecord.pdf_personalization = {
+      travel_plan: {
+        subtitle: "Old marketing target subtitle"
+      },
+      offer: {
+        closing: "Target offer closing marker"
+      }
+    };
+    await writeFile(STORE_PATH, `${JSON.stringify(store, null, 2)}\n`, "utf8");
+
+    const tourCreateResult = await requestJson(
+      endpointPath("tour_create"),
+      apiHeaders("atp_tour_editor", "tour-editor", "kc-tour-editor"),
+      {
+        method: "POST",
+        body: {
+          title: tourTitle,
+          destinations: ["vietnam"],
+          styles: ["culture"],
+          short_description: "Marketing tour with a reusable travel plan",
+          travel_plan: {
+            days: [
+              {
+                id: "marketing_tour_source_day_1",
+                day_number: 1,
+                title: "Marketing tour day marker",
+                overnight_location: "Hanoi",
+                notes: "Marketing tour day notes",
+                services: [
+                  {
+                    id: "marketing_tour_source_service_1",
+                    timing_kind: "label",
+                    kind: "activity",
+                    title: "Marketing tour service marker",
+                    details: "This booking-only detail must be stripped",
+                    location: "Hanoi"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    );
+    assert.equal(tourCreateResult.status, 201);
+    tourId = tourCreateResult.body.tour.id;
+    assert.equal(tourCreateResult.body.tour.travel_plan.days[0].title, "Marketing tour day marker");
+    assert.equal("date" in tourCreateResult.body.tour.travel_plan.days[0], false);
+    assert.equal("details" in tourCreateResult.body.tour.travel_plan.days[0].services[0], false);
+
+    const applyResult = await requestJson(
+      endpointPath("booking_tour_apply")
+        .replace("{booking_id}", targetBooking.id)
+        .replace("{tour_id}", tourId),
+      apiHeaders(),
+      {
+        method: "POST",
+        body: {
+          expected_travel_plan_revision: targetBooking.travel_plan_revision
+        }
+      }
+    );
+    assert.equal(applyResult.status, 200);
+    assert.deepEqual(applyResult.body.booking.travel_plan.destinations, ["VN"]);
+    assert.equal(applyResult.body.booking.travel_plan.days.length, 1);
+    assert.equal(applyResult.body.booking.travel_plan.days[0].title, "Marketing tour day marker");
+    assert.equal(applyResult.body.booking.travel_plan.days[0].date, null);
+    assert.equal(applyResult.body.booking.travel_plan.days[0].services[0].title, "Marketing tour service marker");
+    assert.equal(applyResult.body.booking.travel_plan.days[0].services[0].details, null);
+    assert.notEqual(applyResult.body.booking.travel_plan.days[0].id, "marketing_tour_source_day_1");
+    assert.notEqual(applyResult.body.booking.travel_plan.days[0].services[0].id, "marketing_tour_source_service_1");
+    assert.equal(applyResult.body.booking.pdf_personalization.travel_plan.subtitle, "Old marketing target subtitle");
+    assert.equal(applyResult.body.booking.pdf_personalization.offer.closing, "Target offer closing marker");
+  } finally {
+    if (tourId) {
+      await requestJson(
+        endpointPath("tour_delete").replace("{tour_id}", tourId),
+        apiHeaders("atp_tour_editor", "tour-editor", "kc-tour-editor"),
+        { method: "DELETE" }
+      );
+    }
+  }
+});
+
 test("standard tour titles must be unique", async () => {
   const sourceBooking = await createSeedBooking();
   const primaryTitle = `Summer Escape ${sourceBooking.id}`;

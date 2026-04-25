@@ -41,6 +41,7 @@ export const CONTRACT_ROUTE_DEFINITIONS = Object.freeze([
   { method: "PATCH", path: "/api/v1/standard-tours/{standard_tour_id}", handlerKey: "handlePatchStandardTour" },
   { method: "DELETE", path: "/api/v1/standard-tours/{standard_tour_id}", handlerKey: "handleDeleteStandardTour" },
   { method: "POST", path: "/api/v1/bookings/{booking_id}/travel-plan/standard-tours/{standard_tour_id}/apply", handlerKey: "handleApplyStandardTour" },
+  { method: "POST", path: "/api/v1/bookings/{booking_id}/travel-plan/tours/{tour_id}/apply", handlerKey: "handleApplyTourToBooking" },
   { method: "POST", path: "/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/services/import", handlerKey: "handleImportTravelPlanService" },
   { method: "POST", path: "/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/services/{service_id}/image", handlerKey: "handleUploadTravelPlanServiceImage" },
   { method: "DELETE", path: "/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/services/{service_id}/image", handlerKey: "handleDeleteTravelPlanServiceImage" },
@@ -76,6 +77,9 @@ export const CONTRACT_ROUTE_DEFINITIONS = Object.freeze([
   { method: "POST", path: "/api/v1/tours", handlerKey: "handleCreateTour" },
   { method: "PATCH", path: "/api/v1/tours/{tour_id}", handlerKey: "handlePatchTour" },
   { method: "DELETE", path: "/api/v1/tours/{tour_id}", handlerKey: "handleDeleteTour" },
+  { method: "PATCH", path: "/api/v1/tours/{tour_id}/travel-plan", handlerKey: "handlePatchTourTravelPlan" },
+  { method: "POST", path: "/api/v1/tours/{tour_id}/travel-plan/days/{day_id}/services/{service_id}/image", handlerKey: "handleUploadTourTravelPlanServiceImage" },
+  { method: "DELETE", path: "/api/v1/tours/{tour_id}/travel-plan/days/{day_id}/services/{service_id}/image", handlerKey: "handleDeleteTourTravelPlanServiceImage" },
   { method: "POST", path: "/api/v1/tours/{tour_id}/pictures", handlerKey: "handleUploadTourPicture" },
   { method: "DELETE", path: "/api/v1/tours/{tour_id}/pictures/{picture_name}", handlerKey: "handleDeleteTourPicture" },
   { method: "GET", path: "/auth/me", handlerKey: "handleAuthMe" }

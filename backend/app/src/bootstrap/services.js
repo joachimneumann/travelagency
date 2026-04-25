@@ -156,7 +156,8 @@ export function createBackendServices({
 
   const tourHelpers = createTourHelpers({
     toursDir: collections.toursDir,
-    safeInt: support.safeInt
+    safeInt: support.safeInt,
+    normalizeMarketingTourTravelPlan: travelPlanHelpers.normalizeMarketingTourTravelPlan
   });
 
   const writeGeneratedOfferPdf = createOfferPdfWriter({

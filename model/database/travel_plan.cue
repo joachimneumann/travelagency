@@ -5,19 +5,24 @@ import (
 	enums "travelagency.local/model/enums"
 )
 
-#BookingTravelPlanServiceImageSourceAttribution: {
+#TravelPlanVideo: {
+	storage_path?: string
+	title?:        string
+}
+
+#TravelPlanServiceImageSourceAttribution: {
 	source_name?:  string
 	source_url?:   common.#Url | string
 	photographer?: string
 	license?:      string
 }
 
-#BookingTravelPlanServiceImageFocalPoint: {
+#TravelPlanServiceImageFocalPoint: {
 	x: >=0 & <=1 & number
 	y: >=0 & <=1 & number
 }
 
-#BookingTravelPlanServiceImage: {
+#TravelPlanServiceImage: {
 	id:                   common.#Identifier
 	storage_path:         string & !=""
 	caption?:             string
@@ -27,10 +32,16 @@ import (
 	is_customer_visible?: bool
 	width_px?:            >0 & int
 	height_px?:           >0 & int
-	source_attribution?:  #BookingTravelPlanServiceImageSourceAttribution
-	focal_point?:         #BookingTravelPlanServiceImageFocalPoint
+	source_attribution?:  #TravelPlanServiceImageSourceAttribution
+	focal_point?:         #TravelPlanServiceImageFocalPoint
 	created_at?:          common.#Timestamp
 }
+
+#BookingTravelPlanServiceImageSourceAttribution: #TravelPlanServiceImageSourceAttribution
+
+#BookingTravelPlanServiceImageFocalPoint: #TravelPlanServiceImageFocalPoint
+
+#BookingTravelPlanServiceImage: #TravelPlanServiceImage
 
 #BookingTravelPlanServiceCopiedFrom: {
 	source_type:             "booking_travel_plan_service"
@@ -51,20 +62,25 @@ import (
 	import_batch_id?:        common.#Identifier
 }
 
-#BookingTravelPlanService: {
+#TravelPlanService: {
 	id:              common.#Identifier
 	timing_kind:     *"label" | enums.#TravelPlanTimingKind
 	time_label?:     string
 	time_point?:     string
 	kind:            enums.#TravelPlanServiceKind
 	title?:          string
-	details?:        string
 	image_subtitle?: string
 	location?:       string
 	start_time?:     string
 	end_time?:       string
-	image?:          #BookingTravelPlanServiceImage
-	copied_from?:    #BookingTravelPlanServiceCopiedFrom
+	image?:          #TravelPlanServiceImage
+	...
+}
+
+#BookingTravelPlanService: #TravelPlanService & {
+	details?: string
+	details_i18n?: [string]: string
+	copied_from?: #BookingTravelPlanServiceCopiedFrom
 }
 
 #BookingTravelPlanAttachment: {
@@ -76,20 +92,31 @@ import (
 	created_at?:  common.#Timestamp
 }
 
-#BookingTravelPlanDay: {
+#TravelPlanDay: {
 	id:                  common.#Identifier
 	day_number:          >0 & int
-	date?:               common.#DateOnly
-	date_string?:        string
-	title:               string
+	title?:              string
 	overnight_location?: string
+	services?: [...#TravelPlanService]
+	notes?: string
+	...
+}
+
+#BookingTravelPlanDay: #TravelPlanDay & {
+	date?:        common.#DateOnly
+	date_string?: string
 	services?: [...#BookingTravelPlanService]
-	notes?:       string
 	copied_from?: #BookingTravelPlanDayCopiedFrom
 }
 
-#BookingTravelPlan: {
-	destinations?: [...enums.#CountryCode]
+#TravelPlan: {
+	video?: #TravelPlanVideo
+	days?: [...#TravelPlanDay]
+	...
+}
+
+#BookingTravelPlan: #TravelPlan & {
 	days?: [...#BookingTravelPlanDay]
+	destinations?: [...enums.#CountryCode]
 	attachments?: [...#BookingTravelPlanAttachment]
 }

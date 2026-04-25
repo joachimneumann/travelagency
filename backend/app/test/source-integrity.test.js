@@ -10,6 +10,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const execFileAsync = promisify(execFile);
 
+function travelPlanEditorCorePath() {
+  return path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "shared", "travel_plan_editor_core.js");
+}
+
 async function topLevelFunctionDeclarations(filePath) {
   const source = await readFile(filePath, "utf8");
   const lines = source.split("\n");
@@ -236,7 +240,7 @@ test("booking page uses a page-level dirty bar instead of local section save but
 
 test("travel plan and payment PDFs share the same workspace helper", async () => {
   const repoRoot = path.resolve(__dirname, "..", "..", "..");
-  const travelPlanPath = path.join(repoRoot, "frontend", "scripts", "booking", "travel_plan.js");
+  const travelPlanPath = travelPlanEditorCorePath();
   const paymentFlowPath = path.join(repoRoot, "frontend", "scripts", "booking", "payment_flow.js");
   const helperPath = path.join(repoRoot, "frontend", "scripts", "booking", "pdf_workspace.js");
   const [travelPlanSource, paymentFlowSource, helperSource] = await Promise.all([
@@ -1347,7 +1351,7 @@ test("booking page top control row keeps staff and customer language visually al
 });
 
 test("service titles remain optional across save validation and UI state", async () => {
-  const travelPlanScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan.js");
+  const travelPlanScriptPath = travelPlanEditorCorePath();
   const travelPlanValidationPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan_validation.js");
   const bookingStylesPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "pages", "backend-booking.css");
   const travelPlanStylesPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "pages", "backend-booking-travel-plan.css");
@@ -1395,7 +1399,7 @@ test("service titles remain optional across save validation and UI state", async
 
 test("travel-plan services are single-day only across model, API, backend, and UI", async () => {
   const modelPath = path.resolve(__dirname, "..", "..", "..", "model", "database", "travel_plan.cue");
-  const travelPlanScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan.js");
+  const travelPlanScriptPath = travelPlanEditorCorePath();
   const travelPlanHelpersPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan_helpers.js");
   const travelPlanValidationPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan_validation.js");
   const travelPlanDomainPath = path.resolve(__dirname, "..", "src", "domain", "travel_plan.js");
@@ -1466,7 +1470,7 @@ test("travel-plan services are single-day only across model, API, backend, and U
 
 test("travel plan images cap inline previews and open in a full-size modal", async () => {
   const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
-  const travelPlanScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan.js");
+  const travelPlanScriptPath = travelPlanEditorCorePath();
   const travelPlanImagesModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan_images.js");
   const coreModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "core.js");
   const travelPlanStylesPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "pages", "backend-booking-travel-plan.css");
@@ -1519,7 +1523,7 @@ test("travel plan images cap inline previews and open in a full-size modal", asy
 });
 
 test("travel plan footer exposes clean-state-gated preview and create actions backed by dedicated contract pdf endpoints", async () => {
-  const travelPlanScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan.js");
+  const travelPlanScriptPath = travelPlanEditorCorePath();
   const bookingPageScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking.js");
   const bookingTravelPlanStylesPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "pages", "backend-booking-travel-plan.css");
   const openApiPath = path.resolve(__dirname, "..", "..", "..", "api", "generated", "openapi.yaml");
@@ -1601,7 +1605,7 @@ test("travel plan footer exposes clean-state-gated preview and create actions ba
 });
 
 test("travel plan editor warns in the console when the new-day controls never render", async () => {
-  const travelPlanScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan.js");
+  const travelPlanScriptPath = travelPlanEditorCorePath();
   const travelPlanSource = await readFile(travelPlanScriptPath, "utf8");
 
   assert.match(
@@ -1623,7 +1627,7 @@ test("travel plan editor warns in the console when the new-day controls never re
 
 test("travel plan footer exposes additional PDF attachment controls and contract routes", async () => {
   const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
-  const travelPlanScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan.js");
+  const travelPlanScriptPath = travelPlanEditorCorePath();
   const travelPlanAttachmentsScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan_attachments.js");
   const openApiPath = path.resolve(__dirname, "..", "..", "..", "api", "generated", "openapi.yaml");
   const [bookingPageSource, travelPlanSource, travelPlanAttachmentsSource] = await Promise.all([
@@ -2343,7 +2347,7 @@ test("offer editor preserves explicit zero tax rates and keeps zero-tax rows out
 
 test("booking page save orchestrates dirty sections through existing section endpoints", async () => {
   const bookingPageScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking.js");
-  const travelPlanModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan.js");
+  const travelPlanModulePath = travelPlanEditorCorePath();
   const [bookingSource, travelPlanSource] = await Promise.all([
     readFile(bookingPageScriptPath, "utf8"),
     readFile(travelPlanModulePath, "utf8")
@@ -2498,7 +2502,7 @@ test("offer editor persists only through explicit page save", async () => {
 test("booking page logs reload-time dirty diagnostics and core comparisons ignore inactive referral fields", async () => {
   const bookingPageModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking.js");
   const coreModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "core.js");
-  const travelPlanModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan.js");
+  const travelPlanModulePath = travelPlanEditorCorePath();
   const travelPlanHelpersModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan_helpers.js");
   const [bookingPageSource, coreSource, travelPlanSource, travelPlanHelpersSource] = await Promise.all([
     readFile(bookingPageModulePath, "utf8"),
@@ -2564,7 +2568,7 @@ test("standalone generated offer controls are removed from the booking page", as
 
 test("persons and travel plan editors no longer autosave from local interactions while service image changes use clean-state mutations", async () => {
   const personsModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "persons.js");
-  const travelPlanModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan.js");
+  const travelPlanModulePath = travelPlanEditorCorePath();
   const travelPlanImagesModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan_images.js");
   const personsSource = await readFile(personsModulePath, "utf8");
   const travelPlanSource = await readFile(travelPlanModulePath, "utf8");
@@ -2723,7 +2727,7 @@ test("booking page wires the dedicated travel-plan module and section", async ()
   const bookingPageModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking.js");
   const bookingPageDataModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking_page_data.js");
   const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
-  const travelPlanModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan.js");
+  const travelPlanModulePath = travelPlanEditorCorePath();
   const moduleSource = await readFile(bookingPageModulePath, "utf8");
   const dataModuleSource = await readFile(bookingPageDataModulePath, "utf8");
   const pageSource = await readFile(bookingPagePath, "utf8");
@@ -2777,7 +2781,7 @@ test("booking page wires the dedicated travel-plan module and section", async ()
 });
 
 test("travel-plan module preserves add/remove/reorder editing helpers", async () => {
-  const travelPlanModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan.js");
+  const travelPlanModulePath = travelPlanEditorCorePath();
   const travelPlanHelpersPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan_helpers.js");
   const generatedCatalogsPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "shared", "generated_catalogs.js");
   const source = await readFile(travelPlanModulePath, "utf8");
@@ -2877,7 +2881,7 @@ test("travel-plan service image subtitle stays wired across model, API, backend,
   const openApiPath = path.resolve(__dirname, "..", "..", "..", "api", "generated", "openapi.yaml");
   const backendPath = path.resolve(__dirname, "..", "..", "..", "backend", "app", "src", "domain", "travel_plan.js");
   const helperPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan_helpers.js");
-  const uiPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan.js");
+  const uiPath = travelPlanEditorCorePath();
   const [modelSource, openApiSource, backendSource, helperSource, uiSource] = await Promise.all([
     readFile(modelPath, "utf8"),
     readFile(openApiPath, "utf8"),
@@ -2918,7 +2922,7 @@ test("travel-plan day date presets stay wired across model, API, backend, and UI
   const openApiPath = path.resolve(__dirname, "..", "..", "..", "api", "generated", "openapi.yaml");
   const backendPath = path.resolve(__dirname, "..", "..", "..", "backend", "app", "src", "domain", "travel_plan.js");
   const helperPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan_helpers.js");
-  const uiPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan.js");
+  const uiPath = travelPlanEditorCorePath();
   const travelPlanStylesPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "pages", "backend-booking-travel-plan.css");
   const [modelSource, openApiSource, backendSource, helperSource, uiSource, travelPlanStyles] = await Promise.all([
     readFile(modelPath, "utf8"),
@@ -4080,13 +4084,13 @@ test("runtime links use direct tours and settings pages instead of backend secti
   }
 });
 
-test("standard tours are wired through backend navigation, routes, and booking apply actions", async () => {
+test("booking travel-plan templates apply marketing tours through the tour endpoints", async () => {
   const navPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "shared", "nav.js");
   const pagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "standard-tours.html");
   const pageScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "standard_tours.js");
   const detailScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "standard_tour.js");
   const bookingLibraryPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan_service_library.js");
-  const bookingTravelPlanPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan.js");
+  const bookingTravelPlanPath = travelPlanEditorCorePath();
   const routesPath = path.resolve(__dirname, "..", "..", "..", "backend", "app", "src", "http", "routes.js");
   const handlersPath = path.resolve(__dirname, "..", "..", "..", "backend", "app", "src", "http", "handlers", "standard_tours.js");
   const domainPath = path.resolve(__dirname, "..", "..", "..", "backend", "app", "src", "domain", "standard_tours.js");
@@ -4119,9 +4123,11 @@ test("standard tours are wired through backend navigation, routes, and booking a
   assert.match(pageScriptSource, /const DESTINATION_COUNTRY_CODES = Object\.freeze\(\["VN", "TH", "KH", "LA"\]\)/, "The standard tours UI should limit destinations to the four supported country codes");
   assert.match(pageScriptSource, /expectedRolesAnyOf:\s*\[ROLES\.TOUR_EDITOR\]/, "The standard tours list page should require the atp_tour_editor role");
   assert.match(detailScriptSource, /expectedRolesAnyOf:\s*\[ROLES\.TOUR_EDITOR\]/, "The standard tour detail page should require the atp_tour_editor role");
-  assert.match(bookingLibrarySource, /bookingStandardTourApplyRequest/, "The booking travel-plan library should apply standard tours through the dedicated endpoint");
-  assert.doesNotMatch(bookingLibrarySource, /status:\s*"published"/, "The booking travel-plan library should not filter standard tours by status");
-  assert.match(bookingTravelPlanSource, /data-travel-plan-open-standard-tour-import/, "The booking travel-plan footer should expose a standard tour action");
+  assert.match(bookingLibrarySource, /bookingTourApplyRequest/, "The booking travel-plan library should apply marketing tours through the dedicated endpoint");
+  assert.doesNotMatch(bookingLibrarySource, /bookingStandardTourApplyRequest/, "The booking travel-plan library should no longer apply standard tours from the booking editor");
+  assert.match(bookingLibrarySource, /toursRequest\(/, "The booking travel-plan library should search marketing tours from the tours endpoint");
+  assert.match(bookingTravelPlanSource, /data-travel-plan-open-tour-import/, "The booking travel-plan footer should expose a marketing tour action");
+  assert.match(routesSource, /\/api\/v1\/bookings\/\{booking_id\}\/travel-plan\/tours\/\{tour_id\}\/apply/, "HTTP routes should include the marketing-tour apply endpoint");
   assert.match(routesSource, /\/api\/v1\/standard-tours/, "HTTP routes should include the standard tour endpoints");
   assert.doesNotMatch(handlersSource, /Only published standard tours can be applied/, "Standard tour apply handler should not enforce standard tour status");
   assert.match(domainSource, /enumValueSetFor\("CountryCode"\)[\s\S]*normalizeText\(value\)\.toUpperCase\(\)[\s\S]*COUNTRY_CODE_SET\.has\(value\)/, "Standard tour destination normalization should store CountryCode values instead of tour destination slugs");

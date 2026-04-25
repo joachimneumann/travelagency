@@ -988,8 +988,8 @@ textarea:focus-visible {
   border-radius: calc(var(--radius) - 1px) calc(var(--radius) - 1px) 0 0;
 }
 
-.tour-card:hover .tour-card__media img,
-.tour-card:focus-within .tour-card__media img {
+.tour-card__media:hover img,
+.tour-card__media:focus-within img {
   transform: scale(1.05);
   filter: saturate(1.03);
   border-radius: calc(var(--radius) - 1px);

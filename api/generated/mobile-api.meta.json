@@ -3,7 +3,7 @@
   "generatorVersion": "0.1.0",
   "modulePath": "travelagency.local/model",
   "defaultCurrency": "USD",
-  "generatedAt": "2026-04-24T16:15:38Z",
+  "generatedAt": "2026-04-24T17:13:25Z",
   "languages": [
     "en",
     "ar",
@@ -1016,6 +1016,29 @@
       ]
     },
     {
+      "key": "booking_tour_apply",
+      "path": "/api/v1/bookings/{booking_id}/travel-plan/tours/{tour_id}/apply",
+      "method": "POST",
+      "tag": "Tours",
+      "authenticated": true,
+      "requestType": "BookingTourApplyRequest",
+      "responseType": "BookingDetail",
+      "parameters": [
+        {
+          "name": "booking_id",
+          "location": "path",
+          "required": true,
+          "typeName": "Identifier"
+        },
+        {
+          "name": "tour_id",
+          "location": "path",
+          "required": true,
+          "typeName": "Identifier"
+        }
+      ]
+    },
+    {
       "key": "booking_travel_plan_service_import",
       "path": "/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/services/import",
       "method": "POST",
@@ -1611,6 +1634,81 @@
       "parameters": [
         {
           "name": "tour_id",
+          "location": "path",
+          "required": true,
+          "typeName": "Identifier"
+        }
+      ]
+    },
+    {
+      "key": "tour_travel_plan_update",
+      "path": "/api/v1/tours/{tour_id}/travel-plan",
+      "method": "PATCH",
+      "tag": "Tours",
+      "authenticated": true,
+      "requestType": "TourTravelPlanUpdateRequest",
+      "responseType": "TourResponse",
+      "parameters": [
+        {
+          "name": "tour_id",
+          "location": "path",
+          "required": true,
+          "typeName": "Identifier"
+        }
+      ]
+    },
+    {
+      "key": "tour_travel_plan_service_image_upload",
+      "path": "/api/v1/tours/{tour_id}/travel-plan/days/{day_id}/services/{service_id}/image",
+      "method": "POST",
+      "tag": "Tours",
+      "authenticated": true,
+      "requestType": "TravelPlanServiceImageUploadRequest",
+      "responseType": "TourResponse",
+      "parameters": [
+        {
+          "name": "tour_id",
+          "location": "path",
+          "required": true,
+          "typeName": "Identifier"
+        },
+        {
+          "name": "day_id",
+          "location": "path",
+          "required": true,
+          "typeName": "Identifier"
+        },
+        {
+          "name": "service_id",
+          "location": "path",
+          "required": true,
+          "typeName": "Identifier"
+        }
+      ]
+    },
+    {
+      "key": "tour_travel_plan_service_image_delete",
+      "path": "/api/v1/tours/{tour_id}/travel-plan/days/{day_id}/services/{service_id}/image",
+      "method": "DELETE",
+      "tag": "Tours",
+      "authenticated": true,
+      "requestType": "TravelPlanServiceImageDeleteRequest",
+      "responseType": "TourResponse",
+      "parameters": [
+        {
+          "name": "tour_id",
+          "location": "path",
+          "required": true,
+          "typeName": "Identifier"
+        },
+        {
+          "name": "day_id",
+          "location": "path",
+          "required": true,
+          "typeName": "Identifier"
+        },
+        {
+          "name": "service_id",
           "location": "path",
           "required": true,
           "typeName": "Identifier"

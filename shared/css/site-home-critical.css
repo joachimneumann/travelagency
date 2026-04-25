@@ -757,21 +757,18 @@ textarea:focus-visible {
   pointer-events: none;
 }
 
-.tour-card:hover .tour-card__media-zoom,
 .tour-card__media:hover .tour-card__media-zoom,
 .tour-card__media-button:focus-visible .tour-card__media-zoom,
 .tour-card__media-zoom:hover {
   transform: scale(1.05);
 }
 
-.tour-card:hover .tour-card__media-stage,
 .tour-card__media:hover .tour-card__media-stage,
 .tour-card__media-button:focus-visible .tour-card__media-stage,
 .tour-card__media-zoom:hover .tour-card__media-stage {
   border-radius: calc(var(--radius) - 1px);
 }
 
-.tour-card:hover .tour-card__media-layer.is-active,
 .tour-card__media:hover .tour-card__media-layer.is-active,
 .tour-card__media-button:focus-visible .tour-card__media-layer.is-active,
 .tour-card__media-zoom:hover .tour-card__media-layer.is-active {

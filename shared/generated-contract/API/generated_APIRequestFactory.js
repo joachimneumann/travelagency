@@ -726,6 +726,23 @@ export function bookingStandardTourApplyRequest({ baseURL = '', params = {}, que
   };
 }
 
+export function bookingTourApplyPath(params = {}) {
+  return buildPath("/api/v1/bookings/{booking_id}/travel-plan/tours/{tour_id}/apply", params);
+}
+
+export function bookingTourApplyRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = bookingTourApplyPath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "booking_tour_apply",
+    method: "POST",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
 export function bookingTravelPlanServiceImportPath(params = {}) {
   return buildPath("/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/services/import", params);
 }
@@ -1331,6 +1348,57 @@ export function tourTranslateFieldsRequest({ baseURL = '', params = {}, query = 
   return {
     key: "tour_translate_fields",
     method: "POST",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function tourTravelPlanUpdatePath(params = {}) {
+  return buildPath("/api/v1/tours/{tour_id}/travel-plan", params);
+}
+
+export function tourTravelPlanUpdateRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = tourTravelPlanUpdatePath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "tour_travel_plan_update",
+    method: "PATCH",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function tourTravelPlanServiceImageUploadPath(params = {}) {
+  return buildPath("/api/v1/tours/{tour_id}/travel-plan/days/{day_id}/services/{service_id}/image", params);
+}
+
+export function tourTravelPlanServiceImageUploadRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = tourTravelPlanServiceImageUploadPath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "tour_travel_plan_service_image_upload",
+    method: "POST",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function tourTravelPlanServiceImageDeletePath(params = {}) {
+  return buildPath("/api/v1/tours/{tour_id}/travel-plan/days/{day_id}/services/{service_id}/image", params);
+}
+
+export function tourTravelPlanServiceImageDeleteRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = tourTravelPlanServiceImageDeletePath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "tour_travel_plan_service_image_delete",
+    method: "DELETE",
     authenticated: true,
     url,
     headers,

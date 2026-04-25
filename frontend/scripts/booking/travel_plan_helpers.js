@@ -180,6 +180,15 @@ function normalizeTravelPlanAttachments(attachments) {
     }));
 }
 
+function normalizeTravelPlanVideo(video) {
+  const source = video && typeof video === "object" && !Array.isArray(video) ? video : {};
+  const normalized = {
+    storage_path: normalizeOptionalText(source.storage_path),
+    title: normalizeOptionalText(source.title)
+  };
+  return Object.values(normalized).some(Boolean) ? normalized : null;
+}
+
 function normalizeCopiedFrom(value) {
   const source = value && typeof value === "object" && !Array.isArray(value) ? value : null;
   if (!source) return null;
@@ -364,7 +373,9 @@ export function normalizeTravelPlanDraft(plan, options = {}) {
       };
     });
 
+  const video = normalizeTravelPlanVideo(source.video);
   return {
+    ...(video ? { video } : {}),
     days,
     attachments: normalizeTravelPlanAttachments(source.attachments)
   };
