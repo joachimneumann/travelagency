@@ -588,8 +588,8 @@ Styling and content:
 - `shared/css/pages/backend-booking-travel-plan.css`
 - `frontend/data/i18n/backend/en.json`
 - `frontend/data/i18n/backend/vi.json`
-- `deploy/Caddyfile`
-- `deploy/Caddyfile.local`
+- `deploy-config/Caddyfile`
+- `deploy-config/Caddyfile.local`
 - `content/tours`
 - `content/standard_tours`
 

@@ -194,7 +194,7 @@ cd /home/asiatravelplan/travelagency
 
 The repo now includes:
 - `docker-compose.staging.yml`
-- `deploy/Caddyfile`
+- `deploy-config/Caddyfile`
 - `.env.staging.example`
 - `scripts/deploy_staging.sh`
 
@@ -207,7 +207,7 @@ cp .env.staging.example .env
 
 ## 8) Review the included Caddy routing
 
-The included `deploy/Caddyfile` does three things:
+The included `deploy-config/Caddyfile` does three things:
 - serves the static website on `staging.asiatravelplan.com`
 - proxies `/auth/*`, `/api/*`, and `/public/v1/*` from `staging.asiatravelplan.com` to the backend
 - exposes direct service hosts for `api-staging.asiatravelplan.com` and `auth-staging.asiatravelplan.com`

@@ -9,6 +9,7 @@ readonly ALLOWED_ROOT_LEVEL_FILES=(
   "docker-compose.local-caddy.yml"
   "docker-compose.local-keycloak.yml"
   "docker-compose.staging.yml"
+  "deploy"
   "robots-staging.txt"
   "site.webmanifest"
 )
@@ -123,7 +124,7 @@ default_stage_paths_for_target() {
         api/generated \
         assets \
         backend/app \
-        deploy/Caddyfile \
+        deploy-config/Caddyfile \
         documentation \
         frontend \
         model \
@@ -133,7 +134,7 @@ default_stage_paths_for_target() {
     keycloak)
       printf '%s\n' \
         backend/keycloak-theme \
-        deploy/Caddyfile \
+        deploy-config/Caddyfile \
         scripts
       ;;
     all)

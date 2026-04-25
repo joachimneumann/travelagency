@@ -166,8 +166,8 @@ Local helper compose files:
 - `docker-compose.local-keycloak.yml`
 
 Reverse proxy configs:
-- `deploy/Caddyfile`
-- `deploy/Caddyfile.local`
+- `deploy-config/Caddyfile`
+- `deploy-config/Caddyfile.local`
 
 Main local scripts:
 - `scripts/local/deploy_local_all.sh`

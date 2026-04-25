@@ -3884,7 +3884,7 @@ test("booking travel-plan translate contract accepts explicit source and target 
 test("backend list pages have dedicated entrypoints and are served by caddy", async () => {
   const repoRoot = path.resolve(__dirname, "..", "..", "..");
   const frontendRoot = path.resolve(__dirname, "..", "..", "..", "frontend");
-  const deployRoot = path.resolve(__dirname, "..", "..", "..", "deploy");
+  const deployRoot = path.resolve(__dirname, "..", "..", "..", "deploy-config");
   const [
     bookingsHtml,
     bookingHtml,

@@ -18,7 +18,7 @@ Before this migration, production still uses the placeholder setup:
 - `/app-home.html` used to serve the real homepage only after the temporary
   `/production-access/check` forward-auth check.
 - production deploy wrappers used to call
-  `scripts/deploy/deploy_static_website.sh`.
+  `scripts/deploy_static_website.sh`.
 - `docker-compose.caddy.yml` used to mount `/srv/placeholder:/placeholder:ro`.
 
 Do not use this document as a normal production deploy checklist until the
@@ -102,7 +102,7 @@ Chosen compatibility behavior:
    - End the production site block with a `404` response for unmatched paths.
    - Keep `hide` rules for sensitive repo paths wherever `file_server` is used.
    - Confirm these paths return `404`: `/.env`, `/.git/config`,
-     `/backend/app/src/server.js`, `/deploy/Caddyfile`, and
+     `/backend/app/src/server.js`, `/deploy-config/Caddyfile`, and
      `/documentation/first_deployment.md`.
 
 3. Remove placeholder mounts.
@@ -111,9 +111,9 @@ Chosen compatibility behavior:
      longer needed.
 
 4. Stop publishing the placeholder bundle.
-   - Remove calls to `scripts/deploy/deploy_static_website.sh` from all
+   - Remove calls to `scripts/deploy_static_website.sh` from all
      production deploy wrappers.
-   - Retire or delete `scripts/deploy/deploy_static_website.sh`.
+   - Retire or delete `scripts/deploy_static_website.sh`.
    - Ensure `./deploy_frontend` on `/srv/asiatravelplan` only regenerates
      homepage assets and does not copy anything into `/srv/placeholder`.
 
@@ -127,7 +127,7 @@ Chosen compatibility behavior:
    - `scripts/production/deploy_production_all.sh` should run
      `scripts/deploy/update_production.sh all` and
      `scripts/production/deploy_production_caddy.sh`. It must not call
-     `scripts/deploy/deploy_static_website.sh`.
+     `scripts/deploy_static_website.sh`.
    - Do not add a separate manual homepage asset generation step to the
      production deploy sequence. `scripts/deploy/update_production.sh all`
      already regenerates homepage assets.
@@ -178,7 +178,7 @@ Validate Caddy before reloading production:
 
 ```bash
 docker run --rm \
-  -v "$PWD/deploy/Caddyfile:/etc/caddy/Caddyfile:ro" \
+  -v "$PWD/deploy-config/Caddyfile:/etc/caddy/Caddyfile:ro" \
   caddy:2 \
   caddy validate --config /etc/caddy/Caddyfile
 ```
@@ -198,7 +198,7 @@ Run an exposure scan on the Caddyfile and review every production `file_server`
 block:
 
 ```bash
-rg -n "root \* /production-app|file_server|respond 404|hide |backend-access" deploy/Caddyfile
+rg -n "root \* /production-app|file_server|respond 404|hide |backend-access" deploy-config/Caddyfile
 ```
 
 The production site must not have a catch-all `file_server` rooted at
@@ -252,7 +252,7 @@ Before changing public routing, preserve the current runtime Caddy files:
 
 ```bash
 cd /srv/asiatravelplan-public
-cp deploy/Caddyfile deploy/Caddyfile.before-public-homepage
+cp deploy-config/Caddyfile deploy-config/Caddyfile.before-public-homepage
 cp docker-compose.caddy.yml docker-compose.caddy.yml.before-public-homepage
 ```
 
@@ -301,7 +301,7 @@ curl -I https://asiatravelplan.com/placeholder-assets/styles.css
 curl -I https://asiatravelplan.com/app-home.html
 curl -I https://asiatravelplan.com/.env
 curl -I https://asiatravelplan.com/backend/app/src/server.js
-curl -I https://asiatravelplan.com/deploy/Caddyfile
+curl -I https://asiatravelplan.com/deploy-config/Caddyfile
 ```
 
 Expected results:
@@ -354,7 +354,7 @@ still exist:
 
 ```bash
 cd /srv/asiatravelplan-public
-cp deploy/Caddyfile.before-public-homepage deploy/Caddyfile
+cp deploy-config/Caddyfile.before-public-homepage deploy-config/Caddyfile
 cp docker-compose.caddy.yml.before-public-homepage docker-compose.caddy.yml
 docker compose -p asiatravelplan-public \
   --env-file /srv/asiatravelplan/.env \

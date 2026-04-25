@@ -4,10 +4,10 @@ set -euo pipefail
 EXPECTED_HOSTNAME="${EXPECTED_HOSTNAME:-atp}"
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 CADDY_ROOT="${CADDY_ROOT:-/srv/asiatravelplan-public}"
-SOURCE_CADDYFILE="${SOURCE_CADDYFILE:-$ROOT_DIR/deploy/Caddyfile}"
+SOURCE_CADDYFILE="${SOURCE_CADDYFILE:-$ROOT_DIR/deploy-config/Caddyfile}"
 SOURCE_CADDY_COMPOSE_FILE="${SOURCE_CADDY_COMPOSE_FILE:-$ROOT_DIR/docker-compose.caddy.yml}"
 CADDY_COMPOSE_FILE="${CADDY_COMPOSE_FILE:-$CADDY_ROOT/docker-compose.caddy.yml}"
-RUNTIME_CADDYFILE="${RUNTIME_CADDYFILE:-$CADDY_ROOT/deploy/Caddyfile}"
+RUNTIME_CADDYFILE="${RUNTIME_CADDYFILE:-$CADDY_ROOT/deploy-config/Caddyfile}"
 ENV_FILE="${ENV_FILE:-$ROOT_DIR/.env}"
 CADDY_PROJECT_NAME="${CADDY_PROJECT_NAME:-asiatravelplan-public}"
 
@@ -21,10 +21,10 @@ Usage:
 Environment overrides:
   EXPECTED_HOSTNAME       Hostname required for execution (default: atp)
   CADDY_ROOT              Runtime root for the shared public Caddy stack (default: /srv/asiatravelplan-public)
-  SOURCE_CADDYFILE        Source Caddy config file in the checkout (default: deploy/Caddyfile)
+  SOURCE_CADDYFILE        Source Caddy config file in the checkout (default: deploy-config/Caddyfile)
   SOURCE_CADDY_COMPOSE_FILE Source compose file in the checkout (default: docker-compose.caddy.yml)
   CADDY_COMPOSE_FILE      Runtime compose file path (default: /srv/asiatravelplan-public/docker-compose.caddy.yml)
-  RUNTIME_CADDYFILE       Runtime Caddyfile path (default: /srv/asiatravelplan-public/deploy/Caddyfile)
+  RUNTIME_CADDYFILE       Runtime Caddyfile path (default: /srv/asiatravelplan-public/deploy-config/Caddyfile)
   ENV_FILE                Env file passed to docker compose (default: .env)
 EOF
 }
@@ -61,7 +61,7 @@ if ! command -v docker >/dev/null 2>&1; then
   exit 1
 fi
 
-mkdir -p "$CADDY_ROOT/deploy"
+mkdir -p "$(dirname "$RUNTIME_CADDYFILE")"
 cp "$SOURCE_CADDYFILE" "$RUNTIME_CADDYFILE"
 cp "$SOURCE_CADDY_COMPOSE_FILE" "$CADDY_COMPOSE_FILE"
 

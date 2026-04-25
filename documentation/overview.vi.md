@@ -241,7 +241,7 @@ Repository-root wrappers cũng tồn tại:
 ./deploy_frontend
 ./deploy_backend
 ./deploy_keycloak
-./deploy/deploy
+./deploy
 ```
 
 Chúng dispatch khác nhau tùy theo việc được chạy từ local checkout, staging checkout hay production checkout.

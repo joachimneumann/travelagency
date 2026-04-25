@@ -10,7 +10,7 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./deploy-config/Caddyfile:/etc/caddy/Caddyfile:ro
       - /srv/asiatravelplan-staging:/srv:ro
       - /srv/asiatravelplan:/production-app:ro
       - caddy_data:/data

@@ -32,7 +32,7 @@ Common entry points:
 ./deploy_backend
 ./deploy_backend_frontend
 ./deploy_keycloak
-./deploy/deploy
+./deploy
 
 ./scripts/local/deploy_local_all.sh
 ./scripts/local/deploy_local_backend.sh
@@ -105,7 +105,7 @@ The repo root now includes five wrapper commands:
 ./deploy_backend
 ./deploy_backend_frontend
 ./deploy_keycloak
-./deploy/deploy
+./deploy
 ```
 
 They must be run from the checkout root itself, and they dispatch by current

@@ -35,7 +35,7 @@ Read these in order:
   - currently reduced to bootstrap, Keycloak login, session restoration, and a minimal authenticated shell
 - Deployment:
   - `docker-compose.staging.yml`
-  - `deploy/Caddyfile`
+  - `deploy-config/Caddyfile`
   - `scripts/staging/deploy_staging_all.sh`
 
 ## Repository Map
