@@ -1043,20 +1043,16 @@ function renderTravelPlanTranslationReview(plan, targetLang) {
 function renderTravelPlanTranslationPanel() {
   if (!els.travelPlanTranslationPanel) return;
   const plan = currentTravelPlanForTranslation();
-  const languages = travelPlanTranslationLanguages();
   const targets = travelPlanTranslationTargetLanguages();
   const sourceFields = collectTravelPlanTranslationFields(plan, TRAVEL_PLAN_SOURCE_LANG);
   const canTranslate = state.permissions.canEditTours && sourceFields.length > 0 && targets.length > 0;
-  const rows = languages.map((lang) => {
+  const rows = targets.map((lang) => {
     const summary = travelPlanTranslationStatus(plan, lang);
-    const isSource = lang === TRAVEL_PLAN_SOURCE_LANG;
-    const isReviewOpen = state.activeTravelPlanTranslationLang === lang && !isSource;
-    const progress = isSource
-      ? backendT("tour.travel_plan_translation.source_progress", "{count} source fields", { count: String(summary.totalFields) })
-      : backendT("tour.travel_plan_translation.progress", "{translated}/{total} fields", {
-          translated: String(summary.translatedFields),
-          total: String(summary.totalFields)
-        });
+    const isReviewOpen = state.activeTravelPlanTranslationLang === lang;
+    const progress = backendT("tour.travel_plan_translation.progress", "{translated}/{total} fields", {
+      translated: String(summary.translatedFields),
+      total: String(summary.totalFields)
+    });
     return `
       <div class="tour-travel-plan-translation__row">
         <div>
@@ -1066,14 +1062,12 @@ function renderTravelPlanTranslationPanel() {
         <span class="micro tour-travel-plan-translation__status">${escapeHtml(travelPlanTranslationStatusLabel(summary.status))}</span>
         <span class="micro">${escapeHtml(progress)}</span>
         <div class="tour-travel-plan-translation__actions">
-          ${isSource ? "" : `
-            <button class="btn btn-ghost" type="button" data-tour-travel-plan-translate-lang="${escapeHtml(lang)}" ${canTranslate ? "" : "disabled"}>
-              ${escapeHtml(summary.status === "missing" ? backendT("tour.travel_plan_translation.translate", "Translate") : backendT("tour.travel_plan_translation.update", "Update"))}
-            </button>
-            <button class="btn btn-ghost" type="button" data-tour-travel-plan-review-lang="${escapeHtml(lang)}" ${summary.totalFields ? "" : "disabled"}>
-              ${escapeHtml(isReviewOpen ? backendT("tour.travel_plan_translation.hide_review", "Hide") : backendT("tour.travel_plan_translation.review", "Review"))}
-            </button>
-          `}
+          <button class="btn btn-ghost" type="button" data-tour-travel-plan-translate-lang="${escapeHtml(lang)}" ${canTranslate ? "" : "disabled"}>
+            ${escapeHtml(summary.status === "missing" ? backendT("tour.travel_plan_translation.translate", "Translate") : backendT("tour.travel_plan_translation.update", "Update"))}
+          </button>
+          <button class="btn btn-ghost" type="button" data-tour-travel-plan-review-lang="${escapeHtml(lang)}" ${summary.totalFields ? "" : "disabled"}>
+            ${escapeHtml(isReviewOpen ? backendT("tour.travel_plan_translation.hide_review", "Hide") : backendT("tour.travel_plan_translation.review", "Review"))}
+          </button>
         </div>
         ${isReviewOpen ? renderTravelPlanTranslationReview(plan, lang) : ""}
       </div>
@@ -1084,7 +1078,6 @@ function renderTravelPlanTranslationPanel() {
     <div class="tour-travel-plan-translation__header">
       <div class="tour-travel-plan-translation__copy">
         <strong>${escapeHtml(backendT("tour.travel_plan_translation.title", "Translate the English website content and travel plan"))}</strong>
-        <span class="micro">${escapeHtml(backendT("tour.travel_plan_translation.help", "Keep the normal editor in English, then translate and review one customer language at a time."))}</span>
       </div>
       <div class="tour-travel-plan-translation__actions">
         <button class="btn btn-ghost" type="button" data-tour-travel-plan-translate-missing ${canTranslate ? "" : "disabled"}>

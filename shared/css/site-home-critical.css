@@ -44,8 +44,8 @@
 
 .brand-logo {
   display: block;
-  width: 165px;
-  max-width: min(40vw, 165px);
+  width: 288px;
+  max-width: 288px;
   height: auto;
 }
 
