@@ -115,6 +115,16 @@ IR: {
 			]
 		},
 		{
+			name:       "TourVideo"
+			domain:     "aux"
+			module:     "json"
+			sourceType: "json.#TourVideo"
+			fields: [
+				{name: "storage_path", kind: "scalar", typeName: "string", required: false},
+				{name: "title", kind: "scalar", typeName: "string", required: false},
+			]
+		},
+		{
 			name:       "Tour"
 			domain:     "aux"
 			module:     "json"
@@ -130,19 +140,10 @@ IR: {
 				{name: "short_description", kind: "scalar", typeName: "string", required: false},
 				{name: "pictures", kind: "scalar", typeName: "string", required: false, isArray: true},
 				{name: "image", kind: "scalar", typeName: "string", required: false},
+				{name: "video", kind: "entity", typeName: "TourVideo", required: false},
 				{name: "travel_plan", kind: "entity", typeName: "TravelPlan", required: false},
 				{name: "created_at", kind: "scalar", typeName: "Timestamp", required: false},
 				{name: "updated_at", kind: "scalar", typeName: "Timestamp", required: false},
-			]
-		},
-		{
-			name:       "TravelPlanVideo"
-			domain:     "booking"
-			module:     "database"
-			sourceType: "database.#TravelPlanVideo"
-			fields: [
-				{name: "storage_path", kind: "scalar", typeName: "string", required: false},
-				{name: "title", kind: "scalar", typeName: "string", required: false},
 			]
 		},
 		{
@@ -226,7 +227,6 @@ IR: {
 			module:     "database"
 			sourceType: "database.#TravelPlan"
 			fields: [
-				{name: "video", kind: "entity", typeName: "TravelPlanVideo", required: false},
 				{name: "days", kind: "entity", typeName: "TravelPlanDay", required: false, isArray: true},
 			]
 		},

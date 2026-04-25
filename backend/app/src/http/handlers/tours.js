@@ -188,6 +188,7 @@ export function createTourHandlers(deps) {
       );
     }
     if (payload.image !== undefined) next.image = toTourImagePublicUrl(payload.image);
+    if (payload.video !== undefined) next.video = payload.video;
     if (payload.travel_plan !== undefined) {
       next.travel_plan = normalizeMarketingTourTravelPlan(payload.travel_plan);
     }
@@ -332,24 +333,17 @@ export function createTourHandlers(deps) {
     if (!tourId) return null;
     const videoPath = resolveTourVideoDiskPath(tourId);
     if (!videoPath || !existsSync(videoPath)) return null;
+    const storedVideo = tour?.video && typeof tour.video === "object" && !Array.isArray(tour.video)
+      ? tour.video
+      : {};
     return {
-      filename: TOUR_REEL_VIDEO_FILENAME,
+      filename: normalizeText(storedVideo.title) || TOUR_REEL_VIDEO_FILENAME,
       preview_url: buildTourVideoEditorPreviewUrl(tour)
     };
   }
 
   function buildTourTravelPlanEditorValue(tour) {
-    const plan = normalizeTourTravelPlan(tour?.travel_plan);
-    const reelVideo = buildTourReelVideoMeta(tour);
-    if (!reelVideo) return plan;
-    return {
-      ...plan,
-      video: {
-        ...(plan.video || {}),
-        storage_path: reelVideo.preview_url,
-        title: normalizeText(plan.video?.title) || reelVideo.filename
-      }
-    };
+    return normalizeTourTravelPlan(tour?.travel_plan);
   }
 
   function tourPictureName(value) {
@@ -1255,14 +1249,12 @@ export function createTourHandlers(deps) {
     }
 
     const current = normalizeTourForStorage(tours[index]);
-    const travelPlan = normalizeMarketingTourTravelPlan(current.travel_plan);
-    travelPlan.video = {
-      storage_path: `/api/v1/tours/${tourId}/video`,
-      title: filename
-    };
     const updated = normalizeTourForStorage({
       ...current,
-      travel_plan: travelPlan,
+      video: {
+        storage_path: `/api/v1/tours/${tourId}/video`,
+        title: filename
+      },
       updated_at: nowIso()
     });
     tours[index] = updated;
@@ -1353,11 +1345,9 @@ export function createTourHandlers(deps) {
     await rm(videoPath, { force: true });
 
     const current = normalizeTourForStorage(tours[index]);
-    const travelPlan = normalizeMarketingTourTravelPlan(current.travel_plan);
-    delete travelPlan.video;
+    delete current.video;
     const updated = normalizeTourForStorage({
       ...current,
-      travel_plan: travelPlan,
       updated_at: nowIso()
     });
     tours[index] = updated;

@@ -118,11 +118,38 @@ export function createBookingTravelPlanImagesModule(deps) {
   }
 
   function triggerTravelPlanServiceImagePicker(dayId, itemId) {
-    if (!state.permissions.canEditBooking || !els.travelPlanServiceImageInput) return;
-    els.travelPlanServiceImageInput.dataset.dayId = String(dayId || "").trim();
-    els.travelPlanServiceImageInput.dataset.itemId = String(itemId || "").trim();
+    const normalizedDayId = String(dayId || "").trim();
+    const normalizedItemId = String(itemId || "").trim();
+    if (!state.permissions.canEditBooking || !els.travelPlanServiceImageInput) {
+      console.warn("[travel-plan-service-image] Image picker blocked", {
+        can_edit: state.permissions.canEditBooking === true,
+        has_input: Boolean(els.travelPlanServiceImageInput),
+        day_id: normalizedDayId,
+        service_id: normalizedItemId
+      });
+      return;
+    }
+    console.info("[travel-plan-service-image] Opening image picker", {
+      booking_id: String(state.booking?.id || "").trim(),
+      day_id: normalizedDayId,
+      service_id: normalizedItemId
+    });
+    els.travelPlanServiceImageInput.dataset.dayId = normalizedDayId;
+    els.travelPlanServiceImageInput.dataset.itemId = normalizedItemId;
     els.travelPlanServiceImageInput.value = "";
     els.travelPlanServiceImageInput.click();
+  }
+
+  function serviceImageDebugPayload(dayId, itemId, extra = {}) {
+    const item = findDraftItem(dayId, itemId);
+    return {
+      booking_id: String(state.booking?.id || "").trim(),
+      day_id: String(dayId || "").trim(),
+      service_id: String(itemId || "").trim(),
+      service_found: Boolean(item),
+      image: resolveCurrentItemImage(item),
+      ...extra
+    };
   }
 
   async function handleTravelPlanServiceImageInputChange() {
@@ -131,8 +158,31 @@ export function createBookingTravelPlanImagesModule(deps) {
     const itemId = String(input?.dataset.itemId || "").trim();
     const file = Array.from(input?.files || [])[0] || null;
     if (input) input.value = "";
-    if (!dayId || !itemId || !file) return;
-    if (!(await ensureTravelPlanReadyForMutation())) return;
+    console.info("[travel-plan-service-image] Image input changed", {
+      booking_id: String(state.booking?.id || "").trim(),
+      day_id: dayId,
+      service_id: itemId,
+      has_file: Boolean(file),
+      filename: file?.name || ""
+    });
+    if (!dayId || !itemId || !file) {
+      console.warn("[travel-plan-service-image] Image upload skipped because input data is incomplete", {
+        booking_id: String(state.booking?.id || "").trim(),
+        day_id: dayId,
+        service_id: itemId,
+        has_file: Boolean(file)
+      });
+      return;
+    }
+    if (!(await ensureTravelPlanReadyForMutation())) {
+      console.warn("[travel-plan-service-image] Image upload blocked because travel plan is not ready for mutation", serviceImageDebugPayload(dayId, itemId));
+      return;
+    }
+    console.info("[travel-plan-service-image] Starting image upload", serviceImageDebugPayload(dayId, itemId, {
+      filename: file.name,
+      size_bytes: file.size,
+      mime_type: file.type
+    }));
     travelPlanStatus(
       bookingT("booking.travel_plan.uploading_image_progress", "Uploading image {current}/{total}...", {
         current: 1,
@@ -159,10 +209,24 @@ export function createBookingTravelPlanImagesModule(deps) {
       method: request.method,
       body: request.body
     });
-    if (!result?.booking) return;
+    if (!result?.booking) {
+      console.warn("[travel-plan-service-image] Image upload response did not include booking payload", serviceImageDebugPayload(dayId, itemId, {
+        response_keys: result && typeof result === "object" ? Object.keys(result) : []
+      }));
+      return;
+    }
+    const responseItem = (Array.isArray(result.booking?.travel_plan?.days) ? result.booking.travel_plan.days : [])
+      .find((day) => String(day?.id || "").trim() === dayId)
+      ?.services
+      ?.find((item) => String(item?.id || "").trim() === itemId);
+    console.info("[travel-plan-service-image] Image upload response received", serviceImageDebugPayload(dayId, itemId, {
+      response_image: resolveCurrentItemImage(responseItem)
+    }));
     applyTravelPlanMutationBooking(result.booking, { preserveCollapsedState: true });
+    console.info("[travel-plan-service-image] Image upload applied to local draft", serviceImageDebugPayload(dayId, itemId));
     await loadActivities();
     travelPlanStatus(bookingT("booking.travel_plan.image_uploaded", "Image uploaded."), "success");
+    console.info("[travel-plan-service-image] Image upload completed successfully", serviceImageDebugPayload(dayId, itemId));
   }
 
   async function removeTravelPlanServiceImage(dayId, itemId, imageId) {

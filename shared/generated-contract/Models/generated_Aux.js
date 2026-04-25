@@ -20,7 +20,8 @@ import { SHARED_FIELD_DEFS, schemaField, validateShape } from './generated_Schem
     schemaField({"name":"short_description","required":false,"wireName":"short_description"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"pictures","required":false,"wireName":"pictures"}, SHARED_FIELD_DEFS.FIELD_7),
     schemaField({"name":"image","required":false,"wireName":"image"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"travel_plan","required":false,"wireName":"travel_plan"}, SHARED_FIELD_DEFS.FIELD_42),
+    schemaField({"name":"video","required":false,"wireName":"video"}, SHARED_FIELD_DEFS.FIELD_42),
+    schemaField({"name":"travel_plan","required":false,"wireName":"travel_plan"}, SHARED_FIELD_DEFS.FIELD_43),
     schemaField({"name":"created_at","required":false,"wireName":"created_at"}, SHARED_FIELD_DEFS.FIELD_5),
     schemaField({"name":"updated_at","required":false,"wireName":"updated_at"}, SHARED_FIELD_DEFS.FIELD_5)
         ]

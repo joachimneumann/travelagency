@@ -6,6 +6,11 @@ import (
 	enums "travelagency.local/model/enums"
 )
 
+#TourVideo: {
+	storage_path?: string
+	title?:        string
+}
+
 #Tour: {
 	id:     common.#Identifier
 	title?: string
@@ -19,6 +24,7 @@ import (
 	short_description_i18n?: [string]: string
 	pictures?: [...string]
 	image?:       string
+	video?:       #TourVideo
 	travel_plan?: databaseModel.#TravelPlan
 	created_at?:  common.#Timestamp
 	updated_at?:  common.#Timestamp

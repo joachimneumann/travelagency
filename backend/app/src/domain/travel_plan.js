@@ -212,17 +212,6 @@ function buildDefaultBookingTravelPlan() {
   };
 }
 
-function normalizeTravelPlanVideo(rawVideo) {
-  const source = rawVideo && typeof rawVideo === "object" && !Array.isArray(rawVideo)
-    ? rawVideo
-    : {};
-  const normalized = {
-    storage_path: normalizeOptionalText(source.storage_path),
-    title: normalizeOptionalText(source.title)
-  };
-  return Object.values(normalized).some(Boolean) ? normalized : null;
-}
-
 function normalizeItemTiming(rawItem) {
   const timing_kind = normalizeTimingKind(rawItem?.timing_kind);
   const time_label = normalizeOptionalText(rawItem?.time_label);
@@ -430,9 +419,7 @@ export function createTravelPlanHelpers() {
       ...options,
       flatMode
     }).map((day) => stripBookingFieldsFromTravelPlanDay(day));
-    const video = normalizeTravelPlanVideo(source.video);
     return normalizeTravelPlanTranslationMeta({
-      ...(video ? { video } : {}),
       days
     });
   }
@@ -451,9 +438,7 @@ export function createTravelPlanHelpers() {
       flatMode
     });
 
-    const video = normalizeTravelPlanVideo(source.video);
     return normalizeTravelPlanTranslationMeta({
-      ...(video ? { video } : {}),
       destinations: normalizeCountryCodes(source.destinations),
       days,
       attachments: normalizeTravelPlanAttachments(source.attachments)

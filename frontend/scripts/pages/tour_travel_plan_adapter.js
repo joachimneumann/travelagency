@@ -42,6 +42,28 @@ function rewriteTourTravelPlanMutationUrl(urlLike, tourId) {
   return withBackendLang(`${url.pathname}${url.search}`);
 }
 
+function parseTravelPlanServiceImageMutation(urlLike) {
+  const url = new URL(urlLike, window.location.origin);
+  const imageMatch = url.pathname.match(/^\/api\/v1\/bookings\/[^/]+\/travel-plan\/days\/([^/]+)\/services\/([^/]+)\/image$/);
+  if (!imageMatch) return null;
+  return {
+    dayId: decodeURIComponent(imageMatch[1]),
+    serviceId: decodeURIComponent(imageMatch[2])
+  };
+}
+
+function findTravelPlanServiceImage(plan, dayId, serviceId) {
+  const normalizedDayId = normalizeText(dayId);
+  const normalizedServiceId = normalizeText(serviceId);
+  const days = Array.isArray(plan?.days) ? plan.days : [];
+  const day = days.find((item) => normalizeText(item?.id) === normalizedDayId);
+  const service = (Array.isArray(day?.services) ? day.services : [])
+    .find((item) => normalizeText(item?.id) === normalizedServiceId);
+  return service?.image && typeof service.image === "object" && !Array.isArray(service.image)
+    ? service.image
+    : null;
+}
+
 function rewriteTourTravelPlanMutationBody(urlLike, body) {
   const url = new URL(urlLike, window.location.origin);
   if (!/^\/api\/v1\/bookings\/[^/]+\/travel-plan$/.test(url.pathname)) {
@@ -69,18 +91,45 @@ export function createTourTravelPlanAdapter({
   }
 
   async function fetchTourTravelPlanMutation(url, options = {}) {
+    const serviceImageMutation = parseTravelPlanServiceImageMutation(url);
     const rewrittenUrl = rewriteTourTravelPlanMutationUrl(url, state.id || state.booking?.id);
     const rewrittenBody = rewriteTourTravelPlanMutationBody(url, options.body);
+    if (serviceImageMutation) {
+      console.info("[tour-travel-plan-image] Sending service image mutation", {
+        tour_id: normalizeText(state.id || state.booking?.id),
+        day_id: serviceImageMutation.dayId,
+        service_id: serviceImageMutation.serviceId,
+        method: options.method || "GET",
+        url: rewrittenUrl
+      });
+    }
     const result = await fetchApi(rewrittenUrl, {
       method: options.method || "GET",
       body: rewrittenBody
     });
     if (result?.tour) {
+      if (serviceImageMutation) {
+        console.info("[tour-travel-plan-image] Service image mutation returned tour", {
+          tour_id: normalizeText(result.tour?.id || state.id || state.booking?.id),
+          day_id: serviceImageMutation.dayId,
+          service_id: serviceImageMutation.serviceId,
+          image: findTravelPlanServiceImage(result.tour?.travel_plan, serviceImageMutation.dayId, serviceImageMutation.serviceId),
+          travel_plan_days: Array.isArray(result.tour?.travel_plan?.days) ? result.tour.travel_plan.days.length : 0
+        });
+      }
       if (typeof onTourMutation === "function") onTourMutation(result.tour);
       return {
         ...result,
         booking: fakeBookingFromTour(result.tour, state.id)
       };
+    }
+    if (serviceImageMutation) {
+      console.warn("[tour-travel-plan-image] Service image mutation did not return a tour", {
+        tour_id: normalizeText(state.id || state.booking?.id),
+        day_id: serviceImageMutation.dayId,
+        service_id: serviceImageMutation.serviceId,
+        response_keys: result && typeof result === "object" ? Object.keys(result) : []
+      });
     }
     return result;
   }

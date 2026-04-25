@@ -279,7 +279,6 @@ export function createBookingTravelPlanModule(ctx) {
   function normalizeTravelPlanForEnabledFeatures(plan) {
     const source = plan && typeof plan === "object" && !Array.isArray(plan) ? plan : {};
     const next = {
-      ...(source.video ? { video: source.video } : {}),
       days: (Array.isArray(source.days) ? source.days : []).map((day, dayIndex) => {
         const sourceDay = day && typeof day === "object" && !Array.isArray(day) ? day : {};
         const nextDay = {
@@ -1761,9 +1760,6 @@ export function createBookingTravelPlanModule(ctx) {
     });
     if (allowPdfs) {
       draft.attachments = Array.isArray(state.travelPlanDraft?.attachments) ? state.travelPlanDraft.attachments : [];
-    }
-    if (state.travelPlanDraft?.video) {
-      draft.video = state.travelPlanDraft.video;
     }
     state.travelPlanDraft = normalizeTravelPlanState(draft);
     return state.travelPlanDraft;

@@ -27,6 +27,17 @@ function hasLocalizedContent(value) {
   });
 }
 
+function normalizeTourVideo(value) {
+  const source = value && typeof value === "object" && !Array.isArray(value)
+    ? value
+    : {};
+  const normalized = {
+    storage_path: normalizeText(source.storage_path),
+    title: normalizeText(source.title)
+  };
+  return Object.values(normalized).some(Boolean) ? normalized : null;
+}
+
 export function migratePersistedTourState(tour) {
   if (!tour || typeof tour !== "object") return false;
   let changed = false;
@@ -40,6 +51,17 @@ export function migratePersistedTourState(tour) {
       tour.pictures = [legacyImage];
       changed = true;
     }
+  }
+  const travelPlan = tour.travel_plan && typeof tour.travel_plan === "object" && !Array.isArray(tour.travel_plan)
+    ? tour.travel_plan
+    : null;
+  if (travelPlan && Object.prototype.hasOwnProperty.call(travelPlan, "video")) {
+    const legacyVideo = normalizeTourVideo(travelPlan.video);
+    if (legacyVideo && !normalizeTourVideo(tour.video)) {
+      tour.video = legacyVideo;
+    }
+    delete travelPlan.video;
+    changed = true;
   }
   return changed;
 }
@@ -106,25 +128,43 @@ export function createTourHelpers({ toursDir, safeInt, normalizeMarketingTourTra
     return tourStyleCodes(tour).map((code) => getTourStyleLabel(code, lang));
   }
 
-  function toTourImagePublicUrl(value) {
+  function splitAssetUrlSuffix(value) {
     const normalized = normalizeText(value);
-    if (!normalized) return "";
-    if (normalized.startsWith("/public/v1/tour-images/")) return normalized;
-    if (/^https?:\/\//i.test(normalized)) return normalized;
-    return `/public/v1/tour-images/${normalized.replace(/^\/+/, "")}`;
+    const match = normalized.match(/^([^?#]*)([?#].*)?$/);
+    return {
+      pathPart: match?.[1] || "",
+      suffix: match?.[2] || ""
+    };
   }
 
-  function normalizeTourPictureList(values, fallbackValue = "") {
+  function toTourImagePublicUrl(value, tourId = "") {
+    const normalized = normalizeText(value);
+    if (!normalized) return "";
+    if (/^https?:\/\//i.test(normalized)) return normalized;
+    const normalizedTourId = normalizeText(tourId);
+    const publicPrefix = "/public/v1/tour-images/";
+    const { pathPart, suffix } = splitAssetUrlSuffix(normalized);
+    const relativePath = pathPart.startsWith(publicPrefix)
+      ? pathPart.slice(publicPrefix.length).replace(/^\/+/, "")
+      : pathPart.replace(/^\/+/, "");
+    if (!relativePath) return "";
+    const scopedRelativePath = normalizedTourId && !relativePath.includes("/")
+      ? `${normalizedTourId}/${relativePath}`
+      : relativePath;
+    return `${publicPrefix}${scopedRelativePath}${suffix}`;
+  }
+
+  function normalizeTourPictureList(values, fallbackValue = "", tourId = "") {
     const items = Array.isArray(values)
       ? values
       : (values === undefined || values === null || values === "" ? [] : [values]);
     const normalizedPictures = items
-      .map((value) => toTourImagePublicUrl(value))
+      .map((value) => toTourImagePublicUrl(value, tourId))
       .filter(Boolean);
     if (normalizedPictures.length) {
       return Array.from(new Set(normalizedPictures));
     }
-    const fallbackPicture = toTourImagePublicUrl(fallbackValue);
+    const fallbackPicture = toTourImagePublicUrl(fallbackValue, tourId);
     return fallbackPicture ? [fallbackPicture] : [];
   }
 
@@ -142,6 +182,10 @@ export function createTourHelpers({ toursDir, safeInt, normalizeMarketingTourTra
     const next = {
       ...(tour && typeof tour === "object" ? tour : {})
     };
+    const hasExplicitVideo = Object.prototype.hasOwnProperty.call(next, "video");
+    const legacyTravelPlanVideo = next.travel_plan && typeof next.travel_plan === "object" && !Array.isArray(next.travel_plan)
+      ? next.travel_plan.video
+      : null;
     const legacyShortDescription = next.shortDescription;
     delete next.shortDescription;
     delete next.budget_lower_USD;
@@ -152,8 +196,11 @@ export function createTourHelpers({ toursDir, safeInt, normalizeMarketingTourTra
     );
     next.destinations = tourDestinationCodes(next);
     next.styles = tourStyleCodes(next);
-    next.pictures = normalizeTourPictureList(next.pictures, next.image);
+    next.pictures = normalizeTourPictureList(next.pictures, next.image, next.id);
     next.image = next.pictures[0] || "";
+    const video = normalizeTourVideo(next.video) || (hasExplicitVideo ? null : normalizeTourVideo(legacyTravelPlanVideo));
+    if (video) next.video = video;
+    else delete next.video;
     if (next.travel_plan !== undefined) {
       next.travel_plan = normalizeTourTravelPlan(next.travel_plan);
     }
@@ -211,6 +258,12 @@ export function createTourHelpers({ toursDir, safeInt, normalizeMarketingTourTra
       .filter((segment) => segment !== "." && segment !== "..")
       .join("/");
     if (!normalizedPath) return null;
+    if (!normalizedPath.includes("/")) {
+      const legacyTourId = path.parse(normalizedPath).name;
+      if (legacyTourId.startsWith("tour_")) {
+        return path.join(toursDir, legacyTourId, normalizedPath);
+      }
+    }
     return path.join(toursDir, normalizedPath);
   }
 

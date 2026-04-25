@@ -5,11 +5,6 @@ import (
 	enums "travelagency.local/model/enums"
 )
 
-#TravelPlanVideo: {
-	storage_path?: string
-	title?:        string
-}
-
 #TravelPlanServiceImageSourceAttribution: {
 	source_name?:  string
 	source_url?:   common.#Url | string
@@ -110,7 +105,6 @@ import (
 }
 
 #TravelPlan: {
-	video?: #TravelPlanVideo
 	days?: [...#TravelPlanDay]
 	...
 }
