@@ -940,6 +940,7 @@
   "booking.travel_plan.use_existing_plan": "Dùng lịch trình từ đặt chỗ khác",
   "booking.travel_plan.use_marketing_tour": "Dùng tour marketing",
   "booking.travel_plan.use_standard_tour": "Sử dụng chuyến tham quan tiêu chuẩn",
+  "booking.travel_plan.uploading_image_overlay": "Đang tải ảnh lên. Vui lòng đợi.",
   "booking.travel_plan.uploading_image_progress": "Đang tải lên ảnh {current} trong tổng số {total}...",
   "booking.travel_plan.uploading_pdf_progress": "Đang tải lên PDF {current}/{total}...",
   "booking.travel_plan.validation.day_id": "ID ngày trong kế hoạch hành trình là bắt buộc.",

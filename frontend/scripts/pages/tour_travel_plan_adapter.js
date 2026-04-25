@@ -1,4 +1,9 @@
 import { createTravelPlanEditorCore } from "../shared/travel_plan_editor_core.js";
+import {
+  tourTravelPlanServiceImageDeleteRequest,
+  tourTravelPlanServiceImageUploadRequest,
+  tourTravelPlanUpdateRequest
+} from "../../Generated/API/generated_APIRequestFactory.js";
 import { formatDateTime } from "../shared/api.js";
 import { initializeBookingSection, setBookingSectionOpen } from "../booking/sections.js";
 
@@ -8,6 +13,11 @@ function normalizeText(value) {
 
 function currentBackendLang() {
   return typeof window.backendI18n?.getLang === "function" ? window.backendI18n.getLang() : "";
+}
+
+function backendLangQuery() {
+  const lang = currentBackendLang();
+  return lang ? { lang } : {};
 }
 
 function withBackendLang(urlLike) {
@@ -29,22 +39,9 @@ function fakeBookingFromTour(tour, fallbackId = "") {
   };
 }
 
-function rewriteTourTravelPlanMutationUrl(urlLike, tourId) {
-  const url = new URL(urlLike, window.location.origin);
-  const normalizedTourId = encodeURIComponent(normalizeText(tourId));
-  const imageMatch = url.pathname.match(/^\/api\/v1\/bookings\/[^/]+\/travel-plan\/days\/([^/]+)\/services\/([^/]+)\/image$/);
-  if (imageMatch && normalizedTourId) {
-    return withBackendLang(`/api/v1/tours/${normalizedTourId}/travel-plan/days/${imageMatch[1]}/services/${imageMatch[2]}/image${url.search}`);
-  }
-  if (/^\/api\/v1\/bookings\/[^/]+\/travel-plan$/.test(url.pathname) && normalizedTourId) {
-    return withBackendLang(`/api/v1/tours/${normalizedTourId}/travel-plan${url.search}`);
-  }
-  return withBackendLang(`${url.pathname}${url.search}`);
-}
-
 function parseTravelPlanServiceImageMutation(urlLike) {
   const url = new URL(urlLike, window.location.origin);
-  const imageMatch = url.pathname.match(/^\/api\/v1\/bookings\/[^/]+\/travel-plan\/days\/([^/]+)\/services\/([^/]+)\/image$/);
+  const imageMatch = url.pathname.match(/^\/api\/v1\/(?:bookings|tours)\/[^/]+\/travel-plan\/days\/([^/]+)\/services\/([^/]+)\/image$/);
   if (!imageMatch) return null;
   return {
     dayId: decodeURIComponent(imageMatch[1]),
@@ -64,17 +61,6 @@ function findTravelPlanServiceImage(plan, dayId, serviceId) {
     : null;
 }
 
-function rewriteTourTravelPlanMutationBody(urlLike, body) {
-  const url = new URL(urlLike, window.location.origin);
-  if (!/^\/api\/v1\/bookings\/[^/]+\/travel-plan$/.test(url.pathname)) {
-    return body;
-  }
-  return {
-    travel_plan: body?.travel_plan || { days: [] },
-    actor: body?.actor
-  };
-}
-
 export function createTourTravelPlanAdapter({
   state,
   els,
@@ -82,7 +68,8 @@ export function createTourTravelPlanAdapter({
   fetchApi,
   escapeHtml,
   onDirtyChange,
-  onTourMutation
+  onTourMutation,
+  setPageOverlay
 }) {
   let core = null;
 
@@ -92,20 +79,19 @@ export function createTourTravelPlanAdapter({
 
   async function fetchTourTravelPlanMutation(url, options = {}) {
     const serviceImageMutation = parseTravelPlanServiceImageMutation(url);
-    const rewrittenUrl = rewriteTourTravelPlanMutationUrl(url, state.id || state.booking?.id);
-    const rewrittenBody = rewriteTourTravelPlanMutationBody(url, options.body);
+    const requestUrl = withBackendLang(url);
     if (serviceImageMutation) {
       console.info("[tour-travel-plan-image] Sending service image mutation", {
         tour_id: normalizeText(state.id || state.booking?.id),
         day_id: serviceImageMutation.dayId,
         service_id: serviceImageMutation.serviceId,
         method: options.method || "GET",
-        url: rewrittenUrl
+        url: requestUrl
       });
     }
-    const result = await fetchApi(rewrittenUrl, {
+    const result = await fetchApi(requestUrl, {
       method: options.method || "GET",
-      body: rewrittenBody
+      body: options.body
     });
     if (result?.tour) {
       if (serviceImageMutation) {
@@ -137,11 +123,15 @@ export function createTourTravelPlanAdapter({
   async function prepareTourTravelPlanMutation({
     applyTravelPlanMutationBooking,
     buildTravelPlanPayload,
+    saveTravelPlan,
     syncTravelPlanDraftFromDom,
     travelPlanStatus
   } = {}) {
     if (!state.travelPlanDirty) return true;
     if (!state.booking?.id) return false;
+    if (typeof saveTravelPlan === "function") {
+      return await saveTravelPlan();
+    }
     if (typeof syncTravelPlanDraftFromDom === "function") syncTravelPlanDraftFromDom();
     const travelPlan = typeof buildTravelPlanPayload === "function"
       ? buildTravelPlanPayload()
@@ -149,19 +139,68 @@ export function createTourTravelPlanAdapter({
     if (typeof travelPlanStatus === "function") {
       travelPlanStatus("Saving travel plan before uploading image...", "info");
     }
-    const bookingTravelPlanUrl = `/api/v1/bookings/${encodeURIComponent(state.booking.id)}/travel-plan`;
-    const result = await fetchTourTravelPlanMutation(bookingTravelPlanUrl, {
-      method: "PATCH",
+    const request = tourTravelPlanUpdateRequest({
+      baseURL: apiOrigin,
+      params: { tour_id: state.booking.id },
+      query: backendLangQuery(),
       body: {
         travel_plan: travelPlan,
         actor: state.user
       }
+    });
+    const result = await fetchTourTravelPlanMutation(request.url, {
+      method: request.method,
+      body: request.body
     });
     if (!result?.booking) return false;
     if (typeof applyTravelPlanMutationBooking === "function") {
       applyTravelPlanMutationBooking(result.booking, { preserveCollapsedState: true });
     }
     return true;
+  }
+
+  function buildTourTravelPlanSaveRequest({ apiOrigin: requestApiOrigin, state: requestState, travelPlanPayload }) {
+    return tourTravelPlanUpdateRequest({
+      baseURL: requestApiOrigin,
+      params: { tour_id: normalizeText(requestState.booking?.id || requestState.id) },
+      query: backendLangQuery(),
+      body: {
+        travel_plan: travelPlanPayload,
+        actor: requestState.user
+      }
+    });
+  }
+
+  function buildTourTravelPlanServiceImageUploadRequest({ apiOrigin: requestApiOrigin, state: requestState, dayId, itemId, file, dataBase64 }) {
+    return tourTravelPlanServiceImageUploadRequest({
+      baseURL: requestApiOrigin,
+      params: {
+        tour_id: normalizeText(requestState.booking?.id || requestState.id),
+        day_id: dayId,
+        service_id: itemId
+      },
+      query: backendLangQuery(),
+      body: {
+        filename: file.name,
+        data_base64: dataBase64,
+        actor: requestState.user
+      }
+    });
+  }
+
+  function buildTourTravelPlanServiceImageDeleteRequest({ apiOrigin: requestApiOrigin, state: requestState, dayId, itemId }) {
+    return tourTravelPlanServiceImageDeleteRequest({
+      baseURL: requestApiOrigin,
+      params: {
+        tour_id: normalizeText(requestState.booking?.id || requestState.id),
+        day_id: dayId,
+        service_id: itemId
+      },
+      query: backendLangQuery(),
+      body: {
+        actor: requestState.user
+      }
+    });
   }
 
   function ensureCore() {
@@ -184,6 +223,10 @@ export function createTourTravelPlanAdapter({
       setPageSaveActionError: () => {},
       hasUnsavedBookingChanges: () => false,
       prepareTravelPlanMutation: prepareTourTravelPlanMutation,
+      buildTravelPlanSaveRequest: buildTourTravelPlanSaveRequest,
+      buildTravelPlanServiceImageUploadRequest: buildTourTravelPlanServiceImageUploadRequest,
+      buildTravelPlanServiceImageDeleteRequest: buildTourTravelPlanServiceImageDeleteRequest,
+      setPageOverlay,
       features: {
         dates: false,
         timing: false,

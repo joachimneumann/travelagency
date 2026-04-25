@@ -940,6 +940,7 @@
   "booking.travel_plan.use_existing_plan": "Use a Travel Plan from another Booking",
   "booking.travel_plan.use_marketing_tour": "Use a Marketing Tour",
   "booking.travel_plan.use_standard_tour": "Use a Standard Tour",
+  "booking.travel_plan.uploading_image_overlay": "Uploading image. Please wait.",
   "booking.travel_plan.uploading_image_progress": "Uploading image {current} of {total}...",
   "booking.travel_plan.uploading_pdf_progress": "Uploading PDF {current}/{total}...",
   "booking.travel_plan.validation.day_id": "Travel-plan day id is required.",

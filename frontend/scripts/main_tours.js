@@ -8,6 +8,7 @@ const DEFAULT_TOUR_IMAGE = "/assets/img/marketing_tours.png";
 const TOUR_IMAGE_TRANSITION_MS = 2000;
 const TOUR_GRID_LAYOUT_TRANSITION_MS = 520;
 const TOUR_DETAILS_TRANSITION_MS = 640;
+const TOUR_SHOW_MORE_LABEL_TRANSITION_MS = 180;
 const TOUR_CARD_SCROLL_TIMEOUT_MS = 900;
 const TOUR_CARD_SCROLL_MARGIN_PX = 12;
 const tourCardImageTransitionTimers = new WeakMap();
@@ -373,24 +374,21 @@ export function createFrontendToursController(ctx) {
     return `${backendBaseUrl}/${value}`;
   }
 
-  function resolveTourImage(item) {
-    const raw = String(item?.image || "").trim();
-    if (!raw) return DEFAULT_TOUR_IMAGE;
-    return absolutizeBackendUrl(raw);
-  }
-
   function resolveTourPictures(item) {
-    const primaryImage = resolveTourImage(item);
-    const additionalPictures = Array.isArray(item?.pictures)
+    const pictures = Array.isArray(item?.pictures)
       ? item.pictures.map((picture) => absolutizeBackendUrl(picture)).filter(Boolean)
       : [];
-    return Array.from(new Set([primaryImage, ...additionalPictures]));
+    return Array.from(new Set(pictures));
+  }
+
+  function primaryTourPicture(item) {
+    const pictures = Array.isArray(item?.pictures) ? item.pictures : [];
+    return normalizeText(pictures[0]) || DEFAULT_TOUR_IMAGE;
   }
 
   function normalizeToursForFrontend(items) {
     const lang = currentFrontendLang();
     return (Array.isArray(items) ? items : []).map((item) => {
-      const image = resolveTourImage(item);
       const pictures = resolveTourPictures(item);
       const normalizedTitle = resolveLocalizedFrontendText(item?.title, lang);
       const normalizedShortDescription = resolveLocalizedFrontendText(item?.short_description, lang);
@@ -398,8 +396,7 @@ export function createFrontendToursController(ctx) {
         ...item,
         title: normalizedTitle,
         short_description: normalizedShortDescription,
-        pictures,
-        image
+        pictures
       };
     });
   }
@@ -508,6 +505,75 @@ export function createFrontendToursController(ctx) {
     `;
   }
 
+  function tourShowMoreLabel(expanded) {
+    return expanded
+      ? frontendT("tour.card.show_less", "Show less")
+      : frontendT("tour.card.show_more", "Show more");
+  }
+
+  function renderTourShowMoreLabel(label) {
+    return `<span class="tour-card__show-more-label" data-tour-card-show-more-label>${escapeHTML(label)}</span>`;
+  }
+
+  function tourShowMoreButton(tripId) {
+    if (!els.tourGrid) return null;
+    const normalizedTripId = normalizeText(tripId);
+    return Array.from(els.tourGrid.querySelectorAll("[data-tour-card-show-more][data-trip-id]"))
+      .find((candidate) => normalizeText(candidate.getAttribute("data-trip-id")) === normalizedTripId) || null;
+  }
+
+  function setTourShowMoreButtonLabel(button, label) {
+    if (!(button instanceof HTMLButtonElement)) return null;
+    const labelElement = button.querySelector("[data-tour-card-show-more-label]");
+    if (labelElement instanceof HTMLElement) {
+      labelElement.textContent = label;
+      return labelElement;
+    }
+    button.innerHTML = renderTourShowMoreLabel(label);
+    const renderedLabel = button.querySelector("[data-tour-card-show-more-label]");
+    return renderedLabel instanceof HTMLElement ? renderedLabel : null;
+  }
+
+  async function animateTourShowMoreButtonLabel(button, nextLabel, { direction = "open" } = {}) {
+    if (!(button instanceof HTMLButtonElement)) return;
+    const labelElement = button.querySelector("[data-tour-card-show-more-label]");
+    if (!(labelElement instanceof HTMLElement)) {
+      setTourShowMoreButtonLabel(button, nextLabel);
+      return;
+    }
+    if (normalizeText(labelElement.textContent) === normalizeText(nextLabel)) return;
+    if (prefersReducedMotion() || typeof labelElement.animate !== "function") {
+      labelElement.textContent = nextLabel;
+      return;
+    }
+
+    const outOffset = direction === "close" ? "0.22rem" : "-0.22rem";
+    const inOffset = direction === "close" ? "-0.22rem" : "0.22rem";
+    const halfDuration = Math.max(80, Math.round(TOUR_SHOW_MORE_LABEL_TRANSITION_MS / 2));
+    const outgoing = labelElement.animate([
+      { opacity: 1, transform: "translateY(0)" },
+      { opacity: 0, transform: `translateY(${outOffset})` }
+    ], {
+      duration: halfDuration,
+      easing: "cubic-bezier(0.4, 0, 0.2, 1)",
+      fill: "forwards"
+    });
+    await outgoing.finished.catch(() => {});
+    outgoing.cancel();
+
+    labelElement.textContent = nextLabel;
+    const incoming = labelElement.animate([
+      { opacity: 0, transform: `translateY(${inOffset})` },
+      { opacity: 1, transform: "translateY(0)" }
+    ], {
+      duration: halfDuration,
+      easing: "cubic-bezier(0.2, 0, 0.2, 1)",
+      fill: "forwards"
+    });
+    await incoming.finished.catch(() => {});
+    incoming.cancel();
+  }
+
   function renderTourCard(trip, { index = 0, expanded = false } = {}) {
     const tripId = normalizeText(trip?.id);
     const tripTitle = resolveLocalizedFrontendText(trip?.title, state.lang);
@@ -518,9 +584,7 @@ export function createFrontendToursController(ctx) {
     const countries = tourDestinations(trip);
     const countriesLabel = countries.join(", ");
     const ctaLabel = frontendT("tour.card.plan_trip", "Plan this trip");
-    const showMoreLabel = expanded
-      ? frontendT("tour.card.show_less", "Show less")
-      : frontendT("tour.card.show_more", "Show more");
+    const showMoreLabel = tourShowMoreLabel(expanded);
     const detailsUnavailableLabel = frontendT(
       "tour.plan.details_unavailable",
       "No detailed travel plan is available yet."
@@ -530,7 +594,8 @@ export function createFrontendToursController(ctx) {
     });
     const loading = index === 0 ? "eager" : "lazy";
     const fetchpriority = "auto";
-    const gallery = Array.isArray(trip?.pictures) && trip.pictures.length ? trip.pictures : [trip?.image || DEFAULT_TOUR_IMAGE];
+    const gallery = Array.isArray(trip?.pictures) && trip.pictures.length ? trip.pictures : [DEFAULT_TOUR_IMAGE];
+    const primaryPicture = primaryTourPicture(trip);
     const galleryCount = gallery.length;
     const mediaTag = galleryCount > 1 ? "button" : "div";
     const mediaClass = galleryCount > 1 ? "tour-card__media tour-card__media-button" : "tour-card__media";
@@ -554,7 +619,7 @@ export function createFrontendToursController(ctx) {
               <img
                 class="tour-card__media-layer is-active"
                 data-tour-media-layer="primary"
-                src="${escapeAttr(trip?.image || DEFAULT_TOUR_IMAGE)}"
+                src="${escapeAttr(primaryPicture)}"
                 alt="${escapeAttr(frontendT("tour.card.image_alt", "{title} in {destinations}", {
                   title: tripTitle,
                   destinations: countriesLabel
@@ -567,7 +632,7 @@ export function createFrontendToursController(ctx) {
               <img
                 class="tour-card__media-layer"
                 data-tour-media-layer="secondary"
-                src="${escapeAttr(trip?.image || DEFAULT_TOUR_IMAGE)}"
+                src="${escapeAttr(primaryPicture)}"
                 alt=""
                 aria-hidden="true"
                 loading="lazy"
@@ -584,7 +649,7 @@ export function createFrontendToursController(ctx) {
             <p class="tour-desc" data-tour-desc>${escapeHTML(tripShortDescription)}</p>
           </div>
           <div class="tags">${tags}</div>
-          <button class="btn tour-card__show-more" type="button" data-tour-card-show-more data-trip-id="${escapeAttr(tripId)}" ${showMoreStateAttrs}>${escapeHTML(showMoreLabel)}</button>
+          <button class="btn tour-card__show-more" type="button" data-tour-card-show-more data-trip-id="${escapeAttr(tripId)}" ${showMoreStateAttrs}>${renderTourShowMoreLabel(showMoreLabel)}</button>
           <button class="btn btn-primary tour-card__plan-trip" type="button" data-open-modal data-trip-id="${escapeAttr(tripId)}">${escapeHTML(ctaLabel)}</button>
         </div>
       </article>
@@ -852,10 +917,7 @@ export function createFrontendToursController(ctx) {
   }
 
   function focusTourShowMoreButton(tripId) {
-    if (!els.tourGrid) return;
-    const normalizedTripId = normalizeText(tripId);
-    const button = Array.from(els.tourGrid.querySelectorAll("[data-tour-card-show-more][data-trip-id]"))
-      .find((candidate) => normalizeText(candidate.getAttribute("data-trip-id")) === normalizedTripId);
+    const button = tourShowMoreButton(tripId);
     if (button instanceof HTMLButtonElement) {
       try {
         button.focus({ preventScroll: true });
@@ -1119,9 +1181,6 @@ export function createFrontendToursController(ctx) {
     const button = row?.querySelector?.("[data-tour-card-show-more][data-trip-id]");
     if (!(button instanceof HTMLButtonElement)) return;
     button.setAttribute("aria-expanded", expanded ? "true" : "false");
-    button.textContent = expanded
-      ? frontendT("tour.card.show_less", "Show less")
-      : frontendT("tour.card.show_more", "Show more");
   }
 
   function animateTourDetailsToggle(tripId, willOpen) {
@@ -1158,10 +1217,13 @@ export function createFrontendToursController(ctx) {
     }
     setTourExpanded(tripId, true);
     renderVisibleTrips();
+    const openedButton = tourShowMoreButton(tripId);
+    setTourShowMoreButtonLabel(openedButton, tourShowMoreLabel(false));
 
     const row = expandedTourRow(tripId);
     if (!(row instanceof HTMLElement)) {
       await animateTourGridLayout(previousRects, { excludedTripIds: [tripId] });
+      await animateTourShowMoreButtonLabel(openedButton, tourShowMoreLabel(true), { direction: "open" });
       openingTourColumnIndexes.delete(tripId);
       tourDetailsTransitioning = false;
       window.requestAnimationFrame(() => {
@@ -1184,6 +1246,7 @@ export function createFrontendToursController(ctx) {
     const opensSideways = row.classList.contains("tour-details-row--side-panel");
     await animateTourDetailsRowHeight(row, opensSideways ? collapsedHeight : expandedHeight, "open");
     clearTourDetailsRowAnimation(row, { preserveHeight: opensSideways });
+    await animateTourShowMoreButtonLabel(openedButton, tourShowMoreLabel(true), { direction: "open" });
     tourDetailsTransitioning = false;
     focusTourShowMoreButton(tripId);
   }
@@ -1210,7 +1273,10 @@ export function createFrontendToursController(ctx) {
     const previousRects = captureTourCardRects();
     setTourExpanded(tripId, false);
     renderVisibleTrips();
+    const closedButton = tourShowMoreButton(tripId);
+    setTourShowMoreButtonLabel(closedButton, tourShowMoreLabel(true));
     await animateTourGridLayout(previousRects);
+    await animateTourShowMoreButtonLabel(closedButton, tourShowMoreLabel(false), { direction: "close" });
     tourDetailsTransitioning = false;
     window.requestAnimationFrame(() => {
       focusTourShowMoreButton(tripId);
@@ -1271,7 +1337,7 @@ export function createFrontendToursController(ctx) {
     const trip = state.filteredTrips.find((item) => normalizeText(item?.id) === tripId)
       || state.trips.find((item) => normalizeText(item?.id) === tripId)
       || null;
-    const gallery = Array.isArray(trip?.pictures) && trip.pictures.length ? trip.pictures : [trip?.image || DEFAULT_TOUR_IMAGE];
+    const gallery = Array.isArray(trip?.pictures) && trip.pictures.length ? trip.pictures : [DEFAULT_TOUR_IMAGE];
     if (gallery.length <= 1) return;
 
     const currentIndex = Math.max(0, Number.parseInt(button.dataset.tourGalleryIndex || "0", 10) || 0) % gallery.length;
@@ -1579,8 +1645,7 @@ export function createFrontendToursController(ctx) {
     const urls = [];
 
     for (const tour of tours) {
-      const primary = String(tour.image || "").trim();
-      for (const url of [primary]) {
+      for (const url of (Array.isArray(tour?.pictures) ? tour.pictures : []).slice(0, 1)) {
         if (!url || seen.has(url)) continue;
         seen.add(url);
         urls.push(url);

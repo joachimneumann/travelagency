@@ -8,6 +8,8 @@
     X-Content-Type-Options "nosniff"
     X-Frame-Options "SAMEORIGIN"
     Referrer-Policy "strict-origin-when-cross-origin"
+    Content-Security-Policy "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; form-action 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; media-src 'self'; connect-src 'self'; manifest-src 'self'; worker-src 'self' blob:; upgrade-insecure-requests"
+    Permissions-Policy "accelerometer=(), autoplay=(self), camera=(), display-capture=(), encrypted-media=(), fullscreen=(self), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), midi=(), payment=(), publickey-credentials-get=(), screen-wake-lock=(), usb=(), web-share=(), xr-spatial-tracking=()"
   }
 }
 
@@ -20,9 +22,7 @@
 (staging_html_no_cache_headers) {
   @staging_html path / /index.html /404.html /bookings.html /booking.html /persons.html /marketing_tour.html /marketing_tours.html /standard-tours.html /standard-tour.html /settings.html /emergency.html /privacy.html /traveler-details.html
   header @staging_html {
-    Cache-Control "no-store, no-cache, must-revalidate"
-    Pragma "no-cache"
-    Expires "0"
+    Cache-Control "no-cache, must-revalidate"
   }
 }
 
@@ -31,24 +31,18 @@
     path /assets/* /frontend/scripts/* /frontend/data/* /frontend/Generated/* /shared/* /site.webmanifest
     not path /frontend/data/generated/homepage/*
   }
-  header @staging_static Cache-Control "public, max-age=300, stale-while-revalidate=600, must-revalidate"
+  header @staging_static Cache-Control "public, max-age=300, stale-while-revalidate=600"
 }
 
-(staging_generated_homepage_no_cache_headers) {
+(staging_generated_homepage_cache_headers) {
   @staging_generated_homepage path /frontend/data/generated/homepage/*
-  header @staging_generated_homepage {
-    Cache-Control "no-store, no-cache, must-revalidate"
-    Pragma "no-cache"
-    Expires "0"
-  }
+  header @staging_generated_homepage Cache-Control "public, max-age=60, stale-while-revalidate=300"
 }
 
 (production_html_no_cache_headers) {
   @production_html path / /index.html /404.html /app-home.html /bookings.html /booking.html /persons.html /marketing_tour.html /marketing_tours.html /standard-tours.html /standard-tour.html /settings.html /emergency.html /privacy.html /traveler-details.html
   header @production_html {
-    Cache-Control "no-store, no-cache, must-revalidate"
-    Pragma "no-cache"
-    Expires "0"
+    Cache-Control "no-cache, must-revalidate"
   }
 }
 
@@ -63,23 +57,25 @@
     not path /frontend/data/generated/homepage/*
     not path /assets/fonts/* /assets/generated/homepage/* /assets/generated/reels/*
   }
-  header @production_static Cache-Control "public, max-age=300, stale-while-revalidate=600, must-revalidate"
+  header @production_static Cache-Control "public, max-age=300, stale-while-revalidate=600"
 }
 
-(production_generated_homepage_no_cache_headers) {
+(production_generated_homepage_cache_headers) {
   @production_generated_homepage path /frontend/data/generated/homepage/*
-  header @production_generated_homepage {
-    Cache-Control "no-store, no-cache, must-revalidate"
-    Pragma "no-cache"
-    Expires "0"
-  }
+  header @production_generated_homepage Cache-Control "public, max-age=60, stale-while-revalidate=300"
+}
+
+(production_private_noindex_headers) {
+  @production_private_index_exclusions path /app-home.html /bookings.html /booking.html /persons.html /marketing_tour.html /marketing_tours.html /standard-tours.html /standard-tour.html /settings.html /emergency.html /traveler-details.html /auth/* /api/* /integrations/* /keycloak/*
+  header @production_private_index_exclusions X-Robots-Tag "noindex, nofollow, noarchive"
 }
 
 asiatravelplan.com {
   import security_headers
   import production_html_no_cache_headers
   import production_static_cache_headers
-  import production_generated_homepage_no_cache_headers
+  import production_generated_homepage_cache_headers
+  import production_private_noindex_headers
   encode zstd gzip
 
   handle_errors {
@@ -93,10 +89,28 @@ asiatravelplan.com {
     }
   }
 
-  @site_root path /
-  handle @site_root {
+  @production_homepage path / /index.html
+  handle @production_homepage {
     root * /production-app
-    rewrite * /frontend/pages/index.html
+    try_files /frontend/data/generated/homepage/index.html /frontend/pages/index.html
+    file_server {
+      hide /production-app/.git /production-app/.gitignore /production-app/backend /production-app/deploy /production-app/documentation /production-app/scripts /production-app/docker-compose*.yml /production-app/.env* /production-app/README* /production-app/AGENTS.md
+    }
+  }
+
+  @production_sitemap path /sitemap.xml
+  handle @production_sitemap {
+    root * /production-app
+    try_files /frontend/data/generated/homepage/sitemap.xml /sitemap.xml
+    file_server {
+      hide /production-app/.git /production-app/.gitignore /production-app/backend /production-app/deploy /production-app/documentation /production-app/scripts /production-app/docker-compose*.yml /production-app/.env* /production-app/README* /production-app/AGENTS.md
+    }
+  }
+
+  @production_seo_pages path /destinations /destinations/* /travel-styles /travel-styles/* /tours /tours/*
+  handle @production_seo_pages {
+    root * /production-app
+    try_files /frontend/data/generated/homepage/seo{path}.html =404
     file_server {
       hide /production-app/.git /production-app/.gitignore /production-app/backend /production-app/deploy /production-app/documentation /production-app/scripts /production-app/docker-compose*.yml /production-app/.env* /production-app/README* /production-app/AGENTS.md
     }
@@ -122,7 +136,7 @@ asiatravelplan.com {
     redir * / 302
   }
 
-  @production_public_html_pages path /index.html /404.html /privacy.html /traveler-details.html
+  @production_public_html_pages path /404.html /privacy.html /traveler-details.html
   handle @production_public_html_pages {
     root * /production-app
     rewrite * /frontend/pages{path}
@@ -177,7 +191,7 @@ staging.asiatravelplan.com {
   import noindex_headers
   import staging_html_no_cache_headers
   import staging_static_cache_headers
-  import staging_generated_homepage_no_cache_headers
+  import staging_generated_homepage_cache_headers
   encode zstd gzip
   root * /srv
 
@@ -187,9 +201,21 @@ staging.asiatravelplan.com {
     file_server
   }
 
-  @site_root path /
-  handle @site_root {
-    rewrite * /frontend/pages/index.html
+  @site_home path / /index.html
+  handle @site_home {
+    try_files /frontend/data/generated/homepage/index.html /frontend/pages/index.html
+    file_server
+  }
+
+  @sitemap path /sitemap.xml
+  handle @sitemap {
+    try_files /frontend/data/generated/homepage/sitemap.xml /sitemap.xml
+    file_server
+  }
+
+  @seo_pages path /destinations /destinations/* /travel-styles /travel-styles/* /tours /tours/*
+  handle @seo_pages {
+    try_files /frontend/data/generated/homepage/seo{path}.html =404
     file_server
   }
 
@@ -214,7 +240,7 @@ staging.asiatravelplan.com {
     file_server
   }
 
-  @html_pages path /index.html /404.html /bookings.html /booking.html /persons.html /marketing_tour.html /marketing_tours.html /standard-tours.html /standard-tour.html /settings.html /emergency.html /privacy.html /traveler-details.html
+  @html_pages path /404.html /bookings.html /booking.html /persons.html /marketing_tour.html /marketing_tours.html /standard-tours.html /standard-tour.html /settings.html /emergency.html /privacy.html /traveler-details.html
   handle @html_pages {
     rewrite * /frontend/pages{path}
     file_server

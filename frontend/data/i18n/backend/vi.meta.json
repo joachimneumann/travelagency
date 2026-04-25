@@ -4369,6 +4369,11 @@
     "origin": "machine",
     "updated_at": "2026-04-22T16:00:27.582Z"
   },
+  "booking.travel_plan.uploading_image_overlay": {
+    "source_hash": "6336c6eaca6eeafd6c08f7b962792321e50a8edbff91e3cd258af4d84532ed40",
+    "origin": "manual",
+    "updated_at": "2026-04-26T00:00:00.000Z"
+  },
   "booking.travel_plan.uploading_image_progress": {
     "source_hash": "f93bb068c277ca50c823c8cc44f73f39ac37cce65bef8004f639379b9e2e8c15",
     "origin": "machine",

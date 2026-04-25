@@ -75,8 +75,14 @@ export function createBookingTravelPlanModule(ctx) {
     hasUnsavedBookingChanges,
     updatePageDirtyBar,
     prepareTravelPlanMutation,
+    buildTravelPlanSaveRequest,
+    buildTravelPlanServiceImageUploadRequest,
+    buildTravelPlanServiceImageDeleteRequest,
     features = {}
   } = ctx;
+  const setTravelPlanPageOverlay = typeof ctx.setPageOverlay === "function"
+    ? ctx.setPageOverlay
+    : (isVisible, message = "") => setBookingPageOverlay(els, isVisible, message);
   let lastMissingTravelPlanControlsDiagnosticKey = "";
   let lastTravelPlanTranslationIncomplete = null;
 
@@ -149,8 +155,7 @@ export function createBookingTravelPlanModule(ctx) {
   }
 
   function setTravelPlanTranslationOverlay(isVisible, message = "") {
-    setBookingPageOverlay(
-      els,
+    setTravelPlanPageOverlay(
       isVisible,
       message || bookingT("booking.translation.translating_overlay", "Translating travel plan. Please wait.")
     );
@@ -480,6 +485,7 @@ export function createBookingTravelPlanModule(ctx) {
       return await prepareTravelPlanMutation({
         applyTravelPlanMutationBooking,
         buildTravelPlanPayload,
+        saveTravelPlan: persistTravelPlan,
         syncTravelPlanDraftFromDom,
         travelPlanStatus
       });
@@ -572,7 +578,10 @@ export function createBookingTravelPlanModule(ctx) {
     applyBookingPayload,
     renderTravelPlanPanel,
     loadActivities,
-    travelPlanStatus
+    travelPlanStatus,
+    setPageOverlay: setTravelPlanPageOverlay,
+    buildServiceImageUploadRequest: buildTravelPlanServiceImageUploadRequest,
+    buildServiceImageDeleteRequest: buildTravelPlanServiceImageDeleteRequest
   });
 
   const travelPlanAttachmentsModule = createBookingTravelPlanAttachmentsModule({
@@ -2101,15 +2110,25 @@ export function createBookingTravelPlanModule(ctx) {
     }, 3000);
     try {
       const expectedTravelPlanRevision = getBookingRevision("travel_plan_revision");
-      const request = bookingTravelPlanRequest({
-        baseURL: apiOrigin,
-        params: { booking_id: state.booking.id },
-        body: {
-          expected_travel_plan_revision: expectedTravelPlanRevision,
-          travel_plan: travelPlanPayload,
-          content_lang: bookingContentLang()
-        }
-      });
+      const request = typeof buildTravelPlanSaveRequest === "function"
+        ? buildTravelPlanSaveRequest({
+            apiOrigin,
+            state,
+            travelPlanPayload,
+            expectedTravelPlanRevision,
+            contentLang: bookingContentLang(),
+            sourceLang: bookingSourceLang(),
+            getBookingRevision
+          })
+        : bookingTravelPlanRequest({
+            baseURL: apiOrigin,
+            params: { booking_id: state.booking.id },
+            body: {
+              expected_travel_plan_revision: expectedTravelPlanRevision,
+              travel_plan: travelPlanPayload,
+              content_lang: bookingContentLang()
+            }
+          });
       logTravelPlanSave("[booking-save][travel-plan] Sending mutation request.", {
         booking_id: state.booking.id,
         expected_travel_plan_revision: expectedTravelPlanRevision,

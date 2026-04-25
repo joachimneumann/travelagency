@@ -5,6 +5,7 @@ import { pathToFileURL } from "node:url";
 
 const repoRoot = path.resolve(new URL("../../..", import.meta.url).pathname);
 const helperPath = path.join(repoRoot, "frontend", "scripts", "booking", "travel_plan_helpers.js");
+const imagesModulePath = path.join(repoRoot, "frontend", "scripts", "booking", "travel_plan_images.js");
 
 async function loadHelpers() {
   global.window = {
@@ -12,6 +13,14 @@ async function loadHelpers() {
     __BOOKING_CONTENT_LANG: "en"
   };
   return await import(`${pathToFileURL(helperPath).href}?test=${Date.now()}`);
+}
+
+async function loadImagesModule() {
+  global.window = {
+    ...(global.window || {}),
+    __BOOKING_CONTENT_LANG: "en"
+  };
+  return await import(`${pathToFileURL(imagesModulePath).href}?test=${Date.now()}`);
 }
 
 test("normalizeTravelPlanDraft preserves localized maps while keeping flat source text authoritative", async () => {
@@ -190,4 +199,78 @@ test("normalizeTravelPlanDraft does not restore a cleared source field from tran
   assert.deepEqual(normalized.days[0].services[0].title_i18n, {
     vi: "Dich vu"
   });
+});
+
+test("travel-plan image module can use entity-specific delete request builders", async () => {
+  const { createBookingTravelPlanImagesModule } = await loadImagesModule();
+  const service = {
+    id: "service_1",
+    image: {
+      id: "image_1",
+      storage_path: "/public/v1/tour-images/tour_1/service.webp"
+    }
+  };
+  const state = {
+    permissions: { canEditBooking: true },
+    booking: { id: "tour_1" }
+  };
+  const fetchCalls = [];
+  const statuses = [];
+  let appliedBooking = null;
+  let loadedActivities = false;
+
+  const module = createBookingTravelPlanImagesModule({
+    state,
+    els: {},
+    apiOrigin: "http://example.test",
+    fetchBookingMutation: async (url, options) => {
+      fetchCalls.push({ url, options });
+      return {
+        booking: {
+          id: "tour_1",
+          travel_plan: {
+            days: [
+              {
+                id: "day_1",
+                services: [{ ...service, image: null }]
+              }
+            ]
+          }
+        }
+      };
+    },
+    getBookingRevision: () => 12,
+    escapeHtml: (value) => String(value ?? ""),
+    ensureTravelPlanReadyForMutation: async () => true,
+    findDraftItem: () => service,
+    applyTravelPlanMutationBooking: (booking) => {
+      appliedBooking = booking;
+    },
+    loadActivities: async () => {
+      loadedActivities = true;
+    },
+    travelPlanStatus: (message, type) => {
+      statuses.push({ message, type });
+    },
+    buildServiceImageDeleteRequest: ({ state: requestState, dayId, itemId, imageId }) => ({
+      url: `/custom/tours/${requestState.booking.id}/days/${dayId}/services/${itemId}/images/${imageId}`,
+      method: "DELETE",
+      body: { actor: "tester" }
+    })
+  });
+
+  await module.removeTravelPlanServiceImage("day_1", "service_1", "image_1");
+
+  assert.deepEqual(fetchCalls, [
+    {
+      url: "/custom/tours/tour_1/days/day_1/services/service_1/images/image_1",
+      options: {
+        method: "DELETE",
+        body: { actor: "tester" }
+      }
+    }
+  ]);
+  assert.equal(appliedBooking?.id, "tour_1");
+  assert.equal(loadedActivities, true);
+  assert.equal(statuses.at(-1)?.type, "success");
 });

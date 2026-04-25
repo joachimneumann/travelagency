@@ -909,11 +909,23 @@ textarea:focus-visible {
 .tour-card__show-more {
   border: 1px solid var(--accent);
   border-radius: 14px;
-  background: var(--surface);
+  background:
+    linear-gradient(180deg, rgba(255, 111, 77, 0.045), rgba(255, 111, 77, 0)) var(--surface);
   color: var(--accent);
+  gap: 0.48rem;
+  overflow: hidden;
   box-shadow: 0 10px 24px rgba(255, 111, 77, 0.08);
   font-size: 1.08rem;
   font-weight: var(--font-weight-bold);
+}
+
+.tour-card__show-more-label {
+  display: inline-block;
+  line-height: 1;
+  min-width: 5.5em;
+  text-align: center;
+  white-space: nowrap;
+  will-change: opacity, transform;
 }
 
 .tour-card__show-more:hover,

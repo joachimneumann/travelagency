@@ -187,7 +187,6 @@ export function createTourHandlers(deps) {
         )
       );
     }
-    if (payload.image !== undefined) next.image = toTourImagePublicUrl(payload.image);
     if (payload.video !== undefined) next.video = payload.video;
     if (payload.travel_plan !== undefined) {
       next.travel_plan = normalizeMarketingTourTravelPlan(payload.travel_plan);

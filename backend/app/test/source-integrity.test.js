@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
-import { readFile } from "node:fs/promises";
+import { readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -2708,7 +2708,7 @@ test("persons and travel plan editors no longer autosave from local interactions
   );
   assert.match(
     travelPlanImagesSource,
-    /bookingTravelPlanServiceImageDeleteRequest[\s\S]*function removeTravelPlanServiceImage\(dayId, itemId, imageId\)\s*\{[\s\S]*ensureTravelPlanReadyForMutation\(\)[\s\S]*bookingTravelPlanServiceImageDeleteRequest\([\s\S]*applyTravelPlanMutationBooking\(result\.booking,\s*\{\s*preserveCollapsedState:\s*true\s*\}\)[\s\S]*loadActivities\(\)/,
+    /bookingTravelPlanServiceImageDeleteRequest[\s\S]*function removeTravelPlanServiceImage\(dayId, itemId, imageId\)\s*\{[\s\S]*ensureTravelPlanReadyForMutation\(\)[\s\S]*createServiceImageDeleteRequest\([\s\S]*applyTravelPlanMutationBooking\(result\.booking,\s*\{\s*preserveCollapsedState:\s*true\s*\}\)[\s\S]*loadActivities\(\)/,
     "Removing a travel plan image should use the dedicated delete endpoint, refresh persisted booking state, and keep the editor collapse state stable"
   );
   assert.match(
@@ -3300,7 +3300,7 @@ test("tour page reads month options from the generated catalogs layer", async ()
   );
 });
 
-test("tour read models version public image URLs so immutable caching still refreshes after uploads", async () => {
+test("tour read models version public picture URLs so immutable caching still refreshes after uploads", async () => {
   const toursSupportPath = path.resolve(__dirname, "..", "src", "domain", "tours_support.js");
   const toursHandlerPath = path.resolve(__dirname, "..", "src", "http", "handlers", "tours.js");
   const [toursSupportSource, toursHandlerSource] = await Promise.all([
@@ -3320,8 +3320,8 @@ test("tour read models version public image URLs so immutable caching still refr
   );
   assert.match(
     toursSupportSource,
-    /const pictures = stored\.pictures\.map\(\(picture\) => withAssetVersion\(toTourImagePublicUrl\(picture\), version\)\);[\s\S]*image:\s*pictures\[0\] \|\| ""/,
-    "Tour read models should version returned picture URLs with the tour update timestamp and derive image from the first picture"
+    /const pictures = stored\.pictures\.map\(\(picture\) => withAssetVersion\(toTourImagePublicUrl\(picture\), version\)\);[\s\S]*pictures,[\s\S]*travel_plan: travelPlan/,
+    "Tour read models should version returned picture URLs with the tour update timestamp"
   );
 });
 
@@ -4073,6 +4073,26 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
   }
   assert.match(
     stagingCaddy,
+    /Content-Security-Policy "default-src 'self';[\s\S]*object-src 'none';[\s\S]*frame-ancestors 'self';[\s\S]*script-src 'self' 'unsafe-inline';[\s\S]*style-src 'self' 'unsafe-inline';[\s\S]*img-src 'self' data: blob:;[\s\S]*connect-src 'self';[\s\S]*upgrade-insecure-requests"/,
+    "Shared Caddy security headers should publish a CSP that limits resource origins while allowing current inline bootstraps"
+  );
+  assert.match(
+    stagingCaddy,
+    /Permissions-Policy "accelerometer=\(\), autoplay=\(self\), camera=\(\), display-capture=\(\), encrypted-media=\(\), fullscreen=\(self\), geolocation=\(\), gyroscope=\(\), magnetometer=\(\), microphone=\(\), midi=\(\), payment=\(\), publickey-credentials-get=\(\), screen-wake-lock=\(\), usb=\(\), web-share=\(\), xr-spatial-tracking=\(\)"/,
+    "Shared Caddy security headers should disable browser capabilities the site does not use"
+  );
+  assert.match(
+    localCaddy,
+    /Content-Security-Policy "default-src 'self';[\s\S]*Permissions-Policy "accelerometer=\(\), autoplay=\(self\), camera=\(\)[\s\S]*import local_security_headers/,
+    "Local Caddy should apply the same CSP and Permissions-Policy coverage for development"
+  );
+  assert.doesNotMatch(
+    localCaddy,
+    /upgrade-insecure-requests/,
+    "Local CSP should not force HTTP development assets to HTTPS"
+  );
+  assert.match(
+    stagingCaddy,
     /import staging_html_no_cache_headers[\s\S]*import staging_static_cache_headers/,
     "Staging should scope no-cache headers to HTML entry pages while enabling short-lived caching for static assets"
   );
@@ -4093,13 +4113,18 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
   );
   assert.match(
     stagingCaddy,
-    /@staging_generated_homepage path \/frontend\/data\/generated\/homepage\/\*[\s\S]*Cache-Control "no-store, no-cache, must-revalidate"/,
-    "Staging generated homepage data should bypass browser caches after tour content saves"
+    /@staging_generated_homepage path \/frontend\/data\/generated\/homepage\/\*[\s\S]*Cache-Control "public, max-age=60, stale-while-revalidate=300"/,
+    "Staging generated homepage data should use a short public cache instead of bypassing browser caches"
   );
   assert.match(
     stagingCaddy,
-    /@production_generated_homepage path \/frontend\/data\/generated\/homepage\/\*[\s\S]*Cache-Control "no-store, no-cache, must-revalidate"/,
-    "Production generated homepage data should bypass browser caches after tour content saves"
+    /@production_generated_homepage path \/frontend\/data\/generated\/homepage\/\*[\s\S]*Cache-Control "public, max-age=60, stale-while-revalidate=300"/,
+    "Production generated homepage data should use a short public cache instead of bypassing browser caches"
+  );
+  assert.doesNotMatch(
+    stagingCaddy,
+    /no-store, no-cache, must-revalidate|Pragma "no-cache"|Expires "0"/,
+    "Caddy cache headers should allow normal cache storage and revalidation instead of legacy no-store directives"
   );
   assert.doesNotMatch(
     stagingCaddy,
@@ -4122,8 +4147,18 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
   );
   assert.match(
     stagingCaddy,
-    /@site_root path \/[^\n]*[\s\S]*rewrite \* \/frontend\/pages\/index\.html/,
-    "Production Caddy should serve the real homepage from the production app checkout"
+    /path \/ \/index\.html[\s\S]*try_files \/frontend\/data\/generated\/homepage\/index\.html \/frontend\/pages\/index\.html/,
+    "Caddy should serve the deploy-generated homepage HTML with a tracked template fallback"
+  );
+  assert.match(
+    stagingCaddy,
+    /path \/sitemap\.xml[\s\S]*try_files \/frontend\/data\/generated\/homepage\/sitemap\.xml \/sitemap\.xml/,
+    "Caddy should serve the deploy-generated sitemap with the tracked sitemap as a fallback"
+  );
+  assert.match(
+    stagingCaddy,
+    /path \/destinations \/destinations\/\* \/travel-styles \/travel-styles\/\* \/tours \/tours\/\*[\s\S]*try_files \/frontend\/data\/generated\/homepage\/seo\{path\}\.html =404/,
+    "Caddy should expose generated SEO pages for destinations, travel styles, and tours"
   );
   assert.match(
     stagingCaddy,
@@ -4323,18 +4358,79 @@ test("homepage tour cards use fixed-height text areas without an inline more lin
   );
 });
 
+test("homepage TravelAgency structured data mirrors footer contact details", async () => {
+  const homepagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "index.html");
+  const runtimeConfigPath = path.resolve(__dirname, "..", "src", "config", "runtime.js");
+  const [homepageSource, runtimeConfigSource] = await Promise.all([
+    readFile(homepagePath, "utf8"),
+    readFile(runtimeConfigPath, "utf8")
+  ]);
+
+  const jsonLdBlocks = Array.from(homepageSource.matchAll(/<script type="application\/ld\+json">\s*([\s\S]*?)\s*<\/script>/g))
+    .map((match) => JSON.parse(match[1]));
+  const travelAgencySchema = jsonLdBlocks.find((schema) => schema?.["@type"] === "TravelAgency");
+  const footerPhone = homepageSource.match(/data-i18n-id="footer\.whatsapp">WhatsApp:\s*([^<]+)/)?.[1];
+  const footerEmail = homepageSource.match(/data-i18n-id="footer\.email">Email:\s*([^<]+)/)?.[1];
+  const footerFacebookUrl = homepageSource.match(/<a href="([^"]+)"[^>]*data-i18n-id="footer\.facebook"/)?.[1];
+  const licenseNumber = runtimeConfigSource.match(/licenseNumber:\s*"([^"]+)"/)?.[1];
+
+  assert.ok(travelAgencySchema, "Homepage should publish TravelAgency JSON-LD");
+  assert.equal(travelAgencySchema.telephone, footerPhone);
+  assert.equal(travelAgencySchema.email, footerEmail);
+  assert.equal(travelAgencySchema.contactPoint?.[0]?.telephone, footerPhone);
+  assert.equal(travelAgencySchema.contactPoint?.[0]?.email, footerEmail);
+  assert.equal(travelAgencySchema.contactPoint?.[0]?.url, "https://wa.me/84354999192");
+  assert.equal(travelAgencySchema.identifier?.value, licenseNumber);
+  assert.ok(travelAgencySchema.sameAs?.includes(footerFacebookUrl), "TravelAgency schema should include the footer Facebook URL");
+  assert.deepEqual(
+    travelAgencySchema.address,
+    [
+      {
+        "@type": "PostalAddress",
+        name: "Head office in Hội An",
+        streetAddress: "378/51 Cửa Đại",
+        addressLocality: "Hội An Đông",
+        addressRegion: "Đà Nẵng",
+        addressCountry: "VN"
+      },
+      {
+        "@type": "PostalAddress",
+        name: "Office in Hà Nội",
+        streetAddress: "59 Đ. Lạc Long Quân",
+        addressLocality: "Nghĩa Đô",
+        postalCode: "100000",
+        addressRegion: "Hà Nội",
+        addressCountry: "VN"
+      }
+    ]
+  );
+  assert.doesNotMatch(JSON.stringify(travelAgencySchema), /Ho Chi Minh City|\+84-90-000-0000/);
+});
+
 test("homepage hero title follows published destinations and only hides the destination picker when one destination remains", async () => {
   const mainToursPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "main_tours.js");
   const homepagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "index.html");
   const frontendEnI18nPath = path.resolve(__dirname, "..", "..", "..", "frontend", "data", "i18n", "frontend", "en.json");
   const frontendI18nScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "shared", "frontend_i18n.js");
   const siteCssPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "site.css");
-  const [mainToursSource, homepageSource, frontendEnI18nSource, frontendI18nScriptSource, siteCssSource] = await Promise.all([
+  const desktopHeroVideoPath = path.resolve(__dirname, "..", "..", "..", "assets", "video", "rice field.mp4");
+  const mobileHeroVideoPath = path.resolve(__dirname, "..", "..", "..", "assets", "video", "rice field-mobile.mp4");
+  const [
+    mainToursSource,
+    homepageSource,
+    frontendEnI18nSource,
+    frontendI18nScriptSource,
+    siteCssSource,
+    desktopHeroVideo,
+    mobileHeroVideo
+  ] = await Promise.all([
     readFile(mainToursPath, "utf8"),
     readFile(homepagePath, "utf8"),
     readFile(frontendEnI18nPath, "utf8"),
     readFile(frontendI18nScriptPath, "utf8"),
-    readFile(siteCssPath, "utf8")
+    readFile(siteCssPath, "utf8"),
+    stat(desktopHeroVideoPath),
+    stat(mobileHeroVideoPath)
   ]);
 
   assert.match(
@@ -4354,8 +4450,12 @@ test("homepage hero title follows published destinations and only hides the dest
   );
   assert.match(
     homepageSource,
-    /<source data-src="\/assets\/video\/rice field\.mp4" type="video\/mp4" \/>[\s\S]*attachVideoSource\(\)[\s\S]*window\.addEventListener\("load", startPlayback, \{ once: true \}\)/,
-    "Homepage should keep the hero MP4 out of the initial request graph and attach it when initial page loading completes"
+    /<source data-src="\/assets\/video\/rice field-mobile\.mp4" media="\(max-width: 760px\)" type="video\/mp4" \/>\s*<source data-src="\/assets\/video\/rice field\.mp4" type="video\/mp4" \/>[\s\S]*const findHeroVideoSource = \(\) => heroVideoSources\.find[\s\S]*window\.matchMedia\(media\)\.matches[\s\S]*attachVideoSource\(\)[\s\S]*window\.addEventListener\("load", startPlayback, \{ once: true \}\)/,
+    "Homepage should keep hero MP4s out of the initial request graph and attach a mobile-specific source on small screens"
+  );
+  assert.ok(
+    mobileHeroVideo.size < desktopHeroVideo.size / 3,
+    "Mobile hero MP4 should be materially smaller than the desktop hero MP4"
   );
   assert.match(
     homepageSource,
@@ -4374,8 +4474,8 @@ test("homepage hero title follows published destinations and only hides the dest
   );
   assert.match(
     frontendI18nScriptSource,
-    /function generatedTranslationOverride\(id\) \{[\s\S]*heroTitleByLang = GENERATED_HOMEPAGE_COPY\?\.heroTitleByLang[\s\S]*normalizeText\(heroTitleByLang\[state\.lang\]\)/,
-    "Homepage hero title should come from the deploy-generated homepage copy instead of being rebuilt from the live tours payload"
+    /function generatedTranslationOverride\(id\) \{[\s\S]*'hero\.title': GENERATED_HOMEPAGE_COPY\?\.heroTitleByLang[\s\S]*'meta\.home_title': GENERATED_HOMEPAGE_COPY\?\.metaTitleByLang[\s\S]*'meta\.home_description': GENERATED_HOMEPAGE_COPY\?\.metaDescriptionByLang[\s\S]*normalizeText\(generatedById\[state\.lang\]\)/,
+    "Homepage hero and metadata promises should come from the deploy-generated homepage copy"
   );
   assert.match(
     mainToursSource,

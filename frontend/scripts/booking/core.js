@@ -1368,7 +1368,7 @@ export function createBookingCoreModule(ctx) {
     }
     if (normalizeText(state.booking?.web_form_submission?.tour_id) !== tourId) return;
     state.tour_image_tour_id = tourId;
-    state.tour_image = normalizeText(payload.tour.image) || "";
+    state.tour_image = normalizeText(Array.isArray(payload.tour?.pictures) ? payload.tour.pictures[0] : "") || "";
   }
 
   function handleBookingDetailKeydown(event) {

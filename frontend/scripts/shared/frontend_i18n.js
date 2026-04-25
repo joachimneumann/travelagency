@@ -166,11 +166,14 @@
 
   function generatedTranslationOverride(id) {
     const normalizedId = normalizeText(id);
-    if (normalizedId !== 'hero.title') return '';
-    const heroTitleByLang = GENERATED_HOMEPAGE_COPY?.heroTitleByLang;
-    if (!heroTitleByLang || typeof heroTitleByLang !== 'object') return '';
-    return normalizeText(heroTitleByLang[state.lang])
-      || normalizeText(heroTitleByLang[CONFIG.defaultLang]);
+    const generatedById = {
+      'hero.title': GENERATED_HOMEPAGE_COPY?.heroTitleByLang,
+      'meta.home_title': GENERATED_HOMEPAGE_COPY?.metaTitleByLang,
+      'meta.home_description': GENERATED_HOMEPAGE_COPY?.metaDescriptionByLang
+    }[normalizedId];
+    if (!generatedById || typeof generatedById !== 'object') return '';
+    return normalizeText(generatedById[state.lang])
+      || normalizeText(generatedById[CONFIG.defaultLang]);
   }
 
   function mountLanguageMenu() {

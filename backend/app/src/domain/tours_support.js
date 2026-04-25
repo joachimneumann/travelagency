@@ -52,6 +52,10 @@ export function migratePersistedTourState(tour) {
       changed = true;
     }
   }
+  if (Object.prototype.hasOwnProperty.call(tour, "image")) {
+    delete tour.image;
+    changed = true;
+  }
   const travelPlan = tour.travel_plan && typeof tour.travel_plan === "object" && !Array.isArray(tour.travel_plan)
     ? tour.travel_plan
     : null;
@@ -143,7 +147,7 @@ export function createTourHelpers({ toursDir, safeInt, normalizeMarketingTourTra
     if (/^https?:\/\//i.test(normalized)) return normalized;
     const normalizedTourId = normalizeText(tourId);
     const publicPrefix = "/public/v1/tour-images/";
-    const { pathPart, suffix } = splitAssetUrlSuffix(normalized);
+    const { pathPart } = splitAssetUrlSuffix(normalized);
     const relativePath = pathPart.startsWith(publicPrefix)
       ? pathPart.slice(publicPrefix.length).replace(/^\/+/, "")
       : pathPart.replace(/^\/+/, "");
@@ -151,7 +155,7 @@ export function createTourHelpers({ toursDir, safeInt, normalizeMarketingTourTra
     const scopedRelativePath = normalizedTourId && !relativePath.includes("/")
       ? `${normalizedTourId}/${relativePath}`
       : relativePath;
-    return `${publicPrefix}${scopedRelativePath}${suffix}`;
+    return `${publicPrefix}${scopedRelativePath}`;
   }
 
   function normalizeTourPictureList(values, fallbackValue = "", tourId = "") {
@@ -197,7 +201,7 @@ export function createTourHelpers({ toursDir, safeInt, normalizeMarketingTourTra
     next.destinations = tourDestinationCodes(next);
     next.styles = tourStyleCodes(next);
     next.pictures = normalizeTourPictureList(next.pictures, next.image, next.id);
-    next.image = next.pictures[0] || "";
+    delete next.image;
     const video = normalizeTourVideo(next.video) || (hasExplicitVideo ? null : normalizeTourVideo(legacyTravelPlanVideo));
     if (video) next.video = video;
     else delete next.video;
@@ -231,7 +235,6 @@ export function createTourHelpers({ toursDir, safeInt, normalizeMarketingTourTra
       styles: styleCodes.map((code) => getTourStyleLabel(code, normalizedLang)),
       style_codes: styleCodes,
       pictures,
-      image: pictures[0] || "",
       travel_plan: travelPlan,
       priority: safeInt(stored.priority) ?? 50
     };

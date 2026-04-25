@@ -139,7 +139,6 @@ IR: {
 				{name: "seasonality_end_month", kind: "enum", typeName: "MonthCode", required: false},
 				{name: "short_description", kind: "scalar", typeName: "string", required: false},
 				{name: "pictures", kind: "scalar", typeName: "string", required: false, isArray: true},
-				{name: "image", kind: "scalar", typeName: "string", required: false},
 				{name: "video", kind: "entity", typeName: "TourVideo", required: false},
 				{name: "travel_plan", kind: "entity", typeName: "TravelPlan", required: false},
 				{name: "created_at", kind: "scalar", typeName: "Timestamp", required: false},
@@ -1978,7 +1977,6 @@ IR: {
 				{name: "seasonality_end_month", kind: "enum", typeName: "MonthCode", required: false},
 				{name: "short_description", kind: "scalar", typeName: "string", required: false},
 				{name: "pictures", kind: "scalar", typeName: "string", required: false, isArray: true},
-				{name: "image", kind: "scalar", typeName: "string", required: false},
 				{name: "travel_plan", kind: "entity", typeName: "TravelPlan", required: false},
 			]
 		},

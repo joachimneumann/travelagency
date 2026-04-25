@@ -135,9 +135,15 @@ test("tour helpers scope legacy bare tour picture filenames under the tour folde
   });
 
   assert.deepEqual(normalized.pictures, [
-    "/public/v1/tour-images/tour_legacy/tour_legacy.webp?v=old"
+    "/public/v1/tour-images/tour_legacy/tour_legacy.webp"
   ]);
-  assert.equal(normalized.image, "/public/v1/tour-images/tour_legacy/tour_legacy.webp?v=old");
+  assert.equal("image" in normalized, false);
+
+  const readModel = helpers.normalizeTourForRead(normalized);
+  assert.equal("image" in readModel, false);
+  assert.deepEqual(readModel.pictures, [
+    "/public/v1/tour-images/tour_legacy/tour_legacy.webp"
+  ]);
 
   const normalizedPublicPrefix = helpers.normalizeTourForStorage({
     id: "tour_legacy",
@@ -154,4 +160,47 @@ test("tour helpers scope legacy bare tour picture filenames under the tour folde
     helpers.resolveTourImageDiskPath("tour_legacy.webp"),
     path.join("/tmp", "tour_legacy", "tour_legacy.webp")
   );
+});
+
+test("tour helpers keep cache-buster versions out of persisted picture paths", () => {
+  const normalized = helpers.normalizeTourForStorage({
+    id: "tour_versioned",
+    title: "Versioned picture",
+    destinations: ["vietnam"],
+    styles: ["culture"],
+    pictures: [
+      "/public/v1/tour-images/tour_versioned/hero.webp?v=2026-04-25T17%3A16%3A28.500Z",
+      "gallery.webp?cache=stale#fragment"
+    ]
+  });
+
+  assert.deepEqual(normalized.pictures, [
+    "/public/v1/tour-images/tour_versioned/hero.webp",
+    "/public/v1/tour-images/tour_versioned/gallery.webp"
+  ]);
+  assert.equal("image" in normalized, false);
+
+  const readModel = helpers.normalizeTourForRead({
+    ...normalized,
+    updated_at: "2026-04-26T01:02:03.000Z"
+  });
+  assert.deepEqual(readModel.pictures, [
+    "/public/v1/tour-images/tour_versioned/hero.webp?v=2026-04-26T01%3A02%3A03.000Z",
+    "/public/v1/tour-images/tour_versioned/gallery.webp?v=2026-04-26T01%3A02%3A03.000Z"
+  ]);
+  assert.equal("image" in readModel, false);
+});
+
+test("tour migration moves legacy image into pictures and removes persisted image", () => {
+  const persistedTour = {
+    id: "tour_legacy_image",
+    title: "Legacy image",
+    destinations: ["vietnam"],
+    styles: ["culture"],
+    image: "legacy.webp"
+  };
+
+  assert.equal(migratePersistedTourState(persistedTour), true);
+  assert.deepEqual(persistedTour.pictures, ["legacy.webp"]);
+  assert.equal("image" in persistedTour, false);
 });

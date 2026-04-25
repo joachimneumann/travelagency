@@ -400,10 +400,13 @@ function resolveLocalizedFieldText(field, preferredLangs = [], fallbackValue = "
 
 function normalizeTourPictures(tour) {
   if (Array.isArray(tour?.pictures) && tour.pictures.length) {
-    return tour.pictures.map((value) => String(value || "").trim()).filter(Boolean);
+    return tour.pictures.map(stripTourPictureVersion).filter(Boolean);
   }
-  const image = String(tour?.image || "").trim();
-  return image ? [image] : [];
+  return [];
+}
+
+function stripTourPictureVersion(value) {
+  return String(value || "").trim().replace(/[?#].*$/, "");
 }
 
 function pictureNameFromValue(value) {
@@ -418,13 +421,14 @@ function pictureNameFromValue(value) {
 }
 
 function createStoredPictureDraftItem(picture, index = 0) {
-  const normalizedPicture = String(picture || "").trim();
+  const rawPicture = String(picture || "").trim();
+  const normalizedPicture = stripTourPictureVersion(rawPicture);
   return {
     key: `stored:${normalizedPicture}:${index}`,
     kind: "stored",
     picture: normalizedPicture,
     name: pictureNameFromValue(normalizedPicture) || `picture-${index + 1}`,
-    previewUrl: ""
+    previewUrl: rawPicture && rawPicture !== normalizedPicture ? rawPicture : ""
   };
 }
 
@@ -1353,7 +1357,8 @@ async function init() {
       state.tour = tour;
       state.id = String(tour?.id || state.id || "");
       state.is_create_mode = !state.id;
-    }
+    },
+    setPageOverlay: (isVisible, message = "") => setTourPageOverlay(isVisible, message)
   });
   tourTravelPlanAdapter.bind();
   if (els.travelPlanTranslationSection instanceof HTMLElement) {
@@ -1587,7 +1592,6 @@ async function initializeNewTourForm() {
     short_description: "",
     short_description_i18n: {},
     pictures: [],
-    image: "",
     reel_video: null,
     travel_plan: { days: [] }
   };

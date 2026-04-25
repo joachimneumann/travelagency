@@ -22,6 +22,8 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
   const tourOutputDir = path.join(root, "assets", "generated", "homepage", "tours");
   const teamOutputDir = path.join(root, "assets", "generated", "homepage", "team");
   const homepageHtmlPath = path.join(root, "frontend", "pages", "index.html");
+  const generatedHomepageHtmlPath = path.join(frontendDataDir, "index.html");
+  const generatedSitemapPath = path.join(frontendDataDir, "sitemap.xml");
   const homepageCopyGlobalPath = path.join(frontendDataDir, "public-homepage-copy.global.js");
   const homepageInitialBundlePath = path.join(frontendDataDir, "public-homepage-main.bundle.js");
 
@@ -41,13 +43,15 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
   });
   await writeFile(
     homepageHtmlPath,
-    '<!doctype html><html><body><h1 id="heroTitle" class="hero-title-only" data-i18n-id="hero.title">Old title</h1><script src="/frontend/data/generated/homepage/public-homepage-copy.global.js"></script></body></html>\n'
+    '<!doctype html><html><head><title data-i18n-id="meta.home_title">Old title</title><meta name="description" content="Old description" data-i18n-content-id="meta.home_description"><meta property="og:title" content="Old title" data-i18n-content-id="meta.home_title"><script type="application/ld+json">{"@context":"https://schema.org","@type":"TravelAgency","description":"Old schema","areaServed":["Vietnam","Thailand"]}</script></head><body><h1 id="heroTitle" class="hero-title-only" data-i18n-id="hero.title">Old title</h1><script src="/frontend/data/generated/homepage/public-homepage-copy.global.js"></script></body></html>\n'
   );
 
   await writeJson(path.join(contentRoot, "country_reference_info.json"), {
     items: [
       { country: "VN", published_on_webpage: true },
-      { country: "TH", published_on_webpage: false }
+      { country: "TH", published_on_webpage: false },
+      { country: "KH", published_on_webpage: false },
+      { country: "LA", published_on_webpage: false }
     ]
   });
 
@@ -132,7 +136,7 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
     teamOutputDir,
     frontendI18nDir,
     homepageCopyGlobalPath,
-    homepageHtmlPath,
+    homepageTemplatePath: homepageHtmlPath,
     languages: ["en", "de"]
   });
 
@@ -143,24 +147,35 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
   const homepageCopyGlobal = await readFile(homepageCopyGlobalPath, "utf8");
   const homepageInitialBundle = await readFile(homepageInitialBundlePath, "utf8");
   const homepageHtml = await readFile(homepageHtmlPath, "utf8");
+  const generatedHomepageHtml = await readFile(generatedHomepageHtmlPath, "utf8");
+  const generatedSitemap = await readFile(generatedSitemapPath, "utf8");
+  const generatedDestinationHtml = await readFile(path.join(frontendDataDir, "seo", "destinations", "vietnam.html"), "utf8");
+  const generatedStyleHtml = await readFile(path.join(frontendDataDir, "seo", "travel-styles", "budget.html"), "utf8");
+  const generatedTourHtml = await readFile(path.join(frontendDataDir, "seo", "tours", "alpha-tour-alpha.html"), "utf8");
 
   assert.equal(publicToursEn.items.length, 1);
   assert.equal(publicToursEn.items[0].id, "tour_alpha");
   assert.deepEqual(publicToursEn.items[0].destination_codes, ["vietnam"]);
   assert.deepEqual(publicToursEn.available_destinations, [{ code: "vietnam", label: "Vietnam" }]);
-  assert.match(publicToursEn.items[0].image, /^\/assets\/generated\/homepage\/tours\/tour_alpha\/alpha\.(png|webp)\?v=/);
+  assert.match(publicToursEn.items[0].pictures[0], /^\/assets\/generated\/homepage\/tours\/tour_alpha\/alpha\.(png|webp)\?v=/);
+  assert.equal("image" in publicToursEn.items[0], false);
 
   assert.equal(publicToursDe.items[0].title, "Alpha Reise");
   assert.equal(publicToursDe.items[0].short_description, "Alpha Beschreibung");
   assert.deepEqual(publicToursDe.available_styles, [{ code: "budget", label: "Budget" }]);
   assert.deepEqual(publicReels, { items: [] });
   assert.match(homepageCopyGlobal, /heroTitleByLang/);
+  assert.match(homepageCopyGlobal, /metaTitleByLang/);
+  assert.match(homepageCopyGlobal, /metaDescriptionByLang/);
+  assert.match(homepageCopyGlobal, /areaServed/);
   assert.match(homepageCopyGlobal, /assetUrls/);
   assert.match(homepageCopyGlobal, /public-tours\.en\.json\?v=/);
   assert.match(homepageCopyGlobal, /public-team\.json\?v=/);
   assert.match(homepageCopyGlobal, /public-reels\.json\?v=/);
   assert.match(homepageCopyGlobal, /"en": "Private holidays in Vietnam"/);
   assert.match(homepageCopyGlobal, /"de": "Privaturlaub in Vietnam"/);
+  assert.match(homepageCopyGlobal, /"en": "AsiaTravelPlan \| Private holidays in Vietnam"/);
+  assert.match(homepageCopyGlobal, /Private holidays in Vietnam with clear pricing and local support/);
   assert.match(homepageInitialBundle, /function createFrontendToursController/);
   assert.doesNotMatch(homepageInitialBundle, /function frontendT\(/);
   assert.match(homepageInitialBundle, /const frontendT = \(id, fallback, vars\) => \{/);
@@ -168,6 +183,28 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
   assert.match(homepageInitialBundle, /import\("\/frontend\/scripts\/main_reels\.js"\)/);
   assert.match(homepageInitialBundle, /import\("\/frontend\/scripts\/shared\/auth\.js"\)/);
   assert.match(homepageHtml, />Old title</);
+  assert.match(generatedHomepageHtml, /<title data-i18n-id="meta\.home_title">AsiaTravelPlan \| Private holidays in Vietnam<\/title>/);
+  assert.match(generatedHomepageHtml, /content="Private holidays in Vietnam with clear pricing and local support\. Book a free discovery call\."/);
+  assert.match(generatedHomepageHtml, />Private holidays in Vietnam<\/h1>/);
+  assert.match(generatedHomepageHtml, /"areaServed": \[\s*"Vietnam"\s*\]/);
+  assert.doesNotMatch(generatedHomepageHtml, /Thailand/);
+  const generatedTravelAgencySchema = JSON.parse(generatedHomepageHtml.match(/<script type="application\/ld\+json">\s*([\s\S]*?)\s*<\/script>/)?.[1] || "{}");
+  assert.equal(generatedTravelAgencySchema.telephone, "+84 354999192");
+  assert.equal(generatedTravelAgencySchema.email, "info@asiatravelplan.com");
+  assert.equal(generatedTravelAgencySchema.identifier?.value, "4001328591");
+  assert.deepEqual(
+    generatedTravelAgencySchema.address?.map((address) => address.name),
+    ["Head office in Hội An", "Office in Hà Nội"]
+  );
+  assert.equal(generatedTravelAgencySchema.contactPoint?.[0]?.url, "https://wa.me/84354999192");
+  assert.match(generatedSitemap, /https:\/\/asiatravelplan\.com\/destinations\/vietnam/);
+  assert.match(generatedSitemap, /https:\/\/asiatravelplan\.com\/travel-styles\/budget/);
+  assert.match(generatedSitemap, /https:\/\/asiatravelplan\.com\/tours\/alpha-tour-alpha/);
+  assert.match(generatedDestinationHtml, /<h1>Private tours in Vietnam<\/h1>/);
+  assert.match(generatedDestinationHtml, /<a href="\/tours\/alpha-tour-alpha">Alpha tour<\/a>/);
+  assert.match(generatedStyleHtml, /<h1>Budget private tours<\/h1>/);
+  assert.match(generatedTourHtml, /<title>Alpha tour \| AsiaTravelPlan<\/title>/);
+  assert.match(generatedTourHtml, /"@type":"TouristTrip"/);
   assert.doesNotMatch(homepageHtml, /public-homepage-copy\.manifest\.json/);
 
   assert.equal(publicTeam.total, 4);
@@ -186,7 +223,7 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
   assert.match(publicTeam.items[0].picture_ref, /^\/assets\/generated\/homepage\/team\/joachim\.webp\?v=/);
   assert.equal("appears_in_team_web_page" in publicTeam.items[0], false);
 
-  const copiedTourAssetName = path.basename(new URL(publicToursEn.items[0].image, "https://asiatravelplan.test").pathname);
+  const copiedTourAssetName = path.basename(new URL(publicToursEn.items[0].pictures[0], "https://asiatravelplan.test").pathname);
   const copiedTourAsset = await stat(path.join(tourOutputDir, "tour_alpha", copiedTourAssetName));
   const copiedTeamAsset = await stat(path.join(teamOutputDir, "joachim.webp"));
   assert.ok(copiedTourAsset.isFile());
@@ -235,7 +272,7 @@ test("generatePublicHomepageAssets falls back when a visible tour image is missi
   assert.equal(publicToursEn.items.length, 1);
   assert.equal(publicToursEn.items[0].id, "tour_missing_image");
   assert.deepEqual(publicToursEn.items[0].pictures, []);
-  assert.equal(publicToursEn.items[0].image, "/assets/img/marketing_tours.png");
+  assert.equal("image" in publicToursEn.items[0], false);
 });
 
 test("generatePublicHomepageAssets fails when a visible staff photo is missing", async () => {

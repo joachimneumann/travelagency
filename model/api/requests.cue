@@ -374,7 +374,6 @@ import (
 	short_description?:       string
 	short_description_i18n?: [string]: string
 	pictures?: [...string]
-	image?:       string
 	travel_plan?: databaseModel.#TravelPlan
 }
 

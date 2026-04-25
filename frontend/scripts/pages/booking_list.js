@@ -629,7 +629,7 @@ async function ensureTourImageCatalog() {
   const items = Array.isArray(payload?.items) ? payload.items : [];
   state.tourImagesById = new Map(
     items
-      .map((tour) => [normalizeText(tour?.id), normalizeText(tour?.image)])
+      .map((tour) => [normalizeText(tour?.id), normalizeText(Array.isArray(tour?.pictures) ? tour.pictures[0] : "")])
       .filter(([tourId]) => Boolean(tourId))
   );
   toursStep.done({

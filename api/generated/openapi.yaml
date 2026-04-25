@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-04-25T15:23:52Z
+# 2026-04-25T17:53:00Z
 
 ---
 openapi: 3.1.0
@@ -3877,9 +3877,6 @@ components:
           type: array
           items:
             type: string
-        image:
-          type: string
-          nullable: true
         video:
           "$ref": "#/components/schemas/TourVideo"
           nullable: true
@@ -6932,9 +6929,6 @@ components:
           type: array
           items:
             type: string
-        image:
-          type: string
-          nullable: true
         travel_plan:
           "$ref": "#/components/schemas/TravelPlan"
           nullable: true

@@ -125,6 +125,7 @@
     <main id="main-content">
       <section class="hero hero-video" id="hero">
         <video class="hero-bg-video" muted loop playsinline preload="none" poster="/assets/video/rice field.webp" data-deferred-autoplay>
+          <source data-src="/assets/video/rice field-mobile.mp4" media="(max-width: 760px)" type="video/mp4" />
           <source data-src="/assets/video/rice field.mp4" type="video/mp4" />
           <span data-i18n-id="hero.video_fallback">Your browser does not support HTML5 video.</span>
         </video>
@@ -609,7 +610,7 @@
         if (!heroVideo) return;
         if (window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) return;
 
-        const heroVideoSource = heroVideo.querySelector("source[data-src]");
+        const heroVideoSources = Array.from(heroVideo.querySelectorAll("source[data-src]"));
         const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
         let playbackStarted = false;
         let sourceAttached = false;
@@ -619,7 +620,14 @@
           return !/2g/i.test(String(connection?.effectiveType || ""));
         };
 
+        const findHeroVideoSource = () => heroVideoSources.find((source) => {
+          const media = source.getAttribute("media");
+          if (!media) return true;
+          return typeof window.matchMedia === "function" && window.matchMedia(media).matches;
+        });
+
         const attachVideoSource = () => {
+          const heroVideoSource = findHeroVideoSource();
           if (sourceAttached || !heroVideoSource?.dataset?.src) return;
           heroVideoSource.src = heroVideoSource.dataset.src;
           sourceAttached = true;
@@ -653,25 +661,147 @@
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "When is the best time to travel to Vietnam?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Vietnam is a year-round destination, and we can design the best itinerary based on your travel dates. October to November is ideal for northern Vietnam with clear skies and pleasant weather. Central Vietnam may experience rain during this period, but is great to visit in other months. Southern Vietnam is very comfortable from November to March."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Is Vietnam a good destination all year round?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes. Vietnam stretches across different climate zones, so there is always a great destination to visit regardless of the season."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How many days do I need to explore Vietnam?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "7 to 10 days is enough to explore the highlights. For a deeper experience, we recommend 12 to 14 days."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "What is the best itinerary for first-time visitors?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "A classic route includes Hanoi, Halong Bay, Hoi An, and Ho Chi Minh City. We customize based on your interests and pace. All our tours are tailor-made."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How much does a trip to Vietnam cost?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Private tours typically range from $80 to $200 per person per day depending on your travel style."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Can you customize a private tour?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes. We create personalized itineraries based on your travel style, budget, and interests."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How do I book a tour?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Click on Plan this trip or contact us directly via WhatsApp or email. We will design your itinerary, confirm details, and guide you through the booking process. Fast response within 2 hours."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Do I need to pay a deposit?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes, a deposit is required to secure your booking. The balance can be paid later."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Do I need a visa to enter Vietnam?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "It depends on your nationality. Many travelers can apply for an e-visa online."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Is Vietnam safe for tourists?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes. Vietnam is considered one of the safest countries in Southeast Asia."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "What food can I expect?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Vietnamese cuisine is fresh and diverse. We can accommodate vegetarian, halal, or special diets."
+            }
+          }
+        ]
+      }
+    </script>
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
         "@type": "TravelAgency",
+        "@id": "https://asiatravelplan.com/#travelagency",
         "name": "AsiaTravelPlan",
         "url": "https://asiatravelplan.com/",
         "logo": "https://asiatravelplan.com/assets/img/logo-asiatravelplan.svg",
         "image": "https://asiatravelplan.com/assets/video/rice%20field.webp",
-        "description": "Private travel agency in Vietnam creating custom holidays across Vietnam, Thailand, Cambodia and Laos.",
-        "address": {
-          "@type": "PostalAddress",
-          "streetAddress": "alley 378 Cua Dai",
-          "addressLocality": "Ho Chi Minh City",
-          "addressCountry": "VN"
+        "description": "Tailor-made Southeast Asia journeys planned in Vietnam, with clear scope and trusted local support.",
+        "telephone": "+84 354999192",
+        "email": "info@asiatravelplan.com",
+        "identifier": {
+          "@type": "PropertyValue",
+          "name": "License",
+          "value": "4001328591"
         },
+        "address": [
+          {
+            "@type": "PostalAddress",
+            "name": "Head office in Hội An",
+            "streetAddress": "378/51 Cửa Đại",
+            "addressLocality": "Hội An Đông",
+            "addressRegion": "Đà Nẵng",
+            "addressCountry": "VN"
+          },
+          {
+            "@type": "PostalAddress",
+            "name": "Office in Hà Nội",
+            "streetAddress": "59 Đ. Lạc Long Quân",
+            "addressLocality": "Nghĩa Đô",
+            "postalCode": "100000",
+            "addressRegion": "Hà Nội",
+            "addressCountry": "VN"
+          }
+        ],
         "areaServed": ["Vietnam", "Thailand", "Cambodia", "Laos"],
+        "sameAs": [
+          "https://www.facebook.com/people/Asiatravelplan/61586533685459/"
+        ],
         "contactPoint": [
           {
             "@type": "ContactPoint",
             "contactType": "travel support",
-            "telephone": "+84-90-000-0000",
-            "email": "info@asiatravelplan.com"
+            "telephone": "+84 354999192",
+            "email": "info@asiatravelplan.com",
+            "url": "https://wa.me/84354999192"
           }
         ],
         "openingHoursSpecification": {

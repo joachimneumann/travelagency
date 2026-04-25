@@ -345,7 +345,7 @@ async function resolveBookingImageForPdf({ booking, bookingImagesDir, readTours,
   if (tourId && typeof readTours === "function" && typeof resolveTourImageDiskPath === "function") {
     const tours = await readTours().catch(() => []);
     const tour = safeArray(tours).find((item) => normalizeText(item?.id) === tourId);
-    const tourImageRelative = extractPublicRelativePath(tour?.image, "/public/v1/tour-images/");
+    const tourImageRelative = extractPublicRelativePath(safeArray(tour?.pictures)[0], "/public/v1/tour-images/");
     if (tourImageRelative) {
       const tourImageAbsolute = resolveTourImageDiskPath(tourImageRelative);
       if (await fileExists(tourImageAbsolute)) return tourImageAbsolute;
