@@ -70,6 +70,7 @@ export function createBookingTravelPlanModule(ctx) {
     setBookingSectionDirty,
     setPageSaveActionError,
     hasUnsavedBookingChanges,
+    prepareTravelPlanMutation,
     features = {}
   } = ctx;
   let lastMissingTravelPlanControlsDiagnosticKey = "";
@@ -466,6 +467,14 @@ export function createBookingTravelPlanModule(ctx) {
   async function ensureTravelPlanReadyForMutation() {
     if (!state.permissions.canEditBooking || !state.booking?.id) return false;
     if (!state.travelPlanDirty) return true;
+    if (typeof prepareTravelPlanMutation === "function") {
+      return await prepareTravelPlanMutation({
+        applyTravelPlanMutationBooking,
+        buildTravelPlanPayload,
+        syncTravelPlanDraftFromDom,
+        travelPlanStatus
+      });
+    }
     travelPlanStatus("Save edits to enable.", "info");
     return false;
   }

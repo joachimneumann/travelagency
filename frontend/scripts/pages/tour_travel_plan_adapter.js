@@ -85,6 +85,36 @@ export function createTourTravelPlanAdapter({
     return result;
   }
 
+  async function prepareTourTravelPlanMutation({
+    applyTravelPlanMutationBooking,
+    buildTravelPlanPayload,
+    syncTravelPlanDraftFromDom,
+    travelPlanStatus
+  } = {}) {
+    if (!state.travelPlanDirty) return true;
+    if (!state.booking?.id) return false;
+    if (typeof syncTravelPlanDraftFromDom === "function") syncTravelPlanDraftFromDom();
+    const travelPlan = typeof buildTravelPlanPayload === "function"
+      ? buildTravelPlanPayload()
+      : (state.travelPlanDraft || state.booking?.travel_plan || { days: [] });
+    if (typeof travelPlanStatus === "function") {
+      travelPlanStatus("Saving travel plan before uploading image...", "info");
+    }
+    const bookingTravelPlanUrl = `/api/v1/bookings/${encodeURIComponent(state.booking.id)}/travel-plan`;
+    const result = await fetchTourTravelPlanMutation(bookingTravelPlanUrl, {
+      method: "PATCH",
+      body: {
+        travel_plan: travelPlan,
+        actor: state.user
+      }
+    });
+    if (!result?.booking) return false;
+    if (typeof applyTravelPlanMutationBooking === "function") {
+      applyTravelPlanMutationBooking(result.booking, { preserveCollapsedState: true });
+    }
+    return true;
+  }
+
   function ensureCore() {
     if (core) return core;
     state.permissions.canEditBooking = state.permissions.canEditTours === true;
@@ -104,6 +134,7 @@ export function createTourTravelPlanAdapter({
       setBookingSectionDirty: setTourTravelPlanDirty,
       setPageSaveActionError: () => {},
       hasUnsavedBookingChanges: () => false,
+      prepareTravelPlanMutation: prepareTourTravelPlanMutation,
       features: {
         dates: false,
         timing: false,
