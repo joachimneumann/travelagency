@@ -3766,6 +3766,11 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
     /prepare_runtime_brand_logo\(\)[\s\S]*"\$RUNTIME_BRAND_LOGO_PREPARER" production[\s\S]*prepare_runtime_brand_logo[\s\S]*generate_public_homepage_assets/,
     "Production deploys should prepare the production runtime logo before regenerating frontend assets"
   );
+  assert.match(
+    updateProductionScript,
+    /dump_startup_diagnostics\(\)[\s\S]*logs --tail 200 keycloak[\s\S]*logs --tail 200 postgres[\s\S]*dump_startup_diagnostics "\$compose_up_exit_code"/,
+    "Production deploys should dump Keycloak and Postgres logs when compose startup fails"
+  );
 
   for (const source of [localCaddy, stagingCaddy]) {
     assert.match(source, /\/bookings\.html/, "Caddy should serve bookings.html");

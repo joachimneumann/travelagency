@@ -89,6 +89,20 @@ should_sync_atp_staff() {
   return 1
 }
 
+dump_startup_diagnostics() {
+  local exit_code="$1"
+
+  echo "Production compose startup failed with exit code $exit_code." >&2
+  echo "--- docker compose ps ---" >&2
+  docker_compose -p "$PROJECT_NAME" --env-file "$ENV_FILE" -f "$COMPOSE_FILE" ps >&2 || true
+
+  echo "--- keycloak logs (last 200 lines) ---" >&2
+  docker_compose -p "$PROJECT_NAME" --env-file "$ENV_FILE" -f "$COMPOSE_FILE" logs --tail 200 keycloak >&2 || true
+
+  echo "--- postgres logs (last 200 lines) ---" >&2
+  docker_compose -p "$PROJECT_NAME" --env-file "$ENV_FILE" -f "$COMPOSE_FILE" logs --tail 200 postgres >&2 || true
+}
+
 cd "$ROOT_DIR"
 
 if [[ ! -f "$ENV_FILE" ]]; then
@@ -110,7 +124,12 @@ if [[ ! -f backend/app/data/store.json ]]; then
   printf '{}\n' > backend/app/data/store.json
 fi
 
-docker_compose -p "$PROJECT_NAME" --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up -d --build --force-recreate "${SERVICES[@]}"
+compose_up_exit_code=0
+docker_compose -p "$PROJECT_NAME" --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up -d --build --force-recreate "${SERVICES[@]}" || compose_up_exit_code=$?
+if [[ "$compose_up_exit_code" -ne 0 ]]; then
+  dump_startup_diagnostics "$compose_up_exit_code"
+  exit "$compose_up_exit_code"
+fi
 
 if should_sync_atp_staff "${SERVICES[@]}"; then
   echo "Syncing ATP staff names from Keycloak ..."
