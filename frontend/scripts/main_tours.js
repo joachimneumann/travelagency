@@ -433,6 +433,7 @@ export function createFrontendToursController(ctx) {
         const countries = tourDestinations(trip);
         const countriesLabel = countries.join(", ");
         const ctaLabel = frontendT("tour.card.plan_trip", "Plan this trip");
+        const showMoreLabel = frontendT("tour.card.show_more", "Show more");
         const moreLabel = frontendT("tour.card.more", "more");
         const galleryLabel = frontendT("tour.card.gallery_next", "Show next picture for {title}", {
           title: tripTitle
@@ -496,6 +497,7 @@ export function createFrontendToursController(ctx) {
                 >${escapeHTML(moreLabel)}</button>
               </div>
               <div class="tags">${tags}</div>
+              <button class="btn btn-primary" type="button" data-tour-card-show-more data-trip-id="${escapeAttr(trip.id)}">${escapeHTML(showMoreLabel)}</button>
               <button class="btn btn-primary" type="button" data-open-modal data-trip-id="${escapeAttr(trip.id)}">${escapeHTML(ctaLabel)}</button>
             </div>
           </article>

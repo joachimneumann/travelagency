@@ -309,6 +309,11 @@
     "origin": "legacy",
     "updated_at": "2026-04-02T15:09:07.177Z"
   },
+  "tour.card.show_more": {
+    "source_hash": "f5c9bd131486e793ee105bd81f001fc25cdc2dac9c1d9f636ac7d43a10efc7e6",
+    "origin": "machine",
+    "updated_at": "2026-04-25T00:00:00.000Z"
+  },
   "tour.card.more": {
     "source_hash": "187897ce0afcf20b50ba2b37dca84a951b7046f29ed5ab94f010619f69d6e189",
     "origin": "machine",
