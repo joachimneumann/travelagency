@@ -639,25 +639,6 @@ export function createBookingTravelPlanModule(ctx) {
     return raw;
   }
 
-  function travelPlanDayDateStringLabel(value) {
-    const normalized = normalizeTravelPlanDayDateString(value);
-    if (!normalized) return "";
-    if (normalized === TRAVEL_PLAN_DAY_DATE_STRING.BEFORE_TRIP) {
-      return bookingT("booking.travel_plan.date_string.before_trip", "Before the trip");
-    }
-    if (normalized === TRAVEL_PLAN_DAY_DATE_STRING.AFTER_TRIP) {
-      return bookingT("booking.travel_plan.date_string.after_trip", "After the trip");
-    }
-    return normalized;
-  }
-
-  function travelPlanDayDateLabel(day) {
-    if (!allowDates) return "";
-    const date = String(day?.date || "").trim();
-    if (date) return date;
-    return travelPlanDayDateStringLabel(day?.date_string);
-  }
-
   function deriveNextTravelPlanDayDate(days) {
     if (!allowDates) return "";
     const items = Array.isArray(days) ? days : [];
@@ -854,7 +835,7 @@ export function createBookingTravelPlanModule(ctx) {
     const day = findDraftDay(normalizedId);
     const items = Array.isArray(day?.services) ? day.services : [];
     const fallback = headingNode.getAttribute("data-travel-plan-day-fallback") || "";
-    const summary = travelPlanDayCollapsedSummary(day, items).trim() || fallback;
+    const summary = travelPlanDayCollapsedSummary(day, items, { dayHeading: fallback }).trim() || fallback;
     headingNode.textContent = summary;
     headingNode.setAttribute("title", summary);
   }
@@ -988,25 +969,16 @@ export function createBookingTravelPlanModule(ctx) {
     applyTravelPlanDayCollapsedUi(normalizedId, collapsedIds.has(normalizedId), { animate: true });
   }
 
-  function travelPlanDayCollapsedSummary(day, items) {
-    const dateLabel = travelPlanDayDateLabel(day);
+  function travelPlanDayCollapsedSummary(day, items, { dayHeading = "" } = {}) {
     const title = resolveLocalizedDraftBranchText(day?.title_i18n ?? day?.title, bookingSourceLang(), "").trim();
-    const overnightLocation = resolveLocalizedDraftBranchText(
-      day?.overnight_location_i18n ?? day?.overnight_location,
-      bookingSourceLang(),
-      ""
-    ).trim();
-    const parts = [];
-    if (dateLabel) parts.push(dateLabel);
+    const serviceCount = Array.isArray(items) ? items.length : 0;
+    const parts = [String(dayHeading || "").trim()].filter(Boolean);
+    parts.push(bookingT(
+      serviceCount === 1 ? "booking.travel_plan.summary.item" : "booking.travel_plan.summary.items",
+      serviceCount === 1 ? "{count} service" : "{count} services",
+      { count: serviceCount }
+    ));
     if (title) parts.push(title);
-    if (overnightLocation) parts.push(overnightLocation);
-    if (items.length) {
-      parts.push(bookingT(
-        items.length === 1 ? "booking.travel_plan.summary.item" : "booking.travel_plan.summary.items",
-        items.length === 1 ? "{count} service" : "{count} services",
-        { count: items.length }
-      ));
-    }
     return parts.join(" · ");
   }
 
@@ -1535,8 +1507,9 @@ export function createBookingTravelPlanModule(ctx) {
   function renderTravelPlanDay(day, dayIndex) {
     const items = Array.isArray(day.services) ? day.services : [];
     const collapsed = isTravelPlanDayCollapsed(day.id);
-    const collapsedSummary = travelPlanDayCollapsedSummary(day, items);
-    const headingLabel = collapsedSummary || formatTravelPlanDayHeading(dayIndex);
+    const dayHeading = formatTravelPlanDayHeading(dayIndex);
+    const collapsedSummary = travelPlanDayCollapsedSummary(day, items, { dayHeading });
+    const headingLabel = collapsedSummary || dayHeading;
     const dateInputId = `travel_plan_day_date_${day.id}`;
     const dateStringValue = normalizeTravelPlanDayDateString(day?.date_string);
     const nextDaySuggestion = !String(day?.date || "").trim() ? suggestedNextTravelPlanDayDate(dayIndex) : "";
@@ -1557,7 +1530,7 @@ export function createBookingTravelPlanModule(ctx) {
         <div class="travel-plan-day__main">
           <div class="travel-plan-day__head">
             <div class="travel-plan-day__head-copy" data-travel-plan-toggle-day-area="${escapeHtml(day.id)}">
-              <h3 class="travel-plan-day__collapsed-heading" data-travel-plan-day-fallback="${escapeHtml(formatTravelPlanDayHeading(dayIndex))}" title="${escapeHtml(headingLabel)}">${escapeHtml(headingLabel)}</h3>
+              <h3 class="travel-plan-day__collapsed-heading" data-travel-plan-day-fallback="${escapeHtml(dayHeading)}" title="${escapeHtml(headingLabel)}">${escapeHtml(headingLabel)}</h3>
             </div>
             <div class="travel-plan-day__actions">
               <button class="btn btn-ghost travel-plan-move-btn travel-plan-move-btn--day" data-travel-plan-move-day-up="${escapeHtml(day.id)}" type="button" aria-label="${escapeHtml(bookingT("booking.travel_plan.move_day_up", "Move day up"))}">&#8593;</button>
