@@ -277,20 +277,20 @@ Recommendation:
 - guard it behind both environment and host checks
 - ideally remove it entirely from production builds
 
-### 10. Removed `quick_login` shortcut
+### 10. `quick_login` is local-only
 
 Relevant code:
 - `backend/app/src/auth.js`
 - `backend/keycloak-theme/asiatravelplan/login/theme.properties`
 
-The previous staging/local `quick_login` shortcut has been removed from the backend login redirect, homepage Command-click behavior, and Keycloak theme scripts.
+The previous staging Keycloak theme quick-login script has been removed. Local development keeps `quick_login=1`, but it is handled by the backend only when both the request host and `KEYCLOAK_BASE_URL` are loopback addresses.
 
-Do not reintroduce credentials in static Keycloak theme assets or frontend JavaScript.
+Do not reintroduce credentials in static Keycloak theme assets or frontend JavaScript. Local quick login should use local demo credentials via backend-only configuration.
 
 Recommendation:
 - keep all staging login shortcuts disabled
 - use normal Keycloak credentials for staging validation
-- keep any future test-only auth shortcut behind explicit local-only environment gates
+- keep any test-only auth shortcut behind explicit local-only environment gates
 
 ### 11. Public webhook status endpoint leaks operational details
 

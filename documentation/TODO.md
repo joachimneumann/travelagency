@@ -1,189 +1,21 @@
-# in progress
-
-Remove stage as a drop down from booking.html. Instead add buttons such as travel plan sent to customer, offer sent to customer, deposit received, etc. 
-Then Automatically derive the stage and write a description of the stage and last action at the top of the booking.html page. for example: "Offer sent to customer. Waiting for deposit"
-
 # TODO
 
-staging: git write persmissions
+index.html
+==========
+only show the hover animation of the image when there is more than one image.
 
-# tour guide / ATP staff
+make the "show more" button eually tall as the Plan this trip button
 
-Booking stage
-=============
-change and save results in: 
-
-[booking-dirty] Section dirty state changed. {booking_id: 'booking_dec5e3e2-bef7-44f2-8dc9-22b0ad162e3b', section: 'core', dirty: true, diagnostic: {…}, dirty_sections: Array(1)}
-booking.js:480 [booking-dirty] Section dirty state changed. {booking_id: 'booking_dec5e3e2-bef7-44f2-8dc9-22b0ad162e3b', section: 'pricing', dirty: true, diagnostic: null, dirty_sections: Array(2)}
-booking.js:149 [booking-save] Save button clicked. {booking_id: 'booking_dec5e3e2-bef7-44f2-8dc9-22b0ad162e3b', dirty: {…}, has_unsaved_changes: true, page_save_in_flight: false, page_discard_in_flight: false}
-booking.js:149 [booking-save] Save flow started. {booking_id: 'booking_dec5e3e2-bef7-44f2-8dc9-22b0ad162e3b', dirty: {…}, page_dirty_bar_status: 'saving'}
-booking.js:149 [booking-save] Running save task. {booking_id: 'booking_dec5e3e2-bef7-44f2-8dc9-22b0ad162e3b', task: 'Booking details'}
-booking_page_data.js:103  POST http://localhost:8080/api/v1/bookings/booking_dec5e3e2-bef7-44f2-8dc9-22b0ad162e3b/milestone-actions?content_lang=en&source_lang=en 409 (Conflict)
-fetchBookingMutation @ booking_page_data.js:103
-fetchBookingMutation @ booking.js:1708
-saveCoreEdits @ core.js:1060
-saveCoreEdits @ booking.js:1160
-run @ booking.js:1371
-savePageEdits @ booking.js:1419
-(anonymous) @ booking.js:728Understand this error
-api.js:39 [booking] Backend rejected a booking mutation request. {booking_id: 'booking_dec5e3e2-bef7-44f2-8dc9-22b0ad162e3b', method: 'POST', url: 'http://localhost:8080/api/v1/bookings/booking_dec5…/milestone-actions?content_lang=en&source_lang=en', status: 409, status_text: 'Conflict', …}
-logBrowserConsoleError @ api.js:39
-fetchBookingMutation @ booking_page_data.js:125
-await in fetchBookingMutation
-fetchBookingMutation @ booking.js:1708
-saveCoreEdits @ core.js:1060
-saveCoreEdits @ booking.js:1160
-run @ booking.js:1371
-savePageEdits @ booking.js:1419
-(anonymous) @ booking.js:728Understand this error
-booking.js:149 [booking-save] Save task finished. {booking_id: 'booking_dec5e3e2-bef7-44f2-8dc9-22b0ad162e3b', task: 'Booking details', duration_ms: 11, result: 'blocked_or_failed'}
-booking.js:149 [booking-save] Save flow stopped because a task returned false. {booking_id: 'booking_dec5e3e2-bef7-44f2-8dc9-22b0ad162e3b', task: 'Booking details', dirty: {…}}
-booking.js:149 [booking-save] Save flow finalized. {booking_id: 'booking_dec5e3e2-bef7-44f2-8dc9-22b0ad162e3b', save_completed: false, duration_ms: 12, page_dirty_bar_status: '', dirty: {…}}
-
-Can you add a feature to the booking.html page, in the danger zone at the bottom:
-Clone Booking with a "new title" textfield.
-When pressed, the booking should be cloned following the rules set in the cloning script (new IDs)
-
-Database structure around travelplan, inclusing destinations and style
-What is copied when a travel plan is copied?
-What is copied when a booking is copied?
-Datenstructue (cue)
-service
-day can have 0+ services
-before tour
-after tour day
-Travel plan has days and destinations
-Core Booking
-Core Booking with traveler
-Booking
-booking has rumpf booking and more
-
-I want to change the Status visibility and payment logic. Update the document payment to reflect this logic. You may completely rewrite the payments.md file.
-======
-- completely remove the Stage logic (before versus after deposit paid), remove all of these stages:
-Before deposit received
-New booking
-Travel plan sent
-Offer sent
-Negotiation
-Deposit requested
-Booking lost
-Deposit Received
-After deposit received
-In progress
-Trip completed
-Booking lost
-- remove all booking milestones / status from the model, code and UI
-- remove all buttons
-- remove all badge/status, e.g., Awaiting payment
-
-- completely remove the next steps logic (Proposal in progress, Proposal sent, Booking confirmation / Deposit pending, Deposit confirmed, Remaining payments, Fully paid)
-
-Center the logic around the financial flow:
-Depost, optional installment payments and final payment
-
-Each stage (deposit, installments payments and final payment according to the payment plan) has:
-1. A section for PDF generation to ask for the money (initially collapsed):
-1.1: PDF Texts for personalization (initially collapsed)
-1.2: PDF Attachments  (initially empty and collapsed)
-1.3: Table of generated PDFs
-1.4: A button: "new PDF"
-2. A Payment received section:
-2.2: Amount received
-2.3: When received (date)
-2.4: Confirmed by (ATP staff drop down)
-2.5: Receipt reference (text field)
-2.6: Snapshot of the offer (last generated PDF, offer parameters) at the time when the payment has been received
-3. A Customer Receipt section (initially collapsed)
-3.1: PDF Texts for personalization (initially collapsed)
-3.2: PDF Attachments  (initially empty and collapsed)
-3.3: Table of generated PDFs
-3.4: A button: "new PDF"
-
-
-
-Proposal & Payments
-===================
-remove the Track the current commercial step and the next ATP action.
-
-
-In the travel plan PDF configuration, add a section "Cancellation policy" with a default value:
-
-
-In the payments sections, after the deposit has been received and this is confirmed, add a table with Booking confirmations PDFs and a button "create Booking confirmation".
-
-The Booking confirmation PDF shall contain:
-
-- AsiaTravelPlan header
-- Title of the booking
-- who is traveling
-- short table of travel plan (one line per day)
-- Your AsiaTravelPlan Contact: name and WhatsApp /Phone
-- Total Amount, Deposit Received, Remaining Balance
-- and the Deposit Payment Confirmation:
-"This document confirms receipt of a deposit payment of XXXX".
-					
-Thank you for your payment. AsiaTravelPlan looks forward to supporting you throughout your journey.					
-					
-AsiaTravelPlan				            AsiaTravelPlan	
-Director's Signature				Tour Coordinator's Signature	
-					
-
-Cancellation policy
-===================
-
-For group of 1-10 persons:
-If cancellation is made 14 days prior to travel date, 0% of total fee will be charged.
-If cancellation is made 7-14 days prior to travel date, 30% of total fee will be charged.
-If cancellation is made 0-7 days prior to travel date, 50% of total fee will be charged.
-
-For group of 11-20 persons:
-If cancellation is made 21 days prior to travel date, 0% of total fee will be charged.
-If cancellation is made 10-21 days prior to travel date, 30% of total fee will be charged.
-If cancellation is made 0-10 days prior to travel date, 50% of total fee will be charged.
-
-For group of 21 persons or above:
-If cancellation is made 30 days prior to travel date, 0% of total fee will be charged.
-If cancellation is made 15-30 days prior to travel date, 30% of total fee will be charged.
-If cancellation is made 0-15 days prior to travel date, 50% of total fee will be charged.
-
-Travel plan
-===========
-* Copy whole travel plan from another booking
-** Regenerate all IDs
-** set dates blank
-* remove "Travel plan saved."
-* Copy existing service:
-** red "X"
-** "Insert as copy" "use"
-** in the preview: remove "Day X" and "0 image(s)"
-** mark as copied service.
-** search for service: 
-*** priority: services from this travel plan
-*** When services have an identical summary only show the newest of theses services but enable a button: show all
-*** remove "Search existing booking services and insert a copy into this day."
-*** "Copy existing service" --> "Existing services"
-* Copy existing day, also with preview
-
-* after adding a picture to a service, keep the service open, no jumping on the page
-
-Travel plan PDF
-==============
-PDF personalization
-- remove subtitle "Override the default customer-facing text when needed. Leave a field empty to use the derived default."
-- Travel plan subtitle -> Subtitle below title
-- horizontally center the web form submission
-
-- Treat accomodation special: You will stay at:... near the day
-
+in marketing_tour.html: if the backend language is VI put the EN back in front of both the Tour Title and the Tour description. Us the same horizontal size as in front of the day and service fields.
 
 Translate
 =========
-* Also Translate tour descriptions with openai
+* Translate with openai
 
 Travler
 =======
 * test! when clicking on the traveler, load the data from the backend. The traveler might have submitted his data.
+
 
 emergency.html
 =============

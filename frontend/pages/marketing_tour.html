@@ -20,6 +20,7 @@
     </script>
     <style>
       .tour-picture-editor {
+        --tour-media-preview-width: clamp(150px, 18vw, 220px);
         display: grid;
         gap: 1rem;
       }
@@ -28,21 +29,39 @@
         display: grid;
         grid-template-columns: minmax(0, 1fr);
         gap: 1rem;
+        justify-items: center;
       }
 
       .tour-picture-card {
         display: grid;
-        grid-template-columns: clamp(180px, 24vw, 260px) minmax(0, 1fr) auto;
+        grid-template-columns: minmax(0, var(--tour-media-preview-width)) auto;
         gap: 1rem;
         align-items: center;
+        justify-content: center;
+        width: fit-content;
+        max-width: 100%;
+        margin-inline: auto;
         padding: 1rem;
         border: 1px solid var(--line);
         border-radius: 1rem;
         background: var(--surface);
       }
 
+      .tour-picture-card__media {
+        grid-column: 1;
+        grid-row: 1;
+        display: grid;
+        gap: 0.5rem;
+        justify-items: center;
+        justify-self: center;
+        width: min(100%, var(--tour-media-preview-width));
+        min-width: 0;
+      }
+
       .tour-picture-card__frame {
-        position: relative;
+        width: 100%;
+        border-radius: 1rem;
+        overflow: hidden;
       }
 
       .tour-picture-card__image {
@@ -50,37 +69,25 @@
         aspect-ratio: 1 / 1;
         object-fit: cover;
         border: 1px solid var(--line);
-        border-radius: 1rem;
+        border-radius: inherit;
         background: var(--surface-muted);
+        cursor: pointer;
         display: block;
       }
 
-      .tour-picture-card__meta {
-        display: grid;
-        gap: 0.35rem;
-        min-width: 0;
-        align-self: center;
-      }
-
-      .tour-picture-card__actions {
-        display: contents;
-      }
-
-      .tour-picture-card__name {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: normal;
-        overflow-wrap: anywhere;
-        min-width: 0;
+      .tour-picture-card__filename {
+        max-width: 100%;
         color: var(--text-strong);
-      }
-
-      .tour-picture-card__order {
-        color: var(--text-soft);
+        overflow-wrap: anywhere;
+        text-align: center;
+        user-select: text;
       }
 
       .tour-picture-card__remove {
+        grid-column: 2;
+        grid-row: 1;
         align-self: center;
+        justify-self: start;
       }
 
       .tour-picture-empty {
@@ -91,26 +98,52 @@
       }
 
       .tour-picture-toolbar {
-        display: flex;
-        flex-wrap: wrap;
+        display: grid;
+        justify-items: center;
         align-items: center;
-        gap: 0.75rem 1rem;
+        gap: 0.5rem;
+        text-align: center;
+      }
+
+      .tour-picture-toolbar .micro {
+        max-width: min(100%, 34rem);
+        margin: 0;
       }
 
       .tour-reel-editor {
+        --tour-media-preview-width: clamp(150px, 18vw, 220px);
         display: grid;
         gap: 1rem;
       }
 
       .tour-reel-card {
         display: grid;
-        grid-template-columns: clamp(180px, 24vw, 260px) minmax(0, 1fr) auto;
+        grid-template-columns: minmax(0, var(--tour-media-preview-width)) auto;
         gap: 1rem;
         align-items: center;
+        justify-content: center;
+        width: fit-content;
+        max-width: 100%;
+        margin-inline: auto;
         padding: 1rem;
         border: 1px solid var(--line);
         border-radius: 1rem;
         background: var(--surface);
+      }
+
+      .tour-reel-card__media {
+        grid-column: 1;
+        grid-row: 1;
+        display: grid;
+        gap: 0.5rem;
+        justify-items: center;
+        justify-self: center;
+        width: min(100%, var(--tour-media-preview-width));
+        min-width: 0;
+      }
+
+      .tour-reel-card__frame {
+        width: 100%;
       }
 
       .tour-reel-card__preview {
@@ -119,23 +152,24 @@
         border: 1px solid var(--line);
         border-radius: 1rem;
         background: var(--surface-muted);
+        cursor: pointer;
         object-fit: cover;
         display: block;
       }
 
-      .tour-reel-card__meta {
-        display: grid;
-        gap: 0.35rem;
-        min-width: 0;
-      }
-
-      .tour-reel-card__name {
-        overflow-wrap: anywhere;
+      .tour-reel-card__filename {
+        max-width: 100%;
         color: var(--text-strong);
+        overflow-wrap: anywhere;
+        text-align: center;
+        user-select: text;
       }
 
-      .tour-reel-card__hint {
-        color: var(--text-soft);
+      .tour-reel-card__remove {
+        grid-column: 2;
+        grid-row: 1;
+        align-self: center;
+        justify-self: start;
       }
 
       .tour-reel-empty {
@@ -145,21 +179,39 @@
         background: var(--surface-muted);
       }
 
-      @media (max-width: 720px) {
+      @media (max-width: 520px) {
         .tour-picture-card {
           grid-template-columns: minmax(0, 1fr);
+          width: 100%;
         }
 
-        .tour-picture-card__frame {
-          max-width: 320px;
+        .tour-picture-card__media {
+          grid-column: 1;
+          grid-row: auto;
+          max-width: var(--tour-media-preview-width);
         }
 
         .tour-picture-card__remove {
-          justify-self: start;
+          grid-column: 1;
+          grid-row: auto;
+          justify-self: center;
         }
 
         .tour-reel-card {
           grid-template-columns: minmax(0, 1fr);
+          width: 100%;
+        }
+
+        .tour-reel-card__media {
+          grid-column: 1;
+          grid-row: auto;
+          max-width: var(--tour-media-preview-width);
+        }
+
+        .tour-reel-card__remove {
+          grid-column: 1;
+          grid-row: auto;
+          justify-self: center;
         }
       }
     </style>
@@ -222,7 +274,7 @@
                   <div class="tour-reel-editor">
                     <div id="tour_reel_video_card" aria-live="polite"></div>
                     <div class="tour-picture-toolbar">
-                      <button class="btn btn-ghost" id="tour_add_reel_btn" type="button" data-i18n-id="tour.add_reel_video">Upload reel video</button>
+                      <button class="btn btn-ghost" id="tour_add_reel_btn" type="button" data-i18n-id="tour.new_reel_video">New Reel</button>
                       <p class="micro" data-i18n-id="tour.reel_video_help">One reel video per tour. Uploading a new file replaces the previous reel and stores it as a normalized portrait MP4.</p>
                     </div>
                   </div>

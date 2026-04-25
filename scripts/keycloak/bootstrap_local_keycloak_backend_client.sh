@@ -74,7 +74,7 @@ payload = {
     "publicClient": False,
     "bearerOnly": False,
     "standardFlowEnabled": True,
-    "directAccessGrantsEnabled": False,
+    "directAccessGrantsEnabled": True,
     "serviceAccountsEnabled": False,
     "implicitFlowEnabled": False,
     "redirectUris": [

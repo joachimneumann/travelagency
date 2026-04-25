@@ -127,7 +127,13 @@ test("backend ui i18n sync script passes and local backend startup is strict by 
   const repoRoot = path.resolve(__dirname, "..", "..", "..");
   const syncScriptPath = path.join(repoRoot, "scripts", "i18n", "sync_backend_i18n.mjs");
   const startLocalBackendPath = path.join(repoRoot, "scripts", "local", "start_local_backend.sh");
-  const startLocalBackendSource = await readFile(startLocalBackendPath, "utf8");
+  const localKeycloakClientPath = path.join(repoRoot, "scripts", "keycloak", "bootstrap_local_keycloak_backend_client.sh");
+  const sharedKeycloakClientPath = path.join(repoRoot, "scripts", "keycloak", "bootstrap_keycloak_backend_realm.sh");
+  const [startLocalBackendSource, localKeycloakClientSource, sharedKeycloakClientSource] = await Promise.all([
+    readFile(startLocalBackendPath, "utf8"),
+    readFile(localKeycloakClientPath, "utf8"),
+    readFile(sharedKeycloakClientPath, "utf8")
+  ]);
 
   await execFileAsync(process.execPath, [syncScriptPath, "check"], { cwd: repoRoot });
 
@@ -155,6 +161,16 @@ test("backend ui i18n sync script passes and local backend startup is strict by 
     startLocalBackendSource,
     /\.zshrc/,
     "Local backend startup should not depend on user shell startup files"
+  );
+  assert.match(
+    localKeycloakClientSource,
+    /"directAccessGrantsEnabled": True/,
+    "Local Keycloak should allow the backend-local quick-login password grant"
+  );
+  assert.match(
+    sharedKeycloakClientSource,
+    /"directAccessGrantsEnabled": False/,
+    "Shared staging/production Keycloak bootstrap should keep password grants disabled"
   );
 });
 
@@ -3326,23 +3342,53 @@ test("tour page keeps website content translations in the English-source review 
   );
   assert.match(
     tourSource,
+    /const TOUR_DESCRIPTION_MAX_LENGTH = 170;/,
+    "Marketing-tour English website descriptions should use the 170-character source limit"
+  );
+  assert.match(
+    tourSource,
+    /function normalizeTourShortDescriptionMap\(value, fallbackValue = ""\) \{[\s\S]*normalized\[TOUR_TRANSLATION_SOURCE_LANG\] = truncateTourSourceDescription\(normalized\[TOUR_TRANSLATION_SOURCE_LANG\]\)/,
+    "Loading an existing marketing tour should truncate only the English source description"
+  );
+  assert.match(
+    tourSource,
     /function renderLocalizedTourContentEditor\(\)\s*\{[\s\S]*const lang = TOUR_TRANSLATION_SOURCE_LANG;/,
     "The visible website title and description editor should render only the English source fields"
   );
   assert.match(
     tourSource,
-    /backendT\("tour\.content_label", "Tour Title and description"\)[\s\S]*tour-localized-group__code--inline[\s\S]*tourLanguageShortLabel\(lang\)/,
-    "The visible tour title and description editor should put the English language marker beside the title"
+    /data-tour-i18n-field="short_description_i18n"[\s\S]*maxlength="\$\{TOUR_DESCRIPTION_MAX_LENGTH\}"/,
+    "The visible English source description textarea should prevent entering more than 170 characters"
+  );
+  assert.match(
+    tourSource,
+    /function shouldShowTourContentSourceCue\(\) \{[\s\S]*normalizeTourTextLang\(currentBackendLang\(\)\) === "vi";[\s\S]*\}/,
+    "Vietnamese backend users should see the English source cue in front of website content source fields"
   );
   assert.doesNotMatch(
     tourSource,
-    /tour-localized-group__code-cell[\s\S]*tourLanguageShortLabel\(lang\)[\s\S]*data-tour-i18n-field="title_i18n"/,
-    "The visible tour title and description editor should not keep a left-side EN marker"
+    /headerCodeMarkup|tour-localized-group__code--inline/,
+    "The website content editor should not render an inline EN marker after the Tour Title and description label"
+  );
+  assert.match(
+    tourSource,
+    /const sourceCueMarkup = showSourceCue[\s\S]*localized-pair__code tour-localized-content__source-code/,
+    "The website content editor should keep field-level EN source cues for Vietnamese backend users"
+  );
+  assert.match(
+    tourSource,
+    /<div class="\$\{fieldClass\}">\s*\$\{sourceCueMarkup\}[\s\S]*data-tour-i18n-field="title_i18n"[\s\S]*<div class="\$\{fieldClass\}">\s*\$\{sourceCueMarkup\}[\s\S]*data-tour-i18n-field="short_description_i18n"/,
+    "The visible tour title and description editor should render the source cue in front of both English source fields"
   );
   assert.match(
     siteStyles,
     /\.tour-localized-group__code--inline[\s\S]*\.tour-localized-group--content \.tour-localized-group__row \{[\s\S]*grid-template-columns: minmax\(0, 1fr\);[\s\S]*\.tour-localized-group--content \.tour-localized-group__header \{[\s\S]*padding-left: 0;/,
-    "The marketing-tour content editor should use a single-column row after moving the language marker into the title"
+    "The marketing-tour content editor should keep the outer content row single-column"
+  );
+  assert.match(
+    siteStyles,
+    /\.tour-localized-content__field--source-code \{[\s\S]*grid-template-columns: 1\.35rem minmax\(0, 1fr\);/,
+    "The Vietnamese backend source cue should reuse the same language-code column width as travel-plan day and service fields"
   );
   assert.match(
     englishTranslations,
@@ -4148,10 +4194,15 @@ test("frontend language switching updates the homepage in place instead of forci
     /scheduleDeferredAuthStatusLoad\(\)|scheduleDeferredTask\(\(\) => \{\s*void loadWebsiteAuthStatus\(\)/,
     "Homepage should refresh website auth status directly instead of hiding it behind an idle callback"
   );
+  assert.match(
+    mainSource,
+    /event\.metaKey && isLocalFrontend\(\)[\s\S]*quick_login:\s+"1"/,
+    "Homepage brand-logo Command-click should keep the quick-login shortcut for local development"
+  );
   assert.doesNotMatch(
     mainSource,
-    /quick_login|login_hint/,
-    "Homepage brand-logo behavior should not expose staging quick-login shortcuts"
+    /staging\.asiatravelplan\.com[\s\S]{0,300}quick_login|quick_login[\s\S]{0,300}staging\.asiatravelplan\.com|login_hint|quick_login_user/,
+    "Homepage brand-logo behavior should not expose staging quick-login shortcuts or static quick-login users"
   );
   assert.match(
     mainSource,
@@ -4200,7 +4251,7 @@ test("frontend language switching updates the homepage in place instead of forci
   );
 });
 
-test("homepage tour cards clamp long descriptions and open the shared detail popup", async () => {
+test("homepage tour cards use fixed-height text areas without an inline more link", async () => {
   const mainToursPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "main_tours.js");
   const homepagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "index.html");
   const siteCssPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "site.css");
@@ -4210,25 +4261,65 @@ test("homepage tour cards clamp long descriptions and open the shared detail pop
     readFile(siteCssPath, "utf8")
   ]);
 
-  assert.match(
+  assert.doesNotMatch(
     homepageSource,
     /id="tourDescriptionDetail"/,
-    "Homepage should expose a dedicated overlay mount for expanded tour descriptions"
+    "Homepage should not keep the old inline-description detail overlay after removing the more link"
   );
-  assert.match(
+  assert.doesNotMatch(
     mainToursSource,
-    /data-tour-desc-toggle[\s\S]*data-tour-desc-trip-id[\s\S]*syncTourDescriptionToggles\(\)/,
-    "Tour cards should render a conditional more button for clamped descriptions"
-  );
-  assert.match(
-    mainToursSource,
-    /function renderTourDescriptionDetail\(\) \{[\s\S]*team-detail[\s\S]*team-detail__name[\s\S]*team-detail__body/,
-    "Expanded tour descriptions should reuse the shared homepage detail popup shell"
+    /data-tour-desc-toggle|syncTourDescriptionToggles|function renderTourDescriptionDetail|tour\.card\.more/,
+    "Tour cards should no longer render the old inline more link for clamped descriptions"
   );
   assert.match(
     siteCssSource,
     /\.tour-desc \{[\s\S]*-webkit-line-clamp: var\(--tour-card-desc-lines\);[\s\S]*min-height: calc\(1em \* var\(--tour-card-desc-line-height\) \* var\(--tour-card-desc-lines\)\);/,
     "Tour descriptions should clamp to a fixed-height preview so cards stay aligned"
+  );
+  assert.match(
+    siteCssSource,
+    /\.tour-body \{[\s\S]*grid-template-rows: auto auto auto 1fr auto auto;[\s\S]*\.tour-desc-wrap \{[\s\S]*min-height: calc\(1em \* var\(--tour-card-desc-line-height\) \* var\(--tour-card-desc-lines\)\);/,
+    "Tour card text rows should reserve the same title, description, and tag heights before the action buttons"
+  );
+  assert.match(
+    mainToursSource,
+    /const openingTourColumnIndexes = new Map\(\)[\s\S]*data-tour-card-id="\$\{escapeAttr\(tripId\)\}"[\s\S]*function captureTourCardRects\(\)[\s\S]*function animateTourGridLayout\(previousRects, \{ excludedTripIds = \[\] \} = \{\}\)[\s\S]*if \(excludedIds\.has\(tripId\)\) return;/,
+    "Show more/show less should capture and animate tour-card grid movement before expanding details"
+  );
+  assert.match(
+    mainToursSource,
+    /function animateExpandedTourCardToLeft\(row\)[\s\S]*currentColumn <= 1[\s\S]*row\.style\.setProperty\("--tour-details-column", "1"\)[\s\S]*duration: TOUR_GRID_LAYOUT_TRANSITION_MS/,
+    "The expanded card should animate to the left column after sibling cards move, unless it is already left"
+  );
+  assert.match(
+    mainToursSource,
+    /const sidePanelClass = columnCount > 1[\s\S]*tour-details-row--side-panel tour-details-row--columns-\$\{columnCount\}[\s\S]*tour-details-row--attached[\s\S]*class="tour-details-row\$\{sidePanelClass\}"/,
+    "Multi-column expanded tour rows should switch to the side-panel layout and attach the details panel when the card is already left-aligned"
+  );
+  assert.match(
+    mainToursSource,
+    /function stickyHeaderBottomOffset\(\)[\s\S]*document\.querySelector\("\.header"\)[\s\S]*function scrollTourCardFullyVisible\(tripId,[\s\S]*visibleTop = stickyHeaderBottomOffset\(\) \+ TOUR_CARD_SCROLL_MARGIN_PX[\s\S]*rect\.height > availableHeight \|\| rect\.top < visibleTop[\s\S]*rect\.bottom > visibleBottom/,
+    "Show more should account for the sticky header and scroll the selected card fully into the visible viewport when needed"
+  );
+  assert.match(
+    mainToursSource,
+    /async function animateTourDetailsOpen\(tripId\)[\s\S]*const previousRects = captureTourCardRects\(\)[\s\S]*const initialColumnIndex = tourGridColumnIndexForTrip\(tripId\)[\s\S]*await animateTourGridLayout\(previousRects, \{ excludedTripIds: \[tripId\] \}\);[\s\S]*await animateExpandedTourCardToLeft\(row\);[\s\S]*openingTourColumnIndexes\.delete\(tripId\);[\s\S]*await scrollTourCardFullyVisible\(tripId\);[\s\S]*const opensSideways = row\.classList\.contains\("tour-details-row--side-panel"\);[\s\S]*await animateTourDetailsRowHeight\(row, opensSideways \? collapsedHeight : expandedHeight, "open"\);[\s\S]*clearTourDetailsRowAnimation\(row, \{ preserveHeight: opensSideways \}\)/,
+    "Opening a tour should move only sibling cards first, animate the selected card left once, ensure it is visible, then expand sideways when space exists"
+  );
+  assert.match(
+    mainToursSource,
+    /async function animateTourDetailsClose\(tripId\)[\s\S]*await animateTourDetailsRowHeight\(row, collapsedHeight, "close"\)[\s\S]*const previousRects = captureTourCardRects\(\)[\s\S]*await animateTourGridLayout\(previousRects\)/,
+    "Closing a tour should collapse details before moving sibling cards back into the row"
+  );
+  assert.match(
+    siteCssSource,
+    /\.tour-details-row \{[\s\S]*grid-template-columns: repeat\(var\(--tour-grid-columns, 3\), minmax\(0, 1fr\)\);[\s\S]*column-gap: 1\.5rem;[\s\S]*row-gap: 0;[\s\S]*transition:[\s\S]*height 0\.64s[\s\S]*\.tour-details-row--side-panel \.tour-details-row__shell \{[\s\S]*grid-column: 1 \/ -1;[\s\S]*grid-template-columns: repeat\(var\(--tour-grid-columns, 3\), minmax\(0, 1fr\)\);[\s\S]*\.tour-details-row--side-panel \.tour-details-row__shell > \.tour-card \{[\s\S]*grid-column: var\(--tour-details-column, 1\);[\s\S]*\.tour-details-row--side-panel \.tour-details-row__panel \{[\s\S]*grid-column: 2 \/ -1;/,
+    "Expanded tour details should keep the selected card at the normal tour-card grid width and expand details into the right-side grid space"
+  );
+  assert.match(
+    siteCssSource,
+    /\.tour-details-row--side-panel\.tour-details-row--attached \.tour-details-row__shell \{[\s\S]*column-gap: 0;[\s\S]*\.tour-details-row--side-panel\.tour-details-row--attached\.tour-details-row--columns-2 \.tour-details-row__shell \{[\s\S]*grid-template-columns: calc\(\(100% - 1\.5rem\) \/ 2\) minmax\(0, 1fr\);[\s\S]*\.tour-details-row--side-panel\.tour-details-row--attached\.tour-details-row--columns-3 \.tour-details-row__shell \{[\s\S]*grid-template-columns: calc\(\(100% - 3rem\) \/ 3\) minmax\(0, 1fr\);/,
+    "Attached side-panel tour details should remove the gutter while keeping the card track at the normal tour-card width"
   );
 });
 
@@ -4591,10 +4682,20 @@ test("backend auth normalizes token roles and derives callback URLs from the act
     /authRequests\.set\(state,\s*\{[\s\S]*redirect_uri:\s*redirectUri[\s\S]*created_at:\s*Date\.now\(\)/,
     "auth.js should persist the request-specific redirect URI in the auth request state"
   );
+  assert.match(
+    authSource,
+    /function isLocalQuickLoginAllowed\(req\)[\s\S]*isLoopbackHost\(hostnameFromHostHeader\(req\.headers\.host\)\) && isLoopbackUrl\(cfg\.keycloakBaseUrl\)/,
+    "auth.js should gate quick login to loopback requests against loopback Keycloak only"
+  );
+  assert.match(
+    authSource,
+    /grant_type:\s+"password"[\s\S]*username,[\s\S]*password,[\s\S]*client_secret:\s+cfg\.keycloakClientSecret/,
+    "auth.js should implement local quick login as a backend-only password grant without static frontend credentials"
+  );
   assert.doesNotMatch(
     authSource,
-    /quick_login|quickLogin|login_hint/,
-    "auth.js should not pass quick-login hints or credentials into Keycloak"
+    /staging\.asiatravelplan\.com|login_hint/,
+    "auth.js should not pass staging quick-login hints into Keycloak"
   );
   assert.match(
     authSource,

@@ -29,6 +29,9 @@ export function createAuth({ port }) {
         .map((value) => normalizeText(value))
         .filter(Boolean)
     ),
+    localQuickLoginEnabled: parseBoolEnv("LOCAL_QUICK_LOGIN_ENABLED", true),
+    localQuickLoginUser: normalizeText(process.env.LOCAL_QUICK_LOGIN_USER || "joachim"),
+    localQuickLoginPassword: normalizeText(process.env.LOCAL_QUICK_LOGIN_PASSWORD || process.env.LOCAL_KEYCLOAK_STAFF_PASSWORD || "atp"),
     insecureTestAuth: parseBoolEnv("INSECURE_TEST_AUTH", false),
     returnToAllowedOrigins: new Set(
       String(process.env.RETURN_TO_ALLOWED_ORIGINS || `http://localhost:8080,http://127.0.0.1:8080,http://localhost:${port},http://127.0.0.1:${port}`)
@@ -366,7 +369,32 @@ export function createAuth({ port }) {
   }
 
   function isLoopbackHost(hostname) {
-    return hostname === "localhost" || hostname === "127.0.0.1";
+    return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1" || hostname === "[::1]";
+  }
+
+  function hostnameFromHostHeader(value) {
+    const raw = normalizeText(value);
+    if (!raw) return "";
+    try {
+      return new URL(`http://${raw}`).hostname;
+    } catch {
+      return raw.split(":")[0];
+    }
+  }
+
+  function isLoopbackUrl(value) {
+    const raw = normalizeText(value);
+    if (!raw) return false;
+    try {
+      return isLoopbackHost(new URL(raw).hostname);
+    } catch {
+      return false;
+    }
+  }
+
+  function isLocalQuickLoginAllowed(req) {
+    if (!cfg.localQuickLoginEnabled) return false;
+    return isLoopbackHost(hostnameFromHostHeader(req.headers.host)) && isLoopbackUrl(cfg.keycloakBaseUrl);
   }
 
   function sameLogoutOriginAlias(left, right) {
@@ -432,6 +460,93 @@ export function createAuth({ port }) {
     res.end();
   }
 
+  async function createSessionFromTokenPayload(res, tokenPayload, missingTokenError = "Missing access token in callback") {
+    const accessToken = normalizeText(tokenPayload.access_token);
+    const idToken = normalizeText(tokenPayload.id_token);
+    const refreshToken = normalizeText(tokenPayload.refresh_token);
+    if (!accessToken) {
+      return { ok: false, status: 400, body: { error: missingTokenError } };
+    }
+
+    const verified = await verifyKeycloakToken(accessToken);
+    const roles = extractRolesFromPayload(verified);
+    const hasRole = roles.some((role) => cfg.keycloakAllowedRoles.has(role));
+    if (!hasRole) {
+      console.warn(
+        `[auth] denied backend access for ${String(verified.preferred_username || verified.email || verified.sub || "unknown")} with claims: ${JSON.stringify(
+          {
+            roles,
+            groups: Array.isArray(verified.groups) ? verified.groups : []
+          }
+        )}`
+      );
+      return { ok: false, status: 403, body: { error: "Authenticated but not authorized for backend access" } };
+    }
+
+    const sid = `sess_${randomUUID()}`;
+    sessions.set(sid, {
+      sub: String(verified.sub || ""),
+      name: String(verified.name || ""),
+      given_name: String(verified.given_name || ""),
+      family_name: String(verified.family_name || ""),
+      preferred_username: String(verified.preferred_username || ""),
+      email: String(verified.email || ""),
+      roles,
+      access_token: accessToken,
+      id_token: idToken || "",
+      refresh_token: refreshToken || "",
+      created_at: Date.now(),
+      expires_at: Date.now() + sessionMaxAgeMs
+    });
+    setSessionCookie(res, sid);
+
+    return { ok: true };
+  }
+
+  async function handleLocalQuickLogin(req, res, requestUrl, returnTo) {
+    if (!isLocalQuickLoginAllowed(req)) {
+      return false;
+    }
+
+    const username = normalizeText(requestUrl.searchParams.get("quick_login_user")) || cfg.localQuickLoginUser;
+    const password = cfg.localQuickLoginPassword;
+    if (!username || !password) {
+      sendJson(res, 400, { error: "Local quick login is not configured" });
+      return true;
+    }
+
+    const discovery = await getKeycloakDiscovery();
+    const tokenResponse = await fetch(discovery.token_endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        grant_type: "password",
+        username,
+        password,
+        scope: "openid profile email",
+        client_id: cfg.keycloakClientId,
+        client_secret: cfg.keycloakClientSecret
+      })
+    });
+    if (!tokenResponse.ok) {
+      sendJson(res, 401, { error: "Local quick login failed" });
+      return true;
+    }
+
+    const sessionResult = await createSessionFromTokenPayload(
+      res,
+      await tokenResponse.json(),
+      "Missing access token in local quick login"
+    );
+    if (!sessionResult.ok) {
+      sendJson(res, sessionResult.status, sessionResult.body);
+      return true;
+    }
+
+    redirect(res, returnTo || "/bookings.html");
+    return true;
+  }
+
   async function handleAuthLogin(req, res) {
     const configured = requireKeycloakConfigured();
     if (!configured.ok) {
@@ -441,6 +556,11 @@ export function createAuth({ port }) {
 
     const requestUrl = new URL(req.url, "http://localhost");
     const returnTo = buildSafeReturnTo(requestUrl.searchParams.get("return_to"), "/bookings.html");
+    if (normalizeText(requestUrl.searchParams.get("quick_login")) === "1") {
+      const handled = await handleLocalQuickLogin(req, res, requestUrl, returnTo);
+      if (handled) return;
+    }
+
     const redirectUri = resolveAuthRedirectUri(req);
     const forcePromptLogin = normalizeText(requestUrl.searchParams.get("prompt")) === "login";
     const state = randomUUID();
@@ -507,47 +627,11 @@ export function createAuth({ port }) {
       return;
     }
 
-    const tokenPayload = await tokenResponse.json();
-    const accessToken = normalizeText(tokenPayload.access_token);
-    const idToken = normalizeText(tokenPayload.id_token);
-    const refreshToken = normalizeText(tokenPayload.refresh_token);
-    if (!accessToken) {
-      sendJson(res, 400, { error: "Missing access token in callback" });
+    const sessionResult = await createSessionFromTokenPayload(res, await tokenResponse.json());
+    if (!sessionResult.ok) {
+      sendJson(res, sessionResult.status, sessionResult.body);
       return;
     }
-
-    const verified = await verifyKeycloakToken(accessToken);
-    const roles = extractRolesFromPayload(verified);
-    const hasRole = roles.some((role) => cfg.keycloakAllowedRoles.has(role));
-    if (!hasRole) {
-      console.warn(
-        `[auth] denied backend access for ${String(verified.preferred_username || verified.email || verified.sub || "unknown")} with claims: ${JSON.stringify(
-          {
-            roles,
-            groups: Array.isArray(verified.groups) ? verified.groups : []
-          }
-        )}`
-      );
-      sendJson(res, 403, { error: "Authenticated but not authorized for backend access" });
-      return;
-    }
-
-    const sid = `sess_${randomUUID()}`;
-    sessions.set(sid, {
-      sub: String(verified.sub || ""),
-      name: String(verified.name || ""),
-      given_name: String(verified.given_name || ""),
-      family_name: String(verified.family_name || ""),
-      preferred_username: String(verified.preferred_username || ""),
-      email: String(verified.email || ""),
-      roles,
-      access_token: accessToken,
-      id_token: idToken || "",
-      refresh_token: refreshToken || "",
-      created_at: Date.now(),
-      expires_at: Date.now() + sessionMaxAgeMs
-    });
-    setSessionCookie(res, sid);
 
     redirect(res, requestState.return_to || "/bookings.html");
   }

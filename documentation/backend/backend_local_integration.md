@@ -44,6 +44,11 @@ cd ~/projects/travelagency
 ./scripts/local/start_local_keycloak.sh
 ```
 
+Local quick login:
+- Command-click the homepage brand logo on `localhost` or `127.0.0.1` to sign in through the backend-local `quick_login=1` path.
+- The shortcut is only accepted when the backend request host and `KEYCLOAK_BASE_URL` are both loopback addresses.
+- If an existing local Keycloak client was created before quick login was enabled, rerun `./scripts/local/start_local_keycloak.sh` once so direct access grants are updated.
+
 Recommended split-origin setup:
 - frontend: `http://localhost:8080`
 - backend: `http://localhost:8787`

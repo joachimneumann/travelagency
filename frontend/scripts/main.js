@@ -62,8 +62,8 @@ const state = {
   bookingSubmitted: false,
   visibleToursCount: 6,
   showMoreUsed: false,
+  expandedTourIds: new Set(),
   selectedTour: null,
-  selectedTourDescriptionId: "",
   selectedTeamMemberUsername: "",
   companyProfile: null,
   authStatusKnown: false,
@@ -162,7 +162,6 @@ const els = {
   teamSectionBody: document.getElementById("teamSectionBody"),
   teamGrid: document.getElementById("teamGrid"),
   teamDetail: document.getElementById("teamDetail"),
-  tourDescriptionDetail: document.getElementById("tourDescriptionDetail"),
   heroDynamicSubtitle: document.getElementById("heroDynamicSubtitle"),
   bookingTitle: document.getElementById("bookingTitle"),
   tourGrid: document.getElementById("tourGrid"),
@@ -1295,6 +1294,19 @@ function setupBrandLogoLinkBehavior() {
   els.brandLogoLink.dataset.brandLogoBound = "1";
 
   els.brandLogoLink.addEventListener("click", (event) => {
+    if (event.metaKey && isLocalFrontend()) {
+      event.preventDefault();
+      event.stopPropagation();
+
+      const backendUrl = withLangUrl("/bookings.html");
+      const loginParams = new URLSearchParams({
+        return_to: backendUrl,
+        quick_login: "1"
+      });
+      window.location.href = `${BACKEND_BASE_URL}/auth/login?${loginParams.toString()}`;
+      return;
+    }
+
     event.preventDefault();
     if (state.reelsModeOpen) return;
 
@@ -1303,6 +1315,10 @@ function setupBrandLogoLinkBehavior() {
       behavior: "smooth"
     });
   });
+}
+
+function isLocalFrontend() {
+  return window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" || window.location.hostname === "::1";
 }
 
 function filterOptionEntries(kind) {

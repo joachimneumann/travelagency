@@ -4954,6 +4954,16 @@
     "origin": "machine",
     "updated_at": "2026-03-30T23:51:31.875Z"
   },
+  "tour.change_below": {
+    "source_hash": "0dfad25bfb27237ffca16fdc0bd7d69fbb4a43be8359741361dfd0b409f7039a",
+    "origin": "manual",
+    "updated_at": "2026-04-26T00:00:00.000Z"
+  },
+  "tour.change_reel_video": {
+    "source_hash": "6695e9ed71bdd357b0ed60f66537a81200de883c039fc947f92d9b6de142112d",
+    "origin": "manual",
+    "updated_at": "2026-04-26T00:00:00.000Z"
+  },
   "tour.content_label": {
     "source_hash": "361eb547f24c37f6017dc09dcbfe11152e49785347d88199f5638621b70eaae4",
     "origin": "manual",
@@ -5018,6 +5028,11 @@
     "source_hash": "645547c7ed0c5aec5b07192022c21c1d9b0c099d5d92177d840343aa82c59f4e",
     "origin": "machine",
     "updated_at": "2026-03-30T23:51:31.875Z"
+  },
+  "tour.new_reel_video": {
+    "source_hash": "cb1ecb58dfbb6c0468203b95b684e1de49cc6be067e26d1c825a4fdbcf2557af",
+    "origin": "manual",
+    "updated_at": "2026-04-26T00:00:00.000Z"
   },
   "tour.page_title": {
     "source_hash": "a76eb76fde5671789323276d3b97dd5bd707a3cb58547da75f4787503f3fa1a8",

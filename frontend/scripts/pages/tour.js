@@ -125,6 +125,7 @@ const state = {
 };
 
 const TOUR_TRANSLATION_SOURCE_LANG = "en";
+const TOUR_DESCRIPTION_MAX_LENGTH = 170;
 const TRAVEL_PLAN_TRANSLATION_INCOMPLETE_STATUSES = new Set(["missing", "partial", "stale"]);
 
 const els = {
@@ -331,6 +332,36 @@ function normalizeLocalizedTextMap(value, { multiline = false } = {}) {
   );
 }
 
+function truncateTourSourceDescription(value) {
+  return String(value ?? "").slice(0, TOUR_DESCRIPTION_MAX_LENGTH);
+}
+
+function normalizeTourShortDescriptionMap(value, fallbackValue = "") {
+  const normalized = normalizeLocalizedTextMap(value);
+  const fallback = normalizeText(fallbackValue);
+  if (!normalized[TOUR_TRANSLATION_SOURCE_LANG] && fallback) {
+    normalized[TOUR_TRANSLATION_SOURCE_LANG] = fallback;
+  }
+  if (normalized[TOUR_TRANSLATION_SOURCE_LANG]) {
+    normalized[TOUR_TRANSLATION_SOURCE_LANG] = truncateTourSourceDescription(normalized[TOUR_TRANSLATION_SOURCE_LANG]);
+  }
+  return normalized;
+}
+
+function enforceTourSourceDescriptionLimit(control) {
+  if (!control || control.getAttribute("data-tour-i18n-field") !== "short_description_i18n") return;
+  const lang = normalizeTourTextLang(control.getAttribute("data-tour-i18n-lang"));
+  if (lang !== TOUR_TRANSLATION_SOURCE_LANG) return;
+  const truncated = truncateTourSourceDescription(control.value);
+  if (control.value !== truncated) {
+    control.value = truncated;
+  }
+}
+
+function shouldShowTourContentSourceCue() {
+  return normalizeTourTextLang(currentBackendLang()) === "vi";
+}
+
 function localizedFieldValue(field, lang) {
   const normalizedLang = normalizeTourTextLang(lang);
   const map = state.localizedContent?.[field];
@@ -480,34 +511,50 @@ function renderTourPictures() {
   }
 
   els.pictureList.innerHTML = state.pictureDraftItems
-    .map((item, index) => {
+    .map((item) => {
       const removeDisabled = !state.permissions.canEditTours ? "disabled" : "";
-      const label = item.kind === "pending"
-        ? backendT("tour.status.selected_image", "Selected image: {file}", { file: item.name })
-        : item.name;
+      const fileName = item.name || backendT("tour.picture_label", "Tour picture");
       return `
         <div class="tour-picture-card">
-          <div class="tour-picture-card__frame">
-            <img class="tour-picture-card__image" src="${escapeHtml(picturePreviewSrc(item))}" alt="" loading="lazy" />
-          </div>
-          <div class="tour-picture-card__actions">
-            <div class="tour-picture-card__meta">
-              <span class="tour-picture-card__name micro" title="${escapeHtml(label)}">${escapeHtml(label)}</span>
-              <span class="tour-picture-card__order micro">${escapeHtml(`#${index + 1}`)}</span>
+          <div class="tour-picture-card__media">
+            <div class="tour-picture-card__frame">
+              <img class="tour-picture-card__image" src="${escapeHtml(picturePreviewSrc(item))}" alt="" loading="lazy" data-tour-media-filename-trigger="true" />
             </div>
-            <button class="btn btn-ghost tour-picture-card__remove" type="button" data-tour-remove-picture="${escapeHtml(item.key)}" ${removeDisabled}>
-              ${escapeHtml(backendT("tour.remove_picture", "Remove picture"))}
-            </button>
+            <span class="tour-picture-card__filename micro" hidden>${escapeHtml(fileName)}</span>
           </div>
+          <button class="btn btn-ghost tour-picture-card__remove" type="button" data-tour-remove-picture="${escapeHtml(item.key)}" ${removeDisabled}>
+            ${escapeHtml(backendT("tour.remove_picture", "Remove picture"))}
+          </button>
         </div>
       `;
     })
     .join("");
 }
 
+function revealMediaFilename(target) {
+  if (!(target instanceof Element)) return false;
+  const trigger = target.closest("[data-tour-media-filename-trigger]");
+  if (!trigger) return false;
+  const media = trigger.closest(".tour-picture-card__media, .tour-reel-card__media");
+  const filename = media?.querySelector(".tour-picture-card__filename, .tour-reel-card__filename");
+  if (!(filename instanceof HTMLElement)) return false;
+  filename.hidden = false;
+  return true;
+}
+
+function updateReelVideoButtonLabel() {
+  if (!els.addReelVideoBtn) return;
+  const hasReelVideo = Boolean(state.reelVideoDraftItem);
+  const i18nId = hasReelVideo ? "tour.change_reel_video" : "tour.new_reel_video";
+  const fallback = hasReelVideo ? "Change Reel" : "New Reel";
+  els.addReelVideoBtn.textContent = backendT(i18nId, fallback);
+  els.addReelVideoBtn.setAttribute("data-i18n-id", i18nId);
+}
+
 function renderTourReelVideo() {
   if (!els.reelVideoCard) return;
   const item = state.reelVideoDraftItem;
+  updateReelVideoButtonLabel();
   if (!item) {
     els.reelVideoCard.innerHTML = `<div class="tour-reel-empty micro">No reel video uploaded yet.</div>`;
     return;
@@ -515,23 +562,17 @@ function renderTourReelVideo() {
 
   const removeDisabled = !state.permissions.canEditTours ? "disabled" : "";
   const previewSrc = reelVideoPreviewSrc(item);
-  const name = item.kind === "pending"
-    ? backendT("tour.status.selected_video", "Selected video: {file}", { file: item.name })
-    : item.name;
-  const hint = item.kind === "pending"
-    ? "This selected file will replace the stored reel video when you save."
-    : "This is the reel video currently stored for this tour.";
+  const fileName = item.name || "video.mp4";
   const preview = previewSrc
-    ? `<video class="tour-reel-card__preview" src="${escapeHtml(previewSrc)}" controls muted playsinline preload="metadata"></video>`
-    : `<div class="tour-reel-card__preview" aria-hidden="true"></div>`;
+    ? `<video class="tour-reel-card__preview" src="${escapeHtml(previewSrc)}" controls muted playsinline preload="metadata" data-tour-media-filename-trigger="true"></video>`
+    : `<div class="tour-reel-card__preview" aria-hidden="true" data-tour-media-filename-trigger="true"></div>`;
   els.reelVideoCard.innerHTML = `
     <div class="tour-reel-card">
-      <div class="tour-reel-card__frame">
-        ${preview}
-      </div>
-      <div class="tour-reel-card__meta">
-        <span class="tour-reel-card__name micro" title="${escapeHtml(name)}">${escapeHtml(name)}</span>
-        <span class="tour-reel-card__hint micro">${escapeHtml(hint)}</span>
+      <div class="tour-reel-card__media">
+        <div class="tour-reel-card__frame">
+          ${preview}
+        </div>
+        <span class="tour-reel-card__filename micro" hidden>${escapeHtml(fileName)}</span>
       </div>
       <button class="btn btn-ghost tour-reel-card__remove" type="button" data-tour-remove-reel-video="true" ${removeDisabled}>
         ${escapeHtml(backendT("tour.remove_reel_video", "Remove reel video"))}
@@ -595,17 +636,25 @@ function renderLocalizedTourContentEditor() {
   const descriptionId = localizedFieldId("short_description_i18n", lang);
   const titleValue = localizedFieldValue("title_i18n", lang);
   const descriptionValue = localizedFieldValue("short_description_i18n", lang);
+  const showSourceCue = shouldShowTourContentSourceCue();
+  const sourceCode = escapeHtml(tourLanguageShortLabel(lang));
+  const sourceCueMarkup = showSourceCue
+    ? `<span class="localized-pair__code tour-localized-content__source-code" aria-hidden="true">${sourceCode}</span>`
+    : "";
+  const fieldClass = showSourceCue
+    ? "tour-localized-content__field tour-localized-content__field--source-code"
+    : "tour-localized-content__field";
 
   els.localizedContentEditor.innerHTML = `
     <div class="tour-localized-group tour-localized-group--multiline tour-localized-group--content">
       <div class="tour-localized-group__header">
         <label class="tour-localized-group__label" for="${escapeHtml(titleId)}">${escapeHtml(backendT("tour.content_label", "Tour Title and description"))}</label>
-        <span class="tour-localized-group__code tour-localized-group__code--inline">${escapeHtml(tourLanguageShortLabel(lang))}</span>
       </div>
       <div class="tour-localized-group__row">
         <div class="tour-localized-group__field">
           <div class="tour-localized-content">
-            <div class="tour-localized-content__field">
+            <div class="${fieldClass}">
+              ${sourceCueMarkup}
               <input
                 class="tour-localized-content__title"
                 id="${escapeHtml(titleId)}"
@@ -617,12 +666,14 @@ function renderLocalizedTourContentEditor() {
                 value="${escapeHtml(titleValue)}"
               />
             </div>
-            <div class="tour-localized-content__field">
+            <div class="${fieldClass}">
+              ${sourceCueMarkup}
               <textarea
                 class="tour-localized-content__description"
                 id="${escapeHtml(descriptionId)}"
                 data-tour-i18n-field="short_description_i18n"
                 data-tour-i18n-lang="${escapeHtml(lang)}"
+                maxlength="${TOUR_DESCRIPTION_MAX_LENGTH}"
                 rows="3"
                 spellcheck="true"
                 dir="${escapeHtml(direction)}"
@@ -642,7 +693,13 @@ function readLocalizedFields(field, { multiline = false } = {}) {
     const input = getLocalizedField(field, lang);
     if (!input) continue;
     const value = String(input.value ?? "");
-    const normalizedValue = multiline ? value : value.trim();
+    let normalizedValue = multiline ? value : value.trim();
+    if (field === "short_description_i18n" && lang === TOUR_TRANSLATION_SOURCE_LANG) {
+      normalizedValue = truncateTourSourceDescription(normalizedValue);
+      if (input.value !== normalizedValue) {
+        input.value = normalizedValue;
+      }
+    }
     if (multiline ? normalizedValue.trim() : normalizedValue) {
       next[lang] = normalizedValue;
     } else {
@@ -666,6 +723,11 @@ function updateHeaderTitle() {
   if (!els.title) return;
   const rawTitle = resolveLocalizedFieldText("title_i18n", preferredTourHeaderLangs(), state.tour?.title);
   els.title.textContent = rawTitle || (state.is_create_mode ? backendT("tour.new_title", "New tour") : backendT("nav.tours", "Tour"));
+}
+
+function updateHeaderSubtitle() {
+  if (!els.subtitle) return;
+  els.subtitle.innerHTML = `<em>${escapeHtml(backendT("tour.change_below", "(change below)"))}</em>`;
 }
 
 function clearTranslatedTourTarget(targetLang) {
@@ -1319,6 +1381,9 @@ async function init() {
       }
       const field = event.target instanceof HTMLElement ? event.target.getAttribute("data-tour-i18n-field") : "";
       if (field === "title_i18n" || field === "short_description_i18n") {
+        if (event.target instanceof HTMLTextAreaElement || event.target instanceof HTMLInputElement) {
+          enforceTourSourceDescriptionLimit(event.target);
+        }
         syncLocalizedFieldState();
         if (field === "title_i18n") {
           clearTitleError();
@@ -1419,14 +1484,15 @@ async function init() {
       if (!file) return;
       replaceReelVideoDraftItem(createPendingReelVideoDraftItem(file));
       renderTourReelVideo();
-      setStatus(backendT("tour.status.selected_video", "Selected video: {file}", { file: file.name }));
+      setStatus(backendT("tour.status.selected_video", "Selected video."));
       els.reelVideoUpload.value = "";
       updateTourDirtyState();
     });
   }
   if (els.pictureList) {
     els.pictureList.addEventListener("click", (event) => {
-      const button = event.target.closest("[data-tour-remove-picture]");
+      if (revealMediaFilename(event.target)) return;
+      const button = event.target instanceof Element ? event.target.closest("[data-tour-remove-picture]") : null;
       if (!button || !state.permissions.canEditTours) return;
       event.preventDefault();
       const key = String(button.getAttribute("data-tour-remove-picture") || "").trim();
@@ -1447,11 +1513,14 @@ async function init() {
   if (els.reelVideoCard) {
     els.reelVideoCard.addEventListener("click", (event) => {
       const button = event.target instanceof Element ? event.target.closest("[data-tour-remove-reel-video]") : null;
-      if (!button || !state.permissions.canEditTours) return;
-      event.preventDefault();
-      replaceReelVideoDraftItem(null);
-      renderTourReelVideo();
-      updateTourDirtyState();
+      if (button && state.permissions.canEditTours) {
+        event.preventDefault();
+        replaceReelVideoDraftItem(null);
+        renderTourReelVideo();
+        updateTourDirtyState();
+        return;
+      }
+      revealMediaFilename(event.target);
     });
   }
 
@@ -1476,8 +1545,9 @@ async function loadTour() {
   state.localizedContent.title_i18n = normalizeLocalizedTextMap(
     tour.title_i18n || { en: tour.title || "" }
   );
-  state.localizedContent.short_description_i18n = normalizeLocalizedTextMap(
-    tour.short_description_i18n || { en: tour.short_description || "" }
+  state.localizedContent.short_description_i18n = normalizeTourShortDescriptionMap(
+    tour.short_description_i18n,
+    tour.short_description
   );
   const destinations = tour_destinations(tour);
   const styles = tour_styles(tour);
@@ -1525,7 +1595,6 @@ async function initializeNewTourForm() {
   state.localizedContent.title_i18n = {};
   state.localizedContent.short_description_i18n = {};
   updateHeader({ title: backendT("tour.new_title", "New tour") }, [], []);
-  if (els.subtitle) els.subtitle.textContent = backendT("tour.create_subtitle", "Create a new tour");
   setInput("tour_priority", "50");
   setInput("tour_seasonality_start_month", "");
   setInput("tour_seasonality_end_month", "");
@@ -1743,8 +1812,9 @@ async function submitForm(event) {
     state.localizedContent.title_i18n = normalizeLocalizedTextMap(
       result.tour.title_i18n || { en: result.tour.title || "" }
     );
-    state.localizedContent.short_description_i18n = normalizeLocalizedTextMap(
-      result.tour.short_description_i18n || { en: result.tour.short_description || "" }
+    state.localizedContent.short_description_i18n = normalizeTourShortDescriptionMap(
+      result.tour.short_description_i18n,
+      result.tour.short_description
     );
     state.id = String(result.tour.id || "");
     state.is_create_mode = false;
@@ -2069,13 +2139,7 @@ function setTourPageOverlay(isVisible, message = "") {
 
 function updateHeader(tour, destinations, styles) {
   updateHeaderTitle();
-  if (!els.subtitle) return;
-  const destText = destinations.length ? destinations.join(", ") : "-";
-  const styleText = styles.length ? styles.join(", ") : "-";
-  els.subtitle.textContent = backendT("tour.status.destinations_styles", "Destinations: {destinations} | Styles: {styles}", {
-    destinations: destText,
-    styles: styleText
-  });
+  updateHeaderSubtitle();
 }
 
 function tour_destinations(tour) {
