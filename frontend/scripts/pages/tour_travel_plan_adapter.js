@@ -239,7 +239,8 @@ export function createTourTravelPlanAdapter({
         pdfs: false,
         translation: false,
         serviceDetails: false,
-        renumberDays: false
+        renumberDays: false,
+        pruneEmptyTravelPlanContentOnCollect: true
       }
     });
     return core;

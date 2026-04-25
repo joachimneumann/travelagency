@@ -102,6 +102,7 @@ export function createBookingTravelPlanModule(ctx) {
   const allowTranslation = isFeatureEnabled("translation");
   const allowRenumberDays = isFeatureEnabled("renumberDays", allowDates);
   const allowPdfs = isFeatureEnabled("pdfs");
+  const pruneEmptyTravelPlanContentOnCollect = isFeatureEnabled("pruneEmptyTravelPlanContentOnCollect", false);
 
   function logTravelPlanSave(message, details = {}) {
     const payload = details && typeof details === "object" ? { ...details } : { details };
@@ -282,8 +283,77 @@ export function createBookingTravelPlanModule(ctx) {
     return normalizeTravelPlanForEnabledFeatures(normalized);
   }
 
-  function buildTravelPlanPayload(plan = state.travelPlanDraft) {
-    return normalizeTravelPlanState(plan);
+  function hasTravelPlanTextContent(value) {
+    return String(value ?? "").trim().length > 0;
+  }
+
+  function localizedTravelPlanMapHasContent(value) {
+    if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+    return Object.values(value).some((entry) => hasTravelPlanTextContent(entry));
+  }
+
+  function localizedTravelPlanFieldHasContent(source, fieldName) {
+    if (!source || typeof source !== "object" || Array.isArray(source)) return false;
+    return hasTravelPlanTextContent(source[fieldName])
+      || localizedTravelPlanMapHasContent(source[`${fieldName}_i18n`]);
+  }
+
+  function travelPlanImageHasContent(image) {
+    return Boolean(image && typeof image === "object" && !Array.isArray(image) && hasTravelPlanTextContent(image.storage_path));
+  }
+
+  function travelPlanServiceHasContent(item) {
+    if (!item || typeof item !== "object" || Array.isArray(item)) return false;
+    return [
+      "time_label",
+      "title",
+      "details",
+      "image_subtitle",
+      "location"
+    ].some((fieldName) => localizedTravelPlanFieldHasContent(item, fieldName))
+      || hasTravelPlanTextContent(item.time_point)
+      || hasTravelPlanTextContent(item.start_time)
+      || hasTravelPlanTextContent(item.end_time)
+      || (hasTravelPlanTextContent(item.kind) && String(item.kind).trim().toLowerCase() !== "other")
+      || travelPlanImageHasContent(item.image);
+  }
+
+  function travelPlanDayHasContent(day) {
+    if (!day || typeof day !== "object" || Array.isArray(day)) return false;
+    return [
+      "title",
+      "overnight_location",
+      "notes"
+    ].some((fieldName) => localizedTravelPlanFieldHasContent(day, fieldName))
+      || hasTravelPlanTextContent(day.date)
+      || hasTravelPlanTextContent(day.date_string)
+      || (Array.isArray(day.services) && day.services.length > 0);
+  }
+
+  function pruneEmptyTravelPlanContent(plan) {
+    const source = plan && typeof plan === "object" && !Array.isArray(plan) ? plan : {};
+    const days = (Array.isArray(source.days) ? source.days : [])
+      .map((day) => {
+        const sourceDay = day && typeof day === "object" && !Array.isArray(day) ? day : {};
+        return {
+          ...sourceDay,
+          services: (Array.isArray(sourceDay.services) ? sourceDay.services : []).filter(travelPlanServiceHasContent)
+        };
+      })
+      .filter(travelPlanDayHasContent)
+      .map((day, dayIndex) => ({
+        ...day,
+        day_number: dayIndex + 1
+      }));
+    return {
+      ...source,
+      days
+    };
+  }
+
+  function buildTravelPlanPayload(plan = state.travelPlanDraft, { pruneEmptyContent = false } = {}) {
+    const normalized = normalizeTravelPlanState(plan);
+    return pruneEmptyContent ? pruneEmptyTravelPlanContent(normalized) : normalized;
   }
 
   function normalizeTravelPlanForEnabledFeatures(plan) {
@@ -2185,7 +2255,10 @@ export function createBookingTravelPlanModule(ctx) {
     return await persistTravelPlan();
   }
 
-  function collectTravelPlanPayload({ focusFirstInvalid = true } = {}) {
+  function collectTravelPlanPayload({
+    focusFirstInvalid = true,
+    pruneEmptyContent = pruneEmptyTravelPlanContentOnCollect
+  } = {}) {
     const dateFieldValidation = validateTravelPlanDateFieldsInDom({ allowPartial: false, focusFirstInvalid });
     if (!dateFieldValidation.ok) {
       return {
@@ -2194,7 +2267,7 @@ export function createBookingTravelPlanModule(ctx) {
       };
     }
     syncTravelPlanDraftFromDom();
-    const travelPlanPayload = buildTravelPlanPayload();
+    const travelPlanPayload = buildTravelPlanPayload(state.travelPlanDraft, { pruneEmptyContent });
     const validation = validateTravelPlanDraft(travelPlanPayload);
     if (!validation.ok) {
       return {

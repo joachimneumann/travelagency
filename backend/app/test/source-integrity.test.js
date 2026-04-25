@@ -2487,6 +2487,36 @@ test("booking page save orchestrates dirty sections through existing section end
   );
 });
 
+test("marketing tour travel-plan form save prunes empty services and days without pruning image-upload pre-saves", async () => {
+  const travelPlanModulePath = travelPlanEditorCorePath();
+  const tourTravelPlanAdapterPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "tour_travel_plan_adapter.js");
+  const [travelPlanSource, adapterSource] = await Promise.all([
+    readFile(travelPlanModulePath, "utf8"),
+    readFile(tourTravelPlanAdapterPath, "utf8")
+  ]);
+
+  assert.match(
+    adapterSource,
+    /features:\s*\{[\s\S]*pruneEmptyTravelPlanContentOnCollect: true[\s\S]*\}/,
+    "Marketing tour travel-plan saves should opt into pruning blank day/service rows"
+  );
+  assert.match(
+    travelPlanSource,
+    /function pruneEmptyTravelPlanContent\(plan\) \{[\s\S]*filter\(travelPlanServiceHasContent\)[\s\S]*filter\(travelPlanDayHasContent\)[\s\S]*day_number: dayIndex \+ 1/,
+    "The travel-plan collector should remove empty services, remove empty days, and renumber kept days"
+  );
+  assert.match(
+    travelPlanSource,
+    /function collectTravelPlanPayload\(\{\s*focusFirstInvalid = true,\s*pruneEmptyContent = pruneEmptyTravelPlanContentOnCollect\s*\} = \{\}\) \{[\s\S]*const travelPlanPayload = buildTravelPlanPayload\(state\.travelPlanDraft, \{ pruneEmptyContent \}\);/,
+    "Only collected page-save payloads should receive the marketing-tour pruning option"
+  );
+  assert.match(
+    travelPlanSource,
+    /async function persistTravelPlan\(\) \{[\s\S]*const travelPlanPayload = buildTravelPlanPayload\(\);/,
+    "Internal travel-plan pre-saves should keep blank rows so image upload can save the target service before attaching the file"
+  );
+});
+
 test("booking page keeps English as the fixed booking source language while still sending explicit language query params", async () => {
   const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
   const bookingI18nPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "i18n.js");
@@ -4339,6 +4369,11 @@ test("homepage tour cards use fixed-height text areas without an inline more lin
     siteCssSource,
     /\.tour-body \{[\s\S]*grid-template-rows: auto auto auto 1fr auto auto;[\s\S]*\.tour-desc-wrap \{[\s\S]*min-height: calc\(1em \* var\(--tour-card-desc-line-height\) \* var\(--tour-card-desc-lines\)\);/,
     "Tour card text rows should reserve the same title, description, and tag heights before the action buttons"
+  );
+  assert.match(
+    mainToursSource,
+    /function formatTourDurationSuffix\(trip\) \{[\s\S]*const normalizedLang = normalizeFrontendTourLang\(currentFrontendLang\(\)\);[\s\S]*if \(normalizedLang === "vi"\) \{[\s\S]*return `\$\{dayCount\}N\$\{Math\.max\(0, dayCount - 1\)\}Đ`;[\s\S]*return `\$\{dayCount\}D\$\{Math\.max\(0, dayCount - 1\)\}N`;/,
+    "Tour card duration suffixes should localize day/night abbreviations for Vietnamese"
   );
   assert.match(
     mainToursSource,

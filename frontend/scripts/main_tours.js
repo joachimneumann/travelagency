@@ -467,6 +467,11 @@ export function createFrontendToursController(ctx) {
   function formatTourDurationSuffix(trip) {
     const dayCount = travelPlanDays(trip).length;
     if (dayCount <= 0) return "";
+    const normalizedLang = normalizeFrontendTourLang(currentFrontendLang());
+    if (normalizedLang === "vi") {
+      if (dayCount === 1) return "1N";
+      return `${dayCount}N${Math.max(0, dayCount - 1)}Đ`;
+    }
     if (dayCount === 1) return "1D";
     return `${dayCount}D${Math.max(0, dayCount - 1)}N`;
   }
