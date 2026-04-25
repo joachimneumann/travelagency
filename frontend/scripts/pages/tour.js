@@ -103,10 +103,12 @@ const state = {
     canEditBooking: false
   },
   allowPageUnload: false,
+  formDirty: false,
   tour: null,
   booking: null,
   travelPlanDraft: null,
   travelPlanDirty: false,
+  travelPlanTranslationIncomplete: false,
   originalTravelPlanSnapshot: "",
   originalTravelPlanState: null,
   pictureDraftItems: [],
@@ -123,6 +125,7 @@ const state = {
 };
 
 const TOUR_TRANSLATION_SOURCE_LANG = "en";
+const TRAVEL_PLAN_TRANSLATION_INCOMPLETE_STATUSES = new Set(["missing", "partial", "stale"]);
 
 const els = {
   pageBody: document.body,
@@ -138,6 +141,8 @@ const els = {
   titleError: document.getElementById("tour_titleError"),
   form: document.getElementById("tour_form"),
   dirtyBar: document.getElementById("tour_dirty_bar"),
+  dirtyBarTitle: document.getElementById("tour_dirty_bar_title"),
+  dirtyBarSummary: document.getElementById("tour_dirty_bar_summary"),
   status: document.getElementById("tour_formStatus"),
   cancel: document.getElementById("tour_cancel_btn"),
   destinationHidden: document.getElementById("tour_destinations"),
@@ -158,6 +163,7 @@ const els = {
   travel_plan_editor: document.getElementById("travel_plan_editor"),
   travel_plan_status: document.getElementById("travel_plan_status"),
   travelPlanTranslationSection: document.getElementById("tour_travel_plan_translation_section"),
+  travelPlanTranslationSummary: document.getElementById("tour_travel_plan_translation_summary"),
   travelPlanTranslationPanel: document.getElementById("tour_travel_plan_translation_panel"),
   travelPlanServiceImageInput: document.getElementById("travel_plan_service_image_input"),
   travelPlanImagePreviewModal: document.getElementById("travel_plan_image_preview_modal"),
@@ -224,9 +230,30 @@ const tourDirtyTracker = createSnapshotDirtyTracker({
   captureSnapshot: () => captureTourFormSnapshot(),
   isEnabled: () => state.permissions.canEditTours,
   onDirtyChange: (isDirty) => {
-    els.dirtyBar?.classList.toggle("booking-dirty-bar--dirty", isDirty);
+    state.formDirty = Boolean(isDirty);
+    renderTourDirtyBar();
   }
 });
+
+function renderTourDirtyBar() {
+  const isDirty = state.formDirty === true;
+  const translationIncomplete = state.travelPlanTranslationIncomplete === true;
+  els.dirtyBar?.classList.toggle("booking-dirty-bar--dirty", isDirty);
+  if (els.dirtyBarTitle) {
+    els.dirtyBarTitle.textContent = isDirty
+      ? backendT("booking.page_save.unsaved", "Unsaved edits")
+      : backendT("booking.page_save.clean", "No unsaved edits");
+  }
+  if (els.dirtyBarSummary) {
+    els.dirtyBarSummary.textContent = "";
+    if (translationIncomplete) {
+      const pill = document.createElement("span");
+      pill.className = "booking-dirty-bar__notice-pill";
+      pill.textContent = backendT("tour.travel_plan_translation.section_title_incomplete", "Translation: incomplete");
+      els.dirtyBarSummary.append(pill);
+    }
+  }
+}
 
 function updateTourDirtyState() {
   return tourDirtyTracker.refresh();
@@ -572,12 +599,10 @@ function renderLocalizedTourContentEditor() {
   els.localizedContentEditor.innerHTML = `
     <div class="tour-localized-group tour-localized-group--multiline tour-localized-group--content">
       <div class="tour-localized-group__header">
-        <label class="tour-localized-group__label" for="${escapeHtml(titleId)}">${escapeHtml(backendT("tour.content_label", "Website title and description"))}</label>
+        <label class="tour-localized-group__label" for="${escapeHtml(titleId)}">${escapeHtml(backendT("tour.content_label", "Tour Title and description"))}</label>
+        <span class="tour-localized-group__code tour-localized-group__code--inline">${escapeHtml(tourLanguageShortLabel(lang))}</span>
       </div>
       <div class="tour-localized-group__row">
-        <div class="tour-localized-group__code-cell">
-          <span class="tour-localized-group__code">${escapeHtml(tourLanguageShortLabel(lang))}</span>
-        </div>
         <div class="tour-localized-group__field">
           <div class="tour-localized-content">
             <div class="tour-localized-content__field">
@@ -915,6 +940,27 @@ function collectTravelPlanTranslationFields(plan, targetLang = "") {
         key: `travel_plan.${dayId}.${serviceId}.location`,
         label: `${serviceLabel} · ${backendT("booking.travel_plan.location_optional", "Location (optional)")}`
       });
+      addField({
+        holder: service,
+        mapField: "image_subtitle_i18n",
+        plainField: "image_subtitle",
+        key: `travel_plan.${dayId}.${serviceId}.image_subtitle`,
+        label: `${serviceLabel} · ${backendT("booking.travel_plan.image_subtitle_optional", "Image subtitle (optional)")}`
+      });
+      addField({
+        holder: service?.image,
+        mapField: "caption_i18n",
+        plainField: "caption",
+        key: `travel_plan.${dayId}.${serviceId}.image.caption`,
+        label: `${serviceLabel} · ${backendT("booking.travel_plan.image_caption", "Image caption")}`
+      });
+      addField({
+        holder: service?.image,
+        mapField: "alt_text_i18n",
+        plainField: "alt_text",
+        key: `travel_plan.${dayId}.${serviceId}.image.alt_text`,
+        label: `${serviceLabel} · ${backendT("booking.travel_plan.image_alt_text", "Image alt text")}`
+      });
     });
   });
 
@@ -1016,6 +1062,27 @@ function travelPlanTranslationStatusLabel(status) {
   }
 }
 
+function isTravelPlanTranslationIncompleteStatus(status) {
+  return TRAVEL_PLAN_TRANSLATION_INCOMPLETE_STATUSES.has(String(status || ""));
+}
+
+function setTravelPlanTranslationSummaryState(isIncomplete) {
+  state.travelPlanTranslationIncomplete = Boolean(isIncomplete);
+  renderTourDirtyBar();
+  if (!(els.travelPlanTranslationSummary instanceof HTMLElement)) return;
+  const title = els.travelPlanTranslationSummary.querySelector("[data-translation-summary-title]");
+  const labelKey = isIncomplete
+    ? "tour.travel_plan_translation.section_title_incomplete"
+    : "tour.travel_plan_translation.section_title";
+  const fallback = isIncomplete ? "Translation: incomplete" : "Translations";
+  els.travelPlanTranslationSummary.classList.toggle("booking-section__summary--translation-incomplete", isIncomplete);
+  els.travelPlanTranslationSummary.classList.toggle("backend-section__summary--translation-incomplete", isIncomplete);
+  if (title instanceof HTMLElement) {
+    title.dataset.i18nId = labelKey;
+    title.textContent = backendT(labelKey, fallback);
+  }
+}
+
 function renderTravelPlanTranslationReview(plan, targetLang) {
   const fields = collectTravelPlanTranslationFields(plan, targetLang);
   if (!fields.length) {
@@ -1046,8 +1113,14 @@ function renderTravelPlanTranslationPanel() {
   const targets = travelPlanTranslationTargetLanguages();
   const sourceFields = collectTravelPlanTranslationFields(plan, TRAVEL_PLAN_SOURCE_LANG);
   const canTranslate = state.permissions.canEditTours && sourceFields.length > 0 && targets.length > 0;
-  const rows = targets.map((lang) => {
-    const summary = travelPlanTranslationStatus(plan, lang);
+  const summaries = targets.map((lang) => ({
+    lang,
+    summary: travelPlanTranslationStatus(plan, lang)
+  }));
+  setTravelPlanTranslationSummaryState(
+    summaries.some(({ summary }) => isTravelPlanTranslationIncompleteStatus(summary.status))
+  );
+  const rows = summaries.map(({ lang, summary }) => {
     const isReviewOpen = state.activeTravelPlanTranslationLang === lang;
     const progress = backendT("tour.travel_plan_translation.progress", "{translated}/{total} fields", {
       translated: String(summary.translatedFields),

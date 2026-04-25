@@ -51,6 +51,22 @@ test("normalizeTravelPlanDraft preserves localized maps while keeping flat sourc
             details_i18n: {
               vi: "Chi tiet"
             },
+            image_subtitle: "English subtitle",
+            image_subtitle_i18n: {
+              vi: "Phu de"
+            },
+            image: {
+              id: "image_1",
+              storage_path: "/tmp/service.webp",
+              caption: "English caption",
+              caption_i18n: {
+                vi: "Chu thich"
+              },
+              alt_text: "English alt text",
+              alt_text_i18n: {
+                vi: "Van ban thay the"
+              }
+            },
             location: "Old Quarter",
             location_i18n: {
               vi: "Pho co"
@@ -105,6 +121,21 @@ test("normalizeTravelPlanDraft preserves localized maps while keeping flat sourc
   assert.deepEqual(service.details_i18n, {
     vi: "Chi tiet",
     en: "English details"
+  });
+  assert.equal(service.image_subtitle, "English subtitle");
+  assert.deepEqual(service.image_subtitle_i18n, {
+    vi: "Phu de",
+    en: "English subtitle"
+  });
+  assert.equal(service.image.caption, "English caption");
+  assert.deepEqual(service.image.caption_i18n, {
+    vi: "Chu thich",
+    en: "English caption"
+  });
+  assert.equal(service.image.alt_text, "English alt text");
+  assert.deepEqual(service.image.alt_text_i18n, {
+    vi: "Van ban thay the",
+    en: "English alt text"
   });
   assert.equal(service.location, "Old Quarter");
   assert.deepEqual(service.location_i18n, {

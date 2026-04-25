@@ -1793,6 +1793,11 @@ textarea:focus-visible {
   margin: 0;
 }
 
+.tour-localized-group__code--inline {
+  margin-left: 0.45rem;
+  vertical-align: middle;
+}
+
 .tour-localized-group__row {
   display: grid;
   grid-template-columns: var(--tour-localized-code-column-width) minmax(0, 1fr);
@@ -4410,7 +4415,12 @@ textarea:focus-visible {
 }
 
 .tour-localized-group--content .tour-localized-group__row {
+  grid-template-columns: minmax(0, 1fr);
   align-items: stretch;
+}
+
+.tour-localized-group--content .tour-localized-group__header {
+  padding-left: 0;
 }
 
 .backend-tour-form .backend-controls {

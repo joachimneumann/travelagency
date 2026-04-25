@@ -103,6 +103,23 @@
   padding-right: 4rem;
 }
 
+.backend-collapsible__summary--translation-incomplete,
+.backend-section__summary--translation-incomplete,
+.booking-collapsible__summary--translation-incomplete,
+.booking-section__summary--translation-incomplete {
+  border: 1.5px solid #ff6f55;
+  background: rgba(255, 240, 236, 0.98);
+  box-shadow: 0 0 0 1px rgba(255, 111, 85, 0.14);
+  color: var(--error-text-strong);
+}
+
+.backend-collapsible__summary--translation-incomplete::after,
+.backend-section__summary--translation-incomplete::after,
+.booking-collapsible__summary--translation-incomplete::after,
+.booking-section__summary--translation-incomplete::after {
+  color: var(--error-text-strong);
+}
+
 .backend-collapsible__summary::after,
 .backend-section__summary::after,
 .booking-collapsible__summary::after,

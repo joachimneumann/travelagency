@@ -3,6 +3,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 HOMEPAGE_BUNDLE_PATH="$ROOT_DIR/frontend/data/generated/homepage/public-homepage-main.bundle.js"
+source "$ROOT_DIR/scripts/lib/public_homepage_assets.sh"
 
 if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
   cat <<'EOF'
@@ -17,7 +18,7 @@ fi
 cd "$ROOT_DIR"
 echo "Generating production homepage frontend assets..."
 "$ROOT_DIR/scripts/assets/prepare_runtime_brand_logo.sh" production
-node "$ROOT_DIR/scripts/assets/generate_public_homepage_assets.mjs"
+run_public_homepage_asset_generator_quiet "$ROOT_DIR"
 
 if [[ ! -f "$HOMEPAGE_BUNDLE_PATH" ]]; then
   echo "Missing generated homepage bundle after asset generation: $HOMEPAGE_BUNDLE_PATH" >&2

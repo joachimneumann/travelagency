@@ -5931,6 +5931,20 @@ test("tour editor can manage tours while staff cannot access tour endpoints", as
   assert.equal(updateResult.status, 200);
   assert.equal(updateResult.body.tour.short_description, "Updated by the tour editor");
 
+  const tourVideoPath = path.join(TEST_DATA_DIR, "tours", tourId, "video.mp4");
+  await mkdir(path.dirname(tourVideoPath), { recursive: true });
+  await writeFile(tourVideoPath, "not a picture");
+  const invalidPictureDeleteResult = await requestJson(
+    endpointPath("tour_picture_delete")
+      .replace("{tour_id}", tourId)
+      .replace("{picture_name}", "video.mp4"),
+    apiHeaders("atp_tour_editor", "tour-editor", "kc-tour-editor"),
+    { method: "DELETE" }
+  );
+  assert.equal(invalidPictureDeleteResult.status, 404);
+  assert.equal(await readFile(tourVideoPath, "utf8"), "not a picture");
+  await rm(path.dirname(tourVideoPath), { recursive: true, force: true });
+
   const deleteResult = await requestJson(
     endpointPath("tour_delete").replace("{tour_id}", tourId),
     apiHeaders("atp_tour_editor", "tour-editor", "kc-tour-editor"),

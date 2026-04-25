@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-04-25T08:21:48Z
+# 2026-04-25T15:23:52Z
 
 ---
 openapi: 3.1.0
@@ -3934,8 +3934,18 @@ components:
         caption:
           type: string
           nullable: true
+        caption_i18n:
+          type: object
+          additionalProperties:
+            type: string
+          nullable: true
         alt_text:
           type: string
+          nullable: true
+        alt_text_i18n:
+          type: object
+          additionalProperties:
+            type: string
           nullable: true
         sort_order:
           type: integer
@@ -3985,6 +3995,11 @@ components:
           nullable: true
         image_subtitle:
           type: string
+          nullable: true
+        image_subtitle_i18n:
+          type: object
+          additionalProperties:
+            type: string
           nullable: true
         location:
           type: string
@@ -4244,8 +4259,18 @@ components:
         caption:
           type: string
           nullable: true
+        caption_i18n:
+          type: object
+          additionalProperties:
+            type: string
+          nullable: true
         alt_text:
           type: string
+          nullable: true
+        alt_text_i18n:
+          type: object
+          additionalProperties:
+            type: string
           nullable: true
         sort_order:
           type: integer
@@ -4321,6 +4346,11 @@ components:
           nullable: true
         image_subtitle:
           type: string
+          nullable: true
+        image_subtitle_i18n:
+          type: object
+          additionalProperties:
+            type: string
           nullable: true
         location:
           type: string

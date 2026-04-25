@@ -440,21 +440,13 @@ export function createAuth({ port }) {
     }
 
     const requestUrl = new URL(req.url, "http://localhost");
-    const requestHost = extractHost(req.headers.host);
-    const quickLoginAllowedHost =
-      requestHost === "staging.asiatravelplan.com" || requestHost === "localhost" || requestHost === "127.0.0.1";
     const returnTo = buildSafeReturnTo(requestUrl.searchParams.get("return_to"), "/bookings.html");
     const redirectUri = resolveAuthRedirectUri(req);
-    const quickLoginRequested =
-      quickLoginAllowedHost && normalizeText(requestUrl.searchParams.get("quick_login")) === "1";
-    const quickLoginUser = normalizeText(requestUrl.searchParams.get("quick_login_user")) || "joachim";
     const forcePromptLogin = normalizeText(requestUrl.searchParams.get("prompt")) === "login";
     const state = randomUUID();
     authRequests.set(state, {
       return_to: returnTo,
       redirect_uri: redirectUri,
-      quick_login: quickLoginRequested,
-      quick_login_user: quickLoginRequested ? quickLoginUser : undefined,
       created_at: Date.now()
     });
 
@@ -465,12 +457,6 @@ export function createAuth({ port }) {
     authUrl.searchParams.set("scope", "openid profile email");
     authUrl.searchParams.set("redirect_uri", redirectUri);
     authUrl.searchParams.set("state", state);
-    if (quickLoginRequested) {
-      authUrl.searchParams.set("quick_login", "1");
-      if (quickLoginUser) {
-        authUrl.searchParams.set("login_hint", quickLoginUser);
-      }
-    }
     if (cfg.keycloakForceLoginPrompt || forcePromptLogin) {
       authUrl.searchParams.set("prompt", "login");
       authUrl.searchParams.set("max_age", "0");
@@ -687,10 +673,4 @@ function parseBoolEnv(name, defaultValue) {
   const raw = normalizeText(process.env[name]);
   if (!raw) return defaultValue;
   return raw.toLowerCase() === "true";
-}
-
-function extractHost(headerValue) {
-  const raw = normalizeText(headerValue);
-  if (!raw) return "";
-  return raw.split(":")[0];
 }

@@ -183,6 +183,10 @@
           <div class="booking-dirty-bar-row">
             <div class="booking-dirty-bar" id="tour_dirty_bar">
               <div class="booking-dirty-bar__panel">
+                <div class="booking-dirty-bar__copy">
+                  <strong id="tour_dirty_bar_title" data-i18n-id="booking.page_save.clean">No unsaved edits</strong>
+                  <span class="micro booking-dirty-bar__summary" id="tour_dirty_bar_summary"></span>
+                </div>
                 <div class="booking-dirty-bar__actions">
                   <a class="btn btn-ghost" id="tour_cancel_btn" href="bookings.html" data-i18n-id="tour.cancel">Cancel</a>
                   <button class="btn btn-primary" id="tour_save_btn" type="submit" form="tour_form" data-i18n-id="tour.save_changes">Save Changes</button>
@@ -270,7 +274,7 @@
                   <article id="tour_travel_plan_translation_section" class="booking-section is-open">
                     <div class="booking-section__head">
                       <button id="tour_travel_plan_translation_summary" class="booking-section__summary booking-section__summary--inline-pad-16" type="button">
-                        <span data-i18n-id="tour.travel_plan_translation.section_title">Translations review</span>
+                        <span data-translation-summary-title data-i18n-id="tour.travel_plan_translation.section_title">Translations</span>
                       </button>
                     </div>
                     <div class="booking-section__body">

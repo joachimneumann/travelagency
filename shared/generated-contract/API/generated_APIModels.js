@@ -1941,11 +1941,12 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
     schemaField({"name":"title","required":false,"wireName":"title"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"details","required":false,"wireName":"details"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"image_subtitle","required":false,"wireName":"image_subtitle"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"image_subtitle_i18n","required":false,"wireName":"image_subtitle_i18n"}, SHARED_FIELD_DEFS.FIELD_111),
     schemaField({"name":"location","required":false,"wireName":"location"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"start_time","required":false,"wireName":"start_time"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"end_time","required":false,"wireName":"end_time"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"image","required":false,"wireName":"image"}, SHARED_FIELD_DEFS.FIELD_111),
-    schemaField({"name":"copied_from","required":false,"wireName":"copied_from"}, SHARED_FIELD_DEFS.FIELD_112)
+    schemaField({"name":"image","required":false,"wireName":"image"}, SHARED_FIELD_DEFS.FIELD_112),
+    schemaField({"name":"copied_from","required":false,"wireName":"copied_from"}, SHARED_FIELD_DEFS.FIELD_113)
         ]
       };
 
@@ -1980,11 +1981,11 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         requireOneOf: [],
         fields: [
     schemaField({"name":"id","required":true,"wireName":"id"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"kind","required":true,"wireName":"kind"}, SHARED_FIELD_DEFS.FIELD_113),
+    schemaField({"name":"kind","required":true,"wireName":"kind"}, SHARED_FIELD_DEFS.FIELD_114),
     schemaField({"name":"label","required":true,"wireName":"label"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"sequence","required":true,"wireName":"sequence"}, SHARED_FIELD_DEFS.FIELD_18),
-    schemaField({"name":"amount_spec","required":true,"wireName":"amount_spec"}, SHARED_FIELD_DEFS.FIELD_114),
-    schemaField({"name":"due_rule","required":true,"wireName":"due_rule"}, SHARED_FIELD_DEFS.FIELD_115)
+    schemaField({"name":"amount_spec","required":true,"wireName":"amount_spec"}, SHARED_FIELD_DEFS.FIELD_115),
+    schemaField({"name":"due_rule","required":true,"wireName":"due_rule"}, SHARED_FIELD_DEFS.FIELD_116)
         ]
       };
 
@@ -2006,10 +2007,11 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
     schemaField({"name":"kind","required":true,"wireName":"kind"}, SHARED_FIELD_DEFS.FIELD_90),
     schemaField({"name":"title","required":false,"wireName":"title"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"image_subtitle","required":false,"wireName":"image_subtitle"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"image_subtitle_i18n","required":false,"wireName":"image_subtitle_i18n"}, SHARED_FIELD_DEFS.FIELD_111),
     schemaField({"name":"location","required":false,"wireName":"location"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"start_time","required":false,"wireName":"start_time"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"end_time","required":false,"wireName":"end_time"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"image","required":false,"wireName":"image"}, SHARED_FIELD_DEFS.FIELD_116)
+    schemaField({"name":"image","required":false,"wireName":"image"}, SHARED_FIELD_DEFS.FIELD_117)
         ]
       };
 
@@ -2025,11 +2027,11 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         requireOneOf: [],
         fields: [
     schemaField({"name":"id","required":true,"wireName":"id"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"kind","required":true,"wireName":"kind"}, SHARED_FIELD_DEFS.FIELD_113),
+    schemaField({"name":"kind","required":true,"wireName":"kind"}, SHARED_FIELD_DEFS.FIELD_114),
     schemaField({"name":"label","required":true,"wireName":"label"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"sequence","required":true,"wireName":"sequence"}, SHARED_FIELD_DEFS.FIELD_18),
-    schemaField({"name":"amount_spec","required":true,"wireName":"amount_spec"}, SHARED_FIELD_DEFS.FIELD_114),
-    schemaField({"name":"due_rule","required":true,"wireName":"due_rule"}, SHARED_FIELD_DEFS.FIELD_115),
+    schemaField({"name":"amount_spec","required":true,"wireName":"amount_spec"}, SHARED_FIELD_DEFS.FIELD_115),
+    schemaField({"name":"due_rule","required":true,"wireName":"due_rule"}, SHARED_FIELD_DEFS.FIELD_116),
     schemaField({"name":"description","required":false,"wireName":"description"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"resolved_amount_cents","required":true,"wireName":"resolved_amount_cents"}, SHARED_FIELD_DEFS.FIELD_18)
         ]
@@ -2090,14 +2092,16 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
     schemaField({"name":"id","required":true,"wireName":"id"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"storage_path","required":true,"wireName":"storage_path"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"caption","required":false,"wireName":"caption"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"caption_i18n","required":false,"wireName":"caption_i18n"}, SHARED_FIELD_DEFS.FIELD_111),
     schemaField({"name":"alt_text","required":false,"wireName":"alt_text"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"alt_text_i18n","required":false,"wireName":"alt_text_i18n"}, SHARED_FIELD_DEFS.FIELD_111),
     schemaField({"name":"sort_order","required":true,"wireName":"sort_order"}, SHARED_FIELD_DEFS.FIELD_18),
     schemaField({"name":"is_primary","required":false,"wireName":"is_primary"}, SHARED_FIELD_DEFS.FIELD_9),
     schemaField({"name":"is_customer_visible","required":false,"wireName":"is_customer_visible"}, SHARED_FIELD_DEFS.FIELD_9),
     schemaField({"name":"width_px","required":false,"wireName":"width_px"}, SHARED_FIELD_DEFS.FIELD_18),
     schemaField({"name":"height_px","required":false,"wireName":"height_px"}, SHARED_FIELD_DEFS.FIELD_18),
-    schemaField({"name":"source_attribution","required":false,"wireName":"source_attribution"}, SHARED_FIELD_DEFS.FIELD_117),
-    schemaField({"name":"focal_point","required":false,"wireName":"focal_point"}, SHARED_FIELD_DEFS.FIELD_118),
+    schemaField({"name":"source_attribution","required":false,"wireName":"source_attribution"}, SHARED_FIELD_DEFS.FIELD_118),
+    schemaField({"name":"focal_point","required":false,"wireName":"focal_point"}, SHARED_FIELD_DEFS.FIELD_119),
     schemaField({"name":"created_at","required":false,"wireName":"created_at"}, SHARED_FIELD_DEFS.FIELD_5)
         ]
       };
@@ -2133,7 +2137,7 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         sourceType: "openapi.components.schemas.BookingOfferPaymentAmountSpec",
         requireOneOf: [],
         fields: [
-    schemaField({"name":"mode","required":true,"wireName":"mode"}, SHARED_FIELD_DEFS.FIELD_119),
+    schemaField({"name":"mode","required":true,"wireName":"mode"}, SHARED_FIELD_DEFS.FIELD_120),
     schemaField({"name":"fixed_amount_cents","required":false,"wireName":"fixed_amount_cents"}, SHARED_FIELD_DEFS.FIELD_18),
     schemaField({"name":"percentage_basis_points","required":false,"wireName":"percentage_basis_points"}, SHARED_FIELD_DEFS.FIELD_18)
         ]
@@ -2150,7 +2154,7 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         sourceType: "openapi.components.schemas.BookingOfferPaymentDueRule",
         requireOneOf: [],
         fields: [
-    schemaField({"name":"type","required":true,"wireName":"type"}, SHARED_FIELD_DEFS.FIELD_120),
+    schemaField({"name":"type","required":true,"wireName":"type"}, SHARED_FIELD_DEFS.FIELD_121),
     schemaField({"name":"fixed_date","required":false,"wireName":"fixed_date"}, SHARED_FIELD_DEFS.FIELD_8),
     schemaField({"name":"days","required":false,"wireName":"days"}, SHARED_FIELD_DEFS.FIELD_18)
         ]
@@ -2170,14 +2174,16 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
     schemaField({"name":"id","required":true,"wireName":"id"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"storage_path","required":true,"wireName":"storage_path"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"caption","required":false,"wireName":"caption"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"caption_i18n","required":false,"wireName":"caption_i18n"}, SHARED_FIELD_DEFS.FIELD_111),
     schemaField({"name":"alt_text","required":false,"wireName":"alt_text"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"alt_text_i18n","required":false,"wireName":"alt_text_i18n"}, SHARED_FIELD_DEFS.FIELD_111),
     schemaField({"name":"sort_order","required":true,"wireName":"sort_order"}, SHARED_FIELD_DEFS.FIELD_18),
     schemaField({"name":"is_primary","required":false,"wireName":"is_primary"}, SHARED_FIELD_DEFS.FIELD_9),
     schemaField({"name":"is_customer_visible","required":false,"wireName":"is_customer_visible"}, SHARED_FIELD_DEFS.FIELD_9),
     schemaField({"name":"width_px","required":false,"wireName":"width_px"}, SHARED_FIELD_DEFS.FIELD_18),
     schemaField({"name":"height_px","required":false,"wireName":"height_px"}, SHARED_FIELD_DEFS.FIELD_18),
-    schemaField({"name":"source_attribution","required":false,"wireName":"source_attribution"}, SHARED_FIELD_DEFS.FIELD_121),
-    schemaField({"name":"focal_point","required":false,"wireName":"focal_point"}, SHARED_FIELD_DEFS.FIELD_122),
+    schemaField({"name":"source_attribution","required":false,"wireName":"source_attribution"}, SHARED_FIELD_DEFS.FIELD_122),
+    schemaField({"name":"focal_point","required":false,"wireName":"focal_point"}, SHARED_FIELD_DEFS.FIELD_123),
     schemaField({"name":"created_at","required":false,"wireName":"created_at"}, SHARED_FIELD_DEFS.FIELD_5)
         ]
       };

@@ -170,6 +170,33 @@ function collectTravelPlanFieldDescriptors(travelPlan, options = {}) {
           sourceLang: normalizedSourceLang,
           targetLang: normalizedTargetLang,
           emptyValue: null
+        }),
+        createFieldDescriptor({
+          key: `travel_plan.${dayId}.${itemId}.image_subtitle`,
+          holder: item,
+          mapField: "image_subtitle_i18n",
+          plainField: "image_subtitle",
+          sourceLang: normalizedSourceLang,
+          targetLang: normalizedTargetLang,
+          emptyValue: null
+        }),
+        createFieldDescriptor({
+          key: `travel_plan.${dayId}.${itemId}.image.caption`,
+          holder: item?.image,
+          mapField: "caption_i18n",
+          plainField: "caption",
+          sourceLang: normalizedSourceLang,
+          targetLang: normalizedTargetLang,
+          emptyValue: null
+        }),
+        createFieldDescriptor({
+          key: `travel_plan.${dayId}.${itemId}.image.alt_text`,
+          holder: item?.image,
+          mapField: "alt_text_i18n",
+          plainField: "alt_text",
+          sourceLang: normalizedSourceLang,
+          targetLang: normalizedTargetLang,
+          emptyValue: null
         })
       ].filter(Boolean);
     });

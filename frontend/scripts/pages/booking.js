@@ -402,6 +402,7 @@ const els = {
   travel_plan_panel: document.getElementById("travel_plan_panel"),
   travel_plan_panel_summary: document.getElementById("travel_plan_panel_summary"),
   travel_plan_translation_section: document.getElementById("travel_plan_translation_section"),
+  travel_plan_translation_summary: document.getElementById("travel_plan_translation_summary"),
   travel_plan_translation_panel: document.getElementById("travel_plan_translation_panel"),
   travel_plan_pdf_panel: document.getElementById("travel_plan_pdf_panel"),
   travel_plan_pdf_panel_summary: document.getElementById("travel_plan_pdf_panel_summary"),
@@ -533,6 +534,16 @@ function dirtySectionLabels() {
   return labels;
 }
 
+let travelPlanModule = null;
+
+function dirtyBarNoticeLabels() {
+  const labels = [];
+  if (travelPlanModule?.hasIncompleteTravelPlanTranslation?.()) {
+    labels.push(backendT("booking.translation.section_title_incomplete", "Translation: incomplete"));
+  }
+  return labels;
+}
+
 const bookingDirtyBarController = createBookingStyleDirtyBarController({
   els,
   backendT,
@@ -543,6 +554,7 @@ const bookingDirtyBarController = createBookingStyleDirtyBarController({
     error: state.pageSaveActionError
   }),
   getDirtySectionLabels: dirtySectionLabels,
+  getNoticeLabels: dirtyBarNoticeLabels,
   onSave: () => {
     logBookingSave("[booking-save] Save button clicked.", {
       booking_id: state.id || null,
@@ -1589,7 +1601,7 @@ const paymentFlowModule = createBookingPaymentFlowModule({
   formatDateTime,
 });
 
-const travelPlanModule = createBookingTravelPlanModule({
+travelPlanModule = createBookingTravelPlanModule({
   state,
   els,
   apiOrigin,
@@ -1607,7 +1619,8 @@ const travelPlanModule = createBookingTravelPlanModule({
     state.pageSaveActionError = normalizeText(message);
     updatePageDirtyBar();
   },
-  hasUnsavedBookingChanges
+  hasUnsavedBookingChanges,
+  updatePageDirtyBar
 });
 
 const offerModule = createBookingOfferModule({

@@ -168,6 +168,20 @@ end
 
 def swift_type_for_field(field)
   base = case field.fetch('kind')
+         when 'map'
+           value_type = case field.fetch('typeName')
+                        when 'Identifier', 'Timestamp', 'Email', 'string'
+                          'String'
+                        when 'int'
+                          'Int'
+                        when 'float'
+                          'Double'
+                        when 'bool'
+                          'Bool'
+                        else
+                          'String'
+                        end
+           "[String: #{value_type}]"
          when 'enum'
            "Generated#{field.fetch('typeName')}"
          when 'entity', 'valueObject', 'transport'
@@ -969,6 +983,21 @@ def field_type_from_openapi_schema(field_schema, enum_names, schemas, transport_
   is_array = schema['type'] == 'array'
   schema = schema['items'] if is_array
 
+  if schema['type'] == 'object' && schema['additionalProperties'].is_a?(Hash)
+    value_schema = schema['additionalProperties']
+    type_name = case value_schema['type']
+                when 'integer' then 'int'
+                when 'number' then 'float'
+                when 'boolean' then 'bool'
+                else 'string'
+                end
+    return {
+      'kind' => 'map',
+      'typeName' => type_name,
+      'isArray' => is_array
+    }
+  end
+
   if schema['$ref']
     ref_name = ref_name_from_schema_ref(schema['$ref'])
     kind = enum_names.include?(ref_name) ? 'enum' : transport_kind
@@ -1141,6 +1170,18 @@ end
 
 def openapi_schema_for_field(field, type_index, enum_schema_names)
   prop = case field.fetch('kind')
+         when 'map'
+           value_schema = case field.fetch('typeName')
+                          when 'integer', 'int'
+                            { type: 'integer' }
+                          when 'number', 'float'
+                            { type: 'number' }
+                          when 'boolean', 'bool'
+                            { type: 'boolean' }
+                          else
+                            { type: 'string' }
+                          end
+           { type: 'object', additionalProperties: value_schema }
          when 'scalar'
            case field.fetch('typeName')
            when 'string', 'Identifier'

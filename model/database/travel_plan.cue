@@ -21,7 +21,9 @@ import (
 	id:                   common.#Identifier
 	storage_path:         string & !=""
 	caption?:             string
+	caption_i18n?:        [string]: string
 	alt_text?:            string
+	alt_text_i18n?:       [string]: string
 	sort_order:           >=0 & int
 	is_primary?:          bool
 	is_customer_visible?: bool
@@ -65,6 +67,7 @@ import (
 	kind:            enums.#TravelPlanServiceKind
 	title?:          string
 	image_subtitle?: string
+	image_subtitle_i18n?: [string]: string
 	location?:       string
 	start_time?:     string
 	end_time?:       string

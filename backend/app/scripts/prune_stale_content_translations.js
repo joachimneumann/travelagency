@@ -218,11 +218,12 @@ function pruneTravelPlan(travelPlan, keepLangs) {
       removedLanguages += result.removedLanguages;
     }
 
-    for (const item of Array.isArray(day.items) ? day.items : []) {
+    for (const item of Array.isArray(day.services) ? day.services : (Array.isArray(day.items) ? day.items : [])) {
       for (const [mapField, plainField, emptyValue] of [
         ["time_label_i18n", "time_label", null],
         ["title_i18n", "title", ""],
         ["details_i18n", "details", null],
+        ["image_subtitle_i18n", "image_subtitle", null],
         ["location_i18n", "location", null]
       ]) {
         const result = applyPrunedField(
@@ -234,6 +235,25 @@ function pruneTravelPlan(travelPlan, keepLangs) {
         );
         if (result.changed) fieldChanges += 1;
         removedLanguages += result.removedLanguages;
+      }
+      for (const image of [
+        item?.image,
+        ...(Array.isArray(item?.images) ? item.images : [])
+      ].filter((entry) => entry && typeof entry === "object" && !Array.isArray(entry))) {
+        for (const [mapField, plainField] of [
+          ["caption_i18n", "caption"],
+          ["alt_text_i18n", "alt_text"]
+        ]) {
+          const result = applyPrunedField(
+            image,
+            mapField,
+            plainField,
+            keepLanguagesForField(image?.[mapField] ?? image?.[plainField], keepLangs, sectionSourceLangs),
+            null
+          );
+          if (result.changed) fieldChanges += 1;
+          removedLanguages += result.removedLanguages;
+        }
       }
     }
   }

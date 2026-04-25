@@ -3,6 +3,7 @@ export function createBookingStyleDirtyBarController({
   backendT,
   readState,
   getDirtySectionLabels,
+  getNoticeLabels,
   onSave,
   onDiscard,
   onBack
@@ -22,6 +23,7 @@ export function createBookingStyleDirtyBarController({
   function render() {
     if (!els?.dirtyBar || !els?.dirtyBarSummary || !els?.saveEditsBtn || !els?.discardEditsBtn) return;
     const labels = typeof getDirtySectionLabels === "function" ? getDirtySectionLabels() : [];
+    const notices = typeof getNoticeLabels === "function" ? getNoticeLabels() : [];
     const barState = typeof readState === "function" ? readState() : {};
     const isDirty = labels.length > 0;
     const isSaving = barState.saving === true;
@@ -47,9 +49,20 @@ export function createBookingStyleDirtyBarController({
       }
     }
 
-    els.dirtyBarSummary.textContent = isDirty
-      ? backendT("booking.page_save.summary", "Changed sections: {sections}", { sections: labels.join(", ") })
-      : "";
+    const summaryParts = [];
+    if (isDirty) {
+      summaryParts.push(backendT("booking.page_save.summary", "Changed sections: {sections}", { sections: labels.join(", ") }));
+    }
+    els.dirtyBarSummary.textContent = "";
+    if (summaryParts.length) {
+      els.dirtyBarSummary.append(document.createTextNode(summaryParts.join(" · ")));
+    }
+    for (const notice of notices) {
+      const pill = document.createElement("span");
+      pill.className = "booking-dirty-bar__notice-pill";
+      pill.textContent = String(notice || "");
+      els.dirtyBarSummary.append(pill);
+    }
 
     if (els.saveErrorHint) {
       els.saveErrorHint.textContent = String(barState.error || "");

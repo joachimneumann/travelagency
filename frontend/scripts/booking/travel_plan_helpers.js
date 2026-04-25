@@ -184,16 +184,20 @@ function resolveRawItemImage(rawImageOrImages) {
   );
 }
 
-function normalizeItemImage(rawImageOrImages) {
+function normalizeItemImage(rawImageOrImages, sourceLang, targetLang) {
   const rawImage = resolveRawItemImage(rawImageOrImages);
   if (!rawImage) return null;
   const storagePath = normalizeOptionalText(rawImage.storage_path);
   if (!storagePath) return null;
+  const captionField = normalizeDraftLocalizedPayload(rawImage, "caption", sourceLang, targetLang);
+  const altTextField = normalizeDraftLocalizedPayload(rawImage, "alt_text", sourceLang, targetLang);
   return {
     id: String(rawImage.id || travelPlanId("travel_plan_service_image")),
     storage_path: storagePath,
-    caption: normalizeOptionalText(rawImage.caption),
-    alt_text: normalizeOptionalText(rawImage.alt_text),
+    caption: captionField.text,
+    caption_i18n: captionField.map,
+    alt_text: altTextField.text,
+    alt_text_i18n: altTextField.map,
     sort_order: 0,
     is_primary: true,
     is_customer_visible: rawImage.is_customer_visible !== false,
@@ -284,6 +288,7 @@ export function createEmptyTravelPlanService() {
     details: "",
     details_i18n: {},
     image_subtitle: "",
+    image_subtitle_i18n: {},
     location: "",
     location_i18n: {},
     start_time: "",
@@ -364,6 +369,7 @@ export function normalizeTravelPlanDraft(plan, options = {}) {
           const titleField = normalizeDraftLocalizedPayload(rawItem, "title", sourceLang, targetLang);
           const detailsField = normalizeDraftLocalizedPayload(rawItem, "details", sourceLang, targetLang);
           const locationField = normalizeDraftLocalizedPayload(rawItem, "location", sourceLang, targetLang);
+          const imageSubtitleField = normalizeDraftLocalizedPayload(rawItem, "image_subtitle", sourceLang, targetLang);
           return {
             id: String(rawItem.id || travelPlanId("travel_plan_service")),
             timing_kind: timing.timing_kind,
@@ -375,12 +381,13 @@ export function normalizeTravelPlanDraft(plan, options = {}) {
             title_i18n: titleField.map,
             details: detailsField.text,
             details_i18n: detailsField.map,
-            image_subtitle: normalizeOptionalText(rawItem.image_subtitle),
+            image_subtitle: imageSubtitleField.text,
+            image_subtitle_i18n: imageSubtitleField.map,
             location: locationField.text,
             location_i18n: locationField.map,
             start_time: timing.start_time,
             end_time: timing.end_time,
-            image: normalizeItemImage(rawItem.image ?? rawItem.images),
+            image: normalizeItemImage(rawItem.image ?? rawItem.images, sourceLang, targetLang),
             copied_from: normalizeCopiedFrom(rawItem.copied_from)
           };
         }),

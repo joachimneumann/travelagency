@@ -277,19 +277,20 @@ Recommendation:
 - guard it behind both environment and host checks
 - ideally remove it entirely from production builds
 
-### 10. `quick_login` support increases auth attack surface
+### 10. Removed `quick_login` shortcut
 
 Relevant code:
 - `backend/app/src/auth.js`
+- `backend/keycloak-theme/asiatravelplan/login/theme.properties`
 
-The login flow has a special `quick_login` path for `staging.asiatravelplan.com`, `localhost`, and `127.0.0.1`.
+The previous staging/local `quick_login` shortcut has been removed from the backend login redirect, homepage Command-click behavior, and Keycloak theme scripts.
 
-Even if it currently depends on Keycloak-side behavior, it is still a sensitive shortcut.
+Do not reintroduce credentials in static Keycloak theme assets or frontend JavaScript.
 
 Recommendation:
-- disable `quick_login` outside local development
-- do not rely only on the incoming `Host` header for deciding whether a shortcut is allowed
-- move it behind an explicit environment flag that defaults to off
+- keep all staging login shortcuts disabled
+- use normal Keycloak credentials for staging validation
+- keep any future test-only auth shortcut behind explicit local-only environment gates
 
 ### 11. Public webhook status endpoint leaks operational details
 
@@ -371,7 +372,7 @@ Current risk: medium
 
 Reason:
 - production auth path is reasonable
-- but there are dangerous configuration shortcuts: `INSECURE_TEST_AUTH`, permissive CORS defaults, and `quick_login`
+- but there are dangerous configuration shortcuts: `INSECURE_TEST_AUTH` and permissive CORS defaults
 
 ### Broken access control
 
@@ -413,10 +414,9 @@ Reason:
 ### Near Term
 
 8. Add rate limiting for auth, webhook, public booking, and upload routes.
-9. Disable `quick_login` outside local development.
-10. Fail startup if `INSECURE_TEST_AUTH` is enabled outside local.
-11. Restrict or remove the public webhook status endpoint.
-12. Add security headers at the reverse proxy:
+9. Fail startup if `INSECURE_TEST_AUTH` is enabled outside local.
+10. Restrict or remove the public webhook status endpoint.
+11. Add security headers at the reverse proxy:
     - `Strict-Transport-Security`
     - `X-Content-Type-Options: nosniff`
     - `Referrer-Policy`

@@ -1290,33 +1290,11 @@ async function loadWebsiteAuthStatus({ force = false } = {}) {
   return authStatusLoadPromise;
 }
 
-function isStagingFrontend() {
-  return window.location.hostname === "staging.asiatravelplan.com";
-}
-
-function isLocalFrontend() {
-  return window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-}
-
 function setupBrandLogoLinkBehavior() {
   if (!(els.brandLogoLink instanceof HTMLElement) || els.brandLogoLink.dataset.brandLogoBound === "1") return;
   els.brandLogoLink.dataset.brandLogoBound = "1";
 
   els.brandLogoLink.addEventListener("click", (event) => {
-    const allowQuickLogin = isStagingFrontend() || isLocalFrontend();
-    if (event.metaKey && allowQuickLogin) {
-      event.preventDefault();
-      event.stopPropagation();
-
-      const backendUrl = withLangUrl("/bookings.html");
-      const loginParams = new URLSearchParams({
-        return_to: backendUrl,
-        quick_login: "1"
-      });
-      window.location.href = `${BACKEND_BASE_URL}/auth/login?${loginParams.toString()}`;
-      return;
-    }
-
     event.preventDefault();
     if (state.reelsModeOpen) return;
 

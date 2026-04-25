@@ -800,9 +800,13 @@ test("booking page scrolls across the full main-content section while keeping th
 
 test("booking page uses the dirty bar as the only red dirty-state surface", async () => {
   const bookingPageScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking.js");
+  const dirtyBarControllerPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "shared", "booking_style_dirty_bar.js");
   const bookingStylesPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "pages", "backend-booking.css");
-  const bookingSource = await readFile(bookingPageScriptPath, "utf8");
-  const bookingStyles = await readFile(bookingStylesPath, "utf8");
+  const [bookingSource, dirtyBarControllerSource, bookingStyles] = await Promise.all([
+    readFile(bookingPageScriptPath, "utf8"),
+    readFile(dirtyBarControllerPath, "utf8"),
+    readFile(bookingStylesPath, "utf8")
+  ]);
 
   assert.doesNotMatch(
     bookingSource,
@@ -810,9 +814,9 @@ test("booking page uses the dirty bar as the only red dirty-state surface", asyn
     "Booking sections should no longer be painted as red dirty surfaces"
   );
   assert.match(
-    bookingSource,
+    dirtyBarControllerSource,
     /dirtyBar\.classList\.toggle\("booking-dirty-bar--dirty", isDirty\);/,
-    "The page-level dirty bar should own the visual dirty state"
+    "The page-level dirty bar should only use the red dirty state for unsaved edits"
   );
   assert.match(
     bookingStyles,
@@ -826,31 +830,121 @@ test("booking page uses the dirty bar as the only red dirty-state surface", asyn
   );
 });
 
+test("booking and marketing-tour translation collapsibles expose incomplete state and clean dirty-bar pills", async () => {
+  const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
+  const bookingPageScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking.js");
+  const bookingTravelPlanModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "shared", "travel_plan_editor_core.js");
+  const tourPageHtmlPath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "marketing_tour.html");
+  const tourPageScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "tour.js");
+  const collapsibleStylesPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "components", "backend-collapsible.css");
+  const bookingStylesPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "pages", "backend-booking.css");
+  const englishTranslationsPath = path.resolve(__dirname, "..", "..", "..", "frontend", "data", "i18n", "backend", "en.json");
+  const [
+    bookingPageSource,
+    bookingScriptSource,
+    bookingTravelPlanSource,
+    tourPageSource,
+    tourScriptSource,
+    collapsibleStyles,
+    bookingStyles,
+    englishTranslations
+  ] = await Promise.all([
+    readFile(bookingPagePath, "utf8"),
+    readFile(bookingPageScriptPath, "utf8"),
+    readFile(bookingTravelPlanModulePath, "utf8"),
+    readFile(tourPageHtmlPath, "utf8"),
+    readFile(tourPageScriptPath, "utf8"),
+    readFile(collapsibleStylesPath, "utf8"),
+    readFile(bookingStylesPath, "utf8"),
+    readFile(englishTranslationsPath, "utf8")
+  ]);
+
+  assert.match(
+    bookingPageSource,
+    /id="travel_plan_translation_summary"[\s\S]*data-translation-summary-title data-i18n-id="booking\.translation\.section_title">Translations/,
+    "Booking translation summary should expose a stable title mount with the complete-state label"
+  );
+  assert.match(
+    tourPageSource,
+    /id="tour_travel_plan_translation_summary"[\s\S]*data-translation-summary-title data-i18n-id="tour\.travel_plan_translation\.section_title">Translations/,
+    "Marketing-tour translation summary should expose the same complete-state label"
+  );
+  assert.match(
+    tourPageSource,
+    /id="tour_dirty_bar_title"[\s\S]*id="tour_dirty_bar_summary"/,
+    "Marketing-tour dirty bar should expose a visible copy area for translation notices"
+  );
+  assert.match(
+    bookingScriptSource,
+    /travel_plan_translation_summary: document\.getElementById\("travel_plan_translation_summary"\)/,
+    "Booking page should wire the translation summary button"
+  );
+  assert.match(
+    tourScriptSource,
+    /travelPlanTranslationSummary: document\.getElementById\("tour_travel_plan_translation_summary"\)/,
+    "Marketing-tour page should wire the translation summary button"
+  );
+  assert.match(
+    bookingTravelPlanSource,
+    /function setTravelPlanTranslationSummaryState\(isIncomplete\)[\s\S]*updatePageDirtyBar\(\)[\s\S]*booking\.translation\.section_title_incomplete[\s\S]*Translation: incomplete[\s\S]*booking-section__summary--translation-incomplete[\s\S]*setTravelPlanTranslationSummaryState\(isTranslationIncompleteStatus\(summary\.status\)\)/,
+    "Booking travel-plan translation review should mark incomplete translations in the collapsible title and dirty bar"
+  );
+  assert.match(
+    bookingScriptSource,
+    /function dirtyBarNoticeLabels\(\)[\s\S]*hasIncompleteTravelPlanTranslation[\s\S]*booking\.translation\.section_title_incomplete/,
+    "Booking dirty bar should include the incomplete translation notice"
+  );
+  assert.match(
+    tourScriptSource,
+    /TRAVEL_PLAN_TRANSLATION_INCOMPLETE_STATUSES = new Set\(\["missing", "partial", "stale"\]\)[\s\S]*function renderTourDirtyBar\(\)[\s\S]*booking-dirty-bar--dirty", isDirty\)[\s\S]*booking-dirty-bar__notice-pill[\s\S]*tour\.travel_plan_translation\.section_title_incomplete[\s\S]*summaries\.some\(\(\{ summary \}\) => isTravelPlanTranslationIncompleteStatus\(summary\.status\)\)/,
+    "Marketing-tour translation review should mark missing, partial, and stale translations as incomplete without making the dirty bar red by itself"
+  );
+  assert.match(
+    collapsibleStyles,
+    /\.booking-section__summary--translation-incomplete \{[\s\S]*border: 1\.5px solid #ff6f55;[\s\S]*background: rgba\(255, 240, 236, 0\.98\);[\s\S]*box-shadow: 0 0 0 1px rgba\(255, 111, 85, 0\.14\);[\s\S]*color: var\(--error-text-strong\);/,
+    "Incomplete translation summaries should reuse the dirty-bar red treatment"
+  );
+  assert.match(
+    bookingStyles,
+    /\.booking-detail-page \.booking-dirty-bar__notice-pill \{[\s\S]*border-radius: 999px;[\s\S]*background: rgba\(255, 240, 236, 0\.98\);[\s\S]*color: var\(--error-text-strong\);[\s\S]*padding: 0\.18rem 0\.48rem;/,
+    "Incomplete translation dirty-bar notices should render as light-red pills"
+  );
+  assert.match(
+    englishTranslations,
+    /"booking\.translation\.section_title": "Translations"[\s\S]*"booking\.translation\.section_title_incomplete": "Translation: incomplete"[\s\S]*"tour\.travel_plan_translation\.section_title": "Translations"[\s\S]*"tour\.travel_plan_translation\.section_title_incomplete": "Translation: incomplete"/,
+    "Backend i18n should define the complete and incomplete translation titles"
+  );
+});
+
 test("booking dirty bar stays visible while clean and reports save or discard progress", async () => {
   const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
   const bookingPageScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking.js");
-  const bookingPageSource = await readFile(bookingPagePath, "utf8");
-  const bookingSource = await readFile(bookingPageScriptPath, "utf8");
+  const dirtyBarControllerPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "shared", "booking_style_dirty_bar.js");
+  const [bookingPageSource, bookingSource, dirtyBarControllerSource] = await Promise.all([
+    readFile(bookingPagePath, "utf8"),
+    readFile(bookingPageScriptPath, "utf8"),
+    readFile(dirtyBarControllerPath, "utf8")
+  ]);
 
   assert.match(
-    bookingSource,
+    dirtyBarControllerSource,
     /els\.dirtyBar\.hidden = false;/,
     "The sticky dirty bar should stay visible even when there are no unsaved edits"
   );
   assert.match(
-    bookingSource,
+    dirtyBarControllerSource,
     /const isBusy = isSaving \|\| isDiscarding;[\s\S]*?els\.saveEditsBtn\.disabled = isBusy \|\| !isDirty;[\s\S]*?els\.discardEditsBtn\.disabled = isBusy \|\| !isDirty;/,
     "Both dirty-bar buttons should be disabled while the page is clean or busy"
   );
   assert.match(
-    bookingSource,
+    dirtyBarControllerSource,
     /backendT\("booking\.page_save\.saving", "Saving edits\.\.\."\)[\s\S]*backendT\("booking\.page_discard\.running", "Discarding edits\.\.\."\)[\s\S]*backendT\("booking\.page_save\.saved", "All edits saved"\)[\s\S]*backendT\("booking\.page_discard\.saved", "All edits reverted"\)/,
     "The dirty bar should expose explicit save and discard progress and completion text"
   );
   assert.match(
-    bookingSource,
-    /els\.dirtyBarSummary\.textContent = isDirty[\s\S]*\?\s*backendT\("booking\.page_save\.summary", "Changed sections: \{sections\}", \{ sections: labels\.join\(", "\) \}\)[\s\S]*:\s*"";/,
-    "The clean dirty-bar state should not repeat the title text in the summary line"
+    dirtyBarControllerSource,
+    /const summaryParts = \[\];[\s\S]*if \(isDirty\) \{[\s\S]*booking\.page_save\.summary[\s\S]*document\.createElement\("span"\)[\s\S]*booking-dirty-bar__notice-pill/,
+    "The dirty-bar summary should show changed sections and non-dirty notices as pills without repeating the title"
   );
   assert.match(
     bookingPageSource,
@@ -2752,7 +2846,7 @@ test("booking page wires the dedicated travel-plan module and section", async ()
   );
   assert.match(
     moduleSource,
-    /const travelPlanModule = createBookingTravelPlanModule\(/,
+    /let travelPlanModule = null;[\s\S]*travelPlanModule = createBookingTravelPlanModule\(/,
     "booking.js should instantiate the dedicated travel-plan module"
   );
   assert.match(
@@ -2902,18 +2996,22 @@ test("travel-plan module preserves add/remove/reorder editing helpers", async ()
   );
 });
 
-test("travel-plan service image subtitle stays wired across model, API, backend, and UI", async () => {
+test("travel-plan service image text stays wired across model, API, backend, translation review, and UI", async () => {
   const modelPath = path.resolve(__dirname, "..", "..", "..", "model", "database", "travel_plan.cue");
   const openApiPath = path.resolve(__dirname, "..", "..", "..", "api", "generated", "openapi.yaml");
   const backendPath = path.resolve(__dirname, "..", "..", "..", "backend", "app", "src", "domain", "travel_plan.js");
+  const translationPath = path.resolve(__dirname, "..", "..", "..", "backend", "app", "src", "domain", "booking_translation.js");
   const helperPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan_helpers.js");
   const uiPath = travelPlanEditorCorePath();
-  const [modelSource, openApiSource, backendSource, helperSource, uiSource] = await Promise.all([
+  const tourUiPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "tour.js");
+  const [modelSource, openApiSource, backendSource, translationSource, helperSource, uiSource, tourUiSource] = await Promise.all([
     readFile(modelPath, "utf8"),
     readFile(openApiPath, "utf8"),
     readFile(backendPath, "utf8"),
+    readFile(translationPath, "utf8"),
     readFile(helperPath, "utf8"),
-    readFile(uiPath, "utf8")
+    readFile(uiPath, "utf8"),
+    readFile(tourUiPath, "utf8")
   ]);
 
   assert.match(
@@ -2922,24 +3020,99 @@ test("travel-plan service image subtitle stays wired across model, API, backend,
     "The travel-plan service model should expose an optional image subtitle field"
   );
   assert.match(
+    modelSource,
+    /image_subtitle_i18n\?:\s+\[string\]:\s+string/,
+    "The travel-plan service model should expose localized image subtitles"
+  );
+  assert.match(
+    modelSource,
+    /caption_i18n\?:\s+\[string\]:\s+string[\s\S]*alt_text_i18n\?:\s+\[string\]:\s+string/,
+    "The travel-plan service image model should expose localized caption and alt text"
+  );
+  assert.match(
     openApiSource,
     /image_subtitle:\n\s+type: string\n\s+nullable: true/,
     "The OpenAPI contract should expose the optional travel-plan service image subtitle"
   );
   assert.match(
+    openApiSource,
+    /image_subtitle_i18n:\n\s+type: object\n\s+additionalProperties:\n\s+type: string\n\s+nullable: true/,
+    "The OpenAPI contract should expose localized travel-plan service image subtitles"
+  );
+  assert.match(
+    openApiSource,
+    /caption_i18n:\n\s+type: object\n\s+additionalProperties:\n\s+type: string\n\s+nullable: true[\s\S]*alt_text_i18n:\n\s+type: object\n\s+additionalProperties:\n\s+type: string\n\s+nullable: true/,
+    "The OpenAPI contract should expose localized travel-plan service image caption and alt text"
+  );
+  assert.match(
     backendSource,
-    /image_subtitle: normalizeOptionalText\(rawItem\.image_subtitle\) \|\| null/,
-    "The backend travel-plan normalizer should persist the service image subtitle"
+    /normalizeTravelPlanLocalizedField\(rawItem\?\.image_subtitle_i18n,\s*rawItem\?\.image_subtitle/,
+    "The backend travel-plan normalizer should read localized service image subtitles"
+  );
+  assert.match(
+    backendSource,
+    /image_subtitle:\s+imageSubtitleField\.text \|\| null,[\s\S]*image_subtitle_i18n:\s+imageSubtitleField\.map/,
+    "The backend travel-plan normalizer should persist localized service image subtitles"
+  );
+  assert.match(
+    backendSource,
+    /const captionField = normalizeTravelPlanLocalizedField\(rawImage\.caption_i18n,\s*rawImage\.caption,\s*options\);[\s\S]*const altTextField = normalizeTravelPlanLocalizedField\(rawImage\.alt_text_i18n,\s*rawImage\.alt_text,\s*options\);[\s\S]*caption_i18n:\s+captionField\.map,[\s\S]*alt_text_i18n:\s+altTextField\.map/,
+    "The backend travel-plan normalizer should persist localized service image caption and alt text"
+  );
+  assert.match(
+    translationSource,
+    /key:\s+`travel_plan\.\$\{dayId\}\.\$\{itemId\}\.image_subtitle`[\s\S]*mapField:\s+"image_subtitle_i18n"[\s\S]*plainField:\s+"image_subtitle"/,
+    "The backend translation collector should include service image subtitles"
+  );
+  assert.match(
+    translationSource,
+    /key:\s+`travel_plan\.\$\{dayId\}\.\$\{itemId\}\.image\.caption`[\s\S]*mapField:\s+"caption_i18n"[\s\S]*plainField:\s+"caption"[\s\S]*key:\s+`travel_plan\.\$\{dayId\}\.\$\{itemId\}\.image\.alt_text`[\s\S]*mapField:\s+"alt_text_i18n"[\s\S]*plainField:\s+"alt_text"/,
+    "The backend translation collector should include service image caption and alt text"
   );
   assert.match(
     helperSource,
-    /image_subtitle: ""[\s\S]*image_subtitle: normalizeOptionalText\(rawItem\.image_subtitle\)/,
-    "The frontend travel-plan helpers should seed and normalize the service image subtitle"
+    /image_subtitle:\s+""[\s\S]*image_subtitle_i18n:\s+\{\}/,
+    "The frontend travel-plan helpers should seed localized service image subtitles"
+  );
+  assert.match(
+    helperSource,
+    /const imageSubtitleField = normalizeDraftLocalizedPayload\(rawItem,\s+"image_subtitle",\s+sourceLang,\s+targetLang\)/,
+    "The frontend travel-plan helpers should normalize localized service image subtitles"
+  );
+  assert.match(
+    helperSource,
+    /image_subtitle:\s+imageSubtitleField\.text,[\s\S]*image_subtitle_i18n:\s+imageSubtitleField\.map/,
+    "The frontend travel-plan helpers should persist localized service image subtitles"
+  );
+  assert.match(
+    helperSource,
+    /const captionField = normalizeDraftLocalizedPayload\(rawImage,\s+"caption",\s+sourceLang,\s+targetLang\);[\s\S]*const altTextField = normalizeDraftLocalizedPayload\(rawImage,\s+"alt_text",\s+sourceLang,\s+targetLang\);[\s\S]*caption_i18n:\s+captionField\.map,[\s\S]*alt_text_i18n:\s+altTextField\.map/,
+    "The frontend travel-plan helpers should normalize localized service image caption and alt text"
   );
   assert.match(
     uiSource,
-    /data-travel-plan-service-field="image_subtitle"[\s\S]*item\.image_subtitle = String\(itemNode\.querySelector\('\[data-travel-plan-service-field="image_subtitle"\]'\)\?\.value \|\| ""\)\.trim\(\);/,
-    "The travel-plan editor should render and save the service image subtitle field"
+    /field:\s+"image_subtitle"[\s\S]*item\.image_subtitle_i18n = itemImageSubtitle\.map/,
+    "The travel-plan editor should render and save localized service image subtitles"
+  );
+  assert.match(
+    uiSource,
+    /mapField:\s+"image_subtitle_i18n"[\s\S]*plainField:\s+"image_subtitle"[\s\S]*key:\s+`travel_plan\.\$\{dayId\}\.\$\{serviceId\}\.image_subtitle`/,
+    "The booking frontend translation review should include service image subtitles"
+  );
+  assert.match(
+    uiSource,
+    /mapField:\s+"caption_i18n"[\s\S]*plainField:\s+"caption"[\s\S]*key:\s+`travel_plan\.\$\{dayId\}\.\$\{serviceId\}\.image\.caption`[\s\S]*mapField:\s+"alt_text_i18n"[\s\S]*plainField:\s+"alt_text"[\s\S]*key:\s+`travel_plan\.\$\{dayId\}\.\$\{serviceId\}\.image\.alt_text`/,
+    "The booking frontend translation review should include service image caption and alt text"
+  );
+  assert.match(
+    tourUiSource,
+    /mapField:\s+"image_subtitle_i18n"[\s\S]*plainField:\s+"image_subtitle"[\s\S]*key:\s+`travel_plan\.\$\{dayId\}\.\$\{serviceId\}\.image_subtitle`/,
+    "The marketing-tour frontend translation review should include service image subtitles"
+  );
+  assert.match(
+    tourUiSource,
+    /mapField:\s+"caption_i18n"[\s\S]*plainField:\s+"caption"[\s\S]*key:\s+`travel_plan\.\$\{dayId\}\.\$\{serviceId\}\.image\.caption`[\s\S]*mapField:\s+"alt_text_i18n"[\s\S]*plainField:\s+"alt_text"[\s\S]*key:\s+`travel_plan\.\$\{dayId\}\.\$\{serviceId\}\.image\.alt_text`/,
+    "The marketing-tour frontend translation review should include service image caption and alt text"
   );
 });
 
@@ -3138,7 +3311,13 @@ test("tour read models version public image URLs so immutable caching still refr
 
 test("tour page keeps website content translations in the English-source review panel", async () => {
   const tourPageModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "tour.js");
-  const tourSource = await readFile(tourPageModulePath, "utf8");
+  const siteStylesPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "site.css");
+  const englishTranslationsPath = path.resolve(__dirname, "..", "..", "..", "frontend", "data", "i18n", "backend", "en.json");
+  const [tourSource, siteStyles, englishTranslations] = await Promise.all([
+    readFile(tourPageModulePath, "utf8"),
+    readFile(siteStylesPath, "utf8"),
+    readFile(englishTranslationsPath, "utf8")
+  ]);
 
   assert.match(
     tourSource,
@@ -3149,6 +3328,26 @@ test("tour page keeps website content translations in the English-source review 
     tourSource,
     /function renderLocalizedTourContentEditor\(\)\s*\{[\s\S]*const lang = TOUR_TRANSLATION_SOURCE_LANG;/,
     "The visible website title and description editor should render only the English source fields"
+  );
+  assert.match(
+    tourSource,
+    /backendT\("tour\.content_label", "Tour Title and description"\)[\s\S]*tour-localized-group__code--inline[\s\S]*tourLanguageShortLabel\(lang\)/,
+    "The visible tour title and description editor should put the English language marker beside the title"
+  );
+  assert.doesNotMatch(
+    tourSource,
+    /tour-localized-group__code-cell[\s\S]*tourLanguageShortLabel\(lang\)[\s\S]*data-tour-i18n-field="title_i18n"/,
+    "The visible tour title and description editor should not keep a left-side EN marker"
+  );
+  assert.match(
+    siteStyles,
+    /\.tour-localized-group__code--inline[\s\S]*\.tour-localized-group--content \.tour-localized-group__row \{[\s\S]*grid-template-columns: minmax\(0, 1fr\);[\s\S]*\.tour-localized-group--content \.tour-localized-group__header \{[\s\S]*padding-left: 0;/,
+    "The marketing-tour content editor should use a single-column row after moving the language marker into the title"
+  );
+  assert.match(
+    englishTranslations,
+    /"tour\.content_label": "Tour Title and description"/,
+    "The marketing-tour content label should use the requested copy"
   );
   assert.match(
     tourSource,
@@ -3659,7 +3858,8 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
     stagingFrontendScript,
     updateStagingScript,
     productionFrontendScript,
-    updateProductionScript
+    updateProductionScript,
+    publicHomepageAssetsScript
   ] = await Promise.all([
     readFile(path.join(frontendRoot, "pages", "bookings.html"), "utf8"),
     readFile(path.join(frontendRoot, "pages", "booking.html"), "utf8"),
@@ -3679,7 +3879,8 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
     readFile(path.join(repoRoot, "scripts", "staging", "deploy_staging_frontend.sh"), "utf8"),
     readFile(path.join(repoRoot, "scripts", "deploy", "update_staging.sh"), "utf8"),
     readFile(path.join(repoRoot, "scripts", "production", "deploy_production_frontend.sh"), "utf8"),
-    readFile(path.join(repoRoot, "scripts", "deploy", "update_production.sh"), "utf8")
+    readFile(path.join(repoRoot, "scripts", "deploy", "update_production.sh"), "utf8"),
+    readFile(path.join(repoRoot, "scripts", "lib", "public_homepage_assets.sh"), "utf8")
   ]);
 
   assert.match(
@@ -3776,6 +3977,36 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
     /prepare_runtime_brand_logo\(\)[\s\S]*"\$RUNTIME_BRAND_LOGO_PREPARER" production[\s\S]*prepare_runtime_brand_logo[\s\S]*generate_public_homepage_assets/,
     "Production deploys should prepare the production runtime logo before regenerating frontend assets"
   );
+  assert.match(
+    publicHomepageAssetsScript,
+    /PUBLIC_HOMEPAGE_ASSET_GENERATOR_QUIET=1[\s\S]*>\s*"\$command_log_path" 2>&1[\s\S]*Generated static homepage assets\. Full generation output:/,
+    "Homepage asset deploy helper should suppress generator stdout on successful deploys while preserving logs"
+  );
+  for (const deployScript of [
+    localFrontendScript,
+    stagingFrontendScript,
+    updateStagingScript,
+    productionFrontendScript,
+    updateProductionScript
+  ]) {
+    assert.match(
+      deployScript,
+      /source "\$ROOT_DIR\/scripts\/lib\/public_homepage_assets\.sh"[\s\S]*run_public_homepage_asset_generator_quiet/,
+      "Frontend/deploy scripts should run homepage generation through the quiet deploy helper"
+    );
+  }
+  for (const deployScript of [
+    stagingFrontendScript,
+    updateStagingScript,
+    productionFrontendScript,
+    updateProductionScript
+  ]) {
+    assert.doesNotMatch(
+      deployScript,
+      /node "\$ROOT_DIR\/scripts\/assets\/generate_public_homepage_assets\.mjs"/,
+      "Deploy scripts should not call the noisy homepage asset generator directly"
+    );
+  }
   assert.match(
     updateProductionScript,
     /dump_startup_diagnostics\(\)[\s\S]*logs --tail 200 keycloak[\s\S]*logs --tail 200 postgres[\s\S]*dump_startup_diagnostics "\$compose_up_exit_code"/,
@@ -3916,6 +4147,11 @@ test("frontend language switching updates the homepage in place instead of forci
     mainSource,
     /scheduleDeferredAuthStatusLoad\(\)|scheduleDeferredTask\(\(\) => \{\s*void loadWebsiteAuthStatus\(\)/,
     "Homepage should refresh website auth status directly instead of hiding it behind an idle callback"
+  );
+  assert.doesNotMatch(
+    mainSource,
+    /quick_login|login_hint/,
+    "Homepage brand-logo behavior should not expose staging quick-login shortcuts"
   );
   assert.match(
     mainSource,
@@ -4354,6 +4590,11 @@ test("backend auth normalizes token roles and derives callback URLs from the act
     authSource,
     /authRequests\.set\(state,\s*\{[\s\S]*redirect_uri:\s*redirectUri[\s\S]*created_at:\s*Date\.now\(\)/,
     "auth.js should persist the request-specific redirect URI in the auth request state"
+  );
+  assert.doesNotMatch(
+    authSource,
+    /quick_login|quickLogin|login_hint/,
+    "auth.js should not pass quick-login hints or credentials into Keycloak"
   );
   assert.match(
     authSource,

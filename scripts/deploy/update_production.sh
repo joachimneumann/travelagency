@@ -8,6 +8,7 @@ PROJECT_NAME="${PROJECT_NAME:-asiatravelplan}"
 RUNTIME_BRAND_LOGO_PREPARER="${RUNTIME_BRAND_LOGO_PREPARER:-$ROOT_DIR/scripts/assets/prepare_runtime_brand_logo.sh}"
 
 source "$ROOT_DIR/scripts/lib/docker_runtime.sh"
+source "$ROOT_DIR/scripts/lib/public_homepage_assets.sh"
 
 usage() {
   cat <<'EOF'
@@ -69,7 +70,7 @@ normalize_services() {
 
 generate_public_homepage_assets() {
   echo "Generating static homepage tours/team assets..."
-  node "$ROOT_DIR/scripts/assets/generate_public_homepage_assets.mjs"
+  run_public_homepage_asset_generator_quiet "$ROOT_DIR"
 }
 
 prepare_runtime_brand_logo() {

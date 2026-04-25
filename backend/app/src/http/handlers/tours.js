@@ -1296,6 +1296,10 @@ export function createTourHandlers(deps) {
     const current = normalizeTourForStorage(tours[index]);
     const retainedPictures = current.pictures.filter((picture) => tourPictureName(picture) !== pictureName);
     const removedPicture = current.pictures.find((picture) => tourPictureName(picture) === pictureName) || "";
+    if (!removedPicture) {
+      sendJson(res, 404, { error: "Tour picture not found" });
+      return;
+    }
     let updated = current;
     if (retainedPictures.length !== current.pictures.length) {
       updated = normalizeTourForStorage({
@@ -1307,8 +1311,10 @@ export function createTourHandlers(deps) {
       await persistTour(updated);
     }
 
-    const relativePath = tourPictureRelativePath(removedPicture, tourId) || `${tourId}/${safePictureName}`;
-    await rm(path.join(TOURS_DIR, relativePath), { force: true }).catch(() => {});
+    const relativePath = tourPictureRelativePath(removedPicture, tourId);
+    if (relativePath) {
+      await rm(path.join(TOURS_DIR, relativePath), { force: true }).catch(() => {});
+    }
 
     const homepageAssets = await regeneratePublicHomepageAssets("tour_picture_delete", {
       tour_id: updated.id,

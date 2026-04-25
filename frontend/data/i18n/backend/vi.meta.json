@@ -3399,6 +3399,11 @@
     "origin": "manual",
     "updated_at": "2026-04-25T00:00:00.000Z"
   },
+  "booking.translation.section_title_incomplete": {
+    "source_hash": "92a76ef1497dc7e5f8995be581d342be2f9b66b24e20d62471b6d3502cdebdb5",
+    "origin": "manual",
+    "updated_at": "2026-04-25T00:00:00.000Z"
+  },
   "booking.translation.source_description": {
     "source_hash": "d336cefe63725e4e9dc6f62cfa146fc880eb71b2320234fd763e6c319d90aea9",
     "origin": "machine",
@@ -3743,6 +3748,16 @@
     "source_hash": "958df9c95b8209a4eba9eacef19080df19c199d963dea3db5acac74333dd0fef",
     "origin": "machine",
     "updated_at": "2026-03-30T23:51:31.875Z"
+  },
+  "booking.travel_plan.image_alt_text": {
+    "source_hash": "4d258fbcd8fb13c6aecef34e363799a5dc3596aab681435ee2f2ee31ce9db908",
+    "origin": "manual",
+    "updated_at": "2026-04-25T00:00:00.000Z"
+  },
+  "booking.travel_plan.image_caption": {
+    "source_hash": "bc8691074600bd37e55ee512c92fb4dd4da5e1d5b0fd2f955600df7a5768d759",
+    "origin": "manual",
+    "updated_at": "2026-04-25T00:00:00.000Z"
   },
   "booking.travel_plan.image_subtitle_optional": {
     "source_hash": "86d8e15b048d222988c5c91928d1e4763704829932dc74133eb1852663a346ac",
@@ -4940,9 +4955,9 @@
     "updated_at": "2026-03-30T23:51:31.875Z"
   },
   "tour.content_label": {
-    "source_hash": "3399b38e45d3525de1c18c92d03a0bb2ba327028f046c56d55ad1c2257dc455e",
+    "source_hash": "361eb547f24c37f6017dc09dcbfe11152e49785347d88199f5638621b70eaae4",
     "origin": "manual",
-    "updated_at": "2026-04-09T00:00:00.000Z"
+    "updated_at": "2026-04-25T00:00:00.000Z"
   },
   "tour.create_subtitle": {
     "source_hash": "407a78fc70e5e96d2bba90683df34b715e8da84bd4461153c339652c25d934ef",
@@ -5190,7 +5205,12 @@
     "updated_at": "2026-04-25T00:00:00.000Z"
   },
   "tour.travel_plan_translation.section_title": {
-    "source_hash": "8034fe04bbaed8cf8156a8c31c39074a7361c07b4d12bba14d50e65d680d764f",
+    "source_hash": "266a41b90d4f831ea1626e6188606e9ba4fe3f9f72bdb65cb1626d364d212162",
+    "origin": "manual",
+    "updated_at": "2026-04-25T00:00:00.000Z"
+  },
+  "tour.travel_plan_translation.section_title_incomplete": {
+    "source_hash": "92a76ef1497dc7e5f8995be581d342be2f9b66b24e20d62471b6d3502cdebdb5",
     "origin": "manual",
     "updated_at": "2026-04-25T00:00:00.000Z"
   },

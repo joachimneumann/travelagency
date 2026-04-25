@@ -103,6 +103,8 @@ function copyItemForImport(sourceItem, options = {}) {
     title_i18n: includeTranslations ? cloneTravelPlanLocalizedMap(sourceItem?.title_i18n) : undefined,
     details: options.normalizeText(sourceItem?.details),
     details_i18n: includeTranslations ? cloneTravelPlanLocalizedMap(sourceItem?.details_i18n) : undefined,
+    image_subtitle: options.normalizeText(sourceItem?.image_subtitle),
+    image_subtitle_i18n: includeTranslations ? cloneTravelPlanLocalizedMap(sourceItem?.image_subtitle_i18n) : undefined,
     location: options.normalizeText(sourceItem?.location),
     location_i18n: includeTranslations ? cloneTravelPlanLocalizedMap(sourceItem?.location_i18n) : undefined,
     start_time: options.normalizeText(sourceItem?.start_time),

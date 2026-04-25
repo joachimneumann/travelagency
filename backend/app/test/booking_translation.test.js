@@ -32,6 +32,16 @@ test("travel plan translation status counts customer-facing fields only", () => 
             title_i18n: {},
             location: "Noi Bai Airport",
             location_i18n: {},
+            image_subtitle: "Driver at arrival hall",
+            image_subtitle_i18n: {},
+            image: {
+              id: "img_1",
+              storage_path: "/tmp/arrival.webp",
+              caption: "Arrival welcome sign",
+              caption_i18n: {},
+              alt_text: "Driver holding a welcome sign",
+              alt_text_i18n: {}
+            },
             details: "Meet your driver and transfer to the hotel.",
             details_i18n: {}
           }
@@ -44,9 +54,9 @@ test("travel plan translation status counts customer-facing fields only", () => 
   travelPlan.days[0].title_i18n.fr = "Arrivee a Hanoi";
 
   const status = buildTravelPlanTranslationStatus(travelPlan, "fr");
-  assert.equal(status.total_fields, 7);
+  assert.equal(status.total_fields, 10);
   assert.equal(status.translated_fields, 1);
-  assert.equal(status.missing_fields, 6);
+  assert.equal(status.missing_fields, 9);
   assert.equal(status.status, "partial");
 });
 
@@ -122,6 +132,22 @@ test("travel plan manual field locks survive future auto-translation", async () 
             details_i18n: {
               fr: "Rencontrez votre chauffeur et transfert a l'hotel."
             },
+            image_subtitle: "Driver at arrival hall",
+            image_subtitle_i18n: {
+              fr: "Chauffeur dans le hall d'arrivee"
+            },
+            image: {
+              id: "img_1",
+              storage_path: "/tmp/arrival.webp",
+              caption: "Arrival welcome sign",
+              caption_i18n: {
+                fr: "Panneau de bienvenue"
+              },
+              alt_text: "Driver holding a welcome sign",
+              alt_text_i18n: {
+                fr: "Chauffeur tenant un panneau de bienvenue"
+              }
+            },
             location: "Noi Bai Airport",
             location_i18n: {
               fr: "Aeroport Noi Bai"
@@ -151,6 +177,9 @@ test("travel plan manual field locks survive future auto-translation", async () 
       "travel_plan.day_1.seg_1.time_label": "Matinee machine",
       "travel_plan.day_1.seg_1.title": "Transfert machine",
       "travel_plan.day_1.seg_1.details": "Details machine",
+      "travel_plan.day_1.seg_1.image_subtitle": "Sous-titre machine",
+      "travel_plan.day_1.seg_1.image.caption": "Legende machine",
+      "travel_plan.day_1.seg_1.image.alt_text": "Texte alternatif machine",
       "travel_plan.day_1.seg_1.location": "Lieu machine"
     }),
     "2026-03-17T12:00:00.000Z"
@@ -159,6 +188,9 @@ test("travel plan manual field locks survive future auto-translation", async () 
   assert.equal(translated.days[0].title_i18n.fr, "Arrivee privee a Hanoi");
   assert.equal(translated.days[0].notes_i18n.fr, "Notes machine");
   assert.equal(translated.days[0].services[0].title_i18n.fr, "Transfert machine");
+  assert.equal(translated.days[0].services[0].image_subtitle_i18n.fr, "Sous-titre machine");
+  assert.equal(translated.days[0].services[0].image.caption_i18n.fr, "Legende machine");
+  assert.equal(translated.days[0].services[0].image.alt_text_i18n.fr, "Texte alternatif machine");
   assert.equal(Object.prototype.hasOwnProperty.call(translated.days[0].title_i18n, "en"), false);
   assert.deepEqual(translated.translation_meta.fr.manual_keys, ["travel_plan.day_1.title"]);
 
@@ -192,6 +224,25 @@ test("travel plan storage keeps English in plain fields while read models hydrat
             title_i18n: {
               en: "Walking tour",
               ms: "Lawatan berjalan kaki"
+            },
+            image_subtitle: "Guide at the riverside",
+            image_subtitle_i18n: {
+              en: "Guide at the riverside",
+              ms: "Pemandu di tepi sungai"
+            },
+            image: {
+              id: "img_1",
+              storage_path: "/tmp/hoi-an.webp",
+              caption: "Lanterns over the river",
+              caption_i18n: {
+                en: "Lanterns over the river",
+                ms: "Tanglung di atas sungai"
+              },
+              alt_text: "Hoi An lanterns reflected in the river",
+              alt_text_i18n: {
+                en: "Hoi An lanterns reflected in the river",
+                ms: "Tanglung Hoi An terpantul di sungai"
+              }
             }
           }
         ]
@@ -208,6 +259,18 @@ test("travel plan storage keeps English in plain fields while read models hydrat
   assert.deepEqual(stored.days[0].services[0].time_label_i18n, {
     ms: "Pagi"
   });
+  assert.equal(stored.days[0].services[0].image_subtitle, "Guide at the riverside");
+  assert.deepEqual(stored.days[0].services[0].image_subtitle_i18n, {
+    ms: "Pemandu di tepi sungai"
+  });
+  assert.equal(stored.days[0].services[0].image.caption, "Lanterns over the river");
+  assert.deepEqual(stored.days[0].services[0].image.caption_i18n, {
+    ms: "Tanglung di atas sungai"
+  });
+  assert.equal(stored.days[0].services[0].image.alt_text, "Hoi An lanterns reflected in the river");
+  assert.deepEqual(stored.days[0].services[0].image.alt_text_i18n, {
+    ms: "Tanglung Hoi An terpantul di sungai"
+  });
 
   const readModel = buildBookingTravelPlanReadModel(rawTravelPlan, null, { lang: "ms", sourceLang: "en" });
   assert.equal(readModel.days[0].title, "Terokai Bandar Purba Hoi An");
@@ -219,5 +282,20 @@ test("travel plan storage keeps English in plain fields while read models hydrat
   assert.deepEqual(readModel.days[0].services[0].time_label_i18n, {
     en: "Morning",
     ms: "Pagi"
+  });
+  assert.equal(readModel.days[0].services[0].image_subtitle, "Pemandu di tepi sungai");
+  assert.deepEqual(readModel.days[0].services[0].image_subtitle_i18n, {
+    en: "Guide at the riverside",
+    ms: "Pemandu di tepi sungai"
+  });
+  assert.equal(readModel.days[0].services[0].image.caption, "Tanglung di atas sungai");
+  assert.deepEqual(readModel.days[0].services[0].image.caption_i18n, {
+    en: "Lanterns over the river",
+    ms: "Tanglung di atas sungai"
+  });
+  assert.equal(readModel.days[0].services[0].image.alt_text, "Tanglung Hoi An terpantul di sungai");
+  assert.deepEqual(readModel.days[0].services[0].image.alt_text_i18n, {
+    en: "Hoi An lanterns reflected in the river",
+    ms: "Tanglung Hoi An terpantul di sungai"
   });
 });

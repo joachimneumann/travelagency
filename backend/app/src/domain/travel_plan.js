@@ -146,16 +146,20 @@ function resolveRawTravelPlanServiceImage(rawImageOrImages) {
     : null;
 }
 
-function normalizeTravelPlanServiceImage(image, dayIndex, itemIndex) {
+function normalizeTravelPlanServiceImage(image, dayIndex, itemIndex, options = {}) {
   const rawImage = resolveRawTravelPlanServiceImage(image);
   if (!rawImage) return null;
   const storagePath = normalizeOptionalText(rawImage.storage_path);
   if (!storagePath) return null;
+  const captionField = normalizeTravelPlanLocalizedField(rawImage.caption_i18n, rawImage.caption, options);
+  const altTextField = normalizeTravelPlanLocalizedField(rawImage.alt_text_i18n, rawImage.alt_text, options);
   return {
     id: normalizeText(rawImage.id) || `travel_plan_service_image_${dayIndex + 1}_${itemIndex + 1}_1`,
     storage_path: storagePath,
-    caption: normalizeOptionalText(rawImage.caption),
-    alt_text: normalizeOptionalText(rawImage.alt_text),
+    caption: captionField.text || null,
+    caption_i18n: captionField.map,
+    alt_text: altTextField.text || null,
+    alt_text_i18n: altTextField.map,
     sort_order: 0,
     is_primary: true,
     is_customer_visible: normalizeOptionalBoolean(rawImage.is_customer_visible, true),
@@ -322,6 +326,13 @@ function normalizeTravelPlanDays(days, options = {}) {
           flatMode,
           hydrateSourceIntoLocalizedMaps: options?.hydrateSourceIntoLocalizedMaps === true
         });
+        const imageSubtitleField = normalizeTravelPlanLocalizedField(rawItem?.image_subtitle_i18n, rawItem?.image_subtitle, {
+          contentLang,
+          flatLang,
+          sourceLang,
+          flatMode,
+          hydrateSourceIntoLocalizedMaps: options?.hydrateSourceIntoLocalizedMaps === true
+        });
         return {
           id: normalizeText(rawItem.id) || `travel_plan_service_${dayIndex + 1}_${itemIndex + 1}`,
           timing_kind: timing.timing_kind,
@@ -333,12 +344,19 @@ function normalizeTravelPlanDays(days, options = {}) {
           title_i18n: titleField.map,
           details: detailsField.text || null,
           details_i18n: detailsField.map,
-          image_subtitle: normalizeOptionalText(rawItem.image_subtitle) || null,
+          image_subtitle: imageSubtitleField.text || null,
+          image_subtitle_i18n: imageSubtitleField.map,
           location: locationField.text || null,
           location_i18n: locationField.map,
           start_time: timing.start_time,
           end_time: timing.end_time,
-          image: normalizeTravelPlanServiceImage(rawItem.image ?? rawItem.images, dayIndex, itemIndex),
+          image: normalizeTravelPlanServiceImage(rawItem.image ?? rawItem.images, dayIndex, itemIndex, {
+            contentLang,
+            flatLang,
+            sourceLang,
+            flatMode,
+            hydrateSourceIntoLocalizedMaps: options?.hydrateSourceIntoLocalizedMaps === true
+          }),
           copied_from: normalizeTravelPlanServiceCopiedFrom(rawItem.copied_from)
         };
       });

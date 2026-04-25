@@ -847,6 +847,7 @@ async function runCli() {
   const logPath = normalizeText(process.env.PUBLIC_HOMEPAGE_ASSET_GENERATOR_LOG) || DEFAULT_CLI_LOG_PATH;
   await ensureDirectory(path.dirname(logPath));
   await writeFile(logPath, `${JSON.stringify(result, null, 2)}\n`);
+  if (process.env.PUBLIC_HOMEPAGE_ASSET_GENERATOR_QUIET === "1") return;
   process.stdout.write(
     `Generated public homepage assets: ${result.tours.count} tours, ${result.team.count} team members, ${result.reels.count} reels.\n`
     + `Full generation output: ${logPath}\n`

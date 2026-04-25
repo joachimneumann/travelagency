@@ -73,10 +73,12 @@ export function createBookingTravelPlanModule(ctx) {
     setBookingSectionDirty,
     setPageSaveActionError,
     hasUnsavedBookingChanges,
+    updatePageDirtyBar,
     prepareTravelPlanMutation,
     features = {}
   } = ctx;
   let lastMissingTravelPlanControlsDiagnosticKey = "";
+  let lastTravelPlanTranslationIncomplete = null;
 
   function isFeatureEnabled(key, defaultValue = true) {
     if (!Object.prototype.hasOwnProperty.call(features, key)) return defaultValue;
@@ -1473,14 +1475,17 @@ export function createBookingTravelPlanModule(ctx) {
                 editable: allowImageUpload && state.permissions.canEditBooking
               })}
               <div class="field travel-plan-service__image-subtitle-field">
-                <label for="travel_plan_image_subtitle_${escapeHtml(item.id)}">${escapeHtml(bookingT("booking.travel_plan.image_subtitle_optional", "Image subtitle (optional)"))}</label>
-                <input
-                  class="booking-text-field travel-plan-service__image-subtitle-input"
-                  id="travel_plan_image_subtitle_${escapeHtml(item.id)}"
-                  data-travel-plan-service-field="image_subtitle"
-                  type="text"
-                  value="${escapeHtml(item.image_subtitle || "")}"
-                />
+                ${renderTravelPlanLocalizedField({
+                  label: bookingT("booking.travel_plan.image_subtitle_optional", "Image subtitle (optional)"),
+                  idBase: `travel_plan_image_subtitle_${item.id}`,
+                  dataScope: "travel-plan-service-field",
+                  dayId: day.id,
+                  itemId: item.id,
+                  field: "image_subtitle",
+                  type: "input",
+                  sourceValue: resolveLocalizedDraftBranchText(item.image_subtitle_i18n ?? item.image_subtitle, bookingSourceLang(), ""),
+                  localizedValue: resolveLocalizedDraftBranchText(item.image_subtitle_i18n ?? item.image_subtitle, bookingContentLang(), "")
+                })}
               </div>
             </div>
           </div>
@@ -1762,7 +1767,14 @@ export function createBookingTravelPlanModule(ctx) {
           item.start_time = "";
           item.end_time = "";
         }
-        item.image_subtitle = String(itemNode.querySelector('[data-travel-plan-service-field="image_subtitle"]')?.value || "").trim();
+        const itemImageSubtitle = readLocalizedFieldPayload(
+          itemNode,
+          "travel-plan-service-field",
+          "image_subtitle",
+          previousItem?.image_subtitle_i18n ?? previousItem?.image_subtitle
+        );
+        item.image_subtitle = itemImageSubtitle.text;
+        item.image_subtitle_i18n = itemImageSubtitle.map;
         item.image = previousItem?.image && typeof previousItem.image === "object" && !Array.isArray(previousItem.image)
           ? previousItem.image
           : null;
@@ -2562,6 +2574,27 @@ export function createBookingTravelPlanModule(ctx) {
           key: `travel_plan.${dayId}.${serviceId}.location`,
           label: `${serviceLabel} · ${bookingT("booking.travel_plan.location_optional", "Location (optional)")}`
         });
+        addField({
+          holder: service,
+          mapField: "image_subtitle_i18n",
+          plainField: "image_subtitle",
+          key: `travel_plan.${dayId}.${serviceId}.image_subtitle`,
+          label: `${serviceLabel} · ${bookingT("booking.travel_plan.image_subtitle_optional", "Image subtitle (optional)")}`
+        });
+        addField({
+          holder: service?.image,
+          mapField: "caption_i18n",
+          plainField: "caption",
+          key: `travel_plan.${dayId}.${serviceId}.image.caption`,
+          label: `${serviceLabel} · ${bookingT("booking.travel_plan.image_caption", "Image caption")}`
+        });
+        addField({
+          holder: service?.image,
+          mapField: "alt_text_i18n",
+          plainField: "alt_text",
+          key: `travel_plan.${dayId}.${serviceId}.image.alt_text`,
+          label: `${serviceLabel} · ${bookingT("booking.travel_plan.image_alt_text", "Image alt text")}`
+        });
       });
     });
 
@@ -2751,6 +2784,40 @@ export function createBookingTravelPlanModule(ctx) {
     };
   }
 
+  function isTranslationIncompleteStatus(status) {
+    return ["missing", "partial", "stale"].includes(String(status || ""));
+  }
+
+  function setTravelPlanTranslationSummaryState(isIncomplete) {
+    const summaryButton = els.travel_plan_translation_summary;
+    const nextIncomplete = Boolean(isIncomplete);
+    if (lastTravelPlanTranslationIncomplete !== nextIncomplete) {
+      lastTravelPlanTranslationIncomplete = nextIncomplete;
+      if (typeof updatePageDirtyBar === "function") updatePageDirtyBar();
+    }
+    if (!(summaryButton instanceof HTMLElement)) return;
+    const title = summaryButton.querySelector("[data-translation-summary-title]");
+    const labelKey = isIncomplete
+      ? "booking.translation.section_title_incomplete"
+      : "booking.translation.section_title";
+    const fallback = isIncomplete ? "Translation: incomplete" : "Translations";
+    summaryButton.classList.toggle("booking-section__summary--translation-incomplete", isIncomplete);
+    summaryButton.classList.toggle("backend-section__summary--translation-incomplete", isIncomplete);
+    if (title instanceof HTMLElement) {
+      title.dataset.i18nId = labelKey;
+      title.textContent = bookingT(labelKey, fallback);
+    }
+  }
+
+  function hasIncompleteTravelPlanTranslation() {
+    const targetLang = currentTravelPlanReviewTargetLang();
+    if (targetLang === TRAVEL_PLAN_REVIEW_SOURCE_LANG) return false;
+    const plan = state.travelPlanDraft || state.booking?.travel_plan || { days: [] };
+    const sourceFields = collectBookingTranslationReviewFields(plan, targetLang);
+    const summary = bookingTranslationReviewStatus(sourceFields);
+    return isTranslationIncompleteStatus(summary.status);
+  }
+
   function renderBookingReviewFields(fields, targetLang) {
     if (!fields.length) {
       return `<div class="tour-reel-empty micro">${escapeHtml(bookingT("booking.translation.no_customer_content_source", "Add English travel-plan or PDF text before translating."))}</div>`;
@@ -2780,6 +2847,7 @@ export function createBookingTravelPlanModule(ctx) {
     if (!(section instanceof HTMLElement) || !(panel instanceof HTMLElement)) return;
     const targetLang = currentTravelPlanReviewTargetLang();
     if (targetLang === TRAVEL_PLAN_REVIEW_SOURCE_LANG) {
+      setTravelPlanTranslationSummaryState(false);
       section.hidden = true;
       panel.innerHTML = "";
       return;
@@ -2788,6 +2856,7 @@ export function createBookingTravelPlanModule(ctx) {
     const plan = state.travelPlanDraft || state.booking?.travel_plan || { days: [] };
     const sourceFields = collectBookingTranslationReviewFields(plan, targetLang);
     const summary = bookingTranslationReviewStatus(sourceFields);
+    setTravelPlanTranslationSummaryState(isTranslationIncompleteStatus(summary.status));
     const canTranslate = state.permissions.canEditBooking && sourceFields.length > 0;
     const progress = bookingT("tour.travel_plan_translation.progress", "{translated}/{total} fields", {
       translated: String(summary.translatedFields),
@@ -3313,6 +3382,7 @@ export function createBookingTravelPlanModule(ctx) {
     collectTravelPlanPayload,
     renderTravelPlanPanel,
     renderTravelPlanTranslationPanel,
+    hasIncompleteTravelPlanTranslation,
     updateTravelPlanDirtyState,
     saveTravelPlan
   };

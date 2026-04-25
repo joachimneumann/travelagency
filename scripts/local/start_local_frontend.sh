@@ -5,6 +5,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 source "$ROOT_DIR/scripts/lib/load_repo_env.sh"
 load_repo_env "$ROOT_DIR"
 source "$ROOT_DIR/scripts/lib/docker_runtime.sh"
+source "$ROOT_DIR/scripts/lib/public_homepage_assets.sh"
 source "$ROOT_DIR/scripts/local/local_i18n_preflight.sh"
 PUBLIC_HOMEPAGE_ASSET_GENERATOR="${PUBLIC_HOMEPAGE_ASSET_GENERATOR:-$ROOT_DIR/scripts/assets/generate_public_homepage_assets.mjs}"
 RUNTIME_BRAND_LOGO_PREPARER="${RUNTIME_BRAND_LOGO_PREPARER:-$ROOT_DIR/scripts/assets/prepare_runtime_brand_logo.sh}"
@@ -46,10 +47,7 @@ generate_public_homepage_assets() {
   fi
 
   echo "Generating static homepage tours/team assets ..."
-  (
-    cd "$ROOT_DIR"
-    node "$PUBLIC_HOMEPAGE_ASSET_GENERATOR"
-  )
+  run_public_homepage_asset_generator_quiet "$ROOT_DIR" "$PUBLIC_HOMEPAGE_ASSET_GENERATOR"
 }
 
 prepare_runtime_brand_logo() {
