@@ -43,6 +43,7 @@ const REELS_ASSETS_DIR = normalizeText(process.env.PUBLIC_REELS_ASSETS_DIR) || G
 const REELS_MANIFEST_PATH = path.join(REELS_DATA_DIR, "public-reels.json");
 const HOMEPAGE_COPY_GLOBAL_PATH = path.join(FRONTEND_DATA_DIR, "public-homepage-copy.global.js");
 const HOMEPAGE_INITIAL_BUNDLE_PATH = path.join(FRONTEND_DATA_DIR, "public-homepage-main.bundle.js");
+const DEFAULT_CLI_LOG_PATH = "/tmp/generate_public_homepage_assets.log";
 const DEFAULT_TEAM_ORDER = 10;
 const TOUR_FILE_PREFIX = "public-tours.";
 const TOUR_FILE_SUFFIX = ".json";
@@ -843,7 +844,13 @@ export async function generatePublicHomepageAssets({
 
 async function runCli() {
   const result = await generatePublicHomepageAssets();
-  process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
+  const logPath = normalizeText(process.env.PUBLIC_HOMEPAGE_ASSET_GENERATOR_LOG) || DEFAULT_CLI_LOG_PATH;
+  await ensureDirectory(path.dirname(logPath));
+  await writeFile(logPath, `${JSON.stringify(result, null, 2)}\n`);
+  process.stdout.write(
+    `Generated public homepage assets: ${result.tours.count} tours, ${result.team.count} team members, ${result.reels.count} reels.\n`
+    + `Full generation output: ${logPath}\n`
+  );
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
