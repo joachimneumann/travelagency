@@ -1,12 +1,5 @@
 # TODO
 
-index.html
-==========
-only show the hover animation of the image when there is more than one image.
-
-make the "show more" button eually tall as the Plan this trip button
-
-in marketing_tour.html: if the backend language is VI put the EN back in front of both the Tour Title and the Tour description. Us the same horizontal size as in front of the day and service fields.
 
 Translate
 =========
@@ -25,10 +18,6 @@ emergency.html
 offer
 =====
 * improve the input of currency amounts (VND no cents)
-
-Welcome PDF
-===========
-* After accepting the offer (deposit paid) generate another "prepare yout journey" pdf that also includes travel documents with practical tips and emergency numbers. 
 
 Other
 =====

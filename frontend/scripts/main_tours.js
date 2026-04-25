@@ -11,6 +11,7 @@ const TOUR_DETAILS_TRANSITION_MS = 640;
 const TOUR_SHOW_MORE_LABEL_TRANSITION_MS = 180;
 const TOUR_CARD_SCROLL_TIMEOUT_MS = 900;
 const TOUR_CARD_SCROLL_MARGIN_PX = 12;
+const TOUR_CARD_MEDIA_SNAPSHOT_HOLD_MS = Math.max(TOUR_GRID_LAYOUT_TRANSITION_MS, TOUR_DETAILS_TRANSITION_MS) + 180;
 const tourCardImageTransitionTimers = new WeakMap();
 
 export function createFrontendToursController(ctx) {
@@ -39,6 +40,7 @@ export function createFrontendToursController(ctx) {
   let renderedTourGridColumnCount = 0;
   let tourGridResizeBound = false;
   let tourDetailsTransitioning = false;
+  let tourCardMediaSnapshotToken = 0;
   const openingTourColumnIndexes = new Map();
 
   function normalizeFrontendTourLang(value) {
@@ -964,9 +966,195 @@ export function createFrontendToursController(ctx) {
     return rects;
   }
 
+  function cssImageUrl(value) {
+    const url = normalizeText(value);
+    if (!url) return "";
+    return `url("${url.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/[\n\r\f]/g, "")}")`;
+  }
+
+  function captureTourCardMediaSnapshots() {
+    const snapshots = new Map();
+    if (!els.tourGrid) return snapshots;
+
+    Array.from(els.tourGrid.querySelectorAll("[data-tour-card-id]")).forEach((card) => {
+      if (!(card instanceof HTMLElement)) return;
+      const tripId = normalizeText(card.getAttribute("data-tour-card-id"));
+      if (!tripId || snapshots.has(tripId)) return;
+      const visibleLayer = card.querySelector(".tour-card__media-layer.is-entering")
+        || card.querySelector(".tour-card__media-layer.is-active");
+      if (!(visibleLayer instanceof HTMLImageElement)) return;
+      const imageSrc = normalizeText(visibleLayer.currentSrc || visibleLayer.src || visibleLayer.getAttribute("src"));
+      if (!imageSrc) return;
+      const computedStyle = window.getComputedStyle?.(visibleLayer);
+      snapshots.set(tripId, {
+        imageSrc,
+        objectPosition: computedStyle?.objectPosition || "center"
+      });
+    });
+
+    return snapshots;
+  }
+
+  function clearTourCardMediaSnapshot(stage, token) {
+    if (!(stage instanceof HTMLElement) || stage.dataset.mediaSnapshotToken !== token) return;
+    stage.style.backgroundImage = "";
+    stage.style.backgroundPosition = "";
+    stage.style.backgroundRepeat = "";
+    stage.style.backgroundSize = "";
+    delete stage.dataset.mediaSnapshotToken;
+  }
+
+  function scheduleTourCardMediaSnapshotClear(stage, activeImage) {
+    if (!(stage instanceof HTMLElement)) return;
+    const token = String(++tourCardMediaSnapshotToken);
+    stage.dataset.mediaSnapshotToken = token;
+    let imageReady = !(activeImage instanceof HTMLImageElement) || (activeImage.complete && activeImage.naturalWidth > 0);
+    let holdElapsed = false;
+
+    const maybeClear = () => {
+      if (!imageReady || !holdElapsed) return;
+      clearTourCardMediaSnapshot(stage, token);
+    };
+    const markReady = () => {
+      imageReady = true;
+      maybeClear();
+    };
+
+    if (activeImage instanceof HTMLImageElement && !imageReady) {
+      activeImage.addEventListener("load", markReady, { once: true });
+      activeImage.addEventListener("error", markReady, { once: true });
+      if (typeof activeImage.decode === "function") {
+        activeImage.decode().then(markReady).catch(() => {});
+      }
+    }
+
+    window.setTimeout(() => {
+      holdElapsed = true;
+      maybeClear();
+    }, TOUR_CARD_MEDIA_SNAPSHOT_HOLD_MS);
+  }
+
+  function applyTourCardMediaSnapshots(snapshots) {
+    if (!(snapshots instanceof Map) || snapshots.size === 0 || !els.tourGrid) return;
+
+    Array.from(els.tourGrid.querySelectorAll("[data-tour-card-id]")).forEach((card) => {
+      if (!(card instanceof HTMLElement)) return;
+      const tripId = normalizeText(card.getAttribute("data-tour-card-id"));
+      const snapshot = snapshots.get(tripId);
+      if (!snapshot?.imageSrc) return;
+
+      const mediaStage = card.querySelector(".tour-card__media-stage");
+      if (!(mediaStage instanceof HTMLElement)) return;
+      mediaStage.style.backgroundImage = cssImageUrl(snapshot.imageSrc);
+      mediaStage.style.backgroundPosition = snapshot.objectPosition || "center";
+      mediaStage.style.backgroundRepeat = "no-repeat";
+      mediaStage.style.backgroundSize = "cover";
+
+      const activeImage = card.querySelector(".tour-card__media-layer.is-active");
+      scheduleTourCardMediaSnapshotClear(mediaStage, activeImage);
+    });
+  }
+
   function waitForAnimationFrame() {
     return new Promise((resolve) => {
       window.requestAnimationFrame(resolve);
+    });
+  }
+
+  function disableFocusableElements(element) {
+    if (!(element instanceof HTMLElement)) return;
+    const focusableSelector = [
+      "a[href]",
+      "button",
+      "input",
+      "select",
+      "textarea",
+      "[tabindex]"
+    ].join(",");
+    element.querySelectorAll(focusableSelector).forEach((item) => {
+      if (!(item instanceof HTMLElement)) return;
+      item.setAttribute("tabindex", "-1");
+      item.setAttribute("aria-hidden", "true");
+    });
+  }
+
+  function createOutgoingTourDetailsGhost(row) {
+    if (!(row instanceof HTMLElement)) return null;
+    const panel = row.querySelector(".tour-details-row__panel");
+    if (!(panel instanceof HTMLElement)) return null;
+
+    const rect = panel.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) return null;
+
+    const ghost = panel.cloneNode(true);
+    if (!(ghost instanceof HTMLElement)) return null;
+    ghost.removeAttribute("id");
+    ghost.querySelectorAll("[id]").forEach((item) => item.removeAttribute("id"));
+    ghost.setAttribute("aria-hidden", "true");
+    ghost.setAttribute("inert", "");
+    disableFocusableElements(ghost);
+
+    Object.assign(ghost.style, {
+      position: "fixed",
+      left: `${rect.left}px`,
+      top: `${rect.top}px`,
+      width: `${rect.width}px`,
+      height: `${rect.height}px`,
+      margin: "0",
+      boxSizing: "border-box",
+      pointerEvents: "none",
+      zIndex: "20",
+      overflow: "hidden",
+      willChange: "opacity, transform, clip-path"
+    });
+    document.body.append(ghost);
+
+    return {
+      element: ghost,
+      sidePanel: row.classList.contains("tour-details-row--side-panel")
+    };
+  }
+
+  function animateOutgoingTourDetailsGhost(ghostState) {
+    const ghost = ghostState?.element;
+    if (!(ghost instanceof HTMLElement)) return Promise.resolve();
+    const sidePanel = Boolean(ghostState?.sidePanel);
+    const keyframes = sidePanel
+      ? [
+          { opacity: 1, transform: "translateX(0)", clipPath: "inset(0 0 0 0)" },
+          { opacity: 0, transform: "translateX(-0.5rem)", clipPath: "inset(0 100% 0 0)" }
+        ]
+      : [
+          { opacity: 1, transform: "translateY(0)", clipPath: "inset(0 0 0 0)" },
+          { opacity: 0, transform: "translateY(-0.4rem)", clipPath: "inset(0 0 100% 0)" }
+        ];
+
+    if (typeof ghost.animate !== "function") {
+      ghost.remove();
+      return Promise.resolve();
+    }
+
+    const animation = ghost.animate(keyframes, {
+      duration: TOUR_DETAILS_TRANSITION_MS,
+      easing: "cubic-bezier(0.2, 0.82, 0.2, 1)",
+      fill: "forwards"
+    });
+
+    return new Promise((resolve) => {
+      let finished = false;
+      let timer = 0;
+      const done = () => {
+        if (finished) return;
+        finished = true;
+        window.clearTimeout(timer);
+        animation.removeEventListener("finish", done);
+        animation.removeEventListener("cancel", done);
+        ghost.remove();
+        resolve();
+      };
+      animation.addEventListener("finish", done, { once: true });
+      animation.addEventListener("cancel", done, { once: true });
+      timer = window.setTimeout(done, TOUR_DETAILS_TRANSITION_MS + 140);
     });
   }
 
@@ -1209,6 +1397,7 @@ export function createFrontendToursController(ctx) {
 
   async function animateTourDetailsOpen(tripId) {
     const previousRects = captureTourCardRects();
+    const previousMediaSnapshots = captureTourCardMediaSnapshots();
     const initialColumnIndex = tourGridColumnIndexForTrip(tripId);
     if (initialColumnIndex > 0) {
       openingTourColumnIndexes.set(tripId, initialColumnIndex);
@@ -1217,6 +1406,7 @@ export function createFrontendToursController(ctx) {
     }
     setTourExpanded(tripId, true);
     renderVisibleTrips();
+    applyTourCardMediaSnapshots(previousMediaSnapshots);
     const openedButton = tourShowMoreButton(tripId);
     setTourShowMoreButtonLabel(openedButton, tourShowMoreLabel(false));
 
@@ -1239,8 +1429,10 @@ export function createFrontendToursController(ctx) {
     row.style.overflow = "hidden";
     row.style.opacity = "1";
 
-    await animateTourGridLayout(previousRects, { excludedTripIds: [tripId] });
-    await animateExpandedTourCardToLeft(row);
+    await Promise.all([
+      animateTourGridLayout(previousRects, { excludedTripIds: [tripId] }),
+      animateExpandedTourCardToLeft(row)
+    ]);
     openingTourColumnIndexes.delete(tripId);
     await scrollTourCardFullyVisible(tripId);
     const opensSideways = row.classList.contains("tour-details-row--side-panel");
@@ -1264,18 +1456,18 @@ export function createFrontendToursController(ctx) {
     }
 
     updateOutgoingTourDetailsButton(row, false);
-    row.style.height = `${row.getBoundingClientRect().height}px`;
-    row.style.overflow = "hidden";
-    row.style.opacity = "1";
-    const collapsedHeight = collapsedTourDetailsHeight(row);
-
-    await animateTourDetailsRowHeight(row, collapsedHeight, "close");
     const previousRects = captureTourCardRects();
+    const previousMediaSnapshots = captureTourCardMediaSnapshots();
+    const outgoingDetailsGhost = createOutgoingTourDetailsGhost(row);
     setTourExpanded(tripId, false);
     renderVisibleTrips();
+    applyTourCardMediaSnapshots(previousMediaSnapshots);
     const closedButton = tourShowMoreButton(tripId);
     setTourShowMoreButtonLabel(closedButton, tourShowMoreLabel(true));
-    await animateTourGridLayout(previousRects);
+    await Promise.all([
+      animateOutgoingTourDetailsGhost(outgoingDetailsGhost),
+      animateTourGridLayout(previousRects)
+    ]);
     await animateTourShowMoreButtonLabel(closedButton, tourShowMoreLabel(false), { direction: "close" });
     tourDetailsTransitioning = false;
     window.requestAnimationFrame(() => {
