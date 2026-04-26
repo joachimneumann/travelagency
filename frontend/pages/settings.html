@@ -74,23 +74,6 @@
             <div class="settings-staff-editor__check-grid" id="websiteDestinationPublicationList"></div>
           </section>
 
-          <section class="backend-section settings-translation-rules" id="translationRulesPanel" hidden>
-            <div class="settings-destination-publication__head">
-              <div>
-                <h2 class="section-title u-title-medium" data-i18n-id="backend.settings.translation_rules_heading">Translation overrides</h2>
-                <p class="micro" data-i18n-id="backend.settings.translation_rules_intro">One global list used across PDFs, travel plans, staff profiles, and marketing tours.</p>
-              </div>
-              <div class="settings-destination-publication__actions">
-                <p class="micro settings-destination-publication__status" id="translationRulesStatus"></p>
-                <button class="btn btn-ghost" id="translationRulesAddBtn" type="button" data-i18n-id="backend.settings.translation_rules_add">Add row</button>
-                <button class="btn btn-primary" id="translationRulesSaveBtn" type="button" data-i18n-id="common.save" disabled>Save</button>
-              </div>
-            </div>
-            <div class="backend-table-wrap">
-              <table class="backend-table" id="translationRulesTable"></table>
-            </div>
-          </section>
-
           <div class="backend-table-wrap" id="settingsPanel">
             <table class="backend-table" id="staffTable"></table>
           </div>
@@ -194,6 +177,31 @@
             </div>
 
             <div class="emergency-editor__list" id="emergencyList"></div>
+          </section>
+
+          <section class="backend-section settings-translation-rules" id="translationRulesPanel" hidden>
+            <div class="backend-section__head">
+              <button class="backend-section__summary backend-section__summary--inline-pad-16" type="button">
+                <span class="backend-section-header">
+                  <span class="backend-section-header__primary" data-i18n-id="backend.settings.translation_rules_heading">Translation overrides</span>
+                </span>
+              </button>
+            </div>
+            <div class="backend-section__body">
+              <div class="settings-destination-publication__head">
+                <div>
+                  <p class="micro" data-i18n-id="backend.settings.translation_rules_intro">One global list used across PDFs, travel plans, staff profiles, and marketing tours.</p>
+                </div>
+                <div class="settings-destination-publication__actions">
+                  <p class="micro settings-destination-publication__status" id="translationRulesStatus"></p>
+                  <button class="btn btn-ghost" id="translationRulesAddBtn" type="button" data-i18n-id="backend.settings.translation_rules_add">Add row</button>
+                  <button class="btn btn-primary" id="translationRulesSaveBtn" type="button" data-i18n-id="common.save" disabled>Save</button>
+                </div>
+              </div>
+              <div class="backend-table-wrap">
+                <table class="backend-table" id="translationRulesTable"></table>
+              </div>
+            </div>
           </section>
         </div>
       </section>

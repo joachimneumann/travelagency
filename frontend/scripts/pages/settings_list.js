@@ -665,6 +665,7 @@ init();
 
 async function init() {
   bindEvents();
+  initializeBackendCollapsibles(document);
 
   const chrome = await initializeBackendPageChrome({
     currentSection: "settings",

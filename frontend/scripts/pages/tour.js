@@ -924,6 +924,15 @@ function partitionItems(items, batchSize) {
   return batches;
 }
 
+function waitForMs(ms) {
+  return new Promise((resolve) => window.setTimeout(resolve, Math.max(0, Number(ms) || 0)));
+}
+
+async function waitForMinimumElapsed(startedAt, minimumMs) {
+  const remainingMs = Math.max(0, (Number(minimumMs) || 0) - (Date.now() - startedAt));
+  if (remainingMs > 0) await waitForMs(remainingMs);
+}
+
 function travelPlanTranslationOverlayMessage(targetLang, translator = "") {
   if (!normalizeText(targetLang)) {
     return backendT("tour.travel_plan_translation.translating_overlay", "Translating website content and travel plan. Please wait.");
@@ -1329,7 +1338,7 @@ function updateTravelPlanTranslationField(targetLang, key, value, { rerender = f
   if (rerender) renderTravelPlanTranslationPanel();
 }
 
-async function translateTravelPlanLanguages(targets, { force = false } = {}) {
+async function translateTravelPlanLanguages(targets, { force = false, minimumOverlayMs = 0, showOverlayWhenNoWork = false } = {}) {
   const plan = currentTravelPlanForTranslation({ syncFromEditor: true });
   if (!plan) return;
   const sourceFields = collectTravelPlanTranslationFields(plan, TRAVEL_PLAN_SOURCE_LANG);
@@ -1352,8 +1361,18 @@ async function translateTravelPlanLanguages(targets, { force = false } = {}) {
       };
     })
     .filter(Boolean);
-  if (!workItems.length) return;
+  if (!workItems.length) {
+    if (showOverlayWhenNoWork || minimumOverlayMs > 0) {
+      const overlayStartedAt = Date.now();
+      setTourPageOverlay(true, travelPlanTranslationOverlayMessage("", TOUR_TRANSLATION_PROVIDER_DISPLAY));
+      setStatus(backendT("tour.travel_plan_translation.done", "Translations updated."));
+      await waitForMinimumElapsed(overlayStartedAt, minimumOverlayMs);
+      setTourPageOverlay(false);
+    }
+    return;
+  }
 
+  const overlayStartedAt = Date.now();
   setTourPageOverlay(true, travelPlanTranslationOverlayMessage(workItems[0]?.targetLang, TOUR_TRANSLATION_PROVIDER_DISPLAY));
   setStatus(backendT("tour.travel_plan_translation.translating", "Translating website content and travel plan..."));
   try {
@@ -1378,6 +1397,7 @@ async function translateTravelPlanLanguages(targets, { force = false } = {}) {
     updateTourDirtyState();
     setStatus(backendT("tour.travel_plan_translation.done", "Translations updated."));
   } finally {
+    await waitForMinimumElapsed(overlayStartedAt, minimumOverlayMs);
     setTourPageOverlay(false);
   }
 }
@@ -1499,7 +1519,11 @@ async function init() {
       const translateMissingTravelPlanButton = event.target.closest("[data-tour-travel-plan-translate-missing]");
       if (translateMissingTravelPlanButton) {
         event.preventDefault();
-        void translateTravelPlanLanguages(travelPlanTranslationTargetLanguages(), { force: false });
+        void translateTravelPlanLanguages(travelPlanTranslationTargetLanguages(), {
+          force: false,
+          minimumOverlayMs: 1000,
+          showOverlayWhenNoWork: true
+        });
         return;
       }
       const translateTravelPlanLanguageButton = event.target.closest("[data-tour-travel-plan-translate-lang]");
