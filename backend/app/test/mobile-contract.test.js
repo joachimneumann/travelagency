@@ -1,4 +1,4 @@
-import test from "node:test";
+import baseTest from "node:test";
 import assert from "node:assert/strict";
 import { Readable, Writable } from "node:stream";
 import { mkdtemp, mkdir, readFile, readdir, rm, stat, writeFile } from "node:fs/promises";
@@ -11,6 +11,8 @@ import { PDFDocument as PDFLibDocument } from "pdf-lib";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const RUN_IOS_CONTRACT_TESTS = process.env.ENABLE_IOS_TESTS === "true";
+const IOS_CONTRACT_SKIP_REASON = "Set ENABLE_IOS_TESTS=true to run mobile/iOS contract tests.";
 const CONTRACT_META_PATH = path.resolve(__dirname, "..", "..", "..", "api", "generated", "mobile-api.meta.json");
 const TEST_DATA_DIR = await mkdtemp(path.join(os.tmpdir(), "travelagency-contract-test-"));
 const STORE_PATH = path.join(TEST_DATA_DIR, "store.json");
@@ -34,6 +36,31 @@ process.env.ATP_STAFF_PHOTOS_DIR = path.join(TEST_DATA_DIR, "content", "atp_staf
 process.env.GOOGLE_SERVICE_ACCOUNT_JSON_PATH = "";
 process.env.GOOGLE_IMPERSONATED_EMAIL = "";
 process.env.TRAVELER_DETAILS_TOKEN_SECRET = "traveler-details-contract-test-secret";
+
+function mobileAwareTest(name, optionsOrFn, maybeFn) {
+  if (RUN_IOS_CONTRACT_TESTS) {
+    return baseTest(name, optionsOrFn, maybeFn);
+  }
+
+  if (typeof optionsOrFn === "function" || optionsOrFn === undefined) {
+    return baseTest(name, { skip: IOS_CONTRACT_SKIP_REASON }, optionsOrFn);
+  }
+
+  return baseTest(name, {
+    ...(optionsOrFn || {}),
+    skip: IOS_CONTRACT_SKIP_REASON
+  }, maybeFn);
+}
+
+const test = Object.assign(mobileAwareTest, {
+  after: baseTest.after.bind(baseTest),
+  afterEach: baseTest.afterEach.bind(baseTest),
+  before: baseTest.before.bind(baseTest),
+  beforeEach: baseTest.beforeEach.bind(baseTest),
+  only: baseTest.only.bind(baseTest),
+  skip: baseTest.skip.bind(baseTest),
+  todo: baseTest.todo.bind(baseTest)
+});
 
 const originalFetch = global.fetch;
 const KEYCLOAK_USERS = [
@@ -139,9 +166,17 @@ test.after(async () => {
 });
 
 const contractMeta = JSON.parse(await readFile(CONTRACT_META_PATH, "utf8"));
-const { createBackendHandler } = await import("../src/server.js");
-const handler = await createBackendHandler({ port: 8787 });
-const HAS_MAGICK = spawnSync("magick", ["-version"], { stdio: "ignore" }).status === 0;
+let handler = async () => {
+  throw new Error(IOS_CONTRACT_SKIP_REASON);
+};
+let HAS_MAGICK = false;
+
+if (RUN_IOS_CONTRACT_TESTS) {
+  const { createBackendHandler } = await import("../src/server.js");
+  handler = await createBackendHandler({ port: 8787 });
+  HAS_MAGICK = spawnSync("magick", ["-version"], { stdio: "ignore" }).status === 0;
+}
+
 const TINY_PNG_BASE64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAGUExURXqnx////yb9JEMAAAABYktHRAH/Ai3eAAAAB3RJTUUH6gMXCTo1ja6mZwAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAyNi0wMy0yM1QwOTo1ODo1MyswMDowMLzSbEkAAAAldEVYdGRhdGU6bW9kaWZ5ADIwMjYtMDMtMjNUMDk6NTg6NTMrMDA6MDDNj9T1AAAAKHRFWHRkYXRlOnRpbWVzdGFtcAAyMDI2LTAzLTIzVDA5OjU4OjUzKzAwOjAwmpr1KgAAAApJREFUCNdjYAAAAAIAAeIhvDMAAAAASUVORK5CYII=";
 
 async function seedStaffPhoto(username) {

@@ -81,6 +81,9 @@
   color: var(--text-strong);
   font-size: var(--booking-type-body);
   font-weight: var(--booking-font-weight-strong);
+  line-height: 1.5;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
 }
 
 .booking-detail-page .backend-collapsible__summary,

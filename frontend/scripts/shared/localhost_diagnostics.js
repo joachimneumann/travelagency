@@ -6,14 +6,19 @@
 
   const PREFIX = "[localhost-diagnostics]";
   const apiBase = String(window.ASIATRAVELPLAN_API_BASE || window.location.origin).replace(/\/$/, "");
-  const localBackendPort = String(window.ASIATRAVELPLAN_LOCAL_BACKEND_PORT || "8787").trim() || "8787";
-  const healthProbeBase = (() => {
+  const configuredHealthProbeUrl = String(window.ASIATRAVELPLAN_HEALTH_PROBE_URL || "").trim();
+  const healthProbeUrl = (() => {
+    if (configuredHealthProbeUrl) {
+      try {
+        return new URL(configuredHealthProbeUrl, window.location.origin).toString();
+      } catch {
+        return configuredHealthProbeUrl;
+      }
+    }
     try {
-      const url = new URL(apiBase || window.location.origin, window.location.origin);
-      url.port = localBackendPort;
-      return url.origin;
+      return new URL("/health", window.location.origin).toString();
     } catch {
-      return `${window.location.protocol}//${host}:${localBackendPort}`;
+      return `${window.location.protocol}//${host}/health`;
     }
   })();
 
@@ -22,6 +27,7 @@
       location_href: window.location.href,
       location_origin: window.location.origin,
       api_base: apiBase,
+      health_probe_url: healthProbeUrl,
       navigator_on_line: typeof navigator.onLine === "boolean" ? navigator.onLine : null,
       document_ready_state: document.readyState,
       timestamp: new Date().toISOString(),
@@ -62,13 +68,44 @@
     return String(reason);
   }
 
+  function firstNonEmptyString(values = []) {
+    for (const value of values) {
+      if (typeof value !== "string") continue;
+      const normalized = value.trim();
+      if (normalized) return normalized;
+    }
+    return "";
+  }
+
+  function attributeValue(target, name) {
+    if (!target || typeof target.getAttribute !== "function") return "";
+    return String(target.getAttribute(name) || "").trim();
+  }
+
+  function resourceDetails(target) {
+    const resourceUrl = firstNonEmptyString([
+      typeof target?.currentSrc === "string" ? target.currentSrc : "",
+      typeof target?.src === "string" ? target.src : "",
+      typeof target?.href === "string" ? target.href : "",
+      attributeValue(target, "src"),
+      attributeValue(target, "href"),
+      attributeValue(target, "data-src"),
+      attributeValue(target, "poster"),
+      attributeValue(target, "srcset").split(",")[0]?.trim().split(/\s+/)[0] || ""
+    ]);
+    return {
+      resource_url: resourceUrl,
+      data_src: attributeValue(target, "data-src"),
+      poster: attributeValue(target, "poster")
+    };
+  }
+
   async function probeBackendHealth() {
-    const healthUrl = `${healthProbeBase}/health`;
     const controller = typeof AbortController === "function" ? new AbortController() : null;
     const timeoutId = window.setTimeout(() => controller?.abort(), 2500);
-    info("probing backend health", { health_url: healthUrl });
+    info("probing backend health", { health_url: healthProbeUrl });
     try {
-      const response = await fetch(healthUrl, {
+      const response = await fetch(healthProbeUrl, {
         method: "GET",
         cache: "no-store",
         credentials: "include",
@@ -77,7 +114,7 @@
       const bodyText = await response.text().catch(() => "");
       if (!response.ok) {
         warn("backend health probe returned a non-OK response", {
-          health_url: healthUrl,
+          health_url: healthProbeUrl,
           status: response.status,
           status_text: response.statusText,
           response_preview: bodyText.slice(0, 200)
@@ -85,14 +122,14 @@
         return;
       }
       info("backend health probe succeeded", {
-        health_url: healthUrl,
+        health_url: healthProbeUrl,
         status: response.status,
         response_preview: bodyText.slice(0, 200)
       });
     } catch (err) {
       error("backend health probe failed", {
-        health_url: healthUrl,
-        likely_cause: "The local frontend server or backend proxy may not be reachable on localhost."
+        health_url: healthProbeUrl,
+        likely_cause: "The local frontend server or its /health backend proxy may not be reachable on localhost."
       }, err);
     } finally {
       window.clearTimeout(timeoutId);
@@ -134,7 +171,7 @@
     if (target && target !== window) {
       error("resource failed to load", {
         tag_name: String(target.tagName || "").toLowerCase(),
-        resource_url: String(target.currentSrc || target.src || target.href || "")
+        ...resourceDetails(target)
       });
       return;
     }

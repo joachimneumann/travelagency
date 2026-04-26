@@ -3940,6 +3940,7 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
     bookingHtml,
     emergencyHtml,
     indexHtml,
+    localhostDiagnosticsSource,
     marketingTourHtml,
     marketingToursHtml,
     privacyHtml,
@@ -3963,6 +3964,7 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
     readFile(path.join(frontendRoot, "pages", "booking.html"), "utf8"),
     readFile(path.join(frontendRoot, "pages", "emergency.html"), "utf8"),
     readFile(path.join(frontendRoot, "pages", "index.html"), "utf8"),
+    readFile(path.join(frontendRoot, "scripts", "shared", "localhost_diagnostics.js"), "utf8"),
     readFile(path.join(frontendRoot, "pages", "marketing_tour.html"), "utf8"),
     readFile(path.join(frontendRoot, "pages", "marketing_tours.html"), "utf8"),
     readFile(path.join(frontendRoot, "pages", "privacy.html"), "utf8"),
@@ -4155,10 +4157,25 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
     /Content-Security-Policy "default-src 'self';[\s\S]*Permissions-Policy "accelerometer=\(\), autoplay=\(self\), camera=\(\)[\s\S]*import local_security_headers/,
     "Local Caddy should apply the same CSP and Permissions-Policy coverage for development"
   );
+  assert.match(
+    localCaddy,
+    /@backend path \/health \/auth\/\* \/api\/\* \/public\/v1\/\* \/integrations\/\*/,
+    "Local Caddy should proxy /health so localhost diagnostics can probe the backend without violating CSP"
+  );
   assert.doesNotMatch(
     localCaddy,
     /upgrade-insecure-requests/,
     "Local CSP should not force HTTP development assets to HTTPS"
+  );
+  assert.match(
+    localhostDiagnosticsSource,
+    /new URL\("\/health", window\.location\.origin\)/,
+    "Localhost diagnostics should probe the backend through the same-origin /health path so local CSP stays strict"
+  );
+  assert.match(
+    localhostDiagnosticsSource,
+    /attributeValue\(target, "data-src"\)[\s\S]*attributeValue\(target, "poster"\)/,
+    "Localhost diagnostics should surface deferred media URLs so local resource failures identify the failing asset"
   );
   assert.match(
     stagingCaddy,

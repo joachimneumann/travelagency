@@ -3489,6 +3489,11 @@
     "origin": "manual",
     "updated_at": "2026-04-25T00:00:00.000Z"
   },
+  "booking.translation.translating_current_overlay": {
+    "source_hash": "e06c15275dcee64da2084e8258a71460af1b066fa0f07bcc04e952ae8fc98816",
+    "origin": "manual",
+    "updated_at": "2026-04-26T00:00:00.000Z"
+  },
   "booking.translation.translating_field": {
     "source_hash": "714e0d9a985ab9414dd74a92bbca7c976139b1c1df55d18748ad2549b2c26e1e",
     "origin": "machine",
@@ -5280,14 +5285,14 @@
     "updated_at": "2026-04-25T00:00:00.000Z"
   },
   "tour.travel_plan_translation.translate_all": {
-    "source_hash": "29a7e1c24c92661418c4ad45d0db9215b34f37cc7fdd75f042bbfe2beb5f1f7b",
+    "source_hash": "6e241e3e424021422bef56b321e3b01e36d45be6ea0398ed4d88e539b8b0c6c7",
     "origin": "manual",
-    "updated_at": "2026-04-25T00:00:00.000Z"
+    "updated_at": "2026-04-26T00:00:00.000Z"
   },
   "tour.travel_plan_translation.translate_missing": {
-    "source_hash": "18d0cf947157a4cfa51e71d380b657b5c4a522061cf6076bbfcad39f6d823bf5",
+    "source_hash": "8fe147696fbf47f30d37aeb7ba669ce027c1a598e0d260cbbf0532c64f88a57e",
     "origin": "manual",
-    "updated_at": "2026-04-25T00:00:00.000Z"
+    "updated_at": "2026-04-26T00:00:00.000Z"
   },
   "tour.travel_plan_translation.translating": {
     "source_hash": "643b9ec32a631da1113ba6a0cac0d73a8332ddc5514ec4233999fe2a8e680c5b",
@@ -5298,6 +5303,11 @@
     "source_hash": "89ad51ba363326f9c534e1c53c5b3f31b2a120c72e5cc165a1ba47342430daa1",
     "origin": "manual",
     "updated_at": "2026-04-25T00:00:00.000Z"
+  },
+  "tour.travel_plan_translation.translating_current_overlay": {
+    "source_hash": "e06c15275dcee64da2084e8258a71460af1b066fa0f07bcc04e952ae8fc98816",
+    "origin": "manual",
+    "updated_at": "2026-04-26T00:00:00.000Z"
   },
   "tour.travel_plan_translation.update": {
     "source_hash": "c1c1009d3f37ec058070a62e22caf9ac9dae2169d452487c5c271a8bcf57a291",

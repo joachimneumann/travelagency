@@ -16,6 +16,7 @@
     "seed": "node scripts/seed.js",
     "migrate-booking-english-master": "node scripts/migrate_booking_english_master.js",
     "wipe-bookings": "node scripts/wipe_bookings.js",
-    "test": "node --test test/*.test.js"
+    "test": "node --test test/*.test.js",
+    "test:mobile-contract": "ENABLE_IOS_TESTS=true node --test test/mobile-contract.test.js"
   }
 }

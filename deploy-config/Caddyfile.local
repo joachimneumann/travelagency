@@ -75,7 +75,7 @@
     file_server
   }
 
-  @backend path /auth/* /api/* /public/v1/* /integrations/*
+  @backend path /health /auth/* /api/* /public/v1/* /integrations/*
   handle @backend {
     reverse_proxy host.docker.internal:8787
   }

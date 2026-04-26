@@ -585,7 +585,8 @@ export function createTourHandlers(deps) {
       const translatedEntries = await translateEntries(entries, targetLang, {
         sourceLangCode: sourceLang,
         domain: "tour marketing copy",
-        allowGoogleFallback: true,
+        provider: "google",
+        cacheNamespace: "tour-marketing-copy",
         traceId
       });
       logTourTranslationTiming("Request finished", {

@@ -128,9 +128,12 @@ const state = {
   }
 };
 
+const TOUR_BULK_TRANSLATION_CONCURRENCY = 4;
+
 const TOUR_TRANSLATION_SOURCE_LANG = "en";
 const TOUR_DESCRIPTION_MAX_LENGTH = 170;
 const TRAVEL_PLAN_TRANSLATION_INCOMPLETE_STATUSES = new Set(["missing", "partial", "stale"]);
+const TRAVEL_PLAN_TRANSLATION_REQUEST_BATCH_SIZE = 12;
 
 const els = {
   pageBody: document.body,
@@ -798,6 +801,15 @@ function logTourTranslationBatchProgress(message, details = {}) {
   console.log(`[tour-translation] ${message}`);
 }
 
+async function runBatchedParallel(items, batchSize, worker) {
+  const normalizedItems = Array.isArray(items) ? items : [];
+  const normalizedBatchSize = Math.max(1, Number(batchSize) || 1);
+  for (let start = 0; start < normalizedItems.length; start += normalizedBatchSize) {
+    const batch = normalizedItems.slice(start, start + normalizedBatchSize);
+    await Promise.all(batch.map((item, index) => worker(item, start + index)));
+  }
+}
+
 async function translateAllTourContent(button) {
   if (!button) return;
   const sourceLang = currentTourEditingLang();
@@ -829,11 +841,12 @@ async function translateAllTourContent(button) {
     source_lang: sourceLang,
     source_label: tourLanguageLabel(sourceLang),
     total_targets: targets.length,
-    targets
+    targets,
+    concurrency: TOUR_BULK_TRANSLATION_CONCURRENCY
   });
   try {
-    for (let index = 0; index < targets.length; index += 1) {
-      const targetLang = targets[index];
+    let completed = 0;
+    await runBatchedParallel(targets, TOUR_BULK_TRANSLATION_CONCURRENCY, async (targetLang, index) => {
       logTourTranslationBatchProgress("Translating language", {
         step: `${index + 1}/${targets.length}`,
         source_lang: sourceLang,
@@ -845,13 +858,19 @@ async function translateAllTourContent(button) {
       applyTranslatedTourFields(targetLang, translatedEntries);
       syncLocalizedFieldState();
       updateTourDirtyState();
+      completed += 1;
+      setStatus(backendT("tour.translation.translating_all_progress", "Translated {completed} of {total} languages from {sourceLanguage}...", {
+        completed,
+        total: targets.length,
+        sourceLanguage: tourLanguageLabel(sourceLang)
+      }));
       logTourTranslationBatchProgress("Finished language", {
         step: `${index + 1}/${targets.length}`,
         source_lang: sourceLang,
         target_lang: targetLang,
         target_label: tourLanguageLabel(targetLang)
       });
-    }
+    });
   } catch (error) {
     logTourTranslationBatchProgress("Bulk translation failed", {
       source_lang: sourceLang,
@@ -882,6 +901,29 @@ function travelPlanTranslationLanguages() {
 
 function travelPlanTranslationTargetLanguages() {
   return travelPlanTranslationLanguages().filter((lang) => lang !== TRAVEL_PLAN_SOURCE_LANG);
+}
+
+function partitionItems(items, batchSize) {
+  const normalizedItems = Array.isArray(items) ? items : [];
+  const normalizedBatchSize = Math.max(1, Number(batchSize) || 1);
+  const batches = [];
+  for (let start = 0; start < normalizedItems.length; start += normalizedBatchSize) {
+    batches.push(normalizedItems.slice(start, start + normalizedBatchSize));
+  }
+  return batches;
+}
+
+function travelPlanTranslationOverlayMessage(targetLang) {
+  if (!normalizeText(targetLang)) {
+    return backendT("tour.travel_plan_translation.translating_overlay", "Translating website content and travel plan. Please wait.");
+  }
+  return backendT(
+    "tour.travel_plan_translation.translating_current_overlay",
+    "Translating {language}. Please wait.",
+    {
+      language: tourLanguageLabel(targetLang)
+    }
+  );
 }
 
 function travelPlanSourceHash(fields, { excludedKeys = [] } = {}) {
@@ -1223,11 +1265,11 @@ function renderTravelPlanTranslationPanel() {
         <strong>${escapeHtml(backendT("tour.travel_plan_translation.title", "Translate the English website content and travel plan"))}</strong>
       </div>
       <div class="tour-travel-plan-translation__actions">
-        <button class="btn btn-ghost" type="button" data-tour-travel-plan-translate-missing ${canTranslate ? "" : "disabled"}>
-          ${escapeHtml(backendT("tour.travel_plan_translation.translate_missing", "Translate missing/outdated"))}
+        <button class="btn btn-primary" type="button" data-tour-travel-plan-translate-missing ${canTranslate ? "" : "disabled"}>
+          ${escapeHtml(backendT("tour.travel_plan_translation.translate_missing", "Translate"))}
         </button>
         <button class="btn btn-ghost" type="button" data-tour-travel-plan-translate-all ${canTranslate ? "" : "disabled"}>
-          ${escapeHtml(backendT("tour.travel_plan_translation.translate_all", "Translate all"))}
+          ${escapeHtml(backendT("tour.travel_plan_translation.translate_all", "Delete all translations and translate"))}
         </button>
       </div>
     </div>
@@ -1283,21 +1325,38 @@ async function translateTravelPlanLanguages(targets, { force = false } = {}) {
     setStatus(backendT("tour.travel_plan_translation.no_source", "Add English website or travel-plan text before translating."));
     return;
   }
-  const sourceEntries = Object.fromEntries(sourceFields.map((field) => [field.key, field.sourceText]));
   const resolvedTargets = uniqueLanguageCodes(targets).filter((lang) => lang && lang !== TRAVEL_PLAN_SOURCE_LANG);
   if (!resolvedTargets.length) return;
 
-  setTourPageOverlay(true, backendT("tour.travel_plan_translation.translating_overlay", "Translating website content and travel plan. Please wait."));
+  const workItems = resolvedTargets
+    .map((targetLang) => {
+      const summary = travelPlanTranslationStatus(plan, targetLang);
+      if (!force && !["missing", "partial", "stale"].includes(summary.status)) return null;
+      const fields = collectTravelPlanTranslationFields(plan, targetLang);
+      if (!fields.length) return null;
+      return {
+        targetLang,
+        fieldBatches: partitionItems(fields, TRAVEL_PLAN_TRANSLATION_REQUEST_BATCH_SIZE)
+      };
+    })
+    .filter(Boolean);
+  if (!workItems.length) return;
+
+  const firstBatch = workItems[0]?.fieldBatches?.[0] || [];
+  setTourPageOverlay(true, travelPlanTranslationOverlayMessage(workItems[0]?.targetLang));
   setStatus(backendT("tour.travel_plan_translation.translating", "Translating website content and travel plan..."));
   try {
-    for (const targetLang of resolvedTargets) {
-      const summary = travelPlanTranslationStatus(plan, targetLang);
-      if (!force && !["missing", "partial", "stale"].includes(summary.status)) continue;
-      const translatedEntries = await requestTourTranslation(targetLang, sourceEntries, {
-        sourceLang: TRAVEL_PLAN_SOURCE_LANG
-      });
-      if (!translatedEntries) continue;
-      applyTravelPlanTranslationEntries(plan, targetLang, translatedEntries, "machine");
+    for (const workItem of workItems) {
+      const targetLang = workItem.targetLang;
+      for (const fieldBatch of workItem.fieldBatches) {
+        setTourPageOverlay(true, travelPlanTranslationOverlayMessage(targetLang));
+        const sourceEntries = Object.fromEntries(fieldBatch.map((field) => [field.key, field.sourceText]));
+        const translatedEntries = await requestTourTranslation(targetLang, sourceEntries, {
+          sourceLang: TRAVEL_PLAN_SOURCE_LANG
+        });
+        if (!translatedEntries) continue;
+        applyTravelPlanTranslationEntries(plan, targetLang, translatedEntries, "machine");
+      }
     }
     state.travelPlanDraft = plan;
     if (state.booking) state.booking.travel_plan = plan;
