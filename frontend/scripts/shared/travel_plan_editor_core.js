@@ -4,7 +4,7 @@ import {
   bookingTravelPlanRequest,
   bookingTravelPlanTranslateRequest
 } from "../../Generated/API/generated_APIRequestFactory.js";
-import { logBrowserConsoleError } from "../shared/api.js";
+import { fetchApiJson, logBrowserConsoleError } from "../shared/api.js";
 import {
   bookingContentLang,
   bookingLanguageQuery,
@@ -85,6 +85,8 @@ export function createBookingTravelPlanModule(ctx) {
     : (isVisible, message = "") => setBookingPageOverlay(els, isVisible, message);
   let lastMissingTravelPlanControlsDiagnosticKey = "";
   let lastTravelPlanTranslationIncomplete = null;
+  let configuredTranslationProviderDisplay = "";
+  let configuredTranslationProviderDisplayPromise = null;
 
   function isFeatureEnabled(key, defaultValue = true) {
     if (!Object.prototype.hasOwnProperty.call(features, key)) return defaultValue;
@@ -2313,7 +2315,8 @@ export function createBookingTravelPlanModule(ctx) {
         fetchBookingMutation,
         apiBase: apiOrigin,
         sourceLang,
-        targetLang: destinationLang
+        targetLang: destinationLang,
+        translationProfile: "customer_travel_plan"
       });
       translated = String(translatedEntries?.value || "").trim();
       if (!translated) throw new Error(bookingT("booking.translation.error", "Could not translate this section."));
@@ -2363,6 +2366,7 @@ export function createBookingTravelPlanModule(ctx) {
         expected_travel_plan_revision: getBookingRevision("travel_plan_revision"),
         source_lang: bookingSourceLang(),
         target_lang: bookingContentLang(),
+        translation_profile: "customer_travel_plan",
         actor: state.user || "keycloak_user"
       }
     });
@@ -2371,7 +2375,8 @@ export function createBookingTravelPlanModule(ctx) {
     if (els.travel_plan_translate_all_btn instanceof HTMLButtonElement) {
       els.travel_plan_translate_all_btn.disabled = true;
     }
-    setTravelPlanTranslationOverlay(true);
+    const configuredTranslator = await loadConfiguredTranslationProviderDisplay();
+    setTravelPlanTranslationOverlay(true, travelPlanReviewOverlayMessage(bookingContentLang(), configuredTranslator));
 
     try {
       const response = await fetchBookingMutation(request.url, {
@@ -2418,6 +2423,38 @@ export function createBookingTravelPlanModule(ctx) {
     return String(value ?? "").trim();
   }
 
+  function rememberTranslationProviderDisplay(translationProvider) {
+    const display = normalizeReviewText(
+      translationProvider?.display
+      || translationProvider?.model
+      || translationProvider?.provider
+    );
+    if (!display) return normalizeReviewText(configuredTranslationProviderDisplay);
+    configuredTranslationProviderDisplay = display;
+    return configuredTranslationProviderDisplay;
+  }
+
+  async function loadConfiguredTranslationProviderDisplay() {
+    if (normalizeReviewText(configuredTranslationProviderDisplay)) {
+      return configuredTranslationProviderDisplay;
+    }
+    if (!configuredTranslationProviderDisplayPromise) {
+      configuredTranslationProviderDisplayPromise = (async () => {
+        const payload = await fetchApiJson("/health", {
+          apiBase: apiOrigin,
+          method: "GET",
+          cache: "no-store"
+        });
+        return rememberTranslationProviderDisplay({
+          display: payload?.translation?.display || payload?.translation?.provider
+        });
+      })().finally(() => {
+        configuredTranslationProviderDisplayPromise = null;
+      });
+    }
+    return normalizeReviewText(await configuredTranslationProviderDisplayPromise);
+  }
+
   function partitionReviewFields(fields, batchSize) {
     const normalizedFields = Array.isArray(fields) ? fields : [];
     const normalizedBatchSize = Math.max(1, Number(batchSize) || 1);
@@ -2428,15 +2465,20 @@ export function createBookingTravelPlanModule(ctx) {
     return batches;
   }
 
-  function travelPlanReviewOverlayMessage(targetLang) {
+  function travelPlanReviewOverlayMessage(targetLang, translator = "") {
     if (!normalizeReviewText(targetLang)) {
+      return bookingT("booking.translation.translating_customer_content_overlay", "Translating customer-facing content. Please wait.");
+    }
+    const normalizedTranslator = normalizeReviewText(translator);
+    if (!normalizedTranslator) {
       return bookingT("booking.translation.translating_customer_content_overlay", "Translating customer-facing content. Please wait.");
     }
     return bookingT(
       "booking.translation.translating_current_overlay",
-      "Translating {language}. Please wait.",
+      "Translating {language} using {translator}. Please wait.",
       {
-        language: bookingContentLanguageOption(targetLang).label
+        language: bookingContentLanguageOption(targetLang).label,
+        translator: normalizedTranslator
       }
     );
   }
@@ -3130,20 +3172,27 @@ export function createBookingTravelPlanModule(ctx) {
 
     travelPlanStatus(bookingT("booking.translation.translating_customer_content", "Translating customer-facing content..."), "loading");
     const fieldBatches = partitionReviewFields(fields, TRAVEL_PLAN_REVIEW_TRANSLATION_BATCH_SIZE);
-    const firstBatch = fieldBatches[0] || [];
-    setTravelPlanTranslationOverlay(true, travelPlanReviewOverlayMessage(targetLang));
+    const configuredTranslator = await loadConfiguredTranslationProviderDisplay();
+    setTravelPlanTranslationOverlay(true, travelPlanReviewOverlayMessage(targetLang, configuredTranslator));
     try {
       for (const fieldBatch of fieldBatches) {
-        setTravelPlanTranslationOverlay(true, travelPlanReviewOverlayMessage(targetLang));
-        const translatedEntries = await requestBookingFieldTranslation({
+        setTravelPlanTranslationOverlay(
+          true,
+          travelPlanReviewOverlayMessage(targetLang, normalizeReviewText(configuredTranslationProviderDisplay) || configuredTranslator)
+        );
+        const translationResult = await requestBookingFieldTranslation({
           bookingId: state.booking.id,
           entries: Object.fromEntries(fieldBatch.map((field) => [field.key, field.sourceText])),
           fetchBookingMutation,
           apiBase: apiOrigin,
           actor: state.user || "keycloak_user",
           sourceLang: TRAVEL_PLAN_REVIEW_SOURCE_LANG,
-          targetLang
+          targetLang,
+          translationProfile: "customer_travel_plan",
+          includeMeta: true
         });
+        const translatedEntries = translationResult?.entries || null;
+        rememberTranslationProviderDisplay(translationResult?.translationProvider);
         if (!translatedEntries) continue;
         applyTravelPlanReviewTranslations(plan, targetLang, translatedEntries, "machine");
         applyPdfReviewTranslations(fieldBatch, targetLang, translatedEntries);

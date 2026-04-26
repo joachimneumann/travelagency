@@ -65,6 +65,22 @@ export function logLocalhostDiagnostic(level, message, details = {}, error = nul
   console[method](`[localhost-diagnostics] ${message}`, payload);
 }
 
+export function translationProviderMetaFromResponse(response) {
+  if (!response?.headers || typeof response.headers.get !== "function") return null;
+  const provider = normalizeText(response.headers.get("X-ATP-Translation-Provider"));
+  const model = normalizeText(response.headers.get("X-ATP-Translation-Provider-Model"));
+  const display = normalizeText(
+    response.headers.get("X-ATP-Translation-Provider-Display")
+    || (provider === "openai" ? model : provider)
+  );
+  if (!provider && !model && !display) return null;
+  return {
+    provider,
+    model,
+    display
+  };
+}
+
 export async function fetchApiJson(path, options = {}) {
   const {
     apiBase = "",
@@ -75,7 +91,8 @@ export async function fetchApiJson(path, options = {}) {
     onSuccess = null,
     connectionErrorMessage = "Could not connect to backend API.",
     includeDetailInError = true,
-    cache = ""
+    cache = "",
+    includeResponseMeta = false
   } = options;
   const url = resolveApiUrl(apiBase, path);
   const requestMeta = {
@@ -119,8 +136,13 @@ export async function fetchApiJson(path, options = {}) {
       return null;
     }
 
+    const responseMeta = includeResponseMeta
+      ? {
+          translationProvider: translationProviderMetaFromResponse(response)
+        }
+      : null;
     if (typeof onSuccess === "function") onSuccess(payload, response);
-    return payload;
+    return includeResponseMeta ? { payload, responseMeta } : payload;
   } catch (error) {
     if (typeof onError === "function") onError(connectionErrorMessage, null, null, error);
     logLocalhostDiagnostic("error", "backend request failed before a response", {
@@ -155,7 +177,8 @@ export function createApiFetcher(config = {}) {
       onError,
       onSuccess,
       connectionErrorMessage: options.connectionErrorMessage || connectionErrorMessage,
-      cache: options.cache
+      cache: options.cache,
+      includeResponseMeta: options.includeResponseMeta
     });
   };
 }

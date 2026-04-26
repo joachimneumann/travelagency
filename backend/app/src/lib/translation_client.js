@@ -1,6 +1,8 @@
 import { createHash } from "node:crypto";
 import { normalizeText } from "./text.js";
 import { normalizeLanguageCode, promptLanguageName } from "../../../../shared/generated/language_catalog.js";
+import { resolveTranslationProfileOptions } from "./translation_profiles.js";
+import { translationRulesForTargetLang } from "./translation_rules.js";
 
 function nowMs() {
   return Date.now();
@@ -109,7 +111,8 @@ function googleProviderMeta() {
   return Object.freeze({
     kind: "google",
     label: "Google Translate",
-    model: ""
+    model: "",
+    display: "google"
   });
 }
 
@@ -118,7 +121,8 @@ function openAiProviderMeta(model) {
   return Object.freeze({
     kind: "openai",
     label: normalizedModel ? `OpenAI (${normalizedModel})` : "OpenAI",
-    model: normalizedModel
+    model: normalizedModel,
+    display: normalizedModel
   });
 }
 
@@ -157,10 +161,81 @@ function cloneTranslationResult(result) {
       ? {
           kind: normalizeText(result.provider.kind),
           label: normalizeText(result.provider.label),
-          model: normalizeText(result.provider.model)
+          model: normalizeText(result.provider.model),
+          display: normalizeText(result.provider.display)
         }
       : null
   };
+}
+
+function buildTranslationRulePrompt(rule) {
+  return `${JSON.stringify(normalizeText(rule?.source))} => ${JSON.stringify(normalizeText(rule?.target))}`;
+}
+
+function prepareEntriesWithTranslationRules(entries, targetLang, translationRules) {
+  const applicableRules = translationRulesForTargetLang(translationRules, targetLang);
+  const exactEntries = {};
+  const providerEntries = {};
+  const replacementsByKey = {};
+  const exactOverrideBySource = new Map(applicableRules.map((rule) => [rule.source, rule.target]));
+  let placeholderCounter = 0;
+
+  for (const [key, value] of Object.entries(entries || {})) {
+    const sourceText = normalizeText(value);
+    if (!sourceText) continue;
+    const exactOverride = exactOverrideBySource.get(sourceText);
+    if (exactOverride) {
+      exactEntries[key] = exactOverride;
+      continue;
+    }
+
+    let maskedSourceText = sourceText;
+    const replacements = [];
+    for (const rule of applicableRules) {
+      if (!rule.source || !maskedSourceText.includes(rule.source)) continue;
+      const placeholder = `[[ATP_TRANSLATION_RULE_${placeholderCounter}]]`;
+      placeholderCounter += 1;
+      maskedSourceText = maskedSourceText.split(rule.source).join(placeholder);
+      replacements.push({
+        placeholder,
+        target: rule.target
+      });
+    }
+
+    providerEntries[key] = maskedSourceText;
+    replacementsByKey[key] = replacements;
+  }
+
+  return {
+    applicableRules,
+    exactEntries,
+    providerEntries,
+    replacementsByKey
+  };
+}
+
+function restoreMaskedTranslationValue(value, replacements) {
+  let restored = normalizeText(value);
+  for (const replacement of Array.isArray(replacements) ? replacements : []) {
+    const placeholder = normalizeText(replacement?.placeholder);
+    const target = normalizeText(replacement?.target);
+    if (!placeholder || !target) continue;
+    restored = restored.split(placeholder).join(target);
+  }
+  return restored;
+}
+
+function finalizePreparedTranslation(preparedTranslation, translatedEntries = {}) {
+  const finalized = { ...(preparedTranslation?.exactEntries || {}) };
+  for (const [key] of Object.entries(preparedTranslation?.providerEntries || {})) {
+    const translatedValue = restoreMaskedTranslationValue(
+      translatedEntries[key],
+      preparedTranslation?.replacementsByKey?.[key]
+    );
+    if (!translatedValue) continue;
+    finalized[key] = translatedValue;
+  }
+  return stableEntriesObject(finalized);
 }
 
 export function createTranslationClient({
@@ -178,15 +253,26 @@ export function createTranslationClient({
   const translationCache = new Map();
   const MAX_TRANSLATION_CACHE_ENTRIES = 500;
 
-  function translationCacheKey(entries, targetLang, options = {}) {
+  function translationCacheKey(entries, targetLang, options = {}, applicableRules = []) {
     const namespace = normalizeText(options?.cacheNamespace);
     if (!namespace) return "";
     const sourceLangCode = googleTranslateLangCode(options?.sourceLangCode || "en", "en");
     const targetLangCode = googleTranslateLangCode(targetLang, "en");
+    const profileOptions = resolveTranslationProfileOptions(options);
+    const promptFingerprint = createHash("sha256")
+      .update(JSON.stringify({
+        profile: profileOptions.profile,
+        domain: profileOptions.domain,
+        context: profileOptions.context,
+        glossary_terms: profileOptions.glossaryTerms,
+        protected_terms: profileOptions.protectedTerms,
+        translation_rules: applicableRules
+      }))
+      .digest("hex");
     const sourceHash = createHash("sha256")
       .update(JSON.stringify(stableEntriesObject(entries)))
       .digest("hex");
-    return `${namespace}:${sourceLangCode}:${targetLangCode}:${sourceHash}`;
+    return `${namespace}:${sourceLangCode}:${targetLangCode}:${profileOptions.profile || "default"}:${promptFingerprint}:${sourceHash}`;
   }
 
   function readCachedTranslation(cacheKey) {
@@ -213,11 +299,19 @@ export function createTranslationClient({
     return cloneTranslationResult(cachedResult);
   }
 
-  async function translateEntriesWithGoogle(entries, targetLang, options = {}) {
+  async function translateEntriesWithGoogle(preparedTranslation, targetLang, options = {}) {
     const sourceLangCode = googleTranslateLangCode(options?.sourceLangCode || "en", "en");
     const targetLangCode = googleTranslateLangCode(targetLang, "en");
     const traceId = normalizeText(options?.traceId);
     const totalStartMs = nowMs();
+    const entries = stableEntriesObject(preparedTranslation?.providerEntries || {});
+    const exactEntryCount = Object.keys(preparedTranslation?.exactEntries || {}).length;
+    if (!Object.keys(entries).length) {
+      return {
+        entries: finalizePreparedTranslation(preparedTranslation, {}),
+        provider: null
+      };
+    }
     const translated = {};
     const entryStats = summarizeEntries(entries);
 
@@ -226,7 +320,8 @@ export function createTranslationClient({
       source_lang: sourceLangCode,
       target_lang: targetLangCode,
       entry_count: entryStats.entryCount,
-      total_chars: entryStats.totalChars
+      total_chars: entryStats.totalChars,
+      exact_override_count: exactEntryCount
     });
 
     for (const [key, value] of Object.entries(entries || {})) {
@@ -269,11 +364,12 @@ export function createTranslationClient({
       source_lang: sourceLangCode,
       target_lang: targetLangCode,
       entry_count: Object.keys(translated).length,
+      exact_override_count: exactEntryCount,
       duration_ms: durationMs(totalStartMs)
     });
 
     return {
-      entries: translated,
+      entries: finalizePreparedTranslation(preparedTranslation, translated),
       provider: googleProviderMeta()
     };
   }
@@ -291,14 +387,27 @@ export function createTranslationClient({
     const normalizedEntriesObject = Object.fromEntries(normalizedEntries);
     const allowGoogleFallback = Boolean(options?.allowGoogleFallback) && allowGoogleFallbackByDefault;
     const forceGoogleProvider = normalizeText(options?.provider).toLowerCase() === "google";
-    const cacheKey = translationCacheKey(normalizedEntriesObject, targetLang, options);
+    const profileOptions = resolveTranslationProfileOptions(options);
+    const preparedTranslation = prepareEntriesWithTranslationRules(
+      normalizedEntriesObject,
+      targetLang,
+      options?.translationRules
+    );
+    const cacheKey = translationCacheKey(
+      normalizedEntriesObject,
+      targetLang,
+      options,
+      preparedTranslation.applicableRules
+    );
     const cachedResult = readCachedTranslation(cacheKey);
     if (cachedResult) {
       logTranslationTiming("Translation cache hit", {
         trace_id: normalizeText(options?.traceId),
         cache_namespace: normalizeText(options?.cacheNamespace),
+        translation_profile: profileOptions.profile || "",
         source_lang: googleTranslateLangCode(options?.sourceLangCode || "en", "en"),
-        target_lang: googleTranslateLangCode(targetLang, "en")
+        target_lang: googleTranslateLangCode(targetLang, "en"),
+        translation_rule_count: preparedTranslation.applicableRules.length
       });
       return cachedResult;
     }
@@ -306,7 +415,7 @@ export function createTranslationClient({
     const translateWithGoogleAndCache = async () => (
       writeCachedTranslation(
         cacheKey,
-        await translateEntriesWithGoogle(normalizedEntriesObject, targetLang, options)
+        await translateEntriesWithGoogle(preparedTranslation, targetLang, options)
       )
     );
 
@@ -326,26 +435,39 @@ export function createTranslationClient({
     const sourceLang = normalizeText(options?.sourceLang)
       || promptLanguageName(options?.sourceLangCode, "English")
       || "English";
-    const domainLabel = normalizeText(options?.domain || "travel planning") || "travel planning";
-    const contextNote = normalizeText(options?.context);
+    const domainLabel = profileOptions.domain;
+    const contextNote = profileOptions.context;
     const targetLanguageName = promptLanguageName(targetLang, "English");
-    const chunks = chunkEntries(normalizedEntries);
+    const glossaryTerms = profileOptions.glossaryTerms;
+    const protectedTerms = profileOptions.protectedTerms;
+    const translationRulePrompts = preparedTranslation.applicableRules.map(buildTranslationRulePrompt);
+    const entriesToTranslate = Object.entries(stableEntriesObject(preparedTranslation.providerEntries || {}));
+    if (!entriesToTranslate.length) {
+      return writeCachedTranslation(cacheKey, {
+        entries: finalizePreparedTranslation(preparedTranslation, {}),
+        provider: null
+      });
+    }
+    const chunks = chunkEntries(entriesToTranslate);
     const onChunkStart = typeof options?.onChunkStart === "function" ? options.onChunkStart : null;
     const traceId = normalizeText(options?.traceId);
     const totalStartMs = nowMs();
-    const entryStats = summarizeEntries(Object.fromEntries(normalizedEntries));
+    const entryStats = summarizeEntries(Object.fromEntries(entriesToTranslate));
     const translated = {};
     let translatedCount = 0;
 
     logTranslationTiming("OpenAI translation started", {
       trace_id: traceId,
       model: normalizedModel,
+      translation_profile: profileOptions.profile || "",
       source_lang: sourceLang,
       target_lang: targetLanguageName,
       domain: domainLabel,
       entry_count: entryStats.entryCount,
       total_chars: entryStats.totalChars,
-      chunk_count: chunks.length
+      chunk_count: chunks.length,
+      exact_override_count: Object.keys(preparedTranslation.exactEntries).length,
+      translation_rule_count: preparedTranslation.applicableRules.length
     });
 
     for (let chunkIndex = 0; chunkIndex < chunks.length; chunkIndex += 1) {
@@ -357,7 +479,7 @@ export function createTranslationClient({
           chunkIndex,
           totalChunks: chunks.length,
           startIndex: translatedCount,
-          totalEntries: normalizedEntries.length,
+          totalEntries: entriesToTranslate.length,
           keys: chunk.map(([key]) => key)
         });
       }
@@ -383,9 +505,19 @@ export function createTranslationClient({
           instructions: [
             `You translate ${domainLabel} copy from ${sourceLang} into ${targetLanguageName}.`,
             contextNote ? `Context: ${contextNote}` : "",
+            glossaryTerms.length
+              ? `Glossary and term guidance:\n- ${glossaryTerms.join("\n- ")}`
+              : "",
+            protectedTerms.length
+              ? `Do not translate or rewrite these names and terms when they appear in the source unless the source already localizes them: ${protectedTerms.join(", ")}.`
+              : "",
+            translationRulePrompts.length
+              ? `Apply these translation overrides exactly when they match the source text or appear inside it:\n- ${translationRulePrompts.join("\n- ")}`
+              : "",
             "Return JSON only.",
             "Keep the exact same keys.",
             "Preserve line breaks and blank lines within each value exactly.",
+            "Preserve placeholder tokens such as [[ATP_TRANSLATION_RULE_0]] exactly when they appear.",
             "Preserve proper nouns, brand names, phone numbers, ISO codes, URLs, and currency codes unless a natural translation requires otherwise.",
             "Do not add explanations."
           ].filter(Boolean).join(" "),
@@ -409,6 +541,7 @@ export function createTranslationClient({
           logTranslationTiming("OpenAI translation chunk failed, falling back to Google", {
             trace_id: traceId,
             model: normalizedModel,
+            translation_profile: profileOptions.profile || "",
             chunk_index: chunkIndex + 1,
             total_chunks: chunks.length,
             http_status: response.status,
@@ -430,6 +563,7 @@ export function createTranslationClient({
           logTranslationTiming("OpenAI translation chunk returned invalid JSON, falling back to Google", {
             trace_id: traceId,
             model: normalizedModel,
+            translation_profile: profileOptions.profile || "",
             chunk_index: chunkIndex + 1,
             total_chunks: chunks.length,
             openai_duration_ms: responseDurationMs,
@@ -449,6 +583,7 @@ export function createTranslationClient({
       logTranslationTiming("OpenAI translation chunk finished", {
         trace_id: traceId,
         model: normalizedModel,
+        translation_profile: profileOptions.profile || "",
         chunk_index: chunkIndex + 1,
         total_chunks: chunks.length,
         entry_count: chunk.length,
@@ -461,14 +596,17 @@ export function createTranslationClient({
     logTranslationTiming("OpenAI translation finished", {
       trace_id: traceId,
       model: normalizedModel,
+      translation_profile: profileOptions.profile || "",
       source_lang: sourceLang,
       target_lang: targetLanguageName,
       translated_count: translatedCount,
+      exact_override_count: Object.keys(preparedTranslation.exactEntries).length,
+      translation_rule_count: preparedTranslation.applicableRules.length,
       duration_ms: durationMs(totalStartMs)
     });
 
     return writeCachedTranslation(cacheKey, {
-      entries: translated,
+      entries: finalizePreparedTranslation(preparedTranslation, translated),
       provider: openAiProviderMeta(normalizedModel)
     });
   }

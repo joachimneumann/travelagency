@@ -54,6 +54,9 @@ export const LEGACY_COUNTRY_REFERENCE_INFO_PATH = path.join(DATA_ROOT, "country_
 export const COUNTRY_REFERENCE_INFO_PATH = resolveConfigPathFromRepoRoot(
   normalizeText(process.env.COUNTRY_REFERENCE_INFO_PATH || path.join("content", "country_reference_info.json"))
 );
+export const TRANSLATION_RULES_PATH = resolveConfigPathFromRepoRoot(
+  normalizeText(process.env.TRANSLATION_RULES_PATH || path.join("content", "translation_rules.json"))
+);
 export const BOOKING_TRAVEL_PLAN_ATTACHMENTS_DIR = path.join(PDFS_ROOT, "attachments");
 export const TEMP_UPLOAD_DIR = path.join(DATA_ROOT, "tmp");
 export const TRAVEL_PLAN_PDF_PREVIEW_DIR = path.join(TEMP_UPLOAD_DIR, "travel_plan_previews");
@@ -131,8 +134,18 @@ const OPENAI_PROJECT_ID = normalizeText(process.env.OPENAI_PROJECT_ID || "");
 const OPENAI_ORGANIZATION_ID = normalizeText(process.env.OPENAI_ORGANIZATION_ID || "");
 const OPENAI_TRANSLATION_MODEL = normalizeText(process.env.OPENAI_TRANSLATION_MODEL || process.env.OPENAI_MODEL || "gpt-4.1") || "gpt-4.1";
 const GOOGLE_TRANSLATE_FALLBACK_ENABLED = String(process.env.GOOGLE_TRANSLATE_FALLBACK_ENABLED || "true").trim().toLowerCase() !== "false";
+const DEFAULT_TRANSLATION_PROVIDER_KIND = OPENAI_API_KEY
+  ? "openai"
+  : (GOOGLE_TRANSLATE_FALLBACK_ENABLED ? "google" : "");
+const DEFAULT_TRANSLATION_PROVIDER_DISPLAY = OPENAI_API_KEY
+  ? OPENAI_TRANSLATION_MODEL
+  : (GOOGLE_TRANSLATE_FALLBACK_ENABLED ? "google" : "");
 
 export const TRANSLATION_ENABLED = Boolean(OPENAI_API_KEY) || GOOGLE_TRANSLATE_FALLBACK_ENABLED;
+export const TRANSLATION_RUNTIME_INFO = Object.freeze({
+  provider: DEFAULT_TRANSLATION_PROVIDER_KIND,
+  display: DEFAULT_TRANSLATION_PROVIDER_DISPLAY
+});
 
 export const COMPANY_PROFILE = Object.freeze({
   name: "AsiaTravelPlan",
@@ -293,6 +306,7 @@ export const RUNTIME_PATHS = Object.freeze({
   keycloakUserSnapshotPath: KEYCLOAK_USER_SNAPSHOT_PATH,
   legacyCountryReferenceInfoPath: LEGACY_COUNTRY_REFERENCE_INFO_PATH,
   countryReferenceInfoPath: COUNTRY_REFERENCE_INFO_PATH,
+  translationRulesPath: TRANSLATION_RULES_PATH,
   bookingTravelPlanAttachmentsDir: BOOKING_TRAVEL_PLAN_ATTACHMENTS_DIR,
   tempUploadDir: TEMP_UPLOAD_DIR,
   travelPlanPdfPreviewDir: TRAVEL_PLAN_PDF_PREVIEW_DIR,

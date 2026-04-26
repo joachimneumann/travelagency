@@ -48,6 +48,7 @@ export function createBookingTravelPlanHandlers(deps) {
     deleteBookingTravelPlanPdfArtifact,
     sendFileWithCache,
     translateEntries,
+    readTranslationRules,
     path,
     randomUUID,
     generatedOfferPdfPath,
@@ -714,13 +715,21 @@ export function createBookingTravelPlanHandlers(deps) {
 
     const contentLang = requestContentLang(req, payload);
     const sourceLang = requestSourceLang(req, payload);
+    const translationProfile = normalizeText(payload.translation_profile) || "customer_travel_plan";
+    const translationRules = typeof readTranslationRules === "function"
+      ? (await readTranslationRules()).items
+      : [];
     try {
       const translatedTravelPlan = await translateTravelPlanFromSourceLanguage(
         booking.travel_plan,
         sourceLang,
         contentLang,
-        translateEntries,
-        nowIso()
+        (entries, targetLang, translateOptions = {}) => translateEntries(entries, targetLang, {
+          ...translateOptions,
+          translationRules
+        }),
+        nowIso(),
+        { translationProfile }
       );
       if (!Array.isArray(translatedTravelPlan?.destinations) && Array.isArray(booking?.travel_plan?.destinations)) {
         translatedTravelPlan.destinations = [...booking.travel_plan.destinations];

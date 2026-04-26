@@ -5,7 +5,12 @@ import {
   staffProfilesRequest
 } from "../../Generated/API/generated_APIRequestFactory.js";
 import { validateAuthMeResponse } from "../../Generated/API/generated_APIModels.js";
-import { logBrowserConsoleError, normalizeText, resolveApiUrl } from "../shared/api.js";
+import {
+  logBrowserConsoleError,
+  normalizeText,
+  resolveApiUrl,
+  translationProviderMetaFromResponse
+} from "../shared/api.js";
 import { applyBackendUserLabel } from "../shared/backend_page.js";
 import {
   bookingContentLang,
@@ -103,6 +108,7 @@ export function createBookingPageDataController(ctx) {
   async function fetchBookingMutation(path, options = {}) {
     const method = options.method || "GET";
     const body = options.body;
+    const includeResponseMeta = options.includeResponseMeta === true;
     const requestUrl = resolveApiUrl(apiOrigin, withBookingContentLang(path));
     state.lastMutationError = null;
 
@@ -156,7 +162,14 @@ export function createBookingPageDataController(ctx) {
 
       clearError();
       state.lastMutationError = null;
-      return payload;
+      return includeResponseMeta
+        ? {
+            payload,
+            responseMeta: {
+              translationProvider: translationProviderMetaFromResponse(response)
+            }
+          }
+        : payload;
     } catch (error) {
       state.lastMutationError = {
         method,

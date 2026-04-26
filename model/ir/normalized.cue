@@ -1251,6 +1251,17 @@ IR: {
 			]
 		},
 		{
+			name:       "TranslationRulesResponse"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#TranslationRulesResponse"
+			fields: [
+				{name: "items", kind: "transport", typeName: "TranslationRule", required: true, isArray: true},
+				{name: "total", kind: "scalar", typeName: "int", required: true},
+				{name: "updated_at", kind: "scalar", typeName: "Timestamp", required: false},
+			]
+		},
+		{
 			name:       "BookingChatEvent"
 			domain:     "api"
 			module:     "api"
@@ -1681,8 +1692,29 @@ IR: {
 			fields: [
 				{name: "source_lang", kind: "enum", typeName: "LanguageCode", required: true},
 				{name: "target_lang", kind: "enum", typeName: "LanguageCode", required: true},
+				{name: "translation_profile", kind: "scalar", typeName: "string", required: false},
 				{name: "actor", kind: "scalar", typeName: "string", required: false},
 				{name: "entries", kind: "transport", typeName: "TranslationEntry", required: true, isArray: true},
+			]
+		},
+		{
+			name:       "TranslationRule"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#TranslationRule"
+			fields: [
+				{name: "source", kind: "scalar", typeName: "string", required: true},
+				{name: "target_lang", kind: "enum", typeName: "LanguageCode", required: true},
+				{name: "target", kind: "scalar", typeName: "string", required: true},
+			]
+		},
+		{
+			name:       "TranslationRulesUpdateRequest"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#TranslationRulesUpdateRequest"
+			fields: [
+				{name: "items", kind: "transport", typeName: "TranslationRule", required: true, isArray: true},
 			]
 		},
 		{
@@ -1705,6 +1737,7 @@ IR: {
 				{name: "expected_travel_plan_revision", kind: "scalar", typeName: "int", required: false},
 				{name: "source_lang", kind: "enum", typeName: "LanguageCode", required: true},
 				{name: "target_lang", kind: "enum", typeName: "LanguageCode", required: true},
+				{name: "translation_profile", kind: "scalar", typeName: "string", required: false},
 				{name: "actor", kind: "scalar", typeName: "string", required: false},
 			]
 		},
@@ -1990,6 +2023,7 @@ IR: {
 			fields: [
 				{name: "source_lang", kind: "enum", typeName: "LanguageCode", required: true},
 				{name: "target_lang", kind: "enum", typeName: "LanguageCode", required: true},
+				{name: "translation_profile", kind: "scalar", typeName: "string", required: false},
 				{name: "actor", kind: "scalar", typeName: "string", required: false},
 				{name: "entries", kind: "transport", typeName: "TranslationEntry", required: true, isArray: true},
 			]

@@ -16,6 +16,7 @@ import { createCountryReferenceHandlers } from "../http/handlers/country_referen
 import { createKeycloakUserHandlers } from "../http/handlers/keycloak_users.js";
 import { createStandardTourHandlers } from "../http/handlers/standard_tours.js";
 import { createTourHandlers } from "../http/handlers/tours.js";
+import { createTranslationRulesHandlers } from "../http/handlers/translation_rules.js";
 
 export function createApplicationRoutes({
   auth,
@@ -51,6 +52,7 @@ export function createApplicationRoutes({
     keycloakDirectory,
     atpStaffDirectory,
     countryReferenceStore,
+    translationRulesStore,
     travelPlanPdfArtifacts,
     metaWebhookHandlers,
     tourHelpers,
@@ -271,6 +273,8 @@ export function createApplicationRoutes({
     rm,
     sendFileWithCache: httpHelpers.sendFileWithCache,
     translateEntries: runtime.translationClient.translateEntries,
+    translateEntriesWithMeta: runtime.translationClient.translateEntriesWithMeta,
+    readTranslationRules: translationRulesStore.readTranslationRules,
     resolveLocalizedTourText: tourHelpers.resolveLocalizedText
   });
 
@@ -298,6 +302,7 @@ export function createApplicationRoutes({
     repoRoot: runtime.paths.repoRoot,
     translateEntries: runtime.translationClient.translateEntries,
     translateEntriesWithMeta: runtime.translationClient.translateEntriesWithMeta,
+    readTranslationRules: translationRulesStore.readTranslationRules,
     execFile: runtime.execFile,
     mkdir,
     writeFile,
@@ -325,6 +330,16 @@ export function createApplicationRoutes({
     execFile: runtime.execFile
   });
 
+  const translationRulesHandlers = createTranslationRulesHandlers({
+    readBodyJson: httpHelpers.readBodyJson,
+    sendJson: httpHelpers.sendJson,
+    getPrincipal,
+    canReadSettings,
+    readTranslationRules: translationRulesStore.readTranslationRules,
+    persistTranslationRules: translationRulesStore.persistTranslationRules,
+    nowIso: support.nowIso
+  });
+
   const tourHandlers = createTourHandlers({
     normalizeText: support.normalizeText,
     normalizeStringArray: support.normalizeStringArray,
@@ -346,6 +361,8 @@ export function createApplicationRoutes({
     resolveLocalizedText: tourHelpers.resolveLocalizedText,
     setLocalizedTextForLang: tourHelpers.setLocalizedTextForLang,
     translateEntries: runtime.translationClient.translateEntries,
+    translateEntriesWithMeta: runtime.translationClient.translateEntriesWithMeta,
+    readTranslationRules: translationRulesStore.readTranslationRules,
     normalizeTourLang,
     normalizeTourDestinationCode,
     normalizeTourStyleCode,
@@ -428,6 +445,7 @@ export function createApplicationRoutes({
       ...atpStaffHandlers,
       ...keycloakUserHandlers,
       ...countryReferenceHandlers,
+      ...translationRulesHandlers,
       ...tourHandlers,
       ...standardTourHandlers
     }

@@ -1168,6 +1168,40 @@ export function settingsObservabilityRequest({ baseURL = '', params = {}, query 
   };
 }
 
+export function settingsTranslationRulesPath(params = {}) {
+  return buildPath("/api/v1/settings/translation-rules", params);
+}
+
+export function settingsTranslationRulesRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = settingsTranslationRulesPath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "settings_translation_rules",
+    method: "GET",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function settingsTranslationRulesUpdatePath(params = {}) {
+  return buildPath("/api/v1/settings/translation-rules", params);
+}
+
+export function settingsTranslationRulesUpdateRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = settingsTranslationRulesUpdatePath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "settings_translation_rules_update",
+    method: "PATCH",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
 export function staffProfilesPath(params = {}) {
   return buildPath("/api/v1/staff-profiles", params);
 }

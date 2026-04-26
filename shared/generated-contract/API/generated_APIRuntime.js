@@ -954,6 +954,28 @@
         ]
       },
       {
+        key: "settings_translation_rules",
+        path: "/api/v1/settings/translation-rules",
+        method: "GET",
+        authenticated: true,
+        requestType: null,
+        responseType: "TranslationRulesResponse",
+        parameters: [
+
+        ]
+      },
+      {
+        key: "settings_translation_rules_update",
+        path: "/api/v1/settings/translation-rules",
+        method: "PATCH",
+        authenticated: true,
+        requestType: "TranslationRulesUpdateRequest",
+        responseType: "TranslationRulesResponse",
+        parameters: [
+
+        ]
+      },
+      {
         key: "staff_profiles",
         path: "/api/v1/staff-profiles",
         method: "GET",

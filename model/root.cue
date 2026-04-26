@@ -93,6 +93,7 @@ import (
 		SettingsObservabilityBookingActivity:                      apiModel.#SettingsObservabilityBookingActivity
 		SettingsObservabilityLatestChangedBooking:                 apiModel.#SettingsObservabilityLatestChangedBooking
 		SettingsObservabilityResponse:                             apiModel.#SettingsObservabilityResponse
+		TranslationRulesResponse:                                  apiModel.#TranslationRulesResponse
 		CatalogOption:                                             apiModel.#CatalogOption
 		TourOptions:                                               apiModel.#TourOptions
 		TourResponse:                                              apiModel.#TourResponse
@@ -142,6 +143,8 @@ import (
 		BookingPersonDeleteRequest:                                apiModel.#BookingPersonDeleteRequest
 		BookingPersonPhotoUploadRequest:                           apiModel.#BookingPersonPhotoUploadRequest
 		BookingNotesUpdateRequest:                                 apiModel.#BookingNotesUpdateRequest
+		TranslationRule:                                           apiModel.#TranslationRule
+		TranslationRulesUpdateRequest:                             apiModel.#TranslationRulesUpdateRequest
 		BookingTravelPlanUpdateRequest:                            apiModel.#BookingTravelPlanUpdateRequest
 		TravelPlanDaySearchRequest:                                apiModel.#TravelPlanDaySearchRequest
 		TravelPlanDayImportRequest:                                apiModel.#TravelPlanDayImportRequest

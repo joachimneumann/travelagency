@@ -320,7 +320,7 @@ function touchSectionTranslationMeta(section, targetLang, origin, timestamp, col
   return section;
 }
 
-async function translateSection(section, targetLang, translateEntries, timestamp, collectDescriptors, sourceLang = DEFAULT_BOOKING_CONTENT_LANG) {
+async function translateSection(section, targetLang, translateEntries, timestamp, collectDescriptors, sourceLang = DEFAULT_BOOKING_CONTENT_LANG, options = {}) {
   const normalizedSourceLang = normalizeBookingContentLang(sourceLang || DEFAULT_BOOKING_CONTENT_LANG);
   const normalizedTargetLang = normalizeBookingContentLang(targetLang);
   if (normalizedTargetLang === normalizedSourceLang) {
@@ -339,7 +339,8 @@ async function translateSection(section, targetLang, translateEntries, timestamp
   const translatedEntries = await translateEntries(entries, normalizedTargetLang, {
     sourceLang: promptLanguageName(normalizedSourceLang),
     domain: "travel planning",
-    allowGoogleFallback: true
+    allowGoogleFallback: true,
+    translationProfile: normalizeText(options?.translationProfile)
   });
   descriptors.forEach((descriptor) => {
     if (manualKeys.includes(descriptor.key)) return;
@@ -385,10 +386,25 @@ export function collectTravelPlanTranslationFieldChanges(currentTravelPlan, next
   return collectChangedTranslationKeys(currentTravelPlan, nextTravelPlan, collectTravelPlanFieldDescriptors, sourceLang, targetLang);
 }
 
-export async function translateTravelPlanFromSourceLanguage(travelPlan, sourceLang, targetLang, translateEntries, timestamp) {
-  return translateSection(travelPlan, targetLang, translateEntries, timestamp, collectTravelPlanFieldDescriptors, sourceLang);
+export async function translateTravelPlanFromSourceLanguage(travelPlan, sourceLang, targetLang, translateEntries, timestamp, options = {}) {
+  return translateSection(
+    travelPlan,
+    targetLang,
+    translateEntries,
+    timestamp,
+    collectTravelPlanFieldDescriptors,
+    sourceLang,
+    options
+  );
 }
 
-export async function translateTravelPlanFromEnglish(travelPlan, targetLang, translateEntries, timestamp) {
-  return translateTravelPlanFromSourceLanguage(travelPlan, DEFAULT_BOOKING_CONTENT_LANG, targetLang, translateEntries, timestamp);
+export async function translateTravelPlanFromEnglish(travelPlan, targetLang, translateEntries, timestamp, options = {}) {
+  return translateTravelPlanFromSourceLanguage(
+    travelPlan,
+    DEFAULT_BOOKING_CONTENT_LANG,
+    targetLang,
+    translateEntries,
+    timestamp,
+    options
+  );
 }

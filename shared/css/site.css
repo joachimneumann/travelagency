@@ -4689,6 +4689,50 @@ textarea:focus-visible {
   color: var(--error-text);
 }
 
+.settings-translation-rules__textarea,
+.settings-translation-rules__lang {
+  width: 100%;
+}
+
+.settings-translation-rules__textarea {
+  min-height: 5.25rem;
+  resize: vertical;
+}
+
+.settings-translation-rules__targets {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.settings-translation-rules__target-row {
+  display: grid;
+  grid-template-columns: minmax(9rem, 0.45fr) minmax(14rem, 1fr) auto;
+  gap: 0.5rem;
+  align-items: start;
+}
+
+.settings-translation-rules__target-row .settings-translation-rules__textarea {
+  min-height: 3.25rem;
+}
+
+.settings-translation-rules__add-target {
+  justify-self: start;
+}
+
+@media (max-width: 720px) {
+  .settings-translation-rules__target-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.settings-translation-rules__remove {
+  white-space: nowrap;
+}
+
+.settings-translation-rules__empty {
+  color: var(--text-muted);
+}
+
 .backend-tour-form {
   display: grid;
   grid-template-columns: repeat(2, minmax(220px, 1fr));

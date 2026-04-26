@@ -5,6 +5,7 @@ export function createSystemHandlers({
   sendJson,
   nowIso,
   companyProfile,
+  translationRuntimeInfo,
   mobileAppConfig,
   mobileContractMetaPath,
   backendGeneratedRequestFactoryPath
@@ -20,6 +21,16 @@ export function createSystemHandlers({
       whatsapp: normalizeText(companyProfile.whatsapp),
       email: normalizeText(companyProfile.email),
       licenseNumber: normalizeText(companyProfile.licenseNumber)
+    };
+  }
+
+  function publicTranslationRuntimeInfo() {
+    const provider = normalizeText(translationRuntimeInfo?.provider);
+    const display = normalizeText(translationRuntimeInfo?.display);
+    if (!provider && !display) return null;
+    return {
+      provider,
+      display
     };
   }
 
@@ -50,7 +61,8 @@ export function createSystemHandlers({
     sendJson(res, 200, {
       ok: true,
       service: "asiatravelplan-backend",
-      timestamp: nowIso()
+      timestamp: nowIso(),
+      translation: publicTranslationRuntimeInfo()
     });
   }
 

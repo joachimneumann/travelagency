@@ -49,7 +49,9 @@ export function createBookingCoreHandlers(deps) {
     buildBookingDetailResponse,
     buildBookingPayload,
     incrementBookingRevision,
-    translateEntries
+    translateEntries,
+    translateEntriesWithMeta,
+    readTranslationRules
   } = deps;
 
   function translationEntriesToObject(entries) {
@@ -64,6 +66,17 @@ export function createBookingCoreHandlers(deps) {
     return Object.entries(entries || {})
       .map(([key, value]) => ({ key: normalizeText(key), value: normalizeText(value) }))
       .filter((entry) => Boolean(entry.key && entry.value));
+  }
+
+  function translationProviderResponseHeaders(provider) {
+    const kind = normalizeText(provider?.kind).toLowerCase();
+    const model = normalizeText(provider?.model);
+    const display = normalizeText(provider?.display || (kind === "openai" ? model : kind));
+    return {
+      ...(kind ? { "X-ATP-Translation-Provider": kind } : {}),
+      ...(model ? { "X-ATP-Translation-Provider-Model": model } : {}),
+      ...(display ? { "X-ATP-Translation-Provider-Display": display } : {})
+    };
   }
 
   async function handlePatchBookingName(req, res, [bookingId]) {
@@ -461,6 +474,10 @@ export function createBookingCoreHandlers(deps) {
 
     const sourceLang = normalizeBookingSourceLang(payload.source_lang);
     const targetLang = normalizeBookingContentLang(payload.target_lang);
+    const translationProfile = normalizeText(payload.translation_profile) || "customer_travel_plan";
+    const translationRules = typeof readTranslationRules === "function"
+      ? (await readTranslationRules()).items
+      : [];
     const entries = translationEntriesToObject(payload.entries);
     if (!Object.keys(entries).length) {
       sendJson(res, 422, { error: "At least one source field is required." });
@@ -477,16 +494,30 @@ export function createBookingCoreHandlers(deps) {
     }
 
     try {
-      const translatedEntries = await translateEntries(entries, targetLang, {
-        sourceLangCode: sourceLang,
-        domain: "travel planning",
-        allowGoogleFallback: true
-      });
+      const translationResult = translateEntriesWithMeta
+        ? await translateEntriesWithMeta(entries, targetLang, {
+            sourceLangCode: sourceLang,
+            domain: "travel planning",
+            allowGoogleFallback: true,
+            translationProfile,
+            translationRules
+          })
+        : {
+            entries: await translateEntries(entries, targetLang, {
+              sourceLangCode: sourceLang,
+              domain: "travel planning",
+              allowGoogleFallback: true,
+              translationProfile,
+              translationRules
+            }),
+            provider: null
+          };
+      const translatedEntries = translationResult?.entries || {};
       sendJson(res, 200, {
         source_lang: sourceLang,
         target_lang: targetLang,
         entries: translationEntriesFromObject(translatedEntries)
-      });
+      }, translationProviderResponseHeaders(translationResult?.provider));
     } catch (error) {
       if (error?.code === "TRANSLATION_NOT_CONFIGURED") {
         sendJson(res, 503, { error: String(error.message || "Translation provider is not configured.") });

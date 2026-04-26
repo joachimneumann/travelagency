@@ -134,6 +134,7 @@ const TOUR_TRANSLATION_SOURCE_LANG = "en";
 const TOUR_DESCRIPTION_MAX_LENGTH = 170;
 const TRAVEL_PLAN_TRANSLATION_INCOMPLETE_STATUSES = new Set(["missing", "partial", "stale"]);
 const TRAVEL_PLAN_TRANSLATION_REQUEST_BATCH_SIZE = 12;
+const TOUR_TRANSLATION_PROVIDER_DISPLAY = "google";
 
 const els = {
   pageBody: document.body,
@@ -604,26 +605,34 @@ async function requestTourTranslation(targetLang, sourceValues, options = {}) {
   const entries = buildTourTranslationEntries(sourceValues);
   if (!Object.keys(entries).length) return null;
   const sourceLang = normalizeTourTextLang(options?.sourceLang || currentTourEditingLang());
+  const translationProfile = normalizeText(options?.translationProfile || "marketing_trip_copy") || "marketing_trip_copy";
 
   const request = tourTranslateFieldsRequest({
     baseURL: apiOrigin,
     body: {
       source_lang: sourceLang,
       target_lang: targetLang,
+      translation_profile: translationProfile,
       entries: Object.entries(entries).map(([key, value]) => ({ key, value }))
     }
   });
   const result = await fetchApi(withApiLang(request.url), {
     method: request.method,
-    body: request.body
+    body: request.body,
+    includeResponseMeta: true
   });
-  return Array.isArray(result?.entries)
+  const payload = result?.payload || null;
+  const translatedEntries = Array.isArray(payload?.entries)
     ? Object.fromEntries(
-        result.entries
+        payload.entries
           .map((entry) => [String(entry?.key || "").trim(), String(entry?.value || "").trim()])
           .filter(([key, value]) => Boolean(key && value))
       )
     : null;
+  return {
+    entries: translatedEntries,
+    translationProvider: result?.responseMeta?.translationProvider || null
+  };
 }
 
 function applyTranslatedTourFields(targetLang, translatedEntries) {
@@ -780,7 +789,8 @@ async function translateTourContent(button) {
   setStatus(backendT("tour.translation.translating", "Translating from {sourceLanguage}...", {
     sourceLanguage: tourLanguageLabel(sourceLang)
   }));
-  const translatedEntries = await requestTourTranslation(targetLang, sourceEntries);
+  const translationResult = await requestTourTranslation(targetLang, sourceEntries);
+  const translatedEntries = translationResult?.entries || null;
   if (!translatedEntries) return;
   applyTranslatedTourFields(targetLang, translatedEntries);
   syncLocalizedFieldState();
@@ -853,7 +863,8 @@ async function translateAllTourContent(button) {
         target_lang: targetLang,
         target_label: tourLanguageLabel(targetLang)
       });
-      const translatedEntries = await requestTourTranslation(targetLang, sourceEntries);
+      const translationResult = await requestTourTranslation(targetLang, sourceEntries);
+      const translatedEntries = translationResult?.entries || null;
       if (!translatedEntries) return;
       applyTranslatedTourFields(targetLang, translatedEntries);
       syncLocalizedFieldState();
@@ -913,15 +924,16 @@ function partitionItems(items, batchSize) {
   return batches;
 }
 
-function travelPlanTranslationOverlayMessage(targetLang) {
+function travelPlanTranslationOverlayMessage(targetLang, translator = "") {
   if (!normalizeText(targetLang)) {
     return backendT("tour.travel_plan_translation.translating_overlay", "Translating website content and travel plan. Please wait.");
   }
   return backendT(
     "tour.travel_plan_translation.translating_current_overlay",
-    "Translating {language}. Please wait.",
+    "Translating {language} using {translator}. Please wait.",
     {
-      language: tourLanguageLabel(targetLang)
+      language: tourLanguageLabel(targetLang),
+      translator: normalizeText(translator) || TOUR_TRANSLATION_PROVIDER_DISPLAY
     }
   );
 }
@@ -1342,18 +1354,18 @@ async function translateTravelPlanLanguages(targets, { force = false } = {}) {
     .filter(Boolean);
   if (!workItems.length) return;
 
-  const firstBatch = workItems[0]?.fieldBatches?.[0] || [];
-  setTourPageOverlay(true, travelPlanTranslationOverlayMessage(workItems[0]?.targetLang));
+  setTourPageOverlay(true, travelPlanTranslationOverlayMessage(workItems[0]?.targetLang, TOUR_TRANSLATION_PROVIDER_DISPLAY));
   setStatus(backendT("tour.travel_plan_translation.translating", "Translating website content and travel plan..."));
   try {
     for (const workItem of workItems) {
       const targetLang = workItem.targetLang;
       for (const fieldBatch of workItem.fieldBatches) {
-        setTourPageOverlay(true, travelPlanTranslationOverlayMessage(targetLang));
+        setTourPageOverlay(true, travelPlanTranslationOverlayMessage(targetLang, TOUR_TRANSLATION_PROVIDER_DISPLAY));
         const sourceEntries = Object.fromEntries(fieldBatch.map((field) => [field.key, field.sourceText]));
-        const translatedEntries = await requestTourTranslation(targetLang, sourceEntries, {
+        const translationResult = await requestTourTranslation(targetLang, sourceEntries, {
           sourceLang: TRAVEL_PLAN_SOURCE_LANG
         });
+        const translatedEntries = translationResult?.entries || null;
         if (!translatedEntries) continue;
         applyTravelPlanTranslationEntries(plan, targetLang, translatedEntries, "machine");
       }

@@ -64,6 +64,8 @@ export const CONTRACT_ROUTE_DEFINITIONS = Object.freeze([
   { method: "GET", path: "/api/v1/payment-documents/{document_id}/pdf", handlerKey: "handleGetPaymentDocumentPdf" },
   { method: "GET", path: "/api/v1/keycloak_users", handlerKey: "handleListKeycloakUsers" },
   { method: "GET", path: "/api/v1/settings/observability", handlerKey: "handleGetSettingsObservability" },
+  { method: "GET", path: "/api/v1/settings/translation-rules", handlerKey: "handleGetSettingsTranslationRules" },
+  { method: "PATCH", path: "/api/v1/settings/translation-rules", handlerKey: "handlePatchSettingsTranslationRules" },
   { method: "GET", path: "/api/v1/staff-profiles", handlerKey: "handleListAtpStaffDirectoryEntries" },
   { method: "PATCH", path: "/api/v1/keycloak_users/{username}/staff-profile", handlerKey: "handlePatchAtpStaffProfile" },
   { method: "POST", path: "/api/v1/keycloak_users/{username}/staff-profile/translate-fields", handlerKey: "handleTranslateAtpStaffProfileFields" },

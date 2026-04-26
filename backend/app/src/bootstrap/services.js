@@ -16,6 +16,7 @@ import { createKeycloakDirectory } from "../lib/keycloak_directory.js";
 import { createStoreUtils } from "../lib/store_utils.js";
 import { createAtpStaffDirectory } from "../lib/atp_staff_directory.js";
 import { createCountryReferenceStore } from "../lib/country_reference_store.js";
+import { createTranslationRulesStore } from "../lib/translation_rules_store.js";
 
 export function createBackendServices({
   runtime,
@@ -82,6 +83,12 @@ export function createBackendServices({
 
   const countryReferenceStore = createCountryReferenceStore({
     dataPath: collections.countryReferenceInfoPath,
+    writeQueueRef,
+    nowIso: support.nowIso
+  });
+
+  const translationRulesStore = createTranslationRulesStore({
+    dataPath: collections.translationRulesPath,
     writeQueueRef,
     nowIso: support.nowIso
   });
@@ -207,6 +214,7 @@ export function createBackendServices({
     keycloakDirectory,
     atpStaffDirectory,
     countryReferenceStore,
+    translationRulesStore,
     travelPlanPdfArtifacts,
     metaWebhookHandlers,
     tourHelpers,

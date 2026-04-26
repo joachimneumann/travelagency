@@ -40,6 +40,7 @@ import {
   STAGING_ACCESS_CONFIG,
   TRAVELER_DETAILS_TOKEN_CONFIG,
   TRANSLATION_CLIENT,
+  TRANSLATION_RUNTIME_INFO,
   TRANSLATION_ENABLED
 } from "./config/runtime.js";
 import { createAuth } from "./auth.js";
@@ -202,6 +203,7 @@ const services = createBackendServices({
     atpStaffPhotosDir: RUNTIME_PATHS.atpStaffPhotosDir,
     keycloakUserSnapshotPath: RUNTIME_PATHS.keycloakUserSnapshotPath,
     countryReferenceInfoPath: RUNTIME_PATHS.countryReferenceInfoPath,
+    translationRulesPath: RUNTIME_PATHS.translationRulesPath,
     bookingTravelPlanAttachmentsDir: RUNTIME_PATHS.bookingTravelPlanAttachmentsDir,
     tempUploadDir: RUNTIME_PATHS.tempUploadDir,
     travelPlanPdfPreviewDir: RUNTIME_PATHS.travelPlanPdfPreviewDir,
@@ -233,6 +235,7 @@ const systemHandlers = createSystemHandlers({
   sendJson: httpHelpers.sendJson,
   nowIso,
   companyProfile: COMPANY_PROFILE,
+  translationRuntimeInfo: TRANSLATION_RUNTIME_INFO,
   mobileAppConfig: MOBILE_APP_CONFIG,
   mobileContractMetaPath: RUNTIME_PATHS.mobileContractMetaPath,
   backendGeneratedRequestFactoryPath: RUNTIME_PATHS.backendGeneratedRequestFactoryPath
@@ -275,6 +278,7 @@ export async function createBackendHandler({ port = PORT } = {}) {
   await pruneDirectoryContents(path.join(RUNTIME_PATHS.pdfsRoot, "invoices"));
   await services.atpStaffDirectory.ensureStorage();
   await services.countryReferenceStore.ensureStorage();
+  await services.translationRulesStore.ensureStorage();
   await services.atpStaffDirectory.syncProfilesFromKeycloak().catch(() => []);
   const startupStore = await services.storeUtils.readStore();
   const backfilledBookingPersons = startupStore.__bookingPersonsWritebackNeeded === true;

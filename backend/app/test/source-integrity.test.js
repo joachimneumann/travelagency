@@ -3613,6 +3613,11 @@ test("settings page hosts destination publication controls while emergency no lo
   );
   assert.match(
     settingsHtml,
+    /id="translationRulesPanel"[\s\S]*id="translationRulesStatus"[\s\S]*id="translationRulesAddBtn"[\s\S]*id="translationRulesSaveBtn"[\s\S]*id="translationRulesTable"/,
+    "Settings page should expose a global translation overrides section with status, add/save actions, and a table mount"
+  );
+  assert.match(
+    settingsHtml,
     /id="settingsObservabilityPanel"[\s\S]*id="settingsObservabilityStatus"[\s\S]*id="settingsObservabilityRefreshBtn"[\s\S]*id="settingsLoggedInUsers"[\s\S]*id="settingsLastChangedBooking"/,
     "Settings page should expose a backend activity section with a refresh action and mounts for active sessions plus the latest booking change"
   );
@@ -3620,6 +3625,11 @@ test("settings page hosts destination publication controls while emergency no lo
     settingsSource,
     /countryReferenceInfoRequest|countryReferenceInfoUpdateRequest/,
     "Settings page should use the generated country-reference API requests for website destination publication"
+  );
+  assert.match(
+    settingsSource,
+    /settingsTranslationRulesRequest|settingsTranslationRulesUpdateRequest/,
+    "Settings page should use the generated translation-rules API requests for the global overrides table"
   );
   assert.match(
     settingsSource,
@@ -3633,13 +3643,18 @@ test("settings page hosts destination publication controls while emergency no lo
   );
   assert.match(
     settingsSource,
-    /canReadStaffProfiles:\s*roles\.includes\(ROLES\.ADMIN\)[\s\S]*canEditStaffProfiles:\s*roles\.includes\(ROLES\.ADMIN\)[\s\S]*canReadWebsiteDestinationPublication:\s*roles\.includes\(ROLES\.ADMIN\)[\s\S]*canEditWebsiteDestinationPublication:\s*roles\.includes\(ROLES\.ADMIN\)[\s\S]*canReadSettings:\s*roles\.includes\(ROLES\.ADMIN\)[\s\S]*expectedRolesAnyOf:\s*\[ROLES\.ADMIN\]/,
+    /canReadStaffProfiles:\s*roles\.includes\(ROLES\.ADMIN\)[\s\S]*canEditStaffProfiles:\s*roles\.includes\(ROLES\.ADMIN\)[\s\S]*canReadWebsiteDestinationPublication:\s*roles\.includes\(ROLES\.ADMIN\)[\s\S]*canEditWebsiteDestinationPublication:\s*roles\.includes\(ROLES\.ADMIN\)[\s\S]*canReadTranslationRules:\s*roles\.includes\(ROLES\.ADMIN\)[\s\S]*canEditTranslationRules:\s*roles\.includes\(ROLES\.ADMIN\)[\s\S]*canReadEmergency:\s*roles\.includes\(ROLES\.ADMIN\)[\s\S]*canEditEmergency:\s*roles\.includes\(ROLES\.ADMIN\)[\s\S]*canReadSettings:\s*roles\.includes\(ROLES\.ADMIN\)[\s\S]*expectedRolesAnyOf:\s*\[ROLES\.ADMIN\]/,
     "Settings page should now be admin-only, including the website destination publication section"
   );
   assert.match(
     settingsSource,
     /async function saveWebsiteDestinationPublication\(\) \{[\s\S]*published_on_webpage:[\s\S]*countryReferenceInfoUpdateRequest/,
     "Settings page should save the published-on-webpage flags through the country-reference update route"
+  );
+  assert.match(
+    settingsSource,
+    /async function saveTranslationRules\(\) \{[\s\S]*settingsTranslationRulesUpdateRequest[\s\S]*items:\s*cloneTranslationRules\(state\.translationRulesDraftItems\)/,
+    "Settings page should save the global translation overrides through the translation-rules update route"
   );
   assert.match(
     navSource,
@@ -3903,31 +3918,67 @@ test("booking travel-plan translate contract accepts explicit source and target 
 
   assert.match(
     requestsCueSource,
-    /#BookingTravelPlanTranslateRequest:\s*\{[\s\S]*source_lang:\s+enums\.\#LanguageCode[\s\S]*target_lang:\s+enums\.\#LanguageCode/,
-    "The authored travel-plan translate request model should require source_lang and target_lang"
+    /#BookingTravelPlanTranslateRequest:\s*\{[\s\S]*source_lang:\s+enums\.\#LanguageCode[\s\S]*target_lang:\s+enums\.\#LanguageCode[\s\S]*translation_profile\?:\s+string/,
+    "The authored travel-plan translate request model should require source_lang and target_lang and allow translation_profile"
   );
   assert.match(
     normalizedIrSource,
-    /name:\s+"BookingTravelPlanTranslateRequest"[\s\S]*\{name: "source_lang", kind: "enum", typeName: "LanguageCode", required: true\}[\s\S]*\{name: "target_lang", kind: "enum", typeName: "LanguageCode", required: true\}/,
-    "The normalized API IR should keep source_lang and target_lang for travel-plan translation"
+    /name:\s+"BookingTravelPlanTranslateRequest"[\s\S]*\{name: "source_lang", kind: "enum", typeName: "LanguageCode", required: true\}[\s\S]*\{name: "target_lang", kind: "enum", typeName: "LanguageCode", required: true\}[\s\S]*\{name: "translation_profile", kind: "scalar", typeName: "string", required: false\}/,
+    "The normalized API IR should keep source_lang, target_lang, and translation_profile for travel-plan translation"
   );
   assert.match(
     openApiSource,
-    /BookingTravelPlanTranslateRequest:[\s\S]*required:[\s\S]*- source_lang[\s\S]*- target_lang[\s\S]*properties:[\s\S]*source_lang:[\s\S]*target_lang:/,
-    "The generated OpenAPI schema should require source_lang and target_lang for travel-plan translation"
+    /BookingTravelPlanTranslateRequest:[\s\S]*required:[\s\S]*- source_lang[\s\S]*- target_lang[\s\S]*properties:[\s\S]*source_lang:[\s\S]*target_lang:[\s\S]*translation_profile:/,
+    "The generated OpenAPI schema should require source_lang and target_lang and expose translation_profile for travel-plan translation"
   );
   const generatedSchemaBlock = generatedModelsSource.match(
     /export const BOOKING_TRAVEL_PLAN_TRANSLATE_REQUEST_SCHEMA = \{[\s\S]*?\n\s*\};/
   )?.[0] || "";
   assert.match(
     generatedSchemaBlock,
-    /"name":"source_lang"[\s\S]*"name":"target_lang"/,
-    "The shared runtime validator should accept source_lang and target_lang for travel-plan translation"
+    /"name":"source_lang"[\s\S]*"name":"target_lang"[\s\S]*"name":"translation_profile"/,
+    "The shared runtime validator should accept source_lang, target_lang, and translation_profile for travel-plan translation"
   );
   assert.equal(
     generatedSchemaBlock.includes('"name":"lang"'),
     false,
     "The shared runtime validator should not keep the legacy lang-only travel-plan translation schema"
+  );
+});
+
+test("frontend translation requests send explicit translation profiles", async () => {
+  const repoRoot = path.resolve(__dirname, "..", "..", "..");
+  const [
+    tourSource,
+    localizedEditorSource,
+    travelPlanEditorSource,
+    settingsSource
+  ] = await Promise.all([
+    readFile(path.join(repoRoot, "frontend", "scripts", "pages", "tour.js"), "utf8"),
+    readFile(path.join(repoRoot, "frontend", "scripts", "booking", "localized_editor.js"), "utf8"),
+    readFile(path.join(repoRoot, "frontend", "scripts", "shared", "travel_plan_editor_core.js"), "utf8"),
+    readFile(path.join(repoRoot, "frontend", "scripts", "pages", "settings_list.js"), "utf8")
+  ]);
+
+  assert.match(
+    tourSource,
+    /const translationProfile = normalizeText\(options\?\.translationProfile \|\| "marketing_trip_copy"\) \|\| "marketing_trip_copy";[\s\S]*translation_profile: translationProfile/,
+    "Tour translation requests should default to the marketing_trip_copy profile"
+  );
+  assert.match(
+    localizedEditorSource,
+    /translationProfile = "customer_travel_plan"[\s\S]*translation_profile: normalizedTranslationProfile/,
+    "Booking field translation requests should default to the customer_travel_plan profile"
+  );
+  assert.match(
+    travelPlanEditorSource,
+    /bookingTravelPlanTranslateRequest\(\{[\s\S]*translation_profile: "customer_travel_plan"/,
+    "Full travel-plan translation requests should send the customer_travel_plan profile"
+  );
+  assert.match(
+    settingsSource,
+    /keycloakUserStaffProfileTranslateFieldsRequest\(\{[\s\S]*translation_profile: "staff_profile"/,
+    "Staff profile translation requests should send the staff_profile profile"
   );
 });
 
@@ -4176,6 +4227,24 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
     localhostDiagnosticsSource,
     /attributeValue\(target, "data-src"\)[\s\S]*attributeValue\(target, "poster"\)/,
     "Localhost diagnostics should surface deferred media URLs so local resource failures identify the failing asset"
+  );
+  const systemHandlersSource = await readFile(path.resolve(__dirname, "..", "src", "http", "handlers", "system.js"), "utf8");
+  const tourPageSource = await readFile(path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "tour.js"), "utf8");
+  const travelPlanEditorCoreSource = await readFile(travelPlanEditorCorePath(), "utf8");
+  assert.match(
+    systemHandlersSource,
+    /translation:\s*publicTranslationRuntimeInfo\(\)/,
+    "Health responses should expose translation runtime info so the frontend can label the active translator"
+  );
+  assert.match(
+    travelPlanEditorCoreSource,
+    /fetchApiJson\("\/health",[\s\S]*booking\.translation\.translating_current_overlay",[\s\S]*using \{translator\}/,
+    "Booking travel-plan overlays should load translation runtime info and show the active translator in the wait message"
+  );
+  assert.match(
+    tourPageSource,
+    /TOUR_TRANSLATION_PROVIDER_DISPLAY = "google"[\s\S]*tour\.travel_plan_translation\.translating_current_overlay",[\s\S]*using \{translator\}/,
+    "Marketing tour overlays should identify the Google translation provider in the wait message"
   );
   assert.match(
     stagingCaddy,

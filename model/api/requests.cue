@@ -135,10 +135,21 @@ import (
 }
 
 #TranslationEntriesRequest: {
-	source_lang: enums.#LanguageCode
-	target_lang: enums.#LanguageCode
-	actor?:      string
+	source_lang:          enums.#LanguageCode
+	target_lang:          enums.#LanguageCode
+	translation_profile?: string
+	actor?:               string
 	entries: [...#TranslationEntry]
+}
+
+#TranslationRule: {
+	source:      string
+	target_lang: enums.#LanguageCode
+	target:      string
+}
+
+#TranslationRulesUpdateRequest: {
+	items: [...#TranslationRule]
 }
 
 #BookingTravelPlanUpdateRequest: {
@@ -151,6 +162,7 @@ import (
 	expected_travel_plan_revision?: >=0 & int
 	source_lang:                    enums.#LanguageCode
 	target_lang:                    enums.#LanguageCode
+	translation_profile?:           string
 	actor?:                         string
 }
 

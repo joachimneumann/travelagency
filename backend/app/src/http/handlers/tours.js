@@ -39,6 +39,8 @@ export function createTourHandlers(deps) {
     resolveLocalizedText,
     setLocalizedTextForLang,
     translateEntries,
+    translateEntriesWithMeta,
+    readTranslationRules,
     normalizeTourLang,
     normalizeTourDestinationCode,
     normalizeTourStyleCode,
@@ -119,6 +121,17 @@ export function createTourHandlers(deps) {
     return Object.entries(entries || {})
       .map(([key, value]) => ({ key: normalizeText(key), value: normalizeText(value) }))
       .filter((entry) => Boolean(entry.key && entry.value));
+  }
+
+  function translationProviderResponseHeaders(provider) {
+    const kind = normalizeText(provider?.kind).toLowerCase();
+    const model = normalizeText(provider?.model);
+    const display = normalizeText(provider?.display || (kind === "openai" ? model : kind));
+    return {
+      ...(kind ? { "X-ATP-Translation-Provider": kind } : {}),
+      ...(model ? { "X-ATP-Translation-Provider-Model": model } : {}),
+      ...(display ? { "X-ATP-Translation-Provider-Display": display } : {})
+    };
   }
 
   function requestLang(reqUrl) {
@@ -544,6 +557,10 @@ export function createTourHandlers(deps) {
 
     const sourceLang = normalizeTourLang(payload.source_lang);
     const targetLang = normalizeTourLang(payload.target_lang);
+    const translationProfile = normalizeText(payload.translation_profile) || "marketing_trip_copy";
+    const translationRules = typeof readTranslationRules === "function"
+      ? (await readTranslationRules()).items
+      : [];
     const entries = translationEntriesToObject(payload.entries);
     const traceId = `tour_${randomUUID()}`;
     const requestStartMs = nowMs();
@@ -582,13 +599,29 @@ export function createTourHandlers(deps) {
     }
 
     try {
-      const translatedEntries = await translateEntries(entries, targetLang, {
-        sourceLangCode: sourceLang,
-        domain: "tour marketing copy",
-        provider: "google",
-        cacheNamespace: "tour-marketing-copy",
-        traceId
-      });
+      const translationResult = translateEntriesWithMeta
+        ? await translateEntriesWithMeta(entries, targetLang, {
+            sourceLangCode: sourceLang,
+            domain: "tour marketing copy",
+            provider: "google",
+            cacheNamespace: "tour-marketing-copy",
+            translationProfile,
+            translationRules,
+            traceId
+          })
+        : {
+            entries: await translateEntries(entries, targetLang, {
+              sourceLangCode: sourceLang,
+              domain: "tour marketing copy",
+              provider: "google",
+              cacheNamespace: "tour-marketing-copy",
+              translationProfile,
+              translationRules,
+              traceId
+            }),
+            provider: { kind: "google", model: "", display: "google" }
+          };
+      const translatedEntries = translationResult?.entries || {};
       logTourTranslationTiming("Request finished", {
         trace_id: traceId,
         source_lang: sourceLang,
@@ -600,7 +633,7 @@ export function createTourHandlers(deps) {
         source_lang: sourceLang,
         target_lang: targetLang,
         entries: translationEntriesFromObject(translatedEntries)
-      });
+      }, translationProviderResponseHeaders(translationResult?.provider));
     } catch (error) {
       logTourTranslationTiming("Request failed", {
         trace_id: traceId,

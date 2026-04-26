@@ -451,10 +451,13 @@ export async function requestBookingFieldTranslation({
   apiBase = "",
   actor = null,
   sourceLang = bookingSourceLang(),
-  targetLang = bookingContentLang()
+  targetLang = bookingContentLang(),
+  translationProfile = "customer_travel_plan",
+  includeMeta = false
 }) {
   const normalizedSourceLang = normalizeBookingContentLang(sourceLang || DEFAULT_CONTENT_LANG);
   const normalizedTargetLang = normalizeBookingContentLang(targetLang || DEFAULT_CONTENT_LANG);
+  const normalizedTranslationProfile = String(translationProfile || "").trim() || "customer_travel_plan";
   const payloadEntries = Object.fromEntries(
     Object.entries(entries || {})
       .map(([key, value]) => [String(key || "").trim(), String(value || "").trim()])
@@ -470,6 +473,7 @@ export async function requestBookingFieldTranslation({
       body: {
         source_lang: normalizedSourceLang,
         target_lang: normalizedTargetLang,
+        translation_profile: normalizedTranslationProfile,
         actor,
         entries: Object.entries(payloadEntries).map(([key, value]) => ({ key, value }))
       }
@@ -480,6 +484,7 @@ export async function requestBookingFieldTranslation({
       api_base: resolvedApiBase,
       source_lang: normalizedSourceLang,
       target_lang: normalizedTargetLang,
+      translation_profile: normalizedTranslationProfile,
       actor,
       entry_keys: Object.keys(payloadEntries),
       entry_values: payloadEntries
@@ -488,23 +493,32 @@ export async function requestBookingFieldTranslation({
   }
   const response = await fetchBookingMutation(request.url, {
     method: request.method,
-    body: request.body
+    body: request.body,
+    includeResponseMeta: includeMeta
   });
-  if (!Array.isArray(response?.entries)) {
+  const payload = includeMeta ? response?.payload : response;
+  if (!Array.isArray(payload?.entries)) {
     logBrowserConsoleError("[translation] Booking field translation returned no translated entries.", {
       booking_id: bookingId,
       request_url: request.url,
       source_lang: normalizedSourceLang,
       target_lang: normalizedTargetLang,
+      translation_profile: normalizedTranslationProfile,
       actor,
       entry_keys: Object.keys(payloadEntries),
-      response_payload: response
+      response_payload: payload
     });
     return null;
   }
-  return Object.fromEntries(
-    response.entries
+  const translatedEntries = Object.fromEntries(
+    payload.entries
       .map((entry) => [String(entry?.key || "").trim(), String(entry?.value || "").trim()])
       .filter(([key, value]) => Boolean(key && value))
   );
+  return includeMeta
+    ? {
+        entries: translatedEntries,
+        translationProvider: response?.responseMeta?.translationProvider || null
+      }
+    : translatedEntries;
 }

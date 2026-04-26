@@ -148,6 +148,10 @@ case "keycloak_users":
   return RequestFactory.keycloakUsersRequest(options);
 case "settings_observability":
   return RequestFactory.settingsObservabilityRequest(options);
+case "settings_translation_rules":
+  return RequestFactory.settingsTranslationRulesRequest(options);
+case "settings_translation_rules_update":
+  return RequestFactory.settingsTranslationRulesUpdateRequest(options);
 case "staff_profiles":
   return RequestFactory.staffProfilesRequest(options);
 case "keycloak_user_staff_profile_update":

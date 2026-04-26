@@ -13,6 +13,8 @@ import {
   keycloakUserStaffProfileUpdateRequest,
   keycloakUserStaffProfileTranslateFieldsRequest,
   keycloakUserStaffProfilePictureUploadRequest,
+  settingsTranslationRulesRequest,
+  settingsTranslationRulesUpdateRequest,
   toursRequest
 } from "../../Generated/API/generated_APIRequestFactory.js";
 import {
@@ -53,6 +55,11 @@ const els = {
   websiteDestinationPublicationStatus: document.getElementById("websiteDestinationPublicationStatus"),
   websiteDestinationPublicationList: document.getElementById("websiteDestinationPublicationList"),
   websiteDestinationPublicationSaveBtn: document.getElementById("websiteDestinationPublicationSaveBtn"),
+  translationRulesPanel: document.getElementById("translationRulesPanel"),
+  translationRulesStatus: document.getElementById("translationRulesStatus"),
+  translationRulesTable: document.getElementById("translationRulesTable"),
+  translationRulesAddBtn: document.getElementById("translationRulesAddBtn"),
+  translationRulesSaveBtn: document.getElementById("translationRulesSaveBtn"),
   emergencyPanel: document.getElementById("emergencyPanel"),
   emergencyStatus: document.getElementById("emergencyStatus"),
   emergencyList: document.getElementById("emergencyList"),
@@ -205,6 +212,8 @@ const state = {
     canEditStaffProfiles: false,
     canReadWebsiteDestinationPublication: false,
     canEditWebsiteDestinationPublication: false,
+    canReadTranslationRules: false,
+    canEditTranslationRules: false,
     canReadEmergency: false,
     canEditEmergency: false
   },
@@ -222,6 +231,10 @@ const state = {
   websiteDestinationPublicationInitialByCountry: {},
   websiteDestinationPublicationDraftByCountry: {},
   websiteDestinationPublicationSaving: false,
+  translationRulesLoaded: false,
+  translationRulesInitialItems: [],
+  translationRulesDraftItems: [],
+  translationRulesSaving: false,
   emergencyItems: [],
   emergencyLoaded: false,
   emergencyDirty: false,
@@ -255,6 +268,146 @@ function hasAnyRoleInList(roleList, ...roles) {
 function countryLabel(countryCode) {
   const normalizedCountry = normalizeText(countryCode).toUpperCase();
   return normalizeText(COUNTRY_LABEL_BY_VALUE.get(normalizedCountry)) || normalizedCountry;
+}
+
+function defaultTranslationRuleTargetLang() {
+  const preferred = currentStaffSourceLang() === "en" ? "vi" : currentStaffSourceLang();
+  const normalizedPreferred = normalizeText(preferred).toLowerCase();
+  if (LANGUAGE_LABEL_BY_VALUE.has(normalizedPreferred)) return normalizedPreferred;
+  return normalizeText(LANGUAGE_OPTIONS[0]?.value).toLowerCase() || "vi";
+}
+
+function normalizeTranslationRules(items) {
+  return Array.from(
+    new Map(
+      flattenTranslationRuleGroups(items)
+        .filter((item) => item.source && item.target && LANGUAGE_LABEL_BY_VALUE.has(item.target_lang))
+        .map((item) => [`${item.target_lang}\u0000${item.source}`, item])
+    ).values()
+  ).sort((left, right) => {
+    const sourceCompare = normalizeText(left?.source).localeCompare(normalizeText(right?.source), "en", {
+      sensitivity: "base"
+    });
+    if (sourceCompare !== 0) return sourceCompare;
+    return normalizeText(left?.target_lang).localeCompare(normalizeText(right?.target_lang), "en", {
+      sensitivity: "base"
+    });
+  });
+}
+
+function translationRuleTargetDrafts(item) {
+  const targets = [];
+  if (Array.isArray(item?.targets)) {
+    for (const target of item.targets) {
+      targets.push({
+        target_lang: normalizeText(target?.target_lang).toLowerCase(),
+        target: normalizeText(target?.target)
+      });
+    }
+  } else if (item?.targets && typeof item.targets === "object") {
+    for (const [target_lang, target] of Object.entries(item.targets)) {
+      targets.push({
+        target_lang: normalizeText(target_lang).toLowerCase(),
+        target: normalizeText(target)
+      });
+    }
+  }
+
+  if (Object.hasOwn(item || {}, "target_lang") || Object.hasOwn(item || {}, "target")) {
+    targets.push({
+      target_lang: normalizeText(item?.target_lang).toLowerCase(),
+      target: normalizeText(item?.target)
+    });
+  }
+  return targets;
+}
+
+function normalizeTranslationRuleTargetDraft(target) {
+  const target_lang = normalizeText(target?.target_lang).toLowerCase();
+  return {
+    target_lang: LANGUAGE_LABEL_BY_VALUE.has(target_lang) ? target_lang : defaultTranslationRuleTargetLang(),
+    target: normalizeText(target?.target)
+  };
+}
+
+function sanitizeTranslationRuleDraftItems(items) {
+  const groups = [];
+  const groupBySource = new Map();
+  for (const item of Array.isArray(items) ? items : []) {
+    const source = normalizeText(item?.source);
+    const targets = translationRuleTargetDrafts(item).map(normalizeTranslationRuleTargetDraft);
+    const nextTargets = targets.length ? targets : [buildEmptyTranslationRuleTarget()];
+    if (!source) {
+      groups.push({
+        source,
+        targets: nextTargets
+      });
+      continue;
+    }
+
+    const existing = groupBySource.get(source);
+    if (existing) {
+      existing.targets.push(...nextTargets);
+      continue;
+    }
+
+    const group = {
+      source,
+      targets: nextTargets
+    };
+    groupBySource.set(source, group);
+    groups.push(group);
+  }
+  return groups;
+}
+
+function flattenTranslationRuleGroups(items) {
+  return sanitizeTranslationRuleDraftItems(items).flatMap((item) => (
+    item.targets.map((target) => ({
+      source: normalizeText(item?.source),
+      target_lang: normalizeText(target?.target_lang).toLowerCase(),
+      target: normalizeText(target?.target)
+    }))
+  ));
+}
+
+function cloneTranslationRules(items) {
+  return normalizeTranslationRules(items).map((item) => ({
+    source: normalizeText(item?.source),
+    target_lang: normalizeText(item?.target_lang).toLowerCase(),
+    target: normalizeText(item?.target)
+  }));
+}
+
+function hasInvalidTranslationRuleDrafts() {
+  return sanitizeTranslationRuleDraftItems(state.translationRulesDraftItems).some((item) => {
+    const hasAnyValue = Boolean(item.source || item.targets.some((target) => target.target));
+    if (!hasAnyValue) return false;
+    if (!item.source) return true;
+    const seenTargetLangs = new Set();
+    return item.targets.some((target) => {
+      const hasTargetValue = Boolean(target.target);
+      if (!hasTargetValue) return true;
+      if (!LANGUAGE_LABEL_BY_VALUE.has(target.target_lang) || seenTargetLangs.has(target.target_lang)) return true;
+      seenTargetLangs.add(target.target_lang);
+      return false;
+    });
+  });
+}
+
+function isTranslationRulesDirty() {
+  if (!state.permissions.canEditTranslationRules) return false;
+  return JSON.stringify(sanitizeTranslationRuleDraftItems(state.translationRulesDraftItems))
+    !== JSON.stringify(sanitizeTranslationRuleDraftItems(state.translationRulesInitialItems));
+}
+
+function updateTranslationRulesSaveButtonState() {
+  if (!els.translationRulesSaveBtn) return;
+  els.translationRulesSaveBtn.disabled = !state.permissions.canEditTranslationRules
+    || !state.translationRulesLoaded
+    || state.translationRulesSaving
+    || hasInvalidTranslationRuleDrafts()
+    || !isTranslationRulesDirty();
 }
 
 function applyBackendI18n(root) {
@@ -338,6 +491,12 @@ function showWebsiteDestinationPublicationStatus(message, isError = false) {
 
 function clearWebsiteDestinationPublicationStatus() {
   showWebsiteDestinationPublicationStatus("", false);
+}
+
+function showTranslationRulesStatus(message = "", isError = false) {
+  if (!els.translationRulesStatus) return;
+  els.translationRulesStatus.textContent = normalizeText(message);
+  els.translationRulesStatus.classList.toggle("is-error", Boolean(isError));
 }
 
 function showEmergencyStatus(message = "", isError = false) {
@@ -524,6 +683,8 @@ async function init() {
       canEditStaffProfiles: roles.includes(ROLES.ADMIN),
       canReadWebsiteDestinationPublication: roles.includes(ROLES.ADMIN),
       canEditWebsiteDestinationPublication: roles.includes(ROLES.ADMIN),
+      canReadTranslationRules: roles.includes(ROLES.ADMIN),
+      canEditTranslationRules: roles.includes(ROLES.ADMIN),
       canReadEmergency: roles.includes(ROLES.ADMIN),
       canEditEmergency: roles.includes(ROLES.ADMIN),
       canReadSettings: roles.includes(ROLES.ADMIN)
@@ -544,6 +705,8 @@ async function init() {
     canEditStaffProfiles: Boolean(authState.permissions?.canEditStaffProfiles),
     canReadWebsiteDestinationPublication: Boolean(authState.permissions?.canReadWebsiteDestinationPublication),
     canEditWebsiteDestinationPublication: Boolean(authState.permissions?.canEditWebsiteDestinationPublication),
+    canReadTranslationRules: Boolean(authState.permissions?.canReadTranslationRules),
+    canEditTranslationRules: Boolean(authState.permissions?.canEditTranslationRules),
     canReadEmergency: Boolean(authState.permissions?.canReadEmergency),
     canEditEmergency: Boolean(authState.permissions?.canEditEmergency)
   };
@@ -555,6 +718,7 @@ async function init() {
       state.permissions.canReadObservability ? loadObservability() : Promise.resolve(),
       state.permissions.canReadStaffProfiles ? loadStaffDirectoryEntries() : Promise.resolve(),
       state.permissions.canEditStaffProfiles ? loadDestinationOptions() : Promise.resolve(),
+      state.permissions.canReadTranslationRules ? loadTranslationRules() : Promise.resolve(),
       (state.permissions.canReadWebsiteDestinationPublication || state.permissions.canReadEmergency)
         ? loadWebsiteDestinationPublication()
         : Promise.resolve()
@@ -573,6 +737,74 @@ function bindEvents() {
   els.websiteDestinationPublicationList?.addEventListener("change", handleWebsiteDestinationPublicationToggle);
   els.websiteDestinationPublicationSaveBtn?.addEventListener("click", () => {
     void saveWebsiteDestinationPublication();
+  });
+  els.translationRulesAddBtn?.addEventListener("click", () => {
+    syncTranslationRulesStateFromDom();
+    state.translationRulesDraftItems = [...state.translationRulesDraftItems, buildEmptyTranslationRule()];
+    renderTranslationRules();
+    showTranslationRulesStatus(backendT("backend.settings.translation_rules.unsaved", "Unsaved changes."));
+    updateTranslationRulesSaveButtonState();
+  });
+  els.translationRulesSaveBtn?.addEventListener("click", () => {
+    void saveTranslationRules();
+  });
+  els.translationRulesTable?.addEventListener("input", () => {
+    markTranslationRulesDirty();
+  });
+  els.translationRulesTable?.addEventListener("change", () => {
+    markTranslationRulesDirty();
+  });
+  els.translationRulesTable?.addEventListener("click", (event) => {
+    const target = event.target instanceof Element ? event.target : null;
+    if (!target || !state.permissions.canEditTranslationRules) return;
+    const addTargetButton = target.closest("[data-translation-rule-add-target]");
+    if (addTargetButton) {
+      syncTranslationRulesStateFromDom();
+      const rowIndex = Number(addTargetButton.getAttribute("data-translation-rule-add-target"));
+      if (!Number.isInteger(rowIndex) || rowIndex < 0 || !state.translationRulesDraftItems[rowIndex]) return;
+      state.translationRulesDraftItems[rowIndex] = {
+        ...state.translationRulesDraftItems[rowIndex],
+        targets: [
+          ...(Array.isArray(state.translationRulesDraftItems[rowIndex]?.targets)
+            ? state.translationRulesDraftItems[rowIndex].targets
+            : []),
+          buildEmptyTranslationRuleTarget()
+        ]
+      };
+      renderTranslationRules();
+      showTranslationRulesStatus(backendT("backend.settings.translation_rules.unsaved", "Unsaved changes."));
+      updateTranslationRulesSaveButtonState();
+      return;
+    }
+
+    const removeTargetButton = target.closest("[data-translation-rule-remove-target]");
+    if (removeTargetButton) {
+      syncTranslationRulesStateFromDom();
+      const rowIndex = Number(removeTargetButton.getAttribute("data-translation-rule-remove-target"));
+      const targetIndex = Number(removeTargetButton.getAttribute("data-translation-rule-target-index"));
+      if (!Number.isInteger(rowIndex) || rowIndex < 0 || !Number.isInteger(targetIndex) || targetIndex < 0) return;
+      const item = state.translationRulesDraftItems[rowIndex];
+      if (!item) return;
+      const nextTargets = (Array.isArray(item.targets) ? item.targets : []).filter((_, index) => index !== targetIndex);
+      state.translationRulesDraftItems[rowIndex] = {
+        ...item,
+        targets: nextTargets.length ? nextTargets : [buildEmptyTranslationRuleTarget()]
+      };
+      renderTranslationRules();
+      showTranslationRulesStatus(backendT("backend.settings.translation_rules.unsaved", "Unsaved changes."));
+      updateTranslationRulesSaveButtonState();
+      return;
+    }
+
+    const removeButton = target.closest("[data-translation-rule-remove]");
+    if (!removeButton) return;
+    syncTranslationRulesStateFromDom();
+    const rowIndex = Number(removeButton.getAttribute("data-translation-rule-remove"));
+    if (!Number.isInteger(rowIndex) || rowIndex < 0) return;
+    state.translationRulesDraftItems = state.translationRulesDraftItems.filter((_, index) => index !== rowIndex);
+    renderTranslationRules();
+    showTranslationRulesStatus(backendT("backend.settings.translation_rules.unsaved", "Unsaved changes."));
+    updateTranslationRulesSaveButtonState();
   });
   els.emergencyAddCountryBtn?.addEventListener("click", handleAddEmergencyCountry);
   els.emergencySaveBtn?.addEventListener("click", () => {
@@ -720,6 +952,9 @@ function renderPermissionScopedSections() {
   }
   if (els.websiteDestinationPublicationPanel) {
     els.websiteDestinationPublicationPanel.hidden = !state.permissions.canReadWebsiteDestinationPublication;
+  }
+  if (els.translationRulesPanel) {
+    els.translationRulesPanel.hidden = !state.permissions.canReadTranslationRules;
   }
   if (els.emergencyPanel) {
     els.emergencyPanel.hidden = !state.permissions.canReadEmergency;
@@ -878,6 +1113,163 @@ function updateWebsiteDestinationPublicationSaveButtonState() {
   els.websiteDestinationPublicationSaveBtn.disabled = !state.permissions.canEditWebsiteDestinationPublication
     || state.websiteDestinationPublicationSaving
     || !isWebsiteDestinationPublicationDirty();
+}
+
+function buildEmptyTranslationRuleTarget() {
+  return {
+    target_lang: defaultTranslationRuleTargetLang(),
+    target: ""
+  };
+}
+
+function buildEmptyTranslationRule() {
+  return {
+    source: "",
+    targets: [buildEmptyTranslationRuleTarget()]
+  };
+}
+
+function renderTranslationRules() {
+  if (!els.translationRulesTable) return;
+  if (!state.permissions.canReadTranslationRules) {
+    els.translationRulesTable.innerHTML = "";
+    updateTranslationRulesSaveButtonState();
+    return;
+  }
+
+  const items = Array.isArray(state.translationRulesDraftItems) ? state.translationRulesDraftItems : [];
+  const header = `<thead><tr>
+    <th>${escapeHtml(backendT("backend.settings.translation_rules.source", "Source"))}</th>
+    <th>${escapeHtml(backendT("backend.settings.translation_rules.target", "Target translations"))}</th>
+    <th></th>
+  </tr></thead>`;
+  const rows = items.map((item, index) => `
+    <tr data-translation-rule-row="${index}">
+      <td>
+        <textarea class="settings-translation-rules__textarea" rows="3" data-translation-rule-source>${escapeHtml(item?.source || "")}</textarea>
+      </td>
+      <td>
+        <div class="settings-translation-rules__targets">
+          ${(Array.isArray(item?.targets) && item.targets.length ? item.targets : [buildEmptyTranslationRuleTarget()]).map((target, targetIndex) => `
+            <div class="settings-translation-rules__target-row" data-translation-rule-target-row>
+              <select class="settings-translation-rules__lang" data-translation-rule-target-lang>
+                ${LANGUAGE_OPTIONS.map((option) => {
+                  const value = normalizeText(option?.value).toLowerCase();
+                  const label = normalizeText(option?.label) || value.toUpperCase();
+                  return `<option value="${escapeHtml(value)}" ${value === normalizeText(target?.target_lang).toLowerCase() ? "selected" : ""}>${escapeHtml(label)}</option>`;
+                }).join("")}
+              </select>
+              <textarea class="settings-translation-rules__textarea" rows="2" data-translation-rule-target>${escapeHtml(target?.target || "")}</textarea>
+              <button class="btn btn-ghost settings-translation-rules__remove" type="button" data-translation-rule-remove-target="${index}" data-translation-rule-target-index="${targetIndex}">${escapeHtml(backendT("common.remove", "Remove"))}</button>
+            </div>
+          `).join("")}
+          <button class="btn btn-ghost settings-translation-rules__add-target" type="button" data-translation-rule-add-target="${index}">${escapeHtml(backendT("backend.settings.translation_rules.add_language", "Add language"))}</button>
+        </div>
+      </td>
+      <td>
+        <button class="btn btn-ghost settings-translation-rules__remove" type="button" data-translation-rule-remove="${index}">${escapeHtml(backendT("common.remove", "Remove"))}</button>
+      </td>
+    </tr>
+  `).join("");
+  const emptyRow = `<tr><td colspan="3" class="settings-translation-rules__empty">${escapeHtml(backendT("backend.settings.translation_rules.empty", "No translation overrides yet."))}</td></tr>`;
+  els.translationRulesTable.innerHTML = `${header}<tbody>${rows || emptyRow}</tbody>`;
+  applyBackendI18n(els.translationRulesTable);
+  updateTranslationRulesSaveButtonState();
+}
+
+function readTranslationRulesFromDom() {
+  if (!els.translationRulesTable) return sanitizeTranslationRuleDraftItems(state.translationRulesDraftItems);
+  const rows = Array.from(els.translationRulesTable.querySelectorAll("[data-translation-rule-row]"));
+  if (!rows.length) return [];
+  return sanitizeTranslationRuleDraftItems(rows.map((row) => ({
+    source: row.querySelector("[data-translation-rule-source]")?.value,
+    targets: Array.from(row.querySelectorAll("[data-translation-rule-target-row]")).map((targetRow) => ({
+      target_lang: targetRow.querySelector("[data-translation-rule-target-lang]")?.value,
+      target: targetRow.querySelector("[data-translation-rule-target]")?.value
+    }))
+  })));
+}
+
+function syncTranslationRulesStateFromDom() {
+  state.translationRulesDraftItems = readTranslationRulesFromDom();
+}
+
+function markTranslationRulesDirty() {
+  if (!state.permissions.canEditTranslationRules) return;
+  syncTranslationRulesStateFromDom();
+  showTranslationRulesStatus(backendT("backend.settings.translation_rules.unsaved", "Unsaved changes."));
+  updateTranslationRulesSaveButtonState();
+}
+
+async function loadTranslationRules() {
+  if (!state.permissions.canReadTranslationRules) {
+    renderTranslationRules();
+    return;
+  }
+
+  showTranslationRulesStatus(backendT("backend.settings.translation_rules.loading", "Loading translation overrides..."));
+  try {
+    const request = settingsTranslationRulesRequest({ baseURL: apiOrigin });
+    const payload = await fetchApi(request.url, { suppressNotFound: true });
+    if (!payload) {
+      state.translationRulesLoaded = false;
+      state.translationRulesInitialItems = [];
+      state.translationRulesDraftItems = [];
+      renderTranslationRules();
+      showTranslationRulesStatus(backendT("backend.settings.translation_rules.load_failed", "Could not load translation overrides."), true);
+      return;
+    }
+    state.translationRulesLoaded = true;
+    state.translationRulesInitialItems = cloneTranslationRules(payload?.items);
+    state.translationRulesDraftItems = sanitizeTranslationRuleDraftItems(payload?.items);
+    renderTranslationRules();
+    showTranslationRulesStatus(backendT("backend.settings.translation_rules.ready", "Translation overrides loaded."));
+  } catch (error) {
+    console.error("[backend-settings] Failed to load translation overrides.", {
+      error,
+      apiOrigin,
+      user: state.authUser?.username || state.authUser?.sub || null
+    });
+    state.translationRulesLoaded = false;
+    state.translationRulesInitialItems = [];
+    state.translationRulesDraftItems = [];
+    renderTranslationRules();
+    showTranslationRulesStatus(backendT("backend.settings.translation_rules.load_failed", "Could not load translation overrides."), true);
+  }
+}
+
+async function saveTranslationRules() {
+  if (!state.permissions.canEditTranslationRules || state.translationRulesSaving) return;
+  syncTranslationRulesStateFromDom();
+  if (!isTranslationRulesDirty()) {
+    updateTranslationRulesSaveButtonState();
+    return;
+  }
+
+  state.translationRulesSaving = true;
+  updateTranslationRulesSaveButtonState();
+  showTranslationRulesStatus(backendT("backend.settings.translation_rules.saving", "Saving translation overrides..."));
+  try {
+    const request = settingsTranslationRulesUpdateRequest({ baseURL: apiOrigin });
+    const payload = await fetchApi(request.url, {
+      method: request.method,
+      body: {
+        items: cloneTranslationRules(state.translationRulesDraftItems)
+      }
+    });
+    if (!payload) {
+      showTranslationRulesStatus(backendT("backend.settings.translation_rules.save_failed", "Could not save translation overrides."), true);
+      return;
+    }
+    state.translationRulesLoaded = true;
+    state.translationRulesInitialItems = cloneTranslationRules(payload?.items);
+    state.translationRulesDraftItems = sanitizeTranslationRuleDraftItems(payload?.items);
+    renderTranslationRules();
+    showTranslationRulesStatus(backendT("backend.settings.translation_rules.saved", "Translation overrides saved."));
+  } finally {
+    state.translationRulesSaving = false;
+    updateTranslationRulesSaveButtonState();
+  }
 }
 
 function buildEmptyEmergencyCountryItem(country) {
@@ -1993,6 +2385,7 @@ async function requestStaffTranslation(targetLang, entries) {
     body: {
       source_lang: sourceLang,
       target_lang: targetLang,
+      translation_profile: "staff_profile",
       entries: Object.entries(entries).map(([key, value]) => ({ key, value }))
     }
   });
