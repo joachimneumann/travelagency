@@ -79,6 +79,7 @@ run_staging_tests() {
   echo "Running staging pre-deploy tests..."
   docker_compose -p "$PROJECT_NAME" --env-file "$ENV_FILE" -f "$COMPOSE_FILE" build backend
   docker_compose -p "$PROJECT_NAME" --env-file "$ENV_FILE" -f "$COMPOSE_FILE" run --rm --no-deps backend \
+    env WEB_INQUIRY_NOTIFICATION_ENABLED=false \
     node --test test/mobile-contract.test.js test/source-integrity.test.js
 }
 
