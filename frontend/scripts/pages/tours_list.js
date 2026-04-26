@@ -3,7 +3,8 @@ import {
   escapeHtml,
   formatDateTime,
   fetchApiJson,
-  normalizeText
+  normalizeText,
+  resolveApiUrl
 } from "../shared/api.js";
 import { GENERATED_APP_ROLES } from "../../Generated/Models/generated_Roles.js";
 import { tourDeleteRequest, toursRequest } from "../../Generated/API/generated_APIRequestFactory.js";
@@ -451,31 +452,86 @@ function renderToursMatrix(matrix, totalTours) {
 
 function renderTours(items) {
   const canEditTours = state.permissions.canEditTours;
-  const header = `<thead><tr><th class="tour-list__title-col">${escapeHtml(backendT("backend.table.title", "Title"))}</th><th class="tour-list__center-col">${escapeHtml(backendT("tour.destinations_label", "Destinations"))}</th><th class="tour-list__center-col">${escapeHtml(backendT("backend.table.styles", "Styles"))}</th><th class="tour-list__center-col">${escapeHtml(backendT("backend.table.updated", "Updated"))}</th>${canEditTours ? `<th class="tour-list__actions-col">${escapeHtml(backendT("backend.table.actions", "Actions"))}</th>` : ""}</tr></thead>`;
   const rows = items
     .map((tour) => {
-      const styles = Array.isArray(tour.styles) ? tour.styles.join(", ") : "";
       const countries = Array.isArray(tour.destinations) ? tour.destinations.join(", ") : "";
+      const planSummary = formatTourPlanSummary(tour);
+      const updatedAt = formatDateTime(tour.updated_at || tour.created_at);
       const href = buildTourEditHref(tour.id);
       const title = tour.title || "-";
+      const tourImageMarkup = renderTourImageMarkup(tour);
       const rowAriaLabel = backendT("backend.tours.open_tour", "Open tour {name}", {
         name: title
       });
-      const actionCell = canEditTours
-        ? `<td class="tour-list__actions-col"><button class="btn btn-ghost offer-remove-btn" type="button" data-tour-delete="${escapeHtml(tour.id)}" data-tour-title="${escapeHtml(tour.title || "")}" title="${escapeHtml(backendT("backend.tours.delete", "Delete"))}" aria-label="${escapeHtml(backendT("backend.tours.delete", "Delete"))}" ${state.tours.deletingId === tour.id ? "disabled" : ""}>&times;</button></td>`
+      const actionButton = canEditTours
+        ? `<button class="btn btn-ghost offer-remove-btn" type="button" data-tour-delete="${escapeHtml(tour.id)}" data-tour-title="${escapeHtml(tour.title || "")}" title="${escapeHtml(backendT("backend.tours.delete", "Delete"))}" aria-label="${escapeHtml(backendT("backend.tours.delete", "Delete"))}" ${state.tours.deletingId === tour.id ? "disabled" : ""}>&times;</button>`
         : "";
       return `<tr class="tour-list__row tour-list__row--clickable" data-tour-href="${escapeHtml(href)}" tabindex="0" role="link" aria-label="${escapeHtml(rowAriaLabel)}">
-        <td class="tour-list__title-col">${escapeHtml(title)}</td>
-        <td class="tour-list__center-col">${escapeHtml(countries || "-")}</td>
-        <td class="tour-list__center-col">${escapeHtml(styles || "-")}</td>
-        <td>${escapeHtml(formatDateTime(tour.updated_at || tour.created_at))}</td>
-        ${actionCell}
+        <td>
+          <div class="booking-list__name-cell">
+            <span class="booking-list__booking-thumb">${tourImageMarkup}</span>
+            <div class="booking-list__name-copy">
+              <div class="booking-list__booking-name">${escapeHtml(title)}</div>
+              <div class="booking-list__representative">
+                <span class="booking-list__representative-name">${escapeHtml(countries || "-")}</span>
+              </div>
+            </div>
+          </div>
+        </td>
+        <td class="booking-list__meta-cell">
+          <div class="booking-list__plan-summary">
+            <div class="booking-list__plan-primary">${escapeHtml(planSummary.days)}</div>
+            <div class="booking-list__plan-secondary">${escapeHtml(planSummary.services)}</div>
+          </div>
+        </td>
+        <td class="tour-list__updated-cell" aria-label="${escapeHtml(backendT("backend.table.updated", "Updated"))}: ${escapeHtml(updatedAt)}">
+          <div class="tour-list__updated-cell-content">
+            <div class="tour-list__updated-summary">
+              <div class="tour-list__updated-primary">${escapeHtml(updatedAt)}</div>
+            </div>
+            ${actionButton}
+          </div>
+        </td>
       </tr>`;
     })
     .join("");
 
-  const body = rows || `<tr><td colspan="${canEditTours ? "5" : "4"}">${escapeHtml(backendT("backend.tours.no_results", "No tours found"))}</td></tr>`;
-  if (els.toursTable) els.toursTable.innerHTML = `${header}<tbody>${body}</tbody>`;
+  const body = rows || `<tr><td colspan="3">${escapeHtml(backendT("backend.tours.no_results", "No tours found"))}</td></tr>`;
+  if (els.toursTable) els.toursTable.innerHTML = `<tbody>${body}</tbody>`;
+}
+
+function formatTourPlanSummary(tour) {
+  const days = Array.isArray(tour?.travel_plan?.days) ? tour.travel_plan.days : [];
+  const dayCount = days.length;
+  const serviceCount = days.reduce((total, day) => total + (Array.isArray(day?.services) ? day.services.length : 0), 0);
+
+  return {
+    days: backendT(
+      dayCount === 1 ? "booking.travel_plan.summary.day" : "booking.travel_plan.summary.days",
+      dayCount === 1 ? "{count} day" : "{count} days",
+      { count: formatIntegerWithGrouping(dayCount) }
+    ),
+    services: backendT(
+      serviceCount === 1 ? "booking.travel_plan.summary.item" : "booking.travel_plan.summary.items",
+      serviceCount === 1 ? "{count} service" : "{count} services",
+      { count: formatIntegerWithGrouping(serviceCount) }
+    )
+  };
+}
+
+function renderTourImageMarkup(tour) {
+  const picture = Array.isArray(tour?.pictures) ? normalizeText(tour.pictures[0]) : "";
+  const title = normalizeText(tour?.title);
+  if (picture) {
+    return `<img class="booking-list__booking-thumb-image" src="${escapeHtml(resolveApiUrl(apiBase, picture))}" alt="${escapeHtml(title || backendT("tour.picture_label", "Tour picture"))}" />`;
+  }
+  return `<span class="booking-list__booking-thumb-initials">${escapeHtml(getTourInitials(title))}</span>`;
+}
+
+function getTourInitials(value) {
+  const parts = normalizeText(value).split(/\s+/).filter(Boolean);
+  const initials = parts.slice(0, 2).map((part) => part.charAt(0)).join("").toUpperCase();
+  return initials || "T";
 }
 
 function openDeleteModal(tourId, title, trigger = null) {

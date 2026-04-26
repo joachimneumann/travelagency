@@ -63,16 +63,33 @@
         outline: none;
       }
 
-      .backend-list-page #toursTable .tour-list__title-col {
-        text-align: left;
+      .backend-list-page #toursTable .booking-list__meta-cell,
+      .backend-list-page #toursTable .tour-list__updated-cell {
+        white-space: nowrap;
       }
 
-      .backend-list-page #toursTable .tour-list__actions-col {
-        text-align: center;
+      .backend-list-page #toursTable .booking-list__plan-summary,
+      .backend-list-page #toursTable .tour-list__updated-summary {
+        display: grid;
+        gap: 0.15rem;
       }
 
-      .backend-list-page #toursTable .tour-list__center-col {
-        text-align: center;
+      .backend-list-page #toursTable .tour-list__updated-cell-content {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.65rem;
+      }
+
+      .backend-list-page #toursTable .booking-list__plan-primary,
+      .backend-list-page #toursTable .tour-list__updated-primary {
+        font-weight: 600;
+        color: #173329;
+      }
+
+      .backend-list-page #toursTable .booking-list__plan-secondary,
+      .backend-list-page #toursTable .booking-list__representative-name {
+        color: #5f6b7a;
       }
 
       @media (max-width: 980px) {
@@ -83,6 +100,13 @@
 
         .backend-tours-controls__status {
           justify-self: start;
+        }
+      }
+
+      @media (max-width: 720px) {
+        .backend-list-page #toursTable .booking-list__meta-cell,
+        .backend-list-page #toursTable .tour-list__updated-cell {
+          white-space: normal;
         }
       }
     </style>
