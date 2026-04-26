@@ -77,6 +77,11 @@ export function createTourTravelPlanAdapter({
     if (typeof onDirtyChange === "function") onDirtyChange();
   }
 
+  function expectedTourUpdatedAtPayload(sourceState = state) {
+    const expectedUpdatedAt = normalizeText(sourceState.tour?.updated_at);
+    return expectedUpdatedAt ? { expected_updated_at: expectedUpdatedAt } : {};
+  }
+
   async function fetchTourTravelPlanMutation(url, options = {}) {
     const serviceImageMutation = parseTravelPlanServiceImageMutation(url);
     const requestUrl = withBackendLang(url);
@@ -145,6 +150,7 @@ export function createTourTravelPlanAdapter({
       query: backendLangQuery(),
       body: {
         travel_plan: travelPlan,
+        ...expectedTourUpdatedAtPayload(state),
         actor: state.user
       }
     });
@@ -166,6 +172,7 @@ export function createTourTravelPlanAdapter({
       query: backendLangQuery(),
       body: {
         travel_plan: travelPlanPayload,
+        ...expectedTourUpdatedAtPayload(requestState),
         actor: requestState.user
       }
     });

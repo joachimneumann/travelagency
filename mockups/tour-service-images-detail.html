@@ -231,6 +231,42 @@
         line-height: 1.35;
       }
 
+      .tour-plan-text-services {
+        display: grid;
+        gap: 0.55rem;
+        margin-top: 0.75rem;
+      }
+
+      .tour-plan-text-service {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 0.18rem;
+        padding: 0.72rem 0.82rem;
+        border: 1px solid rgba(215, 224, 230, 0.9);
+        border-radius: 12px;
+        background: var(--surface-muted);
+      }
+
+      .tour-plan-text-service--title-only {
+        width: fit-content;
+        max-width: 100%;
+        padding: 0.52rem 0.7rem;
+      }
+
+      .tour-plan-text-service h5 {
+        margin: 0;
+        color: var(--text-strong);
+        font-size: 0.96rem;
+        line-height: 1.25;
+      }
+
+      .tour-plan-text-service p {
+        margin: 0;
+        color: var(--muted);
+        font-size: var(--font-size-body-sm);
+        line-height: 1.45;
+      }
+
       .tour-plan-day--closed .tour-plan-day__toggle {
         background: var(--surface-muted);
       }
@@ -313,7 +349,7 @@
                     <p class="tour-plan__eyebrow">Travel plan</p>
                     <h4 class="tour-plan__title">Travel plan</h4>
                   </div>
-                  <p class="tour-plan__summary">3 days, services in route order</p>
+                  <p class="tour-plan__summary">3 days</p>
                 </div>
 
                 <div class="tour-plan__days">
@@ -371,6 +407,12 @@
                             </div>
                           </article>
                         </div>
+                      </div>
+
+                      <div class="tour-plan-text-services" aria-label="Services without images">
+                        <article class="tour-plan-text-service tour-plan-text-service--title-only">
+                          <h5>Hotel check-in and luggage support</h5>
+                        </article>
                       </div>
                     </div>
                   </article>

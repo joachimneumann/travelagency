@@ -2501,6 +2501,11 @@ test("marketing tour travel-plan form save prunes empty services and days withou
     "Marketing tour travel-plan saves should opt into pruning blank day/service rows"
   );
   assert.match(
+    adapterSource,
+    /function expectedTourUpdatedAtPayload\([\s\S]*expected_updated_at: expectedUpdatedAt[\s\S]*buildTourTravelPlanSaveRequest[\s\S]*\.\.\.expectedTourUpdatedAtPayload\(requestState\)/,
+    "Marketing-tour travel-plan section saves should include the loaded tour timestamp for optimistic conflict detection"
+  );
+  assert.match(
     travelPlanSource,
     /function pruneEmptyTravelPlanContent\(plan\) \{[\s\S]*filter\(travelPlanServiceHasContent\)[\s\S]*filter\(travelPlanDayHasContent\)[\s\S]*day_number: dayIndex \+ 1/,
     "The travel-plan collector should remove empty services, remove empty days, and renumber kept days"
@@ -3322,6 +3327,21 @@ test("tour page reads month options from the generated catalogs layer", async ()
     tourSource,
     /function buildTourSaveValidationMessage\([\s\S]*showError\(validationMessage\);[\s\S]*setStatus\(validationMessage\);/,
     "Tour save validation should show a visible blocking reason instead of failing silently"
+  );
+  assert.match(
+    tourSource,
+    /expectedUpdatedAt = normalizeText\(state\.tour\?\.updated_at\);[\s\S]*payload\.expected_updated_at = expectedUpdatedAt;/,
+    "Existing marketing-tour saves should send the timestamp loaded by the editor for optimistic conflict detection"
+  );
+  assert.match(
+    tourSource,
+    /function staleTourUpdateMessage\(\)[\s\S]*This tour was updated by someone else\. Reload before saving\./,
+    "Marketing-tour saves should define a specific stale-edit message"
+  );
+  assert.match(
+    tourSource,
+    /response\?\.status === 409 && payload\?\.code === "TOUR_REVISION_MISMATCH"[\s\S]*staleTourUpdateMessage\(\)/,
+    "Marketing-tour saves should show a specific stale-edit message on revision conflicts"
   );
   assert.match(
     tourSource,

@@ -1747,6 +1747,7 @@ IR: {
 			sourceType: "api.#TourTravelPlanUpdateRequest"
 			fields: [
 				{name: "travel_plan", kind: "entity", typeName: "TravelPlan", required: true},
+				{name: "expected_updated_at", kind: "scalar", typeName: "Timestamp", required: false},
 				{name: "actor", kind: "scalar", typeName: "string", required: false},
 			]
 		},
@@ -1978,6 +1979,7 @@ IR: {
 				{name: "short_description", kind: "scalar", typeName: "string", required: false},
 				{name: "pictures", kind: "scalar", typeName: "string", required: false, isArray: true},
 				{name: "travel_plan", kind: "entity", typeName: "TravelPlan", required: false},
+				{name: "expected_updated_at", kind: "scalar", typeName: "Timestamp", required: false},
 			]
 		},
 		{

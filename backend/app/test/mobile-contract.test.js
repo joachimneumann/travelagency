@@ -5903,6 +5903,8 @@ test("tour editor can manage tours while staff cannot access tour endpoints", as
   );
   assert.equal(createResult.status, 201);
   const tourId = createResult.body.tour.id;
+  const createdUpdatedAt = createResult.body.tour.updated_at;
+  assert.ok(createdUpdatedAt);
 
   const editorList = await requestJson(
     `${endpointPath("tours")}?page=1&page_size=20&sort=updated_at_desc`,
@@ -5924,12 +5926,40 @@ test("tour editor can manage tours while staff cannot access tour endpoints", as
     {
       method: "PATCH",
       body: {
-        short_description: "Updated by the tour editor"
+        short_description: "Updated by the tour editor",
+        expected_updated_at: createdUpdatedAt
       }
     }
   );
   assert.equal(updateResult.status, 200);
   assert.equal(updateResult.body.tour.short_description, "Updated by the tour editor");
+  const updatedUpdatedAt = updateResult.body.tour.updated_at;
+  assert.ok(updatedUpdatedAt);
+
+  const staleExpectedUpdatedAt = updatedUpdatedAt === createdUpdatedAt
+    ? "2000-01-01T00:00:00.000Z"
+    : createdUpdatedAt;
+  const staleUpdateResult = await requestJson(
+    endpointPath("tour_update").replace("{tour_id}", tourId),
+    apiHeaders("atp_tour_editor", "tour-editor", "kc-tour-editor"),
+    {
+      method: "PATCH",
+      body: {
+        short_description: "This stale update should not be saved",
+        expected_updated_at: staleExpectedUpdatedAt
+      }
+    }
+  );
+  assert.equal(staleUpdateResult.status, 409);
+  assert.equal(staleUpdateResult.body.code, "TOUR_REVISION_MISMATCH");
+  assert.equal(staleUpdateResult.body.error, "This tour was updated by someone else. Reload before saving.");
+
+  const detailAfterStaleUpdate = await requestJson(
+    endpointPath("tour_detail").replace("{tour_id}", tourId),
+    apiHeaders("atp_tour_editor", "tour-editor", "kc-tour-editor")
+  );
+  assert.equal(detailAfterStaleUpdate.status, 200);
+  assert.equal(detailAfterStaleUpdate.body.tour.short_description, "Updated by the tour editor");
 
   const tourVideoPath = path.join(TEST_DATA_DIR, "tours", tourId, "video.mp4");
   await mkdir(path.dirname(tourVideoPath), { recursive: true });

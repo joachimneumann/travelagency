@@ -80,6 +80,10 @@ function normalizeText(value) {
   return String(value ?? "").trim();
 }
 
+function staleTourUpdateMessage() {
+  return backendT("tour.error.stale_update", "This tour was updated by someone else. Reload before saving.");
+}
+
 const GENERATED_ROLE_LOOKUP = Object.freeze(
   Object.fromEntries(
     GENERATED_APP_ROLES.map((role) => [String(role).replace(/^atp_/, "").toUpperCase(), role])
@@ -1767,6 +1771,10 @@ async function submitForm(event) {
     pictures: storedPictures,
     travel_plan: travelPlanResult.payload
   };
+  const expectedUpdatedAt = normalizeText(state.tour?.updated_at);
+  if (!state.is_create_mode && expectedUpdatedAt) {
+    payload.expected_updated_at = expectedUpdatedAt;
+  }
 
   const validationMessage = buildTourSaveValidationMessage({
     title: payload.title,
@@ -1935,7 +1943,12 @@ async function fileToBase64(file) {
 
 const fetchApi = createApiFetcher({
   apiBase,
-  onError: (message) => showError(message),
+  onError: (message, payload, response) => {
+    const staleTourUpdate = response?.status === 409 && payload?.code === "TOUR_REVISION_MISMATCH";
+    const visibleMessage = staleTourUpdate ? staleTourUpdateMessage() : message;
+    showError(visibleMessage);
+    if (staleTourUpdate) setStatus(visibleMessage);
+  },
   includeDetailInError: false,
   connectionErrorMessage: "Could not connect to backend API."
 });

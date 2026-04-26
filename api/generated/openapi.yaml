@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-04-25T17:53:00Z
+# 2026-04-26T00:13:06Z
 
 ---
 openapi: 3.1.0
@@ -6592,6 +6592,10 @@ components:
       properties:
         travel_plan:
           "$ref": "#/components/schemas/TravelPlan"
+        expected_updated_at:
+          type: string
+          format: date-time
+          nullable: true
         actor:
           type: string
           nullable: true
@@ -6931,6 +6935,10 @@ components:
             type: string
         travel_plan:
           "$ref": "#/components/schemas/TravelPlan"
+          nullable: true
+        expected_updated_at:
+          type: string
+          format: date-time
           nullable: true
     TourTranslateFieldsRequest:
       type: object

@@ -308,41 +308,51 @@ async function loadSharp() {
 
 async function generateHomepageTourAssets(sourceDir, destinationDir) {
   await ensureDirectory(destinationDir);
-  const entries = await listDirectoryEntries(sourceDir);
   const generatedPathBySourceName = new Map();
   const sharp = await loadSharp();
 
-  for (const entry of entries) {
-    if (!entry.isFile()) continue;
-    if (!isAllowedAssetFile(entry.name)) continue;
+  async function copyAssetsFromDirectory(currentSourceDir, relativeDir = "") {
+    const entries = await listDirectoryEntries(currentSourceDir);
+    for (const entry of entries) {
+      const sourcePath = path.join(currentSourceDir, entry.name);
+      const sourceRelativePath = path.join(relativeDir, entry.name);
+      if (entry.isDirectory()) {
+        await copyAssetsFromDirectory(sourcePath, sourceRelativePath);
+        continue;
+      }
+      if (!entry.isFile()) continue;
+      if (!isAllowedAssetFile(entry.name)) continue;
 
-    const sourcePath = path.join(sourceDir, entry.name);
-    if (!isRasterAssetFile(entry.name) || !sharp) {
-      const destinationPath = path.join(destinationDir, entry.name);
+      const normalizedSourceRelativePath = sourceRelativePath.split(path.sep).join("/");
+      if (!isRasterAssetFile(entry.name) || !sharp) {
+        const destinationPath = path.join(destinationDir, sourceRelativePath);
+        await ensureDirectory(path.dirname(destinationPath));
+        await copyFile(sourcePath, destinationPath);
+        generatedPathBySourceName.set(normalizedSourceRelativePath, normalizedSourceRelativePath);
+        continue;
+      }
+
+      const outputRelativePath = path.join(relativeDir, `${path.parse(entry.name).name}.webp`);
+      const normalizedOutputRelativePath = outputRelativePath.split(path.sep).join("/");
+      const destinationPath = path.join(destinationDir, outputRelativePath);
       await ensureDirectory(path.dirname(destinationPath));
-      await copyFile(sourcePath, destinationPath);
-      generatedPathBySourceName.set(entry.name, entry.name);
-      continue;
+      await sharp(sourcePath, { failOn: "none" })
+        .rotate()
+        .resize(HOMEPAGE_TOUR_IMAGE_SIZE, HOMEPAGE_TOUR_IMAGE_SIZE, {
+          fit: "cover",
+          position: "centre",
+          withoutEnlargement: true
+        })
+        .webp({
+          quality: HOMEPAGE_TOUR_IMAGE_QUALITY,
+          effort: 5
+        })
+        .toFile(destinationPath);
+      generatedPathBySourceName.set(normalizedSourceRelativePath, normalizedOutputRelativePath);
     }
-
-    const outputName = `${path.parse(entry.name).name}.webp`;
-    const destinationPath = path.join(destinationDir, outputName);
-    await ensureDirectory(path.dirname(destinationPath));
-    await sharp(sourcePath, { failOn: "none" })
-      .rotate()
-      .resize(HOMEPAGE_TOUR_IMAGE_SIZE, HOMEPAGE_TOUR_IMAGE_SIZE, {
-        fit: "cover",
-        position: "centre",
-        withoutEnlargement: true
-      })
-      .webp({
-        quality: HOMEPAGE_TOUR_IMAGE_QUALITY,
-        effort: 5
-      })
-      .toFile(destinationPath);
-    generatedPathBySourceName.set(entry.name, outputName);
   }
 
+  await copyAssetsFromDirectory(sourceDir);
   return generatedPathBySourceName;
 }
 
@@ -432,6 +442,76 @@ async function optionalVersionedStaticAssetPath(relativePath, outputRoot, option
     });
     return "";
   }
+}
+
+async function publicHomepageTourAssetUrl(imagePath, tourId, generatedTourAssetPaths, outputRoot, version) {
+  const assetRelativePath = extractTourAssetRelativePath(imagePath, tourId);
+  if (!assetRelativePath) return "";
+  const generatedAssetRelativePath = generatedTourAssetPaths.get(assetRelativePath) || assetRelativePath;
+  return optionalVersionedStaticAssetPath(generatedAssetRelativePath, outputRoot, {
+    publicPrefix: "/assets/generated/homepage/tours",
+    version
+  });
+}
+
+async function publicHomepageTourImageRef(image, tourId, generatedTourAssetPaths, outputRoot, version) {
+  if (!image) return null;
+  if (typeof image === "string") {
+    const imageUrl = await publicHomepageTourAssetUrl(image, tourId, generatedTourAssetPaths, outputRoot, version);
+    return imageUrl ? { storage_path: imageUrl } : null;
+  }
+  if (typeof image !== "object" || Array.isArray(image)) return null;
+
+  const sourcePath = normalizeText(image.storage_path || image.url || image.src);
+  const imageUrl = await publicHomepageTourAssetUrl(sourcePath, tourId, generatedTourAssetPaths, outputRoot, version);
+  return imageUrl
+    ? {
+        ...image,
+        storage_path: imageUrl
+      }
+    : null;
+}
+
+async function publicHomepageTourService(service, tourId, generatedTourAssetPaths, outputRoot, version) {
+  if (!service || typeof service !== "object" || Array.isArray(service)) return service;
+  const next = { ...service };
+  const image = await publicHomepageTourImageRef(next.image, tourId, generatedTourAssetPaths, outputRoot, version);
+  if (image) next.image = image;
+  else delete next.image;
+
+  if (Array.isArray(next.images)) {
+    const images = [];
+    for (const item of next.images) {
+      const imageItem = await publicHomepageTourImageRef(item, tourId, generatedTourAssetPaths, outputRoot, version);
+      if (imageItem) images.push(imageItem);
+    }
+    if (images.length) next.images = images;
+    else delete next.images;
+  }
+  return next;
+}
+
+async function publicHomepageTourTravelPlan(travelPlan, tourId, generatedTourAssetPaths, outputRoot, version) {
+  if (!travelPlan || typeof travelPlan !== "object" || Array.isArray(travelPlan)) return travelPlan;
+  const days = [];
+  for (const day of Array.isArray(travelPlan.days) ? travelPlan.days : []) {
+    if (!day || typeof day !== "object" || Array.isArray(day)) {
+      days.push(day);
+      continue;
+    }
+    const services = [];
+    for (const service of Array.isArray(day.services) ? day.services : []) {
+      services.push(await publicHomepageTourService(service, tourId, generatedTourAssetPaths, outputRoot, version));
+    }
+    days.push({
+      ...day,
+      services
+    });
+  }
+  return {
+    ...travelPlan,
+    days
+  };
 }
 
 async function buildHeroTitleByLang({
@@ -1190,18 +1270,26 @@ async function generateTourAssets({
         : [];
       const pictures = [];
       for (const picture of pictureCandidates) {
-        const assetRelativePath = extractTourAssetRelativePath(picture, readModel.id);
-        const generatedAssetRelativePath = generatedTourAssetPaths.get(assetRelativePath) || assetRelativePath;
-        if (!generatedAssetRelativePath) continue;
-        const pictureUrl = await optionalVersionedStaticAssetPath(generatedAssetRelativePath, outputRoot, {
-          publicPrefix: "/assets/generated/homepage/tours",
-          version: normalizeText(readModel.updated_at || readModel.created_at)
-        });
+        const pictureUrl = await publicHomepageTourAssetUrl(
+          picture,
+          readModel.id,
+          generatedTourAssetPaths,
+          outputRoot,
+          normalizeText(readModel.updated_at || readModel.created_at)
+        );
         if (pictureUrl) pictures.push(pictureUrl);
       }
+      const travelPlan = await publicHomepageTourTravelPlan(
+        readModel.travel_plan,
+        readModel.id,
+        generatedTourAssetPaths,
+        outputRoot,
+        normalizeText(readModel.updated_at || readModel.created_at)
+      );
       localizedItems.push({
         ...readModel,
-        pictures
+        pictures,
+        travel_plan: travelPlan
       });
     }
     const options = collectTourOptions(publicTours, { lang: normalizedLang });

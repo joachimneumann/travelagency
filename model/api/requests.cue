@@ -234,7 +234,8 @@ import (
 
 #TourTravelPlanUpdateRequest: {
 	travel_plan: databaseModel.#TravelPlan
-	actor?:      string
+	expected_updated_at?: common.#Timestamp
+	actor?:              string
 }
 
 #TravelPlanServiceImageUploadRequest: #EvidenceUpload & {
@@ -375,6 +376,7 @@ import (
 	short_description_i18n?: [string]: string
 	pictures?: [...string]
 	travel_plan?: databaseModel.#TravelPlan
+	expected_updated_at?: common.#Timestamp
 }
 
 #TourTranslateFieldsRequest: #TranslationEntriesRequest

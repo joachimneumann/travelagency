@@ -80,6 +80,7 @@ export function createTourHandlers(deps) {
   const TOUR_REEL_VIDEO_FILENAME = "video.mp4";
   const IMAGE_UPLOAD_BODY_MAX_BYTES = 16 * 1024 * 1024;
   const VIDEO_UPLOAD_BODY_MAX_BYTES = 150 * 1024 * 1024;
+  const TOUR_STALE_UPDATE_MESSAGE = "This tour was updated by someone else. Reload before saving.";
   let publicHomepageAssetGenerationQueue = Promise.resolve();
 
   function nowMs() {
@@ -157,6 +158,20 @@ export function createTourHandlers(deps) {
       travel_plan: buildTourTravelPlanEditorValue(stored),
       reel_video: buildTourReelVideoMeta(stored)
     };
+  }
+
+  function assertExpectedTourUpdatedAt(payload, currentTour, res) {
+    const expectedUpdatedAt = normalizeText(payload?.expected_updated_at);
+    if (!expectedUpdatedAt) return true;
+    const currentUpdatedAt = normalizeText(currentTour?.updated_at);
+    if (expectedUpdatedAt === currentUpdatedAt) return true;
+    sendJson(res, 409, {
+      error: TOUR_STALE_UPDATE_MESSAGE,
+      code: "TOUR_REVISION_MISMATCH",
+      expected_updated_at: expectedUpdatedAt,
+      current_updated_at: currentUpdatedAt || null
+    });
+    return false;
   }
 
   function buildTourPayload(payload, { existing = null, isCreate = false, lang = "en" } = {}) {
@@ -665,6 +680,7 @@ export function createTourHandlers(deps) {
     }
 
     const current = tours[index];
+    if (!assertExpectedTourUpdatedAt(payload, current, res)) return;
     const idChange = normalizeText(payload.id);
     if (idChange && idChange !== tourId) {
       sendJson(res, 422, { error: "Tour id cannot be changed" });
@@ -711,6 +727,8 @@ export function createTourHandlers(deps) {
       sendJson(res, 404, { error: "Tour not found" });
       return;
     }
+
+    if (!assertExpectedTourUpdatedAt(payload, tours[index], res)) return;
 
     const check = validateMarketingTourTravelPlanInput(payload.travel_plan);
     if (!check.ok) {

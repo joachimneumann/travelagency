@@ -62,10 +62,30 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
     destinations: ["vietnam", "thailand"],
     styles: ["budget"],
     image: "/public/v1/tour-images/tour_alpha/alpha.png",
+    travel_plan: {
+      days: [
+        {
+          day_number: 1,
+          title: { en: "Arrival day", de: "Ankunftstag" },
+          services: [
+            {
+              title: { en: "Airport pick-up", de: "Flughafenabholung" },
+              details: { en: "Private transfer to the hotel.", de: "Privater Transfer zum Hotel." },
+              image: {
+                storage_path: "/public/v1/tour-images/tour_alpha/travel-plan-services/pickup.png",
+                alt_text: { en: "Driver at arrivals", de: "Fahrer bei der Ankunft" }
+              }
+            }
+          ]
+        }
+      ]
+    },
     priority: 80,
     updated_at: "2026-04-14T12:34:56.000Z"
   });
   await writeFile(path.join(toursRoot, "tour_alpha", "alpha.png"), Buffer.from(TINY_PNG_BASE64, "base64"));
+  await mkdir(path.join(toursRoot, "tour_alpha", "travel-plan-services"), { recursive: true });
+  await writeFile(path.join(toursRoot, "tour_alpha", "travel-plan-services", "pickup.png"), Buffer.from(TINY_PNG_BASE64, "base64"));
 
   await writeJson(path.join(toursRoot, "tour_hidden", "tour.json"), {
     id: "tour_hidden",
@@ -158,10 +178,19 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
   assert.deepEqual(publicToursEn.items[0].destination_codes, ["vietnam"]);
   assert.deepEqual(publicToursEn.available_destinations, [{ code: "vietnam", label: "Vietnam" }]);
   assert.match(publicToursEn.items[0].pictures[0], /^\/assets\/generated\/homepage\/tours\/tour_alpha\/alpha\.(png|webp)\?v=/);
+  assert.match(
+    publicToursEn.items[0].travel_plan.days[0].services[0].image.storage_path,
+    /^\/assets\/generated\/homepage\/tours\/tour_alpha\/travel-plan-services\/pickup\.(png|webp)\?v=/
+  );
+  assert.equal(publicToursEn.items[0].travel_plan.days[0].services[0].image.alt_text.en, "Driver at arrivals");
   assert.equal("image" in publicToursEn.items[0], false);
 
   assert.equal(publicToursDe.items[0].title, "Alpha Reise");
   assert.equal(publicToursDe.items[0].short_description, "Alpha Beschreibung");
+  assert.match(
+    publicToursDe.items[0].travel_plan.days[0].services[0].image.storage_path,
+    /^\/assets\/generated\/homepage\/tours\/tour_alpha\/travel-plan-services\/pickup\.(png|webp)\?v=/
+  );
   assert.deepEqual(publicToursDe.available_styles, [{ code: "budget", label: "Budget" }]);
   assert.deepEqual(publicReels, { items: [] });
   assert.match(homepageCopyGlobal, /heroTitleByLang/);
@@ -228,9 +257,12 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
   assert.equal("appears_in_team_web_page" in publicTeam.items[0], false);
 
   const copiedTourAssetName = path.basename(new URL(publicToursEn.items[0].pictures[0], "https://asiatravelplan.test").pathname);
+  const copiedServiceAssetPath = new URL(publicToursEn.items[0].travel_plan.days[0].services[0].image.storage_path, "https://asiatravelplan.test").pathname;
   const copiedTourAsset = await stat(path.join(tourOutputDir, "tour_alpha", copiedTourAssetName));
+  const copiedServiceAsset = await stat(path.join(tourOutputDir, copiedServiceAssetPath.replace(/^\/assets\/generated\/homepage\/tours\//, "")));
   const copiedTeamAsset = await stat(path.join(teamOutputDir, "joachim.webp"));
   assert.ok(copiedTourAsset.isFile());
+  assert.ok(copiedServiceAsset.isFile());
   assert.ok(copiedTeamAsset.isFile());
 });
 

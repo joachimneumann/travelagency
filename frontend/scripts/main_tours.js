@@ -493,7 +493,13 @@ export function createFrontendToursController(ctx) {
     tourGridResizeBound = true;
     window.addEventListener("resize", () => {
       const nextColumnCount = getTourGridColumnCount();
-      if (nextColumnCount === renderedTourGridColumnCount) return;
+      if (nextColumnCount === renderedTourGridColumnCount) {
+        syncExpandedTourDetailsHeights();
+        window.requestAnimationFrame(() => {
+          syncExpandedTourDetailsHeights();
+        });
+        return;
+      }
       renderedTourGridColumnCount = nextColumnCount;
       openingTourColumnIndexes.clear();
       renderVisibleTrips();
@@ -699,25 +705,65 @@ export function createFrontendToursController(ctx) {
     return normalized.replace(/\b([a-z])/g, (match) => match.toUpperCase());
   }
 
-  function formatTourPlanServiceTime(service) {
-    const label = resolveTravelPlanField(service, "time_label");
-    if (label) return label;
-    const timePoint = compactText(service?.time_point);
-    if (timePoint) return timePoint;
-    const start = compactText(service?.start_time);
-    const end = compactText(service?.end_time);
-    if (start && end) return `${start}-${end}`;
-    return start || end;
+  function resolveTravelPlanImageField(image, fieldName) {
+    if (!image || typeof image !== "object" || Array.isArray(image)) return "";
+    return resolveLocalizedFrontendText(image[`${fieldName}_i18n`], state.lang)
+      || resolveLocalizedFrontendText(image[fieldName], state.lang);
+  }
+
+  function primaryTourPlanServiceImage(service) {
+    const image = service?.image;
+    if (typeof image === "string") return { storage_path: image };
+    if (image && typeof image === "object" && !Array.isArray(image)) return image;
+    if (!Array.isArray(service?.images)) return null;
+    return service.images.find((item) => item?.is_primary) || service.images[0] || null;
+  }
+
+  function tourPlanServiceImageSrc(service) {
+    const image = primaryTourPlanServiceImage(service);
+    if (typeof image === "string") return absolutizeBackendUrl(image);
+    if (!image || typeof image !== "object" || Array.isArray(image)) return "";
+    return absolutizeBackendUrl(image.storage_path || image.url || image.src || image.path);
+  }
+
+  function tourPlanServiceTitle(service, { genericFallback = true } = {}) {
+    const image = primaryTourPlanServiceImage(service);
+    const title = resolveTravelPlanField(service, "title")
+      || resolveTravelPlanField(service, "image_subtitle")
+      || resolveTravelPlanImageField(image, "caption")
+      || resolveTravelPlanField(service, "location")
+      || formatServiceKindLabel(service?.kind);
+    return title || (genericFallback ? frontendT("tour.plan.service_fallback", "Service") : "");
+  }
+
+  function tourPlanServiceDetails(service, title = tourPlanServiceTitle(service)) {
+    const image = primaryTourPlanServiceImage(service);
+    const candidates = [
+      resolveTravelPlanField(service, "details"),
+      resolveTravelPlanField(service, "image_subtitle"),
+      resolveTravelPlanImageField(image, "caption"),
+      resolveTravelPlanField(service, "location")
+    ];
+    const normalizedTitle = compactText(title).toLowerCase();
+    return candidates
+      .map((item) => compactText(item))
+      .find((item) => item && item.toLowerCase() !== normalizedTitle) || "";
+  }
+
+  function tourPlanServiceImageAlt(service) {
+    const image = primaryTourPlanServiceImage(service);
+    return resolveTravelPlanImageField(image, "alt_text")
+      || tourPlanServiceTitle(service)
+      || frontendT("tour.plan.service_image_alt", "Travel plan service image");
   }
 
   function formatTourPlanServiceLine(service) {
-    const time = formatTourPlanServiceTime(service);
     const title = resolveTravelPlanField(service, "title")
       || resolveTravelPlanField(service, "image_subtitle")
       || formatServiceKindLabel(service?.kind);
     const location = resolveTravelPlanField(service, "location");
     const details = resolveTravelPlanField(service, "details");
-    const parts = [time, title, location].map((item) => compactText(item)).filter(Boolean);
+    const parts = [title, location].map((item) => compactText(item)).filter(Boolean);
     let line = parts.join(" - ");
     const detailsText = compactText(details);
     const titleText = compactText(title).toLowerCase();
@@ -732,6 +778,107 @@ export function createFrontendToursController(ctx) {
     return truncateCompactText(line || detailsText);
   }
 
+  function renderTourPlanServiceCard(service, className = "") {
+    const src = tourPlanServiceImageSrc(service);
+    if (!src) return "";
+    const title = tourPlanServiceTitle(service);
+    const details = tourPlanServiceDetails(service, title);
+    const detailMarkup = details
+      ? `<p>${escapeHTML(details)}</p>`
+      : "";
+    const image = primaryTourPlanServiceImage(service);
+    const width = Math.max(1, Number.parseInt(image?.width_px, 10) || 720);
+    const height = Math.max(1, Number.parseInt(image?.height_px, 10) || 720);
+
+    return `
+      <article class="tour-plan-service-card${className ? ` ${escapeAttr(className)}` : ""}">
+        <img
+          src="${escapeAttr(src)}"
+          alt="${escapeAttr(tourPlanServiceImageAlt(service))}"
+          loading="lazy"
+          width="${escapeAttr(String(width))}"
+          height="${escapeAttr(String(height))}"
+        />
+        <div class="tour-plan-service-card__body">
+          <h5>${escapeHTML(title)}</h5>
+          ${detailMarkup}
+        </div>
+      </article>
+    `;
+  }
+
+  function tourPlanServiceImageEntries(services) {
+    return (Array.isArray(services) ? services : [])
+      .map((service, index) => ({
+        service,
+        index,
+        src: tourPlanServiceImageSrc(service)
+      }))
+      .filter((entry) => entry.src);
+  }
+
+  function renderTourPlanServiceMedia(services) {
+    const imageEntries = tourPlanServiceImageEntries(services);
+    if (!imageEntries.length) {
+      return {
+        markup: "",
+        imageIndexes: new Set()
+      };
+    }
+
+    const [featured, ...sideEntries] = imageEntries;
+    const sideMarkup = sideEntries.length
+      ? `<div class="tour-plan-service-media__side">
+          ${sideEntries.map(({ service }) => renderTourPlanServiceCard(service, "tour-plan-service-card--small")).join("")}
+        </div>`
+      : "";
+
+    return {
+      markup: `
+        <div class="tour-plan-service-media${sideEntries.length ? "" : " tour-plan-service-media--single"}">
+          ${renderTourPlanServiceCard(featured.service, "tour-plan-service-card--featured")}
+          ${sideMarkup}
+        </div>
+      `,
+      imageIndexes: new Set(imageEntries.map((entry) => entry.index))
+    };
+  }
+
+  function renderTourPlanTextServices(services, excludedIndexes = new Set()) {
+    const rows = (Array.isArray(services) ? services : [])
+      .map((service, index) => {
+        if (excludedIndexes.has(index)) return "";
+        const title = tourPlanServiceTitle(service, { genericFallback: false });
+        const details = tourPlanServiceDetails(service, title);
+        const hasTitle = compactText(title);
+        const hasDetails = compactText(details);
+        if (!hasTitle && !hasDetails) return "";
+        const titleMarkup = hasTitle ? `<h5>${escapeHTML(title)}</h5>` : "";
+        const detailMarkup = hasDetails ? `<p>${escapeHTML(details)}</p>` : "";
+        const titleOnlyClass = hasTitle && !hasDetails ? " tour-plan-text-service--title-only" : "";
+        return `
+          <article class="tour-plan-text-service${titleOnlyClass}">
+            ${titleMarkup}
+            ${detailMarkup}
+          </article>
+        `;
+      })
+      .filter(Boolean)
+      .join("");
+
+    return rows
+      ? `<div class="tour-plan-text-services">${rows}</div>`
+      : "";
+  }
+
+  function formatTourPlanDayCount(days) {
+    const count = Array.isArray(days) ? days.length : 0;
+    if (count <= 0) return "";
+    return count === 1
+      ? frontendT("tour.plan.day_count_one", "1 day")
+      : frontendT("tour.plan.day_count_many", "{count} days", { count: String(count) });
+  }
+
   function renderTourPlanDay(day, index, tripId) {
     const dayNumber = Math.max(1, Number.parseInt(day?.day_number, 10) || index + 1);
     const dayTitle = resolveTravelPlanField(day, "title");
@@ -741,22 +888,36 @@ export function createFrontendToursController(ctx) {
     const heading = dayTitle ? `${dayLabel} - ${dayTitle}` : dayLabel;
     const notes = resolveTravelPlanField(day, "notes");
     const services = Array.isArray(day?.services) ? day.services : [];
-    const serviceLines = services
-      .map((service) => formatTourPlanServiceLine(service))
-      .filter((line) => line.text);
+    const serviceMedia = renderTourPlanServiceMedia(services);
+    const textServiceMarkup = renderTourPlanTextServices(services, serviceMedia.imageIndexes);
+    const shouldRenderLegacyServices = !serviceMedia.markup && !textServiceMarkup;
+    const legacyServiceLines = shouldRenderLegacyServices
+      ? services
+        .map((service) => formatTourPlanServiceLine(service))
+        .filter((line) => line.text)
+      : [];
     const panelId = `${tourDetailsPanelId(tripId)}-day-${index + 1}`;
-    const serviceList = serviceLines.length
-      ? `<ul class="tour-plan-services">
-          ${serviceLines.map((line) => `
-            <li>
-              <span class="tour-plan-service__line" title="${escapeAttr(line.isTruncated ? line.fullText : "")}">${escapeHTML(line.text)}</span>
-            </li>
-          `).join("")}
-        </ul>`
-      : `<p class="tour-plan-day__empty">${escapeHTML(frontendT("tour.plan.no_services", "No services listed yet."))}</p>`;
+    const legacyServiceList = shouldRenderLegacyServices
+      ? (legacyServiceLines.length
+          ? `<ul class="tour-plan-services">
+              ${legacyServiceLines.map((line) => `
+                <li>
+                  <span class="tour-plan-service__line" title="${escapeAttr(line.isTruncated ? line.fullText : "")}">${escapeHTML(line.text)}</span>
+                </li>
+              `).join("")}
+            </ul>`
+          : `<p class="tour-plan-day__empty">${escapeHTML(frontendT("tour.plan.no_services", "No services listed yet."))}</p>`)
+      : "";
     const notesMarkup = notes
       ? `<p class="tour-plan-day__notes">${escapeHTML(notes)}</p>`
       : "";
+    const serviceMarkup = [
+      serviceMedia.markup,
+      textServiceMarkup,
+      legacyServiceList
+    ].filter(Boolean).join("") || (!services.length && notes
+      ? ""
+      : `<p class="tour-plan-day__empty">${escapeHTML(frontendT("tour.plan.no_services", "No services listed yet."))}</p>`);
 
     return `
       <article class="tour-plan-day">
@@ -772,7 +933,7 @@ export function createFrontendToursController(ctx) {
         </button>
         <div class="tour-plan-day__body" id="${escapeAttr(panelId)}" hidden>
           ${notesMarkup}
-          ${serviceList}
+          ${serviceMarkup}
         </div>
       </article>
     `;
@@ -790,7 +951,10 @@ export function createFrontendToursController(ctx) {
 
     return `
       <div class="tour-plan">
-        <h4 class="tour-plan__title">${escapeHTML(frontendT("tour.plan.heading", "Travel plan"))}</h4>
+        <div class="tour-plan__head">
+          <h4 class="tour-plan__title">${escapeHTML(frontendT("tour.plan.heading", "Travel plan"))}</h4>
+          <p class="tour-plan__summary">${escapeHTML(formatTourPlanDayCount(days))}</p>
+        </div>
         <div class="tour-plan__days">
           ${days.map((day, index) => renderTourPlanDay(day, index, trip?.id)).join("")}
         </div>
@@ -866,6 +1030,12 @@ export function createFrontendToursController(ctx) {
 
     els.tourGrid.innerHTML = parts.join("");
     bindTourCardOpenHandlers();
+    syncExpandedTourDetailsHeights();
+    if (typeof window !== "undefined") {
+      window.requestAnimationFrame(() => {
+        syncExpandedTourDetailsHeights();
+      });
+    }
   }
 
   function bindTourCardOpenHandlers() {
@@ -1321,7 +1491,35 @@ export function createFrontendToursController(ctx) {
     return expandedTourShell(row)?.querySelector?.(".tour-card") || null;
   }
 
+  function syncExpandedTourDetailsHeight(row) {
+    if (!(row instanceof HTMLElement)) return 0;
+    const card = expandedTourCard(row);
+    if (!(card instanceof HTMLElement)) return 0;
+
+    const cardHeight = Math.max(0, Math.ceil(card.getBoundingClientRect().height));
+    if (cardHeight <= 0) return 0;
+
+    row.style.setProperty("--tour-details-card-height", `${cardHeight}px`);
+    if (
+      row.classList.contains("tour-details-row--side-panel")
+      && !row.classList.contains("tour-details-row--opening")
+      && !row.classList.contains("tour-details-row--closing")
+    ) {
+      row.style.height = `${cardHeight}px`;
+    }
+    return cardHeight;
+  }
+
+  function syncExpandedTourDetailsHeights() {
+    if (!els.tourGrid) return;
+    Array.from(els.tourGrid.querySelectorAll(".tour-details-row")).forEach((row) => {
+      syncExpandedTourDetailsHeight(row);
+    });
+  }
+
   function collapsedTourDetailsHeight(row) {
+    const syncedHeight = syncExpandedTourDetailsHeight(row);
+    if (syncedHeight > 0) return syncedHeight;
     const card = expandedTourCard(row);
     if (!(card instanceof HTMLElement)) return 0;
     return Math.max(0, Math.ceil(card.getBoundingClientRect().height));
