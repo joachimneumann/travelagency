@@ -700,6 +700,175 @@ test("public booking discovery-call request can be created without destinations 
   assert.equal(result.body.booking.persons[0].name, "Discovery Caller");
 });
 
+test("public booking request inherits the selected marketing tour travel plan without service details", async () => {
+  await resetStore();
+  const tourTitle = `Public booking tour seed marker ${Date.now()}`;
+  let tourId = "";
+  let uploadedImage = false;
+  try {
+    const tourCreateResult = await requestJson(
+      endpointPath("tour_create"),
+      apiHeaders("atp_tour_editor", "tour-editor", "kc-tour-editor"),
+      {
+        method: "POST",
+        body: {
+          title: tourTitle,
+          destinations: ["vietnam"],
+          styles: ["culture"],
+          short_description: "Marketing tour selected from the public booking form",
+          travel_plan: {
+            days: [
+              {
+                id: "public_booking_source_day_1",
+                day_number: 1,
+                title: "Day 1 English",
+                title_i18n: {
+                  de: "Tag 1 Deutsch",
+                  fr: "Jour 1 Francais"
+                },
+                overnight_location: "Hanoi",
+                overnight_location_i18n: {
+                  de: "Hanoi DE",
+                  fr: "Hanoi FR"
+                },
+                notes: "English day note",
+                notes_i18n: {
+                  de: "Deutsche Tagesnotiz",
+                  fr: "Note francaise"
+                },
+                services: [
+                  {
+                    id: "public_booking_source_service_1",
+                    timing_kind: "label",
+                    time_label: "Morning",
+                    kind: "activity",
+                    title: "English service title",
+                    title_i18n: {
+                      de: "Deutscher Service-Titel",
+                      fr: "Titre de service francais"
+                    },
+                    details: "This service detail must not reach the booking",
+                    details_i18n: {
+                      de: "Deutsches Detail",
+                      fr: "Detail francais"
+                    },
+                    image_subtitle: "English image subtitle",
+                    image_subtitle_i18n: {
+                      de: "Deutscher Bilduntertitel",
+                      fr: "Sous-titre francais"
+                    },
+                    location: "Hidden service location",
+                    location_i18n: {
+                      de: "Versteckter Ort",
+                      fr: "Lieu masque"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    );
+    assert.equal(tourCreateResult.status, 201);
+    tourId = tourCreateResult.body.tour.id;
+
+    if (HAS_MAGICK) {
+      const imageUploadResult = await requestJson(
+        endpointPath("tour_travel_plan_service_image_upload")
+          .replace("{tour_id}", tourId)
+          .replace("{day_id}", "public_booking_source_day_1")
+          .replace("{service_id}", "public_booking_source_service_1"),
+        apiHeaders("atp_tour_editor", "tour-editor", "kc-tour-editor"),
+        {
+          method: "POST",
+          body: {
+            filename: "service.png",
+            data_base64: TINY_PNG_BASE64
+          }
+        }
+      );
+      assert.equal(imageUploadResult.status, 200);
+      uploadedImage = true;
+    }
+
+    const result = await requestJson(endpointPath("public_bookings"), {}, {
+      method: "POST",
+      body: {
+        name: "Tour Seed Customer",
+        email: "tour-seed@example.com",
+        preferred_language: "de",
+        preferred_currency: "USD",
+        destinations: ["Vietnam"],
+        travel_style: ["Culture"],
+        booking_name: "",
+        tour_id: tourId,
+        notes: "Selected a public tour"
+      }
+    });
+
+    assert.equal(result.status, 201);
+    const plan = result.body.booking.travel_plan;
+    assert.deepEqual(plan.destinations, ["VN"]);
+    assert.equal(plan.days.length, 1);
+
+    const day = plan.days[0];
+    assert.equal(day.title, "Day 1 English");
+    assert.deepEqual(day.title_i18n, {
+      de: "Tag 1 Deutsch",
+      en: "Day 1 English",
+      fr: "Jour 1 Francais"
+    });
+    assert.equal(day.overnight_location, "Hanoi");
+    assert.deepEqual(day.overnight_location_i18n, {
+      de: "Hanoi DE",
+      en: "Hanoi",
+      fr: "Hanoi FR"
+    });
+    assert.equal(day.notes, "English day note");
+    assert.deepEqual(day.notes_i18n, {
+      de: "Deutsche Tagesnotiz",
+      en: "English day note",
+      fr: "Note francaise"
+    });
+
+    const service = day.services[0];
+    assert.equal(service.title, "English service title");
+    assert.deepEqual(service.title_i18n, {
+      de: "Deutscher Service-Titel",
+      en: "English service title",
+      fr: "Titre de service francais"
+    });
+    assert.equal(service.image_subtitle, "English image subtitle");
+    assert.deepEqual(service.image_subtitle_i18n, {
+      de: "Deutscher Bilduntertitel",
+      en: "English image subtitle",
+      fr: "Sous-titre francais"
+    });
+    assert.equal(service.details, null);
+    assert.deepEqual(service.details_i18n, {});
+    assert.equal(service.location, null);
+    assert.deepEqual(service.location_i18n, {});
+    assert.equal(service.timing_kind, "not_applicable");
+    assert.equal(service.time_label, null);
+    assert.deepEqual(service.time_label_i18n, {});
+    assert.notEqual(service.id, "public_booking_source_service_1");
+    if (uploadedImage) {
+      assert.ok(service.image);
+      assert.match(String(service.image.storage_path || ""), /^\/public\/v1\/booking-images\//);
+
+      const imageRelativePath = String(service.image.storage_path).replace(/^\/public\/v1\/booking-images\//, "");
+      const imageStats = await stat(path.join(TEST_DATA_DIR, "booking_images", imageRelativePath));
+      assert.ok(imageStats.size > 0);
+    } else {
+      assert.equal(service.image, null);
+    }
+  } finally {
+    await resetStore();
+    if (tourId) await deleteTourForTest(tourId);
+  }
+});
+
 test("booking detail, activities, and payment documents conform to the mobile contract", async () => {
   const createdBooking = await createSeedBooking();
   const bookingId = createdBooking.id;
@@ -6119,7 +6288,17 @@ test("public tours only expose destinations published on webpage and hide unpubl
           title: "Public Laos destination visibility test",
           destinations: ["laos"],
           styles: ["culture"],
-          short_description: "Hidden public test tour"
+          short_description: "Hidden public test tour",
+          travel_plan: {
+            days: [
+              {
+                id: "hidden_public_tour_day_1",
+                day_number: 1,
+                title: "Hidden Laos day",
+                services: []
+              }
+            ]
+          }
         }
       }
     );
@@ -6147,7 +6326,25 @@ test("public tours only expose destinations published on webpage and hide unpubl
     const publicVietnamTours = await requestJson(`${endpointPath("public_tours")}?lang=en&destination=vietnam`);
     assert.equal(publicVietnamTours.status, 200);
     assert.ok(publicVietnamTours.body.items.some((item) => item.id === visibleTourId));
+
+    const hiddenTourBooking = await requestJson(endpointPath("public_bookings"), {}, {
+      method: "POST",
+      body: {
+        name: "Hidden Tour Customer",
+        email: "hidden-tour-customer@example.com",
+        preferred_language: "en",
+        preferred_currency: "USD",
+        destinations: ["Laos"],
+        travel_style: ["Culture"],
+        tour_id: hiddenTourId,
+        notes: "Forged hidden tour id"
+      }
+    });
+    assert.equal(hiddenTourBooking.status, 201);
+    assert.deepEqual(hiddenTourBooking.body.booking.travel_plan.destinations, ["LA"]);
+    assert.deepEqual(hiddenTourBooking.body.booking.travel_plan.days, []);
   } finally {
+    await resetStore();
     await deleteTourForTest(hiddenTourId);
     await deleteTourForTest(visibleTourId);
     if (originalCountryItems.length) {

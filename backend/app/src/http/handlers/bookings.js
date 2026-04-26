@@ -28,6 +28,10 @@ import { createBookingPeopleHandlers } from "./booking_people.js";
 import { createBookingTravelerDetailsHandlers } from "./booking_traveler_details.js";
 import { createBookingTravelPlanHandlers } from "./booking_travel_plan.js";
 import { enumValueSetFor } from "../../lib/generated_catalogs.js";
+import { createMarketingTourBookingTravelPlanCloner } from "./marketing_tour_booking_travel_plan.js";
+import {
+  DESTINATION_COUNTRY_CODES
+} from "../../../../../shared/js/destination_country_codes.js";
 
 const COUNTRY_CODE_SET = enumValueSetFor("CountryCode");
 const DESTINATION_COUNTRY_CODE_BY_TOUR_CODE = Object.freeze({
@@ -61,6 +65,10 @@ export function createBookingHandlers(deps) {
     validateBookingInput,
     readStore,
     readTours,
+    readCountryPracticalInfo,
+    normalizeTourForStorage,
+    normalizeMarketingTourTravelPlan,
+    tourDestinationCodes,
     normalizeText,
     normalizeStringArray,
     getRequestIpAddress,
@@ -129,6 +137,7 @@ export function createBookingHandlers(deps) {
     path,
     execFile,
     TEMP_UPLOAD_DIR,
+    TOURS_DIR,
     GENERATED_OFFERS_DIR,
     TRAVEL_PLAN_PDFS_DIR,
     TRAVEL_PLAN_PDF_PREVIEW_DIR,
@@ -193,6 +202,113 @@ export function createBookingHandlers(deps) {
       "82",
       outputPath
     ]);
+  }
+
+  const marketingTourBookingTravelPlanCloner = createMarketingTourBookingTravelPlanCloner({
+    normalizeText,
+    normalizeMarketingTourTravelPlan,
+    tourDestinationCodes,
+    randomUUID,
+    nowIso,
+    processTourServiceImageToWebp: processBookingImageToWebp,
+    bookingImagesDir: BOOKING_IMAGES_DIR,
+    toursDir: TOURS_DIR,
+    path,
+    logPrefix: "public-booking-tour"
+  });
+
+  function defaultInitialBookingTravelPlan(destinations) {
+    return {
+      ...defaultBookingTravelPlan(),
+      destinations
+    };
+  }
+
+  function tourCountryCodesFromTour(tour) {
+    return Array.from(
+      new Set(
+        tourDestinationCodes(tour)
+          .map((code) => DESTINATION_COUNTRY_CODE_BY_TOUR_CODE[code] || normalizeText(code).toUpperCase())
+          .filter((code) => DESTINATION_COUNTRY_CODES.includes(code))
+      )
+    );
+  }
+
+  async function publishedPublicWebpageCountryCodes() {
+    const publishedCountryCodes = new Set(DESTINATION_COUNTRY_CODES);
+    if (typeof readCountryPracticalInfo !== "function") return publishedCountryCodes;
+    const countryReferencePayload = await readCountryPracticalInfo();
+    for (const item of Array.isArray(countryReferencePayload?.items) ? countryReferencePayload.items : []) {
+      const countryCode = normalizeText(item?.country).toUpperCase();
+      if (!countryCode) continue;
+      if (item?.published_on_webpage === false) publishedCountryCodes.delete(countryCode);
+      else publishedCountryCodes.add(countryCode);
+    }
+    return publishedCountryCodes;
+  }
+
+  async function canSeedSubmittedTourFromPublicForm(tour) {
+    const tourCountryCodes = tourCountryCodesFromTour(tour);
+    if (!tourCountryCodes.length) return false;
+    const publishedCountryCodes = await publishedPublicWebpageCountryCodes();
+    return tourCountryCodes.some((countryCode) => publishedCountryCodes.has(countryCode));
+  }
+
+  async function buildInitialTravelPlanFromSubmittedTour(tourId, booking, fallbackDestinations) {
+    const normalizedTourId = normalizeText(tourId);
+    if (!normalizedTourId) return defaultInitialBookingTravelPlan(fallbackDestinations);
+
+    let tour = null;
+    try {
+      const tours = (await readTours()).map((item) => normalizeTourForStorage(item));
+      tour = tours.find((item) => item.id === normalizedTourId) || null;
+    } catch (error) {
+      console.warn("[public-booking-tour] Could not read submitted marketing tour.", {
+        tour_id: normalizedTourId,
+        booking_id: booking?.id,
+        error: String(error?.message || error)
+      });
+      return defaultInitialBookingTravelPlan(fallbackDestinations);
+    }
+
+    if (!tour) return defaultInitialBookingTravelPlan(fallbackDestinations);
+
+    try {
+      if (!(await canSeedSubmittedTourFromPublicForm(tour))) {
+        return defaultInitialBookingTravelPlan(fallbackDestinations);
+      }
+    } catch (error) {
+      console.warn("[public-booking-tour] Could not verify submitted marketing tour publication state.", {
+        tour_id: normalizedTourId,
+        booking_id: booking?.id,
+        error: String(error?.message || error)
+      });
+      return defaultInitialBookingTravelPlan(fallbackDestinations);
+    }
+
+    let nextTravelPlan;
+    try {
+      nextTravelPlan = await marketingTourBookingTravelPlanCloner.cloneMarketingTourTravelPlanForBooking(tour, booking);
+    } catch (error) {
+      console.warn("[public-booking-tour] Could not clone submitted marketing tour travel plan.", {
+        tour_id: normalizedTourId,
+        booking_id: booking?.id,
+        error: String(error?.message || error)
+      });
+      return defaultInitialBookingTravelPlan(fallbackDestinations);
+    }
+
+    const check = validateBookingTravelPlanInput(nextTravelPlan, booking.offer);
+    if (!check.ok) {
+      console.warn("[public-booking-tour] Submitted marketing tour travel plan was invalid for booking.", {
+        tour_id: normalizedTourId,
+        booking_id: booking?.id,
+        error: check.error
+      });
+      return defaultInitialBookingTravelPlan(fallbackDestinations);
+    }
+
+    return check.travel_plan;
   }
 
   async function processBookingPersonImageToWebp(inputPath, outputPath) {
@@ -842,10 +958,7 @@ export function createBookingHandlers(deps) {
       preferred_currency: preferredCurrency,
       notes: submission.notes,
       persons: [],
-      travel_plan: {
-        ...defaultBookingTravelPlan(),
-        destinations: normalizedDestinations
-      },
+      travel_plan: defaultInitialBookingTravelPlan(normalizedDestinations),
       web_form_submission: submission,
       offer: defaultBookingOffer(preferredCurrency),
       generated_offers: [],
@@ -853,6 +966,12 @@ export function createBookingHandlers(deps) {
       created_at: now,
       updated_at: now
     };
+
+    booking.travel_plan = await buildInitialTravelPlanFromSubmittedTour(
+      submission.tour_id,
+      booking,
+      normalizedDestinations
+    );
 
     const primaryContact = buildPrimaryContactFromSubmission(booking);
     booking.persons = primaryContact ? [primaryContact] : [];

@@ -9,14 +9,13 @@ import { existsSync } from "node:fs";
 import { execImageMagick } from "../../lib/imagemagick.js";
 import {
   DESTINATION_COUNTRY_CODES,
-  DESTINATION_COUNTRY_TO_TOUR_DESTINATION_CODE,
-  TOUR_DESTINATION_TO_COUNTRY_CODE
+  DESTINATION_COUNTRY_TO_TOUR_DESTINATION_CODE
 } from "../../../../../shared/js/destination_country_codes.js";
 import {
   findTravelPlanDayAndItem,
-  normalizeItemImageRef,
-  publicBookingImagePath
+  normalizeItemImageRef
 } from "./booking_travel_plan_shared.js";
+import { createMarketingTourBookingTravelPlanCloner } from "./marketing_tour_booking_travel_plan.js";
 
 export function createTourHandlers(deps) {
   const {
@@ -750,87 +749,18 @@ export function createTourHandlers(deps) {
     });
   }
 
-  function cloneJson(value) {
-    return value === undefined ? undefined : JSON.parse(JSON.stringify(value));
-  }
-
-  function bookingDestinationCodesFromTour(tour) {
-    return Array.from(
-      new Set(
-        tourDestinationCodes(tour)
-          .map((code) => TOUR_DESTINATION_TO_COUNTRY_CODE[code] || normalizeText(code).toUpperCase())
-          .filter((code) => DESTINATION_COUNTRY_CODES.includes(code))
-      )
-    );
-  }
-
-  async function copyTourServiceImageToBooking(image, { tourId, bookingId, serviceId, createdAt }) {
-    const sourceImage = image && typeof image === "object" && !Array.isArray(image) ? image : null;
-    const sourcePath = resolveTourServiceImageDiskPath(sourceImage?.storage_path, tourId);
-    if (!sourceImage || !sourcePath || !existsSync(sourcePath)) return null;
-    const outputName = `${serviceId}-${Date.now()}-${randomUUID()}.webp`;
-    const outputRelativePath = `${bookingId}/travel-plan-services/${outputName}`;
-    const outputPath = path.join(BOOKING_IMAGES_DIR, outputRelativePath);
-    try {
-      await processTourImageToWebp(sourcePath, outputPath);
-    } catch (error) {
-      console.warn("[tour-apply] Could not copy tour service image into booking storage.", {
-        tour_id: tourId,
-        booking_id: bookingId,
-        service_id: serviceId,
-        source_path: sourcePath,
-        error: String(error?.message || error)
-      });
-      return null;
-    }
-    return normalizeItemImageRef({
-      ...cloneJson(sourceImage),
-      id: `travel_plan_service_image_${randomUUID()}`,
-      storage_path: publicBookingImagePath(normalizeText, outputRelativePath),
-      sort_order: 0,
-      is_primary: true,
-      is_customer_visible: true,
-      created_at: normalizeText(sourceImage.created_at) || createdAt
-    });
-  }
-
-  async function cloneMarketingTourTravelPlanForBooking(tour, booking) {
-    const normalized = normalizeMarketingTourTravelPlan(tour?.travel_plan);
-    const createdAt = nowIso();
-    const bookingId = normalizeText(booking?.id);
-    return {
-      destinations: bookingDestinationCodesFromTour(tour),
-      days: await Promise.all((Array.isArray(normalized.days) ? normalized.days : []).map(async (day, dayIndex) => {
-        const nextDay = {
-          ...cloneJson(day),
-          id: `travel_plan_day_${randomUUID()}`,
-          day_number: dayIndex + 1,
-          date: null,
-          date_string: null,
-          copied_from: null
-        };
-        nextDay.services = await Promise.all((Array.isArray(day.services) ? day.services : []).map(async (service) => {
-          const nextServiceId = `travel_plan_service_${randomUUID()}`;
-          const nextImage = await copyTourServiceImageToBooking(service?.image, {
-            tourId: tour.id,
-            bookingId,
-            serviceId: nextServiceId,
-            createdAt
-          });
-          return {
-            ...cloneJson(service),
-            id: nextServiceId,
-            details: null,
-            details_i18n: {},
-            copied_from: null,
-            image: nextImage
-          };
-        }));
-        return nextDay;
-      })),
-      attachments: []
-    };
-  }
+  const marketingTourBookingTravelPlanCloner = createMarketingTourBookingTravelPlanCloner({
+    normalizeText,
+    normalizeMarketingTourTravelPlan,
+    tourDestinationCodes,
+    randomUUID,
+    nowIso,
+    processTourServiceImageToWebp: processTourImageToWebp,
+    bookingImagesDir: BOOKING_IMAGES_DIR,
+    toursDir: TOURS_DIR,
+    path,
+    logPrefix: "tour-apply"
+  });
 
   async function handleApplyTourToBooking(req, res, [bookingId, tourId]) {
     let payload;
@@ -861,7 +791,7 @@ export function createTourHandlers(deps) {
       return;
     }
 
-    const nextTravelPlan = await cloneMarketingTourTravelPlanForBooking(tour, booking);
+    const nextTravelPlan = await marketingTourBookingTravelPlanCloner.cloneMarketingTourTravelPlanForBooking(tour, booking);
     const check = validateBookingTravelPlanInput(nextTravelPlan, booking.offer);
     if (!check.ok) {
       sendJson(res, 422, { error: check.error });

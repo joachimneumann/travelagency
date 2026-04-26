@@ -1339,8 +1339,23 @@ textarea:focus-visible {
 }
 
 .tour-plan-day__body {
+  box-sizing: border-box;
   padding: 0 0.85rem 0.85rem;
   color: var(--muted);
+}
+
+.tour-plan-day__body--animating {
+  overflow: hidden;
+  transition:
+    height 0.3s cubic-bezier(0.2, 0.82, 0.2, 1),
+    opacity 0.18s ease;
+  will-change: height, opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tour-plan-day__body--animating {
+    transition: none;
+  }
 }
 
 .tour-plan-day__notes {
@@ -1388,6 +1403,28 @@ textarea:focus-visible {
 
 .tour-plan-service-card--small {
   min-height: 9.65rem;
+}
+
+.tour-plan-service-card--interactive {
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.tour-plan-service-card--interactive:hover,
+.tour-plan-service-card--interactive:focus-visible {
+  border-color: rgba(43, 177, 169, 0.8);
+  box-shadow: 0 0 0 3px rgba(43, 177, 169, 0.16);
+  outline: none;
+}
+
+.tour-plan-service-card--swapping {
+  z-index: 4;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.tour-plan-service-media[data-tour-plan-service-swap-animating="1"] .tour-plan-service-card--interactive {
+  pointer-events: none;
 }
 
 .tour-plan-service-card__body {
