@@ -4360,6 +4360,32 @@ test("frontend language switching updates the homepage in place instead of forci
   );
 });
 
+test("homepage tour details keep English travel-plan source ahead of translation fallbacks", async () => {
+  const mainToursPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "main_tours.js");
+  const mainToursSource = await readFile(mainToursPath, "utf8");
+
+  assert.match(
+    mainToursSource,
+    /function resolveTravelPlanLocalizedValue\(sourceValue, i18nValue, lang = state\.lang\)/,
+    "Homepage tours should use the travel-plan-specific localization resolver"
+  );
+  assert.match(
+    mainToursSource,
+    /if \(normalizedLang === "en"\) \{[\s\S]*return sourceEnglishText \|\| i18nEnglishText;/,
+    "Homepage tours should prefer the authored English source when English is selected"
+  );
+  assert.match(
+    mainToursSource,
+    /return resolveExplicitLocalizedFrontendText\(i18nValue, normalizedLang\)[\s\S]*\|\| resolveTravelPlanSourceText\(sourceValue, normalizedLang\)[\s\S]*\|\| sourceEnglishText/,
+    "Homepage tours should fall back to English source before arbitrary translated values"
+  );
+  assert.doesNotMatch(
+    mainToursSource,
+    /resolveLocalizedFrontendText\(i18nValue, state\.lang\)[\s\S]{0,160}\|\| resolveLocalizedFrontendText\(source\[fieldName\], state\.lang\)/,
+    "Homepage tours should not resolve *_i18n maps before English source for travel-plan fields"
+  );
+});
+
 test("homepage tour cards use fixed-height text areas without an inline more link", async () => {
   const mainToursPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "main_tours.js");
   const homepagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "index.html");

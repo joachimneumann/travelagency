@@ -10,7 +10,7 @@ Create a Gmail draft from the ATP backend so ATP staff can:
 
 This is intentionally a **draft creation** flow, not an automatic send flow.
 
-It is also intentionally separate from the generated-offer confirmation flow.
+It is intentionally separate from the generated-offer confirmation flow and from operational booking notification email.
 
 Current backend booking UI distinction:
 - `Email` in the generated-offers table creates a Gmail draft with the frozen PDF attachment

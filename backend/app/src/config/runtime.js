@@ -69,6 +69,29 @@ export const PORT = Number(process.env.PORT || 8787);
 export const CORS_ORIGIN = process.env.CORS_ORIGIN || "*";
 export const execFile = promisify(execFileCb);
 
+function firstHttpOrigin(value) {
+  return String(value || "")
+    .split(",")
+    .map((item) => normalizeText(item).replace(/\/+$/, ""))
+    .find((item) => item.startsWith("http://") || item.startsWith("https://")) || "";
+}
+
+function resolveWebInquiryBackendBaseUrl() {
+  return normalizeText(process.env.WEB_INQUIRY_NOTIFICATION_BACKEND_BASE_URL || "").replace(/\/+$/, "")
+    || firstHttpOrigin(process.env.FRONTEND_BASE_URL)
+    || firstHttpOrigin(CORS_ORIGIN)
+    || "http://127.0.0.1:8080";
+}
+
+function resolveWebInquiryLogoUrl(backendBaseUrl) {
+  const explicit = normalizeText(process.env.WEB_INQUIRY_NOTIFICATION_LOGO_URL || "");
+  if (explicit) return explicit;
+  return `${backendBaseUrl.replace(/\/+$/, "")}/assets/generated/runtime/brand-logo.png`;
+}
+
+const WEB_INQUIRY_BACKEND_BASE_URL = resolveWebInquiryBackendBaseUrl();
+const WEB_INQUIRY_LOGO_URL = resolveWebInquiryLogoUrl(WEB_INQUIRY_BACKEND_BASE_URL);
+
 export const STAGING_ACCESS_CONFIG = Object.freeze({
   enabled: String(process.env.STAGING_ACCESS_ENABLED || "").trim().toLowerCase() === "true",
   password: String(process.env.STAGING_ACCESS_PASSWORD || ""),
@@ -139,6 +162,22 @@ export function resolveConfigPathFromRepoRoot(rawPath) {
 export const GMAIL_DRAFTS_CONFIG = Object.freeze({
   serviceAccountJsonPath: resolveConfigPathFromRepoRoot(normalizeText(process.env.GOOGLE_SERVICE_ACCOUNT_JSON_PATH || "")),
   impersonatedEmail: normalizeText(process.env.GOOGLE_IMPERSONATED_EMAIL || "")
+});
+
+export const BOOKING_NOTIFICATION_EMAIL_CONFIG = Object.freeze({
+  enabled: String(process.env.WEB_INQUIRY_NOTIFICATION_ENABLED || "").trim().toLowerCase() === "true",
+  recipientEmail: normalizeText(process.env.WEB_INQUIRY_NOTIFICATION_TO || "booking@asiatravelplan.com"),
+  fromEmail: normalizeText(process.env.WEB_INQUIRY_NOTIFICATION_FROM || ""),
+  backendBaseUrl: WEB_INQUIRY_BACKEND_BASE_URL,
+  logoUrl: WEB_INQUIRY_LOGO_URL,
+  zoho: Object.freeze({
+    accountsBaseUrl: normalizeText(process.env.ZOHO_ACCOUNTS_BASE_URL || "https://accounts.zoho.com"),
+    mailApiBaseUrl: normalizeText(process.env.ZOHO_MAIL_API_BASE_URL || "https://mail.zoho.com"),
+    clientId: normalizeText(process.env.ZOHO_CLIENT_ID || ""),
+    clientSecret: String(process.env.ZOHO_CLIENT_SECRET || ""),
+    refreshToken: normalizeText(process.env.ZOHO_REFRESH_TOKEN || ""),
+    accountId: normalizeText(process.env.ZOHO_ACCOUNT_ID || "")
+  })
 });
 
 export const TRAVELER_DETAILS_TOKEN_CONFIG = Object.freeze({

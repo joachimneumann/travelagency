@@ -18,6 +18,7 @@ import { createApplicationRoutes } from "./bootstrap/application_handlers.js";
 import {
   APP_ROLES,
   BASE_CURRENCY,
+  BOOKING_NOTIFICATION_EMAIL_CONFIG,
   COMPANY_PROFILE,
   CORS_ORIGIN,
   DEFAULT_OFFER_TAX_RATE_BASIS_POINTS,
@@ -178,6 +179,7 @@ const services = createBackendServices({
     generatedCurrencyDefinition: GENERATED_CURRENCY_HELPERS.generatedCurrencyDefinition,
     normalizeGeneratedCurrencyCode: GENERATED_CURRENCY_HELPERS.normalizeGeneratedCurrencyCode,
     gmailDraftsConfig: GMAIL_DRAFTS_CONFIG,
+    bookingNotificationEmailConfig: BOOKING_NOTIFICATION_EMAIL_CONFIG,
     travelerDetailsTokenConfig: TRAVELER_DETAILS_TOKEN_CONFIG,
     keycloakDirectoryConfig: KEYCLOAK_DIRECTORY_CONFIG,
     metaWebhookConfig: META_WEBHOOK_CONFIG,
@@ -240,6 +242,7 @@ const applicationRuntime = Object.freeze({
   appRoles: APP_ROLES,
   baseCurrency: BASE_CURRENCY,
   gmailDraftsConfig: GMAIL_DRAFTS_CONFIG,
+  bookingNotificationEmailConfig: BOOKING_NOTIFICATION_EMAIL_CONFIG,
   travelerDetailsTokenConfig: TRAVELER_DETAILS_TOKEN_CONFIG,
   execFile,
   paths: RUNTIME_PATHS,

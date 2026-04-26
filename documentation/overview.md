@@ -594,6 +594,7 @@ Core booking features:
 - activities timeline
 - booking image and person photos
 - read-only WhatsApp/Meta chat timeline linked to the booking
+- Zoho Mail notification to `booking@asiatravelplan.com` for public website bookings
 - section-level optimistic concurrency revisions
 - traveler details portal support
 
@@ -810,6 +811,29 @@ Required environment variables:
 Important file:
 
 - `backend/app/src/lib/gmail_drafts.js`
+
+### Booking Notification Email
+
+Public website booking submissions can send an operational notification through Zoho Mail.
+
+Required environment variables:
+
+- `ZOHO_ACCOUNTS_BASE_URL`
+- `ZOHO_MAIL_API_BASE_URL`
+- `ZOHO_CLIENT_ID`
+- `ZOHO_CLIENT_SECRET`
+- `ZOHO_REFRESH_TOKEN`
+- `ZOHO_ACCOUNT_ID`
+- `WEB_INQUIRY_NOTIFICATION_ENABLED`
+- `WEB_INQUIRY_NOTIFICATION_FROM`
+- `WEB_INQUIRY_NOTIFICATION_TO`
+- `WEB_INQUIRY_NOTIFICATION_BACKEND_BASE_URL`
+- `WEB_INQUIRY_NOTIFICATION_LOGO_URL`
+
+Important files:
+
+- `backend/app/src/lib/booking_notification_email.js`
+- `backend/app/src/lib/zoho_mail_api.js`
 
 ### Translation
 

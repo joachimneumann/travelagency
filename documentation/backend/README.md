@@ -40,6 +40,17 @@ Important environment variables:
 - `WHATSAPP_APP_SECRET`
 - `GOOGLE_SERVICE_ACCOUNT_JSON_PATH`
 - `GOOGLE_IMPERSONATED_EMAIL`
+- `ZOHO_ACCOUNTS_BASE_URL`
+- `ZOHO_MAIL_API_BASE_URL`
+- `ZOHO_CLIENT_ID`
+- `ZOHO_CLIENT_SECRET`
+- `ZOHO_REFRESH_TOKEN`
+- `ZOHO_ACCOUNT_ID`
+- `WEB_INQUIRY_NOTIFICATION_ENABLED`
+- `WEB_INQUIRY_NOTIFICATION_FROM`
+- `WEB_INQUIRY_NOTIFICATION_TO`
+- `WEB_INQUIRY_NOTIFICATION_BACKEND_BASE_URL`
+- `WEB_INQUIRY_NOTIFICATION_LOGO_URL`
 - `BASE_CURRENCY`
 - `EXCHANGE_RATE_<FROM>_<TO>`
 - `EXCHANGE_RATE_OVERRIDES`
@@ -47,6 +58,19 @@ Important environment variables:
 Gmail draft creation for generated offers requires:
 - `GOOGLE_SERVICE_ACCOUNT_JSON_PATH`
 - `GOOGLE_IMPERSONATED_EMAIL`
+
+Booking notification email sends through the Zoho Mail API when a public website booking is created:
+- `ZOHO_ACCOUNTS_BASE_URL=https://accounts.zoho.com`
+- `ZOHO_MAIL_API_BASE_URL=https://mail.zoho.com`
+- `ZOHO_CLIENT_ID=1000.YWWEP9YOU6NCNE4JBBRXEIK61NBCJC`
+- `ZOHO_CLIENT_SECRET=<Zoho client secret>`
+- `ZOHO_REFRESH_TOKEN=<Zoho refresh token>`
+- `ZOHO_ACCOUNT_ID=3042681000000008002`
+- `WEB_INQUIRY_NOTIFICATION_ENABLED=true`
+- `WEB_INQUIRY_NOTIFICATION_FROM=noreply@asiatravelplan.com`
+- `WEB_INQUIRY_NOTIFICATION_TO=booking@asiatravelplan.com`
+- `WEB_INQUIRY_NOTIFICATION_BACKEND_BASE_URL=https://asiatravelplan.com`
+- `WEB_INQUIRY_NOTIFICATION_LOGO_URL=https://asiatravelplan.com/assets/generated/runtime/brand-logo.png`
 
 ## Storage
 

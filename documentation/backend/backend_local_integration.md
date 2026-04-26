@@ -67,10 +67,27 @@ export GOOGLE_SERVICE_ACCOUNT_JSON_PATH="$HOME/.config/asiatravelplan/gmail-serv
 export GOOGLE_IMPERSONATED_EMAIL='info@asiatravelplan.com'
 ```
 
+If you want public website booking creation to send a Zoho Mail notification locally, also set:
+
+```bash
+export ZOHO_ACCOUNTS_BASE_URL='https://accounts.zoho.com'
+export ZOHO_MAIL_API_BASE_URL='https://mail.zoho.com'
+export ZOHO_CLIENT_ID='1000.YWWEP9YOU6NCNE4JBBRXEIK61NBCJC'
+export ZOHO_CLIENT_SECRET='replace-with-zoho-client-secret'
+export ZOHO_REFRESH_TOKEN='replace-with-zoho-refresh-token'
+export ZOHO_ACCOUNT_ID='3042681000000008002'
+export WEB_INQUIRY_NOTIFICATION_ENABLED=true
+export WEB_INQUIRY_NOTIFICATION_FROM='noreply@asiatravelplan.com'
+export WEB_INQUIRY_NOTIFICATION_TO='booking@asiatravelplan.com'
+export WEB_INQUIRY_NOTIFICATION_BACKEND_BASE_URL='http://127.0.0.1:8080'
+export WEB_INQUIRY_NOTIFICATION_LOGO_URL='http://127.0.0.1:8080/assets/generated/runtime/brand-logo.png'
+```
+
 Notes:
 - keep the service-account JSON file outside the repository
-- if these Gmail variables are missing, the Gmail draft endpoint returns `503`
-- the booking UI still loads normally without Gmail draft support
+- if Gmail credentials are missing, the Gmail draft endpoint returns `503`
+- if booking notification email is enabled but Zoho Mail API credentials are missing, public booking creation still succeeds and the backend logs a skipped notification
+- the booking UI still loads normally without Gmail draft or notification support
 
 ## Seed Data
 

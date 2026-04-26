@@ -594,6 +594,7 @@ Các core booking features:
 - activities timeline
 - booking image và person photos
 - read-only WhatsApp/Meta chat timeline gắn với booking
+- Zoho Mail notification tới `booking@asiatravelplan.com` cho public website bookings
 - section-level optimistic concurrency revisions
 - traveler details portal support
 
@@ -810,6 +811,29 @@ Các environment variables bắt buộc:
 File quan trọng:
 
 - `backend/app/src/lib/gmail_drafts.js`
+
+### Booking Notification Email
+
+Public website booking submissions có thể gửi operational notification qua Zoho Mail.
+
+Các environment variables bắt buộc:
+
+- `ZOHO_ACCOUNTS_BASE_URL`
+- `ZOHO_MAIL_API_BASE_URL`
+- `ZOHO_CLIENT_ID`
+- `ZOHO_CLIENT_SECRET`
+- `ZOHO_REFRESH_TOKEN`
+- `ZOHO_ACCOUNT_ID`
+- `WEB_INQUIRY_NOTIFICATION_ENABLED`
+- `WEB_INQUIRY_NOTIFICATION_FROM`
+- `WEB_INQUIRY_NOTIFICATION_TO`
+- `WEB_INQUIRY_NOTIFICATION_BACKEND_BASE_URL`
+- `WEB_INQUIRY_NOTIFICATION_LOGO_URL`
+
+Các file quan trọng:
+
+- `backend/app/src/lib/booking_notification_email.js`
+- `backend/app/src/lib/zoho_mail_api.js`
 
 ### Translation
 

@@ -254,6 +254,7 @@ export function createApplicationRoutes({
     paymentDocumentPdfPath: pricingHelpers.paymentDocumentPdfPath,
     generatedOfferPdfPath: pricingHelpers.generatedOfferPdfPath,
     gmailDraftsConfig: runtime.gmailDraftsConfig,
+    bookingNotificationEmailConfig: runtime.bookingNotificationEmailConfig,
     travelerDetailsTokenConfig: runtime.travelerDetailsTokenConfig,
     mkdir,
     path,

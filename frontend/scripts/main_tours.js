@@ -8,12 +8,16 @@ const DEFAULT_TOUR_IMAGE = "/assets/img/marketing_tours.png";
 const TOUR_IMAGE_TRANSITION_MS = 2000;
 const TOUR_GRID_LAYOUT_TRANSITION_MS = 520;
 const TOUR_DETAILS_TRANSITION_MS = 640;
-const TOUR_PLAN_DAY_TRANSITION_MS = 300;
+const TOUR_DETAILS_CLOSE_TRANSITION_MS = 780;
 const TOUR_PLAN_SERVICE_SWAP_TRANSITION_MS = 380;
 const TOUR_SHOW_MORE_LABEL_TRANSITION_MS = 180;
 const TOUR_CARD_SCROLL_TIMEOUT_MS = 900;
 const TOUR_CARD_SCROLL_MARGIN_PX = 12;
-const TOUR_CARD_MEDIA_SNAPSHOT_HOLD_MS = Math.max(TOUR_GRID_LAYOUT_TRANSITION_MS, TOUR_DETAILS_TRANSITION_MS) + 180;
+const TOUR_CARD_MEDIA_SNAPSHOT_HOLD_MS = Math.max(
+  TOUR_GRID_LAYOUT_TRANSITION_MS,
+  TOUR_DETAILS_TRANSITION_MS,
+  TOUR_DETAILS_CLOSE_TRANSITION_MS
+) + 180;
 const tourCardImageTransitionTimers = new WeakMap();
 
 export function createFrontendToursController(ctx) {
@@ -679,9 +683,36 @@ export function createFrontendToursController(ctx) {
 
   function resolveTravelPlanField(source, fieldName) {
     if (!source || typeof source !== "object") return "";
-    const i18nValue = source[`${fieldName}_i18n`];
-    return resolveLocalizedFrontendText(i18nValue, state.lang)
-      || resolveLocalizedFrontendText(source[fieldName], state.lang);
+    return resolveTravelPlanLocalizedValue(source[fieldName], source[`${fieldName}_i18n`], state.lang);
+  }
+
+  function isLocalizedFrontendTextMap(value) {
+    return value && typeof value === "object" && !Array.isArray(value);
+  }
+
+  function resolveExplicitLocalizedFrontendText(value, lang) {
+    if (!isLocalizedFrontendTextMap(value)) return "";
+    return normalizeText(value[normalizeFrontendTourLang(lang)]);
+  }
+
+  function resolveTravelPlanSourceText(value, lang) {
+    if (typeof value === "string") return normalizeText(value);
+    return resolveExplicitLocalizedFrontendText(value, lang);
+  }
+
+  function resolveTravelPlanLocalizedValue(sourceValue, i18nValue, lang = state.lang) {
+    const normalizedLang = normalizeFrontendTourLang(lang);
+    const sourceEnglishText = resolveTravelPlanSourceText(sourceValue, "en");
+    const i18nEnglishText = resolveExplicitLocalizedFrontendText(i18nValue, "en");
+
+    if (normalizedLang === "en") {
+      return sourceEnglishText || i18nEnglishText;
+    }
+
+    return resolveExplicitLocalizedFrontendText(i18nValue, normalizedLang)
+      || resolveTravelPlanSourceText(sourceValue, normalizedLang)
+      || sourceEnglishText
+      || i18nEnglishText;
   }
 
   function compactText(value) {
@@ -709,8 +740,7 @@ export function createFrontendToursController(ctx) {
 
   function resolveTravelPlanImageField(image, fieldName) {
     if (!image || typeof image !== "object" || Array.isArray(image)) return "";
-    return resolveLocalizedFrontendText(image[`${fieldName}_i18n`], state.lang)
-      || resolveLocalizedFrontendText(image[fieldName], state.lang);
+    return resolveTravelPlanLocalizedValue(image[fieldName], image[`${fieldName}_i18n`], state.lang);
   }
 
   function primaryTourPlanServiceImage(service) {
@@ -880,14 +910,6 @@ export function createFrontendToursController(ctx) {
       : "";
   }
 
-  function formatTourPlanDayCount(days) {
-    const count = Array.isArray(days) ? days.length : 0;
-    if (count <= 0) return "";
-    return count === 1
-      ? frontendT("tour.plan.day_count_one", "1 day")
-      : frontendT("tour.plan.day_count_many", "{count} days", { count: String(count) });
-  }
-
   function renderTourPlanDay(day, index, tripId) {
     const dayNumber = Math.max(1, Number.parseInt(day?.day_number, 10) || index + 1);
     const dayTitle = resolveTravelPlanField(day, "title");
@@ -905,7 +927,6 @@ export function createFrontendToursController(ctx) {
         .map((service) => formatTourPlanServiceLine(service))
         .filter((line) => line.text)
       : [];
-    const panelId = `${tourDetailsPanelId(tripId)}-day-${index + 1}`;
     const legacyServiceList = shouldRenderLegacyServices
       ? (legacyServiceLines.length
           ? `<ul class="tour-plan-services">
@@ -930,17 +951,8 @@ export function createFrontendToursController(ctx) {
 
     return `
       <article class="tour-plan-day">
-        <button
-          class="tour-plan-day__toggle"
-          type="button"
-          aria-expanded="false"
-          aria-controls="${escapeAttr(panelId)}"
-          data-tour-plan-day-toggle
-        >
-          <span>${escapeHTML(heading)}</span>
-          <span class="tour-plan-day__icon" aria-hidden="true">+</span>
-        </button>
-        <div class="tour-plan-day__body" id="${escapeAttr(panelId)}" hidden>
+        <h4 class="tour-plan-day__heading">${escapeHTML(heading)}</h4>
+        <div class="tour-plan-day__body">
           ${notesMarkup}
           ${serviceMarkup}
         </div>
@@ -960,10 +972,6 @@ export function createFrontendToursController(ctx) {
 
     return `
       <div class="tour-plan">
-        <div class="tour-plan__head">
-          <h4 class="tour-plan__title">${escapeHTML(frontendT("tour.plan.heading", "Travel plan"))}</h4>
-          <p class="tour-plan__summary">${escapeHTML(formatTourPlanDayCount(days))}</p>
-        </div>
         <div class="tour-plan__days">
           ${days.map((day, index) => renderTourPlanDay(day, index, trip?.id)).join("")}
         </div>
@@ -1070,15 +1078,6 @@ export function createFrontendToursController(ctx) {
         animateTourDetailsToggle(tripId, !expandedTourIdSet().has(tripId));
       });
       button.dataset.tourDetailsBound = "1";
-    });
-
-    const dayToggleButtons = els.tourGrid.querySelectorAll("[data-tour-plan-day-toggle]");
-    dayToggleButtons.forEach((button) => {
-      if (!(button instanceof HTMLButtonElement) || button.dataset.tourPlanDayBound === "1") return;
-      button.addEventListener("click", () => {
-        void toggleTourPlanDay(button);
-      });
-      button.dataset.tourPlanDayBound = "1";
     });
 
     const serviceMediaGroups = els.tourGrid.querySelectorAll("[data-tour-plan-service-media]");
@@ -1327,7 +1326,7 @@ export function createFrontendToursController(ctx) {
     }
 
     const animation = ghost.animate(keyframes, {
-      duration: TOUR_DETAILS_TRANSITION_MS,
+      duration: TOUR_DETAILS_CLOSE_TRANSITION_MS,
       easing: "cubic-bezier(0.2, 0.82, 0.2, 1)",
       fill: "forwards"
     });
@@ -1346,7 +1345,7 @@ export function createFrontendToursController(ctx) {
       };
       animation.addEventListener("finish", done, { once: true });
       animation.addEventListener("cancel", done, { once: true });
-      timer = window.setTimeout(done, TOUR_DETAILS_TRANSITION_MS + 140);
+      timer = window.setTimeout(done, TOUR_DETAILS_CLOSE_TRANSITION_MS + 140);
     });
   }
 
@@ -1693,91 +1692,6 @@ export function createFrontendToursController(ctx) {
     window.requestAnimationFrame(() => {
       focusTourShowMoreButton(tripId);
     });
-  }
-
-  function setTourPlanDayToggleState(button, open) {
-    button.setAttribute("aria-expanded", String(open));
-    const icon = button.querySelector(".tour-plan-day__icon");
-    if (icon) icon.textContent = open ? "-" : "+";
-    button.closest(".tour-plan-day")?.classList.toggle("open", open);
-  }
-
-  function clearTourPlanDayBodyAnimation(body) {
-    body.classList.remove("tour-plan-day__body--animating");
-    body.style.height = "";
-    body.style.opacity = "";
-    body.style.overflow = "";
-    delete body.dataset.tourPlanDayAnimating;
-  }
-
-  function finishTourPlanDayBodyAnimation(body) {
-    return new Promise((resolve) => {
-      let finished = false;
-      let timer = 0;
-      const done = () => {
-        if (finished) return;
-        finished = true;
-        window.clearTimeout(timer);
-        body.removeEventListener("transitionend", onTransitionEnd);
-        resolve();
-      };
-      const onTransitionEnd = (event) => {
-        if (event.target !== body || event.propertyName !== "height") return;
-        done();
-      };
-
-      body.addEventListener("transitionend", onTransitionEnd);
-      timer = window.setTimeout(done, TOUR_PLAN_DAY_TRANSITION_MS + 90);
-    });
-  }
-
-  async function animateTourPlanDayBody(body, open) {
-    if (!(body instanceof HTMLElement)) return;
-    if (prefersReducedMotion()) {
-      body.hidden = !open;
-      clearTourPlanDayBodyAnimation(body);
-      return;
-    }
-
-    body.dataset.tourPlanDayAnimating = "1";
-    body.classList.add("tour-plan-day__body--animating");
-    body.style.overflow = "hidden";
-    body.hidden = false;
-
-    if (open) {
-      body.style.height = "0px";
-      body.style.opacity = "0";
-      void body.offsetHeight;
-      await waitForAnimationFrame();
-      body.style.height = `${Math.max(0, Math.ceil(body.scrollHeight))}px`;
-      body.style.opacity = "1";
-      await finishTourPlanDayBodyAnimation(body);
-      clearTourPlanDayBodyAnimation(body);
-      syncExpandedTourDetailsHeights();
-      return;
-    }
-
-    body.style.height = `${Math.max(0, Math.ceil(body.getBoundingClientRect().height || body.scrollHeight))}px`;
-    body.style.opacity = "1";
-    void body.offsetHeight;
-    await waitForAnimationFrame();
-    body.style.height = "0px";
-    body.style.opacity = "0";
-    await finishTourPlanDayBodyAnimation(body);
-    body.hidden = true;
-    clearTourPlanDayBodyAnimation(body);
-    syncExpandedTourDetailsHeights();
-  }
-
-  async function toggleTourPlanDay(button) {
-    const bodyId = normalizeText(button.getAttribute("aria-controls"));
-    const body = bodyId ? document.getElementById(bodyId) : null;
-    if (body instanceof HTMLElement && body.dataset.tourPlanDayAnimating === "1") return;
-    const willOpen = button.getAttribute("aria-expanded") !== "true";
-    setTourPlanDayToggleState(button, willOpen);
-    if (body instanceof HTMLElement) {
-      await animateTourPlanDayBody(body, willOpen);
-    }
   }
 
   function tourPlanServiceMediaFromEvent(event) {

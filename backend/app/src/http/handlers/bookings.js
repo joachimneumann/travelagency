@@ -11,6 +11,7 @@ import {
   resolveBookingNameForStorage
 } from "../../domain/booking_names.js";
 import { normalizePdfLang } from "../../lib/pdf_i18n.js";
+import { createBookingNotificationEmailService } from "../../lib/booking_notification_email.js";
 import { cloneBookingForTesting } from "../../domain/booking_clone.js";
 import { createGeneratedOfferArtifactHelpers } from "../../domain/generated_offer_artifacts.js";
 import {
@@ -132,6 +133,7 @@ export function createBookingHandlers(deps) {
     paymentDocumentPdfPath,
     generatedOfferPdfPath,
     gmailDraftsConfig,
+    bookingNotificationEmailConfig,
     travelerDetailsTokenConfig,
     mkdir,
     path,
@@ -150,6 +152,10 @@ export function createBookingHandlers(deps) {
     translateEntries,
     resolveLocalizedTourText
   } = deps;
+
+  const bookingNotificationEmail = createBookingNotificationEmailService({
+    config: bookingNotificationEmailConfig
+  });
 
   function unique(values) {
     return Array.from(new Set((Array.isArray(values) ? values : []).filter(Boolean)));
@@ -979,6 +985,7 @@ export function createBookingHandlers(deps) {
     store.bookings.push(booking);
     addActivity(store, booking.id, "BOOKING_CREATED", "public_api", "Booking created from website form");
     await persistStore(store);
+    void bookingNotificationEmail.notifyBookingCreated(booking);
 
     sendJson(res, 201, await buildBookingDetailResponse(booking, req));
   }
