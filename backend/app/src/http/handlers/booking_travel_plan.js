@@ -26,10 +26,12 @@ export function createBookingTravelPlanHandlers(deps) {
     readBodyJson,
     sendJson,
     readStore,
+    readTours,
     getPrincipal,
     canEditBooking,
     canAccessBooking,
-    canAccessTravelPlanImportSourceBooking,
+    normalizeTourForStorage,
+    normalizeMarketingTourTravelPlan,
     normalizeText,
     nowIso,
     addActivity,
@@ -60,7 +62,8 @@ export function createBookingTravelPlanHandlers(deps) {
     writeFile,
     rm,
     processBookingImageToWebp,
-    mkdir
+    mkdir,
+    marketingTourBookingTravelPlanCloner
   } = deps;
 
   function buildTravelPlanDownloadFilename(nowValue = nowIso(), rawSuffix = "") {
@@ -433,20 +436,17 @@ export function createBookingTravelPlanHandlers(deps) {
   }
 
   const {
-    handleSearchTravelPlans,
-    handleSearchTravelPlanDays,
-    handleSearchTravelPlanServices,
-    handleImportTravelPlan,
     handleImportTravelPlanDay,
     handleImportTravelPlanService
   } = createBookingTravelPlanImportHandlers({
     readBodyJson,
     sendJson,
     readStore,
+    readTours,
     getPrincipal,
     canEditBooking,
-    canAccessBooking,
-    canAccessTravelPlanImportSourceBooking,
+    normalizeTourForStorage,
+    normalizeMarketingTourTravelPlan,
     normalizeText,
     nowIso,
     addActivity,
@@ -458,7 +458,7 @@ export function createBookingTravelPlanHandlers(deps) {
     validateBookingTravelPlanInput,
     normalizeBookingTravelPlan,
     requestContentLang,
-    randomUUID
+    marketingTourBookingTravelPlanCloner
   });
 
   const {
@@ -772,10 +772,6 @@ export function createBookingTravelPlanHandlers(deps) {
   }
 
   return {
-    handleSearchTravelPlans,
-    handleSearchTravelPlanDays,
-    handleSearchTravelPlanServices,
-    handleImportTravelPlan,
     handleImportTravelPlanDay,
     handleImportTravelPlanService,
     handleUploadTravelPlanServiceImage,

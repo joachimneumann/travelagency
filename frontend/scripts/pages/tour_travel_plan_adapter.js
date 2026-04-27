@@ -241,7 +241,7 @@ export function createTourTravelPlanAdapter({
     });
   }
 
-  function buildTourTravelPlanDayImportRequest({ apiOrigin: requestApiOrigin, state: requestState, sourceBookingId, sourceDayId }) {
+  function buildTourTravelPlanDayImportRequest({ apiOrigin: requestApiOrigin, state: requestState, sourceTourId, sourceDayId }) {
     return tourTravelPlanDayImportRequest({
       baseURL: requestApiOrigin,
       params: {
@@ -249,7 +249,7 @@ export function createTourTravelPlanAdapter({
       },
       query: backendLangQuery(),
       body: {
-        source_tour_id: sourceBookingId,
+        source_tour_id: sourceTourId,
         source_day_id: sourceDayId,
         include_images: true,
         include_customer_visible_images_only: false,
@@ -261,7 +261,7 @@ export function createTourTravelPlanAdapter({
     });
   }
 
-  function buildTourTravelPlanServiceImportRequest({ apiOrigin: requestApiOrigin, state: requestState, targetDayId, sourceBookingId, sourceServiceId }) {
+  function buildTourTravelPlanServiceImportRequest({ apiOrigin: requestApiOrigin, state: requestState, targetDayId, sourceTourId, sourceServiceId }) {
     return tourTravelPlanServiceImportRequest({
       baseURL: requestApiOrigin,
       params: {
@@ -270,7 +270,7 @@ export function createTourTravelPlanAdapter({
       },
       query: backendLangQuery(),
       body: {
-        source_tour_id: sourceBookingId,
+        source_tour_id: sourceTourId,
         source_service_id: sourceServiceId,
         include_images: true,
         include_customer_visible_images_only: false,
@@ -315,7 +315,6 @@ export function createTourTravelPlanAdapter({
         dates: false,
         timing: false,
         dayImport: true,
-        planImport: false,
         tourImport: false,
         serviceImport: true,
         imageUpload: true,

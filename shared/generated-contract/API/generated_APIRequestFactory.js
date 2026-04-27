@@ -28,6 +28,7 @@ export function mobileBootstrapRequest({ baseURL = '', params = {}, query = {}, 
     body
   };
 }
+
 export function authMePath(params = {}) {
   return buildPath("/auth/me", params);
 }
@@ -538,57 +539,6 @@ export function bookingTravelPlanTranslateRequest({ baseURL = '', params = {}, q
   };
 }
 
-export function travelPlanDaySearchPath(params = {}) {
-  return buildPath("/api/v1/travel-plan-days/search", params);
-}
-
-export function travelPlanDaySearchRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
-  const path = travelPlanDaySearchPath(params);
-  const url = buildURL(baseURL, path, query);
-  return {
-    key: "travel_plan_day_search",
-    method: "GET",
-    authenticated: true,
-    url,
-    headers,
-    body
-  };
-}
-
-export function travelPlanSearchPath(params = {}) {
-  return buildPath("/api/v1/travel-plan/plans", params);
-}
-
-export function travelPlanSearchRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
-  const path = travelPlanSearchPath(params);
-  const url = buildURL(baseURL, path, query);
-  return {
-    key: "travel_plan_search",
-    method: "GET",
-    authenticated: true,
-    url,
-    headers,
-    body
-  };
-}
-
-export function travelPlanServiceSearchPath(params = {}) {
-  return buildPath("/api/v1/travel-plan-services/search", params);
-}
-
-export function travelPlanServiceSearchRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
-  const path = travelPlanServiceSearchPath(params);
-  const url = buildURL(baseURL, path, query);
-  return {
-    key: "travel_plan_service_search",
-    method: "GET",
-    authenticated: true,
-    url,
-    headers,
-    body
-  };
-}
-
 export function bookingTravelPlanDayImportPath(params = {}) {
   return buildPath("/api/v1/bookings/{booking_id}/travel-plan/days/import", params);
 }
@@ -598,23 +548,6 @@ export function bookingTravelPlanDayImportRequest({ baseURL = '', params = {}, q
   const url = buildURL(baseURL, path, query);
   return {
     key: "booking_travel_plan_day_import",
-    method: "POST",
-    authenticated: true,
-    url,
-    headers,
-    body
-  };
-}
-
-export function bookingTravelPlanImportPath(params = {}) {
-  return buildPath("/api/v1/bookings/{booking_id}/travel-plan/import", params);
-}
-
-export function bookingTravelPlanImportRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
-  const path = bookingTravelPlanImportPath(params);
-  const url = buildURL(baseURL, path, query);
-  return {
-    key: "booking_travel_plan_import",
     method: "POST",
     authenticated: true,
     url,

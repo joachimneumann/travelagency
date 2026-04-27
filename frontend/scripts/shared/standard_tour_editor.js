@@ -34,7 +34,6 @@ export function createStandardTourEditor({
     hasUnsavedBookingChanges: () => false,
     features: {
       dayImport: false,
-      planImport: false,
       standardTourImport: false,
       serviceImport: false,
       imageUpload: false,

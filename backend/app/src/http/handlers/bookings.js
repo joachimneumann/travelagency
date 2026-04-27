@@ -102,7 +102,6 @@ export function createBookingHandlers(deps) {
     syncBookingAssignmentFields,
     getBookingAssignedKeycloakUserId,
     canEditBooking,
-    canAccessTravelPlanImportSourceBooking,
     convertMinorUnits,
     validateBookingOfferInput,
     convertBookingOfferToBaseCurrency,
@@ -694,10 +693,6 @@ export function createBookingHandlers(deps) {
   });
 
   const {
-    handleSearchTravelPlans,
-    handleSearchTravelPlanDays,
-    handleSearchTravelPlanServices,
-    handleImportTravelPlan,
     handleImportTravelPlanDay,
     handleImportTravelPlanService,
     handleUploadTravelPlanServiceImage,
@@ -716,10 +711,12 @@ export function createBookingHandlers(deps) {
     readBodyJson,
     sendJson,
     readStore,
+    readTours,
     getPrincipal,
     canEditBooking,
     canAccessBooking,
-    canAccessTravelPlanImportSourceBooking,
+    normalizeTourForStorage,
+    normalizeMarketingTourTravelPlan,
     normalizeText,
     nowIso,
     addActivity,
@@ -750,7 +747,8 @@ export function createBookingHandlers(deps) {
     writeFile,
     rm,
     processBookingImageToWebp,
-    mkdir
+    mkdir,
+    marketingTourBookingTravelPlanCloner
   });
 
   const {
@@ -1211,10 +1209,6 @@ export function createBookingHandlers(deps) {
     handleCreateBookingPerson,
     handlePatchBookingPerson,
     handleDeleteBookingPerson,
-    handleSearchTravelPlans,
-    handleSearchTravelPlanDays,
-    handleSearchTravelPlanServices,
-    handleImportTravelPlan,
     handleImportTravelPlanDay,
     handleImportTravelPlanService,
     handleUploadTravelPlanServiceImage,

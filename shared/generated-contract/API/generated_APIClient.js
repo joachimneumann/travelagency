@@ -74,16 +74,8 @@ case "booking_travel_plan_attachment_pdf":
   return RequestFactory.bookingTravelPlanAttachmentPdfRequest(options);
 case "booking_travel_plan_translate":
   return RequestFactory.bookingTravelPlanTranslateRequest(options);
-case "travel_plan_day_search":
-  return RequestFactory.travelPlanDaySearchRequest(options);
-case "travel_plan_search":
-  return RequestFactory.travelPlanSearchRequest(options);
-case "travel_plan_service_search":
-  return RequestFactory.travelPlanServiceSearchRequest(options);
 case "booking_travel_plan_day_import":
   return RequestFactory.bookingTravelPlanDayImportRequest(options);
-case "booking_travel_plan_import":
-  return RequestFactory.bookingTravelPlanImportRequest(options);
 case "standard_tours":
   return RequestFactory.standardToursRequest(options);
 case "standard_tour_create":

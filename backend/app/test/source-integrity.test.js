@@ -4892,6 +4892,57 @@ test("marketing tour editor imports days and services only from other marketing 
   assert.match(tourHandlersSource, /sourceTourId === tourId[\s\S]*Choose a service from another marketing tour/, "Service imports should reject the current marketing tour as a source");
 });
 
+test("booking travel plan copies days and services from marketing tours only", async () => {
+  const bookingPageScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking.js");
+  const bookingImportHandlersPath = path.resolve(__dirname, "..", "src", "http", "handlers", "booking_travel_plan_import.js");
+  const bookingHandlersPath = path.resolve(__dirname, "..", "src", "http", "handlers", "booking_travel_plan.js");
+  const bookingsSourcePath = path.resolve(__dirname, "..", "src", "http", "handlers", "bookings.js");
+  const clonerPath = path.resolve(__dirname, "..", "src", "http", "handlers", "marketing_tour_booking_travel_plan.js");
+  const apiModelsPath = path.resolve(__dirname, "..", "..", "..", "shared", "generated-contract", "API", "generated_APIModels.js");
+  const apiRequestFactoryPath = path.resolve(__dirname, "..", "..", "..", "shared", "generated-contract", "API", "generated_APIRequestFactory.js");
+  const routesPath = path.resolve(__dirname, "..", "src", "http", "routes.js");
+  const travelPlanLibraryPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan_service_library.js");
+  const [
+    bookingPageScriptSource,
+    bookingImportHandlersSource,
+    bookingHandlersSource,
+    bookingsSource,
+    clonerSource,
+    apiModelsSource,
+    apiRequestFactorySource,
+    routesSource,
+    travelPlanLibrarySource
+  ] = await Promise.all([
+    readFile(bookingPageScriptPath, "utf8"),
+    readFile(bookingImportHandlersPath, "utf8"),
+    readFile(bookingHandlersPath, "utf8"),
+    readFile(bookingsSourcePath, "utf8"),
+    readFile(clonerPath, "utf8"),
+    readFile(apiModelsPath, "utf8"),
+    readFile(apiRequestFactoryPath, "utf8"),
+    readFile(routesPath, "utf8"),
+    readFile(travelPlanLibraryPath, "utf8")
+  ]);
+
+  assert.match(bookingPageScriptSource, /tourTravelPlanDaySearchRequest[\s\S]*tourTravelPlanServiceSearchRequest/, "Booking editor should search day and service libraries through marketing-tour endpoints");
+  assert.match(bookingPageScriptSource, /buildBookingMarketingTourDayImportRequest[\s\S]*source_tour_id:\s*normalizedSourceTourId[\s\S]*buildBookingMarketingTourServiceImportRequest[\s\S]*source_tour_id:\s*normalizedSourceTourId/, "Booking editor should import selected marketing-tour days and services with source_tour_id");
+  assert.match(bookingPageScriptSource, /travelPlanLibrarySource:\s*"marketing_tour"[\s\S]*dayImport:\s*true[\s\S]*tourImport:\s*false[\s\S]*serviceImport:\s*true/, "Booking travel plan should expose only day and service copy actions from the marketing-tour library");
+  assert.doesNotMatch(bookingPageScriptSource, /planImport/, "Booking travel plan should not expose full booking travel-plan import");
+  assert.match(bookingImportHandlersSource, /validateTravelPlanDayImportPayload[\s\S]*assertRequiredIdentifier\(value\.source_tour_id[\s\S]*validateTravelPlanServiceImportPayload[\s\S]*assertRequiredIdentifier\(value\.source_tour_id/, "Booking import handlers should require marketing-tour import sources");
+  assert.doesNotMatch(bookingImportHandlersSource, /source_booking_id/, "Booking import handlers should not accept booking import sources");
+  assert.match(bookingImportHandlersSource, /cloneMarketingTourServiceForBooking[\s\S]*Service imported from marketing tour[\s\S]*cloneMarketingTourDayForBooking[\s\S]*Day imported from marketing tour/, "Booking import handlers should clone selected marketing-tour services and days into booking travel plans");
+  assert.match(bookingHandlersSource, /marketingTourBookingTravelPlanCloner/, "Booking travel-plan handlers should pass the marketing-tour cloner into import handlers");
+  assert.match(bookingsSource, /marketingTourBookingTravelPlanCloner[\s\S]*createBookingTravelPlanHandlers/, "Booking handlers should construct and provide the marketing-tour cloner");
+  assert.match(clonerSource, /cloneMarketingTourDayForBooking[\s\S]*cloneMarketingTourServiceForBooking[\s\S]*cloneMarketingTourTravelPlanForBooking/, "Marketing-tour booking cloner should expose single day and service clone helpers");
+  assert.match(apiModelsSource, /TRAVEL_PLAN_DAY_IMPORT_REQUEST_SCHEMA[\s\S]*source_tour_id","required":true[\s\S]*source_day_id","required":true/, "Generated day import contract should require marketing-tour sources");
+  assert.match(apiModelsSource, /TRAVEL_PLAN_SERVICE_IMPORT_REQUEST_SCHEMA[\s\S]*source_tour_id","required":true[\s\S]*source_service_id","required":true/, "Generated service import contract should require marketing-tour sources");
+  assert.doesNotMatch(apiModelsSource, /TRAVEL_PLAN_DAY_IMPORT_REQUEST_SCHEMA[\s\S]{0,1200}source_booking_id/, "Generated day import contract should not expose booking import sources");
+  assert.doesNotMatch(apiModelsSource, /TRAVEL_PLAN_SERVICE_IMPORT_REQUEST_SCHEMA[\s\S]{0,1200}source_booking_id/, "Generated service import contract should not expose booking import sources");
+  assert.doesNotMatch(apiRequestFactorySource, /travelPlanDaySearchRequest|travelPlanServiceSearchRequest|travelPlanSearchRequest|bookingTravelPlanImportRequest/, "Generated request factory should not expose booking travel-plan library endpoints");
+  assert.doesNotMatch(routesSource, /\/api\/v1\/travel-plan-days\/search|\/api\/v1\/travel-plan-services\/search|\/api\/v1\/travel-plan\/plans|\/api\/v1\/bookings\/\{booking_id\}\/travel-plan\/import/, "Routes should not expose booking travel-plan library endpoints");
+  assert.doesNotMatch(travelPlanLibrarySource, /bookingTravelPlanImportRequest|travelPlanDaySearchRequest|travelPlanServiceSearchRequest|travelPlanSearchRequest|data-travel-plan-import-source-plan-booking|openTravelPlanLibrary/, "Shared library should not call booking travel-plan library endpoints");
+});
+
 test("travel plan library cards keep media separate from copy and actions", async () => {
   const travelPlanStylesPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "pages", "backend-booking-travel-plan.css");
   const travelPlanStyles = await readFile(travelPlanStylesPath, "utf8");

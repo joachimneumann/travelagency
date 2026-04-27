@@ -173,47 +173,6 @@ import (
 	search?:      string
 }
 
-#TravelPlanServiceSearchResult: {
-	source_booking_id:    common.#Identifier
-	source_booking_name?: string
-	source_booking_code?: string
-	day_number?:          >0 & int
-	service_id:           common.#Identifier
-	service_kind?:        enums.#TravelPlanServiceKind
-	title?:               string
-	details?:             string
-	location?:            string
-	overnight_location?:  string
-	thumbnail_url?:       common.#Url | string
-	image_count?:         >=0 & int
-	updated_at?:          common.#Timestamp
-}
-
-#TravelPlanServiceSearchResponse: {
-	items: [...#TravelPlanServiceSearchResult]
-	total: >=0 & int
-}
-
-#TravelPlanDaySearchResult: {
-	source_booking_id:    common.#Identifier
-	source_booking_name?: string
-	source_booking_code?: string
-	day_id:               common.#Identifier
-	day_number?:          >0 & int
-	title?:               string
-	overnight_location?:  string
-	notes?:               string
-	thumbnail_url?:       common.#Url | string
-	service_count?:       >=0 & int
-	image_count?:         >=0 & int
-	updated_at?:          common.#Timestamp
-}
-
-#TravelPlanDaySearchResponse: {
-	items: [...#TravelPlanDaySearchResult]
-	total: >=0 & int
-}
-
 #TourTravelPlanServiceSearchResult: {
 	source_tour_id:      common.#Identifier
 	source_tour_title?:  string
@@ -252,25 +211,6 @@ import (
 
 #TourTravelPlanDaySearchResponse: {
 	items: [...#TourTravelPlanDaySearchResult]
-	total: >=0 & int
-}
-
-#TravelPlanSearchResult: {
-	source_booking_id:    common.#Identifier
-	source_booking_name?: string
-	source_booking_code?: string
-	day_count:            >=0 & int
-	service_count:        >=0 & int
-	first_date?:          common.#DateOnly
-	last_date?:           common.#DateOnly
-	title_preview?:       string
-	overnight_preview?:   string
-	thumbnail_url?:       common.#Url | string
-	updated_at?:          common.#Timestamp
-}
-
-#TravelPlanSearchResponse: {
-	items: [...#TravelPlanSearchResult]
 	total: >=0 & int
 }
 

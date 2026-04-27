@@ -247,6 +247,8 @@ export function createMarketingTourBookingTravelPlanCloner(deps) {
 
   return {
     bookingDestinationCodesFromTour,
+    cloneMarketingTourDayForBooking,
+    cloneMarketingTourServiceForBooking,
     cloneMarketingTourTravelPlanForBooking
   };
 }

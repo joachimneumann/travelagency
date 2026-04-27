@@ -1753,569 +1753,6 @@ test("booking travel plan patch allows blank service titles and still rejects in
 
 });
 
-test("services can be searched and imported from another booking", async () => {
-  const sourceBooking = await createSeedBooking();
-  const targetBooking = await createPublicBooking({
-    name: "Target User",
-    email: "target@example.com"
-  });
-
-  const store = JSON.parse(await readFile(STORE_PATH, "utf8"));
-  const sourceRecord = store.bookings.find((item) => item.id === sourceBooking.id);
-  const targetRecord = store.bookings.find((item) => item.id === targetBooking.id);
-  assert.ok(sourceRecord);
-  assert.ok(targetRecord);
-
-  sourceRecord.travel_plan = {
-    days: [
-      {
-        id: "source_day_1",
-        day_number: 1,
-        date: "2026-04-01",
-        title: "Arrival",
-        overnight_location: "Hoi An",
-        services: [
-          {
-            id: "source_item_1",
-            timing_kind: "label",
-            time_label: "Afternoon",
-            kind: "accommodation",
-            title: "Boutique hotel check-in",
-            details: "Private transfer and riverside hotel check-in.",
-            location: "Hoi An",
-            image: {
-              id: "source_item_image_1",
-              storage_path: "/public/v1/booking-images/source/item-1.webp",
-              sort_order: 0,
-              is_primary: true,
-              is_customer_visible: true,
-              created_at: "2026-03-21T00:00:00Z"
-            }
-          }
-        ],
-        notes: ""
-      }
-    ]
-  };
-  targetRecord.travel_plan = {
-    days: [
-      {
-        id: "target_day_1",
-        day_number: 1,
-        date: "2026-05-10",
-        title: "Start",
-        overnight_location: "Da Nang",
-        services: [],
-        notes: ""
-      }
-    ]
-  };
-  await writeFile(STORE_PATH, `${JSON.stringify(store, null, 2)}\n`, "utf8");
-
-  const searchResult = await requestJson(
-    `${endpointPath("travel_plan_service_search")}?q=boutique&service_kind=accommodation`,
-    apiHeaders()
-  );
-  assert.equal(searchResult.status, 200);
-  assert.equal(typeof searchResult.body.total, "number");
-  assert.ok(Array.isArray(searchResult.body.items));
-  const foundItem = searchResult.body.items.find((item) => item.source_booking_id === sourceBooking.id);
-  assert.ok(foundItem, "Expected imported item to appear in search results");
-  assert.equal(foundItem.service_id, "source_item_1");
-  assert.equal(foundItem.service_kind, "accommodation");
-  assert.equal(foundItem.thumbnail_url, "/public/v1/booking-images/source/item-1.webp");
-
-  const importResult = await requestJson(
-    endpointPath("booking_travel_plan_service_import")
-      .replace("{booking_id}", targetBooking.id)
-      .replace("{day_id}", "target_day_1"),
-    apiHeaders(),
-    {
-      method: "POST",
-      body: {
-        expected_travel_plan_revision: targetBooking.travel_plan_revision,
-        source_booking_id: sourceBooking.id,
-        source_service_id: "source_item_1",
-        include_images: true,
-        include_customer_visible_images_only: false,
-        include_notes: true,
-        include_translations: true,
-        include_offer_links: false
-      }
-    }
-  );
-  assert.equal(importResult.status, 200);
-  assert.equal(importResult.body.booking.travel_plan.days[0].services.length, 1);
-  const importedItem = importResult.body.booking.travel_plan.days[0].services[0];
-  assert.equal(importedItem.title, "Boutique hotel check-in");
-  assert.equal(importedItem.copied_from.source_booking_id, sourceBooking.id);
-  assert.equal(importedItem.copied_from.source_service_id, "source_item_1");
-  assert.ok(importedItem.image);
-  assert.notEqual(importedItem.image.id, "source_item_image_1");
-  assert.equal(importedItem.image.storage_path, "/public/v1/booking-images/source/item-1.webp");
-});
-
-test("days can be searched and imported from another booking with cleared timing and detached financial coverage", async () => {
-  const sourceBooking = await createSeedBooking();
-  const targetBooking = await createPublicBooking({
-    name: "Day Target User",
-    email: "day-target@example.com"
-  });
-
-  const store = JSON.parse(await readFile(STORE_PATH, "utf8"));
-  const sourceRecord = store.bookings.find((item) => item.id === sourceBooking.id);
-  const targetRecord = store.bookings.find((item) => item.id === targetBooking.id);
-  assert.ok(sourceRecord);
-  assert.ok(targetRecord);
-
-  sourceRecord.travel_plan = {
-    days: [
-      {
-        id: "source_day_copy_1",
-        day_number: 1,
-        date: "2026-06-03",
-        title: "Waterfall day",
-        title_i18n: { en: "Waterfall day", de: "Wasserfalltag" },
-        overnight_location: "Hue",
-        overnight_location_i18n: { en: "Hue", de: "Hue" },
-        services: [
-          {
-            id: "source_day_service_1",
-            timing_kind: "point",
-            time_label: "",
-            time_label_i18n: {},
-            time_point: "2026-06-03T08:30:00.000Z",
-            kind: "activity",
-            title: "Canyon walk",
-            title_i18n: { en: "Canyon walk", de: "Canyon-Wanderung" },
-            details: "Guided hike",
-            details_i18n: { en: "Guided hike", de: "Gefuhrte Wanderung" },
-            location: "Bach Ma",
-            location_i18n: { en: "Bach Ma", de: "Bach Ma" },
-            image: {
-              id: "source_day_service_image_1",
-              storage_path: "/public/v1/booking-images/source/day-service-1.webp",
-              sort_order: 0,
-              is_primary: true,
-              is_customer_visible: true,
-              created_at: "2026-03-21T00:00:00Z"
-            }
-          }
-        ],
-        notes: "Bring water",
-        notes_i18n: { en: "Bring water", de: "Wasser mitbringen" }
-      }
-    ]
-  };
-  targetRecord.travel_plan = {
-    days: [
-      {
-        id: "target_day_copy_1",
-        day_number: 1,
-        date: "2026-06-10",
-        title: "Arrival",
-        overnight_location: "Da Nang",
-        services: [],
-        notes: ""
-      }
-    ]
-  };
-  await writeFile(STORE_PATH, `${JSON.stringify(store, null, 2)}\n`, "utf8");
-
-  const searchResult = await requestJson(
-    `${endpointPath("travel_plan_day_search")}?q=waterfall`,
-    apiHeaders()
-  );
-  assert.equal(searchResult.status, 200);
-  assert.equal(typeof searchResult.body.total, "number");
-  assert.ok(Array.isArray(searchResult.body.items));
-  const foundDay = searchResult.body.items.find((item) => item.source_booking_id === sourceBooking.id);
-  assert.ok(foundDay, "Expected imported day to appear in search results");
-  assert.equal(foundDay.day_id, "source_day_copy_1");
-  assert.equal(foundDay.service_count, 1);
-  assert.equal(foundDay.thumbnail_url, "/public/v1/booking-images/source/day-service-1.webp");
-
-  const importResult = await requestJson(
-    endpointPath("booking_travel_plan_day_import").replace("{booking_id}", targetBooking.id),
-    apiHeaders(),
-    {
-      method: "POST",
-      body: {
-        expected_travel_plan_revision: targetBooking.travel_plan_revision,
-        source_booking_id: sourceBooking.id,
-        source_day_id: "source_day_copy_1",
-        include_images: true,
-        include_customer_visible_images_only: false,
-        include_notes: true,
-        include_translations: true
-      }
-    }
-  );
-  assert.equal(importResult.status, 200);
-  assert.equal(importResult.body.booking.travel_plan.days.length, 2);
-  const importedDay = importResult.body.booking.travel_plan.days[1];
-  assert.equal(importedDay.date, "2026-06-11");
-  assert.equal(importedDay.title, "Waterfall day");
-  assert.deepEqual(importedDay.title_i18n, { en: "Waterfall day", de: "Wasserfalltag" });
-  assert.deepEqual(importedDay.notes_i18n, { en: "Bring water", de: "Wasser mitbringen" });
-  assert.equal(importedDay.copied_from.source_booking_id, sourceBooking.id);
-  assert.equal(importedDay.copied_from.source_day_id, "source_day_copy_1");
-  const importedService = importedDay.services[0];
-  assert.equal(importedService.title, "Canyon walk");
-  assert.deepEqual(importedService.title_i18n, { en: "Canyon walk", de: "Canyon-Wanderung" });
-  assert.equal(importedService.time_point, null);
-  assert.equal(importedService.start_time, null);
-  assert.equal(importedService.end_time, null);
-  assert.equal(importedService.copied_from.source_booking_id, sourceBooking.id);
-  assert.equal(importedService.copied_from.source_day_id, "source_day_copy_1");
-  assert.equal(importedService.copied_from.source_service_id, "source_day_service_1");
-  assert.ok(importedService.image);
-  assert.notEqual(importedService.image.id, "source_day_service_image_1");
-  assert.equal(importedService.image.storage_path, "/public/v1/booking-images/source/day-service-1.webp");
-});
-
-test("travel plans can be searched and appended from another booking with grouped provenance", async () => {
-  const sourceBooking = await createSeedBooking();
-  const targetBooking = await createPublicBooking({
-    name: "Plan Target User",
-    email: "plan-target@example.com"
-  });
-
-  const store = JSON.parse(await readFile(STORE_PATH, "utf8"));
-  const sourceRecord = store.bookings.find((item) => item.id === sourceBooking.id);
-  const targetRecord = store.bookings.find((item) => item.id === targetBooking.id);
-  assert.ok(sourceRecord);
-  assert.ok(targetRecord);
-
-  sourceRecord.travel_plan = {
-    days: [
-      {
-        id: "source_plan_day_1",
-        day_number: 1,
-        date: "2026-07-01",
-        title: "Arrival day",
-        overnight_location: "Hue",
-        services: [
-          {
-            id: "source_plan_service_1",
-            timing_kind: "point",
-            time_label: "",
-            time_label_i18n: {},
-            time_point: "2026-07-01T09:30",
-            kind: "transport",
-            title: "Airport pickup",
-            title_i18n: { en: "Airport pickup", de: "Flughafenabholung" },
-            details: "Private transfer",
-            details_i18n: { en: "Private transfer", de: "Privater Transfer" },
-            location: "Hue Airport",
-            location_i18n: { en: "Hue Airport", de: "Flughafen Hue" },
-            image: {
-              id: "source_plan_service_image_1",
-              storage_path: "/public/v1/booking-images/source/plan-service-1.webp",
-              sort_order: 0,
-              is_primary: true,
-              is_customer_visible: true,
-              created_at: "2026-03-21T00:00:00Z"
-            }
-          }
-        ],
-        notes: "Lantern welcome dinner",
-        notes_i18n: { en: "Lantern welcome dinner", de: "Laternen-Abendessen" }
-      },
-      {
-        id: "source_plan_day_2",
-        day_number: 2,
-        date: "2026-07-03",
-        title: "Cave day",
-        overnight_location: "Phong Nha",
-        services: [
-          {
-            id: "source_plan_service_2",
-            timing_kind: "range",
-            time_label: "",
-            time_label_i18n: {},
-            start_time: "2026-07-03T08:00",
-            end_time: "2026-07-03T11:30",
-            kind: "activity",
-            title: "Lantern cave walk",
-            details: "Guided cave visit",
-            location: "Phong Nha"
-          }
-        ],
-        notes: "Bring water"
-      }
-    ],
-    attachments: [
-      {
-        id: "source_plan_attachment_1",
-        filename: "source-attachment.pdf",
-        storage_path: "/tmp/source-attachment.pdf",
-        page_count: 2,
-        sort_order: 0,
-        created_at: "2026-03-21T00:00:00Z"
-      }
-    ]
-  };
-  sourceRecord.pdf_personalization = {
-    travel_plan: {
-      subtitle: "Source subtitle marker",
-      subtitle_i18n: {
-        en: "Source subtitle marker",
-        de: "Quelluntertitel Marker"
-      },
-      welcome: "Source welcome marker",
-      children_policy: "Source children policy marker",
-      whats_not_included: "Source exclusions marker",
-      closing: "Source closing marker",
-      include_who_is_traveling: true
-    }
-  };
-  targetRecord.travel_plan = {
-    days: [
-      {
-        id: "target_plan_day_1",
-        day_number: 1,
-        date: "2026-07-10",
-        title: "Target arrival",
-        overnight_location: "Da Nang",
-        services: [],
-        notes: ""
-      }
-    ],
-    attachments: []
-  };
-  targetRecord.pdf_personalization = {
-    travel_plan: {
-      subtitle: "Target subtitle marker"
-    },
-    offer: {
-      closing: "Offer personalization should stay on the target booking."
-    }
-  };
-  await writeFile(STORE_PATH, `${JSON.stringify(store, null, 2)}\n`, "utf8");
-
-  const searchResult = await requestJson(
-    `${endpointPath("travel_plan_search")}?q=lantern`,
-    apiHeaders()
-  );
-  assert.equal(searchResult.status, 200);
-  assert.equal(typeof searchResult.body.total, "number");
-  assert.ok(Array.isArray(searchResult.body.items));
-  const foundPlan = searchResult.body.items.find((item) => item.source_booking_id === sourceBooking.id);
-  assert.ok(foundPlan, "Expected imported travel plan to appear in search results");
-  assert.equal(foundPlan.day_count, 2);
-  assert.equal(foundPlan.service_count, 2);
-  assert.equal(foundPlan.first_date, "2026-07-01");
-  assert.equal(foundPlan.last_date, "2026-07-03");
-  assert.equal(foundPlan.thumbnail_url, "/public/v1/booking-images/source/plan-service-1.webp");
-
-  const importResult = await requestJson(
-    endpointPath("booking_travel_plan_import").replace("{booking_id}", targetBooking.id),
-    apiHeaders(),
-    {
-      method: "POST",
-      body: {
-        expected_travel_plan_revision: targetBooking.travel_plan_revision,
-        source_booking_id: sourceBooking.id,
-        include_images: true,
-        include_customer_visible_images_only: false,
-        include_notes: true,
-        include_translations: true
-      }
-    }
-  );
-
-  assert.equal(importResult.status, 200);
-  assert.equal(importResult.body.booking.travel_plan.days.length, 3);
-  assert.equal(importResult.body.booking.travel_plan.attachments.length, 0);
-  assert.equal(importResult.body.booking.pdf_personalization.travel_plan.subtitle, "Source subtitle marker");
-  assert.equal(importResult.body.booking.pdf_personalization.travel_plan.subtitle_i18n.de, "Quelluntertitel Marker");
-  assert.equal(importResult.body.booking.pdf_personalization.travel_plan.welcome, "Source welcome marker");
-  assert.equal(importResult.body.booking.pdf_personalization.travel_plan.children_policy, "Source children policy marker");
-  assert.equal(importResult.body.booking.pdf_personalization.travel_plan.whats_not_included, "Source exclusions marker");
-  assert.equal(importResult.body.booking.pdf_personalization.travel_plan.closing, "Source closing marker");
-  assert.equal(importResult.body.booking.pdf_personalization.travel_plan.include_who_is_traveling, true);
-  assert.equal(
-    importResult.body.booking.pdf_personalization.offer.closing,
-    "Offer personalization should stay on the target booking."
-  );
-
-  const importedDays = importResult.body.booking.travel_plan.days.slice(1);
-  assert.equal(importedDays[0].date, "2026-07-11");
-  assert.equal(importedDays[1].date, "2026-07-13");
-  assert.equal(importedDays[0].copied_from.source_booking_id, sourceBooking.id);
-  assert.equal(importedDays[0].copied_from.source_day_id, "source_plan_day_1");
-  assert.equal(importedDays[1].copied_from.source_day_id, "source_plan_day_2");
-  assert.ok(importedDays[0].copied_from.import_batch_id);
-  assert.equal(importedDays[1].copied_from.import_batch_id, importedDays[0].copied_from.import_batch_id);
-
-  const importedFirstService = importedDays[0].services[0];
-  const importedSecondService = importedDays[1].services[0];
-  assert.equal(importedFirstService.time_point, "2026-07-11T09:30");
-  assert.equal(importedSecondService.start_time, "2026-07-13T08:00");
-  assert.equal(importedSecondService.end_time, "2026-07-13T11:30");
-  assert.equal(importedFirstService.copied_from.source_service_id, "source_plan_service_1");
-  assert.equal(importedSecondService.copied_from.source_service_id, "source_plan_service_2");
-  assert.equal(importedFirstService.copied_from.import_batch_id, importedDays[0].copied_from.import_batch_id);
-  assert.equal(importedSecondService.copied_from.import_batch_id, importedDays[0].copied_from.import_batch_id);
-  assert.ok(importedFirstService.image);
-  assert.notEqual(importedFirstService.image.id, "source_plan_service_image_1");
-  assert.equal(importedFirstService.image.storage_path, "/public/v1/booking-images/source/plan-service-1.webp");
-});
-
-test("staff can search and import travel plan library content from other staff bookings into their own booking", async () => {
-  const sourceBooking = await createSeedBooking();
-  const targetBooking = await createPublicBooking({
-    name: "Staff Target User",
-    email: "staff-target@example.com"
-  });
-
-  const store = JSON.parse(await readFile(STORE_PATH, "utf8"));
-  const sourceRecord = store.bookings.find((item) => item.id === sourceBooking.id);
-  const targetRecord = store.bookings.find((item) => item.id === targetBooking.id);
-  assert.ok(sourceRecord);
-  assert.ok(targetRecord);
-
-  sourceRecord.assigned_keycloak_user_id = "kc-joachim";
-  targetRecord.assigned_keycloak_user_id = "kc-staff";
-  sourceRecord.travel_plan = {
-    days: [
-      {
-        id: "shared_source_day_1",
-        day_number: 1,
-        date: "2026-08-03",
-        title: "Shared market day",
-        overnight_location: "Hoi An",
-        services: [
-          {
-            id: "shared_source_service_1",
-            timing_kind: "label",
-            time_label: "Morning",
-            kind: "activity",
-            title: "Lantern workshop",
-            details: "Hands-on lantern making with local artisans.",
-            location: "Hoi An Ancient Town",
-            image: {
-              id: "shared_source_service_image_1",
-              storage_path: "/public/v1/booking-images/source/shared-service-1.webp",
-              sort_order: 0,
-              is_primary: true,
-              is_customer_visible: true,
-              created_at: "2026-03-21T00:00:00Z"
-            }
-          }
-        ],
-        notes: "Great fit for family travelers"
-      }
-    ]
-  };
-  sourceRecord.pdf_personalization = {
-    travel_plan: {
-      subtitle: "Shared subtitle marker"
-    }
-  };
-  targetRecord.travel_plan = {
-    days: [
-      {
-        id: "staff_target_day_1",
-        day_number: 1,
-        date: "2026-08-10",
-        title: "Staff target arrival",
-        overnight_location: "Da Nang",
-        services: [],
-        notes: ""
-      }
-    ],
-    attachments: []
-  };
-  await writeFile(STORE_PATH, `${JSON.stringify(store, null, 2)}\n`, "utf8");
-
-  const staffHeaders = apiHeaders("atp_staff", "staff", "kc-staff");
-
-  const planSearchResult = await requestJson(
-    `${endpointPath("travel_plan_search")}?q=lantern`,
-    staffHeaders
-  );
-  assert.equal(planSearchResult.status, 200);
-  assert.ok(planSearchResult.body.items.some((item) => item.source_booking_id === sourceBooking.id));
-
-  const daySearchResult = await requestJson(
-    `${endpointPath("travel_plan_day_search")}?q=market`,
-    staffHeaders
-  );
-  assert.equal(daySearchResult.status, 200);
-  assert.ok(daySearchResult.body.items.some((item) => item.source_booking_id === sourceBooking.id));
-
-  const serviceSearchResult = await requestJson(
-    `${endpointPath("travel_plan_service_search")}?q=lantern&service_kind=activity`,
-    staffHeaders
-  );
-  assert.equal(serviceSearchResult.status, 200);
-  assert.ok(serviceSearchResult.body.items.some((item) => item.source_booking_id === sourceBooking.id));
-
-  const serviceImportResult = await requestJson(
-    endpointPath("booking_travel_plan_service_import")
-      .replace("{booking_id}", targetBooking.id)
-      .replace("{day_id}", "staff_target_day_1"),
-    staffHeaders,
-    {
-      method: "POST",
-      body: {
-        expected_travel_plan_revision: targetBooking.travel_plan_revision,
-        source_booking_id: sourceBooking.id,
-        source_service_id: "shared_source_service_1",
-        include_images: true,
-        include_customer_visible_images_only: false,
-        include_notes: true,
-        include_translations: true
-      }
-    }
-  );
-  assert.equal(serviceImportResult.status, 200);
-  assert.equal(serviceImportResult.body.booking.travel_plan.days[0].services[0].copied_from.source_booking_id, sourceBooking.id);
-
-  const targetAfterServiceImport = serviceImportResult.body.booking;
-
-  const dayImportResult = await requestJson(
-    endpointPath("booking_travel_plan_day_import").replace("{booking_id}", targetBooking.id),
-    staffHeaders,
-    {
-      method: "POST",
-      body: {
-        expected_travel_plan_revision: targetAfterServiceImport.travel_plan_revision,
-        source_booking_id: sourceBooking.id,
-        source_day_id: "shared_source_day_1",
-        include_images: true,
-        include_customer_visible_images_only: false,
-        include_notes: true,
-        include_translations: true
-      }
-    }
-  );
-  assert.equal(dayImportResult.status, 200);
-  assert.equal(dayImportResult.body.booking.travel_plan.days[1].copied_from.source_booking_id, sourceBooking.id);
-
-  const targetAfterDayImport = dayImportResult.body.booking;
-
-  const planImportResult = await requestJson(
-    endpointPath("booking_travel_plan_import").replace("{booking_id}", targetBooking.id),
-    staffHeaders,
-    {
-      method: "POST",
-      body: {
-        expected_travel_plan_revision: targetAfterDayImport.travel_plan_revision,
-        source_booking_id: sourceBooking.id,
-        include_images: true,
-        include_customer_visible_images_only: false,
-        include_notes: true,
-        include_translations: true
-      }
-    }
-  );
-  assert.equal(planImportResult.status, 200);
-  assert.equal(planImportResult.body.booking.travel_plan.days.length, 3);
-  assert.equal(planImportResult.body.booking.pdf_personalization.travel_plan.subtitle, "Shared subtitle marker");
-});
 
 test("standard tour apply copies the travel plan without storing extra standard-tour metadata", async () => {
   await removeStandardToursByTitlePrefix("Standard tour copy marker");
@@ -2694,6 +2131,127 @@ test("marketing tour editor can import days and services from other marketing to
     for (const tourId of [targetTourId, sourceTourId].filter(Boolean)) {
       await requestJson(
         endpointPath("tour_delete").replace("{tour_id}", tourId),
+        tourEditorHeaders,
+        { method: "DELETE" }
+      );
+    }
+  }
+});
+
+test("booking editor can import days and services from marketing tours", async () => {
+  const sourceTitle = `Booking marketing tour library source ${Date.now()}`;
+  let sourceTourId = "";
+  const tourEditorHeaders = apiHeaders("atp_tour_editor", "tour-editor", "kc-tour-editor");
+  try {
+    const sourceCreateResult = await requestJson(
+      endpointPath("tour_create"),
+      tourEditorHeaders,
+      {
+        method: "POST",
+        body: {
+          title: sourceTitle,
+          styles: ["culture"],
+          short_description: "Reusable marketing tour content for bookings",
+          travel_plan: {
+            destination_scope: [{ destination: "VN", areas: [] }],
+            days: [
+              {
+                id: "booking_marketing_source_day_1",
+                day_number: 1,
+                title: "Reusable booking day",
+                overnight_location: "Hoi An",
+                notes: "Reusable booking day notes",
+                services: [
+                  {
+                    id: "booking_marketing_source_service_1",
+                    timing_kind: "label",
+                    kind: "activity",
+                    title: "Reusable booking service",
+                    image_subtitle: "Service image subtitle",
+                    location: "Hoi An"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    );
+    assert.equal(sourceCreateResult.status, 201);
+    sourceTourId = sourceCreateResult.body.tour.id;
+
+    const targetBooking = await createPublicBooking({
+      name: "Marketing Tour Import Target",
+      email: "marketing-tour-import-target@example.com"
+    });
+    const store = JSON.parse(await readFile(STORE_PATH, "utf8"));
+    const targetRecord = store.bookings.find((item) => item.id === targetBooking.id);
+    assert.ok(targetRecord);
+    targetRecord.travel_plan = {
+      destination_scope: [],
+      destinations: [],
+      days: [
+        {
+          id: "booking_marketing_target_day_1",
+          day_number: 1,
+          title: "Target booking day",
+          overnight_location: "Da Nang",
+          services: [],
+          notes: ""
+        }
+      ]
+    };
+    await writeFile(STORE_PATH, `${JSON.stringify(store, null, 2)}\n`, "utf8");
+
+    const serviceImportResult = await requestJson(
+      endpointPath("booking_travel_plan_service_import")
+        .replace("{booking_id}", targetBooking.id)
+        .replace("{day_id}", "booking_marketing_target_day_1"),
+      apiHeaders(),
+      {
+        method: "POST",
+        body: {
+          expected_travel_plan_revision: targetBooking.travel_plan_revision,
+          source_tour_id: sourceTourId,
+          source_service_id: "booking_marketing_source_service_1",
+          include_images: true,
+          include_customer_visible_images_only: false,
+          include_notes: true,
+          include_translations: true
+        }
+      }
+    );
+    assert.equal(serviceImportResult.status, 200);
+    const importedService = serviceImportResult.body.booking.travel_plan.days[0].services[0];
+    assert.equal(importedService.title, "Reusable booking service");
+    assert.notEqual(importedService.id, "booking_marketing_source_service_1");
+    assert.equal(importedService.timing_kind, "not_applicable");
+
+    const dayImportResult = await requestJson(
+      endpointPath("booking_travel_plan_day_import").replace("{booking_id}", targetBooking.id),
+      apiHeaders(),
+      {
+        method: "POST",
+        body: {
+          expected_travel_plan_revision: serviceImportResult.body.booking.travel_plan_revision,
+          source_tour_id: sourceTourId,
+          source_day_id: "booking_marketing_source_day_1",
+          include_images: true,
+          include_customer_visible_images_only: false,
+          include_notes: true,
+          include_translations: true
+        }
+      }
+    );
+    assert.equal(dayImportResult.status, 200);
+    assert.equal(dayImportResult.body.booking.travel_plan.days.length, 2);
+    assert.equal(dayImportResult.body.booking.travel_plan.days[1].title, "Reusable booking day");
+    assert.notEqual(dayImportResult.body.booking.travel_plan.days[1].id, "booking_marketing_source_day_1");
+    assert.equal(dayImportResult.body.booking.travel_plan.destination_scope[0].destination, "VN");
+  } finally {
+    if (sourceTourId) {
+      await requestJson(
+        endpointPath("tour_delete").replace("{tour_id}", sourceTourId),
         tourEditorHeaders,
         { method: "DELETE" }
       );

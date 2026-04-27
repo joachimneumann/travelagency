@@ -106,7 +106,6 @@ export function createBookingTravelPlanModule(ctx) {
   }
 
   const allowDayImport = isFeatureEnabled("dayImport");
-  const allowPlanImport = isFeatureEnabled("planImport");
   const allowTourImport = isFeatureEnabled("tourImport", isFeatureEnabled("standardTourImport"));
   const allowServiceImport = isFeatureEnabled("serviceImport");
   const allowImageUpload = isFeatureEnabled("imageUpload");
@@ -3463,10 +3462,6 @@ export function createBookingTravelPlanModule(ctx) {
           travelPlanServiceLibraryModule.openTravelPlanDayLibrary();
           return;
         }
-        if (button.hasAttribute("data-travel-plan-open-plan-import")) {
-          travelPlanServiceLibraryModule.openTravelPlanLibrary();
-          return;
-        }
         if (button.hasAttribute("data-travel-plan-open-tour-import") || button.hasAttribute("data-travel-plan-open-standard-tour-import")) {
           travelPlanServiceLibraryModule.openStandardTourLibrary();
           return;
@@ -3686,9 +3681,6 @@ export function createBookingTravelPlanModule(ctx) {
     const tourTemplateLabel = hasDays
       ? bookingT("booking.travel_plan.append_marketing_tour", "Append a Marketing Tour")
       : bookingT("booking.travel_plan.use_marketing_tour", "Use a Marketing Tour");
-    const bookingPlanLabel = hasDays
-      ? bookingT("booking.travel_plan.append_existing_plan", "Append a Travel Plan from another Booking")
-      : bookingT("booking.travel_plan.use_existing_plan", "Use a Travel Plan from another Booking");
     const primaryActionRowClass = allowDayImport
       ? "travel-plan-footer__action-row travel-plan-footer__action-row--double"
       : "travel-plan-footer__action-row";
@@ -3722,11 +3714,6 @@ export function createBookingTravelPlanModule(ctx) {
           ${allowTourImport
             ? `<div class="travel-plan-footer__action-row">
                 <button class="btn travel-plan-day-add-btn travel-plan-day-add-btn--service travel-plan-day-add-btn--day-copy" data-travel-plan-open-tour-import data-requires-clean-state type="button">${escapeHtml(tourTemplateLabel)}</button>
-              </div>`
-            : ""}
-          ${allowPlanImport
-            ? `<div class="travel-plan-footer__action-row">
-                <button class="btn travel-plan-day-add-btn travel-plan-day-add-btn--service travel-plan-day-add-btn--day-copy" data-travel-plan-open-plan-import data-requires-clean-state type="button">${escapeHtml(bookingPlanLabel)}</button>
               </div>`
             : ""}
         </div>

@@ -104,13 +104,7 @@ import (
 		OfferExchangeRatesResponse:                                apiModel.#OfferExchangeRatesResponse
 		BookingListFilters:                                        apiModel.#BookingListFilters
 		TourListFilters:                                           apiModel.#TourListFilters
-		TravelPlanDaySearchResult:                                 apiModel.#TravelPlanDaySearchResult
-		TravelPlanDaySearchResponse:                               apiModel.#TravelPlanDaySearchResponse
-		TravelPlanSearchResult:                                    apiModel.#TravelPlanSearchResult
-		TravelPlanSearchResponse:                                  apiModel.#TravelPlanSearchResponse
-		TravelPlanServiceSearchResult:                             apiModel.#TravelPlanServiceSearchResult
-		TravelPlanServiceSearchResponse:                           apiModel.#TravelPlanServiceSearchResponse
-		DestinationScopeCatalogDestination:                        apiModel.#DestinationScopeCatalogDestination
+			DestinationScopeCatalogDestination:                        apiModel.#DestinationScopeCatalogDestination
 		DestinationArea:                                           apiModel.#DestinationArea
 		DestinationPlace:                                          apiModel.#DestinationPlace
 		DestinationScopeCatalogResponse:                           apiModel.#DestinationScopeCatalogResponse
@@ -156,17 +150,13 @@ import (
 		TranslationRule:                                           apiModel.#TranslationRule
 		TranslationRulesUpdateRequest:                             apiModel.#TranslationRulesUpdateRequest
 		BookingTravelPlanUpdateRequest:                            apiModel.#BookingTravelPlanUpdateRequest
-		TravelPlanDaySearchRequest:                                apiModel.#TravelPlanDaySearchRequest
-		TravelPlanDayImportRequest:                                apiModel.#TravelPlanDayImportRequest
-		TravelPlanSearchRequest:                                   apiModel.#TravelPlanSearchRequest
-		TravelPlanImportRequest:                                   apiModel.#TravelPlanImportRequest
-		DestinationCreateRequest:                                  apiModel.#DestinationCreateRequest
+			TravelPlanDayImportRequest:                                apiModel.#TravelPlanDayImportRequest
+			DestinationCreateRequest:                                  apiModel.#DestinationCreateRequest
 		DestinationAreaCreateRequest:                              apiModel.#DestinationAreaCreateRequest
 		DestinationPlaceCreateRequest:                             apiModel.#DestinationPlaceCreateRequest
 		StandardTourUpsertRequest:                           apiModel.#StandardTourUpsertRequest
 		BookingStandardTourApplyRequest:                     apiModel.#BookingStandardTourApplyRequest
-		TravelPlanServiceSearchRequest:                            apiModel.#TravelPlanServiceSearchRequest
-		TravelPlanServiceImportRequest:                            apiModel.#TravelPlanServiceImportRequest
+			TravelPlanServiceImportRequest:                            apiModel.#TravelPlanServiceImportRequest
 		TravelPlanServiceImageUploadRequest:                       apiModel.#TravelPlanServiceImageUploadRequest
 		TravelPlanServiceImageDeleteRequest:                       apiModel.#TravelPlanServiceImageDeleteRequest
 		TravelPlanAttachmentUploadRequest:                         apiModel.#TravelPlanAttachmentUploadRequest

@@ -2,11 +2,15 @@ import { GENERATED_APP_ROLES } from "../../Generated/Models/generated_Roles.js";
 import { BOOKING_PERSON_SCHEMA } from "../../Generated/Models/generated_Booking.js";
 import {
   bookingActivitiesRequest,
+  bookingTravelPlanDayImportRequest,
+  bookingTravelPlanServiceImportRequest,
   bookingPaymentDocumentsRequest,
   bookingPersonCreateRequest,
   bookingPersonDeleteRequest,
   bookingPersonPhotoRequest,
-  bookingPersonUpdateRequest
+  bookingPersonUpdateRequest,
+  tourTravelPlanDaySearchRequest,
+  tourTravelPlanServiceSearchRequest
 } from "../../Generated/API/generated_APIRequestFactory.js";
 import {
   createApiFetcher,
@@ -47,6 +51,7 @@ import {
 import { wireAuthLogoutLink } from "../shared/auth.js";
 import {
   bookingContentLang,
+  bookingLanguageQuery,
   normalizeBookingContentLang,
   setBookingContentLang
 } from "../booking/i18n.js";
@@ -1601,6 +1606,74 @@ const paymentFlowModule = createBookingPaymentFlowModule({
   formatDateTime,
 });
 
+function buildBookingMarketingTourDaySearchRequest({ apiOrigin: requestApiOrigin, query }) {
+  const normalizedQuery = normalizeText(query);
+  return tourTravelPlanDaySearchRequest({
+    baseURL: requestApiOrigin,
+    query: {
+      ...(normalizedQuery ? { q: normalizedQuery } : {}),
+      limit: 30
+    }
+  });
+}
+
+function buildBookingMarketingTourServiceSearchRequest({ apiOrigin: requestApiOrigin, query, kind }) {
+  const normalizedQuery = normalizeText(query);
+  const normalizedKind = normalizeText(kind);
+  return tourTravelPlanServiceSearchRequest({
+    baseURL: requestApiOrigin,
+    query: {
+      ...(normalizedQuery ? { q: normalizedQuery } : {}),
+      ...(normalizedKind ? { service_kind: normalizedKind } : {}),
+      limit: 30
+    }
+  });
+}
+
+function buildBookingMarketingTourDayImportRequest({ apiOrigin: requestApiOrigin, state: requestState, sourceTourId, sourceDayId, getBookingRevision: readRevision }) {
+  const normalizedSourceTourId = normalizeText(sourceTourId);
+  return bookingTravelPlanDayImportRequest({
+    baseURL: requestApiOrigin,
+    params: {
+      booking_id: requestState.booking.id
+    },
+    query: bookingLanguageQuery(),
+    body: {
+      expected_travel_plan_revision: readRevision("travel_plan_revision"),
+      source_tour_id: normalizedSourceTourId,
+      source_day_id: sourceDayId,
+      include_images: true,
+      include_customer_visible_images_only: false,
+      include_notes: true,
+      include_translations: true,
+      actor: requestState.user
+    }
+  });
+}
+
+function buildBookingMarketingTourServiceImportRequest({ apiOrigin: requestApiOrigin, state: requestState, targetDayId, sourceTourId, sourceServiceId, getBookingRevision: readRevision }) {
+  const normalizedSourceTourId = normalizeText(sourceTourId);
+  return bookingTravelPlanServiceImportRequest({
+    baseURL: requestApiOrigin,
+    params: {
+      booking_id: requestState.booking.id,
+      day_id: targetDayId
+    },
+    query: bookingLanguageQuery(),
+    body: {
+      expected_travel_plan_revision: readRevision("travel_plan_revision"),
+      source_tour_id: normalizedSourceTourId,
+      source_service_id: sourceServiceId,
+      include_images: true,
+      include_customer_visible_images_only: false,
+      include_notes: true,
+      include_translations: true,
+      include_offer_links: false,
+      actor: requestState.user
+    }
+  });
+}
+
 travelPlanModule = createBookingTravelPlanModule({
   state,
   els,
@@ -1620,7 +1693,17 @@ travelPlanModule = createBookingTravelPlanModule({
     updatePageDirtyBar();
   },
   hasUnsavedBookingChanges,
-  updatePageDirtyBar
+  updatePageDirtyBar,
+  buildTravelPlanDaySearchRequest: buildBookingMarketingTourDaySearchRequest,
+  buildTravelPlanServiceSearchRequest: buildBookingMarketingTourServiceSearchRequest,
+  buildTravelPlanDayImportRequest: buildBookingMarketingTourDayImportRequest,
+  buildTravelPlanServiceImportRequest: buildBookingMarketingTourServiceImportRequest,
+  travelPlanLibrarySource: "marketing_tour",
+  features: {
+    dayImport: true,
+    tourImport: false,
+    serviceImport: true
+  }
 });
 
 const offerModule = createBookingOfferModule({
