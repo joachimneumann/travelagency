@@ -19,85 +19,7 @@
       }
     </script>
     <style>
-      .tour-picture-editor {
-        --tour-media-preview-width: clamp(150px, 18vw, 220px);
-        display: grid;
-        gap: 1rem;
-      }
-
-      .tour-picture-list {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr);
-        gap: 1rem;
-        justify-items: center;
-      }
-
-      .tour-picture-card {
-        display: grid;
-        grid-template-columns: minmax(0, var(--tour-media-preview-width)) auto;
-        gap: 1rem;
-        align-items: center;
-        justify-content: center;
-        width: fit-content;
-        max-width: 100%;
-        margin-inline: auto;
-        padding: 1rem;
-        border: 1px solid var(--line);
-        border-radius: 1rem;
-        background: var(--surface);
-      }
-
-      .tour-picture-card__media {
-        grid-column: 1;
-        grid-row: 1;
-        display: grid;
-        gap: 0.5rem;
-        justify-items: center;
-        justify-self: center;
-        width: min(100%, var(--tour-media-preview-width));
-        min-width: 0;
-      }
-
-      .tour-picture-card__frame {
-        width: 100%;
-        border-radius: 1rem;
-        overflow: hidden;
-      }
-
-      .tour-picture-card__image {
-        width: 100%;
-        aspect-ratio: 1 / 1;
-        object-fit: cover;
-        border: 1px solid var(--line);
-        border-radius: inherit;
-        background: var(--surface-muted);
-        cursor: pointer;
-        display: block;
-      }
-
-      .tour-picture-card__filename {
-        max-width: 100%;
-        color: var(--text-strong);
-        overflow-wrap: anywhere;
-        text-align: center;
-        user-select: text;
-      }
-
-      .tour-picture-card__remove {
-        grid-column: 2;
-        grid-row: 1;
-        align-self: center;
-        justify-self: start;
-      }
-
-      .tour-picture-empty {
-        border: 1px dashed var(--line);
-        border-radius: 1rem;
-        padding: 1rem;
-        background: var(--surface-muted);
-      }
-
-      .tour-picture-toolbar {
+      .tour-media-toolbar {
         display: grid;
         justify-items: center;
         align-items: center;
@@ -105,7 +27,7 @@
         text-align: center;
       }
 
-      .tour-picture-toolbar .micro {
+      .tour-media-toolbar .micro {
         max-width: min(100%, 34rem);
         margin: 0;
       }
@@ -180,23 +102,6 @@
       }
 
       @media (max-width: 520px) {
-        .tour-picture-card {
-          grid-template-columns: minmax(0, 1fr);
-          width: 100%;
-        }
-
-        .tour-picture-card__media {
-          grid-column: 1;
-          grid-row: auto;
-          max-width: var(--tour-media-preview-width);
-        }
-
-        .tour-picture-card__remove {
-          grid-column: 1;
-          grid-row: auto;
-          justify-self: center;
-        }
-
         .tour-reel-card {
           grid-template-columns: minmax(0, 1fr);
           width: 100%;
@@ -261,19 +166,9 @@
 
               <form id="tour_form" class="backend-tour-form">
                 <div class="field full">
-                  <div class="tour-picture-editor">
-                    <div id="tour_picture_list" class="tour-picture-list" aria-live="polite"></div>
-                    <div class="tour-picture-toolbar">
-                      <button class="btn btn-ghost" id="tour_add_picture_btn" type="button" data-i18n-id="tour.add_picture">Add picture</button>
-                      <p class="micro" data-i18n-id="tour.picture_help">Pictures are converted to WebP and resized to max 1000px automatically.</p>
-                    </div>
-                  </div>
-                  <input id="tour_picture_upload" name="tour_picture_upload" type="file" accept="image/*" multiple class="u-file-input-hidden" />
-                </div>
-                <div class="field full">
                   <div class="tour-reel-editor">
                     <div id="tour_reel_video_card" aria-live="polite"></div>
-                    <div class="tour-picture-toolbar">
+                    <div class="tour-media-toolbar">
                       <button class="btn btn-ghost" id="tour_add_reel_btn" type="button" data-i18n-id="tour.new_reel_video">New Reel</button>
                       <p class="micro" data-i18n-id="tour.reel_video_help">One reel video per tour. Uploading a new file replaces the previous reel and stores it as a normalized portrait MP4.</p>
                     </div>

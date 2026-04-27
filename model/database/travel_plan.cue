@@ -27,6 +27,7 @@ import (
 	sort_order:           >=0 & int
 	is_primary?:          bool
 	is_customer_visible?: bool
+	include_in_travel_tour_card?: bool
 	width_px?:            >0 & int
 	height_px?:           >0 & int
 	source_attribution?:  #TravelPlanServiceImageSourceAttribution

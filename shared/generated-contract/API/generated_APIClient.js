@@ -188,10 +188,6 @@ case "tour_travel_plan_service_image_upload":
   return RequestFactory.tourTravelPlanServiceImageUploadRequest(options);
 case "tour_travel_plan_service_image_delete":
   return RequestFactory.tourTravelPlanServiceImageDeleteRequest(options);
-case "tour_picture_upload":
-  return RequestFactory.tourPictureUploadRequest(options);
-case "tour_picture_delete":
-  return RequestFactory.tourPictureDeleteRequest(options);
       default:
             throw new Error(`Unknown generated endpoint ${key}`);
         }

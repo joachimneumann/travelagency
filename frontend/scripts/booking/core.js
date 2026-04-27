@@ -1371,7 +1371,25 @@ export function createBookingCoreModule(ctx) {
     }
     if (normalizeText(state.booking?.web_form_submission?.tour_id) !== tourId) return;
     state.tour_image_tour_id = tourId;
-    state.tour_image = normalizeText(Array.isArray(payload.tour?.pictures) ? payload.tour.pictures[0] : "") || "";
+    state.tour_image = firstTravelTourCardImagePath(payload.tour);
+  }
+
+  function firstTravelTourCardImagePath(tour) {
+    for (const day of Array.isArray(tour?.travel_plan?.days) ? tour.travel_plan.days : []) {
+      for (const service of Array.isArray(day?.services) ? day.services : []) {
+        const image = service?.image && typeof service.image === "object" && !Array.isArray(service.image)
+          ? service.image
+          : null;
+        if (
+          image?.include_in_travel_tour_card === true
+          && image.is_customer_visible !== false
+          && normalizeText(image.storage_path)
+        ) {
+          return normalizeText(image.storage_path);
+        }
+      }
+    }
+    return "";
   }
 
   function handleBookingDetailKeydown(event) {

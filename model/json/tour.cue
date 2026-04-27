@@ -22,7 +22,6 @@ import (
 	seasonality_end_month?:   enums.#MonthCode
 	short_description?:       string
 	short_description_i18n?: [string]: string
-	pictures?: [...string]
 	video?:       #TourVideo
 	travel_plan?: databaseModel.#TravelPlan
 	created_at?:  common.#Timestamp

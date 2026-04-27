@@ -87,7 +87,8 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
               details: { en: "Private transfer to the hotel.", de: "Privater Transfer zum Hotel." },
               image: {
                 storage_path: "/public/v1/tour-images/tour_alpha/travel-plan-services/pickup.png",
-                alt_text: { en: "Driver at arrivals", de: "Fahrer bei der Ankunft" }
+                alt_text: { en: "Driver at arrivals", de: "Fahrer bei der Ankunft" },
+                include_in_travel_tour_card: true
               }
             }
           ]
@@ -214,12 +215,13 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
     areas: [{ id: "area_central", destination: "vietnam", country_code: "VN", code: "central", label: "Central" }],
     places: [{ id: "place_hoi_an", area_id: "area_central", code: "hoi-an", label: "Hoi An" }]
   });
-  assert.match(publicToursEn.items[0].pictures[0], /^\/assets\/generated\/homepage\/tours\/tour_alpha\/alpha\.(png|webp)\?v=/);
+  assert.match(publicToursEn.items[0].pictures[0], /^\/assets\/generated\/homepage\/tours\/tour_alpha\/travel-plan-services\/pickup\.(png|webp)\?v=/);
   assert.match(
     publicToursEn.items[0].travel_plan.days[0].services[0].image.storage_path,
     /^\/assets\/generated\/homepage\/tours\/tour_alpha\/travel-plan-services\/pickup\.(png|webp)\?v=/
   );
   assert.equal(publicToursEn.items[0].travel_plan.days[0].services[0].image.alt_text.en, "Driver at arrivals");
+  assert.equal(publicToursEn.items[0].travel_plan.days[0].services[0].image.include_in_travel_tour_card, true);
   assert.equal("image" in publicToursEn.items[0], false);
 
   assert.equal(publicToursDe.items[0].title, "Alpha Reise");
@@ -293,9 +295,9 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
   assert.match(publicTeam.items[0].picture_ref, /^\/assets\/generated\/homepage\/team\/joachim\.webp\?v=/);
   assert.equal("appears_in_team_web_page" in publicTeam.items[0], false);
 
-  const copiedTourAssetName = path.basename(new URL(publicToursEn.items[0].pictures[0], "https://asiatravelplan.test").pathname);
+  const copiedTourAssetPath = new URL(publicToursEn.items[0].pictures[0], "https://asiatravelplan.test").pathname;
   const copiedServiceAssetPath = new URL(publicToursEn.items[0].travel_plan.days[0].services[0].image.storage_path, "https://asiatravelplan.test").pathname;
-  const copiedTourAsset = await stat(path.join(tourOutputDir, "tour_alpha", copiedTourAssetName));
+  const copiedTourAsset = await stat(path.join(tourOutputDir, copiedTourAssetPath.replace(/^\/assets\/generated\/homepage\/tours\//, "")));
   const copiedServiceAsset = await stat(path.join(tourOutputDir, copiedServiceAssetPath.replace(/^\/assets\/generated\/homepage\/tours\//, "")));
   const copiedTeamAsset = await stat(path.join(teamOutputDir, "joachim.webp"));
   assert.ok(copiedTourAsset.isFile());

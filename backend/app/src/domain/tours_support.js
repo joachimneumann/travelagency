@@ -19,10 +19,6 @@ import {
   sortTourStyleCodes
 } from "./tour_catalog_i18n.js";
 
-function firstDefined(...values) {
-  return values.find((value) => value !== undefined);
-}
-
 function hasLocalizedContent(value) {
   if (typeof value === "string") return Boolean(normalizeText(value));
   if (!value || typeof value !== "object" || Array.isArray(value)) return false;
@@ -50,12 +46,9 @@ export function migratePersistedTourState(tour) {
     delete tour.highlights;
     changed = true;
   }
-  if (!Array.isArray(tour.pictures) || !tour.pictures.length) {
-    const legacyImage = normalizeText(tour.image);
-    if (legacyImage) {
-      tour.pictures = [legacyImage];
-      changed = true;
-    }
+  if (Object.prototype.hasOwnProperty.call(tour, "pictures")) {
+    delete tour.pictures;
+    changed = true;
   }
   if (Object.prototype.hasOwnProperty.call(tour, "image")) {
     delete tour.image;
@@ -138,56 +131,6 @@ export function createTourHelpers({ toursDir, safeInt, normalizeMarketingTourTra
     return tourStyleCodes(tour).map((code) => getTourStyleLabel(code, lang));
   }
 
-  function splitAssetUrlSuffix(value) {
-    const normalized = normalizeText(value);
-    const match = normalized.match(/^([^?#]*)([?#].*)?$/);
-    return {
-      pathPart: match?.[1] || "",
-      suffix: match?.[2] || ""
-    };
-  }
-
-  function toTourImagePublicUrl(value, tourId = "") {
-    const normalized = normalizeText(value);
-    if (!normalized) return "";
-    if (/^https?:\/\//i.test(normalized)) return normalized;
-    const normalizedTourId = normalizeText(tourId);
-    const publicPrefix = "/public/v1/tour-images/";
-    const { pathPart } = splitAssetUrlSuffix(normalized);
-    const relativePath = pathPart.startsWith(publicPrefix)
-      ? pathPart.slice(publicPrefix.length).replace(/^\/+/, "")
-      : pathPart.replace(/^\/+/, "");
-    if (!relativePath) return "";
-    const scopedRelativePath = normalizedTourId && !relativePath.includes("/")
-      ? `${normalizedTourId}/${relativePath}`
-      : relativePath;
-    return `${publicPrefix}${scopedRelativePath}`;
-  }
-
-  function normalizeTourPictureList(values, fallbackValue = "", tourId = "") {
-    const items = Array.isArray(values)
-      ? values
-      : (values === undefined || values === null || values === "" ? [] : [values]);
-    const normalizedPictures = items
-      .map((value) => toTourImagePublicUrl(value, tourId))
-      .filter(Boolean);
-    if (normalizedPictures.length) {
-      return Array.from(new Set(normalizedPictures));
-    }
-    const fallbackPicture = toTourImagePublicUrl(fallbackValue, tourId);
-    return fallbackPicture ? [fallbackPicture] : [];
-  }
-
-  function withAssetVersion(value, version) {
-    const normalizedValue = normalizeText(value);
-    const normalizedVersion = normalizeText(version);
-    if (!normalizedValue || !normalizedVersion) return normalizedValue;
-    const absolute = /^https?:\/\//i.test(normalizedValue);
-    const url = new URL(normalizedValue, "http://localhost");
-    url.searchParams.set("v", normalizedVersion);
-    return absolute ? url.toString() : `${url.pathname}${url.search}${url.hash}`;
-  }
-
   function normalizeTourForStorage(tour) {
     const next = {
       ...(tour && typeof tour === "object" ? tour : {})
@@ -205,7 +148,7 @@ export function createTourHelpers({ toursDir, safeInt, normalizeMarketingTourTra
       hasLocalizedContent(next.short_description) ? next.short_description : legacyShortDescription
     );
     next.styles = tourStyleCodes(next);
-    next.pictures = normalizeTourPictureList(next.pictures, next.image, next.id);
+    delete next.pictures;
     delete next.image;
     const video = normalizeTourVideo(next.video) || (hasExplicitVideo ? null : normalizeTourVideo(legacyTravelPlanVideo));
     if (video) next.video = video;
@@ -231,8 +174,6 @@ export function createTourHelpers({ toursDir, safeInt, normalizeMarketingTourTra
     const normalizedLang = normalizeTourLang(lang);
     const destinationCodes = tourDestinationCodes(stored);
     const styleCodes = tourStyleCodes(stored);
-    const version = normalizeText(stored.updated_at || stored.created_at);
-    const pictures = stored.pictures.map((picture) => withAssetVersion(toTourImagePublicUrl(picture), version));
     const travelPlan = normalizeTourTravelPlan(stored.travel_plan);
     return {
       ...stored,
@@ -242,7 +183,6 @@ export function createTourHelpers({ toursDir, safeInt, normalizeMarketingTourTra
       destination_codes: destinationCodes,
       styles: styleCodes.map((code) => getTourStyleLabel(code, normalizedLang)),
       style_codes: styleCodes,
-      pictures,
       travel_plan: travelPlan,
       priority: safeInt(stored.priority) ?? 50
     };
@@ -287,7 +227,6 @@ export function createTourHelpers({ toursDir, safeInt, normalizeMarketingTourTra
     tourDestinationCodes,
     tourStyles,
     tourStyleCodes,
-    toTourImagePublicUrl,
     normalizeTourForStorage,
     normalizeTourForRead,
     collectTourOptions,

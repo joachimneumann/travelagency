@@ -629,7 +629,7 @@ async function ensureTourImageCatalog() {
   const items = Array.isArray(payload?.items) ? payload.items : [];
   state.tourImagesById = new Map(
     items
-      .map((tour) => [normalizeText(tour?.id), normalizeText(Array.isArray(tour?.pictures) ? tour.pictures[0] : "")])
+      .map((tour) => [normalizeText(tour?.id), firstTravelTourCardImagePath(tour)])
       .filter(([tourId]) => Boolean(tourId))
   );
   toursStep.done({
@@ -637,6 +637,24 @@ async function ensureTourImageCatalog() {
     item_count: items.length,
     cached_images: state.tourImagesById.size
   });
+}
+
+function firstTravelTourCardImagePath(tour) {
+  for (const day of Array.isArray(tour?.travel_plan?.days) ? tour.travel_plan.days : []) {
+    for (const service of Array.isArray(day?.services) ? day.services : []) {
+      const image = service?.image && typeof service.image === "object" && !Array.isArray(service.image)
+        ? service.image
+        : null;
+      if (
+        image?.include_in_travel_tour_card === true
+        && image.is_customer_visible !== false
+        && normalizeText(image.storage_path)
+      ) {
+        return normalizeText(image.storage_path);
+      }
+    }
+  }
+  return "";
 }
 
 function updateBookingsPaginationUi() {

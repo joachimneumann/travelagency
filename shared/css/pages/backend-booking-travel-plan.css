@@ -1388,6 +1388,23 @@
   outline-offset: 2px;
 }
 
+.travel-plan-images__tour-card-toggle {
+  justify-self: end;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  width: min(100%, 18rem);
+  margin-top: 0.6rem;
+  color: var(--text-strong);
+  font-size: 0.92rem;
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.25;
+}
+
+.travel-plan-images__tour-card-toggle input {
+  flex: 0 0 auto;
+}
+
 .travel-plan-images__head {
   display: flex;
   align-items: flex-start;

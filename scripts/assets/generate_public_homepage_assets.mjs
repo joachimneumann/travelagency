@@ -588,6 +588,30 @@ async function publicHomepageTourTravelPlan(travelPlan, tourId, generatedTourAss
   };
 }
 
+function selectedTravelTourCardImagePaths(travelPlan) {
+  const paths = [];
+  const seen = new Set();
+  for (const day of Array.isArray(travelPlan?.days) ? travelPlan.days : []) {
+    for (const service of Array.isArray(day?.services) ? day.services : []) {
+      const candidates = [
+        service?.image,
+        ...(Array.isArray(service?.images)
+          ? [...service.images].sort((left, right) => Number(left?.sort_order || 0) - Number(right?.sort_order || 0))
+          : [])
+      ];
+      for (const image of candidates) {
+        if (!image || typeof image !== "object" || Array.isArray(image)) continue;
+        if (image.include_in_travel_tour_card !== true || image.is_customer_visible === false) continue;
+        const storagePath = normalizeText(image.storage_path || image.url || image.src || image.path);
+        if (!storagePath || seen.has(storagePath)) continue;
+        seen.add(storagePath);
+        paths.push(storagePath);
+      }
+    }
+  }
+  return paths;
+}
+
 async function buildHeroTitleByLang({
   publishedCountryCodes,
   frontendI18nDir = FRONTEND_I18N_DIR,
@@ -1341,20 +1365,6 @@ async function generateTourAssets({
     const localizedItems = [];
     for (const tour of sortedPublicTours) {
       const readModel = normalizeTourForRead(tour, { lang: normalizedLang });
-      const pictureCandidates = Array.isArray(readModel.pictures) && readModel.pictures.length
-        ? readModel.pictures
-        : [];
-      const pictures = [];
-      for (const picture of pictureCandidates) {
-        const pictureUrl = await publicHomepageTourAssetUrl(
-          picture,
-          readModel.id,
-          generatedTourAssetPaths,
-          outputRoot,
-          normalizeText(readModel.updated_at || readModel.created_at)
-        );
-        if (pictureUrl) pictures.push(pictureUrl);
-      }
       const travelPlan = await publicHomepageTourTravelPlan(
         readModel.travel_plan,
         readModel.id,
@@ -1362,6 +1372,7 @@ async function generateTourAssets({
         outputRoot,
         normalizeText(readModel.updated_at || readModel.created_at)
       );
+      const pictures = selectedTravelTourCardImagePaths(travelPlan);
       localizedItems.push({
         ...readModel,
         pictures,

@@ -1431,38 +1431,4 @@ package api
 			typeName: "Identifier"
 		}]
 	},
-	{
-		key:           "tour_picture_upload"
-		path:          "/api/v1/tours/{tour_id}/pictures"
-		method:        "POST"
-		tag:           "Tours"
-		authenticated: true
-		requestType:   "EvidenceUpload"
-		responseType:  "TourResponse"
-		parameters: [{
-			name:     "tour_id"
-			location: "path"
-			required: true
-			typeName: "Identifier"
-		}]
-	},
-	{
-		key:           "tour_picture_delete"
-		path:          "/api/v1/tours/{tour_id}/pictures/{picture_name}"
-		method:        "DELETE"
-		tag:           "Tours"
-		authenticated: true
-		responseType:  "TourResponse"
-		parameters: [{
-			name:     "tour_id"
-			location: "path"
-			required: true
-			typeName: "Identifier"
-		}, {
-			name:     "picture_name"
-			location: "path"
-			required: true
-			typeName: "string"
-		}]
-	},
 ]

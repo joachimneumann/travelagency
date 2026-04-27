@@ -251,6 +251,7 @@ export function createTourTravelPlanAdapter({
         attachments: false,
         pdfs: false,
         translation: false,
+        tourCardImageSelection: true,
         serviceDetails: false,
         renumberDays: false,
         destinationScope: true,

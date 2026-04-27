@@ -28,7 +28,6 @@ export function mobileBootstrapRequest({ baseURL = '', params = {}, query = {}, 
     body
   };
 }
-
 export function authMePath(params = {}) {
   return buildPath("/auth/me", params);
 }
@@ -1317,7 +1316,7 @@ export function destinationScopeDestinationCreateRequest({ baseURL = '', params 
     authenticated: true,
     url,
     headers,
-    body: body === undefined ? undefined : JSON.stringify(body)
+    body
   };
 }
 
@@ -1500,40 +1499,6 @@ export function tourTravelPlanServiceImageDeleteRequest({ baseURL = '', params =
   const url = buildURL(baseURL, path, query);
   return {
     key: "tour_travel_plan_service_image_delete",
-    method: "DELETE",
-    authenticated: true,
-    url,
-    headers,
-    body
-  };
-}
-
-export function tourPictureUploadPath(params = {}) {
-  return buildPath("/api/v1/tours/{tour_id}/pictures", params);
-}
-
-export function tourPictureUploadRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
-  const path = tourPictureUploadPath(params);
-  const url = buildURL(baseURL, path, query);
-  return {
-    key: "tour_picture_upload",
-    method: "POST",
-    authenticated: true,
-    url,
-    headers,
-    body
-  };
-}
-
-export function tourPictureDeletePath(params = {}) {
-  return buildPath("/api/v1/tours/{tour_id}/pictures/{picture_name}", params);
-}
-
-export function tourPictureDeleteRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
-  const path = tourPictureDeletePath(params);
-  const url = buildURL(baseURL, path, query);
-  return {
-    key: "tour_picture_delete",
     method: "DELETE",
     authenticated: true,
     url,

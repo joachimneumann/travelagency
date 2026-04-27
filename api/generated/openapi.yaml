@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-04-27T11:22:41Z
+# 2026-04-27T14:24:27Z
 
 ---
 openapi: 3.1.0
@@ -3873,10 +3873,6 @@ components:
         short_description:
           type: string
           nullable: true
-        pictures:
-          type: array
-          items:
-            type: string
         video:
           "$ref": "#/components/schemas/TourVideo"
           nullable: true
@@ -3950,6 +3946,9 @@ components:
           type: boolean
           nullable: true
         is_customer_visible:
+          type: boolean
+          nullable: true
+        include_in_travel_tour_card:
           type: boolean
           nullable: true
         width_px:
@@ -4312,6 +4311,9 @@ components:
           type: boolean
           nullable: true
         is_customer_visible:
+          type: boolean
+          nullable: true
+        include_in_travel_tour_card:
           type: boolean
           nullable: true
         width_px:
@@ -7213,10 +7215,6 @@ components:
         short_description:
           type: string
           nullable: true
-        pictures:
-          type: array
-          items:
-            type: string
         travel_plan:
           "$ref": "#/components/schemas/TravelPlan"
           nullable: true
@@ -10723,89 +10721,6 @@ paths:
           application/json:
             schema:
               "$ref": "#/components/schemas/TravelPlanServiceImageDeleteRequest"
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/TourResponse"
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-  "/api/v1/tours/{tour_id}/pictures":
-    post:
-      operationId: tour_picture_upload
-      summary: Tour Picture Upload
-      tags:
-      - Tours
-      security:
-      - bearerAuth: []
-      parameters:
-      - name: tour_id
-        in: path
-        required: true
-        schema:
-          type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              "$ref": "#/components/schemas/EvidenceUpload"
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/TourResponse"
-        '201':
-          description: Created
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/TourResponse"
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-  "/api/v1/tours/{tour_id}/pictures/{picture_name}":
-    delete:
-      operationId: tour_picture_delete
-      summary: Tour Picture Delete
-      tags:
-      - Tours
-      security:
-      - bearerAuth: []
-      parameters:
-      - name: tour_id
-        in: path
-        required: true
-        schema:
-          type: string
-      - name: picture_name
-        in: path
-        required: true
-        schema:
-          type: string
       responses:
         '200':
           description: Success

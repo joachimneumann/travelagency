@@ -99,6 +99,7 @@ export function createBookingTravelPlanImageHandlers(deps) {
         sort_order: 0,
         is_primary: true,
         is_customer_visible: true,
+        include_in_travel_tour_card: item?.image?.include_in_travel_tour_card === true,
         created_at: nowIso()
       }
     );

@@ -40,7 +40,8 @@ export function createBookingTravelPlanImagesModule(deps) {
     travelPlanStatus,
     setPageOverlay,
     buildServiceImageUploadRequest,
-    buildServiceImageDeleteRequest
+    buildServiceImageDeleteRequest,
+    allowTourCardImageSelection = false
   } = deps;
 
   function defaultBuildServiceImageUploadRequest({ dayId, itemId, file, dataBase64 }) {
@@ -127,6 +128,19 @@ export function createBookingTravelPlanImagesModule(deps) {
     const changePictureLabel = image
       ? bookingT("booking.travel_plan.change_picture", "Change picture")
       : bookingT("booking.travel_plan.add_picture", "Add picture");
+    const includeInTourCardControl = allowTourCardImageSelection && image
+      ? `
+        <label class="travel-plan-images__tour-card-toggle">
+          <input
+            type="checkbox"
+            data-travel-plan-service-image-field="include_in_travel_tour_card"
+            ${image.include_in_travel_tour_card === true ? "checked" : ""}
+            ${editable ? "" : "disabled"}
+          />
+          <span>${escapeHtml(bookingT("booking.travel_plan.include_in_travel_tour_card", "Include in travel tour card"))}</span>
+        </label>
+      `
+      : "";
     const heroMedia = editable
       ? `
         <div class="travel-plan-images__hero-frame">
@@ -171,6 +185,7 @@ export function createBookingTravelPlanImagesModule(deps) {
     return `
       <div class="travel-plan-images${variant === "sidebar" ? " travel-plan-images--sidebar" : ""}">
         ${heroMedia}
+        ${includeInTourCardControl}
         ${copiedFromText ? `<p class="travel-plan-images__copied-from">${escapeHtml(copiedFromText)}</p>` : ""}
       </div>
     `;

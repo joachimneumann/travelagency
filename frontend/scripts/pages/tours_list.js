@@ -1001,12 +1001,30 @@ function formatTourPlanSummary(tour) {
 }
 
 function renderTourImageMarkup(tour) {
-  const picture = Array.isArray(tour?.pictures) ? normalizeText(tour.pictures[0]) : "";
+  const picture = firstTravelTourCardImagePath(tour);
   const title = normalizeText(tour?.title);
   if (picture) {
     return `<img class="booking-list__booking-thumb-image" src="${escapeHtml(resolveApiUrl(apiBase, picture))}" alt="${escapeHtml(title || backendT("tour.picture_label", "Tour picture"))}" />`;
   }
   return `<span class="booking-list__booking-thumb-initials">${escapeHtml(getTourInitials(title))}</span>`;
+}
+
+function firstTravelTourCardImagePath(tour) {
+  for (const day of Array.isArray(tour?.travel_plan?.days) ? tour.travel_plan.days : []) {
+    for (const service of Array.isArray(day?.services) ? day.services : []) {
+      const image = service?.image && typeof service.image === "object" && !Array.isArray(service.image)
+        ? service.image
+        : null;
+      if (
+        image?.include_in_travel_tour_card === true
+        && image.is_customer_visible !== false
+        && normalizeText(image.storage_path)
+      ) {
+        return normalizeText(image.storage_path);
+      }
+    }
+  }
+  return "";
 }
 
 function getTourInitials(value) {

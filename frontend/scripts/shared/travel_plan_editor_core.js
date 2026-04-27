@@ -113,6 +113,7 @@ export function createBookingTravelPlanModule(ctx) {
   const allowPdfs = isFeatureEnabled("pdfs");
   const allowDestinationScope = isFeatureEnabled("destinationScope");
   const allowDestinationScopeCreate = isFeatureEnabled("destinationScopeCreate", false);
+  const allowTourCardImageSelection = isFeatureEnabled("tourCardImageSelection", false);
   const pruneEmptyTravelPlanContentOnCollect = isFeatureEnabled("pruneEmptyTravelPlanContentOnCollect", false);
 
   function destinationScopeEditorRoot() {
@@ -764,7 +765,8 @@ export function createBookingTravelPlanModule(ctx) {
     travelPlanStatus,
     setPageOverlay: setTravelPlanPageOverlay,
     buildServiceImageUploadRequest: buildTravelPlanServiceImageUploadRequest,
-    buildServiceImageDeleteRequest: buildTravelPlanServiceImageDeleteRequest
+    buildServiceImageDeleteRequest: buildTravelPlanServiceImageDeleteRequest,
+    allowTourCardImageSelection
   });
 
   const travelPlanAttachmentsModule = createBookingTravelPlanAttachmentsModule({
@@ -1972,7 +1974,14 @@ export function createBookingTravelPlanModule(ctx) {
         item.image_subtitle = itemImageSubtitle.text;
         item.image_subtitle_i18n = itemImageSubtitle.map;
         item.image = previousItem?.image && typeof previousItem.image === "object" && !Array.isArray(previousItem.image)
-          ? previousItem.image
+          ? {
+              ...previousItem.image,
+              ...(allowTourCardImageSelection
+                ? {
+                    include_in_travel_tour_card: itemNode.querySelector('[data-travel-plan-service-image-field="include_in_travel_tour_card"]')?.checked === true
+                  }
+                : {})
+            }
           : null;
         item.copied_from = previousItem?.copied_from || null;
         return item;

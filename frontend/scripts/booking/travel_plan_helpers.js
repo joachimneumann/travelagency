@@ -205,6 +205,7 @@ function normalizeItemImage(rawImageOrImages, sourceLang, targetLang) {
     sort_order: 0,
     is_primary: true,
     is_customer_visible: rawImage.is_customer_visible !== false,
+    include_in_travel_tour_card: rawImage.include_in_travel_tour_card === true,
     width_px: Number.isInteger(rawImage.width_px) && rawImage.width_px > 0 ? rawImage.width_px : null,
     height_px: Number.isInteger(rawImage.height_px) && rawImage.height_px > 0 ? rawImage.height_px : null,
     source_attribution: rawImage.source_attribution && typeof rawImage.source_attribution === "object" && !Array.isArray(rawImage.source_attribution)

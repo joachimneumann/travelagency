@@ -2,8 +2,6 @@ import {
   authMeRequest,
   tourCreateRequest,
   tourDetailRequest,
-  tourPictureDeleteRequest,
-  tourPictureUploadRequest,
   toursRequest,
   tourTranslateFieldsRequest,
   tourUpdateRequest
@@ -125,7 +123,6 @@ const state = {
   travelPlanTranslationIncomplete: false,
   originalTravelPlanSnapshot: "",
   originalTravelPlanState: null,
-  pictureDraftItems: [],
   reelVideoDraftItem: null,
   activeTravelPlanTranslationLang: "",
   options: {
@@ -172,9 +169,6 @@ const els = {
   seasonalityStartMonth: document.getElementById("tour_seasonality_start_month"),
   seasonalityEndMonth: document.getElementById("tour_seasonality_end_month"),
   localizedContentEditor: document.getElementById("tour_localized_content_editor"),
-  pictureList: document.getElementById("tour_picture_list"),
-  addPictureBtn: document.getElementById("tour_add_picture_btn"),
-  pictureUpload: document.getElementById("tour_picture_upload"),
   reelVideoCard: document.getElementById("tour_reel_video_card"),
   addReelVideoBtn: document.getElementById("tour_add_reel_btn"),
   reelVideoUpload: document.getElementById("tour_reel_upload"),
@@ -219,14 +213,6 @@ function captureTourFormSnapshot() {
     }
     return [key, value];
   });
-  snapshot.push([
-    "tour_pictures",
-    state.pictureDraftItems.map((item) => {
-      if (item.kind === "stored") return `stored:${item.picture}`;
-      const file = item.file;
-      return `pending:${file?.name || ""}:${file?.size || 0}:${file?.lastModified || 0}`;
-    })
-  ]);
   snapshot.push([
     "tour_reel_video",
     state.reelVideoDraftItem
@@ -417,51 +403,6 @@ function resolveLocalizedFieldText(field, preferredLangs = [], fallbackValue = "
   return resolveLocalizedTextMapValue(state.localizedContent?.[field], preferredLangs, fallbackValue);
 }
 
-function normalizeTourPictures(tour) {
-  if (Array.isArray(tour?.pictures) && tour.pictures.length) {
-    return tour.pictures.map(stripTourPictureVersion).filter(Boolean);
-  }
-  return [];
-}
-
-function stripTourPictureVersion(value) {
-  return String(value || "").trim().replace(/[?#].*$/, "");
-}
-
-function pictureNameFromValue(value) {
-  const normalized = String(value || "").trim();
-  if (!normalized) return "";
-  const withoutQuery = normalized.split("?")[0].replace(/\/+$/, "");
-  try {
-    return decodeURIComponent(withoutQuery.split("/").pop() || "");
-  } catch {
-    return withoutQuery.split("/").pop() || "";
-  }
-}
-
-function createStoredPictureDraftItem(picture, index = 0) {
-  const rawPicture = String(picture || "").trim();
-  const normalizedPicture = stripTourPictureVersion(rawPicture);
-  return {
-    key: `stored:${normalizedPicture}:${index}`,
-    kind: "stored",
-    picture: normalizedPicture,
-    name: pictureNameFromValue(normalizedPicture) || `picture-${index + 1}`,
-    previewUrl: rawPicture && rawPicture !== normalizedPicture ? rawPicture : ""
-  };
-}
-
-function createPendingPictureDraftItem(file) {
-  const previewUrl = URL.createObjectURL(file);
-  return {
-    key: `pending:${file.name}:${file.size}:${file.lastModified}:${Math.random().toString(36).slice(2, 10)}`,
-    kind: "pending",
-    file,
-    name: file.name,
-    previewUrl
-  };
-}
-
 function createStoredReelVideoDraftItem(reelVideo) {
   return {
     key: `stored:${normalizeText(reelVideo?.preview_url || reelVideo?.filename || "video.mp4")}`,
@@ -481,31 +422,15 @@ function createPendingReelVideoDraftItem(file) {
   };
 }
 
-function revokePictureDraftItem(item) {
-  if (item?.kind === "pending" && item.previewUrl) {
-    URL.revokeObjectURL(item.previewUrl);
-  }
-}
-
 function revokeReelVideoDraftItem(item) {
   if (item?.kind === "pending" && item.previewUrl) {
     URL.revokeObjectURL(item.previewUrl);
   }
 }
 
-function replacePictureDraftItems(items) {
-  state.pictureDraftItems.forEach((item) => revokePictureDraftItem(item));
-  state.pictureDraftItems = items;
-}
-
 function replaceReelVideoDraftItem(item) {
   revokeReelVideoDraftItem(state.reelVideoDraftItem);
   state.reelVideoDraftItem = item || null;
-}
-
-function syncPictureDraftItemsFromTour(tour) {
-  replacePictureDraftItems(normalizeTourPictures(tour).map((picture, index) => createStoredPictureDraftItem(picture, index)));
-  renderTourPictures();
 }
 
 function syncReelVideoDraftItemFromTour(tour) {
@@ -514,52 +439,17 @@ function syncReelVideoDraftItemFromTour(tour) {
   renderTourReelVideo();
 }
 
-function picturePreviewSrc(item) {
-  if (item?.kind === "pending") return item.previewUrl;
-  return absolutizeApiUrl(item?.picture || "");
-}
-
 function reelVideoPreviewSrc(item) {
   if (item?.kind === "pending") return item.previewUrl;
   return absolutizeApiUrl(item?.previewUrl || "");
-}
-
-function renderTourPictures() {
-  if (!els.pictureList) return;
-  if (!state.pictureDraftItems.length) {
-    els.pictureList.innerHTML = `<div class="tour-picture-empty micro">${escapeHtml(
-      backendT("tour.picture_empty", "No pictures added yet.")
-    )}</div>`;
-    return;
-  }
-
-  els.pictureList.innerHTML = state.pictureDraftItems
-    .map((item) => {
-      const removeDisabled = !state.permissions.canEditTours ? "disabled" : "";
-      const fileName = item.name || backendT("tour.picture_label", "Tour picture");
-      return `
-        <div class="tour-picture-card">
-          <div class="tour-picture-card__media">
-            <div class="tour-picture-card__frame">
-              <img class="tour-picture-card__image" src="${escapeHtml(picturePreviewSrc(item))}" alt="" loading="lazy" data-tour-media-filename-trigger="true" />
-            </div>
-            <span class="tour-picture-card__filename micro" hidden>${escapeHtml(fileName)}</span>
-          </div>
-          <button class="btn btn-ghost tour-picture-card__remove" type="button" data-tour-remove-picture="${escapeHtml(item.key)}" ${removeDisabled}>
-            ${escapeHtml(backendT("tour.remove_picture", "Remove picture"))}
-          </button>
-        </div>
-      `;
-    })
-    .join("");
 }
 
 function revealMediaFilename(target) {
   if (!(target instanceof Element)) return false;
   const trigger = target.closest("[data-tour-media-filename-trigger]");
   if (!trigger) return false;
-  const media = trigger.closest(".tour-picture-card__media, .tour-reel-card__media");
-  const filename = media?.querySelector(".tour-picture-card__filename, .tour-reel-card__filename");
+  const media = trigger.closest(".tour-reel-card__media");
+  const filename = media?.querySelector(".tour-reel-card__filename");
   if (!(filename instanceof HTMLElement)) return false;
   filename.hidden = false;
   return true;
@@ -1565,29 +1455,6 @@ async function init() {
       void translateTourContent(button);
     });
   }
-  if (els.addPictureBtn && els.pictureUpload) {
-    els.addPictureBtn.addEventListener("click", () => {
-      els.pictureUpload.click();
-    });
-  }
-  if (els.pictureUpload) {
-    els.pictureUpload.addEventListener("change", () => {
-      const files = Array.from(els.pictureUpload.files || []).filter((file) => file instanceof File);
-      if (!files.length) return;
-      state.pictureDraftItems = [
-        ...state.pictureDraftItems,
-        ...files.map((file) => createPendingPictureDraftItem(file))
-      ];
-      renderTourPictures();
-      setStatus(
-        backendT("tour.status.selected_pictures", "Selected {count} picture(s).", {
-          count: String(files.length)
-        })
-      );
-      els.pictureUpload.value = "";
-      updateTourDirtyState();
-    });
-  }
   if (els.addReelVideoBtn && els.reelVideoUpload) {
     els.addReelVideoBtn.addEventListener("click", () => {
       els.reelVideoUpload.click();
@@ -1601,27 +1468,6 @@ async function init() {
       renderTourReelVideo();
       setStatus(backendT("tour.status.selected_video", "Selected video."));
       els.reelVideoUpload.value = "";
-      updateTourDirtyState();
-    });
-  }
-  if (els.pictureList) {
-    els.pictureList.addEventListener("click", (event) => {
-      if (revealMediaFilename(event.target)) return;
-      const button = event.target instanceof Element ? event.target.closest("[data-tour-remove-picture]") : null;
-      if (!button || !state.permissions.canEditTours) return;
-      event.preventDefault();
-      const key = String(button.getAttribute("data-tour-remove-picture") || "").trim();
-      if (!key) return;
-      const nextItems = [];
-      for (const item of state.pictureDraftItems) {
-        if (item.key === key) {
-          revokePictureDraftItem(item);
-          continue;
-        }
-        nextItems.push(item);
-      }
-      state.pictureDraftItems = nextItems;
-      renderTourPictures();
       updateTourDirtyState();
     });
   }
@@ -1672,7 +1518,6 @@ async function loadTour() {
   setInput("tour_seasonality_start_month", tour.seasonality_start_month || "");
   setInput("tour_seasonality_end_month", tour.seasonality_end_month || "");
   renderLocalizedTourContentEditor();
-  syncPictureDraftItemsFromTour(tour);
   syncReelVideoDraftItemFromTour(tour);
   tourTravelPlanAdapter?.applyTour(tour);
   renderTravelPlanTranslationPanel();
@@ -1701,7 +1546,6 @@ async function initializeNewTourForm() {
     seasonality_end_month: "",
     short_description: "",
     short_description_i18n: {},
-    pictures: [],
     reel_video: null,
     travel_plan: { destination_scope: [], destinations: [], days: [] }
   };
@@ -1713,7 +1557,6 @@ async function initializeNewTourForm() {
   setInput("tour_seasonality_start_month", "");
   setInput("tour_seasonality_end_month", "");
   renderLocalizedTourContentEditor();
-  syncPictureDraftItemsFromTour(state.tour);
   syncReelVideoDraftItemFromTour(state.tour);
   tourTravelPlanAdapter?.applyTour(state.tour);
   renderTravelPlanTranslationPanel();
@@ -1862,13 +1705,6 @@ async function submitForm(event) {
     ...(travelPlanResult.payload || {}),
     destination_scope: selectedDestinationScope
   };
-  const draftPictureItems = [...state.pictureDraftItems];
-  const storedPictures = draftPictureItems
-    .filter((item) => item.kind === "stored")
-    .map((item) => item.picture)
-    .filter(Boolean);
-  const pendingPictures = draftPictureItems.filter((item) => item.kind === "pending");
-  const removedPictures = normalizeTourPictures(state.tour).filter((picture) => !storedPictures.includes(picture));
   const pendingReelVideo = state.reelVideoDraftItem?.kind === "pending" ? state.reelVideoDraftItem : null;
   const storedReelVideo = state.reelVideoDraftItem?.kind === "stored" ? state.reelVideoDraftItem : null;
   const hasStoredReelVideoOnServer = Boolean(state.tour?.reel_video);
@@ -1885,7 +1721,6 @@ async function submitForm(event) {
     seasonality_start_month: getInput("tour_seasonality_start_month"),
     seasonality_end_month: getInput("tour_seasonality_end_month"),
     short_description_i18n,
-    pictures: storedPictures,
     travel_plan: omitDerivedTravelPlanDestinations(travelPlanPayload)
   };
   const expectedUpdatedAt = normalizeText(state.tour?.updated_at);
@@ -1948,56 +1783,6 @@ async function submitForm(event) {
     state.id = String(result.tour.id || "");
     state.is_create_mode = false;
     updateHeader(state.tour, tour_destinations(state.tour), tour_styles(state.tour));
-
-    if (pendingPictures.length) {
-      for (let index = 0; index < pendingPictures.length; index += 1) {
-        const item = pendingPictures[index];
-        setStatus(
-          backendT("tour.status.uploading_picture_progress", "Uploading picture {current} of {total}...", {
-            current: String(index + 1),
-            total: String(pendingPictures.length)
-          })
-        );
-        const base64 = await fileToBase64(item.file);
-        const pictureRequest = tourPictureUploadRequest({ baseURL: apiOrigin, params: { tour_id: state.id } });
-        const pictureResult = await fetchApi(withApiLang(pictureRequest.url), {
-          method: pictureRequest.method,
-          body: {
-            filename: item.file.name,
-            data_base64: base64
-          }
-        });
-        if (!pictureResult) return;
-        if (homepageAssetSyncFailed(pictureResult)) {
-          finalSaveStatus = homepageAssetSyncWarningMessage();
-        }
-        if (pictureResult.tour) {
-          state.tour = pictureResult.tour;
-        }
-      }
-    }
-
-    if (!is_create && removedPictures.length) {
-      for (const picture of removedPictures) {
-        const pictureName = pictureNameFromValue(picture);
-        if (!pictureName) continue;
-        setStatus(backendT("tour.status.removing_picture", "Removing picture..."));
-        const deleteRequest = tourPictureDeleteRequest({
-          baseURL: apiOrigin,
-          params: { tour_id: state.id, picture_name: pictureName }
-        });
-        const deleteResult = await fetchApi(withApiLang(deleteRequest.url), {
-          method: deleteRequest.method
-        });
-        if (!deleteResult) return;
-        if (homepageAssetSyncFailed(deleteResult)) {
-          finalSaveStatus = homepageAssetSyncWarningMessage();
-        }
-        if (deleteResult.tour) {
-          state.tour = deleteResult.tour;
-        }
-      }
-    }
 
     if (pendingReelVideo) {
       setStatus(backendT("tour.status.uploading_video", "Uploading reel video..."));
@@ -2124,8 +1909,6 @@ function redirectToBackendLogin() {
 
 function applyTourPermissions() {
   if (state.permissions.canEditTours) return;
-  if (els.addPictureBtn) els.addPictureBtn.disabled = true;
-  if (els.pictureUpload) els.pictureUpload.disabled = true;
   if (els.addReelVideoBtn) els.addReelVideoBtn.disabled = true;
   if (els.reelVideoUpload) els.reelVideoUpload.disabled = true;
   if (els.form) {

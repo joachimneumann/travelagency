@@ -547,15 +547,37 @@ export function createFrontendToursController(ctx) {
     return `${backendBaseUrl}/${value}`;
   }
 
+  function selectedTravelTourCardPictures(item) {
+    const pictures = [];
+    for (const day of Array.isArray(item?.travel_plan?.days) ? item.travel_plan.days : []) {
+      for (const service of Array.isArray(day?.services) ? day.services : []) {
+        const candidates = [
+          service?.image,
+          ...(Array.isArray(service?.images)
+            ? [...service.images].sort((left, right) => Number(left?.sort_order || 0) - Number(right?.sort_order || 0))
+            : [])
+        ];
+        for (const image of candidates) {
+          if (!image || typeof image !== "object" || Array.isArray(image)) continue;
+          if (image.include_in_travel_tour_card !== true || image.is_customer_visible === false) continue;
+          const src = absolutizeBackendUrl(image.storage_path || image.url || image.src || image.path);
+          if (src) pictures.push(src);
+        }
+      }
+    }
+    return pictures;
+  }
+
   function resolveTourPictures(item) {
-    const pictures = Array.isArray(item?.pictures)
+    const selectedPictures = selectedTravelTourCardPictures(item);
+    const payloadPictures = Array.isArray(item?.pictures)
       ? item.pictures.map((picture) => absolutizeBackendUrl(picture)).filter(Boolean)
       : [];
-    return Array.from(new Set(pictures));
+    return Array.from(new Set([...selectedPictures, ...payloadPictures]));
   }
 
   function primaryTourPicture(item) {
-    const pictures = Array.isArray(item?.pictures) ? item.pictures : [];
+    const pictures = resolveTourPictures(item);
     return normalizeText(pictures[0]) || DEFAULT_TOUR_IMAGE;
   }
 

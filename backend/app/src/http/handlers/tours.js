@@ -26,7 +26,6 @@ export function createTourHandlers(deps) {
     normalizeText,
     normalizeStringArray,
     safeInt,
-    toTourImagePublicUrl,
     tourDestinationCodes,
     tourStyleCodes,
     readStore,
@@ -202,15 +201,6 @@ export function createTourHandlers(deps) {
       next.short_description = setLocalizedTextForLang(current.short_description, payload.short_description, lang);
     }
     if (isCreate || payload.styles !== undefined) next.styles = normalizeStyleCodes(payload.styles);
-    if (payload.pictures !== undefined) {
-      next.pictures = Array.from(
-        new Set(
-          (Array.isArray(payload.pictures) ? payload.pictures : [])
-            .map((value) => toTourImagePublicUrl(value))
-            .filter(Boolean)
-        )
-      );
-    }
     if (payload.video !== undefined) next.video = payload.video;
     if (payload.travel_plan !== undefined) {
       next.travel_plan = normalizeMarketingTourTravelPlan(payload.travel_plan);
@@ -391,29 +381,6 @@ export function createTourHandlers(deps) {
 
   function buildTourTravelPlanEditorValue(tour) {
     return normalizeTourTravelPlan(tour?.travel_plan);
-  }
-
-  function tourPictureName(value) {
-    const normalized = normalizeText(value);
-    if (!normalized) return "";
-    const withoutQuery = normalized.split("?")[0];
-    const trimmed = withoutQuery.replace(/\/+$/, "");
-    return decodeURIComponent(trimmed.split("/").pop() || "");
-  }
-
-  function tourPictureRelativePath(value, tourId) {
-    const normalizedTourId = normalizeText(tourId);
-    if (!normalizedTourId) return "";
-    const normalized = normalizeText(value);
-    if (!normalized) return "";
-    const withoutQuery = normalized.split("?")[0];
-    const publicPrefix = `/public/v1/tour-images/${normalizedTourId}/`;
-    if (withoutQuery.startsWith(publicPrefix)) {
-      return `${normalizedTourId}/${withoutQuery.slice(publicPrefix.length).replace(/^\/+/, "")}`;
-    }
-    const bareValue = withoutQuery.replace(/^\/+/, "");
-    if (bareValue.startsWith(`${normalizedTourId}/`)) return bareValue;
-    return "";
   }
 
   async function regeneratePublicHomepageAssets(reason, details = {}) {
@@ -1040,6 +1007,7 @@ export function createTourHandlers(deps) {
       sort_order: 0,
       is_primary: true,
       is_customer_visible: true,
+      include_in_travel_tour_card: item?.image?.include_in_travel_tour_card === true,
       created_at: nowIso()
     });
 
@@ -1134,74 +1102,6 @@ export function createTourHandlers(deps) {
     });
   }
 
-  async function handleUploadTourPicture(req, res, [tourId]) {
-    const principal = getPrincipal(req);
-    if (!canEditTours(principal)) {
-      sendJson(res, 403, { error: "Forbidden" });
-      return;
-    }
-    let payload;
-    try {
-      payload = await readBodyJson(req, { maxBytes: IMAGE_UPLOAD_BODY_MAX_BYTES });
-    } catch (error) {
-      sendJson(res, error?.statusCode || 400, { error: error?.message || "Invalid JSON payload" });
-      return;
-    }
-
-    const lang = requestLang(req.url);
-    const filename = normalizeText(payload.filename) || `${tourId}.upload`;
-    const base64 = normalizeText(payload.data_base64);
-    if (!base64) {
-      sendJson(res, 422, { error: "data_base64 is required" });
-      return;
-    }
-
-    const tours = (await readTours()).map((tour) => normalizeTourForStorage(tour));
-    const index = tours.findIndex((item) => item.id === tourId);
-    if (index < 0) {
-      sendJson(res, 404, { error: "Tour not found" });
-      return;
-    }
-
-    const now = nowIso();
-    const sourceBuffer = Buffer.from(base64, "base64");
-    if (!sourceBuffer.length) {
-      sendJson(res, 422, { error: "Invalid base64 image payload" });
-      return;
-    }
-
-    const tempInputPath = path.join(TEMP_UPLOAD_DIR, `${tourId}-${randomUUID()}${path.extname(filename) || ".upload"}`);
-    const outputName = `picture-${randomUUID()}.webp`;
-    const outputRelativePath = `${tourId}/${outputName}`;
-    const outputPath = path.join(TOURS_DIR, outputRelativePath);
-
-    try {
-      await writeFile(tempInputPath, sourceBuffer);
-      await processTourImageToWebp(tempInputPath, outputPath);
-    } catch (error) {
-      sendJson(res, 500, { error: "Image conversion failed", detail: String(error?.message || error) });
-      return;
-    } finally {
-      await rm(tempInputPath, { force: true });
-    }
-
-    const publicPath = `/public/v1/tour-images/${outputRelativePath}`;
-    const current = normalizeTourForStorage(tours[index]);
-    const updated = normalizeTourForStorage({
-      ...current,
-      pictures: [...current.pictures, publicPath],
-      updated_at: now
-    });
-    tours[index] = updated;
-    await persistTour(updated);
-    const homepageAssets = await regeneratePublicHomepageAssets("tour_image_upload", { tour_id: updated.id });
-
-    sendJson(res, 200, {
-      tour: buildTourEditorResponse(updated, lang),
-      homepage_assets: homepageAssets
-    });
-  }
-
   async function handleUploadTourVideo(req, res, [tourId]) {
     const principal = getPrincipal(req);
     if (!canEditTours(principal)) {
@@ -1279,66 +1179,6 @@ export function createTourHandlers(deps) {
     });
   }
 
-  async function handleDeleteTourPicture(req, res, [tourId, rawPictureName]) {
-    const principal = getPrincipal(req);
-    if (!canEditTours(principal)) {
-      sendJson(res, 403, { error: "Forbidden" });
-      return;
-    }
-
-    const pictureName = normalizeText(decodeURIComponent(rawPictureName || ""));
-    if (!pictureName) {
-      sendJson(res, 422, { error: "picture_name is required" });
-      return;
-    }
-    const safePictureName = path.basename(pictureName);
-    if (safePictureName !== pictureName) {
-      sendJson(res, 422, { error: "picture_name is invalid" });
-      return;
-    }
-
-    const lang = requestLang(req.url);
-    const tours = (await readTours()).map((tour) => normalizeTourForStorage(tour));
-    const index = tours.findIndex((item) => item.id === tourId);
-    if (index < 0) {
-      sendJson(res, 404, { error: "Tour not found" });
-      return;
-    }
-
-    const current = normalizeTourForStorage(tours[index]);
-    const retainedPictures = current.pictures.filter((picture) => tourPictureName(picture) !== pictureName);
-    const removedPicture = current.pictures.find((picture) => tourPictureName(picture) === pictureName) || "";
-    if (!removedPicture) {
-      sendJson(res, 404, { error: "Tour picture not found" });
-      return;
-    }
-    let updated = current;
-    if (retainedPictures.length !== current.pictures.length) {
-      updated = normalizeTourForStorage({
-        ...current,
-        pictures: retainedPictures,
-        updated_at: nowIso()
-      });
-      tours[index] = updated;
-      await persistTour(updated);
-    }
-
-    const relativePath = tourPictureRelativePath(removedPicture, tourId);
-    if (relativePath) {
-      await rm(path.join(TOURS_DIR, relativePath), { force: true }).catch(() => {});
-    }
-
-    const homepageAssets = await regeneratePublicHomepageAssets("tour_picture_delete", {
-      tour_id: updated.id,
-      picture_name: safePictureName
-    });
-
-    sendJson(res, 200, {
-      tour: buildTourEditorResponse(updated, lang),
-      homepage_assets: homepageAssets
-    });
-  }
-
   async function handleDeleteTourVideo(req, res, [tourId]) {
     const principal = getPrincipal(req);
     if (!canEditTours(principal)) {
@@ -1392,8 +1232,6 @@ export function createTourHandlers(deps) {
     handleDeleteTour,
     handleGetTourVideo,
     handlePublicTourImage,
-    handleUploadTourPicture,
-    handleDeleteTourPicture,
     handleUploadTourVideo,
     handleDeleteTourVideo
   };

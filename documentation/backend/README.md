@@ -175,8 +175,6 @@ Admin API:
 - `PATCH /api/v1/tours/:tourId`
 - `DELETE /api/v1/tours/:tourId`
 - `POST /api/v1/tours/translate-fields`
-- `POST /api/v1/tours/:tourId/pictures`
-- `DELETE /api/v1/tours/:tourId/pictures/:pictureName`
 - `GET /api/v1/tours/:tourId/video`
 - `POST /api/v1/tours/:tourId/video`
 - `DELETE /api/v1/tours/:tourId/video`

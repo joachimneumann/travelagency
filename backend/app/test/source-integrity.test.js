@@ -3373,10 +3373,20 @@ test("tour page reads month options from the generated catalogs layer", async ()
     /id="tour_title_input"/,
     "Tour page should no longer render the old header title input"
   );
-  assert.match(
+  assert.doesNotMatch(
+    tourHtml,
+    /tour_picture_list|tour_add_picture_btn|tour_picture_upload/,
+    "Tour page should no longer render the standalone tour picture editor"
+  );
+  assert.doesNotMatch(
     tourSource,
-    /els\.pictureUpload\.addEventListener\("change", \(\) => \{[\s\S]*files\.map\(\(file\) => createPendingPictureDraftItem\(file\)\)[\s\S]*renderTourPictures\(\);[\s\S]*tour\.status\.selected_pictures/,
-    "Tour page should stage newly selected pictures in the gallery immediately before save"
+    /pictureUpload|createPendingPictureDraftItem|renderTourPictures|tourPictureUploadRequest|tourPictureDeleteRequest/,
+    "Tour page should no longer stage or persist standalone tour pictures"
+  );
+  assert.match(
+    tourTravelPlanAdapterSource,
+    /tourCardImageSelection:\s*true/,
+    "Marketing-tour travel-plan editor should enable service-image selection for tour cards"
   );
   assert.match(
     tourSource,
@@ -3398,19 +3408,18 @@ test("tour page reads month options from the generated catalogs layer", async ()
     /response\?\.status === 409 && payload\?\.code === "TOUR_REVISION_MISMATCH"[\s\S]*staleTourUpdateMessage\(\)/,
     "Marketing-tour saves should show a specific stale-edit message on revision conflicts"
   );
-  assert.match(
-    tourSource,
-    /function createPendingPictureDraftItem\(file\) \{[\s\S]*URL\.createObjectURL\(file\)/,
-    "Tour page should stage a temporary object URL for each selected picture"
-  );
 });
 
-test("tour read models version public picture URLs so immutable caching still refreshes after uploads", async () => {
+test("tour card images are selected from travel-plan service images", async () => {
   const toursSupportPath = path.resolve(__dirname, "..", "src", "domain", "tours_support.js");
   const toursHandlerPath = path.resolve(__dirname, "..", "src", "http", "handlers", "tours.js");
-  const [toursSupportSource, toursHandlerSource] = await Promise.all([
+  const travelPlanModelPath = path.resolve(__dirname, "..", "..", "..", "model", "database", "travel_plan.cue");
+  const homepageGeneratorPath = path.resolve(__dirname, "..", "..", "..", "scripts", "assets", "generate_public_homepage_assets.mjs");
+  const [toursSupportSource, toursHandlerSource, travelPlanModelSource, homepageGeneratorSource] = await Promise.all([
     readFile(toursSupportPath, "utf8"),
-    readFile(toursHandlerPath, "utf8")
+    readFile(toursHandlerPath, "utf8"),
+    readFile(travelPlanModelPath, "utf8"),
+    readFile(homepageGeneratorPath, "utf8")
   ]);
 
   assert.match(
@@ -3419,14 +3428,19 @@ test("tour read models version public picture URLs so immutable caching still re
     "Public tour images should keep the long-lived immutable cache headers"
   );
   assert.match(
-    toursSupportSource,
-    /function withAssetVersion\(value, version\) \{[\s\S]*searchParams\.set\("v", normalizedVersion\)/,
-    "Tour support should append a version query parameter for cache busting"
+    travelPlanModelSource,
+    /include_in_travel_tour_card\?: bool/,
+    "Travel-plan service images should expose the tour-card inclusion flag"
+  );
+  assert.match(
+    homepageGeneratorSource,
+    /function selectedTravelTourCardImagePaths\(travelPlan\)[\s\S]*include_in_travel_tour_card !== true[\s\S]*const pictures = selectedTravelTourCardImagePaths\(travelPlan\)/,
+    "Public homepage generation should derive tour-card pictures from selected service images"
   );
   assert.match(
     toursSupportSource,
-    /const pictures = stored\.pictures\.map\(\(picture\) => withAssetVersion\(toTourImagePublicUrl\(picture\), version\)\);[\s\S]*pictures,[\s\S]*travel_plan: travelPlan/,
-    "Tour read models should version returned picture URLs with the tour update timestamp"
+    /delete next\.pictures;[\s\S]*delete next\.image;/,
+    "Tour storage normalization should remove legacy tour-level picture fields"
   );
 });
 

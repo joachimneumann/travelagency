@@ -141,6 +141,7 @@ function normalizeTravelPlanServiceImage(image, dayIndex, itemIndex, options = {
     sort_order: 0,
     is_primary: true,
     is_customer_visible: normalizeOptionalBoolean(rawImage.is_customer_visible, true),
+    include_in_travel_tour_card: normalizeOptionalBoolean(rawImage.include_in_travel_tour_card, false),
     width_px: normalizePositiveInt(rawImage.width_px, null),
     height_px: normalizePositiveInt(rawImage.height_px, null),
     source_attribution: normalizeTravelPlanServiceImageSourceAttribution(rawImage.source_attribution),

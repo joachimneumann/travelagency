@@ -159,83 +159,65 @@ test("tour helpers keep video metadata at the tour root and strip legacy travel 
   assert.equal("video" in deleted.travel_plan, false);
 });
 
-test("tour helpers scope legacy bare tour picture filenames under the tour folder", () => {
+test("tour helpers remove legacy tour-level picture storage", () => {
   const normalized = helpers.normalizeTourForStorage({
     id: "tour_legacy",
     title: "Legacy picture",
     destinations: ["vietnam"],
     styles: ["culture"],
     image: "tour_legacy.webp?v=old",
-    pictures: ["tour_legacy.webp?v=old"]
+    pictures: ["tour_legacy.webp?v=old"],
+    travel_plan: {
+      destination_scope: [{ destination: "VN", areas: [] }],
+      days: [
+        {
+          services: [
+            {
+              id: "service_1",
+              title: "Service",
+              image: {
+                id: "image_1",
+                storage_path: "/public/v1/tour-images/tour_legacy/travel-plan-services/service.webp",
+                include_in_travel_tour_card: true
+              }
+            }
+          ]
+        }
+      ]
+    }
   });
 
-  assert.deepEqual(normalized.pictures, [
-    "/public/v1/tour-images/tour_legacy/tour_legacy.webp"
-  ]);
   assert.equal("image" in normalized, false);
+  assert.equal("pictures" in normalized, false);
+  assert.equal(
+    normalized.travel_plan.days[0].services[0].image.include_in_travel_tour_card,
+    true
+  );
 
   const readModel = helpers.normalizeTourForRead(normalized);
   assert.equal("image" in readModel, false);
-  assert.deepEqual(readModel.pictures, [
-    "/public/v1/tour-images/tour_legacy/tour_legacy.webp"
-  ]);
-
-  const normalizedPublicPrefix = helpers.normalizeTourForStorage({
-    id: "tour_legacy",
-    title: "Legacy public picture",
-    destinations: ["vietnam"],
-    styles: ["culture"],
-    pictures: ["/public/v1/tour-images/tour_legacy.webp"]
-  });
-
-  assert.deepEqual(normalizedPublicPrefix.pictures, [
-    "/public/v1/tour-images/tour_legacy/tour_legacy.webp"
-  ]);
+  assert.equal("pictures" in readModel, false);
+  assert.equal(
+    readModel.travel_plan.days[0].services[0].image.include_in_travel_tour_card,
+    true
+  );
   assert.equal(
     helpers.resolveTourImageDiskPath("tour_legacy.webp"),
     path.join("/tmp", "tour_legacy", "tour_legacy.webp")
   );
 });
 
-test("tour helpers keep cache-buster versions out of persisted picture paths", () => {
-  const normalized = helpers.normalizeTourForStorage({
-    id: "tour_versioned",
-    title: "Versioned picture",
-    destinations: ["vietnam"],
-    styles: ["culture"],
-    pictures: [
-      "/public/v1/tour-images/tour_versioned/hero.webp?v=2026-04-25T17%3A16%3A28.500Z",
-      "gallery.webp?cache=stale#fragment"
-    ]
-  });
-
-  assert.deepEqual(normalized.pictures, [
-    "/public/v1/tour-images/tour_versioned/hero.webp",
-    "/public/v1/tour-images/tour_versioned/gallery.webp"
-  ]);
-  assert.equal("image" in normalized, false);
-
-  const readModel = helpers.normalizeTourForRead({
-    ...normalized,
-    updated_at: "2026-04-26T01:02:03.000Z"
-  });
-  assert.deepEqual(readModel.pictures, [
-    "/public/v1/tour-images/tour_versioned/hero.webp?v=2026-04-26T01%3A02%3A03.000Z",
-    "/public/v1/tour-images/tour_versioned/gallery.webp?v=2026-04-26T01%3A02%3A03.000Z"
-  ]);
-  assert.equal("image" in readModel, false);
-});
-
-test("tour migration moves legacy image into pictures and removes persisted image", () => {
+test("tour migration removes legacy image and pictures", () => {
   const persistedTour = {
     id: "tour_legacy_image",
     title: "Legacy image",
     destinations: ["vietnam"],
     styles: ["culture"],
-    image: "legacy.webp"
+    image: "legacy.webp",
+    pictures: ["legacy.webp"]
   };
 
   assert.equal(migratePersistedTourState(persistedTour), true);
-  assert.deepEqual(persistedTour.pictures, ["legacy.webp"]);
+  assert.equal("pictures" in persistedTour, false);
   assert.equal("image" in persistedTour, false);
 });

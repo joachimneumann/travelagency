@@ -345,7 +345,7 @@ async function resolveBookingImageForPdf({ booking, bookingImagesDir, readTours,
   if (tourId && typeof readTours === "function" && typeof resolveTourImageDiskPath === "function") {
     const tours = await readTours().catch(() => []);
     const tour = safeArray(tours).find((item) => normalizeText(item?.id) === tourId);
-    const tourImageRelative = extractPublicRelativePath(safeArray(tour?.pictures)[0], "/public/v1/tour-images/");
+    const tourImageRelative = extractPublicRelativePath(firstTravelTourCardImagePath(tour), "/public/v1/tour-images/");
     if (tourImageRelative) {
       const tourImageAbsolute = resolveTourImageDiskPath(tourImageRelative);
       if (await fileExists(tourImageAbsolute)) return tourImageAbsolute;
@@ -353,6 +353,24 @@ async function resolveBookingImageForPdf({ booking, bookingImagesDir, readTours,
   }
 
   return null;
+}
+
+function firstTravelTourCardImagePath(tour) {
+  for (const day of safeArray(tour?.travel_plan?.days)) {
+    for (const service of safeArray(day?.services)) {
+      const image = service?.image && typeof service.image === "object" && !Array.isArray(service.image)
+        ? service.image
+        : null;
+      if (
+        image?.include_in_travel_tour_card === true
+        && image.is_customer_visible !== false
+        && textOrNull(image.storage_path)
+      ) {
+        return image.storage_path;
+      }
+    }
+  }
+  return "";
 }
 
 function footerText(companyProfile, lang) {
