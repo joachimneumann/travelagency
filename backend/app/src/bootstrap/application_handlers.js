@@ -350,7 +350,11 @@ export function createApplicationRoutes({
     canEditTours,
     normalizeText: support.normalizeText,
     nowIso: support.nowIso,
-    randomUUID
+    randomUUID,
+    repoRoot: runtime.paths.repoRoot,
+    execFile: runtime.execFile,
+    dataPath: runtime.paths.dataPath,
+    toursDir: runtime.paths.toursDir
   });
 
   const tourHandlers = createTourHandlers({

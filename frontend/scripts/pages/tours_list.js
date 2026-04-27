@@ -431,6 +431,45 @@ function setDestinationCatalogStatus(message = "") {
   els.destinationCatalogStatus.textContent = message;
 }
 
+function destinationCatalogSaveOverlayMessage() {
+  return backendT(
+    "backend.tours.destination_catalog.saving_overlay",
+    "Saving destination catalog and refreshing public homepage. Please wait."
+  );
+}
+
+function destinationCatalogSavedMessage(result) {
+  if (result?.homepage_assets?.ok === false) {
+    return backendT(
+      "backend.tours.destination_catalog.saved_homepage_failed",
+      "Destination catalog saved, but refreshing the public homepage failed."
+    );
+  }
+  return backendT("backend.tours.destination_catalog.saved", "Destination catalog saved.");
+}
+
+function destinationCatalogSaveFailedMessage() {
+  return backendT(
+    "backend.tours.destination_catalog.save_failed",
+    "Destination catalog could not be saved."
+  );
+}
+
+function handleDestinationCatalogSaveResult(result) {
+  if (!result?.catalog) return false;
+  state.destinationCatalog.catalog = normalizeDestinationScopeCatalog(result.catalog);
+  renderDestinationScopeFilter();
+  setDestinationCatalogStatus(destinationCatalogSavedMessage(result));
+  clearError();
+  if (result?.homepage_assets?.ok === false) {
+    const detail = normalizeText(result.homepage_assets.error);
+    showError(detail
+      ? `${destinationCatalogSavedMessage(result)} ${detail}`
+      : destinationCatalogSavedMessage(result));
+  }
+  return true;
+}
+
 async function loadDestinationCatalog() {
   if (!state.permissions.canReadTours || !els.destinationCatalogContent) return;
   state.destinationCatalog.loading = true;
@@ -648,21 +687,23 @@ async function createDestinationCatalogDestination(form) {
   if (!destination) return;
   state.destinationCatalog.saving = true;
   setDestinationCatalogStatus(backendT("backend.tours.destination_catalog.saving", "Saving destination catalog..."));
+  setToursPageOverlay(true, destinationCatalogSaveOverlayMessage());
   try {
+    const body = { destination };
     const request = destinationScopeDestinationCreateRequest({
       baseURL: apiOrigin,
-      body: { destination }
+      body
     });
     const result = await fetchApi(withBackendApiLang(request.url), {
       method: request.method,
-      body: request.body
+      body
     });
-    if (result?.catalog) {
-      state.destinationCatalog.catalog = normalizeDestinationScopeCatalog(result.catalog);
-      setDestinationCatalogStatus(backendT("backend.tours.destination_catalog.saved", "Destination catalog saved."));
+    if (!handleDestinationCatalogSaveResult(result)) {
+      setDestinationCatalogStatus(destinationCatalogSaveFailedMessage());
     }
   } finally {
     state.destinationCatalog.saving = false;
+    setToursPageOverlay(false);
     renderDestinationCatalog();
   }
 }
@@ -674,22 +715,25 @@ async function createDestinationCatalogArea(form) {
   if (!destination || !name) return;
   state.destinationCatalog.saving = true;
   setDestinationCatalogStatus(backendT("backend.tours.destination_catalog.saving", "Saving destination catalog..."));
+  setToursPageOverlay(true, destinationCatalogSaveOverlayMessage());
   try {
+    const body = { destination, name };
     const request = destinationScopeAreaCreateRequest({
       baseURL: apiOrigin,
-      body: { destination, name }
+      body
     });
     const result = await fetchApi(withBackendApiLang(request.url), {
       method: request.method,
-      body: request.body
+      body
     });
-    if (result?.catalog) {
-      state.destinationCatalog.catalog = normalizeDestinationScopeCatalog(result.catalog);
+    if (handleDestinationCatalogSaveResult(result)) {
       clearCatalogInput(form);
-      setDestinationCatalogStatus(backendT("backend.tours.destination_catalog.saved", "Destination catalog saved."));
+    } else {
+      setDestinationCatalogStatus(destinationCatalogSaveFailedMessage());
     }
   } finally {
     state.destinationCatalog.saving = false;
+    setToursPageOverlay(false);
     renderDestinationCatalog();
   }
 }
@@ -701,22 +745,25 @@ async function createDestinationCatalogPlace(form) {
   if (!areaId || !name) return;
   state.destinationCatalog.saving = true;
   setDestinationCatalogStatus(backendT("backend.tours.destination_catalog.saving", "Saving destination catalog..."));
+  setToursPageOverlay(true, destinationCatalogSaveOverlayMessage());
   try {
+    const body = { area_id: areaId, name };
     const request = destinationScopePlaceCreateRequest({
       baseURL: apiOrigin,
-      body: { area_id: areaId, name }
+      body
     });
     const result = await fetchApi(withBackendApiLang(request.url), {
       method: request.method,
-      body: request.body
+      body
     });
-    if (result?.catalog) {
-      state.destinationCatalog.catalog = normalizeDestinationScopeCatalog(result.catalog);
+    if (handleDestinationCatalogSaveResult(result)) {
       clearCatalogInput(form);
-      setDestinationCatalogStatus(backendT("backend.tours.destination_catalog.saved", "Destination catalog saved."));
+    } else {
+      setDestinationCatalogStatus(destinationCatalogSaveFailedMessage());
     }
   } finally {
     state.destinationCatalog.saving = false;
+    setToursPageOverlay(false);
     renderDestinationCatalog();
   }
 }
