@@ -2,6 +2,7 @@ backend/app/data/invoices/
 backend/app/data/store.json
 .env
 staging_secrets/
+/AI/
 backend/app/node_modules/
 backend/app/data/*
 !backend/app/data/tours/
