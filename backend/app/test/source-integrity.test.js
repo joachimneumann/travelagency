@@ -4520,29 +4520,29 @@ test("frontend language switching updates the homepage in place instead of forci
   );
 });
 
-test("homepage tour details keep travel-plan day and service copy pinned to English", async () => {
+test("homepage tour details resolve travel-plan day and service copy from the active frontend language", async () => {
   const mainToursPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "main_tours.js");
   const mainToursSource = await readFile(mainToursPath, "utf8");
 
   assert.match(
     mainToursSource,
-    /function resolveTravelPlanLocalizedValue\(sourceValue, i18nValue\)/,
+    /function resolveTravelPlanLocalizedValue\(sourceValue, i18nValue, lang = state\.lang\)/,
     "Homepage tours should use the travel-plan-specific localization resolver"
   );
   assert.match(
     mainToursSource,
-    /const sourceEnglishText = resolveTravelPlanSourceText\(sourceValue, "en"\);[\s\S]*const i18nEnglishText = resolveExplicitLocalizedFrontendText\(i18nValue, "en"\);[\s\S]*return sourceEnglishText \|\| i18nEnglishText;/,
-    "Homepage tours should always prefer the authored English source for travel-plan day and service text"
+    /return resolveExplicitLocalizedFrontendText\(i18nValue, normalizedLang\)[\s\S]*\|\| resolveTravelPlanSourceText\(sourceValue, normalizedLang\)[\s\S]*\|\| sourceEnglishText[\s\S]*\|\| i18nEnglishText;/,
+    "Homepage tours should use translated travel-plan day and service text before falling back to English"
   );
-  assert.doesNotMatch(
+  assert.match(
     mainToursSource,
     /resolveExplicitLocalizedFrontendText\(i18nValue, normalizedLang\)|resolveTravelPlanSourceText\(sourceValue, normalizedLang\)/,
-    "Homepage tours should not resolve travel-plan day or service copy from the active frontend language"
+    "Homepage tours should resolve travel-plan day and service copy from the active frontend language"
   );
   assert.doesNotMatch(
     mainToursSource,
     /resolveLocalizedFrontendText\(i18nValue, state\.lang\)[\s\S]{0,160}\|\| resolveLocalizedFrontendText\(source\[fieldName\], state\.lang\)/,
-    "Homepage tours should not resolve *_i18n maps before English source for travel-plan fields"
+    "Homepage tours should keep travel-plan field resolution in the dedicated resolver"
   );
 });
 

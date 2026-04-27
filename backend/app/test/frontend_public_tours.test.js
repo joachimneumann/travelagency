@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
@@ -41,7 +42,12 @@ async function loadToursController() {
   return await import(`${pathToFileURL(controllerPath).href}?test=${Date.now()}`);
 }
 
-test("public tour travel-plan text stays English when the frontend language changes", async () => {
+async function loadFrontendDictionary(lang) {
+  const dictionaryPath = path.join(repoRoot, "frontend", "data", "i18n", "frontend", `${lang}.json`);
+  return JSON.parse(await readFile(dictionaryPath, "utf8"));
+}
+
+test("public tour travel-plan content and detail chrome follow the frontend language", async () => {
   global.HTMLElement = FakeElement;
   global.HTMLButtonElement = FakeElement;
   global.window = {
@@ -69,11 +75,11 @@ test("public tour travel-plan text stays English when the frontend language chan
           day_number: 1,
           title: "English day title",
           title_i18n: {
-            vi: "Vietnamese day title"
+            de: "German day title"
           },
           notes: "English day notes",
           notes_i18n: {
-            vi: "Vietnamese day notes"
+            de: "German day notes"
           },
           services: [
             {
@@ -81,11 +87,11 @@ test("public tour travel-plan text stays English when the frontend language chan
               kind: "other",
               title: "English service title",
               title_i18n: {
-                vi: "Vietnamese service title"
+                de: "German service title"
               },
               details: "English service details",
               details_i18n: {
-                vi: "Vietnamese service details"
+                de: "German service details"
               }
             }
           ]
@@ -94,7 +100,7 @@ test("public tour travel-plan text stays English when the frontend language chan
     }
   };
   const state = {
-    lang: "vi",
+    lang: "de",
     filteredTrips: [trip],
     trips: [trip],
     visibleToursCount: 1,
@@ -117,7 +123,8 @@ test("public tour travel-plan text stays English when the frontend language chan
     tourActions: null,
     showMoreTours: null
   };
-  const frontendT = (_id, fallback, vars = {}) => String(fallback ?? "").replace(/\{([^{}]+)\}/g, (_match, key) => (
+  const frontendDict = await loadFrontendDictionary("de");
+  const frontendT = (id, fallback, vars = {}) => String(frontendDict[id] ?? fallback ?? "").replace(/\{([^{}]+)\}/g, (_match, key) => (
     Object.prototype.hasOwnProperty.call(vars, key) ? String(vars[key]) : ""
   ));
 
@@ -128,7 +135,7 @@ test("public tour travel-plan text stays English when the frontend language chan
     initialVisibleTours: 1,
     showMoreBatch: 1,
     frontendT,
-    currentFrontendLang: () => "vi",
+    currentFrontendLang: () => "de",
     preferredCurrencyForFrontendLang: () => "USD",
     approximateDisplayAmountFromUSD: () => null,
     formatDisplayMoney: () => "",
@@ -145,12 +152,13 @@ test("public tour travel-plan text stays English when the frontend language chan
 
   controller.renderVisibleTrips();
 
-  assert.match(els.tourGrid.innerHTML, /English day title/);
-  assert.match(els.tourGrid.innerHTML, /English day notes/);
-  assert.match(els.tourGrid.innerHTML, /English service title/);
-  assert.match(els.tourGrid.innerHTML, /English service details/);
-  assert.doesNotMatch(els.tourGrid.innerHTML, /Vietnamese day title/);
-  assert.doesNotMatch(els.tourGrid.innerHTML, /Vietnamese day notes/);
-  assert.doesNotMatch(els.tourGrid.innerHTML, /Vietnamese service title/);
-  assert.doesNotMatch(els.tourGrid.innerHTML, /Vietnamese service details/);
+  assert.match(els.tourGrid.innerHTML, /Tag 1 - German day title/);
+  assert.doesNotMatch(els.tourGrid.innerHTML, /Day 1 - English day title/);
+  assert.match(els.tourGrid.innerHTML, /German day title/);
+  assert.match(els.tourGrid.innerHTML, /German day notes/);
+  assert.match(els.tourGrid.innerHTML, /German service title/);
+  assert.match(els.tourGrid.innerHTML, /German service details/);
+  assert.doesNotMatch(els.tourGrid.innerHTML, /English day notes/);
+  assert.doesNotMatch(els.tourGrid.innerHTML, /English service title/);
+  assert.doesNotMatch(els.tourGrid.innerHTML, /English service details/);
 });

@@ -164,6 +164,11 @@
     "origin": "legacy",
     "updated_at": "2026-04-02T15:10:05.558Z"
   },
+  "filters.no_destinations": {
+    "source_hash": "a892187e1f61e663bfefaa916f244f1c5efff3233b5407e6d88e30f948173eaa",
+    "origin": "manual",
+    "updated_at": "2026-04-28T00:00:00.000Z"
+  },
   "tours.heading.default": {
     "source_hash": "4a8249333bb0431d6a76f1865a836fd98f92d9a66933e3bbb0774de82c477084",
     "origin": "legacy",
@@ -323,6 +328,51 @@
     "source_hash": "187897ce0afcf20b50ba2b37dca84a951b7046f29ed5ab94f010619f69d6e189",
     "origin": "machine",
     "updated_at": "2026-04-02T15:10:05.558Z"
+  },
+  "tour.card.gallery_next": {
+    "source_hash": "df33df10ef9b7d9a855b8809ae5aa01d7fe051eb5c995f7fe7a3f74733bed508",
+    "origin": "manual",
+    "updated_at": "2026-04-28T00:00:00.000Z"
+  },
+  "tour.plan.details_unavailable": {
+    "source_hash": "72d19b16167101dee67e4edc12e6f65531151b686868a49683eed7b6f68fa8b8",
+    "origin": "manual",
+    "updated_at": "2026-04-28T00:00:00.000Z"
+  },
+  "tour.plan.day_label": {
+    "source_hash": "562e5b929d75143be2bbc825c3f4438d02c929d8daf79a1fa0d979e70cf896fb",
+    "origin": "manual",
+    "updated_at": "2026-04-28T00:00:00.000Z"
+  },
+  "tour.plan.service_fallback": {
+    "source_hash": "d677190e0a9990e7d5fa9e4c1bbde44271fb8959c4acb6d43e02ed991128b4bf",
+    "origin": "manual",
+    "updated_at": "2026-04-28T00:00:00.000Z"
+  },
+  "tour.plan.service_image_alt": {
+    "source_hash": "9d7154e95f378052cea6285f3771f804d7c8f9473bdacea2c46caba505e8be6c",
+    "origin": "manual",
+    "updated_at": "2026-04-28T00:00:00.000Z"
+  },
+  "tour.plan.feature_service": {
+    "source_hash": "0017096a9d4e4aa6f2f4a089fcdae27e0788da7a218a2389da656076a8e52a0c",
+    "origin": "manual",
+    "updated_at": "2026-04-28T00:00:00.000Z"
+  },
+  "tour.plan.no_services": {
+    "source_hash": "952d97e34491ee864ac282e26c3ff56cd6dac7e9340e76553349cd72d132be61",
+    "origin": "manual",
+    "updated_at": "2026-04-28T00:00:00.000Z"
+  },
+  "tour.plan.no_days": {
+    "source_hash": "1886d8a38f95325307b6717aaa9cafcb6800b3f215f154731a309fdb10f58657",
+    "origin": "manual",
+    "updated_at": "2026-04-28T00:00:00.000Z"
+  },
+  "tour.plan.panel_label": {
+    "source_hash": "8d5834ab9f5f9f75214b1922ea0321a1ae1aa9d187cc7d2735b449edd3878322",
+    "origin": "manual",
+    "updated_at": "2026-04-28T00:00:00.000Z"
   },
   "trust.strip.rating_title": {
     "source_hash": "9bfd13650697fb45b37c83c952d53e4304f55e1e2883b7ceec33ed8a77c98cad",
