@@ -19,6 +19,7 @@ import {
 import { createBookingTravelPlanAttachmentHandlers } from "./booking_travel_plan_attachments.js";
 import { createBookingTravelPlanImportHandlers } from "./booking_travel_plan_import.js";
 import { createBookingTravelPlanImageHandlers } from "./booking_travel_plan_images.js";
+import { validateDestinationScopeAgainstCatalog } from "../../domain/destination_scope.js";
 
 export function createBookingTravelPlanHandlers(deps) {
   const {
@@ -135,15 +136,19 @@ export function createBookingTravelPlanHandlers(deps) {
       sourceLang: normalizedSourceLang,
       strictReferences: false
     });
-    const nextDestinations = Array.isArray(nextTravelPlan?.destinations)
+    const nextDestinations = Array.isArray(nextTravelPlan?.destinations) || Array.isArray(nextTravelPlan?.destination_scope)
       ? nextNormalized.destinations
       : existingNormalized.destinations;
+    const nextDestinationScope = Array.isArray(nextTravelPlan?.destination_scope)
+      ? nextNormalized.destination_scope
+      : existingNormalized.destination_scope;
     const existingDaysById = new Map(
       (Array.isArray(existingNormalized?.days) ? existingNormalized.days : []).map((day) => [day.id, day])
     );
 
     return {
       ...nextNormalized,
+      destination_scope: nextDestinationScope,
       destinations: nextDestinations,
       days: (Array.isArray(nextNormalized?.days) ? nextNormalized.days : []).map((day) => {
         const existingDay = existingDaysById.get(day.id);
@@ -651,6 +656,11 @@ export function createBookingTravelPlanHandlers(deps) {
       sendJson(res, 422, { error: check.error });
       return;
     }
+    const scopeCheck = validateDestinationScopeAgainstCatalog(check.travel_plan?.destination_scope, store);
+    if (!scopeCheck.ok) {
+      sendJson(res, 422, { error: scopeCheck.error });
+      return;
+    }
 
     const contentLang = requestContentLang(req, payload);
     const sourceLang = requestSourceLang(req, payload);
@@ -733,6 +743,9 @@ export function createBookingTravelPlanHandlers(deps) {
       );
       if (!Array.isArray(translatedTravelPlan?.destinations) && Array.isArray(booking?.travel_plan?.destinations)) {
         translatedTravelPlan.destinations = [...booking.travel_plan.destinations];
+      }
+      if (!Array.isArray(translatedTravelPlan?.destination_scope) && Array.isArray(booking?.travel_plan?.destination_scope)) {
+        translatedTravelPlan.destination_scope = JSON.parse(JSON.stringify(booking.travel_plan.destination_scope));
       }
       const nextTravelPlanJson = JSON.stringify(translatedTravelPlan);
       const currentTravelPlanJson = JSON.stringify(booking.travel_plan || null);

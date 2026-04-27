@@ -45,6 +45,41 @@ test("tour admin options can include catalog travel styles that no tour uses yet
   );
 });
 
+test("tour helpers derive destinations from scope and omit legacy destination storage", () => {
+  const legacyOnly = helpers.normalizeTourForStorage({
+    id: "tour_legacy_destinations",
+    title: "Legacy destinations",
+    destinations: ["vietnam"],
+    styles: ["culture"],
+    travel_plan: {
+      days: []
+    }
+  });
+
+  assert.equal("destinations" in legacyOnly, false);
+  assert.deepEqual(helpers.tourDestinationCodes(legacyOnly), []);
+  assert.deepEqual(helpers.normalizeTourForRead(legacyOnly).destination_codes, []);
+
+  const scoped = helpers.normalizeTourForStorage({
+    id: "tour_scoped_destinations",
+    title: "Scoped destinations",
+    destinations: ["thailand"],
+    styles: ["culture"],
+    travel_plan: {
+      destination_scope: [
+        { destination: "VN", areas: [] }
+      ],
+      days: []
+    }
+  });
+
+  assert.equal("destinations" in scoped, false);
+  assert.equal("destinations" in scoped.travel_plan, false);
+  assert.deepEqual(helpers.tourDestinationCodes(scoped), ["vietnam"]);
+  assert.deepEqual(helpers.normalizeTourForRead(scoped).destination_codes, ["vietnam"]);
+  assert.deepEqual(helpers.normalizeTourForRead(scoped).travel_plan.destinations, ["VN"]);
+});
+
 test("tour helpers resolve localized titles with vietnamese then english fallback", () => {
   const viTour = helpers.normalizeTourForRead(
     {

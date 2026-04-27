@@ -35,6 +35,7 @@ import {
   COUNTRY_CODE_OPTIONS,
   TOUR_STYLE_CODE_OPTIONS
 } from "../shared/generated_catalogs.js";
+import { destinationScopeDestinations } from "../shared/destination_scope_editor.js";
 
 function labelizeKey(key) {
   return String(key || "")
@@ -163,6 +164,8 @@ function travelStyleLabels(values) {
 }
 
 function bookingDestinations(booking) {
+  const scopedDestinations = destinationScopeDestinations(booking?.travel_plan?.destination_scope);
+  if (scopedDestinations.length) return normalizeCodeArray(scopedDestinations);
   return normalizeCodeArray(booking?.travel_plan?.destinations);
 }
 

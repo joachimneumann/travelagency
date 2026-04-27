@@ -1,10 +1,12 @@
 import { normalizeText } from "../lib/text.js";
 import {
-  enumValueSetFor,
   TRAVEL_PLAN_SERVICE_KIND_VALUES,
   TRAVEL_PLAN_TIMING_KIND_VALUES
 } from "../lib/generated_catalogs.js";
-import { normalizeTourDestinationCode } from "./tour_catalog_i18n.js";
+import {
+  destinationScopeDestinations,
+  normalizeTravelPlanDestinationScope
+} from "./destination_scope.js";
 import { normalizeTravelPlanTranslationMeta } from "./booking_translation.js";
 import {
   normalizeBookingContentLang,
@@ -14,13 +16,6 @@ import {
 
 const TRAVEL_PLAN_SERVICE_KINDS = new Set(TRAVEL_PLAN_SERVICE_KIND_VALUES);
 const TRAVEL_PLAN_TIMING_KINDS = new Set(TRAVEL_PLAN_TIMING_KIND_VALUES);
-const COUNTRY_CODE_SET = enumValueSetFor("CountryCode");
-const DESTINATION_COUNTRY_CODE_BY_TOUR_CODE = Object.freeze({
-  vietnam: "VN",
-  thailand: "TH",
-  cambodia: "KH",
-  laos: "LA"
-});
 
 function normalizeOptionalText(value) {
   const normalized = normalizeText(value);
@@ -41,23 +36,6 @@ function normalizeOptionalBoolean(value, fallback = null) {
   if (value === true) return true;
   if (value === false) return false;
   return fallback;
-}
-
-function normalizeCountryCodes(values) {
-  return Array.from(
-    new Set(
-      (Array.isArray(values) ? values : [])
-        .map((value) => {
-          const normalizedText = normalizeOptionalText(value);
-          if (!normalizedText) return "";
-          const directCode = normalizedText.toUpperCase();
-          if (COUNTRY_CODE_SET.has(directCode)) return directCode;
-          const tourCode = normalizeTourDestinationCode(normalizedText);
-          return DESTINATION_COUNTRY_CODE_BY_TOUR_CODE[tourCode] || directCode;
-        })
-        .filter((value) => value && COUNTRY_CODE_SET.has(value))
-    )
-  );
 }
 
 function normalizeTravelPlanServiceImageSourceAttribution(rawAttribution) {
@@ -204,6 +182,8 @@ function normalizeTimingKind(value) {
 
 function buildDefaultTravelPlan() {
   return {
+    destination_scope: [],
+    destinations: [],
     days: []
   };
 }
@@ -433,11 +413,15 @@ export function createTravelPlanHelpers() {
       ? rawTravelPlan
       : {};
     const flatMode = options?.flatMode === "localized" ? "localized" : "source";
+    const destination_scope = normalizeTravelPlanDestinationScope(source);
+    const destinations = destinationScopeDestinations(destination_scope);
     const days = normalizeTravelPlanDays(source.days, {
       ...options,
       flatMode
     }).map((day) => stripBookingFieldsFromTravelPlanDay(day));
     return normalizeTravelPlanTranslationMeta({
+      destination_scope,
+      destinations,
       days,
       translation_meta: source.translation_meta
     });
@@ -457,8 +441,10 @@ export function createTravelPlanHelpers() {
       flatMode
     });
 
+    const destination_scope = normalizeTravelPlanDestinationScope(source);
     return normalizeTravelPlanTranslationMeta({
-      destinations: normalizeCountryCodes(source.destinations),
+      destination_scope,
+      destinations: destinationScopeDestinations(destination_scope),
       days,
       attachments: normalizeTravelPlanAttachments(source.attachments),
       translation_meta: source.translation_meta

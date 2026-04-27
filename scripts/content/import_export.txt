@@ -27,6 +27,4 @@ rsync -av backup/tours/ content/tours/
 
 ### CAUTION
 ## reset tours backup from local content
-mkdir -p backup/tours
-find backup/tours -mindepth 1 -maxdepth 1 -exec rm -rf {} +
-rsync -av content/tours/ backup/tours/
+test -d content/tours && mkdir -p backup/tours && rsync -av --delete content/tours/ backup/tours/

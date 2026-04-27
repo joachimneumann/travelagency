@@ -1,14 +1,48 @@
 # TODO
 
+#regions
+
+create a document documentation/concept/areas_amd_places.md:
+
+I want to add destination areas and places to the travel plan in the marketing tours and to the travel plan in bookings.
+Create a document documentation/concept/areas_and_places.md
+
+Areas are sub-categories to destinations. 
+Areas have optional places
+
+for example:
+destination: Vietnam
+area: central
+place: Hoi An
+
+The list of possible areas and places shall be stored in the backend, not in the content folder.
+It shall be possible to add areas to destinations in the tour editor marketing_tours.html
+It shall be possible to add places to areas in the tour editor marketing_tours.html
+
+In marketing_tour.html, staff can select one or more destinations and can additionaly select an one or more areas of all selected destinations and can select select an one or more places of each selected area.
+
+do not implement yet.
+
 
 Translate
 =========
 * Translate with openai
 
-Travler
+Traveler
 =======
 * test! when clicking on the traveler, load the data from the backend. The traveler might have submitted his data.
 
+Translation
+===========
+- global translation cache for customer (17 languages)
+- global translation cache for staff (EN/VI)
+- global translation override for customer (17 languages)
+- global translation override for staff (EN/VI)
+All searchable and editable
+
+Pictures in marketing_tours
+===========================
+Remove pictures from top, add a [] Use Checkbox in the service picture
 
 emergency.html
 =============

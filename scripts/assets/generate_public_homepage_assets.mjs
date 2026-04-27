@@ -7,6 +7,11 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { promisify } from "node:util";
 import { createTourHelpers } from "../../backend/app/src/domain/tours_support.js";
 import {
+  buildDestinationScopeCatalogResponse,
+  countryCodeToTourDestinationCode,
+  filterDestinationScopeByTourDestinations
+} from "../../backend/app/src/domain/destination_scope.js";
+import {
   normalizeTourDestinationCode,
   normalizeTourLang
 } from "../../backend/app/src/domain/tour_catalog_i18n.js";
@@ -29,6 +34,7 @@ const ATP_STAFF_ROOT = normalizeText(process.env.PUBLIC_HOMEPAGE_STAFF_ROOT) || 
 const ATP_STAFF_PROFILES_PATH = normalizeText(process.env.PUBLIC_HOMEPAGE_STAFF_PROFILES_PATH) || path.join(ATP_STAFF_ROOT, "staff.json");
 const ATP_STAFF_PHOTOS_ROOT = normalizeText(process.env.PUBLIC_HOMEPAGE_STAFF_PHOTOS_DIR) || path.join(ATP_STAFF_ROOT, "photos");
 const COUNTRY_REFERENCE_INFO_PATH = normalizeText(process.env.PUBLIC_HOMEPAGE_COUNTRY_REFERENCE_INFO_PATH) || path.join(CONTENT_ROOT, "country_reference_info.json");
+const STORE_PATH = path.resolve(normalizeText(process.env.PUBLIC_HOMEPAGE_STORE_PATH || process.env.STORE_FILE) || path.join(ROOT_DIR, "backend", "app", "data", "store.json"));
 const GENERATED_HOMEPAGE_DATA_DIR = path.join(ROOT_DIR, "frontend", "data", "generated", "homepage");
 const GENERATED_HOMEPAGE_ASSETS_DIR = path.join(ROOT_DIR, "assets", "generated", "homepage");
 const GENERATED_REELS_DATA_DIR = path.join(ROOT_DIR, "frontend", "data", "generated", "reels");
@@ -381,12 +387,80 @@ function visiblePublishedDestinationCodes(countryReferencePayload) {
   );
 }
 
+function publicDestinationScopeCatalog(store, destinationOptions, { lang = "en" } = {}) {
+  const destinationSource = Array.isArray(store?.destination_scope_destinations)
+    ? store.destination_scope_destinations
+    : [];
+  const synthesizedStore = {
+    ...(store && typeof store === "object" && !Array.isArray(store) ? store : {}),
+    destination_scope_destinations: destinationSource.length
+      ? destinationSource
+      : (Array.isArray(destinationOptions) ? destinationOptions : []).map((destination, index) => ({
+        code: normalizeText(destination?.code || destination),
+        label: normalizeText(destination?.label || destination?.code || destination),
+        sort_order: index
+      }))
+  };
+  const catalog = buildDestinationScopeCatalogResponse(synthesizedStore, { lang });
+  const destinationCodes = new Set();
+  const destinations = (Array.isArray(catalog.destinations) ? catalog.destinations : [])
+    .map((destination) => {
+      const countryCode = normalizeText(destination?.code).toUpperCase();
+      const code = normalizeTourDestinationCode(countryCodeToTourDestinationCode(countryCode));
+      if (!code) return null;
+      destinationCodes.add(code);
+      return {
+        code,
+        country_code: countryCode,
+        label: normalizeText(destination?.label || destination?.name) || code
+      };
+    })
+    .filter(Boolean);
+  const areas = (Array.isArray(catalog.areas) ? catalog.areas : [])
+    .map((area) => {
+      const destination = normalizeTourDestinationCode(countryCodeToTourDestinationCode(area?.destination));
+      const id = normalizeText(area?.id);
+      if (!id || !destination || !destinationCodes.has(destination)) return null;
+      return {
+        id,
+        destination,
+        country_code: normalizeText(area?.destination).toUpperCase(),
+        code: normalizeText(area?.code),
+        label: normalizeText(area?.label || area?.name || area?.code) || id
+      };
+    })
+    .filter(Boolean);
+  const areaIds = new Set(areas.map((area) => area.id));
+  const places = (Array.isArray(catalog.places) ? catalog.places : [])
+    .map((place) => {
+      const areaId = normalizeText(place?.area_id);
+      const id = normalizeText(place?.id);
+      if (!id || !areaId || !areaIds.has(areaId)) return null;
+      return {
+        id,
+        area_id: areaId,
+        code: normalizeText(place?.code),
+        label: normalizeText(place?.label || place?.name || place?.code) || id
+      };
+    })
+    .filter(Boolean);
+
+  return { destinations, areas, places };
+}
+
 function normalizeTourForPublicHomepage(tour, publishedDestinationCodes, { normalizeTourForStorage, tourDestinationCodes }) {
   const stored = normalizeTourForStorage(tour);
   const visibleDestinations = tourDestinationCodes(stored).filter((code) => publishedDestinationCodes.has(code));
   if (!visibleDestinations.length) return null;
+  const travelPlan = stored.travel_plan && typeof stored.travel_plan === "object" && !Array.isArray(stored.travel_plan)
+    ? stored.travel_plan
+    : {};
   return {
     ...stored,
+    travel_plan: {
+      ...travelPlan,
+      destination_scope: filterDestinationScopeByTourDestinations(travelPlan.destination_scope, visibleDestinations)
+    },
     destinations: visibleDestinations
   };
 }
@@ -525,7 +599,7 @@ async function buildHeroTitleByLang({
     const dictionary = await readJson(path.join(frontendI18nDir, `${normalizedLang}.json`), {});
     const destinationLabels = destinationLabelsForCountryCodes(publishedCountryCodes, normalizedLang);
     const defaultTitle = normalizeText(dictionary["hero.title"]);
-    const genericTitle = normalizeText(dictionary["hero.title_generic"]) || "Private tailor-made holidays";
+    const genericTitle = normalizeText(dictionary["hero.title_generic"]) || "Private Holidays in Southeast Asia";
     const titleTemplate = normalizeText(dictionary["hero.title_with_destinations"]) || defaultTitle || "Private holidays in {destinations}";
     result[normalizedLang] = destinationLabels.length
       ? interpolateTemplate(titleTemplate, {
@@ -654,7 +728,7 @@ async function writeGeneratedHomepageHtml(templatePath, outputPath, copy) {
   const metaTitle = normalizeText(copy?.metaTitleByLang?.en) || "AsiaTravelPlan | Custom Holidays";
   const metaDescription = normalizeText(copy?.metaDescriptionByLang?.en)
     || "Private tailor-made holidays with clear pricing and local support.";
-  const heroTitle = normalizeText(copy?.heroTitleByLang?.en) || "Private tailor-made holidays";
+  const heroTitle = normalizeText(copy?.heroTitleByLang?.en) || "Private Holidays in Southeast Asia";
 
   let next = source
     .replace(/(<title\b[^>]*>)([\s\S]*?)(<\/title>)/, `$1${escapeHtmlText(metaTitle)}$3`)
@@ -1205,6 +1279,7 @@ async function generateTourAssets({
   outputRoot = TOUR_OUTPUT_DIR,
   frontendDataDir = FRONTEND_DATA_DIR,
   countryReferenceInfoPath = COUNTRY_REFERENCE_INFO_PATH,
+  storePath = STORE_PATH,
   frontendI18nDir = FRONTEND_I18N_DIR,
   languages = FRONTEND_LANGUAGE_CODES
 } = {}) {
@@ -1248,6 +1323,7 @@ async function generateTourAssets({
   }
 
   const countryReferencePayload = await readJson(countryReferenceInfoPath, { fallback: { items: [] } });
+  const storePayload = await readJson(storePath, { fallback: {} });
   const publishedCountryCodes = publishedDestinationCountryCodes(countryReferencePayload);
   const publishedDestinationCodes = visiblePublishedDestinationCodes(countryReferencePayload);
   const publicTours = tours
@@ -1293,9 +1369,11 @@ async function generateTourAssets({
       });
     }
     const options = collectTourOptions(publicTours, { lang: normalizedLang });
+    const destinationScopeCatalog = publicDestinationScopeCatalog(storePayload, options.destinations, { lang: normalizedLang });
     const payload = {
       items: localizedItems,
       available_destinations: options.destinations,
+      available_destination_scope_catalog: destinationScopeCatalog,
       available_styles: options.styles,
       pagination: {
         page: 1,
@@ -1527,13 +1605,14 @@ export async function generatePublicHomepageAssets({
   staffProfilesPath = "",
   staffPhotosRoot = "",
   countryReferenceInfoPath = COUNTRY_REFERENCE_INFO_PATH,
+  storePath = STORE_PATH,
   frontendDataDir = FRONTEND_DATA_DIR,
   tourOutputDir = TOUR_OUTPUT_DIR,
   teamOutputDir = TEAM_OUTPUT_DIR,
   reelsDataDir = "",
   reelOutputDir = "",
   frontendI18nDir = FRONTEND_I18N_DIR,
-  homepageCopyGlobalPath = HOMEPAGE_COPY_GLOBAL_PATH,
+  homepageCopyGlobalPath = "",
   homepageInitialBundlePath = "",
   homepageTemplatePath = HOMEPAGE_TEMPLATE_PATH,
   homepageIndexPath = "",
@@ -1543,6 +1622,8 @@ export async function generatePublicHomepageAssets({
     || path.join(frontendDataDir, path.basename(HOMEPAGE_INITIAL_BUNDLE_PATH));
   const resolvedHomepageIndexPath = normalizeText(homepageIndexPath)
     || path.join(frontendDataDir, path.basename(HOMEPAGE_INDEX_PATH));
+  const resolvedHomepageCopyGlobalPath = normalizeText(homepageCopyGlobalPath)
+    || path.join(frontendDataDir, path.basename(HOMEPAGE_COPY_GLOBAL_PATH));
   const resolvedReelsDataDir = normalizeText(reelsDataDir)
     || path.resolve(frontendDataDir, "..", "reels");
   const resolvedReelOutputDir = normalizeText(reelOutputDir)
@@ -1557,6 +1638,7 @@ export async function generatePublicHomepageAssets({
     outputRoot: tourOutputDir,
     frontendDataDir,
     countryReferenceInfoPath,
+    storePath,
     frontendI18nDir,
     languages
   });
@@ -1581,7 +1663,7 @@ export async function generatePublicHomepageAssets({
       reels: reels.assetUrl
     }
   };
-  const homepageCopy = await writeHomepageCopyGlobalScript(homepageCopyGlobalPath, homepageCopyValue);
+  const homepageCopy = await writeHomepageCopyGlobalScript(resolvedHomepageCopyGlobalPath, homepageCopyValue);
   const homepageHtml = await writeGeneratedHomepageHtml(homepageTemplatePath, resolvedHomepageIndexPath, homepageCopyValue);
   const seo = await writeSeoSurfaceAssets({
     outputRoot: path.join(frontendDataDir, path.basename(SEO_OUTPUT_DIR)),

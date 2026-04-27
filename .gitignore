@@ -31,6 +31,8 @@ backup/atp_staff/staff.json.audit.log
 logs/
 
 __pycache__/
+.DS_Store
+AI/
 *.xcuserstate
 *.xccheckout
 *.xcscmblueprint

@@ -16,6 +16,10 @@ import {
   normalizeItemImageRef
 } from "./booking_travel_plan_shared.js";
 import { createMarketingTourBookingTravelPlanCloner } from "./marketing_tour_booking_travel_plan.js";
+import {
+  filterDestinationScopeByTourDestinations,
+  validateDestinationScopeAgainstCatalog
+} from "../../domain/destination_scope.js";
 
 export function createTourHandlers(deps) {
   const {
@@ -138,10 +142,6 @@ export function createTourHandlers(deps) {
     return normalizeTourLang(new URL(reqUrl, "http://localhost").searchParams.get("lang"));
   }
 
-  function normalizeDestinationCodes(values) {
-    return tourDestinationCodes({ destinations: normalizeStringArray(values) });
-  }
-
   function normalizeStyleCodes(values) {
     return tourStyleCodes({ styles: normalizeStringArray(values) });
   }
@@ -201,9 +201,6 @@ export function createTourHandlers(deps) {
     } else if (payload.short_description !== undefined) {
       next.short_description = setLocalizedTextForLang(current.short_description, payload.short_description, lang);
     }
-    if (isCreate || payload.destinations !== undefined) {
-      next.destinations = normalizeDestinationCodes(payload.destinations);
-    }
     if (isCreate || payload.styles !== undefined) next.styles = normalizeStyleCodes(payload.styles);
     if (payload.pictures !== undefined) {
       next.pictures = Array.from(
@@ -234,23 +231,45 @@ export function createTourHandlers(deps) {
 
   function validateTourInput(tour, { isCreate = false, lang = "en" } = {}) {
     if (isCreate && !resolveLocalizedText(tour?.title, lang)) return "title is required";
-    if (isCreate && !normalizeDestinationCodes(tour?.destinations).length) return "destinations is required";
+    if (isCreate && !tourDestinationCodes(tour).length) return "destinations is required";
     if (isCreate && !normalizeStyleCodes(tour?.styles).length) return "styles is required";
     return "";
+  }
+
+  async function validateTourDestinationScope(travelPlan, res) {
+    const store = await readStore();
+    const check = validateDestinationScopeAgainstCatalog(travelPlan?.destination_scope, store);
+    if (check.ok) return true;
+    sendJson(res, 422, { error: check.error });
+    return false;
   }
 
   function filterAndSortTours(tours, query, lang) {
     const search = normalizeText(query.get("search")).toLowerCase();
     const destination = normalizeTourDestinationCode(query.get("destination"));
+    const area = normalizeText(query.get("area"));
+    const place = normalizeText(query.get("place"));
     const style = normalizeTourStyleCode(query.get("style"));
     const sort = normalizeText(query.get("sort")) || "updated_at_desc";
 
     const filtered = tours.filter((tour) => {
       const destinationCodes = tourDestinationCodes(tour);
       const styleCodes = tourStyleCodes(tour);
+      const destinationScope = Array.isArray(tour?.travel_plan?.destination_scope) ? tour.travel_plan.destination_scope : [];
       const destinationMatch = !destination || destinationCodes.includes(destination);
+      const areaMatch = !area || destinationScope.some((entry) => (
+        Array.isArray(entry?.areas)
+        && entry.areas.some((areaSelection) => normalizeText(areaSelection?.area_id) === area)
+      ));
+      const placeMatch = !place || destinationScope.some((entry) => (
+        Array.isArray(entry?.areas)
+        && entry.areas.some((areaSelection) => (
+          Array.isArray(areaSelection?.places)
+          && areaSelection.places.some((placeSelection) => normalizeText(placeSelection?.place_id) === place)
+        ))
+      ));
       const styleMatch = !style || styleCodes.includes(style);
-      if (!destinationMatch || !styleMatch) return false;
+      if (!destinationMatch || !areaMatch || !placeMatch || !styleMatch) return false;
       if (!search) return true;
 
       const readModel = normalizeTourForRead(tour, { lang });
@@ -281,6 +300,8 @@ export function createTourHandlers(deps) {
       sort,
       filters: {
         destination: destination || null,
+        area: area || null,
+        place: place || null,
         style: style || null,
         search: search || null
       }
@@ -444,8 +465,15 @@ export function createTourHandlers(deps) {
     const stored = normalizeTourForStorage(tour);
     const visibleDestinations = tourDestinationCodes(stored).filter((code) => publishedDestinationCodes.has(code));
     if (!visibleDestinations.length) return null;
+    const travelPlan = stored.travel_plan && typeof stored.travel_plan === "object" && !Array.isArray(stored.travel_plan)
+      ? stored.travel_plan
+      : {};
     return {
       ...stored,
+      travel_plan: {
+        ...travelPlan,
+        destination_scope: filterDestinationScopeByTourDestinations(travelPlan.destination_scope, visibleDestinations)
+      },
       destinations: visibleDestinations
     };
   }
@@ -681,6 +709,7 @@ export function createTourHandlers(deps) {
       sendJson(res, 422, { error: validationError });
       return;
     }
+    if (!(await validateTourDestinationScope(tour.travel_plan, res))) return;
 
     await persistTour(tour);
     const homepageAssets = await regeneratePublicHomepageAssets("tour_create", { tour_id: tour.id });
@@ -728,6 +757,7 @@ export function createTourHandlers(deps) {
       sendJson(res, 422, { error: validationError });
       return;
     }
+    if (!(await validateTourDestinationScope(updated.travel_plan, res))) return;
 
     tours[index] = updated;
     await persistTour(updated);
@@ -768,6 +798,7 @@ export function createTourHandlers(deps) {
       sendJson(res, 422, { error: check.error });
       return;
     }
+    if (!(await validateTourDestinationScope(check.travel_plan, res))) return;
 
     const updated = normalizeTourForStorage({
       ...tours[index],

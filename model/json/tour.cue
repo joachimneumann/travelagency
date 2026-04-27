@@ -15,7 +15,7 @@ import (
 	id:     common.#Identifier
 	title?: string
 	title_i18n?: [string]: string
-	destinations: [...enums.#CountryCode]
+	destinations?: [...enums.#CountryCode]
 	styles: [...enums.#TourStyleCode]
 	priority?:                int
 	seasonality_start_month?: enums.#MonthCode

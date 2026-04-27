@@ -1263,6 +1263,41 @@ package api
 		}]
 	},
 	{
+		key:           "destination_scope_catalog"
+		path:          "/api/v1/destination-scope/catalog"
+		method:        "GET"
+		tag:           "Tours"
+		authenticated: true
+		responseType:  "DestinationScopeCatalogResponse"
+	},
+	{
+		key:           "destination_scope_destination_create"
+		path:          "/api/v1/destination-scope/destinations"
+		method:        "POST"
+		tag:           "Tours"
+		authenticated: true
+		requestType:   "DestinationCreateRequest"
+		responseType:  "DestinationCreateResponse"
+	},
+	{
+		key:           "destination_scope_area_create"
+		path:          "/api/v1/destination-scope/areas"
+		method:        "POST"
+		tag:           "Tours"
+		authenticated: true
+		requestType:   "DestinationAreaCreateRequest"
+		responseType:  "DestinationAreaCreateResponse"
+	},
+	{
+		key:           "destination_scope_place_create"
+		path:          "/api/v1/destination-scope/places"
+		method:        "POST"
+		tag:           "Tours"
+		authenticated: true
+		requestType:   "DestinationPlaceCreateRequest"
+		responseType:  "DestinationPlaceCreateResponse"
+	},
+	{
 		key:           "tours"
 		path:          "/api/v1/tours"
 		method:        "GET"

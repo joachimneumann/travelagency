@@ -201,6 +201,28 @@ test("normalizeTravelPlanDraft does not restore a cleared source field from tran
   });
 });
 
+test("normalizeTravelPlanDraft ignores legacy destinations without explicit scope", async () => {
+  const { normalizeTravelPlanDraft } = await loadHelpers();
+
+  const legacyOnly = normalizeTravelPlanDraft({
+    destinations: ["VN"],
+    destination_scope: [],
+    days: []
+  });
+  assert.deepEqual(legacyOnly.destination_scope, []);
+  assert.deepEqual(legacyOnly.destinations, []);
+
+  const scoped = normalizeTravelPlanDraft({
+    destinations: ["TH"],
+    destination_scope: [
+      { destination: "VN", areas: [] }
+    ],
+    days: []
+  });
+  assert.deepEqual(scoped.destination_scope, [{ destination: "VN", areas: [] }]);
+  assert.deepEqual(scoped.destinations, ["VN"]);
+});
+
 test("travel-plan image module can use entity-specific delete request builders", async () => {
   const { createBookingTravelPlanImagesModule } = await loadImagesModule();
   const service = {

@@ -7,9 +7,18 @@ import {
   resolveApiUrl
 } from "../shared/api.js";
 import { GENERATED_APP_ROLES } from "../../Generated/Models/generated_Roles.js";
-import { tourDeleteRequest, toursRequest } from "../../Generated/API/generated_APIRequestFactory.js";
+import {
+  destinationScopeAreaCreateRequest,
+  destinationScopeCatalogRequest,
+  destinationScopeDestinationCreateRequest,
+  destinationScopePlaceCreateRequest,
+  tourDeleteRequest,
+  toursRequest
+} from "../../Generated/API/generated_APIRequestFactory.js";
 import { buildTourCreateHref, buildTourEditHref } from "../shared/links.js";
 import { renderPagination } from "../shared/pagination.js";
+import { COUNTRY_CODE_OPTIONS } from "../shared/generated_catalogs.js";
+import { normalizeDestinationScopeCatalog } from "../shared/destination_scope_editor.js";
 import {
   backendT,
   getBackendApiBase,
@@ -21,6 +30,9 @@ import {
 
 const apiBase = getBackendApiBase();
 const apiOrigin = getBackendApiOrigin();
+const COUNTRY_LABEL_BY_CODE = new Map(
+  COUNTRY_CODE_OPTIONS.map((option) => [normalizeText(option.value), normalizeText(option.label || option.value)])
+);
 
 const els = {
   pageBody: document.body,
@@ -31,7 +43,7 @@ const els = {
   userLabel: document.getElementById("backendUserLabel"),
   error: document.getElementById("backendError"),
   toursSearch: document.getElementById("toursSearch"),
-  toursDestination: document.getElementById("toursDestination"),
+  destinationScopeFilter: document.getElementById("toursDestinationScopeFilter"),
   toursStyle: document.getElementById("toursStyle"),
   toursClearFiltersBtn: document.getElementById("toursClearFiltersBtn"),
   toursSearchBtn: document.getElementById("toursSearchBtn"),
@@ -42,6 +54,9 @@ const els = {
   toursMatrixTotal: document.getElementById("toursMatrixTotal"),
   toursPagination: document.getElementById("toursPagination"),
   toursTable: document.getElementById("toursTable"),
+  destinationCatalogPanel: document.getElementById("tourDestinationCatalogPanel"),
+  destinationCatalogContent: document.getElementById("tourDestinationCatalogContent"),
+  destinationCatalogStatus: document.getElementById("tourDestinationCatalogStatus"),
   tourDeleteModal: document.getElementById("tourDeleteModal"),
   tourDeleteModalMessage: document.getElementById("tourDeleteModalMessage"),
   tourDeleteModalCloseBtn: document.getElementById("tourDeleteModalCloseBtn"),
@@ -77,13 +92,20 @@ const state = {
     total: 0,
     lastItems: [],
     search: "",
-    destination: "all",
+    destination: "",
+    area: "",
+    place: "",
     style: "all",
     pendingDeleteId: "",
     pendingDeleteTitle: "",
     pendingDeleteTrigger: null,
     deletingId: "",
     loadToken: 0
+  },
+  destinationCatalog: {
+    catalog: normalizeDestinationScopeCatalog({}),
+    loading: false,
+    saving: false
   }
 };
 
@@ -194,6 +216,7 @@ async function init() {
 
   if (state.permissions.canReadTours) {
     loadTours();
+    loadDestinationCatalog();
   } else {
     showError(backendT("tour.error.forbidden", "You do not have access to tours."));
   }
@@ -209,14 +232,6 @@ function bindControls() {
     });
   }
 
-  if (els.toursDestination) {
-    els.toursDestination.addEventListener("change", () => {
-      state.tours.destination = els.toursDestination.value || "all";
-      state.tours.page = 1;
-      loadTours();
-    });
-  }
-
   if (els.toursStyle) {
     els.toursStyle.addEventListener("change", () => {
       state.tours.style = els.toursStyle.value || "all";
@@ -227,12 +242,27 @@ function bindControls() {
 
   if (els.toursClearFiltersBtn) {
     els.toursClearFiltersBtn.addEventListener("click", () => {
-      state.tours.destination = "all";
+      state.tours.destination = "";
+      state.tours.area = "";
+      state.tours.place = "";
       state.tours.style = "all";
       state.tours.page = 1;
-      if (els.toursDestination) els.toursDestination.value = "all";
       if (els.toursStyle) els.toursStyle.value = "all";
+      renderDestinationScopeFilter();
       loadTours();
+    });
+  }
+
+  if (els.destinationScopeFilter) {
+    els.destinationScopeFilter.addEventListener("click", (event) => {
+      const button = event.target instanceof Element ? event.target.closest("[data-destination-filter]") : null;
+      if (!(button instanceof HTMLElement)) return;
+      event.preventDefault();
+      applyDestinationScopeFilter({
+        destination: normalizeText(button.getAttribute("data-destination-filter-destination")),
+        area: normalizeText(button.getAttribute("data-destination-filter-area")),
+        place: normalizeText(button.getAttribute("data-destination-filter-place"))
+      });
     });
   }
 
@@ -272,6 +302,25 @@ function bindControls() {
       if (event.key !== "Escape") return;
       event.preventDefault();
       closeDeleteModal();
+    });
+  }
+
+  if (els.destinationCatalogContent) {
+    els.destinationCatalogContent.addEventListener("submit", (event) => {
+      const form = event.target instanceof HTMLFormElement ? event.target : null;
+      if (!form) return;
+      event.preventDefault();
+      if (form.hasAttribute("data-destination-area-create")) {
+        void createDestinationCatalogArea(form);
+        return;
+      }
+      if (form.hasAttribute("data-destination-create")) {
+        void createDestinationCatalogDestination(form);
+        return;
+      }
+      if (form.hasAttribute("data-destination-place-create")) {
+        void createDestinationCatalogPlace(form);
+      }
     });
   }
 }
@@ -346,6 +395,7 @@ async function loadTours() {
   updatePaginationUi();
   renderTours(state.tours.lastItems);
   renderToursMatrix(payload?.matrix, Number((payload?.matrix?.total_tours ?? pagination.total_items) || 0));
+  renderDestinationCatalog();
 }
 
 function buildToursQueryEntries({ page = 1, pageSize = state.tours.pageSize } = {}) {
@@ -355,24 +405,15 @@ function buildToursQueryEntries({ page = 1, pageSize = state.tours.pageSize } = 
     sort: "updated_at_desc"
   };
   if (state.tours.search) entries.search = state.tours.search;
-  if (state.tours.destination && state.tours.destination !== "all") entries.destination = state.tours.destination;
+  if (state.tours.destination) entries.destination = state.tours.destination;
+  if (state.tours.area) entries.area = state.tours.area;
+  if (state.tours.place) entries.place = state.tours.place;
   if (state.tours.style && state.tours.style !== "all") entries.style = state.tours.style;
   return entries;
 }
 
 function populateTourFilterOptions(payload) {
-  const destinations = Array.isArray(payload?.available_destinations) ? payload.available_destinations : [];
   const styles = Array.isArray(payload?.available_styles) ? payload.available_styles : [];
-
-  if (els.toursDestination) {
-    const current = state.tours.destination || "all";
-    const options = [`<option value="all">${escapeHtml(backendT("backend.tours.all_destinations", "All destinations"))}</option>`]
-      .concat(destinations.map((value) => `<option value="${escapeHtml(value.code || value)}">${escapeHtml(value.label || value.code || value)}</option>`))
-      .join("");
-    els.toursDestination.innerHTML = options;
-    els.toursDestination.value = destinations.some((value) => String(value?.code || value) === current) ? current : "all";
-    state.tours.destination = els.toursDestination.value;
-  }
 
   if (els.toursStyle) {
     const current = state.tours.style || "all";
@@ -383,6 +424,399 @@ function populateTourFilterOptions(payload) {
     els.toursStyle.value = styles.some((value) => String(value?.code || value) === current) ? current : "all";
     state.tours.style = els.toursStyle.value;
   }
+}
+
+function setDestinationCatalogStatus(message = "") {
+  if (!els.destinationCatalogStatus) return;
+  els.destinationCatalogStatus.textContent = message;
+}
+
+async function loadDestinationCatalog() {
+  if (!state.permissions.canReadTours || !els.destinationCatalogContent) return;
+  state.destinationCatalog.loading = true;
+  renderDestinationScopeFilter();
+  renderDestinationCatalog();
+  try {
+    const request = destinationScopeCatalogRequest({ baseURL: apiOrigin });
+    const payload = await fetchApi(withBackendApiLang(request.url), { cache: "no-store" });
+    if (payload) {
+      state.destinationCatalog.catalog = normalizeDestinationScopeCatalog(payload);
+    }
+    clearError();
+  } finally {
+    state.destinationCatalog.loading = false;
+    renderDestinationScopeFilter();
+    renderDestinationCatalog();
+  }
+}
+
+function applyDestinationScopeFilter({ destination = "", area = "", place = "" } = {}) {
+  state.tours.destination = destination;
+  state.tours.area = area;
+  state.tours.place = place;
+  state.tours.page = 1;
+  renderDestinationScopeFilter();
+  loadTours();
+}
+
+function destinationDisplayLabel(destination) {
+  const code = normalizeText(destination?.code || destination);
+  return normalizeText(destination?.label) || COUNTRY_LABEL_BY_CODE.get(code) || code;
+}
+
+function isDestinationFilterActive({ destination = "", area = "", place = "" } = {}) {
+  return state.tours.destination === destination
+    && state.tours.area === area
+    && state.tours.place === place;
+}
+
+function renderFilterButton({ label, destination = "", area = "", place = "", className = "tour-destination-filter__chip" }) {
+  return `
+    <button
+      class="${escapeHtml(className)}"
+      type="button"
+      data-destination-filter
+      data-destination-filter-destination="${escapeHtml(destination)}"
+      data-destination-filter-area="${escapeHtml(area)}"
+      data-destination-filter-place="${escapeHtml(place)}"
+      aria-pressed="${isDestinationFilterActive({ destination, area, place }) ? "true" : "false"}"
+    >${escapeHtml(label)}</button>
+  `;
+}
+
+function renderDestinationScopeFilter() {
+  if (!els.destinationScopeFilter) return;
+  if (state.destinationCatalog.loading) {
+    els.destinationScopeFilter.innerHTML = `<p class="micro tour-destination-filter__empty">${escapeHtml(backendT("backend.tours.destination_catalog.loading", "Loading destinations..."))}</p>`;
+    return;
+  }
+
+  const catalog = normalizeDestinationScopeCatalog(state.destinationCatalog.catalog);
+  const areaByDestination = new Map();
+  for (const area of catalog.areas) {
+    const items = areaByDestination.get(area.destination) || [];
+    items.push(area);
+    areaByDestination.set(area.destination, items);
+  }
+  const placesByArea = new Map();
+  for (const place of catalog.places) {
+    const items = placesByArea.get(place.area_id) || [];
+    items.push(place);
+    placesByArea.set(place.area_id, items);
+  }
+
+  const destinationsMarkup = catalog.destinations.map((destination) => {
+    const destinationCode = normalizeText(destination.code);
+    const areas = areaByDestination.get(destinationCode) || [];
+    return `
+      <section class="tour-destination-filter__destination">
+        ${renderFilterButton({
+          label: destinationDisplayLabel(destination),
+          destination: destinationCode,
+          className: "tour-destination-filter__chip tour-destination-filter__destination-head"
+        })}
+        ${areas.length
+          ? `<div class="tour-destination-filter__areas">
+              ${areas.map((area) => {
+                const places = placesByArea.get(area.id) || [];
+                return `
+                  <div class="tour-destination-filter__area">
+                    ${renderFilterButton({
+                      label: area.label || area.code || area.id,
+                      destination: destinationCode,
+                      area: area.id,
+                      className: "tour-destination-filter__chip tour-destination-filter__area-head"
+                    })}
+                    ${places.length
+                      ? `<div class="tour-destination-filter__places">
+                          ${places.map((place) => renderFilterButton({
+                            label: place.label || place.code || place.id,
+                            destination: destinationCode,
+                            area: area.id,
+                            place: place.id
+                          })).join("")}
+                        </div>`
+                      : ""}
+                  </div>
+                `;
+              }).join("")}
+            </div>`
+          : `<p class="micro tour-destination-filter__empty">${escapeHtml(backendT("backend.tours.destination_catalog.no_areas", "No areas yet."))}</p>`}
+      </section>
+    `;
+  }).join("");
+
+  els.destinationScopeFilter.innerHTML = `
+    <div class="tour-destination-filter__head">
+      <p class="tour-destination-filter__title">${escapeHtml(backendT("backend.tours.destination_filter.heading", "Destination filter"))}</p>
+      ${renderFilterButton({
+        label: backendT("backend.tours.all_destinations", "All destinations"),
+        className: "tour-destination-filter__chip"
+      })}
+    </div>
+    ${destinationsMarkup
+      ? `<div class="tour-destination-filter__destinations">${destinationsMarkup}</div>`
+      : `<p class="micro tour-destination-filter__empty">${escapeHtml(backendT("backend.tours.destination_filter.empty", "No destinations configured."))}</p>`}
+  `;
+}
+
+function selectedTourDestinationScopeWarnings(catalog) {
+  const destinationByCode = new Map(catalog.destinations.map((destination) => [normalizeText(destination.code), destination]));
+  const areaById = new Map(catalog.areas.map((area) => [normalizeText(area.id), area]));
+  const placeById = new Map(catalog.places.map((place) => [normalizeText(place.id), place]));
+  const warnings = [];
+
+  for (const tour of state.tours.lastItems) {
+    const problems = [];
+    const scope = Array.isArray(tour?.travel_plan?.destination_scope) ? tour.travel_plan.destination_scope : [];
+    for (const entry of scope) {
+      const destination = normalizeText(entry?.destination);
+      if (destination && !destinationByCode.has(destination)) {
+        problems.push(backendT("backend.tours.destination_catalog.warning_destination", "destination {value}", {
+          value: destination
+        }));
+      }
+      for (const areaSelection of Array.isArray(entry?.areas) ? entry.areas : []) {
+        const areaId = normalizeText(areaSelection?.area_id);
+        const area = areaById.get(areaId);
+        if (areaId && !area) {
+          problems.push(backendT("backend.tours.destination_catalog.warning_area", "area {value}", {
+            value: areaId
+          }));
+        } else if (area && destination && area.destination !== destination) {
+          problems.push(backendT("backend.tours.destination_catalog.warning_area_mismatch", "area {value} under {destination}", {
+            value: area.label || area.id,
+            destination
+          }));
+        }
+        for (const placeSelection of Array.isArray(areaSelection?.places) ? areaSelection.places : []) {
+          const placeId = normalizeText(placeSelection?.place_id);
+          const place = placeById.get(placeId);
+          if (placeId && !place) {
+            problems.push(backendT("backend.tours.destination_catalog.warning_place", "place {value}", {
+              value: placeId
+            }));
+          } else if (place && areaId && place.area_id !== areaId) {
+            problems.push(backendT("backend.tours.destination_catalog.warning_place_mismatch", "place {value} under {area}", {
+              value: place.label || place.id,
+              area: areaId
+            }));
+          }
+        }
+      }
+    }
+    if (problems.length) {
+      warnings.push({
+        tour: normalizeText(tour?.title) || normalizeText(tour?.id) || "-",
+        problems: Array.from(new Set(problems))
+      });
+    }
+  }
+
+  return warnings;
+}
+
+function renderDestinationCatalogWarnings(catalog) {
+  const warnings = selectedTourDestinationScopeWarnings(catalog);
+  if (!warnings.length) return "";
+  return `
+    <div class="tour-destination-catalog__warnings" role="alert">
+      <strong>${escapeHtml(backendT("backend.tours.destination_catalog.warning_heading", "Some tours use destinations, areas, or places that are not configured."))}</strong>
+      <ul>
+        ${warnings.map((warning) => `
+          <li>${escapeHtml(warning.tour)}: ${escapeHtml(warning.problems.join(", "))}</li>
+        `).join("")}
+      </ul>
+    </div>
+  `;
+}
+
+function catalogInputValue(form) {
+  const input = typeof form?.elements?.namedItem === "function" ? form.elements.namedItem("name") : null;
+  return normalizeText(input?.value);
+}
+
+function clearCatalogInput(form) {
+  const input = typeof form?.elements?.namedItem === "function" ? form.elements.namedItem("name") : null;
+  if (input) input.value = "";
+}
+
+async function createDestinationCatalogDestination(form) {
+  if (!state.permissions.canEditTours || state.destinationCatalog.saving) return;
+  const select = typeof form?.elements?.namedItem === "function" ? form.elements.namedItem("destination") : null;
+  const destination = normalizeText(select?.value);
+  if (!destination) return;
+  state.destinationCatalog.saving = true;
+  setDestinationCatalogStatus(backendT("backend.tours.destination_catalog.saving", "Saving destination catalog..."));
+  try {
+    const request = destinationScopeDestinationCreateRequest({
+      baseURL: apiOrigin,
+      body: { destination }
+    });
+    const result = await fetchApi(withBackendApiLang(request.url), {
+      method: request.method,
+      body: request.body
+    });
+    if (result?.catalog) {
+      state.destinationCatalog.catalog = normalizeDestinationScopeCatalog(result.catalog);
+      setDestinationCatalogStatus(backendT("backend.tours.destination_catalog.saved", "Destination catalog saved."));
+    }
+  } finally {
+    state.destinationCatalog.saving = false;
+    renderDestinationCatalog();
+  }
+}
+
+async function createDestinationCatalogArea(form) {
+  if (!state.permissions.canEditTours || state.destinationCatalog.saving) return;
+  const destination = normalizeText(form.getAttribute("data-destination-area-create"));
+  const name = catalogInputValue(form);
+  if (!destination || !name) return;
+  state.destinationCatalog.saving = true;
+  setDestinationCatalogStatus(backendT("backend.tours.destination_catalog.saving", "Saving destination catalog..."));
+  try {
+    const request = destinationScopeAreaCreateRequest({
+      baseURL: apiOrigin,
+      body: { destination, name }
+    });
+    const result = await fetchApi(withBackendApiLang(request.url), {
+      method: request.method,
+      body: request.body
+    });
+    if (result?.catalog) {
+      state.destinationCatalog.catalog = normalizeDestinationScopeCatalog(result.catalog);
+      clearCatalogInput(form);
+      setDestinationCatalogStatus(backendT("backend.tours.destination_catalog.saved", "Destination catalog saved."));
+    }
+  } finally {
+    state.destinationCatalog.saving = false;
+    renderDestinationCatalog();
+  }
+}
+
+async function createDestinationCatalogPlace(form) {
+  if (!state.permissions.canEditTours || state.destinationCatalog.saving) return;
+  const areaId = normalizeText(form.getAttribute("data-destination-place-create"));
+  const name = catalogInputValue(form);
+  if (!areaId || !name) return;
+  state.destinationCatalog.saving = true;
+  setDestinationCatalogStatus(backendT("backend.tours.destination_catalog.saving", "Saving destination catalog..."));
+  try {
+    const request = destinationScopePlaceCreateRequest({
+      baseURL: apiOrigin,
+      body: { area_id: areaId, name }
+    });
+    const result = await fetchApi(withBackendApiLang(request.url), {
+      method: request.method,
+      body: request.body
+    });
+    if (result?.catalog) {
+      state.destinationCatalog.catalog = normalizeDestinationScopeCatalog(result.catalog);
+      clearCatalogInput(form);
+      setDestinationCatalogStatus(backendT("backend.tours.destination_catalog.saved", "Destination catalog saved."));
+    }
+  } finally {
+    state.destinationCatalog.saving = false;
+    renderDestinationCatalog();
+  }
+}
+
+function renderDestinationCatalog() {
+  if (!els.destinationCatalogContent) return;
+  if (state.destinationCatalog.loading) {
+    els.destinationCatalogContent.innerHTML = `<p class="micro tour-destination-catalog__empty">${escapeHtml(backendT("backend.tours.destination_catalog.loading", "Loading destinations..."))}</p>`;
+    return;
+  }
+
+  const catalog = normalizeDestinationScopeCatalog(state.destinationCatalog.catalog);
+  const canEdit = state.permissions.canEditTours && !state.destinationCatalog.saving;
+  const areaByDestination = new Map();
+  for (const area of catalog.areas) {
+    const items = areaByDestination.get(area.destination) || [];
+    items.push(area);
+    areaByDestination.set(area.destination, items);
+  }
+  const placesByArea = new Map();
+  for (const place of catalog.places) {
+    const items = placesByArea.get(place.area_id) || [];
+    items.push(place);
+    placesByArea.set(place.area_id, items);
+  }
+
+  const destinationMarkup = catalog.destinations.map((destination) => {
+    const areas = areaByDestination.get(destination.code) || [];
+    return `
+      <article class="tour-destination-catalog__destination">
+        <h3>${escapeHtml(destination.label || destination.code)}</h3>
+        ${areas.length
+          ? areas.map((area) => renderDestinationCatalogArea(area, placesByArea.get(area.id) || [], canEdit)).join("")
+          : `<p class="micro tour-destination-catalog__empty">${escapeHtml(backendT("backend.tours.destination_catalog.no_areas", "No areas yet."))}</p>`}
+        ${canEdit ? renderDestinationCatalogAreaForm(destination) : ""}
+      </article>
+    `;
+  }).join("");
+  els.destinationCatalogContent.innerHTML = `
+    ${renderDestinationCatalogWarnings(catalog)}
+    ${canEdit ? renderDestinationCatalogDestinationForm(catalog.destinations) : ""}
+    <div class="tour-destination-catalog__grid">
+      ${destinationMarkup}
+    </div>
+  `;
+}
+
+function renderDestinationCatalogArea(area, places, canEdit) {
+  return `
+    <section class="tour-destination-catalog__area">
+      <h4>${escapeHtml(area.label || area.code || area.id)}</h4>
+      ${places.length
+        ? `<ul class="tour-destination-catalog__places">${places.map((place) => `<li class="tour-destination-catalog__place">${escapeHtml(place.label || place.code || place.id)}</li>`).join("")}</ul>`
+        : `<p class="micro tour-destination-catalog__empty">${escapeHtml(backendT("backend.tours.destination_catalog.no_places", "No places yet."))}</p>`}
+      ${canEdit ? renderDestinationCatalogPlaceForm(area) : ""}
+    </section>
+  `;
+}
+
+function renderDestinationCatalogDestinationForm(destinations) {
+  const existingCodes = new Set((Array.isArray(destinations) ? destinations : []).map((destination) => normalizeText(destination?.code)));
+  const options = COUNTRY_CODE_OPTIONS
+    .filter((option) => option?.value && !existingCodes.has(option.value))
+    .map((option) => `<option value="${escapeHtml(option.value)}">${escapeHtml(option.label || option.value)}</option>`);
+  if (!options.length) {
+    return `<p class="micro tour-destination-catalog__empty">${escapeHtml(backendT("backend.tours.destination_catalog.no_missing_destinations", "All destinations are already in the catalog."))}</p>`;
+  }
+  return `
+    <form class="tour-destination-catalog__form tour-destination-catalog__form--destination" data-destination-create>
+      <div class="field">
+        <label>${escapeHtml(backendT("backend.tours.destination_catalog.destination_name", "Destination"))}</label>
+        <select name="destination" required>${options.join("")}</select>
+      </div>
+      <button class="btn btn-ghost" type="submit">${escapeHtml(backendT("backend.tours.destination_catalog.add_destination", "Add destination"))}</button>
+    </form>
+  `;
+}
+
+function renderDestinationCatalogAreaForm(destination) {
+  return `
+    <form class="tour-destination-catalog__form" data-destination-area-create="${escapeHtml(destination.code)}">
+      <div class="field">
+        <label>${escapeHtml(backendT("backend.tours.destination_catalog.area_name", "New area"))}</label>
+        <input name="name" type="text" autocomplete="off" required />
+      </div>
+      <button class="btn btn-ghost" type="submit">${escapeHtml(backendT("backend.tours.destination_catalog.add_area", "Add area"))}</button>
+    </form>
+  `;
+}
+
+function renderDestinationCatalogPlaceForm(area) {
+  return `
+    <form class="tour-destination-catalog__form" data-destination-place-create="${escapeHtml(area.id)}">
+      <div class="field">
+        <label>${escapeHtml(backendT("backend.tours.destination_catalog.place_name", "New place"))}</label>
+        <input name="name" type="text" autocomplete="off" required />
+      </div>
+      <button class="btn btn-ghost" type="submit">${escapeHtml(backendT("backend.tours.destination_catalog.add_place", "Add place"))}</button>
+    </form>
+  `;
 }
 
 function updatePaginationUi() {

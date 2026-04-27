@@ -233,6 +233,62 @@ import (
 	total: >=0 & int
 }
 
+#DestinationScopeCatalogDestination: {
+	code:       enums.#CountryCode
+	label:      string & !=""
+	sort_order: >=0 & int
+	is_active:  bool
+	created_at?: common.#Timestamp | null
+	updated_at?: common.#Timestamp | null
+}
+
+#DestinationArea: {
+	id:         common.#Identifier
+	destination: enums.#CountryCode
+	code:       string & !=""
+	name:       string & !=""
+	name_i18n?: [string]: string
+	label:      string & !=""
+	sort_order: >=0 & int
+	is_active:  bool
+	created_at?: common.#Timestamp | null
+	updated_at?: common.#Timestamp | null
+}
+
+#DestinationPlace: {
+	id:         common.#Identifier
+	area_id:    common.#Identifier
+	code:       string & !=""
+	name:       string & !=""
+	name_i18n?: [string]: string
+	label:      string & !=""
+	sort_order: >=0 & int
+	is_active:  bool
+	created_at?: common.#Timestamp | null
+	updated_at?: common.#Timestamp | null
+}
+
+#DestinationScopeCatalogResponse: {
+	destinations: [...#DestinationScopeCatalogDestination]
+	areas:        [...#DestinationArea]
+	places:       [...#DestinationPlace]
+}
+
+#DestinationCreateResponse: {
+	destination: #DestinationScopeCatalogDestination
+	catalog:     #DestinationScopeCatalogResponse
+}
+
+#DestinationAreaCreateResponse: {
+	area:    #DestinationArea
+	catalog: #DestinationScopeCatalogResponse
+}
+
+#DestinationPlaceCreateResponse: {
+	place:   #DestinationPlace
+	catalog: #DestinationScopeCatalogResponse
+}
+
 #StandardTourReadModel: {
 	id:           common.#Identifier
 	title:        string

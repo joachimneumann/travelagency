@@ -132,7 +132,7 @@ IR: {
 			fields: [
 				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
 				{name: "title", kind: "scalar", typeName: "string", required: false},
-				{name: "destinations", kind: "scalar", typeName: "string", required: true, isArray: true},
+				{name: "destinations", kind: "scalar", typeName: "string", required: false, isArray: true},
 				{name: "styles", kind: "scalar", typeName: "string", required: true, isArray: true},
 				{name: "priority", kind: "scalar", typeName: "int", required: false},
 				{name: "seasonality_start_month", kind: "enum", typeName: "MonthCode", required: false},
@@ -224,11 +224,42 @@ IR: {
 			]
 		},
 		{
+			name:       "TravelPlanDestinationPlaceSelection"
+			domain:     "booking"
+			module:     "database"
+			sourceType: "database.#TravelPlanDestinationPlaceSelection"
+			fields: [
+				{name: "place_id", kind: "scalar", typeName: "Identifier", required: true},
+			]
+		},
+		{
+			name:       "TravelPlanDestinationAreaSelection"
+			domain:     "booking"
+			module:     "database"
+			sourceType: "database.#TravelPlanDestinationAreaSelection"
+			fields: [
+				{name: "area_id", kind: "scalar", typeName: "Identifier", required: true},
+				{name: "places", kind: "entity", typeName: "TravelPlanDestinationPlaceSelection", required: false, isArray: true},
+			]
+		},
+		{
+			name:       "TravelPlanDestinationScopeEntry"
+			domain:     "booking"
+			module:     "database"
+			sourceType: "database.#TravelPlanDestinationScopeEntry"
+			fields: [
+				{name: "destination", kind: "enum", typeName: "CountryCode", required: true},
+				{name: "areas", kind: "entity", typeName: "TravelPlanDestinationAreaSelection", required: false, isArray: true},
+			]
+		},
+		{
 			name:       "TravelPlan"
 			domain:     "booking"
 			module:     "database"
 			sourceType: "database.#TravelPlan"
 			fields: [
+				{name: "destination_scope", kind: "entity", typeName: "TravelPlanDestinationScopeEntry", required: false, isArray: true},
+				{name: "destinations", kind: "enum", typeName: "CountryCode", required: false, isArray: true},
 				{name: "days", kind: "entity", typeName: "TravelPlanDay", required: false, isArray: true},
 			]
 		},
@@ -434,6 +465,7 @@ IR: {
 			module:     "database"
 			sourceType: "database.#BookingTravelPlan"
 			fields: [
+				{name: "destination_scope", kind: "entity", typeName: "TravelPlanDestinationScopeEntry", required: false, isArray: true},
 				{name: "destinations", kind: "enum", typeName: "CountryCode", required: false, isArray: true},
 				{name: "days", kind: "entity", typeName: "BookingTravelPlanDay", required: false, isArray: true},
 				{name: "attachments", kind: "entity", typeName: "BookingTravelPlanAttachment", required: false, isArray: true},
@@ -1090,6 +1122,97 @@ IR: {
 			]
 		},
 		{
+			name:       "DestinationScopeCatalogDestination"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#DestinationScopeCatalogDestination"
+			fields: [
+				{name: "code", kind: "enum", typeName: "CountryCode", required: true},
+				{name: "label", kind: "scalar", typeName: "string", required: true},
+				{name: "sort_order", kind: "scalar", typeName: "int", required: true},
+				{name: "is_active", kind: "scalar", typeName: "bool", required: true},
+				{name: "created_at", kind: "scalar", typeName: "Timestamp", required: false},
+				{name: "updated_at", kind: "scalar", typeName: "Timestamp", required: false},
+			]
+		},
+		{
+			name:       "DestinationArea"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#DestinationArea"
+			fields: [
+				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
+				{name: "destination", kind: "enum", typeName: "CountryCode", required: true},
+				{name: "code", kind: "scalar", typeName: "string", required: true},
+				{name: "name", kind: "scalar", typeName: "string", required: true},
+				{name: "name_i18n", kind: "map", typeName: "string", required: false},
+				{name: "label", kind: "scalar", typeName: "string", required: true},
+				{name: "sort_order", kind: "scalar", typeName: "int", required: true},
+				{name: "is_active", kind: "scalar", typeName: "bool", required: true},
+				{name: "created_at", kind: "scalar", typeName: "Timestamp", required: false},
+				{name: "updated_at", kind: "scalar", typeName: "Timestamp", required: false},
+			]
+		},
+		{
+			name:       "DestinationPlace"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#DestinationPlace"
+			fields: [
+				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
+				{name: "area_id", kind: "scalar", typeName: "Identifier", required: true},
+				{name: "code", kind: "scalar", typeName: "string", required: true},
+				{name: "name", kind: "scalar", typeName: "string", required: true},
+				{name: "name_i18n", kind: "map", typeName: "string", required: false},
+				{name: "label", kind: "scalar", typeName: "string", required: true},
+				{name: "sort_order", kind: "scalar", typeName: "int", required: true},
+				{name: "is_active", kind: "scalar", typeName: "bool", required: true},
+				{name: "created_at", kind: "scalar", typeName: "Timestamp", required: false},
+				{name: "updated_at", kind: "scalar", typeName: "Timestamp", required: false},
+			]
+		},
+		{
+			name:       "DestinationScopeCatalogResponse"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#DestinationScopeCatalogResponse"
+			fields: [
+				{name: "destinations", kind: "transport", typeName: "DestinationScopeCatalogDestination", required: true, isArray: true},
+				{name: "areas", kind: "transport", typeName: "DestinationArea", required: true, isArray: true},
+				{name: "places", kind: "transport", typeName: "DestinationPlace", required: true, isArray: true},
+			]
+		},
+		{
+			name:       "DestinationCreateResponse"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#DestinationCreateResponse"
+			fields: [
+				{name: "destination", kind: "transport", typeName: "DestinationScopeCatalogDestination", required: true},
+				{name: "catalog", kind: "transport", typeName: "DestinationScopeCatalogResponse", required: true},
+			]
+		},
+		{
+			name:       "DestinationAreaCreateResponse"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#DestinationAreaCreateResponse"
+			fields: [
+				{name: "area", kind: "transport", typeName: "DestinationArea", required: true},
+				{name: "catalog", kind: "transport", typeName: "DestinationScopeCatalogResponse", required: true},
+			]
+		},
+		{
+			name:       "DestinationPlaceCreateResponse"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#DestinationPlaceCreateResponse"
+			fields: [
+				{name: "place", kind: "transport", typeName: "DestinationPlace", required: true},
+				{name: "catalog", kind: "transport", typeName: "DestinationScopeCatalogResponse", required: true},
+			]
+		},
+		{
 			name:       "TourList"
 			domain:     "api"
 			module:     "api"
@@ -1738,6 +1861,43 @@ IR: {
 				{name: "source_lang", kind: "enum", typeName: "LanguageCode", required: true},
 				{name: "target_lang", kind: "enum", typeName: "LanguageCode", required: true},
 				{name: "translation_profile", kind: "scalar", typeName: "string", required: false},
+				{name: "actor", kind: "scalar", typeName: "string", required: false},
+			]
+		},
+		{
+			name:       "DestinationCreateRequest"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#DestinationCreateRequest"
+			fields: [
+				{name: "destination", kind: "enum", typeName: "CountryCode", required: true},
+				{name: "label", kind: "scalar", typeName: "string", required: false},
+				{name: "actor", kind: "scalar", typeName: "string", required: false},
+			]
+		},
+		{
+			name:       "DestinationAreaCreateRequest"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#DestinationAreaCreateRequest"
+			fields: [
+				{name: "destination", kind: "enum", typeName: "CountryCode", required: true},
+				{name: "name", kind: "scalar", typeName: "string", required: true},
+				{name: "name_i18n", kind: "map", typeName: "string", required: false},
+				{name: "code", kind: "scalar", typeName: "string", required: false},
+				{name: "actor", kind: "scalar", typeName: "string", required: false},
+			]
+		},
+		{
+			name:       "DestinationPlaceCreateRequest"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#DestinationPlaceCreateRequest"
+			fields: [
+				{name: "area_id", kind: "scalar", typeName: "Identifier", required: true},
+				{name: "name", kind: "scalar", typeName: "string", required: true},
+				{name: "name_i18n", kind: "map", typeName: "string", required: false},
+				{name: "code", kind: "scalar", typeName: "string", required: false},
 				{name: "actor", kind: "scalar", typeName: "string", required: false},
 			]
 		},

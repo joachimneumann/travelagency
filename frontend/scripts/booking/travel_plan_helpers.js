@@ -13,6 +13,10 @@ import {
   resolveLocalizedEditorBranchText,
   resolveLocalizedEditorText
 } from "./localized_editor.js";
+import {
+  destinationScopeDestinations,
+  normalizeDestinationScope
+} from "../shared/destination_scope_editor.js";
 
 export const TRAVEL_PLAN_TIMING_KIND_OPTIONS = Object.freeze(
   GENERATED_TRAVEL_PLAN_TIMING_KIND_OPTIONS.map((option) => ({
@@ -317,6 +321,8 @@ export function createEmptyTravelPlanDay(index = 0) {
 
 export function createEmptyTravelPlan() {
   return {
+    destination_scope: [],
+    destinations: [],
     days: [],
     attachments: []
   };
@@ -397,7 +403,10 @@ export function normalizeTravelPlanDraft(plan, options = {}) {
       };
     });
 
+  const destination_scope = normalizeDestinationScope(source.destination_scope);
   const normalized = {
+    destination_scope,
+    destinations: destinationScopeDestinations(destination_scope),
     days,
     attachments: normalizeTravelPlanAttachments(source.attachments)
   };
