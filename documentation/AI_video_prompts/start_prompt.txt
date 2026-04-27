@@ -1,0 +1,26 @@
+Script
+=====
+
+XXX = Ba Na Hills - Hue - Hoi An Ancient Town
+
+Write a script for a 20 second video for a travel tour to XXX. 
+I want to use the video as example trip in my company web page asiatravelplan.com.
+
+Consistent lighting and shadows. Same people across all frames (identical faces, clothing, proportions). Realistic skin tones, natural motion, no distortion. High detail, sharp focus, 4K quality, travel documentary style.
+
+The video shall use Cinematic, ultra-smooth Stable camera movement, slow cinematic pans, no jitter. Consistent lighting and shadows. Same people across all frames (identical faces, clothing, proportions). Realistic skin tones, natural motion, no distortion. High detail, sharp focus, 4K quality, travel documentary style.
+
+write this as a file XXX.md into /Users/internal_admin/projects/travelagency/documentation/
+
+Images
+======
+Create image creation prompts for each of these senes I will use nano banana 2 in freePik. assure subject continuity. 
+I want to see more about the location than about the 3 people.
+
+update the XXX.MD with image creation prompts for each of these senes I will use nano banana 2 in freePik. assure subject continuity
+Write the complete prompt is copy ready for each image, including the repeated general stuff.
+
+
+3-second Clips
+==============
+add the corresponding prompts at the bottom of the md file. Give me the complete prompt for each clip.
