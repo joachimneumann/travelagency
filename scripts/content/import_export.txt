@@ -19,6 +19,14 @@ rsync -av atp:/srv/asiatravelplan-staging/content/tours/ content/tours/
 rsync -av content/atp_staff/ backup/atp_staff/
 rsync -av content/tours/ backup/tours/
 
+
 ## restore from backup
 rsync -av backup/atp_staff/ content/atp_staff/
 rsync -av backup/tours/ content/tours/
+
+
+### CAUTION
+## reset tours backup from local content
+mkdir -p backup/tours
+find backup/tours -mindepth 1 -maxdepth 1 -exec rm -rf {} +
+rsync -av content/tours/ backup/tours/
