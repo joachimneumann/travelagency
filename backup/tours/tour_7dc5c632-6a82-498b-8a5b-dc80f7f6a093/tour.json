@@ -52,10 +52,9 @@
   "seasonality_start_month": "feb",
   "seasonality_end_month": "aug",
   "priority": 50,
-  "image": "/public/v1/tour-images/tour_7dc5c632-6a82-498b-8a5b-dc80f7f6a093/tour_7dc5c632-6a82-498b-8a5b-dc80f7f6a093.webp?v=2026-04-22T04%3A49%3A45.905Z",
   "created_at": "2026-04-13T10:43:50.789Z",
   "updated_at": "2026-04-22T14:38:07.504Z",
   "pictures": [
-    "/public/v1/tour-images/tour_7dc5c632-6a82-498b-8a5b-dc80f7f6a093/tour_7dc5c632-6a82-498b-8a5b-dc80f7f6a093.webp?v=2026-04-22T04%3A49%3A45.905Z"
+    "/public/v1/tour-images/tour_7dc5c632-6a82-498b-8a5b-dc80f7f6a093/tour_7dc5c632-6a82-498b-8a5b-dc80f7f6a093.webp"
   ]
 }
