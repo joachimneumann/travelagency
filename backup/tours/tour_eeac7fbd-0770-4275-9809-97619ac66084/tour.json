@@ -52,10 +52,9 @@
   "seasonality_start_month": "",
   "seasonality_end_month": "",
   "priority": 100,
-  "image": "/public/v1/tour-images/tour_eeac7fbd-0770-4275-9809-97619ac66084/tour_eeac7fbd-0770-4275-9809-97619ac66084.webp?v=2026-04-22T16%3A03%3A17.727Z",
   "created_at": "2026-04-09T03:29:39.112Z",
   "updated_at": "2026-04-23T01:22:03.379Z",
   "pictures": [
-    "/public/v1/tour-images/tour_eeac7fbd-0770-4275-9809-97619ac66084/tour_eeac7fbd-0770-4275-9809-97619ac66084.webp?v=2026-04-22T16%3A03%3A17.727Z"
+    "/public/v1/tour-images/tour_eeac7fbd-0770-4275-9809-97619ac66084/tour_eeac7fbd-0770-4275-9809-97619ac66084.webp"
   ]
 }

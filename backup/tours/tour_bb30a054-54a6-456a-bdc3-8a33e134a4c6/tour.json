@@ -48,14 +48,13 @@
     "gastronomic-experiences"
   ],
   "pictures": [
-    "/public/v1/tour-images/tour_bb30a054-54a6-456a-bdc3-8a33e134a4c6/picture-17a85a25-e9b6-4e20-9b3c-be5860224d58.webp?v=2026-04-22T04%3A34%3A01.935Z",
-    "/public/v1/tour-images/tour_bb30a054-54a6-456a-bdc3-8a33e134a4c6/picture-e57c5541-5c91-4f24-a2f3-dbfbc69926b2.webp?v=2026-04-22T04%3A34%3A01.935Z",
-    "/public/v1/tour-images/tour_bb30a054-54a6-456a-bdc3-8a33e134a4c6/picture-5379924b-f356-4f34-ab04-7a153dba01e8.webp?v=2026-04-22T04%3A34%3A01.935Z"
+    "/public/v1/tour-images/tour_bb30a054-54a6-456a-bdc3-8a33e134a4c6/picture-17a85a25-e9b6-4e20-9b3c-be5860224d58.webp",
+    "/public/v1/tour-images/tour_bb30a054-54a6-456a-bdc3-8a33e134a4c6/picture-e57c5541-5c91-4f24-a2f3-dbfbc69926b2.webp",
+    "/public/v1/tour-images/tour_bb30a054-54a6-456a-bdc3-8a33e134a4c6/picture-5379924b-f356-4f34-ab04-7a153dba01e8.webp"
   ],
   "seasonality_start_month": "jan",
   "seasonality_end_month": "dec",
   "priority": 50,
-  "image": "/public/v1/tour-images/tour_bb30a054-54a6-456a-bdc3-8a33e134a4c6/picture-17a85a25-e9b6-4e20-9b3c-be5860224d58.webp?v=2026-04-22T04%3A34%3A01.935Z",
   "created_at": "2026-04-18T08:35:52.218Z",
   "updated_at": "2026-04-22T14:51:51.349Z"
 }
