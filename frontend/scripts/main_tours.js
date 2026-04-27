@@ -946,7 +946,7 @@ export function createFrontendToursController(ctx) {
 
   function resolveTravelPlanField(source, fieldName) {
     if (!source || typeof source !== "object") return "";
-    return resolveTravelPlanLocalizedValue(source[fieldName], source[`${fieldName}_i18n`], state.lang);
+    return resolveTravelPlanLocalizedValue(source[fieldName], source[`${fieldName}_i18n`]);
   }
 
   function isLocalizedFrontendTextMap(value) {
@@ -963,19 +963,10 @@ export function createFrontendToursController(ctx) {
     return resolveExplicitLocalizedFrontendText(value, lang);
   }
 
-  function resolveTravelPlanLocalizedValue(sourceValue, i18nValue, lang = state.lang) {
-    const normalizedLang = normalizeFrontendTourLang(lang);
+  function resolveTravelPlanLocalizedValue(sourceValue, i18nValue) {
     const sourceEnglishText = resolveTravelPlanSourceText(sourceValue, "en");
     const i18nEnglishText = resolveExplicitLocalizedFrontendText(i18nValue, "en");
-
-    if (normalizedLang === "en") {
-      return sourceEnglishText || i18nEnglishText;
-    }
-
-    return resolveExplicitLocalizedFrontendText(i18nValue, normalizedLang)
-      || resolveTravelPlanSourceText(sourceValue, normalizedLang)
-      || sourceEnglishText
-      || i18nEnglishText;
+    return sourceEnglishText || i18nEnglishText;
   }
 
   function compactText(value) {
@@ -1003,7 +994,7 @@ export function createFrontendToursController(ctx) {
 
   function resolveTravelPlanImageField(image, fieldName) {
     if (!image || typeof image !== "object" || Array.isArray(image)) return "";
-    return resolveTravelPlanLocalizedValue(image[fieldName], image[`${fieldName}_i18n`], state.lang);
+    return resolveTravelPlanLocalizedValue(image[fieldName], image[`${fieldName}_i18n`]);
   }
 
   function primaryTourPlanServiceImage(service) {

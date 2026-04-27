@@ -4520,24 +4520,24 @@ test("frontend language switching updates the homepage in place instead of forci
   );
 });
 
-test("homepage tour details keep English travel-plan source ahead of translation fallbacks", async () => {
+test("homepage tour details keep travel-plan day and service copy pinned to English", async () => {
   const mainToursPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "main_tours.js");
   const mainToursSource = await readFile(mainToursPath, "utf8");
 
   assert.match(
     mainToursSource,
-    /function resolveTravelPlanLocalizedValue\(sourceValue, i18nValue, lang = state\.lang\)/,
+    /function resolveTravelPlanLocalizedValue\(sourceValue, i18nValue\)/,
     "Homepage tours should use the travel-plan-specific localization resolver"
   );
   assert.match(
     mainToursSource,
-    /if \(normalizedLang === "en"\) \{[\s\S]*return sourceEnglishText \|\| i18nEnglishText;/,
-    "Homepage tours should prefer the authored English source when English is selected"
+    /const sourceEnglishText = resolveTravelPlanSourceText\(sourceValue, "en"\);[\s\S]*const i18nEnglishText = resolveExplicitLocalizedFrontendText\(i18nValue, "en"\);[\s\S]*return sourceEnglishText \|\| i18nEnglishText;/,
+    "Homepage tours should always prefer the authored English source for travel-plan day and service text"
   );
-  assert.match(
+  assert.doesNotMatch(
     mainToursSource,
-    /return resolveExplicitLocalizedFrontendText\(i18nValue, normalizedLang\)[\s\S]*\|\| resolveTravelPlanSourceText\(sourceValue, normalizedLang\)[\s\S]*\|\| sourceEnglishText/,
-    "Homepage tours should fall back to English source before arbitrary translated values"
+    /resolveExplicitLocalizedFrontendText\(i18nValue, normalizedLang\)|resolveTravelPlanSourceText\(sourceValue, normalizedLang\)/,
+    "Homepage tours should not resolve travel-plan day or service copy from the active frontend language"
   );
   assert.doesNotMatch(
     mainToursSource,
