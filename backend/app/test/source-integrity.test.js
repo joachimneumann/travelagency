@@ -3278,10 +3278,20 @@ test("travel plan PDF personalization exposes and persists traveler-list toggles
 
 test("tour page reads month options from the generated catalogs layer", async () => {
   const tourPageModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "tour.js");
+  const tourTravelPlanAdapterPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "tour_travel_plan_adapter.js");
   const tourPageHtmlPath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "marketing_tour.html");
+  const toursListHtmlPath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "marketing_tours.html");
+  const toursListModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "tours_list.js");
   const generatedCatalogsPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "shared", "generated_catalogs.js");
-  const tourSource = await readFile(tourPageModulePath, "utf8");
-  const tourHtml = await readFile(tourPageHtmlPath, "utf8");
+  const travelPlanCorePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "shared", "travel_plan_editor_core.js");
+  const [tourSource, tourTravelPlanAdapterSource, tourHtml, toursListHtml, toursListSource, travelPlanCoreSource] = await Promise.all([
+    readFile(tourPageModulePath, "utf8"),
+    readFile(tourTravelPlanAdapterPath, "utf8"),
+    readFile(tourPageHtmlPath, "utf8"),
+    readFile(toursListHtmlPath, "utf8"),
+    readFile(toursListModulePath, "utf8"),
+    readFile(travelPlanCorePath, "utf8")
+  ]);
   const generatedCatalogs = await import(`${pathToFileURL(generatedCatalogsPath).href}?test=${Date.now()}`);
 
   assert.match(
@@ -3307,6 +3317,51 @@ test("tour page reads month options from the generated catalogs layer", async ()
     tourHtml,
     /id="tour_formStatus"/,
     "Tour page should render the save-status mount that tour.js writes validation and save feedback into"
+  );
+  assert.match(
+    tourHtml,
+    /<div class="field full">\s*<span class="field-label" data-i18n-id="tour\.styles_label">Tour Styles/,
+    "Tour styles should span the full editor width"
+  );
+  assert.match(
+    tourHtml,
+    /id="tour_style_choices"[\s\S]*id="tour_destination_scope_editor"[\s\S]*id="tour_priority"/,
+    "Tour destination/area/place controls should render below tour styles and above priority"
+  );
+  assert.match(
+    tourSource,
+    /travel_plan_destination_scope_editor: document\.getElementById\("tour_destination_scope_editor"\)/,
+    "Tour page should wire the external route-scope editor mount"
+  );
+  assert.match(
+    travelPlanCoreSource,
+    /function usesExternalDestinationScopeEditor\(\)[\s\S]*travel_plan_destination_scope_editor[\s\S]*els\.travel_plan_editor/,
+    "The shared travel-plan editor should support rendering destination scope outside the travel-plan day list"
+  );
+  assert.match(
+    tourTravelPlanAdapterSource,
+    /destinationScopeCreate:\s*false/,
+    "Marketing-tour detail should only select existing destination-scope catalog entries"
+  );
+  assert.match(
+    toursListHtml,
+    /id="toursPagination"[\s\S]*id="tourDestinationCatalogPanel"/,
+    "The marketing tours list should place the destinations catalog manager at the bottom"
+  );
+  assert.doesNotMatch(
+    toursListHtml,
+    /id="toursDestination"/,
+    "The marketing tours list should not keep the old destination dropdown"
+  );
+  assert.match(
+    toursListHtml,
+    /id="toursDestinationScopeFilter"/,
+    "The marketing tours list should render the structured destination/area/place filter"
+  );
+  assert.match(
+    toursListSource,
+    /destinationScopeAreaCreateRequest[\s\S]*destinationScopeCatalogRequest[\s\S]*destinationScopeDestinationCreateRequest[\s\S]*destinationScopePlaceCreateRequest[\s\S]*data-destination-filter/,
+    "The marketing tours list should manage destinations, areas, and places through the destination-scope APIs"
   );
   assert.doesNotMatch(
     tourHtml,
@@ -4608,7 +4663,7 @@ test("homepage TravelAgency structured data mirrors footer contact details", asy
   );
 });
 
-test("homepage hero title follows published destinations and only hides the destination picker when one destination remains", async () => {
+test("homepage hero title follows published destinations and keeps the destination button visible", async () => {
   const mainToursPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "main_tours.js");
   const homepagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "index.html");
   const frontendEnI18nPath = path.resolve(__dirname, "..", "..", "..", "frontend", "data", "i18n", "frontend", "en.json");
@@ -4636,8 +4691,8 @@ test("homepage hero title follows published destinations and only hides the dest
 
   assert.match(
     homepageSource,
-    /id="heroTitle"[\s\S]*id="navDestinationWrap" class="select-wrap" hidden/,
-    "Homepage hero should expose a dedicated title mount and keep the destination dropdown hidden in the hero markup"
+    /id="heroTitle"[\s\S]*class="filter-menu--hero__filters"[\s\S]*id="navStyleTrigger"[\s\S]*id="navDestinationWrap" class="select-wrap"[\s\S]*id="navDestinationSummary" data-i18n-id="filters\.all_destinations">All destinations[\s\S]*class="filter-menu--hero__cta"[\s\S]*id="viewToursBtn"/,
+    "Homepage hero should expose a dedicated title mount, keep the style and destination controls on the left, and move the tour CTA into its right-side group"
   );
   assert.match(
     homepageSource,
@@ -4680,13 +4735,13 @@ test("homepage hero title follows published destinations and only hides the dest
   );
   assert.match(
     mainToursSource,
-    /function shouldShowHeroDestinationFilter\(destinations = filterOptionList\("destination"\)\) \{[\s\S]*return destinations\.length > 1;[\s\S]*function normalizeActiveFiltersFromOptions\(\) \{[\s\S]*state\.filters\.dest = shouldShowHeroDestinationFilter\(\)\s*\?[\s\S]*normalizeSelectionToCodes\(state\.filters\.dest, "destination", \{ allowUnknown: false \}\)[\s\S]*:\s*\[\];[\s\S]*state\.filters\.style = normalizeSelectionToCodes\(state\.filters\.style, "style", \{ allowUnknown: false \}\);/,
-    "Homepage should only keep destination filters when the hero destination dropdown is actually visible"
+    /function shouldShowHeroDestinationFilter\(\) \{[\s\S]*return true;[\s\S]*function normalizeDestinationScopeFilterFromOptions\(\) \{[\s\S]*state\.filters\.area = area;[\s\S]*state\.filters\.place = place;[\s\S]*function normalizeActiveFiltersFromOptions\(\) \{[\s\S]*normalizeDestinationScopeFilterFromOptions\(\);[\s\S]*state\.filters\.style = normalizeSelectionToCodes\(state\.filters\.style, "style", \{ allowUnknown: false \}\);[\s\S]*function selectedDestinationScopeLabel\(\) \{[\s\S]*labels\.join\(" · "\)[\s\S]*frontendT\("filters\.all_destinations", "All destinations"\)/,
+    "Homepage should keep the hero destination button visible and preserve valid destination, area, and place filters"
   );
   assert.match(
     mainToursSource,
-    /const destinationFilterWrap = els\.navDestinationWrap;[\s\S]*const showDestinationFilter = shouldShowHeroDestinationFilter\(destinations\);[\s\S]*destinationFilterWrap\.hidden = !showDestinationFilter;[\s\S]*els\.navDestinationPanel\.hidden = true;/,
-    "Homepage filter rendering should hide the whole destination picker in the hero whenever only one published destination remains"
+    /const destinationFilterWrap = els\.navDestinationWrap;[\s\S]*const showDestinationFilter = shouldShowHeroDestinationFilter\(\);[\s\S]*destinationFilterWrap\.hidden = !showDestinationFilter;[\s\S]*els\.navDestinationPanel\.hidden = true;/,
+    "Homepage filter rendering should keep the destination picker visible while still resetting the closed panel state"
   );
   assert.match(
     siteCssSource,

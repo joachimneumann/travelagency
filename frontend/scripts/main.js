@@ -51,10 +51,13 @@ const state = {
   filteredTrips: [],
   filterOptions: {
     destinations: [],
+    destinationScopeCatalog: null,
     styles: []
   },
   filters: {
     dest: [],
+    area: "",
+    place: "",
     style: []
   },
   rankedTripsDebug: [],
@@ -433,6 +436,8 @@ async function init() {
   const savedFilters = JSON.parse(localStorage.getItem("asiatravelplan_filters") || "null");
   const urlFilters = getFiltersFromURL();
   state.filters.dest = normalizeFilterSelection(urlFilters.dest.length ? urlFilters.dest : savedFilters?.dest);
+  state.filters.area = normalizeText(urlFilters.area || savedFilters?.area);
+  state.filters.place = normalizeText(urlFilters.place || savedFilters?.place);
   state.filters.style = normalizeFilterSelection(urlFilters.style.length ? urlFilters.style : savedFilters?.style);
 
   try {
@@ -441,6 +446,7 @@ async function init() {
     state.filterOptions.destinations = Array.isArray(toursPayload?.available_destinations)
       ? toursPayload.available_destinations
       : [];
+    state.filterOptions.destinationScopeCatalog = toursPayload?.available_destination_scope_catalog || null;
     state.filterOptions.styles = Array.isArray(toursPayload?.available_styles)
       ? toursPayload.available_styles
       : [];
@@ -448,6 +454,7 @@ async function init() {
     console.error("Failed to load static homepage tours data.", error);
     state.trips = [];
     state.filterOptions.destinations = [];
+    state.filterOptions.destinationScopeCatalog = null;
     state.filterOptions.styles = [];
   }
   normalizeActiveFiltersFromOptions();
@@ -1380,6 +1387,7 @@ async function handleFrontendLanguageChanged() {
     state.filterOptions.destinations = Array.isArray(toursPayload?.available_destinations)
       ? toursPayload.available_destinations
       : [];
+    state.filterOptions.destinationScopeCatalog = toursPayload?.available_destination_scope_catalog || null;
     state.filterOptions.styles = Array.isArray(toursPayload?.available_styles)
       ? toursPayload.available_styles
       : [];

@@ -162,6 +162,14 @@ case "keycloak_user_staff_profile_picture_upload":
   return RequestFactory.keycloakUserStaffProfilePictureUploadRequest(options);
 case "keycloak_user_staff_profile_picture_delete":
   return RequestFactory.keycloakUserStaffProfilePictureDeleteRequest(options);
+case "destination_scope_catalog":
+  return RequestFactory.destinationScopeCatalogRequest(options);
+case "destination_scope_destination_create":
+  return RequestFactory.destinationScopeDestinationCreateRequest(options);
+case "destination_scope_area_create":
+  return RequestFactory.destinationScopeAreaCreateRequest(options);
+case "destination_scope_place_create":
+  return RequestFactory.destinationScopePlaceCreateRequest(options);
 case "tours":
   return RequestFactory.toursRequest(options);
 case "tour_create":

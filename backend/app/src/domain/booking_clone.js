@@ -1,6 +1,10 @@
 import { normalizeText } from "../lib/text.js";
 import { extractTravelPlanPdfPersonalization } from "../lib/booking_pdf_personalization.js";
 import { normalizeTourDestinationCode } from "./tour_catalog_i18n.js";
+import {
+  destinationScopeDestinations,
+  normalizeDestinationScope
+} from "./destination_scope.js";
 
 function cloneJson(value) {
   return value == null ? value : JSON.parse(JSON.stringify(value));
@@ -91,12 +95,16 @@ function resetSourceMetadata(booking, { sourceBookingId, nextName }) {
 }
 
 function canonicalizeTravelPlanDestinations(booking) {
-  const nextDestinations = normalizeCountryCodes(booking?.travel_plan?.destinations || booking?.destinations);
+  const scopedDestinations = destinationScopeDestinations(booking?.travel_plan?.destination_scope);
+  const nextDestinations = scopedDestinations.length
+    ? scopedDestinations
+    : normalizeCountryCodes(booking?.travel_plan?.destinations || booking?.destinations);
   const currentTravelPlan = booking?.travel_plan && typeof booking.travel_plan === "object" && !Array.isArray(booking.travel_plan)
     ? booking.travel_plan
     : {};
   booking.travel_plan = {
     ...currentTravelPlan,
+    destination_scope: normalizeDestinationScope(currentTravelPlan.destination_scope, nextDestinations),
     destinations: nextDestinations
   };
   delete booking.destinations;

@@ -5,9 +5,21 @@ import { normalizeText } from "./text.js";
 import { normalizeStoredBookingRecord } from "./booking_persons.js";
 
 const STORE_SNAPSHOT = Symbol("asiatravelplan_store_snapshot");
+const DEFAULT_DESTINATION_SCOPE_DESTINATIONS = Object.freeze([
+  Object.freeze({
+    code: "VN",
+    label: "Vietnam",
+    sort_order: 0,
+    is_active: true
+  })
+]);
 
 function cloneJson(value) {
   return value === undefined ? undefined : JSON.parse(JSON.stringify(value));
+}
+
+function defaultDestinationScopeDestinations() {
+  return cloneJson(DEFAULT_DESTINATION_SCOPE_DESTINATIONS);
 }
 
 function jsonEqual(left, right) {
@@ -125,6 +137,13 @@ function mergeStoreSnapshot(baseStore, latestStore, nextStore) {
     mergePlainObject
   );
   for (const key of [
+    "destination_scope_destinations",
+    "destination_areas",
+    "destination_places"
+  ]) {
+    result[key] = mergeCollectionByKey(baseStore?.[key], latestStore?.[key], nextStore?.[key], mergePlainObject);
+  }
+  for (const key of [
     "activities",
     "payment_documents",
     "chat_channel_accounts",
@@ -180,6 +199,9 @@ export function createStoreUtils({
           bookings: [],
           activities: [],
           payment_documents: [],
+          destination_scope_destinations: defaultDestinationScopeDestinations(),
+          destination_areas: [],
+          destination_places: [],
           chat_channel_accounts: [],
           chat_conversations: [],
           chat_events: []
@@ -200,13 +222,19 @@ export function createStoreUtils({
   }
 
   async function normalizeParsedStore(parsed) {
+    let legacyStoreWritebackNeeded = false;
     parsed.bookings ||= [];
     parsed.activities ||= [];
     parsed.payment_documents ||= [];
+    if (!Array.isArray(parsed.destination_scope_destinations) || !parsed.destination_scope_destinations.length) {
+      parsed.destination_scope_destinations = defaultDestinationScopeDestinations();
+      legacyStoreWritebackNeeded = true;
+    }
+    parsed.destination_areas ||= [];
+    parsed.destination_places ||= [];
     parsed.chat_channel_accounts ||= [];
     parsed.chat_conversations ||= [];
     parsed.chat_events ||= [];
-    let legacyStoreWritebackNeeded = false;
     if (Object.prototype.hasOwnProperty.call(parsed, "invoices")) {
       delete parsed.invoices;
       legacyStoreWritebackNeeded = true;

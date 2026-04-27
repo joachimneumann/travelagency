@@ -26,6 +26,9 @@ import (
 		BookingTravelPlanServiceImageSourceAttribution: databaseModel.#BookingTravelPlanServiceImageSourceAttribution
 		BookingTravelPlanServiceImageFocalPoint:        databaseModel.#BookingTravelPlanServiceImageFocalPoint
 		BookingTravelPlanServiceCopiedFrom:             databaseModel.#BookingTravelPlanServiceCopiedFrom
+		TravelPlanDestinationScopeEntry:                databaseModel.#TravelPlanDestinationScopeEntry
+		TravelPlanDestinationAreaSelection:             databaseModel.#TravelPlanDestinationAreaSelection
+		TravelPlanDestinationPlaceSelection:            databaseModel.#TravelPlanDestinationPlaceSelection
 		BookingOfferDiscount:                           databaseModel.#BookingOfferDiscount
 		PaymentDocumentComponent:                       databaseModel.#PaymentDocumentComponent
 		BookingPaymentDocument:                         databaseModel.#BookingPaymentDocument
@@ -107,6 +110,13 @@ import (
 		TravelPlanSearchResponse:                                  apiModel.#TravelPlanSearchResponse
 		TravelPlanServiceSearchResult:                             apiModel.#TravelPlanServiceSearchResult
 		TravelPlanServiceSearchResponse:                           apiModel.#TravelPlanServiceSearchResponse
+		DestinationScopeCatalogDestination:                        apiModel.#DestinationScopeCatalogDestination
+		DestinationArea:                                           apiModel.#DestinationArea
+		DestinationPlace:                                          apiModel.#DestinationPlace
+		DestinationScopeCatalogResponse:                           apiModel.#DestinationScopeCatalogResponse
+		DestinationCreateResponse:                                 apiModel.#DestinationCreateResponse
+		DestinationAreaCreateResponse:                             apiModel.#DestinationAreaCreateResponse
+		DestinationPlaceCreateResponse:                            apiModel.#DestinationPlaceCreateResponse
 		StandardTourReadModel:                               apiModel.#StandardTourReadModel
 		StandardTourListResponse:                            apiModel.#StandardTourListResponse
 		StandardTourResponse:                                apiModel.#StandardTourResponse
@@ -150,6 +160,9 @@ import (
 		TravelPlanDayImportRequest:                                apiModel.#TravelPlanDayImportRequest
 		TravelPlanSearchRequest:                                   apiModel.#TravelPlanSearchRequest
 		TravelPlanImportRequest:                                   apiModel.#TravelPlanImportRequest
+		DestinationCreateRequest:                                  apiModel.#DestinationCreateRequest
+		DestinationAreaCreateRequest:                              apiModel.#DestinationAreaCreateRequest
+		DestinationPlaceCreateRequest:                             apiModel.#DestinationPlaceCreateRequest
 		StandardTourUpsertRequest:                           apiModel.#StandardTourUpsertRequest
 		BookingStandardTourApplyRequest:                     apiModel.#BookingStandardTourApplyRequest
 		TravelPlanServiceSearchRequest:                            apiModel.#TravelPlanServiceSearchRequest

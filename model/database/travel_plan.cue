@@ -100,6 +100,20 @@ import (
 	...
 }
 
+#TravelPlanDestinationPlaceSelection: {
+	place_id: common.#Identifier
+}
+
+#TravelPlanDestinationAreaSelection: {
+	area_id: common.#Identifier
+	places?: [...#TravelPlanDestinationPlaceSelection]
+}
+
+#TravelPlanDestinationScopeEntry: {
+	destination: enums.#CountryCode
+	areas?: [...#TravelPlanDestinationAreaSelection]
+}
+
 #BookingTravelPlanDay: #TravelPlanDay & {
 	date?:        common.#DateOnly
 	date_string?: string
@@ -108,12 +122,13 @@ import (
 }
 
 #TravelPlan: {
+	destination_scope?: [...#TravelPlanDestinationScopeEntry]
+	destinations?: [...enums.#CountryCode]
 	days?: [...#TravelPlanDay]
 	...
 }
 
 #BookingTravelPlan: #TravelPlan & {
 	days?: [...#BookingTravelPlanDay]
-	destinations?: [...enums.#CountryCode]
 	attachments?: [...#BookingTravelPlanAttachment]
 }

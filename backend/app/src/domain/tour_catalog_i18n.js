@@ -8,9 +8,21 @@ import {
   TOUR_STYLE_BY_CODE,
   TOUR_STYLE_CODES
 } from "../../../../shared/generated/tour_style_catalog.js";
+import { DESTINATION_COUNTRY_TO_TOUR_DESTINATION_CODE } from "../../../../shared/js/destination_country_codes.js";
+import { enumOptionsFor, enumValueSetFor } from "../lib/generated_catalogs.js";
 
 export const TOUR_TEXT_LANGUAGES = CUSTOMER_CONTENT_LANGUAGE_CODES;
 const DEFAULT_TOUR_LANG = "en";
+const COUNTRY_CODE_SET = enumValueSetFor("CountryCode");
+const COUNTRY_LABELS_BY_CODE = Object.freeze(
+  Object.fromEntries(
+    enumOptionsFor("CountryCode").map((option) => {
+      const code = normalizeText(option?.value).toUpperCase();
+      const label = normalizeText(option?.label).replace(new RegExp(`^${code}\\s+`, "i"), "");
+      return [code, label || code];
+    })
+  )
+);
 
 const DESTINATION_LABELS = Object.freeze({
   cambodia: Object.freeze({ en: "Cambodia", ar: "كمبوديا", fr: "Cambodge", zh: "柬埔寨", ja: "カンボジア", ko: "캄보디아", vi: "Campuchia", ms: "Kemboja", de: "Kambodscha", es: "Camboya", it: "Cambogia", ru: "Камбоджа", nl: "Cambodja", pl: "Kambodża", da: "Cambodja", sv: "Kambodja", no: "Kambodsja" }),
@@ -75,6 +87,10 @@ function catalogCodeFromValue(value, catalog) {
 function getCatalogLabel(catalog, code, lang) {
   const normalizedCode = normalizeText(code).toLowerCase();
   if (!normalizedCode) return "";
+  const countryCode = normalizedCode.toUpperCase();
+  if (!catalog[normalizedCode] && COUNTRY_CODE_SET.has(countryCode)) {
+    return COUNTRY_LABELS_BY_CODE[countryCode] || countryCode;
+  }
   const entry = catalog[normalizedCode];
   if (!entry) return humanizeCode(normalizedCode);
   const normalizedLang = normalizeCatalogLang(lang);
@@ -98,6 +114,11 @@ export function normalizeTourLang(value) {
 }
 
 export function normalizeTourDestinationCode(value) {
+  const rawValue = normalizeText(value);
+  const countryCode = rawValue.toUpperCase();
+  if (COUNTRY_CODE_SET.has(countryCode)) {
+    return DESTINATION_COUNTRY_TO_TOUR_DESTINATION_CODE[countryCode] || countryCode.toLowerCase();
+  }
   return catalogCodeFromValue(value, DESTINATION_LABELS);
 }
 

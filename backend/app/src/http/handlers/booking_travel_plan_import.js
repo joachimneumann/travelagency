@@ -2,6 +2,10 @@ import {
   validateTravelPlanServiceImportRequest
 } from "../../../Generated/API/generated_APIModels.js";
 import { normalizeTourStyleCode } from "../../domain/tour_catalog_i18n.js";
+import {
+  destinationScopeDestinations,
+  normalizeDestinationScope
+} from "../../domain/destination_scope.js";
 import { getBookingTravelPlanDestinations } from "../../lib/booking_persons.js";
 import {
   cloneTravelPlanLocalizedMap,
@@ -23,6 +27,17 @@ function assertOptionalNonNegativeInteger(value, fieldName) {
   if (!Number.isInteger(value) || value < 0) {
     throw new Error(`${fieldName} must be a non-negative integer`);
   }
+}
+
+function mergeDestinationScopes(leftScope, rightScope) {
+  const merged = normalizeDestinationScope([
+    ...normalizeDestinationScope(leftScope),
+    ...normalizeDestinationScope(rightScope)
+  ]);
+  return {
+    destination_scope: merged,
+    destinations: destinationScopeDestinations(merged)
+  };
 }
 
 function assertRequiredIdentifier(value, fieldName) {
@@ -894,9 +909,11 @@ export function createBookingTravelPlanImportHandlers(deps) {
         randomUUID
       })
     ));
+    const mergedScope = mergeDestinationScopes(targetTravelPlan.destination_scope, sourceTravelPlan.destination_scope);
 
     const nextTravelPlan = {
       ...targetTravelPlan,
+      ...mergedScope,
       days: [...targetDays, ...importedDays],
       attachments: Array.isArray(targetTravelPlan?.attachments) ? targetTravelPlan.attachments : []
     };

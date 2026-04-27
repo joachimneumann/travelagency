@@ -110,9 +110,9 @@
     "updated_at": "2026-04-02T15:09:47.633Z"
   },
   "hero.title": {
-    "source_hash": "2d1f4dc95c4054ca27922b1d1d20ce65922571c01a4b34aaa4467d5f4d3a6a67",
-    "origin": "legacy",
-    "updated_at": "2026-04-02T15:09:47.633Z"
+    "source_hash": "dbe863dce5f4241e38997182cc5103851814ddccf56d8341a0445516f966e980",
+    "origin": "machine",
+    "updated_at": "2026-04-27T13:14:55.383Z"
   },
   "hero.title_with_destinations": {
     "source_hash": "7ea1252a585bacaed9e59b417cee7ab44d68a0703fb9d3054cdda72b9c4af950",

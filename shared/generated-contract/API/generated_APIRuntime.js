@@ -1031,6 +1031,50 @@
         ]
       },
       {
+        key: "destination_scope_catalog",
+        path: "/api/v1/destination-scope/catalog",
+        method: "GET",
+        authenticated: true,
+        requestType: null,
+        responseType: "DestinationScopeCatalogResponse",
+        parameters: [
+
+        ]
+      },
+      {
+        key: "destination_scope_destination_create",
+        path: "/api/v1/destination-scope/destinations",
+        method: "POST",
+        authenticated: true,
+        requestType: "DestinationCreateRequest",
+        responseType: "DestinationCreateResponse",
+        parameters: [
+
+        ]
+      },
+      {
+        key: "destination_scope_area_create",
+        path: "/api/v1/destination-scope/areas",
+        method: "POST",
+        authenticated: true,
+        requestType: "DestinationAreaCreateRequest",
+        responseType: "DestinationAreaCreateResponse",
+        parameters: [
+
+        ]
+      },
+      {
+        key: "destination_scope_place_create",
+        path: "/api/v1/destination-scope/places",
+        method: "POST",
+        authenticated: true,
+        requestType: "DestinationPlaceCreateRequest",
+        responseType: "DestinationPlaceCreateResponse",
+        parameters: [
+
+        ]
+      },
+      {
         key: "tours",
         path: "/api/v1/tours",
         method: "GET",

@@ -1287,6 +1287,74 @@ export function keycloakUserStaffProfilePictureDeleteRequest({ baseURL = '', par
   };
 }
 
+export function destinationScopeCatalogPath(params = {}) {
+  return buildPath("/api/v1/destination-scope/catalog", params);
+}
+
+export function destinationScopeCatalogRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = destinationScopeCatalogPath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "destination_scope_catalog",
+    method: "GET",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function destinationScopeDestinationCreatePath(params = {}) {
+  return buildPath("/api/v1/destination-scope/destinations", params);
+}
+
+export function destinationScopeDestinationCreateRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = destinationScopeDestinationCreatePath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "destination_scope_destination_create",
+    method: "POST",
+    authenticated: true,
+    url,
+    headers,
+    body: body === undefined ? undefined : JSON.stringify(body)
+  };
+}
+
+export function destinationScopeAreaCreatePath(params = {}) {
+  return buildPath("/api/v1/destination-scope/areas", params);
+}
+
+export function destinationScopeAreaCreateRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = destinationScopeAreaCreatePath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "destination_scope_area_create",
+    method: "POST",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function destinationScopePlaceCreatePath(params = {}) {
+  return buildPath("/api/v1/destination-scope/places", params);
+}
+
+export function destinationScopePlaceCreateRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = destinationScopePlaceCreatePath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "destination_scope_place_create",
+    method: "POST",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
 export function toursPath(params = {}) {
   return buildPath("/api/v1/tours", params);
 }
@@ -1473,4 +1541,3 @@ export function tourPictureDeleteRequest({ baseURL = '', params = {}, query = {}
     body
   };
 }
-

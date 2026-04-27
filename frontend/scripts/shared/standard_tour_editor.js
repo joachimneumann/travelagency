@@ -37,7 +37,8 @@ export function createStandardTourEditor({
       planImport: false,
       standardTourImport: false,
       serviceImport: false,
-      imageUpload: false
+      imageUpload: false,
+      destinationScope: false
     }
   });
 

@@ -2,6 +2,7 @@ backend/app/data/invoices/
 backend/app/data/store.json
 .env
 staging_secrets/
+/AI/
 backend/app/node_modules/
 backend/app/data/*
 !backend/app/data/tours/
@@ -30,6 +31,8 @@ backup/atp_staff/staff.json.audit.log
 logs/
 
 __pycache__/
+.DS_Store
+AI/
 *.xcuserstate
 *.xccheckout
 *.xcscmblueprint

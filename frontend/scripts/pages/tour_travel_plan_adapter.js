@@ -11,6 +11,12 @@ function normalizeText(value) {
   return String(value ?? "").trim();
 }
 
+function omitDerivedTravelPlanDestinations(plan) {
+  if (!plan || typeof plan !== "object" || Array.isArray(plan)) return plan;
+  const { destinations: _derivedDestinations, ...next } = plan;
+  return next;
+}
+
 function currentBackendLang() {
   return typeof window.backendI18n?.getLang === "function" ? window.backendI18n.getLang() : "";
 }
@@ -149,7 +155,7 @@ export function createTourTravelPlanAdapter({
       params: { tour_id: state.booking.id },
       query: backendLangQuery(),
       body: {
-        travel_plan: travelPlan,
+        travel_plan: omitDerivedTravelPlanDestinations(travelPlan),
         ...expectedTourUpdatedAtPayload(state),
         actor: state.user
       }
@@ -171,7 +177,7 @@ export function createTourTravelPlanAdapter({
       params: { tour_id: normalizeText(requestState.booking?.id || requestState.id) },
       query: backendLangQuery(),
       body: {
-        travel_plan: travelPlanPayload,
+        travel_plan: omitDerivedTravelPlanDestinations(travelPlanPayload),
         ...expectedTourUpdatedAtPayload(requestState),
         actor: requestState.user
       }
@@ -247,6 +253,8 @@ export function createTourTravelPlanAdapter({
         translation: false,
         serviceDetails: false,
         renumberDays: false,
+        destinationScope: true,
+        destinationScopeCreate: false,
         pruneEmptyTravelPlanContentOnCollect: true
       }
     });

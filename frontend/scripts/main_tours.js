@@ -18,6 +18,12 @@ const TOUR_CARD_MEDIA_SNAPSHOT_HOLD_MS = Math.max(
   TOUR_DETAILS_TRANSITION_MS,
   TOUR_DETAILS_CLOSE_TRANSITION_MS
 ) + 180;
+const COUNTRY_TO_TOUR_DESTINATION_CODE = Object.freeze({
+  VN: "vietnam",
+  TH: "thailand",
+  KH: "cambodia",
+  LA: "laos"
+});
 const tourCardImageTransitionTimers = new WeakMap();
 
 export function createFrontendToursController(ctx) {
@@ -81,8 +87,10 @@ export function createFrontendToursController(ctx) {
   function getFiltersFromURL() {
     const params = new URLSearchParams(window.location.search);
     const dest = normalizeFilterSelection(params.get("dest"));
+    const area = normalizeText(params.get("area"));
+    const place = normalizeText(params.get("place"));
     const style = normalizeFilterSelection(params.get("style"));
-    return { dest, style };
+    return { dest, area, place, style };
   }
 
   function normalizeFilterOptionList(items) {
@@ -103,6 +111,69 @@ export function createFrontendToursController(ctx) {
   function filterOptionList(kind) {
     const raw = kind === "destination" ? state.filterOptions.destinations : state.filterOptions.styles;
     return normalizeFilterOptionList(raw);
+  }
+
+  function normalizeDestinationCode(value) {
+    const normalized = normalizeText(value);
+    if (!normalized) return "";
+    const countryCode = normalized.toUpperCase();
+    if (COUNTRY_TO_TOUR_DESTINATION_CODE[countryCode]) return COUNTRY_TO_TOUR_DESTINATION_CODE[countryCode];
+    return normalized.toLowerCase();
+  }
+
+  function normalizeDestinationScopeCatalogPayload(catalog) {
+    const rawCatalog = catalog && typeof catalog === "object" && !Array.isArray(catalog) ? catalog : {};
+    const destinationOptions = filterOptionList("destination");
+    const destinationByCode = new Map();
+
+    const addDestination = (item) => {
+      const code = normalizeDestinationCode(item?.code || item?.destination || item?.country_code || item);
+      if (!code || destinationByCode.has(code)) return;
+      destinationByCode.set(code, {
+        code,
+        country_code: normalizeText(item?.country_code || item?.country || "").toUpperCase(),
+        label: normalizeText(item?.label || item?.name) || filterLabel("destination", code) || code
+      });
+    };
+
+    (Array.isArray(rawCatalog.destinations) ? rawCatalog.destinations : []).forEach(addDestination);
+    destinationOptions.forEach(addDestination);
+
+    const destinations = Array.from(destinationByCode.values());
+    const destinationCodes = new Set(destinations.map((destination) => destination.code));
+    const areas = (Array.isArray(rawCatalog.areas) ? rawCatalog.areas : [])
+      .map((area) => {
+        const destination = normalizeDestinationCode(area?.destination || area?.country_code);
+        const id = normalizeText(area?.id || area?.area_id);
+        if (!id || !destination || !destinationCodes.has(destination)) return null;
+        return {
+          id,
+          destination,
+          code: normalizeText(area?.code),
+          label: normalizeText(area?.label || area?.name || area?.code) || id
+        };
+      })
+      .filter(Boolean);
+    const areaIds = new Set(areas.map((area) => area.id));
+    const places = (Array.isArray(rawCatalog.places) ? rawCatalog.places : [])
+      .map((place) => {
+        const area_id = normalizeText(place?.area_id || place?.areaId);
+        const id = normalizeText(place?.id || place?.place_id);
+        if (!id || !area_id || !areaIds.has(area_id)) return null;
+        return {
+          id,
+          area_id,
+          code: normalizeText(place?.code),
+          label: normalizeText(place?.label || place?.name || place?.code) || id
+        };
+      })
+      .filter(Boolean);
+
+    return { destinations, areas, places };
+  }
+
+  function destinationScopeCatalog() {
+    return normalizeDestinationScopeCatalogPayload(state.filterOptions.destinationScopeCatalog);
   }
 
   function filterLabel(kind, value) {
@@ -145,9 +216,44 @@ export function createFrontendToursController(ctx) {
 
   function tourDestinationCodes(trip) {
     if (Array.isArray(trip?.destination_codes) && trip.destination_codes.length) {
-      return trip.destination_codes.map((value) => normalizeText(value)).filter(Boolean);
+      return trip.destination_codes.map((value) => normalizeDestinationCode(value)).filter(Boolean);
     }
     return normalizeSelectionToCodes(tourDestinations(trip), "destination");
+  }
+
+  function tourDestinationScopeEntries(trip) {
+    const scope = Array.isArray(trip?.travel_plan?.destination_scope) ? trip.travel_plan.destination_scope : [];
+    return scope
+      .map((entry) => ({
+        destination: normalizeDestinationCode(entry?.destination),
+        areas: Array.isArray(entry?.areas) ? entry.areas : []
+      }))
+      .filter((entry) => entry.destination);
+  }
+
+  function tourIncludesDestinationScope(trip, { destination = "", area = "", place = "" } = {}) {
+    const selectedDestination = normalizeDestinationCode(destination);
+    const selectedArea = normalizeText(area);
+    const selectedPlace = normalizeText(place);
+    const scopeEntries = tourDestinationScopeEntries(trip);
+
+    const destinationMatch = !selectedDestination
+      || tourDestinationCodes(trip).includes(selectedDestination)
+      || scopeEntries.some((entry) => entry.destination === selectedDestination);
+    if (!destinationMatch) return false;
+
+    if (!selectedArea && !selectedPlace) return true;
+
+    return scopeEntries.some((entry) => (
+      (!selectedDestination || entry.destination === selectedDestination)
+      && entry.areas.some((areaSelection) => {
+        const areaId = normalizeText(areaSelection?.area_id);
+        if (selectedArea && areaId !== selectedArea) return false;
+        if (!selectedPlace) return true;
+        return (Array.isArray(areaSelection?.places) ? areaSelection.places : [])
+          .some((placeSelection) => normalizeText(placeSelection?.place_id) === selectedPlace);
+      })
+    ));
   }
 
   function tourStyleCodes(trip) {
@@ -157,14 +263,50 @@ export function createFrontendToursController(ctx) {
     return normalizeSelectionToCodes(Array.isArray(trip?.styles) ? trip.styles : [], "style");
   }
 
-  function shouldShowHeroDestinationFilter(destinations = filterOptionList("destination")) {
-    return destinations.length > 1;
+  function shouldShowHeroDestinationFilter() {
+    return true;
+  }
+
+  function normalizeDestinationScopeFilterFromOptions() {
+    const catalog = destinationScopeCatalog();
+    const areaById = new Map(catalog.areas.map((area) => [area.id, area]));
+    const placeById = new Map(catalog.places.map((place) => [place.id, place]));
+    let destination = normalizeSelectionToCodes(state.filters.dest, "destination", { allowUnknown: false })[0] || "";
+    let area = normalizeText(state.filters.area);
+    let place = normalizeText(state.filters.place);
+
+    if (place) {
+      const matchedPlace = placeById.get(place);
+      if (matchedPlace) {
+        area = matchedPlace.area_id;
+      } else {
+        place = "";
+      }
+    }
+
+    if (area) {
+      const matchedArea = areaById.get(area);
+      if (matchedArea) {
+        destination = matchedArea.destination;
+      } else {
+        area = "";
+        place = "";
+      }
+    }
+
+    if (destination && !filterOptionList("destination").some((option) => normalizeDestinationCode(option.code) === destination)) {
+      destination = "";
+      area = "";
+      place = "";
+    }
+
+    state.filters.dest = destination ? [destination] : [];
+    state.filters.area = area;
+    state.filters.place = place;
   }
 
   function normalizeActiveFiltersFromOptions() {
-    state.filters.dest = shouldShowHeroDestinationFilter()
-      ? normalizeSelectionToCodes(state.filters.dest, "destination", { allowUnknown: false })
-      : [];
+    normalizeDestinationScopeFilterFromOptions();
     state.filters.style = normalizeSelectionToCodes(state.filters.style, "style", { allowUnknown: false });
   }
 
@@ -190,9 +332,32 @@ export function createFrontendToursController(ctx) {
       : frontendT("filters.all_styles", "All travel styles");
   }
 
+  function selectedDestinationScopeLabel() {
+    const catalog = destinationScopeCatalog();
+    const selectedPlace = normalizeText(state.filters.place);
+    const selectedArea = normalizeText(state.filters.area);
+    const selectedDestination = normalizeText(state.filters.dest?.[0]);
+    const destinationLabel = selectedDestination ? filterLabel("destination", selectedDestination) : "";
+    const labels = [];
+    if (selectedPlace) {
+      const place = catalog.places.find((item) => item.id === selectedPlace);
+      if (place?.label) labels.push(place.label);
+    }
+    if (selectedArea) {
+      const area = catalog.areas.find((item) => item.id === selectedArea);
+      if (area?.label) labels.push(area.label);
+    }
+    if (destinationLabel) {
+      labels.push(destinationLabel);
+    }
+    return labels.length
+      ? labels.join(" · ")
+      : frontendT("filters.all_destinations", "All destinations");
+  }
+
   function updateFilterTriggerLabels() {
     if (els.navDestinationSummary) {
-      els.navDestinationSummary.textContent = formatFilterValue(state.filters.dest, "destination");
+      els.navDestinationSummary.textContent = selectedDestinationScopeLabel();
     }
     if (els.navStyleSummary) {
       els.navStyleSummary.textContent = formatFilterValue(state.filters.style, "style");
@@ -207,7 +372,7 @@ export function createFrontendToursController(ctx) {
 
   function buildShowMoreToursLabel(moreCount) {
     const style = filterLabels(state.filters.style, "style");
-    const destination = filterLabels(state.filters.dest, "destination");
+    const destination = state.filters.dest.length ? [selectedDestinationScopeLabel()] : [];
     const countText = String(moreCount);
 
     if (style.length === 1) {
@@ -282,7 +447,7 @@ export function createFrontendToursController(ctx) {
   function updateTitlesForFilters() {
     const dest = state.filters.dest;
     const style = state.filters.style;
-    const destLabel = formatFilterValue(dest, "destination");
+    const destLabel = dest.length ? selectedDestinationScopeLabel() : formatFilterValue(dest, "destination");
     const styleLabel = formatFilterValue(style, "style");
     const styleLower = String(styleLabel || "").toLowerCase();
 
@@ -414,6 +579,7 @@ export function createFrontendToursController(ctx) {
     return {
       items: normalizeToursForFrontend(Array.isArray(source.items) ? source.items : []),
       available_destinations: normalizeFilterOptionList(source.available_destinations),
+      available_destination_scope_catalog: source.available_destination_scope_catalog || null,
       available_styles: normalizeFilterOptionList(source.available_styles)
     };
   }
@@ -1964,9 +2130,12 @@ export function createFrontendToursController(ctx) {
 
   function applyFilters() {
     const matchingTrips = state.trips.filter((trip) => {
-      const destinations = tourDestinationCodes(trip);
       const styles = tourStyleCodes(trip);
-      const matchDest = !state.filters.dest.length || state.filters.dest.some((destination) => destinations.includes(destination));
+      const matchDest = tourIncludesDestinationScope(trip, {
+        destination: state.filters.dest[0],
+        area: state.filters.area,
+        place: state.filters.place
+      });
       const matchStyle = !state.filters.style.length || state.filters.style.some((style) => styles.includes(style));
       return matchDest && matchStyle;
     });
@@ -1996,10 +2165,19 @@ export function createFrontendToursController(ctx) {
   function setupFilterEvents() {
     if (!els.navDestinationOptions || !els.navStyleOptions) return;
 
-    els.navDestinationOptions.addEventListener("change", () => {
-      state.filters.dest = getCheckedValues(els.navDestinationOptions);
+    els.navDestinationOptions.addEventListener("click", (event) => {
+      const button = event.target instanceof Element ? event.target.closest("[data-hero-destination-filter]") : null;
+      if (!button) return;
+      state.filters.dest = normalizeText(button.getAttribute("data-destination"))
+        ? [normalizeText(button.getAttribute("data-destination"))]
+        : [];
+      state.filters.area = normalizeText(button.getAttribute("data-area"));
+      state.filters.place = normalizeText(button.getAttribute("data-place"));
+      normalizeDestinationScopeFilterFromOptions();
       state.visibleToursCount = initialVisibleTours;
+      syncDestinationFilterMenu();
       onFilterChange();
+      closeFilterPanelForOptions(els.navDestinationOptions);
     });
 
     els.navDestinationOptions.addEventListener("click", (event) => {
@@ -2037,6 +2215,18 @@ export function createFrontendToursController(ctx) {
       url.searchParams.set("dest", state.filters.dest.join(","));
     }
 
+    if (!state.filters.area) {
+      url.searchParams.delete("area");
+    } else {
+      url.searchParams.set("area", state.filters.area);
+    }
+
+    if (!state.filters.place) {
+      url.searchParams.delete("place");
+    } else {
+      url.searchParams.set("place", state.filters.place);
+    }
+
     if (!state.filters.style.length) {
       url.searchParams.delete("style");
     } else {
@@ -2047,9 +2237,23 @@ export function createFrontendToursController(ctx) {
   }
 
   function syncFilterInputs() {
-    setFilterCheckboxes(els.navDestinationOptions, state.filters.dest);
     setFilterCheckboxes(els.navStyleOptions, state.filters.style);
+    syncDestinationFilterMenu();
     updateFilterTriggerLabels();
+  }
+
+  function syncDestinationFilterMenu() {
+    if (!els.navDestinationOptions) return;
+    const selectedDestination = normalizeText(state.filters.dest?.[0]);
+    const selectedArea = normalizeText(state.filters.area);
+    const selectedPlace = normalizeText(state.filters.place);
+    Array.from(els.navDestinationOptions.querySelectorAll("[data-hero-destination-filter]")).forEach((button) => {
+      const destination = normalizeText(button.getAttribute("data-destination"));
+      const area = normalizeText(button.getAttribute("data-area"));
+      const place = normalizeText(button.getAttribute("data-place"));
+      const isSelected = destination === selectedDestination && area === selectedArea && place === selectedPlace;
+      button.setAttribute("aria-pressed", isSelected ? "true" : "false");
+    });
   }
 
   function closeFilterPanelForOptions(optionsContainer) {
@@ -2063,6 +2267,8 @@ export function createFrontendToursController(ctx) {
   function clearFilterGroup(group, optionsContainer) {
     if (group === "destination") {
       state.filters.dest = [];
+      state.filters.area = "";
+      state.filters.place = "";
     } else if (group === "style") {
       state.filters.style = [];
     } else {
@@ -2095,19 +2301,104 @@ export function createFrontendToursController(ctx) {
     `;
   }
 
+  function renderDestinationFilterButton({
+    label,
+    destination = "",
+    area = "",
+    place = "",
+    className = "hero-destination-menu__item"
+  } = {}) {
+    return `
+      <button
+        class="${escapeAttr(className)}"
+        type="button"
+        role="menuitem"
+        data-hero-destination-filter
+        data-destination="${escapeAttr(destination)}"
+        data-area="${escapeAttr(area)}"
+        data-place="${escapeAttr(place)}"
+        aria-pressed="false"
+      >${escapeHTML(label)}</button>
+    `;
+  }
+
+  function renderDestinationScopeMenu() {
+    const catalog = destinationScopeCatalog();
+    const areaByDestination = new Map();
+    for (const area of catalog.areas) {
+      const items = areaByDestination.get(area.destination) || [];
+      items.push(area);
+      areaByDestination.set(area.destination, items);
+    }
+    const placesByArea = new Map();
+    for (const place of catalog.places) {
+      const items = placesByArea.get(place.area_id) || [];
+      items.push(place);
+      placesByArea.set(place.area_id, items);
+    }
+
+    const destinationMarkup = catalog.destinations.map((destination) => {
+      const areas = areaByDestination.get(destination.code) || [];
+      return `
+        <section class="hero-destination-menu__destination">
+          ${renderDestinationFilterButton({
+            label: destination.label,
+            destination: destination.code,
+            className: "hero-destination-menu__destination-button"
+          })}
+          ${areas.length
+            ? `<div class="hero-destination-menu__areas">
+                ${areas.map((area) => {
+                  const places = placesByArea.get(area.id) || [];
+                  return `
+                    <section class="hero-destination-menu__area">
+                      ${renderDestinationFilterButton({
+                        label: area.label,
+                        destination: destination.code,
+                        area: area.id,
+                        className: "hero-destination-menu__area-button"
+                      })}
+                      ${places.length
+                        ? `<div class="hero-destination-menu__places">
+                            ${places.map((place) => renderDestinationFilterButton({
+                              label: place.label,
+                              destination: destination.code,
+                              area: area.id,
+                              place: place.id
+                            })).join("")}
+                          </div>`
+                        : ""}
+                    </section>
+                  `;
+                }).join("")}
+              </div>`
+            : ""}
+        </section>
+      `;
+    }).join("");
+
+    return `
+      <div class="hero-destination-menu__all">
+        ${renderDestinationFilterButton({
+          label: frontendT("filters.all_destinations", "All destinations"),
+          className: "hero-destination-menu__all-button"
+        })}
+      </div>
+      ${destinationMarkup || `<p class="hero-destination-menu__empty">${escapeHTML(frontendT("filters.no_destinations", "No destinations configured."))}</p>`}
+    `;
+  }
+
   function populateFilterOptions() {
     const destinations = filterOptionList("destination");
     const styles = filterOptionList("style");
     const bookingDestinations = destinations.map((option) => option.label);
     const bookingStyles = styles.map((option) => option.label);
     const destinationFilterWrap = els.navDestinationWrap;
-    const showDestinationFilter = shouldShowHeroDestinationFilter(destinations);
+    const showDestinationFilter = shouldShowHeroDestinationFilter();
 
     if (els.navDestinationOptions) {
-      els.navDestinationOptions.innerHTML = [
-        renderFilterClearAction("destination", frontendT("filters.all_destinations", "All destinations")),
-        ...destinations.map((destination) => renderFilterCheckbox("destination", destination.code, destination.label))
-      ].join("");
+      els.navDestinationOptions.innerHTML = renderDestinationScopeMenu();
+      syncDestinationFilterMenu();
     }
 
     if (destinationFilterWrap instanceof HTMLElement) {

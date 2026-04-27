@@ -24,6 +24,10 @@ import { applyBackendUserLabel } from "../shared/backend_page.js";
 import { initializeBookingSection, setBookingSectionOpen } from "../booking/sections.js";
 import { createTourTravelPlanAdapter } from "./tour_travel_plan_adapter.js";
 import {
+  destinationScopeTourDestinations,
+  readDestinationScopeFromDom
+} from "../shared/destination_scope_editor.js";
+import {
   CUSTOMER_CONTENT_LANGUAGES,
   normalizeLanguageCode
 } from "../../../shared/generated/language_catalog.js";
@@ -82,6 +86,12 @@ function normalizeText(value) {
 
 function staleTourUpdateMessage() {
   return backendT("tour.error.stale_update", "This tour was updated by someone else. Reload before saving.");
+}
+
+function omitDerivedTravelPlanDestinations(plan) {
+  if (!plan || typeof plan !== "object" || Array.isArray(plan)) return plan;
+  const { destinations: _derivedDestinations, ...next } = plan;
+  return next;
 }
 
 const GENERATED_ROLE_LOOKUP = Object.freeze(
@@ -158,6 +168,7 @@ const els = {
   destinationChoices: document.getElementById("tour_destination_choices"),
   stylesHidden: document.getElementById("tour_styles"),
   styleChoices: document.getElementById("tour_style_choices"),
+  travel_plan_destination_scope_editor: document.getElementById("tour_destination_scope_editor"),
   seasonalityStartMonth: document.getElementById("tour_seasonality_start_month"),
   seasonalityEndMonth: document.getElementById("tour_seasonality_end_month"),
   localizedContentEditor: document.getElementById("tour_localized_content_editor"),
@@ -1692,7 +1703,7 @@ async function initializeNewTourForm() {
     short_description_i18n: {},
     pictures: [],
     reel_video: null,
-    travel_plan: { days: [] }
+    travel_plan: { destination_scope: [], destinations: [], days: [] }
   };
 
   state.localizedContent.title_i18n = {};
@@ -1801,6 +1812,13 @@ function getCheckedValues(inputName) {
   return Array.from(document.querySelectorAll(`input[name="${inputName}"]:checked`)).map((el) => String(el.value || "").trim());
 }
 
+function selectedDestinationScopeForSave(travelPlanPayload) {
+  if (els.travel_plan_destination_scope_editor instanceof HTMLElement) {
+    return readDestinationScopeFromDom(els.travel_plan_destination_scope_editor);
+  }
+  return Array.isArray(travelPlanPayload?.destination_scope) ? travelPlanPayload.destination_scope : [];
+}
+
 function buildTourSaveValidationMessage({ title = "", destinations = [], styles = [] }) {
   const missing = [];
   if (!normalizeText(title)) {
@@ -1825,7 +1843,6 @@ async function submitForm(event) {
   clearError();
   clearTitleError();
 
-  const selectedDestinationCountries = getCheckedValues("destinationCountryChoice");
   const selectedStyles = getCheckedValues("styleChoice");
   const title_i18n = readLocalizedFields("title_i18n");
   const short_description_i18n = readLocalizedFields("short_description_i18n");
@@ -1839,6 +1856,12 @@ async function submitForm(event) {
     setStatus(message);
     return;
   }
+  const selectedDestinationScope = selectedDestinationScopeForSave(travelPlanResult.payload);
+  const selectedDestinationCountries = destinationScopeTourDestinations(selectedDestinationScope);
+  const travelPlanPayload = {
+    ...(travelPlanResult.payload || {}),
+    destination_scope: selectedDestinationScope
+  };
   const draftPictureItems = [...state.pictureDraftItems];
   const storedPictures = draftPictureItems
     .filter((item) => item.kind === "stored")
@@ -1857,14 +1880,13 @@ async function submitForm(event) {
   const payload = {
     title: resolvedTitle,
     title_i18n,
-    destinations: selectedDestinationCountries,
     styles: selectedStyles,
     priority: toNumberOrNull(getInput("tour_priority")),
     seasonality_start_month: getInput("tour_seasonality_start_month"),
     seasonality_end_month: getInput("tour_seasonality_end_month"),
     short_description_i18n,
     pictures: storedPictures,
-    travel_plan: travelPlanResult.payload
+    travel_plan: omitDerivedTravelPlanDestinations(travelPlanPayload)
   };
   const expectedUpdatedAt = normalizeText(state.tour?.updated_at);
   if (!state.is_create_mode && expectedUpdatedAt) {
@@ -1873,7 +1895,7 @@ async function submitForm(event) {
 
   const validationMessage = buildTourSaveValidationMessage({
     title: payload.title,
-    destinations: payload.destinations,
+    destinations: selectedDestinationCountries,
     styles: payload.styles
   });
   if (validationMessage) {
@@ -2255,9 +2277,8 @@ function updateHeader(tour, destinations, styles) {
 }
 
 function tour_destinations(tour) {
-  if (Array.isArray(tour?.destinations) && tour.destinations.length) {
-    return tour.destinations.map((value) => String(value || "").trim()).filter(Boolean);
-  }
+  const scoped = destinationScopeTourDestinations(tour?.travel_plan?.destination_scope);
+  if (scoped.length) return scoped;
   return [];
 }
 

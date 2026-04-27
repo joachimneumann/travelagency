@@ -19,6 +19,7 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
   const staffRoot = path.join(contentRoot, "atp_staff");
   const frontendDataDir = path.join(root, "frontend", "data", "generated", "homepage");
   const frontendI18nDir = path.join(root, "frontend", "data", "i18n", "frontend");
+  const storePath = path.join(root, "backend", "app", "data", "store.json");
   const tourOutputDir = path.join(root, "assets", "generated", "homepage", "tours");
   const teamOutputDir = path.join(root, "assets", "generated", "homepage", "team");
   const homepageHtmlPath = path.join(root, "frontend", "pages", "index.html");
@@ -59,10 +60,23 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
     id: "tour_alpha",
     title: { en: "Alpha tour", de: "Alpha Reise" },
     short_description: { en: "Alpha description", de: "Alpha Beschreibung" },
-    destinations: ["vietnam", "thailand"],
     styles: ["budget"],
     image: "/public/v1/tour-images/tour_alpha/alpha.png",
     travel_plan: {
+      destination_scope: [
+        {
+          destination: "VN",
+          areas: [
+            {
+              area_id: "area_central",
+              places: [
+                { place_id: "place_hoi_an" }
+              ]
+            }
+          ]
+        },
+        { destination: "TH", areas: [] }
+      ],
       days: [
         {
           day_number: 1,
@@ -91,13 +105,30 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
     id: "tour_hidden",
     title: { en: "Hidden tour" },
     short_description: { en: "Should not appear" },
-    destinations: ["thailand"],
     styles: ["luxury"],
     image: "/public/v1/tour-images/tour_hidden/hidden.png",
+    travel_plan: {
+      destination_scope: [
+        { destination: "TH", areas: [] }
+      ],
+      days: []
+    },
     priority: 20,
     updated_at: "2026-04-14T10:00:00.000Z"
   });
   await writeFile(path.join(toursRoot, "tour_hidden", "hidden.png"), Buffer.from(TINY_PNG_BASE64, "base64"));
+
+  await writeJson(storePath, {
+    destination_scope_destinations: [
+      { code: "VN", label: "Vietnam", sort_order: 1 }
+    ],
+    destination_areas: [
+      { id: "area_central", destination: "VN", code: "central", name: "Central", sort_order: 1 }
+    ],
+    destination_places: [
+      { id: "place_hoi_an", area_id: "area_central", code: "hoi-an", name: "Hoi An", sort_order: 1 }
+    ]
+  });
 
   await writeJson(path.join(staffRoot, "staff.json"), {
     staff: {
@@ -151,6 +182,7 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
     toursRoot,
     staffRoot,
     countryReferenceInfoPath: path.join(contentRoot, "country_reference_info.json"),
+    storePath,
     frontendDataDir,
     tourOutputDir,
     teamOutputDir,
@@ -177,6 +209,11 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
   assert.equal(publicToursEn.items[0].id, "tour_alpha");
   assert.deepEqual(publicToursEn.items[0].destination_codes, ["vietnam"]);
   assert.deepEqual(publicToursEn.available_destinations, [{ code: "vietnam", label: "Vietnam" }]);
+  assert.deepEqual(publicToursEn.available_destination_scope_catalog, {
+    destinations: [{ code: "vietnam", country_code: "VN", label: "Vietnam" }],
+    areas: [{ id: "area_central", destination: "vietnam", country_code: "VN", code: "central", label: "Central" }],
+    places: [{ id: "place_hoi_an", area_id: "area_central", code: "hoi-an", label: "Hoi An" }]
+  });
   assert.match(publicToursEn.items[0].pictures[0], /^\/assets\/generated\/homepage\/tours\/tour_alpha\/alpha\.(png|webp)\?v=/);
   assert.match(
     publicToursEn.items[0].travel_plan.days[0].services[0].image.storage_path,
@@ -273,6 +310,7 @@ test("generatePublicHomepageAssets falls back when a visible tour image is missi
   const staffRoot = path.join(contentRoot, "atp_staff");
   const frontendDataDir = path.join(root, "frontend", "data", "generated", "homepage");
   const frontendI18nDir = path.join(root, "frontend", "data", "i18n", "frontend");
+  const storePath = path.join(root, "backend", "app", "data", "store.json");
   const tourOutputDir = path.join(root, "assets", "generated", "homepage", "tours");
   const teamOutputDir = path.join(root, "assets", "generated", "homepage", "team");
 
@@ -283,12 +321,18 @@ test("generatePublicHomepageAssets falls back when a visible tour image is missi
     "hero.title_with_destinations": "Private holidays in {destinations}"
   });
   await writeJson(path.join(contentRoot, "country_reference_info.json"), { items: [] });
+  await writeJson(storePath, {});
   await writeJson(path.join(toursRoot, "tour_missing_image", "tour.json"), {
     id: "tour_missing_image",
     title: { en: "Missing image tour" },
     short_description: { en: "Visible but stale image reference" },
-    destinations: ["vietnam"],
     image: "/public/v1/tour-images/tour_missing_image/missing.png",
+    travel_plan: {
+      destination_scope: [
+        { destination: "VN", areas: [] }
+      ],
+      days: []
+    },
     priority: 10,
     updated_at: "2026-04-14T12:34:56.000Z"
   });
@@ -297,6 +341,7 @@ test("generatePublicHomepageAssets falls back when a visible tour image is missi
     toursRoot,
     staffRoot,
     countryReferenceInfoPath: path.join(contentRoot, "country_reference_info.json"),
+    storePath,
     frontendDataDir,
     tourOutputDir,
     teamOutputDir,
@@ -304,7 +349,9 @@ test("generatePublicHomepageAssets falls back when a visible tour image is missi
     languages: ["en"]
   });
 
+  const homepageCopy = await stat(path.join(frontendDataDir, "public-homepage-copy.global.js"));
   const publicToursEn = JSON.parse(await readFile(path.join(frontendDataDir, "public-tours.en.json"), "utf8"));
+  assert.ok(homepageCopy.isFile());
   assert.equal(publicToursEn.items.length, 1);
   assert.equal(publicToursEn.items[0].id, "tour_missing_image");
   assert.deepEqual(publicToursEn.items[0].pictures, []);
@@ -318,8 +365,10 @@ test("generatePublicHomepageAssets fails when a visible staff photo is missing",
   const staffRoot = path.join(contentRoot, "atp_staff");
   const frontendDataDir = path.join(root, "frontend", "data", "generated", "homepage");
   const frontendI18nDir = path.join(root, "frontend", "data", "i18n", "frontend");
+  const storePath = path.join(root, "backend", "app", "data", "store.json");
   const tourOutputDir = path.join(root, "assets", "generated", "homepage", "tours");
   const teamOutputDir = path.join(root, "assets", "generated", "homepage", "team");
+  const homepageCopyGlobalPath = path.join(frontendDataDir, "public-homepage-copy.global.js");
 
   await mkdir(toursRoot, { recursive: true });
   await mkdir(path.join(staffRoot, "photos"), { recursive: true });
@@ -330,6 +379,7 @@ test("generatePublicHomepageAssets fails when a visible staff photo is missing",
     "hero.title_with_destinations": "Private holidays in {destinations}"
   });
   await writeJson(path.join(contentRoot, "country_reference_info.json"), { items: [] });
+  await writeJson(storePath, {});
   await writeJson(path.join(staffRoot, "staff.json"), {
     staff: {
       vic: {
@@ -345,10 +395,12 @@ test("generatePublicHomepageAssets fails when a visible staff photo is missing",
       toursRoot,
       staffRoot,
       countryReferenceInfoPath: path.join(contentRoot, "country_reference_info.json"),
+      storePath,
       frontendDataDir,
       tourOutputDir,
       teamOutputDir,
       frontendI18nDir,
+      homepageCopyGlobalPath,
       languages: ["en"]
     }),
     /Public staff profile "vic" is missing a usable picture file/

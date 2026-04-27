@@ -6,6 +6,10 @@ import {
   sortTourStyleCodes
 } from "../domain/tour_catalog_i18n.js";
 import {
+  destinationScopeDestinations,
+  normalizeDestinationScope
+} from "../domain/destination_scope.js";
+import {
   CUSTOMER_CONTENT_LANGUAGE_CODES,
   languageByApiValue,
   languageByCode
@@ -272,7 +276,10 @@ export function normalizeSingleBookingPersonPayload(bookingId, person, fallbackI
 }
 
 export function getBookingTravelPlanDestinations(booking) {
-  return normalizeCountryCodes(booking?.travel_plan?.destinations || booking?.destinations);
+  const scopedDestinations = destinationScopeDestinations(booking?.travel_plan?.destination_scope);
+  return scopedDestinations.length
+    ? scopedDestinations
+    : normalizeCountryCodes(booking?.travel_plan?.destinations || booking?.destinations);
 }
 
 export function setBookingTravelPlanDestinations(booking, destinations) {
@@ -280,8 +287,16 @@ export function setBookingTravelPlanDestinations(booking, destinations) {
   const currentTravelPlan = booking?.travel_plan && typeof booking.travel_plan === "object" && !Array.isArray(booking.travel_plan)
     ? booking.travel_plan
     : {};
+  const nextDestinationScope = normalizeDestinationScope(currentTravelPlan.destination_scope, nextDestinations)
+    .filter((entry) => nextDestinations.includes(entry.destination));
+  for (const destination of nextDestinations) {
+    if (!nextDestinationScope.some((entry) => entry.destination === destination)) {
+      nextDestinationScope.push({ destination, areas: [] });
+    }
+  }
   booking.travel_plan = {
     ...currentTravelPlan,
+    destination_scope: normalizeDestinationScope(nextDestinationScope),
     destinations: nextDestinations
   };
   return booking.travel_plan;
@@ -340,9 +355,13 @@ export function normalizeStoredBookingRecord(booking, _store = {}) {
   const normalizedTravelPlan = booking?.travel_plan && typeof booking.travel_plan === "object" && !Array.isArray(booking.travel_plan)
     ? {
         ...booking.travel_plan,
+        destination_scope: normalizeDestinationScope(booking.travel_plan.destination_scope, normalizedDestinations),
         destinations: normalizedDestinations
       }
-    : (normalizedDestinations.length ? { destinations: normalizedDestinations } : booking?.travel_plan);
+    : (normalizedDestinations.length ? {
+        destination_scope: normalizeDestinationScope([], normalizedDestinations),
+        destinations: normalizedDestinations
+      } : booking?.travel_plan);
   const normalizedBooking = {
     ...bookingWithoutLegacyFields,
     customer_language: optionalLanguageCode(booking?.customer_language || booking?.web_form_submission?.preferred_language),

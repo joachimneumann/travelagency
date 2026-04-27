@@ -748,10 +748,12 @@ test("public booking request inherits the selected marketing tour travel plan wi
         method: "POST",
         body: {
           title: tourTitle,
-          destinations: ["vietnam"],
           styles: ["culture"],
           short_description: "Marketing tour selected from the public booking form",
           travel_plan: {
+            destination_scope: [
+              { destination: "VN", areas: [] }
+            ],
             days: [
               {
                 id: "public_booking_source_day_1",
@@ -2460,10 +2462,12 @@ test("marketing tour apply copies the marketing travel plan into a booking trave
         method: "POST",
         body: {
           title: tourTitle,
-          destinations: ["vietnam"],
           styles: ["culture"],
           short_description: "Marketing tour with a reusable travel plan",
           travel_plan: {
+            destination_scope: [
+              { destination: "VN", areas: [] }
+            ],
             days: [
               {
                 id: "marketing_tour_source_day_1",
@@ -6098,10 +6102,15 @@ test("tour editor can manage tours while staff cannot access tour endpoints", as
       method: "POST",
       body: {
         title: "Tour editor access test",
-        destinations: ["vietnam"],
         styles: ["culture"],
         short_description: "Editor-created tour",
-        priority: 42
+        priority: 42,
+        travel_plan: {
+          destination_scope: [
+            { destination: "VN", areas: [] }
+          ],
+          days: []
+        }
       }
     }
   );
@@ -6305,9 +6314,14 @@ test("public tours only expose destinations published on webpage and hide unpubl
         method: "POST",
         body: {
           title: "Public Vietnam destination visibility test",
-          destinations: ["vietnam"],
           styles: ["culture"],
-          short_description: "Visible public test tour"
+          short_description: "Visible public test tour",
+          travel_plan: {
+            destination_scope: [
+              { destination: "VN", areas: [] }
+            ],
+            days: []
+          }
         }
       }
     );
@@ -6321,10 +6335,12 @@ test("public tours only expose destinations published on webpage and hide unpubl
         method: "POST",
         body: {
           title: "Public Laos destination visibility test",
-          destinations: ["laos"],
           styles: ["culture"],
           short_description: "Hidden public test tour",
           travel_plan: {
+            destination_scope: [
+              { destination: "LA", areas: [] }
+            ],
             days: [
               {
                 id: "hidden_public_tour_day_1",
@@ -6409,9 +6425,14 @@ test("tour delete is blocked while bookings still reference the tour", async () 
         method: "POST",
       body: {
         title: "Tour delete guard test",
-        destinations: ["vietnam"],
         styles: ["culture"],
-        short_description: "Tour kept by booking reference"
+        short_description: "Tour kept by booking reference",
+        travel_plan: {
+          destination_scope: [
+            { destination: "VN", areas: [] }
+          ],
+          days: []
+        }
       }
       }
     );

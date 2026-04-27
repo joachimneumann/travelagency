@@ -227,6 +227,7 @@ export function createBookingHandlers(deps) {
   function defaultInitialBookingTravelPlan(destinations) {
     return {
       ...defaultBookingTravelPlan(),
+      destination_scope: destinations.map((destination) => ({ destination, areas: [] })),
       destinations
     };
   }
@@ -1023,6 +1024,7 @@ export function createBookingHandlers(deps) {
     const travelerCount = payload?.number_of_travelers === undefined || payload?.number_of_travelers === null || payload?.number_of_travelers === ""
       ? null
       : safeInt(payload.number_of_travelers);
+    const destinations = normalizeCountryCodes(payload?.destinations, normalizeText);
     const booking = {
       id: bookingId,
       customer_language: preferredLanguage,
@@ -1044,7 +1046,8 @@ export function createBookingHandlers(deps) {
       persons: [],
       travel_plan: {
         ...defaultBookingTravelPlan(),
-        destinations: normalizeCountryCodes(payload?.destinations, normalizeText)
+        destination_scope: destinations.map((destination) => ({ destination, areas: [] })),
+        destinations
       },
       offer: defaultBookingOffer(preferredCurrency),
       generated_offers: [],

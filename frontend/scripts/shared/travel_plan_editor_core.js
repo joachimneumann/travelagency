@@ -56,6 +56,13 @@ import {
   translationBusyText
 } from "../booking/translation_status.js";
 import { setBookingPageOverlay } from "../booking/page_overlay.js";
+import {
+  destinationScopeDestinations,
+  normalizeDestinationScope,
+  normalizeDestinationScopeCatalog,
+  readDestinationScopeFromDom,
+  renderDestinationScopeEditor
+} from "./destination_scope_editor.js";
 
 export function createBookingTravelPlanModule(ctx) {
   const {
@@ -104,7 +111,22 @@ export function createBookingTravelPlanModule(ctx) {
   const allowTranslation = isFeatureEnabled("translation");
   const allowRenumberDays = isFeatureEnabled("renumberDays", allowDates);
   const allowPdfs = isFeatureEnabled("pdfs");
+  const allowDestinationScope = isFeatureEnabled("destinationScope");
+  const allowDestinationScopeCreate = isFeatureEnabled("destinationScopeCreate", false);
   const pruneEmptyTravelPlanContentOnCollect = isFeatureEnabled("pruneEmptyTravelPlanContentOnCollect", false);
+
+  function destinationScopeEditorRoot() {
+    if (els.travel_plan_destination_scope_editor instanceof HTMLElement) {
+      return els.travel_plan_destination_scope_editor;
+    }
+    return els.travel_plan_editor;
+  }
+
+  function usesExternalDestinationScopeEditor() {
+    return allowDestinationScope
+      && els.travel_plan_destination_scope_editor instanceof HTMLElement
+      && els.travel_plan_destination_scope_editor !== els.travel_plan_editor;
+  }
 
   function logTravelPlanSave(message, details = {}) {
     const payload = details && typeof details === "object" ? { ...details } : { details };
@@ -117,6 +139,92 @@ export function createBookingTravelPlanModule(ctx) {
     url.searchParams.set("content_lang", query.content_lang);
     url.searchParams.set("source_lang", query.source_lang);
     return url.toString();
+  }
+
+  function withBackendLangQuery(urlLike) {
+    const url = new URL(urlLike, window.location.origin);
+    const lang = typeof window.backendI18n?.getLang === "function" ? window.backendI18n.getLang() : "";
+    if (lang && !url.searchParams.has("lang")) url.searchParams.set("lang", lang);
+    return url.toString();
+  }
+
+  async function loadDestinationScopeCatalog({ force = false } = {}) {
+    if (!allowDestinationScope) return null;
+    if (state.destinationScopeCatalog && !force) return state.destinationScopeCatalog;
+    try {
+      const url = withBackendLangQuery(`${apiOrigin}/api/v1/destination-scope/catalog`);
+      const response = await fetchBookingMutation(url, { method: "GET" });
+      state.destinationScopeCatalog = normalizeDestinationScopeCatalog(response);
+    } catch (error) {
+      logBrowserConsoleError("[destination-scope] Failed to load destination scope catalog.", {
+        booking_id: state.booking?.id || null
+      }, error);
+      state.destinationScopeCatalog = normalizeDestinationScopeCatalog({});
+    }
+    return state.destinationScopeCatalog;
+  }
+
+  async function createDestinationScopeArea(destination) {
+    const name = window.prompt(bookingT("booking.travel_plan.add_area_prompt", "Area name"));
+    const normalizedName = String(name || "").trim();
+    if (!normalizedName) return false;
+    const url = withBackendLangQuery(`${apiOrigin}/api/v1/destination-scope/areas`);
+    const result = await fetchBookingMutation(url, {
+      method: "POST",
+      body: {
+        destination,
+        name: normalizedName
+      }
+    });
+    if (!result) return false;
+    if (result.catalog) state.destinationScopeCatalog = normalizeDestinationScopeCatalog(result.catalog);
+    if (result?.area?.id) {
+      state.travelPlanDraft.destination_scope = normalizeDestinationScope([
+        ...normalizeDestinationScope(state.travelPlanDraft.destination_scope),
+        {
+          destination,
+          areas: [{ area_id: result.area.id, places: [] }]
+        }
+      ]);
+      renderTravelPlanPanel();
+      return true;
+    }
+    await loadDestinationScopeCatalog({ force: true });
+    renderTravelPlanPanel();
+    return true;
+  }
+
+  async function createDestinationScopePlace(areaId) {
+    const name = window.prompt(bookingT("booking.travel_plan.add_place_prompt", "Place name"));
+    const normalizedName = String(name || "").trim();
+    if (!normalizedName) return false;
+    const url = withBackendLangQuery(`${apiOrigin}/api/v1/destination-scope/places`);
+    const result = await fetchBookingMutation(url, {
+      method: "POST",
+      body: {
+        area_id: areaId,
+        name: normalizedName
+      }
+    });
+    if (!result) return false;
+    if (result.catalog) state.destinationScopeCatalog = normalizeDestinationScopeCatalog(result.catalog);
+    if (result?.place?.id) {
+      const scope = normalizeDestinationScope(state.travelPlanDraft.destination_scope);
+      for (const entry of scope) {
+        const area = (Array.isArray(entry.areas) ? entry.areas : []).find((item) => item.area_id === areaId);
+        if (!area) continue;
+        area.places = Array.isArray(area.places) ? area.places : [];
+        if (!area.places.some((place) => place.place_id === result.place.id)) {
+          area.places.push({ place_id: result.place.id });
+        }
+      }
+      state.travelPlanDraft.destination_scope = normalizeDestinationScope(scope);
+      renderTravelPlanPanel();
+      return true;
+    }
+    await loadDestinationScopeCatalog({ force: true });
+    renderTravelPlanPanel();
+    return true;
   }
 
   function findDraftDay(dayId) {
@@ -360,7 +468,10 @@ export function createBookingTravelPlanModule(ctx) {
 
   function normalizeTravelPlanForEnabledFeatures(plan) {
     const source = plan && typeof plan === "object" && !Array.isArray(plan) ? plan : {};
+    const destination_scope = normalizeDestinationScope(source.destination_scope);
     const next = {
+      destination_scope,
+      destinations: destinationScopeDestinations(destination_scope),
       days: (Array.isArray(source.days) ? source.days : []).map((day, dayIndex) => {
         const sourceDay = day && typeof day === "object" && !Array.isArray(day) ? day : {};
         const nextDay = {
@@ -1746,6 +1857,10 @@ export function createBookingTravelPlanModule(ctx) {
         .map((item) => [item.id, item])
     );
     const draft = createEmptyTravelPlan();
+    if (allowDestinationScope) {
+      draft.destination_scope = readDestinationScopeFromDom(destinationScopeEditorRoot());
+      draft.destinations = destinationScopeDestinations(draft.destination_scope);
+    }
     draft.days = Array.from(els.travel_plan_editor.querySelectorAll("[data-travel-plan-day]")).map((dayNode, dayIndex) => {
       const dayId = String(dayNode.getAttribute("data-travel-plan-day") || "").trim();
       const day = createEmptyTravelPlanDay(dayIndex);
@@ -3246,6 +3361,8 @@ export function createBookingTravelPlanModule(ctx) {
         const shouldRerender = Boolean(
           target?.matches?.('[data-travel-plan-service-field="timing_kind"]')
           || target?.matches?.('[data-travel-plan-service-field="kind"]')
+          || target?.matches?.("[data-destination-scope-destination]")
+          || target?.matches?.("[data-destination-scope-area]")
         );
         if (shouldRerender) {
           renderTravelPlanPanel();
@@ -3264,6 +3381,14 @@ export function createBookingTravelPlanModule(ctx) {
         }
         const button = event.target.closest("button");
         if (!button) return;
+        if (button.hasAttribute("data-destination-scope-add-area")) {
+          void createDestinationScopeArea(button.getAttribute("data-destination-scope-add-area"));
+          return;
+        }
+        if (button.hasAttribute("data-destination-scope-add-place")) {
+          void createDestinationScopePlace(button.getAttribute("data-destination-scope-add-place"));
+          return;
+        }
         if (button.hasAttribute("data-travel-plan-add-day")) {
           addDay();
           return;
@@ -3370,6 +3495,38 @@ export function createBookingTravelPlanModule(ctx) {
       window.setTimeout(() => {
         warnIfTravelPlanControlsMissing("post-load-watchdog");
       }, 1500);
+    }
+    const externalDestinationScopeRoot = destinationScopeEditorRoot();
+    if (
+      externalDestinationScopeRoot
+      && externalDestinationScopeRoot !== els.travel_plan_editor
+      && externalDestinationScopeRoot.dataset.travelPlanDestinationScopeBound !== "true"
+    ) {
+      externalDestinationScopeRoot.addEventListener("change", (event) => {
+        const target = event.target;
+        syncTravelPlanDraftFromDom();
+        updateTravelPlanDirtyState();
+        renderBookingSectionHeader(els.travel_plan_panel_summary, travelPlanSummary());
+        renderTravelPlanTranslationPanel();
+        if (
+          target?.matches?.("[data-destination-scope-destination]")
+          || target?.matches?.("[data-destination-scope-area]")
+        ) {
+          renderTravelPlanPanel();
+        }
+      });
+      externalDestinationScopeRoot.addEventListener("click", (event) => {
+        const button = event.target.closest("button");
+        if (!button) return;
+        if (button.hasAttribute("data-destination-scope-add-area")) {
+          void createDestinationScopeArea(button.getAttribute("data-destination-scope-add-area"));
+          return;
+        }
+        if (button.hasAttribute("data-destination-scope-add-place")) {
+          void createDestinationScopePlace(button.getAttribute("data-destination-scope-add-place"));
+        }
+      });
+      externalDestinationScopeRoot.dataset.travelPlanDestinationScopeBound = "true";
     }
     if (els.travel_plan_translation_panel && els.travel_plan_translation_panel.dataset.travelPlanBound !== "true") {
       els.travel_plan_translation_panel.addEventListener("input", (event) => {
@@ -3486,6 +3643,9 @@ export function createBookingTravelPlanModule(ctx) {
   function renderTravelPlanPanel() {
     if (!els.travel_plan_panel || !els.travel_plan_editor || !state.booking) return;
     state.travelPlanDraft = normalizeTravelPlanState(state.travelPlanDraft || state.booking.travel_plan);
+    if (allowDestinationScope && !state.destinationScopeCatalog) {
+      void loadDestinationScopeCatalog().then(() => renderTravelPlanPanel());
+    }
     syncTravelPlanCollapsedServiceIds();
     renderBookingSectionHeader(els.travel_plan_panel_summary, travelPlanSummary());
     const hasDays = Array.isArray(state.travelPlanDraft.days) && state.travelPlanDraft.days.length > 0;
@@ -3498,7 +3658,21 @@ export function createBookingTravelPlanModule(ctx) {
     const primaryActionRowClass = allowDayImport
       ? "travel-plan-footer__action-row travel-plan-footer__action-row--double"
       : "travel-plan-footer__action-row";
+    const destinationScopeMarkup = allowDestinationScope
+      ? renderDestinationScopeEditor({
+          catalog: state.destinationScopeCatalog,
+          scope: state.travelPlanDraft.destination_scope,
+          escapeHtml,
+          canEdit: state.permissions.canEditBooking,
+          allowCreate: allowDestinationScopeCreate,
+          t: bookingT
+        })
+      : "";
+    if (usesExternalDestinationScopeEditor()) {
+      els.travel_plan_destination_scope_editor.innerHTML = destinationScopeMarkup;
+    }
     els.travel_plan_editor.innerHTML = `
+      ${usesExternalDestinationScopeEditor() ? "" : destinationScopeMarkup}
       ${(Array.isArray(state.travelPlanDraft.days) ? state.travelPlanDraft.days : []).map((day, dayIndex) => renderTravelPlanDay(day, dayIndex)).join("") || `<p class="travel-plan-empty">${escapeHtml(bookingT("booking.travel_plan.no_days", "No travel-plan days yet."))}</p>`}
       <div class="travel-plan-footer">
         <div class="travel-plan-footer__action-rows">

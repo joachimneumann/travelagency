@@ -292,15 +292,18 @@
                     <option value=""></option>
                   </select>
                 </div>
-                <div class="field">
+                <div class="field" hidden>
                   <span class="field-label" data-i18n-id="tour.destinations_label">Destinations</span>
-                  <input id="tour_destinations" name="destinations" type="hidden" required />
+                  <input id="tour_destinations" name="destinations" type="hidden" />
                   <div id="tour_destination_choices" class="backend-checkbox-grid"></div>
                 </div>
-                <div class="field">
+                <div class="field full">
                   <span class="field-label" data-i18n-id="tour.styles_label">Tour Styles</span>
                   <input id="tour_styles" name="styles" type="hidden" required />
                   <div id="tour_style_choices" class="backend-checkbox-grid"></div>
+                </div>
+                <div class="field full">
+                  <div id="tour_destination_scope_editor"></div>
                 </div>
                 <div class="field">
                   <label for="tour_priority" data-i18n-id="tour.priority_label">Web page ranking priority (0-100)</label>

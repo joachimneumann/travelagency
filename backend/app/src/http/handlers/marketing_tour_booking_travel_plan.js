@@ -2,6 +2,7 @@ import { existsSync } from "node:fs";
 import {
   normalizeBookingContentLang
 } from "../../domain/booking_content_i18n.js";
+import { normalizeDestinationScope } from "../../domain/destination_scope.js";
 import {
   DESTINATION_COUNTRY_CODES,
   TOUR_DESTINATION_TO_COUNTRY_CODE
@@ -228,8 +229,10 @@ export function createMarketingTourBookingTravelPlanCloner(deps) {
     });
     const createdAt = nowIso();
     const bookingId = normalizeText(booking?.id);
+    const destinations = bookingDestinationCodesFromTour(tour);
     return {
-      destinations: bookingDestinationCodesFromTour(tour),
+      destination_scope: normalizeDestinationScope(normalized.destination_scope, destinations),
+      destinations,
       days: await Promise.all((Array.isArray(normalized.days) ? normalized.days : []).map((day, dayIndex) => (
         cloneMarketingTourDayForBooking(day, {
           dayIndex,

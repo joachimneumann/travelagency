@@ -131,39 +131,43 @@
         </video>
         <div class="hero-scrim" aria-hidden="true"></div>
         <div class="container hero-content">
-          <h1 id="heroTitle" class="hero-title-only" data-i18n-id="hero.title">Private holidays in Vietnam, Thailand, Cambodia and Laos</h1>
+          <h1 id="heroTitle" class="hero-title-only" data-i18n-id="hero.title">Private Holidays in Southeast Asia</h1>
           <div class="filter-menu filter-menu--hero" aria-label="Primary browse menu" data-i18n-aria-label-id="a11y.browse_menu">
-              <div id="navDestinationWrap" class="select-wrap" hidden>
-              <button
-                id="navDestinationTrigger"
-                class="filter-select-trigger"
-                type="button"
-                aria-expanded="false"
-                aria-controls="navDestinationPanel"
-              >
-                <span id="navDestinationSummary" data-i18n-id="filters.all_destinations">All destinations</span>
-                <span class="filter-select-trigger__caret" aria-hidden="true">▾</span>
-              </button>
-              <div id="navDestinationPanel" class="filter-select-panel" hidden>
-                <div id="navDestinationOptions" class="filter-checkbox-list" role="group" aria-label="Destination filters" data-i18n-aria-label-id="a11y.destination_filters"></div>
-              </div>
-            </div>
+            <div class="filter-menu--hero__filters">
               <div class="select-wrap">
-              <button
-                id="navStyleTrigger"
-                class="filter-select-trigger"
-                type="button"
-                aria-expanded="false"
-                aria-controls="navStylePanel"
-              >
-                <span id="navStyleSummary" data-i18n-id="filters.all_styles">All travel styles</span>
-                <span class="filter-select-trigger__caret" aria-hidden="true">▾</span>
-              </button>
-              <div id="navStylePanel" class="filter-select-panel" hidden>
-                <div id="navStyleOptions" class="filter-checkbox-list" role="group" aria-label="Travel style filters" data-i18n-aria-label-id="a11y.style_filters"></div>
+                <button
+                  id="navStyleTrigger"
+                  class="filter-select-trigger"
+                  type="button"
+                  aria-expanded="false"
+                  aria-controls="navStylePanel"
+                >
+                  <span id="navStyleSummary" data-i18n-id="filters.all_styles">All travel styles</span>
+                  <span class="filter-select-trigger__caret" aria-hidden="true">▾</span>
+                </button>
+                <div id="navStylePanel" class="filter-select-panel" hidden>
+                  <div id="navStyleOptions" class="filter-checkbox-list" role="group" aria-label="Travel style filters" data-i18n-aria-label-id="a11y.style_filters"></div>
+                </div>
+              </div>
+              <div id="navDestinationWrap" class="select-wrap">
+                <button
+                  id="navDestinationTrigger"
+                  class="filter-select-trigger"
+                  type="button"
+                  aria-expanded="false"
+                  aria-controls="navDestinationPanel"
+                >
+                  <span id="navDestinationSummary" data-i18n-id="filters.all_destinations">All destinations</span>
+                  <span class="filter-select-trigger__caret" aria-hidden="true">▾</span>
+                </button>
+                <div id="navDestinationPanel" class="filter-select-panel hero-destination-panel" hidden>
+                  <div id="navDestinationOptions" class="hero-destination-menu" role="menu" aria-label="Destination filters" data-i18n-aria-label-id="a11y.destination_filters"></div>
+                </div>
               </div>
             </div>
-            <button id="viewToursBtn" class="btn btn-primary btn-primary--hero" type="button">View tours</button>
+            <div class="filter-menu--hero__cta">
+              <button id="viewToursBtn" class="btn btn-primary btn-primary--hero" type="button">View tours</button>
+            </div>
           </div>
         </div>
       </section>

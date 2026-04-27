@@ -2,6 +2,11 @@ import path from "node:path";
 import { normalizeText } from "../lib/text.js";
 import { normalizeStringArray } from "../lib/collection_utils.js";
 import {
+  destinationScopeDestinations,
+  normalizeDestinationScope,
+  destinationScopeTourDestinations
+} from "./destination_scope.js";
+import {
   TOUR_STYLE_CODE_CATALOG,
   buildTourDestinationOption,
   buildTourStyleOption,
@@ -75,7 +80,10 @@ export function createTourHelpers({ toursDir, safeInt, normalizeMarketingTourTra
     if (typeof normalizeMarketingTourTravelPlan === "function") {
       return normalizeMarketingTourTravelPlan(value, options);
     }
+    const destinationScope = normalizeDestinationScope(value?.destination_scope);
     return {
+      destination_scope: destinationScope,
+      destinations: destinationScopeDestinations(destinationScope),
       days: Array.isArray(value?.days) ? value.days : []
     };
   }
@@ -113,9 +121,7 @@ export function createTourHelpers({ toursDir, safeInt, normalizeMarketingTourTra
   }
 
   function tourDestinationCodes(tour) {
-    return sortTourDestinationCodes(
-      normalizeStringArray(tour?.destinations).map((value) => normalizeTourDestinationCode(value)).filter(Boolean)
-    );
+    return sortTourDestinationCodes(destinationScopeTourDestinations(tour?.travel_plan?.destination_scope));
   }
 
   function tourStyleCodes(tour) {
@@ -198,7 +204,6 @@ export function createTourHelpers({ toursDir, safeInt, normalizeMarketingTourTra
     next.short_description = normalizeLocalizedTextMap(
       hasLocalizedContent(next.short_description) ? next.short_description : legacyShortDescription
     );
-    next.destinations = tourDestinationCodes(next);
     next.styles = tourStyleCodes(next);
     next.pictures = normalizeTourPictureList(next.pictures, next.image, next.id);
     delete next.image;
@@ -206,8 +211,11 @@ export function createTourHelpers({ toursDir, safeInt, normalizeMarketingTourTra
     if (video) next.video = video;
     else delete next.video;
     if (next.travel_plan !== undefined) {
-      next.travel_plan = normalizeTourTravelPlan(next.travel_plan);
+      const normalizedTravelPlan = normalizeTourTravelPlan(next.travel_plan);
+      const { destinations: _derivedDestinations, ...travelPlanWithoutDerivedDestinations } = normalizedTravelPlan;
+      next.travel_plan = travelPlanWithoutDerivedDestinations;
     }
+    delete next.destinations;
     next.seasonality_start_month = normalizeText(next.seasonality_start_month);
     next.seasonality_end_month = normalizeText(next.seasonality_end_month);
     next.priority = safeInt(next.priority) ?? 50;

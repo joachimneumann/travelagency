@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-04-26T17:02:43Z
+# 2026-04-27T11:22:41Z
 
 ---
 openapi: 3.1.0
@@ -4033,10 +4033,47 @@ components:
         notes:
           type: string
           nullable: true
+    TravelPlanDestinationPlaceSelection:
+      type: object
+      required:
+      - place_id
+      properties:
+        place_id:
+          type: string
+    TravelPlanDestinationAreaSelection:
+      type: object
+      required:
+      - area_id
+      properties:
+        area_id:
+          type: string
+        places:
+          type: array
+          items:
+            "$ref": "#/components/schemas/TravelPlanDestinationPlaceSelection"
+    TravelPlanDestinationScopeEntry:
+      type: object
+      required:
+      - destination
+      properties:
+        destination:
+          "$ref": "#/components/schemas/CountryCode"
+        areas:
+          type: array
+          items:
+            "$ref": "#/components/schemas/TravelPlanDestinationAreaSelection"
     TravelPlan:
       type: object
       required: []
       properties:
+        destination_scope:
+          type: array
+          items:
+            "$ref": "#/components/schemas/TravelPlanDestinationScopeEntry"
+        destinations:
+          type: array
+          items:
+            "$ref": "#/components/schemas/CountryCode"
         days:
           type: array
           items:
@@ -4421,6 +4458,10 @@ components:
       type: object
       required: []
       properties:
+        destination_scope:
+          type: array
+          items:
+            "$ref": "#/components/schemas/TravelPlanDestinationScopeEntry"
         destinations:
           type: array
           items:
@@ -5675,6 +5716,152 @@ components:
             "$ref": "#/components/schemas/TravelPlanServiceSearchResult"
         total:
           type: integer
+    DestinationScopeCatalogDestination:
+      type: object
+      required:
+      - code
+      - label
+      - sort_order
+      - is_active
+      properties:
+        code:
+          "$ref": "#/components/schemas/CountryCode"
+        label:
+          type: string
+        sort_order:
+          type: integer
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          nullable: true
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+    DestinationArea:
+      type: object
+      required:
+      - id
+      - destination
+      - code
+      - name
+      - label
+      - sort_order
+      - is_active
+      properties:
+        id:
+          type: string
+        destination:
+          "$ref": "#/components/schemas/CountryCode"
+        code:
+          type: string
+        name:
+          type: string
+        name_i18n:
+          type: object
+          additionalProperties:
+            type: string
+          nullable: true
+        label:
+          type: string
+        sort_order:
+          type: integer
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          nullable: true
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+    DestinationPlace:
+      type: object
+      required:
+      - id
+      - area_id
+      - code
+      - name
+      - label
+      - sort_order
+      - is_active
+      properties:
+        id:
+          type: string
+        area_id:
+          type: string
+        code:
+          type: string
+        name:
+          type: string
+        name_i18n:
+          type: object
+          additionalProperties:
+            type: string
+          nullable: true
+        label:
+          type: string
+        sort_order:
+          type: integer
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          nullable: true
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+    DestinationScopeCatalogResponse:
+      type: object
+      required: []
+      properties:
+        destinations:
+          type: array
+          items:
+            "$ref": "#/components/schemas/DestinationScopeCatalogDestination"
+        areas:
+          type: array
+          items:
+            "$ref": "#/components/schemas/DestinationArea"
+        places:
+          type: array
+          items:
+            "$ref": "#/components/schemas/DestinationPlace"
+    DestinationCreateResponse:
+      type: object
+      required:
+      - destination
+      - catalog
+      properties:
+        destination:
+          "$ref": "#/components/schemas/DestinationScopeCatalogDestination"
+        catalog:
+          "$ref": "#/components/schemas/DestinationScopeCatalogResponse"
+    DestinationAreaCreateResponse:
+      type: object
+      required:
+      - area
+      - catalog
+      properties:
+        area:
+          "$ref": "#/components/schemas/DestinationArea"
+        catalog:
+          "$ref": "#/components/schemas/DestinationScopeCatalogResponse"
+    DestinationPlaceCreateResponse:
+      type: object
+      required:
+      - place
+      - catalog
+      properties:
+        place:
+          "$ref": "#/components/schemas/DestinationPlace"
+        catalog:
+          "$ref": "#/components/schemas/DestinationScopeCatalogResponse"
     TourList:
       type: object
       required:
@@ -6585,6 +6772,61 @@ components:
         target_lang:
           "$ref": "#/components/schemas/LanguageCode"
         translation_profile:
+          type: string
+          nullable: true
+        actor:
+          type: string
+          nullable: true
+    DestinationCreateRequest:
+      type: object
+      required:
+      - destination
+      properties:
+        destination:
+          "$ref": "#/components/schemas/CountryCode"
+        label:
+          type: string
+          nullable: true
+        actor:
+          type: string
+          nullable: true
+    DestinationAreaCreateRequest:
+      type: object
+      required:
+      - destination
+      - name
+      properties:
+        destination:
+          "$ref": "#/components/schemas/CountryCode"
+        name:
+          type: string
+        name_i18n:
+          type: object
+          additionalProperties:
+            type: string
+          nullable: true
+        code:
+          type: string
+          nullable: true
+        actor:
+          type: string
+          nullable: true
+    DestinationPlaceCreateRequest:
+      type: object
+      required:
+      - area_id
+      - name
+      properties:
+        area_id:
+          type: string
+        name:
+          type: string
+        name_i18n:
+          type: object
+          additionalProperties:
+            type: string
+          nullable: true
+        code:
           type: string
           nullable: true
         actor:
@@ -9988,6 +10230,154 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/KeycloakUserStaffProfileEntryResponse"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/destination-scope/catalog":
+    get:
+      operationId: destination_scope_catalog
+      summary: Destination Scope Catalog
+      tags:
+      - Tours
+      security:
+      - bearerAuth: []
+      parameters: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/DestinationScopeCatalogResponse"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/destination-scope/destinations":
+    post:
+      operationId: destination_scope_destination_create
+      summary: Destination Scope Destination Create
+      tags:
+      - Tours
+      security:
+      - bearerAuth: []
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/DestinationCreateRequest"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/DestinationCreateResponse"
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/DestinationCreateResponse"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/destination-scope/areas":
+    post:
+      operationId: destination_scope_area_create
+      summary: Destination Scope Area Create
+      tags:
+      - Tours
+      security:
+      - bearerAuth: []
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/DestinationAreaCreateRequest"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/DestinationAreaCreateResponse"
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/DestinationAreaCreateResponse"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/destination-scope/places":
+    post:
+      operationId: destination_scope_place_create
+      summary: Destination Scope Place Create
+      tags:
+      - Tours
+      security:
+      - bearerAuth: []
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/DestinationPlaceCreateRequest"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/DestinationPlaceCreateResponse"
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/DestinationPlaceCreateResponse"
         '401':
           description: Unauthorized
           content:

@@ -227,6 +227,28 @@ import (
 	actor?:                               string
 }
 
+#DestinationCreateRequest: {
+	destination: enums.#CountryCode
+	label?:      string
+	actor?:      string
+}
+
+#DestinationAreaCreateRequest: {
+	destination: enums.#CountryCode
+	name:        string & !=""
+	name_i18n?: [string]: string
+	code?:      string
+	actor?:     string
+}
+
+#DestinationPlaceCreateRequest: {
+	area_id:    common.#Identifier
+	name:       string & !=""
+	name_i18n?: [string]: string
+	code?:      string
+	actor?:     string
+}
+
 #StandardTourUpsertRequest: {
 	title?: string
 	destinations?: [...enums.#CountryCode]

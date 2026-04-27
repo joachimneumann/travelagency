@@ -13,6 +13,7 @@ import { createAtpStaffHandlers } from "../http/handlers/atp_staff.js";
 import { createBookingHandlers } from "../http/handlers/bookings.js";
 import { createBookingQueryModule } from "../http/handlers/booking_query.js";
 import { createCountryReferenceHandlers } from "../http/handlers/country_reference.js";
+import { createDestinationScopeHandlers } from "../http/handlers/destination_scope.js";
 import { createKeycloakUserHandlers } from "../http/handlers/keycloak_users.js";
 import { createStandardTourHandlers } from "../http/handlers/standard_tours.js";
 import { createTourHandlers } from "../http/handlers/tours.js";
@@ -340,6 +341,18 @@ export function createApplicationRoutes({
     nowIso: support.nowIso
   });
 
+  const destinationScopeHandlers = createDestinationScopeHandlers({
+    readBodyJson: httpHelpers.readBodyJson,
+    sendJson: httpHelpers.sendJson,
+    readStore: storeUtils.readStore,
+    persistStore: storeUtils.persistStore,
+    getPrincipal,
+    canEditTours,
+    normalizeText: support.normalizeText,
+    nowIso: support.nowIso,
+    randomUUID
+  });
+
   const tourHandlers = createTourHandlers({
     normalizeText: support.normalizeText,
     normalizeStringArray: support.normalizeStringArray,
@@ -445,6 +458,7 @@ export function createApplicationRoutes({
       ...atpStaffHandlers,
       ...keycloakUserHandlers,
       ...countryReferenceHandlers,
+      ...destinationScopeHandlers,
       ...translationRulesHandlers,
       ...tourHandlers,
       ...standardTourHandlers

@@ -1,5 +1,9 @@
 import { normalizeText } from "../lib/text.js";
 import { enumValueSetFor } from "../lib/generated_catalogs.js";
+import {
+  destinationScopeDestinations,
+  normalizeDestinationScope
+} from "./destination_scope.js";
 
 const COUNTRY_CODE_SET = enumValueSetFor("CountryCode");
 
@@ -55,8 +59,10 @@ export function createStandardTourHelpers({
   function cloneStandardTourTravelPlanForBooking(rawTravelPlan) {
     const normalized = normalizeStandardTourTravelPlan(rawTravelPlan);
     const createdAt = nowIso();
+    const destinationScope = normalizeDestinationScope(normalized.destination_scope, normalized.destinations);
     return {
-      destinations: normalizeDestinations(normalized?.destinations),
+      destination_scope: destinationScope,
+      destinations: destinationScopeDestinations(destinationScope),
       days: (Array.isArray(normalized?.days) ? normalized.days : []).map((day, dayIndex) => ({
         ...cloneJson(day),
         id: `travel_plan_day_${randomUUID()}`,
@@ -90,9 +96,13 @@ export function createStandardTourHelpers({
       ? standardTour
       : {};
     const normalizedTravelPlan = normalizeStandardTourTravelPlan(source.travel_plan);
+    const fallbackDestinations = Array.isArray(normalizedTravelPlan.destinations) && normalizedTravelPlan.destinations.length
+      ? normalizedTravelPlan.destinations
+      : source.destinations;
+    const destinationScope = normalizeDestinationScope(normalizedTravelPlan.destination_scope, fallbackDestinations);
     const normalizedDestinations = normalizeDestinations(
-      Array.isArray(normalizedTravelPlan?.destinations) && normalizedTravelPlan.destinations.length
-        ? normalizedTravelPlan.destinations
+      destinationScopeDestinations(destinationScope).length
+        ? destinationScopeDestinations(destinationScope)
         : source.destinations
     );
     return {
@@ -101,6 +111,7 @@ export function createStandardTourHelpers({
       destinations: normalizedDestinations,
       travel_plan: {
         ...normalizedTravelPlan,
+        destination_scope: normalizeDestinationScope(destinationScope, normalizedDestinations),
         destinations: normalizedDestinations
       }
     };
