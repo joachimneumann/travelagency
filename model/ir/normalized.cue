@@ -1123,6 +1123,67 @@ IR: {
 			]
 		},
 		{
+			name:       "TourTravelPlanDaySearchResult"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#TourTravelPlanDaySearchResult"
+			fields: [
+				{name: "source_tour_id", kind: "scalar", typeName: "Identifier", required: true},
+				{name: "source_tour_title", kind: "scalar", typeName: "string", required: false},
+				{name: "source_tour_code", kind: "scalar", typeName: "string", required: false},
+				{name: "day_id", kind: "scalar", typeName: "Identifier", required: true},
+				{name: "day_number", kind: "scalar", typeName: "int", required: false},
+				{name: "title", kind: "scalar", typeName: "string", required: false},
+				{name: "overnight_location", kind: "scalar", typeName: "string", required: false},
+				{name: "notes", kind: "scalar", typeName: "string", required: false},
+				{name: "thumbnail_url", kind: "scalar", typeName: "string", required: false},
+				{name: "service_count", kind: "scalar", typeName: "int", required: false},
+				{name: "image_count", kind: "scalar", typeName: "int", required: false},
+				{name: "updated_at", kind: "scalar", typeName: "Timestamp", required: false},
+			]
+		},
+		{
+			name:       "TourTravelPlanDaySearchResponse"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#TourTravelPlanDaySearchResponse"
+			fields: [
+				{name: "items", kind: "transport", typeName: "TourTravelPlanDaySearchResult", required: true, isArray: true},
+				{name: "total", kind: "scalar", typeName: "int", required: true},
+			]
+		},
+		{
+			name:       "TourTravelPlanServiceSearchResult"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#TourTravelPlanServiceSearchResult"
+			fields: [
+				{name: "source_tour_id", kind: "scalar", typeName: "Identifier", required: true},
+				{name: "source_tour_title", kind: "scalar", typeName: "string", required: false},
+				{name: "source_tour_code", kind: "scalar", typeName: "string", required: false},
+				{name: "day_number", kind: "scalar", typeName: "int", required: false},
+				{name: "service_id", kind: "scalar", typeName: "Identifier", required: true},
+				{name: "service_kind", kind: "enum", typeName: "TravelPlanServiceKind", required: false},
+				{name: "title", kind: "scalar", typeName: "string", required: false},
+				{name: "details", kind: "scalar", typeName: "string", required: false},
+				{name: "location", kind: "scalar", typeName: "string", required: false},
+				{name: "overnight_location", kind: "scalar", typeName: "string", required: false},
+				{name: "thumbnail_url", kind: "scalar", typeName: "string", required: false},
+				{name: "image_count", kind: "scalar", typeName: "int", required: false},
+				{name: "updated_at", kind: "scalar", typeName: "Timestamp", required: false},
+			]
+		},
+		{
+			name:       "TourTravelPlanServiceSearchResponse"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#TourTravelPlanServiceSearchResponse"
+			fields: [
+				{name: "items", kind: "transport", typeName: "TourTravelPlanServiceSearchResult", required: true, isArray: true},
+				{name: "total", kind: "scalar", typeName: "int", required: true},
+			]
+		},
+		{
 			name:       "DestinationScopeCatalogDestination"
 			domain:     "api"
 			module:     "api"
@@ -1942,6 +2003,39 @@ IR: {
 			fields: [
 				{name: "travel_plan", kind: "entity", typeName: "TravelPlan", required: true},
 				{name: "expected_updated_at", kind: "scalar", typeName: "Timestamp", required: false},
+				{name: "actor", kind: "scalar", typeName: "string", required: false},
+			]
+		},
+		{
+			name:       "TourTravelPlanDayImportRequest"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#TourTravelPlanDayImportRequest"
+			fields: [
+				{name: "expected_updated_at", kind: "scalar", typeName: "Timestamp", required: false},
+				{name: "source_tour_id", kind: "scalar", typeName: "Identifier", required: true},
+				{name: "source_day_id", kind: "scalar", typeName: "Identifier", required: true},
+				{name: "include_images", kind: "scalar", typeName: "bool", required: true},
+				{name: "include_customer_visible_images_only", kind: "scalar", typeName: "bool", required: true},
+				{name: "include_notes", kind: "scalar", typeName: "bool", required: true},
+				{name: "include_translations", kind: "scalar", typeName: "bool", required: true},
+				{name: "actor", kind: "scalar", typeName: "string", required: false},
+			]
+		},
+		{
+			name:       "TourTravelPlanServiceImportRequest"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#TourTravelPlanServiceImportRequest"
+			fields: [
+				{name: "expected_updated_at", kind: "scalar", typeName: "Timestamp", required: false},
+				{name: "source_tour_id", kind: "scalar", typeName: "Identifier", required: true},
+				{name: "source_service_id", kind: "scalar", typeName: "Identifier", required: true},
+				{name: "insert_after_service_id", kind: "scalar", typeName: "Identifier", required: false},
+				{name: "include_images", kind: "scalar", typeName: "bool", required: true},
+				{name: "include_customer_visible_images_only", kind: "scalar", typeName: "bool", required: true},
+				{name: "include_notes", kind: "scalar", typeName: "bool", required: true},
+				{name: "include_translations", kind: "scalar", typeName: "bool", required: true},
 				{name: "actor", kind: "scalar", typeName: "string", required: false},
 			]
 		},

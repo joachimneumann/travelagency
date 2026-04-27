@@ -21,6 +21,7 @@ import { COUNTRY_CODE_OPTIONS } from "../shared/generated_catalogs.js";
 import { normalizeDestinationScopeCatalog } from "../shared/destination_scope_editor.js";
 import {
   backendT,
+  currentBackendLang,
   getBackendApiBase,
   getBackendApiOrigin,
   initializeBackendPageChrome,
@@ -180,6 +181,24 @@ const fetchApi = createApiFetcher({
   includeDetailInError: false,
   connectionErrorMessage: backendT("booking.error.connect", "Could not connect to backend API.")
 });
+
+function withDestinationCatalogEnglishLang(urlLike) {
+  const url = new URL(urlLike, window.location.origin);
+  url.searchParams.set("lang", "en");
+  return url.toString();
+}
+
+function shouldMarkEnglishCatalogInputs() {
+  return normalizeText(currentBackendLang()).toLowerCase() === "vi";
+}
+
+function destinationCatalogEnglishMarker() {
+  return shouldMarkEnglishCatalogInputs() ? " (EN)" : "";
+}
+
+function destinationCatalogFieldLabel(i18nId, fallback) {
+  return `${backendT(i18nId, fallback)}${destinationCatalogEnglishMarker()}`;
+}
 
 init();
 
@@ -434,11 +453,17 @@ function setDestinationCatalogStatus(message = "") {
 function destinationCatalogSaveOverlayMessage() {
   return backendT(
     "backend.tours.destination_catalog.saving_overlay",
-    "Saving destination catalog and refreshing public homepage. Please wait."
+    "Saving destination catalog, translating labels, and refreshing public homepage. Please wait."
   );
 }
 
 function destinationCatalogSavedMessage(result) {
+  if (result?.i18n?.ok === false) {
+    return backendT(
+      "backend.tours.destination_catalog.saved_i18n_failed",
+      "Destination catalog saved, but some labels could not be translated."
+    );
+  }
   if (result?.homepage_assets?.ok === false) {
     return backendT(
       "backend.tours.destination_catalog.saved_homepage_failed",
@@ -461,8 +486,12 @@ function handleDestinationCatalogSaveResult(result) {
   renderDestinationScopeFilter();
   setDestinationCatalogStatus(destinationCatalogSavedMessage(result));
   clearError();
-  if (result?.homepage_assets?.ok === false) {
-    const detail = normalizeText(result.homepage_assets.error);
+  if (result?.i18n?.ok === false || result?.homepage_assets?.ok === false) {
+    const i18nDetail = Array.isArray(result?.i18n?.errors)
+      ? result.i18n.errors.map((entry) => normalizeText(entry?.error)).filter(Boolean).join(" ")
+      : "";
+    const homepageDetail = normalizeText(result?.homepage_assets?.error);
+    const detail = [i18nDetail, homepageDetail].filter(Boolean).join(" ");
     showError(detail
       ? `${destinationCatalogSavedMessage(result)} ${detail}`
       : destinationCatalogSavedMessage(result));
@@ -477,7 +506,7 @@ async function loadDestinationCatalog() {
   renderDestinationCatalog();
   try {
     const request = destinationScopeCatalogRequest({ baseURL: apiOrigin });
-    const payload = await fetchApi(withBackendApiLang(request.url), { cache: "no-store" });
+    const payload = await fetchApi(withDestinationCatalogEnglishLang(request.url), { cache: "no-store" });
     if (payload) {
       state.destinationCatalog.catalog = normalizeDestinationScopeCatalog(payload);
     }
@@ -694,7 +723,7 @@ async function createDestinationCatalogDestination(form) {
       baseURL: apiOrigin,
       body
     });
-    const result = await fetchApi(withBackendApiLang(request.url), {
+    const result = await fetchApi(withDestinationCatalogEnglishLang(request.url), {
       method: request.method,
       body
     });
@@ -722,7 +751,7 @@ async function createDestinationCatalogArea(form) {
       baseURL: apiOrigin,
       body
     });
-    const result = await fetchApi(withBackendApiLang(request.url), {
+    const result = await fetchApi(withDestinationCatalogEnglishLang(request.url), {
       method: request.method,
       body
     });
@@ -752,7 +781,7 @@ async function createDestinationCatalogPlace(form) {
       baseURL: apiOrigin,
       body
     });
-    const result = await fetchApi(withBackendApiLang(request.url), {
+    const result = await fetchApi(withDestinationCatalogEnglishLang(request.url), {
       method: request.method,
       body
     });
@@ -834,7 +863,7 @@ function renderDestinationCatalogDestinationForm(destinations) {
   return `
     <form class="tour-destination-catalog__form tour-destination-catalog__form--destination" data-destination-create>
       <div class="field">
-        <label>${escapeHtml(backendT("backend.tours.destination_catalog.destination_name", "Destination"))}</label>
+        <label>${escapeHtml(destinationCatalogFieldLabel("backend.tours.destination_catalog.destination_name", "Destination"))}</label>
         <select name="destination" required>${options.join("")}</select>
       </div>
       <button class="btn btn-ghost" type="submit">${escapeHtml(backendT("backend.tours.destination_catalog.add_destination", "Add destination"))}</button>
@@ -846,7 +875,7 @@ function renderDestinationCatalogAreaForm(destination) {
   return `
     <form class="tour-destination-catalog__form" data-destination-area-create="${escapeHtml(destination.code)}">
       <div class="field">
-        <label>${escapeHtml(backendT("backend.tours.destination_catalog.area_name", "New area"))}</label>
+        <label>${escapeHtml(destinationCatalogFieldLabel("backend.tours.destination_catalog.area_name", "New area"))}</label>
         <input name="name" type="text" autocomplete="off" required />
       </div>
       <button class="btn btn-ghost" type="submit">${escapeHtml(backendT("backend.tours.destination_catalog.add_area", "Add area"))}</button>
@@ -858,7 +887,7 @@ function renderDestinationCatalogPlaceForm(area) {
   return `
     <form class="tour-destination-catalog__form" data-destination-place-create="${escapeHtml(area.id)}">
       <div class="field">
-        <label>${escapeHtml(backendT("backend.tours.destination_catalog.place_name", "New place"))}</label>
+        <label>${escapeHtml(destinationCatalogFieldLabel("backend.tours.destination_catalog.place_name", "New place"))}</label>
         <input name="name" type="text" autocomplete="off" required />
       </div>
       <button class="btn btn-ghost" type="submit">${escapeHtml(backendT("backend.tours.destination_catalog.add_place", "Add place"))}</button>

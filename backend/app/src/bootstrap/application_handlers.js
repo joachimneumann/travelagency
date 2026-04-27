@@ -354,7 +354,9 @@ export function createApplicationRoutes({
     repoRoot: runtime.paths.repoRoot,
     execFile: runtime.execFile,
     dataPath: runtime.paths.dataPath,
-    toursDir: runtime.paths.toursDir
+    toursDir: runtime.paths.toursDir,
+    translateEntriesWithMeta: runtime.translationClient.translateEntriesWithMeta,
+    readTranslationRules: translationRulesStore.readTranslationRules
   });
 
   const tourHandlers = createTourHandlers({

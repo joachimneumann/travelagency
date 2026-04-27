@@ -9,6 +9,25 @@ const DEFAULT_DESTINATION_SCOPE_DESTINATIONS = Object.freeze([
   Object.freeze({
     code: "VN",
     label: "Vietnam",
+    label_i18n: Object.freeze({
+      en: "Vietnam",
+      ar: "فيتنام",
+      fr: "Vietnam",
+      zh: "越南",
+      ja: "ベトナム",
+      ko: "베트남",
+      vi: "Việt Nam",
+      ms: "Vietnam",
+      de: "Vietnam",
+      es: "Vietnam",
+      it: "Vietnam",
+      ru: "Вьетнам",
+      nl: "Vietnam",
+      pl: "Wietnam",
+      da: "Vietnam",
+      sv: "Vietnam",
+      no: "Vietnam"
+    }),
     sort_order: 0,
     is_active: true
   })

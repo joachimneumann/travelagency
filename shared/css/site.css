@@ -1055,6 +1055,7 @@ textarea:focus-visible {
   color: var(--muted);
   font-size: var(--font-size-body-sm);
   line-height: var(--tour-card-desc-line-height);
+  overflow-wrap: anywhere;
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: var(--tour-card-desc-lines);
@@ -4836,8 +4837,29 @@ textarea:focus-visible {
   min-width: 0;
 }
 
+.tour-localized-content__counter {
+  justify-self: start;
+  color: var(--text-muted-alt);
+  line-height: 1.3;
+  margin-top: -0.1rem;
+  text-align: left;
+}
+
+.tour-localized-content__counter.tour-localized-content__counter--warning {
+  color: #ff0000;
+}
+
+.tour-localized-content__field--source-code .tour-localized-content__counter {
+  grid-column: 2;
+}
+
 .tour-localized-content__description[dir="rtl"] {
   text-align: right;
+}
+
+.tour-localized-content__description,
+.tour-travel-plan-translation__target[data-tour-short-description-fit="1"] {
+  overflow-wrap: anywhere;
 }
 
 .tour-localized-group--content .tour-localized-group__code-cell {

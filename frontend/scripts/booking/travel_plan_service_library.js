@@ -12,6 +12,10 @@ import { bookingT } from "./i18n.js";
 import { TRAVEL_PLAN_SERVICE_KIND_OPTIONS } from "../shared/generated_catalogs.js";
 import { resolveTravelPlanImageSrc } from "./travel_plan_images.js";
 
+function normalizeText(value) {
+  return String(value ?? "").trim();
+}
+
 export function createBookingTravelPlanServiceLibraryModule(deps) {
   const {
     state,
@@ -22,7 +26,12 @@ export function createBookingTravelPlanServiceLibraryModule(deps) {
     escapeHtml,
     ensureTravelPlanReadyForMutation,
     finalizeTravelPlanMutation,
-    findDraftDay
+    findDraftDay,
+    buildTravelPlanDaySearchRequest,
+    buildTravelPlanServiceSearchRequest,
+    buildTravelPlanDayImportRequest,
+    buildTravelPlanServiceImportRequest,
+    travelPlanLibrarySource = "booking"
   } = deps;
 
   const serviceLibraryState = {
@@ -46,6 +55,23 @@ export function createBookingTravelPlanServiceLibraryModule(deps) {
 
   function isStandardTourLibraryMode() {
     return serviceLibraryState.mode === "tour" || serviceLibraryState.mode === "standard_tour";
+  }
+
+  function isMarketingTourLibrarySource() {
+    return travelPlanLibrarySource === "marketing_tour";
+  }
+
+  function librarySourceId(item) {
+    return normalizeText(item?.source_tour_id) || normalizeText(item?.source_booking_id);
+  }
+
+  function librarySourceLabel(item) {
+    return normalizeText(item?.source_tour_title)
+      || normalizeText(item?.source_tour_name)
+      || normalizeText(item?.source_booking_name)
+      || normalizeText(item?.source_tour_code)
+      || normalizeText(item?.source_booking_code)
+      || librarySourceId(item);
   }
 
   function setTravelPlanLibraryStatus(message, type = "info") {
@@ -92,7 +118,7 @@ export function createBookingTravelPlanServiceLibraryModule(deps) {
   }
 
   function prioritizeCurrentBookingResults(items = []) {
-    const currentBookingId = String(state.booking?.id || "").trim();
+    const currentBookingId = String(state.booking?.id || state.id || "").trim();
     if (!currentBookingId || !Array.isArray(items) || !items.length) return Array.isArray(items) ? items : [];
     const prioritized = [];
     const remaining = [];
@@ -109,7 +135,13 @@ export function createBookingTravelPlanServiceLibraryModule(deps) {
 
   function normalizeTravelPlanLibrarySearchResults(items = []) {
     const rows = Array.isArray(items) ? items : [];
-    const currentBookingId = String(state.booking?.id || "").trim();
+    const currentBookingId = String(state.booking?.id || state.id || "").trim();
+    if (isMarketingTourLibrarySource()) {
+      return rows.filter((item) => {
+        const sourceId = librarySourceId(item);
+        return sourceId && sourceId !== currentBookingId;
+      });
+    }
     if (isStandardTourLibraryMode()) {
       return rows;
     }
@@ -247,7 +279,16 @@ export function createBookingTravelPlanServiceLibraryModule(deps) {
     }
     if (isDayLibraryMode()) {
       els.travelPlanServiceLibraryResults.innerHTML = rows.map((item) => `
-        <article class="travel-plan-library-card">
+        <article class="travel-plan-library-card travel-plan-library-card--leading-action">
+          <div class="travel-plan-library-card__actions">
+            <button
+              class="btn btn-primary"
+              data-travel-plan-import-source-booking="${escapeHtml(librarySourceId(item))}"
+              data-travel-plan-import-source-day="${escapeHtml(item.day_id || "")}"
+              data-requires-clean-state
+              type="button"
+            >${escapeHtml(bookingT("booking.travel_plan.insert_as_copy", "Use"))}</button>
+          </div>
           <div class="travel-plan-library-card__media">
             ${item.thumbnail_url
               ? `<img src="${escapeHtml(resolveTravelPlanImageSrc(item.thumbnail_url, apiOrigin))}" alt="${escapeHtml(item.title || bookingT("booking.travel_plan.day_heading", "Day"))}" loading="lazy" />`
@@ -255,7 +296,7 @@ export function createBookingTravelPlanServiceLibraryModule(deps) {
           </div>
           <div class="travel-plan-library-card__content">
             <div class="travel-plan-library-card__eyebrow">
-              ${escapeHtml(item.source_booking_name || item.source_booking_id || "")}
+              ${escapeHtml(librarySourceLabel(item))}
             </div>
             <h3>${escapeHtml(item.title || bookingT("booking.travel_plan.day_heading", "Day"))}</h3>
             <p>${escapeHtml(item.overnight_location || item.notes || "")}</p>
@@ -264,21 +305,21 @@ export function createBookingTravelPlanServiceLibraryModule(deps) {
               ${Number(item.image_count) > 0 ? `<span>${escapeHtml(bookingT("booking.travel_plan.image_count", "{count} images", { count: Number(item.image_count) }))}</span>` : ""}
             </div>
           </div>
-          <div class="travel-plan-library-card__actions">
-            <button
-              class="btn btn-primary"
-              data-travel-plan-import-source-booking="${escapeHtml(item.source_booking_id || "")}"
-              data-travel-plan-import-source-day="${escapeHtml(item.day_id || "")}"
-              data-requires-clean-state
-              type="button"
-            >${escapeHtml(bookingT("booking.travel_plan.insert_as_copy", "use"))}</button>
-          </div>
         </article>
       `).join("");
       return;
     }
     els.travelPlanServiceLibraryResults.innerHTML = rows.map((item) => `
-      <article class="travel-plan-library-card">
+      <article class="travel-plan-library-card travel-plan-library-card--leading-action">
+        <div class="travel-plan-library-card__actions">
+          <button
+            class="btn btn-primary"
+            data-travel-plan-import-source-booking="${escapeHtml(librarySourceId(item))}"
+            data-travel-plan-import-source-service="${escapeHtml(item.service_id || "")}"
+            data-requires-clean-state
+            type="button"
+          >${escapeHtml(bookingT("booking.travel_plan.insert_as_copy", "Use"))}</button>
+        </div>
         <div class="travel-plan-library-card__media">
           ${item.thumbnail_url
             ? `<img src="${escapeHtml(resolveTravelPlanImageSrc(item.thumbnail_url, apiOrigin))}" alt="${escapeHtml(item.title || bookingT("booking.travel_plan.item_title", "Service title"))}" loading="lazy" />`
@@ -286,7 +327,7 @@ export function createBookingTravelPlanServiceLibraryModule(deps) {
         </div>
         <div class="travel-plan-library-card__content">
           <div class="travel-plan-library-card__eyebrow">
-            ${escapeHtml(item.source_booking_name || item.source_booking_id || "")}
+            ${escapeHtml(librarySourceLabel(item))}
           </div>
           <h3>${escapeHtml(item.title || bookingT("booking.travel_plan.item_title", "Service title"))}</h3>
           <p>${escapeHtml(item.location || item.overnight_location || item.details || "")}</p>
@@ -294,15 +335,6 @@ export function createBookingTravelPlanServiceLibraryModule(deps) {
             ${item.service_kind ? `<span>${escapeHtml(bookingT(`booking.travel_plan.kind.${String(item.service_kind).toLowerCase()}`, item.service_kind))}</span>` : ""}
             ${Number(item.image_count) > 0 ? `<span>${escapeHtml(bookingT("booking.travel_plan.image_count", "{count} images", { count: Number(item.image_count) }))}</span>` : ""}
           </div>
-        </div>
-        <div class="travel-plan-library-card__actions">
-          <button
-            class="btn btn-primary"
-            data-travel-plan-import-source-booking="${escapeHtml(item.source_booking_id || "")}"
-            data-travel-plan-import-source-service="${escapeHtml(item.service_id || "")}"
-            data-requires-clean-state
-            type="button"
-          >${escapeHtml(bookingT("booking.travel_plan.insert_as_copy", "use"))}</button>
         </div>
       </article>
     `).join("");
@@ -403,6 +435,19 @@ export function createBookingTravelPlanServiceLibraryModule(deps) {
         ? "Searching travel plans..."
         : (isDayLibraryMode() ? "Searching days..." : "Searching services...")
     ), "info");
+    const defaultDaySearchRequest = () => travelPlanDaySearchRequest({
+      baseURL: apiOrigin,
+      query: {
+        ...(query ? { q: query } : {})
+      }
+    });
+    const defaultServiceSearchRequest = () => travelPlanServiceSearchRequest({
+      baseURL: apiOrigin,
+      query: {
+        ...(query ? { q: query } : {}),
+        ...(kind ? { service_kind: kind } : {})
+      }
+    });
     const request = isStandardTourLibraryMode()
       ? toursRequest({
           baseURL: apiOrigin,
@@ -419,19 +464,12 @@ export function createBookingTravelPlanServiceLibraryModule(deps) {
           }
         })
       : (isDayLibraryMode()
-      ? travelPlanDaySearchRequest({
-          baseURL: apiOrigin,
-          query: {
-            ...(query ? { q: query } : {})
-          }
-        })
-      : travelPlanServiceSearchRequest({
-          baseURL: apiOrigin,
-          query: {
-            ...(query ? { q: query } : {}),
-            ...(kind ? { service_kind: kind } : {})
-          }
-        }));
+      ? (typeof buildTravelPlanDaySearchRequest === "function"
+          ? buildTravelPlanDaySearchRequest({ apiOrigin, state, query })
+          : defaultDaySearchRequest())
+      : (typeof buildTravelPlanServiceSearchRequest === "function"
+          ? buildTravelPlanServiceSearchRequest({ apiOrigin, state, query, kind })
+          : defaultServiceSearchRequest()));
     try {
       const result = await fetchBookingMutation(request.url, { method: request.method });
       if (!result) {
@@ -489,22 +527,24 @@ export function createBookingTravelPlanServiceLibraryModule(deps) {
     if (!sourceBookingId || !sourceDayId) return;
     if (!(await ensureTravelPlanReadyForMutation())) return;
     setTravelPlanLibraryStatus(bookingT("booking.travel_plan.inserting_day", "Inserting day..."), "info");
-    const request = bookingTravelPlanDayImportRequest({
-      baseURL: apiOrigin,
-      params: {
-        booking_id: state.booking.id
-      },
-      body: {
-        expected_travel_plan_revision: getBookingRevision("travel_plan_revision"),
-        source_booking_id: sourceBookingId,
-        source_day_id: sourceDayId,
-        include_images: true,
-        include_customer_visible_images_only: false,
-        include_notes: true,
-        include_translations: true,
-        actor: state.user
-      }
-    });
+    const request = typeof buildTravelPlanDayImportRequest === "function"
+      ? buildTravelPlanDayImportRequest({ apiOrigin, state, sourceBookingId, sourceDayId, getBookingRevision })
+      : bookingTravelPlanDayImportRequest({
+          baseURL: apiOrigin,
+          params: {
+            booking_id: state.booking.id
+          },
+          body: {
+            expected_travel_plan_revision: getBookingRevision("travel_plan_revision"),
+            source_booking_id: sourceBookingId,
+            source_day_id: sourceDayId,
+            include_images: true,
+            include_customer_visible_images_only: false,
+            include_notes: true,
+            include_translations: true,
+            actor: state.user
+          }
+        });
     const result = await fetchBookingMutation(request.url, {
       method: request.method,
       body: request.body
@@ -521,24 +561,33 @@ export function createBookingTravelPlanServiceLibraryModule(deps) {
     if (!serviceLibraryState.dayId || !sourceBookingId || !sourceServiceId) return;
     if (!(await ensureTravelPlanReadyForMutation())) return;
     setTravelPlanLibraryStatus(bookingT("booking.travel_plan.inserting_item", "Inserting service..."), "info");
-    const request = bookingTravelPlanServiceImportRequest({
-      baseURL: apiOrigin,
-      params: {
-        booking_id: state.booking.id,
-        day_id: serviceLibraryState.dayId
-      },
-      body: {
-        expected_travel_plan_revision: getBookingRevision("travel_plan_revision"),
-        source_booking_id: sourceBookingId,
-        source_service_id: sourceServiceId,
-        include_images: true,
-        include_customer_visible_images_only: false,
-        include_notes: true,
-        include_translations: true,
-        include_offer_links: false,
-        actor: state.user
-      }
-    });
+    const request = typeof buildTravelPlanServiceImportRequest === "function"
+      ? buildTravelPlanServiceImportRequest({
+          apiOrigin,
+          state,
+          targetDayId: serviceLibraryState.dayId,
+          sourceBookingId,
+          sourceServiceId,
+          getBookingRevision
+        })
+      : bookingTravelPlanServiceImportRequest({
+          baseURL: apiOrigin,
+          params: {
+            booking_id: state.booking.id,
+            day_id: serviceLibraryState.dayId
+          },
+          body: {
+            expected_travel_plan_revision: getBookingRevision("travel_plan_revision"),
+            source_booking_id: sourceBookingId,
+            source_service_id: sourceServiceId,
+            include_images: true,
+            include_customer_visible_images_only: false,
+            include_notes: true,
+            include_translations: true,
+            include_offer_links: false,
+            actor: state.user
+          }
+        });
     const result = await fetchBookingMutation(request.url, {
       method: request.method,
       body: request.body

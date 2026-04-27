@@ -1306,6 +1306,74 @@ package api
 		responseType:  "TourList"
 	},
 	{
+		key:           "tour_travel_plan_day_search"
+		path:          "/api/v1/tours/travel-plan-days/search"
+		method:        "GET"
+		tag:           "Tours"
+		authenticated: true
+		responseType:  "TourTravelPlanDaySearchResponse"
+		parameters: [{
+			name:     "q"
+			location: "query"
+			required: false
+			typeName: "string"
+		}, {
+			name:     "service_kind"
+			location: "query"
+			required: false
+			typeName: "TravelPlanServiceKind"
+		}, {
+			name:     "exclude_tour_id"
+			location: "query"
+			required: false
+			typeName: "Identifier"
+		}, {
+			name:     "limit"
+			location: "query"
+			required: false
+			typeName: "int"
+		}, {
+			name:     "offset"
+			location: "query"
+			required: false
+			typeName: "int"
+		}]
+	},
+	{
+		key:           "tour_travel_plan_service_search"
+		path:          "/api/v1/tours/travel-plan-services/search"
+		method:        "GET"
+		tag:           "Tours"
+		authenticated: true
+		responseType:  "TourTravelPlanServiceSearchResponse"
+		parameters: [{
+			name:     "q"
+			location: "query"
+			required: false
+			typeName: "string"
+		}, {
+			name:     "service_kind"
+			location: "query"
+			required: false
+			typeName: "TravelPlanServiceKind"
+		}, {
+			name:     "exclude_tour_id"
+			location: "query"
+			required: false
+			typeName: "Identifier"
+		}, {
+			name:     "limit"
+			location: "query"
+			required: false
+			typeName: "int"
+		}, {
+			name:     "offset"
+			location: "query"
+			required: false
+			typeName: "int"
+		}]
+	},
+	{
 		key:           "tour_detail"
 		path:          "/api/v1/tours/{tour_id}"
 		method:        "GET"
@@ -1376,6 +1444,41 @@ package api
 		responseType:  "TourResponse"
 		parameters: [{
 			name:     "tour_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}]
+	},
+	{
+		key:           "tour_travel_plan_day_import"
+		path:          "/api/v1/tours/{tour_id}/travel-plan/days/import"
+		method:        "POST"
+		tag:           "Tours"
+		authenticated: true
+		requestType:   "TourTravelPlanDayImportRequest"
+		responseType:  "TourResponse"
+		parameters: [{
+			name:     "tour_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}]
+	},
+	{
+		key:           "tour_travel_plan_service_import"
+		path:          "/api/v1/tours/{tour_id}/travel-plan/days/{day_id}/services/import"
+		method:        "POST"
+		tag:           "Tours"
+		authenticated: true
+		requestType:   "TourTravelPlanServiceImportRequest"
+		responseType:  "TourResponse"
+		parameters: [{
+			name:     "tour_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}, {
+			name:     "day_id"
 			location: "path"
 			required: true
 			typeName: "Identifier"

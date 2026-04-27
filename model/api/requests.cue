@@ -208,6 +208,29 @@ import (
 	actor?:                               string
 }
 
+#TourTravelPlanDayImportRequest: {
+	expected_updated_at?:                 common.#Timestamp
+	source_tour_id:                       common.#Identifier
+	source_day_id:                        common.#Identifier
+	include_images:                       *true | bool
+	include_customer_visible_images_only: *false | bool
+	include_notes:                        *true | bool
+	include_translations:                 *true | bool
+	actor?:                               string
+}
+
+#TourTravelPlanServiceImportRequest: {
+	expected_updated_at?:                 common.#Timestamp
+	source_tour_id:                       common.#Identifier
+	source_service_id:                    common.#Identifier
+	insert_after_service_id?:             common.#Identifier
+	include_images:                       *true | bool
+	include_customer_visible_images_only: *false | bool
+	include_notes:                        *true | bool
+	include_translations:                 *true | bool
+	actor?:                               string
+}
+
 #TravelPlanSearchRequest: {
 	q?:           string
 	destination?: string
@@ -237,16 +260,16 @@ import (
 	destination: enums.#CountryCode
 	name:        string & !=""
 	name_i18n?: [string]: string
-	code?:      string
-	actor?:     string
+	code?:  string
+	actor?: string
 }
 
 #DestinationPlaceCreateRequest: {
-	area_id:    common.#Identifier
-	name:       string & !=""
+	area_id: common.#Identifier
+	name:    string & !=""
 	name_i18n?: [string]: string
-	code?:      string
-	actor?:     string
+	code?:  string
+	actor?: string
 }
 
 #StandardTourUpsertRequest: {
@@ -267,9 +290,9 @@ import (
 }
 
 #TourTravelPlanUpdateRequest: {
-	travel_plan: databaseModel.#TravelPlan
+	travel_plan:          databaseModel.#TravelPlan
 	expected_updated_at?: common.#Timestamp
-	actor?:              string
+	actor?:               string
 }
 
 #TravelPlanServiceImageUploadRequest: #EvidenceUpload & {
@@ -408,7 +431,7 @@ import (
 	seasonality_end_month?:   enums.#MonthCode
 	short_description?:       string
 	short_description_i18n?: [string]: string
-	travel_plan?: databaseModel.#TravelPlan
+	travel_plan?:         databaseModel.#TravelPlan
 	expected_updated_at?: common.#Timestamp
 }
 

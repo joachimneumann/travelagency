@@ -1388,6 +1388,40 @@ export function tourCreateRequest({ baseURL = '', params = {}, query = {}, body,
   };
 }
 
+export function tourTravelPlanDaySearchPath(params = {}) {
+  return buildPath("/api/v1/tours/travel-plan-days/search", params);
+}
+
+export function tourTravelPlanDaySearchRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = tourTravelPlanDaySearchPath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "tour_travel_plan_day_search",
+    method: "GET",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function tourTravelPlanServiceSearchPath(params = {}) {
+  return buildPath("/api/v1/tours/travel-plan-services/search", params);
+}
+
+export function tourTravelPlanServiceSearchRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = tourTravelPlanServiceSearchPath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "tour_travel_plan_service_search",
+    method: "GET",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
 export function tourDetailPath(params = {}) {
   return buildPath("/api/v1/tours/{tour_id}", params);
 }
@@ -1466,6 +1500,40 @@ export function tourTravelPlanUpdateRequest({ baseURL = '', params = {}, query =
   return {
     key: "tour_travel_plan_update",
     method: "PATCH",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function tourTravelPlanDayImportPath(params = {}) {
+  return buildPath("/api/v1/tours/{tour_id}/travel-plan/days/import", params);
+}
+
+export function tourTravelPlanDayImportRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = tourTravelPlanDayImportPath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "tour_travel_plan_day_import",
+    method: "POST",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function tourTravelPlanServiceImportPath(params = {}) {
+  return buildPath("/api/v1/tours/{tour_id}/travel-plan/days/{day_id}/services/import", params);
+}
+
+export function tourTravelPlanServiceImportRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = tourTravelPlanServiceImportPath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "tour_travel_plan_service_import",
+    method: "POST",
     authenticated: true,
     url,
     headers,

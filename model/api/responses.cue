@@ -114,11 +114,11 @@ import (
 }
 
 #SettingsObservabilityLoggedInUser: {
-	sub?:               string
+	sub?:                string
 	preferred_username?: string
-	name?:              string
-	email?:             common.#Email
-	roles?:             [...string]
+	name?:               string
+	email?:              common.#Email
+	roles?: [...string]
 	session_count:      >=0 & int
 	latest_login_at?:   common.#Timestamp
 	latest_expires_at?: common.#Timestamp
@@ -132,15 +132,15 @@ import (
 }
 
 #SettingsObservabilityLatestChangedBooking: {
-	id:                        common.#Identifier
-	name?:                     string
-	updated_at?:               common.#Timestamp
+	id:                         common.#Identifier
+	name?:                      string
+	updated_at?:                common.#Timestamp
 	assigned_keycloak_user_id?: common.#Identifier
-	last_activity?:            #SettingsObservabilityBookingActivity
+	last_activity?:             #SettingsObservabilityBookingActivity
 }
 
 #SettingsObservabilityResponse: {
-	logged_in_users:         [...#SettingsObservabilityLoggedInUser]
+	logged_in_users: [...#SettingsObservabilityLoggedInUser]
 	session_count:           >=0 & int
 	user_count:              >=0 & int
 	latest_changed_booking?: #SettingsObservabilityLatestChangedBooking
@@ -148,7 +148,7 @@ import (
 
 #TranslationRulesResponse: {
 	items: [...#TranslationRule]
-	total: >=0 & int
+	total:       >=0 & int
 	updated_at?: common.#Timestamp
 }
 
@@ -214,6 +214,47 @@ import (
 	total: >=0 & int
 }
 
+#TourTravelPlanServiceSearchResult: {
+	source_tour_id:      common.#Identifier
+	source_tour_title?:  string
+	source_tour_code?:   string
+	day_number?:         >0 & int
+	service_id:          common.#Identifier
+	service_kind?:       enums.#TravelPlanServiceKind
+	title?:              string
+	details?:            string
+	location?:           string
+	overnight_location?: string
+	thumbnail_url?:      common.#Url | string
+	image_count?:        >=0 & int
+	updated_at?:         common.#Timestamp
+}
+
+#TourTravelPlanServiceSearchResponse: {
+	items: [...#TourTravelPlanServiceSearchResult]
+	total: >=0 & int
+}
+
+#TourTravelPlanDaySearchResult: {
+	source_tour_id:      common.#Identifier
+	source_tour_title?:  string
+	source_tour_code?:   string
+	day_id:              common.#Identifier
+	day_number?:         >0 & int
+	title?:              string
+	overnight_location?: string
+	notes?:              string
+	thumbnail_url?:      common.#Url | string
+	service_count?:      >=0 & int
+	image_count?:        >=0 & int
+	updated_at?:         common.#Timestamp
+}
+
+#TourTravelPlanDaySearchResponse: {
+	items: [...#TourTravelPlanDaySearchResult]
+	total: >=0 & int
+}
+
 #TravelPlanSearchResult: {
 	source_booking_id:    common.#Identifier
 	source_booking_name?: string
@@ -234,44 +275,44 @@ import (
 }
 
 #DestinationScopeCatalogDestination: {
-	code:       enums.#CountryCode
-	label:      string & !=""
-	sort_order: >=0 & int
-	is_active:  bool
+	code:        enums.#CountryCode
+	label:       string & !=""
+	sort_order:  >=0 & int
+	is_active:   bool
 	created_at?: common.#Timestamp | null
 	updated_at?: common.#Timestamp | null
 }
 
 #DestinationArea: {
-	id:         common.#Identifier
+	id:          common.#Identifier
 	destination: enums.#CountryCode
-	code:       string & !=""
-	name:       string & !=""
+	code:        string & !=""
+	name:        string & !=""
 	name_i18n?: [string]: string
-	label:      string & !=""
-	sort_order: >=0 & int
-	is_active:  bool
+	label:       string & !=""
+	sort_order:  >=0 & int
+	is_active:   bool
 	created_at?: common.#Timestamp | null
 	updated_at?: common.#Timestamp | null
 }
 
 #DestinationPlace: {
-	id:         common.#Identifier
-	area_id:    common.#Identifier
-	code:       string & !=""
-	name:       string & !=""
+	id:      common.#Identifier
+	area_id: common.#Identifier
+	code:    string & !=""
+	name:    string & !=""
 	name_i18n?: [string]: string
-	label:      string & !=""
-	sort_order: >=0 & int
-	is_active:  bool
+	label:       string & !=""
+	sort_order:  >=0 & int
+	is_active:   bool
 	created_at?: common.#Timestamp | null
 	updated_at?: common.#Timestamp | null
 }
 
 #DestinationScopeCatalogResponse: {
 	destinations: [...#DestinationScopeCatalogDestination]
-	areas:        [...#DestinationArea]
-	places:       [...#DestinationPlace]
+	areas: [...#DestinationArea]
+	places: [...#DestinationPlace]
 }
 
 #DestinationCreateResponse: {
@@ -290,10 +331,10 @@ import (
 }
 
 #StandardTourReadModel: {
-	id:           common.#Identifier
-	title:        string
+	id:    common.#Identifier
+	title: string
 	destinations: [...enums.#CountryCode] | []
-	travel_plan:  databaseModel.#BookingTravelPlan
+	travel_plan: databaseModel.#BookingTravelPlan
 }
 
 #StandardTourListResponse: {
@@ -391,7 +432,7 @@ import (
 	trip_price_internal?: databaseModel.#BookingOfferTripPriceInternal
 	days_internal?: [...databaseModel.#BookingOfferDayPriceInternal]
 	additional_items?: [...databaseModel.#BookingOfferAdditionalItem]
-	discounts?:         [...databaseModel.#BookingOfferDiscount]
+	discounts?: [...databaseModel.#BookingOfferDiscount]
 	totals:             databaseModel.#BookingOfferTotals
 	quotation_summary?: databaseModel.#BookingOfferQuotationSummary
 	payment_terms?:     #BookingOfferPaymentTermsReadModel
@@ -415,20 +456,20 @@ import (
 }
 
 #GeneratedBookingOfferReadModel: {
-	id:                                      common.#Identifier
-	booking_id:                              common.#Identifier
-	version:                                 >=1 & int
-	filename:                                string & !=""
-	lang:                                    enums.#LanguageCode
-	comment?:                                string
-	created_at:                              common.#Timestamp
-	created_by?:                             string
-	currency:                                enums.#CurrencyCode
-	total_price_cents:                       int
-	payment_terms?:                          #BookingOfferPaymentTermsReadModel
-	offer:                                   #BookingOfferReadModel
-	travel_plan?:                            databaseModel.#BookingTravelPlan
-	pdf_url:                                 string & !=""
+	id:                common.#Identifier
+	booking_id:        common.#Identifier
+	version:           >=1 & int
+	filename:          string & !=""
+	lang:              enums.#LanguageCode
+	comment?:          string
+	created_at:        common.#Timestamp
+	created_by?:       string
+	currency:          enums.#CurrencyCode
+	total_price_cents: int
+	payment_terms?:    #BookingOfferPaymentTermsReadModel
+	offer:             #BookingOfferReadModel
+	travel_plan?:      databaseModel.#BookingTravelPlan
+	pdf_url:           string & !=""
 }
 
 #BookingTravelPlanPdfReadModel: {
@@ -446,33 +487,33 @@ import (
 }
 
 #BookingReadModel: {
-	id:                                               common.#Identifier
-	name?:                                            string
-	image?:                                           string
-	core_revision?:                                   >=0 & int
-	notes_revision?:                                  >=0 & int
-	persons_revision?:                                >=0 & int
-	travel_plan_revision?:                            >=0 & int
-	offer_revision?:                                  >=0 & int
-	payment_documents_revision?:                      >=0 & int
-	deposit_received_at?:                             common.#Timestamp
-	deposit_confirmed_by_atp_staff_id?:               common.#Identifier
-	assigned_keycloak_user_id?:                       common.#Identifier
-	source_channel?:                                  enums.#BookingSourceChannel
-	referral_kind?:                                   enums.#BookingReferralKind
-	referral_label?:                                  string
-	referral_staff_user_id?:                          common.#Identifier
-	assigned_keycloak_user_label?:                    string
-	assigned_atp_staff?:                              jsonModel.#AtpStaffProfile
+	id:                                 common.#Identifier
+	name?:                              string
+	image?:                             string
+	core_revision?:                     >=0 & int
+	notes_revision?:                    >=0 & int
+	persons_revision?:                  >=0 & int
+	travel_plan_revision?:              >=0 & int
+	offer_revision?:                    >=0 & int
+	payment_documents_revision?:        >=0 & int
+	deposit_received_at?:               common.#Timestamp
+	deposit_confirmed_by_atp_staff_id?: common.#Identifier
+	assigned_keycloak_user_id?:         common.#Identifier
+	source_channel?:                    enums.#BookingSourceChannel
+	referral_kind?:                     enums.#BookingReferralKind
+	referral_label?:                    string
+	referral_staff_user_id?:            common.#Identifier
+	assigned_keycloak_user_label?:      string
+	assigned_atp_staff?:                jsonModel.#AtpStaffProfile
 	travel_styles?: [...string]
-	pdf_personalization?:          databaseModel.#BookingPdfPersonalization
-	travel_start_day?:             common.#DateOnly
-	travel_end_day?:               common.#DateOnly
-	number_of_travelers?:          >=0 & int
-	preferred_currency?:           enums.#CurrencyCode
-	customer_language?:            enums.#LanguageCode
-	accepted_record?:              #BookingAcceptedRecordReadModel
-	notes?:                        string
+	pdf_personalization?: databaseModel.#BookingPdfPersonalization
+	travel_start_day?:    common.#DateOnly
+	travel_end_day?:      common.#DateOnly
+	number_of_travelers?: >=0 & int
+	preferred_currency?:  enums.#CurrencyCode
+	customer_language?:   enums.#LanguageCode
+	accepted_record?:     #BookingAcceptedRecordReadModel
+	notes?:               string
 	persons?: [...databaseModel.#BookingPerson]
 	travel_plan?:         databaseModel.#BookingTravelPlan
 	web_form_submission?: databaseModel.#BookingWebFormSubmission

@@ -2531,6 +2531,176 @@ test("marketing tour apply copies the marketing travel plan into a booking trave
   }
 });
 
+test("marketing tour editor can import days and services from other marketing tours", async () => {
+  const sourceTitle = `Marketing tour library source ${Date.now()}`;
+  const targetTitle = `Marketing tour library target ${Date.now()}`;
+  let sourceTourId = "";
+  let targetTourId = "";
+  const tourEditorHeaders = apiHeaders("atp_tour_editor", "tour-editor", "kc-tour-editor");
+  try {
+    const sourceCreateResult = await requestJson(
+      endpointPath("tour_create"),
+      tourEditorHeaders,
+      {
+        method: "POST",
+        body: {
+          title: sourceTitle,
+          styles: ["culture"],
+          short_description: "Reusable marketing tour content",
+          travel_plan: {
+            destination_scope: [{ destination: "VN", areas: [] }],
+            days: [
+              {
+                id: "marketing_library_source_day_1",
+                day_number: 1,
+                title: "Library source market day",
+                overnight_location: "Hoi An",
+                notes: "Reusable marketing day notes",
+                services: [
+                  {
+                    id: "marketing_library_source_service_1",
+                    timing_kind: "label",
+                    kind: "activity",
+                    title: "Library lantern service",
+                    image_subtitle: "Lantern image subtitle",
+                    location: "Hoi An",
+                    image: {
+                      id: "marketing_library_source_image_1",
+                      storage_path: "/public/v1/tour-images/source/library-service.webp",
+                      sort_order: 0,
+                      is_primary: true,
+                      is_customer_visible: true,
+                      include_in_travel_tour_card: true,
+                      created_at: "2026-04-01T00:00:00Z"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    );
+    assert.equal(sourceCreateResult.status, 201);
+    sourceTourId = sourceCreateResult.body.tour.id;
+
+    const targetCreateResult = await requestJson(
+      endpointPath("tour_create"),
+      tourEditorHeaders,
+      {
+        method: "POST",
+        body: {
+          title: targetTitle,
+          styles: ["culture"],
+          short_description: "Marketing tour receiving reusable content",
+          travel_plan: {
+            destination_scope: [{ destination: "VN", areas: [] }],
+            days: [
+              {
+                id: "marketing_library_target_day_1",
+                day_number: 1,
+                title: "Target base day",
+                overnight_location: "Da Nang",
+                services: []
+              }
+            ]
+          }
+        }
+      }
+    );
+    assert.equal(targetCreateResult.status, 201);
+    targetTourId = targetCreateResult.body.tour.id;
+
+    const daySearchResult = await requestJson(
+      `${endpointPath("tour_travel_plan_day_search")}?q=market&exclude_tour_id=${encodeURIComponent(targetTourId)}`,
+      tourEditorHeaders
+    );
+    assert.equal(daySearchResult.status, 200);
+    assert.ok(daySearchResult.body.items.some((item) => item.source_tour_id === sourceTourId));
+    assert.equal(daySearchResult.body.items.some((item) => item.source_tour_id === targetTourId), false);
+
+    const serviceSearchResult = await requestJson(
+      `${endpointPath("tour_travel_plan_service_search")}?q=lantern&service_kind=activity&exclude_tour_id=${encodeURIComponent(targetTourId)}`,
+      tourEditorHeaders
+    );
+    assert.equal(serviceSearchResult.status, 200);
+    assert.ok(serviceSearchResult.body.items.some((item) => item.source_tour_id === sourceTourId));
+
+    const sameTourImportResult = await requestJson(
+      endpointPath("tour_travel_plan_day_import").replace("{tour_id}", targetTourId),
+      tourEditorHeaders,
+      {
+        method: "POST",
+        body: {
+          expected_updated_at: targetCreateResult.body.tour.updated_at,
+          source_tour_id: targetTourId,
+          source_day_id: "marketing_library_target_day_1",
+          include_images: true,
+          include_customer_visible_images_only: false,
+          include_notes: true,
+          include_translations: true
+        }
+      }
+    );
+    assert.equal(sameTourImportResult.status, 422);
+
+    const serviceImportResult = await requestJson(
+      endpointPath("tour_travel_plan_service_import")
+        .replace("{tour_id}", targetTourId)
+        .replace("{day_id}", "marketing_library_target_day_1"),
+      tourEditorHeaders,
+      {
+        method: "POST",
+        body: {
+          expected_updated_at: targetCreateResult.body.tour.updated_at,
+          source_tour_id: sourceTourId,
+          source_service_id: "marketing_library_source_service_1",
+          include_images: true,
+          include_customer_visible_images_only: false,
+          include_notes: true,
+          include_translations: true
+        }
+      }
+    );
+    assert.equal(serviceImportResult.status, 200);
+    const importedService = serviceImportResult.body.tour.travel_plan.days[0].services[0];
+    assert.equal(importedService.title, "Library lantern service");
+    assert.notEqual(importedService.id, "marketing_library_source_service_1");
+    assert.equal(importedService.image.include_in_travel_tour_card, true);
+    assert.notEqual(importedService.image.id, "marketing_library_source_image_1");
+
+    const dayImportResult = await requestJson(
+      endpointPath("tour_travel_plan_day_import").replace("{tour_id}", targetTourId),
+      tourEditorHeaders,
+      {
+        method: "POST",
+        body: {
+          expected_updated_at: serviceImportResult.body.tour.updated_at,
+          source_tour_id: sourceTourId,
+          source_day_id: "marketing_library_source_day_1",
+          include_images: true,
+          include_customer_visible_images_only: false,
+          include_notes: true,
+          include_translations: true
+        }
+      }
+    );
+    assert.equal(dayImportResult.status, 200);
+    assert.equal(dayImportResult.body.tour.travel_plan.days.length, 2);
+    assert.equal(dayImportResult.body.tour.travel_plan.days[1].title, "Library source market day");
+    assert.notEqual(dayImportResult.body.tour.travel_plan.days[1].id, "marketing_library_source_day_1");
+    assert.equal(dayImportResult.body.tour.travel_plan.days[1].services[0].title, "Library lantern service");
+  } finally {
+    for (const tourId of [targetTourId, sourceTourId].filter(Boolean)) {
+      await requestJson(
+        endpointPath("tour_delete").replace("{tour_id}", tourId),
+        tourEditorHeaders,
+        { method: "DELETE" }
+      );
+    }
+  }
+});
+
 test("standard tour titles must be unique", async () => {
   const sourceBooking = await createSeedBooking();
   const primaryTitle = `Summer Escape ${sourceBooking.id}`;

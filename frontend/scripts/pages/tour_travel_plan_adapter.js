@@ -1,5 +1,9 @@
 import { createTravelPlanEditorCore } from "../shared/travel_plan_editor_core.js";
 import {
+  tourTravelPlanDayImportRequest,
+  tourTravelPlanDaySearchRequest,
+  tourTravelPlanServiceImportRequest,
+  tourTravelPlanServiceSearchRequest,
   tourTravelPlanServiceImageDeleteRequest,
   tourTravelPlanServiceImageUploadRequest,
   tourTravelPlanUpdateRequest
@@ -216,6 +220,68 @@ export function createTourTravelPlanAdapter({
     });
   }
 
+  function buildTourTravelPlanDaySearchRequest({ apiOrigin: requestApiOrigin, state: requestState, query }) {
+    return tourTravelPlanDaySearchRequest({
+      baseURL: requestApiOrigin,
+      query: {
+        ...(normalizeText(query) ? { q: normalizeText(query) } : {}),
+        exclude_tour_id: normalizeText(requestState.booking?.id || requestState.id)
+      }
+    });
+  }
+
+  function buildTourTravelPlanServiceSearchRequest({ apiOrigin: requestApiOrigin, state: requestState, query, kind }) {
+    return tourTravelPlanServiceSearchRequest({
+      baseURL: requestApiOrigin,
+      query: {
+        ...(normalizeText(query) ? { q: normalizeText(query) } : {}),
+        ...(normalizeText(kind) ? { service_kind: normalizeText(kind) } : {}),
+        exclude_tour_id: normalizeText(requestState.booking?.id || requestState.id)
+      }
+    });
+  }
+
+  function buildTourTravelPlanDayImportRequest({ apiOrigin: requestApiOrigin, state: requestState, sourceBookingId, sourceDayId }) {
+    return tourTravelPlanDayImportRequest({
+      baseURL: requestApiOrigin,
+      params: {
+        tour_id: normalizeText(requestState.booking?.id || requestState.id)
+      },
+      query: backendLangQuery(),
+      body: {
+        source_tour_id: sourceBookingId,
+        source_day_id: sourceDayId,
+        include_images: true,
+        include_customer_visible_images_only: false,
+        include_notes: true,
+        include_translations: true,
+        ...expectedTourUpdatedAtPayload(requestState),
+        actor: requestState.user
+      }
+    });
+  }
+
+  function buildTourTravelPlanServiceImportRequest({ apiOrigin: requestApiOrigin, state: requestState, targetDayId, sourceBookingId, sourceServiceId }) {
+    return tourTravelPlanServiceImportRequest({
+      baseURL: requestApiOrigin,
+      params: {
+        tour_id: normalizeText(requestState.booking?.id || requestState.id),
+        day_id: targetDayId
+      },
+      query: backendLangQuery(),
+      body: {
+        source_tour_id: sourceBookingId,
+        source_service_id: sourceServiceId,
+        include_images: true,
+        include_customer_visible_images_only: false,
+        include_notes: true,
+        include_translations: true,
+        ...expectedTourUpdatedAtPayload(requestState),
+        actor: requestState.user
+      }
+    });
+  }
+
   function ensureCore() {
     if (core) return core;
     state.permissions.canEditBooking = state.permissions.canEditTours === true;
@@ -239,14 +305,19 @@ export function createTourTravelPlanAdapter({
       buildTravelPlanSaveRequest: buildTourTravelPlanSaveRequest,
       buildTravelPlanServiceImageUploadRequest: buildTourTravelPlanServiceImageUploadRequest,
       buildTravelPlanServiceImageDeleteRequest: buildTourTravelPlanServiceImageDeleteRequest,
+      buildTravelPlanDaySearchRequest: buildTourTravelPlanDaySearchRequest,
+      buildTravelPlanServiceSearchRequest: buildTourTravelPlanServiceSearchRequest,
+      buildTravelPlanDayImportRequest: buildTourTravelPlanDayImportRequest,
+      buildTravelPlanServiceImportRequest: buildTourTravelPlanServiceImportRequest,
+      travelPlanLibrarySource: "marketing_tour",
       setPageOverlay,
       features: {
         dates: false,
         timing: false,
-        dayImport: false,
+        dayImport: true,
         planImport: false,
         tourImport: false,
-        serviceImport: false,
+        serviceImport: true,
         imageUpload: true,
         attachments: false,
         pdfs: false,

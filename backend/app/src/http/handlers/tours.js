@@ -1,6 +1,8 @@
 import {
   validateBookingTourApplyRequest,
   validateTourTranslateFieldsRequest,
+  validateTourTravelPlanDayImportRequest,
+  validateTourTravelPlanServiceImportRequest,
   validateTourTravelPlanUpdateRequest,
   validateTravelPlanServiceImageDeleteRequest,
   validateTravelPlanServiceImageUploadRequest
@@ -383,6 +385,108 @@ export function createTourHandlers(deps) {
     return normalizeTourTravelPlan(tour?.travel_plan);
   }
 
+  function primaryTravelPlanServiceImage(item) {
+    if (item?.image && typeof item.image === "object" && !Array.isArray(item.image)) {
+      return item.image;
+    }
+    if (!Array.isArray(item?.images)) return null;
+    return item.images.find((image) => image?.is_primary)
+      || item.images.find((image) => image?.is_customer_visible !== false)
+      || item.images[0]
+      || null;
+  }
+
+  function buildTourTravelPlanDaySearchResult({ tour, tourTitle, day }) {
+    const services = Array.isArray(day?.services) ? day.services : [];
+    const primaryService = services.find((item) => primaryTravelPlanServiceImage(item)) || services[0] || null;
+    const primaryImage = primaryTravelPlanServiceImage(primaryService);
+    return {
+      source_tour_id: tour.id,
+      source_tour_title: normalizeText(tourTitle),
+      source_tour_code: tour.id,
+      day_id: normalizeText(day?.id),
+      day_number: day?.day_number || null,
+      title: normalizeText(day?.title),
+      overnight_location: normalizeText(day?.overnight_location),
+      notes: normalizeText(day?.notes),
+      thumbnail_url: normalizeText(primaryImage?.storage_path),
+      service_count: services.length,
+      image_count: primaryImage ? 1 : 0,
+      updated_at: normalizeText(tour.updated_at || tour.created_at)
+    };
+  }
+
+  function buildTourTravelPlanServiceSearchResult({ tour, tourTitle, day, item }) {
+    const primaryImage = primaryTravelPlanServiceImage(item);
+    return {
+      source_tour_id: tour.id,
+      source_tour_title: normalizeText(tourTitle),
+      source_tour_code: tour.id,
+      day_number: day?.day_number || null,
+      service_id: item.id,
+      service_kind: normalizeText(item.kind) || null,
+      title: normalizeText(item.title),
+      details: normalizeText(item.details),
+      location: normalizeText(item.location),
+      overnight_location: normalizeText(day?.overnight_location),
+      thumbnail_url: normalizeText(primaryImage?.storage_path),
+      image_count: primaryImage ? 1 : 0,
+      updated_at: normalizeText(tour.updated_at || tour.created_at)
+    };
+  }
+
+  function copyMarketingTourServiceForImport(sourceItem, options = {}) {
+    const includeTranslations = options.includeTranslations !== false;
+    const includeImages = options.includeImages !== false;
+    const includeCustomerVisibleImagesOnly = options.includeCustomerVisibleImagesOnly === true;
+    const importedAt = normalizeText(options.importedAt) || nowIso();
+    const sourceImage = primaryTravelPlanServiceImage(sourceItem);
+    const image = includeImages && sourceImage && (!includeCustomerVisibleImagesOnly || sourceImage?.is_customer_visible !== false)
+      ? {
+          ...sourceImage,
+          id: `travel_plan_service_image_${randomUUID()}`,
+          sort_order: 0,
+          is_primary: true,
+          created_at: importedAt
+        }
+      : null;
+    return {
+      id: `travel_plan_service_${randomUUID()}`,
+      timing_kind: normalizeText(sourceItem?.timing_kind) || "label",
+      time_label: normalizeText(sourceItem?.time_label),
+      time_label_i18n: includeTranslations && sourceItem?.time_label_i18n ? { ...sourceItem.time_label_i18n } : undefined,
+      time_point: normalizeText(sourceItem?.time_point),
+      kind: normalizeText(sourceItem?.kind) || "other",
+      title: normalizeText(sourceItem?.title),
+      title_i18n: includeTranslations && sourceItem?.title_i18n ? { ...sourceItem.title_i18n } : undefined,
+      image_subtitle: normalizeText(sourceItem?.image_subtitle),
+      image_subtitle_i18n: includeTranslations && sourceItem?.image_subtitle_i18n ? { ...sourceItem.image_subtitle_i18n } : undefined,
+      location: normalizeText(sourceItem?.location),
+      location_i18n: includeTranslations && sourceItem?.location_i18n ? { ...sourceItem.location_i18n } : undefined,
+      start_time: normalizeText(sourceItem?.start_time),
+      end_time: normalizeText(sourceItem?.end_time),
+      image
+    };
+  }
+
+  function copyMarketingTourDayForImport(sourceDay, options = {}) {
+    const includeTranslations = options.includeTranslations !== false;
+    const includeNotes = options.includeNotes !== false;
+    return {
+      id: `travel_plan_day_${randomUUID()}`,
+      day_number: 1,
+      title: normalizeText(sourceDay?.title),
+      title_i18n: includeTranslations && sourceDay?.title_i18n ? { ...sourceDay.title_i18n } : undefined,
+      overnight_location: normalizeText(sourceDay?.overnight_location),
+      overnight_location_i18n: includeTranslations && sourceDay?.overnight_location_i18n ? { ...sourceDay.overnight_location_i18n } : undefined,
+      notes: includeNotes ? normalizeText(sourceDay?.notes) : null,
+      notes_i18n: includeNotes && includeTranslations && sourceDay?.notes_i18n ? { ...sourceDay.notes_i18n } : undefined,
+      services: (Array.isArray(sourceDay?.services) ? sourceDay.services : []).map((sourceItem) => (
+        copyMarketingTourServiceForImport(sourceItem, options)
+      ))
+    };
+  }
+
   async function regeneratePublicHomepageAssets(reason, details = {}) {
     const task = async () => {
       const generatorPath = PUBLIC_HOMEPAGE_ASSET_GENERATOR_CANDIDATES.find((candidate) => existsSync(candidate));
@@ -509,6 +613,108 @@ export function createTourHandlers(deps) {
         }
       )
     );
+  }
+
+  async function handleSearchTourTravelPlanDays(req, res) {
+    const principal = getPrincipal(req);
+    if (!canReadTours(principal)) {
+      sendJson(res, 403, { error: "Forbidden" });
+      return;
+    }
+    const lang = requestLang(req.url);
+    const requestUrl = new URL(req.url, "http://localhost");
+    const query = normalizeText(requestUrl.searchParams.get("q")).toLowerCase();
+    const serviceKind = normalizeText(requestUrl.searchParams.get("service_kind")).toLowerCase();
+    const excludeTourId = normalizeText(requestUrl.searchParams.get("exclude_tour_id"));
+    const limit = clamp(safeInt(requestUrl.searchParams.get("limit")) || 20, 1, 50);
+    const offset = clamp(safeInt(requestUrl.searchParams.get("offset")) || 0, 0, 5000);
+    const rows = [];
+
+    for (const tour of (await readTours()).map((item) => normalizeTourForStorage(item))) {
+      if (excludeTourId && tour.id === excludeTourId) continue;
+      const readModel = normalizeTourForRead(tour, { lang });
+      const travelPlan = normalizeMarketingTourTravelPlan(tour.travel_plan, {
+        contentLang: lang,
+        flatLang: lang,
+        strictReferences: false
+      });
+      for (const day of Array.isArray(travelPlan?.days) ? travelPlan.days : []) {
+        const services = Array.isArray(day?.services) ? day.services : [];
+        if (!services.length) continue;
+        if (serviceKind && !services.some((item) => normalizeText(item?.kind).toLowerCase() === serviceKind)) continue;
+        const haystack = [
+          readModel.title,
+          day?.title,
+          day?.overnight_location,
+          day?.notes,
+          ...services.flatMap((item) => [item?.title, item?.image_subtitle, item?.location])
+        ].map((value) => normalizeText(value).toLowerCase()).filter(Boolean).join(" ");
+        if (query && !haystack.includes(query)) continue;
+        rows.push(buildTourTravelPlanDaySearchResult({
+          tour,
+          tourTitle: readModel.title,
+          day
+        }));
+      }
+    }
+
+    rows.sort((left, right) => String(right.updated_at || "").localeCompare(String(left.updated_at || "")));
+    sendJson(res, 200, {
+      items: rows.slice(offset, offset + limit),
+      total: rows.length
+    });
+  }
+
+  async function handleSearchTourTravelPlanServices(req, res) {
+    const principal = getPrincipal(req);
+    if (!canReadTours(principal)) {
+      sendJson(res, 403, { error: "Forbidden" });
+      return;
+    }
+    const lang = requestLang(req.url);
+    const requestUrl = new URL(req.url, "http://localhost");
+    const query = normalizeText(requestUrl.searchParams.get("q")).toLowerCase();
+    const serviceKind = normalizeText(requestUrl.searchParams.get("service_kind")).toLowerCase();
+    const excludeTourId = normalizeText(requestUrl.searchParams.get("exclude_tour_id"));
+    const limit = clamp(safeInt(requestUrl.searchParams.get("limit")) || 20, 1, 50);
+    const offset = clamp(safeInt(requestUrl.searchParams.get("offset")) || 0, 0, 5000);
+    const rows = [];
+
+    for (const tour of (await readTours()).map((item) => normalizeTourForStorage(item))) {
+      if (excludeTourId && tour.id === excludeTourId) continue;
+      const readModel = normalizeTourForRead(tour, { lang });
+      const travelPlan = normalizeMarketingTourTravelPlan(tour.travel_plan, {
+        contentLang: lang,
+        flatLang: lang,
+        strictReferences: false
+      });
+      for (const day of Array.isArray(travelPlan?.days) ? travelPlan.days : []) {
+        for (const item of Array.isArray(day?.services) ? day.services : []) {
+          if (serviceKind && normalizeText(item?.kind).toLowerCase() !== serviceKind) continue;
+          const haystack = [
+            readModel.title,
+            day?.title,
+            day?.overnight_location,
+            item?.title,
+            item?.image_subtitle,
+            item?.location
+          ].map((value) => normalizeText(value).toLowerCase()).filter(Boolean).join(" ");
+          if (query && !haystack.includes(query)) continue;
+          rows.push(buildTourTravelPlanServiceSearchResult({
+            tour,
+            tourTitle: readModel.title,
+            day,
+            item
+          }));
+        }
+      }
+    }
+
+    rows.sort((left, right) => String(right.updated_at || "").localeCompare(String(left.updated_at || "")));
+    sendJson(res, 200, {
+      items: rows.slice(offset, offset + limit),
+      total: rows.length
+    });
   }
 
   async function handleGetTour(req, res, [tourId]) {
@@ -775,6 +981,205 @@ export function createTourHandlers(deps) {
     tours[index] = updated;
     await persistTour(updated);
     const homepageAssets = await regeneratePublicHomepageAssets("tour_travel_plan_patch", { tour_id: updated.id });
+    sendJson(res, 200, {
+      tour: buildTourEditorResponse(updated, lang),
+      homepage_assets: homepageAssets
+    });
+  }
+
+  async function handleImportTourTravelPlanDay(req, res, [tourId]) {
+    const principal = getPrincipal(req);
+    if (!canEditTours(principal)) {
+      sendJson(res, 403, { error: "Forbidden" });
+      return;
+    }
+    let payload;
+    try {
+      payload = await readBodyJson(req);
+      validateTourTravelPlanDayImportRequest(payload);
+    } catch (error) {
+      sendJson(res, error?.statusCode || 400, { error: String(error?.message || "Invalid JSON payload") });
+      return;
+    }
+
+    const lang = requestLang(req.url);
+    const tours = (await readTours()).map((tour) => normalizeTourForStorage(tour));
+    const targetIndex = tours.findIndex((item) => item.id === tourId);
+    if (targetIndex < 0) {
+      sendJson(res, 404, { error: "Tour not found" });
+      return;
+    }
+    if (!assertExpectedTourUpdatedAt(payload, tours[targetIndex], res)) return;
+
+    const sourceTourId = normalizeText(payload.source_tour_id);
+    if (sourceTourId === tourId) {
+      sendJson(res, 422, { error: "Choose a day from another marketing tour." });
+      return;
+    }
+    const sourceTour = tours.find((item) => item.id === sourceTourId);
+    if (!sourceTour) {
+      sendJson(res, 404, { error: "Source tour not found" });
+      return;
+    }
+    const sourceTravelPlan = normalizeMarketingTourTravelPlan(sourceTour.travel_plan, {
+      contentLang: lang,
+      flatLang: lang,
+      strictReferences: false
+    });
+    const sourceDay = (Array.isArray(sourceTravelPlan?.days) ? sourceTravelPlan.days : [])
+      .find((day) => day.id === normalizeText(payload.source_day_id));
+    if (!sourceDay) {
+      sendJson(res, 404, { error: "Source day not found" });
+      return;
+    }
+
+    const targetTravelPlan = normalizeMarketingTourTravelPlan(tours[targetIndex].travel_plan, {
+      contentLang: lang,
+      flatLang: lang,
+      strictReferences: false
+    });
+    const importedDay = copyMarketingTourDayForImport(sourceDay, {
+      includeTranslations: payload.include_translations !== false,
+      includeNotes: payload.include_notes !== false,
+      includeImages: payload.include_images !== false,
+      includeCustomerVisibleImagesOnly: payload.include_customer_visible_images_only === true,
+      importedAt: nowIso()
+    });
+    const nextTravelPlan = {
+      ...targetTravelPlan,
+      days: [
+        ...(Array.isArray(targetTravelPlan?.days) ? targetTravelPlan.days : []),
+        importedDay
+      ]
+    };
+    const check = validateMarketingTourTravelPlanInput(nextTravelPlan);
+    if (!check.ok) {
+      sendJson(res, 422, { error: check.error });
+      return;
+    }
+    if (!(await validateTourDestinationScope(check.travel_plan, res))) return;
+
+    const updated = normalizeTourForStorage({
+      ...tours[targetIndex],
+      travel_plan: check.travel_plan,
+      updated_at: nowIso()
+    });
+    tours[targetIndex] = updated;
+    await persistTour(updated);
+    const homepageAssets = await regeneratePublicHomepageAssets("tour_travel_plan_day_import", { tour_id: updated.id });
+    sendJson(res, 200, {
+      tour: buildTourEditorResponse(updated, lang),
+      homepage_assets: homepageAssets
+    });
+  }
+
+  async function handleImportTourTravelPlanService(req, res, [tourId, dayId]) {
+    const principal = getPrincipal(req);
+    if (!canEditTours(principal)) {
+      sendJson(res, 403, { error: "Forbidden" });
+      return;
+    }
+    let payload;
+    try {
+      payload = await readBodyJson(req);
+      validateTourTravelPlanServiceImportRequest(payload);
+    } catch (error) {
+      sendJson(res, error?.statusCode || 400, { error: String(error?.message || "Invalid JSON payload") });
+      return;
+    }
+
+    const lang = requestLang(req.url);
+    const tours = (await readTours()).map((tour) => normalizeTourForStorage(tour));
+    const targetIndex = tours.findIndex((item) => item.id === tourId);
+    if (targetIndex < 0) {
+      sendJson(res, 404, { error: "Tour not found" });
+      return;
+    }
+    if (!assertExpectedTourUpdatedAt(payload, tours[targetIndex], res)) return;
+
+    const sourceTourId = normalizeText(payload.source_tour_id);
+    if (sourceTourId === tourId) {
+      sendJson(res, 422, { error: "Choose a service from another marketing tour." });
+      return;
+    }
+    const sourceTour = tours.find((item) => item.id === sourceTourId);
+    if (!sourceTour) {
+      sendJson(res, 404, { error: "Source tour not found" });
+      return;
+    }
+    const sourceServiceId = normalizeText(payload.source_service_id);
+    const sourceTravelPlan = normalizeMarketingTourTravelPlan(sourceTour.travel_plan, {
+      contentLang: lang,
+      flatLang: lang,
+      strictReferences: false
+    });
+    const sourceDay = (Array.isArray(sourceTravelPlan?.days) ? sourceTravelPlan.days : [])
+      .find((day) => Array.isArray(day?.services) && day.services.some((item) => item.id === sourceServiceId));
+    const sourceService = (Array.isArray(sourceDay?.services) ? sourceDay.services : [])
+      .find((item) => item.id === sourceServiceId);
+    if (!sourceDay || !sourceService) {
+      sendJson(res, 404, { error: "Source service not found" });
+      return;
+    }
+
+    const targetTravelPlan = normalizeMarketingTourTravelPlan(tours[targetIndex].travel_plan, {
+      contentLang: lang,
+      flatLang: lang,
+      strictReferences: false
+    });
+    const targetDays = Array.isArray(targetTravelPlan?.days) ? targetTravelPlan.days : [];
+    const targetDayIndex = targetDays.findIndex((day) => day.id === dayId);
+    if (targetDayIndex < 0) {
+      sendJson(res, 404, { error: "Target day not found" });
+      return;
+    }
+
+    const importedService = copyMarketingTourServiceForImport(sourceService, {
+      includeTranslations: payload.include_translations !== false,
+      includeImages: payload.include_images !== false,
+      includeCustomerVisibleImagesOnly: payload.include_customer_visible_images_only === true,
+      importedAt: nowIso()
+    });
+    const targetDay = targetDays[targetDayIndex];
+    const targetServices = Array.isArray(targetDay?.services) ? [...targetDay.services] : [];
+    const insertAfterServiceId = normalizeText(payload.insert_after_service_id);
+    if (insertAfterServiceId) {
+      const insertAfterIndex = targetServices.findIndex((item) => item.id === insertAfterServiceId);
+      if (insertAfterIndex < 0) {
+        sendJson(res, 422, { error: `Target service ${insertAfterServiceId} was not found in the target day.` });
+        return;
+      }
+      targetServices.splice(insertAfterIndex + 1, 0, importedService);
+    } else {
+      targetServices.push(importedService);
+    }
+
+    const nextTravelPlan = {
+      ...targetTravelPlan,
+      days: targetDays.map((day, index) => (
+        index === targetDayIndex
+          ? {
+              ...day,
+              services: targetServices
+            }
+          : day
+      ))
+    };
+    const check = validateMarketingTourTravelPlanInput(nextTravelPlan);
+    if (!check.ok) {
+      sendJson(res, 422, { error: check.error });
+      return;
+    }
+    if (!(await validateTourDestinationScope(check.travel_plan, res))) return;
+
+    const updated = normalizeTourForStorage({
+      ...tours[targetIndex],
+      travel_plan: check.travel_plan,
+      updated_at: nowIso()
+    });
+    tours[targetIndex] = updated;
+    await persistTour(updated);
+    const homepageAssets = await regeneratePublicHomepageAssets("tour_travel_plan_service_import", { tour_id: updated.id });
     sendJson(res, 200, {
       tour: buildTourEditorResponse(updated, lang),
       homepage_assets: homepageAssets
@@ -1221,11 +1626,15 @@ export function createTourHandlers(deps) {
   return {
     handlePublicListTours,
     handleListTours,
+    handleSearchTourTravelPlanDays,
+    handleSearchTourTravelPlanServices,
     handleGetTour,
     handleTranslateTourFields,
     handleCreateTour,
     handlePatchTour,
     handlePatchTourTravelPlan,
+    handleImportTourTravelPlanDay,
+    handleImportTourTravelPlanService,
     handleUploadTourTravelPlanServiceImage,
     handleDeleteTourTravelPlanServiceImage,
     handleApplyTourToBooking,

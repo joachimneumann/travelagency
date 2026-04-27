@@ -916,6 +916,11 @@ test("booking and marketing-tour translation collapsibles expose incomplete stat
     "Marketing-tour translation review should mark missing, partial, and stale translations as incomplete without making the dirty bar red by itself"
   );
   assert.match(
+    tourScriptSource,
+    /function travelPlanTranslationStatus\(plan, targetLang\)[\s\S]*const hasSourceHash = Boolean\(normalizeText\(meta\?\.source_hash\)\);[\s\S]*const stale = translatedFields > 0 && \([\s\S]*hasSourceHash && meta\.source_hash !== sourceHash[\s\S]*!hasSourceHash && targetLang !== TRAVEL_PLAN_SOURCE_LANG/,
+    "Marketing-tour Translate should treat translated travel-plan content without source metadata as outdated instead of skipping it"
+  );
+  assert.match(
     collapsibleStyles,
     /\.booking-section__summary--translation-incomplete \{[\s\S]*border: 1\.5px solid #ff6f55;[\s\S]*background: rgba\(255, 240, 236, 0\.98\);[\s\S]*box-shadow: 0 0 0 1px rgba\(255, 111, 85, 0\.14\);[\s\S]*color: var\(--error-text-strong\);/,
     "Incomplete translation summaries should reuse the dirty-bar red treatment"
@@ -4843,6 +4848,48 @@ test("booking travel-plan templates apply marketing tours through the tour endpo
   assert.match(routesSource, /\/api\/v1\/standard-tours/, "HTTP routes should include the standard tour endpoints");
   assert.doesNotMatch(handlersSource, /Only published standard tours can be applied/, "Standard tour apply handler should not enforce standard tour status");
   assert.match(domainSource, /enumValueSetFor\("CountryCode"\)[\s\S]*normalizeText\(value\)\.toUpperCase\(\)[\s\S]*COUNTRY_CODE_SET\.has\(value\)/, "Standard tour destination normalization should store CountryCode values instead of tour destination slugs");
+});
+
+test("marketing tour editor imports days and services only from other marketing tours", async () => {
+  const marketingTourPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "marketing_tour.html");
+  const tourAdapterPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "tour_travel_plan_adapter.js");
+  const tourPageScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "tour.js");
+  const travelPlanLibraryPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan_service_library.js");
+  const routesPath = path.resolve(__dirname, "..", "src", "http", "routes.js");
+  const tourHandlersPath = path.resolve(__dirname, "..", "src", "http", "handlers", "tours.js");
+  const [
+    marketingTourPageSource,
+    tourAdapterSource,
+    tourPageScriptSource,
+    travelPlanLibrarySource,
+    routesSource,
+    tourHandlersSource
+  ] = await Promise.all([
+    readFile(marketingTourPagePath, "utf8"),
+    readFile(tourAdapterPath, "utf8"),
+    readFile(tourPageScriptPath, "utf8"),
+    readFile(travelPlanLibraryPath, "utf8"),
+    readFile(routesPath, "utf8"),
+    readFile(tourHandlersPath, "utf8")
+  ]);
+
+  assert.match(marketingTourPageSource, /id="travel_plan_service_library_modal"/, "Marketing tour page should include the reusable travel-plan library modal");
+  assert.match(tourPageScriptSource, /travelPlanServiceLibraryModal:\s*document\.getElementById\("travel_plan_service_library_modal"\)/, "Marketing tour script should wire the travel-plan library modal");
+  assert.match(tourAdapterSource, /tourTravelPlanDaySearchRequest/, "Marketing tour editor should search reusable days through tour endpoints");
+  assert.match(tourAdapterSource, /tourTravelPlanServiceSearchRequest/, "Marketing tour editor should search reusable services through tour endpoints");
+  assert.match(tourAdapterSource, /tourTravelPlanDayImportRequest/, "Marketing tour editor should import days through tour endpoints");
+  assert.match(tourAdapterSource, /tourTravelPlanServiceImportRequest/, "Marketing tour editor should import services through tour endpoints");
+  assert.match(tourAdapterSource, /travelPlanLibrarySource:\s*"marketing_tour"/, "Marketing tour editor should mark the library source as marketing tours");
+  assert.match(tourAdapterSource, /dayImport:\s*true/, "Marketing tour editor should expose day import");
+  assert.match(tourAdapterSource, /serviceImport:\s*true/, "Marketing tour editor should expose service import");
+  assert.match(travelPlanLibrarySource, /buildTravelPlanDaySearchRequest/, "Shared library should accept entity-specific day search builders");
+  assert.match(travelPlanLibrarySource, /buildTravelPlanServiceImportRequest/, "Shared library should accept entity-specific service import builders");
+  assert.match(routesSource, /\/api\/v1\/tours\/travel-plan-days\/search/, "Routes should expose marketing tour day search");
+  assert.match(routesSource, /\/api\/v1\/tours\/travel-plan-services\/search/, "Routes should expose marketing tour service search");
+  assert.match(routesSource, /\/api\/v1\/tours\/\{tour_id\}\/travel-plan\/days\/import/, "Routes should expose marketing tour day import");
+  assert.match(routesSource, /\/api\/v1\/tours\/\{tour_id\}\/travel-plan\/days\/\{day_id\}\/services\/import/, "Routes should expose marketing tour service import");
+  assert.match(tourHandlersSource, /sourceTourId === tourId[\s\S]*Choose a day from another marketing tour/, "Day imports should reject the current marketing tour as a source");
+  assert.match(tourHandlersSource, /sourceTourId === tourId[\s\S]*Choose a service from another marketing tour/, "Service imports should reject the current marketing tour as a source");
 });
 
 test("travel plan library cards keep media separate from copy and actions", async () => {

@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-04-27T14:24:27Z
+# 2026-04-27T15:00:39Z
 
 ---
 openapi: 3.1.0
@@ -5718,6 +5718,113 @@ components:
             "$ref": "#/components/schemas/TravelPlanServiceSearchResult"
         total:
           type: integer
+    TourTravelPlanDaySearchResult:
+      type: object
+      required:
+      - source_tour_id
+      - day_id
+      properties:
+        source_tour_id:
+          type: string
+        source_tour_title:
+          type: string
+          nullable: true
+        source_tour_code:
+          type: string
+          nullable: true
+        day_id:
+          type: string
+        day_number:
+          type: integer
+          nullable: true
+        title:
+          type: string
+          nullable: true
+        overnight_location:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        thumbnail_url:
+          type: string
+          nullable: true
+        service_count:
+          type: integer
+          nullable: true
+        image_count:
+          type: integer
+          nullable: true
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+    TourTravelPlanDaySearchResponse:
+      type: object
+      required:
+      - total
+      properties:
+        items:
+          type: array
+          items:
+            "$ref": "#/components/schemas/TourTravelPlanDaySearchResult"
+        total:
+          type: integer
+    TourTravelPlanServiceSearchResult:
+      type: object
+      required:
+      - source_tour_id
+      - service_id
+      properties:
+        source_tour_id:
+          type: string
+        source_tour_title:
+          type: string
+          nullable: true
+        source_tour_code:
+          type: string
+          nullable: true
+        day_number:
+          type: integer
+          nullable: true
+        service_id:
+          type: string
+        service_kind:
+          "$ref": "#/components/schemas/TravelPlanServiceKind"
+          nullable: true
+        title:
+          type: string
+          nullable: true
+        details:
+          type: string
+          nullable: true
+        location:
+          type: string
+          nullable: true
+        overnight_location:
+          type: string
+          nullable: true
+        thumbnail_url:
+          type: string
+          nullable: true
+        image_count:
+          type: integer
+          nullable: true
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+    TourTravelPlanServiceSearchResponse:
+      type: object
+      required:
+      - total
+      properties:
+        items:
+          type: array
+          items:
+            "$ref": "#/components/schemas/TourTravelPlanServiceSearchResult"
+        total:
+          type: integer
     DestinationScopeCatalogDestination:
       type: object
       required:
@@ -6882,6 +6989,67 @@ components:
           type: string
           format: date-time
           nullable: true
+        actor:
+          type: string
+          nullable: true
+    TourTravelPlanDayImportRequest:
+      type: object
+      required:
+      - source_tour_id
+      - source_day_id
+      - include_images
+      - include_customer_visible_images_only
+      - include_notes
+      - include_translations
+      properties:
+        expected_updated_at:
+          type: string
+          format: date-time
+          nullable: true
+        source_tour_id:
+          type: string
+        source_day_id:
+          type: string
+        include_images:
+          type: boolean
+        include_customer_visible_images_only:
+          type: boolean
+        include_notes:
+          type: boolean
+        include_translations:
+          type: boolean
+        actor:
+          type: string
+          nullable: true
+    TourTravelPlanServiceImportRequest:
+      type: object
+      required:
+      - source_tour_id
+      - source_service_id
+      - include_images
+      - include_customer_visible_images_only
+      - include_notes
+      - include_translations
+      properties:
+        expected_updated_at:
+          type: string
+          format: date-time
+          nullable: true
+        source_tour_id:
+          type: string
+        source_service_id:
+          type: string
+        insert_after_service_id:
+          type: string
+          nullable: true
+        include_images:
+          type: boolean
+        include_customer_visible_images_only:
+          type: boolean
+        include_notes:
+          type: boolean
+        include_translations:
+          type: boolean
         actor:
           type: string
           nullable: true
@@ -10455,6 +10623,112 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/tours/travel-plan-days/search":
+    get:
+      operationId: tour_travel_plan_day_search
+      summary: Tour Travel Plan Day Search
+      tags:
+      - Tours
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: q
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: service_kind
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: exclude_tour_id
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/TourTravelPlanDaySearchResponse"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/tours/travel-plan-services/search":
+    get:
+      operationId: tour_travel_plan_service_search
+      summary: Tour Travel Plan Service Search
+      tags:
+      - Tours
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: q
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: service_kind
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: exclude_tour_id
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/TourTravelPlanServiceSearchResponse"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
   "/api/v1/tours/{tour_id}":
     get:
       operationId: tour_detail
@@ -10621,6 +10895,101 @@ paths:
       responses:
         '200':
           description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/TourResponse"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/tours/{tour_id}/travel-plan/days/import":
+    post:
+      operationId: tour_travel_plan_day_import
+      summary: Tour Travel Plan Day Import
+      tags:
+      - Tours
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: tour_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/TourTravelPlanDayImportRequest"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/TourResponse"
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/TourResponse"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/tours/{tour_id}/travel-plan/days/{day_id}/services/import":
+    post:
+      operationId: tour_travel_plan_service_import
+      summary: Tour Travel Plan Service Import
+      tags:
+      - Tours
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: tour_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: day_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/TourTravelPlanServiceImportRequest"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/TourResponse"
+        '201':
+          description: Created
           content:
             application/json:
               schema:

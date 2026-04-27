@@ -853,6 +853,7 @@ textarea:focus-visible {
   color: var(--muted);
   font-size: var(--font-size-body-sm);
   line-height: var(--tour-card-desc-line-height);
+  overflow-wrap: anywhere;
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: var(--tour-card-desc-lines);

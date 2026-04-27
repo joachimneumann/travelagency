@@ -139,6 +139,10 @@ const TOUR_BULK_TRANSLATION_CONCURRENCY = 4;
 
 const TOUR_TRANSLATION_SOURCE_LANG = "en";
 const TOUR_DESCRIPTION_MAX_LENGTH = 170;
+const TOUR_DESCRIPTION_WARNING_LENGTH = 150;
+const TOUR_DESCRIPTION_MIN_FONT_SIZE_PX = 9;
+const TOUR_DESCRIPTION_FIT_TOLERANCE_PX = 1;
+const TOUR_DESCRIPTION_FIT_ITERATIONS = 8;
 const TRAVEL_PLAN_TRANSLATION_INCOMPLETE_STATUSES = new Set(["missing", "partial", "stale"]);
 const TRAVEL_PLAN_TRANSLATION_REQUEST_BATCH_SIZE = 12;
 const TOUR_TRANSLATION_PROVIDER_DISPLAY = "google";
@@ -179,6 +183,14 @@ const els = {
   travelPlanTranslationSection: document.getElementById("tour_travel_plan_translation_section"),
   travelPlanTranslationSummary: document.getElementById("tour_travel_plan_translation_summary"),
   travelPlanTranslationPanel: document.getElementById("tour_travel_plan_translation_panel"),
+  travelPlanServiceLibraryModal: document.getElementById("travel_plan_service_library_modal"),
+  travelPlanServiceLibraryCloseBtn: document.getElementById("travel_plan_service_library_close_btn"),
+  travelPlanServiceLibraryTitle: document.getElementById("travel_plan_service_library_title"),
+  travelPlanServiceLibraryQuery: document.getElementById("travel_plan_service_library_query"),
+  travelPlanServiceLibraryKind: document.getElementById("travel_plan_service_library_kind"),
+  travelPlanServiceLibrarySearchBtn: document.getElementById("travel_plan_service_library_search_btn"),
+  travelPlanServiceLibraryStatus: document.getElementById("travel_plan_service_library_status"),
+  travelPlanServiceLibraryResults: document.getElementById("travel_plan_service_library_results"),
   travelPlanServiceImageInput: document.getElementById("travel_plan_service_image_input"),
   travelPlanImagePreviewModal: document.getElementById("travel_plan_image_preview_modal"),
   travelPlanImagePreviewCloseBtn: document.getElementById("travel_plan_image_preview_close_btn"),
@@ -341,6 +353,17 @@ function truncateTourSourceDescription(value) {
   return String(value ?? "").slice(0, TOUR_DESCRIPTION_MAX_LENGTH);
 }
 
+function tourDescriptionCharacterCountText(value) {
+  return backendT("tour.short_description_character_count", "{count} / {max} characters", {
+    count: String(value ?? "").length,
+    max: TOUR_DESCRIPTION_MAX_LENGTH
+  });
+}
+
+function isTourDescriptionOverWarningLength(value) {
+  return String(value ?? "").length > TOUR_DESCRIPTION_WARNING_LENGTH;
+}
+
 function normalizeTourShortDescriptionMap(value, fallbackValue = "") {
   const normalized = normalizeLocalizedTextMap(value);
   const fallback = normalizeText(fallbackValue);
@@ -380,8 +403,87 @@ function localizedFieldId(field, lang) {
   return `tour_${field}_${normalizeTourTextLang(lang)}`;
 }
 
+function localizedFieldCounterId(field, lang) {
+  return `${localizedFieldId(field, lang)}_counter`;
+}
+
 function getLocalizedField(field, lang) {
   return document.getElementById(localizedFieldId(field, lang));
+}
+
+function updateTourDescriptionCounter(control) {
+  if (!control || control.getAttribute("data-tour-i18n-field") !== "short_description_i18n") return;
+  const lang = normalizeTourTextLang(control.getAttribute("data-tour-i18n-lang"));
+  const counter = document.getElementById(localizedFieldCounterId("short_description_i18n", lang));
+  if (!counter) return;
+  counter.textContent = tourDescriptionCharacterCountText(control.value ?? "");
+  counter.classList.toggle(
+    "tour-localized-content__counter--warning",
+    isTourDescriptionOverWarningLength(control.value ?? "")
+  );
+}
+
+function shouldFitTourShortDescriptionControl(control) {
+  if (!(control instanceof HTMLElement)) return false;
+  return control.getAttribute("data-tour-i18n-field") === "short_description_i18n"
+    || control.getAttribute("data-tour-short-description-fit") === "1";
+}
+
+function fitTourShortDescriptionControl(control) {
+  if (!(control instanceof HTMLElement) || !shouldFitTourShortDescriptionControl(control)) return;
+  if (typeof window === "undefined" || !window.getComputedStyle) return;
+
+  control.style.fontSize = "";
+  const maxFontSize = Number.parseFloat(window.getComputedStyle(control).fontSize || "") || 14;
+  const minFontSize = Math.min(maxFontSize, TOUR_DESCRIPTION_MIN_FONT_SIZE_PX);
+  const availableHeight = Math.floor(control.clientHeight || 0);
+  if (!(availableHeight > 0)) return;
+
+  const previousOverflow = control.style.overflow;
+  const previousHeight = control.style.height;
+  const borderBoxHeight = Math.ceil(control.getBoundingClientRect().height || 0);
+  control.style.overflow = "hidden";
+  if (borderBoxHeight > 0) {
+    control.style.height = `${borderBoxHeight}px`;
+  }
+
+  const measuredHeight = (fontSize) => {
+    control.style.fontSize = `${fontSize}px`;
+    return Math.ceil(control.scrollHeight || 0);
+  };
+
+  if (measuredHeight(maxFontSize) <= availableHeight + TOUR_DESCRIPTION_FIT_TOLERANCE_PX) {
+    control.style.fontSize = "";
+    control.style.overflow = previousOverflow;
+    control.style.height = previousHeight;
+    return;
+  }
+
+  let low = minFontSize;
+  let high = maxFontSize;
+  let best = minFontSize;
+  for (let index = 0; index < TOUR_DESCRIPTION_FIT_ITERATIONS; index += 1) {
+    const mid = (low + high) / 2;
+    if (measuredHeight(mid) <= availableHeight + TOUR_DESCRIPTION_FIT_TOLERANCE_PX) {
+      best = mid;
+      low = mid;
+    } else {
+      high = mid;
+    }
+  }
+  control.style.fontSize = `${best.toFixed(2)}px`;
+  if ((control.scrollHeight || 0) > (control.clientHeight || 0) + TOUR_DESCRIPTION_FIT_TOLERANCE_PX) {
+    const borderHeight = Math.max(0, (control.getBoundingClientRect().height || 0) - (control.clientHeight || 0));
+    control.style.height = `${Math.ceil((control.scrollHeight || 0) + borderHeight)}px`;
+  }
+  control.style.overflow = previousOverflow;
+}
+
+function fitTourShortDescriptionControls(root = document) {
+  if (!root?.querySelectorAll) return;
+  root.querySelectorAll('[data-tour-i18n-field="short_description_i18n"], [data-tour-short-description-fit="1"]').forEach((control) => {
+    fitTourShortDescriptionControl(control);
+  });
 }
 
 function resolveLocalizedTextMapValue(value, preferredLangs = [], fallbackValue = "") {
@@ -545,6 +647,7 @@ function applyTranslatedTourFields(targetLang, translatedEntries) {
   }
   if (descriptionInput && translatedEntries.short_description) {
     descriptionInput.value = String(translatedEntries.short_description || "").trim();
+    fitTourShortDescriptionControl(descriptionInput);
   }
 }
 
@@ -555,8 +658,12 @@ function renderLocalizedTourContentEditor() {
   const direction = String(language?.direction || "ltr");
   const titleId = localizedFieldId("title_i18n", lang);
   const descriptionId = localizedFieldId("short_description_i18n", lang);
+  const descriptionCounterId = localizedFieldCounterId("short_description_i18n", lang);
   const titleValue = localizedFieldValue("title_i18n", lang);
   const descriptionValue = localizedFieldValue("short_description_i18n", lang);
+  const descriptionCounterClass = isTourDescriptionOverWarningLength(descriptionValue)
+    ? "tour-localized-content__counter micro tour-localized-content__counter--warning"
+    : "tour-localized-content__counter micro";
   const showSourceCue = shouldShowTourContentSourceCue();
   const sourceCode = escapeHtml(tourLanguageShortLabel(lang));
   const sourceCueMarkup = showSourceCue
@@ -594,17 +701,24 @@ function renderLocalizedTourContentEditor() {
                 id="${escapeHtml(descriptionId)}"
                 data-tour-i18n-field="short_description_i18n"
                 data-tour-i18n-lang="${escapeHtml(lang)}"
+                data-tour-short-description-fit="1"
                 maxlength="${TOUR_DESCRIPTION_MAX_LENGTH}"
                 rows="3"
                 spellcheck="true"
                 dir="${escapeHtml(direction)}"
               >${escapeHtml(descriptionValue)}</textarea>
+              <div
+                class="${descriptionCounterClass}"
+                id="${escapeHtml(descriptionCounterId)}"
+                aria-live="polite"
+              >${escapeHtml(tourDescriptionCharacterCountText(descriptionValue))}</div>
             </div>
           </div>
         </div>
       </div>
     </div>
   `;
+  fitTourShortDescriptionControls(els.localizedContentEditor);
 }
 
 function readLocalizedFields(field, { multiline = false } = {}) {
@@ -1059,7 +1173,11 @@ function travelPlanTranslationStatus(plan, targetLang) {
   const sourceHash = travelPlanSourceHash(fields, {
     excludedKeys: travelPlanManualTranslationKeys(plan, targetLang)
   });
-  const stale = Boolean(meta?.source_hash) && meta.source_hash !== sourceHash;
+  const hasSourceHash = Boolean(normalizeText(meta?.source_hash));
+  const stale = translatedFields > 0 && (
+    (hasSourceHash && meta.source_hash !== sourceHash)
+    || (!hasSourceHash && targetLang !== TRAVEL_PLAN_SOURCE_LANG)
+  );
   let status = "missing";
   if (targetLang === TRAVEL_PLAN_SOURCE_LANG) status = "source";
   else if (!totalFields) status = "empty";
@@ -1133,6 +1251,7 @@ function renderTravelPlanTranslationReview(plan, targetLang) {
             rows="2"
             data-tour-travel-plan-translation-key="${escapeHtml(field.key)}"
             data-tour-travel-plan-translation-lang="${escapeHtml(targetLang)}"
+            ${field.key === "website.short_description" ? 'data-tour-short-description-fit="1"' : ""}
             ${state.permissions.canEditTours ? "" : "disabled"}
           >${escapeHtml(field.targetText)}</textarea>
         </div>
@@ -1197,6 +1316,7 @@ function renderTravelPlanTranslationPanel() {
     </div>
     <div class="tour-travel-plan-translation__list">${rows || `<div class="tour-reel-empty micro">${escapeHtml(backendT("tour.travel_plan_translation.no_languages", "No customer languages configured."))}</div>`}</div>
   `;
+  fitTourShortDescriptionControls(els.travelPlanTranslationPanel);
 }
 
 function applyTravelPlanTranslationEntries(plan, targetLang, translatedEntries, origin = "machine") {
@@ -1372,11 +1492,15 @@ async function init() {
         ? event.target.closest("[data-tour-travel-plan-translation-key]")
         : null;
       if (translationField) {
+        const translationKey = normalizeText(translationField.getAttribute("data-tour-travel-plan-translation-key"));
         updateTravelPlanTranslationField(
           normalizeTourTextLang(translationField.getAttribute("data-tour-travel-plan-translation-lang")),
-          normalizeText(translationField.getAttribute("data-tour-travel-plan-translation-key")),
+          translationKey,
           translationField.value || ""
         );
+        if (translationKey === "website.short_description") {
+          fitTourShortDescriptionControl(translationField);
+        }
         scheduleTourDirtyState();
         return;
       }
@@ -1384,6 +1508,8 @@ async function init() {
       if (field === "title_i18n" || field === "short_description_i18n") {
         if (event.target instanceof HTMLTextAreaElement || event.target instanceof HTMLInputElement) {
           enforceTourSourceDescriptionLimit(event.target);
+          updateTourDescriptionCounter(event.target);
+          fitTourShortDescriptionControl(event.target);
         }
         syncLocalizedFieldState();
         if (field === "title_i18n") {

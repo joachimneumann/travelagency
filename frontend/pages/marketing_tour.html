@@ -266,6 +266,41 @@
       </div>
     </div>
 
+    <div
+      class="modal travel-plan-library-modal"
+      id="travel_plan_service_library_modal"
+      hidden
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="travel_plan_service_library_title"
+    >
+      <div class="modal-panel travel-plan-library-modal__panel" role="document">
+        <div class="modal-head travel-plan-library-modal__head">
+          <div>
+            <h2 id="travel_plan_service_library_title" data-i18n-id="booking.travel_plan.existing_services">Existing services</h2>
+          </div>
+          <button class="btn btn-ghost offer-remove-btn" id="travel_plan_service_library_close_btn" type="button" aria-label="Close insert service dialog" data-i18n-aria-label-id="booking.travel_plan.close_insert_service_dialog">&times;</button>
+        </div>
+        <div class="modal-body travel-plan-library-modal__body">
+          <div class="travel-plan-library-modal__filters">
+            <div class="field">
+              <label for="travel_plan_service_library_query" data-i18n-id="common.search">Search</label>
+              <input id="travel_plan_service_library_query" type="search" placeholder="Search services, bookings, locations..." data-i18n-placeholder-id="booking.travel_plan.search_placeholder" />
+            </div>
+            <div class="field">
+              <label for="travel_plan_service_library_kind" data-i18n-id="booking.travel_plan.kind_label">Kind</label>
+              <select id="travel_plan_service_library_kind"></select>
+            </div>
+            <div class="travel-plan-library-modal__search-action">
+              <button class="btn btn-primary" id="travel_plan_service_library_search_btn" type="button" data-i18n-id="common.search">Search</button>
+            </div>
+          </div>
+          <div id="travel_plan_service_library_status" class="micro booking-inline-status"></div>
+          <div id="travel_plan_service_library_results" class="travel-plan-library-modal__results"></div>
+        </div>
+      </div>
+    </div>
+
     <input id="travel_plan_service_image_input" type="file" accept="image/*" hidden />
 
     <script src="shared/generated/language_catalog.global.js"></script>

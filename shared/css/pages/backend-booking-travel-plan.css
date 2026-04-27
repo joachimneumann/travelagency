@@ -1580,6 +1580,16 @@
   max-width: 100%;
 }
 
+.travel-plan-library-card--leading-action {
+  grid-template-columns: max-content 140px minmax(0, 1fr);
+  grid-template-areas: "actions media content";
+}
+
+.travel-plan-library-card--leading-action .travel-plan-library-card__actions {
+  align-self: center;
+  justify-content: center;
+}
+
 .travel-plan-links__head {
   display: flex;
   align-items: center;
@@ -1832,6 +1842,18 @@
 
   .travel-plan-library-card__actions {
     justify-content: flex-start;
+  }
+
+  .travel-plan-library-card--leading-action {
+    grid-template-columns: max-content minmax(0, 1fr);
+    grid-template-areas:
+      "actions media"
+      "content content";
+    align-items: center;
+  }
+
+  .travel-plan-library-card--leading-action .travel-plan-library-card__actions {
+    justify-content: center;
   }
 
   .travel-plan-attachments__head {

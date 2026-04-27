@@ -139,6 +139,12 @@
   "location": "path",
   "required": true,
   "typeName": "Identifier"
+},
+  PARAM_24: {
+  "name": "exclude_tour_id",
+  "location": "query",
+  "required": false,
+  "typeName": "Identifier"
 }
     });
 
@@ -1091,6 +1097,36 @@
         ]
       },
       {
+        key: "tour_travel_plan_day_search",
+        path: "/api/v1/tours/travel-plan-days/search",
+        method: "GET",
+        authenticated: true,
+        requestType: null,
+        responseType: "TourTravelPlanDaySearchResponse",
+        parameters: [
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_7),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_13),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_24),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_11),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_12)
+        ]
+      },
+      {
+        key: "tour_travel_plan_service_search",
+        path: "/api/v1/tours/travel-plan-services/search",
+        method: "GET",
+        authenticated: true,
+        requestType: null,
+        responseType: "TourTravelPlanServiceSearchResponse",
+        parameters: [
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_7),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_13),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_24),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_11),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_12)
+        ]
+      },
+      {
         key: "tour_detail",
         path: "/api/v1/tours/{tour_id}",
         method: "GET",
@@ -1143,6 +1179,29 @@
         responseType: "TourResponse",
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_17)
+        ]
+      },
+      {
+        key: "tour_travel_plan_day_import",
+        path: "/api/v1/tours/{tour_id}/travel-plan/days/import",
+        method: "POST",
+        authenticated: true,
+        requestType: "TourTravelPlanDayImportRequest",
+        responseType: "TourResponse",
+        parameters: [
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_17)
+        ]
+      },
+      {
+        key: "tour_travel_plan_service_import",
+        path: "/api/v1/tours/{tour_id}/travel-plan/days/{day_id}/services/import",
+        method: "POST",
+        authenticated: true,
+        requestType: "TourTravelPlanServiceImportRequest",
+        responseType: "TourResponse",
+        parameters: [
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_17),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_18)
         ]
       },
       {

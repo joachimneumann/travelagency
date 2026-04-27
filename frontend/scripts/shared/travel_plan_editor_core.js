@@ -85,6 +85,11 @@ export function createBookingTravelPlanModule(ctx) {
     buildTravelPlanSaveRequest,
     buildTravelPlanServiceImageUploadRequest,
     buildTravelPlanServiceImageDeleteRequest,
+    buildTravelPlanDaySearchRequest,
+    buildTravelPlanServiceSearchRequest,
+    buildTravelPlanDayImportRequest,
+    buildTravelPlanServiceImportRequest,
+    travelPlanLibrarySource,
     features = {}
   } = ctx;
   const setTravelPlanPageOverlay = typeof ctx.setPageOverlay === "function"
@@ -149,11 +154,26 @@ export function createBookingTravelPlanModule(ctx) {
     return url.toString();
   }
 
+  function withDestinationScopeEnglishLangQuery(urlLike) {
+    const url = new URL(urlLike, window.location.origin);
+    url.searchParams.set("lang", "en");
+    return url.toString();
+  }
+
+  function shouldMarkEnglishDestinationScopeInputs() {
+    const lang = typeof window.backendI18n?.getLang === "function" ? window.backendI18n.getLang() : "";
+    return String(lang || "").trim().toLowerCase() === "vi";
+  }
+
+  function destinationScopeEnglishInputLabel(label) {
+    return shouldMarkEnglishDestinationScopeInputs() ? `${label} (EN)` : label;
+  }
+
   async function loadDestinationScopeCatalog({ force = false } = {}) {
     if (!allowDestinationScope) return null;
     if (state.destinationScopeCatalog && !force) return state.destinationScopeCatalog;
     try {
-      const url = withBackendLangQuery(`${apiOrigin}/api/v1/destination-scope/catalog`);
+      const url = withDestinationScopeEnglishLangQuery(`${apiOrigin}/api/v1/destination-scope/catalog`);
       const response = await fetchBookingMutation(url, { method: "GET" });
       state.destinationScopeCatalog = normalizeDestinationScopeCatalog(response);
     } catch (error) {
@@ -166,10 +186,10 @@ export function createBookingTravelPlanModule(ctx) {
   }
 
   async function createDestinationScopeArea(destination) {
-    const name = window.prompt(bookingT("booking.travel_plan.add_area_prompt", "Area name"));
+    const name = window.prompt(destinationScopeEnglishInputLabel(bookingT("booking.travel_plan.add_area_prompt", "Area name")));
     const normalizedName = String(name || "").trim();
     if (!normalizedName) return false;
-    const url = withBackendLangQuery(`${apiOrigin}/api/v1/destination-scope/areas`);
+    const url = withDestinationScopeEnglishLangQuery(`${apiOrigin}/api/v1/destination-scope/areas`);
     const result = await fetchBookingMutation(url, {
       method: "POST",
       body: {
@@ -196,10 +216,10 @@ export function createBookingTravelPlanModule(ctx) {
   }
 
   async function createDestinationScopePlace(areaId) {
-    const name = window.prompt(bookingT("booking.travel_plan.add_place_prompt", "Place name"));
+    const name = window.prompt(destinationScopeEnglishInputLabel(bookingT("booking.travel_plan.add_place_prompt", "Place name")));
     const normalizedName = String(name || "").trim();
     if (!normalizedName) return false;
-    const url = withBackendLangQuery(`${apiOrigin}/api/v1/destination-scope/places`);
+    const url = withDestinationScopeEnglishLangQuery(`${apiOrigin}/api/v1/destination-scope/places`);
     const result = await fetchBookingMutation(url, {
       method: "POST",
       body: {
@@ -806,7 +826,12 @@ export function createBookingTravelPlanModule(ctx) {
     ensureTravelPlanReadyForMutation,
     finalizeTravelPlanMutation,
     findDraftDay,
-    formatTravelPlanDayHeading
+    formatTravelPlanDayHeading,
+    buildTravelPlanDaySearchRequest,
+    buildTravelPlanServiceSearchRequest,
+    buildTravelPlanDayImportRequest,
+    buildTravelPlanServiceImportRequest,
+    travelPlanLibrarySource
   });
 
   function isIsoDateString(value) {

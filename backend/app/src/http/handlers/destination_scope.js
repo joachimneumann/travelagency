@@ -5,6 +5,7 @@ import {
   createDestinationCatalogDestinationRecord,
   createDestinationAreaRecord,
   createDestinationPlaceRecord,
+  ensureDestinationScopeCatalogI18n,
   upsertDestinationCatalogDestination,
   upsertDestinationArea,
   upsertDestinationPlace
@@ -24,7 +25,9 @@ export function createDestinationScopeHandlers(deps) {
     repoRoot,
     execFile,
     dataPath,
-    toursDir
+    toursDir,
+    translateEntriesWithMeta,
+    readTranslationRules
   } = deps;
 
   const PUBLIC_HOMEPAGE_ASSET_GENERATOR_CANDIDATES = Object.freeze([
@@ -78,6 +81,20 @@ export function createDestinationScopeHandlers(deps) {
     }
   }
 
+  async function ensureCatalogI18n(store, reason) {
+    const translationRulesPayload = typeof readTranslationRules === "function"
+      ? await readTranslationRules()
+      : null;
+    const translationRules = Array.isArray(translationRulesPayload?.items) ? translationRulesPayload.items : [];
+    const result = await ensureDestinationScopeCatalogI18n(store, {
+      translateEntriesWithMeta,
+      translationRules,
+      nowIso,
+      traceId: reason
+    });
+    return result;
+  }
+
   function canReadDestinationScopeCatalog(principal) {
     return Boolean(principal);
   }
@@ -128,6 +145,8 @@ export function createDestinationScopeHandlers(deps) {
       return;
     }
     store.destination_areas = result.store.destination_areas;
+    const i18nResult = await ensureCatalogI18n(store, "destination_scope_area_create");
+    Object.assign(store, i18nResult.store);
     await persistStore(store);
     const catalog = buildDestinationScopeCatalogResponse(store, { lang: requestLang(req) });
     const homepageAssets = await regeneratePublicHomepageAssets("destination_scope_area_create", {
@@ -137,6 +156,10 @@ export function createDestinationScopeHandlers(deps) {
     sendJson(res, 201, {
       area: catalog.areas.find((area) => area.id === result.area.id) || result.area,
       catalog,
+      i18n: {
+        ok: !i18nResult.errors.length,
+        errors: i18nResult.errors
+      },
       homepage_assets: homepageAssets
     });
   }
@@ -168,6 +191,8 @@ export function createDestinationScopeHandlers(deps) {
       return;
     }
     store.destination_scope_destinations = result.store.destination_scope_destinations;
+    const i18nResult = await ensureCatalogI18n(store, "destination_scope_destination_create");
+    Object.assign(store, i18nResult.store);
     await persistStore(store);
     const catalog = buildDestinationScopeCatalogResponse(store, { lang: requestLang(req) });
     const homepageAssets = await regeneratePublicHomepageAssets("destination_scope_destination_create", {
@@ -176,6 +201,10 @@ export function createDestinationScopeHandlers(deps) {
     sendJson(res, 201, {
       destination: catalog.destinations.find((destination) => destination.code === result.destination.code) || result.destination,
       catalog,
+      i18n: {
+        ok: !i18nResult.errors.length,
+        errors: i18nResult.errors
+      },
       homepage_assets: homepageAssets
     });
   }
@@ -207,6 +236,8 @@ export function createDestinationScopeHandlers(deps) {
       return;
     }
     store.destination_places = result.store.destination_places;
+    const i18nResult = await ensureCatalogI18n(store, "destination_scope_place_create");
+    Object.assign(store, i18nResult.store);
     await persistStore(store);
     const catalog = buildDestinationScopeCatalogResponse(store, { lang: requestLang(req) });
     const homepageAssets = await regeneratePublicHomepageAssets("destination_scope_place_create", {
@@ -216,6 +247,10 @@ export function createDestinationScopeHandlers(deps) {
     sendJson(res, 201, {
       place: catalog.places.find((place) => place.id === result.place.id) || result.place,
       catalog,
+      i18n: {
+        ok: !i18nResult.errors.length,
+        errors: i18nResult.errors
+      },
       homepage_assets: homepageAssets
     });
   }

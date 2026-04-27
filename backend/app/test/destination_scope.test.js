@@ -7,6 +7,7 @@ import {
   createDestinationPlaceRecord,
   destinationScopeDestinations,
   destinationScopeTourDestinations,
+  ensureDestinationScopeCatalogI18n,
   normalizeDestinationScope,
   normalizeTravelPlanDestinationScope,
   upsertDestinationCatalogDestination,
@@ -166,4 +167,75 @@ test("empty destination catalog is pre-populated with Vietnam", () => {
   assert.equal(areaRecord.ok, true);
   const areaResult = upsertDestinationArea(store, areaRecord.area);
   assert.equal(areaResult.ok, true);
+});
+
+test("destination catalog i18n fills destinations, areas, and places", async () => {
+  const store = {
+    destination_scope_destinations: [
+      { code: "VN", label: "Vietnam", sort_order: 0, is_active: true }
+    ],
+    destination_areas: [
+      {
+        id: "area_central",
+        destination: "VN",
+        code: "central",
+        name: "Central",
+        name_i18n: {},
+        sort_order: 100,
+        is_active: true
+      }
+    ],
+    destination_places: [
+      {
+        id: "place_hoi_an",
+        area_id: "area_central",
+        code: "hoi-an",
+        name: "Hoi An",
+        name_i18n: {},
+        sort_order: 100,
+        is_active: true
+      }
+    ]
+  };
+  const translatedRequests = [];
+  const result = await ensureDestinationScopeCatalogI18n(store, {
+    languages: ["en", "fr", "de"],
+    nowIso: () => fixedNow,
+    translateEntriesWithMeta: async (entries, lang) => {
+      translatedRequests.push({ entries, lang });
+      return {
+        entries: Object.fromEntries(
+          Object.entries(entries).map(([key, value]) => [key, `${value} ${lang}`])
+        )
+      };
+    }
+  });
+
+  assert.equal(result.errors.length, 0);
+  assert.deepEqual(result.store.destination_scope_destinations[0].label_i18n, {
+    en: "Vietnam",
+    ar: "فيتنام",
+    fr: "Vietnam",
+    zh: "越南",
+    ja: "ベトナム",
+    ko: "베트남",
+    vi: "Việt Nam",
+    ms: "Vietnam",
+    de: "Vietnam",
+    es: "Vietnam",
+    it: "Vietnam",
+    ru: "Вьетнам",
+    nl: "Vietnam",
+    pl: "Wietnam",
+    da: "Vietnam",
+    sv: "Vietnam",
+    no: "Vietnam"
+  });
+  assert.equal(result.store.destination_areas[0].name_i18n.en, "Central");
+  assert.equal(result.store.destination_areas[0].name_i18n.fr, "Central fr");
+  assert.equal(result.store.destination_areas[0].name_i18n.de, "Central de");
+  assert.equal(result.store.destination_places[0].name_i18n.en, "Hoi An");
+  assert.equal(result.store.destination_places[0].name_i18n.fr, "Hoi An fr");
+  assert.equal(result.store.destination_places[0].name_i18n.de, "Hoi An de");
+  assert.deepEqual(translatedRequests.map((request) => request.lang), ["fr", "de"]);
 });

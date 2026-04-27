@@ -1,10 +1,14 @@
 import { normalizeText } from "../lib/text.js";
 import { enumOptionsFor, enumValueSetFor } from "../lib/generated_catalogs.js";
+import { CUSTOMER_CONTENT_LANGUAGE_CODES } from "../../../../shared/generated/language_catalog.js";
 import {
   DESTINATION_COUNTRY_TO_TOUR_DESTINATION_CODE,
   TOUR_DESTINATION_TO_COUNTRY_CODE
 } from "../../../../shared/js/destination_country_codes.js";
-import { normalizeTourDestinationCode } from "./tour_catalog_i18n.js";
+import {
+  getTourDestinationLabel,
+  normalizeTourDestinationCode
+} from "./tour_catalog_i18n.js";
 
 const COUNTRY_CODE_SET = enumValueSetFor("CountryCode");
 const DESTINATION_COUNTRY_ORDER = Object.freeze(["VN", "TH", "KH", "LA"]);
@@ -27,10 +31,12 @@ const DEFAULT_DESTINATION_CATALOG = Object.freeze(
   ["VN"].map((code) => Object.freeze({
     code,
     label: DESTINATION_COUNTRY_LABELS[code] || code,
+    label_i18n: Object.freeze({ en: DESTINATION_COUNTRY_LABELS[code] || code }),
     sort_order: 0,
     is_active: true
   }))
 );
+const DESTINATION_SCOPE_I18N_LANGUAGES = Object.freeze([...CUSTOMER_CONTENT_LANGUAGE_CODES]);
 
 function cloneJson(value) {
   return value === undefined ? undefined : JSON.parse(JSON.stringify(value));
@@ -69,9 +75,29 @@ function resolveLocalizedText(value, lang = "en", fallback = "") {
     || fallback;
 }
 
+function setLocalizedText(map, lang, value) {
+  const normalizedLang = normalizeText(lang).toLowerCase();
+  const normalizedValue = normalizeText(value);
+  if (!normalizedLang || !normalizedValue) return false;
+  if (normalizeText(map[normalizedLang]) === normalizedValue) return false;
+  map[normalizedLang] = normalizedValue;
+  return true;
+}
+
 function destinationLabel(value) {
   const countryCode = normalizeDestinationCountryCode(value);
   return DESTINATION_COUNTRY_LABELS[countryCode] || COUNTRY_LABELS_BY_CODE[countryCode] || countryCode;
+}
+
+function knownDestinationLabelI18n(value) {
+  const countryCode = normalizeDestinationCountryCode(value);
+  const tourDestinationCode = DESTINATION_COUNTRY_TO_TOUR_DESTINATION_CODE[countryCode];
+  if (!tourDestinationCode) return {};
+  return Object.fromEntries(
+    DESTINATION_SCOPE_I18N_LANGUAGES
+      .map((lang) => [lang, getTourDestinationLabel(tourDestinationCode, lang)])
+      .filter(([, label]) => normalizeText(label))
+  );
 }
 
 export function normalizeDestinationCountryCode(value) {
@@ -254,6 +280,7 @@ function normalizeCatalogDestination(rawDestination, index = 0) {
   return {
     code,
     label: normalizeOptionalText(source.label || source.name) || destinationLabel(code),
+    label_i18n: normalizeLocalizedTextMap(source.label_i18n || source.name_i18n),
     sort_order: Number.isInteger(Number(source.sort_order)) ? Number(source.sort_order) : index,
     is_active: source.is_active !== false,
     created_at: normalizeOptionalText(source.created_at) || null,
@@ -316,7 +343,11 @@ export function buildDestinationScopeCatalogResponse(store, { lang = "en" } = {}
   return {
     destinations: catalog.destinations.map((destination) => ({
       ...destination,
-      label: normalizeOptionalText(destination.label) || destinationLabel(destination.code)
+      label: resolveLocalizedText(
+        destination.label_i18n,
+        lang,
+        normalizeOptionalText(destination.label) || destinationLabel(destination.code)
+      )
     })),
     areas: catalog.areas.map((area) => ({
       ...area,
@@ -372,6 +403,10 @@ export function createDestinationCatalogDestinationRecord(payload, { nowIso }) {
     destination: {
       code,
       label: normalizeOptionalText(payload?.label || payload?.name) || destinationLabel(code),
+      label_i18n: {
+        ...knownDestinationLabelI18n(code),
+        ...normalizeLocalizedTextMap(payload?.label_i18n || payload?.name_i18n)
+      },
       sort_order: Number.isInteger(Number(payload?.sort_order)) ? Number(payload.sort_order) : 100,
       is_active: payload?.is_active !== false,
       created_at: now,
@@ -425,6 +460,126 @@ export function createDestinationPlaceRecord(payload, store, { randomUUID, nowIs
       created_at: now,
       updated_at: now
     }
+  };
+}
+
+function destinationCatalogI18nRecords(store) {
+  return [
+    ...(Array.isArray(store?.destination_scope_destinations) ? store.destination_scope_destinations : []).map((record) => ({
+      record,
+      mapField: "label_i18n",
+      sourceField: "label",
+      sourceFallback: destinationLabel(record?.code),
+      key: `destination.${normalizeDestinationCountryCode(record?.code || record?.destination || record)}.label`,
+      knownI18n: knownDestinationLabelI18n(record?.code || record?.destination || record)
+    })),
+    ...(Array.isArray(store?.destination_areas) ? store.destination_areas : []).map((record) => ({
+      record,
+      mapField: "name_i18n",
+      sourceField: "name",
+      sourceFallback: "",
+      key: `area.${normalizeOptionalText(record?.id)}.name`,
+      knownI18n: {}
+    })),
+    ...(Array.isArray(store?.destination_places) ? store.destination_places : []).map((record) => ({
+      record,
+      mapField: "name_i18n",
+      sourceField: "name",
+      sourceFallback: "",
+      key: `place.${normalizeOptionalText(record?.id)}.name`,
+      knownI18n: {}
+    }))
+  ].filter((entry) => entry.record && normalizeText(entry.key) && normalizeText(entry.record?.[entry.sourceField] || entry.sourceFallback));
+}
+
+export async function ensureDestinationScopeCatalogI18n(store, {
+  translateEntriesWithMeta = null,
+  translationRules = [],
+  nowIso = () => new Date().toISOString(),
+  languages = DESTINATION_SCOPE_I18N_LANGUAGES,
+  traceId = ""
+} = {}) {
+  const next = cloneJson(store || {});
+  next.destination_scope_destinations = Array.isArray(next.destination_scope_destinations) && next.destination_scope_destinations.length
+    ? next.destination_scope_destinations
+    : cloneJson(DEFAULT_DESTINATION_CATALOG);
+  next.destination_areas = Array.isArray(next.destination_areas) ? next.destination_areas : [];
+  next.destination_places = Array.isArray(next.destination_places) ? next.destination_places : [];
+
+  const normalizedLanguages = Array.from(new Set(
+    (Array.isArray(languages) ? languages : DESTINATION_SCOPE_I18N_LANGUAGES)
+      .map((lang) => normalizeText(lang).toLowerCase())
+      .filter(Boolean)
+  ));
+  const records = destinationCatalogI18nRecords(next);
+  const targetEntriesByLang = new Map();
+  const recordsByKey = new Map();
+  let changed = false;
+
+  for (const entry of records) {
+    const record = entry.record;
+    const sourceText = normalizeText(record[entry.sourceField] || entry.sourceFallback);
+    const map = normalizeLocalizedTextMap(record[entry.mapField]);
+    for (const [lang, label] of Object.entries(entry.knownI18n || {})) {
+      changed = setLocalizedText(map, lang, label) || changed;
+    }
+    changed = setLocalizedText(map, "en", sourceText) || changed;
+    record[entry.mapField] = map;
+    recordsByKey.set(entry.key, { record, mapField: entry.mapField, sourceText });
+
+    for (const lang of normalizedLanguages) {
+      if (lang === "en" || normalizeText(map[lang])) continue;
+      const entries = targetEntriesByLang.get(lang) || {};
+      entries[entry.key] = sourceText;
+      targetEntriesByLang.set(lang, entries);
+    }
+  }
+
+  const errors = [];
+  for (const [lang, entries] of targetEntriesByLang.entries()) {
+    let translatedEntries = {};
+    if (typeof translateEntriesWithMeta === "function") {
+      try {
+        const result = await translateEntriesWithMeta(entries, lang, {
+          sourceLangCode: "en",
+          domain: "travel destination taxonomy labels",
+          provider: "google",
+          allowGoogleFallback: true,
+          cacheNamespace: "destination-scope-catalog",
+          translationProfile: "destination_scope_catalog",
+          translationRules,
+          traceId
+        });
+        translatedEntries = result?.entries || {};
+      } catch (error) {
+        errors.push({
+          lang,
+          error: String(error?.message || error || "Translation failed.")
+        });
+      }
+    }
+
+    for (const [key, sourceText] of Object.entries(entries)) {
+      const target = recordsByKey.get(key);
+      if (!target) continue;
+      const map = normalizeLocalizedTextMap(target.record[target.mapField]);
+      const translatedText = normalizeText(translatedEntries[key]) || normalizeText(sourceText);
+      changed = setLocalizedText(map, lang, translatedText) || changed;
+      target.record[target.mapField] = map;
+    }
+  }
+
+  if (changed) {
+    const now = nowIso();
+    for (const entry of records) {
+      entry.record.updated_at = normalizeOptionalText(entry.record.updated_at) || now;
+    }
+  }
+
+  return {
+    store: next,
+    translated: changed,
+    errors
   };
 }
 

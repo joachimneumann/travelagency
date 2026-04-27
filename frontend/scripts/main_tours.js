@@ -13,6 +13,9 @@ const TOUR_PLAN_SERVICE_SWAP_TRANSITION_MS = 380;
 const TOUR_SHOW_MORE_LABEL_TRANSITION_MS = 180;
 const TOUR_CARD_SCROLL_TIMEOUT_MS = 900;
 const TOUR_CARD_SCROLL_MARGIN_PX = 12;
+const TOUR_CARD_DESC_MIN_FONT_SIZE_PX = 10;
+const TOUR_CARD_DESC_FIT_TOLERANCE_PX = 1;
+const TOUR_CARD_DESC_FIT_ITERATIONS = 8;
 const TOUR_CARD_MEDIA_SNAPSHOT_HOLD_MS = Math.max(
   TOUR_GRID_LAYOUT_TRANSITION_MS,
   TOUR_DETAILS_TRANSITION_MS,
@@ -688,8 +691,10 @@ export function createFrontendToursController(ctx) {
     window.addEventListener("resize", () => {
       const nextColumnCount = getTourGridColumnCount();
       if (nextColumnCount === renderedTourGridColumnCount) {
+        fitTourCardDescriptions();
         syncExpandedTourDetailsHeights();
         window.requestAnimationFrame(() => {
+          fitTourCardDescriptions();
           syncExpandedTourDetailsHeights();
         });
         return;
@@ -861,6 +866,76 @@ export function createFrontendToursController(ctx) {
         </div>
       </article>
     `;
+  }
+
+  function tourDescriptionAvailableHeight(description) {
+    const wrap = description?.closest?.(".tour-desc-wrap");
+    const wrapHeight = wrap instanceof HTMLElement ? wrap.getBoundingClientRect().height : 0;
+    if (wrapHeight > 0) return Math.floor(wrapHeight);
+
+    const styles = window.getComputedStyle?.(description);
+    const fontSize = Number.parseFloat(styles?.fontSize || "") || 14;
+    const lineHeight = Number.parseFloat(styles?.lineHeight || "") || (fontSize * 1.55);
+    const lines = Number.parseInt(styles?.getPropertyValue("--tour-card-desc-lines") || "4", 10) || 4;
+    return Math.floor(lineHeight * lines);
+  }
+
+  function fitTourCardDescription(description) {
+    if (!(description instanceof HTMLElement) || typeof window === "undefined" || !window.getComputedStyle) return;
+
+    description.style.fontSize = "";
+    const maxFontSize = Number.parseFloat(window.getComputedStyle(description).fontSize || "") || 14;
+    const minFontSize = Math.min(maxFontSize, TOUR_CARD_DESC_MIN_FONT_SIZE_PX);
+    const availableHeight = tourDescriptionAvailableHeight(description);
+    if (!(availableHeight > 0)) return;
+
+    const previousDisplay = description.style.display;
+    const previousLineClamp = description.style.webkitLineClamp;
+    const previousBoxOrient = description.style.webkitBoxOrient;
+    const previousOverflow = description.style.overflow;
+    const previousMinHeight = description.style.minHeight;
+
+    description.style.display = "block";
+    description.style.webkitLineClamp = "unset";
+    description.style.webkitBoxOrient = "initial";
+    description.style.overflow = "visible";
+    description.style.minHeight = "0";
+
+    const measuredHeight = (fontSize) => {
+      description.style.fontSize = `${fontSize}px`;
+      return Math.ceil(description.scrollHeight);
+    };
+
+    if (measuredHeight(maxFontSize) <= availableHeight + TOUR_CARD_DESC_FIT_TOLERANCE_PX) {
+      description.style.fontSize = "";
+    } else {
+      let low = minFontSize;
+      let high = maxFontSize;
+      let best = minFontSize;
+      for (let index = 0; index < TOUR_CARD_DESC_FIT_ITERATIONS; index += 1) {
+        const mid = (low + high) / 2;
+        if (measuredHeight(mid) <= availableHeight + TOUR_CARD_DESC_FIT_TOLERANCE_PX) {
+          best = mid;
+          low = mid;
+        } else {
+          high = mid;
+        }
+      }
+      description.style.fontSize = `${best.toFixed(2)}px`;
+    }
+
+    description.style.display = previousDisplay;
+    description.style.webkitLineClamp = previousLineClamp;
+    description.style.webkitBoxOrient = previousBoxOrient;
+    description.style.overflow = previousOverflow;
+    description.style.minHeight = previousMinHeight;
+  }
+
+  function fitTourCardDescriptions(root = els.tourGrid) {
+    if (!(root instanceof HTMLElement)) return;
+    root.querySelectorAll("[data-tour-desc]").forEach((description) => {
+      fitTourCardDescription(description);
+    });
   }
 
   function renderTourGridSpacer(count) {
@@ -1235,9 +1310,11 @@ export function createFrontendToursController(ctx) {
 
     els.tourGrid.innerHTML = parts.join("");
     bindTourCardOpenHandlers();
+    fitTourCardDescriptions();
     syncExpandedTourDetailsHeights();
     if (typeof window !== "undefined") {
       window.requestAnimationFrame(() => {
+        fitTourCardDescriptions();
         syncExpandedTourDetailsHeights();
       });
     }
