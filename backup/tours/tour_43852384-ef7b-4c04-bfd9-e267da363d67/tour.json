@@ -38,9 +38,6 @@
     "sv": "Cat Ba Island är en grön pärla med magnifika urskogar, där du kan njuta av det underbara samspelet mellan berg och hav. Lan Ha Bay fängslar resenärer med den vilda skönheten hos hundratals små kalkstensöar och stränder gömda i lugnt smaragdgrönt vatten.",
     "no": "Cat Ba Island er en grønn perle med praktfulle urskoger, hvor du kan nyte det fantastiske samspillet mellom fjell og hav. Lan Ha Bay trollbinder reisende med den ville skjønnheten til hundrevis av små kalksteinsøyer og strender skjult i rolig smaragdgrønt vann."
   },
-  "destinations": [
-    "vietnam"
-  ],
   "styles": [
     "beach",
     "budget",
@@ -54,8 +51,5 @@
   "seasonality_end_month": "oct",
   "priority": 50,
   "created_at": "2026-04-14T10:21:21.199Z",
-  "updated_at": "2026-04-22T14:49:07.004Z",
-  "pictures": [
-    "/public/v1/tour-images/tour_43852384-ef7b-4c04-bfd9-e267da363d67/tour_43852384-ef7b-4c04-bfd9-e267da363d67.webp"
-  ]
+  "updated_at": "2026-04-22T14:49:07.004Z"
 }

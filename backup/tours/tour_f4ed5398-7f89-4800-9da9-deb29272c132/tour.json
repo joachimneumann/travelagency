@@ -38,9 +38,6 @@
     "sv": "Resan tar dig till \"Nordens Da Lat\" Tam Dao täckt av moln året runt, där klimatet med fyra årstider roterar under en spännande dag.\n\nNästa är det fridfulla utrymmet vid Tay Thiens natursköna plats, där du kan beundra det majestätiska andliga arkitektoniska komplexet och fördjupa dig i de grönskande bergen och skogarna.",
     "no": "Reisen tar deg til «Nordens Da Lat» Tam Dao dekket av skyer hele året, hvor klimaet på fire årstider roterer på en spennende dag.\n\nNeste er den fredelige plassen ved det naturskjønne stedet Tay Thien, hvor du kan beundre det majestetiske åndelige arkitektoniske komplekset og fordype deg i de frodige grønne fjellene og skogene."
   },
-  "destinations": [
-    "vietnam"
-  ],
   "styles": [
     "budget",
     "culture",
@@ -53,8 +50,5 @@
   "seasonality_end_month": "jul",
   "priority": 50,
   "created_at": "2026-04-13T10:11:16.624Z",
-  "updated_at": "2026-04-22T15:38:27.231Z",
-  "pictures": [
-    "/public/v1/tour-images/tour_f4ed5398-7f89-4800-9da9-deb29272c132/tour_f4ed5398-7f89-4800-9da9-deb29272c132.webp"
-  ]
+  "updated_at": "2026-04-22T15:38:27.231Z"
 }

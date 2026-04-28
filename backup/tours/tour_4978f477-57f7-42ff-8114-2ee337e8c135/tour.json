@@ -38,9 +38,6 @@
     "sv": "Ha Long lyxkryssningstur 2 dagar 1 natt eller 3 dagar 2 nätter på en 5-stjärnig kryssning: njut av privat utrymme mitt i poetisk natur, utforska magiska grottor till Sunset Party vid solnedgången. Upplev kajakpaddling, besök fiskebyar och ät skaldjursspecialiteter.",
     "no": "Ha Long luksuscruisetur 2 dager 1 natt eller 3 dager 2 netter på et 5-stjerners cruise: nyt privat rom midt i poetisk natur, utforsk magiske grotter til Sunset Party ved solnedgang. Opplev kajakkpadling, besøk fiskevær og spis sjømatspesialiteter."
   },
-  "destinations": [
-    "vietnam"
-  ],
   "styles": [
     "beach",
     "budget",
@@ -52,8 +49,5 @@
   "seasonality_end_month": "dec",
   "priority": 100,
   "created_at": "2026-04-03T11:00:28.709Z",
-  "updated_at": "2026-04-09T08:30:26.783Z",
-  "pictures": [
-    "/public/v1/tour-images/tour_4978f477-57f7-42ff-8114-2ee337e8c135/tour_4978f477-57f7-42ff-8114-2ee337e8c135.webp"
-  ]
+  "updated_at": "2026-04-09T08:30:26.783Z"
 }

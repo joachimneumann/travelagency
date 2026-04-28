@@ -38,9 +38,6 @@
     "sv": "Stad. Ho Chi Minh: En dynamisk utgångspunkt, där du utforskar gammal fransk arkitektur, heroiska historiska platser och njuter av gatumatparadiset på natten.\nBa Den Mountain (Tay Ninh): \"Första himmelska berget\" i söder. Upplev det moderna linbanesystemet till toppen av berget för att beundra den högsta bronsbuddhastatyn av Tay Bo Da Son i Asien och njut av panoramautsikt över deltat från ovan.\nMui Ne (Phan Thiet): Ett resortparadis med färgglada sanddyner, romantiska Suoi Tien-strömmen och idylliska fiskebyar. Detta är den idealiska platsen för att njuta av havsbrisen och delta i spännande spel på sanden.\nFörbindande resa: En underbar skärningspunkt mellan de lugna stunderna vid Buddhas dörr på toppen av ett högt berg, friheten i havet och Mui Ne och det livliga livet i Saigon.",
     "no": "By. Ho Chi Minh: Et dynamisk utgangspunkt, hvor du utforsker gammel fransk arkitektur, heroiske historiske steder og nyter et gatematparadis om natten.\nBa Den Mountain (Tay Ninh): \"Første himmelske fjell\" i sør. Opplev det moderne taubanesystemet til toppen av fjellet for å beundre den høyeste bronse Buddha-statuen av Tay Bo Da Son i Asia og nyt panoramautsikt over deltaet ovenfra.\nMui Ne (Phan Thiet): Et ferieparadis med fargerike sanddyner, romantisk Suoi Tien-strøm og idylliske fiskerlandsbyer. Dette er det ideelle stedet å nyte havbrisen og delta i spennende spill på sanden.\nForbindelsesreise: Et fantastisk skjæringspunkt mellom de stille øyeblikkene ved Buddhas dør på toppen av et høyt fjell, friheten til havet og himmelen til Mui Ne og det travle livet i Saigon."
   },
-  "destinations": [
-    "vietnam"
-  ],
   "styles": [
     "budget",
     "culture",
@@ -53,8 +50,5 @@
   "seasonality_end_month": "dec",
   "priority": 50,
   "created_at": "2026-04-14T09:47:49.907Z",
-  "updated_at": "2026-04-22T15:03:01.960Z",
-  "pictures": [
-    "/public/v1/tour-images/tour_75618ce5-f5e4-41e9-a2ad-a8e1d50cc136/tour_75618ce5-f5e4-41e9-a2ad-a8e1d50cc136.webp"
-  ]
+  "updated_at": "2026-04-22T15:03:01.960Z"
 }

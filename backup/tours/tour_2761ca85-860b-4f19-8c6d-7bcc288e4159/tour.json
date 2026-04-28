@@ -38,9 +38,6 @@
     "sv": "Ha Long Bay är inte bara Vietnams stolthet utan också ett världsnaturunder som har erkänts två gånger av UNESCO. Denna plats är som en gigantisk akvarellmålning, skapad av naturens geniala arrangemang mellan sten och vatten.",
     "no": "Ha Long Bay er ikke bare Vietnams stolthet, men også et verdensnaturunder som har blitt anerkjent to ganger av UNESCO. Dette stedet er som et gigantisk akvarellmaleri, laget av naturens geniale arrangement mellom stein og vann."
   },
-  "destinations": [
-    "vietnam"
-  ],
   "styles": [
     "beach",
     "budget",
@@ -54,12 +51,5 @@
   "seasonality_end_month": "nov",
   "priority": 50,
   "created_at": "2026-04-13T04:48:49.101Z",
-  "updated_at": "2026-04-22T14:53:03.958Z",
-  "pictures": [
-    "/public/v1/tour-images/tour_2761ca85-860b-4f19-8c6d-7bcc288e4159/picture-9132130a-0b9b-49e1-bf5b-402d8ecfb721.webp",
-    "/public/v1/tour-images/tour_2761ca85-860b-4f19-8c6d-7bcc288e4159/picture-b192e714-0d40-4140-a337-612469ab42ee.webp",
-    "/public/v1/tour-images/tour_2761ca85-860b-4f19-8c6d-7bcc288e4159/picture-3708e1d2-cb10-4ef1-a217-4d2a0f969e24.webp",
-    "/public/v1/tour-images/tour_2761ca85-860b-4f19-8c6d-7bcc288e4159/picture-43500bf7-8b75-4bff-b7b6-f0329e1e2a4e.webp",
-    "/public/v1/tour-images/tour_2761ca85-860b-4f19-8c6d-7bcc288e4159/picture-a2f218a0-b0a8-41db-b06d-42aa1d96f6e3.webp"
-  ]
+  "updated_at": "2026-04-22T14:53:03.958Z"
 }

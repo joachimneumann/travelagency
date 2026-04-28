@@ -38,9 +38,6 @@
     "sv": "Ba Be Lake, som ligger i nationalparken med samma namn i Bac Kan, är en av världens största och vackraste naturliga sötvattensbergssjöar. Denna plats har ett magnifikt landskap med en harmonisk kombination av blå vattenyta, branta kalkstensklippor och rik primär vegetation.",
     "no": "Ba Be Lake, som ligger i nasjonalparken med samme navn i Bac Kan, er en av verdens største og vakreste naturlige ferskvannsfjellvann. Dette stedet besitter et storslått landskap med en harmonisk kombinasjon av blå vannflate, bratte kalksteinsklipper og rik primærvegetasjon."
   },
-  "destinations": [
-    "vietnam"
-  ],
   "styles": [
     "grand-expeditions",
     "budget",
@@ -50,8 +47,5 @@
   "seasonality_end_month": "oct",
   "priority": 50,
   "created_at": "2026-04-15T03:58:02.218Z",
-  "updated_at": "2026-04-22T14:40:44.140Z",
-  "pictures": [
-    "/public/v1/tour-images/tour_8ce2c424-1fa2-49ce-9605-ed29f3457a93/tour_8ce2c424-1fa2-49ce-9605-ed29f3457a93.webp"
-  ]
+  "updated_at": "2026-04-22T14:40:44.140Z"
 }

@@ -38,9 +38,6 @@
     "sv": "Sapa (Lao Cai): \"Stad i molnen\" med ett svalt klimat året runt, där Hoang Lien Sons majestätiska skönhet och etniska minoriteters unika kultur möts.\nO Quy Ho Pass & Cau Kinh: Ett av de \"fyra stora passen\" med tusentals slingrande vägar. Dragon Cloud Glass Bridge ger en spännande upplevelse när du tittar på avgrunden från en höjd av mer än 2 000 m.\nFansipan: \"Roof of Indokina\" med en höjd av 3 143m. Det moderna linbanesystemet tar dig genom molnen för att vidröra det legendariska landmärket och beundra det andliga komplexet på toppen av berget.\nTam Dao (Vinh Phuc): Vacker liten stad med \"4 årstider på en dag\" väder. Incheckningsställen som Cau May eller Ban May-gården erbjuder en romantisk, fridfull plats i hjärtat av bergen och skogarna.\nTrang An & Mua Cave: Världsarvskomplex med ett magiskt grottsystem som går igenom vattnet. Från toppen av Hang Mua kan du se hela panorama av risfält och den romantiska Ngo Dong-floden.\nBai Dinh & Hoa Lu Pagoda: Kombinationen av den första antika huvudstadens rika historia och storheten hos det största pagodkomplexet i Vietnam, som har många imponerande buddhistiska rekord.",
     "no": "Sapa (Lao Cai): \"Town in the clouds\" med et kjølig klima året rundt, hvor den majestetiske skjønnheten til Hoang Lien Son-området og den unike kulturen til etniske minoriteter møtes.\nO Quy Ho Pass & Cau Kinh: Et av de \"fire store passene\" med tusenvis av svingete veier. Dragon Cloud Glass Bridge gir en spennende opplevelse når du ser avgrunnen fra en høyde på mer enn 2000 meter.\nFansipan: \"Roof of Indokina\" med en høyde på 3.143m. Det moderne taubanesystemet tar deg gjennom skyene for å berøre det legendariske landemerket og beundre det åndelige komplekset på toppen av fjellet.\nTam Dao (Vinh Phuc): Vakker liten by med \"4 årstider på en dag\" vær. Innsjekkingssteder som Cau May eller Ban May-gården gir en romantisk, fredelig plass i hjertet av fjellene og skogene.\nTrang An & Mua Cave: Verdensarvkompleks med et magisk grottesystem som går gjennom vann. Fra toppen av Hang Mua kan du se hele panoramaet av rismarker og den romantiske Ngo Dong-elven.\nBai Dinh & Hoa Lu Pagoda: Kombinasjonen av den rike historien til den første eldgamle hovedstaden og storheten til det største pagodekomplekset i Vietnam, som har mange imponerende buddhistiske rekorder."
   },
-  "destinations": [
-    "vietnam"
-  ],
   "styles": [
     "grand-expeditions",
     "budget",
@@ -54,8 +51,5 @@
   "seasonality_end_month": "dec",
   "priority": 50,
   "created_at": "2026-04-14T03:19:32.447Z",
-  "updated_at": "2026-04-22T15:16:42.572Z",
-  "pictures": [
-    "/public/v1/tour-images/tour_eae2572d-2f4d-4eca-95f8-d79518f6c697/tour_eae2572d-2f4d-4eca-95f8-d79518f6c697.webp"
-  ]
+  "updated_at": "2026-04-22T15:16:42.572Z"
 }

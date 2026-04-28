@@ -38,9 +38,6 @@
     "sv": "Resan tar dig tillbaka till dina historiska rötter i den antika huvudstaden Hoa Lu, innan du tar en båt nerför Ngo Dong-floden för att utforska den poetiska skönheten i de gyllene risfälten i Tam Coc.\nResans höjdpunkt är upplevelsen av att erövra toppen av Hang Mua, där du till fullo kan ta in det majestätiska och hisnande landskapet i Ninh Binh från ovan.",
     "no": "Reisen tar deg tilbake til dine historiske røtter i den gamle hovedstaden Hoa Lu, før du tar en båt nedover Ngo Dong-elven for å utforske den poetiske skjønnheten til de gylne rismarkene i Tam Coc.\nHøydepunktet på turen er opplevelsen av å erobre toppen av Hang Mua, hvor du fullt ut kan ta inn det majestetiske og fantastiske landskapet i Ninh Binh ovenfra."
   },
-  "destinations": [
-    "vietnam"
-  ],
   "styles": [
     "budget",
     "culture",
@@ -53,8 +50,5 @@
   "seasonality_end_month": "aug",
   "priority": 50,
   "created_at": "2026-04-13T10:43:50.789Z",
-  "updated_at": "2026-04-22T14:38:07.504Z",
-  "pictures": [
-    "/public/v1/tour-images/tour_7dc5c632-6a82-498b-8a5b-dc80f7f6a093/tour_7dc5c632-6a82-498b-8a5b-dc80f7f6a093.webp"
-  ]
+  "updated_at": "2026-04-22T14:38:07.504Z"
 }

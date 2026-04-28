@@ -38,9 +38,6 @@
     "sv": "Resan tar dig till traditionella hantverksbyar, där hantverkarnas begåvade händer blåser liv i sofistikerade lackarbeten och själfulla vietnamesiska koniska hattar.\nAtmosfären på resan blir mer lysande och avslappnande när du stannar till i rökelsebyn, där knippen av rökelsepinnar blommar som färgglada blommor och utstrålar en stillsam doft i hjärtat av arvet.",
     "no": "Reisen tar deg med til tradisjonelle håndverkslandsbyer, hvor de talentfulle hendene til håndverkere blåser liv i sofistikerte lakkarbeider og sjelfulle vietnamesiske koniske hatter.\nAtmosfæren på turen blir mer strålende og avslappende når du stopper ved røkelseslandsbyen, der bunter med røkelsespinner blomstrer som fargerike blomster, og utstråler en stille duft i hjertet av arven."
   },
-  "destinations": [
-    "vietnam"
-  ],
   "styles": [
     "budget",
     "culture",
@@ -51,8 +48,5 @@
   "seasonality_end_month": "dec",
   "priority": 50,
   "created_at": "2026-04-13T10:48:46.170Z",
-  "updated_at": "2026-04-22T15:34:51.885Z",
-  "pictures": [
-    "/public/v1/tour-images/tour_94d1fcb2-0ac0-4f49-b365-6ffeaf39216c/tour_94d1fcb2-0ac0-4f49-b365-6ffeaf39216c.webp"
-  ]
+  "updated_at": "2026-04-22T15:34:51.885Z"
 }

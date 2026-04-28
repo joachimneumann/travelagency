@@ -38,9 +38,6 @@
     "sv": "Sapa & Fansipan Peak: Charmig \"stad i molnen\" med tempererat klimat. Du kommer att erövra \"Indokinas tak\" med en kabelgrupp, beundra den romantiska Muong Hoa-dalen och uppleva unik inhemsk kultur.\nO Quy Ho Pass & Cau Kinh: Ett av de \"fyra stora passen\" med tusentals slingrande vägar. Här kan du utmana höjder på Dragon Cloud Glass Bridge och jaga moln på kända incheckningsställen som Lonely Tree.\n\nHam Rong Mountain & Silver Waterfall: Naturattraktioner nära staden Sapa, där du kan se hela dalen från ovan och beundra det vita vattenfallet som strömmar ner från ravinen.\nTam Dao: Den här dimmiga staden anses vara \"Nordens Da Lat\" och erbjuder en avkopplande plats med romantiska stopp som Cau May, grönskande gårdar och kaféer med vacker utsikt över molnen och himlen.\nTrang An & Mua Cave: Världsarvskomplex med ett magiskt undervattensgrottsystem på en båt. Hang Mua är där du utmanar 500 stentrappor för att till fullo fånga skönheten i Tam Coc och Ngo Dong-floden.\nHoa Lu Ancient Capital & Bai Dinh Pagoda: Res tillbaka till ursprunget i Vietnams första huvudstad och beundra det största pagodkomplexet i Sydostasien med många imponerande rekord som ger en känsla av fred och frihet.",
     "no": "Sapa & Fansipan Peak: Sjarmerende \"by i skyene\" med temperert klima. Du vil erobre \"Indokinas tak\" med kabelgruppe, beundre den romantiske Muong Hoa-dalen og oppleve unik urfolkskultur.\nO Quy Ho Pass & Cau Kinh: Et av de \"fire store passene\" med tusenvis av svingete veier. Her kan du utfordre høyder på Dragon Cloud Glass Bridge og jakte på skyer på kjente innsjekkingssteder som Lonely Tree.\n\nHam Rong Mountain & Silver Waterfall: Naturattraksjoner nær Sapa by, hvor du kan se hele dalen ovenfra og beundre den hvite fossen som strømmer ned fra ravinen.\nTam Dao: Denne tåkete byen regnes som \"Nordens Da Lat\", og tilbyr et avslappende sted med romantiske stopp som Cau May, frodige grønne gårder og kafeer med vakker utsikt over skyene og himmelen.\nTrang An & Mua Cave: Verdensarvkompleks med et magisk undervanns grottesystem på en båt. Hang Mua er der du utfordrer 500 steintrapper for å fange skjønnheten til Tam Coc og Ngo Dong-elven.\nHoa Lu Ancient Capital & Bai Dinh Pagoda: Reis tilbake til opprinnelsen i Vietnams første hovedstad og beundre det største pagodekomplekset i Sørøst-Asia med mange imponerende rekorder, som gir en følelse av fred og frihet."
   },
-  "destinations": [
-    "vietnam"
-  ],
   "styles": [
     "grand-expeditions",
     "budget",
@@ -54,8 +51,5 @@
   "seasonality_end_month": "dec",
   "priority": 50,
   "created_at": "2026-04-14T02:15:56.438Z",
-  "updated_at": "2026-04-22T15:07:30.037Z",
-  "pictures": [
-    "/public/v1/tour-images/tour_4b8aff72-92fc-4763-8224-804249583e99/tour_4b8aff72-92fc-4763-8224-804249583e99.webp"
-  ]
+  "updated_at": "2026-04-22T15:07:30.037Z"
 }

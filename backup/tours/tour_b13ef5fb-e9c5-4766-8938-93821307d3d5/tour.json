@@ -38,9 +38,6 @@
     "sv": "Cu Chi Tunnels är ett gigantiskt underjordiskt militärt försvarssystem som är mer än 250 km långt med 3 olika djup, byggt helt av mänsklig kraft under motståndsperioden. Denna plats är inte bara en strategisk bas med fulla mötesrum, sjukhus och kök, utan också en lysande symbol för den vietnamesiska arméns och folkets motståndskraftiga vilja och unika gerillakrigföringskonst.",
     "no": "Cu Chi Tunnels er et gigantisk underjordisk militært forsvarssystem som er mer enn 250 km langt med 3 forskjellige dybder, bygget utelukkende av menneskelig kraft under motstandsperioden. Dette stedet er ikke bare en strategisk base med fulle møterom, sykehus og kjøkken, men også et strålende symbol på den spenstige viljen og unike geriljakrigføringskunsten til den vietnamesiske hæren og folket."
   },
-  "destinations": [
-    "vietnam"
-  ],
   "styles": [
     "budget",
     "culture",
@@ -50,8 +47,5 @@
   "seasonality_end_month": "dec",
   "priority": 50,
   "created_at": "2026-04-15T03:49:55.892Z",
-  "updated_at": "2026-04-22T14:36:22.728Z",
-  "pictures": [
-    "/public/v1/tour-images/tour_b13ef5fb-e9c5-4766-8938-93821307d3d5/tour_b13ef5fb-e9c5-4766-8938-93821307d3d5.webp"
-  ]
+  "updated_at": "2026-04-22T14:36:22.728Z"
 }

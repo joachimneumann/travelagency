@@ -38,9 +38,6 @@
     "sv": "Resan tar dig tillbaka till dina historiska rötter i den antika huvudstaden Hoa Lu, innan du fördjupar dig i det magiska \"Ha Long on land\"-landskapet i Trang Ans naturarv.\nResans höjdpunkt är upplevelsen av att erövra toppen av Hang Mua, där du till fullo kan ta in den majestätiska och poetiska bilden av Ninh Binh-bergen och vattnet från ovan.",
     "no": "Reisen tar deg tilbake til dine historiske røtter i den gamle hovedstaden Hoa Lu, før du fordyper deg i det magiske \"Ha Long på land\"-landskapet i Trang An-naturarven.\nHøydepunktet på turen er opplevelsen av å erobre toppen av Hang Mua, hvor du fullt ut kan ta inn det majestetiske og poetiske bildet av Ninh Binh-fjellene og vannet ovenfra."
   },
-  "destinations": [
-    "vietnam"
-  ],
   "styles": [
     "budget",
     "culture",
@@ -53,8 +50,5 @@
   "seasonality_end_month": "",
   "priority": 50,
   "created_at": "2026-04-13T10:18:33.599Z",
-  "updated_at": "2026-04-22T14:43:30.011Z",
-  "pictures": [
-    "/public/v1/tour-images/tour_f76f8004-3244-40f6-9477-918dfecb1658/tour_f76f8004-3244-40f6-9477-918dfecb1658.webp"
-  ]
+  "updated_at": "2026-04-22T14:43:30.011Z"
 }

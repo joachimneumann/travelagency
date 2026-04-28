@@ -38,9 +38,6 @@
     "sv": "Vägen som förbinder staden. Livfulla Ho Chi Minh med soligt och blåsigt Mui Ne tar dig över den vidsträckta och poetiska Da Lat-platån. Resan slutar i Nha Trang - ett paradis av blått hav och vit sand, som ger en underbar blandning av modernt liv och romantisk naturskönhet.",
     "no": "Vei som forbinder byen. Livlige Ho Chi Minh med solfylte og vindfulle Mui Ne tar deg over det enorme og poetiske Da Lat-platået. Reisen ender i Nha Trang - et paradis av blått hav og hvit sand, som bringer en fantastisk blanding av moderne liv og romantisk naturskjønnhet."
   },
-  "destinations": [
-    "vietnam"
-  ],
   "styles": [
     "grand-expeditions",
     "beach",
@@ -54,8 +51,5 @@
   "seasonality_end_month": "apr",
   "priority": 100,
   "created_at": "2026-04-09T04:30:04.537Z",
-  "updated_at": "2026-04-22T16:01:10.722Z",
-  "pictures": [
-    "/public/v1/tour-images/tour_67b333c8-0eb7-4cd2-a203-13a97c382b22/tour_67b333c8-0eb7-4cd2-a203-13a97c382b22.webp"
-  ]
+  "updated_at": "2026-04-22T16:01:10.722Z"
 }
