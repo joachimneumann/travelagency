@@ -4084,9 +4084,11 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
     runtimeBrandLogoScript,
     localFrontendScript,
     stagingFrontendScript,
+    autoCommitDeployScript,
     updateStagingScript,
     productionFrontendScript,
     updateProductionScript,
+    productionCaddyDeployScript,
     publicHomepageAssetsScript
   ] = await Promise.all([
     readFile(path.join(frontendRoot, "pages", "bookings.html"), "utf8"),
@@ -4107,9 +4109,11 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
     readFile(path.join(repoRoot, "scripts", "assets", "prepare_runtime_brand_logo.sh"), "utf8"),
     readFile(path.join(repoRoot, "scripts", "local", "start_local_frontend.sh"), "utf8"),
     readFile(path.join(repoRoot, "scripts", "staging", "deploy_staging_frontend.sh"), "utf8"),
+    readFile(path.join(repoRoot, "scripts", "deploy", "auto_commit_and_deploy.sh"), "utf8"),
     readFile(path.join(repoRoot, "scripts", "deploy", "update_staging.sh"), "utf8"),
     readFile(path.join(repoRoot, "scripts", "production", "deploy_production_frontend.sh"), "utf8"),
     readFile(path.join(repoRoot, "scripts", "deploy", "update_production.sh"), "utf8"),
+    readFile(path.join(repoRoot, "scripts", "production", "deploy_production_caddy.sh"), "utf8"),
     readFile(path.join(repoRoot, "scripts", "lib", "public_homepage_assets.sh"), "utf8")
   ]);
 
@@ -4205,6 +4209,16 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
     publicHomepageAssetsScript,
     /PUBLIC_HOMEPAGE_ASSET_GENERATOR_QUIET=1[\s\S]*>\s*"\$command_log_path" 2>&1[\s\S]*Generated static homepage assets\. Full generation output:/,
     "Homepage asset deploy helper should suppress generator stdout on successful deploys while preserving logs"
+  );
+  assert.match(
+    autoCommitDeployScript,
+    /SOURCE_CADDYFILE=\/srv\/asiatravelplan-staging\/deploy-config\/Caddyfile[\s\S]*SOURCE_CADDY_COMPOSE_FILE=\/srv\/asiatravelplan-staging\/docker-compose\.caddy\.yml[\s\S]*\.\/scripts\/production\/deploy_production_caddy\.sh/,
+    "Staging auto-deploy should reload shared Caddy from the just-updated staging checkout"
+  );
+  assert.match(
+    productionCaddyDeployScript,
+    /docker_compose -p "\$CADDY_PROJECT_NAME"[\s\S]*up -d caddy[\s\S]*exec -T caddy\s+\\\n\s+caddy reload --config \/etc\/caddy\/Caddyfile/,
+    "Shared Caddy deploys should explicitly reload the running Caddy process after updating the mounted config"
   );
   for (const deployScript of [
     localFrontendScript,

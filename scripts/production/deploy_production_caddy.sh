@@ -71,4 +71,6 @@ docker run --rm \
   caddy validate --config /etc/caddy/Caddyfile
 
 docker_compose -p "$CADDY_PROJECT_NAME" --env-file "$ENV_FILE" -f "$CADDY_COMPOSE_FILE" up -d caddy
+docker_compose -p "$CADDY_PROJECT_NAME" --env-file "$ENV_FILE" -f "$CADDY_COMPOSE_FILE" exec -T caddy \
+  caddy reload --config /etc/caddy/Caddyfile
 echo "Shared public Caddy reloaded on $CURRENT_HOSTNAME using runtime root $CADDY_ROOT (project: $CADDY_PROJECT_NAME)."

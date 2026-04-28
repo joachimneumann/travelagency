@@ -254,5 +254,5 @@ if [[ "${#STAGING_SERVICES[@]}" -gt 0 ]]; then
 fi
 
 if [[ "$DEPLOY_SHARED_CADDY" -eq 1 ]]; then
-  ssh atp "bash -lc 'cd /srv/asiatravelplan && git pull --ff-only && ./scripts/production/deploy_production_caddy.sh'"
+  ssh atp "bash -lc 'cd /srv/asiatravelplan-staging && git pull --ff-only && SOURCE_CADDYFILE=/srv/asiatravelplan-staging/deploy-config/Caddyfile SOURCE_CADDY_COMPOSE_FILE=/srv/asiatravelplan-staging/docker-compose.caddy.yml ENV_FILE=/srv/asiatravelplan-staging/.env ./scripts/production/deploy_production_caddy.sh'"
 fi
