@@ -12,6 +12,27 @@ function durationMs(startMs) {
   return Math.max(0, nowMs() - Number(startMs || 0));
 }
 
+function waitMs(delayMs) {
+  const normalizedDelayMs = Math.max(0, Number(delayMs || 0));
+  if (!normalizedDelayMs) return Promise.resolve();
+  return new Promise((resolve) => setTimeout(resolve, normalizedDelayMs));
+}
+
+async function mapWithConcurrency(items, concurrency, worker) {
+  const normalizedItems = Array.isArray(items) ? items : [];
+  const normalizedConcurrency = Math.max(1, Math.min(normalizedItems.length || 1, Math.trunc(Number(concurrency) || 1)));
+  const results = new Array(normalizedItems.length);
+  let nextIndex = 0;
+  await Promise.all(Array.from({ length: normalizedConcurrency }, async () => {
+    while (nextIndex < normalizedItems.length) {
+      const index = nextIndex;
+      nextIndex += 1;
+      results[index] = await worker(normalizedItems[index], index);
+    }
+  }));
+  return results;
+}
+
 function summarizeEntries(entries) {
   const normalizedEntries = Object.entries(entries || {})
     .map(([key, value]) => [normalizeText(key), normalizeText(value)])
@@ -243,19 +264,40 @@ export function createTranslationClient({
   model = "gpt-4o-mini",
   organizationId = "",
   projectId = "",
-  googleFallbackEnabled = true
+  googleFallbackEnabled = true,
+  googleRetryMaxAttempts = 3,
+  googleRetryBaseDelayMs = 250,
+  googleConcurrency = 4
 } = {}) {
   const normalizedApiKey = normalizeText(apiKey);
   const normalizedModel = normalizeText(model) || "gpt-4o-mini";
   const normalizedOrganizationId = normalizeText(organizationId);
   const normalizedProjectId = normalizeText(projectId);
   const allowGoogleFallbackByDefault = googleFallbackEnabled !== false;
+  const googleRetryAttempts = Math.max(1, Math.trunc(Number(googleRetryMaxAttempts) || 0) || 3);
+  const googleRetryDelayBaseMs = Math.max(0, Number(googleRetryBaseDelayMs || 0));
+  const googleMaxConcurrency = Math.max(1, Math.min(12, Math.trunc(Number(googleConcurrency) || 0) || 4));
   const translationCache = new Map();
-  const MAX_TRANSLATION_CACHE_ENTRIES = 500;
+  const MAX_TRANSLATION_CACHE_ENTRIES = 2500;
 
-  function translationCacheKey(entries, targetLang, options = {}, applicableRules = []) {
+  function googleRetryDelayMs(attempt) {
+    return googleRetryDelayBaseMs * (2 ** Math.max(0, Number(attempt || 1) - 1));
+  }
+
+  function shouldRetryGoogleTranslationError(error) {
+    const errorCode = normalizeText(error?.code);
+    const httpStatus = Number(error?.httpStatus || error?.status || 0);
+    if (httpStatus === 429 || httpStatus >= 500) return true;
+    return !httpStatus && (
+      errorCode === "TRANSLATION_REQUEST_FAILED"
+      || errorCode === "TRANSLATION_INVALID_RESPONSE"
+      || !errorCode
+    );
+  }
+
+  function translationCacheContext(targetLang, options = {}, applicableRules = []) {
     const namespace = normalizeText(options?.cacheNamespace);
-    if (!namespace) return "";
+    if (!namespace) return null;
     const sourceLangCode = googleTranslateLangCode(options?.sourceLangCode || "en", "en");
     const targetLangCode = googleTranslateLangCode(targetLang, "en");
     const profileOptions = resolveTranslationProfileOptions(options);
@@ -269,10 +311,29 @@ export function createTranslationClient({
         translation_rules: applicableRules
       }))
       .digest("hex");
+    return {
+      namespace,
+      sourceLangCode,
+      targetLangCode,
+      profile: profileOptions.profile || "default",
+      promptFingerprint
+    };
+  }
+
+  function translationCacheKey(entries, targetLang, options = {}, applicableRules = []) {
+    const context = translationCacheContext(targetLang, options, applicableRules);
+    if (!context) return "";
     const sourceHash = createHash("sha256")
       .update(JSON.stringify(stableEntriesObject(entries)))
       .digest("hex");
-    return `${namespace}:${sourceLangCode}:${targetLangCode}:${profileOptions.profile || "default"}:${promptFingerprint}:${sourceHash}`;
+    return `${context.namespace}:request:${context.sourceLangCode}:${context.targetLangCode}:${context.profile}:${context.promptFingerprint}:${sourceHash}`;
+  }
+
+  function translationEntryCacheKey(sourceText, cacheContext) {
+    const normalizedSourceText = normalizeText(sourceText);
+    if (!cacheContext || !normalizedSourceText) return "";
+    const sourceHash = createHash("sha256").update(normalizedSourceText).digest("hex");
+    return `${cacheContext.namespace}:entry:${cacheContext.sourceLangCode}:${cacheContext.targetLangCode}:${cacheContext.profile}:${cacheContext.promptFingerprint}:${sourceHash}`;
   }
 
   function readCachedTranslation(cacheKey) {
@@ -297,6 +358,60 @@ export function createTranslationClient({
       translationCache.delete(oldestKey);
     }
     return cloneTranslationResult(cachedResult);
+  }
+
+  function readCachedTranslationEntry(cacheKey) {
+    if (!cacheKey) return "";
+    const cached = translationCache.get(cacheKey);
+    const normalized = normalizeText(cached);
+    if (!normalized) return "";
+    translationCache.delete(cacheKey);
+    translationCache.set(cacheKey, normalized);
+    return normalized;
+  }
+
+  function writeCachedTranslationEntry(cacheKey, value) {
+    const normalized = normalizeText(value);
+    if (!cacheKey || !normalized) return;
+    if (translationCache.has(cacheKey)) {
+      translationCache.delete(cacheKey);
+    }
+    translationCache.set(cacheKey, normalized);
+    while (translationCache.size > MAX_TRANSLATION_CACHE_ENTRIES) {
+      const oldestKey = translationCache.keys().next().value;
+      if (!oldestKey) break;
+      translationCache.delete(oldestKey);
+    }
+  }
+
+  function splitPreparedTranslationByEntryCache(preparedTranslation, sourceEntries, cacheContext) {
+    const providerEntries = stableEntriesObject(preparedTranslation?.providerEntries || {});
+    const cachedEntries = {};
+    const missingProviderEntries = {};
+    let hitCount = 0;
+    for (const [key, providerSourceText] of Object.entries(providerEntries)) {
+      const sourceText = normalizeText(sourceEntries?.[key]) || providerSourceText;
+      const cachedText = readCachedTranslationEntry(translationEntryCacheKey(sourceText, cacheContext));
+      if (cachedText) {
+        cachedEntries[key] = cachedText;
+        hitCount += 1;
+      } else {
+        missingProviderEntries[key] = providerSourceText;
+      }
+    }
+    return {
+      cachedEntries,
+      missingProviderEntries,
+      hitCount
+    };
+  }
+
+  function writeCachedTranslationEntries(entries, sourceEntries, cacheContext) {
+    if (!cacheContext) return;
+    for (const [key, translatedText] of Object.entries(entries || {})) {
+      const sourceText = normalizeText(sourceEntries?.[key]);
+      writeCachedTranslationEntry(translationEntryCacheKey(sourceText, cacheContext), translatedText);
+    }
   }
 
   async function translateEntriesWithGoogle(preparedTranslation, targetLang, options = {}) {
@@ -324,10 +439,9 @@ export function createTranslationClient({
       exact_override_count: exactEntryCount
     });
 
-    for (const [key, value] of Object.entries(entries || {})) {
+    await mapWithConcurrency(Object.entries(entries || {}), googleMaxConcurrency, async ([key, value]) => {
       const sourceText = normalizeText(value);
-      if (!sourceText) continue;
-      const requestStartMs = nowMs();
+      if (!sourceText) return;
       const params = new URLSearchParams({
         client: "gtx",
         sl: sourceLangCode,
@@ -335,29 +449,60 @@ export function createTranslationClient({
         dt: "t",
         q: sourceText
       });
-      const response = await fetch(`https://translate.googleapis.com/translate_a/single?${params.toString()}`);
-      if (!response.ok) {
-        const error = new Error(`Google translation request failed with HTTP ${response.status}.`);
-        error.code = "TRANSLATION_REQUEST_FAILED";
-        throw error;
+      const requestUrl = `https://translate.googleapis.com/translate_a/single?${params.toString()}`;
+      for (let attempt = 1; attempt <= googleRetryAttempts; attempt += 1) {
+        const requestStartMs = nowMs();
+        try {
+          const response = await fetch(requestUrl);
+          if (!response.ok) {
+            const error = new Error(`Google translation request failed with HTTP ${response.status}.`);
+            error.code = "TRANSLATION_REQUEST_FAILED";
+            error.httpStatus = response.status;
+            throw error;
+          }
+          const payload = await response.json();
+          const translatedText = extractGoogleTranslatedText(payload);
+          if (!translatedText) {
+            const error = new Error("Google translation provider returned an invalid response.");
+            error.code = "TRANSLATION_INVALID_RESPONSE";
+            throw error;
+          }
+          translated[key] = translatedText;
+          logTranslationTiming("Google translation entry finished", {
+            trace_id: traceId,
+            source_lang: sourceLangCode,
+            target_lang: targetLangCode,
+            key,
+            chars: sourceText.length,
+            attempt,
+            duration_ms: durationMs(requestStartMs)
+          });
+          break;
+        } catch (error) {
+          const shouldRetry = attempt < googleRetryAttempts && shouldRetryGoogleTranslationError(error);
+          const retryDelayMs = shouldRetry ? googleRetryDelayMs(attempt) : undefined;
+          logTranslationTiming(
+            shouldRetry ? "Google translation entry failed, retrying" : "Google translation entry failed",
+            {
+              trace_id: traceId,
+              source_lang: sourceLangCode,
+              target_lang: targetLangCode,
+              key,
+              chars: sourceText.length,
+              attempt,
+              max_attempts: googleRetryAttempts,
+              http_status: Number(error?.httpStatus || error?.status || 0) || undefined,
+              error_code: normalizeText(error?.code),
+              error: String(error?.message || error || "Translation failed."),
+              duration_ms: durationMs(requestStartMs),
+              retry_delay_ms: retryDelayMs
+            }
+          );
+          if (!shouldRetry) throw error;
+          await waitMs(retryDelayMs);
+        }
       }
-      const payload = await response.json();
-      const translatedText = extractGoogleTranslatedText(payload);
-      if (!translatedText) {
-        const error = new Error("Google translation provider returned an invalid response.");
-        error.code = "TRANSLATION_INVALID_RESPONSE";
-        throw error;
-      }
-      translated[key] = translatedText;
-      logTranslationTiming("Google translation entry finished", {
-        trace_id: traceId,
-        source_lang: sourceLangCode,
-        target_lang: targetLangCode,
-        key,
-        chars: sourceText.length,
-        duration_ms: durationMs(requestStartMs)
-      });
-    }
+    });
 
     logTranslationTiming("Google translation finished", {
       trace_id: traceId,
@@ -399,6 +544,7 @@ export function createTranslationClient({
       options,
       preparedTranslation.applicableRules
     );
+    const cacheContext = translationCacheContext(targetLang, options, preparedTranslation.applicableRules);
     const cachedResult = readCachedTranslation(cacheKey);
     if (cachedResult) {
       logTranslationTiming("Translation cache hit", {
@@ -412,11 +558,44 @@ export function createTranslationClient({
       return cachedResult;
     }
 
+    const entryCacheSplit = splitPreparedTranslationByEntryCache(
+      preparedTranslation,
+      normalizedEntriesObject,
+      cacheContext
+    );
+    if (entryCacheSplit.hitCount) {
+      logTranslationTiming("Translation entry cache hits", {
+        trace_id: normalizeText(options?.traceId),
+        cache_namespace: normalizeText(options?.cacheNamespace),
+        translation_profile: profileOptions.profile || "",
+        source_lang: googleTranslateLangCode(options?.sourceLangCode || "en", "en"),
+        target_lang: googleTranslateLangCode(targetLang, "en"),
+        hit_count: entryCacheSplit.hitCount,
+        miss_count: Object.keys(entryCacheSplit.missingProviderEntries).length
+      });
+    }
+
+    const providerPreparedTranslation = {
+      ...preparedTranslation,
+      exactEntries: {},
+      providerEntries: entryCacheSplit.missingProviderEntries
+    };
+
+    const completeTranslationResult = (providerResult) => {
+      const providerEntries = stableEntriesObject(providerResult?.entries || {});
+      writeCachedTranslationEntries(providerEntries, normalizedEntriesObject, cacheContext);
+      return writeCachedTranslation(cacheKey, {
+        entries: stableEntriesObject({
+          ...preparedTranslation.exactEntries,
+          ...entryCacheSplit.cachedEntries,
+          ...providerEntries
+        }),
+        provider: providerResult?.provider || null
+      });
+    };
+
     const translateWithGoogleAndCache = async () => (
-      writeCachedTranslation(
-        cacheKey,
-        await translateEntriesWithGoogle(preparedTranslation, targetLang, options)
-      )
+      completeTranslationResult(await translateEntriesWithGoogle(providerPreparedTranslation, targetLang, options))
     );
 
     if (forceGoogleProvider) {
@@ -441,10 +620,10 @@ export function createTranslationClient({
     const glossaryTerms = profileOptions.glossaryTerms;
     const protectedTerms = profileOptions.protectedTerms;
     const translationRulePrompts = preparedTranslation.applicableRules.map(buildTranslationRulePrompt);
-    const entriesToTranslate = Object.entries(stableEntriesObject(preparedTranslation.providerEntries || {}));
+    const entriesToTranslate = Object.entries(stableEntriesObject(providerPreparedTranslation.providerEntries || {}));
     if (!entriesToTranslate.length) {
-      return writeCachedTranslation(cacheKey, {
-        entries: finalizePreparedTranslation(preparedTranslation, {}),
+      return completeTranslationResult({
+        entries: {},
         provider: null
       });
     }
@@ -605,8 +784,8 @@ export function createTranslationClient({
       duration_ms: durationMs(totalStartMs)
     });
 
-    return writeCachedTranslation(cacheKey, {
-      entries: finalizePreparedTranslation(preparedTranslation, translated),
+    return completeTranslationResult({
+      entries: finalizePreparedTranslation(providerPreparedTranslation, translated),
       provider: openAiProviderMeta(normalizedModel)
     });
   }

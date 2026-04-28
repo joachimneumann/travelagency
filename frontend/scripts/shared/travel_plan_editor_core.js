@@ -89,6 +89,8 @@ export function createBookingTravelPlanModule(ctx) {
     buildTravelPlanServiceSearchRequest,
     buildTravelPlanDayImportRequest,
     buildTravelPlanServiceImportRequest,
+    cloneTravelPlanDayForLocalImport,
+    cloneTravelPlanServiceForLocalImport,
     travelPlanLibrarySource,
     features = {}
   } = ctx;
@@ -271,6 +273,17 @@ export function createBookingTravelPlanModule(ctx) {
     renderTravelPlanPanel();
   }
 
+  function refreshActivitiesInBackground(reason = "travel_plan_mutation") {
+    void Promise.resolve()
+      .then(() => loadActivities())
+      .catch((error) => {
+        logBrowserConsoleError("[travel-plan] Failed to refresh activities in the background.", {
+          booking_id: state.booking?.id || "",
+          reason
+        }, error);
+      });
+  }
+
   function travelPlanStatus(message, type = "info") {
     if (!els.travel_plan_status) return;
     els.travel_plan_status.textContent = message;
@@ -290,6 +303,17 @@ export function createBookingTravelPlanModule(ctx) {
       isVisible,
       message || bookingT("booking.translation.translating_overlay", "Translating travel plan. Please wait.")
     );
+  }
+
+  const MIN_TRAVEL_PLAN_TRANSLATION_OVERLAY_MS = 500;
+
+  function waitForMs(ms) {
+    return new Promise((resolve) => window.setTimeout(resolve, Math.max(0, Number(ms) || 0)));
+  }
+
+  async function waitForMinimumElapsed(startedAt, minimumMs) {
+    const remainingMs = Math.max(0, (Number(minimumMs) || 0) - (Date.now() - Number(startedAt || 0)));
+    if (remainingMs > 0) await waitForMs(remainingMs);
   }
 
   function travelPlanSectionLabel() {
@@ -700,7 +724,7 @@ export function createBookingTravelPlanModule(ctx) {
   async function finalizeTravelPlanMutation(result, successMessage) {
     if (!result?.booking) return false;
     applyTravelPlanMutationBooking(result.booking);
-    await loadActivities();
+    refreshActivitiesInBackground("travel_plan_mutation");
     travelPlanStatus(successMessage, "success");
     return true;
   }
@@ -736,6 +760,13 @@ export function createBookingTravelPlanModule(ctx) {
     travelPlanStatus("");
     travelPlanServiceLibraryModule.populateTravelPlanServiceLibraryKindOptions();
     renderTravelPlanTranslationPanel();
+  }
+
+  function applyLocalTravelPlanDraft(nextPlan) {
+    state.travelPlanDraft = nextPlan && typeof nextPlan === "object"
+      ? nextPlan
+      : createEmptyTravelPlan();
+    renderTravelPlanPanel();
   }
 
   function resolveLocalizedDraftBranchText(map, lang = "en", fallback = "") {
@@ -824,12 +855,17 @@ export function createBookingTravelPlanModule(ctx) {
     escapeHtml,
     ensureTravelPlanReadyForMutation,
     finalizeTravelPlanMutation,
+    collectTravelPlanPayload,
     findDraftDay,
     formatTravelPlanDayHeading,
     buildTravelPlanDaySearchRequest,
     buildTravelPlanServiceSearchRequest,
     buildTravelPlanDayImportRequest,
     buildTravelPlanServiceImportRequest,
+    cloneTravelPlanDayForLocalImport,
+    cloneTravelPlanServiceForLocalImport,
+    applyLocalTravelPlanDraft,
+    setPageOverlay: setTravelPlanPageOverlay,
     travelPlanLibrarySource
   });
 
@@ -1844,7 +1880,7 @@ export function createBookingTravelPlanModule(ctx) {
                   <span class="travel-plan-add-btn__label">${escapeHtml(bookingT("booking.travel_plan.new_item", "New service"))}</span>
                 </button>
                 ${allowServiceImport
-                  ? `<button class="btn travel-plan-day-add-btn travel-plan-day-add-btn--service" data-travel-plan-open-import="${escapeHtml(day.id)}" data-requires-clean-state type="button">${escapeHtml(bookingT("booking.travel_plan.insert_existing", "Copy existing service"))}</button>`
+                  ? `<button class="btn travel-plan-day-add-btn travel-plan-day-add-btn--service" data-travel-plan-open-import="${escapeHtml(day.id)}" type="button">${escapeHtml(bookingT("booking.travel_plan.insert_existing", "Copy existing service"))}</button>`
                   : ""}
               </div>
             </div>
@@ -2376,7 +2412,7 @@ export function createBookingTravelPlanModule(ctx) {
       renderBookingData();
       applyBookingPayload();
       renderTravelPlanPanel();
-      await loadActivities();
+      refreshActivitiesInBackground("travel_plan_save");
       travelPlanStatus("");
       return true;
     } catch (error) {
@@ -2522,6 +2558,7 @@ export function createBookingTravelPlanModule(ctx) {
       els.travel_plan_translate_all_btn.disabled = true;
     }
     const configuredTranslator = await loadConfiguredTranslationProviderDisplay();
+    const overlayStartedAt = Date.now();
     setTravelPlanTranslationOverlay(true, travelPlanReviewOverlayMessage(bookingContentLang(), configuredTranslator));
 
     try {
@@ -2548,6 +2585,7 @@ export function createBookingTravelPlanModule(ctx) {
       }, error);
       travelPlanStatus(error?.message || bookingT("booking.translation.error", "Could not translate this section."), "error");
     } finally {
+      await waitForMinimumElapsed(overlayStartedAt, MIN_TRAVEL_PLAN_TRANSLATION_OVERLAY_MS);
       setTravelPlanTranslationOverlay(false);
       syncTravelPlanTranslateButton();
     }
@@ -3319,6 +3357,7 @@ export function createBookingTravelPlanModule(ctx) {
     travelPlanStatus(bookingT("booking.translation.translating_customer_content", "Translating customer-facing content..."), "loading");
     const fieldBatches = partitionReviewFields(fields, TRAVEL_PLAN_REVIEW_TRANSLATION_BATCH_SIZE);
     const configuredTranslator = await loadConfiguredTranslationProviderDisplay();
+    const overlayStartedAt = Date.now();
     setTravelPlanTranslationOverlay(true, travelPlanReviewOverlayMessage(targetLang, configuredTranslator));
     try {
       for (const fieldBatch of fieldBatches) {
@@ -3355,6 +3394,7 @@ export function createBookingTravelPlanModule(ctx) {
       }, error);
       travelPlanStatus(error?.message || bookingT("booking.translation.error", "Could not translate this section."), "error");
     } finally {
+      await waitForMinimumElapsed(overlayStartedAt, MIN_TRAVEL_PLAN_TRANSLATION_OVERLAY_MS);
       setTravelPlanTranslationOverlay(false);
     }
   }
@@ -3706,7 +3746,7 @@ export function createBookingTravelPlanModule(ctx) {
               <span class="travel-plan-add-btn__label">${escapeHtml(bookingT("booking.travel_plan.new_day", "New day"))}</span>
             </button>
             ${allowDayImport
-              ? `<button class="btn travel-plan-day-add-btn travel-plan-day-add-btn--service travel-plan-day-add-btn--day-copy" data-travel-plan-open-day-import data-requires-clean-state type="button">${escapeHtml(bookingT("booking.travel_plan.insert_existing_day", "Copy existing day"))}</button>`
+              ? `<button class="btn travel-plan-day-add-btn travel-plan-day-add-btn--service travel-plan-day-add-btn--day-copy" data-travel-plan-open-day-import type="button">${escapeHtml(bookingT("booking.travel_plan.insert_existing_day", "Copy existing day"))}</button>`
               : ""}
           </div>
           ${allowTourImport

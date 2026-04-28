@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-04-28T08:34:18Z
+# 2026-04-28T12:46:15Z
 
 ---
 openapi: 3.1.0
@@ -6862,6 +6862,9 @@ components:
           type: string
         source_day_id:
           type: string
+        target_travel_plan:
+          "$ref": "#/components/schemas/TravelPlan"
+          nullable: true
         include_images:
           type: boolean
         include_customer_visible_images_only:
@@ -6894,6 +6897,9 @@ components:
         insert_after_service_id:
           type: string
           nullable: true
+        target_travel_plan:
+          "$ref": "#/components/schemas/TravelPlan"
+          nullable: true
         include_images:
           type: boolean
         include_customer_visible_images_only:
@@ -6922,6 +6928,9 @@ components:
           type: string
         source_day_id:
           type: string
+        target_travel_plan:
+          "$ref": "#/components/schemas/BookingTravelPlan"
+          nullable: true
         include_images:
           type: boolean
         include_customer_visible_images_only:
@@ -6952,6 +6961,9 @@ components:
           type: string
         insert_after_service_id:
           type: string
+          nullable: true
+        target_travel_plan:
+          "$ref": "#/components/schemas/BookingTravelPlan"
           nullable: true
         include_images:
           type: boolean

@@ -136,6 +136,7 @@ const state = {
 };
 
 const TOUR_BULK_TRANSLATION_CONCURRENCY = 4;
+const MIN_TRANSLATION_SECTION_OVERLAY_MS = 500;
 
 const TOUR_TRANSLATION_SOURCE_LANG = "en";
 const TOUR_DESCRIPTION_MAX_LENGTH = 170;
@@ -803,15 +804,22 @@ async function translateTourContent(button) {
   setStatus(backendT("tour.translation.translating", "Translating from {sourceLanguage}...", {
     sourceLanguage: tourLanguageLabel(sourceLang)
   }));
-  const translationResult = await requestTourTranslation(targetLang, sourceEntries);
-  const translatedEntries = translationResult?.entries || null;
-  if (!translatedEntries) return;
-  applyTranslatedTourFields(targetLang, translatedEntries);
-  syncLocalizedFieldState();
-  updateHeaderTitle();
+  const overlayStartedAt = Date.now();
+  setTourPageOverlay(true, backendT("tour.translation.translating_overlay", "Translating. Please wait."));
+  try {
+    const translationResult = await requestTourTranslation(targetLang, sourceEntries);
+    const translatedEntries = translationResult?.entries || null;
+    if (!translatedEntries) return;
+    applyTranslatedTourFields(targetLang, translatedEntries);
+    syncLocalizedFieldState();
+    updateHeaderTitle();
 
-  updateTourDirtyState();
-  setStatus(backendT("tour.translation.done", "Translation updated."));
+    updateTourDirtyState();
+    setStatus(backendT("tour.translation.done", "Translation updated."));
+  } finally {
+    await waitForMinimumElapsed(overlayStartedAt, MIN_TRANSLATION_SECTION_OVERLAY_MS);
+    setTourPageOverlay(false);
+  }
 }
 
 function logTourTranslationBatchProgress(message, details = {}) {
@@ -857,6 +865,7 @@ async function translateAllTourContent(button) {
     clearTranslatedTourTarget(targetLang);
   }
   updateTourDirtyState();
+  const overlayStartedAt = Date.now();
   setTourPageOverlay(true, backendT("tour.translation.translating_all_overlay", "Translating all languages. Please wait."));
   setStatus(backendT("tour.translation.translating_all", "Translating all languages from {sourceLanguage}...", {
     sourceLanguage: tourLanguageLabel(sourceLang)
@@ -903,6 +912,7 @@ async function translateAllTourContent(button) {
     });
     throw error;
   } finally {
+    await waitForMinimumElapsed(overlayStartedAt, MIN_TRANSLATION_SECTION_OVERLAY_MS);
     setTourPageOverlay(false);
     logTourTranslationBatchProgress("Bulk translation finished", {
       source_lang: sourceLang
@@ -1365,7 +1375,7 @@ function updateTravelPlanTranslationField(targetLang, key, value, { rerender = f
   if (rerender) renderTravelPlanTranslationPanel();
 }
 
-async function translateTravelPlanLanguages(targets, { force = false, minimumOverlayMs = 0, showOverlayWhenNoWork = false } = {}) {
+async function translateTravelPlanLanguages(targets, { force = false, minimumOverlayMs = MIN_TRANSLATION_SECTION_OVERLAY_MS, showOverlayWhenNoWork = false } = {}) {
   const plan = currentTravelPlanForTranslation({ syncFromEditor: true });
   if (!plan) return;
   const sourceFields = collectTravelPlanTranslationFields(plan, TRAVEL_PLAN_SOURCE_LANG);
@@ -1389,7 +1399,7 @@ async function translateTravelPlanLanguages(targets, { force = false, minimumOve
     })
     .filter(Boolean);
   if (!workItems.length) {
-    if (showOverlayWhenNoWork || minimumOverlayMs > 0) {
+    if (showOverlayWhenNoWork) {
       const overlayStartedAt = Date.now();
       setTourPageOverlay(true, travelPlanTranslationOverlayMessage("", TOUR_TRANSLATION_PROVIDER_DISPLAY));
       setStatus(backendT("tour.travel_plan_translation.done", "Translations updated."));
@@ -1487,6 +1497,9 @@ async function init() {
       state.tour = tour;
       state.id = String(tour?.id || state.id || "");
       state.is_create_mode = !state.id;
+      if (state.booking && state.booking.id === state.id) {
+        state.booking.updated_at = normalizeText(tour?.updated_at) || state.booking.updated_at || null;
+      }
     },
     setPageOverlay: (isVisible, message = "") => setTourPageOverlay(isVisible, message)
   });
@@ -1863,7 +1876,7 @@ async function submitForm(event) {
     short_description_i18n,
     travel_plan: omitDerivedTravelPlanDestinations(travelPlanPayload)
   };
-  const expectedUpdatedAt = normalizeText(state.tour?.updated_at);
+  const expectedUpdatedAt = normalizeText(state.tour?.updated_at || state.booking?.updated_at);
   if (!state.is_create_mode && expectedUpdatedAt) {
     payload.expected_updated_at = expectedUpdatedAt;
   }

@@ -177,6 +177,8 @@ import (
 	source_tour_id:      common.#Identifier
 	source_tour_title?:  string
 	source_tour_code?:   string
+	source_destination_scope?: [...databaseModel.#TravelPlanDestinationScopeEntry]
+	source_service?:     databaseModel.#TravelPlanService
 	day_number?:         >0 & int
 	service_id:          common.#Identifier
 	service_kind?:       enums.#TravelPlanServiceKind
@@ -198,6 +200,8 @@ import (
 	source_tour_id:      common.#Identifier
 	source_tour_title?:  string
 	source_tour_code?:   string
+	source_destination_scope?: [...databaseModel.#TravelPlanDestinationScopeEntry]
+	source_day?:         databaseModel.#TravelPlanDay
 	day_id:              common.#Identifier
 	day_number?:         >0 & int
 	title?:              string

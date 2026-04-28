@@ -349,6 +349,11 @@
     "origin": "manual",
     "updated_at": "2026-04-27T00:00:00.000Z"
   },
+  "backend.tours.destination_catalog.saving_overlay": {
+    "source_hash": "f3a3fa31a8e996c067f788a65ac81c68d21a5e1aa5e5a0b06ca0a72bc00d2768",
+    "origin": "manual",
+    "updated_at": "2026-04-28T00:00:00.000Z"
+  },
   "backend.tours.destination_catalog.warning_area": {
     "source_hash": "2c909b2fd4e0160e78519794fb228768038ad4a225a436f9592e88e04a1375b1",
     "origin": "manual",
@@ -443,6 +448,26 @@
     "source_hash": "7e744141b40ea5501412e42c8b40fd0b05f1608aa2e4073944ccccbd82f24ee8",
     "origin": "machine",
     "updated_at": "2026-03-30T23:51:31.875Z"
+  },
+  "backend.translations.applying_overlay": {
+    "source_hash": "968a03f2e2df351a2dcff2ebd208589b557543cb952bb40afbc54d7dbd3d7acf",
+    "origin": "manual",
+    "updated_at": "2026-04-28T00:00:00.000Z"
+  },
+  "backend.translations.retranslate_backend_vi_overlay": {
+    "source_hash": "5736c022a5bcc7d9b2085bfbae7309d649c02ea8a5f1956b3b2c699bbf964790",
+    "origin": "manual",
+    "updated_at": "2026-04-28T00:00:00.000Z"
+  },
+  "backend.translations.retranslate_current_overlay": {
+    "source_hash": "8aa358f99f815bb11c1167c8466bda9da3a6e7a2857840ea16a89a6a91a92e5c",
+    "origin": "manual",
+    "updated_at": "2026-04-28T00:00:00.000Z"
+  },
+  "backend.translations.retranslate_frontend_all_overlay": {
+    "source_hash": "e81ae454c1cc4efb68e94221c5c26ff9236e0cc3b6c2f41fbff7ba4072603805",
+    "origin": "manual",
+    "updated_at": "2026-04-28T00:00:00.000Z"
   },
   "backend.emergency.add_contact": {
     "source_hash": "a02ce0df219d8ace5bdeb691400b07b9a0012969152d88d74f1b6a0997419921",
@@ -5438,6 +5463,11 @@
     "source_hash": "dc85af8f2b1d0d6756547cd5f79557466e25e682b882f68d277bd7f125851321",
     "origin": "machine",
     "updated_at": "2026-03-30T23:51:31.875Z"
+  },
+  "tour.status.saving_overlay": {
+    "source_hash": "b3577ce5a73ad3cb6583328265e54193b61350c90da4effbcc335474a748f0f5",
+    "origin": "manual",
+    "updated_at": "2026-04-28T00:00:00.000Z"
   },
   "tour.status.selected_image": {
     "source_hash": "9d1e4118992a4d7bbf86d0ae0a58eaac8dc3f5ee296a94dc022e196bd5584f4a",

@@ -120,6 +120,147 @@ test("translation client can force Google even when OpenAI is configured", async
   }
 });
 
+test("google translation retries transient provider failures before succeeding", async () => {
+  const originalFetch = globalThis.fetch;
+  const requestedUrls = [];
+  let callCount = 0;
+  globalThis.fetch = async (url) => {
+    requestedUrls.push(String(url || ""));
+    callCount += 1;
+    if (callCount < 3) {
+      return {
+        ok: false,
+        status: 500
+      };
+    }
+    return {
+      ok: true,
+      async json() {
+        return [[
+          ["Profil ATP", null, null, null]
+        ]];
+      }
+    };
+  };
+
+  try {
+    const client = createTranslationClient({
+      apiKey: "",
+      googleFallbackEnabled: true,
+      googleRetryBaseDelayMs: 0
+    });
+    const translated = await client.translateEntries(
+      {
+        value: "ATP profile"
+      },
+      "fr",
+      {
+        sourceLangCode: "en",
+        allowGoogleFallback: true
+      }
+    );
+
+    assert.equal(translated.value, "Profil ATP");
+    assert.equal(requestedUrls.length, 3);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("google translation does not retry non-retryable provider failures", async () => {
+  const originalFetch = globalThis.fetch;
+  let callCount = 0;
+  globalThis.fetch = async () => {
+    callCount += 1;
+    return {
+      ok: false,
+      status: 400
+    };
+  };
+
+  try {
+    const client = createTranslationClient({
+      apiKey: "",
+      googleFallbackEnabled: true,
+      googleRetryBaseDelayMs: 0
+    });
+
+    await assert.rejects(
+      client.translateEntries(
+        {
+          value: "ATP profile"
+        },
+        "fr",
+        {
+          sourceLangCode: "en",
+          allowGoogleFallback: true
+        }
+      ),
+      /Google translation request failed with HTTP 400\./
+    );
+
+    assert.equal(callCount, 1);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("google translation runs entries with bounded concurrency", async () => {
+  const originalFetch = globalThis.fetch;
+  let inFlight = 0;
+  let maxInFlight = 0;
+  let callCount = 0;
+  globalThis.fetch = async (url) => {
+    callCount += 1;
+    inFlight += 1;
+    maxInFlight = Math.max(maxInFlight, inFlight);
+    const requestUrl = new URL(String(url || ""));
+    const sourceText = requestUrl.searchParams.get("q") || "";
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    inFlight -= 1;
+    return {
+      ok: true,
+      async json() {
+        return [[
+          [`fr:${sourceText}`, null, null, null]
+        ]];
+      }
+    };
+  };
+
+  try {
+    const client = createTranslationClient({
+      apiKey: "",
+      googleFallbackEnabled: true,
+      googleConcurrency: 2
+    });
+    const translated = await client.translateEntries(
+      {
+        first: "One",
+        second: "Two",
+        third: "Three",
+        fourth: "Four"
+      },
+      "fr",
+      {
+        sourceLangCode: "en",
+        allowGoogleFallback: true
+      }
+    );
+
+    assert.deepEqual(translated, {
+      first: "fr:One",
+      fourth: "fr:Four",
+      second: "fr:Two",
+      third: "fr:Three"
+    });
+    assert.equal(callCount, 4);
+    assert.equal(maxInFlight, 2);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
 test("global translation rules can satisfy an exact override without calling a provider", async () => {
   const originalFetch = globalThis.fetch;
   let callCount = 0;
@@ -357,6 +498,74 @@ test("translation cache is keyed by source text hash, source lang, target lang, 
     assert.equal(differentProfile.value, "translated-fr");
     assert.equal(differentRules.value, "translated-fr");
     assert.equal(requestLog.length, 5);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("translation cache reuses individual booking travel-plan texts across request shapes", async () => {
+  const originalFetch = globalThis.fetch;
+  const requestedTexts = [];
+  globalThis.fetch = async (url) => {
+    const requestUrl = new URL(String(url || ""));
+    const sourceText = requestUrl.searchParams.get("q") || "";
+    requestedTexts.push(sourceText);
+    return {
+      ok: true,
+      async json() {
+        return [[
+          [`fr:${sourceText}`, null, null, null]
+        ]];
+      }
+    };
+  };
+
+  try {
+    const client = createTranslationClient({
+      apiKey: "",
+      googleFallbackEnabled: true
+    });
+
+    const firstBooking = await client.translateEntries(
+      {
+        service_title: "Basket boat tour",
+        service_details: "Local lunch in Hoi An"
+      },
+      "fr",
+      {
+        sourceLangCode: "en",
+        provider: "google",
+        cacheNamespace: "booking-travel-plan",
+        translationProfile: "customer_travel_plan"
+      }
+    );
+    const secondBooking = await client.translateEntries(
+      {
+        another_service_title: "Basket boat tour",
+        another_service_details: "Hotel pickup"
+      },
+      "fr",
+      {
+        sourceLangCode: "en",
+        provider: "google",
+        cacheNamespace: "booking-travel-plan",
+        translationProfile: "customer_travel_plan"
+      }
+    );
+
+    assert.deepEqual(firstBooking, {
+      service_details: "fr:Local lunch in Hoi An",
+      service_title: "fr:Basket boat tour"
+    });
+    assert.deepEqual(secondBooking, {
+      another_service_details: "fr:Hotel pickup",
+      another_service_title: "fr:Basket boat tour"
+    });
+    assert.deepEqual(requestedTexts, [
+      "Local lunch in Hoi An",
+      "Basket boat tour",
+      "Hotel pickup"
+    ]);
   } finally {
     globalThis.fetch = originalFetch;
   }

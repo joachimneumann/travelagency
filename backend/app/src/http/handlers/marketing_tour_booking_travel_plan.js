@@ -25,24 +25,16 @@ function cloneLocalizedMap(value, normalizeText) {
   );
 }
 
-function firstTextFromMap(value, normalizeText) {
-  const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
-  for (const text of Object.values(source)) {
-    const normalized = normalizeText(text);
-    if (normalized) return normalized;
-  }
-  return "";
-}
-
 function cloneLocalizedTextField(source, plainField, mapField, normalizeText) {
   const rawMap = source?.[mapField] && typeof source[mapField] === "object" && !Array.isArray(source[mapField])
     ? source[mapField]
     : {};
   const map = cloneLocalizedMap(rawMap, normalizeText);
+  const englishText = normalizeText(rawMap.en);
+  const plainText = normalizeText(source?.[plainField]);
   return {
-    text: normalizeText(source?.[plainField])
-      || normalizeText(rawMap.en)
-      || firstTextFromMap(map, normalizeText),
+    text: englishText
+      || plainText,
     map
   };
 }
@@ -67,6 +59,17 @@ function resolveTourServiceImageDiskPath(storagePath, tourId, { normalizeText, p
   const toursRoot = path.resolve(toursDir);
   if (!absolutePath.startsWith(`${toursRoot}${path.sep}`)) return "";
   return absolutePath;
+}
+
+function extractTourIdFromStoragePath(storagePath, normalizeText) {
+  const normalized = normalizeText(storagePath).split("?")[0];
+  if (!normalized) return "";
+  const publicPrefix = "/public/v1/tour-images/";
+  const relativePath = normalized.startsWith(publicPrefix)
+    ? normalized.slice(publicPrefix.length).replace(/^\/+/, "")
+    : normalized.replace(/^\/+/, "");
+  const tourId = normalizeText(relativePath.split("/")[0]);
+  return /^tour_[A-Za-z0-9-]+$/.test(tourId) ? tourId : "";
 }
 
 export function createMarketingTourBookingTravelPlanCloner(deps) {
@@ -244,10 +247,49 @@ export function createMarketingTourBookingTravelPlanCloner(deps) {
     };
   }
 
+  async function materializeBookingTravelPlanTourImages(travelPlan, {
+    bookingId,
+    createdAt
+  }) {
+    const normalizedBookingId = normalizeText(bookingId);
+    const normalizedCreatedAt = normalizeText(createdAt) || nowIso();
+    const sourcePlan = travelPlan && typeof travelPlan === "object" && !Array.isArray(travelPlan)
+      ? travelPlan
+      : {};
+    const days = await Promise.all((Array.isArray(sourcePlan.days) ? sourcePlan.days : []).map(async (day) => ({
+      ...cloneJson(day),
+      services: await Promise.all((Array.isArray(day?.services) ? day.services : []).map(async (service) => {
+        const sourceService = service && typeof service === "object" && !Array.isArray(service) ? service : {};
+        const sourceImage = sourceService.image && typeof sourceService.image === "object" && !Array.isArray(sourceService.image)
+          ? sourceService.image
+          : null;
+        const sourceTourId = extractTourIdFromStoragePath(sourceImage?.storage_path, normalizeText);
+        if (!sourceImage || !sourceTourId || !normalizedBookingId) {
+          return cloneJson(sourceService);
+        }
+        const copiedImage = await copyTourServiceImageToBooking(sourceImage, {
+          tourId: sourceTourId,
+          bookingId: normalizedBookingId,
+          serviceId: normalizeText(sourceService.id) || `travel_plan_service_${randomUUID()}`,
+          createdAt: normalizedCreatedAt
+        });
+        return {
+          ...cloneJson(sourceService),
+          image: copiedImage || cloneJson(sourceImage)
+        };
+      }))
+    })));
+    return {
+      ...cloneJson(sourcePlan),
+      days
+    };
+  }
+
   return {
     bookingDestinationCodesFromTour,
     cloneMarketingTourDayForBooking,
     cloneMarketingTourServiceForBooking,
-    cloneMarketingTourTravelPlanForBooking
+    cloneMarketingTourTravelPlanForBooking,
+    materializeBookingTravelPlanTourImages
   };
 }

@@ -131,6 +131,7 @@ const OPENAI_PROJECT_ID = normalizeText(process.env.OPENAI_PROJECT_ID || "");
 const OPENAI_ORGANIZATION_ID = normalizeText(process.env.OPENAI_ORGANIZATION_ID || "");
 const OPENAI_TRANSLATION_MODEL = normalizeText(process.env.OPENAI_TRANSLATION_MODEL || process.env.OPENAI_MODEL || "gpt-4.1") || "gpt-4.1";
 const GOOGLE_TRANSLATE_FALLBACK_ENABLED = String(process.env.GOOGLE_TRANSLATE_FALLBACK_ENABLED || "true").trim().toLowerCase() !== "false";
+const GOOGLE_TRANSLATE_CONCURRENCY = Math.max(1, Math.min(12, Number.parseInt(process.env.GOOGLE_TRANSLATE_CONCURRENCY || "4", 10) || 4));
 const DEFAULT_TRANSLATION_PROVIDER_KIND = OPENAI_API_KEY
   ? "openai"
   : (GOOGLE_TRANSLATE_FALLBACK_ENABLED ? "google" : "");
@@ -200,7 +201,8 @@ export const TRANSLATION_CLIENT = createTranslationClient({
   projectId: OPENAI_PROJECT_ID,
   organizationId: OPENAI_ORGANIZATION_ID,
   model: OPENAI_TRANSLATION_MODEL,
-  googleFallbackEnabled: GOOGLE_TRANSLATE_FALLBACK_ENABLED
+  googleFallbackEnabled: GOOGLE_TRANSLATE_FALLBACK_ENABLED,
+  googleConcurrency: GOOGLE_TRANSLATE_CONCURRENCY
 });
 
 const GENERATED_APP_ROLE_LOOKUP = Object.freeze(

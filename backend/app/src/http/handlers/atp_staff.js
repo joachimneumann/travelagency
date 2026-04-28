@@ -369,6 +369,7 @@ export function createAtpStaffHandlers(deps) {
             sourceLangCode: sourceLang,
             domain: "ATP staff profile text",
             allowGoogleFallback: true,
+            cacheNamespace: "staff-profile",
             translationProfile,
             translationRules
           })
@@ -377,6 +378,7 @@ export function createAtpStaffHandlers(deps) {
               sourceLangCode: sourceLang,
               domain: "ATP staff profile text",
               allowGoogleFallback: true,
+              cacheNamespace: "staff-profile",
               translationProfile,
               translationRules
             }),

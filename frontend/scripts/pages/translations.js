@@ -46,6 +46,8 @@ const state = {
   isJobRunning: false
 };
 
+const MIN_TRANSLATIONS_OVERLAY_MS = 500;
+
 const apiOrigin = getBackendApiOrigin();
 const fetchApi = createApiFetcher({
   apiBase: apiOrigin,
@@ -70,6 +72,28 @@ function selectedDomainId() {
 
 function selectedTargetLang() {
   return normalizeText(els.languageSelect?.value || state.current?.target_lang || "");
+}
+
+function translationsApplyingOverlayText() {
+  return backendT("backend.translations.applying_overlay", "Applying translations. Please wait.");
+}
+
+function retranslateCurrentOverlayText() {
+  return backendT("backend.translations.retranslate_current_overlay", "Retranslating current language. Please wait.");
+}
+
+function retranslateFrontendAllOverlayText() {
+  return backendT(
+    "backend.translations.retranslate_frontend_all_overlay",
+    "Retranslating all customer-facing languages. Please wait."
+  );
+}
+
+function retranslateBackendViOverlayText() {
+  return backendT(
+    "backend.translations.retranslate_backend_vi_overlay",
+    "Retranslating backend Vietnamese. Please wait."
+  );
 }
 
 function languageLabel(language) {
@@ -393,15 +417,29 @@ function setOverlayVisible(visible, text = "") {
   if (els.overlayText && text) els.overlayText.textContent = text;
 }
 
+function waitForMs(ms) {
+  return new Promise((resolve) => window.setTimeout(resolve, Math.max(0, Number(ms) || 0)));
+}
+
+async function waitForMinimumElapsed(startedAt, minimumMs) {
+  const remainingMs = Math.max(0, (Number(minimumMs) || 0) - (Date.now() - Number(startedAt || 0)));
+  if (remainingMs > 0) await waitForMs(remainingMs);
+}
+
+async function hideOverlayAfterMinimum(startedAt) {
+  await waitForMinimumElapsed(startedAt, MIN_TRANSLATIONS_OVERLAY_MS);
+  setOverlayVisible(false);
+}
+
 function renderJob(job) {
   if (!job) return;
   const phase = job.phases?.find((entry) => entry.status === "running");
-  const label = phase?.label || (job.status === "succeeded" ? "Finished." : "Applying translations. Please wait.");
+  const label = phase?.label || (job.status === "succeeded" ? "Finished." : translationsApplyingOverlayText());
   if (els.overlayText) els.overlayText.textContent = label;
   if (els.applyLog) els.applyLog.textContent = Array.isArray(job.log) ? job.log.slice(-80).join("\n") : "";
 }
 
-async function pollJob(jobId) {
+async function pollJob(jobId, overlayStartedAt) {
   let latest = null;
   while (state.isJobRunning) {
     const payload = await fetchApi(`/api/v1/static-translations/apply/${encodeURIComponent(jobId)}`, { cache: "no-store" });
@@ -413,20 +451,22 @@ async function pollJob(jobId) {
   state.isJobRunning = false;
   updateActions();
   if (latest?.status === "succeeded") {
-    setOverlayVisible(false);
+    await hideOverlayAfterMinimum(overlayStartedAt);
     setStatus("Translations applied.");
     await loadCurrentState({ preserveSelection: true });
     return;
   }
+  await hideOverlayAfterMinimum(overlayStartedAt);
   setStatus("Translation job failed.");
   showError(latest?.error || "Translation job failed.");
 }
 
-async function startJob(path, body = null, overlayText = "Applying translations. Please wait.") {
+async function startJob(path, body = null, overlayText = translationsApplyingOverlayText()) {
   if (state.isJobRunning) return;
   if (state.dirty.size && !window.confirm("You have unsaved overrides. Continue without saving them?")) return;
   state.isJobRunning = true;
   updateActions();
+  const overlayStartedAt = Date.now();
   setOverlayVisible(true, overlayText);
   if (els.applyLog) els.applyLog.textContent = "";
   const payload = await fetchApi(path, {
@@ -436,12 +476,12 @@ async function startJob(path, body = null, overlayText = "Applying translations.
   const job = payload?.job;
   if (!job?.id) {
     state.isJobRunning = false;
-    setOverlayVisible(false);
+    await hideOverlayAfterMinimum(overlayStartedAt);
     updateActions();
     return;
   }
   renderJob(job);
-  await pollJob(job.id);
+  await pollJob(job.id, overlayStartedAt);
 }
 
 function bindEvents() {
@@ -454,22 +494,22 @@ function bindEvents() {
   els.importBtn?.addEventListener("click", () => els.importInput?.click());
   els.importInput?.addEventListener("change", () => importOverridesFile(els.importInput.files?.[0] || null));
   els.saveBtn?.addEventListener("click", saveOverrides);
-  els.applyBtn?.addEventListener("click", () => startJob("/api/v1/static-translations/apply", null, "Applying translations. Please wait."));
+  els.applyBtn?.addEventListener("click", () => startJob("/api/v1/static-translations/apply", null, translationsApplyingOverlayText()));
   els.retranslateCurrentBtn?.addEventListener("click", () => {
     if (!window.confirm("Retranslate cached machine translations for the current language? Manual overrides are preserved.")) return;
     const mode = selectedDomainId() === "backend" ? "backend_vi" : "frontend_current_language";
     startJob("/api/v1/static-translations/retranslate", {
       mode,
       target_lang: selectedTargetLang()
-    }, "Retranslating current language. Please wait.");
+    }, retranslateCurrentOverlayText());
   });
   els.retranslateFrontendAllBtn?.addEventListener("click", () => {
     if (!window.confirm("Retranslate all customer-facing languages? This can take several minutes. Manual overrides are preserved.")) return;
-    startJob("/api/v1/static-translations/retranslate", { mode: "frontend_all_languages" }, "Retranslating all customer-facing languages. Please wait.");
+    startJob("/api/v1/static-translations/retranslate", { mode: "frontend_all_languages" }, retranslateFrontendAllOverlayText());
   });
   els.retranslateBackendViBtn?.addEventListener("click", () => {
     if (!window.confirm("Retranslate backend Vietnamese? Manual overrides are preserved.")) return;
-    startJob("/api/v1/static-translations/retranslate", { mode: "backend_vi" }, "Retranslating backend Vietnamese. Please wait.");
+    startJob("/api/v1/static-translations/retranslate", { mode: "backend_vi" }, retranslateBackendViOverlayText());
   });
 }
 

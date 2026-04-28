@@ -262,6 +262,7 @@ async function translateEntries(sourceEntries, targetLang, sourceLang, translato
     sourceLangCode: sourceLang,
     domain: "ATP backend UI",
     context: BACKEND_UI_TRANSLATION_CONTEXT,
+    cacheNamespace: "backend-ui-static",
     allowGoogleFallback: translatorSession.allowGoogleFallback,
     onChunkStart({ startIndex, totalEntries, keys }) {
       keys.forEach((key, offset) => {
@@ -288,7 +289,8 @@ async function resolveTranslatorSession(targetLang, sourceLang) {
     sourceLang: sourceLang === "en" ? "English" : sourceLang,
     sourceLangCode: sourceLang,
     domain: "ATP backend UI",
-    context: BACKEND_UI_TRANSLATION_CONTEXT
+    context: BACKEND_UI_TRANSLATION_CONTEXT,
+    cacheNamespace: "backend-ui-static"
   };
 
   if (normalizedApiKey) {

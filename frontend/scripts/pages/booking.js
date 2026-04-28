@@ -1643,7 +1643,7 @@ function buildBookingMarketingTourServiceSearchRequest({ apiOrigin: requestApiOr
   });
 }
 
-function buildBookingMarketingTourDayImportRequest({ apiOrigin: requestApiOrigin, state: requestState, sourceTourId, sourceDayId, getBookingRevision: readRevision }) {
+function buildBookingMarketingTourDayImportRequest({ apiOrigin: requestApiOrigin, state: requestState, sourceTourId, sourceDayId, getBookingRevision: readRevision, targetTravelPlan = null }) {
   const normalizedSourceTourId = normalizeText(sourceTourId);
   return bookingTravelPlanDayImportRequest({
     baseURL: requestApiOrigin,
@@ -1655,6 +1655,7 @@ function buildBookingMarketingTourDayImportRequest({ apiOrigin: requestApiOrigin
       expected_travel_plan_revision: readRevision("travel_plan_revision"),
       source_tour_id: normalizedSourceTourId,
       source_day_id: sourceDayId,
+      ...(targetTravelPlan ? { target_travel_plan: targetTravelPlan } : {}),
       include_images: true,
       include_customer_visible_images_only: false,
       include_notes: true,
@@ -1664,7 +1665,7 @@ function buildBookingMarketingTourDayImportRequest({ apiOrigin: requestApiOrigin
   });
 }
 
-function buildBookingMarketingTourServiceImportRequest({ apiOrigin: requestApiOrigin, state: requestState, targetDayId, sourceTourId, sourceServiceId, getBookingRevision: readRevision }) {
+function buildBookingMarketingTourServiceImportRequest({ apiOrigin: requestApiOrigin, state: requestState, targetDayId, sourceTourId, sourceServiceId, getBookingRevision: readRevision, targetTravelPlan = null }) {
   const normalizedSourceTourId = normalizeText(sourceTourId);
   return bookingTravelPlanServiceImportRequest({
     baseURL: requestApiOrigin,
@@ -1677,6 +1678,7 @@ function buildBookingMarketingTourServiceImportRequest({ apiOrigin: requestApiOr
       expected_travel_plan_revision: readRevision("travel_plan_revision"),
       source_tour_id: normalizedSourceTourId,
       source_service_id: sourceServiceId,
+      ...(targetTravelPlan ? { target_travel_plan: targetTravelPlan } : {}),
       include_images: true,
       include_customer_visible_images_only: false,
       include_notes: true,
@@ -1685,6 +1687,90 @@ function buildBookingMarketingTourServiceImportRequest({ apiOrigin: requestApiOr
       actor: requestState.user
     }
   });
+}
+
+function cloneJson(value) {
+  return value === undefined ? undefined : JSON.parse(JSON.stringify(value));
+}
+
+function cloneLocalizedMap(value) {
+  const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+  return Object.fromEntries(
+    Object.entries(source)
+      .map(([lang, text]) => [String(lang || "").trim(), normalizeText(text)])
+      .filter(([lang, text]) => lang && text)
+  );
+}
+
+function preferredEnglishImportText(mapValue, plainValue) {
+  const source = mapValue && typeof mapValue === "object" && !Array.isArray(mapValue) ? mapValue : {};
+  const englishText = normalizeText(source.en);
+  if (englishText) return englishText;
+  const normalizedPlainText = normalizeText(plainValue);
+  if (normalizedPlainText) return normalizedPlainText;
+  return "";
+}
+
+function cloneMarketingTourSourceImageForLocalBookingInsert(sourceImage) {
+  const normalizedImage = sourceImage && typeof sourceImage === "object" && !Array.isArray(sourceImage)
+    ? sourceImage
+    : null;
+  if (!normalizedImage) return null;
+  return {
+    ...cloneJson(normalizedImage),
+    sort_order: 0,
+    is_primary: true,
+    is_customer_visible: normalizedImage.is_customer_visible !== false,
+    created_at: normalizeText(normalizedImage.created_at) || new Date().toISOString()
+  };
+}
+
+function cloneBookingMarketingTourServiceForLocalImport({ searchResult }) {
+  const sourceService = searchResult?.source_service && typeof searchResult.source_service === "object" && !Array.isArray(searchResult.source_service)
+    ? searchResult.source_service
+    : null;
+  if (!sourceService) return null;
+  return {
+    timing_kind: "not_applicable",
+    time_label: null,
+    time_label_i18n: {},
+    time_point: null,
+    kind: normalizeText(sourceService.kind) || "other",
+    title: preferredEnglishImportText(sourceService.title_i18n, sourceService.title),
+    title_i18n: cloneLocalizedMap(sourceService.title_i18n),
+    details: preferredEnglishImportText(sourceService.details_i18n, sourceService.details) || null,
+    details_i18n: cloneLocalizedMap(sourceService.details_i18n),
+    image_subtitle: preferredEnglishImportText(sourceService.image_subtitle_i18n, sourceService.image_subtitle) || null,
+    image_subtitle_i18n: cloneLocalizedMap(sourceService.image_subtitle_i18n),
+    location: null,
+    location_i18n: {},
+    start_time: null,
+    end_time: null,
+    image: cloneMarketingTourSourceImageForLocalBookingInsert(sourceService.image)
+  };
+}
+
+function cloneBookingMarketingTourDayForLocalImport({ searchResult, targetDayIndex = 0 }) {
+  const sourceDay = searchResult?.source_day && typeof searchResult.source_day === "object" && !Array.isArray(searchResult.source_day)
+    ? searchResult.source_day
+    : null;
+  if (!sourceDay) return null;
+  return {
+    day_number: Math.max(1, Number(targetDayIndex) + 1),
+    date: null,
+    date_string: null,
+    title: preferredEnglishImportText(sourceDay.title_i18n, sourceDay.title),
+    title_i18n: cloneLocalizedMap(sourceDay.title_i18n),
+    overnight_location: preferredEnglishImportText(sourceDay.overnight_location_i18n, sourceDay.overnight_location) || null,
+    overnight_location_i18n: cloneLocalizedMap(sourceDay.overnight_location_i18n),
+    services: (Array.isArray(sourceDay.services) ? sourceDay.services : []).map((service) => (
+      cloneBookingMarketingTourServiceForLocalImport({
+        searchResult: { source_service: service }
+      })
+    )).filter(Boolean),
+    notes: preferredEnglishImportText(sourceDay.notes_i18n, sourceDay.notes) || null,
+    notes_i18n: cloneLocalizedMap(sourceDay.notes_i18n)
+  };
 }
 
 travelPlanModule = createBookingTravelPlanModule({
@@ -1711,6 +1797,8 @@ travelPlanModule = createBookingTravelPlanModule({
   buildTravelPlanServiceSearchRequest: buildBookingMarketingTourServiceSearchRequest,
   buildTravelPlanDayImportRequest: buildBookingMarketingTourDayImportRequest,
   buildTravelPlanServiceImportRequest: buildBookingMarketingTourServiceImportRequest,
+  cloneTravelPlanDayForLocalImport: cloneBookingMarketingTourDayForLocalImport,
+  cloneTravelPlanServiceForLocalImport: cloneBookingMarketingTourServiceForLocalImport,
   travelPlanLibrarySource: "marketing_tour",
   features: {
     dayImport: true,

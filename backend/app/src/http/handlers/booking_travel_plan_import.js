@@ -47,11 +47,17 @@ function assertOptionalString(value, fieldName) {
   }
 }
 
+function assertOptionalPlainObject(value, fieldName) {
+  if (value === undefined || value === null) return;
+  assertPlainObject(value, fieldName);
+}
+
 function validateTravelPlanDayImportPayload(value) {
   assertPlainObject(value, "Travel plan day import payload");
   assertOptionalNonNegativeInteger(value.expected_travel_plan_revision, "expected_travel_plan_revision");
   assertRequiredIdentifier(value.source_tour_id, "source_tour_id");
   assertRequiredIdentifier(value.source_day_id, "source_day_id");
+  assertOptionalPlainObject(value.target_travel_plan, "target_travel_plan");
   assertOptionalBoolean(value.include_images, "include_images");
   assertOptionalBoolean(value.include_customer_visible_images_only, "include_customer_visible_images_only");
   assertOptionalBoolean(value.include_notes, "include_notes");
@@ -65,6 +71,7 @@ function validateTravelPlanServiceImportPayload(value) {
   assertRequiredIdentifier(value.source_tour_id, "source_tour_id");
   assertRequiredIdentifier(value.source_service_id, "source_service_id");
   assertOptionalString(value.insert_after_service_id, "insert_after_service_id");
+  assertOptionalPlainObject(value.target_travel_plan, "target_travel_plan");
   assertOptionalBoolean(value.include_images, "include_images");
   assertOptionalBoolean(value.include_customer_visible_images_only, "include_customer_visible_images_only");
   assertOptionalBoolean(value.include_notes, "include_notes");
@@ -115,6 +122,17 @@ export function createBookingTravelPlanImportHandlers(deps) {
     };
   }
 
+  function resolveTargetBookingTravelPlan(targetBooking, payload, contentLang) {
+    const rawTargetTravelPlan = payload?.target_travel_plan && typeof payload.target_travel_plan === "object" && !Array.isArray(payload.target_travel_plan)
+      ? payload.target_travel_plan
+      : targetBooking?.travel_plan;
+    return normalizeBookingTravelPlan(rawTargetTravelPlan, targetBooking.offer, {
+      contentLang,
+      flatLang: contentLang,
+      strictReferences: false
+    });
+  }
+
   async function handleImportTravelPlanService(req, res, [bookingId, dayId]) {
     let payload;
     try {
@@ -159,11 +177,7 @@ export function createBookingTravelPlanImportHandlers(deps) {
         return;
       }
 
-      const targetTravelPlan = normalizeBookingTravelPlan(targetBooking.travel_plan, targetBooking.offer, {
-        contentLang,
-        flatLang: contentLang,
-        strictReferences: false
-      });
+      const targetTravelPlan = resolveTargetBookingTravelPlan(targetBooking, payload, contentLang);
       const targetDays = Array.isArray(targetTravelPlan?.days) ? targetTravelPlan.days : [];
       const targetDayIndex = targetDays.findIndex((day) => day.id === dayId);
       if (targetDayIndex < 0) {
@@ -266,11 +280,7 @@ export function createBookingTravelPlanImportHandlers(deps) {
         return;
       }
 
-      const targetTravelPlan = normalizeBookingTravelPlan(targetBooking.travel_plan, targetBooking.offer, {
-        contentLang,
-        flatLang: contentLang,
-        strictReferences: false
-      });
+      const targetTravelPlan = resolveTargetBookingTravelPlan(targetBooking, payload, contentLang);
       const targetDays = Array.isArray(targetTravelPlan?.days) ? [...targetTravelPlan.days] : [];
       const importedDay = await marketingTourBookingTravelPlanCloner.cloneMarketingTourDayForBooking(sourceDay, {
         dayIndex: targetDays.length,

@@ -162,6 +162,15 @@ export function createTourHandlers(deps) {
     );
   }
 
+  function preferredEnglishImportText(mapValue, plainValue) {
+    const source = mapValue && typeof mapValue === "object" && !Array.isArray(mapValue) ? mapValue : {};
+    const englishText = normalizeText(source.en);
+    if (englishText) return englishText;
+    const normalizedPlainText = normalizeText(plainValue);
+    if (normalizedPlainText) return normalizedPlainText;
+    return "";
+  }
+
   function buildTourEditorResponse(tour, lang) {
     const stored = normalizeTourForStorage(tour);
     return {
@@ -396,7 +405,7 @@ export function createTourHandlers(deps) {
       || null;
   }
 
-  function buildTourTravelPlanDaySearchResult({ tour, tourTitle, day }) {
+  function buildTourTravelPlanDaySearchResult({ tour, tourTitle, day, sourceDestinationScope }) {
     const services = Array.isArray(day?.services) ? day.services : [];
     const primaryService = services.find((item) => primaryTravelPlanServiceImage(item)) || services[0] || null;
     const primaryImage = primaryTravelPlanServiceImage(primaryService);
@@ -404,6 +413,8 @@ export function createTourHandlers(deps) {
       source_tour_id: tour.id,
       source_tour_title: normalizeText(tourTitle),
       source_tour_code: tour.id,
+      source_destination_scope: Array.isArray(sourceDestinationScope) ? JSON.parse(JSON.stringify(sourceDestinationScope)) : [],
+      source_day: day && typeof day === "object" ? JSON.parse(JSON.stringify(day)) : null,
       day_id: normalizeText(day?.id),
       day_number: day?.day_number || null,
       title: normalizeText(day?.title),
@@ -416,12 +427,14 @@ export function createTourHandlers(deps) {
     };
   }
 
-  function buildTourTravelPlanServiceSearchResult({ tour, tourTitle, day, item }) {
+  function buildTourTravelPlanServiceSearchResult({ tour, tourTitle, day, item, sourceDestinationScope }) {
     const primaryImage = primaryTravelPlanServiceImage(item);
     return {
       source_tour_id: tour.id,
       source_tour_title: normalizeText(tourTitle),
       source_tour_code: tour.id,
+      source_destination_scope: Array.isArray(sourceDestinationScope) ? JSON.parse(JSON.stringify(sourceDestinationScope)) : [],
+      source_service: item && typeof item === "object" ? JSON.parse(JSON.stringify(item)) : null,
       day_number: day?.day_number || null,
       service_id: item.id,
       service_kind: normalizeText(item.kind) || null,
@@ -453,17 +466,17 @@ export function createTourHandlers(deps) {
     return {
       id: `travel_plan_service_${randomUUID()}`,
       timing_kind: normalizeText(sourceItem?.timing_kind) || "label",
-      time_label: normalizeText(sourceItem?.time_label),
+      time_label: preferredEnglishImportText(sourceItem?.time_label_i18n, sourceItem?.time_label),
       time_label_i18n: includeTranslations && sourceItem?.time_label_i18n ? { ...sourceItem.time_label_i18n } : undefined,
       time_point: normalizeText(sourceItem?.time_point),
       kind: normalizeText(sourceItem?.kind) || "other",
-      title: normalizeText(sourceItem?.title),
+      title: preferredEnglishImportText(sourceItem?.title_i18n, sourceItem?.title),
       title_i18n: includeTranslations && sourceItem?.title_i18n ? { ...sourceItem.title_i18n } : undefined,
-      details: normalizeText(sourceItem?.details),
+      details: preferredEnglishImportText(sourceItem?.details_i18n, sourceItem?.details),
       details_i18n: includeTranslations && sourceItem?.details_i18n ? { ...sourceItem.details_i18n } : undefined,
-      image_subtitle: normalizeText(sourceItem?.image_subtitle),
+      image_subtitle: preferredEnglishImportText(sourceItem?.image_subtitle_i18n, sourceItem?.image_subtitle),
       image_subtitle_i18n: includeTranslations && sourceItem?.image_subtitle_i18n ? { ...sourceItem.image_subtitle_i18n } : undefined,
-      location: normalizeText(sourceItem?.location),
+      location: preferredEnglishImportText(sourceItem?.location_i18n, sourceItem?.location),
       location_i18n: includeTranslations && sourceItem?.location_i18n ? { ...sourceItem.location_i18n } : undefined,
       start_time: normalizeText(sourceItem?.start_time),
       end_time: normalizeText(sourceItem?.end_time),
@@ -477,11 +490,11 @@ export function createTourHandlers(deps) {
     return {
       id: `travel_plan_day_${randomUUID()}`,
       day_number: 1,
-      title: normalizeText(sourceDay?.title),
+      title: preferredEnglishImportText(sourceDay?.title_i18n, sourceDay?.title),
       title_i18n: includeTranslations && sourceDay?.title_i18n ? { ...sourceDay.title_i18n } : undefined,
-      overnight_location: normalizeText(sourceDay?.overnight_location),
+      overnight_location: preferredEnglishImportText(sourceDay?.overnight_location_i18n, sourceDay?.overnight_location),
       overnight_location_i18n: includeTranslations && sourceDay?.overnight_location_i18n ? { ...sourceDay.overnight_location_i18n } : undefined,
-      notes: includeNotes ? normalizeText(sourceDay?.notes) : null,
+      notes: includeNotes ? preferredEnglishImportText(sourceDay?.notes_i18n, sourceDay?.notes) : null,
       notes_i18n: includeNotes && includeTranslations && sourceDay?.notes_i18n ? { ...sourceDay.notes_i18n } : undefined,
       services: (Array.isArray(sourceDay?.services) ? sourceDay.services : []).map((sourceItem) => (
         copyMarketingTourServiceForImport(sourceItem, options)
@@ -655,7 +668,8 @@ export function createTourHandlers(deps) {
         rows.push(buildTourTravelPlanDaySearchResult({
           tour,
           tourTitle: readModel.title,
-          day
+          day,
+          sourceDestinationScope: travelPlan?.destination_scope
         }));
       }
     }
@@ -706,7 +720,8 @@ export function createTourHandlers(deps) {
             tour,
             tourTitle: readModel.title,
             day,
-            item
+            item,
+            sourceDestinationScope: travelPlan?.destination_scope
           }));
         }
       }
@@ -1035,11 +1050,16 @@ export function createTourHandlers(deps) {
       return;
     }
 
-    const targetTravelPlan = normalizeMarketingTourTravelPlan(tours[targetIndex].travel_plan, {
-      contentLang: lang,
-      flatLang: lang,
-      strictReferences: false
-    });
+    const targetTravelPlan = normalizeMarketingTourTravelPlan(
+      payload?.target_travel_plan && typeof payload.target_travel_plan === "object" && !Array.isArray(payload.target_travel_plan)
+        ? payload.target_travel_plan
+        : tours[targetIndex].travel_plan,
+      {
+        contentLang: lang,
+        flatLang: lang,
+        strictReferences: false
+      }
+    );
     const importedDay = copyMarketingTourDayForImport(sourceDay, {
       includeTranslations: payload.include_translations !== false,
       includeNotes: payload.include_notes !== false,
@@ -1124,11 +1144,16 @@ export function createTourHandlers(deps) {
       return;
     }
 
-    const targetTravelPlan = normalizeMarketingTourTravelPlan(tours[targetIndex].travel_plan, {
-      contentLang: lang,
-      flatLang: lang,
-      strictReferences: false
-    });
+    const targetTravelPlan = normalizeMarketingTourTravelPlan(
+      payload?.target_travel_plan && typeof payload.target_travel_plan === "object" && !Array.isArray(payload.target_travel_plan)
+        ? payload.target_travel_plan
+        : tours[targetIndex].travel_plan,
+      {
+        contentLang: lang,
+        flatLang: lang,
+        strictReferences: false
+      }
+    );
     const targetDays = Array.isArray(targetTravelPlan?.days) ? targetTravelPlan.days : [];
     const targetDayIndex = targetDays.findIndex((day) => day.id === dayId);
     if (targetDayIndex < 0) {

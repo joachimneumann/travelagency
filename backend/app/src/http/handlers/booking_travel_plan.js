@@ -678,14 +678,20 @@ export function createBookingTravelPlanHandlers(deps) {
         markTravelPlanTranslationManual(mergedTravelPlan, contentLang, nowIso(), sourceLang);
       }
     }
-    const nextTravelPlanJson = JSON.stringify(mergedTravelPlan);
+    const persistedTravelPlan = marketingTourBookingTravelPlanCloner?.materializeBookingTravelPlanTourImages
+      ? await marketingTourBookingTravelPlanCloner.materializeBookingTravelPlanTourImages(mergedTravelPlan, {
+          bookingId: booking.id,
+          createdAt: nowIso()
+        })
+      : mergedTravelPlan;
+    const nextTravelPlanJson = JSON.stringify(persistedTravelPlan);
     const currentTravelPlanJson = JSON.stringify(booking.travel_plan || null);
     if (nextTravelPlanJson === currentTravelPlanJson) {
       sendJson(res, 200, { ...(await buildBookingDetailResponse(booking, req)), unchanged: true });
       return;
     }
 
-    booking.travel_plan = mergedTravelPlan;
+    booking.travel_plan = persistedTravelPlan;
     incrementBookingRevision(booking, "travel_plan_revision");
     booking.updated_at = nowIso();
     addActivity(
@@ -736,6 +742,7 @@ export function createBookingTravelPlanHandlers(deps) {
         contentLang,
         (entries, targetLang, translateOptions = {}) => translateEntries(entries, targetLang, {
           ...translateOptions,
+          cacheNamespace: "booking-travel-plan",
           translationRules
         }),
         nowIso(),

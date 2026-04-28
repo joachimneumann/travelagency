@@ -499,6 +499,7 @@ export function createBookingCoreHandlers(deps) {
             sourceLangCode: sourceLang,
             domain: "travel planning",
             allowGoogleFallback: true,
+            cacheNamespace: "booking-travel-plan",
             translationProfile,
             translationRules
           })
@@ -507,6 +508,7 @@ export function createBookingCoreHandlers(deps) {
               sourceLangCode: sourceLang,
               domain: "travel planning",
               allowGoogleFallback: true,
+              cacheNamespace: "booking-travel-plan",
               translationProfile,
               translationRules
             }),

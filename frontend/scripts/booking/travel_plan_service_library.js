@@ -5,9 +5,21 @@ import {
 import { bookingT } from "./i18n.js";
 import { TRAVEL_PLAN_SERVICE_KIND_OPTIONS } from "../shared/generated_catalogs.js";
 import { resolveTravelPlanImageSrc } from "./travel_plan_images.js";
+import { normalizeDestinationScope } from "../shared/destination_scope_editor.js";
 
 function normalizeText(value) {
   return String(value ?? "").trim();
+}
+
+const MIN_COPY_IMPORT_OVERLAY_MS = 500;
+
+function waitForMs(ms) {
+  return new Promise((resolve) => window.setTimeout(resolve, Math.max(0, Number(ms) || 0)));
+}
+
+async function waitForMinimumElapsed(startedAt, minimumMs) {
+  const remainingMs = Math.max(0, (Number(minimumMs) || 0) - (Date.now() - Number(startedAt || 0)));
+  if (remainingMs > 0) await waitForMs(remainingMs);
 }
 
 export function createBookingTravelPlanServiceLibraryModule(deps) {
@@ -20,11 +32,16 @@ export function createBookingTravelPlanServiceLibraryModule(deps) {
     escapeHtml,
     ensureTravelPlanReadyForMutation,
     finalizeTravelPlanMutation,
+    collectTravelPlanPayload,
     findDraftDay,
     buildTravelPlanDaySearchRequest,
     buildTravelPlanServiceSearchRequest,
     buildTravelPlanDayImportRequest,
     buildTravelPlanServiceImportRequest,
+    cloneTravelPlanDayForLocalImport,
+    cloneTravelPlanServiceForLocalImport,
+    applyLocalTravelPlanDraft,
+    setPageOverlay,
     travelPlanLibrarySource = "marketing_tour"
   } = deps;
 
@@ -73,6 +90,108 @@ export function createBookingTravelPlanServiceLibraryModule(deps) {
     if (!message) return;
     const normalizedType = type === "error" || type === "success" ? type : "info";
     els.travelPlanServiceLibraryStatus.classList.add(`booking-inline-status--${normalizedType}`);
+  }
+
+  function cloneJson(value) {
+    return value === undefined ? undefined : JSON.parse(JSON.stringify(value));
+  }
+
+  function resolveDirtyImportTargetTravelPlan() {
+    if (state.travelPlanDirty !== true || typeof collectTravelPlanPayload !== "function") {
+      return {
+        aborted: false,
+        skipPrepare: false,
+        targetTravelPlan: null
+      };
+    }
+    const collected = collectTravelPlanPayload({
+      focusFirstInvalid: true,
+      pruneEmptyContent: false
+    });
+    if (!collected?.ok) {
+      setTravelPlanLibraryStatus(
+        collected?.error || bookingT("booking.travel_plan.invalid", "Travel plan is invalid."),
+        "error"
+      );
+      return {
+        aborted: true,
+        skipPrepare: true,
+        targetTravelPlan: null
+      };
+    }
+    return {
+      aborted: false,
+      skipPrepare: true,
+      targetTravelPlan: collected.payload
+    };
+  }
+
+  function collectCurrentTravelPlanForLocalInsert() {
+    if (typeof collectTravelPlanPayload !== "function") return null;
+    const collected = collectTravelPlanPayload({
+      focusFirstInvalid: true,
+      pruneEmptyContent: false
+    });
+    if (!collected?.ok) {
+      setTravelPlanLibraryStatus(
+        collected?.error || bookingT("booking.travel_plan.invalid", "Travel plan is invalid."),
+        "error"
+      );
+      return null;
+    }
+    return collected.payload;
+  }
+
+  function mergeDestinationScopeIntoTravelPlan(plan, sourceScope) {
+    return {
+      ...(plan && typeof plan === "object" ? plan : {}),
+      destination_scope: normalizeDestinationScope([
+        ...normalizeDestinationScope(plan?.destination_scope),
+        ...normalizeDestinationScope(sourceScope)
+      ])
+    };
+  }
+
+  function findTravelPlanDaySearchResult(sourceId, sourceDayId) {
+    const normalizedSourceId = normalizeText(sourceId);
+    const normalizedDayId = normalizeText(sourceDayId);
+    return serviceLibraryState.searchResults.find((item) => (
+      librarySourceId(item) === normalizedSourceId
+      && normalizeText(item?.day_id) === normalizedDayId
+    )) || null;
+  }
+
+  function findTravelPlanServiceSearchResult(sourceId, sourceServiceId) {
+    const normalizedSourceId = normalizeText(sourceId);
+    const normalizedServiceId = normalizeText(sourceServiceId);
+    return serviceLibraryState.searchResults.find((item) => (
+      librarySourceId(item) === normalizedSourceId
+      && normalizeText(item?.service_id) === normalizedServiceId
+    )) || null;
+  }
+
+  function canApplyLocalTravelPlanDayImport(searchResult) {
+    return Boolean(
+      typeof cloneTravelPlanDayForLocalImport === "function"
+      && typeof applyLocalTravelPlanDraft === "function"
+      && searchResult?.source_day
+      && typeof searchResult.source_day === "object"
+    );
+  }
+
+  function canApplyLocalTravelPlanServiceImport(searchResult) {
+    return Boolean(
+      typeof cloneTravelPlanServiceForLocalImport === "function"
+      && typeof applyLocalTravelPlanDraft === "function"
+      && searchResult?.source_service
+      && typeof searchResult.source_service === "object"
+    );
+  }
+
+  function applyLocalTravelPlanImport(nextPlan, successMessage) {
+    closeTravelPlanServiceLibrary();
+    applyLocalTravelPlanDraft(nextPlan);
+    setTravelPlanLibraryStatus(successMessage, "success");
   }
 
   function populateTravelPlanServiceLibraryKindOptions() {
@@ -201,7 +320,6 @@ export function createBookingTravelPlanServiceLibraryModule(deps) {
               class="btn btn-primary"
               data-travel-plan-import-source-id="${escapeHtml(librarySourceId(item))}"
               data-travel-plan-import-source-day="${escapeHtml(item.day_id || "")}"
-              data-requires-clean-state
               type="button"
             >${escapeHtml(bookingT("booking.travel_plan.insert_as_copy", "Use"))}</button>
           </div>
@@ -232,7 +350,6 @@ export function createBookingTravelPlanServiceLibraryModule(deps) {
             class="btn btn-primary"
             data-travel-plan-import-source-id="${escapeHtml(librarySourceId(item))}"
             data-travel-plan-import-source-service="${escapeHtml(item.service_id || "")}"
-            data-requires-clean-state
             type="button"
           >${escapeHtml(bookingT("booking.travel_plan.insert_as_copy", "Use"))}</button>
         </div>
@@ -394,55 +511,149 @@ export function createBookingTravelPlanServiceLibraryModule(deps) {
 
   async function importTravelPlanDay(sourceId, sourceDayId) {
     if (!sourceId || !sourceDayId) return;
-    if (!(await ensureTravelPlanReadyForMutation())) return;
-    setTravelPlanLibraryStatus(bookingT("booking.travel_plan.inserting_day", "Inserting day..."), "info");
-    const request = typeof buildTravelPlanDayImportRequest === "function"
-      ? buildTravelPlanDayImportRequest({ apiOrigin, state, sourceTourId: sourceId, sourceDayId, getBookingRevision })
-      : null;
-    if (!request?.url) {
-      setTravelPlanLibraryStatus(bookingT("booking.travel_plan.day_insert_failed", "Could not insert this day."), "error");
-      return;
+    const insertingMessage = bookingT("booking.travel_plan.inserting_day", "Inserting day...");
+    const overlayStartedAt = Date.now();
+    setTravelPlanLibraryStatus(insertingMessage, "info");
+    if (typeof setPageOverlay === "function") {
+      setPageOverlay(true, insertingMessage);
     }
-    const result = await fetchBookingMutation(request.url, {
-      method: request.method,
-      body: request.body
-    });
-    if (!result?.booking) {
-      setTravelPlanLibraryStatus(bookingT("booking.travel_plan.day_insert_failed", "Could not insert this day."), "error");
-      return;
+    try {
+      const searchResult = findTravelPlanDaySearchResult(sourceId, sourceDayId);
+      if (canApplyLocalTravelPlanDayImport(searchResult)) {
+        const currentTravelPlan = collectCurrentTravelPlanForLocalInsert();
+        if (!currentTravelPlan) return;
+        const importedDay = cloneTravelPlanDayForLocalImport({
+          searchResult: cloneJson(searchResult),
+          targetTravelPlan: cloneJson(currentTravelPlan),
+          targetDayIndex: Array.isArray(currentTravelPlan?.days) ? currentTravelPlan.days.length : 0
+        });
+        if (!importedDay || typeof importedDay !== "object") {
+          setTravelPlanLibraryStatus(bookingT("booking.travel_plan.day_insert_failed", "Could not insert this day."), "error");
+          return;
+        }
+        const nextTravelPlan = mergeDestinationScopeIntoTravelPlan({
+          ...cloneJson(currentTravelPlan),
+          days: [
+            ...(Array.isArray(currentTravelPlan?.days) ? currentTravelPlan.days : []),
+            importedDay
+          ]
+        }, searchResult.source_destination_scope);
+        applyLocalTravelPlanImport(nextTravelPlan, bookingT("booking.travel_plan.day_inserted", "Day inserted."));
+        return;
+      }
+      const draftTarget = resolveDirtyImportTargetTravelPlan();
+      if (draftTarget.aborted) return;
+      if (!draftTarget.skipPrepare && !(await ensureTravelPlanReadyForMutation())) return;
+      const request = typeof buildTravelPlanDayImportRequest === "function"
+        ? buildTravelPlanDayImportRequest({
+            apiOrigin,
+            state,
+            sourceTourId: sourceId,
+            sourceDayId,
+            getBookingRevision,
+            targetTravelPlan: draftTarget.targetTravelPlan
+          })
+        : null;
+      if (!request?.url) {
+        setTravelPlanLibraryStatus(bookingT("booking.travel_plan.day_insert_failed", "Could not insert this day."), "error");
+        return;
+      }
+      const result = await fetchBookingMutation(request.url, {
+        method: request.method,
+        body: request.body
+      });
+      if (!result?.booking) {
+        setTravelPlanLibraryStatus(bookingT("booking.travel_plan.day_insert_failed", "Could not insert this day."), "error");
+        return;
+      }
+      closeTravelPlanServiceLibrary();
+      await finalizeTravelPlanMutation(result, bookingT("booking.travel_plan.day_inserted", "Day inserted."));
+    } finally {
+      if (typeof setPageOverlay === "function") {
+        await waitForMinimumElapsed(overlayStartedAt, MIN_COPY_IMPORT_OVERLAY_MS);
+        setPageOverlay(false);
+      }
     }
-    closeTravelPlanServiceLibrary();
-    await finalizeTravelPlanMutation(result, bookingT("booking.travel_plan.day_inserted", "Day inserted."));
   }
 
   async function importTravelPlanService(sourceId, sourceServiceId) {
     if (!serviceLibraryState.dayId || !sourceId || !sourceServiceId) return;
-    if (!(await ensureTravelPlanReadyForMutation())) return;
-    setTravelPlanLibraryStatus(bookingT("booking.travel_plan.inserting_item", "Inserting service..."), "info");
-    const request = typeof buildTravelPlanServiceImportRequest === "function"
-      ? buildTravelPlanServiceImportRequest({
-          apiOrigin,
-          state,
-          targetDayId: serviceLibraryState.dayId,
-          sourceTourId: sourceId,
-          sourceServiceId,
-          getBookingRevision
-        })
-      : null;
-    if (!request?.url) {
-      setTravelPlanLibraryStatus(bookingT("booking.travel_plan.insert_failed", "Could not insert service."), "error");
-      return;
+    const insertingMessage = bookingT("booking.travel_plan.inserting_item", "Inserting service...");
+    const overlayStartedAt = Date.now();
+    setTravelPlanLibraryStatus(insertingMessage, "info");
+    if (typeof setPageOverlay === "function") {
+      setPageOverlay(true, insertingMessage);
     }
-    const result = await fetchBookingMutation(request.url, {
-      method: request.method,
-      body: request.body
-    });
-    if (!result?.booking) {
-      setTravelPlanLibraryStatus(bookingT("booking.travel_plan.insert_failed", "Could not insert service."), "error");
-      return;
+    try {
+      const searchResult = findTravelPlanServiceSearchResult(sourceId, sourceServiceId);
+      if (canApplyLocalTravelPlanServiceImport(searchResult)) {
+        const currentTravelPlan = collectCurrentTravelPlanForLocalInsert();
+        if (!currentTravelPlan) return;
+        const targetDays = Array.isArray(currentTravelPlan?.days) ? [...currentTravelPlan.days] : [];
+        const targetDayIndex = targetDays.findIndex((day) => normalizeText(day?.id) === serviceLibraryState.dayId);
+        if (targetDayIndex < 0) {
+          setTravelPlanLibraryStatus(bookingT("booking.travel_plan.insert_failed", "Could not insert service."), "error");
+          return;
+        }
+        const importedService = cloneTravelPlanServiceForLocalImport({
+          searchResult: cloneJson(searchResult),
+          targetTravelPlan: cloneJson(currentTravelPlan),
+          targetDay: cloneJson(targetDays[targetDayIndex]),
+          targetDayIndex
+        });
+        if (!importedService || typeof importedService !== "object") {
+          setTravelPlanLibraryStatus(bookingT("booking.travel_plan.insert_failed", "Could not insert service."), "error");
+          return;
+        }
+        const targetServices = Array.isArray(targetDays[targetDayIndex]?.services)
+          ? [...targetDays[targetDayIndex].services]
+          : [];
+        targetServices.push(importedService);
+        targetDays[targetDayIndex] = {
+          ...targetDays[targetDayIndex],
+          services: targetServices
+        };
+        const nextTravelPlan = mergeDestinationScopeIntoTravelPlan({
+          ...cloneJson(currentTravelPlan),
+          days: targetDays
+        }, searchResult.source_destination_scope);
+        applyLocalTravelPlanImport(nextTravelPlan, bookingT("booking.travel_plan.item_inserted", "Service inserted."));
+        return;
+      }
+      const draftTarget = resolveDirtyImportTargetTravelPlan();
+      if (draftTarget.aborted) return;
+      if (!draftTarget.skipPrepare && !(await ensureTravelPlanReadyForMutation())) return;
+      const request = typeof buildTravelPlanServiceImportRequest === "function"
+        ? buildTravelPlanServiceImportRequest({
+            apiOrigin,
+            state,
+            targetDayId: serviceLibraryState.dayId,
+            sourceTourId: sourceId,
+            sourceServiceId,
+            getBookingRevision,
+            targetTravelPlan: draftTarget.targetTravelPlan
+          })
+        : null;
+      if (!request?.url) {
+        setTravelPlanLibraryStatus(bookingT("booking.travel_plan.insert_failed", "Could not insert service."), "error");
+        return;
+      }
+      const result = await fetchBookingMutation(request.url, {
+        method: request.method,
+        body: request.body
+      });
+      if (!result?.booking) {
+        setTravelPlanLibraryStatus(bookingT("booking.travel_plan.insert_failed", "Could not insert service."), "error");
+        return;
+      }
+      closeTravelPlanServiceLibrary();
+      await finalizeTravelPlanMutation(result, bookingT("booking.travel_plan.item_inserted", "Service inserted."));
+    } finally {
+      if (typeof setPageOverlay === "function") {
+        await waitForMinimumElapsed(overlayStartedAt, MIN_COPY_IMPORT_OVERLAY_MS);
+        setPageOverlay(false);
+      }
     }
-    closeTravelPlanServiceLibrary();
-    await finalizeTravelPlanMutation(result, bookingT("booking.travel_plan.item_inserted", "Service inserted."));
   }
 
   async function applyTour(tourId) {

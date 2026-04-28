@@ -2507,8 +2507,8 @@ test("marketing tour travel-plan form save prunes empty services and days withou
   );
   assert.match(
     adapterSource,
-    /function expectedTourUpdatedAtPayload\([\s\S]*expected_updated_at: expectedUpdatedAt[\s\S]*buildTourTravelPlanSaveRequest[\s\S]*\.\.\.expectedTourUpdatedAtPayload\(requestState\)/,
-    "Marketing-tour travel-plan section saves should include the loaded tour timestamp for optimistic conflict detection"
+    /function fakeBookingFromTour\([\s\S]*updated_at:\s*normalizeText\(tour\?\.updated_at\)\s*\|\|\s*null[\s\S]*function expectedTourUpdatedAtPayload\([\s\S]*sourceState\.tour\?\.updated_at\s*\|\|\s*sourceState\.booking\?\.updated_at[\s\S]*expected_updated_at: expectedUpdatedAt[\s\S]*buildTourTravelPlanSaveRequest[\s\S]*\.\.\.expectedTourUpdatedAtPayload\(requestState\)/,
+    "Marketing-tour travel-plan section saves should keep a mirrored tour timestamp and use it for optimistic conflict detection"
   );
   assert.match(
     travelPlanSource,
@@ -3400,8 +3400,8 @@ test("tour page reads month options from the generated catalogs layer", async ()
   );
   assert.match(
     tourSource,
-    /expectedUpdatedAt = normalizeText\(state\.tour\?\.updated_at\);[\s\S]*payload\.expected_updated_at = expectedUpdatedAt;/,
-    "Existing marketing-tour saves should send the timestamp loaded by the editor for optimistic conflict detection"
+    /expectedUpdatedAt = normalizeText\(state\.tour\?\.updated_at\s*\|\|\s*state\.booking\?\.updated_at\);[\s\S]*payload\.expected_updated_at = expectedUpdatedAt;/,
+    "Existing marketing-tour saves should send the freshest tour timestamp available for optimistic conflict detection"
   );
   assert.match(
     tourSource,
@@ -4904,6 +4904,7 @@ test("marketing tour editor imports days and services only from other marketing 
   const tourAdapterPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "tour_travel_plan_adapter.js");
   const tourPageScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "tour.js");
   const travelPlanLibraryPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan_service_library.js");
+  const travelPlanEditorCorePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "shared", "travel_plan_editor_core.js");
   const routesPath = path.resolve(__dirname, "..", "src", "http", "routes.js");
   const tourHandlersPath = path.resolve(__dirname, "..", "src", "http", "handlers", "tours.js");
   const [
@@ -4911,6 +4912,7 @@ test("marketing tour editor imports days and services only from other marketing 
     tourAdapterSource,
     tourPageScriptSource,
     travelPlanLibrarySource,
+    travelPlanEditorCoreSource,
     routesSource,
     tourHandlersSource
   ] = await Promise.all([
@@ -4918,6 +4920,7 @@ test("marketing tour editor imports days and services only from other marketing 
     readFile(tourAdapterPath, "utf8"),
     readFile(tourPageScriptPath, "utf8"),
     readFile(travelPlanLibraryPath, "utf8"),
+    readFile(travelPlanEditorCorePath, "utf8"),
     readFile(routesPath, "utf8"),
     readFile(tourHandlersPath, "utf8")
   ]);
@@ -4928,6 +4931,7 @@ test("marketing tour editor imports days and services only from other marketing 
   assert.match(tourAdapterSource, /tourTravelPlanServiceSearchRequest/, "Marketing tour editor should search reusable services through tour endpoints");
   assert.match(tourAdapterSource, /tourTravelPlanDayImportRequest/, "Marketing tour editor should import days through tour endpoints");
   assert.match(tourAdapterSource, /tourTravelPlanServiceImportRequest/, "Marketing tour editor should import services through tour endpoints");
+  assert.match(tourAdapterSource, /target_travel_plan:\s*omitDerivedTravelPlanDestinations\(targetTravelPlan\)/, "Marketing tour editor should send dirty draft travel plans with import mutations");
   assert.match(tourAdapterSource, /travelPlanLibrarySource:\s*"marketing_tour"/, "Marketing tour editor should mark the library source as marketing tours");
   assert.match(tourAdapterSource, /dayImport:\s*true/, "Marketing tour editor should expose day import");
   assert.match(tourAdapterSource, /serviceImport:\s*true/, "Marketing tour editor should expose service import");
@@ -4935,6 +4939,15 @@ test("marketing tour editor imports days and services only from other marketing 
   assert.match(tourPageScriptSource, /mapField:\s*"details_i18n"[\s\S]*plainField:\s*"details"[\s\S]*travel_plan\.\$\{dayId\}\.\$\{serviceId\}\.details/, "Marketing tour translation should include service details");
   assert.match(travelPlanLibrarySource, /buildTravelPlanDaySearchRequest/, "Shared library should accept entity-specific day search builders");
   assert.match(travelPlanLibrarySource, /buildTravelPlanServiceImportRequest/, "Shared library should accept entity-specific service import builders");
+  assert.match(travelPlanLibrarySource, /cloneTravelPlanDayForLocalImport[\s\S]*cloneTravelPlanServiceForLocalImport[\s\S]*applyLocalTravelPlanDraft/, "Shared library should accept local draft clone hooks for fast reusable-content inserts");
+  assert.match(travelPlanLibrarySource, /resolveDirtyImportTargetTravelPlan[\s\S]*collectTravelPlanPayload\(\{\s*focusFirstInvalid:\s*true,\s*pruneEmptyContent:\s*false\s*\}\)/, "Shared library should collect the current draft without pruning before fast import mutations");
+  assert.match(travelPlanLibrarySource, /findTravelPlanDaySearchResult[\s\S]*source_day[\s\S]*applyLocalTravelPlanImport/, "Shared library should support local reusable-day inserts from search payloads");
+  assert.match(travelPlanLibrarySource, /findTravelPlanServiceSearchResult[\s\S]*source_service[\s\S]*applyLocalTravelPlanImport/, "Shared library should support local reusable-service inserts from search payloads");
+  assert.match(travelPlanLibrarySource, /setPageOverlay[\s\S]*const insertingMessage = bookingT\("booking\.travel_plan\.inserting_day", "Inserting day\.\.\."\)[\s\S]*setPageOverlay\(true, insertingMessage\)[\s\S]*ensureTravelPlanReadyForMutation\(\)[\s\S]*setPageOverlay\(false\)/, "Shared library should show the page overlay before day imports prepare or run");
+  assert.match(travelPlanLibrarySource, /const insertingMessage = bookingT\("booking\.travel_plan\.inserting_item", "Inserting service\.\.\."\)[\s\S]*setPageOverlay\(true, insertingMessage\)[\s\S]*ensureTravelPlanReadyForMutation\(\)[\s\S]*setPageOverlay\(false\)/, "Shared library should show the page overlay before service imports prepare or run");
+  assert.match(travelPlanEditorCoreSource, /createBookingTravelPlanServiceLibraryModule\([\s\S]*collectTravelPlanPayload[\s\S]*cloneTravelPlanDayForLocalImport[\s\S]*cloneTravelPlanServiceForLocalImport[\s\S]*applyLocalTravelPlanDraft[\s\S]*setPageOverlay:\s*setTravelPlanPageOverlay/, "Travel-plan editor core should pass local-insert hooks, draft collection, and the shared page overlay hook into the import library");
+  assert.doesNotMatch(travelPlanEditorCoreSource, /data-travel-plan-open-import="\$\{escapeHtml\(day\.id\)\}" data-requires-clean-state/, "Reusable service copy buttons should stay enabled for dirty local drafts");
+  assert.doesNotMatch(travelPlanEditorCoreSource, /data-travel-plan-open-day-import data-requires-clean-state/, "Reusable day copy buttons should stay enabled for dirty local drafts");
   assert.match(routesSource, /\/api\/v1\/tours\/travel-plan-days\/search/, "Routes should expose marketing tour day search");
   assert.match(routesSource, /\/api\/v1\/tours\/travel-plan-services\/search/, "Routes should expose marketing tour service search");
   assert.match(routesSource, /\/api\/v1\/tours\/\{tour_id\}\/travel-plan\/days\/import/, "Routes should expose marketing tour day import");
@@ -4977,17 +4990,18 @@ test("booking travel plan copies days and services from marketing tours only", a
   ]);
 
   assert.match(bookingPageScriptSource, /tourTravelPlanDaySearchRequest[\s\S]*tourTravelPlanServiceSearchRequest/, "Booking editor should search day and service libraries through marketing-tour endpoints");
-  assert.match(bookingPageScriptSource, /buildBookingMarketingTourDayImportRequest[\s\S]*source_tour_id:\s*normalizedSourceTourId[\s\S]*buildBookingMarketingTourServiceImportRequest[\s\S]*source_tour_id:\s*normalizedSourceTourId/, "Booking editor should import selected marketing-tour days and services with source_tour_id");
+  assert.match(bookingPageScriptSource, /buildBookingMarketingTourDayImportRequest[\s\S]*source_tour_id:\s*normalizedSourceTourId[\s\S]*target_travel_plan:\s*targetTravelPlan[\s\S]*buildBookingMarketingTourServiceImportRequest[\s\S]*source_tour_id:\s*normalizedSourceTourId[\s\S]*target_travel_plan:\s*targetTravelPlan/, "Booking editor should import selected marketing-tour days and services with source_tour_id and optional dirty draft payloads");
+  assert.match(bookingPageScriptSource, /cloneTravelPlanDayForLocalImport:\s*cloneBookingMarketingTourDayForLocalImport[\s\S]*cloneTravelPlanServiceForLocalImport:\s*cloneBookingMarketingTourServiceForLocalImport/, "Booking editor should provide local reusable-content clone hooks");
   assert.match(bookingPageScriptSource, /travelPlanLibrarySource:\s*"marketing_tour"[\s\S]*dayImport:\s*true[\s\S]*tourImport:\s*false[\s\S]*serviceImport:\s*true/, "Booking travel plan should expose only day and service copy actions from the marketing-tour library");
   assert.doesNotMatch(bookingPageScriptSource, /planImport/, "Booking travel plan should not expose full booking travel-plan import");
-  assert.match(bookingImportHandlersSource, /validateTravelPlanDayImportPayload[\s\S]*assertRequiredIdentifier\(value\.source_tour_id[\s\S]*validateTravelPlanServiceImportPayload[\s\S]*assertRequiredIdentifier\(value\.source_tour_id/, "Booking import handlers should require marketing-tour import sources");
+  assert.match(bookingImportHandlersSource, /validateTravelPlanDayImportPayload[\s\S]*assertRequiredIdentifier\(value\.source_tour_id[\s\S]*assertOptionalPlainObject\(value\.target_travel_plan[\s\S]*validateTravelPlanServiceImportPayload[\s\S]*assertRequiredIdentifier\(value\.source_tour_id[\s\S]*assertOptionalPlainObject\(value\.target_travel_plan/, "Booking import handlers should require marketing-tour import sources and accept optional draft travel plans");
   assert.doesNotMatch(bookingImportHandlersSource, /source_booking_id/, "Booking import handlers should not accept booking import sources");
-  assert.match(bookingImportHandlersSource, /cloneMarketingTourServiceForBooking[\s\S]*Service imported from marketing tour[\s\S]*cloneMarketingTourDayForBooking[\s\S]*Day imported from marketing tour/, "Booking import handlers should clone selected marketing-tour services and days into booking travel plans");
-  assert.match(bookingHandlersSource, /marketingTourBookingTravelPlanCloner/, "Booking travel-plan handlers should pass the marketing-tour cloner into import handlers");
+  assert.match(bookingImportHandlersSource, /resolveTargetBookingTravelPlan[\s\S]*cloneMarketingTourServiceForBooking[\s\S]*Service imported from marketing tour[\s\S]*cloneMarketingTourDayForBooking[\s\S]*Day imported from marketing tour/, "Booking import handlers should apply imports onto either the persisted or provided draft travel plan");
+  assert.match(bookingHandlersSource, /marketingTourBookingTravelPlanCloner[\s\S]*materializeBookingTravelPlanTourImages/, "Booking travel-plan handlers should use the marketing-tour cloner for both imports and save-time image materialization");
   assert.match(bookingsSource, /marketingTourBookingTravelPlanCloner[\s\S]*createBookingTravelPlanHandlers/, "Booking handlers should construct and provide the marketing-tour cloner");
-  assert.match(clonerSource, /cloneMarketingTourDayForBooking[\s\S]*cloneMarketingTourServiceForBooking[\s\S]*cloneMarketingTourTravelPlanForBooking/, "Marketing-tour booking cloner should expose single day and service clone helpers");
-  assert.match(apiModelsSource, /TRAVEL_PLAN_DAY_IMPORT_REQUEST_SCHEMA[\s\S]*source_tour_id","required":true[\s\S]*source_day_id","required":true/, "Generated day import contract should require marketing-tour sources");
-  assert.match(apiModelsSource, /TRAVEL_PLAN_SERVICE_IMPORT_REQUEST_SCHEMA[\s\S]*source_tour_id","required":true[\s\S]*source_service_id","required":true/, "Generated service import contract should require marketing-tour sources");
+  assert.match(clonerSource, /cloneMarketingTourDayForBooking[\s\S]*cloneMarketingTourServiceForBooking[\s\S]*cloneMarketingTourTravelPlanForBooking[\s\S]*materializeBookingTravelPlanTourImages/, "Marketing-tour booking cloner should expose single day and service clone helpers plus save-time image materialization");
+  assert.match(apiModelsSource, /TRAVEL_PLAN_DAY_IMPORT_REQUEST_SCHEMA[\s\S]*source_tour_id","required":true[\s\S]*source_day_id","required":true[\s\S]*target_travel_plan","required":false/, "Generated day import contract should require marketing-tour sources and allow optional draft payloads");
+  assert.match(apiModelsSource, /TRAVEL_PLAN_SERVICE_IMPORT_REQUEST_SCHEMA[\s\S]*source_tour_id","required":true[\s\S]*source_service_id","required":true[\s\S]*target_travel_plan","required":false/, "Generated service import contract should require marketing-tour sources and allow optional draft payloads");
   assert.doesNotMatch(apiModelsSource, /TRAVEL_PLAN_DAY_IMPORT_REQUEST_SCHEMA[\s\S]{0,1200}source_booking_id/, "Generated day import contract should not expose booking import sources");
   assert.doesNotMatch(apiModelsSource, /TRAVEL_PLAN_SERVICE_IMPORT_REQUEST_SCHEMA[\s\S]{0,1200}source_booking_id/, "Generated service import contract should not expose booking import sources");
   assert.doesNotMatch(apiRequestFactorySource, /travelPlanDaySearchRequest|travelPlanServiceSearchRequest|travelPlanSearchRequest|bookingTravelPlanImportRequest/, "Generated request factory should not expose booking travel-plan library endpoints");

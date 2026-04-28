@@ -41,6 +41,7 @@ function fakeBookingFromTour(tour, fallbackId = "") {
   const tourId = normalizeText(tour?.id) || normalizeText(fallbackId);
   return {
     id: tourId,
+    updated_at: normalizeText(tour?.updated_at) || null,
     travel_plan: tour?.travel_plan && typeof tour.travel_plan === "object" ? tour.travel_plan : { days: [] },
     travel_plan_revision: 0,
     translation_enabled: false,
@@ -71,6 +72,70 @@ function findTravelPlanServiceImage(plan, dayId, serviceId) {
     : null;
 }
 
+function cloneJson(value) {
+  return value === undefined ? undefined : JSON.parse(JSON.stringify(value));
+}
+
+function normalizeLocalizedMap(value) {
+  const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+  return Object.fromEntries(
+    Object.entries(source)
+      .map(([lang, text]) => [normalizeText(lang), normalizeText(text)])
+      .filter(([lang, text]) => lang && text)
+  );
+}
+
+function preferredEnglishImportText(mapValue, plainValue) {
+  const source = normalizeLocalizedMap(mapValue);
+  const englishText = normalizeText(source.en);
+  if (englishText) return englishText;
+  const normalizedPlainText = normalizeText(plainValue);
+  if (normalizedPlainText) return normalizedPlainText;
+  return "";
+}
+
+function cloneTourMarketingServiceForLocalImport({ searchResult }) {
+  const sourceService = searchResult?.source_service && typeof searchResult.source_service === "object" && !Array.isArray(searchResult.source_service)
+    ? searchResult.source_service
+    : null;
+  if (!sourceService) return null;
+  return cloneJson({
+    ...sourceService,
+    time_label: preferredEnglishImportText(sourceService.time_label_i18n, sourceService.time_label) || null,
+    title: preferredEnglishImportText(sourceService.title_i18n, sourceService.title),
+    details: preferredEnglishImportText(sourceService.details_i18n, sourceService.details) || null,
+    image_subtitle: preferredEnglishImportText(sourceService.image_subtitle_i18n, sourceService.image_subtitle) || null,
+    location: preferredEnglishImportText(sourceService.location_i18n, sourceService.location) || null,
+    id: undefined,
+    image: sourceService.image && typeof sourceService.image === "object" && !Array.isArray(sourceService.image)
+      ? {
+          ...sourceService.image,
+          id: undefined
+        }
+      : sourceService.image
+  });
+}
+
+function cloneTourMarketingDayForLocalImport({ searchResult, targetDayIndex = 0 }) {
+  const sourceDay = searchResult?.source_day && typeof searchResult.source_day === "object" && !Array.isArray(searchResult.source_day)
+    ? searchResult.source_day
+    : null;
+  if (!sourceDay) return null;
+  return cloneJson({
+    ...sourceDay,
+    title: preferredEnglishImportText(sourceDay.title_i18n, sourceDay.title),
+    overnight_location: preferredEnglishImportText(sourceDay.overnight_location_i18n, sourceDay.overnight_location) || null,
+    notes: preferredEnglishImportText(sourceDay.notes_i18n, sourceDay.notes) || null,
+    id: undefined,
+    day_number: Math.max(1, Number(targetDayIndex) + 1),
+    services: (Array.isArray(sourceDay.services) ? sourceDay.services : []).map((service) => (
+      cloneTourMarketingServiceForLocalImport({
+        searchResult: { source_service: service }
+      })
+    )).filter(Boolean)
+  });
+}
+
 export function createTourTravelPlanAdapter({
   state,
   els,
@@ -88,7 +153,7 @@ export function createTourTravelPlanAdapter({
   }
 
   function expectedTourUpdatedAtPayload(sourceState = state) {
-    const expectedUpdatedAt = normalizeText(sourceState.tour?.updated_at);
+    const expectedUpdatedAt = normalizeText(sourceState.tour?.updated_at || sourceState.booking?.updated_at);
     return expectedUpdatedAt ? { expected_updated_at: expectedUpdatedAt } : {};
   }
 
@@ -241,7 +306,7 @@ export function createTourTravelPlanAdapter({
     });
   }
 
-  function buildTourTravelPlanDayImportRequest({ apiOrigin: requestApiOrigin, state: requestState, sourceTourId, sourceDayId }) {
+  function buildTourTravelPlanDayImportRequest({ apiOrigin: requestApiOrigin, state: requestState, sourceTourId, sourceDayId, targetTravelPlan = null }) {
     return tourTravelPlanDayImportRequest({
       baseURL: requestApiOrigin,
       params: {
@@ -251,6 +316,7 @@ export function createTourTravelPlanAdapter({
       body: {
         source_tour_id: sourceTourId,
         source_day_id: sourceDayId,
+        ...(targetTravelPlan ? { target_travel_plan: omitDerivedTravelPlanDestinations(targetTravelPlan) } : {}),
         include_images: true,
         include_customer_visible_images_only: false,
         include_notes: true,
@@ -261,7 +327,7 @@ export function createTourTravelPlanAdapter({
     });
   }
 
-  function buildTourTravelPlanServiceImportRequest({ apiOrigin: requestApiOrigin, state: requestState, targetDayId, sourceTourId, sourceServiceId }) {
+  function buildTourTravelPlanServiceImportRequest({ apiOrigin: requestApiOrigin, state: requestState, targetDayId, sourceTourId, sourceServiceId, targetTravelPlan = null }) {
     return tourTravelPlanServiceImportRequest({
       baseURL: requestApiOrigin,
       params: {
@@ -272,6 +338,7 @@ export function createTourTravelPlanAdapter({
       body: {
         source_tour_id: sourceTourId,
         source_service_id: sourceServiceId,
+        ...(targetTravelPlan ? { target_travel_plan: omitDerivedTravelPlanDestinations(targetTravelPlan) } : {}),
         include_images: true,
         include_customer_visible_images_only: false,
         include_notes: true,
@@ -309,6 +376,8 @@ export function createTourTravelPlanAdapter({
       buildTravelPlanServiceSearchRequest: buildTourTravelPlanServiceSearchRequest,
       buildTravelPlanDayImportRequest: buildTourTravelPlanDayImportRequest,
       buildTravelPlanServiceImportRequest: buildTourTravelPlanServiceImportRequest,
+      cloneTravelPlanDayForLocalImport: cloneTourMarketingDayForLocalImport,
+      cloneTravelPlanServiceForLocalImport: cloneTourMarketingServiceForLocalImport,
       travelPlanLibrarySource: "marketing_tour",
       setPageOverlay,
       features: {

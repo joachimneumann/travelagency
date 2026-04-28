@@ -170,6 +170,7 @@ import (
 	expected_travel_plan_revision?:       >=0 & int
 	source_tour_id:                       common.#Identifier
 	source_day_id:                        common.#Identifier
+	target_travel_plan?:                  databaseModel.#BookingTravelPlan
 	include_images:                       *true | bool
 	include_customer_visible_images_only: *false | bool
 	include_notes:                        *true | bool
@@ -182,6 +183,7 @@ import (
 	source_tour_id:                       common.#Identifier
 	source_service_id:                    common.#Identifier
 	insert_after_service_id?:             common.#Identifier
+	target_travel_plan?:                  databaseModel.#BookingTravelPlan
 	include_images:                       *true | bool
 	include_customer_visible_images_only: *false | bool
 	include_notes:                        *true | bool
@@ -193,6 +195,7 @@ import (
 	expected_updated_at?:                 common.#Timestamp
 	source_tour_id:                       common.#Identifier
 	source_day_id:                        common.#Identifier
+	target_travel_plan?:                  databaseModel.#TravelPlan
 	include_images:                       *true | bool
 	include_customer_visible_images_only: *false | bool
 	include_notes:                        *true | bool
@@ -205,6 +208,7 @@ import (
 	source_tour_id:                       common.#Identifier
 	source_service_id:                    common.#Identifier
 	insert_after_service_id?:             common.#Identifier
+	target_travel_plan?:                  databaseModel.#TravelPlan
 	include_images:                       *true | bool
 	include_customer_visible_images_only: *false | bool
 	include_notes:                        *true | bool
