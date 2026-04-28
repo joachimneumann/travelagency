@@ -3481,6 +3481,11 @@ test("tour page keeps website content translations in the English-source review 
   );
   assert.match(
     tourSource,
+    /function preferredTourHeaderLangs\(\) \{\s*return \[TOUR_TRANSLATION_SOURCE_LANG, "vi"\];\s*\}/,
+    "The marketing-tour header should keep the English source title first instead of following the backend UI language"
+  );
+  assert.match(
+    tourSource,
     /data-tour-i18n-field="short_description_i18n"[\s\S]*maxlength="\$\{TOUR_DESCRIPTION_MAX_LENGTH\}"/,
     "The visible English source description textarea should prevent entering more than 170 characters"
   );
@@ -4517,6 +4522,36 @@ test("frontend language switching updates the homepage in place instead of forci
     mainToursSource,
     /\/public\/v1\/tours/,
     "Homepage tours source should no longer fetch tour payloads from the backend"
+  );
+});
+
+test("backend language switching updates admin UI in place instead of forcing a full page reload", async () => {
+  const backendI18nPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "shared", "backend_i18n.js");
+  const tourPageModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "tour.js");
+  const [backendI18nSource, tourSource] = await Promise.all([
+    readFile(backendI18nPath, "utf8"),
+    readFile(tourPageModulePath, "utf8")
+  ]);
+
+  assert.match(
+    backendI18nSource,
+    /async function switchLanguage\(nextLang,[\s\S]*applyDataI18nAttributes\(document\)[\s\S]*window\.history\.replaceState\(window\.history\.state, '', url\.toString\(\)\)[\s\S]*backend-i18n-changed/,
+    "Backend i18n should switch languages in place, update UI labels, keep the URL in sync, and emit a change event"
+  );
+  assert.match(
+    backendI18nSource,
+    /setLang: \(lang\) => switchLanguage\(lang\)/,
+    "Backend i18n should expose an in-place language switch API"
+  );
+  assert.doesNotMatch(
+    backendI18nSource,
+    /window\.location\.href\s*=\s*url\.toString\(\)/,
+    "Backend language menu should not navigate the whole page on option click"
+  );
+  assert.match(
+    tourSource,
+    /window\.addEventListener\("backend-i18n-changed", handleBackendLanguageChanged\)/,
+    "Marketing-tour detail should refresh dynamic backend labels after an in-place backend language switch"
   );
 });
 

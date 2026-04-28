@@ -750,8 +750,7 @@ function syncLocalizedFieldState() {
 }
 
 function preferredTourHeaderLangs() {
-  const selectedLang = normalizeTourTextLang(currentBackendLang());
-  return selectedLang === "vi" ? ["vi", "en"] : ["en", "vi"];
+  return [TOUR_TRANSLATION_SOURCE_LANG, "vi"];
 }
 
 function updateHeaderTitle() {
@@ -1425,6 +1424,13 @@ async function translateTravelPlanLanguages(targets, { force = false, minimumOve
 
 init();
 
+function handleBackendLanguageChanged() {
+  updateHeaderTitle();
+  updateHeaderSubtitle();
+  renderTravelPlanTranslationPanel();
+  renderTourDirtyBar();
+}
+
 async function init() {
   await waitForBackendI18n();
   window.addEventListener("beforeunload", (event) => {
@@ -1432,6 +1438,7 @@ async function init() {
     event.preventDefault();
     event.returnValue = "";
   });
+  window.addEventListener("backend-i18n-changed", handleBackendLanguageChanged);
   refreshBackendNavElements();
   const backHref = resolveBackendSectionHref("tours");
 
