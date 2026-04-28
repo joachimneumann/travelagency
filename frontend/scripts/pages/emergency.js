@@ -555,6 +555,7 @@ async function init() {
     canEditEmergency: Boolean(authState.permissions?.canEditEmergency)
   };
 
+  window.addEventListener("backend-i18n-changed", handleBackendLanguageChanged);
   renderAddCountryOptions();
   updateControls();
 
@@ -564,6 +565,17 @@ async function init() {
   }
 
   await loadCountryReferenceInfo();
+}
+
+function handleBackendLanguageChanged() {
+  syncExpandedCountriesFromDom();
+  syncStateFromDom();
+  renderAddCountryOptions();
+  renderItems();
+  updateControls();
+  if (!state.permissions.canReadEmergency) {
+    showError(backendT("backend.emergency.forbidden", "You do not have access to emergency references."));
+  }
 }
 
 init();

@@ -155,12 +155,22 @@ async function init() {
 
   renderCatalogOptions();
   bindControls();
+  window.addEventListener("backend-i18n-changed", handleBackendLanguageChanged);
 
   if (state.permissions.canReadStandardTours) {
     await loadStandardTours();
   } else {
     showError(backendT("backend.standard_tours.forbidden", "You do not have access to standard tours."));
   }
+}
+
+function handleBackendLanguageChanged() {
+  renderCatalogOptions();
+  if (!state.permissions.canReadStandardTours) {
+    showError(backendT("backend.standard_tours.forbidden", "You do not have access to standard tours."));
+    return;
+  }
+  void loadStandardTours();
 }
 
 function bindControls() {

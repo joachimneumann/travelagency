@@ -1073,20 +1073,64 @@ export function createFrontendToursController(ctx) {
     return truncateCompactText(line || detailsText);
   }
 
-  function renderTourPlanServiceCard(service, className = "", { swappable = false } = {}) {
+  function renderTourPlanServiceCard(service, className = "", { featured = false, swappable = false } = {}) {
     const src = tourPlanServiceImageSrc(service);
     if (!src) return "";
     const title = tourPlanServiceTitle(service);
     const details = tourPlanServiceDetails(service, title);
-    const detailMarkup = details
-      ? `<p>${escapeHTML(details)}</p>`
-      : "";
     const image = primaryTourPlanServiceImage(service);
     const width = Math.max(1, Number.parseInt(image?.width_px, 10) || 720);
     const height = Math.max(1, Number.parseInt(image?.height_px, 10) || 720);
-    const swapLabel = swappable
-      ? frontendT("tour.plan.feature_service", "Show {title} as the featured service", { title })
+    const flippable = Boolean(compactText(details));
+    const flipLabel = flippable
+      ? frontendT("tour.plan.show_service_details", "Show details for {title}", { title })
       : "";
+    const swapLabel = frontendT("tour.plan.feature_service", "Show {title} as the featured service", { title });
+    const frontBody = `
+      <div class="tour-plan-service-card__body">
+        <h5>${escapeHTML(title)}</h5>
+      </div>
+    `;
+    const imageMarkup = `
+      <img
+        src="${escapeAttr(src)}"
+        alt="${escapeAttr(tourPlanServiceImageAlt(service))}"
+        loading="lazy"
+        width="${escapeAttr(String(width))}"
+        height="${escapeAttr(String(height))}"
+      />
+    `;
+
+    if (flippable) {
+      const backHint = frontendT("tour.plan.service_details_back_hint", "Tap again to see the image");
+      const interactionAttrs = featured
+        ? `data-tour-plan-service-flip role="button" tabindex="0" aria-pressed="false" aria-label="${escapeAttr(flipLabel)}"`
+        : (swappable
+            ? `data-tour-plan-service-swap role="button" tabindex="0" aria-label="${escapeAttr(swapLabel)}"`
+            : "");
+      return `
+        <article
+          class="tour-plan-service-card${className ? ` ${escapeAttr(className)}` : ""}${featured ? " tour-plan-service-card--flippable" : ""}${swappable ? " tour-plan-service-card--interactive" : ""}"
+          data-tour-plan-service-card
+          data-tour-plan-service-has-details="1"
+          ${interactionAttrs}
+        >
+          <div class="tour-plan-service-card__inner">
+            <div class="tour-plan-service-card__face tour-plan-service-card__face--front">
+              ${imageMarkup}
+              ${frontBody}
+            </div>
+            <div class="tour-plan-service-card__face tour-plan-service-card__face--back">
+              <div class="tour-plan-service-card__back-copy">
+                <h5>${escapeHTML(title)}</h5>
+                <p>${escapeHTML(details)}</p>
+                <span class="tour-plan-service-card__back-hint">${escapeHTML(backHint)}</span>
+              </div>
+            </div>
+          </div>
+        </article>
+      `;
+    }
 
     return `
       <article
@@ -1094,17 +1138,8 @@ export function createFrontendToursController(ctx) {
         data-tour-plan-service-card
         ${swappable ? `data-tour-plan-service-swap role="button" tabindex="0" aria-label="${escapeAttr(swapLabel)}"` : ""}
       >
-        <img
-          src="${escapeAttr(src)}"
-          alt="${escapeAttr(tourPlanServiceImageAlt(service))}"
-          loading="lazy"
-          width="${escapeAttr(String(width))}"
-          height="${escapeAttr(String(height))}"
-        />
-        <div class="tour-plan-service-card__body">
-          <h5>${escapeHTML(title)}</h5>
-          ${detailMarkup}
-        </div>
+        ${imageMarkup}
+        ${frontBody}
       </article>
     `;
   }
@@ -1138,7 +1173,7 @@ export function createFrontendToursController(ctx) {
     return {
       markup: `
         <div class="tour-plan-service-media${sideEntries.length ? "" : " tour-plan-service-media--single"}" data-tour-plan-service-media>
-          ${renderTourPlanServiceCard(featured.service, "tour-plan-service-card--featured")}
+          ${renderTourPlanServiceCard(featured.service, "tour-plan-service-card--featured", { featured: true })}
           ${sideMarkup}
         </div>
       `,
@@ -1372,6 +1407,20 @@ export function createFrontendToursController(ctx) {
 
       button.dataset.bookingBound = "1";
     });
+  }
+
+  function setTourPlanServiceCardFlipped(card, flipped) {
+    if (!(card instanceof HTMLElement)) return;
+    card.classList.toggle("is-flipped", flipped);
+    if (card.hasAttribute("data-tour-plan-service-flip")) {
+      card.setAttribute("aria-pressed", flipped ? "true" : "false");
+    }
+  }
+
+  function toggleTourPlanServiceCard(card) {
+    if (!(card instanceof HTMLElement)) return;
+    setTourPlanServiceCardFlipped(card, !card.classList.contains("is-flipped"));
+    syncExpandedTourDetailsHeights();
   }
 
   function focusTourShowMoreButton(tripId) {
@@ -1980,17 +2029,33 @@ export function createFrontendToursController(ctx) {
 
   function setTourPlanServiceCardFeaturedState(card, featured) {
     if (!(card instanceof HTMLElement)) return;
+    const hasDetails = card.getAttribute("data-tour-plan-service-has-details") === "1";
     card.classList.toggle("tour-plan-service-card--featured", featured);
     card.classList.toggle("tour-plan-service-card--small", !featured);
     card.classList.toggle("tour-plan-service-card--interactive", !featured);
+    card.classList.toggle("tour-plan-service-card--flippable", featured && hasDetails);
+    card.classList.remove("is-flipped");
     if (featured) {
       card.removeAttribute("data-tour-plan-service-swap");
-      card.removeAttribute("role");
-      card.removeAttribute("tabindex");
-      card.removeAttribute("aria-label");
+      if (hasDetails) {
+        const title = tourPlanServiceCardTitleText(card);
+        card.setAttribute("data-tour-plan-service-flip", "");
+        card.setAttribute("role", "button");
+        card.setAttribute("tabindex", "0");
+        card.setAttribute("aria-pressed", "false");
+        card.setAttribute("aria-label", frontendT("tour.plan.show_service_details", "Show details for {title}", { title }));
+      } else {
+        card.removeAttribute("data-tour-plan-service-flip");
+        card.removeAttribute("role");
+        card.removeAttribute("tabindex");
+        card.removeAttribute("aria-label");
+        card.removeAttribute("aria-pressed");
+      }
       return;
     }
 
+    card.removeAttribute("data-tour-plan-service-flip");
+    card.removeAttribute("aria-pressed");
     const title = tourPlanServiceCardTitleText(card);
     card.setAttribute("data-tour-plan-service-swap", "");
     card.setAttribute("role", "button");
@@ -2093,20 +2158,36 @@ export function createFrontendToursController(ctx) {
   function handleTourPlanServiceMediaClick(event) {
     const media = tourPlanServiceMediaFromEvent(event);
     if (!media) return;
-    const card = tourPlanServiceSwapCardFromEvent(event, media);
-    if (!card) return;
+    const target = event.target instanceof Element ? event.target : null;
+    if (!target) return;
+    const swapCard = tourPlanServiceSwapCardFromEvent(event, media);
+    if (swapCard) {
+      event.preventDefault();
+      void swapFeaturedTourPlanService(swapCard);
+      return;
+    }
+    const flipCard = target.closest("[data-tour-plan-service-flip]");
+    if (!(flipCard instanceof HTMLElement) || !media.contains(flipCard)) return;
     event.preventDefault();
-    void swapFeaturedTourPlanService(card);
+    toggleTourPlanServiceCard(flipCard);
   }
 
   function handleTourPlanServiceMediaKeydown(event) {
     if (event.key !== "Enter" && event.key !== " ") return;
     const media = tourPlanServiceMediaFromEvent(event);
     if (!media) return;
-    const card = tourPlanServiceSwapCardFromEvent(event, media);
-    if (!card) return;
+    const target = event.target instanceof Element ? event.target : null;
+    if (!target) return;
+    const swapCard = tourPlanServiceSwapCardFromEvent(event, media);
+    if (swapCard) {
+      event.preventDefault();
+      void swapFeaturedTourPlanService(swapCard);
+      return;
+    }
+    const flipCard = target.closest("[data-tour-plan-service-flip]");
+    if (!(flipCard instanceof HTMLElement) || !media.contains(flipCard)) return;
     event.preventDefault();
-    void swapFeaturedTourPlanService(card);
+    toggleTourPlanServiceCard(flipCard);
   }
 
   function updateTourCardImageCounter(button, currentIndex, total) {

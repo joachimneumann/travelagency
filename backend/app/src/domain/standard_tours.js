@@ -47,10 +47,8 @@ export function createStandardTourHelpers({
         ...day,
         date: null,
         date_string: normalizeOptionalText(day?.date_string),
-        copied_from: null,
         services: (Array.isArray(day?.services) ? day.services : []).map((service) => ({
-          ...service,
-          copied_from: null
+          ...service
         }))
       }))
     };
@@ -68,13 +66,11 @@ export function createStandardTourHelpers({
         id: `travel_plan_day_${randomUUID()}`,
         day_number: dayIndex + 1,
         date: null,
-        copied_from: null,
         services: (Array.isArray(day?.services) ? day.services : []).map((service) => {
           const image = firstImageFromService(service);
           return {
             ...cloneJson(service),
             id: `travel_plan_service_${randomUUID()}`,
-            copied_from: null,
             image: image
               ? {
                   ...cloneJson(image),

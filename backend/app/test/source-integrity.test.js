@@ -4357,7 +4357,7 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
   );
   assert.match(
     stagingCaddy,
-    /production_private_noindex_headers[\s\S]*path \/app-home\.html \/bookings\.html \/booking\.html \/persons\.html \/marketing_tour\.html \/marketing_tours\.html \/standard-tours\.html \/standard-tour\.html \/settings\.html \/emergency\.html \/traveler-details\.html \/auth\/\* \/api\/\* \/integrations\/\* \/keycloak\/\*[\s\S]*X-Robots-Tag "noindex, nofollow, noarchive"[\s\S]*import production_private_noindex_headers/,
+    /production_private_noindex_headers[\s\S]*path \/app-home\.html \/bookings\.html \/booking\.html \/persons\.html \/marketing_tour\.html \/marketing_tours\.html \/standard-tours\.html \/standard-tour\.html \/settings\.html \/translations\.html \/emergency\.html \/traveler-details\.html \/auth\/\* \/api\/\* \/integrations\/\* \/keycloak\/\*[\s\S]*X-Robots-Tag "noindex, nofollow, noarchive"[\s\S]*import production_private_noindex_headers/,
     "Production Caddy should send an X-Robots-Tag noindex header on private or utility routes"
   );
   assert.doesNotMatch(
@@ -4527,9 +4527,39 @@ test("frontend language switching updates the homepage in place instead of forci
 
 test("backend language switching updates admin UI in place instead of forcing a full page reload", async () => {
   const backendI18nPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "shared", "backend_i18n.js");
+  const backendNavPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "shared", "nav.js");
+  const bookingListPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking_list.js");
+  const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking.js");
+  const toursListPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "tours_list.js");
+  const standardToursPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "standard_tours.js");
+  const standardTourPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "standard_tour.js");
+  const settingsListPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "settings_list.js");
+  const translationsPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "translations.js");
+  const emergencyPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "emergency.js");
   const tourPageModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "tour.js");
-  const [backendI18nSource, tourSource] = await Promise.all([
+  const [
+    backendI18nSource,
+    backendNavSource,
+    bookingListSource,
+    bookingPageSource,
+    toursListSource,
+    standardToursSource,
+    standardTourSource,
+    settingsListSource,
+    translationsPageSource,
+    emergencyPageSource,
+    tourSource
+  ] = await Promise.all([
     readFile(backendI18nPath, "utf8"),
+    readFile(backendNavPath, "utf8"),
+    readFile(bookingListPath, "utf8"),
+    readFile(bookingPagePath, "utf8"),
+    readFile(toursListPath, "utf8"),
+    readFile(standardToursPath, "utf8"),
+    readFile(standardTourPath, "utf8"),
+    readFile(settingsListPath, "utf8"),
+    readFile(translationsPagePath, "utf8"),
+    readFile(emergencyPagePath, "utf8"),
     readFile(tourPageModulePath, "utf8")
   ]);
 
@@ -4547,6 +4577,51 @@ test("backend language switching updates admin UI in place instead of forcing a 
     backendI18nSource,
     /window\.location\.href\s*=\s*url\.toString\(\)/,
     "Backend language menu should not navigate the whole page on option click"
+  );
+  assert.match(
+    backendNavSource,
+    /window\.addEventListener\("backend-i18n-changed", mount\.__backendNavLanguageHandler\)/,
+    "Backend navigation should rerender itself when the backend language changes"
+  );
+  assert.match(
+    bookingListSource,
+    /window\.addEventListener\("backend-i18n-changed", handleBackendLanguageChanged\)/,
+    "Booking list should refresh its rendered content after an in-place backend language switch"
+  );
+  assert.match(
+    bookingPageSource,
+    /window\.addEventListener\("backend-i18n-changed", handleBackendLanguageChanged\)/,
+    "Booking detail should rerender its dynamic panels after an in-place backend language switch"
+  );
+  assert.match(
+    toursListSource,
+    /window\.addEventListener\("backend-i18n-changed", handleBackendLanguageChanged\)/,
+    "Marketing-tour list should refresh its rendered content after an in-place backend language switch"
+  );
+  assert.match(
+    standardToursSource,
+    /window\.addEventListener\("backend-i18n-changed", handleBackendLanguageChanged\)/,
+    "Standard-tours list should refresh its rendered content after an in-place backend language switch"
+  );
+  assert.match(
+    standardTourSource,
+    /window\.addEventListener\("backend-i18n-changed", handleBackendLanguageChanged\)/,
+    "Standard-tour detail should rerender its editor chrome after an in-place backend language switch"
+  );
+  assert.match(
+    settingsListSource,
+    /window\.addEventListener\("backend-i18n-changed", handleBackendLanguageChanged\)/,
+    "Settings should rerender its rendered admin sections after an in-place backend language switch"
+  );
+  assert.match(
+    translationsPageSource,
+    /window\.addEventListener\("backend-i18n-changed", handleBackendLanguageChanged\)/,
+    "Translations should rerender its rendered admin state after an in-place backend language switch"
+  );
+  assert.match(
+    emergencyPageSource,
+    /window\.addEventListener\("backend-i18n-changed", handleBackendLanguageChanged\)/,
+    "Emergency editor should rerender its rendered admin state after an in-place backend language switch"
   );
   assert.match(
     tourSource,
@@ -4760,7 +4835,7 @@ test("homepage hero title follows published destinations and keeps the destinati
   );
   assert.match(
     homepageSource,
-    /<source data-src="\/assets\/video\/rice field-mobile\.mp4" media="\(max-width: 760px\)" type="video\/mp4" \/>\s*<source data-src="\/assets\/video\/rice field\.mp4" type="video\/mp4" \/>[\s\S]*const findHeroVideoSource = \(\) => heroVideoSources\.find[\s\S]*window\.matchMedia\(media\)\.matches[\s\S]*attachVideoSource\(\)[\s\S]*window\.addEventListener\("load", startPlayback, \{ once: true \}\)/,
+    /data-mobile-src="\/assets\/video\/rice%20field-mobile\.mp4"[\s\S]*data-desktop-src="\/assets\/video\/rice%20field\.mp4"[\s\S]*const chooseHeroVideoSource = \(\) => \{[\s\S]*window\.matchMedia\("\(max-width: 760px\)"\)\.matches[\s\S]*heroVideo\.src = heroVideoSource;[\s\S]*window\.addEventListener\("load", startPlayback, \{ once: true \}\)/,
     "Homepage should keep hero MP4s out of the initial request graph and attach a mobile-specific source on small screens"
   );
   assert.ok(
@@ -4917,12 +4992,15 @@ test("marketing tour editor imports days and services only from other marketing 
   assert.match(tourAdapterSource, /travelPlanLibrarySource:\s*"marketing_tour"/, "Marketing tour editor should mark the library source as marketing tours");
   assert.match(tourAdapterSource, /dayImport:\s*true/, "Marketing tour editor should expose day import");
   assert.match(tourAdapterSource, /serviceImport:\s*true/, "Marketing tour editor should expose service import");
+  assert.match(tourAdapterSource, /serviceDetails:\s*true/, "Marketing tour editor should expose service details");
+  assert.match(tourPageScriptSource, /mapField:\s*"details_i18n"[\s\S]*plainField:\s*"details"[\s\S]*travel_plan\.\$\{dayId\}\.\$\{serviceId\}\.details/, "Marketing tour translation should include service details");
   assert.match(travelPlanLibrarySource, /buildTravelPlanDaySearchRequest/, "Shared library should accept entity-specific day search builders");
   assert.match(travelPlanLibrarySource, /buildTravelPlanServiceImportRequest/, "Shared library should accept entity-specific service import builders");
   assert.match(routesSource, /\/api\/v1\/tours\/travel-plan-days\/search/, "Routes should expose marketing tour day search");
   assert.match(routesSource, /\/api\/v1\/tours\/travel-plan-services\/search/, "Routes should expose marketing tour service search");
   assert.match(routesSource, /\/api\/v1\/tours\/\{tour_id\}\/travel-plan\/days\/import/, "Routes should expose marketing tour day import");
   assert.match(routesSource, /\/api\/v1\/tours\/\{tour_id\}\/travel-plan\/days\/\{day_id\}\/services\/import/, "Routes should expose marketing tour service import");
+  assert.match(tourHandlersSource, /copyMarketingTourServiceForImport[\s\S]*details:\s*normalizeText\(sourceItem\?\.details\)[\s\S]*details_i18n:/, "Marketing tour imports should preserve service details");
   assert.match(tourHandlersSource, /sourceTourId === tourId[\s\S]*Choose a day from another marketing tour/, "Day imports should reject the current marketing tour as a source");
   assert.match(tourHandlersSource, /sourceTourId === tourId[\s\S]*Choose a service from another marketing tour/, "Service imports should reject the current marketing tour as a source");
 });

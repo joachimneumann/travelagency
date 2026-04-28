@@ -48,6 +48,28 @@ test("buildApiRoutes includes the settings observability route", () => {
   );
 });
 
+test("buildApiRoutes includes static translation management routes", () => {
+  const handlerFns = new Map();
+  const handlers = new Proxy({}, {
+    get: (_target, prop) => {
+      if (!handlerFns.has(prop)) handlerFns.set(prop, () => {});
+      return handlerFns.get(prop);
+    }
+  });
+
+  const routes = buildApiRoutes({ handlers });
+  const matches = (method, path) => routes.some((route) => route.method === method && route.pattern.test(path));
+
+  assert.equal(matches("GET", "/api/v1/static-translations/domains"), true);
+  assert.equal(matches("PATCH", "/api/v1/static-translations/frontend/vi/overrides"), true);
+  assert.equal(matches("POST", "/api/v1/static-translations/apply"), true);
+  assert.equal(matches("GET", "/api/v1/static-translations/apply/job_123"), true);
+
+  const firstApplyJobRoute = routes.find((route) => route.method === "GET" && route.pattern.test("/api/v1/static-translations/apply/job_123"));
+  const expectedHandler = handlerFns.get("handleGetStaticTranslationApplyJob");
+  assert.equal(firstApplyJobRoute.handler, expectedHandler);
+});
+
 test("buildApiRoutes includes tour reel video editor routes", () => {
   const handlers = new Proxy({}, {
     get: () => () => {}

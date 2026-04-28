@@ -10,8 +10,7 @@ import {
 import { normalizeTravelPlanTranslationMeta } from "./booking_translation.js";
 import {
   normalizeBookingContentLang,
-  normalizeStoredLocalizedTextField,
-  resolveLocalizedText
+  normalizeStoredLocalizedTextField
 } from "./booking_content_i18n.js";
 
 const TRAVEL_PLAN_SERVICE_KINDS = new Set(TRAVEL_PLAN_SERVICE_KIND_VALUES);
@@ -61,41 +60,6 @@ function normalizeTravelPlanServiceImageFocalPoint(rawFocalPoint) {
     return null;
   }
   return { x, y };
-}
-
-function normalizeTravelPlanServiceCopiedFrom(rawCopiedFrom) {
-  const source = rawCopiedFrom && typeof rawCopiedFrom === "object" && !Array.isArray(rawCopiedFrom)
-    ? rawCopiedFrom
-    : {};
-  const sourceBookingId = normalizeOptionalText(source.source_booking_id);
-  const sourceServiceId = normalizeOptionalText(source.source_service_id) || normalizeOptionalText(source.source_item_id);
-  if (!sourceBookingId || !sourceServiceId) return null;
-  return {
-    source_type: normalizeOptionalText(source.source_type) || "booking_travel_plan_service",
-    source_booking_id: sourceBookingId,
-    source_day_id: normalizeOptionalText(source.source_day_id),
-    source_service_id: sourceServiceId,
-    copied_at: normalizeOptionalText(source.copied_at),
-    copied_by_atp_staff_id: normalizeOptionalText(source.copied_by_atp_staff_id),
-    import_batch_id: normalizeOptionalText(source.import_batch_id)
-  };
-}
-
-function normalizeTravelPlanDayCopiedFrom(rawCopiedFrom) {
-  const source = rawCopiedFrom && typeof rawCopiedFrom === "object" && !Array.isArray(rawCopiedFrom)
-    ? rawCopiedFrom
-    : {};
-  const sourceBookingId = normalizeOptionalText(source.source_booking_id);
-  const sourceDayId = normalizeOptionalText(source.source_day_id);
-  if (!sourceBookingId || !sourceDayId) return null;
-  return {
-    source_type: normalizeOptionalText(source.source_type) || "booking_travel_plan_day",
-    source_booking_id: sourceBookingId,
-    source_day_id: sourceDayId,
-    copied_at: normalizeOptionalText(source.copied_at),
-    copied_by_atp_staff_id: normalizeOptionalText(source.copied_by_atp_staff_id),
-    import_batch_id: normalizeOptionalText(source.import_batch_id)
-  };
 }
 
 function resolveRawTravelPlanServiceImage(rawImageOrImages) {
@@ -337,8 +301,7 @@ function normalizeTravelPlanDays(days, options = {}) {
             sourceLang,
             flatMode,
             hydrateSourceIntoLocalizedMaps: options?.hydrateSourceIntoLocalizedMaps === true
-          }),
-          copied_from: normalizeTravelPlanServiceCopiedFrom(rawItem.copied_from)
+          })
         };
       });
 
@@ -380,8 +343,7 @@ function normalizeTravelPlanDays(days, options = {}) {
         overnight_location_i18n: overnightLocationField.map,
         services,
         notes: notesField.text || null,
-        notes_i18n: notesField.map,
-        copied_from: normalizeTravelPlanDayCopiedFrom(day?.copied_from)
+        notes_i18n: notesField.map
       };
     });
 }
@@ -391,19 +353,16 @@ export function createTravelPlanHelpers() {
     return buildDefaultBookingTravelPlan();
   }
 
-  function stripBookingFieldsFromTravelPlanDay(day) {
+  function stripBookingOnlyFieldsFromTravelPlanDay(day) {
     const source = day && typeof day === "object" && !Array.isArray(day) ? day : {};
-    const { date, date_string, copied_from, ...baseDay } = source;
+    const { date, date_string, ...baseDay } = source;
+    delete baseDay.copied_from;
     return {
       ...baseDay,
       services: (Array.isArray(source.services) ? source.services : []).map((service) => {
         const serviceSource = service && typeof service === "object" && !Array.isArray(service) ? service : {};
-        const {
-          details,
-          details_i18n,
-          copied_from: serviceCopiedFrom,
-          ...baseService
-        } = serviceSource;
+        const { ...baseService } = serviceSource;
+        delete baseService.copied_from;
         return baseService;
       })
     };
@@ -419,7 +378,7 @@ export function createTravelPlanHelpers() {
     const days = normalizeTravelPlanDays(source.days, {
       ...options,
       flatMode
-    }).map((day) => stripBookingFieldsFromTravelPlanDay(day));
+    }).map((day) => stripBookingOnlyFieldsFromTravelPlanDay(day));
     return normalizeTravelPlanTranslationMeta({
       destination_scope,
       destinations,
@@ -466,12 +425,6 @@ export function createTravelPlanHelpers() {
         return { ok: false, error: `Travel-plan day id ${day.id} is duplicated.` };
       }
       dayIds.add(day.id);
-      if (day.copied_from) {
-        if (!normalizeText(day.copied_from.source_booking_id) || !normalizeText(day.copied_from.source_day_id)) {
-          return { ok: false, error: `Day ${day.day_number}: Copied-from metadata is incomplete.` };
-        }
-      }
-
       for (const [itemIndex, item] of day.services.entries()) {
         const itemNumber = itemIndex + 1;
         if (!normalizeText(item.id)) {
@@ -509,11 +462,6 @@ export function createTravelPlanHelpers() {
           }
           if (image.is_primary === false) {
             return { ok: false, error: `Day ${day.day_number}, Service ${itemNumber}: The service image must be primary.` };
-          }
-        }
-        if (item.copied_from) {
-          if (!normalizeText(item.copied_from.source_booking_id) || !normalizeText(item.copied_from.source_service_id)) {
-            return { ok: false, error: `Day ${day.day_number}, Service ${itemNumber}: Copied-from metadata is incomplete.` };
           }
         }
       }

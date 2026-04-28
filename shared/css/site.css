@@ -1324,6 +1324,10 @@ textarea:focus-visible {
   border: 1px solid rgba(215, 224, 230, 0.9);
   border-radius: 12px;
   background: var(--surface-muted);
+  transition:
+    transform 0.28s cubic-bezier(0.2, 0.82, 0.2, 1),
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
 }
 
 .tour-plan-service-card img {
@@ -1349,9 +1353,23 @@ textarea:focus-visible {
   min-height: 9.65rem;
 }
 
+.tour-plan-service-card--flippable {
+  cursor: pointer;
+  touch-action: manipulation;
+  perspective: 1400px;
+}
+
 .tour-plan-service-card--interactive {
   cursor: pointer;
   touch-action: manipulation;
+}
+
+.tour-plan-service-card--flippable:hover,
+.tour-plan-service-card--flippable:focus-visible {
+  border-color: rgba(43, 177, 169, 0.8);
+  box-shadow: 0 0 0 3px rgba(43, 177, 169, 0.16), 0 18px 32px rgba(17, 27, 33, 0.12);
+  outline: none;
+  transform: scale(1.02);
 }
 
 .tour-plan-service-card--interactive:hover,
@@ -1359,6 +1377,57 @@ textarea:focus-visible {
   border-color: rgba(43, 177, 169, 0.8);
   box-shadow: 0 0 0 3px rgba(43, 177, 169, 0.16);
   outline: none;
+  transform: translateY(-2px);
+}
+
+.tour-plan-service-card__inner {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+}
+
+.tour-plan-service-card__face {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transition:
+    transform 0.72s cubic-bezier(0.2, 0.82, 0.2, 1),
+    opacity 0.28s ease;
+  transform-style: preserve-3d;
+}
+
+.tour-plan-service-card__face--front {
+  background: var(--surface-muted);
+  transform: rotateY(0deg);
+  opacity: 1;
+  z-index: 2;
+}
+
+.tour-plan-service-card__face--back {
+  display: flex;
+  align-items: stretch;
+  background:
+    radial-gradient(circle at top, rgba(43, 177, 169, 0.14), transparent 58%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(245, 249, 248, 0.98));
+  color: var(--text-strong);
+  transform: rotateY(-180deg);
+  opacity: 0;
+  z-index: 1;
+}
+
+.tour-plan-service-card.is-flipped .tour-plan-service-card__face--front {
+  transform: rotateY(180deg);
+  opacity: 0;
+  z-index: 1;
+}
+
+.tour-plan-service-card.is-flipped .tour-plan-service-card__face--back {
+  transform: rotateY(0deg);
+  opacity: 1;
+  z-index: 2;
 }
 
 .tour-plan-service-card--swapping {
@@ -1408,6 +1477,40 @@ textarea:focus-visible {
 
 .tour-plan-service-card--featured .tour-plan-service-card__body p {
   -webkit-line-clamp: 3;
+}
+
+.tour-plan-service-card__back-copy {
+  display: grid;
+  align-content: start;
+  gap: 0.45rem;
+  width: 100%;
+  padding: 0.9rem;
+  overflow: auto;
+}
+
+.tour-plan-service-card__back-copy h5 {
+  margin: 0;
+  color: var(--text-strong);
+  font-size: 0.98rem;
+  line-height: 1.24;
+}
+
+.tour-plan-service-card--featured .tour-plan-service-card__back-copy h5 {
+  font-size: 1.08rem;
+}
+
+.tour-plan-service-card__back-copy p {
+  margin: 0;
+  color: var(--text);
+  font-size: var(--font-size-body-sm);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.tour-plan-service-card__back-hint {
+  color: var(--muted);
+  font-size: var(--font-size-caption);
+  line-height: 1.35;
 }
 
 .tour-plan-text-services {

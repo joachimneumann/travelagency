@@ -1082,6 +1082,13 @@ function collectTravelPlanTranslationFields(plan, targetLang = "") {
       });
       addField({
         holder: service,
+        mapField: "details_i18n",
+        plainField: "details",
+        key: `travel_plan.${dayId}.${serviceId}.details`,
+        label: `${serviceLabel} · ${backendT("booking.travel_plan.item_details", "Details")}`
+      });
+      addField({
+        holder: service,
         mapField: "location_i18n",
         plainField: "location",
         key: `travel_plan.${dayId}.${serviceId}.location`,

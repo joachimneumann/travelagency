@@ -41,25 +41,6 @@ import (
 
 #BookingTravelPlanServiceImage: #TravelPlanServiceImage
 
-#BookingTravelPlanServiceCopiedFrom: {
-	source_type:             "booking_travel_plan_service"
-	source_booking_id:       common.#Identifier
-	source_day_id?:          common.#Identifier
-	source_service_id:       common.#Identifier
-	copied_at:               common.#Timestamp
-	copied_by_atp_staff_id?: common.#Identifier
-	import_batch_id?:        common.#Identifier
-}
-
-#BookingTravelPlanDayCopiedFrom: {
-	source_type:             "booking_travel_plan_day"
-	source_booking_id:       common.#Identifier
-	source_day_id:           common.#Identifier
-	copied_at:               common.#Timestamp
-	copied_by_atp_staff_id?: common.#Identifier
-	import_batch_id?:        common.#Identifier
-}
-
 #TravelPlanService: {
 	id:              common.#Identifier
 	timing_kind:     *"label" | enums.#TravelPlanTimingKind
@@ -67,6 +48,8 @@ import (
 	time_point?:     string
 	kind:            enums.#TravelPlanServiceKind
 	title?:          string
+	details?:        string
+	details_i18n?:   [string]: string
 	image_subtitle?: string
 	image_subtitle_i18n?: [string]: string
 	location?:       string
@@ -76,11 +59,7 @@ import (
 	...
 }
 
-#BookingTravelPlanService: #TravelPlanService & {
-	details?: string
-	details_i18n?: [string]: string
-	copied_from?: #BookingTravelPlanServiceCopiedFrom
-}
+#BookingTravelPlanService: #TravelPlanService
 
 #BookingTravelPlanAttachment: {
 	id:           common.#Identifier
@@ -119,7 +98,6 @@ import (
 	date?:        common.#DateOnly
 	date_string?: string
 	services?: [...#BookingTravelPlanService]
-	copied_from?: #BookingTravelPlanDayCopiedFrom
 }
 
 #TravelPlan: {

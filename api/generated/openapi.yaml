@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-04-27T17:33:54Z
+# 2026-04-28T06:44:20Z
 
 ---
 openapi: 3.1.0
@@ -3989,6 +3989,14 @@ components:
         title:
           type: string
           nullable: true
+        details:
+          type: string
+          nullable: true
+        details_i18n:
+          type: object
+          additionalProperties:
+            type: string
+          nullable: true
         image_subtitle:
           type: string
           nullable: true
@@ -4332,29 +4340,6 @@ components:
           type: string
           format: date-time
           nullable: true
-    BookingTravelPlanServiceCopiedFrom:
-      type: object
-      required:
-      - source_type
-      - source_booking_id
-      - source_service_id
-      - copied_at
-      properties:
-        source_type:
-          type: string
-        source_booking_id:
-          type: string
-        source_day_id:
-          type: string
-          nullable: true
-        source_service_id:
-          type: string
-        copied_at:
-          type: string
-          format: date-time
-        copied_by_atp_staff_id:
-          type: string
-          nullable: true
     BookingTravelPlanService:
       type: object
       required:
@@ -4380,6 +4365,11 @@ components:
         details:
           type: string
           nullable: true
+        details_i18n:
+          type: object
+          additionalProperties:
+            type: string
+          nullable: true
         image_subtitle:
           type: string
           nullable: true
@@ -4399,9 +4389,6 @@ components:
           nullable: true
         image:
           "$ref": "#/components/schemas/BookingTravelPlanServiceImage"
-          nullable: true
-        copied_from:
-          "$ref": "#/components/schemas/BookingTravelPlanServiceCopiedFrom"
           nullable: true
     BookingTravelPlanDay:
       type: object

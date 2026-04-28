@@ -247,39 +247,6 @@ function normalizeTravelPlanAttachments(attachments) {
     }));
 }
 
-function normalizeCopiedFrom(value) {
-  const source = value && typeof value === "object" && !Array.isArray(value) ? value : null;
-  if (!source) return null;
-  const sourceBookingId = normalizeOptionalText(source.source_booking_id);
-  const sourceItemId = normalizeOptionalText(source.source_service_id) || normalizeOptionalText(source.source_item_id);
-  if (!sourceBookingId || !sourceItemId) return null;
-  return {
-    source_type: normalizeOptionalText(source.source_type) || "booking_travel_plan_service",
-    source_booking_id: sourceBookingId,
-    source_day_id: normalizeOptionalText(source.source_day_id),
-    source_service_id: sourceItemId,
-    copied_at: normalizeOptionalText(source.copied_at),
-    copied_by_atp_staff_id: normalizeOptionalText(source.copied_by_atp_staff_id),
-    import_batch_id: normalizeOptionalText(source.import_batch_id)
-  };
-}
-
-function normalizeCopiedDayFrom(value) {
-  const source = value && typeof value === "object" && !Array.isArray(value) ? value : null;
-  if (!source) return null;
-  const sourceBookingId = normalizeOptionalText(source.source_booking_id);
-  const sourceDayId = normalizeOptionalText(source.source_day_id);
-  if (!sourceBookingId || !sourceDayId) return null;
-  return {
-    source_type: normalizeOptionalText(source.source_type) || "booking_travel_plan_day",
-    source_booking_id: sourceBookingId,
-    source_day_id: sourceDayId,
-    copied_at: normalizeOptionalText(source.copied_at),
-    copied_by_atp_staff_id: normalizeOptionalText(source.copied_by_atp_staff_id),
-    import_batch_id: normalizeOptionalText(source.import_batch_id)
-  };
-}
-
 export function createEmptyTravelPlanService() {
   return {
     id: travelPlanId("travel_plan_service"),
@@ -298,8 +265,7 @@ export function createEmptyTravelPlanService() {
     location_i18n: {},
     start_time: "",
     end_time: "",
-    image: null,
-    copied_from: null
+    image: null
   };
 }
 
@@ -315,8 +281,7 @@ export function createEmptyTravelPlanDay(index = 0) {
     overnight_location_i18n: {},
     services: [],
     notes: "",
-    notes_i18n: {},
-    copied_from: null
+    notes_i18n: {}
   };
 }
 
@@ -394,13 +359,11 @@ export function normalizeTravelPlanDraft(plan, options = {}) {
             location_i18n: locationField.map,
             start_time: timing.start_time,
             end_time: timing.end_time,
-            image: normalizeItemImage(rawItem.image ?? rawItem.images, sourceLang, targetLang),
-            copied_from: normalizeCopiedFrom(rawItem.copied_from)
+            image: normalizeItemImage(rawItem.image ?? rawItem.images, sourceLang, targetLang)
           };
         }),
         notes: notesField.text,
-        notes_i18n: notesField.map,
-        copied_from: normalizeCopiedDayFrom(rawDay.copied_from)
+        notes_i18n: notesField.map
       };
     });
 

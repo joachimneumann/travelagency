@@ -868,6 +868,7 @@ async function init() {
   travelPlanModule.bindEvents();
   document.addEventListener("keydown", handleBookingDetailKeydown, true);
   document.addEventListener("keydown", handlePageSaveKeydown, true);
+  window.addEventListener("backend-i18n-changed", handleBackendLanguageChanged);
 
   bindSectionNavigation("bookings");
   if (!state.id) {
@@ -878,6 +879,18 @@ async function init() {
   await loadAuthStatus();
 
   await loadBookingPage();
+}
+
+function handleBackendLanguageChanged() {
+  renderStaticSectionHeaders();
+  renderBookingHeader();
+  renderBookingData();
+  renderActionControls();
+  renderPersonsEditor();
+  renderTravelPlanPanel();
+  renderOfferPanel();
+  renderPricingPanel();
+  void loadActivities();
 }
 
 function bindSectionNavigation(activeSection) {

@@ -100,7 +100,7 @@ end
 
 def write_file(path, content)
   FileUtils.mkdir_p(File.dirname(path))
-  File.write(path, content)
+  File.write(path, content.to_s.sub(/\n+\z/, "\n"))
 end
 
 def relative_module_path(from_dir, to_file)

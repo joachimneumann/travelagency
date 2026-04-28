@@ -28,13 +28,16 @@
 .home-page .hero-content {
   z-index: 3;
   width: min(1120px, 100%);
-  align-items: flex-start;
-  justify-content: center;
-  gap: 1.35rem;
-  padding: 6.5rem 1.25rem 5.5rem;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 0;
+  padding: clamp(4.5rem, 7.5vh, 5.75rem) 1.25rem 5.5rem;
 }
 
 .home-page .hero-title-only {
+  position: absolute;
+  left: 1.25rem;
+  bottom: clamp(7rem, 23vh, 13rem);
   font-family: var(--font-family-display);
   font-size: clamp(2.5rem, 5.2vw, 4.8rem);
   font-weight: var(--font-weight-medium);
@@ -52,7 +55,7 @@
 }
 
 .home-page .filter-menu--hero {
-  --hero-filter-control-height: 3.6rem;
+  --hero-filter-control-height: 3.85rem;
   width: 100%;
   max-width: 100%;
   flex-wrap: nowrap;
@@ -100,16 +103,18 @@
   min-height: var(--hero-filter-control-height);
   width: 100%;
   border-radius: 16px;
-  background: rgba(255, 255, 255, 0.14);
-  border-color: rgba(255, 255, 255, 0.2);
-  color: var(--surface);
-  box-shadow: none;
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(255, 255, 255, 0.72);
+  color: var(--text-strong);
+  box-shadow: 0 16px 34px rgba(6, 18, 24, 0.22);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-bold);
 }
 
 .home-page .hero .filter-menu--hero .filter-select-trigger:hover,
 .home-page .hero .filter-menu--hero .filter-select-trigger:focus-visible {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.3);
+  background: var(--surface);
+  border-color: rgba(255, 255, 255, 0.92);
 }
 
 .home-page .hero .filter-menu--hero .filter-select-panel {
@@ -227,7 +232,8 @@
   min-height: var(--hero-filter-control-height);
   padding-inline: 1.4rem;
   border-radius: 16px;
-  box-shadow: 0 16px 30px rgba(177, 74, 27, 0.22);
+  box-shadow: 0 16px 34px rgba(6, 18, 24, 0.22), 0 10px 24px rgba(177, 74, 27, 0.28);
+  font-size: var(--font-size-body);
   white-space: nowrap;
 }
 
@@ -274,7 +280,7 @@
 
 @media (max-width: 1024px) {
   .home-page .hero-content {
-    padding-top: 5.8rem;
+    padding-top: clamp(4.4rem, 7vh, 5.5rem);
     padding-bottom: 5rem;
   }
 
@@ -291,13 +297,16 @@
   .home-page .hero-content {
     align-items: center;
     text-align: center;
-    padding: 4.8rem 1rem 4rem;
+    padding: 4.15rem 1rem 4rem;
   }
 
   .home-page .hero-title-only {
+    left: 50%;
+    bottom: clamp(7rem, 22vh, 11rem);
     max-width: 12ch;
     text-align: center;
     font-size: clamp(2.2rem, 9vw, 3.5rem);
+    transform: translateX(-50%);
   }
 
   .home-page .filter-menu--hero {

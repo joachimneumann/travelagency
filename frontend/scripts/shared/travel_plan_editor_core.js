@@ -1919,7 +1919,6 @@ export function createBookingTravelPlanModule(ctx) {
       );
       day.notes = dayNotes.text;
       day.notes_i18n = dayNotes.map;
-      day.copied_from = previousDay?.copied_from || null;
       day.services = Array.from(dayNode.querySelectorAll("[data-travel-plan-service]")).map((itemNode) => {
         const itemId = String(itemNode.getAttribute("data-travel-plan-service") || "").trim();
         const previousItem = previousItemsById.get(itemId);
@@ -2007,7 +2006,6 @@ export function createBookingTravelPlanModule(ctx) {
                 : {})
             }
           : null;
-        item.copied_from = previousItem?.copied_from || null;
         return item;
       });
       return day;

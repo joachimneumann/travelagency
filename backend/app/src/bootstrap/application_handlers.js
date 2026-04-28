@@ -16,6 +16,7 @@ import { createCountryReferenceHandlers } from "../http/handlers/country_referen
 import { createDestinationScopeHandlers } from "../http/handlers/destination_scope.js";
 import { createKeycloakUserHandlers } from "../http/handlers/keycloak_users.js";
 import { createStandardTourHandlers } from "../http/handlers/standard_tours.js";
+import { createStaticTranslationHandlers } from "../http/handlers/static_translations.js";
 import { createTourHandlers } from "../http/handlers/tours.js";
 import { createTranslationRulesHandlers } from "../http/handlers/translation_rules.js";
 
@@ -54,6 +55,8 @@ export function createApplicationRoutes({
     atpStaffDirectory,
     countryReferenceStore,
     translationRulesStore,
+    staticTranslationService,
+    staticTranslationApplyJobs,
     travelPlanPdfArtifacts,
     metaWebhookHandlers,
     tourHelpers,
@@ -443,6 +446,15 @@ export function createApplicationRoutes({
     actorLabel: bookingViewHelpers.actorLabel
   });
 
+  const staticTranslationHandlers = createStaticTranslationHandlers({
+    readBodyJson: httpHelpers.readBodyJson,
+    sendJson: httpHelpers.sendJson,
+    getPrincipal,
+    canReadSettings,
+    staticTranslationService,
+    staticTranslationApplyJobs
+  });
+
   return buildApiRoutes({
     authRoutes: auth.routes,
     handlers: {
@@ -464,6 +476,7 @@ export function createApplicationRoutes({
       ...countryReferenceHandlers,
       ...destinationScopeHandlers,
       ...translationRulesHandlers,
+      ...staticTranslationHandlers,
       ...tourHandlers,
       ...standardTourHandlers
     }

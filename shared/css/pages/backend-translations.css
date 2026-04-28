@@ -1,0 +1,207 @@
+.backend-translations-page .translations-workspace {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.backend-translations-page .translations-workspace__head,
+.backend-translations-page .translations-controls,
+.backend-translations-page .translations-advanced__actions {
+  display: grid;
+  gap: 1rem;
+}
+
+.backend-translations-page .translations-workspace__head {
+  align-items: start;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.backend-translations-page .translations-workspace__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.backend-translations-page .translations-workspace__status {
+  flex-basis: 100%;
+  margin: 0;
+  text-align: right;
+}
+
+.backend-translations-page .translations-controls {
+  grid-template-columns: minmax(180px, 0.9fr) minmax(160px, 0.7fr) minmax(260px, 1.4fr) minmax(160px, 0.7fr);
+  align-items: end;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--surface-muted) 82%, white);
+}
+
+.backend-translations-page .translations-controls .field {
+  margin-bottom: 0;
+}
+
+.backend-translations-page .translations-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.backend-translations-page .translations-summary__pill {
+  display: inline-flex;
+  gap: 0.35rem;
+  align-items: center;
+  padding: 0.35rem 0.65rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fffaf0;
+  color: #24362f;
+}
+
+.backend-translations-page .translations-table-wrap {
+  max-height: 72vh;
+  overflow: auto;
+}
+
+.backend-translations-page .translations-table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.backend-translations-page .translations-table td {
+  vertical-align: top;
+}
+
+.backend-translations-page .translations-table__key {
+  min-width: 220px;
+  max-width: 320px;
+}
+
+.backend-translations-page .translations-table__key code {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.backend-translations-page .translations-table__text {
+  min-width: 240px;
+  max-width: 360px;
+  white-space: pre-wrap;
+}
+
+.backend-translations-page .translations-table__override {
+  width: min(34vw, 420px);
+  min-width: 260px;
+  resize: vertical;
+  font: inherit;
+}
+
+.backend-translations-page .translations-table__meta {
+  margin-top: 0.45rem;
+}
+
+.backend-translations-page .translations-table__meta summary {
+  cursor: pointer;
+  color: #5f6b7a;
+  font-size: 0.78rem;
+}
+
+.backend-translations-page .translations-table__meta pre,
+.backend-translations-page .translations-apply-log {
+  max-width: 100%;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 0.78rem;
+}
+
+.backend-translations-page .translations-status {
+  display: inline-flex;
+  margin-bottom: 0.35rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  background: #edf1ee;
+  color: #24362f;
+}
+
+.backend-translations-page .translations-status--manual_override {
+  background: #e8f5e9;
+  color: #17632d;
+}
+
+.backend-translations-page .translations-status--content_translation {
+  background: #e7f0ff;
+  color: #17406f;
+}
+
+.backend-translations-page .translations-status--stale,
+.backend-translations-page .translations-status--missing {
+  background: #fff0d8;
+  color: #8a4d00;
+}
+
+.backend-translations-page .translations-status--extra {
+  background: #f4e5e5;
+  color: #8a1f1f;
+}
+
+.backend-translations-page .translations-table__updated {
+  display: block;
+  color: #5f6b7a;
+  font-size: 0.78rem;
+}
+
+.backend-translations-page .translations-table tr.is-dirty td {
+  background: #fff9df;
+}
+
+.backend-translations-page .translations-advanced {
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+}
+
+.backend-translations-page .translations-advanced summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.backend-list-page .translations-apply-overlay__panel {
+  width: min(760px, calc(100vw - 2rem));
+  gap: 0.85rem;
+}
+
+.backend-translations-page .translations-apply-log {
+  width: 100%;
+  max-height: 44vh;
+  margin: 0;
+  padding: 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.18);
+  color: #fff;
+  text-align: left;
+}
+
+@media (max-width: 900px) {
+  .backend-translations-page .translations-workspace__head,
+  .backend-translations-page .translations-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .backend-translations-page .translations-workspace__actions {
+    justify-content: flex-start;
+  }
+
+  .backend-translations-page .translations-workspace__status {
+    text-align: left;
+  }
+
+  .backend-translations-page .translations-table__override {
+    width: 100%;
+  }
+}

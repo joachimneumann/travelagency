@@ -150,6 +150,7 @@ export function createMarketingTourBookingTravelPlanCloner(deps) {
   }) {
     const nextServiceId = `travel_plan_service_${randomUUID()}`;
     const title = cloneLocalizedTextField(service, "title", "title_i18n", normalizeText);
+    const details = cloneLocalizedTextField(service, "details", "details_i18n", normalizeText);
     const imageSubtitle = cloneLocalizedTextField(
       service,
       "image_subtitle",
@@ -172,16 +173,15 @@ export function createMarketingTourBookingTravelPlanCloner(deps) {
       kind: normalizeText(service?.kind) || "other",
       title: title.text,
       title_i18n: title.map,
-      details: null,
-      details_i18n: {},
+      details: details.text || null,
+      details_i18n: details.map,
       image_subtitle: imageSubtitle.text || null,
       image_subtitle_i18n: imageSubtitle.map,
       location: null,
       location_i18n: {},
       start_time: null,
       end_time: null,
-      image: nextImage,
-      copied_from: null
+      image: nextImage
     };
   }
 
@@ -216,8 +216,7 @@ export function createMarketingTourBookingTravelPlanCloner(deps) {
         })
       ))),
       notes: notes.text || null,
-      notes_i18n: notes.map,
-      copied_from: null
+      notes_i18n: notes.map
     };
   }
 

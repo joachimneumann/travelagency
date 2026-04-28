@@ -17,6 +17,8 @@ import { createStoreUtils } from "../lib/store_utils.js";
 import { createAtpStaffDirectory } from "../lib/atp_staff_directory.js";
 import { createCountryReferenceStore } from "../lib/country_reference_store.js";
 import { createTranslationRulesStore } from "../lib/translation_rules_store.js";
+import { createStaticTranslationApplyJobs } from "../domain/static_translation_apply_jobs.js";
+import { createStaticTranslationService } from "../domain/static_translations.js";
 
 export function createBackendServices({
   runtime,
@@ -143,6 +145,22 @@ export function createBackendServices({
     convertBookingOfferToBaseCurrency: pricingHelpers.convertBookingOfferToBaseCurrency
   });
 
+  const repoRoot = runtime.paths?.repoRoot || collections.repoRoot;
+
+  const staticTranslationService = createStaticTranslationService({
+    repoRoot,
+    readStore: storeUtils.readStore,
+    persistStore: storeUtils.persistStore,
+    readTours: storeUtils.readTours,
+    persistTour: storeUtils.persistTour,
+    nowIso: support.nowIso
+  });
+
+  const staticTranslationApplyJobs = createStaticTranslationApplyJobs({
+    repoRoot,
+    nowIso: support.nowIso
+  });
+
   const metaWebhookHandlers = createMetaWebhookHandlers({
     metaWebhookEnabled: runtime.metaWebhookConfig.metaWebhookEnabled,
     whatsappWebhookEnabled: runtime.metaWebhookConfig.whatsappWebhookEnabled,
@@ -215,6 +233,8 @@ export function createBackendServices({
     atpStaffDirectory,
     countryReferenceStore,
     translationRulesStore,
+    staticTranslationService,
+    staticTranslationApplyJobs,
     travelPlanPdfArtifacts,
     metaWebhookHandlers,
     tourHelpers,

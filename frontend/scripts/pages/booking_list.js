@@ -395,6 +395,7 @@ async function init() {
       canReadBookings: Boolean(authState.permissions?.canReadBookings)
     };
     bindControls();
+    window.addEventListener("backend-i18n-changed", handleBackendLanguageChanged);
 
     if (state.permissions.canReadBookings) {
       await loadBookings();
@@ -414,6 +415,14 @@ async function init() {
       apiOrigin
     }, error);
   }
+}
+
+function handleBackendLanguageChanged() {
+  if (!state.permissions.canReadBookings) {
+    showError(backendT("booking.error.forbidden", "You do not have access to bookings."));
+    return;
+  }
+  void loadBookings();
 }
 
 function bindControls() {

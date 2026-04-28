@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en" translate="no">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Translations</title>
+    <meta name="description" content="AsiaTravelPlan backend translation overrides" />
+    <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml" />
+    <script>
+      if (!window.ASIATRAVELPLAN_API_BASE && ["localhost", "127.0.0.1"].includes(window.location.hostname)) {
+        window.ASIATRAVELPLAN_API_BASE = window.location.origin;
+      }
+    </script>
+    <script>
+      if (["localhost", "127.0.0.1"].includes(window.location.hostname)) {
+        const diagnosticsScript = document.createElement("script");
+        diagnosticsScript.src = "/frontend/scripts/shared/localhost_diagnostics.js";
+        document.head.append(diagnosticsScript);
+      }
+    </script>
+    <link rel="stylesheet" href="assets/css/styles.css" />
+  </head>
+  <body class="backend-list-page backend-translations-page">
+    <header class="header" id="top">
+      <div class="container header-wrap">
+        <a class="brand" id="backendHomeLink" href="bookings.html" aria-label="AsiaTravelPlan backend home">
+          <img class="brand-logo" src="/assets/generated/runtime/brand-logo.png" alt="AsiaTravelPlan" width="165" height="68" />
+        </a>
+        <div id="backendNavMount"></div>
+      </div>
+    </header>
+
+    <main id="main-content">
+      <section class="section">
+        <div class="container">
+          <div id="backendError" class="backend-message" role="alert" aria-live="assertive"></div>
+
+          <section class="backend-section translations-workspace" id="translationsPanel" hidden>
+            <div class="translations-workspace__head">
+              <div>
+                <h1 class="section-title u-title-medium">Translations</h1>
+                <p class="micro" id="translationsIntro">Manage static translation overrides and inspect cached generated strings.</p>
+              </div>
+              <div class="translations-workspace__actions">
+                <p class="micro translations-workspace__status" id="translationsStatus" role="status" aria-live="polite"></p>
+                <button class="btn btn-ghost" id="translationsRefreshBtn" type="button">Refresh</button>
+                <button class="btn btn-ghost" id="translationsExportBtn" type="button">Export overrides</button>
+                <button class="btn btn-ghost" id="translationsImportBtn" type="button">Import overrides</button>
+                <input id="translationsImportInput" type="file" accept="application/json,.json" hidden />
+                <button class="btn btn-primary" id="translationsSaveBtn" type="button" disabled>Save overrides</button>
+                <button class="btn btn-primary" id="translationsApplyBtn" type="button">Apply</button>
+              </div>
+            </div>
+
+            <div class="translations-controls">
+              <div class="field">
+                <label for="translationsDomainSelect">Area</label>
+                <select id="translationsDomainSelect"></select>
+              </div>
+              <div class="field">
+                <label for="translationsLanguageSelect">Language</label>
+                <select id="translationsLanguageSelect"></select>
+              </div>
+              <div class="field">
+                <label for="translationsSearchInput">Search</label>
+                <input id="translationsSearchInput" type="search" autocomplete="off" placeholder="Key, source, cache, override" />
+              </div>
+              <div class="field">
+                <label for="translationsStatusFilter">Status</label>
+                <select id="translationsStatusFilter">
+                  <option value="">All</option>
+                  <option value="manual_override">Manual overrides</option>
+                  <option value="content_translation">Content translations</option>
+                  <option value="stale">Stale</option>
+                  <option value="missing">Missing</option>
+                  <option value="machine">Machine</option>
+                  <option value="legacy">Legacy</option>
+                  <option value="extra">Extra</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="translations-summary" id="translationsSummary"></div>
+
+            <div class="backend-table-wrap translations-table-wrap">
+              <table class="backend-table translations-table" id="translationsTable"></table>
+            </div>
+
+            <details class="translations-advanced">
+              <summary>Advanced retranslation and cache invalidation</summary>
+              <p class="micro">Use these only when cached machine translations are poor. Manual overrides are preserved by the sync scripts.</p>
+              <div class="translations-advanced__actions">
+                <button class="btn btn-ghost" id="translationsRetranslateCurrentBtn" type="button">Retranslate current language</button>
+                <button class="btn btn-ghost" id="translationsRetranslateFrontendAllBtn" type="button">Retranslate all customer-facing languages</button>
+                <button class="btn btn-ghost" id="translationsRetranslateBackendViBtn" type="button">Retranslate backend Vietnamese</button>
+              </div>
+            </details>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <div class="booking-page-overlay" id="translationsApplyOverlay" hidden aria-hidden="true">
+      <div class="booking-page-overlay__panel translations-apply-overlay__panel" role="status" aria-live="assertive">
+        <span class="booking-page-overlay__spinner" aria-hidden="true"></span>
+        <span class="booking-page-overlay__text" id="translationsApplyOverlayText">Applying translations. Please wait.</span>
+        <pre class="translations-apply-log" id="translationsApplyLog"></pre>
+      </div>
+    </div>
+
+    <script src="shared/generated/language_catalog.global.js"></script>
+    <script src="frontend/scripts/shared/backend_i18n.js"></script>
+    <script type="module">
+      import { mountBackendNav } from "./frontend/scripts/shared/nav.js";
+      await (window.__BACKEND_I18N_PROMISE || Promise.resolve());
+      mountBackendNav(document.getElementById("backendNavMount"), { currentSection: "translations" });
+    </script>
+    <script type="module" src="frontend/scripts/pages/translations.js"></script>
+  </body>
+</html>

@@ -459,6 +459,8 @@ export function createTourHandlers(deps) {
       kind: normalizeText(sourceItem?.kind) || "other",
       title: normalizeText(sourceItem?.title),
       title_i18n: includeTranslations && sourceItem?.title_i18n ? { ...sourceItem.title_i18n } : undefined,
+      details: normalizeText(sourceItem?.details),
+      details_i18n: includeTranslations && sourceItem?.details_i18n ? { ...sourceItem.details_i18n } : undefined,
       image_subtitle: normalizeText(sourceItem?.image_subtitle),
       image_subtitle_i18n: includeTranslations && sourceItem?.image_subtitle_i18n ? { ...sourceItem.image_subtitle_i18n } : undefined,
       location: normalizeText(sourceItem?.location),

@@ -714,6 +714,7 @@ async function init() {
 
   renderPermissionScopedSections();
   updateStatusCopy();
+  window.addEventListener("backend-i18n-changed", handleBackendLanguageChanged);
   if (state.permissions.canReadSettings) {
     await Promise.all([
       state.permissions.canReadObservability ? loadObservability() : Promise.resolve(),
@@ -727,6 +728,21 @@ async function init() {
   } else {
     showError(backendT("backend.settings.forbidden", "You do not have access to reports and settings."));
   }
+}
+
+function handleBackendLanguageChanged() {
+  syncExpandedEmergencyCountriesFromDom();
+  syncEmergencyStateFromDom();
+  syncTranslationRulesStateFromDom();
+  renderPermissionScopedSections();
+  updateStatusCopy();
+  renderObservability();
+  renderTranslationRules();
+  renderWebsiteDestinationPublication();
+  renderEmergencyAddCountryOptions();
+  renderEmergencyEditor();
+  renderStaff(state.keycloakUsers);
+  renderEditor();
 }
 
 function bindEvents() {

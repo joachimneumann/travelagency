@@ -274,6 +274,7 @@ async function init() {
 
   renderDestinationChoices();
   bindControls();
+  window.addEventListener("backend-i18n-changed", handleBackendLanguageChanged);
   dirtyBarController.bind();
   travelPlanEditor.bind();
 
@@ -283,6 +284,32 @@ async function init() {
   }
 
   await loadStandardTour();
+}
+
+function handleBackendLanguageChanged() {
+  const draftTitle = normalizeText(els.titleInput?.value);
+  const draftDestinations = selectedDestinationValues();
+  const travelPlan = state.travelPlanDraft || state.booking?.travel_plan || { days: [], attachments: [] };
+
+  renderDestinationChoices();
+
+  if (els.heading) {
+    els.heading.textContent = draftTitle || normalizeText(state.standardTour?.title) || backendT("backend.standard_tours.detail_heading", "Standard tour");
+  }
+  if (els.subtitle) {
+    els.subtitle.textContent = draftDestinations.length
+      ? draftDestinations.join(" · ")
+      : backendT("backend.standard_tours.detail_subtitle", "Edit title, destinations, and travel plan.");
+  }
+  if (els.titleInput) {
+    els.titleInput.value = draftTitle;
+  }
+  setSelectedDestinationValues(draftDestinations);
+  travelPlanEditor.applyStandardTour({
+    id: normalizeText(state.booking?.id || state.id),
+    travel_plan: travelPlan
+  });
+  updatePageDirtyBar();
 }
 
 function bindControls() {

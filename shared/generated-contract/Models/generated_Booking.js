@@ -304,4 +304,3 @@ export const GENERATED_OFFER_CATEGORIES = Object.freeze([
       export function validateBooking(value) {
         return validateShape(value, BOOKING_SCHEMA);
       }
-

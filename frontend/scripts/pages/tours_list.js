@@ -231,6 +231,7 @@ async function init() {
     canEditTours: Boolean(authState.permissions?.canEditTours)
   };
   bindControls();
+  window.addEventListener("backend-i18n-changed", handleBackendLanguageChanged);
   if (els.toursCreateBtn) els.toursCreateBtn.hidden = !state.permissions.canEditTours;
 
   if (state.permissions.canReadTours) {
@@ -239,6 +240,16 @@ async function init() {
   } else {
     showError(backendT("tour.error.forbidden", "You do not have access to tours."));
   }
+}
+
+function handleBackendLanguageChanged() {
+  if (!state.permissions.canReadTours) {
+    showError(backendT("tour.error.forbidden", "You do not have access to tours."));
+    return;
+  }
+  renderDestinationScopeFilter();
+  renderDestinationCatalog();
+  void loadTours();
 }
 
 function bindControls() {

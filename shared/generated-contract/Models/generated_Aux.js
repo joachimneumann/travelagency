@@ -56,4 +56,3 @@ import { SHARED_FIELD_DEFS, schemaField, validateShape } from './generated_Schem
       export function validateWebsiteBookingForm(value) {
         return validateShape(value, WEBSITE_BOOKING_FORM_SCHEMA);
       }
-

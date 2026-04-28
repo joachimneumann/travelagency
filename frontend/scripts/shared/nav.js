@@ -45,6 +45,8 @@ export function resolveBackendSectionHref(section) {
         ? "standard-tours.html"
       : normalizedSection === "settings"
         ? "settings.html"
+      : normalizedSection === "translations"
+        ? "translations.html"
       : normalizedSection === "emergency"
         ? "settings.html"
         : "bookings.html";
@@ -68,6 +70,7 @@ function applyNavPermissions(mount, roles) {
   const canReadStandardTours = hasAnyRole(resolvedRoles, "atp_tour_editor");
   const canReadTours = hasAnyRole(resolvedRoles, "atp_admin", "atp_accountant", "atp_tour_editor");
   const canReadSettings = hasAnyRole(resolvedRoles, "atp_admin");
+  const canReadTranslations = hasAnyRole(resolvedRoles, "atp_admin");
   mount
     .querySelectorAll(".backend-section-nav__item[data-backend-section]")
     .forEach((button) => {
@@ -76,6 +79,7 @@ function applyNavPermissions(mount, roles) {
         (section === "bookings" && canReadBookings) ||
         (section === "standard-tours" && canReadStandardTours) ||
         (section === "tours" && canReadTours) ||
+        (section === "translations" && canReadTranslations) ||
         (section === "settings" && canReadSettings);
       button.hidden = !visible;
       button.classList.toggle("is-hidden", !visible);
@@ -103,6 +107,7 @@ export function mountBackendNav(mount, options = {}) {
           ${buildSectionButton("bookings", backendT("nav.bookings", "Bookings"), { type: "image", src: "assets/img/profile_booking.png", size: "large" })}
           ${buildSectionButton("standard-tours", backendT("nav.standard_tours", "Standard tours"), { type: "image", src: "assets/img/standardTour.png", size: "large" })}
           ${buildSectionButton("settings", backendT("nav.settings", "Reports and Settings"), { type: "image", src: "assets/img/profile_person.png", size: "large" })}
+          ${buildSectionButton("translations", backendT("nav.translations", "Translations"), { type: "image", src: "assets/img/translation.png", size: "large" })}
           ${buildSectionButton("tours", "Marketing Tour", { type: "image", src: "assets/img/marketing_tours.png", size: "large" })}
         </div>
       </div>
@@ -162,4 +167,12 @@ export function mountBackendNav(mount, options = {}) {
     .catch(() => {
       applyNavPermissions(mount, cachedRoles);
     });
+
+  if (typeof mount.__backendNavLanguageHandler === "function") {
+    window.removeEventListener("backend-i18n-changed", mount.__backendNavLanguageHandler);
+  }
+  mount.__backendNavLanguageHandler = () => {
+    mountBackendNav(mount, options);
+  };
+  window.addEventListener("backend-i18n-changed", mount.__backendNavLanguageHandler);
 }

@@ -110,14 +110,6 @@ export function createBookingTravelPlanImagesModule(deps) {
 
   function renderTravelPlanServiceImages(day, item, { variant = "default", editable = true } = {}) {
     const image = resolveCurrentItemImage(item);
-    const copiedFrom = item?.copied_from || null;
-    const copiedFromText = copiedFrom?.source_booking_id
-      ? bookingT(
-        "booking.travel_plan.copied_from_booking",
-        "Copied from booking {booking}",
-        { booking: copiedFrom.source_booking_id }
-      )
-      : "";
     const placeholderSrc = "assets/img/service.png";
     const primaryPreviewSrc = image
       ? resolveTravelPlanImageSrc(image.storage_path, apiOrigin)
@@ -186,7 +178,6 @@ export function createBookingTravelPlanImagesModule(deps) {
       <div class="travel-plan-images${variant === "sidebar" ? " travel-plan-images--sidebar" : ""}">
         ${heroMedia}
         ${includeInTourCardControl}
-        ${copiedFromText ? `<p class="travel-plan-images__copied-from">${escapeHtml(copiedFromText)}</p>` : ""}
       </div>
     `;
   }

@@ -191,6 +191,7 @@ const services = createBackendServices({
     translationEnabled: TRANSLATION_ENABLED
   },
   collections: {
+    repoRoot: RUNTIME_PATHS.repoRoot,
     dataPath: RUNTIME_PATHS.dataPath,
     toursDir: RUNTIME_PATHS.toursDir,
     standardToursDir: RUNTIME_PATHS.standardToursDir,

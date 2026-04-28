@@ -322,7 +322,7 @@ export function createTourTravelPlanAdapter({
         pdfs: false,
         translation: false,
         tourCardImageSelection: true,
-        serviceDetails: false,
+        serviceDetails: true,
         renumberDays: false,
         destinationScope: true,
         destinationScopeCreate: false,

@@ -124,14 +124,22 @@
 
     <main id="main-content">
       <section class="hero hero-video" id="hero">
-        <video class="hero-bg-video" muted loop playsinline preload="none" poster="/assets/video/rice field.webp" data-deferred-autoplay>
-          <source data-src="/assets/video/rice field-mobile.mp4" media="(max-width: 760px)" type="video/mp4" />
-          <source data-src="/assets/video/rice field.mp4" type="video/mp4" />
+        <video
+          class="hero-bg-video"
+          muted
+          loop
+          playsinline
+          preload="none"
+          poster="/assets/video/rice%20field.webp"
+          data-deferred-autoplay
+          data-mobile-src="/assets/video/rice%20field-mobile.mp4"
+          data-desktop-src="/assets/video/rice%20field.mp4"
+        >
           <span data-i18n-id="hero.video_fallback">Your browser does not support HTML5 video.</span>
         </video>
         <div class="hero-scrim" aria-hidden="true"></div>
         <div class="container hero-content">
-          <h1 id="heroTitle" class="hero-title-only" data-i18n-id="hero.title">Private Holidays in Southeast Asia</h1>
+          <h1 id="heroTitle" class="hero-title-only" data-i18n-id="hero.title">Private holidays in Vietnam</h1>
           <div class="filter-menu filter-menu--hero" aria-label="Primary browse menu" data-i18n-aria-label-id="a11y.browse_menu">
             <div class="filter-menu--hero__filters">
               <div class="select-wrap">
@@ -614,7 +622,6 @@
         if (!heroVideo) return;
         if (window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) return;
 
-        const heroVideoSources = Array.from(heroVideo.querySelectorAll("source[data-src]"));
         const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
         let playbackStarted = false;
         let sourceAttached = false;
@@ -624,16 +631,18 @@
           return !/2g/i.test(String(connection?.effectiveType || ""));
         };
 
-        const findHeroVideoSource = () => heroVideoSources.find((source) => {
-          const media = source.getAttribute("media");
-          if (!media) return true;
-          return typeof window.matchMedia === "function" && window.matchMedia(media).matches;
-        });
+        const chooseHeroVideoSource = () => {
+          const mobileSource = heroVideo.dataset.mobileSrc || "";
+          const desktopSource = heroVideo.dataset.desktopSrc || "";
+          const useMobile = typeof window.matchMedia === "function"
+            && window.matchMedia("(max-width: 760px)").matches;
+          return useMobile ? mobileSource || desktopSource : desktopSource || mobileSource;
+        };
 
         const attachVideoSource = () => {
-          const heroVideoSource = findHeroVideoSource();
-          if (sourceAttached || !heroVideoSource?.dataset?.src) return;
-          heroVideoSource.src = heroVideoSource.dataset.src;
+          const heroVideoSource = chooseHeroVideoSource();
+          if (sourceAttached || !heroVideoSource) return;
+          heroVideo.src = heroVideoSource;
           sourceAttached = true;
           heroVideo.load();
         };

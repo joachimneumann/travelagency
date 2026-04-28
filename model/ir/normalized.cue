@@ -199,10 +199,12 @@ IR: {
 				{name: "timing_kind", kind: "enum", typeName: "TravelPlanTimingKind", required: true},
 				{name: "time_label", kind: "scalar", typeName: "string", required: false},
 				{name: "time_point", kind: "scalar", typeName: "string", required: false},
-				{name: "kind", kind: "enum", typeName: "TravelPlanServiceKind", required: true},
-				{name: "title", kind: "scalar", typeName: "string", required: false},
-				{name: "image_subtitle", kind: "scalar", typeName: "string", required: false},
-				{name: "image_subtitle_i18n", kind: "map", typeName: "string", required: false},
+					{name: "kind", kind: "enum", typeName: "TravelPlanServiceKind", required: true},
+					{name: "title", kind: "scalar", typeName: "string", required: false},
+					{name: "details", kind: "scalar", typeName: "string", required: false},
+					{name: "details_i18n", kind: "map", typeName: "string", required: false},
+					{name: "image_subtitle", kind: "scalar", typeName: "string", required: false},
+					{name: "image_subtitle_i18n", kind: "map", typeName: "string", required: false},
 				{name: "location", kind: "scalar", typeName: "string", required: false},
 				{name: "start_time", kind: "scalar", typeName: "string", required: false},
 				{name: "end_time", kind: "scalar", typeName: "string", required: false},
@@ -395,20 +397,6 @@ IR: {
 			]
 		},
 		{
-			name:       "BookingTravelPlanServiceCopiedFrom"
-			domain:     "booking"
-			module:     "database"
-			sourceType: "database.#BookingTravelPlanServiceCopiedFrom"
-			fields: [
-				{name: "source_type", kind: "scalar", typeName: "string", required: true},
-				{name: "source_booking_id", kind: "scalar", typeName: "Identifier", required: true},
-				{name: "source_day_id", kind: "scalar", typeName: "Identifier", required: false},
-				{name: "source_service_id", kind: "scalar", typeName: "Identifier", required: true},
-				{name: "copied_at", kind: "scalar", typeName: "Timestamp", required: true},
-				{name: "copied_by_atp_staff_id", kind: "scalar", typeName: "Identifier", required: false},
-			]
-		},
-		{
 			name:       "BookingTravelPlanService"
 			domain:     "booking"
 			module:     "database"
@@ -418,16 +406,16 @@ IR: {
 				{name: "timing_kind", kind: "enum", typeName: "TravelPlanTimingKind", required: true},
 				{name: "time_label", kind: "scalar", typeName: "string", required: false},
 				{name: "time_point", kind: "scalar", typeName: "string", required: false},
-				{name: "kind", kind: "enum", typeName: "TravelPlanServiceKind", required: true},
-				{name: "title", kind: "scalar", typeName: "string", required: false},
-				{name: "details", kind: "scalar", typeName: "string", required: false},
-				{name: "image_subtitle", kind: "scalar", typeName: "string", required: false},
+					{name: "kind", kind: "enum", typeName: "TravelPlanServiceKind", required: true},
+					{name: "title", kind: "scalar", typeName: "string", required: false},
+					{name: "details", kind: "scalar", typeName: "string", required: false},
+					{name: "details_i18n", kind: "map", typeName: "string", required: false},
+					{name: "image_subtitle", kind: "scalar", typeName: "string", required: false},
 				{name: "image_subtitle_i18n", kind: "map", typeName: "string", required: false},
 				{name: "location", kind: "scalar", typeName: "string", required: false},
 				{name: "start_time", kind: "scalar", typeName: "string", required: false},
 				{name: "end_time", kind: "scalar", typeName: "string", required: false},
 				{name: "image", kind: "entity", typeName: "BookingTravelPlanServiceImage", required: false},
-				{name: "copied_from", kind: "entity", typeName: "BookingTravelPlanServiceCopiedFrom", required: false},
 			]
 		},
 		{

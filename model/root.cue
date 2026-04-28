@@ -25,7 +25,6 @@ import (
 		BookingTravelPlanServiceImage:                  databaseModel.#BookingTravelPlanServiceImage
 		BookingTravelPlanServiceImageSourceAttribution: databaseModel.#BookingTravelPlanServiceImageSourceAttribution
 		BookingTravelPlanServiceImageFocalPoint:        databaseModel.#BookingTravelPlanServiceImageFocalPoint
-		BookingTravelPlanServiceCopiedFrom:             databaseModel.#BookingTravelPlanServiceCopiedFrom
 		TravelPlanDestinationScopeEntry:                databaseModel.#TravelPlanDestinationScopeEntry
 		TravelPlanDestinationAreaSelection:             databaseModel.#TravelPlanDestinationAreaSelection
 		TravelPlanDestinationPlaceSelection:            databaseModel.#TravelPlanDestinationPlaceSelection
