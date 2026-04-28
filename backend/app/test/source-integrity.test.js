@@ -4075,6 +4075,7 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
     marketingToursHtml,
     privacyHtml,
     settingsHtml,
+    translationsHtml,
     travelerDetailsHtml,
     localCaddy,
     stagingCaddy,
@@ -4097,6 +4098,7 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
     readFile(path.join(frontendRoot, "pages", "marketing_tours.html"), "utf8"),
     readFile(path.join(frontendRoot, "pages", "privacy.html"), "utf8"),
     readFile(path.join(frontendRoot, "pages", "settings.html"), "utf8"),
+    readFile(path.join(frontendRoot, "pages", "translations.html"), "utf8"),
     readFile(path.join(frontendRoot, "pages", "traveler-details.html"), "utf8"),
     readFile(path.join(deployRoot, "Caddyfile.local"), "utf8"),
     readFile(path.join(deployRoot, "Caddyfile"), "utf8"),
@@ -4127,6 +4129,11 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
     "settings.html should mount the settings page script"
   );
   assert.match(
+    translationsHtml,
+    /frontend\/scripts\/pages\/translations\.js/,
+    "translations.html should mount the translations admin page script"
+  );
+  assert.match(
     emergencyHtml,
     /frontend\/scripts\/pages\/emergency\.js/,
     "emergency.html should mount the emergency page script"
@@ -4140,6 +4147,7 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
     marketingToursHtml,
     privacyHtml,
     settingsHtml,
+    translationsHtml,
     travelerDetailsHtml
   ]) {
     assert.match(
@@ -4237,6 +4245,7 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
     assert.match(source, /\/marketing_tour\.html/, "Caddy should serve marketing_tour.html");
     assert.match(source, /\/tour\.html/, "Caddy should keep redirecting legacy tour.html");
     assert.match(source, /\/settings\.html/, "Caddy should serve settings.html");
+    assert.match(source, /\/translations\.html/, "Caddy should serve translations.html");
     assert.match(source, /\/emergency\.html/, "Caddy should serve emergency.html");
   }
   assert.match(

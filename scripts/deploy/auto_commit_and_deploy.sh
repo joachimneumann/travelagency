@@ -59,6 +59,22 @@ collect_services() {
   done < <(normalize_target "$1")
 }
 
+split_remote_services() {
+  local service
+  STAGING_SERVICES=()
+  DEPLOY_SHARED_CADDY=0
+  for service in "$@"; do
+    case "$service" in
+      caddy)
+        DEPLOY_SHARED_CADDY=1
+        ;;
+      *)
+        STAGING_SERVICES+=("$service")
+        ;;
+    esac
+  done
+}
+
 should_run_tests() {
   local service
   for service in "$@"; do
@@ -230,5 +246,13 @@ if [[ -n "$(git status --porcelain)" ]]; then
   exit 1
 fi
 
-remote_args="$(printf "%q " "${SERVICES[@]}")"
-ssh atp "bash -lc 'cd /srv/asiatravelplan-staging && git pull --ff-only && $REMOTE_SCRIPT ${remote_args}'"
+split_remote_services "${SERVICES[@]}"
+
+if [[ "${#STAGING_SERVICES[@]}" -gt 0 ]]; then
+  remote_args="$(printf "%q " "${STAGING_SERVICES[@]}")"
+  ssh atp "bash -lc 'cd /srv/asiatravelplan-staging && git pull --ff-only && $REMOTE_SCRIPT ${remote_args}'"
+fi
+
+if [[ "$DEPLOY_SHARED_CADDY" -eq 1 ]]; then
+  ssh atp "bash -lc 'cd /srv/asiatravelplan && git pull --ff-only && ./scripts/production/deploy_production_caddy.sh'"
+fi
