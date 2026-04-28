@@ -2,6 +2,7 @@ import { normalizeText } from "../lib/text.js";
 import { enumOptionsFor, enumValueSetFor } from "../lib/generated_catalogs.js";
 import { CUSTOMER_CONTENT_LANGUAGE_CODES } from "../../../../shared/generated/language_catalog.js";
 import {
+  DESTINATION_COUNTRY_CODES,
   DESTINATION_COUNTRY_TO_TOUR_DESTINATION_CODE,
   TOUR_DESTINATION_TO_COUNTRY_CODE
 } from "../../../../shared/js/destination_country_codes.js";
@@ -11,7 +12,7 @@ import {
 } from "./tour_catalog_i18n.js";
 
 const COUNTRY_CODE_SET = enumValueSetFor("CountryCode");
-const DESTINATION_COUNTRY_ORDER = Object.freeze(["VN", "TH", "KH", "LA"]);
+const DESTINATION_COUNTRY_ORDER = Object.freeze([...DESTINATION_COUNTRY_CODES]);
 const DESTINATION_COUNTRY_LABELS = Object.freeze({
   VN: "Vietnam",
   TH: "Thailand",
@@ -28,11 +29,11 @@ const COUNTRY_LABELS_BY_CODE = Object.freeze(
   )
 );
 const DEFAULT_DESTINATION_CATALOG = Object.freeze(
-  ["VN"].map((code) => Object.freeze({
+  DESTINATION_COUNTRY_ORDER.map((code, index) => Object.freeze({
     code,
     label: DESTINATION_COUNTRY_LABELS[code] || code,
     label_i18n: Object.freeze({ en: DESTINATION_COUNTRY_LABELS[code] || code }),
-    sort_order: 0,
+    sort_order: index,
     is_active: true
   }))
 );

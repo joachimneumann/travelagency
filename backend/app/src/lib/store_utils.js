@@ -1,37 +1,32 @@
-import { mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
+import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { normalizeBookingPdfPersonalization } from "./booking_pdf_personalization.js";
 import { normalizeText } from "./text.js";
 import { normalizeStoredBookingRecord } from "./booking_persons.js";
+import { CUSTOMER_CONTENT_LANGUAGE_CODES } from "../../../../shared/generated/language_catalog.js";
+import {
+  DESTINATION_COUNTRY_CODES,
+  DESTINATION_COUNTRY_TO_TOUR_DESTINATION_CODE
+} from "../../../../shared/js/destination_country_codes.js";
+import { getTourDestinationLabel } from "../domain/tour_catalog_i18n.js";
 
 const STORE_SNAPSHOT = Symbol("asiatravelplan_store_snapshot");
-const DEFAULT_DESTINATION_SCOPE_DESTINATIONS = Object.freeze([
-  Object.freeze({
-    code: "VN",
-    label: "Vietnam",
-    label_i18n: Object.freeze({
-      en: "Vietnam",
-      ar: "فيتنام",
-      fr: "Vietnam",
-      zh: "越南",
-      ja: "ベトナム",
-      ko: "베트남",
-      vi: "Việt Nam",
-      ms: "Vietnam",
-      de: "Vietnam",
-      es: "Vietnam",
-      it: "Vietnam",
-      ru: "Вьетнам",
-      nl: "Vietnam",
-      pl: "Wietnam",
-      da: "Vietnam",
-      sv: "Vietnam",
-      no: "Vietnam"
-    }),
-    sort_order: 0,
-    is_active: true
+const DEFAULT_DESTINATION_SCOPE_DESTINATIONS = Object.freeze(
+  DESTINATION_COUNTRY_CODES.map((code, index) => {
+    const destinationCode = DESTINATION_COUNTRY_TO_TOUR_DESTINATION_CODE[code] || code.toLowerCase();
+    return Object.freeze({
+      code,
+      label: getTourDestinationLabel(destinationCode, "en"),
+      label_i18n: Object.freeze(
+        Object.fromEntries(
+          CUSTOMER_CONTENT_LANGUAGE_CODES.map((lang) => [lang, getTourDestinationLabel(destinationCode, lang)])
+        )
+      ),
+      sort_order: index,
+      is_active: true
+    });
   })
-]);
+);
 
 function cloneJson(value) {
   return value === undefined ? undefined : JSON.parse(JSON.stringify(value));
@@ -177,7 +172,6 @@ function mergeStoreSnapshot(baseStore, latestStore, nextStore) {
 export function createStoreUtils({
   dataPath,
   toursDir,
-  standardToursDir,
   paymentDocumentsDir,
   generatedOffersDir,
   travelPlanPdfsDir,
@@ -196,7 +190,6 @@ export function createStoreUtils({
   async function ensureStorage() {
     await mkdir(path.dirname(dataPath), { recursive: true });
     await mkdir(toursDir, { recursive: true });
-    await mkdir(standardToursDir, { recursive: true });
     await mkdir(paymentDocumentsDir, { recursive: true });
     await mkdir(generatedOffersDir, { recursive: true });
     if (travelPlanPdfsDir) {
@@ -380,14 +373,6 @@ export function createStoreUtils({
     return path.join(tourFolderPath(tourId), "tour.json");
   }
 
-  function standardTourFolderPath(standardTourId) {
-    return path.join(standardToursDir, standardTourId);
-  }
-
-  function standardTourJsonPath(standardTourId) {
-    return path.join(standardTourFolderPath(standardTourId), "standard_tour.json");
-  }
-
   async function readTours() {
     const items = [];
     const entries = await readdir(toursDir, { withFileTypes: true }).catch(() => []);
@@ -417,52 +402,11 @@ export function createStoreUtils({
     await writeQueueRef.current;
   }
 
-  async function readStandardTours() {
-    const items = [];
-    const entries = await readdir(standardToursDir, { withFileTypes: true }).catch(() => []);
-    for (const entry of entries) {
-      if (!entry.isDirectory()) continue;
-      const standardTourPath = path.join(standardToursDir, entry.name, "standard_tour.json");
-      try {
-        const raw = await readFile(standardTourPath, "utf8");
-        const parsed = JSON.parse(raw);
-        if (parsed && typeof parsed === "object" && normalizeText(parsed.id)) {
-          items.push(parsed);
-        }
-      } catch {
-        // Ignore unreadable standard tour folders.
-      }
-    }
-    return items;
-  }
-
-  async function persistStandardTour(standardTour) {
-    writeQueueRef.current = writeQueueRef.current.then(async () => {
-      const id = normalizeText(standardTour?.id);
-      if (!id) throw new Error("Standard tour id is required");
-      await mkdir(standardTourFolderPath(id), { recursive: true });
-      await writeFile(standardTourJsonPath(id), `${JSON.stringify(standardTour, null, 2)}\n`, "utf8");
-    });
-    await writeQueueRef.current;
-  }
-
-  async function deleteStandardTour(standardTourId) {
-    writeQueueRef.current = writeQueueRef.current.then(async () => {
-      const id = normalizeText(standardTourId);
-      if (!id) throw new Error("Standard tour id is required");
-      await rm(standardTourFolderPath(id), { recursive: true, force: true });
-    });
-    await writeQueueRef.current;
-  }
-
   return {
     ensureStorage,
     readStore,
     persistStore,
     readTours,
-    persistTour,
-    readStandardTours,
-    persistStandardTour,
-    deleteStandardTour
+    persistTour
   };
 }

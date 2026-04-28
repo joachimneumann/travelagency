@@ -16,7 +16,6 @@ const IOS_CONTRACT_SKIP_REASON = "Set ENABLE_IOS_TESTS=true to run mobile/iOS co
 const CONTRACT_META_PATH = path.resolve(__dirname, "..", "..", "..", "api", "generated", "mobile-api.meta.json");
 const TEST_DATA_DIR = await mkdtemp(path.join(os.tmpdir(), "travelagency-contract-test-"));
 const STORE_PATH = path.join(TEST_DATA_DIR, "store.json");
-const STANDARD_TOURS_DIR = path.resolve(__dirname, "..", "..", "..", "content", "standard_tours");
 
 process.env.KEYCLOAK_ENABLED = "true";
 process.env.INSECURE_TEST_AUTH = "true";
@@ -361,25 +360,6 @@ async function resetStore() {
     chat_conversations: [],
     chat_events: []
   }, null, 2)}\n`, "utf8");
-}
-
-async function removeStandardToursByTitlePrefix(prefix) {
-  const normalizedPrefix = String(prefix || "").trim();
-  if (!normalizedPrefix) return;
-  const entries = await readdir(STANDARD_TOURS_DIR, { withFileTypes: true }).catch(() => []);
-  for (const entry of entries) {
-    if (!entry?.isDirectory?.()) continue;
-    const standardTourPath = path.join(STANDARD_TOURS_DIR, entry.name, "standard_tour.json");
-    let parsed = null;
-    try {
-      parsed = JSON.parse(await readFile(standardTourPath, "utf8"));
-    } catch {
-      continue;
-    }
-    const title = String(parsed?.title || "").trim();
-    if (!title.startsWith(normalizedPrefix)) continue;
-    await rm(path.join(STANDARD_TOURS_DIR, entry.name), { recursive: true, force: true });
-  }
 }
 
 async function createSeedBooking() {
@@ -1758,110 +1738,6 @@ test("booking travel plan patch allows blank service titles and still rejects in
 });
 
 
-test("standard tour apply copies the travel plan without storing extra standard-tour metadata", async () => {
-  await removeStandardToursByTitlePrefix("Standard tour copy marker");
-  const sourceBooking = await createSeedBooking();
-  const targetBooking = await createPublicBooking({
-    name: "Standard Tour Target User",
-    email: "standard-tour-target@example.com"
-  });
-  const standardTourTitle = `Standard tour copy marker ${sourceBooking.id}`;
-  try {
-    const store = JSON.parse(await readFile(STORE_PATH, "utf8"));
-    const sourceRecord = store.bookings.find((item) => item.id === sourceBooking.id);
-    const targetRecord = store.bookings.find((item) => item.id === targetBooking.id);
-    assert.ok(sourceRecord);
-    assert.ok(targetRecord);
-
-    sourceRecord.travel_plan = {
-      days: [
-        {
-          id: "standard_tour_source_day_1",
-          day_number: 1,
-          date: "2026-08-01",
-          title: "Standard tour day marker",
-          overnight_location: "Siem Reap",
-          services: [
-            {
-              id: "standard_tour_source_service_1",
-              timing_kind: "label",
-              time_label: "Morning",
-              kind: "activity",
-              title: "Standard tour service marker",
-              details: "Standard tour service details",
-              location: "Siem Reap"
-            }
-          ],
-          notes: ""
-        }
-      ]
-    };
-    targetRecord.travel_plan = {
-      days: [
-        {
-          id: "standard_tour_target_day_1",
-          day_number: 1,
-          date: "2026-08-10",
-          title: "Old target day",
-          overnight_location: "Da Nang",
-          services: [],
-          notes: ""
-        }
-      ]
-    };
-    targetRecord.pdf_personalization = {
-      travel_plan: {
-        subtitle: "Old target subtitle"
-      },
-      offer: {
-        closing: "Target offer closing marker"
-      }
-    };
-    await writeFile(STORE_PATH, `${JSON.stringify(store, null, 2)}\n`, "utf8");
-
-    const standardTourCreateResult = await requestJson(
-      endpointPath("standard_tour_create"),
-      apiHeaders(),
-      {
-        method: "POST",
-        body: {
-          title: standardTourTitle,
-          travel_plan: sourceRecord.travel_plan
-        }
-      }
-    );
-    assert.equal(standardTourCreateResult.status, 201);
-    assert.equal(standardTourCreateResult.body.standard_tour.title, standardTourTitle);
-    assert.deepEqual(standardTourCreateResult.body.standard_tour.destinations, []);
-    assert.ok(standardTourCreateResult.body.standard_tour.travel_plan);
-    assert.ok(!("source_booking_id" in standardTourCreateResult.body.standard_tour));
-    assert.ok(!("description" in standardTourCreateResult.body.standard_tour));
-    assert.ok(!("created_at" in standardTourCreateResult.body.standard_tour));
-    assert.ok(!("updated_at" in standardTourCreateResult.body.standard_tour));
-
-    const applyResult = await requestJson(
-      endpointPath("booking_standard_tour_apply")
-        .replace("{booking_id}", targetBooking.id)
-        .replace("{standard_tour_id}", standardTourCreateResult.body.standard_tour.id),
-      apiHeaders(),
-      {
-        method: "POST",
-        body: {
-          expected_travel_plan_revision: targetBooking.travel_plan_revision
-        }
-      }
-    );
-    assert.equal(applyResult.status, 200);
-    assert.equal(applyResult.body.booking.travel_plan.days.length, 1);
-    assert.equal(applyResult.body.booking.travel_plan.days[0].title, "Standard tour day marker");
-    assert.equal(applyResult.body.booking.travel_plan.days[0].services[0].title, "Standard tour service marker");
-    assert.equal(applyResult.body.booking.pdf_personalization.travel_plan.subtitle, "Old target subtitle");
-    assert.equal(applyResult.body.booking.pdf_personalization.offer.closing, "Target offer closing marker");
-  } finally {
-    await removeStandardToursByTitlePrefix("Standard tour copy marker");
-  }
-});
-
 test("marketing tour apply copies the marketing travel plan into a booking travel plan", async () => {
   const targetBooking = await createPublicBooking({
     name: "Marketing Tour Target User",
@@ -2276,83 +2152,6 @@ test("booking editor can import days and services from marketing tours", async (
       );
     }
   }
-});
-
-test("standard tour titles must be unique", async () => {
-  const sourceBooking = await createSeedBooking();
-  const primaryTitle = `Summer Escape ${sourceBooking.id}`;
-  const secondaryTitle = `Mekong Explorer ${sourceBooking.id}`;
-
-  const store = JSON.parse(await readFile(STORE_PATH, "utf8"));
-  const sourceRecord = store.bookings.find((item) => item.id === sourceBooking.id);
-  assert.ok(sourceRecord);
-  sourceRecord.travel_plan = {
-    days: [
-      {
-        id: "duplicate_title_day_1",
-        day_number: 1,
-        date: "2026-08-15",
-        title: "Duplicate title source day",
-        overnight_location: "Bangkok",
-        services: [],
-        notes: ""
-      }
-    ]
-  };
-  await writeFile(STORE_PATH, `${JSON.stringify(store, null, 2)}\n`, "utf8");
-
-  const firstCreateResult = await requestJson(
-    endpointPath("standard_tour_create"),
-    apiHeaders(),
-    {
-      method: "POST",
-      body: {
-        title: primaryTitle,
-        travel_plan: sourceRecord.travel_plan
-      }
-    }
-  );
-  assert.equal(firstCreateResult.status, 201);
-
-  const secondCreateResult = await requestJson(
-    endpointPath("standard_tour_create"),
-    apiHeaders(),
-    {
-      method: "POST",
-      body: {
-        title: secondaryTitle,
-        travel_plan: sourceRecord.travel_plan
-      }
-    }
-  );
-  assert.equal(secondCreateResult.status, 201);
-
-  const duplicateCreateResult = await requestJson(
-    endpointPath("standard_tour_create"),
-    apiHeaders(),
-    {
-      method: "POST",
-      body: {
-        title: `  ${primaryTitle.toLowerCase()}  `,
-        travel_plan: sourceRecord.travel_plan
-      }
-    }
-  );
-  assert.equal(duplicateCreateResult.status, 409);
-  assert.equal(duplicateCreateResult.body.error, "A standard tour with this title already exists.");
-
-  const duplicatePatchResult = await requestJson(
-    endpointPath("standard_tour_update").replace("{standard_tour_id}", secondCreateResult.body.standard_tour.id),
-    apiHeaders(),
-    {
-      method: "PATCH",
-      body: {
-        title: primaryTitle.toUpperCase()
-      }
-    }
-  );
-  assert.equal(duplicatePatchResult.status, 409);
-  assert.equal(duplicatePatchResult.body.error, "A standard tour with this title already exists.");
 });
 
 test("service image can be deleted", async () => {

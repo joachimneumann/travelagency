@@ -4075,8 +4075,6 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
     marketingToursHtml,
     privacyHtml,
     settingsHtml,
-    standardTourHtml,
-    standardToursHtml,
     travelerDetailsHtml,
     localCaddy,
     stagingCaddy,
@@ -4099,8 +4097,6 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
     readFile(path.join(frontendRoot, "pages", "marketing_tours.html"), "utf8"),
     readFile(path.join(frontendRoot, "pages", "privacy.html"), "utf8"),
     readFile(path.join(frontendRoot, "pages", "settings.html"), "utf8"),
-    readFile(path.join(frontendRoot, "pages", "standard-tour.html"), "utf8"),
-    readFile(path.join(frontendRoot, "pages", "standard-tours.html"), "utf8"),
     readFile(path.join(frontendRoot, "pages", "traveler-details.html"), "utf8"),
     readFile(path.join(deployRoot, "Caddyfile.local"), "utf8"),
     readFile(path.join(deployRoot, "Caddyfile"), "utf8"),
@@ -4126,16 +4122,6 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
     "marketing_tours.html should mount the tours page script"
   );
   assert.match(
-    standardToursHtml,
-    /frontend\/scripts\/pages\/standard_tours\.js/,
-    "standard-tours.html should mount the standard tours page script"
-  );
-  assert.match(
-    standardTourHtml,
-    /frontend\/scripts\/pages\/standard_tour\.js/,
-    "standard-tour.html should mount the standard tour detail page script"
-  );
-  assert.match(
     settingsHtml,
     /frontend\/scripts\/pages\/settings_list\.js/,
     "settings.html should mount the settings page script"
@@ -4154,8 +4140,6 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
     marketingToursHtml,
     privacyHtml,
     settingsHtml,
-    standardTourHtml,
-    standardToursHtml,
     travelerDetailsHtml
   ]) {
     assert.match(
@@ -4252,8 +4236,6 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
     assert.match(source, /\/tours\.html/, "Caddy should keep redirecting legacy tours.html");
     assert.match(source, /\/marketing_tour\.html/, "Caddy should serve marketing_tour.html");
     assert.match(source, /\/tour\.html/, "Caddy should keep redirecting legacy tour.html");
-    assert.match(source, /\/standard-tours\.html/, "Caddy should serve standard-tours.html");
-    assert.match(source, /\/standard-tour\.html/, "Caddy should serve standard-tour.html");
     assert.match(source, /\/settings\.html/, "Caddy should serve settings.html");
     assert.match(source, /\/emergency\.html/, "Caddy should serve emergency.html");
   }
@@ -4357,7 +4339,7 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
   );
   assert.match(
     stagingCaddy,
-    /production_private_noindex_headers[\s\S]*path \/app-home\.html \/bookings\.html \/booking\.html \/persons\.html \/marketing_tour\.html \/marketing_tours\.html \/standard-tours\.html \/standard-tour\.html \/settings\.html \/translations\.html \/emergency\.html \/traveler-details\.html \/auth\/\* \/api\/\* \/integrations\/\* \/keycloak\/\*[\s\S]*X-Robots-Tag "noindex, nofollow, noarchive"[\s\S]*import production_private_noindex_headers/,
+    /production_private_noindex_headers[\s\S]*path \/app-home\.html \/bookings\.html \/booking\.html \/persons\.html \/marketing_tour\.html \/marketing_tours\.html \/settings\.html \/translations\.html \/emergency\.html \/traveler-details\.html \/auth\/\* \/api\/\* \/integrations\/\* \/keycloak\/\*[\s\S]*X-Robots-Tag "noindex, nofollow, noarchive"[\s\S]*import production_private_noindex_headers/,
     "Production Caddy should send an X-Robots-Tag noindex header on private or utility routes"
   );
   assert.doesNotMatch(
@@ -4531,8 +4513,6 @@ test("backend language switching updates admin UI in place instead of forcing a 
   const bookingListPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking_list.js");
   const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking.js");
   const toursListPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "tours_list.js");
-  const standardToursPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "standard_tours.js");
-  const standardTourPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "standard_tour.js");
   const settingsListPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "settings_list.js");
   const translationsPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "translations.js");
   const emergencyPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "emergency.js");
@@ -4543,8 +4523,6 @@ test("backend language switching updates admin UI in place instead of forcing a 
     bookingListSource,
     bookingPageSource,
     toursListSource,
-    standardToursSource,
-    standardTourSource,
     settingsListSource,
     translationsPageSource,
     emergencyPageSource,
@@ -4555,8 +4533,6 @@ test("backend language switching updates admin UI in place instead of forcing a 
     readFile(bookingListPath, "utf8"),
     readFile(bookingPagePath, "utf8"),
     readFile(toursListPath, "utf8"),
-    readFile(standardToursPath, "utf8"),
-    readFile(standardTourPath, "utf8"),
     readFile(settingsListPath, "utf8"),
     readFile(translationsPagePath, "utf8"),
     readFile(emergencyPagePath, "utf8"),
@@ -4597,16 +4573,6 @@ test("backend language switching updates admin UI in place instead of forcing a 
     toursListSource,
     /window\.addEventListener\("backend-i18n-changed", handleBackendLanguageChanged\)/,
     "Marketing-tour list should refresh its rendered content after an in-place backend language switch"
-  );
-  assert.match(
-    standardToursSource,
-    /window\.addEventListener\("backend-i18n-changed", handleBackendLanguageChanged\)/,
-    "Standard-tours list should refresh its rendered content after an in-place backend language switch"
-  );
-  assert.match(
-    standardTourSource,
-    /window\.addEventListener\("backend-i18n-changed", handleBackendLanguageChanged\)/,
-    "Standard-tour detail should rerender its editor chrome after an in-place backend language switch"
   );
   assert.match(
     settingsListSource,
@@ -4883,15 +4849,11 @@ test("runtime links use direct tours and settings pages instead of backend secti
   const filesToScan = [
     path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking_list.js"),
     path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "tours_list.js"),
-    path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "standard_tours.js"),
-    path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "standard_tour.js"),
     path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "settings_list.js"),
     path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "emergency.js"),
     path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "tour.js"),
     path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "shared", "nav.js"),
     path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "marketing_tours.html"),
-    path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "standard-tours.html"),
-    path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "standard-tour.html"),
     path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "settings.html"),
     path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "emergency.html")
   ];
@@ -4900,64 +4862,41 @@ test("runtime links use direct tours and settings pages instead of backend secti
     const source = await readFile(filePath, "utf8");
     assert.doesNotMatch(
       source,
-      /backend\.html\?section=(tours|standard-tours|settings|emergency)/,
-      `${path.basename(filePath)} should not hard-code backend section query routes for tours/standard-tours/settings/emergency`
+      /backend\.html\?section=(tours|settings|emergency)/,
+      `${path.basename(filePath)} should not hard-code backend section query routes for tours/settings/emergency`
     );
     assert.doesNotMatch(
       source,
-      /withBackendLang\(\s*"\/(backend|bookings)\.html"\s*,\s*\{\s*section\s*:\s*"(tours|standard-tours|settings|emergency)"/,
-      `${path.basename(filePath)} should not build tours/standard-tours/settings/emergency routes through the bookings entry page`
+      /withBackendLang\(\s*"\/(backend|bookings)\.html"\s*,\s*\{\s*section\s*:\s*"(tours|settings|emergency)"/,
+      `${path.basename(filePath)} should not build tours/settings/emergency routes through the bookings entry page`
     );
   }
 });
 
-test("booking travel-plan templates apply marketing tours through the tour endpoints", async () => {
+test("booking travel-plan templates only use marketing-tour routes and UI", async () => {
   const navPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "shared", "nav.js");
-  const pagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "standard-tours.html");
-  const pageScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "standard_tours.js");
-  const detailScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "standard_tour.js");
   const bookingLibraryPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan_service_library.js");
   const bookingTravelPlanPath = travelPlanEditorCorePath();
   const routesPath = path.resolve(__dirname, "..", "..", "..", "backend", "app", "src", "http", "routes.js");
-  const handlersPath = path.resolve(__dirname, "..", "..", "..", "backend", "app", "src", "http", "handlers", "standard_tours.js");
-  const domainPath = path.resolve(__dirname, "..", "..", "..", "backend", "app", "src", "domain", "standard_tours.js");
   const [
     navSource,
-    pageSource,
-    pageScriptSource,
-    detailScriptSource,
     bookingLibrarySource,
     bookingTravelPlanSource,
-    routesSource,
-    handlersSource,
-    domainSource
+    routesSource
   ] = await Promise.all([
     readFile(navPath, "utf8"),
-    readFile(pagePath, "utf8"),
-    readFile(pageScriptPath, "utf8"),
-    readFile(detailScriptPath, "utf8"),
     readFile(bookingLibraryPath, "utf8"),
     readFile(bookingTravelPlanPath, "utf8"),
-    readFile(routesPath, "utf8"),
-    readFile(handlersPath, "utf8"),
-    readFile(domainPath, "utf8")
+    readFile(routesPath, "utf8")
   ]);
 
-  assert.match(navSource, /standard-tours\.html/, "Backend nav should link to the dedicated standard tours page");
-  assert.match(navSource, /const canReadStandardTours = hasAnyRole\(resolvedRoles, "atp_tour_editor"\);/, "Backend nav should only show standard tours to atp_tour_editor users");
-  assert.match(pageSource, /id="standardToursTable"/, "The standard tours page should expose the standard tours table");
-  assert.match(pageScriptSource, /\/api\/v1\/standard-tours/, "The standard tours page should load standard tours from the dedicated backend endpoint");
-  assert.match(pageScriptSource, /const DESTINATION_COUNTRY_CODES = Object\.freeze\(\["VN", "TH", "KH", "LA"\]\)/, "The standard tours UI should limit destinations to the four supported country codes");
-  assert.match(pageScriptSource, /expectedRolesAnyOf:\s*\[ROLES\.TOUR_EDITOR\]/, "The standard tours list page should require the atp_tour_editor role");
-  assert.match(detailScriptSource, /expectedRolesAnyOf:\s*\[ROLES\.TOUR_EDITOR\]/, "The standard tour detail page should require the atp_tour_editor role");
+  assert.doesNotMatch(navSource, /standard-tours\.html|nav\.standard_tours|standardTour\.png/, "Backend nav should not expose the removed standard tours UI");
   assert.match(bookingLibrarySource, /bookingTourApplyRequest/, "The booking travel-plan library should apply marketing tours through the dedicated endpoint");
-  assert.doesNotMatch(bookingLibrarySource, /bookingStandardTourApplyRequest/, "The booking travel-plan library should no longer apply standard tours from the booking editor");
+  assert.doesNotMatch(bookingLibrarySource, /standard[-_]tour|standardTour/, "The booking travel-plan library should not carry standard-tour compatibility branches");
   assert.match(bookingLibrarySource, /toursRequest\(/, "The booking travel-plan library should search marketing tours from the tours endpoint");
   assert.match(bookingTravelPlanSource, /data-travel-plan-open-tour-import/, "The booking travel-plan footer should expose a marketing tour action");
   assert.match(routesSource, /\/api\/v1\/bookings\/\{booking_id\}\/travel-plan\/tours\/\{tour_id\}\/apply/, "HTTP routes should include the marketing-tour apply endpoint");
-  assert.match(routesSource, /\/api\/v1\/standard-tours/, "HTTP routes should include the standard tour endpoints");
-  assert.doesNotMatch(handlersSource, /Only published standard tours can be applied/, "Standard tour apply handler should not enforce standard tour status");
-  assert.match(domainSource, /enumValueSetFor\("CountryCode"\)[\s\S]*normalizeText\(value\)\.toUpperCase\(\)[\s\S]*COUNTRY_CODE_SET\.has\(value\)/, "Standard tour destination normalization should store CountryCode values instead of tour destination slugs");
+  assert.doesNotMatch(routesSource, /\/api\/v1\/standard-tours|travel-plan\/standard-tours/, "HTTP routes should not expose removed standard-tour endpoints");
 });
 
 test("marketing tour editor imports days and services only from other marketing tours", async () => {

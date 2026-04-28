@@ -234,18 +234,6 @@ import (
 	actor?: string
 }
 
-#StandardTourUpsertRequest: {
-	title?: string
-	destinations?: [...enums.#CountryCode]
-	travel_plan?: databaseModel.#BookingTravelPlan
-	actor?:       string
-}
-
-#BookingStandardTourApplyRequest: {
-	expected_travel_plan_revision?: >=0 & int
-	actor?:                         string
-}
-
 #BookingTourApplyRequest: {
 	expected_travel_plan_revision?: >=0 & int
 	actor?:                         string

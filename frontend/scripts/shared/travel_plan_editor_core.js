@@ -106,7 +106,7 @@ export function createBookingTravelPlanModule(ctx) {
   }
 
   const allowDayImport = isFeatureEnabled("dayImport");
-  const allowTourImport = isFeatureEnabled("tourImport", isFeatureEnabled("standardTourImport"));
+  const allowTourImport = isFeatureEnabled("tourImport");
   const allowServiceImport = isFeatureEnabled("serviceImport");
   const allowImageUpload = isFeatureEnabled("imageUpload");
   const allowDates = isFeatureEnabled("dates");
@@ -3460,8 +3460,8 @@ export function createBookingTravelPlanModule(ctx) {
           travelPlanServiceLibraryModule.openTravelPlanDayLibrary();
           return;
         }
-        if (button.hasAttribute("data-travel-plan-open-tour-import") || button.hasAttribute("data-travel-plan-open-standard-tour-import")) {
-          travelPlanServiceLibraryModule.openStandardTourLibrary();
+        if (button.hasAttribute("data-travel-plan-open-tour-import")) {
+          travelPlanServiceLibraryModule.openTourLibrary();
           return;
         }
         if (button.hasAttribute("data-travel-plan-open-import")) {

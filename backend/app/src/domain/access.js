@@ -48,16 +48,6 @@ export function createAccessHelpers({ auth, appRoles }) {
       hasRole(principal, appRoles.TOUR_EDITOR);
   }
 
-  function canReadStandardTours(principal) {
-    return hasRole(principal, appRoles.ADMIN) ||
-      hasRole(principal, appRoles.MANAGER) ||
-      hasRole(principal, appRoles.ATP_STAFF);
-  }
-
-  function canEditStandardTours(principal) {
-    return canReadStandardTours(principal);
-  }
-
   return {
     getPrincipal,
     canReadBackend,
@@ -67,8 +57,6 @@ export function createAccessHelpers({ auth, appRoles }) {
     canReadTours,
     canEditTours,
     canReadCountryReferenceInfo,
-    canEditCountryReferenceInfo,
-    canReadStandardTours,
-    canEditStandardTours
+    canEditCountryReferenceInfo
   };
 }

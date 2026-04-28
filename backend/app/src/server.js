@@ -194,7 +194,6 @@ const services = createBackendServices({
     repoRoot: RUNTIME_PATHS.repoRoot,
     dataPath: RUNTIME_PATHS.dataPath,
     toursDir: RUNTIME_PATHS.toursDir,
-    standardToursDir: RUNTIME_PATHS.standardToursDir,
     paymentDocumentsDir: RUNTIME_PATHS.paymentDocumentsDir,
     generatedOffersDir: RUNTIME_PATHS.generatedOffersDir,
     travelPlanPdfsDir: RUNTIME_PATHS.travelPlanPdfsDir,

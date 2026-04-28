@@ -15,7 +15,6 @@ import { createBookingQueryModule } from "../http/handlers/booking_query.js";
 import { createCountryReferenceHandlers } from "../http/handlers/country_reference.js";
 import { createDestinationScopeHandlers } from "../http/handlers/destination_scope.js";
 import { createKeycloakUserHandlers } from "../http/handlers/keycloak_users.js";
-import { createStandardTourHandlers } from "../http/handlers/standard_tours.js";
 import { createStaticTranslationHandlers } from "../http/handlers/static_translations.js";
 import { createTourHandlers } from "../http/handlers/tours.js";
 import { createTranslationRulesHandlers } from "../http/handlers/translation_rules.js";
@@ -37,9 +36,7 @@ export function createApplicationRoutes({
     canReadTours,
     canEditTours,
     canReadCountryReferenceInfo,
-    canEditCountryReferenceInfo,
-    canReadStandardTours,
-    canEditStandardTours
+    canEditCountryReferenceInfo
   } = createAccessHelpers({
     auth,
     appRoles: runtime.appRoles
@@ -48,7 +45,6 @@ export function createApplicationRoutes({
   const {
     pricingHelpers,
     travelPlanHelpers,
-    standardTourHelpers,
     bookingViewHelpers,
     storeUtils,
     keycloakDirectory,
@@ -417,35 +413,6 @@ export function createApplicationRoutes({
     rm
   });
 
-  const standardTourHandlers = createStandardTourHandlers({
-    readBodyJson: httpHelpers.readBodyJson,
-    sendJson: httpHelpers.sendJson,
-    readStore: storeUtils.readStore,
-    readStandardTours: storeUtils.readStandardTours,
-    persistStandardTour: storeUtils.persistStandardTour,
-    deleteStandardTour: storeUtils.deleteStandardTour,
-    getPrincipal,
-    canReadStandardTours,
-    canEditStandardTours,
-    canEditBooking: bookingViewHelpers.canEditBooking,
-    normalizeText: support.normalizeText,
-    normalizeTourDestinationCode,
-    normalizeTourStyleCode,
-    nowIso: support.nowIso,
-    randomUUID,
-    buildStandardTourReadModel: standardTourHelpers.buildStandardTourReadModel,
-    normalizeStandardTourForStorage: standardTourHelpers.normalizeStandardTourForStorage,
-    cloneStandardTourTravelPlanForBooking: standardTourHelpers.cloneStandardTourTravelPlanForBooking,
-    normalizeStandardTourTravelPlan: standardTourHelpers.normalizeStandardTourTravelPlan,
-    validateBookingTravelPlanInput: travelPlanHelpers.validateBookingTravelPlanInput,
-    assertExpectedRevision,
-    buildBookingDetailResponse: bookingQueryModule.buildBookingDetailResponse,
-    incrementBookingRevision,
-    persistStore: storeUtils.persistStore,
-    addActivity: bookingViewHelpers.addActivity,
-    actorLabel: bookingViewHelpers.actorLabel
-  });
-
   const staticTranslationHandlers = createStaticTranslationHandlers({
     readBodyJson: httpHelpers.readBodyJson,
     sendJson: httpHelpers.sendJson,
@@ -477,8 +444,7 @@ export function createApplicationRoutes({
       ...destinationScopeHandlers,
       ...translationRulesHandlers,
       ...staticTranslationHandlers,
-      ...tourHandlers,
-      ...standardTourHandlers
+      ...tourHandlers
     }
   });
 }

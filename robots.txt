@@ -10,8 +10,6 @@ Disallow: /booking.html
 Disallow: /persons.html
 Disallow: /marketing_tour.html
 Disallow: /marketing_tours.html
-Disallow: /standard-tours.html
-Disallow: /standard-tour.html
 Disallow: /settings.html
 Disallow: /emergency.html
 Disallow: /traveler-details.html

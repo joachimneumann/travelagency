@@ -20,7 +20,7 @@
 }
 
 (staging_html_no_cache_headers) {
-  @staging_html path / /index.html /404.html /bookings.html /booking.html /persons.html /marketing_tour.html /marketing_tours.html /standard-tours.html /standard-tour.html /settings.html /translations.html /emergency.html /privacy.html /traveler-details.html
+  @staging_html path / /index.html /404.html /bookings.html /booking.html /persons.html /marketing_tour.html /marketing_tours.html /settings.html /translations.html /emergency.html /privacy.html /traveler-details.html
   header @staging_html {
     Cache-Control "no-cache, must-revalidate"
   }
@@ -40,7 +40,7 @@
 }
 
 (production_html_no_cache_headers) {
-  @production_html path / /index.html /404.html /app-home.html /bookings.html /booking.html /persons.html /marketing_tour.html /marketing_tours.html /standard-tours.html /standard-tour.html /settings.html /translations.html /emergency.html /privacy.html /traveler-details.html
+  @production_html path / /index.html /404.html /app-home.html /bookings.html /booking.html /persons.html /marketing_tour.html /marketing_tours.html /settings.html /translations.html /emergency.html /privacy.html /traveler-details.html
   header @production_html {
     Cache-Control "no-cache, must-revalidate"
   }
@@ -66,7 +66,7 @@
 }
 
 (production_private_noindex_headers) {
-  @production_private_index_exclusions path /app-home.html /bookings.html /booking.html /persons.html /marketing_tour.html /marketing_tours.html /standard-tours.html /standard-tour.html /settings.html /translations.html /emergency.html /traveler-details.html /auth/* /api/* /integrations/* /keycloak/*
+  @production_private_index_exclusions path /app-home.html /bookings.html /booking.html /persons.html /marketing_tour.html /marketing_tours.html /settings.html /translations.html /emergency.html /traveler-details.html /auth/* /api/* /integrations/* /keycloak/*
   header @production_private_index_exclusions X-Robots-Tag "noindex, nofollow, noarchive"
 }
 
@@ -145,7 +145,7 @@ asiatravelplan.com {
     }
   }
 
-  @production_backend_html_pages path /bookings.html /booking.html /persons.html /marketing_tour.html /marketing_tours.html /standard-tours.html /standard-tour.html /settings.html /translations.html /emergency.html
+  @production_backend_html_pages path /bookings.html /booking.html /persons.html /marketing_tour.html /marketing_tours.html /settings.html /translations.html /emergency.html
   forward_auth @production_backend_html_pages host.docker.internal:8788 {
     uri /backend-access/check
   }
@@ -240,7 +240,7 @@ staging.asiatravelplan.com {
     file_server
   }
 
-  @html_pages path /404.html /bookings.html /booking.html /persons.html /marketing_tour.html /marketing_tours.html /standard-tours.html /standard-tour.html /settings.html /translations.html /emergency.html /privacy.html /traveler-details.html
+  @html_pages path /404.html /bookings.html /booking.html /persons.html /marketing_tour.html /marketing_tours.html /settings.html /translations.html /emergency.html /privacy.html /traveler-details.html
   handle @html_pages {
     rewrite * /frontend/pages{path}
     file_server

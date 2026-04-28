@@ -3,7 +3,7 @@
   "generatorVersion": "0.1.0",
   "modulePath": "travelagency.local/model",
   "defaultCurrency": "USD",
-  "generatedAt": "2026-04-28T06:44:20Z",
+  "generatedAt": "2026-04-28T08:34:18Z",
   "languages": [
     "en",
     "ar",
@@ -734,120 +734,6 @@
       "parameters": [
         {
           "name": "booking_id",
-          "location": "path",
-          "required": true,
-          "typeName": "Identifier"
-        }
-      ]
-    },
-    {
-      "key": "standard_tours",
-      "path": "/api/v1/standard-tours",
-      "method": "GET",
-      "tag": "Standard tours",
-      "authenticated": true,
-      "responseType": "StandardTourListResponse",
-      "parameters": [
-        {
-          "name": "q",
-          "location": "query",
-          "required": false,
-          "typeName": "string"
-        },
-        {
-          "name": "destination",
-          "location": "query",
-          "required": false,
-          "typeName": "CountryCode"
-        },
-        {
-          "name": "page",
-          "location": "query",
-          "required": false,
-          "typeName": "int"
-        },
-        {
-          "name": "page_size",
-          "location": "query",
-          "required": false,
-          "typeName": "int"
-        }
-      ]
-    },
-    {
-      "key": "standard_tour_create",
-      "path": "/api/v1/standard-tours",
-      "method": "POST",
-      "tag": "Standard tours",
-      "authenticated": true,
-      "requestType": "StandardTourUpsertRequest",
-      "responseType": "StandardTourResponse"
-    },
-    {
-      "key": "standard_tour_detail",
-      "path": "/api/v1/standard-tours/{standard_tour_id}",
-      "method": "GET",
-      "tag": "Standard tours",
-      "authenticated": true,
-      "responseType": "StandardTourResponse",
-      "parameters": [
-        {
-          "name": "standard_tour_id",
-          "location": "path",
-          "required": true,
-          "typeName": "Identifier"
-        }
-      ]
-    },
-    {
-      "key": "standard_tour_update",
-      "path": "/api/v1/standard-tours/{standard_tour_id}",
-      "method": "PATCH",
-      "tag": "Standard tours",
-      "authenticated": true,
-      "requestType": "StandardTourUpsertRequest",
-      "responseType": "StandardTourResponse",
-      "parameters": [
-        {
-          "name": "standard_tour_id",
-          "location": "path",
-          "required": true,
-          "typeName": "Identifier"
-        }
-      ]
-    },
-    {
-      "key": "standard_tour_delete",
-      "path": "/api/v1/standard-tours/{standard_tour_id}",
-      "method": "DELETE",
-      "tag": "Standard tours",
-      "authenticated": true,
-      "parameters": [
-        {
-          "name": "standard_tour_id",
-          "location": "path",
-          "required": true,
-          "typeName": "Identifier"
-        }
-      ]
-    },
-    {
-      "key": "booking_standard_tour_apply",
-      "path": "/api/v1/bookings/{booking_id}/travel-plan/standard-tours/{standard_tour_id}/apply",
-      "method": "POST",
-      "tag": "Standard tours",
-      "authenticated": true,
-      "requestType": "BookingStandardTourApplyRequest",
-      "responseType": "BookingDetail",
-      "parameters": [
-        {
-          "name": "booking_id",
-          "location": "path",
-          "required": true,
-          "typeName": "Identifier"
-        },
-        {
-          "name": "standard_tour_id",
           "location": "path",
           "required": true,
           "typeName": "Identifier"

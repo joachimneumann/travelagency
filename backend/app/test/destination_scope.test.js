@@ -99,15 +99,6 @@ test("destination area and place catalog validates selected scope", () => {
   ], store);
   assert.equal(valid.ok, true);
 
-  const thailandRecord = createDestinationCatalogDestinationRecord(
-    { destination: "TH" },
-    { nowIso: () => fixedNow }
-  );
-  assert.equal(thailandRecord.ok, true);
-  const thailandResult = upsertDestinationCatalogDestination(store, thailandRecord.destination);
-  assert.equal(thailandResult.ok, true);
-  store = thailandResult.store;
-
   const invalid = validateDestinationScopeAgainstCatalog([
     {
       destination: "TH",
@@ -152,12 +143,17 @@ test("destination catalog can add missing supported destinations", () => {
   assert.match(invalidScope.error, /Unknown destination: KH/);
 });
 
-test("empty destination catalog is pre-populated with Vietnam", () => {
+test("empty destination catalog is pre-populated with supported destinations", () => {
   const store = { destination_scope_destinations: [] };
   const catalog = buildDestinationScopeCatalogResponse(store, { lang: "en" });
   assert.deepEqual(
     catalog.destinations.map((destination) => ({ code: destination.code, label: destination.label })),
-    [{ code: "VN", label: "Vietnam" }]
+    [
+      { code: "VN", label: "Vietnam" },
+      { code: "TH", label: "Thailand" },
+      { code: "KH", label: "Cambodia" },
+      { code: "LA", label: "Laos" }
+    ]
   );
 
   const areaRecord = createDestinationAreaRecord(

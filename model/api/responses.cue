@@ -270,22 +270,6 @@ import (
 	catalog: #DestinationScopeCatalogResponse
 }
 
-#StandardTourReadModel: {
-	id:    common.#Identifier
-	title: string
-	destinations: [...enums.#CountryCode] | []
-	travel_plan: databaseModel.#BookingTravelPlan
-}
-
-#StandardTourListResponse: {
-	items: [...#StandardTourReadModel]
-	total: >=0 & int
-}
-
-#StandardTourResponse: {
-	standard_tour: #StandardTourReadModel
-}
-
 #OfferExchangeRatesResponse: {
 	from_currency:     string
 	to_currency:       string

@@ -41,8 +41,6 @@ export function resolveBackendSectionHref(section) {
   const pathname =
     normalizedSection === "tours"
       ? "marketing_tours.html"
-      : normalizedSection === "standard-tours"
-        ? "standard-tours.html"
       : normalizedSection === "settings"
         ? "settings.html"
       : normalizedSection === "translations"
@@ -67,7 +65,6 @@ function resolveUserLabel(authUser = null) {
 function applyNavPermissions(mount, roles) {
   const resolvedRoles = Array.isArray(roles) ? roles : [];
   const canReadBookings = hasAnyRole(resolvedRoles, "atp_admin", "atp_manager", "atp_accountant", "atp_staff");
-  const canReadStandardTours = hasAnyRole(resolvedRoles, "atp_tour_editor");
   const canReadTours = hasAnyRole(resolvedRoles, "atp_admin", "atp_accountant", "atp_tour_editor");
   const canReadSettings = hasAnyRole(resolvedRoles, "atp_admin");
   const canReadTranslations = hasAnyRole(resolvedRoles, "atp_admin");
@@ -77,7 +74,6 @@ function applyNavPermissions(mount, roles) {
       const section = button.getAttribute("data-backend-section");
       const visible =
         (section === "bookings" && canReadBookings) ||
-        (section === "standard-tours" && canReadStandardTours) ||
         (section === "tours" && canReadTours) ||
         (section === "translations" && canReadTranslations) ||
         (section === "settings" && canReadSettings);
@@ -105,7 +101,6 @@ export function mountBackendNav(mount, options = {}) {
       <div class="backend-section-nav-wrap">
         <div class="backend-section-nav" role="tablist" aria-label="${backendT("a11y.backend_sections", "Backend sections")}">
           ${buildSectionButton("bookings", backendT("nav.bookings", "Bookings"), { type: "image", src: "assets/img/profile_booking.png", size: "large" })}
-          ${buildSectionButton("standard-tours", backendT("nav.standard_tours", "Standard tours"), { type: "image", src: "assets/img/standardTour.png", size: "large" })}
           ${buildSectionButton("settings", backendT("nav.settings", "Reports and Settings"), { type: "image", src: "assets/img/profile_person.png", size: "large" })}
           ${buildSectionButton("translations", backendT("nav.translations", "Translations"), { type: "image", src: "assets/img/translation.png", size: "large" })}
           ${buildSectionButton("tours", "Marketing Tour", { type: "image", src: "assets/img/marketing_tours.png", size: "large" })}
