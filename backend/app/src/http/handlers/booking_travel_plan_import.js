@@ -103,7 +103,7 @@ export function createBookingTravelPlanImportHandlers(deps) {
     marketingTourBookingTravelPlanCloner
   } = deps;
 
-  async function findMarketingTourImportSource(sourceTourId, contentLang) {
+  async function findMarketingTourImportSource(sourceTourId) {
     if (!sourceTourId || typeof readTours !== "function" || typeof normalizeMarketingTourTravelPlan !== "function") {
       return null;
     }
@@ -115,8 +115,8 @@ export function createBookingTravelPlanImportHandlers(deps) {
     return {
       sourceTour,
       sourceTravelPlan: normalizeMarketingTourTravelPlan(sourceTour.travel_plan, {
-        contentLang,
-        flatLang: contentLang,
+        contentLang: "en",
+        flatLang: "en",
         strictReferences: false
       })
     };
@@ -163,7 +163,7 @@ export function createBookingTravelPlanImportHandlers(deps) {
         sendJson(res, 500, { error: "Marketing tour import is not configured" });
         return;
       }
-      const source = await findMarketingTourImportSource(sourceTourId, contentLang);
+      const source = await findMarketingTourImportSource(sourceTourId);
       if (!source?.sourceTour) {
         sendJson(res, 404, { error: "Source tour not found" });
         return;
@@ -268,7 +268,7 @@ export function createBookingTravelPlanImportHandlers(deps) {
         sendJson(res, 500, { error: "Marketing tour import is not configured" });
         return;
       }
-      const source = await findMarketingTourImportSource(sourceTourId, contentLang);
+      const source = await findMarketingTourImportSource(sourceTourId);
       if (!source?.sourceTour) {
         sendJson(res, 404, { error: "Source tour not found" });
         return;

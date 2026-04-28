@@ -175,11 +175,11 @@ export function createMarketingTourBookingTravelPlanCloner(deps) {
       time_point: null,
       kind: normalizeText(service?.kind) || "other",
       title: title.text,
-      title_i18n: title.map,
+      title_i18n: {},
       details: details.text || null,
-      details_i18n: details.map,
+      details_i18n: {},
       image_subtitle: imageSubtitle.text || null,
-      image_subtitle_i18n: imageSubtitle.map,
+      image_subtitle_i18n: {},
       location: null,
       location_i18n: {},
       start_time: null,
@@ -208,9 +208,9 @@ export function createMarketingTourBookingTravelPlanCloner(deps) {
       date: null,
       date_string: null,
       title: title.text,
-      title_i18n: title.map,
+      title_i18n: {},
       overnight_location: overnightLocation.text || null,
-      overnight_location_i18n: overnightLocation.map,
+      overnight_location_i18n: {},
       services: await Promise.all((Array.isArray(day?.services) ? day.services : []).map((service) => (
         cloneMarketingTourServiceForBooking(service, {
           tourId,
@@ -219,7 +219,7 @@ export function createMarketingTourBookingTravelPlanCloner(deps) {
         })
       ))),
       notes: notes.text || null,
-      notes_i18n: notes.map
+      notes_i18n: {}
     };
   }
 

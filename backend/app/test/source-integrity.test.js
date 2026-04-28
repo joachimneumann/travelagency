@@ -4952,7 +4952,9 @@ test("marketing tour editor imports days and services only from other marketing 
   assert.match(routesSource, /\/api\/v1\/tours\/travel-plan-services\/search/, "Routes should expose marketing tour service search");
   assert.match(routesSource, /\/api\/v1\/tours\/\{tour_id\}\/travel-plan\/days\/import/, "Routes should expose marketing tour day import");
   assert.match(routesSource, /\/api\/v1\/tours\/\{tour_id\}\/travel-plan\/days\/\{day_id\}\/services\/import/, "Routes should expose marketing tour service import");
-  assert.match(tourHandlersSource, /copyMarketingTourServiceForImport[\s\S]*details:\s*normalizeText\(sourceItem\?\.details\)[\s\S]*details_i18n:/, "Marketing tour imports should preserve service details");
+  assert.match(tourAdapterSource, /include_translations:\s*false[\s\S]*include_translations:\s*false/, "Marketing tour imports should not prefill translated day or service branches");
+  assert.match(tourHandlersSource, /copyMarketingTourServiceForImport[\s\S]*details:\s*preferredEnglishImportText\(sourceItem\?\.details_i18n,\s*sourceItem\?\.details\)[\s\S]*details_i18n:\s*includeTranslations/, "Marketing tour imports should preserve English service details as source text");
+  assert.match(tourHandlersSource, /copyMarketingTourDayForImport\(sourceDay,[\s\S]*includeTranslations:\s*false[\s\S]*copyMarketingTourServiceForImport\(sourceService,[\s\S]*includeTranslations:\s*false/, "Marketing tour import endpoints should keep translated branches out of copied days and services");
   assert.match(tourHandlersSource, /sourceTourId === tourId[\s\S]*Choose a day from another marketing tour/, "Day imports should reject the current marketing tour as a source");
   assert.match(tourHandlersSource, /sourceTourId === tourId[\s\S]*Choose a service from another marketing tour/, "Service imports should reject the current marketing tour as a source");
 });

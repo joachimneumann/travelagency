@@ -100,12 +100,21 @@ function cloneTourMarketingServiceForLocalImport({ searchResult }) {
     : null;
   if (!sourceService) return null;
   return cloneJson({
-    ...sourceService,
+    timing_kind: sourceService.timing_kind,
     time_label: preferredEnglishImportText(sourceService.time_label_i18n, sourceService.time_label) || null,
+    time_label_i18n: {},
+    time_point: sourceService.time_point,
+    kind: sourceService.kind,
     title: preferredEnglishImportText(sourceService.title_i18n, sourceService.title),
+    title_i18n: {},
     details: preferredEnglishImportText(sourceService.details_i18n, sourceService.details) || null,
+    details_i18n: {},
     image_subtitle: preferredEnglishImportText(sourceService.image_subtitle_i18n, sourceService.image_subtitle) || null,
+    image_subtitle_i18n: {},
     location: preferredEnglishImportText(sourceService.location_i18n, sourceService.location) || null,
+    location_i18n: {},
+    start_time: sourceService.start_time,
+    end_time: sourceService.end_time,
     id: undefined,
     image: sourceService.image && typeof sourceService.image === "object" && !Array.isArray(sourceService.image)
       ? {
@@ -122,10 +131,14 @@ function cloneTourMarketingDayForLocalImport({ searchResult, targetDayIndex = 0 
     : null;
   if (!sourceDay) return null;
   return cloneJson({
-    ...sourceDay,
+    date: sourceDay.date,
+    date_string: sourceDay.date_string,
     title: preferredEnglishImportText(sourceDay.title_i18n, sourceDay.title),
+    title_i18n: {},
     overnight_location: preferredEnglishImportText(sourceDay.overnight_location_i18n, sourceDay.overnight_location) || null,
+    overnight_location_i18n: {},
     notes: preferredEnglishImportText(sourceDay.notes_i18n, sourceDay.notes) || null,
+    notes_i18n: {},
     id: undefined,
     day_number: Math.max(1, Number(targetDayIndex) + 1),
     services: (Array.isArray(sourceDay.services) ? sourceDay.services : []).map((service) => (
@@ -320,7 +333,7 @@ export function createTourTravelPlanAdapter({
         include_images: true,
         include_customer_visible_images_only: false,
         include_notes: true,
-        include_translations: true,
+        include_translations: false,
         ...expectedTourUpdatedAtPayload(requestState),
         actor: requestState.user
       }
@@ -342,7 +355,7 @@ export function createTourTravelPlanAdapter({
         include_images: true,
         include_customer_visible_images_only: false,
         include_notes: true,
-        include_translations: true,
+        include_translations: false,
         ...expectedTourUpdatedAtPayload(requestState),
         actor: requestState.user
       }

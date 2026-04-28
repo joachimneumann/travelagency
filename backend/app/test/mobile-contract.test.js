@@ -2009,7 +2009,7 @@ test("marketing tour editor can import days and services from other marketing to
     const importedService = serviceImportResult.body.tour.travel_plan.days[0].services[1];
     assert.equal(importedService.title, "Library lantern service");
     assert.equal(importedService.details, "Library lantern service details");
-    assert.equal(importedService.details_i18n.de, "Laternen Service Details");
+    assert.deepEqual(importedService.details_i18n, {});
     assert.notEqual(importedService.id, "marketing_library_source_service_1");
     assert.equal(importedService.image.include_in_travel_tour_card, true);
     assert.notEqual(importedService.image.id, "marketing_library_source_image_1");
@@ -2039,9 +2039,11 @@ test("marketing tour editor can import days and services from other marketing to
     assert.equal(dayImportResult.body.tour.travel_plan.days.length, 2);
     assert.equal(dayImportResult.body.tour.travel_plan.days[0].notes, "Unsaved note before day import");
     assert.equal(dayImportResult.body.tour.travel_plan.days[1].title, "Library source market day");
+    assert.deepEqual(dayImportResult.body.tour.travel_plan.days[1].title_i18n, {});
     assert.notEqual(dayImportResult.body.tour.travel_plan.days[1].id, "marketing_library_source_day_1");
     assert.equal(dayImportResult.body.tour.travel_plan.days[1].services[0].title, "Library lantern service");
     assert.equal(dayImportResult.body.tour.travel_plan.days[1].services[0].details, "Library lantern service details");
+    assert.deepEqual(dayImportResult.body.tour.travel_plan.days[1].services[0].details_i18n, {});
   } finally {
     for (const tourId of [targetTourId, sourceTourId].filter(Boolean)) {
       await requestJson(
@@ -2167,7 +2169,7 @@ test("booking editor can import days and services from marketing tours", async (
     const importedService = serviceImportResult.body.booking.travel_plan.days[0].services[1];
     assert.equal(importedService.title, "Reusable booking service");
     assert.equal(importedService.details, "Reusable booking service details");
-    assert.equal(importedService.details_i18n.de, "Wiederverwendbare Buchungsdetails");
+    assert.equal(importedService.details_i18n?.de, undefined);
     assert.notEqual(importedService.id, "booking_marketing_source_service_1");
     assert.equal(importedService.timing_kind, "not_applicable");
 
@@ -2196,7 +2198,9 @@ test("booking editor can import days and services from marketing tours", async (
     assert.equal(dayImportResult.body.booking.travel_plan.days.length, 2);
     assert.equal(dayImportResult.body.booking.travel_plan.days[0].notes, "Unsaved note before booking day import");
     assert.equal(dayImportResult.body.booking.travel_plan.days[1].title, "Reusable booking day");
+    assert.equal(dayImportResult.body.booking.travel_plan.days[1].title_i18n?.de, undefined);
     assert.equal(dayImportResult.body.booking.travel_plan.days[1].services[0].details, "Reusable booking service details");
+    assert.equal(dayImportResult.body.booking.travel_plan.days[1].services[0].details_i18n?.de, undefined);
     assert.notEqual(dayImportResult.body.booking.travel_plan.days[1].id, "booking_marketing_source_day_1");
     assert.equal(dayImportResult.body.booking.travel_plan.destination_scope[0].destination, "VN");
   } finally {

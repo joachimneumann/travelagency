@@ -1659,7 +1659,7 @@ function buildBookingMarketingTourDayImportRequest({ apiOrigin: requestApiOrigin
       include_images: true,
       include_customer_visible_images_only: false,
       include_notes: true,
-      include_translations: true,
+      include_translations: false,
       actor: requestState.user
     }
   });
@@ -1682,7 +1682,7 @@ function buildBookingMarketingTourServiceImportRequest({ apiOrigin: requestApiOr
       include_images: true,
       include_customer_visible_images_only: false,
       include_notes: true,
-      include_translations: true,
+      include_translations: false,
       include_offer_links: false,
       actor: requestState.user
     }
@@ -1691,15 +1691,6 @@ function buildBookingMarketingTourServiceImportRequest({ apiOrigin: requestApiOr
 
 function cloneJson(value) {
   return value === undefined ? undefined : JSON.parse(JSON.stringify(value));
-}
-
-function cloneLocalizedMap(value) {
-  const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
-  return Object.fromEntries(
-    Object.entries(source)
-      .map(([lang, text]) => [String(lang || "").trim(), normalizeText(text)])
-      .filter(([lang, text]) => lang && text)
-  );
 }
 
 function preferredEnglishImportText(mapValue, plainValue) {
@@ -1737,11 +1728,11 @@ function cloneBookingMarketingTourServiceForLocalImport({ searchResult }) {
     time_point: null,
     kind: normalizeText(sourceService.kind) || "other",
     title: preferredEnglishImportText(sourceService.title_i18n, sourceService.title),
-    title_i18n: cloneLocalizedMap(sourceService.title_i18n),
+    title_i18n: {},
     details: preferredEnglishImportText(sourceService.details_i18n, sourceService.details) || null,
-    details_i18n: cloneLocalizedMap(sourceService.details_i18n),
+    details_i18n: {},
     image_subtitle: preferredEnglishImportText(sourceService.image_subtitle_i18n, sourceService.image_subtitle) || null,
-    image_subtitle_i18n: cloneLocalizedMap(sourceService.image_subtitle_i18n),
+    image_subtitle_i18n: {},
     location: null,
     location_i18n: {},
     start_time: null,
@@ -1760,16 +1751,16 @@ function cloneBookingMarketingTourDayForLocalImport({ searchResult, targetDayInd
     date: null,
     date_string: null,
     title: preferredEnglishImportText(sourceDay.title_i18n, sourceDay.title),
-    title_i18n: cloneLocalizedMap(sourceDay.title_i18n),
+    title_i18n: {},
     overnight_location: preferredEnglishImportText(sourceDay.overnight_location_i18n, sourceDay.overnight_location) || null,
-    overnight_location_i18n: cloneLocalizedMap(sourceDay.overnight_location_i18n),
+    overnight_location_i18n: {},
     services: (Array.isArray(sourceDay.services) ? sourceDay.services : []).map((service) => (
       cloneBookingMarketingTourServiceForLocalImport({
         searchResult: { source_service: service }
       })
     )).filter(Boolean),
     notes: preferredEnglishImportText(sourceDay.notes_i18n, sourceDay.notes) || null,
-    notes_i18n: cloneLocalizedMap(sourceDay.notes_i18n)
+    notes_i18n: {}
   };
 }
 

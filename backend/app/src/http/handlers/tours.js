@@ -1039,8 +1039,8 @@ export function createTourHandlers(deps) {
       return;
     }
     const sourceTravelPlan = normalizeMarketingTourTravelPlan(sourceTour.travel_plan, {
-      contentLang: lang,
-      flatLang: lang,
+      contentLang: "en",
+      flatLang: "en",
       strictReferences: false
     });
     const sourceDay = (Array.isArray(sourceTravelPlan?.days) ? sourceTravelPlan.days : [])
@@ -1055,13 +1055,13 @@ export function createTourHandlers(deps) {
         ? payload.target_travel_plan
         : tours[targetIndex].travel_plan,
       {
-        contentLang: lang,
-        flatLang: lang,
+        contentLang: "en",
+        flatLang: "en",
         strictReferences: false
       }
     );
     const importedDay = copyMarketingTourDayForImport(sourceDay, {
-      includeTranslations: payload.include_translations !== false,
+      includeTranslations: false,
       includeNotes: payload.include_notes !== false,
       includeImages: payload.include_images !== false,
       includeCustomerVisibleImagesOnly: payload.include_customer_visible_images_only === true,
@@ -1131,8 +1131,8 @@ export function createTourHandlers(deps) {
     }
     const sourceServiceId = normalizeText(payload.source_service_id);
     const sourceTravelPlan = normalizeMarketingTourTravelPlan(sourceTour.travel_plan, {
-      contentLang: lang,
-      flatLang: lang,
+      contentLang: "en",
+      flatLang: "en",
       strictReferences: false
     });
     const sourceDay = (Array.isArray(sourceTravelPlan?.days) ? sourceTravelPlan.days : [])
@@ -1149,8 +1149,8 @@ export function createTourHandlers(deps) {
         ? payload.target_travel_plan
         : tours[targetIndex].travel_plan,
       {
-        contentLang: lang,
-        flatLang: lang,
+        contentLang: "en",
+        flatLang: "en",
         strictReferences: false
       }
     );
@@ -1162,7 +1162,7 @@ export function createTourHandlers(deps) {
     }
 
     const importedService = copyMarketingTourServiceForImport(sourceService, {
-      includeTranslations: payload.include_translations !== false,
+      includeTranslations: false,
       includeImages: payload.include_images !== false,
       includeCustomerVisibleImagesOnly: payload.include_customer_visible_images_only === true,
       importedAt: nowIso()
