@@ -20,27 +20,24 @@
     "no": "Phu Quoc"
   },
   "short_description": {
-    "en": "Phu Quoc is the largest island in Vietnam, known as the \"Pearl Island\" with clear blue beaches and a diverse primary forest ecosystem. This is a world-class resort paradi",
-    "ar": "فو كووك هي أكبر جزيرة في فيتنام، والمعروفة باسم \"جزيرة اللؤلؤ\" ذات الشواطئ الزرقاء الصافية والنظام البيئي للغابات الأولية المتنوعة. إنه منتجع بارادي ذو مستوى عالمي",
-    "fr": "Phu Quoc est la plus grande île du Vietnam, connue sous le nom de « l'île des Perles » avec des plages d'un bleu cristallin et un écosystème forestier primaire diversifié. C'est un paradis de villégiature de classe mondiale",
-    "zh": "富国岛是越南最大的岛屿，被誉为“珍珠岛”，拥有清澈蔚蓝的海滩和多样化的原始森林生态系统。这里是世界级的度假天堂",
-    "ja": "フーコックはベトナム最大の島で、透き通った青いビーチと多様な原生林生態系があり、「真珠の島」として知られています。ここは世界クラスのリゾートパラダイス",
-    "ko": "푸꾸옥(Phu Quoc)은 베트남에서 가장 큰 섬으로, 맑고 푸른 해변과 다양한 원시림 생태계가 있어 '진주섬'으로 알려져 있습니다. 이곳은 세계적인 리조트 파라다이스",
-    "vi": "Phú Quốc là hòn đảo lớn nhất Việt Nam, được mệnh danh là “Đảo Ngọc” với những bãi biển trong xanh và hệ sinh thái rừng nguyên sinh đa dạng. Đây là thiên đường nghỉ dưỡng đẳng cấp thế giới",
-    "ms": "Phu Quoc ialah pulau terbesar di Vietnam, dikenali sebagai \"Pulau Mutiara\" dengan pantai biru jernih dan ekosistem hutan primer yang pelbagai. Ini adalah paradi resort bertaraf dunia",
-    "de": "Phu Quoc ist die größte Insel Vietnams, bekannt als „Perleninsel“ mit klaren blauen Stränden und einem vielfältigen Primärwald-Ökosystem. Dies ist ein Weltklasse-Resort-Paradies",
-    "es": "Phu Quoc es la isla más grande de Vietnam, conocida como la \"Isla de las Perlas\", con playas de color azul claro y un ecosistema de bosque primario diverso. Este es un paraíso turístico de clase mundial.",
-    "it": "Phu Quoc è l'isola più grande del Vietnam, conosciuta come \"l'Isola delle Perle\" con spiagge azzurre e cristalline e un diversificato ecosistema forestale primario. Questo è un resort paradisiaco di prima classe",
-    "ru": "Фукуок — самый большой остров Вьетнама, известный как «Жемчужный остров» с чистыми голубыми пляжами и разнообразной экосистемой девственных лесов. Это курортный рай мирового класса.",
-    "nl": "Phu Quoc is het grootste eiland van Vietnam, bekend als het \"Pareleiland\" met helderblauwe stranden en een divers primair bosecosysteem. Dit is een resortparadi van wereldklasse",
-    "pl": "Phu Quoc to największa wyspa w Wietnamie, znana jako „Wyspa Perłowa” z czystymi, błękitnymi plażami i zróżnicowanym ekosystemem lasów pierwotnych. To światowej klasy kurort paradi",
-    "da": "Phu Quoc er den største ø i Vietnam, kendt som \"Perleøen\" med klare blå strande og et mangfoldigt primært skovøkosystem. Dette er et resort-paradi i verdensklasse",
-    "sv": "Phu Quoc är den största ön i Vietnam, känd som \"Pärlön\" med klarblå stränder och ett mångsidigt primärt skogsekosystem. Detta är ett resortparadi i världsklass",
-    "no": "Phu Quoc er den største øya i Vietnam, kjent som \"Perleøya\" med klare blå strender og et mangfoldig primært skogøkosystem. Dette er et feriestedsparadi i verdensklasse"
+    "ar": "استكشف المعالم البارزة في Phu Quoc: VinWonders، وGrand World، وجولة في 4 جزر، وتلفريك Hon Thom، وSunset Town، وHo Quoc Pagoda، وCoconut Prison، والسوق الليلي النابض بالحياة.",
+    "fr": "Explorez les points forts de Phu Quoc : VinWonders, Grand World, une visite de 4 îles, le téléphérique Hon Thom, Sunset Town, la pagode Ho Quoc, la prison de noix de coco et le marché nocturne animé.",
+    "zh": "探索富国岛的亮点：VinWonders、大世界、4 岛之旅、Hon Thom 缆车、日落小镇、胡国宝塔、椰子监狱和充满活力的夜市。",
+    "ja": "フーコックのハイライトを探索しましょう: VinWonders、グランド ワールド、4 島ツアー、ホン トム ケーブル カー、サンセット タウン、ホーコック パゴダ、ココナッツ プリズン、そして活気に満ちたナイト マーケット。",
+    "ko": "푸꾸옥의 하이라이트를 탐험해보세요: 빈원더스(VinWonders), 그랜드 월드(Grand World), 4개 섬 투어, 혼톰(Hon Thom) 케이블카, 선셋 타운(Sunset Town), 호꾸옥 파고다(Ho Quoc Pagoda), 코코넛 감옥(Coconut Prison), 활기 넘치는 야시장.",
+    "vi": "Khám phá những điểm nổi bật của Phú Quốc: VinWonders, Grand World, tour 4 đảo, cáp treo Hòn Thơm, Sunset Town, Chùa Hộ Quốc, Nhà tù Dừa và Chợ đêm sôi động.",
+    "ms": "Terokai sorotan Phu Quoc: VinWonders, Grand World, lawatan 4 pulau, kereta kabel Hon Thom, Bandar Sunset, Pagoda Ho Quoc, Penjara Kelapa dan Pasar Malam yang meriah.",
+    "de": "Entdecken Sie die Highlights von Phu Quoc: VinWonders, Grand World, eine 4-Insel-Tour, Hon Thom Cable Car, Sunset Town, Ho Quoc Pagode, Coconut Prison und den lebhaften Nachtmarkt.",
+    "es": "Explore los aspectos más destacados de Phu Quoc: VinWonders, Grand World, un recorrido por 4 islas, el teleférico de Hon Thom, Sunset Town, la pagoda de Ho Quoc, la prisión de Coconut y el vibrante mercado nocturno.",
+    "it": "Esplora i punti salienti di Phu Quoc: VinWonders, Grand World, un tour di 4 isole, la funivia di Hon Thom, Sunset Town, la Pagoda di Ho Quoc, la prigione di Coconut e il vivace mercato notturno.",
+    "ru": "Исследуйте достопримечательности Фукуока: VinWonders, Grand World, экскурсию по 4 островам, канатную дорогу Хон Том, Сансет Таун, пагоду Хо Куок, Кокосовую тюрьму и оживленный ночной рынок.",
+    "nl": "Ontdek de hoogtepunten van Phu Quoc: VinWonders, Grand World, een tour van 4 eilanden, de Hon Thom-kabelbaan, Sunset Town, Ho Quoc Pagoda, Coconut Prison en de levendige avondmarkt.",
+    "pl": "Poznaj najważniejsze atrakcje Phu Quoc: VinWonders, Grand World, wycieczkę na 4 wyspy, kolejkę linową Hon Thom, Sunset Town, Pagoda Ho Quoc, więzienie Coconut i tętniący życiem nocny targ.",
+    "da": "Udforsk Phu Quocs højdepunkter: VinWonders, Grand World, en 4-ø-tur, Hon Thom-svævebane, Sunset Town, Ho Quoc-pagoden, Coconut Prison og det pulserende natmarked.",
+    "sv": "Utforska Phu Quocs höjdpunkter: VinWonders, Grand World, en rundtur på 4 öar, linbanan Hon Thom, Sunset Town, Ho Quoc Pagoda, Coconut Prison och den livliga nattmarknaden.",
+    "no": "Utforsk Phu Quocs høydepunkter: VinWonders, Grand World, en tur på 4 øyer, Hon Thom taubane, Sunset Town, Ho Quoc Pagoda, Coconut Prison og det pulserende nattmarkedet.",
+    "en": "Explore Phu Quoc’s highlights: VinWonders, Grand World, a 4-island tour, Hon Thom cable car, Sunset Town, Ho Quoc Pagoda, Coconut Prison, and the vibrant Night Market."
   },
-  "destinations": [
-    "vietnam"
-  ],
   "styles": [
     "grand-expeditions",
     "beach",
@@ -52,12 +49,19 @@
   "seasonality_end_month": "feb",
   "priority": 100,
   "created_at": "2026-04-09T03:15:24.977Z",
-  "updated_at": "2026-04-26T00:15:19.954Z",
-  "pictures": [
-    "/public/v1/tour-images/tour_c2c80f99-287c-41b5-93cc-53c4d98d0caf/tour_c2c80f99-287c-41b5-93cc-53c4d98d0caf.webp",
-    "/public/v1/tour-images/tour_c2c80f99-287c-41b5-93cc-53c4d98d0caf/picture-be2d817d-8c19-4a96-bc32-ecf3bcb684ba.webp"
-  ],
+  "updated_at": "2026-04-28T09:21:59.194Z",
   "travel_plan": {
+    "destination_scope": [
+      {
+        "destination": "VN",
+        "areas": [
+          {
+            "area_id": "area_024155db-da17-4cdb-ae0e-a01fd1e77f58",
+            "places": []
+          }
+        ]
+      }
+    ],
     "days": [
       {
         "id": "travel_plan_day_cd73568b-8916-4faa-998f-c6285531de92",
@@ -75,9 +79,9 @@
           "es": "Recogida en el aeropuerto de Phu Quoc – Pagoda de Ho Quoc – Prisión de cocoteros – Playa de Sao – Mercado nocturno de Phu Quoc",
           "it": "Prelievo all'aeroporto di Phu Quoc – Pagoda di Ho Quoc – Prigione del cocco – Spiaggia di Sao – Mercato notturno di Phu Quoc",
           "ru": "Встреча в аэропорту Фукуока – Пагода Хо Куок – Тюрьма Кокосовой Пальмы – Пляж Сан – Ночной рынок Фукуока",
-          "nl": "Phu Quoc Airport Pick-up – Ho Quoc Pagoda – Coconut Tree Prison – Sao Beach – Phu Quoc Night Market",
+          "nl": "Ophaalservice vanaf de luchthaven Phu Quoc – Ho Quoc Pagode – Coconut Tree Prison – Sao Beach – Phu Quoc-avondmarkt",
           "pl": "Odbiór z lotniska Phu Quoc – Pagoda Ho Quoc – Więzienie drzewa kokosowego – Plaża Sao – Nocny targ w Phu Quoc",
-          "da": "Phu Quoc Airport Pick-Up – Ho Quoc Pagoda – Coconut Tree Prison – Sao Beach – Phu Quoc Nattemarked",
+          "da": "Phu Quoc Lufthavn afhentning – Ho Quoc Pagoda – Coconut Tree Prison – Sao Beach – Phu Quoc Nattemarked",
           "sv": "Phu Quoc Airport Pick-up – Ho Quoc Pagoda – Coconut Tree Prison – Sao Beach – Phu Quoc nattmarknad",
           "no": "Phu Quoc Airport Pick-up – Ho Quoc Pagoda – Coconut Tree Prison – Sao Beach – Phu Quoc nattmarked"
         },
@@ -117,8 +121,8 @@
             "start_time": null,
             "end_time": null,
             "image": {
-              "id": "travel_plan_service_image_1cb73809-206d-4480-91c2-e6461996a13e",
-              "storage_path": "/public/v1/tour-images/tour_c2c80f99-287c-41b5-93cc-53c4d98d0caf/travel-plan-services/travel_plan_service_abdee124-c984-4813-aae9-cea38dd11c85-1777159371055-13a6ee17-a2e1-4205-acd0-3a46d17ce527.webp",
+              "id": "travel_plan_service_image_7cd8fd2c-4abf-4bee-b3b0-402439d615bc",
+              "storage_path": "/public/v1/tour-images/tour_c2c80f99-287c-41b5-93cc-53c4d98d0caf/travel-plan-services/travel_plan_service_abdee124-c984-4813-aae9-cea38dd11c85-1777344058412-5ce2aac0-e946-43cf-ab7d-74dc9754999c.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -126,11 +130,12 @@
               "sort_order": 0,
               "is_primary": true,
               "is_customer_visible": true,
+              "include_in_travel_tour_card": false,
               "width_px": null,
               "height_px": null,
               "source_attribution": null,
               "focal_point": null,
-              "created_at": "2026-04-25T23:22:51.102Z"
+              "created_at": "2026-04-28T02:40:58.471Z"
             }
           },
           {
@@ -175,11 +180,112 @@
               "sort_order": 0,
               "is_primary": true,
               "is_customer_visible": true,
+              "include_in_travel_tour_card": true,
               "width_px": null,
               "height_px": null,
               "source_attribution": null,
               "focal_point": null,
               "created_at": "2026-04-25T23:24:11.779Z"
+            }
+          },
+          {
+            "id": "travel_plan_service_88dfa046-d5ef-428e-bbb2-fba8ec209d2e",
+            "timing_kind": "label",
+            "time_label": null,
+            "time_label_i18n": {},
+            "time_point": null,
+            "kind": "other",
+            "title": "Ho Quoc Pagoda",
+            "title_i18n": {
+              "ar": "معبد هو كوك",
+              "fr": "Pagode Ho Quoc",
+              "zh": "护国寺",
+              "ja": "ホーコックパゴダ",
+              "ko": "호 꾸옥 파고다",
+              "vi": "Chùa Hộ Quốc",
+              "ms": "Pagoda Ho Quoc",
+              "de": "Ho-Quoc-Pagode",
+              "es": "Pagoda Ho Quoc",
+              "it": "Pagoda di Ho Quoc",
+              "ru": "Пагода Хо Куок",
+              "nl": "Ho Quoc-pagode",
+              "pl": "Pagoda Ho Quoc",
+              "da": "Ho Quoc Pagoda",
+              "sv": "Ho Quoc Pagoda",
+              "no": "Ho Quoc Pagoda"
+            },
+            "image_subtitle": null,
+            "image_subtitle_i18n": {},
+            "location": null,
+            "location_i18n": {},
+            "start_time": null,
+            "end_time": null,
+            "image": {
+              "id": "travel_plan_service_image_7e3c1276-0629-43d8-a0f0-52dc9b074178",
+              "storage_path": "/public/v1/tour-images/tour_c2c80f99-287c-41b5-93cc-53c4d98d0caf/travel-plan-services/travel_plan_service_88dfa046-d5ef-428e-bbb2-fba8ec209d2e-1777367632344-c5358074-8e7f-4075-8b61-0306635ba3f3.webp",
+              "caption": null,
+              "caption_i18n": {},
+              "alt_text": null,
+              "alt_text_i18n": {},
+              "sort_order": 0,
+              "is_primary": true,
+              "is_customer_visible": true,
+              "include_in_travel_tour_card": false,
+              "width_px": null,
+              "height_px": null,
+              "source_attribution": null,
+              "focal_point": null,
+              "created_at": "2026-04-28T09:13:52.412Z"
+            }
+          },
+          {
+            "id": "travel_plan_service_bc0f1957-3085-4204-a35e-6494362054ac",
+            "timing_kind": "label",
+            "time_label": null,
+            "time_label_i18n": {},
+            "time_point": null,
+            "kind": "other",
+            "title": "Cay Dua Prison",
+            "title_i18n": {
+              "ar": "سجن كاي دوا",
+              "fr": "Prison de Cay Dua",
+              "zh": "杜瓦岛监狱",
+              "ja": "ケイドゥア刑務所",
+              "ko": "케이 두아 교도소",
+              "vi": "Nhà tù Cây Dừa",
+              "ms": "Penjara Cay Dua",
+              "de": "Cay Dua Gefängnis",
+              "es": "Prisión de Cay Dua",
+              "it": "Prigione di Cay Dua",
+              "ru": "Тюрьма Кей Дуа",
+              "nl": "Cay Dua-gevangenis",
+              "pl": "Więzienie Cay Dua",
+              "da": "Cay Dua fængsel",
+              "sv": "Cay Dua fängelse",
+              "no": "Cay Dua fengsel"
+            },
+            "image_subtitle": null,
+            "image_subtitle_i18n": {},
+            "location": null,
+            "location_i18n": {},
+            "start_time": null,
+            "end_time": null,
+            "image": {
+              "id": "travel_plan_service_image_56be8279-c524-4b62-a072-184337ddb334",
+              "storage_path": "/public/v1/tour-images/tour_c2c80f99-287c-41b5-93cc-53c4d98d0caf/travel-plan-services/travel_plan_service_bc0f1957-3085-4204-a35e-6494362054ac-1777367975624-0944e2ba-557c-4af2-a12f-79718e2a23aa.webp",
+              "caption": null,
+              "caption_i18n": {},
+              "alt_text": null,
+              "alt_text_i18n": {},
+              "sort_order": 0,
+              "is_primary": true,
+              "is_customer_visible": true,
+              "include_in_travel_tour_card": true,
+              "width_px": null,
+              "height_px": null,
+              "source_attribution": null,
+              "focal_point": null,
+              "created_at": "2026-04-28T09:19:35.772Z"
             }
           }
         ],
@@ -250,7 +356,7 @@
               "ru": "Большой Мир",
               "nl": "Grote Wereld",
               "pl": "Wielki Świat",
-              "da": "Den store verden",
+              "da": "Store Verden",
               "sv": "Stora världen",
               "no": "Grand World"
             },
@@ -270,34 +376,18 @@
               "sort_order": 0,
               "is_primary": true,
               "is_customer_visible": true,
+              "include_in_travel_tour_card": true,
               "width_px": null,
               "height_px": null,
               "source_attribution": null,
               "focal_point": null,
               "created_at": "2026-04-25T23:25:29.631Z"
             }
-          },
-          {
-            "id": "travel_plan_service_30c0be56-f237-42bc-9659-65137a611fee",
-            "timing_kind": "label",
-            "time_label": null,
-            "time_label_i18n": {},
-            "time_point": null,
-            "kind": "other",
-            "title": "",
-            "title_i18n": {},
-            "image_subtitle": null,
-            "image_subtitle_i18n": {},
-            "location": null,
-            "location_i18n": {},
-            "start_time": null,
-            "end_time": null,
-            "image": null
           }
         ],
         "notes": "•\tImmerse yourself in the ultimate artistic experience at Grand World, the \"city that never sleeps.\" ONCE: A symphony of light technology and sublime emotions in the heart of Phu Quoc.",
         "notes_i18n": {
-          "ar": "• انغمس في التجربة الفنية المطلقة في جراند وورلد، \"المدينة التي لا تنام\". مرة واحدة: سيمفونية من تكنولوجيا الضوء والمشاعر السامية في قلب فو كووك.",
+          "ar": "• انغمس في التجربة الفنية المطلقة في جراند وورلد، \"المدينة التي لا تنام أبدًا\". مرة واحدة: سيمفونية من تكنولوجيا الضوء والمشاعر السامية في قلب فو كووك.",
           "fr": "• Plongez-vous dans l'expérience artistique ultime à Grand World, la « ville qui ne dort jamais ». ONCE : Une symphonie de technologie lumineuse et d'émotions sublimes au cœur de Phu Quoc.",
           "zh": "• 让自己沉浸在“不夜城”大世界的终极艺术体验中。ONCE：富国岛中心的光技术与崇高情感的交响曲。",
           "ja": "• 「眠らない街」グランド ワールドで究極の芸術体験に浸ってください。ONCE: フーコックの中心部にある光のテクノロジーと崇高な感情のシンフォニー。",
@@ -382,6 +472,7 @@
               "sort_order": 0,
               "is_primary": true,
               "is_customer_visible": true,
+              "include_in_travel_tour_card": true,
               "width_px": null,
               "height_px": null,
               "source_attribution": null,
@@ -413,53 +504,53 @@
       {
         "id": "travel_plan_day_18bacfad-0f7f-49d8-8295-8af767ec3a40",
         "day_number": 4,
-        "title": ": Dinh Cau – Dinh Ba – Traditional Craft Villages – “Bun Quay” Noodles – Airport Transfer",
+        "title": "Dinh Cau – Dinh Ba – Traditional Craft Villages – “Bun Quay” Noodles – Airport Transfer",
         "title_i18n": {
-          "ar": ": دينه كاو - دينه با - قرى الحرف التقليدية - نودلز \"بون كواي\" - نقل المطار",
-          "fr": ": Dinh Cau – Dinh Ba – Villages artisanaux traditionnels – Nouilles « Bun Quay » – Transfert aéroport",
-          "zh": ": Dinh Cau – Dinh Ba – 传统工艺村 – “Bun Quay”面条 – 机场接送",
-          "ja": ": ディンカウ – ディンバ – 伝統工芸村 – 「ブンキー」ヌードル – 空港送迎",
-          "ko": ": 딘까우(Dinh Cau) – 딘바(Dinh Ba) – 전통 공예 마을 – “Bun Quay” 국수 – 공항 이동",
-          "vi": ": Dinh Cậu – Dinh Ba – Làng nghề truyền thống – Bún Quay – Đưa đón sân bay",
-          "ms": ": Dinh Cau – Dinh Ba – Kampung Kraf Tradisional – Mi “Bun Quay” – Pemindahan Lapangan Terbang",
-          "de": ": Dinh Cau – Dinh Ba – Traditionelle Handwerksdörfer – „Bun Quay“-Nudeln – Flughafentransfer",
-          "es": ": Dinh Cau – Dinh Ba – Pueblos artesanales tradicionales – Fideos “Bun Quay” – Traslado al aeropuerto",
-          "it": ": Dinh Cau – Dinh Ba – Villaggi artigianali tradizionali – Noodles “Bun Quay” – Trasferimento aeroportuale",
-          "ru": ": Динь Кау – Динь Ба – Традиционные ремесленные деревни – Лапша «Bun Quay» – Трансфер из аэропорта.",
-          "nl": ": Dinh Cau – Dinh Ba – Traditionele ambachtsdorpen – “Bun Quay” noedels – Luchthaventransfer",
-          "pl": ": Dinh Cau – Dinh Ba – Tradycyjne wioski rzemieślnicze – Makaron „Bun Quay” – Transfer na lotnisko",
-          "da": ": Dinh Cau - Dinh Ba - Traditionelle håndværkslandsbyer - \"Bun Quay\" nudler - Lufthavnstransport",
-          "sv": ": Dinh Cau - Dinh Ba - Traditionella hantverksbyar - \"Bun Quay\" nudlar - Flygplatstransfer",
-          "no": ": Dinh Cau – Dinh Ba – Tradisjonelle håndverkslandsbyer – “Bun Quay” nudler – Flyplasstransport"
+          "ar": "دينه كاو - دينه با - قرى الحرف التقليدية - نودلز \"بون كواي\" - نقل المطار",
+          "fr": "Dinh Cau – Dinh Ba – Villages artisanaux traditionnels – Nouilles « Bun Quay » – Transfert aéroport",
+          "zh": "Dinh Cau – Dinh Ba – 传统工艺村 – “Bun Quay”面条 – 机场接送",
+          "ja": "ディンカウ – ディンバ – 伝統工芸村 – 「ブンキー」ヌードル – 空港送迎",
+          "ko": "Dinh Cau – Dinh Ba – 전통 공예 마을 – “Bun Quay” 국수 – 공항 이동",
+          "vi": "Dinh Cậu – Dinh Ba – Làng nghề truyền thống – Bún Quay – Đưa đón sân bay",
+          "ms": "Dinh Cau – Dinh Ba – Kampung Kraf Tradisional – Mi “Bun Quay” – Pemindahan Lapangan Terbang",
+          "de": "Dinh Cau – Dinh Ba – Traditionelle Handwerksdörfer – „Bun Quay“-Nudeln – Flughafentransfer",
+          "es": "Dinh Cau – Dinh Ba – Pueblos artesanales tradicionales – Fideos “Bun Quay” – Traslado al aeropuerto",
+          "it": "Dinh Cau – Dinh Ba – Villaggi artigianali tradizionali – Noodles “Bun Quay” – Trasferimento aeroportuale",
+          "ru": "Динь ​​Кау – Динь Ба – Традиционные ремесленные деревни – Лапша «Bun Quay» – Трансфер из аэропорта",
+          "nl": "Dinh Cau – Dinh Ba – Traditionele ambachtsdorpen – “Bun Quay” noedels – Luchthaventransfer",
+          "pl": "Dinh Cau – Dinh Ba – Tradycyjne wioski rzemieślnicze – Makaron „Bun Quay” – Transfer na lotnisko",
+          "da": "Dinh Cau - Dinh Ba - Traditionelle håndværkslandsbyer - \"Bun Quay\" nudler - Lufthavnstransport",
+          "sv": "Dinh Cau - Dinh Ba - Traditionella hantverksbyar - \"Bun Quay\" nudlar - Flygplatstransfer",
+          "no": "Dinh Cau – Dinh Ba – Tradisjonelle håndverkslandsbyer – “Bun Quay” nudler – Flyplasstransport"
         },
         "overnight_location": null,
         "overnight_location_i18n": {},
         "services": [
           {
-            "id": "travel_plan_service_d2bb36c8-5405-4091-b6b8-fbb5e5a6142e",
+            "id": "travel_plan_service_a07b41dc-ad8e-4682-9a02-5e4585d75b13",
             "timing_kind": "label",
             "time_label": null,
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Dinh Cau beach",
+            "title": "Dinh Cau",
             "title_i18n": {
-              "ar": "شاطئ دينه كاو",
-              "fr": "Plage de Dinh Cau",
-              "zh": "亭久海滩",
-              "ja": "ディンカウビーチ",
-              "ko": "딘까우 해변",
-              "vi": "Bãi biển Dinh Cậu",
-              "ms": "Pantai Dinh Cau",
-              "de": "Dinh Cau Strand",
-              "es": "Playa Dinh Cau",
-              "it": "Spiaggia di Dinh Cau",
-              "ru": "Пляж Динь Кау",
-              "nl": "Dinh Cau-strand",
-              "pl": "Plaża Dinh Cau",
-              "da": "Dinh Cau strand",
-              "sv": "Dinh Cau strand",
-              "no": "Dinh Cau-stranden"
+              "ar": "دينه كاو",
+              "fr": "Dinh Cau",
+              "zh": "丁久",
+              "ja": "ディンカウ",
+              "ko": "딘까우",
+              "vi": "Dinh Cậu",
+              "ms": "Dinh Cau",
+              "de": "Dinh Cau",
+              "es": "Dinh Cau",
+              "it": "Dinh Cau",
+              "ru": "Динь ​​Кау",
+              "nl": "Dinh Cau",
+              "pl": "Dinh Cau",
+              "da": "Dinh Cau",
+              "sv": "Dinh Cau",
+              "no": "Dinh Cau"
             },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -468,8 +559,8 @@
             "start_time": null,
             "end_time": null,
             "image": {
-              "id": "travel_plan_service_image_b0fa2599-7447-4bbc-9d3a-39c3ba5a7685",
-              "storage_path": "/public/v1/tour-images/tour_c2c80f99-287c-41b5-93cc-53c4d98d0caf/travel-plan-services/travel_plan_service_d2bb36c8-5405-4091-b6b8-fbb5e5a6142e-1777159778755-6a6addd9-4f87-457a-8146-9ee357260175.webp",
+              "id": "travel_plan_service_image_fc32d48b-1255-4862-aec6-7d619e01f20c",
+              "storage_path": "/public/v1/tour-images/tour_c2c80f99-287c-41b5-93cc-53c4d98d0caf/travel-plan-services/travel_plan_service_a07b41dc-ad8e-4682-9a02-5e4585d75b13-1777344170302-4c728736-55ee-440c-8662-701e2fabba78.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -477,11 +568,12 @@
               "sort_order": 0,
               "is_primary": true,
               "is_customer_visible": true,
+              "include_in_travel_tour_card": true,
               "width_px": null,
               "height_px": null,
               "source_attribution": null,
               "focal_point": null,
-              "created_at": "2026-04-25T23:29:38.873Z"
+              "created_at": "2026-04-28T02:42:50.419Z"
             }
           }
         ],
@@ -504,199 +596,104 @@
           "sv": "• Kulturella höjdpunkter: Upptäck den andliga essensen i templen Dinh Cau och Dinh Ba, och utforska det rika arvet från Phu Quoc Islands långvariga traditionella hantverksbyar. • Lokala smaker: Njut av den berömda nudelrätten Bun Quay innan du avslutar din resa med bekväm och uppmärksam flygplatstransfer.",
           "no": "• Kulturelle høydepunkter: Oppdag den åndelige essensen ved templene Dinh Cau og Dinh Ba, og utforsk den rike arven til Phu Quoc Islands mangeårige tradisjonelle håndverkslandsbyer. • Lokale smaker: Nyt den berømte nudelretten Bun Quay før du avslutter reisen med praktisk og oppmerksom flyplasstransport."
         }
-      },
-      {
-        "id": "travel_plan_day_e2bbcb10-bb2e-45e1-b535-4e58437df9f7",
-        "day_number": 5,
-        "title": "Farewell",
-        "title_i18n": {
-          "ar": "وداع",
-          "fr": "Adieu",
-          "zh": "告别",
-          "ja": "別れ",
-          "ko": "작별",
-          "vi": "Tạm biệt",
-          "ms": "perpisahan",
-          "de": "Lebewohl",
-          "es": "Despedida",
-          "it": "Addio",
-          "ru": "Прощание",
-          "nl": "Afscheid",
-          "pl": "Pożegnanie",
-          "da": "Farvel",
-          "sv": "Farväl",
-          "no": "Farvel"
-        },
-        "overnight_location": null,
-        "overnight_location_i18n": {},
-        "services": [
-          {
-            "id": "travel_plan_service_f76c20a9-823c-47aa-bdae-353d6a0df82d",
-            "timing_kind": "label",
-            "time_label": null,
-            "time_label_i18n": {},
-            "time_point": null,
-            "kind": "other",
-            "title": "farewell",
-            "title_i18n": {
-              "ar": "وداع",
-              "fr": "adieu",
-              "zh": "告别",
-              "ja": "別れ",
-              "ko": "작별",
-              "vi": "tạm biệt",
-              "ms": "perpisahan",
-              "de": "Lebewohl",
-              "es": "despedida",
-              "it": "addio",
-              "ru": "прощание",
-              "nl": "afscheid",
-              "pl": "pożegnanie",
-              "da": "farvel",
-              "sv": "farväl",
-              "no": "farvel"
-            },
-            "image_subtitle": null,
-            "image_subtitle_i18n": {},
-            "location": null,
-            "location_i18n": {},
-            "start_time": null,
-            "end_time": null,
-            "image": {
-              "id": "travel_plan_service_image_3189cd0a-6584-4b7e-8231-67810f7795f5",
-              "storage_path": "/public/v1/tour-images/tour_c2c80f99-287c-41b5-93cc-53c4d98d0caf/travel-plan-services/travel_plan_service_f76c20a9-823c-47aa-bdae-353d6a0df82d-1777162360413-3719c8e4-9e8e-465c-a1d8-83935d2cd14b.webp",
-              "caption": null,
-              "caption_i18n": {},
-              "alt_text": null,
-              "alt_text_i18n": {},
-              "sort_order": 0,
-              "is_primary": true,
-              "is_customer_visible": true,
-              "width_px": null,
-              "height_px": null,
-              "source_attribution": null,
-              "focal_point": null,
-              "created_at": "2026-04-26T00:12:40.460Z"
-            }
-          }
-        ],
-        "notes": "Goodbye, tourists!",
-        "notes_i18n": {
-          "ar": "وداعا أيها السياح!",
-          "fr": "Au revoir les touristes !",
-          "zh": "再见，游客们！",
-          "ja": "さようなら、観光客の皆さん！",
-          "ko": "안녕, 관광객!",
-          "vi": "Tạm biệt các du khách!",
-          "ms": "Selamat tinggal, pelancong!",
-          "de": "Auf Wiedersehen, Touristen!",
-          "es": "¡Adiós turistas!",
-          "it": "Addio turisti!",
-          "ru": "До свидания, туристы!",
-          "nl": "Tot ziens, toeristen!",
-          "pl": "Żegnajcie turyści!",
-          "da": "Farvel, turister!",
-          "sv": "Adjö, turister!",
-          "no": "Farvel, turister!"
-        }
       }
     ],
     "translation_meta": {
       "ar": {
         "source_lang": "en",
-        "source_hash": "fnv1a_472178f1",
+        "source_hash": "fnv1a_aa442176",
         "origin": "machine",
-        "updated_at": "2026-04-26T00:12:59.781Z"
+        "updated_at": "2026-04-28T09:19:56.606Z"
       },
       "fr": {
         "source_lang": "en",
-        "source_hash": "fnv1a_472178f1",
+        "source_hash": "fnv1a_aa442176",
         "origin": "machine",
-        "updated_at": "2026-04-26T00:13:00.913Z"
+        "updated_at": "2026-04-28T09:19:58.825Z"
       },
       "zh": {
         "source_lang": "en",
-        "source_hash": "fnv1a_472178f1",
+        "source_hash": "fnv1a_aa442176",
         "origin": "machine",
-        "updated_at": "2026-04-26T00:13:02.935Z"
+        "updated_at": "2026-04-28T09:20:00.602Z"
       },
       "ja": {
         "source_lang": "en",
-        "source_hash": "fnv1a_472178f1",
+        "source_hash": "fnv1a_aa442176",
         "origin": "machine",
-        "updated_at": "2026-04-26T00:13:04.614Z"
+        "updated_at": "2026-04-28T09:20:02.538Z"
       },
       "ko": {
         "source_lang": "en",
-        "source_hash": "fnv1a_472178f1",
+        "source_hash": "fnv1a_aa442176",
         "origin": "machine",
-        "updated_at": "2026-04-26T00:13:06.279Z"
+        "updated_at": "2026-04-28T09:20:04.876Z"
       },
       "vi": {
         "source_lang": "en",
-        "source_hash": "fnv1a_472178f1",
+        "source_hash": "fnv1a_aa442176",
         "origin": "machine",
-        "updated_at": "2026-04-26T00:13:07.947Z"
+        "updated_at": "2026-04-28T09:20:07.043Z"
       },
       "ms": {
         "source_lang": "en",
-        "source_hash": "fnv1a_472178f1",
+        "source_hash": "fnv1a_aa442176",
         "origin": "machine",
-        "updated_at": "2026-04-26T00:13:12.183Z"
+        "updated_at": "2026-04-28T09:20:08.433Z"
       },
       "de": {
         "source_lang": "en",
-        "source_hash": "fnv1a_472178f1",
+        "source_hash": "fnv1a_aa442176",
         "origin": "machine",
-        "updated_at": "2026-04-26T00:13:13.947Z"
+        "updated_at": "2026-04-28T09:20:09.636Z"
       },
       "es": {
         "source_lang": "en",
-        "source_hash": "fnv1a_472178f1",
+        "source_hash": "fnv1a_aa442176",
         "origin": "machine",
-        "updated_at": "2026-04-26T00:13:15.180Z"
+        "updated_at": "2026-04-28T09:20:11.274Z"
       },
       "it": {
         "source_lang": "en",
-        "source_hash": "fnv1a_472178f1",
+        "source_hash": "fnv1a_aa442176",
         "origin": "machine",
-        "updated_at": "2026-04-26T00:13:16.414Z"
+        "updated_at": "2026-04-28T09:20:12.911Z"
       },
       "ru": {
         "source_lang": "en",
-        "source_hash": "fnv1a_472178f1",
+        "source_hash": "fnv1a_aa442176",
         "origin": "machine",
-        "updated_at": "2026-04-26T00:13:17.224Z"
+        "updated_at": "2026-04-28T09:20:14.205Z"
       },
       "nl": {
         "source_lang": "en",
-        "source_hash": "fnv1a_472178f1",
+        "source_hash": "fnv1a_aa442176",
         "origin": "machine",
-        "updated_at": "2026-04-26T00:13:19.089Z"
+        "updated_at": "2026-04-28T09:20:16.341Z"
       },
       "pl": {
         "source_lang": "en",
-        "source_hash": "fnv1a_472178f1",
+        "source_hash": "fnv1a_aa442176",
         "origin": "machine",
-        "updated_at": "2026-04-26T00:13:21.092Z"
+        "updated_at": "2026-04-28T09:20:17.883Z"
       },
       "da": {
         "source_lang": "en",
-        "source_hash": "fnv1a_472178f1",
+        "source_hash": "fnv1a_aa442176",
         "origin": "machine",
-        "updated_at": "2026-04-26T00:13:22.091Z"
+        "updated_at": "2026-04-28T09:20:20.127Z"
       },
       "sv": {
         "source_lang": "en",
-        "source_hash": "fnv1a_472178f1",
+        "source_hash": "fnv1a_aa442176",
         "origin": "machine",
-        "updated_at": "2026-04-26T00:13:23.036Z"
+        "updated_at": "2026-04-28T09:20:22.000Z"
       },
       "no": {
         "source_lang": "en",
-        "source_hash": "fnv1a_472178f1",
+        "source_hash": "fnv1a_aa442176",
         "origin": "machine",
-        "updated_at": "2026-04-26T00:13:24.659Z"
+        "updated_at": "2026-04-28T09:20:23.321Z"
       }
     }
   }

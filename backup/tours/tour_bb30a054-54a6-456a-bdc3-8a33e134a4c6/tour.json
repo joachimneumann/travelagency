@@ -7,7 +7,7 @@
     "zh": "河内 - 沙巴",
     "ja": "ハノイ - サパ",
     "ko": "하노이 - 사파",
-    "vi": "Hà Nội- Sapa",
+    "vi": "Hà Nội-Sapa",
     "ms": "Hanoi - Sapa",
     "de": "Hanoi – Sapa",
     "es": "Hanói - Sapa",
@@ -20,41 +20,558 @@
     "no": "Hanoi - Sapa"
   },
   "short_description": {
-    "en": "This journey will take you away from the hustle and bustle of the capital to a misty town. Experience the feeling of standing on top of Fanxipan, check-in at the picturesque Cat Cat village and enjoy the cool air typical of the Northwest highlands.",
-    "ar": "ستأخذك هذه الرحلة بعيدًا عن صخب العاصمة إلى مدينة ضبابية. استمتع بشعور الوقوف على قمة Fanxipan، وقم بتسجيل الوصول في قرية Cat Cat الخلابة واستمتع بالهواء البارد النموذجي للمرتفعات الشمالية الغربية.",
-    "fr": "Ce voyage vous emmènera loin de l'agitation de la capitale vers une ville brumeuse. Découvrez la sensation de vous tenir au sommet de Fanxipan, enregistrez-vous au pittoresque village de Cat Cat et profitez de l'air frais typique des hauts plateaux du nord-ouest.",
-    "zh": "这次旅程将带您远离首都的喧嚣，来到一座雾气弥漫的小镇。体验站在梵西盘山顶的感觉，入住风景如画的猫猫村，享受西北高原特有的凉爽空气。",
-    "ja": "この旅は、首都の喧騒から離れ、霧の町へあなたを連れて行きます。樊西帆の頂上に立っている気分を味わい、絵のように美しい猫猫村にチェックインして、北西高地特有の涼しい空気を満喫してください。",
-    "ko": "이 여행은 수도의 번잡함에서 벗어나 안개가 자욱한 마을로 여러분을 데려갈 것입니다. 판시판(Fanxipan) 꼭대기에 서 있는 듯한 느낌을 경험하고, 그림처럼 아름다운 캣캣(Cat Cat) 마을에 체크인하고, 북서 고원의 전형적인 시원한 공기를 즐겨보세요.",
-    "vi": "Hành trình này sẽ đưa bạn rời xa sự ồn ào, náo nhiệt của thủ đô để đến một thị trấn mù sương. Trải nghiệm cảm giác đứng trên đỉnh Fanxipan, check-in tại bản Cát Cát đẹp như tranh vẽ và tận hưởng không khí mát mẻ đặc trưng của vùng cao Tây Bắc.",
-    "ms": "Perjalanan ini akan membawa anda jauh dari kesibukan ibu kota ke bandar berkabus. Alami perasaan berdiri di atas Fanxipan, daftar masuk di perkampungan Cat Cat yang indah dan nikmati udara sejuk khas tanah tinggi Barat Laut.",
-    "de": "Diese Reise entführt Sie vom Trubel der Hauptstadt in eine neblige Stadt. Erleben Sie das Gefühl, auf dem Gipfel des Fanxipan zu stehen, checken Sie im malerischen Cat Cat-Dorf ein und genießen Sie die kühle Luft, die typisch für das nordwestliche Hochland ist.",
-    "es": "Este viaje te alejará del ajetreo y el bullicio de la capital hasta un pueblo brumoso. Experimente la sensación de estar en la cima de Fanxipan, regístrese en el pintoresco pueblo de Cat Cat y disfrute del aire fresco típico de las tierras altas del noroeste.",
-    "it": "Questo viaggio ti porterà lontano dal trambusto della capitale verso una città nebbiosa. Prova la sensazione di trovarti in cima al Fanxipan, fai il check-in presso il pittoresco villaggio di Cat Cat e goditi l'aria fresca tipica degli altopiani del nord-ovest.",
-    "ru": "Это путешествие унесет вас от шума и суеты столицы в туманный городок. Испытайте ощущение, стоя на вершине Фаньксипана, зарегистрируйтесь в живописной деревне Кэт-Кэт и насладитесь прохладным воздухом, типичным для северо-западного нагорья.",
-    "nl": "Deze reis neemt je mee weg van de drukte van de hoofdstad naar een mistige stad. Ervaar het gevoel bovenop Fanxipan te staan, check in in het pittoreske Cat Cat-dorp en geniet van de koele lucht die typisch is voor de noordwestelijke hooglanden.",
-    "pl": "Ta podróż zabierze Cię z dala od zgiełku stolicy do zamglonego miasta. Poczuj się, jakbyś stał na szczycie Fanxipan, zamelduj się w malowniczej wiosce Cat Cat i ciesz się chłodnym powietrzem typowym dla północno-zachodnich wyżyn.",
-    "da": "Denne rejse vil tage dig væk fra hovedstadens stress og jag til en tåget by. Oplev følelsen af ​​at stå på toppen af ​​Fanxipan, check-in i den maleriske Cat Cat-landsby og nyd den kølige luft, der er typisk for det nordvestlige højland.",
-    "sv": "Denna resa tar dig bort från huvudstadens liv och rörelse till en dimmig stad. Upplev känslan av att stå på toppen av Fanxipan, checka in i den pittoreska byn Cat Cat och njut av den svala luften som är typisk för nordvästra höglandet.",
-    "no": "Denne reisen tar deg bort fra hovedstadens kjas og mas til en tåkete by. Opplev følelsen av å stå på toppen av Fanxipan, sjekk inn på den pittoreske Cat Cat-landsbyen og nyt den kjølige luften som er typisk for det nordvestlige høylandet."
+    "en": "Journey from Hanoi to the misty highlands of Sapa. Experience breathtaking mountain landscapes, vibrant ethnic cultures, and a refreshing escape into northern Vietnam.",
+    "ar": "رحلة من هانوي إلى مرتفعات سابا الضبابية. استمتع بالمناظر الطبيعية الجبلية الخلابة والثقافات العرقية النابضة بالحياة والهروب المنعش إلى شمال فيتنام.",
+    "fr": "Voyage de Hanoï vers les hauts plateaux brumeux de Sapa. Découvrez des paysages de montagne à couper le souffle, des cultures ethniques dynamiques et une escapade rafraîchissante dans le nord du Vietnam.",
+    "zh": "从河内到雾蒙蒙的萨帕高原的旅程。体验令人惊叹的山地景观、充满活力的民族文化，以及前往越南北部的清新度假。",
+    "ja": "ハノイから霧深いサパの高地への旅。息を呑むような山の風景、活気に満ちた民族文化、そしてベトナム北部への爽やかな逃避行を体験してください。",
+    "ko": "하노이에서 안개가 자욱한 사파 고원으로 여행을 떠나세요. 숨막히는 산의 풍경, 활기찬 민족 문화, 그리고 베트남 북부로의 상쾌한 탈출을 경험해보세요.",
+    "vi": "Hành trình từ Hà Nội đến cao nguyên mù sương Sapa. Trải nghiệm phong cảnh núi non ngoạn mục, nền văn hóa dân tộc sôi động và chuyến trốn thoát sảng khoái đến miền bắc Việt Nam.",
+    "ms": "Perjalanan dari Hanoi ke tanah tinggi berkabus Sapa. Alami landskap gunung yang mempesonakan, budaya etnik yang bertenaga dan percutian yang menyegarkan ke utara Vietnam.",
+    "de": "Reise von Hanoi in das neblige Hochland von Sapa. Erleben Sie atemberaubende Berglandschaften, lebendige ethnische Kulturen und eine erfrischende Flucht in den Norden Vietnams.",
+    "es": "Viaje desde Hanoi a las brumosas tierras altas de Sapa. Experimente impresionantes paisajes montañosos, vibrantes culturas étnicas y una refrescante escapada al norte de Vietnam.",
+    "it": "Viaggio da Hanoi agli altopiani nebbiosi di Sapa. Scopri paesaggi montani mozzafiato, vivaci culture etniche e una fuga rinfrescante nel Vietnam settentrionale.",
+    "ru": "Путешествие из Ханоя в туманное высокогорье Сапа. Насладитесь захватывающими дух горными пейзажами, яркими этническими культурами и освежающим отдыхом в северном Вьетнаме.",
+    "nl": "Reis van Hanoi naar de mistige hooglanden van Sapa. Ervaar adembenemende berglandschappen, levendige etnische culturen en een verfrissende ontsnapping naar Noord-Vietnam.",
+    "pl": "Podróż z Hanoi do mglistych wyżyn Sapa. Przeżyj zapierające dech w piersiach górskie krajobrazy, tętniące życiem kultury etniczne i orzeźwiającą ucieczkę do północnego Wietnamu.",
+    "da": "Rejs fra Hanoi til det tågede højland i Sapa. Oplev betagende bjerglandskaber, pulserende etniske kulturer og en forfriskende flugt til det nordlige Vietnam.",
+    "sv": "Resa från Hanoi till Sapas dimmiga högland. Upplev hisnande bergslandskap, pulserande etniska kulturer och en uppfriskande flykt till norra Vietnam.",
+    "no": "Reis fra Hanoi til det tåkete høylandet i Sapa. Opplev fantastiske fjellandskap, pulserende etniske kulturer og en forfriskende flukt til det nordlige Vietnam."
   },
-  "destinations": [
-    "vietnam"
-  ],
   "styles": [
     "budget",
     "culture",
     "family",
     "gastronomic-experiences"
   ],
-  "pictures": [
-    "/public/v1/tour-images/tour_bb30a054-54a6-456a-bdc3-8a33e134a4c6/picture-17a85a25-e9b6-4e20-9b3c-be5860224d58.webp",
-    "/public/v1/tour-images/tour_bb30a054-54a6-456a-bdc3-8a33e134a4c6/picture-e57c5541-5c91-4f24-a2f3-dbfbc69926b2.webp",
-    "/public/v1/tour-images/tour_bb30a054-54a6-456a-bdc3-8a33e134a4c6/picture-5379924b-f356-4f34-ab04-7a153dba01e8.webp"
-  ],
   "seasonality_start_month": "jan",
   "seasonality_end_month": "dec",
   "priority": 50,
   "created_at": "2026-04-18T08:35:52.218Z",
-  "updated_at": "2026-04-22T14:51:51.349Z"
+  "updated_at": "2026-04-28T10:13:21.621Z",
+  "travel_plan": {
+    "destination_scope": [
+      {
+        "destination": "VN",
+        "areas": [
+          {
+            "area_id": "area_3fa05b42-97ab-495d-b16d-4691e66e0434",
+            "places": [
+              {
+                "place_id": "place_a8172e07-213b-46ed-bb88-f0f77bb7fbe0"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "days": [
+      {
+        "id": "travel_plan_day_6f0b35ff-e816-45c3-9661-01701173671a",
+        "day_number": 1,
+        "title": "HaNoi city Tour",
+        "title_i18n": {
+          "ar": "جولة مدينة هانوي",
+          "fr": "Visite de la ville de Hanoï",
+          "zh": "河内城市之旅",
+          "ja": "ハノイ市内ツアー",
+          "ko": "하노이 시티 투어",
+          "ms": "Lawatan bandar HaNoi",
+          "de": "Stadtrundfahrt durch HaNoi",
+          "es": "Tour por la ciudad de Hanói",
+          "it": "Tour della città di Hanoi",
+          "ru": "Обзорная экскурсия по Ханою",
+          "nl": "Hanoi stadstour",
+          "pl": "Wycieczka po mieście HaNoi",
+          "da": "HaNoi byrundtur",
+          "sv": "Hanoi stadsrundtur",
+          "no": "HaNoi bytur",
+          "vi": "Tour tham quan thành phố Hà Nội"
+        },
+        "overnight_location": null,
+        "overnight_location_i18n": {},
+        "services": [
+          {
+            "id": "travel_plan_service_4dd1d781-87c6-4fbc-b4ec-ee72c327a02c",
+            "timing_kind": "label",
+            "time_label": null,
+            "time_label_i18n": {},
+            "time_point": null,
+            "kind": "other",
+            "title": "Hoa Lo Prison",
+            "title_i18n": {
+              "ar": "سجن هوا لو",
+              "fr": "Prison de Hoa Lo",
+              "zh": "华庐监狱",
+              "ja": "ホアロー刑務所",
+              "ko": "호아로 수용소",
+              "ms": "Penjara Hoa Lo",
+              "de": "Hoa-Lo-Gefängnis",
+              "es": "Prisión de Hoa Lo",
+              "it": "Prigione di Hoa Lo",
+              "ru": "Тюрьма Хоа Ло",
+              "nl": "Hoa Lo-gevangenis",
+              "pl": "Więzienie Hoa Lo",
+              "da": "Hoa Lo fængsel",
+              "sv": "Hoa Lo fängelse",
+              "no": "Hoa Lo fengsel",
+              "vi": "Nhà tù Hỏa Lò"
+            },
+            "image_subtitle": null,
+            "image_subtitle_i18n": {},
+            "location": null,
+            "location_i18n": {},
+            "start_time": null,
+            "end_time": null,
+            "image": {
+              "id": "travel_plan_service_image_ff7cd600-26c9-4a6a-ba61-2b5a0daf3aec",
+              "storage_path": "/public/v1/tour-images/tour_51d3c652-0e8d-4463-ad04-852c64b3a652/travel-plan-services/travel_plan_service_85141620-87fa-4c40-9286-62f72eb5d92f-1777168613135-c655a0c6-a703-4bdc-85fe-8cd24dcc88a8.webp",
+              "caption": null,
+              "caption_i18n": {},
+              "alt_text": null,
+              "alt_text_i18n": {},
+              "sort_order": 0,
+              "is_primary": true,
+              "is_customer_visible": true,
+              "include_in_travel_tour_card": true,
+              "width_px": null,
+              "height_px": null,
+              "source_attribution": null,
+              "focal_point": null,
+              "created_at": "2026-04-27T23:13:04.722Z"
+            }
+          },
+          {
+            "id": "travel_plan_service_64653b0a-746e-43c2-b0dc-3a59511e6c19",
+            "timing_kind": "label",
+            "time_label": null,
+            "time_label_i18n": {},
+            "time_point": null,
+            "kind": "other",
+            "title": "Ethnology Museum",
+            "title_i18n": {
+              "ar": "متحف الإثنولوجيا",
+              "fr": "Musée d'Ethnologie",
+              "zh": "民族学博物馆",
+              "ja": "民族学博物館",
+              "ko": "민족학 박물관",
+              "ms": "Muzium Etnologi",
+              "de": "Ethnologisches Museum",
+              "es": "Museo Etnológico",
+              "it": "Museo Etnologico",
+              "ru": "Этнологический музей",
+              "nl": "Volkenkunde Museum",
+              "pl": "Muzeum Etnologiczne",
+              "da": "Etnologisk museum",
+              "sv": "Etnologiskt museum",
+              "no": "Etnologisk museum",
+              "vi": "Bảo tàng Dân tộc học"
+            },
+            "image_subtitle": null,
+            "image_subtitle_i18n": {},
+            "location": null,
+            "location_i18n": {},
+            "start_time": null,
+            "end_time": null,
+            "image": {
+              "id": "travel_plan_service_image_0c5e6b5b-5429-4165-810b-ac4df777f744",
+              "storage_path": "/public/v1/tour-images/tour_51d3c652-0e8d-4463-ad04-852c64b3a652/travel-plan-services/travel_plan_service_c2be3ec4-8442-44dc-bb89-a479ee395d72-1777168698578-c26f5cfa-cf6f-43fe-b5e0-4f56ec6a9494.webp",
+              "caption": null,
+              "caption_i18n": {},
+              "alt_text": null,
+              "alt_text_i18n": {},
+              "sort_order": 0,
+              "is_primary": true,
+              "is_customer_visible": true,
+              "include_in_travel_tour_card": true,
+              "width_px": null,
+              "height_px": null,
+              "source_attribution": null,
+              "focal_point": null,
+              "created_at": "2026-04-27T23:13:04.722Z"
+            }
+          },
+          {
+            "id": "travel_plan_service_354d96b2-3de9-41bf-851d-c97dab27170e",
+            "timing_kind": "label",
+            "time_label": null,
+            "time_label_i18n": {},
+            "time_point": null,
+            "kind": "other",
+            "title": "Văn Miếu Quốc Tủ Giám",
+            "title_i18n": {
+              "ar": "Văn Miếu Quốc Tủ Giám",
+              "fr": "Văn Miếu Quốc Tủ Giám",
+              "zh": "Văn Miếu Quốc Tủ Giám",
+              "ja": "ヴァン・ミエウ・クエ・トゥ・ジャーム",
+              "ko": "Văn Miếu Quốc Tủ Giám",
+              "ms": "Văn Miếu Quốc Tủ Giám",
+              "de": "Văn Miếu Quốc Tủ Giám",
+              "es": "Văn Miếu Quốc Tủ Giám",
+              "it": "Văn Miếu Quốc Tủ Giám",
+              "ru": "Ван Миу Куок То Гиам",
+              "nl": "Van Miếu Quốc Tủ Giám",
+              "pl": "Văn Miếu Quốc Tủ Giám",
+              "da": "Văn Miếu Quốc Tủ Giám",
+              "sv": "Văn Miếu Quốc Tủ Giám",
+              "no": "Văn Miếu Quốc Tủ Giám",
+              "vi": "Văn Miếu Quốc Tủ Giám"
+            },
+            "image_subtitle": null,
+            "image_subtitle_i18n": {},
+            "location": null,
+            "location_i18n": {},
+            "start_time": null,
+            "end_time": null,
+            "image": {
+              "id": "travel_plan_service_image_f3ad8636-263f-4fb2-a156-21b4fda64932",
+              "storage_path": "/public/v1/tour-images/tour_51d3c652-0e8d-4463-ad04-852c64b3a652/travel-plan-services/travel_plan_service_ff577450-b44e-4272-a727-abc85d38fba1-1777168812131-54d74a01-f42b-4525-b896-592026946da9.webp",
+              "caption": null,
+              "caption_i18n": {},
+              "alt_text": null,
+              "alt_text_i18n": {},
+              "sort_order": 0,
+              "is_primary": true,
+              "is_customer_visible": true,
+              "include_in_travel_tour_card": true,
+              "width_px": null,
+              "height_px": null,
+              "source_attribution": null,
+              "focal_point": null,
+              "created_at": "2026-04-27T23:13:04.722Z"
+            }
+          },
+          {
+            "id": "travel_plan_service_45181235-8dd2-467f-977e-a1c3607c3e37",
+            "timing_kind": "label",
+            "time_label": null,
+            "time_label_i18n": {},
+            "time_point": null,
+            "kind": "other",
+            "title": "Một cột pagoda",
+            "title_i18n": {
+              "ar": "معبد Một cột",
+              "fr": "Pagode Một Cột",
+              "zh": "Một cột 宝塔",
+              "ja": "モットコットパゴダ",
+              "ko": "못콧(Một cột) 탑",
+              "ms": "Pagoda",
+              "de": "Một-Cột-Pagode",
+              "es": "Pagoda de la mayor parte",
+              "it": "La mia pagoda",
+              "ru": "Пагода Мот",
+              "nl": "Một cột-pagode",
+              "pl": "Pagoda Một cột",
+              "da": "Một cột pagode",
+              "sv": "Jag har en pagod",
+              "no": "Det er en pagode",
+              "vi": "Chùa Một cột"
+            },
+            "image_subtitle": null,
+            "image_subtitle_i18n": {},
+            "location": null,
+            "location_i18n": {},
+            "start_time": null,
+            "end_time": null,
+            "image": {
+              "id": "travel_plan_service_image_d959d12e-17dd-486e-ad8a-3da7c2446b33",
+              "storage_path": "/public/v1/tour-images/tour_51d3c652-0e8d-4463-ad04-852c64b3a652/travel-plan-services/travel_plan_service_a4d58f6f-2e2d-48c7-b5da-d2892c92d56f-1777168887530-fff1a834-7a9c-4ab6-ab1c-0e48af8e065a.webp",
+              "caption": null,
+              "caption_i18n": {},
+              "alt_text": null,
+              "alt_text_i18n": {},
+              "sort_order": 0,
+              "is_primary": true,
+              "is_customer_visible": true,
+              "include_in_travel_tour_card": true,
+              "width_px": null,
+              "height_px": null,
+              "source_attribution": null,
+              "focal_point": null,
+              "created_at": "2026-04-27T23:13:04.722Z"
+            }
+          }
+        ],
+        "notes": "Today, we start our exploration of Hanoi, seeing the most notable landmark of Ho Chi Minh Mausoleum (close on Mon. and Fri.). This imposing marble and granite monument was built towards Ba Dinh Square. We follow the footpath to the One Pillar Pagoda rising from the center of a square lotus pond, ascending on a single pillar and resembling a blossoming lotus flower.",
+        "notes_i18n": {
+          "ar": "اليوم، نبدأ استكشافنا في هانوي، ونرى أبرز المعالم في ضريح هوشي منه (يقع بالقرب من الاثنين والجمعة). تم بناء هذا النصب التذكاري المهيب من الرخام والجرانيت باتجاه ميدان با دينه. نتبع الممر المؤدي إلى معبد العمود الواحد الذي يرتفع من وسط بركة لوتس مربعة، ويصعد على عمود واحد ويشبه زهرة اللوتس المتفتحة.",
+          "fr": "Aujourd'hui, nous commençons notre exploration de Hanoï en visitant le monument le plus remarquable du mausolée de Hô Chi Minh (fermé le lundi et le vendredi). Cet imposant monument de marbre et de granit a été construit en direction de la place Ba Dinh. Nous suivons le sentier jusqu'à la pagode au pilier unique qui s'élève du centre d'un étang de lotus carré, montant sur un seul pilier et ressemblant à une fleur de lotus en fleurs.",
+          "zh": "今天，我们开始探索河内，参观最著名的地标胡志明陵（周一和周五关闭）。这座宏伟的大理石和花岗岩纪念碑面向巴亭广场而建。我们沿着步道来到一柱塔，它从方形荷塘的中心升起，在一根柱子上上升，就像一朵盛开的莲花。",
+          "ja": "今日は、最も有名なランドマークであるホーチミン廟を見て、ハノイの探索を開始します（月曜と金曜は休館）。この印象的な大理石と花崗岩の記念碑は、バーディン広場に向かって建てられました。歩道をたどって、四角い蓮池の中心にそびえ、一本の柱の上を昇り、開花した蓮の花のように見える一柱塔へ向かいます。",
+          "ko": "오늘은 가장 주목할만한 랜드마크인 호치민 묘소(월, 금 휴무)를 보며 하노이 탐험을 시작합니다. 이 인상적인 대리석과 화강암 기념물은 바딘 광장(Ba Dinh Square)을 향해 지어졌습니다. 우리는 네모난 연꽃 연못 중앙에서 솟아오른 일주탑으로 이어지는 산책로를 따라가며, 한 기둥 위로 올라가 마치 연꽃이 핀 모습을 닮았습니다.",
+          "ms": "Hari ini, kami memulakan penjelajahan Hanoi, melihat mercu tanda yang paling terkenal di Makam Ho Chi Minh (tutup pada Isnin dan Jumaat). Monumen marmar dan granit yang mengagumkan ini dibina ke arah Dataran Ba ​​Dinh. Kami mengikut laluan pejalan kaki ke Pagoda Satu Tiang yang menjulang dari tengah kolam teratai persegi, menaiki satu tiang dan menyerupai bunga teratai yang sedang mekar.",
+          "de": "Heute beginnen wir mit der Erkundung von Hanoi und besichtigen das bemerkenswerteste Wahrzeichen des Ho-Chi-Minh-Mausoleums (montags und freitags geschlossen). Dieses imposante Denkmal aus Marmor und Granit wurde in Richtung Ba-Dinh-Platz errichtet. Wir folgen dem Fußweg zur Einsäulenpagode, die sich in der Mitte eines quadratischen Lotusteichs erhebt, auf einer einzigen Säule aufsteigt und einer blühenden Lotusblume ähnelt.",
+          "es": "Hoy comenzamos nuestra exploración de Hanoi, viendo el hito más notable del Mausoleo de Ho Chi Minh (cerca los lunes y viernes). Este imponente monumento de mármol y granito fue construido hacia la plaza Ba Dinh. Seguimos el sendero hacia la Pagoda del Pilar Único que se eleva desde el centro de un estanque de lotos cuadrado, que asciende sobre un solo pilar y se asemeja a una flor de loto en flor.",
+          "it": "Oggi iniziamo la nostra esplorazione di Hanoi, vedendo il punto di riferimento più importante del Mausoleo di Ho Chi Minh (chiuso lunedì e venerdì). Questo imponente monumento in marmo e granito fu costruito verso piazza Ba Dinh. Seguiamo il sentiero verso la Pagoda a un pilastro che sorge dal centro di uno stagno di loto quadrato, salendo su un unico pilastro e somigliante a un fiore di loto in fiore.",
+          "ru": "Сегодня мы начинаем наше исследование Ханоя с осмотра самой известной достопримечательности — мавзолея Хо Ши Мина (закрыто в понедельник и пятницу). Этот внушительный памятник из мрамора и гранита был построен недалеко от площади Бадинь. Мы следуем по тропинке к Пагоде с одним столбом, поднимающейся из центра квадратного пруда с лотосами, поднимающейся на единственной колонне и напоминающей цветущий цветок лотоса.",
+          "nl": "Vandaag beginnen we onze verkenning van Hanoi en zien we de meest opvallende bezienswaardigheid: het Ho Chi Minh Mausoleum (gesloten op maandag en vrijdag). Dit imposante marmeren en granieten monument werd gebouwd richting het Ba Dinh-plein. We volgen het voetpad naar de One Pillar Pagoda die oprijst uit het midden van een vierkante lotusvijver, opstijgt op een enkele pilaar en lijkt op een bloeiende lotusbloem.",
+          "pl": "Dzisiaj rozpoczynamy naszą eksplorację Hanoi, odwiedzając najbardziej charakterystyczny punkt orientacyjny – Mauzoleum Ho Chi Minha (zamknięte w poniedziałki i piątki). Ten imponujący pomnik z marmuru i granitu został zbudowany w kierunku placu Ba Dinh. Podążamy ścieżką do Pagody Jednej Kolumny wznoszącej się ze środka kwadratowego stawu lotosu, wznoszącej się na jednym filarze i przypominającej kwitnący kwiat lotosu.",
+          "da": "I dag starter vi vores udforskning af Hanoi, hvor vi ser det mest bemærkelsesværdige vartegn ved Ho Chi Minh-mausoleet (tæt på mandag og fredag). Dette imponerende monument i marmor og granit blev bygget mod Ba Dinh-pladsen. Vi følger gangstien til One Pillar Pagoda, der rejser sig fra midten af ​​en firkantet lotusdam, stiger op på en enkelt søjle og ligner en blomstrende lotusblomst.",
+          "sv": "Idag börjar vi vår utforskning av Hanoi, och ser Ho Chi Minh-mausoleets mest anmärkningsvärda landmärke (nära måndag och fredag). Detta imponerande monument i marmor och granit byggdes mot Ba Dinh-torget. Vi följer gångstigen till One Pillar Pagoda som reser sig från mitten av en fyrkantig lotusdamm, stiger upp på en enda pelare och liknar en blommande lotusblomma.",
+          "no": "I dag starter vi vår utforskning av Hanoi, og ser det mest bemerkelsesverdige landemerket til Ho Chi Minh-mausoleet (nær mandag og fredag). Dette imponerende marmor- og granittmonumentet ble bygget mot Ba Dinh-plassen. Vi følger gangstien til One Pillar Pagoda som stiger opp fra midten av en firkantet lotusdam, stiger opp på en enkelt søyle og ligner en blomstrende lotusblomst.",
+          "vi": "Hôm nay, chúng tôi bắt đầu hành trình khám phá Hà Nội, tham quan địa danh đáng chú ý nhất là Lăng Chủ tịch Hồ Chí Minh (đóng cửa vào Thứ Hai và Thứ Sáu). Tượng đài bằng đá cẩm thạch và đá granit hùng vĩ này được xây dựng hướng về phía Quảng trường Ba Đình. Chúng tôi đi theo lối đi bộ lên chùa Một Cột, mọc lên từ giữa một ao sen hình vuông, leo lên một cây cột duy nhất trông giống như một bông sen đang nở rộ."
+        }
+      },
+      {
+        "id": "travel_plan_day_551a3b81-6412-4fa1-913d-f5650f02fc35",
+        "day_number": 2,
+        "title": "",
+        "title_i18n": {},
+        "overnight_location": null,
+        "overnight_location_i18n": {},
+        "services": [
+          {
+            "id": "travel_plan_service_58bb4614-ea33-44d7-9e0c-c8be4c76caaa",
+            "timing_kind": "label",
+            "time_label": null,
+            "time_label_i18n": {},
+            "time_point": null,
+            "kind": "other",
+            "title": "Sapa town",
+            "title_i18n": {
+              "ar": "مدينة سابا",
+              "fr": "Ville de Sapa",
+              "zh": "沙巴镇",
+              "ja": "サパの町",
+              "ko": "사파 타운",
+              "ms": "Pekan Sapa",
+              "de": "Sapa-Stadt",
+              "es": "ciudad de sapa",
+              "it": "Città di Sapa",
+              "ru": "город Сапа",
+              "nl": "Sapa-stad",
+              "pl": "Miasto Sapa",
+              "da": "Sapa by",
+              "sv": "Sapa stad",
+              "no": "Sapa by",
+              "vi": "Thị trấn Sa Pa"
+            },
+            "image_subtitle": null,
+            "image_subtitle_i18n": {},
+            "location": null,
+            "location_i18n": {},
+            "start_time": null,
+            "end_time": null,
+            "image": {
+              "id": "travel_plan_service_image_72001d18-e286-4bc8-9b1a-b7da2f104735",
+              "storage_path": "/public/v1/tour-images/tour_eeac7fbd-0770-4275-9809-97619ac66084/travel-plan-services/travel_plan_service_5e6dce3f-13f7-47e4-8ee6-05772f9d5455-1777364413737-5bbe9f2c-0d25-4e8b-9199-a265fb2b8212.webp",
+              "caption": null,
+              "caption_i18n": {},
+              "alt_text": null,
+              "alt_text_i18n": {},
+              "sort_order": 0,
+              "is_primary": true,
+              "is_customer_visible": true,
+              "include_in_travel_tour_card": true,
+              "width_px": null,
+              "height_px": null,
+              "source_attribution": null,
+              "focal_point": null,
+              "created_at": "2026-04-28T09:28:15.315Z"
+            }
+          },
+          {
+            "id": "travel_plan_service_e985ce2b-1268-4613-9dc7-40390500de41",
+            "timing_kind": "label",
+            "time_label": null,
+            "time_label_i18n": {},
+            "time_point": null,
+            "kind": "other",
+            "title": "O Quy Ho Pass",
+            "title_i18n": {
+              "ar": "يا كوي هو باس",
+              "fr": "Col O Quy Ho",
+              "zh": "乌归胡山口",
+              "ja": "オークイホーパス",
+              "ko": "오퀴호 패스",
+              "ms": "O Quy Ho Pass",
+              "de": "O Quy Ho Pass",
+              "es": "Paso O Quy Ho",
+              "it": "O Quy Ho Pass",
+              "ru": "О Куй Хо Пасс",
+              "nl": "O Quy Ho-pas",
+              "pl": "Przełęcz O Quy Ho",
+              "da": "O Quy Ho Pass",
+              "sv": "O Quy Ho Pass",
+              "no": "O Quy Ho Pass",
+              "vi": "Đèo Ô Quy Hồ"
+            },
+            "image_subtitle": null,
+            "image_subtitle_i18n": {},
+            "location": null,
+            "location_i18n": {},
+            "start_time": null,
+            "end_time": null,
+            "image": {
+              "id": "travel_plan_service_image_c132d298-b897-4e10-ba7a-38924b411d93",
+              "storage_path": "/public/v1/tour-images/tour_eeac7fbd-0770-4275-9809-97619ac66084/travel-plan-services/travel_plan_service_146e3f6b-03f1-41d7-be39-29978b561df5-1777364552649-46611318-b1b1-4a6c-ba34-ae060c2c4beb.webp",
+              "caption": null,
+              "caption_i18n": {},
+              "alt_text": null,
+              "alt_text_i18n": {},
+              "sort_order": 0,
+              "is_primary": true,
+              "is_customer_visible": true,
+              "include_in_travel_tour_card": true,
+              "width_px": null,
+              "height_px": null,
+              "source_attribution": null,
+              "focal_point": null,
+              "created_at": "2026-04-28T09:29:41.897Z"
+            }
+          },
+          {
+            "id": "travel_plan_service_9f6ba13a-628a-4906-8bad-0df493a428b9",
+            "timing_kind": "label",
+            "time_label": null,
+            "time_label_i18n": {},
+            "time_point": null,
+            "kind": "other",
+            "title": "Lonely Tree",
+            "title_i18n": {
+              "ar": "الشجرة الوحيدة",
+              "fr": "Arbre solitaire",
+              "zh": "孤独的树",
+              "ja": "ロンリーツリー",
+              "ko": "외로운 나무",
+              "vi": "Cây cô đơn",
+              "ms": "Pokok Sunyi",
+              "de": "Einsamer Baum",
+              "es": "árbol solitario",
+              "it": "Albero solitario",
+              "ru": "Одинокое дерево",
+              "nl": "Eenzame boom",
+              "pl": "Samotne drzewo",
+              "da": "Ensomt træ",
+              "sv": "Ensamt träd",
+              "no": "Ensomt tre"
+            },
+            "image_subtitle": null,
+            "image_subtitle_i18n": {},
+            "location": null,
+            "location_i18n": {},
+            "start_time": null,
+            "end_time": null,
+            "image": {
+              "id": "travel_plan_service_image_70d214ee-f504-4b0d-8ca6-412ec7cd2f8c",
+              "storage_path": "/public/v1/tour-images/tour_eeac7fbd-0770-4275-9809-97619ac66084/travel-plan-services/travel_plan_service_eb8dcbdf-e0ab-48d0-8cb2-cee956422a81-1777364598577-5aad8ee5-ee49-48fb-bd60-6e242513f8f5.webp",
+              "caption": null,
+              "caption_i18n": {},
+              "alt_text": null,
+              "alt_text_i18n": {},
+              "sort_order": 0,
+              "is_primary": true,
+              "is_customer_visible": true,
+              "include_in_travel_tour_card": true,
+              "width_px": null,
+              "height_px": null,
+              "source_attribution": null,
+              "focal_point": null,
+              "created_at": "2026-04-28T09:30:32.806Z"
+            }
+          }
+        ],
+        "notes": null,
+        "notes_i18n": {}
+      }
+    ],
+    "translation_meta": {
+      "ar": {
+        "source_lang": "en",
+        "source_hash": "fnv1a_03a78f81",
+        "origin": "machine",
+        "updated_at": "2026-04-28T10:12:53.709Z"
+      },
+      "fr": {
+        "source_lang": "en",
+        "source_hash": "fnv1a_03a78f81",
+        "origin": "machine",
+        "updated_at": "2026-04-28T10:12:55.023Z"
+      },
+      "zh": {
+        "source_lang": "en",
+        "source_hash": "fnv1a_03a78f81",
+        "origin": "machine",
+        "updated_at": "2026-04-28T10:12:57.729Z"
+      },
+      "ja": {
+        "source_lang": "en",
+        "source_hash": "fnv1a_03a78f81",
+        "origin": "machine",
+        "updated_at": "2026-04-28T10:12:59.612Z"
+      },
+      "ko": {
+        "source_lang": "en",
+        "source_hash": "fnv1a_03a78f81",
+        "origin": "machine",
+        "updated_at": "2026-04-28T10:13:00.904Z"
+      },
+      "vi": {
+        "source_lang": "en",
+        "source_hash": "fnv1a_03a78f81",
+        "origin": "machine",
+        "updated_at": "2026-04-28T10:13:01.779Z"
+      },
+      "ms": {
+        "source_lang": "en",
+        "source_hash": "fnv1a_03a78f81",
+        "origin": "machine",
+        "updated_at": "2026-04-28T10:13:03.601Z"
+      },
+      "de": {
+        "source_lang": "en",
+        "source_hash": "fnv1a_03a78f81",
+        "origin": "machine",
+        "updated_at": "2026-04-28T10:13:05.569Z"
+      },
+      "es": {
+        "source_lang": "en",
+        "source_hash": "fnv1a_03a78f81",
+        "origin": "machine",
+        "updated_at": "2026-04-28T10:13:06.985Z"
+      },
+      "it": {
+        "source_lang": "en",
+        "source_hash": "fnv1a_03a78f81",
+        "origin": "machine",
+        "updated_at": "2026-04-28T10:13:08.256Z"
+      },
+      "ru": {
+        "source_lang": "en",
+        "source_hash": "fnv1a_03a78f81",
+        "origin": "machine",
+        "updated_at": "2026-04-28T10:13:08.973Z"
+      },
+      "nl": {
+        "source_lang": "en",
+        "source_hash": "fnv1a_03a78f81",
+        "origin": "machine",
+        "updated_at": "2026-04-28T10:13:10.610Z"
+      },
+      "pl": {
+        "source_lang": "en",
+        "source_hash": "fnv1a_03a78f81",
+        "origin": "machine",
+        "updated_at": "2026-04-28T10:13:11.585Z"
+      },
+      "da": {
+        "source_lang": "en",
+        "source_hash": "fnv1a_03a78f81",
+        "origin": "machine",
+        "updated_at": "2026-04-28T10:13:12.709Z"
+      },
+      "sv": {
+        "source_lang": "en",
+        "source_hash": "fnv1a_03a78f81",
+        "origin": "machine",
+        "updated_at": "2026-04-28T10:13:14.326Z"
+      },
+      "no": {
+        "source_lang": "en",
+        "source_hash": "fnv1a_03a78f81",
+        "origin": "machine",
+        "updated_at": "2026-04-28T10:13:15.823Z"
+      }
+    }
+  }
 }

@@ -38,9 +38,6 @@
     "sv": "Landsbygden är där själen finner frid mellan doften av moget ris och ljudet av drakflöjter i eftermiddagsbrisen. Tillsammans med det långsamma livet här, väver den en bild av fred och sofistikering genomsyrad av själen från den vietnamesiska landsbygden.",
     "no": "Landsbygda er der sjelen finner fred mellom duften av moden ris og lyden av dragefløyter i ettermiddagsbrisen. Sammen med det langsomme tempoet i livet her, vever det et bilde av fred og raffinement gjennomsyret av sjelen til det vietnamesiske landskapet."
   },
-  "destinations": [
-    "vietnam"
-  ],
   "styles": [
     "budget",
     "culture",
@@ -52,9 +49,5 @@
   "seasonality_end_month": "aug",
   "priority": 50,
   "created_at": "2026-04-14T10:52:39.442Z",
-  "updated_at": "2026-04-22T14:35:40.799Z",
-  "pictures": [
-    "/public/v1/tour-images/tour_915ca398-f573-4dad-bf37-aec9f40800ca/tour_915ca398-f573-4dad-bf37-aec9f40800ca.webp",
-    "/public/v1/tour-images/tour_915ca398-f573-4dad-bf37-aec9f40800ca/picture-d8a694ce-6704-407d-b638-931762f3c620.webp"
-  ]
+  "updated_at": "2026-04-22T14:35:40.799Z"
 }

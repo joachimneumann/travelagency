@@ -38,9 +38,6 @@
     "sv": "Saigon Imprint: Utforska \"Fjärran Österns pärla\" genom ikoniska arkitektoniska verk som Independence Palace, Notre Dame Cathedral och Central Post Office. Glöm inte att besöka den antika Ba Thien Hau-pagoden och fördjupa dig i det moderna livets rytm på Nguyen Hues gågata.\nCu Chi-tunnlar: Den legendariska \"underjordiska labyrinten\", där du kommer att bli förvånad över det vietnamesiska folkets motståndskraft och visdom genom historien.\n\nVästra flodregionen: Upplev det milda livet i Mekongdeltat med dess sammanflätade kanaler, fruktbara fruktträdgårdar och typiska trädgårdskulturer.\nMui Ne (Phan Thiet): Paradis av sol, vind och sand. Du kommer att beundra den surrealistiska skönheten i de röda sanddynerna, vada den färgglada Fairy Stream och lära dig om det enkla livet i fiskebyn.\nDrömmande Da Lat: Blommornas stad välkomnar dig med den kyliga luften, den romantiska skönheten i Valley of Love, lugnet vid Truc Lam Zen-klostret och den enorma utsikten från den majestätiska Langbiang-toppen.\nNha Trang: Den perfekta slutpunkten i den vackra kuststaden, där du kan koppla av, shoppa specialiteter och njuta av den friska havsbrisen innan du avslutar din resa.",
     "no": "Saigon Imprint: Utforsk \"Perlen fra Fjernøsten\" gjennom ikoniske arkitektoniske verk som uavhengighetspalasset, Notre Dame-katedralen og sentralpostkontoret. Ikke glem å besøke den gamle Ba Thien Hau-pagoden og fordype deg i rytmen til det moderne livet på gågaten Nguyen Hue.\nCu Chi-tunneler: Den legendariske \"underjordiske labyrinten\", hvor du vil bli overrasket over motstandskraften og visdommen til det vietnamesiske folket gjennom historien.\n\nVestlig elveregion: Opplev det milde tempoet i livet i Mekong-deltaet med sine sammenflettede kanaler, fruktbare frukthager og typisk hagebrukskultur.\nMui Ne (Phan Thiet): Paradis med sol, vind og sand. Du vil beundre den surrealistiske skjønnheten til de røde sanddynene, vasse den fargerike Fairy Stream og lære om det enkle livet i fiskerlandsbyen.\nDreamy Da Lat: Blomstenes by ønsker deg velkommen med den kjølige luften, den romantiske skjønnheten i Valley of Love, stillheten ved Truc Lam Zen-klosteret og den enorme utsikten fra den majestetiske Langbiang-toppen.\nNha Trang: Det perfekte endepunktet i den vakre kystbyen, hvor du kan slappe av, handle spesialiteter og nyte den friske havbrisen før du avslutter reisen."
   },
-  "destinations": [
-    "vietnam"
-  ],
   "styles": [
     "grand-expeditions",
     "beach",
@@ -53,8 +50,5 @@
   "seasonality_end_month": "oct",
   "priority": 50,
   "created_at": "2026-04-14T03:24:30.063Z",
-  "updated_at": "2026-04-22T15:10:51.449Z",
-  "pictures": [
-    "/public/v1/tour-images/tour_da4fb126-ee8a-4c24-8a25-9837162375de/tour_da4fb126-ee8a-4c24-8a25-9837162375de.webp"
-  ]
+  "updated_at": "2026-04-22T15:10:51.449Z"
 }

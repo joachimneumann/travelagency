@@ -38,9 +38,6 @@
     "sv": "Hanoi: Huvudstaden i tusen år av civilisation med den antika skönheten på 36 gator, den romantiska Sword Lake och djupet av sofistikerad kulinarisk kultur.\nHa Long Bay: Ett naturligt underverk i världen med tusentals magnifika kalkstensöar som reflekteras i smaragdgrönt vatten, bäst när du upplever övernattning på en yacht.\nDa Nang: Den mest beboeliga staden i Vietnam, känd för sina moderna broar, charmiga My Khe-stranden och den andliga symbolen för Marmorbergen.\nBay Mau Coconut Forest & Hoi An: Upplev rolig korgbåtsrodd i kokosskogen innan du fördjupar dig i det magiska lyktutrymmet i den gamla gamla stan vid Hoai-floden.\nBa Na Hills: \"Road to paradise\" med fyra säsongsklimat på en dag, framhävd av den lysande Gyllene bron och den klassiska franska byns arkitektoniska utrymme.\nHue Ancient Capital: Res tillbaka i tiden till den lugna skönheten i palatsen, mausoleerna från Nguyen-dynastin och tystnaden i Parfymfloden.\nStad. Ho Chi Minh: Det mest dynamiska ekonomiska centrumet, där moderna skyskrapor och historiska reliker från eran korsas.\nVäst (Mekongdeltat): Utforska flodkulturen i den sydligaste regionen med lummiga fruktträdgårdar och en enkel livsstil på kanalerna.",
     "no": "Hanoi: Hovedstaden i tusen år med sivilisasjon med den eldgamle skjønnheten til 36 gater, den romantiske Sword Lake og dybden av sofistikert kulinarisk kultur.\nHa Long Bay: Et naturlig underverk i verden med tusenvis av praktfulle kalksteinsøyer reflektert i smaragdgrønt vann, best når du opplever overnatting på en yacht.\nDa Nang: Den mest beboelige byen i Vietnam, kjent for sine moderne broer, sjarmerende My Khe-stranden og det åndelige Marmorfjell-symbolet.\nBay Mau Coconut Forest & Hoi An: Opplev morsom kurvebåtroing i kokosnøttskogen før du fordyper deg i det magiske lanternerommet i den historiske gamlebyen ved Hoai-elven.\nBa Na Hills: \"Road to paradise\" med fire-sesongs klima på én dag, fremhevet av den strålende Golden Bridge og klassiske franske landsbyarkitektoniske rom.\nHue Ancient Capital: Reis tilbake i tid til den stille skjønnheten til palassene, mausoleumene til Nguyen-dynastiet og stillheten til Parfyme-elven.\nBy. Ho Chi Minh: Det mest dynamiske økonomiske sentrum, der moderne skyskrapere og historiske relikvier fra epoken krysser hverandre.\nVesten (Mekong-deltaet): Utforsk elvekulturen i den sørligste regionen med frodige frukthager og en enkel livsstil på kanalene."
   },
-  "destinations": [
-    "vietnam"
-  ],
   "styles": [
     "grand-expeditions",
     "beach",
@@ -55,8 +52,5 @@
   "seasonality_end_month": "",
   "priority": 50,
   "created_at": "2026-04-14T01:43:39.165Z",
-  "updated_at": "2026-04-22T15:09:15.171Z",
-  "pictures": [
-    "/public/v1/tour-images/tour_988c323e-72da-4fe5-8b48-01d6382ca2ba/tour_988c323e-72da-4fe5-8b48-01d6382ca2ba.webp"
-  ]
+  "updated_at": "2026-04-22T15:09:15.171Z"
 }

@@ -38,9 +38,6 @@
     "sv": "Ba Na Hills är \"vägen till paradiset\" känd för sitt fyrasäsongsklimat på en dag och antik fransk byarkitektur bland tusentals moln.\nDenna plats äger den ikoniska Golden Bridge och ett linbanasystem med många världsrekord, vilket ger besökarna den ultimata resort- och underhållningsupplevelsen.",
     "no": "Ba Na Hills er \"veien til paradis\" kjent for sitt fire-sesongs klima på én dag og eldgammel fransk landsbyarkitektur blant tusenvis av skyer.\nDette stedet eier den ikoniske Golden Bridge og et taubanesystem med mange verdensrekorder, noe som gir besøkende den ultimate ferie- og underholdningsopplevelsen."
   },
-  "destinations": [
-    "vietnam"
-  ],
   "styles": [
     "grand-expeditions",
     "beach",
@@ -54,8 +51,5 @@
   "seasonality_end_month": "nov",
   "priority": 50,
   "created_at": "2026-04-13T08:57:00.020Z",
-  "updated_at": "2026-04-22T15:53:03.593Z",
-  "pictures": [
-    "/public/v1/tour-images/tour_7aee1d33-cbd1-4d3c-ae0b-b738c0a7582d/tour_7aee1d33-cbd1-4d3c-ae0b-b738c0a7582d.webp"
-  ]
+  "updated_at": "2026-04-22T15:53:03.593Z"
 }

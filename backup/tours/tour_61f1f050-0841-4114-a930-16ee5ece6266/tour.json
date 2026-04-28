@@ -38,9 +38,6 @@
     "sv": "Ninh Binh liknas vid en \"Ha Long på land\", där besökare kan ta en båt nerför Ngo Dong-floden eller se världsarvet Trang An.\nFrån att erövra den vietnamesiska versionen av \"den stora muren\" vid Mua-grottan till att utforska magiska grottor, Ninh Binh är alltid den bästa destinationen för natur- och historieälskare.",
     "no": "Ninh Binh sammenlignes med en \"Ha Long på land\", hvor besøkende kan ta en båt nedover Ngo Dong-elven eller se verdensarvstedet Trang An.\nFra å erobre den vietnamesiske versjonen av \"den store muren\" ved Mua-hulen til å utforske magiske grotter, er Ninh Binh alltid det beste reisemålet for natur- og historieelskere."
   },
-  "destinations": [
-    "vietnam"
-  ],
   "styles": [
     "grand-expeditions",
     "budget",
@@ -52,8 +49,5 @@
   "seasonality_end_month": "dec",
   "priority": 50,
   "created_at": "2026-04-13T04:53:45.385Z",
-  "updated_at": "2026-04-22T15:54:07.314Z",
-  "pictures": [
-    "/public/v1/tour-images/tour_61f1f050-0841-4114-a930-16ee5ece6266/tour_61f1f050-0841-4114-a930-16ee5ece6266.webp"
-  ]
+  "updated_at": "2026-04-22T15:54:07.314Z"
 }

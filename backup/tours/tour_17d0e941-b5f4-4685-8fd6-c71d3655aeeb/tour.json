@@ -38,9 +38,6 @@
     "sv": "Res genom höjdpunkterna i centrala Vietnam för att uppleva dess rika traditionella kultur, orörda natur, vackra stränder och vänliga lokalbefolkningen. En komplett upplevelse av det autentiska köket i detta land. -Gå på världens mest imponerande gångbro vid Golden HandBridge och utforska Ba Na Hills nöjeskomplex - Besök Hoi An för att uppleva den vackra gamla stan och kokosskogen. -Utforska den vietnamesiska landsbygden: Thanh Ha keramikby och Tra Que grönsaksbypagoden i Hue -Utforska Vietnams sista feodala huvudstad och dess kulinariska läckerheter - Hue Ancient Capital. -Fullständigt uppleva gatumat, kungligt kök, vegetarisk mat, färska skaldjur, lokalbefolkningens dagliga måltider, BBQ i skogen, internationell buffé. -Exponering för rik kultur med många aktiviteter: traditionella föreställningar på båtar, hantverksverkstäder, silkesmatning, etc.",
     "no": "Reis gjennom høydepunktene i Sentral-Vietnam for å oppleve dens rike tradisjonelle kultur, uberørte natur, vakre strender og vennlige lokalbefolkningen. En komplett opplevelse av det autentiske kjøkkenet i dette landet. -Gå på verdens mest imponerende fotgjengerbro ved Golden HandBridge og utforsk underholdningskomplekset Ba Na Hills - Besøk Hoi An for å oppleve den vakre gamlebyen og kokosskogen. -Utforsk det vietnamesiske landskapet: Thanh Ha keramikklandsby og Tra Que grønnsakslandsbypagode i Hue -Utforsk den siste føydale hovedstaden i Vietnam og dens kulinariske herligheter - Hue Ancient Capital. -Full opplevelse av gatemat, kongelig mat, vegetarmat, fersk sjømat, daglige måltider fra lokalbefolkningen, BBQ i skogen, internasjonal buffé. -Eksponering for rik kultur med mange aktiviteter: tradisjonelle forestillinger på båter, håndverksverksteder, silkeormforing, etc."
   },
-  "destinations": [
-    "vietnam"
-  ],
   "styles": [
     "budget",
     "culture",
@@ -50,8 +47,5 @@
   "seasonality_end_month": "",
   "priority": 100,
   "created_at": "2026-04-02T13:58:46.560Z",
-  "updated_at": "2026-04-22T15:58:19.568Z",
-  "pictures": [
-    "/public/v1/tour-images/tour_17d0e941-b5f4-4685-8fd6-c71d3655aeeb/tour_17d0e941-b5f4-4685-8fd6-c71d3655aeeb.webp"
-  ]
+  "updated_at": "2026-04-22T15:58:19.568Z"
 }

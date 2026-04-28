@@ -38,9 +38,6 @@
     "sv": "Den här resan tar dig tillbaka till de gamla minnena av Doai-land med mossiga laterithus i Duong Lams gamla by och majestätet i Son Tays gamla citadell.\nDu kan också beundra den sofistikerade skulpturkonsten på Mia Pagoda med den höga Amitabha Buddha-statyn, som ger en känsla av lugn och avkoppling till Buddhas dörr.",
     "no": "Denne reisen tar deg tilbake til de gamle minnene fra Doai-landet med moserike lateritthus i den gamle landsbyen Duong Lam og majesteten til Son Tay gamle citadell.\nDu kan også beundre den sofistikerte skulpturelle kunsten ved Mia Pagoda med den ruvende Amitabha Buddha-statuen, som bringer en følelse av fred og avslapning til Buddhas dør."
   },
-  "destinations": [
-    "vietnam"
-  ],
   "styles": [
     "budget",
     "culture",
@@ -53,8 +50,5 @@
   "seasonality_end_month": "dec",
   "priority": 50,
   "created_at": "2026-04-13T09:20:39.655Z",
-  "updated_at": "2026-04-22T15:45:24.129Z",
-  "pictures": [
-    "/public/v1/tour-images/tour_f3f7ffa3-44a6-4775-a98d-a3a5baf2043b/tour_f3f7ffa3-44a6-4775-a98d-a3a5baf2043b.webp"
-  ]
+  "updated_at": "2026-04-22T15:45:24.129Z"
 }

@@ -38,9 +38,6 @@
     "sv": "Resan tar dig för att beundra majestätet i Bai Dinh-pagodkomplexet med imponerande buddhistiska rekord och ett majestätiskt, lugnt andligt utrymme.\n\nNästa är upplevelsen av att sitta på en båt nerför floden Trang An, väva genom magiska grottor mitt i den majestätiska naturen på världsarvet \"Ha Long på land\".",
     "no": "Reisen tar deg med til å beundre majesteten til Bai Dinh-pagodekomplekset med imponerende buddhistiske opptegnelser og et majestetisk, stille åndelig rom.\n\nNeste er opplevelsen av å sitte på en båt nedover Trang An-elven, veve seg gjennom magiske grotter midt i den majestetiske naturen til verdensarvstedet \"Ha Long på land\"."
   },
-  "destinations": [
-    "vietnam"
-  ],
   "styles": [
     "budget",
     "culture",
@@ -53,8 +50,5 @@
   "seasonality_end_month": "dec",
   "priority": 50,
   "created_at": "2026-04-13T10:15:22.936Z",
-  "updated_at": "2026-04-22T15:36:28.199Z",
-  "pictures": [
-    "/public/v1/tour-images/tour_38be9dcf-9d06-44f7-a404-613062e5054b/tour_38be9dcf-9d06-44f7-a404-613062e5054b.webp"
-  ]
+  "updated_at": "2026-04-22T15:36:28.199Z"
 }

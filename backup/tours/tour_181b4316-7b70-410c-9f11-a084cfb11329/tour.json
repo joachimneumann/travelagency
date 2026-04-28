@@ -38,9 +38,6 @@
     "sv": "Resan tar dig till den majestätiska skönheten i Tuyet Tinh Coc med dess smaragdgröna sjö, innan du tar en båt för att utforska det magiska undervattensgrottsystemet vid Trang Ans arv.\nResan avslutas med upplevelsen av att erövra toppen av Hang Mua, där du till fullo kan ta in den majestätiska och poetiska bilden av Ninh Binh-bergen och vattnet från ovan.",
     "no": "Reisen tar deg inn i den majestetiske skjønnheten til Tuyet Tinh Coc med sin smaragdgrønne innsjø, før du tar en båt for å utforske det magiske undervannsgrottesystemet ved Trang An-arvstedet.\nTuren avsluttes med opplevelsen av å erobre toppen av Hang Mua, hvor du fullt ut kan ta inn det majestetiske og poetiske bildet av Ninh Binh-fjellene og vann ovenfra."
   },
-  "destinations": [
-    "vietnam"
-  ],
   "styles": [
     "budget",
     "culture",
@@ -53,8 +50,5 @@
   "seasonality_end_month": "",
   "priority": 50,
   "created_at": "2026-04-13T10:22:47.669Z",
-  "updated_at": "2026-04-22T15:01:28.069Z",
-  "pictures": [
-    "/public/v1/tour-images/tour_181b4316-7b70-410c-9f11-a084cfb11329/tour_181b4316-7b70-410c-9f11-a084cfb11329.webp"
-  ]
+  "updated_at": "2026-04-22T15:01:28.069Z"
 }

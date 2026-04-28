@@ -38,9 +38,6 @@
     "sv": "Hoi An är ett av de charmigaste resmålen i den centrala regionen, där tiden verkar stanna bland de små gamla gatorna med karaktäristiska gyllene väggar och gnistrande lyktor på natten.",
     "no": "Hoi An er en av de mest sjarmerende destinasjonene i den sentrale regionen, hvor tiden ser ut til å stoppe opp blant de små eldgamle gatene med karakteristiske gyldne vegger og glitrende lykter om natten."
   },
-  "destinations": [
-    "vietnam"
-  ],
   "styles": [
     "culture",
     "family",
@@ -51,8 +48,5 @@
   "seasonality_end_month": "dec",
   "priority": 50,
   "created_at": "2026-04-13T09:06:18.834Z",
-  "updated_at": "2026-04-22T15:48:34.310Z",
-  "pictures": [
-    "/public/v1/tour-images/tour_3d160d2f-62ea-43a4-8ca6-3acb6dcd30df/tour_3d160d2f-62ea-43a4-8ca6-3acb6dcd30df.webp"
-  ]
+  "updated_at": "2026-04-22T15:48:34.310Z"
 }

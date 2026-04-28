@@ -38,9 +38,6 @@
     "sv": "Parfympagoden och Huong Tich-grottan är unika kulturella och religiösa komplex, där du kan ta en båt nerför den romantiska Yen-strömmen för att nå det rena Buddha-landet.\n\nHuong Tich-grottan är också känd som \"Nam Thien De Nhat-grottan\", som har majestätisk skönhet med skimrande stalaktiter och stalaktiter och är den heligaste andliga destinationen varje vår.",
     "no": "Parfymepagoden og Huong Tich-hulen er unike kulturelle og religiøse komplekser, hvor du kan ta en båt nedover den romantiske Yen-strømmen for å nå det rene Buddha-landet.\n\nHuong Tich-hulen er også kjent som \"Nam Thien De Nhat-hulen\", og har majestetisk skjønnhet med glitrende stalaktitter og stalaktitter og er den helligste åndelige destinasjonen hver vår."
   },
-  "destinations": [
-    "vietnam"
-  ],
   "styles": [
     "budget",
     "culture",
@@ -53,8 +50,5 @@
   "seasonality_end_month": "apr",
   "priority": 50,
   "created_at": "2026-04-13T09:33:29.406Z",
-  "updated_at": "2026-04-22T15:43:44.700Z",
-  "pictures": [
-    "/public/v1/tour-images/tour_8d8c2598-ecf8-4c27-bb2e-c9449c93ab1d/tour_8d8c2598-ecf8-4c27-bb2e-c9449c93ab1d.webp"
-  ]
+  "updated_at": "2026-04-22T15:43:44.700Z"
 }

@@ -38,9 +38,6 @@
     "sv": "Da Lat är ett paradis med tusentals blommor och dimma, en plats med drömsk skönhet som en söt symfoni av naturen. Denna höglandsstad lockar resenärer med sitt svala tempererade klimat och nostalgiska, romantiska gathörn.",
     "no": "Da Lat er et paradis med tusenvis av blomster og tåke, et sted med drømmende skjønnhet som en søt symfoni av naturen. Denne høylandsbyen tiltrekker reisende med sitt kjølige tempererte klima og nostalgiske, romantiske gatehjørner."
   },
-  "destinations": [
-    "vietnam"
-  ],
   "styles": [
     "budget",
     "culture",
@@ -53,8 +50,5 @@
   "seasonality_end_month": "",
   "priority": 50,
   "created_at": "2026-04-14T01:35:35.203Z",
-  "updated_at": "2026-04-22T15:33:19.260Z",
-  "pictures": [
-    "/public/v1/tour-images/tour_40d7ef5b-eb63-4de2-8bb2-b1c51835a4fb/tour_40d7ef5b-eb63-4de2-8bb2-b1c51835a4fb.webp"
-  ]
+  "updated_at": "2026-04-22T15:33:19.260Z"
 }

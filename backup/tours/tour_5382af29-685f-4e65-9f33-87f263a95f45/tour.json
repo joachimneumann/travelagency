@@ -38,9 +38,6 @@
     "sv": "Resan tar dig tillbaka till det fridfulla området i Duong Lams gamla by med mossiga laterithus och den urgamla majestätiska skönheten i Son Tay Citadel.\nDu kan också beundra den sofistikerade skulpturkonsten vid Mia Pagoda och den höga Amitabha Buddha-statyn vid Khai Nguyen Pagoda, vilket ger en känsla av fred i landet Doai.",
     "no": "Reisen tar deg tilbake til det fredelige området i den gamle landsbyen Duong Lam med moserike lateritthus og den eldgamle, majestetiske skjønnheten til Son Tay Citadel.\nDu kan også beundre det sofistikerte skulpturelle kunsten ved Mia Pagoda og den ruvende Amitabha Buddha-statuen ved Khai Nguyen Pagoda, som gir en følelse av fred i landet Doai."
   },
-  "destinations": [
-    "vietnam"
-  ],
   "styles": [
     "budget",
     "culture",
@@ -53,8 +50,5 @@
   "seasonality_end_month": "may",
   "priority": 50,
   "created_at": "2026-04-13T10:05:18.055Z",
-  "updated_at": "2026-04-22T15:40:42.778Z",
-  "pictures": [
-    "/public/v1/tour-images/tour_5382af29-685f-4e65-9f33-87f263a95f45/tour_5382af29-685f-4e65-9f33-87f263a95f45.webp"
-  ]
+  "updated_at": "2026-04-22T15:40:42.778Z"
 }

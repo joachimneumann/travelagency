@@ -38,9 +38,6 @@
     "sv": "Från antika Hanois 36 gator till dimmiga Sapa och Fansipan, sedan till Ha Long Bays kalkstensöar och Ninh Binhs natursköna Trang An – \"Ha Long på land.\"",
     "no": "Fra gamle Hanois 36 gater til tåkete Sapa og Fansipan, så til Ha Long Bays kalksteinsøyer og Ninh Binhs naturskjønne Trang An – «Ha Long på land»."
   },
-  "destinations": [
-    "vietnam"
-  ],
   "styles": [
     "grand-expeditions",
     "beach",
@@ -53,11 +50,23 @@
   "seasonality_end_month": "sep",
   "priority": 100,
   "created_at": "2026-04-09T03:37:52.367Z",
-  "updated_at": "2026-04-27T00:35:32.182Z",
-  "pictures": [
-    "/public/v1/tour-images/tour_51d3c652-0e8d-4463-ad04-852c64b3a652/tour_51d3c652-0e8d-4463-ad04-852c64b3a652.webp"
-  ],
+  "updated_at": "2026-04-28T02:26:59.119Z",
   "travel_plan": {
+    "destination_scope": [
+      {
+        "destination": "VN",
+        "areas": [
+          {
+            "area_id": "area_3fa05b42-97ab-495d-b16d-4691e66e0434",
+            "places": [
+              {
+                "place_id": "place_a8172e07-213b-46ed-bb88-f0f77bb7fbe0"
+              }
+            ]
+          }
+        ]
+      }
+    ],
     "days": [
       {
         "id": "travel_plan_day_e9161ca8-2912-4912-9610-464984823d83",
@@ -117,8 +126,8 @@
             "start_time": null,
             "end_time": null,
             "image": {
-              "id": "travel_plan_service_image_f88cdd9e-381f-429f-a8d5-be86311ae380",
-              "storage_path": "/public/v1/tour-images/tour_51d3c652-0e8d-4463-ad04-852c64b3a652/travel-plan-services/travel_plan_service_e945d12b-03a5-46d0-a572-62694e9dc251-1777168388200-20efbdda-2709-470a-b0c1-9cf947fac4b2.webp",
+              "id": "travel_plan_service_image_f7ee82ec-0b00-4350-b59f-de847c4b9638",
+              "storage_path": "/public/v1/tour-images/tour_51d3c652-0e8d-4463-ad04-852c64b3a652/travel-plan-services/travel_plan_service_e945d12b-03a5-46d0-a572-62694e9dc251-1777298097393-39920a1a-e273-43b1-b3bf-ecbd2e9aeccd.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -126,11 +135,12 @@
               "sort_order": 0,
               "is_primary": true,
               "is_customer_visible": true,
+              "include_in_travel_tour_card": false,
               "width_px": null,
               "height_px": null,
               "source_attribution": null,
               "focal_point": null,
-              "created_at": "2026-04-26T01:53:08.249Z"
+              "created_at": "2026-04-27T13:54:57.457Z"
             }
           },
           {
@@ -166,8 +176,8 @@
             "start_time": null,
             "end_time": null,
             "image": {
-              "id": "travel_plan_service_image_990091c6-2f92-4035-884a-5a54aa698ee0",
-              "storage_path": "/public/v1/tour-images/tour_51d3c652-0e8d-4463-ad04-852c64b3a652/travel-plan-services/travel_plan_service_7867c82d-e10f-430c-acc2-ee9dd82339f8-1777168454107-20e67096-79d8-4f5b-b70a-b7e15f1cd8a4.webp",
+              "id": "travel_plan_service_image_f51a6d6f-104c-40f0-8a25-e3a8aa0a9c05",
+              "storage_path": "/public/v1/tour-images/tour_51d3c652-0e8d-4463-ad04-852c64b3a652/travel-plan-services/travel_plan_service_7867c82d-e10f-430c-acc2-ee9dd82339f8-1777341280171-25f4d246-fab2-462e-927e-ca042b8d78c3.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -175,32 +185,33 @@
               "sort_order": 0,
               "is_primary": true,
               "is_customer_visible": true,
+              "include_in_travel_tour_card": false,
               "width_px": null,
               "height_px": null,
               "source_attribution": null,
               "focal_point": null,
-              "created_at": "2026-04-26T01:54:14.374Z"
+              "created_at": "2026-04-28T01:54:40.350Z"
             }
           }
         ],
-        "notes": "Upon arrival at Noi Bai International Airport (Hanoi), you will be met by our private guide and driver and transferred to Hanoi city center by car. Your first glimpse of Vietnam's chaotic traffic will unfold before your eyes",
+        "notes": "Upon arrival at Noi Bai Airport, our guide and driver will transfer you to Hanoi center. Experience your first glimpse of Vietnam’s vibrant, bustling traffic by car.",
         "notes_i18n": {
-          "ar": "عند وصولك إلى مطار نوي باي الدولي (هانوي)، سيتم استقبالك من قبل مرشدنا الخاص وسائقنا ونقلك إلى وسط مدينة هانوي بالسيارة. سوف تتكشف أمام عينيك أول نظرة خاطفة لحركة المرور الفوضوية في فيتنام",
-          "fr": "À votre arrivée à l'aéroport international de Noi Bai (Hanoï), vous serez accueillis par notre guide et chauffeur privés et transférés au centre-ville de Hanoï en voiture. Votre premier aperçu du trafic chaotique du Vietnam se déroulera sous vos yeux",
-          "zh": "抵达内排国际机场（河内）后，我们的私人导游和司机将与您会面，并乘车前往河内市中心。越南混乱的交通将首次呈现在您眼前",
-          "ja": "ノイバイ国際空港（ハノイ）に到着したら、専属ガイドとドライバーがお出迎えし、車でハノイ市内中心部までお送りします。ベトナムの混沌とし​​た交通を初めて垣間見ることができます。",
-          "ko": "노이바이 국제공항(하노이)에 도착하면 개인 가이드와 운전기사를 만나 차량으로 하노이 시내로 이동합니다. 베트남의 혼란스러운 교통 상황을 처음으로 눈앞에 펼쳐보세요.",
-          "vi": "Khi đến Sân bay Quốc tế Nội Bài (Hà Nội), xe và hướng dẫn viên riêng của chúng tôi đón quý khách và đưa về trung tâm thành phố Hà Nội bằng ô tô. Cái nhìn đầu tiên về giao thông hỗn loạn của Việt Nam sẽ hiện ra trước mắt bạn",
-          "ms": "Apabila tiba di Lapangan Terbang Antarabangsa Noi Bai (Hanoi), anda akan ditemui oleh pemandu dan pemandu peribadi kami dan dipindahkan ke pusat bandar Hanoi dengan menaiki kereta. Pandangan pertama anda tentang trafik huru-hara Vietnam akan terungkap di hadapan mata anda",
-          "de": "Bei Ihrer Ankunft am internationalen Flughafen Noi Bai (Hanoi) werden Sie von unserem privaten Reiseleiter und Fahrer abgeholt und mit dem Auto in die Innenstadt von Hanoi gebracht. Ihr erster Blick auf den chaotischen Verkehr Vietnams wird sich vor Ihren Augen entfalten",
-          "es": "A su llegada al aeropuerto internacional de Noi Bai (Hanoi), nuestro guía y conductor privados lo recibirán y lo trasladarán al centro de la ciudad de Hanoi en automóvil. Tu primer vistazo del caótico tráfico de Vietnam se desarrollará ante tus ojos",
-          "it": "All'arrivo all'aeroporto internazionale di Noi Bai (Hanoi), verrai accolto dalla nostra guida e autista privati ​​e trasferito in auto al centro di Hanoi. Il tuo primo assaggio del traffico caotico del Vietnam si svolgerà davanti ai tuoi occhi",
-          "ru": "По прибытии в международный аэропорт Нойбай (Ханой) вас встретит наш частный гид и водитель и доставит на машине в центр Ханоя. Ваш первый взгляд на хаотичное движение во Вьетнаме откроется перед вашими глазами.",
-          "nl": "Bij aankomst op de internationale luchthaven Noi Bai (Hanoi) wordt u opgewacht door onze privégids en chauffeur en met de auto naar het centrum van Hanoi gebracht. Je eerste glimp van het chaotische verkeer in Vietnam zal zich voor je ogen ontvouwen",
-          "pl": "Po przybyciu na międzynarodowe lotnisko Noi Bai (Hanoi) powita Cię nasz prywatny przewodnik i kierowca, a następnie przewieziesz samochodem do centrum Hanoi. Twój pierwszy rzut oka na chaotyczny ruch uliczny w Wietnamie pojawi się na Twoich oczach",
-          "da": "Ved ankomst til Noi Bai International Airport (Hanoi), vil du blive mødt af vores private guide og chauffør og overført til Hanois centrum i bil. Dit første glimt af Vietnams kaotiske trafik vil udfolde sig foran dine øjne",
-          "sv": "Vid ankomst till Noi Bai International Airport (Hanoi) kommer du att mötas av vår privata guide och chaufför och föras till Hanois centrum med bil. Din första glimt av Vietnams kaotiska trafik kommer att utvecklas framför dina ögon",
-          "no": "Ved ankomst til Noi Bai internasjonale lufthavn (Hanoi), vil du bli møtt av vår private guide og sjåfør og overført til Hanoi sentrum med bil. Ditt første glimt av Vietnams kaotiske trafikk vil utfolde seg foran øynene dine"
+          "ar": "عند الوصول إلى مطار نوي باي، سيقوم مرشدنا وسائقنا بنقلك إلى مركز هانوي. استمتع بإلقاء نظرة أولى على حركة المرور النابضة بالحياة والصاخبة في فيتنام بالسيارة.",
+          "fr": "À votre arrivée à l'aéroport de Noi Bai, notre guide et chauffeur vous transféreront au centre de Hanoi. Découvrez votre premier aperçu du trafic dynamique et animé du Vietnam en voiture.",
+          "zh": "抵达内排机场后，我们的导游和司机将带您前往河内市中心。驾车体验越南充满活力、熙熙攘攘的交通。",
+          "ja": "ノイバイ空港に到着したら、ガイドとドライバーがハノイ中心部までお送りします。車でベトナムの活気に満ちたにぎやかな交通を初めて体験してください。",
+          "ko": "노이바이 공항에 도착하면 가이드와 운전기사가 하노이 센터로 모셔다드립니다. 베트남의 활기차고 분주한 교통 상황을 자동차로 처음 경험해 보세요.",
+          "vi": "Đến sân bay Nội Bài, xe và hướng dẫn viên đón quý khách về trung tâm Hà Nội. Trải nghiệm cái nhìn đầu tiên của bạn về giao thông sôi động, nhộn nhịp của Việt Nam bằng ô tô.",
+          "ms": "Apabila tiba di Lapangan Terbang Noi Bai, pemandu dan pemandu kami akan memindahkan anda ke pusat Hanoi. Alami pandangan pertama anda tentang trafik Vietnam yang meriah dan sibuk dengan kereta.",
+          "de": "Nach Ihrer Ankunft am Flughafen Noi Bai werden Sie von unserem Reiseleiter und Fahrer ins Zentrum von Hanoi gebracht. Erleben Sie mit dem Auto einen ersten Blick auf den pulsierenden, geschäftigen Verkehr Vietnams.",
+          "es": "A su llegada al aeropuerto de Noi Bai, nuestro guía y conductor lo trasladarán al centro de Hanoi. Experimente su primera visión del vibrante y bullicioso tráfico de Vietnam en automóvil.",
+          "it": "All'arrivo all'aeroporto di Noi Bai, la nostra guida e autista ti trasferiranno al centro di Hanoi. Vivi il tuo primo assaggio del vivace e vivace traffico del Vietnam in auto.",
+          "ru": "По прибытии в аэропорт Нойбай наш гид и водитель отвезут вас в центр Ханоя. Впервые вы сможете увидеть оживленное и шумное движение Вьетнама на машине.",
+          "nl": "Bij aankomst op de luchthaven Noi Bai brengen onze gids en chauffeur u naar het centrum van Hanoi. Ervaar je eerste glimp van het levendige, drukke verkeer van Vietnam met de auto.",
+          "pl": "Po przybyciu na lotnisko Noi Bai nasz przewodnik i kierowca zabiorą Cię do centrum Hanoi. Przeżyj pierwszy rzut oka na tętniący życiem ruch uliczny w Wietnamie, jadąc samochodem.",
+          "da": "Ved ankomst til Noi Bai lufthavn vil vores guide og chauffør overføre dig til Hanoi centrum. Oplev dit første glimt af Vietnams livlige, travle trafik i bil.",
+          "sv": "Vid ankomst till Noi Bai flygplats kommer vår guide och chaufför att överföra dig till Hanois centrum. Upplev din första glimt av Vietnams livliga, livliga trafik med bil.",
+          "no": "Ved ankomst til Noi Bai flyplass vil vår guide og sjåfør overføre deg til Hanoi sentrum. Opplev ditt første glimt av Vietnams livlige, travle trafikk med bil."
         }
       },
       {
@@ -270,6 +281,7 @@
               "sort_order": 0,
               "is_primary": true,
               "is_customer_visible": true,
+              "include_in_travel_tour_card": true,
               "width_px": null,
               "height_px": null,
               "source_attribution": null,
@@ -284,24 +296,24 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Ethnology Museum",
+            "title": "Ho Chi Minh Mausoleum",
             "title_i18n": {
-              "ar": "متحف الإثنولوجيا",
-              "fr": "Musée d'Ethnologie",
-              "zh": "民族学博物馆",
-              "ja": "民族学博物館",
-              "ko": "민족학 박물관",
-              "vi": "Bảo tàng Dân tộc học",
-              "ms": "Muzium Etnologi",
-              "de": "Ethnologisches Museum",
-              "es": "Museo Etnológico",
-              "it": "Museo Etnologico",
-              "ru": "Этнологический музей",
-              "nl": "Volkenkunde Museum",
-              "pl": "Muzeum Etnologiczne",
-              "da": "Etnologisk museum",
-              "sv": "Etnologiskt museum",
-              "no": "Etnologisk museum"
+              "ar": "ضريح هوشي منه",
+              "fr": "Mausolée de Hô Chi Minh",
+              "zh": "胡志明陵墓",
+              "ja": "ホーチミン廟",
+              "ko": "호치민 묘소",
+              "vi": "Lăng Hồ Chí Minh",
+              "ms": "Makam Ho Chi Minh",
+              "de": "Ho-Chi-Minh-Mausoleum",
+              "es": "Mausoleo de Ho Chi Minh",
+              "it": "Mausoleo di Ho Chi Minh",
+              "ru": "Мавзолей Хо Ши Мина",
+              "nl": "Mausoleum van Ho Chi Minh",
+              "pl": "Mauzoleum Ho Chi Minha",
+              "da": "Ho Chi Minh-mausoleet",
+              "sv": "Ho Chi Minh-mausoleet",
+              "no": "Ho Chi Minh-mausoleet"
             },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -319,6 +331,7 @@
               "sort_order": 0,
               "is_primary": true,
               "is_customer_visible": true,
+              "include_in_travel_tour_card": true,
               "width_px": null,
               "height_px": null,
               "source_attribution": null,
@@ -368,6 +381,7 @@
               "sort_order": 0,
               "is_primary": true,
               "is_customer_visible": true,
+              "include_in_travel_tour_card": true,
               "width_px": null,
               "height_px": null,
               "source_attribution": null,
@@ -417,6 +431,7 @@
               "sort_order": 0,
               "is_primary": true,
               "is_customer_visible": true,
+              "include_in_travel_tour_card": false,
               "width_px": null,
               "height_px": null,
               "source_attribution": null,
@@ -425,24 +440,24 @@
             }
           }
         ],
-        "notes": "Today, we start our exploration of Hanoi, seeing the most notable landmark of Ho Chi Minh Mausoleum (close on Mon. and Fri.). This imposing marble and granite monument was built towards Ba Dinh Square. We follow the footpath to the One Pillar Pagoda rising from the center of a square lotus pond, ascending on a single pillar and resembling a blossoming lotus flower.",
+        "notes": "Explore Hanoi’s landmarks: visit the Ho Chi Minh Mausoleum at Ba Dinh Square and the iconic One Pillar Pagoda, a unique structure resembling a blooming lotus flower.",
         "notes_i18n": {
-          "ar": "اليوم، نبدأ استكشافنا في هانوي، ونرى أبرز المعالم في ضريح هوشي منه (يقع بالقرب من الاثنين والجمعة). تم بناء هذا النصب التذكاري المهيب من الرخام والجرانيت باتجاه ميدان با دينه. نتبع الممر المؤدي إلى معبد العمود الواحد الذي يرتفع من وسط بركة لوتس مربعة، ويصعد على عمود واحد ويشبه زهرة اللوتس المتفتحة.",
-          "fr": "Aujourd'hui, nous commençons notre exploration de Hanoï en visitant le monument le plus remarquable du mausolée de Hô Chi Minh (fermé le lundi et le vendredi). Cet imposant monument de marbre et de granit a été construit en direction de la place Ba Dinh. Nous suivons le sentier jusqu'à la pagode au pilier unique qui s'élève du centre d'un étang de lotus carré, montant sur un seul pilier et ressemblant à une fleur de lotus en fleurs.",
-          "zh": "今天，我们开始探索河内，参观最著名的地标胡志明陵（周一和周五关闭）。这座宏伟的大理石和花岗岩纪念碑面向巴亭广场而建。我们沿着步道来到一柱塔，它从方形荷塘的中心升起，在一根柱子上上升，就像一朵盛开的莲花。",
-          "ja": "今日は、最も有名なランドマークであるホーチミン廟を見て、ハノイの探索を開始します（月曜と金曜は休館）。この印象的な大理石と花崗岩の記念碑は、バーディン広場に向かって建てられました。歩道をたどって、四角い蓮池の中心にそびえ、一本の柱の上を昇り、開花した蓮の花のように見える一柱塔へ向かいます。",
-          "ko": "오늘은 가장 주목할만한 랜드마크인 호치민 묘소(월, 금 휴무)를 보며 하노이 탐험을 시작합니다. 이 인상적인 대리석과 화강암 기념물은 바딘 광장(Ba Dinh Square)을 향해 지어졌습니다. 우리는 네모난 연꽃 연못 중앙에서 솟아오른 일주탑으로 이어지는 산책로를 따라가며, 한 기둥 위로 올라가 마치 연꽃이 핀 모습을 닮았습니다.",
-          "vi": "Hôm nay, chúng tôi bắt đầu hành trình khám phá Hà Nội, tham quan địa danh đáng chú ý nhất là Lăng Chủ tịch Hồ Chí Minh (đóng cửa vào Thứ Hai và Thứ Sáu). Tượng đài bằng đá cẩm thạch và đá granit hùng vĩ này được xây dựng hướng về phía Quảng trường Ba Đình. Chúng tôi đi theo lối đi bộ lên chùa Một Cột, nhô lên từ giữa ao sen hình vuông, leo lên một cây cột trông giống như một bông sen đang nở rộ.",
-          "ms": "Hari ini, kami memulakan penjelajahan Hanoi, melihat mercu tanda yang paling terkenal di Makam Ho Chi Minh (tutup pada Isnin dan Jumaat). Monumen marmar dan granit yang mengagumkan ini dibina ke arah Dataran Ba ​​Dinh. Kami mengikut laluan pejalan kaki ke Pagoda Satu Tiang yang menjulang dari tengah kolam teratai persegi, menaiki satu tiang dan menyerupai bunga teratai yang sedang mekar.",
-          "de": "Heute beginnen wir mit der Erkundung von Hanoi und besichtigen das bemerkenswerteste Wahrzeichen des Ho-Chi-Minh-Mausoleums (montags und freitags geschlossen). Dieses imposante Denkmal aus Marmor und Granit wurde in Richtung Ba-Dinh-Platz errichtet. Wir folgen dem Fußweg zur Einsäulenpagode, die sich in der Mitte eines quadratischen Lotusteichs erhebt, auf einer einzelnen Säule aufsteigt und einer blühenden Lotusblume ähnelt.",
-          "es": "Hoy comenzamos nuestra exploración de Hanoi, viendo el hito más notable del Mausoleo de Ho Chi Minh (cerca los lunes y viernes). Este imponente monumento de mármol y granito fue construido hacia la plaza Ba Dinh. Seguimos el sendero hacia la Pagoda del Pilar Único que se eleva desde el centro de un estanque de lotos cuadrado, que asciende sobre un solo pilar y se asemeja a una flor de loto en flor.",
-          "it": "Oggi iniziamo la nostra esplorazione di Hanoi, vedendo il punto di riferimento più importante del Mausoleo di Ho Chi Minh (chiuso lunedì e venerdì). Questo imponente monumento in marmo e granito fu costruito verso piazza Ba Dinh. Seguiamo il sentiero verso la Pagoda a un pilastro che sorge dal centro di uno stagno di loto quadrato, salendo su un unico pilastro e somigliante a un fiore di loto in fiore.",
-          "ru": "Сегодня мы начинаем наше исследование Ханоя с осмотра самой известной достопримечательности — мавзолея Хо Ши Мина (закрыто в понедельник и пятницу). Этот внушительный памятник из мрамора и гранита был построен недалеко от площади Бадинь. Мы следуем по тропинке к Пагоде с одним столбом, поднимающейся из центра квадратного пруда с лотосами, поднимающейся на единственной колонне и напоминающей цветущий цветок лотоса.",
-          "nl": "Vandaag beginnen we onze verkenning van Hanoi en zien we de meest opvallende bezienswaardigheid: het Ho Chi Minh Mausoleum (gesloten op maandag en vrijdag). Dit imposante marmeren en granieten monument werd gebouwd richting het Ba Dinh-plein. We volgen het voetpad naar de One Pillar Pagoda die oprijst uit het midden van een vierkante lotusvijver, opstijgt op een enkele pilaar en lijkt op een bloeiende lotusbloem.",
-          "pl": "Dzisiaj rozpoczynamy naszą eksplorację Hanoi, odwiedzając najbardziej charakterystyczny punkt orientacyjny – Mauzoleum Ho Chi Minha (zamknięte w poniedziałki i piątki). Ten imponujący pomnik z marmuru i granitu został zbudowany w kierunku placu Ba Dinh. Podążamy ścieżką do Pagody Jednej Kolumny wznoszącej się ze środka kwadratowego stawu lotosu, wznoszącej się na jednym filarze i przypominającej kwitnący kwiat lotosu.",
-          "da": "I dag starter vi vores udforskning af Hanoi, hvor vi ser det mest bemærkelsesværdige vartegn ved Ho Chi Minh-mausoleet (tæt på mandag og fredag). Dette imponerende monument i marmor og granit blev bygget mod Ba Dinh-pladsen. Vi følger gangstien til One Pillar Pagoda, der rejser sig fra midten af ​​en firkantet lotusdam, stiger op på en enkelt søjle og ligner en blomstrende lotusblomst.",
-          "sv": "Idag börjar vi vår utforskning av Hanoi, och ser Ho Chi Minh-mausoleets mest anmärkningsvärda landmärke (nära måndag och fredag). Detta imponerande monument i marmor och granit byggdes mot Ba Dinh-torget. Vi följer gångvägen till One Pillar Pagoda som reser sig från mitten av en fyrkantig lotusdamm, stiger upp på en enda pelare och liknar en blommande lotusblomma.",
-          "no": "I dag starter vi vår utforskning av Hanoi, og ser det mest bemerkelsesverdige landemerket til Ho Chi Minh-mausoleet (nær mandag og fredag). Dette imponerende marmor- og granittmonumentet ble bygget mot Ba Dinh-plassen. Vi følger gangstien til One Pillar Pagoda som stiger opp fra midten av en firkantet lotusdam, stiger opp på en enkelt søyle og ligner en blomstrende lotusblomst."
+          "ar": "استكشف معالم هانوي: قم بزيارة ضريح هوشي منه في ميدان با دينه ومعبد One Pillar Pagoda الشهير، وهو هيكل فريد يشبه زهرة اللوتس المتفتحة.",
+          "fr": "Explorez les monuments de Hanoï : visitez le mausolée de Hô Chi Minh sur la place Ba Dinh et l'emblématique pagode au pilier unique, une structure unique ressemblant à une fleur de lotus en fleurs.",
+          "zh": "探索河内的地标：参观巴亭广场的胡志明陵墓和标志性的一柱塔，这是一个独特的结构，类似于盛开的莲花。",
+          "ja": "ハノイのランドマークを探索しましょう。バーディン広場にあるホーチミン廟や、咲き誇る蓮の花のようなユニークな建造物である象徴的な一柱寺を訪れてください。",
+          "ko": "하노이의 랜드마크를 탐험해보세요. 바딘 광장에 있는 호치민 영묘와 활짝 핀 연꽃을 닮은 독특한 건축물인 상징적인 일주사를 방문해보세요.",
+          "vi": "Khám phá các địa danh của Hà Nội: tham quan Lăng Chủ tịch Hồ Chí Minh tại Quảng trường Ba Đình và Chùa Một Cột mang tính biểu tượng, một công trình kiến ​​trúc độc đáo giống như một bông hoa sen đang nở.",
+          "ms": "Terokai mercu tanda Hanoi: lawati Makam Ho Chi Minh di Dataran Ba ​​Dinh dan One Pillar Pagoda yang ikonik, struktur unik yang menyerupai bunga teratai yang sedang mekar.",
+          "de": "Erkunden Sie die Wahrzeichen von Hanoi: Besuchen Sie das Ho-Chi-Minh-Mausoleum am Ba-Dinh-Platz und die ikonische Einsäulenpagode, ein einzigartiges Bauwerk, das einer blühenden Lotusblume ähnelt.",
+          "es": "Explore los lugares emblemáticos de Hanoi: visite el mausoleo de Ho Chi Minh en la plaza Ba Dinh y la icónica Pagoda del Pilar Único, una estructura única que se asemeja a una flor de loto en flor.",
+          "it": "Esplora i monumenti di Hanoi: visita il Mausoleo di Ho Chi Minh in piazza Ba Dinh e l'iconica Pagoda a un pilastro, una struttura unica che ricorda un fiore di loto in fiore.",
+          "ru": "Исследуйте достопримечательности Ханоя: посетите мавзолей Хо Ши Мина на площади Ба Динь и знаменитую Пагоду на одном столбе, уникальное сооружение, напоминающее цветущий цветок лотоса.",
+          "nl": "Verken de bezienswaardigheden van Hanoi: bezoek het Ho Chi Minh-mausoleum op het Ba Dinh-plein en de iconische One Pillar Pagoda, een uniek bouwwerk dat lijkt op een bloeiende lotusbloem.",
+          "pl": "Poznaj zabytki Hanoi: odwiedź Mauzoleum Ho Chi Minha na placu Ba Dinh i słynną Pagodę Jednej Kolumny, wyjątkową budowlę przypominającą kwitnący kwiat lotosu.",
+          "da": "Udforsk Hanois vartegn: Besøg Ho Chi Minh-mausoleet ved Ba Dinh-pladsen og den ikoniske One Pillar Pagoda, en unik struktur, der ligner en blomstrende lotusblomst.",
+          "sv": "Utforska Hanois landmärken: besök Ho Chi Minh-mausoleet vid Ba Dinh-torget och den ikoniska One Pillar Pagoda, en unik struktur som liknar en blommande lotusblomma.",
+          "no": "Utforsk Hanois landemerker: besøk Ho Chi Minh-mausoleet ved Ba Dinh-plassen og den ikoniske One Pillar Pagoda, en unik struktur som ligner en blomstrende lotusblomst."
         }
       },
       {
@@ -512,6 +527,7 @@
               "sort_order": 0,
               "is_primary": true,
               "is_customer_visible": true,
+              "include_in_travel_tour_card": false,
               "width_px": null,
               "height_px": null,
               "source_attribution": null,
@@ -561,6 +577,7 @@
               "sort_order": 0,
               "is_primary": true,
               "is_customer_visible": true,
+              "include_in_travel_tour_card": false,
               "width_px": null,
               "height_px": null,
               "source_attribution": null,
@@ -610,6 +627,7 @@
               "sort_order": 0,
               "is_primary": true,
               "is_customer_visible": true,
+              "include_in_travel_tour_card": false,
               "width_px": null,
               "height_px": null,
               "source_attribution": null,
@@ -618,123 +636,123 @@
             }
           }
         ],
-        "notes": "A bus will pick you up from your hotel in Hanoi's Old Quarter. Enjoy the scenery of the Red River Delta on the way to Ha Long Bay. Please arrive 10 minutes before the scheduled time. (The bus may be delayed due to traffic; we appreciate your understanding.)",
+        "notes": "Pick up at Hanoi Old Quarter. Enjoy the Red River Delta scenery to Ha Long Bay. Arrive 10 mins early. Traffic may cause delays. Thanks for your patience!",
         "notes_i18n": {
-          "ar": "سوف تقلك الحافلة من فندقك في الحي القديم في هانوي. استمتع بمناظر دلتا النهر الأحمر في الطريق إلى خليج ها لونج. يرجى الوصول قبل 10 دقائق من الوقت المحدد. (قد تتأخر الحافلة بسبب حركة المرور، ونحن نقدر تفهمكم.)",
-          "fr": "Un bus viendra vous chercher à votre hôtel dans le vieux quartier de Hanoi. Profitez du paysage du delta du fleuve Rouge en route vers la baie d'Ha Long. Veuillez arriver 10 minutes avant l'heure prévue. (Le bus peut être retardé en raison de la circulation ; nous apprécions votre compréhension.)",
-          "zh": "巴士将前往河内老城区的酒店接您。前往下龙湾的途中欣赏红河三角洲的风景。请在预定时间前 10 分钟到达。（巴士可能会因交通堵塞而延误，敬请谅解。）",
-          "ja": "ハノイ旧市街のホテルからバスがお迎えに上がります。ハロン湾に向かう途中で紅河デルタの景色をお楽しみください。予定時間の10分前には到着してください。（交通渋滞によりバスが遅れる場合がございます。ご了承ください。）",
-          "ko": "버스가 하노이 올드 쿼터(Old Quarter)에 있는 호텔에서 귀하를 픽업할 것입니다. 하롱베이로 가는 길에 홍강삼각주의 풍경을 감상해보세요. 예약시간 10분 전까지 도착해주세요. (교통상황에 따라 버스가 지연될 수 있으니 양해 부탁드립니다.)",
-          "vi": "Xe buýt sẽ đón bạn từ khách sạn ở Khu Phố Cổ Hà Nội. Thưởng thức phong cảnh đồng bằng sông Hồng trên đường đến Vịnh Hạ Long. Vui lòng đến 10 phút trước thời gian dự kiến. (Xe buýt có thể bị trì hoãn do giao thông; chúng tôi đánh giá cao sự thông cảm của bạn.)",
-          "ms": "Bas akan menjemput anda dari hotel anda di Old Quarter Hanoi. Nikmati pemandangan Delta Sungai Merah dalam perjalanan ke Teluk Ha Long. Sila tiba 10 minit sebelum waktu yang dijadualkan. (Bas mungkin tertunda kerana lalu lintas; kami menghargai pemahaman anda.)",
-          "de": "Ein Bus holt Sie von Ihrem Hotel in der Altstadt von Hanoi ab. Genießen Sie die Landschaft des Roten Flussdeltas auf dem Weg zur Halong-Bucht. Bitte kommen Sie 10 Minuten vor der geplanten Zeit an. (Der Bus kann verkehrsbedingt verspätet sein; wir bitten um Ihr Verständnis.)",
-          "es": "Un autobús le recogerá en su hotel en el casco antiguo de Hanoi. Disfrute del paisaje del delta del río Rojo de camino a la bahía de Ha Long. Por favor llegue 10 minutos antes de la hora programada. (El autobús puede sufrir retrasos debido al tráfico; agradecemos su comprensión).",
-          "it": "Un autobus ti verrà a prendere dal tuo hotel nel quartiere vecchio di Hanoi. Goditi lo scenario del delta del fiume Rosso sulla strada per la baia di Ha Long. Si prega di arrivare 10 minuti prima dell'orario previsto. (L'autobus potrebbe subire ritardi a causa del traffico; apprezziamo la tua comprensione.)",
-          "ru": "Автобус заберет вас из отеля в старом квартале Ханоя. Наслаждайтесь пейзажами дельты Красной реки по пути к заливу Халонг. Пожалуйста, приходите за 10 минут до назначенного времени. (Автобус может задерживаться из-за пробок; мы ценим ваше понимание.)",
-          "nl": "Een bus haalt je op bij je hotel in de oude wijk van Hanoi. Geniet van het landschap van de Rode Rivierdelta op weg naar Ha Long Bay. Gelieve 10 minuten vóór de geplande tijd aanwezig te zijn. (De bus kan vertraging hebben vanwege verkeersdrukte; wij stellen uw begrip op prijs.)",
-          "pl": "Autobus odbierze Cię z hotelu w Starej Dzielnicy Hanoi. Ciesz się scenerią delty Rzeki Czerwonej w drodze do zatoki Ha Long. Prosimy o przybycie 10 minut przed wyznaczoną godziną. (Autobus może być opóźniony z powodu ruchu ulicznego; dziękujemy za zrozumienie.)",
-          "da": "En bus henter dig fra dit hotel i Hanois gamle kvarter. Nyd landskabet i Red River Delta på vej til Ha Long Bay. Kom venligst 10 minutter før aftalt tid. (Bussen kan blive forsinket på grund af trafik; vi sætter pris på din forståelse.)",
-          "sv": "En buss hämtar dig från ditt hotell i Hanois gamla kvarter. Njut av landskapet i Red River Delta på vägen till Ha Long Bay. Vänligen kom 10 minuter före utsatt tid. (Bussen kan bli försenad på grund av trafik, vi uppskattar din förståelse.)",
-          "no": "En buss henter deg fra hotellet ditt i Hanois gamle kvarter. Nyt naturen til Red River Delta på vei til Ha Long Bay. Vennligst kom 10 minutter før planlagt tid. (Bussen kan bli forsinket på grunn av trafikk; vi setter pris på din forståelse.)"
+          "ar": "التقط في حي هانوي القديم. استمتع بمناظر دلتا النهر الأحمر إلى خليج ها لونج. الوصول مبكرًا بـ 10 دقائق. قد تتسبب حركة المرور في حدوث تأخيرات. شكرا لصبرك!",
+          "fr": "Prise en charge au vieux quartier de Hanoi. Profitez du paysage du delta du fleuve Rouge jusqu'à la baie d'Ha Long. Arrivez 10 minutes plus tôt. La circulation peut entraîner des retards. Merci pour votre patience !",
+          "zh": "在河内老城区接客。前往下龙湾欣赏红河三角洲风光。提前 10 分钟到达。交通可能会造成延误。感谢您的耐心等待！",
+          "ja": "ハノイ旧市街でお迎えします。ハロン湾まで紅河デルタの景色をお楽しみください。10分前に到着。交通状況により遅延が発生する場合があります。ご辛抱いただきありがとうございます。",
+          "ko": "하노이 올드 쿼터에서 픽업하세요. 하롱베이까지 홍강 삼각주(Red River Delta)의 풍경을 즐겨보세요. 10분 일찍 도착하세요. 교통 정체로 인해 지연이 발생할 수 있습니다. 기다려주셔서 감사합니다!",
+          "vi": "Đón tại phố cổ Hà Nội. Thưởng thức phong cảnh đồng bằng sông Hồng đến Vịnh Hạ Long. Đến sớm 10 phút. Giao thông có thể gây ra sự chậm trễ. Cảm ơn sự kiên nhẫn của bạn!",
+          "ms": "Jemput di Suku Lama Hanoi. Nikmati pemandangan Delta Sungai Merah ke Teluk Ha Long. Tiba 10 minit lebih awal. Trafik boleh menyebabkan kelewatan. Terima kasih atas kesabaran anda!",
+          "de": "Abholung in der Altstadt von Hanoi. Genießen Sie die Landschaft des Roten Flussdeltas bis zur Halong-Bucht. Arrive 10 mins early. Der Verkehr kann zu Verzögerungen führen. Vielen Dank für Ihre Geduld!",
+          "es": "Recogida en el casco antiguo de Hanoi. Disfrute del paisaje del delta del río Rojo hasta la bahía de Ha Long. Llegue 10 minutos antes. El tráfico puede causar retrasos. ¡Gracias por tu paciencia!",
+          "it": "Ritiro nel quartiere vecchio di Hanoi. Goditi lo scenario del delta del fiume Rosso fino alla baia di Ha Long. Arriva 10 minuti prima. Il traffico potrebbe causare ritardi. Grazie per la pazienza!",
+          "ru": "Встреча в Старом квартале Ханоя. Наслаждайтесь пейзажами дельты Красной реки и залива Халонг. Приходите на 10 минут раньше. Пробки могут вызвать задержки. Спасибо за ваше терпение!",
+          "nl": "Ophalen in de oude wijk van Hanoi. Geniet van het landschap van de Rode Rivierdelta tot aan Ha Long Bay. Kom 10 minuten te vroeg. Het verkeer kan voor vertraging zorgen. Bedankt voor uw geduld!",
+          "pl": "Odbiór w starej dzielnicy Hanoi. Ciesz się scenerią Delty Rzeki Czerwonej do Zatoki Ha Long. Przyjdź 10 minut wcześniej. Ruch może powodować opóźnienia. Dziękujemy za cierpliwość!",
+          "da": "Afhentning i Hanois gamle kvarter. Nyd Red River Delta-landskabet til Ha Long Bay. Ankom 10 minutter før tid. Trafikken kan forårsage forsinkelser. Tak for din tålmodighed!",
+          "sv": "Hämtning vid Hanois gamla kvarter. Njut av Red River Delta-landskapet till Ha Long Bay. Kom 10 minuter tidigt. Trafiken kan orsaka förseningar. Tack för ditt tålamod!",
+          "no": "Hent i Hanoi Old Quarter. Nyt Red River Delta-landskapet til Ha Long Bay. Kom 10 minutter for tidlig. Trafikk kan føre til forsinkelser. Takk for tålmodigheten!"
         }
       }
     ],
     "translation_meta": {
       "ar": {
         "source_lang": "en",
-        "source_hash": "fnv1a_924c9bfc",
+        "source_hash": "fnv1a_fab4ec90",
         "origin": "machine",
-        "updated_at": "2026-04-27T00:33:30.505Z"
+        "updated_at": "2026-04-28T02:14:18.726Z"
       },
       "fr": {
         "source_lang": "en",
-        "source_hash": "fnv1a_924c9bfc",
+        "source_hash": "fnv1a_fab4ec90",
         "origin": "machine",
-        "updated_at": "2026-04-27T00:33:32.516Z"
+        "updated_at": "2026-04-28T02:14:24.440Z"
       },
       "zh": {
         "source_lang": "en",
-        "source_hash": "fnv1a_924c9bfc",
+        "source_hash": "fnv1a_fab4ec90",
         "origin": "machine",
-        "updated_at": "2026-04-27T00:33:34.365Z"
+        "updated_at": "2026-04-28T02:14:28.702Z"
       },
       "ja": {
         "source_lang": "en",
-        "source_hash": "fnv1a_924c9bfc",
+        "source_hash": "fnv1a_fab4ec90",
         "origin": "machine",
-        "updated_at": "2026-04-27T00:33:36.513Z"
+        "updated_at": "2026-04-28T02:14:34.532Z"
       },
       "ko": {
         "source_lang": "en",
-        "source_hash": "fnv1a_924c9bfc",
+        "source_hash": "fnv1a_fab4ec90",
         "origin": "machine",
-        "updated_at": "2026-04-27T00:33:38.413Z"
+        "updated_at": "2026-04-28T02:14:39.304Z"
       },
       "vi": {
         "source_lang": "en",
-        "source_hash": "fnv1a_924c9bfc",
+        "source_hash": "fnv1a_fab4ec90",
         "origin": "machine",
-        "updated_at": "2026-04-27T00:33:40.534Z"
+        "updated_at": "2026-04-28T02:14:42.967Z"
       },
       "ms": {
         "source_lang": "en",
-        "source_hash": "fnv1a_924c9bfc",
+        "source_hash": "fnv1a_fab4ec90",
         "origin": "machine",
-        "updated_at": "2026-04-27T00:33:42.712Z"
+        "updated_at": "2026-04-28T02:14:47.386Z"
       },
       "de": {
         "source_lang": "en",
-        "source_hash": "fnv1a_924c9bfc",
+        "source_hash": "fnv1a_fab4ec90",
         "origin": "machine",
-        "updated_at": "2026-04-27T00:33:44.617Z"
+        "updated_at": "2026-04-28T02:14:52.874Z"
       },
       "es": {
         "source_lang": "en",
-        "source_hash": "fnv1a_924c9bfc",
+        "source_hash": "fnv1a_fab4ec90",
         "origin": "machine",
-        "updated_at": "2026-04-27T00:33:46.578Z"
+        "updated_at": "2026-04-28T02:14:57.297Z"
       },
       "it": {
         "source_lang": "en",
-        "source_hash": "fnv1a_924c9bfc",
+        "source_hash": "fnv1a_fab4ec90",
         "origin": "machine",
-        "updated_at": "2026-04-27T00:33:48.450Z"
+        "updated_at": "2026-04-28T02:15:03.127Z"
       },
       "ru": {
         "source_lang": "en",
-        "source_hash": "fnv1a_924c9bfc",
+        "source_hash": "fnv1a_fab4ec90",
         "origin": "machine",
-        "updated_at": "2026-04-27T00:33:50.389Z"
+        "updated_at": "2026-04-28T02:15:06.813Z"
       },
       "nl": {
         "source_lang": "en",
-        "source_hash": "fnv1a_924c9bfc",
+        "source_hash": "fnv1a_fab4ec90",
         "origin": "machine",
-        "updated_at": "2026-04-27T00:33:52.440Z"
+        "updated_at": "2026-04-28T02:15:12.429Z"
       },
       "pl": {
         "source_lang": "en",
-        "source_hash": "fnv1a_924c9bfc",
+        "source_hash": "fnv1a_fab4ec90",
         "origin": "machine",
-        "updated_at": "2026-04-27T00:33:54.311Z"
+        "updated_at": "2026-04-28T02:15:16.464Z"
       },
       "da": {
         "source_lang": "en",
-        "source_hash": "fnv1a_924c9bfc",
+        "source_hash": "fnv1a_fab4ec90",
         "origin": "machine",
-        "updated_at": "2026-04-27T00:33:56.416Z"
+        "updated_at": "2026-04-28T02:15:21.996Z"
       },
       "sv": {
         "source_lang": "en",
-        "source_hash": "fnv1a_924c9bfc",
+        "source_hash": "fnv1a_fab4ec90",
         "origin": "machine",
-        "updated_at": "2026-04-27T00:33:58.424Z"
+        "updated_at": "2026-04-28T02:15:27.629Z"
       },
       "no": {
         "source_lang": "en",
-        "source_hash": "fnv1a_924c9bfc",
+        "source_hash": "fnv1a_fab4ec90",
         "origin": "machine",
-        "updated_at": "2026-04-27T00:34:00.399Z"
+        "updated_at": "2026-04-28T02:15:33.400Z"
       }
     }
   }
