@@ -4089,6 +4089,7 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
     productionFrontendScript,
     updateProductionScript,
     productionCaddyDeployScript,
+    keycloakSharedTokensCss,
     publicHomepageAssetsScript
   ] = await Promise.all([
     readFile(path.join(frontendRoot, "pages", "bookings.html"), "utf8"),
@@ -4114,6 +4115,7 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
     readFile(path.join(repoRoot, "scripts", "production", "deploy_production_frontend.sh"), "utf8"),
     readFile(path.join(repoRoot, "scripts", "deploy", "update_production.sh"), "utf8"),
     readFile(path.join(repoRoot, "scripts", "production", "deploy_production_caddy.sh"), "utf8"),
+    readFile(path.join(repoRoot, "backend", "keycloak-theme", "asiatravelplan", "login", "resources", "css", "shared-tokens.css"), "utf8"),
     readFile(path.join(repoRoot, "scripts", "lib", "public_homepage_assets.sh"), "utf8")
   ]);
 
@@ -4281,6 +4283,21 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
     stagingCaddy,
     /Content-Security-Policy "default-src 'self';[\s\S]*object-src 'none';[\s\S]*frame-ancestors 'self';[\s\S]*script-src 'self' 'unsafe-inline';[\s\S]*style-src 'self' 'unsafe-inline';[\s\S]*img-src 'self' data: blob:;[\s\S]*connect-src 'self';[\s\S]*upgrade-insecure-requests"/,
     "Shared Caddy security headers should publish a CSP that limits resource origins while allowing current inline bootstraps"
+  );
+  assert.match(
+    stagingCaddy,
+    /\(auth_security_headers\)[\s\S]*Content-Security-Policy "default-src 'self';[\s\S]*form-action 'self' https:\/\/auth-staging\.asiatravelplan\.com https:\/\/staging\.asiatravelplan\.com;[\s\S]*font-src 'self' data:;/,
+    "Auth Caddy security headers should allow Keycloak login form posts without opening the app page CSP"
+  );
+  assert.match(
+    stagingCaddy,
+    /auth-staging\.asiatravelplan\.com \{[\s\S]*import auth_security_headers[\s\S]*reverse_proxy host\.docker\.internal:8083/,
+    "auth-staging should use the Keycloak-specific CSP instead of the generic app page CSP"
+  );
+  assert.doesNotMatch(
+    keycloakSharedTokensCss,
+    /fonts\.googleapis\.com|fonts\.gstatic\.com/,
+    "Keycloak login CSS should stay self-contained instead of depending on external Google Fonts"
   );
   assert.match(
     stagingCaddy,
