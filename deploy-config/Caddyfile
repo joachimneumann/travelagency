@@ -13,6 +13,17 @@
   }
 }
 
+(auth_security_headers) {
+  header {
+    Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+    X-Content-Type-Options "nosniff"
+    X-Frame-Options "SAMEORIGIN"
+    Referrer-Policy "strict-origin-when-cross-origin"
+    Content-Security-Policy "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; form-action 'self' https://auth-staging.asiatravelplan.com https://staging.asiatravelplan.com; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; media-src 'self'; connect-src 'self'; manifest-src 'self'; worker-src 'self' blob:; upgrade-insecure-requests"
+    Permissions-Policy "accelerometer=(), autoplay=(self), camera=(), display-capture=(), encrypted-media=(), fullscreen=(self), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), midi=(), payment=(), publickey-credentials-get=(), screen-wake-lock=(), usb=(), web-share=(), xr-spatial-tracking=()"
+  }
+}
+
 (noindex_headers) {
   header {
     X-Robots-Tag "noindex, nofollow, noarchive, nosnippet, noimageindex"
@@ -289,7 +300,7 @@ api-staging.asiatravelplan.com {
 }
 
 auth-staging.asiatravelplan.com {
-  import security_headers
+  import auth_security_headers
   import noindex_headers
   encode zstd gzip
   reverse_proxy host.docker.internal:8083
