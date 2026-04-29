@@ -648,6 +648,26 @@
 
 .tour-plan__footer-cta {
   display: none;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.9rem;
+  align-items: center;
+  width: min(100%, 530px);
+  margin-inline: auto;
+  padding: 0 15px 15px;
+}
+
+.tour-plan__footer-cta h4 {
+  margin: 0;
+  color: var(--text-strong);
+  font-size: clamp(1.05rem, 4.8vw, 1.35rem);
+  line-height: 1.16;
+}
+
+.tour-plan__footer-plan-trip {
+  min-height: 2.5rem;
+  padding: 0.58rem 0.9rem;
+  border-radius: 13px;
+  white-space: nowrap;
 }
 
 .tour-plan-day {
@@ -1120,23 +1140,6 @@
 
   .tour-plan__footer-cta {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 0.9rem;
-    align-items: center;
-    padding: 0 15px 15px;
   }
 
-  .tour-plan__footer-cta h4 {
-    margin: 0;
-    color: var(--text-strong);
-    font-size: clamp(1.05rem, 4.8vw, 1.35rem);
-    line-height: 1.16;
-  }
-
-  .tour-plan__footer-plan-trip {
-    min-height: 2.5rem;
-    padding: 0.58rem 0.9rem;
-    border-radius: 13px;
-    white-space: nowrap;
-  }
 }
