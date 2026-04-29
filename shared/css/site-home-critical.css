@@ -578,7 +578,7 @@ textarea:focus-visible {
 
 .hero-title-only {
   margin: 0;
-  color: var(--text-strong);
+  color: var(--text);
   font-size: var(--font-size-fluid-marketing-lg);
   line-height: 1.15;
   max-width: 24ch;
@@ -754,12 +754,13 @@ textarea:focus-visible {
   bottom: 0.75rem;
   z-index: 4;
   border-radius: 999px;
-  background: rgb(15 23 42 / 0.66);
-  color: var(--surface);
-  padding: 0.28rem 0.55rem;
-  font-size: var(--font-size-caption);
+  background: rgb(255 255 255 / 0.82);
+  color: var(--text);
+  padding: 0.2rem 0.46rem;
+  font-size: 0.78rem;
   font-weight: var(--font-weight-semibold);
   letter-spacing: var(--tracking-ui);
+  line-height: 1.1;
   pointer-events: none;
 }
 
@@ -826,6 +827,7 @@ textarea:focus-visible {
 
 .tour-title {
   margin: 0;
+  color: var(--text);
   font-size: var(--font-size-title-sm);
   line-height: var(--tour-card-title-line-height);
   display: -webkit-box;
@@ -850,7 +852,7 @@ textarea:focus-visible {
 
 .tour-desc {
   margin: 0;
-  color: var(--muted);
+  color: var(--text);
   font-size: var(--font-size-body-sm);
   line-height: var(--tour-card-desc-line-height);
   overflow-wrap: anywhere;
