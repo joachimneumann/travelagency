@@ -561,7 +561,7 @@ html[data-language-direction="rtl"] .home-page .metric span {
   place-items: center;
   padding: 1.5rem;
   background:
-    radial-gradient(circle at top, rgba(255, 111, 77, 0.2), transparent 40%),
+    radial-gradient(circle at top, rgb(var(--accent-rgb) / 0.2), transparent 40%),
     linear-gradient(180deg, #05080a, #10161a 58%, #161d22 100%);
 }
 

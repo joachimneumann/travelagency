@@ -214,7 +214,7 @@
 .home-page .hero-destination-menu__item:hover,
 .home-page .hero-destination-menu__item:focus-visible,
 .home-page .hero-destination-menu [aria-pressed="true"] {
-  background: rgba(255, 111, 77, 0.13);
+  background: rgb(var(--accent-rgb) / 0.13);
   color: var(--accent-text-deep);
   outline: none;
 }

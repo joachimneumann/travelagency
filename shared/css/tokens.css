@@ -108,7 +108,7 @@
   --surface-warning: #fff3df;
   --surface-warning-soft: var(--surface-warning);
   --surface-error: #fff2f1;
-  --surface-accent: #fff0ec;
+  --surface-accent: #eaf5f2;
   --surface-accent-soft: var(--surface-accent);
   --marketing-card-surface: #fff8ec;
   --marketing-card-control-surface: #fffdf7;
@@ -169,25 +169,27 @@
   --line-error: #e4a6a2;
   --line-error-strong: #d43a34;
   --line-warning: #e8dda6;
-  --line-accent: #f1b7a7;
+  --line-accent: #95c2b6;
   --line-avatar: rgba(172, 208, 224, 0.85);
 
   /* Brand */
-  --accent: #ff6f4d;
-  --accent-soft: #ffe3d9;
-  --accent-text: #b14a1b;
+  --accent-rgb: 48 121 107;
+  --accent-soft-rgb: 221 237 233;
+  --accent: rgb(var(--accent-rgb));
+  --accent-soft: rgb(var(--accent-soft-rgb));
+  --accent-text: #1f5f52;
   --accent-text-strong: var(--accent-text);
   --accent-text-deep: var(--accent-text);
   --accent-wash: var(--accent-soft-alpha);
-  --accent-tint: rgba(255, 111, 77, 0.2);
+  --accent-tint: rgb(var(--accent-rgb) / 0.2);
   --accent-tint-soft: var(--accent-tint);
   --accent-tint-medium: var(--accent-tint);
-  --accent-ring: rgba(255, 111, 77, 0.42);
+  --accent-ring: rgb(var(--accent-rgb) / 0.42);
   --accent-shadow: var(--accent-ring);
-  --accent-alpha-0: rgba(255, 111, 77, 0);
+  --accent-alpha-0: rgb(var(--accent-rgb) / 0);
   --accent-border-glow: var(--accent-tint);
   --accent-glow: var(--accent-soft-alpha);
-  --accent-soft-alpha: rgba(255, 227, 217, 0.2);
+  --accent-soft-alpha: rgb(var(--accent-soft-rgb) / 0.2);
   --secondary: #1fa7a0;
   --secondary-strong: var(--secondary);
   --secondary-text: var(--secondary);

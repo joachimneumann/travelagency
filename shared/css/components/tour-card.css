@@ -355,7 +355,7 @@
   font-weight: var(--font-weight-bold);
   line-height: 1;
   white-space: nowrap;
-  box-shadow: 0 10px 24px rgba(255, 111, 77, 0.18);
+  box-shadow: 0 10px 24px rgb(var(--accent-rgb) / 0.18);
 }
 
 .tour-desc {
@@ -415,11 +415,11 @@
   border: 1px solid var(--accent);
   border-radius: 14px;
   background:
-    linear-gradient(180deg, rgba(255, 111, 77, 0.045), rgba(255, 111, 77, 0)) var(--marketing-card-control-surface);
+    linear-gradient(180deg, rgb(var(--accent-rgb) / 0.045), rgb(var(--accent-rgb) / 0)) var(--marketing-card-control-surface);
   color: var(--accent);
   gap: 0.48rem;
   overflow: hidden;
-  box-shadow: 0 10px 24px rgba(255, 111, 77, 0.08);
+  box-shadow: 0 10px 24px rgb(var(--accent-rgb) / 0.08);
   font-weight: var(--font-weight-bold);
 }
 
@@ -435,7 +435,7 @@
 .tour-card__show-more:hover,
 .tour-card__show-more:focus-visible {
   background: var(--surface-accent);
-  box-shadow: 0 12px 28px rgba(255, 111, 77, 0.16);
+  box-shadow: 0 12px 28px rgb(var(--accent-rgb) / 0.16);
   transform: translateY(-1px);
 }
 
