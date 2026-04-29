@@ -321,7 +321,13 @@
     padding-top: 0;
   }
 
+  .home-page .hero-video {
+    max-width: 100vw;
+    overflow: hidden;
+  }
+
   .home-page .hero-bg-video {
+    max-width: 100%;
     object-position: 68% center;
   }
 

@@ -4793,8 +4793,13 @@ test("homepage tour cards use fixed-height text areas without an inline more lin
   );
   assert.match(
     mainToursSource,
-    /const TOUR_IMAGE_TRANSITION_MS = 2000;[\s\S]*function parseCssDurationToMs\(value\) \{[\s\S]*if \(normalizedValue\.endsWith\("ms"\)\) \{[\s\S]*if \(normalizedValue\.endsWith\("s"\)\) \{[\s\S]*function tourCardImageTransitionDurationMs\(button\) \{[\s\S]*window\.getComputedStyle\(button\)\.getPropertyValue\("--tour-card-image-transition-duration"\)[\s\S]*return cssDurationMs > 0 \? cssDurationMs : TOUR_IMAGE_TRANSITION_MS;[\s\S]*function cycleTourCardImage\(button\) \{[\s\S]*const transitionDurationMs = tourCardImageTransitionDurationMs\(button\);[\s\S]*window\.setTimeout\(\(\) => \{[\s\S]*\}, transitionDurationMs\);/,
+    /const TOUR_IMAGE_TRANSITION_MS = 2000;[\s\S]*function parseCssDurationToMs\(value\) \{[\s\S]*if \(normalizedValue\.endsWith\("ms"\)\) \{[\s\S]*if \(normalizedValue\.endsWith\("s"\)\) \{[\s\S]*function tourCardImageTransitionDurationMs\(button\) \{[\s\S]*window\.getComputedStyle\(button\)\.getPropertyValue\("--tour-card-image-transition-duration"\)[\s\S]*return cssDurationMs > 0 \? cssDurationMs : TOUR_IMAGE_TRANSITION_MS;[\s\S]*function cycleTourCardImage\(button, \{ step = 1 \} = \{\}\) \{[\s\S]*const transitionDurationMs = tourCardImageTransitionDurationMs\(button\);[\s\S]*window\.setTimeout\(\(\) => \{[\s\S]*\}, transitionDurationMs\);/,
     "Homepage marketing-card image swaps should read their dissolve duration from CSS so mobile can shorten the transition cleanly"
+  );
+  assert.match(
+    mainToursSource,
+    /const singleColumnGallery = galleryCount > 1 && isSingleColumnTourLayout\(\);[\s\S]*data-tour-image-swipe="1"[\s\S]*data-tour-media-track[\s\S]*tour-card__media-slide[\s\S]*function tourCardSwipeIndexFromScroll\(surface\)[\s\S]*Math\.round\(track\.scrollLeft \/ slideWidth\)[\s\S]*function setTourCardSwipeGalleryIndex\(surface, nextIndex, \{ scroll = true, behavior = "auto" \} = \{\}\)[\s\S]*track\.scrollTo\(\{ left, behavior \}\);[\s\S]*function stepTourCardSwipeGallery\(surface, step\)[\s\S]*behavior: "smooth"[\s\S]*function bindTourCardImageSwipeHandlers\(surface\)[\s\S]*track\.addEventListener\("scroll"[\s\S]*window\.requestAnimationFrame\(syncFromScroll\)[\s\S]*surface\.addEventListener\("click"[\s\S]*event\.clientX < rect\.left \+ \(rect\.width \/ 2\) \? -1 : 1[\s\S]*stepTourCardSwipeGallery\(surface, step\)[\s\S]*setTourCardSwipeGalleryIndex\(surface, currentTourCardGalleryIndex\(surface, tourCardSwipeSlides\(surface\)\.length\), \{[\s\S]*scroll: true,[\s\S]*behavior: "auto"/,
+    "Mobile homepage tour cards should use native scroll-snap galleries with visible dots and left/right tap zones"
   );
   assert.match(
     mainToursSource,
@@ -4833,8 +4838,18 @@ test("homepage tour cards use fixed-height text areas without an inline more lin
   );
   assert.match(
     tourCardCssSource,
-    /\.tour-card__media \{[\s\S]*--tour-card-image-transition-duration: 2s;[\s\S]*\.tour-card__media-layer\.is-entering \{[\s\S]*animation: tour-card-image-dissolve-in var\(--tour-card-image-transition-duration, 2s\) ease both;[\s\S]*\.tour-card__media-layer\.is-leaving \{[\s\S]*animation: tour-card-image-dissolve-out var\(--tour-card-image-transition-duration, 2s\) ease both;[\s\S]*@media \(max-width: 760px\) \{[\s\S]*\.tour-card__media \{[\s\S]*--tour-card-image-transition-duration: 1\.1s;/,
-    "Mobile homepage marketing cards should shorten the image dissolve duration while keeping desktop on the longer transition"
+    /\.tour-card__media \{[\s\S]*--tour-card-image-transition-duration: 2s;[\s\S]*\.tour-card__media-layer\.is-entering \{[\s\S]*animation: tour-card-image-dissolve-in var\(--tour-card-image-transition-duration, 2s\) ease both;[\s\S]*\.tour-card__media-layer\.is-leaving \{[\s\S]*animation: tour-card-image-dissolve-out var\(--tour-card-image-transition-duration, 2s\) ease both;/,
+    "Homepage marketing cards should keep the desktop image dissolve duration driven from CSS"
+  );
+  assert.match(
+    tourCardCssSource,
+    /\.tour-card__media-track \{[\s\S]*display: flex;[\s\S]*overflow-x: auto;[\s\S]*scroll-snap-type: x mandatory;[\s\S]*-webkit-overflow-scrolling: touch;[\s\S]*\.tour-card__media-slide \{[\s\S]*flex: 0 0 100%;[\s\S]*object-fit: cover;[\s\S]*scroll-snap-align: start;[\s\S]*scroll-snap-stop: always;/,
+    "Mobile homepage marketing cards should use a native horizontal scroll-snap track"
+  );
+  assert.match(
+    tourCardCssSource,
+    /@media \(max-width: 760px\) \{[\s\S]*\.tour-card__media \{[\s\S]*width: 100vw;[\s\S]*margin-inline: calc\(50% - 50vw\);[\s\S]*border-radius: 0;[\s\S]*\.tour-card__media::after,[\s\S]*\.tour-card__media-track,[\s\S]*\.tour-card__media-slide \{[\s\S]*border-radius: 0;[\s\S]*\.tour-card__media-counter \{[\s\S]*display: none;[\s\S]*\.tour-card__media-dots \{[\s\S]*display: inline-flex;/,
+    "Mobile homepage tour cards should use full-bleed square images and bottom dots instead of the image counter"
   );
   assert.match(
     tourCardCssSource,

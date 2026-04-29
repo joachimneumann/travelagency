@@ -708,10 +708,12 @@ export function createFrontendToursController(ctx) {
     window.addEventListener("resize", () => {
       const nextColumnCount = getTourGridColumnCount();
       if (nextColumnCount === renderedTourGridColumnCount) {
+        syncTourCardImageSwipeSurfaces();
         fitTourCardStyleTags();
         fitTourCardDescriptions();
         syncExpandedTourDetailsHeights();
         window.requestAnimationFrame(() => {
+          syncTourCardImageSwipeSurfaces();
           fitTourCardStyleTags();
           fitTourCardDescriptions();
           syncExpandedTourDetailsHeights();
@@ -852,36 +854,58 @@ export function createFrontendToursController(ctx) {
     const loading = index === 0 ? "eager" : "lazy";
     const fetchpriority = "auto";
     const gallery = Array.isArray(trip?.pictures) && trip.pictures.length ? trip.pictures : [DEFAULT_TOUR_IMAGE];
-    const primaryPicture = primaryTourPicture(trip);
     const galleryCount = gallery.length;
-    const mediaCycleTag = galleryCount > 1 ? "button" : "div";
-    const mediaCycleClass = galleryCount > 1 ? "tour-card__media-cycle tour-card__media-button" : "tour-card__media-cycle";
+    const activeGalleryIndex = savedTourCardGalleryIndex(tripId, galleryCount);
+    const primaryPicture = normalizeText(gallery[activeGalleryIndex]) || primaryTourPicture(trip);
+    const singleColumnGallery = galleryCount > 1 && isSingleColumnTourLayout();
+    const galleryImageAlt = frontendT("tour.card.image_alt", "{title} in {destinations}", {
+      title: tripTitle,
+      destinations: countriesLabel
+    });
+    const mediaCycleTag = galleryCount > 1 && !singleColumnGallery ? "button" : "div";
+    const mediaCycleClass = galleryCount > 1
+      ? `tour-card__media-cycle ${singleColumnGallery ? "tour-card__media-swipe" : "tour-card__media-button"}`
+      : "tour-card__media-cycle";
     const mediaAttrs = galleryCount > 1
-      ? ` type="button" data-tour-image-cycle="1" data-tour-gallery-index="0" data-trip-id="${escapeAttr(tripId)}" aria-label="${escapeAttr(galleryLabel)}"`
+      ? singleColumnGallery
+        ? ` data-tour-image-swipe="1" data-tour-gallery-index="${escapeAttr(String(activeGalleryIndex))}" data-trip-id="${escapeAttr(tripId)}"`
+        : ` type="button" data-tour-image-cycle="1" data-tour-gallery-index="${escapeAttr(String(activeGalleryIndex))}" data-trip-id="${escapeAttr(tripId)}" aria-label="${escapeAttr(galleryLabel)}"`
       : "";
     const galleryCounter = galleryCount > 1
-      ? `<span class="tour-card__media-counter" data-tour-image-counter>${escapeHTML(`1 / ${galleryCount}`)}</span>`
+      ? `<span class="tour-card__media-counter" data-tour-image-counter>${escapeHTML(`${activeGalleryIndex + 1} / ${galleryCount}`)}</span>`
       : "";
-    const canShowDetails = hasTravelPlanDays(trip);
-    const detailsPanelId = tourDetailsPanelId(tripId);
-    const showMoreStateAttrs = canShowDetails
-      ? `aria-expanded="${expanded ? "true" : "false"}" aria-controls="${escapeAttr(detailsPanelId)}"`
-      : `disabled title="${escapeAttr(detailsUnavailableLabel)}"`;
-
-    return `
-      <article class="tour-card${expanded ? " tour-card--expanded" : ""}" data-tour-card-id="${escapeAttr(tripId)}">
-        <div class="tour-card__media">
-          <${mediaCycleTag} class="${mediaCycleClass}"${mediaAttrs}>
-            <div class="tour-card__media-zoom">
-              <div class="tour-card__media-stage">
+    const galleryDots = galleryCount > 1
+      ? `
+          <span class="tour-card__media-dots" data-tour-image-dots aria-hidden="true">
+            ${gallery.map((_image, imageIndex) => `<span class="tour-card__media-dot${imageIndex === activeGalleryIndex ? " is-active" : ""}" data-tour-image-dot></span>`).join("")}
+          </span>
+        `
+      : "";
+    const galleryMediaMarkup = singleColumnGallery
+      ? `
+                <div class="tour-card__media-track" data-tour-media-track>
+                  ${gallery.map((image, imageIndex) => `
+                    <img
+                      class="tour-card__media-slide${imageIndex === activeGalleryIndex ? " is-active" : ""}"
+                      data-tour-media-slide
+                      data-tour-media-alt="${escapeAttr(galleryImageAlt)}"
+                      src="${escapeAttr(image || DEFAULT_TOUR_IMAGE)}"
+                      alt="${imageIndex === activeGalleryIndex ? escapeAttr(galleryImageAlt) : ""}"
+                      aria-hidden="${imageIndex === activeGalleryIndex ? "false" : "true"}"
+                      loading="${imageIndex === activeGalleryIndex ? loading : "lazy"}"
+                      fetchpriority="${imageIndex === activeGalleryIndex ? fetchpriority : "auto"}"
+                      width="1200"
+                      height="800"
+                    />
+                  `).join("")}
+                </div>
+              `
+      : `
                 <img
                   class="tour-card__media-layer is-active"
                   data-tour-media-layer="primary"
                   src="${escapeAttr(primaryPicture)}"
-                  alt="${escapeAttr(frontendT("tour.card.image_alt", "{title} in {destinations}", {
-                    title: tripTitle,
-                    destinations: countriesLabel
-                  }))}"
+                  alt="${escapeAttr(galleryImageAlt)}"
                   loading="${loading}"
                   fetchpriority="${fetchpriority}"
                   width="1200"
@@ -897,10 +921,25 @@ export function createFrontendToursController(ctx) {
                   width="1200"
                   height="800"
                 />
+              `;
+    const canShowDetails = hasTravelPlanDays(trip);
+    const detailsPanelId = tourDetailsPanelId(tripId);
+    const showMoreStateAttrs = canShowDetails
+      ? `aria-expanded="${expanded ? "true" : "false"}" aria-controls="${escapeAttr(detailsPanelId)}"`
+      : `disabled title="${escapeAttr(detailsUnavailableLabel)}"`;
+
+    return `
+      <article class="tour-card${expanded ? " tour-card--expanded" : ""}" data-tour-card-id="${escapeAttr(tripId)}">
+        <div class="tour-card__media">
+          <${mediaCycleTag} class="${mediaCycleClass}"${mediaAttrs}>
+            <div class="tour-card__media-zoom">
+              <div class="tour-card__media-stage">
+                ${galleryMediaMarkup}
               </div>
             </div>
           </${mediaCycleTag}>
           ${galleryCounter}
+          ${galleryDots}
           ${renderTourMediaTitle(trip, tripTitle)}
         </div>
         <div class="tour-body">
@@ -1425,6 +1464,13 @@ export function createFrontendToursController(ctx) {
       button.dataset.imageCycleBound = "1";
     });
 
+    const imageSwipeSurfaces = els.tourGrid.querySelectorAll("[data-tour-media-track]");
+    imageSwipeSurfaces.forEach((track) => {
+      const surface = track instanceof HTMLElement ? track.closest(".tour-card__media-cycle") : null;
+      bindTourCardImageSwipeHandlers(surface);
+    });
+    syncTourCardImageSwipeSurfaces();
+
     const showMoreButtons = els.tourGrid.querySelectorAll("[data-tour-card-show-more][data-trip-id]");
     showMoreButtons.forEach((button) => {
       if (!(button instanceof HTMLButtonElement) || button.dataset.tourDetailsBound === "1") return;
@@ -1545,10 +1591,12 @@ export function createFrontendToursController(ctx) {
       if (!tripId || snapshots.has(tripId)) return;
       const visibleLayer = card.querySelector(".tour-card__media-layer.is-entering")
         || card.querySelector(".tour-card__media-layer.is-active");
-      if (!(visibleLayer instanceof HTMLImageElement)) return;
-      const imageSrc = normalizeText(visibleLayer.currentSrc || visibleLayer.src || visibleLayer.getAttribute("src"));
+      const visibleSlide = card.querySelector(".tour-card__media-slide.is-active");
+      const visibleImage = visibleLayer instanceof HTMLImageElement ? visibleLayer : visibleSlide;
+      if (!(visibleImage instanceof HTMLImageElement)) return;
+      const imageSrc = normalizeText(visibleImage.currentSrc || visibleImage.src || visibleImage.getAttribute("src"));
       if (!imageSrc) return;
-      const computedStyle = window.getComputedStyle?.(visibleLayer);
+      const computedStyle = window.getComputedStyle?.(visibleImage);
       snapshots.set(tripId, {
         imageSrc,
         objectPosition: computedStyle?.objectPosition || "center"
@@ -1613,7 +1661,8 @@ export function createFrontendToursController(ctx) {
       mediaStage.style.backgroundRepeat = "no-repeat";
       mediaStage.style.backgroundSize = "cover";
 
-      const activeImage = card.querySelector(".tour-card__media-layer.is-active");
+      const activeImage = card.querySelector(".tour-card__media-layer.is-active")
+        || card.querySelector(".tour-card__media-slide.is-active");
       scheduleTourCardMediaSnapshotClear(mediaStage, activeImage);
     });
   }
@@ -2421,8 +2470,148 @@ export function createFrontendToursController(ctx) {
   function updateTourCardImageCounter(button, currentIndex, total) {
     const media = button.closest?.(".tour-card__media");
     const counter = media?.querySelector?.("[data-tour-image-counter]");
-    if (!(counter instanceof HTMLElement)) return;
-    counter.textContent = `${currentIndex + 1} / ${total}`;
+    if (counter instanceof HTMLElement) {
+      counter.textContent = `${currentIndex + 1} / ${total}`;
+    }
+    const dots = Array.from(media?.querySelectorAll?.("[data-tour-image-dot]") || []);
+    dots.forEach((dot, dotIndex) => {
+      if (!(dot instanceof HTMLElement)) return;
+      dot.classList.toggle("is-active", dotIndex === currentIndex);
+    });
+  }
+
+  function tourCardGalleryIndexByTripId() {
+    if (!state.tourGalleryIndexByTripId || typeof state.tourGalleryIndexByTripId !== "object") {
+      state.tourGalleryIndexByTripId = {};
+    }
+    return state.tourGalleryIndexByTripId;
+  }
+
+  function savedTourCardGalleryIndex(tripId, total) {
+    const rawIndex = tourCardGalleryIndexByTripId()[normalizeText(tripId)];
+    return clampTourCardGalleryIndex(rawIndex, total);
+  }
+
+  function saveTourCardGalleryIndex(tripId, index, total) {
+    const normalizedTripId = normalizeText(tripId);
+    if (!normalizedTripId) return;
+    tourCardGalleryIndexByTripId()[normalizedTripId] = clampTourCardGalleryIndex(index, total);
+  }
+
+  function saveTourCardSurfaceGalleryIndex(surface, index, total) {
+    if (!(surface instanceof HTMLElement)) return;
+    saveTourCardGalleryIndex(surface.getAttribute("data-trip-id"), index, total);
+  }
+
+  function tourCardSwipeSlides(surface) {
+    return Array.from(surface?.querySelectorAll?.("[data-tour-media-slide]") || [])
+      .filter((item) => item instanceof HTMLImageElement);
+  }
+
+  function currentTourCardGalleryIndex(surface, total) {
+    if (!(surface instanceof HTMLElement)) return 0;
+    const rawIndex = Number.parseInt(surface.dataset.tourGalleryIndex || "0", 10);
+    const safeIndex = Number.isFinite(rawIndex) ? rawIndex : 0;
+    return clampTourCardGalleryIndex(safeIndex, total);
+  }
+
+  function clampTourCardGalleryIndex(index, total) {
+    const maxIndex = Math.max(0, Number(total) - 1);
+    const safeIndex = Number.isFinite(Number(index)) ? Number(index) : 0;
+    return Math.min(Math.max(safeIndex, 0), maxIndex);
+  }
+
+  function tourCardSwipeTrack(surface) {
+    return surface?.querySelector?.("[data-tour-media-track]") || null;
+  }
+
+  function updateTourCardSwipeSlides(surface, activeIndex) {
+    const slides = tourCardSwipeSlides(surface);
+    slides.forEach((slide, slideIndex) => {
+      const isActive = slideIndex === activeIndex;
+      const altText = normalizeText(slide.dataset.tourMediaAlt);
+      slide.classList.toggle("is-active", isActive);
+      slide.alt = isActive ? altText : "";
+      slide.setAttribute("aria-hidden", isActive ? "false" : "true");
+    });
+  }
+
+  function tourCardSwipeIndexFromScroll(surface) {
+    const track = tourCardSwipeTrack(surface);
+    const slides = tourCardSwipeSlides(surface);
+    if (!(track instanceof HTMLElement) || !slides.length) return 0;
+    const slideWidth = track.clientWidth || slides[0]?.getBoundingClientRect?.().width || 0;
+    if (slideWidth <= 0) return currentTourCardGalleryIndex(surface, slides.length);
+    return clampTourCardGalleryIndex(Math.round(track.scrollLeft / slideWidth), slides.length);
+  }
+
+  function setTourCardSwipeGalleryIndex(surface, nextIndex, { scroll = true, behavior = "auto" } = {}) {
+    if (!(surface instanceof HTMLElement)) return;
+    const track = tourCardSwipeTrack(surface);
+    const slides = tourCardSwipeSlides(surface);
+    if (!slides.length) return;
+    const safeIndex = Math.min(Math.max(Number.parseInt(String(nextIndex), 10) || 0, 0), slides.length - 1);
+    surface.dataset.tourGalleryIndex = String(safeIndex);
+    saveTourCardSurfaceGalleryIndex(surface, safeIndex, slides.length);
+    updateTourCardSwipeSlides(surface, safeIndex);
+    updateTourCardImageCounter(surface, safeIndex, slides.length);
+    if (scroll && track instanceof HTMLElement) {
+      const slideWidth = track.clientWidth || slides[safeIndex]?.getBoundingClientRect?.().width || 0;
+      const left = slideWidth * safeIndex;
+      if (typeof track.scrollTo === "function") {
+        track.scrollTo({ left, behavior });
+      } else {
+        track.scrollLeft = left;
+      }
+    }
+  }
+
+  function stepTourCardSwipeGallery(surface, step) {
+    const slides = tourCardSwipeSlides(surface);
+    if (!(surface instanceof HTMLElement) || slides.length <= 1) return;
+    const currentIndex = tourCardSwipeIndexFromScroll(surface);
+    const nextIndex = clampTourCardGalleryIndex(currentIndex + step, slides.length);
+    setTourCardSwipeGalleryIndex(surface, nextIndex, { scroll: true, behavior: "smooth" });
+  }
+
+  function syncTourCardImageSwipeSurfaces(root = els.tourGrid) {
+    if (!root?.querySelectorAll) return;
+    root.querySelectorAll("[data-tour-media-track]").forEach((track) => {
+      const surface = track instanceof HTMLElement ? track.closest(".tour-card__media-cycle") : null;
+      if (!(surface instanceof HTMLElement)) return;
+      setTourCardSwipeGalleryIndex(surface, currentTourCardGalleryIndex(surface, tourCardSwipeSlides(surface).length), {
+        scroll: true,
+        behavior: "auto"
+      });
+    });
+  }
+
+  function bindTourCardImageSwipeHandlers(surface) {
+    if (!(surface instanceof HTMLElement) || surface.dataset.imageSwipeBound === "1") return;
+    const track = tourCardSwipeTrack(surface);
+    if (!(track instanceof HTMLElement)) return;
+
+    let scrollFrame = 0;
+    const syncFromScroll = () => {
+      scrollFrame = 0;
+      setTourCardSwipeGalleryIndex(surface, tourCardSwipeIndexFromScroll(surface), { scroll: false });
+    };
+    track.addEventListener("scroll", () => {
+      if (scrollFrame) return;
+      scrollFrame = window.requestAnimationFrame(syncFromScroll);
+    }, { passive: true });
+    surface.addEventListener("click", (event) => {
+      if (!isSingleColumnTourLayout()) return;
+      const rect = surface.getBoundingClientRect();
+      if (rect.width <= 0) return;
+      const step = event.clientX < rect.left + (rect.width / 2) ? -1 : 1;
+      stepTourCardSwipeGallery(surface, step);
+    });
+    surface.dataset.imageSwipeBound = "1";
+    setTourCardSwipeGalleryIndex(surface, currentTourCardGalleryIndex(surface, tourCardSwipeSlides(surface).length), {
+      scroll: true,
+      behavior: "auto"
+    });
   }
 
   function clearTourCardImageTransitionTimer(button) {
@@ -2434,7 +2623,7 @@ export function createFrontendToursController(ctx) {
   }
 
   function commitActiveTourCardImageTransition(button) {
-    if (!(button instanceof HTMLButtonElement) || button.dataset.imageAnimating !== "1") return;
+    if (!(button instanceof HTMLElement) || button.dataset.imageAnimating !== "1") return;
 
     const primaryLayer = button.querySelector('[data-tour-media-layer="primary"]');
     const secondaryLayer = button.querySelector('[data-tour-media-layer="secondary"]');
@@ -2451,8 +2640,8 @@ export function createFrontendToursController(ctx) {
     button.dataset.imageAnimating = "0";
   }
 
-  function cycleTourCardImage(button) {
-    if (!(button instanceof HTMLButtonElement)) return;
+  function cycleTourCardImage(button, { step = 1 } = {}) {
+    if (!(button instanceof HTMLElement)) return;
 
     if (button.dataset.imageAnimating === "1") {
       commitActiveTourCardImageTransition(button);
@@ -2466,13 +2655,15 @@ export function createFrontendToursController(ctx) {
     if (gallery.length <= 1) return;
 
     const currentIndex = Math.max(0, Number.parseInt(button.dataset.tourGalleryIndex || "0", 10) || 0) % gallery.length;
-    const nextIndex = (currentIndex + 1) % gallery.length;
+    const requestedStep = Number.parseInt(String(step), 10) || 1;
+    const nextIndex = (currentIndex + requestedStep + gallery.length) % gallery.length;
     const primaryLayer = button.querySelector('[data-tour-media-layer="primary"]');
     const secondaryLayer = button.querySelector('[data-tour-media-layer="secondary"]');
     if (!(primaryLayer instanceof HTMLImageElement) || !(secondaryLayer instanceof HTMLImageElement)) return;
 
     button.dataset.imageAnimating = "1";
     button.dataset.tourGalleryIndex = String(nextIndex);
+    saveTourCardGalleryIndex(tripId, nextIndex, gallery.length);
     secondaryLayer.src = String(gallery[nextIndex] || gallery[0] || DEFAULT_TOUR_IMAGE);
     secondaryLayer.classList.remove("is-entering");
     primaryLayer.classList.remove("is-leaving");

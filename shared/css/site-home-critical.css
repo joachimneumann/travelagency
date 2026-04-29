@@ -40,6 +40,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  min-width: 0;
 }
 
 .brand-logo {
@@ -562,8 +563,16 @@ textarea:focus-visible {
 .hero-bg-poster {
   position: absolute;
   inset: 0;
-  background: center / cover no-repeat url("/assets/video/rice%20field.webp");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
   transition: opacity 0.32s ease, visibility 0.32s ease;
+}
+
+@media (min-width: 761px) {
+  .hero-bg-poster {
+    background-image: url("/assets/video/rice%20field.webp");
+  }
 }
 
 .hero-bg-video::-webkit-media-controls,
@@ -690,7 +699,20 @@ textarea:focus-visible {
   }
 
   .header-wrap {
+    gap: 0.7rem;
     min-height: 68px;
+  }
+
+  .brand {
+    flex: 1 1 auto;
+  }
+
+  .brand-logo {
+    width: min(288px, 100%);
+  }
+
+  .header-mobile-actions {
+    flex: 0 0 auto;
   }
 
   .nav-toggle {
@@ -770,10 +792,6 @@ textarea:focus-visible {
   .hero-bg-video,
   .hero-bg-poster {
     transition-duration: 0.12s;
-  }
-
-  .hero-bg-poster {
-    background-image: url("/assets/video/rice%20field-mobile.webp");
   }
 
   .hero-content {

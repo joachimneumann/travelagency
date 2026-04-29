@@ -1,6 +1,16 @@
 # TODO
 
-use Coral text color on white bckground for the 5D4N pill. use the same font size as the image counter.
+Actually move the image to the side, do not fade to the new image.
+
+use 4:3 aspect ratio in the images
+
+Add draggable="false" to the images and texts, maybe to the whole page
+
+Travel card details: when a small service is show, make it bigger and make the previously large one smaller
+
+Show a turn around symbol when there is service text to show.
+
+Do the image transitionallow a tab in the 50% left and 50% righ side to trigger a side sweep action
 
 Translation
 ===========

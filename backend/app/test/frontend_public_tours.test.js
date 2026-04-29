@@ -188,7 +188,7 @@ test("public tour travel-plan content and detail chrome follow the frontend lang
   assert.match(els.tourGrid.innerHTML, /data-tour-plan-service-swap/);
 });
 
-test("collapsed public tour cards only animate image hover when more than one tour image is available", async () => {
+test("collapsed public tour cards use swipe-only mobile galleries for multi-image tours", async () => {
   global.HTMLElement = FakeElement;
   global.HTMLButtonElement = FakeElement;
   global.window = {
@@ -226,6 +226,9 @@ test("collapsed public tour cards only animate image hover when more than one to
     trips: [singleImageTrip, multiImageTrip],
     visibleToursCount: 2,
     expandedTourIds: new Set(),
+    tourGalleryIndexByTripId: {
+      tour_multi_image: 1
+    },
     filterOptions: {
       destinations: [],
       styles: [],
@@ -277,6 +280,12 @@ test("collapsed public tour cards only animate image hover when more than one to
   assert.match(singleCardMarkup, /tour_single_image/);
   assert.match(singleCardMarkup, /<div class="tour-card__media">/);
   assert.doesNotMatch(singleCardMarkup, /data-tour-image-cycle="1"/);
-  assert.match(els.tourGrid.innerHTML, /tour_multi_image[\s\S]*data-tour-image-cycle="1"/);
-  assert.match(els.tourGrid.innerHTML, /tour_multi_image[\s\S]*tour-card__media-cycle tour-card__media-button/);
+  assert.doesNotMatch(els.tourGrid.innerHTML, /tour_multi_image[\s\S]*data-tour-image-cycle="1"/);
+  assert.match(els.tourGrid.innerHTML, /tour_multi_image[\s\S]*data-tour-image-swipe="1"/);
+  assert.match(els.tourGrid.innerHTML, /tour_multi_image[\s\S]*data-tour-gallery-index="1"/);
+  assert.match(els.tourGrid.innerHTML, /tour_multi_image[\s\S]*tour-card__media-cycle tour-card__media-swipe/);
+  assert.match(els.tourGrid.innerHTML, /tour_multi_image[\s\S]*data-tour-media-track/);
+  assert.match(els.tourGrid.innerHTML, /tour_multi_image[\s\S]*2 \/ 2/);
+  assert.match(els.tourGrid.innerHTML, /tour-card__media-slide is-active[\s\S]*src="\/assets\/img\/two\.webp"/);
+  assert.match(els.tourGrid.innerHTML, /tour_multi_image[\s\S]*tour-card__media-dots/);
 });
