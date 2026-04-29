@@ -290,50 +290,81 @@
 }
 
 @media (max-width: 760px) {
+  .home-page .hero {
+    padding-top: 0;
+  }
+
   .home-page .hero-bg-video {
     object-position: 68% center;
   }
 
   .home-page .hero-content {
-    align-items: center;
-    text-align: center;
+    align-items: stretch;
+    text-align: left;
     padding: 4.15rem 1rem 4rem;
   }
 
   .home-page .hero-title-only {
-    left: 50%;
-    bottom: clamp(7rem, 22vh, 11rem);
-    max-width: 12ch;
-    text-align: center;
-    font-size: clamp(2.2rem, 9vw, 3.5rem);
-    transform: translateX(-50%);
+    left: 10px;
+    right: 10px;
+    bottom: 15px;
+    max-width: none;
+    width: auto;
+    text-align: left;
+    font-size: clamp(2rem, 8.4vw, 3.2rem);
+    transform: none;
   }
 
   .home-page .filter-menu--hero {
-    padding: 0.85rem;
-    border-radius: 18px;
-    justify-content: center;
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    width: auto;
+    padding: 0;
+    border-radius: 0;
+    justify-content: flex-start;
   }
 
   .home-page .filter-menu--hero__filters,
   .home-page .filter-menu--hero__cta {
     width: 100%;
-    justify-content: center;
+    justify-content: flex-start;
   }
 
   .home-page .filter-menu--hero__filters {
-    flex-wrap: wrap;
+    flex-direction: column;
+    flex-wrap: nowrap;
+  }
+
+  .home-page .filter-menu--hero__cta {
+    display: none;
   }
 
   .home-page .filter-menu--hero .select-wrap {
-    flex-basis: min(100%, 18rem);
-    min-width: min(100%, 14rem);
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .home-page .hero .filter-menu--hero .filter-select-trigger {
+    max-width: none;
+    width: 100%;
+  }
+
+  .home-page .hero .filter-menu--hero .filter-select-panel {
+    left: 0;
+    right: 0;
+    width: auto;
+    min-width: 0;
   }
 
   .home-page .hero .filter-menu--hero .hero-destination-panel {
-    left: 50%;
-    width: min(100vw - 2rem, 30rem);
-    transform: translateX(-50%);
+    left: 0;
+    right: 0;
+    width: auto;
+    max-width: none;
+    transform: none;
   }
 
   .home-page .hero-destination-menu__areas {

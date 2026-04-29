@@ -653,6 +653,96 @@ textarea:focus-visible {
   flex-wrap: wrap;
 }
 
+.tour-empty-card {
+  margin: 1.8rem auto 0;
+  max-width: 720px;
+  min-height: 220px;
+  display: grid;
+  grid-template-columns: minmax(170px, 0.42fr) minmax(0, 0.58fr);
+  align-items: stretch;
+  overflow: hidden;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--sand) 82%, #fff 18%), var(--surface) 58%),
+    var(--surface);
+  border: 1px solid color-mix(in srgb, var(--line) 82%, var(--accent) 18%);
+  border-radius: var(--radius);
+  box-shadow: 0 22px 60px rgba(28, 43, 53, 0.12);
+}
+
+.tour-empty-card__media {
+  position: relative;
+  min-height: 220px;
+  background:
+    radial-gradient(circle at 28% 28%, rgba(255, 255, 255, 0.9) 0 10%, transparent 11%),
+    radial-gradient(circle at 73% 64%, rgba(255, 255, 255, 0.72) 0 8%, transparent 9%),
+    linear-gradient(145deg, color-mix(in srgb, var(--accent) 72%, #fff 28%), color-mix(in srgb, var(--text) 78%, var(--accent) 22%));
+}
+
+.tour-empty-card__media::before,
+.tour-empty-card__media::after {
+  content: "";
+  position: absolute;
+  inset-inline: 12%;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  transform: rotate(-12deg);
+}
+
+.tour-empty-card__media::before {
+  top: 24%;
+  height: 26%;
+}
+
+.tour-empty-card__media::after {
+  bottom: 18%;
+  height: 18%;
+}
+
+.tour-empty-card__route {
+  position: absolute;
+  inset: 28% 20% 30% 22%;
+  border: 3px dashed rgba(255, 255, 255, 0.78);
+  border-top: 0;
+  border-right: 0;
+  border-radius: 0 0 0 64px;
+  transform: rotate(-8deg);
+}
+
+.tour-empty-card__pin {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 8px 20px rgba(28, 43, 53, 0.22);
+}
+
+.tour-empty-card__pin--start {
+  top: 31%;
+  left: 22%;
+}
+
+.tour-empty-card__pin--end {
+  right: 25%;
+  bottom: 31%;
+}
+
+.tour-empty-card__body {
+  display: grid;
+  align-content: center;
+  gap: 0.65rem;
+  padding: clamp(1.35rem, 4vw, 2.35rem);
+}
+
+.tour-empty-card__text {
+  margin: 0;
+  color: var(--text);
+  font-size: clamp(1.22rem, 2.2vw, 1.72rem);
+  line-height: 1.28;
+  font-weight: var(--font-weight-bold);
+}
+
 .tour-card {
   --tour-card-title-lines: 2;
   --tour-card-title-line-height: 1.28;
@@ -1506,6 +1596,15 @@ textarea:focus-visible {
   .tour-grid,
   .trust-strip {
     grid-template-columns: 1fr;
+  }
+
+  .tour-empty-card {
+    grid-template-columns: 1fr;
+    min-height: 0;
+  }
+
+  .tour-empty-card__media {
+    min-height: 130px;
   }
 
   .tour-details-row {

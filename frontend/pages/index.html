@@ -193,9 +193,18 @@
           <div class="tour-actions" id="tourActions" hidden>
             <button class="btn btn-secondary" id="showMoreTours" type="button" data-i18n-id="tours.show_more.default">Show more</button>
           </div>
-          <p id="noResultsMessage" class="section-booking" hidden data-i18n-id="tours.no_results">
-            No tours match these filters yet. Try "All destinations" or "All styles".
-          </p>
+          <div id="noResultsMessage" class="tour-empty-card" hidden>
+            <div class="tour-empty-card__media" aria-hidden="true">
+              <span class="tour-empty-card__route"></span>
+              <span class="tour-empty-card__pin tour-empty-card__pin--start"></span>
+              <span class="tour-empty-card__pin tour-empty-card__pin--end"></span>
+            </div>
+            <div class="tour-empty-card__body">
+              <p class="tour-empty-card__text" data-i18n-id="tours.no_results">
+                No tours match these filters yet. Try "All destinations" or "All styles".
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 
