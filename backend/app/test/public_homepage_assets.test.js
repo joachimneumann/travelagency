@@ -63,6 +63,7 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
     styles: ["budget"],
     image: "/public/v1/tour-images/tour_alpha/alpha.png",
     travel_plan: {
+      tour_card_primary_image_id: "travel_plan_service_image_featured",
       destination_scope: [
         {
           destination: "VN",
@@ -86,8 +87,21 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
               title: { en: "Airport pick-up", de: "Flughafenabholung" },
               details: { en: "Private transfer to the hotel.", de: "Privater Transfer zum Hotel." },
               image: {
+                id: "travel_plan_service_image_pickup",
                 storage_path: "/public/v1/tour-images/tour_alpha/travel-plan-services/pickup.png",
-                alt_text: { en: "Driver at arrivals", de: "Fahrer bei der Ankunft" },
+                alt_text: "Driver at arrivals",
+                alt_text_i18n: { en: "Driver at arrivals", de: "Fahrer bei der Ankunft" },
+                include_in_travel_tour_card: true
+              }
+            },
+            {
+              title: { en: "Featured viewpoint", de: "Aussichtspunkt" },
+              details: { en: "The selected card image should be first.", de: "Das ausgewählte Kartenbild sollte zuerst erscheinen." },
+              image: {
+                id: "travel_plan_service_image_featured",
+                storage_path: "/public/v1/tour-images/tour_alpha/travel-plan-services/featured.png",
+                alt_text: "Featured viewpoint",
+                alt_text_i18n: { en: "Featured viewpoint", de: "Aussichtspunkt" },
                 include_in_travel_tour_card: true
               }
             }
@@ -101,6 +115,7 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
   await writeFile(path.join(toursRoot, "tour_alpha", "alpha.png"), Buffer.from(TINY_PNG_BASE64, "base64"));
   await mkdir(path.join(toursRoot, "tour_alpha", "travel-plan-services"), { recursive: true });
   await writeFile(path.join(toursRoot, "tour_alpha", "travel-plan-services", "pickup.png"), Buffer.from(TINY_PNG_BASE64, "base64"));
+  await writeFile(path.join(toursRoot, "tour_alpha", "travel-plan-services", "featured.png"), Buffer.from(TINY_PNG_BASE64, "base64"));
 
   await writeJson(path.join(toursRoot, "tour_hidden", "tour.json"), {
     id: "tour_hidden",
@@ -215,12 +230,14 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
     areas: [{ id: "area_central", destination: "vietnam", country_code: "VN", code: "central", label: "Central" }],
     places: [{ id: "place_hoi_an", area_id: "area_central", code: "hoi-an", label: "Hoi An" }]
   });
-  assert.match(publicToursEn.items[0].pictures[0], /^\/assets\/generated\/homepage\/tours\/tour_alpha\/travel-plan-services\/pickup\.(png|webp)\?v=/);
+  assert.equal(publicToursEn.items[0].travel_plan.tour_card_primary_image_id, "travel_plan_service_image_featured");
+  assert.match(publicToursEn.items[0].pictures[0], /^\/assets\/generated\/homepage\/tours\/tour_alpha\/travel-plan-services\/featured\.(png|webp)\?v=/);
+  assert.match(publicToursEn.items[0].pictures[1], /^\/assets\/generated\/homepage\/tours\/tour_alpha\/travel-plan-services\/pickup\.(png|webp)\?v=/);
   assert.match(
     publicToursEn.items[0].travel_plan.days[0].services[0].image.storage_path,
     /^\/assets\/generated\/homepage\/tours\/tour_alpha\/travel-plan-services\/pickup\.(png|webp)\?v=/
   );
-  assert.equal(publicToursEn.items[0].travel_plan.days[0].services[0].image.alt_text.en, "Driver at arrivals");
+  assert.equal(publicToursEn.items[0].travel_plan.days[0].services[0].image.alt_text, "Driver at arrivals");
   assert.equal(publicToursEn.items[0].travel_plan.days[0].services[0].image.include_in_travel_tour_card, true);
   assert.equal("image" in publicToursEn.items[0], false);
 

@@ -5,6 +5,7 @@ import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { promisify } from "node:util";
+import { createTravelPlanHelpers } from "../../backend/app/src/domain/travel_plan.js";
 import { createTourHelpers } from "../../backend/app/src/domain/tours_support.js";
 import {
   buildDestinationScopeCatalogResponse,
@@ -589,7 +590,8 @@ async function publicHomepageTourTravelPlan(travelPlan, tourId, generatedTourAss
 }
 
 function selectedTravelTourCardImagePaths(travelPlan) {
-  const paths = [];
+  const selectedImageId = normalizeText(travelPlan?.tour_card_primary_image_id);
+  const entries = [];
   const seen = new Set();
   for (const day of Array.isArray(travelPlan?.days) ? travelPlan.days : []) {
     for (const service of Array.isArray(day?.services) ? day.services : []) {
@@ -605,11 +607,21 @@ function selectedTravelTourCardImagePaths(travelPlan) {
         const storagePath = normalizeText(image.storage_path || image.url || image.src || image.path);
         if (!storagePath || seen.has(storagePath)) continue;
         seen.add(storagePath);
-        paths.push(storagePath);
+        entries.push({
+          id: normalizeText(image.id),
+          storagePath
+        });
       }
     }
   }
-  return paths;
+  const selectedEntryIndex = selectedImageId
+    ? entries.findIndex((entry) => entry.id === selectedImageId)
+    : -1;
+  if (selectedEntryIndex > 0) {
+    const [selectedEntry] = entries.splice(selectedEntryIndex, 1);
+    entries.unshift(selectedEntry);
+  }
+  return entries.map((entry) => entry.storagePath);
 }
 
 async function buildHeroTitleByLang({
@@ -1307,7 +1319,8 @@ async function generateTourAssets({
   frontendI18nDir = FRONTEND_I18N_DIR,
   languages = FRONTEND_LANGUAGE_CODES
 } = {}) {
-  const tourHelpers = createTourHelpers({ toursDir: toursRoot, safeInt });
+  const { normalizeMarketingTourTravelPlan } = createTravelPlanHelpers();
+  const tourHelpers = createTourHelpers({ toursDir: toursRoot, safeInt, normalizeMarketingTourTravelPlan });
   const {
     collectTourOptions,
     normalizeTourForRead,

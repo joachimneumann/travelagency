@@ -174,6 +174,7 @@ const els = {
   seasonalityStartMonth: document.getElementById("tour_seasonality_start_month"),
   seasonalityEndMonth: document.getElementById("tour_seasonality_end_month"),
   localizedContentEditor: document.getElementById("tour_localized_content_editor"),
+  tourCardImageSelector: document.getElementById("tour_card_image_selector"),
   reelVideoCard: document.getElementById("tour_reel_video_card"),
   addReelVideoBtn: document.getElementById("tour_add_reel_btn"),
   reelVideoUpload: document.getElementById("tour_reel_upload"),
@@ -572,7 +573,7 @@ function renderTourReelVideo() {
   const item = state.reelVideoDraftItem;
   updateReelVideoButtonLabel();
   if (!item) {
-    els.reelVideoCard.innerHTML = `<div class="tour-reel-empty micro">No reel video uploaded yet.</div>`;
+    els.reelVideoCard.innerHTML = `<div class="tour-reel-empty micro">${escapeHtml(backendT("tour.reel_video_empty", "No reel video uploaded yet."))}</div>`;
     return;
   }
 
@@ -595,6 +596,131 @@ function renderTourReelVideo() {
       </button>
     </div>
   `;
+}
+
+function resolveTravelPlanImageSrc(pathValue) {
+  const normalized = normalizeText(pathValue);
+  if (!normalized) return "";
+  if (/^https?:\/\//i.test(normalized)) return normalized;
+  if (normalized.startsWith("/")) return `${apiOrigin}${normalized}`;
+  return normalized;
+}
+
+function currentTourTravelPlan() {
+  return state.travelPlanDraft || state.booking?.travel_plan || state.tour?.travel_plan || { days: [] };
+}
+
+function collectTourCardImageOptions(plan = currentTourTravelPlan()) {
+  const result = [];
+  for (const [dayIndex, day] of (Array.isArray(plan?.days) ? plan.days : []).entries()) {
+    const dayLabel = backendT("booking.travel_plan.day_heading", "Day {day}", { day: String(dayIndex + 1) });
+    for (const [serviceIndex, service] of (Array.isArray(day?.services) ? day.services : []).entries()) {
+      const image = service?.image && typeof service.image === "object" && !Array.isArray(service.image)
+        ? service.image
+        : null;
+      const storagePath = normalizeText(image?.storage_path);
+      const imageId = normalizeText(image?.id);
+      if (!image || !storagePath || !imageId || image.is_customer_visible === false) continue;
+      const serviceLabel = normalizeText(service?.title)
+        || backendT("booking.travel_plan.service_label", "Service {service}", { service: String(serviceIndex + 1) });
+      result.push({
+        id: imageId,
+        storagePath,
+        src: resolveTravelPlanImageSrc(storagePath),
+        label: `${dayLabel} · ${serviceLabel}`,
+        included: image.include_in_travel_tour_card === true
+      });
+    }
+  }
+  return result;
+}
+
+function selectedTourCardPrimaryImageId(plan, includedImages) {
+  const storedId = normalizeText(plan?.tour_card_primary_image_id);
+  if (storedId && includedImages.some((image) => image.id === storedId)) return storedId;
+  return includedImages[0]?.id || "";
+}
+
+function renderTourCardImageThumb(image, selectedId, { selectable = false } = {}) {
+  const selected = image.id === selectedId;
+  const title = selected
+    ? backendT("tour.card_images.selected_first", "{label} is the first image shown in the card", { label: image.label })
+    : selectable
+      ? backendT("tour.card_images.select_first", "Use {label} as the first card image", { label: image.label })
+      : backendT("tour.card_images.not_shown_hint", "{label} is not shown in the card", { label: image.label });
+  const tagName = selectable ? "button" : "span";
+  const attrs = selectable
+    ? `type="button" data-tour-card-primary-image="${escapeHtml(image.id)}"`
+    : `aria-disabled="true"`;
+  return `
+    <${tagName}
+      class="tour-card-image-selector__thumb${selected ? " is-selected" : ""}"
+      ${attrs}
+      title="${escapeHtml(title)}"
+      aria-label="${escapeHtml(title)}"
+    >
+      <img src="${escapeHtml(image.src)}" alt="${escapeHtml(image.label)}" loading="lazy" />
+      ${selected ? `<span class="tour-card-image-selector__check" aria-hidden="true">✓</span>` : ""}
+    </${tagName}>
+  `;
+}
+
+function renderTourCardImageSelector() {
+  if (!(els.tourCardImageSelector instanceof HTMLElement)) return;
+  const plan = currentTourTravelPlan();
+  const images = collectTourCardImageOptions(plan);
+  const includedImages = images.filter((image) => image.included);
+  const excludedImages = images.filter((image) => !image.included);
+  const selectedId = selectedTourCardPrimaryImageId(plan, includedImages);
+  const shownMarkup = includedImages.length
+    ? includedImages.map((image) => renderTourCardImageThumb(image, selectedId, { selectable: state.permissions.canEditTours })).join("")
+    : `<span class="micro">${escapeHtml(backendT("tour.card_images.none_shown", "No service images are currently shown in the card."))}</span>`;
+  const hiddenMarkup = excludedImages.length
+    ? excludedImages.map((image) => renderTourCardImageThumb(image, selectedId, { selectable: false })).join("")
+    : `<span class="micro">${escapeHtml(backendT("tour.card_images.none_hidden", "No service images are currently hidden from the card."))}</span>`;
+
+  els.tourCardImageSelector.innerHTML = `
+    <div class="tour-card-image-selector__row">
+      <span class="tour-card-image-selector__label">${escapeHtml(backendT("tour.card_images.shown", "Displayed in the card"))}</span>
+      <div class="tour-card-image-selector__thumbs">${shownMarkup}</div>
+    </div>
+    <div class="tour-card-image-selector__row">
+      <span class="tour-card-image-selector__label">${escapeHtml(backendT("tour.card_images.not_shown", "Not shown"))}</span>
+      <div class="tour-card-image-selector__thumbs">${hiddenMarkup}</div>
+    </div>
+  `;
+}
+
+function syncTourCardImageSelectorFromEditor() {
+  const result = tourTravelPlanAdapter?.collectPayload?.({
+    focusFirstInvalid: false,
+    pruneEmptyContent: false
+  });
+  if (result?.ok) {
+    state.travelPlanDraft = result.payload;
+    if (state.booking) state.booking.travel_plan = result.payload;
+    if (state.tour) state.tour.travel_plan = result.payload;
+  }
+  renderTourCardImageSelector();
+}
+
+function selectTourCardPrimaryImage(imageId) {
+  const normalizedImageId = normalizeText(imageId);
+  if (!normalizedImageId || !state.permissions.canEditTours) return;
+  syncTourCardImageSelectorFromEditor();
+  const plan = currentTourTravelPlan();
+  const includedImages = collectTourCardImageOptions(plan).filter((image) => image.included);
+  if (!includedImages.some((image) => image.id === normalizedImageId)) {
+    setStatus(backendT("tour.card_images.select_shown_only", "Only images shown in the card can be selected as first image."));
+    return;
+  }
+  plan.tour_card_primary_image_id = normalizedImageId;
+  if (state.travelPlanDraft) state.travelPlanDraft.tour_card_primary_image_id = normalizedImageId;
+  if (state.booking?.travel_plan) state.booking.travel_plan.tour_card_primary_image_id = normalizedImageId;
+  if (state.tour?.travel_plan) state.tour.travel_plan.tour_card_primary_image_id = normalizedImageId;
+  renderTourCardImageSelector();
+  updateTourDirtyState();
+  setStatus(backendT("tour.card_images.first_selected", "First card image selected. Save changes to publish it."));
 }
 
 function buildTourTranslationEntries(sourceValues) {
@@ -1442,8 +1568,13 @@ async function translateTravelPlanLanguages(targets, { force = false, minimumOve
 init();
 
 function handleBackendLanguageChanged() {
+  syncLocalizedFieldState();
   updateHeaderTitle();
   updateHeaderSubtitle();
+  renderLocalizedTourContentEditor();
+  renderTourReelVideo();
+  tourTravelPlanAdapter?.renderTravelPlanPanel?.({ syncFromDom: true });
+  renderTourCardImageSelector();
   renderTravelPlanTranslationPanel();
   renderTourDirtyBar();
 }
@@ -1500,6 +1631,7 @@ async function init() {
       if (state.booking && state.booking.id === state.id) {
         state.booking.updated_at = normalizeText(tour?.updated_at) || state.booking.updated_at || null;
       }
+      window.setTimeout(renderTourCardImageSelector, 0);
     },
     setPageOverlay: (isVisible, message = "") => setTourPageOverlay(isVisible, message)
   });
@@ -1550,6 +1682,9 @@ async function init() {
     els.form.addEventListener("change", (event) => {
       clearError();
       setStatus("");
+      if (event.target instanceof HTMLElement && event.target.matches('[data-travel-plan-service-image-field="include_in_travel_tour_card"]')) {
+        window.setTimeout(syncTourCardImageSelectorFromEditor, 0);
+      }
       const translationField = event.target instanceof HTMLElement
         ? event.target.closest("[data-tour-travel-plan-translation-key]")
         : null;
@@ -1564,6 +1699,14 @@ async function init() {
       scheduleTourDirtyState();
     });
     els.form.addEventListener("click", (event) => {
+      const tourCardPrimaryImageButton = event.target instanceof Element
+        ? event.target.closest("[data-tour-card-primary-image]")
+        : null;
+      if (tourCardPrimaryImageButton) {
+        event.preventDefault();
+        selectTourCardPrimaryImage(tourCardPrimaryImageButton.getAttribute("data-tour-card-primary-image"));
+        return;
+      }
       const translateAllTravelPlanButton = event.target.closest("[data-tour-travel-plan-translate-all]");
       if (translateAllTravelPlanButton) {
         event.preventDefault();
@@ -1673,6 +1816,7 @@ async function loadTour() {
   renderLocalizedTourContentEditor();
   syncReelVideoDraftItemFromTour(tour);
   tourTravelPlanAdapter?.applyTour(tour);
+  renderTourCardImageSelector();
   renderTravelPlanTranslationPanel();
 
   renderDestinationChoices(tour_destination_codes(tour));
@@ -1712,6 +1856,7 @@ async function initializeNewTourForm() {
   renderLocalizedTourContentEditor();
   syncReelVideoDraftItemFromTour(state.tour);
   tourTravelPlanAdapter?.applyTour(state.tour);
+  renderTourCardImageSelector();
   renderTravelPlanTranslationPanel();
   renderDestinationChoices([]);
   renderStyleChoices([]);

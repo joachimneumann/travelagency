@@ -551,7 +551,8 @@ export function createFrontendToursController(ctx) {
   }
 
   function selectedTravelTourCardPictures(item) {
-    const pictures = [];
+    const selectedImageId = normalizeText(item?.travel_plan?.tour_card_primary_image_id);
+    const entries = [];
     for (const day of Array.isArray(item?.travel_plan?.days) ? item.travel_plan.days : []) {
       for (const service of Array.isArray(day?.services) ? day.services : []) {
         const candidates = [
@@ -564,11 +565,18 @@ export function createFrontendToursController(ctx) {
           if (!image || typeof image !== "object" || Array.isArray(image)) continue;
           if (image.include_in_travel_tour_card !== true || image.is_customer_visible === false) continue;
           const src = absolutizeBackendUrl(image.storage_path || image.url || image.src || image.path);
-          if (src) pictures.push(src);
+          if (src) entries.push({ id: normalizeText(image.id), src });
         }
       }
     }
-    return pictures;
+    const selectedEntryIndex = selectedImageId
+      ? entries.findIndex((entry) => entry.id === selectedImageId)
+      : -1;
+    if (selectedEntryIndex > 0) {
+      const [selectedEntry] = entries.splice(selectedEntryIndex, 1);
+      entries.unshift(selectedEntry);
+    }
+    return entries.map((entry) => entry.src);
   }
 
   function resolveTourPictures(item) {

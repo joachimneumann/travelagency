@@ -516,6 +516,7 @@ export function createBookingTravelPlanModule(ctx) {
     const next = {
       destination_scope,
       destinations: destinationScopeDestinations(destination_scope),
+      tour_card_primary_image_id: source.tour_card_primary_image_id || null,
       days: (Array.isArray(source.days) ? source.days : []).map((day, dayIndex) => {
         const sourceDay = day && typeof day === "object" && !Array.isArray(day) ? day : {};
         const nextDay = {
@@ -1919,6 +1920,7 @@ export function createBookingTravelPlanModule(ctx) {
         .map((item) => [item.id, item])
     );
     const draft = createEmptyTravelPlan();
+    draft.tour_card_primary_image_id = state.travelPlanDraft?.tour_card_primary_image_id || null;
     if (allowDestinationScope) {
       draft.destination_scope = readDestinationScopeFromDom(destinationScopeEditorRoot());
       draft.destinations = destinationScopeDestinations(draft.destination_scope);

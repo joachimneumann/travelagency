@@ -239,7 +239,7 @@ Repository-root wrappers also exist:
 
 ```bash
 ./deploy_frontend
-./deploy_backend
+./deploy_backend_frontend
 ./deploy_keycloak
 ./deploy
 ```

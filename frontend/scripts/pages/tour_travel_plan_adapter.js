@@ -436,6 +436,17 @@ export function createTourTravelPlanAdapter({
     return ensureCore().collectTravelPlanPayload(options);
   }
 
+  function renderTravelPlanPanel({ syncFromDom = true } = {}) {
+    const instance = ensureCore();
+    if (syncFromDom) {
+      instance.collectTravelPlanPayload({
+        focusFirstInvalid: false,
+        pruneEmptyContent: false
+      });
+    }
+    instance.renderTravelPlanPanel();
+  }
+
   function snapshot() {
     const plan = state.travelPlanDraft || state.booking?.travel_plan || { days: [] };
     return JSON.stringify(plan);
@@ -445,6 +456,7 @@ export function createTourTravelPlanAdapter({
     applyTour,
     bind,
     collectPayload,
+    renderTravelPlanPanel,
     snapshot
   };
 }

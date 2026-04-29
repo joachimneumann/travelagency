@@ -103,6 +103,7 @@ import (
 #TravelPlan: {
 	destination_scope?: [...#TravelPlanDestinationScopeEntry]
 	destinations?: [...enums.#CountryCode]
+	tour_card_primary_image_id?: common.#Identifier
 	days?: [...#TravelPlanDay]
 	...
 }

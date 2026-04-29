@@ -1050,21 +1050,32 @@ function renderTourImageMarkup(tour) {
 }
 
 function firstTravelTourCardImagePath(tour) {
+  const selectedImageId = normalizeText(tour?.travel_plan?.tour_card_primary_image_id);
+  const entries = [];
   for (const day of Array.isArray(tour?.travel_plan?.days) ? tour.travel_plan.days : []) {
     for (const service of Array.isArray(day?.services) ? day.services : []) {
-      const image = service?.image && typeof service.image === "object" && !Array.isArray(service.image)
-        ? service.image
-        : null;
-      if (
-        image?.include_in_travel_tour_card === true
-        && image.is_customer_visible !== false
-        && normalizeText(image.storage_path)
-      ) {
-        return normalizeText(image.storage_path);
+      const candidates = [
+        service?.image,
+        ...(Array.isArray(service?.images)
+          ? [...service.images].sort((left, right) => Number(left?.sort_order || 0) - Number(right?.sort_order || 0))
+          : [])
+      ];
+      for (const image of candidates) {
+        if (!image || typeof image !== "object" || Array.isArray(image)) continue;
+        if (image.include_in_travel_tour_card !== true || image.is_customer_visible === false) continue;
+        const storagePath = normalizeText(image.storage_path);
+        if (storagePath) entries.push({ id: normalizeText(image.id), storagePath });
       }
     }
   }
-  return "";
+  const selectedEntryIndex = selectedImageId
+    ? entries.findIndex((entry) => entry.id === selectedImageId)
+    : -1;
+  if (selectedEntryIndex > 0) {
+    const [selectedEntry] = entries.splice(selectedEntryIndex, 1);
+    entries.unshift(selectedEntry);
+  }
+  return entries[0]?.storagePath || "";
 }
 
 function getTourInitials(value) {

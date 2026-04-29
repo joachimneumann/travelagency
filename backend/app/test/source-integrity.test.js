@@ -3418,11 +3418,17 @@ test("tour page reads month options from the generated catalogs layer", async ()
 test("tour card images are selected from travel-plan service images", async () => {
   const toursSupportPath = path.resolve(__dirname, "..", "src", "domain", "tours_support.js");
   const toursHandlerPath = path.resolve(__dirname, "..", "src", "http", "handlers", "tours.js");
+  const toursListPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "tours_list.js");
+  const mainToursPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "main_tours.js");
+  const travelPlanEditorPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "shared", "travel_plan_editor_core.js");
   const travelPlanModelPath = path.resolve(__dirname, "..", "..", "..", "model", "database", "travel_plan.cue");
   const homepageGeneratorPath = path.resolve(__dirname, "..", "..", "..", "scripts", "assets", "generate_public_homepage_assets.mjs");
-  const [toursSupportSource, toursHandlerSource, travelPlanModelSource, homepageGeneratorSource] = await Promise.all([
+  const [toursSupportSource, toursHandlerSource, toursListSource, mainToursSource, travelPlanEditorSource, travelPlanModelSource, homepageGeneratorSource] = await Promise.all([
     readFile(toursSupportPath, "utf8"),
     readFile(toursHandlerPath, "utf8"),
+    readFile(toursListPath, "utf8"),
+    readFile(mainToursPath, "utf8"),
+    readFile(travelPlanEditorPath, "utf8"),
     readFile(travelPlanModelPath, "utf8"),
     readFile(homepageGeneratorPath, "utf8")
   ]);
@@ -3438,9 +3444,34 @@ test("tour card images are selected from travel-plan service images", async () =
     "Travel-plan service images should expose the tour-card inclusion flag"
   );
   assert.match(
+    travelPlanModelSource,
+    /tour_card_primary_image_id\?: common\.\#Identifier/,
+    "Travel plans should store the selected first tour-card image id separately from image inclusion"
+  );
+  assert.match(
     homepageGeneratorSource,
-    /function selectedTravelTourCardImagePaths\(travelPlan\)[\s\S]*include_in_travel_tour_card !== true[\s\S]*const pictures = selectedTravelTourCardImagePaths\(travelPlan\)/,
-    "Public homepage generation should derive tour-card pictures from selected service images"
+    /function selectedTravelTourCardImagePaths\(travelPlan\)[\s\S]*const selectedImageId = normalizeText\(travelPlan\?\.tour_card_primary_image_id\)[\s\S]*include_in_travel_tour_card !== true[\s\S]*entries\.findIndex\(\(entry\) => entry\.id === selectedImageId\)[\s\S]*const pictures = selectedTravelTourCardImagePaths\(travelPlan\)/,
+    "Public homepage generation should derive tour-card pictures from selected service images while honoring the explicit first image"
+  );
+  assert.match(
+    homepageGeneratorSource,
+    /import \{ createTravelPlanHelpers \}[\s\S]*const \{ normalizeMarketingTourTravelPlan \} = createTravelPlanHelpers\(\);[\s\S]*createTourHelpers\(\{ toursDir: toursRoot, safeInt, normalizeMarketingTourTravelPlan \}\)/,
+    "Public homepage generation should use the full travel-plan normalizer so selected first image ids are preserved"
+  );
+  assert.match(
+    mainToursSource,
+    /function selectedTravelTourCardPictures\(item\)[\s\S]*const selectedImageId = normalizeText\(item\?\.travel_plan\?\.tour_card_primary_image_id\)[\s\S]*include_in_travel_tour_card !== true[\s\S]*entries\.findIndex\(\(entry\) => entry\.id === selectedImageId\)[\s\S]*return entries\.map\(\(entry\) => entry\.src\)/,
+    "Runtime homepage tour cards should honor the explicit first travel-plan service image"
+  );
+  assert.match(
+    toursListSource,
+    /function firstTravelTourCardImagePath\(tour\)[\s\S]*const selectedImageId = normalizeText\(tour\?\.travel_plan\?\.tour_card_primary_image_id\)[\s\S]*include_in_travel_tour_card !== true[\s\S]*entries\.findIndex\(\(entry\) => entry\.id === selectedImageId\)[\s\S]*return entries\[0\]\?\.storagePath \|\| "";/,
+    "Marketing tour list thumbnails should honor the explicit first travel-plan service image"
+  );
+  assert.match(
+    travelPlanEditorSource,
+    /function syncTravelPlanDraftFromDom\(\)[\s\S]*draft\.tour_card_primary_image_id = state\.travelPlanDraft\?\.tour_card_primary_image_id \|\| null;[\s\S]*state\.travelPlanDraft = normalizeTravelPlanState\(draft\);/,
+    "Travel-plan DOM sync should preserve the selected first card image through save"
   );
   assert.match(
     toursSupportSource,
@@ -4557,6 +4588,7 @@ test("backend language switching updates admin UI in place instead of forcing a 
   const translationsPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "translations.js");
   const emergencyPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "emergency.js");
   const tourPageModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "tour.js");
+  const tourTravelPlanAdapterPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "tour_travel_plan_adapter.js");
   const [
     backendI18nSource,
     backendNavSource,
@@ -4566,7 +4598,8 @@ test("backend language switching updates admin UI in place instead of forcing a 
     settingsListSource,
     translationsPageSource,
     emergencyPageSource,
-    tourSource
+    tourSource,
+    tourTravelPlanAdapterSource
   ] = await Promise.all([
     readFile(backendI18nPath, "utf8"),
     readFile(backendNavPath, "utf8"),
@@ -4576,7 +4609,8 @@ test("backend language switching updates admin UI in place instead of forcing a 
     readFile(settingsListPath, "utf8"),
     readFile(translationsPagePath, "utf8"),
     readFile(emergencyPagePath, "utf8"),
-    readFile(tourPageModulePath, "utf8")
+    readFile(tourPageModulePath, "utf8"),
+    readFile(tourTravelPlanAdapterPath, "utf8")
   ]);
 
   assert.match(
@@ -4633,6 +4667,16 @@ test("backend language switching updates admin UI in place instead of forcing a 
     tourSource,
     /window\.addEventListener\("backend-i18n-changed", handleBackendLanguageChanged\)/,
     "Marketing-tour detail should refresh dynamic backend labels after an in-place backend language switch"
+  );
+  assert.match(
+    tourSource,
+    /function handleBackendLanguageChanged\(\) \{[\s\S]*syncLocalizedFieldState\(\);[\s\S]*renderLocalizedTourContentEditor\(\);[\s\S]*renderTourReelVideo\(\);[\s\S]*tourTravelPlanAdapter\?\.renderTravelPlanPanel\?\.\(\{ syncFromDom: true \}\)/,
+    "Marketing-tour detail should rerender travel-plan titles and labels immediately after an in-place backend language switch"
+  );
+  assert.match(
+    tourTravelPlanAdapterSource,
+    /function renderTravelPlanPanel\(\{ syncFromDom = true \} = \{\}\) \{[\s\S]*collectTravelPlanPayload\(\{[\s\S]*focusFirstInvalid: false,[\s\S]*pruneEmptyContent: false[\s\S]*instance\.renderTravelPlanPanel\(\);[\s\S]*renderTravelPlanPanel,/,
+    "Marketing-tour travel-plan adapter should expose a safe rerender that preserves current DOM edits during backend language switches"
   );
 });
 

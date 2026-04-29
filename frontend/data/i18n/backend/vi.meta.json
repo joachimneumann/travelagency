@@ -5294,6 +5294,61 @@
     "origin": "machine",
     "updated_at": "2026-03-30T23:51:31.875Z"
   },
+  "tour.card_images.first_selected": {
+    "source_hash": "8b6cbbdc75ee866dd985fecd7e3992b4fdd6df3f774b95ad36e447eaaa50f5be",
+    "origin": "manual",
+    "updated_at": "2026-04-29T00:00:00.000Z"
+  },
+  "tour.card_images.help": {
+    "source_hash": "cc743eefc47788383754333a80e01641bcf8768ab7154503221fc55864b10b23",
+    "origin": "manual",
+    "updated_at": "2026-04-29T00:00:00.000Z"
+  },
+  "tour.card_images.none_hidden": {
+    "source_hash": "5ede64c45b4b6b79a77c1ec5f559366ff6120fb3e4bc3de2ea325a2e5b09b1ca",
+    "origin": "manual",
+    "updated_at": "2026-04-29T00:00:00.000Z"
+  },
+  "tour.card_images.none_shown": {
+    "source_hash": "a89a1e5e18223aab68c674ddce0c6b795120920ee99405c6699e432779460faa",
+    "origin": "manual",
+    "updated_at": "2026-04-29T00:00:00.000Z"
+  },
+  "tour.card_images.not_shown": {
+    "source_hash": "a08f0f94673a990239b7f73c42df9360e4734a3baf1729471ad48bb51556e143",
+    "origin": "manual",
+    "updated_at": "2026-04-29T00:00:00.000Z"
+  },
+  "tour.card_images.not_shown_hint": {
+    "source_hash": "f31e8e536ae35b7c410757ecc14add1ed5f9abe44f1a1da80e017e88381401f3",
+    "origin": "manual",
+    "updated_at": "2026-04-29T00:00:00.000Z"
+  },
+  "tour.card_images.select_first": {
+    "source_hash": "393c6cb1e685416096493c586819feadb8ccfd2971d63ce36192f4117a21a3ac",
+    "origin": "manual",
+    "updated_at": "2026-04-29T00:00:00.000Z"
+  },
+  "tour.card_images.select_shown_only": {
+    "source_hash": "17927483943e64fb9ed816de0fbb20c29071a4a82c9b31185b831b2f8ae21150",
+    "origin": "manual",
+    "updated_at": "2026-04-29T00:00:00.000Z"
+  },
+  "tour.card_images.selected_first": {
+    "source_hash": "d3cefb77f301e4ba7759e1f076b992943d2a6246a5648f5622fa7d34ebc42f0b",
+    "origin": "manual",
+    "updated_at": "2026-04-29T00:00:00.000Z"
+  },
+  "tour.card_images.shown": {
+    "source_hash": "735e025bd60773031d4c1c9078501526136f3c2b8a6b8aef1abc1f7d709316cc",
+    "origin": "manual",
+    "updated_at": "2026-04-29T00:00:00.000Z"
+  },
+  "tour.card_images.title": {
+    "source_hash": "9d7433afabadf88ec08cc197f6d6eaed487146afb9898a11386eb689eb71cb48",
+    "origin": "manual",
+    "updated_at": "2026-04-29T00:00:00.000Z"
+  },
   "tour.change_image": {
     "source_hash": "87b8b0086a4c5112e018c16187c697c61886188b28a8cb578053063406714dd7",
     "origin": "machine",
@@ -5393,6 +5448,11 @@
     "source_hash": "9f29530464f730bd28f137cfc9ea941af137187b57c21e8ff5fefed520764d99",
     "origin": "machine",
     "updated_at": "2026-03-30T23:51:31.875Z"
+  },
+  "tour.reel_video_empty": {
+    "source_hash": "b1d0baef7e87b8a886500c53b4a6cfc3994e4189b7b0640169b51433b3a57acf",
+    "origin": "manual",
+    "updated_at": "2026-04-29T00:00:00.000Z"
   },
   "tour.reel_video_help": {
     "source_hash": "4ad0c4b81500121acf544bfa0db0f80de988cbf6eaa6abe63a90b54b920ae670",

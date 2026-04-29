@@ -29,7 +29,6 @@ Common entry points:
 
 ```bash
 ./deploy_frontend
-./deploy_backend
 ./deploy_backend_frontend
 ./deploy_keycloak
 ./deploy
@@ -98,11 +97,10 @@ Current public routing notes:
 
 ## Directory-Aware Wrappers
 
-The repo root now includes five wrapper commands:
+The repo root now includes four wrapper commands:
 
 ```bash
 ./deploy_frontend
-./deploy_backend
 ./deploy_backend_frontend
 ./deploy_keycloak
 ./deploy
@@ -119,7 +117,7 @@ Git worktrees attached to those repositories are treated as the same
 environment as their parent checkout. A worktree attached to
 `$HOME/projects/travelagency`, for example, dispatches to the local scripts.
 
-Use `./deploy_backend_frontend` instead of running `./deploy_backend` followed
-by `./deploy_frontend`. The combined wrapper dispatches to the environment's
-backend+frontend deploy entrypoint so shared work such as i18n checks, predeploy
-tests, `git pull`, and public homepage asset generation runs only once.
+Use `./deploy_backend_frontend` for combined application deploys. The wrapper
+dispatches to the environment's backend+frontend deploy entrypoint so shared
+work such as i18n checks, predeploy tests, `git pull`, and public homepage
+asset generation runs only once.

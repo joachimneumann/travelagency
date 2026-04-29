@@ -149,6 +149,7 @@ function buildDefaultTravelPlan() {
   return {
     destination_scope: [],
     destinations: [],
+    tour_card_primary_image_id: null,
     days: []
   };
 }
@@ -348,6 +349,26 @@ function normalizeTravelPlanDays(days, options = {}) {
     });
 }
 
+function normalizeTravelPlanTourCardPrimaryImageId(source, days) {
+  const selectedImageId = normalizeOptionalText(source?.tour_card_primary_image_id);
+  if (!selectedImageId) return null;
+  for (const day of Array.isArray(days) ? days : []) {
+    for (const service of Array.isArray(day?.services) ? day.services : []) {
+      const image = service?.image && typeof service.image === "object" && !Array.isArray(service.image)
+        ? service.image
+        : null;
+      if (
+        image?.id === selectedImageId
+        && image.include_in_travel_tour_card === true
+        && image.is_customer_visible !== false
+      ) {
+        return selectedImageId;
+      }
+    }
+  }
+  return null;
+}
+
 export function createTravelPlanHelpers() {
   function defaultBookingTravelPlan() {
     return buildDefaultBookingTravelPlan();
@@ -379,9 +400,11 @@ export function createTravelPlanHelpers() {
       ...options,
       flatMode
     }).map((day) => stripBookingOnlyFieldsFromTravelPlanDay(day));
+    const tour_card_primary_image_id = normalizeTravelPlanTourCardPrimaryImageId(source, days);
     return normalizeTravelPlanTranslationMeta({
       destination_scope,
       destinations,
+      ...(tour_card_primary_image_id ? { tour_card_primary_image_id } : {}),
       days,
       translation_meta: source.translation_meta
     });
@@ -402,9 +425,11 @@ export function createTravelPlanHelpers() {
     });
 
     const destination_scope = normalizeTravelPlanDestinationScope(source);
+    const tour_card_primary_image_id = normalizeTravelPlanTourCardPrimaryImageId(source, days);
     return normalizeTravelPlanTranslationMeta({
       destination_scope,
       destinations: destinationScopeDestinations(destination_scope),
+      ...(tour_card_primary_image_id ? { tour_card_primary_image_id } : {}),
       days,
       attachments: normalizeTravelPlanAttachments(source.attachments),
       translation_meta: source.translation_meta
