@@ -62,6 +62,8 @@
   "tour.card.custom_quote": "Custom quote",
   "tour.card.days": "{days} days",
   "tour.card.plan_trip": "Plan this trip",
+  "tour.card.details": "Details",
+  "tour.card.styles_more": "+{count} more",
   "tour.card.show_more": "Show more",
   "tour.card.show_less": "Show less",
   "tour.card.more": "more",

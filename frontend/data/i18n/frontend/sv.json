@@ -62,6 +62,8 @@
   "tour.card.custom_quote": "Anpassad offert",
   "tour.card.days": "{days} dagar",
   "tour.card.plan_trip": "Planera denna resa",
+  "tour.card.details": "Detaljer",
+  "tour.card.styles_more": "+{count} till",
   "tour.card.show_more": "Visa mer",
   "tour.card.show_less": "Visa mindre",
   "tour.card.more": "mer",

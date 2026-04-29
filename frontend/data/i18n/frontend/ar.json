@@ -62,6 +62,8 @@
   "tour.card.custom_quote": "عرض سعر مخصص",
   "tour.card.days": "{days} أيام",
   "tour.card.plan_trip": "خطط لهذه الرحلة",
+  "tour.card.details": "التفاصيل",
+  "tour.card.styles_more": "+{count} أخرى",
   "tour.card.show_more": "عرض المزيد",
   "tour.card.show_less": "عرض أقل",
   "tour.card.more": "المزيد",

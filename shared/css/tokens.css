@@ -81,7 +81,7 @@
 
 :root {
   /* Core */
-  --bg: #efeae2;
+  --bg: #e2ecde;
   --surface: #ffffff;
   --surface-muted: #f3f5f6;
   --surface-muted-cool: var(--surface-muted);
@@ -110,6 +110,11 @@
   --surface-error: #fff2f1;
   --surface-accent: #fff0ec;
   --surface-accent-soft: var(--surface-accent);
+  --marketing-card-surface: #fff8ec;
+  --marketing-card-control-surface: #fffdf7;
+  --marketing-card-details-surface: var(--marketing-card-surface);
+  --marketing-card-border: #c7ddd5;
+  --marketing-card-details-border: #b8d5cc;
 
   /* Text */
   --text: #1c2b35;

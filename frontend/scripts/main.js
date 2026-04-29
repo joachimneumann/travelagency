@@ -27,6 +27,24 @@ function currentFrontendLang() {
   return typeof window.frontendI18n?.getLang === "function" ? window.frontendI18n.getLang() : "en";
 }
 
+function markHomepageMobileStageReady(flag) {
+  if (typeof window.__ASIATRAVELPLAN_MARK_HOMEPAGE_STAGE_READY === "function") {
+    window.__ASIATRAVELPLAN_MARK_HOMEPAGE_STAGE_READY(flag);
+  }
+}
+
+function queueHomepageMobileStageReady(flag) {
+  if (typeof window.requestAnimationFrame === "function") {
+    window.requestAnimationFrame(() => {
+      markHomepageMobileStageReady(flag);
+    });
+    return;
+  }
+  window.setTimeout(() => {
+    markHomepageMobileStageReady(flag);
+  }, 16);
+}
+
 function withLangUrl(pathname) {
   const url = new URL(pathname, window.location.origin);
   const lang = currentFrontendLang();
@@ -416,6 +434,7 @@ async function init() {
     void handleFrontendLanguageChanged();
   });
   syncI18nManagedLabels();
+  markHomepageMobileStageReady("heroCopyReady");
   setupMobileNav();
   setupReelsUnlock();
   setupReelsToggle();
@@ -463,6 +482,8 @@ async function init() {
   setupFilterSelectPanels();
   syncFilterInputs();
   applyFilters();
+  markHomepageMobileStageReady("toursReady");
+  queueHomepageMobileStageReady("restReady");
   setupFilterEvents();
   prefillBookingFormWithFilters();
   setupTourSectionImagePrewarm();
@@ -1365,6 +1386,7 @@ function mapBookingSelectionLabelsToCodes(values, kind) {
 
 async function handleFrontendLanguageChanged() {
   state.lang = currentFrontendLang();
+  markHomepageMobileStageReady("heroCopyReady");
   const selectedTourId = normalizeText(state.selectedTour?.id || els.booking_tour_id?.value);
   const preservedBookingDestinationCodes = mapBookingSelectionLabelsToCodes(
     readBookingStaticFieldValues("bookingDestination"),
@@ -1413,6 +1435,8 @@ async function handleFrontendLanguageChanged() {
     }
 
     applyFilters();
+    markHomepageMobileStageReady("toursReady");
+    queueHomepageMobileStageReady("restReady");
     if (state.teamMembersLoaded) {
       renderTeamSection();
     }

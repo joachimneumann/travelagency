@@ -17,6 +17,8 @@
     defaultLang: 'en',
     basePath: '/frontend/data/i18n/frontend'
   };
+  const INITIAL_PENDING_ATTR = 'data-frontend-lang-pending';
+  const INITIAL_PENDING_STYLE_ID = 'frontendLangPendingStyle';
 
   const state = {
     lang: 'en',
@@ -69,6 +71,7 @@
     applyDataI18nAttributes(document);
     applyLocalizedControlDirection(document);
     mountLanguageMenu();
+    clearInitialPendingLanguageState();
 
     if (updateUrl) {
       const url = new URL(window.location.href);
@@ -95,6 +98,11 @@
     document.documentElement.dataset.languageDirection = direction;
     document.documentElement.dataset.languageCode = state.lang;
     document.body?.classList.toggle('frontend-language-rtl', direction === 'rtl');
+  }
+
+  function clearInitialPendingLanguageState() {
+    document.documentElement.removeAttribute(INITIAL_PENDING_ATTR);
+    document.getElementById(INITIAL_PENDING_STYLE_ID)?.remove();
   }
 
   function applyLocalizedControlDirection(root) {

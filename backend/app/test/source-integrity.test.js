@@ -4704,16 +4704,21 @@ test("homepage tour details resolve travel-plan day and service copy from the ac
     /resolveLocalizedFrontendText\(i18nValue, state\.lang\)[\s\S]{0,160}\|\| resolveLocalizedFrontendText\(source\[fieldName\], state\.lang\)/,
     "Homepage tours should keep travel-plan field resolution in the dedicated resolver"
   );
+  assert.doesNotMatch(
+    mainToursSource,
+    /renderTourPlanDay[\s\S]*tour\.plan\.no_services/,
+    "Homepage tour day details should omit the no-services empty-state copy inside individual days"
+  );
 });
 
 test("homepage tour cards use fixed-height text areas without an inline more link", async () => {
   const mainToursPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "main_tours.js");
   const homepagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "index.html");
-  const siteCssPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "site.css");
-  const [mainToursSource, homepageSource, siteCssSource] = await Promise.all([
+  const tourCardCssPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "components", "tour-card.css");
+  const [mainToursSource, homepageSource, tourCardCssSource] = await Promise.all([
     readFile(mainToursPath, "utf8"),
     readFile(homepagePath, "utf8"),
-    readFile(siteCssPath, "utf8")
+    readFile(tourCardCssPath, "utf8")
   ]);
 
   assert.doesNotMatch(
@@ -4727,14 +4732,29 @@ test("homepage tour cards use fixed-height text areas without an inline more lin
     "Tour cards should no longer render the old inline more link for clamped descriptions"
   );
   assert.match(
-    siteCssSource,
+    tourCardCssSource,
     /\.tour-desc \{[\s\S]*-webkit-line-clamp: var\(--tour-card-desc-lines\);[\s\S]*min-height: calc\(1em \* var\(--tour-card-desc-line-height\) \* var\(--tour-card-desc-lines\)\);/,
     "Tour descriptions should clamp to a fixed-height preview so cards stay aligned"
   );
   assert.match(
-    siteCssSource,
-    /\.tour-body \{[\s\S]*grid-template-rows: auto auto auto 1fr auto auto;[\s\S]*\.tour-desc-wrap \{[\s\S]*min-height: calc\(1em \* var\(--tour-card-desc-line-height\) \* var\(--tour-card-desc-lines\)\);/,
-    "Tour card text rows should reserve the same title, description, and tag heights before the action buttons"
+    tourCardCssSource,
+    /\.tour-card \{[\s\S]*--tour-card-desc-lines: 3;[\s\S]*--tour-card-media-overlay-inset: 1\.14rem;[\s\S]*\.tour-card__media \{[\s\S]*aspect-ratio: 1 \/ 1;[\s\S]*\.tour-card__media-counter \{[\s\S]*font-size: 0\.9rem;[\s\S]*\.tour-card__media-overlay \{[\s\S]*bottom: var\(--tour-card-media-overlay-inset\);[\s\S]*\.tour-title--media \{[\s\S]*-webkit-line-clamp: 1;[\s\S]*\.tour-card__duration-pill \{[\s\S]*background: #fff;[\s\S]*color: var\(--accent\);[\s\S]*font-size: 0\.9rem;/,
+    "Tour cards should move the title and duration onto a square image overlay with compact shared pill margins"
+  );
+  assert.match(
+    tourCardCssSource,
+    /\.tour-body \{[\s\S]*grid-template-rows: auto auto auto;[\s\S]*\.tour-desc-wrap \{[\s\S]*min-height: calc\(1em \* var\(--tour-card-desc-line-height\) \* var\(--tour-card-desc-lines\)\);[\s\S]*\.tour-card__actions \{[\s\S]*grid-template-columns: minmax\(0, 0\.92fr\) minmax\(0, 1fr\);[\s\S]*margin-top: 0\.25rem;/,
+    "Tour card text rows should keep compact copy and place the two action buttons side by side below the tags"
+  );
+  assert.match(
+    mainToursSource,
+    /function renderTourStyleTags\(styles\)[\s\S]*data-tour-style-tag="\$\{index\}"[\s\S]*data-tour-style-more hidden[\s\S]*function tourStyleTagsFit\(container\)[\s\S]*const scrollWidth = Number\(container\?\.scrollWidth\) \|\| clientWidth;[\s\S]*return fitsHeight && fitsWidth;[\s\S]*function fitTourCardStyleTagsContainer\(container\)[\s\S]*setTourStyleTagsMoreCount\(moreTag, hiddenCount\)[\s\S]*data-tour-style-tags/,
+    "Tour cards should replace overflowing travel style pills with a visible +X more pill after checking one-line width"
+  );
+  assert.match(
+    tourCardCssSource,
+    /\.tour-card \{[\s\S]*--tour-card-tag-lines: 1;[\s\S]*\.tags \{[\s\S]*flex-wrap: nowrap;[\s\S]*min-width: 0;[\s\S]*max-height: calc\(\s*\(1em \* var\(--tour-card-tag-line-height\) \+ var\(--tour-card-tag-vertical-padding\)\) \* var\(--tour-card-tag-lines\)\s*\);[\s\S]*overflow: hidden;[\s\S]*\.tag \{[\s\S]*flex: 0 0 auto;[\s\S]*white-space: nowrap;/,
+    "Tour style pills should stay on one line and rely on the +X more pill for overflow"
   );
   assert.match(
     mainToursSource,
@@ -4753,33 +4773,88 @@ test("homepage tour cards use fixed-height text areas without an inline more lin
   );
   assert.match(
     mainToursSource,
-    /const sidePanelClass = columnCount > 1[\s\S]*tour-details-row--side-panel tour-details-row--columns-\$\{columnCount\}[\s\S]*tour-details-row--attached[\s\S]*class="tour-details-row\$\{sidePanelClass\}"/,
-    "Multi-column expanded tour rows should switch to the side-panel layout and attach the details panel when the card is already left-aligned"
+    /function expandedTourShellStartRightInset\(shell, card\)[\s\S]*const shellWidth = Number\(shell\.clientWidth\) \|\| 0;[\s\S]*const cardRight = \(Number\(card\.offsetLeft\) \|\| 0\) \+ \(Number\(card\.offsetWidth\) \|\| 0\);[\s\S]*return Math\.max\(0, Math\.ceil\(shellWidth - cardRight\)\);[\s\S]*function animateExpandedTourDetailsAttach\(row, durationMs = TOUR_DETAILS_OPEN_TRANSITION_MS\)[\s\S]*const startRightInset = expandedTourShellStartRightInset\(shell, card\)[\s\S]*shell\.style\.clipPath = startClipPath[\s\S]*row\.classList\.add\("tour-details-row--attached"\)[\s\S]*shell\.animate\([\s\S]*clipPath: startClipPath[\s\S]*clipPath: endClipPath/,
+    "The side-panel shell should attach by clipping open from the selected card layout width instead of appearing instantly wide"
+  );
+  assert.match(
+    mainToursSource,
+    /const openingClass = isOpeningTour && columnCount > 1 \? " tour-details-row--opening" : "";[\s\S]*const sidePanelClass = columnCount > 1[\s\S]*tour-details-row--side-panel tour-details-row--columns-\$\{columnCount\}[\s\S]*tour-details-row--attached[\s\S]*class="tour-details-row\$\{openingClass\}\$\{sidePanelClass\}"/,
+    "Multi-column expanded tour rows should render active openings hidden immediately and attach only after the row-clearing transition"
   );
   assert.match(
     mainToursSource,
     /function stickyHeaderBottomOffset\(\)[\s\S]*document\.querySelector\("\.header"\)[\s\S]*function scrollTourCardFullyVisible\(tripId,[\s\S]*visibleTop = stickyHeaderBottomOffset\(\) \+ TOUR_CARD_SCROLL_MARGIN_PX[\s\S]*rect\.height > availableHeight \|\| rect\.top < visibleTop[\s\S]*rect\.bottom > visibleBottom/,
     "Show more should account for the sticky header and scroll the selected card fully into the visible viewport when needed"
   );
-  assert.match(
+  assert.doesNotMatch(
     mainToursSource,
-    /async function animateTourDetailsOpen\(tripId\)[\s\S]*const previousRects = captureTourCardRects\(\)[\s\S]*const previousMediaSnapshots = captureTourCardMediaSnapshots\(\)[\s\S]*const initialColumnIndex = tourGridColumnIndexForTrip\(tripId\)[\s\S]*renderVisibleTrips\(\);[\s\S]*applyTourCardMediaSnapshots\(previousMediaSnapshots\);[\s\S]*await Promise\.all\(\[\s*animateTourGridLayout\(previousRects, \{ excludedTripIds: \[tripId\] \}\),\s*animateExpandedTourCardToLeft\(row\)\s*\]\);[\s\S]*openingTourColumnIndexes\.delete\(tripId\);[\s\S]*await scrollTourCardFullyVisible\(tripId\);[\s\S]*const opensSideways = row\.classList\.contains\("tour-details-row--side-panel"\);[\s\S]*await animateTourDetailsRowHeight\(row, opensSideways \? collapsedHeight : expandedHeight, "open"\);[\s\S]*clearTourDetailsRowAnimation\(row, \{ preserveHeight: opensSideways \}\)/,
-    "Opening a tour should keep card media visible, move sibling cards and the selected card left together, ensure it is visible, then expand sideways when space exists"
+    /TOUR_CARD_BOTTOM_NEAR_VIEWPORT_THRESHOLD_PX|TOUR_SINGLE_COLUMN_OPEN_SCROLL_NUDGE_PX|function nudgeSingleColumnExpandedTourIntoView\(/,
+    "Mobile homepage tours should not keep any dedicated show-more auto-scroll or nudge helper code"
   );
   assert.match(
     mainToursSource,
-    /function createOutgoingTourDetailsGhost\(row\)[\s\S]*const ghost = panel\.cloneNode\(true\)[\s\S]*position: "fixed"[\s\S]*function animateOutgoingTourDetailsGhost\(ghostState\)[\s\S]*async function animateTourDetailsClose\(tripId\)[\s\S]*const previousRects = captureTourCardRects\(\)[\s\S]*const previousMediaSnapshots = captureTourCardMediaSnapshots\(\)[\s\S]*const outgoingDetailsGhost = createOutgoingTourDetailsGhost\(row\)[\s\S]*renderVisibleTrips\(\);[\s\S]*applyTourCardMediaSnapshots\(previousMediaSnapshots\);[\s\S]*await Promise\.all\(\[\s*animateOutgoingTourDetailsGhost\(outgoingDetailsGhost\),\s*animateTourGridLayout\(previousRects\)\s*\]\)/,
-    "Closing a tour should keep card media visible, animate a closing details ghost, and move sibling cards back into the row at the same time"
+    /const TOUR_IMAGE_TRANSITION_MS = 2000;[\s\S]*function parseCssDurationToMs\(value\) \{[\s\S]*if \(normalizedValue\.endsWith\("ms"\)\) \{[\s\S]*if \(normalizedValue\.endsWith\("s"\)\) \{[\s\S]*function tourCardImageTransitionDurationMs\(button\) \{[\s\S]*window\.getComputedStyle\(button\)\.getPropertyValue\("--tour-card-image-transition-duration"\)[\s\S]*return cssDurationMs > 0 \? cssDurationMs : TOUR_IMAGE_TRANSITION_MS;[\s\S]*function cycleTourCardImage\(button\) \{[\s\S]*const transitionDurationMs = tourCardImageTransitionDurationMs\(button\);[\s\S]*window\.setTimeout\(\(\) => \{[\s\S]*\}, transitionDurationMs\);/,
+    "Homepage marketing-card image swaps should read their dissolve duration from CSS so mobile can shorten the transition cleanly"
   );
   assert.match(
-    siteCssSource,
-    /\.tour-details-row \{[\s\S]*grid-template-columns: repeat\(var\(--tour-grid-columns, 3\), minmax\(0, 1fr\)\);[\s\S]*column-gap: 1\.5rem;[\s\S]*row-gap: 0;[\s\S]*transition:[\s\S]*height 0\.64s[\s\S]*\.tour-details-row--side-panel \.tour-details-row__shell \{[\s\S]*grid-column: 1 \/ -1;[\s\S]*grid-template-columns: repeat\(var\(--tour-grid-columns, 3\), minmax\(0, 1fr\)\);[\s\S]*\.tour-details-row--side-panel \.tour-details-row__shell > \.tour-card \{[\s\S]*grid-column: var\(--tour-details-column, 1\);[\s\S]*\.tour-details-row--side-panel \.tour-details-row__panel \{[\s\S]*grid-column: 2 \/ -1;/,
+    mainToursSource,
+    /const TOUR_DETAILS_ATTACH_ROW_CLEAR_OVERLAP_MS = 180;[\s\S]*const TOUR_DETAILS_OPEN_TRANSITION_MS = 780;[\s\S]*const TOUR_DETAILS_TRANSITION_MS = 640;[\s\S]*const TOUR_DETAILS_CLOSE_TRANSITION_MS = 780;[\s\S]*const TOUR_CARD_MEDIA_SNAPSHOT_HOLD_MS = Math\.max\([\s\S]*TOUR_DETAILS_OPEN_TRANSITION_MS,[\s\S]*TOUR_DETAILS_TRANSITION_MS,[\s\S]*function clearTourDetailsRowAnimation\(row, \{ preserveHeight = false \} = \{\}\) \{[\s\S]*row\.style\.removeProperty\("--tour-details-row-transition-duration"\);[\s\S]*function finishTourDetailsRowAnimation\(row, durationMs = TOUR_DETAILS_TRANSITION_MS\) \{[\s\S]*window\.setTimeout\(done, durationMs \+ 140\);[\s\S]*async function animateTourDetailsRowHeight\(row, targetHeight, mode\) \{[\s\S]*const transitionDurationMs = opening \? TOUR_DETAILS_OPEN_TRANSITION_MS : TOUR_DETAILS_TRANSITION_MS;[\s\S]*row\.style\.setProperty\("--tour-details-row-transition-duration", `\$\{transitionDurationMs\}ms`\);[\s\S]*await finishTourDetailsRowAnimation\(row, transitionDurationMs\);/,
+    "Opening tour details should use the same visible timing as the close animation while resetting the shared transition duration override afterward"
+  );
+  assert.match(
+    mainToursSource,
+    /const TOUR_SHOW_MORE_LABEL_TRANSITION_MS = 420;[\s\S]*async function animateTourShowMoreButtonLabel\(button, nextLabel, \{ direction = "open" \} = \{\}\) \{[\s\S]*const previousLabel = labelElement\.textContent \|\| "";[\s\S]*const outgoingLabel = document\.createElement\("span"\);[\s\S]*const incomingLabel = document\.createElement\("span"\);[\s\S]*outgoingLabel\.textContent = previousLabel;[\s\S]*incomingLabel\.textContent = nextLabel;[\s\S]*labelElement\.textContent = "";[\s\S]*labelElement\.append\(outgoingLabel, incomingLabel\);[\s\S]*outgoingLabel\.animate\(\[[\s\S]*opacity:\s*1[\s\S]*opacity:\s*0[\s\S]*incomingLabel\.animate\(\[[\s\S]*opacity:\s*0[\s\S]*opacity:\s*1[\s\S]*await Promise\.all\(animations\.map\(\(animation\) => animation\.finished\.catch\(\(\) => \{\}\)\)\);[\s\S]*labelElement\.textContent = nextLabel;/,
+    "Show more/show less label swaps should crossfade the incoming text immediately instead of waiting for the outgoing text to fade out"
+  );
+  assert.doesNotMatch(
+    mainToursSource,
+    /animateTourShowMoreButtonLabelAfterDetailThird|oneThirdDelayMs/,
+    "Show more/show less label swaps should not keep a delayed one-third transition helper"
+  );
+  assert.match(
+    mainToursSource,
+    /function animateTourDetailsToggle\(tripId, willOpen\) \{[\s\S]*const visibilityPromise = willOpen && !isSingleColumnTourLayout\(\)[\s\S]*scrollTourCardFullyVisible\(normalizedTripId, \{ behavior: "auto" \}\)[\s\S]*: Promise\.resolve\(false\);[\s\S]*async function animateTourDetailsOpen\(tripId\)[\s\S]*const singleColumnLayout = isSingleColumnTourLayout\(\)[\s\S]*const previousRects = captureTourCardRects\(\)[\s\S]*const previousMediaSnapshots = captureTourCardMediaSnapshots\(\)[\s\S]*const initialColumnIndex = singleColumnLayout \? 0 : tourGridColumnIndexForTrip\(tripId\)[\s\S]*openingTourColumnIndexes\.set\(tripId, initialColumnIndex\);[\s\S]*renderVisibleTrips\(\);[\s\S]*applyTourCardMediaSnapshots\(previousMediaSnapshots\);[\s\S]*if \(singleColumnLayout\) \{[\s\S]*await Promise\.all\(\[\s*animateTourDetailsRowHeight\(row, expandedHeight, "open"\),\s*animateTourShowMoreButtonLabel\(\s*openedButton,\s*tourShowMoreLabel\(true\),\s*\{ direction: "open" \}\s*\)\s*\]\);[\s\S]*clearTourDetailsRowAnimation\(row\);[\s\S]*tourDetailsTransitioning = false;[\s\S]*focusTourShowMoreButton\(tripId\);[\s\S]*return;[\s\S]*\}[\s\S]*const rowClearingPromise = Promise\.all\(\[\s*animateTourGridLayout\(previousRects, \{ excludedTripIds: \[tripId\] \}\),\s*animateExpandedTourCardToLeft\(row\)\s*\]\);[\s\S]*const opensSideways = row\.classList\.contains\("tour-details-row--side-panel"\);[\s\S]*const buttonLabelPromise = animateTourShowMoreButtonLabel\(\s*openedButton,\s*tourShowMoreLabel\(true\),\s*\{ direction: "open" \}\s*\);[\s\S]*const startDetailsOpenAnimation = \(\) => Promise\.all\(\[\s*opensSideways \? animateExpandedTourDetailsAttach\(row, TOUR_DETAILS_OPEN_TRANSITION_MS\) : Promise\.resolve\(\),\s*animateTourDetailsRowHeight\(row, opensSideways \? collapsedHeight : expandedHeight, "open"\)[\s\S]*\]\);[\s\S]*const detailsOpenPromise = opensSideways[\s\S]*Promise\.race\(\[[\s\S]*rowClearingPromise,[\s\S]*waitForTimeout\(TOUR_GRID_LAYOUT_TRANSITION_MS - TOUR_DETAILS_ATTACH_ROW_CLEAR_OVERLAP_MS\)[\s\S]*\]\)[\s\S]*\.then\(startDetailsOpenAnimation\)[\s\S]*await rowClearingPromise;[\s\S]*openingTourColumnIndexes\.delete\(tripId\);[\s\S]*await scrollTourCardFullyVisible\(tripId\);[\s\S]*await Promise\.all\(\[[\s\S]*detailsOpenPromise \|\| startDetailsOpenAnimation\(\),[\s\S]*buttonLabelPromise[\s\S]*\]\);[\s\S]*clearTourDetailsRowAnimation\(row, \{ preserveHeight: opensSideways \}\)/,
+    "Opening a tour should start the button text fade immediately while the side panel starts clipping open shortly before row clearing fully ends"
+  );
+  assert.match(
+    mainToursSource,
+    /function createOutgoingTourDetailsGhost\(row\)[\s\S]*const ghost = panel\.cloneNode\(true\)[\s\S]*position: "fixed"[\s\S]*function animateOutgoingTourDetailsGhost\(ghostState\)[\s\S]*async function animateTourDetailsClose\(tripId\)[\s\S]*const previousRects = captureTourCardRects\(\)[\s\S]*const previousMediaSnapshots = captureTourCardMediaSnapshots\(\)[\s\S]*const outgoingDetailsGhost = createOutgoingTourDetailsGhost\(row\)[\s\S]*renderVisibleTrips\(\);[\s\S]*applyTourCardMediaSnapshots\(previousMediaSnapshots\);[\s\S]*await Promise\.all\(\[\s*animateOutgoingTourDetailsGhost\(outgoingDetailsGhost\),\s*animateTourGridLayout\(previousRects\),\s*animateTourShowMoreButtonLabel\(\s*closedButton,\s*tourShowMoreLabel\(false\),\s*\{ direction: "close" \}\s*\)\s*\]\)/,
+    "Closing a tour should keep card media visible, animate a closing details ghost, and fade the button text with the detail animation"
+  );
+  assert.match(
+    tourCardCssSource,
+    /\.tour-details-row \{[\s\S]*--tour-details-row-transition-duration: 0\.64s;[\s\S]*grid-template-columns: repeat\(var\(--tour-grid-columns, 3\), minmax\(0, 1fr\)\);[\s\S]*column-gap: 1\.5rem;[\s\S]*row-gap: 0;[\s\S]*transition:[\s\S]*height var\(--tour-details-row-transition-duration\)[\s\S]*\.tour-details-row--side-panel \.tour-details-row__shell \{[\s\S]*grid-column: 1 \/ -1;[\s\S]*grid-template-columns: repeat\(var\(--tour-grid-columns, 3\), minmax\(0, 1fr\)\);[\s\S]*\.tour-details-row--side-panel \.tour-details-row__shell > \.tour-card \{[\s\S]*grid-column: var\(--tour-details-column, 1\);[\s\S]*\.tour-details-row__panel \{[\s\S]*transition:[\s\S]*transform var\(--tour-details-row-transition-duration\)[\s\S]*clip-path var\(--tour-details-row-transition-duration\)[\s\S]*\.tour-details-row--side-panel \.tour-details-row__panel \{[\s\S]*grid-column: 2 \/ -1;/,
     "Expanded tour details should keep the selected card at the normal tour-card grid width and expand details into the right-side grid space"
   );
   assert.match(
-    siteCssSource,
+    tourCardCssSource,
     /\.tour-details-row--side-panel\.tour-details-row--attached \.tour-details-row__shell \{[\s\S]*column-gap: 0;[\s\S]*\.tour-details-row--side-panel\.tour-details-row--attached\.tour-details-row--columns-2 \.tour-details-row__shell \{[\s\S]*grid-template-columns: calc\(\(100% - 1\.5rem\) \/ 2\) minmax\(0, 1fr\);[\s\S]*\.tour-details-row--side-panel\.tour-details-row--attached\.tour-details-row--columns-3 \.tour-details-row__shell \{[\s\S]*grid-template-columns: calc\(\(100% - 3rem\) \/ 3\) minmax\(0, 1fr\);/,
     "Attached side-panel tour details should remove the gutter while keeping the card track at the normal tour-card width"
+  );
+  assert.match(
+    tourCardCssSource,
+    /\.tour-card__media \{[\s\S]*--tour-card-image-transition-duration: 2s;[\s\S]*\.tour-card__media-layer\.is-entering \{[\s\S]*animation: tour-card-image-dissolve-in var\(--tour-card-image-transition-duration, 2s\) ease both;[\s\S]*\.tour-card__media-layer\.is-leaving \{[\s\S]*animation: tour-card-image-dissolve-out var\(--tour-card-image-transition-duration, 2s\) ease both;[\s\S]*@media \(max-width: 760px\) \{[\s\S]*\.tour-card__media \{[\s\S]*--tour-card-image-transition-duration: 1\.1s;/,
+    "Mobile homepage marketing cards should shorten the image dissolve duration while keeping desktop on the longer transition"
+  );
+  assert.match(
+    tourCardCssSource,
+    /@media \(max-width: 760px\) \{[\s\S]*\.tour-details-row__panel \{[\s\S]*max-height: none;[\s\S]*overflow: visible;[\s\S]*overscroll-behavior: auto;[\s\S]*transition: none;[\s\S]*\.tour-details-row--opening \.tour-details-row__panel,[\s\S]*\.tour-details-row--closing \.tour-details-row__panel \{[\s\S]*opacity: 1;[\s\S]*transform: none;[\s\S]*clip-path: inset\(0 0 0 0\);/,
+    "Mobile homepage tour details should rely on the row expansion instead of a separate panel slide or fade animation"
+  );
+  assert.match(
+    tourCardCssSource,
+    /@media \(max-width: 760px\) \{[\s\S]*\.tour-card__media-button:hover \.tour-card__media-zoom,[\s\S]*\.tour-card__media-button:focus-visible \.tour-card__media-zoom \{[\s\S]*transform: scale\(1\);[\s\S]*\.tour-card__media-button:hover \.tour-card__media-stage,[\s\S]*\.tour-card__media-button:focus-visible \.tour-card__media-stage \{[\s\S]*border-radius: calc\(var\(--radius\) - 1px\) calc\(var\(--radius\) - 1px\) 0 0;[\s\S]*\.tour-card__media-button:hover \.tour-card__media-layer\.is-active,[\s\S]*\.tour-card__media-button:focus-visible \.tour-card__media-layer\.is-active \{[\s\S]*filter: none;/,
+    "Mobile multi-image tour cards should not enlarge or round out the image when tapped or focused"
+  );
+  assert.match(
+    tourCardCssSource,
+    /@media \(max-width: 760px\) \{[\s\S]*\.tour-details-row__shell \.tour-card \{[\s\S]*border-bottom-right-radius: var\(--radius\);[\s\S]*border-bottom-left-radius: var\(--radius\);[\s\S]*\.tour-details-row__shell \.tour-card__plan-trip \{[\s\S]*border-bottom-right-radius: 14px;[\s\S]*border-bottom-left-radius: 14px;/,
+    "Mobile expanded tour cards should keep the lower card and plan-trip button corners rounded"
+  );
+  assert.match(
+    tourCardCssSource,
+    /\.tour-card__show-more-label \{[\s\S]*will-change: opacity;/,
+    "Homepage show-more labels should hint a fade-only transition"
   );
 });
 
@@ -4849,6 +4924,7 @@ test("homepage hero title follows published destinations and keeps the destinati
   const frontendI18nScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "shared", "frontend_i18n.js");
   const siteHomeCriticalCssPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "site-home-critical.css");
   const siteCssPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "site.css");
+  const tourCardCssPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "components", "tour-card.css");
   const desktopHeroVideoPath = path.resolve(__dirname, "..", "..", "..", "assets", "video", "rice field.mp4");
   const mobileHeroVideoPath = path.resolve(__dirname, "..", "..", "..", "assets", "video", "rice field-mobile.mp4");
   const [
@@ -4858,6 +4934,7 @@ test("homepage hero title follows published destinations and keeps the destinati
     frontendI18nScriptSource,
     siteHomeCriticalCssSource,
     siteCssSource,
+    tourCardCssSource,
     desktopHeroVideo,
     mobileHeroVideo
   ] = await Promise.all([
@@ -4867,6 +4944,7 @@ test("homepage hero title follows published destinations and keeps the destinati
     readFile(frontendI18nScriptPath, "utf8"),
     readFile(siteHomeCriticalCssPath, "utf8"),
     readFile(siteCssPath, "utf8"),
+    readFile(tourCardCssPath, "utf8"),
     stat(desktopHeroVideoPath),
     stat(mobileHeroVideoPath)
   ]);
@@ -4878,7 +4956,7 @@ test("homepage hero title follows published destinations and keeps the destinati
   );
   assert.match(
     homepageSource,
-    /<link rel="stylesheet" href="\/shared\/css\/tokens\.css" \/>[\s\S]*<link rel="stylesheet" href="\/shared\/css\/site-home-critical\.css" \/>[\s\S]*<link rel="stylesheet" href="\/shared\/css\/pages\/home-critical\.css" \/>[\s\S]*<link rel="preload" href="\/shared\/css\/site-home-deferred\.css" as="style"[\s\S]*<link rel="preload" href="\/shared\/css\/pages\/home-deferred\.css" as="style"/,
+    /<link rel="stylesheet" href="\/shared\/css\/tokens\.css" \/>[\s\S]*<link rel="stylesheet" href="\/shared\/css\/site-home-critical\.css" \/>[\s\S]*<link rel="stylesheet" href="\/shared\/css\/components\/tour-card\.css" \/>[\s\S]*<link rel="stylesheet" href="\/shared\/css\/pages\/home-critical\.css" \/>[\s\S]*<link rel="preload" href="\/shared\/css\/site-home-deferred\.css" as="style"[\s\S]*<link rel="preload" href="\/shared\/css\/pages\/home-deferred\.css" as="style"/,
     "Homepage should link the real shared CSS assets directly instead of routing critical and deferred styles through import wrappers"
   );
   assert.doesNotMatch(
@@ -4931,9 +5009,41 @@ test("homepage hero title follows published destinations and keeps the destinati
     "Hidden select wrappers should stay hidden even though the base select-wrap class uses display:flex"
   );
   assert.match(
-    siteHomeCriticalCssSource,
+    tourCardCssSource,
     /\.tour-empty-card\[hidden\]\s*\{[\s\S]*display:\s*none\s*!important;/,
     "Hidden tour empty-state cards should stay hidden even though the base tour-empty-card class uses display:grid"
+  );
+});
+
+test("homepage mobile load stages keep unstable sections hidden until hero and tours are ready", async () => {
+  const homepagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "index.html");
+  const mainSourcePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "main.js");
+  const homeCriticalCssPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "pages", "home-critical.css");
+  const [homepageSource, mainSource, homeCriticalCssSource] = await Promise.all([
+    readFile(homepagePath, "utf8"),
+    readFile(mainSourcePath, "utf8"),
+    readFile(homeCriticalCssPath, "utf8")
+  ]);
+
+  assert.match(
+    homepageSource,
+    /const STAGE_ATTR = "data-home-mobile-stage"[\s\S]*window\[STAGE_READY_FN\] = markStageReady;[\s\S]*window\.setTimeout\(\(\) => \{[\s\S]*markStageReady\("heroMediaReady"\)/,
+    "Homepage boot should initialize a mobile staged-load controller with a hero-media fallback so small screens can reveal content in order"
+  );
+  assert.match(
+    homepageSource,
+    /pendingStyle\.textContent = isMobile[\s\S]*body\.home-page \.hero-content[\s\S]*body\.home-page #tours ~ section[\s\S]*body\.home-page \.footer/,
+    "Homepage pending-language guard should keep unstable mobile hero and lower-page sections hidden instead of flashing English content"
+  );
+  assert.match(
+    mainSource,
+    /syncI18nManagedLabels\(\);[\s\S]*markHomepageMobileStageReady\("heroCopyReady"\);[\s\S]*applyFilters\(\);[\s\S]*markHomepageMobileStageReady\("toursReady"\);[\s\S]*queueHomepageMobileStageReady\("restReady"\);/,
+    "Homepage main boot should advance the mobile staged reveal from localized hero copy to tours and then the rest of the page"
+  );
+  assert.match(
+    homeCriticalCssSource,
+    /html\[data-home-mobile-stage="hero-media"\] \.home-page \.hero-content \{[\s\S]*opacity: 0;[\s\S]*html\[data-home-mobile-stage="hero-copy"\] \.home-page #tours[\s\S]*html\[data-home-mobile-stage="tours"\] \.home-page #tours ~ section[\s\S]*\.home-page \.hero-bg-poster \{[\s\S]*display: none;/,
+    "Homepage mobile critical CSS should hide poster-based hero fallbacks, stage hero copy, and defer lower sections on small screens"
   );
 });
 

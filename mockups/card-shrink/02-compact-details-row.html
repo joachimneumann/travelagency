@@ -1,0 +1,64 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; width: 604px; background: #eee9dd; color: #1b2a34; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif; -webkit-font-smoothing: antialiased; }
+  body { overflow: hidden; }
+  .stage { position: relative; width: 604px; padding: 14px 17px; background: #eee9dd; }
+  .card { position: relative; width: 570px; background: #fff; border-radius: 22px; overflow: hidden; box-shadow: 0 18px 34px rgba(255, 105, 79, .13), 0 2px 4px rgba(20, 32, 40, .08); }
+  .opt1 { height: 820px; }
+  .opt2 { height: 716px; }
+  .opt3 { height: 624px; }
+  .photo { position: relative; width: 570px; background-image: url("source-photo.png"); background-size: cover; background-position: center; overflow: hidden; }
+  .h376 { height: 376px; }
+  .h322 { height: 322px; background-position: center 45%; }
+  .h438 { height: 438px; background-position: center 40%; }
+  .shade { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,.12) 44%, rgba(0,0,0,.72) 100%); }
+  .shade.softer { background: linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,.12) 50%, rgba(0,0,0,.55) 100%); }
+  .count { position: absolute; background: rgba(255,255,255,.95); color: #152531; font-size: 20px; line-height: 38px; min-width: 68px; height: 38px; border-radius: 19px; text-align: center; font-weight: 650; }
+  .count.bottom { right: 26px; bottom: 15px; }
+  .count.top { left: 26px; top: 26px; min-width: 74px; height: 36px; line-height: 36px; font-size: 18px; }
+  .count.upper { right: 26px; top: 28px; }
+  .duration { position: absolute; right: 26px; bottom: 26px; height: 36px; min-width: 78px; border-radius: 18px; background: #ff694f; color: white; font-size: 18px; line-height: 36px; text-align: center; font-weight: 800; }
+  .hero-copy { position: absolute; left: 26px; bottom: 40px; color: white; text-shadow: 0 2px 12px rgba(0,0,0,.45); }
+  .hero-copy.low { bottom: 22px; }
+  .hero-copy.compact { bottom: 66px; }
+  .hero-copy h1 { margin: 0 0 8px; font-size: 27px; line-height: 1.08; letter-spacing: 0; font-weight: 850; }
+  .hero-copy strong { display: inline-block; color: #ff775f; font-size: 20px; font-weight: 900; letter-spacing: 0; }
+  .hero-copy.compact h1 { font-size: 28px; margin-bottom: 8px; }
+  .hero-copy.compact span { margin-left: 14px; color: rgba(255,255,255,.92); font-size: 20px; font-weight: 720; }
+  .pad { padding: 22px 26px 0; }
+  .tight { padding-top: 26px; }
+  .minimal { padding-top: 23px; }
+  .eyebrow { display: inline-flex; align-items: center; height: 30px; padding: 0 14px; border-radius: 15px; background: #fff1ed; color: #ff694f; font-size: 17px; font-weight: 800; }
+  .desc { margin: 24px 0 0; font-size: 24px; line-height: 1.66; font-weight: 500; color: #1b2a34; letter-spacing: 0; }
+  .desc.two { margin-top: 0; font-size: 23px; line-height: 1.62; }
+  .tags { display: flex; gap: 11px; align-items: center; flex-wrap: nowrap; margin-top: 26px; }
+  .minimal .tags { margin-top: 0; }
+  .tags span { display: inline-flex; align-items: center; justify-content: center; height: 32px; padding: 0 14px; border-radius: 16px; background: #eef5ff; color: #005bc6; font-size: 18px; line-height: 1; font-weight: 650; white-space: nowrap; }
+  .rule { margin-top: 48px; height: 1px; background: #e8ecef; }
+  .actions { display: flex; align-items: center; gap: 24px; }
+  button { border: 0; font-family: inherit; cursor: default; }
+  .primary { height: 74px; border-radius: 14px; background: #ff694f; color: #fff; font-size: 24px; font-weight: 850; letter-spacing: 0; }
+  .split { margin-top: 20px; }
+  .split .ghost { width: 236px; height: 76px; border-radius: 18px; background: #fff; border: 1.5px solid #ff694f; color: #ff694f; font-size: 24px; font-weight: 850; }
+  .split .primary { width: 258px; height: 76px; border-radius: 18px; }
+  .chev { display: inline-flex; align-items: center; justify-content: center; margin-left: 16px; width: 28px; height: 28px; border-radius: 14px; background: #fff1ed; font-size: 21px; transform: translateY(-1px); }
+  .rail { margin-top: 23px; gap: 21px; }
+  .rail .more { width: 94px; height: 48px; border-radius: 24px; background: #fff5f2; color: #ff694f; font-size: 18px; font-weight: 850; }
+  .rail .primary { flex: 1; height: 74px; border-radius: 16px; }
+  .rail.bottom { margin-top: 33px; gap: 18px; }
+  .rail.bottom .more { width: 82px; height: 58px; border-radius: 16px; }
+  .rail.bottom .primary { height: 58px; border-radius: 16px; font-size: 23px; }
+</style></head><body><div class="stage" style="height:744px">
+      <div class="card opt2">
+        <div class="photo h322">
+          <div class="shade softer"></div>
+          <div class="count top">1 / 14</div>
+          <div class="duration">5D4N</div>
+          <div class="hero-copy low"><h1>Da Nang - Hue - Hoi An</h1></div>
+        </div>
+        <div class="content pad tight">
+          <p class="desc two">Slow living in Da Nang: beaches, Marble Mountains,<br>calm neighborhoods, and the city's easy rhythm.</p>
+          <div class="tags"><span>Grand Expeditions</span><span>Beach</span><span>Culture</span><span>+3 more</span></div>
+          <div class="actions split"><button class="ghost">Details</button><button class="primary">Plan this trip</button></div>
+        </div>
+      </div></div></body></html>

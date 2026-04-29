@@ -278,5 +278,5 @@ test("collapsed public tour cards only animate image hover when more than one to
   assert.match(singleCardMarkup, /<div class="tour-card__media">/);
   assert.doesNotMatch(singleCardMarkup, /data-tour-image-cycle="1"/);
   assert.match(els.tourGrid.innerHTML, /tour_multi_image[\s\S]*data-tour-image-cycle="1"/);
-  assert.match(els.tourGrid.innerHTML, /tour_multi_image[\s\S]*tour-card__media tour-card__media-button/);
+  assert.match(els.tourGrid.innerHTML, /tour_multi_image[\s\S]*tour-card__media-cycle tour-card__media-button/);
 });

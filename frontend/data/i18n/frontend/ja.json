@@ -62,6 +62,8 @@
   "tour.card.custom_quote": "個別見積もり",
   "tour.card.days": "{days} 日間",
   "tour.card.plan_trip": "この旅を計画する",
+  "tour.card.details": "詳細",
+  "tour.card.styles_more": "+{count}件",
   "tour.card.show_more": "もっと見る",
   "tour.card.show_less": "少なく表示",
   "tour.card.more": "もっと見る",

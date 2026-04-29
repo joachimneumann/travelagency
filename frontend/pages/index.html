@@ -42,6 +42,154 @@
         document.head.append(diagnosticsScript);
       }
     </script>
+    <script>
+      (() => {
+        const STORAGE_KEY = "asiatravelplan_frontend_lang";
+        const PENDING_ATTR = "data-frontend-lang-pending";
+        const PENDING_STYLE_ID = "frontendLangPendingStyle";
+        const MOBILE_QUERY = "(max-width: 760px)";
+        const normalizeLang = (value) => {
+          const normalized = String(value || "").trim().toLowerCase();
+          return /^[a-z]{2}$/.test(normalized) ? normalized : "";
+        };
+        const clearPendingState = () => {
+          document.documentElement.removeAttribute(PENDING_ATTR);
+          document.getElementById(PENDING_STYLE_ID)?.remove();
+        };
+        const queryLang = normalizeLang(new URLSearchParams(window.location.search).get("lang"));
+        let savedLang = "";
+        if (!queryLang) {
+          try {
+            savedLang = normalizeLang(window.localStorage?.getItem(STORAGE_KEY));
+          } catch {}
+        }
+        const initialLang = queryLang || savedLang;
+        if (!initialLang || initialLang === "en") return;
+        document.documentElement.setAttribute(PENDING_ATTR, "true");
+        document.documentElement.lang = initialLang;
+        const isMobile = typeof window.matchMedia === "function" && window.matchMedia(MOBILE_QUERY).matches;
+        const pendingStyle = document.createElement("style");
+        pendingStyle.id = PENDING_STYLE_ID;
+        pendingStyle.textContent = isMobile
+          ? [
+              'html[data-frontend-lang-pending="true"] body.home-page .hero-content { visibility: hidden; opacity: 0; pointer-events: none; }',
+              'html[data-frontend-lang-pending="true"] body.home-page #tours,',
+              'html[data-frontend-lang-pending="true"] body.home-page #tours ~ section,',
+              'html[data-frontend-lang-pending="true"] body.home-page .footer { display: none; }'
+            ].join("")
+          : 'html[data-frontend-lang-pending="true"] body.home-page { visibility: hidden; }';
+        document.head.append(pendingStyle);
+        window.addEventListener("frontend-i18n-ready", clearPendingState, { once: true });
+        window.addEventListener("frontend-i18n-changed", clearPendingState, { once: true });
+        window.setTimeout(clearPendingState, 3000);
+      })();
+    </script>
+    <script>
+      (() => {
+        const MOBILE_QUERY = "(max-width: 760px)";
+        const STAGE_ATTR = "data-home-mobile-stage";
+        const STAGE_READY_FN = "__ASIATRAVELPLAN_MARK_HOMEPAGE_STAGE_READY";
+        const stageOrder = ["hero-media", "hero-copy", "tours", "full"];
+        const stageRank = Object.freeze({
+          "hero-media": 0,
+          "hero-copy": 1,
+          tours: 2,
+          full: 3
+        });
+        const readyFlags = {
+          heroMediaReady: false,
+          heroCopyReady: false,
+          toursReady: false,
+          restReady: false
+        };
+        const mobileQuery = typeof window.matchMedia === "function" ? window.matchMedia(MOBILE_QUERY) : null;
+        let pendingAdvanceHandle = 0;
+
+        const isMobile = () => Boolean(mobileQuery?.matches);
+        const clearStage = () => {
+          document.documentElement.removeAttribute(STAGE_ATTR);
+        };
+        const ensureStage = () => {
+          if (!isMobile()) {
+            clearStage();
+            return;
+          }
+          if (!document.documentElement.hasAttribute(STAGE_ATTR)) {
+            document.documentElement.setAttribute(STAGE_ATTR, stageOrder[0]);
+          }
+        };
+        const targetStage = () => {
+          if (readyFlags.restReady && readyFlags.toursReady && readyFlags.heroCopyReady && readyFlags.heroMediaReady) {
+            return "full";
+          }
+          if (readyFlags.toursReady && readyFlags.heroCopyReady && readyFlags.heroMediaReady) {
+            return "tours";
+          }
+          if (readyFlags.heroCopyReady && readyFlags.heroMediaReady) {
+            return "hero-copy";
+          }
+          return "hero-media";
+        };
+        const scheduleAdvance = () => {
+          if (pendingAdvanceHandle) return;
+          if (typeof window.requestAnimationFrame === "function") {
+            pendingAdvanceHandle = window.requestAnimationFrame(advanceStage);
+            return;
+          }
+          pendingAdvanceHandle = window.setTimeout(advanceStage, 16);
+        };
+        const advanceStage = () => {
+          pendingAdvanceHandle = 0;
+          if (!isMobile()) {
+            clearStage();
+            return;
+          }
+          ensureStage();
+          const currentStage = document.documentElement.getAttribute(STAGE_ATTR) || stageOrder[0];
+          const currentRank = stageRank[currentStage] ?? 0;
+          const targetRank = stageRank[targetStage()] ?? 0;
+          if (targetRank <= currentRank) return;
+          document.documentElement.setAttribute(
+            STAGE_ATTR,
+            stageOrder[Math.min(stageOrder.length - 1, currentRank + 1)]
+          );
+          if (targetRank > currentRank + 1) {
+            scheduleAdvance();
+          }
+        };
+        const markStageReady = (flag) => {
+          if (!Object.prototype.hasOwnProperty.call(readyFlags, flag)) return;
+          readyFlags[flag] = true;
+          if (!isMobile()) {
+            clearStage();
+            return;
+          }
+          ensureStage();
+          scheduleAdvance();
+        };
+        const handleViewportChange = (event) => {
+          if (!event.matches) {
+            clearStage();
+            return;
+          }
+          ensureStage();
+          scheduleAdvance();
+        };
+
+        window[STAGE_READY_FN] = markStageReady;
+        ensureStage();
+        window.addEventListener("load", () => {
+          window.setTimeout(() => {
+            if (!readyFlags.heroMediaReady) markStageReady("heroMediaReady");
+          }, 1400);
+        }, { once: true });
+        if (mobileQuery && typeof mobileQuery.addEventListener === "function") {
+          mobileQuery.addEventListener("change", handleViewportChange);
+        } else if (mobileQuery && typeof mobileQuery.addListener === "function") {
+          mobileQuery.addListener(handleViewportChange);
+        }
+      })();
+    </script>
     <link rel="manifest" href="/site.webmanifest" />
     <link rel="preload" as="image" href="/assets/video/rice%20field.webp" fetchpriority="high" />
     <link rel="stylesheet" href="/shared/css/tokens.css" />
@@ -49,6 +197,7 @@
     <link rel="stylesheet" href="/shared/css/utilities.css" />
     <link rel="stylesheet" href="/shared/css/components/backend-login.css" />
     <link rel="stylesheet" href="/shared/css/site-home-critical.css" />
+    <link rel="stylesheet" href="/shared/css/components/tour-card.css" />
     <link rel="stylesheet" href="/shared/css/pages/home-critical.css" />
     <link rel="preload" href="/shared/css/site-home-deferred.css" as="style" onload="this.onload=null;this.rel='stylesheet'" />
     <link rel="preload" href="/shared/css/pages/home-deferred.css" as="style" onload="this.onload=null;this.rel='stylesheet'" />
@@ -132,13 +281,13 @@
           playsinline
           webkit-playsinline
           preload="none"
-          poster="/assets/video/rice%20field.webp"
           data-deferred-autoplay
           data-mobile-src="/assets/video/rice%20field-mobile.mp4"
           data-desktop-src="/assets/video/rice%20field.mp4"
         >
           <span data-i18n-id="hero.video_fallback">Your browser does not support HTML5 video.</span>
         </video>
+        <div class="hero-bg-poster" aria-hidden="true"></div>
         <div class="hero-scrim" aria-hidden="true"></div>
         <div class="container hero-content">
           <h1 id="heroTitle" class="hero-title-only" data-i18n-id="hero.title">Private holidays in Vietnam</h1>
@@ -631,12 +780,28 @@
       (() => {
         const heroVideo = document.querySelector(".hero-bg-video[data-deferred-autoplay]");
         if (!heroVideo) return;
+        const heroSection = heroVideo.closest(".hero-video");
         if (window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) return;
 
         const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
         let playbackStarted = false;
         let sourceAttached = false;
         let playbackRetryBound = false;
+        let playbackAttemptPending = false;
+
+        const markHeroMediaReady = () => {
+          if (!(heroSection instanceof HTMLElement) || heroSection.dataset.heroMediaReady === "true") return;
+          heroSection.dataset.heroMediaReady = "true";
+          if (typeof window.__ASIATRAVELPLAN_MARK_HOMEPAGE_STAGE_READY === "function") {
+            window.__ASIATRAVELPLAN_MARK_HOMEPAGE_STAGE_READY("heroMediaReady");
+          }
+        };
+
+        const revealHeroVideo = () => {
+          if (!(heroSection instanceof HTMLElement)) return;
+          heroSection.classList.add("hero-video--playing");
+          markHeroMediaReady();
+        };
 
         const shouldAutoplayVideo = () => {
           if (connection?.saveData) return false;
@@ -657,13 +822,18 @@
           heroVideo.autoplay = true;
           heroVideo.loop = true;
           heroVideo.playsInline = true;
+          heroVideo.controls = false;
+          heroVideo.preload = "auto";
           heroVideo.setAttribute("muted", "");
           heroVideo.setAttribute("autoplay", "");
           heroVideo.setAttribute("loop", "");
           heroVideo.setAttribute("playsinline", "");
           heroVideo.setAttribute("webkit-playsinline", "");
+          heroVideo.setAttribute("controlslist", "nodownload nofullscreen noremoteplayback");
           heroVideo.setAttribute("disablepictureinpicture", "");
           heroVideo.setAttribute("disableremoteplayback", "");
+          heroVideo.setAttribute("x-webkit-airplay", "deny");
+          heroVideo.removeAttribute("controls");
           heroVideo.disablePictureInPicture = true;
           heroVideo.disableRemotePlayback = true;
         };
@@ -680,15 +850,36 @@
         const bindPlaybackRetry = () => {
           if (playbackRetryBound) return;
           playbackRetryBound = true;
+          heroVideo.addEventListener("playing", revealHeroVideo);
           const retryPlayback = () => {
-            if (!heroVideo.isConnected || playbackStarted || !shouldAutoplayVideo()) return;
+            if (!heroVideo.isConnected || playbackStarted || playbackAttemptPending || !shouldAutoplayVideo()) return;
             window.requestAnimationFrame(() => {
-              startPlayback();
+              requestPlayback();
             });
           };
           heroVideo.addEventListener("loadedmetadata", retryPlayback);
+          heroVideo.addEventListener("loadeddata", retryPlayback);
           heroVideo.addEventListener("canplay", retryPlayback);
           heroVideo.addEventListener("canplaythrough", retryPlayback);
+        };
+
+        const requestPlayback = () => {
+          if (playbackStarted || playbackAttemptPending || !shouldAutoplayVideo()) return;
+          playbackAttemptPending = true;
+          const playPromise = heroVideo.play();
+          if (playPromise && typeof playPromise.catch === "function") {
+            playPromise.then(() => {
+              playbackStarted = true;
+              playbackAttemptPending = false;
+              revealHeroVideo();
+            }).catch(() => {
+              playbackAttemptPending = false;
+            });
+            return;
+          }
+          playbackStarted = true;
+          playbackAttemptPending = false;
+          revealHeroVideo();
         };
 
         const startPlayback = () => {
@@ -696,13 +887,19 @@
           attachVideoSource();
           configureHeroVideo();
           bindPlaybackRetry();
-          playbackStarted = true;
-          const playPromise = heroVideo.play();
-          if (playPromise && typeof playPromise.catch === "function") {
-            playPromise.catch(() => {
-              playbackStarted = false;
-            });
+          if (heroVideo.readyState >= 2) {
+            requestPlayback();
+            return;
           }
+          const playbackWhenReady = () => {
+            if (!heroVideo.isConnected || playbackStarted || !shouldAutoplayVideo()) return;
+            window.requestAnimationFrame(() => {
+              requestPlayback();
+            });
+          };
+          heroVideo.addEventListener("loadeddata", playbackWhenReady, { once: true });
+          heroVideo.addEventListener("canplay", playbackWhenReady, { once: true });
+          heroVideo.addEventListener("canplaythrough", playbackWhenReady, { once: true });
         };
 
         ["pointerdown", "keydown", "touchstart"].forEach((eventName) => {

@@ -62,6 +62,8 @@
   "tour.card.custom_quote": "Niestandardowy cytat",
   "tour.card.days": "{days} dni",
   "tour.card.plan_trip": "Zaplanuj tę podróż",
+  "tour.card.details": "Szczegóły",
+  "tour.card.styles_more": "+{count} więcej",
   "tour.card.show_more": "Pokaż więcej",
   "tour.card.show_less": "Pokaż mniej",
   "tour.card.more": "więcej",

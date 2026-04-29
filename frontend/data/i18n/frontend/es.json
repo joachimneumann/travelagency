@@ -62,6 +62,8 @@
   "tour.card.custom_quote": "Cotización personalizada",
   "tour.card.days": "{days} días",
   "tour.card.plan_trip": "Planifica este viaje",
+  "tour.card.details": "Detalles",
+  "tour.card.styles_more": "+{count} más",
   "tour.card.show_more": "Ver más",
   "tour.card.show_less": "Ver menos",
   "tour.card.more": "más",

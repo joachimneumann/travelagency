@@ -62,6 +62,8 @@
   "tour.card.custom_quote": "Tilpasset tilbud",
   "tour.card.days": "{days} dage",
   "tour.card.plan_trip": "Planlæg denne tur",
+  "tour.card.details": "Detaljer",
+  "tour.card.styles_more": "+{count} mere",
   "tour.card.show_more": "Vis mere",
   "tour.card.show_less": "Vis mindre",
   "tour.card.more": "Se mere",

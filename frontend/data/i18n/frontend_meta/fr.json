@@ -314,6 +314,16 @@
     "origin": "legacy",
     "updated_at": "2026-04-02T15:09:12.387Z"
   },
+  "tour.card.details": {
+    "source_hash": "45989de49fb7f66dfe17a8fc26f3a02c7abcd74f7e8e6cf9f39fa0e3775780df",
+    "origin": "manual",
+    "updated_at": "2026-04-29T00:00:00.000Z"
+  },
+  "tour.card.styles_more": {
+    "source_hash": "ecccea94c62457a718fff608b635a8fdeb2a9d43b60a9db2680fa35e800b5dd6",
+    "origin": "manual",
+    "updated_at": "2026-04-29T00:00:00.000Z"
+  },
   "tour.card.show_more": {
     "source_hash": "f5c9bd131486e793ee105bd81f001fc25cdc2dac9c1d9f636ac7d43a10efc7e6",
     "origin": "machine",

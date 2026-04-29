@@ -1,6 +1,6 @@
 # TODO
 
-
+use Coral text color on white bckground for the 5D4N pill. use the same font size as the image counter.
 
 Translation
 ===========

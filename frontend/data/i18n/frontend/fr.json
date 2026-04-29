@@ -62,6 +62,8 @@
   "tour.card.custom_quote": "Devis sur mesure",
   "tour.card.days": "{days} jours",
   "tour.card.plan_trip": "Planifier ce voyage",
+  "tour.card.details": "Détails",
+  "tour.card.styles_more": "+{count} de plus",
   "tour.card.show_more": "Voir plus",
   "tour.card.show_less": "Voir moins",
   "tour.card.more": "En savoir plus",

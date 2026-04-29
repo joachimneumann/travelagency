@@ -62,6 +62,8 @@
   "tour.card.custom_quote": "Aangepaste offerte",
   "tour.card.days": "{days} dagen",
   "tour.card.plan_trip": "Plan deze reis",
+  "tour.card.details": "Details",
+  "tour.card.styles_more": "+{count} meer",
   "tour.card.show_more": "Meer tonen",
   "tour.card.show_less": "Minder tonen",
   "tour.card.more": "meer",

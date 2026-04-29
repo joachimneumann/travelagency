@@ -9,6 +9,7 @@
 @import "./base.css";
 @import "./utilities.css";
 @import "./site.css";
+@import "./components/tour-card.css";
 @import "./components/backend-collapsible.css";
 @import "./components/backend-nav.css";
 @import "./components/backend-login.css";
