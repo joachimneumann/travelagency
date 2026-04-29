@@ -127,6 +127,7 @@
   grid-template-rows: auto 1fr;
   height: 100%;
   position: relative;
+  overflow-anchor: none;
 }
 
 .tour-card--expanded {
@@ -516,6 +517,7 @@
 
 .tour-details-row {
   --tour-details-row-transition-duration: 0.64s;
+  --tour-details-row-transition-easing: cubic-bezier(0.2, 0.82, 0.2, 1);
   grid-column: 1 / -1;
   display: grid;
   grid-template-columns: repeat(var(--tour-grid-columns, 3), minmax(0, 1fr));
@@ -524,9 +526,10 @@
   align-items: start;
   min-width: 0;
   transition:
-    height var(--tour-details-row-transition-duration) cubic-bezier(0.2, 0.82, 0.2, 1),
+    height var(--tour-details-row-transition-duration) var(--tour-details-row-transition-easing),
     opacity 0.38s ease;
   will-change: height, opacity;
+  overflow-anchor: none;
 }
 
 .tour-details-row--opening,
@@ -549,6 +552,7 @@
   grid-column: var(--tour-details-column, 1);
   display: grid;
   gap: 0;
+  overflow-anchor: none;
 }
 
 .tour-details-row--side-panel .tour-details-row__shell {
@@ -610,8 +614,9 @@
   clip-path: inset(0 0 0 0);
   transition:
     opacity 0.38s ease,
-    transform var(--tour-details-row-transition-duration) cubic-bezier(0.2, 0.82, 0.2, 1),
-    clip-path var(--tour-details-row-transition-duration) cubic-bezier(0.2, 0.82, 0.2, 1);
+    transform var(--tour-details-row-transition-duration) var(--tour-details-row-transition-easing),
+    clip-path var(--tour-details-row-transition-duration) var(--tour-details-row-transition-easing);
+  overflow-anchor: none;
 }
 
 .tour-details-row--side-panel .tour-details-row__panel {

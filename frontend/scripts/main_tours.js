@@ -9,6 +9,8 @@ const TOUR_IMAGE_TRANSITION_MS = 2000;
 const TOUR_GRID_LAYOUT_TRANSITION_MS = 520;
 const TOUR_DETAILS_ATTACH_ROW_CLEAR_OVERLAP_MS = 180;
 const TOUR_DETAILS_OPEN_TRANSITION_MS = 780;
+const TOUR_DETAILS_MOBILE_OPEN_TRANSITION_MS = 1500;
+const TOUR_DETAILS_MOBILE_OPEN_EASING = "cubic-bezier(0.45, 0, 0.2, 1)";
 const TOUR_DETAILS_TRANSITION_MS = 640;
 const TOUR_DETAILS_CLOSE_TRANSITION_MS = 780;
 const TOUR_PLAN_SERVICE_SWAP_TRANSITION_MS = 380;
@@ -19,6 +21,7 @@ const TOUR_DETAILS_IMAGE_READY_TIMEOUT_MS = 900;
 const TOUR_CARD_MEDIA_SNAPSHOT_HOLD_MS = Math.max(
   TOUR_GRID_LAYOUT_TRANSITION_MS,
   TOUR_DETAILS_OPEN_TRANSITION_MS,
+  TOUR_DETAILS_MOBILE_OPEN_TRANSITION_MS,
   TOUR_DETAILS_TRANSITION_MS,
   TOUR_DETAILS_CLOSE_TRANSITION_MS
 ) + 180;
@@ -55,9 +58,10 @@ export function createFrontendToursController(ctx) {
 
   let renderedTourGridColumnCount = 0;
   let tourGridResizeBound = false;
-  let tourDetailsTransitioning = false;
+  let tourDetailsTransitionToken = 0;
   let tourCardMediaSnapshotToken = 0;
   const openingTourColumnIndexes = new Map();
+  const openingTourInitialHeights = new Map();
 
   function normalizeFrontendTourLang(value) {
     return normalizeLanguageCode(value, { allowedCodes: FRONTEND_LANGUAGE_CODES, fallback: "en" });
@@ -1366,6 +1370,10 @@ export function createFrontendToursController(ctx) {
     const columnCount = Math.min(Math.max(1, renderedTourGridColumnCount), 3);
     const column = Math.min(Math.max(1, Number(initialColumnIndex ?? columnIndex) + 1), Math.max(1, columnCount));
     const openingClass = isOpeningTour && columnCount > 1 ? " tour-details-row--opening" : "";
+    const openingInitialHeight = Math.max(0, Math.ceil(Number(openingTourInitialHeights.get(tripId)) || 0));
+    const mobileOpeningStyle = isOpeningTour && columnCount === 1 && openingInitialHeight > 0
+      ? ` height: ${openingInitialHeight}px; overflow: hidden; opacity: 1;`
+      : "";
     const sidePanelClass = columnCount > 1
       ? ` tour-details-row--side-panel tour-details-row--columns-${columnCount}${isOpeningTour ? "" : " tour-details-row--attached"}`
       : "";
@@ -1373,7 +1381,7 @@ export function createFrontendToursController(ctx) {
       <article
         class="tour-details-row${openingClass}${sidePanelClass}"
         data-expanded-tour-id="${escapeAttr(tripId)}"
-        style="--tour-grid-columns: ${columnCount}; --tour-details-column: ${column};"
+        style="--tour-grid-columns: ${columnCount}; --tour-details-column: ${column};${mobileOpeningStyle}"
       >
         <div class="tour-details-row__shell">
           ${renderTourCard(trip, { index, expanded: true })}
@@ -1456,7 +1464,7 @@ export function createFrontendToursController(ctx) {
     showMoreButtons.forEach((button) => {
       if (!(button instanceof HTMLButtonElement) || button.dataset.tourDetailsBound === "1") return;
       button.addEventListener("click", () => {
-        if (button.disabled || tourDetailsTransitioning) return;
+        if (button.disabled) return;
         const tripId = normalizeText(button.getAttribute("data-trip-id"));
         const trip = findTripById(tripId);
         if (!trip || !hasTravelPlanDays(trip)) return;
@@ -1735,6 +1743,7 @@ export function createFrontendToursController(ctx) {
     ghost.querySelectorAll("[id]").forEach((item) => item.removeAttribute("id"));
     ghost.setAttribute("aria-hidden", "true");
     ghost.setAttribute("inert", "");
+    ghost.dataset.tourDetailsGhost = "1";
     disableFocusableElements(ghost);
 
     Object.assign(ghost.style, {
@@ -1799,6 +1808,55 @@ export function createFrontendToursController(ctx) {
       animation.addEventListener("cancel", done, { once: true });
       timer = window.setTimeout(done, TOUR_DETAILS_CLOSE_TRANSITION_MS + 140);
     });
+  }
+
+  function cancelElementAnimations(element, { subtree = false } = {}) {
+    if (!(element instanceof Element) || typeof element.getAnimations !== "function") return;
+    element.getAnimations({ subtree }).forEach((animation) => {
+      try {
+        animation.cancel();
+      } catch (_error) {
+        // Best effort: stale async paths are also ignored through transition tokens.
+      }
+    });
+  }
+
+  function cancelActiveTourDetailsAnimations() {
+    if (els.tourGrid instanceof HTMLElement) {
+      const animatedElements = els.tourGrid.querySelectorAll([
+        ".tour-details-row",
+        ".tour-details-row__shell",
+        ".tour-details-row__panel",
+        "[data-tour-card-id]"
+      ].join(","));
+      animatedElements.forEach((element) => cancelElementAnimations(element));
+      els.tourGrid
+        .querySelectorAll("[data-tour-card-show-more-label]")
+        .forEach((label) => cancelElementAnimations(label, { subtree: true }));
+    }
+
+    document.querySelectorAll("[data-tour-details-ghost]").forEach((ghost) => {
+      cancelElementAnimations(ghost, { subtree: true });
+      ghost.remove();
+    });
+  }
+
+  function beginTourDetailsTransition() {
+    const token = ++tourDetailsTransitionToken;
+    openingTourColumnIndexes.clear();
+    openingTourInitialHeights.clear();
+    cancelActiveTourDetailsAnimations();
+    return token;
+  }
+
+  function isCurrentTourDetailsTransition(token) {
+    return token === tourDetailsTransitionToken;
+  }
+
+  function completeTourDetailsTransition(token, tripId) {
+    if (!isCurrentTourDetailsTransition(token)) return false;
+    focusTourShowMoreButton(tripId);
+    return true;
   }
 
   function animateTourGridLayout(previousRects, { excludedTripIds = [] } = {}) {
@@ -2034,6 +2092,35 @@ export function createFrontendToursController(ctx) {
     return scrollWindowToY(targetY, behavior).then(() => true);
   }
 
+  function createMobileTourCardViewportLock(tripId) {
+    if (!isSingleColumnTourLayout()) return null;
+    const normalizedTripId = normalizeText(tripId);
+    const card = tourCardElement(normalizedTripId);
+    if (!(card instanceof HTMLElement)) return null;
+    const lockedTop = card.getBoundingClientRect().top;
+
+    const apply = () => {
+      const currentCard = tourCardElement(normalizedTripId);
+      if (!(currentCard instanceof HTMLElement)) return;
+      const deltaY = currentCard.getBoundingClientRect().top - lockedTop;
+      if (Math.abs(deltaY) < 0.5) return;
+      window.scrollBy(0, deltaY);
+    };
+
+    const maintain = (durationMs = TOUR_DETAILS_TRANSITION_MS) => {
+      const startedAt = performance.now();
+      const tick = () => {
+        apply();
+        if (performance.now() - startedAt < durationMs) {
+          window.requestAnimationFrame(tick);
+        }
+      };
+      window.requestAnimationFrame(tick);
+    };
+
+    return { apply, maintain };
+  }
+
   function isSingleColumnTourLayout() {
     return getTourGridColumnCount() === 1;
   }
@@ -2097,6 +2184,7 @@ export function createFrontendToursController(ctx) {
     row.style.opacity = "";
     row.style.overflow = "";
     row.style.removeProperty("--tour-details-row-transition-duration");
+    row.style.removeProperty("--tour-details-row-transition-easing");
   }
 
   function finishTourDetailsRowAnimation(row, durationMs = TOUR_DETAILS_TRANSITION_MS) {
@@ -2108,6 +2196,7 @@ export function createFrontendToursController(ctx) {
         finished = true;
         window.clearTimeout(timer);
         row?.removeEventListener?.("transitionend", onTransitionEnd);
+        row?.removeEventListener?.("transitioncancel", onTransitionEnd);
         resolve();
       };
       const onTransitionEnd = (event) => {
@@ -2116,17 +2205,28 @@ export function createFrontendToursController(ctx) {
       };
 
       row.addEventListener("transitionend", onTransitionEnd);
+      row.addEventListener("transitioncancel", onTransitionEnd);
       timer = window.setTimeout(done, durationMs + 140);
     });
   }
 
-  async function animateTourDetailsRowHeight(row, targetHeight, mode) {
+  async function animateTourDetailsRowHeight(row, targetHeight, mode, { durationMs, easing } = {}) {
     if (!(row instanceof HTMLElement)) return;
     const opening = mode === "open";
-    const transitionDurationMs = opening ? TOUR_DETAILS_OPEN_TRANSITION_MS : TOUR_DETAILS_TRANSITION_MS;
+    const fallbackDurationMs = opening ? TOUR_DETAILS_OPEN_TRANSITION_MS : TOUR_DETAILS_TRANSITION_MS;
+    const customDurationMs = Number(durationMs);
+    const transitionDurationMs = Number.isFinite(customDurationMs)
+      ? Math.max(0, customDurationMs)
+      : fallbackDurationMs;
+    const transitionEasing = normalizeText(easing);
     row.classList.toggle("tour-details-row--opening", opening);
     row.classList.toggle("tour-details-row--closing", !opening);
     row.style.setProperty("--tour-details-row-transition-duration", `${transitionDurationMs}ms`);
+    if (transitionEasing) {
+      row.style.setProperty("--tour-details-row-transition-easing", transitionEasing);
+    } else {
+      row.style.removeProperty("--tour-details-row-transition-easing");
+    }
     void row.offsetHeight;
     await waitForAnimationFrame();
     if (opening) {
@@ -2158,58 +2258,77 @@ export function createFrontendToursController(ctx) {
       return;
     }
 
-    tourDetailsTransitioning = true;
+    const transitionToken = beginTourDetailsTransition();
     if (willOpen) {
-      animateTourDetailsOpen(normalizedTripId);
+      animateTourDetailsOpen(normalizedTripId, transitionToken);
     } else {
-      animateTourDetailsClose(normalizedTripId);
+      animateTourDetailsClose(normalizedTripId, transitionToken);
     }
   }
 
-  async function animateTourDetailsOpen(tripId) {
+  async function animateTourDetailsOpen(tripId, transitionToken) {
     const singleColumnLayout = isSingleColumnTourLayout();
+    const viewportLock = createMobileTourCardViewportLock(tripId);
     const previousRects = captureTourCardRects();
     const previousMediaSnapshots = captureTourCardMediaSnapshots();
     const initialColumnIndex = singleColumnLayout ? 0 : tourGridColumnIndexForTrip(tripId);
     openingTourColumnIndexes.set(tripId, initialColumnIndex);
+    const initialCardHeight = Math.max(0, Math.ceil(Number(previousRects.get(tripId)?.height) || 0));
+    if (singleColumnLayout && initialCardHeight > 0) {
+      openingTourInitialHeights.set(tripId, initialCardHeight);
+    } else {
+      openingTourInitialHeights.delete(tripId);
+    }
     setTourExpanded(tripId, true);
     renderVisibleTrips();
     applyTourCardMediaSnapshots(previousMediaSnapshots);
+    viewportLock?.apply();
     const openedButton = tourShowMoreButton(tripId);
     setTourShowMoreButtonLabel(openedButton, tourShowMoreLabel(false));
 
     const row = expandedTourRow(tripId);
     if (!(row instanceof HTMLElement)) {
       await animateTourGridLayout(previousRects, { excludedTripIds: [tripId] });
+      if (!isCurrentTourDetailsTransition(transitionToken)) return;
       await animateTourShowMoreButtonLabel(openedButton, tourShowMoreLabel(true), { direction: "open" });
+      if (!isCurrentTourDetailsTransition(transitionToken)) return;
       openingTourColumnIndexes.delete(tripId);
-      tourDetailsTransitioning = false;
+      openingTourInitialHeights.delete(tripId);
       window.requestAnimationFrame(() => {
-        focusTourShowMoreButton(tripId);
+        completeTourDetailsTransition(transitionToken, tripId);
       });
       return;
     }
 
-    await waitForExpandedTourServiceImages(row);
-    const expandedHeight = Math.max(row.scrollHeight, row.getBoundingClientRect().height);
     const collapsedHeight = collapsedTourDetailsHeight(row);
     row.classList.add("tour-details-row--opening");
     row.style.height = `${collapsedHeight}px`;
     row.style.overflow = "hidden";
     row.style.opacity = "1";
+    viewportLock?.apply();
+
+    await waitForExpandedTourServiceImages(row);
+    if (!isCurrentTourDetailsTransition(transitionToken)) return;
+    const expandedHeight = Math.max(row.scrollHeight, row.getBoundingClientRect().height);
 
     if (singleColumnLayout) {
+      const mobileOpenTransitionMs = TOUR_DETAILS_MOBILE_OPEN_TRANSITION_MS;
+      viewportLock?.maintain(mobileOpenTransitionMs + 120);
       await Promise.all([
-        animateTourDetailsRowHeight(row, expandedHeight, "open"),
+        animateTourDetailsRowHeight(row, expandedHeight, "open", {
+          durationMs: mobileOpenTransitionMs,
+          easing: TOUR_DETAILS_MOBILE_OPEN_EASING
+        }),
         animateTourShowMoreButtonLabel(
           openedButton,
           tourShowMoreLabel(true),
           { direction: "open" }
         )
       ]);
+      if (!isCurrentTourDetailsTransition(transitionToken)) return;
+      openingTourInitialHeights.delete(tripId);
       clearTourDetailsRowAnimation(row);
-      tourDetailsTransitioning = false;
-      focusTourShowMoreButton(tripId);
+      completeTourDetailsTransition(transitionToken, tripId);
       return;
     }
 
@@ -2236,42 +2355,49 @@ export function createFrontendToursController(ctx) {
       : null;
 
     await rowClearingPromise;
+    if (!isCurrentTourDetailsTransition(transitionToken)) return;
     openingTourColumnIndexes.delete(tripId);
+    openingTourInitialHeights.delete(tripId);
     await scrollTourCardFullyVisible(tripId);
+    if (!isCurrentTourDetailsTransition(transitionToken)) return;
     if (!opensSideways) {
       await scrollExpandedTourDetailsIntoView(tripId);
+      if (!isCurrentTourDetailsTransition(transitionToken)) return;
     }
     await Promise.all([
       detailsOpenPromise || startDetailsOpenAnimation(),
       buttonLabelPromise
     ]);
+    if (!isCurrentTourDetailsTransition(transitionToken)) return;
     if (!opensSideways) {
       await scrollExpandedTourDetailsIntoView(tripId);
+      if (!isCurrentTourDetailsTransition(transitionToken)) return;
     }
     clearTourDetailsRowAnimation(row, { preserveHeight: opensSideways });
-    tourDetailsTransitioning = false;
-    focusTourShowMoreButton(tripId);
+    completeTourDetailsTransition(transitionToken, tripId);
   }
 
-  async function animateTourDetailsClose(tripId) {
+  async function animateTourDetailsClose(tripId, transitionToken) {
     const row = expandedTourRow(tripId);
     if (!(row instanceof HTMLElement)) {
       setTourExpanded(tripId, false);
       renderVisibleTrips();
-      tourDetailsTransitioning = false;
       window.requestAnimationFrame(() => {
-        focusTourShowMoreButton(tripId);
+        completeTourDetailsTransition(transitionToken, tripId);
       });
       return;
     }
 
     updateOutgoingTourDetailsButton(row, false);
+    const viewportLock = createMobileTourCardViewportLock(tripId);
     const previousRects = captureTourCardRects();
     const previousMediaSnapshots = captureTourCardMediaSnapshots();
     const outgoingDetailsGhost = createOutgoingTourDetailsGhost(row);
     setTourExpanded(tripId, false);
     renderVisibleTrips();
     applyTourCardMediaSnapshots(previousMediaSnapshots);
+    viewportLock?.apply();
+    viewportLock?.maintain(TOUR_DETAILS_CLOSE_TRANSITION_MS + 120);
     const closedButton = tourShowMoreButton(tripId);
     setTourShowMoreButtonLabel(closedButton, tourShowMoreLabel(true));
     await Promise.all([
@@ -2283,9 +2409,9 @@ export function createFrontendToursController(ctx) {
         { direction: "close" }
       )
     ]);
-    tourDetailsTransitioning = false;
+    if (!isCurrentTourDetailsTransition(transitionToken)) return;
     window.requestAnimationFrame(() => {
-      focusTourShowMoreButton(tripId);
+      completeTourDetailsTransition(transitionToken, tripId);
     });
   }
 
