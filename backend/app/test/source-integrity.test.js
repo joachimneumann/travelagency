@@ -4847,6 +4847,7 @@ test("homepage hero title follows published destinations and keeps the destinati
   const homepagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "index.html");
   const frontendEnI18nPath = path.resolve(__dirname, "..", "..", "..", "frontend", "data", "i18n", "frontend", "en.json");
   const frontendI18nScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "shared", "frontend_i18n.js");
+  const siteHomeCriticalCssPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "site-home-critical.css");
   const siteCssPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "site.css");
   const desktopHeroVideoPath = path.resolve(__dirname, "..", "..", "..", "assets", "video", "rice field.mp4");
   const mobileHeroVideoPath = path.resolve(__dirname, "..", "..", "..", "assets", "video", "rice field-mobile.mp4");
@@ -4855,6 +4856,7 @@ test("homepage hero title follows published destinations and keeps the destinati
     homepageSource,
     frontendEnI18nSource,
     frontendI18nScriptSource,
+    siteHomeCriticalCssSource,
     siteCssSource,
     desktopHeroVideo,
     mobileHeroVideo
@@ -4863,6 +4865,7 @@ test("homepage hero title follows published destinations and keeps the destinati
     readFile(homepagePath, "utf8"),
     readFile(frontendEnI18nPath, "utf8"),
     readFile(frontendI18nScriptPath, "utf8"),
+    readFile(siteHomeCriticalCssPath, "utf8"),
     readFile(siteCssPath, "utf8"),
     stat(desktopHeroVideoPath),
     stat(mobileHeroVideoPath)
@@ -4926,6 +4929,11 @@ test("homepage hero title follows published destinations and keeps the destinati
     siteCssSource,
     /\.select-wrap\[hidden\]\s*\{[\s\S]*display:\s*none;/,
     "Hidden select wrappers should stay hidden even though the base select-wrap class uses display:flex"
+  );
+  assert.match(
+    siteHomeCriticalCssSource,
+    /\.tour-empty-card\[hidden\]\s*\{[\s\S]*display:\s*none\s*!important;/,
+    "Hidden tour empty-state cards should stay hidden even though the base tour-empty-card class uses display:grid"
   );
 });
 

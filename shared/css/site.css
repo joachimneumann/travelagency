@@ -5627,9 +5627,9 @@ textarea:focus-visible {
   }
 
   .tour-details-row__panel {
-    max-height: var(--tour-details-card-height, none);
-    overflow-y: auto;
-    overscroll-behavior: contain;
+    max-height: none;
+    overflow: visible;
+    overscroll-behavior: auto;
   }
 
   .tour-plan-service-media,

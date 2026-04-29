@@ -669,6 +669,10 @@ textarea:focus-visible {
   box-shadow: 0 22px 60px rgba(28, 43, 53, 0.12);
 }
 
+.tour-empty-card[hidden] {
+  display: none !important;
+}
+
 .tour-empty-card__media {
   position: relative;
   min-height: 220px;
@@ -1630,9 +1634,9 @@ textarea:focus-visible {
   }
 
   .tour-details-row__panel {
-    max-height: var(--tour-details-card-height, none);
-    overflow-y: auto;
-    overscroll-behavior: contain;
+    max-height: none;
+    overflow: visible;
+    overscroll-behavior: auto;
   }
 
   .tour-plan-service-media,

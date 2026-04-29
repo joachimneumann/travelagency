@@ -313,6 +313,15 @@ export function createFrontendToursController(ctx) {
     state.filters.style = normalizeSelectionToCodes(state.filters.style, "style", { allowUnknown: false });
   }
 
+  function hasActiveHeroFilters() {
+    return Boolean(
+      state.filters.dest.length
+      || normalizeText(state.filters.area)
+      || normalizeText(state.filters.place)
+      || state.filters.style.length
+    );
+  }
+
   function setFilterCheckboxes(container, values) {
     if (!container) return;
     const selected = new Set(Array.isArray(values) ? values.map((item) => normalizeText(item)).filter(Boolean) : []);
@@ -1317,13 +1326,13 @@ export function createFrontendToursController(ctx) {
     `;
   }
 
-  function renderTrips(trips) {
+  function renderTrips(trips, { showNoResults = false } = {}) {
     if (!els.tourGrid) return;
     bindTourGridResizeHandler();
 
     if (!trips.length) {
       els.tourGrid.innerHTML = "";
-      els.noResultsMessage.hidden = false;
+      els.noResultsMessage.hidden = !showNoResults;
       return;
     }
 
@@ -1825,6 +1834,23 @@ export function createFrontendToursController(ctx) {
     return scrollWindowToY(targetY, behavior).then(() => true);
   }
 
+  function isSingleColumnTourLayout() {
+    return getTourGridColumnCount() === 1;
+  }
+
+  function expandedTourDetailsPanel(row) {
+    return row?.querySelector?.(".tour-details-row__panel") || null;
+  }
+
+  function scrollExpandedTourDetailsIntoView(tripId, { behavior = "smooth" } = {}) {
+    const panel = expandedTourDetailsPanel(expandedTourRow(tripId));
+    if (!(panel instanceof HTMLElement)) return Promise.resolve(false);
+
+    const visibleTop = stickyHeaderBottomOffset() + TOUR_CARD_SCROLL_MARGIN_PX;
+    const targetY = window.scrollY + panel.getBoundingClientRect().top - visibleTop;
+    return scrollWindowToY(targetY, behavior).then(() => true);
+  }
+
   function expandedTourCard(row) {
     return expandedTourShell(row)?.querySelector?.(".tour-card") || null;
   }
@@ -1920,7 +1946,9 @@ export function createFrontendToursController(ctx) {
       setTourExpanded(normalizedTripId, willOpen);
       renderVisibleTrips();
       const visibilityPromise = willOpen
-        ? scrollTourCardFullyVisible(normalizedTripId, { behavior: "auto" })
+        ? (isSingleColumnTourLayout()
+            ? scrollExpandedTourDetailsIntoView(normalizedTripId, { behavior: "auto" })
+            : scrollTourCardFullyVisible(normalizedTripId, { behavior: "auto" }))
         : Promise.resolve(false);
       void visibilityPromise.then(() => {
         focusTourShowMoreButton(normalizedTripId);
@@ -1975,9 +2003,14 @@ export function createFrontendToursController(ctx) {
       animateExpandedTourCardToLeft(row)
     ]);
     openingTourColumnIndexes.delete(tripId);
-    await scrollTourCardFullyVisible(tripId);
     const opensSideways = row.classList.contains("tour-details-row--side-panel");
+    await (opensSideways
+      ? scrollTourCardFullyVisible(tripId)
+      : scrollExpandedTourDetailsIntoView(tripId));
     await animateTourDetailsRowHeight(row, opensSideways ? collapsedHeight : expandedHeight, "open");
+    if (!opensSideways) {
+      await scrollExpandedTourDetailsIntoView(tripId);
+    }
     clearTourDetailsRowAnimation(row, { preserveHeight: opensSideways });
     await animateTourShowMoreButtonLabel(openedButton, tourShowMoreLabel(true), { direction: "open" });
     tourDetailsTransitioning = false;
@@ -2274,7 +2307,9 @@ export function createFrontendToursController(ctx) {
 
   function renderVisibleTrips() {
     const visibleTrips = state.filteredTrips.slice(0, state.visibleToursCount);
-    renderTrips(visibleTrips);
+    renderTrips(visibleTrips, {
+      showNoResults: hasActiveHeroFilters() && state.filteredTrips.length === 0
+    });
     updateTourActions();
   }
 

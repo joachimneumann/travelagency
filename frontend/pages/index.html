@@ -127,8 +127,10 @@
         <video
           class="hero-bg-video"
           muted
+          autoplay
           loop
           playsinline
+          webkit-playsinline
           preload="none"
           poster="/assets/video/rice%20field.webp"
           data-deferred-autoplay
@@ -634,6 +636,7 @@
         const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
         let playbackStarted = false;
         let sourceAttached = false;
+        let playbackRetryBound = false;
 
         const shouldAutoplayVideo = () => {
           if (connection?.saveData) return false;
@@ -648,17 +651,51 @@
           return useMobile ? mobileSource || desktopSource : desktopSource || mobileSource;
         };
 
+        const configureHeroVideo = () => {
+          heroVideo.defaultMuted = true;
+          heroVideo.muted = true;
+          heroVideo.autoplay = true;
+          heroVideo.loop = true;
+          heroVideo.playsInline = true;
+          heroVideo.setAttribute("muted", "");
+          heroVideo.setAttribute("autoplay", "");
+          heroVideo.setAttribute("loop", "");
+          heroVideo.setAttribute("playsinline", "");
+          heroVideo.setAttribute("webkit-playsinline", "");
+          heroVideo.setAttribute("disablepictureinpicture", "");
+          heroVideo.setAttribute("disableremoteplayback", "");
+          heroVideo.disablePictureInPicture = true;
+          heroVideo.disableRemotePlayback = true;
+        };
+
         const attachVideoSource = () => {
           const heroVideoSource = chooseHeroVideoSource();
           if (sourceAttached || !heroVideoSource) return;
+          configureHeroVideo();
           heroVideo.src = heroVideoSource;
           sourceAttached = true;
           heroVideo.load();
         };
 
+        const bindPlaybackRetry = () => {
+          if (playbackRetryBound) return;
+          playbackRetryBound = true;
+          const retryPlayback = () => {
+            if (!heroVideo.isConnected || playbackStarted || !shouldAutoplayVideo()) return;
+            window.requestAnimationFrame(() => {
+              startPlayback();
+            });
+          };
+          heroVideo.addEventListener("loadedmetadata", retryPlayback);
+          heroVideo.addEventListener("canplay", retryPlayback);
+          heroVideo.addEventListener("canplaythrough", retryPlayback);
+        };
+
         const startPlayback = () => {
           if (playbackStarted || !shouldAutoplayVideo()) return;
           attachVideoSource();
+          configureHeroVideo();
+          bindPlaybackRetry();
           playbackStarted = true;
           const playPromise = heroVideo.play();
           if (playPromise && typeof playPromise.catch === "function") {
