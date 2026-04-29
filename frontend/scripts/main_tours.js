@@ -2003,10 +2003,11 @@ export function createFrontendToursController(ctx) {
       animateExpandedTourCardToLeft(row)
     ]);
     openingTourColumnIndexes.delete(tripId);
+    await scrollTourCardFullyVisible(tripId);
     const opensSideways = row.classList.contains("tour-details-row--side-panel");
-    await (opensSideways
-      ? scrollTourCardFullyVisible(tripId)
-      : scrollExpandedTourDetailsIntoView(tripId));
+    if (!opensSideways) {
+      await scrollExpandedTourDetailsIntoView(tripId);
+    }
     await animateTourDetailsRowHeight(row, opensSideways ? collapsedHeight : expandedHeight, "open");
     if (!opensSideways) {
       await scrollExpandedTourDetailsIntoView(tripId);
