@@ -4853,18 +4853,18 @@ test("homepage tour cards use fixed-height text areas without an inline more lin
   );
   assert.match(
     tourCardCssSource,
-    /@media \(max-width: 760px\) \{[\s\S]*\.tour-details-row__panel \{[\s\S]*max-height: none;[\s\S]*overflow: visible;[\s\S]*overscroll-behavior: auto;[\s\S]*transition: none;[\s\S]*\.tour-details-row--opening \.tour-details-row__panel,[\s\S]*\.tour-details-row--closing \.tour-details-row__panel \{[\s\S]*opacity: 1;[\s\S]*transform: none;[\s\S]*clip-path: inset\(0 0 0 0\);/,
+    /@media \(max-width: 760px\) \{[\s\S]*\.tour-details-row__panel \{[\s\S]*width: 100vw;[\s\S]*margin-inline: calc\(50% - 50vw\);[\s\S]*border-radius: 0;[\s\S]*padding-inline: 0;[\s\S]*max-height: none;[\s\S]*overflow: visible;[\s\S]*overscroll-behavior: auto;[\s\S]*transition: none;[\s\S]*\.tour-details-row--opening \.tour-details-row__panel,[\s\S]*\.tour-details-row--closing \.tour-details-row__panel \{[\s\S]*opacity: 1;[\s\S]*transform: none;[\s\S]*clip-path: inset\(0 0 0 0\);/,
     "Mobile homepage tour details should rely on the row expansion instead of a separate panel slide or fade animation"
   );
   assert.match(
     tourCardCssSource,
-    /@media \(max-width: 760px\) \{[\s\S]*\.tour-card__media-button:hover \.tour-card__media-zoom,[\s\S]*\.tour-card__media-button:focus-visible \.tour-card__media-zoom \{[\s\S]*transform: scale\(1\);[\s\S]*\.tour-card__media-button:hover \.tour-card__media-stage,[\s\S]*\.tour-card__media-button:focus-visible \.tour-card__media-stage \{[\s\S]*border-radius: calc\(var\(--radius\) - 1px\) calc\(var\(--radius\) - 1px\) 0 0;[\s\S]*\.tour-card__media-button:hover \.tour-card__media-layer\.is-active,[\s\S]*\.tour-card__media-button:focus-visible \.tour-card__media-layer\.is-active \{[\s\S]*filter: none;/,
+    /@media \(max-width: 760px\) \{[\s\S]*\.tour-card \{[\s\S]*width: 100vw;[\s\S]*margin-inline: calc\(50% - 50vw\);[\s\S]*border: 0;[\s\S]*border-radius: 0;[\s\S]*\.tour-card__media-button:hover \.tour-card__media-zoom,[\s\S]*\.tour-card__media-button:focus-visible \.tour-card__media-zoom \{[\s\S]*transform: scale\(1\);[\s\S]*\.tour-card__media-button:hover \.tour-card__media-stage,[\s\S]*\.tour-card__media-button:focus-visible \.tour-card__media-stage \{[\s\S]*border-radius: 0;[\s\S]*\.tour-card__media-button:hover \.tour-card__media-layer\.is-active,[\s\S]*\.tour-card__media-button:focus-visible \.tour-card__media-layer\.is-active \{[\s\S]*filter: none;/,
     "Mobile multi-image tour cards should not enlarge or round out the image when tapped or focused"
   );
   assert.match(
     tourCardCssSource,
-    /@media \(max-width: 760px\) \{[\s\S]*\.tour-details-row__shell \.tour-card \{[\s\S]*border-bottom-right-radius: var\(--radius\);[\s\S]*border-bottom-left-radius: var\(--radius\);[\s\S]*\.tour-details-row__shell \.tour-card__plan-trip \{[\s\S]*border-bottom-right-radius: 14px;[\s\S]*border-bottom-left-radius: 14px;/,
-    "Mobile expanded tour cards should keep the lower card and plan-trip button corners rounded"
+    /@media \(max-width: 760px\) \{[\s\S]*\.tour-details-row__shell \.tour-card \{[\s\S]*border-bottom-right-radius: 0;[\s\S]*border-bottom-left-radius: 0;[\s\S]*\.tour-details-row__shell \.tour-card__plan-trip \{[\s\S]*border-bottom-right-radius: 14px;[\s\S]*border-bottom-left-radius: 14px;/,
+    "Mobile expanded tour cards should keep the card square while preserving the plan-trip button shape"
   );
   assert.match(
     tourCardCssSource,

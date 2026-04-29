@@ -894,6 +894,7 @@ export function createFrontendToursController(ctx) {
                       aria-hidden="${imageIndex === activeGalleryIndex ? "false" : "true"}"
                       loading="${imageIndex === activeGalleryIndex ? loading : "lazy"}"
                       fetchpriority="${imageIndex === activeGalleryIndex ? fetchpriority : "auto"}"
+                      draggable="false"
                       width="1200"
                       height="800"
                     />
@@ -908,6 +909,7 @@ export function createFrontendToursController(ctx) {
                   alt="${escapeAttr(galleryImageAlt)}"
                   loading="${loading}"
                   fetchpriority="${fetchpriority}"
+                  draggable="false"
                   width="1200"
                   height="800"
                 />
@@ -918,6 +920,7 @@ export function createFrontendToursController(ctx) {
                   alt=""
                   aria-hidden="true"
                   loading="lazy"
+                  draggable="false"
                   width="1200"
                   height="800"
                 />
@@ -929,7 +932,7 @@ export function createFrontendToursController(ctx) {
       : `disabled title="${escapeAttr(detailsUnavailableLabel)}"`;
 
     return `
-      <article class="tour-card${expanded ? " tour-card--expanded" : ""}" data-tour-card-id="${escapeAttr(tripId)}">
+      <article class="tour-card${expanded ? " tour-card--expanded" : ""}" data-tour-card-id="${escapeAttr(tripId)}" draggable="false">
         <div class="tour-card__media">
           <${mediaCycleTag} class="${mediaCycleClass}"${mediaAttrs}>
             <div class="tour-card__media-zoom">
@@ -1177,14 +1180,13 @@ export function createFrontendToursController(ctx) {
     const image = primaryTourPlanServiceImage(service);
     const width = Math.max(1, Number.parseInt(image?.width_px, 10) || 720);
     const height = Math.max(1, Number.parseInt(image?.height_px, 10) || 720);
-    const flippable = Boolean(compactText(details));
-    const flipLabel = flippable
-      ? frontendT("tour.plan.show_service_details", "Show details for {title}", { title })
-      : "";
+    const hasDetails = Boolean(compactText(details));
+    const detailsLabel = frontendT("tour.plan.show_service_details", "Show details for {title}", { title });
     const swapLabel = frontendT("tour.plan.feature_service", "Show {title} as the featured service", { title });
-    const frontBody = `
+    const body = `
       <div class="tour-plan-service-card__body">
         <h5>${escapeHTML(title)}</h5>
+        ${hasDetails ? `<p>${escapeHTML(details)}</p>` : ""}
       </div>
     `;
     const imageMarkup = `
@@ -1197,45 +1199,16 @@ export function createFrontendToursController(ctx) {
       />
     `;
 
-    if (flippable) {
-      const backHint = frontendT("tour.plan.service_details_back_hint", "Tap again to see the image");
-      const interactionAttrs = featured
-        ? `data-tour-plan-service-flip role="button" tabindex="0" aria-pressed="false" aria-label="${escapeAttr(flipLabel)}"`
-        : (swappable
-            ? `data-tour-plan-service-swap role="button" tabindex="0" aria-label="${escapeAttr(swapLabel)}"`
-            : "");
-      return `
-        <article
-          class="tour-plan-service-card${className ? ` ${escapeAttr(className)}` : ""}${featured ? " tour-plan-service-card--flippable" : ""}${swappable ? " tour-plan-service-card--interactive" : ""}"
-          data-tour-plan-service-card
-          data-tour-plan-service-has-details="1"
-          ${interactionAttrs}
-        >
-          <div class="tour-plan-service-card__inner">
-            <div class="tour-plan-service-card__face tour-plan-service-card__face--front">
-              ${imageMarkup}
-              ${frontBody}
-            </div>
-            <div class="tour-plan-service-card__face tour-plan-service-card__face--back">
-              <div class="tour-plan-service-card__back-copy">
-                <h5>${escapeHTML(title)}</h5>
-                <p>${escapeHTML(details)}</p>
-                <span class="tour-plan-service-card__back-hint">${escapeHTML(backHint)}</span>
-              </div>
-            </div>
-          </div>
-        </article>
-      `;
-    }
-
     return `
       <article
-        class="tour-plan-service-card${className ? ` ${escapeAttr(className)}` : ""}${swappable ? " tour-plan-service-card--interactive" : ""}"
+        class="tour-plan-service-card${className ? ` ${escapeAttr(className)}` : ""}${hasDetails ? " tour-plan-service-card--has-details" : ""}${swappable ? " tour-plan-service-card--interactive" : ""}"
         data-tour-plan-service-card
+        ${hasDetails ? `data-tour-plan-service-has-details="1"` : ""}
+        ${featured && hasDetails ? `data-tour-plan-service-details-toggle role="button" tabindex="0" aria-pressed="false" aria-label="${escapeAttr(detailsLabel)}"` : ""}
         ${swappable ? `data-tour-plan-service-swap role="button" tabindex="0" aria-label="${escapeAttr(swapLabel)}"` : ""}
       >
         ${imageMarkup}
-        ${frontBody}
+        ${body}
       </article>
     `;
   }
@@ -1356,17 +1329,15 @@ export function createFrontendToursController(ctx) {
     const days = travelPlanDays(trip);
     if (!days.length) {
       return `
-        <div class="tour-plan tour-plan--empty">
+        <div class="tour-plan--empty">
           <p>${escapeHTML(frontendT("tour.plan.no_days", "No travel plan days listed yet."))}</p>
         </div>
       `;
     }
 
     return `
-      <div class="tour-plan">
-        <div class="tour-plan__days">
-          ${days.map((day, index) => renderTourPlanDay(day, index, trip?.id)).join("")}
-        </div>
+      <div class="tour-plan__days">
+        ${days.map((day, index) => renderTourPlanDay(day, index, trip?.id)).join("")}
       </div>
     `;
   }
@@ -1490,6 +1461,7 @@ export function createFrontendToursController(ctx) {
       media.addEventListener("click", handleTourPlanServiceMediaClick);
       media.addEventListener("keydown", handleTourPlanServiceMediaKeydown);
       media.dataset.tourPlanServiceMediaBound = "1";
+      normalizeMobileTourPlanServiceMedia(media);
     });
 
     const buttons = els.tourGrid.querySelectorAll("[data-open-modal][data-trip-id]");
@@ -1511,20 +1483,6 @@ export function createFrontendToursController(ctx) {
 
       button.dataset.bookingBound = "1";
     });
-  }
-
-  function setTourPlanServiceCardFlipped(card, flipped) {
-    if (!(card instanceof HTMLElement)) return;
-    card.classList.toggle("is-flipped", flipped);
-    if (card.hasAttribute("data-tour-plan-service-flip")) {
-      card.setAttribute("aria-pressed", flipped ? "true" : "false");
-    }
-  }
-
-  function toggleTourPlanServiceCard(card) {
-    if (!(card instanceof HTMLElement)) return;
-    setTourPlanServiceCardFlipped(card, !card.classList.contains("is-flipped"));
-    syncExpandedTourDetailsHeights();
   }
 
   function focusTourShowMoreButton(tripId) {
@@ -2304,25 +2262,38 @@ export function createFrontendToursController(ctx) {
       || frontendT("tour.plan.service_fallback", "Service");
   }
 
+  function setTourPlanServiceDetailsVisible(card, visible) {
+    if (!(card instanceof HTMLElement)) return;
+    card.classList.toggle("is-showing-details", visible);
+    if (card.hasAttribute("data-tour-plan-service-details-toggle")) {
+      card.setAttribute("aria-pressed", visible ? "true" : "false");
+    }
+    syncExpandedTourDetailsHeights();
+  }
+
+  function toggleTourPlanServiceDetails(card) {
+    if (!(card instanceof HTMLElement)) return;
+    setTourPlanServiceDetailsVisible(card, !card.classList.contains("is-showing-details"));
+  }
+
   function setTourPlanServiceCardFeaturedState(card, featured) {
     if (!(card instanceof HTMLElement)) return;
     const hasDetails = card.getAttribute("data-tour-plan-service-has-details") === "1";
     card.classList.toggle("tour-plan-service-card--featured", featured);
     card.classList.toggle("tour-plan-service-card--small", !featured);
     card.classList.toggle("tour-plan-service-card--interactive", !featured);
-    card.classList.toggle("tour-plan-service-card--flippable", featured && hasDetails);
-    card.classList.remove("is-flipped");
+    card.classList.remove("is-showing-details");
     if (featured) {
       card.removeAttribute("data-tour-plan-service-swap");
       if (hasDetails) {
         const title = tourPlanServiceCardTitleText(card);
-        card.setAttribute("data-tour-plan-service-flip", "");
+        card.setAttribute("data-tour-plan-service-details-toggle", "");
         card.setAttribute("role", "button");
         card.setAttribute("tabindex", "0");
         card.setAttribute("aria-pressed", "false");
         card.setAttribute("aria-label", frontendT("tour.plan.show_service_details", "Show details for {title}", { title }));
       } else {
-        card.removeAttribute("data-tour-plan-service-flip");
+        card.removeAttribute("data-tour-plan-service-details-toggle");
         card.removeAttribute("role");
         card.removeAttribute("tabindex");
         card.removeAttribute("aria-label");
@@ -2331,13 +2302,22 @@ export function createFrontendToursController(ctx) {
       return;
     }
 
-    card.removeAttribute("data-tour-plan-service-flip");
-    card.removeAttribute("aria-pressed");
     const title = tourPlanServiceCardTitleText(card);
+    card.removeAttribute("data-tour-plan-service-details-toggle");
+    card.removeAttribute("aria-pressed");
     card.setAttribute("data-tour-plan-service-swap", "");
     card.setAttribute("role", "button");
     card.setAttribute("tabindex", "0");
     card.setAttribute("aria-label", frontendT("tour.plan.feature_service", "Show {title} as the featured service", { title }));
+  }
+
+  function normalizeMobileTourPlanServiceMedia(media) {
+    if (!(media instanceof HTMLElement) || !isSingleColumnTourLayout()) return;
+    if (media.dataset.mobileTourPlanServicesNormalized === "1") return;
+    const featuredCard = media.querySelector(".tour-plan-service-card--featured");
+    if (!(featuredCard instanceof HTMLElement)) return;
+    setTourPlanServiceCardFeaturedState(featuredCard, false);
+    media.dataset.mobileTourPlanServicesNormalized = "1";
   }
 
   function finishTourPlanServiceSwapAnimation(card) {
@@ -2406,11 +2386,20 @@ export function createFrontendToursController(ctx) {
     if (!(targetCard instanceof HTMLElement)) return;
     const media = targetCard.closest("[data-tour-plan-service-media]");
     if (!(media instanceof HTMLElement) || media.dataset.tourPlanServiceSwapAnimating === "1") return;
-    const featuredCard = Array.from(media.children)
-      .find((child) => child instanceof HTMLElement && child.matches(".tour-plan-service-card--featured"));
+    const featuredCard = media.querySelector(".tour-plan-service-card--featured");
     const side = media.querySelector(".tour-plan-service-media__side");
-    if (!(featuredCard instanceof HTMLElement) || !(side instanceof HTMLElement) || featuredCard === targetCard) return;
-    if (!side.contains(targetCard)) return;
+    const singleColumnLayout = isSingleColumnTourLayout();
+    if (!(featuredCard instanceof HTMLElement)) {
+      if (!singleColumnLayout || targetCard.classList.contains("tour-plan-service-card--featured")) return;
+      media.dataset.tourPlanServiceSwapAnimating = "1";
+      setTourPlanServiceCardFeaturedState(targetCard, true);
+      syncExpandedTourDetailsHeights();
+      window.requestAnimationFrame(syncExpandedTourDetailsHeights);
+      delete media.dataset.tourPlanServiceSwapAnimating;
+      return;
+    }
+    if (!(side instanceof HTMLElement) || featuredCard === targetCard) return;
+    if (!singleColumnLayout && !side.contains(targetCard)) return;
 
     media.dataset.tourPlanServiceSwapAnimating = "1";
     const firstRects = new Map([
@@ -2421,8 +2410,17 @@ export function createFrontendToursController(ctx) {
 
     setTourPlanServiceCardFeaturedState(targetCard, true);
     setTourPlanServiceCardFeaturedState(featuredCard, false);
+    if (singleColumnLayout) {
+      syncExpandedTourDetailsHeights();
+      window.requestAnimationFrame(syncExpandedTourDetailsHeights);
+      delete media.dataset.tourPlanServiceSwapAnimating;
+      return;
+    }
+
     media.insertBefore(targetCard, side);
     side.insertBefore(featuredCard, targetNextSibling);
+    syncExpandedTourDetailsHeights();
+    window.requestAnimationFrame(syncExpandedTourDetailsHeights);
 
     try {
       await animateTourPlanServiceSwap(media, firstRects, [targetCard, featuredCard]);
@@ -2435,36 +2433,36 @@ export function createFrontendToursController(ctx) {
   function handleTourPlanServiceMediaClick(event) {
     const media = tourPlanServiceMediaFromEvent(event);
     if (!media) return;
-    const target = event.target instanceof Element ? event.target : null;
-    if (!target) return;
     const swapCard = tourPlanServiceSwapCardFromEvent(event, media);
     if (swapCard) {
       event.preventDefault();
       void swapFeaturedTourPlanService(swapCard);
       return;
     }
-    const flipCard = target.closest("[data-tour-plan-service-flip]");
-    if (!(flipCard instanceof HTMLElement) || !media.contains(flipCard)) return;
+    const detailsCard = event.target instanceof Element
+      ? event.target.closest("[data-tour-plan-service-details-toggle]")
+      : null;
+    if (!(detailsCard instanceof HTMLElement) || !media.contains(detailsCard)) return;
     event.preventDefault();
-    toggleTourPlanServiceCard(flipCard);
+    toggleTourPlanServiceDetails(detailsCard);
   }
 
   function handleTourPlanServiceMediaKeydown(event) {
     if (event.key !== "Enter" && event.key !== " ") return;
     const media = tourPlanServiceMediaFromEvent(event);
     if (!media) return;
-    const target = event.target instanceof Element ? event.target : null;
-    if (!target) return;
     const swapCard = tourPlanServiceSwapCardFromEvent(event, media);
     if (swapCard) {
       event.preventDefault();
       void swapFeaturedTourPlanService(swapCard);
       return;
     }
-    const flipCard = target.closest("[data-tour-plan-service-flip]");
-    if (!(flipCard instanceof HTMLElement) || !media.contains(flipCard)) return;
+    const detailsCard = event.target instanceof Element
+      ? event.target.closest("[data-tour-plan-service-details-toggle]")
+      : null;
+    if (!(detailsCard instanceof HTMLElement) || !media.contains(detailsCard)) return;
     event.preventDefault();
-    toggleTourPlanServiceCard(flipCard);
+    toggleTourPlanServiceDetails(detailsCard);
   }
 
   function updateTourCardImageCounter(button, currentIndex, total) {

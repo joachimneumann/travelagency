@@ -443,6 +443,7 @@ async function init() {
   setupFooterCompanyProfile();
   setupBackendLogin();
   setupBrandLogoLinkBehavior();
+  setupPageDragPrevention();
   applyWebsiteAuthState({ authenticated: false, user: "", known: false });
   primeBackendLoginFromCache();
   revealBackendLogin();
@@ -1342,6 +1343,12 @@ function setupBrandLogoLinkBehavior() {
       top: 0,
       behavior: "smooth"
     });
+  });
+}
+
+function setupPageDragPrevention() {
+  document.addEventListener("dragstart", (event) => {
+    event.preventDefault();
   });
 }
 

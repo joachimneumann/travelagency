@@ -183,8 +183,10 @@ test("public tour travel-plan content and detail chrome follow the frontend lang
   assert.doesNotMatch(els.tourGrid.innerHTML, /English day notes/);
   assert.doesNotMatch(els.tourGrid.innerHTML, /English service title/);
   assert.doesNotMatch(els.tourGrid.innerHTML, /English service details/);
-  assert.match(els.tourGrid.innerHTML, /data-tour-plan-service-flip/);
-  assert.match(els.tourGrid.innerHTML, /Tap again to see the image/);
+  assert.match(els.tourGrid.innerHTML, /tour-plan-service-card--has-details/);
+  assert.match(els.tourGrid.innerHTML, /data-tour-plan-service-details-toggle/);
+  assert.doesNotMatch(els.tourGrid.innerHTML, /data-tour-plan-service-flip/);
+  assert.doesNotMatch(els.tourGrid.innerHTML, /Tap again to see the image/);
   assert.match(els.tourGrid.innerHTML, /data-tour-plan-service-swap/);
 });
 
