@@ -255,6 +255,66 @@ export function createBookingTravelPlanServiceLibraryModule(deps) {
     return String(thumbnailService?.image?.storage_path || item?.image || "").trim();
   }
 
+  function travelPlanServiceImageUrls(service) {
+    const images = [];
+    if (service?.image && typeof service.image === "object" && !Array.isArray(service.image)) {
+      images.push(service.image);
+    }
+    if (Array.isArray(service?.images)) {
+      images.push(...service.images);
+    }
+    const seen = new Set();
+    return images
+      .filter((image) => image && typeof image === "object")
+      .sort((left, right) => Number(left?.sort_order || 0) - Number(right?.sort_order || 0))
+      .map((image) => String(image?.storage_path || "").trim())
+      .filter((url) => {
+        if (!url || seen.has(url)) return false;
+        seen.add(url);
+        return true;
+      });
+  }
+
+  function tourThumbnailUrls(item) {
+    const urls = tourServices(item).flatMap((service) => travelPlanServiceImageUrls(service));
+    if (!urls.length) {
+      const fallbackUrl = tourThumbnailUrl(item);
+      return fallbackUrl ? [fallbackUrl] : [];
+    }
+    return urls;
+  }
+
+  function libraryThumbnailUrls(item) {
+    const urls = Array.isArray(item?.thumbnail_urls)
+      ? item.thumbnail_urls.map((url) => String(url || "").trim()).filter(Boolean)
+      : [];
+    const fallbackUrl = String(item?.thumbnail_url || "").trim();
+    if (!urls.length && fallbackUrl) urls.push(fallbackUrl);
+    return Array.from(new Set(urls));
+  }
+
+  function renderTravelPlanLibraryCardMedia(urls, altText) {
+    const normalizedUrls = Array.isArray(urls) ? urls.map((url) => String(url || "").trim()).filter(Boolean) : [];
+    if (!normalizedUrls.length) {
+      return `<div class="travel-plan-library-card__placeholder">${escapeHtml(bookingT("booking.travel_plan.no_image", "No image"))}</div>`;
+    }
+    if (normalizedUrls.length === 1) {
+      return `<img src="${escapeHtml(resolveTravelPlanImageSrc(normalizedUrls[0], apiOrigin))}" alt="${escapeHtml(altText)}" loading="lazy" />`;
+    }
+    return `
+      <div class="travel-plan-library-card__image-cycle" style="--travel-plan-library-image-count: ${normalizedUrls.length};">
+        ${normalizedUrls.map((url, index) => `
+          <img
+            src="${escapeHtml(resolveTravelPlanImageSrc(url, apiOrigin))}"
+            alt="${index === 0 ? escapeHtml(altText) : ""}"
+            loading="lazy"
+            style="--travel-plan-library-image-index: ${index};"
+          />
+        `).join("")}
+      </div>
+    `;
+  }
+
   function renderTravelPlanServiceLibraryResults(items = []) {
     if (!els.travelPlanServiceLibraryResults) return;
     const rows = Array.isArray(items) ? items : [];
@@ -281,13 +341,12 @@ export function createBookingTravelPlanServiceLibraryModule(deps) {
         const destinations = Array.isArray(item?.destinations) ? item.destinations : [];
         const days = tourDays(item);
         const services = tourServices(item);
-        const thumbnailUrl = tourThumbnailUrl(item);
+        const thumbnailUrls = tourThumbnailUrls(item);
+        const thumbnailAlt = item.title || bookingT("booking.travel_plan.marketing_tours", "Marketing tours");
         return `
           <article class="travel-plan-library-card">
             <div class="travel-plan-library-card__media">
-              ${thumbnailUrl
-                ? `<img src="${escapeHtml(resolveTravelPlanImageSrc(thumbnailUrl, apiOrigin))}" alt="${escapeHtml(item.title || bookingT("booking.travel_plan.marketing_tours", "Marketing tours"))}" loading="lazy" />`
-                : `<div class="travel-plan-library-card__placeholder">${escapeHtml(bookingT("booking.travel_plan.no_image", "No image"))}</div>`}
+              ${renderTravelPlanLibraryCardMedia(thumbnailUrls, thumbnailAlt)}
             </div>
             <div class="travel-plan-library-card__content">
               <div class="travel-plan-library-card__eyebrow">
@@ -324,9 +383,7 @@ export function createBookingTravelPlanServiceLibraryModule(deps) {
             >${escapeHtml(bookingT("booking.travel_plan.insert_as_copy", "Use"))}</button>
           </div>
           <div class="travel-plan-library-card__media">
-            ${item.thumbnail_url
-              ? `<img src="${escapeHtml(resolveTravelPlanImageSrc(item.thumbnail_url, apiOrigin))}" alt="${escapeHtml(item.title || bookingT("booking.travel_plan.day_heading", "Day"))}" loading="lazy" />`
-              : `<div class="travel-plan-library-card__placeholder">${escapeHtml(bookingT("booking.travel_plan.no_image", "No image"))}</div>`}
+            ${renderTravelPlanLibraryCardMedia(libraryThumbnailUrls(item), item.title || bookingT("booking.travel_plan.day_heading", "Day"))}
           </div>
           <div class="travel-plan-library-card__content">
             <div class="travel-plan-library-card__eyebrow">
@@ -354,9 +411,7 @@ export function createBookingTravelPlanServiceLibraryModule(deps) {
           >${escapeHtml(bookingT("booking.travel_plan.insert_as_copy", "Use"))}</button>
         </div>
         <div class="travel-plan-library-card__media">
-          ${item.thumbnail_url
-            ? `<img src="${escapeHtml(resolveTravelPlanImageSrc(item.thumbnail_url, apiOrigin))}" alt="${escapeHtml(item.title || bookingT("booking.travel_plan.item_title", "Service title"))}" loading="lazy" />`
-            : `<div class="travel-plan-library-card__placeholder">${escapeHtml(bookingT("booking.travel_plan.no_image", "No image"))}</div>`}
+          ${renderTravelPlanLibraryCardMedia(libraryThumbnailUrls(item), item.title || bookingT("booking.travel_plan.item_title", "Service title"))}
         </div>
         <div class="travel-plan-library-card__content">
           <div class="travel-plan-library-card__eyebrow">

@@ -405,10 +405,35 @@ export function createTourHandlers(deps) {
       || null;
   }
 
+  function travelPlanServiceImages(item) {
+    const images = [];
+    if (item?.image && typeof item.image === "object" && !Array.isArray(item.image)) {
+      images.push(item.image);
+    }
+    if (Array.isArray(item?.images)) {
+      images.push(...item.images);
+    }
+    const seen = new Set();
+    return images
+      .filter((image) => image && typeof image === "object")
+      .sort((left, right) => Number(left?.sort_order || 0) - Number(right?.sort_order || 0))
+      .filter((image) => {
+        const storagePath = normalizeText(image?.storage_path);
+        if (!storagePath || seen.has(storagePath)) return false;
+        seen.add(storagePath);
+        return true;
+      });
+  }
+
+  function travelPlanServiceImagePaths(item) {
+    return travelPlanServiceImages(item).map((image) => normalizeText(image?.storage_path)).filter(Boolean);
+  }
+
   function buildTourTravelPlanDaySearchResult({ tour, tourTitle, day, sourceDestinationScope }) {
     const services = Array.isArray(day?.services) ? day.services : [];
     const primaryService = services.find((item) => primaryTravelPlanServiceImage(item)) || services[0] || null;
     const primaryImage = primaryTravelPlanServiceImage(primaryService);
+    const thumbnailUrls = services.flatMap((item) => travelPlanServiceImagePaths(item));
     return {
       source_tour_id: tour.id,
       source_tour_title: normalizeText(tourTitle),
@@ -421,14 +446,16 @@ export function createTourHandlers(deps) {
       overnight_location: normalizeText(day?.overnight_location),
       notes: normalizeText(day?.notes),
       thumbnail_url: normalizeText(primaryImage?.storage_path),
+      thumbnail_urls: thumbnailUrls,
       service_count: services.length,
-      image_count: primaryImage ? 1 : 0,
+      image_count: thumbnailUrls.length,
       updated_at: normalizeText(tour.updated_at || tour.created_at)
     };
   }
 
   function buildTourTravelPlanServiceSearchResult({ tour, tourTitle, day, item, sourceDestinationScope }) {
     const primaryImage = primaryTravelPlanServiceImage(item);
+    const thumbnailUrls = travelPlanServiceImagePaths(item);
     return {
       source_tour_id: tour.id,
       source_tour_title: normalizeText(tourTitle),
@@ -443,7 +470,8 @@ export function createTourHandlers(deps) {
       location: normalizeText(item.location),
       overnight_location: normalizeText(day?.overnight_location),
       thumbnail_url: normalizeText(primaryImage?.storage_path),
-      image_count: primaryImage ? 1 : 0,
+      thumbnail_urls: thumbnailUrls,
+      image_count: thumbnailUrls.length,
       updated_at: normalizeText(tour.updated_at || tour.created_at)
     };
   }

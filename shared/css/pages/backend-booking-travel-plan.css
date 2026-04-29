@@ -1186,6 +1186,29 @@
   font-style: italic;
 }
 
+.tour-detail-page .travel-plan-service__overview {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.tour-detail-page .travel-plan-service__overview-media {
+  align-items: stretch;
+  justify-content: stretch;
+}
+
+.tour-detail-page .travel-plan-images--sidebar,
+.tour-detail-page .travel-plan-images__hero-frame,
+.tour-detail-page .travel-plan-images__hero-button,
+.tour-detail-page .travel-plan-images__hero-static,
+.tour-detail-page .travel-plan-images__tour-card-toggle,
+.tour-detail-page .travel-plan-service__image-subtitle-field {
+  width: 100%;
+}
+
+.tour-detail-page .travel-plan-images__hero-frame,
+.tour-detail-page .travel-plan-images__tour-card-toggle {
+  justify-self: stretch;
+}
+
 .travel-plan-move-btn {
   min-width: 34px;
   height: 34px;
@@ -1520,6 +1543,36 @@
   height: 100%;
   object-fit: cover;
   display: block;
+}
+
+.travel-plan-library-card__image-cycle {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.travel-plan-library-card__image-cycle img {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  animation: travel-plan-library-image-cycle calc(var(--travel-plan-library-image-count, 1) * 3.2s) ease-in-out infinite;
+  animation-delay: calc(var(--travel-plan-library-image-index, 0) * 3.2s);
+}
+
+@keyframes travel-plan-library-image-cycle {
+  0%,
+  100% {
+    opacity: 0;
+  }
+
+  7%,
+  30% {
+    opacity: 1;
+  }
+
+  38% {
+    opacity: 0;
+  }
 }
 
 .travel-plan-library-card__placeholder {

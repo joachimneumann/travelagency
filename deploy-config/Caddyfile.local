@@ -19,6 +19,11 @@
 }
 
 :80 {
+  log {
+    output stdout
+    format json
+  }
+
   import local_security_headers
   import local_cache_headers
   encode zstd gzip

@@ -8,7 +8,7 @@ Translation
 
 Destinations
 ============
-maketing_tours.html: make destinations nicer
+At the bottom of maketing_tours.html: make destinations nicer
 
 emergency.html
 =============

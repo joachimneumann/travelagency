@@ -15,6 +15,7 @@ const TOUR_PLAN_SERVICE_SWAP_TRANSITION_MS = 380;
 const TOUR_SHOW_MORE_LABEL_TRANSITION_MS = 420;
 const TOUR_CARD_SCROLL_TIMEOUT_MS = 900;
 const TOUR_CARD_SCROLL_MARGIN_PX = 12;
+const TOUR_DETAILS_IMAGE_READY_TIMEOUT_MS = 900;
 const TOUR_CARD_MEDIA_SNAPSHOT_HOLD_MS = Math.max(
   TOUR_GRID_LAYOUT_TRANSITION_MS,
   TOUR_DETAILS_OPEN_TRANSITION_MS,
@@ -1193,7 +1194,7 @@ export function createFrontendToursController(ctx) {
       <img
         src="${escapeAttr(src)}"
         alt="${escapeAttr(tourPlanServiceImageAlt(service))}"
-        loading="lazy"
+        loading="eager"
         width="${escapeAttr(String(width))}"
         height="${escapeAttr(String(height))}"
       />
@@ -1208,6 +1209,7 @@ export function createFrontendToursController(ctx) {
         ${swappable ? `data-tour-plan-service-swap role="button" tabindex="0" aria-label="${escapeAttr(swapLabel)}"` : ""}
       >
         ${imageMarkup}
+        ${hasDetails ? `<span class="tour-plan-service-card__details-indicator" aria-hidden="true">i</span>` : ""}
         ${body}
       </article>
     `;
@@ -1335,9 +1337,17 @@ export function createFrontendToursController(ctx) {
       `;
     }
 
+    const tripId = normalizeText(trip?.id);
+    const tripTitle = resolveLocalizedFrontendText(trip?.title, state.lang);
+    const ctaLabel = frontendT("tour.card.plan_trip", "Plan this trip");
+
     return `
       <div class="tour-plan__days">
         ${days.map((day, index) => renderTourPlanDay(day, index, trip?.id)).join("")}
+      </div>
+      <div class="tour-plan__footer-cta">
+        <h4>${escapeHTML(tripTitle)}</h4>
+        <button class="btn btn-primary tour-plan__footer-plan-trip" type="button" data-open-modal data-trip-id="${escapeAttr(tripId)}">${escapeHTML(ctaLabel)}</button>
       </div>
     `;
   }
@@ -1461,7 +1471,7 @@ export function createFrontendToursController(ctx) {
       media.addEventListener("click", handleTourPlanServiceMediaClick);
       media.addEventListener("keydown", handleTourPlanServiceMediaKeydown);
       media.dataset.tourPlanServiceMediaBound = "1";
-      normalizeMobileTourPlanServiceMedia(media);
+      normalizeTourPlanServiceMedia(media);
     });
 
     const buttons = els.tourGrid.querySelectorAll("[data-open-modal][data-trip-id]");
@@ -1635,6 +1645,41 @@ export function createFrontendToursController(ctx) {
     return new Promise((resolve) => {
       window.setTimeout(resolve, Math.max(0, Math.round(durationMs)));
     });
+  }
+
+  function waitForImageReady(image) {
+    if (!(image instanceof HTMLImageElement)) return Promise.resolve();
+    image.loading = "eager";
+    if (image.complete && image.naturalWidth > 0) return Promise.resolve();
+
+    return new Promise((resolve) => {
+      let settled = false;
+      let timer = 0;
+      const done = () => {
+        if (settled) return;
+        settled = true;
+        window.clearTimeout(timer);
+        image.removeEventListener("load", done);
+        image.removeEventListener("error", done);
+        resolve();
+      };
+
+      image.addEventListener("load", done, { once: true });
+      image.addEventListener("error", done, { once: true });
+      if (typeof image.decode === "function") {
+        image.decode().then(done).catch(() => {});
+      }
+      timer = window.setTimeout(done, TOUR_DETAILS_IMAGE_READY_TIMEOUT_MS);
+    });
+  }
+
+  async function waitForExpandedTourServiceImages(row) {
+    if (!(row instanceof HTMLElement)) return;
+    const images = Array.from(row.querySelectorAll("[data-tour-plan-service-media] img"))
+      .filter((image) => image instanceof HTMLImageElement);
+    if (!images.length) return;
+    await Promise.all(images.map((image) => waitForImageReady(image)));
+    await waitForAnimationFrame();
   }
 
   function parseCssDurationToMs(value) {
@@ -2145,6 +2190,7 @@ export function createFrontendToursController(ctx) {
       return;
     }
 
+    await waitForExpandedTourServiceImages(row);
     const expandedHeight = Math.max(row.scrollHeight, row.getBoundingClientRect().height);
     const collapsedHeight = collapsedTourDetailsHeight(row);
     row.classList.add("tour-details-row--opening");
@@ -2311,13 +2357,13 @@ export function createFrontendToursController(ctx) {
     card.setAttribute("aria-label", frontendT("tour.plan.feature_service", "Show {title} as the featured service", { title }));
   }
 
-  function normalizeMobileTourPlanServiceMedia(media) {
-    if (!(media instanceof HTMLElement) || !isSingleColumnTourLayout()) return;
-    if (media.dataset.mobileTourPlanServicesNormalized === "1") return;
+  function normalizeTourPlanServiceMedia(media) {
+    if (!(media instanceof HTMLElement)) return;
+    if (media.dataset.tourPlanServicesNormalized === "1") return;
     const featuredCard = media.querySelector(".tour-plan-service-card--featured");
     if (!(featuredCard instanceof HTMLElement)) return;
     setTourPlanServiceCardFeaturedState(featuredCard, false);
-    media.dataset.mobileTourPlanServicesNormalized = "1";
+    media.dataset.tourPlanServicesNormalized = "1";
   }
 
   function finishTourPlanServiceSwapAnimation(card) {
@@ -2387,10 +2433,8 @@ export function createFrontendToursController(ctx) {
     const media = targetCard.closest("[data-tour-plan-service-media]");
     if (!(media instanceof HTMLElement) || media.dataset.tourPlanServiceSwapAnimating === "1") return;
     const featuredCard = media.querySelector(".tour-plan-service-card--featured");
-    const side = media.querySelector(".tour-plan-service-media__side");
-    const singleColumnLayout = isSingleColumnTourLayout();
     if (!(featuredCard instanceof HTMLElement)) {
-      if (!singleColumnLayout || targetCard.classList.contains("tour-plan-service-card--featured")) return;
+      if (targetCard.classList.contains("tour-plan-service-card--featured")) return;
       media.dataset.tourPlanServiceSwapAnimating = "1";
       setTourPlanServiceCardFeaturedState(targetCard, true);
       syncExpandedTourDetailsHeights();
@@ -2398,36 +2442,14 @@ export function createFrontendToursController(ctx) {
       delete media.dataset.tourPlanServiceSwapAnimating;
       return;
     }
-    if (!(side instanceof HTMLElement) || featuredCard === targetCard) return;
-    if (!singleColumnLayout && !side.contains(targetCard)) return;
+    if (featuredCard === targetCard) return;
 
     media.dataset.tourPlanServiceSwapAnimating = "1";
-    const firstRects = new Map([
-      [featuredCard, featuredCard.getBoundingClientRect()],
-      [targetCard, targetCard.getBoundingClientRect()]
-    ]);
-    const targetNextSibling = targetCard.nextSibling;
-
     setTourPlanServiceCardFeaturedState(targetCard, true);
     setTourPlanServiceCardFeaturedState(featuredCard, false);
-    if (singleColumnLayout) {
-      syncExpandedTourDetailsHeights();
-      window.requestAnimationFrame(syncExpandedTourDetailsHeights);
-      delete media.dataset.tourPlanServiceSwapAnimating;
-      return;
-    }
-
-    media.insertBefore(targetCard, side);
-    side.insertBefore(featuredCard, targetNextSibling);
     syncExpandedTourDetailsHeights();
     window.requestAnimationFrame(syncExpandedTourDetailsHeights);
-
-    try {
-      await animateTourPlanServiceSwap(media, firstRects, [targetCard, featuredCard]);
-    } finally {
-      delete media.dataset.tourPlanServiceSwapAnimating;
-      syncExpandedTourDetailsHeights();
-    }
+    delete media.dataset.tourPlanServiceSwapAnimating;
   }
 
   function handleTourPlanServiceMediaClick(event) {
@@ -2534,13 +2556,22 @@ export function createFrontendToursController(ctx) {
     });
   }
 
+  function tourCardSwipeSlideWidth(track, slides, index = 0) {
+    return track.clientWidth || slides[index]?.getBoundingClientRect?.().width || 0;
+  }
+
+  function tourCardSwipePhysicalIndexFromScroll(track, slides) {
+    const slideWidth = tourCardSwipeSlideWidth(track, slides);
+    if (slideWidth <= 0) return 1;
+    return Math.round(track.scrollLeft / slideWidth);
+  }
+
   function tourCardSwipeIndexFromScroll(surface) {
     const track = tourCardSwipeTrack(surface);
     const slides = tourCardSwipeSlides(surface);
-    if (!(track instanceof HTMLElement) || !slides.length) return 0;
-    const slideWidth = track.clientWidth || slides[0]?.getBoundingClientRect?.().width || 0;
-    if (slideWidth <= 0) return currentTourCardGalleryIndex(surface, slides.length);
-    return clampTourCardGalleryIndex(Math.round(track.scrollLeft / slideWidth), slides.length);
+    if (!(track instanceof HTMLElement) || !slides.length) return;
+    const physicalIndex = tourCardSwipePhysicalIndexFromScroll(track, slides);
+    return clampTourCardGalleryIndex(physicalIndex, slides.length);
   }
 
   function setTourCardSwipeGalleryIndex(surface, nextIndex, { scroll = true, behavior = "auto" } = {}) {
@@ -2548,13 +2579,13 @@ export function createFrontendToursController(ctx) {
     const track = tourCardSwipeTrack(surface);
     const slides = tourCardSwipeSlides(surface);
     if (!slides.length) return;
-    const safeIndex = Math.min(Math.max(Number.parseInt(String(nextIndex), 10) || 0, 0), slides.length - 1);
+    const safeIndex = clampTourCardGalleryIndex(Number.parseInt(String(nextIndex), 10) || 0, slides.length);
     surface.dataset.tourGalleryIndex = String(safeIndex);
     saveTourCardSurfaceGalleryIndex(surface, safeIndex, slides.length);
     updateTourCardSwipeSlides(surface, safeIndex);
     updateTourCardImageCounter(surface, safeIndex, slides.length);
     if (scroll && track instanceof HTMLElement) {
-      const slideWidth = track.clientWidth || slides[safeIndex]?.getBoundingClientRect?.().width || 0;
+      const slideWidth = tourCardSwipeSlideWidth(track, slides, safeIndex);
       const left = slideWidth * safeIndex;
       if (typeof track.scrollTo === "function") {
         track.scrollTo({ left, behavior });

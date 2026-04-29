@@ -4798,8 +4798,13 @@ test("homepage tour cards use fixed-height text areas without an inline more lin
   );
   assert.match(
     mainToursSource,
-    /const singleColumnGallery = galleryCount > 1 && isSingleColumnTourLayout\(\);[\s\S]*data-tour-image-swipe="1"[\s\S]*data-tour-media-track[\s\S]*tour-card__media-slide[\s\S]*function tourCardSwipeIndexFromScroll\(surface\)[\s\S]*Math\.round\(track\.scrollLeft \/ slideWidth\)[\s\S]*function setTourCardSwipeGalleryIndex\(surface, nextIndex, \{ scroll = true, behavior = "auto" \} = \{\}\)[\s\S]*track\.scrollTo\(\{ left, behavior \}\);[\s\S]*function stepTourCardSwipeGallery\(surface, step\)[\s\S]*behavior: "smooth"[\s\S]*function bindTourCardImageSwipeHandlers\(surface\)[\s\S]*track\.addEventListener\("scroll"[\s\S]*window\.requestAnimationFrame\(syncFromScroll\)[\s\S]*surface\.addEventListener\("click"[\s\S]*event\.clientX < rect\.left \+ \(rect\.width \/ 2\) \? -1 : 1[\s\S]*stepTourCardSwipeGallery\(surface, step\)[\s\S]*setTourCardSwipeGalleryIndex\(surface, currentTourCardGalleryIndex\(surface, tourCardSwipeSlides\(surface\)\.length\), \{[\s\S]*scroll: true,[\s\S]*behavior: "auto"/,
-    "Mobile homepage tour cards should use native scroll-snap galleries with visible dots and left/right tap zones"
+    /const singleColumnGallery = galleryCount > 1 && isSingleColumnTourLayout\(\);[\s\S]*data-tour-image-swipe="1"[\s\S]*data-tour-media-track[\s\S]*tour-card__media-slide[\s\S]*function tourCardSwipePhysicalIndexFromScroll\(track, slides\)[\s\S]*Math\.round\(track\.scrollLeft \/ slideWidth\)[\s\S]*function tourCardSwipeIndexFromScroll\(surface\)[\s\S]*const slides = tourCardSwipeSlides\(surface\);[\s\S]*clampTourCardGalleryIndex\(physicalIndex, slides\.length\)[\s\S]*function setTourCardSwipeGalleryIndex\(surface, nextIndex, \{ scroll = true, behavior = "auto" \} = \{\}\)[\s\S]*track\.scrollTo\(\{ left, behavior \}\);[\s\S]*function stepTourCardSwipeGallery\(surface, step\)[\s\S]*clampTourCardGalleryIndex\(currentIndex \+ step, slides\.length\)[\s\S]*behavior: "smooth"[\s\S]*function bindTourCardImageSwipeHandlers\(surface\)[\s\S]*track\.addEventListener\("scroll"[\s\S]*window\.requestAnimationFrame\(syncFromScroll\)[\s\S]*surface\.addEventListener\("click"[\s\S]*event\.clientX < rect\.left \+ \(rect\.width \/ 2\) \? -1 : 1[\s\S]*stepTourCardSwipeGallery\(surface, step\)[\s\S]*setTourCardSwipeGalleryIndex\(surface, currentTourCardGalleryIndex\(surface, tourCardSwipeSlides\(surface\)\.length\), \{[\s\S]*scroll: true,[\s\S]*behavior: "auto"/,
+    "Mobile homepage tour cards should use bounded native scroll-snap galleries with visible dots and left/right tap zones"
+  );
+  assert.doesNotMatch(
+    mainToursSource,
+    /data-tour-media-clone|wrapTourCardGalleryIndex|scheduleCloneReset|scrollTourCardSwipeToPhysicalIndex/,
+    "Mobile homepage tour-card swiping should not use cyclic cloned-edge scrolling"
   );
   assert.match(
     mainToursSource,

@@ -642,6 +642,12 @@
   display: grid;
   gap: 1.1rem;
   padding: 15px;
+  width: min(100%, 530px);
+  margin-inline: auto;
+}
+
+.tour-plan__footer-cta {
+  display: none;
 }
 
 .tour-plan-day {
@@ -685,7 +691,7 @@
 
 .tour-plan-service-media {
   display: grid;
-  grid-template-columns: minmax(0, 1.12fr) minmax(220px, 0.88fr);
+  grid-template-columns: 1fr;
   gap: 0.75rem;
 }
 
@@ -717,17 +723,17 @@
 }
 
 .tour-plan-service-card--featured {
-  min-height: 20rem;
+  min-height: min(72vw, 19rem);
 }
 
 .tour-plan-service-media__side {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: 1fr;
   gap: 0.65rem;
 }
 
 .tour-plan-service-card--small {
-  min-height: 9.65rem;
+  min-height: 3.8rem;
 }
 
 .tour-plan-service-card--interactive {
@@ -778,6 +784,38 @@
 .tour-plan-service-card--has-details.is-showing-details img {
   filter: blur(2px);
   transform: scale(1.025);
+}
+
+.tour-plan-service-card__details-indicator {
+  position: absolute;
+  top: 0.56rem;
+  right: 0.56rem;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  border-radius: 999px;
+  color: rgba(255, 255, 255, 0.96);
+  background: rgba(10, 16, 18, 0.42);
+  box-shadow: 0 0.35rem 1rem rgba(10, 16, 18, 0.22);
+  font-family: "Optima", "Avenir Next", "Montserrat", var(--font-family-sans);
+  font-size: 0.82rem;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 1;
+  pointer-events: none;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.tour-plan-service-card--has-details.is-showing-details .tour-plan-service-card__details-indicator {
+  border-color: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(0.94);
 }
 
 .tour-plan-service-card__body {
@@ -1080,16 +1118,25 @@
     clip-path: inset(0 0 0 0);
   }
 
-  .tour-plan-service-media,
-  .tour-plan-service-media__side {
-    grid-template-columns: 1fr;
+  .tour-plan__footer-cta {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.9rem;
+    align-items: center;
+    padding: 0 15px 15px;
   }
 
-  .tour-plan-service-card--featured {
-    min-height: min(72vw, 19rem);
+  .tour-plan__footer-cta h4 {
+    margin: 0;
+    color: var(--text-strong);
+    font-size: clamp(1.05rem, 4.8vw, 1.35rem);
+    line-height: 1.16;
   }
 
-  .tour-plan-service-card--small {
-    min-height: 3.8rem;
+  .tour-plan__footer-plan-trip {
+    min-height: 2.5rem;
+    padding: 0.58rem 0.9rem;
+    border-radius: 13px;
+    white-space: nowrap;
   }
 }
