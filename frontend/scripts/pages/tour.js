@@ -257,11 +257,84 @@ function shouldIgnoreTourSnapshotControl(control) {
     || Boolean(els.travelPlanTranslationPanel?.contains(control));
 }
 
+const TOUR_DIRTY_LOG_VALUE_LIMIT = 240;
+const TOUR_DIRTY_LOG_MAX_CHANGES = 20;
+
+function stringifyTourDirtyValue(value) {
+  if (value === undefined) return "";
+  if (typeof value === "string") return value;
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return String(value);
+  }
+}
+
+function formatTourDirtyValue(value) {
+  const serialized = stringifyTourDirtyValue(value);
+  return serialized.length > TOUR_DIRTY_LOG_VALUE_LIMIT
+    ? `${serialized.slice(0, TOUR_DIRTY_LOG_VALUE_LIMIT)}...`
+    : serialized;
+}
+
+function parseTourSnapshotEntries(snapshot) {
+  try {
+    const rows = JSON.parse(String(snapshot || "[]"));
+    if (!Array.isArray(rows)) return null;
+    return rows.reduce((entries, row, index) => {
+      if (!Array.isArray(row) || row.length < 2) return entries;
+      const key = String(row[0] || `snapshot-${index}`);
+      entries.set(key, row[1]);
+      return entries;
+    }, new Map());
+  } catch {
+    return null;
+  }
+}
+
+function describeTourSnapshotChanges(cleanSnapshot, currentSnapshot) {
+  const cleanEntries = parseTourSnapshotEntries(cleanSnapshot);
+  const currentEntries = parseTourSnapshotEntries(currentSnapshot);
+  if (!cleanEntries || !currentEntries) {
+    return [{
+      key: "snapshot",
+      before: formatTourDirtyValue(cleanSnapshot),
+      after: formatTourDirtyValue(currentSnapshot)
+    }];
+  }
+
+  const keys = new Set([...cleanEntries.keys(), ...currentEntries.keys()]);
+  return Array.from(keys)
+    .filter((key) => stringifyTourDirtyValue(cleanEntries.get(key)) !== stringifyTourDirtyValue(currentEntries.get(key)))
+    .map((key) => ({
+      key,
+      before: formatTourDirtyValue(cleanEntries.get(key)),
+      after: formatTourDirtyValue(currentEntries.get(key))
+    }));
+}
+
+function logTourDirtyReason() {
+  const cleanSnapshot = tourDirtyTracker.getCleanSnapshot();
+  const currentSnapshot = captureTourFormSnapshot();
+  const changes = describeTourSnapshotChanges(cleanSnapshot, currentSnapshot);
+  console.log("[tour-dirty] Tour form became dirty.", {
+    tour_id: state.id || state.tour?.id || "",
+    lang: currentBackendLang(),
+    changed_fields: changes.map((change) => change.key),
+    shown_changes: changes.slice(0, TOUR_DIRTY_LOG_MAX_CHANGES),
+    hidden_change_count: Math.max(0, changes.length - TOUR_DIRTY_LOG_MAX_CHANGES)
+  });
+}
+
 const tourDirtyTracker = createSnapshotDirtyTracker({
   captureSnapshot: () => captureTourFormSnapshot(),
   isEnabled: () => state.permissions.canEditTours,
   onDirtyChange: (isDirty) => {
-    state.formDirty = Boolean(isDirty);
+    const nextDirty = Boolean(isDirty);
+    if (nextDirty && state.formDirty !== true) {
+      logTourDirtyReason();
+    }
+    state.formDirty = nextDirty;
     renderTourDirtyBar();
   }
 });
