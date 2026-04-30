@@ -1,5 +1,9 @@
 # TODO
 
+SEO
+===
+URL for each tour, see SEO.md
+
 Translation
 ===========
 * North Mien Bac

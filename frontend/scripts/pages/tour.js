@@ -214,7 +214,8 @@ function hasAnyRoleInList(roleList, ...roles) {
 
 function captureTourFormSnapshot() {
   if (!els.form) return "";
-  const controls = Array.from(els.form.querySelectorAll("input, select, textarea"));
+  const controls = Array.from(els.form.querySelectorAll("input, select, textarea"))
+    .filter((control) => !shouldIgnoreTourSnapshotControl(control));
   const snapshot = controls.map((control, index) => {
     const key = control.id || control.name || `${control.tagName.toLowerCase()}-${index}`;
     let value = "";
@@ -244,6 +245,16 @@ function captureTourFormSnapshot() {
     tourTravelPlanAdapter?.snapshot?.() || JSON.stringify(state.tour?.travel_plan || { days: [] })
   ]);
   return JSON.stringify(snapshot);
+}
+
+function shouldIgnoreTourSnapshotControl(control) {
+  if (!(control instanceof HTMLElement)) return false;
+  // These sub-editors already contribute their own semantic snapshots via state.
+  return control === els.reelVideoUpload
+    || Boolean(els.localizedContentEditor?.contains(control))
+    || Boolean(els.travel_plan_destination_scope_editor?.contains(control))
+    || Boolean(els.travel_plan_editor?.contains(control))
+    || Boolean(els.travelPlanTranslationPanel?.contains(control));
 }
 
 const tourDirtyTracker = createSnapshotDirtyTracker({

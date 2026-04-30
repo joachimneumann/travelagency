@@ -861,7 +861,18 @@ function seoPageShell({
     <meta name="twitter:title" content="${escapeHtmlAttribute(title)}" />
     <meta name="twitter:description" content="${safeDescription}" />
     <meta name="twitter:image" content="${escapeHtmlAttribute(canonicalUrl(image))}" />
-    <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/assets/img/favicon-32.png" sizes="32x32" type="image/png" />
+    <link rel="icon" href="/assets/img/favicon-16.png" sizes="16x16" type="image/png" />
+    <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png" sizes="180x180" />
+    <script>
+      if (["localhost", "127.0.0.1"].includes(window.location.hostname)) {
+        const localIconHref = "/assets/img/local.small.png";
+        document.querySelector('link[rel="icon"][sizes="32x32"]')?.setAttribute("href", localIconHref);
+        document.querySelector('link[rel="icon"][sizes="16x16"]')?.setAttribute("href", localIconHref);
+        document.querySelector('link[rel="apple-touch-icon"]')?.setAttribute("href", localIconHref);
+        document.querySelector('link[rel="apple-touch-icon"]')?.setAttribute("sizes", "200x200");
+      }
+    </script>
     <style>
       :root { color-scheme: light; --ink: #172026; --muted: #5d6b73; --line: #dfe7e8; --accent: #0d766e; --accent-strong: #0a5f59; --bg: #f6f8f7; }
       body { margin: 0; font-family: Arial, Helvetica, sans-serif; color: var(--ink); background: #fff; line-height: 1.6; }

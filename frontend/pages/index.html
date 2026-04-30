@@ -30,7 +30,18 @@
     />
     <meta name="twitter:image" content="https://asiatravelplan.com/assets/video/rice%20field.webp" />
 
-    <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/assets/img/favicon-32.png" sizes="32x32" type="image/png" />
+    <link rel="icon" href="/assets/img/favicon-16.png" sizes="16x16" type="image/png" />
+    <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png" sizes="180x180" />
+    <script>
+      if (["localhost", "127.0.0.1"].includes(window.location.hostname)) {
+        const localIconHref = "/assets/img/local.small.png";
+        document.querySelector('link[rel="icon"][sizes="32x32"]')?.setAttribute("href", localIconHref);
+        document.querySelector('link[rel="icon"][sizes="16x16"]')?.setAttribute("href", localIconHref);
+        document.querySelector('link[rel="apple-touch-icon"]')?.setAttribute("href", localIconHref);
+        document.querySelector('link[rel="apple-touch-icon"]')?.setAttribute("sizes", "200x200");
+      }
+    </script>
     <script>
       if (!window.ASIATRAVELPLAN_API_BASE && ["localhost", "127.0.0.1"].includes(window.location.hostname)) {
         window.ASIATRAVELPLAN_API_BASE = window.location.origin;
