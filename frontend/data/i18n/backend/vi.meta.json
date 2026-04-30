@@ -664,11 +664,6 @@
     "origin": "machine",
     "updated_at": "2026-03-30T23:51:31.875Z"
   },
-  "backend.users.edit_in_keycloak": {
-    "source_hash": "ae954dc8de75dfc7237b367e96a10f0109399c70a228e8ae10bb48e3ba54d92f",
-    "origin": "manual_override",
-    "updated_at": "2026-04-19T12:40:00.000Z"
-  },
   "backend.users.edit_profile": {
     "source_hash": "464c4ffd019e1e9691dcf0537c797353ef2b1c1d4833d3d463e5b74ae4547344",
     "origin": "machine",
@@ -858,11 +853,6 @@
     "source_hash": "16ebb899743767d08f3fd6f58b7898d8274261ffb729f08379853538a6477013",
     "origin": "machine",
     "updated_at": "2026-03-30T23:51:31.875Z"
-  },
-  "backend.users.status_not_active": {
-    "source_hash": "75fa42934c5b7fdcfa6c4928f5653238c92f009e041390082267ae0ffd8df2eb",
-    "origin": "manual_override",
-    "updated_at": "2026-04-19T12:25:00.000Z"
   },
   "backend.users.status_missing_description": {
     "source_hash": "ab24cb71466e12fb4232662aaa042a49dd2957c93143f0308ee32f0129ebb6b0",
@@ -4594,21 +4584,6 @@
     "origin": "machine",
     "updated_at": "2026-03-30T23:51:31.875Z"
   },
-  "booking.travel_plan.renumber_days": {
-    "source_hash": "5337c80697c07d79821d9543435b544339440c966d503a582d1c561659bf493e",
-    "origin": "manual_override",
-    "updated_at": "2026-04-19T12:15:00.000Z"
-  },
-  "booking.travel_plan.renumber_days_disabled": {
-    "source_hash": "24599879424a227b9145f1b950d5ec566945369208f200d1aec46127ffcd45b6",
-    "origin": "manual_override",
-    "updated_at": "2026-04-19T12:15:00.000Z"
-  },
-  "booking.travel_plan.renumber_days_done": {
-    "source_hash": "410cc49ac9387e42a4fd0ccfa1fe2fd4474fc1b44a5a3e999b73c6b8b795f309",
-    "origin": "manual_override",
-    "updated_at": "2026-04-19T12:15:00.000Z"
-  },
   "booking.travel_plan.select_offer_component": {
     "source_hash": "1680ad8050730afd5b0f578907cca68c83e0b20ccde9538284794ffd24c6abe2",
     "origin": "machine",
@@ -5437,11 +5412,6 @@
   "tour.page_title": {
     "source_hash": "a76eb76fde5671789323276d3b97dd5bd707a3cb58547da75f4787503f3fa1a8",
     "origin": "machine",
-    "updated_at": "2026-03-30T23:51:31.875Z"
-  },
-  "tour.priority_label": {
-    "source_hash": "a331bce12b2ffa3285451d208e720950dd8666f77572c8343b66d918f1d50a26",
-    "origin": "manual_override",
     "updated_at": "2026-03-30T23:51:31.875Z"
   },
   "tour.rating_label": {
