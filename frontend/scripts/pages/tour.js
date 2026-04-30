@@ -313,6 +313,8 @@ function describeTourSnapshotChanges(cleanSnapshot, currentSnapshot) {
     }));
 }
 
+let tourDirtySnapshotReady = false;
+
 function logTourDirtyReason() {
   const cleanSnapshot = tourDirtyTracker.getCleanSnapshot();
   const currentSnapshot = captureTourFormSnapshot();
@@ -331,7 +333,7 @@ const tourDirtyTracker = createSnapshotDirtyTracker({
   isEnabled: () => state.permissions.canEditTours,
   onDirtyChange: (isDirty) => {
     const nextDirty = Boolean(isDirty);
-    if (nextDirty && state.formDirty !== true) {
+    if (tourDirtySnapshotReady && nextDirty && state.formDirty !== true) {
       logTourDirtyReason();
     }
     state.formDirty = nextDirty;
@@ -360,11 +362,19 @@ function renderTourDirtyBar() {
 }
 
 function updateTourDirtyState() {
+  if (!tourDirtySnapshotReady) {
+    if (state.formDirty) {
+      state.formDirty = false;
+      renderTourDirtyBar();
+    }
+    return false;
+  }
   return tourDirtyTracker.refresh();
 }
 
 function markTourSnapshotClean() {
   tourDirtyTracker.markClean();
+  tourDirtySnapshotReady = true;
 }
 
 function tourTextLanguages() {
@@ -1874,6 +1884,7 @@ async function init() {
 }
 
 async function loadTour() {
+  tourDirtySnapshotReady = false;
   const request = tourDetailRequest({ baseURL: apiOrigin, params: { tour_id: state.id } });
   const payload = await fetchApi(withApiLang(request.url));
   if (!payload?.tour) return;
@@ -1910,6 +1921,7 @@ async function loadTour() {
 }
 
 async function initializeNewTourForm() {
+  tourDirtySnapshotReady = false;
   const request = toursRequest({ baseURL: apiOrigin, query: { page: 1, page_size: 1 } });
   const payload = await fetchApi(withApiLang(request.url));
   state.options.destinations = Array.isArray(payload?.available_destinations) ? payload.available_destinations : [];
