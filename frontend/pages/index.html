@@ -34,12 +34,20 @@
     <link rel="icon" href="/assets/img/favicon-16.png" sizes="16x16" type="image/png" />
     <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png" sizes="180x180" />
     <script>
-      if (["localhost", "127.0.0.1"].includes(window.location.hostname)) {
-        const localIconHref = "/assets/img/local.small.png";
-        document.querySelector('link[rel="icon"][sizes="32x32"]')?.setAttribute("href", localIconHref);
-        document.querySelector('link[rel="icon"][sizes="16x16"]')?.setAttribute("href", localIconHref);
-        document.querySelector('link[rel="apple-touch-icon"]')?.setAttribute("href", localIconHref);
-        document.querySelector('link[rel="apple-touch-icon"]')?.setAttribute("sizes", "200x200");
+      {
+        const hostname = window.location.hostname;
+        const environmentIcon = ["localhost", "127.0.0.1", "::1", "[::1]"].includes(hostname)
+          ? { href: "/assets/img/local.small.png", sizes: "200x200" }
+          : hostname === "staging.asiatravelplan.com"
+            ? { href: "/assets/img/staging.small.png", sizes: "150x150" }
+            : null;
+        if (environmentIcon) {
+          document.querySelector('link[rel="icon"][sizes="32x32"]')?.setAttribute("href", environmentIcon.href);
+          document.querySelector('link[rel="icon"][sizes="16x16"]')?.setAttribute("href", environmentIcon.href);
+          const appleTouchIcon = document.querySelector('link[rel="apple-touch-icon"]');
+          appleTouchIcon?.setAttribute("href", environmentIcon.href);
+          appleTouchIcon?.setAttribute("sizes", environmentIcon.sizes);
+        }
       }
     </script>
     <script>
