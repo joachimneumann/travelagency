@@ -1,6 +1,7 @@
 backend/app/data/invoices/
 backend/app/data/store.json
 .env
+.passwords
 staging_secrets/
 /AI/
 backend/app/node_modules/
