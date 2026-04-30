@@ -8,25 +8,55 @@ import {
 
 const ROLES = { ADMIN: "atp_admin" };
 
+const SECTION_CONFIGS = [
+  {
+    key: "backend-staff",
+    domainId: "backend",
+    title: "1. Backend terms for staff",
+    description: "All backend UI terms across staff pages, including bookings.html.",
+    fixedTargetLang: "vi",
+    languageLabel: "EN -> VI"
+  },
+  {
+    key: "index-content",
+    domainId: "index-content-memory",
+    title: "2. index.html texts",
+    description: "Customer-facing index.html text, excluding marketing tours."
+  },
+  {
+    key: "marketing-tours",
+    domainId: "marketing-tour-memory",
+    title: "3. Marketing Tours",
+    description: "Exact-source cache and manual overrides used when staff translate marketing-tour content."
+  },
+  {
+    key: "booking-content",
+    domainId: "booking-content-memory",
+    title: "4. Texts in bookings.html",
+    description: "Customer-facing booking text, including booking travel-plan translation fields."
+  }
+];
+
+const STATUS_OPTIONS = [
+  ["", "All"],
+  ["manual_override", "Manual overrides"],
+  ["content_translation", "Content translations"],
+  ["stale", "Stale"],
+  ["missing", "Missing"],
+  ["machine", "Machine"],
+  ["legacy", "Legacy"],
+  ["extra", "Extra"]
+];
+
 const els = {
   homeLink: document.getElementById("backendHomeLink"),
   error: document.getElementById("backendError"),
   panel: document.getElementById("translationsPanel"),
   intro: document.getElementById("translationsIntro"),
   status: document.getElementById("translationsStatus"),
-  domainSelect: document.getElementById("translationsDomainSelect"),
-  languageSelect: document.getElementById("translationsLanguageSelect"),
-  searchInput: document.getElementById("translationsSearchInput"),
-  statusFilter: document.getElementById("translationsStatusFilter"),
-  summary: document.getElementById("translationsSummary"),
-  table: document.getElementById("translationsTable"),
+  sections: document.getElementById("translationsSections"),
   refreshBtn: document.getElementById("translationsRefreshBtn"),
-  exportBtn: document.getElementById("translationsExportBtn"),
-  importBtn: document.getElementById("translationsImportBtn"),
-  importInput: document.getElementById("translationsImportInput"),
-  saveBtn: document.getElementById("translationsSaveBtn"),
   applyBtn: document.getElementById("translationsApplyBtn"),
-  retranslateCurrentBtn: document.getElementById("translationsRetranslateCurrentBtn"),
   retranslateFrontendAllBtn: document.getElementById("translationsRetranslateFrontendAllBtn"),
   retranslateBackendViBtn: document.getElementById("translationsRetranslateBackendViBtn"),
   overlay: document.getElementById("translationsApplyOverlay"),
@@ -36,8 +66,7 @@ const els = {
 
 const state = {
   domains: [],
-  current: null,
-  dirty: new Map(),
+  sections: new Map(),
   permissions: {
     canReadTranslations: false,
     canEditTranslations: false
@@ -66,20 +95,12 @@ function setStatus(message) {
   if (els.status) els.status.textContent = normalizeText(message);
 }
 
-function selectedDomainId() {
-  return normalizeText(els.domainSelect?.value || state.current?.domain?.id || "frontend");
-}
-
-function selectedTargetLang() {
-  return normalizeText(els.languageSelect?.value || state.current?.target_lang || "");
+function setSectionStatus(section, message) {
+  if (section?.els?.status) section.els.status.textContent = normalizeText(message);
 }
 
 function translationsApplyingOverlayText() {
   return backendT("backend.translations.applying_overlay", "Applying translations. Please wait.");
-}
-
-function retranslateCurrentOverlayText() {
-  return backendT("backend.translations.retranslate_current_overlay", "Retranslating current language. Please wait.");
 }
 
 function retranslateFrontendAllOverlayText() {
@@ -100,74 +121,188 @@ function languageLabel(language) {
   return normalizeText(language?.nativeLabel || language?.native_label || language?.code).toUpperCase();
 }
 
+function safeDomId(value) {
+  return normalizeText(value).replace(/[^a-z0-9_-]+/gi, "_");
+}
+
+function getDomain(domainId) {
+  return state.domains.find((entry) => entry.id === domainId) || null;
+}
+
+function dirtySections() {
+  return Array.from(state.sections.values()).filter((section) => section.dirty.size > 0);
+}
+
 function updateActions() {
-  const hasDirty = state.dirty.size > 0;
-  if (els.saveBtn) {
-    els.saveBtn.disabled = !state.permissions.canEditTranslations || !hasDirty || state.isSaving || state.isJobRunning;
-    els.saveBtn.textContent = hasDirty ? `Save overrides (${state.dirty.size})` : "Save overrides";
-  }
+  const hasDirty = dirtySections().length > 0;
   if (els.applyBtn) {
     els.applyBtn.disabled = !state.permissions.canEditTranslations || state.isSaving || state.isJobRunning;
   }
   if (els.refreshBtn) {
     els.refreshBtn.disabled = state.isSaving || state.isJobRunning;
   }
-  if (els.exportBtn) {
-    els.exportBtn.disabled = !state.permissions.canReadTranslations || !state.current || state.isSaving || state.isJobRunning;
-  }
-  if (els.importBtn) {
-    els.importBtn.disabled = !state.permissions.canEditTranslations || !state.current || state.isSaving || state.isJobRunning;
-  }
-  if (els.retranslateCurrentBtn) {
-    els.retranslateCurrentBtn.disabled = !state.permissions.canEditTranslations || state.isSaving || state.isJobRunning;
-  }
   if (els.retranslateFrontendAllBtn) {
-    els.retranslateFrontendAllBtn.disabled = !state.permissions.canEditTranslations || state.isSaving || state.isJobRunning || selectedDomainId() !== "frontend";
+    els.retranslateFrontendAllBtn.disabled = !state.permissions.canEditTranslations || state.isSaving || state.isJobRunning;
   }
   if (els.retranslateBackendViBtn) {
     els.retranslateBackendViBtn.disabled = !state.permissions.canEditTranslations || state.isSaving || state.isJobRunning;
   }
+
+  for (const section of state.sections.values()) {
+    const sectionDirty = section.dirty.size;
+    if (section.els.saveBtn) {
+      section.els.saveBtn.disabled = !state.permissions.canEditTranslations || !sectionDirty || state.isSaving || state.isJobRunning;
+      section.els.saveBtn.textContent = sectionDirty ? `Save manual overrides (${sectionDirty})` : "Save manual overrides";
+    }
+    if (section.els.exportBtn) {
+      section.els.exportBtn.disabled = !state.permissions.canReadTranslations || !section.current || state.isSaving || state.isJobRunning;
+    }
+    if (section.els.importBtn) {
+      section.els.importBtn.disabled = !state.permissions.canEditTranslations || !section.current || state.isSaving || state.isJobRunning;
+    }
+    if (section.els.languageSelect) {
+      section.els.languageSelect.disabled = state.isSaving || state.isJobRunning;
+    }
+  }
+
+  if (hasDirty) {
+    setStatus(`${dirtySections().length} section${dirtySections().length === 1 ? "" : "s"} with unsaved manual overrides.`);
+  } else if (normalizeText(els.status?.textContent).includes("unsaved manual overrides")) {
+    setStatus("No unsaved manual overrides.");
+  }
 }
 
-function renderDomainOptions() {
-  if (!els.domainSelect) return;
-  els.domainSelect.innerHTML = state.domains
-    .map((domain) => `<option value="${escapeHtml(domain.id)}">${escapeHtml(domain.label || domain.id)}</option>`)
+function sectionTemplate(config) {
+  const id = safeDomId(config.key);
+  const statusOptions = STATUS_OPTIONS
+    .map(([value, label]) => `<option value="${escapeHtml(value)}">${escapeHtml(label)}</option>`)
     .join("");
+  const languageControl = config.fixedTargetLang
+    ? `
+      <div class="field">
+        <label>Language</label>
+        <p class="translations-fixed-language">${escapeHtml(config.languageLabel || "EN -> VI")}</p>
+      </div>
+    `
+    : `
+      <div class="field">
+        <label for="translations_${id}_language">Customer language</label>
+        <select id="translations_${id}_language" data-section-language="${escapeHtml(config.key)}"></select>
+      </div>
+    `;
+
+  return `
+    <section class="translations-section" data-translation-section="${escapeHtml(config.key)}">
+      <div class="translations-section__head">
+        <div>
+          <h2 class="translations-section__title">${escapeHtml(config.title)}</h2>
+          <p class="micro">${escapeHtml(config.description)}</p>
+        </div>
+        <div class="translations-section__actions">
+          <p class="micro translations-section__status" data-section-status role="status" aria-live="polite"></p>
+          <button class="btn btn-ghost" type="button" data-section-export>Export manual overrides</button>
+          <button class="btn btn-ghost" type="button" data-section-import>Import manual overrides</button>
+          <input type="file" accept="application/json,.json" hidden data-section-import-input />
+          <button class="btn btn-primary" type="button" disabled data-section-save>Save manual overrides</button>
+        </div>
+      </div>
+
+      <div class="translations-controls">
+        ${languageControl}
+        <div class="field">
+          <label for="translations_${id}_search">Search</label>
+          <input id="translations_${id}_search" type="search" autocomplete="off" placeholder="English term, cache, manual override" data-section-search />
+        </div>
+        <div class="field">
+          <label for="translations_${id}_status">Status</label>
+          <select id="translations_${id}_status" data-section-filter>${statusOptions}</select>
+        </div>
+      </div>
+
+      <div class="translations-summary" data-section-summary></div>
+
+      <div class="backend-table-wrap translations-table-wrap">
+        <table class="backend-table translations-table" data-section-table></table>
+      </div>
+    </section>
+  `;
 }
 
-function renderLanguageOptions(domain) {
-  if (!els.languageSelect) return;
-  const languages = Array.isArray(domain?.target_languages) ? domain.target_languages : [];
-  els.languageSelect.innerHTML = languages
+function renderSectionCards() {
+  if (!els.sections) return;
+  els.sections.innerHTML = SECTION_CONFIGS.map(sectionTemplate).join("");
+  state.sections.clear();
+
+  for (const config of SECTION_CONFIGS) {
+    const root = Array.from(els.sections.querySelectorAll("[data-translation-section]"))
+      .find((candidate) => candidate.getAttribute("data-translation-section") === config.key);
+    const section = {
+      config,
+      domain: getDomain(config.domainId),
+      current: null,
+      dirty: new Map(),
+      els: {
+        root,
+        status: root?.querySelector("[data-section-status]") || null,
+        languageSelect: root?.querySelector("[data-section-language]") || null,
+        searchInput: root?.querySelector("[data-section-search]") || null,
+        statusFilter: root?.querySelector("[data-section-filter]") || null,
+        summary: root?.querySelector("[data-section-summary]") || null,
+        table: root?.querySelector("[data-section-table]") || null,
+        exportBtn: root?.querySelector("[data-section-export]") || null,
+        importBtn: root?.querySelector("[data-section-import]") || null,
+        importInput: root?.querySelector("[data-section-import-input]") || null,
+        saveBtn: root?.querySelector("[data-section-save]") || null
+      }
+    };
+    state.sections.set(config.key, section);
+    renderLanguageOptions(section);
+    bindSectionEvents(section);
+  }
+  updateActions();
+}
+
+function renderLanguageOptions(section) {
+  const select = section?.els?.languageSelect;
+  if (!select) return;
+  const languages = Array.isArray(section.domain?.target_languages) ? section.domain.target_languages : [];
+  const previous = normalizeText(select.value);
+  select.innerHTML = languages
     .map((language) => `<option value="${escapeHtml(language.code)}">${escapeHtml(languageLabel(language))}</option>`)
     .join("");
+  const nextValue = languages.some((language) => language.code === previous)
+    ? previous
+    : (languages[0]?.code || "");
+  select.value = nextValue;
 }
 
-function renderSummary() {
-  const counts = state.current?.counts || {};
+function selectedTargetLang(section) {
+  if (section?.config?.fixedTargetLang) return section.config.fixedTargetLang;
+  return normalizeText(section?.els?.languageSelect?.value || section?.current?.target_lang || section?.domain?.target_languages?.[0]?.code || "");
+}
+
+function renderSummary(section) {
+  const counts = section.current?.counts || {};
   const parts = [
-    ["Total", state.current?.total || 0],
-    ["Overrides", counts.manual_override || 0],
+    ["Total", section.current?.total || 0],
+    ["Manual overrides", counts.manual_override || 0],
+    ["Machine", counts.machine || 0],
     ["Content translations", counts.content_translation || 0],
     ["Stale", counts.stale || 0],
     ["Missing", counts.missing || 0],
     ["Extra", counts.extra || 0]
   ];
-  if (els.summary) {
-    els.summary.innerHTML = parts
+  if (section.els.summary) {
+    section.els.summary.innerHTML = parts
       .map(([label, count]) => `<span class="translations-summary__pill"><strong>${escapeHtml(label)}</strong> ${escapeHtml(count)}</span>`)
       .join("");
   }
-  if (els.intro) {
-    els.intro.textContent = state.current?.domain?.context || "Manage static translation overrides and inspect cached generated strings.";
-  }
 }
 
-function filteredRows() {
-  const rows = Array.isArray(state.current?.rows) ? state.current.rows : [];
-  const query = normalizeText(els.searchInput?.value).toLowerCase();
-  const status = normalizeText(els.statusFilter?.value);
+function filteredRows(section) {
+  const rows = Array.isArray(section.current?.rows) ? section.current.rows : [];
+  const query = normalizeText(section.els.searchInput?.value).toLowerCase();
+  const status = normalizeText(section.els.statusFilter?.value);
   return rows.filter((row) => {
     if (status && row.status !== status) return false;
     if (!query) return true;
@@ -176,19 +311,19 @@ function filteredRows() {
   });
 }
 
-function rowOverrideValue(row) {
-  return state.dirty.has(row.key) ? state.dirty.get(row.key) : normalizeText(row.override);
+function rowOverrideValue(section, row) {
+  return section.dirty.has(row.key) ? section.dirty.get(row.key) : normalizeText(row.override);
 }
 
-function sourceRows() {
-  return (Array.isArray(state.current?.rows) ? state.current.rows : [])
+function sourceRows(section) {
+  return (Array.isArray(section.current?.rows) ? section.current.rows : [])
     .filter((row) => normalizeText(row.key) && normalizeText(row.source));
 }
 
-function currentOverrideObject() {
+function currentOverrideObject(section) {
   const overrides = {};
-  for (const row of sourceRows()) {
-    const value = rowOverrideValue(row);
+  for (const row of sourceRows(section)) {
+    const value = rowOverrideValue(section, row);
     if (value) overrides[row.key] = value;
   }
   return overrides;
@@ -208,19 +343,19 @@ function timestampForFilename() {
   ].join("");
 }
 
-function exportOverrides() {
-  if (!state.current) return;
-  const overrides = currentOverrideObject();
+function exportOverrides(section) {
+  if (!section.current) return;
+  const overrides = currentOverrideObject(section);
   const blob = new Blob([`${JSON.stringify(overrides, null, 2)}\n`], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = `${state.current.domain.id}-${state.current.target_lang}-translation-overrides-${timestampForFilename()}.json`;
+  link.download = `${section.current.domain.id}-${section.current.target_lang}-manual-overrides-${timestampForFilename()}.json`;
   document.body.append(link);
   link.click();
   link.remove();
   URL.revokeObjectURL(url);
-  setStatus(`Exported ${Object.keys(overrides).length} overrides.`);
+  setSectionStatus(section, `Exported ${Object.keys(overrides).length} manual overrides.`);
 }
 
 function normalizeImportedOverrides(parsed) {
@@ -228,11 +363,11 @@ function normalizeImportedOverrides(parsed) {
     ? parsed.overrides
     : parsed;
   if (!rawOverrides || typeof rawOverrides !== "object" || Array.isArray(rawOverrides)) {
-    throw new Error("Import file must contain a JSON object of translation overrides.");
+    throw new Error("Import file must contain a JSON object of manual translation overrides.");
   }
   for (const [key, value] of Object.entries(rawOverrides)) {
     if (value !== null && typeof value === "object") {
-      throw new Error(`Override value for ${key} must be text.`);
+      throw new Error(`Manual override value for ${key} must be text.`);
     }
   }
   return Object.fromEntries(
@@ -242,8 +377,8 @@ function normalizeImportedOverrides(parsed) {
   );
 }
 
-function stageImportedOverrides(importedOverrides) {
-  const rows = sourceRows();
+function stageImportedOverrides(section, importedOverrides) {
+  const rows = sourceRows(section);
   const sourceKeySet = new Set(rows.map((row) => row.key));
   const unknownKeys = Object.keys(importedOverrides).filter((key) => !sourceKeySet.has(key));
   if (unknownKeys.length) {
@@ -251,72 +386,80 @@ function stageImportedOverrides(importedOverrides) {
     throw new Error(`Import contains unknown translation keys: ${preview}${unknownKeys.length > 8 ? ", ..." : ""}`);
   }
 
-  state.dirty.clear();
+  section.dirty.clear();
   for (const row of rows) {
     const importedValue = normalizeText(importedOverrides[row.key]);
     const currentValue = normalizeText(row.override);
     if (importedValue !== currentValue) {
-      state.dirty.set(row.key, importedValue);
+      section.dirty.set(row.key, importedValue);
     }
   }
-  renderSummary();
-  renderTable();
+  renderSummary(section);
+  renderTable(section);
   updateActions();
-  setStatus(`Imported ${Object.keys(importedOverrides).length} overrides. Save to persist this replacement set.`);
+  setSectionStatus(section, `Imported ${Object.keys(importedOverrides).length} manual overrides. Save to persist this replacement set.`);
 }
 
-async function importOverridesFile(file) {
+async function importOverridesFile(section, file) {
   if (!file) return;
   try {
-    if (!state.current) throw new Error("Select a translation language before importing overrides.");
-    if (state.dirty.size && !window.confirm("Import will replace the currently staged override edits. Continue?")) return;
+    if (!section.current) throw new Error("Load a translation language before importing manual overrides.");
+    if (section.dirty.size && !window.confirm("Import will replace the currently staged manual override edits in this section. Continue?")) return;
     const parsed = JSON.parse(await file.text());
-    stageImportedOverrides(normalizeImportedOverrides(parsed));
+    stageImportedOverrides(section, normalizeImportedOverrides(parsed));
     showError("");
   } catch (error) {
-    showError(error?.message || "Could not import translation overrides.");
+    showError(error?.message || "Could not import manual translation overrides.");
   } finally {
-    if (els.importInput) els.importInput.value = "";
+    if (section.els.importInput) section.els.importInput.value = "";
   }
 }
 
-function renderTable() {
-  if (!els.table) return;
-  const rows = filteredRows();
+function renderTable(section) {
+  const table = section.els.table;
+  if (!table) return;
+  const rows = filteredRows(section);
+  if (!section.current) {
+    table.innerHTML = `
+      <thead><tr><th>English term</th><th>Cache</th><th>Manual override</th><th>Status</th></tr></thead>
+      <tbody><tr><td colspan="4">Loading translation strings...</td></tr></tbody>
+    `;
+    updateActions();
+    return;
+  }
   if (!rows.length) {
-    els.table.innerHTML = `
-      <thead><tr><th>Key</th><th>Source</th><th>Cache</th><th>Override</th><th>Status</th></tr></thead>
-      <tbody><tr><td colspan="5">No translation strings match the current filter.</td></tr></tbody>
+    table.innerHTML = `
+      <thead><tr><th>English term</th><th>Cache</th><th>Manual override</th><th>Status</th></tr></thead>
+      <tbody><tr><td colspan="4">No translation strings match the current filter.</td></tr></tbody>
     `;
     updateActions();
     return;
   }
 
-  els.table.innerHTML = `
+  table.innerHTML = `
     <thead>
       <tr>
-        <th>Key</th>
-        <th>Source text</th>
+        <th>English term</th>
         <th>Cache (read only)</th>
-        <th>Override / translation</th>
+        <th>Manual override</th>
         <th>Status</th>
       </tr>
     </thead>
     <tbody>
       ${rows.map((row) => {
-        const overrideValue = rowOverrideValue(row);
-        const isDirty = state.dirty.has(row.key);
+        const overrideValue = rowOverrideValue(section, row);
+        const isDirty = section.dirty.has(row.key);
         const metadata = JSON.stringify(row.cache_meta || {}, null, 2);
         return `
           <tr class="${isDirty ? "is-dirty" : ""}" data-key="${escapeHtml(row.key)}">
-            <td class="translations-table__key">
-              <code>${escapeHtml(row.key)}</code>
+            <td class="translations-table__text">
+              ${escapeHtml(row.source || "-")}
               <details class="translations-table__meta">
-                <summary>metadata</summary>
+                <summary>key and metadata</summary>
+                <code>${escapeHtml(row.key)}</code>
                 <pre>${escapeHtml(metadata)}</pre>
               </details>
             </td>
-            <td class="translations-table__text">${escapeHtml(row.source || "-")}</td>
             <td class="translations-table__text">${escapeHtml(row.cached || "-")}</td>
             <td>
               <textarea class="translations-table__override" data-override-key="${escapeHtml(row.key)}" rows="3" ${state.permissions.canEditTranslations ? "" : "disabled"}>${escapeHtml(overrideValue)}</textarea>
@@ -331,18 +474,18 @@ function renderTable() {
     </tbody>
   `;
 
-  els.table.querySelectorAll("[data-override-key]").forEach((textarea) => {
+  table.querySelectorAll("[data-override-key]").forEach((textarea) => {
     textarea.addEventListener("input", () => {
       const key = textarea.getAttribute("data-override-key");
-      const original = normalizeText((state.current?.rows || []).find((row) => row.key === key)?.override);
+      const original = normalizeText((section.current?.rows || []).find((row) => row.key === key)?.override);
       const next = normalizeText(textarea.value);
       if (next === original) {
-        state.dirty.delete(key);
+        section.dirty.delete(key);
       } else {
-        state.dirty.set(key, next);
+        section.dirty.set(key, next);
       }
       const tr = textarea.closest("tr");
-      if (tr) tr.classList.toggle("is-dirty", state.dirty.has(key));
+      if (tr) tr.classList.toggle("is-dirty", section.dirty.has(key));
       updateActions();
     });
   });
@@ -352,59 +495,73 @@ function renderTable() {
 async function loadDomains() {
   const payload = await fetchApi("/api/v1/static-translations/domains", { cache: "no-store" });
   state.domains = Array.isArray(payload?.domains) ? payload.domains : [];
-  renderDomainOptions();
 }
 
-async function loadCurrentState({ preserveSelection = false } = {}) {
-  if (!state.domains.length) await loadDomains();
-  const domainId = preserveSelection ? selectedDomainId() : selectedDomainId() || state.domains[0]?.id;
-  const requestedTargetLang = preserveSelection ? selectedTargetLang() : selectedTargetLang();
-  const domain = state.domains.find((entry) => entry.id === domainId) || state.domains[0];
-  if (!domain) return;
+async function loadSectionState(section, { preserveLanguage = true } = {}) {
+  section.domain = getDomain(section.config.domainId);
+  if (!section.domain) {
+    setSectionStatus(section, "Translation area is not configured.");
+    renderTable(section);
+    return;
+  }
+  renderLanguageOptions(section);
+  const targetLang = preserveLanguage ? selectedTargetLang(section) : (section.config.fixedTargetLang || section.domain.target_languages?.[0]?.code || "");
+  if (section.els.languageSelect && targetLang) section.els.languageSelect.value = targetLang;
+  if (!targetLang) {
+    setSectionStatus(section, "No target language configured.");
+    renderTable(section);
+    return;
+  }
 
-  if (els.domainSelect) els.domainSelect.value = domain.id;
-  renderLanguageOptions(domain);
-  const targetLang = requestedTargetLang || domain.target_languages?.[0]?.code;
-  const resolvedLang = domain.target_languages?.some((entry) => entry.code === targetLang)
-    ? targetLang
-    : domain.target_languages?.[0]?.code;
-  if (els.languageSelect) els.languageSelect.value = resolvedLang || "";
-  if (!resolvedLang) return;
-
-  state.dirty.clear();
-  setStatus("Loading translations...");
-  const payload = await fetchApi(`/api/v1/static-translations/${encodeURIComponent(domain.id)}/${encodeURIComponent(resolvedLang)}`, { cache: "no-store" });
+  section.dirty.clear();
+  setSectionStatus(section, "Loading translations...");
+  const payload = await fetchApi(`/api/v1/static-translations/${encodeURIComponent(section.domain.id)}/${encodeURIComponent(targetLang)}`, { cache: "no-store" });
   if (!payload) return;
-  state.current = payload;
-  renderSummary();
-  renderTable();
-  setStatus(`Loaded ${payload.total || 0} strings.`);
+  section.current = payload;
+  renderSummary(section);
+  renderTable(section);
+  setSectionStatus(section, `Loaded ${payload.total || 0} strings.`);
 }
 
-async function saveOverrides() {
-  if (!state.current || !state.dirty.size || state.isSaving) return;
+async function loadAllSections({ preserveLanguage = true } = {}) {
+  if (!state.domains.length) await loadDomains();
+  if (!state.sections.size) renderSectionCards();
+  const results = await Promise.allSettled(
+    Array.from(state.sections.values()).map((section) => loadSectionState(section, { preserveLanguage }))
+  );
+  const failed = results.filter((result) => result.status === "rejected");
+  if (failed.length) {
+    showError(failed[0].reason?.message || "Could not load one or more translation sections.");
+  } else {
+    showError("");
+    setStatus("All translation sections loaded.");
+  }
+  updateActions();
+}
+
+async function saveOverrides(section) {
+  if (!section.current || !section.dirty.size || state.isSaving) return;
   state.isSaving = true;
   updateActions();
-  setStatus("Saving overrides...");
-  const overrides = Object.fromEntries(state.dirty.entries());
+  setSectionStatus(section, "Saving manual overrides...");
+  const overrides = Object.fromEntries(section.dirty.entries());
   const payload = await fetchApi(
-    `/api/v1/static-translations/${encodeURIComponent(state.current.domain.id)}/${encodeURIComponent(state.current.target_lang)}/overrides`,
+    `/api/v1/static-translations/${encodeURIComponent(section.current.domain.id)}/${encodeURIComponent(section.current.target_lang)}/overrides`,
     {
       method: "PATCH",
       body: {
-        expected_revision: state.current.revision,
+        expected_revision: section.current.revision,
         overrides
       }
     }
   );
   state.isSaving = false;
   if (payload) {
-    state.current = payload;
-    state.dirty.clear();
-    renderSummary();
-    renderTable();
-    const saveLabel = state.current?.domain?.id === "homepage-content" ? "Content translations" : "Overrides";
-    setStatus(`${saveLabel} saved. Use Apply to update the generated dictionaries and homepage assets.`);
+    section.current = payload;
+    section.dirty.clear();
+    renderSummary(section);
+    renderTable(section);
+    setSectionStatus(section, "Manual overrides saved.");
     showError("");
   }
   updateActions();
@@ -446,14 +603,14 @@ async function pollJob(jobId, overlayStartedAt) {
     latest = payload?.job || latest;
     renderJob(latest);
     if (latest?.status === "succeeded" || latest?.status === "failed") break;
-    await new Promise((resolve) => window.setTimeout(resolve, 1500));
+    await waitForMs(1500);
   }
   state.isJobRunning = false;
   updateActions();
   if (latest?.status === "succeeded") {
     await hideOverlayAfterMinimum(overlayStartedAt);
     setStatus("Translations applied.");
-    await loadCurrentState({ preserveSelection: true });
+    await loadAllSections({ preserveLanguage: true });
     return;
   }
   await hideOverlayAfterMinimum(overlayStartedAt);
@@ -463,7 +620,7 @@ async function pollJob(jobId, overlayStartedAt) {
 
 async function startJob(path, body = null, overlayText = translationsApplyingOverlayText()) {
   if (state.isJobRunning) return;
-  if (state.dirty.size && !window.confirm("You have unsaved overrides. Continue without saving them?")) return;
+  if (dirtySections().length && !window.confirm("You have unsaved manual overrides. Continue without saving them?")) return;
   state.isJobRunning = true;
   updateActions();
   const overlayStartedAt = Date.now();
@@ -484,25 +641,19 @@ async function startJob(path, body = null, overlayText = translationsApplyingOve
   await pollJob(job.id, overlayStartedAt);
 }
 
+function bindSectionEvents(section) {
+  section.els.languageSelect?.addEventListener("change", () => loadSectionState(section, { preserveLanguage: true }));
+  section.els.searchInput?.addEventListener("input", () => renderTable(section));
+  section.els.statusFilter?.addEventListener("change", () => renderTable(section));
+  section.els.exportBtn?.addEventListener("click", () => exportOverrides(section));
+  section.els.importBtn?.addEventListener("click", () => section.els.importInput?.click());
+  section.els.importInput?.addEventListener("change", () => importOverridesFile(section, section.els.importInput.files?.[0] || null));
+  section.els.saveBtn?.addEventListener("click", () => saveOverrides(section));
+}
+
 function bindEvents() {
-  els.domainSelect?.addEventListener("change", () => loadCurrentState({ preserveSelection: true }));
-  els.languageSelect?.addEventListener("change", () => loadCurrentState({ preserveSelection: true }));
-  els.searchInput?.addEventListener("input", renderTable);
-  els.statusFilter?.addEventListener("change", renderTable);
-  els.refreshBtn?.addEventListener("click", () => loadCurrentState({ preserveSelection: true }));
-  els.exportBtn?.addEventListener("click", exportOverrides);
-  els.importBtn?.addEventListener("click", () => els.importInput?.click());
-  els.importInput?.addEventListener("change", () => importOverridesFile(els.importInput.files?.[0] || null));
-  els.saveBtn?.addEventListener("click", saveOverrides);
+  els.refreshBtn?.addEventListener("click", () => loadAllSections({ preserveLanguage: true }));
   els.applyBtn?.addEventListener("click", () => startJob("/api/v1/static-translations/apply", null, translationsApplyingOverlayText()));
-  els.retranslateCurrentBtn?.addEventListener("click", () => {
-    if (!window.confirm("Retranslate cached machine translations for the current language? Manual overrides are preserved.")) return;
-    const mode = selectedDomainId() === "backend" ? "backend_vi" : "frontend_current_language";
-    startJob("/api/v1/static-translations/retranslate", {
-      mode,
-      target_lang: selectedTargetLang()
-    }, retranslateCurrentOverlayText());
-  });
   els.retranslateFrontendAllBtn?.addEventListener("click", () => {
     if (!window.confirm("Retranslate all customer-facing languages? This can take several minutes. Manual overrides are preserved.")) return;
     startJob("/api/v1/static-translations/retranslate", { mode: "frontend_all_languages" }, retranslateFrontendAllOverlayText());
@@ -548,7 +699,8 @@ async function init() {
 
   if (els.panel) els.panel.hidden = false;
   await loadDomains();
-  await loadCurrentState();
+  renderSectionCards();
+  await loadAllSections({ preserveLanguage: false });
 }
 
 function handleBackendLanguageChanged() {
@@ -556,18 +708,10 @@ function handleBackendLanguageChanged() {
     showError(backendT("backend.translations.forbidden", "You do not have access to translations."));
     return;
   }
-  const domainId = selectedDomainId();
-  const targetLang = selectedTargetLang();
-  renderDomainOptions();
-  if (els.domainSelect) {
-    els.domainSelect.value = domainId;
+  for (const section of state.sections.values()) {
+    renderSummary(section);
+    renderTable(section);
   }
-  renderLanguageOptions(state.current?.domain);
-  if (els.languageSelect) {
-    els.languageSelect.value = targetLang;
-  }
-  renderSummary();
-  renderTable();
   updateActions();
 }
 

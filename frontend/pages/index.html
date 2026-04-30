@@ -36,17 +36,27 @@
     <script>
       {
         const hostname = window.location.hostname;
-        const environmentIcon = ["localhost", "127.0.0.1", "::1", "[::1]"].includes(hostname)
+        const isPrivateNetworkHost = /^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(hostname);
+        const isLocalEnvironment = ["localhost", "127.0.0.1", "::1", "[::1]"].includes(hostname) || isPrivateNetworkHost;
+        const isStagingEnvironment = hostname === "staging.asiatravelplan.com";
+        const environmentIcon = isLocalEnvironment
           ? { href: "/assets/img/local.small.png", sizes: "200x200" }
-          : hostname === "staging.asiatravelplan.com"
+          : isStagingEnvironment
             ? { href: "/assets/img/staging.small.png", sizes: "150x150" }
+            : null;
+        const environmentAppleTouchIcon = isLocalEnvironment
+          ? { href: "/assets/img/local-home-screen-icon.png", sizes: "180x180" }
+          : isStagingEnvironment
+            ? { href: "/assets/img/staging-home-screen-icon.png", sizes: "180x180" }
             : null;
         if (environmentIcon) {
           document.querySelector('link[rel="icon"][sizes="32x32"]')?.setAttribute("href", environmentIcon.href);
           document.querySelector('link[rel="icon"][sizes="16x16"]')?.setAttribute("href", environmentIcon.href);
+        }
+        if (environmentAppleTouchIcon) {
           const appleTouchIcon = document.querySelector('link[rel="apple-touch-icon"]');
-          appleTouchIcon?.setAttribute("href", environmentIcon.href);
-          appleTouchIcon?.setAttribute("sizes", environmentIcon.sizes);
+          appleTouchIcon?.setAttribute("href", environmentAppleTouchIcon.href);
+          appleTouchIcon?.setAttribute("sizes", environmentAppleTouchIcon.sizes);
         }
       }
     </script>

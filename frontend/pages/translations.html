@@ -4,24 +4,34 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Translations</title>
-    <meta name="description" content="AsiaTravelPlan backend translation overrides" />
+    <meta name="description" content="AsiaTravelPlan backend manual translation overrides" />
     <link rel="icon" href="/assets/img/favicon-32.png" sizes="32x32" type="image/png" />
     <link rel="icon" href="/assets/img/favicon-16.png" sizes="16x16" type="image/png" />
     <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png" sizes="180x180" />
     <script>
       {
         const hostname = window.location.hostname;
-        const environmentIcon = ["localhost", "127.0.0.1", "::1", "[::1]"].includes(hostname)
+        const isPrivateNetworkHost = /^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(hostname);
+        const isLocalEnvironment = ["localhost", "127.0.0.1", "::1", "[::1]"].includes(hostname) || isPrivateNetworkHost;
+        const isStagingEnvironment = hostname === "staging.asiatravelplan.com";
+        const environmentIcon = isLocalEnvironment
           ? { href: "/assets/img/local.small.png", sizes: "200x200" }
-          : hostname === "staging.asiatravelplan.com"
+          : isStagingEnvironment
             ? { href: "/assets/img/staging.small.png", sizes: "150x150" }
+            : null;
+        const environmentAppleTouchIcon = isLocalEnvironment
+          ? { href: "/assets/img/local-home-screen-icon.png", sizes: "180x180" }
+          : isStagingEnvironment
+            ? { href: "/assets/img/staging-home-screen-icon.png", sizes: "180x180" }
             : null;
         if (environmentIcon) {
           document.querySelector('link[rel="icon"][sizes="32x32"]')?.setAttribute("href", environmentIcon.href);
           document.querySelector('link[rel="icon"][sizes="16x16"]')?.setAttribute("href", environmentIcon.href);
+        }
+        if (environmentAppleTouchIcon) {
           const appleTouchIcon = document.querySelector('link[rel="apple-touch-icon"]');
-          appleTouchIcon?.setAttribute("href", environmentIcon.href);
-          appleTouchIcon?.setAttribute("sizes", environmentIcon.sizes);
+          appleTouchIcon?.setAttribute("href", environmentAppleTouchIcon.href);
+          appleTouchIcon?.setAttribute("sizes", environmentAppleTouchIcon.sizes);
         }
       }
     </script>
@@ -58,58 +68,21 @@
             <div class="translations-workspace__head">
               <div>
                 <h1 class="section-title u-title-medium">Translations</h1>
-                <p class="micro" id="translationsIntro">Manage static translation overrides and inspect cached generated strings.</p>
+                <p class="micro" id="translationsIntro">Manage manual translation overrides and inspect cached generated strings across all translation areas.</p>
               </div>
               <div class="translations-workspace__actions">
                 <p class="micro translations-workspace__status" id="translationsStatus" role="status" aria-live="polite"></p>
                 <button class="btn btn-ghost" id="translationsRefreshBtn" type="button">Refresh</button>
-                <button class="btn btn-ghost" id="translationsExportBtn" type="button">Export overrides</button>
-                <button class="btn btn-ghost" id="translationsImportBtn" type="button">Import overrides</button>
-                <input id="translationsImportInput" type="file" accept="application/json,.json" hidden />
-                <button class="btn btn-primary" id="translationsSaveBtn" type="button" disabled>Save overrides</button>
                 <button class="btn btn-primary" id="translationsApplyBtn" type="button">Apply</button>
               </div>
             </div>
 
-            <div class="translations-controls">
-              <div class="field">
-                <label for="translationsDomainSelect">Area</label>
-                <select id="translationsDomainSelect"></select>
-              </div>
-              <div class="field">
-                <label for="translationsLanguageSelect">Language</label>
-                <select id="translationsLanguageSelect"></select>
-              </div>
-              <div class="field">
-                <label for="translationsSearchInput">Search</label>
-                <input id="translationsSearchInput" type="search" autocomplete="off" placeholder="Key, source, cache, override" />
-              </div>
-              <div class="field">
-                <label for="translationsStatusFilter">Status</label>
-                <select id="translationsStatusFilter">
-                  <option value="">All</option>
-                  <option value="manual_override">Manual overrides</option>
-                  <option value="content_translation">Content translations</option>
-                  <option value="stale">Stale</option>
-                  <option value="missing">Missing</option>
-                  <option value="machine">Machine</option>
-                  <option value="legacy">Legacy</option>
-                  <option value="extra">Extra</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="translations-summary" id="translationsSummary"></div>
-
-            <div class="backend-table-wrap translations-table-wrap">
-              <table class="backend-table translations-table" id="translationsTable"></table>
-            </div>
+            <div class="translations-sections" id="translationsSections"></div>
 
             <details class="translations-advanced">
               <summary>Advanced retranslation and cache invalidation</summary>
               <p class="micro">Use these only when cached machine translations are poor. Manual overrides are preserved by the sync scripts.</p>
               <div class="translations-advanced__actions">
-                <button class="btn btn-ghost" id="translationsRetranslateCurrentBtn" type="button">Retranslate current language</button>
                 <button class="btn btn-ghost" id="translationsRetranslateFrontendAllBtn" type="button">Retranslate all customer-facing languages</button>
                 <button class="btn btn-ghost" id="translationsRetranslateBackendViBtn" type="button">Retranslate backend Vietnamese</button>
               </div>

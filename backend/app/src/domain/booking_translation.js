@@ -92,7 +92,7 @@ function createFieldDescriptor({
   };
 }
 
-function collectTravelPlanFieldDescriptors(travelPlan, options = {}) {
+export function collectTravelPlanFieldDescriptors(travelPlan, options = {}) {
   const normalizedSourceLang = normalizeBookingContentLang(options?.sourceLang || DEFAULT_BOOKING_CONTENT_LANG);
   const normalizedTargetLang = normalizeBookingContentLang(options?.targetLang || options?.lang || DEFAULT_BOOKING_CONTENT_LANG);
   const days = Array.isArray(travelPlan?.days) ? travelPlan.days : [];

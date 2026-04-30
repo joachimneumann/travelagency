@@ -5,6 +5,7 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { createStaticTranslationService } from "../src/domain/static_translations.js";
+import { createTranslationMemoryStore } from "../src/lib/translation_memory_store.js";
 
 function sha(value) {
   return createHash("sha256").update(String(value ?? ""), "utf8").digest("hex");
@@ -186,6 +187,183 @@ test("static translation service exposes and edits generated homepage content tr
     assert.equal(store.destination_areas[0].name_i18n.vi, "Bắc Bộ");
     assert.equal(tours[0].short_description.vi, "Đà Lạt miền Bắc");
     assert.equal(saved.rows.find((row) => row.key === "area.area_north.name").override, "Bắc Bộ");
+  } finally {
+    await rm(repoRoot, { recursive: true, force: true });
+  }
+});
+
+test("static translation service exposes marketing tour memory and saves manual overrides", async () => {
+  const repoRoot = await createFixture();
+  try {
+    const translationMemoryStore = createTranslationMemoryStore({
+      dataPath: path.join(repoRoot, "content", "translation_memory.json"),
+      writeQueueRef: { current: Promise.resolve() },
+      nowIso: () => "2026-04-28T02:00:00.000Z"
+    });
+    await translationMemoryStore.writeMachineTranslations(
+      { title: "Lantern walk" },
+      { title: "Maschinenlaternen-Spaziergang" },
+      "de",
+      { kind: "google", display: "google" }
+    );
+
+    const tours = [
+      {
+        id: "tour_memory",
+        title: { en: "Lantern walk" },
+        short_description: { en: "Hoi An evening" },
+        travel_plan: {
+          days: [
+            {
+              id: "day_one",
+              title: "Market morning",
+              services: [
+                {
+                  id: "service_one",
+                  timing_kind: "label",
+                  title: "Basket boat tour"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ];
+
+    const service = createStaticTranslationService({
+      repoRoot,
+      readTours: async () => JSON.parse(JSON.stringify(tours)),
+      translationMemoryStore,
+      nowIso: () => "2026-04-28T02:00:00.000Z"
+    });
+
+    const state = await service.getLanguageState("marketing-tour-memory", "de");
+    const row = state.rows.find((item) => item.source === "Lantern walk");
+    const missing = state.rows.find((item) => item.source === "Basket boat tour");
+
+    assert.equal(row.cached, "Maschinenlaternen-Spaziergang");
+    assert.equal(row.status, "machine");
+    assert.equal(missing.status, "missing");
+
+    const saved = await service.patchOverrides("marketing-tour-memory", "de", {
+      expected_revision: state.revision,
+      overrides: {
+        [row.key]: "Laternen-Spaziergang"
+      }
+    });
+    const savedRow = saved.rows.find((item) => item.source === "Lantern walk");
+    const resolved = await translationMemoryStore.resolveEntries({ copied: "Lantern walk" }, "de");
+
+    assert.equal(savedRow.override, "Laternen-Spaziergang");
+    assert.equal(savedRow.status, "manual_override");
+    assert.deepEqual(resolved.entries, { copied: "Laternen-Spaziergang" });
+    assert.deepEqual(resolved.origins, { copied: "manual_override" });
+
+    await translationMemoryStore.writeMachineTranslations(
+      { copied: "Lantern walk" },
+      { copied: "Neue Maschinenlaterne" },
+      "de",
+      { kind: "google", display: "google" }
+    );
+    const stillManual = await translationMemoryStore.resolveEntries({ copied: "Lantern walk" }, "de");
+
+    assert.deepEqual(stillManual.entries, { copied: "Laternen-Spaziergang" });
+    assert.deepEqual(stillManual.origins, { copied: "manual_override" });
+  } finally {
+    await rm(repoRoot, { recursive: true, force: true });
+  }
+});
+
+test("static translation service exposes exact-source memory for index and booking sections", async () => {
+  const repoRoot = await createFixture();
+  try {
+    const translationMemoryStore = createTranslationMemoryStore({
+      dataPath: path.join(repoRoot, "content", "translation_memory.json"),
+      writeQueueRef: { current: Promise.resolve() },
+      nowIso: () => "2026-04-28T03:00:00.000Z"
+    });
+    await translationMemoryStore.writeMachineTranslations(
+      {
+        cta: "Plan my trip",
+        bookingService: "Airport transfer"
+      },
+      {
+        cta: "Lập kế hoạch chuyến đi",
+        bookingService: "Đưa đón sân bay"
+      },
+      "vi",
+      { kind: "google", display: "google" }
+    );
+
+    const store = {
+      destination_scope_destinations: [
+        {
+          code: "VN",
+          label: "Vietnam",
+          label_i18n: { en: "Vietnam" }
+        }
+      ],
+      destination_areas: [],
+      destination_places: [],
+      bookings: [
+        {
+          id: "booking_alpha",
+          travel_plan: {
+            days: [
+              {
+                id: "day_one",
+                title: "Arrival day",
+                services: [
+                  {
+                    id: "service_one",
+                    title: "Airport transfer",
+                    details: "Meet your guide"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    };
+
+    const service = createStaticTranslationService({
+      repoRoot,
+      readStore: async () => JSON.parse(JSON.stringify(store)),
+      readTours: async () => [],
+      translationMemoryStore,
+      nowIso: () => "2026-04-28T03:00:00.000Z"
+    });
+
+    const indexState = await service.getLanguageState("index-content-memory", "vi");
+    const indexCta = indexState.rows.find((row) => row.source === "Plan my trip");
+    const destination = indexState.rows.find((row) => row.source === "Vietnam");
+
+    assert.equal(indexCta.cached, "Lập kế hoạch chuyến đi");
+    assert.equal(indexCta.status, "machine");
+    assert.equal(destination.status, "missing");
+
+    const bookingState = await service.getLanguageState("booking-content-memory", "vi");
+    const bookingService = bookingState.rows.find((row) => row.source === "Airport transfer");
+    const bookingDetails = bookingState.rows.find((row) => row.source === "Meet your guide");
+
+    assert.equal(bookingService.cached, "Đưa đón sân bay");
+    assert.equal(bookingService.status, "machine");
+    assert.equal(bookingDetails.status, "missing");
+
+    const saved = await service.patchOverrides("booking-content-memory", "vi", {
+      expected_revision: bookingState.revision,
+      overrides: {
+        [bookingService.key]: "Xe đón sân bay"
+      }
+    });
+    const savedService = saved.rows.find((row) => row.source === "Airport transfer");
+    const resolved = await translationMemoryStore.resolveEntries({ service: "Airport transfer" }, "vi");
+
+    assert.equal(savedService.override, "Xe đón sân bay");
+    assert.equal(savedService.status, "manual_override");
+    assert.deepEqual(resolved.entries, { service: "Xe đón sân bay" });
+    assert.deepEqual(resolved.origins, { service: "manual_override" });
   } finally {
     await rm(repoRoot, { recursive: true, force: true });
   }
