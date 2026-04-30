@@ -54,6 +54,9 @@ export const COUNTRY_REFERENCE_INFO_PATH = resolveConfigPathFromRepoRoot(
 export const TRANSLATION_RULES_PATH = resolveConfigPathFromRepoRoot(
   normalizeText(process.env.TRANSLATION_RULES_PATH || path.join("content", "translation_rules.json"))
 );
+export const TRANSLATION_MEMORY_PATH = resolveConfigPathFromRepoRoot(
+  normalizeText(process.env.TRANSLATION_MEMORY_PATH || path.join("content", "translation_memory.json"))
+);
 export const BOOKING_TRAVEL_PLAN_ATTACHMENTS_DIR = path.join(PDFS_ROOT, "attachments");
 export const TEMP_UPLOAD_DIR = path.join(DATA_ROOT, "tmp");
 export const TRAVEL_PLAN_PDF_PREVIEW_DIR = path.join(TEMP_UPLOAD_DIR, "travel_plan_previews");
@@ -305,6 +308,7 @@ export const RUNTIME_PATHS = Object.freeze({
   legacyCountryReferenceInfoPath: LEGACY_COUNTRY_REFERENCE_INFO_PATH,
   countryReferenceInfoPath: COUNTRY_REFERENCE_INFO_PATH,
   translationRulesPath: TRANSLATION_RULES_PATH,
+  translationMemoryPath: TRANSLATION_MEMORY_PATH,
   bookingTravelPlanAttachmentsDir: BOOKING_TRAVEL_PLAN_ATTACHMENTS_DIR,
   tempUploadDir: TEMP_UPLOAD_DIR,
   travelPlanPdfPreviewDir: TRAVEL_PLAN_PDF_PREVIEW_DIR,

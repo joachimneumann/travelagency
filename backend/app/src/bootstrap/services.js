@@ -12,6 +12,7 @@ import { createStoreUtils } from "../lib/store_utils.js";
 import { createAtpStaffDirectory } from "../lib/atp_staff_directory.js";
 import { createCountryReferenceStore } from "../lib/country_reference_store.js";
 import { createTranslationRulesStore } from "../lib/translation_rules_store.js";
+import { createTranslationMemoryStore } from "../lib/translation_memory_store.js";
 import { createStaticTranslationApplyJobs } from "../domain/static_translation_apply_jobs.js";
 import { createStaticTranslationService } from "../domain/static_translations.js";
 
@@ -82,6 +83,12 @@ export function createBackendServices({
     nowIso: support.nowIso
   });
 
+  const translationMemoryStore = createTranslationMemoryStore({
+    dataPath: collections.translationMemoryPath,
+    writeQueueRef,
+    nowIso: support.nowIso
+  });
+
   const travelPlanPdfArtifacts = createTravelPlanPdfArtifacts({
     travelPlanPdfsDir: collections.travelPlanPdfsDir,
     generatedOffersDir: collections.generatedOffersDir
@@ -139,6 +146,7 @@ export function createBackendServices({
     persistStore: storeUtils.persistStore,
     readTours: storeUtils.readTours,
     persistTour: storeUtils.persistTour,
+    translationMemoryStore,
     nowIso: support.nowIso
   });
 
@@ -218,6 +226,7 @@ export function createBackendServices({
     atpStaffDirectory,
     countryReferenceStore,
     translationRulesStore,
+    translationMemoryStore,
     staticTranslationService,
     staticTranslationApplyJobs,
     travelPlanPdfArtifacts,

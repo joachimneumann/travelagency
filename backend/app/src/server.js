@@ -204,6 +204,7 @@ const services = createBackendServices({
     keycloakUserSnapshotPath: RUNTIME_PATHS.keycloakUserSnapshotPath,
     countryReferenceInfoPath: RUNTIME_PATHS.countryReferenceInfoPath,
     translationRulesPath: RUNTIME_PATHS.translationRulesPath,
+    translationMemoryPath: RUNTIME_PATHS.translationMemoryPath,
     bookingTravelPlanAttachmentsDir: RUNTIME_PATHS.bookingTravelPlanAttachmentsDir,
     tempUploadDir: RUNTIME_PATHS.tempUploadDir,
     travelPlanPdfPreviewDir: RUNTIME_PATHS.travelPlanPdfPreviewDir,
@@ -279,6 +280,7 @@ export async function createBackendHandler({ port = PORT } = {}) {
   await services.atpStaffDirectory.ensureStorage();
   await services.countryReferenceStore.ensureStorage();
   await services.translationRulesStore.ensureStorage();
+  await services.translationMemoryStore.ensureStorage();
   await services.atpStaffDirectory.syncProfilesFromKeycloak().catch(() => []);
   const startupStore = await services.storeUtils.readStore();
   const backfilledBookingPersons = startupStore.__bookingPersonsWritebackNeeded === true;

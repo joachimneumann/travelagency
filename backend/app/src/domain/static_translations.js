@@ -3,12 +3,18 @@ import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 import {
   BACKEND_UI_LANGUAGES,
+  CUSTOMER_CONTENT_LANGUAGES,
   FRONTEND_LANGUAGES,
   FRONTEND_LANGUAGE_CODES
 } from "../../../../shared/generated/language_catalog.js";
+import { collectTravelPlanFieldDescriptors } from "./booking_translation.js";
+import { translationMemorySourceKey } from "../lib/translation_memory_store.js";
 
 const FRONTEND_CONTEXT = "AsiaTravelPlan public website for travelers planning Southeast Asia trips. Use natural, polished, customer-facing copy that feels trustworthy, clear, and concise.";
 const HOMEPAGE_CONTENT_CONTEXT = "AsiaTravelPlan generated public homepage content from tours and destination filters. These strings are content translations, not static UI labels; Apply regenerates the public homepage assets after saving.";
+const INDEX_CONTENT_MEMORY_CONTEXT = "Exact-source translation memory for index.html customer-facing text, excluding marketing tours.";
+const MARKETING_TOUR_MEMORY_CONTEXT = "Shared exact-source translation memory for marketing tours. Manual overrides win over machine cache when staff translate marketing-tour content.";
+const BOOKING_CONTENT_MEMORY_CONTEXT = "Exact-source translation memory for customer-facing booking text shown or translated from bookings.html.";
 const BACKEND_CONTEXT = "AsiaTravelPlan backend UI for ATP staff managing bookings, tours, invoices, travel plans, and internal notes. Use a clear, natural, friendly tone for internal staff UI copy.";
 
 function normalizeText(value) {
@@ -21,6 +27,10 @@ function sha256(value) {
 
 function sourceHash(value) {
   return sha256(String(value ?? ""));
+}
+
+function sourceKey(value) {
+  return translationMemorySourceKey(value);
 }
 
 function apiError(status, code, message) {
@@ -56,12 +66,13 @@ function sortOverridesBySource(source, overrides) {
 
 function buildDomainConfigs(repoRoot) {
   const frontendLangs = FRONTEND_LANGUAGES.filter((entry) => entry.code !== "en");
+  const customerContentLangs = CUSTOMER_CONTENT_LANGUAGES.filter((entry) => entry.code !== "en");
   const backendLangs = BACKEND_UI_LANGUAGES.filter((entry) => entry.code !== "en" && entry.code === "vi");
   return {
     frontend: {
       id: "frontend",
       kind: "static",
-      label: "Customer-facing UI",
+      label: "Customer-facing UI (legacy key-based)",
       sourceLang: "en",
       sourcePath: () => path.join(repoRoot, "frontend", "data", "i18n", "frontend", "en.json"),
       targetPath: (lang) => path.join(repoRoot, "frontend", "data", "i18n", "frontend", `${lang}.json`),
@@ -70,18 +81,42 @@ function buildDomainConfigs(repoRoot) {
       targetLanguages: frontendLangs,
       context: FRONTEND_CONTEXT
     },
+    "index-content-memory": {
+      id: "index-content-memory",
+      kind: "translation_memory",
+      label: "Index.html texts",
+      sourceLang: "en",
+      targetLanguages: customerContentLangs,
+      context: INDEX_CONTENT_MEMORY_CONTEXT
+    },
     "homepage-content": {
       id: "homepage-content",
       kind: "homepage_content",
-      label: "Customer-facing content",
+      label: "Customer-facing content (legacy direct content)",
       sourceLang: "en",
       targetLanguages: frontendLangs,
       context: HOMEPAGE_CONTENT_CONTEXT
     },
+    "marketing-tour-memory": {
+      id: "marketing-tour-memory",
+      kind: "translation_memory",
+      label: "Marketing Tours",
+      sourceLang: "en",
+      targetLanguages: customerContentLangs,
+      context: MARKETING_TOUR_MEMORY_CONTEXT
+    },
+    "booking-content-memory": {
+      id: "booking-content-memory",
+      kind: "translation_memory",
+      label: "Texts in bookings.html",
+      sourceLang: "en",
+      targetLanguages: customerContentLangs,
+      context: BOOKING_CONTENT_MEMORY_CONTEXT
+    },
     backend: {
       id: "backend",
       kind: "static",
-      label: "Backend UI",
+      label: "Backend terms for staff",
       sourceLang: "en",
       sourcePath: () => path.join(repoRoot, "frontend", "data", "i18n", "backend", "en.json"),
       targetPath: (lang) => path.join(repoRoot, "frontend", "data", "i18n", "backend", `${lang}.json`),
@@ -99,6 +134,7 @@ export function createStaticTranslationService({
   persistStore = null,
   readTours = null,
   persistTour = null,
+  translationMemoryStore = null,
   nowIso = () => new Date().toISOString(),
   readJsonFile = defaultReadJsonFile,
   mkdirFn = mkdir,
@@ -133,6 +169,7 @@ export function createStaticTranslationService({
   function domainSummary(config) {
     return {
       id: config.id,
+      kind: config.kind,
       label: config.label,
       source_lang: config.sourceLang,
       target_languages: config.targetLanguages,
@@ -255,6 +292,158 @@ export function createStaticTranslationService({
     return rows;
   }
 
+  function addSourceText(targetSet, value) {
+    const normalized = normalizeText(value);
+    if (normalized) targetSet.add(normalized);
+  }
+
+  function collectMarketingTourMemorySourcesFromPlan(targetSet, travelPlan) {
+    const days = Array.isArray(travelPlan?.days) ? travelPlan.days : [];
+    for (const day of days) {
+      addSourceText(targetSet, localizedSource(day?.title_i18n, day?.title));
+      addSourceText(targetSet, localizedSource(day?.overnight_location_i18n, day?.overnight_location));
+      addSourceText(targetSet, localizedSource(day?.notes_i18n, day?.notes));
+      const services = Array.isArray(day?.services) ? day.services : [];
+      for (const service of services) {
+        addSourceText(targetSet, localizedSource(service?.time_label_i18n, service?.time_label));
+        addSourceText(targetSet, localizedSource(service?.title_i18n, service?.title));
+        addSourceText(targetSet, localizedSource(service?.details_i18n, service?.details));
+        addSourceText(targetSet, localizedSource(service?.location_i18n, service?.location));
+        addSourceText(targetSet, localizedSource(service?.image_subtitle_i18n, service?.image_subtitle));
+        const images = [
+          service?.image,
+          ...(Array.isArray(service?.images) ? service.images : [])
+        ].filter((image) => image && typeof image === "object" && !Array.isArray(image));
+        for (const image of images) {
+          addSourceText(targetSet, localizedSource(image?.caption_i18n, image?.caption));
+          addSourceText(targetSet, localizedSource(image?.alt_text_i18n, image?.alt_text));
+        }
+      }
+    }
+  }
+
+  function collectMarketingTourMemorySources(tours) {
+    const sources = new Set();
+    for (const tour of Array.isArray(tours) ? tours : []) {
+      addSourceText(sources, localizedSource(tour?.title, tour?.id));
+      addSourceText(sources, localizedSource(tour?.short_description, ""));
+      collectMarketingTourMemorySourcesFromPlan(sources, tour?.travel_plan);
+    }
+    return Array.from(sources).sort((left, right) => left.localeCompare(right, "en", { sensitivity: "base" }));
+  }
+
+  function sortedSourceTexts(sources) {
+    return Array.from(sources).sort((left, right) => left.localeCompare(right, "en", { sensitivity: "base" }));
+  }
+
+  async function collectIndexContentMemorySources(config) {
+    const sources = new Set();
+    const { data: frontendSource } = await readJsonFile(configs.frontend.sourcePath(), {});
+    for (const value of Object.values(frontendSource || {})) {
+      addSourceText(sources, value);
+    }
+    if (typeof readStore === "function") {
+      const store = await readStore();
+      for (const row of contentRowsFromStore(store, "")) {
+        addSourceText(sources, row.source);
+      }
+    }
+    return sortedSourceTexts(sources);
+  }
+
+  function collectBookingContentMemorySourcesFromPlan(targetSet, travelPlan) {
+    const descriptors = collectTravelPlanFieldDescriptors(travelPlan, {
+      sourceLang: configSourceLang(configs["booking-content-memory"]),
+      targetLang: "vi"
+    });
+    for (const descriptor of descriptors) {
+      addSourceText(targetSet, descriptor.sourceText);
+    }
+  }
+
+  async function collectBookingContentMemorySources() {
+    if (typeof readStore !== "function") {
+      throw apiError(500, "STATIC_TRANSLATION_BOOKING_CONTENT_UNAVAILABLE", "Booking content translation storage is not configured.");
+    }
+    const store = await readStore();
+    const sources = new Set();
+    for (const booking of Array.isArray(store?.bookings) ? store.bookings : []) {
+      collectBookingContentMemorySourcesFromPlan(sources, booking?.travel_plan);
+    }
+    return sortedSourceTexts(sources);
+  }
+
+  function configSourceLang(config) {
+    return normalizeText(config?.sourceLang) || "en";
+  }
+
+  async function collectTranslationMemorySources(config) {
+    if (config.id === "index-content-memory") {
+      return collectIndexContentMemorySources(config);
+    }
+    if (config.id === "marketing-tour-memory") {
+      if (typeof readTours !== "function") {
+        throw apiError(500, "STATIC_TRANSLATION_MEMORY_UNAVAILABLE", "Marketing tour translation memory storage is not configured.");
+      }
+      return collectMarketingTourMemorySources(await readTours());
+    }
+    if (config.id === "booking-content-memory") {
+      return collectBookingContentMemorySources();
+    }
+    return [];
+  }
+
+  async function loadTranslationMemoryState(config, language) {
+    if (!translationMemoryStore || typeof translationMemoryStore.readTranslationMemory !== "function") {
+      throw apiError(500, "STATIC_TRANSLATION_MEMORY_UNAVAILABLE", "Translation memory storage is not configured.");
+    }
+    const [memory, sourceTexts] = await Promise.all([
+      translationMemoryStore.readTranslationMemory(),
+      collectTranslationMemorySources(config)
+    ]);
+    const rowsByKey = new Map(sourceTexts.map((source) => [sourceKey(source), { source }]));
+
+    const rows = Array.from(rowsByKey.entries())
+      .map(([key, { source }]) => {
+        const target = memory.items?.[key]?.targets?.[language.code] || {};
+        const cached = normalizeText(target.machine);
+        const override = normalizeText(target.manual_override);
+        const status = override ? "manual_override" : (cached ? "machine" : "missing");
+        return {
+          key,
+          source,
+          cached,
+          override,
+          status,
+          source_hash: key,
+          cached_source_hash: key,
+          origin: status === "manual_override" ? "manual_override" : (cached ? "machine" : ""),
+          updated_at: normalizeText(target.manual_updated_at || target.machine_updated_at),
+          cache_meta: {
+            source_hash: key,
+            machine_updated_at: normalizeText(target.machine_updated_at) || null,
+            manual_updated_at: normalizeText(target.manual_updated_at) || null,
+            provider: target.provider || null
+          }
+        };
+      })
+      .sort((left, right) => left.source.localeCompare(right.source, "en", { sensitivity: "base" }));
+    const counts = rows.reduce((acc, row) => {
+      acc[row.status] = (acc[row.status] || 0) + 1;
+      return acc;
+    }, {});
+    return {
+      domain: domainSummary(config),
+      language,
+      source_lang: config.sourceLang,
+      target_lang: language.code,
+      revision: memory.revision,
+      total: rows.length,
+      counts,
+      rows
+    };
+  }
+
   function contentRevision(rows) {
     return sha256(JSON.stringify(rows.map((row) => ({
       key: row.key,
@@ -293,6 +482,9 @@ export function createStaticTranslationService({
     const { config, language } = getLanguageConfig(domain, targetLang);
     if (config.kind === "homepage_content") {
       return loadHomepageContentState(config, language);
+    }
+    if (config.kind === "translation_memory") {
+      return loadTranslationMemoryState(config, language);
     }
 
     const [{ data: source }, { data: target }, { data: meta }, { data: overrides, raw: overrideRaw }] = await Promise.all([
@@ -418,6 +610,8 @@ export function createStaticTranslationService({
     let storeChanged = false;
     const toursById = new Map((await readTours()).map((tour) => [normalizeText(tour?.id), tour]));
     const changedTourIds = new Set();
+    const currentRowsByKey = new Map(currentState.rows.map((row) => [row.key, row]));
+    const translationMemoryUpdates = [];
 
     for (const [key, rawValue] of Object.entries(updates)) {
       let match = key.match(/^destination\.([A-Z]{2})\.label$/);
@@ -459,6 +653,10 @@ export function createStaticTranslationService({
         if (tour) {
           setLocalizedTarget(tour, match[2], language.code, rawValue, timestamp);
           changedTourIds.add(match[1]);
+          translationMemoryUpdates.push({
+            source_text: currentRowsByKey.get(key)?.source,
+            manual_override: rawValue
+          });
         }
       }
     }
@@ -469,13 +667,54 @@ export function createStaticTranslationService({
     for (const tourId of changedTourIds) {
       await persistTour(toursById.get(tourId));
     }
+    if (translationMemoryUpdates.length && typeof translationMemoryStore?.patchManualOverrides === "function") {
+      await translationMemoryStore.patchManualOverrides(language.code, translationMemoryUpdates);
+    }
     return loadHomepageContentState(config, language);
+  }
+
+  async function patchTranslationMemoryOverrides(config, language, payload = {}) {
+    if (!translationMemoryStore || typeof translationMemoryStore.patchManualOverrides !== "function") {
+      throw apiError(500, "STATIC_TRANSLATION_MEMORY_UNAVAILABLE", "Translation memory storage is not configured.");
+    }
+    const expectedRevision = normalizeText(payload?.expected_revision);
+    const updates = payload?.overrides && typeof payload.overrides === "object" && !Array.isArray(payload.overrides)
+      ? payload.overrides
+      : null;
+    if (!updates) {
+      throw apiError(400, "STATIC_TRANSLATION_INVALID_OVERRIDES", "overrides must be an object keyed by translation id.");
+    }
+
+    const currentState = await loadTranslationMemoryState(config, language);
+    const rowsByKey = new Map(currentState.rows.map((row) => [row.key, row]));
+    const unknownKeys = Object.keys(updates).filter((key) => !rowsByKey.has(key));
+    if (unknownKeys.length) {
+      throw apiError(400, "STATIC_TRANSLATION_UNKNOWN_KEY", `Unknown translation key: ${unknownKeys[0]}`);
+    }
+
+    try {
+      await translationMemoryStore.patchManualOverrides(
+        language.code,
+        Object.entries(updates).map(([key, value]) => ({
+          source_text: rowsByKey.get(key)?.source,
+          manual_override: value
+        })),
+        { expectedRevision }
+      );
+    } catch (error) {
+      if (error?.status) throw error;
+      throw apiError(500, "STATIC_TRANSLATION_MEMORY_SAVE_FAILED", String(error?.message || error || "Could not save translation memory."));
+    }
+    return loadTranslationMemoryState(config, language);
   }
 
   async function patchOverrides(domain, targetLang, payload = {}) {
     const { config, language } = getLanguageConfig(domain, targetLang);
     if (config.kind === "homepage_content") {
       return patchHomepageContentTranslations(config, language, payload);
+    }
+    if (config.kind === "translation_memory") {
+      return patchTranslationMemoryOverrides(config, language, payload);
     }
 
     const expectedRevision = normalizeText(payload?.expected_revision);
