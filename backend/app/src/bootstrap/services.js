@@ -147,7 +147,8 @@ export function createBackendServices({
     readTours: storeUtils.readTours,
     persistTour: storeUtils.persistTour,
     translationMemoryStore,
-    nowIso: support.nowIso
+    nowIso: support.nowIso,
+    writesEnabled: runtime.translationOverrideWritesEnabled !== false
   });
 
   const staticTranslationApplyJobs = createStaticTranslationApplyJobs({

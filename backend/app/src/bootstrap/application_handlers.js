@@ -337,7 +337,8 @@ export function createApplicationRoutes({
     canReadSettings,
     readTranslationRules: translationRulesStore.readTranslationRules,
     persistTranslationRules: translationRulesStore.persistTranslationRules,
-    nowIso: support.nowIso
+    nowIso: support.nowIso,
+    writesEnabled: runtime.translationOverrideWritesEnabled !== false
   });
 
   const destinationScopeHandlers = createDestinationScopeHandlers({
@@ -421,7 +422,8 @@ export function createApplicationRoutes({
     getPrincipal,
     canReadSettings,
     staticTranslationService,
-    staticTranslationApplyJobs
+    staticTranslationApplyJobs,
+    writesEnabled: runtime.translationOverrideWritesEnabled !== false
   });
 
   return buildApiRoutes({

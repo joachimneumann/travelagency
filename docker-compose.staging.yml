@@ -39,6 +39,7 @@ services:
     environment:
       PUBLIC_HOMEPAGE_FRONTEND_DATA_DIR: /srv/frontend/data/generated/homepage
       PUBLIC_HOMEPAGE_ASSETS_DIR: /srv/assets/generated/homepage
+      TRANSLATION_OVERRIDE_WRITES_ENABLED: "false"
     depends_on:
       postgres:
         condition: service_healthy

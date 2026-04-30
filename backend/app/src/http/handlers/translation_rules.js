@@ -9,7 +9,8 @@ export function createTranslationRulesHandlers(deps) {
     canReadSettings,
     readTranslationRules,
     persistTranslationRules,
-    nowIso
+    nowIso,
+    writesEnabled = true
   } = deps;
 
   async function handleGetSettingsTranslationRules(req, res) {
@@ -23,7 +24,10 @@ export function createTranslationRulesHandlers(deps) {
     sendJson(res, 200, {
       items: payload.items,
       total: payload.items.length,
-      updated_at: payload.updated_at
+      updated_at: payload.updated_at,
+      permissions: {
+        can_write: writesEnabled !== false
+      }
     });
   }
 
@@ -31,6 +35,13 @@ export function createTranslationRulesHandlers(deps) {
     const principal = getPrincipal(req);
     if (!canReadSettings(principal)) {
       sendJson(res, 403, { error: "Forbidden" });
+      return;
+    }
+    if (writesEnabled === false) {
+      sendJson(res, 403, {
+        error: "Translation rule editing is disabled in this environment.",
+        code: "TRANSLATION_RULE_WRITES_DISABLED"
+      });
       return;
     }
 

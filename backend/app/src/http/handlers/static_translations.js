@@ -12,7 +12,8 @@ export function createStaticTranslationHandlers({
   getPrincipal,
   canReadSettings,
   staticTranslationService,
-  staticTranslationApplyJobs
+  staticTranslationApplyJobs,
+  writesEnabled = true
 }) {
   function canAccess(req) {
     return canReadSettings(getPrincipal(req));
@@ -22,12 +23,24 @@ export function createStaticTranslationHandlers({
     sendJson(res, 403, { error: "Forbidden" });
   }
 
+  function rejectWritesDisabled(res) {
+    sendJson(res, 403, {
+      error: "Manual translation override editing is disabled in this environment.",
+      code: "STATIC_TRANSLATION_WRITES_DISABLED"
+    });
+  }
+
   async function handleListStaticTranslationDomains(req, res) {
     if (!canAccess(req)) {
       rejectForbidden(res);
       return;
     }
-    sendJson(res, 200, { domains: staticTranslationService.listDomains() });
+    sendJson(res, 200, {
+      domains: staticTranslationService.listDomains(),
+      permissions: {
+        can_write: writesEnabled !== false
+      }
+    });
   }
 
   async function handleListStaticTranslationLanguages(req, res, params = []) {
@@ -60,6 +73,10 @@ export function createStaticTranslationHandlers({
       rejectForbidden(res);
       return;
     }
+    if (writesEnabled === false) {
+      rejectWritesDisabled(res);
+      return;
+    }
     try {
       const payload = await readBodyJson(req);
       const saved = await staticTranslationService.patchOverrides(params[0], params[1], payload);
@@ -74,6 +91,10 @@ export function createStaticTranslationHandlers({
       rejectForbidden(res);
       return;
     }
+    if (writesEnabled === false) {
+      rejectWritesDisabled(res);
+      return;
+    }
     try {
       const job = staticTranslationApplyJobs.startApply();
       sendJson(res, 202, { job });
@@ -85,6 +106,10 @@ export function createStaticTranslationHandlers({
   async function handleStartStaticTranslationRetranslate(req, res) {
     if (!canAccess(req)) {
       rejectForbidden(res);
+      return;
+    }
+    if (writesEnabled === false) {
+      rejectWritesDisabled(res);
       return;
     }
     try {

@@ -234,6 +234,7 @@ const state = {
   translationRulesLoaded: false,
   translationRulesInitialItems: [],
   translationRulesDraftItems: [],
+  translationRuleWritesEnabled: true,
   translationRulesSaving: false,
   emergencyItems: [],
   emergencyLoaded: false,
@@ -402,6 +403,11 @@ function isTranslationRulesDirty() {
 }
 
 function updateTranslationRulesSaveButtonState() {
+  if (els.translationRulesAddBtn) {
+    els.translationRulesAddBtn.disabled = !state.permissions.canEditTranslationRules
+      || !state.translationRulesLoaded
+      || state.translationRulesSaving;
+  }
   if (!els.translationRulesSaveBtn) return;
   els.translationRulesSaveBtn.disabled = !state.permissions.canEditTranslationRules
     || !state.translationRulesLoaded
@@ -756,6 +762,7 @@ function bindEvents() {
     void saveWebsiteDestinationPublication();
   });
   els.translationRulesAddBtn?.addEventListener("click", () => {
+    if (!state.permissions.canEditTranslationRules) return;
     syncTranslationRulesStateFromDom();
     state.translationRulesDraftItems = [...state.translationRulesDraftItems, buildEmptyTranslationRule()];
     renderTranslationRules();
@@ -1163,28 +1170,28 @@ function renderTranslationRules() {
   const rows = items.map((item, index) => `
     <tr data-translation-rule-row="${index}">
       <td>
-        <textarea class="settings-translation-rules__textarea" rows="3" data-translation-rule-source>${escapeHtml(item?.source || "")}</textarea>
+        <textarea class="settings-translation-rules__textarea" rows="3" data-translation-rule-source ${state.permissions.canEditTranslationRules ? "" : "disabled"}>${escapeHtml(item?.source || "")}</textarea>
       </td>
       <td>
         <div class="settings-translation-rules__targets">
           ${(Array.isArray(item?.targets) && item.targets.length ? item.targets : [buildEmptyTranslationRuleTarget()]).map((target, targetIndex) => `
             <div class="settings-translation-rules__target-row" data-translation-rule-target-row>
-              <select class="settings-translation-rules__lang" data-translation-rule-target-lang>
+              <select class="settings-translation-rules__lang" data-translation-rule-target-lang ${state.permissions.canEditTranslationRules ? "" : "disabled"}>
                 ${LANGUAGE_OPTIONS.map((option) => {
                   const value = normalizeText(option?.value).toLowerCase();
                   const label = normalizeText(option?.label) || value.toUpperCase();
                   return `<option value="${escapeHtml(value)}" ${value === normalizeText(target?.target_lang).toLowerCase() ? "selected" : ""}>${escapeHtml(label)}</option>`;
                 }).join("")}
               </select>
-              <textarea class="settings-translation-rules__textarea" rows="2" data-translation-rule-target>${escapeHtml(target?.target || "")}</textarea>
-              <button class="btn btn-ghost settings-translation-rules__remove" type="button" data-translation-rule-remove-target="${index}" data-translation-rule-target-index="${targetIndex}">${escapeHtml(backendT("common.remove", "Remove"))}</button>
+              <textarea class="settings-translation-rules__textarea" rows="2" data-translation-rule-target ${state.permissions.canEditTranslationRules ? "" : "disabled"}>${escapeHtml(target?.target || "")}</textarea>
+              <button class="btn btn-ghost settings-translation-rules__remove" type="button" data-translation-rule-remove-target="${index}" data-translation-rule-target-index="${targetIndex}" ${state.permissions.canEditTranslationRules ? "" : "disabled"}>${escapeHtml(backendT("common.remove", "Remove"))}</button>
             </div>
           `).join("")}
-          <button class="btn btn-ghost settings-translation-rules__add-target" type="button" data-translation-rule-add-target="${index}">${escapeHtml(backendT("backend.settings.translation_rules.add_language", "Add language"))}</button>
+          <button class="btn btn-ghost settings-translation-rules__add-target" type="button" data-translation-rule-add-target="${index}" ${state.permissions.canEditTranslationRules ? "" : "disabled"}>${escapeHtml(backendT("backend.settings.translation_rules.add_language", "Add language"))}</button>
         </div>
       </td>
       <td>
-        <button class="btn btn-ghost settings-translation-rules__remove" type="button" data-translation-rule-remove="${index}">${escapeHtml(backendT("common.remove", "Remove"))}</button>
+        <button class="btn btn-ghost settings-translation-rules__remove" type="button" data-translation-rule-remove="${index}" ${state.permissions.canEditTranslationRules ? "" : "disabled"}>${escapeHtml(backendT("common.remove", "Remove"))}</button>
       </td>
     </tr>
   `).join("");
@@ -1237,10 +1244,14 @@ async function loadTranslationRules() {
       return;
     }
     state.translationRulesLoaded = true;
+    state.translationRuleWritesEnabled = payload?.permissions?.can_write !== false;
+    state.permissions.canEditTranslationRules = state.permissions.canEditTranslationRules && state.translationRuleWritesEnabled;
     state.translationRulesInitialItems = cloneTranslationRules(payload?.items);
     state.translationRulesDraftItems = sanitizeTranslationRuleDraftItems(payload?.items);
     renderTranslationRules();
-    showTranslationRulesStatus(backendT("backend.settings.translation_rules.ready", "Translation overrides loaded."));
+    showTranslationRulesStatus(state.translationRuleWritesEnabled
+      ? backendT("backend.settings.translation_rules.ready", "Translation overrides loaded.")
+      : "Translation override editing is disabled in this environment.");
   } catch (error) {
     console.error("[backend-settings] Failed to load translation overrides.", {
       error,
