@@ -71,6 +71,7 @@ const state = {
     canReadTranslations: false,
     canEditTranslations: false
   },
+  translationWritesEnabled: true,
   isSaving: false,
   isJobRunning: false
 };
@@ -495,6 +496,14 @@ function renderTable(section) {
 async function loadDomains() {
   const payload = await fetchApi("/api/v1/static-translations/domains", { cache: "no-store" });
   state.domains = Array.isArray(payload?.domains) ? payload.domains : [];
+  state.translationWritesEnabled = payload?.permissions?.can_write !== false;
+  if (!state.translationWritesEnabled) {
+    state.permissions.canEditTranslations = false;
+    if (els.intro) {
+      els.intro.textContent = "Manual translation overrides are read-only in this environment. Edit them in the source-of-truth development checkout and redeploy.";
+    }
+    setStatus("Translation override editing is disabled in this environment.");
+  }
 }
 
 async function loadSectionState(section, { preserveLanguage = true } = {}) {
@@ -540,7 +549,7 @@ async function loadAllSections({ preserveLanguage = true } = {}) {
 }
 
 async function saveOverrides(section) {
-  if (!section.current || !section.dirty.size || state.isSaving) return;
+  if (!state.permissions.canEditTranslations || !section.current || !section.dirty.size || state.isSaving) return;
   state.isSaving = true;
   updateActions();
   setSectionStatus(section, "Saving manual overrides...");
@@ -619,6 +628,10 @@ async function pollJob(jobId, overlayStartedAt) {
 }
 
 async function startJob(path, body = null, overlayText = translationsApplyingOverlayText()) {
+  if (!state.permissions.canEditTranslations) {
+    setStatus("Translation override editing is disabled in this environment.");
+    return;
+  }
   if (state.isJobRunning) return;
   if (dirtySections().length && !window.confirm("You have unsaved manual overrides. Continue without saving them?")) return;
   state.isJobRunning = true;
@@ -699,6 +712,7 @@ async function init() {
 
   if (els.panel) els.panel.hidden = false;
   await loadDomains();
+  state.permissions.canEditTranslations = state.permissions.canEditTranslations && state.translationWritesEnabled;
   renderSectionCards();
   await loadAllSections({ preserveLanguage: false });
 }

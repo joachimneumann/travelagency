@@ -41,7 +41,8 @@ import {
   TRAVELER_DETAILS_TOKEN_CONFIG,
   TRANSLATION_CLIENT,
   TRANSLATION_RUNTIME_INFO,
-  TRANSLATION_ENABLED
+  TRANSLATION_ENABLED,
+  TRANSLATION_OVERRIDE_WRITES_ENABLED
 } from "./config/runtime.js";
 import { createAuth } from "./auth.js";
 import { createSystemHandlers } from "./http/handlers/system.js";
@@ -188,7 +189,8 @@ const services = createBackendServices({
     offerCategoryOrder: OFFER_CATEGORY_ORDER,
     paymentStatuses: PAYMENT_STATUSES,
     pricingAdjustmentTypes: PRICING_ADJUSTMENT_TYPES,
-    translationEnabled: TRANSLATION_ENABLED
+    translationEnabled: TRANSLATION_ENABLED,
+    translationOverrideWritesEnabled: TRANSLATION_OVERRIDE_WRITES_ENABLED
   },
   collections: {
     repoRoot: RUNTIME_PATHS.repoRoot,

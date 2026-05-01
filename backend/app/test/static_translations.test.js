@@ -110,6 +110,30 @@ test("static translation service writes ordered overrides with optimistic revisi
   }
 });
 
+test("static translation service rejects manual override writes when disabled", async () => {
+  const repoRoot = await createFixture();
+  try {
+    const service = createStaticTranslationService({ repoRoot, writesEnabled: false });
+    const initial = await service.getLanguageState("frontend", "vi");
+
+    await assert.rejects(
+      () => service.patchOverrides("frontend", "vi", {
+        expected_revision: initial.revision,
+        overrides: {
+          "hero.title": "Kỳ nghỉ riêng mới"
+        }
+      }),
+      (error) => {
+        assert.equal(error.status, 403);
+        assert.equal(error.code, "STATIC_TRANSLATION_WRITES_DISABLED");
+        return true;
+      }
+    );
+  } finally {
+    await rm(repoRoot, { recursive: true, force: true });
+  }
+});
+
 test("static translation service exposes and edits generated homepage content translations", async () => {
   const repoRoot = await createFixture();
   try {

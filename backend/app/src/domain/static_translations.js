@@ -139,7 +139,8 @@ export function createStaticTranslationService({
   readJsonFile = defaultReadJsonFile,
   mkdirFn = mkdir,
   writeFileFn = writeFile,
-  renameFn = rename
+  renameFn = rename,
+  writesEnabled = true
 } = {}) {
   if (!repoRoot) {
     throw new Error("createStaticTranslationService requires repoRoot.");
@@ -173,8 +174,19 @@ export function createStaticTranslationService({
       label: config.label,
       source_lang: config.sourceLang,
       target_languages: config.targetLanguages,
-      context: config.context
+      context: config.context,
+      writes_enabled: writesEnabled !== false
     };
+  }
+
+  function assertWritesEnabled() {
+    if (writesEnabled === false) {
+      throw apiError(
+        403,
+        "STATIC_TRANSLATION_WRITES_DISABLED",
+        "Manual translation override editing is disabled in this environment."
+      );
+    }
   }
 
   function rowStatus({ sourceValue, cachedValue, overrideValue, metaEntry, expectedSourceHash, isExtra }) {
@@ -709,6 +721,7 @@ export function createStaticTranslationService({
   }
 
   async function patchOverrides(domain, targetLang, payload = {}) {
+    assertWritesEnabled();
     const { config, language } = getLanguageConfig(domain, targetLang);
     if (config.kind === "homepage_content") {
       return patchHomepageContentTranslations(config, language, payload);
