@@ -232,7 +232,10 @@ source_hash
 target_lang
 target_text
 origin: machine | manual | cache | override
-status: missing | stale | running | failed | current | translated_unpublished | published
+freshness_state: missing | stale | current
+job_state: idle | queued | running | failed
+publish_state: unpublished | published
+review_state: unreviewed | reviewed | protected
 engine_provider
 engine_model
 engine_profile
@@ -244,11 +247,13 @@ updated_by
 
 The database is the working state for translation jobs. It can include in-progress jobs, failures, logs, retries, manual drafts, and engine metadata.
 
+Do not collapse these dimensions into one status field. A target can be manual, current, unpublished, and protected at the same time. UI labels and counts should be derived from the separate dimensions.
+
 ## Published Snapshot
 
-`content/translations` is the published translation snapshot.
+`content/translations` is the published translation snapshot and the release artifact for translations.
 
-It is ignored by git and copied manually by rsync between environments.
+It is ignored by git and copied manually by rsync between environments. Rsync remains the backup and transport mechanism between repositories, but production must still validate and atomically apply the snapshot before generated runtime files change.
 
 It must contain only published translations. It should not contain in-progress job state.
 
@@ -323,6 +328,8 @@ It should:
 7. Mark the published state clean.
 
 Publish is all-or-nothing for enabled target languages.
+
+This is intentional. Enabled target languages are the production contract, so staff should only enable languages that must ship together.
 
 Public website translations become visible only after `Publish`.
 
@@ -420,7 +427,7 @@ Translation memory should be separate from translation targets.
 Translation memory answers:
 
 ```text
-Have we translated this English phrase in this context before?
+Have we translated this exact English phrase before?
 ```
 
 Translation targets answer:
@@ -429,22 +436,30 @@ Translation targets answer:
 What is the current translation for this exact source_ref, source_hash, and target language?
 ```
 
-Translation memory can be used as a provider/cache for both booking and non-booking jobs, but booking-specific results should stay production-owned and should not be overwritten by global non-booking retranslation jobs.
+For now, translation memory identity is global exact-English text plus target language. Identical English strings should reuse identical translations independent of context.
+
+Translation memory can be used as a provider/cache for both booking and non-booking jobs, but booking-specific result storage should stay production-owned and should not be overwritten by global non-booking retranslation jobs.
 
 ## Dirty State
 
 Dirty state should be computed from the source index and target/published state.
 
-Recommended statuses:
+Dirty state should not be stored as one status. It is derived from separate target state dimensions:
 
-- `current`: target exists and matches current source hash.
-- `missing`: required target does not exist.
-- `stale`: target exists but source hash changed.
-- `running`: a job is translating the item.
-- `failed`: previous translation attempt failed.
-- `translated_unpublished`: target exists in working DB but not in `content/translations`.
-- `published`: target exists in published snapshot and generated outputs are current.
-- `manual_override`: manually provided target exists and is protected.
+- `freshness_state`: `missing`, `stale`, or `current`.
+- `job_state`: `idle`, `queued`, `running`, or `failed`.
+- `publish_state`: `unpublished` or `published`.
+- `review_state`: `unreviewed`, `reviewed`, or `protected`.
+- `origin`: `machine`, `manual`, `cache`, or `override`.
+
+A required item is dirty when:
+
+- freshness is `missing` or `stale`.
+- job state is `queued`, `running`, or `failed`.
+- publish state is `unpublished`.
+- review is required and review state is `unreviewed`.
+
+The UI can still show friendly derived labels such as `Missing`, `Stale`, `Running`, `Failed`, `Translated but unpublished`, `Published`, or `Manual protected`, but those labels should be computed from the dimensions above.
 
 The nav icon can show a simple dirty indicator, but the translation tab should expose detailed counts.
 
@@ -490,4 +505,3 @@ The nav icon can show a simple dirty indicator, but the translation tab should e
 - Should emergency/settings content be classified as customer-facing or internal-only?
 - Should staging be the only environment allowed to create `content/translations`, or can local publish snapshots too?
 - Should failed optional strings block publish, or only required strings?
-- Should manual translations be reusable through translation memory by default, or scoped to their exact `source_ref` unless explicitly promoted?

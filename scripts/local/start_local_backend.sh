@@ -9,7 +9,7 @@ BACKEND_DIR="${BACKEND_DIR:-$ROOT_DIR/backend/app}"
 BACKEND_PID_FILE="${BACKEND_PID_FILE:-/tmp/asiatravelplan-backend.pid}"
 BACKEND_LOG_FILE="${BACKEND_LOG_FILE:-/tmp/asiatravelplan-backend.log}"
 BACKEND_PORT="${BACKEND_PORT:-8787}"
-STORE_FILE="${STORE_FILE:-$BACKEND_DIR/data/store.json}"
+STORE_FILE="${STORE_FILE:-$BACKEND_DIR/data/app-data.json}"
 
 FRONTEND_PORT="${FRONTEND_PORT:-8080}"
 FRONTEND_BIND="${FRONTEND_BIND:-127.0.0.1}"

@@ -113,7 +113,6 @@
 .tour-card {
   --tour-card-title-lines: 2;
   --tour-card-title-line-height: 1.28;
-  --tour-card-desc-lines: 3;
   --tour-card-desc-line-height: 1.55;
   --tour-card-tag-lines: 1;
   --tour-card-tag-line-height: 1.2;
@@ -366,7 +365,7 @@
   padding: 1rem;
   display: grid;
   gap: 0.72rem;
-  grid-template-rows: auto auto auto;
+  grid-template-rows: minmax(0, 1fr) auto auto;
   align-content: start;
 }
 
@@ -439,18 +438,14 @@
   font-size: 16px;
   line-height: var(--tour-card-desc-line-height);
   overflow-wrap: anywhere;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: var(--tour-card-desc-lines);
-  overflow: hidden;
-  min-height: calc(1em * var(--tour-card-desc-line-height) * var(--tour-card-desc-lines));
+  display: block;
+  overflow: visible;
 }
 
 .tour-desc-wrap {
   display: grid;
   gap: 0;
   align-content: start;
-  min-height: calc(1em * var(--tour-card-desc-line-height) * var(--tour-card-desc-lines));
 }
 
 .tags {
@@ -620,6 +615,28 @@
   column-gap: 0;
   background: var(--marketing-card-surface);
   border-radius: var(--radius);
+  isolation: isolate;
+  position: relative;
+}
+
+.tour-details-row__attach-background {
+  display: none;
+}
+
+.tour-details-row--side-panel.tour-details-row--attached .tour-details-row__attach-background {
+  display: block;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: var(--marketing-card-surface);
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.tour-details-row--side-panel.tour-details-row--attached .tour-details-row__shell > .tour-card,
+.tour-details-row--side-panel.tour-details-row--attached .tour-details-row__panel {
+  position: relative;
+  z-index: 1;
 }
 
 .tour-details-row--side-panel.tour-details-row--attached.tour-details-row--columns-2 .tour-details-row__shell {
@@ -679,10 +696,15 @@
   transform: translateY(-0.4rem);
 }
 
-.tour-details-row--side-panel.tour-details-row--opening .tour-details-row__panel,
+.tour-details-row--side-panel.tour-details-row--opening .tour-details-row__panel {
+  opacity: 1;
+  transform: none;
+  clip-path: inset(0 0 0 var(--tour-details-panel-open-left-inset, 100%));
+}
+
 .tour-details-row--side-panel.tour-details-row--closing .tour-details-row__panel {
-  transform: translateX(-0.5rem);
-  clip-path: inset(0 100% 0 0);
+  transform: none;
+  clip-path: inset(0 0 0 100%);
 }
 
 .tour-plan__days {

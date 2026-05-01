@@ -122,6 +122,7 @@ export function createBackendServices({
   const storeUtils = createStoreUtils({
     dataPath: collections.dataPath,
     toursDir: collections.toursDir,
+    tourDestinationsPath: collections.tourDestinationsPath,
     paymentDocumentsDir: collections.paymentDocumentsDir,
     generatedOffersDir: collections.generatedOffersDir,
     travelPlanPdfsDir: collections.travelPlanPdfsDir,

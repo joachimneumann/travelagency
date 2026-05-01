@@ -121,9 +121,6 @@ prepare_runtime_brand_logo
 generate_public_homepage_assets
 
 mkdir -p backend/app/data backend/app/data/tmp content logs
-if [[ ! -f backend/app/data/store.json ]]; then
-  printf '{}\n' > backend/app/data/store.json
-fi
 
 compose_up_exit_code=0
 docker_compose -p "$PROJECT_NAME" --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up -d --build --force-recreate "${SERVICES[@]}" || compose_up_exit_code=$?

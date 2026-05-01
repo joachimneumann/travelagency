@@ -23,6 +23,7 @@ content/**
 !content/atp_staff/photos/.gitkeep
 !content/tours/
 !content/tours/.gitkeep
+!content/tours/destinations.json
 
 frontend/data/generated/
 assets/generated/

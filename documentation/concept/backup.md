@@ -20,7 +20,7 @@ Current critical data is split into 3 domains.
 
 Current:
 
-- `backend/app/data/store.json`
+- `backend/app/data/app-data.json`
 
 Later:
 

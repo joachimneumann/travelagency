@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This document defines the transition from file-based operational storage in `backend/app/data/store.json` to PostgreSQL.
+This document defines the transition from file-based operational storage in `backend/app/data/app-data.json` to PostgreSQL.
 
 It is the authoritative design for:
 
@@ -51,7 +51,7 @@ Important boundary:
 
 ### Moves to PostgreSQL
 
-Operational runtime data currently persisted in `backend/app/data/store.json` and related runtime metadata:
+Operational runtime data currently persisted in `backend/app/data/app-data.json` and related runtime metadata:
 
 - bookings
 - booking persons
@@ -118,7 +118,7 @@ These are cache or temporary runtime files and should not be treated as system-o
 
 The current operational source of truth is:
 
-- `backend/app/data/store.json`
+- `backend/app/data/app-data.json`
 
 It currently contains these top-level collections:
 
@@ -989,7 +989,7 @@ Suggested meanings:
 
 The one-time importer reads:
 
-- `backend/app/data/store.json`
+- `backend/app/data/app-data.json`
 - `backend/app/data/pdfs/travel_plans/*/manifest.json`
 
 It must not modify the source JSON files.

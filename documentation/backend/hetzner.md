@@ -300,11 +300,11 @@ Other useful variants:
 Behavior:
 - fetches from `origin`
 - requires `git pull --ff-only`
-- preserves the untracked runtime `backend/app/data/store.json`
+- preserves the untracked runtime `backend/app/data/app-data.json`
 - recreates only the requested staging services
 
 Live data note:
-- `backend/app/data/store.json` must stay on the server and must not be overwritten by deploy sync.
+- `backend/app/data/app-data.json` must stay on the server and must not be overwritten by deploy sync.
 - The included staging deploy script excludes that file and creates it only if it does not exist yet.
 
 Logs:

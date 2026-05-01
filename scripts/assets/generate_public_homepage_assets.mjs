@@ -35,7 +35,10 @@ const ATP_STAFF_ROOT = normalizeText(process.env.PUBLIC_HOMEPAGE_STAFF_ROOT) || 
 const ATP_STAFF_PROFILES_PATH = normalizeText(process.env.PUBLIC_HOMEPAGE_STAFF_PROFILES_PATH) || path.join(ATP_STAFF_ROOT, "staff.json");
 const ATP_STAFF_PHOTOS_ROOT = normalizeText(process.env.PUBLIC_HOMEPAGE_STAFF_PHOTOS_DIR) || path.join(ATP_STAFF_ROOT, "photos");
 const COUNTRY_REFERENCE_INFO_PATH = normalizeText(process.env.PUBLIC_HOMEPAGE_COUNTRY_REFERENCE_INFO_PATH) || path.join(CONTENT_ROOT, "country_reference_info.json");
-const STORE_PATH = path.resolve(normalizeText(process.env.PUBLIC_HOMEPAGE_STORE_PATH || process.env.STORE_FILE) || path.join(ROOT_DIR, "backend", "app", "data", "store.json"));
+const DESTINATION_CATALOG_PATH = path.resolve(
+  normalizeText(process.env.PUBLIC_HOMEPAGE_DESTINATION_CATALOG_PATH || process.env.TOUR_DESTINATIONS_PATH)
+    || path.join(CONTENT_ROOT, "tours", "destinations.json")
+);
 const GENERATED_HOMEPAGE_DATA_DIR = path.join(ROOT_DIR, "frontend", "data", "generated", "homepage");
 const GENERATED_HOMEPAGE_ASSETS_DIR = path.join(ROOT_DIR, "assets", "generated", "homepage");
 const GENERATED_REELS_DATA_DIR = path.join(ROOT_DIR, "frontend", "data", "generated", "reels");
@@ -58,6 +61,8 @@ const DEFAULT_CLI_LOG_PATH = "/tmp/generate_public_homepage_assets.log";
 const DEFAULT_TEAM_ORDER = 10;
 const TOUR_FILE_PREFIX = "public-tours.";
 const TOUR_FILE_SUFFIX = ".json";
+const TOUR_DESTINATIONS_FILE_PREFIX = "public-tour-destinations.";
+const TOUR_DESTINATIONS_FILE_SUFFIX = ".json";
 const FOOTER_ALIGNED_TRAVEL_AGENCY_STRUCTURED_DATA = Object.freeze({
   "@id": "https://asiatravelplan.com/#travelagency",
   name: "AsiaTravelPlan",
@@ -249,6 +254,7 @@ async function cleanGeneratedFrontendData(frontendDataDir) {
       || entryName === path.basename(HOMEPAGE_INITIAL_BUNDLE_PATH)
       || entryName === path.basename(SITEMAP_OUTPUT_PATH)
       || (entryName.startsWith(TOUR_FILE_PREFIX) && entryName.endsWith(TOUR_FILE_SUFFIX))
+      || (entryName.startsWith(TOUR_DESTINATIONS_FILE_PREFIX) && entryName.endsWith(TOUR_DESTINATIONS_FILE_SUFFIX))
       || (entryName.startsWith("public-tour-details.") && entryName.endsWith(".json"))
     ) {
       await rm(path.join(frontendDataDir, entryName), { force: true });
@@ -386,6 +392,47 @@ function visiblePublishedDestinationCodes(countryReferencePayload) {
     publishedDestinationCountryCodes(countryReferencePayload)
       .map((countryCode) => normalizeTourDestinationCode(DESTINATION_COUNTRY_TO_TOUR_DESTINATION_CODE[countryCode]))
       .filter(Boolean)
+  );
+}
+
+function catalogDestinationTourCode(destination) {
+  const rawCode = normalizeText(destination?.code || destination);
+  if (!rawCode) return "";
+  return normalizeTourDestinationCode(rawCode)
+    || normalizeText(countryCodeToTourDestinationCode(rawCode)).toLowerCase();
+}
+
+function destinationCatalogTourDestinationCodes(destinationCatalogPayload) {
+  return new Set(
+    (Array.isArray(destinationCatalogPayload?.destination_scope_destinations)
+      ? destinationCatalogPayload.destination_scope_destinations
+      : [])
+      .map(catalogDestinationTourCode)
+      .filter(Boolean)
+  );
+}
+
+function assertTourDestinationsListedInCatalog(tours, destinationCatalogPayload, {
+  destinationCatalogPath = "",
+  tourDestinationCodes
+} = {}) {
+  const allowedDestinations = destinationCatalogTourDestinationCodes(destinationCatalogPayload);
+  const missingByTour = [];
+  for (const tour of Array.isArray(tours) ? tours : []) {
+    const missingCodes = (typeof tourDestinationCodes === "function" ? tourDestinationCodes(tour) : [])
+      .filter((code) => code && !allowedDestinations.has(code));
+    if (missingCodes.length) {
+      missingByTour.push(`${normalizeText(tour?.id) || "(missing id)"}: ${Array.from(new Set(missingCodes)).join(", ")}`);
+    }
+  }
+  if (!missingByTour.length) return;
+
+  const catalogLabel = normalizeText(destinationCatalogPath)
+    ? path.relative(ROOT_DIR, destinationCatalogPath)
+    : "the tour destination catalog";
+  throw new Error(
+    "Cannot generate public homepage assets because some tours use destinations that are not listed in "
+      + `${catalogLabel}: ${missingByTour.join("; ")}.`
   );
 }
 
@@ -1362,10 +1409,12 @@ async function generateTourAssets({
   outputRoot = TOUR_OUTPUT_DIR,
   frontendDataDir = FRONTEND_DATA_DIR,
   countryReferenceInfoPath = COUNTRY_REFERENCE_INFO_PATH,
-  storePath = STORE_PATH,
+  destinationCatalogPath = "",
   frontendI18nDir = FRONTEND_I18N_DIR,
   languages = FRONTEND_LANGUAGE_CODES
 } = {}) {
+  const resolvedDestinationCatalogPath = normalizeText(destinationCatalogPath)
+    || (toursRoot === TOURS_ROOT ? DESTINATION_CATALOG_PATH : path.join(toursRoot, "destinations.json"));
   const { normalizeMarketingTourTravelPlan } = createTravelPlanHelpers();
   const tourHelpers = createTourHelpers({ toursDir: toursRoot, safeInt, normalizeMarketingTourTravelPlan });
   const {
@@ -1375,9 +1424,9 @@ async function generateTourAssets({
     tourDestinationCodes
   } = tourHelpers;
 
-  await cleanGeneratedAssetDir(outputRoot);
   const tourDirectories = (await listDirectoryEntries(toursRoot)).filter((entry) => entry.isDirectory());
   const tours = [];
+  const tourRecords = [];
   const generatedTourAssetPaths = new Map();
 
   for (const entry of tourDirectories) {
@@ -1394,11 +1443,8 @@ async function generateTourAssets({
     if (!normalizeText(normalizedTour?.id)) {
       throw new Error(`Tour at ${tourPath} is missing an id.`);
     }
-    const generatedPaths = await generateHomepageTourAssets(tourDir, path.join(outputRoot, normalizedTour.id));
-    for (const [sourceName, generatedName] of generatedPaths.entries()) {
-      generatedTourAssetPaths.set(`${normalizedTour.id}/${sourceName}`, `${normalizedTour.id}/${generatedName}`);
-    }
     tours.push(normalizedTour);
+    tourRecords.push({ tour: normalizedTour, tourDir });
   }
 
   const ids = tours.map((tour) => normalizeText(tour.id));
@@ -1407,7 +1453,23 @@ async function generateTourAssets({
   }
 
   const countryReferencePayload = await readJson(countryReferenceInfoPath, { fallback: { items: [] } });
-  const storePayload = await readJson(storePath, { fallback: {} });
+  const destinationCatalogPayload = await readJson(resolvedDestinationCatalogPath, { fallback: {} });
+  assertTourDestinationsListedInCatalog(tours, destinationCatalogPayload, {
+    destinationCatalogPath: resolvedDestinationCatalogPath,
+    tourDestinationCodes
+  });
+
+  await cleanGeneratedAssetDir(outputRoot);
+  for (const { tour, tourDir } of tourRecords) {
+    const generatedPaths = await generateHomepageTourAssets(tourDir, path.join(outputRoot, tour.id));
+    for (const [sourceName, generatedName] of generatedPaths.entries()) {
+      generatedTourAssetPaths.set(`${tour.id}/${sourceName}`, `${tour.id}/${generatedName}`);
+    }
+  }
+
+  const storePayload = destinationCatalogPayload && typeof destinationCatalogPayload === "object" && !Array.isArray(destinationCatalogPayload)
+    ? destinationCatalogPayload
+    : {};
   const publishedCountryCodes = publishedDestinationCountryCodes(countryReferencePayload);
   const publishedDestinationCodes = visiblePublishedDestinationCodes(countryReferencePayload);
   const publicTours = tours
@@ -1418,6 +1480,7 @@ async function generateTourAssets({
     .filter(Boolean);
   const sortedPublicTours = [...publicTours].sort((left, right) => Number(right.priority || 0) - Number(left.priority || 0));
   const assetUrlsByLang = {};
+  const destinationAssetUrlsByLang = {};
   let seoPayload = null;
 
   for (const lang of languages) {
@@ -1454,10 +1517,18 @@ async function generateTourAssets({
     }
     const options = collectTourOptions(publicTours, { lang: normalizedLang });
     const destinationScopeCatalog = publicDestinationScopeCatalog(storePayload, options.destinations, { lang: normalizedLang });
+    const destinationFilename = `${TOUR_DESTINATIONS_FILE_PREFIX}${normalizedLang}${TOUR_DESTINATIONS_FILE_SUFFIX}`;
+    const destinationPayload = {
+      available_destination_scope_catalog: destinationScopeCatalog
+    };
+    const destinationSource = jsonWithTrailingNewline(destinationPayload);
+    const destinationVersion = versionTokenForContent(destinationSource);
+    await writeFile(path.join(frontendDataDir, destinationFilename), destinationSource, "utf8");
+    destinationAssetUrlsByLang[normalizedLang] = buildVersionedGeneratedDataUrl(destinationFilename, destinationVersion);
+
     const payload = {
       items: localizedItems,
       available_destinations: options.destinations,
-      available_destination_scope_catalog: destinationScopeCatalog,
       available_styles: options.styles,
       pagination: {
         page: 1,
@@ -1494,6 +1565,7 @@ async function generateTourAssets({
     heroTitleByLang: destinationPromiseCopy.heroTitleByLang,
     seoPayload,
     assetUrlsByLang,
+    destinationAssetUrlsByLang,
     publicTours: sortedPublicTours
   };
 }
@@ -1692,7 +1764,7 @@ export async function generatePublicHomepageAssets({
   staffProfilesPath = "",
   staffPhotosRoot = "",
   countryReferenceInfoPath = COUNTRY_REFERENCE_INFO_PATH,
-  storePath = STORE_PATH,
+  destinationCatalogPath = "",
   frontendDataDir = FRONTEND_DATA_DIR,
   tourOutputDir = TOUR_OUTPUT_DIR,
   teamOutputDir = TEAM_OUTPUT_DIR,
@@ -1719,13 +1791,15 @@ export async function generatePublicHomepageAssets({
     || (staffRoot === ATP_STAFF_ROOT ? ATP_STAFF_PROFILES_PATH : path.join(staffRoot, "staff.json"));
   const resolvedStaffPhotosRoot = normalizeText(staffPhotosRoot)
     || (staffRoot === ATP_STAFF_ROOT ? ATP_STAFF_PHOTOS_ROOT : path.join(staffRoot, "photos"));
+  const resolvedDestinationCatalogPath = normalizeText(destinationCatalogPath)
+    || (toursRoot === TOURS_ROOT ? DESTINATION_CATALOG_PATH : path.join(toursRoot, "destinations.json"));
   await cleanGeneratedFrontendData(frontendDataDir);
   const tours = await generateTourAssets({
     toursRoot,
     outputRoot: tourOutputDir,
     frontendDataDir,
     countryReferenceInfoPath,
-    storePath,
+    destinationCatalogPath: resolvedDestinationCatalogPath,
     frontendI18nDir,
     languages
   });
@@ -1746,6 +1820,7 @@ export async function generatePublicHomepageAssets({
     ...tours.destinationPromiseCopy,
     assetUrls: {
       toursByLang: tours.assetUrlsByLang,
+      tourDestinationsByLang: tours.destinationAssetUrlsByLang,
       team: team.assetUrl,
       reels: reels.assetUrl
     }

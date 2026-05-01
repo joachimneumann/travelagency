@@ -16,7 +16,7 @@ import {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const APP_ROOT = path.resolve(__dirname, "..");
-const DEFAULT_STORE_PATH = path.join(APP_ROOT, "data", "store.json");
+const DEFAULT_STORE_PATH = path.join(APP_ROOT, "data", "app-data.json");
 
 function usage() {
   return [

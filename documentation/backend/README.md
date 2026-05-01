@@ -75,7 +75,7 @@ Booking notification email sends through the Zoho Mail API when a public website
 ## Storage
 
 Runtime JSON persistence:
-- `backend/app/data/store.json`
+- `backend/app/data/app-data.json`
 - `backend/app/data/pdfs/payment_documents/`
 - `backend/app/data/booking_images/`
 - `backend/app/data/booking_person_photos/`
@@ -83,7 +83,7 @@ Runtime JSON persistence:
 - `content/country_reference_info.json`
 
 Notes:
-- `backend/app/data/store.json` is runtime data and is not tracked in Git
+- `backend/app/data/app-data.json` is runtime data and is not tracked in Git
 - startup creates an empty store automatically if the file is missing
 - bookings, activities, payment documents, and chats are the active operational store domains
 - tours and country reference info remain file-backed content domains

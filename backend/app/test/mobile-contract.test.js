@@ -15,7 +15,8 @@ const RUN_IOS_CONTRACT_TESTS = process.env.ENABLE_IOS_TESTS === "true";
 const IOS_CONTRACT_SKIP_REASON = "Set ENABLE_IOS_TESTS=true to run mobile/iOS contract tests.";
 const CONTRACT_META_PATH = path.resolve(__dirname, "..", "..", "..", "api", "generated", "mobile-api.meta.json");
 const TEST_DATA_DIR = await mkdtemp(path.join(os.tmpdir(), "travelagency-contract-test-"));
-const STORE_PATH = path.join(TEST_DATA_DIR, "store.json");
+const STORE_PATH = path.join(TEST_DATA_DIR, "app-data.json");
+const TOUR_DESTINATIONS_PATH = path.join(TEST_DATA_DIR, "content", "tours", "destinations.json");
 
 process.env.KEYCLOAK_ENABLED = "true";
 process.env.INSECURE_TEST_AUTH = "true";
@@ -30,6 +31,7 @@ process.env.MOBILE_LATEST_APP_VERSION = "1.0.0";
 process.env.MOBILE_FORCE_UPDATE = "false";
 process.env.BACKEND_DATA_DIR = TEST_DATA_DIR;
 process.env.STORE_FILE = STORE_PATH;
+process.env.TOUR_DESTINATIONS_PATH = TOUR_DESTINATIONS_PATH;
 process.env.ATP_STAFF_PROFILES_PATH = path.join(TEST_DATA_DIR, "content", "atp_staff", "staff.json");
 process.env.ATP_STAFF_PHOTOS_DIR = path.join(TEST_DATA_DIR, "content", "atp_staff", "photos");
 process.env.GOOGLE_SERVICE_ACCOUNT_JSON_PATH = "";

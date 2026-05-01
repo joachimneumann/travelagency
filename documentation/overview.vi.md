@@ -189,7 +189,7 @@ Commit:
 Không commit:
 
 - file `.env` chứa secrets thật
-- `backend/app/data/store.json`
+- `backend/app/data/app-data.json`
 - runtime PDFs được sinh
 - booking images được upload
 - traveler photos/documents
@@ -538,7 +538,7 @@ Các khu vực backend quan trọng:
 
 Current persistence:
 
-- `backend/app/data/store.json`
+- `backend/app/data/app-data.json`
 - `backend/app/data/pdfs/generated_offers/`
 - `backend/app/data/pdfs/payment_documents/`
 - `backend/app/data/pdfs/travel_plans/`

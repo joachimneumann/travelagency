@@ -24,8 +24,8 @@ export function createDestinationScopeHandlers(deps) {
     randomUUID,
     repoRoot,
     execFile,
-    dataPath,
     toursDir,
+    tourDestinationsPath,
     translateEntriesWithMeta,
     readTranslationRules
   } = deps;
@@ -38,14 +38,14 @@ export function createDestinationScopeHandlers(deps) {
 
   function buildPublicHomepageAssetGeneratorEnv() {
     const env = { ...process.env };
-    const normalizedDataPath = normalizeText(dataPath);
     const normalizedToursDir = normalizeText(toursDir);
-    if (normalizedDataPath) {
-      env.STORE_FILE = normalizedDataPath;
-      env.PUBLIC_HOMEPAGE_STORE_PATH = normalizedDataPath;
-    }
     if (normalizedToursDir) {
       env.PUBLIC_HOMEPAGE_TOURS_ROOT = normalizedToursDir;
+    }
+    const normalizedTourDestinationsPath = normalizeText(tourDestinationsPath);
+    if (normalizedTourDestinationsPath) {
+      env.TOUR_DESTINATIONS_PATH = normalizedTourDestinationsPath;
+      env.PUBLIC_HOMEPAGE_DESTINATION_CATALOG_PATH = normalizedTourDestinationsPath;
     }
     return env;
   }

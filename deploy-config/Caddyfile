@@ -46,8 +46,14 @@
 }
 
 (staging_generated_homepage_cache_headers) {
-  @staging_generated_homepage path /frontend/data/generated/homepage/*
-  header @staging_generated_homepage Cache-Control "public, max-age=60, stale-while-revalidate=300"
+  @staging_generated_homepage_json path /frontend/data/generated/homepage/*.json
+  header @staging_generated_homepage_json Cache-Control "public, max-age=31536000, immutable"
+
+  @staging_generated_homepage_runtime {
+    path /frontend/data/generated/homepage/*
+    not path /frontend/data/generated/homepage/*.json
+  }
+  header @staging_generated_homepage_runtime Cache-Control "public, max-age=60, stale-while-revalidate=300"
 }
 
 (production_html_no_cache_headers) {
@@ -72,8 +78,14 @@
 }
 
 (production_generated_homepage_cache_headers) {
-  @production_generated_homepage path /frontend/data/generated/homepage/*
-  header @production_generated_homepage Cache-Control "public, max-age=60, stale-while-revalidate=300"
+  @production_generated_homepage_json path /frontend/data/generated/homepage/*.json
+  header @production_generated_homepage_json Cache-Control "public, max-age=31536000, immutable"
+
+  @production_generated_homepage_runtime {
+    path /frontend/data/generated/homepage/*
+    not path /frontend/data/generated/homepage/*.json
+  }
+  header @production_generated_homepage_runtime Cache-Control "public, max-age=60, stale-while-revalidate=300"
 }
 
 (production_private_noindex_headers) {

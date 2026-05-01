@@ -50,7 +50,7 @@ Important backend areas:
   - Meta webhook integration
 
 Runtime persistence is currently file-based:
-- `backend/app/data/store.json`
+- `backend/app/data/app-data.json`
 - `backend/app/data/pdfs/generated_offers/`
 - `backend/app/data/pdfs/payment_documents/`
 - `backend/app/data/booking_images/`

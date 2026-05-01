@@ -189,7 +189,7 @@ Commit:
 Do not commit:
 
 - `.env` files with real secrets
-- `backend/app/data/store.json`
+- `backend/app/data/app-data.json`
 - generated runtime PDFs
 - uploaded booking images
 - traveler photos/documents
@@ -538,7 +538,7 @@ Important backend areas:
 
 Current persistence:
 
-- `backend/app/data/store.json`
+- `backend/app/data/app-data.json`
 - `backend/app/data/pdfs/generated_offers/`
 - `backend/app/data/pdfs/payment_documents/`
 - `backend/app/data/pdfs/travel_plans/`

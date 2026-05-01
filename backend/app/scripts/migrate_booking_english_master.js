@@ -57,7 +57,7 @@ export function resolveStorePath(storePath = "") {
   return path.resolve(
     normalizeText(storePath)
     || normalizeText(process.env.STORE_FILE)
-    || path.join(normalizeText(process.env.BACKEND_DATA_DIR) || DEFAULT_DATA_ROOT, "store.json")
+    || path.join(normalizeText(process.env.BACKEND_DATA_DIR) || DEFAULT_DATA_ROOT, "app-data.json")
   );
 }
 

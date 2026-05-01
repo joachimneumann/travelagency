@@ -64,7 +64,7 @@ export function parseArgs(argv = process.argv.slice(2)) {
 
 export function resolveWipePaths({ storePath = "", dataDir = "" } = {}) {
   const resolvedDataRoot = path.resolve(normalizeText(dataDir) || normalizeText(process.env.BACKEND_DATA_DIR) || DEFAULT_DATA_ROOT);
-  const resolvedStorePath = path.resolve(normalizeText(storePath) || normalizeText(process.env.STORE_FILE) || path.join(resolvedDataRoot, "store.json"));
+  const resolvedStorePath = path.resolve(normalizeText(storePath) || normalizeText(process.env.STORE_FILE) || path.join(resolvedDataRoot, "app-data.json"));
   const pdfRoot = path.join(resolvedDataRoot, "pdfs");
   const tempRoot = path.join(resolvedDataRoot, "tmp");
 

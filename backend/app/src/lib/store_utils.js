@@ -11,6 +11,11 @@ import {
 import { getTourDestinationLabel } from "../domain/tour_catalog_i18n.js";
 
 const STORE_SNAPSHOT = Symbol("asiatravelplan_store_snapshot");
+const DESTINATION_CATALOG_KEYS = Object.freeze([
+  "destination_scope_destinations",
+  "destination_areas",
+  "destination_places"
+]);
 const DEFAULT_DESTINATION_SCOPE_DESTINATIONS = Object.freeze(
   DESTINATION_COUNTRY_CODES.map((code, index) => {
     const destinationCode = DESTINATION_COUNTRY_TO_TOUR_DESTINATION_CODE[code] || code.toLowerCase();
@@ -34,6 +39,43 @@ function cloneJson(value) {
 
 function defaultDestinationScopeDestinations() {
   return cloneJson(DEFAULT_DESTINATION_SCOPE_DESTINATIONS);
+}
+
+function defaultDestinationCatalogDocument() {
+  return {
+    destination_scope_destinations: defaultDestinationScopeDestinations(),
+    destination_areas: [],
+    destination_places: []
+  };
+}
+
+function destinationCatalogDocumentFromStore(store = {}) {
+  return {
+    destination_scope_destinations: Array.isArray(store?.destination_scope_destinations) && store.destination_scope_destinations.length
+      ? cloneJson(store.destination_scope_destinations)
+      : defaultDestinationScopeDestinations(),
+    destination_areas: Array.isArray(store?.destination_areas) ? cloneJson(store.destination_areas) : [],
+    destination_places: Array.isArray(store?.destination_places) ? cloneJson(store.destination_places) : []
+  };
+}
+
+function storeHasDestinationCatalogFields(store) {
+  return DESTINATION_CATALOG_KEYS.some((key) => Object.prototype.hasOwnProperty.call(store || {}, key));
+}
+
+function storeWithoutDestinationCatalogFields(store = {}) {
+  const next = cloneJson(store || {});
+  for (const key of DESTINATION_CATALOG_KEYS) {
+    delete next[key];
+  }
+  return next;
+}
+
+function mergeDestinationCatalogIntoStore(store = {}, catalog = {}) {
+  return {
+    ...(store && typeof store === "object" && !Array.isArray(store) ? store : {}),
+    ...destinationCatalogDocumentFromStore(catalog)
+  };
 }
 
 function jsonEqual(left, right) {
@@ -172,6 +214,7 @@ function mergeStoreSnapshot(baseStore, latestStore, nextStore) {
 export function createStoreUtils({
   dataPath,
   toursDir,
+  tourDestinationsPath = "",
   paymentDocumentsDir,
   generatedOffersDir,
   travelPlanPdfsDir,
@@ -187,9 +230,26 @@ export function createStoreUtils({
   getBookingPreferredCurrency,
   convertBookingOfferToBaseCurrency
 }) {
+  const destinationCatalogPath = normalizeText(tourDestinationsPath);
+
+  function initialStoreDocument() {
+    return {
+      bookings: [],
+      activities: [],
+      payment_documents: [],
+      ...(destinationCatalogPath ? {} : defaultDestinationCatalogDocument()),
+      chat_channel_accounts: [],
+      chat_conversations: [],
+      chat_events: []
+    };
+  }
+
   async function ensureStorage() {
     await mkdir(path.dirname(dataPath), { recursive: true });
     await mkdir(toursDir, { recursive: true });
+    if (destinationCatalogPath) {
+      await mkdir(path.dirname(destinationCatalogPath), { recursive: true });
+    }
     await mkdir(paymentDocumentsDir, { recursive: true });
     await mkdir(generatedOffersDir, { recursive: true });
     if (travelPlanPdfsDir) {
@@ -202,22 +262,35 @@ export function createStoreUtils({
     if (travelPlanPdfPreviewDir) {
       await mkdir(travelPlanPdfPreviewDir, { recursive: true });
     }
+    let storedDocument = null;
     try {
-      await readFile(dataPath, "utf8");
-    } catch {
+      storedDocument = JSON.parse(await readFile(dataPath, "utf8"));
+    } catch (error) {
+      if (error?.code !== "ENOENT") throw error;
+      storedDocument = initialStoreDocument();
       await writeFile(
         dataPath,
-        `${JSON.stringify({
-          bookings: [],
-          activities: [],
-          payment_documents: [],
-          destination_scope_destinations: defaultDestinationScopeDestinations(),
-          destination_areas: [],
-          destination_places: [],
-          chat_channel_accounts: [],
-          chat_conversations: [],
-          chat_events: []
-        }, null, 2)}\n`,
+        `${JSON.stringify(storedDocument, null, 2)}\n`,
+        "utf8"
+      );
+    }
+    if (!destinationCatalogPath) return;
+
+    try {
+      JSON.parse(await readFile(destinationCatalogPath, "utf8"));
+    } catch (error) {
+      if (error?.code !== "ENOENT") throw error;
+      await writeFile(
+        destinationCatalogPath,
+        `${JSON.stringify(destinationCatalogDocumentFromStore(storedDocument), null, 2)}\n`,
+        "utf8"
+      );
+    }
+
+    if (storeHasDestinationCatalogFields(storedDocument)) {
+      await writeFile(
+        dataPath,
+        `${JSON.stringify(storeWithoutDestinationCatalogFields(storedDocument), null, 2)}\n`,
         "utf8"
       );
     }
@@ -330,9 +403,28 @@ export function createStoreUtils({
     return parsed;
   }
 
-  async function readStoreFromDisk() {
+  async function readDestinationCatalogFromDisk(storeDocument) {
+    if (!destinationCatalogPath) {
+      return destinationCatalogDocumentFromStore(storeDocument);
+    }
+    try {
+      const raw = await readFile(destinationCatalogPath, "utf8");
+      return destinationCatalogDocumentFromStore(JSON.parse(raw));
+    } catch (error) {
+      if (error?.code !== "ENOENT") throw error;
+      return destinationCatalogDocumentFromStore(storeDocument);
+    }
+  }
+
+  async function readStoreDocumentFromDisk() {
     const raw = await readFile(dataPath, "utf8");
-    return await normalizeParsedStore(JSON.parse(raw));
+    return JSON.parse(raw);
+  }
+
+  async function readStoreFromDisk() {
+    const storeDocument = await readStoreDocumentFromDisk();
+    const destinationCatalog = await readDestinationCatalogFromDisk(storeDocument);
+    return await normalizeParsedStore(mergeDestinationCatalogIntoStore(storeDocument, destinationCatalog));
   }
 
   async function readStore() {
@@ -351,8 +443,16 @@ export function createStoreUtils({
           nextStore = mergeStoreSnapshot(baseSnapshot, latestStore, requestedStore);
         }
       }
-      const next = `${JSON.stringify(nextStore, null, 2)}\n`;
+      const storeDocument = destinationCatalogPath ? storeWithoutDestinationCatalogFields(nextStore) : nextStore;
+      const next = `${JSON.stringify(storeDocument, null, 2)}\n`;
       await writeFile(dataPath, next, "utf8");
+      if (destinationCatalogPath) {
+        await writeFile(
+          destinationCatalogPath,
+          `${JSON.stringify(destinationCatalogDocumentFromStore(nextStore), null, 2)}\n`,
+          "utf8"
+        );
+      }
       if (store && typeof store === "object" && !Array.isArray(store)) {
         Object.defineProperty(store, STORE_SNAPSHOT, {
           value: cloneJson(nextStore),

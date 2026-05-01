@@ -355,6 +355,7 @@ export function createApplicationRoutes({
     execFile: runtime.execFile,
     dataPath: runtime.paths.dataPath,
     toursDir: runtime.paths.toursDir,
+    tourDestinationsPath: runtime.paths.tourDestinationsPath,
     translateEntriesWithMeta: runtime.translationClient.translateEntriesWithMeta,
     readTranslationRules: translationRulesStore.readTranslationRules
   });

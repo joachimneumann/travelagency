@@ -143,7 +143,7 @@ function parseArgs(argv = process.argv.slice(2)) {
 
 function resolvePaths({ storePath = "", dataDir = "" } = {}) {
   const resolvedDataRoot = path.resolve(normalizeText(dataDir) || normalizeText(process.env.BACKEND_DATA_DIR) || DEFAULT_DATA_ROOT);
-  const resolvedStorePath = path.resolve(normalizeText(storePath) || normalizeText(process.env.STORE_FILE) || path.join(resolvedDataRoot, "store.json"));
+  const resolvedStorePath = path.resolve(normalizeText(storePath) || normalizeText(process.env.STORE_FILE) || path.join(resolvedDataRoot, "app-data.json"));
   return {
     dataRoot: resolvedDataRoot,
     storePath: resolvedStorePath
@@ -152,7 +152,7 @@ function resolvePaths({ storePath = "", dataDir = "" } = {}) {
 
 function resolveRemotePaths({ storePath = "", dataDir = "" } = {}) {
   const normalizedDataDir = normalizeText(dataDir) || normalizeText(process.env.BACKEND_DATA_DIR) || DEFAULT_DATA_ROOT;
-  const normalizedStorePath = normalizeText(storePath) || normalizeText(process.env.STORE_FILE) || path.join(normalizedDataDir, "store.json");
+  const normalizedStorePath = normalizeText(storePath) || normalizeText(process.env.STORE_FILE) || path.join(normalizedDataDir, "app-data.json");
   return {
     dataRoot: path.posix.normalize(normalizedDataDir),
     storePath: path.posix.normalize(normalizedStorePath)

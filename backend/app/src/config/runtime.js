@@ -22,11 +22,14 @@ const __dirname = path.dirname(__filename);
 export const APP_ROOT = path.resolve(__dirname, "..", "..");
 export const REPO_ROOT = path.resolve(APP_ROOT, "..", "..");
 export const DATA_ROOT = path.resolve(normalizeText(process.env.BACKEND_DATA_DIR) || path.join(APP_ROOT, "data"));
-export const DATA_PATH = path.resolve(normalizeText(process.env.STORE_FILE) || path.join(DATA_ROOT, "store.json"));
+export const DATA_PATH = path.resolve(normalizeText(process.env.STORE_FILE) || path.join(DATA_ROOT, "app-data.json"));
 export const CONTENT_ROOT = resolveConfigPathFromRepoRoot(normalizeText(process.env.CONTENT_ROOT || "content"));
 export const LEGACY_TOURS_DIR = path.join(DATA_ROOT, "tours");
 export const TOURS_DIR = resolveConfigPathFromRepoRoot(
   normalizeText(process.env.TOURS_DIR || process.env.TOURS_ROOT || path.join("content", "tours"))
+);
+export const TOUR_DESTINATIONS_PATH = resolveConfigPathFromRepoRoot(
+  normalizeText(process.env.TOUR_DESTINATIONS_PATH || path.join("content", "tours", "destinations.json"))
 );
 export const PDFS_ROOT = path.join(DATA_ROOT, "pdfs");
 export const PAYMENT_DOCUMENTS_DIR = path.join(PDFS_ROOT, "payment_documents");
@@ -295,6 +298,7 @@ export const RUNTIME_PATHS = Object.freeze({
   contentRoot: CONTENT_ROOT,
   dataPath: DATA_PATH,
   legacyToursDir: LEGACY_TOURS_DIR,
+  tourDestinationsPath: TOUR_DESTINATIONS_PATH,
   pdfsRoot: PDFS_ROOT,
   toursDir: TOURS_DIR,
   paymentDocumentsDir: PAYMENT_DOCUMENTS_DIR,

@@ -4400,13 +4400,13 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
   );
   assert.match(
     stagingCaddy,
-    /@staging_generated_homepage path \/frontend\/data\/generated\/homepage\/\*[\s\S]*Cache-Control "public, max-age=60, stale-while-revalidate=300"/,
-    "Staging generated homepage data should use a short public cache instead of bypassing browser caches"
+    /@staging_generated_homepage_json path \/frontend\/data\/generated\/homepage\/\*\.json[\s\S]*Cache-Control "public, max-age=31536000, immutable"[\s\S]*@staging_generated_homepage_runtime \{[\s\S]*path \/frontend\/data\/generated\/homepage\/\*[\s\S]*not path \/frontend\/data\/generated\/homepage\/\*\.json[\s\S]*Cache-Control "public, max-age=60, stale-while-revalidate=300"/,
+    "Staging should cache versioned generated homepage JSON long-term while keeping runtime generated homepage assets short-lived"
   );
   assert.match(
     stagingCaddy,
-    /@production_generated_homepage path \/frontend\/data\/generated\/homepage\/\*[\s\S]*Cache-Control "public, max-age=60, stale-while-revalidate=300"/,
-    "Production generated homepage data should use a short public cache instead of bypassing browser caches"
+    /@production_generated_homepage_json path \/frontend\/data\/generated\/homepage\/\*\.json[\s\S]*Cache-Control "public, max-age=31536000, immutable"[\s\S]*@production_generated_homepage_runtime \{[\s\S]*path \/frontend\/data\/generated\/homepage\/\*[\s\S]*not path \/frontend\/data\/generated\/homepage\/\*\.json[\s\S]*Cache-Control "public, max-age=60, stale-while-revalidate=300"/,
+    "Production should cache versioned generated homepage JSON long-term while keeping runtime generated homepage assets short-lived"
   );
   assert.match(
     stagingCaddy,
@@ -4555,6 +4555,11 @@ test("frontend language switching updates the homepage in place instead of forci
     mainToursSource,
     /function publicToursDataUrl\(lang\) \{[\s\S]*generatedTourAssetUrlsByLang\(\)\?\.\[normalizedLang\][\s\S]*async function loadTrips\(\) \{[\s\S]*const lang = normalizeFrontendTourLang\(currentFrontendLang\(\)\);[\s\S]*fetch\(publicToursDataUrl\(lang\), \{ cache: "no-store" \}\)/,
     "Homepage tour loading should use generated versioned per-language URLs and bypass browser cache"
+  );
+  assert.match(
+    mainToursSource,
+    /function publicTourDestinationsDataUrl\(lang\) \{[\s\S]*generatedTourDestinationAssetUrlsByLang\(\)\?\.\[normalizedLang\][\s\S]*async function loadTrips\(\) \{[\s\S]*loadTourDestinations\(lang\)/,
+    "Homepage tour destination loading should use generated static per-language destination URLs instead of reading the source content file"
   );
   assert.match(
     mainToursSource,
@@ -4711,7 +4716,7 @@ test("homepage tour details resolve travel-plan day and service copy from the ac
   );
 });
 
-test("homepage tour cards use fixed-height text areas without an inline more link", async () => {
+test("homepage tour cards expand descriptions and align same-row cards without an inline more link", async () => {
   const mainToursPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "main_tours.js");
   const homepagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "index.html");
   const tourCardCssPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "components", "tour-card.css");
@@ -4731,10 +4736,15 @@ test("homepage tour cards use fixed-height text areas without an inline more lin
     /data-tour-desc-toggle|syncTourDescriptionToggles|function renderTourDescriptionDetail|tour\.card\.more/,
     "Tour cards should no longer render the old inline more link for clamped descriptions"
   );
+  assert.doesNotMatch(
+    tourCardCssSource,
+    /\.tour-desc \{[\s\S]*-webkit-line-clamp: var\(--tour-card-desc-lines\);/,
+    "Desktop tour descriptions should not keep the old fixed-line clamp"
+  );
   assert.match(
     tourCardCssSource,
-    /\.tour-desc \{[\s\S]*-webkit-line-clamp: var\(--tour-card-desc-lines\);[\s\S]*min-height: calc\(1em \* var\(--tour-card-desc-line-height\) \* var\(--tour-card-desc-lines\)\);/,
-    "Desktop tour descriptions should clamp to a fixed-height preview so cards stay aligned"
+    /\.tour-desc \{[\s\S]*display: block;[\s\S]*overflow: visible;/,
+    "Desktop tour descriptions should expand to their full content"
   );
   assert.match(
     tourCardCssSource,
@@ -4743,13 +4753,13 @@ test("homepage tour cards use fixed-height text areas without an inline more lin
   );
   assert.match(
     tourCardCssSource,
-    /\.tour-card \{[\s\S]*--tour-card-desc-lines: 3;[\s\S]*--tour-card-media-overlay-inset: 1\.14rem;[\s\S]*\.tour-card__media \{[\s\S]*aspect-ratio: 1 \/ 1;[\s\S]*\.tour-card__media-counter \{[\s\S]*font-size: 0\.9rem;[\s\S]*\.tour-card__media-overlay \{[\s\S]*bottom: var\(--tour-card-media-overlay-inset\);[\s\S]*\.tour-title--media \{[\s\S]*-webkit-line-clamp: 1;[\s\S]*\.tour-card__duration-pill \{[\s\S]*background: #fff;[\s\S]*color: var\(--accent\);[\s\S]*font-size: 0\.9rem;/,
+    /\.tour-card \{[\s\S]*--tour-card-desc-line-height: 1\.55;[\s\S]*--tour-card-media-overlay-inset: 1\.14rem;[\s\S]*\.tour-card__media \{[\s\S]*aspect-ratio: 1 \/ 1;[\s\S]*\.tour-card__media-counter \{[\s\S]*font-size: 0\.9rem;[\s\S]*\.tour-card__media-overlay \{[\s\S]*bottom: var\(--tour-card-media-overlay-inset\);[\s\S]*\.tour-title--media \{[\s\S]*-webkit-line-clamp: 1;[\s\S]*\.tour-card__duration-pill \{[\s\S]*background: #fff;[\s\S]*color: var\(--accent\);[\s\S]*font-size: 0\.9rem;/,
     "Tour cards should move the title and duration onto a square image overlay with compact shared pill margins"
   );
   assert.match(
     tourCardCssSource,
-    /\.tour-body \{[\s\S]*grid-template-rows: auto auto auto;[\s\S]*\.tour-desc-wrap \{[\s\S]*min-height: calc\(1em \* var\(--tour-card-desc-line-height\) \* var\(--tour-card-desc-lines\)\);[\s\S]*\.tour-card__actions \{[\s\S]*grid-template-columns: minmax\(0, 0\.92fr\) minmax\(0, 1fr\);[\s\S]*margin-top: 0\.25rem;/,
-    "Tour card text rows should keep compact copy and place the two action buttons side by side below the tags"
+    /\.tour-body \{[\s\S]*grid-template-rows: minmax\(0, 1fr\) auto auto;[\s\S]*\.tour-desc-wrap \{[\s\S]*align-content: start;[\s\S]*\.tour-card__actions \{[\s\S]*grid-template-columns: minmax\(0, 0\.92fr\) minmax\(0, 1fr\);[\s\S]*margin-top: 0\.25rem;/,
+    "Tour card text rows should let the description area stretch while placing the two action buttons side by side below the tags"
   );
   assert.match(
     mainToursSource,
@@ -4993,6 +5003,8 @@ test("homepage hero title follows published destinations and keeps the destinati
   const frontendEnI18nPath = path.resolve(__dirname, "..", "..", "..", "frontend", "data", "i18n", "frontend", "en.json");
   const frontendI18nScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "shared", "frontend_i18n.js");
   const siteHomeCriticalCssPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "site-home-critical.css");
+  const homeCriticalMobileCssPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "home-critical-mobile.css");
+  const homeCriticalDesktopCssPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "home-critical-desktop.css");
   const siteCssPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "site.css");
   const tourCardCssPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "components", "tour-card.css");
   const desktopHeroVideoPath = path.resolve(__dirname, "..", "..", "..", "assets", "video", "rice field.mp4");
@@ -5003,6 +5015,8 @@ test("homepage hero title follows published destinations and keeps the destinati
     frontendEnI18nSource,
     frontendI18nScriptSource,
     siteHomeCriticalCssSource,
+    homeCriticalMobileCssSource,
+    homeCriticalDesktopCssSource,
     siteCssSource,
     tourCardCssSource,
     desktopHeroVideo,
@@ -5013,6 +5027,8 @@ test("homepage hero title follows published destinations and keeps the destinati
     readFile(frontendEnI18nPath, "utf8"),
     readFile(frontendI18nScriptPath, "utf8"),
     readFile(siteHomeCriticalCssPath, "utf8"),
+    readFile(homeCriticalMobileCssPath, "utf8"),
+    readFile(homeCriticalDesktopCssPath, "utf8"),
     readFile(siteCssPath, "utf8"),
     readFile(tourCardCssPath, "utf8"),
     stat(desktopHeroVideoPath),
@@ -5026,8 +5042,18 @@ test("homepage hero title follows published destinations and keeps the destinati
   );
   assert.match(
     homepageSource,
-    /<link rel="stylesheet" href="\/shared\/css\/tokens\.css" \/>[\s\S]*<link rel="stylesheet" href="\/shared\/css\/site-home-critical\.css" \/>[\s\S]*<link rel="stylesheet" href="\/shared\/css\/components\/tour-card\.css" \/>[\s\S]*<link rel="stylesheet" href="\/shared\/css\/pages\/home-critical\.css" \/>[\s\S]*<link rel="preload" href="\/shared\/css\/site-home-deferred\.css" as="style"[\s\S]*<link rel="preload" href="\/shared\/css\/pages\/home-deferred\.css" as="style"/,
-    "Homepage should link the real shared CSS assets directly instead of routing critical and deferred styles through import wrappers"
+    /<link rel="stylesheet" href="\/shared\/css\/home-critical-mobile\.css" media="\(max-width: 760px\)" \/>[\s\S]*<link rel="stylesheet" href="\/shared\/css\/home-critical-desktop\.css" media="\(min-width: 760\.01px\)" \/>[\s\S]*<link rel="preload" href="\/shared\/css\/site-home-deferred\.css" as="style"[\s\S]*<link rel="preload" href="\/shared\/css\/pages\/home-deferred\.css" as="style"/,
+    "Homepage should load one combined critical CSS bundle for the active mobile or desktop viewport"
+  );
+  assert.match(
+    homeCriticalMobileCssSource,
+    /Generated by scripts\/assets\/build_homepage_critical_css\.mjs[\s\S]*shared\/css\/tokens\.css[\s\S]*shared\/css\/site-home-critical\.css[\s\S]*shared\/css\/components\/tour-card\.css[\s\S]*shared\/css\/pages\/home-critical\.css/,
+    "Mobile homepage critical CSS should combine the shared critical inputs into one request"
+  );
+  assert.equal(
+    homeCriticalDesktopCssSource,
+    homeCriticalMobileCssSource,
+    "Desktop and mobile critical CSS bundles should stay in sync with the shared critical source set"
   );
   assert.doesNotMatch(
     homepageSource,
@@ -5299,7 +5325,7 @@ test("travel plan library cards keep media separate from copy and actions", asyn
   );
 });
 
-test("contract tests use an isolated temp store instead of the runtime store.json", async () => {
+test("contract tests use an isolated temp data file instead of the runtime app data file", async () => {
   const contractTestPath = path.resolve(__dirname, "mobile-contract.test.js");
   const source = await readFile(contractTestPath, "utf8");
 
@@ -5310,8 +5336,8 @@ test("contract tests use an isolated temp store instead of the runtime store.jso
   );
   assert.match(
     source,
-    /const STORE_PATH = path\.join\(TEST_DATA_DIR, "store\.json"\);/,
-    "Contract tests should write to a temp store path"
+    /const STORE_PATH = path\.join\(TEST_DATA_DIR, "app-data\.json"\);/,
+    "Contract tests should write to a temp app data path"
   );
   assert.match(
     source,
@@ -5323,10 +5349,15 @@ test("contract tests use an isolated temp store instead of the runtime store.jso
     /process\.env\.STORE_FILE = STORE_PATH;/,
     "Contract tests should override STORE_FILE"
   );
-  assert.doesNotMatch(
+  assert.match(
     source,
-    /backend\/app\/data\/store\.json/,
-    "Contract tests must not reference the real runtime store.json directly"
+    /process\.env\.TOUR_DESTINATIONS_PATH = TOUR_DESTINATIONS_PATH;/,
+    "Contract tests should override TOUR_DESTINATIONS_PATH"
+  );
+  assert.equal(
+    source.includes(["backend/app/data", "store.json"].join("/")),
+    false,
+    "Contract tests must not reference the old runtime data file directly"
   );
 });
 
@@ -5335,10 +5366,10 @@ test("staging bootstrap does not seed legacy customer store data", async () => {
   const source = await readFile(filePath, "utf8");
 
   assert.ok(!source.includes('"customers"'), "update_staging.sh should not bootstrap legacy customers collection");
-  assert.match(
-    source,
-    /printf '\{\}\\n' > backend\/app\/data\/store\.json/,
-    "update_staging.sh should bootstrap an empty JSON store"
+  assert.equal(
+    source.includes(["backend/app/data", "store.json"].join("/")),
+    false,
+    "update_staging.sh should not recreate the old runtime data file"
   );
 });
 
