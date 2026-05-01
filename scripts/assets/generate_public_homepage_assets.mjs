@@ -436,7 +436,40 @@ function assertTourDestinationsListedInCatalog(tours, destinationCatalogPayload,
   );
 }
 
-function publicDestinationScopeCatalog(store, destinationOptions, { lang = "en" } = {}) {
+function publicTourDestinationScopeFilters(tours) {
+  const destinationCodes = new Set();
+  const areaIds = new Set();
+  const placeIds = new Set();
+  for (const tour of Array.isArray(tours) ? tours : []) {
+    const scope = Array.isArray(tour?.travel_plan?.destination_scope)
+      ? tour.travel_plan.destination_scope
+      : [];
+    for (const entry of scope) {
+      const destinationCode = normalizeTourDestinationCode(countryCodeToTourDestinationCode(entry?.destination));
+      if (destinationCode) destinationCodes.add(destinationCode);
+      for (const area of Array.isArray(entry?.areas) ? entry.areas : []) {
+        const areaId = normalizeText(area?.area_id || area?.id);
+        if (areaId) areaIds.add(areaId);
+        for (const place of Array.isArray(area?.places) ? area.places : []) {
+          const placeId = normalizeText(place?.place_id || place?.id);
+          if (placeId) placeIds.add(placeId);
+        }
+      }
+    }
+  }
+  return { destinationCodes, areaIds, placeIds };
+}
+
+function publicDestinationScopeCatalog(store, destinationOptions, { lang = "en", scopeFilters = null } = {}) {
+  const hasDestinationOptions = Array.isArray(destinationOptions);
+  const scopedDestinationCodes = scopeFilters?.destinationCodes instanceof Set ? scopeFilters.destinationCodes : null;
+  const scopedAreaIds = scopeFilters?.areaIds instanceof Set ? scopeFilters.areaIds : null;
+  const scopedPlaceIds = scopeFilters?.placeIds instanceof Set ? scopeFilters.placeIds : null;
+  const allowedDestinationCodes = scopedDestinationCodes || new Set(
+    (hasDestinationOptions ? destinationOptions : [])
+      .map((destination) => normalizeTourDestinationCode(destination?.code || destination))
+      .filter(Boolean)
+  );
   const destinationSource = Array.isArray(store?.destination_scope_destinations)
     ? store.destination_scope_destinations
     : [];
@@ -457,6 +490,7 @@ function publicDestinationScopeCatalog(store, destinationOptions, { lang = "en" 
       const countryCode = normalizeText(destination?.code).toUpperCase();
       const code = normalizeTourDestinationCode(countryCodeToTourDestinationCode(countryCode));
       if (!code) return null;
+      if ((hasDestinationOptions || scopedDestinationCodes) && !allowedDestinationCodes.has(code)) return null;
       destinationCodes.add(code);
       return {
         code,
@@ -470,6 +504,7 @@ function publicDestinationScopeCatalog(store, destinationOptions, { lang = "en" 
       const destination = normalizeTourDestinationCode(countryCodeToTourDestinationCode(area?.destination));
       const id = normalizeText(area?.id);
       if (!id || !destination || !destinationCodes.has(destination)) return null;
+      if (scopedAreaIds && !scopedAreaIds.has(id)) return null;
       return {
         id,
         destination,
@@ -485,6 +520,7 @@ function publicDestinationScopeCatalog(store, destinationOptions, { lang = "en" 
       const areaId = normalizeText(place?.area_id);
       const id = normalizeText(place?.id);
       if (!id || !areaId || !areaIds.has(areaId)) return null;
+      if (scopedPlaceIds && !scopedPlaceIds.has(id)) return null;
       return {
         id,
         area_id: areaId,
@@ -1479,6 +1515,7 @@ async function generateTourAssets({
     }))
     .filter(Boolean);
   const sortedPublicTours = [...publicTours].sort((left, right) => Number(right.priority || 0) - Number(left.priority || 0));
+  const destinationScopeFilters = publicTourDestinationScopeFilters(sortedPublicTours);
   const assetUrlsByLang = {};
   const destinationAssetUrlsByLang = {};
   let seoPayload = null;
@@ -1516,7 +1553,10 @@ async function generateTourAssets({
       });
     }
     const options = collectTourOptions(publicTours, { lang: normalizedLang });
-    const destinationScopeCatalog = publicDestinationScopeCatalog(storePayload, options.destinations, { lang: normalizedLang });
+    const destinationScopeCatalog = publicDestinationScopeCatalog(storePayload, options.destinations, {
+      lang: normalizedLang,
+      scopeFilters: destinationScopeFilters
+    });
     const destinationFilename = `${TOUR_DESTINATIONS_FILE_PREFIX}${normalizedLang}${TOUR_DESTINATIONS_FILE_SUFFIX}`;
     const destinationPayload = {
       available_destination_scope_catalog: destinationScopeCatalog

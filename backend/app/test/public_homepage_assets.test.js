@@ -140,10 +140,13 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
       { code: "TH", label: "Thailand", sort_order: 2 }
     ],
     destination_areas: [
-      { id: "area_central", destination: "VN", code: "central", name: "Central", sort_order: 1 }
+      { id: "area_central", destination: "VN", code: "central", name: "Central", sort_order: 1 },
+      { id: "area_north", destination: "VN", code: "north", name: "North", sort_order: 2 }
     ],
     destination_places: [
-      { id: "place_hoi_an", area_id: "area_central", code: "hoi-an", name: "Hoi An", sort_order: 1 }
+      { id: "place_hoi_an", area_id: "area_central", code: "hoi-an", name: "Hoi An", sort_order: 1 },
+      { id: "place_unused", area_id: "area_central", code: "unused", name: "Unused", sort_order: 2 },
+      { id: "place_hanoi", area_id: "area_north", code: "hanoi", name: "Hanoi", sort_order: 3 }
     ]
   });
 
@@ -231,10 +234,7 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
   assert.deepEqual(publicToursEn.available_destinations, [{ code: "vietnam", label: "Vietnam" }]);
   assert.equal(publicToursEn.available_destination_scope_catalog, undefined);
   assert.deepEqual(publicTourDestinationsEn.available_destination_scope_catalog, {
-    destinations: [
-      { code: "vietnam", country_code: "VN", label: "Vietnam" },
-      { code: "thailand", country_code: "TH", label: "Thailand" }
-    ],
+    destinations: [{ code: "vietnam", country_code: "VN", label: "Vietnam" }],
     areas: [{ id: "area_central", destination: "vietnam", country_code: "VN", code: "central", label: "Central" }],
     places: [{ id: "place_hoi_an", area_id: "area_central", code: "hoi-an", label: "Hoi An" }]
   });
