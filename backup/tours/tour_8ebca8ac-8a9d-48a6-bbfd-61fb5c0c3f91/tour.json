@@ -7,7 +7,6 @@
     "zh": "游览河内",
     "ja": "ハノイを訪問",
     "ko": "하노이 방문",
-    "vi": "Tham Quan Hà Nội",
     "ms": "Lawati Hanoi",
     "de": "Besuchen Sie Hanoi",
     "es": "Visita Hanói",
@@ -26,7 +25,6 @@
     "zh": "河内不仅是首都，更是越南神圣的灵魂，时间的流动似乎萦绕在街道的每一个呼吸里。",
     "ja": "ハノイは首都であるだけでなく、ベトナムの神聖な魂でもあり、街路の息づかいに時の流れが残っているように感じられます。",
     "ko": "하노이는 수도일 뿐만 아니라, 거리의 숨결 하나하나에 시간의 흐름이 머무는 듯한 베트남의 신성한 영혼이기도 합니다.",
-    "vi": "Hà Nội không chỉ là thủ đô, mà còn là mảnh hồn thiêng liêng của Việt Nam, nơi mà dòng chảy thời gian dường như đọng lại trong từng hơi thở của phố phường",
     "ms": "Hanoi bukan sahaja ibu negara, tetapi juga jiwa suci Vietnam, di mana aliran masa kelihatan berlarutan dalam setiap nafas jalanan.",
     "de": "Hanoi ist nicht nur die Hauptstadt, sondern auch die heilige Seele Vietnams, wo der Fluss der Zeit in jedem Atemzug der Straßen zu spüren scheint.",
     "es": "Hanoi no es sólo la capital, sino también el alma sagrada de Vietnam, donde el paso del tiempo parece persistir en cada aliento de las calles.",
@@ -50,5 +48,5 @@
   "seasonality_end_month": "dec",
   "priority": 50,
   "created_at": "2026-04-13T04:43:22.714Z",
-  "updated_at": "2026-04-22T15:05:20.579Z"
+  "updated_at": "2026-04-30T04:05:50.414Z"
 }

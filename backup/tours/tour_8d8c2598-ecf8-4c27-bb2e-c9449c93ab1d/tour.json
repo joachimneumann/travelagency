@@ -7,7 +7,6 @@
     "zh": "香水塔 - Huong Tich Cave",
     "ja": "香水塔 - フォン ティッチ洞窟",
     "ko": "향수 탑 - 흐엉틱 동굴",
-    "vi": "Chùa Hương- Động Hương Tích",
     "ms": "Pagoda Minyak Wangi - Gua Huong Tich",
     "de": "Parfümpagode – Huong-Tich-Höhle",
     "es": "Pagoda del Perfume - Cueva Huong Tich",
@@ -26,7 +25,6 @@
     "zh": "香水塔和香迪洞是独特的文化和宗教建筑群，您可以乘船沿着浪漫的日元溪流而下，到达纯净的佛国。\n\nHuong Tich Cave又被称为“Nam Thien De Nhat Cave”，拥有闪闪发光的钟乳石和钟乳石的雄伟之美，是每年春天最神圣的精神目的地。",
     "ja": "パフューム パゴダとフオン ティチ洞窟は、ユニークな文化と宗教の複合施設で、ボートに乗ってロマンチックなイェン川を下り、清らかな仏陀の地に到達できます。\n\nフォン ティッチ洞窟は「ナム ティエン デ ニャット洞窟」としても知られ、きらめく鍾乳石と鍾乳石の雄大な美しさを持ち、毎年春になると最も神聖なスピリチュアルな目的地となります。",
     "ko": "향수 탑(Perfume Pagoda)과 흐엉틱 동굴(Huong Tich Cave)은 독특한 문화 및 종교 단지로, 낭만적인 엔 강을 따라 보트를 타고 순수한 불국토에 도달할 수 있습니다.\n\nHuong Tich 동굴은 \"Nam Thien De Nhat 동굴\"로도 알려져 있으며 반짝이는 종유석과 종유석으로 장엄한 아름다움을 지니고 있으며 매년 봄마다 가장 신성한 영적 목적지입니다.",
-    "vi": "Chùa Hương và Động Hương Tích là quần thể văn hóa - tôn giáo đặc sắc, nơi bạn được ngồi thuyền xuôi dòng suối Yến thơ mộng để đến với cõi Phật thanh tịnh.\n\nĐộng Hương Tích còn được mệnh danh là \"Nam thiên đệ nhất động\", sở hữu vẻ đẹp kỳ vĩ với những khối thạch nhũ đá lung linh và là điểm đến tâm linh linh thiêng bậc nhất mỗi dịp xuân về.",
     "ms": "Pagoda Minyak Wangi dan Gua Huong Tich ialah kompleks kebudayaan dan keagamaan yang unik, di mana anda boleh menaiki bot menyusuri aliran Yen yang romantis untuk sampai ke tanah Buddha yang tulen.\n\nGua Huong Tich juga dikenali sebagai \"Gua Nam Thien De Nhat\", memiliki keindahan megah dengan stalaktit dan stalaktit yang berkilauan dan merupakan destinasi rohani yang paling suci setiap musim bunga.",
     "de": "Die Parfümpagode und die Huong-Tich-Höhle sind einzigartige kulturelle und religiöse Komplexe, in denen Sie mit dem Boot den romantischen Yen-Strom hinunterfahren können, um das reine Buddha-Land zu erreichen.\n\nDie Huong-Tich-Höhle ist auch als „Nam Thien De Nhat-Höhle“ bekannt. Sie besitzt majestätische Schönheit mit schimmernden Stalaktiten und Stalaktiten und ist jeden Frühling das heiligste spirituelle Ziel.",
     "es": "La Pagoda del Perfume y la Cueva Huong Tich son complejos culturales y religiosos únicos, donde puedes tomar un barco por el romántico arroyo Yen para llegar a la tierra pura de Buda.\n\nLa cueva Huong Tich, también conocida como \"Cueva Nam Thien De Nhat\", posee una belleza majestuosa con estalactitas y estalactitas relucientes y es el destino espiritual más sagrado cada primavera.",
@@ -50,5 +48,5 @@
   "seasonality_end_month": "apr",
   "priority": 50,
   "created_at": "2026-04-13T09:33:29.406Z",
-  "updated_at": "2026-04-22T15:43:44.700Z"
+  "updated_at": "2026-04-30T04:05:50.414Z"
 }

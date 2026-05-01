@@ -7,7 +7,6 @@
     "zh": "探索会安的乡村地区：乡村之旅",
     "ja": "ホイアンの田園地帯を探索: 田園地帯の中心部への旅",
     "ko": "호이안 농촌 지역 탐험: 시골 중심부로의 여행",
-    "vi": "Khám Phá Vùng Nông Thôn Hội An: Hành Trình Vào Trái Tim Của  Vùng Nông Thôn",
     "ms": "Meneroka Kawasan Luar Bandar Hoi An: Perjalanan ke Tengah-tengah Desa",
     "de": "Erkundung der ländlichen Gegend von Hoi An: Eine Reise ins Herz der Landschaft",
     "es": "Explorando la zona rural de Hoi An: un viaje al corazón del campo",
@@ -26,7 +25,6 @@
     "zh": "乡村是在成熟稻香和午后微风中风筝笛声之间找到心灵平静的地方。伴随着这里缓慢的生活节奏，编织出一幅充满越南乡村灵魂的宁静与精致的画面。",
     "ja": "田舎では、熟した米の香りと午後の風に吹かれる凧笛の音の間に魂が安らぎを感じます。ここでのゆっくりした生活のペースとともに、ベトナムの田舎の魂が染み込んだ平和と洗練のイメージが織り込まれています。",
     "ko": "시골은 익은 쌀 향기와 오후 미풍에 연피리 소리 사이에서 영혼의 평화를 찾는 곳입니다. 이곳의 느린 삶의 속도와 함께 베트남 시골의 영혼이 스며든 평화로움과 세련미의 그림을 엮어냅니다.",
-    "vi": "Đồng quê là nơi tâm hồn tìm về sự an nhiên giữa hương lúa chín nồng và tiếng sáo diều vi vu trong gió chiều. Cùng nhịp sống chậm rãi nơi đây dệt nên một bức tranh thanh bình, nhuần nhị đậm chất hồn quê Việt.",
     "ms": "Pedesaan adalah tempat jiwa mencari ketenangan antara haruman nasi masak dan bunyi serunai layang-layang ditiup angin petang. Seiring dengan rentak kehidupan yang perlahan di sini, ia menjalinkan gambaran keamanan dan kecanggihan yang disemai dengan jiwa desa Vietnam.",
     "de": "Auf dem Land findet die Seele Frieden zwischen dem Duft von reifem Reis und dem Klang der Drachenflöten in der Nachmittagsbrise. Zusammen mit dem langsamen Tempo des Lebens hier vermittelt es ein Bild von Frieden und Kultiviertheit, durchdrungen von der Seele der vietnamesischen Landschaft.",
     "es": "El campo es donde el alma encuentra la paz entre el aroma del arroz maduro y el sonido de las flautas de las cometas en la brisa de la tarde. Junto con el lento ritmo de vida aquí, teje una imagen de paz y sofisticación imbuida del alma del campo vietnamita.",
@@ -49,5 +47,5 @@
   "seasonality_end_month": "aug",
   "priority": 50,
   "created_at": "2026-04-14T10:52:39.442Z",
-  "updated_at": "2026-04-22T14:35:40.799Z"
+  "updated_at": "2026-04-30T04:05:50.414Z"
 }

@@ -7,7 +7,6 @@
     "zh": "河内 – 探索河江",
     "ja": "ハノイ – ハザンを探索する",
     "ko": "하노이 – 하장(Ha Giang) 탐험",
-    "vi": "Hà Nội – Khám Phá Hà Giang",
     "ms": "Hanoi – Terokai Ha Giang",
     "de": "Hanoi – Entdecken Sie Ha Giang",
     "es": "Hanói – Explora Ha Giang",
@@ -26,7 +25,6 @@
     "zh": "河江是国家的顶级土地，连绵起伏的石灰岩山脉和传奇的马皮岭山口的雄伟美景让每个人都惊叹不已。同文喀斯特高原不仅是世界地质遗产，也是多彩的蒙族、傣族、道族等民族的文化空间，紫色、粉红色的荞麦花覆盖了整个山坡。",
     "ja": "ハザンは国の最高峰であり、なだらかに起伏する石灰岩の山々や伝説の馬ピレン峠の雄大な美しさに誰もが圧倒される場所です。ドン ヴァン カルスト高原は、世界地質遺産であるだけでなく、丘の斜面全体を紫やピンクのソバの花で覆い、モン族、ローロー族、ダオ族などの民族の色彩豊かな文化空間でもあります。",
     "ko": "하장(Ha Giang)은 이 나라 최고의 땅으로, 구불구불한 석회암 산과 전설적인 마피렝(Ma Pi Leng) 고개의 장엄한 아름다움에 모든 사람을 압도하게 만드는 곳입니다. 동반 카르스트 고원은 세계 지질유산일 뿐만 아니라 보라색과 분홍색 메밀꽃이 언덕 전체를 덮고 있는 몽족, 로로족, 다오족의 다채로운 문화 공간이기도 합니다.",
-    "vi": "Hà Giang là mảnh đất địa đầu Tổ quốc, nơi khiến bất cứ ai cũng phải choáng ngợp trước vẻ đẹp hùng vĩ của những dãy núi đá vôi trùng điệp và cung đường đèo Mã Pí Lèng huyền thoại. Cao nguyên đá Đồng Văn không chỉ là di sản địa chất thế giới mà còn là không gian văn hóa rực rỡ sắc màu của các dân tộc Mông, Lô Lô, Dao... với những mùa hoa tam giác mạch tím hồng phủ khắp sườn đồi.",
     "ms": "Ha Giang ialah tanah teratas negara, tempat yang membuatkan semua orang terharu dengan keindahan pergunungan batu kapur yang bergolek dan laluan legenda Ma Pi Leng. Dataran Tinggi Dong Van Karst bukan sahaja warisan geologi dunia tetapi juga ruang budaya berwarna-warni kumpulan etnik Mong, Lo Lo, Dao... dengan bunga soba ungu dan merah jambu yang meliputi seluruh lereng bukit.",
     "de": "Ha Giang ist das oberste Land des Landes, ein Ort, der jeden von der majestätischen Schönheit der sanften Kalksteinberge und des legendären Ma Pi Leng-Passes überwältigt. Das Dong Van Karst Plateau ist nicht nur ein geologisches Welterbe, sondern auch ein farbenfroher Kulturraum der ethnischen Gruppen Mong, Lo Lo, Dao ... mit violetten und rosa Buchweizenblumen, die den gesamten Hügel bedecken.",
     "es": "Ha Giang es la tierra más importante del país, un lugar que deja a todos abrumados por la majestuosa belleza de las onduladas montañas de piedra caliza y el legendario paso de Ma Pi Leng. La meseta kárstica de Dong Van no es sólo un patrimonio geológico mundial, sino también un colorido espacio cultural de los grupos étnicos Mong, Lo Lo, Dao... con flores de trigo sarraceno de color púrpura y rosa que cubren toda la ladera.",
@@ -50,5 +48,5 @@
   "seasonality_end_month": "",
   "priority": 50,
   "created_at": "2026-04-14T10:39:04.534Z",
-  "updated_at": "2026-04-22T14:39:13.366Z"
+  "updated_at": "2026-04-30T04:05:50.414Z"
 }

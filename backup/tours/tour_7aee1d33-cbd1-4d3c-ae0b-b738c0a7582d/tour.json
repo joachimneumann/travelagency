@@ -7,7 +7,6 @@
     "zh": "岘港 - 巴拿山 - 探索金桥",
     "ja": "ダナン - バナヒルズ - ゴールデンブリッジ発見",
     "ko": "다낭 - 바나힐 - 골든 브릿지 발견",
-    "vi": "Đà Nẵng - Bà Nà Hills - Khám Phá Cầu Vàng",
     "ms": "Da Nang - Bukit Ba Na - Temui Jambatan Emas",
     "de": "Da Nang – Ba Na Hills – Entdecken Sie die Goldene Brücke",
     "es": "Da Nang - Colinas de Ba Na - Descubre el Puente Dorado",
@@ -26,7 +25,6 @@
     "zh": "巴拿山是“天堂之路”，以其一日四季气候和万云缭绕的法式古村落建筑而闻名。\n这里拥有标志性的金桥和拥有多项世界纪录的缆车系统，为游客带来极致的度假和娱乐体验。",
     "ja": "バ ナ ヒルズは、1 日の四季折々の気候と、何千もの雲に囲まれたフランスの古代村の建築物で有名な「楽園への道」です。\nこの場所には、象徴的なゴールデン ブリッジと多くの世界記録を持つケーブル カー システムがあり、訪問者に究極のリゾートとエンターテイメント体験をもたらします。",
     "ko": "바나힐은 하루 사계절 기후와 수천 개의 구름 속에 둘러싸인 고대 프랑스 마을 건축물로 유명한 '천국으로 가는 길'입니다.\n이곳은 상징적인 골든 브릿지와 수많은 세계 기록을 보유한 케이블카 시스템을 보유하고 있어 방문객들에게 최고의 리조트와 엔터테인먼트 경험을 선사합니다.",
-    "vi": "Bà Nà Hills là \"đường lên tiên cảnh\" nổi tiếng với khí hậu bốn mùa trong một ngày và kiến trúc làng Pháp cổ kính giữa mây ngàn.\nNơi đây sở hữu Cầu Vàng biểu tượng cùng hệ thống cáp treo đạt nhiều kỷ lục thế giới, mang đến trải nghiệm nghỉ dưỡng và giải trí đỉnh cao cho du khách.",
     "ms": "Bukit Ba Na ialah \"jalan ke syurga\" yang terkenal dengan iklim empat musim dalam satu hari dan seni bina kampung Perancis purba di tengah-tengah ribuan awan.\nTempat ini memiliki Jambatan Emas yang ikonik dan sistem kereta kabel dengan banyak rekod dunia, membawakan pengalaman resort dan hiburan terbaik kepada pengunjung.",
     "de": "Ba Na Hills ist der „Weg zum Paradies“, der für sein Vier-Jahreszeiten-Klima an einem Tag und die alte französische Dorfarchitektur inmitten Tausender Wolken bekannt ist.\nDieser Ort besitzt die berühmte Goldene Brücke und ein Seilbahnsystem mit vielen Weltrekorden, das den Besuchern das ultimative Resort- und Unterhaltungserlebnis bietet.",
     "es": "Ba Na Hills es el \"camino al paraíso\", famoso por su clima que cambia las cuatro estaciones en un día y la arquitectura de un antiguo pueblo francés en medio de miles de nubes.\nEste lugar posee el icónico Puente Dorado y un sistema de teleférico con muchos récords mundiales, lo que brinda a los visitantes la mejor experiencia de resort y entretenimiento.",
@@ -51,5 +49,5 @@
   "seasonality_end_month": "nov",
   "priority": 50,
   "created_at": "2026-04-13T08:57:00.020Z",
-  "updated_at": "2026-04-22T15:53:03.593Z"
+  "updated_at": "2026-04-30T04:05:50.414Z"
 }

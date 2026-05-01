@@ -7,7 +7,6 @@
     "zh": "探索 Tam Dao - 西天",
     "ja": "タムダオ - タイティエンを探索する",
     "ko": "땀다오(Tam Dao) - Tay Thien 둘러보기",
-    "vi": "Khám Phá Tam Đảo - Tây Thiên",
     "ms": "Terokai Tam Dao - Tay Thien",
     "de": "Entdecken Sie Tam Dao – Tay Thien",
     "es": "Explora Tam Dao - Tay Thien",
@@ -26,7 +25,6 @@
     "zh": "旅程将带您前往“北方大叻”常年云雾缭绕的谭岛，在这里，四季气候在令人兴奋的一天中轮换。\n\n接下来是西天风景区的宁静空间，在这里您可以欣赏雄伟的精神建筑群，沉浸在郁郁葱葱的青山森林中。",
     "ja": "一年中雲に覆われ、四季折々の気候が一日で移り変わる「北のダラット」タムダオへの旅です。\n\n次に、タイ ティエン景勝地にある静かな空間です。ここでは、雄大な精神的な建築物を鑑賞し、緑豊かな山々や森林に浸ることができます。",
     "ko": "이 여행은 일년 내내 구름으로 뒤덮인 \"북쪽의 달랏\" 땀다오로 여러분을 안내합니다. 이곳에서는 사계절의 기후가 흥미로운 하루에 순환합니다.\n\n다음은 떠이티엔(Tay Thien) 명승지의 평화로운 공간으로, 장엄한 영적 건축물 단지를 감상하고 무성한 녹색 산과 숲에 푹 빠져볼 수 있습니다.",
-    "vi": "Hành trình đưa bạn đến với \"Đà Lạt của miền Bắc\" Tam Đảo quanh năm mây phủ, nơi sở hữu khí hậu bốn mùa luân chuyển trong một ngày đầy kỳ thú.\n\nTiếp nối là không gian thanh tịnh tại danh thắng Tây Thiên, nơi bạn có thể chiêm bái quần thể kiến trúc tâm linh hùng vĩ và hòa mình vào cảnh sắc núi rừng đại ngàn xanh mướt.",
     "ms": "Perjalanan membawa anda ke \"Da Lat of the North\" Tam Dao yang dilitupi awan sepanjang tahun, di mana iklim empat musim berputar dalam satu hari yang menarik.\n\nSeterusnya ialah ruang damai di tempat indah Tay Thien, di mana anda boleh mengagumi kompleks seni bina rohani yang megah dan menyelami pergunungan dan hutan yang menghijau.",
     "de": "Die Reise führt Sie zum ganzjährig wolkenverhangenen „Da Lat des Nordens“ Tam Dao, wo das Klima der vier Jahreszeiten an einem aufregenden Tag wechselt.\n\nAls nächstes kommt der friedliche Ort am malerischen Ort Tay Thien, wo Sie den majestätischen spirituellen Architekturkomplex bewundern und in die üppigen grünen Berge und Wälder eintauchen können.",
     "es": "El viaje le llevará al \"Da Lat del Norte\", Tam Dao, cubierto de nubes durante todo el año, donde el clima de las cuatro estaciones cambia en un día emocionante.\n\nEl siguiente es el espacio tranquilo en el lugar escénico de Tay Thien, donde podrá admirar el majestuoso complejo arquitectónico espiritual y sumergirse en las exuberantes montañas y bosques verdes.",
@@ -50,5 +48,5 @@
   "seasonality_end_month": "jul",
   "priority": 50,
   "created_at": "2026-04-13T10:11:16.624Z",
-  "updated_at": "2026-04-22T15:38:27.231Z"
+  "updated_at": "2026-04-30T04:05:50.414Z"
 }

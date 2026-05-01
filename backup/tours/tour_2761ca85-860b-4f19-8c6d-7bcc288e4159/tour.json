@@ -7,7 +7,6 @@
     "zh": "下龙湾",
     "ja": "ハロン湾",
     "ko": "하롱베이",
-    "vi": "Vịnh Hạ Long",
     "ms": "Teluk Ha Long",
     "de": "Halong-Bucht",
     "es": "Bahía de Ha Long",
@@ -26,7 +25,6 @@
     "zh": "下龙湾不仅是越南的骄傲，也是两次被联合国教科文组织认可的世界自然奇观。这里就像一幅巨大的水彩画，是大自然在岩石和水之间巧妙的排列而成的。",
     "ja": "ハロン湾はベトナムの誇りであるだけでなく、ユネスコに二度認定された世界の自然の驚異でもあります。この場所は、岩と水の間の自然の巧妙な配置によって作成された巨大な水彩画のような場所です。",
     "ko": "하롱베이는 베트남의 자랑일 뿐만 아니라 유네스코가 두 번이나 인정한 세계 자연의 경이로움이기도 합니다. 이곳은 바위와 물 사이의 자연의 독창적인 배열로 만들어진 거대한 수채화 그림과 같습니다.",
-    "vi": "Vịnh Hạ Long không chỉ là niềm tự hào của Việt Nam mà còn là một kỳ quan thiên nhiên thế giới đã hai lần được UNESCO công nhận. Nơi đây giống như một bức tranh thủy mặc khổng lồ, được tạo nên từ sự sắp đặt tài tình của tạo hóa giữa đá và nước.",
     "ms": "Teluk Ha Long bukan sahaja kebanggaan Vietnam tetapi juga keajaiban alam semula jadi dunia yang telah dua kali diiktiraf oleh UNESCO. Tempat ini seperti lukisan cat air gergasi, dicipta daripada susunan cerdik alam antara batu dan air.",
     "de": "Die Halong-Bucht ist nicht nur der Stolz Vietnams, sondern auch ein Weltnaturwunder, das bereits zweimal von der UNESCO anerkannt wurde. Dieser Ort ist wie ein riesiges Aquarellgemälde, entstanden aus der genialen Anordnung der Natur zwischen Felsen und Wasser.",
     "es": "La bahía de Ha Long no es sólo el orgullo de Vietnam, sino también una maravilla natural mundial reconocida dos veces por la UNESCO. Este lugar es como una pintura de acuarela gigante, creada a partir de la ingeniosa disposición de la naturaleza entre la roca y el agua.",
@@ -51,5 +49,5 @@
   "seasonality_end_month": "nov",
   "priority": 50,
   "created_at": "2026-04-13T04:48:49.101Z",
-  "updated_at": "2026-04-22T14:53:03.958Z"
+  "updated_at": "2026-04-30T04:05:50.414Z"
 }

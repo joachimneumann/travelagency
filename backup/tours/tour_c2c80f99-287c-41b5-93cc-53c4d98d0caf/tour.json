@@ -7,7 +7,6 @@
     "zh": "富国岛",
     "ja": "フーコック",
     "ko": "푸꾸옥",
-    "vi": "Phú Quốc",
     "ms": "Phu Quoc",
     "de": "Phu Quoc",
     "es": "Phú Quoc",
@@ -25,7 +24,6 @@
     "zh": "探索富国岛的亮点：VinWonders、大世界、4 岛之旅、Hon Thom 缆车、日落小镇、胡国宝塔、椰子监狱和充满活力的夜市。",
     "ja": "フーコックのハイライトを探索しましょう: VinWonders、グランド ワールド、4 島ツアー、ホン トム ケーブル カー、サンセット タウン、ホーコック パゴダ、ココナッツ プリズン、そして活気に満ちたナイト マーケット。",
     "ko": "푸꾸옥의 하이라이트를 탐험해보세요: 빈원더스(VinWonders), 그랜드 월드(Grand World), 4개 섬 투어, 혼톰(Hon Thom) 케이블카, 선셋 타운(Sunset Town), 호꾸옥 파고다(Ho Quoc Pagoda), 코코넛 감옥(Coconut Prison), 활기 넘치는 야시장.",
-    "vi": "Khám phá những điểm nổi bật của Phú Quốc: VinWonders, Grand World, tour 4 đảo, cáp treo Hòn Thơm, Sunset Town, Chùa Hộ Quốc, Nhà tù Dừa và Chợ đêm sôi động.",
     "ms": "Terokai sorotan Phu Quoc: VinWonders, Grand World, lawatan 4 pulau, kereta kabel Hon Thom, Bandar Sunset, Pagoda Ho Quoc, Penjara Kelapa dan Pasar Malam yang meriah.",
     "de": "Entdecken Sie die Highlights von Phu Quoc: VinWonders, Grand World, eine 4-Insel-Tour, Hon Thom Cable Car, Sunset Town, Ho Quoc Pagode, Coconut Prison und den lebhaften Nachtmarkt.",
     "es": "Explore los aspectos más destacados de Phu Quoc: VinWonders, Grand World, un recorrido por 4 islas, el teleférico de Hon Thom, Sunset Town, la pagoda de Ho Quoc, la prisión de Coconut y el vibrante mercado nocturno.",
@@ -49,7 +47,7 @@
   "seasonality_end_month": "feb",
   "priority": 100,
   "created_at": "2026-04-09T03:15:24.977Z",
-  "updated_at": "2026-04-28T09:21:59.194Z",
+  "updated_at": "2026-04-30T04:05:50.414Z",
   "travel_plan": {
     "destination_scope": [
       {

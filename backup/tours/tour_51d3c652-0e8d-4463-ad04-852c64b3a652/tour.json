@@ -7,7 +7,6 @@
     "zh": "河内 - 沙坝 - 下龙湾 - 宁平",
     "ja": "ハノイ - サパ - ハロン湾 - ニンビン",
     "ko": "하노이 - 사파 - 하롱베이 - 닌빈",
-    "vi": "Hà Nội - Sapa - Vịnh Hạ Long - Ninh Bình",
     "ms": "Hanoi - Sapa - Teluk Ha Long - Ninh Binh",
     "de": "Hanoi – Sapa – Halong-Bucht – Ninh Binh",
     "es": "Hanoi - Sapa - Bahía de Ha Long - Ninh Binh",
@@ -26,7 +25,6 @@
     "zh": "从古老河内的 36 条街到云雾缭绕的沙巴和番西邦，再到下龙湾的石灰岩岛屿和宁平风景秀丽的长安——“陆地上的下龙”。",
     "ja": "古代ハノイの 36 本の通りから霧深いサパやファンシーパン、そしてハロン湾の石灰岩の島々やニンビンの風光明媚なチャンアン (「陸のハロン」) まで。",
     "ko": "고대 하노이의 36개 거리부터 안개가 자욱한 사파와 판시판, 그리고 하롱베이의 석회섬과 닌빈의 경치 좋은 짱안까지, “육지의 하롱”까지.",
-    "vi": "Từ 36 con phố cổ của Hà Nội đến Sapa và Phan Xi Păng mù sương, rồi đến những hòn đảo đá vôi của Vịnh Hạ Long và danh thắng Tràng An của Ninh Bình—“Hạ Long trên cạn”.",
     "ms": "Dari 36 jalan Hanoi purba ke Sapa dan Fansipan yang berkabus, kemudian ke pulau batu kapur Teluk Ha Long dan Trang An yang indah di Ninh Binh—\"Ha Long di darat.\"",
     "de": "Von den 36 Straßen des antiken Hanoi über das neblige Sapa und Fansipan bis hin zu den Kalksteininseln der Halong-Bucht und Ninh Binhs malerischem Trang An – „Ha Long an Land“.",
     "es": "Desde las 36 calles de la antigua Hanoi hasta las brumosas Sapa y Fansipan, luego las islas de piedra caliza de la bahía de Ha Long y el pintoresco Trang An de Ninh Binh: \"Ha Long en tierra\".",
@@ -50,7 +48,7 @@
   "seasonality_end_month": "sep",
   "priority": 100,
   "created_at": "2026-04-09T03:37:52.367Z",
-  "updated_at": "2026-04-28T02:26:59.119Z",
+  "updated_at": "2026-04-30T04:05:50.414Z",
   "travel_plan": {
     "destination_scope": [
       {

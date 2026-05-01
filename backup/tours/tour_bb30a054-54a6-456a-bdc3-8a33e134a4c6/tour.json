@@ -7,7 +7,6 @@
     "zh": "河内 - 沙巴",
     "ja": "ハノイ - サパ",
     "ko": "하노이 - 사파",
-    "vi": "Hà Nội-Sapa",
     "ms": "Hanoi - Sapa",
     "de": "Hanoi – Sapa",
     "es": "Hanói - Sapa",
@@ -26,7 +25,6 @@
     "zh": "从河内到雾蒙蒙的萨帕高原的旅程。体验令人惊叹的山地景观、充满活力的民族文化，以及前往越南北部的清新度假。",
     "ja": "ハノイから霧深いサパの高地への旅。息を呑むような山の風景、活気に満ちた民族文化、そしてベトナム北部への爽やかな逃避行を体験してください。",
     "ko": "하노이에서 안개가 자욱한 사파 고원으로 여행을 떠나세요. 숨막히는 산의 풍경, 활기찬 민족 문화, 그리고 베트남 북부로의 상쾌한 탈출을 경험해보세요.",
-    "vi": "Hành trình từ Hà Nội đến cao nguyên mù sương Sapa. Trải nghiệm phong cảnh núi non ngoạn mục, nền văn hóa dân tộc sôi động và chuyến trốn thoát sảng khoái đến miền bắc Việt Nam.",
     "ms": "Perjalanan dari Hanoi ke tanah tinggi berkabus Sapa. Alami landskap gunung yang mempesonakan, budaya etnik yang bertenaga dan percutian yang menyegarkan ke utara Vietnam.",
     "de": "Reise von Hanoi in das neblige Hochland von Sapa. Erleben Sie atemberaubende Berglandschaften, lebendige ethnische Kulturen und eine erfrischende Flucht in den Norden Vietnams.",
     "es": "Viaje desde Hanoi a las brumosas tierras altas de Sapa. Experimente impresionantes paisajes montañosos, vibrantes culturas étnicas y una refrescante escapada al norte de Vietnam.",
@@ -48,7 +46,7 @@
   "seasonality_end_month": "dec",
   "priority": 50,
   "created_at": "2026-04-18T08:35:52.218Z",
-  "updated_at": "2026-04-28T10:13:21.621Z",
+  "updated_at": "2026-04-30T04:05:50.414Z",
   "travel_plan": {
     "destination_scope": [
       {
@@ -65,6 +63,7 @@
         ]
       }
     ],
+    "tour_card_primary_image_id": "travel_plan_service_image_ff7cd600-26c9-4a6a-ba61-2b5a0daf3aec",
     "days": [
       {
         "id": "travel_plan_day_6f0b35ff-e816-45c3-9661-01701173671a",
@@ -117,6 +116,8 @@
               "no": "Hoa Lo fengsel",
               "vi": "Nhà tù Hỏa Lò"
             },
+            "details": null,
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -167,6 +168,8 @@
               "no": "Etnologisk museum",
               "vi": "Bảo tàng Dân tộc học"
             },
+            "details": null,
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -217,6 +220,8 @@
               "no": "Văn Miếu Quốc Tủ Giám",
               "vi": "Văn Miếu Quốc Tủ Giám"
             },
+            "details": null,
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -267,6 +272,8 @@
               "no": "Det er en pagode",
               "vi": "Chùa Một cột"
             },
+            "details": null,
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -346,6 +353,8 @@
               "no": "Sapa by",
               "vi": "Thị trấn Sa Pa"
             },
+            "details": null,
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -396,6 +405,8 @@
               "no": "O Quy Ho Pass",
               "vi": "Đèo Ô Quy Hồ"
             },
+            "details": null,
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -446,6 +457,8 @@
               "sv": "Ensamt träd",
               "no": "Ensomt tre"
             },
+            "details": null,
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,

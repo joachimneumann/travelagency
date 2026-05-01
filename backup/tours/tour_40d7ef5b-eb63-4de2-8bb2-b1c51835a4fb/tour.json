@@ -7,7 +7,6 @@
     "zh": "花之交响曲，发现大叻的浪漫",
     "ja": "花のシンフォニーとダラットのロマンスの発見",
     "ko": "꽃의 심포니와 달랏의 낭만을 발견하다",
-    "vi": "Bản Giao Hưởng Của Hoa Và Khám Phá Sự Lãng Mạn Của Đà Lạt",
     "ms": "Simfoni Bunga dan Menemui Percintaan Da Lat",
     "de": "Symphonie der Blumen und Entdeckung der Romantik von Da Lat",
     "es": "Sinfonía de flores y descubrimiento del romance de Da Lat",
@@ -26,7 +25,6 @@
     "zh": "大叻是一个万花缭乱、云雾缭绕的世外桃源，一个梦幻般的美丽之地，就像一首大自然甜蜜的交响曲。这座高原城市以其凉爽的温带气候和怀旧浪漫的街角吸引着游客。",
     "ja": "ダラットは何千もの花と霧の楽園であり、自然の甘いシンフォニーのような夢のような美しさを持つ場所です。この高原の都市は、冷涼な気候とノスタルジックでロマンチックな街角が旅行者を魅了します。",
     "ko": "달랏은 수천 송이의 꽃과 안개의 천국이자 자연의 감미로운 교향곡처럼 몽환적인 아름다움을 지닌 곳이다. 이 고지대 도시는 선선하고 온화한 기후와 향수를 불러일으키는 낭만적인 거리 풍경으로 여행자의 마음을 사로잡습니다.",
-    "vi": "Đà Lạt là thiên đường của ngàn hoa và sương mù, nơi mang vẻ đẹp mộng mơ như một bản giao hưởng ngọt ngào của thiên nhiên. Thành phố cao nguyên này quyến rũ bước chân lữ khách bằng khí hậu ôn đới dịu mát và những góc phố nhuốm màu lãng mạn đầy hoài niệm.",
     "ms": "Da Lat ialah syurga dengan beribu-ribu bunga dan kabus, tempat dengan keindahan termenung seperti simfoni alam yang manis. Bandar tanah tinggi ini menarik pelancong dengan iklim sederhana yang sejuk dan sudut jalan romantis yang nostalgia.",
     "de": "Da Lat ist ein Paradies aus Tausenden von Blumen und Nebel, ein Ort mit verträumter Schönheit wie eine süße Symphonie der Natur. Diese Hochlandstadt lockt Reisende mit ihrem kühlen gemäßigten Klima und nostalgischen, romantischen Straßenecken.",
     "es": "Da Lat es un paraíso de miles de flores y niebla, un lugar con una belleza de ensueño como una dulce sinfonía de la naturaleza. Esta ciudad de las tierras altas atrae a los viajeros por su clima templado fresco y sus rincones románticos y nostálgicos.",
@@ -50,5 +48,5 @@
   "seasonality_end_month": "",
   "priority": 50,
   "created_at": "2026-04-14T01:35:35.203Z",
-  "updated_at": "2026-04-22T15:33:19.260Z"
+  "updated_at": "2026-04-30T04:05:50.414Z"
 }

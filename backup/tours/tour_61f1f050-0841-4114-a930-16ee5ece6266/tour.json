@@ -7,7 +7,6 @@
     "zh": "宁平",
     "ja": "ニンビン",
     "ko": "닌빈",
-    "vi": "Ninh Bình",
     "ms": "Ninh Binh",
     "de": "Ninh Binh",
     "es": "Ninh Binh",
@@ -26,7 +25,6 @@
     "zh": "宁平被称为“陆地上的下龙”，游客可以乘船沿着吴东河顺流而下，也可以参观世界遗产长安。\n从征服越南版的Mua Cave“长城”到探索神奇的洞穴，宁平始终是自然和历史爱好者的首选目的地。",
     "ja": "ニンビンは「陸のハロン」に例えられ、ボートでゴドン川を下ったり、世界遺産チャンアンを観光したりできます。\nムア洞窟のベトナム版「万里の長城」の制覇から魔法の洞窟の探索まで、ニンビンは常に自然と歴史愛好家にとってトップの目的地です。",
     "ko": "닌빈은 방문객들이 보트를 타고 응오동강을 따라 내려가거나 세계문화유산인 짱안(Trang An)을 볼 수 있는 \"육지의 하롱\"에 비유됩니다.\n무아 동굴(Mua Cave)의 베트남 버전 \"만리장성\" 정복부터 마법의 동굴 탐험까지 닌빈(Ninh Binh)은 항상 자연과 역사를 사랑하는 사람들에게 최고의 목적지입니다.",
-    "vi": "Ninh Bình được ví như một \"Hạ Long trên cạn\", nơi du khách có thể ngồi thuyền xuôi dòng Ngô Đồng hay ngắm nhìn quần thể danh thắng Tràng An di sản thế giới.\nTừ việc chinh phục \"Vạn Lý Trường Thành\" phiên bản Việt tại hang Múa đến việc khám phá các hang động kỳ ảo, Ninh Bình luôn là điểm đến hàng đầu cho những tâm hồn yêu thiên nhiên và lịch sử.",
     "ms": "Ninh Binh diibaratkan seperti \"Ha Long di darat\", di mana pengunjung boleh menaiki bot menyusuri sungai Ngo Dong atau melihat tapak warisan dunia Trang An.\nDaripada menakluki \"Tembok Besar\" versi Vietnam di Gua Mua hingga menerokai gua ajaib, Ninh Binh sentiasa menjadi destinasi teratas bagi pencinta alam semula jadi dan sejarah.",
     "de": "Ninh Binh wird mit „Ha Long an Land“ verglichen, wo Besucher mit dem Boot den Fluss Ngo Dong hinunterfahren oder die Weltkulturerbestätte Trang An besichtigen können.\nVon der Eroberung der vietnamesischen Version der „Großen Mauer“ in der Mua-Höhle bis hin zur Erkundung magischer Höhlen ist Ninh Binh immer das Top-Reiseziel für Natur- und Geschichtsliebhaber.",
     "es": "Ninh Binh se compara con un \"Ha Long en tierra\", donde los visitantes pueden tomar un bote por el río Ngo Dong o ver el sitio de Trang An, declarado Patrimonio de la Humanidad.\nDesde conquistar la versión vietnamita de la \"Gran Muralla\" en la cueva Mua hasta explorar cuevas mágicas, Ninh Binh es siempre el principal destino para los amantes de la naturaleza y la historia.",
@@ -49,5 +47,5 @@
   "seasonality_end_month": "dec",
   "priority": 50,
   "created_at": "2026-04-13T04:53:45.385Z",
-  "updated_at": "2026-04-22T15:54:07.314Z"
+  "updated_at": "2026-04-30T04:05:50.414Z"
 }

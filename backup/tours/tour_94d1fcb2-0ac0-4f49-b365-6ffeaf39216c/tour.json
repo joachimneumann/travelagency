@@ -7,7 +7,6 @@
     "zh": "漆器 – 帽子 – 香工艺村",
     "ja": "漆・帽子・香工芸村",
     "ko": "옻칠 – 모자 – 향 공예 마을",
-    "vi": "Làng nghề Sơn Mài – Nón – Hương",
     "ms": "Lacquer – Topi – Kampung kraf kemenyan",
     "de": "Lack – Hut – Weihrauch-Handwerksdorf",
     "es": "Laca – Sombrero – Pueblo artesanal de incienso",
@@ -26,7 +25,6 @@
     "zh": "旅程将带您进入传统手工艺村，工匠们的才华横溢的双手为精致的漆器作品和深情的越南圆锥形帽子注入了生命。\n当你停在香村时，旅途的气氛变得更加灿烂和轻松，一束束香像五颜六色的花朵一样绽放，在遗产的中心散发着安静的香味。",
     "ja": "この旅では、伝統工芸の村を訪れます。そこでは、職人の才能ある手によって、洗練された漆工芸や魂のこもったベトナムの円錐形の帽子に命が吹き込まれています。\nお香の村に立ち寄ると、旅の雰囲気はさらに華やかでリラックスしたものになります。お香の束が色とりどりの花のように咲き誇り、遺産の中心で静かな香りを放ちます。",
     "ko": "이 여행은 장인의 재능 있는 손이 정교한 칠기 작품과 영혼이 담긴 베트남 원추형 모자에 생명을 불어넣는 전통 공예 마을로 여러분을 안내합니다.\n향단이 형형색색의 꽃처럼 피어나고, 유산의 중심에 은은한 향기를 발산하는 향마을에 들르면 여행의 분위기는 더욱 화사해지고 여유로워진다.",
-    "vi": "Hành trình đưa bạn len lỏi vào những xóm nghề truyền thống, nơi đôi bàn tay tài hoa của các nghệ nhân thổi hồn vào các tác phẩm sơn mài tinh xảo và những chiếc nón lá hồn quê Việt.\nKhông gian chuyến đi thêm phần rực rỡ và thư thái khi bạn dừng chân tại làng hương, nơi những bó tăm nhang xòe nở như những đóa hoa thắm sắc, tỏa hương thơm trầm mặc giữa lòng di sản.",
     "ms": "Perjalanan membawa anda ke perkampungan kraf tradisional, di mana tangan-tangan artisan yang berbakat menghidupkan karya lakuer yang canggih dan topi kon Vietnam yang penuh semangat.\nSuasana perjalanan menjadi lebih menyerlah dan santai apabila anda singgah di perkampungan kemenyan, di mana seikat batang kemenyan mekar seperti bunga berwarna-warni, memancarkan keharuman yang tenang di tengah-tengah warisan.",
     "de": "Die Reise führt Sie in traditionelle Handwerksdörfer, wo die talentierten Hände der Kunsthandwerker raffinierten Lackarbeiten und gefühlvollen vietnamesischen Kegelhüten Leben einhauchen.\nDie Atmosphäre der Reise wird strahlender und entspannender, wenn Sie im Räucherdorf anhalten, wo Bündel von Räucherstäbchen wie bunte Blumen blühen und einen ruhigen Duft im Herzen des Erbes verströmen.",
     "es": "El viaje le llevará a pueblos artesanales tradicionales, donde las talentosas manos de los artesanos dan vida a sofisticados trabajos de laca y conmovedores sombreros cónicos vietnamitas.\nLa atmósfera del viaje se vuelve más brillante y relajante cuando se detiene en el pueblo del incienso, donde los haces de varitas de incienso florecen como flores de colores, irradiando una fragancia tranquila en el corazón del patrimonio.",
@@ -48,5 +46,5 @@
   "seasonality_end_month": "dec",
   "priority": 50,
   "created_at": "2026-04-13T10:48:46.170Z",
-  "updated_at": "2026-04-22T15:34:51.885Z"
+  "updated_at": "2026-04-30T04:05:50.414Z"
 }

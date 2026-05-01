@@ -7,7 +7,6 @@
     "zh": "胡志明市 - 芽庄",
     "ja": "ホーチミン - ニャチャン",
     "ko": "호치민 - 나트랑",
-    "vi": "Hồ Chí Minh- Nha Trang",
     "ms": "Ho Chi Minh - Nha Trang",
     "de": "Ho-Chi-Minh-Nha-Trang",
     "es": "Ho Chi Minh - Nha Trang",
@@ -20,23 +19,22 @@
     "no": "Ho Chi Minh - Nha Trang"
   },
   "short_description": {
-    "en": "Road connecting the city. Vibrant Ho Chi Minh with sunny and windy Mui Ne takes you across the vast and poetic Da Lat plateau. The journey ends in Nha Trang - a paradise of blue sea and white sand, bringing a wonderful blend of modern life and romantic natural beauty.",
-    "ar": "الطريق الذي يربط المدينة. تأخذك مدينة Ho Chi Minh النابضة بالحياة مع Mui Ne المشمسة والرياح عبر هضبة Da Lat الشاسعة والشاعرية. تنتهي الرحلة في نها ترانج - جنة البحر الأزرق والرمال البيضاء، التي توفر مزيجًا رائعًا من الحياة العصرية والجمال الطبيعي الرومانسي.",
-    "fr": "Route reliant la ville. La vibrante Ho Chi Minh avec Mui Ne ensoleillée et venteuse vous emmène à travers le vaste et poétique plateau de Da Lat. Le voyage se termine à Nha Trang, un paradis de mer bleue et de sable blanc, apportant un merveilleux mélange de vie moderne et de beauté naturelle romantique.",
-    "zh": "连接城市的道路。充满活力的胡志明市和阳光明媚、风和日丽的美奈带您穿越广阔而诗意的大叻高原。旅程的终点​​是芽庄——蓝海白沙的天堂，带来现代生活与浪漫自然美景的美妙融合。",
-    "ja": "街を繋ぐ道路。活気に満ちたホーチミンと晴れた風が吹くムイネーを訪れると、広大で詩的なダラット高原を巡ることができます。旅はニャチャンで終わります。ニャチャンは青い海と白い砂浜の楽園で、現代的な生活とロマンチックな自然の美しさが見事に融合しています。",
-    "ko": "도시를 연결하는 도로. 화창하고 바람이 많이 부는 무이네와 함께 활기찬 호치민은 광활하고 시적인 달랏 고원을 가로지르게 됩니다. 여행은 현대 생활과 낭만적인 자연의 아름다움이 훌륭하게 조화를 이루는 푸른 바다와 백사장의 천국인 나트랑에서 끝납니다.",
-    "vi": "Con đường nối TP. Hồ Chí Minh sôi động với Mũi Né nắng gió đưa bạn băng qua cao nguyên Đà Lạt bao la thơ mộng. Hành trình kết thúc tại Nha Trang – thiên đường biển xanh cát trắng, mang đến sự hòa quyện tuyệt vời giữa cuộc sống hiện đại và vẻ đẹp thiên nhiên thơ mộng.",
-    "ms": "Jalan yang menghubungkan bandar. Ho Chi Minh yang meriah dengan Mui Ne yang cerah dan berangin membawa anda merentasi dataran tinggi Da Lat yang luas dan puitis. Perjalanan berakhir di Nha Trang - syurga laut biru dan pasir putih, membawa gabungan indah kehidupan moden dan keindahan alam semula jadi yang romantis.",
-    "de": "Straße, die die Stadt verbindet. Das lebhafte Ho Chi Minh mit dem sonnigen und windigen Mui Ne führt Sie über die weite und poetische Hochebene Da Lat. Die Reise endet in Nha Trang – einem Paradies aus blauem Meer und weißem Sand, das eine wunderbare Mischung aus modernem Leben und romantischer Naturschönheit bietet.",
-    "es": "Carretera que conecta la ciudad. La vibrante Ho Chi Minh con el soleado y ventoso Mui Ne le llevará a través de la vasta y poética meseta de Da Lat. El viaje termina en Nha Trang, un paraíso de mar azul y arena blanca, que ofrece una maravillosa combinación de vida moderna y romántica belleza natural.",
-    "it": "Strada che collega la città. La vibrante Ho Chi Minh con la soleggiata e ventosa Mui Ne ti porta attraverso il vasto e poetico altopiano di Da Lat. Il viaggio termina a Nha Trang, un paradiso di mare blu e sabbia bianca, che porta una meravigliosa miscela di vita moderna e romantica bellezza naturale.",
-    "ru": "Дорога, соединяющая город. Яркий Хошимин с солнечным и ветреным Муйне проведут вас через обширное и поэтичное плато Далат. Путешествие заканчивается в Нячанге – раю синего моря и белого песка, сочетающем в себе чудесное сочетание современной жизни и романтической природной красоты.",
-    "nl": "Weg die de stad verbindt. Levendig Ho Chi Minh met zonnig en winderig Mui Ne neemt je mee over het uitgestrekte en poëtische Da Lat-plateau. De reis eindigt in Nha Trang - een paradijs van blauwe zee en wit zand, dat een prachtige mix van modern leven en romantische natuurlijke schoonheid biedt.",
-    "pl": "Droga łącząca miasto. Tętniące życiem Ho Chi Minh ze słonecznym i wietrznym Mui Ne zabierze Cię przez rozległy i poetycki płaskowyż Da Lat. Podróż kończy się w Nha Trang – raju błękitnego morza i białego piasku, oferującym wspaniałe połączenie współczesnego życia i romantycznej przyrody.",
-    "da": "Vej, der forbinder byen. Levende Ho Chi Minh med solrige og blæsende Mui Ne tager dig hen over det store og poetiske Da Lat-plateau. Rejsen slutter i Nha Trang - et paradis med blåt hav og hvidt sand, der bringer en vidunderlig blanding af moderne liv og romantisk naturskønhed.",
-    "sv": "Vägen som förbinder staden. Livfulla Ho Chi Minh med soligt och blåsigt Mui Ne tar dig över den vidsträckta och poetiska Da Lat-platån. Resan slutar i Nha Trang - ett paradis av blått hav och vit sand, som ger en underbar blandning av modernt liv och romantisk naturskönhet.",
-    "no": "Vei som forbinder byen. Livlige Ho Chi Minh med solfylte og vindfulle Mui Ne tar deg over det enorme og poetiske Da Lat-platået. Reisen ender i Nha Trang - et paradis av blått hav og hvit sand, som bringer en fantastisk blanding av moderne liv og romantisk naturskjønnhet."
+    "en": "Road connecting the city. Vibrant Ho Chi Minh with sunny and windy Mui Ne takes you across the vast and poetic Da Lat plateau. The journey ends in Nha Trang - a paradise",
+    "ar": "الطريق الذي يربط المدينة. تأخذك مدينة Ho Chi Minh النابضة بالحياة مع Mui Ne المشمسة والرياح عبر هضبة Da Lat الشاسعة والشاعرية. تنتهي الرحلة في نها ترانج - الجنة",
+    "fr": "Route reliant la ville. La vibrante Ho Chi Minh avec Mui Ne ensoleillée et venteuse vous emmène à travers le vaste et poétique plateau de Da Lat. Le voyage se termine à Nha Trang - un paradis",
+    "zh": "连接城市的道路。充满活力的胡志明市和阳光明媚、风和日丽的美奈带您穿越广阔而诗意的大叻高原。旅程的终点​​是天堂——芽庄",
+    "ja": "街を繋ぐ道路。活気に満ちたホーチミンと晴れた風が吹くムイネーを訪れると、広大で詩的なダラット高原を巡ることができます。旅は楽園ニャチャンで終わります",
+    "ko": "도시를 연결하는 도로. 화창하고 바람이 많이 부는 무이네와 함께 활기찬 호치민은 광활하고 시적인 달랏 고원을 가로지르게 됩니다. 여행은 천국인 나트랑에서 끝납니다",
+    "ms": "Jalan yang menghubungkan bandar. Ho Chi Minh yang meriah dengan Mui Ne yang cerah dan berangin membawa anda merentasi dataran tinggi Da Lat yang luas dan puitis. Perjalanan berakhir di Nha Trang - sebuah syurga",
+    "de": "Straße, die die Stadt verbindet. Das lebhafte Ho Chi Minh mit dem sonnigen und windigen Mui Ne führt Sie über das weite und poetische Da Lat-Plateau. Die Reise endet in Nha Trang – einem Paradies",
+    "es": "Carretera que conecta la ciudad. La vibrante Ho Chi Minh con el soleado y ventoso Mui Ne le llevará a través de la vasta y poética meseta de Da Lat. El viaje termina en Nha Trang: un paraíso",
+    "it": "Strada che collega la città. La vibrante Ho Chi Minh con la soleggiata e ventosa Mui Ne ti porta attraverso il vasto e poetico altopiano di Da Lat. Il viaggio termina a Nha Trang, un paradiso",
+    "ru": "Дорога, соединяющая город. Яркий Хошимин с солнечным и ветреным Муйне проведут вас через обширное и поэтичное плато Далат. Путешествие заканчивается в Нячанге – райском уголке.",
+    "nl": "Weg die de stad verbindt. Levendig Ho Chi Minh met zonnig en winderig Mui Ne neemt je mee over het uitgestrekte en poëtische Da Lat-plateau. De reis eindigt in Nha Trang - een paradijs",
+    "pl": "Droga łącząca miasto. Tętniące życiem Ho Chi Minh ze słonecznym i wietrznym Mui Ne zabierze Cię przez rozległy i poetycki płaskowyż Da Lat. Podróż kończy się w Nha Trang – raju",
+    "da": "Vej, der forbinder byen. Levende Ho Chi Minh med solrige og blæsende Mui Ne tager dig hen over det store og poetiske Da Lat-plateau. Rejsen slutter i Nha Trang – et paradis",
+    "sv": "Vägen som förbinder staden. Livfulla Ho Chi Minh med soligt och blåsigt Mui Ne tar dig över den vidsträckta och poetiska Da Lat-platån. Resan slutar i Nha Trang – ett paradis",
+    "no": "Vei som forbinder byen. Livlige Ho Chi Minh med solfylte og vindfulle Mui Ne tar deg over det enorme og poetiske Da Lat-platået. Reisen ender i Nha Trang – et paradis"
   },
   "styles": [
     "grand-expeditions",
@@ -51,5 +49,112 @@
   "seasonality_end_month": "apr",
   "priority": 100,
   "created_at": "2026-04-09T04:30:04.537Z",
-  "updated_at": "2026-04-22T16:01:10.722Z"
+  "updated_at": "2026-04-30T04:05:50.414Z",
+  "travel_plan": {
+    "destination_scope": [
+      {
+        "destination": "VN",
+        "areas": []
+      }
+    ],
+    "days": [],
+    "translation_meta": {
+      "ar": {
+        "source_lang": "en",
+        "source_hash": "fnv1a_c3df38ef",
+        "origin": "machine",
+        "updated_at": "2026-04-30T03:07:08.483Z"
+      },
+      "fr": {
+        "source_lang": "en",
+        "source_hash": "fnv1a_c3df38ef",
+        "origin": "machine",
+        "updated_at": "2026-04-30T03:07:11.267Z"
+      },
+      "zh": {
+        "source_lang": "en",
+        "source_hash": "fnv1a_c3df38ef",
+        "origin": "machine",
+        "updated_at": "2026-04-30T03:07:12.975Z"
+      },
+      "ja": {
+        "source_lang": "en",
+        "source_hash": "fnv1a_c3df38ef",
+        "origin": "machine",
+        "updated_at": "2026-04-30T03:07:14.433Z"
+      },
+      "ko": {
+        "source_lang": "en",
+        "source_hash": "fnv1a_c3df38ef",
+        "origin": "machine",
+        "updated_at": "2026-04-30T03:07:15.962Z"
+      },
+      "vi": {
+        "source_lang": "en",
+        "source_hash": "fnv1a_c3df38ef",
+        "origin": "machine",
+        "updated_at": "2026-04-30T03:07:17.517Z"
+      },
+      "ms": {
+        "source_lang": "en",
+        "source_hash": "fnv1a_c3df38ef",
+        "origin": "machine",
+        "updated_at": "2026-04-30T03:07:19.114Z"
+      },
+      "de": {
+        "source_lang": "en",
+        "source_hash": "fnv1a_c3df38ef",
+        "origin": "machine",
+        "updated_at": "2026-04-30T03:07:21.881Z"
+      },
+      "es": {
+        "source_lang": "en",
+        "source_hash": "fnv1a_c3df38ef",
+        "origin": "machine",
+        "updated_at": "2026-04-30T03:07:27.141Z"
+      },
+      "it": {
+        "source_lang": "en",
+        "source_hash": "fnv1a_c3df38ef",
+        "origin": "machine",
+        "updated_at": "2026-04-30T03:07:28.815Z"
+      },
+      "ru": {
+        "source_lang": "en",
+        "source_hash": "fnv1a_c3df38ef",
+        "origin": "machine",
+        "updated_at": "2026-04-30T03:07:29.734Z"
+      },
+      "nl": {
+        "source_lang": "en",
+        "source_hash": "fnv1a_c3df38ef",
+        "origin": "machine",
+        "updated_at": "2026-04-30T03:07:31.408Z"
+      },
+      "pl": {
+        "source_lang": "en",
+        "source_hash": "fnv1a_c3df38ef",
+        "origin": "machine",
+        "updated_at": "2026-04-30T03:07:32.860Z"
+      },
+      "da": {
+        "source_lang": "en",
+        "source_hash": "fnv1a_c3df38ef",
+        "origin": "machine",
+        "updated_at": "2026-04-30T03:07:34.275Z"
+      },
+      "sv": {
+        "source_lang": "en",
+        "source_hash": "fnv1a_c3df38ef",
+        "origin": "machine",
+        "updated_at": "2026-04-30T03:07:35.900Z"
+      },
+      "no": {
+        "source_lang": "en",
+        "source_hash": "fnv1a_c3df38ef",
+        "origin": "machine",
+        "updated_at": "2026-04-30T03:07:37.674Z"
+      }
+    }
+  }
 }

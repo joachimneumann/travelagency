@@ -7,7 +7,6 @@
     "zh": "岘港 - 顺化 - 会安",
     "ja": "ダナン - フエ - ホイアン",
     "ko": "다낭 - 후에 - 호이안",
-    "vi": "Đà Nẵng - Huế - Hội An",
     "ms": "Da Nang - Hue - Hoi An",
     "de": "Da Nang – Hue – Hoi An",
     "es": "Da Nang - Hue - Hoi An",
@@ -26,7 +25,6 @@
     "zh": "在岘港体验5天“慢生活”。在原始海滩上放松身心，探索五行山，享受越南最宜居城市的宁静氛围。",
     "ja": "ダナンで5日間の「スローライフ」を体験してみませんか。自然のままのビーチでリラックスし、マーブル マウンテンを探索し、ベトナムで最も住みやすい都市の静かな雰囲気を満喫してください。",
     "ko": "다낭에서 5일 동안 \"느린 생활\"을 경험해 보세요. 깨끗한 해변에서 휴식을 취하고, 오행산을 탐험하고, 베트남에서 가장 살기 좋은 도시의 평화로운 분위기를 즐겨보세요.",
-    "vi": "Trải nghiệm 5 ngày “sống chậm” ở Đà Nẵng. Thư giãn trên những bãi biển hoang sơ, khám phá Ngũ Hành Sơn và tận hưởng bầu không khí yên bình của thành phố đáng sống nhất Việt Nam.",
     "ms": "Alami 5 hari \"hidup perlahan\" di Da Nang. Bersantai di pantai yang bersih, terokai Pergunungan Marble, dan nikmati suasana damai di bandar paling sesuai untuk didiami di Vietnam.",
     "de": "Erleben Sie 5 Tage „Slow Living“ in Da Nang. Entspannen Sie sich an unberührten Stränden, erkunden Sie die Marmorberge und genießen Sie die friedliche Atmosphäre der lebenswertesten Stadt Vietnams.",
     "es": "Experimente 5 días de \"vida lenta\" en Da Nang. Relájese en playas vírgenes, explore las Montañas de Mármol y disfrute del ambiente tranquilo de la ciudad más habitable de Vietnam.",
@@ -50,7 +48,7 @@
   "seasonality_end_month": "oct",
   "priority": 97,
   "created_at": "2026-04-06T02:54:41.519Z",
-  "updated_at": "2026-04-28T07:49:05.591Z",
+  "updated_at": "2026-04-30T04:05:50.414Z",
   "travel_plan": {
     "destination_scope": [
       {

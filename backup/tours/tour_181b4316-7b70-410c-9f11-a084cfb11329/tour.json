@@ -7,7 +7,6 @@
     "zh": "雪静谷 - 长安 - 跳舞的洞穴",
     "ja": "トゥエット・ティンコック - チャンアン - ダンシング・ケーブ",
     "ko": "Tuyet Tinh Coc - Trang An - 춤추는 동굴",
-    "vi": "Tuyệt Tình Cốc - Tràng An - Hang Múa",
     "ms": "Tuyet Tinh Coc - Trang An - Gua Menari",
     "de": "Tuyet Tinh Coc – Trang An – Tanzende Höhle",
     "es": "Tuyet Tinh Coc - Trang An - Cueva Danzante",
@@ -17,26 +16,27 @@
     "pl": "Tuyet Tinh Coc – Trang An – Tańcząca Jaskinia",
     "da": "Tuyet Tinh Coc - Trang An - Dancing Cave",
     "sv": "Tuyet Tinh Coc - Trang An - Dansgrotta",
-    "no": "Tuyet Tinh Coc - Trang An - Dancing Cave"
+    "no": "Tuyet Tinh Coc - Trang An - Dancing Cave",
+    "vi": "Tuyệt Tình Cốc - Tràng An - Hang Múa"
   },
   "short_description": {
-    "en": "The journey takes you into the majestic beauty of Tuyet Tinh Coc with its emerald green lake, before taking a boat to explore the magical underwater cave system at Trang An heritage site. The trip ends with the experience of conquering the top of Hang Mua, where you can fully take in the majestic and poetic picture of Ninh Binh mountains and water from above.",
-    "ar": "تأخذك الرحلة إلى جمال Tuyet Tinh Coc المهيب مع بحيرتها الخضراء الزمردية، قبل ركوب قارب لاستكشاف نظام الكهف السحري تحت الماء في موقع Trang An التراثي.\nوتنتهي الرحلة بتجربة احتلال قمة هانغ موا، حيث يمكنك الاستمتاع بالكامل بالصورة المهيبة والشاعرية لجبال نينه بينه والمياه من الأعلى.",
-    "fr": "Le voyage vous emmène dans la beauté majestueuse de Tuyet Tinh Coc avec son lac vert émeraude, avant de prendre un bateau pour explorer le système magique de grottes sous-marines du site patrimonial de Trang An.\nLe voyage se termine par l'expérience de la conquête du sommet de Hang Mua, où vous pourrez pleinement admirer l'image majestueuse et poétique des montagnes de Ninh Binh et de l'eau d'en haut.",
-    "zh": "旅程将带您领略雪静谷的壮丽美景及其翠绿的湖泊，然后乘船探索长安遗址神奇的水下洞穴系统。\n旅程以征服 Hang Mua 山顶的体验结束，在那里您可以从高处充分欣赏宁平山水的雄伟而诗意的画面。",
-    "ja": "この旅では、エメラルドグリーンの湖があるトゥエット・ティンコックの雄大な美しさを満喫した後、ボートに乗ってチャンアン遺跡の魔法の水中洞窟システムを探索します。\n旅はハン ムアの頂上を征服する体験で終わります。そこでは、ニンビン山脈と水の雄大で詩的な景色を上から満喫できます。",
-    "ko": "이 여행은 에메랄드 그린 호수가 있는 Tuyet Tinh Coc의 장엄한 아름다움을 감상한 후 보트를 타고 Trang An 유적지의 마법 같은 수중 동굴 시스템을 탐험하게 됩니다.\n여행은 항무아(Hang Mua) 정상을 정복하는 경험으로 마무리됩니다. 그곳에서 닌빈(Ninh Binh) 산과 물의 웅장하고 시적인 그림을 위에서 완전히 감상할 수 있습니다.",
-    "vi": "Hành trình đưa bạn lạc bước vào vẻ đẹp liêu trai của Tuyệt Tịnh Cốc với hồ nước xanh ngọc bích, trước khi xuôi thuyền khám phá hệ thống hang động xuyên thủy kỳ ảo tại di sản Tràng An.\nChuyến đi khép lại bằng trải nghiệm chinh phục đỉnh Hang Múa, nơi bạn có thể thu trọn vào tầm mắt bức tranh non nước Ninh Bình hùng vĩ và thơ mộng từ trên cao.",
-    "ms": "Perjalanan membawa anda ke keindahan Tuyet Tinh Coc yang mengagumkan dengan tasik hijau zamrud, sebelum menaiki bot untuk meneroka sistem gua bawah air yang ajaib di tapak warisan Trang An.\nPerjalanan berakhir dengan pengalaman menakluki puncak Hang Mua, di mana anda boleh mengambil sepenuhnya gambaran megah dan puitis pergunungan Ninh Binh dan air dari atas.",
-    "de": "Die Reise führt Sie in die majestätische Schönheit von Tuyet Tinh Coc mit seinem smaragdgrünen See, bevor Sie mit dem Boot das magische Unterwasserhöhlensystem der Kulturerbestätte Trang An erkunden.\nDie Reise endet mit der Eroberung des Gipfels des Hang Mua, wo Sie das majestätische und poetische Bild der Ninh-Binh-Berge und des Wassers von oben genießen können.",
-    "es": "El viaje lo llevará a la majestuosa belleza de Tuyet Tinh Coc con su lago verde esmeralda, antes de tomar un bote para explorar el mágico sistema de cuevas submarinas en el sitio patrimonial de Trang An.\nEl viaje termina con la experiencia de conquistar la cima de Hang Mua, donde podrás disfrutar plenamente de la majestuosa y poética imagen de las montañas de Ninh Binh y el agua desde arriba.",
-    "it": "Il viaggio ti porta nella maestosa bellezza di Tuyet Tinh Coc con il suo lago verde smeraldo, prima di prendere una barca per esplorare il magico sistema di grotte sottomarine nel sito storico di Trang An.\nIl viaggio si conclude con l'esperienza di conquistare la cima di Hang Mua, dove potrai ammirare appieno l'immagine maestosa e poetica delle montagne di Ninh Binh e dell'acqua dall'alto.",
-    "ru": "Путешествие приведет вас к величественной красоте Туйет Тинь Кока с его изумрудно-зеленым озером, а затем вы отправитесь на лодке, чтобы исследовать волшебную систему подводных пещер на территории наследия Транг Ан.\nПутешествие заканчивается покорением вершины Ханг Муа, где вы сможете в полной мере насладиться величественной и поэтичной картиной гор Нинь Бинь и воды сверху.",
-    "nl": "De reis neemt je mee naar de majestueuze schoonheid van Tuyet Tinh Coc met zijn smaragdgroene meer, voordat je een boot neemt om het magische onderwatergrottensysteem op de erfgoedsite Trang An te verkennen.\nDe reis eindigt met de ervaring van het veroveren van de top van Hang Mua, waar je het majestueuze en poëtische beeld van de Ninh Binh-bergen en het water van bovenaf volledig kunt bewonderen.",
-    "pl": "Podróż zabierze Cię do majestatycznego piękna Tuyet Tinh Coc ze szmaragdowozielonym jeziorem, a następnie popłyniesz łodzią i odkryjesz magiczny system podwodnych jaskiń w obiekcie dziedzictwa kulturowego Trang An.\nWycieczka kończy się zdobyciem szczytu Hang Mua, gdzie można w pełni podziwiać majestatyczny i poetycki obraz gór Ninh Binh i wody z góry.",
-    "da": "Rejsen tager dig ind i Tuyet Tinh Coc's majestætiske skønhed med dens smaragdgrønne sø, før du tager en båd for at udforske det magiske undervandshulesystem ved Trang An-arvstedet.\nTuren slutter med oplevelsen af ​​at erobre toppen af ​​Hang Mua, hvor du fuldt ud kan tage det majestætiske og poetiske billede af Ninh Binh-bjergene og vand fra oven.",
-    "sv": "Resan tar dig till den majestätiska skönheten i Tuyet Tinh Coc med dess smaragdgröna sjö, innan du tar en båt för att utforska det magiska undervattensgrottsystemet vid Trang Ans arv.\nResan avslutas med upplevelsen av att erövra toppen av Hang Mua, där du till fullo kan ta in den majestätiska och poetiska bilden av Ninh Binh-bergen och vattnet från ovan.",
-    "no": "Reisen tar deg inn i den majestetiske skjønnheten til Tuyet Tinh Coc med sin smaragdgrønne innsjø, før du tar en båt for å utforske det magiske undervannsgrottesystemet ved Trang An-arvstedet.\nTuren avsluttes med opplevelsen av å erobre toppen av Hang Mua, hvor du fullt ut kan ta inn det majestetiske og poetiske bildet av Ninh Binh-fjellene og vann ovenfra."
+    "en": "Explore the serene Tuyet Tinh Coc, majestic karst landscapes of Trang An, and panoramic views from Mua Cave (Dancing Cave). Ninh Binh's ultimate scenic trio",
+    "ar": "استكشف منطقة Tuyet Tinh Coc الهادئة، والمناظر الطبيعية الكارستية المهيبة في Trang An، والمناظر البانورامية من كهف Mua (الكهف الراقص). ثلاثي نينه بينه ذو المناظر الخلابة",
+    "fr": "Explorez le serein Tuyet Tinh Coc, les majestueux paysages karstiques de Trang An et les vues panoramiques depuis la grotte Mua (grotte dansante). Le trio scénique ultime de Ninh Binh",
+    "zh": "探索宁静的雪静谷 (Tuyet Tinh Coc)、长安 (Trang An) 雄伟的喀斯特景观，以及 Mua Cave（跳舞洞）的全景。宁平的终极风景三人组",
+    "ja": "静かなトゥエット ティン コック、チャン アンの雄大なカルスト地形、ムア洞窟 (ダンシング ケーブ) からのパノラマの景色を探索しましょう。ニンビンの究極の景色のトリオ",
+    "ko": "고요한 Tuyet Tinh Coc, Trang An의 장엄한 카르스트 풍경, Mua Cave(Dancing Cave)의 탁 트인 전망을 탐험해보세요. 닌빈의 최고의 풍경 트리오",
+    "ms": "Terokai Tuyet Tinh Coc yang tenang, landskap karst Trang An yang megah dan pemandangan panoramik dari Gua Mua (Gua Menari). Trio pemandangan terbaik Ninh Binh",
+    "de": "Erkunden Sie das ruhige Tuyet Tinh Coc, die majestätischen Karstlandschaften von Trang An und den Panoramablick von der Mua-Höhle (Tanzende Höhle). Ninh Binhs ultimatives Bühnentrio",
+    "es": "Explore el sereno Tuyet Tinh Coc, los majestuosos paisajes kársticos de Trang An y las vistas panorámicas desde la cueva Mua (cueva del baile). El trío escénico definitivo de Ninh Binh",
+    "it": "Esplora il sereno Tuyet Tinh Coc, i maestosi paesaggi carsici di Trang An e le viste panoramiche dalla Mua Cave (Grotta Danzante). Il trio scenico definitivo di Ninh Binh",
+    "ru": "Исследуйте безмятежный Туйет Тинь Кок, величественные карстовые пейзажи Транг Ана и панорамные виды из пещеры Муа (Танцующая пещера). Лучшее сценическое трио Нинь Бинь",
+    "nl": "Verken de serene Tuyet Tinh Coc, de majestueuze karstlandschappen van Trang An en panoramische uitzichten vanaf de Mua-grot (dansgrot). Het ultieme scenische trio van Ninh Binh",
+    "pl": "Odkryj spokojną Tuyet Tinh Coc, majestatyczne krajobrazy krasowe Trang An i panoramiczne widoki z jaskini Mua (Tańcząca Jaskinia). Najlepsze sceniczne trio Ninh Binh",
+    "da": "Udforsk den fredfyldte Tuyet Tinh Coc, majestætiske karstlandskaber i Trang An og panoramaudsigt fra Mua Cave (Dancing Cave). Ninh Binhs ultimative naturskønne trio",
+    "sv": "Utforska den fridfulla Tuyet Tinh Coc, majestätiska karstlandskap i Trang An och panoramautsikt från Mua-grottan (dansgrottan). Ninh Binhs ultimata sceniska trio",
+    "no": "Utforsk den rolige Tuyet Tinh Coc, majestetiske karstlandskap i Trang An og panoramautsikt fra Mua-hulen (danshulen). Ninh Binhs ultimate sceniske trio",
+    "vi": "Khám phá Tuyệt Tình Cốc thanh bình, phong cảnh núi đá vôi hùng vĩ của Tràng An và tầm nhìn toàn cảnh từ Hang Múa (Hang Khiêu Vũ). Bộ ba cảnh đẹp tuyệt đỉnh của Ninh Bình"
   },
   "styles": [
     "budget",
@@ -50,5 +50,354 @@
   "seasonality_end_month": "",
   "priority": 50,
   "created_at": "2026-04-13T10:22:47.669Z",
-  "updated_at": "2026-04-22T15:01:28.069Z"
+  "updated_at": "2026-05-01T01:28:06.164Z",
+  "travel_plan": {
+    "destination_scope": [
+      {
+        "destination": "VN",
+        "areas": [
+          {
+            "area_id": "area_3fa05b42-97ab-495d-b16d-4691e66e0434",
+            "places": []
+          }
+        ]
+      }
+    ],
+    "days": [
+      {
+        "id": "travel_plan_day_63c3809d-f8bd-4bae-ba85-26f9eb64d4cc",
+        "day_number": 1,
+        "title": "",
+        "title_i18n": {},
+        "overnight_location": null,
+        "overnight_location_i18n": {},
+        "services": [
+          {
+            "id": "travel_plan_service_19368f67-d1d6-4987-8f0e-07316ac7d61d",
+            "timing_kind": "label",
+            "time_label": null,
+            "time_label_i18n": {},
+            "time_point": null,
+            "kind": "other",
+            "title": "Explore the serene Tuyet Tinh Coc",
+            "title_i18n": {
+              "ar": "استكشف منطقة Tuyet Tinh Coc الهادئة",
+              "fr": "Explorez le paisible Tuyet Tinh Coc",
+              "zh": "探索宁静的雪静谷",
+              "ja": "静かなトゥエット ティンコックを探索する",
+              "ko": "고요한 Tuyet Tinh Coc을 탐험해보세요",
+              "vi": "Khám phá Tuyệt Tình Cốc thanh bình",
+              "ms": "Terokai Tuyet Tinh Coc yang tenang",
+              "de": "Erkunden Sie das ruhige Tuyet Tinh Coc",
+              "es": "Explora el sereno Tuyet Tinh Coc",
+              "it": "Esplora il sereno Tuyet Tinh Coc",
+              "ru": "Исследуйте безмятежный район Тайет Тинь Кок",
+              "nl": "Verken het serene Tuyet Tinh Coc",
+              "pl": "Poznaj spokojną Tuyet Tinh Coc",
+              "da": "Udforsk den fredfyldte Tuyet Tinh Coc",
+              "sv": "Utforska den fridfulla Tuyet Tinh Coc",
+              "no": "Utforsk den rolige Tuyet Tinh Coc"
+            },
+            "details": "Tuyet Tinh Coc, nestled in the ancient capital of Hoa Lu, Ninh Binh, is a hidden gem famous for its crystal-clear turquoise lake and limestone cliffs. This \"Fairytale Garden\" offers a peaceful escape with its serene atmosphere, a tranquil pagoda, and a mysterious cave, perfect for those seeking natural beauty and quiet reflection",
+            "details_i18n": {
+              "ar": "تقع Tuyet Tinh Coc في العاصمة القديمة هوا لو، نينه بينه، وهي جوهرة مخفية تشتهر ببحيرتها الفيروزية الصافية ومنحدراتها من الحجر الجيري. توفر \"حديقة القصص الخيالية\" هذه ملاذًا هادئًا بأجوائها الهادئة ومعبدها الهادئ وكهفها الغامض، وهي مثالية لأولئك الذين يبحثون عن الجمال الطبيعي والتأمل الهادئ.",
+              "fr": "Tuyet Tinh Coc, niché dans l'ancienne capitale de Hoa Lu, Ninh Binh, est un joyau caché célèbre pour son lac turquoise aux eaux cristallines et ses falaises calcaires. Ce \"Jardin de conte de fées\" offre une évasion paisible avec son atmosphère sereine, une pagode tranquille et une grotte mystérieuse, parfaite pour ceux qui recherchent la beauté naturelle et la réflexion tranquille.",
+              "zh": "雪静谷 (Tuyet Tinh Coc) 坐落在宁平省华闾古都，是一颗隐藏的宝石，以其晶莹剔透的绿松石湖和石灰岩悬崖而闻名。这个“童话花园”以其宁静的氛围、宁静的宝塔和神秘的洞穴提供了一个宁静的避世之所，非常适合那些寻求自然美景和安静反思的人",
+              "ja": "ホアルーの古都ニンビンに位置するトゥエット ティンコックは、透き通ったターコイズブルーの湖と石灰岩の崖で有名な隠れた宝石です。この「おとぎ話の庭」は、静かな雰囲気、静かな塔、神秘的な洞窟があり、自然の美しさと静かな思索を求める人に最適です。",
+              "ko": "닌빈(Ninh Binh)의 고대 수도 호아루(Hoa Lu)에 자리잡은 뚜엣띤꼭(Tuyet Tinh Coc)은 수정처럼 투명한 청록색 호수와 석회암 절벽으로 유명한 숨겨진 보석입니다. 이 \"동화 정원\"은 고요한 분위기, 고요한 탑, 신비한 동굴이 있는 평화로운 휴식처를 제공하며, 자연의 아름다움과 조용한 사색을 추구하는 사람들에게 완벽한 장소입니다.",
+              "vi": "Tuyệt Tình Cốc nép mình ở cố đô Hoa Lư, Ninh Bình, là viên ngọc ẩn nổi tiếng với hồ nước trong xanh như pha lê và những vách đá vôi. \"Khu vườn cổ tích\" này mang đến một nơi trốn thoát yên bình với bầu không khí thanh bình, một ngôi chùa yên tĩnh và một hang động bí ẩn, hoàn hảo cho những ai tìm kiếm vẻ đẹp tự nhiên và sự tĩnh lặng",
+              "ms": "Tuyet Tinh Coc, terletak di ibu kota purba Hoa Lu, Ninh Binh, adalah permata tersembunyi yang terkenal dengan tasik biru jernih dan cenuram batu kapur. \"Taman Dongeng\" ini menawarkan percutian yang damai dengan suasananya yang tenang, pagoda yang tenang dan gua misteri, sesuai untuk mereka yang mencari keindahan semula jadi dan refleksi yang tenang",
+              "de": "Tuyet Tinh Coc, eingebettet in der alten Hauptstadt von Hoa Lu, Ninh Binh, ist ein verstecktes Juwel, das für seinen kristallklaren türkisfarbenen See und seine Kalksteinfelsen bekannt ist. Dieser „Märchengarten“ bietet mit seiner ruhigen Atmosphäre, einer ruhigen Pagode und einer geheimnisvollen Höhle einen friedlichen Rückzugsort und ist perfekt für alle, die natürliche Schönheit und ruhige Besinnung suchen",
+              "es": "Tuyet Tinh Coc, ubicado en la antigua capital de Hoa Lu, Ninh Binh, es una joya escondida famosa por su lago cristalino de color turquesa y sus acantilados de piedra caliza. Este \"Jardín de cuento de hadas\" ofrece una escapada pacífica con su atmósfera serena, una pagoda tranquila y una cueva misteriosa, perfecta para quienes buscan belleza natural y reflexión tranquila.",
+              "it": "Tuyet Tinh Coc, annidato nell'antica capitale di Hoa Lu, Ninh Binh, è un gioiello nascosto famoso per il suo lago turchese cristallino e le scogliere calcaree. Questo \"Giardino da favola\" offre una fuga tranquilla con la sua atmosfera serena, una pagoda tranquilla e una grotta misteriosa, perfetta per chi cerca la bellezza naturale e la riflessione tranquilla",
+              "ru": "Туйет Тинь Кок, расположенный в древней столице Хоа Лу, Нинь Бинь, представляет собой скрытую жемчужину, известную своим кристально чистым бирюзовым озером и известняковыми скалами. Этот «Сказочный сад» предлагает спокойный отдых с его безмятежной атмосферой, спокойной пагодой и таинственной пещерой, идеально подходящей для тех, кто ищет природную красоту и тихое размышление.",
+              "nl": "Tuyet Tinh Coc, gelegen in de oude hoofdstad van Hoa Lu, Ninh Binh, is een verborgen juweeltje dat beroemd is om zijn kristalheldere turquoise meer en kalkstenen kliffen. Deze \"Sprookjestuin\" biedt een vredig toevluchtsoord met zijn serene sfeer, een rustige pagode en een mysterieuze grot, perfect voor wie op zoek is naar natuurlijke schoonheid en rustige reflectie",
+              "pl": "Tuyet Tinh Coc, położona w starożytnej stolicy Hoa Lu, Ninh Binh, to ukryty klejnot słynący z krystalicznie czystego turkusowego jeziora i wapiennych klifów. Ten „Bajkowy Ogród” oferuje spokojną ucieczkę z spokojną atmosferą, spokojną pagodą i tajemniczą jaskinią, idealną dla osób poszukujących naturalnego piękna i spokojnej refleksji",
+              "da": "Tuyet Tinh Coc, der ligger i den gamle hovedstad Hoa Lu, Ninh Binh, er en skjult perle, der er berømt for sin krystalklare turkise sø og kalkstensklipper. Denne \"eventyrhave\" tilbyder en fredelig flugt med sin fredfyldte atmosfære, en rolig pagode og en mystisk hule, perfekt til dem, der søger naturlig skønhed og stille refleksion",
+              "sv": "Tuyet Tinh Coc, inbäddat i den antika huvudstaden Hoa Lu, Ninh Binh, är en dold pärla känd för sin kristallklara turkosa sjö och kalkstensklippor. Denna \"Sagoträdgård\" erbjuder en fridfull flykt med sin fridfulla atmosfär, en lugn pagod och en mystisk grotta, perfekt för dem som söker naturlig skönhet och tyst reflektion",
+              "no": "Tuyet Tinh Coc, som ligger i den gamle hovedstaden Hoa Lu, Ninh Binh, er en skjult perle kjent for sin krystallklare turkise innsjø og kalksteinsklipper. Denne \"eventyrhagen\" tilbyr en fredelig flukt med sin rolige atmosfære, en rolig pagode og en mystisk hule, perfekt for de som søker naturlig skjønnhet og stille refleksjon"
+            },
+            "image_subtitle": null,
+            "image_subtitle_i18n": {},
+            "location": null,
+            "location_i18n": {},
+            "start_time": null,
+            "end_time": null,
+            "image": {
+              "id": "travel_plan_service_image_01bd2736-cfa1-4756-a4ee-a39f4d3ca921",
+              "storage_path": "/public/v1/tour-images/tour_181b4316-7b70-410c-9f11-a084cfb11329/travel-plan-services/travel_plan_service_19368f67-d1d6-4987-8f0e-07316ac7d61d-1777598498360-6d351592-975b-486f-a14d-f44d0775fb26.webp",
+              "caption": null,
+              "caption_i18n": {},
+              "alt_text": null,
+              "alt_text_i18n": {},
+              "sort_order": 0,
+              "is_primary": true,
+              "is_customer_visible": true,
+              "include_in_travel_tour_card": true,
+              "width_px": null,
+              "height_px": null,
+              "source_attribution": null,
+              "focal_point": null,
+              "created_at": "2026-05-01T01:21:38.604Z"
+            }
+          },
+          {
+            "id": "travel_plan_service_5f385375-1011-4fc3-b04e-8665f09e52f4",
+            "timing_kind": "label",
+            "time_label": null,
+            "time_label_i18n": {},
+            "time_point": null,
+            "kind": "other",
+            "title": "Majestic karst landscapes of Trang An",
+            "title_i18n": {
+              "ar": "المناظر الطبيعية الكارستية المهيبة في ترانج آن",
+              "fr": "Paysages karstiques majestueux de Trang An",
+              "zh": "长安雄伟的喀斯特地貌",
+              "ja": "チャンアンの雄大なカルスト景観",
+              "ko": "짱안(Trang An)의 장엄한 카르스트 지형",
+              "vi": "Cảnh quan núi đá vôi hùng vĩ của Tràng An",
+              "ms": "Landskap kars yang megah di Trang An",
+              "de": "Majestätische Karstlandschaften von Trang An",
+              "es": "Majestuosos paisajes kársticos de Trang An",
+              "it": "Maestosi paesaggi carsici di Trang An",
+              "ru": "Величественные карстовые пейзажи Трангана",
+              "nl": "Majestueuze karstlandschappen van Trang An",
+              "pl": "Majestatyczne krajobrazy krasowe Trang An",
+              "da": "Majestætiske karstlandskaber i Trang An",
+              "sv": "Majestätiska karstlandskap i Trang An",
+              "no": "Majestetiske karstlandskap i Trang An"
+            },
+            "details": "Trang An Landscape Complex, a UNESCO World Heritage site, is renowned for its majestic limestone karsts rising from emerald waters. This \"Ha Long Bay on Land\" features a labyrinth of secret caves and ancient temples accessible by traditional sampan boats, offering a breathtaking blend of natural beauty and cultural history",
+            "details_i18n": {
+              "ar": "يشتهر مجمع ترانج آن للمناظر الطبيعية، أحد مواقع التراث العالمي لليونسكو، بالكارستات الجيرية المهيبة التي ترتفع من المياه الزمردية. يتميز \"خليج ها لونج على الأرض\" بمتاهة من الكهوف السرية والمعابد القديمة التي يمكن الوصول إليها عن طريق قوارب السامبان التقليدية، مما يوفر مزيجًا مذهلاً من الجمال الطبيعي والتاريخ الثقافي",
+              "fr": "Le complexe paysager de Trang An, site classé au patrimoine mondial de l'UNESCO, est réputé pour ses majestueux karsts calcaires s'élevant des eaux émeraude. Cette « baie d'Ha Long terrestre » présente un labyrinthe de grottes secrètes et de temples anciens accessibles par des bateaux sampan traditionnels, offrant un mélange époustouflant de beauté naturelle et d'histoire culturelle.",
+              "zh": "长安风景区被联合国教科文组织列为世界遗产，以其从碧绿海水中升起的雄伟石灰岩喀斯特而闻名。这个“陆地上的下龙湾”拥有迷宫般的秘密洞穴和古老寺庙，可乘坐传统舢板船进入，将自然美景与文化历史融为一体",
+              "ja": "ユネスコ世界遺産に登録されているチャンアン景観複合体は、エメラルド色の海からそびえる雄大な石灰岩のカルスト地形で有名です。この「陸のハロン湾」には、伝統的なサンパンボートでアクセスできる秘密の洞窟と古代寺院の迷路があり、自然の美しさと文化の歴史の息を呑むような融合を楽しめます。",
+              "ko": "유네스코 세계문화유산으로 지정된 짱안(Trang An) 경관 단지는 에메랄드 바다에서 솟아오른 장엄한 석회암 카르스트 지형으로 유명합니다. 이 \"육지의 하롱베이\"는 비밀 동굴의 미로와 전통 삼판 보트로 접근할 수 있는 고대 사원을 특징으로 하며, 자연의 아름다움과 문화사가 숨막히게 조화를 이루고 있습니다.",
+              "vi": "Quần thể danh thắng Tràng An, Di sản Thế giới được UNESCO công nhận, nổi tiếng với những núi đá vôi hùng vĩ nhô lên từ làn nước màu ngọc lục bảo. \"Vịnh Hạ Long trên cạn\" này có mê cung các hang động bí mật và những ngôi đền cổ có thể đến được bằng thuyền vạn đò truyền thống, mang đến sự pha trộn ngoạn mục giữa vẻ đẹp tự nhiên và lịch sử văn hóa",
+              "ms": "Kompleks Landskap Trang An, tapak Warisan Dunia UNESCO, terkenal dengan kars batu kapur yang megah yang timbul dari perairan zamrud. \"Ha Long Bay on Land\" ini menampilkan labirin gua rahsia dan kuil purba yang boleh diakses oleh bot sampan tradisional, menawarkan gabungan keindahan semula jadi dan sejarah budaya yang menakjubkan",
+              "de": "Der Landschaftskomplex Trang An, ein UNESCO-Weltkulturerbe, ist bekannt für seine majestätischen Kalksteinkarste, die aus smaragdgrünen Gewässern ragen. Diese „Halong-Bucht an Land“ verfügt über ein Labyrinth aus geheimen Höhlen und antiken Tempeln, die mit traditionellen Sampan-Booten erreichbar sind und eine atemberaubende Mischung aus Naturschönheit und Kulturgeschichte bieten",
+              "es": "El complejo paisajístico de Trang An, declarado Patrimonio de la Humanidad por la UNESCO, es famoso por sus majestuosos karsts de piedra caliza que se elevan desde aguas color esmeralda. Esta \"Bahía terrestre de Ha Long\" presenta un laberinto de cuevas secretas y templos antiguos a los que se puede acceder mediante barcos tradicionales de sampán, y ofrece una impresionante combinación de belleza natural e historia cultural.",
+              "it": "Il complesso paesaggistico di Trang An, patrimonio mondiale dell'UNESCO, è rinomato per le sue maestose rocce calcaree che emergono da acque color smeraldo. Questa \"Baia di Ha Long sulla terraferma\" presenta un labirinto di grotte segrete e antichi templi accessibili tramite le tradizionali barche sampan, offrendo una miscela mozzafiato di bellezza naturale e storia culturale",
+              "ru": "Ландшафтный комплекс Транг Ан, объект Всемирного наследия ЮНЕСКО, известен своими величественными известняковыми карстами, возвышающимися над изумрудными водами. Этот «залив Халонг на суше» представляет собой лабиринт секретных пещер и древних храмов, куда можно добраться на традиционных лодках-сампанах, предлагая захватывающее сочетание природной красоты и истории культуры.",
+              "nl": "Trang An Landscape Complex, een UNESCO-werelderfgoedlocatie, staat bekend om zijn majestueuze kalkstenen karsts die oprijzen uit smaragdgroene wateren. Deze \"Ha Long Bay on Land\" beschikt over een labyrint van geheime grotten en oude tempels die toegankelijk zijn met traditionele sampanboten en biedt een adembenemende mix van natuurlijke schoonheid en culturele geschiedenis",
+              "pl": "Kompleks krajobrazowy Trang An, wpisany na Listę Światowego Dziedzictwa UNESCO, słynie z majestatycznych wapiennych krasów wyrastających ze szmaragdowych wód. Ta „Zatoka Ha Long na lądzie” obejmuje labirynt tajnych jaskiń i starożytnych świątyń, do których można dotrzeć tradycyjnymi łodziami sampanowymi, oferując zapierające dech w piersiach połączenie naturalnego piękna i historii kultury",
+              "da": "Trang An Landscape Complex, et UNESCO-verdensarvssted, er kendt for sine majestætiske kalkstenskarsts, der rejser sig fra smaragdgrønt vand. Denne \"Ha Long Bay on Land\" har en labyrint af hemmelige huler og gamle templer, der er tilgængelige med traditionelle sampanbåde, og tilbyder en betagende blanding af naturlig skønhed og kulturhistorie",
+              "sv": "Trang An Landscape Complex, som finns med på UNESCO:s världsarvslista, är känt för sina majestätiska kalkstenskarster som reser sig från smaragdgröna vatten. Denna \"Ha Long Bay on Land\" har en labyrint av hemliga grottor och gamla tempel som är tillgängliga med traditionella sampanbåtar, och erbjuder en hisnande blandning av naturlig skönhet och kulturhistoria",
+              "no": "Trang An Landscape Complex, et UNESCOs verdensarvsted, er kjent for sine majestetiske kalksteinskarster som stiger opp fra smaragdgrønne vannet. Denne \"Ha Long Bay on Land\" har en labyrint av hemmelige grotter og gamle templer tilgjengelig med tradisjonelle sampan-båter, og tilbyr en fantastisk blanding av naturlig skjønnhet og kulturhistorie"
+            },
+            "image_subtitle": null,
+            "image_subtitle_i18n": {},
+            "location": null,
+            "location_i18n": {},
+            "start_time": null,
+            "end_time": null,
+            "image": {
+              "id": "travel_plan_service_image_47bac449-a2f3-4f14-8ac3-40222c316d54",
+              "storage_path": "/public/v1/tour-images/tour_181b4316-7b70-410c-9f11-a084cfb11329/travel-plan-services/travel_plan_service_5f385375-1011-4fc3-b04e-8665f09e52f4-1777598617346-b80486c7-1d45-49b8-8e63-416a69dcf7a7.webp",
+              "caption": null,
+              "caption_i18n": {},
+              "alt_text": null,
+              "alt_text_i18n": {},
+              "sort_order": 0,
+              "is_primary": true,
+              "is_customer_visible": true,
+              "include_in_travel_tour_card": true,
+              "width_px": null,
+              "height_px": null,
+              "source_attribution": null,
+              "focal_point": null,
+              "created_at": "2026-05-01T01:23:37.458Z"
+            }
+          },
+          {
+            "id": "travel_plan_service_e7d8bf27-0a90-44e7-9bca-3a18b6f4a1b1",
+            "timing_kind": "label",
+            "time_label": null,
+            "time_label_i18n": {},
+            "time_point": null,
+            "kind": "other",
+            "title": "panoramic views from Mua Cave",
+            "title_i18n": {
+              "ar": "مناظر بانورامية من كهف Mua",
+              "fr": "vues panoramiques depuis la grotte de Mua",
+              "zh": "Mua 洞的全景",
+              "ja": "ムア洞窟からのパノラマの景色",
+              "ko": "무아 동굴(Mua Cave)의 탁 트인 전망",
+              "vi": "toàn cảnh nhìn từ Hang Múa",
+              "ms": "pemandangan panorama dari Gua Mua",
+              "de": "Panoramablick von der Mua-Höhle",
+              "es": "vistas panorámicas desde la cueva de Mua",
+              "it": "viste panoramiche dalla Grotta Mua",
+              "ru": "панорамный вид из пещеры Муа",
+              "nl": "panoramisch uitzicht vanaf de Mua-grot",
+              "pl": "panoramiczne widoki z jaskini Mua",
+              "da": "panoramaudsigt fra Mua Cave",
+              "sv": "panoramautsikt från Mua-grottan",
+              "no": "panoramautsikt fra Mua-hulen"
+            },
+            "details": "Mua Cave (Hang Mua) offers the most spectacular panoramic views in Ninh Binh. After climbing nearly 500 stone steps, you are rewarded with a breathtaking 360-degree vista of the Ngo Dong River winding through lush rice fields and towering limestone karsts. It is the ultimate spot to capture the majestic beauty of the Tam Coc valley from above",
+            "details_i18n": {
+              "ar": "يوفر كهف Mua (Hang Mua) أروع المناظر البانورامية في نينه بينه. بعد تسلق ما يقرب من 500 درجة حجرية، ستتم مكافأتك بمنظر يحبس الأنفاس بزاوية 360 درجة لنهر نجو دونج الذي يتعرج عبر حقول الأرز الخضراء وأحجار الكارست الجيرية الشاهقة. إنه المكان المثالي لالتقاط الجمال المهيب لوادي تام كوك من الأعلى",
+              "fr": "La grotte Mua (Hang Mua) offre les vues panoramiques les plus spectaculaires de Ninh Binh. Après avoir gravi près de 500 marches de pierre, vous êtes récompensé par une vue imprenable à 360 degrés sur la rivière Ngo Dong qui serpente à travers des rizières luxuriantes et d'imposants karsts calcaires. C'est l'endroit idéal pour capturer la beauté majestueuse de la vallée de Tam Coc d'en haut.",
+              "zh": "Mua Cave（Hang Mua）提供宁平最壮观的全景。爬上近 500 级石阶后，您将欣赏到蜿蜒穿过郁郁葱葱的稻田和高耸的石灰岩喀斯特地貌的吴东河 360 度壮丽景色。这是从高处捕捉三谷山谷雄伟美景的终极地点",
+              "ja": "ムア洞窟 (ハン ムア) からは、ニンビンで最も壮観なパノラマの景色を眺めることができます。500 段近くの石段を登ると、緑豊かな水田とそびえ立つ石灰岩のカルストの間を曲がりくねるゴ ドン川の息を呑むような 360 度の景色が広がります。タムコック渓谷の雄大な美しさを上空から捉える究極のスポットです。",
+              "ko": "무아 동굴(항 무아)은 닌빈에서 가장 멋진 전경을 제공합니다. 거의 500개의 돌계단을 오르면 무성한 논과 우뚝 솟은 석회암 카르스트를 통과하여 굽이쳐 흐르는 응오동강의 숨막히는 360도 풍경을 감상할 수 있습니다. 땀꼭(Tam Coc) 계곡의 장엄한 아름다움을 위에서 내려다볼 수 있는 최고의 장소입니다.",
+              "vi": "Hang Múa (Hang Múa) mang đến tầm nhìn toàn cảnh ngoạn mục nhất ở Ninh Bình. Sau khi leo gần 500 bậc đá, bạn sẽ được chiêm ngưỡng khung cảnh 360 độ ngoạn mục của dòng sông Ngô Đồng uốn lượn qua những cánh đồng lúa tươi tốt và những núi đá vôi cao chót vót. Đây là địa điểm tuyệt vời nhất để ghi lại vẻ đẹp hùng vĩ của thung lũng Tam Cốc từ trên cao",
+              "ms": "Gua Mua (Hang Mua) menawarkan pemandangan panoramik yang paling menakjubkan di Ninh Binh. Selepas mendaki hampir 500 anak tangga batu, anda diberi ganjaran dengan pemandangan 360 darjah Sungai Ngo Dong yang mempesonakan yang berliku melalui sawah yang subur dan karst batu kapur yang menjulang tinggi. Ia adalah tempat terbaik untuk menangkap keindahan megah lembah Tam Coc dari atas",
+              "de": "Die Mua-Höhle (Hang Mua) bietet den spektakulärsten Panoramablick in Ninh Binh. Nachdem Sie fast 500 Steinstufen erklommen haben, werden Sie mit einem atemberaubenden 360-Grad-Blick auf den Fluss Ngo Dong belohnt, der sich durch üppige Reisfelder und hoch aufragende Kalksteinkarste schlängelt. Es ist der ultimative Ort, um die majestätische Schönheit des Tam Coc-Tals von oben einzufangen",
+              "es": "La cueva Mua (Hang Mua) ofrece las vistas panorámicas más espectaculares de Ninh Binh. Después de subir casi 500 escalones de piedra, será recompensado con una impresionante vista de 360 ​​grados del río Ngo Dong que serpentea a través de exuberantes campos de arroz e imponentes karsts de piedra caliza. Es el mejor lugar para capturar la majestuosa belleza del valle de Tam Coc desde arriba.",
+              "it": "La Grotta Mua (Hang Mua) offre le viste panoramiche più spettacolari di Ninh Binh. Dopo aver salito quasi 500 gradini di pietra, sarai ricompensato con una vista mozzafiato a 360 gradi del fiume Ngo Dong che si snoda attraverso rigogliose risaie e imponenti rocce calcaree. È il luogo ideale per catturare dall'alto la maestosa bellezza della valle di Tam Coc",
+              "ru": "Пещера Муа (Ханг Муа) предлагает самые захватывающие панорамные виды в Нинь Бинь. Поднявшись почти на 500 каменных ступенек, вы будете вознаграждены захватывающим 360-градусным видом на реку Нго Донг, протекающую через пышные рисовые поля и высокие известняковые карсты. Это идеальное место, где можно запечатлеть величественную красоту долины Там Кок сверху.",
+              "nl": "Mua-grot (Hang Mua) biedt de meest spectaculaire panoramische uitzichten in Ninh Binh. Nadat je bijna 500 stenen treden hebt beklommen, word je beloond met een adembenemend 360 graden uitzicht op de Ngo Dong-rivier, die door weelderige rijstvelden en torenhoge kalkstenen karsts kronkelt. Het is de ultieme plek om de majestueuze schoonheid van de Tam Coc-vallei van bovenaf vast te leggen",
+              "pl": "Jaskinia Mua (Hang Mua) oferuje najbardziej spektakularne panoramiczne widoki w Ninh Binh. Po wejściu na prawie 500 kamiennych schodów zostaniesz nagrodzony zapierającym dech w piersiach 360-stopniowym widokiem na rzekę Ngo Dong wijącą się przez bujne pola ryżowe i wysokie wapienne krasy. To najlepsze miejsce, aby uchwycić z góry majestatyczne piękno doliny Tam Coc",
+              "da": "Mua Cave (Hang Mua) tilbyder den mest spektakulære panoramaudsigt i Ninh Binh. Efter at have besteget næsten 500 stentrapper, bliver du belønnet med en betagende 360-graders udsigt over Ngo Dong-floden, der snor sig gennem frodige rismarker og tårnhøje kalkstenskarster. Det er det ultimative sted at fange Tam Coc-dalens majestætiske skønhed fra oven",
+              "sv": "Mua Cave (Hang Mua) erbjuder den mest spektakulära panoramautsikten i Ninh Binh. Efter att ha klättrat nästan 500 stentrappor belönas du med en hisnande 360-graders utsikt över Ngo Dong-floden som slingrar sig genom frodiga risfält och höga kalkstenskarst. Det är den ultimata platsen för att fånga den majestätiska skönheten i Tam Coc-dalen från ovan",
+              "no": "Mua Cave (Hang Mua) tilbyr den mest spektakulære panoramautsikten i Ninh Binh. Etter å ha klatret nesten 500 steintrapper, blir du belønnet med en fantastisk 360-graders utsikt over Ngo Dong-elven som slynger seg gjennom frodige rismarker og ruvende kalksteinskarster. Det er det ultimate stedet for å fange den majestetiske skjønnheten i Tam Coc-dalen ovenfra"
+            },
+            "image_subtitle": null,
+            "image_subtitle_i18n": {},
+            "location": null,
+            "location_i18n": {},
+            "start_time": null,
+            "end_time": null,
+            "image": {
+              "id": "travel_plan_service_image_33f875a2-e36e-4cca-b840-fad10bd462d1",
+              "storage_path": "/public/v1/tour-images/tour_181b4316-7b70-410c-9f11-a084cfb11329/travel-plan-services/travel_plan_service_e7d8bf27-0a90-44e7-9bca-3a18b6f4a1b1-1777598743826-64c126e8-6426-47fe-9651-834508d27cea.webp",
+              "caption": null,
+              "caption_i18n": {},
+              "alt_text": null,
+              "alt_text_i18n": {},
+              "sort_order": 0,
+              "is_primary": true,
+              "is_customer_visible": true,
+              "include_in_travel_tour_card": true,
+              "width_px": null,
+              "height_px": null,
+              "source_attribution": null,
+              "focal_point": null,
+              "created_at": "2026-05-01T01:25:44.051Z"
+            }
+          }
+        ],
+        "notes": "The vehicle and guide will pick you up from your hotel in the central Old Quarter and the Hanoi Opera House area, then depart for Ninh Binh.",
+        "notes_i18n": {
+          "ar": "ستنقلك السيارة والدليل من فندقك في الحي القديم المركزي ومنطقة دار الأوبرا في هانوي، ثم تغادران إلى نينه بينه.",
+          "fr": "Le véhicule et le guide viendront vous chercher à votre hôtel dans le vieux quartier central et dans le quartier de l'opéra de Hanoï, puis partiront pour Ninh Binh.",
+          "zh": "车辆和导游将从老城区中心和河内歌剧院区的酒店接您，然后前往宁平。",
+          "ja": "車とガイドが旧市街中心部とハノイ オペラ ハウス エリアのホテルまでお迎えに上がり、ニンビンへ向けて出発します。",
+          "ko": "차량과 가이드가 올드 쿼터 중심부와 하노이 오페라 하우스 지역에 있는 호텔에서 픽업한 후 닌빈으로 출발합니다.",
+          "vi": "Xe và hướng dẫn viên sẽ đón quý khách tại khách sạn ở trung tâm Phố Cổ và khu vực Nhà Hát Lớn Hà Nội, sau đó khởi hành đi Ninh Bình.",
+          "ms": "Kenderaan dan pemandu akan menjemput anda dari hotel anda di kawasan Old Quarter dan kawasan Hanoi Opera House, kemudian bertolak ke Ninh Binh.",
+          "de": "Das Fahrzeug und der Reiseleiter holen Sie von Ihrem Hotel in der zentralen Altstadt und im Bereich des Opernhauses von Hanoi ab und fahren dann nach Ninh Binh.",
+          "es": "El vehículo y el guía lo recogerán de su hotel en el casco antiguo central y el área de la Ópera de Hanoi, luego partirán hacia Ninh Binh.",
+          "it": "Il veicolo e la guida verranno a prendervi dal vostro hotel nel centro storico e nella zona del Teatro dell'Opera di Hanoi, quindi partiranno per Ninh Binh.",
+          "ru": "Автомобиль и гид заберут вас из отеля в центральном Старом квартале и районе Ханойского оперного театра, а затем отправятся в Ниньбинь.",
+          "nl": "Het voertuig en de gids halen je op bij je hotel in de centrale oude wijk en het operagebouw van Hanoi en vertrekken vervolgens naar Ninh Binh.",
+          "pl": "Pojazd i przewodnik odbiorą Cię z hotelu w centralnej Starej Dzielnicy i okolicy Opery w Hanoi, a następnie wyruszysz do Ninh Binh.",
+          "da": "Køretøjet og guiden henter dig fra dit hotel i det centrale gamle kvarter og Hanoi Opera House-området, og afgår derefter til Ninh Binh.",
+          "sv": "Fordonet och guiden hämtar dig från ditt hotell i de centrala gamla kvarteren och Hanoi Opera House-området, och avgår sedan till Ninh Binh.",
+          "no": "Kjøretøyet og guiden henter deg fra hotellet ditt i det sentrale gamle kvarteret og Hanoi Opera House-området, og drar deretter til Ninh Binh."
+        }
+      }
+    ],
+    "translation_meta": {
+      "ar": {
+        "source_lang": "en",
+        "source_hash": "fnv1a_eb9e7cdd",
+        "origin": "machine",
+        "updated_at": "2026-05-01T01:26:25.255Z"
+      },
+      "fr": {
+        "source_lang": "en",
+        "source_hash": "fnv1a_eb9e7cdd",
+        "origin": "machine",
+        "updated_at": "2026-05-01T01:26:28.109Z"
+      },
+      "zh": {
+        "source_lang": "en",
+        "source_hash": "fnv1a_eb9e7cdd",
+        "origin": "machine",
+        "updated_at": "2026-05-01T01:26:30.852Z"
+      },
+      "ja": {
+        "source_lang": "en",
+        "source_hash": "fnv1a_eb9e7cdd",
+        "origin": "machine",
+        "updated_at": "2026-05-01T01:26:34.638Z"
+      },
+      "ko": {
+        "source_lang": "en",
+        "source_hash": "fnv1a_eb9e7cdd",
+        "origin": "machine",
+        "updated_at": "2026-05-01T01:26:37.404Z"
+      },
+      "vi": {
+        "source_lang": "en",
+        "source_hash": "fnv1a_eb9e7cdd",
+        "origin": "machine",
+        "updated_at": "2026-05-01T01:26:39.792Z"
+      },
+      "ms": {
+        "source_lang": "en",
+        "source_hash": "fnv1a_eb9e7cdd",
+        "origin": "machine",
+        "updated_at": "2026-05-01T01:26:43.545Z"
+      },
+      "de": {
+        "source_lang": "en",
+        "source_hash": "fnv1a_eb9e7cdd",
+        "origin": "machine",
+        "updated_at": "2026-05-01T01:26:46.928Z"
+      },
+      "es": {
+        "source_lang": "en",
+        "source_hash": "fnv1a_eb9e7cdd",
+        "origin": "machine",
+        "updated_at": "2026-05-01T01:26:48.771Z"
+      },
+      "it": {
+        "source_lang": "en",
+        "source_hash": "fnv1a_eb9e7cdd",
+        "origin": "machine",
+        "updated_at": "2026-05-01T01:26:51.432Z"
+      },
+      "ru": {
+        "source_lang": "en",
+        "source_hash": "fnv1a_eb9e7cdd",
+        "origin": "machine",
+        "updated_at": "2026-05-01T01:26:53.581Z"
+      },
+      "nl": {
+        "source_lang": "en",
+        "source_hash": "fnv1a_eb9e7cdd",
+        "origin": "machine",
+        "updated_at": "2026-05-01T01:26:56.743Z"
+      },
+      "pl": {
+        "source_lang": "en",
+        "source_hash": "fnv1a_eb9e7cdd",
+        "origin": "machine",
+        "updated_at": "2026-05-01T01:26:59.933Z"
+      },
+      "da": {
+        "source_lang": "en",
+        "source_hash": "fnv1a_eb9e7cdd",
+        "origin": "machine",
+        "updated_at": "2026-05-01T01:27:02.698Z"
+      },
+      "sv": {
+        "source_lang": "en",
+        "source_hash": "fnv1a_eb9e7cdd",
+        "origin": "machine",
+        "updated_at": "2026-05-01T01:27:06.485Z"
+      },
+      "no": {
+        "source_lang": "en",
+        "source_hash": "fnv1a_eb9e7cdd",
+        "origin": "machine",
+        "updated_at": "2026-05-01T01:27:09.350Z"
+      }
+    }
+  }
 }

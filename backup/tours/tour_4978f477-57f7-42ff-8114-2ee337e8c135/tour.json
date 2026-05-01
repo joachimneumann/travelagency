@@ -7,7 +7,6 @@
     "zh": "下龙湾游轮",
     "ja": "ハロン湾クルーズ",
     "ko": "하롱베이 크루즈",
-    "vi": "Du thuyền Vịnh Hạ Long",
     "ms": "Pelayaran Teluk Ha Long",
     "de": "Halong-Bucht-Kreuzfahrt",
     "es": "Crucero por la bahía de Ha Long",
@@ -26,7 +25,6 @@
     "zh": "下龙湾豪华游轮之旅2天1夜或3天2夜五星级游轮：在诗意的大自然中享受私人空间，探索神奇的洞穴，参加日落时分的日落派对。体验皮划艇、参观渔村、品尝海鲜特色菜。",
     "ja": "ハロンの豪華クルーズ ツアー 5 つ星クルーズの 1 泊 2 日または 2 泊 3 日: 詩的な自然に囲まれたプライベートな空間を満喫し、魔法の洞窟を探索し、日没時のサンセット パーティーまでお楽しみください。カヤックを体験したり、漁村を訪れたり、シーフードの名物料理を食べたりしましょう。",
     "ko": "하롱 럭셔리 크루즈 투어 5성급 크루즈로 1박 2일 또는 2박 3일: 시적인 자연 속에서 개인 공간을 즐기고, 일몰 시 마법의 동굴을 탐험하고 일몰 파티를 즐겨보세요. 카약을 경험하고, 어촌을 방문하고, 해산물 특선 요리를 맛보세요.",
-    "vi": "Du thuyền Hạ Long sang trọng 2 ngày 1 đêm hoặc 3 ngày 2 đêm trên du thuyền 5 sao: tận hưởng không gian riêng tư giữa thiên nhiên thơ mộng, khám phá hang động huyền ảo đến bữa tiệc Sunset Party lúc hoàng hôn. Trải nghiệm chèo thuyền kayak, tham quan làng chài và ăn đặc sản hải sản.",
     "ms": "Lawatan pelayaran mewah Ha Long 2 hari 1 malam atau 3 hari 2 malam dengan pelayaran 5 bintang: nikmati ruang peribadi di tengah-tengah alam puitis, terokai gua ajaib ke Pesta Matahari Terbenam pada waktu matahari terbenam. Alami pengalaman berkayak, melawat perkampungan nelayan dan makan kepakaran makanan laut.",
     "de": "Ha Long Luxuskreuzfahrttour 2 Tage 1 Nacht oder 3 Tage 2 Nächte auf einer 5-Sterne-Kreuzfahrt: Genießen Sie Privatsphäre inmitten poetischer Natur, erkunden Sie magische Höhlen bis hin zur Sunset Party bei Sonnenuntergang. Erleben Sie Kajakfahren, besuchen Sie Fischerdörfer und essen Sie Meeresfrüchtespezialitäten.",
     "es": "Tour en crucero de lujo por Ha Long 2 días 1 noche o 3 días 2 noches en un crucero de 5 estrellas: disfrute de un espacio privado en medio de la naturaleza poética, explore cuevas mágicas y disfrute de la Sunset Party al atardecer. Experimente el kayak, visite pueblos de pescadores y coma especialidades de mariscos.",
@@ -49,5 +47,5 @@
   "seasonality_end_month": "dec",
   "priority": 100,
   "created_at": "2026-04-03T11:00:28.709Z",
-  "updated_at": "2026-04-09T08:30:26.783Z"
+  "updated_at": "2026-04-30T04:05:50.414Z"
 }

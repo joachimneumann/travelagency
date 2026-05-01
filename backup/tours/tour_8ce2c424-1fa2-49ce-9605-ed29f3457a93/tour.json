@@ -7,7 +7,6 @@
     "zh": "巴贝湖",
     "ja": "バベ湖",
     "ko": "바베 호수",
-    "vi": "Hồ Ba Bể",
     "ms": "Tasik Ba Be",
     "de": "Ba-Be-See",
     "es": "Lago Ba Be",
@@ -26,7 +25,6 @@
     "zh": "巴贝湖（Ba Be Lake）位于北干（Bac Kan）同名国家公园内，是世界上最大、最美丽的天然淡水高山湖泊之一。这里风景壮丽，碧蓝的水面、陡峭的石灰岩悬崖和丰富的原生植被和谐地结合在一起。",
     "ja": "バベ湖は、バッカンの同名の国立公園内にあり、世界最大級で最も美しい天然の淡水山湖の 1 つです。この場所は、青い水面、石灰岩の切り立った崖、豊かな原生植物が調和した素晴らしい景観を持っています。",
     "ko": "Bac Kan의 같은 이름의 국립공원에 위치한 Ba Be 호수는 세계에서 가장 크고 가장 아름다운 자연 담수 산 호수 중 하나입니다. 이곳은 푸른 수면, 가파른 석회암 절벽, 풍부한 원시 식생이 조화롭게 어우러진 웅장한 풍경을 자랑하는 곳입니다.",
-    "vi": "Hồ Ba Bể nằm trong vườn quốc gia cùng tên tại Bắc Kạn, là một trong những hồ nước ngọt tự nhiên trên núi đẹp và lớn nhất thế giới. Nơi đây sở hữu cảnh quan kỳ vĩ với sự kết hợp hài hòa giữa mặt nước xanh ngắt, những vách núi đá vôi dựng đứng và thảm thực vật nguyên sinh trù phú",
     "ms": "Tasik Ba Be, yang terletak di taman negara dengan nama yang sama di Bac Kan, adalah salah satu tasik gunung air tawar semula jadi yang terbesar dan paling indah di dunia. Tempat ini mempunyai landskap yang indah dengan gabungan harmoni permukaan air biru, tebing batu kapur yang curam dan tumbuh-tumbuhan primer yang kaya.",
     "de": "Der Ba Be-See im gleichnamigen Nationalpark in Bac Kan ist einer der größten und schönsten natürlichen Süßwasser-Bergseen der Welt. Dieser Ort verfügt über eine herrliche Landschaft mit einer harmonischen Kombination aus blauer Wasseroberfläche, steilen Kalksteinfelsen und üppiger Primärvegetation.",
     "es": "El lago Ba Be, ubicado en el parque nacional del mismo nombre en Bac Kan, es uno de los lagos naturales de montaña de agua dulce más grandes y bellos del mundo. Este lugar posee un magnífico paisaje con una combinación armoniosa de superficie de agua azul, escarpados acantilados de piedra caliza y rica vegetación primaria.",
@@ -47,5 +45,5 @@
   "seasonality_end_month": "oct",
   "priority": 50,
   "created_at": "2026-04-15T03:58:02.218Z",
-  "updated_at": "2026-04-22T14:40:44.140Z"
+  "updated_at": "2026-04-30T04:05:50.414Z"
 }

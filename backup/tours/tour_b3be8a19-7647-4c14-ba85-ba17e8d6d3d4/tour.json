@@ -7,7 +7,6 @@
     "zh": "探索顺化古都",
     "ja": "古都フエを探索する",
     "ko": "후에(Hue) 고대 수도 탐험",
-    "vi": "Khám phá cố đô Huế",
     "ms": "Terokai Ibu Kota Purba Hue",
     "de": "Erkunden Sie die antike Hauptstadt Hue",
     "es": "Explora la antigua capital de Hue",
@@ -26,7 +25,6 @@
     "zh": "探索雄伟的城堡、皇家陵墓和诗意的香水河。探索越南古都顺化的永恒魅力、丰富历史和帝国优雅。",
     "ja": "雄大な城塞、王家の墓、詩的な香水川を探索してください。ベトナムの古都フエの時代を超越した魅力、豊かな歴史、帝国の優雅さを発見してください。",
     "ko": "장엄한 성채, 왕릉, 시적인 향강을 탐험해보세요. 베트남의 고대 수도 후에(Hue)에서 시대를 초월한 매력, 풍부한 역사, 황실의 우아함을 느껴보세요.",
-    "vi": "Khám phá Hoàng thành hùng vĩ, lăng mộ hoàng gia và sông Hương thơ mộng. Khám phá vẻ đẹp quyến rũ vượt thời gian, lịch sử phong phú và nét sang trọng hoàng gia của cố đô Huế của Việt Nam.",
     "ms": "Terokai Citadel yang megah, makam diraja, dan Sungai Perfume yang puitis. Temui daya tarikan abadi, sejarah yang kaya dan keanggunan empayar ibu kota purba Vietnam, Hue.",
     "de": "Erkunden Sie die majestätische Zitadelle, die Königsgräber und den poetischen Parfümfluss. Entdecken Sie den zeitlosen Charme, die reiche Geschichte und die imperiale Eleganz der alten Hauptstadt Vietnams, Hue.",
     "es": "Explore la majestuosa Ciudadela, las tumbas reales y el poético río Perfume. Descubra el encanto eterno, la rica historia y la elegancia imperial de la antigua capital de Vietnam, Hue.",
@@ -49,7 +47,7 @@
   "seasonality_end_month": "nov",
   "priority": 50,
   "created_at": "2026-04-13T09:01:09.779Z",
-  "updated_at": "2026-04-28T03:43:26.359Z",
+  "updated_at": "2026-04-30T04:05:50.414Z",
   "travel_plan": {
     "destination_scope": [
       {

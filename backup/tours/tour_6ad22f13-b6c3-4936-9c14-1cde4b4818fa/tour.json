@@ -7,7 +7,6 @@
     "zh": "探索河内",
     "ja": "ハノイを探索する",
     "ko": "하노이 둘러보기",
-    "vi": "Khám phá Hà Nội",
     "ms": "Terokai Hanoi",
     "de": "Entdecken Sie Hanoi",
     "es": "Explorar Hanói",
@@ -26,7 +25,6 @@
     "zh": "探索河内的灵魂：探索繁华的老城区、历史悠久的寺庙和宁静的湖泊。沉浸在这座城市丰富的文化和充满活力的街头美食中",
     "ja": "ハノイの魂を発見しましょう。賑やかな旧市街、歴史ある寺院、静かな湖を探索してください。この街の豊かな文化と活気に満ちた屋台の食べ物を満喫してください。",
     "ko": "하노이의 영혼을 발견해보세요: 번화한 올드 쿼터, 역사적인 사원, 고요한 호수를 탐험해보세요. 이 도시의 풍부한 문화와 생동감 넘치는 길거리 음식에 푹 빠져보세요.",
-    "vi": "Khám phá tâm hồn Hà Nội: khám phá khu phố cổ nhộn nhịp, những ngôi đền lịch sử và những hồ nước thanh bình. Đắm chìm trong nền văn hóa phong phú và ẩm thực đường phố sôi động của thành phố này",
     "ms": "Temui jiwa Hanoi: terokai Old Quarter yang sibuk, kuil bersejarah dan tasik yang tenang. Selami budaya yang kaya dan makanan jalanan yang meriah di bandar ini",
     "de": "Entdecken Sie Hanois Seele: Erkunden Sie die geschäftige Altstadt, historische Tempel und ruhige Seen. Tauchen Sie ein in die reiche Kultur und das pulsierende Streetfood dieser Stadt",
     "es": "Descubra el alma de Hanoi: explore el bullicioso casco antiguo, los templos históricos y los serenos lagos. Sumérgete en la rica cultura y la vibrante comida callejera de esta ciudad.",
@@ -49,7 +47,7 @@
   "seasonality_end_month": "",
   "priority": 50,
   "created_at": "2026-04-13T09:16:46.974Z",
-  "updated_at": "2026-04-28T10:24:27.365Z",
+  "updated_at": "2026-04-30T04:05:50.414Z",
   "travel_plan": {
     "destination_scope": [
       {

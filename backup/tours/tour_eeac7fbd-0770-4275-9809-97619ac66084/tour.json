@@ -7,7 +7,6 @@
     "zh": "沙巴 - Tam Dao - 河内 - 宁平",
     "ja": "サパ - タムダオ - ハノイ - ニンビン",
     "ko": "사파 - 땀다오 - 하노이 - 닌빈",
-    "vi": "Sapa - Tam Đảo - Hà Nội - Ninh Bình",
     "ms": "Sapa - Tam Dao - Hanoi - Ninh Binh",
     "de": "Sapa – Tam Dao – Hanoi – Ninh Binh",
     "es": "Sapa - Tam Dao - Hanói - Ninh Binh",
@@ -25,7 +24,6 @@
     "zh": "探索越南北部：从沙巴的云雾缭绕的山峰和 Tam Dao 的清凉胜地到河内的历史魅力和宁平的迷人风景。自然与文化之旅",
     "ja": "ベトナム北部を探索：サパの霧深い山々やタムダオの涼しい隠れ家から、ハノイの歴史的魅力やニンビンの美しい風景まで。自然と文化の旅",
     "ko": "북부 베트남 탐험: 사파의 안개 낀 봉우리와 땀다오의 시원한 휴양지부터 하노이의 역사적인 매력과 닌빈의 놀라운 풍경까지. 자연과 문화의 여정",
-    "vi": "Khám phá miền Bắc Việt Nam: từ đỉnh núi mù sương của Sapa và nơi nghỉ mát mát mẻ của Tam Đảo đến nét quyến rũ lịch sử của Hà Nội và cảnh quan tuyệt đẹp của Ninh Bình. Hành trình của thiên nhiên và văn hóa",
     "ms": "Terokai Vietnam Utara: dari puncak berkabus Sapa dan tempat berundur sejuk di Tam Dao ke pesona bersejarah Hanoi dan landskap Ninh Binh yang menakjubkan. Perjalanan alam semula jadi dan budaya",
     "de": "Entdecken Sie Nordvietnam: von den nebligen Gipfeln von Sapa und dem kühlen Rückzugsort von Tam Dao bis zum historischen Charme von Hanoi und den atemberaubenden Landschaften von Ninh Binh. Eine Reise durch Natur und Kultur",
     "es": "Explore el norte de Vietnam: desde los picos brumosos de Sapa y el fresco retiro de Tam Dao hasta el encanto histórico de Hanoi y los impresionantes paisajes de Ninh Binh. Un viaje de naturaleza y cultura",
@@ -50,7 +48,7 @@
   "seasonality_end_month": "",
   "priority": 100,
   "created_at": "2026-04-09T03:29:39.112Z",
-  "updated_at": "2026-04-28T08:57:21.237Z",
+  "updated_at": "2026-04-30T04:05:50.414Z",
   "travel_plan": {
     "destination_scope": [
       {

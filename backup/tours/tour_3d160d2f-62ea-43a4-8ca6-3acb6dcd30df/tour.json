@@ -7,7 +7,6 @@
     "zh": "岘港 - 大理石山 - 会安古城",
     "ja": "ダナン - マーブル マウンテン - ホイアンの古代都市",
     "ko": "다낭 - 오행산 - 호이안 고대 도시",
-    "vi": "Đà Nẵng - Ngũ Hành Sơn - Phố cổ Hội An",
     "ms": "Da Nang - Pergunungan Marmar - Bandar Purba Hoi An",
     "de": "Da Nang – Marmorberge – Altstadt von Hoi An",
     "es": "Da Nang - Montañas de Mármol - Ciudad antigua de Hoi An",
@@ -26,7 +25,6 @@
     "zh": "会安是中部地区最迷人的目的地之一，这里的时间似乎停止在古老的小街道上，这里有特色的金色墙壁和夜晚闪闪发光的灯笼。",
     "ja": "ホイアンは中部地域で最も魅力的な目的地の 1 つで、夜になると特徴的な金色の壁と輝くランタンのある古い小さな通りの間で時間が止まっているかのようです。",
     "ko": "호이안은 특징적인 황금빛 벽과 밤에 반짝이는 등불이 있는 작은 고대 거리들 사이에서 시간이 멈춘 것 같은 중부 지역에서 가장 매력적인 여행지 중 하나입니다.",
-    "vi": "Hội An là một trong những điểm đến quyến rũ nhất miền Trung, nơi thời gian như ngừng lại giữa những con phố cổ nhỏ nhắn với bức tường vàng đặc trưng và ánh đèn lồng lung linh khi đêm về.",
     "ms": "Hoi An ialah salah satu destinasi paling menawan di wilayah Tengah, di mana masa seolah-olah berhenti di antara jalan-jalan kecil purba dengan ciri-ciri dinding emas dan tanglung berkilauan pada waktu malam.",
     "de": "Hoi An ist eines der bezauberndsten Reiseziele in der Zentralregion, wo in den kleinen alten Straßen mit charakteristischen goldenen Mauern und nachts funkelnden Laternen die Zeit stehenzubleiben scheint.",
     "es": "Hoi An es uno de los destinos con más encanto de la región Central, donde el tiempo parece detenerse entre las pequeñas calles antiguas con características paredes doradas y faroles brillantes por la noche.",
@@ -48,5 +46,5 @@
   "seasonality_end_month": "dec",
   "priority": 50,
   "created_at": "2026-04-13T09:06:18.834Z",
-  "updated_at": "2026-04-22T15:48:34.310Z"
+  "updated_at": "2026-04-30T04:05:50.414Z"
 }
