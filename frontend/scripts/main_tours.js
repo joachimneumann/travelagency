@@ -7,12 +7,12 @@ import {
 const DEFAULT_TOUR_IMAGE = "/assets/img/marketing_tours.png";
 const TOUR_IMAGE_TRANSITION_MS = 2000;
 const TOUR_GRID_LAYOUT_TRANSITION_MS = 520;
-const TOUR_DETAILS_ATTACH_ROW_CLEAR_OVERLAP_MS = 180;
-const TOUR_DETAILS_OPEN_TRANSITION_MS = 780;
+const TOUR_DETAILS_OPEN_TRANSITION_MS = 920;
 const TOUR_DETAILS_MOBILE_OPEN_TRANSITION_MS = 1500;
 const TOUR_DETAILS_MOBILE_OPEN_EASING = "cubic-bezier(0.45, 0, 0.2, 1)";
 const TOUR_DETAILS_TRANSITION_MS = 640;
 const TOUR_DETAILS_CLOSE_TRANSITION_MS = 780;
+const TOUR_DETAILS_DESKTOP_CLOSE_TRANSITION_MS = 920;
 const TOUR_PLAN_SERVICE_SWAP_TRANSITION_MS = 380;
 const TOUR_SHOW_MORE_LABEL_TRANSITION_MS = 420;
 const TOUR_CARD_SCROLL_TIMEOUT_MS = 900;
@@ -24,7 +24,8 @@ const TOUR_CARD_MEDIA_SNAPSHOT_HOLD_MS = Math.max(
   TOUR_DETAILS_OPEN_TRANSITION_MS,
   TOUR_DETAILS_MOBILE_OPEN_TRANSITION_MS,
   TOUR_DETAILS_TRANSITION_MS,
-  TOUR_DETAILS_CLOSE_TRANSITION_MS
+  TOUR_DETAILS_CLOSE_TRANSITION_MS,
+  TOUR_DETAILS_DESKTOP_CLOSE_TRANSITION_MS
 ) + 180;
 const COUNTRY_TO_TOUR_DESTINATION_CODE = Object.freeze({
   VN: "vietnam",
@@ -79,6 +80,16 @@ export function createFrontendToursController(ctx) {
     const normalizedLang = normalizeFrontendTourLang(lang);
     return normalizeText(generatedTourAssetUrlsByLang()?.[normalizedLang])
       || `/frontend/data/generated/homepage/public-tours.${encodeURIComponent(normalizedLang)}.json`;
+  }
+
+  function publicTourDetailsDataUrl(trip) {
+    const explicitUrl = normalizeText(trip?.travel_plan_details_url);
+    if (explicitUrl) return explicitUrl;
+    const normalizedLang = normalizeFrontendTourLang(currentFrontendLang());
+    const tripId = normalizeText(trip?.id);
+    return tripId
+      ? `/frontend/data/generated/homepage/public-tour-details.${encodeURIComponent(normalizedLang)}.${encodeURIComponent(tripId)}.json`
+      : "";
   }
 
   function normalizeFilterSelection(value) {
@@ -233,7 +244,9 @@ export function createFrontendToursController(ctx) {
   }
 
   function tourDestinationScopeEntries(trip) {
-    const scope = Array.isArray(trip?.travel_plan?.destination_scope) ? trip.travel_plan.destination_scope : [];
+    const scope = Array.isArray(trip?.destination_scope)
+      ? trip.destination_scope
+      : (Array.isArray(trip?.travel_plan?.destination_scope) ? trip.travel_plan.destination_scope : []);
     return scope
       .map((entry) => ({
         destination: normalizeDestinationCode(entry?.destination),
@@ -664,7 +677,83 @@ export function createFrontendToursController(ctx) {
   }
 
   function hasTravelPlanDays(trip) {
-    return travelPlanDays(trip).length > 0;
+    return travelPlanDays(trip).length > 0
+      || Number(trip?.travel_plan_day_count || 0) > 0
+      || trip?.has_travel_plan_details === true;
+  }
+
+  function tourDetailsCache() {
+    if (!state.tourDetailsById || typeof state.tourDetailsById !== "object") {
+      state.tourDetailsById = {};
+    }
+    return state.tourDetailsById;
+  }
+
+  function tourDetailsInflightCache() {
+    if (!state.tourDetailsInflightById || typeof state.tourDetailsInflightById !== "object") {
+      state.tourDetailsInflightById = {};
+    }
+    return state.tourDetailsInflightById;
+  }
+
+  function normalizeTourDetailsPayloadForFrontend(payload, trip) {
+    const source = payload && typeof payload === "object" && !Array.isArray(payload) ? payload : {};
+    const travelPlan = source.travel_plan && typeof source.travel_plan === "object" && !Array.isArray(source.travel_plan)
+      ? source.travel_plan
+      : {};
+    return {
+      title: source.title ?? trip?.title,
+      travel_plan: travelPlan,
+      travel_plan_day_count: Array.isArray(travelPlan.days) ? travelPlan.days.length : 0,
+      has_travel_plan_details: Array.isArray(travelPlan.days) && travelPlan.days.length > 0
+    };
+  }
+
+  async function loadTourDetailsForTrip(trip) {
+    const tripId = normalizeText(trip?.id);
+    if (!tripId) return null;
+    if (travelPlanDays(trip).length > 0) return trip;
+
+    const cache = tourDetailsCache();
+    if (cache[tripId]) {
+      Object.assign(trip, cache[tripId]);
+      return trip;
+    }
+
+    const inflight = tourDetailsInflightCache();
+    if (!inflight[tripId]) {
+      const url = publicTourDetailsDataUrl(trip);
+      inflight[tripId] = url
+        ? fetch(url)
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error(`Static tour details request failed with status ${response.status}.`);
+            }
+            return response.json();
+          })
+          .then((payload) => normalizeTourDetailsPayloadForFrontend(payload, trip))
+          .finally(() => {
+            delete inflight[tripId];
+          })
+        : Promise.resolve(null);
+    }
+
+    const details = await inflight[tripId];
+    if (!details) return null;
+    cache[tripId] = details;
+    Object.assign(trip, details);
+    return trip;
+  }
+
+  async function ensureTourDetailsLoaded(tripId) {
+    const trip = findTripById(tripId);
+    if (!trip || !hasTravelPlanDays(trip)) return null;
+    try {
+      return await loadTourDetailsForTrip(trip);
+    } catch (error) {
+      console.error("Failed to load static homepage tour details.", error);
+      return null;
+    }
   }
 
   function isTourExpanded(trip) {
@@ -863,7 +952,7 @@ export function createFrontendToursController(ctx) {
       : "tour-card__media-cycle";
     const mediaAttrs = galleryCount > 1
       ? singleColumnGallery
-        ? ` data-tour-image-swipe="1" data-tour-gallery-index="${escapeAttr(String(activeGalleryIndex))}" data-trip-id="${escapeAttr(tripId)}"`
+        ? ` data-tour-image-swipe="1" data-tour-gallery-index="${escapeAttr(String(activeGalleryIndex))}" data-tour-gallery-total="${escapeAttr(String(galleryCount))}" data-trip-id="${escapeAttr(tripId)}"`
         : ` type="button" data-tour-image-cycle="1" data-tour-gallery-index="${escapeAttr(String(activeGalleryIndex))}" data-trip-id="${escapeAttr(tripId)}" aria-label="${escapeAttr(galleryLabel)}"`
       : "";
     const galleryCounter = galleryCount > 1
@@ -879,10 +968,11 @@ export function createFrontendToursController(ctx) {
     const galleryMediaMarkup = singleColumnGallery
       ? `
                 <div class="tour-card__media-track" data-tour-media-track>
-                  ${gallery.map((image, imageIndex) => `
+                  ${[{ image: gallery[activeGalleryIndex], imageIndex: activeGalleryIndex }].map(({ image, imageIndex }) => `
                     <img
                       class="tour-card__media-slide${imageIndex === activeGalleryIndex ? " is-active" : ""}"
                       data-tour-media-slide
+                      data-tour-media-index="${escapeAttr(String(imageIndex))}"
                       data-tour-media-alt="${escapeAttr(galleryImageAlt)}"
                       src="${escapeAttr(image || DEFAULT_TOUR_IMAGE)}"
                       alt="${imageIndex === activeGalleryIndex ? escapeAttr(galleryImageAlt) : ""}"
@@ -1555,12 +1645,19 @@ export function createFrontendToursController(ctx) {
     const showMoreButtons = els.tourGrid.querySelectorAll("[data-tour-card-show-more][data-trip-id]");
     showMoreButtons.forEach((button) => {
       if (!(button instanceof HTMLButtonElement) || button.dataset.tourDetailsBound === "1") return;
-      button.addEventListener("click", () => {
+      button.addEventListener("click", async () => {
         if (button.disabled) return;
         const tripId = normalizeText(button.getAttribute("data-trip-id"));
         const trip = findTripById(tripId);
         if (!trip || !hasTravelPlanDays(trip)) return;
-        animateTourDetailsToggle(tripId, !expandedTourIdSet().has(tripId));
+        const willOpen = !expandedTourIdSet().has(tripId);
+        if (willOpen) {
+          button.disabled = true;
+          const loadedTrip = await ensureTourDetailsLoaded(tripId);
+          button.disabled = false;
+          if (!loadedTrip || !hasTravelPlanDays(loadedTrip)) return;
+        }
+        animateTourDetailsToggle(tripId, willOpen);
       });
       button.dataset.tourDetailsBound = "1";
     });
@@ -1742,12 +1839,6 @@ export function createFrontendToursController(ctx) {
     });
   }
 
-  function waitForTimeout(durationMs) {
-    return new Promise((resolve) => {
-      window.setTimeout(resolve, Math.max(0, Math.round(durationMs)));
-    });
-  }
-
   function waitForImageReady(image) {
     if (!(image instanceof HTMLImageElement)) return Promise.resolve();
     image.loading = "eager";
@@ -1880,7 +1971,7 @@ export function createFrontendToursController(ctx) {
     }
 
     const animation = ghost.animate(keyframes, {
-      duration: TOUR_DETAILS_CLOSE_TRANSITION_MS,
+      duration: TOUR_DETAILS_DESKTOP_CLOSE_TRANSITION_MS,
       easing: "cubic-bezier(0.2, 0.82, 0.2, 1)",
       fill: "forwards"
     });
@@ -1899,7 +1990,7 @@ export function createFrontendToursController(ctx) {
       };
       animation.addEventListener("finish", done, { once: true });
       animation.addEventListener("cancel", done, { once: true });
-      timer = window.setTimeout(done, TOUR_DETAILS_CLOSE_TRANSITION_MS + 140);
+      timer = window.setTimeout(done, TOUR_DETAILS_DESKTOP_CLOSE_TRANSITION_MS + 140);
     });
   }
 
@@ -2514,6 +2605,21 @@ export function createFrontendToursController(ctx) {
     row.style.overflow = "hidden";
     row.style.opacity = "1";
 
+    const rowClearingPromise = singleColumnLayout
+      ? Promise.resolve()
+      : Promise.all([
+          animateTourGridLayout(previousRects, { excludedTripIds: [tripId] }),
+          animateExpandedTourCardToLeft(row)
+        ]);
+    const opensSideways = !singleColumnLayout && row.classList.contains("tour-details-row--side-panel");
+    const startDetailsOpenAnimation = (targetHeight) => Promise.all([
+      opensSideways ? animateExpandedTourDetailsAttach(row, TOUR_DETAILS_OPEN_TRANSITION_MS) : Promise.resolve(),
+      animateTourDetailsRowHeight(row, opensSideways ? collapsedHeight : targetHeight, "open")
+    ]);
+    const detailsOpenPromise = opensSideways
+      ? startDetailsOpenAnimation(collapsedHeight)
+      : null;
+
     await waitForExpandedTourServiceImages(row);
     if (!isCurrentTourDetailsTransition(transitionToken)) return;
     const expandedHeight = Math.max(row.scrollHeight, row.getBoundingClientRect().height);
@@ -2538,27 +2644,11 @@ export function createFrontendToursController(ctx) {
       return;
     }
 
-    const rowClearingPromise = Promise.all([
-      animateTourGridLayout(previousRects, { excludedTripIds: [tripId] }),
-      animateExpandedTourCardToLeft(row)
-    ]);
-    const opensSideways = row.classList.contains("tour-details-row--side-panel");
     const buttonLabelPromise = animateTourShowMoreButtonLabel(
       openedButton,
       tourShowMoreLabel(true),
       { direction: "open" }
     );
-    const startDetailsOpenAnimation = () => Promise.all([
-      opensSideways ? animateExpandedTourDetailsAttach(row, TOUR_DETAILS_OPEN_TRANSITION_MS) : Promise.resolve(),
-      animateTourDetailsRowHeight(row, opensSideways ? collapsedHeight : expandedHeight, "open")
-    ]);
-    const detailsOpenPromise = opensSideways
-      ? Promise.race([
-          rowClearingPromise,
-          waitForTimeout(TOUR_GRID_LAYOUT_TRANSITION_MS - TOUR_DETAILS_ATTACH_ROW_CLEAR_OVERLAP_MS)
-        ])
-        .then(startDetailsOpenAnimation)
-      : null;
 
     await rowClearingPromise;
     if (!isCurrentTourDetailsTransition(transitionToken)) return;
@@ -2571,7 +2661,7 @@ export function createFrontendToursController(ctx) {
       if (!isCurrentTourDetailsTransition(transitionToken)) return;
     }
     await Promise.all([
-      detailsOpenPromise || startDetailsOpenAnimation(),
+      detailsOpenPromise || startDetailsOpenAnimation(expandedHeight),
       buttonLabelPromise
     ]);
     if (!isCurrentTourDetailsTransition(transitionToken)) return;
@@ -2857,6 +2947,13 @@ export function createFrontendToursController(ctx) {
       .filter((item) => item instanceof HTMLImageElement);
   }
 
+  function tourCardSwipeTotal(surface) {
+    const rawTotal = Number.parseInt(surface?.dataset?.tourGalleryTotal || "", 10);
+    return Number.isFinite(rawTotal) && rawTotal > 0
+      ? rawTotal
+      : tourCardSwipeSlides(surface).length;
+  }
+
   function currentTourCardGalleryIndex(surface, total) {
     if (!(surface instanceof HTMLElement)) return 0;
     const rawIndex = Number.parseInt(surface.dataset.tourGalleryIndex || "0", 10);
@@ -2877,12 +2974,50 @@ export function createFrontendToursController(ctx) {
   function updateTourCardSwipeSlides(surface, activeIndex) {
     const slides = tourCardSwipeSlides(surface);
     slides.forEach((slide, slideIndex) => {
-      const isActive = slideIndex === activeIndex;
+      const rawSlideIndex = Number.parseInt(slide.dataset.tourMediaIndex || String(slideIndex), 10);
+      const resolvedSlideIndex = Number.isFinite(rawSlideIndex) ? rawSlideIndex : slideIndex;
+      const isActive = resolvedSlideIndex === activeIndex;
       const altText = normalizeText(slide.dataset.tourMediaAlt);
       slide.classList.toggle("is-active", isActive);
       slide.alt = isActive ? altText : "";
       slide.setAttribute("aria-hidden", isActive ? "false" : "true");
     });
+  }
+
+  function hydrateTourCardSwipeGallery(surface) {
+    if (!(surface instanceof HTMLElement) || surface.dataset.tourGalleryHydrated === "1") return;
+    const track = tourCardSwipeTrack(surface);
+    if (!(track instanceof HTMLElement)) return;
+    const tripId = normalizeText(surface.getAttribute("data-trip-id"));
+    const trip = findTripById(tripId);
+    const gallery = Array.isArray(trip?.pictures) && trip.pictures.length ? trip.pictures : [DEFAULT_TOUR_IMAGE];
+    if (gallery.length <= 1) return;
+    const activeIndex = currentTourCardGalleryIndex(surface, gallery.length);
+    const activeSlide = tourCardSwipeSlides(surface).find((slide) => {
+      const slideIndex = Number.parseInt(slide.dataset.tourMediaIndex || "", 10);
+      return Number.isFinite(slideIndex) && slideIndex === activeIndex;
+    });
+    const altText = normalizeText(activeSlide?.dataset?.tourMediaAlt)
+      || activeSlide?.alt
+      || "";
+    track.innerHTML = gallery.map((image, imageIndex) => `
+      <img
+        class="tour-card__media-slide${imageIndex === activeIndex ? " is-active" : ""}"
+        data-tour-media-slide
+        data-tour-media-index="${escapeAttr(String(imageIndex))}"
+        data-tour-media-alt="${escapeAttr(altText)}"
+        src="${escapeAttr(image || DEFAULT_TOUR_IMAGE)}"
+        alt="${imageIndex === activeIndex ? escapeAttr(altText) : ""}"
+        aria-hidden="${imageIndex === activeIndex ? "false" : "true"}"
+        loading="${imageIndex === activeIndex ? "eager" : "lazy"}"
+        fetchpriority="auto"
+        draggable="false"
+        width="1200"
+        height="800"
+      />
+    `).join("");
+    surface.dataset.tourGalleryHydrated = "1";
+    setTourCardSwipeGalleryIndex(surface, activeIndex, { scroll: true, behavior: "auto" });
   }
 
   function tourCardSwipeSlideWidth(track, slides, index = 0) {
@@ -2907,13 +3042,14 @@ export function createFrontendToursController(ctx) {
     if (!(surface instanceof HTMLElement)) return;
     const track = tourCardSwipeTrack(surface);
     const slides = tourCardSwipeSlides(surface);
+    const total = Math.max(1, tourCardSwipeTotal(surface));
     if (!slides.length) return;
-    const safeIndex = clampTourCardGalleryIndex(Number.parseInt(String(nextIndex), 10) || 0, slides.length);
+    const safeIndex = clampTourCardGalleryIndex(Number.parseInt(String(nextIndex), 10) || 0, total);
     surface.dataset.tourGalleryIndex = String(safeIndex);
-    saveTourCardSurfaceGalleryIndex(surface, safeIndex, slides.length);
+    saveTourCardSurfaceGalleryIndex(surface, safeIndex, total);
     updateTourCardSwipeSlides(surface, safeIndex);
-    updateTourCardImageCounter(surface, safeIndex, slides.length);
-    if (scroll && track instanceof HTMLElement) {
+    updateTourCardImageCounter(surface, safeIndex, total);
+    if (scroll && track instanceof HTMLElement && surface.dataset.tourGalleryHydrated === "1") {
       const slideWidth = tourCardSwipeSlideWidth(track, slides, safeIndex);
       const left = slideWidth * safeIndex;
       if (typeof track.scrollTo === "function") {
@@ -2925,6 +3061,7 @@ export function createFrontendToursController(ctx) {
   }
 
   function stepTourCardSwipeGallery(surface, step) {
+    hydrateTourCardSwipeGallery(surface);
     const slides = tourCardSwipeSlides(surface);
     if (!(surface instanceof HTMLElement) || slides.length <= 1) return;
     const currentIndex = tourCardSwipeIndexFromScroll(surface);
@@ -2937,7 +3074,7 @@ export function createFrontendToursController(ctx) {
     root.querySelectorAll("[data-tour-media-track]").forEach((track) => {
       const surface = track instanceof HTMLElement ? track.closest(".tour-card__media-cycle") : null;
       if (!(surface instanceof HTMLElement)) return;
-      setTourCardSwipeGalleryIndex(surface, currentTourCardGalleryIndex(surface, tourCardSwipeSlides(surface).length), {
+      setTourCardSwipeGalleryIndex(surface, currentTourCardGalleryIndex(surface, tourCardSwipeTotal(surface)), {
         scroll: true,
         behavior: "auto"
       });
@@ -2965,8 +3102,16 @@ export function createFrontendToursController(ctx) {
       const step = event.clientX < rect.left + (rect.width / 2) ? -1 : 1;
       stepTourCardSwipeGallery(surface, step);
     });
+    surface.addEventListener("pointerdown", () => {
+      if (!isSingleColumnTourLayout()) return;
+      hydrateTourCardSwipeGallery(surface);
+    }, { passive: true, once: true });
+    surface.addEventListener("touchstart", () => {
+      if (!isSingleColumnTourLayout()) return;
+      hydrateTourCardSwipeGallery(surface);
+    }, { passive: true, once: true });
     surface.dataset.imageSwipeBound = "1";
-    setTourCardSwipeGalleryIndex(surface, currentTourCardGalleryIndex(surface, tourCardSwipeSlides(surface).length), {
+    setTourCardSwipeGalleryIndex(surface, currentTourCardGalleryIndex(surface, tourCardSwipeTotal(surface)), {
       scroll: true,
       behavior: "auto"
     });

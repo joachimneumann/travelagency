@@ -544,6 +544,23 @@
   opacity: 1;
 }
 
+.tour-card__show-more:disabled,
+.tour-card__show-more:disabled:hover,
+.tour-card__show-more:disabled:focus-visible,
+.tour-card__show-more:disabled:active {
+  background: var(--surface-disabled);
+  color: var(--text-disabled);
+  border-color: var(--line-disabled);
+  box-shadow: none;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.tour-card__show-more:disabled::after,
+.tour-card__show-more:disabled:active::after {
+  opacity: 0;
+}
+
 .tour-grid__spacer {
   min-height: 0;
   visibility: hidden;

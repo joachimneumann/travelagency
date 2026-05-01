@@ -249,6 +249,7 @@ async function cleanGeneratedFrontendData(frontendDataDir) {
       || entryName === path.basename(HOMEPAGE_INITIAL_BUNDLE_PATH)
       || entryName === path.basename(SITEMAP_OUTPUT_PATH)
       || (entryName.startsWith(TOUR_FILE_PREFIX) && entryName.endsWith(TOUR_FILE_SUFFIX))
+      || (entryName.startsWith("public-tour-details.") && entryName.endsWith(".json"))
     ) {
       await rm(path.join(frontendDataDir, entryName), { force: true });
     }
@@ -586,6 +587,23 @@ async function publicHomepageTourTravelPlan(travelPlan, tourId, generatedTourAss
   return {
     ...travelPlan,
     days
+  };
+}
+
+function publicHomepageTourListItem(readModel, travelPlan, pictures, detailsUrl) {
+  const {
+    image: _image,
+    travel_plan: _travelPlan,
+    ...listItem
+  } = readModel || {};
+  const days = Array.isArray(travelPlan?.days) ? travelPlan.days : [];
+  return {
+    ...listItem,
+    pictures,
+    destination_scope: Array.isArray(travelPlan?.destination_scope) ? travelPlan.destination_scope : [],
+    travel_plan_day_count: days.length,
+    has_travel_plan_details: days.length > 0,
+    travel_plan_details_url: detailsUrl
   };
 }
 
@@ -1405,6 +1423,7 @@ async function generateTourAssets({
   for (const lang of languages) {
     const normalizedLang = normalizeTourLang(lang);
     const localizedItems = [];
+    const localizedSeoItems = [];
     for (const tour of sortedPublicTours) {
       const readModel = normalizeTourForRead(tour, { lang: normalizedLang });
       const travelPlan = await publicHomepageTourTravelPlan(
@@ -1415,7 +1434,19 @@ async function generateTourAssets({
         normalizeText(readModel.updated_at || readModel.created_at)
       );
       const pictures = selectedTravelTourCardImagePaths(travelPlan);
-      localizedItems.push({
+      const detailPayload = {
+        id: readModel.id,
+        title: readModel.title,
+        travel_plan: travelPlan
+      };
+      const detailFilename = `public-tour-details.${normalizedLang}.${readModel.id}.json`;
+      const detailOutputPath = path.join(frontendDataDir, detailFilename);
+      const detailSource = jsonWithTrailingNewline(detailPayload);
+      const detailVersion = versionTokenForContent(detailSource);
+      await writeFile(detailOutputPath, detailSource, "utf8");
+      const detailsUrl = buildVersionedGeneratedDataUrl(detailFilename, detailVersion);
+      localizedItems.push(publicHomepageTourListItem(readModel, travelPlan, pictures, detailsUrl));
+      localizedSeoItems.push({
         ...readModel,
         pictures,
         travel_plan: travelPlan
@@ -1436,7 +1467,10 @@ async function generateTourAssets({
       }
     };
     if (normalizedLang === "en" || !seoPayload) {
-      seoPayload = payload;
+      seoPayload = {
+        ...payload,
+        items: localizedSeoItems
+      };
     }
     const filename = `${TOUR_FILE_PREFIX}${normalizedLang}${TOUR_FILE_SUFFIX}`;
     const outputPath = path.join(frontendDataDir, filename);
