@@ -4752,6 +4752,11 @@ test("homepage tour cards use fixed-height text areas without an inline more lin
     "Tour cards should replace overflowing travel style pills with a visible +X more pill after checking one-line width"
   );
   assert.match(
+    mainToursSource,
+    /let tourStyleTagsDeferredFitBound = false;[\s\S]*function tourStyleTagsCanMeasure\(container\) \{[\s\S]*tourStyleTagsMaxHeight\(container\) > 0[\s\S]*function fitTourCardStyleTagsContainer\(container\) \{[\s\S]*if \(!tourStyleTagsCanMeasure\(container\)\) return;[\s\S]*function bindTourStyleTagsDeferredFit\(\) \{[\s\S]*fontSet\.ready[\s\S]*fontSet\.addEventListener\("loadingdone"[\s\S]*function scheduleTourCardStyleTagsFit\(root = els\.tourGrid\) \{[\s\S]*window\.requestAnimationFrame[\s\S]*window\.setTimeout/,
+    "Tour style pills should refit after measurable layout and webfont readiness so initial cards do not show clipped pills"
+  );
+  assert.match(
     tourCardCssSource,
     /\.tour-card \{[\s\S]*--tour-card-tag-lines: 1;[\s\S]*\.tags \{[\s\S]*flex-wrap: nowrap;[\s\S]*min-width: 0;[\s\S]*max-height: calc\(\s*\(1em \* var\(--tour-card-tag-line-height\) \+ var\(--tour-card-tag-vertical-padding\)\) \* var\(--tour-card-tag-lines\)\s*\);[\s\S]*overflow: hidden;[\s\S]*\.tag \{[\s\S]*flex: 0 0 auto;[\s\S]*white-space: nowrap;/,
     "Tour style pills should stay on one line and rely on the +X more pill for overflow"
@@ -4788,8 +4793,13 @@ test("homepage tour cards use fixed-height text areas without an inline more lin
   );
   assert.doesNotMatch(
     mainToursSource,
-    /TOUR_CARD_BOTTOM_NEAR_VIEWPORT_THRESHOLD_PX|TOUR_SINGLE_COLUMN_OPEN_SCROLL_NUDGE_PX|function nudgeSingleColumnExpandedTourIntoView\(/,
-    "Mobile homepage tours should not keep any dedicated show-more auto-scroll or nudge helper code"
+    /TOUR_CARD_BOTTOM_NEAR_VIEWPORT_THRESHOLD_PX|TOUR_SINGLE_COLUMN_OPEN_SCROLL_NUDGE_PX|function nudgeSingleColumnExpandedTourIntoView\(|createMobileTourCardViewportLock|window\.scrollBy\(0, deltaY\)/,
+    "Mobile homepage tours should not keep any dedicated show-more auto-scroll, scroll lock, or nudge helper code"
+  );
+  assert.match(
+    mainToursSource,
+    /function createSingleColumnTourDetailsRow\(trip, card\) \{[\s\S]*card\.replaceWith\(row\);[\s\S]*shell\.append\(card, panel\);[\s\S]*function animateTourDetailsToggle\(tripId, willOpen\) \{[\s\S]*if \(isSingleColumnTourLayout\(\)\) \{[\s\S]*animateSingleColumnTourDetailsOpen\(normalizedTripId, transitionToken\);[\s\S]*animateSingleColumnTourDetailsClose\(normalizedTripId, transitionToken\);/,
+    "Mobile details toggles should move the existing tour card into the details row instead of re-rendering its image"
   );
   assert.match(
     mainToursSource,
@@ -4813,8 +4823,8 @@ test("homepage tour cards use fixed-height text areas without an inline more lin
   );
   assert.match(
     mainToursSource,
-    /const TOUR_SHOW_MORE_LABEL_TRANSITION_MS = 420;[\s\S]*async function animateTourShowMoreButtonLabel\(button, nextLabel, \{ direction = "open" \} = \{\}\) \{[\s\S]*const previousLabel = labelElement\.textContent \|\| "";[\s\S]*const outgoingLabel = document\.createElement\("span"\);[\s\S]*const incomingLabel = document\.createElement\("span"\);[\s\S]*outgoingLabel\.textContent = previousLabel;[\s\S]*incomingLabel\.textContent = nextLabel;[\s\S]*labelElement\.textContent = "";[\s\S]*labelElement\.append\(outgoingLabel, incomingLabel\);[\s\S]*outgoingLabel\.animate\(\[[\s\S]*opacity:\s*1[\s\S]*opacity:\s*0[\s\S]*incomingLabel\.animate\(\[[\s\S]*opacity:\s*0[\s\S]*opacity:\s*1[\s\S]*await Promise\.all\(animations\.map\(\(animation\) => animation\.finished\.catch\(\(\) => \{\}\)\)\);[\s\S]*labelElement\.textContent = nextLabel;/,
-    "Show more/show less label swaps should crossfade the incoming text immediately instead of waiting for the outgoing text to fade out"
+    /const TOUR_SHOW_MORE_LABEL_TRANSITION_MS = 420;[\s\S]*async function animateTourShowMoreButtonLabel\(button, nextLabel, \{ direction = "open" \} = \{\}\) \{[\s\S]*const fadeOut = labelElement\.animate\(\[[\s\S]*opacity:\s*1[\s\S]*opacity:\s*0[\s\S]*duration: Math\.round\(TOUR_SHOW_MORE_LABEL_TRANSITION_MS \/ 2\)[\s\S]*await fadeOut\.finished\.catch\(\(\) => \{\}\);[\s\S]*fadeOut\.cancel\(\);[\s\S]*labelElement\.textContent = nextLabel;[\s\S]*const fadeIn = labelElement\.animate\(\[[\s\S]*opacity:\s*0[\s\S]*opacity:\s*1[\s\S]*duration: Math\.round\(TOUR_SHOW_MORE_LABEL_TRANSITION_MS \/ 2\)[\s\S]*await fadeIn\.finished\.catch\(\(\) => \{\}\);[\s\S]*fadeIn\.cancel\(\);/,
+    "Show more/show less label swaps should fade out, swap text while hidden, then fade in to avoid alignment jumps"
   );
   assert.doesNotMatch(
     mainToursSource,
@@ -4823,7 +4833,7 @@ test("homepage tour cards use fixed-height text areas without an inline more lin
   );
   assert.match(
     mainToursSource,
-    /function cancelActiveTourDetailsAnimations\(\) \{[\s\S]*querySelectorAll\(\[[\s\S]*"\.tour-details-row"[\s\S]*"\.tour-details-row__shell"[\s\S]*"\.tour-details-row__panel"[\s\S]*"\[data-tour-card-id\]"[\s\S]*querySelectorAll\("\[data-tour-card-show-more-label\]"\)[\s\S]*document\.querySelectorAll\("\[data-tour-details-ghost\]"\)[\s\S]*function beginTourDetailsTransition\(\) \{[\s\S]*const token = \+\+tourDetailsTransitionToken;[\s\S]*openingTourColumnIndexes\.clear\(\);[\s\S]*openingTourInitialHeights\.clear\(\);[\s\S]*cancelActiveTourDetailsAnimations\(\);[\s\S]*return token;[\s\S]*function isCurrentTourDetailsTransition\(token\)[\s\S]*function completeTourDetailsTransition\(token, tripId\)[\s\S]*if \(!isCurrentTourDetailsTransition\(token\)\) return false;[\s\S]*focusTourShowMoreButton\(tripId\);[\s\S]*function animateTourDetailsToggle\(tripId, willOpen\) \{[\s\S]*const transitionToken = beginTourDetailsTransition\(\);[\s\S]*animateTourDetailsOpen\(normalizedTripId, transitionToken\);[\s\S]*animateTourDetailsClose\(normalizedTripId, transitionToken\);[\s\S]*async function animateTourDetailsOpen\(tripId, transitionToken\)[\s\S]*openingTourColumnIndexes\.set\(tripId, initialColumnIndex\);[\s\S]*openingTourInitialHeights\.set\(tripId, initialCardHeight\);[\s\S]*renderVisibleTrips\(\);[\s\S]*applyTourCardMediaSnapshots\(previousMediaSnapshots\);[\s\S]*if \(singleColumnLayout\) \{[\s\S]*const mobileOpenTransitionMs = TOUR_DETAILS_MOBILE_OPEN_TRANSITION_MS;[\s\S]*viewportLock\?\.maintain\(mobileOpenTransitionMs \+ 120\);[\s\S]*await Promise\.all\(\[\s*animateTourDetailsRowHeight\(row, expandedHeight, "open", \{\s*durationMs: mobileOpenTransitionMs,\s*easing: TOUR_DETAILS_MOBILE_OPEN_EASING\s*\}\),\s*animateTourShowMoreButtonLabel\(\s*openedButton,\s*tourShowMoreLabel\(true\),\s*\{ direction: "open" \}\s*\)\s*\]\);[\s\S]*if \(!isCurrentTourDetailsTransition\(transitionToken\)\) return;[\s\S]*clearTourDetailsRowAnimation\(row\);[\s\S]*completeTourDetailsTransition\(transitionToken, tripId\);[\s\S]*return;[\s\S]*\}[\s\S]*const rowClearingPromise = Promise\.all\(\[[\s\S]*animateTourGridLayout\(previousRects, \{ excludedTripIds: \[tripId\] \}\)[\s\S]*animateExpandedTourCardToLeft\(row\)[\s\S]*\]\);[\s\S]*await rowClearingPromise;[\s\S]*if \(!isCurrentTourDetailsTransition\(transitionToken\)\) return;[\s\S]*await Promise\.all\(\[[\s\S]*detailsOpenPromise \|\| startDetailsOpenAnimation\(\),[\s\S]*buttonLabelPromise[\s\S]*\]\);[\s\S]*if \(!isCurrentTourDetailsTransition\(transitionToken\)\) return;[\s\S]*clearTourDetailsRowAnimation\(row, \{ preserveHeight: opensSideways \}\);[\s\S]*completeTourDetailsTransition\(transitionToken, tripId\);[\s\S]*async function animateTourDetailsClose\(tripId, transitionToken\)[\s\S]*const outgoingDetailsGhost = createOutgoingTourDetailsGhost\(row\);[\s\S]*renderVisibleTrips\(\);[\s\S]*applyTourCardMediaSnapshots\(previousMediaSnapshots\);[\s\S]*await Promise\.all\(\[\s*animateOutgoingTourDetailsGhost\(outgoingDetailsGhost\),\s*animateTourGridLayout\(previousRects\),\s*animateTourShowMoreButtonLabel\(\s*closedButton,\s*tourShowMoreLabel\(false\),\s*\{ direction: "close" \}\s*\)\s*\]\);[\s\S]*if \(!isCurrentTourDetailsTransition\(transitionToken\)\) return;[\s\S]*completeTourDetailsTransition\(transitionToken, tripId\);/,
+    /function cancelActiveTourDetailsAnimations\(\) \{[\s\S]*querySelectorAll\(\[[\s\S]*"\.tour-details-row"[\s\S]*"\.tour-details-row__shell"[\s\S]*"\.tour-details-row__panel"[\s\S]*"\[data-tour-card-id\]"[\s\S]*querySelectorAll\("\[data-tour-card-show-more-label\]"\)[\s\S]*document\.querySelectorAll\("\[data-tour-details-ghost\]"\)[\s\S]*function beginTourDetailsTransition\(\) \{[\s\S]*const token = \+\+tourDetailsTransitionToken;[\s\S]*openingTourColumnIndexes\.clear\(\);[\s\S]*openingTourInitialHeights\.clear\(\);[\s\S]*cancelActiveTourDetailsAnimations\(\);[\s\S]*return token;[\s\S]*function isCurrentTourDetailsTransition\(token\)[\s\S]*function completeTourDetailsTransition\(token, tripId\)[\s\S]*if \(!isCurrentTourDetailsTransition\(token\)\) return false;[\s\S]*focusTourShowMoreButton\(tripId\);[\s\S]*function animateTourDetailsToggle\(tripId, willOpen\) \{[\s\S]*const transitionToken = beginTourDetailsTransition\(\);[\s\S]*animateTourDetailsOpen\(normalizedTripId, transitionToken\);[\s\S]*animateTourDetailsClose\(normalizedTripId, transitionToken\);[\s\S]*async function animateTourDetailsOpen\(tripId, transitionToken\)[\s\S]*openingTourColumnIndexes\.set\(tripId, initialColumnIndex\);[\s\S]*openingTourInitialHeights\.set\(tripId, initialCardHeight\);[\s\S]*renderVisibleTrips\(\);[\s\S]*applyTourCardMediaSnapshots\(previousMediaSnapshots\);[\s\S]*if \(singleColumnLayout\) \{[\s\S]*const mobileOpenTransitionMs = TOUR_DETAILS_MOBILE_OPEN_TRANSITION_MS;[\s\S]*await Promise\.all\(\[\s*animateTourDetailsRowHeight\(row, expandedHeight, "open", \{\s*durationMs: mobileOpenTransitionMs,\s*easing: TOUR_DETAILS_MOBILE_OPEN_EASING\s*\}\),\s*animateTourShowMoreButtonLabel\(\s*openedButton,\s*tourShowMoreLabel\(true\),\s*\{ direction: "open" \}\s*\)\s*\]\);[\s\S]*if \(!isCurrentTourDetailsTransition\(transitionToken\)\) return;[\s\S]*clearTourDetailsRowAnimation\(row\);[\s\S]*completeTourDetailsTransition\(transitionToken, tripId\);[\s\S]*return;[\s\S]*\}[\s\S]*const rowClearingPromise = Promise\.all\(\[[\s\S]*animateTourGridLayout\(previousRects, \{ excludedTripIds: \[tripId\] \}\)[\s\S]*animateExpandedTourCardToLeft\(row\)[\s\S]*\]\);[\s\S]*await rowClearingPromise;[\s\S]*if \(!isCurrentTourDetailsTransition\(transitionToken\)\) return;[\s\S]*await Promise\.all\(\[[\s\S]*detailsOpenPromise \|\| startDetailsOpenAnimation\(\),[\s\S]*buttonLabelPromise[\s\S]*\]\);[\s\S]*if \(!isCurrentTourDetailsTransition\(transitionToken\)\) return;[\s\S]*clearTourDetailsRowAnimation\(row, \{ preserveHeight: opensSideways \}\);[\s\S]*completeTourDetailsTransition\(transitionToken, tripId\);[\s\S]*async function animateTourDetailsClose\(tripId, transitionToken\)[\s\S]*const outgoingDetailsGhost = createOutgoingTourDetailsGhost\(row\);[\s\S]*renderVisibleTrips\(\);[\s\S]*applyTourCardMediaSnapshots\(previousMediaSnapshots\);[\s\S]*await Promise\.all\(\[\s*animateOutgoingTourDetailsGhost\(outgoingDetailsGhost\),\s*animateTourGridLayout\(previousRects\),\s*animateTourShowMoreButtonLabel\(\s*closedButton,\s*tourShowMoreLabel\(false\),\s*\{ direction: "close" \}\s*\)\s*\]\);[\s\S]*if \(!isCurrentTourDetailsTransition\(transitionToken\)\) return;[\s\S]*completeTourDetailsTransition\(transitionToken, tripId\);/,
     "Opening and closing a tour should be interruptible: new toggles cancel active detail animations and stale async paths must not finish over the requested action"
   );
   assert.doesNotMatch(
@@ -4873,8 +4883,18 @@ test("homepage tour cards use fixed-height text areas without an inline more lin
   );
   assert.match(
     tourCardCssSource,
-    /@media \(max-width: 760px\) \{[\s\S]*\.tour-details-row__shell \.tour-card \{[\s\S]*border-bottom-right-radius: 0;[\s\S]*border-bottom-left-radius: 0;[\s\S]*\.tour-details-row__shell \.tour-card__plan-trip \{[\s\S]*border-bottom-right-radius: 14px;[\s\S]*border-bottom-left-radius: 14px;/,
-    "Mobile expanded tour cards should keep the card square while preserving the plan-trip button shape"
+    /@media \(max-width: 760px\) \{[\s\S]*\.tour-details-row__shell \.tour-card \{[\s\S]*border-bottom-right-radius: 0;[\s\S]*border-bottom-left-radius: 0;/,
+    "Mobile expanded tour cards should keep the card square"
+  );
+  assert.match(
+    tourCardCssSource,
+    /\.tour-card__plan-trip \{[\s\S]*border-radius: 10px;/,
+    "Tour-card plan-trip buttons should keep the same radius before and after details open"
+  );
+  assert.doesNotMatch(
+    tourCardCssSource,
+    /\.tour-details-row__shell \.tour-card__plan-trip \{[\s\S]*border-bottom-(?:right|left)-radius:/,
+    "Expanded tour details should not override the plan-trip button corner radius"
   );
   assert.match(
     tourCardCssSource,

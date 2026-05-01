@@ -9,6 +9,12 @@ Translation
 * North Mien Bac
 * Make it nice
 * Translate with openai
+* Uber uns im Menu: kein Umlaut?
+
+Travel Cards
+============
+"Details" -> Flicker
+remove min-width from .tour-card__show-more-label
 
 Destinations
 ============

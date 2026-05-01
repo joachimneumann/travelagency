@@ -8,6 +8,146 @@ Connect an Instagram business account to Kommo so ATP staff can manage Instagram
 
 This document covers the current Kommo integration paths for Instagram and explains which path should be used depending on the intended features.
 
+## Starting Point
+
+This setup assumes ATP already has:
+- a Meta / Facebook business account or business portfolio
+- access to the correct Facebook business Page
+- a company-controlled phone number that can receive SMS
+
+The company phone number should be used for the Instagram business account whenever possible, especially for SMS verification and recovery. Avoid using a staff member's private phone number for the business Instagram account unless there is no better option.
+
+The private Facebook account of the owner or admin is still relevant, but only as the login identity that manages the business assets. It should not become the public-facing business presence. The public-facing assets should be:
+- the Facebook Page
+- the Instagram Business account
+- the Kommo channel connected to that Instagram account
+
+Meta Business Suite can be opened at:
+- `https://business.facebook.com/`
+
+## Full Setup From The Beginning
+
+Use this sequence when ATP is setting up Instagram for the business for the first time.
+
+### 1. Confirm Meta business access
+
+In Meta Business Suite:
+- open `https://business.facebook.com/`
+- log in with the Facebook account that has admin access
+- confirm the correct business portfolio is selected
+- confirm the correct Facebook Page is visible
+- confirm the person doing setup has access to manage that Page
+
+If the correct Page is not visible:
+- switch to the correct business portfolio
+- ask an existing business admin to grant access
+- do not continue with Kommo until the correct Page access is clear
+
+### 2. Confirm the company-controlled verification channels
+
+Before creating or connecting Instagram, confirm ATP can receive:
+- SMS on the company phone number
+- email at the email address used for the Instagram or Facebook admin flow
+
+Recommended:
+- use the company phone number for Instagram phone verification and recovery
+- use a company-controlled email address for the Instagram account login where possible
+- keep the Facebook admin's email verified in Meta Accounts Center
+
+WhatsApp verification note:
+- do not create a WhatsApp Business account only to receive an Instagram verification message
+- if Instagram offers WhatsApp verification, the company number only needs to be active in WhatsApp for that message to arrive
+- create WhatsApp Business only if ATP intends to use that number as a real customer-facing WhatsApp business channel
+- remember that one phone number should be treated as one business messaging asset, so avoid switching it casually between personal WhatsApp, WhatsApp Business, and later platform integrations
+
+### 3. Create the business Instagram account
+
+Recommended device:
+- use the Instagram mobile app on a phone, ideally the phone or SIM that can receive SMS for the company number
+
+Reason:
+- SMS verification is easier to complete on the phone
+- Instagram's professional account setup is usually smoother in the mobile app
+- account security checks are easier to handle when the verification phone is available during setup
+
+Creating the account from a computer is possible, but keep the company phone nearby for SMS verification and expect to finish some business-account settings in the Instagram mobile app if the desktop flow does not show every option.
+
+In Instagram:
+- install/open Instagram
+- create a new account for the business, or use the existing business account if one already exists
+- choose a business handle that matches the brand as closely as possible
+- add the company phone number when Instagram asks for phone verification
+- complete SMS verification
+- add the business email address if Instagram asks for contact or recovery details
+
+Do not use the owner's private Instagram profile unless ATP intentionally wants to convert that profile into the business account.
+
+### 4. Switch Instagram to a professional Business account
+
+In Instagram:
+- open the business profile
+- open the menu
+- go to account type / professional account settings
+- switch to a professional account
+- choose `Business` rather than `Creator`
+- select the closest business category
+- add public business contact details if desired
+
+Recommended outcome:
+- the Instagram account is an Instagram Business account
+- the account phone number is verified
+- the account can receive login and security checks
+
+### 5. Confirm or create the Facebook Page
+
+In Facebook or Meta Business Suite:
+- confirm ATP has the correct Facebook Page for the business
+- if no Page exists, create the Facebook Page before continuing
+- confirm the Page belongs to or is accessible from the correct business portfolio
+- confirm the setup user has Page access
+
+The Page is needed for the recommended Facebook-linked Kommo path.
+
+### 6. Link Instagram to the Facebook Page
+
+Before starting the Kommo connection:
+- connect the Instagram Business account to the Facebook Page
+
+This can be done from either side:
+- Facebook Page settings: linked accounts / Instagram
+- Instagram profile settings: public business information / Page
+
+Recommended outcome:
+- the Facebook Page and Instagram Business account are visibly connected
+- the person doing setup can access both assets
+
+### 7. Add or confirm Instagram in the Meta business portfolio
+
+In Meta Business Suite:
+- open `Settings`
+- open the business assets / accounts area
+- confirm the Instagram account is visible under Instagram accounts or business assets
+- if it is missing, add/connect it using the Instagram account login
+
+This keeps the Facebook Page, Instagram account, and Kommo authorization aligned under the same business ownership model.
+
+### 8. Connect Instagram to Kommo
+
+In Kommo:
+- open `Settings`
+- open `Integrations`
+- open `Instagram`
+- use `Continue with Facebook` for the recommended production path
+- authorize with the Facebook account that has access to the correct business portfolio, Page, and Instagram account
+- select the correct business, Page, and Instagram account
+- enable the Instagram tools ATP needs, such as messages, comments, stories, and mentions
+
+After setup:
+- test an inbound Instagram DM from another account
+- reply from Kommo
+- confirm the reply appears in Instagram
+- test comments or story mentions if ATP wants those features
+
 ## Supported Connection Paths
 
 Kommo currently supports two connection methods:
@@ -285,6 +425,31 @@ Action:
 - confirm the account type
 - confirm phone verification in Instagram
 - confirm the correct Facebook identity is being used
+
+### Instagram or Meta says SMS cannot be sent right now
+
+Possible message:
+- `We can't send the SMS to this number right now`
+
+Likely causes:
+- Meta/Instagram has temporarily rate-limited SMS attempts for that number
+- the number format or country code is wrong
+- the phone number is not a normal SMS-capable mobile number
+- the carrier is blocking short-code or automated verification messages
+- too many verification attempts were made in a short period
+- the number was recently added, ported, reused, or flagged by Meta's security checks
+
+Action:
+- stop requesting SMS codes for a while instead of retrying repeatedly
+- wait and try again later, preferably after several hours or the next day
+- confirm the number is entered with the correct country code
+- confirm the company phone can receive normal SMS and short-code / automated SMS
+- check blocked numbers, spam filters, and filtered SMS folders on the phone
+- try email verification instead if Meta offers it
+- try WhatsApp verification if Meta offers it and the number has WhatsApp
+- if the number keeps failing, use another company-controlled mobile number
+
+Do not switch to a staff member's private number unless it is a temporary emergency. If a private number must be used temporarily, replace it with a company-controlled number after the account is stable.
 
 ### Facebook path does not show the correct Page or Instagram account
 
