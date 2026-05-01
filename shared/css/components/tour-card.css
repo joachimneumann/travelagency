@@ -470,6 +470,7 @@
 }
 
 .tour-card__actions {
+  position: relative;
   display: grid;
   grid-template-columns: minmax(0, 0.92fr) minmax(0, 1fr);
   gap: 1.5rem;
@@ -1061,10 +1062,23 @@
     margin-inline: calc(50% - 50vw);
     border: 0;
     border-radius: 0;
+    grid-template-rows: auto auto;
+    height: auto;
   }
 
   .tour-body {
     border-radius: 0;
+  }
+
+  .tour-desc {
+    display: block;
+    -webkit-line-clamp: unset;
+    overflow: visible;
+    min-height: 0;
+  }
+
+  .tour-desc-wrap {
+    min-height: 0;
   }
 
   .tour-card__media {
@@ -1147,6 +1161,37 @@
 
   .tour-card__show-more:active {
     clip-path: inset(0 round 14px);
+  }
+
+  .tour-card--details-connector-visible .tour-card__actions::before,
+  .tour-card--details-connector-visible .tour-card__actions::after {
+    content: "";
+    position: absolute;
+    left: calc((100% - 1.5rem) * 0.92 / 1.92 / 2);
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  .tour-card--details-connector-visible .tour-card__actions::before {
+    top: calc(100% + 0.45rem);
+    width: 2px;
+    height: 1.45rem;
+    border-radius: 999px;
+    background: linear-gradient(
+      180deg,
+      rgb(var(--accent-rgb) / 0.72),
+      rgb(var(--accent-rgb) / 0.16)
+    );
+    transform: translateX(-50%);
+  }
+
+  .tour-card--details-connector-visible .tour-card__actions::after {
+    top: calc(100% + 1.62rem);
+    width: 0.58rem;
+    height: 0.58rem;
+    border-right: 2px solid rgb(var(--accent-rgb) / 0.56);
+    border-bottom: 2px solid rgb(var(--accent-rgb) / 0.56);
+    transform: translateX(-50%) rotate(45deg);
   }
 
   .tour-card__media-button:hover .tour-card__media-zoom,

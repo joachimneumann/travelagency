@@ -18,6 +18,7 @@ const TOUR_SHOW_MORE_LABEL_TRANSITION_MS = 420;
 const TOUR_CARD_SCROLL_TIMEOUT_MS = 900;
 const TOUR_CARD_SCROLL_MARGIN_PX = 12;
 const TOUR_DETAILS_IMAGE_READY_TIMEOUT_MS = 900;
+const TOUR_DETAILS_CONNECTOR_VIEWPORT_THRESHOLD_PX = 100;
 const TOUR_CARD_MEDIA_SNAPSHOT_HOLD_MS = Math.max(
   TOUR_GRID_LAYOUT_TRANSITION_MS,
   TOUR_DETAILS_OPEN_TRANSITION_MS,
@@ -59,6 +60,7 @@ export function createFrontendToursController(ctx) {
   let renderedTourGridColumnCount = 0;
   let tourGridResizeBound = false;
   let tourStyleTagsDeferredFitBound = false;
+  let tourDetailsConnectorFrame = 0;
   let tourDetailsTransitionToken = 0;
   let tourCardMediaSnapshotToken = 0;
   const openingTourColumnIndexes = new Map();
@@ -718,10 +720,12 @@ export function createFrontendToursController(ctx) {
         scheduleTourCardStyleTagsFit();
         fitTourCardDescriptions();
         syncExpandedTourDetailsHeights();
+        scheduleTourDetailsConnectorVisibilityUpdate();
         window.requestAnimationFrame(() => {
           syncTourCardImageSwipeSurfaces();
           fitTourCardDescriptions();
           syncExpandedTourDetailsHeights();
+          scheduleTourDetailsConnectorVisibilityUpdate();
         });
         return;
       }
@@ -729,6 +733,9 @@ export function createFrontendToursController(ctx) {
       openingTourColumnIndexes.clear();
       renderVisibleTrips();
     });
+    window.addEventListener("scroll", () => {
+      scheduleTourDetailsConnectorVisibilityUpdate();
+    }, { passive: true });
   }
 
   function renderTourMediaTitle(trip, tripTitle) {
@@ -1466,6 +1473,9 @@ export function createFrontendToursController(ctx) {
     if (!(card instanceof HTMLElement)) return null;
     const tripId = normalizeText(card.getAttribute("data-tour-card-id"));
     card.classList.toggle("tour-card--expanded", expanded);
+    if (!expanded) {
+      card.classList.remove("tour-card--details-connector-visible");
+    }
     const button = card.querySelector("[data-tour-card-show-more][data-trip-id]");
     if (button instanceof HTMLButtonElement) {
       button.setAttribute("aria-expanded", expanded ? "true" : "false");
@@ -1513,10 +1523,12 @@ export function createFrontendToursController(ctx) {
     scheduleTourCardStyleTagsFit();
     fitTourCardDescriptions();
     syncExpandedTourDetailsHeights();
+    scheduleTourDetailsConnectorVisibilityUpdate();
     if (typeof window !== "undefined") {
       window.requestAnimationFrame(() => {
         fitTourCardDescriptions();
         syncExpandedTourDetailsHeights();
+        scheduleTourDetailsConnectorVisibilityUpdate();
       });
     }
   }
@@ -2221,6 +2233,37 @@ export function createFrontendToursController(ctx) {
     });
   }
 
+  function updateTourDetailsConnectorVisibility(root = els.tourGrid) {
+    if (!(root instanceof HTMLElement) || typeof window === "undefined") return;
+    const singleColumnLayout = isSingleColumnTourLayout();
+    const cards = Array.from(root.querySelectorAll(".tour-card--expanded"));
+    cards.forEach((card) => {
+      if (!(card instanceof HTMLElement)) return;
+      const button = card.querySelector("[data-tour-card-show-more][data-trip-id]");
+      if (!singleColumnLayout || !(button instanceof HTMLElement)) {
+        card.classList.remove("tour-card--details-connector-visible");
+        return;
+      }
+      const buttonBottom = button.getBoundingClientRect().bottom;
+      const distanceFromViewportBottom = window.innerHeight - buttonBottom;
+      card.classList.toggle(
+        "tour-card--details-connector-visible",
+        distanceFromViewportBottom < TOUR_DETAILS_CONNECTOR_VIEWPORT_THRESHOLD_PX
+      );
+    });
+  }
+
+  function scheduleTourDetailsConnectorVisibilityUpdate(root = els.tourGrid) {
+    if (!(root instanceof HTMLElement) || typeof window === "undefined") return;
+    if (tourDetailsConnectorFrame) {
+      window.cancelAnimationFrame(tourDetailsConnectorFrame);
+    }
+    tourDetailsConnectorFrame = window.requestAnimationFrame(() => {
+      tourDetailsConnectorFrame = 0;
+      updateTourDetailsConnectorVisibility(root);
+    });
+  }
+
   function collapsedTourDetailsHeight(row) {
     const syncedHeight = syncExpandedTourDetailsHeight(row);
     if (syncedHeight > 0) return syncedHeight;
@@ -2343,6 +2386,7 @@ export function createFrontendToursController(ctx) {
     const row = createSingleColumnTourDetailsRow(trip, card);
     const openedButton = setTourCardExpandedDomState(card, true);
     setTourShowMoreButtonLabel(openedButton, tourShowMoreLabel(false));
+    scheduleTourDetailsConnectorVisibilityUpdate(row);
     row.classList.add("tour-details-row--opening");
     row.style.height = `${initialCardHeight}px`;
     row.style.overflow = "hidden";
@@ -2355,6 +2399,7 @@ export function createFrontendToursController(ctx) {
     if (prefersReducedMotion()) {
       setTourShowMoreButtonLabel(openedButton, tourShowMoreLabel(true));
       clearTourDetailsRowAnimation(row);
+      scheduleTourDetailsConnectorVisibilityUpdate(row);
       completeTourDetailsTransition(transitionToken, tripId);
       return;
     }
@@ -2377,6 +2422,7 @@ export function createFrontendToursController(ctx) {
     ]);
     if (!isCurrentTourDetailsTransition(transitionToken)) return;
     clearTourDetailsRowAnimation(row);
+    scheduleTourDetailsConnectorVisibilityUpdate(row);
     completeTourDetailsTransition(transitionToken, tripId);
   }
 

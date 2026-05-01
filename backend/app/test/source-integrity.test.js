@@ -4734,7 +4734,12 @@ test("homepage tour cards use fixed-height text areas without an inline more lin
   assert.match(
     tourCardCssSource,
     /\.tour-desc \{[\s\S]*-webkit-line-clamp: var\(--tour-card-desc-lines\);[\s\S]*min-height: calc\(1em \* var\(--tour-card-desc-line-height\) \* var\(--tour-card-desc-lines\)\);/,
-    "Tour descriptions should clamp to a fixed-height preview so cards stay aligned"
+    "Desktop tour descriptions should clamp to a fixed-height preview so cards stay aligned"
+  );
+  assert.match(
+    tourCardCssSource,
+    /@media \(max-width: 760px\) \{[\s\S]*\.tour-card \{[\s\S]*grid-template-rows: auto auto;[\s\S]*height: auto;[\s\S]*\.tour-desc \{[\s\S]*display: block;[\s\S]*-webkit-line-clamp: unset;[\s\S]*overflow: visible;[\s\S]*min-height: 0;[\s\S]*\.tour-desc-wrap \{[\s\S]*min-height: 0;/,
+    "Mobile tour cards should let description text and card height expand to their full content"
   );
   assert.match(
     tourCardCssSource,
@@ -4900,6 +4905,16 @@ test("homepage tour cards use fixed-height text areas without an inline more lin
     tourCardCssSource,
     /\.tour-card__show-more-label \{[\s\S]*will-change: opacity;/,
     "Homepage show-more labels should hint a fade-only transition"
+  );
+  assert.match(
+    mainToursSource,
+    /const TOUR_DETAILS_CONNECTOR_VIEWPORT_THRESHOLD_PX = 100;[\s\S]*function updateTourDetailsConnectorVisibility\(root = els\.tourGrid\) \{[\s\S]*const distanceFromViewportBottom = window\.innerHeight - buttonBottom;[\s\S]*"tour-card--details-connector-visible"[\s\S]*distanceFromViewportBottom < TOUR_DETAILS_CONNECTOR_VIEWPORT_THRESHOLD_PX/,
+    "Mobile details connector should only show when the show-less button is within 100px of the viewport bottom"
+  );
+  assert.match(
+    tourCardCssSource,
+    /\.tour-card--details-connector-visible \.tour-card__actions::before,[\s\S]*\.tour-card--details-connector-visible \.tour-card__actions::after/,
+    "Mobile details connector pseudo-elements should be gated by the measured visibility class"
   );
 });
 
