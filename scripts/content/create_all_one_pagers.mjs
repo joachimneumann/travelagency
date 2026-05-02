@@ -22,12 +22,19 @@ const repoRoot = path.resolve(__dirname, "..", "..");
 const toursDir = path.join(repoRoot, "content", "tours");
 const defaultOutputDir = path.join(repoRoot, "content", "one-pagers");
 const flagTokensPath = path.join(repoRoot, "shared", "css", "tokens.css");
+const experienceHighlightsManifestPath = path.join(repoRoot, "assets", "img", "experience-highlights", "manifest.json");
 const googleSitesBaseUrl = "https://sites.google.com";
 const googleAccount = "info@asiatravelplan.com";
 const onePagerFrameImageCount = 5;
 const minOnePagerImageCount = onePagerFrameImageCount;
+const onePagerExperienceHighlightCount = 4;
 const publicTourImagePrefix = "/public/v1/tour-images/";
 const tourImageExtensions = new Set([".jpg", ".jpeg", ".png", ".webp"]);
+const preferredPdfColumnLanguages = Object.freeze(["en", "vi"]);
+const preferredPdfColumnLanguageSet = new Set(preferredPdfColumnLanguages);
+const defaultPdfColumnLanguages = Object.freeze(
+  prioritizePdfColumnLanguages(CUSTOMER_CONTENT_LANGUAGES.map((language) => language.code))
+);
 
 function printUsage() {
   console.log(`Usage: scripts/content/create_all_one-pagers.sh [N_tours] [N_languages] [options]
@@ -39,7 +46,7 @@ Examples:
 
 Options:
   --output DIR              Output directory. Default: content/one-pagers
-  --languages LIST          Comma-separated language codes. Default: all customer languages
+  --languages LIST          Comma-separated language codes. Default: all customer languages, EN and VI first
   --tour TOUR_ID            Render one tour only. Can be repeated.
   --limit N                 Render only the first N tours after filtering.
   --image-dpi N             PDF-to-PNG resolution. Default: 144
@@ -68,7 +75,7 @@ function parseLimitArg(value, label) {
 function parseArgs(argv) {
   const options = {
     outputDir: defaultOutputDir,
-    languages: CUSTOMER_CONTENT_LANGUAGES.map((language) => language.code),
+    languages: [...defaultPdfColumnLanguages],
     tours: new Set(),
     limit: 0,
     imageDpi: 144,
@@ -126,6 +133,7 @@ function parseArgs(argv) {
   if (positionals[0] !== undefined) {
     options.limit = parseLimitArg(positionals[0], "N_tours");
   }
+  options.languages = prioritizePdfColumnLanguages(options.languages);
   if (positionals[1] !== undefined) {
     const languageLimit = parseLimitArg(positionals[1], "N_languages");
     if (languageLimit) {
@@ -140,6 +148,21 @@ function parseArgs(argv) {
 
 function normalizeLanguageCode(value) {
   return normalizeText(value).toLowerCase();
+}
+
+function prioritizePdfColumnLanguages(languages) {
+  const seen = new Set();
+  const normalizedLanguages = [];
+  for (const language of Array.isArray(languages) ? languages : []) {
+    const code = normalizeLanguageCode(language);
+    if (!code || seen.has(code)) continue;
+    seen.add(code);
+    normalizedLanguages.push(code);
+  }
+  return [
+    ...preferredPdfColumnLanguages.filter((code) => seen.has(code)),
+    ...normalizedLanguages.filter((code) => !preferredPdfColumnLanguageSet.has(code))
+  ];
 }
 
 function safeInt(value) {
@@ -227,6 +250,19 @@ async function readTours() {
   return tours;
 }
 
+async function readExperienceHighlightIds() {
+  const raw = await readFile(experienceHighlightsManifestPath, "utf8");
+  const parsed = JSON.parse(raw);
+  const seen = new Set();
+  return (Array.isArray(parsed) ? parsed : [])
+    .map((item) => textOrNull(item?.id))
+    .filter((id) => {
+      if (!id || seen.has(id)) return false;
+      seen.add(id);
+      return true;
+    });
+}
+
 function deterministicShuffle(items, seed) {
   return [...items]
     .map((item) => ({
@@ -312,6 +348,20 @@ function onePagerSelectionIds(rawTravelPlan) {
   });
 }
 
+function onePagerExperienceHighlightIds(rawTravelPlan) {
+  const seen = new Set();
+  return (Array.isArray(rawTravelPlan?.one_pager_experience_highlight_ids)
+    ? rawTravelPlan.one_pager_experience_highlight_ids
+    : [])
+    .map((value) => textOrNull(value))
+    .filter((id) => {
+      if (!id || seen.has(id)) return false;
+      seen.add(id);
+      return true;
+    })
+    .slice(0, onePagerExperienceHighlightCount);
+}
+
 async function prepareScriptFrameImages(tour, rawTravelPlan, seed, { resolveTourImageDiskPath = null } = {}) {
   const fallbackLabel = textOrNull(tour?.title) || "Tour";
   const serviceImages = await filterExistingImages(collectVisibleTravelPlanImages(tour.travel_plan), resolveTourImageDiskPath);
@@ -355,6 +405,31 @@ async function applyScriptFrameImages(tour, rawTravelPlan, seed, { resolveTourIm
     fillerImagesApplied: frameImages.length > selectedImageCount,
     frameImageCount: frameImages.length,
     selectedImageCount
+  };
+}
+
+function applyScriptExperienceHighlights(tour, rawTravelPlan, seed, availableHighlightIds) {
+  const selectedHighlightIds = onePagerExperienceHighlightIds(rawTravelPlan);
+  if (selectedHighlightIds.length || availableHighlightIds.length < onePagerExperienceHighlightCount) {
+    return {
+      tour,
+      randomExperienceHighlightsApplied: false,
+      selectedExperienceHighlightCount: selectedHighlightIds.length,
+      selectedExperienceHighlightIds: selectedHighlightIds
+    };
+  }
+  const randomHighlightIds = deterministicShuffle(availableHighlightIds, seed).slice(0, onePagerExperienceHighlightCount);
+  return {
+    tour: {
+      ...tour,
+      travel_plan: {
+        ...tour.travel_plan,
+        one_pager_experience_highlight_ids: randomHighlightIds
+      }
+    },
+    randomExperienceHighlightsApplied: true,
+    selectedExperienceHighlightCount: randomHighlightIds.length,
+    selectedExperienceHighlightIds: randomHighlightIds
   };
 }
 
@@ -644,8 +719,13 @@ async function main() {
     resolveTourImageDiskPath: tourHelpers.resolveTourImageDiskPath,
     logoPath: path.join(repoRoot, "assets", "img", "logo-asiatravelplan.png"),
     fallbackImagePath: FALLBACK_BOOKING_IMAGE_PATH,
+    experienceHighlightsManifestPath,
     companyProfile: COMPANY_PROFILE
   });
+  const experienceHighlightIds = await readExperienceHighlightIds();
+  if (experienceHighlightIds.length < onePagerExperienceHighlightCount) {
+    throw new Error(`Expected at least ${onePagerExperienceHighlightCount} experience highlights in ${experienceHighlightsManifestPath}.`);
+  }
 
   let tours = (await readTours())
     .map((tour) => tourHelpers.normalizeTourForStorage(tour))
@@ -715,6 +795,12 @@ async function main() {
         `${tour.id}:${lang}`,
         { resolveTourImageDiskPath: tourHelpers.resolveTourImageDiskPath }
       );
+      const highlighted = applyScriptExperienceHighlights(
+        selected.tour,
+        tour.travel_plan,
+        `${tour.id}:experience-highlights`,
+        experienceHighlightIds
+      );
       const tourDirName = slug(tour.id);
       const pdfDir = path.join(options.outputDir, "pdfs", tourDirName);
       const imageDir = path.join(options.outputDir, "images", tourDirName);
@@ -723,7 +809,7 @@ async function main() {
       const pdfPath = path.join(pdfDir, `${lang}.pdf`);
       const imagePath = path.join(imageDir, `${lang}.png`);
       process.stdout.write(`[${rendered}/${total}] ${tour.id} ${lang}\n`);
-      await writeOnePagerPdf(selected.tour, { lang, outputPath: pdfPath });
+      await writeOnePagerPdf(highlighted.tour, { lang, outputPath: pdfPath });
       await convertPdfToPng(pdfPath, imagePath, options.imageDpi);
       const artifact = {
         lang,
@@ -731,7 +817,10 @@ async function main() {
         imagePath,
         fillerImagesApplied: selected.fillerImagesApplied,
         frameImageCount: selected.frameImageCount,
-        selectedImageCount: selected.selectedImageCount
+        selectedImageCount: selected.selectedImageCount,
+        randomExperienceHighlightsApplied: highlighted.randomExperienceHighlightsApplied,
+        selectedExperienceHighlightCount: highlighted.selectedExperienceHighlightCount,
+        selectedExperienceHighlightIds: highlighted.selectedExperienceHighlightIds
       };
       row.artifacts.push(artifact);
       manifestTour.artifacts.push({
@@ -740,7 +829,10 @@ async function main() {
         image: path.relative(options.outputDir, imagePath),
         filler_images_applied: selected.fillerImagesApplied,
         frame_image_count: selected.frameImageCount,
-        selected_image_count: selected.selectedImageCount
+        selected_image_count: selected.selectedImageCount,
+        random_experience_highlights_applied: highlighted.randomExperienceHighlightsApplied,
+        selected_experience_highlight_count: highlighted.selectedExperienceHighlightCount,
+        selected_experience_highlight_ids: highlighted.selectedExperienceHighlightIds
       });
     }
     matrixRows.push(row);

@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-05-02T03:20:12Z
+# 2026-05-02T11:44:13Z
 
 ---
 openapi: 3.1.0
@@ -4083,6 +4083,24 @@ components:
           type: array
           items:
             "$ref": "#/components/schemas/CountryCode"
+        tour_card_primary_image_id:
+          type: string
+          nullable: true
+        tour_card_image_ids:
+          type: array
+          items:
+            type: string
+        one_pager_hero_image_id:
+          type: string
+          nullable: true
+        one_pager_image_ids:
+          type: array
+          items:
+            type: string
+        one_pager_experience_highlight_ids:
+          type: array
+          items:
+            type: string
         days:
           type: array
           items:
@@ -4440,6 +4458,24 @@ components:
           type: array
           items:
             "$ref": "#/components/schemas/CountryCode"
+        tour_card_primary_image_id:
+          type: string
+          nullable: true
+        tour_card_image_ids:
+          type: array
+          items:
+            type: string
+        one_pager_hero_image_id:
+          type: string
+          nullable: true
+        one_pager_image_ids:
+          type: array
+          items:
+            type: string
+        one_pager_experience_highlight_ids:
+          type: array
+          items:
+            type: string
         days:
           type: array
           items:

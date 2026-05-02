@@ -524,7 +524,13 @@ html[data-language-direction="rtl"] .home-page .metric span {
   z-index: 1;
   width: 100%;
   display: grid;
-  gap: 0.5rem;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  grid-template-areas:
+    "title actions"
+    "meta actions";
+  align-items: end;
+  column-gap: 0.8rem;
+  row-gap: 0.4rem;
   padding:
     1.1rem
     1rem
@@ -533,27 +539,43 @@ html[data-language-direction="rtl"] .home-page .metric span {
 }
 
 .mobile-reel-card__title {
+  grid-area: title;
   margin: 0;
-  max-width: 12ch;
+  min-width: 0;
+  max-width: 100%;
   font-size: clamp(1.9rem, 9vw, 3.4rem);
   line-height: 0.96;
   letter-spacing: -0.04em;
+  overflow-wrap: anywhere;
 }
 
 .mobile-reel-card__meta {
+  grid-area: meta;
   margin: 0;
-  max-width: 26rem;
+  min-width: 0;
+  max-width: 100%;
   color: rgba(255, 255, 255, 0.84);
   font-size: var(--font-size-body-sm);
   line-height: 1.45;
+  overflow-wrap: anywhere;
 }
 
 .mobile-reel-card__actions {
-  margin-top: 0.2rem;
+  grid-area: actions;
+  min-width: 0;
+  margin-top: 0;
 }
 
 .mobile-reel-card__cta {
-  width: min(100%, 15.5rem);
+  width: 100%;
+  min-height: 4.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  hyphens: auto;
+  line-height: 1.15;
 }
 
 .mobile-reel-empty {

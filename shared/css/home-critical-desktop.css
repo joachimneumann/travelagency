@@ -593,12 +593,11 @@ img {
   border: 0;
   background: var(--accent);
   color: var(--surface);
-  box-shadow: 0 8px 18px var(--accent-shadow);
   padding: 0.45rem 0.8rem;
   border-radius: 10px;
   font-size: var(--font-size-body-sm);
   font-weight: var(--font-weight-bold);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.2s ease;
   display: none;
 }
 
@@ -611,7 +610,9 @@ img {
 }
 
 .reels-toggle.is-active {
-  min-width: 2.75rem;
+  width: var(--reels-toggle-default-width, auto);
+  height: var(--reels-toggle-default-height, auto);
+  min-width: var(--reels-toggle-default-width, 2.75rem);
 }
 
 .nav-toggle:disabled,

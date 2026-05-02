@@ -965,6 +965,13 @@ export function createTourHandlers(deps) {
       flatLang: lang,
       strictReferences: false
     });
+    const selectedExperienceHighlightIds = Array.isArray(travelPlan?.one_pager_experience_highlight_ids)
+      ? travelPlan.one_pager_experience_highlight_ids.map((value) => normalizeText(value)).filter(Boolean)
+      : [];
+    if (selectedExperienceHighlightIds.length < 4) {
+      sendJson(res, 400, { error: "Select 4 experience highlights before creating the tour one-pager PDF." });
+      return;
+    }
     const previewPath = path.join(TEMP_UPLOAD_DIR, `tour-one-pager-${tourId}-${randomUUID()}.pdf`);
     let renderedPath = previewPath;
     try {

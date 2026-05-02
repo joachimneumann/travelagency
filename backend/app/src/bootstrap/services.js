@@ -220,6 +220,7 @@ export function createBackendServices({
     resolveTourImageDiskPath: tourHelpers.resolveTourImageDiskPath,
     logoPath: path.join(collections.repoRoot, "assets", "img", "logo-asiatravelplan.png"),
     fallbackImagePath: collections.fallbackBookingImagePath,
+    experienceHighlightsManifestPath: path.join(collections.repoRoot, "assets", "img", "experience-highlights", "manifest.json"),
     companyProfile: runtime.companyProfile
   });
 

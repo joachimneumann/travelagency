@@ -1,82 +1,482 @@
 [
   {
+    "id": "iconic_landmarks",
     "title": "Iconic Landmarks",
-    "image": "iconic landmarks.svg"
+    "image": "01.svg",
+    "title_i18n": {
+      "en": "Iconic Landmarks",
+      "ar": "معالم بارزة",
+      "fr": "Sites emblématiques",
+      "zh": "标志性地标",
+      "ja": "象徴的な名所",
+      "ko": "상징적인 명소",
+      "vi": "Địa danh biểu tượng",
+      "ms": "Mercu tanda ikonik",
+      "de": "Ikonische Sehenswürdigkeiten",
+      "es": "Lugares emblemáticos",
+      "it": "Luoghi iconici",
+      "ru": "Знаковые достопримечательности",
+      "nl": "Iconische bezienswaardigheden",
+      "pl": "Kultowe zabytki",
+      "da": "Ikoniske seværdigheder",
+      "sv": "Ikoniska landmärken",
+      "no": "Ikoniske landemerker"
+    }
   },
   {
+    "id": "cultural_heritage",
     "title": "Cultural Heritage",
-    "image": "cultural heritage.svg"
+    "image": "02.svg",
+    "title_i18n": {
+      "en": "Cultural Heritage",
+      "ar": "تراث ثقافي",
+      "fr": "Patrimoine culturel",
+      "zh": "文化遗产",
+      "ja": "文化遺産",
+      "ko": "문화유산",
+      "vi": "Di sản văn hóa",
+      "ms": "Warisan budaya",
+      "de": "Kulturerbe",
+      "es": "Patrimonio cultural",
+      "it": "Patrimonio culturale",
+      "ru": "Культурное наследие",
+      "nl": "Cultureel erfgoed",
+      "pl": "Dziedzictwo kulturowe",
+      "da": "Kulturarv",
+      "sv": "Kulturarv",
+      "no": "Kulturarv"
+    }
   },
   {
+    "id": "local_experiences",
     "title": "Local Experiences",
-    "image": "local experiences.svg"
+    "image": "03.svg",
+    "title_i18n": {
+      "en": "Local Experiences",
+      "ar": "تجارب محلية",
+      "fr": "Expériences locales",
+      "zh": "当地体验",
+      "ja": "現地体験",
+      "ko": "현지 체험",
+      "vi": "Trải nghiệm địa phương",
+      "ms": "Pengalaman tempatan",
+      "de": "Lokale Erlebnisse",
+      "es": "Experiencias locales",
+      "it": "Esperienze locali",
+      "ru": "Местные впечатления",
+      "nl": "Lokale ervaringen",
+      "pl": "Lokalne doświadczenia",
+      "da": "Lokale oplevelser",
+      "sv": "Lokala upplevelser",
+      "no": "Lokale opplevelser"
+    }
   },
   {
+    "id": "delicious_cuisine",
     "title": "Delicious Cuisine",
-    "image": "delicious cuisine.svg"
+    "image": "04.svg",
+    "title_i18n": {
+      "en": "Delicious Cuisine",
+      "ar": "مأكولات شهية",
+      "fr": "Cuisine savoureuse",
+      "zh": "美味佳肴",
+      "ja": "おいしい料理",
+      "ko": "맛있는 음식",
+      "vi": "Ẩm thực đặc sắc",
+      "ms": "Masakan lazat",
+      "de": "Köstliche Küche",
+      "es": "Gastronomía deliciosa",
+      "it": "Cucina deliziosa",
+      "ru": "Вкусная кухня",
+      "nl": "Heerlijke keuken",
+      "pl": "Wyśmienita kuchnia",
+      "da": "Lækker madkultur",
+      "sv": "Utsökt mat",
+      "no": "Deilig mat"
+    }
   },
   {
+    "id": "scenic_landscapes",
     "title": "Scenic Landscapes",
-    "image": "scenic landscapes.svg"
+    "image": "05.svg",
+    "title_i18n": {
+      "en": "Scenic Landscapes",
+      "ar": "مناظر طبيعية خلابة",
+      "fr": "Paysages panoramiques",
+      "zh": "秀丽风光",
+      "ja": "美しい風景",
+      "ko": "아름다운 풍경",
+      "vi": "Cảnh quan tuyệt đẹp",
+      "ms": "Landskap indah",
+      "de": "Malerische Landschaften",
+      "es": "Paisajes escénicos",
+      "it": "Paesaggi scenografici",
+      "ru": "Живописные пейзажи",
+      "nl": "Schilderachtige landschappen",
+      "pl": "Malownicze krajobrazy",
+      "da": "Smukke landskaber",
+      "sv": "Vackra landskap",
+      "no": "Vakre landskap"
+    }
   },
   {
+    "id": "hidden_gems",
     "title": "Hidden Gems",
-    "image": "hidden gems.svg"
+    "image": "06.svg",
+    "title_i18n": {
+      "en": "Hidden Gems",
+      "ar": "جواهر خفية",
+      "fr": "Pépites cachées",
+      "zh": "隐秘宝藏",
+      "ja": "隠れた名所",
+      "ko": "숨은 명소",
+      "vi": "Viên ngọc ẩn",
+      "ms": "Permata tersembunyi",
+      "de": "Verborgene Schätze",
+      "es": "Joyas ocultas",
+      "it": "Gemme nascoste",
+      "ru": "Скрытые жемчужины",
+      "nl": "Verborgen parels",
+      "pl": "Ukryte perełki",
+      "da": "Skjulte perler",
+      "sv": "Dolda pärlor",
+      "no": "Skjulte perler"
+    }
   },
   {
+    "id": "historic_sites",
     "title": "Historic Sites",
-    "image": "historic sites.svg"
+    "image": "07.svg",
+    "title_i18n": {
+      "en": "Historic Sites",
+      "ar": "مواقع تاريخية",
+      "fr": "Sites historiques",
+      "zh": "历史遗址",
+      "ja": "歴史的名所",
+      "ko": "역사 유적",
+      "vi": "Di tích lịch sử",
+      "ms": "Tapak bersejarah",
+      "de": "Historische Stätten",
+      "es": "Sitios históricos",
+      "it": "Siti storici",
+      "ru": "Исторические места",
+      "nl": "Historische locaties",
+      "pl": "Miejsca historyczne",
+      "da": "Historiske steder",
+      "sv": "Historiska platser",
+      "no": "Historiske steder"
+    }
   },
   {
+    "id": "art_architecture",
     "title": "Art and Architecture",
-    "image": "art architecture.svg"
+    "image": "08.svg",
+    "title_i18n": {
+      "en": "Art and Architecture",
+      "ar": "فن وعمارة",
+      "fr": "Art et architecture",
+      "zh": "艺术与建筑",
+      "ja": "芸術と建築",
+      "ko": "예술과 건축",
+      "vi": "Nghệ thuật và kiến trúc",
+      "ms": "Seni dan seni bina",
+      "de": "Kunst und Architektur",
+      "es": "Arte y arquitectura",
+      "it": "Arte e architettura",
+      "ru": "Искусство и архитектура",
+      "nl": "Kunst en architectuur",
+      "pl": "Sztuka i architektura",
+      "da": "Kunst og arkitektur",
+      "sv": "Konst och arkitektur",
+      "no": "Kunst og arkitektur"
+    }
   },
   {
+    "id": "nature_wildlife",
     "title": "Nature and Wildlife",
-    "image": "nature wildlife.svg"
+    "image": "09.svg",
+    "title_i18n": {
+      "en": "Nature and Wildlife",
+      "ar": "طبيعة وحياة برية",
+      "fr": "Nature et faune",
+      "zh": "自然与野生动物",
+      "ja": "自然と野生動物",
+      "ko": "자연과 야생동물",
+      "vi": "Thiên nhiên và động vật hoang dã",
+      "ms": "Alam semula jadi dan hidupan liar",
+      "de": "Natur und Tierwelt",
+      "es": "Naturaleza y fauna",
+      "it": "Natura e fauna selvatica",
+      "ru": "Природа и дикая жизнь",
+      "nl": "Natuur en wildlife",
+      "pl": "Przyroda i dzika fauna",
+      "da": "Natur og dyreliv",
+      "sv": "Natur och djurliv",
+      "no": "Natur og dyreliv"
+    }
   },
   {
+    "id": "beaches_islands",
     "title": "Beaches and Islands",
-    "image": "beaches islands.svg"
+    "image": "10.svg",
+    "title_i18n": {
+      "en": "Beaches and Islands",
+      "ar": "شواطئ وجزر",
+      "fr": "Plages et îles",
+      "zh": "海滩与岛屿",
+      "ja": "ビーチと島々",
+      "ko": "해변과 섬",
+      "vi": "Bãi biển và đảo",
+      "ms": "Pantai dan pulau",
+      "de": "Strände und Inseln",
+      "es": "Playas e islas",
+      "it": "Spiagge e isole",
+      "ru": "Пляжи и острова",
+      "nl": "Stranden en eilanden",
+      "pl": "Plaże i wyspy",
+      "da": "Strande og øer",
+      "sv": "Stränder och öar",
+      "no": "Strender og øyer"
+    }
   },
   {
+    "id": "mountain_adventures",
     "title": "Mountain Adventures",
-    "image": "mountain adventures.svg"
+    "image": "11.svg",
+    "title_i18n": {
+      "en": "Mountain Adventures",
+      "ar": "مغامرات جبلية",
+      "fr": "Aventures en montagne",
+      "zh": "山地探险",
+      "ja": "山の冒険",
+      "ko": "산악 모험",
+      "vi": "Phiêu lưu núi rừng",
+      "ms": "Pengembaraan gunung",
+      "de": "Bergabenteuer",
+      "es": "Aventuras de montaña",
+      "it": "Avventure in montagna",
+      "ru": "Горные приключения",
+      "nl": "Bergavonturen",
+      "pl": "Górskie przygody",
+      "da": "Bjergeventyr",
+      "sv": "Bergäventyr",
+      "no": "Fjelleventyr"
+    }
   },
   {
+    "id": "city_life",
     "title": "City Life",
-    "image": "city life.svg"
+    "image": "12.svg",
+    "title_i18n": {
+      "en": "City Life",
+      "ar": "حياة المدينة",
+      "fr": "Vie urbaine",
+      "zh": "城市生活",
+      "ja": "都市の暮らし",
+      "ko": "도시 생활",
+      "vi": "Nhịp sống đô thị",
+      "ms": "Kehidupan bandar",
+      "de": "Stadtleben",
+      "es": "Vida urbana",
+      "it": "Vita cittadina",
+      "ru": "Городская жизнь",
+      "nl": "Stadsleven",
+      "pl": "Życie miasta",
+      "da": "Byliv",
+      "sv": "Stadsliv",
+      "no": "Byliv"
+    }
   },
   {
+    "id": "festivals_events",
     "title": "Festivals and Events",
-    "image": "festivals events.svg"
+    "image": "13.svg",
+    "title_i18n": {
+      "en": "Festivals and Events",
+      "ar": "مهرجانات وفعاليات",
+      "fr": "Festivals et événements",
+      "zh": "节庆与活动",
+      "ja": "祭りとイベント",
+      "ko": "축제와 이벤트",
+      "vi": "Lễ hội và sự kiện",
+      "ms": "Festival dan acara",
+      "de": "Feste und Events",
+      "es": "Festivales y eventos",
+      "it": "Festival ed eventi",
+      "ru": "Фестивали и события",
+      "nl": "Festivals en evenementen",
+      "pl": "Festiwale i wydarzenia",
+      "da": "Festivaler og events",
+      "sv": "Festivaler och evenemang",
+      "no": "Festivaler og arrangementer"
+    }
   },
   {
+    "id": "traditional_markets",
     "title": "Traditional Markets",
-    "image": "traditional markets.svg"
+    "image": "14.svg",
+    "title_i18n": {
+      "en": "Traditional Markets",
+      "ar": "أسواق تقليدية",
+      "fr": "Marchés traditionnels",
+      "zh": "传统市场",
+      "ja": "伝統市場",
+      "ko": "전통 시장",
+      "vi": "Chợ truyền thống",
+      "ms": "Pasar tradisional",
+      "de": "Traditionelle Märkte",
+      "es": "Mercados tradicionales",
+      "it": "Mercati tradizionali",
+      "ru": "Традиционные рынки",
+      "nl": "Traditionele markten",
+      "pl": "Tradycyjne targi",
+      "da": "Traditionelle markeder",
+      "sv": "Traditionella marknader",
+      "no": "Tradisjonelle markeder"
+    }
   },
   {
+    "id": "nightlife_entertainment",
     "title": "Nightlife and Entertainment",
-    "image": "nightlife entertainment.svg"
+    "image": "15.svg",
+    "title_i18n": {
+      "en": "Nightlife and Entertainment",
+      "ar": "حياة ليلية وترفيه",
+      "fr": "Vie nocturne et divertissement",
+      "zh": "夜生活与娱乐",
+      "ja": "ナイトライフとエンターテインメント",
+      "ko": "나이트라이프와 엔터테인먼트",
+      "vi": "Giải trí và cuộc sống về đêm",
+      "ms": "Hiburan dan kehidupan malam",
+      "de": "Nachtleben und Unterhaltung",
+      "es": "Vida nocturna y entretenimiento",
+      "it": "Vita notturna e intrattenimento",
+      "ru": "Ночная жизнь и развлечения",
+      "nl": "Nachtleven en entertainment",
+      "pl": "Życie nocne i rozrywka",
+      "da": "Natteliv og underholdning",
+      "sv": "Nattliv och underhållning",
+      "no": "Uteliv og underholdning"
+    }
   },
   {
+    "id": "wellness_relaxation",
     "title": "Wellness and Relaxation",
-    "image": "wellness relaxation.svg"
+    "image": "16.svg",
+    "title_i18n": {
+      "en": "Wellness and Relaxation",
+      "ar": "عافية واسترخاء",
+      "fr": "Bien-être et détente",
+      "zh": "康养与放松",
+      "ja": "ウェルネスと癒やし",
+      "ko": "웰니스와 휴식",
+      "vi": "Sức khỏe và thư giãn",
+      "ms": "Kesihatan dan relaksasi",
+      "de": "Wellness und Entspannung",
+      "es": "Bienestar y relajación",
+      "it": "Benessere e relax",
+      "ru": "Велнес и отдых",
+      "nl": "Wellness en ontspanning",
+      "pl": "Wellness i relaks",
+      "da": "Wellness og afslapning",
+      "sv": "Wellness och avkoppling",
+      "no": "Velvære og avslapning"
+    }
   },
   {
+    "id": "family_friendly_activities",
     "title": "Family Friendly Activities",
-    "image": "family friendly activities.svg"
+    "image": "17.svg",
+    "title_i18n": {
+      "en": "Family Friendly Activities",
+      "ar": "أنشطة مناسبة للعائلات",
+      "fr": "Activités en famille",
+      "zh": "亲子友好活动",
+      "ja": "家族向けアクティビティ",
+      "ko": "가족 친화 활동",
+      "vi": "Hoạt động phù hợp gia đình",
+      "ms": "Aktiviti mesra keluarga",
+      "de": "Familienfreundliche Aktivitäten",
+      "es": "Actividades para familias",
+      "it": "Attività per famiglie",
+      "ru": "Семейные развлечения",
+      "nl": "Gezinsvriendelijke activiteiten",
+      "pl": "Atrakcje dla rodzin",
+      "da": "Familievenlige aktiviteter",
+      "sv": "Familjevänliga aktiviteter",
+      "no": "Familievennlige aktiviteter"
+    }
   },
   {
+    "id": "outdoor_adventures",
     "title": "Outdoor Adventures",
-    "image": "outdoor adventures.svg"
+    "image": "18.svg",
+    "title_i18n": {
+      "en": "Outdoor Adventures",
+      "ar": "مغامرات في الهواء الطلق",
+      "fr": "Aventures en plein air",
+      "zh": "户外探险",
+      "ja": "アウトドアアドベンチャー",
+      "ko": "야외 모험",
+      "vi": "Phiêu lưu ngoài trời",
+      "ms": "Pengembaraan luar",
+      "de": "Outdoor-Abenteuer",
+      "es": "Aventuras al aire libre",
+      "it": "Avventure all'aperto",
+      "ru": "Приключения на природе",
+      "nl": "Outdooravonturen",
+      "pl": "Przygody na świeżym powietrzu",
+      "da": "Udendørs eventyr",
+      "sv": "Utomhusäventyr",
+      "no": "Utendørseventyr"
+    }
   },
   {
+    "id": "spiritual_places",
     "title": "Spiritual Places",
-    "image": "spiritual places.svg"
+    "image": "19.svg",
+    "title_i18n": {
+      "en": "Spiritual Places",
+      "ar": "أماكن روحانية",
+      "fr": "Lieux spirituels",
+      "zh": "宗教圣地",
+      "ja": "スピリチュアルスポット",
+      "ko": "영적인 장소",
+      "vi": "Địa điểm tâm linh",
+      "ms": "Tempat rohani",
+      "de": "Spirituelle Orte",
+      "es": "Lugares espirituales",
+      "it": "Luoghi spirituali",
+      "ru": "Духовные места",
+      "nl": "Spirituele plekken",
+      "pl": "Miejsca duchowe",
+      "da": "Spirituelle steder",
+      "sv": "Andliga platser",
+      "no": "Åndelige steder"
+    }
   },
   {
+    "id": "shopping_souvenirs",
     "title": "Shopping and Souvenirs",
-    "image": "shopping souvenirs.svg"
+    "image": "20.svg",
+    "title_i18n": {
+      "en": "Shopping and Souvenirs",
+      "ar": "تسوق وهدايا تذكارية",
+      "fr": "Shopping et souvenirs",
+      "zh": "购物与纪念品",
+      "ja": "ショッピングとお土産",
+      "ko": "쇼핑과 기념품",
+      "vi": "Mua sắm và quà lưu niệm",
+      "ms": "Membeli-belah dan cenderamata",
+      "de": "Shopping und Souvenirs",
+      "es": "Compras y recuerdos",
+      "it": "Shopping e souvenir",
+      "ru": "Покупки и сувениры",
+      "nl": "Winkelen en souvenirs",
+      "pl": "Zakupy i pamiątki",
+      "da": "Shopping og souvenirs",
+      "sv": "Shopping och souvenirer",
+      "no": "Shopping og suvenirer"
+    }
   }
 ]

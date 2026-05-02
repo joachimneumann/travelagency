@@ -1,5 +1,5 @@
 import { createWriteStream } from "node:fs";
-import { access, rm } from "node:fs/promises";
+import { access, readFile, rm } from "node:fs/promises";
 import path from "node:path";
 import PDFDocument from "pdfkit";
 import sharp from "sharp";
@@ -18,6 +18,8 @@ const PDF_FONT_SCRIPT = "MarketingTourOnePagerScript";
 const PDF_FONT_LABEL = "MarketingTourOnePagerLabel";
 const IMAGE_RENDER_SCALE = 2.4;
 const PUBLIC_TOUR_IMAGE_PREFIX = "/public/v1/tour-images/";
+const ONE_PAGER_EXPERIENCE_HIGHLIGHT_LIMIT = 4;
+const EXPERIENCE_HIGHLIGHT_RENDER_SCALE = 3;
 
 const PDF_FONT_REGULAR_CANDIDATES = Object.freeze([
   "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
@@ -111,6 +113,14 @@ function safeArray(value) {
 function textOrNull(value) {
   const normalized = normalizeText(value);
   return normalized || null;
+}
+
+function localizedMapValue(value, lang, fallback = "") {
+  const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+  const normalizedLang = normalizePdfLang(lang);
+  return normalizeText(source[normalizedLang])
+    || normalizeText(source.en)
+    || normalizeText(fallback);
 }
 
 function cssColorToHex(value, fallback) {
@@ -616,6 +626,74 @@ async function loadImageBuffer(storagePath, { width, height, resolveTourImageDis
   return null;
 }
 
+function normalizeExperienceHighlightManifestItem(item, index, manifestDir) {
+  const source = item && typeof item === "object" && !Array.isArray(item) ? item : {};
+  const image = textOrNull(source.image);
+  const id = textOrNull(source.id) || (image ? image.replace(/\.[^.]+$/, "") : "") || `highlight_${index + 1}`;
+  if (!image || !id) return null;
+  const title = textOrNull(source.title) || localizedMapValue(source.title_i18n, "en", id);
+  return {
+    id,
+    title,
+    title_i18n: source.title_i18n && typeof source.title_i18n === "object" && !Array.isArray(source.title_i18n)
+      ? source.title_i18n
+      : {},
+    imagePath: path.join(manifestDir, image)
+  };
+}
+
+async function readExperienceHighlightManifest(manifestPath) {
+  const normalizedPath = normalizeText(manifestPath);
+  if (!normalizedPath) return [];
+  try {
+    const raw = await readFile(normalizedPath, "utf8");
+    const parsed = JSON.parse(raw);
+    const manifestDir = path.dirname(normalizedPath);
+    return (Array.isArray(parsed) ? parsed : [])
+      .map((item, index) => normalizeExperienceHighlightManifestItem(item, index, manifestDir))
+      .filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+
+async function loadExperienceHighlightImageBuffer(imagePath, size = 42) {
+  if (!(await fileExists(imagePath))) return null;
+  try {
+    return await sharp(imagePath)
+      .resize(
+        Math.max(1, Math.round(size * EXPERIENCE_HIGHLIGHT_RENDER_SCALE)),
+        Math.max(1, Math.round(size * EXPERIENCE_HIGHLIGHT_RENDER_SCALE)),
+        { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } }
+      )
+      .png()
+      .toBuffer();
+  } catch {
+    return null;
+  }
+}
+
+async function collectConfiguredExperienceHighlightItems(tour, lang, manifestPath) {
+  const selectedIds = safeArray(tour?.travel_plan?.one_pager_experience_highlight_ids)
+    .map((value) => textOrNull(value))
+    .filter(Boolean)
+    .slice(0, ONE_PAGER_EXPERIENCE_HIGHLIGHT_LIMIT);
+  if (selectedIds.length < ONE_PAGER_EXPERIENCE_HIGHLIGHT_LIMIT) return [];
+  const manifestItems = await readExperienceHighlightManifest(manifestPath);
+  if (!manifestItems.length) return [];
+  const itemById = new Map(manifestItems.map((item) => [item.id, item]));
+  const configuredItems = selectedIds
+    .map((id) => itemById.get(id))
+    .filter(Boolean)
+    .slice(0, ONE_PAGER_EXPERIENCE_HIGHLIGHT_LIMIT);
+  if (configuredItems.length < ONE_PAGER_EXPERIENCE_HIGHLIGHT_LIMIT) return [];
+  return await Promise.all(configuredItems.map(async (item) => ({
+    title: localizedMapValue(item.title_i18n, lang, item.title),
+    body: "",
+    imageBuffer: await loadExperienceHighlightImageBuffer(item.imagePath)
+  })));
+}
+
 function localizedServiceKindLabel(lang, value) {
   const normalizedKind = normalizeText(value).toLowerCase().replace(/[^a-z0-9]+/g, "_");
   if (!normalizedKind) return "";
@@ -686,17 +764,23 @@ function drawHighlights(doc, items, x, y, width, fonts, lang) {
   const top = y + 34;
   items.forEach((item, index) => {
     const itemX = x + index * colWidth;
-    drawHighlightIcon(doc, index, itemX + colWidth / 2 - 18, top, 36, COLORS.textStrong);
+    if (item.imageBuffer) {
+      doc.image(item.imageBuffer, itemX + colWidth / 2 - 21, top - 3, { fit: [42, 42] });
+    } else {
+      drawHighlightIcon(doc, index, itemX + colWidth / 2 - 18, top, 36, COLORS.textStrong);
+    }
     doc
       .font(pdfFontName("label", fonts))
       .fontSize(7.8)
       .fillColor(COLORS.textStrong)
-      .text(item.title.toUpperCase(), itemX, top + 45, { width: colWidth - 10, height: 20, align: "center", ellipsis: true });
-    doc
-      .font(pdfFontName("regular", fonts))
-      .fontSize(7.5)
-      .fillColor(COLORS.text)
-      .text(item.body, itemX + 3, top + 68, { width: colWidth - 16, height: 25, align: "center", ellipsis: true });
+      .text(item.title.toUpperCase(), itemX, top + 45, pdfTextOptions(lang, { width: colWidth - 10, height: item.body ? 20 : 38, align: "center", ellipsis: true }));
+    if (item.body) {
+      doc
+        .font(pdfFontName("regular", fonts))
+        .fontSize(7.5)
+        .fillColor(COLORS.text)
+        .text(item.body, itemX + 3, top + 68, pdfTextOptions(lang, { width: colWidth - 16, height: 25, align: "center", ellipsis: true }));
+    }
     if (index > 0) {
       doc.moveTo(itemX - 5, top + 2).lineTo(itemX - 5, top + 92).lineWidth(0.5).strokeColor(COLORS.line).stroke();
     }
@@ -1002,16 +1086,23 @@ function drawMainCopy(doc, tour, duration, fonts, lang) {
     .fontSize(titleSize)
     .fillColor(COLORS.textStrong)
     .text(titleText, 42, 208, pdfTextOptions(lang, { width: 286, lineGap: -6, height: 124 }));
+  const styleText = styleLine || onePagerT(lang, "default_style_line", "PRIVATE TOUR  |  LOCAL EXPERTISE").toUpperCase();
+  const styleY = 338;
+  const styleOptions = pdfTextOptions(lang, { width: 282, characterSpacing: 1.4, lineGap: 2 });
   doc
     .font(pdfFontName("label", fonts))
     .fontSize(12.5)
-    .fillColor(COLORS.textStrong)
-    .text(styleLine || onePagerT(lang, "default_style_line", "PRIVATE TOUR  |  LOCAL EXPERTISE").toUpperCase(), 42, 338, pdfTextOptions(lang, { width: 282, characterSpacing: 1.4, height: 18, ellipsis: true }));
+    .fillColor(COLORS.textStrong);
+  const measuredStyleHeight = Math.max(18, Math.ceil(doc.heightOfString(styleText, styleOptions)));
+  const styleHeight = Math.min(64, measuredStyleHeight);
+  doc.text(styleText, 42, styleY, pdfTextOptions(lang, { ...styleOptions, height: styleHeight, ellipsis: measuredStyleHeight > styleHeight }));
+  const descriptionY = Math.max(368, styleY + styleHeight + 8);
+  const descriptionHeight = Math.max(12, 426 - descriptionY);
   doc
     .font(pdfFontName("regular", fonts))
     .fontSize(10.6)
     .fillColor(COLORS.text)
-    .text(description, 42, 368, pdfTextOptions(lang, { width: 265, height: 54, lineGap: 3, ellipsis: true }));
+    .text(description, 42, descriptionY, pdfTextOptions(lang, { width: 265, height: descriptionHeight, lineGap: 3, ellipsis: true }));
   doc.moveTo(42, 430).lineTo(78, 430).lineWidth(1).strokeColor(COLORS.secondary).stroke();
 }
 
@@ -1067,6 +1158,7 @@ export function createMarketingTourOnePagerPdfWriter({
   resolveTourImageDiskPath,
   logoPath = "",
   fallbackImagePath = "",
+  experienceHighlightsManifestPath = "",
   companyProfile = null
 } = {}) {
   return async function writeMarketingTourOnePagerPdf(tour, {
@@ -1101,6 +1193,10 @@ export function createMarketingTourOnePagerPdfWriter({
       ...Object.fromEntries(Object.entries(displayFonts).filter(([, value]) => value))
     };
     const frameImages = await prepareFrameImages(tour, { resolveTourImageDiskPath, fallbackImagePath }, normalizedLang);
+    const configuredHighlightItems = await collectConfiguredExperienceHighlightItems(tour, normalizedLang, experienceHighlightsManifestPath);
+    const highlightItems = configuredHighlightItems.length
+      ? configuredHighlightItems
+      : collectHighlightItems(tour, duration, normalizedLang);
 
     const renderWithFonts = async (renderFonts) => {
       await removePartialPdf(outputPath);
@@ -1120,7 +1216,7 @@ export function createMarketingTourOnePagerPdfWriter({
       drawLogo(doc, logoPath);
       drawDurationBadge(doc, duration, renderFonts);
       drawMainCopy(doc, tour, duration, renderFonts, normalizedLang);
-      drawHighlights(doc, collectHighlightItems(tour, duration, normalizedLang), 42, 438, 276, renderFonts, normalizedLang);
+      drawHighlights(doc, highlightItems, 42, 438, 276, renderFonts, normalizedLang);
       drawRouteConnector(doc, 43, 570, 238);
       drawIncluded(doc, collectIncludedItems(tour, duration, normalizedLang), 42, 616, 276, renderFonts, normalizedLang);
 

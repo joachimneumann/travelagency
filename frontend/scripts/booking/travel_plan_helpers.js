@@ -19,6 +19,7 @@ import {
 } from "../shared/destination_scope_editor.js";
 
 const ONE_PAGER_SMALL_IMAGE_LIMIT = 4;
+const ONE_PAGER_EXPERIENCE_HIGHLIGHT_LIMIT = 4;
 
 export const TRAVEL_PLAN_TIMING_KIND_OPTIONS = Object.freeze(
   GENERATED_TRAVEL_PLAN_TIMING_KIND_OPTIONS.map((option) => ({
@@ -358,6 +359,18 @@ function normalizeAvailableImageIdList(values, days) {
     .filter((value, index, list) => value && list.indexOf(value) === index && availableIds.has(value));
 }
 
+function normalizeOnePagerExperienceHighlightIds(values) {
+  const seen = new Set();
+  return (Array.isArray(values) ? values : [])
+    .slice(0, ONE_PAGER_EXPERIENCE_HIGHLIGHT_LIMIT)
+    .map((value) => {
+      const id = normalizeOptionalText(value);
+      if (!id || seen.has(id)) return "";
+      seen.add(id);
+      return id;
+    });
+}
+
 function normalizeOnePagerHeroImageId(source, days) {
   const heroImageId = normalizeOptionalText(source?.one_pager_hero_image_id);
   if (!heroImageId) return "";
@@ -463,6 +476,7 @@ export function normalizeTravelPlanDraft(plan, options = {}) {
   const one_pager_image_ids = normalizeAvailableImageIdList(source.one_pager_image_ids, days)
     .filter((imageId) => imageId !== one_pager_hero_image_id)
     .slice(0, ONE_PAGER_SMALL_IMAGE_LIMIT);
+  const one_pager_experience_highlight_ids = normalizeOnePagerExperienceHighlightIds(source.one_pager_experience_highlight_ids);
   const normalized = {
     destination_scope,
     destinations: destinationScopeDestinations(destination_scope),
@@ -470,6 +484,7 @@ export function normalizeTravelPlanDraft(plan, options = {}) {
     tour_card_image_ids,
     one_pager_hero_image_id: one_pager_hero_image_id || null,
     one_pager_image_ids,
+    one_pager_experience_highlight_ids,
     days: applyTourCardImageSelection(days, tour_card_image_ids),
     attachments: normalizeTravelPlanAttachments(source.attachments)
   };

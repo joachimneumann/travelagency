@@ -1469,6 +1469,11 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         fields: [
     schemaField({"name":"destination_scope","required":false,"wireName":"destination_scope"}, SHARED_FIELD_DEFS.FIELD_96),
     schemaField({"name":"destinations","required":false,"wireName":"destinations"}, SHARED_FIELD_DEFS.FIELD_17),
+    schemaField({"name":"tour_card_primary_image_id","required":false,"wireName":"tour_card_primary_image_id"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"tour_card_image_ids","required":false,"wireName":"tour_card_image_ids"}, SHARED_FIELD_DEFS.FIELD_7),
+    schemaField({"name":"one_pager_hero_image_id","required":false,"wireName":"one_pager_hero_image_id"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"one_pager_image_ids","required":false,"wireName":"one_pager_image_ids"}, SHARED_FIELD_DEFS.FIELD_7),
+    schemaField({"name":"one_pager_experience_highlight_ids","required":false,"wireName":"one_pager_experience_highlight_ids"}, SHARED_FIELD_DEFS.FIELD_7),
     schemaField({"name":"days","required":false,"wireName":"days"}, SHARED_FIELD_DEFS.FIELD_97),
     schemaField({"name":"attachments","required":false,"wireName":"attachments"}, SHARED_FIELD_DEFS.FIELD_98)
         ]
@@ -1748,6 +1753,11 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         fields: [
     schemaField({"name":"destination_scope","required":false,"wireName":"destination_scope"}, SHARED_FIELD_DEFS.FIELD_96),
     schemaField({"name":"destinations","required":false,"wireName":"destinations"}, SHARED_FIELD_DEFS.FIELD_17),
+    schemaField({"name":"tour_card_primary_image_id","required":false,"wireName":"tour_card_primary_image_id"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"tour_card_image_ids","required":false,"wireName":"tour_card_image_ids"}, SHARED_FIELD_DEFS.FIELD_7),
+    schemaField({"name":"one_pager_hero_image_id","required":false,"wireName":"one_pager_hero_image_id"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"one_pager_image_ids","required":false,"wireName":"one_pager_image_ids"}, SHARED_FIELD_DEFS.FIELD_7),
+    schemaField({"name":"one_pager_experience_highlight_ids","required":false,"wireName":"one_pager_experience_highlight_ids"}, SHARED_FIELD_DEFS.FIELD_7),
     schemaField({"name":"days","required":false,"wireName":"days"}, SHARED_FIELD_DEFS.FIELD_102)
         ]
       };

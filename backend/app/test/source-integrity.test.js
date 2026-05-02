@@ -3472,20 +3472,24 @@ test("tour card images are selected from travel-plan service images", async () =
   const tourPageSourcePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "tour.js");
   const toursListPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "tours_list.js");
   const mainToursPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "main_tours.js");
+  const travelPlanHelpersPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan_helpers.js");
   const travelPlanEditorPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "shared", "travel_plan_editor_core.js");
   const travelPlanModelPath = path.resolve(__dirname, "..", "..", "..", "model", "database", "travel_plan.cue");
   const homepageGeneratorPath = path.resolve(__dirname, "..", "..", "..", "scripts", "assets", "generate_public_homepage_assets.mjs");
+  const onePagerScriptPath = path.resolve(__dirname, "..", "..", "..", "scripts", "content", "create_all_one_pagers.mjs");
   const onePagerPdfPath = path.resolve(__dirname, "..", "src", "lib", "marketing_tour_one_pager_pdf.js");
-  const [toursSupportSource, toursHandlerSource, tourHtmlSource, tourPageSource, toursListSource, mainToursSource, travelPlanEditorSource, travelPlanModelSource, homepageGeneratorSource, onePagerPdfSource] = await Promise.all([
+  const [toursSupportSource, toursHandlerSource, tourHtmlSource, tourPageSource, toursListSource, mainToursSource, travelPlanHelpersSource, travelPlanEditorSource, travelPlanModelSource, homepageGeneratorSource, onePagerScriptSource, onePagerPdfSource] = await Promise.all([
     readFile(toursSupportPath, "utf8"),
     readFile(toursHandlerPath, "utf8"),
     readFile(tourHtmlPath, "utf8"),
     readFile(tourPageSourcePath, "utf8"),
     readFile(toursListPath, "utf8"),
     readFile(mainToursPath, "utf8"),
+    readFile(travelPlanHelpersPath, "utf8"),
     readFile(travelPlanEditorPath, "utf8"),
     readFile(travelPlanModelPath, "utf8"),
     readFile(homepageGeneratorPath, "utf8"),
+    readFile(onePagerScriptPath, "utf8"),
     readFile(onePagerPdfPath, "utf8")
   ]);
 
@@ -3511,17 +3515,17 @@ test("tour card images are selected from travel-plan service images", async () =
   );
   assert.match(
     travelPlanModelSource,
-    /one_pager_hero_image_id\?: common\.\#Identifier[\s\S]*one_pager_image_ids\?: \[\.\.\.common\.\#Identifier\]/,
-    "Travel plans should store one-pager PDF hero and body image selections separately from web-page images"
+    /one_pager_hero_image_id\?: common\.\#Identifier[\s\S]*one_pager_image_ids\?: \[\.\.\.common\.\#Identifier\][\s\S]*one_pager_experience_highlight_ids\?: \[\.\.\.common\.\#Identifier\]/,
+    "Travel plans should store one-pager PDF hero, body image, and experience-highlight selections separately from web-page images"
   );
   assert.match(
     tourHtmlSource,
-    /id="tour_one_pager_image_selector"[\s\S]*src="\/assets\/img\/one_pager\.png"[\s\S]*id="tour_one_pager_hero_images"[\s\S]*Select 4 small images[\s\S]*id="tour_one_pager_body_images"[\s\S]*id="tour_one_pager_btn"[\s\S]*id="tour_card_image_selector"/,
-    "Marketing-tour detail should render the one-pager PDF image selector above the web-page image selector"
+    /id="tour_one_pager_image_selector"[\s\S]*src="\/assets\/img\/one_pager\.png"[\s\S]*id="tour_one_pager_hero_images"[\s\S]*Select 4 small images[\s\S]*id="tour_one_pager_body_images"[\s\S]*id="tour_one_pager_experience_highlights"[\s\S]*id="tour_one_pager_btn"[\s\S]*id="tour_card_image_selector"/,
+    "Marketing-tour detail should render the one-pager PDF image and experience-highlight selectors above the web-page image selector"
   );
   assert.match(
     tourPageSource,
-    /const ONE_PAGER_SMALL_IMAGE_LIMIT = 4;[\s\S]*function renderOnePagerImageThumb[\s\S]*disabledTitle[\s\S]*data-one-pager-hero-image[\s\S]*data-one-pager-select-image[\s\S]*const isHeroImage = image\.id === heroImageId;[\s\S]*&& !isHeroImage[\s\S]*selectedIds\.length < ONE_PAGER_SMALL_IMAGE_LIMIT[\s\S]*function selectOnePagerHeroImage/,
+    /const ONE_PAGER_SMALL_IMAGE_LIMIT = 4;[\s\S]*const ONE_PAGER_EXPERIENCE_HIGHLIGHT_LIMIT = 4;[\s\S]*function renderOnePagerImageThumb[\s\S]*disabledTitle[\s\S]*data-one-pager-hero-image[\s\S]*data-one-pager-select-image[\s\S]*function renderOnePagerExperienceHighlightOption[\s\S]*data-one-pager-highlight-option[\s\S]*function renderOnePagerExperienceHighlightSelectors[\s\S]*const isHeroImage = image\.id === heroImageId;[\s\S]*&& !isHeroImage[\s\S]*selectedIds\.length < ONE_PAGER_SMALL_IMAGE_LIMIT[\s\S]*function selectOnePagerHeroImage/,
     "Marketing-tour detail should let staff select one-pager hero and up to four body images while showing the hero image disabled in the small-image row"
   );
   assert.doesNotMatch(
@@ -3555,6 +3559,11 @@ test("tour card images are selected from travel-plan service images", async () =
     "Travel-plan DOM sync should preserve the selected first card image through save"
   );
   assert.match(
+    travelPlanHelpersSource,
+    /function normalizeOnePagerExperienceHighlightIds\(values\)[\s\S]*ONE_PAGER_EXPERIENCE_HIGHLIGHT_LIMIT[\s\S]*one_pager_experience_highlight_ids = normalizeOnePagerExperienceHighlightIds\(source\.one_pager_experience_highlight_ids\)[\s\S]*one_pager_experience_highlight_ids,/,
+    "Travel-plan draft normalization should preserve one-pager experience-highlight selections through selector rerenders and save"
+  );
+  assert.match(
     toursSupportSource,
     /delete next\.pictures;[\s\S]*delete next\.image;/,
     "Tour storage normalization should remove legacy tour-level picture fields"
@@ -3563,6 +3572,21 @@ test("tour card images are selected from travel-plan service images", async () =
     onePagerPdfSource,
     /function collectTourImages\(tour, lang\)[\s\S]*one_pager_image_ids[\s\S]*one_pager_hero_image_id[\s\S]*addEntry\(entriesById\.get\(heroImageId\)\)/,
     "The one-pager PDF should prioritize the dedicated one-pager hero and body image selections"
+  );
+  assert.match(
+    onePagerPdfSource,
+    /const styleOptions = pdfTextOptions\(lang, \{ width: 282, characterSpacing: 1\.4, lineGap: 2 \}\);[\s\S]*doc\.heightOfString\(styleText, styleOptions\)[\s\S]*doc\.text\(styleText, 42, styleY[\s\S]*const descriptionY = Math\.max\(368, styleY \+ styleHeight \+ 8\)/,
+    "The one-pager PDF should wrap long travel-style labels below the tour title and move the description down"
+  );
+  assert.match(
+    onePagerPdfSource,
+    /function collectConfiguredExperienceHighlightItems\(tour, lang, manifestPath\)[\s\S]*one_pager_experience_highlight_ids[\s\S]*title: localizedMapValue\(item\.title_i18n, lang, item\.title\)[\s\S]*body: ""[\s\S]*imageBuffer: await loadExperienceHighlightImageBuffer\(item\.imagePath\)/,
+    "The one-pager PDF should render the selected manifest-backed experience highlight images with localized captions and no subtitle"
+  );
+  assert.match(
+    onePagerScriptSource,
+    /function applyScriptExperienceHighlights\(tour, rawTravelPlan, seed, availableHighlightIds\)[\s\S]*onePagerExperienceHighlightIds\(rawTravelPlan\)[\s\S]*if \(selectedHighlightIds\.length[\s\S]*randomHighlightIds = deterministicShuffle\(availableHighlightIds, seed\)\.slice\(0, onePagerExperienceHighlightCount\)[\s\S]*one_pager_experience_highlight_ids: randomHighlightIds/,
+    "The one-pager batch script should choose four random experience highlights only when a marketing tour has none selected"
   );
 });
 

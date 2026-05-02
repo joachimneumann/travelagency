@@ -5629,6 +5629,16 @@
     "origin": "manual",
     "updated_at": "2026-05-02T00:00:00.000Z"
   },
+  "tour.one_pager_experience_highlights": {
+    "source_hash": "770dd86bad64ad6ae9a598a412671702b6389fbfc49af3de499ddf426b0ba8b3",
+    "origin": "legacy",
+    "updated_at": "2026-05-02T11:48:19.267Z"
+  },
+  "tour.one_pager_select_one": {
+    "source_hash": "345b3fcdc2dd96102ba31cedf87c48ec9d51079deaa9afced05f883eb0ce4f33",
+    "origin": "machine",
+    "updated_at": "2026-05-02T11:52:26.865Z"
+  },
   "tour.one_pager_select_hero": {
     "source_hash": "999f6b77fbb48e8754133a4b178a1269fd808036ac36c35e1d7c6c3c3a1e2985",
     "origin": "manual",
@@ -5678,6 +5688,31 @@
     "source_hash": "34cf27b7526fdcb978851bc29270e62b98d417b707fdadace03725f0f5b6397e",
     "origin": "manual",
     "updated_at": "2026-05-02T00:00:00.000Z"
+  },
+  "tour.one_pager_experience_highlights_empty": {
+    "source_hash": "c9a59880a76864504db416e79f525e8f8d0e6c3fb51d889844e6f1f0effcbfdf",
+    "origin": "legacy",
+    "updated_at": "2026-05-02T11:48:19.267Z"
+  },
+  "tour.one_pager_experience_highlights_load_failed": {
+    "source_hash": "df1a806df3e38acf6f6ee6e9ec517359ef2bd6ac8b392770be495e2bfc21ac76",
+    "origin": "legacy",
+    "updated_at": "2026-05-02T11:48:19.267Z"
+  },
+  "tour.one_pager_experience_highlight_unavailable": {
+    "source_hash": "4591c6884d3afc931b962057f9599520018226489be853a57f0abf57c0fe6dce",
+    "origin": "legacy",
+    "updated_at": "2026-05-02T11:48:19.267Z"
+  },
+  "tour.one_pager_experience_highlights_selected": {
+    "source_hash": "ffc2efdc0f1aa7cab448bc63284921bede38e4744fbad0999e0d6826f91ffd8d",
+    "origin": "legacy",
+    "updated_at": "2026-05-02T11:48:19.267Z"
+  },
+  "tour.one_pager_experience_highlights_required": {
+    "source_hash": "963c6bf544e5737933de001e2ce28b0a12808b4b0bc4d79ff5217e65408957a8",
+    "origin": "legacy",
+    "updated_at": "2026-05-02T11:48:19.267Z"
   },
   "tour.page_title": {
     "source_hash": "a76eb76fde5671789323276d3b97dd5bd707a3cb58547da75f4787503f3fa1a8",

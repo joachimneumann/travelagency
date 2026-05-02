@@ -602,9 +602,29 @@ function reelsButtonCloseLabel() {
   return "X";
 }
 
+function syncReelsButtonDefaultSize() {
+  if (!(els.mobileReelToggle instanceof HTMLElement) || els.mobileReelToggle.hidden) return;
+  const button = els.mobileReelToggle;
+  const wasActive = button.classList.contains("is-active");
+  const previousText = button.textContent;
+
+  button.classList.remove("is-active");
+  button.textContent = reelsButtonDefaultLabel();
+
+  const rect = button.getBoundingClientRect();
+  if (rect.width > 0 && rect.height > 0) {
+    button.style.setProperty("--reels-toggle-default-width", `${rect.width}px`);
+    button.style.setProperty("--reels-toggle-default-height", `${rect.height}px`);
+  }
+
+  button.textContent = previousText;
+  button.classList.toggle("is-active", wasActive);
+}
+
 function setReelsButtonActive(isActive) {
   if (!els.mobileReelToggle) return;
   const active = Boolean(isActive);
+  syncReelsButtonDefaultSize();
   els.mobileReelToggle.classList.toggle("is-active", active);
   els.mobileReelToggle.setAttribute("aria-expanded", String(active));
   els.mobileReelToggle.textContent = active ? reelsButtonCloseLabel() : reelsButtonDefaultLabel();

@@ -520,6 +520,9 @@ export function createBookingTravelPlanModule(ctx) {
       tour_card_image_ids: Array.isArray(source.tour_card_image_ids) ? source.tour_card_image_ids : [],
       one_pager_hero_image_id: source.one_pager_hero_image_id || null,
       one_pager_image_ids: Array.isArray(source.one_pager_image_ids) ? source.one_pager_image_ids : [],
+      one_pager_experience_highlight_ids: Array.isArray(source.one_pager_experience_highlight_ids)
+        ? source.one_pager_experience_highlight_ids
+        : [],
       days: (Array.isArray(source.days) ? source.days : []).map((day, dayIndex) => {
         const sourceDay = day && typeof day === "object" && !Array.isArray(day) ? day : {};
         const nextDay = {
@@ -1930,6 +1933,9 @@ export function createBookingTravelPlanModule(ctx) {
     draft.one_pager_hero_image_id = state.travelPlanDraft?.one_pager_hero_image_id || null;
     draft.one_pager_image_ids = Array.isArray(state.travelPlanDraft?.one_pager_image_ids)
       ? [...state.travelPlanDraft.one_pager_image_ids]
+      : [];
+    draft.one_pager_experience_highlight_ids = Array.isArray(state.travelPlanDraft?.one_pager_experience_highlight_ids)
+      ? [...state.travelPlanDraft.one_pager_experience_highlight_ids]
       : [];
     if (allowDestinationScope) {
       draft.destination_scope = readDestinationScopeFromDom(destinationScopeEditorRoot());

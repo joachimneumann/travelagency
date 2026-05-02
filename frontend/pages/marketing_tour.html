@@ -290,6 +290,106 @@
         opacity: 0.58;
       }
 
+      .tour-experience-highlight-selectors {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0.55rem;
+      }
+
+      .tour-experience-highlight-select {
+        min-width: 0;
+      }
+
+      .tour-experience-highlight-select__details {
+        position: relative;
+      }
+
+      .tour-experience-highlight-select__summary {
+        display: flex;
+        min-height: 2.75rem;
+        align-items: center;
+        gap: 0.45rem;
+        padding: 0.38rem 0.55rem;
+        border: 1px solid var(--line);
+        border-radius: 0.65rem;
+        background: var(--surface-muted);
+        color: var(--text-strong);
+        cursor: pointer;
+        list-style: none;
+      }
+
+      .tour-experience-highlight-select__summary::-webkit-details-marker {
+        display: none;
+      }
+
+      .tour-experience-highlight-select__details[open] .tour-experience-highlight-select__summary {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 2px var(--accent-tint);
+      }
+
+      .tour-experience-highlight-select__icon {
+        flex: 0 0 auto;
+        width: 28px;
+        height: 28px;
+        object-fit: contain;
+      }
+
+      .tour-experience-highlight-select__text {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .tour-experience-highlight-select__menu {
+        position: absolute;
+        top: calc(100% + 0.3rem);
+        left: 0;
+        right: 0;
+        z-index: 30;
+        display: grid;
+        max-height: 18rem;
+        overflow: auto;
+        border: 1px solid var(--line);
+        border-radius: 0.7rem;
+        background: var(--surface);
+        box-shadow: 0 18px 36px rgba(24, 35, 52, 0.16);
+      }
+
+      .tour-experience-highlight-select__option {
+        display: flex;
+        width: 100%;
+        min-height: 2.65rem;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.45rem 0.55rem;
+        border: 0;
+        border-bottom: 1px solid var(--line);
+        background: transparent;
+        color: var(--text-strong);
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+      }
+
+      .tour-experience-highlight-select__option:last-child {
+        border-bottom: 0;
+      }
+
+      .tour-experience-highlight-select__option:hover:not(:disabled),
+      .tour-experience-highlight-select__option:focus-visible:not(:disabled) {
+        background: var(--surface-muted);
+      }
+
+      .tour-experience-highlight-select__option.is-selected {
+        background: var(--accent-tint);
+      }
+
+      .tour-experience-highlight-select__option:disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
+      }
+
       .tour-card-image-selector__actions {
         display: flex;
         flex-wrap: wrap;
@@ -308,6 +408,10 @@
           width: 88px;
         }
 
+        .tour-experience-highlight-selectors {
+          grid-template-columns: minmax(0, 1fr);
+        }
+
         .tour-reel-card {
           grid-template-columns: minmax(0, 1fr);
           width: 100%;
@@ -323,6 +427,12 @@
           grid-column: 1;
           grid-row: auto;
           justify-self: center;
+        }
+      }
+
+      @media (min-width: 521px) and (max-width: 820px) {
+        .tour-experience-highlight-selectors {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
         }
       }
     </style>
@@ -386,6 +496,10 @@
                               <button class="btn btn-ghost" id="tour_one_pager_clear_images_btn" type="button" data-i18n-id="tour.one_pager_clear_images">Clear</button>
                             </div>
                             <div id="tour_one_pager_body_images" class="tour-card-image-selector__thumbs"></div>
+                          </div>
+                          <div class="tour-card-image-selector__row">
+                            <span class="tour-card-image-selector__label" data-i18n-id="tour.one_pager_experience_highlights">Experience highlights</span>
+                            <div id="tour_one_pager_experience_highlights" class="tour-experience-highlight-selectors"></div>
                           </div>
                         </div>
                         <div class="tour-card-image-selector__actions">
