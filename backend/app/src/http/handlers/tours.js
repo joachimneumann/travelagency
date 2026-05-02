@@ -364,6 +364,9 @@ export function createTourHandlers(deps) {
       const priority = safeInt(payload.priority);
       next.priority = priority === null ? 50 : priority;
     }
+    if (payload.published_on_webpage !== undefined || isCreate) {
+      next.published_on_webpage = payload.published_on_webpage !== false;
+    }
 
     return normalizeTourForStorage(next);
   }
@@ -715,6 +718,7 @@ export function createTourHandlers(deps) {
 
   function normalizeTourForPublicWebpage(tour, publishedDestinationCodes) {
     const stored = normalizeTourForStorage(tour);
+    if (stored.published_on_webpage === false) return null;
     const visibleDestinations = tourDestinationCodes(stored).filter((code) => publishedDestinationCodes.has(code));
     if (!visibleDestinations.length) return null;
     const travelPlan = stored.travel_plan && typeof stored.travel_plan === "object" && !Array.isArray(stored.travel_plan)

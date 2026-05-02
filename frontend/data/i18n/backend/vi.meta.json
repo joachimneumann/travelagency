@@ -419,6 +419,11 @@
     "origin": "machine",
     "updated_at": "2026-03-30T23:51:31.875Z"
   },
+  "backend.tours.published_pill": {
+    "source_hash": "b04e5ea201bb040cae53f693f6a38a3e00b62da6039ca248fecd59b7fc842894",
+    "origin": "manual",
+    "updated_at": "2026-05-02T03:25:00.000Z"
+  },
   "backend.tours.search_label": {
     "source_hash": "be3d1790ef4f77a8db308e493848c51d83d74e40ec8b3223cbc3420badbb8b73",
     "origin": "machine",
@@ -5443,6 +5448,11 @@
     "source_hash": "a331bce12b2ffa3285451d208e720950dd8666f77572c8343b66d918f1d50a26",
     "origin": "legacy",
     "updated_at": "2026-04-30T04:25:00.000Z"
+  },
+  "tour.published_on_webpage": {
+    "source_hash": "eed1e6bc6be5e01b2f1fd5add5de7a90b3d87232a7b142f7c4b971082c157633",
+    "origin": "manual",
+    "updated_at": "2026-05-02T03:25:00.000Z"
   },
   "tour.rating_label": {
     "source_hash": "9f29530464f730bd28f137cfc9ea941af137187b57c21e8ff5fefed520764d99",

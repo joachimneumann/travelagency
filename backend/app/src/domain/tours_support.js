@@ -162,6 +162,7 @@ export function createTourHelpers({ toursDir, safeInt, normalizeMarketingTourTra
     next.seasonality_start_month = normalizeText(next.seasonality_start_month);
     next.seasonality_end_month = normalizeText(next.seasonality_end_month);
     next.priority = safeInt(next.priority) ?? 50;
+    next.published_on_webpage = next.published_on_webpage !== false;
     delete next.travel_duration_days;
     delete next.budget_lower_usd;
     delete next.rating;

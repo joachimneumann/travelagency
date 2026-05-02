@@ -981,6 +981,9 @@ function renderTours(items) {
       const href = buildTourEditHref(tour.id);
       const title = tour.title || "-";
       const tourImageMarkup = renderTourImageMarkup(tour);
+      const publishedPill = tour.published_on_webpage !== false
+        ? `<span class="tour-list__published-pill">${escapeHtml(backendT("backend.tours.published_pill", "published"))}</span>`
+        : "";
       const rowAriaLabel = backendT("backend.tours.open_tour", "Open tour {name}", {
         name: title
       });
@@ -992,7 +995,9 @@ function renderTours(items) {
           <div class="booking-list__name-cell">
             <span class="booking-list__booking-thumb">${tourImageMarkup}</span>
             <div class="booking-list__name-copy">
-              <div class="booking-list__booking-name">${escapeHtml(title)}</div>
+              <div class="booking-list__booking-name">
+                <span>${escapeHtml(title)}</span>
+              </div>
               <div class="booking-list__representative">
                 <span class="booking-list__representative-name">${escapeHtml(countries || "-")}</span>
               </div>
@@ -1008,6 +1013,7 @@ function renderTours(items) {
         <td class="tour-list__updated-cell" aria-label="${escapeHtml(backendT("backend.table.updated", "Updated"))}: ${escapeHtml(updatedAt)}">
           <div class="tour-list__updated-cell-content">
             <div class="tour-list__updated-summary">
+              ${publishedPill}
               <div class="tour-list__updated-primary">${escapeHtml(updatedAt)}</div>
             </div>
             ${actionButton}

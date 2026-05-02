@@ -121,6 +121,31 @@
         color: #5f6b7a;
       }
 
+      .backend-list-page #toursTable .booking-list__booking-name {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.45rem;
+      }
+
+      .tour-list__published-pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.18rem 0.5rem;
+        border-radius: 999px;
+        background: var(--success-surface-alpha);
+        color: var(--success-text-deep);
+        font-size: var(--font-size-overline);
+        font-weight: var(--font-weight-bold);
+        line-height: 1.15;
+        text-transform: lowercase;
+      }
+
+      .backend-list-page #toursTable .tour-list__updated-summary .tour-list__published-pill {
+        justify-self: start;
+      }
+
       .tour-destination-filter {
         display: grid;
         gap: 0.85rem;

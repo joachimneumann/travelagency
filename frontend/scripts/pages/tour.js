@@ -173,6 +173,7 @@ const els = {
   travel_plan_destination_scope_editor: document.getElementById("tour_destination_scope_editor"),
   seasonalityStartMonth: document.getElementById("tour_seasonality_start_month"),
   seasonalityEndMonth: document.getElementById("tour_seasonality_end_month"),
+  publishedOnWebpage: document.getElementById("tour_published_on_webpage"),
   localizedContentEditor: document.getElementById("tour_localized_content_editor"),
   tourCardImageSelector: document.getElementById("tour_card_image_selector"),
   reelVideoCard: document.getElementById("tour_reel_video_card"),
@@ -1908,6 +1909,7 @@ async function loadTour() {
   setInput("tour_priority", toInputNumber(tour.priority));
   setInput("tour_seasonality_start_month", tour.seasonality_start_month || "");
   setInput("tour_seasonality_end_month", tour.seasonality_end_month || "");
+  if (els.publishedOnWebpage) els.publishedOnWebpage.checked = tour.published_on_webpage !== false;
   renderLocalizedTourContentEditor();
   syncReelVideoDraftItemFromTour(tour);
   tourTravelPlanAdapter?.applyTour(tour);
@@ -1949,6 +1951,7 @@ async function initializeNewTourForm() {
   setInput("tour_priority", "50");
   setInput("tour_seasonality_start_month", "");
   setInput("tour_seasonality_end_month", "");
+  if (els.publishedOnWebpage) els.publishedOnWebpage.checked = true;
   renderLocalizedTourContentEditor();
   syncReelVideoDraftItemFromTour(state.tour);
   tourTravelPlanAdapter?.applyTour(state.tour);
@@ -2114,6 +2117,7 @@ async function submitForm(event) {
     priority: toNumberOrNull(getInput("tour_priority")),
     seasonality_start_month: getInput("tour_seasonality_start_month"),
     seasonality_end_month: getInput("tour_seasonality_end_month"),
+    published_on_webpage: els.publishedOnWebpage ? els.publishedOnWebpage.checked : true,
     short_description_i18n,
     travel_plan: omitDerivedTravelPlanDestinations(travelPlanPayload)
   };

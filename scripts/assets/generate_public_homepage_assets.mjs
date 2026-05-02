@@ -535,6 +535,7 @@ function publicDestinationScopeCatalog(store, destinationOptions, { lang = "en",
 
 function normalizeTourForPublicHomepage(tour, publishedDestinationCodes, { normalizeTourForStorage, tourDestinationCodes }) {
   const stored = normalizeTourForStorage(tour);
+  if (stored.published_on_webpage === false) return null;
   const visibleDestinations = tourDestinationCodes(stored).filter((code) => publishedDestinationCodes.has(code));
   if (!visibleDestinations.length) return null;
   const travelPlan = stored.travel_plan && typeof stored.travel_plan === "object" && !Array.isArray(stored.travel_plan)
