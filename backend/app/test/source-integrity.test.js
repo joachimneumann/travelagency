@@ -3618,6 +3618,11 @@ test("tour card images are selected from travel-plan service images", async () =
     /const translationsSnapshotDir = path\.join\(repoRoot, "content", "translations"\);[\s\S]*async function loadPublishedMarketingTourTranslations\(languages\)[\s\S]*`marketing-tours\.\$\{lang\}\.json`[\s\S]*function applyPublishedTranslationsToTravelPlan\(travelPlan, lang, translations\)[\s\S]*applyPublishedTranslationToLocalizedPair\(service, "title", "title_i18n", lang, translations\)[\s\S]*function applyPublishedMarketingTourTranslations\(tour, lang, translations\)[\s\S]*applyPublishedTranslationsToTravelPlan\(next\.travel_plan, normalizedLang, translations\)[\s\S]*const publishedTranslationsByLang = await loadPublishedMarketingTourTranslations\(options\.languages\);[\s\S]*const localizedTour = applyPublishedMarketingTourTranslations\(tour, lang, publishedTranslations\);[\s\S]*const readModel = tourHelpers\.normalizeTourForRead\(localizedTour, \{ lang \}\);[\s\S]*normalizeMarketingTourTravelPlan\(localizedTour\.travel_plan,[\s\S]*sourceLang: "en"[\s\S]*flatMode: "localized"/,
     "Batch one-pager PDFs should apply published marketing-tour translation snapshots before localized PDF rendering"
   );
+  assert.doesNotMatch(
+    `${homepageGeneratorSource}\n${onePagerScriptSource}`,
+    /if \(!sourceText \|\| localizedObjectText\([^)]*, normalizedLang\)\) return false;/,
+    "Published marketing-tour snapshots should override stale embedded localized tour text instead of only filling missing languages"
+  );
   assert.match(
     onePagerScriptSource,
     /const bodyRows = rows\.map\(\(row\) => \{[\s\S]*return `<tr>\$\{cells\}<\/tr>`;[\s\S]*<tr>\$\{headerCells\}<\/tr>/,

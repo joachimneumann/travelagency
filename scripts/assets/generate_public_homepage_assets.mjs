@@ -617,9 +617,10 @@ function applyPublishedTranslationToLocalizedMap(holder, fieldName, lang, transl
   const normalizedLang = normalizeTourLang(lang);
   const existingValue = holder[fieldName];
   const sourceText = sourceTextFromLocalizedValue(existingValue);
-  if (!sourceText || localizedObjectText(existingValue, normalizedLang)) return false;
+  if (!sourceText) return false;
   const targetText = publishedTranslationForSource(translations, sourceText);
   if (!targetText) return false;
+  if (localizedObjectText(existingValue, normalizedLang) === targetText) return false;
   holder[fieldName] = {
     ...(existingValue && typeof existingValue === "object" && !Array.isArray(existingValue)
       ? existingValue
@@ -634,9 +635,10 @@ function applyPublishedTranslationToLocalizedPair(holder, plainField, i18nField,
   const normalizedLang = normalizeTourLang(lang);
   const i18nValue = holder[i18nField];
   const sourceText = sourceTextFromLocalizedValue(i18nValue, holder[plainField]);
-  if (!sourceText || localizedObjectText(i18nValue, normalizedLang)) return false;
+  if (!sourceText) return false;
   const targetText = publishedTranslationForSource(translations, sourceText);
   if (!targetText) return false;
+  if (localizedObjectText(i18nValue, normalizedLang) === targetText) return false;
   holder[i18nField] = {
     ...(i18nValue && typeof i18nValue === "object" && !Array.isArray(i18nValue)
       ? i18nValue
