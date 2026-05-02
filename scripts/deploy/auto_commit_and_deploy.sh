@@ -3,6 +3,9 @@ set -euo pipefail
 
 ROOT_DIR="$HOME/projects/travelagency"
 REMOTE_SCRIPT="./scripts/deploy/update_staging.sh"
+REMOTE_HOST="${REMOTE_HOST:-atp}"
+REMOTE_STAGING_ROOT="${REMOTE_STAGING_ROOT:-/srv/asiatravelplan-staging}"
+PUBLISHED_TRANSLATIONS_DIR="$ROOT_DIR/content/translations"
 readonly ALLOWED_ROOT_LEVEL_FILES=(
   ".env.staging.example"
   ".gitignore"
@@ -73,6 +76,24 @@ split_remote_services() {
         ;;
     esac
   done
+}
+
+sync_published_translation_snapshots_to_staging() {
+  local remote_translations_dir="$REMOTE_STAGING_ROOT/content/translations"
+
+  if [[ ! -f "$PUBLISHED_TRANSLATIONS_DIR/manifest.json" ]]; then
+    echo "Missing published translation snapshot: $PUBLISHED_TRANSLATIONS_DIR/manifest.json" >&2
+    echo "Publish translations locally/staging first, or restore content/translations before deploying." >&2
+    exit 1
+  fi
+  if ! command -v rsync >/dev/null 2>&1; then
+    echo "rsync is required to deploy ignored content/translations snapshots." >&2
+    exit 1
+  fi
+
+  echo "Syncing published translation snapshots to staging..."
+  ssh "$REMOTE_HOST" "mkdir -p $(printf '%q' "$remote_translations_dir")"
+  rsync -az --delete "$PUBLISHED_TRANSLATIONS_DIR/" "$REMOTE_HOST:$remote_translations_dir/"
 }
 
 should_run_tests() {
@@ -250,9 +271,10 @@ split_remote_services "${SERVICES[@]}"
 
 if [[ "${#STAGING_SERVICES[@]}" -gt 0 ]]; then
   remote_args="$(printf "%q " "${STAGING_SERVICES[@]}")"
-  ssh atp "bash -lc 'cd /srv/asiatravelplan-staging && git pull --ff-only && $REMOTE_SCRIPT ${remote_args}'"
+  sync_published_translation_snapshots_to_staging
+  ssh "$REMOTE_HOST" "bash -lc 'cd $(printf '%q' "$REMOTE_STAGING_ROOT") && git pull --ff-only && $REMOTE_SCRIPT ${remote_args}'"
 fi
 
 if [[ "$DEPLOY_SHARED_CADDY" -eq 1 ]]; then
-  ssh atp "bash -lc 'cd /srv/asiatravelplan-staging && git pull --ff-only && SOURCE_CADDYFILE=/srv/asiatravelplan-staging/deploy-config/Caddyfile SOURCE_CADDY_COMPOSE_FILE=/srv/asiatravelplan-staging/docker-compose.caddy.yml ENV_FILE=/srv/asiatravelplan-staging/.env ./scripts/production/deploy_production_caddy.sh'"
+  ssh "$REMOTE_HOST" "bash -lc 'cd $(printf '%q' "$REMOTE_STAGING_ROOT") && git pull --ff-only && SOURCE_CADDYFILE=$REMOTE_STAGING_ROOT/deploy-config/Caddyfile SOURCE_CADDY_COMPOSE_FILE=$REMOTE_STAGING_ROOT/docker-compose.caddy.yml ENV_FILE=$REMOTE_STAGING_ROOT/.env ./scripts/production/deploy_production_caddy.sh'"
 fi

@@ -9,12 +9,19 @@ run_runtime_i18n_generator_quiet() {
   local generator_path="${2:-$root_dir/scripts/i18n/build_runtime_i18n.mjs}"
   local log_path
   local command_log_path
+  local snapshot_manifest
 
   log_path="$(runtime_i18n_generator_log_path)"
   command_log_path="${log_path}.command"
+  snapshot_manifest="$root_dir/content/translations/manifest.json"
 
   if [[ ! -f "$generator_path" ]]; then
     echo "Error: runtime i18n generator not found at $generator_path" >&2
+    return 1
+  fi
+  if [[ ! -f "$snapshot_manifest" ]]; then
+    echo "Error: published translation snapshot missing: $snapshot_manifest" >&2
+    echo "Publish translations first, restore content/translations, or sync the published snapshot before deploying." >&2
     return 1
   fi
 

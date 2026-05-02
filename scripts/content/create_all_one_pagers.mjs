@@ -672,12 +672,7 @@ function buildMatrixHtml({ outputDir, rows, languages, generatedAt, flagDataUrls
         </a>
       </td>`;
     }).join("");
-    return `<tr>
-      <th class="tour-cell">
-        <span class="tour-title">${escapeHtml(row.title)}</span>
-      </th>
-      ${cells}
-    </tr>`;
+    return `<tr>${cells}</tr>`;
   }).join("\n");
 
   return `<!doctype html>
@@ -695,7 +690,6 @@ function buildMatrixHtml({ outputDir, rows, languages, generatedAt, flagDataUrls
       --muted: #60717a;
       --surface: #ffffff;
       --preview-width: 440px;
-      --tour-column-width: 170px;
     }
     * { box-sizing: border-box; }
     body {
@@ -773,26 +767,6 @@ function buildMatrixHtml({ outputDir, rows, languages, generatedAt, flagDataUrls
       flex: 0 0 auto;
       object-fit: cover;
     }
-    .corner,
-    .tour-cell {
-      width: var(--tour-column-width);
-      min-width: var(--tour-column-width);
-      max-width: var(--tour-column-width);
-      background: #fbfcfb;
-    }
-    .tour-cell {
-      vertical-align: middle;
-      text-align: left;
-      white-space: normal;
-      overflow-wrap: anywhere;
-    }
-    .tour-title {
-      display: block;
-    }
-    .tour-title {
-      font-size: 13px;
-      line-height: 1.3;
-    }
     .preview-link {
       display: block;
       width: var(--preview-width);
@@ -820,7 +794,7 @@ function buildMatrixHtml({ outputDir, rows, languages, generatedAt, flagDataUrls
     <div class="matrix-wrap">
       <table>
         <thead>
-          <tr><th class="corner">Tour</th>${headerCells}</tr>
+          <tr>${headerCells}</tr>
         </thead>
         <tbody>
           ${bodyRows}

@@ -3619,6 +3619,16 @@ test("tour card images are selected from travel-plan service images", async () =
     "Batch one-pager PDFs should apply published marketing-tour translation snapshots before localized PDF rendering"
   );
   assert.match(
+    onePagerScriptSource,
+    /const bodyRows = rows\.map\(\(row\) => \{[\s\S]*return `<tr>\$\{cells\}<\/tr>`;[\s\S]*<tr>\$\{headerCells\}<\/tr>/,
+    "The one-pager matrix should render only language preview columns"
+  );
+  assert.doesNotMatch(
+    onePagerScriptSource,
+    /class="tour-cell"|class="corner">Tour|tour-column-width/,
+    "The one-pager matrix should not render the old tour-title first column"
+  );
+  assert.match(
     travelPlanEditorSource,
     /function syncTravelPlanDraftFromDom\(\)[\s\S]*draft\.tour_card_primary_image_id = state\.travelPlanDraft\?\.tour_card_primary_image_id \|\| null;[\s\S]*state\.travelPlanDraft = normalizeTravelPlanState\(draft\);/,
     "Travel-plan DOM sync should preserve the selected first card image through save"
@@ -4739,8 +4749,18 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
     "Runtime i18n deploy helper should build generated dictionaries from published snapshots"
   );
   assert.match(
+    runtimeI18nScript,
+    /snapshot_manifest="\$root_dir\/content\/translations\/manifest\.json"[\s\S]*published translation snapshot missing/,
+    "Runtime i18n deploy helper should fail with a clear message when ignored published snapshots are missing"
+  );
+  assert.match(
     autoCommitDeployScript,
-    /SOURCE_CADDYFILE=\/srv\/asiatravelplan-staging\/deploy-config\/Caddyfile[\s\S]*SOURCE_CADDY_COMPOSE_FILE=\/srv\/asiatravelplan-staging\/docker-compose\.caddy\.yml[\s\S]*\.\/scripts\/production\/deploy_production_caddy\.sh/,
+    /PUBLISHED_TRANSLATIONS_DIR="\$ROOT_DIR\/content\/translations"[\s\S]*sync_published_translation_snapshots_to_staging\(\)[\s\S]*rsync -az --delete "\$PUBLISHED_TRANSLATIONS_DIR\/" "\$REMOTE_HOST:\$remote_translations_dir\/"[\s\S]*sync_published_translation_snapshots_to_staging[\s\S]*\$REMOTE_SCRIPT/,
+    "Auto deploy should sync ignored published content/translations snapshots before running staging update"
+  );
+  assert.match(
+    autoCommitDeployScript,
+    /REMOTE_STAGING_ROOT="\$\{REMOTE_STAGING_ROOT:-\/srv\/asiatravelplan-staging\}"[\s\S]*SOURCE_CADDYFILE=\$REMOTE_STAGING_ROOT\/deploy-config\/Caddyfile[\s\S]*SOURCE_CADDY_COMPOSE_FILE=\$REMOTE_STAGING_ROOT\/docker-compose\.caddy\.yml[\s\S]*\.\/scripts\/production\/deploy_production_caddy\.sh/,
     "Staging auto-deploy should reload shared Caddy from the just-updated staging checkout"
   );
   assert.match(
