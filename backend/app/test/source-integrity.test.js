@@ -215,9 +215,18 @@ test("translate wrapper covers backend and frontend i18n sync scripts", async ()
   );
 });
 
-test("generated translation outputs are not tracked outside backup", async () => {
+test("generated translation outputs are not tracked outside backup", async (t) => {
   const repoRoot = path.resolve(__dirname, "..", "..", "..");
-  const { stdout } = await execFileAsync("git", ["ls-files"], { cwd: repoRoot });
+  let stdout = "";
+  try {
+    ({ stdout } = await execFileAsync("git", ["ls-files"], { cwd: repoRoot }));
+  } catch (error) {
+    if (error?.code === "ENOENT") {
+      t.skip("git is not installed in this runtime image.");
+      return;
+    }
+    throw error;
+  }
   const forbidden = stdout
     .split(/\r?\n/)
     .map((line) => line.trim())
