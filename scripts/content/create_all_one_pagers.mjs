@@ -216,11 +216,17 @@ async function fileExists(filePath) {
 
 async function commandExists(command) {
   try {
-    await execFile(command === "magick" ? "magick" : "which", command === "magick" ? ["-version"] : [command]);
+    await execFile("which", [command]);
     return true;
   } catch {
     return false;
   }
+}
+
+async function findImageMagickCommand() {
+  if (await commandExists("magick")) return "magick";
+  if (await commandExists("convert")) return "convert";
+  return "";
 }
 
 async function convertPdfToWebJpg(pdfPath, jpgPath, { dpi, width }) {
@@ -244,11 +250,12 @@ async function convertPdfToWebJpg(pdfPath, jpgPath, { dpi, width }) {
       return;
     } catch (error) {
       await rm(jpgPath, { force: true });
-      if (!(await commandExists("magick"))) throw error;
+      if (!(await findImageMagickCommand())) throw error;
     }
   }
-  if (await commandExists("magick")) {
-    await execFile("magick", [
+  const imageMagickCommand = await findImageMagickCommand();
+  if (imageMagickCommand) {
+    await execFile(imageMagickCommand, [
       "-density",
       String(dpi),
       `${pdfPath}[0]`,
@@ -267,7 +274,7 @@ async function convertPdfToWebJpg(pdfPath, jpgPath, { dpi, width }) {
     ]);
     return;
   }
-  throw new Error("Could not convert PDF to JPG. Install poppler (pdftoppm) or ImageMagick (magick).");
+  throw new Error("Could not convert PDF to JPG. Install poppler (pdftoppm) or ImageMagick (magick/convert).");
 }
 
 async function readTours() {

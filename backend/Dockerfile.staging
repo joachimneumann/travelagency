@@ -1,6 +1,6 @@
 FROM node:22-alpine
 
-RUN apk add --no-cache bash ffmpeg imagemagick libwebp-tools python3 py3-fonttools font-noto font-noto-cjk font-droid-nonlatin font-unifont ttf-dejavu \
+RUN apk add --no-cache bash ffmpeg imagemagick libwebp-tools poppler-utils python3 py3-fonttools font-noto font-noto-cjk font-droid-nonlatin font-unifont ttf-dejavu \
   && mkdir -p /usr/local/share/fonts/extracted \
   && python3 - <<'PY'
 from pathlib import Path
