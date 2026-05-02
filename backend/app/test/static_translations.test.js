@@ -391,6 +391,76 @@ test("static translation service applies missing marketing tour memory translati
   }
 });
 
+test("static translation service clears marketing tour machine cache without deleting manual overrides", async () => {
+  const repoRoot = await createFixture();
+  try {
+    const translationMemoryStore = createTranslationMemoryStore({
+      dataPath: path.join(repoRoot, "content", "translation_memory.json"),
+      writeQueueRef: { current: Promise.resolve() },
+      nowIso: () => "2026-04-28T02:45:00.000Z"
+    });
+    const tours = [
+      {
+        id: "tour_memory",
+        title: { en: "Lantern walk" },
+        short_description: { en: "Hoi An evening" }
+      }
+    ];
+    await translationMemoryStore.writeMachineTranslations(
+      {
+        title: "Lantern walk",
+        description: "Hoi An evening"
+      },
+      {
+        title: "old:Lantern walk",
+        description: "old:Hoi An evening"
+      },
+      "vi",
+      { kind: "test", display: "test" }
+    );
+    await translationMemoryStore.patchManualOverrides("vi", [
+      {
+        source_text: "Hoi An evening",
+        manual_override: "manual:Hoi An evening"
+      }
+    ]);
+
+    const service = createStaticTranslationService({
+      repoRoot,
+      readTours: async () => JSON.parse(JSON.stringify(tours)),
+      translationMemoryStore,
+      nowIso: () => "2026-04-28T02:45:00.000Z"
+    });
+
+    const summary = await service.clearMachineTranslations({
+      domains: ["marketing-tour-memory"],
+      target_langs: ["vi"]
+    });
+
+    const resolved = await translationMemoryStore.resolveEntries({ title: "Lantern walk", description: "Hoi An evening" }, "vi");
+    assert.equal(summary.cleared_count, 2);
+    assert.deepEqual(summary.domains, [
+      {
+        domain: "marketing-tour-memory",
+        target_lang: "vi",
+        cleared_count: 2
+      }
+    ]);
+    assert.equal(resolved.entries.title, undefined);
+    assert.equal(resolved.entries.description, "manual:Hoi An evening");
+    assert.equal(resolved.origins.description, "manual_override");
+
+    const state = await service.getLanguageState("marketing-tour-memory", "vi");
+    const title = state.rows.find((row) => row.source === "Lantern walk");
+    const description = state.rows.find((row) => row.source === "Hoi An evening");
+    assert.equal(title.status, "missing");
+    assert.equal(description.status, "manual_override");
+    assert.equal(description.cached, "");
+  } finally {
+    await rm(repoRoot, { recursive: true, force: true });
+  }
+});
+
 test("static translation service excludes generated content and booking travel-plan strings from index memory", async () => {
   const repoRoot = await createFixture();
   try {

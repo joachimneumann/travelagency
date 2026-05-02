@@ -161,6 +161,7 @@ export function createBackendServices({
   const staticTranslationApplyJobs = createStaticTranslationApplyJobs({
     repoRoot,
     applyTranslations: (options) => staticTranslationService.applyMissingTranslations(options),
+    clearTranslationCaches: (options) => staticTranslationService.clearMachineTranslations(options),
     publishTranslations: () => staticTranslationService.publishTranslations(),
     getStatusSummary: () => staticTranslationService.getStatusSummary(),
     nowIso: support.nowIso

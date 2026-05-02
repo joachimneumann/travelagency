@@ -4407,26 +4407,53 @@ test("backend translation nav icon reflects dirty centralized translation state"
   );
 });
 
-test("translations page exposes translate and publish actions without a refresh button", async () => {
+test("translations page exposes one translate action that auto-publishes clean snapshots", async () => {
   const repoRoot = path.resolve(__dirname, "..", "..", "..");
-  const [translationsHtml, translationsSource, translationsStyles, staticTranslationsSource] = await Promise.all([
+  const [translationsHtml, translationsSource, translationsStyles, staticTranslationsSource, staticTranslationApplyJobsSource, servicesSource] = await Promise.all([
     readFile(path.join(repoRoot, "frontend", "pages", "translations.html"), "utf8"),
     readFile(path.join(repoRoot, "frontend", "scripts", "pages", "translations.js"), "utf8"),
     readFile(path.join(repoRoot, "shared", "css", "pages", "backend-translations.css"), "utf8"),
-    readFile(path.join(repoRoot, "backend", "app", "src", "domain", "static_translations.js"), "utf8")
+    readFile(path.join(repoRoot, "backend", "app", "src", "domain", "static_translations.js"), "utf8"),
+    readFile(path.join(repoRoot, "backend", "app", "src", "domain", "static_translation_apply_jobs.js"), "utf8"),
+    readFile(path.join(repoRoot, "backend", "app", "src", "bootstrap", "services.js"), "utf8")
   ]);
   const statusOptionsSource = translationsSource.match(/const STATUS_OPTIONS = \[[\s\S]*?\];/)?.[0] || "";
   const tableTextRule = translationsStyles.match(/\.backend-translations-page \.translations-table__text \{[\s\S]*?\}/)?.[0] || "";
 
   assert.match(
     translationsHtml,
-    /id="translationsTranslateBtn"[\s\S]*>Translate<\/button>[\s\S]*id="translationsApplyBtn"[\s\S]*>Publish<\/button>/,
-    "translations.html should expose a top-level Translate action before Publish"
+    /id="translationsTranslateBtn"[\s\S]*>Translate<\/button>/,
+    "translations.html should expose a top-level Translate action"
+  );
+  assert.doesNotMatch(
+    `${translationsHtml}\n${translationsSource}`,
+    /translationsApplyBtn/,
+    "translations.html should not expose a separate Publish button"
   );
   assert.doesNotMatch(
     `${translationsHtml}\n${translationsSource}`,
     /translationsRefreshBtn/,
     "translations.html should not expose the removed refresh button"
+  );
+  assert.match(
+    translationsHtml,
+    /translationsRetranslateFrontendAllBtn"[\s\S]*>Retranslate customer UI strings<\/button>[\s\S]*translationsClearMarketingTourCacheBtn"[\s\S]*>Clear marketing tour translation cache<\/button>/,
+    "Advanced actions should split customer UI retranslation from marketing-tour cache invalidation"
+  );
+  assert.match(
+    translationsSource,
+    /clearMarketingTourCacheBtn[\s\S]*\/api\/v1\/static-translations\/retranslate", \{ mode: "marketing_tour_cache" \}/,
+    "The marketing-tour cache button should call the dedicated central memory cache-clear mode"
+  );
+  assert.match(
+    staticTranslationApplyJobsSource,
+    /mode === "marketing_tour_cache"[\s\S]*clearTranslationCaches\(\{[\s\S]*domains: \["marketing-tour-memory"\][\s\S]*Use Translate to rebuild missing machine translations and publish clean snapshots/,
+    "The marketing-tour cache job should clear central memory cache and leave translation plus publishing to Translate"
+  );
+  assert.match(
+    servicesSource,
+    /clearTranslationCaches:\s*\(options\) => staticTranslationService\.clearMachineTranslations\(options\)/,
+    "Runtime services should wire central cache clearing into translation jobs"
   );
   assert.doesNotMatch(
     `${translationsSource}\n${staticTranslationsSource}`,
@@ -4445,13 +4472,13 @@ test("translations page exposes translate and publish actions without a refresh 
   );
   assert.match(
     translationsSource,
-    /translationsApplyBtn[\s\S]*\/api\/v1\/static-translations\/publish/,
-    "The Publish button should start the static translation publish job"
+    /function currentTranslationActionState\(\)[\s\S]*translateNeeded[\s\S]*publishReady[\s\S]*translateActionReady/,
+    "The translations page should enable Translate for missing strings or publish-ready snapshots"
   );
   assert.match(
-    translationsSource,
-    /function currentTranslationActionState\(\)[\s\S]*translateNeeded[\s\S]*publishReady/,
-    "The translations page should derive translate and publish readiness from the central status summary"
+    staticTranslationApplyJobsSource,
+    /function autoPublishPhases\(\{ publishTranslations, getStatusSummary \} = \{\}\)[\s\S]*issueEntriesFromStatus\(status\)[\s\S]*Skipped publishing because[\s\S]*const manifest = await publishTranslations\(\)[\s\S]*whenPhase\(runtimeI18nPhase\(\), autoPublished\)[\s\S]*whenPhase\(homepageAssetsPhase\(\), autoPublished\)/,
+    "The apply job should publish snapshots and rebuild runtime assets after translation issues clear"
   );
   assert.match(
     translationsSource,
@@ -4485,8 +4512,8 @@ test("translations page exposes translate and publish actions without a refresh 
   );
   assert.match(
     translationsSource,
-    /function translationStatusMessage\(status\)[\s\S]*const base = `\$\{count\} \$\{subject\} \$\{verb\} translation before publishing\.`[\s\S]*return `\$\{base\} \$\{pluralize\(status\.publishReadyCount, "translated string"\)\} ready to publish\.`/,
-    "The status text above Translate should always begin with the number of strings needing translation before publishing"
+    /function translationStatusMessage\(status\)[\s\S]*const base = `\$\{count\} \$\{subject\} \$\{verb\} translation before publishing\.`[\s\S]*return `\$\{base\} \$\{pluralize\(status\.publishReadyCount, "translated string"\)\} ready to publish with Translate\.`/,
+    "The status text above Translate should explain that publish-ready strings are handled by Translate"
   );
   assert.match(
     translationsSource,
@@ -4555,18 +4582,18 @@ test("translations page exposes translate and publish actions without a refresh 
   );
   assert.match(
     translationsSource,
-    /function configureTranslationActionButton\(button, action, translationState, canRunTranslationAction, actionsBusy\)[\s\S]*button\.classList\.toggle\("is-waiting", Boolean\(actionsBusy\)\)[\s\S]*button\.disabled = !canRunTranslationAction \|\| !translationState\.translateNeeded[\s\S]*button\.disabled = !canRunTranslationAction \|\| translationState\.translateNeeded \|\| !translationState\.publishReady/,
-    "Publish should stay disabled while Translate is enabled for missing or stale strings"
+    /function configureTranslationActionButton\(button, action, translationState, canRunTranslationAction, actionsBusy\)[\s\S]*button\.classList\.toggle\("is-waiting", Boolean\(actionsBusy\)\)[\s\S]*button\.disabled = !canRunTranslationAction \|\| !translationState\.translateActionReady/,
+    "Translate should stay enabled when strings need translation or clean snapshots are ready to publish"
   );
   assert.match(
     translationsSource,
     /async function loadTranslationStatus\(\{ updateMessage = false \} = \{\}\) \{[\s\S]*state\.isStatusRefreshing = true;[\s\S]*finally \{[\s\S]*state\.isStatusRefreshing = false;[\s\S]*updateActions\(\);[\s\S]*\}/,
-    "The global Translate and Publish buttons should remain disabled while the central translation status refresh is running"
+    "The global Translate button should remain disabled while the central translation status refresh is running"
   );
   assert.match(
     translationsSource,
-    /const actionsBusy = state\.isSaving \|\| state\.isJobRunning \|\| state\.isStatusRefreshing;[\s\S]*configureTranslationActionButton\(els\.translateBtn, "translate", translationState, canRunTranslationAction, actionsBusy\)[\s\S]*configureTranslationActionButton\(els\.applyBtn, "publish", translationState, canRunTranslationAction, actionsBusy\)/,
-    "Translate and Publish should share the same busy state while save, translate, publish, or status scripts run"
+    /const actionsBusy = state\.isSaving \|\| state\.isJobRunning \|\| state\.isStatusRefreshing;[\s\S]*configureTranslationActionButton\(els\.translateBtn, "translate", translationState, canRunTranslationAction, actionsBusy\)/,
+    "Translate should use the shared busy state while save, translate, publish, or status scripts run"
   );
   assert.match(
     translationsSource,
@@ -4581,7 +4608,7 @@ test("translations page exposes translate and publish actions without a refresh 
   assert.match(
     translationsStyles,
     /\.backend-translations-page \.translations-workspace__buttons \.btn\.is-waiting::before[\s\S]*animation: translations-action-spin 760ms linear infinite;[\s\S]*@keyframes translations-action-spin/,
-    "Busy Translate and Publish buttons should show a spinner while disabled"
+    "The busy Translate button should show a spinner while disabled"
   );
   assert.doesNotMatch(
     translationsSource,
@@ -4590,13 +4617,13 @@ test("translations page exposes translate and publish actions without a refresh 
   );
   assert.match(
     translationsSource,
-    /latest\.type === "apply"[\s\S]*translationStatus\.translationIssueCount > 0[\s\S]*Publish remains disabled[\s\S]*refreshTranslationStatusText\(\)/,
-    "After Translate finishes, the page should either enable Publish or show an error explaining why it remains blocked"
+    /latest\.type === "apply" && translationStatus\.translationIssueCount > 0[\s\S]*Publishing was skipped[\s\S]*latest\.type === "apply" && translationStatus\.dirty[\s\S]*warning icon could not be cleared/,
+    "After Translate finishes, the page should either report skipped publishing or warn when auto-publish did not clear dirty status"
   );
   assert.match(
     translationsSource,
-    /function notifyBackendTranslationsStatus[\s\S]*backend-translations-status-refresh[\s\S]*latest\.type === "publish"[\s\S]*translationStatus\.dirty[\s\S]*warning icon could not be cleared[\s\S]*refreshTranslationStatusText\(\)/,
-    "After Publish finishes, the page should refresh the nav translation icon or show an error if dirty status remains"
+    /function notifyBackendTranslationsStatus[\s\S]*backend-translations-status-refresh[\s\S]*latest\.type === "apply" && translationStatus\.dirty[\s\S]*warning icon could not be cleared[\s\S]*refreshTranslationStatusText\(\)/,
+    "After Translate auto-publishes, the page should refresh the nav translation icon or show an error if dirty status remains"
   );
 });
 

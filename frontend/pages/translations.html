@@ -69,7 +69,6 @@
               <div class="translations-workspace__actions">
                 <div class="translations-workspace__buttons">
                   <button class="btn btn-primary" id="translationsTranslateBtn" type="button">Translate</button>
-                  <button class="btn btn-primary" id="translationsApplyBtn" type="button">Publish</button>
                 </div>
                 <p class="micro translations-workspace__status" id="translationsStatus" role="status" aria-live="polite">1 string needs translation before publishing.</p>
               </div>
@@ -79,9 +78,10 @@
 
             <details class="translations-advanced">
               <summary>Advanced retranslation and cache invalidation</summary>
-              <p class="micro">Use these only when cached machine translations are poor. Manual overrides are preserved by the sync scripts.</p>
+              <p class="micro">Use these only when cached machine translations are poor. Manual overrides are preserved.</p>
               <div class="translations-advanced__actions">
-                <button class="btn btn-ghost" id="translationsRetranslateFrontendAllBtn" type="button">Retranslate all customer-facing languages</button>
+                <button class="btn btn-ghost" id="translationsRetranslateFrontendAllBtn" type="button">Retranslate customer UI strings</button>
+                <button class="btn btn-ghost" id="translationsClearMarketingTourCacheBtn" type="button">Clear marketing tour translation cache</button>
                 <button class="btn btn-ghost" id="translationsRetranslateBackendViBtn" type="button">Retranslate backend Vietnamese</button>
               </div>
             </details>

@@ -174,6 +174,75 @@ test("static translation apply job only translates affected central memory domai
   ]);
 });
 
+test("static translation apply job publishes automatically after translation issues clear", async () => {
+  const seen = [];
+  const applyOptions = [];
+  let statusCalls = 0;
+  const service = createStaticTranslationApplyJobs({
+    repoRoot: "/tmp/repo",
+    nowIso: () => "2026-04-28T00:00:00.000Z",
+    idFactory: () => "job-auto-publish",
+    runCommand: async (phase) => {
+      seen.push([phase.command, ...phase.args].join(" "));
+    },
+    getStatusSummary: async () => {
+      statusCalls += 1;
+      return statusCalls === 1
+        ? {
+            languages: [
+              {
+                domain: "marketing-tour-memory",
+                target_lang: "vi",
+                missing_count: 1,
+                stale_count: 0,
+                legacy_count: 0
+              }
+            ]
+          }
+        : {
+            languages: [
+              {
+                domain: "marketing-tour-memory",
+                target_lang: "vi",
+                missing_count: 0,
+                stale_count: 0,
+                legacy_count: 0,
+                unpublished_count: 2
+              }
+            ]
+          };
+    },
+    applyTranslations: async (options) => {
+      applyOptions.push(options);
+      seen.push("central translations");
+      return { translated_count: 2 };
+    },
+    publishTranslations: async () => {
+      seen.push("publish snapshot");
+      return { total_items: 2, source_set_hash: "published123" };
+    }
+  });
+
+  const started = await service.startApply();
+  assert.deepEqual(started.phases.map((phase) => phase.id), ["central_translate", "publish_snapshot", "runtime_i18n", "homepage_assets"]);
+  const finished = await waitForJob(service, "job-auto-publish", "succeeded");
+
+  assert.equal(finished.status, "succeeded");
+  assert.deepEqual(applyOptions, [
+    {
+      domains: ["marketing-tour-memory"],
+      target_langs_by_domain: {
+        "marketing-tour-memory": ["vi"]
+      }
+    }
+  ]);
+  assert.equal(seen[0], "central translations");
+  assert.equal(seen[1], "publish snapshot");
+  assert.match(seen[2], /build_runtime_i18n\.mjs --strict$/);
+  assert.match(seen[3], /generate_public_homepage_assets\.mjs$/);
+  assert.match(finished.log.join("\n"), /Published 2 translation snapshot items/);
+});
+
 test("static translation apply job limits frontend scripts to affected languages", async () => {
   const seen = [];
   const service = createStaticTranslationApplyJobs({
@@ -219,6 +288,41 @@ test("static translation apply job limits frontend scripts to affected languages
   assert.match(seen[0], /sync_frontend_i18n\.mjs translate --target de --target vi$/);
   assert.match(seen[1], /generate_public_homepage_assets\.mjs$/);
   assert.match(seen[2], /sync_frontend_i18n\.mjs check --target de --target vi$/);
+});
+
+test("static translation advanced job clears marketing tour memory cache without translating", async () => {
+  const seen = [];
+  const clearOptions = [];
+  const service = createStaticTranslationApplyJobs({
+    repoRoot: "/tmp/repo",
+    nowIso: () => "2026-04-28T00:00:00.000Z",
+    idFactory: () => "job-marketing-tour-cache-clear",
+    runCommand: async (phase) => {
+      seen.push([phase.command, ...phase.args].join(" "));
+    },
+    applyTranslations: async () => {
+      throw new Error("advanced cache clear should not call the translation provider");
+    },
+    clearTranslationCaches: async (options) => {
+      clearOptions.push(options);
+      seen.push("central cache clear");
+      return { cleared_count: 4 };
+    }
+  });
+
+  const started = service.startRetranslate({ mode: "marketing_tour_cache" });
+  assert.deepEqual(started.phases.map((phase) => phase.id), ["marketing_tour_cache_clear"]);
+  const finished = await waitForJob(service, "job-marketing-tour-cache-clear", "succeeded");
+
+  assert.equal(finished.status, "succeeded");
+  assert.deepEqual(seen, ["central cache clear"]);
+  assert.deepEqual(clearOptions, [
+    {
+      domains: ["marketing-tour-memory"]
+    }
+  ]);
+  assert.match(finished.log.join("\n"), /Cleared 4 cached marketing tour translation items/);
+  assert.match(finished.log.join("\n"), /Use Translate to rebuild missing machine translations/);
 });
 
 test("static translation retranslate job validates frontend current language", () => {

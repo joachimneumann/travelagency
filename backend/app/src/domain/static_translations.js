@@ -793,6 +793,45 @@ export function createStaticTranslationService({
     return summary;
   }
 
+  async function clearTranslationMemoryCache(config, language) {
+    if (!translationMemoryStore || typeof translationMemoryStore.deleteMachineTranslations !== "function") {
+      throw apiError(500, "STATIC_TRANSLATION_MEMORY_UNAVAILABLE", "Translation memory storage is not configured.");
+    }
+    const state = await loadState(config.id, language.code);
+    const sourceTexts = (state.rows || [])
+      .filter((row) => row?.required && normalizeText(row.cached) && normalizeText(row.source))
+      .map((row) => row.source);
+    if (sourceTexts.length) {
+      await translationMemoryStore.deleteMachineTranslations(language.code, sourceTexts);
+    }
+    return {
+      cleared_count: sourceTexts.length
+    };
+  }
+
+  async function clearMachineTranslations(options = {}) {
+    assertWritesEnabled();
+    const summary = {
+      cleared_count: 0,
+      domains: []
+    };
+
+    for (const config of normalizeTranslationDomains(options)) {
+      if (config.kind !== "translation_memory") continue;
+      for (const language of publishLanguagesForConfig(config, options)) {
+        const result = await clearTranslationMemoryCache(config, language);
+        summary.cleared_count += result.cleared_count;
+        summary.domains.push({
+          domain: config.id,
+          target_lang: language.code,
+          cleared_count: result.cleared_count
+        });
+      }
+    }
+
+    return summary;
+  }
+
   function normalizePublishDomains(options = {}) {
     const requested = Array.isArray(options?.domains)
       ? options.domains.map((value) => normalizeText(value).toLowerCase()).filter(Boolean)
@@ -1061,6 +1100,7 @@ export function createStaticTranslationService({
     patchOverrides,
     deleteCache,
     applyMissingTranslations,
+    clearMachineTranslations,
     publishTranslations,
     isSupportedFrontendLanguage(lang) {
       const normalized = normalizeText(lang).toLowerCase();

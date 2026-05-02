@@ -62,6 +62,10 @@ function callbackPhase(id, label, run) {
   return { id, label, run, status: "pending" };
 }
 
+function whenPhase(phase, when) {
+  return { ...phase, when };
+}
+
 function languageHasTranslationIssues(entry) {
   return Number(entry?.missing_count || 0) > 0
     || Number(entry?.stale_count || 0) > 0
@@ -210,6 +214,36 @@ async function applyPhases({ applyTranslations, getStatusSummary } = {}) {
   return phases;
 }
 
+function autoPublishPhases({ publishTranslations, getStatusSummary } = {}) {
+  if (typeof publishTranslations !== "function" || typeof getStatusSummary !== "function") return [];
+  const autoPublished = (job) => job?.auto_published === true;
+  return [
+    callbackPhase("publish_snapshot", "Publish translation snapshot", async (_phase, job, helpers) => {
+      const status = await getStatusSummary();
+      const issueEntries = issueEntriesFromStatus(status);
+      const unavailableCount = Array.isArray(status?.unavailable) ? status.unavailable.length : 0;
+      if (issueEntries.length || unavailableCount) {
+        job.auto_published = false;
+        helpers.appendLog(
+          job,
+          unavailableCount
+            ? `Skipped publishing because ${unavailableCount} translation section${unavailableCount === 1 ? "" : "s"} could not be checked.`
+            : `Skipped publishing because ${issueEntries.length} translation target${issueEntries.length === 1 ? "" : "s"} still need work.`
+        );
+        return;
+      }
+      const manifest = await publishTranslations();
+      job.auto_published = true;
+      helpers.appendLog(
+        job,
+        `Published ${manifest.total_items || 0} translation snapshot items. source_set_hash=${manifest.source_set_hash || ""}`
+      );
+    }),
+    whenPhase(runtimeI18nPhase(), autoPublished),
+    whenPhase(homepageAssetsPhase(), autoPublished)
+  ];
+}
+
 async function publishPhases({ applyTranslations, publishTranslations, getStatusSummary }) {
   return [
     ...fallbackApplyPhases({ applyTranslations, includeHomepageAssets: false }),
@@ -225,7 +259,7 @@ async function publishPhases({ applyTranslations, publishTranslations, getStatus
   ];
 }
 
-function retranslatePhases({ mode, targetLang }) {
+function retranslatePhases({ mode, targetLang, clearTranslationCaches }) {
   if (mode === "frontend_current_language") {
     const normalizedLang = normalizeText(targetLang).toLowerCase();
     if (!FRONTEND_LANGUAGE_CODES.includes(normalizedLang) || normalizedLang === "en") {
@@ -240,9 +274,27 @@ function retranslatePhases({ mode, targetLang }) {
 
   if (mode === "frontend_all_languages") {
     return [
-      commandPhase("frontend_retranslate_all", "Retranslate all customer-facing languages", process.execPath, ["scripts/i18n/sync_frontend_i18n.mjs", "translate", "--force-all"]),
+      commandPhase("frontend_retranslate_all", "Retranslate customer UI strings", process.execPath, ["scripts/i18n/sync_frontend_i18n.mjs", "translate", "--force-all"]),
       homepageAssetsPhase(),
       commandPhase("frontend_check", "Check customer-facing translations", process.execPath, ["scripts/i18n/sync_frontend_i18n.mjs", "check"])
+    ];
+  }
+
+  if (mode === "marketing_tour_cache") {
+    return [
+      callbackPhase("marketing_tour_cache_clear", "Clear marketing tour translation cache", async (_phase, job, helpers) => {
+        if (typeof clearTranslationCaches !== "function") {
+          throw apiError(500, "STATIC_TRANSLATION_CACHE_CLEAR_UNAVAILABLE", "Translation cache clearing is not configured.");
+        }
+        const summary = await clearTranslationCaches({
+          domains: ["marketing-tour-memory"]
+        });
+        helpers.appendLog(
+          job,
+          `Cleared ${summary?.cleared_count || 0} cached marketing tour translation item${summary?.cleared_count === 1 ? "" : "s"}.`
+        );
+        helpers.appendLog(job, "Use Translate to rebuild missing machine translations and publish clean snapshots.");
+      })
     ];
   }
 
@@ -279,6 +331,7 @@ function spawnRunner({ spawnCommand, repoRoot, env }) {
 export function createStaticTranslationApplyJobs({
   repoRoot,
   applyTranslations = null,
+  clearTranslationCaches = null,
   publishTranslations = null,
   getStatusSummary = null,
   spawnCommand = spawn,
@@ -319,6 +372,11 @@ export function createStaticTranslationApplyJobs({
       try {
         for (const phase of job.phases) {
           job.phase = phase.id;
+          if (typeof phase.when === "function" && !phase.when(job)) {
+            phase.status = "skipped";
+            appendLog(job, `Skipped: ${phase.label}`, env);
+            continue;
+          }
           phase.status = "running";
           appendLog(job, `Starting: ${phase.label}`, env);
           if (typeof phase.run === "function") {
@@ -350,7 +408,13 @@ export function createStaticTranslationApplyJobs({
 
   return {
     async startApply() {
-      return startJob({ type: "apply", phases: await applyPhases({ applyTranslations, getStatusSummary }) });
+      return startJob({
+        type: "apply",
+        phases: [
+          ...await applyPhases({ applyTranslations, getStatusSummary }),
+          ...autoPublishPhases({ publishTranslations, getStatusSummary })
+        ]
+      });
     },
     async startPublish() {
       if (typeof publishTranslations !== "function") {
@@ -359,7 +423,7 @@ export function createStaticTranslationApplyJobs({
       return startJob({ type: "publish", phases: await publishPhases({ applyTranslations, publishTranslations, getStatusSummary }) });
     },
     startRetranslate({ mode, target_lang: targetLang } = {}) {
-      return startJob({ type: "retranslate", phases: retranslatePhases({ mode, targetLang }) });
+      return startJob({ type: "retranslate", phases: retranslatePhases({ mode, targetLang, clearTranslationCaches }) });
     },
     getJob(jobId) {
       const job = jobs.get(normalizeText(jobId));

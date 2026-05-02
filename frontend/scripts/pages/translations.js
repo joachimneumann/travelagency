@@ -58,8 +58,8 @@ const els = {
   sections: document.getElementById("translationsSections"),
   customerLanguageSelect: null,
   translateBtn: document.getElementById("translationsTranslateBtn"),
-  applyBtn: document.getElementById("translationsApplyBtn"),
   retranslateFrontendAllBtn: document.getElementById("translationsRetranslateFrontendAllBtn"),
+  clearMarketingTourCacheBtn: document.getElementById("translationsClearMarketingTourCacheBtn"),
   retranslateBackendViBtn: document.getElementById("translationsRetranslateBackendViBtn"),
   overlay: document.getElementById("translationsApplyOverlay"),
   overlayText: document.getElementById("translationsApplyOverlayText"),
@@ -111,7 +111,7 @@ function translationsApplyingOverlayText() {
 }
 
 function translationsTranslateOverlayText() {
-  return backendT("backend.translations.translating_overlay", "Translating content. Please wait.");
+  return backendT("backend.translations.translating_overlay", "Translating and publishing content. Please wait.");
 }
 
 function translationsRefreshingOverlayText() {
@@ -121,7 +121,14 @@ function translationsRefreshingOverlayText() {
 function retranslateFrontendAllOverlayText() {
   return backendT(
     "backend.translations.retranslate_frontend_all_overlay",
-    "Retranslating all customer-facing languages. Please wait."
+    "Retranslating customer UI strings. Please wait."
+  );
+}
+
+function clearMarketingTourCacheOverlayText() {
+  return backendT(
+    "backend.translations.clear_marketing_tour_cache_overlay",
+    "Clearing marketing tour translation cache. Please wait."
   );
 }
 
@@ -250,10 +257,12 @@ function currentTranslationActionState() {
   const loaded = Boolean(status?.loaded);
   const translateNeeded = loaded && status.translationIssueCount > 0;
   const publishReady = loaded && !translateNeeded && status.publishReadyCount > 0;
+  const translateActionReady = translateNeeded || publishReady;
   return {
     loaded,
     translateNeeded,
     publishReady,
+    translateActionReady,
     status
   };
 }
@@ -264,8 +273,9 @@ function translationActionTitle(action, translationState, actionsBusy) {
     return "Translation editing is disabled for your account or this environment.";
   }
   if (action === "translate") {
-    if (translationState.translateNeeded) return "Translate all missing or stale strings before publishing.";
-    return translationState.loaded ? "No strings need translation." : "Loading translation status.";
+    if (translationState.translateNeeded) return "Translate all missing or stale strings, then publish automatically if clean.";
+    if (translationState.publishReady) return "Publish the translated snapshot.";
+    return translationState.loaded ? "No strings need translation or publishing." : "Loading translation status.";
   }
   if (translationState.translateNeeded) return "Translate missing or stale strings before publishing.";
   return translationState.publishReady ? "Publish the translated snapshot." : "No translated strings are ready to publish.";
@@ -280,7 +290,7 @@ function configureTranslationActionButton(button, action, translationState, canR
     button.removeAttribute("aria-busy");
   }
   if (action === "translate") {
-    button.disabled = !canRunTranslationAction || !translationState.translateNeeded;
+    button.disabled = !canRunTranslationAction || !translationState.translateActionReady;
     button.title = translationActionTitle(action, translationState, actionsBusy);
     return;
   }
@@ -296,7 +306,7 @@ function translationStatusMessage(status) {
   const base = `${count} ${subject} ${verb} translation before publishing.`;
   if (count > 0) return base;
   if (status.publishReadyCount > 0) {
-    return `${base} ${pluralize(status.publishReadyCount, "translated string")} ready to publish.`;
+    return `${base} ${pluralize(status.publishReadyCount, "translated string")} ready to publish with Translate.`;
   }
   if (status.dirty) {
     return `${base} ${pluralize(status.dirtyCount, "translation item")} still need attention.`;
@@ -351,9 +361,11 @@ function updateActions() {
   const sectionControlsBusy = state.isSaving || state.isJobRunning || state.isLoadingSections;
   const canRunTranslationAction = state.permissions.canEditTranslations && !actionsBusy;
   configureTranslationActionButton(els.translateBtn, "translate", translationState, canRunTranslationAction, actionsBusy);
-  configureTranslationActionButton(els.applyBtn, "publish", translationState, canRunTranslationAction, actionsBusy);
   if (els.retranslateFrontendAllBtn) {
     els.retranslateFrontendAllBtn.disabled = !state.permissions.canEditTranslations || actionsBusy;
+  }
+  if (els.clearMarketingTourCacheBtn) {
+    els.clearMarketingTourCacheBtn.disabled = !state.permissions.canEditTranslations || actionsBusy;
   }
   if (els.retranslateBackendViBtn) {
     els.retranslateBackendViBtn.disabled = !state.permissions.canEditTranslations || actionsBusy;
@@ -1128,13 +1140,18 @@ async function pollJob(jobId, overlayStartedAt) {
       refreshTranslationStatusText();
       return;
     }
-    if (latest.type === "apply") {
-      if (translationStatus.translationIssueCount > 0) {
-        showError(`${translationStatusMessage(translationStatus)} Publish remains disabled.`);
-        refreshTranslationStatusText();
-        return;
-      }
-      showError("");
+    if (latest.type === "apply" && translationStatus.translationIssueCount > 0) {
+      showError(`${translationStatusMessage(translationStatus)} Publishing was skipped.`);
+      refreshTranslationStatusText();
+      return;
+    }
+    if (latest.type === "apply" && translationStatus.unavailableCount > 0) {
+      showError(`${translationStatusMessage(translationStatus)} Publishing was skipped.`);
+      refreshTranslationStatusText();
+      return;
+    }
+    if (latest.type === "apply" && translationStatus.dirty) {
+      showError(`${translationStatusMessage(translationStatus)} The translation warning icon could not be cleared.`);
       refreshTranslationStatusText();
       return;
     }
@@ -1159,7 +1176,7 @@ async function startJob(path, body = null, overlayText = translationsApplyingOve
   const translationState = currentTranslationActionState();
   const isTranslateJob = path.endsWith("/apply");
   const isPublishJob = path.endsWith("/publish");
-  if (isTranslateJob && !translationState.translateNeeded) {
+  if (isTranslateJob && !translationState.translateActionReady) {
     refreshTranslationStatusText();
     showError("");
     return;
@@ -1248,10 +1265,13 @@ function bindCustomerLanguageEvents() {
 
 function bindEvents() {
   els.translateBtn?.addEventListener("click", () => startJob("/api/v1/static-translations/apply", null, translationsTranslateOverlayText()));
-  els.applyBtn?.addEventListener("click", () => startJob("/api/v1/static-translations/publish", null, translationsApplyingOverlayText()));
   els.retranslateFrontendAllBtn?.addEventListener("click", () => {
-    if (!window.confirm("Retranslate all customer-facing languages? This can take several minutes. Manual overrides are preserved.")) return;
+    if (!window.confirm("Retranslate customer UI strings? This can take several minutes. Manual overrides are preserved.")) return;
     startJob("/api/v1/static-translations/retranslate", { mode: "frontend_all_languages" }, retranslateFrontendAllOverlayText());
+  });
+  els.clearMarketingTourCacheBtn?.addEventListener("click", () => {
+    if (!window.confirm("Clear cached marketing tour translations? Manual overrides are preserved. Use Translate afterward to rebuild missing machine translations and publish clean snapshots.")) return;
+    startJob("/api/v1/static-translations/retranslate", { mode: "marketing_tour_cache" }, clearMarketingTourCacheOverlayText());
   });
   els.retranslateBackendViBtn?.addEventListener("click", () => {
     if (!window.confirm("Retranslate backend Vietnamese? Manual overrides are preserved.")) return;
