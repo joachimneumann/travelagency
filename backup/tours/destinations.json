@@ -4,7 +4,26 @@
       "code": "VN",
       "label": "Vietnam",
       "sort_order": 0,
-      "is_active": true
+      "is_active": true,
+      "label_i18n": {
+        "ar": "فيتنام",
+        "fr": "Viêt Nam",
+        "zh": "越南",
+        "ja": "ベトナム",
+        "ko": "베트남",
+        "vi": "Việt Nam",
+        "ms": "Vietnam",
+        "de": "Vietnam",
+        "es": "Vietnam",
+        "it": "Vietnam",
+        "ru": "Вьетнам",
+        "nl": "Vietnam",
+        "pl": "Wietnam",
+        "da": "Vietnam",
+        "sv": "Vietnam",
+        "no": "Vietnam"
+      },
+      "updated_at": "2026-05-01T17:53:46.854Z"
     }
   ],
   "destination_areas": [
@@ -14,12 +33,27 @@
       "code": "north",
       "name": "North",
       "name_i18n": {
-        "vi": "Miền Bắc"
+        "vi": "Miền Bắc",
+        "ar": "شمال",
+        "fr": "Nord",
+        "zh": "北",
+        "ja": "北",
+        "ko": "북쪽",
+        "ms": "utara",
+        "de": "Norden",
+        "es": "Norte",
+        "it": "Nord",
+        "ru": "Север",
+        "nl": "Noorden",
+        "pl": "Północ",
+        "da": "Nord",
+        "sv": "Norr",
+        "no": "Nord"
       },
       "sort_order": 100,
       "is_active": true,
       "created_at": "2026-04-27T13:42:52.459Z",
-      "updated_at": "2026-04-28T16:23:02.099Z"
+      "updated_at": "2026-05-01T17:53:46.854Z"
     },
     {
       "id": "area_3d22386f-d130-4f20-ab82-a30164fa5a19",
@@ -27,12 +61,27 @@
       "code": "central",
       "name": "Central",
       "name_i18n": {
-        "vi": "Miền Trung"
+        "vi": "Miền Trung",
+        "ar": "المركزية",
+        "fr": "Central",
+        "zh": "中央",
+        "ja": "中央",
+        "ko": "본부",
+        "ms": "Pusat",
+        "de": "Zentral",
+        "es": "Central",
+        "it": "Centrale",
+        "ru": "Центральный",
+        "nl": "Centraal",
+        "pl": "Centralny",
+        "da": "Central",
+        "sv": "Central",
+        "no": "Sentral"
       },
       "sort_order": 100,
       "is_active": true,
       "created_at": "2026-04-27T13:43:16.237Z",
-      "updated_at": "2026-04-28T16:23:02.099Z"
+      "updated_at": "2026-05-01T17:53:46.854Z"
     },
     {
       "id": "area_024155db-da17-4cdb-ae0e-a01fd1e77f58",
@@ -40,12 +89,27 @@
       "code": "south",
       "name": "South",
       "name_i18n": {
-        "vi": "Miền Nam"
+        "vi": "Miền Nam",
+        "ar": "جنوب",
+        "fr": "Sud",
+        "zh": "南",
+        "ja": "南",
+        "ko": "남쪽",
+        "ms": "Selatan",
+        "de": "Süden",
+        "es": "Sur",
+        "it": "Sud",
+        "ru": "Юг",
+        "nl": "Zuiden",
+        "pl": "Południe",
+        "da": "Syd",
+        "sv": "Söder",
+        "no": "Sør"
       },
       "sort_order": 100,
       "is_active": true,
       "created_at": "2026-04-27T13:43:29.077Z",
-      "updated_at": "2026-04-28T16:23:02.099Z"
+      "updated_at": "2026-05-01T17:53:46.854Z"
     }
   ],
   "destination_places": [
@@ -54,33 +118,84 @@
       "area_id": "area_3d22386f-d130-4f20-ab82-a30164fa5a19",
       "code": "hue",
       "name": "Huế",
-      "name_i18n": {},
+      "name_i18n": {
+        "ar": "هوى",
+        "fr": "Teinte",
+        "zh": "色调",
+        "ja": "フエ",
+        "ko": "색조",
+        "vi": "Huế",
+        "ms": "Huế",
+        "de": "Farbton",
+        "es": "Matiz",
+        "it": "Tinta",
+        "ru": "Хуэ",
+        "nl": "Tint",
+        "pl": "Odcień",
+        "da": "Huế",
+        "sv": "Nyans",
+        "no": "Huế"
+      },
       "sort_order": 100,
       "is_active": true,
       "created_at": "2026-04-27T13:44:12.737Z",
-      "updated_at": "2026-04-27T13:44:12.737Z"
+      "updated_at": "2026-05-01T17:53:46.854Z"
     },
     {
       "id": "place_5c7c616b-f7c7-4650-a206-bfcf204d078e",
       "area_id": "area_3d22386f-d130-4f20-ab82-a30164fa5a19",
       "code": "hoi-an",
       "name": "Hội An",
-      "name_i18n": {},
+      "name_i18n": {
+        "ar": "هوي آن",
+        "fr": "Hội An",
+        "zh": "会安",
+        "ja": "ホイアン",
+        "ko": "호이안",
+        "vi": "Hội An",
+        "ms": "Hội An",
+        "de": "Hội An",
+        "es": "Hội An",
+        "it": "Hội An",
+        "ru": "Хойан",
+        "nl": "Hoi An",
+        "pl": "Hội An",
+        "da": "Hội An",
+        "sv": "Hội An",
+        "no": "Hội An"
+      },
       "sort_order": 100,
       "is_active": true,
       "created_at": "2026-04-27T13:44:19.826Z",
-      "updated_at": "2026-04-27T13:44:19.826Z"
+      "updated_at": "2026-05-01T17:53:46.854Z"
     },
     {
       "id": "place_a8172e07-213b-46ed-bb88-f0f77bb7fbe0",
       "area_id": "area_3fa05b42-97ab-495d-b16d-4691e66e0434",
       "code": "sapa",
       "name": "Sapa",
-      "name_i18n": {},
+      "name_i18n": {
+        "ar": "سابا",
+        "fr": "Sapa",
+        "zh": "沙巴",
+        "ja": "サパ",
+        "ko": "사파",
+        "vi": "Sa Pa",
+        "ms": "Sapa",
+        "de": "Sapa",
+        "es": "Sapa",
+        "it": "Sapa",
+        "ru": "Сапа",
+        "nl": "Sapa",
+        "pl": "Sapa",
+        "da": "Sapa",
+        "sv": "Sapa",
+        "no": "Sapa"
+      },
       "sort_order": 100,
       "is_active": true,
       "created_at": "2026-04-27T13:50:03.476Z",
-      "updated_at": "2026-04-27T13:50:03.476Z"
+      "updated_at": "2026-05-01T17:53:46.854Z"
     }
   ]
 }
