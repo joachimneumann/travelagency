@@ -525,7 +525,7 @@ function collectTourImages(tour, lang) {
           ? webImageIds.indexOf(imageId)
           : (image.include_in_travel_tour_card === true ? webImageIds.length : webImageIds.length + 1),
         order: dayIndex * 100 + serviceIndex,
-        label: textOrNull(service?.location) || textOrNull(service?.title) || textOrNull(day?.overnight_location) || textOrNull(day?.title) || onePagerT(lang, "tour", "Tour")
+        label: textOrNull(service?.title) || textOrNull(service?.location) || textOrNull(day?.overnight_location) || textOrNull(day?.title) || onePagerT(lang, "tour", "Tour")
       });
     });
   });
@@ -563,7 +563,10 @@ function hasExplicitOnePagerBodyImageSelection(tour) {
 }
 
 function collectScriptProvidedFrameImages(tour, lang) {
-  return safeArray(tour?.travel_plan?.__one_pager_random_images)
+  const sourceImages = safeArray(tour?.travel_plan?.__one_pager_frame_images).length
+    ? safeArray(tour.travel_plan.__one_pager_frame_images)
+    : safeArray(tour?.travel_plan?.__one_pager_random_images);
+  return sourceImages
     .map((entry, index) => {
       const source = entry && typeof entry === "object" && !Array.isArray(entry) ? entry : {};
       const storagePath = textOrNull(source.storage_path);

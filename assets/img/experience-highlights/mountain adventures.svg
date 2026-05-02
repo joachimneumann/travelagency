@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-labelledby="title desc">
+  <title id="title">Mountain Adventures</title>
+  <desc id="desc">Thin outline pictogram of a mountain trail with a summit flag.</desc>
+  <g fill="none" stroke="#3f5356" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M18 76 39 29l13 22 8-13 19 38H18Z" />
+    <path d="M39 29l4 19" />
+    <path d="M60 38l5 18" />
+    <path d="M44 76c-1-8 3-13 10-17s9-8 7-14" />
+    <path d="M39 29V16" />
+    <path d="M39 16h18l-5 6 5 6H39" />
+    <path d="M30 61h5" />
+    <path d="M56 69h6" />
+  </g>
+</svg>

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-labelledby="title desc">
+  <title id="title">Cultural Heritage</title>
+  <desc id="desc">Thin outline pictogram of a traditional hanging lantern.</desc>
+  <g fill="none" stroke="#3f5356" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M48 8v8" />
+    <path d="M43 16c0-4 2-7 5-7s5 3 5 7" />
+    <path d="M39 20h18" />
+    <path d="M35 27h26" />
+    <path d="M33 46c0-17 7-27 15-27s15 10 15 27-7 27-15 27-15-10-15-27Z" />
+    <path d="M40 21c-5 9-7 17-7 25s2 16 7 25" />
+    <path d="M56 21c5 9 7 17 7 25s-2 16-7 25" />
+    <path d="M48 19v54" />
+    <path d="M34 38h28" />
+    <path d="M34 54h28" />
+    <path d="M39 73h18" />
+    <path d="M48 73v7" />
+    <circle cx="48" cy="82" r="2.6" />
+    <path d="M44 87h8" />
+  </g>
+</svg>

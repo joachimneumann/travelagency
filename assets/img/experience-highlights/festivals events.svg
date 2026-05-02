@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-labelledby="title desc">
+  <title id="title">Festivals and Events</title>
+  <desc id="desc">Thin outline pictogram of fireworks and a small festival lantern.</desc>
+  <g fill="none" stroke="#3f5356" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M33 62h22" />
+    <path d="M35 37h18" />
+    <path d="M34 37c0 15 3 26 10 26s10-11 10-26" />
+    <path d="M44 37v26" />
+    <path d="M39 68h10" />
+    <path d="M44 68v10" />
+    <path d="M68 18v13" />
+    <path d="M62 25h12" />
+    <path d="M59 16l18 18" />
+    <path d="M77 16 59 34" />
+    <path d="M21 23v10" />
+    <path d="M16 28h10" />
+    <path d="M23 20l-5 16" />
+    <path d="M15 21l13 14" />
+    <path d="M62 62l7 7" />
+    <path d="M72 59l-4 13" />
+  </g>
+</svg>

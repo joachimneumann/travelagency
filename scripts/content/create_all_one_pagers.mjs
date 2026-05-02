@@ -24,7 +24,8 @@ const defaultOutputDir = path.join(repoRoot, "content", "one-pagers");
 const flagTokensPath = path.join(repoRoot, "shared", "css", "tokens.css");
 const googleSitesBaseUrl = "https://sites.google.com";
 const googleAccount = "info@asiatravelplan.com";
-const minOnePagerImageCount = 5;
+const onePagerFrameImageCount = 5;
+const minOnePagerImageCount = onePagerFrameImageCount;
 const publicTourImagePrefix = "/public/v1/tour-images/";
 const tourImageExtensions = new Set([".jpg", ".jpeg", ".png", ".webp"]);
 
@@ -166,6 +167,10 @@ function textOrNull(value) {
   return normalized || null;
 }
 
+function serviceImageLabel(service, fallback = "Tour") {
+  return textOrNull(service?.title) || textOrNull(service?.location) || fallback;
+}
+
 function normalizeTourImageStoragePath(storagePath) {
   const normalized = textOrNull(storagePath);
   if (!normalized) return "";
@@ -226,10 +231,35 @@ function deterministicShuffle(items, seed) {
   return [...items]
     .map((item) => ({
       item,
-      rank: createHash("sha256").update(`${seed}:${item}`).digest("hex")
+      rank: createHash("sha256").update(`${seed}:${typeof item === "string" ? item : item?.storage_path || JSON.stringify(item)}`).digest("hex")
     }))
     .sort((left, right) => left.rank.localeCompare(right.rank))
     .map(({ item }) => item);
+}
+
+function uniqueImageEntries(entries) {
+  const seen = new Set();
+  const output = [];
+  for (const entry of Array.isArray(entries) ? entries : []) {
+    const storagePath = textOrNull(entry?.storage_path);
+    if (!storagePath || seen.has(storagePath)) continue;
+    seen.add(storagePath);
+    output.push({ ...entry, storage_path: storagePath });
+  }
+  return output;
+}
+
+async function filterExistingImages(entries, resolveTourImageDiskPath = null) {
+  const uniqueEntries = uniqueImageEntries(entries);
+  if (!resolveTourImageDiskPath) return uniqueEntries;
+  const existingEntries = [];
+  for (const entry of uniqueEntries) {
+    const diskPath = resolveTourImageDiskPath(entry.storage_path);
+    if (await fileExists(diskPath)) {
+      existingEntries.push(entry);
+    }
+  }
+  return existingEntries;
 }
 
 function collectVisibleTravelPlanImages(travelPlan) {
@@ -241,11 +271,11 @@ function collectVisibleTravelPlanImages(travelPlan) {
         : null;
       const id = textOrNull(image?.id);
       const storagePath = normalizeTourImageStoragePath(image?.storage_path);
-      if (id && storagePath && image?.is_customer_visible !== false && !images.some((entry) => entry.storage_path === storagePath)) {
+      if (storagePath && image?.is_customer_visible !== false && !images.some((entry) => entry.storage_path === storagePath)) {
         images.push({
           id,
           storage_path: storagePath,
-          label: textOrNull(service?.location) || textOrNull(service?.title) || "Tour"
+          label: serviceImageLabel(service)
         });
       }
     }
@@ -253,7 +283,7 @@ function collectVisibleTravelPlanImages(travelPlan) {
   return images;
 }
 
-async function collectTourDirectoryImages(tourId) {
+async function collectTourDirectoryImages(tourId, fallbackLabel = "Tour") {
   let entries = [];
   try {
     entries = await readdir(path.join(toursDir, tourId), { withFileTypes: true });
@@ -265,63 +295,66 @@ async function collectTourDirectoryImages(tourId) {
     .map((entry) => ({
       id: `one-pager-random-${createHash("sha1").update(entry.name).digest("hex").slice(0, 12)}`,
       storage_path: `${tourId}/${entry.name}`,
-      label: path.parse(entry.name).name
+      label: fallbackLabel
     }));
 }
 
-async function collectAvailableOnePagerImages(tour, {
-  includeTourDirectoryImages = true,
-  resolveTourImageDiskPath = null
-} = {}) {
-  const imagePool = [
-    ...collectVisibleTravelPlanImages(tour.travel_plan),
-    ...(includeTourDirectoryImages ? await collectTourDirectoryImages(tour.id) : [])
-  ].filter((entry, index, list) => (
-    entry.storage_path
-    && list.findIndex((candidate) => candidate.storage_path === entry.storage_path) === index
-  ));
-  if (!resolveTourImageDiskPath) return imagePool;
-
-  const existingImages = [];
-  for (const entry of imagePool) {
-    const diskPath = resolveTourImageDiskPath(entry.storage_path);
-    if (await fileExists(diskPath)) {
-      existingImages.push(entry);
-    }
-  }
-  return existingImages;
-}
-
-function hasOnePagerSelection(rawTravelPlan) {
+function onePagerSelectionIds(rawTravelPlan) {
   const hero = textOrNull(rawTravelPlan?.one_pager_hero_image_id);
   const ids = Array.isArray(rawTravelPlan?.one_pager_image_ids)
     ? rawTravelPlan.one_pager_image_ids.map((value) => textOrNull(value)).filter(Boolean)
     : [];
-  return Boolean(hero || ids.length);
+  const seen = new Set();
+  return [hero, ...ids].filter((id) => {
+    if (!id || seen.has(id)) return false;
+    seen.add(id);
+    return true;
+  });
 }
 
-async function applyRandomOnePagerImages(tour, rawTravelPlan, seed, { resolveTourImageDiskPath = null } = {}) {
-  if (hasOnePagerSelection(rawTravelPlan)) {
-    return { tour, randomImagesApplied: false, selectedImageCount: 0 };
-  }
-  const imagePool = await collectAvailableOnePagerImages(tour, { resolveTourImageDiskPath });
-  const randomImages = deterministicShuffle(imagePool.map((entry) => entry.storage_path), seed)
-    .map((storagePath) => imagePool.find((entry) => entry.storage_path === storagePath))
+async function prepareScriptFrameImages(tour, rawTravelPlan, seed, { resolveTourImageDiskPath = null } = {}) {
+  const fallbackLabel = textOrNull(tour?.title) || "Tour";
+  const serviceImages = await filterExistingImages(collectVisibleTravelPlanImages(tour.travel_plan), resolveTourImageDiskPath);
+  const directoryImages = await filterExistingImages(await collectTourDirectoryImages(tour.id, fallbackLabel), resolveTourImageDiskPath);
+  const serviceImagesById = new Map(serviceImages.filter((entry) => entry.id).map((entry) => [entry.id, entry]));
+  const selectedImages = onePagerSelectionIds(rawTravelPlan)
+    .map((imageId) => serviceImagesById.get(imageId))
     .filter(Boolean)
-    .slice(0, 5);
-  if (!randomImages.length) {
-    return { tour, randomImagesApplied: false, selectedImageCount: 0 };
+    .slice(0, onePagerFrameImageCount);
+  const selectedStoragePaths = new Set(selectedImages.map((entry) => entry.storage_path));
+  const randomServiceImages = deterministicShuffle(
+    serviceImages.filter((entry) => !selectedStoragePaths.has(entry.storage_path)),
+    `${seed}:services`
+  );
+  const randomDirectoryImages = deterministicShuffle(
+    directoryImages.filter((entry) => !selectedStoragePaths.has(entry.storage_path)),
+    `${seed}:directory`
+  );
+  return uniqueImageEntries([
+    ...selectedImages,
+    ...randomServiceImages,
+    ...randomDirectoryImages
+  ]).slice(0, onePagerFrameImageCount);
+}
+
+async function applyScriptFrameImages(tour, rawTravelPlan, seed, { resolveTourImageDiskPath = null } = {}) {
+  const frameImages = await prepareScriptFrameImages(tour, rawTravelPlan, seed, { resolveTourImageDiskPath });
+  if (!frameImages.length) {
+    return { tour, fillerImagesApplied: false, frameImageCount: 0, selectedImageCount: 0 };
   }
+  const selectedImageIds = new Set(onePagerSelectionIds(rawTravelPlan));
+  const selectedImageCount = frameImages.filter((entry) => selectedImageIds.has(entry.id)).length;
   return {
     tour: {
       ...tour,
       travel_plan: {
         ...tour.travel_plan,
-        __one_pager_random_images: randomImages
+        __one_pager_frame_images: frameImages
       }
     },
-    randomImagesApplied: true,
-    selectedImageCount: randomImages.length
+    fillerImagesApplied: frameImages.length > selectedImageCount,
+    frameImageCount: frameImages.length,
+    selectedImageCount
   };
 }
 
@@ -624,17 +657,19 @@ async function main() {
   const skippedTours = [];
   const eligibleTours = [];
   for (const tour of tours) {
-    const availableImages = await collectAvailableOnePagerImages(tour, {
-      includeTourDirectoryImages: !hasOnePagerSelection(tour.travel_plan),
-      resolveTourImageDiskPath: tourHelpers.resolveTourImageDiskPath
-    });
-    if (availableImages.length >= minOnePagerImageCount) {
+    const scriptFrameImages = await prepareScriptFrameImages(
+      { ...tour, title: tourTitleForSort(tourHelpers, tour) },
+      tour.travel_plan,
+      `${tour.id}:eligibility`,
+      { resolveTourImageDiskPath: tourHelpers.resolveTourImageDiskPath }
+    );
+    if (scriptFrameImages.length >= minOnePagerImageCount) {
       eligibleTours.push(tour);
     } else {
       skippedTours.push({
         id: tour.id,
         title: tourTitleForSort(tourHelpers, tour),
-        usable_image_count: availableImages.length
+        usable_image_count: scriptFrameImages.length
       });
     }
   }
@@ -674,7 +709,7 @@ async function main() {
         flatLang: lang,
         strictReferences: false
       });
-      const selected = await applyRandomOnePagerImages(
+      const selected = await applyScriptFrameImages(
         { ...readModel, travel_plan: localizedTravelPlan },
         tour.travel_plan,
         `${tour.id}:${lang}`,
@@ -694,7 +729,8 @@ async function main() {
         lang,
         pdfPath,
         imagePath,
-        randomImagesApplied: selected.randomImagesApplied,
+        fillerImagesApplied: selected.fillerImagesApplied,
+        frameImageCount: selected.frameImageCount,
         selectedImageCount: selected.selectedImageCount
       };
       row.artifacts.push(artifact);
@@ -702,7 +738,8 @@ async function main() {
         lang,
         pdf: path.relative(options.outputDir, pdfPath),
         image: path.relative(options.outputDir, imagePath),
-        random_images_applied: selected.randomImagesApplied,
+        filler_images_applied: selected.fillerImagesApplied,
+        frame_image_count: selected.frameImageCount,
         selected_image_count: selected.selectedImageCount
       });
     }
