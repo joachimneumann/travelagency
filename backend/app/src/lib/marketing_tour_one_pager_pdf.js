@@ -1,5 +1,5 @@
 import { createWriteStream } from "node:fs";
-import { access } from "node:fs/promises";
+import { access, rm } from "node:fs/promises";
 import path from "node:path";
 import PDFDocument from "pdfkit";
 import sharp from "sharp";
@@ -201,6 +201,15 @@ function streamPdfToFile(doc, outputPath) {
     doc.pipe(stream);
     doc.end();
   });
+}
+
+async function removePartialPdf(outputPath) {
+  if (!outputPath) return;
+  await rm(outputPath, { force: true }).catch(() => {});
+}
+
+function isFontkitDataViewBoundsError(error) {
+  return /Offset is outside the bounds of the DataView/i.test(String(error?.message || error || ""));
 }
 
 function drawPolygonPath(doc, points) {
@@ -962,76 +971,94 @@ export function createMarketingTourOnePagerPdfWriter({
       ...Object.fromEntries(Object.entries(displayFonts).filter(([, value]) => value))
     };
     const frameImages = await prepareFrameImages(tour, { resolveTourImageDiskPath, fallbackImagePath });
-    const doc = new PDFDocument({
-      autoFirstPage: false,
-      size: PAGE_SIZE,
-      margin: 0,
-      info: {
-        Title: `${textOrNull(tour?.title) || "Tour"} one pager`,
-        Author: "AsiaTravelPlan"
-      }
-    });
-    registerPdfFonts(doc, fonts);
-    doc.addPage({ size: PAGE_SIZE, margin: 0 });
 
-    drawBackground(doc, frameImages[0]?.buffer);
-    drawLogo(doc, logoPath);
-    drawDurationBadge(doc, duration, fonts);
-    drawMainCopy(doc, tour, duration, fonts, normalizedLang);
-    drawHighlights(doc, collectHighlightItems(tour, duration), 42, 438, 276, fonts);
-    drawRouteConnector(doc, 43, 570, 238);
-    drawIncluded(doc, collectIncludedItems(tour, duration), 42, 616, 276, fonts);
+    const renderWithFonts = async (renderFonts) => {
+      await removePartialPdf(outputPath);
+      const doc = new PDFDocument({
+        autoFirstPage: false,
+        size: PAGE_SIZE,
+        margin: 0,
+        info: {
+          Title: `${textOrNull(tour?.title) || "Tour"} one pager`,
+          Author: "AsiaTravelPlan"
+        }
+      });
+      registerPdfFonts(doc, renderFonts);
+      doc.addPage({ size: PAGE_SIZE, margin: 0 });
 
-    drawFramedImage(doc, {
-      x: 352,
-      y: 258,
-      width: 198,
-      height: 122,
-      angle: -2.5,
-      imageBuffer: frameImages[1]?.buffer,
-      label: frameImages[1]?.entry?.label || "",
-      fonts,
-      variant: 0
-    });
-    drawFramedImage(doc, {
-      x: 303,
-      y: 405,
-      width: 158,
-      height: 102,
-      angle: -4,
-      imageBuffer: frameImages[2]?.buffer,
-      label: frameImages[2]?.entry?.label || "",
-      fonts,
-      variant: 1
-    });
-    drawFramedImage(doc, {
-      x: 364,
-      y: 491,
-      width: 190,
-      height: 126,
-      angle: 4,
-      imageBuffer: frameImages[3]?.buffer,
-      label: frameImages[3]?.entry?.label || "",
-      fonts,
-      variant: 2
-    });
-    if (frameImages[4]?.entry) {
+      drawBackground(doc, frameImages[0]?.buffer);
+      drawLogo(doc, logoPath);
+      drawDurationBadge(doc, duration, renderFonts);
+      drawMainCopy(doc, tour, duration, renderFonts, normalizedLang);
+      drawHighlights(doc, collectHighlightItems(tour, duration), 42, 438, 276, renderFonts);
+      drawRouteConnector(doc, 43, 570, 238);
+      drawIncluded(doc, collectIncludedItems(tour, duration), 42, 616, 276, renderFonts);
+
       drawFramedImage(doc, {
-        x: 456,
-        y: 394,
-        width: 112,
-        height: 82,
-        angle: 5,
-        imageBuffer: frameImages[4]?.buffer,
-        label: frameImages[4]?.entry?.label || "",
-        fonts,
+        x: 352,
+        y: 258,
+        width: 198,
+        height: 122,
+        angle: -2.5,
+        imageBuffer: frameImages[1]?.buffer,
+        label: frameImages[1]?.entry?.label || "",
+        fonts: renderFonts,
+        variant: 0
+      });
+      drawFramedImage(doc, {
+        x: 303,
+        y: 405,
+        width: 158,
+        height: 102,
+        angle: -4,
+        imageBuffer: frameImages[2]?.buffer,
+        label: frameImages[2]?.entry?.label || "",
+        fonts: renderFonts,
         variant: 1
       });
-    }
-    drawCta(doc, companyProfile || {}, fonts);
-    drawFooter(doc, companyProfile || {}, fonts);
+      drawFramedImage(doc, {
+        x: 364,
+        y: 491,
+        width: 190,
+        height: 126,
+        angle: 4,
+        imageBuffer: frameImages[3]?.buffer,
+        label: frameImages[3]?.entry?.label || "",
+        fonts: renderFonts,
+        variant: 2
+      });
+      if (frameImages[4]?.entry) {
+        drawFramedImage(doc, {
+          x: 456,
+          y: 394,
+          width: 112,
+          height: 82,
+          angle: 5,
+          imageBuffer: frameImages[4]?.buffer,
+          label: frameImages[4]?.entry?.label || "",
+          fonts: renderFonts,
+          variant: 1
+        });
+      }
+      drawCta(doc, companyProfile || {}, renderFonts);
+      drawFooter(doc, companyProfile || {}, renderFonts);
+      await streamPdfToFile(doc, outputPath);
+    };
 
-    await streamPdfToFile(doc, outputPath);
+    try {
+      await renderWithFonts(fonts);
+    } catch (error) {
+      if (!isFontkitDataViewBoundsError(error)) throw error;
+      const fallbackBodyFonts = {
+        ...Object.fromEntries(Object.entries(bodyFonts).filter(([, value]) => value))
+      };
+      try {
+        await renderWithFonts(fallbackBodyFonts);
+      } catch (fallbackError) {
+        if (!isFontkitDataViewBoundsError(fallbackError)) throw fallbackError;
+        await renderWithFonts({});
+      }
+    }
     return { outputPath };
   };
 }
