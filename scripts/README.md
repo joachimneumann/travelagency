@@ -53,6 +53,7 @@ Common entry points:
 ./scripts/content/clipVideo assets/video/mountains.mp4
 
 ./scripts/i18n/translate check
+node scripts/i18n/build_runtime_i18n.mjs --strict
 node scripts/assets/generate_public_homepage_assets.mjs
 ```
 

@@ -78,6 +78,14 @@ function targetArgs(targetLangs) {
   return uniqueNormalized(targetLangs).flatMap((lang) => ["--target", lang]);
 }
 
+function runtimeI18nPhase() {
+  return commandPhase("runtime_i18n", "Generate runtime i18n from published snapshots", process.execPath, ["scripts/i18n/build_runtime_i18n.mjs", "--strict"]);
+}
+
+function homepageAssetsPhase() {
+  return commandPhase("homepage_assets", "Regenerate public homepage assets", process.execPath, ["scripts/assets/generate_public_homepage_assets.mjs"]);
+}
+
 function centralApplyOptions(entries) {
   const targetLangsByDomain = {};
   for (const entry of entries) {
@@ -96,7 +104,7 @@ function issueEntriesFromStatus(status) {
   return (Array.isArray(status?.languages) ? status.languages : []).filter(languageHasTranslationIssues);
 }
 
-function fallbackApplyPhases({ applyTranslations } = {}) {
+function fallbackApplyPhases({ applyTranslations, includeHomepageAssets = true } = {}) {
   const phases = [
     commandPhase("backend_translate", "Apply backend UI translation overrides", process.execPath, ["scripts/i18n/sync_backend_i18n.mjs", "translate", "--target", "vi"]),
     commandPhase("frontend_translate", "Apply customer-facing translation overrides", process.execPath, ["scripts/i18n/sync_frontend_i18n.mjs", "translate"])
@@ -110,8 +118,10 @@ function fallbackApplyPhases({ applyTranslations } = {}) {
       );
     }));
   }
+  if (includeHomepageAssets) {
+    phases.push(homepageAssetsPhase());
+  }
   phases.push(
-    commandPhase("homepage_assets", "Regenerate public homepage assets", process.execPath, ["scripts/assets/generate_public_homepage_assets.mjs"]),
     commandPhase("backend_check", "Check backend UI translations", process.execPath, ["scripts/i18n/sync_backend_i18n.mjs", "check", "--target", "vi"]),
     commandPhase("frontend_check", "Check customer-facing translations", process.execPath, ["scripts/i18n/sync_frontend_i18n.mjs", "check"])
   );
@@ -170,7 +180,7 @@ async function applyPhases({ applyTranslations, getStatusSummary } = {}) {
   }
 
   if (frontendTargetLangs.length) {
-    phases.push(commandPhase("homepage_assets", "Regenerate public homepage assets", process.execPath, ["scripts/assets/generate_public_homepage_assets.mjs"]));
+    phases.push(homepageAssetsPhase());
   }
 
   for (const targetLang of uniqueNormalized(backendTargets)) {
@@ -202,14 +212,16 @@ async function applyPhases({ applyTranslations, getStatusSummary } = {}) {
 
 async function publishPhases({ applyTranslations, publishTranslations, getStatusSummary }) {
   return [
-    ...fallbackApplyPhases({ applyTranslations }),
+    ...fallbackApplyPhases({ applyTranslations, includeHomepageAssets: false }),
     callbackPhase("publish_snapshot", "Publish translation snapshot", async (_phase, job, helpers) => {
       const manifest = await publishTranslations();
       helpers.appendLog(
         job,
         `Published ${manifest.total_items || 0} translation snapshot items. source_set_hash=${manifest.source_set_hash || ""}`
       );
-    })
+    }),
+    runtimeI18nPhase(),
+    homepageAssetsPhase()
   ];
 }
 
@@ -221,7 +233,7 @@ function retranslatePhases({ mode, targetLang }) {
     }
     return [
       commandPhase("frontend_retranslate", `Retranslate frontend ${normalizedLang}`, process.execPath, ["scripts/i18n/sync_frontend_i18n.mjs", "translate", "--target", normalizedLang, "--force-all"]),
-      commandPhase("homepage_assets", "Regenerate public homepage assets", process.execPath, ["scripts/assets/generate_public_homepage_assets.mjs"]),
+      homepageAssetsPhase(),
       commandPhase("frontend_check", `Check frontend ${normalizedLang}`, process.execPath, ["scripts/i18n/sync_frontend_i18n.mjs", "check", "--target", normalizedLang])
     ];
   }
@@ -229,7 +241,7 @@ function retranslatePhases({ mode, targetLang }) {
   if (mode === "frontend_all_languages") {
     return [
       commandPhase("frontend_retranslate_all", "Retranslate all customer-facing languages", process.execPath, ["scripts/i18n/sync_frontend_i18n.mjs", "translate", "--force-all"]),
-      commandPhase("homepage_assets", "Regenerate public homepage assets", process.execPath, ["scripts/assets/generate_public_homepage_assets.mjs"]),
+      homepageAssetsPhase(),
       commandPhase("frontend_check", "Check customer-facing translations", process.execPath, ["scripts/i18n/sync_frontend_i18n.mjs", "check"])
     ];
   }

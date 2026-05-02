@@ -123,22 +123,29 @@ test("booking handlers do not contain duplicate top-level helper declarations", 
   assert.deepEqual(duplicates, []);
 });
 
-test("backend ui i18n sync script passes and local backend startup is strict by default", async () => {
+test("runtime i18n preflight is generated from snapshots and local backend startup is strict by default", async () => {
   const repoRoot = path.resolve(__dirname, "..", "..", "..");
-  const syncScriptPath = path.join(repoRoot, "scripts", "i18n", "sync_backend_i18n.mjs");
+  const runtimeI18nScriptPath = path.join(repoRoot, "scripts", "i18n", "build_runtime_i18n.mjs");
   const startLocalBackendPath = path.join(repoRoot, "scripts", "local", "start_local_backend.sh");
   const localKeycloakClientPath = path.join(repoRoot, "scripts", "keycloak", "bootstrap_local_keycloak_backend_client.sh");
   const sharedKeycloakClientPath = path.join(repoRoot, "scripts", "keycloak", "bootstrap_keycloak_backend_realm.sh");
   const serverPath = path.join(repoRoot, "backend", "app", "src", "server.js");
-  const [startLocalBackendSource, localKeycloakClientSource, sharedKeycloakClientSource, serverSource] = await Promise.all([
+  const [runtimeI18nScriptSource, startLocalBackendSource, localKeycloakClientSource, sharedKeycloakClientSource, serverSource] = await Promise.all([
+    readFile(runtimeI18nScriptPath, "utf8"),
     readFile(startLocalBackendPath, "utf8"),
     readFile(localKeycloakClientPath, "utf8"),
     readFile(sharedKeycloakClientPath, "utf8"),
     readFile(serverPath, "utf8")
   ]);
 
-  await execFileAsync(process.execPath, [syncScriptPath, "check"], { cwd: repoRoot });
-
+  assert.match(
+    runtimeI18nScriptSource,
+    /"content", "translations"/,
+    "Runtime i18n should be generated from published content/translations snapshots"
+  );
+  assert.match(runtimeI18nScriptSource, /frontend-static/, "Runtime i18n should read frontend static snapshots");
+  assert.match(runtimeI18nScriptSource, /backend-ui/, "Runtime i18n should read backend UI snapshots");
+  assert.match(runtimeI18nScriptSource, /source_hash/, "Runtime i18n should validate source hashes");
   assert.match(
     startLocalBackendSource,
     /BACKEND_I18N_STRICT="\$\{BACKEND_I18N_STRICT:-1\}"/,
@@ -152,7 +159,7 @@ test("backend ui i18n sync script passes and local backend startup is strict by 
   assert.match(
     startLocalBackendSource,
     /run_local_i18n_preflight "\$ROOT_DIR"/,
-    "Local backend startup should run the backend i18n sync check before booting"
+    "Local backend startup should generate runtime i18n before booting"
   );
   assert.match(
     startLocalBackendSource,
@@ -183,11 +190,8 @@ test("backend ui i18n sync script passes and local backend startup is strict by 
 
 test("translate wrapper covers backend and frontend i18n sync scripts", async () => {
   const repoRoot = path.resolve(__dirname, "..", "..", "..");
-  const frontendSyncScriptPath = path.join(repoRoot, "scripts", "i18n", "sync_frontend_i18n.mjs");
   const translateScriptPath = path.join(repoRoot, "scripts", "i18n", "translate");
   const translateScriptSource = await readFile(translateScriptPath, "utf8");
-
-  await execFileAsync(process.execPath, [frontendSyncScriptPath, "check"], { cwd: repoRoot });
 
   assert.match(
     translateScriptSource,
@@ -209,6 +213,30 @@ test("translate wrapper covers backend and frontend i18n sync scripts", async ()
     /node "\$BACKEND_SYNC_SCRIPT" check --target vi[\s\S]*node "\$FRONTEND_SYNC_SCRIPT" check/,
     "Translate check should validate backend and frontend sync state"
   );
+});
+
+test("generated translation outputs are not tracked outside backup", async () => {
+  const repoRoot = path.resolve(__dirname, "..", "..", "..");
+  const { stdout } = await execFileAsync("git", ["ls-files"], { cwd: repoRoot });
+  const forbidden = stdout
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .filter((filePath) => {
+      const normalized = filePath.replace(/\\/g, "/");
+      if (normalized.startsWith("backup/")) return false;
+      if (normalized.startsWith("content/translations/")) return true;
+      if (/^frontend\/data\/generated\/homepage\/.*\.[a-z][a-z0-9-]*\.json$/.test(normalized)) return true;
+      if (/^frontend\/data\/i18n\/frontend\/(?!en\.json$)[^/]+\.json$/.test(normalized)) return true;
+      if (/^frontend\/data\/i18n\/frontend_meta\/[^/]+\.json$/.test(normalized)) return true;
+      if (/^frontend\/data\/i18n\/backend\/(?!en\.json$)[^/]+\.json$/.test(normalized)) return true;
+      if (/^frontend\/data\/i18n\/backend\/[^/]+\.meta\.json$/.test(normalized)) return true;
+      if (/^frontend\/data\/i18n\/frontend_overrides\/[^/]+\.json$/.test(normalized)) return true;
+      if (/^frontend\/data\/i18n\/backend_overrides\/[^/]+\.json$/.test(normalized)) return true;
+      return false;
+    });
+
+  assert.deepEqual(forbidden, [], "Generated translations should be ignored and regenerated from content/translations");
 });
 
 test("booking page keeps critical init handlers wired to real local functions", async () => {
@@ -2141,12 +2169,14 @@ test("backend bookings page exposes an internal create-booking modal backed by a
   );
 });
 
-test("offer and travel-plan PDFs use exact A4 point dimensions instead of PDFKit's rounded preset", async () => {
+test("offer, travel-plan, and one-pager PDFs use exact A4 point dimensions instead of PDFKit's rounded preset", async () => {
   const offerPdfPath = path.resolve(__dirname, "..", "src", "lib", "offer_pdf.js");
   const travelPlanPdfPath = path.resolve(__dirname, "..", "src", "lib", "travel_plan_pdf.js");
-  const [offerPdfSource, travelPlanPdfSource] = await Promise.all([
+  const onePagerPdfPath = path.resolve(__dirname, "..", "src", "lib", "marketing_tour_one_pager_pdf.js");
+  const [offerPdfSource, travelPlanPdfSource, onePagerPdfSource] = await Promise.all([
     readFile(offerPdfPath, "utf8"),
-    readFile(travelPlanPdfPath, "utf8")
+    readFile(travelPlanPdfPath, "utf8"),
+    readFile(onePagerPdfPath, "utf8")
   ]);
 
   const exactA4Pattern = /const MM_TO_POINTS = 72 \/ 25\.4;[\s\S]*const PAGE_SIZE = Object\.freeze\(\[210 \* MM_TO_POINTS, 297 \* MM_TO_POINTS\]\);/;
@@ -2170,6 +2200,16 @@ test("offer and travel-plan PDFs use exact A4 point dimensions instead of PDFKit
     travelPlanPdfSource,
     /const PAGE_SIZE = "A4";/,
     "Travel-plan PDFs should not use PDFKit's built-in rounded A4 preset"
+  );
+  assert.match(
+    onePagerPdfSource,
+    exactA4Pattern,
+    "One-pager PDFs should use exact A4 point dimensions instead of the rounded PDFKit preset"
+  );
+  assert.doesNotMatch(
+    onePagerPdfSource,
+    /const PAGE_SIZE = "(?:LETTER|A4)";/,
+    "One-pager PDFs should not use PDFKit's built-in rounded A4 or Letter presets"
   );
 });
 
@@ -2286,7 +2326,10 @@ test("offer and travel-plan PDFs localize guide, pricing summary, and payment-te
     "one_pager.experience_highlights",
     "one_pager.whats_included",
     "one_pager.planned_services_other",
-    "one_pager.cta_contact"
+    "one_pager.cta_contact",
+    "one_pager.cta_fast_response",
+    "one_pager.cta_local_expert",
+    "one_pager.cta_support"
   ]) {
     assert.equal(
       keyOccurrenceCount(onePagerDictionarySource, key),
@@ -2317,7 +2360,7 @@ test("offer and travel-plan PDFs localize guide, pricing summary, and payment-te
   );
   assert.match(
     onePagerPdfSource,
-    /pdfT\(lang, `one_pager\.\$\{key\}`[\s\S]*onePagerT\(lang, "experience_highlights", "Experience highlights"\)[\s\S]*onePagerT\(lang, "cta_contact", "CONTACT US TODAY"\)[\s\S]*onePagerT\(lang, "trip_to", "Trip to"\)/,
+    /pdfT\(lang, `one_pager\.\$\{key\}`[\s\S]*onePagerT\(lang, "experience_highlights", "Experience highlights"\)[\s\S]*onePagerT\(lang, "cta_contact", "CONTACT US TODAY"\)[\s\S]*onePagerT\(lang, "cta_fast_response", "Fast Response"\)[\s\S]*onePagerT\(lang, "cta_support", "24\/7 Support"\)[\s\S]*onePagerT\(lang, "trip_to", "Trip to"\)/,
     "One-pager PDFs should source visible fixed template labels from the localized PDF dictionary"
   );
   assert.match(
@@ -2648,11 +2691,9 @@ test("booking page keeps English as the fixed booking source language while stil
 test("booking source and referral labels are routed through backend i18n", async () => {
   const bookingCorePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "core.js");
   const englishTranslationsPath = path.resolve(__dirname, "..", "..", "..", "frontend", "data", "i18n", "backend", "en.json");
-  const vietnameseTranslationsPath = path.resolve(__dirname, "..", "..", "..", "frontend", "data", "i18n", "backend", "vi.json");
-  const [coreSource, englishTranslations, vietnameseTranslations] = await Promise.all([
+  const [coreSource, englishTranslations] = await Promise.all([
     readFile(bookingCorePath, "utf8"),
-    readFile(englishTranslationsPath, "utf8"),
-    readFile(vietnameseTranslationsPath, "utf8")
+    readFile(englishTranslationsPath, "utf8")
   ]);
 
   assert.match(
@@ -2669,11 +2710,6 @@ test("booking source and referral labels are routed through backend i18n", async
     englishTranslations,
     /"booking\.referral\.customer_name": "Customer name"[\s\S]*"booking\.referral\.kind\.b2b_partner": "B2B partner"[\s\S]*"booking\.source_channel\.option\.facebook_messenger": "Facebook Messenger"/,
     "English booking translations should define the source-channel and referral labels used by the booking page"
-  );
-  assert.match(
-    vietnameseTranslations,
-    /"booking\.note_title": "Ghi chú booking \(nội bộ ATP\)"[\s\S]*"booking\.referral\.customer_name": "Tên khách hàng"[\s\S]*"booking\.source_channel\.option\.phone_call": "Cuộc gọi điện thoại"/,
-    "Vietnamese booking translations should localize ATP-internal labels and booking source/referral labels"
   );
 });
 
@@ -3575,8 +3611,8 @@ test("tour card images are selected from travel-plan service images", async () =
   );
   assert.match(
     onePagerPdfSource,
-    /const PDF_PRIMARY_GREEN = "#30796B";[\s\S]*accent: PDF_PRIMARY_GREEN,[\s\S]*accentText: PDF_PRIMARY_GREEN,[\s\S]*secondary: PDF_PRIMARY_GREEN,[\s\S]*cta: PDF_PRIMARY_GREEN/,
-    "The one-pager PDF should use the requested brand green for its primary green elements"
+    /const PDF_PRIMARY_GREEN = "#30796B";[\s\S]*const PDF_SECONDARY_GREEN = "#e4ecdf";[\s\S]*const PDF_BACKGROUND_CREAM = "#FFF8EC";[\s\S]*surface: PDF_BACKGROUND_CREAM,[\s\S]*surfaceMuted: PDF_SECONDARY_GREEN,[\s\S]*accent: PDF_PRIMARY_GREEN,[\s\S]*accentText: PDF_PRIMARY_GREEN,[\s\S]*secondary: PDF_SECONDARY_GREEN,[\s\S]*cta: PDF_PRIMARY_GREEN/,
+    "The one-pager PDF should use the requested green, secondary, and cream palette"
   );
   assert.match(
     onePagerPdfSource,
@@ -3597,6 +3633,16 @@ test("tour card images are selected from travel-plan service images", async () =
     onePagerPdfSource,
     /function smoothStep\(edge0, edge1, value\)[\s\S]*async function createFeatheredHeroImageBuffer\(imageBuffer\)[\s\S]*alphaMask[\s\S]*blend: "dest-in"[\s\S]*\.png\(\)[\s\S]*const heroBackgroundBuffer = await createFeatheredHeroImageBuffer\(frameImages\[0\]\?\.buffer\)[\s\S]*drawBackground\(doc, heroBackgroundBuffer\)/,
     "The one-pager PDF should feather the hero image into transparency before drawing it"
+  );
+  assert.match(
+    onePagerPdfSource,
+    /const PDF_BUS_IMAGE_FILENAME = "bus\.png";[\s\S]*function drawBusIcon\(doc, busImagePath, centerX, wheelBaselineY, width\)[\s\S]*doc\.image\(normalizedImagePath, centerX - width \/ 2, wheelBaselineY - height,[\s\S]*const resolvedBusImagePath = normalizeText\(busImagePath\)[\s\S]*path\.join\(path\.dirname\(logoPath\), PDF_BUS_IMAGE_FILENAME\)[\s\S]*const lowerContentY = highlightsY \+ A4_VERTICAL_EXTENSION;[\s\S]*drawRouteConnector\(doc, 43, lowerContentY \+ 132, 296, \{[\s\S]*busImagePath: resolvedBusImagePath/,
+    "The one-pager PDF should render the route bus from the transparent assets/img/bus.png image"
+  );
+  assert.match(
+    onePagerPdfSource,
+    /const PDF_PIN_IMAGE_FILENAME = "pin\.png";[\s\S]*function drawPinIcon\(doc, pinImagePath, tipX, tipY, height\)[\s\S]*doc\.image\(normalizedImagePath, tipX - width \/ 2, tipY - height,[\s\S]*drawRouteConnector\(doc, x, y, width, \{ busImagePath = "", pinImagePath = "" \} = \{\}\)[\s\S]*drawPinIcon\(doc, pinImagePath, x \+ 17, y \+ 18, 24\)[\s\S]*const resolvedPinImagePath = normalizeText\(pinImagePath\)[\s\S]*path\.join\(path\.dirname\(logoPath\), PDF_PIN_IMAGE_FILENAME\)[\s\S]*pinImagePath: resolvedPinImagePath/,
+    "The one-pager PDF should render the route start pin from the transparent assets/img/pin.png image"
   );
   assert.match(
     onePagerPdfSource,
@@ -4504,7 +4550,8 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
     updateProductionScript,
     productionCaddyDeployScript,
     keycloakSharedTokensCss,
-    publicHomepageAssetsScript
+    publicHomepageAssetsScript,
+    runtimeI18nScript
   ] = await Promise.all([
     readFile(path.join(frontendRoot, "pages", "bookings.html"), "utf8"),
     readFile(path.join(frontendRoot, "pages", "booking.html"), "utf8"),
@@ -4530,7 +4577,8 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
     readFile(path.join(repoRoot, "scripts", "deploy", "update_production.sh"), "utf8"),
     readFile(path.join(repoRoot, "scripts", "production", "deploy_production_caddy.sh"), "utf8"),
     readFile(path.join(repoRoot, "backend", "keycloak-theme", "asiatravelplan", "login", "resources", "css", "shared-tokens.css"), "utf8"),
-    readFile(path.join(repoRoot, "scripts", "lib", "public_homepage_assets.sh"), "utf8")
+    readFile(path.join(repoRoot, "scripts", "lib", "public_homepage_assets.sh"), "utf8"),
+    readFile(path.join(repoRoot, "scripts", "lib", "runtime_i18n.sh"), "utf8")
   ]);
 
   assert.match(
@@ -4608,8 +4656,8 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
   );
   assert.match(
     updateStagingScript,
-    /prepare_runtime_brand_logo\(\)[\s\S]*"\$RUNTIME_BRAND_LOGO_PREPARER" staging[\s\S]*prepare_runtime_brand_logo[\s\S]*generate_public_homepage_assets/,
-    "Staging deploys should prepare the staging runtime logo before regenerating frontend assets"
+    /prepare_runtime_brand_logo\(\)[\s\S]*"\$RUNTIME_BRAND_LOGO_PREPARER" staging[\s\S]*prepare_runtime_brand_logo[\s\S]*generate_runtime_i18n[\s\S]*generate_public_homepage_assets/,
+    "Staging deploys should prepare the staging runtime logo and i18n before regenerating frontend assets"
   );
   assert.match(
     productionFrontendScript,
@@ -4618,13 +4666,18 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
   );
   assert.match(
     updateProductionScript,
-    /prepare_runtime_brand_logo\(\)[\s\S]*"\$RUNTIME_BRAND_LOGO_PREPARER" production[\s\S]*prepare_runtime_brand_logo[\s\S]*generate_public_homepage_assets/,
-    "Production deploys should prepare the production runtime logo before regenerating frontend assets"
+    /prepare_runtime_brand_logo\(\)[\s\S]*"\$RUNTIME_BRAND_LOGO_PREPARER" production[\s\S]*prepare_runtime_brand_logo[\s\S]*generate_runtime_i18n[\s\S]*generate_public_homepage_assets/,
+    "Production deploys should prepare the production runtime logo and i18n before regenerating frontend assets"
   );
   assert.match(
     publicHomepageAssetsScript,
     /PUBLIC_HOMEPAGE_ASSET_GENERATOR_QUIET=1[\s\S]*>\s*"\$command_log_path" 2>&1[\s\S]*Generated static homepage assets\. Full generation output:/,
     "Homepage asset deploy helper should suppress generator stdout on successful deploys while preserving logs"
+  );
+  assert.match(
+    runtimeI18nScript,
+    /node "\$generator_path" --strict[\s\S]*Generated runtime i18n files\. Full generation output:/,
+    "Runtime i18n deploy helper should build generated dictionaries from published snapshots"
   );
   assert.match(
     autoCommitDeployScript,
@@ -4647,6 +4700,18 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
       deployScript,
       /source "\$ROOT_DIR\/scripts\/lib\/public_homepage_assets\.sh"[\s\S]*run_public_homepage_asset_generator_quiet/,
       "Frontend/deploy scripts should run homepage generation through the quiet deploy helper"
+    );
+  }
+  for (const deployScript of [
+    stagingFrontendScript,
+    updateStagingScript,
+    productionFrontendScript,
+    updateProductionScript
+  ]) {
+    assert.match(
+      deployScript,
+      /source "\$ROOT_DIR\/scripts\/lib\/runtime_i18n\.sh"[\s\S]*run_runtime_i18n_generator_quiet/,
+      "Deploy scripts should generate runtime i18n from published snapshots before homepage assets"
     );
   }
   for (const deployScript of [
@@ -5456,6 +5521,16 @@ test("homepage hero title follows published destinations and keeps the destinati
     homepageSource,
     /<script defer src="\/shared\/generated\/language_catalog\.global\.js"><\/script>[\s\S]*<script defer src="\/frontend\/data\/generated\/homepage\/public-homepage-copy\.global\.js"><\/script>[\s\S]*<script defer src="\/frontend\/scripts\/shared\/frontend_i18n\.js"><\/script>[\s\S]*<script defer src="\/frontend\/data\/generated\/homepage\/public-homepage-main\.bundle\.js"><\/script>/,
     "Homepage boot should use ordered deferred scripts so the browser can fetch i18n and main bundle assets in parallel"
+  );
+  assert.doesNotMatch(
+    homepageSource,
+    /tour_style_catalog|TOUR_STYLE_CODE_OPTIONS|generated_catalogs/,
+    "Homepage HTML should not load the shared travel-style catalog; visible travel-style copy belongs in generated homepage assets"
+  );
+  assert.doesNotMatch(
+    mainToursSource,
+    /tour_style_catalog|TOUR_STYLE_CODE_OPTIONS|generated_catalogs/,
+    "Homepage runtime source should rely on generated public tour payloads for travel-style labels"
   );
   assert.doesNotMatch(
     homepageSource,

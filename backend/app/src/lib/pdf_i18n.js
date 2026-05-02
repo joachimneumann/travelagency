@@ -1792,6 +1792,9 @@ const ONE_PAGER_DICTIONARY = Object.freeze({
     "one_pager.cta_plan": "Let's plan your",
     "one_pager.cta_perfect_trip": "perfect trip!",
     "one_pager.cta_contact": "Contact us today",
+    "one_pager.cta_fast_response": "Fast Response",
+    "one_pager.cta_local_expert": "Local Expert",
+    "one_pager.cta_support": "24/7 Support",
     "one_pager.document_title_suffix": "one pager"
   }),
   "ar": Object.freeze({
@@ -1829,6 +1832,9 @@ const ONE_PAGER_DICTIONARY = Object.freeze({
     "one_pager.cta_plan": "لنخطط",
     "one_pager.cta_perfect_trip": "رحلتك المثالية!",
     "one_pager.cta_contact": "اتصل بنا اليوم",
+    "one_pager.cta_fast_response": "استجابة سريعة",
+    "one_pager.cta_local_expert": "خبير محلي",
+    "one_pager.cta_support": "دعم 24/7",
     "one_pager.document_title_suffix": "ملخص من صفحة واحدة"
   }),
   "fr": Object.freeze({
@@ -1866,6 +1872,9 @@ const ONE_PAGER_DICTIONARY = Object.freeze({
     "one_pager.cta_plan": "Planifions votre",
     "one_pager.cta_perfect_trip": "voyage parfait !",
     "one_pager.cta_contact": "Contactez-nous aujourd'hui",
+    "one_pager.cta_fast_response": "Réponse rapide",
+    "one_pager.cta_local_expert": "Expert local",
+    "one_pager.cta_support": "Assistance 24/7",
     "one_pager.document_title_suffix": "fiche voyage"
   }),
   "de": Object.freeze({
@@ -1903,6 +1912,9 @@ const ONE_PAGER_DICTIONARY = Object.freeze({
     "one_pager.cta_plan": "Planen wir Ihre",
     "one_pager.cta_perfect_trip": "perfekte Reise!",
     "one_pager.cta_contact": "Kontaktieren Sie uns heute",
+    "one_pager.cta_fast_response": "Schnelle Antwort",
+    "one_pager.cta_local_expert": "Lokaler Experte",
+    "one_pager.cta_support": "24/7 Support",
     "one_pager.document_title_suffix": "One-Pager"
   }),
   "es": Object.freeze({
@@ -1940,6 +1952,9 @@ const ONE_PAGER_DICTIONARY = Object.freeze({
     "one_pager.cta_plan": "Planifiquemos tu",
     "one_pager.cta_perfect_trip": "viaje perfecto!",
     "one_pager.cta_contact": "Contáctanos hoy",
+    "one_pager.cta_fast_response": "Respuesta rápida",
+    "one_pager.cta_local_expert": "Experto local",
+    "one_pager.cta_support": "Soporte 24/7",
     "one_pager.document_title_suffix": "one pager"
   }),
   "it": Object.freeze({
@@ -1977,6 +1992,9 @@ const ONE_PAGER_DICTIONARY = Object.freeze({
     "one_pager.cta_plan": "Pianifichiamo il tuo",
     "one_pager.cta_perfect_trip": "viaggio perfetto!",
     "one_pager.cta_contact": "Contattaci oggi",
+    "one_pager.cta_fast_response": "Risposta rapida",
+    "one_pager.cta_local_expert": "Esperto locale",
+    "one_pager.cta_support": "Supporto 24/7",
     "one_pager.document_title_suffix": "one pager"
   }),
   "ru": Object.freeze({
@@ -2014,6 +2032,9 @@ const ONE_PAGER_DICTIONARY = Object.freeze({
     "one_pager.cta_plan": "Давайте спланируем",
     "one_pager.cta_perfect_trip": "идеальное путешествие!",
     "one_pager.cta_contact": "Свяжитесь с нами сегодня",
+    "one_pager.cta_fast_response": "Быстрый ответ",
+    "one_pager.cta_local_expert": "Местный эксперт",
+    "one_pager.cta_support": "Поддержка 24/7",
     "one_pager.document_title_suffix": "одностраничный обзор"
   }),
   "nl": Object.freeze({
@@ -2051,6 +2072,9 @@ const ONE_PAGER_DICTIONARY = Object.freeze({
     "one_pager.cta_plan": "Plan samen uw",
     "one_pager.cta_perfect_trip": "perfecte reis!",
     "one_pager.cta_contact": "Neem vandaag contact op",
+    "one_pager.cta_fast_response": "Snelle reactie",
+    "one_pager.cta_local_expert": "Lokale expert",
+    "one_pager.cta_support": "24/7 ondersteuning",
     "one_pager.document_title_suffix": "one pager"
   }),
   "pl": Object.freeze({
@@ -2088,6 +2112,9 @@ const ONE_PAGER_DICTIONARY = Object.freeze({
     "one_pager.cta_plan": "Zaplanujmy Twoją",
     "one_pager.cta_perfect_trip": "idealną podróż!",
     "one_pager.cta_contact": "Skontaktuj się z nami",
+    "one_pager.cta_fast_response": "Szybka odpowiedź",
+    "one_pager.cta_local_expert": "Lokalny ekspert",
+    "one_pager.cta_support": "Wsparcie 24/7",
     "one_pager.document_title_suffix": "one pager"
   }),
   "da": Object.freeze({
@@ -2125,6 +2152,9 @@ const ONE_PAGER_DICTIONARY = Object.freeze({
     "one_pager.cta_plan": "Lad os planlægge din",
     "one_pager.cta_perfect_trip": "perfekte rejse!",
     "one_pager.cta_contact": "Kontakt os i dag",
+    "one_pager.cta_fast_response": "Hurtigt svar",
+    "one_pager.cta_local_expert": "Lokal ekspert",
+    "one_pager.cta_support": "24/7 support",
     "one_pager.document_title_suffix": "one pager"
   }),
   "sv": Object.freeze({
@@ -2162,6 +2192,9 @@ const ONE_PAGER_DICTIONARY = Object.freeze({
     "one_pager.cta_plan": "Låt oss planera din",
     "one_pager.cta_perfect_trip": "perfekta resa!",
     "one_pager.cta_contact": "Kontakta oss idag",
+    "one_pager.cta_fast_response": "Snabb respons",
+    "one_pager.cta_local_expert": "Lokal expert",
+    "one_pager.cta_support": "Support 24/7",
     "one_pager.document_title_suffix": "one pager"
   }),
   "no": Object.freeze({
@@ -2199,6 +2232,9 @@ const ONE_PAGER_DICTIONARY = Object.freeze({
     "one_pager.cta_plan": "La oss planlegge din",
     "one_pager.cta_perfect_trip": "perfekte reise!",
     "one_pager.cta_contact": "Kontakt oss i dag",
+    "one_pager.cta_fast_response": "Rask respons",
+    "one_pager.cta_local_expert": "Lokal ekspert",
+    "one_pager.cta_support": "24/7 støtte",
     "one_pager.document_title_suffix": "one pager"
   }),
   "zh": Object.freeze({
@@ -2236,6 +2272,9 @@ const ONE_PAGER_DICTIONARY = Object.freeze({
     "one_pager.cta_plan": "让我们规划您的",
     "one_pager.cta_perfect_trip": "完美旅程！",
     "one_pager.cta_contact": "立即联系我们",
+    "one_pager.cta_fast_response": "快速响应",
+    "one_pager.cta_local_expert": "本地专家",
+    "one_pager.cta_support": "24/7 支持",
     "one_pager.document_title_suffix": "一页行程"
   }),
   "ja": Object.freeze({
@@ -2273,6 +2312,9 @@ const ONE_PAGER_DICTIONARY = Object.freeze({
     "one_pager.cta_plan": "理想の旅を",
     "one_pager.cta_perfect_trip": "一緒に計画しましょう！",
     "one_pager.cta_contact": "今すぐお問い合わせ",
+    "one_pager.cta_fast_response": "迅速な返信",
+    "one_pager.cta_local_expert": "現地エキスパート",
+    "one_pager.cta_support": "24時間サポート",
     "one_pager.document_title_suffix": "1ページ概要"
   }),
   "ko": Object.freeze({
@@ -2310,6 +2352,9 @@ const ONE_PAGER_DICTIONARY = Object.freeze({
     "one_pager.cta_plan": "당신의",
     "one_pager.cta_perfect_trip": "완벽한 여행을 계획해요!",
     "one_pager.cta_contact": "지금 문의하세요",
+    "one_pager.cta_fast_response": "빠른 응답",
+    "one_pager.cta_local_expert": "현지 전문가",
+    "one_pager.cta_support": "24/7 지원",
     "one_pager.document_title_suffix": "원페이지 소개"
   }),
   "vi": Object.freeze({
@@ -2347,6 +2392,9 @@ const ONE_PAGER_DICTIONARY = Object.freeze({
     "one_pager.cta_plan": "Cùng lên kế hoạch",
     "one_pager.cta_perfect_trip": "chuyến đi hoàn hảo!",
     "one_pager.cta_contact": "Liên hệ ngay hôm nay",
+    "one_pager.cta_fast_response": "Phản hồi nhanh",
+    "one_pager.cta_local_expert": "Chuyên gia địa phương",
+    "one_pager.cta_support": "Hỗ trợ 24/7",
     "one_pager.document_title_suffix": "one pager"
   }),
   "ms": Object.freeze({
@@ -2384,6 +2432,9 @@ const ONE_PAGER_DICTIONARY = Object.freeze({
     "one_pager.cta_plan": "Mari rancang",
     "one_pager.cta_perfect_trip": "perjalanan sempurna anda!",
     "one_pager.cta_contact": "Hubungi kami hari ini",
+    "one_pager.cta_fast_response": "Respons pantas",
+    "one_pager.cta_local_expert": "Pakar tempatan",
+    "one_pager.cta_support": "Sokongan 24/7",
     "one_pager.document_title_suffix": "one pager"
   })
 });

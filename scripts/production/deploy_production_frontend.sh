@@ -3,6 +3,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 HOMEPAGE_BUNDLE_PATH="$ROOT_DIR/frontend/data/generated/homepage/public-homepage-main.bundle.js"
+source "$ROOT_DIR/scripts/lib/runtime_i18n.sh"
 source "$ROOT_DIR/scripts/lib/public_homepage_assets.sh"
 
 if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
@@ -18,6 +19,7 @@ fi
 cd "$ROOT_DIR"
 echo "Generating production homepage frontend assets..."
 "$ROOT_DIR/scripts/assets/prepare_runtime_brand_logo.sh" production
+run_runtime_i18n_generator_quiet "$ROOT_DIR"
 run_public_homepage_asset_generator_quiet "$ROOT_DIR"
 
 if [[ ! -f "$HOMEPAGE_BUNDLE_PATH" ]]; then

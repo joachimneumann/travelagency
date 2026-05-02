@@ -144,6 +144,7 @@ const TOUR_DESCRIPTION_FIT_TOLERANCE_PX = 1;
 const TOUR_DESCRIPTION_FIT_ITERATIONS = 8;
 const ONE_PAGER_SMALL_IMAGE_LIMIT = 4;
 const ONE_PAGER_EXPERIENCE_HIGHLIGHT_LIMIT = 4;
+const TOUR_WEB_PAGE_MIN_IMAGE_COUNT = 2;
 const EXPERIENCE_HIGHLIGHTS_BASE_PATH = "/assets/img/experience-highlights";
 
 const els = {
@@ -821,6 +822,39 @@ function selectedTourCardImageIds(plan, images) {
   return legacyIds;
 }
 
+function tourWebPagePublicationEligibility(plan = currentTourTravelPlan()) {
+  const rootScopeCount = destinationScopeTourDestinations(plan?.destination_scope).length;
+  const imageCount = selectedTourCardImageIds(plan, collectTourCardImageOptions(plan)).length;
+  const hasRootScope = rootScopeCount > 0;
+  const hasEnoughImages = imageCount >= TOUR_WEB_PAGE_MIN_IMAGE_COUNT;
+  const canPublish = hasRootScope && hasEnoughImages;
+  const message = canPublish
+    ? backendT("tour.published_on_webpage", "Published on webpage")
+    : !hasRootScope && !hasEnoughImages
+      ? backendT("tour.published_on_webpage_disabled_scope_and_images", "Select a root destination scope and at least 2 web page images before publishing on the web page.")
+      : !hasRootScope
+        ? backendT("tour.published_on_webpage_disabled_scope", "Select a root destination scope before publishing on the web page.")
+        : backendT("tour.published_on_webpage_disabled_images", "Select at least 2 web page images before publishing on the web page.");
+  return {
+    canPublish,
+    hasRootScope,
+    hasEnoughImages,
+    imageCount,
+    message
+  };
+}
+
+function syncPublishedOnWebpageControl(plan = currentTourTravelPlan()) {
+  if (!(els.publishedOnWebpage instanceof HTMLInputElement)) return;
+  const eligibility = tourWebPagePublicationEligibility(plan);
+  if (!eligibility.canPublish) {
+    els.publishedOnWebpage.checked = false;
+  }
+  els.publishedOnWebpage.disabled = !state.permissions.canEditTours || !eligibility.canPublish;
+  els.publishedOnWebpage.title = eligibility.message;
+  els.publishedOnWebpage.setAttribute("aria-disabled", els.publishedOnWebpage.disabled ? "true" : "false");
+}
+
 function applyTourCardImageSelectionToPlan(plan, orderedImageIds) {
   if (!plan || typeof plan !== "object" || Array.isArray(plan)) return;
   const normalizedIds = normalizeTourCardImageIdList(orderedImageIds);
@@ -976,6 +1010,22 @@ function syncOnePagerExperienceHighlightSelectionAcrossState(plan) {
 
 function hasRequiredOnePagerExperienceHighlights() {
   return selectedOnePagerExperienceHighlightIds(currentTourTravelPlan()).length >= ONE_PAGER_EXPERIENCE_HIGHLIGHT_LIMIT;
+}
+
+function hasSelectedOnePagerSmallImage(plan = currentTourTravelPlan()) {
+  const images = collectTourCardImageOptions(plan);
+  const heroImageId = selectedOnePagerHeroImageId(plan, images);
+  return selectedOnePagerImageIds(plan, images).some((imageId) => imageId !== heroImageId);
+}
+
+function onePagerButtonDisabledMessage({ highlightsReady = hasRequiredOnePagerExperienceHighlights(), smallImageReady = hasSelectedOnePagerSmallImage() } = {}) {
+  if (!highlightsReady) {
+    return backendT("tour.one_pager_experience_highlights_required", "Select 4 experience highlights to create the one-page PDF.");
+  }
+  if (!smallImageReady) {
+    return backendT("tour.one_pager_small_image_required", "Select at least one small image to create the one-page PDF.");
+  }
+  return backendT("tour.status.one_pager_save_first", "Save the tour before creating a one-pager PDF.");
 }
 
 function renderTourCardImageThumb(image, selectedOrder, { selectable = false } = {}) {
@@ -1281,6 +1331,7 @@ function renderTourCardImageSelector() {
     shell.clearButton.textContent = clearLabel;
   }
   patchImageSelectorThumbs(shell.thumbs, thumbsMarkup);
+  syncPublishedOnWebpageControl(plan);
 }
 
 function syncTourCardImageSelectorFromEditor({ renderSelectors = true } = {}) {
@@ -1631,6 +1682,7 @@ async function init() {
       window.setTimeout(() => {
         renderOnePagerImageSelector();
         renderTourCardImageSelector();
+        syncPublishedOnWebpageControl();
       }, 0);
       notifyBackendTranslationsStatus();
     },
@@ -1670,6 +1722,16 @@ async function init() {
       if (event.target === els.onePagerLang) {
         renderOnePagerExperienceHighlightSelectors();
         return;
+      }
+      if (
+        event.target?.matches?.("[data-destination-scope-destination]")
+        || event.target?.matches?.("[data-destination-scope-area]")
+        || event.target?.matches?.("[data-destination-scope-place]")
+      ) {
+        window.setTimeout(() => {
+          syncPublishedOnWebpageControl();
+          updateTourDirtyState();
+        }, 0);
       }
       scheduleTourDirtyState();
     });
@@ -1793,7 +1855,7 @@ async function loadTour() {
   setInput("tour_seasonality_start_month", tour.seasonality_start_month || "");
   setInput("tour_seasonality_end_month", tour.seasonality_end_month || "");
   setInput("tour_seo_slug", tour.seo_slug || "");
-  if (els.publishedOnWebpage) els.publishedOnWebpage.checked = tour.published_on_webpage !== false;
+  if (els.publishedOnWebpage) els.publishedOnWebpage.checked = tour.published_on_webpage === true;
   renderLocalizedTourContentEditor();
   syncReelVideoDraftItemFromTour(tour);
   tourTravelPlanAdapter?.applyTour(tour);
@@ -1826,6 +1888,7 @@ async function initializeNewTourForm() {
     seasonality_end_month: "",
     short_description: "",
     short_description_i18n: {},
+    published_on_webpage: false,
     reel_video: null,
     travel_plan: { destination_scope: [], destinations: [], days: [] }
   };
@@ -1837,7 +1900,7 @@ async function initializeNewTourForm() {
   setInput("tour_seasonality_start_month", "");
   setInput("tour_seasonality_end_month", "");
   setInput("tour_seo_slug", "");
-  if (els.publishedOnWebpage) els.publishedOnWebpage.checked = true;
+  if (els.publishedOnWebpage) els.publishedOnWebpage.checked = false;
   renderLocalizedTourContentEditor();
   syncReelVideoDraftItemFromTour(state.tour);
   tourTravelPlanAdapter?.applyTour(state.tour);
@@ -1967,13 +2030,12 @@ function buildTourSaveValidationMessage({ title = "", destinations = [], styles 
 function syncOnePagerButtonState() {
   const unavailable = !state.permissions.canReadTours || state.is_create_mode || !normalizeText(state.id);
   const highlightsReady = hasRequiredOnePagerExperienceHighlights();
-  const disabled = unavailable || !highlightsReady || state.formDirty === true;
+  const smallImageReady = hasSelectedOnePagerSmallImage();
+  const disabled = unavailable || !highlightsReady || !smallImageReady || state.formDirty === true;
   if (els.onePagerBtn) {
     els.onePagerBtn.disabled = disabled;
     els.onePagerBtn.title = disabled
-      ? (!highlightsReady
-        ? backendT("tour.one_pager_experience_highlights_required", "Select 4 experience highlights to create the one-page PDF.")
-        : backendT("tour.status.one_pager_save_first", "Save the tour before creating a one-pager PDF."))
+      ? onePagerButtonDisabledMessage({ highlightsReady, smallImageReady })
       : backendT("tour.one_pager_create", "Create One-Page PDF");
   }
   if (els.onePagerLang) {
@@ -1984,9 +2046,7 @@ function syncOnePagerButtonState() {
 function openTourOnePagerPdf() {
   syncOnePagerButtonState();
   if (els.onePagerBtn?.disabled) {
-    setStatus(hasRequiredOnePagerExperienceHighlights()
-      ? backendT("tour.status.one_pager_save_first", "Save the tour before creating a one-pager PDF.")
-      : backendT("tour.one_pager_experience_highlights_required", "Select 4 experience highlights to create the one-page PDF."));
+    setStatus(onePagerButtonDisabledMessage());
     return;
   }
   if (updateTourDirtyState()) {
@@ -2029,6 +2089,14 @@ async function submitForm(event) {
     ...(travelPlanResult.payload || {}),
     destination_scope: selectedDestinationScope
   };
+  const publishOnWebpage = Boolean(
+    els.publishedOnWebpage?.checked
+    && tourWebPagePublicationEligibility(travelPlanPayload).canPublish
+  );
+  if (els.publishedOnWebpage) {
+    els.publishedOnWebpage.checked = publishOnWebpage;
+    syncPublishedOnWebpageControl(travelPlanPayload);
+  }
   const pendingReelVideo = state.reelVideoDraftItem?.kind === "pending" ? state.reelVideoDraftItem : null;
   const storedReelVideo = state.reelVideoDraftItem?.kind === "stored" ? state.reelVideoDraftItem : null;
   const hasStoredReelVideoOnServer = Boolean(state.tour?.reel_video);
@@ -2044,7 +2112,7 @@ async function submitForm(event) {
     priority: toNumberOrNull(getInput("tour_priority")),
     seasonality_start_month: getInput("tour_seasonality_start_month"),
     seasonality_end_month: getInput("tour_seasonality_end_month"),
-    published_on_webpage: els.publishedOnWebpage ? els.publishedOnWebpage.checked : true,
+    published_on_webpage: publishOnWebpage,
     seo_slug: getInput("tour_seo_slug"),
     short_description_i18n,
     travel_plan: omitDerivedTravelPlanDestinations(travelPlanPayload)

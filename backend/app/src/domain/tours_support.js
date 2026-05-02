@@ -19,6 +19,8 @@ import {
   sortTourStyleCodes
 } from "./tour_catalog_i18n.js";
 
+const TOUR_WEB_PAGE_MIN_IMAGE_COUNT = 2;
+
 function hasLocalizedContent(value) {
   if (typeof value === "string") return Boolean(normalizeText(value));
   if (!value || typeof value !== "object" || Array.isArray(value)) return false;
@@ -88,6 +90,10 @@ export function createTourHelpers({ toursDir, safeInt, normalizeMarketingTourTra
     return {
       destination_scope: destinationScope,
       destinations: destinationScopeDestinations(destinationScope),
+      tour_card_image_ids: Array.isArray(value?.tour_card_image_ids)
+        ? value.tour_card_image_ids.map((entry) => normalizeText(entry)).filter(Boolean)
+        : [],
+      tour_card_primary_image_id: normalizeText(value?.tour_card_primary_image_id) || null,
       days: Array.isArray(value?.days) ? value.days : []
     };
   }
@@ -142,6 +148,19 @@ export function createTourHelpers({ toursDir, safeInt, normalizeMarketingTourTra
     return tourStyleCodes(tour).map((code) => getTourStyleLabel(code, lang));
   }
 
+  function selectedTourWebPageImageCount(travelPlan) {
+    return (Array.isArray(travelPlan?.tour_card_image_ids) ? travelPlan.tour_card_image_ids : [])
+      .map((value) => normalizeText(value))
+      .filter(Boolean)
+      .length;
+  }
+
+  function canPublishTourOnWebpage(tour) {
+    const travelPlan = normalizeTourTravelPlan(tour?.travel_plan);
+    return destinationScopeTourDestinations(travelPlan?.destination_scope).length > 0
+      && selectedTourWebPageImageCount(travelPlan) >= TOUR_WEB_PAGE_MIN_IMAGE_COUNT;
+  }
+
   function normalizeTourForStorage(tour) {
     const next = {
       ...(tour && typeof tour === "object" ? tour : {})
@@ -176,6 +195,7 @@ export function createTourHelpers({ toursDir, safeInt, normalizeMarketingTourTra
     next.published_on_webpage = next.published_on_webpage !== false;
     next.seo_slug = normalizeTourSeoSlug(next.seo_slug);
     if (!next.seo_slug) delete next.seo_slug;
+    if (!canPublishTourOnWebpage(next)) next.published_on_webpage = false;
     delete next.travel_duration_days;
     delete next.budget_lower_usd;
     delete next.rating;
@@ -241,6 +261,7 @@ export function createTourHelpers({ toursDir, safeInt, normalizeMarketingTourTra
     tourDestinationCodes,
     tourStyles,
     tourStyleCodes,
+    canPublishTourOnWebpage,
     normalizeTourForStorage,
     normalizeTourForRead,
     collectTourOptions,

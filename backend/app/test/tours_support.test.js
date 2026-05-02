@@ -80,19 +80,55 @@ test("tour helpers derive destinations from scope and omit legacy destination st
   assert.deepEqual(helpers.normalizeTourForRead(scoped).travel_plan.destinations, ["VN"]);
 });
 
-test("tour helpers default tours to published and preserve explicit unpublished state", () => {
+test("tour helpers only publish tours with root scope and at least two web page images", () => {
+  const eligibleTravelPlan = {
+    destination_scope: [{ destination: "VN", areas: [] }],
+    tour_card_image_ids: ["image_1", "image_2"],
+    days: [{
+      services: [
+        { image: { id: "image_1", storage_path: "/public/v1/tour-images/tour_default_publication/one.webp", include_in_travel_tour_card: true } },
+        { image: { id: "image_2", storage_path: "/public/v1/tour-images/tour_default_publication/two.webp", include_in_travel_tour_card: true } }
+      ]
+    }]
+  };
   const defaultPublished = helpers.normalizeTourForStorage({
     id: "tour_default_publication",
     title: "Default publication",
-    styles: ["culture"]
+    styles: ["culture"],
+    travel_plan: eligibleTravelPlan
   });
   assert.equal(defaultPublished.published_on_webpage, true);
   assert.equal(helpers.normalizeTourForRead(defaultPublished).published_on_webpage, true);
+
+  const missingRootScope = helpers.normalizeTourForStorage({
+    id: "tour_missing_root_scope",
+    title: "Missing root scope",
+    styles: ["culture"],
+    published_on_webpage: true,
+    travel_plan: {
+      ...eligibleTravelPlan,
+      destination_scope: []
+    }
+  });
+  assert.equal(missingRootScope.published_on_webpage, false);
+
+  const missingSecondImage = helpers.normalizeTourForStorage({
+    id: "tour_missing_second_image",
+    title: "Missing second image",
+    styles: ["culture"],
+    published_on_webpage: true,
+    travel_plan: {
+      ...eligibleTravelPlan,
+      tour_card_image_ids: ["image_1"]
+    }
+  });
+  assert.equal(missingSecondImage.published_on_webpage, false);
 
   const unpublished = helpers.normalizeTourForStorage({
     id: "tour_unpublished",
     title: "Unpublished",
     styles: ["culture"],
+    travel_plan: eligibleTravelPlan,
     published_on_webpage: false
   });
   assert.equal(unpublished.published_on_webpage, false);

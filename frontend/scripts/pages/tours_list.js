@@ -982,7 +982,7 @@ function renderTours(items) {
       const title = tour.title || "-";
       const tourImageMarkup = renderTourImageMarkup(tour);
       const publishedPill = tour.published_on_webpage !== false
-        ? `<span class="tour-list__published-pill">${escapeHtml(backendT("backend.tours.published_pill", "published"))}</span>`
+        ? `<span class="tour-list__published-pill">${escapeHtml(backendT("backend.tours.published_pill", "web page"))}</span>`
         : "";
       const rowAriaLabel = backendT("backend.tours.open_tour", "Open tour {name}", {
         name: title

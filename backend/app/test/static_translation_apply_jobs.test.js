@@ -93,10 +93,12 @@ test("static translation publish job applies translations before writing snapsho
   const finished = await waitForJob(service, "job-publish", "succeeded");
 
   assert.equal(finished.status, "succeeded");
-  assert.equal(seen.length, 6);
+  assert.equal(seen.length, 7);
   assert.match(seen[0], /sync_backend_i18n\.mjs translate --target vi$/);
-  assert.match(seen[4], /sync_frontend_i18n\.mjs check$/);
-  assert.equal(seen[5], "publish snapshot");
+  assert.match(seen[3], /sync_frontend_i18n\.mjs check$/);
+  assert.equal(seen[4], "publish snapshot");
+  assert.match(seen[5], /build_runtime_i18n\.mjs --strict$/);
+  assert.match(seen[6], /generate_public_homepage_assets\.mjs$/);
   assert.match(finished.log.join("\n"), /Published 3 translation snapshot items/);
 });
 

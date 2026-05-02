@@ -8,6 +8,7 @@ PROJECT_NAME="${PROJECT_NAME:-asiatravelplan}"
 RUNTIME_BRAND_LOGO_PREPARER="${RUNTIME_BRAND_LOGO_PREPARER:-$ROOT_DIR/scripts/assets/prepare_runtime_brand_logo.sh}"
 
 source "$ROOT_DIR/scripts/lib/docker_runtime.sh"
+source "$ROOT_DIR/scripts/lib/runtime_i18n.sh"
 source "$ROOT_DIR/scripts/lib/public_homepage_assets.sh"
 
 usage() {
@@ -73,6 +74,11 @@ generate_public_homepage_assets() {
   run_public_homepage_asset_generator_quiet "$ROOT_DIR"
 }
 
+generate_runtime_i18n() {
+  echo "Generating runtime i18n from published snapshots..."
+  run_runtime_i18n_generator_quiet "$ROOT_DIR"
+}
+
 prepare_runtime_brand_logo() {
   echo "Preparing production runtime brand logo..."
   "$RUNTIME_BRAND_LOGO_PREPARER" production
@@ -118,6 +124,7 @@ if should_run_tests "${SERVICES[@]}"; then
 fi
 
 prepare_runtime_brand_logo
+generate_runtime_i18n
 generate_public_homepage_assets
 
 mkdir -p backend/app/data backend/app/data/tmp content logs

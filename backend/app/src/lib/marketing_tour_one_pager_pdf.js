@@ -9,21 +9,39 @@ import { styleToken } from "./style_tokens.js";
 import { pdfTextOptions, normalizePdfLang, pdfT } from "./pdf_i18n.js";
 import { resolvePdfFontsForLang } from "./pdf_font_resolver.js";
 
-const PAGE_SIZE = "LETTER";
-const PAGE_WIDTH = 612;
-const PAGE_HEIGHT = 792;
+const MM_TO_POINTS = 72 / 25.4;
+// PDFKit's built-in "A4" preset rounds the page box and some viewers display it as
+// 21.01 x 29.71 cm. Use the exact A4 dimensions in points instead.
+const PAGE_SIZE = Object.freeze([210 * MM_TO_POINTS, 297 * MM_TO_POINTS]);
+const [PAGE_WIDTH, PAGE_HEIGHT] = PAGE_SIZE;
+const LETTER_DESIGN_HEIGHT = 792;
+const A4_VERTICAL_EXTENSION = PAGE_HEIGHT - LETTER_DESIGN_HEIGHT;
+const FOOTER_HEIGHT = 45;
 const PDF_FONT_REGULAR = "MarketingTourOnePagerRegular";
 const PDF_FONT_BOLD = "MarketingTourOnePagerBold";
 const PDF_FONT_DISPLAY = "MarketingTourOnePagerDisplay";
 const PDF_FONT_SCRIPT = "MarketingTourOnePagerScript";
 const PDF_FONT_LABEL = "MarketingTourOnePagerLabel";
+const PDF_FONT_TRIP_LABEL = "MarketingTourOnePagerTripLabel";
 const IMAGE_RENDER_SCALE = 2.4;
 const PUBLIC_TOUR_IMAGE_PREFIX = "/public/v1/tour-images/";
 const ONE_PAGER_EXPERIENCE_HIGHLIGHT_LIMIT = 4;
 const EXPERIENCE_HIGHLIGHT_RENDER_SCALE = 3;
 const PDF_PRIMARY_GREEN = "#30796B";
+const PDF_SECONDARY_GREEN = "#e4ecdf";
+const PDF_BACKGROUND_CREAM = "#FFF8EC";
+const PDF_TRIP_LABEL_ORANGE = "#F27A1A";
+const PDF_BUS_IMAGE_FILENAME = "bus.png";
+const PDF_BUS_IMAGE_WIDTH = 236;
+const PDF_BUS_IMAGE_HEIGHT = 110;
+const PDF_PIN_IMAGE_FILENAME = "pin.png";
+const PDF_PIN_IMAGE_WIDTH = 100;
+const PDF_PIN_IMAGE_HEIGHT = 135;
 const BODY_IMAGE_LIMIT = 4;
 const BODY_IMAGE_RENDER_FRAME = Object.freeze({ width: 248, height: 174 });
+const PHOTO_LABEL_BACKDROP_COLOR = "#000000";
+const PHOTO_LABEL_BACKDROP_OPACITY = 0.34;
+const PHOTO_LABEL_BRIGHTNESS_THRESHOLD = 118;
 const BODY_IMAGE_LAYOUT_BOUNDS = Object.freeze({
   minX: 302,
   minY: 246,
@@ -76,6 +94,15 @@ const PDF_FONT_DISPLAY_CANDIDATES = Object.freeze([
 ]);
 
 const PDF_FONT_SCRIPT_CANDIDATES = Object.freeze([
+  "/System/Library/Fonts/Supplemental/Brush Script.ttf",
+  "/System/Library/Fonts/Supplemental/Zapfino.ttf",
+  "/usr/share/fonts/noto/NotoSans-Italic.ttf",
+  "/usr/share/fonts/truetype/dejavu/DejaVuSans-Oblique.ttf",
+  "/usr/share/fonts/dejavu/DejaVuSans-Oblique.ttf",
+  "/usr/share/fonts/TTF/DejaVuSans-Oblique.ttf"
+]);
+
+const PDF_FONT_TRIP_LABEL_CANDIDATES = Object.freeze([
   "/System/Library/Fonts/Supplemental/Brush Script.ttf",
   "/System/Library/Fonts/Supplemental/Zapfino.ttf",
   "/usr/share/fonts/noto/NotoSans-Italic.ttf",
@@ -151,25 +178,30 @@ function cssColorToHex(value, fallback) {
 }
 
 const COLORS = Object.freeze({
-  surface: cssColorToHex(styleToken("surface"), "#ffffff"),
-  surfaceMuted: cssColorToHex(styleToken("surface-muted"), "#f4f7f5"),
-  surfaceSubtle: cssColorToHex(styleToken("surface-subtle"), "#f7faf8"),
+  surface: PDF_BACKGROUND_CREAM,
+  surfaceMuted: PDF_SECONDARY_GREEN,
+  surfaceSubtle: PDF_BACKGROUND_CREAM,
   accent: PDF_PRIMARY_GREEN,
-  accentSoft: cssColorToHex(styleToken("accent-soft"), "#ddede9"),
+  accentSoft: PDF_SECONDARY_GREEN,
   accentText: PDF_PRIMARY_GREEN,
-  secondary: PDF_PRIMARY_GREEN,
+  secondary: PDF_SECONDARY_GREEN,
   text: cssColorToHex(styleToken("text"), "#1e2f3a"),
   textStrong: cssColorToHex(styleToken("text-strong"), "#152536"),
   textMuted: cssColorToHex(styleToken("muted"), "#5f7078"),
-  line: cssColorToHex(styleToken("line-soft"), "#d8e1e8"),
+  line: PDF_SECONDARY_GREEN,
   white: "#ffffff",
-  cta: PDF_PRIMARY_GREEN
+  cta: PDF_PRIMARY_GREEN,
+  ctaText: PDF_BACKGROUND_CREAM,
+  ctaButton: PDF_BACKGROUND_CREAM,
+  ctaButtonText: PDF_PRIMARY_GREEN,
+  ctaBorder: PDF_SECONDARY_GREEN
 });
 
 function pdfFontName(weight = "regular", fonts = null) {
   if (weight === "display" && fonts?.display) return PDF_FONT_DISPLAY;
   if (weight === "script" && fonts?.script) return PDF_FONT_SCRIPT;
   if (weight === "label" && fonts?.label) return PDF_FONT_LABEL;
+  if (weight === "tripLabel" && fonts?.tripLabel) return PDF_FONT_TRIP_LABEL;
   if ((weight === "display" || weight === "label") && fonts?.bold) return PDF_FONT_BOLD;
   if (weight === "bold" && fonts?.bold) return PDF_FONT_BOLD;
   if (fonts?.regular) return PDF_FONT_REGULAR;
@@ -196,6 +228,7 @@ function registerPdfFonts(doc, fonts) {
   if (fonts?.display) doc.registerFont(PDF_FONT_DISPLAY, fonts.display);
   if (fonts?.script) doc.registerFont(PDF_FONT_SCRIPT, fonts.script);
   if (fonts?.label) doc.registerFont(PDF_FONT_LABEL, fonts.label);
+  if (fonts?.tripLabel) doc.registerFont(PDF_FONT_TRIP_LABEL, fonts.tripLabel);
 }
 
 async function fileExists(filePath) {
@@ -239,12 +272,13 @@ function prioritizeAssetFonts(staticCandidates, assetCandidates) {
 async function resolveOnePagerDisplayFonts(logoPath) {
   const assetDisplayCandidates = assetFontCandidatesFromLogoPath(logoPath, PDF_ASSET_DISPLAY_FONT_FILES);
   const assetScriptCandidates = assetFontCandidatesFromLogoPath(logoPath, PDF_ASSET_SCRIPT_FONT_FILES);
-  const [display, script, label] = await Promise.all([
+  const [display, script, label, tripLabel] = await Promise.all([
     firstExistingPath(prioritizeAssetFonts(PDF_FONT_DISPLAY_CANDIDATES, assetDisplayCandidates)),
     firstExistingPath(prioritizeAssetFonts(PDF_FONT_SCRIPT_CANDIDATES, assetScriptCandidates)),
-    firstExistingPath(prioritizeAssetFonts(PDF_FONT_LABEL_CANDIDATES, assetDisplayCandidates))
+    firstExistingPath(prioritizeAssetFonts(PDF_FONT_LABEL_CANDIDATES, assetDisplayCandidates)),
+    firstExistingPath(prioritizeAssetFonts(PDF_FONT_TRIP_LABEL_CANDIDATES, assetScriptCandidates))
   ]);
-  return { display, script, label };
+  return { display, script, label, tripLabel };
 }
 
 function streamPdfToFile(doc, outputPath) {
@@ -304,65 +338,24 @@ function drawCheckIcon(doc, x, y, size, color) {
   doc.restore();
 }
 
-function drawDestinationPinIcon(doc, x, y, size, color) {
-  const centerX = x + size / 2;
-  const topY = y + size * 0.2;
-  doc.save();
-  doc
-    .circle(centerX, topY + size * 0.21, size * 0.18)
-    .lineWidth(1.1)
-    .strokeColor(color)
-    .stroke();
-  doc
-    .moveTo(centerX - size * 0.22, topY + size * 0.35)
-    .lineTo(centerX, y + size * 0.9)
-    .lineTo(centerX + size * 0.22, topY + size * 0.35)
-    .lineWidth(1.1)
-    .lineJoin("round")
-    .strokeColor(color)
-    .stroke();
-  doc.restore();
+function drawPinIcon(doc, pinImagePath, tipX, tipY, height) {
+  const normalizedImagePath = normalizeText(pinImagePath);
+  if (!normalizedImagePath) return;
+  const width = height * (PDF_PIN_IMAGE_WIDTH / PDF_PIN_IMAGE_HEIGHT);
+  doc.image(normalizedImagePath, tipX - width / 2, tipY - height, {
+    width,
+    height
+  });
 }
 
-function drawBusIcon(doc, x, y, width, height, color) {
-  const wheelRadius = height * 0.14;
-  doc.save();
-  doc.fillColor(COLORS.surfaceSubtle).roundedRect(x - 4, y - 4, width + 8, height + 9, 5).fill();
-  doc
-    .roundedRect(x, y + height * 0.18, width, height * 0.58, 2.4)
-    .lineWidth(1.25)
-    .strokeColor(color)
-    .stroke();
-  doc
-    .moveTo(x + width * 0.1, y + height * 0.39)
-    .lineTo(x + width * 0.9, y + height * 0.39)
-    .moveTo(x + width * 0.17, y + height * 0.18)
-    .lineTo(x + width * 0.17, y + height * 0.76)
-    .moveTo(x + width * 0.77, y + height * 0.18)
-    .lineTo(x + width * 0.77, y + height * 0.76)
-    .lineWidth(0.9)
-    .strokeColor(color)
-    .stroke();
-  doc
-    .roundedRect(x + width * 0.24, y + height * 0.25, width * 0.22, height * 0.2, 1)
-    .roundedRect(x + width * 0.5, y + height * 0.25, width * 0.21, height * 0.2, 1)
-    .lineWidth(0.85)
-    .strokeColor(color)
-    .stroke();
-  doc
-    .moveTo(x + width * 0.2, y + height * 0.86)
-    .lineTo(x + width * 0.8, y + height * 0.86)
-    .lineWidth(1)
-    .strokeColor(color)
-    .stroke();
-  [
-    x + width * 0.27,
-    x + width * 0.74
-  ].forEach((wheelX) => {
-    doc.circle(wheelX, y + height * 0.86, wheelRadius).fillColor(COLORS.surfaceSubtle).fill();
-    doc.circle(wheelX, y + height * 0.86, wheelRadius).lineWidth(1).strokeColor(color).stroke();
+function drawBusIcon(doc, busImagePath, centerX, wheelBaselineY, width) {
+  const normalizedImagePath = normalizeText(busImagePath);
+  if (!normalizedImagePath) return;
+  const height = width * (PDF_BUS_IMAGE_HEIGHT / PDF_BUS_IMAGE_WIDTH);
+  doc.image(normalizedImagePath, centerX - width / 2, wheelBaselineY - height, {
+    width,
+    height
   });
-  doc.restore();
 }
 
 function drawDashedCurve(doc, points, color) {
@@ -378,19 +371,19 @@ function drawDashedCurve(doc, points, color) {
   doc.restore();
 }
 
-function drawRouteConnector(doc, x, y, width) {
-  const color = COLORS.textStrong;
-  drawDestinationPinIcon(doc, x + 4, y + 3, 22, color);
+function drawRouteConnector(doc, x, y, width, { busImagePath = "", pinImagePath = "" } = {}) {
+  const color = COLORS.accentText;
+  drawPinIcon(doc, pinImagePath, x + 17, y + 18, 24);
   drawDashedCurve(doc, [
     [x + 31, y + 18],
     [x + 70, y + 29],
-    [x + 91, y + 5],
+    [x + 91, y + 18],
     [x + 125, y + 18],
-    [x + 159, y + 31],
-    [x + width - 82, y + 4],
-    [x + width - 28, y + 18]
+    [x + 159, y + 18],
+    [x + width - 82, y + 14],
+    [x + width - 28, y + 40]
   ], color);
-  drawBusIcon(doc, x + width / 2 - 22, y + 5, 44, 25, color);
+  drawBusIcon(doc, busImagePath, x + 125, y + 18, 44);
 }
 
 function drawHighlightIcon(doc, index, x, y, size, color) {
@@ -465,7 +458,7 @@ function photoFrameShape(variant = 0) {
   return PHOTO_FRAME_SHAPES[Math.abs(Number(variant) || 0) % PHOTO_FRAME_SHAPES.length];
 }
 
-function drawFramedImage(doc, { x, y, width, height, angle = 0, imageBuffer = null, label = "", fonts = null, lang = "en", variant = 0 } = {}) {
+function drawFramedImage(doc, { x, y, width, height, angle = 0, imageBuffer = null, label = "", labelBackdrop = false, fonts = null, lang = "en", variant = 0 } = {}) {
   const centerX = x + width / 2;
   const centerY = y + height / 2;
   const shape = photoFrameShape(variant);
@@ -490,6 +483,13 @@ function drawFramedImage(doc, { x, y, width, height, angle = 0, imageBuffer = nu
     doc.save();
     drawPolygonPath(doc, innerPoints);
     doc.clip();
+    if (labelBackdrop) {
+      doc
+        .fillOpacity(PHOTO_LABEL_BACKDROP_OPACITY)
+        .roundedRect(x + 7, y + height - 30, width - 14, 24, 4)
+        .fill(PHOTO_LABEL_BACKDROP_COLOR)
+        .fillOpacity(1);
+    }
     doc
       .font(pdfFontName("display", fonts))
       .fontSize(14)
@@ -800,6 +800,28 @@ async function loadImageBuffer(storagePath, { width, height, resolveTourImageDis
     }
   }
   return null;
+}
+
+async function imageLowerBandNeedsLabelBackdrop(imageBuffer) {
+  if (!imageBuffer) return false;
+  try {
+    const image = sharp(imageBuffer);
+    const metadata = await image.metadata();
+    const width = Math.max(1, Math.round(Number(metadata.width) || 0));
+    const height = Math.max(1, Math.round(Number(metadata.height) || 0));
+    if (!width || !height) return false;
+    const bandTop = Math.max(0, Math.floor(height * 0.62));
+    const bandHeight = Math.max(1, height - bandTop);
+    const stats = await sharp(imageBuffer)
+      .extract({ left: 0, top: bandTop, width, height: bandHeight })
+      .stats();
+    const channels = Array.isArray(stats?.channels) ? stats.channels : [];
+    if (channels.length < 3) return false;
+    const luminance = channels[0].mean * 0.2126 + channels[1].mean * 0.7152 + channels[2].mean * 0.0722;
+    return luminance >= PHOTO_LABEL_BRIGHTNESS_THRESHOLD;
+  } catch {
+    return false;
+  }
 }
 
 function normalizeExperienceHighlightManifestItem(item, index, manifestDir) {
@@ -1142,52 +1164,195 @@ function drawDurationBadge(doc, duration, fonts) {
   doc.restore();
 }
 
-function drawCta(doc, companyProfile, fonts, lang) {
-  const x = 335;
-  const y = 636;
-  const width = 230;
-  const height = 98;
-  const usesDecorativeFonts = shouldUseOnePagerDecorativeFonts(lang);
-  const scriptFontSize = usesDecorativeFonts ? 28 : 20;
-  const scriptY = usesDecorativeFonts ? y + 35 : y + 41;
-  const scriptWidth = usesDecorativeFonts ? 138 : 152;
-  const scriptX = usesDecorativeFonts ? x + 75 : x + 66;
+function drawCtaPaperPlaneIcon(doc, x, y, size, color) {
   doc.save();
-  doc.roundedRect(x, y, width, height, 10).fill(COLORS.accentText);
-  doc.roundedRect(x + 4, y + 4, width - 8, height - 8, 8).lineWidth(1.2).strokeColor(COLORS.white).stroke();
   doc
-    .moveTo(x + 28, y + 31)
-    .lineTo(x + 66, y + 17)
-    .lineTo(x + 51, y + 54)
-    .lineTo(x + 42, y + 38)
-    .lineTo(x + 28, y + 31)
-    .lineWidth(1.8)
-    .strokeColor(COLORS.secondary)
+    .moveTo(x, y + size * 0.45)
+    .lineTo(x + size * 0.95, y)
+    .lineTo(x + size * 0.66, y + size * 0.95)
+    .lineTo(x + size * 0.43, y + size * 0.6)
+    .lineTo(x, y + size * 0.45)
+    .lineWidth(2.1)
+    .lineJoin("round")
+    .lineCap("round")
+    .strokeColor(color)
     .stroke();
-  doc.moveTo(x + 42, y + 38).lineTo(x + 66, y + 17).lineWidth(1.2).strokeColor(COLORS.secondary).stroke();
   doc
-    .font(pdfFontName("bold", fonts))
-    .fontSize(15)
-    .fillColor(COLORS.white)
-    .text(onePagerT(lang, "cta_plan", "Let's plan your"), x + 74, y + 18, { width: 136, align: "center" });
+    .moveTo(x + size * 0.43, y + size * 0.6)
+    .lineTo(x + size * 0.95, y)
+    .lineWidth(1.25)
+    .strokeColor(color)
+    .stroke();
+  doc.restore();
+}
+
+function drawCtaLightningIcon(doc, x, y, size, color) {
+  doc.save();
   doc
-    .font(pdfFontName("script", fonts))
-    .fontSize(scriptFontSize)
-    .fillColor(COLORS.accentSoft)
-    .text(onePagerT(lang, "cta_perfect_trip", "perfect trip!"), scriptX, scriptY, { width: scriptWidth, height: 24, align: "center", ellipsis: true });
+    .moveTo(x + size * 0.58, y)
+    .lineTo(x + size * 0.18, y + size * 0.54)
+    .lineTo(x + size * 0.46, y + size * 0.54)
+    .lineTo(x + size * 0.34, y + size)
+    .lineTo(x + size * 0.82, y + size * 0.38)
+    .lineTo(x + size * 0.54, y + size * 0.38)
+    .closePath()
+    .fillColor(color)
+    .fill();
+  doc.restore();
+}
+
+function drawCtaExpertIcon(doc, x, y, size, color) {
+  const cx = x + size / 2;
+  doc.save();
+  doc.lineWidth(1.15).strokeColor(color).lineCap("round").lineJoin("round");
   doc
-    .roundedRect(x + 52, y + 70, width - 104, 20, 10)
-    .fill(COLORS.secondary);
+    .moveTo(cx, y + size * 0.96)
+    .bezierCurveTo(x + size * 0.2, y + size * 0.66, x + size * 0.18, y + size * 0.22, cx, y + size * 0.12)
+    .bezierCurveTo(x + size * 0.82, y + size * 0.22, x + size * 0.8, y + size * 0.66, cx, y + size * 0.96)
+    .stroke();
+  doc
+    .circle(cx, y + size * 0.42, size * 0.14)
+    .stroke();
+  doc
+    .moveTo(x + size * 0.24, y + size)
+    .lineTo(x + size * 0.76, y + size)
+    .stroke();
+  doc.restore();
+}
+
+function drawCtaSupportIcon(doc, x, y, size, color, fonts) {
+  doc.save();
+  doc.lineWidth(1.05).strokeColor(color).lineCap("round").lineJoin("round");
+  doc.circle(x + size / 2, y + size / 2, size * 0.42).stroke();
   doc
     .font(pdfFontName("label", fonts))
-    .fontSize(8.8)
+    .fontSize(size * 0.36)
+    .fillColor(color)
+    .text("24", x, y + size * 0.28, { width: size, align: "center" });
+  doc.restore();
+}
+
+function drawCtaFeatureIcon(doc, icon, x, y, size, color, fonts) {
+  if (icon === "fast") {
+    drawCtaLightningIcon(doc, x, y, size, color);
+  } else if (icon === "expert") {
+    drawCtaExpertIcon(doc, x, y, size, color);
+  } else if (icon === "support") {
+    drawCtaSupportIcon(doc, x, y, size, color, fonts);
+  }
+}
+
+function drawCtaFeature(doc, { icon, text, x, y, width, fonts, lang }) {
+  const iconSize = 11.5;
+  const labelX = x + iconSize + 4.5;
+  const labelWidth = Math.max(10, width - iconSize - 4.5);
+  const labelFont = pdfFontName("bold", fonts);
+  const labelOptions = pdfTextOptions(lang, { width: labelWidth, height: 10, ellipsis: true });
+  const labelSize = fitPdfTextSize(doc, text, {
+    fontName: labelFont,
+    maxSize: 7.1,
+    minSize: 4.8,
+    maxHeight: 10,
+    options: labelOptions,
+    step: 0.25
+  });
+  drawCtaFeatureIcon(doc, icon, x, y - 0.5, iconSize, COLORS.ctaText, fonts);
+  doc
+    .font(labelFont)
+    .fontSize(labelSize)
+    .fillColor(COLORS.ctaText)
+    .text(text, labelX, y + 1.2, labelOptions);
+}
+
+function drawCta(doc, companyProfile, fonts, lang) {
+  const x = 316;
+  const width = 252;
+  const height = 120;
+  const y = PAGE_HEIGHT - FOOTER_HEIGHT - height - 11;
+  const usesDecorativeFonts = shouldUseOnePagerDecorativeFonts(lang);
+  const titleText = onePagerT(lang, "cta_plan", "Let's plan your");
+  const scriptText = onePagerT(lang, "cta_perfect_trip", "perfect trip!");
+  const contactText = onePagerT(lang, "cta_contact", "CONTACT US TODAY").toUpperCase();
+  const titleOptions = pdfTextOptions(lang, { width: 148, height: 20, align: "center", ellipsis: true });
+  const scriptOptions = pdfTextOptions(lang, { width: 178, height: 32, align: "center", ellipsis: true });
+  const titleFont = pdfFontName("bold", fonts);
+  const scriptFont = pdfFontName("script", fonts);
+  const contactFont = pdfFontName("label", fonts);
+  const titleFontSize = fitPdfTextSize(doc, titleText, {
+    fontName: titleFont,
+    maxSize: 17.4,
+    minSize: 9,
+    maxHeight: 20,
+    options: titleOptions,
+    step: 0.3
+  });
+  const scriptFontSize = fitPdfTextSize(doc, scriptText, {
+    fontName: scriptFont,
+    maxSize: usesDecorativeFonts ? 36 : 24,
+    minSize: 9,
+    maxHeight: 32,
+    options: scriptOptions,
+    step: 0.3
+  });
+  const maxContactPillWidth = width - 70;
+  const contactSizingOptions = pdfTextOptions(lang, { width: maxContactPillWidth - 24, height: 15, align: "center", ellipsis: true });
+  const contactFontSize = fitPdfTextSize(doc, contactText, {
+    fontName: contactFont,
+    maxSize: 11.8,
+    minSize: 6.2,
+    maxHeight: 14,
+    options: contactSizingOptions,
+    step: 0.25
+  });
+  doc.font(contactFont).fontSize(contactFontSize);
+  const measuredContactWidth = doc.widthOfString(contactText);
+  const contactPillWidth = clampNumber(measuredContactWidth + 38, 112, maxContactPillWidth);
+  const contactPillX = x + (width - contactPillWidth) / 2;
+  const contactOptions = pdfTextOptions(lang, { width: contactPillWidth - 24, height: 15, align: "center", ellipsis: true });
+  const features = [
+    { icon: "fast", text: onePagerT(lang, "cta_fast_response", "Fast Response") },
+    { icon: "expert", text: onePagerT(lang, "cta_local_expert", "Local Expert") },
+    { icon: "support", text: onePagerT(lang, "cta_support", "24/7 Support") }
+  ];
+  doc.save();
+  doc.roundedRect(x, y, width, height, 12).fill(COLORS.cta);
+  doc.roundedRect(x + 4, y + 4, width - 8, height - 8, 10).lineWidth(1.35).strokeColor(COLORS.ctaBorder).stroke();
+  drawCtaPaperPlaneIcon(doc, x + 31, y + 24, 28, COLORS.ctaText);
+  doc
+    .font(titleFont)
+    .fontSize(titleFontSize)
     .fillColor(COLORS.white)
-    .text(onePagerT(lang, "cta_contact", "CONTACT US TODAY").toUpperCase(), x + 60, y + 75, { width: width - 120, align: "center" });
+    .text(titleText, x + 78, y + 12, titleOptions);
+  doc
+    .font(scriptFont)
+    .fontSize(scriptFontSize)
+    .fillColor(COLORS.ctaText)
+    .text(scriptText, x + 58, y + 31, scriptOptions);
+  doc
+    .roundedRect(contactPillX, y + 73, contactPillWidth, 22, 11)
+    .fill(COLORS.ctaButton);
+  doc
+    .font(contactFont)
+    .fontSize(contactFontSize)
+    .fillColor(COLORS.ctaButtonText)
+    .text(contactText, contactPillX + 12, y + 78, contactOptions);
+  const featureY = y + 103;
+  const featureWidth = (width - 42) / 3;
+  features.forEach((feature, index) => {
+    drawCtaFeature(doc, {
+      ...feature,
+      x: x + 18 + index * featureWidth,
+      y: featureY,
+      width: featureWidth - 3,
+      fonts,
+      lang
+    });
+  });
   doc.restore();
 }
 
 function drawFooter(doc, companyProfile, fonts) {
-  const footerY = 747;
+  const footerY = PAGE_HEIGHT - FOOTER_HEIGHT;
   const iconSize = 16;
   const itemY = footerY + 14;
   const slots = [
@@ -1224,15 +1389,17 @@ async function prepareFrameImages(tour, deps, lang) {
   ];
   return await Promise.all(frames.map(async (frame, index) => {
     const entry = entries[index] || null;
+    const buffer = entry
+      ? await loadImageBuffer(entry.storagePath, {
+        ...frame,
+        resolveTourImageDiskPath: deps.resolveTourImageDiskPath,
+        fallbackImagePath: deps.fallbackImagePath
+      })
+      : null;
     return {
       entry,
-      buffer: entry
-        ? await loadImageBuffer(entry.storagePath, {
-          ...frame,
-          resolveTourImageDiskPath: deps.resolveTourImageDiskPath,
-          fallbackImagePath: deps.fallbackImagePath
-        })
-        : null
+      buffer,
+      labelBackdrop: index > 0 && await imageLowerBandNeedsLabelBackdrop(buffer)
     };
   }));
 }
@@ -1247,10 +1414,10 @@ function drawMainCopy(doc, tour, duration, fonts, lang) {
   const styleLine = safeArray(tour?.styles).slice(0, 3).map((item) => item.toUpperCase()).join("  |  ");
 
   doc
-    .font(pdfFontName("script", fonts))
-    .fontSize(48)
-    .fillColor(COLORS.secondary)
-    .text(onePagerT(lang, "trip_to", "Trip to"), 42, 126, pdfTextOptions(lang, { width: 250 }));
+    .font(pdfFontName("tripLabel", fonts))
+    .fontSize(fonts?.tripLabel ? 27 : 44)
+    .fillColor(PDF_TRIP_LABEL_ORANGE)
+    .text(onePagerT(lang, "trip_to", "Trip to"), 42, 118, pdfTextOptions(lang, { width: 210 }));
   const titleOptions = pdfTextOptions(lang, { width: 286, lineGap: -6 });
   const titleSize = fitTitleSize(doc, titleText, fonts, titleOptions);
   const titleFontName = pdfFontName("display", fonts);
@@ -1295,7 +1462,7 @@ function drawMainCopy(doc, tour, duration, fonts, lang) {
     .fillColor(COLORS.text)
     .text(description, 42, descriptionY, descriptionOptions);
   const sectionRuleY = Math.max(430, descriptionY + descriptionHeight + 8);
-  doc.moveTo(42, sectionRuleY).lineTo(78, sectionRuleY).lineWidth(1).strokeColor(COLORS.secondary).stroke();
+  doc.moveTo(42, sectionRuleY).lineTo(78, sectionRuleY).lineWidth(1).strokeColor(COLORS.accent).stroke();
   return { highlightsY: Math.max(438, sectionRuleY + 8) };
 }
 
@@ -1322,14 +1489,15 @@ function drawHeroBackgroundImage(doc, imageBuffer) {
 }
 
 function drawBackground(doc, heroImageBuffer) {
-  drawSoftRect(doc, 0, 0, PAGE_WIDTH, PAGE_HEIGHT, COLORS.surface, 0);
-  drawSoftRect(doc, 28, 28, PAGE_WIDTH - 56, PAGE_HEIGHT - 56, COLORS.surfaceSubtle, 0);
+  drawSoftRect(doc, 0, 0, PAGE_WIDTH, PAGE_HEIGHT, COLORS.surfaceMuted, 0);
   drawHeroBackgroundImage(doc, heroImageBuffer);
 }
 
 export function createMarketingTourOnePagerPdfWriter({
   resolveTourImageDiskPath,
   logoPath = "",
+  busImagePath = "",
+  pinImagePath = "",
   fallbackImagePath = "",
   experienceHighlightsManifestPath = "",
   companyProfile = null
@@ -1372,6 +1540,10 @@ export function createMarketingTourOnePagerPdfWriter({
     const highlightItems = configuredHighlightItems.length
       ? configuredHighlightItems
       : collectHighlightItems(tour, duration, normalizedLang);
+    const resolvedBusImagePath = normalizeText(busImagePath)
+      || (normalizeText(logoPath) ? path.join(path.dirname(logoPath), PDF_BUS_IMAGE_FILENAME) : "");
+    const resolvedPinImagePath = normalizeText(pinImagePath)
+      || (normalizeText(logoPath) ? path.join(path.dirname(logoPath), PDF_PIN_IMAGE_FILENAME) : "");
 
     const renderWithFonts = async (renderFonts) => {
       await removePartialPdf(outputPath);
@@ -1392,9 +1564,13 @@ export function createMarketingTourOnePagerPdfWriter({
       drawDurationBadge(doc, duration, renderFonts);
       const mainCopyLayout = drawMainCopy(doc, tour, duration, renderFonts, normalizedLang);
       const highlightsY = Math.max(438, Number(mainCopyLayout?.highlightsY) || 438);
+      const lowerContentY = highlightsY + A4_VERTICAL_EXTENSION;
       drawHighlights(doc, highlightItems, 42, highlightsY, 276, renderFonts, normalizedLang);
-      drawRouteConnector(doc, 43, highlightsY + 132, 238);
-      drawIncluded(doc, collectIncludedItems(tour, duration, normalizedLang), 42, highlightsY + 178, 276, renderFonts, normalizedLang);
+      drawRouteConnector(doc, 43, lowerContentY + 132, 296, {
+        busImagePath: resolvedBusImagePath,
+        pinImagePath: resolvedPinImagePath
+      });
+      drawIncluded(doc, collectIncludedItems(tour, duration, normalizedLang), 42, lowerContentY + 178, 276, renderFonts, normalizedLang);
 
       bodyImageLayouts.forEach(({ frame, layout }, index) => {
         drawFramedImage(doc, {
@@ -1404,6 +1580,7 @@ export function createMarketingTourOnePagerPdfWriter({
           height: layout.height,
           angle: layout.angle,
           imageBuffer: frame?.buffer,
+          labelBackdrop: frame?.labelBackdrop === true,
           label: frame?.entry?.label || "",
           fonts: renderFonts,
           lang: normalizedLang,

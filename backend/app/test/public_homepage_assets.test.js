@@ -345,6 +345,7 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
     /^\/assets\/generated\/homepage\/tours\/tour_alpha\/travel-plan-services\/pickup\.(png|webp)\?v=/
   );
   assert.deepEqual(publicToursDe.available_styles, [{ code: "budget", label: "Budget" }]);
+  assert.deepEqual(publicToursVi.available_styles, [{ code: "budget", label: "Tiết kiệm" }]);
   assert.deepEqual(publicReels, { items: [] });
   assert.match(homepageCopyGlobal, /heroTitleByLang/);
   assert.match(homepageCopyGlobal, /metaTitleByLang/);
@@ -366,6 +367,11 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
   assert.match(homepageInitialBundle, /import\("\/frontend\/scripts\/main_booking_form_options\.js"\)/);
   assert.match(homepageInitialBundle, /import\("\/frontend\/scripts\/main_reels\.js"\)/);
   assert.match(homepageInitialBundle, /import\("\/frontend\/scripts\/shared\/auth\.js"\)/);
+  assert.doesNotMatch(
+    homepageInitialBundle,
+    /tour_style_catalog|TOUR_STYLE_CODE_OPTIONS|generated_catalogs/,
+    "Generated homepage runtime should read travel-style labels from public-tours.<lang>.json, not the shared style catalog"
+  );
   assert.match(homepageHtml, />Old title</);
   assert.match(generatedHomepageHtml, /<title data-i18n-id="meta\.home_title">AsiaTravelPlan \| Private holidays in Vietnam<\/title>/);
   assert.match(generatedHomepageHtml, /content="Private holidays in Vietnam with clear pricing and local support\. Book a free discovery call\."/);
@@ -503,10 +509,33 @@ test("generatePublicHomepageAssets falls back when a visible tour image is missi
     short_description: { en: "Visible but stale image reference" },
     image: "/public/v1/tour-images/tour_missing_image/missing.png",
     travel_plan: {
+      tour_card_image_ids: [
+        "travel_plan_service_image_missing_one",
+        "travel_plan_service_image_missing_two"
+      ],
       destination_scope: [
         { destination: "VN", areas: [] }
       ],
-      days: []
+      days: [{
+        services: [
+          {
+            title: "Missing image one",
+            image: {
+              id: "travel_plan_service_image_missing_one",
+              storage_path: "/public/v1/tour-images/tour_missing_image/missing-one.png",
+              include_in_travel_tour_card: true
+            }
+          },
+          {
+            title: "Missing image two",
+            image: {
+              id: "travel_plan_service_image_missing_two",
+              storage_path: "/public/v1/tour-images/tour_missing_image/missing-two.png",
+              include_in_travel_tour_card: true
+            }
+          }
+        ]
+      }]
     },
     priority: 10,
     updated_at: "2026-04-14T12:34:56.000Z"

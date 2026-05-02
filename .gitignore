@@ -29,6 +29,19 @@ frontend/data/generated/
 assets/generated/
 tmp/
 
+# Runtime translation outputs are generated from content/translations.
+# Keep English source dictionaries tracked; keep generated target dictionaries out of git.
+frontend/data/i18n/frontend/*.json
+!frontend/data/i18n/frontend/en.json
+frontend/data/i18n/frontend_meta/*.json
+frontend/data/i18n/backend/*.json
+!frontend/data/i18n/backend/en.json
+frontend/data/i18n/backend/*.meta.json
+frontend/data/i18n/frontend_overrides/*.json
+frontend/data/i18n/backend_overrides/*.json
+!frontend/data/i18n/frontend_overrides/README.md
+!frontend/data/i18n/backend_overrides/README.md
+
 backup/atp_staff/staff.json.audit.log
 logs/
 
