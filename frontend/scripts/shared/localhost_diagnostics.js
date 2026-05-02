@@ -5,6 +5,7 @@
   window.__ATP_LOCALHOST_DIAGNOSTICS_INSTALLED__ = true;
 
   const PREFIX = "[localhost-diagnostics]";
+  const HEALTH_PROBE_TIMEOUT_MS = 5000;
   const apiBase = String(window.ASIATRAVELPLAN_API_BASE || window.location.origin).replace(/\/$/, "");
   const configuredHealthProbeUrl = String(window.ASIATRAVELPLAN_HEALTH_PROBE_URL || "").trim();
   const healthProbeUrl = (() => {
@@ -102,7 +103,11 @@
 
   async function probeBackendHealth() {
     const controller = typeof AbortController === "function" ? new AbortController() : null;
-    const timeoutId = window.setTimeout(() => controller?.abort(), 2500);
+    let didTimeout = false;
+    const timeoutId = window.setTimeout(() => {
+      didTimeout = true;
+      controller?.abort();
+    }, HEALTH_PROBE_TIMEOUT_MS);
     info("probing backend health", { health_url: healthProbeUrl });
     try {
       const response = await fetch(healthProbeUrl, {
@@ -127,6 +132,14 @@
         response_preview: bodyText.slice(0, 200)
       });
     } catch (err) {
+      if (didTimeout || err?.name === "AbortError") {
+        warn("backend health probe timed out", {
+          health_url: healthProbeUrl,
+          timeout_ms: HEALTH_PROBE_TIMEOUT_MS,
+          likely_cause: "The local backend may still be starting, or the local frontend server is not proxying /health."
+        });
+        return;
+      }
       error("backend health probe failed", {
         health_url: healthProbeUrl,
         likely_cause: "The local frontend server or its /health backend proxy may not be reachable on localhost."

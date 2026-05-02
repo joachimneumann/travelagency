@@ -1,9 +1,11 @@
 function sendError(sendJson, res, error) {
   const status = Number.isInteger(error?.status) ? error.status : 500;
-  sendJson(res, status, {
+  const payload = {
     error: String(error?.message || "Request failed"),
     code: error?.code || "STATIC_TRANSLATION_ERROR"
-  });
+  };
+  if (Array.isArray(error?.details)) payload.details = error.details;
+  sendJson(res, status, payload);
 }
 
 export function createStaticTranslationHandlers({
@@ -55,6 +57,18 @@ export function createStaticTranslationHandlers({
     }
   }
 
+  async function handleGetStaticTranslationStatus(req, res) {
+    if (!canAccess(req)) {
+      rejectForbidden(res);
+      return;
+    }
+    try {
+      sendJson(res, 200, await staticTranslationService.getStatusSummary());
+    } catch (error) {
+      sendError(sendJson, res, error);
+    }
+  }
+
   async function handleGetStaticTranslationLanguageState(req, res, params = []) {
     if (!canAccess(req)) {
       rejectForbidden(res);
@@ -86,6 +100,29 @@ export function createStaticTranslationHandlers({
     }
   }
 
+  async function handleDeleteStaticTranslationCache(req, res, params = []) {
+    if (!canAccess(req)) {
+      rejectForbidden(res);
+      return;
+    }
+    if (writesEnabled === false) {
+      rejectWritesDisabled(res);
+      return;
+    }
+    try {
+      const payload = await readBodyJson(req).catch(() => ({}));
+      const saved = await staticTranslationService.deleteCache(
+        params[0],
+        params[1],
+        decodeURIComponent(params[2] || ""),
+        payload
+      );
+      sendJson(res, 200, saved);
+    } catch (error) {
+      sendError(sendJson, res, error);
+    }
+  }
+
   async function handleStartStaticTranslationApply(req, res) {
     if (!canAccess(req)) {
       rejectForbidden(res);
@@ -96,7 +133,24 @@ export function createStaticTranslationHandlers({
       return;
     }
     try {
-      const job = staticTranslationApplyJobs.startApply();
+      const job = await staticTranslationApplyJobs.startApply();
+      sendJson(res, 202, { job });
+    } catch (error) {
+      sendError(sendJson, res, error);
+    }
+  }
+
+  async function handleStartStaticTranslationPublish(req, res) {
+    if (!canAccess(req)) {
+      rejectForbidden(res);
+      return;
+    }
+    if (writesEnabled === false) {
+      rejectWritesDisabled(res);
+      return;
+    }
+    try {
+      const job = await staticTranslationApplyJobs.startPublish();
       sendJson(res, 202, { job });
     } catch (error) {
       sendError(sendJson, res, error);
@@ -136,9 +190,12 @@ export function createStaticTranslationHandlers({
   return {
     handleListStaticTranslationDomains,
     handleListStaticTranslationLanguages,
+    handleGetStaticTranslationStatus,
     handleGetStaticTranslationLanguageState,
     handlePatchStaticTranslationOverrides,
+    handleDeleteStaticTranslationCache,
     handleStartStaticTranslationApply,
+    handleStartStaticTranslationPublish,
     handleStartStaticTranslationRetranslate,
     handleGetStaticTranslationApplyJob
   };

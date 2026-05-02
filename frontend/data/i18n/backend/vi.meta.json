@@ -2,7 +2,7 @@
   "a11y.backend_sections": {
     "source_hash": "a947ac8faf0c3a3f3729d71fe9c2c2d12768e1e77b63e3663e7d4ce982362afd",
     "origin": "machine",
-    "updated_at": "2026-03-30T23:51:31.875Z"
+    "updated_at": "2026-05-02T02:07:27.497Z"
   },
   "backend.bookings.clear_search": {
     "source_hash": "81c2c4f30a4bec68d57b2e50bdc40208d252cb30a5a69defce2ccfd1bb8a2708",
@@ -450,7 +450,7 @@
     "updated_at": "2026-03-30T23:51:31.875Z"
   },
   "backend.translations.applying_overlay": {
-    "source_hash": "968a03f2e2df351a2dcff2ebd208589b557543cb952bb40afbc54d7dbd3d7acf",
+    "source_hash": "08880d355cc59e4f7c2d12c61d4e45922fdd77b162e9cb4fb687dac6b7b8add4",
     "origin": "manual",
     "updated_at": "2026-04-28T00:00:00.000Z"
   },
@@ -468,6 +468,11 @@
     "source_hash": "e81ae454c1cc4efb68e94221c5c26ff9236e0cc3b6c2f41fbff7ba4072603805",
     "origin": "manual",
     "updated_at": "2026-04-28T00:00:00.000Z"
+  },
+  "backend.translations.translating_overlay": {
+    "source_hash": "4729195c764af6ffcee9b1beaad8fa48e993aac0151541dc47fdcdff7d545020",
+    "origin": "manual",
+    "updated_at": "2026-05-01T00:00:00.000Z"
   },
   "backend.emergency.add_contact": {
     "source_hash": "a02ce0df219d8ace5bdeb691400b07b9a0012969152d88d74f1b6a0997419921",
@@ -5524,15 +5529,15 @@
     "origin": "machine",
     "updated_at": "2026-03-30T23:51:31.875Z"
   },
-  "tour.status.saving_overlay": {
-    "source_hash": "b3577ce5a73ad3cb6583328265e54193b61350c90da4effbcc335474a748f0f5",
-    "origin": "manual",
-    "updated_at": "2026-04-28T00:00:00.000Z"
-  },
   "tour.status.selected_image": {
     "source_hash": "9d1e4118992a4d7bbf86d0ae0a58eaac8dc3f5ee296a94dc022e196bd5584f4a",
     "origin": "machine",
     "updated_at": "2026-03-30T23:51:31.875Z"
+  },
+  "tour.status.saving_overlay": {
+    "source_hash": "b3577ce5a73ad3cb6583328265e54193b61350c90da4effbcc335474a748f0f5",
+    "origin": "manual",
+    "updated_at": "2026-04-28T00:00:00.000Z"
   },
   "tour.status.updated": {
     "source_hash": "641595c60cbca7accf86b5f93bc363d4a2fe67f00158fb01fdc9e43fb832f963",

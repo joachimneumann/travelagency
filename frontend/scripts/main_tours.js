@@ -1196,6 +1196,12 @@ export function createFrontendToursController(ctx) {
     bindTourStyleTagsDeferredFit();
     fitTourCardStyleTagsIfConnected(root);
     if (typeof window === "undefined") return;
+    const scheduleTimeout = typeof window.setTimeout === "function"
+      ? window.setTimeout.bind(window)
+      : (callback) => {
+          if (typeof callback === "function") callback();
+          return 0;
+        };
 
     window.requestAnimationFrame(() => {
       fitTourCardStyleTagsIfConnected(root);
@@ -1204,10 +1210,10 @@ export function createFrontendToursController(ctx) {
       });
     });
 
-    window.setTimeout(() => {
+    scheduleTimeout(() => {
       fitTourCardStyleTagsIfConnected(root);
     }, 180);
-    window.setTimeout(() => {
+    scheduleTimeout(() => {
       fitTourCardStyleTagsIfConnected(root);
     }, 700);
   }

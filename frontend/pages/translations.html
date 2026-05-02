@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Translations</title>
-    <meta name="description" content="AsiaTravelPlan backend manual translation overrides" />
+    <meta name="description" content="AsiaTravelPlan translation management" />
     <link rel="icon" href="/assets/img/favicon-32.png" sizes="32x32" type="image/png" />
     <link rel="icon" href="/assets/img/favicon-16.png" sizes="16x16" type="image/png" />
     <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png" sizes="180x180" />
@@ -66,14 +66,12 @@
 
           <section class="backend-section translations-workspace" id="translationsPanel" hidden>
             <div class="translations-workspace__head">
-              <div>
-                <h1 class="section-title u-title-medium">Translations</h1>
-                <p class="micro" id="translationsIntro">Manage manual translation overrides and inspect cached generated strings across all translation areas.</p>
-              </div>
               <div class="translations-workspace__actions">
-                <p class="micro translations-workspace__status" id="translationsStatus" role="status" aria-live="polite"></p>
-                <button class="btn btn-ghost" id="translationsRefreshBtn" type="button">Refresh</button>
-                <button class="btn btn-primary" id="translationsApplyBtn" type="button">Apply</button>
+                <div class="translations-workspace__buttons">
+                  <button class="btn btn-primary" id="translationsTranslateBtn" type="button">Translate</button>
+                  <button class="btn btn-primary" id="translationsApplyBtn" type="button">Publish</button>
+                </div>
+                <p class="micro translations-workspace__status" id="translationsStatus" role="status" aria-live="polite">1 string needs translation before publishing.</p>
               </div>
             </div>
 
@@ -95,7 +93,7 @@
     <div class="booking-page-overlay" id="translationsApplyOverlay" hidden aria-hidden="true">
       <div class="booking-page-overlay__panel translations-apply-overlay__panel" role="status" aria-live="assertive">
         <span class="booking-page-overlay__spinner" aria-hidden="true"></span>
-        <span class="booking-page-overlay__text" id="translationsApplyOverlayText" data-i18n-id="backend.translations.applying_overlay">Applying translations. Please wait.</span>
+        <span class="booking-page-overlay__text" id="translationsApplyOverlayText" data-i18n-id="backend.translations.applying_overlay">Publishing translations. Please wait.</span>
         <pre class="translations-apply-log" id="translationsApplyLog"></pre>
       </div>
     </div>

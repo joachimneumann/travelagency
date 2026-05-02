@@ -61,8 +61,11 @@ test("buildApiRoutes includes static translation management routes", () => {
   const matches = (method, path) => routes.some((route) => route.method === method && route.pattern.test(path));
 
   assert.equal(matches("GET", "/api/v1/static-translations/domains"), true);
+  assert.equal(matches("GET", "/api/v1/static-translations/status"), true);
   assert.equal(matches("PATCH", "/api/v1/static-translations/frontend/vi/overrides"), true);
+  assert.equal(matches("DELETE", "/api/v1/static-translations/frontend/vi/cache/hero.title"), true);
   assert.equal(matches("POST", "/api/v1/static-translations/apply"), true);
+  assert.equal(matches("POST", "/api/v1/static-translations/publish"), true);
   assert.equal(matches("GET", "/api/v1/static-translations/apply/job_123"), true);
 
   const firstApplyJobRoute = routes.find((route) => route.method === "GET" && route.pattern.test("/api/v1/static-translations/apply/job_123"));

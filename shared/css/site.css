@@ -4227,7 +4227,7 @@ textarea:focus-visible {
   margin-bottom: 0;
 }
 
-.tour-detail-page.tour-detail-page--translation-busy {
+.tour-detail-page.tour-detail-page--busy {
   cursor: wait;
 }
 

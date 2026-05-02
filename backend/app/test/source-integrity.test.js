@@ -129,10 +129,12 @@ test("backend ui i18n sync script passes and local backend startup is strict by 
   const startLocalBackendPath = path.join(repoRoot, "scripts", "local", "start_local_backend.sh");
   const localKeycloakClientPath = path.join(repoRoot, "scripts", "keycloak", "bootstrap_local_keycloak_backend_client.sh");
   const sharedKeycloakClientPath = path.join(repoRoot, "scripts", "keycloak", "bootstrap_keycloak_backend_realm.sh");
-  const [startLocalBackendSource, localKeycloakClientSource, sharedKeycloakClientSource] = await Promise.all([
+  const serverPath = path.join(repoRoot, "backend", "app", "src", "server.js");
+  const [startLocalBackendSource, localKeycloakClientSource, sharedKeycloakClientSource, serverSource] = await Promise.all([
     readFile(startLocalBackendPath, "utf8"),
     readFile(localKeycloakClientPath, "utf8"),
-    readFile(sharedKeycloakClientPath, "utf8")
+    readFile(sharedKeycloakClientPath, "utf8"),
+    readFile(serverPath, "utf8")
   ]);
 
   await execFileAsync(process.execPath, [syncScriptPath, "check"], { cwd: repoRoot });
@@ -156,6 +158,11 @@ test("backend ui i18n sync script passes and local backend startup is strict by 
     startLocalBackendSource,
     /TRAVELER_DETAILS_TOKEN_SECRET="\$\{TRAVELER_DETAILS_TOKEN_SECRET:-local-traveler-details-token-secret\}"/,
     "Local backend startup should provide a default traveler-details token secret for local link generation"
+  );
+  assert.match(
+    serverSource,
+    /createBackendServices\(\{[\s\S]*translationClient: TRANSLATION_CLIENT[\s\S]*translationEnabled: TRANSLATION_ENABLED/,
+    "Backend service startup should pass the translation client used by static translation jobs"
   );
   assert.doesNotMatch(
     startLocalBackendSource,
@@ -846,12 +853,14 @@ test("booking page uses the dirty bar as the only red dirty-state surface", asyn
   );
 });
 
-test("booking and marketing-tour translation collapsibles expose incomplete state and clean dirty-bar pills", async () => {
+test("booking translation collapsible exposes incomplete state while marketing-tour translations stay centralized", async () => {
   const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
   const bookingPageScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking.js");
   const bookingTravelPlanModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "shared", "travel_plan_editor_core.js");
   const tourPageHtmlPath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "marketing_tour.html");
   const tourPageScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "tour.js");
+  const translationsPageScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "translations.js");
+  const staticTranslationsPath = path.resolve(__dirname, "..", "src", "domain", "static_translations.js");
   const collapsibleStylesPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "components", "backend-collapsible.css");
   const bookingStylesPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "pages", "backend-booking.css");
   const englishTranslationsPath = path.resolve(__dirname, "..", "..", "..", "frontend", "data", "i18n", "backend", "en.json");
@@ -861,6 +870,8 @@ test("booking and marketing-tour translation collapsibles expose incomplete stat
     bookingTravelPlanSource,
     tourPageSource,
     tourScriptSource,
+    translationsPageScriptSource,
+    staticTranslationsSource,
     collapsibleStyles,
     bookingStyles,
     englishTranslations
@@ -870,6 +881,8 @@ test("booking and marketing-tour translation collapsibles expose incomplete stat
     readFile(bookingTravelPlanModulePath, "utf8"),
     readFile(tourPageHtmlPath, "utf8"),
     readFile(tourPageScriptPath, "utf8"),
+    readFile(translationsPageScriptPath, "utf8"),
+    readFile(staticTranslationsPath, "utf8"),
     readFile(collapsibleStylesPath, "utf8"),
     readFile(bookingStylesPath, "utf8"),
     readFile(englishTranslationsPath, "utf8")
@@ -880,25 +893,20 @@ test("booking and marketing-tour translation collapsibles expose incomplete stat
     /id="travel_plan_translation_summary"[\s\S]*data-translation-summary-title data-i18n-id="booking\.translation\.section_title">Translations/,
     "Booking translation summary should expose a stable title mount with the complete-state label"
   );
-  assert.match(
+  assert.doesNotMatch(
     tourPageSource,
-    /id="tour_travel_plan_translation_summary"[\s\S]*data-translation-summary-title data-i18n-id="tour\.travel_plan_translation\.section_title">Translations/,
-    "Marketing-tour translation summary should expose the same complete-state label"
+    /tour_travel_plan_translation|data-tour-travel-plan-translation|data-tour-travel-plan-translate|data-tour-travel-plan-review/,
+    "Marketing-tour pages should not expose the legacy in-page translation review section"
   );
-  assert.match(
-    tourPageSource,
-    /id="tour_dirty_bar_title"[\s\S]*id="tour_dirty_bar_summary"/,
-    "Marketing-tour dirty bar should expose a visible copy area for translation notices"
+  assert.doesNotMatch(
+    tourScriptSource,
+    /travelPlanTranslation|data-tour-travel-plan-translation|data-tour-travel-plan-translate|data-tour-travel-plan-review|tourTranslateFieldsRequest/,
+    "Marketing-tour page script should not wire the removed translation review controls"
   );
   assert.match(
     bookingScriptSource,
     /travel_plan_translation_summary: document\.getElementById\("travel_plan_translation_summary"\)/,
     "Booking page should wire the translation summary button"
-  );
-  assert.match(
-    tourScriptSource,
-    /travelPlanTranslationSummary: document\.getElementById\("tour_travel_plan_translation_summary"\)/,
-    "Marketing-tour page should wire the translation summary button"
   );
   assert.match(
     bookingTravelPlanSource,
@@ -911,14 +919,19 @@ test("booking and marketing-tour translation collapsibles expose incomplete stat
     "Booking dirty bar should include the incomplete translation notice"
   );
   assert.match(
-    tourScriptSource,
-    /TRAVEL_PLAN_TRANSLATION_INCOMPLETE_STATUSES = new Set\(\["missing", "partial", "stale"\]\)[\s\S]*function renderTourDirtyBar\(\)[\s\S]*booking-dirty-bar--dirty", isDirty\)[\s\S]*booking-dirty-bar__notice-pill[\s\S]*tour\.travel_plan_translation\.section_title_incomplete[\s\S]*summaries\.some\(\(\{ summary \}\) => isTravelPlanTranslationIncompleteStatus\(summary\.status\)\)/,
-    "Marketing-tour translation review should mark missing, partial, and stale translations as incomplete without making the dirty bar red by itself"
+    translationsPageScriptSource,
+    /domainId:\s*"marketing-tour-memory"[\s\S]*title:\s*"5\. Marketing tours"/,
+    "Marketing-tour translations should live in the central translations workspace"
   );
   assert.match(
-    tourScriptSource,
-    /function travelPlanTranslationStatus\(plan, targetLang\)[\s\S]*const hasSourceHash = Boolean\(normalizeText\(meta\?\.source_hash\)\);[\s\S]*const stale = translatedFields > 0 && \([\s\S]*hasSourceHash && meta\.source_hash !== sourceHash[\s\S]*!hasSourceHash && targetLang !== TRAVEL_PLAN_SOURCE_LANG/,
-    "Marketing-tour Translate should treat translated travel-plan content without source metadata as outdated instead of skipping it"
+    staticTranslationsSource,
+    /"marketing-tour-memory"[\s\S]*collectMarketingTourMemorySources\(await readTours\(\)\)/,
+    "Marketing-tour translations should be sourced from the central static translation memory collector"
+  );
+  assert.match(
+    staticTranslationsSource,
+    /collectMarketingTourMemorySourcesFromPlan[\s\S]*localizedSource\(service\?\.details_i18n,\s*service\?\.details\)[\s\S]*localizedSource\(image\?\.caption_i18n,\s*image\?\.caption\)[\s\S]*localizedSource\(image\?\.alt_text_i18n,\s*image\?\.alt_text\)/,
+    "Central marketing-tour memory should include travel-plan service details and image text"
   );
   assert.match(
     collapsibleStyles,
@@ -932,8 +945,8 @@ test("booking and marketing-tour translation collapsibles expose incomplete stat
   );
   assert.match(
     englishTranslations,
-    /"booking\.translation\.section_title": "Translations"[\s\S]*"booking\.translation\.section_title_incomplete": "Translation: incomplete"[\s\S]*"tour\.travel_plan_translation\.section_title": "Translations"[\s\S]*"tour\.travel_plan_translation\.section_title_incomplete": "Translation: incomplete"/,
-    "Backend i18n should define the complete and incomplete translation titles"
+    /"booking\.translation\.section_title": "Translations"[\s\S]*"booking\.translation\.section_title_incomplete": "Translation: incomplete"/,
+    "Backend i18n should define the complete and incomplete booking translation titles"
   );
 });
 
@@ -3057,17 +3070,17 @@ test("travel-plan service image text stays wired across model, API, backend, tra
   const openApiPath = path.resolve(__dirname, "..", "..", "..", "api", "generated", "openapi.yaml");
   const backendPath = path.resolve(__dirname, "..", "..", "..", "backend", "app", "src", "domain", "travel_plan.js");
   const translationPath = path.resolve(__dirname, "..", "..", "..", "backend", "app", "src", "domain", "booking_translation.js");
+  const tourMemoryPath = path.resolve(__dirname, "..", "src", "domain", "static_translations.js");
   const helperPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan_helpers.js");
   const uiPath = travelPlanEditorCorePath();
-  const tourUiPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "tour.js");
-  const [modelSource, openApiSource, backendSource, translationSource, helperSource, uiSource, tourUiSource] = await Promise.all([
+  const [modelSource, openApiSource, backendSource, translationSource, tourMemorySource, helperSource, uiSource] = await Promise.all([
     readFile(modelPath, "utf8"),
     readFile(openApiPath, "utf8"),
     readFile(backendPath, "utf8"),
     readFile(translationPath, "utf8"),
+    readFile(tourMemoryPath, "utf8"),
     readFile(helperPath, "utf8"),
-    readFile(uiPath, "utf8"),
-    readFile(tourUiPath, "utf8")
+    readFile(uiPath, "utf8")
   ]);
 
   assert.match(
@@ -3161,14 +3174,14 @@ test("travel-plan service image text stays wired across model, API, backend, tra
     "The booking frontend translation review should include service image caption and alt text"
   );
   assert.match(
-    tourUiSource,
-    /mapField:\s+"image_subtitle_i18n"[\s\S]*plainField:\s+"image_subtitle"[\s\S]*key:\s+`travel_plan\.\$\{dayId\}\.\$\{serviceId\}\.image_subtitle`/,
-    "The marketing-tour frontend translation review should include service image subtitles"
+    tourMemorySource,
+    /collectMarketingTourMemorySourcesFromPlan[\s\S]*localizedSource\(service\?\.image_subtitle_i18n,\s*service\?\.image_subtitle\)/,
+    "The central marketing-tour translation memory should include service image subtitles"
   );
   assert.match(
-    tourUiSource,
-    /mapField:\s+"caption_i18n"[\s\S]*plainField:\s+"caption"[\s\S]*key:\s+`travel_plan\.\$\{dayId\}\.\$\{serviceId\}\.image\.caption`[\s\S]*mapField:\s+"alt_text_i18n"[\s\S]*plainField:\s+"alt_text"[\s\S]*key:\s+`travel_plan\.\$\{dayId\}\.\$\{serviceId\}\.image\.alt_text`/,
-    "The marketing-tour frontend translation review should include service image caption and alt text"
+    tourMemorySource,
+    /collectMarketingTourMemorySourcesFromPlan[\s\S]*localizedSource\(image\?\.caption_i18n,\s*image\?\.caption\)[\s\S]*localizedSource\(image\?\.alt_text_i18n,\s*image\?\.alt_text\)/,
+    "The central marketing-tour translation memory should include service image caption and alt text"
   );
 });
 
@@ -3480,19 +3493,21 @@ test("tour card images are selected from travel-plan service images", async () =
   );
 });
 
-test("tour page keeps website content translations in the English-source review panel", async () => {
+test("tour page edits English website content while marketing-tour translations stay in central memory", async () => {
   const tourPageModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "tour.js");
+  const staticTranslationsPath = path.resolve(__dirname, "..", "src", "domain", "static_translations.js");
   const siteStylesPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "site.css");
   const englishTranslationsPath = path.resolve(__dirname, "..", "..", "..", "frontend", "data", "i18n", "backend", "en.json");
-  const [tourSource, siteStyles, englishTranslations] = await Promise.all([
+  const [tourSource, staticTranslationsSource, siteStyles, englishTranslations] = await Promise.all([
     readFile(tourPageModulePath, "utf8"),
+    readFile(staticTranslationsPath, "utf8"),
     readFile(siteStylesPath, "utf8"),
     readFile(englishTranslationsPath, "utf8")
   ]);
 
   assert.match(
     tourSource,
-    /const TOUR_TRANSLATION_SOURCE_LANG = "en";/,
+    /const TOUR_SOURCE_LANG = "en";/,
     "Marketing-tour website content should use English as the fixed translation source"
   );
   assert.match(
@@ -3502,17 +3517,17 @@ test("tour page keeps website content translations in the English-source review 
   );
   assert.match(
     tourSource,
-    /function normalizeTourShortDescriptionMap\(value, fallbackValue = ""\) \{[\s\S]*normalized\[TOUR_TRANSLATION_SOURCE_LANG\] = truncateTourSourceDescription\(normalized\[TOUR_TRANSLATION_SOURCE_LANG\]\)/,
+    /function normalizeTourShortDescriptionMap\(value, fallbackValue = ""\) \{[\s\S]*normalized\[TOUR_SOURCE_LANG\] = truncateTourSourceDescription\(normalized\[TOUR_SOURCE_LANG\]\)/,
     "Loading an existing marketing tour should truncate only the English source description"
   );
   assert.match(
     tourSource,
-    /function renderLocalizedTourContentEditor\(\)\s*\{[\s\S]*const lang = TOUR_TRANSLATION_SOURCE_LANG;/,
+    /function renderLocalizedTourContentEditor\(\)\s*\{[\s\S]*const lang = TOUR_SOURCE_LANG;/,
     "The visible website title and description editor should render only the English source fields"
   );
   assert.match(
     tourSource,
-    /function preferredTourHeaderLangs\(\) \{\s*return \[TOUR_TRANSLATION_SOURCE_LANG, "vi"\];\s*\}/,
+    /function preferredTourHeaderLangs\(\) \{\s*return \[TOUR_SOURCE_LANG, "vi"\];\s*\}/,
     "The marketing-tour header should keep the English source title first instead of following the backend UI language"
   );
   assert.match(
@@ -3556,19 +3571,19 @@ test("tour page keeps website content translations in the English-source review 
     "The marketing-tour content label should use the requested copy"
   );
   assert.match(
-    tourSource,
-    /key: "website\.title"[\s\S]*key: "website\.short_description"/,
-    "The translation review field collector should include website title and description"
+    staticTranslationsSource,
+    /function collectMarketingTourMemorySources\(tours\)[\s\S]*localizedSource\(tour\?\.title,\s*tour\?\.id\)[\s\S]*localizedSource\(tour\?\.short_description,\s*""\)/,
+    "The central marketing-tour translation memory should collect website title and description"
   );
-  assert.match(
+  assert.doesNotMatch(
     tourSource,
-    /requestTourTranslation\(targetLang, sourceEntries, \{\s*sourceLang: TRAVEL_PLAN_SOURCE_LANG\s*\}\)/,
-    "Review-panel translation requests should explicitly translate from the English source language"
+    /requestTourTranslation|tourTranslateFieldsRequest|data-tour-translate|data-tour-travel-plan-translation-key/,
+    "The marketing-tour page should not keep the removed in-page translation review or translate actions"
   );
   assert.match(
     tourSource,
     /function readLocalizedFields\(field,[\s\S]*normalizeLocalizedTextMap\(state\.localizedContent\?\.\[field\]/,
-    "Saving should preserve translated website fields that are edited in the review panel instead of visible source inputs"
+    "Saving should preserve translated website fields managed outside the visible English source inputs"
   );
 });
 
@@ -4056,24 +4071,31 @@ test("booking travel-plan translate contract accepts explicit source and target 
   );
 });
 
-test("frontend translation requests send explicit translation profiles", async () => {
+test("frontend translation requests send explicit translation profiles outside centralized marketing-tour memory", async () => {
   const repoRoot = path.resolve(__dirname, "..", "..", "..");
   const [
     tourSource,
     localizedEditorSource,
     travelPlanEditorSource,
-    settingsSource
+    settingsSource,
+    translationsSource
   ] = await Promise.all([
     readFile(path.join(repoRoot, "frontend", "scripts", "pages", "tour.js"), "utf8"),
     readFile(path.join(repoRoot, "frontend", "scripts", "booking", "localized_editor.js"), "utf8"),
     readFile(path.join(repoRoot, "frontend", "scripts", "shared", "travel_plan_editor_core.js"), "utf8"),
-    readFile(path.join(repoRoot, "frontend", "scripts", "pages", "settings_list.js"), "utf8")
+    readFile(path.join(repoRoot, "frontend", "scripts", "pages", "settings_list.js"), "utf8"),
+    readFile(path.join(repoRoot, "frontend", "scripts", "pages", "translations.js"), "utf8")
   ]);
 
-  assert.match(
+  assert.doesNotMatch(
     tourSource,
-    /const translationProfile = normalizeText\(options\?\.translationProfile \|\| "marketing_trip_copy"\) \|\| "marketing_trip_copy";[\s\S]*translation_profile: translationProfile/,
-    "Tour translation requests should default to the marketing_trip_copy profile"
+    /marketing_trip_copy|tourTranslateFieldsRequest|requestTourTranslation/,
+    "Marketing-tour pages should not keep local translation requests now that marketing-tour memory is centralized"
+  );
+  assert.match(
+    translationsSource,
+    /domainId:\s*"marketing-tour-memory"/,
+    "Marketing-tour translation memory should be managed from translations.js"
   );
   assert.match(
     localizedEditorSource,
@@ -4089,6 +4111,245 @@ test("frontend translation requests send explicit translation profiles", async (
     settingsSource,
     /keycloakUserStaffProfileTranslateFieldsRequest\(\{[\s\S]*translation_profile: "staff_profile"/,
     "Staff profile translation requests should send the staff_profile profile"
+  );
+});
+
+test("backend translation nav icon reflects dirty centralized translation state", async () => {
+  const repoRoot = path.resolve(__dirname, "..", "..", "..");
+  const [navSource, tourSource, routesSource, handlersSource] = await Promise.all([
+    readFile(path.join(repoRoot, "frontend", "scripts", "shared", "nav.js"), "utf8"),
+    readFile(path.join(repoRoot, "frontend", "scripts", "pages", "tour.js"), "utf8"),
+    readFile(path.join(repoRoot, "backend", "app", "src", "http", "routes.js"), "utf8"),
+    readFile(path.join(repoRoot, "backend", "app", "src", "http", "handlers", "static_translations.js"), "utf8")
+  ]);
+
+  assert.match(
+    navSource,
+    /TRANSLATIONS_ICON_READY = "assets\/img\/translation\.png"[\s\S]*TRANSLATIONS_ICON_MISSING = "assets\/img\/translation\.missing\.png"/,
+    "Backend nav should know both translation-ready and translation-missing icons"
+  );
+  assert.match(
+    navSource,
+    /\/api\/v1\/static-translations\/status[\s\S]*setTranslationsIconState\(mount, Boolean\(payload\?\.dirty/,
+    "Backend nav should load the central translation status and switch the icon when dirty"
+  );
+  assert.match(
+    navSource,
+    /backend-translations-status-refresh/,
+    "Backend nav should listen for translation status refresh events from editor pages"
+  );
+  assert.match(
+    tourSource,
+    /isLocalizedSourceContentDirty\(\)[\s\S]*notifyBackendTranslationsStatus\(\{ dirty: true, refresh: false \}\)/,
+    "Marketing-tour source title or description edits should immediately mark the translation icon as needing attention"
+  );
+  assert.match(
+    tourSource,
+    /await loadTour\(\);\s*notifyBackendTranslationsStatus\(\);/,
+    "Marketing-tour saves should refresh the central translation status after persisted source changes"
+  );
+  assert.match(
+    routesSource,
+    /static-translations\\\/status[\s\S]*handleGetStaticTranslationStatus/,
+    "Routes should expose the central static translation status endpoint"
+  );
+  assert.match(
+    handlersSource,
+    /handleGetStaticTranslationStatus[\s\S]*staticTranslationService\.getStatusSummary\(\)/,
+    "Static translation handlers should return the central status summary"
+  );
+});
+
+test("translations page exposes translate and publish actions without a refresh button", async () => {
+  const repoRoot = path.resolve(__dirname, "..", "..", "..");
+  const [translationsHtml, translationsSource, translationsStyles, staticTranslationsSource] = await Promise.all([
+    readFile(path.join(repoRoot, "frontend", "pages", "translations.html"), "utf8"),
+    readFile(path.join(repoRoot, "frontend", "scripts", "pages", "translations.js"), "utf8"),
+    readFile(path.join(repoRoot, "shared", "css", "pages", "backend-translations.css"), "utf8"),
+    readFile(path.join(repoRoot, "backend", "app", "src", "domain", "static_translations.js"), "utf8")
+  ]);
+  const statusOptionsSource = translationsSource.match(/const STATUS_OPTIONS = \[[\s\S]*?\];/)?.[0] || "";
+  const tableTextRule = translationsStyles.match(/\.backend-translations-page \.translations-table__text \{[\s\S]*?\}/)?.[0] || "";
+
+  assert.match(
+    translationsHtml,
+    /id="translationsTranslateBtn"[\s\S]*>Translate<\/button>[\s\S]*id="translationsApplyBtn"[\s\S]*>Publish<\/button>/,
+    "translations.html should expose a top-level Translate action before Publish"
+  );
+  assert.doesNotMatch(
+    `${translationsHtml}\n${translationsSource}`,
+    /translationsRefreshBtn/,
+    "translations.html should not expose the removed refresh button"
+  );
+  assert.doesNotMatch(
+    `${translationsSource}\n${staticTranslationsSource}`,
+    /booking-content-memory|Booking text memory|Texts in bookings\.html|backup\//,
+    "The translations workspace should not include booking.html or backup-folder sourced strings"
+  );
+  assert.match(
+    translationsSource,
+    /translationsTranslateBtn[\s\S]*\/api\/v1\/static-translations\/apply/,
+    "The Translate button should start the non-destructive static translation apply job"
+  );
+  assert.match(
+    translationsSource,
+    /els\.translateBtn\?\.addEventListener\("click", \(\) => startJob\("\/api\/v1\/static-translations\/apply", null, translationsTranslateOverlayText\(\)\)\)/,
+    "The top Translate button should run the global apply job without a section filter"
+  );
+  assert.match(
+    translationsSource,
+    /translationsApplyBtn[\s\S]*\/api\/v1\/static-translations\/publish/,
+    "The Publish button should start the static translation publish job"
+  );
+  assert.match(
+    translationsSource,
+    /function currentTranslationActionState\(\)[\s\S]*translateNeeded[\s\S]*publishReady/,
+    "The translations page should derive translate and publish readiness from the central status summary"
+  );
+  assert.match(
+    translationsSource,
+    /const translationIssueCount = missingCount \+ staleCount \+ legacyCount;/,
+    "The translations page should count each missing translation once instead of adding the duplicate untranslated state"
+  );
+  assert.doesNotMatch(
+    statusOptionsSource,
+    /freshness_state:current|publish_state:untranslated|Current|Untranslated/,
+    "The status filter should not expose duplicate current or untranslated states"
+  );
+  assert.match(
+    translationsSource,
+    /function hasMissingDisplayState\(row\)[\s\S]*freshness_state\) === "missing"[\s\S]*publish_state\) === "untranslated"[\s\S]*review_state\) === "needs_translation"/,
+    "The row state display should collapse missing, untranslated, and needs translation into one missing state"
+  );
+  assert.match(
+    translationsSource,
+    /if \(missing\) \{\s*pills\.push\(statePill\("freshness", "missing"\)\);\s*\} else if \(freshnessState && freshnessState !== "current"\)/,
+    "The row state display should show missing once and suppress the current freshness state"
+  );
+  assert.doesNotMatch(
+    tableTextRule,
+    /white-space:/,
+    "The translations table text cells should not preserve source whitespace"
+  );
+  assert.match(
+    translationsStyles,
+    /\.backend-translations-page \.translations-table th,\s*\.backend-translations-page \.translations-table td \{\s*padding: 0\.38rem 0\.45rem;/,
+    "The translations table should use compact row padding"
+  );
+  assert.match(
+    translationsSource,
+    /function translationStatusMessage\(status\)[\s\S]*const base = `\$\{count\} \$\{subject\} \$\{verb\} translation before publishing\.`[\s\S]*return `\$\{base\} \$\{pluralize\(status\.publishReadyCount, "translated string"\)\} ready to publish\.`/,
+    "The status text above Translate should always begin with the number of strings needing translation before publishing"
+  );
+  assert.match(
+    translationsSource,
+    /function syncTranslationStatusText\(status = state\.translationStatus\)[\s\S]*setStatus\(message\)/,
+    "The translation-needed count should be shown above the global Translate button"
+  );
+  assert.match(
+    translationsSource,
+    /data-section-local-status/,
+    "Translation sections should expose a separate local status mount"
+  );
+  assert.match(
+    translationsSource,
+    /<details class="translations-section"[\s\S]*<summary class="translations-section__summary"[\s\S]*data-section-health/,
+    "Translation sections should render as collapsed disclosures with a health marker in the title row"
+  );
+  assert.match(
+    translationsSource,
+    /function customerLanguageTemplate\(\)[\s\S]*data-customer-language[\s\S]*function sectionTemplate/,
+    "The translations page should expose one shared customer language selector above the customer sections"
+  );
+  assert.match(
+    translationsSource,
+    /firstCustomerSectionIndex[\s\S]*customerLanguageTemplate\(\)[\s\S]*sectionTemplate\(config\)/,
+    "The shared customer language selector should be inserted before the first customer section"
+  );
+  assert.doesNotMatch(
+    translationsSource,
+    /data-section-language|section\.els\.languageSelect/,
+    "Customer sections should not keep individual language selectors"
+  );
+  assert.match(
+    translationsSource,
+    /function selectedTargetLang\(section\)[\s\S]*fixedTargetLang[\s\S]*return selectedCustomerTargetLang\(\);/,
+    "Customer sections should all load the selected shared customer language"
+  );
+  assert.match(
+    translationsSource,
+    /function loadCustomerSectionsForSelectedLanguage\(\)[\s\S]*filter\(\(section\) => isCustomerSectionConfig\(section\.config\)\)[\s\S]*loadSectionState\(section, \{ preserveLanguage: true \}\)/,
+    "Changing the shared customer language should reload every customer translation section"
+  );
+  assert.match(
+    translationsStyles,
+    /\.backend-translations-page \.translations-customer-language \{[\s\S]*grid-template-columns: minmax\(220px, 360px\);/,
+    "The shared customer language selector should have its own placement between staff and customer sections"
+  );
+  assert.match(
+    translationsSource,
+    /function translationIssueCountFromCounts\(counts = \{\}\)[\s\S]*freshness_state\.missing[\s\S]*freshness_state\.stale[\s\S]*freshness_state\.legacy[\s\S]*function sectionTranslationIssueCount\(section\)[\s\S]*translationIssueCountFromCounts/,
+    "Section health should use the shared missing, stale, and legacy freshness count as the global Translate readiness"
+  );
+  assert.match(
+    translationsSource,
+    /function updateSectionHealth\(section\)[\s\S]*translations-section__health--ok[\s\S]*translations-section__health--not-ok/,
+    "Section titles should switch between green OK and red not-ok markers after loading"
+  );
+  assert.match(
+    translationsSource,
+    /localStatus: root\?\.querySelector\("\[data-section-local-status\]"\)/,
+    "Translation sections should wire the separate local status mount"
+  );
+  assert.match(
+    translationsSource,
+    /function setSectionStatus\(section, message\) \{\s*if \(section\?\.els\?\.localStatus\)/,
+    "Section load/save messages should not replace the translation-needed count above Translate"
+  );
+  assert.match(
+    translationsSource,
+    /function configureTranslationActionButton\(button, action, translationState, canRunTranslationAction, actionsBusy\)[\s\S]*button\.classList\.toggle\("is-waiting", Boolean\(actionsBusy\)\)[\s\S]*button\.disabled = !canRunTranslationAction \|\| !translationState\.translateNeeded[\s\S]*button\.disabled = !canRunTranslationAction \|\| translationState\.translateNeeded \|\| !translationState\.publishReady/,
+    "Publish should stay disabled while Translate is enabled for missing or stale strings"
+  );
+  assert.match(
+    translationsSource,
+    /async function loadTranslationStatus\(\{ updateMessage = false \} = \{\}\) \{[\s\S]*state\.isStatusRefreshing = true;[\s\S]*finally \{[\s\S]*state\.isStatusRefreshing = false;[\s\S]*updateActions\(\);[\s\S]*\}/,
+    "The global Translate and Publish buttons should remain disabled while the central translation status refresh is running"
+  );
+  assert.match(
+    translationsSource,
+    /const actionsBusy = state\.isSaving \|\| state\.isJobRunning \|\| state\.isStatusRefreshing;[\s\S]*configureTranslationActionButton\(els\.translateBtn, "translate", translationState, canRunTranslationAction, actionsBusy\)[\s\S]*configureTranslationActionButton\(els\.applyBtn, "publish", translationState, canRunTranslationAction, actionsBusy\)/,
+    "Translate and Publish should share the same busy state while save, translate, publish, or status scripts run"
+  );
+  assert.match(
+    translationsSource,
+    /async function deleteCachedTranslation\(section, key\)[\s\S]*try \{[\s\S]*await loadTranslationStatus\(\{ updateMessage: true \}\);[\s\S]*\} finally \{[\s\S]*state\.isSaving = false;[\s\S]*updateActions\(\);/,
+    "Deleting a cached translation should keep the action buttons busy until the global status has refreshed"
+  );
+  assert.match(
+    translationsSource,
+    /async function saveOverrides\(section\)[\s\S]*try \{[\s\S]*await loadTranslationStatus\(\{ updateMessage: true \}\);[\s\S]*\} finally \{[\s\S]*state\.isSaving = false;[\s\S]*updateActions\(\);/,
+    "Saving manual overrides should keep the action buttons busy until the global status has refreshed"
+  );
+  assert.match(
+    translationsStyles,
+    /\.backend-translations-page \.translations-workspace__buttons \.btn\.is-waiting::before[\s\S]*animation: translations-action-spin 760ms linear infinite;[\s\S]*@keyframes translations-action-spin/,
+    "Busy Translate and Publish buttons should show a spinner while disabled"
+  );
+  assert.doesNotMatch(
+    translationsSource,
+    /data-section-translate|data-section-publish|section\.els\.translateBtn|section\.els\.publishBtn/,
+    "Translation sections should not expose their own Translate or Publish actions"
+  );
+  assert.match(
+    translationsSource,
+    /latest\.type === "apply"[\s\S]*translationStatus\.translationIssueCount > 0[\s\S]*Publish remains disabled[\s\S]*refreshTranslationStatusText\(\)/,
+    "After Translate finishes, the page should either enable Publish or show an error explaining why it remains blocked"
+  );
+  assert.match(
+    translationsSource,
+    /function notifyBackendTranslationsStatus[\s\S]*backend-translations-status-refresh[\s\S]*latest\.type === "publish"[\s\S]*translationStatus\.dirty[\s\S]*warning icon could not be cleared[\s\S]*refreshTranslationStatusText\(\)/,
+    "After Publish finishes, the page should refresh the nav translation icon or show an error if dirty status remains"
   );
 });
 
@@ -4373,10 +4634,10 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
     /fetchApiJson\("\/health",[\s\S]*booking\.translation\.translating_current_overlay",[\s\S]*using \{translator\}/,
     "Booking travel-plan overlays should load translation runtime info and show the active translator in the wait message"
   );
-  assert.match(
+  assert.doesNotMatch(
     tourPageSource,
-    /TOUR_TRANSLATION_PROVIDER_DISPLAY = "google"[\s\S]*tour\.travel_plan_translation\.translating_current_overlay",[\s\S]*using \{translator\}/,
-    "Marketing tour overlays should identify the Google translation provider in the wait message"
+    /TOUR_TRANSLATION_PROVIDER_DISPLAY|tour\.travel_plan_translation\.translating_current_overlay/,
+    "Marketing tour pages should not keep the removed local translation overlay"
   );
   assert.match(
     stagingCaddy,
@@ -5205,6 +5466,7 @@ test("marketing tour editor imports days and services only from other marketing 
   const travelPlanEditorCorePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "shared", "travel_plan_editor_core.js");
   const routesPath = path.resolve(__dirname, "..", "src", "http", "routes.js");
   const tourHandlersPath = path.resolve(__dirname, "..", "src", "http", "handlers", "tours.js");
+  const staticTranslationsPath = path.resolve(__dirname, "..", "src", "domain", "static_translations.js");
   const [
     marketingTourPageSource,
     tourAdapterSource,
@@ -5212,7 +5474,8 @@ test("marketing tour editor imports days and services only from other marketing 
     travelPlanLibrarySource,
     travelPlanEditorCoreSource,
     routesSource,
-    tourHandlersSource
+    tourHandlersSource,
+    staticTranslationsSource
   ] = await Promise.all([
     readFile(marketingTourPagePath, "utf8"),
     readFile(tourAdapterPath, "utf8"),
@@ -5220,7 +5483,8 @@ test("marketing tour editor imports days and services only from other marketing 
     readFile(travelPlanLibraryPath, "utf8"),
     readFile(travelPlanEditorCorePath, "utf8"),
     readFile(routesPath, "utf8"),
-    readFile(tourHandlersPath, "utf8")
+    readFile(tourHandlersPath, "utf8"),
+    readFile(staticTranslationsPath, "utf8")
   ]);
 
   assert.match(marketingTourPageSource, /id="travel_plan_service_library_modal"/, "Marketing tour page should include the reusable travel-plan library modal");
@@ -5234,7 +5498,7 @@ test("marketing tour editor imports days and services only from other marketing 
   assert.match(tourAdapterSource, /dayImport:\s*true/, "Marketing tour editor should expose day import");
   assert.match(tourAdapterSource, /serviceImport:\s*true/, "Marketing tour editor should expose service import");
   assert.match(tourAdapterSource, /serviceDetails:\s*true/, "Marketing tour editor should expose service details");
-  assert.match(tourPageScriptSource, /mapField:\s*"details_i18n"[\s\S]*plainField:\s*"details"[\s\S]*travel_plan\.\$\{dayId\}\.\$\{serviceId\}\.details/, "Marketing tour translation should include service details");
+  assert.match(staticTranslationsSource, /collectMarketingTourMemorySourcesFromPlan[\s\S]*localizedSource\(service\?\.details_i18n,\s*service\?\.details\)/, "Marketing tour translation memory should include service details");
   assert.match(travelPlanLibrarySource, /buildTravelPlanDaySearchRequest/, "Shared library should accept entity-specific day search builders");
   assert.match(travelPlanLibrarySource, /buildTravelPlanServiceImportRequest/, "Shared library should accept entity-specific service import builders");
   assert.match(travelPlanLibrarySource, /cloneTravelPlanDayForLocalImport[\s\S]*cloneTravelPlanServiceForLocalImport[\s\S]*applyLocalTravelPlanDraft/, "Shared library should accept local draft clone hooks for fast reusable-content inserts");

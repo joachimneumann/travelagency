@@ -25,6 +25,7 @@ export function createBackendServices({
 }) {
   const writeQueueRef = { current: Promise.resolve() };
   const fxRateCache = new Map();
+  const translationClient = runtime.translationClient || {};
 
   const pricingHelpers = createPricingHelpers({
     baseCurrency: runtime.baseCurrency,
@@ -143,17 +144,23 @@ export function createBackendServices({
 
   const staticTranslationService = createStaticTranslationService({
     repoRoot,
+    translationsSnapshotDir: collections.translationsSnapshotDir,
     readStore: storeUtils.readStore,
     persistStore: storeUtils.persistStore,
     readTours: storeUtils.readTours,
     persistTour: storeUtils.persistTour,
     translationMemoryStore,
+    translateEntriesWithMeta: translationClient.translateEntriesWithMeta,
+    readTranslationRules: translationRulesStore.readTranslationRules,
     nowIso: support.nowIso,
     writesEnabled: runtime.translationOverrideWritesEnabled !== false
   });
 
   const staticTranslationApplyJobs = createStaticTranslationApplyJobs({
     repoRoot,
+    applyTranslations: (options) => staticTranslationService.applyMissingTranslations(options),
+    publishTranslations: () => staticTranslationService.publishTranslations(),
+    getStatusSummary: () => staticTranslationService.getStatusSummary(),
     nowIso: support.nowIso
   });
 
