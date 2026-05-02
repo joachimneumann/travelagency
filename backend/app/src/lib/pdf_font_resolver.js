@@ -16,12 +16,14 @@ const LANGUAGE_FONT_PRIORITY_MARKERS = Object.freeze({
   zh: ["notosanscjksc-"]
 });
 
+const PDF_SUPPORTED_FONT_EXTENSIONS = Object.freeze([".ttf", ".otf"]);
+
 function isSupportedPdfFontContainer(filePath) {
   const normalized = String(filePath || "").trim().toLowerCase();
   if (!normalized) return false;
-  // PDFKit/fontkit behave inconsistently with TrueType Collections and can
-  // either fail at subset generation or emit mojibake for CJK text.
-  return !normalized.endsWith(".ttc");
+  // PDFKit/fontkit behave inconsistently with TTC and WOFF2 in generated PDFs.
+  // Restrict runtime font selection to containers that embed reliably.
+  return PDF_SUPPORTED_FONT_EXTENSIONS.some((extension) => normalized.endsWith(extension));
 }
 
 async function fileExists(filePath) {
@@ -37,8 +39,12 @@ async function fileExists(filePath) {
 function canRegisterPdfFont(candidate) {
   try {
     const probe = new PDFDocument({ autoFirstPage: false });
+    probe.on("data", () => {});
+    probe.on("error", () => {});
+    probe.addPage({ size: [80, 40], margin: 0 });
     probe.registerFont("__probe__", candidate);
-    probe.font("__probe__").fontSize(12);
+    probe.font("__probe__").fontSize(12).text("PDF", 4, 4);
+    probe.end();
     return true;
   } catch {
     return false;

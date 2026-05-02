@@ -22,8 +22,13 @@ const PUBLIC_TOUR_IMAGE_PREFIX = "/public/v1/tour-images/";
 const PDF_FONT_REGULAR_CANDIDATES = Object.freeze([
   "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
   "/Library/Fonts/Arial Unicode.ttf",
+  "/usr/local/share/fonts/extracted/NotoSansCJKjp-Regular.ttf",
+  "/usr/local/share/fonts/extracted/NotoSansCJKsc-Regular.ttf",
+  "/usr/local/share/fonts/extracted/NotoSansCJKkr-Regular.ttf",
+  "/usr/share/fonts/noto/NotoSans-Regular.ttf",
   "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
   "/usr/share/fonts/dejavu/DejaVuSans.ttf",
+  "/usr/share/fonts/TTF/DejaVuSans.ttf",
   "/usr/share/fonts/truetype/noto/NotoSans-Regular.ttf",
   "/usr/share/fonts/opentype/noto/NotoSans-Regular.ttf"
 ]);
@@ -31,8 +36,13 @@ const PDF_FONT_REGULAR_CANDIDATES = Object.freeze([
 const PDF_FONT_BOLD_CANDIDATES = Object.freeze([
   "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
   "/Library/Fonts/Arial Unicode.ttf",
+  "/usr/local/share/fonts/extracted/NotoSansCJKjp-Bold.ttf",
+  "/usr/local/share/fonts/extracted/NotoSansCJKsc-Bold.ttf",
+  "/usr/local/share/fonts/extracted/NotoSansCJKkr-Bold.ttf",
+  "/usr/share/fonts/noto/NotoSans-Bold.ttf",
   "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
   "/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf",
+  "/usr/share/fonts/TTF/DejaVuSans-Bold.ttf",
   "/usr/share/fonts/truetype/noto/NotoSans-Bold.ttf",
   "/usr/share/fonts/opentype/noto/NotoSans-Bold.ttf"
 ]);
@@ -40,20 +50,30 @@ const PDF_FONT_BOLD_CANDIDATES = Object.freeze([
 const PDF_FONT_DISPLAY_CANDIDATES = Object.freeze([
   "/System/Library/Fonts/Supplemental/DIN Condensed Bold.ttf",
   "/System/Library/Fonts/Supplemental/Impact.ttf",
+  "/usr/share/fonts/noto/NotoSans-Bold.ttf",
+  "/usr/share/fonts/noto/NotoSansCondensed-Bold.ttf",
   "/usr/share/fonts/truetype/dejavu/DejaVuSansCondensed-Bold.ttf",
-  "/usr/share/fonts/dejavu/DejaVuSansCondensed-Bold.ttf"
+  "/usr/share/fonts/dejavu/DejaVuSansCondensed-Bold.ttf",
+  "/usr/share/fonts/TTF/DejaVuSansCondensed-Bold.ttf"
 ]);
 
 const PDF_FONT_SCRIPT_CANDIDATES = Object.freeze([
   "/System/Library/Fonts/Supplemental/Brush Script.ttf",
-  "/System/Library/Fonts/Supplemental/Zapfino.ttf"
+  "/System/Library/Fonts/Supplemental/Zapfino.ttf",
+  "/usr/share/fonts/noto/NotoSans-Italic.ttf",
+  "/usr/share/fonts/truetype/dejavu/DejaVuSans-Oblique.ttf",
+  "/usr/share/fonts/dejavu/DejaVuSans-Oblique.ttf",
+  "/usr/share/fonts/TTF/DejaVuSans-Oblique.ttf"
 ]);
 
 const PDF_FONT_LABEL_CANDIDATES = Object.freeze([
   "/System/Library/Fonts/Supplemental/DIN Alternate Bold.ttf",
   "/System/Library/Fonts/Supplemental/Impact.ttf",
+  "/usr/share/fonts/noto/NotoSans-Bold.ttf",
+  "/usr/share/fonts/noto/NotoSansCondensed-Bold.ttf",
   "/usr/share/fonts/truetype/dejavu/DejaVuSansCondensed-Bold.ttf",
-  "/usr/share/fonts/dejavu/DejaVuSansCondensed-Bold.ttf"
+  "/usr/share/fonts/dejavu/DejaVuSansCondensed-Bold.ttf",
+  "/usr/share/fonts/TTF/DejaVuSansCondensed-Bold.ttf"
 ]);
 
 const PDF_ASSET_DISPLAY_FONT_FILES = Object.freeze([
@@ -67,6 +87,8 @@ const PDF_ASSET_SCRIPT_FONT_FILES = Object.freeze([
   "source-sans-3-v19-italic-latin-ext.woff2",
   "source-sans-3-v19-italic-latin.woff2"
 ]);
+
+const PDF_EMBEDDABLE_FONT_EXTENSIONS = Object.freeze([".ttf", ".otf"]);
 
 function safeArray(value) {
   return Array.isArray(value) ? value : [];
@@ -133,16 +155,24 @@ async function fileExists(filePath) {
 
 async function firstExistingPath(candidates) {
   for (const candidate of candidates) {
+    if (!isPdfEmbeddableFontPath(candidate)) continue;
     if (await fileExists(candidate)) return candidate;
   }
   return "";
+}
+
+function isPdfEmbeddableFontPath(filePath) {
+  const normalized = normalizeText(filePath).toLowerCase();
+  return PDF_EMBEDDABLE_FONT_EXTENSIONS.some((extension) => normalized.endsWith(extension));
 }
 
 function assetFontCandidatesFromLogoPath(logoPath, fileNames) {
   const normalizedLogoPath = normalizeText(logoPath);
   if (!normalizedLogoPath) return [];
   const assetsDir = path.resolve(path.dirname(normalizedLogoPath), "..");
-  return fileNames.map((fileName) => path.join(assetsDir, "fonts", fileName));
+  return fileNames
+    .map((fileName) => path.join(assetsDir, "fonts", fileName))
+    .filter(isPdfEmbeddableFontPath);
 }
 
 function prioritizeAssetFonts(staticCandidates, assetCandidates) {
