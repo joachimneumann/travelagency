@@ -2,7 +2,7 @@
   {
     "id": "iconic_landmarks",
     "title": "Iconic Landmarks",
-    "image": "01.svg",
+    "image": "01.png",
     "title_i18n": {
       "en": "Iconic Landmarks",
       "ar": "معالم بارزة",
@@ -26,7 +26,7 @@
   {
     "id": "cultural_heritage",
     "title": "Cultural Heritage",
-    "image": "02.svg",
+    "image": "02.png",
     "title_i18n": {
       "en": "Cultural Heritage",
       "ar": "تراث ثقافي",
@@ -50,7 +50,7 @@
   {
     "id": "local_experiences",
     "title": "Local Experiences",
-    "image": "03.svg",
+    "image": "03.png",
     "title_i18n": {
       "en": "Local Experiences",
       "ar": "تجارب محلية",
@@ -74,7 +74,7 @@
   {
     "id": "delicious_cuisine",
     "title": "Delicious Cuisine",
-    "image": "04.svg",
+    "image": "04.png",
     "title_i18n": {
       "en": "Delicious Cuisine",
       "ar": "مأكولات شهية",
@@ -98,7 +98,7 @@
   {
     "id": "scenic_landscapes",
     "title": "Scenic Landscapes",
-    "image": "05.svg",
+    "image": "05.png",
     "title_i18n": {
       "en": "Scenic Landscapes",
       "ar": "مناظر طبيعية خلابة",
@@ -122,7 +122,7 @@
   {
     "id": "hidden_gems",
     "title": "Hidden Gems",
-    "image": "06.svg",
+    "image": "06.png",
     "title_i18n": {
       "en": "Hidden Gems",
       "ar": "جواهر خفية",
@@ -146,7 +146,7 @@
   {
     "id": "historic_sites",
     "title": "Historic Sites",
-    "image": "07.svg",
+    "image": "07.png",
     "title_i18n": {
       "en": "Historic Sites",
       "ar": "مواقع تاريخية",
@@ -170,7 +170,7 @@
   {
     "id": "art_architecture",
     "title": "Art and Architecture",
-    "image": "08.svg",
+    "image": "08.png",
     "title_i18n": {
       "en": "Art and Architecture",
       "ar": "فن وعمارة",
@@ -194,7 +194,7 @@
   {
     "id": "nature_wildlife",
     "title": "Nature and Wildlife",
-    "image": "09.svg",
+    "image": "09.png",
     "title_i18n": {
       "en": "Nature and Wildlife",
       "ar": "طبيعة وحياة برية",
@@ -218,7 +218,7 @@
   {
     "id": "beaches_islands",
     "title": "Beaches and Islands",
-    "image": "10.svg",
+    "image": "10.png",
     "title_i18n": {
       "en": "Beaches and Islands",
       "ar": "شواطئ وجزر",
@@ -242,7 +242,7 @@
   {
     "id": "mountain_adventures",
     "title": "Mountain Adventures",
-    "image": "11.svg",
+    "image": "11.png",
     "title_i18n": {
       "en": "Mountain Adventures",
       "ar": "مغامرات جبلية",
@@ -266,7 +266,7 @@
   {
     "id": "city_life",
     "title": "City Life",
-    "image": "12.svg",
+    "image": "12.png",
     "title_i18n": {
       "en": "City Life",
       "ar": "حياة المدينة",
@@ -290,7 +290,7 @@
   {
     "id": "festivals_events",
     "title": "Festivals and Events",
-    "image": "13.svg",
+    "image": "13.png",
     "title_i18n": {
       "en": "Festivals and Events",
       "ar": "مهرجانات وفعاليات",
@@ -314,7 +314,7 @@
   {
     "id": "traditional_markets",
     "title": "Traditional Markets",
-    "image": "14.svg",
+    "image": "14.png",
     "title_i18n": {
       "en": "Traditional Markets",
       "ar": "أسواق تقليدية",
@@ -338,7 +338,7 @@
   {
     "id": "nightlife_entertainment",
     "title": "Nightlife and Entertainment",
-    "image": "15.svg",
+    "image": "15.png",
     "title_i18n": {
       "en": "Nightlife and Entertainment",
       "ar": "حياة ليلية وترفيه",
@@ -362,7 +362,7 @@
   {
     "id": "wellness_relaxation",
     "title": "Wellness and Relaxation",
-    "image": "16.svg",
+    "image": "16.png",
     "title_i18n": {
       "en": "Wellness and Relaxation",
       "ar": "عافية واسترخاء",
@@ -386,7 +386,7 @@
   {
     "id": "family_friendly_activities",
     "title": "Family Friendly Activities",
-    "image": "17.svg",
+    "image": "17.png",
     "title_i18n": {
       "en": "Family Friendly Activities",
       "ar": "أنشطة مناسبة للعائلات",
@@ -410,7 +410,7 @@
   {
     "id": "outdoor_adventures",
     "title": "Outdoor Adventures",
-    "image": "18.svg",
+    "image": "18.png",
     "title_i18n": {
       "en": "Outdoor Adventures",
       "ar": "مغامرات في الهواء الطلق",
@@ -434,7 +434,7 @@
   {
     "id": "spiritual_places",
     "title": "Spiritual Places",
-    "image": "19.svg",
+    "image": "19.png",
     "title_i18n": {
       "en": "Spiritual Places",
       "ar": "أماكن روحانية",
@@ -458,7 +458,7 @@
   {
     "id": "shopping_souvenirs",
     "title": "Shopping and Souvenirs",
-    "image": "20.svg",
+    "image": "20.png",
     "title_i18n": {
       "en": "Shopping and Souvenirs",
       "ar": "تسوق وهدايا تذكارية",

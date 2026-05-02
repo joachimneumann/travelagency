@@ -330,6 +330,127 @@ export function createTourHandlers(deps) {
     return `${title}-one-pager.pdf`;
   }
 
+  function localizedObjectText(value, lang) {
+    return value && typeof value === "object" && !Array.isArray(value)
+      ? normalizeText(value[normalizeTourLang(lang)])
+      : "";
+  }
+
+  function cloneJson(value) {
+    if (value === undefined || value === null) return value;
+    return JSON.parse(JSON.stringify(value));
+  }
+
+  function fallbackSourceText(value) {
+    return value && typeof value === "object" && !Array.isArray(value)
+      ? normalizeText(value.en)
+      : normalizeText(value);
+  }
+
+  function sourceTextFromLocalizedValue(value, fallback = "") {
+    const fallbackText = fallbackSourceText(fallback);
+    if (value && typeof value === "object" && !Array.isArray(value)) {
+      return normalizeText(value.en) || fallbackText;
+    }
+    return normalizeText(value) || fallbackText;
+  }
+
+  function collectOnePagerMemoryLocalizedMap(actions, entries, holder, fieldName, lang, key) {
+    if (!holder || typeof holder !== "object" || Array.isArray(holder)) return;
+    const sourceText = sourceTextFromLocalizedValue(holder[fieldName]);
+    if (!sourceText || localizedObjectText(holder[fieldName], lang)) return;
+    entries[key] = sourceText;
+    actions.push({ kind: "map", holder, fieldName, key, sourceText });
+  }
+
+  function collectOnePagerMemoryLocalizedPair(actions, entries, holder, plainField, i18nField, lang, key) {
+    if (!holder || typeof holder !== "object" || Array.isArray(holder)) return;
+    const sourceText = sourceTextFromLocalizedValue(holder[i18nField], holder[plainField]);
+    if (!sourceText || localizedObjectText(holder[i18nField], lang)) return;
+    entries[key] = sourceText;
+    actions.push({ kind: "pair", holder, i18nField, key });
+  }
+
+  function collectOnePagerTravelPlanImageMemory(actions, entries, image, lang, keyPrefix) {
+    if (!image || typeof image !== "object" || Array.isArray(image)) return;
+    collectOnePagerMemoryLocalizedPair(actions, entries, image, "caption", "caption_i18n", lang, `${keyPrefix}.caption`);
+    collectOnePagerMemoryLocalizedPair(actions, entries, image, "alt_text", "alt_text_i18n", lang, `${keyPrefix}.alt_text`);
+  }
+
+  function collectOnePagerTravelPlanMemory(actions, entries, travelPlan, lang) {
+    if (!travelPlan || typeof travelPlan !== "object" || Array.isArray(travelPlan)) return;
+    for (const [dayIndex, day] of (Array.isArray(travelPlan.days) ? travelPlan.days : []).entries()) {
+      if (!day || typeof day !== "object" || Array.isArray(day)) continue;
+      const dayKey = `travel_plan.day.${dayIndex + 1}`;
+      collectOnePagerMemoryLocalizedPair(actions, entries, day, "title", "title_i18n", lang, `${dayKey}.title`);
+      collectOnePagerMemoryLocalizedPair(actions, entries, day, "overnight_location", "overnight_location_i18n", lang, `${dayKey}.overnight_location`);
+      collectOnePagerMemoryLocalizedPair(actions, entries, day, "notes", "notes_i18n", lang, `${dayKey}.notes`);
+
+      for (const [serviceIndex, service] of (Array.isArray(day.services) ? day.services : []).entries()) {
+        if (!service || typeof service !== "object" || Array.isArray(service)) continue;
+        const serviceKey = `${dayKey}.service.${serviceIndex + 1}`;
+        collectOnePagerMemoryLocalizedPair(actions, entries, service, "time_label", "time_label_i18n", lang, `${serviceKey}.time_label`);
+        collectOnePagerMemoryLocalizedPair(actions, entries, service, "title", "title_i18n", lang, `${serviceKey}.title`);
+        collectOnePagerMemoryLocalizedPair(actions, entries, service, "details", "details_i18n", lang, `${serviceKey}.details`);
+        collectOnePagerMemoryLocalizedPair(actions, entries, service, "location", "location_i18n", lang, `${serviceKey}.location`);
+        collectOnePagerMemoryLocalizedPair(actions, entries, service, "image_subtitle", "image_subtitle_i18n", lang, `${serviceKey}.image_subtitle`);
+        collectOnePagerTravelPlanImageMemory(actions, entries, service.image, lang, `${serviceKey}.image`);
+        for (const [imageIndex, image] of (Array.isArray(service.images) ? service.images : []).entries()) {
+          collectOnePagerTravelPlanImageMemory(actions, entries, image, lang, `${serviceKey}.image.${imageIndex + 1}`);
+        }
+      }
+    }
+  }
+
+  function applyResolvedOnePagerMemoryActions(actions, memoryEntries, lang) {
+    const normalizedLang = normalizeTourLang(lang);
+    let changed = false;
+    for (const action of actions) {
+      const targetText = normalizeText(memoryEntries?.[action.key]);
+      if (!targetText) continue;
+      if (action.kind === "map") {
+        const existingValue = action.holder[action.fieldName];
+        action.holder[action.fieldName] = {
+          ...(existingValue && typeof existingValue === "object" && !Array.isArray(existingValue)
+            ? existingValue
+            : { en: action.sourceText }),
+          [normalizedLang]: targetText
+        };
+        changed = true;
+      } else if (action.kind === "pair") {
+        const i18nValue = action.holder[action.i18nField];
+        action.holder[action.i18nField] = {
+          ...(i18nValue && typeof i18nValue === "object" && !Array.isArray(i18nValue)
+            ? i18nValue
+            : {}),
+          [normalizedLang]: targetText
+        };
+        changed = true;
+      }
+    }
+    return changed;
+  }
+
+  async function applyMarketingTourMemoryToOnePagerTour(tour, lang) {
+    const normalizedLang = normalizeTourLang(lang);
+    if (normalizedLang === "en" || typeof translationMemoryStore?.resolveEntries !== "function") return tour;
+    const next = cloneJson(tour);
+    const entries = {};
+    const actions = [];
+    collectOnePagerMemoryLocalizedMap(actions, entries, next, "title", normalizedLang, "tour.title");
+    collectOnePagerMemoryLocalizedMap(actions, entries, next, "short_description", normalizedLang, "tour.short_description");
+    collectOnePagerTravelPlanMemory(actions, entries, next.travel_plan, normalizedLang);
+    if (!Object.keys(entries).length) return tour;
+    try {
+      const memoryResult = await translationMemoryStore.resolveEntries(entries, normalizedLang);
+      return applyResolvedOnePagerMemoryActions(actions, memoryResult?.entries || {}, normalizedLang)
+        ? next
+        : tour;
+    } catch {
+      return tour;
+    }
+  }
+
   function assertExpectedTourUpdatedAt(payload, currentTour, res) {
     const expectedUpdatedAt = normalizeText(payload?.expected_updated_at);
     if (!expectedUpdatedAt) return true;
@@ -443,11 +564,19 @@ export function createTourHandlers(deps) {
       return haystack.includes(search);
     });
 
+    const compareUpdatedAtDesc = (a, b) => String(b.updated_at || b.created_at || "")
+      .localeCompare(String(a.updated_at || a.created_at || ""));
+    const publishedWebpageRank = (tour) => normalizeTourForStorage(tour).published_on_webpage === false ? 1 : 0;
+
     const items = [...filtered].sort((a, b) => {
       if (sort === "title_asc") {
         return String(normalizeTourForRead(a, { lang }).title || "").localeCompare(String(normalizeTourForRead(b, { lang }).title || ""));
       }
-      return String(b.updated_at || b.created_at || "").localeCompare(String(a.updated_at || a.created_at || ""));
+      if (sort === "published_on_webpage_desc") {
+        const publishedCompare = publishedWebpageRank(a) - publishedWebpageRank(b);
+        if (publishedCompare !== 0) return publishedCompare;
+      }
+      return compareUpdatedAtDesc(a, b);
     });
 
     return {
@@ -959,10 +1088,13 @@ export function createTourHandlers(deps) {
       return;
     }
 
-    const readModel = normalizeTourForRead(tour, { lang });
-    const travelPlan = normalizeMarketingTourTravelPlan(tour.travel_plan, {
+    const localizedTour = await applyMarketingTourMemoryToOnePagerTour(tour, lang);
+    const readModel = normalizeTourForRead(localizedTour, { lang });
+    const travelPlan = normalizeMarketingTourTravelPlan(localizedTour.travel_plan, {
+      sourceLang: "en",
       contentLang: lang,
       flatLang: lang,
+      flatMode: "localized",
       strictReferences: false
     });
     const selectedExperienceHighlightIds = Array.isArray(travelPlan?.one_pager_experience_highlight_ids)

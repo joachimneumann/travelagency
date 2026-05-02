@@ -3590,6 +3590,26 @@ test("tour card images are selected from travel-plan service images", async () =
     "Marketing tour list thumbnails should honor the explicit first travel-plan service image"
   );
   assert.match(
+    toursHandlerSource,
+    /const publishedWebpageRank = \(tour\) => normalizeTourForStorage\(tour\)\.published_on_webpage === false \? 1 : 0;[\s\S]*if \(sort === "published_on_webpage_desc"\)[\s\S]*publishedWebpageRank\(a\) - publishedWebpageRank\(b\)/,
+    "Marketing tour API should support sorting published web-page tours before unpublished tours"
+  );
+  assert.match(
+    toursListSource,
+    /function buildToursQueryEntries[\s\S]*sort: "published_on_webpage_desc"/,
+    "Marketing tour list should request published web-page tours first"
+  );
+  assert.match(
+    toursHandlerSource,
+    /async function applyMarketingTourMemoryToOnePagerTour\(tour, lang\)[\s\S]*collectOnePagerMemoryLocalizedMap\(actions, entries, next, "title", normalizedLang, "tour\.title"\);[\s\S]*collectOnePagerTravelPlanMemory\(actions, entries, next\.travel_plan, normalizedLang\);[\s\S]*translationMemoryStore\.resolveEntries\(entries, normalizedLang\)[\s\S]*const localizedTour = await applyMarketingTourMemoryToOnePagerTour\(tour, lang\);[\s\S]*normalizeTourForRead\(localizedTour, \{ lang \}\)[\s\S]*normalizeMarketingTourTravelPlan\(localizedTour\.travel_plan,[\s\S]*sourceLang: "en"[\s\S]*flatMode: "localized"/,
+    "On-demand one-pager PDFs should apply published marketing-tour translation memory before localized PDF rendering"
+  );
+  assert.match(
+    onePagerScriptSource,
+    /const translationsSnapshotDir = path\.join\(repoRoot, "content", "translations"\);[\s\S]*async function loadPublishedMarketingTourTranslations\(languages\)[\s\S]*`marketing-tours\.\$\{lang\}\.json`[\s\S]*function applyPublishedTranslationsToTravelPlan\(travelPlan, lang, translations\)[\s\S]*applyPublishedTranslationToLocalizedPair\(service, "title", "title_i18n", lang, translations\)[\s\S]*function applyPublishedMarketingTourTranslations\(tour, lang, translations\)[\s\S]*applyPublishedTranslationsToTravelPlan\(next\.travel_plan, normalizedLang, translations\)[\s\S]*const publishedTranslationsByLang = await loadPublishedMarketingTourTranslations\(options\.languages\);[\s\S]*const localizedTour = applyPublishedMarketingTourTranslations\(tour, lang, publishedTranslations\);[\s\S]*const readModel = tourHelpers\.normalizeTourForRead\(localizedTour, \{ lang \}\);[\s\S]*normalizeMarketingTourTravelPlan\(localizedTour\.travel_plan,[\s\S]*sourceLang: "en"[\s\S]*flatMode: "localized"/,
+    "Batch one-pager PDFs should apply published marketing-tour translation snapshots before localized PDF rendering"
+  );
+  assert.match(
     travelPlanEditorSource,
     /function syncTravelPlanDraftFromDom\(\)[\s\S]*draft\.tour_card_primary_image_id = state\.travelPlanDraft\?\.tour_card_primary_image_id \|\| null;[\s\S]*state\.travelPlanDraft = normalizeTravelPlanState\(draft\);/,
     "Travel-plan DOM sync should preserve the selected first card image through save"
@@ -3616,8 +3636,28 @@ test("tour card images are selected from travel-plan service images", async () =
   );
   assert.match(
     onePagerPdfSource,
-    /const BODY_IMAGE_LIMIT = 4;[\s\S]*function bodyImageBaseLayouts\(count\)[\s\S]*1: \[[\s\S]*2: \[[\s\S]*3: \[[\s\S]*4: \[[\s\S]*function createBodyImageLayouts\(tour, frameImages\)[\s\S]*\.slice\(1\)[\s\S]*\.slice\(0, BODY_IMAGE_LIMIT\)[\s\S]*deterministicRange\(seed, `scale:\$\{index\}`[\s\S]*BODY_IMAGE_LAYOUT_BOUNDS[\s\S]*variant: deterministicIndex\(seed, `shape:\$\{index\}`, PHOTO_FRAME_SHAPES\.length\)[\s\S]*const bodyImageLayouts = createBodyImageLayouts\(tour, frameImages\)[\s\S]*bodyImageLayouts\.forEach\(\(\{ frame, layout \}, index\) =>[\s\S]*drawFramedImage/,
+    /const durationBadge = dayCount === 1[\s\S]*\? badgeDayLabel[\s\S]*: `\$\{badgeDayLabel\}\\n\$\{badgeNightLabel\}`;[\s\S]*const singleLineBadge = lines\.length === 1;[\s\S]*\.text\(lines\[0\], 476, singleLineBadge \? 116 : 108/,
+    "Single-day one-pager PDFs should show only the one-line day badge without a zero-night line"
+  );
+  assert.match(
+    onePagerPdfSource,
+    /const BODY_IMAGE_LIMIT = 4;[\s\S]*function bodyImageBaseLayouts\(count\)[\s\S]*1: \[[\s\S]*2: \[[\s\S]*3: \[[\s\S]*4: \[[\s\S]*function createBodyImageLayouts\(tour, frameImages\)[\s\S]*\.slice\(1\)[\s\S]*\.slice\(0, BODY_IMAGE_LIMIT\)[\s\S]*deterministicRange\(seed, `scale:\$\{index\}`[\s\S]*BODY_IMAGE_LAYOUT_BOUNDS[\s\S]*variant: deterministicIndex\(seed, `shape:\$\{index\}`, PHOTO_FRAME_SHAPES\.length\)[\s\S]*const bodyImageLayouts = createBodyImageLayouts\(tour, frameImages\)[\s\S]*sortBodyImageLayoutsForDraw\(bodyImageLayouts\)\.forEach\(\(\{ frame, layout, drawOrderIndex \}\) =>[\s\S]*drawFramedImage/,
     "The one-pager PDF should lay out up to four right-side body images with deterministic randomized position, size, and shape"
+  );
+  assert.match(
+    onePagerPdfSource,
+    /function bodyImageLowestPoint\(layout\)[\s\S]*return bounds\.y \+ bounds\.height;[\s\S]*function sortBodyImageLayoutsForDraw\(items\)[\s\S]*lowestPoint: bodyImageLowestPoint\(item\?\.layout \|\| \{\}\)[\s\S]*\.sort\(\(left, right\) => right\.lowestPoint - left\.lowestPoint \|\| left\.drawOrderIndex - right\.drawOrderIndex\)[\s\S]*sortBodyImageLayoutsForDraw\(bodyImageLayouts\)\.forEach/,
+    "The one-pager PDF should draw the lowest small image first, then proceed upward so lower images do not cover higher image titles"
+  );
+  assert.match(
+    onePagerPdfSource,
+    /const PHOTO_LABEL_COLLISION_PAD = 8;[\s\S]*function bodyImageTitleRect\(layout\)[\s\S]*layout\.y \+ layout\.height - 30[\s\S]*function bodyImageTitleCollision\(candidate, placedLayouts\)[\s\S]*rectsOverlap\(candidateImage, placedTitle\)[\s\S]*function resolveBodyImageTitleCollisions\(items\)[\s\S]*return resolveBodyImageTitleCollisions\(layouts\);/,
+    "The one-pager PDF should protect small-image title strips from being covered by other small images"
+  );
+  assert.match(
+    onePagerPdfSource,
+    /const PHOTO_LABEL_BRIGHTNESS_SAMPLE_RATIO = 0\.2;[\s\S]*const PHOTO_LABEL_BRIGHTNESS_THRESHOLD = 155;[\s\S]*function drawFramedImageLabel[\s\S]*if \(labelBackdrop\)[\s\S]*\.rect\(x, y \+ height - 30, width, 30\)[\s\S]*async function imageLowerBandNeedsLabelBackdrop\(imageBuffer\)[\s\S]*height \* \(1 - PHOTO_LABEL_BRIGHTNESS_SAMPLE_RATIO\)[\s\S]*luminance >= PHOTO_LABEL_BRIGHTNESS_THRESHOLD[\s\S]*labelBackdrop: index > 0 && await imageLowerBandNeedsLabelBackdrop\(buffer\)/,
+    "The one-pager PDF should draw square-corner bottom title backdrops for bright lower image bands with low white-title contrast"
   );
   assert.match(
     onePagerPdfSource,
@@ -3628,6 +3668,11 @@ test("tour card images are selected from travel-plan service images", async () =
     onePagerPdfSource,
     /function fitPdfTextSize\(doc, text,[\s\S]*function fitTitleSize\(doc, title, fonts, options\)[\s\S]*maxHeight: 124[\s\S]*\.text\(titleText, 42, 208, titleOptions\)[\s\S]*const descriptionFontSize = fitPdfTextSize\(doc, description,[\s\S]*\.text\(description, 42, descriptionY, descriptionOptions\)[\s\S]*const mainCopyLayout = drawMainCopy\(doc, tour, duration, renderFonts, normalizedLang\)[\s\S]*drawHighlights\(doc, highlightItems, 42, highlightsY/,
     "The one-pager PDF should fit and render the complete tour title and description without clipping or ellipsis"
+  );
+  assert.match(
+    onePagerPdfSource,
+    /const TRIP_LABEL_Y = 154;[\s\S]*\.text\(onePagerT\(lang, "trip_to", "Trip to"\), 42, TRIP_LABEL_Y/,
+    "The one-pager PDF should position the trip label closer to the main title"
   );
   assert.match(
     onePagerPdfSource,
@@ -3658,6 +3703,11 @@ test("tour card images are selected from travel-plan service images", async () =
     onePagerScriptSource,
     /const onePagerFrameImageCount = 5;[\s\S]*const minOnePagerImageCount = 2;[\s\S]*scriptFrameImages\.length >= minOnePagerImageCount/,
     "The one-pager batch script should render tours with fewer than four body images when a hero plus one body image is available"
+  );
+  assert.match(
+    onePagerScriptSource,
+    /const onePagerWebImageWidth = 600;[\s\S]*async function convertPdfToWebJpg\(pdfPath, jpgPath, \{ dpi, width \}\)[\s\S]*"-jpeg"[\s\S]*"-scale-to-x"[\s\S]*String\(width\)[\s\S]*const imagePath = path\.join\(imageDir, `\$\{lang\}\.jpg`\);[\s\S]*await convertPdfToWebJpg\(pdfPath, imagePath,[\s\S]*width: onePagerWebImageWidth/,
+    "The one-pager batch script should create 600px-wide JPG previews for the matrix web page"
   );
 });
 

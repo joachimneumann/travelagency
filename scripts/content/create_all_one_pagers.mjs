@@ -20,6 +20,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "..", "..");
 const toursDir = path.join(repoRoot, "content", "tours");
+const translationsSnapshotDir = path.join(repoRoot, "content", "translations");
 const defaultOutputDir = path.join(repoRoot, "content", "one-pagers");
 const flagTokensPath = path.join(repoRoot, "shared", "css", "tokens.css");
 const experienceHighlightsManifestPath = path.join(repoRoot, "assets", "img", "experience-highlights", "manifest.json");
@@ -28,6 +29,8 @@ const googleAccount = "info@asiatravelplan.com";
 const onePagerFrameImageCount = 5;
 const minOnePagerImageCount = 2;
 const onePagerExperienceHighlightCount = 4;
+const onePagerWebImageWidth = 600;
+const onePagerWebImageQuality = 82;
 const publicTourImagePrefix = "/public/v1/tour-images/";
 const tourImageExtensions = new Set([".jpg", ".jpeg", ".png", ".webp"]);
 const preferredPdfColumnLanguages = Object.freeze(["en", "vi"]);
@@ -49,14 +52,14 @@ Options:
   --languages LIST          Comma-separated language codes. Default: all customer languages, EN and VI first
   --tour TOUR_ID            Render one tour only. Can be repeated.
   --limit N                 Render only the first N tours after filtering.
-  --image-dpi N             PDF-to-PNG resolution. Default: 144
+  --image-dpi N             PDF-to-image resolution before web preview resize. Default: 144
   --no-clean                Keep existing output files.
   --open-google-sites       Open Google Sites after generation.
   --help                    Show this help.
 
 Generated files:
   <output>/pdfs/<tour-id>/<lang>.pdf
-  <output>/images/<tour-id>/<lang>.png
+  <output>/images/<tour-id>/<lang>.jpg
   <output>/index.html
   <output>/manifest.json
 
@@ -220,17 +223,51 @@ async function commandExists(command) {
   }
 }
 
-async function convertPdfToPng(pdfPath, pngPath, dpi) {
-  const withoutExtension = pngPath.replace(/\.png$/i, "");
+async function convertPdfToWebJpg(pdfPath, jpgPath, { dpi, width }) {
+  const withoutExtension = jpgPath.replace(/\.jpe?g$/i, "");
   if (await commandExists("pdftoppm")) {
-    await execFile("pdftoppm", ["-png", "-singlefile", "-r", String(dpi), pdfPath, withoutExtension]);
-    return;
+    try {
+      await execFile("pdftoppm", [
+        "-jpeg",
+        "-jpegopt",
+        `quality=${onePagerWebImageQuality},optimize=y`,
+        "-singlefile",
+        "-r",
+        String(dpi),
+        "-scale-to-x",
+        String(width),
+        "-scale-to-y",
+        "-1",
+        pdfPath,
+        withoutExtension
+      ]);
+      return;
+    } catch (error) {
+      await rm(jpgPath, { force: true });
+      if (!(await commandExists("magick"))) throw error;
+    }
   }
   if (await commandExists("magick")) {
-    await execFile("magick", ["-density", String(dpi), `${pdfPath}[0]`, "-quality", "92", pngPath]);
+    await execFile("magick", [
+      "-density",
+      String(dpi),
+      `${pdfPath}[0]`,
+      "-resize",
+      `${width}x`,
+      "-background",
+      "white",
+      "-alpha",
+      "remove",
+      "-alpha",
+      "off",
+      "-strip",
+      "-quality",
+      String(onePagerWebImageQuality),
+      jpgPath
+    ]);
     return;
   }
-  throw new Error("Could not convert PDF to PNG. Install poppler (pdftoppm) or ImageMagick (magick).");
+  throw new Error("Could not convert PDF to JPG. Install poppler (pdftoppm) or ImageMagick (magick).");
 }
 
 async function readTours() {
@@ -247,6 +284,145 @@ async function readTours() {
     }
   }
   return tours;
+}
+
+function translationSourceKey(sourceText) {
+  return createHash("sha256").update(normalizeText(sourceText), "utf8").digest("hex");
+}
+
+async function loadPublishedMarketingTourTranslations(languages) {
+  const mapsByLang = new Map();
+  const uniqueLanguages = Array.from(new Set(
+    (Array.isArray(languages) ? languages : [])
+      .map((lang) => normalizeLanguageCode(lang))
+      .filter((lang) => lang && lang !== "en")
+  ));
+  await Promise.all(uniqueLanguages.map(async (lang) => {
+    const snapshotPath = path.join(translationsSnapshotDir, "customers", `marketing-tours.${lang}.json`);
+    const entries = new Map();
+    try {
+      const payload = JSON.parse(await readFile(snapshotPath, "utf8"));
+      for (const item of Array.isArray(payload?.items) ? payload.items : []) {
+        const sourceText = normalizeText(item?.source_text);
+        const targetText = normalizeText(item?.target_text);
+        if (!sourceText || !targetText) continue;
+        entries.set(translationSourceKey(sourceText), targetText);
+      }
+    } catch (error) {
+      if (error?.code !== "ENOENT") throw error;
+    }
+    mapsByLang.set(lang, entries);
+  }));
+  return mapsByLang;
+}
+
+function localizedObjectText(value, lang) {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? normalizeText(value[normalizeLanguageCode(lang)])
+    : "";
+}
+
+function fallbackSourceText(value) {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? normalizeText(value.en)
+    : normalizeText(value);
+}
+
+function sourceTextFromLocalizedValue(value, fallback = "") {
+  const fallbackText = fallbackSourceText(fallback);
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    return normalizeText(value.en) || fallbackText;
+  }
+  return normalizeText(value) || fallbackText;
+}
+
+function publishedTranslationForSource(translations, sourceText) {
+  const normalizedSource = normalizeText(sourceText);
+  if (!normalizedSource || !(translations instanceof Map)) return "";
+  return normalizeText(translations.get(translationSourceKey(normalizedSource)));
+}
+
+function cloneJson(value) {
+  if (value === undefined || value === null) return value;
+  return JSON.parse(JSON.stringify(value));
+}
+
+function applyPublishedTranslationToLocalizedMap(holder, fieldName, lang, translations) {
+  if (!holder || typeof holder !== "object" || Array.isArray(holder)) return false;
+  const normalizedLang = normalizeLanguageCode(lang);
+  const existingValue = holder[fieldName];
+  const sourceText = sourceTextFromLocalizedValue(existingValue);
+  if (!sourceText || localizedObjectText(existingValue, normalizedLang)) return false;
+  const targetText = publishedTranslationForSource(translations, sourceText);
+  if (!targetText) return false;
+  holder[fieldName] = {
+    ...(existingValue && typeof existingValue === "object" && !Array.isArray(existingValue)
+      ? existingValue
+      : { en: sourceText }),
+    [normalizedLang]: targetText
+  };
+  return true;
+}
+
+function applyPublishedTranslationToLocalizedPair(holder, plainField, i18nField, lang, translations) {
+  if (!holder || typeof holder !== "object" || Array.isArray(holder)) return false;
+  const normalizedLang = normalizeLanguageCode(lang);
+  const i18nValue = holder[i18nField];
+  const sourceText = sourceTextFromLocalizedValue(i18nValue, holder[plainField]);
+  if (!sourceText || localizedObjectText(i18nValue, normalizedLang)) return false;
+  const targetText = publishedTranslationForSource(translations, sourceText);
+  if (!targetText) return false;
+  holder[i18nField] = {
+    ...(i18nValue && typeof i18nValue === "object" && !Array.isArray(i18nValue)
+      ? i18nValue
+      : {}),
+    [normalizedLang]: targetText
+  };
+  return true;
+}
+
+function applyPublishedTranslationsToTravelPlanImage(image, lang, translations) {
+  if (!image || typeof image !== "object" || Array.isArray(image)) return false;
+  let changed = false;
+  changed = applyPublishedTranslationToLocalizedPair(image, "caption", "caption_i18n", lang, translations) || changed;
+  changed = applyPublishedTranslationToLocalizedPair(image, "alt_text", "alt_text_i18n", lang, translations) || changed;
+  return changed;
+}
+
+function applyPublishedTranslationsToTravelPlan(travelPlan, lang, translations) {
+  if (!travelPlan || typeof travelPlan !== "object" || Array.isArray(travelPlan)) return false;
+  let changed = false;
+  for (const day of Array.isArray(travelPlan.days) ? travelPlan.days : []) {
+    if (!day || typeof day !== "object" || Array.isArray(day)) continue;
+    changed = applyPublishedTranslationToLocalizedPair(day, "title", "title_i18n", lang, translations) || changed;
+    changed = applyPublishedTranslationToLocalizedPair(day, "overnight_location", "overnight_location_i18n", lang, translations) || changed;
+    changed = applyPublishedTranslationToLocalizedPair(day, "notes", "notes_i18n", lang, translations) || changed;
+
+    for (const service of Array.isArray(day.services) ? day.services : []) {
+      if (!service || typeof service !== "object" || Array.isArray(service)) continue;
+      changed = applyPublishedTranslationToLocalizedPair(service, "time_label", "time_label_i18n", lang, translations) || changed;
+      changed = applyPublishedTranslationToLocalizedPair(service, "title", "title_i18n", lang, translations) || changed;
+      changed = applyPublishedTranslationToLocalizedPair(service, "details", "details_i18n", lang, translations) || changed;
+      changed = applyPublishedTranslationToLocalizedPair(service, "location", "location_i18n", lang, translations) || changed;
+      changed = applyPublishedTranslationToLocalizedPair(service, "image_subtitle", "image_subtitle_i18n", lang, translations) || changed;
+      changed = applyPublishedTranslationsToTravelPlanImage(service.image, lang, translations) || changed;
+      for (const image of Array.isArray(service.images) ? service.images : []) {
+        changed = applyPublishedTranslationsToTravelPlanImage(image, lang, translations) || changed;
+      }
+    }
+  }
+  return changed;
+}
+
+function applyPublishedMarketingTourTranslations(tour, lang, translations) {
+  const normalizedLang = normalizeLanguageCode(lang);
+  if (normalizedLang === "en" || !(translations instanceof Map) || translations.size === 0) return tour;
+  const next = cloneJson(tour);
+  let changed = false;
+  changed = applyPublishedTranslationToLocalizedMap(next, "title", normalizedLang, translations) || changed;
+  changed = applyPublishedTranslationToLocalizedMap(next, "short_description", normalizedLang, translations) || changed;
+  changed = applyPublishedTranslationsToTravelPlan(next.travel_plan, normalizedLang, translations) || changed;
+  return changed ? next : tour;
 }
 
 async function readExperienceHighlightIds() {
@@ -687,6 +863,7 @@ async function main() {
   if (experienceHighlightIds.length < onePagerExperienceHighlightCount) {
     throw new Error(`Expected at least ${onePagerExperienceHighlightCount} experience highlights in ${experienceHighlightsManifestPath}.`);
   }
+  const publishedTranslationsByLang = await loadPublishedMarketingTourTranslations(options.languages);
 
   let tours = (await readTours())
     .map((tour) => tourHelpers.normalizeTourForStorage(tour))
@@ -744,10 +921,14 @@ async function main() {
     const manifestTour = { id: tour.id, title, artifacts: [] };
     for (const lang of options.languages) {
       rendered += 1;
-      const readModel = tourHelpers.normalizeTourForRead(tour, { lang });
-      const localizedTravelPlan = travelPlanHelpers.normalizeMarketingTourTravelPlan(tour.travel_plan, {
+      const publishedTranslations = publishedTranslationsByLang.get(normalizeLanguageCode(lang));
+      const localizedTour = applyPublishedMarketingTourTranslations(tour, lang, publishedTranslations);
+      const readModel = tourHelpers.normalizeTourForRead(localizedTour, { lang });
+      const localizedTravelPlan = travelPlanHelpers.normalizeMarketingTourTravelPlan(localizedTour.travel_plan, {
+        sourceLang: "en",
         contentLang: lang,
         flatLang: lang,
+        flatMode: "localized",
         strictReferences: false
       });
       const selected = await applyScriptFrameImages(
@@ -768,10 +949,13 @@ async function main() {
       await mkdir(pdfDir, { recursive: true });
       await mkdir(imageDir, { recursive: true });
       const pdfPath = path.join(pdfDir, `${lang}.pdf`);
-      const imagePath = path.join(imageDir, `${lang}.png`);
+      const imagePath = path.join(imageDir, `${lang}.jpg`);
       process.stdout.write(`[${rendered}/${total}] ${tour.id} ${lang}\n`);
       await writeOnePagerPdf(highlighted.tour, { lang, outputPath: pdfPath });
-      await convertPdfToPng(pdfPath, imagePath, options.imageDpi);
+      await convertPdfToWebJpg(pdfPath, imagePath, {
+        dpi: options.imageDpi,
+        width: onePagerWebImageWidth
+      });
       const artifact = {
         lang,
         pdfPath,

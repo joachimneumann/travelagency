@@ -38,10 +38,14 @@ const PDF_PIN_IMAGE_FILENAME = "pin.png";
 const PDF_PIN_IMAGE_WIDTH = 100;
 const PDF_PIN_IMAGE_HEIGHT = 135;
 const BODY_IMAGE_LIMIT = 4;
+const TRIP_LABEL_Y = 154;
 const BODY_IMAGE_RENDER_FRAME = Object.freeze({ width: 248, height: 174 });
 const PHOTO_LABEL_BACKDROP_COLOR = "#000000";
 const PHOTO_LABEL_BACKDROP_OPACITY = 0.34;
-const PHOTO_LABEL_BRIGHTNESS_THRESHOLD = 118;
+const PHOTO_LABEL_COLLISION_PAD = 8;
+const PHOTO_LABEL_COLLISION_STEP = 40;
+const PHOTO_LABEL_BRIGHTNESS_SAMPLE_RATIO = 0.2;
+const PHOTO_LABEL_BRIGHTNESS_THRESHOLD = 155;
 const BODY_IMAGE_LAYOUT_BOUNDS = Object.freeze({
   minX: 302,
   minY: 246,
@@ -458,12 +462,44 @@ function photoFrameShape(variant = 0) {
   return PHOTO_FRAME_SHAPES[Math.abs(Number(variant) || 0) % PHOTO_FRAME_SHAPES.length];
 }
 
-function drawFramedImage(doc, { x, y, width, height, angle = 0, imageBuffer = null, label = "", labelBackdrop = false, fonts = null, lang = "en", variant = 0 } = {}) {
+function framedImageGeometry({ x, y, width, height, angle = 0, variant = 0 } = {}) {
   const centerX = x + width / 2;
   const centerY = y + height / 2;
   const shape = photoFrameShape(variant);
-  const outerPoints = polygonPointsFromRelative(x - 5.5, y - 5.5, width + 12, height + 12, shape);
-  const innerPoints = polygonPointsFromRelative(x, y, width, height, shape);
+  return {
+    centerX,
+    centerY,
+    outerPoints: polygonPointsFromRelative(x - 5.5, y - 5.5, width + 12, height + 12, shape),
+    innerPoints: polygonPointsFromRelative(x, y, width, height, shape)
+  };
+}
+
+function drawFramedImageLabel(doc, { x, y, width, height, angle = 0, label = "", labelBackdrop = false, fonts = null, lang = "en", variant = 0 } = {}) {
+  if (!label) return;
+  const { centerX, centerY, innerPoints } = framedImageGeometry({ x, y, width, height, angle, variant });
+  doc.save();
+  doc.rotate(angle, { origin: [centerX, centerY] });
+  doc.save();
+  drawPolygonPath(doc, innerPoints);
+  doc.clip();
+  if (labelBackdrop) {
+    doc
+      .fillOpacity(PHOTO_LABEL_BACKDROP_OPACITY)
+      .rect(x, y + height - 30, width, 30)
+      .fill(PHOTO_LABEL_BACKDROP_COLOR)
+      .fillOpacity(1);
+  }
+  doc
+    .font(pdfFontName("display", fonts))
+    .fontSize(14)
+    .fillColor(COLORS.white)
+    .text(label.toUpperCase(), x + 10, y + height - 25, pdfTextOptions(lang, { width: width - 20, height: 18, ellipsis: true }));
+  doc.restore();
+  doc.restore();
+}
+
+function drawFramedImage(doc, { x, y, width, height, angle = 0, imageBuffer = null, label = "", labelBackdrop = false, fonts = null, lang = "en", variant = 0, labelLayer = true } = {}) {
+  const { centerX, centerY, outerPoints, innerPoints } = framedImageGeometry({ x, y, width, height, angle, variant });
   doc.save();
   doc.rotate(angle, { origin: [centerX, centerY] });
   doc.save();
@@ -479,24 +515,7 @@ function drawFramedImage(doc, { x, y, width, height, angle = 0, imageBuffer = nu
     doc.rect(x, y, width, height).fill(COLORS.accentSoft);
   }
   doc.restore();
-  if (label) {
-    doc.save();
-    drawPolygonPath(doc, innerPoints);
-    doc.clip();
-    if (labelBackdrop) {
-      doc
-        .fillOpacity(PHOTO_LABEL_BACKDROP_OPACITY)
-        .roundedRect(x + 7, y + height - 30, width - 14, 24, 4)
-        .fill(PHOTO_LABEL_BACKDROP_COLOR)
-        .fillOpacity(1);
-    }
-    doc
-      .font(pdfFontName("display", fonts))
-      .fontSize(14)
-      .fillColor(COLORS.white)
-      .text(label.toUpperCase(), x + 10, y + height - 25, pdfTextOptions(lang, { width: width - 20, height: 18, ellipsis: true }));
-    doc.restore();
-  }
+  if (labelLayer) drawFramedImageLabel(doc, { x, y, width, height, angle, label, labelBackdrop, fonts, lang, variant });
   doc.save();
   drawPolygonPath(doc, outerPoints);
   doc.lineWidth(1.1).strokeColor(COLORS.white).stroke();
@@ -519,6 +538,135 @@ function deterministicRange(seed, key, min, max) {
 
 function deterministicIndex(seed, key, count) {
   return Math.min(Math.max(0, count - 1), Math.floor(deterministicUnit(seed, key) * count));
+}
+
+function rectsOverlap(first, second) {
+  return first.x < second.x + second.width
+    && first.x + first.width > second.x
+    && first.y < second.y + second.height
+    && first.y + first.height > second.y;
+}
+
+function expandRect(rect, pad) {
+  return {
+    x: rect.x - pad,
+    y: rect.y - pad,
+    width: rect.width + pad * 2,
+    height: rect.height + pad * 2
+  };
+}
+
+function rotatedRectBounds(rect, layout) {
+  const angle = (Number(layout?.angle) || 0) * Math.PI / 180;
+  const centerX = layout.x + layout.width / 2;
+  const centerY = layout.y + layout.height / 2;
+  const cos = Math.cos(angle);
+  const sin = Math.sin(angle);
+  const points = [
+    [rect.x, rect.y],
+    [rect.x + rect.width, rect.y],
+    [rect.x + rect.width, rect.y + rect.height],
+    [rect.x, rect.y + rect.height]
+  ].map(([pointX, pointY]) => {
+    const dx = pointX - centerX;
+    const dy = pointY - centerY;
+    return {
+      x: centerX + dx * cos - dy * sin,
+      y: centerY + dx * sin + dy * cos
+    };
+  });
+  const xs = points.map((point) => point.x);
+  const ys = points.map((point) => point.y);
+  const minX = Math.min(...xs);
+  const minY = Math.min(...ys);
+  return {
+    x: minX,
+    y: minY,
+    width: Math.max(...xs) - minX,
+    height: Math.max(...ys) - minY
+  };
+}
+
+function bodyImageCoverageRect(layout) {
+  return rotatedRectBounds({
+    x: layout.x - 5.5,
+    y: layout.y - 5.5,
+    width: layout.width + 12,
+    height: layout.height + 12
+  }, layout);
+}
+
+function bodyImageLowestPoint(layout) {
+  const bounds = bodyImageCoverageRect(layout);
+  return bounds.y + bounds.height;
+}
+
+function bodyImageTitleRect(layout) {
+  return expandRect(rotatedRectBounds({
+    x: layout.x + 7,
+    y: layout.y + layout.height - 30,
+    width: layout.width - 14,
+    height: 24
+  }, layout), PHOTO_LABEL_COLLISION_PAD);
+}
+
+function bodyImageTitleCollision(candidate, placedLayouts) {
+  const candidateImage = bodyImageCoverageRect(candidate);
+  const candidateTitle = bodyImageTitleRect(candidate);
+  return placedLayouts.some((placed) => {
+    const placedImage = bodyImageCoverageRect(placed);
+    const placedTitle = bodyImageTitleRect(placed);
+    return rectsOverlap(candidateImage, placedTitle)
+      || rectsOverlap(placedImage, candidateTitle)
+      || rectsOverlap(candidateTitle, placedTitle);
+  });
+}
+
+function clampBodyImageLayout(layout, dx = 0, dy = 0) {
+  return {
+    ...layout,
+    x: Number(clampNumber(
+      layout.x + dx,
+      BODY_IMAGE_LAYOUT_BOUNDS.minX,
+      BODY_IMAGE_LAYOUT_BOUNDS.maxX - layout.width
+    ).toFixed(2)),
+    y: Number(clampNumber(
+      layout.y + dy,
+      BODY_IMAGE_LAYOUT_BOUNDS.minY,
+      BODY_IMAGE_LAYOUT_BOUNDS.maxY - layout.height
+    ).toFixed(2))
+  };
+}
+
+function bodyImageTitleCollisionCandidates(layout) {
+  const step = PHOTO_LABEL_COLLISION_STEP;
+  const diagonal = step * 0.65;
+  return [
+    [0, 0],
+    [0, step],
+    [0, step * 1.5],
+    [-diagonal, step],
+    [diagonal, step],
+    [0, -step],
+    [-diagonal, -step],
+    [diagonal, -step],
+    [-step, 0],
+    [step, 0],
+    [0, step * 2],
+    [-step, step * 1.5],
+    [step, step * 1.5]
+  ].map(([dx, dy]) => clampBodyImageLayout(layout, dx, dy));
+}
+
+function resolveBodyImageTitleCollisions(items) {
+  const placedLayouts = [];
+  return items.map(({ frame, layout }) => {
+    const resolvedLayout = bodyImageTitleCollisionCandidates(layout)
+      .find((candidate) => !bodyImageTitleCollision(candidate, placedLayouts))
+      || layout;
+    placedLayouts.push(resolvedLayout);
+    return { frame, layout: resolvedLayout };
+  });
 }
 
 function bodyImageBaseLayouts(count) {
@@ -565,7 +713,7 @@ function createBodyImageLayouts(tour, frameImages) {
     .slice(0, BODY_IMAGE_LIMIT);
   const baseLayouts = bodyImageBaseLayouts(bodyFrames.length);
   const seed = createBodyImageLayoutSeed(tour, bodyFrames);
-  return bodyFrames.map((frame, index) => {
+  const layouts = bodyFrames.map((frame, index) => {
     const base = baseLayouts[index];
     const scale = deterministicRange(seed, `scale:${index}`, 0.84, 1.18);
     const ratioScale = deterministicRange(seed, `ratio:${index}`, 0.9, 1.1);
@@ -593,14 +741,25 @@ function createBodyImageLayouts(tour, frameImages) {
       }
     };
   });
+  return resolveBodyImageTitleCollisions(layouts);
+}
+
+function sortBodyImageLayoutsForDraw(items) {
+  return safeArray(items)
+    .map((item, index) => ({
+      ...item,
+      drawOrderIndex: index,
+      lowestPoint: bodyImageLowestPoint(item?.layout || {})
+    }))
+    .sort((left, right) => right.lowestPoint - left.lowestPoint || left.drawOrderIndex - right.drawOrderIndex);
 }
 
 function drawLogo(doc, logoPath) {
   if (!logoPath) {
     throw new Error("Production logo path is required for the tour one-pager PDF.");
   }
-  doc.image(logoPath, 42, 36, {
-    fit: [180, 60],
+  doc.image(logoPath, 24, 18, {
+    fit: [250, 100],
     align: "left",
     valign: "top"
   });
@@ -677,12 +836,15 @@ function durationParts(days, lang) {
   const nightLabel = onePagerCountLabel(lang, nightCount, "night_count_one", "night_count_other", "{count} night", "{count} nights");
   const badgeDayLabel = onePagerCountLabel(lang, dayCount, "day_badge_one", "day_badge_other", "{count} DAY", "{count} DAYS");
   const badgeNightLabel = onePagerCountLabel(lang, nightCount, "night_badge_one", "night_badge_other", "{count} NIGHT", "{count} NIGHTS");
+  const durationBadge = dayCount === 1
+    ? badgeDayLabel
+    : `${badgeDayLabel}\n${badgeNightLabel}`;
   return {
     dayCount,
     nightCount,
     label: dayCount > 0 ? dayLabel : onePagerT(lang, "tour", "Tour"),
     nightLabel,
-    badge: dayCount > 0 ? `${badgeDayLabel}\n${badgeNightLabel}` : onePagerT(lang, "tour_overview_badge", "TOUR\nOVERVIEW")
+    badge: dayCount > 0 ? durationBadge : onePagerT(lang, "tour_overview_badge", "TOUR\nOVERVIEW")
   };
 }
 
@@ -810,7 +972,7 @@ async function imageLowerBandNeedsLabelBackdrop(imageBuffer) {
     const width = Math.max(1, Math.round(Number(metadata.width) || 0));
     const height = Math.max(1, Math.round(Number(metadata.height) || 0));
     if (!width || !height) return false;
-    const bandTop = Math.max(0, Math.floor(height * 0.62));
+    const bandTop = Math.max(0, Math.floor(height * (1 - PHOTO_LABEL_BRIGHTNESS_SAMPLE_RATIO)));
     const bandHeight = Math.max(1, height - bandTop);
     const stats = await sharp(imageBuffer)
       .extract({ left: 0, top: bandTop, width, height: bandHeight })
@@ -1154,13 +1316,17 @@ function drawDurationBadge(doc, duration, fonts) {
   doc.circle(511, 111, 40).lineWidth(3).strokeColor(COLORS.white).stroke();
   drawCalendarIcon(doc, 500, 83, 22, 20, COLORS.white);
   const lines = duration.badge.split("\n");
+  const singleLineBadge = lines.length === 1;
   doc
     .font(pdfFontName("label", fonts))
-    .fontSize(12.6)
+    .fontSize(singleLineBadge ? 13.6 : 12.6)
     .fillColor(COLORS.white)
-    .text(lines[0], 476, 108, { width: 70, align: "center" })
-    .fontSize(11.5)
-    .text(lines[1] || "", 476, 125, { width: 70, align: "center" });
+    .text(lines[0], 476, singleLineBadge ? 116 : 108, { width: 70, align: "center" });
+  if (!singleLineBadge) {
+    doc
+      .fontSize(11.5)
+      .text(lines[1] || "", 476, 125, { width: 70, align: "center" });
+  }
   doc.restore();
 }
 
@@ -1417,7 +1583,7 @@ function drawMainCopy(doc, tour, duration, fonts, lang) {
     .font(pdfFontName("tripLabel", fonts))
     .fontSize(fonts?.tripLabel ? 27 : 44)
     .fillColor(PDF_TRIP_LABEL_ORANGE)
-    .text(onePagerT(lang, "trip_to", "Trip to"), 42, 118, pdfTextOptions(lang, { width: 210 }));
+    .text(onePagerT(lang, "trip_to", "Trip to"), 42, TRIP_LABEL_Y, pdfTextOptions(lang, { width: 210 }));
   const titleOptions = pdfTextOptions(lang, { width: 286, lineGap: -6 });
   const titleSize = fitTitleSize(doc, titleText, fonts, titleOptions);
   const titleFontName = pdfFontName("display", fonts);
@@ -1572,7 +1738,7 @@ export function createMarketingTourOnePagerPdfWriter({
       });
       drawIncluded(doc, collectIncludedItems(tour, duration, normalizedLang), 42, lowerContentY + 178, 276, renderFonts, normalizedLang);
 
-      bodyImageLayouts.forEach(({ frame, layout }, index) => {
+      sortBodyImageLayoutsForDraw(bodyImageLayouts).forEach(({ frame, layout, drawOrderIndex }) => {
         drawFramedImage(doc, {
           x: layout.x,
           y: layout.y,
@@ -1584,7 +1750,7 @@ export function createMarketingTourOnePagerPdfWriter({
           label: frame?.entry?.label || "",
           fonts: renderFonts,
           lang: normalizedLang,
-          variant: layout.variant ?? index
+          variant: layout.variant ?? drawOrderIndex
         });
       });
       drawCta(doc, companyProfile || {}, renderFonts, normalizedLang);

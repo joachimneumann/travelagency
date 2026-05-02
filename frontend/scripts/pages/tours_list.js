@@ -432,7 +432,7 @@ function buildToursQueryEntries({ page = 1, pageSize = state.tours.pageSize } = 
   const entries = {
     page: String(page),
     page_size: String(pageSize),
-    sort: "updated_at_desc"
+    sort: "published_on_webpage_desc"
   };
   if (state.tours.search) entries.search = state.tours.search;
   if (state.tours.destination) entries.destination = state.tours.destination;
