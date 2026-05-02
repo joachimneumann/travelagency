@@ -69,6 +69,7 @@ export function createTourHandlers(deps) {
     persistTour,
     repoRoot,
     resolveTourImageDiskPath,
+    writeMarketingTourOnePagerPdf,
     sendFileWithCache,
     mkdir,
     path,
@@ -320,6 +321,15 @@ export function createTourHandlers(deps) {
     };
   }
 
+  function tourOnePagerFilename(tour) {
+    const title = normalizeText(resolveLocalizedText(tour?.title, "en") || tour?.id || "tour")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 80) || "tour";
+    return `${title}-one-pager.pdf`;
+  }
+
   function assertExpectedTourUpdatedAt(payload, currentTour, res) {
     const expectedUpdatedAt = normalizeText(payload?.expected_updated_at);
     if (!expectedUpdatedAt) return true;
@@ -363,6 +373,9 @@ export function createTourHandlers(deps) {
     if (payload.priority !== undefined || isCreate) {
       const priority = safeInt(payload.priority);
       next.priority = priority === null ? 50 : priority;
+    }
+    if (payload.published_on_webpage !== undefined || isCreate) {
+      next.published_on_webpage = payload.published_on_webpage !== false;
     }
 
     return normalizeTourForStorage(next);
@@ -715,6 +728,7 @@ export function createTourHandlers(deps) {
 
   function normalizeTourForPublicWebpage(tour, publishedDestinationCodes) {
     const stored = normalizeTourForStorage(tour);
+    if (stored.published_on_webpage === false) return null;
     const visibleDestinations = tourDestinationCodes(stored).filter((code) => publishedDestinationCodes.has(code));
     if (!visibleDestinations.length) return null;
     const travelPlan = stored.travel_plan && typeof stored.travel_plan === "object" && !Array.isArray(stored.travel_plan)
@@ -921,6 +935,56 @@ export function createTourHandlers(deps) {
         styles: options.styles
       }
     });
+  }
+
+  async function handleGetTourOnePagerPdf(req, res, [tourId]) {
+    const principal = getPrincipal(req);
+    if (!canReadTours(principal)) {
+      sendJson(res, 403, { error: "Forbidden" });
+      return;
+    }
+    if (typeof writeMarketingTourOnePagerPdf !== "function") {
+      sendJson(res, 503, { error: "Tour one-pager PDF rendering is not configured" });
+      return;
+    }
+
+    const lang = requestLang(req.url);
+    const tours = (await readTours()).map((tour) => normalizeTourForStorage(tour));
+    const tour = tours.find((item) => item.id === tourId);
+    if (!tour) {
+      sendJson(res, 404, { error: "Tour not found" });
+      return;
+    }
+
+    const readModel = normalizeTourForRead(tour, { lang });
+    const travelPlan = normalizeMarketingTourTravelPlan(tour.travel_plan, {
+      contentLang: lang,
+      flatLang: lang,
+      strictReferences: false
+    });
+    const previewPath = path.join(TEMP_UPLOAD_DIR, `tour-one-pager-${tourId}-${randomUUID()}.pdf`);
+    let renderedPath = previewPath;
+    try {
+      await mkdir(path.dirname(previewPath), { recursive: true });
+      const result = await writeMarketingTourOnePagerPdf({
+        ...readModel,
+        travel_plan: travelPlan
+      }, {
+        lang,
+        outputPath: previewPath
+      });
+      renderedPath = normalizeText(result?.outputPath) || previewPath;
+      await sendFileWithCache(req, res, renderedPath, "private, max-age=0, no-store", {
+        "Content-Disposition": `inline; filename="${tourOnePagerFilename(tour).replace(/"/g, "")}"`
+      });
+    } catch (error) {
+      sendJson(res, 500, { error: "Could not render tour one-pager PDF", detail: String(error?.message || error) });
+    } finally {
+      await rm(renderedPath, { force: true }).catch(() => {});
+      if (renderedPath !== previewPath) {
+        await rm(previewPath, { force: true }).catch(() => {});
+      }
+    }
   }
 
   async function handleTranslateTourFields(req, res) {
@@ -1845,6 +1909,7 @@ export function createTourHandlers(deps) {
     handleSearchTourTravelPlanDays,
     handleSearchTourTravelPlanServices,
     handleGetTour,
+    handleGetTourOnePagerPdf,
     handleTranslateTourFields,
     handleCreateTour,
     handlePatchTour,

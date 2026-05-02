@@ -18,6 +18,7 @@ import (
 	destinations?: [...enums.#CountryCode]
 	styles: [...enums.#TourStyleCode]
 	priority?:                int
+	published_on_webpage?:    bool
 	seasonality_start_month?: enums.#MonthCode
 	seasonality_end_month?:   enums.#MonthCode
 	short_description?:       string

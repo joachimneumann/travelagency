@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-04-28T12:46:15Z
+# 2026-05-02T03:20:12Z
 
 ---
 openapi: 3.1.0
@@ -3863,6 +3863,9 @@ components:
         priority:
           type: integer
           nullable: true
+        published_on_webpage:
+          type: boolean
+          nullable: true
         seasonality_start_month:
           "$ref": "#/components/schemas/MonthCode"
           nullable: true
@@ -7240,6 +7243,9 @@ components:
             "$ref": "#/components/schemas/TourStyleCode"
         priority:
           type: integer
+          nullable: true
+        published_on_webpage:
+          type: boolean
           nullable: true
         seasonality_start_month:
           "$ref": "#/components/schemas/MonthCode"

@@ -80,6 +80,25 @@ test("tour helpers derive destinations from scope and omit legacy destination st
   assert.deepEqual(helpers.normalizeTourForRead(scoped).travel_plan.destinations, ["VN"]);
 });
 
+test("tour helpers default tours to published and preserve explicit unpublished state", () => {
+  const defaultPublished = helpers.normalizeTourForStorage({
+    id: "tour_default_publication",
+    title: "Default publication",
+    styles: ["culture"]
+  });
+  assert.equal(defaultPublished.published_on_webpage, true);
+  assert.equal(helpers.normalizeTourForRead(defaultPublished).published_on_webpage, true);
+
+  const unpublished = helpers.normalizeTourForStorage({
+    id: "tour_unpublished",
+    title: "Unpublished",
+    styles: ["culture"],
+    published_on_webpage: false
+  });
+  assert.equal(unpublished.published_on_webpage, false);
+  assert.equal(helpers.normalizeTourForRead(unpublished).published_on_webpage, false);
+});
+
 test("tour helpers resolve localized titles with vietnamese then english fallback", () => {
   const viTour = helpers.normalizeTourForRead(
     {

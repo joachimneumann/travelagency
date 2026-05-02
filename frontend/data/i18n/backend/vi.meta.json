@@ -419,6 +419,11 @@
     "origin": "machine",
     "updated_at": "2026-03-30T23:51:31.875Z"
   },
+  "backend.tours.published_pill": {
+    "source_hash": "b04e5ea201bb040cae53f693f6a38a3e00b62da6039ca248fecd59b7fc842894",
+    "origin": "manual",
+    "updated_at": "2026-05-02T03:25:00.000Z"
+  },
   "backend.tours.search_label": {
     "source_hash": "be3d1790ef4f77a8db308e493848c51d83d74e40ec8b3223cbc3420badbb8b73",
     "origin": "machine",
@@ -5449,6 +5454,21 @@
     "origin": "legacy",
     "updated_at": "2026-04-30T04:25:00.000Z"
   },
+  "tour.published_on_webpage": {
+    "source_hash": "eed1e6bc6be5e01b2f1fd5add5de7a90b3d87232a7b142f7c4b971082c157633",
+    "origin": "manual",
+    "updated_at": "2026-05-02T03:25:00.000Z"
+  },
+  "tour.one_pager": {
+    "source_hash": "f809b82c6d91c107e4a5a116b804368c25a67617d6d7ed9c2c50cf80ea305d2c",
+    "origin": "manual",
+    "updated_at": "2026-05-02T06:45:00.000Z"
+  },
+  "tour.one_pager_language": {
+    "source_hash": "d41deb15db6f7ed8fe0c3bcbebd0d061f4e8a40b7c0458a6fb12a8051a24234d",
+    "origin": "manual",
+    "updated_at": "2026-05-02T08:05:00.000Z"
+  },
   "tour.rating_label": {
     "source_hash": "9f29530464f730bd28f137cfc9ea941af137187b57c21e8ff5fefed520764d99",
     "origin": "machine",
@@ -5508,6 +5528,21 @@
     "source_hash": "645547c7ed0c5aec5b07192022c21c1d9b0c099d5d92177d840343aa82c59f4e",
     "origin": "machine",
     "updated_at": "2026-03-30T23:51:31.875Z"
+  },
+  "tour.status.one_pager_opening": {
+    "source_hash": "7e896a1e645757f4b43d983a91fed47c9613e05642868067be4537d7eeb436e0",
+    "origin": "manual",
+    "updated_at": "2026-05-02T06:45:00.000Z"
+  },
+  "tour.status.one_pager_popup_blocked": {
+    "source_hash": "9b7e049ad4e993de52cfd5ed7f7733ce508312ad4af856c1e75cd36b663d1b21",
+    "origin": "manual",
+    "updated_at": "2026-05-02T06:45:00.000Z"
+  },
+  "tour.status.one_pager_save_first": {
+    "source_hash": "55f2bc90483373d92cff023268f8e8b1eec4d51d8ec58fb7e3e123f6b2a5e235",
+    "origin": "manual",
+    "updated_at": "2026-05-02T06:45:00.000Z"
   },
   "tour.status.read_only": {
     "source_hash": "14284bb92c375210ea5b39bf167581fa882bce6d00c844fadf4c18ffa7ac5013",

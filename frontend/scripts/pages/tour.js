@@ -24,6 +24,7 @@ import {
   readDestinationScopeFromDom
 } from "../shared/destination_scope_editor.js";
 import {
+  CUSTOMER_CONTENT_LANGUAGE_CODES,
   CUSTOMER_CONTENT_LANGUAGES,
   normalizeLanguageCode
 } from "../../../shared/generated/language_catalog.js";
@@ -67,7 +68,8 @@ function withApiLang(pathname, params = {}) {
       url.searchParams.set(key, String(value));
     }
   });
-  const lang = currentBackendLang();
+  const explicitLang = normalizeText(url.searchParams.get("lang"));
+  const lang = explicitLang || currentBackendLang();
   if (lang) url.searchParams.set("lang", lang);
   return `${url.pathname}${url.search}`;
 }
@@ -157,6 +159,8 @@ const els = {
   dirtyBarSummary: document.getElementById("tour_dirty_bar_summary"),
   status: document.getElementById("tour_formStatus"),
   cancel: document.getElementById("tour_cancel_btn"),
+  onePagerBtn: document.getElementById("tour_one_pager_btn"),
+  onePagerLang: document.getElementById("tour_one_pager_lang"),
   destinationHidden: document.getElementById("tour_destinations"),
   destinationChoices: document.getElementById("tour_destination_choices"),
   stylesHidden: document.getElementById("tour_styles"),
@@ -164,6 +168,7 @@ const els = {
   travel_plan_destination_scope_editor: document.getElementById("tour_destination_scope_editor"),
   seasonalityStartMonth: document.getElementById("tour_seasonality_start_month"),
   seasonalityEndMonth: document.getElementById("tour_seasonality_end_month"),
+  publishedOnWebpage: document.getElementById("tour_published_on_webpage"),
   localizedContentEditor: document.getElementById("tour_localized_content_editor"),
   tourCardImageSelector: document.getElementById("tour_card_image_selector"),
   reelVideoCard: document.getElementById("tour_reel_video_card"),
@@ -409,6 +414,38 @@ function tourLanguageLabel(lang) {
     || normalizeText(language?.promptName)
     || normalizeText(language?.apiValue)
     || tourLanguageShortLabel(lang);
+}
+
+function renderOnePagerLanguageOptions() {
+  if (!els.onePagerLang || String(els.onePagerLang.tagName || "").toLowerCase() !== "select") return;
+  const languages = tourTextLanguages();
+  const fragment = document.createDocumentFragment();
+  languages.forEach((language) => {
+    const code = normalizeTourTextLang(language?.code);
+    if (!code) return;
+    const option = document.createElement("option");
+    option.value = code;
+    option.textContent = `${tourLanguageLabel(code)} (${tourLanguageShortLabel(code)})`;
+    option.dir = normalizeText(language?.direction) || "ltr";
+    fragment.append(option);
+  });
+  if (!fragment.childNodes.length) {
+    const option = document.createElement("option");
+    option.value = "en";
+    option.textContent = "English (EN)";
+    fragment.append(option);
+  }
+  els.onePagerLang.replaceChildren(fragment);
+  els.onePagerLang.value = CUSTOMER_CONTENT_LANGUAGE_CODES.includes("en")
+    ? "en"
+    : normalizeTourTextLang(languages[0]?.code || "en");
+}
+
+function selectedOnePagerLang() {
+  return normalizeLanguageCode(els.onePagerLang?.value, {
+    allowedCodes: CUSTOMER_CONTENT_LANGUAGE_CODES,
+    fallback: "en"
+  });
 }
 
 function normalizeLocalizedTextMap(value, { multiline = false } = {}) {
@@ -968,12 +1005,15 @@ async function init() {
       window.location.href = backHref;
     });
   }
+  renderOnePagerLanguageOptions();
+  els.onePagerBtn?.addEventListener("click", openTourOnePagerPdf);
   if (els.logoutLink) {
     const returnTo = `${window.location.origin}/`;
     wireAuthLogoutLink(els.logoutLink, { apiBase, returnTo });
   }
 
   await loadAuthStatus();
+  syncOnePagerButtonState();
   if (!state.authenticated) {
     redirectToBackendLogin();
     return;
@@ -998,6 +1038,7 @@ async function init() {
       state.tour = tour;
       state.id = String(tour?.id || state.id || "");
       state.is_create_mode = !state.id;
+      syncOnePagerButtonState();
       if (state.booking && state.booking.id === state.id) {
         state.booking.updated_at = normalizeText(tour?.updated_at) || state.booking.updated_at || null;
       }
@@ -1116,6 +1157,7 @@ async function loadTour() {
   setInput("tour_priority", toInputNumber(tour.priority));
   setInput("tour_seasonality_start_month", tour.seasonality_start_month || "");
   setInput("tour_seasonality_end_month", tour.seasonality_end_month || "");
+  if (els.publishedOnWebpage) els.publishedOnWebpage.checked = tour.published_on_webpage !== false;
   renderLocalizedTourContentEditor();
   syncReelVideoDraftItemFromTour(tour);
   tourTravelPlanAdapter?.applyTour(tour);
@@ -1125,6 +1167,7 @@ async function loadTour() {
   renderStyleChoices(tour_style_codes(tour));
   applyTourPermissions();
   markTourSnapshotClean();
+  syncOnePagerButtonState();
 }
 
 async function initializeNewTourForm() {
@@ -1156,6 +1199,7 @@ async function initializeNewTourForm() {
   setInput("tour_priority", "50");
   setInput("tour_seasonality_start_month", "");
   setInput("tour_seasonality_end_month", "");
+  if (els.publishedOnWebpage) els.publishedOnWebpage.checked = true;
   renderLocalizedTourContentEditor();
   syncReelVideoDraftItemFromTour(state.tour);
   tourTravelPlanAdapter?.applyTour(state.tour);
@@ -1166,6 +1210,7 @@ async function initializeNewTourForm() {
   clearError();
   setStatus(backendT("tour.status.new", "New tour"));
   markTourSnapshotClean();
+  syncOnePagerButtonState();
 }
 
 function renderDestinationChoices(selectedValues) {
@@ -1280,6 +1325,40 @@ function buildTourSaveValidationMessage({ title = "", destinations = [], styles 
   });
 }
 
+function syncOnePagerButtonState() {
+  const disabled = !state.permissions.canReadTours || state.is_create_mode || !normalizeText(state.id);
+  if (els.onePagerBtn) {
+    els.onePagerBtn.disabled = disabled;
+    els.onePagerBtn.title = disabled
+      ? backendT("tour.status.one_pager_save_first", "Save the tour before creating a one-pager PDF.")
+      : backendT("tour.one_pager", "One pager");
+  }
+  if (els.onePagerLang) {
+    els.onePagerLang.disabled = disabled;
+  }
+}
+
+function openTourOnePagerPdf() {
+  syncOnePagerButtonState();
+  if (els.onePagerBtn?.disabled) {
+    setStatus(backendT("tour.status.one_pager_save_first", "Save the tour before creating a one-pager PDF."));
+    return;
+  }
+  if (updateTourDirtyState()) {
+    setStatus(backendT("tour.status.one_pager_save_first", "Save the tour before creating a one-pager PDF."));
+    return;
+  }
+  const url = absolutizeApiUrl(withApiLang(`/api/v1/tours/${encodeURIComponent(state.id)}/one-pager.pdf`, {
+    lang: selectedOnePagerLang()
+  }));
+  const previewWindow = window.open(url, "_blank", "noopener");
+  if (!previewWindow) {
+    setStatus(backendT("tour.status.one_pager_popup_blocked", "Allow pop-ups to open the one-pager PDF."));
+    return;
+  }
+  setStatus(backendT("tour.status.one_pager_opening", "Opening one-pager PDF."));
+}
+
 async function submitForm(event) {
   event.preventDefault();
   if (!state.permissions.canEditTours) return;
@@ -1320,6 +1399,7 @@ async function submitForm(event) {
     priority: toNumberOrNull(getInput("tour_priority")),
     seasonality_start_month: getInput("tour_seasonality_start_month"),
     seasonality_end_month: getInput("tour_seasonality_end_month"),
+    published_on_webpage: els.publishedOnWebpage ? els.publishedOnWebpage.checked : true,
     short_description_i18n,
     travel_plan: omitDerivedTravelPlanDestinations(travelPlanPayload)
   };

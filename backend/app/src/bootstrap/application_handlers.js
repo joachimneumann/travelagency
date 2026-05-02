@@ -59,7 +59,8 @@ export function createApplicationRoutes({
     tourHelpers,
     writePaymentDocumentPdf,
     writeGeneratedOfferPdf,
-    writeTravelPlanPdf
+    writeTravelPlanPdf,
+    writeMarketingTourOnePagerPdf
   } = services;
 
   function getBookingRevision(booking, field) {
@@ -406,6 +407,7 @@ export function createApplicationRoutes({
     persistTour: storeUtils.persistTour,
     repoRoot: runtime.paths.repoRoot,
     resolveTourImageDiskPath: tourHelpers.resolveTourImageDiskPath,
+    writeMarketingTourOnePagerPdf,
     sendFileWithCache: httpHelpers.sendFileWithCache,
     mkdir,
     path,

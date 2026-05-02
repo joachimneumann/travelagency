@@ -30,6 +30,7 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
 
   await mkdir(path.join(toursRoot, "tour_alpha"), { recursive: true });
   await mkdir(path.join(toursRoot, "tour_hidden"), { recursive: true });
+  await mkdir(path.join(toursRoot, "tour_unpublished"), { recursive: true });
   await mkdir(path.join(staffRoot, "photos"), { recursive: true });
   await mkdir(frontendI18nDir, { recursive: true });
   await mkdir(path.dirname(homepageHtmlPath), { recursive: true });
@@ -134,6 +135,22 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
   });
   await writeFile(path.join(toursRoot, "tour_hidden", "hidden.png"), Buffer.from(TINY_PNG_BASE64, "base64"));
 
+  await writeJson(path.join(toursRoot, "tour_unpublished", "tour.json"), {
+    id: "tour_unpublished",
+    title: { en: "Unpublished tour", de: "Unveroffentlichte Reise" },
+    short_description: { en: "Should not appear even though its destination is public." },
+    styles: ["luxury"],
+    published_on_webpage: false,
+    travel_plan: {
+      destination_scope: [
+        { destination: "VN", areas: [] }
+      ],
+      days: []
+    },
+    priority: 90,
+    updated_at: "2026-04-14T11:00:00.000Z"
+  });
+
   await writeJson(destinationCatalogPath, {
     destination_scope_destinations: [
       { code: "VN", label: "Vietnam", sort_order: 1 },
@@ -230,6 +247,7 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
 
   assert.equal(publicToursEn.items.length, 1);
   assert.equal(publicToursEn.items[0].id, "tour_alpha");
+  assert.doesNotMatch(JSON.stringify(publicToursEn), /tour_unpublished|Unpublished tour/);
   assert.deepEqual(publicToursEn.items[0].destination_codes, ["vietnam"]);
   assert.deepEqual(publicToursEn.available_destinations, [{ code: "vietnam", label: "Vietnam" }]);
   assert.equal(publicToursEn.available_destination_scope_catalog, undefined);
@@ -311,6 +329,7 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
   assert.match(generatedSitemap, /https:\/\/asiatravelplan\.com\/destinations\/vietnam/);
   assert.match(generatedSitemap, /https:\/\/asiatravelplan\.com\/travel-styles\/budget/);
   assert.match(generatedSitemap, /https:\/\/asiatravelplan\.com\/tours\/alpha-tour-alpha/);
+  assert.doesNotMatch(generatedSitemap, /tour_unpublished/);
   assert.match(generatedSitemap, /https:\/\/asiatravelplan\.com\/privacy\.html/);
   assert.match(generatedDestinationHtml, /<h1>Private tours in Vietnam<\/h1>/);
   assert.match(generatedDestinationHtml, /"@type":"WebPage"/);

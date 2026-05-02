@@ -85,3 +85,15 @@ test("buildApiRoutes includes tour reel video editor routes", () => {
   assert.equal(matches("POST"), true);
   assert.equal(matches("DELETE"), true);
 });
+
+test("buildApiRoutes includes the marketing tour one-pager PDF route", () => {
+  const handlers = new Proxy({}, {
+    get: () => () => {}
+  });
+
+  const routes = buildApiRoutes({ handlers });
+  assert.equal(
+    routes.some((route) => route.method === "GET" && route.pattern.test("/api/v1/tours/tour_alpha/one-pager.pdf")),
+    true
+  );
+});
