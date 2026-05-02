@@ -3623,6 +3623,11 @@ test("tour card images are selected from travel-plan service images", async () =
     /if \(!sourceText \|\| localizedObjectText\([^)]*, normalizedLang\)\) return false;/,
     "Published marketing-tour snapshots should override stale embedded localized tour text instead of only filling missing languages"
   );
+  assert.doesNotMatch(
+    toursHandlerSource,
+    /if \(!sourceText \|\| localizedObjectText\([^)]*, lang\)\) return;/,
+    "On-demand one-pager translation memory should override stale embedded localized tour text instead of only filling missing languages"
+  );
   assert.match(
     onePagerScriptSource,
     /const bodyRows = rows\.map\(\(row\) => \{[\s\S]*return `<tr>\$\{cells\}<\/tr>`;[\s\S]*<tr>\$\{headerCells\}<\/tr>/,

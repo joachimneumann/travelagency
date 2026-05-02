@@ -358,7 +358,7 @@ export function createTourHandlers(deps) {
   function collectOnePagerMemoryLocalizedMap(actions, entries, holder, fieldName, lang, key) {
     if (!holder || typeof holder !== "object" || Array.isArray(holder)) return;
     const sourceText = sourceTextFromLocalizedValue(holder[fieldName]);
-    if (!sourceText || localizedObjectText(holder[fieldName], lang)) return;
+    if (!sourceText) return;
     entries[key] = sourceText;
     actions.push({ kind: "map", holder, fieldName, key, sourceText });
   }
@@ -366,7 +366,7 @@ export function createTourHandlers(deps) {
   function collectOnePagerMemoryLocalizedPair(actions, entries, holder, plainField, i18nField, lang, key) {
     if (!holder || typeof holder !== "object" || Array.isArray(holder)) return;
     const sourceText = sourceTextFromLocalizedValue(holder[i18nField], holder[plainField]);
-    if (!sourceText || localizedObjectText(holder[i18nField], lang)) return;
+    if (!sourceText) return;
     entries[key] = sourceText;
     actions.push({ kind: "pair", holder, i18nField, key });
   }
