@@ -143,7 +143,7 @@ const PDF_FONT_LABEL_CANDIDATES = Object.freeze([
 ]);
 
 const PDF_ASSET_DISPLAY_FONT_FILES = Object.freeze([
-  "Montserrat.ttf",
+  "DejaVuSansCondensed-Bold.ttf",
   "montserrat-v31-vietnamese.woff2",
   "montserrat-v31-latin-ext.woff2",
   "montserrat-v31-latin.woff2"
