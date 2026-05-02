@@ -94,12 +94,17 @@ const PDF_FONT_DISPLAY_CANDIDATES = Object.freeze([
   "/usr/share/fonts/noto/NotoSansCondensed-Bold.ttf",
   "/usr/share/fonts/truetype/dejavu/DejaVuSansCondensed-Bold.ttf",
   "/usr/share/fonts/dejavu/DejaVuSansCondensed-Bold.ttf",
-  "/usr/share/fonts/TTF/DejaVuSansCondensed-Bold.ttf"
+  "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+  "/usr/share/fonts/TTF/DejaVuSansCondensed-Bold.ttf",
+  "/usr/share/fonts/opentype/urw-base35/NimbusSansNarrow-Bold.otf",
+  "/usr/share/fonts/opentype/urw-base35/NimbusSans-Bold.otf"
 ]);
 
 const PDF_FONT_SCRIPT_CANDIDATES = Object.freeze([
   "/System/Library/Fonts/Supplemental/Brush Script.ttf",
   "/System/Library/Fonts/Supplemental/Zapfino.ttf",
+  "/usr/share/fonts/opentype/urw-base35/Z003-MediumItalic.otf",
+  "/usr/share/fonts/font-urw-base35/Z003-MediumItalic.otf",
   "/usr/share/fonts/noto/NotoSans-Italic.ttf",
   "/usr/share/fonts/truetype/dejavu/DejaVuSans-Oblique.ttf",
   "/usr/share/fonts/dejavu/DejaVuSans-Oblique.ttf",
@@ -109,6 +114,15 @@ const PDF_FONT_SCRIPT_CANDIDATES = Object.freeze([
 const PDF_FONT_TRIP_LABEL_CANDIDATES = Object.freeze([
   "/System/Library/Fonts/Supplemental/Brush Script.ttf",
   "/System/Library/Fonts/Supplemental/Zapfino.ttf",
+  "/usr/share/fonts/opentype/urw-base35/Z003-MediumItalic.otf",
+  "/usr/share/fonts/font-urw-base35/Z003-MediumItalic.otf",
+  "/usr/share/fonts/noto/NotoSans-Italic.ttf",
+  "/usr/share/fonts/truetype/dejavu/DejaVuSans-Oblique.ttf",
+  "/usr/share/fonts/dejavu/DejaVuSans-Oblique.ttf",
+  "/usr/share/fonts/TTF/DejaVuSans-Oblique.ttf"
+]);
+
+const PDF_FONT_SCRIPT_FALLBACK_CANDIDATES = Object.freeze([
   "/usr/share/fonts/noto/NotoSans-Italic.ttf",
   "/usr/share/fonts/truetype/dejavu/DejaVuSans-Oblique.ttf",
   "/usr/share/fonts/dejavu/DejaVuSans-Oblique.ttf",
@@ -122,7 +136,10 @@ const PDF_FONT_LABEL_CANDIDATES = Object.freeze([
   "/usr/share/fonts/noto/NotoSansCondensed-Bold.ttf",
   "/usr/share/fonts/truetype/dejavu/DejaVuSansCondensed-Bold.ttf",
   "/usr/share/fonts/dejavu/DejaVuSansCondensed-Bold.ttf",
-  "/usr/share/fonts/TTF/DejaVuSansCondensed-Bold.ttf"
+  "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+  "/usr/share/fonts/TTF/DejaVuSansCondensed-Bold.ttf",
+  "/usr/share/fonts/opentype/urw-base35/NimbusSansNarrow-Bold.otf",
+  "/usr/share/fonts/opentype/urw-base35/NimbusSans-Bold.otf"
 ]);
 
 const PDF_ASSET_DISPLAY_FONT_FILES = Object.freeze([
@@ -132,6 +149,7 @@ const PDF_ASSET_DISPLAY_FONT_FILES = Object.freeze([
 ]);
 
 const PDF_ASSET_SCRIPT_FONT_FILES = Object.freeze([
+  "DancingScript-Regular.otf",
   "source-sans-3-v19-italic-vietnamese.woff2",
   "source-sans-3-v19-italic-latin-ext.woff2",
   "source-sans-3-v19-italic-latin.woff2"
@@ -226,6 +244,10 @@ function shouldUseOnePagerDecorativeFonts(lang) {
   return ONE_PAGER_DECORATIVE_FONT_LANGS.has(normalizePdfLang(lang));
 }
 
+function shouldUseOnePagerScriptFonts(lang) {
+  return normalizePdfLang(lang) === "en";
+}
+
 function registerPdfFonts(doc, fonts) {
   if (fonts?.regular) doc.registerFont(PDF_FONT_REGULAR, fonts.regular);
   if (fonts?.bold) doc.registerFont(PDF_FONT_BOLD, fonts.bold);
@@ -273,14 +295,20 @@ function prioritizeAssetFonts(staticCandidates, assetCandidates) {
   return [...systemCandidates, ...assetCandidates, ...portableCandidates];
 }
 
-async function resolveOnePagerDisplayFonts(logoPath) {
+async function resolveOnePagerDisplayFonts(logoPath, lang) {
   const assetDisplayCandidates = assetFontCandidatesFromLogoPath(logoPath, PDF_ASSET_DISPLAY_FONT_FILES);
   const assetScriptCandidates = assetFontCandidatesFromLogoPath(logoPath, PDF_ASSET_SCRIPT_FONT_FILES);
+  const scriptCandidates = shouldUseOnePagerScriptFonts(lang)
+    ? PDF_FONT_SCRIPT_CANDIDATES
+    : PDF_FONT_SCRIPT_FALLBACK_CANDIDATES;
+  const tripLabelCandidates = shouldUseOnePagerScriptFonts(lang)
+    ? PDF_FONT_TRIP_LABEL_CANDIDATES
+    : PDF_FONT_SCRIPT_FALLBACK_CANDIDATES;
   const [display, script, label, tripLabel] = await Promise.all([
     firstExistingPath(prioritizeAssetFonts(PDF_FONT_DISPLAY_CANDIDATES, assetDisplayCandidates)),
-    firstExistingPath(prioritizeAssetFonts(PDF_FONT_SCRIPT_CANDIDATES, assetScriptCandidates)),
+    firstExistingPath(prioritizeAssetFonts(scriptCandidates, assetScriptCandidates)),
     firstExistingPath(prioritizeAssetFonts(PDF_FONT_LABEL_CANDIDATES, assetDisplayCandidates)),
-    firstExistingPath(prioritizeAssetFonts(PDF_FONT_TRIP_LABEL_CANDIDATES, assetScriptCandidates))
+    firstExistingPath(prioritizeAssetFonts(tripLabelCandidates, assetScriptCandidates))
   ]);
   return { display, script, label, tripLabel };
 }
@@ -1581,7 +1609,7 @@ function drawMainCopy(doc, tour, duration, fonts, lang) {
 
   doc
     .font(pdfFontName("tripLabel", fonts))
-    .fontSize(fonts?.tripLabel ? 27 : 44)
+    .fontSize(fonts?.tripLabel ? 27 : 30)
     .fillColor(PDF_TRIP_LABEL_ORANGE)
     .text(onePagerT(lang, "trip_to", "Trip to"), 42, TRIP_LABEL_Y, pdfTextOptions(lang, { width: 210 }));
   const titleOptions = pdfTextOptions(lang, { width: 286, lineGap: -6 });
@@ -1693,7 +1721,7 @@ export function createMarketingTourOnePagerPdfWriter({
       boldCandidates: PDF_FONT_BOLD_CANDIDATES
     });
     const displayFonts = shouldUseOnePagerDecorativeFonts(normalizedLang)
-      ? await resolveOnePagerDisplayFonts(logoPath)
+      ? await resolveOnePagerDisplayFonts(logoPath, normalizedLang)
       : {};
     const fonts = {
       ...bodyFonts,
