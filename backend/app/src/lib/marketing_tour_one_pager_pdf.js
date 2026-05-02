@@ -143,6 +143,7 @@ const PDF_FONT_LABEL_CANDIDATES = Object.freeze([
 ]);
 
 const PDF_ASSET_DISPLAY_FONT_FILES = Object.freeze([
+  "Montserrat.ttf",
   "montserrat-v31-vietnamese.woff2",
   "montserrat-v31-latin-ext.woff2",
   "montserrat-v31-latin.woff2"
@@ -517,11 +518,22 @@ function drawFramedImageLabel(doc, { x, y, width, height, angle = 0, label = "",
       .fill(PHOTO_LABEL_BACKDROP_COLOR)
       .fillOpacity(1);
   }
+  const labelFont = pdfFontName("display", fonts);
+  const labelText = label.toUpperCase();
+  const labelOptions = pdfTextOptions(lang, { width: width - 20, height: 17, ellipsis: true });
+  const labelFontSize = fitPdfTextSize(doc, labelText, {
+    fontName: labelFont,
+    maxSize: 11.5,
+    minSize: 8,
+    maxHeight: 17,
+    options: labelOptions,
+    step: 0.25
+  });
   doc
-    .font(pdfFontName("display", fonts))
-    .fontSize(14)
+    .font(labelFont)
+    .fontSize(labelFontSize)
     .fillColor(COLORS.white)
-    .text(label.toUpperCase(), x + 10, y + height - 25, pdfTextOptions(lang, { width: width - 20, height: 18, ellipsis: true }));
+    .text(labelText, x + 10, y + height - 24, labelOptions);
   doc.restore();
   doc.restore();
 }
