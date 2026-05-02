@@ -1,0 +1,86 @@
+{
+  "destination_scope_destinations": [
+    {
+      "code": "VN",
+      "label": "Vietnam",
+      "sort_order": 0,
+      "is_active": true
+    }
+  ],
+  "destination_areas": [
+    {
+      "id": "area_3fa05b42-97ab-495d-b16d-4691e66e0434",
+      "destination": "VN",
+      "code": "north",
+      "name": "North",
+      "name_i18n": {
+        "vi": "Miền Bắc"
+      },
+      "sort_order": 100,
+      "is_active": true,
+      "created_at": "2026-04-27T13:42:52.459Z",
+      "updated_at": "2026-04-28T16:23:02.099Z"
+    },
+    {
+      "id": "area_3d22386f-d130-4f20-ab82-a30164fa5a19",
+      "destination": "VN",
+      "code": "central",
+      "name": "Central",
+      "name_i18n": {
+        "vi": "Miền Trung"
+      },
+      "sort_order": 100,
+      "is_active": true,
+      "created_at": "2026-04-27T13:43:16.237Z",
+      "updated_at": "2026-04-28T16:23:02.099Z"
+    },
+    {
+      "id": "area_024155db-da17-4cdb-ae0e-a01fd1e77f58",
+      "destination": "VN",
+      "code": "south",
+      "name": "South",
+      "name_i18n": {
+        "vi": "Miền Nam"
+      },
+      "sort_order": 100,
+      "is_active": true,
+      "created_at": "2026-04-27T13:43:29.077Z",
+      "updated_at": "2026-04-28T16:23:02.099Z"
+    }
+  ],
+  "destination_places": [
+    {
+      "id": "place_49c6e6a3-b74f-4127-a87b-5dc90f183ace",
+      "area_id": "area_3d22386f-d130-4f20-ab82-a30164fa5a19",
+      "code": "hue",
+      "name": "Huế",
+      "name_i18n": {},
+      "sort_order": 100,
+      "is_active": true,
+      "created_at": "2026-04-27T13:44:12.737Z",
+      "updated_at": "2026-04-27T13:44:12.737Z"
+    },
+    {
+      "id": "place_5c7c616b-f7c7-4650-a206-bfcf204d078e",
+      "area_id": "area_3d22386f-d130-4f20-ab82-a30164fa5a19",
+      "code": "hoi-an",
+      "name": "Hội An",
+      "name_i18n": {},
+      "sort_order": 100,
+      "is_active": true,
+      "created_at": "2026-04-27T13:44:19.826Z",
+      "updated_at": "2026-04-27T13:44:19.826Z"
+    },
+    {
+      "id": "place_a8172e07-213b-46ed-bb88-f0f77bb7fbe0",
+      "area_id": "area_3fa05b42-97ab-495d-b16d-4691e66e0434",
+      "code": "sapa",
+      "name": "Sapa",
+      "name_i18n": {},
+      "sort_order": 100,
+      "is_active": true,
+      "created_at": "2026-04-27T13:50:03.476Z",
+      "updated_at": "2026-04-27T13:50:03.476Z"
+    }
+  ]
+}
