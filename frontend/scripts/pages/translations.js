@@ -32,7 +32,7 @@ const SECTION_CONFIGS = [
   {
     key: "marketing-tours",
     domainId: "marketing-tour-memory",
-    title: "4. Marketing tours",
+    title: "5. Marketing tours",
     description: "Exact-source cache and manual overrides used when staff translate marketing-tour content."
   }
 ];
