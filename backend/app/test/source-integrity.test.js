@@ -2374,8 +2374,8 @@ test("offer and travel-plan PDFs localize guide, pricing summary, and payment-te
   );
   assert.match(
     onePagerPdfSource,
-    /const ONE_PAGER_DECORATIVE_FONT_LANGS[\s\S]*function shouldUseOnePagerDecorativeFonts\(lang\)[\s\S]*shouldUseOnePagerDecorativeFonts\(normalizedLang\)[\s\S]*resolveOnePagerDisplayFonts\(logoPath\)[\s\S]*: \{\}/,
-    "One-pager PDFs should skip decorative Latin fonts for customer languages that need broader glyph coverage"
+    /"DancingScript-Regular\.ttf"[\s\S]*const ONE_PAGER_DECORATIVE_FONT_LANGS[\s\S]*function shouldUseOnePagerDecorativeFonts\(lang\)[\s\S]*resolveOnePagerDisplayFonts\(logoPath, normalizedLang\)[\s\S]*: \{\}/,
+    "One-pager PDFs should use bundled Vietnamese-capable decorative fonts while skipping unsafe display fonts for broader-script languages"
   );
 });
 

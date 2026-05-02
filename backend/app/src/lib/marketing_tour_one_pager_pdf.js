@@ -149,7 +149,7 @@ const PDF_ASSET_DISPLAY_FONT_FILES = Object.freeze([
 ]);
 
 const PDF_ASSET_SCRIPT_FONT_FILES = Object.freeze([
-  "DancingScript-Regular.otf",
+  "DancingScript-Regular.ttf",
   "source-sans-3-v19-italic-vietnamese.woff2",
   "source-sans-3-v19-italic-latin-ext.woff2",
   "source-sans-3-v19-italic-latin.woff2"
