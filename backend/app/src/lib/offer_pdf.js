@@ -620,6 +620,10 @@ async function resolveBookingImageForPdf({ booking, bookingImagesDir, readTours,
 }
 
 function firstTravelTourCardImagePath(tour) {
+  const selectedImageIds = (Array.isArray(tour?.travel_plan?.tour_card_image_ids) ? tour.travel_plan.tour_card_image_ids : [])
+    .map((value) => textOrNull(value))
+    .filter(Boolean);
+  const entries = [];
   for (const day of safeArray(tour?.travel_plan?.days)) {
     for (const service of safeArray(day?.services)) {
       const image = service?.image && typeof service.image === "object" && !Array.isArray(service.image)
@@ -630,11 +634,20 @@ function firstTravelTourCardImagePath(tour) {
         && image.is_customer_visible !== false
         && textOrNull(image.storage_path)
       ) {
-        return image.storage_path;
+        entries.push({ id: textOrNull(image.id), storagePath: image.storage_path });
       }
     }
   }
-  return "";
+  if (selectedImageIds.length) {
+    entries.sort((left, right) => {
+      const leftIndex = selectedImageIds.indexOf(left.id);
+      const rightIndex = selectedImageIds.indexOf(right.id);
+      const normalizedLeftIndex = leftIndex >= 0 ? leftIndex : Number.MAX_SAFE_INTEGER;
+      const normalizedRightIndex = rightIndex >= 0 ? rightIndex : Number.MAX_SAFE_INTEGER;
+      return normalizedLeftIndex - normalizedRightIndex;
+    });
+  }
+  return entries[0]?.storagePath || "";
 }
 
 function resolveTravelPlanAttachmentPaths(travelPlan, travelPlanAttachmentsDir) {

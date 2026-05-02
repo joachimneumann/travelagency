@@ -18,6 +18,8 @@ import {
   normalizeDestinationScope
 } from "../shared/destination_scope_editor.js";
 
+const ONE_PAGER_SMALL_IMAGE_LIMIT = 4;
+
 export const TRAVEL_PLAN_TIMING_KIND_OPTIONS = Object.freeze(
   GENERATED_TRAVEL_PLAN_TIMING_KIND_OPTIONS.map((option) => ({
     ...option,
@@ -290,29 +292,96 @@ export function createEmptyTravelPlan() {
     destination_scope: [],
     destinations: [],
     tour_card_primary_image_id: null,
+    tour_card_image_ids: [],
+    one_pager_hero_image_id: null,
+    one_pager_image_ids: [],
     days: [],
     attachments: []
   };
 }
 
-function normalizeTourCardPrimaryImageId(source, days) {
-  const selectedImageId = normalizeOptionalText(source?.tour_card_primary_image_id);
-  if (!selectedImageId) return null;
+function collectTourCardAvailableImageIds(days) {
+  const imageIds = [];
   for (const day of Array.isArray(days) ? days : []) {
     for (const service of Array.isArray(day?.services) ? day.services : []) {
       const image = service?.image && typeof service.image === "object" && !Array.isArray(service.image)
         ? service.image
         : null;
-      if (
-        image?.id === selectedImageId
-        && image.include_in_travel_tour_card === true
-        && image.is_customer_visible !== false
-      ) {
-        return selectedImageId;
+      const imageId = normalizeOptionalText(image?.id);
+      if (imageId && image?.is_customer_visible !== false && normalizeOptionalText(image.storage_path)) {
+        imageIds.push(imageId);
       }
     }
   }
-  return null;
+  return imageIds;
+}
+
+function normalizeTourCardImageIds(source, days) {
+  const availableIds = new Set(collectTourCardAvailableImageIds(days));
+  const hasExplicitImageIds = hasOwnProperty(source, "tour_card_image_ids");
+  const requestedIds = Array.isArray(source?.tour_card_image_ids) ? source.tour_card_image_ids : [];
+  const selectedIds = requestedIds
+    .map((value) => normalizeOptionalText(value))
+    .filter((value, index, list) => value && list.indexOf(value) === index && availableIds.has(value));
+
+  const legacyIncludedIds = [];
+  for (const day of Array.isArray(days) ? days : []) {
+    for (const service of Array.isArray(day?.services) ? day.services : []) {
+      const image = service?.image && typeof service.image === "object" && !Array.isArray(service.image)
+        ? service.image
+        : null;
+      const imageId = normalizeOptionalText(image?.id);
+      if (
+        imageId
+        && image.include_in_travel_tour_card === true
+        && image.is_customer_visible !== false
+        && normalizeOptionalText(image.storage_path)
+      ) {
+        legacyIncludedIds.push(imageId);
+      }
+    }
+  }
+  if (hasExplicitImageIds) return selectedIds;
+  const selectedImageId = normalizeOptionalText(source?.tour_card_primary_image_id);
+  const selectedIndex = selectedImageId ? legacyIncludedIds.indexOf(selectedImageId) : -1;
+  if (selectedIndex > 0) {
+    const [selectedId] = legacyIncludedIds.splice(selectedIndex, 1);
+    legacyIncludedIds.unshift(selectedId);
+  }
+  return legacyIncludedIds;
+}
+
+function normalizeAvailableImageIdList(values, days) {
+  const availableIds = new Set(collectTourCardAvailableImageIds(days));
+  return (Array.isArray(values) ? values : [])
+    .map((value) => normalizeOptionalText(value))
+    .filter((value, index, list) => value && list.indexOf(value) === index && availableIds.has(value));
+}
+
+function normalizeOnePagerHeroImageId(source, days) {
+  const heroImageId = normalizeOptionalText(source?.one_pager_hero_image_id);
+  if (!heroImageId) return "";
+  return collectTourCardAvailableImageIds(days).includes(heroImageId) ? heroImageId : "";
+}
+
+function applyTourCardImageSelection(days, selectedIds) {
+  const selectedSet = new Set(Array.isArray(selectedIds) ? selectedIds : []);
+  return (Array.isArray(days) ? days : []).map((day) => ({
+    ...day,
+    services: (Array.isArray(day?.services) ? day.services : []).map((service) => {
+      const image = service?.image && typeof service.image === "object" && !Array.isArray(service.image)
+        ? service.image
+        : null;
+      if (!image) return service;
+      return {
+        ...service,
+        image: {
+          ...image,
+          include_in_travel_tour_card: selectedSet.has(normalizeOptionalText(image.id))
+        }
+      };
+    })
+  }));
 }
 
 export function getTravelPlanServiceKindLabel(kind) {
@@ -389,11 +458,19 @@ export function normalizeTravelPlanDraft(plan, options = {}) {
     });
 
   const destination_scope = normalizeDestinationScope(source.destination_scope);
+  const tour_card_image_ids = normalizeTourCardImageIds(source, days);
+  const one_pager_hero_image_id = normalizeOnePagerHeroImageId(source, days);
+  const one_pager_image_ids = normalizeAvailableImageIdList(source.one_pager_image_ids, days)
+    .filter((imageId) => imageId !== one_pager_hero_image_id)
+    .slice(0, ONE_PAGER_SMALL_IMAGE_LIMIT);
   const normalized = {
     destination_scope,
     destinations: destinationScopeDestinations(destination_scope),
-    tour_card_primary_image_id: normalizeTourCardPrimaryImageId(source, days),
-    days,
+    tour_card_primary_image_id: tour_card_image_ids[0] || null,
+    tour_card_image_ids,
+    one_pager_hero_image_id: one_pager_hero_image_id || null,
+    one_pager_image_ids,
+    days: applyTourCardImageSelection(days, tour_card_image_ids),
     attachments: normalizeTravelPlanAttachments(source.attachments)
   };
   if (hasOwnProperty(source, "translation_meta")) {

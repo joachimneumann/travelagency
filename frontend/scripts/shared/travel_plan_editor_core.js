@@ -517,6 +517,9 @@ export function createBookingTravelPlanModule(ctx) {
       destination_scope,
       destinations: destinationScopeDestinations(destination_scope),
       tour_card_primary_image_id: source.tour_card_primary_image_id || null,
+      tour_card_image_ids: Array.isArray(source.tour_card_image_ids) ? source.tour_card_image_ids : [],
+      one_pager_hero_image_id: source.one_pager_hero_image_id || null,
+      one_pager_image_ids: Array.isArray(source.one_pager_image_ids) ? source.one_pager_image_ids : [],
       days: (Array.isArray(source.days) ? source.days : []).map((day, dayIndex) => {
         const sourceDay = day && typeof day === "object" && !Array.isArray(day) ? day : {};
         const nextDay = {
@@ -1921,6 +1924,13 @@ export function createBookingTravelPlanModule(ctx) {
     );
     const draft = createEmptyTravelPlan();
     draft.tour_card_primary_image_id = state.travelPlanDraft?.tour_card_primary_image_id || null;
+    draft.tour_card_image_ids = Array.isArray(state.travelPlanDraft?.tour_card_image_ids)
+      ? [...state.travelPlanDraft.tour_card_image_ids]
+      : [];
+    draft.one_pager_hero_image_id = state.travelPlanDraft?.one_pager_hero_image_id || null;
+    draft.one_pager_image_ids = Array.isArray(state.travelPlanDraft?.one_pager_image_ids)
+      ? [...state.travelPlanDraft.one_pager_image_ids]
+      : [];
     if (allowDestinationScope) {
       draft.destination_scope = readDestinationScopeFromDom(destinationScopeEditorRoot());
       draft.destinations = destinationScopeDestinations(draft.destination_scope);
@@ -2035,14 +2045,7 @@ export function createBookingTravelPlanModule(ctx) {
         item.image_subtitle = itemImageSubtitle.text;
         item.image_subtitle_i18n = itemImageSubtitle.map;
         item.image = previousItem?.image && typeof previousItem.image === "object" && !Array.isArray(previousItem.image)
-          ? {
-              ...previousItem.image,
-              ...(allowTourCardImageSelection
-                ? {
-                    include_in_travel_tour_card: itemNode.querySelector('[data-travel-plan-service-image-field="include_in_travel_tour_card"]')?.checked === true
-                  }
-                : {})
-            }
+          ? { ...previousItem.image }
           : null;
         return item;
       });

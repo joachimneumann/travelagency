@@ -103,6 +103,31 @@ export function createFrontendToursController(ctx) {
       : "";
   }
 
+  function slugify(value, fallback = "tour") {
+    const slug = normalizeText(value)
+      .normalize("NFKD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/&/g, " and ")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .replace(/-{2,}/g, "-");
+    return slug || fallback;
+  }
+
+  function tourSeoSlug(trip) {
+    const explicitSlug = slugify(trip?.seo_slug, "");
+    if (explicitSlug) return explicitSlug;
+    const tripId = normalizeText(trip?.id);
+    const title = normalizeText(trip?.title) || tripId;
+    const suffix = slugify(tripId.replace(/^tour[_-]?/i, ""), "tour").slice(0, 8);
+    return `${slugify(title)}-${suffix}`;
+  }
+
+  function tourDetailsHref(trip) {
+    return `/tours/${tourSeoSlug(trip)}`;
+  }
+
   function normalizeFilterSelection(value) {
     if (Array.isArray(value)) {
       return value
@@ -593,6 +618,9 @@ export function createFrontendToursController(ctx) {
 
   function selectedTravelTourCardPictures(item) {
     const selectedImageId = normalizeText(item?.travel_plan?.tour_card_primary_image_id);
+    const selectedImageIds = Array.from(new Set((Array.isArray(item?.travel_plan?.tour_card_image_ids) ? item.travel_plan.tour_card_image_ids : [])
+      .map((value) => normalizeText(value))
+      .filter(Boolean)));
     const entries = [];
     for (const day of Array.isArray(item?.travel_plan?.days) ? item.travel_plan.days : []) {
       for (const service of Array.isArray(day?.services) ? day.services : []) {
@@ -616,6 +644,15 @@ export function createFrontendToursController(ctx) {
     if (selectedEntryIndex > 0) {
       const [selectedEntry] = entries.splice(selectedEntryIndex, 1);
       entries.unshift(selectedEntry);
+    }
+    if (selectedImageIds.length) {
+      entries.sort((left, right) => {
+        const leftIndex = selectedImageIds.indexOf(left.id);
+        const rightIndex = selectedImageIds.indexOf(right.id);
+        const normalizedLeftIndex = leftIndex >= 0 ? leftIndex : Number.MAX_SAFE_INTEGER;
+        const normalizedRightIndex = rightIndex >= 0 ? rightIndex : Number.MAX_SAFE_INTEGER;
+        return normalizedLeftIndex - normalizedRightIndex;
+      });
     }
     return entries.map((entry) => entry.src);
   }
@@ -907,7 +944,7 @@ export function createFrontendToursController(ctx) {
   }
 
   function setTourShowMoreButtonLabel(button, label) {
-    if (!(button instanceof HTMLButtonElement)) return null;
+    if (!(button instanceof HTMLElement)) return null;
     const labelElement = button.querySelector("[data-tour-card-show-more-label]");
     if (labelElement instanceof HTMLElement) {
       labelElement.textContent = label;
@@ -919,7 +956,7 @@ export function createFrontendToursController(ctx) {
   }
 
   async function animateTourShowMoreButtonLabel(button, nextLabel, { direction = "open" } = {}) {
-    if (!(button instanceof HTMLButtonElement)) return;
+    if (!(button instanceof HTMLElement)) return;
     const labelElement = button.querySelector("[data-tour-card-show-more-label]");
     if (!(labelElement instanceof HTMLElement)) {
       setTourShowMoreButtonLabel(button, nextLabel);
@@ -1047,9 +1084,10 @@ export function createFrontendToursController(ctx) {
               `;
     const canShowDetails = hasTravelPlanDays(trip);
     const detailsPanelId = tourDetailsPanelId(tripId);
+    const detailsHref = tourDetailsHref(trip);
     const showMoreStateAttrs = canShowDetails
       ? `aria-expanded="${expanded ? "true" : "false"}" aria-controls="${escapeAttr(detailsPanelId)}"`
-      : `disabled title="${escapeAttr(detailsUnavailableLabel)}"`;
+      : `title="${escapeAttr(detailsUnavailableLabel)}"`;
 
     return `
       <article class="tour-card${expanded ? " tour-card--expanded" : ""}" data-tour-card-id="${escapeAttr(tripId)}" draggable="false">
@@ -1071,7 +1109,7 @@ export function createFrontendToursController(ctx) {
           </div>
           <div class="tags" data-tour-style-tags>${tags}</div>
           <div class="tour-card__actions">
-            <button class="btn tour-card__show-more" type="button" data-tour-card-show-more data-trip-id="${escapeAttr(tripId)}" ${showMoreStateAttrs}>${renderTourShowMoreLabel(showMoreLabel)}</button>
+            <a class="btn tour-card__show-more" href="${escapeAttr(detailsHref)}" data-tour-card-show-more data-trip-id="${escapeAttr(tripId)}" ${showMoreStateAttrs}>${renderTourShowMoreLabel(showMoreLabel)}</a>
             <button class="btn btn-primary tour-card__plan-trip" type="button" data-open-modal data-trip-id="${escapeAttr(tripId)}">${escapeHTML(ctaLabel)}</button>
           </div>
         </div>
@@ -1608,11 +1646,11 @@ export function createFrontendToursController(ctx) {
       card.classList.remove("tour-card--details-connector-visible");
     }
     const button = card.querySelector("[data-tour-card-show-more][data-trip-id]");
-    if (button instanceof HTMLButtonElement) {
+    if (button instanceof HTMLElement) {
       button.setAttribute("aria-expanded", expanded ? "true" : "false");
       button.setAttribute("aria-controls", tourDetailsPanelId(tripId));
     }
-    return button instanceof HTMLButtonElement ? button : null;
+    return button instanceof HTMLElement ? button : null;
   }
 
   function renderTrips(trips, { showNoResults = false } = {}) {
@@ -1685,17 +1723,20 @@ export function createFrontendToursController(ctx) {
 
     const showMoreButtons = els.tourGrid.querySelectorAll("[data-tour-card-show-more][data-trip-id]");
     showMoreButtons.forEach((button) => {
-      if (!(button instanceof HTMLButtonElement) || button.dataset.tourDetailsBound === "1") return;
-      button.addEventListener("click", async () => {
-        if (button.disabled) return;
+      if (!(button instanceof HTMLElement) || button.dataset.tourDetailsBound === "1") return;
+      button.addEventListener("click", async (event) => {
         const tripId = normalizeText(button.getAttribute("data-trip-id"));
         const trip = findTripById(tripId);
         if (!trip || !hasTravelPlanDays(trip)) return;
+        event.preventDefault();
+        if (button.dataset.tourDetailsLoading === "1") return;
         const willOpen = !expandedTourIdSet().has(tripId);
         if (willOpen) {
-          button.disabled = true;
+          button.dataset.tourDetailsLoading = "1";
+          button.setAttribute("aria-disabled", "true");
           const loadedTrip = await ensureTourDetailsLoaded(tripId);
-          button.disabled = false;
+          delete button.dataset.tourDetailsLoading;
+          button.removeAttribute("aria-disabled");
           if (!loadedTrip || !hasTravelPlanDays(loadedTrip)) return;
         }
         animateTourDetailsToggle(tripId, willOpen);
@@ -1736,7 +1777,7 @@ export function createFrontendToursController(ctx) {
   function focusTourShowMoreButton(tripId) {
     if (isSingleColumnTourLayout()) return;
     const button = tourShowMoreButton(tripId);
-    if (button instanceof HTMLButtonElement) {
+    if (button instanceof HTMLElement) {
       try {
         button.focus({ preventScroll: true });
       } catch {
@@ -1935,6 +1976,45 @@ export function createFrontendToursController(ctx) {
       window.getComputedStyle(button).getPropertyValue("--tour-card-image-transition-duration")
     );
     return cssDurationMs > 0 ? cssDurationMs : TOUR_IMAGE_TRANSITION_MS;
+  }
+
+  function waitForTourCardImageReady(image, src) {
+    const normalizedSrc = normalizeText(src);
+    if (!(image instanceof HTMLImageElement) || !normalizedSrc) return Promise.resolve(false);
+
+    return new Promise((resolve) => {
+      let settled = false;
+      let timeout = 0;
+      const finish = (isReady) => {
+        if (settled) return;
+        settled = true;
+        window.clearTimeout(timeout);
+        image.onload = null;
+        image.onerror = null;
+        resolve(Boolean(isReady));
+      };
+      const finishAfterDecode = () => {
+        if (typeof image.decode === "function") {
+          image.decode().then(() => finish(true)).catch(() => finish(true));
+          return;
+        }
+        finish(true);
+      };
+
+      image.decoding = "async";
+      image.loading = "eager";
+      image.onload = finishAfterDecode;
+      image.onerror = () => finish(false);
+      timeout = window.setTimeout(() => finish(false), 5000);
+      image.src = normalizedSrc;
+      if (image.complete) {
+        if (image.naturalWidth > 0) {
+          finishAfterDecode();
+        } else {
+          finish(false);
+        }
+      }
+    });
   }
 
   function disableFocusableElements(element) {
@@ -2486,7 +2566,7 @@ export function createFrontendToursController(ctx) {
 
   function updateOutgoingTourDetailsButton(row, expanded) {
     const button = row?.querySelector?.("[data-tour-card-show-more][data-trip-id]");
-    if (!(button instanceof HTMLButtonElement)) return;
+    if (!(button instanceof HTMLElement)) return;
     button.setAttribute("aria-expanded", expanded ? "true" : "false");
   }
 
@@ -3186,6 +3266,13 @@ export function createFrontendToursController(ctx) {
     });
   }
 
+  function nextTourCardImageTransitionToken(button) {
+    if (!(button instanceof HTMLElement)) return "";
+    const nextToken = String((Number.parseInt(button.dataset.imageTransitionToken || "0", 10) || 0) + 1);
+    button.dataset.imageTransitionToken = nextToken;
+    return nextToken;
+  }
+
   function clearTourCardImageTransitionTimer(button) {
     const activeTimer = tourCardImageTransitionTimers.get(button);
     if (activeTimer) {
@@ -3194,30 +3281,66 @@ export function createFrontendToursController(ctx) {
     }
   }
 
-  function commitActiveTourCardImageTransition(button) {
-    if (!(button instanceof HTMLElement) || button.dataset.imageAnimating !== "1") return;
-
-    const primaryLayer = button.querySelector('[data-tour-media-layer="primary"]');
-    const secondaryLayer = button.querySelector('[data-tour-media-layer="secondary"]');
-    if (!(primaryLayer instanceof HTMLImageElement) || !(secondaryLayer instanceof HTMLImageElement)) return;
-
-    clearTourCardImageTransitionTimer(button);
-
-    if (secondaryLayer.src) {
-      primaryLayer.src = secondaryLayer.src;
+  async function finishTourCardImageTransition(button, primaryLayer, secondaryLayer, transitionToken = "") {
+    if (
+      !(button instanceof HTMLElement)
+      || !(primaryLayer instanceof HTMLImageElement)
+      || !(secondaryLayer instanceof HTMLImageElement)
+    ) {
+      return;
     }
+
+    const nextImageSrc = normalizeText(secondaryLayer.currentSrc || secondaryLayer.src);
+    if (nextImageSrc) {
+      await waitForTourCardImageReady(primaryLayer, nextImageSrc);
+    }
+    if (transitionToken && button.dataset.imageTransitionToken !== transitionToken) return;
 
     primaryLayer.classList.remove("is-leaving");
     secondaryLayer.classList.remove("is-entering");
     button.dataset.imageAnimating = "0";
   }
 
-  function cycleTourCardImage(button, { step = 1 } = {}) {
-    if (!(button instanceof HTMLElement)) return;
-
-    if (button.dataset.imageAnimating === "1") {
-      commitActiveTourCardImageTransition(button);
+  async function commitActiveTourCardImageTransition(button, primaryLayer, secondaryLayer) {
+    if (
+      !(button instanceof HTMLElement)
+      || button.dataset.imageAnimating !== "1"
+      || !(primaryLayer instanceof HTMLImageElement)
+      || !(secondaryLayer instanceof HTMLImageElement)
+    ) {
+      return true;
     }
+
+    clearTourCardImageTransitionTimer(button);
+    const transitionToken = nextTourCardImageTransitionToken(button);
+    const currentTargetSrc = normalizeText(secondaryLayer.currentSrc || secondaryLayer.src);
+    if (!currentTargetSrc) {
+      primaryLayer.classList.remove("is-leaving");
+      secondaryLayer.classList.remove("is-entering");
+      button.dataset.imageAnimating = "0";
+      return true;
+    }
+
+    secondaryLayer.style.animation = "none";
+    secondaryLayer.style.opacity = "1";
+    primaryLayer.style.animation = "none";
+    primaryLayer.style.opacity = "0";
+    const imageReady = await waitForTourCardImageReady(primaryLayer, currentTargetSrc);
+    if (button.dataset.imageTransitionToken !== transitionToken) return false;
+
+    primaryLayer.classList.remove("is-leaving");
+    secondaryLayer.classList.remove("is-entering");
+    primaryLayer.style.animation = "";
+    primaryLayer.style.opacity = "";
+    secondaryLayer.style.animation = "";
+    secondaryLayer.style.opacity = "";
+    button.dataset.imageAnimating = "0";
+    return imageReady;
+  }
+
+  async function cycleTourCardImage(button, { step = 1 } = {}) {
+    if (!(button instanceof HTMLElement)) return;
+    if (button.dataset.imageLoading === "1") return;
 
     const tripId = normalizeText(button.getAttribute("data-trip-id"));
     const trip = state.filteredTrips.find((item) => normalizeText(item?.id) === tripId)
@@ -3233,28 +3356,38 @@ export function createFrontendToursController(ctx) {
     const secondaryLayer = button.querySelector('[data-tour-media-layer="secondary"]');
     if (!(primaryLayer instanceof HTMLImageElement) || !(secondaryLayer instanceof HTMLImageElement)) return;
 
-    button.dataset.imageAnimating = "1";
-    button.dataset.tourGalleryIndex = String(nextIndex);
-    saveTourCardGalleryIndex(tripId, nextIndex, gallery.length);
-    secondaryLayer.src = String(gallery[nextIndex] || gallery[0] || DEFAULT_TOUR_IMAGE);
-    secondaryLayer.classList.remove("is-entering");
-    primaryLayer.classList.remove("is-leaving");
+    if (button.dataset.imageAnimating === "1") {
+      const committed = await commitActiveTourCardImageTransition(button, primaryLayer, secondaryLayer);
+      if (!committed) return;
+    }
 
-    void secondaryLayer.offsetWidth;
-
-    secondaryLayer.classList.add("is-entering");
-    primaryLayer.classList.add("is-leaving");
-    updateTourCardImageCounter(button, nextIndex, gallery.length);
-
-    const transitionDurationMs = tourCardImageTransitionDurationMs(button);
-    const transitionTimer = window.setTimeout(() => {
-      primaryLayer.src = secondaryLayer.src;
-      primaryLayer.classList.remove("is-leaving");
+    const nextImageSrc = String(gallery[nextIndex] || gallery[0] || DEFAULT_TOUR_IMAGE);
+    button.dataset.imageLoading = "1";
+    try {
       secondaryLayer.classList.remove("is-entering");
-      button.dataset.imageAnimating = "0";
-      tourCardImageTransitionTimers.delete(button);
-    }, transitionDurationMs);
-    tourCardImageTransitionTimers.set(button, transitionTimer);
+      primaryLayer.classList.remove("is-leaving");
+      const imageReady = await waitForTourCardImageReady(secondaryLayer, nextImageSrc);
+      if (!imageReady) return;
+
+      const transitionToken = nextTourCardImageTransitionToken(button);
+      button.dataset.imageAnimating = "1";
+      button.dataset.tourGalleryIndex = String(nextIndex);
+      saveTourCardGalleryIndex(tripId, nextIndex, gallery.length);
+      void secondaryLayer.offsetWidth;
+
+      secondaryLayer.classList.add("is-entering");
+      primaryLayer.classList.add("is-leaving");
+      updateTourCardImageCounter(button, nextIndex, gallery.length);
+
+      const transitionDurationMs = tourCardImageTransitionDurationMs(button);
+      const transitionTimer = window.setTimeout(() => {
+        tourCardImageTransitionTimers.delete(button);
+        finishTourCardImageTransition(button, primaryLayer, secondaryLayer, transitionToken);
+      }, transitionDurationMs);
+      tourCardImageTransitionTimers.set(button, transitionTimer);
+    } finally {
+      button.dataset.imageLoading = "0";
+    }
   }
 
   function renderVisibleTrips() {

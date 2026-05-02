@@ -159,17 +159,39 @@
       }
 
       .tour-card-image-selector {
-        display: grid;
-        gap: 0.85rem;
         padding: 1rem;
         border: 1px solid var(--line);
         border-radius: 1rem;
         background: var(--surface);
       }
 
-      .tour-card-image-selector__head {
+      .tour-card-image-selector__layout {
         display: grid;
-        gap: 0.2rem;
+        grid-template-columns: 104px minmax(0, 1fr);
+        gap: 1rem;
+        align-items: start;
+      }
+
+      .tour-card-image-selector__preview {
+        align-self: center;
+        width: 104px;
+        border-radius: 0.8rem;
+        border: 1px solid var(--line);
+        background: var(--surface-muted);
+        object-fit: cover;
+      }
+
+      .tour-card-image-selector__content {
+        display: grid;
+        gap: 0.85rem;
+        min-width: 0;
+      }
+
+      .tour-card-image-selector__head {
+        display: flex;
+        gap: 0.8rem;
+        align-items: start;
+        justify-content: space-between;
       }
 
       .tour-card-image-selector__title {
@@ -181,9 +203,26 @@
         margin: 0;
       }
 
+      .tour-card-image-selector__copy {
+        display: grid;
+        gap: 0.2rem;
+      }
+
       .tour-card-image-selector__row {
         display: grid;
         gap: 0.45rem;
+      }
+
+      .tour-card-image-selector__groups {
+        display: grid;
+        gap: 0.8rem;
+      }
+
+      .tour-card-image-selector__row-head {
+        display: flex;
+        gap: 0.65rem;
+        align-items: center;
+        justify-content: space-between;
       }
 
       .tour-card-image-selector__label {
@@ -226,19 +265,24 @@
         box-shadow: 0 0 0 2px var(--accent-tint);
       }
 
-      .tour-card-image-selector__check {
+      .tour-card-image-selector__order {
         position: absolute;
-        inset: auto 2px 2px auto;
+        inset: 4px auto auto 4px;
         display: grid;
         place-items: center;
-        width: 16px;
-        height: 16px;
+        width: 20px;
+        height: 20px;
         border-radius: 999px;
         background: var(--accent);
         color: var(--surface);
-        font-size: 0.72rem;
+        font-size: 0.76rem;
         font-weight: var(--font-weight-bold);
         line-height: 1;
+        box-shadow: 0 0 0 2px var(--surface);
+      }
+
+      .tour-card-image-selector__order[hidden] {
+        display: none;
       }
 
       .tour-card-image-selector__thumb:disabled,
@@ -246,7 +290,24 @@
         opacity: 0.58;
       }
 
+      .tour-card-image-selector__actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        align-items: center;
+        justify-content: center;
+        padding-top: 0.1rem;
+      }
+
       @media (max-width: 520px) {
+        .tour-card-image-selector__layout {
+          grid-template-columns: minmax(0, 1fr);
+        }
+
+        .tour-card-image-selector__preview {
+          width: 88px;
+        }
+
         .tour-reel-card {
           grid-template-columns: minmax(0, 1fr);
           width: 100%;
@@ -304,20 +365,41 @@
               <div class="tour-header__title-row">
                 <h1 class="section-title tour-header__title" id="tour_title">Tour</h1>
               </div>
-              <div class="tour-header__one-pager-row">
-                <label class="tour-header__one-pager-language" for="tour_one_pager_lang">
-                  <span class="micro" data-i18n-id="tour.one_pager_language">PDF language</span>
-                  <select class="tour-header__one-pager-select" id="tour_one_pager_lang" aria-label="PDF language" data-i18n-aria-label-id="tour.one_pager_language">
-                    <option value="en">English</option>
-                  </select>
-                </label>
-                <button class="btn btn-primary tour-header__one-pager-btn" id="tour_one_pager_btn" type="button" data-i18n-id="tour.one_pager">One pager</button>
-              </div>
               <div id="tour_titleError" class="form-error" role="alert" aria-live="polite"></div>
 
               <div id="tour_error" class="backend-message" role="alert" aria-live="assertive"></div>
 
               <form id="tour_form" class="backend-tour-form">
+                <div class="field full">
+                  <div id="tour_one_pager_image_selector" class="tour-card-image-selector tour-card-image-selector--one-pager">
+                    <div class="tour-card-image-selector__layout">
+                      <img class="tour-card-image-selector__preview" src="/assets/img/one_pager.png" alt="" aria-hidden="true" loading="lazy" />
+                      <div class="tour-card-image-selector__content">
+                        <div class="tour-card-image-selector__groups">
+                          <div class="tour-card-image-selector__row">
+                            <span class="tour-card-image-selector__label" data-i18n-id="tour.one_pager_hero_images">Hero image</span>
+                            <div id="tour_one_pager_hero_images" class="tour-card-image-selector__thumbs"></div>
+                          </div>
+                          <div class="tour-card-image-selector__row">
+                            <div class="tour-card-image-selector__row-head">
+                              <span class="tour-card-image-selector__label" data-i18n-id="tour.one_pager_body_images">Select 4 small images</span>
+                              <button class="btn btn-ghost" id="tour_one_pager_clear_images_btn" type="button" data-i18n-id="tour.one_pager_clear_images">Clear</button>
+                            </div>
+                            <div id="tour_one_pager_body_images" class="tour-card-image-selector__thumbs"></div>
+                          </div>
+                        </div>
+                        <div class="tour-card-image-selector__actions">
+                          <label class="tour-header__one-pager-language" for="tour_one_pager_lang">
+                            <select class="tour-header__one-pager-select" id="tour_one_pager_lang" aria-label="PDF language" data-i18n-aria-label-id="tour.one_pager_language">
+                              <option value="en">English</option>
+                            </select>
+                          </label>
+                          <button class="btn btn-primary tour-header__one-pager-btn" id="tour_one_pager_btn" type="button" data-i18n-id="tour.one_pager_create">Create One-Page PDF</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
                 <div class="field full">
                   <div id="tour_card_image_selector" class="tour-card-image-selector"></div>
                 </div>
@@ -360,6 +442,11 @@
                 <div class="field">
                   <label for="tour_priority" data-i18n-id="tour.priority_label">Web page ranking priority (0-100)</label>
                   <input id="tour_priority" name="priority" type="number" min="0" max="100" step="1" />
+                </div>
+                <div class="field">
+                  <label for="tour_seo_slug" data-i18n-id="tour.seo_slug">SEO URL slug</label>
+                  <input id="tour_seo_slug" name="seo_slug" type="text" inputmode="url" autocomplete="off" placeholder="hanoi-sapa-ha-long-bay" />
+                  <p class="micro" data-i18n-id="tour.seo_slug_hint">Used for /tours/{slug}. Leave blank to generate it from the title.</p>
                 </div>
                 <div class="field full">
                   <div id="tour_localized_content_editor"></div>

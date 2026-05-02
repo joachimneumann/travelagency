@@ -160,7 +160,7 @@ export const TRANSLATION_RUNTIME_INFO = Object.freeze({
 export const COMPANY_PROFILE = Object.freeze({
   name: "AsiaTravelPlan",
   website: "asiatravelplan.com",
-  address: "alley 378 Cua Dai, 550000 Hoi An, Vietnam",
+  address: "378/51 Cửa Đại, Hội An, Đà Nẵng",
   whatsapp: "+84 354999192",
   email: "info@asiatravelplan.com",
   licenseNumber: "4001328591",

@@ -2234,18 +2234,30 @@ test("offer and travel-plan PDFs localize guide, pricing summary, and payment-te
   const pdfI18nPath = path.resolve(__dirname, "..", "src", "lib", "pdf_i18n.js");
   const offerPdfPath = path.resolve(__dirname, "..", "src", "lib", "offer_pdf.js");
   const travelPlanPdfPath = path.resolve(__dirname, "..", "src", "lib", "travel_plan_pdf.js");
-  const [pdfI18nSource, offerPdfSource, travelPlanPdfSource] = await Promise.all([
+  const onePagerPdfPath = path.resolve(__dirname, "..", "src", "lib", "marketing_tour_one_pager_pdf.js");
+  const [pdfI18nSource, offerPdfSource, travelPlanPdfSource, onePagerPdfSource] = await Promise.all([
     readFile(pdfI18nPath, "utf8"),
     readFile(offerPdfPath, "utf8"),
-    readFile(travelPlanPdfPath, "utf8")
+    readFile(travelPlanPdfPath, "utf8"),
+    readFile(onePagerPdfPath, "utf8")
   ]);
 
-  const localeBlockCount = (pdfI18nSource.match(/^\s{2}"[a-z]{2}": Object\.freeze\(\{/gm) || []).length;
+  const coreDictionarySource = pdfI18nSource.slice(
+    pdfI18nSource.indexOf("const DICTIONARY = Object.freeze"),
+    pdfI18nSource.indexOf("const ONE_PAGER_DICTIONARY = Object.freeze")
+  );
+  const onePagerDictionarySource = pdfI18nSource.slice(
+    pdfI18nSource.indexOf("const ONE_PAGER_DICTIONARY = Object.freeze"),
+    pdfI18nSource.indexOf("function interpolate")
+  );
+  const localeBlockCount = (coreDictionarySource.match(/^\s{2}"[a-z]{2}": Object\.freeze\(\{/gm) || []).length;
+  const onePagerLocaleBlockCount = (onePagerDictionarySource.match(/^\s{2}"[a-z]{2}": Object\.freeze\(\{/gm) || []).length;
   assert.ok(localeBlockCount >= 15, "Expected the PDF i18n dictionary to define the supported language blocks");
+  assert.equal(onePagerLocaleBlockCount, localeBlockCount, "Expected one-pager PDF labels to be translated for every PDF locale block");
 
-  const keyOccurrenceCount = (key) => {
+  const keyOccurrenceCount = (source, key) => {
     const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    return (pdfI18nSource.match(new RegExp(`"${escapedKey}":`, "g")) || []).length;
+    return (source.match(new RegExp(`"${escapedKey}":`, "g")) || []).length;
   };
 
   for (const key of [
@@ -2262,9 +2274,24 @@ test("offer and travel-plan PDFs localize guide, pricing summary, and payment-te
     "travel_plan.default_welcome"
   ]) {
     assert.equal(
-      keyOccurrenceCount(key),
+      keyOccurrenceCount(coreDictionarySource, key),
       localeBlockCount,
       `Expected ${key} to be translated in every PDF locale block`
+    );
+  }
+
+  for (const key of [
+    "one_pager.trip_to",
+    "one_pager.tour_overview_badge",
+    "one_pager.experience_highlights",
+    "one_pager.whats_included",
+    "one_pager.planned_services_other",
+    "one_pager.cta_contact"
+  ]) {
+    assert.equal(
+      keyOccurrenceCount(onePagerDictionarySource, key),
+      onePagerLocaleBlockCount,
+      `Expected ${key} to be translated in every one-pager PDF locale block`
     );
   }
 
@@ -2287,6 +2314,16 @@ test("offer and travel-plan PDFs localize guide, pricing summary, and payment-te
     travelPlanPdfSource,
     /pdfT\(\s*lang,\s*"travel_plan\.default_welcome_styles"[\s\S]*pdfT\(\s*lang,\s*"travel_plan\.default_welcome"/,
     "Travel-plan PDFs should source default welcome text from the localized PDF dictionary"
+  );
+  assert.match(
+    onePagerPdfSource,
+    /pdfT\(lang, `one_pager\.\$\{key\}`[\s\S]*onePagerT\(lang, "experience_highlights", "Experience highlights"\)[\s\S]*onePagerT\(lang, "cta_contact", "CONTACT US TODAY"\)[\s\S]*onePagerT\(lang, "trip_to", "Trip to"\)/,
+    "One-pager PDFs should source visible fixed template labels from the localized PDF dictionary"
+  );
+  assert.match(
+    onePagerPdfSource,
+    /const ONE_PAGER_DECORATIVE_FONT_LANGS[\s\S]*function shouldUseOnePagerDecorativeFonts\(lang\)[\s\S]*shouldUseOnePagerDecorativeFonts\(normalizedLang\)[\s\S]*resolveOnePagerDisplayFonts\(logoPath\)[\s\S]*: \{\}/,
+    "One-pager PDFs should skip decorative Latin fonts for customer languages that need broader glyph coverage"
   );
 });
 
@@ -3431,19 +3468,25 @@ test("tour page reads month options from the generated catalogs layer", async ()
 test("tour card images are selected from travel-plan service images", async () => {
   const toursSupportPath = path.resolve(__dirname, "..", "src", "domain", "tours_support.js");
   const toursHandlerPath = path.resolve(__dirname, "..", "src", "http", "handlers", "tours.js");
+  const tourHtmlPath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "marketing_tour.html");
+  const tourPageSourcePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "tour.js");
   const toursListPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "tours_list.js");
   const mainToursPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "main_tours.js");
   const travelPlanEditorPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "shared", "travel_plan_editor_core.js");
   const travelPlanModelPath = path.resolve(__dirname, "..", "..", "..", "model", "database", "travel_plan.cue");
   const homepageGeneratorPath = path.resolve(__dirname, "..", "..", "..", "scripts", "assets", "generate_public_homepage_assets.mjs");
-  const [toursSupportSource, toursHandlerSource, toursListSource, mainToursSource, travelPlanEditorSource, travelPlanModelSource, homepageGeneratorSource] = await Promise.all([
+  const onePagerPdfPath = path.resolve(__dirname, "..", "src", "lib", "marketing_tour_one_pager_pdf.js");
+  const [toursSupportSource, toursHandlerSource, tourHtmlSource, tourPageSource, toursListSource, mainToursSource, travelPlanEditorSource, travelPlanModelSource, homepageGeneratorSource, onePagerPdfSource] = await Promise.all([
     readFile(toursSupportPath, "utf8"),
     readFile(toursHandlerPath, "utf8"),
+    readFile(tourHtmlPath, "utf8"),
+    readFile(tourPageSourcePath, "utf8"),
     readFile(toursListPath, "utf8"),
     readFile(mainToursPath, "utf8"),
     readFile(travelPlanEditorPath, "utf8"),
     readFile(travelPlanModelPath, "utf8"),
-    readFile(homepageGeneratorPath, "utf8")
+    readFile(homepageGeneratorPath, "utf8"),
+    readFile(onePagerPdfPath, "utf8")
   ]);
 
   assert.match(
@@ -3460,6 +3503,31 @@ test("tour card images are selected from travel-plan service images", async () =
     travelPlanModelSource,
     /tour_card_primary_image_id\?: common\.\#Identifier/,
     "Travel plans should store the selected first tour-card image id separately from image inclusion"
+  );
+  assert.match(
+    travelPlanModelSource,
+    /tour_card_image_ids\?: \[\.\.\.common\.\#Identifier\]/,
+    "Travel plans should store the ordered web-page image selection separately from service image checkboxes"
+  );
+  assert.match(
+    travelPlanModelSource,
+    /one_pager_hero_image_id\?: common\.\#Identifier[\s\S]*one_pager_image_ids\?: \[\.\.\.common\.\#Identifier\]/,
+    "Travel plans should store one-pager PDF hero and body image selections separately from web-page images"
+  );
+  assert.match(
+    tourHtmlSource,
+    /id="tour_one_pager_image_selector"[\s\S]*src="\/assets\/img\/one_pager\.png"[\s\S]*id="tour_one_pager_hero_images"[\s\S]*Select 4 small images[\s\S]*id="tour_one_pager_body_images"[\s\S]*id="tour_one_pager_btn"[\s\S]*id="tour_card_image_selector"/,
+    "Marketing-tour detail should render the one-pager PDF image selector above the web-page image selector"
+  );
+  assert.match(
+    tourPageSource,
+    /const ONE_PAGER_SMALL_IMAGE_LIMIT = 4;[\s\S]*function renderOnePagerImageThumb[\s\S]*disabledTitle[\s\S]*data-one-pager-hero-image[\s\S]*data-one-pager-select-image[\s\S]*const isHeroImage = image\.id === heroImageId;[\s\S]*&& !isHeroImage[\s\S]*selectedIds\.length < ONE_PAGER_SMALL_IMAGE_LIMIT[\s\S]*function selectOnePagerHeroImage/,
+    "Marketing-tour detail should let staff select one-pager hero and up to four body images while showing the hero image disabled in the small-image row"
+  );
+  assert.doesNotMatch(
+    travelPlanEditorSource,
+    /data-travel-plan-service-image-field="include_in_travel_tour_card"/,
+    "Marketing-tour service images should not keep a per-service web-page checkbox"
   );
   assert.match(
     homepageGeneratorSource,
@@ -3490,6 +3558,11 @@ test("tour card images are selected from travel-plan service images", async () =
     toursSupportSource,
     /delete next\.pictures;[\s\S]*delete next\.image;/,
     "Tour storage normalization should remove legacy tour-level picture fields"
+  );
+  assert.match(
+    onePagerPdfSource,
+    /function collectTourImages\(tour, lang\)[\s\S]*one_pager_image_ids[\s\S]*one_pager_hero_image_id[\s\S]*addEntry\(entriesById\.get\(heroImageId\)\)/,
+    "The one-pager PDF should prioritize the dedicated one-pager hero and body image selections"
   );
 });
 

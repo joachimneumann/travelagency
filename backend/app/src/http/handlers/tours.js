@@ -377,6 +377,9 @@ export function createTourHandlers(deps) {
     if (payload.published_on_webpage !== undefined || isCreate) {
       next.published_on_webpage = payload.published_on_webpage !== false;
     }
+    if (payload.seo_slug !== undefined) {
+      next.seo_slug = normalizeText(payload.seo_slug);
+    }
 
     return normalizeTourForStorage(next);
   }

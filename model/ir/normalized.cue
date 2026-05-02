@@ -263,6 +263,10 @@ IR: {
 			fields: [
 				{name: "destination_scope", kind: "entity", typeName: "TravelPlanDestinationScopeEntry", required: false, isArray: true},
 				{name: "destinations", kind: "enum", typeName: "CountryCode", required: false, isArray: true},
+				{name: "tour_card_primary_image_id", kind: "scalar", typeName: "Identifier", required: false},
+				{name: "tour_card_image_ids", kind: "scalar", typeName: "Identifier", required: false, isArray: true},
+				{name: "one_pager_hero_image_id", kind: "scalar", typeName: "Identifier", required: false},
+				{name: "one_pager_image_ids", kind: "scalar", typeName: "Identifier", required: false, isArray: true},
 				{name: "days", kind: "entity", typeName: "TravelPlanDay", required: false, isArray: true},
 			]
 		},
@@ -445,6 +449,10 @@ IR: {
 			fields: [
 				{name: "destination_scope", kind: "entity", typeName: "TravelPlanDestinationScopeEntry", required: false, isArray: true},
 				{name: "destinations", kind: "enum", typeName: "CountryCode", required: false, isArray: true},
+				{name: "tour_card_primary_image_id", kind: "scalar", typeName: "Identifier", required: false},
+				{name: "tour_card_image_ids", kind: "scalar", typeName: "Identifier", required: false, isArray: true},
+				{name: "one_pager_hero_image_id", kind: "scalar", typeName: "Identifier", required: false},
+				{name: "one_pager_image_ids", kind: "scalar", typeName: "Identifier", required: false, isArray: true},
 				{name: "days", kind: "entity", typeName: "BookingTravelPlanDay", required: false, isArray: true},
 				{name: "attachments", kind: "entity", typeName: "BookingTravelPlanAttachment", required: false, isArray: true},
 			]

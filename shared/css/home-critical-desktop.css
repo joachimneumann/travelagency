@@ -1834,6 +1834,7 @@ textarea:focus-visible {
   color: var(--accent);
   gap: 0.48rem;
   overflow: hidden;
+  text-decoration: none;
   box-shadow: 0 10px 24px rgb(var(--accent-rgb) / 0.08);
   font-weight: var(--font-weight-bold);
 }

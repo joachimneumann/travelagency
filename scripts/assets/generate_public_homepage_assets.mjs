@@ -674,7 +674,7 @@ async function publicHomepageTourTravelPlan(travelPlan, tourId, generatedTourAss
   };
 }
 
-function publicHomepageTourListItem(readModel, travelPlan, pictures, detailsUrl) {
+function publicHomepageTourListItem(readModel, travelPlan, pictures, detailsUrl, seoSlug = "") {
   const {
     image: _image,
     travel_plan: _travelPlan,
@@ -683,6 +683,7 @@ function publicHomepageTourListItem(readModel, travelPlan, pictures, detailsUrl)
   const days = Array.isArray(travelPlan?.days) ? travelPlan.days : [];
   return {
     ...listItem,
+    seo_slug: normalizeText(seoSlug) || tourSeoSlug(readModel),
     pictures,
     destination_scope: Array.isArray(travelPlan?.destination_scope) ? travelPlan.destination_scope : [],
     travel_plan_day_count: days.length,
@@ -693,6 +694,9 @@ function publicHomepageTourListItem(readModel, travelPlan, pictures, detailsUrl)
 
 function selectedTravelTourCardImagePaths(travelPlan) {
   const selectedImageId = normalizeText(travelPlan?.tour_card_primary_image_id);
+  const selectedImageIds = Array.from(new Set((Array.isArray(travelPlan?.tour_card_image_ids) ? travelPlan.tour_card_image_ids : [])
+    .map((value) => normalizeText(value))
+    .filter(Boolean)));
   const entries = [];
   const seen = new Set();
   for (const day of Array.isArray(travelPlan?.days) ? travelPlan.days : []) {
@@ -722,6 +726,15 @@ function selectedTravelTourCardImagePaths(travelPlan) {
   if (selectedEntryIndex > 0) {
     const [selectedEntry] = entries.splice(selectedEntryIndex, 1);
     entries.unshift(selectedEntry);
+  }
+  if (selectedImageIds.length) {
+    entries.sort((left, right) => {
+      const leftIndex = selectedImageIds.indexOf(left.id);
+      const rightIndex = selectedImageIds.indexOf(right.id);
+      const normalizedLeftIndex = leftIndex >= 0 ? leftIndex : Number.MAX_SAFE_INTEGER;
+      const normalizedRightIndex = rightIndex >= 0 ? rightIndex : Number.MAX_SAFE_INTEGER;
+      return normalizedLeftIndex - normalizedRightIndex;
+    });
   }
   return entries.map((entry) => entry.storagePath);
 }
@@ -900,8 +913,19 @@ function truncateSeoText(value, maxLength = 160) {
 }
 
 function tourSeoSlug(tour) {
+  const explicitSlug = slugify(tour?.seo_slug, "");
+  if (explicitSlug) return explicitSlug;
   const id = normalizeText(tour?.id);
   const title = normalizeText(tour?.title) || id;
+  const suffix = slugify(id.replace(/^tour[_-]?/i, ""), "tour").slice(0, 8);
+  return `${slugify(title, "tour")}-${suffix}`;
+}
+
+function storedTourSeoSlug(tour) {
+  const explicitSlug = slugify(tour?.seo_slug, "");
+  if (explicitSlug) return explicitSlug;
+  const id = normalizeText(tour?.id);
+  const title = resolveLocalizedText(tour?.title, "en", "") || id;
   const suffix = slugify(id.replace(/^tour[_-]?/i, ""), "tour").slice(0, 8);
   return `${slugify(title, "tour")}-${suffix}`;
 }
@@ -1526,6 +1550,7 @@ async function generateTourAssets({
     const localizedItems = [];
     const localizedSeoItems = [];
     for (const tour of sortedPublicTours) {
+      const seoSlug = storedTourSeoSlug(tour);
       const readModel = normalizeTourForRead(tour, { lang: normalizedLang });
       const travelPlan = await publicHomepageTourTravelPlan(
         readModel.travel_plan,
@@ -1546,9 +1571,10 @@ async function generateTourAssets({
       const detailVersion = versionTokenForContent(detailSource);
       await writeFile(detailOutputPath, detailSource, "utf8");
       const detailsUrl = buildVersionedGeneratedDataUrl(detailFilename, detailVersion);
-      localizedItems.push(publicHomepageTourListItem(readModel, travelPlan, pictures, detailsUrl));
+      localizedItems.push(publicHomepageTourListItem(readModel, travelPlan, pictures, detailsUrl, seoSlug));
       localizedSeoItems.push({
         ...readModel,
+        seo_slug: seoSlug,
         pictures,
         travel_plan: travelPlan
       });

@@ -5,7 +5,7 @@ import PDFDocument from "pdfkit";
 import sharp from "sharp";
 import { normalizeText } from "./text.js";
 import { styleToken } from "./style_tokens.js";
-import { pdfTextOptions, normalizePdfLang } from "./pdf_i18n.js";
+import { pdfTextOptions, normalizePdfLang, pdfT } from "./pdf_i18n.js";
 import { resolvePdfFontsForLang } from "./pdf_font_resolver.js";
 
 const PAGE_SIZE = "LETTER";
@@ -89,6 +89,20 @@ const PDF_ASSET_SCRIPT_FONT_FILES = Object.freeze([
 ]);
 
 const PDF_EMBEDDABLE_FONT_EXTENSIONS = Object.freeze([".ttf", ".otf"]);
+const ONE_PAGER_DECORATIVE_FONT_LANGS = Object.freeze(new Set([
+  "en",
+  "fr",
+  "de",
+  "es",
+  "it",
+  "nl",
+  "pl",
+  "da",
+  "sv",
+  "no",
+  "vi",
+  "ms"
+]));
 
 function safeArray(value) {
   return Array.isArray(value) ? value : [];
@@ -130,9 +144,24 @@ function pdfFontName(weight = "regular", fonts = null) {
   if (weight === "display" && fonts?.display) return PDF_FONT_DISPLAY;
   if (weight === "script" && fonts?.script) return PDF_FONT_SCRIPT;
   if (weight === "label" && fonts?.label) return PDF_FONT_LABEL;
+  if ((weight === "display" || weight === "label") && fonts?.bold) return PDF_FONT_BOLD;
   if (weight === "bold" && fonts?.bold) return PDF_FONT_BOLD;
   if (fonts?.regular) return PDF_FONT_REGULAR;
   return weight === "bold" ? "Helvetica-Bold" : "Helvetica";
+}
+
+function onePagerT(lang, key, fallback, vars) {
+  return pdfT(lang, `one_pager.${key}`, fallback, vars);
+}
+
+function onePagerCountLabel(lang, count, oneKey, otherKey, oneFallback, otherFallback) {
+  return onePagerT(lang, count === 1 ? oneKey : otherKey, count === 1 ? oneFallback : otherFallback, {
+    count: String(count)
+  });
+}
+
+function shouldUseOnePagerDecorativeFonts(lang) {
+  return ONE_PAGER_DECORATIVE_FONT_LANGS.has(normalizePdfLang(lang));
 }
 
 function registerPdfFonts(doc, fonts) {
@@ -391,7 +420,7 @@ function photoFrameShape(variant = 0) {
   return shapes[Math.abs(Number(variant) || 0) % shapes.length];
 }
 
-function drawFramedImage(doc, { x, y, width, height, angle = 0, imageBuffer = null, label = "", fonts = null, variant = 0 } = {}) {
+function drawFramedImage(doc, { x, y, width, height, angle = 0, imageBuffer = null, label = "", fonts = null, lang = "en", variant = 0 } = {}) {
   const centerX = x + width / 2;
   const centerY = y + height / 2;
   const shape = photoFrameShape(variant);
@@ -420,7 +449,7 @@ function drawFramedImage(doc, { x, y, width, height, angle = 0, imageBuffer = nu
       .font(pdfFontName("display", fonts))
       .fontSize(14)
       .fillColor(COLORS.white)
-      .text(label.toUpperCase(), x + 10, y + height - 25, { width: width - 20, height: 18, ellipsis: true });
+      .text(label.toUpperCase(), x + 10, y + height - 25, pdfTextOptions(lang, { width: width - 20, height: 18, ellipsis: true }));
     doc.restore();
   }
   doc.save();
@@ -451,19 +480,36 @@ function fitTitleSize(doc, title, fonts) {
   return size;
 }
 
-function durationParts(days) {
+function durationParts(days, lang) {
   const dayCount = Math.max(0, safeArray(days).length);
   const nightCount = Math.max(0, dayCount - 1);
+  const dayLabel = onePagerCountLabel(lang, dayCount, "day_count_one", "day_count_other", "{count} day", "{count} days");
+  const nightLabel = onePagerCountLabel(lang, nightCount, "night_count_one", "night_count_other", "{count} night", "{count} nights");
+  const badgeDayLabel = onePagerCountLabel(lang, dayCount, "day_badge_one", "day_badge_other", "{count} DAY", "{count} DAYS");
+  const badgeNightLabel = onePagerCountLabel(lang, nightCount, "night_badge_one", "night_badge_other", "{count} NIGHT", "{count} NIGHTS");
   return {
     dayCount,
     nightCount,
-    label: dayCount > 0 ? `${dayCount} ${dayCount === 1 ? "day" : "days"}` : "Tour",
-    badge: dayCount > 0 ? `${dayCount} ${dayCount === 1 ? "DAY" : "DAYS"}\n${nightCount} ${nightCount === 1 ? "NIGHT" : "NIGHTS"}` : "TOUR\nOVERVIEW"
+    label: dayCount > 0 ? dayLabel : onePagerT(lang, "tour", "Tour"),
+    nightLabel,
+    badge: dayCount > 0 ? `${badgeDayLabel}\n${badgeNightLabel}` : onePagerT(lang, "tour_overview_badge", "TOUR\nOVERVIEW")
   };
 }
 
-function collectTourImages(tour) {
+function collectTourImages(tour, lang) {
   const entries = [];
+  const webImageIds = (Array.isArray(tour?.travel_plan?.tour_card_image_ids) ? tour.travel_plan.tour_card_image_ids : [])
+    .map((value) => textOrNull(value))
+    .filter(Boolean);
+  const hasOnePagerImageIds = Object.prototype.hasOwnProperty.call(tour?.travel_plan || {}, "one_pager_image_ids");
+  const onePagerImageIds = (Array.isArray(tour?.travel_plan?.one_pager_image_ids) ? tour.travel_plan.one_pager_image_ids : [])
+    .map((value) => textOrNull(value))
+    .filter(Boolean);
+  const selectedImageIds = hasOnePagerImageIds ? onePagerImageIds : webImageIds;
+  const heroImageId = textOrNull(tour?.travel_plan?.one_pager_hero_image_id)
+    || selectedImageIds[0]
+    || webImageIds[0]
+    || textOrNull(tour?.travel_plan?.tour_card_primary_image_id);
   safeArray(tour?.travel_plan?.days).forEach((day, dayIndex) => {
     safeArray(day?.services).forEach((service, serviceIndex) => {
       const image = service?.image && typeof service.image === "object" && !Array.isArray(service.image)
@@ -471,23 +517,66 @@ function collectTourImages(tour) {
         : null;
       const storagePath = textOrNull(image?.storage_path);
       if (!storagePath || image?.is_customer_visible === false) return;
+      const imageId = textOrNull(image?.id);
       entries.push({
+        id: imageId,
         storagePath,
-        priority: image.include_in_travel_tour_card === true ? 0 : 1,
+        priority: webImageIds.includes(imageId)
+          ? webImageIds.indexOf(imageId)
+          : (image.include_in_travel_tour_card === true ? webImageIds.length : webImageIds.length + 1),
         order: dayIndex * 100 + serviceIndex,
-        label: textOrNull(service?.location) || textOrNull(service?.title) || textOrNull(day?.overnight_location) || textOrNull(day?.title) || "Tour"
+        label: textOrNull(service?.location) || textOrNull(service?.title) || textOrNull(day?.overnight_location) || textOrNull(day?.title) || onePagerT(lang, "tour", "Tour")
       });
     });
   });
 
   const seen = new Set();
-  return entries
+  const entriesById = new Map(entries.filter((entry) => entry.id).map((entry) => [entry.id, entry]));
+  const fallbackEntries = entries
     .sort((left, right) => left.priority - right.priority || left.order - right.order)
     .filter((entry) => {
       if (seen.has(entry.storagePath)) return false;
       seen.add(entry.storagePath);
       return true;
     });
+  const orderedEntries = [];
+  const addEntry = (entry) => {
+    if (!entry || orderedEntries.some((existing) => existing.storagePath === entry.storagePath)) return;
+    orderedEntries.push(entry);
+  };
+  addEntry(entriesById.get(heroImageId));
+  selectedImageIds.forEach((imageId) => addEntry(entriesById.get(imageId)));
+  if (!hasOnePagerImageIds) {
+    fallbackEntries.forEach(addEntry);
+  }
+  const outputSeen = new Set();
+  return orderedEntries
+    .filter((entry) => {
+      if (outputSeen.has(entry.storagePath)) return false;
+      outputSeen.add(entry.storagePath);
+      return true;
+    });
+}
+
+function hasExplicitOnePagerBodyImageSelection(tour) {
+  return Object.prototype.hasOwnProperty.call(tour?.travel_plan || {}, "one_pager_image_ids");
+}
+
+function collectScriptProvidedFrameImages(tour, lang) {
+  return safeArray(tour?.travel_plan?.__one_pager_random_images)
+    .map((entry, index) => {
+      const source = entry && typeof entry === "object" && !Array.isArray(entry) ? entry : {};
+      const storagePath = textOrNull(source.storage_path);
+      if (!storagePath) return null;
+      return {
+        id: textOrNull(source.id) || `one-pager-random-${index + 1}`,
+        storagePath,
+        priority: index,
+        order: index,
+        label: textOrNull(source.label) || onePagerT(lang, "tour", "Tour")
+      };
+    })
+    .filter(Boolean);
 }
 
 function extractPublicRelativePath(publicUrl, prefix) {
@@ -524,38 +613,62 @@ async function loadImageBuffer(storagePath, { width, height, resolveTourImageDis
   return null;
 }
 
-function collectHighlightItems(tour, duration) {
+function localizedServiceKindLabel(lang, value) {
+  const normalizedKind = normalizeText(value).toLowerCase().replace(/[^a-z0-9]+/g, "_");
+  if (!normalizedKind) return "";
+  return pdfT(lang, `offer.item.${normalizedKind}`, normalizeText(value));
+}
+
+function collectHighlightItems(tour, duration, lang) {
   const destinations = safeArray(tour?.destinations).slice(0, 2).join(", ");
   const styles = safeArray(tour?.styles).slice(0, 2).join(", ");
   const services = safeArray(tour?.travel_plan?.days).flatMap((day) => safeArray(day?.services));
   const serviceKinds = new Set(services.map((service) => normalizeText(service?.kind)).filter(Boolean));
+  const serviceKindLabels = Array.from(serviceKinds)
+    .slice(0, 2)
+    .map((kind) => localizedServiceKindLabel(lang, kind))
+    .filter(Boolean);
   const entries = [
-    { title: duration.label, body: duration.nightCount > 0 ? `${duration.nightCount} ${duration.nightCount === 1 ? "night" : "nights"}` : "Flexible pacing" },
-    { title: destinations || "Destinations", body: destinations ? "Main route" : "Curated route" },
-    { title: styles || "Travel style", body: styles ? "Tour style" : "Matched to the tour" },
-    { title: `${services.length} planned ${services.length === 1 ? "service" : "services"}`, body: serviceKinds.size ? Array.from(serviceKinds).slice(0, 2).join(", ") : "Tour experiences" }
+    { title: duration.label, body: duration.nightCount > 0 ? duration.nightLabel : onePagerT(lang, "flexible_pacing", "Flexible pacing") },
+    { title: destinations || onePagerT(lang, "destinations", "Destinations"), body: destinations ? onePagerT(lang, "main_route", "Main route") : onePagerT(lang, "curated_route", "Curated route") },
+    { title: styles || onePagerT(lang, "travel_style", "Travel style"), body: styles ? onePagerT(lang, "tour_style", "Tour style") : onePagerT(lang, "matched_to_tour", "Matched to the tour") },
+    {
+      title: onePagerCountLabel(
+        lang,
+        services.length,
+        "planned_services_one",
+        "planned_services_other",
+        "{count} planned service",
+        "{count} planned services"
+      ),
+      body: serviceKindLabels.length ? serviceKindLabels.join(", ") : onePagerT(lang, "tour_experiences", "Tour experiences")
+    }
   ];
   return entries.slice(0, 4);
 }
 
-function collectIncludedItems(tour, duration) {
+function collectIncludedItems(tour, duration, lang) {
   const services = safeArray(tour?.travel_plan?.days).flatMap((day) => safeArray(day?.services));
   const serviceTitles = services.map((service) => textOrNull(service?.title)).filter(Boolean);
   const destinations = safeArray(tour?.destinations).join(", ");
   return [
-    duration.dayCount > 0 ? `${duration.dayCount} ${duration.dayCount === 1 ? "day" : "days"} tour plan` : "Tour plan overview",
-    destinations ? `Route through ${destinations}` : "Curated route",
-    serviceTitles[0] || "Selected local experiences",
-    serviceTitles[1] || "Planned transport and pacing"
+    duration.dayCount > 0
+      ? onePagerCountLabel(lang, duration.dayCount, "day_tour_plan_one", "day_tour_plan_other", "{count} day tour plan", "{count} days tour plan")
+      : onePagerT(lang, "tour_plan_overview", "Tour plan overview"),
+    destinations
+      ? onePagerT(lang, "route_through", "Route through {destinations}", { destinations })
+      : onePagerT(lang, "curated_route", "Curated route"),
+    serviceTitles[0] || onePagerT(lang, "selected_local_experiences", "Selected local experiences"),
+    serviceTitles[1] || onePagerT(lang, "planned_transport_and_pacing", "Planned transport and pacing")
   ].slice(0, 4);
 }
 
-function drawSectionHeading(doc, text, x, y, width, fonts) {
+function drawSectionHeading(doc, text, x, y, width, fonts, lang) {
   doc
     .font(pdfFontName("label", fonts))
     .fontSize(12.5)
     .fillColor(COLORS.accentText)
-    .text(text.toUpperCase(), x, y, { width: 156, characterSpacing: 0.25 });
+    .text(text.toUpperCase(), x, y, pdfTextOptions(lang, { width: 156, characterSpacing: 0.25 }));
   doc
     .moveTo(x + 160, y + 7)
     .lineTo(x + width, y + 7)
@@ -564,8 +677,8 @@ function drawSectionHeading(doc, text, x, y, width, fonts) {
     .stroke();
 }
 
-function drawHighlights(doc, items, x, y, width, fonts) {
-  drawSectionHeading(doc, "Experience highlights", x, y, width, fonts);
+function drawHighlights(doc, items, x, y, width, fonts, lang) {
+  drawSectionHeading(doc, onePagerT(lang, "experience_highlights", "Experience highlights"), x, y, width, fonts, lang);
   const colWidth = width / items.length;
   const top = y + 34;
   items.forEach((item, index) => {
@@ -587,8 +700,8 @@ function drawHighlights(doc, items, x, y, width, fonts) {
   });
 }
 
-function drawIncluded(doc, items, x, y, width, fonts) {
-  drawSectionHeading(doc, "What's included", x, y, width, fonts);
+function drawIncluded(doc, items, x, y, width, fonts, lang) {
+  drawSectionHeading(doc, onePagerT(lang, "whats_included", "What's included"), x, y, width, fonts, lang);
   const colWidth = width / 2;
   items.forEach((item, index) => {
     const col = index % 2;
@@ -766,11 +879,16 @@ function drawDurationBadge(doc, duration, fonts) {
   doc.restore();
 }
 
-function drawCta(doc, companyProfile, fonts) {
+function drawCta(doc, companyProfile, fonts, lang) {
   const x = 335;
   const y = 636;
   const width = 230;
   const height = 98;
+  const usesDecorativeFonts = shouldUseOnePagerDecorativeFonts(lang);
+  const scriptFontSize = usesDecorativeFonts ? 28 : 20;
+  const scriptY = usesDecorativeFonts ? y + 35 : y + 41;
+  const scriptWidth = usesDecorativeFonts ? 138 : 152;
+  const scriptX = usesDecorativeFonts ? x + 75 : x + 66;
   doc.save();
   doc.roundedRect(x, y, width, height, 10).fill(COLORS.accentText);
   doc.roundedRect(x + 4, y + 4, width - 8, height - 8, 8).lineWidth(1.2).strokeColor(COLORS.white).stroke();
@@ -788,12 +906,12 @@ function drawCta(doc, companyProfile, fonts) {
     .font(pdfFontName("bold", fonts))
     .fontSize(15)
     .fillColor(COLORS.white)
-    .text("Let's plan your", x + 74, y + 18, { width: 136, align: "center" });
+    .text(onePagerT(lang, "cta_plan", "Let's plan your"), x + 74, y + 18, { width: 136, align: "center" });
   doc
     .font(pdfFontName("script", fonts))
-    .fontSize(28)
+    .fontSize(scriptFontSize)
     .fillColor(COLORS.accentSoft)
-    .text("perfect trip!", x + 75, y + 35, { width: 138, align: "center" });
+    .text(onePagerT(lang, "cta_perfect_trip", "perfect trip!"), scriptX, scriptY, { width: scriptWidth, height: 24, align: "center", ellipsis: true });
   doc
     .roundedRect(x + 52, y + 70, width - 104, 20, 10)
     .fill(COLORS.secondary);
@@ -801,7 +919,7 @@ function drawCta(doc, companyProfile, fonts) {
     .font(pdfFontName("label", fonts))
     .fontSize(8.8)
     .fillColor(COLORS.white)
-    .text("CONTACT US TODAY", x + 60, y + 75, { width: width - 120, align: "center" });
+    .text(onePagerT(lang, "cta_contact", "CONTACT US TODAY").toUpperCase(), x + 60, y + 75, { width: width - 120, align: "center" });
   doc.restore();
 }
 
@@ -832,8 +950,13 @@ function drawFooter(doc, companyProfile, fonts) {
   });
 }
 
-async function prepareFrameImages(tour, deps) {
-  const entries = collectTourImages(tour);
+async function prepareFrameImages(tour, deps, lang) {
+  const entries = collectScriptProvidedFrameImages(tour, lang);
+  const hasScriptProvidedEntries = entries.length > 0;
+  if (!entries.length) {
+    entries.push(...collectTourImages(tour, lang));
+  }
+  const useExactFrameCount = !hasScriptProvidedEntries && hasExplicitOnePagerBodyImageSelection(tour);
   const frames = [
     { width: 520, height: 270 },
     { width: 205, height: 130 },
@@ -842,7 +965,7 @@ async function prepareFrameImages(tour, deps) {
     { width: 112, height: 82, optional: true }
   ];
   return await Promise.all(frames.map(async (frame, index) => {
-    const entry = entries[index] || (frame.optional ? null : entries[0]) || null;
+    const entry = entries[index] || (useExactFrameCount || frame.optional ? null : entries[0]) || null;
     return {
       entry,
       buffer: entry
@@ -857,28 +980,30 @@ async function prepareFrameImages(tour, deps) {
 }
 
 function drawMainCopy(doc, tour, duration, fonts, lang) {
-  const title = textOrNull(tour?.title) || "Tour";
+  const title = textOrNull(tour?.title) || onePagerT(lang, "tour", "Tour");
   const titleText = title.toUpperCase();
   const description = textOrNull(tour?.short_description)
-    || `A curated ${duration.label.toLowerCase()} by Asia Travel Plan.`;
+    || onePagerT(lang, "default_description", "A curated {duration} by Asia Travel Plan.", {
+      duration: duration.label.toLowerCase()
+    });
   const styleLine = safeArray(tour?.styles).slice(0, 3).map((item) => item.toUpperCase()).join("  |  ");
 
   doc
     .font(pdfFontName("script", fonts))
     .fontSize(48)
     .fillColor(COLORS.secondary)
-    .text("Trip to", 42, 126, { width: 250 });
+    .text(onePagerT(lang, "trip_to", "Trip to"), 42, 126, pdfTextOptions(lang, { width: 250 }));
   const titleSize = fitTitleSize(doc, titleText, fonts);
   doc
     .font(pdfFontName("display", fonts))
     .fontSize(titleSize)
     .fillColor(COLORS.textStrong)
-    .text(titleText, 42, 208, { width: 286, lineGap: -6, height: 124 });
+    .text(titleText, 42, 208, pdfTextOptions(lang, { width: 286, lineGap: -6, height: 124 }));
   doc
     .font(pdfFontName("label", fonts))
     .fontSize(12.5)
     .fillColor(COLORS.textStrong)
-    .text(styleLine || "PRIVATE TOUR  |  LOCAL EXPERTISE", 42, 338, { width: 282, characterSpacing: 1.4, height: 18, ellipsis: true });
+    .text(styleLine || onePagerT(lang, "default_style_line", "PRIVATE TOUR  |  LOCAL EXPERTISE").toUpperCase(), 42, 338, pdfTextOptions(lang, { width: 282, characterSpacing: 1.4, height: 18, ellipsis: true }));
   doc
     .font(pdfFontName("regular", fonts))
     .fontSize(10.6)
@@ -947,7 +1072,7 @@ export function createMarketingTourOnePagerPdfWriter({
   } = {}) {
     const normalizedLang = normalizePdfLang(lang);
     const days = safeArray(tour?.travel_plan?.days);
-    const duration = durationParts(days);
+    const duration = durationParts(days, normalizedLang);
     const sampleText = [
       tour?.title,
       tour?.short_description,
@@ -965,12 +1090,14 @@ export function createMarketingTourOnePagerPdfWriter({
       regularCandidates: PDF_FONT_REGULAR_CANDIDATES,
       boldCandidates: PDF_FONT_BOLD_CANDIDATES
     });
-    const displayFonts = await resolveOnePagerDisplayFonts(logoPath);
+    const displayFonts = shouldUseOnePagerDecorativeFonts(normalizedLang)
+      ? await resolveOnePagerDisplayFonts(logoPath)
+      : {};
     const fonts = {
       ...bodyFonts,
       ...Object.fromEntries(Object.entries(displayFonts).filter(([, value]) => value))
     };
-    const frameImages = await prepareFrameImages(tour, { resolveTourImageDiskPath, fallbackImagePath });
+    const frameImages = await prepareFrameImages(tour, { resolveTourImageDiskPath, fallbackImagePath }, normalizedLang);
 
     const renderWithFonts = async (renderFonts) => {
       await removePartialPdf(outputPath);
@@ -979,7 +1106,7 @@ export function createMarketingTourOnePagerPdfWriter({
         size: PAGE_SIZE,
         margin: 0,
         info: {
-          Title: `${textOrNull(tour?.title) || "Tour"} one pager`,
+          Title: `${textOrNull(tour?.title) || onePagerT(normalizedLang, "tour", "Tour")} ${onePagerT(normalizedLang, "document_title_suffix", "one pager")}`,
           Author: "AsiaTravelPlan"
         }
       });
@@ -990,43 +1117,52 @@ export function createMarketingTourOnePagerPdfWriter({
       drawLogo(doc, logoPath);
       drawDurationBadge(doc, duration, renderFonts);
       drawMainCopy(doc, tour, duration, renderFonts, normalizedLang);
-      drawHighlights(doc, collectHighlightItems(tour, duration), 42, 438, 276, renderFonts);
+      drawHighlights(doc, collectHighlightItems(tour, duration, normalizedLang), 42, 438, 276, renderFonts, normalizedLang);
       drawRouteConnector(doc, 43, 570, 238);
-      drawIncluded(doc, collectIncludedItems(tour, duration), 42, 616, 276, renderFonts);
+      drawIncluded(doc, collectIncludedItems(tour, duration, normalizedLang), 42, 616, 276, renderFonts, normalizedLang);
 
-      drawFramedImage(doc, {
-        x: 352,
-        y: 258,
-        width: 198,
-        height: 122,
-        angle: -2.5,
-        imageBuffer: frameImages[1]?.buffer,
-        label: frameImages[1]?.entry?.label || "",
-        fonts: renderFonts,
-        variant: 0
-      });
-      drawFramedImage(doc, {
-        x: 303,
-        y: 405,
-        width: 158,
-        height: 102,
-        angle: -4,
-        imageBuffer: frameImages[2]?.buffer,
-        label: frameImages[2]?.entry?.label || "",
-        fonts: renderFonts,
-        variant: 1
-      });
-      drawFramedImage(doc, {
-        x: 364,
-        y: 491,
-        width: 190,
-        height: 126,
-        angle: 4,
-        imageBuffer: frameImages[3]?.buffer,
-        label: frameImages[3]?.entry?.label || "",
-        fonts: renderFonts,
-        variant: 2
-      });
+      if (frameImages[1]?.entry) {
+        drawFramedImage(doc, {
+          x: 352,
+          y: 258,
+          width: 198,
+          height: 122,
+          angle: -2.5,
+          imageBuffer: frameImages[1]?.buffer,
+          label: frameImages[1]?.entry?.label || "",
+          fonts: renderFonts,
+          lang: normalizedLang,
+          variant: 0
+        });
+      }
+      if (frameImages[2]?.entry) {
+        drawFramedImage(doc, {
+          x: 303,
+          y: 405,
+          width: 158,
+          height: 102,
+          angle: -4,
+          imageBuffer: frameImages[2]?.buffer,
+          label: frameImages[2]?.entry?.label || "",
+          fonts: renderFonts,
+          lang: normalizedLang,
+          variant: 1
+        });
+      }
+      if (frameImages[3]?.entry) {
+        drawFramedImage(doc, {
+          x: 364,
+          y: 491,
+          width: 190,
+          height: 126,
+          angle: 4,
+          imageBuffer: frameImages[3]?.buffer,
+          label: frameImages[3]?.entry?.label || "",
+          fonts: renderFonts,
+          lang: normalizedLang,
+          variant: 2
+        });
+      }
       if (frameImages[4]?.entry) {
         drawFramedImage(doc, {
           x: 456,
@@ -1037,10 +1173,11 @@ export function createMarketingTourOnePagerPdfWriter({
           imageBuffer: frameImages[4]?.buffer,
           label: frameImages[4]?.entry?.label || "",
           fonts: renderFonts,
+          lang: normalizedLang,
           variant: 1
         });
       }
-      drawCta(doc, companyProfile || {}, renderFonts);
+      drawCta(doc, companyProfile || {}, renderFonts, normalizedLang);
       drawFooter(doc, companyProfile || {}, renderFonts);
       await streamPdfToFile(doc, outputPath);
     };

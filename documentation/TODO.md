@@ -1,8 +1,16 @@
 # TODO
 
-SEO
-===
-URL for each tour, see SEO.md
+One pager
+=========
+Above the web page div insert a similarly styled div for the one-pager PDF with the title: "one page PDF":
+use the same thumbnails to a) select the hero image at the top and b) to select the images below
+on the left side of the image selection for the web page show the image "one_pager.png"
+Below the image selection (inside the one-pager div) plave the create one-page PDF button and the language selector.
+
+Write a script "content/create_all_one-pagers.sh" that
+1) creates all on-pagers for all languages as a) PDF and then converts the PDF to an image - or b) directly creates an image. Use random pictures as the hero picture and the content pictures.
+2) creates a one-page web page that shows all of these images in a matrix (language - columns, tours - rows)
+3) publish this web page on my google site page https://sites.google.com for info@asiatravelplan.com
 
 Translation
 ===========
@@ -15,6 +23,7 @@ Travel Cards
 ============
 "Details" -> Flicker
 remove min-width from .tour-card__show-more-label
+In marketing tour.html
 
 Destinations
 ============

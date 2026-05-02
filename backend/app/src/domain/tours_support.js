@@ -39,6 +39,17 @@ function normalizeTourVideo(value) {
   return Object.values(normalized).some(Boolean) ? normalized : null;
 }
 
+function normalizeTourSeoSlug(value) {
+  return normalizeText(value)
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .replace(/-{2,}/g, "");
+}
+
 export function migratePersistedTourState(tour) {
   if (!tour || typeof tour !== "object") return false;
   let changed = false;
@@ -163,6 +174,8 @@ export function createTourHelpers({ toursDir, safeInt, normalizeMarketingTourTra
     next.seasonality_end_month = normalizeText(next.seasonality_end_month);
     next.priority = safeInt(next.priority) ?? 50;
     next.published_on_webpage = next.published_on_webpage !== false;
+    next.seo_slug = normalizeTourSeoSlug(next.seo_slug);
+    if (!next.seo_slug) delete next.seo_slug;
     delete next.travel_duration_days;
     delete next.budget_lower_usd;
     delete next.rating;

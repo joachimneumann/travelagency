@@ -1057,6 +1057,9 @@ function renderTourImageMarkup(tour) {
 
 function firstTravelTourCardImagePath(tour) {
   const selectedImageId = normalizeText(tour?.travel_plan?.tour_card_primary_image_id);
+  const selectedImageIds = Array.from(new Set((Array.isArray(tour?.travel_plan?.tour_card_image_ids) ? tour.travel_plan.tour_card_image_ids : [])
+    .map((value) => normalizeText(value))
+    .filter(Boolean)));
   const entries = [];
   for (const day of Array.isArray(tour?.travel_plan?.days) ? tour.travel_plan.days : []) {
     for (const service of Array.isArray(day?.services) ? day.services : []) {
@@ -1080,6 +1083,15 @@ function firstTravelTourCardImagePath(tour) {
   if (selectedEntryIndex > 0) {
     const [selectedEntry] = entries.splice(selectedEntryIndex, 1);
     entries.unshift(selectedEntry);
+  }
+  if (selectedImageIds.length) {
+    entries.sort((left, right) => {
+      const leftIndex = selectedImageIds.indexOf(left.id);
+      const rightIndex = selectedImageIds.indexOf(right.id);
+      const normalizedLeftIndex = leftIndex >= 0 ? leftIndex : Number.MAX_SAFE_INTEGER;
+      const normalizedRightIndex = rightIndex >= 0 ? rightIndex : Number.MAX_SAFE_INTEGER;
+      return normalizedLeftIndex - normalizedRightIndex;
+    });
   }
   return entries[0]?.storagePath || "";
 }

@@ -60,11 +60,16 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
   await writeJson(path.join(toursRoot, "tour_alpha", "tour.json"), {
     id: "tour_alpha",
     title: { en: "Alpha tour", de: "Alpha Reise" },
+    seo_slug: "alpha-custom-route",
     short_description: { en: "Alpha description", de: "Alpha Beschreibung" },
     styles: ["budget"],
     image: "/public/v1/tour-images/tour_alpha/alpha.png",
     travel_plan: {
       tour_card_primary_image_id: "travel_plan_service_image_featured",
+      tour_card_image_ids: [
+        "travel_plan_service_image_featured",
+        "travel_plan_service_image_pickup"
+      ],
       destination_scope: [
         {
           destination: "VN",
@@ -105,6 +110,17 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
                 alt_text_i18n: { en: "Featured viewpoint", de: "Aussichtspunkt" },
                 include_in_travel_tour_card: true
               }
+            },
+            {
+              title: { en: "Legacy included image", de: "Altes ausgewähltes Bild" },
+              details: { en: "The ordered selection should be authoritative.", de: "Die sortierte Auswahl sollte maßgeblich sein." },
+              image: {
+                id: "travel_plan_service_image_legacy",
+                storage_path: "/public/v1/tour-images/tour_alpha/travel-plan-services/legacy.png",
+                alt_text: "Legacy viewpoint",
+                alt_text_i18n: { en: "Legacy viewpoint", de: "Alter Aussichtspunkt" },
+                include_in_travel_tour_card: true
+              }
             }
           ]
         }
@@ -117,6 +133,7 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
   await mkdir(path.join(toursRoot, "tour_alpha", "travel-plan-services"), { recursive: true });
   await writeFile(path.join(toursRoot, "tour_alpha", "travel-plan-services", "pickup.png"), Buffer.from(TINY_PNG_BASE64, "base64"));
   await writeFile(path.join(toursRoot, "tour_alpha", "travel-plan-services", "featured.png"), Buffer.from(TINY_PNG_BASE64, "base64"));
+  await writeFile(path.join(toursRoot, "tour_alpha", "travel-plan-services", "legacy.png"), Buffer.from(TINY_PNG_BASE64, "base64"));
 
   await writeJson(path.join(toursRoot, "tour_hidden", "tour.json"), {
     id: "tour_hidden",
@@ -243,10 +260,11 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
   const generatedSitemap = await readFile(generatedSitemapPath, "utf8");
   const generatedDestinationHtml = await readFile(path.join(frontendDataDir, "seo", "destinations", "vietnam.html"), "utf8");
   const generatedStyleHtml = await readFile(path.join(frontendDataDir, "seo", "travel-styles", "budget.html"), "utf8");
-  const generatedTourHtml = await readFile(path.join(frontendDataDir, "seo", "tours", "alpha-tour-alpha.html"), "utf8");
+  const generatedTourHtml = await readFile(path.join(frontendDataDir, "seo", "tours", "alpha-custom-route.html"), "utf8");
 
   assert.equal(publicToursEn.items.length, 1);
   assert.equal(publicToursEn.items[0].id, "tour_alpha");
+  assert.equal(publicToursEn.items[0].seo_slug, "alpha-custom-route");
   assert.doesNotMatch(JSON.stringify(publicToursEn), /tour_unpublished|Unpublished tour/);
   assert.deepEqual(publicToursEn.items[0].destination_codes, ["vietnam"]);
   assert.deepEqual(publicToursEn.available_destinations, [{ code: "vietnam", label: "Vietnam" }]);
@@ -274,17 +292,24 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
     }
   ]);
   assert.equal(publicTourDetailsEn.travel_plan.tour_card_primary_image_id, "travel_plan_service_image_featured");
+  assert.deepEqual(publicTourDetailsEn.travel_plan.tour_card_image_ids, [
+    "travel_plan_service_image_featured",
+    "travel_plan_service_image_pickup"
+  ]);
   assert.match(publicToursEn.items[0].pictures[0], /^\/assets\/generated\/homepage\/tours\/tour_alpha\/travel-plan-services\/featured\.(png|webp)\?v=/);
   assert.match(publicToursEn.items[0].pictures[1], /^\/assets\/generated\/homepage\/tours\/tour_alpha\/travel-plan-services\/pickup\.(png|webp)\?v=/);
+  assert.equal(publicToursEn.items[0].pictures.length, 2);
   assert.match(
     publicTourDetailsEn.travel_plan.days[0].services[0].image.storage_path,
     /^\/assets\/generated\/homepage\/tours\/tour_alpha\/travel-plan-services\/pickup\.(png|webp)\?v=/
   );
   assert.equal(publicTourDetailsEn.travel_plan.days[0].services[0].image.alt_text, "Driver at arrivals");
   assert.equal(publicTourDetailsEn.travel_plan.days[0].services[0].image.include_in_travel_tour_card, true);
+  assert.equal(publicTourDetailsEn.travel_plan.days[0].services[2].image.include_in_travel_tour_card, false);
   assert.equal("image" in publicToursEn.items[0], false);
 
   assert.equal(publicToursDe.items[0].title, "Alpha Reise");
+  assert.equal(publicToursDe.items[0].seo_slug, "alpha-custom-route");
   assert.equal(publicToursDe.items[0].short_description, "Alpha Beschreibung");
   assert.match(
     publicTourDetailsDe.travel_plan.days[0].services[0].image.storage_path,
@@ -308,6 +333,7 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
   assert.match(homepageInitialBundle, /function createFrontendToursController/);
   assert.doesNotMatch(homepageInitialBundle, /function frontendT\(/);
   assert.match(homepageInitialBundle, /const frontendT = \(id, fallback, vars\) => \{/);
+  assert.match(homepageInitialBundle, /<a class="btn tour-card__show-more"/);
   assert.match(homepageInitialBundle, /import\("\/frontend\/scripts\/main_booking_form_options\.js"\)/);
   assert.match(homepageInitialBundle, /import\("\/frontend\/scripts\/main_reels\.js"\)/);
   assert.match(homepageInitialBundle, /import\("\/frontend\/scripts\/shared\/auth\.js"\)/);
@@ -328,12 +354,12 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
   assert.equal(generatedTravelAgencySchema.contactPoint?.[0]?.url, "https://wa.me/84354999192");
   assert.match(generatedSitemap, /https:\/\/asiatravelplan\.com\/destinations\/vietnam/);
   assert.match(generatedSitemap, /https:\/\/asiatravelplan\.com\/travel-styles\/budget/);
-  assert.match(generatedSitemap, /https:\/\/asiatravelplan\.com\/tours\/alpha-tour-alpha/);
+  assert.match(generatedSitemap, /https:\/\/asiatravelplan\.com\/tours\/alpha-custom-route/);
   assert.doesNotMatch(generatedSitemap, /tour_unpublished/);
   assert.match(generatedSitemap, /https:\/\/asiatravelplan\.com\/privacy\.html/);
   assert.match(generatedDestinationHtml, /<h1>Private tours in Vietnam<\/h1>/);
   assert.match(generatedDestinationHtml, /"@type":"WebPage"/);
-  assert.match(generatedDestinationHtml, /<a href="\/tours\/alpha-tour-alpha">Alpha tour<\/a>/);
+  assert.match(generatedDestinationHtml, /<a href="\/tours\/alpha-custom-route">Alpha tour<\/a>/);
   assert.match(generatedStyleHtml, /<h1>Budget private tours<\/h1>/);
   assert.match(generatedTourHtml, /<title>Alpha tour \| AsiaTravelPlan<\/title>/);
   assert.match(generatedTourHtml, /<meta name="twitter:title" content="Alpha tour \| AsiaTravelPlan" \/>/);

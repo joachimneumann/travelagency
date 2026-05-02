@@ -140,6 +140,7 @@ const TOUR_DESCRIPTION_WARNING_LENGTH = 150;
 const TOUR_DESCRIPTION_MIN_FONT_SIZE_PX = 9;
 const TOUR_DESCRIPTION_FIT_TOLERANCE_PX = 1;
 const TOUR_DESCRIPTION_FIT_ITERATIONS = 8;
+const ONE_PAGER_SMALL_IMAGE_LIMIT = 4;
 
 const els = {
   pageBody: document.body,
@@ -169,7 +170,12 @@ const els = {
   seasonalityStartMonth: document.getElementById("tour_seasonality_start_month"),
   seasonalityEndMonth: document.getElementById("tour_seasonality_end_month"),
   publishedOnWebpage: document.getElementById("tour_published_on_webpage"),
+  seoSlug: document.getElementById("tour_seo_slug"),
   localizedContentEditor: document.getElementById("tour_localized_content_editor"),
+  onePagerImageSelector: document.getElementById("tour_one_pager_image_selector"),
+  onePagerHeroImages: document.getElementById("tour_one_pager_hero_images"),
+  onePagerBodyImages: document.getElementById("tour_one_pager_body_images"),
+  onePagerClearImagesBtn: document.getElementById("tour_one_pager_clear_images_btn"),
   tourCardImageSelector: document.getElementById("tour_card_image_selector"),
   reelVideoCard: document.getElementById("tour_reel_video_card"),
   addReelVideoBtn: document.getElementById("tour_add_reel_btn"),
@@ -344,6 +350,7 @@ function renderTourDirtyBar() {
   if (els.dirtyBarSummary) {
     els.dirtyBarSummary.textContent = "";
   }
+  syncOnePagerButtonState();
 }
 
 function updateTourDirtyState() {
@@ -747,63 +754,323 @@ function collectTourCardImageOptions(plan = currentTourTravelPlan()) {
   return result;
 }
 
-function selectedTourCardPrimaryImageId(plan, includedImages) {
-  const storedId = normalizeText(plan?.tour_card_primary_image_id);
-  if (storedId && includedImages.some((image) => image.id === storedId)) return storedId;
-  return includedImages[0]?.id || "";
+function normalizeTourCardImageIdList(value) {
+  return Array.from(new Set((Array.isArray(value) ? value : [])
+    .map((entry) => normalizeText(entry))
+    .filter(Boolean)));
 }
 
-function renderTourCardImageThumb(image, selectedId, { selectable = false } = {}) {
-  const selected = image.id === selectedId;
+function selectedTourCardImageIds(plan, images) {
+  const availableIds = new Set((Array.isArray(images) ? images : []).map((image) => image.id));
+  const storedIds = normalizeTourCardImageIdList(plan?.tour_card_image_ids)
+    .filter((imageId) => availableIds.has(imageId));
+  if (storedIds.length) return storedIds;
+
+  const legacyIds = (Array.isArray(images) ? images : [])
+    .filter((image) => image.included)
+    .map((image) => image.id);
+  const storedPrimaryId = normalizeText(plan?.tour_card_primary_image_id);
+  const primaryIndex = storedPrimaryId ? legacyIds.indexOf(storedPrimaryId) : -1;
+  if (primaryIndex > 0) {
+    const [primaryId] = legacyIds.splice(primaryIndex, 1);
+    legacyIds.unshift(primaryId);
+  }
+  return legacyIds;
+}
+
+function applyTourCardImageSelectionToPlan(plan, orderedImageIds) {
+  if (!plan || typeof plan !== "object" || Array.isArray(plan)) return;
+  const normalizedIds = normalizeTourCardImageIdList(orderedImageIds);
+  const selectedSet = new Set(normalizedIds);
+  plan.tour_card_image_ids = normalizedIds;
+  plan.tour_card_primary_image_id = normalizedIds[0] || null;
+  for (const day of Array.isArray(plan.days) ? plan.days : []) {
+    for (const service of Array.isArray(day?.services) ? day.services : []) {
+      const image = service?.image && typeof service.image === "object" && !Array.isArray(service.image)
+        ? service.image
+        : null;
+      if (!image) continue;
+      image.include_in_travel_tour_card = selectedSet.has(normalizeText(image.id));
+    }
+  }
+}
+
+function syncTourCardImageSelectionAcrossState(plan) {
+  const selectedIds = normalizeTourCardImageIdList(plan?.tour_card_image_ids);
+  applyTourCardImageSelectionToPlan(plan, selectedIds);
+  if (state.travelPlanDraft && state.travelPlanDraft !== plan) {
+    applyTourCardImageSelectionToPlan(state.travelPlanDraft, selectedIds);
+  }
+  if (state.booking?.travel_plan && state.booking.travel_plan !== plan) {
+    applyTourCardImageSelectionToPlan(state.booking.travel_plan, selectedIds);
+  }
+  if (state.tour?.travel_plan && state.tour.travel_plan !== plan) {
+    applyTourCardImageSelectionToPlan(state.tour.travel_plan, selectedIds);
+  }
+}
+
+function selectedOnePagerHeroImageId(plan, images) {
+  const availableIds = new Set((Array.isArray(images) ? images : []).map((image) => image.id));
+  const storedId = normalizeText(plan?.one_pager_hero_image_id);
+  if (storedId && availableIds.has(storedId)) return storedId;
+  const selectedIds = selectedOnePagerImageIds(plan, images);
+  if (selectedIds[0]) return selectedIds[0];
+  const webIds = selectedTourCardImageIds(plan, images);
+  if (webIds[0]) return webIds[0];
+  return images[0]?.id || "";
+}
+
+function selectedOnePagerImageIds(plan, images) {
+  const availableIds = new Set((Array.isArray(images) ? images : []).map((image) => image.id));
+  const hasExplicitImageIds = Object.prototype.hasOwnProperty.call(plan || {}, "one_pager_image_ids");
+  const storedIds = normalizeTourCardImageIdList(plan?.one_pager_image_ids)
+    .filter((imageId) => availableIds.has(imageId));
+  if (hasExplicitImageIds) return storedIds.slice(0, ONE_PAGER_SMALL_IMAGE_LIMIT);
+  return selectedTourCardImageIds(plan, images).slice(0, ONE_PAGER_SMALL_IMAGE_LIMIT);
+}
+
+function applyOnePagerImageSelectionToPlan(plan, { heroImageId = "", imageIds = [] } = {}) {
+  if (!plan || typeof plan !== "object" || Array.isArray(plan)) return;
+  plan.one_pager_hero_image_id = normalizeText(heroImageId) || null;
+  plan.one_pager_image_ids = normalizeTourCardImageIdList(imageIds)
+    .filter((imageId) => imageId !== plan.one_pager_hero_image_id)
+    .slice(0, ONE_PAGER_SMALL_IMAGE_LIMIT);
+}
+
+function syncOnePagerImageSelectionAcrossState(plan) {
+  const images = collectTourCardImageOptions(plan);
+  const heroImageId = selectedOnePagerHeroImageId(plan, images);
+  const imageIds = selectedOnePagerImageIds(plan, images).filter((imageId) => imageId !== heroImageId);
+  applyOnePagerImageSelectionToPlan(plan, { heroImageId, imageIds });
+  if (state.travelPlanDraft && state.travelPlanDraft !== plan) {
+    applyOnePagerImageSelectionToPlan(state.travelPlanDraft, { heroImageId, imageIds });
+  }
+  if (state.booking?.travel_plan && state.booking.travel_plan !== plan) {
+    applyOnePagerImageSelectionToPlan(state.booking.travel_plan, { heroImageId, imageIds });
+  }
+  if (state.tour?.travel_plan && state.tour.travel_plan !== plan) {
+    applyOnePagerImageSelectionToPlan(state.tour.travel_plan, { heroImageId, imageIds });
+  }
+}
+
+function renderTourCardImageThumb(image, selectedOrder, { selectable = false } = {}) {
+  const selected = Number.isInteger(selectedOrder) && selectedOrder > 0;
   const title = selected
-    ? backendT("tour.card_images.selected_first", "{label} is the first image shown in the card", { label: image.label })
+    ? backendT("tour.card_images.selected_order", "{label} is web page image {order}", { label: image.label, order: String(selectedOrder) })
     : selectable
-      ? backendT("tour.card_images.select_first", "Use {label} as the first card image", { label: image.label })
-      : backendT("tour.card_images.not_shown_hint", "{label} is not shown in the card", { label: image.label });
-  const tagName = selectable ? "button" : "span";
-  const attrs = selectable
-    ? `type="button" data-tour-card-primary-image="${escapeHtml(image.id)}"`
+      ? backendT("tour.card_images.select_for_web_page", "Add {label} to the web page images", { label: image.label })
+      : backendT("tour.card_images.select_disabled", "{label} cannot be selected right now", { label: image.label });
+  const canUseButton = state.permissions.canEditTours;
+  const tagName = canUseButton ? "button" : "span";
+  const attrs = canUseButton
+    ? `type="button" data-tour-card-select-image="${escapeHtml(image.id)}"${selectable ? "" : " disabled"}`
     : `aria-disabled="true"`;
+  const badge = selected ? String(selectedOrder) : "";
   return `
     <${tagName}
       class="tour-card-image-selector__thumb${selected ? " is-selected" : ""}"
+      data-image-selector-action="tour-card"
+      data-image-selector-id="${escapeHtml(image.id)}"
       ${attrs}
       title="${escapeHtml(title)}"
       aria-label="${escapeHtml(title)}"
     >
       <img src="${escapeHtml(image.src)}" alt="${escapeHtml(image.label)}" loading="lazy" />
-      ${selected ? `<span class="tour-card-image-selector__check" aria-hidden="true">✓</span>` : ""}
+      <span class="tour-card-image-selector__order" aria-hidden="true"${selected ? "" : " hidden"}>${escapeHtml(badge)}</span>
     </${tagName}>
   `;
+}
+
+function renderOnePagerImageThumb(image, { selected = false, badge = "", selectable = false, action = "hero", disabledTitle = "" } = {}) {
+  const title = action === "hero"
+    ? backendT("tour.one_pager_select_hero", "Use {label} as the one-page PDF hero image", { label: image.label })
+    : backendT("tour.one_pager_select_body_image", "Add {label} to the one-page PDF images", { label: image.label });
+  const selectedTitle = action === "hero"
+    ? backendT("tour.one_pager_selected_hero", "{label} is the one-page PDF hero image", { label: image.label })
+    : backendT("tour.one_pager_selected_body_image", "{label} is one-page PDF image {order}", { label: image.label, order: badge });
+  const inactiveTitle = normalizeText(disabledTitle) || title;
+  const dataAttribute = action === "hero" ? "data-one-pager-hero-image" : "data-one-pager-select-image";
+  const canUseButton = state.permissions.canEditTours;
+  const tagName = canUseButton ? "button" : "span";
+  const attrs = canUseButton
+    ? `type="button" ${dataAttribute}="${escapeHtml(image.id)}"${selectable ? "" : " disabled"}`
+    : `aria-disabled="true"`;
+  const badgeText = selected ? badge : "";
+  return `
+    <${tagName}
+      class="tour-card-image-selector__thumb${selected ? " is-selected" : ""}"
+      data-image-selector-action="${escapeHtml(action)}"
+      data-image-selector-id="${escapeHtml(image.id)}"
+      ${attrs}
+      title="${escapeHtml(selected ? selectedTitle : selectable ? title : inactiveTitle)}"
+      aria-label="${escapeHtml(selected ? selectedTitle : selectable ? title : inactiveTitle)}"
+    >
+      <img src="${escapeHtml(image.src)}" alt="${escapeHtml(image.label)}" loading="lazy" />
+      <span class="tour-card-image-selector__order" aria-hidden="true"${selected ? "" : " hidden"}>${escapeHtml(badgeText)}</span>
+    </${tagName}>
+  `;
+}
+
+function setHtmlIfChanged(element, html) {
+  if (!(element instanceof HTMLElement)) return;
+  if (element.innerHTML !== html) {
+    element.innerHTML = html;
+  }
+}
+
+function syncElementAttributes(target, source) {
+  if (!(target instanceof Element) || !(source instanceof Element)) return;
+  Array.from(target.attributes).forEach((attribute) => {
+    if (!source.hasAttribute(attribute.name)) {
+      target.removeAttribute(attribute.name);
+    }
+  });
+  Array.from(source.attributes).forEach((attribute) => {
+    if (target.getAttribute(attribute.name) !== attribute.value) {
+      target.setAttribute(attribute.name, attribute.value);
+    }
+  });
+}
+
+function patchImageSelectorThumb(currentThumb, nextThumb) {
+  syncElementAttributes(currentThumb, nextThumb);
+  const currentImage = currentThumb.querySelector("img");
+  const nextImage = nextThumb.querySelector("img");
+  if (currentImage instanceof HTMLImageElement && nextImage instanceof HTMLImageElement) {
+    syncElementAttributes(currentImage, nextImage);
+  }
+  const currentOrder = currentThumb.querySelector(".tour-card-image-selector__order");
+  const nextOrder = nextThumb.querySelector(".tour-card-image-selector__order");
+  if (currentOrder instanceof HTMLElement && nextOrder instanceof HTMLElement) {
+    syncElementAttributes(currentOrder, nextOrder);
+    if (currentOrder.textContent !== nextOrder.textContent) {
+      const textNode = Array.from(currentOrder.childNodes).find((node) => node.nodeType === Node.TEXT_NODE);
+      if (textNode) {
+        textNode.nodeValue = nextOrder.textContent || "";
+      } else {
+        currentOrder.append(document.createTextNode(nextOrder.textContent || ""));
+      }
+    }
+  }
+}
+
+function patchImageSelectorThumbs(container, html) {
+  if (!(container instanceof HTMLElement)) return;
+  const template = document.createElement("template");
+  template.innerHTML = html;
+  const nextThumbs = Array.from(template.content.children);
+  const currentThumbs = Array.from(container.children);
+  const canPatch = currentThumbs.length === nextThumbs.length
+    && currentThumbs.every((currentThumb, index) => {
+      const nextThumb = nextThumbs[index];
+      return currentThumb instanceof HTMLElement
+        && nextThumb instanceof HTMLElement
+        && currentThumb.tagName === nextThumb.tagName
+        && currentThumb.dataset.imageSelectorId === nextThumb.dataset.imageSelectorId
+        && currentThumb.dataset.imageSelectorAction === nextThumb.dataset.imageSelectorAction;
+    });
+
+  if (!canPatch) {
+    setHtmlIfChanged(container, html);
+    return;
+  }
+
+  currentThumbs.forEach((currentThumb, index) => {
+    const nextThumb = nextThumbs[index];
+    if (currentThumb instanceof HTMLElement && nextThumb instanceof HTMLElement) {
+      patchImageSelectorThumb(currentThumb, nextThumb);
+    }
+  });
+}
+
+function renderOnePagerImageSelector() {
+  if (!(els.onePagerImageSelector instanceof HTMLElement)) return;
+  const plan = currentTourTravelPlan();
+  const images = collectTourCardImageOptions(plan);
+  const heroImageId = selectedOnePagerHeroImageId(plan, images);
+  const selectedIds = selectedOnePagerImageIds(plan, images).filter((imageId) => imageId !== heroImageId);
+  applyOnePagerImageSelectionToPlan(plan, { heroImageId, imageIds: selectedIds });
+  const orderByImageId = new Map(selectedIds.map((imageId, index) => [imageId, index + 1]));
+  const emptyMarkup = `<span class="micro">${escapeHtml(backendT("tour.card_images.none_available", "No service images are available for the web page."))}</span>`;
+  if (els.onePagerHeroImages) {
+    patchImageSelectorThumbs(els.onePagerHeroImages, images.length
+      ? images.map((image) => renderOnePagerImageThumb(image, {
+        selected: image.id === heroImageId,
+        badge: "H",
+        selectable: state.permissions.canEditTours,
+        action: "hero"
+      })).join("")
+      : emptyMarkup);
+  }
+  if (els.onePagerBodyImages) {
+    patchImageSelectorThumbs(els.onePagerBodyImages, images.length
+      ? images.map((image) => {
+        const isHeroImage = image.id === heroImageId;
+        return renderOnePagerImageThumb(image, {
+          selected: orderByImageId.has(image.id),
+          badge: orderByImageId.has(image.id) ? String(orderByImageId.get(image.id)) : "",
+          selectable: state.permissions.canEditTours
+            && !isHeroImage
+            && (orderByImageId.has(image.id) || selectedIds.length < ONE_PAGER_SMALL_IMAGE_LIMIT),
+          action: "body",
+          disabledTitle: isHeroImage
+            ? backendT("tour.one_pager_hero_already_used", "This image is already used as the one-page PDF hero image.")
+            : ""
+        });
+      }).join("")
+      : emptyMarkup);
+  }
+  if (els.onePagerClearImagesBtn) {
+    els.onePagerClearImagesBtn.disabled = !state.permissions.canEditTours || !selectedIds.length;
+  }
+}
+
+function ensureTourCardImageSelectorShell() {
+  if (!(els.tourCardImageSelector instanceof HTMLElement)) return null;
+  let thumbs = els.tourCardImageSelector.querySelector("[data-tour-card-image-thumbs]");
+  let clearButton = els.tourCardImageSelector.querySelector("[data-tour-card-clear-images]");
+  if (!(thumbs instanceof HTMLElement) || !(clearButton instanceof HTMLButtonElement)) {
+    els.tourCardImageSelector.innerHTML = `
+      <div class="tour-card-image-selector__layout">
+        <img class="tour-card-image-selector__preview" src="/assets/img/marketing_tour.png" alt="" aria-hidden="true" loading="lazy" />
+        <div class="tour-card-image-selector__content">
+          <div class="tour-card-image-selector__head">
+            <button class="btn btn-ghost" type="button" data-tour-card-clear-images>${escapeHtml(backendT("tour.card_images.clear", "Clear"))}</button>
+          </div>
+          <div class="tour-card-image-selector__thumbs" data-tour-card-image-thumbs></div>
+        </div>
+      </div>
+    `;
+    thumbs = els.tourCardImageSelector.querySelector("[data-tour-card-image-thumbs]");
+    clearButton = els.tourCardImageSelector.querySelector("[data-tour-card-clear-images]");
+  }
+  if (!(thumbs instanceof HTMLElement) || !(clearButton instanceof HTMLButtonElement)) return null;
+  return { clearButton, thumbs };
 }
 
 function renderTourCardImageSelector() {
   if (!(els.tourCardImageSelector instanceof HTMLElement)) return;
   const plan = currentTourTravelPlan();
   const images = collectTourCardImageOptions(plan);
-  const includedImages = images.filter((image) => image.included);
-  const excludedImages = images.filter((image) => !image.included);
-  const selectedId = selectedTourCardPrimaryImageId(plan, includedImages);
-  const shownMarkup = includedImages.length
-    ? includedImages.map((image) => renderTourCardImageThumb(image, selectedId, { selectable: state.permissions.canEditTours })).join("")
-    : `<span class="micro">${escapeHtml(backendT("tour.card_images.none_shown", "No service images are currently shown in the card."))}</span>`;
-  const hiddenMarkup = excludedImages.length
-    ? excludedImages.map((image) => renderTourCardImageThumb(image, selectedId, { selectable: false })).join("")
-    : `<span class="micro">${escapeHtml(backendT("tour.card_images.none_hidden", "No service images are currently hidden from the card."))}</span>`;
-
-  els.tourCardImageSelector.innerHTML = `
-    <div class="tour-card-image-selector__row">
-      <span class="tour-card-image-selector__label">${escapeHtml(backendT("tour.card_images.shown", "Displayed in the card"))}</span>
-      <div class="tour-card-image-selector__thumbs">${shownMarkup}</div>
-    </div>
-    <div class="tour-card-image-selector__row">
-      <span class="tour-card-image-selector__label">${escapeHtml(backendT("tour.card_images.not_shown", "Not shown"))}</span>
-      <div class="tour-card-image-selector__thumbs">${hiddenMarkup}</div>
-    </div>
-  `;
+  const selectedIds = selectedTourCardImageIds(plan, images);
+  applyTourCardImageSelectionToPlan(plan, selectedIds);
+  const orderByImageId = new Map(selectedIds.map((imageId, index) => [imageId, index + 1]));
+  const thumbsMarkup = images.length
+    ? images
+      .map((image) => renderTourCardImageThumb(image, orderByImageId.get(image.id) || 0, { selectable: state.permissions.canEditTours }))
+      .join("")
+    : `<span class="micro">${escapeHtml(backendT("tour.card_images.none_available", "No service images are available for the web page."))}</span>`;
+  const shell = ensureTourCardImageSelectorShell();
+  if (!shell) return;
+  shell.clearButton.disabled = !state.permissions.canEditTours || !selectedIds.length;
+  const clearLabel = backendT("tour.card_images.clear", "Clear");
+  if (shell.clearButton.textContent !== clearLabel) {
+    shell.clearButton.textContent = clearLabel;
+  }
+  patchImageSelectorThumbs(shell.thumbs, thumbsMarkup);
 }
 
-function syncTourCardImageSelectorFromEditor() {
+function syncTourCardImageSelectorFromEditor({ renderSelectors = true } = {}) {
   const result = tourTravelPlanAdapter?.collectPayload?.({
     focusFirstInvalid: false,
     pruneEmptyContent: false
@@ -813,26 +1080,107 @@ function syncTourCardImageSelectorFromEditor() {
     if (state.booking) state.booking.travel_plan = result.payload;
     if (state.tour) state.tour.travel_plan = result.payload;
   }
-  renderTourCardImageSelector();
+  syncOnePagerImageSelectionAcrossState(currentTourTravelPlan());
+  syncTourCardImageSelectionAcrossState(currentTourTravelPlan());
+  if (renderSelectors) {
+    renderOnePagerImageSelector();
+    renderTourCardImageSelector();
+  }
 }
 
-function selectTourCardPrimaryImage(imageId) {
+function selectOnePagerHeroImage(imageId) {
   const normalizedImageId = normalizeText(imageId);
   if (!normalizedImageId || !state.permissions.canEditTours) return;
-  syncTourCardImageSelectorFromEditor();
+  syncTourCardImageSelectorFromEditor({ renderSelectors: false });
   const plan = currentTourTravelPlan();
-  const includedImages = collectTourCardImageOptions(plan).filter((image) => image.included);
-  if (!includedImages.some((image) => image.id === normalizedImageId)) {
-    setStatus(backendT("tour.card_images.select_shown_only", "Only images shown in the card can be selected as first image."));
+  const images = collectTourCardImageOptions(plan);
+  if (!images.some((image) => image.id === normalizedImageId)) {
+    setStatus(backendT("tour.card_images.select_available_only", "Only available service images can be selected for the web page."));
     return;
   }
-  plan.tour_card_primary_image_id = normalizedImageId;
-  if (state.travelPlanDraft) state.travelPlanDraft.tour_card_primary_image_id = normalizedImageId;
-  if (state.booking?.travel_plan) state.booking.travel_plan.tour_card_primary_image_id = normalizedImageId;
-  if (state.tour?.travel_plan) state.tour.travel_plan.tour_card_primary_image_id = normalizedImageId;
+  const selectedIds = selectedOnePagerImageIds(plan, images).filter((imageIdValue) => imageIdValue !== normalizedImageId);
+  applyOnePagerImageSelectionToPlan(plan, { heroImageId: normalizedImageId, imageIds: selectedIds });
+  syncOnePagerImageSelectionAcrossState(plan);
+  renderOnePagerImageSelector();
+  updateTourDirtyState();
+  setStatus(backendT("tour.one_pager_hero_selected", "One-page PDF hero image selected. Save changes to publish it."));
+}
+
+function selectOnePagerBodyImage(imageId) {
+  const normalizedImageId = normalizeText(imageId);
+  if (!normalizedImageId || !state.permissions.canEditTours) return;
+  syncTourCardImageSelectorFromEditor({ renderSelectors: false });
+  const plan = currentTourTravelPlan();
+  const images = collectTourCardImageOptions(plan);
+  if (!images.some((image) => image.id === normalizedImageId)) {
+    setStatus(backendT("tour.card_images.select_available_only", "Only available service images can be selected for the web page."));
+    return;
+  }
+  const heroImageId = selectedOnePagerHeroImageId(plan, images);
+  if (normalizedImageId === heroImageId) {
+    setStatus(backendT("tour.one_pager_hero_already_used", "This image is already used as the one-page PDF hero image."));
+    return;
+  }
+  const selectedIds = selectedOnePagerImageIds(plan, images).filter((imageIdValue) => imageIdValue !== heroImageId);
+  if (selectedIds.includes(normalizedImageId)) {
+    setStatus(backendT("tour.one_pager_image_already_selected", "This image is already selected for the one-page PDF."));
+    return;
+  }
+  if (selectedIds.length >= ONE_PAGER_SMALL_IMAGE_LIMIT) {
+    setStatus(backendT("tour.one_pager_image_limit_reached", "Only 4 small images can be selected for the one-page PDF."));
+    return;
+  }
+  applyOnePagerImageSelectionToPlan(plan, { heroImageId, imageIds: [...selectedIds, normalizedImageId] });
+  syncOnePagerImageSelectionAcrossState(plan);
+  renderOnePagerImageSelector();
+  updateTourDirtyState();
+  setStatus(backendT("tour.one_pager_image_selected", "One-page PDF image selected. Save changes to publish it."));
+}
+
+function clearOnePagerBodyImages() {
+  if (!state.permissions.canEditTours) return;
+  syncTourCardImageSelectorFromEditor({ renderSelectors: false });
+  const plan = currentTourTravelPlan();
+  const images = collectTourCardImageOptions(plan);
+  const heroImageId = selectedOnePagerHeroImageId(plan, images);
+  applyOnePagerImageSelectionToPlan(plan, { heroImageId, imageIds: [] });
+  syncOnePagerImageSelectionAcrossState(plan);
+  renderOnePagerImageSelector();
+  updateTourDirtyState();
+  setStatus(backendT("tour.one_pager_images_cleared", "One-page PDF image selection cleared. Select images again, then save changes."));
+}
+
+function selectTourCardImageForWebPage(imageId) {
+  const normalizedImageId = normalizeText(imageId);
+  if (!normalizedImageId || !state.permissions.canEditTours) return;
+  syncTourCardImageSelectorFromEditor({ renderSelectors: false });
+  const plan = currentTourTravelPlan();
+  const images = collectTourCardImageOptions(plan);
+  if (!images.some((image) => image.id === normalizedImageId)) {
+    setStatus(backendT("tour.card_images.select_available_only", "Only available service images can be selected for the web page."));
+    return;
+  }
+  const selectedIds = selectedTourCardImageIds(plan, images);
+  if (selectedIds.includes(normalizedImageId)) {
+    setStatus(backendT("tour.card_images.already_selected", "This image is already selected for the web page."));
+    return;
+  }
+  applyTourCardImageSelectionToPlan(plan, [...selectedIds, normalizedImageId]);
+  syncTourCardImageSelectionAcrossState(plan);
   renderTourCardImageSelector();
   updateTourDirtyState();
-  setStatus(backendT("tour.card_images.first_selected", "First card image selected. Save changes to publish it."));
+  setStatus(backendT("tour.card_images.image_selected", "Web page image selected. Save changes to publish it."));
+}
+
+function clearTourCardImagesForWebPage() {
+  if (!state.permissions.canEditTours) return;
+  syncTourCardImageSelectorFromEditor({ renderSelectors: false });
+  const plan = currentTourTravelPlan();
+  applyTourCardImageSelectionToPlan(plan, []);
+  syncTourCardImageSelectionAcrossState(plan);
+  renderTourCardImageSelector();
+  updateTourDirtyState();
+  setStatus(backendT("tour.card_images.cleared", "Web page image selection cleared. Select images again, then save changes."));
 }
 
 function renderLocalizedTourContentEditor() {
@@ -983,6 +1331,7 @@ function handleBackendLanguageChanged() {
   renderLocalizedTourContentEditor();
   renderTourReelVideo();
   tourTravelPlanAdapter?.renderTravelPlanPanel?.({ syncFromDom: true });
+  renderOnePagerImageSelector();
   renderTourCardImageSelector();
   renderTourDirtyBar();
 }
@@ -1042,7 +1391,10 @@ async function init() {
       if (state.booking && state.booking.id === state.id) {
         state.booking.updated_at = normalizeText(tour?.updated_at) || state.booking.updated_at || null;
       }
-      window.setTimeout(renderTourCardImageSelector, 0);
+      window.setTimeout(() => {
+        renderOnePagerImageSelector();
+        renderTourCardImageSelector();
+      }, 0);
       notifyBackendTranslationsStatus();
     },
     setPageOverlay: (isVisible, message = "") => setTourPageOverlay(isVisible, message)
@@ -1078,18 +1430,48 @@ async function init() {
     els.form.addEventListener("change", (event) => {
       clearError();
       setStatus("");
-      if (event.target instanceof HTMLElement && event.target.matches('[data-travel-plan-service-image-field="include_in_travel_tour_card"]')) {
-        window.setTimeout(syncTourCardImageSelectorFromEditor, 0);
-      }
+      if (event.target === els.onePagerLang) return;
       scheduleTourDirtyState();
     });
     els.form.addEventListener("click", (event) => {
-      const tourCardPrimaryImageButton = event.target instanceof Element
-        ? event.target.closest("[data-tour-card-primary-image]")
+      const onePagerHeroButton = event.target instanceof Element
+        ? event.target.closest("[data-one-pager-hero-image]")
         : null;
-      if (tourCardPrimaryImageButton) {
+      if (onePagerHeroButton) {
         event.preventDefault();
-        selectTourCardPrimaryImage(tourCardPrimaryImageButton.getAttribute("data-tour-card-primary-image"));
+        selectOnePagerHeroImage(onePagerHeroButton.getAttribute("data-one-pager-hero-image"));
+        return;
+      }
+      const onePagerImageButton = event.target instanceof Element
+        ? event.target.closest("[data-one-pager-select-image]")
+        : null;
+      if (onePagerImageButton) {
+        event.preventDefault();
+        selectOnePagerBodyImage(onePagerImageButton.getAttribute("data-one-pager-select-image"));
+        return;
+      }
+      const onePagerClearButton = event.target instanceof Element
+        ? event.target.closest("#tour_one_pager_clear_images_btn")
+        : null;
+      if (onePagerClearButton) {
+        event.preventDefault();
+        clearOnePagerBodyImages();
+        return;
+      }
+      const tourCardImageButton = event.target instanceof Element
+        ? event.target.closest("[data-tour-card-select-image]")
+        : null;
+      if (tourCardImageButton) {
+        event.preventDefault();
+        selectTourCardImageForWebPage(tourCardImageButton.getAttribute("data-tour-card-select-image"));
+        return;
+      }
+      const tourCardClearButton = event.target instanceof Element
+        ? event.target.closest("[data-tour-card-clear-images]")
+        : null;
+      if (tourCardClearButton) {
+        event.preventDefault();
+        clearTourCardImagesForWebPage();
         return;
       }
     });
@@ -1157,10 +1539,12 @@ async function loadTour() {
   setInput("tour_priority", toInputNumber(tour.priority));
   setInput("tour_seasonality_start_month", tour.seasonality_start_month || "");
   setInput("tour_seasonality_end_month", tour.seasonality_end_month || "");
+  setInput("tour_seo_slug", tour.seo_slug || "");
   if (els.publishedOnWebpage) els.publishedOnWebpage.checked = tour.published_on_webpage !== false;
   renderLocalizedTourContentEditor();
   syncReelVideoDraftItemFromTour(tour);
   tourTravelPlanAdapter?.applyTour(tour);
+  renderOnePagerImageSelector();
   renderTourCardImageSelector();
 
   renderDestinationChoices(tour_destination_codes(tour));
@@ -1199,10 +1583,12 @@ async function initializeNewTourForm() {
   setInput("tour_priority", "50");
   setInput("tour_seasonality_start_month", "");
   setInput("tour_seasonality_end_month", "");
+  setInput("tour_seo_slug", "");
   if (els.publishedOnWebpage) els.publishedOnWebpage.checked = true;
   renderLocalizedTourContentEditor();
   syncReelVideoDraftItemFromTour(state.tour);
   tourTravelPlanAdapter?.applyTour(state.tour);
+  renderOnePagerImageSelector();
   renderTourCardImageSelector();
   renderDestinationChoices([]);
   renderStyleChoices([]);
@@ -1326,15 +1712,16 @@ function buildTourSaveValidationMessage({ title = "", destinations = [], styles 
 }
 
 function syncOnePagerButtonState() {
-  const disabled = !state.permissions.canReadTours || state.is_create_mode || !normalizeText(state.id);
+  const unavailable = !state.permissions.canReadTours || state.is_create_mode || !normalizeText(state.id);
+  const disabled = unavailable || state.formDirty === true;
   if (els.onePagerBtn) {
     els.onePagerBtn.disabled = disabled;
     els.onePagerBtn.title = disabled
       ? backendT("tour.status.one_pager_save_first", "Save the tour before creating a one-pager PDF.")
-      : backendT("tour.one_pager", "One pager");
+      : backendT("tour.one_pager_create", "Create One-Page PDF");
   }
   if (els.onePagerLang) {
-    els.onePagerLang.disabled = disabled;
+    els.onePagerLang.disabled = unavailable;
   }
 }
 
@@ -1400,6 +1787,7 @@ async function submitForm(event) {
     seasonality_start_month: getInput("tour_seasonality_start_month"),
     seasonality_end_month: getInput("tour_seasonality_end_month"),
     published_on_webpage: els.publishedOnWebpage ? els.publishedOnWebpage.checked : true,
+    seo_slug: getInput("tour_seo_slug"),
     short_description_i18n,
     travel_plan: omitDerivedTravelPlanDestinations(travelPlanPayload)
   };
@@ -1595,6 +1983,7 @@ function applyTourPermissions() {
   if (els.form) {
     els.form.querySelectorAll("input, textarea, select, button").forEach((el) => {
       if (el.id === "tour_cancel_btn") return;
+      if (el.id === "tour_one_pager_btn" || el.id === "tour_one_pager_lang") return;
       el.disabled = true;
     });
   }
