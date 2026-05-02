@@ -64,12 +64,88 @@ test("static translation service marks changed source strings stale and exposes 
     const extra = state.rows.find((row) => row.key === "obsolete.key");
 
     assert.equal(title.status, "stale");
+    assert.equal(title.freshness_state, "stale");
+    assert.equal(title.publish_state, "unpublished");
     assert.equal(title.source_hash, sha("New private holidays"));
     assert.equal(cta.status, "manual_override");
+    assert.equal(cta.origin, "manual");
+    assert.equal(cta.freshness_state, "current");
     assert.equal(cta.override, "Tạo chuyến đi riêng");
     assert.equal(extra.status, "extra");
+    assert.equal(extra.publish_state, "not_publishable");
+    assert.equal(extra.dirty, false);
     assert.equal(state.counts.stale, 1);
     assert.equal(state.counts.manual_override, 1);
+    assert.equal(state.counts["freshness_state.stale"], 1);
+    assert.equal(state.counts["origin.manual"], 1);
+  } finally {
+    await rm(repoRoot, { recursive: true, force: true });
+  }
+});
+
+test("static translation service publishes a versioned snapshot for clean target languages", async () => {
+  const repoRoot = await createFixture();
+  try {
+    await writeJson(path.join(repoRoot, "frontend", "data", "i18n", "frontend", "vi.json"), {
+      "hero.title": "Kỳ nghỉ riêng mới",
+      "hero.cta": "Lập kế hoạch chuyến đi",
+      "obsolete.key": "Remove me"
+    });
+    await writeJson(path.join(repoRoot, "frontend", "data", "i18n", "frontend_meta", "vi.json"), {
+      "hero.title": {
+        source_hash: sha("New private holidays"),
+        origin: "machine",
+        updated_at: "2026-01-03T00:00:00.000Z"
+      },
+      "hero.cta": {
+        source_hash: sha("Plan my trip"),
+        origin: "machine",
+        updated_at: "2026-01-02T00:00:00.000Z"
+      }
+    });
+    const service = createStaticTranslationService({
+      repoRoot,
+      translationsSnapshotDir: path.join(repoRoot, "content", "translations"),
+      nowIso: () => "2026-04-28T04:00:00.000Z"
+    });
+
+    const manifest = await service.publishTranslations({ domains: ["frontend"], target_langs: ["vi"] });
+    assert.equal(manifest.total_items, 2);
+    assert.equal(manifest.sections[0].file, "customers/frontend-static.vi.json");
+
+    const snapshotRaw = await readFile(path.join(repoRoot, "content", "translations", "customers", "frontend-static.vi.json"), "utf8");
+    const snapshot = JSON.parse(snapshotRaw);
+    const cta = snapshot.items.find((item) => item.key === "hero.cta");
+    assert.equal(snapshot.schema, "translation-snapshot/v1");
+    assert.equal(snapshot.target_lang, "vi");
+    assert.equal(cta.origin, "manual");
+    assert.equal(cta.target_text, "Tạo chuyến đi riêng");
+
+    const state = await service.getLanguageState("frontend", "vi");
+    assert.equal(state.rows.find((row) => row.key === "hero.title").publish_state, "published");
+    assert.equal(state.rows.find((row) => row.key === "hero.cta").publish_state, "published");
+  } finally {
+    await rm(repoRoot, { recursive: true, force: true });
+  }
+});
+
+test("static translation publish blocks stale and missing required rows", async () => {
+  const repoRoot = await createFixture();
+  try {
+    const service = createStaticTranslationService({
+      repoRoot,
+      translationsSnapshotDir: path.join(repoRoot, "content", "translations")
+    });
+
+    await assert.rejects(
+      () => service.publishTranslations({ domains: ["frontend"], target_langs: ["vi"] }),
+      (error) => {
+        assert.equal(error.status, 409);
+        assert.equal(error.code, "STATIC_TRANSLATION_PUBLISH_BLOCKED");
+        assert.ok(error.details.some((issue) => issue.key === "hero.title" && issue.issue === "stale_translation"));
+        return true;
+      }
+    );
   } finally {
     await rm(repoRoot, { recursive: true, force: true });
   }
@@ -110,6 +186,25 @@ test("static translation service writes ordered overrides with optimistic revisi
   }
 });
 
+test("static translation service deletes static cached translations without clearing manual overrides", async () => {
+  const repoRoot = await createFixture();
+  try {
+    const service = createStaticTranslationService({ repoRoot });
+    const deleted = await service.deleteCache("frontend", "vi", "hero.cta");
+    const cta = deleted.rows.find((row) => row.key === "hero.cta");
+
+    assert.equal(cta.cached, "");
+    assert.equal(cta.override, "Tạo chuyến đi riêng");
+    assert.equal(cta.status, "manual_override");
+    assert.equal(cta.origin, "manual");
+
+    const targetRaw = await readFile(path.join(repoRoot, "frontend", "data", "i18n", "frontend", "vi.json"), "utf8");
+    assert.equal(Object.prototype.hasOwnProperty.call(JSON.parse(targetRaw), "hero.cta"), false);
+  } finally {
+    await rm(repoRoot, { recursive: true, force: true });
+  }
+});
+
 test("static translation service rejects manual override writes when disabled", async () => {
   const repoRoot = await createFixture();
   try {
@@ -134,88 +229,6 @@ test("static translation service rejects manual override writes when disabled", 
   }
 });
 
-test("static translation service exposes and edits generated homepage content translations", async () => {
-  const repoRoot = await createFixture();
-  try {
-    let store = {
-      destination_scope_destinations: [
-        {
-          code: "VN",
-          label: "Vietnam",
-          label_i18n: {
-            en: "Vietnam",
-            vi: "Việt Nam"
-          }
-        }
-      ],
-      destination_areas: [
-        {
-          id: "area_north",
-          destination: "VN",
-          code: "north",
-          name: "North",
-          name_i18n: {
-            en: "North",
-            vi: "Miền Bắc"
-          },
-          updated_at: "2026-04-28T00:00:00.000Z"
-        }
-      ],
-      destination_places: []
-    };
-    let tours = [
-      {
-        id: "tour_alpha",
-        title: {
-          en: "Northern Vietnam",
-          vi: "Miền Bắc Việt Nam"
-        },
-        short_description: {
-          en: "Da Lat of the North",
-          vi: "Đà Lạt của miền Bắc"
-        },
-        updated_at: "2026-04-28T00:00:00.000Z"
-      }
-    ];
-
-    const service = createStaticTranslationService({
-      repoRoot,
-      readStore: async () => JSON.parse(JSON.stringify(store)),
-      persistStore: async (nextStore) => {
-        store = JSON.parse(JSON.stringify(nextStore));
-      },
-      readTours: async () => JSON.parse(JSON.stringify(tours)),
-      persistTour: async (nextTour) => {
-        tours = tours.map((tour) => tour.id === nextTour.id ? JSON.parse(JSON.stringify(nextTour)) : tour);
-      },
-      nowIso: () => "2026-04-28T01:00:00.000Z"
-    });
-
-    const state = await service.getLanguageState("homepage-content", "vi");
-    const north = state.rows.find((row) => row.key === "area.area_north.name");
-    const tourDescription = state.rows.find((row) => row.key === "tour.tour_alpha.short_description");
-
-    assert.equal(north.source, "North");
-    assert.equal(north.override, "Miền Bắc");
-    assert.equal(north.status, "content_translation");
-    assert.equal(tourDescription.source, "Da Lat of the North");
-
-    const saved = await service.patchOverrides("homepage-content", "vi", {
-      expected_revision: state.revision,
-      overrides: {
-        "area.area_north.name": "Bắc Bộ",
-        "tour.tour_alpha.short_description": "Đà Lạt miền Bắc"
-      }
-    });
-
-    assert.equal(store.destination_areas[0].name_i18n.vi, "Bắc Bộ");
-    assert.equal(tours[0].short_description.vi, "Đà Lạt miền Bắc");
-    assert.equal(saved.rows.find((row) => row.key === "area.area_north.name").override, "Bắc Bộ");
-  } finally {
-    await rm(repoRoot, { recursive: true, force: true });
-  }
-});
-
 test("static translation service exposes marketing tour memory and saves manual overrides", async () => {
   const repoRoot = await createFixture();
   try {
@@ -225,8 +238,14 @@ test("static translation service exposes marketing tour memory and saves manual 
       nowIso: () => "2026-04-28T02:00:00.000Z"
     });
     await translationMemoryStore.writeMachineTranslations(
-      { title: "Lantern walk" },
-      { title: "Maschinenlaternen-Spaziergang" },
+      {
+        title: "Lantern walk",
+        description: "Hoi An evening"
+      },
+      {
+        title: "Maschinenlaternen-Spaziergang",
+        description: "Hoi An Abend"
+      },
       "de",
       { kind: "google", display: "google" }
     );
@@ -263,14 +282,34 @@ test("static translation service exposes marketing tour memory and saves manual 
 
     const state = await service.getLanguageState("marketing-tour-memory", "de");
     const row = state.rows.find((item) => item.source === "Lantern walk");
+    const description = state.rows.find((item) => item.source === "Hoi An evening");
     const missing = state.rows.find((item) => item.source === "Basket boat tour");
 
     assert.equal(row.cached, "Maschinenlaternen-Spaziergang");
     assert.equal(row.status, "machine");
+    assert.equal(description.cached, "Hoi An Abend");
+    assert.equal(description.status, "machine");
     assert.equal(missing.status, "missing");
 
+    const deleted = await service.deleteCache("marketing-tour-memory", "de", row.key, {
+      expected_revision: state.revision
+    });
+    const deletedRow = deleted.rows.find((item) => item.source === "Lantern walk");
+    assert.equal(deletedRow.cached, "");
+    assert.equal(deletedRow.status, "missing");
+
+    tours[0].short_description.en = "Hoi An sunrise";
+    const changedState = await service.getLanguageState("marketing-tour-memory", "de");
+    const changedDescription = changedState.rows.find((item) => item.source === "Hoi An sunrise");
+    assert.equal(changedDescription.status, "missing");
+    assert.equal(changedDescription.dirty, true);
+    const summary = await service.getStatusSummary();
+    const marketingTourDe = summary.languages.find((entry) => entry.domain === "marketing-tour-memory" && entry.target_lang === "de");
+    assert.equal(summary.dirty, true);
+    assert.equal(marketingTourDe.dirty_count > 0, true);
+
     const saved = await service.patchOverrides("marketing-tour-memory", "de", {
-      expected_revision: state.revision,
+      expected_revision: changedState.revision,
       overrides: {
         [row.key]: "Laternen-Spaziergang"
       }
@@ -298,7 +337,61 @@ test("static translation service exposes marketing tour memory and saves manual 
   }
 });
 
-test("static translation service exposes exact-source memory for index and booking sections", async () => {
+test("static translation service applies missing marketing tour memory translations", async () => {
+  const repoRoot = await createFixture();
+  try {
+    const translationMemoryStore = createTranslationMemoryStore({
+      dataPath: path.join(repoRoot, "content", "translation_memory.json"),
+      writeQueueRef: { current: Promise.resolve() },
+      nowIso: () => "2026-04-28T02:30:00.000Z"
+    });
+    const tours = [
+      {
+        id: "tour_memory",
+        title: { en: "Lantern walk" },
+        short_description: { en: "Hoi An evening" }
+      }
+    ];
+    const calls = [];
+    const service = createStaticTranslationService({
+      repoRoot,
+      readTours: async () => JSON.parse(JSON.stringify(tours)),
+      translationMemoryStore,
+      nowIso: () => "2026-04-28T02:30:00.000Z"
+    });
+
+    const summary = await service.applyMissingTranslations({
+      domains: ["marketing-tour-memory"],
+      target_langs: ["vi"],
+      translateEntriesWithMeta: async (entries, targetLang, options) => {
+        calls.push({ entries, targetLang, options });
+        return {
+          entries: Object.fromEntries(Object.entries(entries).map(([key, value]) => [key, `vi:${value}`])),
+          provider: { kind: "test", display: "test" }
+        };
+      }
+    });
+
+    const resolved = await translationMemoryStore.resolveEntries({ title: "Lantern walk", description: "Hoi An evening" }, "vi");
+    assert.equal(summary.requested_count, 2);
+    assert.equal(summary.translated_count, 2);
+    assert.equal(calls[0].targetLang, "vi");
+    assert.equal(calls[0].options.translationProfile, "marketing_trip_copy");
+    assert.equal(calls[0].options.allowGoogleFallback, true);
+    assert.deepEqual(resolved.entries, {
+      title: "vi:Lantern walk",
+      description: "vi:Hoi An evening"
+    });
+
+    const state = await service.getLanguageState("marketing-tour-memory", "vi");
+    assert.equal(state.rows.find((row) => row.source === "Lantern walk").status, "machine");
+    assert.equal(state.rows.find((row) => row.source === "Hoi An evening").status, "machine");
+  } finally {
+    await rm(repoRoot, { recursive: true, force: true });
+  }
+});
+
+test("static translation service excludes generated content and booking travel-plan strings from index memory", async () => {
   const repoRoot = await createFixture();
   try {
     const translationMemoryStore = createTranslationMemoryStore({
@@ -309,10 +402,12 @@ test("static translation service exposes exact-source memory for index and booki
     await translationMemoryStore.writeMachineTranslations(
       {
         cta: "Plan my trip",
+        bookingDay: "Arrival day",
         bookingService: "Airport transfer"
       },
       {
         cta: "Lập kế hoạch chuyến đi",
+        bookingDay: "Ngày đến",
         bookingService: "Đưa đón sân bay"
       },
       "vi",
@@ -361,33 +456,51 @@ test("static translation service exposes exact-source memory for index and booki
 
     const indexState = await service.getLanguageState("index-content-memory", "vi");
     const indexCta = indexState.rows.find((row) => row.source === "Plan my trip");
-    const destination = indexState.rows.find((row) => row.source === "Vietnam");
 
     assert.equal(indexCta.cached, "Lập kế hoạch chuyến đi");
     assert.equal(indexCta.status, "machine");
-    assert.equal(destination.status, "missing");
+    assert.equal(indexState.rows.some((row) => row.source === "Vietnam"), false);
+    assert.equal(indexState.rows.some((row) => row.source === "Airport transfer"), false);
+    assert.equal(indexState.rows.some((row) => row.source === "Meet your guide"), false);
 
-    const bookingState = await service.getLanguageState("booking-content-memory", "vi");
-    const bookingService = bookingState.rows.find((row) => row.source === "Airport transfer");
-    const bookingDetails = bookingState.rows.find((row) => row.source === "Meet your guide");
+    assert.equal(service.listDomains().some((domain) => domain.id === "homepage-content"), false);
+    assert.equal(service.listDomains().some((domain) => domain.id === "booking-content-memory"), false);
+    const statusSummary = await service.getStatusSummary();
+    assert.equal(statusSummary.languages.some((entry) => entry.domain === "homepage-content"), false);
+    assert.equal(statusSummary.languages.some((entry) => entry.domain === "booking-content-memory"), false);
 
-    assert.equal(bookingService.cached, "Đưa đón sân bay");
-    assert.equal(bookingService.status, "machine");
-    assert.equal(bookingDetails.status, "missing");
-
-    const saved = await service.patchOverrides("booking-content-memory", "vi", {
-      expected_revision: bookingState.revision,
-      overrides: {
-        [bookingService.key]: "Xe đón sân bay"
+    const calls = [];
+    const summary = await service.applyMissingTranslations({
+      domains: ["booking-content-memory"],
+      target_langs: ["vi"],
+      translateEntriesWithMeta: async (entries, targetLang, options) => {
+        calls.push({ entries, targetLang, options });
+        return {
+          entries: Object.fromEntries(Object.entries(entries).map(([key, value]) => [key, `vi:${value}`])),
+          provider: { kind: "test", display: "test" }
+        };
       }
     });
-    const savedService = saved.rows.find((row) => row.source === "Airport transfer");
-    const resolved = await translationMemoryStore.resolveEntries({ service: "Airport transfer" }, "vi");
 
-    assert.equal(savedService.override, "Xe đón sân bay");
-    assert.equal(savedService.status, "manual_override");
-    assert.deepEqual(resolved.entries, { service: "Xe đón sân bay" });
-    assert.deepEqual(resolved.origins, { service: "manual_override" });
+    assert.equal(summary.requested_count, 0);
+    assert.equal(summary.translated_count, 0);
+    assert.equal(calls.length, 0);
+
+    const homepageSummary = await service.applyMissingTranslations({
+      domains: ["homepage-content"],
+      target_langs: ["vi"],
+      translateEntriesWithMeta: async (entries, targetLang, options) => {
+        calls.push({ entries, targetLang, options });
+        return {
+          entries: Object.fromEntries(Object.entries(entries).map(([key, value]) => [key, `vi:${value}`])),
+          provider: { kind: "test", display: "test" }
+        };
+      }
+    });
+
+    assert.equal(homepageSummary.requested_count, 0);
+    assert.equal(homepageSummary.translated_count, 0);
+    assert.equal(calls.length, 0);
   } finally {
     await rm(repoRoot, { recursive: true, force: true });
   }

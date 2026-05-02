@@ -269,11 +269,53 @@ export function createTranslationMemoryStore({ dataPath, writeQueueRef, nowIso }
     });
   }
 
+  async function deleteMachineTranslations(targetLang, sourceTexts, { expectedRevision = "" } = {}) {
+    const normalizedTargetLang = normalizeText(targetLang).toLowerCase();
+    if (!normalizedTargetLang) return readTranslationMemory();
+    return mutateDocument(async (document, revision) => {
+      if (expectedRevision && expectedRevision !== revision) {
+        const error = new Error("Translation memory changed. Refresh and retry.");
+        error.status = 409;
+        error.code = "TRANSLATION_MEMORY_REVISION_MISMATCH";
+        throw error;
+      }
+      const now = timestamp();
+      const next = normalizeTranslationMemoryDocument(document);
+      for (const rawSourceText of Array.isArray(sourceTexts) ? sourceTexts : []) {
+        const sourceText = normalizeText(rawSourceText);
+        if (!sourceText) continue;
+        const itemKey = translationMemorySourceKey(sourceText);
+        const item = next.items[itemKey];
+        const target = item?.targets?.[normalizedTargetLang];
+        if (!item || !target) continue;
+        const nextTarget = { ...target };
+        delete nextTarget.machine;
+        delete nextTarget.machine_updated_at;
+        delete nextTarget.provider;
+        const normalizedTarget = normalizeTargetEntry(nextTarget);
+        if (normalizedTarget) item.targets[normalizedTargetLang] = normalizedTarget;
+        else delete item.targets[normalizedTargetLang];
+        item.updated_at = now;
+        if (Object.keys(item.targets || {}).length) {
+          next.items[itemKey] = item;
+        } else {
+          delete next.items[itemKey];
+        }
+      }
+      next.updated_at = now;
+      return {
+        document: next,
+        value: stableDocument(next)
+      };
+    });
+  }
+
   return {
     ensureStorage,
     readTranslationMemory,
     resolveEntries,
     writeMachineTranslations,
-    patchManualOverrides
+    patchManualOverrides,
+    deleteMachineTranslations
   };
 }

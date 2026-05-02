@@ -165,6 +165,47 @@ test("empty destination catalog is pre-populated with supported destinations", (
   assert.equal(areaResult.ok, true);
 });
 
+test("destination catalog labels fall back to base names before another language", () => {
+  const store = {
+    destination_scope_destinations: [
+      { code: "VN", label: "Vietnam", sort_order: 0, is_active: true }
+    ],
+    destination_areas: [
+      {
+        id: "area_central",
+        destination: "VN",
+        code: "central",
+        name: "Central",
+        name_i18n: { vi: "Miền Trung" },
+        sort_order: 0,
+        is_active: true
+      }
+    ],
+    destination_places: [
+      {
+        id: "place_hue",
+        area_id: "area_central",
+        code: "hue",
+        name: "Hue",
+        name_i18n: { vi: "Huế" },
+        sort_order: 0,
+        is_active: true
+      }
+    ]
+  };
+
+  const englishCatalog = buildDestinationScopeCatalogResponse(store, { lang: "en" });
+  const germanCatalog = buildDestinationScopeCatalogResponse(store, { lang: "de" });
+  const vietnameseCatalog = buildDestinationScopeCatalogResponse(store, { lang: "vi" });
+
+  assert.equal(englishCatalog.areas[0].label, "Central");
+  assert.equal(englishCatalog.places[0].label, "Hue");
+  assert.equal(germanCatalog.areas[0].label, "Central");
+  assert.equal(germanCatalog.places[0].label, "Hue");
+  assert.equal(vietnameseCatalog.areas[0].label, "Miền Trung");
+  assert.equal(vietnameseCatalog.places[0].label, "Huế");
+});
+
 test("destination catalog i18n fills destinations, areas, and places", async () => {
   const store = {
     destination_scope_destinations: [

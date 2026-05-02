@@ -2,7 +2,7 @@
   "a11y.backend_sections": {
     "source_hash": "a947ac8faf0c3a3f3729d71fe9c2c2d12768e1e77b63e3663e7d4ce982362afd",
     "origin": "machine",
-    "updated_at": "2026-03-30T23:51:31.875Z"
+    "updated_at": "2026-05-02T02:07:27.497Z"
   },
   "backend.bookings.clear_search": {
     "source_hash": "81c2c4f30a4bec68d57b2e50bdc40208d252cb30a5a69defce2ccfd1bb8a2708",
@@ -455,7 +455,7 @@
     "updated_at": "2026-03-30T23:51:31.875Z"
   },
   "backend.translations.applying_overlay": {
-    "source_hash": "968a03f2e2df351a2dcff2ebd208589b557543cb952bb40afbc54d7dbd3d7acf",
+    "source_hash": "08880d355cc59e4f7c2d12c61d4e45922fdd77b162e9cb4fb687dac6b7b8add4",
     "origin": "manual",
     "updated_at": "2026-04-28T00:00:00.000Z"
   },
@@ -473,6 +473,11 @@
     "source_hash": "e81ae454c1cc4efb68e94221c5c26ff9236e0cc3b6c2f41fbff7ba4072603805",
     "origin": "manual",
     "updated_at": "2026-04-28T00:00:00.000Z"
+  },
+  "backend.translations.translating_overlay": {
+    "source_hash": "4729195c764af6ffcee9b1beaad8fa48e993aac0151541dc47fdcdff7d545020",
+    "origin": "manual",
+    "updated_at": "2026-05-01T00:00:00.000Z"
   },
   "backend.emergency.add_contact": {
     "source_hash": "a02ce0df219d8ace5bdeb691400b07b9a0012969152d88d74f1b6a0997419921",
@@ -5454,6 +5459,16 @@
     "origin": "manual",
     "updated_at": "2026-05-02T03:25:00.000Z"
   },
+  "tour.one_pager": {
+    "source_hash": "f809b82c6d91c107e4a5a116b804368c25a67617d6d7ed9c2c50cf80ea305d2c",
+    "origin": "manual",
+    "updated_at": "2026-05-02T06:45:00.000Z"
+  },
+  "tour.one_pager_language": {
+    "source_hash": "d41deb15db6f7ed8fe0c3bcbebd0d061f4e8a40b7c0458a6fb12a8051a24234d",
+    "origin": "manual",
+    "updated_at": "2026-05-02T08:05:00.000Z"
+  },
   "tour.rating_label": {
     "source_hash": "9f29530464f730bd28f137cfc9ea941af137187b57c21e8ff5fefed520764d99",
     "origin": "machine",
@@ -5514,6 +5529,21 @@
     "origin": "machine",
     "updated_at": "2026-03-30T23:51:31.875Z"
   },
+  "tour.status.one_pager_opening": {
+    "source_hash": "7e896a1e645757f4b43d983a91fed47c9613e05642868067be4537d7eeb436e0",
+    "origin": "manual",
+    "updated_at": "2026-05-02T06:45:00.000Z"
+  },
+  "tour.status.one_pager_popup_blocked": {
+    "source_hash": "9b7e049ad4e993de52cfd5ed7f7733ce508312ad4af856c1e75cd36b663d1b21",
+    "origin": "manual",
+    "updated_at": "2026-05-02T06:45:00.000Z"
+  },
+  "tour.status.one_pager_save_first": {
+    "source_hash": "55f2bc90483373d92cff023268f8e8b1eec4d51d8ec58fb7e3e123f6b2a5e235",
+    "origin": "manual",
+    "updated_at": "2026-05-02T06:45:00.000Z"
+  },
   "tour.status.read_only": {
     "source_hash": "14284bb92c375210ea5b39bf167581fa882bce6d00c844fadf4c18ffa7ac5013",
     "origin": "machine",
@@ -5534,15 +5564,15 @@
     "origin": "machine",
     "updated_at": "2026-03-30T23:51:31.875Z"
   },
-  "tour.status.saving_overlay": {
-    "source_hash": "b3577ce5a73ad3cb6583328265e54193b61350c90da4effbcc335474a748f0f5",
-    "origin": "manual",
-    "updated_at": "2026-04-28T00:00:00.000Z"
-  },
   "tour.status.selected_image": {
     "source_hash": "9d1e4118992a4d7bbf86d0ae0a58eaac8dc3f5ee296a94dc022e196bd5584f4a",
     "origin": "machine",
     "updated_at": "2026-03-30T23:51:31.875Z"
+  },
+  "tour.status.saving_overlay": {
+    "source_hash": "b3577ce5a73ad3cb6583328265e54193b61350c90da4effbcc335474a748f0f5",
+    "origin": "manual",
+    "updated_at": "2026-04-28T00:00:00.000Z"
   },
   "tour.status.updated": {
     "source_hash": "641595c60cbca7accf86b5f93bc363d4a2fe67f00158fb01fdc9e43fb832f963",

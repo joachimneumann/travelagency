@@ -189,6 +189,7 @@ const services = createBackendServices({
     offerCategoryOrder: OFFER_CATEGORY_ORDER,
     paymentStatuses: PAYMENT_STATUSES,
     pricingAdjustmentTypes: PRICING_ADJUSTMENT_TYPES,
+    translationClient: TRANSLATION_CLIENT,
     translationEnabled: TRANSLATION_ENABLED,
     translationOverrideWritesEnabled: TRANSLATION_OVERRIDE_WRITES_ENABLED
   },
@@ -208,6 +209,7 @@ const services = createBackendServices({
     countryReferenceInfoPath: RUNTIME_PATHS.countryReferenceInfoPath,
     translationRulesPath: RUNTIME_PATHS.translationRulesPath,
     translationMemoryPath: RUNTIME_PATHS.translationMemoryPath,
+    translationsSnapshotDir: RUNTIME_PATHS.translationsSnapshotDir,
     bookingTravelPlanAttachmentsDir: RUNTIME_PATHS.bookingTravelPlanAttachmentsDir,
     tempUploadDir: RUNTIME_PATHS.tempUploadDir,
     travelPlanPdfPreviewDir: RUNTIME_PATHS.travelPlanPdfPreviewDir,

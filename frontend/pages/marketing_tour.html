@@ -61,6 +61,34 @@
         margin: 0;
       }
 
+      .tour-header__one-pager-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-end;
+        justify-content: center;
+        gap: 0.75rem;
+        margin: 0.35rem 0 1.2rem;
+      }
+
+      .tour-header__one-pager-language {
+        display: grid;
+        gap: 0.25rem;
+        min-width: 11rem;
+      }
+
+      .tour-header__one-pager-language .micro {
+        color: var(--text-muted-strong);
+        font-weight: var(--font-weight-semibold);
+      }
+
+      .tour-header__one-pager-select {
+        min-height: 2.5rem;
+      }
+
+      .tour-header__one-pager-btn {
+        min-width: 10rem;
+      }
+
       .tour-reel-editor {
         --tour-media-preview-width: clamp(150px, 18vw, 220px);
         display: grid;
@@ -276,6 +304,15 @@
               <div class="tour-header__title-row">
                 <h1 class="section-title tour-header__title" id="tour_title">Tour</h1>
               </div>
+              <div class="tour-header__one-pager-row">
+                <label class="tour-header__one-pager-language" for="tour_one_pager_lang">
+                  <span class="micro" data-i18n-id="tour.one_pager_language">PDF language</span>
+                  <select class="tour-header__one-pager-select" id="tour_one_pager_lang" aria-label="PDF language" data-i18n-aria-label-id="tour.one_pager_language">
+                    <option value="en">English</option>
+                  </select>
+                </label>
+                <button class="btn btn-primary tour-header__one-pager-btn" id="tour_one_pager_btn" type="button" data-i18n-id="tour.one_pager">One pager</button>
+              </div>
               <div id="tour_titleError" class="form-error" role="alert" aria-live="polite"></div>
 
               <div id="tour_error" class="backend-message" role="alert" aria-live="assertive"></div>
@@ -340,18 +377,6 @@
                     </div>
                   </article>
                 </div>
-                <div class="field full">
-                  <article id="tour_travel_plan_translation_section" class="booking-section is-open">
-                    <div class="booking-section__head">
-                      <button id="tour_travel_plan_translation_summary" class="booking-section__summary booking-section__summary--inline-pad-16" type="button">
-                        <span data-translation-summary-title data-i18n-id="tour.travel_plan_translation.section_title">Translations</span>
-                      </button>
-                    </div>
-                    <div class="booking-section__body">
-                      <div id="tour_travel_plan_translation_panel" class="tour-travel-plan-translation"></div>
-                    </div>
-                  </article>
-                </div>
               </form>
             </div>
           </div>
@@ -359,10 +384,10 @@
       </section>
     </main>
 
-    <div class="booking-page-overlay" id="tour_translate_overlay" hidden aria-hidden="true">
+    <div class="booking-page-overlay" id="tour_page_overlay" hidden aria-hidden="true">
       <div class="booking-page-overlay__panel" role="status" aria-live="assertive">
         <span class="booking-page-overlay__spinner" aria-hidden="true"></span>
-        <span class="booking-page-overlay__text" id="tour_translate_overlay_text" data-i18n-id="tour.translation.translating_all_overlay">Translating all languages. Please wait.</span>
+        <span class="booking-page-overlay__text" id="tour_page_overlay_text">Please wait.</span>
       </div>
     </div>
 

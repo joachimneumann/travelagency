@@ -1,3 +1,4 @@
+import path from "node:path";
 import { createPricingHelpers } from "../domain/pricing.js";
 import { createTravelPlanHelpers } from "../domain/travel_plan.js";
 import { createBookingViewHelpers } from "../domain/booking_views.js";
@@ -6,6 +7,7 @@ import { createMetaWebhookHandlers } from "../integrations/meta_webhook.js";
 import { createPaymentDocumentPdfWriter } from "../lib/payment_document_pdf.js";
 import { createOfferPdfWriter } from "../lib/offer_pdf.js";
 import { createTravelPlanPdfWriter } from "../lib/travel_plan_pdf.js";
+import { createMarketingTourOnePagerPdfWriter } from "../lib/marketing_tour_one_pager_pdf.js";
 import { createTravelPlanPdfArtifacts } from "../lib/travel_plan_pdf_artifacts.js";
 import { createKeycloakDirectory } from "../lib/keycloak_directory.js";
 import { createStoreUtils } from "../lib/store_utils.js";
@@ -25,6 +27,7 @@ export function createBackendServices({
 }) {
   const writeQueueRef = { current: Promise.resolve() };
   const fxRateCache = new Map();
+  const translationClient = runtime.translationClient || {};
 
   const pricingHelpers = createPricingHelpers({
     baseCurrency: runtime.baseCurrency,
@@ -143,17 +146,23 @@ export function createBackendServices({
 
   const staticTranslationService = createStaticTranslationService({
     repoRoot,
+    translationsSnapshotDir: collections.translationsSnapshotDir,
     readStore: storeUtils.readStore,
     persistStore: storeUtils.persistStore,
     readTours: storeUtils.readTours,
     persistTour: storeUtils.persistTour,
     translationMemoryStore,
+    translateEntriesWithMeta: translationClient.translateEntriesWithMeta,
+    readTranslationRules: translationRulesStore.readTranslationRules,
     nowIso: support.nowIso,
     writesEnabled: runtime.translationOverrideWritesEnabled !== false
   });
 
   const staticTranslationApplyJobs = createStaticTranslationApplyJobs({
     repoRoot,
+    applyTranslations: (options) => staticTranslationService.applyMissingTranslations(options),
+    publishTranslations: () => staticTranslationService.publishTranslations(),
+    getStatusSummary: () => staticTranslationService.getStatusSummary(),
     nowIso: support.nowIso
   });
 
@@ -207,6 +216,13 @@ export function createBackendServices({
     companyProfile: runtime.companyProfile
   });
 
+  const writeMarketingTourOnePagerPdf = createMarketingTourOnePagerPdfWriter({
+    resolveTourImageDiskPath: tourHelpers.resolveTourImageDiskPath,
+    logoPath: path.join(collections.repoRoot, "assets", "img", "logo-asiatravelplan.png"),
+    fallbackImagePath: collections.fallbackBookingImagePath,
+    companyProfile: runtime.companyProfile
+  });
+
   const writePaymentDocumentPdf = createPaymentDocumentPdfWriter({
     paymentDocumentPdfPath: pricingHelpers.paymentDocumentPdfPath,
     companyProfile: runtime.companyProfile,
@@ -236,6 +252,7 @@ export function createBackendServices({
     tourHelpers,
     writePaymentDocumentPdf,
     writeGeneratedOfferPdf,
-    writeTravelPlanPdf
+    writeTravelPlanPdf,
+    writeMarketingTourOnePagerPdf
   };
 }

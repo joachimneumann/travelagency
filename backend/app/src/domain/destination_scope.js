@@ -72,8 +72,8 @@ function resolveLocalizedText(value, lang = "en", fallback = "") {
   if (!value || typeof value !== "object" || Array.isArray(value)) return fallback;
   return normalizeText(value[normalizedLang])
     || normalizeText(value.en)
-    || normalizeText(Object.values(value).find((entry) => normalizeText(entry)))
-    || fallback;
+    || fallback
+    || normalizeText(Object.values(value).find((entry) => normalizeText(entry)));
 }
 
 function setLocalizedText(map, lang, value) {

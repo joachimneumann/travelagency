@@ -360,16 +360,20 @@ async function runTranslate(options) {
     ? Object.keys(source).filter((key) => !overrideKeySet.has(key))
     : [...new Set([...state.missingTranslations, ...state.staleTranslations])]
       .filter((key) => !overrideKeySet.has(key));
-  const translatorSession = await resolveTranslatorSession(options.targetLang, options.sourceLang);
   const translationSourceEntries = Object.fromEntries(
     translationKeys.map((key) => [key, source[key]])
   );
-  const translatedEntries = await translateEntries(
-    translationSourceEntries,
-    options.targetLang,
-    options.sourceLang,
-    translatorSession
-  );
+  const translatedEntries = translationKeys.length
+    ? await (async () => {
+      const translatorSession = await resolveTranslatorSession(options.targetLang, options.sourceLang);
+      return translateEntries(
+        translationSourceEntries,
+        options.targetLang,
+        options.sourceLang,
+        translatorSession
+      );
+    })()
+    : {};
   const timestamp = new Date().toISOString();
 
   const nextTarget = {};

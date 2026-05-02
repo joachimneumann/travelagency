@@ -58,13 +58,158 @@ function commandPhase(id, label, command, args) {
   return { id, label, command, args, status: "pending" };
 }
 
-function applyPhases() {
-  return [
+function callbackPhase(id, label, run) {
+  return { id, label, run, status: "pending" };
+}
+
+function languageHasTranslationIssues(entry) {
+  return Number(entry?.missing_count || 0) > 0
+    || Number(entry?.stale_count || 0) > 0
+    || Number(entry?.legacy_count || 0) > 0;
+}
+
+function uniqueNormalized(values) {
+  return [...new Set((Array.isArray(values) ? values : [])
+    .map((value) => normalizeText(value).toLowerCase())
+    .filter(Boolean))];
+}
+
+function targetArgs(targetLangs) {
+  return uniqueNormalized(targetLangs).flatMap((lang) => ["--target", lang]);
+}
+
+function centralApplyOptions(entries) {
+  const targetLangsByDomain = {};
+  for (const entry of entries) {
+    const domain = normalizeText(entry?.domain);
+    const targetLang = normalizeText(entry?.target_lang).toLowerCase();
+    if (!domain || !targetLang) continue;
+    targetLangsByDomain[domain] = uniqueNormalized([...(targetLangsByDomain[domain] || []), targetLang]);
+  }
+  return {
+    domains: Object.keys(targetLangsByDomain),
+    target_langs_by_domain: targetLangsByDomain
+  };
+}
+
+function issueEntriesFromStatus(status) {
+  return (Array.isArray(status?.languages) ? status.languages : []).filter(languageHasTranslationIssues);
+}
+
+function fallbackApplyPhases({ applyTranslations } = {}) {
+  const phases = [
     commandPhase("backend_translate", "Apply backend UI translation overrides", process.execPath, ["scripts/i18n/sync_backend_i18n.mjs", "translate", "--target", "vi"]),
-    commandPhase("frontend_translate", "Apply customer-facing translation overrides", process.execPath, ["scripts/i18n/sync_frontend_i18n.mjs", "translate"]),
+    commandPhase("frontend_translate", "Apply customer-facing translation overrides", process.execPath, ["scripts/i18n/sync_frontend_i18n.mjs", "translate"])
+  ];
+  if (typeof applyTranslations === "function") {
+    phases.push(callbackPhase("central_translate", "Translate central content and memory", async (_phase, job, helpers) => {
+      const summary = await applyTranslations();
+      helpers.appendLog(
+        job,
+        `Translated ${summary?.translated_count || 0} central translation item${summary?.translated_count === 1 ? "" : "s"}.`
+      );
+    }));
+  }
+  phases.push(
     commandPhase("homepage_assets", "Regenerate public homepage assets", process.execPath, ["scripts/assets/generate_public_homepage_assets.mjs"]),
     commandPhase("backend_check", "Check backend UI translations", process.execPath, ["scripts/i18n/sync_backend_i18n.mjs", "check", "--target", "vi"]),
     commandPhase("frontend_check", "Check customer-facing translations", process.execPath, ["scripts/i18n/sync_frontend_i18n.mjs", "check"])
+  );
+  return phases;
+}
+
+async function applyPhases({ applyTranslations, getStatusSummary } = {}) {
+  if (typeof getStatusSummary !== "function") {
+    return fallbackApplyPhases({ applyTranslations });
+  }
+
+  const status = await getStatusSummary();
+  const issueEntries = issueEntriesFromStatus(status);
+  const backendTargets = issueEntries
+    .filter((entry) => normalizeText(entry.domain) === "backend")
+    .map((entry) => entry.target_lang);
+  const frontendTargets = issueEntries
+    .filter((entry) => normalizeText(entry.domain) === "frontend")
+    .map((entry) => entry.target_lang);
+  const centralEntries = issueEntries
+    .filter((entry) => !["backend", "frontend"].includes(normalizeText(entry.domain)));
+  const centralOptions = centralApplyOptions(centralEntries);
+  const phases = [];
+
+  for (const targetLang of uniqueNormalized(backendTargets)) {
+    phases.push(commandPhase(
+      `backend_translate_${targetLang}`,
+      `Apply backend UI translations for ${targetLang}`,
+      process.execPath,
+      ["scripts/i18n/sync_backend_i18n.mjs", "translate", "--target", targetLang]
+    ));
+  }
+
+  const frontendTargetLangs = uniqueNormalized(frontendTargets);
+  if (frontendTargetLangs.length) {
+    phases.push(commandPhase(
+      "frontend_translate",
+      `Apply customer-facing UI translations for ${frontendTargetLangs.join(", ")}`,
+      process.execPath,
+      ["scripts/i18n/sync_frontend_i18n.mjs", "translate", ...targetArgs(frontendTargetLangs)]
+    ));
+  }
+
+  if (centralOptions.domains.length && typeof applyTranslations === "function") {
+    phases.push(callbackPhase("central_translate", "Translate central content and memory", async (_phase, job, helpers) => {
+      const summary = await applyTranslations(centralOptions);
+      helpers.appendLog(
+        job,
+        `Translated ${summary?.translated_count || 0} central translation item${summary?.translated_count === 1 ? "" : "s"}.`
+      );
+    }));
+  } else if (centralOptions.domains.length) {
+    phases.push(callbackPhase("central_translate", "Translate central content and memory", async () => {
+      throw apiError(500, "STATIC_TRANSLATION_PROVIDER_UNAVAILABLE", "Central translation apply service is not configured.");
+    }));
+  }
+
+  if (frontendTargetLangs.length) {
+    phases.push(commandPhase("homepage_assets", "Regenerate public homepage assets", process.execPath, ["scripts/assets/generate_public_homepage_assets.mjs"]));
+  }
+
+  for (const targetLang of uniqueNormalized(backendTargets)) {
+    phases.push(commandPhase(
+      `backend_check_${targetLang}`,
+      `Check backend UI translations for ${targetLang}`,
+      process.execPath,
+      ["scripts/i18n/sync_backend_i18n.mjs", "check", "--target", targetLang]
+    ));
+  }
+
+  if (frontendTargetLangs.length) {
+    phases.push(commandPhase(
+      "frontend_check",
+      `Check customer-facing UI translations for ${frontendTargetLangs.join(", ")}`,
+      process.execPath,
+      ["scripts/i18n/sync_frontend_i18n.mjs", "check", ...targetArgs(frontendTargetLangs)]
+    ));
+  }
+
+  if (!phases.length) {
+    phases.push(callbackPhase("apply_noop", "No translation work needed", async (_phase, job, helpers) => {
+      helpers.appendLog(job, "No missing or stale translations were found.");
+    }));
+  }
+
+  return phases;
+}
+
+async function publishPhases({ applyTranslations, publishTranslations, getStatusSummary }) {
+  return [
+    ...fallbackApplyPhases({ applyTranslations }),
+    callbackPhase("publish_snapshot", "Publish translation snapshot", async (_phase, job, helpers) => {
+      const manifest = await publishTranslations();
+      helpers.appendLog(
+        job,
+        `Published ${manifest.total_items || 0} translation snapshot items. source_set_hash=${manifest.source_set_hash || ""}`
+      );
+    })
   ];
 }
 
@@ -121,6 +266,9 @@ function spawnRunner({ spawnCommand, repoRoot, env }) {
 
 export function createStaticTranslationApplyJobs({
   repoRoot,
+  applyTranslations = null,
+  publishTranslations = null,
+  getStatusSummary = null,
   spawnCommand = spawn,
   runCommand = null,
   nowIso = () => new Date().toISOString(),
@@ -161,7 +309,13 @@ export function createStaticTranslationApplyJobs({
           job.phase = phase.id;
           phase.status = "running";
           appendLog(job, `Starting: ${phase.label}`, env);
-          await executePhase(phase, job);
+          if (typeof phase.run === "function") {
+            await phase.run(phase, job, {
+              appendLog: (targetJob, line) => appendLog(targetJob, line, env)
+            });
+          } else {
+            await executePhase(phase, job);
+          }
           phase.status = "succeeded";
           appendLog(job, `Finished: ${phase.label}`, env);
         }
@@ -183,8 +337,14 @@ export function createStaticTranslationApplyJobs({
   }
 
   return {
-    startApply() {
-      return startJob({ type: "apply", phases: applyPhases() });
+    async startApply() {
+      return startJob({ type: "apply", phases: await applyPhases({ applyTranslations, getStatusSummary }) });
+    },
+    async startPublish() {
+      if (typeof publishTranslations !== "function") {
+        throw apiError(500, "STATIC_TRANSLATION_PUBLISH_UNAVAILABLE", "Translation snapshot publishing is not configured.");
+      }
+      return startJob({ type: "publish", phases: await publishPhases({ applyTranslations, publishTranslations, getStatusSummary }) });
     },
     startRetranslate({ mode, target_lang: targetLang } = {}) {
       return startJob({ type: "retranslate", phases: retranslatePhases({ mode, targetLang }) });
