@@ -1,5 +1,6 @@
 import { createWriteStream } from "node:fs";
 import { access, readFile, rm } from "node:fs/promises";
+import { createHash } from "node:crypto";
 import path from "node:path";
 import PDFDocument from "pdfkit";
 import sharp from "sharp";
@@ -20,6 +21,21 @@ const IMAGE_RENDER_SCALE = 2.4;
 const PUBLIC_TOUR_IMAGE_PREFIX = "/public/v1/tour-images/";
 const ONE_PAGER_EXPERIENCE_HIGHLIGHT_LIMIT = 4;
 const EXPERIENCE_HIGHLIGHT_RENDER_SCALE = 3;
+const PDF_PRIMARY_GREEN = "#30796B";
+const BODY_IMAGE_LIMIT = 4;
+const BODY_IMAGE_RENDER_FRAME = Object.freeze({ width: 248, height: 174 });
+const BODY_IMAGE_LAYOUT_BOUNDS = Object.freeze({
+  minX: 302,
+  minY: 246,
+  maxX: 570,
+  maxY: 626
+});
+const HERO_BACKGROUND_IMAGE = Object.freeze({
+  x: 118,
+  y: 54,
+  width: 466,
+  height: 274
+});
 
 const PDF_FONT_REGULAR_CANDIDATES = Object.freeze([
   "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
@@ -138,16 +154,16 @@ const COLORS = Object.freeze({
   surface: cssColorToHex(styleToken("surface"), "#ffffff"),
   surfaceMuted: cssColorToHex(styleToken("surface-muted"), "#f4f7f5"),
   surfaceSubtle: cssColorToHex(styleToken("surface-subtle"), "#f7faf8"),
-  accent: cssColorToHex(styleToken("accent"), "#30796b"),
+  accent: PDF_PRIMARY_GREEN,
   accentSoft: cssColorToHex(styleToken("accent-soft"), "#ddede9"),
-  accentText: cssColorToHex(styleToken("accent-text"), "#1f5f52"),
-  secondary: cssColorToHex(styleToken("secondary"), "#1fa7a0"),
+  accentText: PDF_PRIMARY_GREEN,
+  secondary: PDF_PRIMARY_GREEN,
   text: cssColorToHex(styleToken("text"), "#1e2f3a"),
   textStrong: cssColorToHex(styleToken("text-strong"), "#152536"),
   textMuted: cssColorToHex(styleToken("muted"), "#5f7078"),
   line: cssColorToHex(styleToken("line-soft"), "#d8e1e8"),
   white: "#ffffff",
-  cta: cssColorToHex(styleToken("accent"), "#30796b")
+  cta: PDF_PRIMARY_GREEN
 });
 
 function pdfFontName(weight = "regular", fonts = null) {
@@ -406,28 +422,47 @@ function drawHighlightIcon(doc, index, x, y, size, color) {
   doc.restore();
 }
 
+const PHOTO_FRAME_SHAPES = Object.freeze([
+  [
+    [0.012, 0.035],
+    [0.994, 0.006],
+    [0.984, 0.972],
+    [0.006, 0.992]
+  ],
+  [
+    [0.006, 0.012],
+    [0.974, 0.004],
+    [0.994, 0.982],
+    [0.03, 0.996]
+  ],
+  [
+    [0.026, 0.006],
+    [0.996, 0.032],
+    [0.974, 0.996],
+    [0.004, 0.966]
+  ],
+  [
+    [0.004, 0.044],
+    [0.99, 0.01],
+    [0.996, 0.994],
+    [0.016, 0.974]
+  ],
+  [
+    [0.022, 0.004],
+    [0.996, 0.012],
+    [0.976, 0.966],
+    [0.01, 0.996]
+  ],
+  [
+    [0.008, 0.004],
+    [0.97, 0.03],
+    [0.996, 0.966],
+    [0.034, 0.996]
+  ]
+]);
+
 function photoFrameShape(variant = 0) {
-  const shapes = [
-    [
-      [0.03, 0.08],
-      [0.99, 0],
-      [0.96, 0.94],
-      [0, 1]
-    ],
-    [
-      [0, 0.03],
-      [0.95, 0],
-      [1, 0.96],
-      [0.08, 1]
-    ],
-    [
-      [0.07, 0],
-      [1, 0.09],
-      [0.93, 1],
-      [0, 0.9]
-    ]
-  ];
-  return shapes[Math.abs(Number(variant) || 0) % shapes.length];
+  return PHOTO_FRAME_SHAPES[Math.abs(Number(variant) || 0) % PHOTO_FRAME_SHAPES.length];
 }
 
 function drawFramedImage(doc, { x, y, width, height, angle = 0, imageBuffer = null, label = "", fonts = null, lang = "en", variant = 0 } = {}) {
@@ -469,6 +504,97 @@ function drawFramedImage(doc, { x, y, width, height, angle = 0, imageBuffer = nu
   doc.restore();
 }
 
+function clampNumber(value, min, max) {
+  return Math.max(min, Math.min(max, Number(value) || 0));
+}
+
+function deterministicUnit(seed, key) {
+  const digest = createHash("sha256").update(`${seed}:${key}`).digest();
+  return digest.readUInt32BE(0) / 0x100000000;
+}
+
+function deterministicRange(seed, key, min, max) {
+  return min + (max - min) * deterministicUnit(seed, key);
+}
+
+function deterministicIndex(seed, key, count) {
+  return Math.min(Math.max(0, count - 1), Math.floor(deterministicUnit(seed, key) * count));
+}
+
+function bodyImageBaseLayouts(count) {
+  const layoutsByCount = {
+    1: [
+      { x: 322, y: 358, width: 236, height: 158, angle: 2 }
+    ],
+    2: [
+      { x: 328, y: 292, width: 218, height: 142, angle: -2.8 },
+      { x: 322, y: 468, width: 230, height: 148, angle: 3.2 }
+    ],
+    3: [
+      { x: 346, y: 276, width: 202, height: 130, angle: 2.4 },
+      { x: 306, y: 418, width: 194, height: 126, angle: -3.8 },
+      { x: 386, y: 506, width: 170, height: 110, angle: 4.2 }
+    ],
+    4: [
+      { x: 344, y: 258, width: 198, height: 126, angle: -2.8 },
+      { x: 306, y: 402, width: 172, height: 110, angle: 3 },
+      { x: 382, y: 508, width: 184, height: 112, angle: -2.2 },
+      { x: 452, y: 370, width: 108, height: 84, angle: 5 }
+    ]
+  };
+  return layoutsByCount[clampNumber(count, 1, BODY_IMAGE_LIMIT)] || [];
+}
+
+function createBodyImageLayoutSeed(tour, bodyFrames) {
+  return [
+    textOrNull(tour?.id),
+    textOrNull(tour?.slug),
+    textOrNull(tour?.title),
+    ...bodyFrames.map((frame) => [
+      textOrNull(frame?.entry?.id),
+      textOrNull(frame?.entry?.storagePath),
+      textOrNull(frame?.entry?.label)
+    ].filter(Boolean).join(":"))
+  ].filter(Boolean).join("|") || "one-pager-body-images";
+}
+
+function createBodyImageLayouts(tour, frameImages) {
+  const bodyFrames = safeArray(frameImages)
+    .slice(1)
+    .filter((frame) => frame?.entry)
+    .slice(0, BODY_IMAGE_LIMIT);
+  const baseLayouts = bodyImageBaseLayouts(bodyFrames.length);
+  const seed = createBodyImageLayoutSeed(tour, bodyFrames);
+  return bodyFrames.map((frame, index) => {
+    const base = baseLayouts[index];
+    const scale = deterministicRange(seed, `scale:${index}`, 0.84, 1.18);
+    const ratioScale = deterministicRange(seed, `ratio:${index}`, 0.9, 1.1);
+    const width = clampNumber(base.width * scale, 88, BODY_IMAGE_RENDER_FRAME.width);
+    const height = clampNumber(base.height * scale * ratioScale, 68, BODY_IMAGE_RENDER_FRAME.height);
+    const x = clampNumber(
+      base.x + deterministicRange(seed, `x:${index}`, -26, 26),
+      BODY_IMAGE_LAYOUT_BOUNDS.minX,
+      BODY_IMAGE_LAYOUT_BOUNDS.maxX - width
+    );
+    const y = clampNumber(
+      base.y + deterministicRange(seed, `y:${index}`, -30, 30),
+      BODY_IMAGE_LAYOUT_BOUNDS.minY,
+      BODY_IMAGE_LAYOUT_BOUNDS.maxY - height
+    );
+    return {
+      frame,
+      layout: {
+        x: Number(x.toFixed(2)),
+        y: Number(y.toFixed(2)),
+        width: Number(width.toFixed(2)),
+        height: Number(height.toFixed(2)),
+        angle: Number((base.angle + deterministicRange(seed, `angle:${index}`, -2.2, 2.2)).toFixed(2)),
+        variant: deterministicIndex(seed, `shape:${index}`, PHOTO_FRAME_SHAPES.length)
+      }
+    };
+  });
+}
+
 function drawLogo(doc, logoPath) {
   if (!logoPath) {
     throw new Error("Production logo path is required for the tour one-pager PDF.");
@@ -480,14 +606,68 @@ function drawLogo(doc, logoPath) {
   });
 }
 
-function fitTitleSize(doc, title, fonts) {
-  let size = 56;
-  while (size > 30) {
-    doc.font(pdfFontName("display", fonts)).fontSize(size);
-    if (doc.heightOfString(title, { width: 286, lineGap: -6 }) <= 124) return size;
-    size -= 1;
+function measurePdfTextHeight(doc, text, { fontName, fontSize, options }) {
+  doc.font(fontName).fontSize(fontSize);
+  return doc.heightOfString(text, options);
+}
+
+function fitPdfTextSize(doc, text, { fontName, maxSize, minSize, maxHeight, options, step = 0.5 }) {
+  for (let size = maxSize; size >= minSize; size -= step) {
+    const roundedSize = Number(size.toFixed(2));
+    if (measurePdfTextHeight(doc, text, { fontName, fontSize: roundedSize, options }) <= maxHeight) {
+      return roundedSize;
+    }
   }
-  return size;
+  return minSize;
+}
+
+function fitTitleSize(doc, title, fonts, options) {
+  return fitPdfTextSize(doc, title, {
+    fontName: pdfFontName("display", fonts),
+    maxSize: 56,
+    minSize: 14,
+    maxHeight: 124,
+    options
+  });
+}
+
+function smoothStep(edge0, edge1, value) {
+  if (edge0 === edge1) return value >= edge1 ? 1 : 0;
+  const t = Math.max(0, Math.min(1, (value - edge0) / (edge1 - edge0)));
+  return t * t * (3 - 2 * t);
+}
+
+async function createFeatheredHeroImageBuffer(imageBuffer) {
+  if (!imageBuffer) return null;
+  const width = Math.max(1, Math.round(HERO_BACKGROUND_IMAGE.width * IMAGE_RENDER_SCALE));
+  const height = Math.max(1, Math.round(HERO_BACKGROUND_IMAGE.height * IMAGE_RENDER_SCALE));
+  const alphaMask = Buffer.alloc(width * height * 4);
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const leftAlpha = smoothStep(width * 0.02, width * 0.56, x);
+      const topAlpha = smoothStep(0, height * 0.12, y);
+      const bottomAlpha = 1 - smoothStep(height * 0.58, height, y);
+      const alpha = Math.round(255 * Math.min(leftAlpha, topAlpha, bottomAlpha));
+      const offset = (y * width + x) * 4;
+      alphaMask[offset] = 255;
+      alphaMask[offset + 1] = 255;
+      alphaMask[offset + 2] = 255;
+      alphaMask[offset + 3] = alpha;
+    }
+  }
+  const maskBuffer = await sharp(alphaMask, {
+    raw: {
+      width,
+      height,
+      channels: 4
+    }
+  }).png().toBuffer();
+  return await sharp(imageBuffer)
+    .resize(width, height, { fit: "cover", position: "centre" })
+    .ensureAlpha()
+    .composite([{ input: maskBuffer, blend: "dest-in" }])
+    .png()
+    .toBuffer();
 }
 
 function durationParts(days, lang) {
@@ -566,10 +746,6 @@ function collectTourImages(tour, lang) {
       outputSeen.add(entry.storagePath);
       return true;
     });
-}
-
-function hasExplicitOnePagerBodyImageSelection(tour) {
-  return Object.prototype.hasOwnProperty.call(tour?.travel_plan || {}, "one_pager_image_ids");
 }
 
 function collectScriptProvidedFrameImages(tour, lang) {
@@ -1039,20 +1215,15 @@ function drawFooter(doc, companyProfile, fonts) {
 
 async function prepareFrameImages(tour, deps, lang) {
   const entries = collectScriptProvidedFrameImages(tour, lang);
-  const hasScriptProvidedEntries = entries.length > 0;
   if (!entries.length) {
     entries.push(...collectTourImages(tour, lang));
   }
-  const useExactFrameCount = !hasScriptProvidedEntries && hasExplicitOnePagerBodyImageSelection(tour);
   const frames = [
     { width: 520, height: 270 },
-    { width: 205, height: 130 },
-    { width: 165, height: 108 },
-    { width: 208, height: 132 },
-    { width: 112, height: 82, optional: true }
+    ...Array.from({ length: BODY_IMAGE_LIMIT }, () => BODY_IMAGE_RENDER_FRAME)
   ];
   return await Promise.all(frames.map(async (frame, index) => {
-    const entry = entries[index] || (useExactFrameCount || frame.optional ? null : entries[0]) || null;
+    const entry = entries[index] || null;
     return {
       entry,
       buffer: entry
@@ -1080,14 +1251,21 @@ function drawMainCopy(doc, tour, duration, fonts, lang) {
     .fontSize(48)
     .fillColor(COLORS.secondary)
     .text(onePagerT(lang, "trip_to", "Trip to"), 42, 126, pdfTextOptions(lang, { width: 250 }));
-  const titleSize = fitTitleSize(doc, titleText, fonts);
+  const titleOptions = pdfTextOptions(lang, { width: 286, lineGap: -6 });
+  const titleSize = fitTitleSize(doc, titleText, fonts, titleOptions);
+  const titleFontName = pdfFontName("display", fonts);
+  const titleHeight = Math.ceil(measurePdfTextHeight(doc, titleText, {
+    fontName: titleFontName,
+    fontSize: titleSize,
+    options: titleOptions
+  }));
   doc
-    .font(pdfFontName("display", fonts))
+    .font(titleFontName)
     .fontSize(titleSize)
     .fillColor(COLORS.textStrong)
-    .text(titleText, 42, 208, pdfTextOptions(lang, { width: 286, lineGap: -6, height: 124 }));
+    .text(titleText, 42, 208, titleOptions);
   const styleText = styleLine || onePagerT(lang, "default_style_line", "PRIVATE TOUR  |  LOCAL EXPERTISE").toUpperCase();
-  const styleY = 338;
+  const styleY = Math.max(338, 208 + titleHeight + 10);
   const styleOptions = pdfTextOptions(lang, { width: 282, characterSpacing: 1.4, lineGap: 2 });
   doc
     .font(pdfFontName("label", fonts))
@@ -1097,20 +1275,32 @@ function drawMainCopy(doc, tour, duration, fonts, lang) {
   const styleHeight = Math.min(64, measuredStyleHeight);
   doc.text(styleText, 42, styleY, pdfTextOptions(lang, { ...styleOptions, height: styleHeight, ellipsis: measuredStyleHeight > styleHeight }));
   const descriptionY = Math.max(368, styleY + styleHeight + 8);
-  const descriptionHeight = Math.max(12, 426 - descriptionY);
+  const descriptionOptions = pdfTextOptions(lang, { width: 265, lineGap: 3 });
+  const descriptionFontName = pdfFontName("regular", fonts);
+  const descriptionFontSize = fitPdfTextSize(doc, description, {
+    fontName: descriptionFontName,
+    maxSize: 10.6,
+    minSize: 5.2,
+    maxHeight: Math.max(72, 426 - descriptionY),
+    options: descriptionOptions
+  });
+  const descriptionHeight = Math.ceil(measurePdfTextHeight(doc, description, {
+    fontName: descriptionFontName,
+    fontSize: descriptionFontSize,
+    options: descriptionOptions
+  }));
   doc
-    .font(pdfFontName("regular", fonts))
-    .fontSize(10.6)
+    .font(descriptionFontName)
+    .fontSize(descriptionFontSize)
     .fillColor(COLORS.text)
-    .text(description, 42, descriptionY, pdfTextOptions(lang, { width: 265, height: descriptionHeight, lineGap: 3, ellipsis: true }));
-  doc.moveTo(42, 430).lineTo(78, 430).lineWidth(1).strokeColor(COLORS.secondary).stroke();
+    .text(description, 42, descriptionY, descriptionOptions);
+  const sectionRuleY = Math.max(430, descriptionY + descriptionHeight + 8);
+  doc.moveTo(42, sectionRuleY).lineTo(78, sectionRuleY).lineWidth(1).strokeColor(COLORS.secondary).stroke();
+  return { highlightsY: Math.max(438, sectionRuleY + 8) };
 }
 
 function drawHeroBackgroundImage(doc, imageBuffer) {
-  const x = 118;
-  const y = 54;
-  const width = 466;
-  const height = 274;
+  const { x, y, width, height } = HERO_BACKGROUND_IMAGE;
   const heroPoints = [
     [104, 58],
     [584, 56],
@@ -1120,32 +1310,15 @@ function drawHeroBackgroundImage(doc, imageBuffer) {
     [253, 230],
     [176, 145]
   ];
-  doc.save();
-  drawPolygonPath(doc, heroPoints);
-  doc.clip();
   if (imageBuffer) {
     doc.image(imageBuffer, x, y, { width, height });
   } else {
+    doc.save();
+    drawPolygonPath(doc, heroPoints);
+    doc.clip();
     doc.rect(x, y, width, height).fill(COLORS.accentSoft);
+    doc.restore();
   }
-  doc.restore();
-
-  doc.save();
-  const leftFade = doc.linearGradient(72, 54, 380, 54)
-    .stop(0, COLORS.surfaceSubtle, 1)
-    .stop(0.45, COLORS.surfaceSubtle, 0.92)
-    .stop(0.82, COLORS.surfaceSubtle, 0.24)
-    .stop(1, COLORS.surfaceSubtle, 0);
-  doc.rect(28, 52, 378, 284).fill(leftFade);
-  doc.restore();
-
-  doc.save();
-  const bottomFade = doc.linearGradient(0, 220, 0, 340)
-    .stop(0, COLORS.surfaceSubtle, 0)
-    .stop(0.7, COLORS.surfaceSubtle, 0.82)
-    .stop(1, COLORS.surfaceSubtle, 1);
-  doc.rect(28, 218, PAGE_WIDTH - 56, 130).fill(bottomFade);
-  doc.restore();
 }
 
 function drawBackground(doc, heroImageBuffer) {
@@ -1193,6 +1366,8 @@ export function createMarketingTourOnePagerPdfWriter({
       ...Object.fromEntries(Object.entries(displayFonts).filter(([, value]) => value))
     };
     const frameImages = await prepareFrameImages(tour, { resolveTourImageDiskPath, fallbackImagePath }, normalizedLang);
+    const heroBackgroundBuffer = await createFeatheredHeroImageBuffer(frameImages[0]?.buffer);
+    const bodyImageLayouts = createBodyImageLayouts(tour, frameImages);
     const configuredHighlightItems = await collectConfiguredExperienceHighlightItems(tour, normalizedLang, experienceHighlightsManifestPath);
     const highlightItems = configuredHighlightItems.length
       ? configuredHighlightItems
@@ -1212,70 +1387,29 @@ export function createMarketingTourOnePagerPdfWriter({
       registerPdfFonts(doc, renderFonts);
       doc.addPage({ size: PAGE_SIZE, margin: 0 });
 
-      drawBackground(doc, frameImages[0]?.buffer);
+      drawBackground(doc, heroBackgroundBuffer);
       drawLogo(doc, logoPath);
       drawDurationBadge(doc, duration, renderFonts);
-      drawMainCopy(doc, tour, duration, renderFonts, normalizedLang);
-      drawHighlights(doc, highlightItems, 42, 438, 276, renderFonts, normalizedLang);
-      drawRouteConnector(doc, 43, 570, 238);
-      drawIncluded(doc, collectIncludedItems(tour, duration, normalizedLang), 42, 616, 276, renderFonts, normalizedLang);
+      const mainCopyLayout = drawMainCopy(doc, tour, duration, renderFonts, normalizedLang);
+      const highlightsY = Math.max(438, Number(mainCopyLayout?.highlightsY) || 438);
+      drawHighlights(doc, highlightItems, 42, highlightsY, 276, renderFonts, normalizedLang);
+      drawRouteConnector(doc, 43, highlightsY + 132, 238);
+      drawIncluded(doc, collectIncludedItems(tour, duration, normalizedLang), 42, highlightsY + 178, 276, renderFonts, normalizedLang);
 
-      if (frameImages[1]?.entry) {
+      bodyImageLayouts.forEach(({ frame, layout }, index) => {
         drawFramedImage(doc, {
-          x: 352,
-          y: 258,
-          width: 198,
-          height: 122,
-          angle: -2.5,
-          imageBuffer: frameImages[1]?.buffer,
-          label: frameImages[1]?.entry?.label || "",
+          x: layout.x,
+          y: layout.y,
+          width: layout.width,
+          height: layout.height,
+          angle: layout.angle,
+          imageBuffer: frame?.buffer,
+          label: frame?.entry?.label || "",
           fonts: renderFonts,
           lang: normalizedLang,
-          variant: 0
+          variant: layout.variant ?? index
         });
-      }
-      if (frameImages[2]?.entry) {
-        drawFramedImage(doc, {
-          x: 303,
-          y: 405,
-          width: 158,
-          height: 102,
-          angle: -4,
-          imageBuffer: frameImages[2]?.buffer,
-          label: frameImages[2]?.entry?.label || "",
-          fonts: renderFonts,
-          lang: normalizedLang,
-          variant: 1
-        });
-      }
-      if (frameImages[3]?.entry) {
-        drawFramedImage(doc, {
-          x: 364,
-          y: 491,
-          width: 190,
-          height: 126,
-          angle: 4,
-          imageBuffer: frameImages[3]?.buffer,
-          label: frameImages[3]?.entry?.label || "",
-          fonts: renderFonts,
-          lang: normalizedLang,
-          variant: 2
-        });
-      }
-      if (frameImages[4]?.entry) {
-        drawFramedImage(doc, {
-          x: 456,
-          y: 394,
-          width: 112,
-          height: 82,
-          angle: 5,
-          imageBuffer: frameImages[4]?.buffer,
-          label: frameImages[4]?.entry?.label || "",
-          fonts: renderFonts,
-          lang: normalizedLang,
-          variant: 1
-        });
-      }
+      });
       drawCta(doc, companyProfile || {}, renderFonts, normalizedLang);
       drawFooter(doc, companyProfile || {}, renderFonts);
       await streamPdfToFile(doc, outputPath);

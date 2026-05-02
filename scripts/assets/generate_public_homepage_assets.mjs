@@ -39,6 +39,10 @@ const DESTINATION_CATALOG_PATH = path.resolve(
   normalizeText(process.env.PUBLIC_HOMEPAGE_DESTINATION_CATALOG_PATH || process.env.TOUR_DESTINATIONS_PATH)
     || path.join(CONTENT_ROOT, "tours", "destinations.json")
 );
+const TRANSLATIONS_SNAPSHOT_DIR = path.resolve(
+  normalizeText(process.env.PUBLIC_HOMEPAGE_TRANSLATIONS_SNAPSHOT_DIR || process.env.TRANSLATIONS_SNAPSHOT_DIR)
+    || path.join(CONTENT_ROOT, "translations")
+);
 const GENERATED_HOMEPAGE_DATA_DIR = path.join(ROOT_DIR, "frontend", "data", "generated", "homepage");
 const GENERATED_HOMEPAGE_ASSETS_DIR = path.join(ROOT_DIR, "assets", "generated", "homepage");
 const GENERATED_REELS_DATA_DIR = path.join(ROOT_DIR, "frontend", "data", "generated", "reels");
@@ -130,6 +134,10 @@ function jsonWithTrailingNewline(value) {
 
 function versionTokenForContent(value) {
   return createHash("sha1").update(String(value ?? ""), "utf8").digest("hex").slice(0, 12);
+}
+
+function translationSourceKey(value) {
+  return createHash("sha256").update(normalizeText(value), "utf8").digest("hex");
 }
 
 function buildVersionedGeneratedDataUrl(filename, version, { publicPrefix = "/frontend/data/generated/homepage" } = {}) {
@@ -549,6 +557,137 @@ function normalizeTourForPublicHomepage(tour, publishedDestinationCodes, { norma
     },
     destinations: visibleDestinations
   };
+}
+
+function cloneJson(value) {
+  if (value === undefined || value === null) return value;
+  return JSON.parse(JSON.stringify(value));
+}
+
+async function loadPublishedMarketingTourTranslations(translationsSnapshotDir, languages) {
+  const mapsByLang = new Map();
+  const uniqueLanguages = Array.from(new Set(
+    (Array.isArray(languages) ? languages : [])
+      .map((lang) => normalizeTourLang(lang))
+      .filter((lang) => lang && lang !== "en")
+  ));
+  await Promise.all(uniqueLanguages.map(async (lang) => {
+    const snapshotPath = path.join(translationsSnapshotDir, "customers", `marketing-tours.${lang}.json`);
+    const payload = await readJson(snapshotPath, { fallback: { items: [] } });
+    const entries = new Map();
+    for (const item of Array.isArray(payload?.items) ? payload.items : []) {
+      const sourceText = normalizeText(item?.source_text);
+      const targetText = normalizeText(item?.target_text);
+      if (!sourceText || !targetText) continue;
+      entries.set(translationSourceKey(sourceText), targetText);
+    }
+    mapsByLang.set(lang, entries);
+  }));
+  return mapsByLang;
+}
+
+function publishedTranslationForSource(translations, sourceText) {
+  const normalizedSource = normalizeText(sourceText);
+  if (!normalizedSource || !(translations instanceof Map)) return "";
+  return normalizeText(translations.get(translationSourceKey(normalizedSource)));
+}
+
+function localizedObjectText(value, lang) {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? normalizeText(value[normalizeTourLang(lang)])
+    : "";
+}
+
+function fallbackSourceText(value) {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? normalizeText(value.en)
+    : normalizeText(value);
+}
+
+function sourceTextFromLocalizedValue(value, fallback = "") {
+  const fallbackText = fallbackSourceText(fallback);
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    return normalizeText(value.en) || fallbackText;
+  }
+  return normalizeText(value) || fallbackText;
+}
+
+function applyPublishedTranslationToLocalizedMap(holder, fieldName, lang, translations) {
+  if (!holder || typeof holder !== "object" || Array.isArray(holder)) return false;
+  const normalizedLang = normalizeTourLang(lang);
+  const existingValue = holder[fieldName];
+  const sourceText = sourceTextFromLocalizedValue(existingValue);
+  if (!sourceText || localizedObjectText(existingValue, normalizedLang)) return false;
+  const targetText = publishedTranslationForSource(translations, sourceText);
+  if (!targetText) return false;
+  holder[fieldName] = {
+    ...(existingValue && typeof existingValue === "object" && !Array.isArray(existingValue)
+      ? existingValue
+      : { en: sourceText }),
+    [normalizedLang]: targetText
+  };
+  return true;
+}
+
+function applyPublishedTranslationToLocalizedPair(holder, plainField, i18nField, lang, translations) {
+  if (!holder || typeof holder !== "object" || Array.isArray(holder)) return false;
+  const normalizedLang = normalizeTourLang(lang);
+  const i18nValue = holder[i18nField];
+  const sourceText = sourceTextFromLocalizedValue(i18nValue, holder[plainField]);
+  if (!sourceText || localizedObjectText(i18nValue, normalizedLang)) return false;
+  const targetText = publishedTranslationForSource(translations, sourceText);
+  if (!targetText) return false;
+  holder[i18nField] = {
+    ...(i18nValue && typeof i18nValue === "object" && !Array.isArray(i18nValue)
+      ? i18nValue
+      : {}),
+    [normalizedLang]: targetText
+  };
+  return true;
+}
+
+function applyPublishedTranslationsToTravelPlanImage(image, lang, translations) {
+  if (!image || typeof image !== "object" || Array.isArray(image)) return false;
+  let changed = false;
+  changed = applyPublishedTranslationToLocalizedPair(image, "caption", "caption_i18n", lang, translations) || changed;
+  changed = applyPublishedTranslationToLocalizedPair(image, "alt_text", "alt_text_i18n", lang, translations) || changed;
+  return changed;
+}
+
+function applyPublishedTranslationsToTravelPlan(travelPlan, lang, translations) {
+  if (!travelPlan || typeof travelPlan !== "object" || Array.isArray(travelPlan)) return false;
+  let changed = false;
+  for (const day of Array.isArray(travelPlan.days) ? travelPlan.days : []) {
+    if (!day || typeof day !== "object" || Array.isArray(day)) continue;
+    changed = applyPublishedTranslationToLocalizedPair(day, "title", "title_i18n", lang, translations) || changed;
+    changed = applyPublishedTranslationToLocalizedPair(day, "overnight_location", "overnight_location_i18n", lang, translations) || changed;
+    changed = applyPublishedTranslationToLocalizedPair(day, "notes", "notes_i18n", lang, translations) || changed;
+
+    for (const service of Array.isArray(day.services) ? day.services : []) {
+      if (!service || typeof service !== "object" || Array.isArray(service)) continue;
+      changed = applyPublishedTranslationToLocalizedPair(service, "time_label", "time_label_i18n", lang, translations) || changed;
+      changed = applyPublishedTranslationToLocalizedPair(service, "title", "title_i18n", lang, translations) || changed;
+      changed = applyPublishedTranslationToLocalizedPair(service, "details", "details_i18n", lang, translations) || changed;
+      changed = applyPublishedTranslationToLocalizedPair(service, "location", "location_i18n", lang, translations) || changed;
+      changed = applyPublishedTranslationToLocalizedPair(service, "image_subtitle", "image_subtitle_i18n", lang, translations) || changed;
+      changed = applyPublishedTranslationsToTravelPlanImage(service.image, lang, translations) || changed;
+      for (const image of Array.isArray(service.images) ? service.images : []) {
+        changed = applyPublishedTranslationsToTravelPlanImage(image, lang, translations) || changed;
+      }
+    }
+  }
+  return changed;
+}
+
+function applyPublishedMarketingTourTranslations(tour, lang, translations) {
+  const normalizedLang = normalizeTourLang(lang);
+  if (normalizedLang === "en" || !(translations instanceof Map) || translations.size === 0) return tour;
+  const next = cloneJson(tour);
+  let changed = false;
+  changed = applyPublishedTranslationToLocalizedMap(next, "title", normalizedLang, translations) || changed;
+  changed = applyPublishedTranslationToLocalizedMap(next, "short_description", normalizedLang, translations) || changed;
+  changed = applyPublishedTranslationsToTravelPlan(next.travel_plan, normalizedLang, translations) || changed;
+  return changed ? next : tour;
 }
 
 function extractTourAssetRelativePath(imagePath, tourId) {
@@ -1471,6 +1610,7 @@ async function generateTourAssets({
   frontendDataDir = FRONTEND_DATA_DIR,
   countryReferenceInfoPath = COUNTRY_REFERENCE_INFO_PATH,
   destinationCatalogPath = "",
+  translationsSnapshotDir = TRANSLATIONS_SNAPSHOT_DIR,
   frontendI18nDir = FRONTEND_I18N_DIR,
   languages = FRONTEND_LANGUAGE_CODES
 } = {}) {
@@ -1541,17 +1681,20 @@ async function generateTourAssets({
     .filter(Boolean);
   const sortedPublicTours = [...publicTours].sort((left, right) => Number(right.priority || 0) - Number(left.priority || 0));
   const destinationScopeFilters = publicTourDestinationScopeFilters(sortedPublicTours);
+  const publishedMarketingTourTranslations = await loadPublishedMarketingTourTranslations(translationsSnapshotDir, languages);
   const assetUrlsByLang = {};
   const destinationAssetUrlsByLang = {};
   let seoPayload = null;
 
   for (const lang of languages) {
     const normalizedLang = normalizeTourLang(lang);
+    const publishedTranslations = publishedMarketingTourTranslations.get(normalizedLang) || new Map();
     const localizedItems = [];
     const localizedSeoItems = [];
     for (const tour of sortedPublicTours) {
       const seoSlug = storedTourSeoSlug(tour);
-      const readModel = normalizeTourForRead(tour, { lang: normalizedLang });
+      const localizedTour = applyPublishedMarketingTourTranslations(tour, normalizedLang, publishedTranslations);
+      const readModel = normalizeTourForRead(localizedTour, { lang: normalizedLang });
       const travelPlan = await publicHomepageTourTravelPlan(
         readModel.travel_plan,
         readModel.id,
@@ -1842,6 +1985,7 @@ export async function generatePublicHomepageAssets({
   homepageInitialBundlePath = "",
   homepageTemplatePath = HOMEPAGE_TEMPLATE_PATH,
   homepageIndexPath = "",
+  translationsSnapshotDir = "",
   languages = FRONTEND_LANGUAGE_CODES
 } = {}) {
   const resolvedHomepageInitialBundlePath = normalizeText(homepageInitialBundlePath)
@@ -1860,6 +2004,8 @@ export async function generatePublicHomepageAssets({
     || (staffRoot === ATP_STAFF_ROOT ? ATP_STAFF_PHOTOS_ROOT : path.join(staffRoot, "photos"));
   const resolvedDestinationCatalogPath = normalizeText(destinationCatalogPath)
     || (toursRoot === TOURS_ROOT ? DESTINATION_CATALOG_PATH : path.join(toursRoot, "destinations.json"));
+  const resolvedTranslationsSnapshotDir = normalizeText(translationsSnapshotDir)
+    || (toursRoot === TOURS_ROOT ? TRANSLATIONS_SNAPSHOT_DIR : path.join(path.dirname(toursRoot), "translations"));
   await cleanGeneratedFrontendData(frontendDataDir);
   const tours = await generateTourAssets({
     toursRoot,
@@ -1867,6 +2013,7 @@ export async function generatePublicHomepageAssets({
     frontendDataDir,
     countryReferenceInfoPath,
     destinationCatalogPath: resolvedDestinationCatalogPath,
+    translationsSnapshotDir: resolvedTranslationsSnapshotDir,
     frontendI18nDir,
     languages
   });

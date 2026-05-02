@@ -26,7 +26,7 @@ const experienceHighlightsManifestPath = path.join(repoRoot, "assets", "img", "e
 const googleSitesBaseUrl = "https://sites.google.com";
 const googleAccount = "info@asiatravelplan.com";
 const onePagerFrameImageCount = 5;
-const minOnePagerImageCount = onePagerFrameImageCount;
+const minOnePagerImageCount = 2;
 const onePagerExperienceHighlightCount = 4;
 const publicTourImagePrefix = "/public/v1/tour-images/";
 const tourImageExtensions = new Set([".jpg", ".jpeg", ".png", ".webp"]);
@@ -58,7 +58,6 @@ Generated files:
   <output>/pdfs/<tour-id>/<lang>.pdf
   <output>/images/<tour-id>/<lang>.png
   <output>/index.html
-  <output>/google-sites-instructions.html
   <output>/manifest.json
 
 Only tours with at least ${minOnePagerImageCount} usable one-pager images are rendered.`);
@@ -600,9 +599,6 @@ function buildMatrixHtml({ outputDir, rows, languages, generatedAt, flagDataUrls
     }
     .corner,
     .tour-cell {
-      position: sticky;
-      left: 0;
-      z-index: 2;
       width: var(--tour-column-width);
       min-width: var(--tour-column-width);
       max-width: var(--tour-column-width);
@@ -613,9 +609,6 @@ function buildMatrixHtml({ outputDir, rows, languages, generatedAt, flagDataUrls
       text-align: left;
       white-space: normal;
       overflow-wrap: anywhere;
-    }
-    thead .corner {
-      z-index: 5;
     }
     .tour-title {
       display: block;
@@ -659,38 +652,6 @@ function buildMatrixHtml({ outputDir, rows, languages, generatedAt, flagDataUrls
       </table>
     </div>
   </main>
-</body>
-</html>
-`;
-}
-
-function buildGoogleSitesInstructions({ outputDir, generatedAt }) {
-  const indexPath = path.join(outputDir, "index.html");
-  return `<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Google Sites publishing instructions</title>
-  <style>
-    body { font-family: Arial, sans-serif; max-width: 860px; margin: 40px auto; line-height: 1.5; color: #14252b; }
-    code { background: #eef3ed; padding: 2px 5px; border-radius: 4px; }
-    .warning { border-left: 4px solid #ba3b36; padding: 8px 14px; background: #fff4f3; }
-  </style>
-</head>
-<body>
-  <h1>Google Sites publishing instructions</h1>
-  <p>Generated ${escapeHtml(generatedAt)} for ${escapeHtml(googleAccount)}.</p>
-  <div class="warning">
-    <p><strong>Automatic publishing to New Google Sites is not available through Google's official Sites API.</strong> The current Sites API is for classic Sites only, so this script generated the page locally instead.</p>
-  </div>
-  <p>Local matrix page:</p>
-  <p><code>${escapeHtml(indexPath)}</code></p>
-  <h2>Recommended publishing options</h2>
-  <ol>
-    <li>Publish the generated <code>content/one-pagers</code> folder to a normal static host, then add it to Google Sites using <strong>Insert → Embed → By URL</strong>.</li>
-    <li>For a manual Google Sites-only workflow, open <a href="${googleSitesBaseUrl}/?authuser=${encodeURIComponent(googleAccount)}">${googleSitesBaseUrl}</a>, sign in as <code>${escapeHtml(googleAccount)}</code>, create or open the target site, and insert selected generated PNG files from <code>content/one-pagers/images</code>.</li>
-  </ol>
 </body>
 </html>
 `;
@@ -846,9 +807,9 @@ async function main() {
     generatedAt,
     flagDataUrls: await buildFlagDataUrls(options.languages)
   });
-  const instructionsHtml = buildGoogleSitesInstructions({ outputDir: options.outputDir, generatedAt });
+  const staleInstructionsPath = path.join(options.outputDir, "google-sites-instructions.html");
+  await rm(staleInstructionsPath, { force: true });
   await writeFile(path.join(options.outputDir, "index.html"), matrixHtml, "utf8");
-  await writeFile(path.join(options.outputDir, "google-sites-instructions.html"), instructionsHtml, "utf8");
   await writeFile(path.join(options.outputDir, "manifest.json"), `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
 
   if (options.openGoogleSites) {
@@ -856,7 +817,6 @@ async function main() {
   }
 
   console.log(`Done. Matrix page: ${path.join(options.outputDir, "index.html")}`);
-  console.log(`Google Sites instructions: ${path.join(options.outputDir, "google-sites-instructions.html")}`);
 }
 
 main().catch((error) => {

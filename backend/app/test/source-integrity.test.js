@@ -3575,8 +3575,28 @@ test("tour card images are selected from travel-plan service images", async () =
   );
   assert.match(
     onePagerPdfSource,
+    /const PDF_PRIMARY_GREEN = "#30796B";[\s\S]*accent: PDF_PRIMARY_GREEN,[\s\S]*accentText: PDF_PRIMARY_GREEN,[\s\S]*secondary: PDF_PRIMARY_GREEN,[\s\S]*cta: PDF_PRIMARY_GREEN/,
+    "The one-pager PDF should use the requested brand green for its primary green elements"
+  );
+  assert.match(
+    onePagerPdfSource,
+    /const BODY_IMAGE_LIMIT = 4;[\s\S]*function bodyImageBaseLayouts\(count\)[\s\S]*1: \[[\s\S]*2: \[[\s\S]*3: \[[\s\S]*4: \[[\s\S]*function createBodyImageLayouts\(tour, frameImages\)[\s\S]*\.slice\(1\)[\s\S]*\.slice\(0, BODY_IMAGE_LIMIT\)[\s\S]*deterministicRange\(seed, `scale:\$\{index\}`[\s\S]*BODY_IMAGE_LAYOUT_BOUNDS[\s\S]*variant: deterministicIndex\(seed, `shape:\$\{index\}`, PHOTO_FRAME_SHAPES\.length\)[\s\S]*const bodyImageLayouts = createBodyImageLayouts\(tour, frameImages\)[\s\S]*bodyImageLayouts\.forEach\(\(\{ frame, layout \}, index\) =>[\s\S]*drawFramedImage/,
+    "The one-pager PDF should lay out up to four right-side body images with deterministic randomized position, size, and shape"
+  );
+  assert.match(
+    onePagerPdfSource,
     /const styleOptions = pdfTextOptions\(lang, \{ width: 282, characterSpacing: 1\.4, lineGap: 2 \}\);[\s\S]*doc\.heightOfString\(styleText, styleOptions\)[\s\S]*doc\.text\(styleText, 42, styleY[\s\S]*const descriptionY = Math\.max\(368, styleY \+ styleHeight \+ 8\)/,
     "The one-pager PDF should wrap long travel-style labels below the tour title and move the description down"
+  );
+  assert.match(
+    onePagerPdfSource,
+    /function fitPdfTextSize\(doc, text,[\s\S]*function fitTitleSize\(doc, title, fonts, options\)[\s\S]*maxHeight: 124[\s\S]*\.text\(titleText, 42, 208, titleOptions\)[\s\S]*const descriptionFontSize = fitPdfTextSize\(doc, description,[\s\S]*\.text\(description, 42, descriptionY, descriptionOptions\)[\s\S]*const mainCopyLayout = drawMainCopy\(doc, tour, duration, renderFonts, normalizedLang\)[\s\S]*drawHighlights\(doc, highlightItems, 42, highlightsY/,
+    "The one-pager PDF should fit and render the complete tour title and description without clipping or ellipsis"
+  );
+  assert.match(
+    onePagerPdfSource,
+    /function smoothStep\(edge0, edge1, value\)[\s\S]*async function createFeatheredHeroImageBuffer\(imageBuffer\)[\s\S]*alphaMask[\s\S]*blend: "dest-in"[\s\S]*\.png\(\)[\s\S]*const heroBackgroundBuffer = await createFeatheredHeroImageBuffer\(frameImages\[0\]\?\.buffer\)[\s\S]*drawBackground\(doc, heroBackgroundBuffer\)/,
+    "The one-pager PDF should feather the hero image into transparency before drawing it"
   );
   assert.match(
     onePagerPdfSource,
@@ -3587,6 +3607,11 @@ test("tour card images are selected from travel-plan service images", async () =
     onePagerScriptSource,
     /function applyScriptExperienceHighlights\(tour, rawTravelPlan, seed, availableHighlightIds\)[\s\S]*onePagerExperienceHighlightIds\(rawTravelPlan\)[\s\S]*if \(selectedHighlightIds\.length[\s\S]*randomHighlightIds = deterministicShuffle\(availableHighlightIds, seed\)\.slice\(0, onePagerExperienceHighlightCount\)[\s\S]*one_pager_experience_highlight_ids: randomHighlightIds/,
     "The one-pager batch script should choose four random experience highlights only when a marketing tour has none selected"
+  );
+  assert.match(
+    onePagerScriptSource,
+    /const onePagerFrameImageCount = 5;[\s\S]*const minOnePagerImageCount = 2;[\s\S]*scriptFrameImages\.length >= minOnePagerImageCount/,
+    "The one-pager batch script should render tours with fewer than four body images when a hero plus one body image is available"
   );
 });
 

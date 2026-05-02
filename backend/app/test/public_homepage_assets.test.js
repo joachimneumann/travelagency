@@ -43,6 +43,10 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
     "hero.title": "Privaturlaub in Vietnam, Thailand, Kambodscha und Laos",
     "hero.title_with_destinations": "Privaturlaub in {destinations}"
   });
+  await writeJson(path.join(frontendI18nDir, "vi.json"), {
+    "hero.title": "Ky nghi rieng o Viet Nam",
+    "hero.title_with_destinations": "Ky nghi rieng o {destinations}"
+  });
   await writeFile(
     homepageHtmlPath,
     '<!doctype html><html><head><title data-i18n-id="meta.home_title">Old title</title><meta name="description" content="Old description" data-i18n-content-id="meta.home_description"><meta property="og:title" content="Old title" data-i18n-content-id="meta.home_title"><script type="application/ld+json">{"@context":"https://schema.org","@type":"TravelAgency","description":"Old schema","areaServed":["Vietnam","Thailand"]}</script></head><body><h1 id="heroTitle" class="hero-title-only" data-i18n-id="hero.title">Old title</h1><script src="/frontend/data/generated/homepage/public-homepage-copy.global.js"></script></body></html>\n'
@@ -87,11 +91,14 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
       days: [
         {
           day_number: 1,
-          title: { en: "Arrival day", de: "Ankunftstag" },
+          title: "Arrival day",
+          title_i18n: { de: "Ankunftstag" },
           services: [
             {
-              title: { en: "Airport pick-up", de: "Flughafenabholung" },
-              details: { en: "Private transfer to the hotel.", de: "Privater Transfer zum Hotel." },
+              title: "Airport pick-up",
+              title_i18n: { de: "Flughafenabholung" },
+              details: "Private transfer to the hotel.",
+              details_i18n: { de: "Privater Transfer zum Hotel." },
               image: {
                 id: "travel_plan_service_image_pickup",
                 storage_path: "/public/v1/tour-images/tour_alpha/travel-plan-services/pickup.png",
@@ -101,8 +108,10 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
               }
             },
             {
-              title: { en: "Featured viewpoint", de: "Aussichtspunkt" },
-              details: { en: "The selected card image should be first.", de: "Das ausgewählte Kartenbild sollte zuerst erscheinen." },
+              title: "Featured viewpoint",
+              title_i18n: { de: "Aussichtspunkt" },
+              details: "The selected card image should be first.",
+              details_i18n: { de: "Das ausgewählte Kartenbild sollte zuerst erscheinen." },
               image: {
                 id: "travel_plan_service_image_featured",
                 storage_path: "/public/v1/tour-images/tour_alpha/travel-plan-services/featured.png",
@@ -112,8 +121,10 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
               }
             },
             {
-              title: { en: "Legacy included image", de: "Altes ausgewähltes Bild" },
-              details: { en: "The ordered selection should be authoritative.", de: "Die sortierte Auswahl sollte maßgeblich sein." },
+              title: "Legacy included image",
+              title_i18n: { de: "Altes ausgewähltes Bild" },
+              details: "The ordered selection should be authoritative.",
+              details_i18n: { de: "Die sortierte Auswahl sollte maßgeblich sein." },
               image: {
                 id: "travel_plan_service_image_legacy",
                 storage_path: "/public/v1/tour-images/tour_alpha/travel-plan-services/legacy.png",
@@ -134,6 +145,16 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
   await writeFile(path.join(toursRoot, "tour_alpha", "travel-plan-services", "pickup.png"), Buffer.from(TINY_PNG_BASE64, "base64"));
   await writeFile(path.join(toursRoot, "tour_alpha", "travel-plan-services", "featured.png"), Buffer.from(TINY_PNG_BASE64, "base64"));
   await writeFile(path.join(toursRoot, "tour_alpha", "travel-plan-services", "legacy.png"), Buffer.from(TINY_PNG_BASE64, "base64"));
+  await writeJson(path.join(contentRoot, "translations", "customers", "marketing-tours.vi.json"), {
+    items: [
+      { source_text: "Alpha tour", target_text: "Tour Alpha" },
+      { source_text: "Alpha description", target_text: "Mo ta Alpha" },
+      { source_text: "Arrival day", target_text: "Ngay den" },
+      { source_text: "Airport pick-up", target_text: "Don san bay" },
+      { source_text: "Private transfer to the hotel.", target_text: "Xe rieng ve khach san." },
+      { source_text: "Driver at arrivals", target_text: "Tai xe tai sanh den" }
+    ]
+  });
 
   await writeJson(path.join(toursRoot, "tour_hidden", "tour.json"), {
     id: "tour_hidden",
@@ -243,14 +264,16 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
     frontendI18nDir,
     homepageCopyGlobalPath,
     homepageTemplatePath: homepageHtmlPath,
-    languages: ["en", "de"]
+    languages: ["en", "de", "vi"]
   });
 
   const publicToursEn = JSON.parse(await readFile(path.join(frontendDataDir, "public-tours.en.json"), "utf8"));
   const publicToursDe = JSON.parse(await readFile(path.join(frontendDataDir, "public-tours.de.json"), "utf8"));
+  const publicToursVi = JSON.parse(await readFile(path.join(frontendDataDir, "public-tours.vi.json"), "utf8"));
   const publicTourDestinationsEn = JSON.parse(await readFile(path.join(frontendDataDir, "public-tour-destinations.en.json"), "utf8"));
   const publicTourDetailsEn = JSON.parse(await readFile(path.join(frontendDataDir, "public-tour-details.en.tour_alpha.json"), "utf8"));
   const publicTourDetailsDe = JSON.parse(await readFile(path.join(frontendDataDir, "public-tour-details.de.tour_alpha.json"), "utf8"));
+  const publicTourDetailsVi = JSON.parse(await readFile(path.join(frontendDataDir, "public-tour-details.vi.tour_alpha.json"), "utf8"));
   const publicTeam = JSON.parse(await readFile(path.join(frontendDataDir, "public-team.json"), "utf8"));
   const publicReels = JSON.parse(await readFile(path.join(root, "frontend", "data", "generated", "reels", "public-reels.json"), "utf8"));
   const homepageCopyGlobal = await readFile(homepageCopyGlobalPath, "utf8");
@@ -311,6 +334,12 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
   assert.equal(publicToursDe.items[0].title, "Alpha Reise");
   assert.equal(publicToursDe.items[0].seo_slug, "alpha-custom-route");
   assert.equal(publicToursDe.items[0].short_description, "Alpha Beschreibung");
+  assert.equal(publicToursVi.items[0].title, "Tour Alpha");
+  assert.equal(publicToursVi.items[0].short_description, "Mo ta Alpha");
+  assert.equal(publicTourDetailsVi.travel_plan.days[0].title_i18n.vi, "Ngay den");
+  assert.equal(publicTourDetailsVi.travel_plan.days[0].services[0].title_i18n.vi, "Don san bay");
+  assert.equal(publicTourDetailsVi.travel_plan.days[0].services[0].details_i18n.vi, "Xe rieng ve khach san.");
+  assert.equal(publicTourDetailsVi.travel_plan.days[0].services[0].image.alt_text_i18n.vi, "Tai xe tai sanh den");
   assert.match(
     publicTourDetailsDe.travel_plan.days[0].services[0].image.storage_path,
     /^\/assets\/generated\/homepage\/tours\/tour_alpha\/travel-plan-services\/pickup\.(png|webp)\?v=/
