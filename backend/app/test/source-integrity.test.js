@@ -5979,6 +5979,29 @@ test("staging backend bakes dependencies into the image and mounts only the writ
   );
 });
 
+test("staging can publish translations while production keeps runtime translation writes disabled", async () => {
+  const repoRoot = path.resolve(__dirname, "..", "..", "..");
+  const stagingComposePath = path.join(repoRoot, "docker-compose.staging.yml");
+  const productionComposePath = path.join(repoRoot, "docker-compose.production.yml");
+  const [stagingComposeSource, productionComposeSource] = await Promise.all([
+    readFile(stagingComposePath, "utf8"),
+    readFile(productionComposePath, "utf8")
+  ]);
+  const stagingBackendBlock = (stagingComposeSource.match(/\n  backend:\n[\s\S]*?(?=\n  keycloak:)/)?.[0] || "");
+  const productionBackendBlock = (productionComposeSource.match(/\n  backend:\n[\s\S]*?(?=\n  keycloak:)/)?.[0] || "");
+
+  assert.match(
+    stagingBackendBlock,
+    /TRANSLATION_OVERRIDE_WRITES_ENABLED: "true"/,
+    "Staging must allow translation jobs to update and publish snapshots"
+  );
+  assert.match(
+    productionBackendBlock,
+    /TRANSLATION_OVERRIDE_WRITES_ENABLED: "false"/,
+    "Production must keep runtime translation writes disabled"
+  );
+});
+
 test("generator no longer emits legacy ATPStaff model outputs or SourceAttribution booking types", async () => {
   const filePath = path.resolve(__dirname, "..", "..", "..", "tools", "generator", "generate_mobile_contract_artifacts.rb");
   const source = await readFile(filePath, "utf8");
