@@ -1792,9 +1792,10 @@ export function createMarketingTourOnePagerPdfWriter({
     ].map((value) => normalizeText(value)).filter(Boolean).join(" ");
     const onePagerFontDir = normalizeText(process.env.ONE_PAGER_FONT_DIR);
     const onePagerFontDirOnly = Boolean(onePagerFontDir);
+    const fontSupportSampleText = onePagerFontDirOnly ? "" : sampleText;
     const bodyFonts = await resolvePdfFontsForLang({
       lang: normalizedLang,
-      sampleText,
+      sampleText: fontSupportSampleText,
       regularCandidates: prioritizeOnePagerFontCandidates(
         PDF_FONT_REGULAR_CANDIDATES,
         fontCandidatesFromDir(onePagerFontDir, PDF_FONT_DIR_REGULAR_FILES),
