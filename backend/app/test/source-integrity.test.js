@@ -145,6 +145,11 @@ test("runtime i18n preflight is generated from content/translations and local ba
     /"content", "translations"/,
     "Runtime i18n should be generated from content/translations"
   );
+  assert.match(
+    runtimeI18nScriptSource,
+    /"frontend", "data", "generated", "i18n", "source", "frontend", "en\.json"[\s\S]*"frontend", "data", "generated", "i18n", "source", "backend", "en\.json"/,
+    "Runtime i18n should read generated English source catalog copies instead of tracked runtime dictionaries"
+  );
   assert.match(runtimeI18nScriptSource, /frontend-static/, "Runtime i18n should read frontend static snapshots");
   assert.match(runtimeI18nScriptSource, /backend-ui/, "Runtime i18n should read backend UI snapshots");
   assert.match(runtimeI18nScriptSource, /source_hash/, "Runtime i18n should validate source hashes");
@@ -165,8 +170,8 @@ test("runtime i18n preflight is generated from content/translations and local ba
   );
   assert.match(
     localI18nPreflightSource,
-    /source "\$runtime_i18n_helper"[\s\S]*run_runtime_i18n_generator_quiet "\$root_dir" "\$runtime_i18n_script"/,
-    "Local runtime i18n preflight should use the shared helper for strict snapshot generation when snapshots exist"
+    /source "\$runtime_i18n_helper"[\s\S]*refresh_runtime_i18n_source_catalogs "\$root_dir"[\s\S]*run_runtime_i18n_generator_quiet "\$root_dir" "\$runtime_i18n_script"/,
+    "Local runtime i18n preflight should refresh generated source catalogs before strict snapshot generation"
   );
   assert.match(
     localI18nPreflightSource,
@@ -208,7 +213,20 @@ test("runtime i18n preflight is generated from content/translations and local ba
 test("translate wrapper covers backend and frontend i18n sync scripts", async () => {
   const repoRoot = path.resolve(__dirname, "..", "..", "..");
   const translateScriptPath = path.join(repoRoot, "scripts", "i18n", "translate");
-  const translateScriptSource = await readFile(translateScriptPath, "utf8");
+  const refreshSourceCatalogsPath = path.join(repoRoot, "scripts", "i18n", "refresh_source_catalogs.mjs");
+  const backendSyncPath = path.join(repoRoot, "scripts", "i18n", "sync_backend_i18n.mjs");
+  const frontendSyncPath = path.join(repoRoot, "scripts", "i18n", "sync_frontend_i18n.mjs");
+  const [
+    translateScriptSource,
+    refreshSourceCatalogsSource,
+    backendSyncSource,
+    frontendSyncSource
+  ] = await Promise.all([
+    readFile(translateScriptPath, "utf8"),
+    readFile(refreshSourceCatalogsPath, "utf8"),
+    readFile(backendSyncPath, "utf8"),
+    readFile(frontendSyncPath, "utf8")
+  ]);
 
   assert.match(
     translateScriptSource,
@@ -222,13 +240,38 @@ test("translate wrapper covers backend and frontend i18n sync scripts", async ()
   );
   assert.match(
     translateScriptSource,
-    /node "\$BACKEND_SYNC_SCRIPT" translate --target vi[\s\S]*node "\$FRONTEND_SYNC_SCRIPT" translate/,
+    /SOURCE_CATALOG_REFRESH_SCRIPT=.*refresh_source_catalogs\.mjs[\s\S]*refresh\)[\s\S]*node "\$SOURCE_CATALOG_REFRESH_SCRIPT"/,
+    "Translate wrapper should expose a source catalog refresh command"
+  );
+  assert.match(
+    translateScriptSource,
+    /node "\$SOURCE_CATALOG_REFRESH_SCRIPT"[\s\S]*node "\$BACKEND_SYNC_SCRIPT" translate --target vi[\s\S]*node "\$FRONTEND_SYNC_SCRIPT" translate/,
     "Translate update should run backend and frontend syncs in sequence"
   );
   assert.match(
     translateScriptSource,
-    /node "\$BACKEND_SYNC_SCRIPT" check --target vi[\s\S]*node "\$FRONTEND_SYNC_SCRIPT" check/,
+    /node "\$SOURCE_CATALOG_REFRESH_SCRIPT" --check[\s\S]*node "\$BACKEND_SYNC_SCRIPT" check --target vi[\s\S]*node "\$FRONTEND_SYNC_SCRIPT" check/,
     "Translate check should validate backend and frontend sync state"
+  );
+  assert.match(
+    refreshSourceCatalogsSource,
+    /scripts", "i18n", "source_catalogs", "backend\.en\.json"[\s\S]*frontend", "data", "generated", "i18n", "source", "backend", "en\.json"[\s\S]*frontend", "data", "i18n", "backend", "en\.json"/,
+    "Source catalog refresh should copy canonical backend English into generated and runtime compatibility paths"
+  );
+  assert.match(
+    refreshSourceCatalogsSource,
+    /scripts", "i18n", "source_catalogs", "frontend\.en\.json"[\s\S]*frontend", "data", "generated", "i18n", "source", "frontend", "en\.json"[\s\S]*frontend", "data", "i18n", "frontend", "en\.json"/,
+    "Source catalog refresh should copy canonical frontend English into generated and runtime compatibility paths"
+  );
+  assert.match(
+    backendSyncSource,
+    /BACKEND_SOURCE_CATALOG_PATH[\s\S]*scripts", "i18n", "source_catalogs", "backend\.en\.json"[\s\S]*if \(lang === DEFAULT_SOURCE_LANG\) return BACKEND_SOURCE_CATALOG_PATH;/,
+    "Backend i18n sync should read canonical English from source_catalogs"
+  );
+  assert.match(
+    frontendSyncSource,
+    /FRONTEND_SOURCE_CATALOG_PATH[\s\S]*scripts", "i18n", "source_catalogs", "frontend\.en\.json"[\s\S]*if \(lang === DEFAULT_SOURCE_LANG\) return FRONTEND_SOURCE_CATALOG_PATH;/,
+    "Frontend i18n sync should read canonical English from source_catalogs"
   );
 });
 
@@ -253,9 +296,10 @@ test("generated translation outputs are not tracked outside backup", async (t) =
       if (normalized.startsWith("backup/")) return false;
       if (normalized.startsWith("content/translations/")) return true;
       if (/^frontend\/data\/generated\/homepage\/.*\.[a-z][a-z0-9-]*\.json$/.test(normalized)) return true;
-      if (/^frontend\/data\/i18n\/frontend\/(?!en\.json$)[^/]+\.json$/.test(normalized)) return true;
+      if (/^frontend\/data\/generated\/i18n\/source\/[^/]+\/en\.json$/.test(normalized)) return true;
+      if (/^frontend\/data\/i18n\/frontend\/[^/]+\.json$/.test(normalized)) return true;
       if (/^frontend\/data\/i18n\/frontend_meta\/[^/]+\.json$/.test(normalized)) return true;
-      if (/^frontend\/data\/i18n\/backend\/(?!en\.json$)[^/]+\.json$/.test(normalized)) return true;
+      if (/^frontend\/data\/i18n\/backend\/[^/]+\.json$/.test(normalized)) return true;
       if (/^frontend\/data\/i18n\/backend\/[^/]+\.meta\.json$/.test(normalized)) return true;
       if (/^frontend\/data\/i18n\/frontend_overrides\/[^/]+\.json$/.test(normalized)) return true;
       if (/^frontend\/data\/i18n\/backend_overrides\/[^/]+\.json$/.test(normalized)) return true;
@@ -942,7 +986,7 @@ test("booking translation collapsible exposes incomplete state while marketing-t
   const staticTranslationsPath = path.resolve(__dirname, "..", "src", "domain", "static_translations.js");
   const collapsibleStylesPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "components", "backend-collapsible.css");
   const bookingStylesPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "pages", "backend-booking.css");
-  const englishTranslationsPath = path.resolve(__dirname, "..", "..", "..", "frontend", "data", "i18n", "backend", "en.json");
+  const englishTranslationsPath = path.resolve(__dirname, "..", "..", "..", "scripts", "i18n", "source_catalogs", "backend.en.json");
   const [
     bookingPageSource,
     bookingScriptSource,
@@ -2746,7 +2790,7 @@ test("booking page keeps English as the fixed booking source language while stil
 
 test("booking source and referral labels are routed through backend i18n", async () => {
   const bookingCorePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "core.js");
-  const englishTranslationsPath = path.resolve(__dirname, "..", "..", "..", "frontend", "data", "i18n", "backend", "en.json");
+  const englishTranslationsPath = path.resolve(__dirname, "..", "..", "..", "scripts", "i18n", "source_catalogs", "backend.en.json");
   const [coreSource, englishTranslations] = await Promise.all([
     readFile(bookingCorePath, "utf8"),
     readFile(englishTranslationsPath, "utf8")
@@ -3803,7 +3847,7 @@ test("tour page edits English website content while marketing-tour translations 
   const tourPageModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "tour.js");
   const staticTranslationsPath = path.resolve(__dirname, "..", "src", "domain", "static_translations.js");
   const siteStylesPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "site.css");
-  const englishTranslationsPath = path.resolve(__dirname, "..", "..", "..", "frontend", "data", "i18n", "backend", "en.json");
+  const englishTranslationsPath = path.resolve(__dirname, "..", "..", "..", "scripts", "i18n", "source_catalogs", "backend.en.json");
   const [tourSource, staticTranslationsSource, siteStyles, englishTranslations] = await Promise.all([
     readFile(tourPageModulePath, "utf8"),
     readFile(staticTranslationsPath, "utf8"),
@@ -4880,9 +4924,24 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
     "Runtime i18n deploy helper should fail with a clear message when content/translations is missing"
   );
   assert.match(
+    runtimeI18nScript,
+    /validate_runtime_i18n_snapshots_quiet\(\)[\s\S]*node "\$generator_path" --check --strict[\s\S]*stale source_text[\s\S]*missing source keys[\s\S]*content\/translations is older than the checked-out source catalog/,
+    "Runtime i18n deploy helper should explain stale or missing snapshot failures as source/snapshot mismatches"
+  );
+  assert.match(
     autoCommitDeployScript,
     /PUBLISHED_TRANSLATIONS_DIR="\$ROOT_DIR\/content\/translations"[\s\S]*sync_published_translation_snapshots_to_staging\(\)[\s\S]*rsync -az --delete "\$PUBLISHED_TRANSLATIONS_DIR\/" "\$REMOTE_HOST:\$remote_translations_dir\/"[\s\S]*sync_published_translation_snapshots_to_staging[\s\S]*\$REMOTE_SCRIPT/,
     "Auto deploy should sync ignored content/translations before running staging update"
+  );
+  assert.match(
+    autoCommitDeployScript,
+    /source "\$ROOT_DIR\/scripts\/lib\/runtime_i18n\.sh"[\s\S]*validate_published_translation_snapshots\(\)[\s\S]*validate_runtime_i18n_snapshots_quiet "\$ROOT_DIR"[\s\S]*validate_published_translation_snapshots[\s\S]*run_predeploy_tests[\s\S]*sync_published_translation_snapshots_to_staging/,
+    "Auto deploy should validate ignored content/translations locally before tests, push, and remote sync"
+  );
+  assert.match(
+    updateStagingScript,
+    /validate_runtime_i18n_snapshots\(\)[\s\S]*validate_runtime_i18n_snapshots_quiet "\$ROOT_DIR"[\s\S]*Staging content\/translations is out of sync[\s\S]*git pull --ff-only[\s\S]*validate_runtime_i18n_snapshots[\s\S]*run_staging_tests/,
+    "Direct staging updates should fail early when ignored content/translations is stale after git pull"
   );
   assert.match(
     autoCommitDeployScript,
@@ -5653,7 +5712,7 @@ test("homepage TravelAgency structured data mirrors footer contact details", asy
 test("homepage hero title follows published destinations and keeps the destination button visible", async () => {
   const mainToursPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "main_tours.js");
   const homepagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "index.html");
-  const frontendEnI18nPath = path.resolve(__dirname, "..", "..", "..", "frontend", "data", "i18n", "frontend", "en.json");
+  const frontendEnI18nPath = path.resolve(__dirname, "..", "..", "..", "scripts", "i18n", "source_catalogs", "frontend.en.json");
   const frontendI18nScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "shared", "frontend_i18n.js");
   const siteHomeCriticalCssPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "site-home-critical.css");
   const homeCriticalMobileCssPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "home-critical-mobile.css");

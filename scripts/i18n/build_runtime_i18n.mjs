@@ -24,7 +24,7 @@ const RUNTIME_DOMAINS = Object.freeze({
     section: "customers",
     subsection: "frontend-static",
     supportedLanguages: FRONTEND_LANGUAGE_CODES.filter((code) => code !== DEFAULT_SOURCE_LANG),
-    sourcePath: (repoRoot) => path.join(repoRoot, "frontend", "data", "i18n", "frontend", "en.json"),
+    sourcePath: (repoRoot) => path.join(repoRoot, "frontend", "data", "generated", "i18n", "source", "frontend", "en.json"),
     targetPath: (repoRoot, lang) => path.join(repoRoot, "frontend", "data", "i18n", "frontend", `${lang}.json`),
     metaPath: (repoRoot, lang) => path.join(repoRoot, "frontend", "data", "i18n", "frontend_meta", `${lang}.json`),
     retiredKeys: ["footer.brand_title"],
@@ -46,7 +46,7 @@ const RUNTIME_DOMAINS = Object.freeze({
     section: "staff",
     subsection: "backend-ui",
     supportedLanguages: BACKEND_UI_LANGUAGE_CODES.filter((code) => code !== DEFAULT_SOURCE_LANG),
-    sourcePath: (repoRoot) => path.join(repoRoot, "frontend", "data", "i18n", "backend", "en.json"),
+    sourcePath: (repoRoot) => path.join(repoRoot, "frontend", "data", "generated", "i18n", "source", "backend", "en.json"),
     targetPath: (repoRoot, lang) => path.join(repoRoot, "frontend", "data", "i18n", "backend", `${lang}.json`),
     metaPath: (repoRoot, lang) => path.join(repoRoot, "frontend", "data", "i18n", "backend", `${lang}.meta.json`),
     cleanupPatterns: [

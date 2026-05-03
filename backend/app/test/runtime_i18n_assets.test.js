@@ -80,8 +80,8 @@ async function createRuntimeI18nFixture() {
     targetText: key === "booking.note_title" ? "Ghi chu booking" : "Cuoc goi dien thoai"
   }));
 
-  await writeJson(path.join(repoRoot, "frontend", "data", "i18n", "frontend", "en.json"), frontendSource);
-  await writeJson(path.join(repoRoot, "frontend", "data", "i18n", "backend", "en.json"), backendSource);
+  await writeJson(path.join(repoRoot, "frontend", "data", "generated", "i18n", "source", "frontend", "en.json"), frontendSource);
+  await writeJson(path.join(repoRoot, "frontend", "data", "generated", "i18n", "source", "backend", "en.json"), backendSource);
   await writeJson(path.join(repoRoot, "frontend", "data", "i18n", "frontend", "fr.json"), { stale: "stale" });
   await writeJson(path.join(repoRoot, "frontend", "data", "i18n", "frontend_meta", "fr.json"), { stale: {} });
   await writeJson(path.join(repoRoot, "frontend", "data", "i18n", "backend", "vi.meta.json"), { stale: {} });
@@ -168,7 +168,7 @@ test("runtime i18n generator writes dictionaries and metadata from published sna
 
 test("runtime i18n generator preserves protected-term-only strings from snapshots", async () => {
   const { repoRoot } = await createRuntimeI18nFixture();
-  const sourcePath = path.join(repoRoot, "frontend", "data", "i18n", "frontend", "en.json");
+  const sourcePath = path.join(repoRoot, "frontend", "data", "generated", "i18n", "source", "frontend", "en.json");
   const snapshotPath = path.join(repoRoot, "content", "translations", "customers", "frontend-static.vi.json");
   const manifestPath = path.join(repoRoot, "content", "translations", "manifest.json");
   const source = JSON.parse(await readFile(sourcePath, "utf8"));
@@ -226,7 +226,7 @@ test("runtime i18n generator rejects stale snapshot sources", async () => {
 
 test("runtime i18n generator ignores retired frontend keys left in published snapshots", async () => {
   const { repoRoot } = await createRuntimeI18nFixture();
-  const sourcePath = path.join(repoRoot, "frontend", "data", "i18n", "frontend", "en.json");
+  const sourcePath = path.join(repoRoot, "frontend", "data", "generated", "i18n", "source", "frontend", "en.json");
   const snapshotPath = path.join(repoRoot, "content", "translations", "customers", "frontend-static.vi.json");
   const manifestPath = path.join(repoRoot, "content", "translations", "manifest.json");
   const source = JSON.parse(await readFile(sourcePath, "utf8"));

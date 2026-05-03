@@ -84,12 +84,23 @@ run_staging_tests() {
     node --test test/mobile-contract.test.js test/source-integrity.test.js
 }
 
+validate_runtime_i18n_snapshots() {
+  refresh_runtime_i18n_source_catalogs "$ROOT_DIR"
+  echo "Validating runtime i18n snapshots..."
+  if ! validate_runtime_i18n_snapshots_quiet "$ROOT_DIR"; then
+    echo "Staging content/translations is out of sync with the checked-out source." >&2
+    echo "Use scripts/deploy/auto_commit_and_deploy.sh so content/translations is synced to staging before update_staging.sh runs." >&2
+    exit 1
+  fi
+}
+
 generate_public_homepage_assets() {
   echo "Generating static homepage tours/team assets..."
   run_public_homepage_asset_generator_quiet "$ROOT_DIR"
 }
 
 generate_runtime_i18n() {
+  refresh_runtime_i18n_source_catalogs "$ROOT_DIR"
   echo "Generating runtime i18n from content/translations..."
   run_runtime_i18n_generator_quiet "$ROOT_DIR"
 }
@@ -132,6 +143,8 @@ fi
 
 git fetch origin
 git pull --ff-only
+
+validate_runtime_i18n_snapshots
 
 if should_run_tests "${SERVICES[@]}"; then
   run_staging_tests

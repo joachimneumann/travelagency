@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const ROOT = path.resolve(__dirname, "..", "..");
+const BACKEND_SOURCE_CATALOG_PATH = path.join(ROOT, "scripts", "i18n", "source_catalogs", "backend.en.json");
 const BACKEND_I18N_DIR = path.join(ROOT, "frontend", "data", "i18n", "backend");
 const BACKEND_I18N_OVERRIDE_DIR = path.join(ROOT, "frontend", "data", "i18n", "backend_overrides");
 
@@ -68,6 +69,7 @@ function parseArgs(argv) {
 }
 
 function dictionaryPath(lang) {
+  if (lang === DEFAULT_SOURCE_LANG) return BACKEND_SOURCE_CATALOG_PATH;
   return path.join(BACKEND_I18N_DIR, `${lang}.json`);
 }
 

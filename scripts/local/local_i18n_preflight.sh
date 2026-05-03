@@ -31,6 +31,7 @@ run_local_i18n_preflight() {
   source "$runtime_i18n_helper"
 
   echo "Building runtime i18n from content/translations ..."
+  refresh_runtime_i18n_source_catalogs "$root_dir"
   if [[ ! -f "$snapshot_manifest" ]]; then
     echo "Warning: translation store missing: $snapshot_manifest" >&2
     echo "Local deploy will continue so you can create content/translations from translations.html." >&2

@@ -18,16 +18,18 @@ async function writeJson(filePath, data) {
 
 async function createFixture() {
   const repoRoot = await mkdtemp(path.join(os.tmpdir(), "static-translations-"));
+  const frontendSourceDir = path.join(repoRoot, "frontend", "data", "generated", "i18n", "source", "frontend");
   const frontendDir = path.join(repoRoot, "frontend", "data", "i18n", "frontend");
   const frontendMetaDir = path.join(repoRoot, "frontend", "data", "i18n", "frontend_meta");
   const frontendOverrideDir = path.join(repoRoot, "frontend", "data", "i18n", "frontend_overrides");
   await Promise.all([
+    mkdir(frontendSourceDir, { recursive: true }),
     mkdir(frontendDir, { recursive: true }),
     mkdir(frontendMetaDir, { recursive: true }),
     mkdir(frontendOverrideDir, { recursive: true })
   ]);
 
-  await writeJson(path.join(frontendDir, "en.json"), {
+  await writeJson(path.join(frontendSourceDir, "en.json"), {
     "hero.title": "New private holidays",
     "hero.cta": "Plan my trip"
   });
@@ -138,7 +140,7 @@ test("static translation service publishes a versioned snapshot for clean target
 test("static translation service repairs protected-term-only strings during machine apply", async () => {
   const repoRoot = await createFixture();
   try {
-    await writeJson(path.join(repoRoot, "frontend", "data", "i18n", "frontend", "en.json"), {
+    await writeJson(path.join(repoRoot, "frontend", "data", "generated", "i18n", "source", "frontend", "en.json"), {
       "backend.button_full": "AsiaTravelPlan Backend"
     });
     await writeJson(path.join(repoRoot, "frontend", "data", "i18n", "frontend", "vi.json"), {
@@ -181,7 +183,7 @@ test("static translation service repairs protected-term-only strings during mach
 test("static translation service updates translated strings that contain protected terms", async () => {
   const repoRoot = await createFixture();
   try {
-    await writeJson(path.join(repoRoot, "frontend", "data", "i18n", "frontend", "en.json"), {
+    await writeJson(path.join(repoRoot, "frontend", "data", "generated", "i18n", "source", "frontend", "en.json"), {
       "modal.title.default": "Plan your trip with AsiaTravelPlan"
     });
     await writeJson(path.join(repoRoot, "frontend", "data", "i18n", "frontend", "vi.json"), {

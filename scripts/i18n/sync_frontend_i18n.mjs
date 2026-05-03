@@ -13,6 +13,7 @@ import {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const ROOT = path.resolve(__dirname, "..", "..");
+const FRONTEND_SOURCE_CATALOG_PATH = path.join(ROOT, "scripts", "i18n", "source_catalogs", "frontend.en.json");
 const FRONTEND_I18N_DIR = path.join(ROOT, "frontend", "data", "i18n", "frontend");
 const FRONTEND_I18N_META_DIR = path.join(ROOT, "frontend", "data", "i18n", "frontend_meta");
 const FRONTEND_I18N_OVERRIDE_DIR = path.join(ROOT, "frontend", "data", "i18n", "frontend_overrides");
@@ -94,6 +95,7 @@ function resolveTargetLangs(sourceLang, requestedTargets) {
 }
 
 function dictionaryPath(lang) {
+  if (lang === DEFAULT_SOURCE_LANG) return FRONTEND_SOURCE_CATALOG_PATH;
   return path.join(FRONTEND_I18N_DIR, `${lang}.json`);
 }
 

@@ -75,6 +75,7 @@ generate_public_homepage_assets() {
 }
 
 generate_runtime_i18n() {
+  refresh_runtime_i18n_source_catalogs "$ROOT_DIR"
   echo "Generating runtime i18n from content/translations..."
   run_runtime_i18n_generator_quiet "$ROOT_DIR"
 }

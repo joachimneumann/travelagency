@@ -4,17 +4,20 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 BACKEND_SYNC_SCRIPT="$ROOT_DIR/scripts/i18n/sync_backend_i18n.mjs"
 FRONTEND_SYNC_SCRIPT="$ROOT_DIR/scripts/i18n/sync_frontend_i18n.mjs"
+SOURCE_CATALOG_REFRESH_SCRIPT="$ROOT_DIR/scripts/i18n/refresh_source_catalogs.mjs"
 
 usage() {
   cat <<'EOF'
 Usage:
   ./scripts/i18n/translate update
   ./scripts/i18n/translate check
+  ./scripts/i18n/translate refresh
   ./scripts/i18n/translate all
 
 Commands:
   update   Translate only missing or stale backend UI and frontend site translations
   check    Verify backend UI and frontend site translations are in sync
+  refresh  Regenerate ignored runtime source catalog copies from canonical English catalogs
   all      Retranslate all backend UI and frontend site translations
 EOF
 }
@@ -26,6 +29,11 @@ fi
 
 if [[ ! -f "$FRONTEND_SYNC_SCRIPT" ]]; then
   echo "Error: frontend sync script not found at $FRONTEND_SYNC_SCRIPT" >&2
+  exit 1
+fi
+
+if [[ ! -f "$SOURCE_CATALOG_REFRESH_SCRIPT" ]]; then
+  echo "Error: source catalog refresh script not found at $SOURCE_CATALOG_REFRESH_SCRIPT" >&2
   exit 1
 fi
 
@@ -48,6 +56,7 @@ case "${1:-}" in
       usage >&2
       exit 1
     fi
+    node "$SOURCE_CATALOG_REFRESH_SCRIPT"
     node "$BACKEND_SYNC_SCRIPT" translate --target vi
     node "$FRONTEND_SYNC_SCRIPT" translate
     ;;
@@ -58,8 +67,18 @@ case "${1:-}" in
       usage >&2
       exit 1
     fi
+    node "$SOURCE_CATALOG_REFRESH_SCRIPT" --check
     node "$BACKEND_SYNC_SCRIPT" check --target vi
     node "$FRONTEND_SYNC_SCRIPT" check
+    ;;
+  refresh)
+    shift
+    if [[ "$#" -ne 0 ]]; then
+      echo "Error: refresh does not accept extra arguments." >&2
+      usage >&2
+      exit 1
+    fi
+    node "$SOURCE_CATALOG_REFRESH_SCRIPT"
     ;;
   all)
     shift
@@ -68,6 +87,7 @@ case "${1:-}" in
       usage >&2
       exit 1
     fi
+    node "$SOURCE_CATALOG_REFRESH_SCRIPT"
     node "$BACKEND_SYNC_SCRIPT" translate --target vi --force-all
     node "$FRONTEND_SYNC_SCRIPT" translate --force-all
     ;;

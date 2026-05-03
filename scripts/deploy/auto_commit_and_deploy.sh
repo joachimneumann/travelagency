@@ -17,6 +17,8 @@ readonly ALLOWED_ROOT_LEVEL_FILES=(
   "site.webmanifest"
 )
 
+source "$ROOT_DIR/scripts/lib/runtime_i18n.sh"
+
 usage() {
   cat <<'EOF'
 Usage:
@@ -94,6 +96,12 @@ sync_published_translation_snapshots_to_staging() {
   echo "Syncing content/translations to staging..."
   ssh "$REMOTE_HOST" "mkdir -p $(printf '%q' "$remote_translations_dir")"
   rsync -az --delete "$PUBLISHED_TRANSLATIONS_DIR/" "$REMOTE_HOST:$remote_translations_dir/"
+}
+
+validate_published_translation_snapshots() {
+  refresh_runtime_i18n_source_catalogs "$ROOT_DIR"
+  echo "Validating local content/translations..."
+  validate_runtime_i18n_snapshots_quiet "$ROOT_DIR"
 }
 
 should_run_tests() {
@@ -229,6 +237,7 @@ if [[ "${#SERVICES[@]}" -eq 0 ]]; then
 fi
 
 if should_run_tests "${SERVICES[@]}"; then
+  validate_published_translation_snapshots
   run_predeploy_tests
 fi
 
