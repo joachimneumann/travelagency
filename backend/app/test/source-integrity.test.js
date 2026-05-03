@@ -6029,6 +6029,11 @@ test("staging backend bakes dependencies into the image and mounts only the writ
     "Staging backend should point homepage generation at the same generated roots Caddy serves"
   );
   assert.match(
+    backendComposeBlock,
+    /ONE_PAGER_FONT_DIR: \/srv\/content\/fonts/,
+    "Staging backend should point one-pager PDF rendering at the container-mounted private font directory"
+  );
+  assert.match(
     updateStagingSource,
     /mkdir -p frontend\/data\/generated\/homepage assets\/generated\/homepage[\s\S]*generate_public_homepage_assets/,
     "Staging deploy should create the shared generated homepage roots before running the homepage asset generator"
@@ -6065,6 +6070,11 @@ test("staging can publish translations while production keeps runtime translatio
     productionBackendBlock,
     /TRANSLATION_OVERRIDE_WRITES_ENABLED: "false"/,
     "Production must keep runtime translation writes disabled"
+  );
+  assert.match(
+    productionBackendBlock,
+    /ONE_PAGER_FONT_DIR: \/srv\/content\/fonts/,
+    "Production backend should point one-pager PDF rendering at the container-mounted private font directory"
   );
 });
 
