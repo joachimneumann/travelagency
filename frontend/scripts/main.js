@@ -7,6 +7,8 @@ import { normalizeText } from "../../shared/js/text.js";
 import { logBrowserConsoleError } from "./shared/api.js";
 import { createFrontendToursController } from "./main_tours.js";
 
+const LICENSE_REGISTRY_URL = "https://dangkykinhdoanh.gov.vn/en/Pages/default.aspx";
+
 const frontendT = (id, fallback, vars) => {
   if (typeof window.frontendT === "function") {
     return window.frontendT(id, fallback, vars);
@@ -1141,15 +1143,22 @@ async function loadPublicBootstrap({ force = false } = {}) {
 function syncFooterCompanyProfile() {
   if (!els.footerLicense) return;
   const licenseNumber = normalizeText(state.companyProfile?.licenseNumber);
+  const licenseLabel = frontendT("footer.license", "License: {licenseNumber}", {
+    licenseNumber: ""
+  }).replace(/\s*[:：]\s*$/, "").trim() || "License";
   if (!licenseNumber) {
-    els.footerLicense.textContent = frontendT("footer.license", "License: {licenseNumber}", {
-      licenseNumber: ""
-    }).replace(/\s*[:：]\s*$/, "").trim();
+    els.footerLicense.textContent = licenseLabel;
     return;
   }
-  els.footerLicense.textContent = frontendT("footer.license", "License: {licenseNumber}", {
-    licenseNumber
-  });
+  const licenseLink = document.createElement("a");
+  licenseLink.href = LICENSE_REGISTRY_URL;
+  licenseLink.target = "_blank";
+  licenseLink.rel = "noopener noreferrer";
+  licenseLink.textContent = licenseNumber;
+  els.footerLicense.replaceChildren(
+    document.createTextNode(`${licenseLabel}: `),
+    licenseLink
+  );
 }
 
 function syncLocalizedControlLanguage() {

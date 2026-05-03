@@ -5603,9 +5603,9 @@ test("homepage TravelAgency structured data mirrors footer contact details", asy
     .map((match) => JSON.parse(match[1]));
   const travelAgencySchema = jsonLdBlocks.find((schema) => schema?.["@type"] === "TravelAgency");
   const faqSchema = jsonLdBlocks.find((schema) => schema?.["@type"] === "FAQPage");
-  const footerPhone = homepageSource.match(/data-i18n-id="footer\.whatsapp">WhatsApp:\s*([^<]+)/)?.[1];
-  const footerEmail = homepageSource.match(/data-i18n-id="footer\.email">Email:\s*([^<]+)/)?.[1];
-  const footerFacebookUrl = homepageSource.match(/<a href="([^"]+)"[^>]*data-i18n-id="footer\.facebook"/)?.[1];
+  const footerPhone = homepageSource.match(/<a href="tel:\+84354999192"><span data-i18n-id="footer\.whatsapp">WhatsApp:\s*([^<]+)/)?.[1];
+  const footerEmail = homepageSource.match(/<a href="mailto:info@asiatravelplan\.com"><span data-i18n-id="footer\.email">Email:\s*([^<]+)/)?.[1];
+  const footerFacebookUrl = homepageSource.match(/<a class="footer-social-link" href="([^"]+)"[^>]*>[\s\S]*?data-i18n-id="footer\.facebook"/)?.[1];
   const licenseNumber = runtimeConfigSource.match(/licenseNumber:\s*"([^"]+)"/)?.[1];
 
   assert.ok(travelAgencySchema, "Homepage should publish TravelAgency JSON-LD");

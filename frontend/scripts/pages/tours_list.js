@@ -53,6 +53,7 @@ const els = {
   toursActionStatus: document.getElementById("toursActionStatus"),
   toursMatrixMount: document.getElementById("toursMatrixMount"),
   toursMatrixTotal: document.getElementById("toursMatrixTotal"),
+  toursFiltersSummary: document.getElementById("toursFiltersSummary"),
   toursPagination: document.getElementById("toursPagination"),
   toursTable: document.getElementById("toursTable"),
   destinationCatalogPanel: document.getElementById("tourDestinationCatalogPanel"),
@@ -401,7 +402,11 @@ async function loadTours() {
   clearError();
   const loadToken = ++state.tours.loadToken;
   if (els.toursMatrixMount) els.toursMatrixMount.innerHTML = "";
-  if (els.toursMatrixTotal) els.toursMatrixTotal.textContent = "";
+  if (els.toursMatrixTotal) {
+    els.toursMatrixTotal.textContent = backendT("backend.tours.statistics_summary", "Statistics: {count} tours", {
+      count: String(state.tours.total || 0)
+    });
+  }
 
   const request = toursRequest({
     baseURL: apiOrigin,
@@ -442,6 +447,42 @@ function buildToursQueryEntries({ page = 1, pageSize = state.tours.pageSize } = 
   return entries;
 }
 
+function selectedStyleLabel() {
+  const selectedStyle = normalizeText(state.tours.style);
+  if (!selectedStyle || selectedStyle === "all") return "";
+  const option = els.toursStyle instanceof HTMLSelectElement
+    ? Array.from(els.toursStyle.options).find((entry) => entry.value === selectedStyle)
+    : null;
+  return normalizeText(option?.textContent) || selectedStyle;
+}
+
+function selectedDestinationFilterLabel() {
+  const catalog = normalizeDestinationScopeCatalog(state.destinationCatalog.catalog);
+  const destinationCode = normalizeText(state.tours.destination);
+  const areaId = normalizeText(state.tours.area);
+  const placeId = normalizeText(state.tours.place);
+  if (!destinationCode && !areaId && !placeId) return "";
+
+  const destination = catalog.destinations.find((entry) => normalizeText(entry.code) === destinationCode);
+  const area = catalog.areas.find((entry) => normalizeText(entry.id) === areaId);
+  const place = catalog.places.find((entry) => normalizeText(entry.id) === placeId);
+  if (place) return normalizeText(place.label || place.code || place.id);
+  if (area) return normalizeText(area.label || area.code || area.id);
+  return destinationDisplayLabel(destination || destinationCode);
+}
+
+function updateToursFiltersSummary() {
+  if (!els.toursFiltersSummary) return;
+  const parts = [
+    selectedDestinationFilterLabel(),
+    selectedStyleLabel(),
+    normalizeText(state.tours.search)
+  ].filter(Boolean);
+  els.toursFiltersSummary.textContent = backendT("backend.tours.filters_summary", "Search and Filters: {filters}", {
+    filters: parts.length ? parts.join(" | ") : backendT("backend.tours.filters_summary.none", "no filters")
+  });
+}
+
 function populateTourFilterOptions(payload) {
   const styles = Array.isArray(payload?.available_styles) ? payload.available_styles : [];
 
@@ -454,6 +495,7 @@ function populateTourFilterOptions(payload) {
     els.toursStyle.value = styles.some((value) => String(value?.code || value) === current) ? current : "all";
     state.tours.style = els.toursStyle.value;
   }
+  updateToursFiltersSummary();
 }
 
 function setDestinationCatalogStatus(message = "") {
@@ -567,6 +609,7 @@ function renderDestinationScopeFilter() {
   if (!els.destinationScopeFilter) return;
   if (state.destinationCatalog.loading) {
     els.destinationScopeFilter.innerHTML = `<p class="micro tour-destination-filter__empty">${escapeHtml(backendT("backend.tours.destination_catalog.loading", "Loading destinations..."))}</p>`;
+    updateToursFiltersSummary();
     return;
   }
 
@@ -637,6 +680,7 @@ function renderDestinationScopeFilter() {
       ? `<div class="tour-destination-filter__destinations">${destinationsMarkup}</div>`
       : `<p class="micro tour-destination-filter__empty">${escapeHtml(backendT("backend.tours.destination_filter.empty", "No destinations configured."))}</p>`}
   `;
+  updateToursFiltersSummary();
 }
 
 function selectedTourDestinationScopeWarnings(catalog) {
@@ -908,12 +952,9 @@ function renderDestinationCatalogPlaceForm(area) {
 
 function updatePaginationUi() {
   if (els.toursCountInfo) {
-    els.toursCountInfo.textContent = backendT("common.page_status", "{total} total · page {page} of {totalPages}", {
-      total: state.tours.total,
-      page: state.tours.page,
-      totalPages: state.tours.totalPages
-    });
+    els.toursCountInfo.textContent = "";
   }
+  updateToursFiltersSummary();
 
   if (els.toursPagination) {
     renderPagination(els.toursPagination, state.tours, (page) => {
@@ -935,7 +976,7 @@ function renderToursMatrix(matrix, totalTours) {
 
   if (!orderedDestinations.length || !orderedStyles.length) {
     els.toursMatrixMount.innerHTML = `<div class="backend-tour-matrix__empty">${escapeHtml(backendT("backend.tours.no_results", "No tours found"))}</div>`;
-    els.toursMatrixTotal.textContent = backendT("backend.tours.matrix.total", "Total tours: {count}", {
+    els.toursMatrixTotal.textContent = backendT("backend.tours.statistics_summary", "Statistics: {count} tours", {
       count: String(totalTours)
     });
     return;
@@ -966,7 +1007,7 @@ function renderToursMatrix(matrix, totalTours) {
       </table>
     </div>
   `;
-  els.toursMatrixTotal.textContent = backendT("backend.tours.matrix.total", "Total tours: {count}", {
+  els.toursMatrixTotal.textContent = backendT("backend.tours.statistics_summary", "Statistics: {count} tours", {
     count: String(totalTours)
   });
 }

@@ -591,23 +591,49 @@
         </section>
         <section>
           <h3 data-i18n-id="footer.contact_title">Contact</h3>
-          <ul>
+          <ul class="footer-contact-list">
             <li data-i18n-id="footer.head_office">Head office in Hội An: 378/51 Cửa Đại, Hội An Đông, Đà Nẵng</li>
             <li data-i18n-id="footer.hanoi_office">Office in Hà Nội: 59 Đ. Lạc Long Quân, Nghĩa Đô, 100000 Hà Nội</li>
-            <li data-i18n-id="footer.whatsapp">WhatsApp: +84 354999192</li>
-            <li data-i18n-id="footer.email">Email: info@asiatravelplan.com</li>
-            <li id="footerLicense">License</li>
+            <li class="footer-contact-list__plain"><a href="tel:+84354999192"><span data-i18n-id="footer.whatsapp">WhatsApp: +84 354999192</span></a></li>
+            <li class="footer-contact-list__plain"><a href="mailto:info@asiatravelplan.com"><span data-i18n-id="footer.email">Email: info@asiatravelplan.com</span></a></li>
           </ul>
         </section>
         <section>
           <h3 data-i18n-id="footer.social_title">Social</h3>
-          <ul>
-            <li><a href="https://www.facebook.com/people/Asiatravelplan/61586533685459/" aria-label="Facebook" data-i18n-id="footer.facebook" data-i18n-aria-label-id="footer.facebook" target="_blank" rel="noopener noreferrer">Facebook</a></li>
+          <ul class="footer-social-list">
+            <li>
+              <a class="footer-social-link" href="https://www.facebook.com/asiatravelplan" aria-label="Facebook" data-i18n-aria-label-id="footer.facebook" target="_blank" rel="noopener noreferrer">
+                <svg class="footer-social-link__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path d="M14 8.2h2.2V4.5A12 12 0 0 0 13 4.3c-3.2 0-5.3 2-5.3 5.6v3.2H4.2v4.1h3.5V24H12v-6.8h3.3l.5-4.1H12V10.3c0-1.2.3-2.1 2-2.1Z" />
+                </svg>
+                <span data-i18n-id="footer.facebook">Facebook</span>
+              </a>
+            </li>
+            <li>
+              <a class="footer-social-link" href="https://www.instagram.com/asia_travel.plan" aria-label="Instagram" data-i18n-aria-label-id="footer.instagram" target="_blank" rel="noopener noreferrer">
+                <svg class="footer-social-link__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <rect x="4" y="4" width="16" height="16" rx="4.5" />
+                  <circle cx="12" cy="12" r="3.4" />
+                  <circle cx="17" cy="7" r="1" />
+                </svg>
+                <span data-i18n-id="footer.instagram">Instagram</span>
+              </a>
+            </li>
+            <li>
+              <a class="footer-social-link" href="https://www.tiktok.com/@asia.travel.plan" aria-label="TikTok" target="_blank" rel="noopener noreferrer">
+                <svg class="footer-social-link__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path d="M14.1 3.8v10.3a4.8 4.8 0 1 1-4.8-4.8c.4 0 .8 0 1.1.1v3.1a2 2 0 1 0 .8 1.6V0h2.9c.4 2.6 2.1 4.5 4.7 4.8v3.1a8.1 8.1 0 0 1-4.7-1.5Z" />
+                </svg>
+                <span>TikTok</span>
+              </a>
+            </li>
           </ul>
         </section>
         <section>
           <h3 data-i18n-id="footer.legal_title">Legal</h3>
-          <ul>
+          <ul class="footer-legal-list">
+            <li>CÔNG TY TNHH ASIA TRAVEL PLAN</li>
+            <li id="footerLicense">License</li>
             <li><a href="/privacy.html" data-i18n-id="footer.privacy">Privacy Policy</a></li>
           </ul>
         </section>
@@ -1073,7 +1099,9 @@
         ],
         "areaServed": ["Vietnam", "Thailand", "Cambodia", "Laos"],
         "sameAs": [
-          "https://www.facebook.com/people/Asiatravelplan/61586533685459/"
+          "https://www.facebook.com/asiatravelplan",
+          "https://www.instagram.com/asia_travel.plan",
+          "https://www.tiktok.com/@asia.travel.plan"
         ],
         "contactPoint": [
           {

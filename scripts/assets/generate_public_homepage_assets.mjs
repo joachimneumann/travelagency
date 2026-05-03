@@ -100,7 +100,9 @@ const FOOTER_ALIGNED_TRAVEL_AGENCY_STRUCTURED_DATA = Object.freeze({
     })
   ]),
   sameAs: Object.freeze([
-    "https://www.facebook.com/people/Asiatravelplan/61586533685459/"
+    "https://www.facebook.com/asiatravelplan",
+    "https://www.instagram.com/asia_travel.plan",
+    "https://www.tiktok.com/@asia.travel.plan"
   ]),
   contactPoint: Object.freeze([
     Object.freeze({
