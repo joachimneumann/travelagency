@@ -234,7 +234,7 @@
 }
 
 .backend-translations-page .translations-table--customer {
-  min-width: 1280px;
+  min-width: 1180px;
 }
 
 .backend-translations-page .translations-table__col-source,
@@ -251,20 +251,15 @@
   min-width: 150px;
 }
 
-.backend-translations-page .translations-table__col-language {
-  width: 8%;
-  min-width: 110px;
-}
-
 .backend-translations-page .translations-table__col-area {
-  width: 12%;
-  min-width: 150px;
+  width: 14%;
+  min-width: 170px;
 }
 
 .backend-translations-page .translations-table--customer .translations-table__col-source,
 .backend-translations-page .translations-table--customer .translations-table__col-cache,
 .backend-translations-page .translations-table--customer .translations-table__col-override {
-  width: 23%;
+  width: 25%;
 }
 
 .backend-translations-page .translations-table--customer .translations-table__col-state {
@@ -309,6 +304,21 @@
   font-weight: 700;
   line-height: 1.25;
   overflow-wrap: anywhere;
+}
+
+.backend-translations-page .translations-table__scope-cell span {
+  display: block;
+}
+
+.backend-translations-page .translations-table__scope-language {
+  color: #24362f;
+  font-weight: 800;
+}
+
+.backend-translations-page .translations-table__scope-area {
+  margin-top: 0.12rem;
+  color: #5f6b7a;
+  font-size: 0.78rem;
 }
 
 .backend-translations-page .translations-cache-cell {

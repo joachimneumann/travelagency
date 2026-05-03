@@ -1064,13 +1064,11 @@ function translationsTableHeadHtml(section) {
   const isCustomer = isCustomerSectionConfig(section?.config);
   const customerCols = isCustomer
     ? `
-      <col class="translations-table__col-language" />
       <col class="translations-table__col-area" />
     `
     : "";
   const customerHeaders = isCustomer
     ? `
-        <th>Language</th>
         <th>Area</th>
     `
     : "";
@@ -1096,7 +1094,7 @@ function translationsTableHeadHtml(section) {
 
 function renderTableMessage(table, message) {
   const section = Array.from(state.sections.values()).find((candidate) => candidate.els.table === table);
-  const colspan = isCustomerSectionConfig(section?.config) ? 6 : 4;
+  const colspan = isCustomerSectionConfig(section?.config) ? 5 : 4;
   table.innerHTML = `
     ${translationsTableHeadHtml(section)}
     <tbody><tr><td colspan="${colspan}">${escapeHtml(message)}</td></tr></tbody>
@@ -1141,8 +1139,10 @@ function renderTable(section) {
         ].filter(Boolean).join(" ");
         const customerCells = isCustomer
           ? `
-            <td class="translations-table__scope-cell">${escapeHtml(row.target_language_label || row.target_lang || "-")}</td>
-            <td class="translations-table__scope-cell">${escapeHtml(row.domain_label || row.domain_id || "-")}</td>
+            <td class="translations-table__scope-cell">
+              <span class="translations-table__scope-language">${escapeHtml(row.target_language_label || row.target_lang || "-")}</span>
+              <span class="translations-table__scope-area">${escapeHtml(row.domain_label || row.domain_id || "-")}</span>
+            </td>
           `
           : "";
         return `

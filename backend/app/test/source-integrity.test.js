@@ -4601,6 +4601,16 @@ test("translations page exposes one translate action that auto-publishes clean s
   );
   assert.match(
     translationsSource,
+    /const customerCols = isCustomer[\s\S]*<col class="translations-table__col-area" \/>[\s\S]*const customerHeaders = isCustomer[\s\S]*<th>Area<\/th>[\s\S]*translations-table__scope-language[\s\S]*translations-table__scope-area/,
+    "The customer translations table should join language and area into one two-line Area column"
+  );
+  assert.doesNotMatch(
+    `${translationsSource}\n${translationsStyles}`,
+    /translations-table__col-language|<th>Language<\/th>/,
+    "The customer translations table should not render a separate Language column"
+  );
+  assert.match(
+    translationsSource,
     /function translationIssueCountFromCounts\(counts = \{\}\)[\s\S]*freshness_state\.missing[\s\S]*freshness_state\.stale[\s\S]*freshness_state\.legacy[\s\S]*function sectionTranslationIssueCount\(section\)[\s\S]*translationIssueCountFromCounts/,
     "Section health should use the shared missing, stale, and legacy freshness count as the global Translate readiness"
   );
