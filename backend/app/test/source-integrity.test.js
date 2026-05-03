@@ -123,7 +123,7 @@ test("booking handlers do not contain duplicate top-level helper declarations", 
   assert.deepEqual(duplicates, []);
 });
 
-test("runtime i18n preflight is generated from snapshots and local backend startup is strict by default", async () => {
+test("runtime i18n preflight is generated from content/translations and local backend startup is strict by default", async () => {
   const repoRoot = path.resolve(__dirname, "..", "..", "..");
   const runtimeI18nScriptPath = path.join(repoRoot, "scripts", "i18n", "build_runtime_i18n.mjs");
   const localI18nPreflightPath = path.join(repoRoot, "scripts", "local", "local_i18n_preflight.sh");
@@ -4436,7 +4436,7 @@ test("backend translation nav icon reflects dirty centralized translation state"
   );
 });
 
-test("translations page exposes one translate action that auto-publishes clean snapshots", async () => {
+test("translations page exposes one translate action that regenerates runtime translations", async () => {
   const repoRoot = path.resolve(__dirname, "..", "..", "..");
   const [translationsHtml, translationsSource, translationsStyles, staticTranslationsSource, staticTranslationApplyJobsSource, servicesSource] = await Promise.all([
     readFile(path.join(repoRoot, "frontend", "pages", "translations.html"), "utf8"),
