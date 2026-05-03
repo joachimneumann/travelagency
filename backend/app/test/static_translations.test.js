@@ -54,6 +54,11 @@ async function createFixture() {
   return repoRoot;
 }
 
+async function readTranslationSection(repoRoot, relativePath) {
+  const raw = await readFile(path.join(repoRoot, "content", "translations", relativePath), "utf8");
+  return JSON.parse(raw);
+}
+
 test("static translation service marks changed source strings stale and exposes manual overrides", async () => {
   const repoRoot = await createFixture();
   try {
@@ -164,11 +169,9 @@ test("static translation service writes ordered overrides with optimistic revisi
       }
     });
 
-    const overridePath = path.join(repoRoot, "frontend", "data", "i18n", "frontend_overrides", "vi.json");
-    const raw = await readFile(overridePath, "utf8");
-    assert.deepEqual(JSON.parse(raw), {
-      "hero.title": "Kỳ nghỉ riêng mới"
-    });
+    const section = await readTranslationSection(repoRoot, "customers/frontend-static.vi.json");
+    assert.equal(section.items.find((item) => item.key === "hero.title").manual_override, "Kỳ nghỉ riêng mới");
+    assert.equal(section.items.find((item) => item.key === "hero.cta").manual_override, "");
     assert.equal(saved.rows.find((row) => row.key === "hero.title").status, "manual_override");
     assert.equal(saved.rows.find((row) => row.key === "hero.cta").status, "machine");
 
@@ -198,8 +201,10 @@ test("static translation service deletes static cached translations without clea
     assert.equal(cta.status, "manual_override");
     assert.equal(cta.origin, "manual");
 
-    const targetRaw = await readFile(path.join(repoRoot, "frontend", "data", "i18n", "frontend", "vi.json"), "utf8");
-    assert.equal(Object.prototype.hasOwnProperty.call(JSON.parse(targetRaw), "hero.cta"), false);
+    const section = await readTranslationSection(repoRoot, "customers/frontend-static.vi.json");
+    const item = section.items.find((entry) => entry.key === "hero.cta");
+    assert.equal(item.machine_text, "");
+    assert.equal(item.manual_override, "Tạo chuyến đi riêng");
   } finally {
     await rm(repoRoot, { recursive: true, force: true });
   }
@@ -315,12 +320,11 @@ test("static translation service exposes marketing tour memory and saves manual 
       }
     });
     const savedRow = saved.rows.find((item) => item.source === "Lantern walk");
-    const resolved = await translationMemoryStore.resolveEntries({ copied: "Lantern walk" }, "de");
 
     assert.equal(savedRow.override, "Laternen-Spaziergang");
     assert.equal(savedRow.status, "manual_override");
-    assert.deepEqual(resolved.entries, { copied: "Laternen-Spaziergang" });
-    assert.deepEqual(resolved.origins, { copied: "manual_override" });
+    const section = await readTranslationSection(repoRoot, "customers/marketing-tours.de.json");
+    assert.equal(section.items.find((item) => item.key === row.key).manual_override, "Laternen-Spaziergang");
 
     await translationMemoryStore.writeMachineTranslations(
       { copied: "Lantern walk" },
@@ -328,10 +332,8 @@ test("static translation service exposes marketing tour memory and saves manual 
       "de",
       { kind: "google", display: "google" }
     );
-    const stillManual = await translationMemoryStore.resolveEntries({ copied: "Lantern walk" }, "de");
-
-    assert.deepEqual(stillManual.entries, { copied: "Laternen-Spaziergang" });
-    assert.deepEqual(stillManual.origins, { copied: "manual_override" });
+    const stillManual = await service.getLanguageState("marketing-tour-memory", "de");
+    assert.equal(stillManual.rows.find((item) => item.source === "Lantern walk").override, "Laternen-Spaziergang");
   } finally {
     await rm(repoRoot, { recursive: true, force: true });
   }
@@ -479,10 +481,9 @@ test("static translation service exposes destination scope catalog labels as cus
       }
     });
     const savedSapa = saved.rows.find((row) => row.key === "place.place_sapa.name");
-    const resolved = await translationMemoryStore.resolveEntries({ sapa: "Sapa" }, "vi");
     assert.equal(savedSapa.override, "Sa Pa");
-    assert.equal(store.destination_places[0].name_i18n.vi, "Sa Pa");
-    assert.deepEqual(resolved.entries, { sapa: "Sa Pa" });
+    const viSection = await readTranslationSection(repoRoot, "customers/tour-destinations.vi.json");
+    assert.equal(viSection.items.find((item) => item.key === "place.place_sapa.name").manual_override, "Sa Pa");
 
     const calls = [];
     const summary = await service.applyMissingTranslations({
@@ -500,9 +501,10 @@ test("static translation service exposes destination scope catalog labels as cus
     assert.equal(summary.requested_count, 3);
     assert.equal(summary.translated_count, 3);
     assert.equal(calls[0].options.translationProfile, "destination_scope_catalog");
-    assert.equal(store.destination_scope_destinations[0].label_i18n.de, "de:Vietnam");
-    assert.equal(store.destination_areas[0].name_i18n.de, "de:North");
-    assert.equal(store.destination_places[0].name_i18n.de, "de:Sapa");
+    const deSection = await readTranslationSection(repoRoot, "customers/tour-destinations.de.json");
+    assert.equal(deSection.items.find((item) => item.key === "destination.VN.label").machine_text, "de:Vietnam");
+    assert.equal(deSection.items.find((item) => item.key === "area.area_north.name").machine_text, "de:North");
+    assert.equal(deSection.items.find((item) => item.key === "place.place_sapa.name").machine_text, "de:Sapa");
   } finally {
     await rm(repoRoot, { recursive: true, force: true });
   }

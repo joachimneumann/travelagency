@@ -526,7 +526,7 @@ export function createStaticTranslationApplyJobs({
     },
     async startPublish() {
       if (typeof publishTranslations !== "function") {
-        throw apiError(500, "STATIC_TRANSLATION_PUBLISH_UNAVAILABLE", "Translation snapshot publishing is not configured.");
+        throw apiError(500, "STATIC_TRANSLATION_PUBLISH_UNAVAILABLE", "Translation store validation is not configured.");
       }
       return startJob({ type: "publish", phases: await publishPhases({ applyTranslations, publishTranslations, getStatusSummary }) });
     },

@@ -143,7 +143,7 @@ test("runtime i18n preflight is generated from snapshots and local backend start
   assert.match(
     runtimeI18nScriptSource,
     /"content", "translations"/,
-    "Runtime i18n should be generated from published content/translations snapshots"
+    "Runtime i18n should be generated from content/translations"
   );
   assert.match(runtimeI18nScriptSource, /frontend-static/, "Runtime i18n should read frontend static snapshots");
   assert.match(runtimeI18nScriptSource, /backend-ui/, "Runtime i18n should read backend UI snapshots");
@@ -170,13 +170,13 @@ test("runtime i18n preflight is generated from snapshots and local backend start
   );
   assert.match(
     localI18nPreflightSource,
-    /snapshot_manifest="\$root_dir\/content\/translations\/manifest\.json"[\s\S]*Warning: published translation snapshot missing:[\s\S]*open translations\.html and run Translate[\s\S]*return 0/,
-    "Local runtime i18n preflight should allow first-run bootstrap when published snapshots are missing"
+    /snapshot_manifest="\$root_dir\/content\/translations\/manifest\.json"[\s\S]*Warning: translation store missing:[\s\S]*open translations\.html and run Translate[\s\S]*return 0/,
+    "Local runtime i18n preflight should allow first-run bootstrap when content/translations is missing"
   );
   assert.match(
     localI18nPreflightSource,
     /BACKEND_I18N_STRICT:-1[\s\S]*Continuing without regenerated runtime i18n because BACKEND_I18N_STRICT=0/,
-    "Local runtime i18n preflight should support explicit non-strict bootstrap when published snapshots are missing"
+    "Local runtime i18n preflight should support explicit non-strict bootstrap when content/translations is missing"
   );
   assert.match(
     startLocalBackendSource,
@@ -4476,8 +4476,8 @@ test("translations page exposes one translate action that auto-publishes clean s
   );
   assert.match(
     staticTranslationApplyJobsSource,
-    /mode === "marketing_tour_cache"[\s\S]*clearTranslationCaches\(\{[\s\S]*domains: \["marketing-tour-memory"\][\s\S]*Use Translate to rebuild missing machine translations and publish clean snapshots/,
-    "The marketing-tour cache job should clear central memory cache and leave translation plus publishing to Translate"
+    /mode === "marketing_tour_cache"[\s\S]*clearTranslationCaches\(\{[\s\S]*domains: \["marketing-tour-memory"\][\s\S]*Use Translate to rebuild missing machine translations in content\/translations/,
+    "The marketing-tour cache job should clear central memory cache and leave translation plus runtime generation to Translate"
   );
   assert.match(
     servicesSource,
@@ -4502,12 +4502,12 @@ test("translations page exposes one translate action that auto-publishes clean s
   assert.match(
     translationsSource,
     /function currentTranslationActionState\(\)[\s\S]*translateNeeded[\s\S]*publishReady[\s\S]*translateActionReady/,
-    "The translations page should enable Translate for missing strings or publish-ready snapshots"
+    "The translations page should enable Translate for missing strings or runtime-ready translations"
   );
   assert.match(
     staticTranslationApplyJobsSource,
-    /function autoPublishPhases\(\{ publishTranslations, getStatusSummary \} = \{\}\)[\s\S]*issueEntriesFromStatus\(status\)[\s\S]*Skipped publishing because[\s\S]*const manifest = await publishTranslations\(\)[\s\S]*whenPhase\(runtimeI18nPhase\(\), autoPublished\)[\s\S]*whenPhase\(homepageAssetsPhase\(\), autoPublished\)/,
-    "The apply job should publish snapshots and rebuild runtime assets after translation issues clear"
+    /function autoPublishPhases\(\{ publishTranslations, getStatusSummary \} = \{\}\)[\s\S]*issueEntriesFromStatus\(status\)[\s\S]*Skipped runtime generation because[\s\S]*const manifest = await publishTranslations\(\)[\s\S]*whenPhase\(runtimeI18nPhase\(\), autoPublished\)[\s\S]*whenPhase\(homepageAssetsPhase\(\), autoPublished\)/,
+    "The apply job should validate content/translations and rebuild runtime assets after translation issues clear"
   );
   assert.match(
     translationsSource,
@@ -4541,8 +4541,8 @@ test("translations page exposes one translate action that auto-publishes clean s
   );
   assert.match(
     translationsSource,
-    /function translationStatusMessage\(status\)[\s\S]*const base = `\$\{count\} \$\{subject\} \$\{verb\} translation before publishing\.`[\s\S]*ready to publish with Translate\./,
-    "The status text above Translate should explain that publish-ready strings are handled by the global action"
+    /function translationStatusMessage\(status\)[\s\S]*const base = `\$\{count\} \$\{subject\} \$\{verb\} translation before runtime generation\.`[\s\S]*ready for runtime generation with Translate\./,
+    "The status text above Translate should explain that runtime-ready strings are handled by the global action"
   );
   assert.match(
     translationsSource,
@@ -4576,8 +4576,8 @@ test("translations page exposes one translate action that auto-publishes clean s
   );
   assert.match(
     staticTranslationsSource,
-    /function translateDestinationScopeCatalogRows[\s\S]*translationProfileForConfig\(config\)[\s\S]*persistDestinationScopeCatalogTargets/,
-    "Translate should translate missing destination-scope catalog labels back into the catalog"
+    /function translateDestinationScopeCatalogRows[\s\S]*translationProfileForConfig\(config\)[\s\S]*writeTranslationStoreSection\(config, language, nextRows\)/,
+    "Translate should write missing destination-scope catalog labels into content/translations"
   );
   assert.match(
     translationsSource,
@@ -4632,7 +4632,7 @@ test("translations page exposes one translate action that auto-publishes clean s
   assert.match(
     translationsSource,
     /function configureTranslationActionButton\(button, action, translationState, canRunTranslationAction, actionsBusy\)[\s\S]*button\.classList\.toggle\("is-waiting", Boolean\(actionsBusy\)\)[\s\S]*button\.disabled = !canRunTranslationAction \|\| !translationState\.translateActionReady/,
-    "Translate should stay enabled when strings need translation or clean snapshots are ready to publish"
+    "Translate should stay enabled when strings need translation or clean content/translations is ready for runtime generation"
   );
   assert.match(
     translationsSource,
@@ -4666,13 +4666,13 @@ test("translations page exposes one translate action that auto-publishes clean s
   );
   assert.match(
     translationsSource,
-    /latest\.type === "apply" && translationStatus\.translationIssueCount > 0[\s\S]*Publishing was skipped[\s\S]*latest\.type === "apply" && translationStatus\.dirty[\s\S]*warning icon could not be cleared/,
-    "After Translate finishes, the page should either report skipped publishing or warn when auto-publish did not clear dirty status"
+    /latest\.type === "apply" && translationStatus\.translationIssueCount > 0[\s\S]*Runtime generation was skipped[\s\S]*latest\.type === "apply" && translationStatus\.dirty[\s\S]*warning icon could not be cleared/,
+    "After Translate finishes, the page should either report skipped runtime generation or warn when dirty status remains"
   );
   assert.match(
     translationsSource,
     /function notifyBackendTranslationsStatus[\s\S]*backend-translations-status-refresh[\s\S]*latest\.type === "apply" && translationStatus\.dirty[\s\S]*warning icon could not be cleared[\s\S]*refreshTranslationStatusText\(\)/,
-    "After Translate auto-publishes, the page should refresh the nav translation icon or show an error if dirty status remains"
+    "After Translate generates runtime files, the page should refresh the nav translation icon or show an error if dirty status remains"
   );
 });
 
@@ -4832,17 +4832,17 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
   assert.match(
     runtimeI18nScript,
     /node "\$generator_path" --strict[\s\S]*Generated runtime i18n files\. Full generation output:/,
-    "Runtime i18n deploy helper should build generated dictionaries from published snapshots"
+    "Runtime i18n deploy helper should build generated dictionaries from content/translations"
   );
   assert.match(
     runtimeI18nScript,
-    /snapshot_manifest="\$root_dir\/content\/translations\/manifest\.json"[\s\S]*published translation snapshot missing/,
-    "Runtime i18n deploy helper should fail with a clear message when ignored published snapshots are missing"
+    /snapshot_manifest="\$root_dir\/content\/translations\/manifest\.json"[\s\S]*translation store missing/,
+    "Runtime i18n deploy helper should fail with a clear message when content/translations is missing"
   );
   assert.match(
     autoCommitDeployScript,
     /PUBLISHED_TRANSLATIONS_DIR="\$ROOT_DIR\/content\/translations"[\s\S]*sync_published_translation_snapshots_to_staging\(\)[\s\S]*rsync -az --delete "\$PUBLISHED_TRANSLATIONS_DIR\/" "\$REMOTE_HOST:\$remote_translations_dir\/"[\s\S]*sync_published_translation_snapshots_to_staging[\s\S]*\$REMOTE_SCRIPT/,
-    "Auto deploy should sync ignored published content/translations snapshots before running staging update"
+    "Auto deploy should sync ignored content/translations before running staging update"
   );
   assert.match(
     autoCommitDeployScript,
@@ -4876,7 +4876,7 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
     assert.match(
       deployScript,
       /source "\$ROOT_DIR\/scripts\/lib\/runtime_i18n\.sh"[\s\S]*run_runtime_i18n_generator_quiet/,
-      "Deploy scripts should generate runtime i18n from published snapshots before homepage assets"
+      "Deploy scripts should generate runtime i18n from content/translations before homepage assets"
     );
   }
   for (const deployScript of [

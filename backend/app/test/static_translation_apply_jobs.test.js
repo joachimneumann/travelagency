@@ -30,6 +30,10 @@ test("static translation apply job runs fallback apply phases in order", async (
     repoRoot: "/tmp/repo",
     nowIso: () => "2026-04-28T00:00:00.000Z",
     idFactory: () => "job-1",
+    applyTranslations: async () => {
+      seen.push("translate content store");
+      return { translated_count: 5 };
+    },
     runCommand: async (phase) => {
       seen.push([phase.command, ...phase.args].join(" "));
     }
@@ -40,12 +44,8 @@ test("static translation apply job runs fallback apply phases in order", async (
   const finished = await waitForJob(service, "job-1", "succeeded");
 
   assert.equal(finished.status, "succeeded");
-  assert.equal(seen.length, 5);
-  assert.match(seen[0], /sync_backend_i18n\.mjs translate --target vi$/);
-  assert.match(seen[1], /sync_frontend_i18n\.mjs translate$/);
-  assert.match(seen[2], /generate_public_homepage_assets\.mjs$/);
-  assert.match(seen[3], /sync_backend_i18n\.mjs check --target vi$/);
-  assert.match(seen[4], /sync_frontend_i18n\.mjs check$/);
+  assert.equal(seen[0], "translate content store");
+  assert.match(seen[1], /generate_public_homepage_assets\.mjs$/);
 });
 
 test("static translation apply job translates central content before regenerating homepage assets", async () => {
@@ -67,12 +67,10 @@ test("static translation apply job translates central content before regeneratin
   const finished = await waitForJob(service, "job-central", "succeeded");
 
   assert.equal(finished.status, "succeeded");
-  assert.equal(seen.length, 6);
-  assert.match(seen[0], /sync_backend_i18n\.mjs translate --target vi$/);
-  assert.match(seen[1], /sync_frontend_i18n\.mjs translate$/);
-  assert.equal(seen[2], "central translations");
-  assert.match(seen[3], /generate_public_homepage_assets\.mjs$/);
-  assert.match(finished.log.join("\n"), /Translated 7 central translation items/);
+  assert.equal(seen.length, 2);
+  assert.equal(seen[0], "central translations");
+  assert.match(seen[1], /generate_public_homepage_assets\.mjs$/);
+  assert.match(finished.log.join("\n"), /Translated 7 translation items in content\/translations/);
 });
 
 test("static translation publish job applies translations before writing snapshot", async () => {
@@ -106,13 +104,11 @@ test("static translation publish job applies translations before writing snapsho
   const finished = await waitForJob(service, "job-publish", "succeeded");
 
   assert.equal(finished.status, "succeeded");
-  assert.equal(seen.length, 7);
-  assert.match(seen[0], /sync_backend_i18n\.mjs translate --target vi$/);
-  assert.match(seen[3], /sync_frontend_i18n\.mjs check$/);
-  assert.equal(seen[4], "publish snapshot");
-  assert.match(seen[5], /build_runtime_i18n\.mjs --strict$/);
-  assert.match(seen[6], /generate_public_homepage_assets\.mjs$/);
-  assert.match(finished.log.join("\n"), /Published 3 translation snapshot items/);
+  assert.equal(seen.length, 3);
+  assert.equal(seen[0], "publish snapshot");
+  assert.match(seen[1], /build_runtime_i18n\.mjs --strict$/);
+  assert.match(seen[2], /generate_public_homepage_assets\.mjs$/);
+  assert.match(finished.log.join("\n"), /Validated 3 content\/translations items/);
 });
 
 test("static translation apply job rejects concurrent jobs", async () => {
@@ -172,7 +168,7 @@ test("static translation apply job only translates affected central memory domai
   });
 
   const started = await service.startApply();
-  assert.deepEqual(started.phases.map((phase) => phase.id), ["central_translate"]);
+  assert.deepEqual(started.phases.map((phase) => phase.id), ["translate_content_store"]);
   const finished = await waitForJob(service, "job-fast-central", "succeeded");
 
   assert.equal(finished.status, "succeeded");
@@ -238,7 +234,7 @@ test("static translation apply job publishes automatically after translation iss
   });
 
   const started = await service.startApply();
-  assert.deepEqual(started.phases.map((phase) => phase.id), ["central_translate", "publish_snapshot", "runtime_i18n", "homepage_assets"]);
+  assert.deepEqual(started.phases.map((phase) => phase.id), ["translate_content_store", "validate_translation_store", "runtime_i18n", "homepage_assets"]);
   const finished = await waitForJob(service, "job-auto-publish", "succeeded");
 
   assert.equal(finished.status, "succeeded");
@@ -255,11 +251,12 @@ test("static translation apply job publishes automatically after translation iss
   assert.equal(seen[1], "publish snapshot");
   assert.match(seen[2], /build_runtime_i18n\.mjs --strict$/);
   assert.match(seen[3], /generate_public_homepage_assets\.mjs$/);
-  assert.match(finished.log.join("\n"), /Published 2 translation snapshot items/);
+  assert.match(finished.log.join("\n"), /Validated 2 content\/translations items/);
 });
 
-test("static translation apply job limits frontend scripts to affected languages", async () => {
+test("static translation apply job limits content store translation to affected languages", async () => {
   const seen = [];
+  const applyOptions = [];
   const service = createStaticTranslationApplyJobs({
     repoRoot: "/tmp/repo",
     nowIso: () => "2026-04-28T00:00:00.000Z",
@@ -291,21 +288,32 @@ test("static translation apply job limits frontend scripts to affected languages
           legacy_count: 0
         }
       ]
-    })
+    }),
+    applyTranslations: async (options) => {
+      applyOptions.push(options);
+      seen.push("translate content store");
+      return { translated_count: 2 };
+    }
   });
 
   const started = await service.startApply();
-  assert.deepEqual(started.phases.map((phase) => phase.id), ["frontend_translate", "homepage_assets", "frontend_check"]);
+  assert.deepEqual(started.phases.map((phase) => phase.id), ["translate_content_store"]);
   const finished = await waitForJob(service, "job-fast-frontend", "succeeded");
 
   assert.equal(finished.status, "succeeded");
-  assert.equal(seen.length, 3);
-  assert.match(seen[0], /sync_frontend_i18n\.mjs translate --target de --target vi$/);
-  assert.match(seen[1], /generate_public_homepage_assets\.mjs$/);
-  assert.match(seen[2], /sync_frontend_i18n\.mjs check --target de --target vi$/);
+  assert.deepEqual(seen, ["translate content store"]);
+  assert.equal(typeof applyOptions[0]?.onProgress, "function");
+  assert.deepEqual(withoutProgressCallbacks(applyOptions), [
+    {
+      domains: ["frontend"],
+      target_langs_by_domain: {
+        frontend: ["de", "vi"]
+      }
+    }
+  ]);
 });
 
-test("static translation apply job exposes command translation progress", async () => {
+test("static translation apply job exposes content-store translation progress", async () => {
   let release;
   const blocked = new Promise((resolve) => {
     release = resolve;
@@ -325,11 +333,15 @@ test("static translation apply job exposes command translation progress", async 
         }
       ]
     }),
-    runCommand: async (phase, job, helpers) => {
-      if (phase.id === "backend_translate_vi") {
-        helpers.appendLog(job, "Translated [100/15075] backend.example");
-        await blocked;
-      }
+    applyTranslations: async (options) => {
+      options.onProgress({
+        domain: "backend",
+        target_lang: "vi",
+        current: 100,
+        total: 15075
+      });
+      await blocked;
+      return { translated_count: 15075 };
     }
   });
 

@@ -135,7 +135,7 @@ function logTranslationJobConsoleError(message, job = null, extra = {}, error = 
 }
 
 function translationsApplyingOverlayText() {
-  return backendT("backend.translations.applying_overlay", "Publishing translations. Please wait.");
+  return backendT("backend.translations.applying_overlay", "Generating runtime translations. Please wait.");
 }
 
 function translationsTranslateOverlayText() {
@@ -287,12 +287,12 @@ function translationActionTitle(action, translationState, actionsBusy) {
     return "Translation editing is disabled for your account or this environment.";
   }
   if (action === "translate") {
-    if (translationState.translateNeeded) return "Translate all missing or stale strings across staff and customer content, then publish automatically if clean.";
-    if (translationState.publishReady) return "Publish the translated snapshot.";
+    if (translationState.translateNeeded) return "Translate all missing or stale strings across staff and customer content, then generate runtime files automatically if clean.";
+    if (translationState.publishReady) return "Generate runtime translation files.";
     return translationState.loaded ? "No strings need translation or publishing." : "Loading translation status.";
   }
   if (translationState.translateNeeded) return "Translate missing or stale strings before publishing.";
-  return translationState.publishReady ? "Publish the translated snapshot." : "No translated strings are ready to publish.";
+  return translationState.publishReady ? "Generate runtime translation files." : "No translated strings are ready for runtime generation.";
 }
 
 function configureTranslationActionButton(button, action, translationState, canRunTranslationAction, actionsBusy) {
@@ -317,10 +317,10 @@ function translationStatusMessage(status) {
   const count = numberCount(status.translationIssueCount);
   const subject = count === 1 ? "string" : "strings";
   const verb = count === 1 ? "needs" : "need";
-  const base = `${count} ${subject} ${verb} translation before publishing.`;
+  const base = `${count} ${subject} ${verb} translation before runtime generation.`;
   if (count > 0) return base;
   if (status.publishReadyCount > 0) {
-    return `${base} ${pluralize(status.publishReadyCount, "translated string")} ready to publish with Translate.`;
+    return `${base} ${pluralize(status.publishReadyCount, "translated string")} ready for runtime generation with Translate.`;
   }
   if (status.dirty) {
     return `${base} ${pluralize(status.dirtyCount, "translation item")} still need attention.`;
@@ -1467,12 +1467,12 @@ async function pollJob(jobId, overlayStartedAt) {
       return;
     }
     if (latest.type === "apply" && translationStatus.translationIssueCount > 0) {
-      showError(`${translationStatusMessage(translationStatus)} Publishing was skipped.`);
+      showError(`${translationStatusMessage(translationStatus)} Runtime generation was skipped.`);
       refreshTranslationStatusText();
       return;
     }
     if (latest.type === "apply" && translationStatus.unavailableCount > 0) {
-      showError(`${translationStatusMessage(translationStatus)} Publishing was skipped.`);
+      showError(`${translationStatusMessage(translationStatus)} Runtime generation was skipped.`);
       refreshTranslationStatusText();
       return;
     }
@@ -1512,7 +1512,7 @@ async function startJob(path, body = null, overlayText = translationsApplyingOve
   }
   if (isPublishJob && translationState.translateNeeded) {
     refreshTranslationStatusText();
-    showError("Translate missing or stale strings before publishing.");
+    showError("Translate missing or stale strings before runtime generation.");
     return;
   }
   if (isPublishJob && !translationState.publishReady) {
@@ -1614,7 +1614,7 @@ function bindEvents() {
     startJob("/api/v1/static-translations/retranslate", { mode: "frontend_all_languages" }, retranslateFrontendAllOverlayText());
   });
   els.clearMarketingTourCacheBtn?.addEventListener("click", () => {
-    if (!window.confirm("Clear cached marketing tour translations? Manual overrides are preserved. Use Translate afterward to rebuild missing machine translations and publish clean snapshots.")) return;
+    if (!window.confirm("Clear cached marketing tour translations? Manual overrides are preserved. Use Translate afterward to rebuild missing machine translations in content/translations.")) return;
     startJob("/api/v1/static-translations/retranslate", { mode: "marketing_tour_cache" }, clearMarketingTourCacheOverlayText());
   });
   els.retranslateBackendViBtn?.addEventListener("click", () => {

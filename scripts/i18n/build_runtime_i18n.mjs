@@ -336,7 +336,7 @@ function selectSections({ manifest, config, targetLangs }) {
     const available = new Set(sections.map((section) => normalizeText(section?.target_lang).toLowerCase()));
     const missing = targetLangs.filter((lang) => config.supportedLanguages.includes(lang) && !available.has(lang));
     if (missing.length) {
-      throw new Error(`${config.id}: no published snapshot section for ${missing.join(", ")}`);
+      throw new Error(`${config.id}: no content/translations section for ${missing.join(", ")}`);
     }
   }
 
@@ -346,7 +346,7 @@ function selectSections({ manifest, config, targetLangs }) {
     const lang = normalizeText(section?.target_lang).toLowerCase();
     if (!lang) continue;
     if (!config.supportedLanguages.includes(lang)) {
-      throw new Error(`${config.id}: published snapshot uses unsupported target language ${lang}.`);
+      throw new Error(`${config.id}: content/translations uses unsupported target language ${lang}.`);
     }
     if (byLang.has(lang)) {
       duplicates.push(lang);
@@ -355,7 +355,7 @@ function selectSections({ manifest, config, targetLangs }) {
     byLang.set(lang, section);
   }
   if (duplicates.length) {
-    throw new Error(`${config.id}: duplicate published snapshot sections for ${duplicates.join(", ")}`);
+    throw new Error(`${config.id}: duplicate content/translations sections for ${duplicates.join(", ")}`);
   }
 
   return [...byLang.entries()].map(([lang, section]) => ({ lang, section }));

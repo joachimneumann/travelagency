@@ -1581,7 +1581,7 @@ export function createStaticTranslationService({
       const error = apiError(
         409,
         "STATIC_TRANSLATION_PUBLISH_BLOCKED",
-        `Publish blocked by ${issues.length} translation issue${issues.length === 1 ? "" : "s"}.`
+        `Runtime generation blocked by ${issues.length} translation issue${issues.length === 1 ? "" : "s"}.`
       );
       error.details = issues.slice(0, 200);
       throw error;
