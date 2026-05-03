@@ -27,6 +27,7 @@ const RUNTIME_DOMAINS = Object.freeze({
     sourcePath: (repoRoot) => path.join(repoRoot, "frontend", "data", "i18n", "frontend", "en.json"),
     targetPath: (repoRoot, lang) => path.join(repoRoot, "frontend", "data", "i18n", "frontend", `${lang}.json`),
     metaPath: (repoRoot, lang) => path.join(repoRoot, "frontend", "data", "i18n", "frontend_meta", `${lang}.json`),
+    retiredKeys: ["footer.brand_title"],
     cleanupPatterns: [
       {
         dir: (repoRoot) => path.join(repoRoot, "frontend", "data", "i18n", "frontend"),
@@ -278,6 +279,7 @@ function validateSnapshotItems({ config, lang, source, snapshot, manifest, stric
 
   const sourceKeys = Object.keys(source || {});
   const sourceKeySet = new Set(sourceKeys);
+  const retiredKeySet = new Set(Array.isArray(config.retiredKeys) ? config.retiredKeys : []);
   const byKey = new Map();
   const duplicateKeys = [];
   const extraKeys = [];
@@ -293,7 +295,7 @@ function validateSnapshotItems({ config, lang, source, snapshot, manifest, stric
       continue;
     }
     byKey.set(key, item);
-    if (!sourceKeySet.has(key)) {
+    if (!sourceKeySet.has(key) && !retiredKeySet.has(key)) {
       extraKeys.push(key);
     }
   }

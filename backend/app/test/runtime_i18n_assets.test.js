@@ -223,3 +223,36 @@ test("runtime i18n generator rejects stale snapshot sources", async () => {
     /stale source_text/
   );
 });
+
+test("runtime i18n generator ignores retired frontend keys left in published snapshots", async () => {
+  const { repoRoot } = await createRuntimeI18nFixture();
+  const sourcePath = path.join(repoRoot, "frontend", "data", "i18n", "frontend", "en.json");
+  const snapshotPath = path.join(repoRoot, "content", "translations", "customers", "frontend-static.vi.json");
+  const manifestPath = path.join(repoRoot, "content", "translations", "manifest.json");
+  const source = JSON.parse(await readFile(sourcePath, "utf8"));
+  const snapshot = JSON.parse(await readFile(snapshotPath, "utf8"));
+  const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
+
+  delete source["footer.brand_title"];
+  snapshot.items.push(snapshotItem({
+    domain: "frontend",
+    section: "customers",
+    subsection: "frontend-static",
+    audience: "customer",
+    lang: "vi",
+    key: "footer.brand_title",
+    sourceText: "AsiaTravelPlan",
+    targetText: "AsiaTravelPlan"
+  }));
+  snapshot.item_count = snapshot.items.length;
+  manifest.sections[0].item_count = snapshot.items.length;
+  manifest.total_items += 1;
+
+  await writeJson(sourcePath, source);
+  await writeJson(snapshotPath, snapshot);
+  await writeJson(manifestPath, manifest);
+  await generateRuntimeI18nFromSnapshots({ repoRoot, quiet: true });
+
+  const frontendVi = JSON.parse(await readFile(path.join(repoRoot, "frontend", "data", "i18n", "frontend", "vi.json"), "utf8"));
+  assert.equal(Object.hasOwn(frontendVi, "footer.brand_title"), false);
+});
