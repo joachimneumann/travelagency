@@ -166,6 +166,7 @@ const els = {
   status: document.getElementById("tour_formStatus"),
   cancel: document.getElementById("tour_cancel_btn"),
   onePagerBtn: document.getElementById("tour_one_pager_btn"),
+  onePagerDisabledReason: document.getElementById("tour_one_pager_disabled_reason"),
   onePagerLang: document.getElementById("tour_one_pager_lang"),
   destinationHidden: document.getElementById("tour_destinations"),
   destinationChoices: document.getElementById("tour_destination_choices"),
@@ -183,9 +184,13 @@ const els = {
   onePagerExperienceHighlights: document.getElementById("tour_one_pager_experience_highlights"),
   onePagerClearImagesBtn: document.getElementById("tour_one_pager_clear_images_btn"),
   tourCardImageSelector: document.getElementById("tour_card_image_selector"),
-  reelVideoCard: document.getElementById("tour_reel_video_card"),
+  reelVideoCard: document.getElementById("tour_reel_preview_slot"),
   addReelVideoBtn: document.getElementById("tour_add_reel_btn"),
+  removeReelVideoBtn: document.getElementById("tour_remove_reel_btn"),
   reelVideoUpload: document.getElementById("tour_reel_upload"),
+  reelVideoPreviewModal: document.getElementById("tour_reel_preview_modal"),
+  reelVideoPreviewCloseBtn: document.getElementById("tour_reel_preview_close_btn"),
+  reelVideoPreviewVideo: document.getElementById("tour_reel_preview_video"),
   travel_plan_panel: document.getElementById("travel_plan_panel"),
   travel_plan_panel_summary: document.getElementById("travel_plan_panel_summary"),
   travel_plan_editor: document.getElementById("travel_plan_editor"),
@@ -720,15 +725,27 @@ function reelVideoPreviewSrc(item) {
   return absolutizeApiUrl(item?.previewUrl || "");
 }
 
-function revealMediaFilename(target) {
-  if (!(target instanceof Element)) return false;
-  const trigger = target.closest("[data-tour-media-filename-trigger]");
-  if (!trigger) return false;
-  const media = trigger.closest(".tour-reel-card__media");
-  const filename = media?.querySelector(".tour-reel-card__filename");
-  if (!(filename instanceof HTMLElement)) return false;
-  filename.hidden = false;
-  return true;
+function openReelVideoPreview() {
+  const item = state.reelVideoDraftItem;
+  if (!item || !(els.reelVideoPreviewModal instanceof HTMLElement) || !(els.reelVideoPreviewVideo instanceof HTMLVideoElement)) return;
+  const previewSrc = reelVideoPreviewSrc(item);
+  if (!previewSrc) return;
+  els.reelVideoPreviewVideo.src = previewSrc;
+  els.reelVideoPreviewModal.hidden = false;
+  els.reelVideoPreviewModal.setAttribute("aria-hidden", "false");
+  els.reelVideoPreviewCloseBtn?.focus?.();
+  els.reelVideoPreviewVideo.play().catch(() => {});
+}
+
+function closeReelVideoPreview() {
+  if (!(els.reelVideoPreviewModal instanceof HTMLElement)) return;
+  if (els.reelVideoPreviewVideo instanceof HTMLVideoElement) {
+    els.reelVideoPreviewVideo.pause();
+    els.reelVideoPreviewVideo.removeAttribute("src");
+    els.reelVideoPreviewVideo.load();
+  }
+  els.reelVideoPreviewModal.hidden = true;
+  els.reelVideoPreviewModal.setAttribute("aria-hidden", "true");
 }
 
 function updateReelVideoButtonLabel() {
@@ -738,6 +755,11 @@ function updateReelVideoButtonLabel() {
   const fallback = hasReelVideo ? "Change Reel" : "New Reel";
   els.addReelVideoBtn.textContent = backendT(i18nId, fallback);
   els.addReelVideoBtn.setAttribute("data-i18n-id", i18nId);
+  if (els.removeReelVideoBtn instanceof HTMLButtonElement) {
+    els.removeReelVideoBtn.hidden = !hasReelVideo;
+    els.removeReelVideoBtn.disabled = !state.permissions.canEditTours;
+    els.removeReelVideoBtn.textContent = backendT("tour.reel_video_clear", "Clear");
+  }
 }
 
 function renderTourReelVideo() {
@@ -749,25 +771,15 @@ function renderTourReelVideo() {
     return;
   }
 
-  const removeDisabled = !state.permissions.canEditTours ? "disabled" : "";
   const previewSrc = reelVideoPreviewSrc(item);
-  const fileName = item.name || "video.mp4";
-  const preview = previewSrc
-    ? `<video class="tour-reel-card__preview" src="${escapeHtml(previewSrc)}" controls muted playsinline preload="metadata" data-tour-media-filename-trigger="true"></video>`
-    : `<div class="tour-reel-card__preview" aria-hidden="true" data-tour-media-filename-trigger="true"></div>`;
-  els.reelVideoCard.innerHTML = `
-    <div class="tour-reel-card">
-      <div class="tour-reel-card__media">
-        <div class="tour-reel-card__frame">
-          ${preview}
-        </div>
-        <span class="tour-reel-card__filename micro" hidden>${escapeHtml(fileName)}</span>
-      </div>
-      <button class="btn btn-ghost tour-reel-card__remove" type="button" data-tour-remove-reel-video="true" ${removeDisabled}>
-        ${escapeHtml(backendT("tour.remove_reel_video", "Remove reel video"))}
+  const previewLabel = backendT("tour.open_reel_video_preview", "Open reel video preview");
+  els.reelVideoCard.innerHTML = previewSrc
+    ? `
+      <button class="tour-reel-preview-trigger" type="button" data-tour-open-reel-preview="true" title="${escapeHtml(previewLabel)}" aria-label="${escapeHtml(previewLabel)}">
+        <video src="${escapeHtml(previewSrc)}" muted playsinline preload="metadata" aria-hidden="true"></video>
       </button>
-    </div>
-  `;
+    `
+    : `<div class="tour-reel-preview-trigger" aria-hidden="true"><span class="tour-reel-preview-placeholder"></span></div>`;
 }
 
 function resolveTravelPlanImageSrc(pathValue) {
@@ -1306,15 +1318,18 @@ function ensureTourCardImageSelectorShell() {
       <div class="tour-card-image-selector__layout">
         <img class="tour-card-image-selector__preview" src="/assets/img/marketing_tour.png" alt="" aria-hidden="true" loading="lazy" />
         <div class="tour-card-image-selector__content">
-          <div class="tour-card-image-selector__head">
-            <button class="btn btn-ghost" type="button" data-tour-card-clear-images>${escapeHtml(backendT("tour.card_images.clear", "Clear"))}</button>
-          </div>
+          <button class="btn btn-ghost tour-card-image-selector__clear" type="button" data-tour-card-clear-images>${escapeHtml(backendT("tour.card_images.clear", "Clear"))}</button>
+          <label class="backend-checkbox-item" for="tour_published_on_webpage">
+            <input id="tour_published_on_webpage" name="published_on_webpage" type="checkbox" />
+            <span>${escapeHtml(backendT("tour.published_on_webpage", "Published on webpage"))}</span>
+          </label>
           <div class="tour-card-image-selector__thumbs" data-tour-card-image-thumbs></div>
         </div>
       </div>
     `;
     thumbs = els.tourCardImageSelector.querySelector("[data-tour-card-image-thumbs]");
     clearButton = els.tourCardImageSelector.querySelector("[data-tour-card-clear-images]");
+    els.publishedOnWebpage = document.getElementById("tour_published_on_webpage");
   }
   if (!(thumbs instanceof HTMLElement) || !(clearButton instanceof HTMLButtonElement)) return null;
   return { clearButton, thumbs };
@@ -1811,6 +1826,14 @@ async function init() {
       els.reelVideoUpload.click();
     });
   }
+  if (els.removeReelVideoBtn) {
+    els.removeReelVideoBtn.addEventListener("click", () => {
+      if (!state.permissions.canEditTours) return;
+      replaceReelVideoDraftItem(null);
+      renderTourReelVideo();
+      updateTourDirtyState();
+    });
+  }
   if (els.reelVideoUpload) {
     els.reelVideoUpload.addEventListener("change", () => {
       const [file] = Array.from(els.reelVideoUpload.files || []).filter((value) => value instanceof File);
@@ -1824,17 +1847,28 @@ async function init() {
   }
   if (els.reelVideoCard) {
     els.reelVideoCard.addEventListener("click", (event) => {
-      const button = event.target instanceof Element ? event.target.closest("[data-tour-remove-reel-video]") : null;
-      if (button && state.permissions.canEditTours) {
+      const previewButton = event.target instanceof Element ? event.target.closest("[data-tour-open-reel-preview]") : null;
+      if (previewButton) {
         event.preventDefault();
-        replaceReelVideoDraftItem(null);
-        renderTourReelVideo();
-        updateTourDirtyState();
-        return;
+        openReelVideoPreview();
       }
-      revealMediaFilename(event.target);
     });
   }
+  if (els.reelVideoPreviewCloseBtn) {
+    els.reelVideoPreviewCloseBtn.addEventListener("click", closeReelVideoPreview);
+  }
+  if (els.reelVideoPreviewModal) {
+    els.reelVideoPreviewModal.addEventListener("click", (event) => {
+      if (event.target === els.reelVideoPreviewModal) {
+        closeReelVideoPreview();
+      }
+    });
+  }
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && els.reelVideoPreviewModal && !els.reelVideoPreviewModal.hidden) {
+      closeReelVideoPreview();
+    }
+  });
 
   if (state.is_create_mode) {
     await initializeNewTourForm();
@@ -2048,10 +2082,17 @@ function syncOnePagerButtonState() {
   const smallImageReady = hasSelectedOnePagerSmallImage();
   const disabled = unavailable || !highlightsReady || !smallImageReady || state.formDirty === true;
   if (els.onePagerBtn) {
+    const disabledMessage = disabled
+      ? onePagerButtonDisabledMessage({ highlightsReady, smallImageReady })
+      : "";
     els.onePagerBtn.disabled = disabled;
     els.onePagerBtn.title = disabled
-      ? onePagerButtonDisabledMessage({ highlightsReady, smallImageReady })
+      ? disabledMessage
       : backendT("tour.one_pager_create", "Create One-Page PDF");
+    if (els.onePagerDisabledReason instanceof HTMLElement) {
+      els.onePagerDisabledReason.hidden = !disabled;
+      els.onePagerDisabledReason.textContent = disabledMessage;
+    }
   }
   if (els.onePagerLang) {
     els.onePagerLang.disabled = unavailable;

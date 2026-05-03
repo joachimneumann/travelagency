@@ -49,9 +49,10 @@
     </script>
     <style>
       .tour-media-toolbar {
-        display: grid;
-        justify-items: center;
+        display: flex;
+        flex-wrap: wrap;
         align-items: center;
+        justify-content: center;
         gap: 0.5rem;
         text-align: center;
       }
@@ -89,73 +90,105 @@
         min-width: 10rem;
       }
 
-      .tour-reel-editor {
-        --tour-media-preview-width: clamp(150px, 18vw, 220px);
+      .tour-header__one-pager-action {
         display: grid;
-        gap: 1rem;
-      }
-
-      .tour-reel-card {
-        display: grid;
-        grid-template-columns: minmax(0, var(--tour-media-preview-width)) auto;
-        gap: 1rem;
-        align-items: center;
-        justify-content: center;
-        width: fit-content;
-        max-width: 100%;
-        margin-inline: auto;
-        padding: 1rem;
-        border: 1px solid var(--line);
-        border-radius: 1rem;
-        background: var(--surface);
-      }
-
-      .tour-reel-card__media {
-        grid-column: 1;
-        grid-row: 1;
-        display: grid;
-        gap: 0.5rem;
+        gap: 0.35rem;
         justify-items: center;
-        justify-self: center;
-        width: min(100%, var(--tour-media-preview-width));
-        min-width: 0;
       }
 
-      .tour-reel-card__frame {
-        width: 100%;
+      .tour-header__one-pager-reason {
+        max-width: min(100%, 24rem);
+        margin: 0;
+        color: var(--text-muted-strong);
+        text-align: center;
       }
 
-      .tour-reel-card__preview {
+      .tour-reel-editor {
+        --tour-media-preview-width: 104px;
+        display: grid;
+        gap: 0;
+      }
+
+      .tour-reel-preview-trigger {
         width: 100%;
         aspect-ratio: 9 / 16;
+        padding: 0;
         border: 1px solid var(--line);
-        border-radius: 1rem;
+        border-radius: 0.8rem;
         background: var(--surface-muted);
         cursor: pointer;
-        object-fit: cover;
         display: block;
+        overflow: hidden;
       }
 
-      .tour-reel-card__filename {
-        max-width: 100%;
-        color: var(--text-strong);
-        overflow-wrap: anywhere;
-        text-align: center;
-        user-select: text;
+      .tour-reel-preview-trigger video,
+      .tour-reel-preview-placeholder {
+        width: 100%;
+        height: 100%;
+        display: block;
+        object-fit: cover;
       }
 
-      .tour-reel-card__remove {
-        grid-column: 2;
-        grid-row: 1;
-        align-self: center;
+      .tour-reel-clear {
         justify-self: start;
       }
 
       .tour-reel-empty {
         border: 1px dashed var(--line);
-        border-radius: 1rem;
-        padding: 1rem;
+        border-radius: 0.8rem;
+        width: 100%;
+        aspect-ratio: 9 / 16;
+        padding: 0.5rem;
         background: var(--surface-muted);
+        display: grid;
+        place-items: center;
+        text-align: center;
+      }
+
+      .tour-reel-editor__content {
+        display: grid;
+        gap: 0.85rem;
+        min-width: 0;
+        position: relative;
+      }
+
+      .tour-reel-editor .tour-media-toolbar {
+        justify-content: flex-start;
+        text-align: left;
+      }
+
+      .tour-reel-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        align-items: center;
+      }
+
+      .tour-reel-help {
+        flex: 1 1 18rem;
+      }
+
+      .tour-reel-editor__preview-slot {
+        align-self: start;
+        width: var(--tour-media-preview-width);
+      }
+
+      .tour-reel-preview-modal__panel {
+        max-width: min(92vw, 28rem);
+      }
+
+      .tour-reel-preview-modal__body {
+        display: grid;
+        justify-items: center;
+      }
+
+      .tour-reel-preview-modal__video {
+        width: min(100%, 22rem);
+        max-height: 78vh;
+        aspect-ratio: 9 / 16;
+        border-radius: 0.8rem;
+        background: #000;
+        object-fit: contain;
       }
 
       .tour-card-image-selector {
@@ -185,13 +218,13 @@
         display: grid;
         gap: 0.85rem;
         min-width: 0;
+        position: relative;
       }
 
-      .tour-card-image-selector__head {
-        display: flex;
-        gap: 0.8rem;
-        align-items: start;
-        justify-content: flex-end;
+      .tour-card-image-selector__clear {
+        position: absolute;
+        inset: 0 0 auto auto;
+        z-index: 2;
       }
 
       .tour-card-image-selector__title {
@@ -216,6 +249,7 @@
       .tour-card-image-selector__groups {
         display: grid;
         gap: 0.8rem;
+        position: relative;
       }
 
       .tour-card-image-selector__row-head {
@@ -235,6 +269,12 @@
         display: flex;
         flex-wrap: wrap;
         gap: 0.4rem;
+      }
+
+      .tour-card-image-selector__content > .tour-card-image-selector__thumbs,
+      .tour-card-image-selector__groups > .tour-card-image-selector__row:first-of-type .tour-card-image-selector__thumbs,
+      .tour-reel-editor__content .tour-media-toolbar {
+        padding-inline-end: 5rem;
       }
 
       .tour-card-image-selector__thumb {
@@ -408,25 +448,12 @@
           width: 88px;
         }
 
+        .tour-reel-editor {
+          --tour-media-preview-width: 88px;
+        }
+
         .tour-experience-highlight-selectors {
           grid-template-columns: minmax(0, 1fr);
-        }
-
-        .tour-reel-card {
-          grid-template-columns: minmax(0, 1fr);
-          width: 100%;
-        }
-
-        .tour-reel-card__media {
-          grid-column: 1;
-          grid-row: auto;
-          max-width: var(--tour-media-preview-width);
-        }
-
-        .tour-reel-card__remove {
-          grid-column: 1;
-          grid-row: auto;
-          justify-self: center;
         }
       }
 
@@ -481,25 +508,51 @@
 
               <form id="tour_form" class="backend-tour-form">
                 <div class="field full">
+                  <div id="tour_card_image_selector" class="tour-card-image-selector">
+                    <div class="tour-card-image-selector__layout">
+                      <img class="tour-card-image-selector__preview" src="/assets/img/marketing_tour.png" alt="" aria-hidden="true" loading="lazy" />
+                      <div class="tour-card-image-selector__content">
+                        <button class="btn btn-ghost tour-card-image-selector__clear" type="button" data-tour-card-clear-images data-i18n-id="tour.card_images.clear">Clear</button>
+                        <label class="backend-checkbox-item" for="tour_published_on_webpage">
+                          <input id="tour_published_on_webpage" name="published_on_webpage" type="checkbox" />
+                          <span data-i18n-id="tour.published_on_webpage">Published on webpage</span>
+                        </label>
+                        <div class="tour-card-image-selector__thumbs" data-tour-card-image-thumbs></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="field full">
+                  <div class="tour-reel-editor tour-card-image-selector">
+                    <div class="tour-card-image-selector__layout">
+                      <div class="tour-reel-editor__preview-slot" id="tour_reel_preview_slot" aria-live="polite"></div>
+                      <div class="tour-reel-editor__content">
+                        <button class="btn btn-ghost tour-card-image-selector__clear tour-reel-clear" id="tour_remove_reel_btn" type="button" data-i18n-id="tour.reel_video_clear" hidden>Clear</button>
+                        <div class="tour-media-toolbar">
+                          <div class="tour-reel-actions">
+                            <button class="btn btn-ghost" id="tour_add_reel_btn" type="button" data-i18n-id="tour.new_reel_video">New Reel</button>
+                          </div>
+                          <p class="micro tour-reel-help" data-i18n-id="tour.reel_video_help">One reel video per tour. Uploading a new file replaces the previous reel and stores it as a normalized portrait MP4.</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <input id="tour_reel_upload" name="tour_reel_upload" type="file" accept="video/*" class="u-file-input-hidden" />
+                </div>
+                <div class="field full">
                   <div id="tour_one_pager_image_selector" class="tour-card-image-selector tour-card-image-selector--one-pager">
                     <div class="tour-card-image-selector__layout">
                       <img class="tour-card-image-selector__preview" src="/assets/img/one_pager.png" alt="" aria-hidden="true" loading="lazy" />
                       <div class="tour-card-image-selector__content">
                         <div class="tour-card-image-selector__groups">
+                          <button class="btn btn-ghost tour-card-image-selector__clear" id="tour_one_pager_clear_images_btn" type="button" data-i18n-id="tour.one_pager_clear_images">Clear</button>
                           <div class="tour-card-image-selector__row">
                             <span class="tour-card-image-selector__label" data-i18n-id="tour.one_pager_hero_images">Hero image</span>
                             <div id="tour_one_pager_hero_images" class="tour-card-image-selector__thumbs"></div>
                           </div>
                           <div class="tour-card-image-selector__row">
-                            <div class="tour-card-image-selector__row-head">
-                              <span class="tour-card-image-selector__label" data-i18n-id="tour.one_pager_body_images">Select 4 small images</span>
-                              <button class="btn btn-ghost" id="tour_one_pager_clear_images_btn" type="button" data-i18n-id="tour.one_pager_clear_images">Clear</button>
-                            </div>
+                            <span class="tour-card-image-selector__label" data-i18n-id="tour.one_pager_body_images">Select 4 small images</span>
                             <div id="tour_one_pager_body_images" class="tour-card-image-selector__thumbs"></div>
-                          </div>
-                          <div class="tour-card-image-selector__row">
-                            <span class="tour-card-image-selector__label" data-i18n-id="tour.one_pager_experience_highlights">Experience highlights</span>
-                            <div id="tour_one_pager_experience_highlights" class="tour-experience-highlight-selectors"></div>
                           </div>
                         </div>
                         <div class="tour-card-image-selector__actions">
@@ -508,30 +561,14 @@
                               <option value="en">English</option>
                             </select>
                           </label>
-                          <button class="btn btn-primary tour-header__one-pager-btn" id="tour_one_pager_btn" type="button" data-i18n-id="tour.one_pager_create">Create One-Page PDF</button>
+                          <div class="tour-header__one-pager-action">
+                            <button class="btn btn-primary tour-header__one-pager-btn" id="tour_one_pager_btn" type="button" data-i18n-id="tour.one_pager_create" aria-describedby="tour_one_pager_disabled_reason">Create One-Page PDF</button>
+                            <p class="micro tour-header__one-pager-reason" id="tour_one_pager_disabled_reason" hidden></p>
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
-                <div class="field full">
-                  <div id="tour_card_image_selector" class="tour-card-image-selector"></div>
-                </div>
-                <div class="field full">
-                  <div class="tour-reel-editor">
-                    <div id="tour_reel_video_card" aria-live="polite"></div>
-                    <div class="tour-media-toolbar">
-                      <button class="btn btn-ghost" id="tour_add_reel_btn" type="button" data-i18n-id="tour.new_reel_video">New Reel</button>
-                      <p class="micro" data-i18n-id="tour.reel_video_help">One reel video per tour. Uploading a new file replaces the previous reel and stores it as a normalized portrait MP4.</p>
-                    </div>
-                  </div>
-                  <input id="tour_reel_upload" name="tour_reel_upload" type="file" accept="video/*" class="u-file-input-hidden" />
-                </div>
-                <div class="field full">
-                  <label class="backend-checkbox-item" for="tour_published_on_webpage">
-                    <input id="tour_published_on_webpage" name="published_on_webpage" type="checkbox" />
-                    <span data-i18n-id="tour.published_on_webpage">Published on webpage</span>
-                  </label>
                 </div>
                 <div class="field">
                   <label for="tour_seasonality_start_month" data-i18n-id="tour.seasonality_start">Seasonality Start Month</label>
@@ -552,6 +589,12 @@
                 </div>
                 <div class="field full">
                   <div id="tour_destination_scope_editor"></div>
+                </div>
+                <div class="field full">
+                  <div class="tour-card-image-selector__row">
+                    <span class="tour-card-image-selector__label" data-i18n-id="tour.one_pager_experience_highlights">Experience highlights</span>
+                    <div id="tour_one_pager_experience_highlights" class="tour-experience-highlight-selectors"></div>
+                  </div>
                 </div>
                 <div class="field">
                   <label for="tour_priority" data-i18n-id="tour.priority_label">Web page ranking priority (0-100)</label>
@@ -589,6 +632,25 @@
       <div class="booking-page-overlay__panel" role="status" aria-live="assertive">
         <span class="booking-page-overlay__spinner" aria-hidden="true"></span>
         <span class="booking-page-overlay__text" id="tour_page_overlay_text">Please wait.</span>
+      </div>
+    </div>
+
+    <div
+      class="modal tour-reel-preview-modal"
+      id="tour_reel_preview_modal"
+      hidden
+      role="dialog"
+      aria-modal="true"
+      aria-label="Reel video preview"
+    >
+      <div class="modal-panel tour-reel-preview-modal__panel" role="document">
+        <div class="modal-head">
+          <div></div>
+          <button class="btn btn-ghost" id="tour_reel_preview_close_btn" type="button" aria-label="Close reel video preview">&times;</button>
+        </div>
+        <div class="modal-body tour-reel-preview-modal__body">
+          <video id="tour_reel_preview_video" class="tour-reel-preview-modal__video" controls playsinline preload="metadata"></video>
+        </div>
       </div>
     </div>
 
