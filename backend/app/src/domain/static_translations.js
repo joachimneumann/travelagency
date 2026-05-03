@@ -765,13 +765,8 @@ export function createStaticTranslationService({
     return Array.from(sources).sort((left, right) => left.localeCompare(right, "en", { sensitivity: "base" }));
   }
 
-  async function collectIndexContentMemorySources(config) {
-    const sources = new Set();
-    const { data: frontendSource } = await readJsonFile(configs.frontend.sourcePath(), {});
-    for (const value of Object.values(frontendSource || {})) {
-      addSourceText(sources, value);
-    }
-    return sortedSourceTexts(sources);
+  async function collectIndexContentMemorySources() {
+    return sortedSourceTexts(new Set());
   }
 
   function configSourceLang(config) {

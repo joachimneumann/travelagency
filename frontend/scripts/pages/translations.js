@@ -14,7 +14,6 @@ const ROLES = { ADMIN: "atp_admin" };
 
 const CUSTOMER_DOMAIN_CONFIGS = [
   { domainId: "frontend", label: "Customer UI" },
-  { domainId: "index-content-memory", label: "index.html texts" },
   { domainId: "marketing-tour-memory", label: "Marketing tours" },
   { domainId: "destination-scope-catalog", label: "Tour destinations" }
 ];
@@ -32,7 +31,7 @@ const SECTION_CONFIGS = [
   {
     key: "customers",
     title: "For customers",
-    description: "Manual overrides for Customer UI, index.html texts, Marketing tours, and tour destinations.",
+    description: "Manual overrides for Customer UI, Marketing tours, and tour destinations.",
     customer: true,
     domains: CUSTOMER_DOMAIN_CONFIGS
   }

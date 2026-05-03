@@ -4596,8 +4596,18 @@ test("translations page exposes one translate action that regenerates runtime tr
   );
   assert.match(
     translationsSource,
-    /CUSTOMER_DOMAIN_CONFIGS = \[[\s\S]*domainId:\s*"frontend"[\s\S]*domainId:\s*"index-content-memory"[\s\S]*domainId:\s*"marketing-tour-memory"[\s\S]*domainId:\s*"destination-scope-catalog"[\s\S]*domains:\s*CUSTOMER_DOMAIN_CONFIGS/,
-    "The customer section should join Customer UI, index.html texts, Marketing tours, and tour destinations"
+    /CUSTOMER_DOMAIN_CONFIGS = \[[\s\S]*domainId:\s*"frontend"[\s\S]*domainId:\s*"marketing-tour-memory"[\s\S]*domainId:\s*"destination-scope-catalog"[\s\S]*domains:\s*CUSTOMER_DOMAIN_CONFIGS/,
+    "The customer section should join Customer UI, Marketing tours, and tour destinations"
+  );
+  assert.doesNotMatch(
+    translationsSource,
+    /domainId:\s*"index-content-memory"/,
+    "The translations page should not show the empty index.html memory domain"
+  );
+  assert.match(
+    staticTranslationsSource,
+    /function collectIndexContentMemorySources\(\) \{\s*return sortedSourceTexts\(new Set\(\)\);\s*\}/,
+    "The index.html memory domain should not duplicate the key-based frontend-static catalog"
   );
   assert.match(
     staticTranslationsSource,

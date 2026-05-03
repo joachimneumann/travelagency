@@ -675,7 +675,7 @@ test("static translation service clears marketing tour machine cache without del
   }
 });
 
-test("static translation service excludes generated content and booking travel-plan strings from index memory", async () => {
+test("static translation service keeps frontend UI and generated content out of index memory", async () => {
   const repoRoot = await createFixture();
   try {
     const translationMemoryStore = createTranslationMemoryStore({
@@ -741,8 +741,8 @@ test("static translation service excludes generated content and booking travel-p
     const indexState = await service.getLanguageState("index-content-memory", "vi");
     const indexCta = indexState.rows.find((row) => row.source === "Plan my trip");
 
-    assert.equal(indexCta.cached, "Lập kế hoạch chuyến đi");
-    assert.equal(indexCta.status, "machine");
+    assert.equal(indexCta, undefined);
+    assert.equal(indexState.rows.length, 0);
     assert.equal(indexState.rows.some((row) => row.source === "Vietnam"), false);
     assert.equal(indexState.rows.some((row) => row.source === "Airport transfer"), false);
     assert.equal(indexState.rows.some((row) => row.source === "Meet your guide"), false);
