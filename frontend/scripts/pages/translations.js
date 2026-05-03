@@ -139,7 +139,7 @@ function translationsApplyingOverlayText() {
 }
 
 function translationsTranslateOverlayText() {
-  return backendT("backend.translations.translating_overlay", "Translating and publishing content. Please wait.");
+  return backendT("backend.translations.translating_overlay", "Translating content and generating runtime files. Please wait.");
 }
 
 function translationsRefreshingOverlayText() {
@@ -289,9 +289,9 @@ function translationActionTitle(action, translationState, actionsBusy) {
   if (action === "translate") {
     if (translationState.translateNeeded) return "Translate all missing or stale strings across staff and customer content, then generate runtime files automatically if clean.";
     if (translationState.publishReady) return "Generate runtime translation files.";
-    return translationState.loaded ? "No strings need translation or publishing." : "Loading translation status.";
+    return translationState.loaded ? "No strings need translation or runtime generation." : "Loading translation status.";
   }
-  if (translationState.translateNeeded) return "Translate missing or stale strings before publishing.";
+  if (translationState.translateNeeded) return "Translate missing or stale strings before runtime generation.";
   return translationState.publishReady ? "Generate runtime translation files." : "No translated strings are ready for runtime generation.";
 }
 

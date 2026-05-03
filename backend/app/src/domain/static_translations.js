@@ -1506,6 +1506,9 @@ export function createStaticTranslationService({
     const targetText = rowTargetText(row);
     const manualOverride = normalizeText(row.override);
     const machineText = normalizeText(row.cached);
+    const origin = manualOverride ? "manual" : (normalizeText(row.origin) || (machineText ? "machine" : ""));
+    const freshnessState = targetText ? "current" : "missing";
+    const reviewState = deriveReviewState({ ...row, override: manualOverride, cached: machineText }, origin, freshnessState);
     return {
       source_ref: normalizeText(row.source_ref) || sourceRef(config, row.key),
       key: row.key,
@@ -1522,11 +1525,11 @@ export function createStaticTranslationService({
       target_hash: sourceHash(targetText),
       machine_text: machineText,
       manual_override: manualOverride,
-      origin: row.origin,
-      freshness_state: row.freshness_state,
+      origin,
+      freshness_state: freshnessState,
       job_state: row.job_state,
-      publish_state: row.publish_state,
-      review_state: row.review_state,
+      publish_state: targetText ? "published" : "untranslated",
+      review_state: reviewState,
       generated_at: normalizeText(publishedAt),
       updated_at: normalizeText(row.updated_at),
       cache_meta: row.cache_meta || {}

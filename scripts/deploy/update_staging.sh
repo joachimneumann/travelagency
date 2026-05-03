@@ -90,7 +90,7 @@ generate_public_homepage_assets() {
 }
 
 generate_runtime_i18n() {
-  echo "Generating runtime i18n from published snapshots..."
+  echo "Generating runtime i18n from content/translations..."
   run_runtime_i18n_generator_quiet "$ROOT_DIR"
 }
 
