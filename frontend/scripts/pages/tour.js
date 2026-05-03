@@ -432,6 +432,11 @@ function tourLanguageLabel(lang) {
 function renderOnePagerLanguageOptions() {
   if (!els.onePagerLang || String(els.onePagerLang.tagName || "").toLowerCase() !== "select") return;
   const languages = tourTextLanguages();
+  const currentValue = normalizeTourTextLang(els.onePagerLang.value);
+  const shouldPreserveCurrentValue = els.onePagerLang.dataset.onePagerLangInitialized === "true";
+  const defaultLang = ["en", "vi"].includes(currentTourEditingLang())
+    ? currentTourEditingLang()
+    : "en";
   const fragment = document.createDocumentFragment();
   languages.forEach((language) => {
     const code = normalizeTourTextLang(language?.code);
@@ -449,9 +454,13 @@ function renderOnePagerLanguageOptions() {
     fragment.append(option);
   }
   els.onePagerLang.replaceChildren(fragment);
-  els.onePagerLang.value = CUSTOMER_CONTENT_LANGUAGE_CODES.includes("en")
-    ? "en"
-    : normalizeTourTextLang(languages[0]?.code || "en");
+  const availableCodes = Array.from(els.onePagerLang.options).map((option) => normalizeTourTextLang(option.value));
+  els.onePagerLang.value = shouldPreserveCurrentValue && availableCodes.includes(currentValue)
+    ? currentValue
+    : availableCodes.includes(defaultLang)
+      ? defaultLang
+      : normalizeTourTextLang(languages[0]?.code || "en");
+  els.onePagerLang.dataset.onePagerLangInitialized = "true";
 }
 
 function selectedOnePagerLang() {
@@ -1612,6 +1621,10 @@ function focusPrimaryTitleField() {
 init();
 
 function handleBackendLanguageChanged() {
+  if (els.onePagerLang && els.onePagerLang.dataset.onePagerLangUserSelected !== "true") {
+    delete els.onePagerLang.dataset.onePagerLangInitialized;
+    renderOnePagerLanguageOptions();
+  }
   syncLocalizedFieldState();
   updateHeaderTitle();
   updateHeaderSubtitle();
@@ -1619,6 +1632,7 @@ function handleBackendLanguageChanged() {
   renderTourReelVideo();
   tourTravelPlanAdapter?.renderTravelPlanPanel?.({ syncFromDom: true });
   renderOnePagerImageSelector();
+  renderOnePagerExperienceHighlightSelectors();
   renderTourCardImageSelector();
   renderTourDirtyBar();
 }
@@ -1720,6 +1734,7 @@ async function init() {
       clearError();
       setStatus("");
       if (event.target === els.onePagerLang) {
+        els.onePagerLang.dataset.onePagerLangUserSelected = "true";
         renderOnePagerExperienceHighlightSelectors();
         return;
       }
