@@ -10,6 +10,8 @@ Translation
 * Make it nice
 * Translate with openai
 * Uber uns im Menu: kein Umlaut?
+NO: Ngày nghỉ riêng ở Việt Nam
+YES: Kỳ nghỉ riêng tại Việt Nam
 
 Travel Cards
 ============

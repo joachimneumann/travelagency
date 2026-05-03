@@ -54,6 +54,7 @@ const els = {
   status: document.getElementById("translationsStatus"),
   sections: document.getElementById("translationsSections"),
   translateBtn: document.getElementById("translationsTranslateBtn"),
+  applyProtectedTermsBtn: document.getElementById("translationsApplyProtectedTermsBtn"),
   retranslateFrontendAllBtn: document.getElementById("translationsRetranslateFrontendAllBtn"),
   clearMarketingTourCacheBtn: document.getElementById("translationsClearMarketingTourCacheBtn"),
   retranslateBackendViBtn: document.getElementById("translationsRetranslateBackendViBtn"),
@@ -168,6 +169,13 @@ function retranslateBackendViOverlayText() {
   return backendT(
     "backend.translations.retranslate_backend_vi_overlay",
     "Retranslating backend Vietnamese. Please wait."
+  );
+}
+
+function applyProtectedTermsOverlayText() {
+  return backendT(
+    "backend.translations.translating_overlay",
+    "Updating translations that use protected terms. Please wait."
   );
 }
 
@@ -375,6 +383,9 @@ function updateActions() {
   const sectionControlsBusy = state.isSaving || state.isJobRunning || state.isLoadingSections;
   const canRunTranslationAction = state.permissions.canEditTranslations && !actionsBusy;
   configureTranslationActionButton(els.translateBtn, "translate", translationState, canRunTranslationAction, actionsBusy);
+  if (els.applyProtectedTermsBtn) {
+    els.applyProtectedTermsBtn.disabled = !state.permissions.canEditTranslations || actionsBusy;
+  }
   if (els.retranslateFrontendAllBtn) {
     els.retranslateFrontendAllBtn.disabled = !state.permissions.canEditTranslations || actionsBusy;
   }
@@ -1609,6 +1620,10 @@ async function loadCustomerSectionForSelectedLanguage(section) {
 
 function bindEvents() {
   els.translateBtn?.addEventListener("click", () => startJob("/api/v1/static-translations/apply", null, translationsTranslateOverlayText()));
+  els.applyProtectedTermsBtn?.addEventListener("click", () => {
+    if (!window.confirm("Update translations that use protected terms? This can take several minutes.")) return;
+    startJob("/api/v1/static-translations/retranslate", { mode: "protected_terms" }, applyProtectedTermsOverlayText());
+  });
   els.retranslateFrontendAllBtn?.addEventListener("click", () => {
     if (!window.confirm("Retranslate customer UI strings? This can take several minutes. Manual overrides are preserved.")) return;
     startJob("/api/v1/static-translations/retranslate", { mode: "frontend_all_languages" }, retranslateFrontendAllOverlayText());

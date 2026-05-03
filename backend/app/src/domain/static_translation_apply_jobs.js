@@ -402,6 +402,23 @@ function retranslatePhases({ mode, targetLang, clearTranslationCaches }) {
   throw apiError(400, "STATIC_TRANSLATION_INVALID_RETRANSLATE_MODE", "Unsupported retranslation mode.");
 }
 
+function protectedTermsPhases({ protectTranslations } = {}) {
+  return [
+    callbackPhase("protected_terms_update", "Update translations using protected terms", async (_phase, job, helpers) => {
+      if (typeof protectTranslations !== "function") {
+        throw apiError(500, "STATIC_TRANSLATION_PROTECTED_TERMS_UNAVAILABLE", "Protected term translation update is not configured.");
+      }
+      const summary = await protectTranslations();
+      helpers.appendLog(
+        job,
+        `Updated ${summary?.translated_count || 0} protected-term translation item${summary?.translated_count === 1 ? "" : "s"}.`
+      );
+    }),
+    runtimeI18nPhase(),
+    homepageAssetsPhase()
+  ];
+}
+
 function spawnRunner({ spawnCommand, repoRoot, env }) {
   return (phase, job) => new Promise((resolve, reject) => {
     const child = spawnCommand(phase.command, phase.args, {
@@ -425,6 +442,7 @@ function spawnRunner({ spawnCommand, repoRoot, env }) {
 export function createStaticTranslationApplyJobs({
   repoRoot,
   applyTranslations = null,
+  protectTranslations = null,
   clearTranslationCaches = null,
   publishTranslations = null,
   getStatusSummary = null,
@@ -531,6 +549,9 @@ export function createStaticTranslationApplyJobs({
       return startJob({ type: "publish", phases: await publishPhases({ applyTranslations, publishTranslations, getStatusSummary }) });
     },
     startRetranslate({ mode, target_lang: targetLang } = {}) {
+      if (mode === "protected_terms") {
+        return startJob({ type: "protected_terms", phases: protectedTermsPhases({ protectTranslations }) });
+      }
       return startJob({ type: "retranslate", phases: retranslatePhases({ mode, targetLang, clearTranslationCaches }) });
     },
     getJob(jobId) {

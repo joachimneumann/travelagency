@@ -79,6 +79,35 @@ function sourceHash(value) {
   return sha256(String(value ?? ""));
 }
 
+function normalizeProtectedToken(value) {
+  return normalizeText(value).replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, "").toLowerCase();
+}
+
+function shouldPreserveProtectedSource(sourceValue, protectedTerms) {
+  const source = normalizeText(sourceValue);
+  if (!source || !protectedTerms?.size) return false;
+  if (protectedTerms.has(source)) return true;
+
+  const protectedTokens = new Set(
+    [...protectedTerms]
+      .map((term) => normalizeProtectedToken(term))
+      .filter((term) => term && !term.includes(" "))
+  );
+  const sourceTokens = source.split(/\s+/).map((token) => normalizeProtectedToken(token)).filter(Boolean);
+  return Boolean(sourceTokens.length) && sourceTokens.every((token) => protectedTokens.has(token));
+}
+
+async function readProtectedTermSet(snapshotDir) {
+  try {
+    const parsed = await readJsonObject(path.join(snapshotDir, "translation_protected_terms.json"));
+    const items = Array.isArray(parsed?.items) ? parsed.items : [];
+    return new Set(items.map((item) => normalizeText(item)).filter(Boolean));
+  } catch (error) {
+    if (error?.code === "ENOENT") return new Set();
+    throw error;
+  }
+}
+
 function usage() {
   console.error([
     "Usage:",
@@ -218,7 +247,7 @@ function itemTargetText(item) {
   );
 }
 
-function validateSnapshotItems({ config, lang, source, snapshot, manifest, strict }) {
+function validateSnapshotItems({ config, lang, source, snapshot, manifest, strict, protectedTerms = new Set() }) {
   const errors = [];
   const items = Array.isArray(snapshot?.items) ? snapshot.items : null;
   if (!items) {
@@ -291,7 +320,8 @@ function validateSnapshotItems({ config, lang, source, snapshot, manifest, stric
 
     const itemSourceText = String(item.source_text ?? "");
     const itemSourceHash = normalizeText(item.source_hash);
-    const targetText = itemTargetText(item);
+    const rawTargetText = itemTargetText(item);
+    const targetText = shouldPreserveProtectedSource(sourceValue, protectedTerms) ? sourceValue : rawTargetText;
 
     if (itemSourceText !== sourceValue) {
       errors.push(`${config.id}/${lang}: ${key} has stale source_text.`);
@@ -364,6 +394,7 @@ function selectSections({ manifest, config, targetLangs }) {
 async function loadRuntimeBuildPlan({ repoRoot, snapshotDir, domains, targetLangs, strict }) {
   const manifestPath = path.join(snapshotDir, "manifest.json");
   const manifest = await readJsonObject(manifestPath);
+  const protectedTerms = await readProtectedTermSet(snapshotDir);
   if (strict && normalizeText(manifest.schema) && normalizeText(manifest.schema) !== TRANSLATION_SNAPSHOT_SCHEMA) {
     throw new Error(`Unsupported translation manifest schema: ${manifest.schema}`);
   }
@@ -389,7 +420,8 @@ async function loadRuntimeBuildPlan({ repoRoot, snapshotDir, domains, targetLang
         source,
         snapshot,
         manifest,
-        strict
+        strict,
+        protectedTerms
       });
       if (build.errors.length) {
         errors.push(...build.errors);

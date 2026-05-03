@@ -166,6 +166,42 @@ test("runtime i18n generator writes dictionaries and metadata from published sna
   assert.equal(backendMeta["booking.source_channel.option.phone_call"].source_hash, hash(backendSource["booking.source_channel.option.phone_call"]));
 });
 
+test("runtime i18n generator preserves protected-term-only strings from snapshots", async () => {
+  const { repoRoot } = await createRuntimeI18nFixture();
+  const sourcePath = path.join(repoRoot, "frontend", "data", "i18n", "frontend", "en.json");
+  const snapshotPath = path.join(repoRoot, "content", "translations", "customers", "frontend-static.vi.json");
+  const manifestPath = path.join(repoRoot, "content", "translations", "manifest.json");
+  const source = JSON.parse(await readFile(sourcePath, "utf8"));
+  const snapshot = JSON.parse(await readFile(snapshotPath, "utf8"));
+  const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
+  source["backend.button_full"] = "AsiaTravelPlan Backend";
+  snapshot.items.push(snapshotItem({
+    domain: "frontend",
+    section: "customers",
+    subsection: "frontend-static",
+    audience: "customer",
+    lang: "vi",
+    key: "backend.button_full",
+    sourceText: "AsiaTravelPlan Backend",
+    targetText: "Phần cuối của Kế hoạch Du lịch Châu Á"
+  }));
+  snapshot.item_count = snapshot.items.length;
+  manifest.sections[0].item_count = snapshot.items.length;
+  manifest.total_items += 1;
+  await writeJson(sourcePath, source);
+  await writeJson(snapshotPath, snapshot);
+  await writeJson(manifestPath, manifest);
+  await writeJson(path.join(repoRoot, "content", "translations", "translation_protected_terms.json"), {
+    items: ["AsiaTravelPlan", "backend"],
+    updated_at: null
+  });
+
+  await generateRuntimeI18nFromSnapshots({ repoRoot, quiet: true });
+
+  const frontendVi = JSON.parse(await readFile(path.join(repoRoot, "frontend", "data", "i18n", "frontend", "vi.json"), "utf8"));
+  assert.equal(frontendVi["backend.button_full"], "AsiaTravelPlan Backend");
+});
+
 test("runtime i18n check validates snapshots without writing generated files", async () => {
   const { repoRoot } = await createRuntimeI18nFixture();
   await generateRuntimeI18nFromSnapshots({ repoRoot, check: true, quiet: true });

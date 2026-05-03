@@ -12,6 +12,7 @@ function sha(value) {
 }
 
 async function writeJson(filePath, data) {
+  await mkdir(path.dirname(filePath), { recursive: true });
   await writeFile(filePath, `${JSON.stringify(data, null, 2)}\n`, "utf8");
 }
 
@@ -129,6 +130,100 @@ test("static translation service publishes a versioned snapshot for clean target
     const state = await service.getLanguageState("frontend", "vi");
     assert.equal(state.rows.find((row) => row.key === "hero.title").publish_state, "published");
     assert.equal(state.rows.find((row) => row.key === "hero.cta").publish_state, "published");
+  } finally {
+    await rm(repoRoot, { recursive: true, force: true });
+  }
+});
+
+test("static translation service repairs protected-term-only strings during machine apply", async () => {
+  const repoRoot = await createFixture();
+  try {
+    await writeJson(path.join(repoRoot, "frontend", "data", "i18n", "frontend", "en.json"), {
+      "backend.button_full": "AsiaTravelPlan Backend"
+    });
+    await writeJson(path.join(repoRoot, "frontend", "data", "i18n", "frontend", "vi.json"), {
+      "backend.button_full": "Phần cuối của Kế hoạch Du lịch Châu Á"
+    });
+    await writeJson(path.join(repoRoot, "frontend", "data", "i18n", "frontend_meta", "vi.json"), {
+      "backend.button_full": {
+        source_hash: sha("AsiaTravelPlan Backend"),
+        origin: "machine",
+        updated_at: "2026-01-02T00:00:00.000Z"
+      }
+    });
+    await writeJson(path.join(repoRoot, "content", "translations", "translation_protected_terms.json"), {
+      items: ["AsiaTravelPlan", "backend"],
+      updated_at: null
+    });
+    const service = createStaticTranslationService({
+      repoRoot,
+      nowIso: () => "2026-04-28T04:00:00.000Z",
+      translateEntriesWithMeta: async () => ({
+        entries: {
+          "backend.button_full": "Phần cuối của Kế hoạch Du lịch Châu Á"
+        },
+        provider: { kind: "test", label: "Test", model: "", display: "test" }
+      })
+    });
+
+    const summary = await service.applyMissingTranslations({ domains: ["frontend"], target_langs: ["vi"] });
+    assert.equal(summary.requested_count, 1);
+    assert.equal(summary.translated_count, 1);
+
+    const snapshot = await readTranslationSection(repoRoot, "customers/frontend-static.vi.json");
+    assert.equal(snapshot.items[0].target_text, "AsiaTravelPlan Backend");
+    assert.equal(snapshot.items[0].source_text, "AsiaTravelPlan Backend");
+  } finally {
+    await rm(repoRoot, { recursive: true, force: true });
+  }
+});
+
+test("static translation service updates translated strings that contain protected terms", async () => {
+  const repoRoot = await createFixture();
+  try {
+    await writeJson(path.join(repoRoot, "frontend", "data", "i18n", "frontend", "en.json"), {
+      "modal.title.default": "Plan your trip with AsiaTravelPlan"
+    });
+    await writeJson(path.join(repoRoot, "frontend", "data", "i18n", "frontend", "vi.json"), {
+      "modal.title.default": "Lên kế hoạch cho chuyến đi của bạn với Kế hoạch Du lịch Châu Á"
+    });
+    await writeJson(path.join(repoRoot, "frontend", "data", "i18n", "frontend_meta", "vi.json"), {
+      "modal.title.default": {
+        source_hash: sha("Plan your trip with AsiaTravelPlan"),
+        origin: "machine",
+        updated_at: "2026-01-02T00:00:00.000Z"
+      }
+    });
+    await writeJson(path.join(repoRoot, "content", "translations", "translation_protected_terms.json"), {
+      items: ["AsiaTravelPlan"],
+      updated_at: null
+    });
+    let translateOptions = null;
+    const service = createStaticTranslationService({
+      repoRoot,
+      nowIso: () => "2026-04-28T04:00:00.000Z",
+      translateEntriesWithMeta: async (entries, _targetLang, options) => {
+        translateOptions = options;
+        assert.deepEqual(entries, {
+          "modal.title.default": "Plan your trip with AsiaTravelPlan"
+        });
+        return {
+          entries: {
+            "modal.title.default": "Lên kế hoạch cho chuyến đi của bạn với AsiaTravelPlan"
+          },
+          provider: { kind: "test", label: "Test", model: "", display: "test" }
+        };
+      }
+    });
+
+    const summary = await service.applyProtectedTerms({ domains: ["frontend"], target_langs: ["vi"] });
+    assert.equal(summary.requested_count, 1);
+    assert.equal(summary.translated_count, 1);
+    assert.deepEqual(translateOptions.protectedTerms, ["AsiaTravelPlan"]);
+
+    const snapshot = await readTranslationSection(repoRoot, "customers/frontend-static.vi.json");
+    assert.equal(snapshot.items[0].target_text, "Lên kế hoạch cho chuyến đi của bạn với AsiaTravelPlan");
+    assert.equal(snapshot.items[0].source_text, "Plan your trip with AsiaTravelPlan");
   } finally {
     await rm(repoRoot, { recursive: true, force: true });
   }

@@ -8,6 +8,7 @@ import {
   FRONTEND_LANGUAGE_CODES
 } from "../../../../shared/generated/language_catalog.js";
 import { translationMemorySourceKey } from "../lib/translation_memory_store.js";
+import { normalizeStoredTranslationProtectedTerms } from "../lib/translation_protected_terms.js";
 import { normalizeDestinationCountryCode } from "./destination_scope.js";
 
 const FRONTEND_CONTEXT = "AsiaTravelPlan public website for travelers planning Southeast Asia trips. Use natural, polished, customer-facing copy that feels trustworthy, clear, and concise.";
@@ -262,6 +263,75 @@ export function createStaticTranslationService({
 
   function rowTargetText(row) {
     return normalizeText(row?.override) || normalizeText(row?.cached);
+  }
+
+  function protectedTermSet(items) {
+    return new Set((Array.isArray(items) ? items : []).map((item) => normalizeText(item)).filter(Boolean));
+  }
+
+  function normalizeProtectedToken(value) {
+    return normalizeText(value).replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, "").toLowerCase();
+  }
+
+  function findProtectedTermOccurrences(sourceValue, protectedTerms) {
+    const source = normalizeText(sourceValue);
+    if (!source || !protectedTerms?.size) return [];
+    const sourceLower = source.toLowerCase();
+    const matches = [];
+    const seen = new Set();
+    const terms = [...protectedTerms]
+      .map((term) => normalizeText(term))
+      .filter(Boolean)
+      .sort((left, right) => right.length - left.length);
+
+    for (const term of terms) {
+      const termLower = term.toLowerCase();
+      let index = sourceLower.indexOf(termLower);
+      while (index >= 0) {
+        const occurrence = source.slice(index, index + term.length);
+        const key = occurrence.toLowerCase();
+        if (!seen.has(key)) {
+          seen.add(key);
+          matches.push(occurrence);
+        }
+        index = sourceLower.indexOf(termLower, index + Math.max(1, termLower.length));
+      }
+    }
+
+    return matches;
+  }
+
+  function shouldPreserveProtectedSource(sourceValue, protectedTerms) {
+    const source = normalizeText(sourceValue);
+    if (!source || !protectedTerms?.size) return false;
+    if (protectedTerms.has(source)) return true;
+
+    const protectedTokens = new Set(
+      [...protectedTerms]
+        .map((term) => normalizeProtectedToken(term))
+        .filter((term) => term && !term.includes(" "))
+    );
+    const sourceTokens = source.split(/\s+/).map((token) => normalizeProtectedToken(token)).filter(Boolean);
+    return Boolean(sourceTokens.length) && sourceTokens.every((token) => protectedTokens.has(token));
+  }
+
+  function protectedTermsForSourceEntries(entries, protectedTerms) {
+    return [
+      ...new Set(
+        Object.values(entries || {})
+          .flatMap((value) => findProtectedTermOccurrences(value, protectedTerms))
+          .filter(Boolean)
+      )
+    ];
+  }
+
+  function violatesProtectedTermUsage(row, protectedTerms) {
+    const source = normalizeText(row?.source);
+    const target = rowTargetText(row);
+    if (!source || !target) return false;
+    if (shouldPreserveProtectedSource(source, protectedTerms)) return target !== source;
+    const expectedTerms = findProtectedTermOccurrences(source, protectedTerms);
+    return expectedTerms.length ? expectedTerms.some((term) => !target.includes(term)) : false;
   }
 
   function normalizeRowOrigin(row) {
@@ -1176,18 +1246,28 @@ export function createStaticTranslationService({
     return "marketing_trip_copy";
   }
 
-  function rowsNeedingMachineTranslation(rows) {
+  async function loadProtectedTermsForApply(options = {}) {
+    if (Array.isArray(options.protectedTerms)) return options.protectedTerms;
+    const { data } = await readJsonFile(path.join(translationsSnapshotDir, "translation_protected_terms.json"), {});
+    return normalizeStoredTranslationProtectedTerms(data).items;
+  }
+
+  function rowsNeedingMachineTranslation(rows, protectedTerms = new Set(), options = {}) {
+    const protectedTermsOnly = options.protectedTermsOnly === true;
     return (Array.isArray(rows) ? rows : []).filter((row) => (
       row?.required
       && row.origin !== "manual"
-      && (
-        row.freshness_state === "missing"
-        || row.freshness_state === "stale"
-        || row.freshness_state === "legacy"
-        || row.publish_state === "untranslated"
-        || row.review_state === "needs_translation"
-        || row.review_state === "needs_update"
-      )
+      && (protectedTermsOnly
+        ? violatesProtectedTermUsage(row, protectedTerms)
+        : (
+          violatesProtectedTermUsage(row, protectedTerms)
+          || row.freshness_state === "missing"
+          || row.freshness_state === "stale"
+          || row.freshness_state === "legacy"
+          || row.publish_state === "untranslated"
+          || row.review_state === "needs_translation"
+          || row.review_state === "needs_update"
+        ))
     ));
   }
 
@@ -1199,7 +1279,8 @@ export function createStaticTranslationService({
   }
 
   async function translateCentralRows(config, language, rows, options = {}) {
-    const candidates = rowsNeedingMachineTranslation(rows);
+    const protectedTerms = protectedTermSet(await loadProtectedTermsForApply(options));
+    const candidates = rowsNeedingMachineTranslation(rows, protectedTerms, options);
     if (!candidates.length) {
       return {
         requested_count: 0,
@@ -1226,6 +1307,7 @@ export function createStaticTranslationService({
     }
 
     const entries = Object.fromEntries(candidates.map((row) => [row.key, row.source]));
+    const sourceProtectedTerms = protectedTermsForSourceEntries(entries, protectedTerms);
     reportProgress(0);
     const result = await translate(entries, language.code, {
       sourceLangCode: configSourceLang(config),
@@ -1234,6 +1316,7 @@ export function createStaticTranslationService({
       cacheNamespace: `static-translations:${config.id}`,
       translationProfile: translationProfileForConfig(config),
       translationRules: await loadTranslationRulesForApply(options),
+      protectedTerms: sourceProtectedTerms,
       allowGoogleFallback: true,
       onEntryComplete(entry) {
         reportProgress(Number(entry?.completedEntries || 0));
@@ -1254,6 +1337,11 @@ export function createStaticTranslationService({
         .map(([key, value]) => [key, normalizeText(value)])
         .filter(([key, value]) => Boolean(key && value))
     );
+    for (const row of candidates) {
+      if (shouldPreserveProtectedSource(row?.source, protectedTerms)) {
+        translatedEntries[row.key] = normalizeText(row.source);
+      }
+    }
 
     const nextRows = rows.map((row) => {
       if (!Object.prototype.hasOwnProperty.call(translatedEntries, row.key)) return row;
@@ -1290,7 +1378,8 @@ export function createStaticTranslationService({
   }
 
   async function translateDestinationScopeCatalogRows(config, language, rows, options = {}) {
-    const candidates = rowsNeedingMachineTranslation(rows);
+    const protectedTerms = protectedTermSet(await loadProtectedTermsForApply(options));
+    const candidates = rowsNeedingMachineTranslation(rows, protectedTerms, options);
     if (!candidates.length) {
       return {
         requested_count: 0,
@@ -1317,6 +1406,7 @@ export function createStaticTranslationService({
     }
 
     const entries = Object.fromEntries(candidates.map((row) => [row.key, row.source]));
+    const sourceProtectedTerms = protectedTermsForSourceEntries(entries, protectedTerms);
     reportProgress(0);
     const result = await translate(entries, language.code, {
       sourceLangCode: configSourceLang(config),
@@ -1325,6 +1415,7 @@ export function createStaticTranslationService({
       cacheNamespace: `static-translations:${config.id}`,
       translationProfile: translationProfileForConfig(config),
       translationRules: await loadTranslationRulesForApply(options),
+      protectedTerms: sourceProtectedTerms,
       allowGoogleFallback: true,
       onEntryComplete(entry) {
         reportProgress(Number(entry?.completedEntries || 0));
@@ -1345,6 +1436,11 @@ export function createStaticTranslationService({
         .map(([key, value]) => [key, normalizeText(value)])
         .filter(([key, value]) => Boolean(key && value))
     );
+    for (const row of candidates) {
+      if (shouldPreserveProtectedSource(row?.source, protectedTerms)) {
+        translatedEntries[row.key] = normalizeText(row.source);
+      }
+    }
     const nextRows = rows.map((row) => {
       if (!Object.prototype.hasOwnProperty.call(translatedEntries, row.key)) return row;
       return {
@@ -1372,6 +1468,39 @@ export function createStaticTranslationService({
     assertWritesEnabled();
     const applyOptions = {
       ...options,
+      translationRules: await loadTranslationRulesForApply(options)
+    };
+    const summary = {
+      requested_count: 0,
+      translated_count: 0,
+      domains: []
+    };
+
+    for (const config of normalizeTranslationDomains(options)) {
+      for (const language of publishLanguagesForConfig(config, options)) {
+        const state = await loadState(config.id, language.code);
+        const result = config.kind === "destination_scope_catalog"
+          ? await translateDestinationScopeCatalogRows(config, language, state.rows, applyOptions)
+          : await translateCentralRows(config, language, state.rows, applyOptions);
+        summary.requested_count += result.requested_count;
+        summary.translated_count += result.translated_count;
+        summary.domains.push({
+          domain: config.id,
+          target_lang: language.code,
+          requested_count: result.requested_count,
+          translated_count: result.translated_count
+        });
+      }
+    }
+
+    return summary;
+  }
+
+  async function applyProtectedTerms(options = {}) {
+    assertWritesEnabled();
+    const applyOptions = {
+      ...options,
+      protectedTermsOnly: true,
       translationRules: await loadTranslationRulesForApply(options)
     };
     const summary = {
@@ -1681,6 +1810,7 @@ export function createStaticTranslationService({
     patchOverrides,
     deleteCache,
     applyMissingTranslations,
+    applyProtectedTerms,
     clearMachineTranslations,
     publishTranslations,
     isSupportedFrontendLanguage(lang) {
