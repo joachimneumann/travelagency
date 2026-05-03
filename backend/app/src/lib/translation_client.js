@@ -329,7 +329,7 @@ export function createTranslationClient({
   organizationId = "",
   projectId = "",
   protectedTerms = [],
-  protectedTermsPath = process.env.TRANSLATION_PROTECTED_TERMS_PATH || path.join("content", "translation_protected_terms.json"),
+  protectedTermsPath = process.env.TRANSLATION_PROTECTED_TERMS_PATH || path.join("content", "translations", "translation_protected_terms.json"),
   googleFallbackEnabled = true,
   googleRetryMaxAttempts = 3,
   googleRetryBaseDelayMs = 250,

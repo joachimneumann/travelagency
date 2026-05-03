@@ -278,6 +278,9 @@ export async function createBackendHandler({ port = PORT } = {}) {
   await moveDirectoryIfNeeded(RUNTIME_PATHS.legacyGeneratedOffersDir, RUNTIME_PATHS.generatedOffersDir);
   await moveDirectoryIfNeeded(RUNTIME_PATHS.legacyBookingTravelPlanAttachmentsDir, RUNTIME_PATHS.bookingTravelPlanAttachmentsDir);
   await moveFileIfNeeded(RUNTIME_PATHS.legacyCountryReferenceInfoPath, RUNTIME_PATHS.countryReferenceInfoPath);
+  await moveFileIfNeeded(RUNTIME_PATHS.legacyTranslationRulesPath, RUNTIME_PATHS.translationRulesPath);
+  await moveFileIfNeeded(RUNTIME_PATHS.legacyTranslationProtectedTermsPath, RUNTIME_PATHS.translationProtectedTermsPath);
+  await moveFileIfNeeded(RUNTIME_PATHS.legacyTranslationMemoryPath, RUNTIME_PATHS.translationMemoryPath);
   await services.storeUtils.ensureStorage();
   await backfillPersistedTourState();
   await services.travelPlanPdfArtifacts.migrateLegacyTravelPlanPdfStorage();

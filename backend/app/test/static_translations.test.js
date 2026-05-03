@@ -238,7 +238,7 @@ test("static translation service exposes marketing tour memory and saves manual 
   const repoRoot = await createFixture();
   try {
     const translationMemoryStore = createTranslationMemoryStore({
-      dataPath: path.join(repoRoot, "content", "translation_memory.json"),
+      dataPath: path.join(repoRoot, "content", "translations", "translation_memory.json"),
       writeQueueRef: { current: Promise.resolve() },
       nowIso: () => "2026-04-28T02:00:00.000Z"
     });
@@ -343,7 +343,7 @@ test("static translation service applies missing marketing tour memory translati
   const repoRoot = await createFixture();
   try {
     const translationMemoryStore = createTranslationMemoryStore({
-      dataPath: path.join(repoRoot, "content", "translation_memory.json"),
+      dataPath: path.join(repoRoot, "content", "translations", "translation_memory.json"),
       writeQueueRef: { current: Promise.resolve() },
       nowIso: () => "2026-04-28T02:30:00.000Z"
     });
@@ -439,7 +439,7 @@ test("static translation service exposes destination scope catalog labels as cus
       ]
     };
     const translationMemoryStore = createTranslationMemoryStore({
-      dataPath: path.join(repoRoot, "content", "translation_memory.json"),
+      dataPath: path.join(repoRoot, "content", "translations", "translation_memory.json"),
       writeQueueRef: { current: Promise.resolve() },
       nowIso: () => "2026-04-28T03:15:00.000Z"
     });
@@ -514,7 +514,7 @@ test("static translation service clears marketing tour machine cache without del
   const repoRoot = await createFixture();
   try {
     const translationMemoryStore = createTranslationMemoryStore({
-      dataPath: path.join(repoRoot, "content", "translation_memory.json"),
+      dataPath: path.join(repoRoot, "content", "translations", "translation_memory.json"),
       writeQueueRef: { current: Promise.resolve() },
       nowIso: () => "2026-04-28T02:45:00.000Z"
     });
@@ -584,7 +584,7 @@ test("static translation service excludes generated content and booking travel-p
   const repoRoot = await createFixture();
   try {
     const translationMemoryStore = createTranslationMemoryStore({
-      dataPath: path.join(repoRoot, "content", "translation_memory.json"),
+      dataPath: path.join(repoRoot, "content", "translations", "translation_memory.json"),
       writeQueueRef: { current: Promise.resolve() },
       nowIso: () => "2026-04-28T03:00:00.000Z"
     });

@@ -54,14 +54,17 @@ export const LEGACY_COUNTRY_REFERENCE_INFO_PATH = path.join(DATA_ROOT, "country_
 export const COUNTRY_REFERENCE_INFO_PATH = resolveConfigPathFromRepoRoot(
   normalizeText(process.env.COUNTRY_REFERENCE_INFO_PATH || path.join("content", "country_reference_info.json"))
 );
+export const LEGACY_TRANSLATION_RULES_PATH = resolveConfigPathFromRepoRoot(path.join("content", "translation_rules.json"));
+export const LEGACY_TRANSLATION_PROTECTED_TERMS_PATH = resolveConfigPathFromRepoRoot(path.join("content", "translation_protected_terms.json"));
+export const LEGACY_TRANSLATION_MEMORY_PATH = resolveConfigPathFromRepoRoot(path.join("content", "translation_memory.json"));
 export const TRANSLATION_RULES_PATH = resolveConfigPathFromRepoRoot(
-  normalizeText(process.env.TRANSLATION_RULES_PATH || path.join("content", "translation_rules.json"))
+  normalizeText(process.env.TRANSLATION_RULES_PATH || path.join("content", "translations", "translation_rules.json"))
 );
 export const TRANSLATION_PROTECTED_TERMS_PATH = resolveConfigPathFromRepoRoot(
-  normalizeText(process.env.TRANSLATION_PROTECTED_TERMS_PATH || path.join("content", "translation_protected_terms.json"))
+  normalizeText(process.env.TRANSLATION_PROTECTED_TERMS_PATH || path.join("content", "translations", "translation_protected_terms.json"))
 );
 export const TRANSLATION_MEMORY_PATH = resolveConfigPathFromRepoRoot(
-  normalizeText(process.env.TRANSLATION_MEMORY_PATH || path.join("content", "translation_memory.json"))
+  normalizeText(process.env.TRANSLATION_MEMORY_PATH || path.join("content", "translations", "translation_memory.json"))
 );
 export const TRANSLATIONS_SNAPSHOT_DIR = resolveConfigPathFromRepoRoot(
   normalizeText(process.env.TRANSLATIONS_SNAPSHOT_DIR || path.join("content", "translations"))
@@ -321,6 +324,9 @@ export const RUNTIME_PATHS = Object.freeze({
   keycloakUserSnapshotPath: KEYCLOAK_USER_SNAPSHOT_PATH,
   legacyCountryReferenceInfoPath: LEGACY_COUNTRY_REFERENCE_INFO_PATH,
   countryReferenceInfoPath: COUNTRY_REFERENCE_INFO_PATH,
+  legacyTranslationRulesPath: LEGACY_TRANSLATION_RULES_PATH,
+  legacyTranslationProtectedTermsPath: LEGACY_TRANSLATION_PROTECTED_TERMS_PATH,
+  legacyTranslationMemoryPath: LEGACY_TRANSLATION_MEMORY_PATH,
   translationRulesPath: TRANSLATION_RULES_PATH,
   translationProtectedTermsPath: TRANSLATION_PROTECTED_TERMS_PATH,
   translationMemoryPath: TRANSLATION_MEMORY_PATH,

@@ -459,6 +459,31 @@ test("country reference info lives under content and startup migrates the legacy
   );
 });
 
+test("translation runtime files live under content translations and startup migrates legacy content files", async () => {
+  const runtimePath = path.resolve(__dirname, "..", "src", "config", "runtime.js");
+  const serverPath = path.resolve(__dirname, "..", "src", "server.js");
+  const [runtimeSource, serverSource] = await Promise.all([
+    readFile(runtimePath, "utf8"),
+    readFile(serverPath, "utf8")
+  ]);
+
+  assert.match(
+    runtimeSource,
+    /LEGACY_TRANSLATION_RULES_PATH = resolveConfigPathFromRepoRoot\(path\.join\("content", "translation_rules\.json"\)\);[\s\S]*LEGACY_TRANSLATION_PROTECTED_TERMS_PATH = resolveConfigPathFromRepoRoot\(path\.join\("content", "translation_protected_terms\.json"\)\);[\s\S]*LEGACY_TRANSLATION_MEMORY_PATH = resolveConfigPathFromRepoRoot\(path\.join\("content", "translation_memory\.json"\)\);/,
+    "Runtime should keep old content-root translation file paths as migration sources"
+  );
+  assert.match(
+    runtimeSource,
+    /TRANSLATION_RULES_PATH[\s\S]*path\.join\("content", "translations", "translation_rules\.json"\)[\s\S]*TRANSLATION_PROTECTED_TERMS_PATH[\s\S]*path\.join\("content", "translations", "translation_protected_terms\.json"\)[\s\S]*TRANSLATION_MEMORY_PATH[\s\S]*path\.join\("content", "translations", "translation_memory\.json"\)/,
+    "Translation runtime files should default to content/translations"
+  );
+  assert.match(
+    serverSource,
+    /moveFileIfNeeded\(RUNTIME_PATHS\.legacyTranslationRulesPath, RUNTIME_PATHS\.translationRulesPath\);[\s\S]*moveFileIfNeeded\(RUNTIME_PATHS\.legacyTranslationProtectedTermsPath, RUNTIME_PATHS\.translationProtectedTermsPath\);[\s\S]*moveFileIfNeeded\(RUNTIME_PATHS\.legacyTranslationMemoryPath, RUNTIME_PATHS\.translationMemoryPath\);/,
+    "Backend startup should move legacy content-root translation files before stores initialize"
+  );
+});
+
 test("backend startup removes legacy tour highlights from persisted tour records before serving requests", async () => {
   const serverPath = path.resolve(__dirname, "..", "src", "server.js");
   const toursSupportPath = path.resolve(__dirname, "..", "src", "domain", "tours_support.js");

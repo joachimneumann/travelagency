@@ -314,7 +314,7 @@ async function resolveTranslatorSession(targetLang, sourceLang) {
   const organizationId = normalizeText(process.env.OPENAI_ORGANIZATION_ID);
   const projectId = normalizeText(process.env.OPENAI_PROJECT_ID);
   const protectedTermsPath = normalizeText(process.env.TRANSLATION_PROTECTED_TERMS_PATH)
-    || path.join(ROOT, "content", "translation_protected_terms.json");
+    || path.join(ROOT, "content", "translations", "translation_protected_terms.json");
   const probeEntries = { __probe: "Public AsiaTravelPlan website translation check." };
   const probeOptions = {
     sourceLang: promptLanguageName(sourceLang, "English"),
