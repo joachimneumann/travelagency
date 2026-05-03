@@ -1275,6 +1275,10 @@ function drawHighlights(doc, items, x, y, width, fonts, lang) {
   const top = y + 34;
   items.forEach((item, index) => {
     const itemX = x + index * colWidth;
+    const titleWidth = colWidth - 10;
+    const titleX = itemX + (colWidth - titleWidth) / 2;
+    const bodyWidth = colWidth - 16;
+    const bodyX = itemX + (colWidth - bodyWidth) / 2;
     if (item.imageBuffer) {
       doc.image(item.imageBuffer, itemX + colWidth / 2 - 21, top - 3, { fit: [42, 42] });
     } else {
@@ -1284,13 +1288,13 @@ function drawHighlights(doc, items, x, y, width, fonts, lang) {
       .font(pdfFontName("label", fonts))
       .fontSize(7.8)
       .fillColor(COLORS.textStrong)
-      .text(item.title.toUpperCase(), itemX, top + 45, pdfTextOptions(lang, { width: colWidth - 10, height: item.body ? 20 : 38, align: "center", ellipsis: true }));
+      .text(item.title.toUpperCase(), titleX, top + 45, pdfTextOptions(lang, { width: titleWidth, height: item.body ? 20 : 38, align: "center", ellipsis: true }));
     if (item.body) {
       doc
         .font(pdfFontName("regular", fonts))
         .fontSize(7.5)
         .fillColor(COLORS.text)
-        .text(item.body, itemX + 3, top + 68, pdfTextOptions(lang, { width: colWidth - 16, height: 25, align: "center", ellipsis: true }));
+        .text(item.body, bodyX, top + 68, pdfTextOptions(lang, { width: bodyWidth, height: 25, align: "center", ellipsis: true }));
     }
     if (index > 0) {
       doc.moveTo(itemX - 5, top + 2).lineTo(itemX - 5, top + 92).lineWidth(0.5).strokeColor(COLORS.line).stroke();
