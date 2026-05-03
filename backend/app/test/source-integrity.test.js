@@ -3614,8 +3614,13 @@ test("tour card images are selected from travel-plan service images", async () =
   );
   assert.match(
     tourHtmlSource,
-    /id="tour_one_pager_image_selector"[\s\S]*src="\/assets\/img\/one_pager\.png"[\s\S]*id="tour_one_pager_hero_images"[\s\S]*Select 4 small images[\s\S]*id="tour_one_pager_body_images"[\s\S]*id="tour_one_pager_experience_highlights"[\s\S]*id="tour_one_pager_btn"[\s\S]*id="tour_card_image_selector"/,
-    "Marketing-tour detail should render the one-pager PDF image and experience-highlight selectors above the web-page image selector"
+    /id="tour_card_image_selector"[\s\S]*name="published_on_webpage"[\s\S]*data-tour-card-image-thumbs[\s\S]*id="tour_reel_preview_slot"[\s\S]*id="tour_add_reel_btn"[\s\S]*id="tour_one_pager_image_selector"[\s\S]*src="\/assets\/img\/one_pager\.png"[\s\S]*id="tour_one_pager_hero_images"[\s\S]*Select 4 small images[\s\S]*id="tour_one_pager_body_images"[\s\S]*id="tour_one_pager_btn"/,
+    "Marketing-tour detail should render web-page images first, then reel controls, then one-pager PDF selectors"
+  );
+  assert.match(
+    tourHtmlSource,
+    /id="tour_destination_scope_editor"[\s\S]*id="tour_one_pager_experience_highlights"/,
+    "Marketing-tour detail should render one-pager experience-highlight selectors below route scope"
   );
   assert.match(
     tourPageSource,

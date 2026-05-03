@@ -22,7 +22,7 @@ const CUSTOMER_DOMAIN_CONFIGS = [
 const SECTION_CONFIGS = [
   {
     key: "staff",
-    title: "For staff",
+    title: "For staff (NE/VI)",
     description: "Manual overrides for staff-facing backend Vietnamese.",
     fixedTargetLang: "vi",
     domains: [
