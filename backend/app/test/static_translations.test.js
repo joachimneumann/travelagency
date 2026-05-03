@@ -353,6 +353,7 @@ test("static translation service applies missing marketing tour memory translati
       }
     ];
     const calls = [];
+    const progress = [];
     const service = createStaticTranslationService({
       repoRoot,
       readTours: async () => JSON.parse(JSON.stringify(tours)),
@@ -363,8 +364,11 @@ test("static translation service applies missing marketing tour memory translati
     const summary = await service.applyMissingTranslations({
       domains: ["marketing-tour-memory"],
       target_langs: ["vi"],
+      onProgress: (entry) => progress.push(entry),
       translateEntriesWithMeta: async (entries, targetLang, options) => {
         calls.push({ entries, targetLang, options });
+        options.onEntryComplete({ completedEntries: 1 });
+        options.onEntryComplete({ completedEntries: 2 });
         return {
           entries: Object.fromEntries(Object.entries(entries).map(([key, value]) => [key, `vi:${value}`])),
           provider: { kind: "test", display: "test" }
@@ -378,6 +382,17 @@ test("static translation service applies missing marketing tour memory translati
     assert.equal(calls[0].targetLang, "vi");
     assert.equal(calls[0].options.translationProfile, "marketing_trip_copy");
     assert.equal(calls[0].options.allowGoogleFallback, true);
+    assert.deepEqual(progress.map((entry) => ({
+      domain: entry.domain,
+      target_lang: entry.target_lang,
+      current: entry.current,
+      total: entry.total
+    })), [
+      { domain: "marketing-tour-memory", target_lang: "vi", current: 0, total: 2 },
+      { domain: "marketing-tour-memory", target_lang: "vi", current: 1, total: 2 },
+      { domain: "marketing-tour-memory", target_lang: "vi", current: 2, total: 2 },
+      { domain: "marketing-tour-memory", target_lang: "vi", current: 2, total: 2 }
+    ]);
     assert.deepEqual(resolved.entries, {
       title: "vi:Lantern walk",
       description: "vi:Hoi An evening"
