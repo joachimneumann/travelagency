@@ -183,9 +183,10 @@ const fetchApi = createApiFetcher({
   connectionErrorMessage: backendT("booking.error.connect", "Could not connect to backend API.")
 });
 
-function withDestinationCatalogEnglishLang(urlLike) {
+function withDestinationCatalogBackendLang(urlLike) {
   const url = new URL(urlLike, window.location.origin);
-  url.searchParams.set("lang", "en");
+  const lang = normalizeText(currentBackendLang());
+  if (lang) url.searchParams.set("lang", lang);
   return url.toString();
 }
 
@@ -559,7 +560,7 @@ async function loadDestinationCatalog() {
   renderDestinationCatalog();
   try {
     const request = destinationScopeCatalogRequest({ baseURL: apiOrigin });
-    const payload = await fetchApi(withDestinationCatalogEnglishLang(request.url), { cache: "no-store" });
+    const payload = await fetchApi(withDestinationCatalogBackendLang(request.url), { cache: "no-store" });
     if (payload) {
       state.destinationCatalog.catalog = normalizeDestinationScopeCatalog(payload);
     }
@@ -778,7 +779,7 @@ async function createDestinationCatalogDestination(form) {
       baseURL: apiOrigin,
       body
     });
-    const result = await fetchApi(withDestinationCatalogEnglishLang(request.url), {
+    const result = await fetchApi(withDestinationCatalogBackendLang(request.url), {
       method: request.method,
       body
     });
@@ -806,7 +807,7 @@ async function createDestinationCatalogArea(form) {
       baseURL: apiOrigin,
       body
     });
-    const result = await fetchApi(withDestinationCatalogEnglishLang(request.url), {
+    const result = await fetchApi(withDestinationCatalogBackendLang(request.url), {
       method: request.method,
       body
     });
@@ -836,7 +837,7 @@ async function createDestinationCatalogPlace(form) {
       baseURL: apiOrigin,
       body
     });
-    const result = await fetchApi(withDestinationCatalogEnglishLang(request.url), {
+    const result = await fetchApi(withDestinationCatalogBackendLang(request.url), {
       method: request.method,
       body
     });
