@@ -1,4 +1,4 @@
-import { createApiFetcher, escapeHtml, formatDateTime, normalizeText } from "../shared/api.js";
+import { createApiFetcher, escapeHtml, formatDateTime, logBrowserConsoleError, normalizeText } from "../shared/api.js";
 import {
   getBackendApiOrigin,
   initializeBackendPageChrome,
@@ -103,6 +103,35 @@ function setStatus(message) {
 
 function setSectionStatus(section, message) {
   if (section?.els?.localStatus) section.els.localStatus.textContent = normalizeText(message);
+}
+
+function translationJobLogTail(job, limit = 80) {
+  return Array.isArray(job?.log) ? job.log.slice(-Math.max(1, Number(limit) || 80)) : [];
+}
+
+function translationJobConsolePayload(job, extra = {}) {
+  const phase = Array.isArray(job?.phases)
+    ? job.phases.find((entry) => entry.status === "running") || null
+    : null;
+  return {
+    job_id: normalizeText(job?.id),
+    job_type: normalizeText(job?.type),
+    job_status: normalizeText(job?.status),
+    job_phase: normalizeText(job?.phase),
+    active_phase: phase ? {
+      id: normalizeText(phase.id),
+      label: normalizeText(phase.label),
+      status: normalizeText(phase.status)
+    } : null,
+    progress: job?.progress || null,
+    error: normalizeText(job?.error),
+    log_tail: translationJobLogTail(job),
+    ...extra
+  };
+}
+
+function logTranslationJobConsoleError(message, job = null, extra = {}, error = null) {
+  logBrowserConsoleError(`[translations] ${message}`, translationJobConsolePayload(job, extra), error);
 }
 
 function translationsApplyingOverlayText() {
@@ -1395,9 +1424,14 @@ async function pollJob(jobId, overlayStartedAt) {
     const payload = await fetchApi(`/api/v1/static-translations/apply/${encodeURIComponent(jobId)}`, { cache: "no-store" });
     if (!payload?.job) {
       latest = latest || {
+        id: jobId,
         status: "failed",
         error: "Translation job status could not be read."
       };
+      logTranslationJobConsoleError("Translation job status response did not include a job.", latest, {
+        requested_job_id: jobId,
+        response_payload: payload
+      });
       break;
     }
     latest = payload.job;
@@ -1456,6 +1490,9 @@ async function pollJob(jobId, overlayStartedAt) {
   await hideOverlayAfterMinimum(overlayStartedAt);
   await loadTranslationStatus({ updateMessage: false });
   refreshTranslationStatusText();
+  logTranslationJobConsoleError("Translation job failed or aborted.", latest || { id: jobId, status: "failed" }, {
+    requested_job_id: jobId
+  });
   showError(latest?.error || "Translation job failed.");
 }
 
@@ -1501,13 +1538,34 @@ async function startJob(path, body = null, overlayText = translationsApplyingOve
   if (!job?.id) {
     state.isJobRunning = false;
     await hideOverlayAfterMinimum(overlayStartedAt);
+    logTranslationJobConsoleError("Translation job could not be started.", {
+      type: isTranslateJob ? "apply" : (isPublishJob ? "publish" : "unknown"),
+      status: "failed"
+    }, {
+      path,
+      request_body: body || null,
+      response_payload: payload
+    });
     showError("Translation job could not be started.");
     await loadTranslationStatus({ updateMessage: false });
     updateActions();
     return;
   }
   renderJob(job);
-  await pollJob(job.id, overlayStartedAt);
+  try {
+    await pollJob(job.id, overlayStartedAt);
+  } catch (error) {
+    state.isJobRunning = false;
+    updateActions();
+    await hideOverlayAfterMinimum(overlayStartedAt);
+    logTranslationJobConsoleError("Translation job polling aborted.", job, {
+      path,
+      request_body: body || null
+    }, error);
+    showError("Translation job polling aborted. Check the browser console for details.");
+    await loadTranslationStatus({ updateMessage: false });
+    refreshTranslationStatusText();
+  }
 }
 
 function bindSectionEvents(section) {
