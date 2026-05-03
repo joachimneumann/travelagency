@@ -1792,21 +1792,18 @@ export function createMarketingTourOnePagerPdfWriter({
     ].map((value) => normalizeText(value)).filter(Boolean).join(" ");
     const onePagerFontDir = normalizeText(process.env.ONE_PAGER_FONT_DIR);
     const onePagerFontDirOnly = Boolean(onePagerFontDir);
-    const fontSupportSampleText = onePagerFontDirOnly ? "" : sampleText;
-    const bodyFonts = await resolvePdfFontsForLang({
-      lang: normalizedLang,
-      sampleText: fontSupportSampleText,
-      regularCandidates: prioritizeOnePagerFontCandidates(
-        PDF_FONT_REGULAR_CANDIDATES,
-        fontCandidatesFromDir(onePagerFontDir, PDF_FONT_DIR_REGULAR_FILES),
-        { preferredOnly: onePagerFontDirOnly }
-      ),
-      boldCandidates: prioritizeOnePagerFontCandidates(
-        PDF_FONT_BOLD_CANDIDATES,
-        fontCandidatesFromDir(onePagerFontDir, PDF_FONT_DIR_BOLD_FILES),
-        { preferredOnly: onePagerFontDirOnly }
-      )
-    });
+    const bodyFonts = onePagerFontDirOnly
+      ? {
+        regular: await firstExistingPath(fontCandidatesFromDir(onePagerFontDir, PDF_FONT_DIR_REGULAR_FILES)),
+        bold: await firstExistingPath(fontCandidatesFromDir(onePagerFontDir, PDF_FONT_DIR_BOLD_FILES))
+      }
+      : await resolvePdfFontsForLang({
+        lang: normalizedLang,
+        sampleText,
+        regularCandidates: prioritizeOnePagerFontCandidates(PDF_FONT_REGULAR_CANDIDATES),
+        boldCandidates: prioritizeOnePagerFontCandidates(PDF_FONT_BOLD_CANDIDATES)
+      });
+    if (bodyFonts?.regular && !bodyFonts.bold) bodyFonts.bold = bodyFonts.regular;
     ensureOnePagerFontDirHasBodyFont(onePagerFontDir, bodyFonts);
     const displayFonts = shouldUseOnePagerDecorativeFonts(normalizedLang)
       ? await resolveOnePagerDisplayFonts(normalizedLang, onePagerFontDir)

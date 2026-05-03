@@ -2391,7 +2391,7 @@ test("offer and travel-plan PDFs localize guide, pricing summary, and payment-te
   );
   assert.match(
     onePagerPdfSource,
-    /PDF_FONT_DIR_REGULAR_FILES[\s\S]*"Arial Unicode\.ttf"[\s\S]*function fontCandidatesFromDir\(fontDir, fileNames\)[\s\S]*function prioritizeOnePagerFontCandidates\(staticCandidates, preferredCandidates = \[\], \{ preferredOnly = false \} = \{\}\)[\s\S]*if \(preferredOnly\) return uniqueFontCandidates\(preferredCandidates\);[\s\S]*process\.env\.ONE_PAGER_FONT_DIR[\s\S]*const fontSupportSampleText = onePagerFontDirOnly \? "" : sampleText;[\s\S]*sampleText: fontSupportSampleText[\s\S]*preferredOnly: onePagerFontDirOnly[\s\S]*ensureOnePagerFontDirHasBodyFont\(onePagerFontDir, bodyFonts\)[\s\S]*resolveOnePagerDisplayFonts\(normalizedLang, onePagerFontDir\)[\s\S]*: \{\}/,
+    /PDF_FONT_DIR_REGULAR_FILES[\s\S]*"Arial Unicode\.ttf"[\s\S]*function fontCandidatesFromDir\(fontDir, fileNames\)[\s\S]*function prioritizeOnePagerFontCandidates\(staticCandidates, preferredCandidates = \[\], \{ preferredOnly = false \} = \{\}\)[\s\S]*if \(preferredOnly\) return uniqueFontCandidates\(preferredCandidates\);[\s\S]*process\.env\.ONE_PAGER_FONT_DIR[\s\S]*onePagerFontDirOnly[\s\S]*regular: await firstExistingPath\(fontCandidatesFromDir\(onePagerFontDir, PDF_FONT_DIR_REGULAR_FILES\)\)[\s\S]*bold: await firstExistingPath\(fontCandidatesFromDir\(onePagerFontDir, PDF_FONT_DIR_BOLD_FILES\)\)[\s\S]*ensureOnePagerFontDirHasBodyFont\(onePagerFontDir, bodyFonts\)[\s\S]*resolveOnePagerDisplayFonts\(normalizedLang, onePagerFontDir\)[\s\S]*: \{\}/,
     "One-pager PDFs should support a strict private ONE_PAGER_FONT_DIR override while skipping unsafe display fonts for broader-script languages"
   );
   assert.doesNotMatch(
