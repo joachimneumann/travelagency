@@ -145,7 +145,7 @@ export function renderDestinationScopeEditor({
   return `
     <section class="destination-scope-editor" data-destination-scope-editor>
       <div class="destination-scope-editor__head">
-        <h3>${escapeHtml(t("booking.travel_plan.route_scope", "Route scope"))}</h3>
+        <h3>${escapeHtml(t("booking.travel_plan.route_scope", "Destination(s)"))}</h3>
       </div>
       <div class="destination-scope-editor__destinations" role="group" aria-label="${escapeHtml(t("booking.travel_plan.destinations", "Destinations"))}">
         ${normalizedCatalog.destinations.map((destination) => `

@@ -758,7 +758,7 @@ function updateReelVideoButtonLabel() {
   if (els.removeReelVideoBtn instanceof HTMLButtonElement) {
     els.removeReelVideoBtn.hidden = !hasReelVideo;
     els.removeReelVideoBtn.disabled = !state.permissions.canEditTours;
-    els.removeReelVideoBtn.textContent = backendT("tour.reel_video_clear", "Clear");
+    els.removeReelVideoBtn.textContent = backendT("tour.reel_video_clear", "Remove reel");
   }
 }
 
@@ -850,7 +850,7 @@ function tourWebPagePublicationEligibility(plan = currentTourTravelPlan()) {
   const hasEnoughImages = imageCount >= TOUR_WEB_PAGE_MIN_IMAGE_COUNT;
   const canPublish = hasRootScope && hasEnoughImages;
   const message = canPublish
-    ? backendT("tour.published_on_webpage", "Published on webpage")
+    ? backendT("tour.published_on_webpage", "Show on web page")
     : !hasRootScope && !hasEnoughImages
       ? backendT("tour.published_on_webpage_disabled_scope_and_images", "Select a root destination scope and at least 2 web page images before publishing on the web page.")
       : !hasRootScope
@@ -1318,10 +1318,10 @@ function ensureTourCardImageSelectorShell() {
       <div class="tour-card-image-selector__layout">
         <img class="tour-card-image-selector__preview" src="/assets/img/marketing_tour.png" alt="" aria-hidden="true" loading="lazy" />
         <div class="tour-card-image-selector__content">
-          <button class="btn btn-ghost tour-card-image-selector__clear" type="button" data-tour-card-clear-images>${escapeHtml(backendT("tour.card_images.clear", "Clear"))}</button>
+          <button class="btn btn-ghost tour-card-image-selector__clear" type="button" data-tour-card-clear-images>${escapeHtml(backendT("tour.card_images.clear", "Clear selection"))}</button>
           <label class="backend-checkbox-item" for="tour_published_on_webpage">
             <input id="tour_published_on_webpage" name="published_on_webpage" type="checkbox" />
-            <span>${escapeHtml(backendT("tour.published_on_webpage", "Published on webpage"))}</span>
+            <span>${escapeHtml(backendT("tour.published_on_webpage", "Show on web page"))}</span>
           </label>
           <div class="tour-card-image-selector__thumbs" data-tour-card-image-thumbs></div>
         </div>
@@ -1350,7 +1350,7 @@ function renderTourCardImageSelector() {
   const shell = ensureTourCardImageSelectorShell();
   if (!shell) return;
   shell.clearButton.disabled = !state.permissions.canEditTours || !selectedIds.length;
-  const clearLabel = backendT("tour.card_images.clear", "Clear");
+  const clearLabel = backendT("tour.card_images.clear", "Clear selection");
   if (shell.clearButton.textContent !== clearLabel) {
     shell.clearButton.textContent = clearLabel;
   }

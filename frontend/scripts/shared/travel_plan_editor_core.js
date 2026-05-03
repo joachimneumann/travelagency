@@ -174,7 +174,7 @@ export function createBookingTravelPlanModule(ctx) {
     if (!allowDestinationScope) return null;
     if (state.destinationScopeCatalog && !force) return state.destinationScopeCatalog;
     try {
-      const url = withDestinationScopeEnglishLangQuery(`${apiOrigin}/api/v1/destination-scope/catalog`);
+      const url = withBackendLangQuery(`${apiOrigin}/api/v1/destination-scope/catalog`);
       const response = await fetchBookingMutation(url, { method: "GET" });
       state.destinationScopeCatalog = normalizeDestinationScopeCatalog(response);
     } catch (error) {

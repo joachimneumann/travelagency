@@ -4344,6 +4344,14 @@ textarea:focus-visible {
   margin: 0.35rem 0 0;
 }
 
+.tour-localized-content-editor-field {
+  margin-block: 1.6rem;
+}
+
+.tour-meta-field {
+  align-content: start;
+}
+
 .tour-localized-content {
   display: grid;
   gap: 0.6rem;

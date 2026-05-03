@@ -119,6 +119,7 @@
         cursor: pointer;
         display: block;
         overflow: hidden;
+        position: relative;
       }
 
       .tour-reel-preview-trigger video,
@@ -129,8 +130,47 @@
         object-fit: cover;
       }
 
+      button.tour-reel-preview-trigger::after {
+        content: "";
+        position: absolute;
+        inset: 50% auto auto 50%;
+        width: 2.4rem;
+        height: 2.4rem;
+        border-radius: 999px;
+        background: rgba(15, 23, 42, 0.62);
+        clip-path: circle(50%);
+        transform: translate(-50%, -50%);
+        box-shadow: 0 8px 22px rgba(15, 23, 42, 0.28);
+        pointer-events: none;
+      }
+
+      button.tour-reel-preview-trigger::before {
+        content: "";
+        position: absolute;
+        inset: 50% auto auto 50%;
+        border-block: 0.42rem solid transparent;
+        border-left: 0.68rem solid var(--surface);
+        margin-left: 0.08rem;
+        transform: translate(-50%, -50%);
+        z-index: 1;
+        pointer-events: none;
+      }
+
       .tour-reel-clear {
         justify-self: start;
+      }
+
+      .tour-reel-control-stack {
+        position: absolute;
+        inset: 0 0 auto auto;
+        z-index: 2;
+        display: grid;
+        gap: 0.45rem;
+        justify-items: end;
+      }
+
+      .tour-reel-control-stack .tour-card-image-selector__clear {
+        position: static;
       }
 
       .tour-reel-empty {
@@ -158,10 +198,9 @@
       }
 
       .tour-reel-actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-        align-items: center;
+        display: grid;
+        gap: 0.45rem;
+        justify-items: end;
       }
 
       .tour-reel-help {
@@ -200,7 +239,7 @@
 
       .tour-card-image-selector__layout {
         display: grid;
-        grid-template-columns: 104px minmax(0, 1fr);
+        grid-template-columns: calc(104px + 0.85rem) minmax(0, 1fr);
         gap: 1rem;
         align-items: start;
       }
@@ -212,6 +251,26 @@
         border: 1px solid var(--line);
         background: var(--surface-muted);
         object-fit: cover;
+      }
+
+      .tour-card-image-selector__preview-stack {
+        display: grid;
+        gap: 0.35rem;
+        justify-items: center;
+        align-self: center;
+        width: 104px;
+      }
+
+      .tour-card-image-selector__preview-label {
+        color: var(--text-strong);
+        font-size: var(--font-size-caption);
+        font-weight: var(--font-weight-regular);
+        line-height: 1.2;
+        text-align: center;
+      }
+
+      .tour-card-image-selector--one-pager .tour-card-image-selector__preview {
+        border-radius: 0;
       }
 
       .tour-card-image-selector__content {
@@ -274,7 +333,7 @@
       .tour-card-image-selector__content > .tour-card-image-selector__thumbs,
       .tour-card-image-selector__groups > .tour-card-image-selector__row:first-of-type .tour-card-image-selector__thumbs,
       .tour-reel-editor__content .tour-media-toolbar {
-        padding-inline-end: 5rem;
+        padding-inline-end: 7.5rem;
       }
 
       .tour-card-image-selector__thumb {
@@ -439,6 +498,28 @@
         padding-top: 0.1rem;
       }
 
+      .tour-card-image-selector--one-pager .tour-card-image-selector__actions {
+        justify-content: flex-start;
+      }
+
+      .tour-card-image-selector--one-pager .tour-header__one-pager-action {
+        justify-items: start;
+      }
+
+      .tour-card-image-selector--one-pager .tour-header__one-pager-reason {
+        text-align: left;
+      }
+
+      .tour-detail-page .tour-taxonomy-field {
+        margin-block: 0.7rem;
+      }
+
+      .tour-detail-page .destination-scope-editor {
+        margin: 0;
+        padding: 0;
+        border: 0;
+      }
+
       @media (max-width: 520px) {
         .tour-card-image-selector__layout {
           grid-template-columns: minmax(0, 1fr);
@@ -512,10 +593,10 @@
                     <div class="tour-card-image-selector__layout">
                       <img class="tour-card-image-selector__preview" src="/assets/img/marketing_tour.png" alt="" aria-hidden="true" loading="lazy" />
                       <div class="tour-card-image-selector__content">
-                        <button class="btn btn-ghost tour-card-image-selector__clear" type="button" data-tour-card-clear-images data-i18n-id="tour.card_images.clear">Clear</button>
+                        <button class="btn btn-ghost tour-card-image-selector__clear" type="button" data-tour-card-clear-images data-i18n-id="tour.card_images.clear">Clear selection</button>
                         <label class="backend-checkbox-item" for="tour_published_on_webpage">
                           <input id="tour_published_on_webpage" name="published_on_webpage" type="checkbox" />
-                          <span data-i18n-id="tour.published_on_webpage">Published on webpage</span>
+                          <span data-i18n-id="tour.published_on_webpage">Show on web page</span>
                         </label>
                         <div class="tour-card-image-selector__thumbs" data-tour-card-image-thumbs></div>
                       </div>
@@ -527,11 +608,11 @@
                     <div class="tour-card-image-selector__layout">
                       <div class="tour-reel-editor__preview-slot" id="tour_reel_preview_slot" aria-live="polite"></div>
                       <div class="tour-reel-editor__content">
-                        <button class="btn btn-ghost tour-card-image-selector__clear tour-reel-clear" id="tour_remove_reel_btn" type="button" data-i18n-id="tour.reel_video_clear" hidden>Clear</button>
+                        <div class="tour-reel-control-stack">
+                          <button class="btn btn-ghost tour-card-image-selector__clear tour-reel-clear" id="tour_remove_reel_btn" type="button" data-i18n-id="tour.reel_video_clear" hidden>Remove reel</button>
+                          <button class="btn btn-ghost" id="tour_add_reel_btn" type="button" data-i18n-id="tour.new_reel_video">New Reel</button>
+                        </div>
                         <div class="tour-media-toolbar">
-                          <div class="tour-reel-actions">
-                            <button class="btn btn-ghost" id="tour_add_reel_btn" type="button" data-i18n-id="tour.new_reel_video">New Reel</button>
-                          </div>
                           <p class="micro tour-reel-help" data-i18n-id="tour.reel_video_help">One reel video per tour. Uploading a new file replaces the previous reel and stores it as a normalized portrait MP4.</p>
                         </div>
                       </div>
@@ -542,10 +623,13 @@
                 <div class="field full">
                   <div id="tour_one_pager_image_selector" class="tour-card-image-selector tour-card-image-selector--one-pager">
                     <div class="tour-card-image-selector__layout">
-                      <img class="tour-card-image-selector__preview" src="/assets/img/one_pager.png" alt="" aria-hidden="true" loading="lazy" />
+                      <div class="tour-card-image-selector__preview-stack" aria-hidden="true">
+                        <span class="tour-card-image-selector__preview-label" data-i18n-id="tour.one_pager_pdf_label">PDF</span>
+                        <img class="tour-card-image-selector__preview" src="/assets/img/one_pager.png" alt="" loading="lazy" />
+                      </div>
                       <div class="tour-card-image-selector__content">
                         <div class="tour-card-image-selector__groups">
-                          <button class="btn btn-ghost tour-card-image-selector__clear" id="tour_one_pager_clear_images_btn" type="button" data-i18n-id="tour.one_pager_clear_images">Clear</button>
+                          <button class="btn btn-ghost tour-card-image-selector__clear" id="tour_one_pager_clear_images_btn" type="button" data-i18n-id="tour.one_pager_clear_images">Clear selection</button>
                           <div class="tour-card-image-selector__row">
                             <span class="tour-card-image-selector__label" data-i18n-id="tour.one_pager_hero_images">Hero image</span>
                             <div id="tour_one_pager_hero_images" class="tour-card-image-selector__thumbs"></div>
@@ -570,42 +654,46 @@
                     </div>
                   </div>
                 </div>
-                <div class="field">
-                  <label for="tour_seasonality_start_month" data-i18n-id="tour.seasonality_start">Seasonality Start Month</label>
-                  <select id="tour_seasonality_start_month" name="seasonality_start_month">
-                    <option value=""></option>
-                  </select>
+                <div class="field full tour-taxonomy-field">
+                  <div id="tour_destination_scope_editor"></div>
                 </div>
-                <div class="field">
-                  <label for="tour_seasonality_end_month" data-i18n-id="tour.seasonality_end">Seasonality End Month</label>
-                  <select id="tour_seasonality_end_month" name="seasonality_end_month">
-                    <option value=""></option>
-                  </select>
-                </div>
-                <div class="field full">
+                <div class="field full tour-taxonomy-field">
                   <span class="field-label" data-i18n-id="tour.styles_label">Tour Styles</span>
                   <input id="tour_styles" name="styles" type="hidden" required />
                   <div id="tour_style_choices" class="backend-checkbox-grid"></div>
                 </div>
-                <div class="field full">
-                  <div id="tour_destination_scope_editor"></div>
-                </div>
-                <div class="field full">
+                <div class="field full tour-taxonomy-field">
                   <div class="tour-card-image-selector__row">
-                    <span class="tour-card-image-selector__label" data-i18n-id="tour.one_pager_experience_highlights">Experience highlights</span>
+                    <span class="field-label" data-i18n-id="tour.one_pager_experience_highlights">Experience Highlights (4 required!)</span>
                     <div id="tour_one_pager_experience_highlights" class="tour-experience-highlight-selectors"></div>
                   </div>
                 </div>
-                <div class="field">
+                <div class="field full tour-taxonomy-field">
+                  <div class="field-grid">
+                    <div class="field">
+                      <label for="tour_seasonality_start_month" data-i18n-id="tour.seasonality_start">Seasonality Start Month</label>
+                      <select id="tour_seasonality_start_month" name="seasonality_start_month">
+                        <option value=""></option>
+                      </select>
+                    </div>
+                    <div class="field">
+                      <label for="tour_seasonality_end_month" data-i18n-id="tour.seasonality_end">Seasonality End Month</label>
+                      <select id="tour_seasonality_end_month" name="seasonality_end_month">
+                        <option value=""></option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+                <div class="field tour-meta-field">
                   <label for="tour_priority" data-i18n-id="tour.priority_label">Web page ranking priority (0-100)</label>
                   <input id="tour_priority" name="priority" type="number" min="0" max="100" step="1" />
                 </div>
-                <div class="field">
+                <div class="field tour-meta-field">
                   <label for="tour_seo_slug" data-i18n-id="tour.seo_slug">SEO URL slug</label>
                   <input id="tour_seo_slug" name="seo_slug" type="text" inputmode="url" autocomplete="off" placeholder="hanoi-sapa-ha-long-bay" />
                   <p class="micro" data-i18n-id="tour.seo_slug_hint">Used for /tours/{slug}. Leave blank to generate it from the title.</p>
                 </div>
-                <div class="field full">
+                <div class="field full tour-localized-content-editor-field">
                   <div id="tour_localized_content_editor"></div>
                 </div>
                 <div class="field full">

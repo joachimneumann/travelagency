@@ -162,7 +162,7 @@
   padding: 1rem;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: var(--surface-muted);
+  background: transparent;
 }
 
 .destination-scope-editor__head,

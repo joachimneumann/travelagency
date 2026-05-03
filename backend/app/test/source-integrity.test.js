@@ -3467,13 +3467,13 @@ test("tour page reads month options from the generated catalogs layer", async ()
   );
   assert.match(
     tourHtml,
-    /<div class="field full">\s*<span class="field-label" data-i18n-id="tour\.styles_label">Tour Styles/,
+    /<div class="field full tour-taxonomy-field">\s*<span class="field-label" data-i18n-id="tour\.styles_label">Tour Styles/,
     "Tour styles should span the full editor width"
   );
   assert.match(
     tourHtml,
-    /id="tour_style_choices"[\s\S]*id="tour_destination_scope_editor"[\s\S]*id="tour_priority"/,
-    "Tour destination/area/place controls should render below tour styles and above priority"
+    /id="tour_destination_scope_editor"[\s\S]*id="tour_style_choices"[\s\S]*id="tour_one_pager_experience_highlights"[\s\S]*id="tour_seasonality_start_month"[\s\S]*id="tour_seasonality_end_month"[\s\S]*id="tour_priority"/,
+    "Tour destination/area/place controls, styles, experience highlights, and seasonality should render in the requested order above priority"
   );
   assert.match(
     tourSource,
@@ -3619,8 +3619,8 @@ test("tour card images are selected from travel-plan service images", async () =
   );
   assert.match(
     tourHtmlSource,
-    /id="tour_destination_scope_editor"[\s\S]*id="tour_one_pager_experience_highlights"/,
-    "Marketing-tour detail should render one-pager experience-highlight selectors below route scope"
+    /id="tour_one_pager_image_selector"[\s\S]*id="tour_destination_scope_editor"[\s\S]*id="tour_style_choices"[\s\S]*id="tour_one_pager_experience_highlights"[\s\S]*id="tour_seasonality_start_month"/,
+    "Marketing-tour detail should render destination, styles, experience highlights, and seasonality below one-pager sections"
   );
   assert.match(
     tourPageSource,
