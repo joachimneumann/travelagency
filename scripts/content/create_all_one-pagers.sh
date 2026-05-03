@@ -6,6 +6,8 @@ REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 
 cd "${REPO_ROOT}"
 
+export ONE_PAGER_FONT_DIR="${ONE_PAGER_FONT_DIR:-${REPO_ROOT}/content/fonts}"
+
 if [[ ! -d "backend/app/node_modules" ]]; then
   echo "Missing backend/app/node_modules. Run npm install in backend/app first." >&2
   exit 1

@@ -57,6 +57,9 @@ Options:
   --open-google-sites       Open Google Sites after generation.
   --help                    Show this help.
 
+Environment:
+  ONE_PAGER_FONT_DIR        Font directory for PDF rendering. Wrapper default: content/fonts.
+
 Generated files:
   <output>/pdfs/<tour-id>/<lang>.pdf
   <output>/images/<tour-id>/<lang>.jpg

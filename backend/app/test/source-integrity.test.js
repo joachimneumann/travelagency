@@ -126,12 +126,14 @@ test("booking handlers do not contain duplicate top-level helper declarations", 
 test("runtime i18n preflight is generated from snapshots and local backend startup is strict by default", async () => {
   const repoRoot = path.resolve(__dirname, "..", "..", "..");
   const runtimeI18nScriptPath = path.join(repoRoot, "scripts", "i18n", "build_runtime_i18n.mjs");
+  const localI18nPreflightPath = path.join(repoRoot, "scripts", "local", "local_i18n_preflight.sh");
   const startLocalBackendPath = path.join(repoRoot, "scripts", "local", "start_local_backend.sh");
   const localKeycloakClientPath = path.join(repoRoot, "scripts", "keycloak", "bootstrap_local_keycloak_backend_client.sh");
   const sharedKeycloakClientPath = path.join(repoRoot, "scripts", "keycloak", "bootstrap_keycloak_backend_realm.sh");
   const serverPath = path.join(repoRoot, "backend", "app", "src", "server.js");
-  const [runtimeI18nScriptSource, startLocalBackendSource, localKeycloakClientSource, sharedKeycloakClientSource, serverSource] = await Promise.all([
+  const [runtimeI18nScriptSource, localI18nPreflightSource, startLocalBackendSource, localKeycloakClientSource, sharedKeycloakClientSource, serverSource] = await Promise.all([
     readFile(runtimeI18nScriptPath, "utf8"),
+    readFile(localI18nPreflightPath, "utf8"),
     readFile(startLocalBackendPath, "utf8"),
     readFile(localKeycloakClientPath, "utf8"),
     readFile(sharedKeycloakClientPath, "utf8"),
@@ -160,6 +162,16 @@ test("runtime i18n preflight is generated from snapshots and local backend start
     startLocalBackendSource,
     /run_local_i18n_preflight "\$ROOT_DIR"/,
     "Local backend startup should generate runtime i18n before booting"
+  );
+  assert.match(
+    localI18nPreflightSource,
+    /source "\$runtime_i18n_helper"[\s\S]*run_runtime_i18n_generator_quiet "\$root_dir" "\$runtime_i18n_script"/,
+    "Local runtime i18n preflight should use the shared helper so missing snapshots fail with a clear message"
+  );
+  assert.match(
+    localI18nPreflightSource,
+    /BACKEND_I18N_STRICT:-1[\s\S]*Continuing without regenerated runtime i18n because BACKEND_I18N_STRICT=0/,
+    "Local runtime i18n preflight should support explicit non-strict bootstrap when published snapshots are missing"
   );
   assert.match(
     startLocalBackendSource,
@@ -957,7 +969,7 @@ test("booking translation collapsible exposes incomplete state while marketing-t
   );
   assert.match(
     translationsPageScriptSource,
-    /domainId:\s*"marketing-tour-memory"[\s\S]*title:\s*"5\. Marketing tours"/,
+    /CUSTOMER_DOMAIN_CONFIGS = \[[\s\S]*domainId:\s*"marketing-tour-memory"[\s\S]*title:\s*"For customers"/,
     "Marketing-tour translations should live in the central translations workspace"
   );
   assert.match(
@@ -2374,8 +2386,13 @@ test("offer and travel-plan PDFs localize guide, pricing summary, and payment-te
   );
   assert.match(
     onePagerPdfSource,
-    /"DancingScript-Regular\.ttf"[\s\S]*const ONE_PAGER_DECORATIVE_FONT_LANGS[\s\S]*function shouldUseOnePagerDecorativeFonts\(lang\)[\s\S]*resolveOnePagerDisplayFonts\(logoPath, normalizedLang\)[\s\S]*: \{\}/,
-    "One-pager PDFs should use bundled Vietnamese-capable decorative fonts while skipping unsafe display fonts for broader-script languages"
+    /PDF_FONT_DIR_REGULAR_FILES[\s\S]*"Arial Unicode\.ttf"[\s\S]*function fontCandidatesFromDir\(fontDir, fileNames\)[\s\S]*function prioritizeOnePagerFontCandidates\(staticCandidates, preferredCandidates = \[\], \{ preferredOnly = false \} = \{\}\)[\s\S]*if \(preferredOnly\) return uniqueFontCandidates\(preferredCandidates\);[\s\S]*process\.env\.ONE_PAGER_FONT_DIR[\s\S]*preferredOnly: onePagerFontDirOnly[\s\S]*ensureOnePagerFontDirHasBodyFont\(onePagerFontDir, bodyFonts\)[\s\S]*resolveOnePagerDisplayFonts\(normalizedLang, onePagerFontDir\)[\s\S]*: \{\}/,
+    "One-pager PDFs should support a strict private ONE_PAGER_FONT_DIR override while skipping unsafe display fonts for broader-script languages"
+  );
+  assert.doesNotMatch(
+    onePagerPdfSource,
+    /assetFontCandidatesFromLogoPath|PDF_ASSET_DISPLAY_FONT_FILES|PDF_ASSET_SCRIPT_FONT_FILES/,
+    "One-pager PDFs should not fall back to bundled repo fonts from assets/fonts"
   );
 });
 
@@ -3521,9 +3538,10 @@ test("tour card images are selected from travel-plan service images", async () =
   const travelPlanEditorPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "shared", "travel_plan_editor_core.js");
   const travelPlanModelPath = path.resolve(__dirname, "..", "..", "..", "model", "database", "travel_plan.cue");
   const homepageGeneratorPath = path.resolve(__dirname, "..", "..", "..", "scripts", "assets", "generate_public_homepage_assets.mjs");
+  const onePagerShellPath = path.resolve(__dirname, "..", "..", "..", "scripts", "content", "create_all_one-pagers.sh");
   const onePagerScriptPath = path.resolve(__dirname, "..", "..", "..", "scripts", "content", "create_all_one_pagers.mjs");
   const onePagerPdfPath = path.resolve(__dirname, "..", "src", "lib", "marketing_tour_one_pager_pdf.js");
-  const [toursSupportSource, toursHandlerSource, tourHtmlSource, tourPageSource, toursListSource, mainToursSource, travelPlanHelpersSource, travelPlanEditorSource, travelPlanModelSource, homepageGeneratorSource, onePagerScriptSource, onePagerPdfSource] = await Promise.all([
+  const [toursSupportSource, toursHandlerSource, tourHtmlSource, tourPageSource, toursListSource, mainToursSource, travelPlanHelpersSource, travelPlanEditorSource, travelPlanModelSource, homepageGeneratorSource, onePagerShellSource, onePagerScriptSource, onePagerPdfSource] = await Promise.all([
     readFile(toursSupportPath, "utf8"),
     readFile(toursHandlerPath, "utf8"),
     readFile(tourHtmlPath, "utf8"),
@@ -3534,6 +3552,7 @@ test("tour card images are selected from travel-plan service images", async () =
     readFile(travelPlanEditorPath, "utf8"),
     readFile(travelPlanModelPath, "utf8"),
     readFile(homepageGeneratorPath, "utf8"),
+    readFile(onePagerShellPath, "utf8"),
     readFile(onePagerScriptPath, "utf8"),
     readFile(onePagerPdfPath, "utf8")
   ]);
@@ -3617,6 +3636,11 @@ test("tour card images are selected from travel-plan service images", async () =
     onePagerScriptSource,
     /const translationsSnapshotDir = path\.join\(repoRoot, "content", "translations"\);[\s\S]*async function loadPublishedMarketingTourTranslations\(languages\)[\s\S]*`marketing-tours\.\$\{lang\}\.json`[\s\S]*function applyPublishedTranslationsToTravelPlan\(travelPlan, lang, translations\)[\s\S]*applyPublishedTranslationToLocalizedPair\(service, "title", "title_i18n", lang, translations\)[\s\S]*function applyPublishedMarketingTourTranslations\(tour, lang, translations\)[\s\S]*applyPublishedTranslationsToTravelPlan\(next\.travel_plan, normalizedLang, translations\)[\s\S]*const publishedTranslationsByLang = await loadPublishedMarketingTourTranslations\(options\.languages\);[\s\S]*const localizedTour = applyPublishedMarketingTourTranslations\(tour, lang, publishedTranslations\);[\s\S]*const readModel = tourHelpers\.normalizeTourForRead\(localizedTour, \{ lang \}\);[\s\S]*normalizeMarketingTourTravelPlan\(localizedTour\.travel_plan,[\s\S]*sourceLang: "en"[\s\S]*flatMode: "localized"/,
     "Batch one-pager PDFs should apply published marketing-tour translation snapshots before localized PDF rendering"
+  );
+  assert.match(
+    onePagerShellSource,
+    /export ONE_PAGER_FONT_DIR="\$\{ONE_PAGER_FONT_DIR:-\$\{REPO_ROOT\}\/content\/fonts\}"/,
+    "Batch one-pager generation should default PDF fonts to the private content/fonts folder"
   );
   assert.doesNotMatch(
     `${homepageGeneratorSource}\n${onePagerScriptSource}`,
@@ -4422,8 +4446,8 @@ test("translations page exposes one translate action that auto-publishes clean s
 
   assert.match(
     translationsHtml,
-    /id="translationsTranslateBtn"[\s\S]*>Translate<\/button>/,
-    "translations.html should expose a top-level Translate action"
+    /id="translationsTranslateBtn"[\s\S]*>Translate everything<\/button>/,
+    "translations.html should expose a top-level Translate everything action"
   );
   assert.doesNotMatch(
     `${translationsHtml}\n${translationsSource}`,
@@ -4512,8 +4536,8 @@ test("translations page exposes one translate action that auto-publishes clean s
   );
   assert.match(
     translationsSource,
-    /function translationStatusMessage\(status\)[\s\S]*const base = `\$\{count\} \$\{subject\} \$\{verb\} translation before publishing\.`[\s\S]*return `\$\{base\} \$\{pluralize\(status\.publishReadyCount, "translated string"\)\} ready to publish with Translate\.`/,
-    "The status text above Translate should explain that publish-ready strings are handled by Translate"
+    /function translationStatusMessage\(status\)[\s\S]*const base = `\$\{count\} \$\{subject\} \$\{verb\} translation before publishing\.`[\s\S]*ready to publish with Translate everything\./,
+    "The status text above Translate everything should explain that publish-ready strings are handled by the global action"
   );
   assert.match(
     translationsSource,
@@ -4532,33 +4556,33 @@ test("translations page exposes one translate action that auto-publishes clean s
   );
   assert.match(
     translationsSource,
-    /function customerLanguageTemplate\(\)[\s\S]*data-customer-language[\s\S]*function sectionTemplate/,
-    "The translations page should expose one shared customer language selector above the customer sections"
+    /title:\s*"For staff \(NE\/VI\)"[\s\S]*title:\s*"For customers"/,
+    "The translations page should expose only staff and customer sections"
   );
   assert.match(
     translationsSource,
-    /firstCustomerSectionIndex[\s\S]*customerLanguageTemplate\(\)[\s\S]*sectionTemplate\(config\)/,
-    "The shared customer language selector should be inserted before the first customer section"
-  );
-  assert.doesNotMatch(
-    translationsSource,
-    /data-section-language|section\.els\.languageSelect/,
-    "Customer sections should not keep individual language selectors"
+    /CUSTOMER_DOMAIN_CONFIGS = \[[\s\S]*domainId:\s*"frontend"[\s\S]*domainId:\s*"index-content-memory"[\s\S]*domainId:\s*"marketing-tour-memory"[\s\S]*domains:\s*CUSTOMER_DOMAIN_CONFIGS/,
+    "The customer section should join Customer UI, index.html texts, and Marketing tours"
   );
   assert.match(
     translationsSource,
-    /function selectedTargetLang\(section\)[\s\S]*fixedTargetLang[\s\S]*return selectedCustomerTargetLang\(\);/,
-    "Customer sections should all load the selected shared customer language"
+    /data-section-language[\s\S]*<option value="">All languages<\/option>/,
+    "The joined customer section should expose one language dropdown that defaults to all languages"
   );
   assert.match(
     translationsSource,
-    /function loadCustomerSectionsForSelectedLanguage\(\)[\s\S]*filter\(\(section\) => isCustomerSectionConfig\(section\.config\)\)[\s\S]*loadSectionState\(section, \{ preserveLanguage: true \}\)/,
-    "Changing the shared customer language should reload every customer translation section"
+    /function selectedCustomerLanguages\(section\)[\s\S]*return selected[\s\S]*languages\.filter[\s\S]*:\s*languages;/,
+    "The customer section should load either one selected language or all customer languages"
+  );
+  assert.match(
+    translationsSource,
+    /async function loadCustomerSectionForSelectedLanguage\(section\)[\s\S]*await loadSectionState\(section, \{ preserveLanguage: true \}\)/,
+    "Changing the customer language should reload the joined customer translation table"
   );
   assert.match(
     translationsStyles,
-    /\.backend-translations-page \.translations-customer-language \{[\s\S]*grid-template-columns: minmax\(220px, 360px\);/,
-    "The shared customer language selector should have its own placement between staff and customer sections"
+    /\.backend-translations-page \.translations-controls--customer \{[\s\S]*grid-template-columns: minmax\(170px, 0\.7fr\) minmax\(260px, 1\.5fr\) minmax\(160px, 0\.65fr\);/,
+    "The joined customer controls should keep language, search, and status in one table toolbar"
   );
   assert.match(
     translationsSource,
@@ -4597,12 +4621,12 @@ test("translations page exposes one translate action that auto-publishes clean s
   );
   assert.match(
     translationsSource,
-    /async function deleteCachedTranslation\(section, key\)[\s\S]*try \{[\s\S]*await loadTranslationStatus\(\{ updateMessage: true \}\);[\s\S]*\} finally \{[\s\S]*state\.isSaving = false;[\s\S]*updateActions\(\);/,
+    /async function deleteCachedTranslation\(section, rowId\)[\s\S]*try \{[\s\S]*await loadSectionState\(section, \{ preserveLanguage: true \}\)[\s\S]*await loadTranslationStatus\(\{ updateMessage: true \}\);[\s\S]*\} finally \{[\s\S]*state\.isSaving = false;[\s\S]*updateActions\(\);/,
     "Deleting a cached translation should keep the action buttons busy until the global status has refreshed"
   );
   assert.match(
     translationsSource,
-    /async function saveOverrides\(section\)[\s\S]*try \{[\s\S]*await loadTranslationStatus\(\{ updateMessage: true \}\);[\s\S]*\} finally \{[\s\S]*state\.isSaving = false;[\s\S]*updateActions\(\);/,
+    /async function saveOverrides\(section\)[\s\S]*try \{[\s\S]*await loadSectionState\(section, \{ preserveLanguage: true \}\)[\s\S]*await loadTranslationStatus\(\{ updateMessage: true \}\);[\s\S]*\} finally \{[\s\S]*state\.isSaving = false;[\s\S]*updateActions\(\);/,
     "Saving manual overrides should keep the action buttons busy until the global status has refreshed"
   );
   assert.match(

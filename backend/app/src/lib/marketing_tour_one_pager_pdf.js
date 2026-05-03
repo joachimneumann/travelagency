@@ -142,18 +142,47 @@ const PDF_FONT_LABEL_CANDIDATES = Object.freeze([
   "/usr/share/fonts/opentype/urw-base35/NimbusSans-Bold.otf"
 ]);
 
-const PDF_ASSET_DISPLAY_FONT_FILES = Object.freeze([
-  "DejaVuSansCondensed-Bold.ttf",
-  "montserrat-v31-vietnamese.woff2",
-  "montserrat-v31-latin-ext.woff2",
-  "montserrat-v31-latin.woff2"
+const PDF_FONT_DIR_REGULAR_FILES = Object.freeze([
+  "Arial Unicode.ttf",
+  "Arial Unicode MS.ttf",
+  "ArialUnicodeMS.ttf",
+  "NotoSans-Regular.ttf",
+  "DejaVuSans.ttf"
 ]);
 
-const PDF_ASSET_SCRIPT_FONT_FILES = Object.freeze([
-  "DancingScript-Regular.ttf",
-  "source-sans-3-v19-italic-vietnamese.woff2",
-  "source-sans-3-v19-italic-latin-ext.woff2",
-  "source-sans-3-v19-italic-latin.woff2"
+const PDF_FONT_DIR_BOLD_FILES = Object.freeze([
+  "Arial Unicode.ttf",
+  "Arial Unicode MS.ttf",
+  "ArialUnicodeMS.ttf",
+  "NotoSans-Bold.ttf",
+  "DejaVuSans-Bold.ttf"
+]);
+
+const PDF_FONT_DIR_DISPLAY_FILES = Object.freeze([
+  "DIN Condensed Bold.ttf",
+  "Impact.ttf",
+  "DejaVuSansCondensed-Bold.ttf",
+  "Montserrat.ttf"
+]);
+
+const PDF_FONT_DIR_LABEL_FILES = Object.freeze([
+  "DIN Alternate Bold.ttf",
+  "Impact.ttf",
+  "DejaVuSansCondensed-Bold.ttf",
+  "Montserrat.ttf"
+]);
+
+const PDF_FONT_DIR_SCRIPT_FILES = Object.freeze([
+  "Brush Script.ttf",
+  "Brush Script MT Italic.ttf",
+  "Zapfino.ttf",
+  "DancingScript-Regular.ttf"
+]);
+
+const PDF_FONT_DIR_SCRIPT_FALLBACK_FILES = Object.freeze([
+  "NotoSans-Italic.ttf",
+  "DejaVuSans-Oblique.ttf",
+  "DancingScript-Regular.ttf"
 ]);
 
 const PDF_EMBEDDABLE_FONT_EXTENSIONS = Object.freeze([".ttf", ".otf"]);
@@ -281,37 +310,72 @@ function isPdfEmbeddableFontPath(filePath) {
   return PDF_EMBEDDABLE_FONT_EXTENSIONS.some((extension) => normalized.endsWith(extension));
 }
 
-function assetFontCandidatesFromLogoPath(logoPath, fileNames) {
-  const normalizedLogoPath = normalizeText(logoPath);
-  if (!normalizedLogoPath) return [];
-  const assetsDir = path.resolve(path.dirname(normalizedLogoPath), "..");
+function fontCandidatesFromDir(fontDir, fileNames) {
+  const normalizedFontDir = normalizeText(fontDir);
+  if (!normalizedFontDir) return [];
+  const resolvedFontDir = path.resolve(normalizedFontDir);
   return fileNames
-    .map((fileName) => path.join(assetsDir, "fonts", fileName))
+    .map((fileName) => path.join(resolvedFontDir, fileName))
     .filter(isPdfEmbeddableFontPath);
 }
 
-function prioritizeAssetFonts(staticCandidates, assetCandidates) {
-  const systemCandidates = staticCandidates.filter((candidate) => candidate.startsWith("/System/") || candidate.startsWith("/Library/"));
-  const portableCandidates = staticCandidates.filter((candidate) => !systemCandidates.includes(candidate));
-  return [...systemCandidates, ...assetCandidates, ...portableCandidates];
+function uniqueFontCandidates(candidates) {
+  const seen = new Set();
+  return candidates.filter((candidate) => {
+    const normalized = normalizeText(candidate);
+    if (!normalized || seen.has(normalized)) return false;
+    seen.add(normalized);
+    return true;
+  });
 }
 
-async function resolveOnePagerDisplayFonts(logoPath, lang) {
-  const assetDisplayCandidates = assetFontCandidatesFromLogoPath(logoPath, PDF_ASSET_DISPLAY_FONT_FILES);
-  const assetScriptCandidates = assetFontCandidatesFromLogoPath(logoPath, PDF_ASSET_SCRIPT_FONT_FILES);
+function prioritizeOnePagerFontCandidates(staticCandidates, preferredCandidates = [], { preferredOnly = false } = {}) {
+  if (preferredOnly) return uniqueFontCandidates(preferredCandidates);
+  const systemCandidates = staticCandidates.filter((candidate) => candidate.startsWith("/System/") || candidate.startsWith("/Library/"));
+  const portableCandidates = staticCandidates.filter((candidate) => !systemCandidates.includes(candidate));
+  return uniqueFontCandidates([...preferredCandidates, ...systemCandidates, ...portableCandidates]);
+}
+
+async function resolveOnePagerDisplayFonts(lang, fontDir = "") {
+  const fontDirOnly = Boolean(normalizeText(fontDir));
   const scriptCandidates = shouldUseOnePagerScriptFonts(lang)
     ? PDF_FONT_SCRIPT_CANDIDATES
     : PDF_FONT_SCRIPT_FALLBACK_CANDIDATES;
   const tripLabelCandidates = shouldUseOnePagerScriptFonts(lang)
     ? PDF_FONT_TRIP_LABEL_CANDIDATES
     : PDF_FONT_SCRIPT_FALLBACK_CANDIDATES;
+  const fontDirScriptFiles = shouldUseOnePagerScriptFonts(lang)
+    ? PDF_FONT_DIR_SCRIPT_FILES
+    : PDF_FONT_DIR_SCRIPT_FALLBACK_FILES;
   const [display, script, label, tripLabel] = await Promise.all([
-    firstExistingPath(prioritizeAssetFonts(PDF_FONT_DISPLAY_CANDIDATES, assetDisplayCandidates)),
-    firstExistingPath(prioritizeAssetFonts(scriptCandidates, assetScriptCandidates)),
-    firstExistingPath(prioritizeAssetFonts(PDF_FONT_LABEL_CANDIDATES, assetDisplayCandidates)),
-    firstExistingPath(prioritizeAssetFonts(tripLabelCandidates, assetScriptCandidates))
+    firstExistingPath(prioritizeOnePagerFontCandidates(
+      PDF_FONT_DISPLAY_CANDIDATES,
+      fontCandidatesFromDir(fontDir, PDF_FONT_DIR_DISPLAY_FILES),
+      { preferredOnly: fontDirOnly }
+    )),
+    firstExistingPath(prioritizeOnePagerFontCandidates(
+      scriptCandidates,
+      fontCandidatesFromDir(fontDir, fontDirScriptFiles),
+      { preferredOnly: fontDirOnly }
+    )),
+    firstExistingPath(prioritizeOnePagerFontCandidates(
+      PDF_FONT_LABEL_CANDIDATES,
+      fontCandidatesFromDir(fontDir, PDF_FONT_DIR_LABEL_FILES),
+      { preferredOnly: fontDirOnly }
+    )),
+    firstExistingPath(prioritizeOnePagerFontCandidates(
+      tripLabelCandidates,
+      fontCandidatesFromDir(fontDir, fontDirScriptFiles),
+      { preferredOnly: fontDirOnly }
+    ))
   ]);
   return { display, script, label, tripLabel };
+}
+
+function ensureOnePagerFontDirHasBodyFont(fontDir, fonts) {
+  const normalizedFontDir = normalizeText(fontDir);
+  if (!normalizedFontDir || fonts?.regular) return;
+  throw new Error(`ONE_PAGER_FONT_DIR is set to ${normalizedFontDir}, but no usable one-pager body font was found there.`);
 }
 
 function streamPdfToFile(doc, outputPath) {
@@ -1726,14 +1790,25 @@ export function createMarketingTourOnePagerPdfWriter({
         ...safeArray(day?.services).flatMap((service) => [service?.title, service?.location, service?.details])
       ])
     ].map((value) => normalizeText(value)).filter(Boolean).join(" ");
+    const onePagerFontDir = normalizeText(process.env.ONE_PAGER_FONT_DIR);
+    const onePagerFontDirOnly = Boolean(onePagerFontDir);
     const bodyFonts = await resolvePdfFontsForLang({
       lang: normalizedLang,
       sampleText,
-      regularCandidates: PDF_FONT_REGULAR_CANDIDATES,
-      boldCandidates: PDF_FONT_BOLD_CANDIDATES
+      regularCandidates: prioritizeOnePagerFontCandidates(
+        PDF_FONT_REGULAR_CANDIDATES,
+        fontCandidatesFromDir(onePagerFontDir, PDF_FONT_DIR_REGULAR_FILES),
+        { preferredOnly: onePagerFontDirOnly }
+      ),
+      boldCandidates: prioritizeOnePagerFontCandidates(
+        PDF_FONT_BOLD_CANDIDATES,
+        fontCandidatesFromDir(onePagerFontDir, PDF_FONT_DIR_BOLD_FILES),
+        { preferredOnly: onePagerFontDirOnly }
+      )
     });
+    ensureOnePagerFontDirHasBodyFont(onePagerFontDir, bodyFonts);
     const displayFonts = shouldUseOnePagerDecorativeFonts(normalizedLang)
-      ? await resolveOnePagerDisplayFonts(logoPath, normalizedLang)
+      ? await resolveOnePagerDisplayFonts(normalizedLang, onePagerFontDir)
       : {};
     const fonts = {
       ...bodyFonts,
