@@ -26,12 +26,129 @@ function redactLine(line, env = process.env) {
   return next;
 }
 
-function appendLog(job, line, env) {
+function countTranslationIssues(entry) {
+  return Number(entry?.missing_count || 0)
+    + Number(entry?.stale_count || 0)
+    + Number(entry?.legacy_count || 0);
+}
+
+function clampCount(value, max = Number.POSITIVE_INFINITY) {
+  const count = Math.max(0, Math.floor(Number(value) || 0));
+  return Number.isFinite(max) ? Math.min(count, max) : count;
+}
+
+function progressKeyForEntry(entry) {
+  const domain = normalizeText(entry?.domain);
+  const targetLang = normalizeText(entry?.target_lang).toLowerCase();
+  return domain && targetLang ? `${domain}|${targetLang}` : "";
+}
+
+function progressMetadataForEntries(entries, keys) {
+  const counts = {};
+  for (const entry of Array.isArray(entries) ? entries : []) {
+    const key = progressKeyForEntry(entry);
+    if (!key) continue;
+    counts[key] = (counts[key] || 0) + countTranslationIssues(entry);
+  }
+
+  const orderedKeys = Array.isArray(keys) && keys.length
+    ? keys
+    : Object.keys(counts);
+  const progress_counts = {};
+  const progress_offsets = {};
+  let progress_count = 0;
+  for (const key of orderedKeys) {
+    const count = clampCount(counts[key]);
+    if (!count) continue;
+    progress_counts[key] = count;
+    progress_offsets[key] = progress_count;
+    progress_count += count;
+  }
+  return { progress_count, progress_counts, progress_offsets };
+}
+
+function progressMetadataForTargetLangs(entries, targetLangs) {
+  const keys = uniqueNormalized(targetLangs).map((targetLang) => `frontend|${targetLang}`);
+  return progressMetadataForEntries(entries, keys);
+}
+
+function withProgress(phase, progress = {}) {
+  return {
+    ...phase,
+    progress_count: clampCount(progress.progress_count),
+    progress_counts: progress.progress_counts || {},
+    progress_offsets: progress.progress_offsets || {}
+  };
+}
+
+function prepareJobPhases(phases) {
+  let progressTotal = 0;
+  const prepared = (Array.isArray(phases) ? phases : []).map((phase) => {
+    const progressCount = clampCount(phase?.progress_count);
+    const next = {
+      ...phase,
+      progress_count: progressCount,
+      progress_offset: progressTotal,
+      progress_counts: phase?.progress_counts || {},
+      progress_offsets: phase?.progress_offsets || {}
+    };
+    progressTotal += progressCount;
+    return next;
+  });
+  return { phases: prepared, progressTotal };
+}
+
+function updateJobProgress(job, phase, progress = {}) {
+  if (!job || !phase) return;
+  const parsedCurrent = clampCount(progress.current);
+  const parsedTotal = clampCount(progress.total);
+  const progressKey = normalizeText(progress.key);
+  const subCount = progressKey ? clampCount(phase.progress_counts?.[progressKey]) : 0;
+  const subOffset = progressKey ? clampCount(phase.progress_offsets?.[progressKey]) : 0;
+  const phaseCount = subCount || clampCount(phase.progress_count) || parsedTotal;
+  if (!phaseCount) return;
+
+  const jobProgress = job.progress || { current: 0, total: 0 };
+  const phaseOffset = clampCount(phase.progress_offset) + subOffset;
+  const nextCurrent = phaseOffset + clampCount(parsedCurrent, phaseCount);
+  const plannedTotal = clampCount(jobProgress.total);
+  const dynamicTotal = phaseOffset + phaseCount;
+  const nextTotal = phase.progress_count
+    ? clampCount(plannedTotal || dynamicTotal)
+    : clampCount(Math.max(plannedTotal, dynamicTotal));
+  job.progress = {
+    current: clampCount(Math.max(jobProgress.current || 0, nextCurrent), nextTotal || Number.POSITIVE_INFINITY),
+    total: nextTotal
+  };
+}
+
+function updateJobProgressFromLogLine(job, phase, line) {
+  const match = /Translat(?:ing|ed) \[(?:(\S+)\s+)?(\d+)\/(\d+)\]/i.exec(String(line || ""));
+  if (!match) return;
+  const [, targetLang, current, total] = match;
+  const normalizedLang = normalizeText(targetLang).toLowerCase();
+  updateJobProgress(job, phase, {
+    current,
+    total,
+    key: normalizedLang ? `frontend|${normalizedLang}` : ""
+  });
+}
+
+function completePhaseProgress(job, phase) {
+  if (!phase?.progress_count) return;
+  updateJobProgress(job, phase, {
+    current: phase.progress_count,
+    total: phase.progress_count
+  });
+}
+
+function appendLog(job, line, env, phase = null) {
   const safeLine = redactLine(line, env);
   if (!safeLine) return;
   for (const entry of safeLine.split(/\r?\n/).filter(Boolean)) {
     job.log.push(entry);
     if (job.log.length > MAX_LOG_LINES) job.log.shift();
+    updateJobProgressFromLogLine(job, phase, entry);
   }
 }
 
@@ -50,6 +167,10 @@ function snapshot(job) {
     started_at: job.started_at,
     finished_at: job.finished_at,
     error: job.error,
+    progress: {
+      current: clampCount(job.progress?.current, job.progress?.total || Number.POSITIVE_INFINITY),
+      total: clampCount(job.progress?.total)
+    },
     log: [...job.log]
   };
 }
@@ -142,45 +263,66 @@ async function applyPhases({ applyTranslations, getStatusSummary } = {}) {
   const backendTargets = issueEntries
     .filter((entry) => normalizeText(entry.domain) === "backend")
     .map((entry) => entry.target_lang);
+  const backendEntries = issueEntries
+    .filter((entry) => normalizeText(entry.domain) === "backend");
   const frontendTargets = issueEntries
     .filter((entry) => normalizeText(entry.domain) === "frontend")
     .map((entry) => entry.target_lang);
+  const frontendEntries = issueEntries
+    .filter((entry) => normalizeText(entry.domain) === "frontend");
   const centralEntries = issueEntries
     .filter((entry) => !["backend", "frontend"].includes(normalizeText(entry.domain)));
   const centralOptions = centralApplyOptions(centralEntries);
   const phases = [];
 
   for (const targetLang of uniqueNormalized(backendTargets)) {
-    phases.push(commandPhase(
+    const progressCount = backendEntries
+      .filter((entry) => normalizeText(entry.target_lang).toLowerCase() === targetLang)
+      .reduce((total, entry) => total + countTranslationIssues(entry), 0);
+    phases.push(withProgress(commandPhase(
       `backend_translate_${targetLang}`,
       `Apply backend UI translations for ${targetLang}`,
       process.execPath,
       ["scripts/i18n/sync_backend_i18n.mjs", "translate", "--target", targetLang]
-    ));
+    ), { progress_count: progressCount }));
   }
 
   const frontendTargetLangs = uniqueNormalized(frontendTargets);
   if (frontendTargetLangs.length) {
-    phases.push(commandPhase(
+    phases.push(withProgress(commandPhase(
       "frontend_translate",
       `Apply customer-facing UI translations for ${frontendTargetLangs.join(", ")}`,
       process.execPath,
       ["scripts/i18n/sync_frontend_i18n.mjs", "translate", ...targetArgs(frontendTargetLangs)]
-    ));
+    ), progressMetadataForTargetLangs(frontendEntries, frontendTargetLangs)));
   }
 
   if (centralOptions.domains.length && typeof applyTranslations === "function") {
-    phases.push(callbackPhase("central_translate", "Translate central content and memory", async (_phase, job, helpers) => {
-      const summary = await applyTranslations(centralOptions);
+    const centralProgressKeys = [...new Set(centralEntries
+      .map(progressKeyForEntry)
+      .filter(Boolean))];
+    phases.push(withProgress(callbackPhase("central_translate", "Translate central content and memory", async (phase, job, helpers) => {
+      const summary = await applyTranslations({
+        ...centralOptions,
+        onProgress(progress = {}) {
+          const domain = normalizeText(progress.domain);
+          const targetLang = normalizeText(progress.target_lang).toLowerCase();
+          updateJobProgress(job, phase, {
+            current: progress.current,
+            total: progress.total,
+            key: domain && targetLang ? `${domain}|${targetLang}` : ""
+          });
+        }
+      });
       helpers.appendLog(
         job,
         `Translated ${summary?.translated_count || 0} central translation item${summary?.translated_count === 1 ? "" : "s"}.`
       );
-    }));
+    }), progressMetadataForEntries(centralEntries, centralProgressKeys)));
   } else if (centralOptions.domains.length) {
-    phases.push(callbackPhase("central_translate", "Translate central content and memory", async () => {
+    phases.push(withProgress(callbackPhase("central_translate", "Translate central content and memory", async () => {
       throw apiError(500, "STATIC_TRANSLATION_PROVIDER_UNAVAILABLE", "Central translation apply service is not configured.");
-    }));
+    }), progressMetadataForEntries(centralEntries)));
   }
 
   if (frontendTargetLangs.length) {
@@ -315,8 +457,8 @@ function spawnRunner({ spawnCommand, repoRoot, env }) {
       env,
       stdio: ["ignore", "pipe", "pipe"]
     });
-    child.stdout?.on("data", (chunk) => appendLog(job, chunk.toString("utf8"), env));
-    child.stderr?.on("data", (chunk) => appendLog(job, chunk.toString("utf8"), env));
+    child.stdout?.on("data", (chunk) => appendLog(job, chunk.toString("utf8"), env, phase));
+    child.stderr?.on("data", (chunk) => appendLog(job, chunk.toString("utf8"), env, phase));
     child.on("error", reject);
     child.on("close", (code) => {
       if (code === 0) {
@@ -354,15 +496,20 @@ export function createStaticTranslationApplyJobs({
     if (runningJobId) {
       throw apiError(409, "STATIC_TRANSLATION_JOB_RUNNING", "A translation apply job is already running.");
     }
+    const prepared = prepareJobPhases(phases);
     const job = {
       id: idFactory(),
       type,
       status: "running",
-      phase: phases[0]?.id || "",
-      phases: phases.map((phase) => ({ ...phase })),
+      phase: prepared.phases[0]?.id || "",
+      phases: prepared.phases,
       started_at: nowIso(),
       finished_at: "",
       error: "",
+      progress: {
+        current: 0,
+        total: prepared.progressTotal
+      },
       log: []
     };
     jobs.set(job.id, job);
@@ -379,13 +526,22 @@ export function createStaticTranslationApplyJobs({
           }
           phase.status = "running";
           appendLog(job, `Starting: ${phase.label}`, env);
+          if (!phase.progress_count && !Object.keys(phase.progress_offsets || {}).length && job.progress?.total) {
+            phase.progress_offset = job.progress.total;
+          }
+          updateJobProgress(job, phase, { current: 0, total: phase.progress_count });
           if (typeof phase.run === "function") {
             await phase.run(phase, job, {
-              appendLog: (targetJob, line) => appendLog(targetJob, line, env)
+              appendLog: (targetJob, line) => appendLog(targetJob, line, env, phase),
+              updateProgress: (targetJob, progress) => updateJobProgress(targetJob, phase, progress)
             });
           } else {
-            await executePhase(phase, job);
+            await executePhase(phase, job, {
+              appendLog: (targetJob, line) => appendLog(targetJob, line, env, phase),
+              updateProgress: (targetJob, progress) => updateJobProgress(targetJob, phase, progress)
+            });
           }
+          completePhaseProgress(job, phase);
           phase.status = "succeeded";
           appendLog(job, `Finished: ${phase.label}`, env);
         }

@@ -268,6 +268,9 @@ async function translateEntries(sourceEntries, targetLang, sourceLang, translato
       keys.forEach((key, offset) => {
         console.log(`Translating [${startIndex + offset + 1}/${totalEntries}] ${key}`);
       });
+    },
+    onEntryComplete({ key, completedEntries, totalEntries }) {
+      console.log(`Translated [${completedEntries}/${totalEntries}] ${key}`);
     }
   });
 
@@ -367,6 +370,7 @@ async function runTranslate(options) {
   const translationSourceEntries = Object.fromEntries(
     translationKeys.map((key) => [key, source[key]])
   );
+  console.log(`Backend target ${options.targetLang}: ${translationKeys.length} key${translationKeys.length === 1 ? "" : "s"} need machine translation.`);
   const translatedEntries = translationKeys.length
     ? await (async () => {
       const translatorSession = await resolveTranslatorSession(options.targetLang, options.sourceLang);
@@ -397,13 +401,15 @@ async function runTranslate(options) {
       continue;
     }
 
-    const existingTargetValue = normalizeText(target[key]);
+    const existingTargetValue = normalizeText(effective.target[key]);
     if (!existingTargetValue) {
       throw new Error(`Translation result is missing required key: ${key}`);
     }
 
-    const existingMeta = meta[key] && typeof meta[key] === "object" && !Array.isArray(meta[key]) ? meta[key] : {};
-    nextTarget[key] = target[key];
+    const existingMeta = effective.meta[key] && typeof effective.meta[key] === "object" && !Array.isArray(effective.meta[key])
+      ? effective.meta[key]
+      : {};
+    nextTarget[key] = effective.target[key];
     nextMeta[key] = {
       source_hash: expectedHash,
       origin: normalizeText(existingMeta.origin) || "legacy",

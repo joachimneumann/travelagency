@@ -11,6 +11,19 @@ async function waitForJob(service, id, status) {
   return service.getJob(id);
 }
 
+async function waitForProgress(service, id, current) {
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    const job = service.getJob(id);
+    if (Number(job.progress?.current || 0) >= current) return job;
+    await new Promise((resolve) => setTimeout(resolve, 5));
+  }
+  return service.getJob(id);
+}
+
+function withoutProgressCallbacks(options) {
+  return options.map(({ onProgress, ...rest }) => rest);
+}
+
 test("static translation apply job runs fallback apply phases in order", async () => {
   const seen = [];
   const service = createStaticTranslationApplyJobs({
@@ -164,7 +177,8 @@ test("static translation apply job only translates affected central memory domai
 
   assert.equal(finished.status, "succeeded");
   assert.deepEqual(seen, ["central translations"]);
-  assert.deepEqual(applyOptions, [
+  assert.equal(typeof applyOptions[0]?.onProgress, "function");
+  assert.deepEqual(withoutProgressCallbacks(applyOptions), [
     {
       domains: ["marketing-tour-memory"],
       target_langs_by_domain: {
@@ -228,7 +242,8 @@ test("static translation apply job publishes automatically after translation iss
   const finished = await waitForJob(service, "job-auto-publish", "succeeded");
 
   assert.equal(finished.status, "succeeded");
-  assert.deepEqual(applyOptions, [
+  assert.equal(typeof applyOptions[0]?.onProgress, "function");
+  assert.deepEqual(withoutProgressCallbacks(applyOptions), [
     {
       domains: ["marketing-tour-memory"],
       target_langs_by_domain: {
@@ -288,6 +303,86 @@ test("static translation apply job limits frontend scripts to affected languages
   assert.match(seen[0], /sync_frontend_i18n\.mjs translate --target de --target vi$/);
   assert.match(seen[1], /generate_public_homepage_assets\.mjs$/);
   assert.match(seen[2], /sync_frontend_i18n\.mjs check --target de --target vi$/);
+});
+
+test("static translation apply job exposes command translation progress", async () => {
+  let release;
+  const blocked = new Promise((resolve) => {
+    release = resolve;
+  });
+  const service = createStaticTranslationApplyJobs({
+    repoRoot: "/tmp/repo",
+    nowIso: () => "2026-04-28T00:00:00.000Z",
+    idFactory: () => "job-command-progress",
+    getStatusSummary: async () => ({
+      languages: [
+        {
+          domain: "backend",
+          target_lang: "vi",
+          missing_count: 15075,
+          stale_count: 0,
+          legacy_count: 0
+        }
+      ]
+    }),
+    runCommand: async (phase, job, helpers) => {
+      if (phase.id === "backend_translate_vi") {
+        helpers.appendLog(job, "Translated [100/15075] backend.example");
+        await blocked;
+      }
+    }
+  });
+
+  const started = await service.startApply();
+  assert.equal(started.progress.total, 15075);
+  const running = await waitForProgress(service, "job-command-progress", 100);
+  assert.deepEqual(running.progress, { current: 100, total: 15075 });
+
+  release();
+  const finished = await waitForJob(service, "job-command-progress", "succeeded");
+  assert.deepEqual(finished.progress, { current: 15075, total: 15075 });
+});
+
+test("static translation apply job exposes central translation progress", async () => {
+  let release;
+  const blocked = new Promise((resolve) => {
+    release = resolve;
+  });
+  const service = createStaticTranslationApplyJobs({
+    repoRoot: "/tmp/repo",
+    nowIso: () => "2026-04-28T00:00:00.000Z",
+    idFactory: () => "job-central-progress",
+    getStatusSummary: async () => ({
+      languages: [
+        {
+          domain: "marketing-tour-memory",
+          target_lang: "vi",
+          missing_count: 5,
+          stale_count: 0,
+          legacy_count: 0
+        }
+      ]
+    }),
+    applyTranslations: async (options) => {
+      options.onProgress({
+        domain: "marketing-tour-memory",
+        target_lang: "vi",
+        current: 2,
+        total: 5
+      });
+      await blocked;
+      return { translated_count: 5 };
+    }
+  });
+
+  const started = await service.startApply();
+  assert.equal(started.progress.total, 5);
+  const running = await waitForProgress(service, "job-central-progress", 2);
+  assert.deepEqual(running.progress, { current: 2, total: 5 });
+
+  release();
+  const finished = await waitForJob(service, "job-central-progress", "succeeded");
+  assert.deepEqual(finished.progress, { current: 5, total: 5 });
 });
 
 test("static translation advanced job clears marketing tour memory cache without translating", async () => {

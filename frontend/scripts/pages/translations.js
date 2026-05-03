@@ -59,6 +59,7 @@ const els = {
   retranslateBackendViBtn: document.getElementById("translationsRetranslateBackendViBtn"),
   overlay: document.getElementById("translationsApplyOverlay"),
   overlayText: document.getElementById("translationsApplyOverlayText"),
+  overlayProgress: document.getElementById("translationsApplyProgress"),
   applyLog: document.getElementById("translationsApplyLog")
 };
 
@@ -90,8 +91,10 @@ const fetchApi = createApiFetcher({
 
 function showError(message) {
   if (!els.error) return;
-  els.error.textContent = normalizeText(message);
-  els.error.hidden = !normalizeText(message);
+  const text = normalizeText(message);
+  els.error.textContent = text;
+  els.error.hidden = !text;
+  els.error.classList.toggle("show", Boolean(text));
 }
 
 function setStatus(message) {
@@ -372,6 +375,7 @@ function updateActions() {
     section.els.table?.querySelectorAll("[data-cache-delete-key]").forEach((button) => {
       button.disabled = !state.permissions.canEditTranslations || sectionControlsBusy;
     });
+    updateFilteredCacheDeleteAction(section);
   }
   for (const section of state.sections.values()) {
     if (section.els.languageSelect) {
@@ -436,6 +440,9 @@ function sectionTemplate(config) {
         </div>
 
         <div class="translations-summary" data-section-summary></div>
+        <div class="translations-filter-actions" data-section-filter-actions hidden>
+          <button class="btn btn-ghost translations-filter-delete-btn" type="button" data-section-delete-filtered-cache>Delete these 0 translations</button>
+        </div>
 
         <div class="backend-table-wrap translations-table-wrap">
           <table class="backend-table translations-table" data-section-table></table>
@@ -468,6 +475,8 @@ function renderSectionCards() {
         searchInput: root?.querySelector("[data-section-search]") || null,
         statusFilter: root?.querySelector("[data-section-filter]") || null,
         summary: root?.querySelector("[data-section-summary]") || null,
+        filterActions: root?.querySelector("[data-section-filter-actions]") || null,
+        deleteFilteredCacheBtn: root?.querySelector("[data-section-delete-filtered-cache]") || null,
         table: root?.querySelector("[data-section-table]") || null,
         exportBtn: root?.querySelector("[data-section-export]") || null,
         importBtn: root?.querySelector("[data-section-import]") || null,
@@ -668,6 +677,33 @@ function filteredRows(section) {
     ]
       .some((value) => normalizeText(value).toLowerCase().includes(query));
   });
+}
+
+function filteredCachedRows(section) {
+  return filteredRows(section).filter((row) => normalizeText(row.cached));
+}
+
+function hasActiveSearch(section) {
+  return Boolean(normalizeText(section?.els?.searchInput?.value));
+}
+
+function updateFilteredCacheDeleteAction(section) {
+  const actions = section?.els?.filterActions;
+  const button = section?.els?.deleteFilteredCacheBtn;
+  if (!actions || !button) return;
+  const visible = Boolean(section?.current) && hasActiveSearch(section);
+  const count = visible ? filteredCachedRows(section).length : 0;
+  actions.hidden = !visible;
+  button.textContent = `Delete these ${count} translation${count === 1 ? "" : "s"}`;
+  button.disabled = !count
+    || !state.permissions.canEditTranslations
+    || state.isSaving
+    || state.isJobRunning
+    || state.isLoadingSections
+    || section.dirty.size > 0;
+  button.title = section.dirty.size
+    ? "Save manual override edits before deleting cached translations."
+    : "Delete cached translations for the current search results. Manual overrides stay unchanged.";
 }
 
 function rowOverrideValue(section, row) {
@@ -934,6 +970,67 @@ async function deleteCachedTranslation(section, rowId) {
   }
 }
 
+function revisionMapForSection(section) {
+  const revisions = new Map();
+  for (const entry of Array.isArray(section?.current?.states) ? section.current.states : []) {
+    revisions.set(stateIdentity(entry.domain?.id, entry.target_lang), entry.revision || "");
+  }
+  if (section?.current?.domain?.id && section.current.target_lang) {
+    revisions.set(stateIdentity(section.current.domain.id, section.current.target_lang), section.current.revision || "");
+  }
+  return revisions;
+}
+
+async function deleteFilteredCachedTranslations(section) {
+  if (!section?.current || !hasActiveSearch(section)) return;
+  if (!state.permissions.canEditTranslations) {
+    showError("Translation editing is disabled in this environment.");
+    return;
+  }
+  if (section.dirty.size) {
+    showError("Save manual override edits before deleting cached translations.");
+    return;
+  }
+  const rows = filteredCachedRows(section);
+  if (!rows.length) return;
+  if (!window.confirm(`Delete cached translations for these ${rows.length} search result${rows.length === 1 ? "" : "s"}? Manual overrides will stay unchanged.`)) return;
+
+  state.isSaving = true;
+  updateActions();
+  const revisions = revisionMapForSection(section);
+  let deletedCount = 0;
+  setSectionStatus(section, `Deleting cached translations (0/${rows.length})...`);
+  try {
+    for (const row of rows) {
+      const stateId = stateIdentity(row.domain_id, row.target_lang);
+      const payload = await fetchApi(
+        `/api/v1/static-translations/${encodeURIComponent(row.domain_id)}/${encodeURIComponent(row.target_lang)}/cache/${encodeURIComponent(row.key)}`,
+        {
+          method: "DELETE",
+          body: {
+            expected_revision: revisions.get(stateId) || section.current.revision
+          }
+        }
+      );
+      if (payload?.revision) revisions.set(stateId, payload.revision);
+      deletedCount += 1;
+      if (deletedCount === rows.length || deletedCount % 10 === 0) {
+        setSectionStatus(section, `Deleting cached translations (${deletedCount}/${rows.length})...`);
+      }
+    }
+    section.dirty.clear();
+    setSectionStatus(section, "Cached translations deleted. Reloading manual override table...");
+    await loadSectionState(section, { preserveLanguage: true });
+    setSectionStatus(section, "Cached translations deleted. Updating translation state...");
+    showError("");
+    await loadTranslationStatus({ updateMessage: true });
+    setSectionStatus(section, `Deleted ${pluralize(deletedCount, "cached translation")}. Manual overrides stayed unchanged.`);
+  } finally {
+    state.isSaving = false;
+    updateActions();
+  }
+}
+
 function translationsTableHeadHtml(section) {
   const isCustomer = isCustomerSectionConfig(section?.config);
   const customerCols = isCustomer
@@ -1070,6 +1167,7 @@ function renderTable(section) {
       void deleteCachedTranslation(section, key);
     });
   });
+  updateFilteredCacheDeleteAction(section);
   updateActions();
 }
 
@@ -1231,6 +1329,10 @@ function setOverlayVisible(visible, text = "") {
   els.overlay.hidden = !visible;
   els.overlay.setAttribute("aria-hidden", visible ? "false" : "true");
   if (els.overlayText && text) els.overlayText.textContent = text;
+  if (!visible) {
+    setOverlayProgress("");
+    setOverlayLog("");
+  }
 }
 
 function setOverlayLog(text = "") {
@@ -1238,6 +1340,20 @@ function setOverlayLog(text = "") {
   const logText = String(text || "");
   els.applyLog.textContent = logText;
   els.applyLog.hidden = !normalizeText(logText);
+}
+
+function formatJobProgress(progress) {
+  const total = numberCount(progress?.total);
+  if (!total) return "";
+  const current = Math.min(numberCount(progress?.current), total);
+  return `${current}/${total}`;
+}
+
+function setOverlayProgress(text = "") {
+  if (!els.overlayProgress) return;
+  const progressText = normalizeText(text);
+  els.overlayProgress.textContent = progressText;
+  els.overlayProgress.hidden = !progressText;
 }
 
 function waitForMs(ms) {
@@ -1269,6 +1385,7 @@ function renderJob(job) {
   const phase = job.phases?.find((entry) => entry.status === "running");
   const label = phase?.label || (job.status === "succeeded" ? "Finished." : translationsApplyingOverlayText());
   if (els.overlayText) els.overlayText.textContent = label;
+  setOverlayProgress(formatJobProgress(job.progress));
   setOverlayLog(Array.isArray(job.log) ? job.log.slice(-80).join("\n") : "");
 }
 
@@ -1292,6 +1409,7 @@ async function pollJob(jobId, overlayStartedAt) {
     let translationStatus = null;
     try {
       setOverlayVisible(true, translationsRefreshingOverlayText());
+      setOverlayProgress("");
       await loadAllSections({ preserveLanguage: true });
       translationStatus = state.translationStatus;
     } finally {
@@ -1372,6 +1490,7 @@ async function startJob(path, body = null, overlayText = translationsApplyingOve
   updateActions();
   const overlayStartedAt = Date.now();
   setOverlayVisible(true, overlayText);
+  setOverlayProgress("");
   setOverlayLog("");
   await waitForNextPaint();
   const payload = await fetchApi(path, {
@@ -1400,6 +1519,9 @@ function bindSectionEvents(section) {
   section.els.exportBtn?.addEventListener("click", () => exportOverrides(section));
   section.els.importBtn?.addEventListener("click", () => section.els.importInput?.click());
   section.els.importInput?.addEventListener("change", () => importOverridesFile(section, section.els.importInput.files?.[0] || null));
+  section.els.deleteFilteredCacheBtn?.addEventListener("click", () => {
+    void deleteFilteredCachedTranslations(section);
+  });
   section.els.saveBtn?.addEventListener("click", () => saveOverrides(section));
 }
 

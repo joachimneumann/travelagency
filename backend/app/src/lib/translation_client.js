@@ -534,7 +534,11 @@ export function createTranslationClient({
       exact_override_count: exactEntryCount
     });
 
-    await mapWithConcurrency(Object.entries(entries || {}), googleMaxConcurrency, async ([key, value]) => {
+    const googleEntries = Object.entries(entries || {});
+    const onEntryComplete = typeof options?.onEntryComplete === "function" ? options.onEntryComplete : null;
+    let completedEntries = 0;
+
+    await mapWithConcurrency(googleEntries, googleMaxConcurrency, async ([key, value]) => {
       const sourceText = normalizeText(value);
       if (!sourceText) return;
       const params = new URLSearchParams({
@@ -563,6 +567,14 @@ export function createTranslationClient({
             throw error;
           }
           translated[key] = translatedText;
+          completedEntries += 1;
+          if (onEntryComplete) {
+            onEntryComplete({
+              key,
+              completedEntries,
+              totalEntries: googleEntries.length
+            });
+          }
           logTranslationTiming("Google translation entry finished", {
             trace_id: traceId,
             source_lang: sourceLangCode,

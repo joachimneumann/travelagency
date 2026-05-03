@@ -1002,6 +1002,17 @@ export function createStaticTranslationService({
       };
     }
 
+    const onProgress = typeof options.onProgress === "function" ? options.onProgress : null;
+    const onChunkStart = typeof options.onChunkStart === "function" ? options.onChunkStart : null;
+    const reportProgress = (current) => {
+      if (!onProgress) return;
+      onProgress({
+        domain: config.id,
+        target_lang: language.code,
+        current: Math.max(0, Math.min(candidates.length, Number(current) || 0)),
+        total: candidates.length
+      });
+    };
     const translate = typeof options.translateEntriesWithMeta === "function"
       ? options.translateEntriesWithMeta
       : translateEntriesWithMeta;
@@ -1010,6 +1021,7 @@ export function createStaticTranslationService({
     }
 
     const entries = Object.fromEntries(candidates.map((row) => [row.key, row.source]));
+    reportProgress(0);
     const result = await translate(entries, language.code, {
       sourceLangCode: configSourceLang(config),
       domain: config.label,
@@ -1017,7 +1029,20 @@ export function createStaticTranslationService({
       cacheNamespace: `static-translations:${config.id}`,
       translationProfile: translationProfileForConfig(config),
       translationRules: await loadTranslationRulesForApply(options),
-      allowGoogleFallback: true
+      allowGoogleFallback: true,
+      onEntryComplete(entry) {
+        reportProgress(Number(entry?.completedEntries || 0));
+      },
+      onChunkStart(chunk) {
+        reportProgress(Number(chunk?.startIndex || 0) + (Array.isArray(chunk?.keys) ? chunk.keys.length : 0));
+        if (onChunkStart) {
+          onChunkStart({
+            ...chunk,
+            domain: config.id,
+            target_lang: language.code
+          });
+        }
+      }
     });
     const translatedEntries = Object.fromEntries(
       Object.entries(result?.entries || {})
@@ -1032,6 +1057,7 @@ export function createStaticTranslationService({
       await translationMemoryStore.writeMachineTranslations(entries, translatedEntries, language.code, result?.provider || null);
     }
 
+    reportProgress(candidates.length);
     return {
       requested_count: candidates.length,
       translated_count: Object.keys(translatedEntries).length
@@ -1047,6 +1073,17 @@ export function createStaticTranslationService({
       };
     }
 
+    const onProgress = typeof options.onProgress === "function" ? options.onProgress : null;
+    const onChunkStart = typeof options.onChunkStart === "function" ? options.onChunkStart : null;
+    const reportProgress = (current) => {
+      if (!onProgress) return;
+      onProgress({
+        domain: config.id,
+        target_lang: language.code,
+        current: Math.max(0, Math.min(candidates.length, Number(current) || 0)),
+        total: candidates.length
+      });
+    };
     const translate = typeof options.translateEntriesWithMeta === "function"
       ? options.translateEntriesWithMeta
       : translateEntriesWithMeta;
@@ -1055,6 +1092,7 @@ export function createStaticTranslationService({
     }
 
     const entries = Object.fromEntries(candidates.map((row) => [row.key, row.source]));
+    reportProgress(0);
     const result = await translate(entries, language.code, {
       sourceLangCode: configSourceLang(config),
       domain: config.label,
@@ -1062,7 +1100,20 @@ export function createStaticTranslationService({
       cacheNamespace: `static-translations:${config.id}`,
       translationProfile: translationProfileForConfig(config),
       translationRules: await loadTranslationRulesForApply(options),
-      allowGoogleFallback: true
+      allowGoogleFallback: true,
+      onEntryComplete(entry) {
+        reportProgress(Number(entry?.completedEntries || 0));
+      },
+      onChunkStart(chunk) {
+        reportProgress(Number(chunk?.startIndex || 0) + (Array.isArray(chunk?.keys) ? chunk.keys.length : 0));
+        if (onChunkStart) {
+          onChunkStart({
+            ...chunk,
+            domain: config.id,
+            target_lang: language.code
+          });
+        }
+      }
     });
     const translatedEntries = Object.fromEntries(
       Object.entries(result?.entries || {})
@@ -1073,6 +1124,7 @@ export function createStaticTranslationService({
       await persistDestinationScopeCatalogTargets(language.code, translatedEntries);
     }
 
+    reportProgress(candidates.length);
     return {
       requested_count: candidates.length,
       translated_count: Object.keys(translatedEntries).length

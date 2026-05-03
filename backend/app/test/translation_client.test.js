@@ -237,6 +237,7 @@ test("google translation runs entries with bounded concurrency", async () => {
       googleFallbackEnabled: true,
       googleConcurrency: 2
     });
+    const completions = [];
     const translated = await client.translateEntries(
       {
         first: "One",
@@ -247,7 +248,10 @@ test("google translation runs entries with bounded concurrency", async () => {
       "fr",
       {
         sourceLangCode: "en",
-        allowGoogleFallback: true
+        allowGoogleFallback: true,
+        onEntryComplete(entry) {
+          completions.push(entry);
+        }
       }
     );
 
@@ -259,6 +263,8 @@ test("google translation runs entries with bounded concurrency", async () => {
     });
     assert.equal(callCount, 4);
     assert.equal(maxInFlight, 2);
+    assert.deepEqual(completions.map((entry) => entry.completedEntries).sort((a, b) => a - b), [1, 2, 3, 4]);
+    assert.deepEqual(new Set(completions.map((entry) => entry.totalEntries)), new Set([4]));
   } finally {
     globalThis.fetch = originalFetch;
   }
