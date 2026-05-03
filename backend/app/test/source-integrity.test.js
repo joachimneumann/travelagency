@@ -166,7 +166,12 @@ test("runtime i18n preflight is generated from snapshots and local backend start
   assert.match(
     localI18nPreflightSource,
     /source "\$runtime_i18n_helper"[\s\S]*run_runtime_i18n_generator_quiet "\$root_dir" "\$runtime_i18n_script"/,
-    "Local runtime i18n preflight should use the shared helper so missing snapshots fail with a clear message"
+    "Local runtime i18n preflight should use the shared helper for strict snapshot generation when snapshots exist"
+  );
+  assert.match(
+    localI18nPreflightSource,
+    /snapshot_manifest="\$root_dir\/content\/translations\/manifest\.json"[\s\S]*Warning: published translation snapshot missing:[\s\S]*open translations\.html and run Translate everything[\s\S]*return 0/,
+    "Local runtime i18n preflight should allow first-run bootstrap when published snapshots are missing"
   );
   assert.match(
     localI18nPreflightSource,
