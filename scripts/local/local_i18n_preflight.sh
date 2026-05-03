@@ -34,7 +34,7 @@ run_local_i18n_preflight() {
   if [[ ! -f "$snapshot_manifest" ]]; then
     echo "Warning: published translation snapshot missing: $snapshot_manifest" >&2
     echo "Local deploy will continue so you can publish the first snapshot from translations.html." >&2
-    echo "After startup, open translations.html and run Translate everything." >&2
+    echo "After startup, open translations.html and run Translate." >&2
     export LOCAL_I18N_PREFLIGHT_DONE=1
     return 0
   fi

@@ -1,5 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
 import { createTranslationClient } from "../src/lib/translation_client.js";
 
 test("google fallback preserves sentence spacing between translated segments", async () => {
@@ -390,6 +393,100 @@ test("global translation rules are restored inside longer translated strings", a
     assert.match(decodeURIComponent(requestUrl), /\[\[ATP_TRANSLATION_RULE_0\]\]/);
   } finally {
     globalThis.fetch = originalFetch;
+  }
+});
+
+test("global protected terms are loaded from file and restored inside longer translated strings", async () => {
+  const originalFetch = globalThis.fetch;
+  const tempDir = await mkdtemp(path.join(os.tmpdir(), "atp-protected-terms-"));
+  const protectedTermsPath = path.join(tempDir, "translation_protected_terms.json");
+  await writeFile(protectedTermsPath, `${JSON.stringify({
+    items: ["Asia Travel Plan", "backend"],
+    updated_at: null
+  }, null, 2)}\n`, "utf8");
+
+  let requestedSource = "";
+  globalThis.fetch = async (url) => {
+    const requestUrl = new URL(String(url || ""));
+    requestedSource = requestUrl.searchParams.get("q") || "";
+    return {
+      ok: true,
+      async json() {
+        return [[
+          ["Ouvrez [[ATP_TRANSLATION_RULE_0]] [[ATP_TRANSLATION_RULE_1]].", null, null, null]
+        ]];
+      }
+    };
+  };
+
+  try {
+    const client = createTranslationClient({
+      apiKey: "",
+      protectedTermsPath,
+      googleFallbackEnabled: true
+    });
+    const translated = await client.translateEntries(
+      {
+        value: "Open Asia Travel Plan backend."
+      },
+      "fr",
+      {
+        sourceLangCode: "en",
+        provider: "google",
+        cacheNamespace: "protected-terms"
+      }
+    );
+
+    assert.equal(translated.value, "Ouvrez Asia Travel Plan backend.");
+    assert.equal(requestedSource, "Open [[ATP_TRANSLATION_RULE_0]] [[ATP_TRANSLATION_RULE_1]].");
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(tempDir, { recursive: true, force: true });
+  }
+});
+
+test("global protected terms can satisfy an exact match without calling a provider", async () => {
+  const originalFetch = globalThis.fetch;
+  const tempDir = await mkdtemp(path.join(os.tmpdir(), "atp-protected-terms-"));
+  const protectedTermsPath = path.join(tempDir, "translation_protected_terms.json");
+  await writeFile(protectedTermsPath, `${JSON.stringify({
+    items: ["backend"],
+    updated_at: null
+  }, null, 2)}\n`, "utf8");
+  let callCount = 0;
+  globalThis.fetch = async () => {
+    callCount += 1;
+    return {
+      ok: true,
+      async json() {
+        return [[["ignored", null, null, null]]];
+      }
+    };
+  };
+
+  try {
+    const client = createTranslationClient({
+      apiKey: "",
+      protectedTermsPath,
+      googleFallbackEnabled: true
+    });
+    const translated = await client.translateEntries(
+      {
+        value: "backend"
+      },
+      "vi",
+      {
+        sourceLangCode: "en",
+        provider: "google",
+        cacheNamespace: "protected-terms-exact"
+      }
+    );
+
+    assert.equal(translated.value, "backend");
+    assert.equal(callCount, 0);
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(tempDir, { recursive: true, force: true });
   }
 });
 

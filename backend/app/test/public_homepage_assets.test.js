@@ -43,10 +43,6 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
     "hero.title": "Privaturlaub in Vietnam, Thailand, Kambodscha und Laos",
     "hero.title_with_destinations": "Privaturlaub in {destinations}"
   });
-  await writeJson(path.join(frontendI18nDir, "vi.json"), {
-    "hero.title": "Ky nghi rieng o Viet Nam",
-    "hero.title_with_destinations": "Ky nghi rieng o {destinations}"
-  });
   await writeFile(
     homepageHtmlPath,
     '<!doctype html><html><head><title data-i18n-id="meta.home_title">Old title</title><meta name="description" content="Old description" data-i18n-content-id="meta.home_description"><meta property="og:title" content="Old title" data-i18n-content-id="meta.home_title"><script type="application/ld+json">{"@context":"https://schema.org","@type":"TravelAgency","description":"Old schema","areaServed":["Vietnam","Thailand"]}</script></head><body><h1 id="heroTitle" class="hero-title-only" data-i18n-id="hero.title">Old title</h1><script src="/frontend/data/generated/homepage/public-homepage-copy.global.js"></script></body></html>\n'

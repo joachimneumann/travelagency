@@ -310,6 +310,8 @@ async function resolveTranslatorSession(targetLang, sourceLang) {
   const model = normalizeText(process.env.OPENAI_TRANSLATION_MODEL || process.env.OPENAI_MODEL) || DEFAULT_OPENAI_TRANSLATION_MODEL;
   const organizationId = normalizeText(process.env.OPENAI_ORGANIZATION_ID);
   const projectId = normalizeText(process.env.OPENAI_PROJECT_ID);
+  const protectedTermsPath = normalizeText(process.env.TRANSLATION_PROTECTED_TERMS_PATH)
+    || path.join(ROOT, "content", "translation_protected_terms.json");
   const probeEntries = { __probe: "Public AsiaTravelPlan website translation check." };
   const probeOptions = {
     sourceLang: promptLanguageName(sourceLang, "English"),
@@ -325,6 +327,7 @@ async function resolveTranslatorSession(targetLang, sourceLang) {
       model,
       organizationId,
       projectId,
+      protectedTermsPath,
       googleFallbackEnabled: false
     });
     try {
@@ -346,6 +349,7 @@ async function resolveTranslatorSession(targetLang, sourceLang) {
   const googleClient = createTranslationClient({
     apiKey: "",
     model,
+    protectedTermsPath,
     googleFallbackEnabled: true
   });
   await googleClient.translateEntries(probeEntries, targetLang, {

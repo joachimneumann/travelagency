@@ -888,7 +888,7 @@ async function buildHeroTitleByLang({
   const result = {};
   for (const lang of languages) {
     const normalizedLang = normalizeTourLang(lang);
-    const dictionary = await readJson(path.join(frontendI18nDir, `${normalizedLang}.json`), {});
+    const dictionary = await readJson(path.join(frontendI18nDir, `${normalizedLang}.json`), { fallback: {} });
     const destinationLabels = destinationLabelsForCountryCodes(publishedCountryCodes, normalizedLang);
     const defaultTitle = normalizeText(dictionary["hero.title"]);
     const genericTitle = normalizeText(dictionary["hero.title_generic"]) || "Private Holidays in Southeast Asia";
@@ -919,7 +919,7 @@ async function buildDestinationPromiseCopyByLang({
 
   for (const lang of languages) {
     const normalizedLang = normalizeTourLang(lang);
-    const dictionary = await readJson(path.join(frontendI18nDir, `${normalizedLang}.json`), {});
+    const dictionary = await readJson(path.join(frontendI18nDir, `${normalizedLang}.json`), { fallback: {} });
     const destinationLabels = destinationLabelsForCountryCodes(publishedCountryCodes, normalizedLang);
     const destinationList = formatLocalizedList(destinationLabels, normalizedLang);
     const defaultTitle = normalizeText(dictionary["meta.home_title"]) || "AsiaTravelPlan | Custom Holidays";

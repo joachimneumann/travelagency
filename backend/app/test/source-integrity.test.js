@@ -170,7 +170,7 @@ test("runtime i18n preflight is generated from snapshots and local backend start
   );
   assert.match(
     localI18nPreflightSource,
-    /snapshot_manifest="\$root_dir\/content\/translations\/manifest\.json"[\s\S]*Warning: published translation snapshot missing:[\s\S]*open translations\.html and run Translate everything[\s\S]*return 0/,
+    /snapshot_manifest="\$root_dir\/content\/translations\/manifest\.json"[\s\S]*Warning: published translation snapshot missing:[\s\S]*open translations\.html and run Translate[\s\S]*return 0/,
     "Local runtime i18n preflight should allow first-run bootstrap when published snapshots are missing"
   );
   assert.match(
@@ -4451,8 +4451,8 @@ test("translations page exposes one translate action that auto-publishes clean s
 
   assert.match(
     translationsHtml,
-    /id="translationsTranslateBtn"[\s\S]*>Translate everything<\/button>/,
-    "translations.html should expose a top-level Translate everything action"
+    /id="translationsTranslateBtn"[\s\S]*>Translate<\/button>/,
+    "translations.html should expose a top-level Translate action"
   );
   assert.doesNotMatch(
     `${translationsHtml}\n${translationsSource}`,
@@ -4541,8 +4541,8 @@ test("translations page exposes one translate action that auto-publishes clean s
   );
   assert.match(
     translationsSource,
-    /function translationStatusMessage\(status\)[\s\S]*const base = `\$\{count\} \$\{subject\} \$\{verb\} translation before publishing\.`[\s\S]*ready to publish with Translate everything\./,
-    "The status text above Translate everything should explain that publish-ready strings are handled by the global action"
+    /function translationStatusMessage\(status\)[\s\S]*const base = `\$\{count\} \$\{subject\} \$\{verb\} translation before publishing\.`[\s\S]*ready to publish with Translate\./,
+    "The status text above Translate should explain that publish-ready strings are handled by the global action"
   );
   assert.match(
     translationsSource,
@@ -4566,8 +4566,18 @@ test("translations page exposes one translate action that auto-publishes clean s
   );
   assert.match(
     translationsSource,
-    /CUSTOMER_DOMAIN_CONFIGS = \[[\s\S]*domainId:\s*"frontend"[\s\S]*domainId:\s*"index-content-memory"[\s\S]*domainId:\s*"marketing-tour-memory"[\s\S]*domains:\s*CUSTOMER_DOMAIN_CONFIGS/,
-    "The customer section should join Customer UI, index.html texts, and Marketing tours"
+    /CUSTOMER_DOMAIN_CONFIGS = \[[\s\S]*domainId:\s*"frontend"[\s\S]*domainId:\s*"index-content-memory"[\s\S]*domainId:\s*"marketing-tour-memory"[\s\S]*domainId:\s*"destination-scope-catalog"[\s\S]*domains:\s*CUSTOMER_DOMAIN_CONFIGS/,
+    "The customer section should join Customer UI, index.html texts, Marketing tours, and tour destinations"
+  );
+  assert.match(
+    staticTranslationsSource,
+    /"destination-scope-catalog": \{[\s\S]*kind: "destination_scope_catalog"[\s\S]*label: "Tour destinations"[\s\S]*section: "customers"[\s\S]*subsection: "tour-destinations"/,
+    "Tour destination labels should be exposed as a customer translation domain"
+  );
+  assert.match(
+    staticTranslationsSource,
+    /function translateDestinationScopeCatalogRows[\s\S]*translationProfileForConfig\(config\)[\s\S]*persistDestinationScopeCatalogTargets/,
+    "Translate should translate missing destination-scope catalog labels back into the catalog"
   );
   assert.match(
     translationsSource,

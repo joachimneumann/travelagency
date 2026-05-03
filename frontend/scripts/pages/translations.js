@@ -11,7 +11,8 @@ const ROLES = { ADMIN: "atp_admin" };
 const CUSTOMER_DOMAIN_CONFIGS = [
   { domainId: "frontend", label: "Customer UI" },
   { domainId: "index-content-memory", label: "index.html texts" },
-  { domainId: "marketing-tour-memory", label: "Marketing tours" }
+  { domainId: "marketing-tour-memory", label: "Marketing tours" },
+  { domainId: "destination-scope-catalog", label: "Tour destinations" }
 ];
 
 const SECTION_CONFIGS = [
@@ -27,7 +28,7 @@ const SECTION_CONFIGS = [
   {
     key: "customers",
     title: "For customers",
-    description: "Manual overrides for Customer UI, index.html texts, and Marketing tours.",
+    description: "Manual overrides for Customer UI, index.html texts, Marketing tours, and tour destinations.",
     customer: true,
     domains: CUSTOMER_DOMAIN_CONFIGS
   }
@@ -111,6 +112,10 @@ function translationsTranslateOverlayText() {
 
 function translationsRefreshingOverlayText() {
   return backendT("backend.translations.refreshing_overlay", "Refreshing translation state. Please wait.");
+}
+
+function translationsLoadingStatusOverlayText() {
+  return translationsRefreshingOverlayText();
 }
 
 function retranslateFrontendAllOverlayText() {
@@ -283,7 +288,7 @@ function translationStatusMessage(status) {
   const base = `${count} ${subject} ${verb} translation before publishing.`;
   if (count > 0) return base;
   if (status.publishReadyCount > 0) {
-    return `${base} ${pluralize(status.publishReadyCount, "translated string")} ready to publish with Translate everything.`;
+    return `${base} ${pluralize(status.publishReadyCount, "translated string")} ready to publish with Translate.`;
   }
   if (status.dirty) {
     return `${base} ${pluralize(status.dirtyCount, "translation item")} still need attention.`;
@@ -790,43 +795,68 @@ function exportOverrides(section) {
   setSectionStatus(section, `Exported ${Object.keys(overrides).length} manual overrides.`);
 }
 
-function normalizeImportedOverrides(parsed, section) {
+function normalizeImportedOverrideEntries(parsed, section) {
   const rawOverrides = parsed?.overrides && typeof parsed.overrides === "object" && !Array.isArray(parsed.overrides)
     ? parsed.overrides
     : parsed;
   if (!rawOverrides || typeof rawOverrides !== "object" || Array.isArray(rawOverrides)) {
     throw new Error("Import file must contain a JSON object of manual translation overrides.");
   }
+  const entries = [];
   for (const [key, value] of Object.entries(rawOverrides)) {
     if (!isCustomerSectionConfig(section.config) && value !== null && typeof value === "object") {
       throw new Error(`Manual override value for ${key} must be text.`);
     }
+    const details = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    const override = normalizeText(details.override ?? value);
+    if (!normalizeText(key) || !override) continue;
+    entries.push({
+      importedKey: normalizeText(key),
+      domain: normalizeText(details.domain),
+      targetLang: normalizeText(details.target_lang),
+      source: normalizeText(details.source),
+      override
+    });
   }
-  return Object.fromEntries(
-    Object.entries(rawOverrides)
-      .map(([key, value]) => [
-        normalizeText(key),
-        normalizeText(value && typeof value === "object" && !Array.isArray(value) ? value.override : value)
-      ])
-      .filter(([key, value]) => key && value)
-  );
+  return entries;
 }
 
-function resolveImportedOverrideKey(section, importedKey) {
+function resolveImportedOverrideKeys(section, entry) {
   const rows = sourceRows(section);
-  const directId = normalizeText(importedKey);
-  if (rows.some((row) => rowIdentity(row) === directId)) return directId;
+  const directId = normalizeText(entry?.importedKey);
+  if (rows.some((row) => rowIdentity(row) === directId)) return [directId];
+
   const matchingRows = rows.filter((row) => row.key === directId);
-  return matchingRows.length === 1 ? rowIdentity(matchingRows[0]) : directId;
+  if (matchingRows.length === 1) return [rowIdentity(matchingRows[0])];
+
+  const source = normalizeText(entry?.source);
+  if (!source || !isCustomerSectionConfig(section.config)) return [directId];
+  const domain = normalizeText(entry?.domain);
+  const targetLang = normalizeText(entry?.targetLang);
+  const portableMatches = rows.filter((row) => (
+    normalizeText(row.source) === source
+    && (!domain || normalizeText(row.domain_id) === domain)
+    && (!targetLang || normalizeText(row.target_lang) === targetLang)
+  ));
+  return portableMatches.length ? portableMatches.map((row) => rowIdentity(row)) : [directId];
 }
 
-function stageImportedOverrides(section, importedOverrides) {
+function stageImportedOverrides(section, importedEntries) {
   const rows = sourceRows(section);
   const sourceKeySet = new Set(rows.map((row) => rowIdentity(row)));
-  const resolvedOverrides = Object.fromEntries(
-    Object.entries(importedOverrides).map(([key, value]) => [resolveImportedOverrideKey(section, key), value])
-  );
-  const unknownKeys = Object.keys(resolvedOverrides).filter((key) => !sourceKeySet.has(key));
+  const resolvedOverrides = new Map();
+  const unknownKeys = [];
+  for (const entry of importedEntries) {
+    const keys = resolveImportedOverrideKeys(section, entry);
+    const knownKeys = keys.filter((key) => sourceKeySet.has(key));
+    if (!knownKeys.length) {
+      unknownKeys.push(entry.importedKey);
+      continue;
+    }
+    for (const key of knownKeys) {
+      resolvedOverrides.set(key, entry.override);
+    }
+  }
   if (unknownKeys.length) {
     const preview = unknownKeys.slice(0, 8).join(", ");
     throw new Error(`Import contains unknown translation keys: ${preview}${unknownKeys.length > 8 ? ", ..." : ""}`);
@@ -834,7 +864,7 @@ function stageImportedOverrides(section, importedOverrides) {
 
   section.dirty.clear();
   for (const row of rows) {
-    const importedValue = normalizeText(resolvedOverrides[rowIdentity(row)]);
+    const importedValue = normalizeText(resolvedOverrides.get(rowIdentity(row)));
     const currentValue = normalizeText(row.override);
     if (importedValue !== currentValue) {
       section.dirty.set(rowIdentity(row), importedValue);
@@ -843,7 +873,7 @@ function stageImportedOverrides(section, importedOverrides) {
   renderSummary(section);
   renderTable(section);
   updateActions();
-  setSectionStatus(section, `Imported ${Object.keys(importedOverrides).length} manual overrides. Save to persist this replacement set.`);
+  setSectionStatus(section, `Imported ${resolvedOverrides.size} manual overrides. Save to persist this replacement set.`);
 }
 
 async function importOverridesFile(section, file) {
@@ -852,7 +882,7 @@ async function importOverridesFile(section, file) {
     if (!section.current) throw new Error("Load a translation language before importing manual overrides.");
     if (section.dirty.size && !window.confirm("Import will replace the currently staged manual override edits in this section. Continue?")) return;
     const parsed = JSON.parse(await file.text());
-    stageImportedOverrides(section, normalizeImportedOverrides(parsed, section));
+    stageImportedOverrides(section, normalizeImportedOverrideEntries(parsed, section));
     showError("");
   } catch (error) {
     showError(error?.message || "Could not import manual translation overrides.");
@@ -1203,6 +1233,13 @@ function setOverlayVisible(visible, text = "") {
   if (els.overlayText && text) els.overlayText.textContent = text;
 }
 
+function setOverlayLog(text = "") {
+  if (!els.applyLog) return;
+  const logText = String(text || "");
+  els.applyLog.textContent = logText;
+  els.applyLog.hidden = !normalizeText(logText);
+}
+
 function waitForMs(ms) {
   return new Promise((resolve) => window.setTimeout(resolve, Math.max(0, Number(ms) || 0)));
 }
@@ -1232,7 +1269,7 @@ function renderJob(job) {
   const phase = job.phases?.find((entry) => entry.status === "running");
   const label = phase?.label || (job.status === "succeeded" ? "Finished." : translationsApplyingOverlayText());
   if (els.overlayText) els.overlayText.textContent = label;
-  if (els.applyLog) els.applyLog.textContent = Array.isArray(job.log) ? job.log.slice(-80).join("\n") : "";
+  setOverlayLog(Array.isArray(job.log) ? job.log.slice(-80).join("\n") : "");
 }
 
 async function pollJob(jobId, overlayStartedAt) {
@@ -1335,7 +1372,7 @@ async function startJob(path, body = null, overlayText = translationsApplyingOve
   updateActions();
   const overlayStartedAt = Date.now();
   setOverlayVisible(true, overlayText);
-  if (els.applyLog) els.applyLog.textContent = "";
+  setOverlayLog("");
   await waitForNextPaint();
   const payload = await fetchApi(path, {
     method: "POST",
@@ -1440,10 +1477,20 @@ async function init() {
   }
 
   if (els.panel) els.panel.hidden = false;
-  await loadDomains();
-  state.permissions.canEditTranslations = state.permissions.canEditTranslations && state.translationWritesEnabled;
-  renderSectionCards();
-  await loadAllSections({ preserveLanguage: false });
+  state.translationStatus = null;
+  syncTranslationStatusText(null);
+  const overlayStartedAt = Date.now();
+  setOverlayLog("");
+  setOverlayVisible(true, translationsLoadingStatusOverlayText());
+  try {
+    await waitForNextPaint();
+    await loadDomains();
+    state.permissions.canEditTranslations = state.permissions.canEditTranslations && state.translationWritesEnabled;
+    renderSectionCards();
+    await loadAllSections({ preserveLanguage: false });
+  } finally {
+    await hideOverlayAfterMinimum(overlayStartedAt);
+  }
 }
 
 function handleBackendLanguageChanged() {

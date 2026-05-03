@@ -567,37 +567,84 @@ function framedImageGeometry({ x, y, width, height, angle = 0, variant = 0 } = {
   };
 }
 
+function rotatePointAround([pointX, pointY], centerX, centerY, angle = 0) {
+  const radians = (Number(angle) || 0) * Math.PI / 180;
+  const cos = Math.cos(radians);
+  const sin = Math.sin(radians);
+  const dx = pointX - centerX;
+  const dy = pointY - centerY;
+  return [
+    centerX + dx * cos - dy * sin,
+    centerY + dx * sin + dy * cos
+  ];
+}
+
+function rotatePointsAround(points, centerX, centerY, angle = 0) {
+  return points.map((point) => rotatePointAround(point, centerX, centerY, angle));
+}
+
+function photoFrameBottomEdgeGeometry(points) {
+  const bottomRight = points[2];
+  const bottomLeft = points[3];
+  const left = { x: bottomLeft[0], y: bottomLeft[1] };
+  const right = { x: bottomRight[0], y: bottomRight[1] };
+  const dx = right.x - left.x;
+  const dy = right.y - left.y;
+  const length = Math.max(1, Math.hypot(dx, dy));
+  return {
+    left,
+    angle: Math.atan2(dy, dx) * 180 / Math.PI,
+    length,
+    unitX: dx / length,
+    unitY: dy / length,
+    inwardX: dy / length,
+    inwardY: -dx / length
+  };
+}
+
 function drawFramedImageLabel(doc, { x, y, width, height, angle = 0, label = "", labelBackdrop = false, fonts = null, lang = "en", variant = 0 } = {}) {
   if (!label) return;
   const { centerX, centerY, innerPoints } = framedImageGeometry({ x, y, width, height, angle, variant });
-  doc.save();
-  doc.rotate(angle, { origin: [centerX, centerY] });
-  doc.save();
-  drawPolygonPath(doc, innerPoints);
-  doc.clip();
   if (labelBackdrop) {
+    doc.save();
+    doc.rotate(angle, { origin: [centerX, centerY] });
+    doc.save();
+    drawPolygonPath(doc, innerPoints);
+    doc.clip();
     doc
       .fillOpacity(PHOTO_LABEL_BACKDROP_OPACITY)
       .rect(x, y + height - 30, width, 30)
       .fill(PHOTO_LABEL_BACKDROP_COLOR)
       .fillOpacity(1);
+    doc.restore();
+    doc.restore();
   }
   const labelFont = pdfFontName("display", fonts);
   const labelText = label.toUpperCase();
-  const labelOptions = pdfTextOptions(lang, { width: width - 20, height: 17, ellipsis: true });
+  const rotatedInnerPoints = rotatePointsAround(innerPoints, centerX, centerY, angle);
+  const bottomEdge = photoFrameBottomEdgeGeometry(rotatedInnerPoints);
+  const labelX = bottomEdge.left.x + bottomEdge.unitX * 10 + bottomEdge.inwardX * 19;
+  const labelY = bottomEdge.left.y + bottomEdge.unitY * 10 + bottomEdge.inwardY * 19;
+  const labelWidth = Math.max(20, bottomEdge.length - 20);
+  const labelOptions = pdfTextOptions(lang, { width: labelWidth, height: 19, ellipsis: true });
   const labelFontSize = fitPdfTextSize(doc, labelText, {
     fontName: labelFont,
-    maxSize: 11.5,
+    maxSize: 12.8,
     minSize: 8,
-    maxHeight: 17,
+    maxHeight: 19,
     options: labelOptions,
     step: 0.25
   });
+  doc.save();
+  drawPolygonPath(doc, rotatedInnerPoints);
+  doc.clip();
+  doc.save();
+  doc.rotate(bottomEdge.angle, { origin: [labelX, labelY] });
   doc
     .font(labelFont)
     .fontSize(labelFontSize)
     .fillColor(COLORS.white)
-    .text(labelText, x + 10, y + height - 24, labelOptions);
+    .text(labelText, labelX, labelY, labelOptions);
   doc.restore();
   doc.restore();
 }
@@ -821,8 +868,8 @@ function createBodyImageLayouts(tour, frameImages) {
     const base = baseLayouts[index];
     const scale = deterministicRange(seed, `scale:${index}`, 0.84, 1.18);
     const ratioScale = deterministicRange(seed, `ratio:${index}`, 0.9, 1.1);
-    const width = clampNumber(base.width * scale, 88, BODY_IMAGE_RENDER_FRAME.width);
-    const height = clampNumber(base.height * scale * ratioScale, 68, BODY_IMAGE_RENDER_FRAME.height);
+    const width = clampNumber(base.width * scale, 114.4, BODY_IMAGE_RENDER_FRAME.width);
+    const height = clampNumber(base.height * scale * ratioScale, 88.4, BODY_IMAGE_RENDER_FRAME.height);
     const x = clampNumber(
       base.x + deterministicRange(seed, `x:${index}`, -26, 26),
       BODY_IMAGE_LAYOUT_BOUNDS.minX,

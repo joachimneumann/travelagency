@@ -8,10 +8,12 @@ import {
   FRONTEND_LANGUAGE_CODES
 } from "../../../../shared/generated/language_catalog.js";
 import { translationMemorySourceKey } from "../lib/translation_memory_store.js";
+import { normalizeDestinationCountryCode } from "./destination_scope.js";
 
 const FRONTEND_CONTEXT = "AsiaTravelPlan public website for travelers planning Southeast Asia trips. Use natural, polished, customer-facing copy that feels trustworthy, clear, and concise.";
 const INDEX_CONTENT_MEMORY_CONTEXT = "Exact-source translation memory for index.html customer-facing text, excluding marketing tours.";
 const MARKETING_TOUR_MEMORY_CONTEXT = "Shared exact-source translation memory for marketing tours. Manual overrides win over machine cache when staff translate marketing-tour content.";
+const DESTINATION_SCOPE_CONTEXT = "AsiaTravelPlan public website destination taxonomy labels for country, region, and place filters. Translate labels naturally and concisely as proper travel destination names.";
 const BACKEND_CONTEXT = "AsiaTravelPlan backend UI for ATP staff managing bookings, tours, invoices, travel plans, and internal notes. Use a clear, natural, friendly tone for internal staff UI copy.";
 const TRANSLATION_SNAPSHOT_SCHEMA = "translation-snapshot/v1";
 
@@ -121,6 +123,18 @@ function buildDomainConfigs(repoRoot) {
       targetLanguages: customerContentLangs,
       context: MARKETING_TOUR_MEMORY_CONTEXT
     },
+    "destination-scope-catalog": {
+      id: "destination-scope-catalog",
+      kind: "destination_scope_catalog",
+      label: "Tour destinations",
+      section: "customers",
+      subsection: "tour-destinations",
+      audience: "customer",
+      publishable: true,
+      sourceLang: "en",
+      targetLanguages: customerContentLangs,
+      context: DESTINATION_SCOPE_CONTEXT
+    },
     backend: {
       id: "backend",
       kind: "static",
@@ -143,6 +157,8 @@ function buildDomainConfigs(repoRoot) {
 export function createStaticTranslationService({
   repoRoot,
   translationsSnapshotDir = path.join(repoRoot || "", "content", "translations"),
+  readStore = null,
+  persistStore = null,
   readTours = null,
   translationMemoryStore = null,
   translateEntriesWithMeta = null,
@@ -395,6 +411,88 @@ export function createStaticTranslationService({
     return Array.from(sources).sort((left, right) => left.localeCompare(right, "en", { sensitivity: "base" }));
   }
 
+  function cloneJson(value) {
+    return value === undefined ? undefined : JSON.parse(JSON.stringify(value));
+  }
+
+  function normalizeLocalizedTextMap(value) {
+    if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+    return Object.fromEntries(
+      Object.entries(value)
+        .map(([lang, text]) => [normalizeText(lang).toLowerCase(), normalizeText(text)])
+        .filter(([lang, text]) => Boolean(lang && text))
+    );
+  }
+
+  function setLocalizedTextValue(record, mapField, lang, value) {
+    if (!record || typeof record !== "object" || Array.isArray(record)) return false;
+    const normalizedLang = normalizeText(lang).toLowerCase();
+    const normalizedValue = normalizeText(value);
+    if (!normalizedLang || !normalizedValue) return false;
+    const map = normalizeLocalizedTextMap(record[mapField]);
+    if (normalizeText(map[normalizedLang]) === normalizedValue) return false;
+    map[normalizedLang] = normalizedValue;
+    record[mapField] = map;
+    return true;
+  }
+
+  function deleteLocalizedTextValue(record, mapField, lang) {
+    if (!record || typeof record !== "object" || Array.isArray(record)) return false;
+    const normalizedLang = normalizeText(lang).toLowerCase();
+    if (!normalizedLang) return false;
+    const map = normalizeLocalizedTextMap(record[mapField]);
+    if (!Object.prototype.hasOwnProperty.call(map, normalizedLang)) return false;
+    delete map[normalizedLang];
+    record[mapField] = map;
+    return true;
+  }
+
+  function destinationRecordSource(record, sourceField, fallback = "") {
+    return normalizeText(record?.[sourceField]) || normalizeText(fallback);
+  }
+
+  function destinationScopeCatalogRecordEntries(store = {}) {
+    const destinationEntries = (Array.isArray(store?.destination_scope_destinations) ? store.destination_scope_destinations : [])
+      .map((record) => {
+        const code = normalizeDestinationCountryCode(record?.code || record?.destination || record);
+        return {
+          record,
+          kind: "destination",
+          mapField: "label_i18n",
+          sourceField: "label",
+          sourceFallback: code || "",
+          key: code ? `destination.${code}.label` : ""
+        };
+      });
+    const areaEntries = (Array.isArray(store?.destination_areas) ? store.destination_areas : [])
+      .map((record) => ({
+        record,
+        kind: "area",
+        mapField: "name_i18n",
+        sourceField: "name",
+        sourceFallback: "",
+        key: `area.${normalizeText(record?.id)}.name`
+      }));
+    const placeEntries = (Array.isArray(store?.destination_places) ? store.destination_places : [])
+      .map((record) => ({
+        record,
+        kind: "place",
+        mapField: "name_i18n",
+        sourceField: "name",
+        sourceFallback: "",
+        key: `place.${normalizeText(record?.id)}.name`
+      }));
+
+    return [...destinationEntries, ...areaEntries, ...placeEntries]
+      .filter((entry) => (
+        entry.record
+        && typeof entry.record === "object"
+        && !Array.isArray(entry.record)
+        && normalizeText(entry.key)
+        && destinationRecordSource(entry.record, entry.sourceField, entry.sourceFallback)
+      ));
+  }
+
   function sortedSourceTexts(sources) {
     return Array.from(sources).sort((left, right) => left.localeCompare(right, "en", { sensitivity: "base" }));
   }
@@ -474,10 +572,97 @@ export function createStaticTranslationService({
     };
   }
 
+  async function readDestinationScopeStore() {
+    if (typeof readStore !== "function") {
+      throw apiError(
+        500,
+        "STATIC_TRANSLATION_DESTINATION_CATALOG_UNAVAILABLE",
+        "Destination-scope catalog storage is not configured."
+      );
+    }
+    return readStore();
+  }
+
+  async function readTranslationMemoryOrEmpty() {
+    if (!translationMemoryStore || typeof translationMemoryStore.readTranslationMemory !== "function") {
+      return {
+        items: {},
+        revision: ""
+      };
+    }
+    return translationMemoryStore.readTranslationMemory();
+  }
+
+  function destinationCatalogStateRevision(rows, memoryRevision) {
+    return sha256(JSON.stringify({
+      memoryRevision: normalizeText(memoryRevision),
+      rows: (Array.isArray(rows) ? rows : []).map((row) => ({
+        key: row.key,
+        source: row.source,
+        cached: row.cached,
+        override: row.override,
+        updated_at: row.updated_at
+      }))
+    }));
+  }
+
+  async function loadDestinationScopeCatalogState(config, language, { publishedIndex = null } = {}) {
+    const [store, memory] = await Promise.all([
+      readDestinationScopeStore(),
+      readTranslationMemoryOrEmpty()
+    ]);
+    const rows = destinationScopeCatalogRecordEntries(store)
+      .map((entry) => {
+        const source = destinationRecordSource(entry.record, entry.sourceField, entry.sourceFallback);
+        const map = normalizeLocalizedTextMap(entry.record[entry.mapField]);
+        const directTarget = normalizeText(map[language.code]);
+        const target = memory.items?.[sourceKey(source)]?.targets?.[language.code] || {};
+        const override = normalizeText(target.manual_override);
+        const cached = override ? "" : directTarget;
+        const expectedSourceHash = sourceHash(source);
+        const status = override ? "manual_override" : (cached ? "content_translation" : "missing");
+        return {
+          key: entry.key,
+          source,
+          cached,
+          override,
+          status,
+          source_hash: expectedSourceHash,
+          cached_source_hash: (cached || override) ? expectedSourceHash : "",
+          origin: override ? "manual_override" : (cached ? "content" : ""),
+          updated_at: normalizeText(target.manual_updated_at || entry.record?.updated_at),
+          cache_meta: {
+            source_hash: expectedSourceHash,
+            catalog_kind: entry.kind,
+            map_field: entry.mapField,
+            direct_target: directTarget || null,
+            manual_updated_at: normalizeText(target.manual_updated_at) || null
+          }
+        };
+      })
+      .sort((left, right) => left.source.localeCompare(right.source, "en", { sensitivity: "base" }));
+
+    const augmentedRows = await augmentRows(config, language, rows, publishedIndex);
+    const counts = countRows(augmentedRows);
+    return {
+      domain: domainSummary(config),
+      language,
+      source_lang: config.sourceLang,
+      target_lang: language.code,
+      revision: destinationCatalogStateRevision(augmentedRows, memory.revision),
+      total: augmentedRows.length,
+      counts,
+      rows: augmentedRows
+    };
+  }
+
   async function loadState(domain, targetLang, { publishedIndex = null } = {}) {
     const { config, language } = getLanguageConfig(domain, targetLang);
     if (config.kind === "translation_memory") {
       return loadTranslationMemoryState(config, language, { publishedIndex });
+    }
+    if (config.kind === "destination_scope_catalog") {
+      return loadDestinationScopeCatalogState(config, language, { publishedIndex });
     }
 
     const [{ data: source }, { data: target }, { data: meta }, { data: overrides, raw: overrideRaw }] = await Promise.all([
@@ -595,6 +780,74 @@ export function createStaticTranslationService({
     return loadTranslationMemoryState(config, language);
   }
 
+  async function persistDestinationScopeCatalogTargets(targetLang, updatesByKey, { remove = false } = {}) {
+    if (typeof persistStore !== "function") {
+      throw apiError(
+        500,
+        "STATIC_TRANSLATION_DESTINATION_CATALOG_UNAVAILABLE",
+        "Destination-scope catalog storage is not writable."
+      );
+    }
+    const store = cloneJson(await readDestinationScopeStore());
+    const recordsByKey = new Map(destinationScopeCatalogRecordEntries(store).map((entry) => [entry.key, entry]));
+    let changed = false;
+    for (const [key, value] of Object.entries(updatesByKey || {})) {
+      const entry = recordsByKey.get(key);
+      if (!entry) continue;
+      const recordChanged = remove
+        ? deleteLocalizedTextValue(entry.record, entry.mapField, targetLang)
+        : setLocalizedTextValue(entry.record, entry.mapField, targetLang, value);
+      if (recordChanged) {
+        entry.record.updated_at = normalizeText(entry.record.updated_at) || nowIso();
+      }
+      changed = recordChanged || changed;
+    }
+    if (changed) await persistStore(store);
+    return changed;
+  }
+
+  async function patchDestinationScopeCatalogOverrides(config, language, payload = {}) {
+    const expectedRevision = normalizeText(payload?.expected_revision);
+    const updates = payload?.overrides && typeof payload.overrides === "object" && !Array.isArray(payload.overrides)
+      ? payload.overrides
+      : null;
+    if (!updates) {
+      throw apiError(400, "STATIC_TRANSLATION_INVALID_OVERRIDES", "overrides must be an object keyed by translation id.");
+    }
+
+    const currentState = await loadDestinationScopeCatalogState(config, language);
+    if (expectedRevision && expectedRevision !== currentState.revision) {
+      throw apiError(409, "STATIC_TRANSLATION_REVISION_MISMATCH", "Translation overrides changed. Refresh and retry.");
+    }
+    const rowsByKey = new Map(currentState.rows.map((row) => [row.key, row]));
+    const unknownKeys = Object.keys(updates).filter((key) => !rowsByKey.has(key));
+    if (unknownKeys.length) {
+      throw apiError(400, "STATIC_TRANSLATION_UNKNOWN_KEY", `Unknown translation key: ${unknownKeys[0]}`);
+    }
+
+    if (!translationMemoryStore || typeof translationMemoryStore.patchManualOverrides !== "function") {
+      throw apiError(500, "STATIC_TRANSLATION_MEMORY_UNAVAILABLE", "Translation memory storage is not configured.");
+    }
+
+    const memoryUpdates = [];
+    const catalogUpdates = {};
+    for (const [key, rawValue] of Object.entries(updates)) {
+      const row = rowsByKey.get(key);
+      const value = normalizeText(rawValue);
+      memoryUpdates.push({
+        source_text: row.source,
+        manual_override: value
+      });
+      if (value) catalogUpdates[key] = value;
+    }
+
+    await translationMemoryStore.patchManualOverrides(language.code, memoryUpdates);
+    if (Object.keys(catalogUpdates).length) {
+      await persistDestinationScopeCatalogTargets(language.code, catalogUpdates);
+    }
+    return loadDestinationScopeCatalogState(config, language);
+  }
+
   async function deleteTranslationMemoryCache(config, language, key, payload = {}) {
     if (!translationMemoryStore || typeof translationMemoryStore.deleteMachineTranslations !== "function") {
       throw apiError(500, "STATIC_TRANSLATION_MEMORY_UNAVAILABLE", "Translation memory storage is not configured.");
@@ -612,6 +865,22 @@ export function createStaticTranslationService({
       await translationMemoryStore.deleteMachineTranslations(language.code, [row.source]);
     }
     return loadTranslationMemoryState(config, language);
+  }
+
+  async function deleteDestinationScopeCatalogCache(config, language, key, payload = {}) {
+    const currentState = await loadDestinationScopeCatalogState(config, language);
+    const expectedRevision = normalizeText(payload?.expected_revision);
+    if (expectedRevision && expectedRevision !== currentState.revision) {
+      throw apiError(409, "STATIC_TRANSLATION_REVISION_MISMATCH", "Translation memory changed. Refresh and retry.");
+    }
+    const row = currentState.rows.find((entry) => entry.key === key);
+    if (!row) {
+      throw apiError(400, "STATIC_TRANSLATION_UNKNOWN_KEY", `Unknown translation key: ${key}`);
+    }
+    if (row.cached) {
+      await persistDestinationScopeCatalogTargets(language.code, { [row.key]: "" }, { remove: true });
+    }
+    return loadDestinationScopeCatalogState(config, language);
   }
 
   async function deleteStaticCache(config, language, key) {
@@ -644,6 +913,9 @@ export function createStaticTranslationService({
     if (config.kind === "translation_memory") {
       return deleteTranslationMemoryCache(config, language, normalizedKey, payload);
     }
+    if (config.kind === "destination_scope_catalog") {
+      return deleteDestinationScopeCatalogCache(config, language, normalizedKey, payload);
+    }
     return deleteStaticCache(config, language, normalizedKey);
   }
 
@@ -652,6 +924,9 @@ export function createStaticTranslationService({
     const { config, language } = getLanguageConfig(domain, targetLang);
     if (config.kind === "translation_memory") {
       return patchTranslationMemoryOverrides(config, language, payload);
+    }
+    if (config.kind === "destination_scope_catalog") {
+      return patchDestinationScopeCatalogOverrides(config, language, payload);
     }
 
     const expectedRevision = normalizeText(payload?.expected_revision);
@@ -691,6 +966,7 @@ export function createStaticTranslationService({
   }
 
   function translationProfileForConfig(config) {
+    if (config.id === "destination-scope-catalog") return "destination_scope_catalog";
     if (config.id === "backend") return "staff_backend_ui";
     return "marketing_trip_copy";
   }
@@ -762,6 +1038,47 @@ export function createStaticTranslationService({
     };
   }
 
+  async function translateDestinationScopeCatalogRows(config, language, rows, options = {}) {
+    const candidates = rowsNeedingMachineTranslation(rows);
+    if (!candidates.length) {
+      return {
+        requested_count: 0,
+        translated_count: 0
+      };
+    }
+
+    const translate = typeof options.translateEntriesWithMeta === "function"
+      ? options.translateEntriesWithMeta
+      : translateEntriesWithMeta;
+    if (typeof translate !== "function") {
+      throw apiError(500, "STATIC_TRANSLATION_PROVIDER_UNAVAILABLE", "Static translation provider is not configured.");
+    }
+
+    const entries = Object.fromEntries(candidates.map((row) => [row.key, row.source]));
+    const result = await translate(entries, language.code, {
+      sourceLangCode: configSourceLang(config),
+      domain: config.label,
+      context: config.context,
+      cacheNamespace: `static-translations:${config.id}`,
+      translationProfile: translationProfileForConfig(config),
+      translationRules: await loadTranslationRulesForApply(options),
+      allowGoogleFallback: true
+    });
+    const translatedEntries = Object.fromEntries(
+      Object.entries(result?.entries || {})
+        .map(([key, value]) => [key, normalizeText(value)])
+        .filter(([key, value]) => Boolean(key && value))
+    );
+    if (Object.keys(translatedEntries).length) {
+      await persistDestinationScopeCatalogTargets(language.code, translatedEntries);
+    }
+
+    return {
+      requested_count: candidates.length,
+      translated_count: Object.keys(translatedEntries).length
+    };
+  }
+
   async function applyMissingTranslations(options = {}) {
     assertWritesEnabled();
     const applyOptions = {
@@ -775,10 +1092,11 @@ export function createStaticTranslationService({
     };
 
     for (const config of normalizeTranslationDomains(options)) {
-      if (config.kind !== "translation_memory") continue;
       for (const language of publishLanguagesForConfig(config, options)) {
         const state = await loadState(config.id, language.code);
-        const result = await translateCentralRows(config, language, state.rows, applyOptions);
+        const result = config.kind === "destination_scope_catalog"
+          ? await translateDestinationScopeCatalogRows(config, language, state.rows, applyOptions)
+          : await translateCentralRows(config, language, state.rows, applyOptions);
         summary.requested_count += result.requested_count;
         summary.translated_count += result.translated_count;
         summary.domains.push({
@@ -849,7 +1167,7 @@ export function createStaticTranslationService({
       : [];
     const requestedSet = new Set(requested);
     return Object.values(configs).filter((config) => {
-      if (config.kind !== "translation_memory") return false;
+      if (!["translation_memory", "destination_scope_catalog"].includes(config.kind)) return false;
       return requestedSet.size ? requestedSet.has(config.id) : true;
     });
   }
@@ -867,7 +1185,8 @@ export function createStaticTranslationService({
 
   function isStatusContentUnavailable(error) {
     const code = normalizeText(error?.code);
-    return code === "STATIC_TRANSLATION_BOOKING_CONTENT_UNAVAILABLE";
+    return code === "STATIC_TRANSLATION_BOOKING_CONTENT_UNAVAILABLE"
+      || code === "STATIC_TRANSLATION_DESTINATION_CATALOG_UNAVAILABLE";
   }
 
   function publishLanguagesForConfig(config, options = {}) {

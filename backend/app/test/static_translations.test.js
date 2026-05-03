@@ -391,6 +391,108 @@ test("static translation service applies missing marketing tour memory translati
   }
 });
 
+test("static translation service exposes destination scope catalog labels as customer translations", async () => {
+  const repoRoot = await createFixture();
+  try {
+    let store = {
+      destination_scope_destinations: [
+        {
+          code: "VN",
+          label: "Vietnam",
+          label_i18n: { en: "Vietnam", vi: "Việt Nam" }
+        }
+      ],
+      destination_areas: [
+        {
+          id: "area_north",
+          destination: "VN",
+          code: "north",
+          name: "North",
+          name_i18n: { en: "North", vi: "Miền Bắc" }
+        }
+      ],
+      destination_places: [
+        {
+          id: "place_sapa",
+          area_id: "area_north",
+          code: "sapa",
+          name: "Sapa",
+          name_i18n: { en: "Sapa" }
+        }
+      ]
+    };
+    const translationMemoryStore = createTranslationMemoryStore({
+      dataPath: path.join(repoRoot, "content", "translation_memory.json"),
+      writeQueueRef: { current: Promise.resolve() },
+      nowIso: () => "2026-04-28T03:15:00.000Z"
+    });
+    await translationMemoryStore.patchManualOverrides("vi", [
+      {
+        source_text: "North",
+        manual_override: "Miền Bắc"
+      }
+    ]);
+
+    const service = createStaticTranslationService({
+      repoRoot,
+      readStore: async () => JSON.parse(JSON.stringify(store)),
+      persistStore: async (nextStore) => {
+        store = JSON.parse(JSON.stringify(nextStore));
+      },
+      translationMemoryStore,
+      nowIso: () => "2026-04-28T03:15:00.000Z"
+    });
+
+    assert.equal(service.listDomains().some((domain) => domain.id === "destination-scope-catalog" && domain.audience === "customer"), true);
+
+    const state = await service.getLanguageState("destination-scope-catalog", "vi");
+    const vietnam = state.rows.find((row) => row.key === "destination.VN.label");
+    const north = state.rows.find((row) => row.key === "area.area_north.name");
+    const sapa = state.rows.find((row) => row.key === "place.place_sapa.name");
+
+    assert.equal(vietnam.cached, "Việt Nam");
+    assert.equal(vietnam.status, "content_translation");
+    assert.equal(north.override, "Miền Bắc");
+    assert.equal(north.cached, "");
+    assert.equal(north.status, "manual_override");
+    assert.equal(sapa.status, "missing");
+
+    const saved = await service.patchOverrides("destination-scope-catalog", "vi", {
+      expected_revision: state.revision,
+      overrides: {
+        "place.place_sapa.name": "Sa Pa"
+      }
+    });
+    const savedSapa = saved.rows.find((row) => row.key === "place.place_sapa.name");
+    const resolved = await translationMemoryStore.resolveEntries({ sapa: "Sapa" }, "vi");
+    assert.equal(savedSapa.override, "Sa Pa");
+    assert.equal(store.destination_places[0].name_i18n.vi, "Sa Pa");
+    assert.deepEqual(resolved.entries, { sapa: "Sa Pa" });
+
+    const calls = [];
+    const summary = await service.applyMissingTranslations({
+      domains: ["destination-scope-catalog"],
+      target_langs: ["de"],
+      translateEntriesWithMeta: async (entries, targetLang, options) => {
+        calls.push({ entries, targetLang, options });
+        return {
+          entries: Object.fromEntries(Object.entries(entries).map(([key, value]) => [key, `de:${value}`])),
+          provider: { kind: "test", display: "test" }
+        };
+      }
+    });
+
+    assert.equal(summary.requested_count, 3);
+    assert.equal(summary.translated_count, 3);
+    assert.equal(calls[0].options.translationProfile, "destination_scope_catalog");
+    assert.equal(store.destination_scope_destinations[0].label_i18n.de, "de:Vietnam");
+    assert.equal(store.destination_areas[0].name_i18n.de, "de:North");
+    assert.equal(store.destination_places[0].name_i18n.de, "de:Sapa");
+  } finally {
+    await rm(repoRoot, { recursive: true, force: true });
+  }
+});
+
 test("static translation service clears marketing tour machine cache without deleting manual overrides", async () => {
   const repoRoot = await createFixture();
   try {

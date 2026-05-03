@@ -57,6 +57,9 @@ export const COUNTRY_REFERENCE_INFO_PATH = resolveConfigPathFromRepoRoot(
 export const TRANSLATION_RULES_PATH = resolveConfigPathFromRepoRoot(
   normalizeText(process.env.TRANSLATION_RULES_PATH || path.join("content", "translation_rules.json"))
 );
+export const TRANSLATION_PROTECTED_TERMS_PATH = resolveConfigPathFromRepoRoot(
+  normalizeText(process.env.TRANSLATION_PROTECTED_TERMS_PATH || path.join("content", "translation_protected_terms.json"))
+);
 export const TRANSLATION_MEMORY_PATH = resolveConfigPathFromRepoRoot(
   normalizeText(process.env.TRANSLATION_MEMORY_PATH || path.join("content", "translation_memory.json"))
 );
@@ -213,6 +216,7 @@ export const TRANSLATION_CLIENT = createTranslationClient({
   projectId: OPENAI_PROJECT_ID,
   organizationId: OPENAI_ORGANIZATION_ID,
   model: OPENAI_TRANSLATION_MODEL,
+  protectedTermsPath: TRANSLATION_PROTECTED_TERMS_PATH,
   googleFallbackEnabled: GOOGLE_TRANSLATE_FALLBACK_ENABLED,
   googleConcurrency: GOOGLE_TRANSLATE_CONCURRENCY
 });
@@ -318,6 +322,7 @@ export const RUNTIME_PATHS = Object.freeze({
   legacyCountryReferenceInfoPath: LEGACY_COUNTRY_REFERENCE_INFO_PATH,
   countryReferenceInfoPath: COUNTRY_REFERENCE_INFO_PATH,
   translationRulesPath: TRANSLATION_RULES_PATH,
+  translationProtectedTermsPath: TRANSLATION_PROTECTED_TERMS_PATH,
   translationMemoryPath: TRANSLATION_MEMORY_PATH,
   translationsSnapshotDir: TRANSLATIONS_SNAPSHOT_DIR,
   bookingTravelPlanAttachmentsDir: BOOKING_TRAVEL_PLAN_ATTACHMENTS_DIR,
