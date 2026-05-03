@@ -1,3 +1,4 @@
+import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -39,6 +40,12 @@ function apiError(status, code, message) {
   error.status = status;
   error.code = code;
   return error;
+}
+
+function trimCommandOutput(value, maxLength = 12000) {
+  const normalized = String(value ?? "").trim();
+  if (normalized.length <= maxLength) return normalized;
+  return `${normalized.slice(0, maxLength)}\n... output truncated ...`;
 }
 
 async function defaultReadJsonFile(filePath, fallback = {}) {
@@ -1610,6 +1617,49 @@ export function createStaticTranslationService({
       || code === "STATIC_TRANSLATION_DESTINATION_CATALOG_UNAVAILABLE";
   }
 
+  function checkRuntimeI18nGenerator() {
+    return new Promise((resolve) => {
+      const child = spawn(process.execPath, ["scripts/i18n/build_runtime_i18n.mjs", "--check", "--strict"], {
+        cwd: repoRoot,
+        stdio: ["ignore", "pipe", "pipe"]
+      });
+      let stdout = "";
+      let stderr = "";
+      child.stdout?.on("data", (chunk) => {
+        stdout += chunk.toString("utf8");
+      });
+      child.stderr?.on("data", (chunk) => {
+        stderr += chunk.toString("utf8");
+      });
+      child.on("error", (error) => {
+        resolve({
+          status: "blocked",
+          blocked: true,
+          error: normalizeText(error?.message) || "Runtime i18n generator could not be started.",
+          output: ""
+        });
+      });
+      child.on("close", (code) => {
+        const output = trimCommandOutput([stdout, stderr].filter(Boolean).join("\n"));
+        if (code === 0) {
+          resolve({
+            status: "ok",
+            blocked: false,
+            error: "",
+            output
+          });
+          return;
+        }
+        resolve({
+          status: "blocked",
+          blocked: true,
+          error: output || `Runtime i18n generator check failed with exit code ${code}.`,
+          output
+        });
+      });
+    });
+  }
+
   function publishLanguagesForConfig(config, options = {}) {
     const byDomain = options?.target_langs_by_domain && typeof options.target_langs_by_domain === "object"
       ? options.target_langs_by_domain[config.id]
@@ -1800,10 +1850,12 @@ export function createStaticTranslationService({
         unpublished_count: 0,
         untranslated_count: 0
       });
+      const runtimeI18n = await checkRuntimeI18nGenerator();
       return {
         dirty: totals.dirty_count > 0,
         ...totals,
         unavailable,
+        runtime_i18n: runtimeI18n,
         languages: languageStates
       };
     },

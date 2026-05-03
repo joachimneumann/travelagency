@@ -5,6 +5,10 @@ import {
   loadBackendPageAuthState,
   refreshBackendNavElements
 } from "../shared/backend_page.js";
+import {
+  BACKEND_UI_LANGUAGES,
+  CUSTOMER_CONTENT_LANGUAGES
+} from "../../../shared/generated/language_catalog.js";
 
 const ROLES = { ADMIN: "atp_admin" };
 
@@ -18,7 +22,7 @@ const CUSTOMER_DOMAIN_CONFIGS = [
 const SECTION_CONFIGS = [
   {
     key: "staff",
-    title: "For staff (NE/VI)",
+    title: "For staff",
     description: "Manual overrides for staff-facing backend Vietnamese.",
     fixedTargetLang: "vi",
     domains: [
@@ -52,6 +56,8 @@ const els = {
   error: document.getElementById("backendError"),
   panel: document.getElementById("translationsPanel"),
   status: document.getElementById("translationsStatus"),
+  runtimeWarning: document.getElementById("translationsRuntimeWarning"),
+  runtimeWarningMessage: document.getElementById("translationsRuntimeWarningMessage"),
   sections: document.getElementById("translationsSections"),
   translateBtn: document.getElementById("translationsTranslateBtn"),
   applyProtectedTermsBtn: document.getElementById("translationsApplyProtectedTermsBtn"),
@@ -183,6 +189,31 @@ function languageLabel(language) {
   return normalizeText(language?.nativeLabel || language?.native_label || language?.code).toUpperCase();
 }
 
+function languageFlagHtml(language) {
+  const flagClass = normalizeText(language?.flagClass || `flag-${language?.code || ""}`);
+  const label = normalizeText(language?.nativeLabel || language?.apiValue || language?.code);
+  if (!flagClass) return "";
+  return `<span class="lang-flag ${escapeHtml(flagClass)}" aria-hidden="true" title="${escapeHtml(label)}"></span>`;
+}
+
+function sectionTitleLanguages(config) {
+  if (config?.key === "staff") {
+    return BACKEND_UI_LANGUAGES.filter((language) => ["en", "vi"].includes(language.code));
+  }
+  if (isCustomerSectionConfig(config)) {
+    return CUSTOMER_CONTENT_LANGUAGES;
+  }
+  return [];
+}
+
+function sectionTitleHtml(config) {
+  const flags = sectionTitleLanguages(config).map(languageFlagHtml).filter(Boolean).join("");
+  return `
+    <span class="translations-section__title-text">${escapeHtml(config.title)}</span>
+    ${flags ? `<span class="translations-section__title-flags">${flags}</span>` : ""}
+  `;
+}
+
 function safeDomId(value) {
   return normalizeText(value).replace(/[^a-z0-9_-]+/gi, "_");
 }
@@ -270,8 +301,29 @@ function summarizeTranslationStatus(payload) {
     unpublishedCount,
     unavailableCount,
     translationIssueCount,
-    publishReadyCount: translationIssueCount > 0 ? 0 : unpublishedCount
+    publishReadyCount: translationIssueCount > 0 ? 0 : unpublishedCount,
+    runtimeI18n: payload?.runtime_i18n && typeof payload.runtime_i18n === "object"
+      ? payload.runtime_i18n
+      : null
   };
+}
+
+function runtimeI18nBlocked(status = state.translationStatus) {
+  return Boolean(status?.runtimeI18n?.blocked);
+}
+
+function runtimeI18nErrorMessage(status = state.translationStatus) {
+  return normalizeText(status?.runtimeI18n?.error || status?.runtimeI18n?.output);
+}
+
+function updateRuntimeWarning(status = state.translationStatus) {
+  const blocked = runtimeI18nBlocked(status);
+  if (els.runtimeWarning) els.runtimeWarning.hidden = !blocked;
+  if (els.runtimeWarningMessage) {
+    els.runtimeWarningMessage.textContent = blocked
+      ? runtimeI18nErrorMessage(status) || "Runtime i18n generator check failed."
+      : "";
+  }
 }
 
 function currentTranslationActionState() {
@@ -296,10 +348,12 @@ function translationActionTitle(action, translationState, actionsBusy) {
   }
   if (action === "translate") {
     if (translationState.translateNeeded) return "Translate all missing or stale strings across staff and customer content, then generate runtime files automatically if clean.";
+    if (runtimeI18nBlocked(translationState.status)) return "Runtime i18n generation is blocked. See the warning below.";
     if (translationState.publishReady) return "Generate runtime translation files.";
     return translationState.loaded ? "No strings need translation or runtime generation." : "Loading translation status.";
   }
   if (translationState.translateNeeded) return "Translate missing or stale strings before runtime generation.";
+  if (runtimeI18nBlocked(translationState.status)) return "Runtime i18n generation is blocked. See the warning below.";
   return translationState.publishReady ? "Generate runtime translation files." : "No translated strings are ready for runtime generation.";
 }
 
@@ -327,6 +381,9 @@ function translationStatusMessage(status) {
   const verb = count === 1 ? "needs" : "need";
   const base = `${count} ${subject} ${verb} translation before runtime generation.`;
   if (count > 0) return base;
+  if (runtimeI18nBlocked(status)) {
+    return `${base} Runtime i18n generation is blocked.`;
+  }
   if (status.publishReadyCount > 0) {
     return `${base} ${pluralize(status.publishReadyCount, "translated string")} ready for runtime generation with Translate.`;
   }
@@ -362,12 +419,14 @@ async function loadTranslationStatus({ updateMessage = false } = {}) {
     const payload = await fetchApi("/api/v1/static-translations/status", { cache: "no-store" });
     if (!payload) {
       state.translationStatus = null;
+      updateRuntimeWarning(null);
       setStatus("Could not load translation status.");
       notifyBackendTranslationsStatus(null);
       return null;
     }
     const nextStatus = summarizeTranslationStatus(payload);
     state.translationStatus = nextStatus;
+    updateRuntimeWarning(nextStatus);
     notifyBackendTranslationsStatus(nextStatus);
     if (updateMessage || nextStatus.loaded) syncTranslationStatusText(nextStatus);
     return nextStatus;
@@ -396,6 +455,7 @@ function updateActions() {
     els.retranslateBackendViBtn.disabled = !state.permissions.canEditTranslations || actionsBusy;
   }
   if (translationState.loaded) syncTranslationStatusText(translationState.status);
+  updateRuntimeWarning(translationState.status);
 
   for (const section of state.sections.values()) {
     const sectionDirty = section.dirty.size;
@@ -448,7 +508,7 @@ function sectionTemplate(config) {
     <details class="translations-section" data-translation-section="${escapeHtml(config.key)}">
       <summary class="translations-section__summary">
         <span class="translations-section__summary-title">
-          <span class="translations-section__title" role="heading" aria-level="2">${escapeHtml(config.title)}</span>
+          <span class="translations-section__title" role="heading" aria-level="2">${sectionTitleHtml(config)}</span>
           <span class="translations-section__health translations-section__health--loading" data-section-health aria-label="Translation state is loading." title="Translation state is loading.">...</span>
         </span>
       </summary>
