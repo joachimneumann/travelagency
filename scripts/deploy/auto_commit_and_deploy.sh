@@ -82,16 +82,16 @@ sync_published_translation_snapshots_to_staging() {
   local remote_translations_dir="$REMOTE_STAGING_ROOT/content/translations"
 
   if [[ ! -f "$PUBLISHED_TRANSLATIONS_DIR/manifest.json" ]]; then
-    echo "Missing published translation snapshot: $PUBLISHED_TRANSLATIONS_DIR/manifest.json" >&2
-    echo "Publish translations locally/staging first, or restore content/translations before deploying." >&2
+    echo "Missing translation store: $PUBLISHED_TRANSLATIONS_DIR/manifest.json" >&2
+    echo "Run Translate locally/staging first, or restore content/translations before deploying." >&2
     exit 1
   fi
   if ! command -v rsync >/dev/null 2>&1; then
-    echo "rsync is required to deploy ignored content/translations snapshots." >&2
+    echo "rsync is required to deploy ignored content/translations." >&2
     exit 1
   fi
 
-  echo "Syncing published translation snapshots to staging..."
+  echo "Syncing content/translations to staging..."
   ssh "$REMOTE_HOST" "mkdir -p $(printf '%q' "$remote_translations_dir")"
   rsync -az --delete "$PUBLISHED_TRANSLATIONS_DIR/" "$REMOTE_HOST:$remote_translations_dir/"
 }

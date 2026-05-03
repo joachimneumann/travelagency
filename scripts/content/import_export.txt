@@ -5,10 +5,14 @@ cd /arv/asiatravelplan
 ## export to ATP
 rsync -av content/atp_staff/ atp:/srv/asiatravelplan-staging/content/atp_staff/
 rsync -av content/tours/ atp:/srv/asiatravelplan-staging/content/tours/
+rsync -av --delete content/translations/ atp:/srv/asiatravelplan-staging/content/translations/
+rsync -av content/translation_rules.json content/translation_protected_terms.json atp:/srv/asiatravelplan-staging/content/
 
 ## import from ATP
 rsync -av atp:/srv/asiatravelplan-staging/content/atp_staff/ content/atp_staff/
 rsync -av atp:/srv/asiatravelplan-staging/content/tours/ content/tours/
+rsync -av --delete atp:/srv/asiatravelplan-staging/content/translations/ content/translations/
+rsync -av atp:/srv/asiatravelplan-staging/content/translation_rules.json atp:/srv/asiatravelplan-staging/content/translation_protected_terms.json content/
 
 
 ## compare local content vs ATP
@@ -18,11 +22,15 @@ rsync -av atp:/srv/asiatravelplan-staging/content/tours/ content/tours/
 ## copy to backup
 rsync -av content/atp_staff/ backup/atp_staff/
 rsync -av content/tours/ backup/tours/
+rsync -av --delete content/translations/ backup/translations/
+rsync -av content/translation_rules.json content/translation_protected_terms.json backup/
 
 
 ## restore from backup
 rsync -av backup/atp_staff/ content/atp_staff/
 rsync -av backup/tours/ content/tours/
+rsync -av --delete backup/translations/ content/translations/
+rsync -av backup/translation_rules.json backup/translation_protected_terms.json content/
 
 
 ### CAUTION

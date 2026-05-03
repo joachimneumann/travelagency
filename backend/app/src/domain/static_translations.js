@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 import {
   BACKEND_UI_LANGUAGES,
@@ -166,7 +166,6 @@ export function createStaticTranslationService({
   nowIso = () => new Date().toISOString(),
   readJsonFile = defaultReadJsonFile,
   mkdirFn = mkdir,
-  rmFn = rm,
   writeFileFn = writeFile,
   renameFn = rename,
   writesEnabled = true
@@ -237,6 +236,30 @@ export function createStaticTranslationService({
     return path.posix.join(scope.section || "translations", `${scope.subsection || config.id}.${targetLang}.json`);
   }
 
+  function translationStorePath(config, language) {
+    return path.join(translationsSnapshotDir, snapshotRelativeFile(config, language.code));
+  }
+
+  function isManualStoreOrigin(origin) {
+    return ["manual", "manual_override", "override"].includes(normalizeText(origin));
+  }
+
+  function storeItemManualOverride(item) {
+    const explicit = normalizeText(item?.manual_override);
+    if (explicit) return explicit;
+    return isManualStoreOrigin(item?.origin) ? normalizeText(item?.target_text) : "";
+  }
+
+  function storeItemMachineText(item) {
+    const explicit = normalizeText(item?.machine_text);
+    if (explicit) return explicit;
+    return isManualStoreOrigin(item?.origin) ? "" : normalizeText(item?.target_text);
+  }
+
+  function storeItemEffectiveTarget(item) {
+    return storeItemManualOverride(item) || storeItemMachineText(item) || normalizeText(item?.target_text);
+  }
+
   function rowTargetText(row) {
     return normalizeText(row?.override) || normalizeText(row?.cached);
   }
@@ -270,22 +293,108 @@ export function createStaticTranslationService({
   }
 
   async function readPublishedIndex() {
-    const manifestPath = path.join(translationsSnapshotDir, "manifest.json");
-    const { data: manifest } = await readJsonFile(manifestPath, {});
-    const sections = Array.isArray(manifest?.sections) ? manifest.sections : [];
-    const rows = new Map();
-    await Promise.all(sections.map(async (section) => {
-      const relativeFile = normalizeText(section?.file);
-      if (!relativeFile) return;
-      const { data } = await readJsonFile(path.join(translationsSnapshotDir, relativeFile), {});
-      const items = Array.isArray(data?.items) ? data.items : [];
-      for (const item of items) {
-        const ref = normalizeText(item?.source_ref);
-        const lang = normalizeText(item?.target_lang);
-        if (ref && lang) rows.set(`${ref}|${lang}`, item);
-      }
-    }));
-    return { manifest, rows };
+    return { manifest: {}, rows: new Map() };
+  }
+
+  async function readTranslationStoreManifest() {
+    return readJsonFile(path.join(translationsSnapshotDir, "manifest.json"), {});
+  }
+
+  function sectionMatches(config, language, section) {
+    return normalizeText(section?.domain).toLowerCase() === config.id
+      && normalizeText(section?.subsection).toLowerCase() === normalizeText(config.subsection)
+      && normalizeText(section?.source_lang).toLowerCase() === configSourceLang(config)
+      && normalizeText(section?.target_lang).toLowerCase() === language.code;
+  }
+
+  async function readTranslationStoreSection(config, language) {
+    const { data: manifest } = await readTranslationStoreManifest();
+    const section = (Array.isArray(manifest?.sections) ? manifest.sections : [])
+      .find((entry) => sectionMatches(config, language, entry)) || null;
+    const relativeFile = normalizeText(section?.file) || snapshotRelativeFile(config, language.code);
+    const { data, raw } = await readJsonFile(path.join(translationsSnapshotDir, relativeFile), {});
+    return {
+      manifest,
+      section,
+      relativeFile,
+      raw,
+      items: Array.isArray(data?.items) ? data.items : []
+    };
+  }
+
+  function sourceSetHashForItems(items) {
+    return sha256(JSON.stringify(items.map((item) => ({
+      source_ref: item.source_ref,
+      source_hash: item.source_hash,
+      target_lang: item.target_lang,
+      target_hash: item.target_hash
+    }))));
+  }
+
+  function storeSectionDescriptor(config, language, relativeFile, itemCount) {
+    return {
+      domain: config.id,
+      label: config.label,
+      section: config.section,
+      subsection: config.subsection,
+      audience: config.audience,
+      source_lang: configSourceLang(config),
+      target_lang: language.code,
+      item_count: Number(itemCount || 0),
+      file: relativeFile
+    };
+  }
+
+  async function writeTranslationStoreSection(config, language, rows) {
+    const timestamp = nowIso();
+    const relativeFile = snapshotRelativeFile(config, language.code);
+    const items = (Array.isArray(rows) ? rows : [])
+      .filter((row) => normalizeText(row?.source) && normalizeText(row?.key))
+      .map((row) => snapshotItem(config, language, row, timestamp));
+    const sourceSetHash = sourceSetHashForItems(items);
+    const sectionPath = translationStorePath(config, language);
+    await writeJsonAtomic(sectionPath, {
+      schema: TRANSLATION_SNAPSHOT_SCHEMA,
+      schema_version: 1,
+      generated_at: timestamp,
+      source_set_hash: sourceSetHash,
+      domain: config.id,
+      label: config.label,
+      section: config.section,
+      subsection: config.subsection,
+      audience: config.audience,
+      source_lang: configSourceLang(config),
+      target_lang: language.code,
+      item_count: items.length,
+      items
+    });
+
+    const { data: manifest } = await readTranslationStoreManifest();
+    const sections = (Array.isArray(manifest?.sections) ? manifest.sections : [])
+      .filter((section) => !sectionMatches(config, language, section));
+    sections.push(storeSectionDescriptor(config, language, relativeFile, items.length));
+    sections.sort((left, right) => (
+      `${normalizeText(left.section)}|${normalizeText(left.subsection)}|${normalizeText(left.target_lang)}`
+        .localeCompare(`${normalizeText(right.section)}|${normalizeText(right.subsection)}|${normalizeText(right.target_lang)}`, "en")
+    ));
+    const nextManifest = {
+      schema: TRANSLATION_SNAPSHOT_SCHEMA,
+      schema_version: 1,
+      generated_at: timestamp,
+      source_set_hash: sourceSetHashForItems(sections.map((section) => ({
+        source_ref: `${section.domain}:${section.subsection}`,
+        source_hash: "",
+        target_lang: section.target_lang,
+        target_hash: `${section.file}:${section.item_count}`
+      }))),
+      staff_languages: Array.from(new Set(sections.filter((section) => section.section === "staff").map((section) => section.target_lang))).sort(),
+      customer_languages: Array.from(new Set(sections.filter((section) => section.section === "customers").map((section) => section.target_lang))).sort(),
+      items_count: sections.reduce((total, section) => total + Number(section.item_count || 0), 0),
+      total_items: sections.reduce((total, section) => total + Number(section.item_count || 0), 0),
+      sections
+    };
+    await writeJsonAtomic(path.join(translationsSnapshotDir, "manifest.json"), nextManifest);
+    return nextManifest;
   }
 
   function augmentRow(config, language, row, publishedIndex = null) {
@@ -313,21 +422,13 @@ export function createStaticTranslationService({
     } else if (!targetText) {
       next.publish_state = "untranslated";
     } else {
-      const published = publishedIndex?.rows?.get(`${next.source_ref}|${language.code}`);
-      next.publish_state = published
-        && normalizeText(published.source_hash) === normalizeText(next.source_hash)
-        && normalizeText(published.target_text) === targetText
-        ? "published"
-        : "unpublished";
-      next.published_at = next.publish_state === "published"
-        ? normalizeText(published?.published_at || publishedIndex?.manifest?.published_at || publishedIndex?.manifest?.generated_at)
-        : "";
+      next.publish_state = next.freshness_state === "current" ? "published" : "unpublished";
+      next.published_at = "";
     }
 
     next.dirty = next.required && (
       next.freshness_state !== "current"
       || next.publish_state === "untranslated"
-      || next.publish_state === "unpublished"
       || next.review_state === "needs_translation"
       || next.review_state === "needs_update"
     );
@@ -352,6 +453,96 @@ export function createStaticTranslationService({
       }
       return acc;
     }, {});
+  }
+
+  function rowFromStoreItem(config, language, sourceRow, item) {
+    const source = sourceRow?.source ?? String(item?.source_text ?? "");
+    const expectedSourceHash = sourceRow?.source_hash || sourceHash(source);
+    const manualOverride = storeItemManualOverride(item);
+    const machineText = storeItemMachineText(item);
+    const origin = manualOverride
+      ? "manual_override"
+      : normalizeText(item?.origin || item?.cache_meta?.origin) || (machineText ? "machine" : "");
+    const cachedSourceHash = normalizeText(item?.source_hash);
+    return {
+      key: normalizeText(sourceRow?.key || item?.key),
+      source,
+      cached: machineText,
+      override: manualOverride,
+      status: rowStatus({
+        sourceValue: source,
+        cachedValue: machineText,
+        overrideValue: manualOverride,
+        metaEntry: { source_hash: cachedSourceHash, origin },
+        expectedSourceHash,
+        isExtra: !sourceRow
+      }),
+      source_hash: expectedSourceHash,
+      cached_source_hash: cachedSourceHash,
+      origin,
+      updated_at: normalizeText(item?.updated_at || item?.published_at || item?.generated_at),
+      cache_meta: {
+        ...(item?.cache_meta && typeof item.cache_meta === "object" && !Array.isArray(item.cache_meta) ? item.cache_meta : {}),
+        source_hash: cachedSourceHash,
+        target_hash: normalizeText(item?.target_hash),
+        provider: item?.provider || item?.cache_meta?.provider || null
+      }
+    };
+  }
+
+  async function rowsFromTranslationStore(config, language, sourceRows, legacyRows = [], { publishedIndex = null } = {}) {
+    const store = await readTranslationStoreSection(config, language);
+    const storeItemsByKey = new Map();
+    for (const item of store.items) {
+      const key = normalizeText(item?.key);
+      if (key && !storeItemsByKey.has(key)) storeItemsByKey.set(key, item);
+    }
+    const legacyRowsByKey = new Map((Array.isArray(legacyRows) ? legacyRows : [])
+      .filter((row) => normalizeText(row?.key))
+      .map((row) => [normalizeText(row.key), row]));
+    const sourceRowsByKey = new Map((Array.isArray(sourceRows) ? sourceRows : [])
+      .filter((row) => normalizeText(row?.key))
+      .map((row) => [normalizeText(row.key), row]));
+
+    const rows = [];
+    for (const sourceRow of sourceRowsByKey.values()) {
+      const key = normalizeText(sourceRow.key);
+      const item = storeItemsByKey.get(key);
+      if (item) {
+        rows.push(rowFromStoreItem(config, language, sourceRow, item));
+        continue;
+      }
+      const legacy = legacyRowsByKey.get(key);
+      rows.push(legacy || {
+        key,
+        source: sourceRow.source,
+        cached: "",
+        override: "",
+        status: "missing",
+        source_hash: sourceRow.source_hash,
+        cached_source_hash: "",
+        origin: "",
+        updated_at: "",
+        cache_meta: {}
+      });
+    }
+
+    for (const [key, item] of storeItemsByKey.entries()) {
+      if (sourceRowsByKey.has(key)) continue;
+      rows.push(rowFromStoreItem(config, language, null, item));
+    }
+    for (const [key, legacy] of legacyRowsByKey.entries()) {
+      if (sourceRowsByKey.has(key) || storeItemsByKey.has(key)) continue;
+      rows.push({ ...legacy, status: "extra" });
+    }
+
+    const augmentedRows = await augmentRows(config, language, rows, publishedIndex);
+    const counts = countRows(augmentedRows);
+    return {
+      revision: sha256(store.raw || JSON.stringify(store.items || [])),
+      rows: augmentedRows,
+      counts
+    };
   }
 
   function rowStatus({ sourceValue, cachedValue, overrideValue, metaEntry, expectedSourceHash, isExtra }) {
@@ -524,17 +715,18 @@ export function createStaticTranslationService({
   }
 
   async function loadTranslationMemoryState(config, language, { publishedIndex = null } = {}) {
-    if (!translationMemoryStore || typeof translationMemoryStore.readTranslationMemory !== "function") {
-      throw apiError(500, "STATIC_TRANSLATION_MEMORY_UNAVAILABLE", "Translation memory storage is not configured.");
+    const sourceTexts = await collectTranslationMemorySources(config);
+    const sourceRows = sourceTexts.map((source) => ({
+      key: sourceKey(source),
+      source,
+      source_hash: sourceKey(source)
+    }));
+    let memory = { items: {}, revision: "" };
+    if (translationMemoryStore && typeof translationMemoryStore.readTranslationMemory === "function") {
+      memory = await translationMemoryStore.readTranslationMemory();
     }
-    const [memory, sourceTexts] = await Promise.all([
-      translationMemoryStore.readTranslationMemory(),
-      collectTranslationMemorySources(config)
-    ]);
-    const rowsByKey = new Map(sourceTexts.map((source) => [sourceKey(source), { source }]));
-
-    const rows = Array.from(rowsByKey.entries())
-      .map(([key, { source }]) => {
+    const legacyRows = sourceRows
+      .map(({ key, source }) => {
         const target = memory.items?.[key]?.targets?.[language.code] || {};
         const cached = normalizeText(target.machine);
         const override = normalizeText(target.manual_override);
@@ -558,17 +750,16 @@ export function createStaticTranslationService({
         };
       })
       .sort((left, right) => left.source.localeCompare(right.source, "en", { sensitivity: "base" }));
-    const augmentedRows = await augmentRows(config, language, rows, publishedIndex);
-    const counts = countRows(augmentedRows);
+    const storeState = await rowsFromTranslationStore(config, language, sourceRows, legacyRows, { publishedIndex });
     return {
       domain: domainSummary(config),
       language,
       source_lang: config.sourceLang,
       target_lang: language.code,
-      revision: memory.revision,
-      total: augmentedRows.length,
-      counts,
-      rows: augmentedRows
+      revision: storeState.revision || memory.revision,
+      total: storeState.rows.length,
+      counts: storeState.counts,
+      rows: storeState.rows
     };
   }
 
@@ -611,7 +802,7 @@ export function createStaticTranslationService({
       readDestinationScopeStore(),
       readTranslationMemoryOrEmpty()
     ]);
-    const rows = destinationScopeCatalogRecordEntries(store)
+    const legacyRows = destinationScopeCatalogRecordEntries(store)
       .map((entry) => {
         const source = destinationRecordSource(entry.record, entry.sourceField, entry.sourceFallback);
         const map = normalizeLocalizedTextMap(entry.record[entry.mapField]);
@@ -642,17 +833,21 @@ export function createStaticTranslationService({
       })
       .sort((left, right) => left.source.localeCompare(right.source, "en", { sensitivity: "base" }));
 
-    const augmentedRows = await augmentRows(config, language, rows, publishedIndex);
-    const counts = countRows(augmentedRows);
+    const sourceRows = legacyRows.map((row) => ({
+      key: row.key,
+      source: row.source,
+      source_hash: row.source_hash
+    }));
+    const storeState = await rowsFromTranslationStore(config, language, sourceRows, legacyRows, { publishedIndex });
     return {
       domain: domainSummary(config),
       language,
       source_lang: config.sourceLang,
       target_lang: language.code,
-      revision: destinationCatalogStateRevision(augmentedRows, memory.revision),
-      total: augmentedRows.length,
-      counts,
-      rows: augmentedRows
+      revision: storeState.revision || destinationCatalogStateRevision(storeState.rows, memory.revision),
+      total: storeState.rows.length,
+      counts: storeState.counts,
+      rows: storeState.rows
     };
   }
 
@@ -673,8 +868,12 @@ export function createStaticTranslationService({
     ]);
 
     const sourceKeys = Object.keys(source || {});
-    const sourceKeySet = new Set(sourceKeys);
-    const rows = sourceKeys.map((key) => {
+    const sourceRows = sourceKeys.map((key) => ({
+      key,
+      source: String(source[key] ?? ""),
+      source_hash: sourceHash(String(source[key] ?? ""))
+    }));
+    const legacyRows = sourceKeys.map((key) => {
       const sourceValue = String(source[key] ?? "");
       const expectedSourceHash = sourceHash(sourceValue);
       const metaEntry = meta?.[key] && typeof meta[key] === "object" ? meta[key] : {};
@@ -709,7 +908,7 @@ export function createStaticTranslationService({
     for (const key of sourceKeys) extraKeys.delete(key);
     for (const key of Array.from(extraKeys).sort()) {
       const metaEntry = meta?.[key] && typeof meta[key] === "object" ? meta[key] : {};
-      rows.push({
+      legacyRows.push({
         key,
         source: "",
         cached: String(target?.[key] ?? ""),
@@ -723,18 +922,17 @@ export function createStaticTranslationService({
       });
     }
 
-    const augmentedRows = await augmentRows(config, language, rows, publishedIndex);
-    const counts = countRows(augmentedRows);
+    const storeState = await rowsFromTranslationStore(config, language, sourceRows, legacyRows, { publishedIndex });
 
     return {
       domain: domainSummary(config),
       language,
       source_lang: config.sourceLang,
       target_lang: language.code,
-      revision: sha256(overrideRaw),
-      total: augmentedRows.length,
-      counts,
-      rows: augmentedRows
+      revision: storeState.revision || sha256(overrideRaw),
+      total: storeState.rows.length,
+      counts: storeState.counts,
+      rows: storeState.rows
     };
   }
 
@@ -743,6 +941,59 @@ export function createStaticTranslationService({
     const tempPath = `${filePath}.${process.pid}.${Date.now()}.tmp`;
     await writeFileFn(tempPath, `${JSON.stringify(data, null, 2)}\n`, "utf8");
     await renameFn(tempPath, filePath);
+  }
+
+  async function patchTranslationStoreOverrides(config, language, payload = {}) {
+    const expectedRevision = normalizeText(payload?.expected_revision);
+    const updates = payload?.overrides && typeof payload.overrides === "object" && !Array.isArray(payload.overrides)
+      ? payload.overrides
+      : null;
+    if (!updates) {
+      throw apiError(400, "STATIC_TRANSLATION_INVALID_OVERRIDES", "overrides must be an object keyed by translation id.");
+    }
+
+    const currentState = await loadState(config.id, language.code);
+    if (expectedRevision && expectedRevision !== currentState.revision) {
+      throw apiError(409, "STATIC_TRANSLATION_REVISION_MISMATCH", "Translations changed. Refresh and retry.");
+    }
+    const rowsByKey = new Map(currentState.rows.map((row) => [row.key, { ...row }]));
+    const unknownKeys = Object.keys(updates).filter((key) => !rowsByKey.has(key) || !rowsByKey.get(key)?.source);
+    if (unknownKeys.length) {
+      throw apiError(400, "STATIC_TRANSLATION_UNKNOWN_KEY", `Unknown translation key: ${unknownKeys[0]}`);
+    }
+
+    for (const [key, rawValue] of Object.entries(updates)) {
+      const row = rowsByKey.get(key);
+      const value = normalizeText(rawValue);
+      row.override = value;
+      row.origin = value ? "manual_override" : normalizeText(row.cache_origin || row.cache_meta?.origin || row.origin);
+      row.updated_at = nowIso();
+    }
+
+    await writeTranslationStoreSection(config, language, Array.from(rowsByKey.values()));
+    return loadState(config.id, language.code);
+  }
+
+  async function deleteTranslationStoreCache(config, language, key, payload = {}) {
+    const currentState = await loadState(config.id, language.code);
+    const expectedRevision = normalizeText(payload?.expected_revision);
+    if (expectedRevision && expectedRevision !== currentState.revision) {
+      throw apiError(409, "STATIC_TRANSLATION_REVISION_MISMATCH", "Translations changed. Refresh and retry.");
+    }
+    const rows = currentState.rows.map((row) => ({ ...row }));
+    const row = rows.find((entry) => entry.key === key);
+    if (!row || !row.source) {
+      throw apiError(400, "STATIC_TRANSLATION_UNKNOWN_KEY", `Unknown translation key: ${key}`);
+    }
+    row.cached = "";
+    row.origin = normalizeText(row.override) ? "manual_override" : "";
+    row.updated_at = nowIso();
+    row.cache_meta = {
+      ...(row.cache_meta && typeof row.cache_meta === "object" && !Array.isArray(row.cache_meta) ? row.cache_meta : {}),
+      provider: null
+    };
+    await writeTranslationStoreSection(config, language, rows);
+    return loadState(config.id, language.code);
   }
 
   async function patchTranslationMemoryOverrides(config, language, payload = {}) {
@@ -910,59 +1161,13 @@ export function createStaticTranslationService({
     if (!normalizedKey) {
       throw apiError(400, "STATIC_TRANSLATION_UNKNOWN_KEY", "Translation key is required.");
     }
-    if (config.kind === "translation_memory") {
-      return deleteTranslationMemoryCache(config, language, normalizedKey, payload);
-    }
-    if (config.kind === "destination_scope_catalog") {
-      return deleteDestinationScopeCatalogCache(config, language, normalizedKey, payload);
-    }
-    return deleteStaticCache(config, language, normalizedKey);
+    return deleteTranslationStoreCache(config, language, normalizedKey, payload);
   }
 
   async function patchOverrides(domain, targetLang, payload = {}) {
     assertWritesEnabled();
     const { config, language } = getLanguageConfig(domain, targetLang);
-    if (config.kind === "translation_memory") {
-      return patchTranslationMemoryOverrides(config, language, payload);
-    }
-    if (config.kind === "destination_scope_catalog") {
-      return patchDestinationScopeCatalogOverrides(config, language, payload);
-    }
-
-    const expectedRevision = normalizeText(payload?.expected_revision);
-    const updates = payload?.overrides && typeof payload.overrides === "object" && !Array.isArray(payload.overrides)
-      ? payload.overrides
-      : null;
-    if (!updates) {
-      throw apiError(400, "STATIC_TRANSLATION_INVALID_OVERRIDES", "overrides must be an object keyed by translation id.");
-    }
-
-    const [{ data: source }, { data: currentOverrides, raw: currentRaw }] = await Promise.all([
-      readJsonFile(config.sourcePath(), {}),
-      readJsonFile(config.overridePath(language.code), {})
-    ]);
-    const currentRevision = sha256(currentRaw);
-    if (expectedRevision && expectedRevision !== currentRevision) {
-      throw apiError(409, "STATIC_TRANSLATION_REVISION_MISMATCH", "Translation overrides changed. Refresh and retry.");
-    }
-
-    const nextOverrides = { ...(currentOverrides || {}) };
-    for (const [key, rawValue] of Object.entries(updates)) {
-      if (!Object.prototype.hasOwnProperty.call(source, key)) {
-        throw apiError(400, "STATIC_TRANSLATION_UNKNOWN_KEY", `Unknown translation key: ${key}`);
-      }
-      const value = normalizeText(rawValue);
-      if (value) {
-        nextOverrides[key] = value;
-      } else {
-        delete nextOverrides[key];
-      }
-    }
-
-    const ordered = sortOverridesBySource(source, nextOverrides);
-    const overridePath = config.overridePath(language.code);
-    await writeJsonAtomic(overridePath, ordered);
-    return loadState(config.id, language.code);
+    return patchTranslationStoreOverrides(config, language, payload);
   }
 
   function translationProfileForConfig(config) {
@@ -1050,9 +1255,29 @@ export function createStaticTranslationService({
         .filter(([key, value]) => Boolean(key && value))
     );
 
+    const nextRows = rows.map((row) => {
+      if (!Object.prototype.hasOwnProperty.call(translatedEntries, row.key)) return row;
+      return {
+        ...row,
+        cached: translatedEntries[row.key],
+        origin: "machine",
+        updated_at: nowIso(),
+        cache_meta: {
+          ...(row.cache_meta && typeof row.cache_meta === "object" && !Array.isArray(row.cache_meta) ? row.cache_meta : {}),
+          source_hash: row.source_hash,
+          provider: result?.provider || null
+        }
+      };
+    });
+    await writeTranslationStoreSection(config, language, nextRows);
+
     if (config.kind === "translation_memory") {
       if (!translationMemoryStore || typeof translationMemoryStore.writeMachineTranslations !== "function") {
-        throw apiError(500, "STATIC_TRANSLATION_MEMORY_UNAVAILABLE", "Translation memory storage is not configured.");
+        reportProgress(candidates.length);
+        return {
+          requested_count: candidates.length,
+          translated_count: Object.keys(translatedEntries).length
+        };
       }
       await translationMemoryStore.writeMachineTranslations(entries, translatedEntries, language.code, result?.provider || null);
     }
@@ -1120,9 +1345,21 @@ export function createStaticTranslationService({
         .map(([key, value]) => [key, normalizeText(value)])
         .filter(([key, value]) => Boolean(key && value))
     );
-    if (Object.keys(translatedEntries).length) {
-      await persistDestinationScopeCatalogTargets(language.code, translatedEntries);
-    }
+    const nextRows = rows.map((row) => {
+      if (!Object.prototype.hasOwnProperty.call(translatedEntries, row.key)) return row;
+      return {
+        ...row,
+        cached: translatedEntries[row.key],
+        origin: "machine",
+        updated_at: nowIso(),
+        cache_meta: {
+          ...(row.cache_meta && typeof row.cache_meta === "object" && !Array.isArray(row.cache_meta) ? row.cache_meta : {}),
+          source_hash: row.source_hash,
+          provider: result?.provider || null
+        }
+      };
+    });
+    await writeTranslationStoreSection(config, language, nextRows);
 
     reportProgress(candidates.length);
     return {
@@ -1164,14 +1401,19 @@ export function createStaticTranslationService({
   }
 
   async function clearTranslationMemoryCache(config, language) {
-    if (!translationMemoryStore || typeof translationMemoryStore.deleteMachineTranslations !== "function") {
-      throw apiError(500, "STATIC_TRANSLATION_MEMORY_UNAVAILABLE", "Translation memory storage is not configured.");
-    }
     const state = await loadState(config.id, language.code);
-    const sourceTexts = (state.rows || [])
+    const rows = (state.rows || []).map((row) => ({ ...row }));
+    const sourceTexts = rows
       .filter((row) => row?.required && normalizeText(row.cached) && normalizeText(row.source))
       .map((row) => row.source);
-    if (sourceTexts.length) {
+    for (const row of rows) {
+      if (!row?.required || !normalizeText(row.cached)) continue;
+      row.cached = "";
+      row.origin = normalizeText(row.override) ? "manual_override" : "";
+      row.updated_at = nowIso();
+    }
+    if (sourceTexts.length) await writeTranslationStoreSection(config, language, rows);
+    if (sourceTexts.length && translationMemoryStore && typeof translationMemoryStore.deleteMachineTranslations === "function") {
       await translationMemoryStore.deleteMachineTranslations(language.code, sourceTexts);
     }
     return {
@@ -1187,7 +1429,6 @@ export function createStaticTranslationService({
     };
 
     for (const config of normalizeTranslationDomains(options)) {
-      if (config.kind !== "translation_memory") continue;
       for (const language of publishLanguagesForConfig(config, options)) {
         const result = await clearTranslationMemoryCache(config, language);
         summary.cleared_count += result.cleared_count;
@@ -1219,7 +1460,6 @@ export function createStaticTranslationService({
       : [];
     const requestedSet = new Set(requested);
     return Object.values(configs).filter((config) => {
-      if (!["translation_memory", "destination_scope_catalog"].includes(config.kind)) return false;
       return requestedSet.size ? requestedSet.has(config.id) : true;
     });
   }
@@ -1264,8 +1504,10 @@ export function createStaticTranslationService({
 
   function snapshotItem(config, language, row, publishedAt = "") {
     const targetText = rowTargetText(row);
+    const manualOverride = normalizeText(row.override);
+    const machineText = normalizeText(row.cached);
     return {
-      source_ref: row.source_ref,
+      source_ref: normalizeText(row.source_ref) || sourceRef(config, row.key),
       key: row.key,
       domain: config.id,
       section: row.section,
@@ -1278,24 +1520,17 @@ export function createStaticTranslationService({
       source_hash: row.source_hash,
       target_text: targetText,
       target_hash: sourceHash(targetText),
+      machine_text: machineText,
+      manual_override: manualOverride,
       origin: row.origin,
       freshness_state: row.freshness_state,
       job_state: row.job_state,
-      publish_state: "published",
+      publish_state: row.publish_state,
       review_state: row.review_state,
-      published_at: normalizeText(publishedAt),
+      generated_at: normalizeText(publishedAt),
       updated_at: normalizeText(row.updated_at),
       cache_meta: row.cache_meta || {}
     };
-  }
-
-  function sourceSetHashForItems(items) {
-    return sha256(JSON.stringify(items.map((item) => ({
-      source_ref: item.source_ref,
-      source_hash: item.source_hash,
-      target_lang: item.target_lang,
-      target_hash: item.target_hash
-    }))));
   }
 
   async function publishTranslations(options = {}) {
@@ -1325,6 +1560,8 @@ export function createStaticTranslationService({
         const items = rows.map((row) => snapshotItem(config, language, row, timestamp));
         allItems.push(...items);
         sections.push({
+          config,
+          language,
           domain: config.id,
           label: config.label,
           section: config.section,
@@ -1334,6 +1571,7 @@ export function createStaticTranslationService({
           target_lang: language.code,
           item_count: items.length,
           file: snapshotRelativeFile(config, language.code),
+          rows,
           items
         });
       }
@@ -1349,52 +1587,21 @@ export function createStaticTranslationService({
       throw error;
     }
 
-    const sourceSetHash = sourceSetHashForItems(allItems);
-    const tempDir = `${translationsSnapshotDir}.next-${process.pid}-${Date.now()}`;
-    await rmFn(tempDir, { recursive: true, force: true });
-    try {
-      await mkdirFn(tempDir, { recursive: true });
-      for (const section of sections) {
-        const filePath = path.join(tempDir, section.file);
-        await mkdirFn(path.dirname(filePath), { recursive: true });
-        await writeFileFn(filePath, `${JSON.stringify({
-          schema: TRANSLATION_SNAPSHOT_SCHEMA,
-          schema_version: 1,
-          published_at: timestamp,
-          generated_at: timestamp,
-          source_set_hash: sourceSetHash,
-          domain: section.domain,
-          label: section.label,
-          section: section.section,
-          subsection: section.subsection,
-          audience: section.audience,
-          source_lang: section.source_lang,
-          target_lang: section.target_lang,
-          item_count: section.item_count,
-          items: section.items
-        }, null, 2)}\n`, "utf8");
-      }
-
-      const manifest = {
-        schema: TRANSLATION_SNAPSHOT_SCHEMA,
-        schema_version: 1,
-        published_at: timestamp,
-        generated_at: timestamp,
-        source_set_hash: sourceSetHash,
-        staff_languages: Array.from(new Set(sections.filter((section) => section.section === "staff").map((section) => section.target_lang))).sort(),
-        customer_languages: Array.from(new Set(sections.filter((section) => section.section === "customers").map((section) => section.target_lang))).sort(),
-        items_count: allItems.length,
-        total_items: allItems.length,
-        sections: sections.map(({ items, ...section }) => section)
-      };
-      await writeFileFn(path.join(tempDir, "manifest.json"), `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
-      await rmFn(translationsSnapshotDir, { recursive: true, force: true });
-      await renameFn(tempDir, translationsSnapshotDir);
-      return manifest;
-    } catch (error) {
-      await rmFn(tempDir, { recursive: true, force: true });
-      throw error;
+    let manifest = null;
+    for (const section of sections) {
+      manifest = await writeTranslationStoreSection(section.config, section.language, section.rows);
     }
+    return manifest || {
+      schema: TRANSLATION_SNAPSHOT_SCHEMA,
+      schema_version: 1,
+      generated_at: timestamp,
+      source_set_hash: sourceSetHashForItems(allItems),
+      staff_languages: Array.from(new Set(sections.filter((section) => section.section === "staff").map((section) => section.target_lang))).sort(),
+      customer_languages: Array.from(new Set(sections.filter((section) => section.section === "customers").map((section) => section.target_lang))).sort(),
+      items_count: allItems.length,
+      total_items: allItems.length,
+      sections: sections.map(({ config, language, rows, items, ...section }) => section)
+    };
   }
 
   return {

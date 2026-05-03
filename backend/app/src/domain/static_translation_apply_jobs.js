@@ -204,7 +204,7 @@ function targetArgs(targetLangs) {
 }
 
 function runtimeI18nPhase() {
-  return commandPhase("runtime_i18n", "Generate runtime i18n from published snapshots", process.execPath, ["scripts/i18n/build_runtime_i18n.mjs", "--strict"]);
+  return commandPhase("runtime_i18n", "Generate runtime i18n from content/translations", process.execPath, ["scripts/i18n/build_runtime_i18n.mjs", "--strict"]);
 }
 
 function homepageAssetsPhase() {
@@ -230,26 +230,19 @@ function issueEntriesFromStatus(status) {
 }
 
 function fallbackApplyPhases({ applyTranslations, includeHomepageAssets = true } = {}) {
-  const phases = [
-    commandPhase("backend_translate", "Apply backend UI translation overrides", process.execPath, ["scripts/i18n/sync_backend_i18n.mjs", "translate", "--target", "vi"]),
-    commandPhase("frontend_translate", "Apply customer-facing translation overrides", process.execPath, ["scripts/i18n/sync_frontend_i18n.mjs", "translate"])
-  ];
+  const phases = [];
   if (typeof applyTranslations === "function") {
-    phases.push(callbackPhase("central_translate", "Translate central content and memory", async (_phase, job, helpers) => {
+    phases.push(callbackPhase("translate_content_store", "Translate missing and stale strings", async (_phase, job, helpers) => {
       const summary = await applyTranslations();
       helpers.appendLog(
         job,
-        `Translated ${summary?.translated_count || 0} central translation item${summary?.translated_count === 1 ? "" : "s"}.`
+        `Translated ${summary?.translated_count || 0} translation item${summary?.translated_count === 1 ? "" : "s"} in content/translations.`
       );
     }));
   }
   if (includeHomepageAssets) {
     phases.push(homepageAssetsPhase());
   }
-  phases.push(
-    commandPhase("backend_check", "Check backend UI translations", process.execPath, ["scripts/i18n/sync_backend_i18n.mjs", "check", "--target", "vi"]),
-    commandPhase("frontend_check", "Check customer-facing translations", process.execPath, ["scripts/i18n/sync_frontend_i18n.mjs", "check"])
-  );
   return phases;
 }
 
@@ -260,50 +253,16 @@ async function applyPhases({ applyTranslations, getStatusSummary } = {}) {
 
   const status = await getStatusSummary();
   const issueEntries = issueEntriesFromStatus(status);
-  const backendTargets = issueEntries
-    .filter((entry) => normalizeText(entry.domain) === "backend")
-    .map((entry) => entry.target_lang);
-  const backendEntries = issueEntries
-    .filter((entry) => normalizeText(entry.domain) === "backend");
-  const frontendTargets = issueEntries
-    .filter((entry) => normalizeText(entry.domain) === "frontend")
-    .map((entry) => entry.target_lang);
-  const frontendEntries = issueEntries
-    .filter((entry) => normalizeText(entry.domain) === "frontend");
-  const centralEntries = issueEntries
-    .filter((entry) => !["backend", "frontend"].includes(normalizeText(entry.domain)));
-  const centralOptions = centralApplyOptions(centralEntries);
+  const applyOptions = centralApplyOptions(issueEntries);
   const phases = [];
 
-  for (const targetLang of uniqueNormalized(backendTargets)) {
-    const progressCount = backendEntries
-      .filter((entry) => normalizeText(entry.target_lang).toLowerCase() === targetLang)
-      .reduce((total, entry) => total + countTranslationIssues(entry), 0);
-    phases.push(withProgress(commandPhase(
-      `backend_translate_${targetLang}`,
-      `Apply backend UI translations for ${targetLang}`,
-      process.execPath,
-      ["scripts/i18n/sync_backend_i18n.mjs", "translate", "--target", targetLang]
-    ), { progress_count: progressCount }));
-  }
-
-  const frontendTargetLangs = uniqueNormalized(frontendTargets);
-  if (frontendTargetLangs.length) {
-    phases.push(withProgress(commandPhase(
-      "frontend_translate",
-      `Apply customer-facing UI translations for ${frontendTargetLangs.join(", ")}`,
-      process.execPath,
-      ["scripts/i18n/sync_frontend_i18n.mjs", "translate", ...targetArgs(frontendTargetLangs)]
-    ), progressMetadataForTargetLangs(frontendEntries, frontendTargetLangs)));
-  }
-
-  if (centralOptions.domains.length && typeof applyTranslations === "function") {
-    const centralProgressKeys = [...new Set(centralEntries
+  if (applyOptions.domains.length && typeof applyTranslations === "function") {
+    const progressKeys = [...new Set(issueEntries
       .map(progressKeyForEntry)
       .filter(Boolean))];
-    phases.push(withProgress(callbackPhase("central_translate", "Translate central content and memory", async (phase, job, helpers) => {
+    phases.push(withProgress(callbackPhase("translate_content_store", "Translate missing and stale strings", async (phase, job, helpers) => {
       const summary = await applyTranslations({
-        ...centralOptions,
+        ...applyOptions,
         onProgress(progress = {}) {
           const domain = normalizeText(progress.domain);
           const targetLang = normalizeText(progress.target_lang).toLowerCase();
@@ -316,35 +275,13 @@ async function applyPhases({ applyTranslations, getStatusSummary } = {}) {
       });
       helpers.appendLog(
         job,
-        `Translated ${summary?.translated_count || 0} central translation item${summary?.translated_count === 1 ? "" : "s"}.`
+        `Translated ${summary?.translated_count || 0} translation item${summary?.translated_count === 1 ? "" : "s"} in content/translations.`
       );
-    }), progressMetadataForEntries(centralEntries, centralProgressKeys)));
-  } else if (centralOptions.domains.length) {
-    phases.push(withProgress(callbackPhase("central_translate", "Translate central content and memory", async () => {
-      throw apiError(500, "STATIC_TRANSLATION_PROVIDER_UNAVAILABLE", "Central translation apply service is not configured.");
-    }), progressMetadataForEntries(centralEntries)));
-  }
-
-  if (frontendTargetLangs.length) {
-    phases.push(homepageAssetsPhase());
-  }
-
-  for (const targetLang of uniqueNormalized(backendTargets)) {
-    phases.push(commandPhase(
-      `backend_check_${targetLang}`,
-      `Check backend UI translations for ${targetLang}`,
-      process.execPath,
-      ["scripts/i18n/sync_backend_i18n.mjs", "check", "--target", targetLang]
-    ));
-  }
-
-  if (frontendTargetLangs.length) {
-    phases.push(commandPhase(
-      "frontend_check",
-      `Check customer-facing UI translations for ${frontendTargetLangs.join(", ")}`,
-      process.execPath,
-      ["scripts/i18n/sync_frontend_i18n.mjs", "check", ...targetArgs(frontendTargetLangs)]
-    ));
+    }), progressMetadataForEntries(issueEntries, progressKeys)));
+  } else if (applyOptions.domains.length) {
+    phases.push(withProgress(callbackPhase("translate_content_store", "Translate missing and stale strings", async () => {
+      throw apiError(500, "STATIC_TRANSLATION_PROVIDER_UNAVAILABLE", "Static translation apply service is not configured.");
+    }), progressMetadataForEntries(issueEntries)));
   }
 
   if (!phases.length) {
@@ -360,7 +297,7 @@ function autoPublishPhases({ publishTranslations, getStatusSummary } = {}) {
   if (typeof publishTranslations !== "function" || typeof getStatusSummary !== "function") return [];
   const autoPublished = (job) => job?.auto_published === true;
   return [
-    callbackPhase("publish_snapshot", "Publish translation snapshot", async (_phase, job, helpers) => {
+    callbackPhase("validate_translation_store", "Validate content/translations", async (_phase, job, helpers) => {
       const status = await getStatusSummary();
       const issueEntries = issueEntriesFromStatus(status);
       const unavailableCount = Array.isArray(status?.unavailable) ? status.unavailable.length : 0;
@@ -369,8 +306,8 @@ function autoPublishPhases({ publishTranslations, getStatusSummary } = {}) {
         helpers.appendLog(
           job,
           unavailableCount
-            ? `Skipped publishing because ${unavailableCount} translation section${unavailableCount === 1 ? "" : "s"} could not be checked.`
-            : `Skipped publishing because ${issueEntries.length} translation target${issueEntries.length === 1 ? "" : "s"} still need work.`
+            ? `Skipped runtime generation because ${unavailableCount} translation section${unavailableCount === 1 ? "" : "s"} could not be checked.`
+            : `Skipped runtime generation because ${issueEntries.length} translation target${issueEntries.length === 1 ? "" : "s"} still need work.`
         );
         return;
       }
@@ -378,7 +315,7 @@ function autoPublishPhases({ publishTranslations, getStatusSummary } = {}) {
       job.auto_published = true;
       helpers.appendLog(
         job,
-        `Published ${manifest.total_items || 0} translation snapshot items. source_set_hash=${manifest.source_set_hash || ""}`
+        `Validated ${manifest.total_items || 0} content/translations item${manifest.total_items === 1 ? "" : "s"}. source_set_hash=${manifest.source_set_hash || ""}`
       );
     }),
     whenPhase(runtimeI18nPhase(), autoPublished),
@@ -389,11 +326,11 @@ function autoPublishPhases({ publishTranslations, getStatusSummary } = {}) {
 async function publishPhases({ applyTranslations, publishTranslations, getStatusSummary }) {
   return [
     ...fallbackApplyPhases({ applyTranslations, includeHomepageAssets: false }),
-    callbackPhase("publish_snapshot", "Publish translation snapshot", async (_phase, job, helpers) => {
+    callbackPhase("validate_translation_store", "Validate content/translations", async (_phase, job, helpers) => {
       const manifest = await publishTranslations();
       helpers.appendLog(
         job,
-        `Published ${manifest.total_items || 0} translation snapshot items. source_set_hash=${manifest.source_set_hash || ""}`
+        `Validated ${manifest.total_items || 0} content/translations item${manifest.total_items === 1 ? "" : "s"}. source_set_hash=${manifest.source_set_hash || ""}`
       );
     }),
     runtimeI18nPhase(),
@@ -402,23 +339,36 @@ async function publishPhases({ applyTranslations, publishTranslations, getStatus
 }
 
 function retranslatePhases({ mode, targetLang, clearTranslationCaches }) {
+  const clearPhase = (id, label, options) => callbackPhase(id, label, async (_phase, job, helpers) => {
+    if (typeof clearTranslationCaches !== "function") {
+      throw apiError(500, "STATIC_TRANSLATION_CACHE_CLEAR_UNAVAILABLE", "Translation cache clearing is not configured.");
+    }
+    const summary = await clearTranslationCaches(options);
+    helpers.appendLog(
+      job,
+      `Cleared ${summary?.cleared_count || 0} cached translation item${summary?.cleared_count === 1 ? "" : "s"}.`
+    );
+    helpers.appendLog(job, "Use Translate to rebuild missing machine translations in content/translations.");
+  });
+
   if (mode === "frontend_current_language") {
     const normalizedLang = normalizeText(targetLang).toLowerCase();
     if (!FRONTEND_LANGUAGE_CODES.includes(normalizedLang) || normalizedLang === "en") {
       throw apiError(400, "STATIC_TRANSLATION_INVALID_RETRANSLATE_TARGET", "Select a non-English frontend language to retranslate.");
     }
     return [
-      commandPhase("frontend_retranslate", `Retranslate frontend ${normalizedLang}`, process.execPath, ["scripts/i18n/sync_frontend_i18n.mjs", "translate", "--target", normalizedLang, "--force-all"]),
-      homepageAssetsPhase(),
-      commandPhase("frontend_check", `Check frontend ${normalizedLang}`, process.execPath, ["scripts/i18n/sync_frontend_i18n.mjs", "check", "--target", normalizedLang])
+      clearPhase("frontend_retranslate", `Clear frontend ${normalizedLang} machine translations`, {
+        domains: ["frontend"],
+        target_langs: [normalizedLang]
+      })
     ];
   }
 
   if (mode === "frontend_all_languages") {
     return [
-      commandPhase("frontend_retranslate_all", "Retranslate customer UI strings", process.execPath, ["scripts/i18n/sync_frontend_i18n.mjs", "translate", "--force-all"]),
-      homepageAssetsPhase(),
-      commandPhase("frontend_check", "Check customer-facing translations", process.execPath, ["scripts/i18n/sync_frontend_i18n.mjs", "check"])
+      clearPhase("frontend_retranslate_all", "Clear customer UI machine translations", {
+        domains: ["frontend"]
+      })
     ];
   }
 
@@ -435,15 +385,17 @@ function retranslatePhases({ mode, targetLang, clearTranslationCaches }) {
           job,
           `Cleared ${summary?.cleared_count || 0} cached marketing tour translation item${summary?.cleared_count === 1 ? "" : "s"}.`
         );
-        helpers.appendLog(job, "Use Translate to rebuild missing machine translations and publish clean snapshots.");
+        helpers.appendLog(job, "Use Translate to rebuild missing machine translations in content/translations.");
       })
     ];
   }
 
   if (mode === "backend_vi") {
     return [
-      commandPhase("backend_retranslate_vi", "Retranslate backend Vietnamese", process.execPath, ["scripts/i18n/sync_backend_i18n.mjs", "translate", "--target", "vi", "--force-all"]),
-      commandPhase("backend_check", "Check backend UI translations", process.execPath, ["scripts/i18n/sync_backend_i18n.mjs", "check", "--target", "vi"])
+      clearPhase("backend_retranslate_vi", "Clear backend Vietnamese machine translations", {
+        domains: ["backend"],
+        target_langs: ["vi"]
+      })
     ];
   }
 

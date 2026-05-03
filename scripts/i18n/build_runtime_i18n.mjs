@@ -85,7 +85,7 @@ function usage() {
     "  node scripts/i18n/build_runtime_i18n.mjs [--check] [--strict] [--target vi] [--domain frontend|backend]",
     "",
     "Options:",
-    "  --check               Validate published snapshots without writing runtime files.",
+    "  --check               Validate content/translations without writing runtime files.",
     "  --strict              Fail on missing, stale, duplicate, or extra snapshot keys. Default.",
     "  --no-strict           Ignore extra snapshot keys that are no longer in the source dictionary.",
     "  --target <lang>       Limit to one or more comma-separated target languages. Repeatable.",
@@ -197,7 +197,7 @@ function summarize(values, limit = 8) {
 function metadataFromSnapshotItem(item, snapshot, manifest, expectedHash) {
   return {
     source_hash: expectedHash,
-    origin: normalizeText(item?.origin || item?.cache_meta?.origin) || "published_snapshot",
+    origin: normalizeText(item?.origin || item?.cache_meta?.origin) || "content_translations",
     updated_at: normalizeText(
       item?.updated_at
       || item?.published_at
@@ -207,6 +207,15 @@ function metadataFromSnapshotItem(item, snapshot, manifest, expectedHash) {
       || manifest?.generated_at
     )
   };
+}
+
+function itemTargetText(item) {
+  return String(
+    normalizeText(item?.manual_override)
+      || normalizeText(item?.machine_text)
+      || item?.target_text
+      || ""
+  );
 }
 
 function validateSnapshotItems({ config, lang, source, snapshot, manifest, strict }) {
@@ -282,7 +291,7 @@ function validateSnapshotItems({ config, lang, source, snapshot, manifest, stric
 
     const itemSourceText = String(item.source_text ?? "");
     const itemSourceHash = normalizeText(item.source_hash);
-    const targetText = String(item.target_text ?? "");
+    const targetText = itemTargetText(item);
 
     if (itemSourceText !== sourceValue) {
       errors.push(`${config.id}/${lang}: ${key} has stale source_text.`);

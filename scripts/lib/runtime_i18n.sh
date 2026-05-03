@@ -20,8 +20,8 @@ run_runtime_i18n_generator_quiet() {
     return 1
   fi
   if [[ ! -f "$snapshot_manifest" ]]; then
-    echo "Error: published translation snapshot missing: $snapshot_manifest" >&2
-    echo "Publish translations first, restore content/translations, or sync the published snapshot before deploying." >&2
+    echo "Error: translation store missing: $snapshot_manifest" >&2
+    echo "Run Translate, restore content/translations, or sync the translation store before deploying." >&2
     return 1
   fi
 

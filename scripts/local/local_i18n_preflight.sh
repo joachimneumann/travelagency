@@ -30,10 +30,10 @@ run_local_i18n_preflight() {
   # shellcheck source=../lib/runtime_i18n.sh
   source "$runtime_i18n_helper"
 
-  echo "Building runtime i18n from published snapshots ..."
+  echo "Building runtime i18n from content/translations ..."
   if [[ ! -f "$snapshot_manifest" ]]; then
-    echo "Warning: published translation snapshot missing: $snapshot_manifest" >&2
-    echo "Local deploy will continue so you can publish the first snapshot from translations.html." >&2
+    echo "Warning: translation store missing: $snapshot_manifest" >&2
+    echo "Local deploy will continue so you can create content/translations from translations.html." >&2
     echo "After startup, open translations.html and run Translate." >&2
     export LOCAL_I18N_PREFLIGHT_DONE=1
     return 0
