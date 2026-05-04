@@ -48,7 +48,7 @@
   "seasonality_end_month": "sep",
   "priority": 100,
   "created_at": "2026-04-09T03:37:52.367Z",
-  "updated_at": "2026-05-04T03:53:07.830Z",
+  "updated_at": "2026-05-04T05:10:22.659Z",
   "travel_plan": {
     "destination_scope": [
       {
@@ -72,7 +72,12 @@
     ],
     "tour_card_primary_image_id": "travel_plan_service_image_fb2eab54-5760-416e-9164-5b48421cdfd3",
     "one_pager_hero_image_id": "travel_plan_service_image_fb2eab54-5760-416e-9164-5b48421cdfd3",
-    "one_pager_image_ids": [],
+    "one_pager_image_ids": [
+      "travel_plan_service_image_f51a6d6f-104c-40f0-8a25-e3a8aa0a9c05",
+      "travel_plan_service_image_ee80bf4d-6417-44aa-a4c2-8a19819afba5",
+      "travel_plan_service_image_e4d15524-cf87-4801-8970-de1be6418f24",
+      "travel_plan_service_image_66239309-9b58-458d-92a9-265a203b1492"
+    ],
     "days": [
       {
         "id": "travel_plan_day_e9161ca8-2912-4912-9610-464984823d83",
@@ -177,7 +182,7 @@
               "sv": "Besök Hanois 36 gator och gränder.",
               "no": "Besøk de 36 gatene og smugene i Hanoi."
             },
-            "details": null,
+            "details": "Step into the timeless rhythm of the Hanoi Old Quarter. Exploring its 36 Streets and hidden alleys is like walking through a living museum, where ancient craftsmanship meets vibrant street life. From the scent of traditional herbs to the glow of silk lanterns, every corner tells a story of a thousand-year-old city",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -275,7 +280,7 @@
               "sv": "Hoa Lo fängelse",
               "no": "Hoa Lo fengsel"
             },
-            "details": null,
+            "details": "A visit to Hoa Lo Prison offers a somber and deeply moving look into Vietnam's turbulent history. From its origins as a colonial prison to its role during the Vietnam War, this site serves as a testament to the human spirit's endurance and the complex layers of war and peace.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -327,7 +332,7 @@
               "sv": "Ho Chi Minh-mausoleet",
               "no": "Ho Chi Minh-mausoleet"
             },
-            "details": null,
+            "details": "The Ho Chi Minh Mausoleum is a place of deep national pride and pilgrimage. As the resting place of Vietnam's greatest leader, it stands as a symbol of the country's independence and a must-visit landmark for those wishing to understand the heart of Vietnamese history.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -379,7 +384,7 @@
               "sv": "Văn Miếu Quốc Tủ Giám",
               "no": "Văn Miếu Quốc Tủ Giám"
             },
-            "details": null,
+            "details": "Step into the Temple of Literature, a sanctuary of peace and a testament to Vietnam's intellectual heritage. As the site of the country’s first university, it remains a place where students still come to pray for academic success, blending ancient history with living tradition.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -431,7 +436,7 @@
               "sv": "Jag har en pagod",
               "no": "Det er en pagode"
             },
-            "details": null,
+            "details": "The One Pillar Pagoda is a masterpiece of ancient Vietnamese architecture. Floating like a lotus above a peaceful pond, this historic temple tells a story of royal gratitude and spiritual devotion, making it a must-see symbol of Hanoi's cultural heritage.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},

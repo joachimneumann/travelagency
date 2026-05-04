@@ -48,7 +48,7 @@
   "seasonality_end_month": "oct",
   "priority": 97,
   "created_at": "2026-04-06T02:54:41.519Z",
-  "updated_at": "2026-05-04T03:14:51.201Z",
+  "updated_at": "2026-05-04T05:20:52.539Z",
   "travel_plan": {
     "destination_scope": [
       {
@@ -190,7 +190,7 @@
               "sv": "Marmorberg",
               "no": "Marmorfjellene"
             },
-            "details": null,
+            "details": "Discover the spiritual heart of Central Vietnam at the Marble Mountains. A journey through hidden caves, ancient pagodas, and soaring viewpoints, this natural wonder perfectly blends the beauty of the landscape with the deep traditions of Vietnamese Buddhism.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -242,7 +242,7 @@
               "sv": "Huyen Khong-grottan",
               "no": "Huyen Khong-hulen"
             },
-            "details": null,
+            "details": "Step into the mystical atmosphere of Huyen Khong Cave, where natural light beams create a sacred glow over ancient stone altars. It is a breathtaking sanctuary of light and shadows, offering a profound sense of peace and wonder hidden deep within the marble cliffs.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -294,7 +294,7 @@
               "sv": "Hội An Ancient Town",
               "no": "Hội en gammel by"
             },
-            "details": null,
+            "details": "Step back in time in Hoi An Ancient Town, where golden walls and lantern-lit alleys tell the story of a bygone era. From its peaceful riverfront to its vibrant night markets, Hoi An offers a nostalgic charm that captures the soul of every traveler.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -375,7 +375,7 @@
               "sv": "Son Tra halvön",
               "no": "Son Tra-halvøya"
             },
-            "details": null,
+            "details": "Escape to the Son Tra Peninsula, where lush mountains meet the deep blue sea. Whether you are seeking spiritual peace at the feet of the Lady Buddha or searching for rare wildlife in the jungle, Son Tra is a breathtaking sanctuary of nature and serenity",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -648,7 +648,7 @@
               "sv": "Bana Hil",
               "no": "Bana Hil"
             },
-            "details": null,
+            "details": "From world-class hotels on the shores of My Khe Beach to the misty peaks of Ba Na Hills, Da Nang is a city of endless discovery. End your day at a bustling Night Market, where the local flavors and vibrant energy capture the true spirit of Central Vietnam.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -700,7 +700,7 @@
               "sv": "Nattmarknad",
               "no": "Nattmarked"
             },
-            "details": null,
+            "details": "Experience the vibrant pulse of Vietnam at a Night Market. Whether you are searching for the perfect handmade souvenir, feasting on fresh grilled seafood, or simply soaking in the neon-lit atmosphere, these markets offer an authentic slice of local life that you won't find anywhere else",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
