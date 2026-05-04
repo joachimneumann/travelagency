@@ -3709,6 +3709,16 @@ test("tour card images are selected from travel-plan service images", async () =
     "Runtime homepage tour cards should honor the explicit first travel-plan service image"
   );
   assert.match(
+    mainToursSource,
+    /function tourPlanServiceImages\(service\)[\s\S]*service\?\.image[\s\S]*service\?\.images[\s\S]*image\.is_customer_visible === false[\s\S]*images\.push\(image\)[\s\S]*function tourPlanServiceImageEntries\(services\)[\s\S]*tourPlanServiceImages\(service\)\.map/,
+    "Runtime homepage tour details should render all customer-visible service images, not only the selected card images"
+  );
+  assert.doesNotMatch(
+    mainToursSource.match(/function tourPlanServiceImageEntries\(services\)[\s\S]*?function renderTourPlanServiceMedia\(services\)/)?.[0] || "",
+    /include_in_travel_tour_card/,
+    "Expanded tour details should not use the card-image selection flag to filter service images"
+  );
+  assert.match(
     toursListSource,
     /function firstTravelTourCardImagePath\(tour\)[\s\S]*const selectedImageId = normalizeText\(tour\?\.travel_plan\?\.tour_card_primary_image_id\)[\s\S]*include_in_travel_tour_card !== true[\s\S]*entries\.findIndex\(\(entry\) => entry\.id === selectedImageId\)[\s\S]*return entries\[0\]\?\.storagePath \|\| "";/,
     "Marketing tour list thumbnails should honor the explicit first travel-plan service image"
@@ -5519,13 +5529,18 @@ test("homepage tour service image detail overlays render full copy over a strong
   );
   assert.match(
     tourCardRuleBlock(".tour-plan-service-card--has-details.is-showing-details .tour-plan-service-card__body"),
-    /grid-template-rows: minmax\(0, 1fr\) auto;[\s\S]*align-content: stretch;/,
-    "Open service detail overlays should keep the service title in the bottom row"
+    /position: absolute;[\s\S]*inset: 0;[\s\S]*grid-template-rows: 1fr auto 1fr;[\s\S]*align-content: stretch;/,
+    "Open service detail overlays should center details against the full image area"
   );
   assert.match(
     tourCardRuleBlock(".tour-plan-service-card.is-showing-details .tour-plan-service-card__body p"),
-    /display: block;[\s\S]*grid-row: 1;[\s\S]*align-self: center;[\s\S]*justify-self: center;[\s\S]*text-align: center;/,
-    "Open service detail overlay text should be complete and horizontally centered above the title"
+    /display: block;[\s\S]*grid-row: 2;[\s\S]*align-self: center;[\s\S]*justify-self: center;[\s\S]*text-align: center;/,
+    "Open service detail overlay text should be complete and centered in the image"
+  );
+  assert.match(
+    tourCardRuleBlock(".tour-plan-service-card.is-showing-details .tour-plan-service-card__body h5"),
+    /position: absolute;[\s\S]*bottom: 0\.72rem;[\s\S]*left: 0\.72rem;/,
+    "Open service detail overlays should keep the service title pinned at the bottom"
   );
   assert.match(
     mainToursSource,
@@ -5636,6 +5651,16 @@ test("homepage tour cards expand descriptions and align same-row cards without a
   );
   assert.match(
     mainToursSource,
+    /function renderTwoColumnBelowTourDetailsRow\(trip, columnIndex = 0\)[\s\S]*tour-details-row--below-grid tour-details-row--columns-2[\s\S]*function createTwoColumnBelowTourDetailsRow\(trip,[\s\S]*visibleTourRowTripIds\(tripId, 2\)[\s\S]*const anchor = rowCards\[rowCards\.length - 1\] \|\| directTourCardElement\(tripId\)[\s\S]*anchor\.after\(row\)[\s\S]*if \(renderedTourGridColumnCount === 2\) \{[\s\S]*renderTourCard\(trip, \{ index: itemIndex, expanded: isTourExpanded\(trip\) \}\)[\s\S]*renderTwoColumnBelowTourDetailsRow\(trip, columnIndex\)[\s\S]*continue;/,
+    "Two-column expanded tour details should keep both tour cards in their grid row and insert a separate details row below them"
+  );
+  assert.match(
+    mainToursSource,
+    /function animateTourDetailsToggle\(tripId, willOpen\)[\s\S]*if \(isTwoColumnTourLayout\(\)\) \{[\s\S]*animateTwoColumnBelowTourDetailsOpen\(normalizedTripId, transitionToken\);[\s\S]*animateTwoColumnBelowTourDetailsClose\(normalizedTripId, transitionToken\);[\s\S]*async function animateTwoColumnBelowTourDetailsOpen\(tripId, transitionToken\)[\s\S]*const card = directTourCardElement\(tripId\);[\s\S]*createTwoColumnBelowTourDetailsRow\(trip,[\s\S]*row\.style\.height = "0px";[\s\S]*animateTourDetailsRowHeight\(row, expandedHeight, "open", \{[\s\S]*durationMs: TOUR_DETAILS_MOBILE_OPEN_TRANSITION_MS[\s\S]*async function animateTwoColumnBelowTourDetailsClose\(tripId, transitionToken\)[\s\S]*const card = directTourCardElement\(tripId\);[\s\S]*animateTourDetailsRowHeight\(row, 0, "close", \{/,
+    "Two-column details should use the single-column-style vertical height animation without moving cards or running grid-flight animations"
+  );
+  assert.match(
+    mainToursSource,
     /const TOUR_IMAGE_TRANSITION_MS = 2000;[\s\S]*function parseCssDurationToMs\(value\) \{[\s\S]*if \(normalizedValue\.endsWith\("ms"\)\) \{[\s\S]*if \(normalizedValue\.endsWith\("s"\)\) \{[\s\S]*function tourCardImageTransitionDurationMs\(button\) \{[\s\S]*window\.getComputedStyle\(button\)\.getPropertyValue\("--tour-card-image-transition-duration"\)[\s\S]*return cssDurationMs > 0 \? cssDurationMs : TOUR_IMAGE_TRANSITION_MS;[\s\S]*function cycleTourCardImage\(button, \{ step = 1 \} = \{\}\) \{[\s\S]*const transitionDurationMs = tourCardImageTransitionDurationMs\(button\);[\s\S]*window\.setTimeout\(\(\) => \{[\s\S]*\}, transitionDurationMs\);/,
     "Homepage marketing-card image swaps should read their dissolve duration from CSS so mobile can shorten the transition cleanly"
   );
@@ -5666,7 +5691,7 @@ test("homepage tour cards expand descriptions and align same-row cards without a
   );
   assert.match(
     mainToursSource,
-    /function cancelActiveTourDetailsAnimations\(\) \{[\s\S]*function beginTourDetailsTransition\(\) \{[\s\S]*const token = \+\+tourDetailsTransitionToken;[\s\S]*cancelActiveTourDetailsAnimations\(\);[\s\S]*function isCurrentTourDetailsTransition\(token\) \{[\s\S]*function animateTourDetailsToggle\(tripId, willOpen\)[\s\S]*const transitionToken = beginTourDetailsTransition\(\);[\s\S]*animateTourDetailsOpen\(normalizedTripId, transitionToken\);[\s\S]*animateTourDetailsClose\(normalizedTripId, transitionToken\);[\s\S]*async function animateTourDetailsOpen\(tripId, transitionToken\)[\s\S]*const previousRects = captureTourCardRects\(\);[\s\S]*const trip = findTripById\(tripId\);[\s\S]*const card = singleColumnLayout \? tourCardElement\(tripId\) : directTourCardElement\(tripId\);[\s\S]*const row = trip && card instanceof HTMLElement[\s\S]*createSidePanelTourDetailsRow\(trip, card,[\s\S]*setTourCardExpandedDomState\(card, true\)[\s\S]*const opensSideways = !singleColumnLayout && row\.classList\.contains\("tour-details-row--side-panel"\);[\s\S]*const rowClearingPromise = singleColumnLayout[\s\S]*animateTourGridLayout\(previousRects, \{ excludedTripIds: \[tripId\] \}\)[\s\S]*animateExpandedTourCardToLeft\(row\)[\s\S]*const startDetailsOpenAnimation = \(targetHeight\) => Promise\.all\(\[[\s\S]*animateExpandedTourDetailsAttach\(row, TOUR_DETAILS_OPEN_TRANSITION_MS, \{ backgroundStartLeft, initialCardRight \}\)[\s\S]*animateTourDetailsRowHeight\(row, opensSideways \? collapsedHeight : targetHeight, "open"\)[\s\S]*await waitForExpandedTourServiceImages\(row\);[\s\S]*if \(!isCurrentTourDetailsTransition\(transitionToken\)\) return;[\s\S]*await rowClearingPromise;[\s\S]*if \(!isCurrentTourDetailsTransition\(transitionToken\)\) return;[\s\S]*await Promise\.all\(\[[\s\S]*detailsOpenPromise \|\| startDetailsOpenAnimation\(expandedHeight\),[\s\S]*buttonLabelPromise[\s\S]*\]\);[\s\S]*clearTourDetailsRowAnimation\(row, \{ preserveHeight: opensSideways \}\);[\s\S]*completeTourDetailsTransition\(transitionToken, tripId\);[\s\S]*async function animateTourDetailsClose\(tripId, transitionToken\)[\s\S]*const card = expandedTourCard\(row\);[\s\S]*const outgoingDetailsGhost = createOutgoingTourDetailsGhost\(row\);[\s\S]*const closedButton = setTourCardExpandedDomState\(card, false\);[\s\S]*restoreExpandedTourCardToGrid\(row, card, tripId\);[\s\S]*await Promise\.all\(\[[\s\S]*animateOutgoingTourDetailsGhost\(outgoingDetailsGhost\),[\s\S]*animateTourGridLayout\(previousRects\),[\s\S]*animateTourShowMoreButtonLabel\([\s\S]*closedButton,[\s\S]*tourShowMoreLabel\(false\),[\s\S]*\{ direction: "close" \}[\s\S]*\)[\s\S]*\]\);[\s\S]*if \(!isCurrentTourDetailsTransition\(transitionToken\)\) return;[\s\S]*completeTourDetailsTransition\(transitionToken, tripId\);/,
+    /function cancelActiveTourDetailsAnimations\(\) \{[\s\S]*function beginTourDetailsTransition\(\) \{[\s\S]*const token = \+\+tourDetailsTransitionToken;[\s\S]*cancelActiveTourDetailsAnimations\(\);[\s\S]*function isCurrentTourDetailsTransition\(token\) \{[\s\S]*function animateTourDetailsToggle\(tripId, willOpen\)[\s\S]*const transitionToken = beginTourDetailsTransition\(\);[\s\S]*animateTourDetailsOpen\(normalizedTripId, transitionToken\);[\s\S]*animateTourDetailsClose\(normalizedTripId, transitionToken\);[\s\S]*async function animateTourDetailsOpen\(tripId, transitionToken\)[\s\S]*const previousRects = captureTourCardRects\(\);[\s\S]*const trip = findTripById\(tripId\);[\s\S]*const card = singleColumnLayout \? tourCardElement\(tripId\) : directTourCardElement\(tripId\);[\s\S]*const row = trip && card instanceof HTMLElement[\s\S]*createSidePanelTourDetailsRow\(trip, card,[\s\S]*setTourCardExpandedDomState\(card, true\)[\s\S]*const opensSideways = !singleColumnLayout[\s\S]*row\.classList\.contains\("tour-details-row--side-panel"\)[\s\S]*!tourDetailsWrapsBelowCard\(row\);[\s\S]*const twoCardWrappedRow = isTwoCardWrappedTourRow\(row\);[\s\S]*const gridAnimationExcludedTripIds = twoCardWrappedRow[\s\S]*\? visibleTourTripIds\(\)[\s\S]*: \[tripId\];[\s\S]*const rowClearingPromise = singleColumnLayout[\s\S]*animateTourGridLayout\(previousRects, \{ excludedTripIds: gridAnimationExcludedTripIds \}\)[\s\S]*animateExpandedTourCardToLeft\(row\)[\s\S]*const startDetailsOpenAnimation = \(targetHeight\) => Promise\.all\(\[[\s\S]*animateExpandedTourDetailsAttach\(row, TOUR_DETAILS_OPEN_TRANSITION_MS, \{ backgroundStartLeft, initialCardRight \}\)[\s\S]*animateTourDetailsRowHeight\(row, opensSideways \? collapsedHeight : targetHeight, "open"\)[\s\S]*await waitForExpandedTourServiceImages\(row\);[\s\S]*if \(!isCurrentTourDetailsTransition\(transitionToken\)\) return;[\s\S]*await rowClearingPromise;[\s\S]*if \(!isCurrentTourDetailsTransition\(transitionToken\)\) return;[\s\S]*await Promise\.all\(\[[\s\S]*detailsOpenPromise \|\| startDetailsOpenAnimation\(expandedHeight\),[\s\S]*buttonLabelPromise[\s\S]*\]\);[\s\S]*clearTourDetailsRowAnimation\(row, \{ preserveHeight: opensSideways \}\);[\s\S]*completeTourDetailsTransition\(transitionToken, tripId\);[\s\S]*async function animateTourDetailsClose\(tripId, transitionToken\)[\s\S]*const card = expandedTourCard\(row\);[\s\S]*const compactWithoutGridAnimation = shouldCompactCloseWithoutGridAnimation\(row\);[\s\S]*const outgoingDetailsGhost = createOutgoingTourDetailsGhost\(row\);[\s\S]*const closedButton = setTourCardExpandedDomState\(card, false\);[\s\S]*restoreExpandedTourCardToGrid\(row, card, tripId\);[\s\S]*const compactedTripIds = compactClosedTourGridCards\(\);[\s\S]*await Promise\.all\(\[[\s\S]*animateOutgoingTourDetailsGhost\(outgoingDetailsGhost\),[\s\S]*animateTourGridLayout\(previousRects, \{[\s\S]*excludedTripIds: compactWithoutGridAnimation \? compactedTripIds : \[\][\s\S]*\}\),[\s\S]*animateTourShowMoreButtonLabel\([\s\S]*closedButton,[\s\S]*tourShowMoreLabel\(false\),[\s\S]*\{ direction: "close" \}[\s\S]*\)[\s\S]*\]\);[\s\S]*if \(!isCurrentTourDetailsTransition\(transitionToken\)\) return;[\s\S]*completeTourDetailsTransition\(transitionToken, tripId\);/,
     "Opening and closing a tour should be interruptible: new toggles cancel active detail animations and stale async paths must not finish over the requested action"
   );
   assert.doesNotMatch(
@@ -5681,8 +5706,8 @@ test("homepage tour cards expand descriptions and align same-row cards without a
   );
   assert.match(
     mainToursSource,
-    /function createOutgoingTourDetailsGhost\(row\)[\s\S]*const ghost = panel\.cloneNode\(true\)[\s\S]*ghost\.dataset\.tourDetailsGhost = "1";[\s\S]*position: "fixed"[\s\S]*function animateOutgoingTourDetailsGhost\(ghostState\)[\s\S]*async function animateTourDetailsClose\(tripId, transitionToken\)[\s\S]*const row = expandedTourRow\(tripId\);[\s\S]*const card = expandedTourCard\(row\);[\s\S]*const previousRects = captureTourCardRects\(\)[\s\S]*const outgoingDetailsGhost = createOutgoingTourDetailsGhost\(row\)[\s\S]*const closedButton = setTourCardExpandedDomState\(card, false\);[\s\S]*restoreExpandedTourCardToGrid\(row, card, tripId\);[\s\S]*await Promise\.all\(\[\s*animateOutgoingTourDetailsGhost\(outgoingDetailsGhost\),\s*animateTourGridLayout\(previousRects\),\s*animateTourShowMoreButtonLabel\(\s*closedButton,\s*tourShowMoreLabel\(false\),\s*\{ direction: "close" \}\s*\)\s*\]\)/,
-    "Closing a tour should keep the existing card DOM visible, animate a closing details ghost, and fade the button text with the detail animation"
+    /function compactClosedTourGridCards\(\)[\s\S]*els\.tourGrid\.querySelector\("\[data-expanded-tour-id\]"\)[\s\S]*\.tour-grid__spacer[\s\S]*els\.tourGrid\.append\(card\)[\s\S]*function isTwoCardWrappedTourRow\(row\)[\s\S]*tourDetailsWrapsBelowCard\(row\)[\s\S]*getTourGridColumnCount\(\) === 2[\s\S]*visibleTourTripIds\(\)\.length === 2[\s\S]*function shouldCompactCloseWithoutGridAnimation\(row\)[\s\S]*return isTwoCardWrappedTourRow\(row\);[\s\S]*function createOutgoingTourDetailsGhost\(row\)[\s\S]*const ghost = panel\.cloneNode\(true\)[\s\S]*ghost\.dataset\.tourDetailsGhost = "1";[\s\S]*position: "fixed"[\s\S]*function animateOutgoingTourDetailsGhost\(ghostState\)[\s\S]*async function animateTourDetailsClose\(tripId, transitionToken\)[\s\S]*const row = expandedTourRow\(tripId\);[\s\S]*const card = expandedTourCard\(row\);[\s\S]*const previousRects = captureTourCardRects\(\)[\s\S]*const compactWithoutGridAnimation = shouldCompactCloseWithoutGridAnimation\(row\)[\s\S]*const outgoingDetailsGhost = createOutgoingTourDetailsGhost\(row\)[\s\S]*const closedButton = setTourCardExpandedDomState\(card, false\);[\s\S]*restoreExpandedTourCardToGrid\(row, card, tripId\);[\s\S]*const compactedTripIds = compactClosedTourGridCards\(\);[\s\S]*await Promise\.all\(\[\s*animateOutgoingTourDetailsGhost\(outgoingDetailsGhost\),\s*animateTourGridLayout\(previousRects, \{\s*excludedTripIds: compactWithoutGridAnimation \? compactedTripIds : \[\]\s*\}\),\s*animateTourShowMoreButtonLabel\(\s*closedButton,\s*tourShowMoreLabel\(false\),\s*\{ direction: "close" \}\s*\)\s*\]\)/,
+    "Closing a tour should keep the existing card DOM visible, compact closed two-column rows, animate a closing details ghost, and fade the button text with the detail animation"
   );
   assert.match(
     tourCardCssSource,
@@ -5691,8 +5716,13 @@ test("homepage tour cards expand descriptions and align same-row cards without a
   );
   assert.match(
     tourCardCssSource,
-    /\.tour-details-row--side-panel\.tour-details-row--attached \.tour-details-row__shell \{[\s\S]*grid-template-columns: var\(--tour-details-card-width, 1fr\) minmax\(0, var\(--tour-details-panel-width, 1\.75fr\)\);[\s\S]*position: relative;[\s\S]*\.tour-details-row--side-panel\.tour-details-row--attached \.tour-details-row__attach-background \{[\s\S]*display: none;[\s\S]*\.tour-details-row--side-panel\.tour-details-row--attached\.tour-details-row--columns-2 \.tour-details-row__shell \{[\s\S]*grid-template-columns: calc\(\(100% - 1\.5rem\) \/ 2\);[\s\S]*row-gap: 1\.5rem;[\s\S]*\.tour-details-row--side-panel\.tour-details-row--attached\.tour-details-row--columns-3 \.tour-details-row__shell \{[\s\S]*grid-template-columns: var\(--tour-details-card-width, 1fr\) minmax\(0, var\(--tour-details-panel-width, 1\.75fr\)\);/,
-    "Attached side-panel tour details should size the panel from the initiating card width and stack below at two columns"
+    /\.tour-details-row--below-grid \.tour-details-row__shell \{[\s\S]*grid-column: 1 \/ -1;[\s\S]*grid-template-columns: repeat\(var\(--tour-grid-columns, 2\), minmax\(0, 1fr\)\);[\s\S]*column-gap: 1\.5rem;[\s\S]*\.tour-details-row--below-grid \.tour-details-row__panel \{[\s\S]*grid-column: 1 \/ -1;[\s\S]*justify-self: center;[\s\S]*width: min\(var\(--tour-details-panel-fit-width, 100%\), 100%\);/,
+    "Two-column below-row tour details should span beneath the unchanged card row and center the full-height panel"
+  );
+  assert.match(
+    tourCardCssSource,
+    /\.tour-details-row:not\(\.tour-details-row--side-panel\) \.tour-details-row__panel \{[\s\S]*height: auto;[\s\S]*max-height: none;[\s\S]*overflow: visible;[\s\S]*overscroll-behavior: auto;/,
+    "Single-column below-card tour details should grow with expanded days and images instead of creating an internal details scrollview"
   );
   assert.match(
     tourCardCssSource,
@@ -5878,17 +5908,17 @@ test("homepage hero title follows published destinations and keeps the destinati
   );
   assert.match(
     mainToursSource,
-    /function updateHeroFilterMatchCount\(\) \{[\s\S]*els\.heroFilterMatchCount\.hidden = true;[\s\S]*const total = state\.filteredTrips\.length;[\s\S]*frontendT\("tours\.filter_match_count\.one"[\s\S]*frontendT\("tours\.filter_match_count\.many"[\s\S]*els\.heroFilterMatchCount\.hidden = false;[\s\S]*renderFilterSummary\(\);[\s\S]*updateHeroFilterMatchCount\(\);[\s\S]*updateTitlesForFilters\(\);/,
+    /function updateHeroFilterMatchCount\(\) \{[\s\S]*els\.heroFilterMatchCount\.hidden = true;[\s\S]*const total = state\.filteredTrips\.length;[\s\S]*frontendT\("tours\.filter_match_count\.zero"[\s\S]*frontendT\("tours\.filter_match_count\.one"[\s\S]*frontendT\("tours\.filter_match_count\.many"[\s\S]*els\.heroFilterMatchCount\.hidden = false;[\s\S]*renderFilterSummary\(\);[\s\S]*updateHeroFilterMatchCount\(\);[\s\S]*updateTitlesForFilters\(\);/,
     "Homepage tour filtering should show a centered hero match count only when a filter criterion is active"
   );
   assert.match(
     homeCriticalMobileCssSource,
-    /\.home-page \.hero-filter-match-count \{[\s\S]*flex: 0 0 100%;[\s\S]*text-align: center;[\s\S]*\.home-page \.hero-down-arrow \{[\s\S]*position: fixed;[\s\S]*bottom: max\(1\.25rem, env\(safe-area-inset-bottom\)\);[\s\S]*\.home-page \.hero-down-arrow\.is-visible \{[\s\S]*opacity: 1;[\s\S]*@keyframes hero-down-arrow-nudge/,
+    /\.home-page \.hero-filter-match-count \{[\s\S]*grid-column: 1 \/ -1;[\s\S]*text-align: center;[\s\S]*\.home-page \.hero-down-arrow \{[\s\S]*position: fixed;[\s\S]*bottom: max\(1\.25rem, env\(safe-area-inset-bottom\)\);[\s\S]*\.home-page \.hero-down-arrow\.is-visible \{[\s\S]*opacity: 1;[\s\S]*@keyframes hero-down-arrow-nudge/,
     "Homepage critical CSS should center the hero filter match count and style the bottom down-arrow prompt"
   );
   assert.match(
     frontendEnI18nSource,
-    /"tours\.filter_match_count\.one": "1 tour matches these filter criteria"[\s\S]*"tours\.filter_match_count\.many": "\{count\} tours match these filter criteria"/,
+    /"tours\.filter_match_count\.zero": "No tours match these filter criteria"[\s\S]*"tours\.filter_match_count\.one": "1 tour matches these filter criteria"[\s\S]*"tours\.filter_match_count\.many": "\{count\} tours match these filter criteria"/,
     "Frontend source copy should include the hero filter match count labels"
   );
   assert.match(

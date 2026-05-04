@@ -46,6 +46,7 @@
   "tours.page_title.style": "AsiaTravelPlan | {style} Southeast Asia Tours",
   "tours.page_title.destination_style": "AsiaTravelPlan | {style} Tours in {destination}",
   "tours.no_results": "No tours match these filters yet. Try \"All destinations\" or \"All styles\".",
+  "tours.filter_match_count.zero": "No tours match these filter criteria",
   "tours.filter_match_count.one": "1 tour matches these filter criteria",
   "tours.filter_match_count.many": "{count} tours match these filter criteria",
   "tours.show_more.default": "Show more tours",

@@ -68,8 +68,10 @@ test("public tour travel-plan content and detail chrome follow the frontend lang
     one_pager_pdf_url: "/content/one-pagers/pdfs/tour_localized_plan/de.pdf",
     styles: [],
     destinations: ["Vietnam"],
-    pictures: [],
+    pictures: ["/assets/img/service-detail.webp"],
     travel_plan: {
+      tour_card_primary_image_id: "image_card_selected",
+      tour_card_image_ids: ["image_card_selected"],
       one_pager_experience_highlight_ids: [
         "iconic_landmarks",
         "delicious_cuisine"
@@ -99,9 +101,42 @@ test("public tour travel-plan content and detail chrome follow the frontend lang
                 de: "German service details"
               },
               image: {
+                id: "image_card_selected",
                 storage_path: "/assets/img/service-detail.webp",
-                alt_text: "English service image"
-              }
+                alt_text: "English service image",
+                include_in_travel_tour_card: true,
+                is_customer_visible: true
+              },
+              images: [
+                {
+                  id: "image_card_selected",
+                  storage_path: "/assets/img/service-detail.webp",
+                  alt_text: "English service image",
+                  include_in_travel_tour_card: true,
+                  is_customer_visible: true,
+                  sort_order: 0,
+                  is_primary: true
+                },
+                {
+                  id: "image_details_only",
+                  storage_path: "/assets/img/service-detail-extra.webp",
+                  alt_text: "English extra service image",
+                  alt_text_i18n: {
+                    de: "German extra service image"
+                  },
+                  include_in_travel_tour_card: false,
+                  is_customer_visible: true,
+                  sort_order: 1
+                },
+                {
+                  id: "image_customer_hidden",
+                  storage_path: "/assets/img/service-detail-hidden.webp",
+                  alt_text: "Hidden service image",
+                  include_in_travel_tour_card: false,
+                  is_customer_visible: false,
+                  sort_order: 2
+                }
+              ]
             },
             {
               id: "service_2",
@@ -115,8 +150,11 @@ test("public tour travel-plan content and detail chrome follow the frontend lang
                 de: "German second service details"
               },
               image: {
+                id: "image_details_second_service",
                 storage_path: "/assets/img/service-detail-2.webp",
-                alt_text: "English second service image"
+                alt_text: "English second service image",
+                include_in_travel_tour_card: false,
+                is_customer_visible: true
               }
             }
           ]
@@ -176,6 +214,16 @@ test("public tour travel-plan content and detail chrome follow the frontend lang
   });
 
   controller.renderVisibleTrips();
+
+  const cardMediaStart = els.tourGrid.innerHTML.indexOf('class="tour-card__media"');
+  const cardBodyStart = els.tourGrid.innerHTML.indexOf('class="tour-body"', cardMediaStart);
+  const cardMediaMarkup = els.tourGrid.innerHTML.slice(cardMediaStart, cardBodyStart);
+  assert.match(cardMediaMarkup, /\/assets\/img\/service-detail\.webp/);
+  assert.doesNotMatch(cardMediaMarkup, /\/assets\/img\/service-detail-extra\.webp/);
+  assert.match(els.tourGrid.innerHTML, /\/assets\/img\/service-detail-extra\.webp/);
+  assert.match(els.tourGrid.innerHTML, /German extra service image/);
+  assert.match(els.tourGrid.innerHTML, /\/assets\/img\/service-detail-2\.webp/);
+  assert.doesNotMatch(els.tourGrid.innerHTML, /\/assets\/img\/service-detail-hidden\.webp/);
 
   assert.doesNotMatch(els.tourGrid.innerHTML, /Tag 1 - German day title/);
   assert.doesNotMatch(els.tourGrid.innerHTML, /Day 1 - English day title/);
