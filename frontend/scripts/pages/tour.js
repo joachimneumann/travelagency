@@ -1920,7 +1920,7 @@ async function init() {
   await loadTour();
 }
 
-async function loadTour() {
+async function loadTour({ preserveTravelPlanCollapsedState = false } = {}) {
   tourDirtySnapshotReady = false;
   const request = tourDetailRequest({ baseURL: apiOrigin, params: { tour_id: state.id } });
   const payload = await fetchApi(withApiLang(request.url));
@@ -1949,7 +1949,7 @@ async function loadTour() {
   if (els.publishedOnWebpage) els.publishedOnWebpage.checked = tour.published_on_webpage === true;
   renderLocalizedTourContentEditor();
   syncReelVideoDraftItemFromTour(tour);
-  tourTravelPlanAdapter?.applyTour(tour);
+  tourTravelPlanAdapter?.applyTour(tour, { preserveCollapsedState: preserveTravelPlanCollapsedState });
   renderOnePagerImageSelector();
   renderTourCardImageSelector();
 
@@ -2331,7 +2331,7 @@ async function submitForm(event) {
       });
       return;
     }
-    await loadTour();
+    await loadTour({ preserveTravelPlanCollapsedState: true });
     if (publicHomepageAssetsStillDirty) {
       state.publicHomepageAssetsDirty = true;
       updateTourDirtyState();
@@ -2375,7 +2375,7 @@ async function publishTourStaticContent() {
         result.tour.short_description
       );
       updateHeader(state.tour, tour_destinations(state.tour), tour_styles(state.tour));
-      tourTravelPlanAdapter?.applyTour(state.tour);
+      tourTravelPlanAdapter?.applyTour(state.tour, { preserveCollapsedState: true });
       renderOnePagerImageSelector();
       renderTourCardImageSelector();
       syncPublishedOnWebpageControl();

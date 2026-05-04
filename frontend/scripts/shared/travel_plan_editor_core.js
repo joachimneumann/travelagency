@@ -2421,7 +2421,7 @@ export function createBookingTravelPlanModule(ctx) {
       state.booking = response.booking;
       renderBookingHeader();
       renderBookingData();
-      applyBookingPayload();
+      applyBookingPayload({ preserveCollapsedState: true });
       renderTravelPlanPanel();
       refreshActivitiesInBackground("travel_plan_save");
       travelPlanStatus("");

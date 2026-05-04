@@ -423,12 +423,12 @@ export function createTourTravelPlanAdapter({
     instance.bindEvents();
   }
 
-  function applyTour(tour) {
+  function applyTour(tour, { preserveCollapsedState = false } = {}) {
     state.tour = tour || state.tour;
     state.permissions.canEditBooking = state.permissions.canEditTours === true;
     state.booking = fakeBookingFromTour(state.tour, state.id);
     const instance = ensureCore();
-    instance.applyBookingPayload();
+    instance.applyBookingPayload({ preserveCollapsedState });
     instance.renderTravelPlanPanel();
   }
 

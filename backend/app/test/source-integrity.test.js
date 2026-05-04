@@ -2693,9 +2693,11 @@ test("booking page save orchestrates dirty sections through existing section end
 test("marketing tour travel-plan form save prunes empty services and days without pruning image-upload pre-saves", async () => {
   const travelPlanModulePath = travelPlanEditorCorePath();
   const tourTravelPlanAdapterPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "tour_travel_plan_adapter.js");
-  const [travelPlanSource, adapterSource] = await Promise.all([
+  const tourPageModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "tour.js");
+  const [travelPlanSource, adapterSource, tourPageSource] = await Promise.all([
     readFile(travelPlanModulePath, "utf8"),
-    readFile(tourTravelPlanAdapterPath, "utf8")
+    readFile(tourTravelPlanAdapterPath, "utf8"),
+    readFile(tourPageModulePath, "utf8")
   ]);
 
   assert.match(
@@ -2722,6 +2724,16 @@ test("marketing tour travel-plan form save prunes empty services and days withou
     travelPlanSource,
     /async function persistTravelPlan\(\) \{[\s\S]*const travelPlanPayload = buildTravelPlanPayload\(\);/,
     "Internal travel-plan pre-saves should keep blank rows so image upload can save the target service before attaching the file"
+  );
+  assert.match(
+    adapterSource,
+    /function applyTour\(tour,\s*\{\s*preserveCollapsedState = false\s*\} = \{\}\)[\s\S]*instance\.applyBookingPayload\(\{\s*preserveCollapsedState\s*\}\)/,
+    "Marketing-tour travel-plan refreshes should be able to preserve the current service collapse state"
+  );
+  assert.match(
+    tourPageSource,
+    /await loadTour\(\{\s*preserveTravelPlanCollapsedState: true\s*\}\);[\s\S]*tourTravelPlanAdapter\?\.applyTour\(state\.tour,\s*\{\s*preserveCollapsedState: true\s*\}\)/,
+    "Marketing-tour save and publish should keep the currently edited service open after the UI refreshes"
   );
 });
 
