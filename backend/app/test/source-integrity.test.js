@@ -4941,6 +4941,11 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
     "Runtime i18n deploy helper should explain stale or missing snapshot failures as source/snapshot mismatches"
   );
   assert.match(
+    runtimeI18nScript,
+    /runtime_i18n_failure_is_translation_sync_issue\(\)[\s\S]*Runtime i18n snapshot validation failed[\s\S]*stale source_text[\s\S]*missing source keys[\s\S]*print_runtime_i18n_deploy_warning\(\)[\s\S]*WARNING: RUNTIME TRANSLATIONS NEED ATTENTION/,
+    "Runtime i18n deploy helper should classify translation sync failures and print a prominent deploy warning"
+  );
+  assert.match(
     autoCommitDeployScript,
     /PUBLISHED_TRANSLATIONS_DIR="\$ROOT_DIR\/content\/translations"[\s\S]*sync_published_translation_snapshots_to_staging\(\)[\s\S]*rsync -az --delete "\$PUBLISHED_TRANSLATIONS_DIR\/" "\$REMOTE_HOST:\$remote_translations_dir\/"[\s\S]*sync_published_translation_snapshots_to_staging[\s\S]*\$REMOTE_SCRIPT/,
     "Auto deploy should sync ignored content/translations before running staging update"
@@ -4952,8 +4957,18 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
   );
   assert.match(
     updateStagingScript,
-    /validate_runtime_i18n_snapshots\(\)[\s\S]*validate_runtime_i18n_snapshots_quiet "\$ROOT_DIR"[\s\S]*Staging content\/translations is out of sync[\s\S]*git pull --ff-only[\s\S]*validate_runtime_i18n_snapshots[\s\S]*run_staging_tests/,
-    "Direct staging updates should fail early when ignored content/translations is stale after git pull"
+    /validate_runtime_i18n_snapshots\(\)[\s\S]*validate_runtime_i18n_snapshots_quiet "\$ROOT_DIR"[\s\S]*runtime_i18n_failure_is_translation_sync_issue "\$command_log_path"[\s\S]*deployment will continue[\s\S]*git pull --ff-only[\s\S]*validate_runtime_i18n_snapshots[\s\S]*run_staging_tests/,
+    "Direct staging updates should warn and continue when ignored content/translations is stale after git pull"
+  );
+  assert.match(
+    updateStagingScript,
+    /generate_runtime_i18n\(\)[\s\S]*run_runtime_i18n_generator_quiet "\$ROOT_DIR"[\s\S]*runtime_i18n_failure_is_translation_sync_issue "\$command_log_path"[\s\S]*print_deploy_runtime_i18n_warning/,
+    "Staging deploys should keep deploying on stale or missing runtime translations and print a final warning"
+  );
+  assert.match(
+    updateProductionScript,
+    /generate_runtime_i18n\(\)[\s\S]*run_runtime_i18n_generator_quiet "\$ROOT_DIR"[\s\S]*runtime_i18n_failure_is_translation_sync_issue "\$command_log_path"[\s\S]*print_deploy_runtime_i18n_warning/,
+    "Production deploys should keep deploying on stale or missing runtime translations and print a final warning"
   );
   assert.match(
     autoCommitDeployScript,

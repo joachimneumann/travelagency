@@ -8,6 +8,35 @@ runtime_i18n_check_log_path() {
   printf '%s\n' "${RUNTIME_I18N_CHECK_LOG:-/tmp/build_runtime_i18n_check.log}"
 }
 
+runtime_i18n_failure_is_translation_sync_issue() {
+  local command_log_path="$1"
+
+  [[ -s "$command_log_path" ]] || return 1
+  grep -E -q "Runtime i18n snapshot validation failed|stale source_text|stale source_hash|missing source keys|missing target_text" "$command_log_path"
+}
+
+print_runtime_i18n_deploy_warning() {
+  local environment="$1"
+  local command_log_path="$2"
+  local warning_message="$3"
+
+  cat >&2 <<EOF
+
+======================================================================
+WARNING: RUNTIME TRANSLATIONS NEED ATTENTION ($environment)
+======================================================================
+$warning_message
+
+Deployment continued with the existing generated runtime i18n files.
+Open the deployed backend translations page and run the translation
+action to publish/regenerate runtime translations for this environment.
+
+Full validation/generation output: $command_log_path
+======================================================================
+
+EOF
+}
+
 refresh_runtime_i18n_source_catalogs() {
   local root_dir="$1"
   local refresh_script="${2:-$root_dir/scripts/i18n/refresh_source_catalogs.mjs}"

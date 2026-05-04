@@ -664,6 +664,7 @@
 }
 
 .tour-details-row__panel {
+  position: relative;
   border-radius: 0 0 var(--radius) var(--radius);
   background: var(--marketing-card-surface);
   padding: 1rem;
@@ -677,6 +678,41 @@
     transform var(--tour-details-row-transition-duration) var(--tour-details-row-transition-easing),
     clip-path var(--tour-details-row-transition-duration) var(--tour-details-row-transition-easing);
   overflow-anchor: none;
+}
+
+.tour-details-row__close {
+  position: sticky;
+  top: 0.25rem;
+  z-index: 4;
+  display: grid;
+  place-items: center;
+  width: 2.15rem;
+  height: 2.15rem;
+  margin: 0 0 0.25rem auto;
+  padding: 0;
+  border: 1px solid rgba(20, 48, 57, 0.16);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--ink);
+  box-shadow: 0 0.4rem 1rem rgba(20, 48, 57, 0.12);
+  cursor: pointer;
+}
+
+.tour-details-row__close span {
+  font-size: 1.35rem;
+  line-height: 1;
+  transform: translateY(-0.04rem);
+}
+
+.tour-details-row__close:hover,
+.tour-details-row__close:focus-visible {
+  border-color: rgba(20, 48, 57, 0.28);
+  background: #fff;
+}
+
+.tour-details-row__close:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .tour-details-row--side-panel .tour-details-row__panel {

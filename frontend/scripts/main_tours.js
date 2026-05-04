@@ -988,6 +988,20 @@ export function createFrontendToursController(ctx) {
     return `<span class="tour-card__show-more-label" data-tour-card-show-more-label>${escapeHTML(label)}</span>`;
   }
 
+  function renderTourDetailsCloseButton(tripId) {
+    const label = tourShowMoreLabel(true);
+    return `
+      <button
+        class="tour-details-row__close"
+        type="button"
+        data-tour-details-close
+        data-trip-id="${escapeAttr(tripId)}"
+        aria-label="${escapeAttr(label)}"
+        title="${escapeAttr(label)}"
+      ><span aria-hidden="true">&times;</span></button>
+    `;
+  }
+
   function renderTourStyleTags(styles) {
     const normalizedStyles = (Array.isArray(styles) ? styles : [])
       .map((style) => normalizeText(style))
@@ -1702,13 +1716,20 @@ export function createFrontendToursController(ctx) {
   function renderTourOnePagerDownload(trip) {
     const pdfUrl = tourOnePagerPdfUrl(trip);
     if (!pdfUrl) return "";
+    const pdfAriaLabel = frontendT("tour.plan.pdf_aria", "Tour PDF");
+    const pdfTitle = frontendT("tour.plan.pdf_title", "Tour Overview");
+    const pdfDescription = frontendT(
+      "tour.plan.pdf_description",
+      "Printable summary with the route, highlights, and trip style."
+    );
+    const pdfDownloadLabel = frontendT("tour.plan.pdf_download", "Download PDF");
     return `
-      <section class="tour-plan-pdf" aria-label="Tour PDF">
+      <section class="tour-plan-pdf" aria-label="${escapeAttr(pdfAriaLabel)}">
         <div class="tour-plan-pdf__body">
-          <h4>Tour Overview</h4>
-          <p>Printable summary with the route, highlights, and trip style.</p>
+          <h4>${escapeHTML(pdfTitle)}</h4>
+          <p>${escapeHTML(pdfDescription)}</p>
         </div>
-        <a class="btn btn-secondary tour-plan-pdf__download" href="${escapeAttr(pdfUrl)}" target="_blank" rel="noopener">Download PDF</a>
+        <a class="btn btn-secondary tour-plan-pdf__download" href="${escapeAttr(pdfUrl)}" target="_blank" rel="noopener">${escapeHTML(pdfDownloadLabel)}</a>
       </section>
     `;
   }
@@ -1898,6 +1919,7 @@ export function createFrontendToursController(ctx) {
         <div class="tour-details-row__shell">
           ${renderTourCard(trip, { index, expanded: true })}
           <aside class="tour-details-row__panel" id="${escapeAttr(panelId)}" aria-label="${escapeAttr(panelLabel)}">
+            ${renderTourDetailsCloseButton(tripId)}
             ${renderTourTravelPlanDetails(trip)}
           </aside>
         </div>
@@ -1915,7 +1937,7 @@ export function createFrontendToursController(ctx) {
     panel.className = "tour-details-row__panel";
     panel.id = tourDetailsPanelId(tripId);
     panel.setAttribute("aria-label", panelLabel);
-    panel.innerHTML = renderTourTravelPlanDetails(trip);
+    panel.innerHTML = `${renderTourDetailsCloseButton(tripId)}${renderTourTravelPlanDetails(trip)}`;
     return panel;
   }
 
@@ -2058,6 +2080,18 @@ export function createFrontendToursController(ctx) {
         toggleTourPlanSummaryDay(button);
       });
       button.dataset.tourPlanSummaryBound = "1";
+    });
+
+    const tourDetailsCloseButtons = els.tourGrid.querySelectorAll("[data-tour-details-close][data-trip-id]");
+    tourDetailsCloseButtons.forEach((button) => {
+      if (!(button instanceof HTMLElement) || button.dataset.tourDetailsCloseBound === "1") return;
+      button.addEventListener("click", (event) => {
+        event.preventDefault();
+        const tripId = normalizeText(button.getAttribute("data-trip-id"));
+        if (!tripId || !expandedTourIdSet().has(tripId)) return;
+        animateTourDetailsToggle(tripId, false);
+      });
+      button.dataset.tourDetailsCloseBound = "1";
     });
 
     const buttons = els.tourGrid.querySelectorAll("[data-open-modal][data-trip-id]");

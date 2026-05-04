@@ -6,6 +6,8 @@ COMPOSE_FILE="docker-compose.production.yml"
 ENV_FILE=".env"
 PROJECT_NAME="${PROJECT_NAME:-asiatravelplan}"
 RUNTIME_BRAND_LOGO_PREPARER="${RUNTIME_BRAND_LOGO_PREPARER:-$ROOT_DIR/scripts/assets/prepare_runtime_brand_logo.sh}"
+RUNTIME_I18N_DEPLOY_WARNING=""
+RUNTIME_I18N_DEPLOY_WARNING_LOG=""
 
 source "$ROOT_DIR/scripts/lib/docker_runtime.sh"
 source "$ROOT_DIR/scripts/lib/runtime_i18n.sh"
@@ -40,6 +42,19 @@ run_production_tests() {
   docker_compose -p "$PROJECT_NAME" --env-file "$ENV_FILE" -f "$COMPOSE_FILE" build backend
   docker_compose -p "$PROJECT_NAME" --env-file "$ENV_FILE" -f "$COMPOSE_FILE" run --rm --no-deps backend \
     node --test test/mobile-contract.test.js test/source-integrity.test.js test/http_routes.test.js
+}
+
+record_runtime_i18n_deploy_warning() {
+  local warning_message="$1"
+  local command_log_path="$2"
+
+  RUNTIME_I18N_DEPLOY_WARNING="$warning_message"
+  RUNTIME_I18N_DEPLOY_WARNING_LOG="$command_log_path"
+}
+
+print_deploy_runtime_i18n_warning() {
+  [[ -n "$RUNTIME_I18N_DEPLOY_WARNING" ]] || return 0
+  print_runtime_i18n_deploy_warning production "$RUNTIME_I18N_DEPLOY_WARNING_LOG" "$RUNTIME_I18N_DEPLOY_WARNING"
 }
 
 normalize_services() {
@@ -77,7 +92,21 @@ generate_public_homepage_assets() {
 generate_runtime_i18n() {
   refresh_runtime_i18n_source_catalogs "$ROOT_DIR"
   echo "Generating runtime i18n from content/translations..."
-  run_runtime_i18n_generator_quiet "$ROOT_DIR"
+  if run_runtime_i18n_generator_quiet "$ROOT_DIR"; then
+    return 0
+  fi
+
+  local command_log_path
+  command_log_path="$(runtime_i18n_generator_log_path).command"
+  if runtime_i18n_failure_is_translation_sync_issue "$command_log_path"; then
+    record_runtime_i18n_deploy_warning \
+      "Runtime i18n generation found stale or missing translations during deployment." \
+      "$command_log_path"
+    echo "WARNING: Runtime i18n generation found stale or missing translations; deployment will continue with existing generated runtime i18n files." >&2
+    return 0
+  fi
+
+  return 1
 }
 
 prepare_runtime_brand_logo() {
@@ -142,3 +171,5 @@ if should_sync_atp_staff "${SERVICES[@]}"; then
   docker_compose -p "$PROJECT_NAME" --env-file "$ENV_FILE" -f "$COMPOSE_FILE" run --rm --no-deps backend \
     node scripts/sync_atp_staff_from_keycloak.js
 fi
+
+print_deploy_runtime_i18n_warning
