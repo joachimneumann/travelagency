@@ -5455,6 +5455,44 @@ test("homepage tour details resolve travel-plan day and service copy from the ac
   );
 });
 
+test("homepage tour service image detail overlays render full copy over a stronger image treatment", async () => {
+  const tourCardCssPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "components", "tour-card.css");
+  const tourCardCssSource = await readFile(tourCardCssPath, "utf8");
+  const ruleBlock = (selector) => {
+    const start = tourCardCssSource.indexOf(`${selector} {`);
+    assert.notEqual(start, -1, `Missing CSS rule for ${selector}`);
+    const end = tourCardCssSource.indexOf("\n}", start);
+    assert.notEqual(end, -1, `Missing closing brace for ${selector}`);
+    return tourCardCssSource.slice(start, end);
+  };
+
+  assert.match(
+    ruleBlock(".tour-plan-service-card"),
+    /display: grid;[\s\S]*align-content: end;/,
+    "Service image cards should let overlay copy participate in layout instead of clipping inside an absolute layer"
+  );
+  assert.doesNotMatch(
+    ruleBlock(".tour-plan-service-card__body h5"),
+    /-webkit-line-clamp|overflow: hidden|display: -webkit-box/,
+    "Service image overlay titles should not be shortened or clipped"
+  );
+  assert.doesNotMatch(
+    ruleBlock(".tour-plan-service-card__body p"),
+    /-webkit-line-clamp|overflow: hidden|display: -webkit-box/,
+    "Service image detail overlay text should not be shortened or clipped"
+  );
+  assert.match(
+    ruleBlock(".tour-plan-service-card--has-details::after"),
+    /background: rgba\(0, 0, 0, 0\.72\);/,
+    "Open service detail overlays should use a stronger dark scrim"
+  );
+  assert.match(
+    ruleBlock(".tour-plan-service-card--has-details.is-showing-details img"),
+    /filter: blur\(4px\) brightness\(0\.7\) saturate\(0\.95\);/,
+    "Open service detail overlays should blur and dim the image more strongly"
+  );
+});
+
 test("homepage tour cards expand descriptions and align same-row cards without an inline more link", async () => {
   const mainToursPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "main_tours.js");
   const homepagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "index.html");

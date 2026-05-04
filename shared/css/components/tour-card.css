@@ -1125,6 +1125,8 @@
   position: relative;
   min-width: 0;
   overflow: hidden;
+  display: grid;
+  align-content: end;
   border: 1px solid var(--marketing-card-details-border);
   border-radius: 12px;
   background: var(--surface);
@@ -1142,6 +1144,9 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition:
+    filter 0.22s ease,
+    transform 0.22s ease;
 }
 
 .tour-plan-service-card--featured {
@@ -1193,7 +1198,7 @@
   position: absolute;
   inset: 0;
   z-index: 1;
-  background: rgba(0, 0, 0, 0.48);
+  background: rgba(0, 0, 0, 0.72);
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.22s ease;
@@ -1204,8 +1209,8 @@
 }
 
 .tour-plan-service-card--has-details.is-showing-details img {
-  filter: blur(2px);
-  transform: scale(1.025);
+  filter: blur(4px) brightness(0.7) saturate(0.95);
+  transform: scale(1.05);
 }
 
 .tour-plan-service-card__details-indicator {
@@ -1291,19 +1296,28 @@
 }
 
 .tour-plan-service-card__body {
-  position: absolute;
-  inset: auto 0 0;
+  position: relative;
   z-index: 2;
+  justify-self: stretch;
+  box-sizing: border-box;
+  width: 100%;
   padding: 0.72rem;
   color: var(--surface);
   background: linear-gradient(180deg, rgba(17, 27, 33, 0), rgba(17, 27, 33, 0.84));
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.58);
 }
 
 .tour-plan-service-card--has-details .tour-plan-service-card__body {
-  inset: 0;
   display: grid;
+  gap: 0.4rem;
   align-content: end;
-  background: linear-gradient(180deg, rgba(17, 27, 33, 0) 52%, rgba(17, 27, 33, 0.84));
+  min-height: 100%;
+  background: linear-gradient(180deg, rgba(17, 27, 33, 0) 32%, rgba(17, 27, 33, 0.88));
+}
+
+.tour-plan-service-card--has-details.is-showing-details .tour-plan-service-card__body {
+  align-content: center;
+  background: linear-gradient(180deg, rgba(5, 9, 10, 0.26), rgba(5, 9, 10, 0.54));
 }
 
 .tour-plan-service-card__body h5 {
@@ -1311,10 +1325,7 @@
   color: inherit;
   font-size: 0.96rem;
   line-height: 1.24;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  overflow: hidden;
+  overflow-wrap: anywhere;
 }
 
 .tour-plan-service-card--featured .tour-plan-service-card__body h5 {
@@ -1322,27 +1333,16 @@
 }
 
 .tour-plan-service-card__body p {
-  position: absolute;
-  top: 50%;
-  right: 0.72rem;
-  left: 0.72rem;
   margin: 0;
-  transform: translateY(-50%);
   color: rgba(255, 255, 255, 0.92);
   font-size: var(--font-size-caption);
   line-height: 1.35;
   display: none;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  overflow: hidden;
+  overflow-wrap: anywhere;
 }
 
 .tour-plan-service-card.is-showing-details .tour-plan-service-card__body p {
-  display: -webkit-box;
-}
-
-.tour-plan-service-card--featured .tour-plan-service-card__body p {
-  -webkit-line-clamp: 4;
+  display: block;
 }
 
 .tour-plan-text-services {
