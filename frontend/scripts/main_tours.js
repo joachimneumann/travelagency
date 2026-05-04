@@ -838,7 +838,21 @@ export function createFrontendToursController(ctx) {
   async function loadExpandedTourDetails() {
     const tripIds = Array.from(expandedTourIdSet()).filter(Boolean);
     if (!tripIds.length) return;
-    await Promise.all(tripIds.map((tripId) => ensureTourDetailsLoaded(tripId)));
+    const currentTripsById = new Map(
+      (Array.isArray(state.trips) ? state.trips : [])
+        .map((trip) => [normalizeText(trip?.id), trip])
+        .filter(([tripId]) => tripId)
+    );
+    await Promise.all(tripIds.map(async (tripId) => {
+      const trip = currentTripsById.get(normalizeText(tripId)) || findTripById(tripId);
+      if (!trip || !hasTravelPlanDays(trip)) return null;
+      try {
+        return await loadTourDetailsForTrip(trip);
+      } catch (error) {
+        console.error("Failed to load static homepage tour details.", error);
+        return null;
+      }
+    }));
   }
 
   function isTourExpanded(trip) {

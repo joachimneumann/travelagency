@@ -291,3 +291,125 @@ test("collapsed public tour cards use swipe-only mobile galleries for multi-imag
   assert.match(els.tourGrid.innerHTML, /tour-card__media-slide is-active[\s\S]*src="\/assets\/img\/two\.webp"/);
   assert.match(els.tourGrid.innerHTML, /tour_multi_image[\s\S]*tour-card__media-dots/);
 });
+
+test("expanded public tour details load into the refreshed language trip list", async () => {
+  global.HTMLElement = FakeElement;
+  global.HTMLButtonElement = FakeElement;
+  global.window = {
+    addEventListener() {},
+    requestAnimationFrame(callback) {
+      if (typeof callback === "function") callback();
+    },
+    matchMedia() {
+      return { matches: true };
+    }
+  };
+
+  const fetchedUrls = [];
+  global.fetch = async (url) => {
+    fetchedUrls.push(String(url));
+    return {
+      ok: true,
+      async json() {
+        return {
+          title: "Tour tiếng Việt",
+          travel_plan: {
+            days: [
+              {
+                id: "day_vi_1",
+                day_number: 1,
+                title: "Ngày tiếng Việt",
+                services: []
+              }
+            ]
+          }
+        };
+      }
+    };
+  };
+
+  const { createFrontendToursController } = await loadToursController();
+  const oldExpandedTrip = {
+    id: "tour_language_switch",
+    title: "Old English tour",
+    short_description: "",
+    styles: [],
+    destinations: ["Vietnam"],
+    pictures: [],
+    travel_plan: {
+      days: [
+        {
+          id: "day_en_1",
+          day_number: 1,
+          title: "Old English day",
+          services: []
+        }
+      ]
+    }
+  };
+  const refreshedTrip = {
+    id: "tour_language_switch",
+    title: "Tour tiếng Việt",
+    short_description: "",
+    styles: [],
+    destinations: ["Việt Nam"],
+    pictures: [],
+    travel_plan_day_count: 1,
+    has_travel_plan_details: true,
+    travel_plan_details_url: "/frontend/data/generated/homepage/public-tour-details.vi.tour_language_switch.json"
+  };
+  const state = {
+    lang: "vi",
+    filteredTrips: [oldExpandedTrip],
+    trips: [refreshedTrip],
+    visibleToursCount: 1,
+    expandedTourIds: new Set([refreshedTrip.id]),
+    filterOptions: {
+      destinations: [],
+      styles: [],
+      destinationScopeCatalog: null
+    },
+    filters: {
+      dest: [],
+      area: "",
+      place: "",
+      style: []
+    }
+  };
+
+  const controller = createFrontendToursController({
+    state,
+    els: {
+      tourGrid: new FakeElement(),
+      noResultsMessage: new FakeElement(),
+      tourActions: null,
+      showMoreTours: null
+    },
+    backendBaseUrl: "",
+    initialVisibleTours: 1,
+    showMoreBatch: 1,
+    frontendT: (_id, fallback, vars = {}) => String(fallback ?? "").replace(/\{([^{}]+)\}/g, (_match, key) => (
+      Object.prototype.hasOwnProperty.call(vars, key) ? String(vars[key]) : ""
+    )),
+    currentFrontendLang: () => "vi",
+    preferredCurrencyForFrontendLang: () => "USD",
+    approximateDisplayAmountFromUSD: () => null,
+    formatDisplayMoney: () => "",
+    defaultBookingCurrency: "USD",
+    escapeHTML,
+    escapeAttr,
+    updateBookingModalTitle() {},
+    openBookingModal() {},
+    setSelectedTourContext() {},
+    clearSelectedTourContext() {},
+    setBookingField() {},
+    prefillBookingFormWithFilters() {}
+  });
+
+  await controller.loadExpandedTourDetails();
+
+  assert.deepEqual(fetchedUrls, [refreshedTrip.travel_plan_details_url]);
+  assert.equal(state.trips[0].travel_plan.days.length, 1);
+  assert.equal(state.trips[0].travel_plan.days[0].title, "Ngày tiếng Việt");
+  assert.equal(state.filteredTrips[0].travel_plan.days[0].title, "Old English day");
+});
