@@ -843,6 +843,15 @@ export function createTourHandlers(deps) {
     }
   }
 
+  function deferredPublicHomepageAssets(reason, details = {}) {
+    return {
+      ok: true,
+      dirty: true,
+      reason,
+      ...details
+    };
+  }
+
   function publishedWebpageDestinationCodes(countryReferencePayload) {
     const publishedCountryCodes = new Set(DESTINATION_COUNTRY_CODES);
     for (const item of Array.isArray(countryReferencePayload?.items) ? countryReferencePayload.items : []) {
@@ -1295,10 +1304,9 @@ export function createTourHandlers(deps) {
 
     await persistTour(tour);
     await syncTourManualTranslationsToMemory(tour);
-    const homepageAssets = await regeneratePublicHomepageAssets("tour_create", { tour_id: tour.id });
     sendJson(res, 201, {
       tour: buildTourEditorResponse(tour, lang),
-      homepage_assets: homepageAssets
+      homepage_assets: deferredPublicHomepageAssets("tour_create", { tour_id: tour.id })
     });
   }
 
@@ -1345,10 +1353,9 @@ export function createTourHandlers(deps) {
     tours[index] = updated;
     await persistTour(updated);
     await syncTourManualTranslationsToMemory(updated);
-    const homepageAssets = await regeneratePublicHomepageAssets("tour_patch", { tour_id: updated.id });
     sendJson(res, 200, {
       tour: buildTourEditorResponse(updated, lang),
-      homepage_assets: homepageAssets
+      homepage_assets: deferredPublicHomepageAssets("tour_patch", { tour_id: updated.id })
     });
   }
 
@@ -1392,9 +1399,30 @@ export function createTourHandlers(deps) {
     tours[index] = updated;
     await persistTour(updated);
     await syncTourManualTranslationsToMemory(updated);
-    const homepageAssets = await regeneratePublicHomepageAssets("tour_travel_plan_patch", { tour_id: updated.id });
     sendJson(res, 200, {
       tour: buildTourEditorResponse(updated, lang),
+      homepage_assets: deferredPublicHomepageAssets("tour_travel_plan_patch", { tour_id: updated.id })
+    });
+  }
+
+  async function handlePublishTour(req, res, [tourId]) {
+    const principal = getPrincipal(req);
+    if (!canEditTours(principal)) {
+      sendJson(res, 403, { error: "Forbidden" });
+      return;
+    }
+
+    const lang = requestLang(req.url);
+    const tours = (await readTours()).map((tour) => normalizeTourForStorage(tour));
+    const tour = tours.find((item) => item.id === tourId);
+    if (!tour) {
+      sendJson(res, 404, { error: "Tour not found" });
+      return;
+    }
+
+    const homepageAssets = await regeneratePublicHomepageAssets("tour_publish", { tour_id: tour.id });
+    sendJson(res, 200, {
+      tour: buildTourEditorResponse(tour, lang),
       homepage_assets: homepageAssets
     });
   }
@@ -1483,10 +1511,9 @@ export function createTourHandlers(deps) {
     });
     tours[targetIndex] = updated;
     await persistTour(updated);
-    const homepageAssets = await regeneratePublicHomepageAssets("tour_travel_plan_day_import", { tour_id: updated.id });
     sendJson(res, 200, {
       tour: buildTourEditorResponse(updated, lang),
-      homepage_assets: homepageAssets
+      homepage_assets: deferredPublicHomepageAssets("tour_travel_plan_day_import", { tour_id: updated.id })
     });
   }
 
@@ -1601,10 +1628,9 @@ export function createTourHandlers(deps) {
     });
     tours[targetIndex] = updated;
     await persistTour(updated);
-    const homepageAssets = await regeneratePublicHomepageAssets("tour_travel_plan_service_import", { tour_id: updated.id });
     sendJson(res, 200, {
       tour: buildTourEditorResponse(updated, lang),
-      homepage_assets: homepageAssets
+      homepage_assets: deferredPublicHomepageAssets("tour_travel_plan_service_import", { tour_id: updated.id })
     });
   }
 
@@ -1856,10 +1882,9 @@ export function createTourHandlers(deps) {
     });
     tours[index] = updated;
     await persistTour(updated);
-    const homepageAssets = await regeneratePublicHomepageAssets("tour_travel_plan_service_image_upload", { tour_id: updated.id });
     sendJson(res, 200, {
       tour: buildTourEditorResponse(updated, lang),
-      homepage_assets: homepageAssets
+      homepage_assets: deferredPublicHomepageAssets("tour_travel_plan_service_image_upload", { tour_id: updated.id })
     });
   }
 
@@ -1922,10 +1947,9 @@ export function createTourHandlers(deps) {
     if (imagePath && imagePath.includes(`${path.sep}travel-plan-services${path.sep}`)) {
       await rm(imagePath, { force: true }).catch(() => {});
     }
-    const homepageAssets = await regeneratePublicHomepageAssets("tour_travel_plan_service_image_delete", { tour_id: updated.id });
     sendJson(res, 200, {
       tour: buildTourEditorResponse(updated, lang),
-      homepage_assets: homepageAssets
+      homepage_assets: deferredPublicHomepageAssets("tour_travel_plan_service_image_delete", { tour_id: updated.id })
     });
   }
 
@@ -1998,11 +2022,10 @@ export function createTourHandlers(deps) {
     });
     tours[index] = updated;
     await persistTour(updated);
-    const homepageAssets = await regeneratePublicHomepageAssets("tour_video_upload", { tour_id: updated.id });
 
     sendJson(res, 200, {
       tour: buildTourEditorResponse(updated, lang),
-      homepage_assets: homepageAssets
+      homepage_assets: deferredPublicHomepageAssets("tour_video_upload", { tour_id: updated.id })
     });
   }
 
@@ -2037,11 +2060,10 @@ export function createTourHandlers(deps) {
     });
     tours[index] = updated;
     await persistTour(updated);
-    const homepageAssets = await regeneratePublicHomepageAssets("tour_video_delete", { tour_id: updated.id });
 
     sendJson(res, 200, {
       tour: buildTourEditorResponse(updated, lang),
-      homepage_assets: homepageAssets
+      homepage_assets: deferredPublicHomepageAssets("tour_video_delete", { tour_id: updated.id })
     });
   }
 
@@ -2052,6 +2074,7 @@ export function createTourHandlers(deps) {
     handleSearchTourTravelPlanServices,
     handleGetTour,
     handleGetTourOnePagerPdf,
+    handlePublishTour,
     handleTranslateTourFields,
     handleCreateTour,
     handlePatchTour,

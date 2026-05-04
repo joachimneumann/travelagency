@@ -104,6 +104,7 @@ const OPERATIONAL_ROUTE_DEFINITIONS = Object.freeze([
   { method: "PATCH", pattern: /^\/api\/v1\/static-translations\/([^/]+)\/([^/]+)\/overrides$/, handlerKey: "handlePatchStaticTranslationOverrides" },
   { method: "DELETE", pattern: /^\/api\/v1\/static-translations\/([^/]+)\/([^/]+)\/cache\/([^/]+)$/, handlerKey: "handleDeleteStaticTranslationCache" },
   { method: "GET", pattern: /^\/api\/v1\/tours\/([^/]+)\/one-pager\.pdf$/, handlerKey: "handleGetTourOnePagerPdf" },
+  { method: "POST", pattern: /^\/api\/v1\/tours\/([^/]+)\/publish$/, handlerKey: "handlePublishTour" },
   { method: "GET", pattern: /^\/api\/v1\/tours\/([^/]+)\/video$/, handlerKey: "handleGetTourVideo" },
   { method: "POST", pattern: /^\/api\/v1\/tours\/([^/]+)\/video$/, handlerKey: "handleUploadTourVideo" },
   { method: "DELETE", pattern: /^\/api\/v1\/tours\/([^/]+)\/video$/, handlerKey: "handleDeleteTourVideo" },

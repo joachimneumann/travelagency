@@ -196,7 +196,7 @@ export function createTourTravelPlanAdapter({
           travel_plan_days: Array.isArray(result.tour?.travel_plan?.days) ? result.tour.travel_plan.days.length : 0
         });
       }
-      if (typeof onTourMutation === "function") onTourMutation(result.tour);
+      if (typeof onTourMutation === "function") onTourMutation(result.tour, result);
       return {
         ...result,
         booking: fakeBookingFromTour(result.tour, state.id)

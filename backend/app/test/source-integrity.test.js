@@ -3475,13 +3475,15 @@ test("tour page reads month options from the generated catalogs layer", async ()
   const toursListModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "tours_list.js");
   const generatedCatalogsPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "shared", "generated_catalogs.js");
   const travelPlanCorePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "shared", "travel_plan_editor_core.js");
-  const [tourSource, tourTravelPlanAdapterSource, tourHtml, toursListHtml, toursListSource, travelPlanCoreSource] = await Promise.all([
+  const toursHandlerPath = path.resolve(__dirname, "..", "src", "http", "handlers", "tours.js");
+  const [tourSource, tourTravelPlanAdapterSource, tourHtml, toursListHtml, toursListSource, travelPlanCoreSource, toursHandlerSource] = await Promise.all([
     readFile(tourPageModulePath, "utf8"),
     readFile(tourTravelPlanAdapterPath, "utf8"),
     readFile(tourPageHtmlPath, "utf8"),
     readFile(toursListHtmlPath, "utf8"),
     readFile(toursListModulePath, "utf8"),
-    readFile(travelPlanCorePath, "utf8")
+    readFile(travelPlanCorePath, "utf8"),
+    readFile(toursHandlerPath, "utf8")
   ]);
   const generatedCatalogs = await import(`${pathToFileURL(generatedCatalogsPath).href}?test=${Date.now()}`);
 
@@ -3588,6 +3590,16 @@ test("tour page reads month options from the generated catalogs layer", async ()
     tourSource,
     /expectedUpdatedAt = normalizeText\(state\.tour\?\.updated_at\s*\|\|\s*state\.booking\?\.updated_at\);[\s\S]*payload\.expected_updated_at = expectedUpdatedAt;/,
     "Existing marketing-tour saves should send the freshest tour timestamp available for optimistic conflict detection"
+  );
+  assert.match(
+    toursHandlerSource,
+    /function deferredPublicHomepageAssets\(reason, details = \{\}\)[\s\S]*dirty:\s*true[\s\S]*homepage_assets:\s*deferredPublicHomepageAssets\("tour_travel_plan_service_image_upload"[\s\S]*homepage_assets:\s*deferredPublicHomepageAssets\("tour_travel_plan_service_image_delete"/,
+    "Marketing-tour service image upload/delete should defer public homepage generation until the explicit publish action"
+  );
+  assert.match(
+    tourSource,
+    /tour_public_homepage_assets_dirty[\s\S]*onTourMutation:\s*\(tour, result = null\)[\s\S]*result\?\.homepage_assets\?\.dirty === true[\s\S]*updateTourDirtyState/,
+    "Marketing-tour service image mutations should mark the page dirty so the next Save refreshes public homepage assets"
   );
   assert.match(
     tourSource,
@@ -4495,7 +4507,7 @@ test("backend translation nav icon reflects dirty centralized translation state"
   );
   assert.match(
     tourSource,
-    /await loadTour\(\);\s*notifyBackendTranslationsStatus\(\);/,
+    /await loadTour\(\);[\s\S]*notifyBackendTranslationsStatus\(\);/,
     "Marketing-tour saves should refresh the central translation status after persisted source changes"
   );
   assert.match(

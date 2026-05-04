@@ -116,6 +116,7 @@ const state = {
   },
   allowPageUnload: false,
   formDirty: false,
+  publicHomepageAssetsDirty: false,
   tour: null,
   booking: null,
   travelPlanDraft: null,
@@ -165,6 +166,8 @@ const els = {
   dirtyBarSummary: document.getElementById("tour_dirty_bar_summary"),
   status: document.getElementById("tour_formStatus"),
   cancel: document.getElementById("tour_cancel_btn"),
+  saveBtn: document.getElementById("tour_save_btn"),
+  publishBtn: document.getElementById("tour_publish_btn"),
   onePagerBtn: document.getElementById("tour_one_pager_btn"),
   onePagerDisabledReason: document.getElementById("tour_one_pager_disabled_reason"),
   onePagerLang: document.getElementById("tour_one_pager_lang"),
@@ -222,7 +225,7 @@ function hasAnyRoleInList(roleList, ...roles) {
   return roles.some((role) => roleList.includes(role));
 }
 
-function captureTourFormSnapshot() {
+function captureTourFormSnapshot({ includePublicHomepageAssetsDirty = true } = {}) {
   if (!els.form) return "";
   const controls = Array.from(els.form.querySelectorAll("input, select, textarea"))
     .filter((control) => !shouldIgnoreTourSnapshotControl(control));
@@ -254,6 +257,12 @@ function captureTourFormSnapshot() {
     "tour_travel_plan",
     tourTravelPlanAdapter?.snapshot?.() || JSON.stringify(state.tour?.travel_plan || { days: [] })
   ]);
+  if (includePublicHomepageAssetsDirty) {
+    snapshot.push([
+      "tour_public_homepage_assets_dirty",
+      state.publicHomepageAssetsDirty === true
+    ]);
+  }
   return JSON.stringify(snapshot);
 }
 
@@ -323,6 +332,7 @@ function describeTourSnapshotChanges(cleanSnapshot, currentSnapshot) {
 }
 
 let tourDirtySnapshotReady = false;
+let tourEditorCleanSnapshot = "";
 
 function logTourDirtyReason() {
   const cleanSnapshot = tourDirtyTracker.getCleanSnapshot();
@@ -352,14 +362,31 @@ const tourDirtyTracker = createSnapshotDirtyTracker({
 
 function renderTourDirtyBar() {
   const isDirty = state.formDirty === true;
+  const hasUnsavedEdits = hasUnsavedTourEditorChanges();
+  const hasUnpublishedChanges = state.publicHomepageAssetsDirty === true;
   els.dirtyBar?.classList.toggle("booking-dirty-bar--dirty", isDirty);
   if (els.dirtyBarTitle) {
-    els.dirtyBarTitle.textContent = isDirty
+    els.dirtyBarTitle.textContent = hasUnsavedEdits
       ? backendT("booking.page_save.unsaved", "Unsaved edits")
-      : backendT("booking.page_save.clean", "No unsaved edits");
+      : (hasUnpublishedChanges
+        ? backendT("tour.dirty.unpublished", "Unpublished changes")
+        : backendT("booking.page_save.clean", "No unsaved edits"));
   }
   if (els.dirtyBarSummary) {
-    els.dirtyBarSummary.textContent = "";
+    els.dirtyBarSummary.textContent = hasUnsavedEdits
+      ? backendT("tour.dirty.save_before_publish", "Save changes before publishing.")
+      : (hasUnpublishedChanges
+        ? backendT("tour.dirty.public_homepage_assets", "Press Publish to refresh the static web page.")
+        : "");
+  }
+  if (els.saveBtn instanceof HTMLButtonElement) {
+    els.saveBtn.disabled = !state.permissions.canEditTours || !hasUnsavedEdits;
+  }
+  if (els.publishBtn instanceof HTMLButtonElement) {
+    els.publishBtn.disabled = !state.permissions.canEditTours || !state.id || hasUnsavedEdits || !hasUnpublishedChanges;
+    els.publishBtn.title = hasUnsavedEdits
+      ? backendT("tour.publish_save_first", "Save changes before publishing.")
+      : "";
   }
   syncOnePagerButtonState();
 }
@@ -375,7 +402,14 @@ function updateTourDirtyState() {
   return tourDirtyTracker.refresh();
 }
 
-function markTourSnapshotClean() {
+function hasUnsavedTourEditorChanges() {
+  if (!tourDirtySnapshotReady) return false;
+  return captureTourFormSnapshot({ includePublicHomepageAssetsDirty: false }) !== tourEditorCleanSnapshot;
+}
+
+function markTourSnapshotClean({ clearPublicHomepageAssetsDirty = false } = {}) {
+  if (clearPublicHomepageAssetsDirty) state.publicHomepageAssetsDirty = false;
+  tourEditorCleanSnapshot = captureTourFormSnapshot({ includePublicHomepageAssetsDirty: false });
   tourDirtyTracker.markClean();
   tourDirtySnapshotReady = true;
   state.originalLocalizedContentSnapshot = captureLocalizedContentSnapshot();
@@ -1672,6 +1706,7 @@ async function init() {
   }
   renderOnePagerLanguageOptions();
   els.onePagerBtn?.addEventListener("click", openTourOnePagerPdf);
+  els.publishBtn?.addEventListener("click", publishTourStaticContent);
   if (els.logoutLink) {
     const returnTo = `${window.location.origin}/`;
     wireAuthLogoutLink(els.logoutLink, { apiBase, returnTo });
@@ -1700,10 +1735,17 @@ async function init() {
     onDirtyChange: () => {
       updateTourDirtyState();
     },
-    onTourMutation: (tour) => {
+    onTourMutation: (tour, result = null) => {
       state.tour = tour;
       state.id = String(tour?.id || state.id || "");
       state.is_create_mode = !state.id;
+      if (result?.homepage_assets?.dirty === true) {
+        state.publicHomepageAssetsDirty = true;
+        window.setTimeout(() => {
+          markTourSnapshotClean();
+          updateTourDirtyState();
+        }, 0);
+      }
       syncOnePagerButtonState();
       if (state.booking && state.booking.id === state.id) {
         state.booking.updated_at = normalizeText(tour?.updated_at) || state.booking.updated_at || null;
@@ -1915,6 +1957,12 @@ async function loadTour() {
   renderStyleChoices(tour_style_codes(tour));
   applyTourPermissions();
   markTourSnapshotClean();
+  if (normalizeText(qs.get("needs_publish")) === "1") {
+    state.publicHomepageAssetsDirty = true;
+    updateTourDirtyState();
+    const cleanUrl = withBackendLang("/marketing_tour.html", { id: state.id });
+    window.history.replaceState(null, "", cleanUrl);
+  }
   syncOnePagerButtonState();
 }
 
@@ -2217,7 +2265,9 @@ async function submitForm(event) {
     });
     if (!result) return;
     if (!result.tour) return;
-    let finalSaveStatus = homepageAssetSyncFailed(result)
+    const homepageAssetsFailed = homepageAssetSyncFailed(result);
+    let publicHomepageAssetsStillDirty = result?.homepage_assets?.dirty === true || homepageAssetsFailed;
+    let finalSaveStatus = homepageAssetsFailed
       ? homepageAssetSyncWarningMessage()
       : (is_create
         ? backendT("tour.status.created", "Tour created.")
@@ -2246,7 +2296,10 @@ async function submitForm(event) {
       });
       if (!videoResult) return;
       if (homepageAssetSyncFailed(videoResult)) {
+        publicHomepageAssetsStillDirty = true;
         finalSaveStatus = homepageAssetSyncWarningMessage();
+      } else if (videoResult?.homepage_assets?.dirty === true) {
+        publicHomepageAssetsStillDirty = true;
       }
       if (videoResult.tour) {
         state.tour = videoResult.tour;
@@ -2258,7 +2311,10 @@ async function submitForm(event) {
       });
       if (!videoDeleteResult) return;
       if (homepageAssetSyncFailed(videoDeleteResult)) {
+        publicHomepageAssetsStillDirty = true;
         finalSaveStatus = homepageAssetSyncWarningMessage();
+      } else if (videoDeleteResult?.homepage_assets?.dirty === true) {
+        publicHomepageAssetsStillDirty = true;
       }
       if (videoDeleteResult.tour) {
         state.tour = videoDeleteResult.tour;
@@ -2269,15 +2325,67 @@ async function submitForm(event) {
     if (is_create) {
       state.allowPageUnload = true;
       keepPageOverlayVisible = true;
-      window.location.href = withBackendLang("/marketing_tour.html", { id: state.id });
+      window.location.href = withBackendLang("/marketing_tour.html", {
+        id: state.id,
+        needs_publish: publicHomepageAssetsStillDirty ? "1" : ""
+      });
       return;
     }
     await loadTour();
+    if (publicHomepageAssetsStillDirty) {
+      state.publicHomepageAssetsDirty = true;
+      updateTourDirtyState();
+    }
     notifyBackendTranslationsStatus();
   } finally {
     if (!keepPageOverlayVisible) {
       setTourPageOverlay(false);
     }
+  }
+}
+
+async function publishTourStaticContent() {
+  if (!state.permissions.canEditTours || !state.id) return;
+  if (hasUnsavedTourEditorChanges()) {
+    setStatus(backendT("tour.publish_save_first", "Save changes before publishing."));
+    updateTourDirtyState();
+    return;
+  }
+
+  setTourPageOverlay(true, backendT("tour.status.publishing_overlay", "Publishing static web page content. Please wait."));
+  setStatus(backendT("tour.status.publishing", "Publishing..."));
+  try {
+    const result = await fetchApi(withApiLang(`/api/v1/tours/${encodeURIComponent(state.id)}/publish`), {
+      method: "POST"
+    });
+    if (!result) return;
+    if (homepageAssetSyncFailed(result)) {
+      state.publicHomepageAssetsDirty = true;
+      updateTourDirtyState();
+      setStatus(homepageAssetSyncWarningMessage());
+      return;
+    }
+    if (result.tour) {
+      state.tour = result.tour;
+      state.localizedContent.title_i18n = normalizeLocalizedTextMap(
+        result.tour.title_i18n || { en: result.tour.title || "" }
+      );
+      state.localizedContent.short_description_i18n = normalizeTourShortDescriptionMap(
+        result.tour.short_description_i18n,
+        result.tour.short_description
+      );
+      updateHeader(state.tour, tour_destinations(state.tour), tour_styles(state.tour));
+      tourTravelPlanAdapter?.applyTour(state.tour);
+      renderOnePagerImageSelector();
+      renderTourCardImageSelector();
+      syncPublishedOnWebpageControl();
+    }
+    state.publicHomepageAssetsDirty = false;
+    markTourSnapshotClean({ clearPublicHomepageAssetsDirty: true });
+    updateTourDirtyState();
+    setStatus(backendT("tour.status.published", "Published."));
+  } finally {
+    setTourPageOverlay(false);
   }
 }
 

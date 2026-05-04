@@ -97,3 +97,15 @@ test("buildApiRoutes includes the marketing tour one-pager PDF route", () => {
     true
   );
 });
+
+test("buildApiRoutes includes the marketing tour publish route", () => {
+  const handlers = new Proxy({}, {
+    get: () => () => {}
+  });
+
+  const routes = buildApiRoutes({ handlers });
+  assert.equal(
+    routes.some((route) => route.method === "POST" && route.pattern.test("/api/v1/tours/tour_alpha/publish")),
+    true
+  );
+});
