@@ -768,6 +768,12 @@ export function createFrontendToursController(ctx) {
     return state.tourDetailsInflightById;
   }
 
+  function tourDetailsCacheKey(tripId, lang = currentFrontendLang()) {
+    const normalizedTripId = normalizeText(tripId);
+    if (!normalizedTripId) return "";
+    return `${normalizeFrontendTourLang(lang)}:${normalizedTripId}`;
+  }
+
   function normalizeTourDetailsPayloadForFrontend(payload, trip) {
     const source = payload && typeof payload === "object" && !Array.isArray(payload) ? payload : {};
     const travelPlan = source.travel_plan && typeof source.travel_plan === "object" && !Array.isArray(source.travel_plan)
@@ -787,15 +793,16 @@ export function createFrontendToursController(ctx) {
     if (travelPlanDays(trip).length > 0) return trip;
 
     const cache = tourDetailsCache();
-    if (cache[tripId]) {
-      Object.assign(trip, cache[tripId]);
+    const cacheKey = tourDetailsCacheKey(tripId);
+    if (cache[cacheKey]) {
+      Object.assign(trip, cache[cacheKey]);
       return trip;
     }
 
     const inflight = tourDetailsInflightCache();
-    if (!inflight[tripId]) {
+    if (!inflight[cacheKey]) {
       const url = publicTourDetailsDataUrl(trip);
-      inflight[tripId] = url
+      inflight[cacheKey] = url
         ? fetch(url)
           .then((response) => {
             if (!response.ok) {
@@ -805,14 +812,14 @@ export function createFrontendToursController(ctx) {
           })
           .then((payload) => normalizeTourDetailsPayloadForFrontend(payload, trip))
           .finally(() => {
-            delete inflight[tripId];
+            delete inflight[cacheKey];
           })
         : Promise.resolve(null);
     }
 
-    const details = await inflight[tripId];
+    const details = await inflight[cacheKey];
     if (!details) return null;
-    cache[tripId] = details;
+    cache[cacheKey] = details;
     Object.assign(trip, details);
     return trip;
   }
@@ -826,6 +833,12 @@ export function createFrontendToursController(ctx) {
       console.error("Failed to load static homepage tour details.", error);
       return null;
     }
+  }
+
+  async function loadExpandedTourDetails() {
+    const tripIds = Array.from(expandedTourIdSet()).filter(Boolean);
+    if (!tripIds.length) return;
+    await Promise.all(tripIds.map((tripId) => ensureTourDetailsLoaded(tripId)));
   }
 
   function isTourExpanded(trip) {
@@ -3816,6 +3829,7 @@ export function createFrontendToursController(ctx) {
     getCheckedValues,
     getFiltersFromURL,
     loadTrips,
+    loadExpandedTourDetails,
     normalizeActiveFiltersFromOptions,
     normalizeFilterSelection,
     prewarmTourImages,

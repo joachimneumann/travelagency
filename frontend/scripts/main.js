@@ -412,6 +412,7 @@ const {
   filterLabels,
   getCheckedValues,
   getFiltersFromURL,
+  loadExpandedTourDetails,
   loadTrips,
   normalizeActiveFiltersFromOptions,
   normalizeFilterSelection,
@@ -1470,6 +1471,7 @@ async function handleFrontendLanguageChanged() {
       setBookingField("bookingStyle", filterLabels(preservedBookingStyleCodes, "style"));
     }
 
+    await loadExpandedTourDetails();
     applyFilters();
     markHomepageMobileStageReady("toursReady");
     queueHomepageMobileStageReady("restReady");

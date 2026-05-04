@@ -1679,7 +1679,7 @@ function handleBackendLanguageChanged() {
   updateHeaderSubtitle();
   renderLocalizedTourContentEditor();
   renderTourReelVideo();
-  tourTravelPlanAdapter?.renderTravelPlanPanel?.({ syncFromDom: true });
+  tourTravelPlanAdapter?.renderTravelPlanPanel?.({ syncFromDom: false });
   renderOnePagerImageSelector();
   renderOnePagerExperienceHighlightSelectors();
   renderTourCardImageSelector();
