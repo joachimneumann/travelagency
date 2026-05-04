@@ -65,10 +65,15 @@ test("public tour travel-plan content and detail chrome follow the frontend lang
     id: "tour_localized_plan",
     title: "Localized plan",
     short_description: "Description",
+    one_pager_pdf_url: "/content/one-pagers/pdfs/tour_localized_plan/de.pdf",
     styles: [],
     destinations: ["Vietnam"],
     pictures: [],
     travel_plan: {
+      one_pager_experience_highlight_ids: [
+        "iconic_landmarks",
+        "delicious_cuisine"
+      ],
       days: [
         {
           id: "day_1",
@@ -172,7 +177,7 @@ test("public tour travel-plan content and detail chrome follow the frontend lang
 
   controller.renderVisibleTrips();
 
-  assert.match(els.tourGrid.innerHTML, /Tag 1 - German day title/);
+  assert.doesNotMatch(els.tourGrid.innerHTML, /Tag 1 - German day title/);
   assert.doesNotMatch(els.tourGrid.innerHTML, /Day 1 - English day title/);
   assert.match(els.tourGrid.innerHTML, /German day title/);
   assert.match(els.tourGrid.innerHTML, /German day notes/);
@@ -183,8 +188,32 @@ test("public tour travel-plan content and detail chrome follow the frontend lang
   assert.doesNotMatch(els.tourGrid.innerHTML, /English day notes/);
   assert.doesNotMatch(els.tourGrid.innerHTML, /English service title/);
   assert.doesNotMatch(els.tourGrid.innerHTML, /English service details/);
+  assert.match(els.tourGrid.innerHTML, /tour-plan-highlights/);
+  assert.equal((els.tourGrid.innerHTML.match(/class="tour-plan-highlight"/g) || []).length, 4);
+  assert.match(els.tourGrid.innerHTML, /Iconic Landmarks/);
+  assert.match(els.tourGrid.innerHTML, /Delicious Cuisine/);
+  assert.match(els.tourGrid.innerHTML, /\/assets\/img\/experience-highlights\/01\.png/);
+  assert.match(els.tourGrid.innerHTML, /tour-plan-pdf/);
+  assert.match(els.tourGrid.innerHTML, /Tour Overview/);
+  assert.doesNotMatch(els.tourGrid.innerHTML, /tour-plan-pdf__badge/);
+  assert.match(els.tourGrid.innerHTML, /\/public\/v1\/tours\/tour_localized_plan\/one-pager\.pdf\?lang=de/);
+  assert.doesNotMatch(els.tourGrid.innerHTML, /\/content\/one-pagers\/pdfs\/tour_localized_plan\/de\.pdf/);
+  assert.doesNotMatch(els.tourGrid.innerHTML, /\/api\/v1\/tours\/tour_localized_plan\/one-pager\.pdf/);
+  assert.match(els.tourGrid.innerHTML, /tour-plan-summary/);
+  assert.match(els.tourGrid.innerHTML, /tour-plan-summary-day/);
+  assert.match(els.tourGrid.innerHTML, /Ihre Reiseroute/);
+  assert.match(els.tourGrid.innerHTML, /data-tour-plan-summary-toggle/);
+  assert.match(els.tourGrid.innerHTML, /data-tour-plan-summary-details hidden/);
+  assert.doesNotMatch(els.tourGrid.innerHTML, /data-tour-plan-full-itinerary/);
+  assert.match(els.tourGrid.innerHTML, /tour-plan__footer-cta/);
+  assert.match(els.tourGrid.innerHTML, /tour-plan__footer-plan-trip/);
   assert.match(els.tourGrid.innerHTML, /tour-plan-service-card--has-details/);
+  assert.match(els.tourGrid.innerHTML, /tour-plan-service-card__details-indicator/);
+  assert.match(els.tourGrid.innerHTML, /tour-plan-service-card__details-text/);
+  assert.match(els.tourGrid.innerHTML, />Details<\/span>/);
   assert.match(els.tourGrid.innerHTML, /data-tour-plan-service-details-toggle/);
+  assert.equal((els.tourGrid.innerHTML.match(/data-tour-plan-service-details-toggle/g) || []).length, 1);
+  assert.match(els.tourGrid.innerHTML, /data-tour-plan-service-collapse/);
   assert.doesNotMatch(els.tourGrid.innerHTML, /data-tour-plan-service-flip/);
   assert.doesNotMatch(els.tourGrid.innerHTML, /Tap again to see the image/);
   assert.match(els.tourGrid.innerHTML, /data-tour-plan-service-swap/);
@@ -313,6 +342,11 @@ test("expanded public tour details load into the refreshed language trip list", 
       async json() {
         return {
           title: "Tour tiếng Việt",
+          one_pager_pdf_url: "/content/one-pagers/pdfs/tour_language_switch/vi.pdf",
+          one_pager_experience_highlight_ids: [
+            "iconic_landmarks",
+            "delicious_cuisine"
+          ],
           travel_plan: {
             days: [
               {
@@ -411,5 +445,10 @@ test("expanded public tour details load into the refreshed language trip list", 
   assert.deepEqual(fetchedUrls, [refreshedTrip.travel_plan_details_url]);
   assert.equal(state.trips[0].travel_plan.days.length, 1);
   assert.equal(state.trips[0].travel_plan.days[0].title, "Ngày tiếng Việt");
+  assert.equal(state.trips[0].one_pager_pdf_url, "/content/one-pagers/pdfs/tour_language_switch/vi.pdf");
+  assert.deepEqual(state.trips[0].one_pager_experience_highlight_ids, [
+    "iconic_landmarks",
+    "delicious_cuisine"
+  ]);
   assert.equal(state.filteredTrips[0].travel_plan.days[0].title, "Old English day");
 });

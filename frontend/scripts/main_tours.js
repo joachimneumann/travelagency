@@ -14,6 +14,7 @@ const TOUR_DETAILS_TRANSITION_MS = 640;
 const TOUR_DETAILS_CLOSE_TRANSITION_MS = 780;
 const TOUR_DETAILS_DESKTOP_CLOSE_TRANSITION_MS = 920;
 const TOUR_PLAN_SERVICE_SWAP_TRANSITION_MS = 380;
+const TOUR_PLAN_DAY_DETAILS_TRANSITION_MS = 300;
 const TOUR_SHOW_MORE_LABEL_TRANSITION_MS = 420;
 const TOUR_CARD_SCROLL_TIMEOUT_MS = 900;
 const TOUR_CARD_SCROLL_MARGIN_PX = 12;
@@ -33,7 +34,33 @@ const COUNTRY_TO_TOUR_DESTINATION_CODE = Object.freeze({
   KH: "cambodia",
   LA: "laos"
 });
+const TOUR_EXPERIENCE_HIGHLIGHT_LIMIT = 4;
+const EXPERIENCE_HIGHLIGHTS_BASE_PATH = "/assets/img/experience-highlights";
+const TOUR_EXPERIENCE_HIGHLIGHTS = Object.freeze([
+  { id: "iconic_landmarks", title: "Iconic Landmarks", image: "01.png" },
+  { id: "cultural_heritage", title: "Cultural Heritage", image: "02.png" },
+  { id: "local_experiences", title: "Local Experiences", image: "03.png" },
+  { id: "delicious_cuisine", title: "Delicious Cuisine", image: "04.png" },
+  { id: "scenic_landscapes", title: "Scenic Landscapes", image: "05.png" },
+  { id: "hidden_gems", title: "Hidden Gems", image: "06.png" },
+  { id: "historic_sites", title: "Historic Sites", image: "07.png" },
+  { id: "art_architecture", title: "Art and Architecture", image: "08.png" },
+  { id: "nature_wildlife", title: "Nature and Wildlife", image: "09.png" },
+  { id: "beaches_islands", title: "Beaches and Islands", image: "10.png" },
+  { id: "mountain_adventures", title: "Mountain Adventures", image: "11.png" },
+  { id: "city_life", title: "City Life", image: "12.png" },
+  { id: "festivals_events", title: "Festivals and Events", image: "13.png" },
+  { id: "traditional_markets", title: "Traditional Markets", image: "14.png" },
+  { id: "nightlife_entertainment", title: "Nightlife and Entertainment", image: "15.png" },
+  { id: "wellness_relaxation", title: "Wellness and Relaxation", image: "16.png" },
+  { id: "family_friendly_activities", title: "Family Friendly Activities", image: "17.png" },
+  { id: "outdoor_adventures", title: "Outdoor Adventures", image: "18.png" },
+  { id: "spiritual_places", title: "Spiritual Places", image: "19.png" },
+  { id: "shopping_souvenirs", title: "Shopping and Souvenirs", image: "20.png" }
+]);
+const TOUR_EXPERIENCE_HIGHLIGHT_BY_ID = new Map(TOUR_EXPERIENCE_HIGHLIGHTS.map((item) => [item.id, item]));
 const tourCardImageTransitionTimers = new WeakMap();
+const tourPlanSummaryDetailsAnimations = new WeakMap();
 
 export function createFrontendToursController(ctx) {
   const {
@@ -779,11 +806,21 @@ export function createFrontendToursController(ctx) {
     const travelPlan = source.travel_plan && typeof source.travel_plan === "object" && !Array.isArray(source.travel_plan)
       ? source.travel_plan
       : {};
+    const onePagerPdfUrl = normalizeText(source.one_pager_pdf_url || travelPlan.one_pager_pdf_url);
+    const onePagerExperienceHighlightIds = Array.isArray(source.one_pager_experience_highlight_ids)
+      ? source.one_pager_experience_highlight_ids
+      : (Array.isArray(travelPlan.one_pager_experience_highlight_ids) ? travelPlan.one_pager_experience_highlight_ids : []);
+    const onePagerExperienceHighlights = Array.isArray(source.one_pager_experience_highlights)
+      ? source.one_pager_experience_highlights
+      : (Array.isArray(travelPlan.one_pager_experience_highlights) ? travelPlan.one_pager_experience_highlights : []);
     return {
       title: source.title ?? trip?.title,
       travel_plan: travelPlan,
       travel_plan_day_count: Array.isArray(travelPlan.days) ? travelPlan.days.length : 0,
-      has_travel_plan_details: Array.isArray(travelPlan.days) && travelPlan.days.length > 0
+      has_travel_plan_details: Array.isArray(travelPlan.days) && travelPlan.days.length > 0,
+      ...(onePagerPdfUrl ? { one_pager_pdf_url: onePagerPdfUrl } : {}),
+      ...(onePagerExperienceHighlightIds.length ? { one_pager_experience_highlight_ids: onePagerExperienceHighlightIds } : {}),
+      ...(onePagerExperienceHighlights.length ? { one_pager_experience_highlights: onePagerExperienceHighlights } : {})
     };
   }
 
@@ -1327,6 +1364,14 @@ export function createFrontendToursController(ctx) {
     return normalizeText(value).replace(/\s+/g, " ");
   }
 
+  function stripLeadingBulletMarkers(value) {
+    return normalizeText(value).replace(/(^|\n)\s*[•*+-]\s+/g, "$1");
+  }
+
+  function compactServiceDetailText(value) {
+    return stripLeadingBulletMarkers(value).replace(/\s+/g, " ");
+  }
+
   function truncateCompactText(value, maxLength = 118) {
     const text = compactText(value);
     const limit = Math.max(20, Number(maxLength) || 118);
@@ -1377,17 +1422,9 @@ export function createFrontendToursController(ctx) {
   }
 
   function tourPlanServiceDetails(service, title = tourPlanServiceTitle(service)) {
-    const image = primaryTourPlanServiceImage(service);
-    const candidates = [
-      resolveTravelPlanField(service, "details"),
-      resolveTravelPlanField(service, "image_subtitle"),
-      resolveTravelPlanImageField(image, "caption"),
-      resolveTravelPlanField(service, "location")
-    ];
     const normalizedTitle = compactText(title).toLowerCase();
-    return candidates
-      .map((item) => compactText(item))
-      .find((item) => item && item.toLowerCase() !== normalizedTitle) || "";
+    const details = compactServiceDetailText(resolveTravelPlanField(service, "details"));
+    return details && details.toLowerCase() !== normalizedTitle ? details : "";
   }
 
   function tourPlanServiceImageAlt(service) {
@@ -1405,7 +1442,7 @@ export function createFrontendToursController(ctx) {
     const details = resolveTravelPlanField(service, "details");
     const parts = [title, location].map((item) => compactText(item)).filter(Boolean);
     let line = parts.join(" - ");
-    const detailsText = compactText(details);
+    const detailsText = compactServiceDetailText(details);
     const titleText = compactText(title).toLowerCase();
 
     if (detailsText && detailsText.toLowerCase() !== titleText) {
@@ -1428,7 +1465,9 @@ export function createFrontendToursController(ctx) {
     const height = Math.max(1, Number.parseInt(image?.height_px, 10) || 720);
     const hasDetails = Boolean(compactText(details));
     const detailsLabel = frontendT("tour.plan.show_service_details", "Show details for {title}", { title });
+    const detailsBadgeLabel = frontendT("tour.plan.service_details_badge", "Details");
     const swapLabel = frontendT("tour.plan.feature_service", "Show {title} as the featured service", { title });
+    const collapseLabel = frontendT("tour.plan.collapse_service_image", "Make {title} image small", { title });
     const body = `
       <div class="tour-plan-service-card__body">
         <h5>${escapeHTML(title)}</h5>
@@ -1450,11 +1489,16 @@ export function createFrontendToursController(ctx) {
         class="tour-plan-service-card${className ? ` ${escapeAttr(className)}` : ""}${hasDetails ? " tour-plan-service-card--has-details" : ""}${swappable ? " tour-plan-service-card--interactive" : ""}"
         data-tour-plan-service-card
         ${hasDetails ? `data-tour-plan-service-has-details="1"` : ""}
-        ${featured && hasDetails ? `data-tour-plan-service-details-toggle role="button" tabindex="0" aria-pressed="false" aria-label="${escapeAttr(detailsLabel)}"` : ""}
+        ${featured ? `data-tour-plan-service-collapse role="button" tabindex="0" aria-label="${escapeAttr(collapseLabel)}"` : ""}
         ${swappable ? `data-tour-plan-service-swap role="button" tabindex="0" aria-label="${escapeAttr(swapLabel)}"` : ""}
       >
         ${imageMarkup}
-        ${hasDetails ? `<span class="tour-plan-service-card__details-indicator" aria-hidden="true">i</span>` : ""}
+        ${hasDetails ? `
+          <span class="tour-plan-service-card__details-indicator"${featured ? ` data-tour-plan-service-details-toggle role="button" tabindex="0" aria-pressed="false" aria-label="${escapeAttr(detailsLabel)}"` : ""}>
+            <span class="tour-plan-service-card__details-icon" aria-hidden="true"></span>
+            <span class="tour-plan-service-card__details-text">${escapeHTML(detailsBadgeLabel)}</span>
+          </span>
+        ` : ""}
         ${body}
       </article>
     `;
@@ -1489,7 +1533,9 @@ export function createFrontendToursController(ctx) {
     return {
       markup: `
         <div class="tour-plan-service-media${sideEntries.length ? "" : " tour-plan-service-media--single"}" data-tour-plan-service-media>
-          ${renderTourPlanServiceCard(featured.service, "tour-plan-service-card--featured", { featured: true })}
+          ${renderTourPlanServiceCard(featured.service, "tour-plan-service-card--featured", {
+            featured: true
+          })}
           ${sideMarkup}
         </div>
       `,
@@ -1524,13 +1570,195 @@ export function createFrontendToursController(ctx) {
       : "";
   }
 
-  function renderTourPlanDay(day, index, tripId) {
+  function normalizeExperienceHighlightId(value) {
+    return normalizeText(value).toLowerCase().replace(/[-\s]+/g, "_");
+  }
+
+  function experienceHighlightAssetSrc(imagePath) {
+    const cleanPath = normalizeText(imagePath).replace(/^\/+/, "");
+    if (!cleanPath) return "";
+    if (cleanPath.startsWith("assets/")) return `/${cleanPath}`;
+    return `${EXPERIENCE_HIGHLIGHTS_BASE_PATH}/${cleanPath.split("/").map((part) => encodeURIComponent(part)).join("/")}`;
+  }
+
+  function fallbackExperienceHighlightTitle(id) {
+    const normalizedId = normalizeExperienceHighlightId(id);
+    if (!normalizedId) return "";
+    return normalizedId
+      .split("_")
+      .map((part) => part ? `${part.charAt(0).toUpperCase()}${part.slice(1)}` : "")
+      .filter(Boolean)
+      .join(" ");
+  }
+
+  function normalizeExperienceHighlightItem(item) {
+    const source = item && typeof item === "object" && !Array.isArray(item) ? item : {};
+    const id = normalizeExperienceHighlightId(source.id);
+    const catalogItem = TOUR_EXPERIENCE_HIGHLIGHT_BY_ID.get(id);
+    const title = normalizeText(source.title) || normalizeText(catalogItem?.title) || fallbackExperienceHighlightTitle(id);
+    const src = normalizeText(source.image_src || source.src)
+      || experienceHighlightAssetSrc(source.image || catalogItem?.image);
+    if (!id || !title || !src) return null;
+    return { id, title, src };
+  }
+
+  function configuredTourExperienceHighlightIds(trip) {
+    const seen = new Set();
+    const sources = [
+      trip?.one_pager_experience_highlight_ids,
+      trip?.experience_highlight_ids,
+      trip?.travel_plan?.one_pager_experience_highlight_ids,
+      trip?.travel_plan?.experience_highlight_ids
+    ];
+    return sources
+      .flatMap((source) => Array.isArray(source) ? source : [])
+      .map((value) => normalizeExperienceHighlightId(value))
+      .filter((id) => {
+        if (!id || seen.has(id)) return false;
+        seen.add(id);
+        return true;
+      })
+      .slice(0, TOUR_EXPERIENCE_HIGHLIGHT_LIMIT);
+  }
+
+  function stableHash(value) {
+    let hash = 2166136261;
+    const text = String(value ?? "");
+    for (let index = 0; index < text.length; index += 1) {
+      hash ^= text.charCodeAt(index);
+      hash = Math.imul(hash, 16777619);
+    }
+    return hash >>> 0;
+  }
+
+  function completeTourExperienceHighlights(trip, highlights) {
+    const seen = new Set();
+    const selectedHighlights = [];
+    for (const highlight of Array.isArray(highlights) ? highlights : []) {
+      if (!highlight?.id || seen.has(highlight.id)) continue;
+      selectedHighlights.push(highlight);
+      seen.add(highlight.id);
+      if (selectedHighlights.length >= TOUR_EXPERIENCE_HIGHLIGHT_LIMIT) return selectedHighlights;
+    }
+
+    const tripSeed = normalizeText(trip?.id || trip?.title) || "tour";
+    const randomHighlights = TOUR_EXPERIENCE_HIGHLIGHTS
+      .filter((item) => item?.id && !seen.has(item.id))
+      .map((item) => ({
+        item,
+        rank: stableHash(`${tripSeed}:${item.id}`)
+      }))
+      .sort((left, right) => left.rank - right.rank || left.item.id.localeCompare(right.item.id))
+      .map(({ item }) => normalizeExperienceHighlightItem(item))
+      .filter((item) => {
+        if (!item?.id || seen.has(item.id)) return false;
+        seen.add(item.id);
+        return true;
+      });
+    return selectedHighlights.concat(randomHighlights).slice(0, TOUR_EXPERIENCE_HIGHLIGHT_LIMIT);
+  }
+
+  function selectedTourExperienceHighlights(trip) {
+    const explicitItems = Array.isArray(trip?.one_pager_experience_highlights)
+      ? trip.one_pager_experience_highlights
+      : (Array.isArray(trip?.travel_plan?.one_pager_experience_highlights) ? trip.travel_plan.one_pager_experience_highlights : []);
+    const normalizedExplicitItems = explicitItems
+      .map((item) => normalizeExperienceHighlightItem(item))
+      .filter(Boolean);
+    if (normalizedExplicitItems.length) return completeTourExperienceHighlights(trip, normalizedExplicitItems);
+
+    const configuredHighlights = configuredTourExperienceHighlightIds(trip)
+      .map((id) => normalizeExperienceHighlightItem({ id }))
+      .filter(Boolean);
+    if (configuredHighlights.length) return completeTourExperienceHighlights(trip, configuredHighlights);
+
+    return completeTourExperienceHighlights(trip, []);
+  }
+
+  function renderTourExperienceHighlights(trip) {
+    const highlights = selectedTourExperienceHighlights(trip);
+    if (!highlights.length) return "";
+    return `
+      <section class="tour-plan-highlights" aria-label="Experience highlights">
+        <div class="tour-plan-highlights__grid">
+          ${highlights.map((item) => `
+            <article class="tour-plan-highlight">
+              <img class="tour-plan-highlight__icon" src="${escapeAttr(item.src)}" alt="" aria-hidden="true" loading="lazy" width="64" height="64" />
+              <h4>${escapeHTML(item.title)}</h4>
+            </article>
+          `).join("")}
+        </div>
+      </section>
+    `;
+  }
+
+  function tourOnePagerPdfUrl(trip) {
+    const tourId = normalizeText(trip?.id);
+    if (!tourId) return "";
+    const lang = normalizeFrontendTourLang(currentFrontendLang());
+    return `/public/v1/tours/${encodeURIComponent(tourId)}/one-pager.pdf?lang=${encodeURIComponent(lang)}`;
+  }
+
+  function renderTourOnePagerDownload(trip) {
+    const pdfUrl = tourOnePagerPdfUrl(trip);
+    if (!pdfUrl) return "";
+    return `
+      <section class="tour-plan-pdf" aria-label="Tour PDF">
+        <div class="tour-plan-pdf__body">
+          <h4>Tour Overview</h4>
+          <p>Printable summary with the route, highlights, and trip style.</p>
+        </div>
+        <a class="btn btn-secondary tour-plan-pdf__download" href="${escapeAttr(pdfUrl)}" target="_blank" rel="noopener">Download PDF</a>
+      </section>
+    `;
+  }
+
+  function tourPlanSummaryDayDetailsId(tripId, index) {
+    return `${tourDetailsPanelId(tripId)}-day-${index + 1}-details`;
+  }
+
+  function tourPlanDayHeading(day, index) {
     const dayNumber = Math.max(1, Number.parseInt(day?.day_number, 10) || index + 1);
     const dayTitle = resolveTravelPlanField(day, "title");
     const dayLabel = frontendT("tour.plan.day_label", "Day {day}", {
       day: String(dayNumber)
     });
-    const heading = dayTitle ? `${dayLabel} - ${dayTitle}` : dayLabel;
+    return {
+      dayNumber,
+      dayTitle,
+      dayLabel,
+      heading: dayTitle || dayLabel
+    };
+  }
+
+  function tourPlanDayBadgeLabel(dayNumber) {
+    const dayLabel = compactText(frontendT("tour.plan.day_label", "Day {day}", {
+      day: String(dayNumber)
+    }));
+    const withoutNumber = compactText(dayLabel.replace(String(dayNumber), ""));
+    return withoutNumber || frontendT("tour.plan.summary_day_badge", "Day");
+  }
+
+  function tourPlanDaySummaryText(day) {
+    const notes = resolveTravelPlanField(day, "notes");
+    if (notes) {
+      return {
+        text: compactText(stripLeadingBulletMarkers(notes)),
+        fullText: compactText(stripLeadingBulletMarkers(notes)),
+        isTruncated: false,
+        source: "notes"
+      };
+    }
+    const serviceLine = (Array.isArray(day?.services) ? day.services : [])
+      .map((service) => formatTourPlanServiceLine(service))
+      .find((line) => line?.text);
+    return serviceLine
+      ? { ...serviceLine, source: "service" }
+      : { text: "", fullText: "", isTruncated: false, source: "empty" };
+  }
+
+  function renderTourPlanDayContent(day, options = {}) {
+    const { includeNotes = true } = options;
     const notes = resolveTravelPlanField(day, "notes");
     const services = Array.isArray(day?.services) ? day.services : [];
     const serviceMedia = renderTourPlanServiceMedia(services);
@@ -1552,23 +1780,68 @@ export function createFrontendToursController(ctx) {
             </ul>`
           : "")
       : "";
-    const notesMarkup = notes
+    const notesMarkup = includeNotes && notes
       ? `<p class="tour-plan-day__notes">${escapeHTML(notes)}</p>`
       : "";
-    const serviceMarkup = [
+    return [
+      notesMarkup,
       serviceMedia.markup,
       textServiceMarkup,
       legacyServiceList
     ].filter(Boolean).join("");
+  }
 
+  function renderTourPlanDaySummary(days, tripId) {
+    if (!days.length) return "";
+    const durationLabel = frontendT("tour.card.days", "{days} days", {
+      days: String(days.length)
+    });
+    const headingLabel = frontendT("tour.plan.summary_heading", "Your itinerary for {duration}", {
+      duration: durationLabel
+    });
     return `
-      <article class="tour-plan-day">
-        <h4 class="tour-plan-day__heading">${escapeHTML(heading)}</h4>
-        <div class="tour-plan-day__body">
-          ${notesMarkup}
-          ${serviceMarkup}
+      <section class="tour-plan-summary" aria-label="${escapeAttr(headingLabel)}" data-tour-plan-summary>
+        <div class="tour-plan-summary__header">
+          <span class="tour-plan-summary__icon" aria-hidden="true"></span>
+          <h4>${escapeHTML(headingLabel)}</h4>
         </div>
-      </article>
+        <div class="tour-plan-summary__list">
+          ${days.map((day, index) => {
+            const { dayNumber, heading } = tourPlanDayHeading(day, index);
+            const summary = tourPlanDaySummaryText(day);
+            const summaryText = summary?.text || "";
+            const detailsId = tourPlanSummaryDayDetailsId(tripId, index);
+            const detailsMarkup = renderTourPlanDayContent(day, {
+              includeNotes: summary?.source !== "notes"
+            });
+            const controlsAttr = detailsMarkup ? ` aria-controls="${escapeAttr(detailsId)}"` : "";
+            return `
+              <article class="tour-plan-summary-day" data-tour-plan-summary-day>
+                <button class="tour-plan-summary-day__toggle" type="button" data-tour-plan-summary-toggle${controlsAttr} aria-expanded="false">
+                  <span class="tour-plan-summary-day__badge" aria-hidden="true">
+                    <span>${escapeHTML(tourPlanDayBadgeLabel(dayNumber))}</span>
+                    <strong>${escapeHTML(String(dayNumber))}</strong>
+                  </span>
+                  <span class="tour-plan-summary-day__body">
+                    <strong>${escapeHTML(heading)}</strong>
+                    ${summaryText ? `
+                      <span class="tour-plan-summary-day__excerpt">${escapeHTML(summaryText)}</span>
+                    ` : ""}
+                  </span>
+                  <span class="tour-plan-summary-day__chevron" aria-hidden="true"></span>
+                </button>
+                ${detailsMarkup ? `
+                  <div class="tour-plan-summary-day__details" id="${escapeAttr(detailsId)}" data-tour-plan-summary-details hidden>
+                    <div class="tour-plan-day__body">
+                      ${detailsMarkup}
+                    </div>
+                  </div>
+                ` : ""}
+              </article>
+            `;
+          }).join("")}
+        </div>
+      </section>
     `;
   }
 
@@ -1583,15 +1856,13 @@ export function createFrontendToursController(ctx) {
     }
 
     const tripId = normalizeText(trip?.id);
-    const tripTitle = resolveLocalizedFrontendText(trip?.title, state.lang);
     const ctaLabel = frontendT("tour.card.plan_trip", "Plan this trip");
 
     return `
-      <div class="tour-plan__days">
-        ${days.map((day, index) => renderTourPlanDay(day, index, trip?.id)).join("")}
-      </div>
+      ${renderTourExperienceHighlights(trip)}
+      ${renderTourOnePagerDownload(trip)}
+      ${renderTourPlanDaySummary(days, tripId)}
       <div class="tour-plan__footer-cta">
-        <h4>${escapeHTML(tripTitle)}</h4>
         <button class="btn btn-primary tour-plan__footer-plan-trip" type="button" data-open-modal data-trip-id="${escapeAttr(tripId)}">${escapeHTML(ctaLabel)}</button>
       </div>
     `;
@@ -1778,6 +2049,15 @@ export function createFrontendToursController(ctx) {
       media.addEventListener("keydown", handleTourPlanServiceMediaKeydown);
       media.dataset.tourPlanServiceMediaBound = "1";
       normalizeTourPlanServiceMedia(media);
+    });
+
+    const daySummaryButtons = els.tourGrid.querySelectorAll("[data-tour-plan-summary-toggle]");
+    daySummaryButtons.forEach((button) => {
+      if (!(button instanceof HTMLElement) || button.dataset.tourPlanSummaryBound === "1") return;
+      button.addEventListener("click", () => {
+        toggleTourPlanSummaryDay(button);
+      });
+      button.dataset.tourPlanSummaryBound = "1";
     });
 
     const buttons = els.tourGrid.querySelectorAll("[data-open-modal][data-trip-id]");
@@ -2492,6 +2772,26 @@ export function createFrontendToursController(ctx) {
     });
   }
 
+  function syncExpandedTourDetailsHeightsDuring(durationMs) {
+    syncExpandedTourDetailsHeights();
+    if (typeof window === "undefined" || typeof window.requestAnimationFrame !== "function") return;
+
+    const start = typeof performance !== "undefined" && typeof performance.now === "function"
+      ? performance.now()
+      : Date.now();
+    const duration = Math.max(0, Number(durationMs) || 0);
+    const tick = () => {
+      syncExpandedTourDetailsHeights();
+      const now = typeof performance !== "undefined" && typeof performance.now === "function"
+        ? performance.now()
+        : Date.now();
+      if (now - start < duration) {
+        window.requestAnimationFrame(tick);
+      }
+    };
+    window.requestAnimationFrame(tick);
+  }
+
   function updateTourDetailsConnectorVisibility(root = els.tourGrid) {
     if (!(root instanceof HTMLElement) || typeof window === "undefined") return;
     const singleColumnLayout = isSingleColumnTourLayout();
@@ -2884,6 +3184,87 @@ export function createFrontendToursController(ctx) {
     });
   }
 
+  function clearTourPlanSummaryDetailsAnimation(details) {
+    const activeAnimation = tourPlanSummaryDetailsAnimations.get(details);
+    if (!activeAnimation) return;
+    if (typeof window !== "undefined" && typeof window.clearTimeout === "function") {
+      window.clearTimeout(activeAnimation.timer);
+    } else {
+      clearTimeout(activeAnimation.timer);
+    }
+    details.removeEventListener("transitionend", activeAnimation.onTransitionEnd);
+    tourPlanSummaryDetailsAnimations.delete(details);
+  }
+
+  function finishTourPlanSummaryDetailsAnimation(details, expanded) {
+    clearTourPlanSummaryDetailsAnimation(details);
+    details.style.height = "";
+    details.style.opacity = "";
+    delete details.dataset.tourPlanSummaryDetailsAnimating;
+    if (!expanded) {
+      details.hidden = true;
+    }
+    syncExpandedTourDetailsHeights();
+  }
+
+  function animateTourPlanSummaryDetails(summaryDay, details, expanded) {
+    if (!(summaryDay instanceof HTMLElement) || !(details instanceof HTMLElement)) return;
+    clearTourPlanSummaryDetailsAnimation(details);
+
+    if (prefersReducedMotion()) {
+      details.hidden = !expanded;
+      details.style.height = "";
+      details.style.opacity = "";
+      delete details.dataset.tourPlanSummaryDetailsAnimating;
+      syncExpandedTourDetailsHeightsDuring(0);
+      return;
+    }
+
+    details.hidden = false;
+    details.dataset.tourPlanSummaryDetailsAnimating = expanded ? "expanding" : "collapsing";
+    if (expanded) {
+      details.style.height = "0px";
+      details.style.opacity = "0";
+      void details.offsetHeight;
+      details.style.height = `${details.scrollHeight}px`;
+      details.style.opacity = "1";
+    } else {
+      details.style.height = `${details.scrollHeight}px`;
+      details.style.opacity = "1";
+      void details.offsetHeight;
+      details.style.height = "0px";
+      details.style.opacity = "0";
+    }
+
+    const done = () => finishTourPlanSummaryDetailsAnimation(details, expanded);
+    const onTransitionEnd = (event) => {
+      if (event.target !== details || event.propertyName !== "height") return;
+      done();
+    };
+    details.addEventListener("transitionend", onTransitionEnd);
+    const timer = typeof window !== "undefined" && typeof window.setTimeout === "function"
+      ? window.setTimeout(done, TOUR_PLAN_DAY_DETAILS_TRANSITION_MS + 120)
+      : setTimeout(done, TOUR_PLAN_DAY_DETAILS_TRANSITION_MS + 120);
+    tourPlanSummaryDetailsAnimations.set(details, { onTransitionEnd, timer });
+    syncExpandedTourDetailsHeightsDuring(TOUR_PLAN_DAY_DETAILS_TRANSITION_MS + 80);
+  }
+
+  function toggleTourPlanSummaryDay(trigger) {
+    if (!(trigger instanceof HTMLElement)) return;
+    const summaryDay = trigger.closest("[data-tour-plan-summary-day]");
+    if (!(summaryDay instanceof HTMLElement)) return;
+
+    const willExpand = trigger.getAttribute("aria-expanded") !== "true";
+    const details = summaryDay.querySelector("[data-tour-plan-summary-details]");
+    summaryDay.classList.toggle("is-expanded", willExpand);
+    trigger.setAttribute("aria-expanded", willExpand ? "true" : "false");
+    if (details instanceof HTMLElement) {
+      animateTourPlanSummaryDetails(summaryDay, details, willExpand);
+      return;
+    }
+    syncExpandedTourDetailsHeightsDuring(0);
+  }
+
   function tourPlanServiceMediaFromEvent(event) {
     const media = event?.currentTarget;
     return media instanceof HTMLElement && media.matches("[data-tour-plan-service-media]")
@@ -2903,11 +3284,33 @@ export function createFrontendToursController(ctx) {
       || frontendT("tour.plan.service_fallback", "Service");
   }
 
+  function setTourPlanServiceDetailsIndicatorState(card, enabled) {
+    if (!(card instanceof HTMLElement)) return;
+    const indicator = card.querySelector(".tour-plan-service-card__details-indicator");
+    if (!(indicator instanceof HTMLElement)) return;
+    if (!enabled) {
+      indicator.removeAttribute("data-tour-plan-service-details-toggle");
+      indicator.removeAttribute("role");
+      indicator.removeAttribute("tabindex");
+      indicator.removeAttribute("aria-pressed");
+      indicator.removeAttribute("aria-label");
+      return;
+    }
+
+    const title = tourPlanServiceCardTitleText(card);
+    indicator.setAttribute("data-tour-plan-service-details-toggle", "");
+    indicator.setAttribute("role", "button");
+    indicator.setAttribute("tabindex", "0");
+    indicator.setAttribute("aria-pressed", card.classList.contains("is-showing-details") ? "true" : "false");
+    indicator.setAttribute("aria-label", frontendT("tour.plan.show_service_details", "Show details for {title}", { title }));
+  }
+
   function setTourPlanServiceDetailsVisible(card, visible) {
     if (!(card instanceof HTMLElement)) return;
     card.classList.toggle("is-showing-details", visible);
-    if (card.hasAttribute("data-tour-plan-service-details-toggle")) {
-      card.setAttribute("aria-pressed", visible ? "true" : "false");
+    const indicator = card.querySelector("[data-tour-plan-service-details-toggle]");
+    if (indicator instanceof HTMLElement) {
+      indicator.setAttribute("aria-pressed", visible ? "true" : "false");
     }
     syncExpandedTourDetailsHeights();
   }
@@ -2926,25 +3329,19 @@ export function createFrontendToursController(ctx) {
     card.classList.remove("is-showing-details");
     if (featured) {
       card.removeAttribute("data-tour-plan-service-swap");
-      if (hasDetails) {
-        const title = tourPlanServiceCardTitleText(card);
-        card.setAttribute("data-tour-plan-service-details-toggle", "");
-        card.setAttribute("role", "button");
-        card.setAttribute("tabindex", "0");
-        card.setAttribute("aria-pressed", "false");
-        card.setAttribute("aria-label", frontendT("tour.plan.show_service_details", "Show details for {title}", { title }));
-      } else {
-        card.removeAttribute("data-tour-plan-service-details-toggle");
-        card.removeAttribute("role");
-        card.removeAttribute("tabindex");
-        card.removeAttribute("aria-label");
-        card.removeAttribute("aria-pressed");
-      }
+      card.setAttribute("data-tour-plan-service-collapse", "");
+      card.setAttribute("role", "button");
+      card.setAttribute("tabindex", "0");
+      card.setAttribute("aria-label", frontendT("tour.plan.collapse_service_image", "Make {title} image small", {
+        title: tourPlanServiceCardTitleText(card)
+      }));
+      setTourPlanServiceDetailsIndicatorState(card, hasDetails);
       return;
     }
 
     const title = tourPlanServiceCardTitleText(card);
-    card.removeAttribute("data-tour-plan-service-details-toggle");
+    setTourPlanServiceDetailsIndicatorState(card, false);
+    card.removeAttribute("data-tour-plan-service-collapse");
     card.removeAttribute("aria-pressed");
     card.setAttribute("data-tour-plan-service-swap", "");
     card.setAttribute("role", "button");
@@ -2957,7 +3354,7 @@ export function createFrontendToursController(ctx) {
     if (media.dataset.tourPlanServicesNormalized === "1") return;
     const featuredCard = media.querySelector(".tour-plan-service-card--featured");
     if (!(featuredCard instanceof HTMLElement)) return;
-    setTourPlanServiceCardFeaturedState(featuredCard, false);
+    setTourPlanServiceCardFeaturedState(featuredCard, true);
     media.dataset.tourPlanServicesNormalized = "1";
   }
 
@@ -3047,39 +3444,72 @@ export function createFrontendToursController(ctx) {
     delete media.dataset.tourPlanServiceSwapAnimating;
   }
 
+  function collapseFeaturedTourPlanService(targetCard) {
+    if (!(targetCard instanceof HTMLElement)) return;
+    const media = targetCard.closest("[data-tour-plan-service-media]");
+    if (!(media instanceof HTMLElement) || media.dataset.tourPlanServiceSwapAnimating === "1") return;
+    if (!targetCard.classList.contains("tour-plan-service-card--featured")) return;
+    media.dataset.tourPlanServiceSwapAnimating = "1";
+    setTourPlanServiceCardFeaturedState(targetCard, false);
+    syncExpandedTourDetailsHeights();
+    window.requestAnimationFrame(syncExpandedTourDetailsHeights);
+    delete media.dataset.tourPlanServiceSwapAnimating;
+  }
+
   function handleTourPlanServiceMediaClick(event) {
     const media = tourPlanServiceMediaFromEvent(event);
     if (!media) return;
+    const detailsToggle = event.target instanceof Element
+      ? event.target.closest("[data-tour-plan-service-details-toggle]")
+      : null;
+    if (detailsToggle instanceof HTMLElement && media.contains(detailsToggle)) {
+      const detailsCard = detailsToggle.closest("[data-tour-plan-service-card]");
+      if (!(detailsCard instanceof HTMLElement) || !media.contains(detailsCard)) return;
+      event.preventDefault();
+      event.stopPropagation();
+      toggleTourPlanServiceDetails(detailsCard);
+      return;
+    }
     const swapCard = tourPlanServiceSwapCardFromEvent(event, media);
     if (swapCard) {
       event.preventDefault();
       void swapFeaturedTourPlanService(swapCard);
       return;
     }
-    const detailsCard = event.target instanceof Element
-      ? event.target.closest("[data-tour-plan-service-details-toggle]")
+    const collapseCard = event.target instanceof Element
+      ? event.target.closest("[data-tour-plan-service-collapse]")
       : null;
-    if (!(detailsCard instanceof HTMLElement) || !media.contains(detailsCard)) return;
+    if (!(collapseCard instanceof HTMLElement) || !media.contains(collapseCard)) return;
     event.preventDefault();
-    toggleTourPlanServiceDetails(detailsCard);
+    collapseFeaturedTourPlanService(collapseCard);
   }
 
   function handleTourPlanServiceMediaKeydown(event) {
     if (event.key !== "Enter" && event.key !== " ") return;
     const media = tourPlanServiceMediaFromEvent(event);
     if (!media) return;
+    const detailsToggle = event.target instanceof Element
+      ? event.target.closest("[data-tour-plan-service-details-toggle]")
+      : null;
+    if (detailsToggle instanceof HTMLElement && media.contains(detailsToggle)) {
+      const detailsCard = detailsToggle.closest("[data-tour-plan-service-card]");
+      if (!(detailsCard instanceof HTMLElement) || !media.contains(detailsCard)) return;
+      event.preventDefault();
+      toggleTourPlanServiceDetails(detailsCard);
+      return;
+    }
     const swapCard = tourPlanServiceSwapCardFromEvent(event, media);
     if (swapCard) {
       event.preventDefault();
       void swapFeaturedTourPlanService(swapCard);
       return;
     }
-    const detailsCard = event.target instanceof Element
-      ? event.target.closest("[data-tour-plan-service-details-toggle]")
+    const collapseCard = event.target instanceof Element
+      ? event.target.closest("[data-tour-plan-service-collapse]")
       : null;
-    if (!(detailsCard instanceof HTMLElement) || !media.contains(detailsCard)) return;
+    if (!(collapseCard instanceof HTMLElement) || !media.contains(collapseCard)) return;
     event.preventDefault();
-    toggleTourPlanServiceDetails(detailsCard);
+    collapseFeaturedTourPlanService(collapseCard);
   }
 
   function updateTourCardImageCounter(button, currentIndex, total) {

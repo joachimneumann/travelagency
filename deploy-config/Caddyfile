@@ -70,7 +70,7 @@
   header @production_immutable_static Cache-Control "public, max-age=31536000, immutable"
 
   @production_static {
-    path /assets/* /frontend/scripts/* /frontend/data/* /frontend/Generated/* /shared/* /site.webmanifest /robots.txt /sitemap.xml
+    path /assets/* /frontend/scripts/* /frontend/data/* /frontend/Generated/* /shared/* /content/one-pagers/* /site.webmanifest /robots.txt /sitemap.xml
     not path /frontend/data/generated/homepage/*
     not path /assets/fonts/* /assets/generated/homepage/* /assets/generated/reels/*
   }
@@ -180,7 +180,7 @@ asiatravelplan.com {
     }
   }
 
-  @production_app_static path /assets/* /frontend/scripts/* /frontend/data/* /frontend/Generated/* /shared/* /site.webmanifest /robots.txt /sitemap.xml
+  @production_app_static path /assets/* /frontend/scripts/* /frontend/data/* /frontend/Generated/* /shared/* /content/one-pagers/* /site.webmanifest /robots.txt /sitemap.xml
   handle @production_app_static {
     root * /production-app
     file_server {

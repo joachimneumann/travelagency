@@ -43,7 +43,7 @@ const BODY_IMAGE_RENDER_FRAME = Object.freeze({ width: 248, height: 174 });
 const PHOTO_LABEL_BACKDROP_COLOR = "#000000";
 const PHOTO_LABEL_BACKDROP_OPACITY = 0.34;
 const PHOTO_LABEL_COLLISION_PAD = 8;
-const PHOTO_LABEL_COLLISION_STEP = 40;
+const PHOTO_LABEL_COLLISION_STEP = 22;
 const PHOTO_LABEL_BRIGHTNESS_SAMPLE_RATIO = 0.2;
 const PHOTO_LABEL_BRIGHTNESS_THRESHOLD = 155;
 const BODY_IMAGE_LAYOUT_BOUNDS = Object.freeze({
@@ -143,6 +143,11 @@ const PDF_FONT_LABEL_CANDIDATES = Object.freeze([
 ]);
 
 const PDF_FONT_DIR_REGULAR_FILES = Object.freeze([
+  "NotoSerif-Regular.ttf",
+  "NotoSerifCJKjp-Regular.otf",
+  "NotoSerifCJKkr-Regular.otf",
+  "NotoSerifCJKsc-Regular.otf",
+  "NotoSerifCJKtc-Regular.otf",
   "Arial Unicode.ttf",
   "Arial Unicode MS.ttf",
   "ArialUnicodeMS.ttf",
@@ -151,6 +156,12 @@ const PDF_FONT_DIR_REGULAR_FILES = Object.freeze([
 ]);
 
 const PDF_FONT_DIR_BOLD_FILES = Object.freeze([
+  "NotoSerif-Bold.ttf",
+  "NotoSerif-Regular.ttf",
+  "NotoSerifCJKjp-Regular.otf",
+  "NotoSerifCJKkr-Regular.otf",
+  "NotoSerifCJKsc-Regular.otf",
+  "NotoSerifCJKtc-Regular.otf",
   "Arial Unicode.ttf",
   "Arial Unicode MS.ttf",
   "ArialUnicodeMS.ttf",
@@ -173,6 +184,7 @@ const PDF_FONT_DIR_LABEL_FILES = Object.freeze([
 ]);
 
 const PDF_FONT_DIR_SCRIPT_FILES = Object.freeze([
+  "NotoSerif-Italic.ttf",
   "Brush Script.ttf",
   "Brush Script MT Italic.ttf",
   "Zapfino.ttf",
@@ -180,6 +192,12 @@ const PDF_FONT_DIR_SCRIPT_FILES = Object.freeze([
 ]);
 
 const PDF_FONT_DIR_SCRIPT_FALLBACK_FILES = Object.freeze([
+  "NotoSerif-Italic.ttf",
+  "NotoSerif-Regular.ttf",
+  "NotoSerifCJKjp-Regular.otf",
+  "NotoSerifCJKkr-Regular.otf",
+  "NotoSerifCJKsc-Regular.otf",
+  "NotoSerifCJKtc-Regular.otf",
   "NotoSans-Italic.ttf",
   "DejaVuSans-Oblique.ttf",
   "DancingScript-Regular.ttf"
@@ -691,6 +709,18 @@ function deterministicIndex(seed, key, count) {
   return Math.min(Math.max(0, count - 1), Math.floor(deterministicUnit(seed, key) * count));
 }
 
+function deterministicShuffle(items, seed) {
+  return [...safeArray(items)]
+    .map((item) => ({
+      item,
+      rank: createHash("sha256")
+        .update(`${seed}:${typeof item === "string" ? item : normalizeText(item?.id) || JSON.stringify(item)}`)
+        .digest("hex")
+    }))
+    .sort((left, right) => left.rank.localeCompare(right.rank))
+    .map(({ item }) => item);
+}
+
 function rectsOverlap(first, second) {
   return first.x < second.x + second.width
     && first.x + first.width > second.x
@@ -791,54 +821,60 @@ function clampBodyImageLayout(layout, dx = 0, dy = 0) {
 
 function bodyImageTitleCollisionCandidates(layout) {
   const step = PHOTO_LABEL_COLLISION_STEP;
-  const diagonal = step * 0.65;
+  const diagonal = step * 0.7;
   return [
     [0, 0],
-    [0, step],
-    [0, step * 1.5],
-    [-diagonal, step],
-    [diagonal, step],
     [0, -step],
     [-diagonal, -step],
     [diagonal, -step],
     [-step, 0],
     [step, 0],
-    [0, step * 2],
-    [-step, step * 1.5],
-    [step, step * 1.5]
+    [0, step],
+    [-diagonal, step],
+    [diagonal, step],
+    [0, -step * 2],
+    [-step, -step * 1.35],
+    [step, -step * 1.35],
+    [0, step * 1.5]
   ].map(([dx, dy]) => clampBodyImageLayout(layout, dx, dy));
 }
 
 function resolveBodyImageTitleCollisions(items) {
-  const placedLayouts = [];
+  const resolvedItems = [];
   return items.map(({ frame, layout }) => {
     const resolvedLayout = bodyImageTitleCollisionCandidates(layout)
-      .find((candidate) => !bodyImageTitleCollision(candidate, placedLayouts))
+      .find((candidate) => !bodyImageTitleCollision(candidate, resolvedItems.map((item) => item.layout)))
       || layout;
-    placedLayouts.push(resolvedLayout);
-    return { frame, layout: resolvedLayout };
+    const resolvedItem = { frame, layout: resolvedLayout };
+    resolvedItems.push(resolvedItem);
+    return resolvedItem;
   });
+}
+
+function resolveBodyImageCollageTitleCollisions(items) {
+  return resolveBodyImageTitleCollisions(sortBodyImageLayoutsForDraw(items))
+    .sort((left, right) => (left.layout?.y || 0) - (right.layout?.y || 0));
 }
 
 function bodyImageBaseLayouts(count) {
   const layoutsByCount = {
     1: [
-      { x: 322, y: 358, width: 236, height: 158, angle: 2 }
+      { x: 326, y: 362, width: 224, height: 146, angle: 1.2 }
     ],
     2: [
-      { x: 328, y: 292, width: 218, height: 142, angle: -2.8 },
-      { x: 322, y: 468, width: 230, height: 148, angle: 3.2 }
+      { x: 330, y: 292, width: 212, height: 136, angle: -1.2 },
+      { x: 322, y: 466, width: 216, height: 138, angle: 1.4 }
     ],
     3: [
-      { x: 346, y: 276, width: 202, height: 130, angle: 2.4 },
-      { x: 306, y: 418, width: 194, height: 126, angle: -3.8 },
-      { x: 386, y: 506, width: 170, height: 110, angle: 4.2 }
+      { x: 336, y: 268, width: 210, height: 132, angle: -1 },
+      { x: 306, y: 432, width: 176, height: 110, angle: 1.4 },
+      { x: 416, y: 502, width: 136, height: 98, angle: -1.2 }
     ],
     4: [
-      { x: 344, y: 258, width: 198, height: 126, angle: -2.8 },
-      { x: 306, y: 402, width: 172, height: 110, angle: 3 },
-      { x: 382, y: 508, width: 184, height: 112, angle: -2.2 },
-      { x: 452, y: 370, width: 108, height: 84, angle: 5 }
+      { x: 326, y: 256, width: 220, height: 136, angle: -1.2 },
+      { x: 412, y: 398, width: 142, height: 98, angle: 1.1 },
+      { x: 304, y: 510, width: 176, height: 108, angle: -1.1 },
+      { x: 476, y: 512, width: 82, height: 110, angle: 1.3 }
     ]
   };
   return layoutsByCount[clampNumber(count, 1, BODY_IMAGE_LIMIT)] || [];
@@ -866,17 +902,17 @@ function createBodyImageLayouts(tour, frameImages) {
   const seed = createBodyImageLayoutSeed(tour, bodyFrames);
   const layouts = bodyFrames.map((frame, index) => {
     const base = baseLayouts[index];
-    const scale = deterministicRange(seed, `scale:${index}`, 0.84, 1.18);
-    const ratioScale = deterministicRange(seed, `ratio:${index}`, 0.9, 1.1);
+    const scale = deterministicRange(seed, `scale:${index}`, 0.96, 1.04);
+    const ratioScale = deterministicRange(seed, `ratio:${index}`, 0.96, 1.04);
     const width = clampNumber(base.width * scale, 114.4, BODY_IMAGE_RENDER_FRAME.width);
     const height = clampNumber(base.height * scale * ratioScale, 88.4, BODY_IMAGE_RENDER_FRAME.height);
     const x = clampNumber(
-      base.x + deterministicRange(seed, `x:${index}`, -26, 26),
+      base.x + deterministicRange(seed, `x:${index}`, -6, 6),
       BODY_IMAGE_LAYOUT_BOUNDS.minX,
       BODY_IMAGE_LAYOUT_BOUNDS.maxX - width
     );
     const y = clampNumber(
-      base.y + deterministicRange(seed, `y:${index}`, -30, 30),
+      base.y + deterministicRange(seed, `y:${index}`, -8, 8),
       BODY_IMAGE_LAYOUT_BOUNDS.minY,
       BODY_IMAGE_LAYOUT_BOUNDS.maxY - height
     );
@@ -887,12 +923,44 @@ function createBodyImageLayouts(tour, frameImages) {
         y: Number(y.toFixed(2)),
         width: Number(width.toFixed(2)),
         height: Number(height.toFixed(2)),
-        angle: Number((base.angle + deterministicRange(seed, `angle:${index}`, -2.2, 2.2)).toFixed(2)),
+        angle: Number((base.angle + deterministicRange(seed, `angle:${index}`, -0.8, 0.8)).toFixed(2)),
         variant: deterministicIndex(seed, `shape:${index}`, PHOTO_FRAME_SHAPES.length)
       }
     };
   });
-  return resolveBodyImageTitleCollisions(layouts);
+  return resolveBodyImageCollageTitleCollisions(layouts);
+}
+
+function drawBodyImageCollage(doc, bodyImageLayouts, fonts, lang) {
+  const drawItems = sortBodyImageLayoutsForDraw(bodyImageLayouts);
+  drawItems.forEach(({ frame, layout, drawOrderIndex }) => {
+    drawFramedImage(doc, {
+      x: layout.x,
+      y: layout.y,
+      width: layout.width,
+      height: layout.height,
+      angle: layout.angle,
+      imageBuffer: frame?.buffer,
+      fonts,
+      lang,
+      variant: layout.variant ?? drawOrderIndex,
+      labelLayer: false
+    });
+  });
+  drawItems.forEach(({ frame, layout, drawOrderIndex }) => {
+    drawFramedImageLabel(doc, {
+      x: layout.x,
+      y: layout.y,
+      width: layout.width,
+      height: layout.height,
+      angle: layout.angle,
+      labelBackdrop: frame?.labelBackdrop === true,
+      label: frame?.entry?.label || "",
+      fonts,
+      lang,
+      variant: layout.variant ?? drawOrderIndex
+    });
+  });
 }
 
 function sortBodyImageLayoutsForDraw(items) {
@@ -1008,7 +1076,8 @@ function collectTourImages(tour, lang) {
   const onePagerImageIds = (Array.isArray(tour?.travel_plan?.one_pager_image_ids) ? tour.travel_plan.one_pager_image_ids : [])
     .map((value) => textOrNull(value))
     .filter(Boolean);
-  const selectedImageIds = hasOnePagerImageIds ? onePagerImageIds : webImageIds;
+  const hasSelectedOnePagerBodyImages = hasOnePagerImageIds && onePagerImageIds.length > 0;
+  const selectedImageIds = hasSelectedOnePagerBodyImages ? onePagerImageIds : webImageIds;
   const heroImageId = textOrNull(tour?.travel_plan?.one_pager_hero_image_id)
     || selectedImageIds[0]
     || webImageIds[0]
@@ -1049,7 +1118,7 @@ function collectTourImages(tour, lang) {
   };
   addEntry(entriesById.get(heroImageId));
   selectedImageIds.forEach((imageId) => addEntry(entriesById.get(imageId)));
-  if (!hasOnePagerImageIds) {
+  if (!hasSelectedOnePagerBodyImages) {
     fallbackEntries.forEach(addEntry);
   }
   const outputSeen = new Set();
@@ -1187,16 +1256,19 @@ async function loadExperienceHighlightImageBuffer(imagePath, size = 42) {
 async function collectConfiguredExperienceHighlightItems(tour, lang, manifestPath) {
   const selectedIds = safeArray(tour?.travel_plan?.one_pager_experience_highlight_ids)
     .map((value) => textOrNull(value))
-    .filter(Boolean)
-    .slice(0, ONE_PAGER_EXPERIENCE_HIGHLIGHT_LIMIT);
-  if (selectedIds.length < ONE_PAGER_EXPERIENCE_HIGHLIGHT_LIMIT) return [];
+    .filter(Boolean);
   const manifestItems = await readExperienceHighlightManifest(manifestPath);
   if (!manifestItems.length) return [];
   const itemById = new Map(manifestItems.map((item) => [item.id, item]));
-  const configuredItems = selectedIds
+  const selectedItems = selectedIds
     .map((id) => itemById.get(id))
-    .filter(Boolean)
-    .slice(0, ONE_PAGER_EXPERIENCE_HIGHLIGHT_LIMIT);
+    .filter(Boolean);
+  const selectedItemIds = new Set(selectedItems.map((item) => item.id));
+  const randomItems = deterministicShuffle(
+    manifestItems.filter((item) => !selectedItemIds.has(item.id)),
+    `${normalizeText(tour?.id) || textOrNull(tour?.title) || "tour"}:${lang}:experience-highlights`
+  );
+  const configuredItems = [...selectedItems, ...randomItems].slice(0, ONE_PAGER_EXPERIENCE_HIGHLIGHT_LIMIT);
   if (configuredItems.length < ONE_PAGER_EXPERIENCE_HIGHLIGHT_LIMIT) return [];
   return await Promise.all(configuredItems.map(async (item) => ({
     title: localizedMapValue(item.title_i18n, lang, item.title),
@@ -1844,10 +1916,12 @@ export function createMarketingTourOnePagerPdfWriter({
     const onePagerFontDir = normalizeText(process.env.ONE_PAGER_FONT_DIR);
     const onePagerFontDirOnly = Boolean(onePagerFontDir);
     const bodyFonts = onePagerFontDirOnly
-      ? {
-        regular: await firstExistingPath(fontCandidatesFromDir(onePagerFontDir, PDF_FONT_DIR_REGULAR_FILES)),
-        bold: await firstExistingPath(fontCandidatesFromDir(onePagerFontDir, PDF_FONT_DIR_BOLD_FILES))
-      }
+      ? await resolvePdfFontsForLang({
+        lang: normalizedLang,
+        sampleText,
+        regularCandidates: fontCandidatesFromDir(onePagerFontDir, PDF_FONT_DIR_REGULAR_FILES),
+        boldCandidates: fontCandidatesFromDir(onePagerFontDir, PDF_FONT_DIR_BOLD_FILES)
+      })
       : await resolvePdfFontsForLang({
         lang: normalizedLang,
         sampleText,
@@ -1902,21 +1976,7 @@ export function createMarketingTourOnePagerPdfWriter({
       });
       drawIncluded(doc, collectIncludedItems(tour, duration, normalizedLang), 42, lowerContentY + 178, 276, renderFonts, normalizedLang);
 
-      sortBodyImageLayoutsForDraw(bodyImageLayouts).forEach(({ frame, layout, drawOrderIndex }) => {
-        drawFramedImage(doc, {
-          x: layout.x,
-          y: layout.y,
-          width: layout.width,
-          height: layout.height,
-          angle: layout.angle,
-          imageBuffer: frame?.buffer,
-          labelBackdrop: frame?.labelBackdrop === true,
-          label: frame?.entry?.label || "",
-          fonts: renderFonts,
-          lang: normalizedLang,
-          variant: layout.variant ?? drawOrderIndex
-        });
-      });
+      drawBodyImageCollage(doc, bodyImageLayouts, renderFonts, normalizedLang);
       drawCta(doc, companyProfile || {}, renderFonts, normalizedLang);
       drawFooter(doc, companyProfile || {}, renderFonts);
       await streamPdfToFile(doc, outputPath);

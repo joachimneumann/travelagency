@@ -2460,7 +2460,7 @@ test("offer and travel-plan PDFs localize guide, pricing summary, and payment-te
   );
   assert.match(
     onePagerPdfSource,
-    /PDF_FONT_DIR_REGULAR_FILES[\s\S]*"Arial Unicode\.ttf"[\s\S]*function fontCandidatesFromDir\(fontDir, fileNames\)[\s\S]*function prioritizeOnePagerFontCandidates\(staticCandidates, preferredCandidates = \[\], \{ preferredOnly = false \} = \{\}\)[\s\S]*if \(preferredOnly\) return uniqueFontCandidates\(preferredCandidates\);[\s\S]*process\.env\.ONE_PAGER_FONT_DIR[\s\S]*onePagerFontDirOnly[\s\S]*regular: await firstExistingPath\(fontCandidatesFromDir\(onePagerFontDir, PDF_FONT_DIR_REGULAR_FILES\)\)[\s\S]*bold: await firstExistingPath\(fontCandidatesFromDir\(onePagerFontDir, PDF_FONT_DIR_BOLD_FILES\)\)[\s\S]*ensureOnePagerFontDirHasBodyFont\(onePagerFontDir, bodyFonts\)[\s\S]*resolveOnePagerDisplayFonts\(normalizedLang, onePagerFontDir\)[\s\S]*: \{\}/,
+    /PDF_FONT_DIR_REGULAR_FILES[\s\S]*"NotoSerif-Regular\.ttf"[\s\S]*"NotoSerifCJKjp-Regular\.otf"[\s\S]*"Arial Unicode\.ttf"[\s\S]*PDF_FONT_DIR_SCRIPT_FALLBACK_FILES[\s\S]*"NotoSerif-Italic\.ttf"[\s\S]*function fontCandidatesFromDir\(fontDir, fileNames\)[\s\S]*function prioritizeOnePagerFontCandidates\(staticCandidates, preferredCandidates = \[\], \{ preferredOnly = false \} = \{\}\)[\s\S]*if \(preferredOnly\) return uniqueFontCandidates\(preferredCandidates\);[\s\S]*process\.env\.ONE_PAGER_FONT_DIR[\s\S]*onePagerFontDirOnly[\s\S]*await resolvePdfFontsForLang\(\{[\s\S]*regularCandidates: fontCandidatesFromDir\(onePagerFontDir, PDF_FONT_DIR_REGULAR_FILES\)[\s\S]*boldCandidates: fontCandidatesFromDir\(onePagerFontDir, PDF_FONT_DIR_BOLD_FILES\)[\s\S]*ensureOnePagerFontDirHasBodyFont\(onePagerFontDir, bodyFonts\)[\s\S]*resolveOnePagerDisplayFonts\(normalizedLang, onePagerFontDir\)[\s\S]*: \{\}/,
     "One-pager PDFs should support a strict private ONE_PAGER_FONT_DIR override while skipping unsafe display fonts for broader-script languages"
   );
   assert.doesNotMatch(
@@ -2491,7 +2491,7 @@ test("staging PDF font stack includes Japanese and Chinese smoke coverage paths"
   );
   assert.match(
     resolverSource,
-    /const LANGUAGE_FONT_PRIORITY_MARKERS = Object\.freeze\(\{[\s\S]*ja:\s*\["notosanscjkjp-"\][\s\S]*zh:\s*\["notosanscjksc-"\]/,
+    /const LANGUAGE_FONT_PRIORITY_MARKERS = Object\.freeze\(\{[\s\S]*ja:\s*\["notosanscjkjp-", "notoserifcjkjp-"\][\s\S]*ko:\s*\["notosanscjkkr-", "notoserifcjkkr-"\][\s\S]*zh:\s*\["notosanscjksc-", "notoserifcjksc-", "notoserifcjktc-"\]/,
     "The PDF font resolver should prioritize language-matching Japanese and Chinese CJK faces"
   );
 
@@ -3770,8 +3770,8 @@ test("tour card images are selected from travel-plan service images", async () =
   );
   assert.match(
     onePagerPdfSource,
-    /function collectTourImages\(tour, lang\)[\s\S]*one_pager_image_ids[\s\S]*one_pager_hero_image_id[\s\S]*addEntry\(entriesById\.get\(heroImageId\)\)/,
-    "The one-pager PDF should prioritize the dedicated one-pager hero and body image selections"
+    /function collectTourImages\(tour, lang\)[\s\S]*one_pager_image_ids[\s\S]*hasSelectedOnePagerBodyImages = hasOnePagerImageIds && onePagerImageIds\.length > 0[\s\S]*selectedImageIds = hasSelectedOnePagerBodyImages \? onePagerImageIds : webImageIds[\s\S]*one_pager_hero_image_id[\s\S]*addEntry\(entriesById\.get\(heroImageId\)\)[\s\S]*if \(!hasSelectedOnePagerBodyImages\) \{[\s\S]*fallbackEntries\.forEach\(addEntry\)/,
+    "The one-pager PDF should prioritize dedicated one-pager selections while falling back when no body images are selected"
   );
   assert.match(
     onePagerPdfSource,
@@ -3785,18 +3785,18 @@ test("tour card images are selected from travel-plan service images", async () =
   );
   assert.match(
     onePagerPdfSource,
-    /const BODY_IMAGE_LIMIT = 4;[\s\S]*function bodyImageBaseLayouts\(count\)[\s\S]*1: \[[\s\S]*2: \[[\s\S]*3: \[[\s\S]*4: \[[\s\S]*function createBodyImageLayouts\(tour, frameImages\)[\s\S]*\.slice\(1\)[\s\S]*\.slice\(0, BODY_IMAGE_LIMIT\)[\s\S]*deterministicRange\(seed, `scale:\$\{index\}`[\s\S]*BODY_IMAGE_LAYOUT_BOUNDS[\s\S]*variant: deterministicIndex\(seed, `shape:\$\{index\}`, PHOTO_FRAME_SHAPES\.length\)[\s\S]*const bodyImageLayouts = createBodyImageLayouts\(tour, frameImages\)[\s\S]*sortBodyImageLayoutsForDraw\(bodyImageLayouts\)\.forEach\(\(\{ frame, layout, drawOrderIndex \}\) =>[\s\S]*drawFramedImage/,
-    "The one-pager PDF should lay out up to four right-side body images with deterministic randomized position, size, and shape"
+    /const BODY_IMAGE_LIMIT = 4;[\s\S]*function bodyImageBaseLayouts\(count\)[\s\S]*1: \[[\s\S]*2: \[[\s\S]*3: \[[\s\S]*4: \[[\s\S]*\{ x: 326, y: 256, width: 220, height: 136[\s\S]*\{ x: 412, y: 398, width: 142, height: 98[\s\S]*\{ x: 304, y: 510, width: 176, height: 108[\s\S]*\{ x: 476, y: 512, width: 82, height: 110[\s\S]*function createBodyImageLayouts\(tour, frameImages\)[\s\S]*\.slice\(1\)[\s\S]*\.slice\(0, BODY_IMAGE_LIMIT\)[\s\S]*deterministicRange\(seed, `scale:\$\{index\}`, 0\.96, 1\.04\)[\s\S]*deterministicRange\(seed, `x:\$\{index\}`, -6, 6\)[\s\S]*deterministicRange\(seed, `angle:\$\{index\}`, -0\.8, 0\.8\)[\s\S]*return resolveBodyImageCollageTitleCollisions\(layouts\);/,
+    "The one-pager PDF should lay out up to four right-side body images in a fixed editorial cascade with light deterministic jitter and title-strip collision cleanup"
   );
   assert.match(
     onePagerPdfSource,
-    /function bodyImageLowestPoint\(layout\)[\s\S]*return bounds\.y \+ bounds\.height;[\s\S]*function sortBodyImageLayoutsForDraw\(items\)[\s\S]*lowestPoint: bodyImageLowestPoint\(item\?\.layout \|\| \{\}\)[\s\S]*\.sort\(\(left, right\) => right\.lowestPoint - left\.lowestPoint \|\| left\.drawOrderIndex - right\.drawOrderIndex\)[\s\S]*sortBodyImageLayoutsForDraw\(bodyImageLayouts\)\.forEach/,
+    /function bodyImageLowestPoint\(layout\)[\s\S]*return bounds\.y \+ bounds\.height;[\s\S]*function drawBodyImageCollage\(doc, bodyImageLayouts, fonts, lang\)[\s\S]*const drawItems = sortBodyImageLayoutsForDraw\(bodyImageLayouts\);[\s\S]*function sortBodyImageLayoutsForDraw\(items\)[\s\S]*lowestPoint: bodyImageLowestPoint[\s\S]*right\.lowestPoint - left\.lowestPoint/,
     "The one-pager PDF should draw the lowest small image first, then proceed upward so lower images do not cover higher image titles"
   );
   assert.match(
     onePagerPdfSource,
-    /const PHOTO_LABEL_COLLISION_PAD = 8;[\s\S]*function bodyImageTitleRect\(layout\)[\s\S]*layout\.y \+ layout\.height - 30[\s\S]*function bodyImageTitleCollision\(candidate, placedLayouts\)[\s\S]*rectsOverlap\(candidateImage, placedTitle\)[\s\S]*function resolveBodyImageTitleCollisions\(items\)[\s\S]*return resolveBodyImageTitleCollisions\(layouts\);/,
-    "The one-pager PDF should protect small-image title strips from being covered by other small images"
+    /const PHOTO_LABEL_COLLISION_STEP = 22;[\s\S]*function bodyImageTitleCollision\(candidate, placedLayouts\)[\s\S]*rectsOverlap\(candidateImage, placedTitle\)[\s\S]*function resolveBodyImageCollageTitleCollisions\(items\)[\s\S]*return resolveBodyImageTitleCollisions\(sortBodyImageLayoutsForDraw\(items\)\)[\s\S]*return resolveBodyImageCollageTitleCollisions\(layouts\);[\s\S]*function drawBodyImageCollage\(doc, bodyImageLayouts, fonts, lang\)[\s\S]*const drawItems = sortBodyImageLayoutsForDraw\(bodyImageLayouts\);[\s\S]*drawFramedImage\(doc,[\s\S]*labelLayer: false[\s\S]*drawItems\.forEach\(\(\{ frame, layout, drawOrderIndex \}\) => \{[\s\S]*drawFramedImageLabel\(doc,[\s\S]*drawBodyImageCollage\(doc, bodyImageLayouts, renderFonts, normalizedLang\);/,
+    "The one-pager PDF should softly move body photos away from other title strips, then draw all labels above the complete collage"
   );
   assert.match(
     onePagerPdfSource,
@@ -5114,7 +5114,7 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
   );
   assert.match(
     stagingCaddy,
-    /@production_static \{[\s\S]*path \/assets\/\* \/frontend\/scripts\/\* \/frontend\/data\/\* \/frontend\/Generated\/\* \/shared\/\* \/site\.webmanifest \/robots\.txt \/sitemap\.xml[\s\S]*not path \/frontend\/data\/generated\/homepage\/\*[\s\S]*not path \/assets\/fonts\/\* \/assets\/generated\/homepage\/\* \/assets\/generated\/reels\/\*/,
+    /@production_static \{[\s\S]*path \/assets\/\* \/frontend\/scripts\/\* \/frontend\/data\/\* \/frontend\/Generated\/\* \/shared\/\* \/content\/one-pagers\/\* \/site\.webmanifest \/robots\.txt \/sitemap\.xml[\s\S]*not path \/frontend\/data\/generated\/homepage\/\*[\s\S]*not path \/assets\/fonts\/\* \/assets\/generated\/homepage\/\* \/assets\/generated\/reels\/\*/,
     "Production should cache static frontend files while excluding generated homepage data from the static cache"
   );
   assert.match(

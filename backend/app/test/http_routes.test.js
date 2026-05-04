@@ -96,6 +96,10 @@ test("buildApiRoutes includes the marketing tour one-pager PDF route", () => {
     routes.some((route) => route.method === "GET" && route.pattern.test("/api/v1/tours/tour_alpha/one-pager.pdf")),
     true
   );
+  assert.equal(
+    routes.some((route) => route.method === "GET" && route.pattern.test("/public/v1/tours/tour_alpha/one-pager.pdf")),
+    true
+  );
 });
 
 test("buildApiRoutes includes the marketing tour publish route", () => {

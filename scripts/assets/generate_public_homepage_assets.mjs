@@ -43,6 +43,20 @@ const TRANSLATIONS_SNAPSHOT_DIR = path.resolve(
   normalizeText(process.env.PUBLIC_HOMEPAGE_TRANSLATIONS_SNAPSHOT_DIR || process.env.TRANSLATIONS_SNAPSHOT_DIR)
     || path.join(CONTENT_ROOT, "translations")
 );
+const ONE_PAGERS_MANIFEST_PATH = path.resolve(
+  normalizeText(process.env.PUBLIC_HOMEPAGE_ONE_PAGERS_MANIFEST_PATH || process.env.ONE_PAGERS_MANIFEST_PATH)
+    || path.join(CONTENT_ROOT, "one-pagers", "manifest.json")
+);
+const ONE_PAGERS_PUBLIC_BASE_PATH = normalizeText(process.env.PUBLIC_HOMEPAGE_ONE_PAGERS_PUBLIC_BASE_PATH) || "/content/one-pagers";
+const EXPERIENCE_HIGHLIGHTS_MANIFEST_PATH = path.join(ROOT_DIR, "assets", "img", "experience-highlights", "manifest.json");
+const EXPERIENCE_HIGHLIGHTS_PUBLIC_BASE_PATH = "/assets/img/experience-highlights";
+const EXPERIENCE_HIGHLIGHT_LIMIT = 4;
+const EXPERIENCE_HIGHLIGHT_DISPLAY_ORDER = Object.freeze([
+  "iconic_landmarks",
+  "delicious_cuisine",
+  "cultural_heritage",
+  "local_experiences"
+]);
 const GENERATED_HOMEPAGE_DATA_DIR = path.join(ROOT_DIR, "frontend", "data", "generated", "homepage");
 const GENERATED_HOMEPAGE_ASSETS_DIR = path.join(ROOT_DIR, "assets", "generated", "homepage");
 const GENERATED_REELS_DATA_DIR = path.join(ROOT_DIR, "frontend", "data", "generated", "reels");
@@ -229,6 +243,147 @@ async function readJson(filePath, { fallback = null } = {}) {
     if (error?.code === "ENOENT" && fallback !== null) return fallback;
     throw error;
   }
+}
+
+function buildPublicPath(basePath, relativePath) {
+  const normalizedBasePath = `/${normalizeText(basePath).replace(/^\/+|\/+$/g, "")}`;
+  const normalizedRelativePath = normalizeText(relativePath).replace(/^\/+/, "");
+  if (!normalizedRelativePath) return "";
+  return `${normalizedBasePath}/${normalizedRelativePath.split("/").map((part) => encodeURIComponent(part)).join("/")}`;
+}
+
+function normalizeExperienceHighlightManifestItem(item, index) {
+  const source = item && typeof item === "object" && !Array.isArray(item) ? item : {};
+  const image = normalizeText(source.image);
+  const id = normalizeText(source.id) || image.replace(/\.[^.]+$/, "") || `highlight_${index + 1}`;
+  if (!id || !image) return null;
+  const title_i18n = normalizeLocalizedTextMap(source.title_i18n || source.title || {}, "en");
+  const title = normalizeText(resolveLocalizedText(title_i18n, "en", "")) || normalizeText(source.title) || id;
+  return {
+    id,
+    title,
+    title_i18n,
+    image,
+    image_src: buildPublicPath(EXPERIENCE_HIGHLIGHTS_PUBLIC_BASE_PATH, image)
+  };
+}
+
+async function loadExperienceHighlightCatalog(manifestPath = EXPERIENCE_HIGHLIGHTS_MANIFEST_PATH) {
+  const payload = await readJson(manifestPath, { fallback: [] });
+  const seen = new Set();
+  return (Array.isArray(payload) ? payload : [])
+    .map((item, index) => normalizeExperienceHighlightManifestItem(item, index))
+    .filter((item) => {
+      if (!item?.id || seen.has(item.id)) return false;
+      seen.add(item.id);
+      return true;
+    });
+}
+
+function normalizeOnePagerArtifactItem(item) {
+  const source = item && typeof item === "object" && !Array.isArray(item) ? item : {};
+  const lang = normalizeTourLang(source.lang);
+  const pdf = normalizeText(source.pdf);
+  if (!lang || !pdf) return null;
+  const selectedExperienceHighlightIds = (Array.isArray(source.selected_experience_highlight_ids)
+    ? source.selected_experience_highlight_ids
+    : [])
+    .map((value) => normalizeText(value))
+    .filter(Boolean)
+    .slice(0, EXPERIENCE_HIGHLIGHT_LIMIT);
+  return {
+    lang,
+    pdf,
+    selectedExperienceHighlightIds
+  };
+}
+
+async function loadOnePagerArtifacts(manifestPath = ONE_PAGERS_MANIFEST_PATH) {
+  const payload = await readJson(manifestPath, { fallback: { tours: [] } });
+  const byTourId = new Map();
+  for (const tour of Array.isArray(payload?.tours) ? payload.tours : []) {
+    const tourId = normalizeText(tour?.id);
+    if (!tourId) continue;
+    const artifactsByLang = new Map();
+    for (const artifact of Array.isArray(tour?.artifacts) ? tour.artifacts : []) {
+      const normalizedArtifact = normalizeOnePagerArtifactItem(artifact);
+      if (normalizedArtifact) artifactsByLang.set(normalizedArtifact.lang, normalizedArtifact);
+    }
+    if (artifactsByLang.size) byTourId.set(tourId, artifactsByLang);
+  }
+  return byTourId;
+}
+
+function onePagerArtifactForLang(artifactsByTourId, tourId, lang) {
+  const artifactsByLang = artifactsByTourId instanceof Map ? artifactsByTourId.get(normalizeText(tourId)) : null;
+  if (!(artifactsByLang instanceof Map)) return null;
+  const normalizedLang = normalizeTourLang(lang);
+  return artifactsByLang.get(normalizedLang) || artifactsByLang.get("en") || Array.from(artifactsByLang.values())[0] || null;
+}
+
+function localizedExperienceHighlightItem(item, lang) {
+  if (!item) return null;
+  const title = normalizeText(resolveLocalizedText(item.title_i18n, lang, item.title)) || item.title;
+  if (!title || !item.image_src) return null;
+  return {
+    id: item.id,
+    title,
+    image_src: item.image_src
+  };
+}
+
+function stableExperienceHighlightRank(seed, id) {
+  return createHash("sha256")
+    .update(`${normalizeText(seed) || "tour"}:${normalizeText(id)}`)
+    .digest("hex");
+}
+
+function orderedExperienceHighlightIds(highlightIds) {
+  return (Array.isArray(highlightIds) ? highlightIds : [])
+    .map((id, index) => ({
+      id,
+      index,
+      displayOrder: EXPERIENCE_HIGHLIGHT_DISPLAY_ORDER.indexOf(id)
+    }))
+    .sort((left, right) => {
+      const leftOrder = left.displayOrder >= 0 ? left.displayOrder : Number.MAX_SAFE_INTEGER;
+      const rightOrder = right.displayOrder >= 0 ? right.displayOrder : Number.MAX_SAFE_INTEGER;
+      return leftOrder - rightOrder || left.index - right.index;
+    })
+    .map((entry) => entry.id);
+}
+
+function publicOnePagerExperienceHighlightSelection(highlightIds, catalog, lang, seed) {
+  const catalogById = new Map((Array.isArray(catalog) ? catalog : []).map((item) => [item.id, item]));
+  const seen = new Set();
+  const selectedIds = (Array.isArray(highlightIds) ? highlightIds : [])
+    .map((value) => normalizeText(value))
+    .filter((id) => {
+      if (!id || seen.has(id)) return false;
+      seen.add(id);
+      return true;
+    })
+    .filter((id) => catalogById.has(id))
+    .slice(0, EXPERIENCE_HIGHLIGHT_LIMIT);
+  const selectedIdSet = new Set(selectedIds);
+  const fillerIds = (Array.isArray(catalog) ? catalog : [])
+    .filter((item) => item?.id && !selectedIdSet.has(item.id))
+    .map((item, index) => ({
+      id: item.id,
+      index,
+      rank: stableExperienceHighlightRank(seed, item.id)
+    }))
+    .sort((left, right) => left.rank.localeCompare(right.rank) || left.index - right.index)
+    .map((entry) => entry.id);
+  const ids = orderedExperienceHighlightIds(
+    selectedIds.concat(fillerIds).slice(0, EXPERIENCE_HIGHLIGHT_LIMIT)
+  );
+  return {
+    ids,
+    items: ids
+      .map((id) => localizedExperienceHighlightItem(catalogById.get(id), lang))
+      .filter(Boolean)
+  };
 }
 
 async function listDirectoryEntries(directoryPath) {
@@ -1614,6 +1769,7 @@ async function generateTourAssets({
   frontendDataDir = FRONTEND_DATA_DIR,
   countryReferenceInfoPath = COUNTRY_REFERENCE_INFO_PATH,
   destinationCatalogPath = "",
+  onePagersManifestPath = ONE_PAGERS_MANIFEST_PATH,
   translationsSnapshotDir = TRANSLATIONS_SNAPSHOT_DIR,
   frontendI18nDir = FRONTEND_I18N_DIR,
   languages = FRONTEND_LANGUAGE_CODES
@@ -1686,6 +1842,8 @@ async function generateTourAssets({
   const sortedPublicTours = [...publicTours].sort((left, right) => Number(right.priority || 0) - Number(left.priority || 0));
   const destinationScopeFilters = publicTourDestinationScopeFilters(sortedPublicTours);
   const publishedMarketingTourTranslations = await loadPublishedMarketingTourTranslations(translationsSnapshotDir, languages);
+  const onePagerArtifactsByTourId = await loadOnePagerArtifacts(onePagersManifestPath);
+  const experienceHighlightCatalog = await loadExperienceHighlightCatalog();
   const assetUrlsByLang = {};
   const destinationAssetUrlsByLang = {};
   let seoPayload = null;
@@ -1707,10 +1865,24 @@ async function generateTourAssets({
         normalizeText(readModel.updated_at || readModel.created_at)
       );
       const pictures = selectedTravelTourCardImagePaths(travelPlan);
+      const onePagerArtifact = onePagerArtifactForLang(onePagerArtifactsByTourId, readModel.id, normalizedLang);
+      const onePagerExperienceHighlightIds = onePagerArtifact?.selectedExperienceHighlightIds || [];
+      const onePagerExperienceHighlightSelection = publicOnePagerExperienceHighlightSelection(
+        onePagerExperienceHighlightIds,
+        experienceHighlightCatalog,
+        normalizedLang,
+        `${readModel.id}:${normalizedLang}`
+      );
+      const onePagerPdfUrl = onePagerArtifact?.pdf
+        ? buildPublicPath(ONE_PAGERS_PUBLIC_BASE_PATH, onePagerArtifact.pdf)
+        : "";
       const detailPayload = {
         id: readModel.id,
         title: readModel.title,
-        travel_plan: travelPlan
+        travel_plan: travelPlan,
+        ...(onePagerPdfUrl ? { one_pager_pdf_url: onePagerPdfUrl } : {}),
+        ...(onePagerExperienceHighlightSelection.ids.length ? { one_pager_experience_highlight_ids: onePagerExperienceHighlightSelection.ids } : {}),
+        ...(onePagerExperienceHighlightSelection.items.length ? { one_pager_experience_highlights: onePagerExperienceHighlightSelection.items } : {})
       };
       const detailFilename = `public-tour-details.${normalizedLang}.${readModel.id}.json`;
       const detailOutputPath = path.join(frontendDataDir, detailFilename);
@@ -1979,6 +2151,7 @@ export async function generatePublicHomepageAssets({
   staffPhotosRoot = "",
   countryReferenceInfoPath = COUNTRY_REFERENCE_INFO_PATH,
   destinationCatalogPath = "",
+  onePagersManifestPath = "",
   frontendDataDir = FRONTEND_DATA_DIR,
   tourOutputDir = TOUR_OUTPUT_DIR,
   teamOutputDir = TEAM_OUTPUT_DIR,
@@ -2008,6 +2181,8 @@ export async function generatePublicHomepageAssets({
     || (staffRoot === ATP_STAFF_ROOT ? ATP_STAFF_PHOTOS_ROOT : path.join(staffRoot, "photos"));
   const resolvedDestinationCatalogPath = normalizeText(destinationCatalogPath)
     || (toursRoot === TOURS_ROOT ? DESTINATION_CATALOG_PATH : path.join(toursRoot, "destinations.json"));
+  const resolvedOnePagersManifestPath = normalizeText(onePagersManifestPath)
+    || (toursRoot === TOURS_ROOT ? ONE_PAGERS_MANIFEST_PATH : path.join(path.dirname(toursRoot), "one-pagers", "manifest.json"));
   const resolvedTranslationsSnapshotDir = normalizeText(translationsSnapshotDir)
     || (toursRoot === TOURS_ROOT ? TRANSLATIONS_SNAPSHOT_DIR : path.join(path.dirname(toursRoot), "translations"));
   await cleanGeneratedFrontendData(frontendDataDir);
@@ -2017,6 +2192,7 @@ export async function generatePublicHomepageAssets({
     frontendDataDir,
     countryReferenceInfoPath,
     destinationCatalogPath: resolvedDestinationCatalogPath,
+    onePagersManifestPath: resolvedOnePagersManifestPath,
     translationsSnapshotDir: resolvedTranslationsSnapshotDir,
     frontendI18nDir,
     languages

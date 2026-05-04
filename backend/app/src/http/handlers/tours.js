@@ -920,6 +920,60 @@ export function createTourHandlers(deps) {
     sendJson(res, 200, payload, { "Cache-Control": "no-store" });
   }
 
+  async function renderTourOnePagerPdf(req, res, tour, lang) {
+    if (typeof writeMarketingTourOnePagerPdf !== "function") {
+      sendJson(res, 503, { error: "Tour one-pager PDF rendering is not configured" });
+      return;
+    }
+
+    const localizedTour = await applyMarketingTourMemoryToOnePagerTour(tour, lang);
+    const readModel = normalizeTourForRead(localizedTour, { lang });
+    const travelPlan = normalizeMarketingTourTravelPlan(localizedTour.travel_plan, {
+      sourceLang: "en",
+      contentLang: lang,
+      flatLang: lang,
+      flatMode: "localized",
+      strictReferences: false
+    });
+    const tourId = normalizeText(tour?.id) || "tour";
+    const previewPath = path.join(TEMP_UPLOAD_DIR, `tour-one-pager-${tourId}-${randomUUID()}.pdf`);
+    let renderedPath = previewPath;
+    try {
+      await mkdir(path.dirname(previewPath), { recursive: true });
+      const result = await writeMarketingTourOnePagerPdf({
+        ...readModel,
+        travel_plan: travelPlan
+      }, {
+        lang,
+        outputPath: previewPath
+      });
+      renderedPath = normalizeText(result?.outputPath) || previewPath;
+      await sendFileWithCache(req, res, renderedPath, "private, max-age=0, no-store", {
+        "Content-Disposition": `inline; filename="${tourOnePagerFilename(tour).replace(/"/g, "")}"`
+      });
+    } catch (error) {
+      sendJson(res, 500, { error: "Could not render tour one-pager PDF", detail: String(error?.message || error) });
+    } finally {
+      await rm(renderedPath, { force: true }).catch(() => {});
+      if (renderedPath !== previewPath) {
+        await rm(previewPath, { force: true }).catch(() => {});
+      }
+    }
+  }
+
+  async function handleGetPublicTourOnePagerPdf(req, res, [tourId]) {
+    const lang = requestLang(req.url);
+    const publishedDestinationCodes = publishedWebpageDestinationCodes(await readCountryPracticalInfo());
+    const tours = (await readTours()).map((tour) => normalizeTourForStorage(tour));
+    const tour = tours.find((item) => item.id === tourId);
+    const publicTour = tour ? normalizeTourForPublicWebpage(tour, publishedDestinationCodes) : null;
+    if (!publicTour) {
+      sendJson(res, 404, { error: "Tour not found" });
+      return;
+    }
+    await renderTourOnePagerPdf(req, res, publicTour, lang);
+  }
+
   async function handleListTours(req, res) {
     const principal = getPrincipal(req);
     if (!canReadTours(principal)) {
@@ -1084,10 +1138,6 @@ export function createTourHandlers(deps) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
     }
-    if (typeof writeMarketingTourOnePagerPdf !== "function") {
-      sendJson(res, 503, { error: "Tour one-pager PDF rendering is not configured" });
-      return;
-    }
 
     const lang = requestLang(req.url);
     const tours = (await readTours()).map((tour) => normalizeTourForStorage(tour));
@@ -1096,46 +1146,7 @@ export function createTourHandlers(deps) {
       sendJson(res, 404, { error: "Tour not found" });
       return;
     }
-
-    const localizedTour = await applyMarketingTourMemoryToOnePagerTour(tour, lang);
-    const readModel = normalizeTourForRead(localizedTour, { lang });
-    const travelPlan = normalizeMarketingTourTravelPlan(localizedTour.travel_plan, {
-      sourceLang: "en",
-      contentLang: lang,
-      flatLang: lang,
-      flatMode: "localized",
-      strictReferences: false
-    });
-    const selectedExperienceHighlightIds = Array.isArray(travelPlan?.one_pager_experience_highlight_ids)
-      ? travelPlan.one_pager_experience_highlight_ids.map((value) => normalizeText(value)).filter(Boolean)
-      : [];
-    if (selectedExperienceHighlightIds.length < 4) {
-      sendJson(res, 400, { error: "Select 4 experience highlights before creating the tour one-pager PDF." });
-      return;
-    }
-    const previewPath = path.join(TEMP_UPLOAD_DIR, `tour-one-pager-${tourId}-${randomUUID()}.pdf`);
-    let renderedPath = previewPath;
-    try {
-      await mkdir(path.dirname(previewPath), { recursive: true });
-      const result = await writeMarketingTourOnePagerPdf({
-        ...readModel,
-        travel_plan: travelPlan
-      }, {
-        lang,
-        outputPath: previewPath
-      });
-      renderedPath = normalizeText(result?.outputPath) || previewPath;
-      await sendFileWithCache(req, res, renderedPath, "private, max-age=0, no-store", {
-        "Content-Disposition": `inline; filename="${tourOnePagerFilename(tour).replace(/"/g, "")}"`
-      });
-    } catch (error) {
-      sendJson(res, 500, { error: "Could not render tour one-pager PDF", detail: String(error?.message || error) });
-    } finally {
-      await rm(renderedPath, { force: true }).catch(() => {});
-      if (renderedPath !== previewPath) {
-        await rm(previewPath, { force: true }).catch(() => {});
-      }
-    }
+    await renderTourOnePagerPdf(req, res, tour, lang);
   }
 
   async function handleTranslateTourFields(req, res) {
@@ -2069,6 +2080,7 @@ export function createTourHandlers(deps) {
 
   return {
     handlePublicListTours,
+    handleGetPublicTourOnePagerPdf,
     handleListTours,
     handleSearchTourTravelPlanDays,
     handleSearchTourTravelPlanServices,

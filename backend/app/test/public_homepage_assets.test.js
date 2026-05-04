@@ -151,6 +151,43 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
       { source_text: "Driver at arrivals", target_text: "Tai xe tai sanh den" }
     ]
   });
+  await writeJson(path.join(contentRoot, "one-pagers", "manifest.json"), {
+    tours: [
+      {
+        id: "tour_alpha",
+        artifacts: [
+          {
+            lang: "en",
+            pdf: "pdfs/tour_alpha/en.pdf",
+            selected_experience_highlight_ids: [
+              "iconic_landmarks",
+              "delicious_cuisine",
+              "cultural_heritage",
+              "local_experiences"
+            ]
+          },
+          {
+            lang: "de",
+            pdf: "pdfs/tour_alpha/de.pdf",
+            selected_experience_highlight_ids: [
+              "iconic_landmarks",
+              "delicious_cuisine"
+            ]
+          },
+          {
+            lang: "vi",
+            pdf: "pdfs/tour_alpha/vi.pdf",
+            selected_experience_highlight_ids: [
+              "iconic_landmarks",
+              "delicious_cuisine",
+              "cultural_heritage",
+              "local_experiences"
+            ]
+          }
+        ]
+      }
+    ]
+  });
 
   await writeJson(path.join(toursRoot, "tour_hidden", "tour.json"), {
     id: "tour_hidden",
@@ -325,13 +362,45 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
   assert.equal(publicTourDetailsEn.travel_plan.days[0].services[0].image.alt_text, "Driver at arrivals");
   assert.equal(publicTourDetailsEn.travel_plan.days[0].services[0].image.include_in_travel_tour_card, true);
   assert.equal(publicTourDetailsEn.travel_plan.days[0].services[2].image.include_in_travel_tour_card, false);
+  assert.equal(publicTourDetailsEn.one_pager_pdf_url, "/content/one-pagers/pdfs/tour_alpha/en.pdf");
+  assert.deepEqual(publicTourDetailsEn.one_pager_experience_highlight_ids, [
+    "iconic_landmarks",
+    "delicious_cuisine",
+    "cultural_heritage",
+    "local_experiences"
+  ]);
+  assert.deepEqual(publicTourDetailsEn.one_pager_experience_highlights.map((item) => item.title), [
+    "Iconic Landmarks",
+    "Delicious Cuisine",
+    "Cultural Heritage",
+    "Local Experiences"
+  ]);
+  assert.deepEqual(publicTourDetailsEn.one_pager_experience_highlights.map((item) => item.image_src), [
+    "/assets/img/experience-highlights/01.png",
+    "/assets/img/experience-highlights/04.png",
+    "/assets/img/experience-highlights/02.png",
+    "/assets/img/experience-highlights/03.png"
+  ]);
   assert.equal("image" in publicToursEn.items[0], false);
 
   assert.equal(publicToursDe.items[0].title, "Alpha Reise");
   assert.equal(publicToursDe.items[0].seo_slug, "alpha-custom-route");
   assert.equal(publicToursDe.items[0].short_description, "Alpha Beschreibung");
+  assert.equal(publicTourDetailsDe.one_pager_pdf_url, "/content/one-pagers/pdfs/tour_alpha/de.pdf");
+  assert.equal(publicTourDetailsDe.one_pager_experience_highlight_ids.length, 4);
+  assert.equal(new Set(publicTourDetailsDe.one_pager_experience_highlight_ids).size, 4);
+  assert.ok(publicTourDetailsDe.one_pager_experience_highlight_ids.includes("iconic_landmarks"));
+  assert.ok(publicTourDetailsDe.one_pager_experience_highlight_ids.includes("delicious_cuisine"));
+  assert.equal(publicTourDetailsDe.one_pager_experience_highlights.length, 4);
   assert.equal(publicToursVi.items[0].title, "Tour Alpha");
   assert.equal(publicToursVi.items[0].short_description, "Mo ta Alpha");
+  assert.equal(publicTourDetailsVi.one_pager_pdf_url, "/content/one-pagers/pdfs/tour_alpha/vi.pdf");
+  assert.deepEqual(publicTourDetailsVi.one_pager_experience_highlights.map((item) => item.title), [
+    "Địa danh biểu tượng",
+    "Ẩm thực đặc sắc",
+    "Di sản văn hóa",
+    "Trải nghiệm địa phương"
+  ]);
   assert.equal(publicTourDetailsVi.travel_plan.days[0].title_i18n.vi, "Ngay den");
   assert.equal(publicTourDetailsVi.travel_plan.days[0].services[0].title_i18n.vi, "Don san bay");
   assert.equal(publicTourDetailsVi.travel_plan.days[0].services[0].details_i18n.vi, "Xe rieng ve khach san.");

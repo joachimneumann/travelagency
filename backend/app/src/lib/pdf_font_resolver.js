@@ -11,9 +11,9 @@ const LANGUAGE_FONT_PROBES = Object.freeze({
 });
 
 const LANGUAGE_FONT_PRIORITY_MARKERS = Object.freeze({
-  ja: ["notosanscjkjp-"],
-  ko: ["notosanscjkkr-"],
-  zh: ["notosanscjksc-"]
+  ja: ["notosanscjkjp-", "notoserifcjkjp-"],
+  ko: ["notosanscjkkr-", "notoserifcjkkr-"],
+  zh: ["notosanscjksc-", "notoserifcjksc-", "notoserifcjktc-"]
 });
 
 const PDF_SUPPORTED_FONT_EXTENSIONS = Object.freeze([".ttf", ".otf"]);
