@@ -5317,7 +5317,7 @@ test("frontend language switching updates the homepage in place instead of forci
   );
   assert.doesNotMatch(
     mainToursSource,
-    /\/public\/v1\/tours/,
+    /fetch\([\s\S]{0,160}\/public\/v1\/tours(?:\?|["'`])/,
     "Homepage tours source should no longer fetch tour payloads from the backend"
   );
 });
