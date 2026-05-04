@@ -486,6 +486,7 @@ export function createBookingTravelPlanHandlers(deps) {
     BOOKING_IMAGES_DIR,
     writeFile,
     rm,
+    mkdir,
     processBookingImageToWebp
   });
 

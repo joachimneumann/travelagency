@@ -33,6 +33,7 @@ export function createBookingTravelPlanImageHandlers(deps) {
     BOOKING_IMAGES_DIR,
     writeFile,
     rm,
+    mkdir,
     processBookingImageToWebp
   } = deps;
 
@@ -83,6 +84,7 @@ export function createBookingTravelPlanImageHandlers(deps) {
     const outputRelativePath = `${bookingId}/travel-plan-services/${outputName}`;
     const outputPath = path.join(BOOKING_IMAGES_DIR, outputRelativePath);
     try {
+      await mkdir(TEMP_UPLOAD_DIR, { recursive: true });
       await writeFile(tempInputPath, sourceBuffer);
       await processBookingImageToWebp(tempInputPath, outputPath);
     } catch (error) {

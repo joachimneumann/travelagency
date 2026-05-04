@@ -1856,6 +1856,7 @@ export function createTourHandlers(deps) {
     const outputPath = path.join(TOURS_DIR, outputRelativePath);
 
     try {
+      await mkdir(TEMP_UPLOAD_DIR, { recursive: true });
       await writeFile(tempInputPath, sourceBuffer);
       await processTourImageToWebp(tempInputPath, outputPath);
     } catch (error) {
