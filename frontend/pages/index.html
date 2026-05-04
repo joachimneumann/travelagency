@@ -347,12 +347,16 @@
                   <div id="navDestinationOptions" class="hero-destination-menu" role="menu" aria-label="Destination filters" data-i18n-aria-label-id="a11y.destination_filters"></div>
                 </div>
               </div>
-            </div>
-            <div class="filter-menu--hero__cta">
-              <button id="viewToursBtn" class="btn btn-primary btn-primary--hero" type="button">View tours</button>
+              <p id="heroFilterMatchCount" class="hero-filter-match-count" aria-live="polite" hidden></p>
             </div>
           </div>
         </div>
+        <button id="heroDownArrow" class="hero-down-arrow" type="button" aria-label="Scroll to tours" data-i18n-aria-label-id="a11y.scroll_to_tours" hidden>
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M12 5v14"></path>
+            <path d="m19 12-7 7-7-7"></path>
+          </svg>
+        </button>
       </section>
 
       <section class="section" id="tours">

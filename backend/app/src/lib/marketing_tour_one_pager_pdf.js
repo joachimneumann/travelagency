@@ -46,7 +46,9 @@ const PHOTO_LABEL_COLLISION_PAD = 8;
 const PHOTO_LABEL_COLLISION_STEP = 22;
 const PHOTO_LABEL_PROTECTED_EXTRA_X = 18;
 const PHOTO_LABEL_PROTECTED_EXTRA_Y = 10;
-const PHOTO_LABEL_LOWER_EDGE_ALIGNMENT_THRESHOLD = 24;
+const PHOTO_LABEL_LOWER_EDGE_ALIGNMENT_THRESHOLD = 18;
+const BODY_IMAGE_COMPACT_TARGET_GAP = 14;
+const BODY_IMAGE_COMPACT_HORIZONTAL_PROXIMITY = 34;
 const PHOTO_LABEL_BRIGHTNESS_SAMPLE_RATIO = 0.2;
 const PHOTO_LABEL_BRIGHTNESS_THRESHOLD = 155;
 const BODY_IMAGE_LAYOUT_BOUNDS = Object.freeze({
@@ -743,6 +745,13 @@ function rectHorizontalOverlap(first, second) {
   return Math.max(0, width);
 }
 
+function rectHorizontalGap(first, second) {
+  if (rectHorizontalOverlap(first, second) > 0) return 0;
+  if (first.x + first.width < second.x) return second.x - (first.x + first.width);
+  if (second.x + second.width < first.x) return first.x - (second.x + second.width);
+  return 0;
+}
+
 function expandRect(rect, pad) {
   return {
     x: rect.x - pad,
@@ -829,6 +838,21 @@ function bodyImageTitleCollisionScore(candidate, placedLayouts) {
   }, 0);
 }
 
+function bodyImageVerticalGapScore(candidate, placedLayouts) {
+  const candidateImage = bodyImageCoverageRect(candidate);
+  const candidateBottom = candidateImage.y + candidateImage.height;
+  return placedLayouts.reduce((score, placed) => {
+    const placedImage = bodyImageCoverageRect(placed);
+    const verticalGap = placedImage.y - candidateBottom;
+    if (verticalGap <= BODY_IMAGE_COMPACT_TARGET_GAP) return score;
+    const horizontalGap = rectHorizontalGap(candidateImage, placedImage);
+    if (horizontalGap > BODY_IMAGE_COMPACT_HORIZONTAL_PROXIMITY) return score;
+    const horizontalAffinity = rectHorizontalOverlap(candidateImage, placedImage)
+      || (BODY_IMAGE_COMPACT_HORIZONTAL_PROXIMITY - horizontalGap);
+    return score + (verticalGap - BODY_IMAGE_COMPACT_TARGET_GAP) * Math.max(1, horizontalAffinity);
+  }, 0);
+}
+
 function clampBodyImageLayout(layout, dx = 0, dy = 0) {
   return {
     ...layout,
@@ -850,12 +874,15 @@ function bodyImageTitleCollisionCandidates(layout) {
   const diagonal = step * 0.7;
   const offsets = [
     [0, 0],
+    [0, step * 0.5],
     [0, -step],
     [-diagonal, -step],
     [diagonal, -step],
     [-step, 0],
     [step, 0],
     [0, step],
+    [-diagonal, step * 0.5],
+    [diagonal, step * 0.5],
     [-diagonal, step],
     [diagonal, step],
     [0, -step * 2],
@@ -890,10 +917,14 @@ function resolveBodyImageTitleCollisions(items) {
       .map((candidate, index) => ({
         candidate,
         index,
-        score: bodyImageTitleCollisionScore(candidate, placedLayouts),
+        collisionScore: bodyImageTitleCollisionScore(candidate, placedLayouts),
+        gapScore: bodyImageVerticalGapScore(candidate, placedLayouts),
         distance: Math.hypot(candidate.x - layout.x, candidate.y - layout.y)
       }))
-      .sort((left, right) => left.score - right.score || left.distance - right.distance || left.index - right.index)[0]
+      .sort((left, right) => left.collisionScore - right.collisionScore
+        || left.gapScore - right.gapScore
+        || left.distance - right.distance
+        || left.index - right.index)[0]
       ?.candidate || layout;
     const resolvedItem = { frame, layout: resolvedLayout };
     resolvedItems.push(resolvedItem);

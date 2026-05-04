@@ -108,6 +108,9 @@ let authStatusLoadPromise = null;
 let reelsUnlockTapTimes = [];
 let reelsRuntimePromise = null;
 let reelsRuntimeInstance = null;
+let heroDownArrowLoadReady = false;
+let heroDownArrowHeroVisible = false;
+let heroDownArrowTimer = 0;
 
 const DEFAULT_BOOKING_CURRENCY = "USD";
 const FALLBACK_MIN_TRAVELERS = 1;
@@ -143,6 +146,7 @@ const authRuntime = {
 
 const INITIAL_VISIBLE_TOURS = 6;
 const SHOW_MORE_BATCH = 3;
+const HERO_DOWN_ARROW_DELAY_MS = 5000;
 const BACKEND_BASE_URL = window.ASIATRAVELPLAN_API_BASE ? window.ASIATRAVELPLAN_API_BASE.replace(/\/$/, "") : "";
 const API_BASE_ORIGIN = BACKEND_BASE_URL || window.location.origin;
 const PUBLIC_BOOTSTRAP_URL = `${API_BASE_ORIGIN}/public/v1/mobile/bootstrap`;
@@ -168,13 +172,15 @@ const els = {
   backendLoginContainer: document.getElementById("backendLoginContainer"),
   headerBackendLoginMount: document.getElementById("headerBackendLoginMount"),
   footerBackendLoginMount: document.getElementById("footerBackendLoginMount"),
+  hero: document.getElementById("hero"),
   heroTitle: document.getElementById("heroTitle"),
+  heroDownArrow: document.getElementById("heroDownArrow"),
+  heroFilterMatchCount: document.getElementById("heroFilterMatchCount"),
   backendLoginBtn: document.getElementById("backendLoginBtn"),
   backendLoginBtnTitle: document.getElementById("backendLoginBtnTitle"),
   backendLoginBtnSubtitle: document.getElementById("backendLoginBtnSubtitle"),
   websiteAuthStatus: document.getElementById("websiteAuthStatus"),
   footerLicense: document.getElementById("footerLicense"),
-  viewToursBtn: document.getElementById("viewToursBtn"),
   activeFilters: document.getElementById("activeFilters"),
   toursTitle: document.getElementById("toursTitle"),
   toursBooking: document.getElementById("toursBooking"),
@@ -446,6 +452,7 @@ async function init() {
   setupFooterCompanyProfile();
   setupBackendLogin();
   setupBrandLogoLinkBehavior();
+  setupHeroDownArrowPrompt();
   setupPageDragPrevention();
   applyWebsiteAuthState({ authenticated: false, user: "", known: false });
   primeBackendLoginFromCache();
@@ -1373,6 +1380,138 @@ function setupBrandLogoLinkBehavior() {
       top: 0,
       behavior: "smooth"
     });
+  });
+}
+
+function clearHeroDownArrowTimer() {
+  if (!heroDownArrowTimer) return;
+  window.clearTimeout(heroDownArrowTimer);
+  heroDownArrowTimer = 0;
+}
+
+function setHeroDownArrowVisible(isVisible) {
+  if (!(els.heroDownArrow instanceof HTMLElement)) return;
+
+  if (!isVisible) {
+    els.heroDownArrow.classList.remove("is-visible");
+    els.heroDownArrow.hidden = true;
+    return;
+  }
+
+  els.heroDownArrow.hidden = false;
+  window.requestAnimationFrame(() => {
+    if (els.heroDownArrow.hidden || !heroDownArrowHeroVisible || state.reelsModeOpen) return;
+    els.heroDownArrow.classList.add("is-visible");
+  });
+}
+
+function isHeroVisibleForDownArrow() {
+  if (!(els.hero instanceof HTMLElement)) return false;
+  const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
+  if (viewportHeight <= 0) return false;
+
+  const rect = els.hero.getBoundingClientRect();
+  const visibleHeight = Math.min(rect.bottom, viewportHeight) - Math.max(rect.top, 0);
+  if (visibleHeight <= 0) return false;
+
+  const measuredHeight = Math.max(1, Math.min(rect.height || viewportHeight, viewportHeight));
+  return visibleHeight / measuredHeight >= 0.25;
+}
+
+function scheduleHeroDownArrowPrompt() {
+  clearHeroDownArrowTimer();
+  if (!heroDownArrowLoadReady || !heroDownArrowHeroVisible || state.reelsModeOpen) return;
+
+  heroDownArrowTimer = window.setTimeout(() => {
+    heroDownArrowTimer = 0;
+    if (!heroDownArrowLoadReady || !isHeroVisibleForDownArrow() || state.reelsModeOpen) return;
+    heroDownArrowHeroVisible = true;
+    setHeroDownArrowVisible(true);
+  }, HERO_DOWN_ARROW_DELAY_MS);
+}
+
+function restartHeroDownArrowPromptDelay() {
+  clearHeroDownArrowTimer();
+  setHeroDownArrowVisible(false);
+  heroDownArrowHeroVisible = isHeroVisibleForDownArrow();
+  scheduleHeroDownArrowPrompt();
+}
+
+function updateHeroDownArrowPromptVisibility() {
+  const isVisible = isHeroVisibleForDownArrow();
+  if (
+    heroDownArrowHeroVisible === isVisible
+    && !state.reelsModeOpen
+    && (heroDownArrowTimer || els.heroDownArrow?.classList.contains("is-visible"))
+  ) {
+    return;
+  }
+
+  heroDownArrowHeroVisible = isVisible;
+  if (!isVisible || state.reelsModeOpen) {
+    clearHeroDownArrowTimer();
+    setHeroDownArrowVisible(false);
+    return;
+  }
+
+  scheduleHeroDownArrowPrompt();
+}
+
+function scrollToToursSection() {
+  if (!(els.toursSection instanceof HTMLElement)) return;
+  const headerHeight = els.pageHeader instanceof HTMLElement ? els.pageHeader.getBoundingClientRect().height : 0;
+  const targetTop = els.toursSection.getBoundingClientRect().top + window.scrollY - headerHeight;
+
+  window.scrollTo({
+    top: Math.max(0, targetTop),
+    behavior: "smooth"
+  });
+}
+
+function setupHeroDownArrowPrompt() {
+  if (!(els.hero instanceof HTMLElement) || !(els.heroDownArrow instanceof HTMLElement)) return;
+
+  const beginDelayAfterLoad = () => {
+    heroDownArrowLoadReady = true;
+    restartHeroDownArrowPromptDelay();
+  };
+  if (document.readyState === "complete") {
+    beginDelayAfterLoad();
+  } else {
+    window.addEventListener("load", beginDelayAfterLoad, { once: true });
+  }
+
+  if ("IntersectionObserver" in window) {
+    const observer = new IntersectionObserver(() => {
+      updateHeroDownArrowPromptVisibility();
+    }, { threshold: [0, 0.25, 0.5] });
+    observer.observe(els.hero);
+  } else {
+    window.addEventListener("scroll", updateHeroDownArrowPromptVisibility, { passive: true });
+  }
+  window.addEventListener("resize", updateHeroDownArrowPromptVisibility, { passive: true });
+
+  const resetAfterFilterInteraction = () => {
+    if (!heroDownArrowLoadReady) return;
+    restartHeroDownArrowPromptDelay();
+  };
+  [
+    els.navStyleTrigger,
+    els.navStyleOptions,
+    els.navDestinationTrigger,
+    els.navDestinationOptions
+  ].forEach((target) => {
+    if (!(target instanceof HTMLElement)) return;
+    target.addEventListener("pointerdown", resetAfterFilterInteraction, { passive: true });
+    target.addEventListener("click", resetAfterFilterInteraction);
+    target.addEventListener("change", resetAfterFilterInteraction);
+    target.addEventListener("keydown", resetAfterFilterInteraction);
+  });
+
+  els.heroDownArrow.addEventListener("click", () => {
+    clearHeroDownArrowTimer();
+    setHeroDownArrowVisible(false);
+    scrollToToursSection();
   });
 }
 

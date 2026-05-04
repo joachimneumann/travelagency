@@ -194,7 +194,8 @@ test("public tour travel-plan content and detail chrome follow the frontend lang
   assert.match(els.tourGrid.innerHTML, /Delicious Cuisine/);
   assert.match(els.tourGrid.innerHTML, /\/assets\/img\/experience-highlights\/01\.png/);
   assert.match(els.tourGrid.innerHTML, /tour-plan-pdf/);
-  assert.match(els.tourGrid.innerHTML, /Tour Overview/);
+  assert.doesNotMatch(els.tourGrid.innerHTML, /Tourübersicht/);
+  assert.doesNotMatch(els.tourGrid.innerHTML, /Tour Overview/);
   assert.doesNotMatch(els.tourGrid.innerHTML, /tour-plan-pdf__badge/);
   assert.match(els.tourGrid.innerHTML, /\/public\/v1\/tours\/tour_localized_plan\/one-pager\.pdf\?lang=de/);
   assert.doesNotMatch(els.tourGrid.innerHTML, /\/content\/one-pagers\/pdfs\/tour_localized_plan\/de\.pdf/);
@@ -210,10 +211,11 @@ test("public tour travel-plan content and detail chrome follow the frontend lang
   assert.match(els.tourGrid.innerHTML, /tour-plan-service-card--has-details/);
   assert.match(els.tourGrid.innerHTML, /tour-plan-service-card__details-indicator/);
   assert.match(els.tourGrid.innerHTML, /tour-plan-service-card__details-text/);
-  assert.match(els.tourGrid.innerHTML, />Details<\/span>/);
+  assert.match(els.tourGrid.innerHTML, />Einzelheiten<\/span>/);
+  assert.doesNotMatch(els.tourGrid.innerHTML, />Details<\/span>/);
   assert.match(els.tourGrid.innerHTML, /data-tour-plan-service-details-toggle/);
   assert.equal((els.tourGrid.innerHTML.match(/data-tour-plan-service-details-toggle/g) || []).length, 1);
-  assert.match(els.tourGrid.innerHTML, /data-tour-plan-service-collapse/);
+  assert.doesNotMatch(els.tourGrid.innerHTML, /data-tour-plan-service-collapse/);
   assert.doesNotMatch(els.tourGrid.innerHTML, /data-tour-plan-service-flip/);
   assert.doesNotMatch(els.tourGrid.innerHTML, /Tap again to see the image/);
   assert.match(els.tourGrid.innerHTML, /data-tour-plan-service-swap/);
