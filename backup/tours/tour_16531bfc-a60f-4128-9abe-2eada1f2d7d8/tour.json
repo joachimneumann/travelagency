@@ -48,7 +48,7 @@
   "seasonality_end_month": "oct",
   "priority": 97,
   "created_at": "2026-04-06T02:54:41.519Z",
-  "updated_at": "2026-04-30T04:05:50.414Z",
+  "updated_at": "2026-05-04T03:14:51.201Z",
   "travel_plan": {
     "destination_scope": [
       {
@@ -68,6 +68,24 @@
         ]
       }
     ],
+    "tour_card_image_ids": [
+      "travel_plan_service_image_c8ef8a06-65a9-472a-ac9c-044541acf90a",
+      "travel_plan_service_image_1b734592-dd38-4b0a-869d-665664446468",
+      "travel_plan_service_image_f9dc828f-715c-49a1-bf21-6f6383487c5e",
+      "travel_plan_service_image_3607254c-2cd4-432b-8bcd-75db3e461972",
+      "travel_plan_service_image_906668cd-976a-462f-8048-430d1abdd8e9",
+      "travel_plan_service_image_8b03f873-f995-4c2e-a92b-6c2d194c6e88",
+      "travel_plan_service_image_aa71ef23-4c06-4596-9913-be7173c52a5d",
+      "travel_plan_service_image_7a50a702-d2ba-4b81-bcc2-8e997fa8fe32",
+      "travel_plan_service_image_aebe2574-afd0-4644-9787-62fce8b6495c",
+      "travel_plan_service_image_631d7743-3990-468f-9a14-58692ea66cbe",
+      "travel_plan_service_image_08ea1e8f-e9ff-46bb-8d01-f0b1cf580d8f",
+      "travel_plan_service_image_298874c6-3086-4891-9bbc-7bd7c9bab6f1",
+      "travel_plan_service_image_9d611a1e-8482-4f5f-babf-b0bfc03ae8d2"
+    ],
+    "tour_card_primary_image_id": "travel_plan_service_image_c8ef8a06-65a9-472a-ac9c-044541acf90a",
+    "one_pager_hero_image_id": "travel_plan_service_image_c8ef8a06-65a9-472a-ac9c-044541acf90a",
+    "one_pager_image_ids": [],
     "days": [
       {
         "id": "travel_plan_day_0cc434a5-139d-4ab7-944f-6adc04c534db",
@@ -120,6 +138,8 @@
               "sv": "Upphämtning på flygplatsen",
               "no": "Henting på flyplassen"
             },
+            "details": null,
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -170,6 +190,8 @@
               "sv": "Marmorberg",
               "no": "Marmorfjellene"
             },
+            "details": null,
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -220,6 +242,8 @@
               "sv": "Huyen Khong-grottan",
               "no": "Huyen Khong-hulen"
             },
+            "details": null,
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -242,56 +266,6 @@
               "source_attribution": null,
               "focal_point": null,
               "created_at": "2026-04-28T04:29:47.120Z"
-            }
-          },
-          {
-            "id": "travel_plan_service_71515313-218c-4274-a5c3-4cea34883719",
-            "timing_kind": "label",
-            "time_label": null,
-            "time_label_i18n": {},
-            "time_point": null,
-            "kind": "other",
-            "title": "Linh Ung",
-            "title_i18n": {
-              "ar": "لينه أونج",
-              "fr": "Linh Ung",
-              "zh": "林翁",
-              "ja": "リン・ウン",
-              "ko": "린웅",
-              "vi": "Linh Ứng",
-              "ms": "Linh Ung",
-              "de": "Linh Ung",
-              "es": "Linh Ung",
-              "it": "Linh Ung",
-              "ru": "Линь Унг",
-              "nl": "Linh Ung",
-              "pl": "Linh Ung",
-              "da": "Linh Ung",
-              "sv": "Linh Ung",
-              "no": "Linh Ung"
-            },
-            "image_subtitle": null,
-            "image_subtitle_i18n": {},
-            "location": null,
-            "location_i18n": {},
-            "start_time": null,
-            "end_time": null,
-            "image": {
-              "id": "travel_plan_service_image_c302601c-976d-434a-adda-fb500085e2bc",
-              "storage_path": "/public/v1/tour-images/tour_16531bfc-a60f-4128-9abe-2eada1f2d7d8/travel-plan-services/travel_plan_service_71515313-218c-4274-a5c3-4cea34883719-1777350682674-a510fe38-0cfc-49c7-bd1a-b5f5810373a0.webp",
-              "caption": null,
-              "caption_i18n": {},
-              "alt_text": null,
-              "alt_text_i18n": {},
-              "sort_order": 0,
-              "is_primary": true,
-              "is_customer_visible": true,
-              "include_in_travel_tour_card": true,
-              "width_px": null,
-              "height_px": null,
-              "source_attribution": null,
-              "focal_point": null,
-              "created_at": "2026-04-28T04:31:22.761Z"
             }
           },
           {
@@ -320,6 +294,8 @@
               "sv": "Hội An Ancient Town",
               "no": "Hội en gammel by"
             },
+            "details": null,
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -399,6 +375,8 @@
               "sv": "Son Tra halvön",
               "no": "Son Tra-halvøya"
             },
+            "details": null,
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -449,6 +427,8 @@
               "sv": "Linh Ung Pagoda",
               "no": "Linh Ung Pagoda"
             },
+            "details": null,
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -499,6 +479,8 @@
               "sv": "Drakbron",
               "no": "Dragebroen"
             },
+            "details": null,
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -549,6 +531,8 @@
               "sv": "Kycklingkyrkan",
               "no": "Kyllingkirken"
             },
+            "details": null,
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -556,6 +540,41 @@
             "start_time": null,
             "end_time": null,
             "image": null
+          },
+          {
+            "id": "travel_plan_service_ae51d437-68ce-4883-b169-5d595c9474fe",
+            "timing_kind": "label",
+            "time_label": null,
+            "time_label_i18n": {},
+            "time_point": null,
+            "kind": "other",
+            "title": "explore the Coconut Forest",
+            "title_i18n": {},
+            "details": "Escape to the tranquil Cam Thanh Coconut Forest, where you can glide through emerald waters in a traditional basket boat. From exciting boat performances to peaceful sunset views, it is a unique cultural adventure that perfectly complements your visit to Hoi An.",
+            "details_i18n": {},
+            "image_subtitle": null,
+            "image_subtitle_i18n": {},
+            "location": null,
+            "location_i18n": {},
+            "start_time": null,
+            "end_time": null,
+            "image": {
+              "id": "travel_plan_service_image_d1c4cda1-3c0d-4f5f-a1b6-508ca0cac1b3",
+              "storage_path": "/public/v1/tour-images/tour_16531bfc-a60f-4128-9abe-2eada1f2d7d8/travel-plan-services/travel_plan_service_ae51d437-68ce-4883-b169-5d595c9474fe-1777864218091-7bf33222-2cb9-42e8-a8e0-8fa4b4c49fa9.webp",
+              "caption": null,
+              "caption_i18n": {},
+              "alt_text": null,
+              "alt_text_i18n": {},
+              "sort_order": 0,
+              "is_primary": true,
+              "is_customer_visible": true,
+              "include_in_travel_tour_card": false,
+              "width_px": null,
+              "height_px": null,
+              "source_attribution": null,
+              "focal_point": null,
+              "created_at": "2026-05-04T03:10:18.252Z"
+            }
           }
         ],
         "notes": "From Hoi An, explore the Coconut Forest, Son Tra Peninsula, and Da Nang’s icons: Dragon Bridge, Love Bridge, and the Chicken Church. A perfect mix of nature and culture.",
@@ -629,6 +648,8 @@
               "sv": "Bana Hil",
               "no": "Bana Hil"
             },
+            "details": null,
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -679,6 +700,8 @@
               "sv": "Nattmarknad",
               "no": "Nattmarked"
             },
+            "details": null,
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -775,6 +798,8 @@
               "sv": "Lang Co bay",
               "no": "Lang Co bukt"
             },
+            "details": null,
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -825,6 +850,8 @@
               "sv": "Thien Mu Pagoda",
               "no": "Thien Mu-pagoden"
             },
+            "details": null,
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -875,6 +902,8 @@
               "sv": "Kejserliga citadellet",
               "no": "Imperial Citadel"
             },
+            "details": null,
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -925,6 +954,8 @@
               "sv": "Rökelse by",
               "no": "Røkelse Village"
             },
+            "details": null,
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -975,6 +1006,8 @@
               "sv": "Dong Ba Market",
               "no": "Dong Ba-markedet"
             },
+            "details": null,
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -1071,6 +1104,8 @@
               "sv": "Bilen tar dig till flygplatsen",
               "no": "Bilen tar deg til flyplassen"
             },
+            "details": null,
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -1215,5 +1250,6 @@
         "updated_at": "2026-04-28T07:48:54.527Z"
       }
     }
-  }
+  },
+  "published_on_webpage": true
 }

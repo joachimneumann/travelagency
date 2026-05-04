@@ -45,5 +45,60 @@
   "seasonality_end_month": "dec",
   "priority": 100,
   "created_at": "2026-04-16T03:51:45.597Z",
-  "updated_at": "2026-04-30T04:05:50.414Z"
+  "updated_at": "2026-05-04T03:26:19.308Z",
+  "published_on_webpage": false,
+  "travel_plan": {
+    "destination_scope": [],
+    "one_pager_image_ids": [],
+    "days": [
+      {
+        "id": "travel_plan_day_f8558193-ef9a-4c59-a5c1-f10837dd2dad",
+        "day_number": 1,
+        "title": "",
+        "title_i18n": {},
+        "overnight_location": null,
+        "overnight_location_i18n": {},
+        "services": [
+          {
+            "id": "travel_plan_service_b0b7ae21-9494-4638-b47c-acb86ffab541",
+            "timing_kind": "label",
+            "time_label": null,
+            "time_label_i18n": {},
+            "time_point": null,
+            "kind": "other",
+            "title": "",
+            "title_i18n": {},
+            "details": null,
+            "details_i18n": {},
+            "image_subtitle": null,
+            "image_subtitle_i18n": {},
+            "location": null,
+            "location_i18n": {},
+            "start_time": null,
+            "end_time": null,
+            "image": {
+              "id": "travel_plan_service_image_4ba1a9e1-865b-4011-9196-9b11e2e86585",
+              "storage_path": "/public/v1/tour-images/tour_9760629b-9b7c-4330-a2e8-8a021b4d47cd/travel-plan-services/travel_plan_service_b0b7ae21-9494-4638-b47c-acb86ffab541-1777865179246-d390ced5-14f5-4676-b121-b350d3a890e4.webp",
+              "caption": null,
+              "caption_i18n": {},
+              "alt_text": null,
+              "alt_text_i18n": {},
+              "sort_order": 0,
+              "is_primary": true,
+              "is_customer_visible": true,
+              "include_in_travel_tour_card": false,
+              "width_px": null,
+              "height_px": null,
+              "source_attribution": null,
+              "focal_point": null,
+              "created_at": "2026-05-04T03:26:19.308Z"
+            }
+          }
+        ],
+        "notes": null,
+        "notes_i18n": {}
+      }
+    ],
+    "translation_meta": {}
+  }
 }

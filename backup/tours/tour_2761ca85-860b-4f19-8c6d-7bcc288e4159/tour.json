@@ -19,7 +19,7 @@
     "no": "Ha Long Bay"
   },
   "short_description": {
-    "en": "Ha Long Bay is not only the pride of Vietnam but also a world natural wonder that has been twice recognized by UNESCO. This place is like a giant watercolor painting, created from nature's ingenious arrangement between rock and water.",
+    "en": "Ha Long Bay: A UNESCO site in Vietnam with emerald waters and thousands of limestone islands. A stunning natural wonder perfect for cruising",
     "ar": "لا يعد خليج ها لونج مصدر فخر لفيتنام فحسب، بل يعد أيضًا إحدى عجائب الطبيعة العالمية التي تم الاعتراف بها مرتين من قبل اليونسكو. هذا المكان يشبه لوحة مائية عملاقة، تم إنشاؤها من ترتيب الطبيعة المبتكر بين الصخور والمياه.",
     "fr": "La baie d’Ha Long n’est pas seulement la fierté du Vietnam mais aussi une merveille naturelle mondiale reconnue à deux reprises par l’UNESCO. Cet endroit est comme une aquarelle géante, créée à partir de l’ingénieux arrangement naturel entre la roche et l’eau.",
     "zh": "下龙湾不仅是越南的骄傲，也是两次被联合国教科文组织认可的世界自然奇观。这里就像一幅巨大的水彩画，是大自然在岩石和水之间巧妙的排列而成的。",
@@ -49,5 +49,217 @@
   "seasonality_end_month": "nov",
   "priority": 50,
   "created_at": "2026-04-13T04:48:49.101Z",
-  "updated_at": "2026-04-30T04:05:50.414Z"
+  "updated_at": "2026-05-03T07:49:23.534Z",
+  "published_on_webpage": false,
+  "travel_plan": {
+    "destination_scope": [
+      {
+        "destination": "VN",
+        "areas": [
+          {
+            "area_id": "area_3fa05b42-97ab-495d-b16d-4691e66e0434",
+            "places": []
+          }
+        ]
+      }
+    ],
+    "tour_card_image_ids": [
+      "travel_plan_service_image_70568f63-ac8c-4b7f-b363-29015e73f16c"
+    ],
+    "tour_card_primary_image_id": "travel_plan_service_image_70568f63-ac8c-4b7f-b363-29015e73f16c",
+    "one_pager_hero_image_id": "travel_plan_service_image_15945f3f-1701-47f2-b728-3523a1026577",
+    "one_pager_image_ids": [
+      "travel_plan_service_image_70568f63-ac8c-4b7f-b363-29015e73f16c"
+    ],
+    "days": [
+      {
+        "id": "travel_plan_day_1788880e-7c86-4dc7-91b2-49d54706a677",
+        "day_number": 1,
+        "title": "Explore Ha Long Bay",
+        "title_i18n": {},
+        "overnight_location": null,
+        "overnight_location_i18n": {},
+        "services": [
+          {
+            "id": "travel_plan_service_2cbf5ef1-c54b-4807-84d1-0b77d52abc78",
+            "timing_kind": "label",
+            "time_label": null,
+            "time_label_i18n": {},
+            "time_point": null,
+            "kind": "other",
+            "title": "To Ha Long Bay.",
+            "title_i18n": {},
+            "details": "The vehicle and tour guide will pick you up at hotels in the Old Quarter and near the Opera House for your trip to Ha Long Bay.",
+            "details_i18n": {},
+            "image_subtitle": null,
+            "image_subtitle_i18n": {},
+            "location": null,
+            "location_i18n": {},
+            "start_time": null,
+            "end_time": null,
+            "image": {
+              "id": "travel_plan_service_image_54e827a3-e43e-41da-85c4-c0851d9bdd41",
+              "storage_path": "/public/v1/tour-images/tour_2761ca85-860b-4f19-8c6d-7bcc288e4159/travel-plan-services/travel_plan_service_2cbf5ef1-c54b-4807-84d1-0b77d52abc78-1777789598247-c9cf5bfc-8140-45bb-af24-0eee4bbf83e0.webp",
+              "caption": null,
+              "caption_i18n": {},
+              "alt_text": null,
+              "alt_text_i18n": {},
+              "sort_order": 0,
+              "is_primary": true,
+              "is_customer_visible": true,
+              "include_in_travel_tour_card": false,
+              "width_px": null,
+              "height_px": null,
+              "source_attribution": null,
+              "focal_point": null,
+              "created_at": "2026-05-03T06:26:38.413Z"
+            }
+          },
+          {
+            "id": "travel_plan_service_383de903-d053-4b5e-932f-0139d445fb88",
+            "timing_kind": "label",
+            "time_label": null,
+            "time_label_i18n": {},
+            "time_point": null,
+            "kind": "other",
+            "title": "Fighting Cock Island",
+            "title_i18n": {},
+            "details": "Hon Ga Choi (Fighting Cocks Island) is a famous symbol of Ha Long Bay. These two limestone islets resemble a pair of chickens facing each other amidst the emerald sea.",
+            "details_i18n": {},
+            "image_subtitle": null,
+            "image_subtitle_i18n": {},
+            "location": null,
+            "location_i18n": {},
+            "start_time": null,
+            "end_time": null,
+            "image": {
+              "id": "travel_plan_service_image_70568f63-ac8c-4b7f-b363-29015e73f16c",
+              "storage_path": "/public/v1/tour-images/tour_2761ca85-860b-4f19-8c6d-7bcc288e4159/travel-plan-services/travel_plan_service_383de903-d053-4b5e-932f-0139d445fb88-1777789937718-170d0e9e-81bc-44ba-b425-627ed73f0d08.webp",
+              "caption": null,
+              "caption_i18n": {},
+              "alt_text": null,
+              "alt_text_i18n": {},
+              "sort_order": 0,
+              "is_primary": true,
+              "is_customer_visible": true,
+              "include_in_travel_tour_card": true,
+              "width_px": null,
+              "height_px": null,
+              "source_attribution": null,
+              "focal_point": null,
+              "created_at": "2026-05-03T06:32:18.021Z"
+            }
+          },
+          {
+            "id": "travel_plan_service_fc1841ea-d0c7-4d79-afb2-ebac49ad0b09",
+            "timing_kind": "label",
+            "time_label": null,
+            "time_label_i18n": {},
+            "time_point": null,
+            "kind": "other",
+            "title": "Sung Sot Cave",
+            "title_i18n": {},
+            "details": "Located on Bo Hon Island, Sung Sot Cave is one of the largest and most beautiful caves in Ha Long Bay.",
+            "details_i18n": {},
+            "image_subtitle": null,
+            "image_subtitle_i18n": {},
+            "location": null,
+            "location_i18n": {},
+            "start_time": null,
+            "end_time": null,
+            "image": {
+              "id": "travel_plan_service_image_15945f3f-1701-47f2-b728-3523a1026577",
+              "storage_path": "/public/v1/tour-images/tour_2761ca85-860b-4f19-8c6d-7bcc288e4159/travel-plan-services/travel_plan_service_fc1841ea-d0c7-4d79-afb2-ebac49ad0b09-1777790012151-425e1472-cef8-43dc-a11f-d83183c85722.webp",
+              "caption": null,
+              "caption_i18n": {},
+              "alt_text": null,
+              "alt_text_i18n": {},
+              "sort_order": 0,
+              "is_primary": true,
+              "is_customer_visible": true,
+              "include_in_travel_tour_card": false,
+              "width_px": null,
+              "height_px": null,
+              "source_attribution": null,
+              "focal_point": null,
+              "created_at": "2026-05-03T06:33:32.300Z"
+            }
+          },
+          {
+            "id": "travel_plan_service_7fdde1dd-06f6-4eb8-bd2c-2d2353a4921c",
+            "timing_kind": "label",
+            "time_label": null,
+            "time_label_i18n": {},
+            "time_point": null,
+            "kind": "other",
+            "title": "Ti Top Island",
+            "title_i18n": {},
+            "details": "Ti Top Island is one of the most popular stops in Ha Long Bay, known for its unique crescent-shaped beach and panoramic views",
+            "details_i18n": {},
+            "image_subtitle": null,
+            "image_subtitle_i18n": {},
+            "location": null,
+            "location_i18n": {},
+            "start_time": null,
+            "end_time": null,
+            "image": {
+              "id": "travel_plan_service_image_5a4a5750-69dc-4645-be41-f928ff3e3db4",
+              "storage_path": "/public/v1/tour-images/tour_2761ca85-860b-4f19-8c6d-7bcc288e4159/travel-plan-services/travel_plan_service_7fdde1dd-06f6-4eb8-bd2c-2d2353a4921c-1777790129395-1d74402e-be3c-4a43-9b60-098f40d0c3d5.webp",
+              "caption": null,
+              "caption_i18n": {},
+              "alt_text": null,
+              "alt_text_i18n": {},
+              "sort_order": 0,
+              "is_primary": true,
+              "is_customer_visible": true,
+              "include_in_travel_tour_card": false,
+              "width_px": null,
+              "height_px": null,
+              "source_attribution": null,
+              "focal_point": null,
+              "created_at": "2026-05-03T06:35:29.562Z"
+            }
+          },
+          {
+            "id": "travel_plan_service_752457d4-9b63-402e-a3ae-c2f3654e7518",
+            "timing_kind": "label",
+            "time_label": null,
+            "time_label_i18n": {},
+            "time_point": null,
+            "kind": "other",
+            "title": "End of the trip",
+            "title_i18n": {},
+            "details": "The vehicle will take you back to the hotel.",
+            "details_i18n": {},
+            "image_subtitle": null,
+            "image_subtitle_i18n": {},
+            "location": null,
+            "location_i18n": {},
+            "start_time": null,
+            "end_time": null,
+            "image": {
+              "id": "travel_plan_service_image_e271bb2d-ed40-4999-acc5-92f3c67c9363",
+              "storage_path": "/public/v1/tour-images/tour_2761ca85-860b-4f19-8c6d-7bcc288e4159/travel-plan-services/travel_plan_service_752457d4-9b63-402e-a3ae-c2f3654e7518-1777790265902-71323ef3-2fad-4101-b685-97de8e7febc1.webp",
+              "caption": null,
+              "caption_i18n": {},
+              "alt_text": null,
+              "alt_text_i18n": {},
+              "sort_order": 0,
+              "is_primary": true,
+              "is_customer_visible": true,
+              "include_in_travel_tour_card": false,
+              "width_px": null,
+              "height_px": null,
+              "source_attribution": null,
+              "focal_point": null,
+              "created_at": "2026-05-03T06:37:46.045Z"
+            }
+          }
+        ],
+        "notes": "Ha Long Bay: A UNESCO site in Vietnam with emerald waters and thousands of limestone islands. A stunning natural wonder perfect for cruising",
+        "notes_i18n": {}
+      }
+    ],
+    "translation_meta": {}
+  }
 }

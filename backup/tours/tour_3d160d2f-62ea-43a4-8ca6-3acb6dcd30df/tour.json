@@ -19,7 +19,7 @@
     "no": "Da Nang - Marmorfjellene - Hoi An gammel by"
   },
   "short_description": {
-    "en": "Hoi An is one of the most charming destinations in the Central region, where time seems to stop among the small ancient streets with characteristic golden walls and sparkling lanterns at night.",
+    "en": "Experience the best of Central Vietnam: from Da Nang's modern beaches to the mystical Marble Mountains and the timeless, lantern-lit charm of Hoi An Ancient Town",
     "ar": "تعتبر هوي آن واحدة من أكثر الوجهات الساحرة في المنطقة الوسطى، حيث يبدو أن الزمن يتوقف بين الشوارع القديمة الصغيرة ذات الجدران الذهبية المميزة والفوانيس المتلألئة في الليل.",
     "fr": "Hoi An est l'une des destinations les plus charmantes de la région centrale, où le temps semble s'arrêter parmi les petites rues anciennes aux murs dorés caractéristiques et aux lanternes scintillantes la nuit.",
     "zh": "会安是中部地区最迷人的目的地之一，这里的时间似乎停止在古老的小街道上，这里有特色的金色墙壁和夜晚闪闪发光的灯笼。",
@@ -46,5 +46,112 @@
   "seasonality_end_month": "dec",
   "priority": 50,
   "created_at": "2026-04-13T09:06:18.834Z",
-  "updated_at": "2026-04-30T04:05:50.414Z"
+  "updated_at": "2026-05-04T02:38:33.686Z",
+  "published_on_webpage": false,
+  "travel_plan": {
+    "destination_scope": [
+      {
+        "destination": "VN",
+        "areas": [
+          {
+            "area_id": "area_3d22386f-d130-4f20-ab82-a30164fa5a19",
+            "places": [
+              {
+                "place_id": "place_5c7c616b-f7c7-4650-a206-bfcf204d078e"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "one_pager_hero_image_id": "travel_plan_service_image_8cc2713e-3646-4017-9600-4b3cab31b8d5",
+    "one_pager_image_ids": [
+      "travel_plan_service_image_a84cfa77-6333-403a-85c0-0ec23d2c35d4"
+    ],
+    "days": [
+      {
+        "id": "travel_plan_day_928327c1-d5dd-4152-90b6-0d4e97c46370",
+        "day_number": 1,
+        "title": "Marble Mountains - Hoi An Ancient Town",
+        "title_i18n": {},
+        "overnight_location": null,
+        "overnight_location_i18n": {},
+        "services": [
+          {
+            "id": "travel_plan_service_a90a6c6a-ed8e-4db0-8cbb-8e7cbb410858",
+            "timing_kind": "label",
+            "time_label": null,
+            "time_label_i18n": {},
+            "time_point": null,
+            "kind": "other",
+            "title": "Marble Mountains",
+            "title_i18n": {},
+            "details": "Located just south of Da Nang, the Marble Mountains are a cluster of five limestone and marble hills named after the five essential elements: Metal, Wood, Water, Fire, and Earth",
+            "details_i18n": {},
+            "image_subtitle": null,
+            "image_subtitle_i18n": {},
+            "location": null,
+            "location_i18n": {},
+            "start_time": null,
+            "end_time": null,
+            "image": {
+              "id": "travel_plan_service_image_a84cfa77-6333-403a-85c0-0ec23d2c35d4",
+              "storage_path": "/public/v1/tour-images/tour_3d160d2f-62ea-43a4-8ca6-3acb6dcd30df/travel-plan-services/travel_plan_service_a90a6c6a-ed8e-4db0-8cbb-8e7cbb410858-1777861731836-719f9a4a-927a-48c8-8feb-cdca58baf481.webp",
+              "caption": null,
+              "caption_i18n": {},
+              "alt_text": null,
+              "alt_text_i18n": {},
+              "sort_order": 0,
+              "is_primary": true,
+              "is_customer_visible": true,
+              "include_in_travel_tour_card": false,
+              "width_px": null,
+              "height_px": null,
+              "source_attribution": null,
+              "focal_point": null,
+              "created_at": "2026-05-04T02:28:52.012Z"
+            }
+          },
+          {
+            "id": "travel_plan_service_cb3aa6f9-323b-4aef-9ad8-d655d3ed6cd7",
+            "timing_kind": "label",
+            "time_label": null,
+            "time_label_i18n": {},
+            "time_point": null,
+            "kind": "other",
+            "title": "Hoi An Ancient Town",
+            "title_i18n": {},
+            "details": "Recognized as a UNESCO World Heritage site, Hoi An Ancient Town is a remarkably well-preserved example of a Southeast Asian trading port dating from the 15th to the 19th century",
+            "details_i18n": {},
+            "image_subtitle": null,
+            "image_subtitle_i18n": {},
+            "location": null,
+            "location_i18n": {},
+            "start_time": null,
+            "end_time": null,
+            "image": {
+              "id": "travel_plan_service_image_8cc2713e-3646-4017-9600-4b3cab31b8d5",
+              "storage_path": "/public/v1/tour-images/tour_3d160d2f-62ea-43a4-8ca6-3acb6dcd30df/travel-plan-services/travel_plan_service_cb3aa6f9-323b-4aef-9ad8-d655d3ed6cd7-1777861896552-914b6f46-4fd2-4caf-947a-1f60f2fc3e71.webp",
+              "caption": null,
+              "caption_i18n": {},
+              "alt_text": null,
+              "alt_text_i18n": {},
+              "sort_order": 0,
+              "is_primary": true,
+              "is_customer_visible": true,
+              "include_in_travel_tour_card": false,
+              "width_px": null,
+              "height_px": null,
+              "source_attribution": null,
+              "focal_point": null,
+              "created_at": "2026-05-04T02:31:36.696Z"
+            }
+          }
+        ],
+        "notes": "This journey takes you through two of Central Vietnam’s most iconic landmarks, blending spiritual nature with ancient history",
+        "notes_i18n": {}
+      }
+    ],
+    "translation_meta": {}
+  }
 }

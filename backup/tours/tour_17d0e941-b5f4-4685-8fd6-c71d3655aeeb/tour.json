@@ -45,7 +45,7 @@
   "seasonality_end_month": "",
   "priority": 100,
   "created_at": "2026-04-02T13:58:46.560Z",
-  "updated_at": "2026-05-01T00:56:59.294Z",
+  "updated_at": "2026-05-03T02:54:19.875Z",
   "travel_plan": {
     "destination_scope": [
       {
@@ -64,6 +64,31 @@
           }
         ]
       }
+    ],
+    "tour_card_image_ids": [
+      "travel_plan_service_image_d5ba411a-ad4e-46c8-9cde-0205a3b096d1",
+      "travel_plan_service_image_e2c52d26-a0c9-421f-8c18-adb7b22e6157",
+      "travel_plan_service_image_b2880aab-5af8-4157-88bb-d38026fe7db5",
+      "travel_plan_service_image_ef59890e-b6c4-40e5-87d8-69b67bf6c266",
+      "travel_plan_service_image_fe38e292-f3f0-4c25-823e-dea7c92948ad",
+      "travel_plan_service_image_387a92b7-1bd3-4175-b13f-8877e2616b08",
+      "travel_plan_service_image_5d7cb4c5-f84a-4e92-8f6f-da9694b7e0b2",
+      "travel_plan_service_image_a186622a-ce7c-4af0-9025-e6ea0e389fe1",
+      "travel_plan_service_image_daf5693d-aeba-497d-93cf-7077d1170cfd"
+    ],
+    "tour_card_primary_image_id": "travel_plan_service_image_d5ba411a-ad4e-46c8-9cde-0205a3b096d1",
+    "one_pager_hero_image_id": "travel_plan_service_image_e2c52d26-a0c9-421f-8c18-adb7b22e6157",
+    "one_pager_image_ids": [
+      "travel_plan_service_image_b2880aab-5af8-4157-88bb-d38026fe7db5",
+      "travel_plan_service_image_ef59890e-b6c4-40e5-87d8-69b67bf6c266",
+      "travel_plan_service_image_fe38e292-f3f0-4c25-823e-dea7c92948ad",
+      "travel_plan_service_image_387a92b7-1bd3-4175-b13f-8877e2616b08"
+    ],
+    "one_pager_experience_highlight_ids": [
+      "iconic_landmarks",
+      "cultural_heritage",
+      "local_experiences",
+      "delicious_cuisine"
     ],
     "days": [
       {
@@ -658,5 +683,6 @@
       }
     ],
     "translation_meta": {}
-  }
+  },
+  "published_on_webpage": true
 }

@@ -19,7 +19,7 @@
     "no": "Bai Dinh Pagoda - Trang An Ecological Area"
   },
   "short_description": {
-    "en": "The journey takes you to admire the majesty of the Bai Dinh pagoda complex with impressive Buddhist records and a majestic, quiet spiritual space. Next is the experience of sitting on a boat down the Trang An river, weaving through magical caves amidst the majestic nature of the world heritage site \"Ha Long on land\".",
+    "en": "The journey takes you to admire the majesty of the Bai Dinh pagoda complex with impressive Buddhist records and a majestic, quiet spiritual space. Next is the experience",
     "ar": "تأخذك الرحلة إلى الإعجاب بعظمة مجمع معبد باي دينه الذي يحتوي على سجلات بوذية مثيرة للإعجاب ومساحة روحية مهيبة وهادئة.\n\nالتالي هو تجربة الجلوس على متن قارب أسفل نهر ترانج آن، والتجول عبر الكهوف السحرية وسط الطبيعة المهيبة لموقع التراث العالمي \"ها لونج على الأرض\".",
     "fr": "Le voyage vous emmène admirer la majesté du complexe de la pagode Bai Dinh avec des archives bouddhistes impressionnantes et un espace spirituel majestueux et calme.\n\nVient ensuite l'expérience de s'asseoir sur un bateau sur la rivière Trang An, se faufilant à travers des grottes magiques au milieu de la nature majestueuse du site du patrimoine mondial « Ha Long sur terre ».",
     "zh": "旅程将带您欣赏白亭塔群的雄伟、令人印象深刻的佛教记录和雄伟、安静的精神空间。\n\n接下来是坐船沿着长安河顺流而下，在世界遗产“陆地下龙”的雄伟自然中穿行于神奇的洞穴中。",
@@ -48,5 +48,154 @@
   "seasonality_end_month": "dec",
   "priority": 50,
   "created_at": "2026-04-13T10:15:22.936Z",
-  "updated_at": "2026-04-30T04:05:50.414Z"
+  "updated_at": "2026-05-04T03:33:49.983Z",
+  "published_on_webpage": true,
+  "travel_plan": {
+    "destination_scope": [
+      {
+        "destination": "VN",
+        "areas": [
+          {
+            "area_id": "area_3fa05b42-97ab-495d-b16d-4691e66e0434",
+            "places": []
+          }
+        ]
+      }
+    ],
+    "tour_card_image_ids": [
+      "travel_plan_service_image_01c8eaa6-8ea7-4bb0-84b3-728a2a41cc52",
+      "travel_plan_service_image_ac49cd04-ba8b-4b86-aceb-696a05adb90b"
+    ],
+    "tour_card_primary_image_id": "travel_plan_service_image_01c8eaa6-8ea7-4bb0-84b3-728a2a41cc52",
+    "one_pager_hero_image_id": "travel_plan_service_image_01c8eaa6-8ea7-4bb0-84b3-728a2a41cc52",
+    "one_pager_image_ids": [
+      "travel_plan_service_image_ac49cd04-ba8b-4b86-aceb-696a05adb90b"
+    ],
+    "one_pager_experience_highlight_ids": [
+      "iconic_landmarks",
+      "local_experiences",
+      "delicious_cuisine",
+      "scenic_landscapes"
+    ],
+    "days": [
+      {
+        "id": "travel_plan_day_994e22ed-7f3f-49dd-9ccd-4da7da91f780",
+        "day_number": 1,
+        "title": "",
+        "title_i18n": {},
+        "overnight_location": null,
+        "overnight_location_i18n": {},
+        "services": [
+          {
+            "id": "travel_plan_service_20760e57-c14a-4085-9c74-59381863f0ce",
+            "timing_kind": "label",
+            "time_label": null,
+            "time_label_i18n": {},
+            "time_point": null,
+            "kind": "other",
+            "title": "Bai Dinh Pagoda - Trang An Ecological Area",
+            "title_i18n": {},
+            "details": "Ninh Binh has always been a top destination for those who love the majestic beauty of nature blended with the depth of its spiritual and cultural heritage. Below is an introduction to the journey of exploring Bai Dinh - Trang An, an impressive \"journey to the land of Buddha\".",
+            "details_i18n": {},
+            "image_subtitle": null,
+            "image_subtitle_i18n": {},
+            "location": null,
+            "location_i18n": {},
+            "start_time": null,
+            "end_time": null,
+            "image": {
+              "id": "travel_plan_service_image_53e61405-cb24-4957-bebc-2c9b56f7300c",
+              "storage_path": "/public/v1/tour-images/tour_2761ca85-860b-4f19-8c6d-7bcc288e4159/travel-plan-services/travel_plan_service_2cbf5ef1-c54b-4807-84d1-0b77d52abc78-1777789598247-c9cf5bfc-8140-45bb-af24-0eee4bbf83e0.webp",
+              "caption": null,
+              "caption_i18n": {},
+              "alt_text": null,
+              "alt_text_i18n": {},
+              "sort_order": 0,
+              "is_primary": true,
+              "is_customer_visible": true,
+              "include_in_travel_tour_card": false,
+              "width_px": null,
+              "height_px": null,
+              "source_attribution": null,
+              "focal_point": null,
+              "created_at": "2026-05-03T06:26:38.413Z"
+            }
+          },
+          {
+            "id": "travel_plan_service_4b1292f4-9f74-4702-80e1-3244e456faf4",
+            "timing_kind": "label",
+            "time_label": null,
+            "time_label_i18n": {},
+            "time_point": null,
+            "kind": "other",
+            "title": "Bai Dinh Pagoda",
+            "title_i18n": {},
+            "details": "Bai Dinh Pagoda is a majestic Buddhist complex in Ninh Binh, famous for its grand architecture and many Asian records. A perfect destination for those seeking peace and cultural heritage",
+            "details_i18n": {},
+            "image_subtitle": null,
+            "image_subtitle_i18n": {},
+            "location": null,
+            "location_i18n": {},
+            "start_time": null,
+            "end_time": null,
+            "image": {
+              "id": "travel_plan_service_image_ac49cd04-ba8b-4b86-aceb-696a05adb90b",
+              "storage_path": "/public/v1/tour-images/tour_38be9dcf-9d06-44f7-a404-613062e5054b/travel-plan-services/travel_plan_service_4b1292f4-9f74-4702-80e1-3244e456faf4-1777792446820-ad18103e-8da3-49a9-be7e-a0b778a23824.webp",
+              "caption": null,
+              "caption_i18n": {},
+              "alt_text": null,
+              "alt_text_i18n": {},
+              "sort_order": 0,
+              "is_primary": true,
+              "is_customer_visible": true,
+              "include_in_travel_tour_card": true,
+              "width_px": null,
+              "height_px": null,
+              "source_attribution": null,
+              "focal_point": null,
+              "created_at": "2026-05-03T07:14:06.934Z"
+            }
+          },
+          {
+            "id": "travel_plan_service_0e6abe1f-c382-4302-a467-f31bdb4e3597",
+            "timing_kind": "label",
+            "time_label": null,
+            "time_label_i18n": {},
+            "time_point": null,
+            "kind": "other",
+            "title": "Trang An Ecological Area",
+            "title_i18n": {},
+            "details": "Tràng An is a stunning UNESCO World Heritage site in Ninh Bình. It features limestone karsts, emerald waters, and mysterious caves, offering a peaceful boat journey through \"Ha Long Bay on land.\"",
+            "details_i18n": {},
+            "image_subtitle": null,
+            "image_subtitle_i18n": {},
+            "location": null,
+            "location_i18n": {},
+            "start_time": null,
+            "end_time": null,
+            "image": {
+              "id": "travel_plan_service_image_01c8eaa6-8ea7-4bb0-84b3-728a2a41cc52",
+              "storage_path": "/public/v1/tour-images/tour_38be9dcf-9d06-44f7-a404-613062e5054b/travel-plan-services/travel_plan_service_0e6abe1f-c382-4302-a467-f31bdb4e3597-1777792553668-d02ec240-89f4-45bc-861c-2c3f670c10ab.webp",
+              "caption": null,
+              "caption_i18n": {},
+              "alt_text": null,
+              "alt_text_i18n": {},
+              "sort_order": 0,
+              "is_primary": true,
+              "is_customer_visible": true,
+              "include_in_travel_tour_card": true,
+              "width_px": null,
+              "height_px": null,
+              "source_attribution": null,
+              "focal_point": null,
+              "created_at": "2026-05-03T07:15:53.780Z"
+            }
+          }
+        ],
+        "notes": null,
+        "notes_i18n": {}
+      }
+    ],
+    "translation_meta": {}
+  }
 }

@@ -48,7 +48,7 @@
   "seasonality_end_month": "sep",
   "priority": 100,
   "created_at": "2026-04-09T03:37:52.367Z",
-  "updated_at": "2026-04-30T04:05:50.414Z",
+  "updated_at": "2026-05-04T03:53:07.830Z",
   "travel_plan": {
     "destination_scope": [
       {
@@ -65,6 +65,14 @@
         ]
       }
     ],
+    "tour_card_image_ids": [
+      "travel_plan_service_image_fb2eab54-5760-416e-9164-5b48421cdfd3",
+      "travel_plan_service_image_38165b85-f838-477b-8d1d-ac22d3c57cd2",
+      "travel_plan_service_image_ee80bf4d-6417-44aa-a4c2-8a19819afba5"
+    ],
+    "tour_card_primary_image_id": "travel_plan_service_image_fb2eab54-5760-416e-9164-5b48421cdfd3",
+    "one_pager_hero_image_id": "travel_plan_service_image_fb2eab54-5760-416e-9164-5b48421cdfd3",
+    "one_pager_image_ids": [],
     "days": [
       {
         "id": "travel_plan_day_e9161ca8-2912-4912-9610-464984823d83",
@@ -117,6 +125,8 @@
               "sv": "upphämtning på flygplatsen",
               "no": "henting på flyplassen"
             },
+            "details": null,
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -167,6 +177,8 @@
               "sv": "Besök Hanois 36 gator och gränder.",
               "no": "Besøk de 36 gatene og smugene i Hanoi."
             },
+            "details": null,
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -263,6 +275,8 @@
               "sv": "Hoa Lo fängelse",
               "no": "Hoa Lo fengsel"
             },
+            "details": null,
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -313,6 +327,8 @@
               "sv": "Ho Chi Minh-mausoleet",
               "no": "Ho Chi Minh-mausoleet"
             },
+            "details": null,
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -363,6 +379,8 @@
               "sv": "Văn Miếu Quốc Tủ Giám",
               "no": "Văn Miếu Quốc Tủ Giám"
             },
+            "details": null,
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -413,6 +431,8 @@
               "sv": "Jag har en pagod",
               "no": "Det er en pagode"
             },
+            "details": null,
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -509,6 +529,8 @@
               "sv": "Hà Nội- Hạ Long bay",
               "no": "Hà Nội- Hạ Long bay"
             },
+            "details": "Visiting Ha Long Bay is a surreal experience. I was completely mesmerized by the emerald waters and the majestic limestone karsts. It felt like stepping into a different world—peaceful, grand, and timeless. It is truly a masterpiece of nature that everyone should see at least once in their life",
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -516,8 +538,8 @@
             "start_time": null,
             "end_time": null,
             "image": {
-              "id": "travel_plan_service_image_a7343065-ba3e-4596-b4af-cb28be7c92e6",
-              "storage_path": "/public/v1/tour-images/tour_51d3c652-0e8d-4463-ad04-852c64b3a652/travel-plan-services/travel_plan_service_223df447-6066-4d3a-929c-7828c2d019fb-1777169090501-06f8a5ed-1e37-47f8-8b4a-95b9cbc9cffc.webp",
+              "id": "travel_plan_service_image_66239309-9b58-458d-92a9-265a203b1492",
+              "storage_path": "/public/v1/tour-images/tour_51d3c652-0e8d-4463-ad04-852c64b3a652/travel-plan-services/travel_plan_service_223df447-6066-4d3a-929c-7828c2d019fb-1777864796064-1fbe43b6-4294-4dca-bcd5-75b2bf847772.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -530,7 +552,7 @@
               "height_px": null,
               "source_attribution": null,
               "focal_point": null,
-              "created_at": "2026-04-26T02:04:50.597Z"
+              "created_at": "2026-05-04T03:19:56.174Z"
             }
           },
           {
@@ -559,6 +581,8 @@
               "sv": "Halong Bay kryssning",
               "no": "Halong Bay cruise"
             },
+            "details": "Choosing the right Ha Long Bay cruise depends on how much time you have and the level of luxury you prefer. While most cruises follow a similar format—including kayaking, cave exploring, and onboard dining—the experience changes significantly based on the duration.",
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -566,8 +590,8 @@
             "start_time": null,
             "end_time": null,
             "image": {
-              "id": "travel_plan_service_image_e1a5bd66-117d-4825-bb0e-e07560ccaffe",
-              "storage_path": "/public/v1/tour-images/tour_51d3c652-0e8d-4463-ad04-852c64b3a652/travel-plan-services/travel_plan_service_f910d896-6a4a-4fd6-a843-9e452ef0f324-1777169157503-a5e15f25-fd74-4084-a039-10fa938c9cb5.webp",
+              "id": "travel_plan_service_image_4a9a4c3a-7134-4a99-be33-6c7213fb474c",
+              "storage_path": "/public/v1/tour-images/tour_51d3c652-0e8d-4463-ad04-852c64b3a652/travel-plan-services/travel_plan_service_f910d896-6a4a-4fd6-a843-9e452ef0f324-1777866787701-7030c763-949c-4f2e-9bfb-5d5dde1adbaf.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -580,7 +604,7 @@
               "height_px": null,
               "source_attribution": null,
               "focal_point": null,
-              "created_at": "2026-04-26T02:05:57.606Z"
+              "created_at": "2026-05-04T03:53:07.828Z"
             }
           },
           {
@@ -609,6 +633,8 @@
               "sv": "Lunch på kryssningsfartyget",
               "no": "Lunsj på cruiseskipet"
             },
+            "details": null,
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -753,5 +779,6 @@
         "updated_at": "2026-04-28T02:15:33.400Z"
       }
     }
-  }
+  },
+  "published_on_webpage": true
 }
