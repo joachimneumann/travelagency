@@ -15,7 +15,7 @@ usage() {
   cat <<'USAGE'
 Usage: scripts/content/create_tour_reviews.sh [tour-id-or-path ...] [options]
 
-Creates review files named review_{last 6 characters of tour ID}.md and .pdf.
+Creates review files named review_{last 6 characters of tour ID}.txt and .pdf.
 Without a tour input, only tours with "published_on_webpage": true are converted.
 
 Examples:
@@ -115,7 +115,7 @@ normalize_storage_path() {
   esac
 }
 
-write_text_review_markdown() {
+write_text_review_txt() {
   local tour_json="$1"
   local output_path="$2"
 
@@ -137,7 +137,6 @@ write_text_review_markdown() {
         else "" end) | clean) as $primary
       | if $primary != "" then $primary else (($fallback // "") | clean) end;
     def field($localized_value; $fallback): optional_text($localized_value; $fallback) | present;
-    def list_or_missing($items): if ($items | length) == 0 then "- missing" else ($items | map("- \(.)") | join("\n")) end;
     def unique_ordered: reduce .[] as $item ([]; if index($item) then . else . + [$item] end);
     def style_label($code): (($styles[0][]? | select(.code == $code) | .labels.en) // $code);
     def highlight_title($id): (($highlights[0][]? | select(.id == $id) | (.title_i18n.en // .title)) // $id);
@@ -153,44 +152,27 @@ write_text_review_markdown() {
       (optional_text($day.details_i18n; $day.details)) as $details
       | if $details != "" then $details else field($day.notes_i18n; $day.notes) end;
     def service_block($service; $index):
-      "##### Service \($index + 1)\n\n"
-      + "**Service Title:** \(field($service.title_i18n; $service.title))\n\n"
-      + "**Service Detail**\n\n"
+      "\($index + 1). \(field($service.title_i18n; $service.title))\n\n"
+      + "Detail\n"
       + "\(field($service.details_i18n; $service.details))";
     def day_block($entry):
       ($entry.value) as $day
       | (($day.services // []) | to_entries) as $services
-      | "### Day \(($day.day_number // ($entry.key + 1)) | tostring)\n\n"
-      + "**Day title:** \(field($day.title_i18n; $day.title))\n\n"
-      + "**Day Details**\n\n"
+      | "Day \(($day.day_number // ($entry.key + 1)) | tostring)\n\n"
+      + "Day title\n"
+      + "\(field($day.title_i18n; $day.title))\n\n"
+      + "Day Details\n"
       + "\(day_details($day))\n\n"
-      + "#### Services\n\n"
       + (if ($services | length) == 0 then "missing" else ($services | map(service_block(.value; .key)) | join("\n\n")) end);
     (.travel_plan.days // []) as $days
     | [
-      "# Review: \(.title | localized)",
+      (.title | localized),
       "",
-      "- Tour ID: `\(.id // "missing")`",
-      "- Title: \(.title | localized)",
-      "- Number of days: \(if ($days | length) > 0 then ($days | length | tostring) else "missing" end)",
+      "Number of days: \(if ($days | length) > 0 then ($days | length | tostring) else "missing" end)",
       "",
-      "## Tour description",
+      "Tour description",
       "",
       (.short_description | localized),
-      "",
-      "## Tour card images",
-      "",
-      (list_or_missing(card_image_services)),
-      "",
-      "## Travel styles",
-      "",
-      (list_or_missing([(.styles // [])[]? | style_label(.)])),
-      "",
-      "## Experience highlights",
-      "",
-      (list_or_missing([(.travel_plan.one_pager_experience_highlight_ids // [])[]? as $id | "\(highlight_title($id)) (`\($id)`)"])),
-      "",
-      "## Itinerary",
       "",
       (if ($days | length) == 0 then "missing" else ($days | to_entries | map(day_block(.)) | join("\n\n")) end)
     ] | join("\n")
@@ -301,10 +283,10 @@ for tour_json in "${tour_json_paths[@]}"; do
     tour_id="$(basename "$(dirname "${tour_json}")")"
   fi
   file_id="${tour_id: -6}"
-  markdown_path="${OUTPUT_DIR}/review_${file_id}.md"
+  markdown_path="${OUTPUT_DIR}/review_${file_id}.txt"
   pdf_path="${OUTPUT_DIR}/review_${file_id}.pdf"
 
-  write_text_review_markdown "${tour_json}" "${markdown_path}"
+  write_text_review_txt "${tour_json}" "${markdown_path}"
   write_image_review_pdf "${tour_json}" "${pdf_path}"
   written_count=$((written_count + 1))
   printf 'Wrote %s\n' "${markdown_path#${REPO_ROOT}/}"
