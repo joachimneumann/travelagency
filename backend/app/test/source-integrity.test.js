@@ -1628,8 +1628,13 @@ test("service titles remain optional across save validation and UI state", async
   );
   assert.match(
     travelPlanSource,
-    /booking\.travel_plan\.item_title[\s\S]*(booking\.travel_plan\.item_notes|booking\.travel_plan\.item_details)[\s\S]*booking\.travel_plan\.kind_label[\s\S]*(booking\.location|booking\.travel_plan\.location_optional)/,
-    "Service editing should keep title and details ahead of kind and location in the service overview"
+    /booking\.travel_plan\.item_numbered_title[\s\S]*booking\.travel_plan\.item_notes[\s\S]*renderTravelPlanTimingFields\(day, item\)/,
+    "Service editing should keep title and details in the service overview ahead of the timing fields"
+  );
+  assert.match(
+    travelPlanSource,
+    /const kindInput = itemNode\.querySelector\('\[data-travel-plan-service-field="kind"\]'\);[\s\S]*item\.kind = kindInput[\s\S]*String\(previousItem\?\.kind \|\| ""\)\.trim\(\);[\s\S]*readLocalizedFieldPayload\([\s\S]*"location",[\s\S]*previousItem\?\.location_i18n \?\? previousItem\?\.location/,
+    "Service editing should preserve saved kind and location values when the overview no longer renders those controls"
   );
   assert.doesNotMatch(
     validationSource,
@@ -1643,8 +1648,8 @@ test("service titles remain optional across save validation and UI state", async
   );
   assert.match(
     travelPlanStyles,
-    /\.travel-plan-service__overview \{[\s\S]*grid-template-columns: minmax\(0, 1fr\) minmax\(0, 1fr\);/,
-    "Travel plan styles should keep the service fields and image editor in a balanced two-column layout"
+    /\.travel-plan-service__overview \{[\s\S]*grid-template-columns: minmax\(7rem, 9rem\) minmax\(0, 1fr\);[\s\S]*\.travel-plan-service__overview-main \{[\s\S]*min-width: 0;[\s\S]*@media \(max-width: 520px\) \{[\s\S]*\.travel-plan-service__overview \{[\s\S]*grid-template-columns: 1fr;/,
+    "Travel plan styles should keep the compact image editor beside flexible service fields and collapse them on narrow screens"
   );
   assert.match(
     travelPlanStyles,
@@ -1768,7 +1773,7 @@ test("travel plan images cap inline previews and open in a full-size modal", asy
   );
   assert.match(
     travelPlanStyles,
-    /\.travel-plan-images__hero-frame \{[\s\S]*width: min\(100%, 18rem\);[\s\S]*\.travel-plan-images__hero-button \{[\s\S]*width: 100%;[\s\S]*aspect-ratio: 1 \/ 1;[\s\S]*\.travel-plan-images__hero-image \{[\s\S]*width: 100%;[\s\S]*height: 100%;[\s\S]*object-fit: contain;/,
+    /\.travel-plan-images__hero-frame \{[\s\S]*width: min\(100%, 8rem\);[\s\S]*\.travel-plan-images__hero-button \{[\s\S]*width: 100%;[\s\S]*aspect-ratio: 1 \/ 1;[\s\S]*\.travel-plan-images__hero-image \{[\s\S]*width: 100%;[\s\S]*height: 100%;[\s\S]*object-fit: contain;/,
     "The travel plan hero image should use a single fixed frame and contain-fit the uploaded image without cropping"
   );
   assert.doesNotMatch(
@@ -3350,7 +3355,7 @@ test("travel-plan service image text stays wired across model, API, backend, tra
   );
   assert.match(
     uiSource,
-    /field:\s+"image_subtitle"[\s\S]*item\.image_subtitle_i18n = itemImageSubtitle\.map/,
+    /const itemImageSubtitle = readLocalizedFieldPayload\([\s\S]*"travel-plan-service-field",[\s\S]*"image_subtitle",[\s\S]*previousItem\?\.image_subtitle_i18n \?\? previousItem\?\.image_subtitle[\s\S]*item\.image_subtitle = itemImageSubtitle\.text;[\s\S]*item\.image_subtitle_i18n = itemImageSubtitle\.map;/,
     "The travel-plan editor should render and save localized service image subtitles"
   );
   assert.match(
@@ -5738,7 +5743,7 @@ test("homepage tour cards expand descriptions and align same-row cards without a
   );
   assert.match(
     tourCardCssSource,
-    /@media \(max-width: 760px\) \{[\s\S]*\.tour-details-row__panel \{[\s\S]*width: 100vw;[\s\S]*margin-inline: calc\(50% - 50vw\);[\s\S]*border-radius: 0;[\s\S]*padding-inline: 0;[\s\S]*max-height: none;[\s\S]*overflow: visible;[\s\S]*overscroll-behavior: auto;[\s\S]*transition: none;[\s\S]*\.tour-details-row--opening \.tour-details-row__panel,[\s\S]*\.tour-details-row--closing \.tour-details-row__panel \{[\s\S]*opacity: 1;[\s\S]*transform: none;[\s\S]*clip-path: inset\(0 0 0 0\);/,
+    /@media \(max-width: 760px\) \{[\s\S]*\.tour-details-row__panel \{[\s\S]*width: min\(calc\(100vw - 1\.5rem\), var\(--tour-details-card-width, 357\.33px\)\);[\s\S]*justify-self: center;[\s\S]*margin-inline: auto;[\s\S]*border-radius: var\(--radius\);[\s\S]*padding-inline: 0;[\s\S]*max-height: none;[\s\S]*overflow: visible;[\s\S]*overscroll-behavior: auto;[\s\S]*transition: none;[\s\S]*\.tour-details-row--opening \.tour-details-row__panel,[\s\S]*\.tour-details-row--closing \.tour-details-row__panel \{[\s\S]*opacity: 1;[\s\S]*transform: none;[\s\S]*clip-path: inset\(0 0 0 0\);/,
     "Mobile homepage tour details should rely on the row expansion instead of a separate panel slide or fade animation"
   );
   assert.match(
