@@ -1942,9 +1942,10 @@ export function createFrontendToursController(ctx) {
     const columns = Math.min(Math.max(1, Number(columnCount) || 1), 3);
     const column = Math.min(Math.max(1, Number(columnIndex ?? 0) + 1), columns);
     const alignmentClass = tourDetailsAlignmentClass(columnIndex, columns);
+    const singleVisibleClass = visibleTourCount() <= 1 ? " tour-details-row--single-visible-tour" : "";
     return `
       <article
-        class="tour-details-row tour-details-row--below-grid tour-details-row--columns-${columns} ${alignmentClass}"
+        class="tour-details-row tour-details-row--below-grid tour-details-row--columns-${columns} ${alignmentClass}${singleVisibleClass}"
         data-expanded-tour-id="${escapeAttr(tripId)}"
         style="--tour-grid-columns: ${columns}; --tour-details-column: ${column};"
       >
@@ -2002,6 +2003,10 @@ export function createFrontendToursController(ctx) {
       .findIndex((trip) => normalizeText(trip?.id) === normalizedTripId);
   }
 
+  function visibleTourCount() {
+    return state.filteredTrips.slice(0, state.visibleToursCount).length;
+  }
+
   function visibleTourRowTripIds(tripId, columnCount = getTourGridColumnCount()) {
     const visibleTrips = state.filteredTrips.slice(0, state.visibleToursCount);
     const visibleIndex = visibleTourIndexForTrip(tripId);
@@ -2027,9 +2032,10 @@ export function createFrontendToursController(ctx) {
     if (!(anchor instanceof HTMLElement)) return null;
     const column = Math.min(Math.max(1, Number(columnIndex ?? 0) + 1), columns);
     const alignmentClass = tourDetailsAlignmentClass(columnIndex, columns);
+    const singleVisibleClass = visibleTourCount() <= 1 ? " tour-details-row--single-visible-tour" : "";
 
     const row = document.createElement("article");
-    row.className = `tour-details-row tour-details-row--below-grid tour-details-row--columns-${columns} ${alignmentClass}`;
+    row.className = `tour-details-row tour-details-row--below-grid tour-details-row--columns-${columns} ${alignmentClass}${singleVisibleClass}`;
     row.dataset.expandedTourId = tripId;
     row.style.setProperty("--tour-grid-columns", String(columns));
     row.style.setProperty("--tour-details-column", String(column));
@@ -2603,10 +2609,10 @@ export function createFrontendToursController(ctx) {
       ? Math.max(0, Math.ceil(shell.getBoundingClientRect().height))
       : 0;
     const cardWidth = card instanceof HTMLElement
-      ? Math.max(0, Math.ceil(card.getBoundingClientRect().width))
+      ? Math.max(0, card.getBoundingClientRect().width)
       : 0;
     const shellWidth = shell instanceof HTMLElement
-      ? Math.max(0, Math.ceil(shell.getBoundingClientRect().width))
+      ? Math.max(0, shell.getBoundingClientRect().width)
       : 0;
     const panelHeight = panel instanceof HTMLElement
       ? Math.max(0, Math.ceil(panel.getBoundingClientRect().height))
@@ -2615,13 +2621,14 @@ export function createFrontendToursController(ctx) {
     const rowHeight = Math.max(cardHeight, panelHeight);
     const sidePanel = row.classList.contains("tour-details-row--side-panel");
     const wrappedPanel = tourDetailsWrapsBelowCard(row);
+    const singleVisibleTour = visibleTourCount() <= 1;
     const syncedHeight = wrappedPanel ? Math.max(cardHeight, shellHeight) : (sidePanel ? cardHeight : rowHeight);
 
     if (cardHeight > 0) {
       row.style.setProperty("--tour-details-card-height", `${cardHeight}px`);
     }
     if (cardWidth > 0) {
-      const panelMaxWidth = Math.round(cardWidth * 1.8);
+      const panelMaxWidth = singleVisibleTour ? cardWidth : Math.round(cardWidth * 1.8);
       row.style.setProperty("--tour-details-card-width", `${cardWidth}px`);
       row.style.setProperty("--tour-details-panel-width", `${Math.round(cardWidth * 1.75)}px`);
       row.style.setProperty("--tour-details-panel-max-width", `${panelMaxWidth}px`);

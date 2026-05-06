@@ -872,6 +872,7 @@
   "booking.travel_plan.item_heading": "Service {item}",
   "booking.travel_plan.item_inserted": "Service inserted.",
   "booking.travel_plan.item_notes": "Service Details",
+  "booking.travel_plan.item_numbered_title": "Service {item} Title",
   "booking.travel_plan.item_title": "Service Title",
   "booking.travel_plan.kind.accommodation": "Accommodation",
   "booking.travel_plan.kind.activity": "Activity",

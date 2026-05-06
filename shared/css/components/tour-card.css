@@ -595,6 +595,7 @@
 }
 
 .tour-details-row {
+  --tour-card-details-gap: 15px;
   --tour-details-row-transition-duration: 0.64s;
   --tour-details-row-transition-easing: cubic-bezier(0.2, 0.82, 0.2, 1);
   grid-column: 1 / -1;
@@ -672,7 +673,7 @@
 
 .tour-details-row--side-panel.tour-details-row--attached.tour-details-row--columns-2 .tour-details-row__shell {
   grid-template-columns: repeat(2, calc((100% - 1.5rem) / 2));
-  row-gap: 1.5rem;
+  row-gap: var(--tour-card-details-gap);
 }
 
 .tour-details-row--side-panel.tour-details-row--attached.tour-details-row--columns-3 .tour-details-row__shell {
@@ -791,11 +792,23 @@
   scrollbar-width: none;
 }
 
+.tour-details-row:not(.tour-details-row--side-panel):not(.tour-details-row--below-grid) .tour-details-row__panel {
+  margin-top: var(--tour-card-details-gap);
+}
+
 .tour-details-row--below-grid .tour-details-row__panel {
   grid-column: 1 / -1;
   justify-self: center;
   width: min(var(--tour-details-panel-fit-width, 100%), 100%);
   border-radius: var(--radius);
+}
+
+.tour-details-row--single-visible-tour.tour-details-row--below-grid .tour-details-row__panel {
+  width: min(var(--tour-details-card-width, 100%), 100%);
+}
+
+.tour-details-row--single-visible-tour.tour-details-row--below-grid {
+  margin-top: calc(var(--tour-card-details-gap) - 1.8rem);
 }
 
 .tour-details-row--below-grid.tour-details-row--align-left .tour-details-row__panel {
@@ -1719,7 +1732,7 @@ html.tour-customize-unlocked .tour-plan__secret-customize {
     grid-template-columns: 1fr;
     width: 100vw;
     margin-inline: calc(50% - 50vw);
-    background: var(--surface);
+    background: var(--bg);
   }
 
   .tour-empty-card {
@@ -1905,10 +1918,10 @@ html.tour-customize-unlocked .tour-plan__secret-customize {
   }
 
   .tour-details-row__panel {
-    width: 100vw;
-    justify-self: stretch;
-    margin-inline: calc(50% - 50vw);
-    border-radius: 0;
+    width: min(calc(100vw - 1.5rem), var(--tour-details-card-width, 357.33px));
+    justify-self: center;
+    margin-inline: auto;
+    border-radius: var(--radius);
     padding-inline: 0;
     max-height: none;
     overflow: visible;
