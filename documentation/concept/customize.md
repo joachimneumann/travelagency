@@ -2,15 +2,15 @@
 
 ## Summary
 
-Add a `Customize this tour` action to the day details in the public marketing tour details. The button opens a customization tool where a visitor can adapt the day-by-day route before contacting the agency or continuing into a booking flow.
+Add one `Customize this tour` action to the itinerary area in the public marketing tour details. The action customizes the whole itinerary, not just one expanded day. The button opens a customization tool where a visitor can adapt the day-by-day route before contacting the agency or continuing into a booking flow.
 
 After the visitor finishes the customization tool, the public tour details should reflect the customized itinerary. The visible day-by-day itinerary is replaced with the visitor's customized order and day selection, and the PDF preview should show a preview of the customized tour rather than the original unchanged marketing tour.
 
 The tool has three main areas:
 
 - bottom: a horizontal timeline containing the current days in the selected tour
-- top left: a simplified Southeast Asia route map showing each day at its location, connected by a dotted route line
-- top right: a list of optional days that can be dragged into the timeline
+- top left: a simplified Southeast Asia route map showing the selected itinerary route, connected by a dotted route line
+- top right: a list of optional days from other published marketing tours that can be dragged into the timeline
 
 When the visitor adds, removes, or reorders days, the map updates immediately so the visual route always reflects the timeline.
 
@@ -22,12 +22,13 @@ For the public customer customizer, do not expose the authenticated admin day se
 
 Recommended public approach:
 
-- build a public-safe optional-day catalog from published marketing tours
+- build a public-safe optional-day catalog from all published marketing tours
 - include only customer-visible day content and customer-visible images
 - exclude unpublished tours and internal-only fields
-- prefer optional days from related destinations, areas, places, and/or styles
-- include only days that can resolve to a route coordinate, unless the UI has a clear fallback
+- include only days that have overnight latitude/longitude
+- hide days that do not have usable route coordinates
 - generate this as static public JSON with the existing public tour detail assets where possible
+- include all customer-language translations needed to preserve the customized itinerary during language switching
 
 Recommended public endpoint or asset shape:
 
@@ -56,11 +57,11 @@ For v1, static generated JSON is likely simpler, safer, and consistent with the 
 
 ## Entry Point
 
-The customization entry point belongs inside the expanded marketing tour details UI, in the day details area near the visible itinerary.
+The customization entry point belongs inside the expanded marketing tour details UI, in the itinerary area near the visible day list.
 
 Recommended placement:
 
-- show the button inside the day details / itinerary area, after the travel plan header or below the day list header
+- show one tour-level button inside the itinerary area, after the travel plan header or below the day list header
 - label: `Customize this tour`
 - only enable it when the tour has structured travel-plan days
 - keep the normal itinerary readable without forcing visitors into the customization tool
@@ -89,7 +90,7 @@ The map is a simplified visual map of Southeast Asia, not a fully interactive GI
 It should show:
 
 - the country or region outline as a static background image
-- one visible marker for each day in the timeline
+- one representative marker per timeline day, grouped when several days resolve to the same route point
 - day number labels on the markers
 - a dotted line connecting the markers in timeline order
 - enough visual contrast that the route is clear over the background
@@ -100,7 +101,7 @@ The map should update whenever:
 - a day is deleted from the timeline
 - the timeline order changes
 
-For v1, the map can use a static image with absolute marker coordinates stored in the day data. A full map library is optional and should only be added if the product needs zooming, panning, or accurate geographic interaction.
+For v1, the map can use a static image with marker coordinates resolved from destination place/area latitude and longitude. A full map library is optional and should only be added if the product needs zooming, panning, or accurate geographic interaction.
 
 ### Several Days At The Same Location
 
@@ -165,6 +166,10 @@ The visitor can:
 
 Deleting a day removes it from the timeline and triggers a map update. If the deleted day came from the optional-days pool, it should become available again in the optional-days panel.
 
+Customers may remove all original days. The customized itinerary is still valid as long as it stays within the configured day limit and contains at least one selected day before requesting or booking the trip.
+
+The maximum customized itinerary length is 20 days by default. Keep this value configurable.
+
 ## State Model
 
 Keep the customization state separate from the original tour object.
@@ -178,8 +183,11 @@ Recommended state:
     {
       id: "...",
       source: "original",
+      sourceTourId: "...",
+      sourceDayId: "...",
       title: "...",
       locationLabel: "...",
+      routePoint: { lat: 15.8801, lng: 108.3380 },
       mapPoint: { x: 52, y: 38 }
     }
   ],
@@ -187,8 +195,11 @@ Recommended state:
     {
       id: "...",
       source: "optional",
+      sourceTourId: "...",
+      sourceDayId: "...",
       title: "...",
       locationLabel: "...",
+      routePoint: { lat: 15.8799, lng: 108.3274 },
       mapPoint: { x: 58, y: 44 }
     }
   ]
@@ -202,6 +213,11 @@ Rules:
 - Day numbers are derived from the current array position, not stored permanently.
 - The original marketing tour data remains unchanged until the visitor explicitly submits or requests the customized tour.
 - Optional days should have stable ids so they can move between panels without duplicating.
+- The customized state should persist after the visitor finishes the customizer.
+- For v1, persist the customized state in browser storage keyed by original tour id so it survives closing/reopening the details panel and a same-device page reload.
+- When the visitor clicks `Plan this trip`, send the customized itinerary with the booking request and use it directly as the initial booking travel plan.
+- After booking creation, the durable copy of the customized itinerary is the booking travel plan.
+- A later v2 can add server-side customization drafts if visitors need a shareable link, cross-device access, or recovery after clearing browser data.
 
 ## Data Requirements
 
@@ -216,6 +232,7 @@ Each day used by the customization tool should expose:
 - location label
 - short description or notes
 - route/map point resolved from the destination catalog
+- all customer-language translations needed for title, location label, notes, and visible service copy
 - optional image
 - source flag: original tour day or optional day
 
@@ -231,6 +248,8 @@ Store coordinates once on reusable destination catalog records instead:
 - destination area: broader region or fallback centroid
 
 Marketing-tour days should reference a destination place or area. The customizer resolves the route point from that reference.
+
+For v1, use the day overnight location as the route-marker source. One representative marker per day is acceptable. If a day has many service locations, the map still uses the overnight location unless a tour editor sets a day-level route override.
 
 Recommended catalog shape:
 
@@ -290,15 +309,17 @@ For v1 with a static Southeast Asia image, normalized image coordinates are simp
 
 Optional days can come from:
 
-- a curated list attached to the marketing tour
-- destination-specific day modules
-- backend-maintained optional activities or extension days
+- any published marketing tour
 
-Avoid showing optional days with missing route coordinates unless the UI has a fallback marker placement strategy.
+Only show optional days that have overnight latitude/longitude. Days without usable route coordinates should be hidden from the optional-days catalog.
 
 The current destination scope catalog already has destinations, areas, and places, but it does not yet store latitude or longitude. Coordinates should be added to that catalog before relying on route maps.
 
 Existing travel-plan days also do not currently have structured `destination_place_id` or `destination_area_id` fields. They should be added so days can resolve their map point through the catalog.
+
+Tour editors should maintain the route coordinates inside the marketing tour editor. The editor should make it easy to choose a destination place or area for each day and should expose latitude/longitude maintenance for the selected overnight location.
+
+If an optional day source becomes unavailable because the source tour is unpublished or the day is removed after the public customization data was generated, delete that optional day from the visitor's available/customized state the next time the state is reconciled.
 
 ## Interaction Rules
 
@@ -380,6 +401,15 @@ Backend rules:
 
 The public tour details page should update the PDF preview action after finishing the customizer so it uses this customized preview flow.
 
+There are two practical ways to open the customized PDF:
+
+1. Fetch a PDF Blob from the POST response and open it with a browser object URL.
+2. Create a short-lived preview token.
+
+A preview token means the browser first sends the customized day ids to the server with a POST request. The server validates them, stores the preview data temporarily, and returns a short temporary URL such as `/public/v1/tour-preview/{token}.pdf`. The browser can then open that URL like a normal PDF link. This avoids putting the whole customized itinerary in the URL and makes opening the preview in a new tab easier.
+
+Recommended v1 choice: use a short-lived preview token for the PDF preview.
+
 ## Accessibility And Mobile
 
 Drag and drop must not be the only way to customize.
@@ -459,7 +489,7 @@ Recommended implementation sequence:
 
 - A visitor opens a marketing tour itinerary and sees `Customize this tour`.
 - Clicking the button opens the customization tool with the tour's existing days in the bottom timeline.
-- The map shows one marker per timeline day and a dotted line connecting the route.
+- The map shows the selected route with distinct route-point markers and a dotted line connecting the route.
 - Several days at the same route point are grouped into one map marker with a day range or day list.
 - Optional days are visible in the top-right panel.
 - Dragging an optional day into the timeline adds it to the selected itinerary.
@@ -470,6 +500,6 @@ Recommended implementation sequence:
 - After finishing, the PDF preview shows the customized tour itinerary.
 - Cancelling the customizer closes the tool without changing the public tour details or PDF preview.
 - Optional days shown to visitors come only from public-safe published marketing-tour content.
-- Days without resolvable route coordinates are hidden from the optional-days catalog or shown with a clear fallback.
+- Days without resolvable route coordinates are hidden from the optional-days catalog.
 - Route markers are drawn on a simplified static map without Google Maps.
 - The tool remains usable on mobile without requiring drag and drop.
