@@ -6,13 +6,11 @@ import {
 
 const DEFAULT_TOUR_IMAGE = "/assets/img/marketing_tours.png";
 const TOUR_IMAGE_TRANSITION_MS = 2000;
-const TOUR_GRID_LAYOUT_TRANSITION_MS = 520;
 const TOUR_DETAILS_OPEN_TRANSITION_MS = 920;
 const TOUR_DETAILS_MOBILE_OPEN_TRANSITION_MS = 1500;
 const TOUR_DETAILS_MOBILE_OPEN_EASING = "cubic-bezier(0.45, 0, 0.2, 1)";
 const TOUR_DETAILS_TRANSITION_MS = 640;
 const TOUR_DETAILS_CLOSE_TRANSITION_MS = 780;
-const TOUR_DETAILS_DESKTOP_CLOSE_TRANSITION_MS = 920;
 const TOUR_PLAN_SERVICE_SWAP_TRANSITION_MS = 380;
 const TOUR_PLAN_DAY_DETAILS_TRANSITION_MS = 300;
 const TOUR_SHOW_MORE_LABEL_TRANSITION_MS = 420;
@@ -21,12 +19,10 @@ const TOUR_CARD_SCROLL_MARGIN_PX = 12;
 const TOUR_DETAILS_IMAGE_READY_TIMEOUT_MS = 900;
 const TOUR_DETAILS_CONNECTOR_VIEWPORT_THRESHOLD_PX = 100;
 const TOUR_CARD_MEDIA_SNAPSHOT_HOLD_MS = Math.max(
-  TOUR_GRID_LAYOUT_TRANSITION_MS,
   TOUR_DETAILS_OPEN_TRANSITION_MS,
   TOUR_DETAILS_MOBILE_OPEN_TRANSITION_MS,
   TOUR_DETAILS_TRANSITION_MS,
-  TOUR_DETAILS_CLOSE_TRANSITION_MS,
-  TOUR_DETAILS_DESKTOP_CLOSE_TRANSITION_MS
+  TOUR_DETAILS_CLOSE_TRANSITION_MS
 ) + 180;
 const COUNTRY_TO_TOUR_DESTINATION_CODE = Object.freeze({
   VN: "vietnam",
@@ -59,6 +55,7 @@ const TOUR_EXPERIENCE_HIGHLIGHTS = Object.freeze([
   { id: "shopping_souvenirs", title: "Shopping and Souvenirs", image: "20.png" }
 ]);
 const TOUR_EXPERIENCE_HIGHLIGHT_BY_ID = new Map(TOUR_EXPERIENCE_HIGHLIGHTS.map((item) => [item.id, item]));
+const SECRET_CUSTOMIZE_CLICK_TARGET = 5;
 const tourCardImageTransitionTimers = new WeakMap();
 const tourPlanSummaryDetailsAnimations = new WeakMap();
 
@@ -90,6 +87,9 @@ export function createFrontendToursController(ctx) {
   let tourDetailsConnectorFrame = 0;
   let tourDetailsTransitionToken = 0;
   let tourCardMediaSnapshotToken = 0;
+  let secretCustomizeClickCount = 0;
+  let secretCustomizeUnlocked = false;
+  let secretCustomizeUnlockBound = false;
   const openingTourColumnIndexes = new Map();
   const openingTourInitialHeights = new Map();
 
@@ -941,6 +941,52 @@ export function createFrontendToursController(ctx) {
     if (window.matchMedia("(max-width: 760px)").matches) return 1;
     if (window.matchMedia("(max-width: 1024px)").matches) return 2;
     return 3;
+  }
+
+  function isSecretCustomizeDesktop() {
+    return getTourGridColumnCount() === 3;
+  }
+
+  function syncSecretCustomizeVisibility() {
+    if (typeof document === "undefined") return;
+    document.documentElement.classList.toggle(
+      "tour-customize-unlocked",
+      secretCustomizeUnlocked && isSecretCustomizeDesktop()
+    );
+  }
+
+  function unlockSecretCustomize() {
+    if (!isSecretCustomizeDesktop()) {
+      secretCustomizeClickCount = 0;
+      syncSecretCustomizeVisibility();
+      return;
+    }
+    secretCustomizeUnlocked = true;
+    secretCustomizeClickCount = 0;
+    syncSecretCustomizeVisibility();
+  }
+
+  function registerSecretCustomizeClick() {
+    if (!isSecretCustomizeDesktop()) {
+      secretCustomizeClickCount = 0;
+      return;
+    }
+    secretCustomizeClickCount += 1;
+    if (secretCustomizeClickCount >= SECRET_CUSTOMIZE_CLICK_TARGET) {
+      unlockSecretCustomize();
+    }
+  }
+
+  function setupSecretCustomizeUnlock() {
+    syncSecretCustomizeVisibility();
+    if (secretCustomizeUnlockBound) return;
+    secretCustomizeUnlockBound = true;
+    if (els.footerLegalTitle instanceof HTMLElement) {
+      els.footerLegalTitle.addEventListener("click", registerSecretCustomizeClick);
+    }
+    if (typeof window !== "undefined") {
+      window.addEventListener("resize", syncSecretCustomizeVisibility, { passive: true });
+    }
   }
 
   function bindTourGridResizeHandler() {
@@ -1802,6 +1848,15 @@ export function createFrontendToursController(ctx) {
     `;
   }
 
+  function renderSecretCustomizeButton(tripId) {
+    const label = frontendT("tour.plan.customize", "customize");
+    return `
+      <div class="tour-plan__secret-customize">
+        <button class="btn btn-secondary tour-plan__secret-customize-button" type="button" data-open-modal data-trip-id="${escapeAttr(tripId)}">${escapeHTML(label)}</button>
+      </div>
+    `;
+  }
+
   function renderTourTravelPlanDetails(trip) {
     const days = travelPlanDays(trip);
     if (!days.length) {
@@ -1819,6 +1874,7 @@ export function createFrontendToursController(ctx) {
       ${renderTourDetailsHeader(trip, days)}
       ${renderTourExperienceHighlights(trip)}
       ${renderTourOnePagerDownload(trip)}
+      ${renderSecretCustomizeButton(tripId)}
       ${renderTourPlanDaySummary(days, tripId)}
       <div class="tour-plan__footer-cta">
         <button class="btn btn-primary tour-plan__footer-plan-trip" type="button" data-open-modal data-trip-id="${escapeAttr(tripId)}">${escapeHTML(ctaLabel)}</button>
@@ -1867,19 +1923,30 @@ export function createFrontendToursController(ctx) {
     `;
   }
 
-  function renderTwoColumnBelowTourDetailsRow(trip, columnIndex = 0) {
+  function tourDetailsAlignmentClass(columnIndex = 0, columnCount = getTourGridColumnCount()) {
+    const columns = Math.max(1, Number(columnCount) || 1);
+    const column = Math.min(Math.max(0, Number(columnIndex) || 0), columns - 1);
+    if (columns <= 1) return "tour-details-row--align-center";
+    if (column <= 0) return "tour-details-row--align-left";
+    if (column >= columns - 1) return "tour-details-row--align-right";
+    return "tour-details-row--align-center";
+  }
+
+  function renderBelowGridTourDetailsRow(trip, columnIndex = 0, columnCount = getTourGridColumnCount()) {
     const tripId = normalizeText(trip?.id);
     const panelId = tourDetailsPanelId(tripId);
     const tripTitle = resolveLocalizedFrontendText(trip?.title, state.lang);
     const panelLabel = frontendT("tour.plan.panel_label", "Travel plan for {title}", {
       title: tripTitle
     });
-    const column = Math.min(Math.max(1, Number(columnIndex ?? 0) + 1), 2);
+    const columns = Math.min(Math.max(1, Number(columnCount) || 1), 3);
+    const column = Math.min(Math.max(1, Number(columnIndex ?? 0) + 1), columns);
+    const alignmentClass = tourDetailsAlignmentClass(columnIndex, columns);
     return `
       <article
-        class="tour-details-row tour-details-row--below-grid tour-details-row--columns-2"
+        class="tour-details-row tour-details-row--below-grid tour-details-row--columns-${columns} ${alignmentClass}"
         data-expanded-tour-id="${escapeAttr(tripId)}"
-        style="--tour-grid-columns: 2; --tour-details-column: ${column};"
+        style="--tour-grid-columns: ${columns}; --tour-details-column: ${column};"
       >
         <div class="tour-details-row__shell">
           <aside class="tour-details-row__panel" id="${escapeAttr(panelId)}" aria-label="${escapeAttr(panelLabel)}">
@@ -1947,128 +2014,24 @@ export function createFrontendToursController(ctx) {
       .filter(Boolean);
   }
 
-  function createTourGridSpacerElement(tripId) {
-    const spacer = document.createElement("div");
-    spacer.className = "tour-grid__spacer";
-    spacer.setAttribute("aria-hidden", "true");
-    spacer.dataset.tourDetailsSpacerFor = normalizeText(tripId);
-    return spacer;
-  }
-
-  function removeTourDetailsGridSpacers(tripId) {
-    if (!(els.tourGrid instanceof HTMLElement)) return;
-    const normalizedTripId = normalizeText(tripId);
-    Array.from(els.tourGrid.querySelectorAll(".tour-grid__spacer[data-tour-details-spacer-for]"))
-      .forEach((spacer) => {
-        if (!(spacer instanceof HTMLElement)) return;
-        if (normalizeText(spacer.dataset.tourDetailsSpacerFor) === normalizedTripId) {
-          spacer.remove();
-        }
-      });
-  }
-
-  function visibleTourTripIds() {
-    return state.filteredTrips
-      .slice(0, state.visibleToursCount)
-      .map((trip) => normalizeText(trip?.id))
-      .filter(Boolean);
-  }
-
-  function compactClosedTourGridCards() {
-    if (!(els.tourGrid instanceof HTMLElement)) return [];
-    if (els.tourGrid.querySelector("[data-expanded-tour-id]")) return [];
-
-    Array.from(els.tourGrid.querySelectorAll(".tour-grid__spacer"))
-      .forEach((spacer) => spacer.remove());
-
-    const movedTripIds = [];
-    visibleTourTripIds().forEach((tripId) => {
-      const card = directTourCardElement(tripId);
-      if (!(card instanceof HTMLElement)) return;
-      els.tourGrid.append(card);
-      movedTripIds.push(tripId);
-    });
-    return movedTripIds;
-  }
-
-  function isTwoCardWrappedTourRow(row) {
-    return tourDetailsWrapsBelowCard(row)
-      && getTourGridColumnCount() === 2
-      && visibleTourTripIds().length === 2;
-  }
-
-  function shouldCompactCloseWithoutGridAnimation(row) {
-    return isTwoCardWrappedTourRow(row);
-  }
-
-  function insertTourDetailsGridSpacers(rowTripIds, tripId, columnCount) {
-    if (!(els.tourGrid instanceof HTMLElement)) return;
-    const normalizedTripId = normalizeText(tripId);
-    removeTourDetailsGridSpacers(normalizedTripId);
-    const expandedIds = expandedTourIdSet();
-    const normalCards = (Array.isArray(rowTripIds) ? rowTripIds : [])
-      .filter((rowTripId) => rowTripId && rowTripId !== normalizedTripId && !expandedIds.has(rowTripId))
-      .map((rowTripId) => directTourCardElement(rowTripId))
-      .filter((card) => card instanceof HTMLElement);
-    if (!normalCards.length) return;
-
-    const spacerCount = Math.max(0, (Math.max(1, Number(columnCount) || 1) - normalCards.length));
-    let anchor = normalCards[normalCards.length - 1];
-    for (let index = 0; index < spacerCount; index += 1) {
-      const spacer = createTourGridSpacerElement(normalizedTripId);
-      anchor.after(spacer);
-      anchor = spacer;
-    }
-  }
-
-  function createSidePanelTourDetailsRow(trip, card, { columnIndex = 0, columnCount = getTourGridColumnCount(), initialCardHeight = 0 } = {}) {
-    if (!(els.tourGrid instanceof HTMLElement) || !(card instanceof HTMLElement)) return null;
-    const tripId = normalizeText(trip?.id);
-    if (!tripId) return null;
-    const columns = Math.min(Math.max(1, Number(columnCount) || 1), 3);
-    const column = Math.min(Math.max(1, Number(columnIndex ?? 0) + 1), Math.max(1, columns));
-    const rowTripIds = visibleTourRowTripIds(tripId, columns);
-    const anchor = rowTripIds.map((rowTripId) => directTourCardElement(rowTripId)).find((item) => item instanceof HTMLElement) || card;
-
-    const row = document.createElement("article");
-    row.className = `tour-details-row tour-details-row--side-panel tour-details-row--columns-${columns}`;
-    row.dataset.expandedTourId = tripId;
-    if (columns === 2) {
-      row.classList.add("tour-details-row--attached");
-    }
-    row.style.setProperty("--tour-grid-columns", String(columns));
-    row.style.setProperty("--tour-details-column", String(column));
-    const cardHeight = Math.max(0, Math.ceil(Number(initialCardHeight) || 0));
-    if (cardHeight > 0) {
-      row.style.setProperty("--tour-details-card-open-height", `${cardHeight}px`);
-    }
-
-    const shell = document.createElement("div");
-    shell.className = "tour-details-row__shell";
-    const panel = createTourDetailsPanelElement(trip);
-    row.append(shell);
-    els.tourGrid.insertBefore(row, anchor);
-    shell.append(card, panel);
-    insertTourDetailsGridSpacers(rowTripIds, tripId, columns);
-    return row;
-  }
-
-  function createTwoColumnBelowTourDetailsRow(trip, { columnIndex = 0 } = {}) {
+  function createBelowGridTourDetailsRow(trip, { columnIndex = 0, columnCount = getTourGridColumnCount() } = {}) {
     if (!(els.tourGrid instanceof HTMLElement)) return null;
     const tripId = normalizeText(trip?.id);
     if (!tripId) return null;
-    const rowTripIds = visibleTourRowTripIds(tripId, 2);
+    const columns = Math.min(Math.max(1, Number(columnCount) || 1), 3);
+    const rowTripIds = visibleTourRowTripIds(tripId, columns);
     const rowCards = rowTripIds
       .map((rowTripId) => directTourCardElement(rowTripId))
       .filter((candidate) => candidate instanceof HTMLElement);
     const anchor = rowCards[rowCards.length - 1] || directTourCardElement(tripId);
     if (!(anchor instanceof HTMLElement)) return null;
-    const column = Math.min(Math.max(1, Number(columnIndex ?? 0) + 1), 2);
+    const column = Math.min(Math.max(1, Number(columnIndex ?? 0) + 1), columns);
+    const alignmentClass = tourDetailsAlignmentClass(columnIndex, columns);
 
     const row = document.createElement("article");
-    row.className = "tour-details-row tour-details-row--below-grid tour-details-row--columns-2";
+    row.className = `tour-details-row tour-details-row--below-grid tour-details-row--columns-${columns} ${alignmentClass}`;
     row.dataset.expandedTourId = tripId;
-    row.style.setProperty("--tour-grid-columns", "2");
+    row.style.setProperty("--tour-grid-columns", String(columns));
     row.style.setProperty("--tour-details-column", String(column));
 
     const shell = document.createElement("div");
@@ -2078,24 +2041,6 @@ export function createFrontendToursController(ctx) {
     shell.append(panel);
     anchor.after(row);
     return row;
-  }
-
-  function restoreExpandedTourCardToGrid(row, card, tripId) {
-    if (!(els.tourGrid instanceof HTMLElement) || !(row instanceof HTMLElement) || !(card instanceof HTMLElement)) return;
-    const normalizedTripId = normalizeText(tripId);
-    removeTourDetailsGridSpacers(normalizedTripId);
-    const visibleIndex = visibleTourIndexForTrip(normalizedTripId);
-    const visibleTrips = state.filteredTrips.slice(0, state.visibleToursCount);
-    const reference = visibleTrips
-      .slice(Math.max(0, visibleIndex + 1))
-      .map((trip) => directTourCardElement(normalizeText(trip?.id)))
-      .find((candidate) => candidate instanceof HTMLElement);
-    if (reference instanceof HTMLElement) {
-      els.tourGrid.insertBefore(card, reference);
-    } else {
-      els.tourGrid.append(card);
-    }
-    row.remove();
   }
 
   function setTourCardExpandedDomState(card, expanded) {
@@ -2136,13 +2081,13 @@ export function createFrontendToursController(ctx) {
         continue;
       }
 
-      if (renderedTourGridColumnCount === 2) {
+      if (renderedTourGridColumnCount > 1) {
         parts.push(...row.map(({ trip, index: itemIndex }) => (
           renderTourCard(trip, { index: itemIndex, expanded: isTourExpanded(trip) })
         )));
         parts.push(...expandedItems.map(({ trip }) => {
           const columnIndex = row.findIndex((item) => normalizeText(item.trip?.id) === normalizeText(trip?.id));
-          return renderTwoColumnBelowTourDetailsRow(trip, columnIndex);
+          return renderBelowGridTourDetailsRow(trip, columnIndex, renderedTourGridColumnCount);
         }));
         continue;
       }
@@ -2300,18 +2245,6 @@ export function createFrontendToursController(ctx) {
     if (!normalizedTripId) return null;
     return Array.from(els.tourGrid.querySelectorAll("[data-tour-card-id]"))
       .find((card) => normalizeText(card.getAttribute("data-tour-card-id")) === normalizedTripId) || null;
-  }
-
-  function captureTourCardRects() {
-    const rects = new Map();
-    if (!els.tourGrid) return rects;
-    Array.from(els.tourGrid.querySelectorAll("[data-tour-card-id]")).forEach((card) => {
-      if (!(card instanceof HTMLElement)) return;
-      const tripId = normalizeText(card.getAttribute("data-tour-card-id"));
-      if (!tripId || rects.has(tripId)) return;
-      rects.set(tripId, card.getBoundingClientRect());
-    });
-    return rects;
   }
 
   function cssImageUrl(value) {
@@ -2508,104 +2441,6 @@ export function createFrontendToursController(ctx) {
     });
   }
 
-  function disableFocusableElements(element) {
-    if (!(element instanceof HTMLElement)) return;
-    const focusableSelector = [
-      "a[href]",
-      "button",
-      "input",
-      "select",
-      "textarea",
-      "[tabindex]"
-    ].join(",");
-    element.querySelectorAll(focusableSelector).forEach((item) => {
-      if (!(item instanceof HTMLElement)) return;
-      item.setAttribute("tabindex", "-1");
-      item.setAttribute("aria-hidden", "true");
-    });
-  }
-
-  function createOutgoingTourDetailsGhost(row) {
-    if (!(row instanceof HTMLElement)) return null;
-    const panel = row.querySelector(".tour-details-row__panel");
-    if (!(panel instanceof HTMLElement)) return null;
-
-    const rect = panel.getBoundingClientRect();
-    if (rect.width <= 0 || rect.height <= 0) return null;
-
-    const ghost = panel.cloneNode(true);
-    if (!(ghost instanceof HTMLElement)) return null;
-    ghost.removeAttribute("id");
-    ghost.querySelectorAll("[id]").forEach((item) => item.removeAttribute("id"));
-    ghost.setAttribute("aria-hidden", "true");
-    ghost.setAttribute("inert", "");
-    ghost.dataset.tourDetailsGhost = "1";
-    disableFocusableElements(ghost);
-
-    Object.assign(ghost.style, {
-      position: "fixed",
-      left: `${rect.left}px`,
-      top: `${rect.top}px`,
-      width: `${rect.width}px`,
-      height: `${rect.height}px`,
-      margin: "0",
-      boxSizing: "border-box",
-      pointerEvents: "none",
-      zIndex: "20",
-      overflow: "hidden",
-      willChange: "opacity, transform, clip-path"
-    });
-    document.body.append(ghost);
-
-    return {
-      element: ghost,
-      sidePanel: row.classList.contains("tour-details-row--side-panel")
-    };
-  }
-
-  function animateOutgoingTourDetailsGhost(ghostState) {
-    const ghost = ghostState?.element;
-    if (!(ghost instanceof HTMLElement)) return Promise.resolve();
-    const sidePanel = Boolean(ghostState?.sidePanel);
-    const keyframes = sidePanel
-      ? [
-          { opacity: 1, transform: "translateY(0)", clipPath: "inset(0 0 0 0)" },
-          { opacity: 0, transform: "translateY(-0.4rem)", clipPath: "inset(0 0 100% 0)" }
-        ]
-      : [
-          { opacity: 1, transform: "translateY(0)", clipPath: "inset(0 0 0 0)" },
-          { opacity: 0, transform: "translateY(-0.4rem)", clipPath: "inset(0 0 100% 0)" }
-        ];
-
-    if (typeof ghost.animate !== "function") {
-      ghost.remove();
-      return Promise.resolve();
-    }
-
-    const animation = ghost.animate(keyframes, {
-      duration: TOUR_DETAILS_DESKTOP_CLOSE_TRANSITION_MS,
-      easing: "cubic-bezier(0.2, 0.82, 0.2, 1)",
-      fill: "forwards"
-    });
-
-    return new Promise((resolve) => {
-      let finished = false;
-      let timer = 0;
-      const done = () => {
-        if (finished) return;
-        finished = true;
-        window.clearTimeout(timer);
-        animation.removeEventListener("finish", done);
-        animation.removeEventListener("cancel", done);
-        ghost.remove();
-        resolve();
-      };
-      animation.addEventListener("finish", done, { once: true });
-      animation.addEventListener("cancel", done, { once: true });
-      timer = window.setTimeout(done, TOUR_DETAILS_DESKTOP_CLOSE_TRANSITION_MS + 140);
-    });
-  }
-
   function cancelElementAnimations(element, { subtree = false } = {}) {
     if (!(element instanceof Element) || typeof element.getAnimations !== "function") return;
     element.getAnimations({ subtree }).forEach((animation) => {
@@ -2656,201 +2491,8 @@ export function createFrontendToursController(ctx) {
     return true;
   }
 
-  function animateTourGridLayout(previousRects, { excludedTripIds = [] } = {}) {
-    if (!(previousRects instanceof Map) || previousRects.size === 0 || !els.tourGrid) {
-      return Promise.resolve();
-    }
-
-    const excludedIds = new Set((Array.isArray(excludedTripIds) ? excludedTripIds : [excludedTripIds])
-      .map((value) => normalizeText(value))
-      .filter(Boolean));
-    const animations = [];
-    Array.from(els.tourGrid.querySelectorAll("[data-tour-card-id]")).forEach((card) => {
-      if (!(card instanceof HTMLElement) || typeof card.animate !== "function") return;
-      const tripId = normalizeText(card.getAttribute("data-tour-card-id"));
-      if (excludedIds.has(tripId)) return;
-      const previousRect = previousRects.get(tripId);
-      if (!previousRect) return;
-      const nextRect = card.getBoundingClientRect();
-      const deltaX = previousRect.left - nextRect.left;
-      const deltaY = previousRect.top - nextRect.top;
-      if (Math.abs(deltaX) < 1 && Math.abs(deltaY) < 1) return;
-
-      card.style.willChange = "transform";
-      const animation = card.animate(
-        [
-          { transform: `translate(${deltaX}px, ${deltaY}px)` },
-          { transform: "translate(0, 0)" }
-        ],
-        {
-          duration: TOUR_GRID_LAYOUT_TRANSITION_MS,
-          easing: "cubic-bezier(0.2, 0.82, 0.2, 1)",
-          fill: "both"
-        }
-      );
-      animations.push(new Promise((resolve) => {
-        const cleanup = () => {
-          card.style.willChange = "";
-          resolve();
-        };
-        animation.addEventListener("finish", cleanup, { once: true });
-        animation.addEventListener("cancel", cleanup, { once: true });
-      }));
-    });
-
-    return animations.length ? Promise.all(animations).then(() => undefined) : Promise.resolve();
-  }
-
   function expandedTourShell(row) {
     return row?.querySelector?.(".tour-details-row__shell") || null;
-  }
-
-  function animateExpandedTourCardToLeft(row) {
-    if (!(row instanceof HTMLElement)) return Promise.resolve();
-    const currentColumn = Number.parseInt(row.style.getPropertyValue("--tour-details-column"), 10) || 1;
-    if (currentColumn <= 1) {
-      return Promise.resolve();
-    }
-
-    const card = row.classList.contains("tour-details-row--side-panel")
-      ? expandedTourCard(row)
-      : expandedTourShell(row);
-    if (!(card instanceof HTMLElement)) {
-      row.style.setProperty("--tour-details-column", "1");
-      return Promise.resolve();
-    }
-
-    const previousRect = card.getBoundingClientRect();
-    row.style.setProperty("--tour-details-column", "1");
-    const nextRect = card.getBoundingClientRect();
-    const deltaX = previousRect.left - nextRect.left;
-    const deltaY = previousRect.top - nextRect.top;
-    if ((Math.abs(deltaX) < 1 && Math.abs(deltaY) < 1) || typeof card.animate !== "function") {
-      return Promise.resolve();
-    }
-
-    card.style.willChange = "transform";
-    const animation = card.animate(
-      [
-        { transform: `translate(${deltaX}px, ${deltaY}px)` },
-        { transform: "translate(0, 0)" }
-      ],
-      {
-        duration: TOUR_DETAILS_OPEN_TRANSITION_MS,
-        easing: "cubic-bezier(0.2, 0.82, 0.2, 1)",
-        fill: "both"
-      }
-    );
-
-    return new Promise((resolve) => {
-      const cleanup = () => {
-        card.style.willChange = "";
-        resolve();
-      };
-      animation.addEventListener("finish", cleanup, { once: true });
-      animation.addEventListener("cancel", cleanup, { once: true });
-    });
-  }
-
-  function finishTourShellAttachAnimation(shell, background, animation, durationMs) {
-    return new Promise((resolve) => {
-      let finished = false;
-      let timer = 0;
-      const done = () => {
-        if (finished) return;
-        finished = true;
-        window.clearTimeout(timer);
-        animation?.removeEventListener?.("finish", done);
-        animation?.removeEventListener?.("cancel", done);
-        background?.remove();
-        shell.style.background = "";
-        resolve();
-      };
-
-      animation?.addEventListener?.("finish", done, { once: true });
-      animation?.addEventListener?.("cancel", done, { once: true });
-      timer = window.setTimeout(done, durationMs + 140);
-    });
-  }
-
-  function expandedTourBackgroundStartLeftInset(shell, card) {
-    if (!(shell instanceof HTMLElement) || !(card instanceof HTMLElement)) return 0;
-
-    const shellRect = shell.getBoundingClientRect();
-    const cardRect = card.getBoundingClientRect();
-    const shellWidth = Math.max(0, Math.ceil(shellRect.width));
-    if (shellWidth <= 0) return 0;
-    return Math.min(shellWidth, Math.max(0, Math.ceil(cardRect.right - shellRect.left)));
-  }
-
-  function expandedTourDetailsPanelStartLeftInset(row, initialCardRight) {
-    const panel = expandedTourDetailsPanel(row);
-    if (!(panel instanceof HTMLElement)) return null;
-    const panelRect = panel.getBoundingClientRect();
-    const panelWidth = Math.max(0, Math.ceil(panelRect.width));
-    if (panelWidth <= 0) return null;
-    return Math.min(panelWidth, Math.max(0, Math.ceil((Number(initialCardRight) || 0) - panelRect.left)));
-  }
-
-  function createTourDetailsAttachBackground(shell, startLeftInset) {
-    if (!(shell instanceof HTMLElement)) return null;
-    const background = document.createElement("span");
-    background.className = "tour-details-row__attach-background";
-    background.setAttribute("aria-hidden", "true");
-    background.style.clipPath = `inset(0 0 0 ${Math.max(0, Math.ceil(Number(startLeftInset) || 0))}px)`;
-    shell.prepend(background);
-    return background;
-  }
-
-  async function animateExpandedTourDetailsAttach(row, durationMs = TOUR_DETAILS_OPEN_TRANSITION_MS, { backgroundStartLeft, initialCardRight } = {}) {
-    if (!(row instanceof HTMLElement) || !row.classList.contains("tour-details-row--side-panel")) {
-      return;
-    }
-    if (row.classList.contains("tour-details-row--attached")) return;
-
-    const shell = expandedTourShell(row);
-    const card = expandedTourCard(row);
-    if (!(shell instanceof HTMLElement) || !(card instanceof HTMLElement)) {
-      row.classList.add("tour-details-row--attached");
-      return;
-    }
-
-    const startLeftInset = Number.isFinite(Number(backgroundStartLeft))
-      ? Math.max(0, Math.ceil(Number(backgroundStartLeft)))
-      : expandedTourBackgroundStartLeftInset(shell, card);
-    const startClipPath = `inset(0 0 0 ${startLeftInset}px)`;
-    const endClipPath = "inset(0 0 0 0)";
-
-    shell.style.background = "transparent";
-    row.classList.add("tour-details-row--attached");
-    const panelStartLeftInset = expandedTourDetailsPanelStartLeftInset(row, initialCardRight);
-    if (panelStartLeftInset !== null) {
-      row.style.setProperty("--tour-details-panel-open-left-inset", `${panelStartLeftInset}px`);
-    }
-    const background = createTourDetailsAttachBackground(shell, startLeftInset);
-    void shell.offsetWidth;
-    await waitForAnimationFrame();
-
-    if (!(background instanceof HTMLElement) || typeof background.animate !== "function" || startLeftInset < 1) {
-      background?.remove();
-      shell.style.background = "";
-      return;
-    }
-
-    background.style.willChange = "clip-path";
-    const animation = background.animate(
-      [
-        { clipPath: startClipPath },
-        { clipPath: endClipPath }
-      ],
-      {
-        duration: Math.max(0, Number(durationMs) || TOUR_DETAILS_OPEN_TRANSITION_MS),
-        easing: "cubic-bezier(0.2, 0.82, 0.2, 1)",
-        fill: "both"
-      }
-    );
-
-    await finishTourShellAttachAnimation(shell, background, animation, durationMs);
   }
 
   function stickyHeaderBottomOffset() {
@@ -2910,10 +2552,6 @@ export function createFrontendToursController(ctx) {
 
   function isSingleColumnTourLayout() {
     return getTourGridColumnCount() === 1;
-  }
-
-  function isTwoColumnTourLayout() {
-    return getTourGridColumnCount() === 2;
   }
 
   function expandedTourDetailsPanel(row) {
@@ -3143,8 +2781,8 @@ export function createFrontendToursController(ctx) {
     const normalizedTripId = normalizeText(tripId);
     if (!normalizedTripId) return;
 
+    const transitionToken = beginTourDetailsTransition();
     if (isSingleColumnTourLayout()) {
-      const transitionToken = beginTourDetailsTransition();
       if (willOpen) {
         animateSingleColumnTourDetailsOpen(normalizedTripId, transitionToken);
       } else {
@@ -3153,78 +2791,10 @@ export function createFrontendToursController(ctx) {
       return;
     }
 
-    if (isTwoColumnTourLayout()) {
-      const transitionToken = beginTourDetailsTransition();
-      if (willOpen) {
-        animateTwoColumnBelowTourDetailsOpen(normalizedTripId, transitionToken);
-      } else {
-        animateTwoColumnBelowTourDetailsClose(normalizedTripId, transitionToken);
-      }
-      return;
-    }
-
-    if (prefersReducedMotion()) {
-      const transitionToken = beginTourDetailsTransition();
-      if (willOpen) {
-        const trip = findTripById(normalizedTripId);
-        const card = directTourCardElement(normalizedTripId);
-        if (!trip || !(card instanceof HTMLElement)) {
-          setTourExpanded(normalizedTripId, true);
-          renderVisibleTrips();
-          completeTourDetailsTransition(transitionToken, normalizedTripId);
-          return;
-        }
-        renderedTourGridColumnCount = getTourGridColumnCount();
-        const initialColumnIndex = tourGridColumnIndexForTrip(normalizedTripId);
-        const initialCardHeight = Math.max(0, Math.ceil(card.getBoundingClientRect().height));
-        setTourExpanded(normalizedTripId, true);
-        const row = createSidePanelTourDetailsRow(trip, card, {
-          columnIndex: initialColumnIndex,
-          columnCount: renderedTourGridColumnCount,
-          initialCardHeight
-        });
-        if (!(row instanceof HTMLElement)) {
-          renderVisibleTrips();
-          completeTourDetailsTransition(transitionToken, normalizedTripId);
-          return;
-        }
-        row.classList.add("tour-details-row--attached");
-        const openedButton = setTourCardExpandedDomState(card, true);
-        setTourShowMoreButtonLabel(openedButton, tourShowMoreLabel(true));
-        bindTourCardOpenHandlers();
-        fitTourCardDescriptions(row);
-        syncExpandedTourDetailsHeight(row);
-        void scrollTourCardFullyVisible(normalizedTripId, { behavior: "auto" }).then(() => {
-          completeTourDetailsTransition(transitionToken, normalizedTripId);
-        });
-        return;
-      }
-
-      const row = expandedTourRow(normalizedTripId);
-      const card = expandedTourCard(row);
-      if (!(row instanceof HTMLElement) || !(card instanceof HTMLElement)) {
-        setTourExpanded(normalizedTripId, false);
-        renderVisibleTrips();
-        completeTourDetailsTransition(transitionToken, normalizedTripId);
-        return;
-      }
-      const closedButton = setTourCardExpandedDomState(card, false);
-      setTourShowMoreButtonLabel(closedButton, tourShowMoreLabel(false));
-      setTourExpanded(normalizedTripId, false);
-      restoreExpandedTourCardToGrid(row, card, normalizedTripId);
-      compactClosedTourGridCards();
-      bindTourCardOpenHandlers();
-      fitTourCardDescriptions(card);
-      syncExpandedTourDetailsHeights();
-      completeTourDetailsTransition(transitionToken, normalizedTripId);
-      return;
-    }
-
-    const transitionToken = beginTourDetailsTransition();
     if (willOpen) {
-      animateTourDetailsOpen(normalizedTripId, transitionToken);
+      animateBelowGridTourDetailsOpen(normalizedTripId, transitionToken);
     } else {
-      animateTourDetailsClose(normalizedTripId, transitionToken);
+      animateBelowGridTourDetailsClose(normalizedTripId, transitionToken);
     }
   }
 
@@ -3334,7 +2904,7 @@ export function createFrontendToursController(ctx) {
     completeTourDetailsTransition(transitionToken, tripId);
   }
 
-  async function animateTwoColumnBelowTourDetailsOpen(tripId, transitionToken) {
+  async function animateBelowGridTourDetailsOpen(tripId, transitionToken) {
     const trip = findTripById(tripId);
     const card = directTourCardElement(tripId);
     if (!trip || !(card instanceof HTMLElement)) {
@@ -3345,10 +2915,11 @@ export function createFrontendToursController(ctx) {
     }
 
     const initialColumnIndex = tourGridColumnIndexForTrip(tripId);
-    renderedTourGridColumnCount = 2;
+    renderedTourGridColumnCount = getTourGridColumnCount();
     setTourExpanded(tripId, true);
-    const row = createTwoColumnBelowTourDetailsRow(trip, {
-      columnIndex: initialColumnIndex
+    const row = createBelowGridTourDetailsRow(trip, {
+      columnIndex: initialColumnIndex,
+      columnCount: renderedTourGridColumnCount
     });
     const openedButton = setTourCardExpandedDomState(card, true);
     setTourShowMoreButtonLabel(openedButton, tourShowMoreLabel(false));
@@ -3394,7 +2965,7 @@ export function createFrontendToursController(ctx) {
     completeTourDetailsTransition(transitionToken, tripId);
   }
 
-  async function animateTwoColumnBelowTourDetailsClose(tripId, transitionToken) {
+  async function animateBelowGridTourDetailsClose(tripId, transitionToken) {
     const row = expandedTourRow(tripId);
     const card = directTourCardElement(tripId);
     if (!(row instanceof HTMLElement) || !(card instanceof HTMLElement)) {
@@ -3440,181 +3011,6 @@ export function createFrontendToursController(ctx) {
     bindTourCardOpenHandlers();
     fitTourCardDescriptions(card);
     completeTourDetailsTransition(transitionToken, tripId);
-  }
-
-  async function animateTourDetailsOpen(tripId, transitionToken) {
-    const singleColumnLayout = isSingleColumnTourLayout();
-    const previousRects = captureTourCardRects();
-    const trip = findTripById(tripId);
-    const card = singleColumnLayout ? tourCardElement(tripId) : directTourCardElement(tripId);
-    const initialColumnIndex = singleColumnLayout ? 0 : tourGridColumnIndexForTrip(tripId);
-    renderedTourGridColumnCount = getTourGridColumnCount();
-    openingTourColumnIndexes.set(tripId, initialColumnIndex);
-    const initialCardHeight = Math.max(0, Math.ceil(Number(previousRects.get(tripId)?.height) || 0));
-    if (initialCardHeight > 0) {
-      openingTourInitialHeights.set(tripId, initialCardHeight);
-    } else {
-      openingTourInitialHeights.delete(tripId);
-    }
-    setTourExpanded(tripId, true);
-    const row = trip && card instanceof HTMLElement
-      ? (singleColumnLayout
-          ? createSingleColumnTourDetailsRow(trip, card)
-          : createSidePanelTourDetailsRow(trip, card, {
-              columnIndex: initialColumnIndex,
-              columnCount: renderedTourGridColumnCount,
-              initialCardHeight
-            }))
-      : null;
-    const openedButton = row instanceof HTMLElement
-      ? setTourCardExpandedDomState(card, true)
-      : tourShowMoreButton(tripId);
-    setTourShowMoreButtonLabel(openedButton, tourShowMoreLabel(false));
-
-    if (!(row instanceof HTMLElement)) {
-      renderVisibleTrips();
-      await animateTourGridLayout(previousRects, { excludedTripIds: [tripId] });
-      if (!isCurrentTourDetailsTransition(transitionToken)) return;
-      await animateTourShowMoreButtonLabel(openedButton, tourShowMoreLabel(true), { direction: "open" });
-      if (!isCurrentTourDetailsTransition(transitionToken)) return;
-      openingTourColumnIndexes.delete(tripId);
-      openingTourInitialHeights.delete(tripId);
-      window.requestAnimationFrame(() => {
-        completeTourDetailsTransition(transitionToken, tripId);
-      });
-      return;
-    }
-
-    bindTourCardOpenHandlers();
-    fitTourCardDescriptions(row);
-    syncExpandedTourDetailsHeight(row);
-    const collapsedHeight = collapsedTourDetailsHeight(row);
-    row.classList.add("tour-details-row--opening");
-    row.style.height = `${collapsedHeight}px`;
-    row.style.overflow = "hidden";
-    row.style.opacity = "1";
-
-    const opensSideways = !singleColumnLayout
-      && row.classList.contains("tour-details-row--side-panel")
-      && !tourDetailsWrapsBelowCard(row);
-    const backgroundStartLeft = opensSideways
-      ? expandedTourBackgroundStartLeftInset(expandedTourShell(row), expandedTourCard(row))
-      : 0;
-    const initialCardRect = opensSideways ? expandedTourCard(row)?.getBoundingClientRect?.() : null;
-    const initialCardRight = Number(initialCardRect?.right) || 0;
-    const twoCardWrappedRow = isTwoCardWrappedTourRow(row);
-    const gridAnimationExcludedTripIds = twoCardWrappedRow
-      ? visibleTourTripIds()
-      : [tripId];
-    const rowClearingPromise = singleColumnLayout
-      ? Promise.resolve()
-      : Promise.all([
-          animateTourGridLayout(previousRects, { excludedTripIds: gridAnimationExcludedTripIds }),
-          animateExpandedTourCardToLeft(row)
-        ]);
-    const startDetailsOpenAnimation = (targetHeight) => Promise.all([
-      opensSideways
-        ? animateExpandedTourDetailsAttach(row, TOUR_DETAILS_OPEN_TRANSITION_MS, { backgroundStartLeft, initialCardRight })
-        : Promise.resolve(),
-      animateTourDetailsRowHeight(row, opensSideways ? collapsedHeight : targetHeight, "open")
-    ]);
-    const detailsOpenPromise = opensSideways
-      ? startDetailsOpenAnimation(collapsedHeight)
-      : null;
-
-    await waitForExpandedTourServiceImages(row);
-    if (!isCurrentTourDetailsTransition(transitionToken)) return;
-    const expandedHeight = Math.max(row.scrollHeight, row.getBoundingClientRect().height);
-
-    if (singleColumnLayout) {
-      const mobileOpenTransitionMs = TOUR_DETAILS_MOBILE_OPEN_TRANSITION_MS;
-      await Promise.all([
-        animateTourDetailsRowHeight(row, expandedHeight, "open", {
-          durationMs: mobileOpenTransitionMs,
-          easing: TOUR_DETAILS_MOBILE_OPEN_EASING
-        }),
-        animateTourShowMoreButtonLabel(
-          openedButton,
-          tourShowMoreLabel(true),
-          { direction: "open" }
-        )
-      ]);
-      if (!isCurrentTourDetailsTransition(transitionToken)) return;
-      openingTourInitialHeights.delete(tripId);
-      clearTourDetailsRowAnimation(row);
-      completeTourDetailsTransition(transitionToken, tripId);
-      return;
-    }
-
-    const buttonLabelPromise = animateTourShowMoreButtonLabel(
-      openedButton,
-      tourShowMoreLabel(true),
-      { direction: "open" }
-    );
-
-    await rowClearingPromise;
-    if (!isCurrentTourDetailsTransition(transitionToken)) return;
-    openingTourColumnIndexes.delete(tripId);
-    openingTourInitialHeights.delete(tripId);
-    await scrollTourCardFullyVisible(tripId);
-    if (!isCurrentTourDetailsTransition(transitionToken)) return;
-    if (!opensSideways) {
-      await scrollExpandedTourDetailsIntoView(tripId);
-      if (!isCurrentTourDetailsTransition(transitionToken)) return;
-    }
-    await Promise.all([
-      detailsOpenPromise || startDetailsOpenAnimation(expandedHeight),
-      buttonLabelPromise
-    ]);
-    if (!isCurrentTourDetailsTransition(transitionToken)) return;
-    if (!opensSideways) {
-      await scrollExpandedTourDetailsIntoView(tripId);
-      if (!isCurrentTourDetailsTransition(transitionToken)) return;
-    }
-    clearTourDetailsRowAnimation(row, { preserveHeight: opensSideways });
-    completeTourDetailsTransition(transitionToken, tripId);
-  }
-
-  async function animateTourDetailsClose(tripId, transitionToken) {
-    const row = expandedTourRow(tripId);
-    const card = expandedTourCard(row);
-    if (!(row instanceof HTMLElement) || !(card instanceof HTMLElement)) {
-      setTourExpanded(tripId, false);
-      renderVisibleTrips();
-      window.requestAnimationFrame(() => {
-        completeTourDetailsTransition(transitionToken, tripId);
-      });
-      return;
-    }
-
-    updateOutgoingTourDetailsButton(row, false);
-    const previousRects = captureTourCardRects();
-    const compactWithoutGridAnimation = shouldCompactCloseWithoutGridAnimation(row);
-    const outgoingDetailsGhost = createOutgoingTourDetailsGhost(row);
-    const closedButton = setTourCardExpandedDomState(card, false);
-    setTourShowMoreButtonLabel(closedButton, tourShowMoreLabel(true));
-    setTourExpanded(tripId, false);
-    restoreExpandedTourCardToGrid(row, card, tripId);
-    const compactedTripIds = compactClosedTourGridCards();
-    bindTourCardOpenHandlers();
-    fitTourCardDescriptions(card);
-    syncExpandedTourDetailsHeights();
-    scheduleTourDetailsConnectorVisibilityUpdate();
-    await Promise.all([
-      animateOutgoingTourDetailsGhost(outgoingDetailsGhost),
-      animateTourGridLayout(previousRects, {
-        excludedTripIds: compactWithoutGridAnimation ? compactedTripIds : []
-      }),
-      animateTourShowMoreButtonLabel(
-        closedButton,
-        tourShowMoreLabel(false),
-        { direction: "close" }
-      )
-    ]);
-    if (!isCurrentTourDetailsTransition(transitionToken)) return;
-    window.requestAnimationFrame(() => {
-      completeTourDetailsTransition(transitionToken, tripId);
-    });
   }
 
   function clearTourPlanSummaryDetailsAnimation(details) {
@@ -4674,6 +4070,7 @@ export function createFrontendToursController(ctx) {
     setFilterCheckboxes,
     setupFilterEvents,
     setupFilterSelectPanels,
+    setupSecretCustomizeUnlock,
     syncFilterInputs,
     tourDestinations
   };

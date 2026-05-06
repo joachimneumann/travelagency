@@ -2136,6 +2136,18 @@ textarea:focus-visible {
   border-radius: var(--radius);
 }
 
+.tour-details-row--below-grid.tour-details-row--align-left .tour-details-row__panel {
+  justify-self: start;
+}
+
+.tour-details-row--below-grid.tour-details-row--align-center .tour-details-row__panel {
+  justify-self: center;
+}
+
+.tour-details-row--below-grid.tour-details-row--align-right .tour-details-row__panel {
+  justify-self: end;
+}
+
 .tour-details-row:not(.tour-details-row--side-panel) .tour-details-row__panel::-webkit-scrollbar {
   display: none;
 }
@@ -2159,6 +2171,7 @@ textarea:focus-visible {
 
 .tour-plan-highlights,
 .tour-plan-pdf,
+.tour-plan__secret-customize,
 .tour-plan-summary,
 .tour-details-overview,
 .tour-plan__days,
@@ -2352,6 +2365,34 @@ textarea:focus-visible {
   background: var(--surface-accent);
   color: var(--accent);
   box-shadow: none;
+  transform: translateY(-1px);
+}
+
+.tour-plan__secret-customize {
+  display: none;
+  justify-content: flex-start;
+  margin-top: 1.35rem;
+  margin-bottom: -0.6rem;
+}
+
+html.tour-customize-unlocked .tour-plan__secret-customize {
+  display: flex;
+}
+
+.tour-plan__secret-customize-button {
+  min-height: 2.35rem;
+  padding: 0.5rem 0.82rem;
+  border-color: var(--line-strong);
+  background: #fff;
+  color: var(--text-strong);
+  text-transform: none;
+}
+
+.tour-plan__secret-customize-button:hover,
+.tour-plan__secret-customize-button:focus-visible {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--surface-accent);
   transform: translateY(-1px);
 }
 
@@ -3203,6 +3244,7 @@ textarea:focus-visible {
 
   .tour-details-row__panel {
     width: 100vw;
+    justify-self: stretch;
     margin-inline: calc(50% - 50vw);
     border-radius: 0;
     padding-inline: 0;
@@ -3239,6 +3281,10 @@ textarea:focus-visible {
 
   .tour-plan-pdf__download {
     justify-self: start;
+  }
+
+  html.tour-customize-unlocked .tour-plan__secret-customize {
+    display: none;
   }
 
   .tour-plan-summary {
