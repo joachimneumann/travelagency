@@ -1842,7 +1842,7 @@ export function createFrontendToursController(ctx) {
           <span class="tour-plan__customize-map-frame" aria-hidden="true">
             <span class="tour-plan__customize-map-image"></span>
             <svg class="tour-plan__customize-map-route" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-              ${routePreview.points ? `<polyline points="${escapeAttr(routePreview.points)}" fill="none" vector-effect="non-scaling-stroke" />` : ""}
+              ${routePreview.path ? `<path d="${escapeAttr(routePreview.path)}" fill="none" vector-effect="non-scaling-stroke" />` : ""}
             </svg>
             ${routePreview.groups.map((group) => `
               <span class="tour-plan__customize-map-marker" style="left:${group.x}%;top:${group.y}%;" title="${escapeAttr(group.locationLabel)}">${escapeHTML(group.label)}</span>

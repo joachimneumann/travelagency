@@ -1,11 +1,14 @@
 const TOUR_CUSTOMIZE_STORAGE_PREFIX = "asiatravelplan.custom_tour.";
 const TOUR_CUSTOMIZE_MAX_DAYS = 20;
+const TOUR_CUSTOMIZE_MAP_ZOOM_MIN_CENTER = 100 / 3 / 2;
+const TOUR_CUSTOMIZE_MAP_ZOOM_MAX_CENTER = 100 - TOUR_CUSTOMIZE_MAP_ZOOM_MIN_CENTER;
 const TOUR_CUSTOMIZE_ROUTE_BOUNDS = Object.freeze({
   north: 24.3,
   south: 7.49,
   west: 101.1,
   east: 110
 });
+const TOUR_CUSTOMIZE_MAP_ZOOM_FACTOR = 3;
 
 const TOUR_CUSTOMIZE_ROUTE_POINTS = Object.freeze([
   { id: "hanoi", label: "Hanoi", lat: 21.0278, lng: 105.8342, aliases: ["hanoi", "ha noi", "hà nội", "hà nội", "noi bai"] },
@@ -205,6 +208,7 @@ export function createTourCustomizer({
   let activeDragPayload = null;
   let activeDropIndex = null;
   let activePointerDrag = null;
+  let activeMapPan = null;
 
   function t(key, fallback, vars) {
     return typeof frontendT === "function" ? frontendT(key, fallback, vars) : fallback;
@@ -295,6 +299,7 @@ export function createTourCustomizer({
     const groups = routeGroups(modules);
     return {
       points: routePolylinePoints(groups),
+      path: routePathData(groups),
       groups: groups.map((group) => ({
         label: formatDayNumbers(group.dayNumbers),
         locationLabel: group.item.locationLabel,
@@ -398,37 +403,111 @@ export function createTourCustomizer({
   }
 
   function routePolylinePoints(groups) {
+    return routeUniquePoints(groups)
+      .map((point) => `${point.x.toFixed(2)},${point.y.toFixed(2)}`)
+      .join(" ");
+  }
+
+  function routeUniquePoints(groups) {
     const points = [];
     for (const group of groups) {
-      const point = `${group.mapPoint.x.toFixed(2)},${group.mapPoint.y.toFixed(2)}`;
-      if (points[points.length - 1] !== point) points.push(point);
+      const x = Number(group?.mapPoint?.x);
+      const y = Number(group?.mapPoint?.y);
+      if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
+      const previous = points[points.length - 1];
+      if (!previous || previous.x.toFixed(2) !== x.toFixed(2) || previous.y.toFixed(2) !== y.toFixed(2)) {
+        points.push({ x, y });
+      }
     }
-    return points.join(" ");
+    return points;
+  }
+
+  function clampRouteCoordinate(value) {
+    return Math.min(98, Math.max(2, value));
+  }
+
+  function routePathData(groups) {
+    const points = routeUniquePoints(groups);
+    if (!points.length) return "";
+    const commands = [`M ${points[0].x.toFixed(2)} ${points[0].y.toFixed(2)}`];
+    for (let index = 1; index < points.length; index += 1) {
+      const start = points[index - 1];
+      const end = points[index];
+      const dx = end.x - start.x;
+      const dy = end.y - start.y;
+      const distance = Math.hypot(dx, dy);
+      if (!distance) continue;
+      const bend = Math.min(7, Math.max(2.2, distance * 0.13));
+      const side = index % 2 === 0 ? -1 : 1;
+      const controlX = clampRouteCoordinate((start.x + end.x) / 2 + (-dy / distance) * bend * side);
+      const controlY = clampRouteCoordinate((start.y + end.y) / 2 + (dx / distance) * bend * side);
+      commands.push(`Q ${controlX.toFixed(2)} ${controlY.toFixed(2)} ${end.x.toFixed(2)} ${end.y.toFixed(2)}`);
+    }
+    return commands.join(" ");
+  }
+
+  function currentMapZoom() {
+    const zoom = draft?.mapZoom;
+    const x = Number(zoom?.x);
+    const y = Number(zoom?.y);
+    return {
+      zoomed: Boolean(zoom?.zoomed),
+      x: Number.isFinite(x) ? x : 50,
+      y: Number.isFinite(y) ? y : 50
+    };
+  }
+
+  function displayedMapPoint(mapPoint) {
+    const x = Number(mapPoint?.x);
+    const y = Number(mapPoint?.y);
+    if (!Number.isFinite(x) || !Number.isFinite(y)) return { x: 0, y: 0 };
+    const zoom = currentMapZoom();
+    if (!zoom.zoomed) return { x, y };
+    return {
+      x: zoom.x + TOUR_CUSTOMIZE_MAP_ZOOM_FACTOR * (x - zoom.x),
+      y: zoom.y + TOUR_CUSTOMIZE_MAP_ZOOM_FACTOR * (y - zoom.y)
+    };
+  }
+
+  function clampMapZoomCenter(value) {
+    return Math.min(TOUR_CUSTOMIZE_MAP_ZOOM_MAX_CENTER, Math.max(TOUR_CUSTOMIZE_MAP_ZOOM_MIN_CENTER, value));
+  }
+
+  function displayedRouteGroups(groups) {
+    return groups.map((group) => ({
+      ...group,
+      mapPoint: displayedMapPoint(group.mapPoint)
+    }));
   }
 
   function renderMap() {
-    const groups = routeGroups(draft.timelineDays);
-    const points = routePolylinePoints(groups);
+    const sourceGroups = routeGroups(draft.timelineDays);
+    const groups = displayedRouteGroups(sourceGroups);
+    const zoom = currentMapZoom();
+    const zoomClass = zoom.zoomed ? " is-zoomed" : "";
+    const zoomStyle = zoom.zoomed
+      ? ` style="--tour-customize-map-zoom-x:${zoom.x.toFixed(2)}%;--tour-customize-map-zoom-y:${zoom.y.toFixed(2)}%;"`
+      : "";
+    const path = routePathData(groups);
     return `
-      <section class="tour-customize-map" aria-label="${escapeAttr(t("tour.customize.map", "Route map"))}">
-        <div class="tour-customize-map__canvas">
-          <div class="tour-customize-map__frame">
-            <div class="tour-customize-map__region" aria-hidden="true"></div>
-            <svg class="tour-customize-map__route" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-              ${points ? `<polyline points="${escapeAttr(points)}" fill="none" vector-effect="non-scaling-stroke" />` : ""}
-            </svg>
-            ${groups.map((group) => {
-              const label = formatDayNumbers(group.dayNumbers);
-              const location = group.item.locationLabel;
-              const aria = t("tour.customize.marker_label", "Days {days}, {location}", { days: label, location });
-              return `
-                <button class="tour-customize-map__marker" type="button" data-customize-route-key="${escapeAttr(group.key)}" style="left:${group.mapPoint.x}%;top:${group.mapPoint.y}%;" aria-label="${escapeAttr(aria)}" title="${escapeAttr(aria)}">
-                  ${escapeHTML(label)}
-                </button>
-              `;
-            }).join("")}
-          </div>
-        </div>
+      <section class="tour-customize-map${zoomClass}"${zoomStyle} aria-label="${escapeAttr(t("tour.customize.map", "Route map"))}">
+        <div class="tour-customize-map__region" aria-hidden="true"></div>
+        <button class="tour-customize-map__zoom-out" type="button" data-customize-map-zoom-out aria-label="${escapeAttr(t("tour.customize.zoom_out", "Zoom out"))}" title="${escapeAttr(t("tour.customize.zoom_out", "Zoom out"))}">
+          <span aria-hidden="true"></span>
+        </button>
+        <svg class="tour-customize-map__route" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+          ${path ? `<path d="${escapeAttr(path)}" fill="none" vector-effect="non-scaling-stroke" />` : ""}
+        </svg>
+        ${groups.map((group) => {
+          const label = formatDayNumbers(group.dayNumbers);
+          const location = group.item.locationLabel;
+          const aria = t("tour.customize.marker_label", "Days {days}, {location}", { days: label, location });
+          return `
+            <button class="tour-customize-map__marker" type="button" data-customize-route-key="${escapeAttr(group.key)}" style="left:${group.mapPoint.x}%;top:${group.mapPoint.y}%;" aria-label="${escapeAttr(aria)}" title="${escapeAttr(aria)}">
+              ${escapeHTML(label)}
+            </button>
+          `;
+        }).join("")}
       </section>
     `;
   }
@@ -521,20 +600,92 @@ export function createTourCustomizer({
     bindModalEvents();
   }
 
+  function refreshMapDom() {
+    if (!modal) return false;
+    const currentMap = modal.querySelector(".tour-customize-map");
+    if (!(currentMap instanceof HTMLElement)) return false;
+    currentMap.outerHTML = renderMap();
+    bindMapZoom(modal);
+    return true;
+  }
+
+  function refreshOptionsDom() {
+    if (!modal || !draft) return false;
+    const optionsList = modal.querySelector(".tour-customize-options__list");
+    if (!(optionsList instanceof HTMLElement)) return false;
+    const optionalDays = optionalModules(draft.modules, draft.timelineDays);
+    optionsList.innerHTML = optionalDays.length
+      ? optionalDays.map(renderOptionalCard).join("")
+      : `<p class="tour-customize__empty">${escapeHTML(t("tour.customize.no_optional_days", "No optional days are available for this route yet."))}</p>`;
+    optionsList.querySelectorAll("[data-customize-option-id]").forEach((element) => {
+      if (element instanceof HTMLElement) bindDraggableElement(element, modal);
+    });
+    return true;
+  }
+
+  function refreshFinishButtonState() {
+    if (!modal || !draft) return false;
+    const finishButton = modal.querySelector("[data-customize-finish]");
+    if (!(finishButton instanceof HTMLButtonElement)) return false;
+    finishButton.disabled = !(draft.timelineDays.length > 0 && draft.timelineDays.length <= TOUR_CUSTOMIZE_MAX_DAYS);
+    return true;
+  }
+
+  function insertTimelineItemDom(item, insertIndex) {
+    if (!modal || !draft) return false;
+    const timeline = modal.querySelector("[data-customize-timeline]");
+    if (!(timeline instanceof HTMLElement)) return false;
+    timeline.querySelector(".tour-customize__empty")?.remove();
+    const template = document.createElement("template");
+    template.innerHTML = renderTimelineItem(item, insertIndex).trim();
+    const element = template.content.firstElementChild;
+    if (!(element instanceof HTMLElement)) return false;
+    const items = timelineItemElements(timeline);
+    timeline.insertBefore(element, items[insertIndex] || null);
+    bindTimelineItemControls(element);
+    bindDraggableElement(element, modal);
+    updateTimelineDayLabels(timeline);
+    return true;
+  }
+
+  function refreshAfterTimelineChange() {
+    refreshMapDom();
+    refreshOptionsDom();
+    refreshFinishButtonState();
+  }
+
   function addDay(itemId, insertIndex = draft.timelineDays.length) {
-    if (!draft || draft.timelineDays.length >= TOUR_CUSTOMIZE_MAX_DAYS) return;
+    if (!draft || draft.timelineDays.length >= TOUR_CUSTOMIZE_MAX_DAYS) return false;
     const item = draft.modules.find((candidate) => candidate.id === itemId);
-    if (!item || draft.timelineDays.some((candidate) => candidate.id === item.id)) return;
+    if (!item || draft.timelineDays.some((candidate) => candidate.id === item.id)) return false;
     const next = [...draft.timelineDays];
-    next.splice(Math.min(Math.max(0, insertIndex), next.length), 0, item);
+    const boundedInsertIndex = Math.min(Math.max(0, insertIndex), next.length);
+    next.splice(boundedInsertIndex, 0, item);
     draft.timelineDays = next;
-    renderModal();
+    if (insertTimelineItemDom(item, boundedInsertIndex)) {
+      refreshAfterTimelineChange();
+    } else {
+      renderModal();
+    }
+    return true;
   }
 
   function removeDay(itemId) {
     if (!draft) return;
     draft.timelineDays = draft.timelineDays.filter((item) => item.id !== itemId);
     renderModal();
+  }
+
+  function cleanupMapPan() {
+    if (activeMapPan?.map instanceof HTMLElement) {
+      activeMapPan.map.classList.remove("is-panning");
+      try {
+        activeMapPan.map.releasePointerCapture?.(activeMapPan.pointerId);
+      } catch {
+        // Pointer capture may already be released.
+      }
+    }
+    activeMapPan = null;
   }
 
   function closeModal({ restoreFocus = true } = {}) {
@@ -544,6 +695,7 @@ export function createTourCustomizer({
     activeDragPayload = null;
     activeDropIndex = null;
     activePointerDrag = null;
+    cleanupMapPan();
     document.documentElement.classList.remove("tour-customize-modal-open");
     document.documentElement.classList.remove("tour-customize-pointer-dragging");
     if (restoreFocus && lastFocusedElement instanceof HTMLElement) {
@@ -701,7 +853,7 @@ export function createTourCustomizer({
     }
     if (payload.kind === "timeline") {
       updateTimelineDayLabels(timeline);
-      renderModal();
+      refreshAfterTimelineChange();
     }
   }
 
@@ -741,9 +893,10 @@ export function createTourCustomizer({
     marker.className = "tour-customize-map__marker is-drag-location";
     marker.setAttribute("data-customize-drag-map-marker", "");
     marker.setAttribute("aria-hidden", "true");
-    marker.style.left = `${item.mapPoint.x}%`;
-    marker.style.top = `${item.mapPoint.y}%`;
-    modal?.querySelector(".tour-customize-map__frame")?.appendChild(marker);
+    const mapPoint = displayedMapPoint(item.mapPoint);
+    marker.style.left = `${mapPoint.x}%`;
+    marker.style.top = `${mapPoint.y}%`;
+    modal?.querySelector(".tour-customize-map")?.appendChild(marker);
   }
 
   function cleanupPointerDrag({ commit = false, event = null } = {}) {
@@ -774,7 +927,7 @@ export function createTourCustomizer({
         return;
       }
       if (commit && pointerDrag.kind === "timeline") {
-        renderModal();
+        refreshAfterTimelineChange();
       }
     }
   }
@@ -849,40 +1002,154 @@ export function createTourCustomizer({
     document.addEventListener("pointercancel", handlePointerDragCancel);
   }
 
-  function bindDragAndDrop(root) {
-    root.querySelectorAll(".tour-customize-option__handle, .tour-customize-timeline__handle").forEach((handle) => {
+  function bindDraggableElement(element, root) {
+    if (!(element instanceof HTMLElement) || !(root instanceof HTMLElement) || element.dataset.customizeDragBound === "1") return;
+    element.dataset.customizeDragBound = "1";
+    element.querySelectorAll(".tour-customize-option__handle, .tour-customize-timeline__handle").forEach((handle) => {
       if (!(handle instanceof HTMLElement)) return;
       handle.addEventListener("pointerdown", (event) => {
         const source = handle.closest("[data-customize-option-id], [data-customize-timeline-id]");
         startPointerDrag(source, event, root);
       });
     });
+    element.addEventListener("dragstart", (event) => {
+      const optionId = element.getAttribute("data-customize-option-id");
+      const timelineId = element.getAttribute("data-customize-timeline-id");
+      activeDragPayload = {
+        kind: optionId ? "option" : "timeline",
+        id: optionId || timelineId
+      };
+      element.classList.add("is-dragging");
+      highlightMapLocation(activeDragPayload.id);
+      if (event.dataTransfer) {
+        event.dataTransfer.setData("text/plain", JSON.stringify(activeDragPayload));
+        event.dataTransfer.effectAllowed = "move";
+      }
+    });
+    element.addEventListener("dragend", () => {
+      element.classList.remove("is-dragging");
+      const wasTimelineDrag = activeDragPayload?.kind === "timeline";
+      activeDragPayload = null;
+      clearMapDragHighlight();
+      const timeline = root.querySelector("[data-customize-timeline]");
+      if (timeline instanceof HTMLElement) clearDropSlot(timeline);
+      if (wasTimelineDrag) refreshAfterTimelineChange();
+    });
+  }
 
+  function bindTimelineItemControls(root) {
+    root.querySelectorAll("[data-customize-remove]").forEach((button) => {
+      if (!(button instanceof HTMLElement) || button.dataset.customizeRemoveBound === "1") return;
+      button.dataset.customizeRemoveBound = "1";
+      button.addEventListener("click", () => removeDay(button.getAttribute("data-customize-remove")));
+    });
+  }
+
+  function bindMapZoom(root) {
+    const map = root?.querySelector?.(".tour-customize-map");
+    if (!(map instanceof HTMLElement) || map.dataset.customizeMapZoomBound === "1") return;
+    map.dataset.customizeMapZoomBound = "1";
+    const zoomOutButton = map.querySelector("[data-customize-map-zoom-out]");
+    const applyZoomStateToCurrentMap = () => {
+      const zoom = currentMapZoom();
+      map.classList.toggle("is-zoomed", zoom.zoomed);
+      if (zoom.zoomed) {
+        map.style.setProperty("--tour-customize-map-zoom-x", `${zoom.x.toFixed(2)}%`);
+        map.style.setProperty("--tour-customize-map-zoom-y", `${zoom.y.toFixed(2)}%`);
+      } else {
+        map.style.removeProperty("--tour-customize-map-zoom-x");
+        map.style.removeProperty("--tour-customize-map-zoom-y");
+      }
+    };
+    const updateMapOverlays = () => {
+      const groups = displayedRouteGroups(routeGroups(draft?.timelineDays || []));
+      const routePath = routePathData(groups);
+      const route = map.querySelector(".tour-customize-map__route");
+      const path = route?.querySelector("path");
+      if (path instanceof SVGPathElement) {
+        path.setAttribute("d", routePath);
+      } else if (route instanceof SVGElement && routePath) {
+        route.innerHTML = `<path d="${escapeAttr(routePath)}" fill="none" vector-effect="non-scaling-stroke" />`;
+      }
+      groups.forEach((group) => {
+        const marker = map.querySelector(`[data-customize-route-key="${CSS.escape(group.key)}"]`);
+        if (!(marker instanceof HTMLElement)) return;
+        marker.style.left = `${group.mapPoint.x}%`;
+        marker.style.top = `${group.mapPoint.y}%`;
+      });
+      const dragMarker = map.querySelector("[data-customize-drag-map-marker]");
+      const dragId = activePointerDrag?.id || activeDragPayload?.id;
+      const item = itemById(dragId);
+      if (dragMarker instanceof HTMLElement && item?.mapPoint) {
+        const mapPoint = displayedMapPoint(item.mapPoint);
+        dragMarker.style.left = `${mapPoint.x}%`;
+        dragMarker.style.top = `${mapPoint.y}%`;
+      }
+    };
+    const zoomOut = () => {
+      if (draft) draft.mapZoom = { zoomed: false, x: 50, y: 50 };
+      refreshMapDom();
+    };
+    zoomOutButton?.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      zoomOut();
+    });
+    map.addEventListener("dblclick", (event) => {
+      if (event.target instanceof Element && event.target.closest("[data-customize-map-zoom-out]")) return;
+      event.preventDefault();
+      if (map.classList.contains("is-zoomed")) {
+        zoomOut();
+        return;
+      }
+      const rect = map.getBoundingClientRect();
+      if (!rect.width || !rect.height) return;
+      const x = clampMapZoomCenter(((event.clientX - rect.left) / rect.width) * 100);
+      const y = clampMapZoomCenter(((event.clientY - rect.top) / rect.height) * 100);
+      if (draft) draft.mapZoom = { zoomed: true, x, y };
+      refreshMapDom();
+    });
+    map.addEventListener("pointerdown", (event) => {
+      if (event.button !== 0 || !draft?.mapZoom?.zoomed) return;
+      if (event.target instanceof Element && event.target.closest("[data-customize-map-zoom-out]")) return;
+      event.preventDefault();
+      event.stopPropagation();
+      const zoom = currentMapZoom();
+      activeMapPan = {
+        pointerId: event.pointerId,
+        map,
+        startX: event.clientX,
+        startY: event.clientY,
+        zoomX: zoom.x,
+        zoomY: zoom.y
+      };
+      map.classList.add("is-panning");
+      map.setPointerCapture?.(event.pointerId);
+    });
+    map.addEventListener("pointermove", (event) => {
+      if (!activeMapPan || activeMapPan.pointerId !== event.pointerId || activeMapPan.map !== map) return;
+      event.preventDefault();
+      const rect = map.getBoundingClientRect();
+      if (!rect.width || !rect.height || !draft) return;
+      draft.mapZoom = {
+        zoomed: true,
+        x: clampMapZoomCenter(activeMapPan.zoomX - ((event.clientX - activeMapPan.startX) / rect.width) * 100),
+        y: clampMapZoomCenter(activeMapPan.zoomY - ((event.clientY - activeMapPan.startY) / rect.height) * 100)
+      };
+      applyZoomStateToCurrentMap();
+      updateMapOverlays();
+    });
+    const finishPan = (event) => {
+      if (!activeMapPan || activeMapPan.pointerId !== event.pointerId || activeMapPan.map !== map) return;
+      cleanupMapPan();
+    };
+    map.addEventListener("pointerup", finishPan);
+    map.addEventListener("pointercancel", finishPan);
+  }
+
+  function bindDragAndDrop(root) {
     root.querySelectorAll("[data-customize-option-id], [data-customize-timeline-id]").forEach((element) => {
-      if (!(element instanceof HTMLElement)) return;
-      element.addEventListener("dragstart", (event) => {
-        const optionId = element.getAttribute("data-customize-option-id");
-        const timelineId = element.getAttribute("data-customize-timeline-id");
-        activeDragPayload = {
-          kind: optionId ? "option" : "timeline",
-          id: optionId || timelineId
-        };
-        element.classList.add("is-dragging");
-        highlightMapLocation(activeDragPayload.id);
-        if (event.dataTransfer) {
-          event.dataTransfer.setData("text/plain", JSON.stringify(activeDragPayload));
-          event.dataTransfer.effectAllowed = "move";
-        }
-      });
-      element.addEventListener("dragend", () => {
-        element.classList.remove("is-dragging");
-        const wasTimelineDrag = activeDragPayload?.kind === "timeline";
-        activeDragPayload = null;
-        clearMapDragHighlight();
-        const timeline = root.querySelector("[data-customize-timeline]");
-        if (timeline instanceof HTMLElement) clearDropSlot(timeline);
-        if (wasTimelineDrag) renderModal();
-      });
+      if (element instanceof HTMLElement) bindDraggableElement(element, root);
     });
 
     const timeline = root.querySelector("[data-customize-timeline]");
@@ -929,9 +1196,8 @@ export function createTourCustomizer({
 
   function bindModalEvents() {
     if (!modal) return;
-    modal.querySelectorAll("[data-customize-remove]").forEach((button) => {
-      button.addEventListener("click", () => removeDay(button.getAttribute("data-customize-remove")));
-    });
+    bindTimelineItemControls(modal);
+    bindMapZoom(modal);
     modal.querySelector("[data-customize-reset]")?.addEventListener("click", resetDraftToOriginal);
     modal.querySelector("[data-customize-finish]")?.addEventListener("click", finishCustomization);
     modal.querySelector("[data-customize-close]")?.addEventListener("click", () => closeModal());
@@ -961,7 +1227,8 @@ export function createTourCustomizer({
     draft = {
       tourId: normalizedTourId,
       modules,
-      timelineDays
+      timelineDays,
+      mapZoom: { zoomed: false, x: 50, y: 50 }
     };
     modal = document.createElement("div");
     modal.className = "tour-customize";

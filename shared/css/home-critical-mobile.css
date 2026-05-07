@@ -2466,6 +2466,7 @@ textarea:focus-visible {
   pointer-events: none;
 }
 
+.tour-plan__customize-map-route path,
 .tour-plan__customize-map-route polyline {
   stroke: #194f93;
   stroke-width: 3.2;
@@ -2597,35 +2598,85 @@ html.tour-customize-modal-open {
 .tour-customize-map {
   position: relative;
   min-height: 330px;
-  border-right: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
-  background: #d8edf1;
-}
-
-.tour-customize-map__canvas {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
   overflow: hidden;
-  background: transparent;
-}
-
-.tour-customize-map__frame {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 50%;
-  height: 100%;
-  max-width: 100%;
-  aspect-ratio: 1 / 2;
-  transform: translateX(-50%);
+  cursor: zoom-in;
+  touch-action: manipulation;
+  user-select: none;
 }
 
 .tour-customize-map__region {
   position: absolute;
   inset: 0;
-  background: #e7f5f7 url("/assets/img/map.webp") center / 100% 100% no-repeat;
+  background-color: #e7f5f7;
+  background-image: url("/assets/img/map.webp");
+  background-position: var(--tour-customize-map-zoom-x, 50%) var(--tour-customize-map-zoom-y, 50%);
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  transition: background-size 0.22s ease, background-position 0.22s ease;
+}
+
+.tour-customize-map.is-zoomed {
+  cursor: grab;
+}
+
+.tour-customize-map.is-zoomed.is-panning {
+  cursor: grabbing;
+}
+
+.tour-customize-map.is-zoomed .tour-customize-map__region {
+  background-size: 300% 300%;
+}
+
+.tour-customize-map__zoom-out {
+  position: absolute;
+  top: 0.65rem;
+  right: 0.65rem;
+  z-index: 5;
+  display: none;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid rgba(25, 79, 147, 0.22);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #194f93;
+  box-shadow: 0 8px 18px rgba(16, 27, 43, 0.18);
+  cursor: pointer;
+}
+
+.tour-customize-map.is-zoomed .tour-customize-map__zoom-out {
+  display: grid;
+}
+
+.tour-customize-map__zoom-out span {
+  position: relative;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid currentColor;
+  border-radius: 999px;
+}
+
+.tour-customize-map__zoom-out span::before,
+.tour-customize-map__zoom-out span::after {
+  content: "";
+  position: absolute;
+  background: currentColor;
+}
+
+.tour-customize-map__zoom-out span::before {
+  left: 0.22rem;
+  right: 0.22rem;
+  top: 50%;
+  height: 2px;
+  transform: translateY(-50%);
+}
+
+.tour-customize-map__zoom-out span::after {
+  right: -0.38rem;
+  bottom: -0.28rem;
+  width: 0.48rem;
+  height: 2px;
+  transform: rotate(45deg);
 }
 
 .tour-customize-map__route {
@@ -2636,6 +2687,7 @@ html.tour-customize-modal-open {
   pointer-events: none;
 }
 
+.tour-customize-map__route path,
 .tour-customize-map__route polyline {
   stroke: #194f93;
   stroke-width: 2.4;
@@ -2990,7 +3042,6 @@ html.tour-customize-pointer-dragging * {
 
   .tour-customize-map {
     min-height: 280px;
-    border-right: 0;
   }
 
   .tour-customize-options {
