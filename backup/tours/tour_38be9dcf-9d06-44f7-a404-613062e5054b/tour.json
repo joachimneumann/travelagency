@@ -48,7 +48,7 @@
   "seasonality_end_month": "dec",
   "priority": 50,
   "created_at": "2026-04-13T10:15:22.936Z",
-  "updated_at": "2026-05-04T03:33:49.983Z",
+  "updated_at": "2026-05-04T18:05:16.181Z",
   "published_on_webpage": true,
   "travel_plan": {
     "destination_scope": [
@@ -63,10 +63,10 @@
       }
     ],
     "tour_card_image_ids": [
-      "travel_plan_service_image_01c8eaa6-8ea7-4bb0-84b3-728a2a41cc52",
-      "travel_plan_service_image_ac49cd04-ba8b-4b86-aceb-696a05adb90b"
+      "travel_plan_service_image_ac49cd04-ba8b-4b86-aceb-696a05adb90b",
+      "travel_plan_service_image_01c8eaa6-8ea7-4bb0-84b3-728a2a41cc52"
     ],
-    "tour_card_primary_image_id": "travel_plan_service_image_01c8eaa6-8ea7-4bb0-84b3-728a2a41cc52",
+    "tour_card_primary_image_id": "travel_plan_service_image_ac49cd04-ba8b-4b86-aceb-696a05adb90b",
     "one_pager_hero_image_id": "travel_plan_service_image_01c8eaa6-8ea7-4bb0-84b3-728a2a41cc52",
     "one_pager_image_ids": [
       "travel_plan_service_image_ac49cd04-ba8b-4b86-aceb-696a05adb90b"
@@ -104,8 +104,8 @@
             "start_time": null,
             "end_time": null,
             "image": {
-              "id": "travel_plan_service_image_53e61405-cb24-4957-bebc-2c9b56f7300c",
-              "storage_path": "/public/v1/tour-images/tour_2761ca85-860b-4f19-8c6d-7bcc288e4159/travel-plan-services/travel_plan_service_2cbf5ef1-c54b-4807-84d1-0b77d52abc78-1777789598247-c9cf5bfc-8140-45bb-af24-0eee4bbf83e0.webp",
+              "id": "travel_plan_service_image_bdf22171-0e53-4ee7-9d35-307b28652f86",
+              "storage_path": "/public/v1/tour-images/tour_38be9dcf-9d06-44f7-a404-613062e5054b/travel-plan-services/travel_plan_service_20760e57-c14a-4085-9c74-59381863f0ce-1777917826323-0eab9bc9-6311-4da3-acbc-7ab1f31e86a0.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -118,7 +118,7 @@
               "height_px": null,
               "source_attribution": null,
               "focal_point": null,
-              "created_at": "2026-05-03T06:26:38.413Z"
+              "created_at": "2026-05-04T18:03:46.580Z"
             }
           },
           {

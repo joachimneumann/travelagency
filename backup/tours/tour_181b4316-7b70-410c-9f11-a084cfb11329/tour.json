@@ -50,7 +50,7 @@
   "seasonality_end_month": "",
   "priority": 50,
   "created_at": "2026-04-13T10:22:47.669Z",
-  "updated_at": "2026-05-01T01:28:06.164Z",
+  "updated_at": "2026-05-06T00:21:20.147Z",
   "travel_plan": {
     "destination_scope": [
       {
@@ -63,6 +63,13 @@
         ]
       }
     ],
+    "tour_card_image_ids": [
+      "travel_plan_service_image_01bd2736-cfa1-4756-a4ee-a39f4d3ca921",
+      "travel_plan_service_image_47bac449-a2f3-4f14-8ac3-40222c316d54"
+    ],
+    "tour_card_primary_image_id": "travel_plan_service_image_01bd2736-cfa1-4756-a4ee-a39f4d3ca921",
+    "one_pager_hero_image_id": "travel_plan_service_image_01bd2736-cfa1-4756-a4ee-a39f4d3ca921",
+    "one_pager_image_ids": [],
     "days": [
       {
         "id": "travel_plan_day_63c3809d-f8bd-4bae-ba85-26f9eb64d4cc",
@@ -262,8 +269,8 @@
             "start_time": null,
             "end_time": null,
             "image": {
-              "id": "travel_plan_service_image_33f875a2-e36e-4cca-b840-fad10bd462d1",
-              "storage_path": "/public/v1/tour-images/tour_181b4316-7b70-410c-9f11-a084cfb11329/travel-plan-services/travel_plan_service_e7d8bf27-0a90-44e7-9bca-3a18b6f4a1b1-1777598743826-64c126e8-6426-47fe-9651-834508d27cea.webp",
+              "id": "travel_plan_service_image_e5f12274-1c41-41f4-b747-110547247c1b",
+              "storage_path": "/public/v1/tour-images/tour_181b4316-7b70-410c-9f11-a084cfb11329/travel-plan-services/travel_plan_service_e7d8bf27-0a90-44e7-9bca-3a18b6f4a1b1-1778026879929-9f2b6aad-a23f-4cbd-98d7-7ab105e83f3c.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -271,12 +278,12 @@
               "sort_order": 0,
               "is_primary": true,
               "is_customer_visible": true,
-              "include_in_travel_tour_card": true,
+              "include_in_travel_tour_card": false,
               "width_px": null,
               "height_px": null,
               "source_attribution": null,
               "focal_point": null,
-              "created_at": "2026-05-01T01:25:44.051Z"
+              "created_at": "2026-05-06T00:21:20.145Z"
             }
           }
         ],
@@ -399,5 +406,6 @@
         "updated_at": "2026-05-01T01:27:09.350Z"
       }
     }
-  }
+  },
+  "published_on_webpage": true
 }

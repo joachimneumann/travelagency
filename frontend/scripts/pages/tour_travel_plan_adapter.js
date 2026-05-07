@@ -11,6 +11,8 @@ import {
 import { formatDateTime } from "../shared/api.js";
 import { initializeBookingSection, setBookingSectionOpen } from "../booking/sections.js";
 
+const TRAVEL_PLAN_SERVICE_LIBRARY_SEARCH_LIMIT = 500;
+
 function normalizeText(value) {
   return String(value ?? "").trim();
 }
@@ -314,7 +316,8 @@ export function createTourTravelPlanAdapter({
       query: {
         ...(normalizeText(query) ? { q: normalizeText(query) } : {}),
         ...(normalizeText(kind) ? { service_kind: normalizeText(kind) } : {}),
-        exclude_tour_id: normalizeText(requestState.booking?.id || requestState.id)
+        exclude_tour_id: normalizeText(requestState.booking?.id || requestState.id),
+        limit: TRAVEL_PLAN_SERVICE_LIBRARY_SEARCH_LIMIT
       }
     });
   }

@@ -49,8 +49,8 @@
   "seasonality_end_month": "nov",
   "priority": 50,
   "created_at": "2026-04-13T04:48:49.101Z",
-  "updated_at": "2026-05-03T07:49:23.534Z",
-  "published_on_webpage": false,
+  "updated_at": "2026-05-04T10:19:09.981Z",
+  "published_on_webpage": true,
   "travel_plan": {
     "destination_scope": [
       {
@@ -64,12 +64,14 @@
       }
     ],
     "tour_card_image_ids": [
-      "travel_plan_service_image_70568f63-ac8c-4b7f-b363-29015e73f16c"
+      "travel_plan_service_image_70568f63-ac8c-4b7f-b363-29015e73f16c",
+      "travel_plan_service_image_5a4a5750-69dc-4645-be41-f928ff3e3db4"
     ],
     "tour_card_primary_image_id": "travel_plan_service_image_70568f63-ac8c-4b7f-b363-29015e73f16c",
     "one_pager_hero_image_id": "travel_plan_service_image_15945f3f-1701-47f2-b728-3523a1026577",
     "one_pager_image_ids": [
-      "travel_plan_service_image_70568f63-ac8c-4b7f-b363-29015e73f16c"
+      "travel_plan_service_image_70568f63-ac8c-4b7f-b363-29015e73f16c",
+      "travel_plan_service_image_5a4a5750-69dc-4645-be41-f928ff3e3db4"
     ],
     "days": [
       {
@@ -98,8 +100,8 @@
             "start_time": null,
             "end_time": null,
             "image": {
-              "id": "travel_plan_service_image_54e827a3-e43e-41da-85c4-c0851d9bdd41",
-              "storage_path": "/public/v1/tour-images/tour_2761ca85-860b-4f19-8c6d-7bcc288e4159/travel-plan-services/travel_plan_service_2cbf5ef1-c54b-4807-84d1-0b77d52abc78-1777789598247-c9cf5bfc-8140-45bb-af24-0eee4bbf83e0.webp",
+              "id": "travel_plan_service_image_94d84ab2-dd56-4f82-80ec-c3c2832b9510",
+              "storage_path": "/public/v1/tour-images/tour_2761ca85-860b-4f19-8c6d-7bcc288e4159/travel-plan-services/travel_plan_service_2cbf5ef1-c54b-4807-84d1-0b77d52abc78-1777889949897-fc26f935-1bc8-49c7-b782-d9649efdfed3.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -112,7 +114,7 @@
               "height_px": null,
               "source_attribution": null,
               "focal_point": null,
-              "created_at": "2026-05-03T06:26:38.413Z"
+              "created_at": "2026-05-04T10:19:09.980Z"
             }
           },
           {
@@ -212,7 +214,7 @@
               "sort_order": 0,
               "is_primary": true,
               "is_customer_visible": true,
-              "include_in_travel_tour_card": false,
+              "include_in_travel_tour_card": true,
               "width_px": null,
               "height_px": null,
               "source_attribution": null,

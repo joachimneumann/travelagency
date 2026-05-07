@@ -47,7 +47,7 @@
   "seasonality_end_month": "feb",
   "priority": 100,
   "created_at": "2026-04-09T03:15:24.977Z",
-  "updated_at": "2026-04-30T04:05:50.414Z",
+  "updated_at": "2026-05-05T02:24:53.253Z",
   "travel_plan": {
     "destination_scope": [
       {
@@ -59,6 +59,23 @@
           }
         ]
       }
+    ],
+    "tour_card_image_ids": [
+      "travel_plan_service_image_de94ec95-0a5f-4dbd-a546-deb4d5847e53",
+      "travel_plan_service_image_56be8279-c524-4b62-a072-184337ddb334",
+      "travel_plan_service_image_18824d49-06de-4da9-aab9-a1998cc3637e",
+      "travel_plan_service_image_fc32d48b-1255-4862-aec6-7d619e01f20c",
+      "travel_plan_service_image_961feeff-81da-44e0-ae8e-0a5ffd6055c6",
+      "travel_plan_service_image_4037a8ce-2c5f-4522-b7b1-ccc913c82370",
+      "travel_plan_service_image_7e3c1276-0629-43d8-a0f0-52dc9b074178"
+    ],
+    "tour_card_primary_image_id": "travel_plan_service_image_de94ec95-0a5f-4dbd-a546-deb4d5847e53",
+    "one_pager_hero_image_id": "travel_plan_service_image_de94ec95-0a5f-4dbd-a546-deb4d5847e53",
+    "one_pager_image_ids": [
+      "travel_plan_service_image_7e3c1276-0629-43d8-a0f0-52dc9b074178",
+      "travel_plan_service_image_56be8279-c524-4b62-a072-184337ddb334",
+      "travel_plan_service_image_4037a8ce-2c5f-4522-b7b1-ccc913c82370",
+      "travel_plan_service_image_18824d49-06de-4da9-aab9-a1998cc3637e"
     ],
     "days": [
       {
@@ -112,6 +129,8 @@
               "sv": "Hämta gäster på flygplatsen",
               "no": "Hente gjester på flyplassen"
             },
+            "details": null,
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -162,6 +181,8 @@
               "sv": "Bai Sao Beach",
               "no": "Bai Sao-stranden"
             },
+            "details": null,
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -212,6 +233,8 @@
               "sv": "Ho Quoc Pagoda",
               "no": "Ho Quoc Pagoda"
             },
+            "details": null,
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -228,7 +251,7 @@
               "sort_order": 0,
               "is_primary": true,
               "is_customer_visible": true,
-              "include_in_travel_tour_card": false,
+              "include_in_travel_tour_card": true,
               "width_px": null,
               "height_px": null,
               "source_attribution": null,
@@ -262,6 +285,8 @@
               "sv": "Cay Dua fängelse",
               "no": "Cay Dua fengsel"
             },
+            "details": null,
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -310,7 +335,7 @@
       {
         "id": "travel_plan_day_0487563f-2b92-40c9-809f-1abf24d2efa9",
         "day_number": 2,
-        "title": "Night Show “One” -Grand World Phú Quốc",
+        "title": "VinWonders Phú Quốc",
         "title_i18n": {
           "ar": "العرض الليلي \"One\" -Grand World Phú Quốc",
           "fr": "Spectacle nocturne « One » -Grand World Phú Quốc",
@@ -339,7 +364,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Grand World",
+            "title": "VinWonders Phú Quốc",
             "title_i18n": {
               "ar": "العالم الكبير",
               "fr": "Grand Monde",
@@ -358,6 +383,8 @@
               "sv": "Stora världen",
               "no": "Grand World"
             },
+            "details": "Prepare for a journey through space and time at VinWonders Phu Quoc. From ancient European castles to a giant turtle palace beneath the ocean, every step will be a new discovery. VinWonders is more than just an amusement park; it's where dreams come true.",
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -365,8 +392,8 @@
             "start_time": null,
             "end_time": null,
             "image": {
-              "id": "travel_plan_service_image_de0943dd-0af1-4a3c-9a73-f15053efd3ce",
-              "storage_path": "/public/v1/tour-images/tour_c2c80f99-287c-41b5-93cc-53c4d98d0caf/travel-plan-services/travel_plan_service_04d68780-1dc1-4713-87fb-897905dc5444-1777159529517-bea8b17b-7dbf-40a8-98e2-0cd9e5ac6c5d.webp",
+              "id": "travel_plan_service_image_4037a8ce-2c5f-4522-b7b1-ccc913c82370",
+              "storage_path": "/public/v1/tour-images/tour_c2c80f99-287c-41b5-93cc-53c4d98d0caf/travel-plan-services/travel_plan_service_04d68780-1dc1-4713-87fb-897905dc5444-1777941055014-12cdbedf-dbdd-417c-8608-5fa4a898c620.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -379,11 +406,46 @@
               "height_px": null,
               "source_attribution": null,
               "focal_point": null,
-              "created_at": "2026-04-25T23:25:29.631Z"
+              "created_at": "2026-05-05T00:30:55.167Z"
+            }
+          },
+          {
+            "id": "travel_plan_service_0ec25711-d369-4e8e-86f4-ec21e519e5f9",
+            "timing_kind": "label",
+            "time_label": null,
+            "time_label_i18n": {},
+            "time_point": null,
+            "kind": "other",
+            "title": "Grand World Phú Quốc",
+            "title_i18n": {},
+            "details": "Grand World Phu Quoc, often called the \"City That Never Sleeps,\" is one of the most vibrant destinations in the north of Phu Quoc Island. This complex is renowned for its diverse architecture, ranging from European styles to distinctive traditional Vietnamese cultural elements.",
+            "details_i18n": {},
+            "image_subtitle": null,
+            "image_subtitle_i18n": {},
+            "location": null,
+            "location_i18n": {},
+            "start_time": null,
+            "end_time": null,
+            "image": {
+              "id": "travel_plan_service_image_961feeff-81da-44e0-ae8e-0a5ffd6055c6",
+              "storage_path": "/public/v1/tour-images/tour_c2c80f99-287c-41b5-93cc-53c4d98d0caf/travel-plan-services/travel_plan_service_0ec25711-d369-4e8e-86f4-ec21e519e5f9-1777947849897-24b39db2-6dcf-47dc-9a14-f684cbb186f8.webp",
+              "caption": null,
+              "caption_i18n": {},
+              "alt_text": null,
+              "alt_text_i18n": {},
+              "sort_order": 0,
+              "is_primary": true,
+              "is_customer_visible": true,
+              "include_in_travel_tour_card": true,
+              "width_px": null,
+              "height_px": null,
+              "source_attribution": null,
+              "focal_point": null,
+              "created_at": "2026-05-05T02:24:10.048Z"
             }
           }
         ],
-        "notes": "•\tImmerse yourself in the ultimate artistic experience at Grand World, the \"city that never sleeps.\" ONCE: A symphony of light technology and sublime emotions in the heart of Phu Quoc.",
+        "notes": "The Sea Shell (Top 5 largest aquariums globally), Adventure World, and the world-class \"Once\" multimedia show",
         "notes_i18n": {
           "ar": "• انغمس في التجربة الفنية المطلقة في جراند وورلد، \"المدينة التي لا تنام أبدًا\". مرة واحدة: سيمفونية من تكنولوجيا الضوء والمشاعر السامية في قلب فو كووك.",
           "fr": "• Plongez-vous dans l'expérience artistique ultime à Grand World, la « ville qui ne dort jamais ». ONCE : Une symphonie de technologie lumineuse et d'émotions sublimes au cœur de Phu Quoc.",
@@ -454,6 +516,8 @@
               "sv": "Solnedgång linbana",
               "no": "Solnedgang taubane"
             },
+            "details": null,
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -479,7 +543,7 @@
             }
           }
         ],
-        "notes": "•\tDiscover a paradise of blue seas and golden sunshine with a canoe trip through pristine islands and snorkeling to admire vibrant coral reefs\n•\tEnd a long and memorable day with a breathtaking sunset and artistic architecture at Sunse Town.",
+        "notes": "Discover a paradise of blue seas and golden sunshine with a canoe trip through pristine islands and snorkeling to admire vibrant coral reefs. End a long and memorable day with a breathtaking sunset and artistic architecture at Sunset Town.",
         "notes_i18n": {
           "ar": "• اكتشف جنة البحار الزرقاء وأشعة الشمس الذهبية من خلال رحلة بالقارب عبر الجزر البكر والغطس للاستمتاع بالشعاب المرجانية النابضة بالحياة• أنهِ يومًا طويلًا لا يُنسى مع غروب الشمس المذهل والهندسة المعمارية الفنية في مدينة سانس.",
           "fr": "• Découvrez un paradis de mer bleue et de soleil doré avec une excursion en canoë à travers des îles vierges et de la plongée en apnée pour admirer les récifs coralliens vibrants. • Terminez une longue et mémorable journée avec un coucher de soleil à couper le souffle et une architecture artistique à Sunse Town.",
@@ -550,6 +614,8 @@
               "sv": "Dinh Cau",
               "no": "Dinh Cau"
             },
+            "details": null,
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -694,5 +760,6 @@
         "updated_at": "2026-04-28T09:20:23.321Z"
       }
     }
-  }
+  },
+  "published_on_webpage": true
 }
