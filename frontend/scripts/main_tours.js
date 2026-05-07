@@ -529,7 +529,9 @@ export function createFrontendToursController(ctx) {
 
     if (showMoreAvailable) {
       els.showMoreTours.hidden = false;
-      els.showMoreTours.textContent = frontendT("tours.show_all.count", "Show all {count} tours", { count: total });
+      els.showMoreTours.textContent = frontendT("tours.show_all.remaining", "Show all tours ({count} more)", {
+        count: String(moreCount)
+      });
     } else {
       els.showMoreTours.hidden = true;
     }
