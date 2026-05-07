@@ -60,6 +60,8 @@ import {
   resolveBookingPdfPersonalizationElements
 } from "../booking/pdf_personalization_panel.js";
 
+const TRAVEL_PLAN_SERVICE_LIBRARY_SEARCH_LIMIT = 500;
+
 function backendT(id, fallback, vars) {
   if (typeof window.backendT === "function") {
     return window.backendT(id, fallback, vars);
@@ -1638,7 +1640,7 @@ function buildBookingMarketingTourServiceSearchRequest({ apiOrigin: requestApiOr
     query: {
       ...(normalizedQuery ? { q: normalizedQuery } : {}),
       ...(normalizedKind ? { service_kind: normalizedKind } : {}),
-      limit: 30
+      limit: TRAVEL_PLAN_SERVICE_LIBRARY_SEARCH_LIMIT
     }
   });
 }

@@ -1668,9 +1668,10 @@ export function createBookingTravelPlanModule(ctx) {
   }
 
   function renderTravelPlanService(day, item, itemIndex) {
+    const serviceNumber = itemIndex + 1;
     const collapsed = isTravelPlanServiceCollapsed(item.id);
     const sourceTitle = resolveLocalizedDraftBranchText(item.title_i18n ?? item.title, bookingSourceLang(), "").trim();
-    const collapsedTitle = sourceTitle || bookingT("booking.travel_plan.item_heading", "Service {item}", { item: itemIndex + 1 });
+    const collapsedTitle = sourceTitle || bookingT("booking.travel_plan.item_heading", "Service {item}", { item: serviceNumber });
     const timingSummary = travelPlanTimingSummary(day, item).trim();
     return `
       <div class="travel-plan-service${collapsed ? " travel-plan-service--collapsed" : ""}" data-travel-plan-service="${escapeHtml(item.id)}">
@@ -1699,10 +1700,16 @@ export function createBookingTravelPlanModule(ctx) {
           </div>
           <div class="travel-plan-service__body">
           <div class="travel-plan-service__overview">
+            <div class="travel-plan-service__overview-media">
+              ${travelPlanImagesModule.renderTravelPlanServiceImages(day, item, {
+                variant: "sidebar",
+                editable: allowImageUpload && state.permissions.canEditBooking
+              })}
+            </div>
             <div class="travel-plan-service__overview-main">
               <div class="field">
                 ${renderTravelPlanLocalizedField({
-                  label: bookingT("booking.travel_plan.item_title", "Service Title"),
+                  label: bookingT("booking.travel_plan.item_numbered_title", "Service {item} Title", { item: serviceNumber }),
                   idBase: `travel_plan_title_${item.id}`,
                   dataScope: "travel-plan-service-field",
                   dayId: day.id,
@@ -1729,46 +1736,6 @@ export function createBookingTravelPlanModule(ctx) {
                     })}
                   </div>`
                 : ""}
-            </div>
-            <div class="travel-plan-service__overview-media">
-              ${travelPlanImagesModule.renderTravelPlanServiceImages(day, item, {
-                variant: "sidebar",
-                editable: allowImageUpload && state.permissions.canEditBooking
-              })}
-              <div class="field travel-plan-service__image-subtitle-field">
-                ${renderTravelPlanLocalizedField({
-                  label: bookingT("booking.travel_plan.image_subtitle_optional", "Image subtitle (optional)"),
-                  idBase: `travel_plan_image_subtitle_${item.id}`,
-                  dataScope: "travel-plan-service-field",
-                  dayId: day.id,
-                  itemId: item.id,
-                  field: "image_subtitle",
-                  type: "input",
-                  sourceValue: resolveLocalizedDraftBranchText(item.image_subtitle_i18n ?? item.image_subtitle, bookingSourceLang(), ""),
-                  localizedValue: resolveLocalizedDraftBranchText(item.image_subtitle_i18n ?? item.image_subtitle, bookingContentLang(), "")
-                })}
-              </div>
-            </div>
-          </div>
-          <div class="travel-plan-grid travel-plan-grid--item">
-            <div class="field">
-              <label for="travel_plan_kind_${escapeHtml(item.id)}">${escapeHtml(bookingT("booking.travel_plan.kind_label", "Kind"))}</label>
-              <select id="travel_plan_kind_${escapeHtml(item.id)}" data-travel-plan-service-field="kind">
-                ${itemKindOptions(item.kind)}
-              </select>
-            </div>
-            <div class="field">
-              ${renderTravelPlanLocalizedField({
-                label: bookingT("booking.travel_plan.location_optional", "Location (optional)"),
-                idBase: `travel_plan_location_${item.id}`,
-                dataScope: "travel-plan-service-field",
-                dayId: day.id,
-                itemId: item.id,
-                field: "location",
-                type: "input",
-                sourceValue: resolveLocalizedDraftBranchText(item.location_i18n ?? item.location, bookingSourceLang(), ""),
-                localizedValue: resolveLocalizedDraftBranchText(item.location_i18n ?? item.location, bookingContentLang(), "")
-              })}
             </div>
           </div>
           ${allowTiming
@@ -1904,6 +1871,13 @@ export function createBookingTravelPlanModule(ctx) {
     const localizedInput = targetLang === sourceLang
       ? null
       : container?.querySelector(`[data-${dataScope}="${field}"][data-localized-lang="${targetLang}"][data-localized-role="target"]`);
+    if (!sourceInput && !localizedInput) {
+      const existingMap = normalizeLocalizedEditorMap(existingValue, sourceLang);
+      return {
+        map: existingMap,
+        text: resolveLocalizedDraftBranchText(existingMap, sourceLang, "")
+      };
+    }
     const sourceValue = String(sourceInput?.value || "").trim();
     if (!localizedInput) {
       const nextMap = normalizeLocalizedEditorMap(existingValue, sourceLang);
@@ -1999,7 +1973,10 @@ export function createBookingTravelPlanModule(ctx) {
           item.time_label_i18n = {};
           item.time_point = "";
         }
-        item.kind = String(itemNode.querySelector('[data-travel-plan-service-field="kind"]')?.value || "").trim();
+        const kindInput = itemNode.querySelector('[data-travel-plan-service-field="kind"]');
+        item.kind = kindInput
+          ? String(kindInput.value || "").trim()
+          : String(previousItem?.kind || "").trim();
         const itemTitle = readLocalizedFieldPayload(
           itemNode,
           "travel-plan-service-field",

@@ -1628,8 +1628,13 @@ test("service titles remain optional across save validation and UI state", async
   );
   assert.match(
     travelPlanSource,
-    /booking\.travel_plan\.item_title[\s\S]*(booking\.travel_plan\.item_notes|booking\.travel_plan\.item_details)[\s\S]*booking\.travel_plan\.kind_label[\s\S]*(booking\.location|booking\.travel_plan\.location_optional)/,
-    "Service editing should keep title and details ahead of kind and location in the service overview"
+    /booking\.travel_plan\.item_numbered_title[\s\S]*booking\.travel_plan\.item_notes[\s\S]*renderTravelPlanTimingFields\(day, item\)/,
+    "Service editing should keep title and details in the service overview ahead of the timing fields"
+  );
+  assert.match(
+    travelPlanSource,
+    /const kindInput = itemNode\.querySelector\('\[data-travel-plan-service-field="kind"\]'\);[\s\S]*item\.kind = kindInput[\s\S]*String\(previousItem\?\.kind \|\| ""\)\.trim\(\);[\s\S]*readLocalizedFieldPayload\([\s\S]*"location",[\s\S]*previousItem\?\.location_i18n \?\? previousItem\?\.location/,
+    "Service editing should preserve saved kind and location values when the overview no longer renders those controls"
   );
   assert.doesNotMatch(
     validationSource,
@@ -1643,8 +1648,8 @@ test("service titles remain optional across save validation and UI state", async
   );
   assert.match(
     travelPlanStyles,
-    /\.travel-plan-service__overview \{[\s\S]*grid-template-columns: minmax\(0, 1fr\) minmax\(0, 1fr\);/,
-    "Travel plan styles should keep the service fields and image editor in a balanced two-column layout"
+    /\.travel-plan-service__overview \{[\s\S]*grid-template-columns: minmax\(7rem, 9rem\) minmax\(0, 1fr\);[\s\S]*\.travel-plan-service__overview-main \{[\s\S]*min-width: 0;[\s\S]*@media \(max-width: 520px\) \{[\s\S]*\.travel-plan-service__overview \{[\s\S]*grid-template-columns: 1fr;/,
+    "Travel plan styles should keep the compact image editor beside flexible service fields and collapse them on narrow screens"
   );
   assert.match(
     travelPlanStyles,
@@ -1768,7 +1773,7 @@ test("travel plan images cap inline previews and open in a full-size modal", asy
   );
   assert.match(
     travelPlanStyles,
-    /\.travel-plan-images__hero-frame \{[\s\S]*width: min\(100%, 18rem\);[\s\S]*\.travel-plan-images__hero-button \{[\s\S]*width: 100%;[\s\S]*aspect-ratio: 1 \/ 1;[\s\S]*\.travel-plan-images__hero-image \{[\s\S]*width: 100%;[\s\S]*height: 100%;[\s\S]*object-fit: contain;/,
+    /\.travel-plan-images__hero-frame \{[\s\S]*width: min\(100%, 8rem\);[\s\S]*\.travel-plan-images__hero-button \{[\s\S]*width: 100%;[\s\S]*aspect-ratio: 1 \/ 1;[\s\S]*\.travel-plan-images__hero-image \{[\s\S]*width: 100%;[\s\S]*height: 100%;[\s\S]*object-fit: contain;/,
     "The travel plan hero image should use a single fixed frame and contain-fit the uploaded image without cropping"
   );
   assert.doesNotMatch(
@@ -3350,7 +3355,7 @@ test("travel-plan service image text stays wired across model, API, backend, tra
   );
   assert.match(
     uiSource,
-    /field:\s+"image_subtitle"[\s\S]*item\.image_subtitle_i18n = itemImageSubtitle\.map/,
+    /const itemImageSubtitle = readLocalizedFieldPayload\([\s\S]*"travel-plan-service-field",[\s\S]*"image_subtitle",[\s\S]*previousItem\?\.image_subtitle_i18n \?\? previousItem\?\.image_subtitle[\s\S]*item\.image_subtitle = itemImageSubtitle\.text;[\s\S]*item\.image_subtitle_i18n = itemImageSubtitle\.map;/,
     "The travel-plan editor should render and save localized service image subtitles"
   );
   assert.match(
@@ -5628,23 +5633,13 @@ test("homepage tour cards expand descriptions and align same-row cards without a
   );
   assert.match(
     mainToursSource,
-    /const openingTourColumnIndexes = new Map\(\)[\s\S]*data-tour-card-id="\$\{escapeAttr\(tripId\)\}"[\s\S]*function captureTourCardRects\(\)[\s\S]*function animateTourGridLayout\(previousRects, \{ excludedTripIds = \[\] \} = \{\}\)[\s\S]*if \(excludedIds\.has\(tripId\)\) return;/,
-    "Show more/show less should capture and animate tour-card grid movement before expanding details"
+    /function renderTrips\(trips, \{ showNoResults = false \} = \{\}\)[\s\S]*renderedTourGridColumnCount = getTourGridColumnCount\(\);[\s\S]*if \(renderedTourGridColumnCount > 1\) \{[\s\S]*renderTourCard\(trip, \{ index: itemIndex, expanded: isTourExpanded\(trip\) \}\)[\s\S]*renderBelowGridTourDetailsRow\(trip, columnIndex, renderedTourGridColumnCount\)[\s\S]*continue;[\s\S]*renderExpandedTourRow\(trip, itemIndex, columnIndex\);/,
+    "Multi-column expanded tour details should keep same-row cards rendered in place and insert details below the row"
   );
   assert.match(
     mainToursSource,
-    /function animateExpandedTourCardToLeft\(row\)[\s\S]*currentColumn <= 1[\s\S]*row\.style\.setProperty\("--tour-details-column", "1"\)[\s\S]*duration: TOUR_DETAILS_OPEN_TRANSITION_MS/,
-    "The expanded card should animate to the left column while sibling cards move, unless it is already left"
-  );
-  assert.match(
-    mainToursSource,
-    /function expandedTourBackgroundStartLeftInset\(shell, card\)[\s\S]*return Math\.min\(shellWidth, Math\.max\(0, Math\.ceil\(cardRect\.right - shellRect\.left\)\)\);[\s\S]*function createTourDetailsAttachBackground\(shell, startLeftInset\)[\s\S]*background\.className = "tour-details-row__attach-background";[\s\S]*function animateExpandedTourDetailsAttach\(row, durationMs = TOUR_DETAILS_OPEN_TRANSITION_MS,[\s\S]*const startLeftInset = Number\.isFinite\(Number\(backgroundStartLeft\)\)[\s\S]*row\.classList\.add\("tour-details-row--attached"\)[\s\S]*const background = createTourDetailsAttachBackground\(shell, startLeftInset\)[\s\S]*background\.animate\([\s\S]*clipPath: startClipPath[\s\S]*clipPath: endClipPath/,
-    "The side-panel shell should attach by clipping a background open from the selected card layout width instead of appearing instantly wide"
-  );
-  assert.match(
-    mainToursSource,
-    /const openingClass = isOpeningTour && columnCount > 1 \? " tour-details-row--opening" : "";[\s\S]*const sidePanelClass = columnCount > 1[\s\S]*tour-details-row--side-panel tour-details-row--columns-\$\{columnCount\}[\s\S]*tour-details-row--attached[\s\S]*class="tour-details-row\$\{openingClass\}\$\{sidePanelClass\}"/,
-    "Multi-column expanded tour rows should render active openings hidden immediately and attach only after the row-clearing transition"
+    /function renderBelowGridTourDetailsRow\(trip, columnIndex = 0, columnCount = getTourGridColumnCount\(\)\)[\s\S]*tour-details-row--below-grid tour-details-row--columns-\$\{columns\} \$\{alignmentClass\}[\s\S]*style="--tour-grid-columns: \$\{columns\}; --tour-details-column: \$\{column\};"[\s\S]*function createBelowGridTourDetailsRow\(trip,[\s\S]*visibleTourRowTripIds\(tripId, columns\)[\s\S]*const anchor = rowCards\[rowCards\.length - 1\] \|\| directTourCardElement\(tripId\)[\s\S]*anchor\.after\(row\)/,
+    "Below-grid details should be anchored after the last visible card in the current card row"
   );
   assert.match(
     mainToursSource,
@@ -5663,13 +5658,8 @@ test("homepage tour cards expand descriptions and align same-row cards without a
   );
   assert.match(
     mainToursSource,
-    /function renderTwoColumnBelowTourDetailsRow\(trip, columnIndex = 0\)[\s\S]*tour-details-row--below-grid tour-details-row--columns-2[\s\S]*function createTwoColumnBelowTourDetailsRow\(trip,[\s\S]*visibleTourRowTripIds\(tripId, 2\)[\s\S]*const anchor = rowCards\[rowCards\.length - 1\] \|\| directTourCardElement\(tripId\)[\s\S]*anchor\.after\(row\)[\s\S]*if \(renderedTourGridColumnCount === 2\) \{[\s\S]*renderTourCard\(trip, \{ index: itemIndex, expanded: isTourExpanded\(trip\) \}\)[\s\S]*renderTwoColumnBelowTourDetailsRow\(trip, columnIndex\)[\s\S]*continue;/,
-    "Two-column expanded tour details should keep both tour cards in their grid row and insert a separate details row below them"
-  );
-  assert.match(
-    mainToursSource,
-    /function animateTourDetailsToggle\(tripId, willOpen\)[\s\S]*if \(isTwoColumnTourLayout\(\)\) \{[\s\S]*animateTwoColumnBelowTourDetailsOpen\(normalizedTripId, transitionToken\);[\s\S]*animateTwoColumnBelowTourDetailsClose\(normalizedTripId, transitionToken\);[\s\S]*async function animateTwoColumnBelowTourDetailsOpen\(tripId, transitionToken\)[\s\S]*const card = directTourCardElement\(tripId\);[\s\S]*createTwoColumnBelowTourDetailsRow\(trip,[\s\S]*row\.style\.height = "0px";[\s\S]*animateTourDetailsRowHeight\(row, expandedHeight, "open", \{[\s\S]*durationMs: TOUR_DETAILS_MOBILE_OPEN_TRANSITION_MS[\s\S]*async function animateTwoColumnBelowTourDetailsClose\(tripId, transitionToken\)[\s\S]*const card = directTourCardElement\(tripId\);[\s\S]*animateTourDetailsRowHeight\(row, 0, "close", \{/,
-    "Two-column details should use the single-column-style vertical height animation without moving cards or running grid-flight animations"
+    /function animateTourDetailsToggle\(tripId, willOpen\)[\s\S]*if \(isSingleColumnTourLayout\(\)\) \{[\s\S]*animateSingleColumnTourDetailsOpen\(normalizedTripId, transitionToken\);[\s\S]*animateSingleColumnTourDetailsClose\(normalizedTripId, transitionToken\);[\s\S]*if \(willOpen\) \{[\s\S]*animateBelowGridTourDetailsOpen\(normalizedTripId, transitionToken\);[\s\S]*animateBelowGridTourDetailsClose\(normalizedTripId, transitionToken\);[\s\S]*async function animateBelowGridTourDetailsOpen\(tripId, transitionToken\)[\s\S]*const card = directTourCardElement\(tripId\);[\s\S]*createBelowGridTourDetailsRow\(trip,[\s\S]*row\.style\.height = "0px";[\s\S]*animateTourDetailsRowHeight\(row, expandedHeight, "open", \{[\s\S]*durationMs: TOUR_DETAILS_MOBILE_OPEN_TRANSITION_MS[\s\S]*async function animateBelowGridTourDetailsClose\(tripId, transitionToken\)[\s\S]*const card = directTourCardElement\(tripId\);[\s\S]*animateTourDetailsRowHeight\(row, 0, "close", \{/,
+    "Multi-column details should use the same vertical height animation below the card row without moving cards"
   );
   assert.match(
     mainToursSource,
@@ -5688,8 +5678,8 @@ test("homepage tour cards expand descriptions and align same-row cards without a
   );
   assert.match(
     mainToursSource,
-    /const TOUR_DETAILS_OPEN_TRANSITION_MS = 920;[\s\S]*const TOUR_DETAILS_MOBILE_OPEN_TRANSITION_MS = 1500;[\s\S]*const TOUR_DETAILS_MOBILE_OPEN_EASING = "cubic-bezier\(0\.45, 0, 0\.2, 1\)";[\s\S]*const TOUR_DETAILS_TRANSITION_MS = 640;[\s\S]*const TOUR_DETAILS_CLOSE_TRANSITION_MS = 780;[\s\S]*const TOUR_DETAILS_DESKTOP_CLOSE_TRANSITION_MS = 920;[\s\S]*const TOUR_CARD_MEDIA_SNAPSHOT_HOLD_MS = Math\.max\([\s\S]*TOUR_DETAILS_OPEN_TRANSITION_MS,[\s\S]*TOUR_DETAILS_MOBILE_OPEN_TRANSITION_MS,[\s\S]*TOUR_DETAILS_TRANSITION_MS,[\s\S]*TOUR_DETAILS_CLOSE_TRANSITION_MS,[\s\S]*TOUR_DETAILS_DESKTOP_CLOSE_TRANSITION_MS[\s\S]*function animateOutgoingTourDetailsGhost\(ghostState\) \{[\s\S]*duration: TOUR_DETAILS_DESKTOP_CLOSE_TRANSITION_MS,[\s\S]*window\.setTimeout\(done, TOUR_DETAILS_DESKTOP_CLOSE_TRANSITION_MS \+ 140\);[\s\S]*function clearTourDetailsRowAnimation\(row, \{ preserveHeight = false \} = \{\}\) \{[\s\S]*row\.style\.removeProperty\("--tour-details-row-transition-duration"\);[\s\S]*row\.style\.removeProperty\("--tour-details-row-transition-easing"\);[\s\S]*function finishTourDetailsRowAnimation\(row, durationMs = TOUR_DETAILS_TRANSITION_MS\) \{[\s\S]*window\.setTimeout\(done, durationMs \+ 140\);[\s\S]*async function animateTourDetailsRowHeight\(row, targetHeight, mode, \{ durationMs, easing \} = \{\}\) \{[\s\S]*const fallbackDurationMs = opening \? TOUR_DETAILS_OPEN_TRANSITION_MS : TOUR_DETAILS_TRANSITION_MS;[\s\S]*const customDurationMs = Number\(durationMs\);[\s\S]*const transitionDurationMs = Number\.isFinite\(customDurationMs\)[\s\S]*\? Math\.max\(0, customDurationMs\)[\s\S]*: fallbackDurationMs;[\s\S]*const transitionEasing = normalizeText\(easing\);[\s\S]*row\.style\.setProperty\("--tour-details-row-transition-duration", `\$\{transitionDurationMs\}ms`\);[\s\S]*row\.style\.setProperty\("--tour-details-row-transition-easing", transitionEasing\);[\s\S]*row\.style\.removeProperty\("--tour-details-row-transition-easing"\);[\s\S]*await finishTourDetailsRowAnimation\(row, transitionDurationMs\);/,
-    "Tour details should keep mobile timing separate while desktop open and close animations use the slower desktop durations"
+    /const TOUR_DETAILS_OPEN_TRANSITION_MS = 920;[\s\S]*const TOUR_DETAILS_MOBILE_OPEN_TRANSITION_MS = 1500;[\s\S]*const TOUR_DETAILS_MOBILE_OPEN_EASING = "cubic-bezier\(0\.45, 0, 0\.2, 1\)";[\s\S]*const TOUR_DETAILS_TRANSITION_MS = 640;[\s\S]*const TOUR_DETAILS_CLOSE_TRANSITION_MS = 780;[\s\S]*const TOUR_CARD_MEDIA_SNAPSHOT_HOLD_MS = Math\.max\([\s\S]*TOUR_DETAILS_OPEN_TRANSITION_MS,[\s\S]*TOUR_DETAILS_MOBILE_OPEN_TRANSITION_MS,[\s\S]*TOUR_DETAILS_TRANSITION_MS,[\s\S]*TOUR_DETAILS_CLOSE_TRANSITION_MS[\s\S]*function clearTourDetailsRowAnimation\(row, \{ preserveHeight = false \} = \{\}\) \{[\s\S]*row\.style\.removeProperty\("--tour-details-row-transition-duration"\);[\s\S]*row\.style\.removeProperty\("--tour-details-row-transition-easing"\);[\s\S]*function finishTourDetailsRowAnimation\(row, durationMs = TOUR_DETAILS_TRANSITION_MS\) \{[\s\S]*window\.setTimeout\(done, durationMs \+ 140\);[\s\S]*async function animateTourDetailsRowHeight\(row, targetHeight, mode, \{ durationMs, easing \} = \{\}\) \{[\s\S]*const fallbackDurationMs = opening \? TOUR_DETAILS_OPEN_TRANSITION_MS : TOUR_DETAILS_TRANSITION_MS;[\s\S]*const customDurationMs = Number\(durationMs\);[\s\S]*const transitionDurationMs = Number\.isFinite\(customDurationMs\)[\s\S]*\? Math\.max\(0, customDurationMs\)[\s\S]*: fallbackDurationMs;[\s\S]*const transitionEasing = normalizeText\(easing\);[\s\S]*row\.style\.setProperty\("--tour-details-row-transition-duration", `\$\{transitionDurationMs\}ms`\);[\s\S]*row\.style\.setProperty\("--tour-details-row-transition-easing", transitionEasing\);[\s\S]*row\.style\.removeProperty\("--tour-details-row-transition-easing"\);[\s\S]*await finishTourDetailsRowAnimation\(row, transitionDurationMs\);/,
+    "Tour details should keep mobile timing separate while all open and close paths share the row-height animation helper"
   );
   assert.match(
     mainToursSource,
@@ -5703,7 +5693,7 @@ test("homepage tour cards expand descriptions and align same-row cards without a
   );
   assert.match(
     mainToursSource,
-    /function cancelActiveTourDetailsAnimations\(\) \{[\s\S]*function beginTourDetailsTransition\(\) \{[\s\S]*const token = \+\+tourDetailsTransitionToken;[\s\S]*cancelActiveTourDetailsAnimations\(\);[\s\S]*function isCurrentTourDetailsTransition\(token\) \{[\s\S]*function animateTourDetailsToggle\(tripId, willOpen\)[\s\S]*const transitionToken = beginTourDetailsTransition\(\);[\s\S]*animateTourDetailsOpen\(normalizedTripId, transitionToken\);[\s\S]*animateTourDetailsClose\(normalizedTripId, transitionToken\);[\s\S]*async function animateTourDetailsOpen\(tripId, transitionToken\)[\s\S]*const previousRects = captureTourCardRects\(\);[\s\S]*const trip = findTripById\(tripId\);[\s\S]*const card = singleColumnLayout \? tourCardElement\(tripId\) : directTourCardElement\(tripId\);[\s\S]*const row = trip && card instanceof HTMLElement[\s\S]*createSidePanelTourDetailsRow\(trip, card,[\s\S]*setTourCardExpandedDomState\(card, true\)[\s\S]*const opensSideways = !singleColumnLayout[\s\S]*row\.classList\.contains\("tour-details-row--side-panel"\)[\s\S]*!tourDetailsWrapsBelowCard\(row\);[\s\S]*const twoCardWrappedRow = isTwoCardWrappedTourRow\(row\);[\s\S]*const gridAnimationExcludedTripIds = twoCardWrappedRow[\s\S]*\? visibleTourTripIds\(\)[\s\S]*: \[tripId\];[\s\S]*const rowClearingPromise = singleColumnLayout[\s\S]*animateTourGridLayout\(previousRects, \{ excludedTripIds: gridAnimationExcludedTripIds \}\)[\s\S]*animateExpandedTourCardToLeft\(row\)[\s\S]*const startDetailsOpenAnimation = \(targetHeight\) => Promise\.all\(\[[\s\S]*animateExpandedTourDetailsAttach\(row, TOUR_DETAILS_OPEN_TRANSITION_MS, \{ backgroundStartLeft, initialCardRight \}\)[\s\S]*animateTourDetailsRowHeight\(row, opensSideways \? collapsedHeight : targetHeight, "open"\)[\s\S]*await waitForExpandedTourServiceImages\(row\);[\s\S]*if \(!isCurrentTourDetailsTransition\(transitionToken\)\) return;[\s\S]*await rowClearingPromise;[\s\S]*if \(!isCurrentTourDetailsTransition\(transitionToken\)\) return;[\s\S]*await Promise\.all\(\[[\s\S]*detailsOpenPromise \|\| startDetailsOpenAnimation\(expandedHeight\),[\s\S]*buttonLabelPromise[\s\S]*\]\);[\s\S]*clearTourDetailsRowAnimation\(row, \{ preserveHeight: opensSideways \}\);[\s\S]*completeTourDetailsTransition\(transitionToken, tripId\);[\s\S]*async function animateTourDetailsClose\(tripId, transitionToken\)[\s\S]*const card = expandedTourCard\(row\);[\s\S]*const compactWithoutGridAnimation = shouldCompactCloseWithoutGridAnimation\(row\);[\s\S]*const outgoingDetailsGhost = createOutgoingTourDetailsGhost\(row\);[\s\S]*const closedButton = setTourCardExpandedDomState\(card, false\);[\s\S]*restoreExpandedTourCardToGrid\(row, card, tripId\);[\s\S]*const compactedTripIds = compactClosedTourGridCards\(\);[\s\S]*await Promise\.all\(\[[\s\S]*animateOutgoingTourDetailsGhost\(outgoingDetailsGhost\),[\s\S]*animateTourGridLayout\(previousRects, \{[\s\S]*excludedTripIds: compactWithoutGridAnimation \? compactedTripIds : \[\][\s\S]*\}\),[\s\S]*animateTourShowMoreButtonLabel\([\s\S]*closedButton,[\s\S]*tourShowMoreLabel\(false\),[\s\S]*\{ direction: "close" \}[\s\S]*\)[\s\S]*\]\);[\s\S]*if \(!isCurrentTourDetailsTransition\(transitionToken\)\) return;[\s\S]*completeTourDetailsTransition\(transitionToken, tripId\);/,
+    /function cancelActiveTourDetailsAnimations\(\) \{[\s\S]*function beginTourDetailsTransition\(\) \{[\s\S]*const token = \+\+tourDetailsTransitionToken;[\s\S]*cancelActiveTourDetailsAnimations\(\);[\s\S]*function isCurrentTourDetailsTransition\(token\) \{[\s\S]*function animateTourDetailsToggle\(tripId, willOpen\)[\s\S]*const transitionToken = beginTourDetailsTransition\(\);[\s\S]*async function animateSingleColumnTourDetailsOpen\(tripId, transitionToken\)[\s\S]*if \(!isCurrentTourDetailsTransition\(transitionToken\)\) return;[\s\S]*async function animateSingleColumnTourDetailsClose\(tripId, transitionToken\)[\s\S]*if \(!isCurrentTourDetailsTransition\(transitionToken\)\) return;[\s\S]*async function animateBelowGridTourDetailsOpen\(tripId, transitionToken\)[\s\S]*if \(!isCurrentTourDetailsTransition\(transitionToken\)\) return;[\s\S]*async function animateBelowGridTourDetailsClose\(tripId, transitionToken\)[\s\S]*if \(!isCurrentTourDetailsTransition\(transitionToken\)\) return;/,
     "Opening and closing a tour should be interruptible: new toggles cancel active detail animations and stale async paths must not finish over the requested action"
   );
   assert.doesNotMatch(
@@ -5718,13 +5708,13 @@ test("homepage tour cards expand descriptions and align same-row cards without a
   );
   assert.match(
     mainToursSource,
-    /function compactClosedTourGridCards\(\)[\s\S]*els\.tourGrid\.querySelector\("\[data-expanded-tour-id\]"\)[\s\S]*\.tour-grid__spacer[\s\S]*els\.tourGrid\.append\(card\)[\s\S]*function isTwoCardWrappedTourRow\(row\)[\s\S]*tourDetailsWrapsBelowCard\(row\)[\s\S]*getTourGridColumnCount\(\) === 2[\s\S]*visibleTourTripIds\(\)\.length === 2[\s\S]*function shouldCompactCloseWithoutGridAnimation\(row\)[\s\S]*return isTwoCardWrappedTourRow\(row\);[\s\S]*function createOutgoingTourDetailsGhost\(row\)[\s\S]*const ghost = panel\.cloneNode\(true\)[\s\S]*ghost\.dataset\.tourDetailsGhost = "1";[\s\S]*position: "fixed"[\s\S]*function animateOutgoingTourDetailsGhost\(ghostState\)[\s\S]*async function animateTourDetailsClose\(tripId, transitionToken\)[\s\S]*const row = expandedTourRow\(tripId\);[\s\S]*const card = expandedTourCard\(row\);[\s\S]*const previousRects = captureTourCardRects\(\)[\s\S]*const compactWithoutGridAnimation = shouldCompactCloseWithoutGridAnimation\(row\)[\s\S]*const outgoingDetailsGhost = createOutgoingTourDetailsGhost\(row\)[\s\S]*const closedButton = setTourCardExpandedDomState\(card, false\);[\s\S]*restoreExpandedTourCardToGrid\(row, card, tripId\);[\s\S]*const compactedTripIds = compactClosedTourGridCards\(\);[\s\S]*await Promise\.all\(\[\s*animateOutgoingTourDetailsGhost\(outgoingDetailsGhost\),\s*animateTourGridLayout\(previousRects, \{\s*excludedTripIds: compactWithoutGridAnimation \? compactedTripIds : \[\]\s*\}\),\s*animateTourShowMoreButtonLabel\(\s*closedButton,\s*tourShowMoreLabel\(false\),\s*\{ direction: "close" \}\s*\)\s*\]\)/,
-    "Closing a tour should keep the existing card DOM visible, compact closed two-column rows, animate a closing details ghost, and fade the button text with the detail animation"
+    /async function animateBelowGridTourDetailsClose\(tripId, transitionToken\)[\s\S]*const row = expandedTourRow\(tripId\);[\s\S]*const card = directTourCardElement\(tripId\);[\s\S]*updateOutgoingTourDetailsButton\(row, false\);[\s\S]*const closedButton = setTourCardExpandedDomState\(card, false\);[\s\S]*row\.classList\.add\("tour-details-row--closing"\);[\s\S]*await Promise\.all\(\[[\s\S]*animateTourDetailsRowHeight\(row, 0, "close", \{[\s\S]*animateTourShowMoreButtonLabel\([\s\S]*closedButton,[\s\S]*tourShowMoreLabel\(false\),[\s\S]*\{ direction: "close" \}[\s\S]*\)[\s\S]*\]\);[\s\S]*row\.remove\(\);/,
+    "Closing multi-column details should leave card DOM in place, collapse the below-row panel, and fade the button text with the detail animation"
   );
   assert.match(
     tourCardCssSource,
-    /\.tour-details-row \{[\s\S]*--tour-details-row-transition-duration: 0\.64s;[\s\S]*--tour-details-row-transition-easing: cubic-bezier\(0\.2, 0\.82, 0\.2, 1\);[\s\S]*grid-template-columns: repeat\(var\(--tour-grid-columns, 3\), minmax\(0, 1fr\)\);[\s\S]*column-gap: 1\.5rem;[\s\S]*row-gap: 0;[\s\S]*transition:[\s\S]*height var\(--tour-details-row-transition-duration\) var\(--tour-details-row-transition-easing\)[\s\S]*\.tour-details-row--side-panel \.tour-details-row__shell \{[\s\S]*grid-column: 1 \/ -1;[\s\S]*grid-template-columns: repeat\(var\(--tour-grid-columns, 3\), minmax\(0, 1fr\)\);[\s\S]*\.tour-details-row--side-panel \.tour-details-row__shell > \.tour-card \{[\s\S]*grid-column: var\(--tour-details-column, 1\);[\s\S]*\.tour-details-row__panel \{[\s\S]*transition:[\s\S]*transform var\(--tour-details-row-transition-duration\) var\(--tour-details-row-transition-easing\)[\s\S]*clip-path var\(--tour-details-row-transition-duration\) var\(--tour-details-row-transition-easing\)[\s\S]*\.tour-details-row--side-panel \.tour-details-row__panel \{[\s\S]*grid-column: 2;/,
-    "Expanded tour details should keep the selected card at card width and render details beside it in the right column"
+    /\.tour-details-row \{[\s\S]*--tour-details-row-transition-duration: 0\.64s;[\s\S]*--tour-details-row-transition-easing: cubic-bezier\(0\.2, 0\.82, 0\.2, 1\);[\s\S]*grid-template-columns: repeat\(var\(--tour-grid-columns, 3\), minmax\(0, 1fr\)\);[\s\S]*column-gap: 1\.5rem;[\s\S]*row-gap: 0;[\s\S]*transition:[\s\S]*height var\(--tour-details-row-transition-duration\) var\(--tour-details-row-transition-easing\)[\s\S]*\.tour-details-row--below-grid \.tour-details-row__shell \{[\s\S]*grid-column: 1 \/ -1;[\s\S]*grid-template-columns: repeat\(var\(--tour-grid-columns, 2\), minmax\(0, 1fr\)\);[\s\S]*\.tour-details-row__panel \{[\s\S]*transition:[\s\S]*transform var\(--tour-details-row-transition-duration\) var\(--tour-details-row-transition-easing\)[\s\S]*clip-path var\(--tour-details-row-transition-duration\) var\(--tour-details-row-transition-easing\)[\s\S]*\.tour-details-row--below-grid \.tour-details-row__panel \{[\s\S]*grid-column: 1 \/ -1;/,
+    "Expanded tour details should use a below-grid row whose height animation controls the panel reveal"
   );
   assert.match(
     tourCardCssSource,
@@ -5753,7 +5743,7 @@ test("homepage tour cards expand descriptions and align same-row cards without a
   );
   assert.match(
     tourCardCssSource,
-    /@media \(max-width: 760px\) \{[\s\S]*\.tour-details-row__panel \{[\s\S]*width: 100vw;[\s\S]*margin-inline: calc\(50% - 50vw\);[\s\S]*border-radius: 0;[\s\S]*padding-inline: 0;[\s\S]*max-height: none;[\s\S]*overflow: visible;[\s\S]*overscroll-behavior: auto;[\s\S]*transition: none;[\s\S]*\.tour-details-row--opening \.tour-details-row__panel,[\s\S]*\.tour-details-row--closing \.tour-details-row__panel \{[\s\S]*opacity: 1;[\s\S]*transform: none;[\s\S]*clip-path: inset\(0 0 0 0\);/,
+    /@media \(max-width: 760px\) \{[\s\S]*\.tour-details-row__panel \{[\s\S]*width: min\(calc\(100vw - 1\.5rem\), var\(--tour-details-card-width, 357\.33px\)\);[\s\S]*justify-self: center;[\s\S]*margin-inline: auto;[\s\S]*border-radius: var\(--radius\);[\s\S]*padding-inline: 0;[\s\S]*max-height: none;[\s\S]*overflow: visible;[\s\S]*overscroll-behavior: auto;[\s\S]*transition: none;[\s\S]*\.tour-details-row--opening \.tour-details-row__panel,[\s\S]*\.tour-details-row--closing \.tour-details-row__panel \{[\s\S]*opacity: 1;[\s\S]*transform: none;[\s\S]*clip-path: inset\(0 0 0 0\);/,
     "Mobile homepage tour details should rely on the row expansion instead of a separate panel slide or fade animation"
   );
   assert.match(
@@ -6133,6 +6123,7 @@ test("marketing tour editor imports days and services only from other marketing 
   assert.match(tourPageScriptSource, /travelPlanServiceLibraryModal:\s*document\.getElementById\("travel_plan_service_library_modal"\)/, "Marketing tour script should wire the travel-plan library modal");
   assert.match(tourAdapterSource, /tourTravelPlanDaySearchRequest/, "Marketing tour editor should search reusable days through tour endpoints");
   assert.match(tourAdapterSource, /tourTravelPlanServiceSearchRequest/, "Marketing tour editor should search reusable services through tour endpoints");
+  assert.match(tourAdapterSource, /TRAVEL_PLAN_SERVICE_LIBRARY_SEARCH_LIMIT = 500[\s\S]*tourTravelPlanServiceSearchRequest[\s\S]*limit: TRAVEL_PLAN_SERVICE_LIBRARY_SEARCH_LIMIT/, "Marketing tour editor should request enough reusable services to avoid truncating the copy-existing-service list");
   assert.match(tourAdapterSource, /tourTravelPlanDayImportRequest/, "Marketing tour editor should import days through tour endpoints");
   assert.match(tourAdapterSource, /tourTravelPlanServiceImportRequest/, "Marketing tour editor should import services through tour endpoints");
   assert.match(tourAdapterSource, /target_travel_plan:\s*omitDerivedTravelPlanDestinations\(targetTravelPlan\)/, "Marketing tour editor should send dirty draft travel plans with import mutations");
@@ -6158,6 +6149,7 @@ test("marketing tour editor imports days and services only from other marketing 
   assert.match(routesSource, /\/api\/v1\/tours\/\{tour_id\}\/travel-plan\/days\/\{day_id\}\/services\/import/, "Routes should expose marketing tour service import");
   assert.match(tourAdapterSource, /include_translations:\s*true[\s\S]*include_translations:\s*true/, "Marketing tour imports should copy translated day and service branches");
   assert.match(tourHandlersSource, /copyMarketingTourServiceForImport[\s\S]*details:\s*preferredEnglishImportText\(sourceItem\?\.details_i18n,\s*sourceItem\?\.details\)[\s\S]*details_i18n:\s*includeTranslations/, "Marketing tour imports should preserve English service details as source text");
+  assert.match(tourHandlersSource, /handleSearchTourTravelPlanServices[\s\S]*const limit = clamp\(safeInt\(requestUrl\.searchParams\.get\("limit"\)\) \|\| 500, 1, 500\)/, "Marketing tour service search should default to the full reusable-service library window instead of the old 20-item cap");
   assert.match(tourHandlersSource, /copyMarketingTourDayForImport\(sourceDay,[\s\S]*includeTranslations:\s*payload\.include_translations !== false[\s\S]*copyMarketingTourServiceForImport\(sourceService,[\s\S]*includeTranslations:\s*payload\.include_translations !== false/, "Marketing tour import endpoints should copy translated branches by default");
   assert.match(tourHandlersSource, /sourceTourId === tourId[\s\S]*Choose a day from another marketing tour/, "Day imports should reject the current marketing tour as a source");
   assert.match(tourHandlersSource, /sourceTourId === tourId[\s\S]*Choose a service from another marketing tour/, "Service imports should reject the current marketing tour as a source");
@@ -6196,6 +6188,7 @@ test("booking travel plan copies days and services from marketing tours only", a
   ]);
 
   assert.match(bookingPageScriptSource, /tourTravelPlanDaySearchRequest[\s\S]*tourTravelPlanServiceSearchRequest/, "Booking editor should search day and service libraries through marketing-tour endpoints");
+  assert.match(bookingPageScriptSource, /TRAVEL_PLAN_SERVICE_LIBRARY_SEARCH_LIMIT = 500[\s\S]*tourTravelPlanServiceSearchRequest[\s\S]*limit: TRAVEL_PLAN_SERVICE_LIBRARY_SEARCH_LIMIT/, "Booking editor should request enough reusable services to avoid truncating the copy-existing-service list");
   assert.match(bookingPageScriptSource, /buildBookingMarketingTourDayImportRequest[\s\S]*source_tour_id:\s*normalizedSourceTourId[\s\S]*target_travel_plan:\s*targetTravelPlan[\s\S]*buildBookingMarketingTourServiceImportRequest[\s\S]*source_tour_id:\s*normalizedSourceTourId[\s\S]*target_travel_plan:\s*targetTravelPlan/, "Booking editor should import selected marketing-tour days and services with source_tour_id and optional dirty draft payloads");
   assert.match(bookingPageScriptSource, /cloneTravelPlanDayForLocalImport:\s*cloneBookingMarketingTourDayForLocalImport[\s\S]*cloneTravelPlanServiceForLocalImport:\s*cloneBookingMarketingTourServiceForLocalImport/, "Booking editor should provide local reusable-content clone hooks");
   assert.match(bookingPageScriptSource, /travelPlanLibrarySource:\s*"marketing_tour"[\s\S]*dayImport:\s*true[\s\S]*tourImport:\s*false[\s\S]*serviceImport:\s*true/, "Booking travel plan should expose only day and service copy actions from the marketing-tour library");

@@ -48,7 +48,7 @@
   "seasonality_end_month": "",
   "priority": 100,
   "created_at": "2026-04-09T03:29:39.112Z",
-  "updated_at": "2026-04-30T04:05:50.414Z",
+  "updated_at": "2026-05-05T02:32:14.143Z",
   "travel_plan": {
     "destination_scope": [
       {
@@ -65,6 +65,22 @@
         ]
       }
     ],
+    "tour_card_image_ids": [
+      "travel_plan_service_image_9fd14563-b2e0-4680-8202-4c00e641471c",
+      "travel_plan_service_image_a73baa84-2431-4bb1-812e-4e3ff20d40a6",
+      "travel_plan_service_image_27b61231-80c5-4e3e-903b-39e760337a02",
+      "travel_plan_service_image_a6dc1e43-db8e-48d8-88b9-8e3bc31304d2",
+      "travel_plan_service_image_725ddcf0-0e32-4117-ad27-0af8ce38310b",
+      "travel_plan_service_image_a6acb7d9-e3db-4f4e-8f6d-6327db1f123e",
+      "travel_plan_service_image_c371ade0-e593-4e9c-9777-520b5a31c5bf",
+      "travel_plan_service_image_3f678e08-6864-438a-b226-41e761d1d83f",
+      "travel_plan_service_image_02fdb43a-8fa7-432a-a6e7-ade06b5c7dde",
+      "travel_plan_service_image_f2390d49-c52a-47c1-8b32-32d0d22efa3c",
+      "travel_plan_service_image_b79f493c-9a5f-4f83-9215-54007249a0ba"
+    ],
+    "tour_card_primary_image_id": "travel_plan_service_image_9fd14563-b2e0-4680-8202-4c00e641471c",
+    "one_pager_hero_image_id": "travel_plan_service_image_9fd14563-b2e0-4680-8202-4c00e641471c",
+    "one_pager_image_ids": [],
     "days": [
       {
         "id": "travel_plan_day_bde5a92b-64be-4e98-bd3c-3ec97881766b",
@@ -117,6 +133,8 @@
               "sv": "Sapa stad",
               "no": "Sapa by"
             },
+            "details": null,
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -213,6 +231,8 @@
               "sv": "O Quy Ho Pass",
               "no": "O Quy Ho Pass"
             },
+            "details": "O Quy Ho Pass is renowned as one of the \"Four Great Mountain Passes\" of the northern coastal region, connecting the two provinces of Lao Cai and Lai Chau. This is a route that anyone who loves exploration wants to conquer at least once because of its majestic beauty and the magical transformation of the clouds and sky.",
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -220,8 +240,8 @@
             "start_time": null,
             "end_time": null,
             "image": {
-              "id": "travel_plan_service_image_23e11681-9d49-471f-8de0-bd3fb8d380d9",
-              "storage_path": "/public/v1/tour-images/tour_eeac7fbd-0770-4275-9809-97619ac66084/travel-plan-services/travel_plan_service_146e3f6b-03f1-41d7-be39-29978b561df5-1777364552649-46611318-b1b1-4a6c-ba34-ae060c2c4beb.webp",
+              "id": "travel_plan_service_image_1c63f313-bd29-4dcb-b165-9faf389eef3e",
+              "storage_path": "/public/v1/tour-images/tour_eeac7fbd-0770-4275-9809-97619ac66084/travel-plan-services/travel_plan_service_146e3f6b-03f1-41d7-be39-29978b561df5-1777948129723-505f6f89-f9ca-49c3-8b0f-70dec96ae99f.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -229,12 +249,12 @@
               "sort_order": 0,
               "is_primary": true,
               "is_customer_visible": true,
-              "include_in_travel_tour_card": true,
+              "include_in_travel_tour_card": false,
               "width_px": null,
               "height_px": null,
               "source_attribution": null,
               "focal_point": null,
-              "created_at": "2026-04-28T08:22:32.866Z"
+              "created_at": "2026-05-05T02:28:49.837Z"
             }
           },
           {
@@ -263,6 +283,8 @@
               "sv": "Ensamt träd",
               "no": "Ensomt tre"
             },
+            "details": "An iconic check-in spot at the top of O Quy Ho Pass. A solitary tree stands amidst the majestic mountain scenery, creating stunning and romantic photos perfect for social media.",
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -313,6 +335,8 @@
               "sv": "Glas bro",
               "no": "Glassbroen"
             },
+            "details": "When mentioning Glass Bridges in the Sa Pa and O Quy Ho Pass area, the most prominent landmark is the Dragon Cloud Glass Bridge. This is currently the highest glass bridge in Vietnam, offering an incredibly thrilling and impressive experience.",
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -363,6 +387,8 @@
               "sv": "Nattmarknad",
               "no": "Nattmarked"
             },
+            "details": "Sa Pa Night Market is one of the most exciting cultural and culinary experiences you shouldn't miss when visiting this misty town. Unlike the quietness of the day, the atmosphere here at night is very lively and full of the colors of the Northwest region.",
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -370,8 +396,8 @@
             "start_time": null,
             "end_time": null,
             "image": {
-              "id": "travel_plan_service_image_71f4ec0d-97d3-44d6-a538-2b7025d56e39",
-              "storage_path": "/public/v1/tour-images/tour_eeac7fbd-0770-4275-9809-97619ac66084/travel-plan-services/travel_plan_service_af7ed304-b7ef-495e-aa1b-bc2bc63e66b0-1777364713740-8693a2d9-e69f-4c7a-a53c-8cee39f362ff.webp",
+              "id": "travel_plan_service_image_5bccb698-d3e9-4329-b05f-a99fdc9b019c",
+              "storage_path": "/public/v1/tour-images/tour_eeac7fbd-0770-4275-9809-97619ac66084/travel-plan-services/travel_plan_service_af7ed304-b7ef-495e-aa1b-bc2bc63e66b0-1777948001171-8405ac88-21fa-42ac-a15e-de9c6f7e374e.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -379,12 +405,12 @@
               "sort_order": 0,
               "is_primary": true,
               "is_customer_visible": true,
-              "include_in_travel_tour_card": true,
+              "include_in_travel_tour_card": false,
               "width_px": null,
               "height_px": null,
               "source_attribution": null,
               "focal_point": null,
-              "created_at": "2026-04-28T08:25:14.014Z"
+              "created_at": "2026-05-05T02:26:41.299Z"
             }
           }
         ],
@@ -459,6 +485,8 @@
               "sv": "Muong Hoa tåg",
               "no": "Muong Hoa tog"
             },
+            "details": null,
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -509,6 +537,8 @@
               "sv": "Fansipan",
               "no": "Fansipan"
             },
+            "details": null,
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -516,8 +546,8 @@
             "start_time": null,
             "end_time": null,
             "image": {
-              "id": "travel_plan_service_image_e3bdaa7e-27dd-4fe4-86bf-43a1d3c5a5a4",
-              "storage_path": "/public/v1/tour-images/tour_eeac7fbd-0770-4275-9809-97619ac66084/travel-plan-services/travel_plan_service_00a8b673-3f30-4852-a74e-a464f723ec3b-1777364946033-acd6e42d-1148-4035-9261-6be2402f4dd5.webp",
+              "id": "travel_plan_service_image_e30ea8ed-457f-4f05-840d-109d2b9c102d",
+              "storage_path": "/public/v1/tour-images/tour_eeac7fbd-0770-4275-9809-97619ac66084/travel-plan-services/travel_plan_service_00a8b673-3f30-4852-a74e-a464f723ec3b-1777948333784-6c599e02-aa1f-4c6c-beeb-5564681248d7.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -525,12 +555,12 @@
               "sort_order": 0,
               "is_primary": true,
               "is_customer_visible": true,
-              "include_in_travel_tour_card": true,
+              "include_in_travel_tour_card": false,
               "width_px": null,
               "height_px": null,
               "source_attribution": null,
               "focal_point": null,
-              "created_at": "2026-04-28T08:29:06.219Z"
+              "created_at": "2026-05-05T02:32:14.140Z"
             }
           }
         ],
@@ -605,6 +635,8 @@
               "sv": "Ham Rong Mountain",
               "no": "Ham Rong-fjellet"
             },
+            "details": null,
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -655,6 +687,8 @@
               "sv": "Silver vattenfall",
               "no": "Sølvfoss"
             },
+            "details": null,
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -751,6 +785,8 @@
               "sv": "Molnbron",
               "no": "Cloud Bridge"
             },
+            "details": null,
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -801,6 +837,8 @@
               "sv": "Ban May Farm",
               "no": "Ban May Farm"
             },
+            "details": null,
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -851,6 +889,8 @@
               "sv": "Co La Café",
               "no": "Co La Cafe"
             },
+            "details": null,
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -947,6 +987,8 @@
               "sv": "Trang An",
               "no": "Trang An"
             },
+            "details": null,
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -997,6 +1039,8 @@
               "sv": "Häng Mua",
               "no": "Heng Mua"
             },
+            "details": null,
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -1093,6 +1137,8 @@
               "sv": "Hoa Lu",
               "no": "Hoa Lu"
             },
+            "details": null,
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -1143,6 +1189,8 @@
               "sv": "Bai Dinh-pagoden",
               "no": "Bai Dinh-pagoden"
             },
+            "details": null,
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -1332,5 +1380,6 @@
         "updated_at": "2026-04-28T08:57:11.347Z"
       }
     }
-  }
+  },
+  "published_on_webpage": true
 }

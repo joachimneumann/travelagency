@@ -48,7 +48,7 @@
   "seasonality_end_month": "oct",
   "priority": 97,
   "created_at": "2026-04-06T02:54:41.519Z",
-  "updated_at": "2026-05-04T05:20:52.539Z",
+  "updated_at": "2026-05-04T16:14:09.580Z",
   "travel_plan": {
     "destination_scope": [
       {
@@ -427,7 +427,7 @@
               "sv": "Linh Ung Pagoda",
               "no": "Linh Ung Pagoda"
             },
-            "details": null,
+            "details": "The Linh Ung Pagodas are the spiritual guardians of Da Nang. Whether you are gazing up at the towering Lady Buddha on the coast or finding peace among the misty peaks of Ba Na, these sacred sites offer a profound blend of architectural beauty and tranquil spirituality.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -479,7 +479,7 @@
               "sv": "Drakbron",
               "no": "Dragebroen"
             },
-            "details": null,
+            "details": "The Dragon Bridge is more than just a piece of infrastructure; it is a living masterpiece that captures the dynamic spirit of Da Nang. Witnessing the golden dragon breathe fire under the night sky is an unforgettable experience that blends modern engineering with ancient legend",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -512,7 +512,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Chicken Church",
+            "title": "Da Nang Cathedral",
             "title_i18n": {
               "ar": "كنيسة الدجاج",
               "fr": "Église de poulet",
@@ -531,7 +531,7 @@
               "sv": "Kycklingkyrkan",
               "no": "Kyllingkirken"
             },
-            "details": null,
+            "details": "Step into a piece of history at the Da Nang Cathedral, where colonial charm meets local legend. With its striking pink walls and the famous rooster crowning its spire, this cathedral offers a peaceful, colorful retreat in the heart of bustling Da Nang",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -539,7 +539,23 @@
             "location_i18n": {},
             "start_time": null,
             "end_time": null,
-            "image": null
+            "image": {
+              "id": "travel_plan_service_image_eb43e5fb-0660-4527-b579-2f174adcab68",
+              "storage_path": "/public/v1/tour-images/tour_16531bfc-a60f-4128-9abe-2eada1f2d7d8/travel-plan-services/travel_plan_service_f0505ee6-b589-47d4-bdf8-5a7d250be858-1777911224116-4533e89e-4386-44e2-af29-eb1ffdee8921.webp",
+              "caption": null,
+              "caption_i18n": {},
+              "alt_text": null,
+              "alt_text_i18n": {},
+              "sort_order": 0,
+              "is_primary": true,
+              "is_customer_visible": true,
+              "include_in_travel_tour_card": false,
+              "width_px": null,
+              "height_px": null,
+              "source_attribution": null,
+              "focal_point": null,
+              "created_at": "2026-05-04T16:13:44.244Z"
+            }
           },
           {
             "id": "travel_plan_service_ae51d437-68ce-4883-b169-5d595c9474fe",
@@ -798,7 +814,7 @@
               "sv": "Lang Co bay",
               "no": "Lang Co bukt"
             },
-            "details": null,
+            "details": "Lang Co Bay is a masterpiece of nature, where the mountains dip their toes into the emerald sea. Whether you are wandering along its white sandy shores or watching the sunset over the tranquil Lap An Lagoon, Lang Co offers a peaceful escape that feels worlds away from the hustle of modern life",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -850,7 +866,7 @@
               "sv": "Thien Mu Pagoda",
               "no": "Thien Mu-pagoden"
             },
-            "details": null,
+            "details": "As the symbol of Hue, Thien Mu Pagoda stands as a timeless guardian of the Perfume River. With its elegant tower and peaceful gardens, it offers a deep dive into the spiritual soul and royal history of Vietnam’s former imperial capital.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -902,7 +918,7 @@
               "sv": "Kejserliga citadellet",
               "no": "Imperial Citadel"
             },
-            "details": null,
+            "details": "Step through the gates of the Imperial Citadel and travel back to the era of Vietnam’s last emperors. With its majestic palaces, ornate temples, and tranquil lotus ponds, this walled fortress remains a powerful testament to the grandeur and resilience of the Nguyen Dynasty.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -954,7 +970,7 @@
               "sv": "Rökelse by",
               "no": "Røkelse Village"
             },
-            "details": null,
+            "details": "Immerse yourself in a world of color at the Thuy Xuan Incense Village. A feast for the senses, this historic craft village offers a rare glimpse into a centuries-old tradition, where every 'flower' of incense tells a story of Hue’s enduring cultural heritage.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -1006,7 +1022,7 @@
               "sv": "Dong Ba Market",
               "no": "Dong Ba-markedet"
             },
-            "details": null,
+            "details": "Experience the soul of Hue at Dong Ba Market. From the sizzling sounds of street food stalls to the delicate craftsmanship of poem conical hats, this bustling market is a sensory journey through the traditions and flavors of central Vietnam.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},

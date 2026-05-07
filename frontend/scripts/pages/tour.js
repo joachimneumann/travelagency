@@ -137,6 +137,8 @@ const state = {
   experienceHighlightsLoadFailed: false
 };
 
+let backendLoginRedirectScheduled = false;
+
 const TOUR_SOURCE_LANG = "en";
 const TOUR_DESCRIPTION_MAX_LENGTH = 170;
 const TOUR_DESCRIPTION_WARNING_LENGTH = 150;
@@ -2241,6 +2243,7 @@ async function submitForm(event) {
   setTourPageOverlay(true, backendT("tour.status.saving_overlay", "Saving changes. Please wait."));
   try {
     const duplicate = await findDuplicateTourTitle(title_i18n, state.id);
+    if (!state.authenticated) return;
     if (duplicate) {
       const duplicateMessage = backendT(
         "tour.error.duplicate_title",
@@ -2405,6 +2408,10 @@ async function fileToBase64(file) {
 const fetchApi = createApiFetcher({
   apiBase,
   onError: (message, payload, response) => {
+    if (response?.status === 401) {
+      handleUnauthorizedApiResponse();
+      return;
+    }
     const staleTourUpdate = response?.status === 409 && payload?.code === "TOUR_REVISION_MISMATCH";
     const visibleMessage = staleTourUpdate ? staleTourUpdateMessage() : message;
     showError(visibleMessage);
@@ -2466,6 +2473,21 @@ function redirectToBackendLogin() {
   window.location.href = `${apiBase}/auth/login?${loginParams.toString()}`;
 }
 
+function handleUnauthorizedApiResponse() {
+  state.authenticated = false;
+  const message = backendT(
+    "tour.error.session_expired",
+    "Your backend session expired. Sign in again to continue."
+  );
+  showError(message);
+  setStatus(message);
+  if (backendLoginRedirectScheduled) return;
+  backendLoginRedirectScheduled = true;
+  window.setTimeout(() => {
+    redirectToBackendLogin();
+  }, 250);
+}
+
 function applyTourPermissions() {
   if (state.permissions.canEditTours) return;
   if (els.addReelVideoBtn) els.addReelVideoBtn.disabled = true;
@@ -2500,6 +2522,7 @@ async function findDuplicateTourTitle(titleMap, currentTourId) {
   if (!candidates.length) return null;
 
   for (const candidate of candidates) {
+    if (!state.authenticated) return null;
     const duplicate = await findDuplicateTourTitleForLang(candidate.title, currentTourId, candidate.lang);
     if (duplicate) return duplicate;
   }
@@ -2516,6 +2539,7 @@ async function findDuplicateTourTitleForLang(title, currentTourId, lang) {
   const maxPages = 50;
 
   while (page <= maxPages) {
+    if (!state.authenticated) return null;
     const query = new URLSearchParams({
       search: title,
       page: String(page),

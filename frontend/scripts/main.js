@@ -200,6 +200,7 @@ const els = {
   toursSection: document.getElementById("tours"),
   mainContent: document.getElementById("main-content"),
   footerBrandTitle: document.getElementById("footerBrandTitle"),
+  footerLegalTitle: document.getElementById("footerLegalTitle"),
   pageFooter: document.querySelector(".footer"),
   debugPriorityBtn: document.getElementById("debugPriorityBtn"),
   debugPriorityOutput: document.getElementById("debugPriorityOutput"),
