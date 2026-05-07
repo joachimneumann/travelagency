@@ -1,7 +1,7 @@
 {
   "id": "tour_6ad22f13-b6c3-4936-9c14-1cde4b4818fa",
   "title": {
-    "en": "Explore Hanoi",
+    "en": "Explore Hanoi's Old Quarter",
     "ar": "اكتشف هانوي",
     "fr": "Explorez Hanoï",
     "zh": "探索河内",
@@ -47,7 +47,7 @@
   "seasonality_end_month": "",
   "priority": 50,
   "created_at": "2026-04-13T09:16:46.974Z",
-  "updated_at": "2026-04-30T04:05:50.414Z",
+  "updated_at": "2026-05-05T02:13:07.212Z",
   "travel_plan": {
     "destination_scope": [
       {
@@ -60,11 +60,22 @@
         ]
       }
     ],
+    "tour_card_image_ids": [
+      "travel_plan_service_image_082a5d88-405b-4af1-bf38-983c3394385d",
+      "travel_plan_service_image_f42ccab6-f020-406e-8006-2bd8193fec73",
+      "travel_plan_service_image_880eaa5c-ae68-474d-bafc-147eec21f5d9",
+      "travel_plan_service_image_d0a9b16e-ab1c-428e-a102-db9315a2db14",
+      "travel_plan_service_image_4f656596-c72b-4ddd-b35d-94375c47984e",
+      "travel_plan_service_image_1115b334-b383-47a1-8058-2feaf0a1fdca"
+    ],
+    "tour_card_primary_image_id": "travel_plan_service_image_082a5d88-405b-4af1-bf38-983c3394385d",
+    "one_pager_hero_image_id": "travel_plan_service_image_f42ccab6-f020-406e-8006-2bd8193fec73",
+    "one_pager_image_ids": [],
     "days": [
       {
         "id": "travel_plan_day_cedf2aa5-236f-4144-afc2-d58e6464bdcb",
         "day_number": 1,
-        "title": "Explore Hanoi",
+        "title": "Explore Hanoi's Old Quarter",
         "title_i18n": {
           "ar": "اكتشف هانوي",
           "fr": "Explorez Hanoï",
@@ -112,6 +123,8 @@
               "no": "Hoa Lo fengsel",
               "vi": "Nhà tù Hỏa Lò"
             },
+            "details": "Hoa Lo Prison is a powerful journey through the resilience of the human spirit. From its dark origins as a colonial dungeon to its complex role in the Vietnam War, this 'Hanoi Hilton' serves as a somber reminder of the sacrifices made in the pursuit of independence.",
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -162,6 +175,8 @@
               "no": "Etnologisk museum",
               "vi": "Bảo tàng Dân tộc học"
             },
+            "details": "The Vietnam Museum of Ethnology is a vibrant mosaic of the nation's cultural soul. From the soaring peaks of the Central Highlands houses to the intricate textiles of the northern mountains, it offers a beautiful and respectful celebration of the people who define Vietnam.",
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -212,6 +227,8 @@
               "no": "Văn Miếu Quốc Tủ Giám",
               "vi": "Văn Miếu Quốc Tủ Giám"
             },
+            "details": "The Temple of Literature is often cited as one of Hanoi’s most picturesque tourist attractions. Originally built as a university in 1070 dedicated to Confucius, scholars, and sages, the building is extremely well preserved and is a superb example of traditional-style Vietnamese architecture",
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -262,6 +279,8 @@
               "no": "Det er en pagode",
               "vi": "Chùa Một cột"
             },
+            "details": "The One Pillar Pagoda is a masterpiece of ancient Vietnamese architecture. Floating like a lotus above a peaceful pond, this historic temple tells a story of royal gratitude and spiritual devotion, making it a must-see symbol of Hanoi's cultural heritage.\"",
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -278,7 +297,7 @@
               "sort_order": 0,
               "is_primary": true,
               "is_customer_visible": true,
-              "include_in_travel_tour_card": true,
+              "include_in_travel_tour_card": false,
               "width_px": null,
               "height_px": null,
               "source_attribution": null,
@@ -312,6 +331,8 @@
               "sv": "Chấn Quốc Pagoda",
               "no": "Chấn Quốc Pagoda"
             },
+            "details": "Chấn Quốc Pagoda\n\nTrấn Quốc Pagoda (Chùa Trấn Quốc) is widely regarded as the oldest Buddhist temple in Hanoi, with a history spanning over 1,500 years. Situated on a small island on the eastern shore of West Lake (Ho Tay), it is famous for its stunning architecture and serene atmosphere",
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -362,6 +383,8 @@
               "sv": "Hanois katedral",
               "no": "Hanoi katedral"
             },
+            "details": "St. Joseph's Cathedral (Nhà thờ Lớn Hà Nội) is the oldest Roman Catholic church in Hanoi and serves as the cathedral of the Archdiocese of Hanoi. It is a stunning example of colonial architecture and a centerpiece of the city's historic district",
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -412,6 +435,8 @@
               "sv": "Hanoi tåggatan",
               "no": "Hanoi toggate"
             },
+            "details": "Hanoi Train Street is one of the most unique and photographed spots in the city. It consists of a narrow residential corridor where a functional railway track runs just centimeters away from the doorsteps of homes and cafes.",
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -437,7 +462,7 @@
             }
           }
         ],
-        "notes": null,
+        "notes": "Explore a labyrinth of heritage with centuries-old craft villages, where moss-covered ancient houses blend seamlessly with the bustling city life. A journey that takes you back to the elegant beauty and cultural depth of Thang Long, a thousand-year-old city.",
         "notes_i18n": {}
       }
     ],
@@ -539,5 +564,6 @@
         "updated_at": "2026-04-28T10:24:05.011Z"
       }
     }
-  }
+  },
+  "published_on_webpage": true
 }

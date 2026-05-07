@@ -1,7 +1,7 @@
 {
   "id": "tour_51d3c652-0e8d-4463-ad04-852c64b3a652",
   "title": {
-    "en": "Hanoi - Sapa - Ha Long Bay - Ninh Binh",
+    "en": "Hanoi  - Ha Long Bay",
     "ar": "هانوي - سابا - خليج ها لونج - نينه بينه",
     "fr": "Hanoï - Sapa - Baie d'Ha Long - Ninh Binh",
     "zh": "河内 - 沙坝 - 下龙湾 - 宁平",
@@ -48,7 +48,7 @@
   "seasonality_end_month": "sep",
   "priority": 100,
   "created_at": "2026-04-09T03:37:52.367Z",
-  "updated_at": "2026-05-04T05:10:22.659Z",
+  "updated_at": "2026-05-05T07:05:43.065Z",
   "travel_plan": {
     "destination_scope": [
       {
@@ -61,177 +61,33 @@
                 "place_id": "place_a8172e07-213b-46ed-bb88-f0f77bb7fbe0"
               }
             ]
+          },
+          {
+            "area_id": "area_024155db-da17-4cdb-ae0e-a01fd1e77f58",
+            "places": []
           }
         ]
       }
     ],
     "tour_card_image_ids": [
+      "travel_plan_service_image_ee80bf4d-6417-44aa-a4c2-8a19819afba5",
+      "travel_plan_service_image_66239309-9b58-458d-92a9-265a203b1492",
+      "travel_plan_service_image_4a9a4c3a-7134-4a99-be33-6c7213fb474c",
+      "travel_plan_service_image_e4d15524-cf87-4801-8970-de1be6418f24",
+      "travel_plan_service_image_38165b85-f838-477b-8d1d-ac22d3c57cd2",
+      "travel_plan_service_image_fb2eab54-5760-416e-9164-5b48421cdfd3"
+    ],
+    "tour_card_primary_image_id": "travel_plan_service_image_ee80bf4d-6417-44aa-a4c2-8a19819afba5",
+    "one_pager_hero_image_id": "travel_plan_service_image_ee80bf4d-6417-44aa-a4c2-8a19819afba5",
+    "one_pager_image_ids": [
       "travel_plan_service_image_fb2eab54-5760-416e-9164-5b48421cdfd3",
       "travel_plan_service_image_38165b85-f838-477b-8d1d-ac22d3c57cd2",
-      "travel_plan_service_image_ee80bf4d-6417-44aa-a4c2-8a19819afba5"
-    ],
-    "tour_card_primary_image_id": "travel_plan_service_image_fb2eab54-5760-416e-9164-5b48421cdfd3",
-    "one_pager_hero_image_id": "travel_plan_service_image_fb2eab54-5760-416e-9164-5b48421cdfd3",
-    "one_pager_image_ids": [
-      "travel_plan_service_image_f51a6d6f-104c-40f0-8a25-e3a8aa0a9c05",
-      "travel_plan_service_image_ee80bf4d-6417-44aa-a4c2-8a19819afba5",
-      "travel_plan_service_image_e4d15524-cf87-4801-8970-de1be6418f24",
       "travel_plan_service_image_66239309-9b58-458d-92a9-265a203b1492"
     ],
     "days": [
       {
-        "id": "travel_plan_day_e9161ca8-2912-4912-9610-464984823d83",
-        "day_number": 1,
-        "title": "Arrival – HaNoi",
-        "title_i18n": {
-          "ar": "الوصول - هانوي",
-          "fr": "Arrivée – Hanoï",
-          "zh": "抵达 – 河内",
-          "ja": "到着 – ハノイ",
-          "ko": "도착 – 하노이",
-          "vi": "Đến – Hà Nội",
-          "ms": "Ketibaan – HaNoi",
-          "de": "Ankunft – Hanoi",
-          "es": "Llegada – Hanói",
-          "it": "Arrivo – Hanoi",
-          "ru": "Прибытие – Ханой.",
-          "nl": "Aankomst – Hanoi",
-          "pl": "Przyjazd – HaNoi",
-          "da": "Ankomst – HaNoi",
-          "sv": "Ankomst – HaNoi",
-          "no": "Ankomst – HaNoi"
-        },
-        "overnight_location": null,
-        "overnight_location_i18n": {},
-        "services": [
-          {
-            "id": "travel_plan_service_e945d12b-03a5-46d0-a572-62694e9dc251",
-            "timing_kind": "label",
-            "time_label": null,
-            "time_label_i18n": {},
-            "time_point": null,
-            "kind": "other",
-            "title": "airport pick-up",
-            "title_i18n": {
-              "ar": "الاستقبال في المطار",
-              "fr": "prise en charge à l'aéroport",
-              "zh": "机场接机",
-              "ja": "空港送迎",
-              "ko": "공항 픽업",
-              "vi": "đón sân bay",
-              "ms": "pengambilan lapangan terbang",
-              "de": "Abholung vom Flughafen",
-              "es": "recogida en el aeropuerto",
-              "it": "ritiro all'aeroporto",
-              "ru": "встреча в аэропорту",
-              "nl": "ophalen van de luchthaven",
-              "pl": "odbiór z lotniska",
-              "da": "lufthavn afhentning",
-              "sv": "upphämtning på flygplatsen",
-              "no": "henting på flyplassen"
-            },
-            "details": null,
-            "details_i18n": {},
-            "image_subtitle": null,
-            "image_subtitle_i18n": {},
-            "location": null,
-            "location_i18n": {},
-            "start_time": null,
-            "end_time": null,
-            "image": {
-              "id": "travel_plan_service_image_f7ee82ec-0b00-4350-b59f-de847c4b9638",
-              "storage_path": "/public/v1/tour-images/tour_51d3c652-0e8d-4463-ad04-852c64b3a652/travel-plan-services/travel_plan_service_e945d12b-03a5-46d0-a572-62694e9dc251-1777298097393-39920a1a-e273-43b1-b3bf-ecbd2e9aeccd.webp",
-              "caption": null,
-              "caption_i18n": {},
-              "alt_text": null,
-              "alt_text_i18n": {},
-              "sort_order": 0,
-              "is_primary": true,
-              "is_customer_visible": true,
-              "include_in_travel_tour_card": false,
-              "width_px": null,
-              "height_px": null,
-              "source_attribution": null,
-              "focal_point": null,
-              "created_at": "2026-04-27T13:54:57.457Z"
-            }
-          },
-          {
-            "id": "travel_plan_service_7867c82d-e10f-430c-acc2-ee9dd82339f8",
-            "timing_kind": "label",
-            "time_label": null,
-            "time_label_i18n": {},
-            "time_point": null,
-            "kind": "other",
-            "title": "Visit the 36 streets and alleys of Hanoi.",
-            "title_i18n": {
-              "ar": "قم بزيارة شوارع وأزقة هانوي الـ 36.",
-              "fr": "Visitez les 36 rues et ruelles de Hanoi.",
-              "zh": "游览河内36条街巷。",
-              "ja": "ハノイの 36 の通りと路地を訪れてください。",
-              "ko": "하노이의 36개 거리와 골목을 방문해보세요.",
-              "vi": "Tham quan 36 phố phường Hà Nội.",
-              "ms": "Lawati 36 jalan dan lorong di Hanoi.",
-              "de": "Besuchen Sie die 36 Straßen und Gassen von Hanoi.",
-              "es": "Visita las 36 calles y callejones de Hanoi.",
-              "it": "Visita le 36 strade e vicoli di Hanoi.",
-              "ru": "Посетите 36 улиц и переулков Ханоя.",
-              "nl": "Bezoek de 36 straten en steegjes van Hanoi.",
-              "pl": "Odwiedź 36 ulic i zaułków Hanoi.",
-              "da": "Besøg de 36 gader og stræder i Hanoi.",
-              "sv": "Besök Hanois 36 gator och gränder.",
-              "no": "Besøk de 36 gatene og smugene i Hanoi."
-            },
-            "details": "Step into the timeless rhythm of the Hanoi Old Quarter. Exploring its 36 Streets and hidden alleys is like walking through a living museum, where ancient craftsmanship meets vibrant street life. From the scent of traditional herbs to the glow of silk lanterns, every corner tells a story of a thousand-year-old city",
-            "details_i18n": {},
-            "image_subtitle": null,
-            "image_subtitle_i18n": {},
-            "location": null,
-            "location_i18n": {},
-            "start_time": null,
-            "end_time": null,
-            "image": {
-              "id": "travel_plan_service_image_f51a6d6f-104c-40f0-8a25-e3a8aa0a9c05",
-              "storage_path": "/public/v1/tour-images/tour_51d3c652-0e8d-4463-ad04-852c64b3a652/travel-plan-services/travel_plan_service_7867c82d-e10f-430c-acc2-ee9dd82339f8-1777341280171-25f4d246-fab2-462e-927e-ca042b8d78c3.webp",
-              "caption": null,
-              "caption_i18n": {},
-              "alt_text": null,
-              "alt_text_i18n": {},
-              "sort_order": 0,
-              "is_primary": true,
-              "is_customer_visible": true,
-              "include_in_travel_tour_card": false,
-              "width_px": null,
-              "height_px": null,
-              "source_attribution": null,
-              "focal_point": null,
-              "created_at": "2026-04-28T01:54:40.350Z"
-            }
-          }
-        ],
-        "notes": "Upon arrival at Noi Bai Airport, our guide and driver will transfer you to Hanoi center. Experience your first glimpse of Vietnam’s vibrant, bustling traffic by car.",
-        "notes_i18n": {
-          "ar": "عند الوصول إلى مطار نوي باي، سيقوم مرشدنا وسائقنا بنقلك إلى مركز هانوي. استمتع بإلقاء نظرة أولى على حركة المرور النابضة بالحياة والصاخبة في فيتنام بالسيارة.",
-          "fr": "À votre arrivée à l'aéroport de Noi Bai, notre guide et chauffeur vous transféreront au centre de Hanoi. Découvrez votre premier aperçu du trafic dynamique et animé du Vietnam en voiture.",
-          "zh": "抵达内排机场后，我们的导游和司机将带您前往河内市中心。驾车体验越南充满活力、熙熙攘攘的交通。",
-          "ja": "ノイバイ空港に到着したら、ガイドとドライバーがハノイ中心部までお送りします。車でベトナムの活気に満ちたにぎやかな交通を初めて体験してください。",
-          "ko": "노이바이 공항에 도착하면 가이드와 운전기사가 하노이 센터로 모셔다드립니다. 베트남의 활기차고 분주한 교통 상황을 자동차로 처음 경험해 보세요.",
-          "vi": "Đến sân bay Nội Bài, xe và hướng dẫn viên đón quý khách về trung tâm Hà Nội. Trải nghiệm cái nhìn đầu tiên của bạn về giao thông sôi động, nhộn nhịp của Việt Nam bằng ô tô.",
-          "ms": "Apabila tiba di Lapangan Terbang Noi Bai, pemandu dan pemandu kami akan memindahkan anda ke pusat Hanoi. Alami pandangan pertama anda tentang trafik Vietnam yang meriah dan sibuk dengan kereta.",
-          "de": "Nach Ihrer Ankunft am Flughafen Noi Bai werden Sie von unserem Reiseleiter und Fahrer ins Zentrum von Hanoi gebracht. Erleben Sie mit dem Auto einen ersten Blick auf den pulsierenden, geschäftigen Verkehr Vietnams.",
-          "es": "A su llegada al aeropuerto de Noi Bai, nuestro guía y conductor lo trasladarán al centro de Hanoi. Experimente su primera visión del vibrante y bullicioso tráfico de Vietnam en automóvil.",
-          "it": "All'arrivo all'aeroporto di Noi Bai, la nostra guida e autista ti trasferiranno al centro di Hanoi. Vivi il tuo primo assaggio del vivace e vivace traffico del Vietnam in auto.",
-          "ru": "По прибытии в аэропорт Нойбай наш гид и водитель отвезут вас в центр Ханоя. Впервые вы сможете увидеть оживленное и шумное движение Вьетнама на машине.",
-          "nl": "Bij aankomst op de luchthaven Noi Bai brengen onze gids en chauffeur u naar het centrum van Hanoi. Ervaar je eerste glimp van het levendige, drukke verkeer van Vietnam met de auto.",
-          "pl": "Po przybyciu na lotnisko Noi Bai nasz przewodnik i kierowca zabiorą Cię do centrum Hanoi. Przeżyj pierwszy rzut oka na tętniący życiem ruch uliczny w Wietnamie, jadąc samochodem.",
-          "da": "Ved ankomst til Noi Bai lufthavn vil vores guide og chauffør overføre dig til Hanoi centrum. Oplev dit første glimt af Vietnams livlige, travle trafik i bil.",
-          "sv": "Vid ankomst till Noi Bai flygplats kommer vår guide och chaufför att överföra dig till Hanois centrum. Upplev din första glimt av Vietnams livliga, livliga trafik med bil.",
-          "no": "Ved ankomst til Noi Bai flyplass vil vår guide og sjåfør overføre deg til Hanoi sentrum. Opplev ditt første glimt av Vietnams livlige, travle trafikk med bil."
-        }
-      },
-      {
         "id": "travel_plan_day_923dfd89-6533-43fa-ada7-38e6767a7c6e",
-        "day_number": 2,
+        "day_number": 1,
         "title": "HaNoi city Tour",
         "title_i18n": {
           "ar": "جولة مدينة هانوي",
@@ -254,6 +110,41 @@
         "overnight_location": null,
         "overnight_location_i18n": {},
         "services": [
+          {
+            "id": "travel_plan_service_476f6933-0c46-4005-965b-c21668d9d529",
+            "timing_kind": "label",
+            "time_label": null,
+            "time_label_i18n": {},
+            "time_point": null,
+            "kind": "other",
+            "title": "Pick up guests and take them to the hotel.",
+            "title_i18n": {},
+            "details": null,
+            "details_i18n": {},
+            "image_subtitle": null,
+            "image_subtitle_i18n": {},
+            "location": null,
+            "location_i18n": {},
+            "start_time": null,
+            "end_time": null,
+            "image": {
+              "id": "travel_plan_service_image_d89b2ace-a032-4505-9f25-1c33b5ddfdd3",
+              "storage_path": "/public/v1/tour-images/tour_51d3c652-0e8d-4463-ad04-852c64b3a652/travel-plan-services/travel_plan_service_476f6933-0c46-4005-965b-c21668d9d529-1777958445406-e2cc5b61-0c30-47b0-a6d5-28f901dd88fa.webp",
+              "caption": null,
+              "caption_i18n": {},
+              "alt_text": null,
+              "alt_text_i18n": {},
+              "sort_order": 0,
+              "is_primary": true,
+              "is_customer_visible": true,
+              "include_in_travel_tour_card": false,
+              "width_px": null,
+              "height_px": null,
+              "source_attribution": null,
+              "focal_point": null,
+              "created_at": "2026-05-05T05:20:45.520Z"
+            }
+          },
           {
             "id": "travel_plan_service_85141620-87fa-4c40-9286-62f72eb5d92f",
             "timing_kind": "label",
@@ -454,7 +345,7 @@
               "sort_order": 0,
               "is_primary": true,
               "is_customer_visible": true,
-              "include_in_travel_tour_card": false,
+              "include_in_travel_tour_card": true,
               "width_px": null,
               "height_px": null,
               "source_attribution": null,
@@ -485,7 +376,7 @@
       },
       {
         "id": "travel_plan_day_aba484c1-bf58-44ac-a62c-17d04eabba24",
-        "day_number": 3,
+        "day_number": 2,
         "title": "HaNoi – HaLong Bay",
         "title_i18n": {
           "ar": "هانوي - خليج هالونج",
@@ -508,6 +399,57 @@
         "overnight_location": null,
         "overnight_location_i18n": {},
         "services": [
+          {
+            "id": "travel_plan_service_7e9a2950-e544-4131-8cc4-84b8055186d7",
+            "timing_kind": "label",
+            "time_label": null,
+            "time_label_i18n": {},
+            "time_point": null,
+            "kind": "other",
+            "title": "Pick up guests at the airport",
+            "title_i18n": {
+              "ar": "التقاط الضيوف في المطار",
+              "fr": "Récupérer les invités à l'aéroport",
+              "zh": "到机场接客人",
+              "ja": "空港でのゲストのお迎え",
+              "ko": "공항에서 손님을 픽업하세요",
+              "ms": "Ambil tetamu di lapangan terbang",
+              "de": "Abholung der Gäste am Flughafen",
+              "es": "Recoger invitados en el aeropuerto.",
+              "it": "Accogliere gli ospiti all'aeroporto",
+              "ru": "Встреча гостей в аэропорту",
+              "nl": "Gasten ophalen op de luchthaven",
+              "pl": "Odbierz gości na lotnisku",
+              "da": "Hent gæster i lufthavnen",
+              "sv": "Hämta gäster på flygplatsen",
+              "no": "Hente gjester på flyplassen"
+            },
+            "details": null,
+            "details_i18n": {},
+            "image_subtitle": null,
+            "image_subtitle_i18n": {},
+            "location": null,
+            "location_i18n": {},
+            "start_time": null,
+            "end_time": null,
+            "image": {
+              "id": "travel_plan_service_image_09c9650b-b651-46c0-a1ac-6c552f9a0e25",
+              "storage_path": "/public/v1/tour-images/tour_c2c80f99-287c-41b5-93cc-53c4d98d0caf/travel-plan-services/travel_plan_service_abdee124-c984-4813-aae9-cea38dd11c85-1777344058412-5ce2aac0-e946-43cf-ab7d-74dc9754999c.webp",
+              "caption": null,
+              "caption_i18n": {},
+              "alt_text": null,
+              "alt_text_i18n": {},
+              "sort_order": 0,
+              "is_primary": true,
+              "is_customer_visible": true,
+              "include_in_travel_tour_card": false,
+              "width_px": null,
+              "height_px": null,
+              "source_attribution": null,
+              "focal_point": null,
+              "created_at": "2026-04-28T02:40:58.471Z"
+            }
+          },
           {
             "id": "travel_plan_service_223df447-6066-4d3a-929c-7828c2d019fb",
             "timing_kind": "label",
@@ -552,7 +494,7 @@
               "sort_order": 0,
               "is_primary": true,
               "is_customer_visible": true,
-              "include_in_travel_tour_card": false,
+              "include_in_travel_tour_card": true,
               "width_px": null,
               "height_px": null,
               "source_attribution": null,
@@ -604,7 +546,7 @@
               "sort_order": 0,
               "is_primary": true,
               "is_customer_visible": true,
-              "include_in_travel_tour_card": false,
+              "include_in_travel_tour_card": true,
               "width_px": null,
               "height_px": null,
               "source_attribution": null,
@@ -638,7 +580,7 @@
               "sv": "Lunch på kryssningsfartyget",
               "no": "Lunsj på cruiseskipet"
             },
-            "details": null,
+            "details": "Lunch on a Ha Long Bay cruise is a feast for both the palate and the eyes. Savoring fresh-caught seafood while gliding through the emerald waters and emerald peaks is an essential experience that captures the true luxury of Northern Vietnam.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -684,6 +626,53 @@
           "sv": "Hämtning vid Hanois gamla kvarter. Njut av Red River Delta-landskapet till Ha Long Bay. Kom 10 minuter tidigt. Trafiken kan orsaka förseningar. Tack för ditt tålamod!",
           "no": "Hent i Hanoi Old Quarter. Nyt Red River Delta-landskapet til Ha Long Bay. Kom 10 minutter for tidlig. Trafikk kan føre til forsinkelser. Takk for tålmodigheten!"
         }
+      },
+      {
+        "id": "travel_plan_day_56a905e0-b4a3-497c-913f-c23666ce0388",
+        "day_number": 3,
+        "title": "Take them shopping and see them off at the airport.",
+        "title_i18n": {},
+        "overnight_location": null,
+        "overnight_location_i18n": {},
+        "services": [
+          {
+            "id": "travel_plan_service_6bee599f-8443-4f52-8203-789a6da99cf2",
+            "timing_kind": "label",
+            "time_label": null,
+            "time_label_i18n": {},
+            "time_point": null,
+            "kind": "other",
+            "title": "Take them shopping and see them off at the airport.",
+            "title_i18n": {},
+            "details": null,
+            "details_i18n": {},
+            "image_subtitle": null,
+            "image_subtitle_i18n": {},
+            "location": null,
+            "location_i18n": {},
+            "start_time": null,
+            "end_time": null,
+            "image": {
+              "id": "travel_plan_service_image_8464e064-af4c-48cb-ba8d-6145e7622fe7",
+              "storage_path": "/public/v1/tour-images/tour_51d3c652-0e8d-4463-ad04-852c64b3a652/travel-plan-services/travel_plan_service_6bee599f-8443-4f52-8203-789a6da99cf2-1777958385836-0b43eec5-1fee-451d-8cc9-2f0cbb8369b5.webp",
+              "caption": null,
+              "caption_i18n": {},
+              "alt_text": null,
+              "alt_text_i18n": {},
+              "sort_order": 0,
+              "is_primary": true,
+              "is_customer_visible": true,
+              "include_in_travel_tour_card": false,
+              "width_px": null,
+              "height_px": null,
+              "source_attribution": null,
+              "focal_point": null,
+              "created_at": "2026-05-05T05:19:45.913Z"
+            }
+          }
+        ],
+        "notes": null,
+        "notes_i18n": {}
       }
     ],
     "translation_meta": {
