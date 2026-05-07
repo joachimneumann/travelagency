@@ -432,7 +432,6 @@ const {
   setupFilterEvents,
   setupFilterSelectPanels,
   syncFilterInputs,
-  setupSecretCustomizeUnlock,
   tourDestinations
 } = toursController;
 
@@ -448,7 +447,6 @@ async function init() {
   markHomepageMobileStageReady("heroCopyReady");
   setupMobileNav();
   setupReelsUnlock();
-  setupSecretCustomizeUnlock();
   setupReelsToggle();
   setupFAQ();
   setupTeamSection();

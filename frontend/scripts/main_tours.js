@@ -3,6 +3,7 @@ import {
   FRONTEND_LANGUAGE_CODES,
   normalizeLanguageCode
 } from "../../shared/generated/language_catalog.js";
+import { createTourCustomizer } from "./tour_customize.js";
 
 const DEFAULT_TOUR_IMAGE = "/assets/img/marketing_tours.png";
 const TOUR_IMAGE_TRANSITION_MS = 2000;
@@ -55,7 +56,6 @@ const TOUR_EXPERIENCE_HIGHLIGHTS = Object.freeze([
   { id: "shopping_souvenirs", title: "Shopping and Souvenirs", image: "20.png" }
 ]);
 const TOUR_EXPERIENCE_HIGHLIGHT_BY_ID = new Map(TOUR_EXPERIENCE_HIGHLIGHTS.map((item) => [item.id, item]));
-const SECRET_CUSTOMIZE_CLICK_TARGET = 5;
 const tourCardImageTransitionTimers = new WeakMap();
 const tourPlanSummaryDetailsAnimations = new WeakMap();
 
@@ -87,11 +87,21 @@ export function createFrontendToursController(ctx) {
   let tourDetailsConnectorFrame = 0;
   let tourDetailsTransitionToken = 0;
   let tourCardMediaSnapshotToken = 0;
-  let secretCustomizeClickCount = 0;
-  let secretCustomizeUnlocked = false;
-  let secretCustomizeUnlockBound = false;
   const openingTourColumnIndexes = new Map();
   const openingTourInitialHeights = new Map();
+  const tourCustomizer = createTourCustomizer({
+    state,
+    frontendT,
+    currentFrontendLang,
+    normalizeFrontendTourLang,
+    escapeHTML,
+    escapeAttr,
+    travelPlanDays,
+    findTripById,
+    ensureTourDetailsLoaded,
+    allTrips: () => state.trips,
+    renderVisibleTrips: () => renderVisibleTrips()
+  });
 
   function normalizeFrontendTourLang(value) {
     return normalizeLanguageCode(value, { allowedCodes: FRONTEND_LANGUAGE_CODES, fallback: "en" });
@@ -770,6 +780,10 @@ export function createFrontendToursController(ctx) {
     return Array.isArray(trip?.travel_plan?.days) ? trip.travel_plan.days : [];
   }
 
+  function activeTourPlanDays(trip) {
+    return tourCustomizer?.activeDaysForTrip(trip) || travelPlanDays(trip);
+  }
+
   function hasTravelPlanDays(trip) {
     return travelPlanDays(trip).length > 0
       || Number(trip?.travel_plan_day_count || 0) > 0
@@ -777,7 +791,7 @@ export function createFrontendToursController(ctx) {
   }
 
   function tourDurationDayCount(trip) {
-    return travelPlanDays(trip).length
+    return activeTourPlanDays(trip).length
       || Math.max(0, Number.parseInt(trip?.travel_plan_day_count, 10) || 0)
       || Math.max(0, Number.parseInt(trip?.duration_days, 10) || 0);
   }
@@ -941,52 +955,6 @@ export function createFrontendToursController(ctx) {
     if (window.matchMedia("(max-width: 760px)").matches) return 1;
     if (window.matchMedia("(max-width: 1024px)").matches) return 2;
     return 3;
-  }
-
-  function isSecretCustomizeDesktop() {
-    return getTourGridColumnCount() === 3;
-  }
-
-  function syncSecretCustomizeVisibility() {
-    if (typeof document === "undefined") return;
-    document.documentElement.classList.toggle(
-      "tour-customize-unlocked",
-      secretCustomizeUnlocked && isSecretCustomizeDesktop()
-    );
-  }
-
-  function unlockSecretCustomize() {
-    if (!isSecretCustomizeDesktop()) {
-      secretCustomizeClickCount = 0;
-      syncSecretCustomizeVisibility();
-      return;
-    }
-    secretCustomizeUnlocked = true;
-    secretCustomizeClickCount = 0;
-    syncSecretCustomizeVisibility();
-  }
-
-  function registerSecretCustomizeClick() {
-    if (!isSecretCustomizeDesktop()) {
-      secretCustomizeClickCount = 0;
-      return;
-    }
-    secretCustomizeClickCount += 1;
-    if (secretCustomizeClickCount >= SECRET_CUSTOMIZE_CLICK_TARGET) {
-      unlockSecretCustomize();
-    }
-  }
-
-  function setupSecretCustomizeUnlock() {
-    syncSecretCustomizeVisibility();
-    if (secretCustomizeUnlockBound) return;
-    secretCustomizeUnlockBound = true;
-    if (els.footerLegalTitle instanceof HTMLElement) {
-      els.footerLegalTitle.addEventListener("click", registerSecretCustomizeClick);
-    }
-    if (typeof window !== "undefined") {
-      window.addEventListener("resize", syncSecretCustomizeVisibility, { passive: true });
-    }
   }
 
   function bindTourGridResizeHandler() {
@@ -1664,17 +1632,24 @@ export function createFrontendToursController(ctx) {
   function renderTourOnePagerDownload(trip) {
     const pdfUrl = tourOnePagerPdfUrl(trip);
     if (!pdfUrl) return "";
+    const tripId = normalizeText(trip?.id);
+    const hasCustomPreview = tourCustomizer?.hasCustomization(tripId);
     const pdfAriaLabel = frontendT("tour.plan.pdf_aria", "Tour PDF");
     const pdfDescription = frontendT(
       "tour.plan.pdf_description",
       "Contact information, Experience highlights, and pictures"
     );
-    const pdfDownloadLabel = frontendT("tour.plan.pdf_download", "Tour Preview");
+    const pdfDownloadLabel = hasCustomPreview
+      ? frontendT("tour.plan.pdf_download_customized", "Custom Tour Preview")
+      : frontendT("tour.plan.pdf_download", "Tour Preview");
+    const downloadAttrs = hasCustomPreview
+      ? `href="#" data-tour-custom-pdf data-trip-id="${escapeAttr(tripId)}"`
+      : `href="${escapeAttr(pdfUrl)}"`;
     return `
       <section class="tour-plan-pdf" aria-label="${escapeAttr(pdfAriaLabel)}">
         <div class="tour-plan-pdf__body">
           <div class="tour-plan-pdf__content">
-            <a class="btn btn-secondary tour-plan-pdf__download" href="${escapeAttr(pdfUrl)}" target="_blank" rel="noopener">${escapeHTML(pdfDownloadLabel)}</a>
+            <a class="btn btn-secondary tour-plan-pdf__download" ${downloadAttrs} target="_blank" rel="noopener">${escapeHTML(pdfDownloadLabel)}</a>
             <p>${escapeHTML(pdfDescription)}</p>
           </div>
         </div>
@@ -1848,17 +1823,30 @@ export function createFrontendToursController(ctx) {
     `;
   }
 
-  function renderSecretCustomizeButton(tripId) {
-    const label = frontendT("tour.plan.customize", "customize");
+  function renderTourCustomizeButton(trip) {
+    const tripId = normalizeText(trip?.id);
+    if (!tripId) return "";
+    const label = frontendT("tour.plan.customize", "Customize this tour");
+    const routePreview = tourCustomizer?.routePreviewForTrip(trip) || { points: "", groups: [] };
     return `
-      <div class="tour-plan__secret-customize">
-        <button class="btn btn-secondary tour-plan__secret-customize-button" type="button" data-open-modal data-trip-id="${escapeAttr(tripId)}">${escapeHTML(label)}</button>
+      <div class="tour-plan__customize">
+        <button class="tour-plan__customize-map" type="button" data-tour-customize data-trip-id="${escapeAttr(tripId)}" aria-label="${escapeAttr(label)}" title="${escapeAttr(label)}">
+          <span class="tour-plan__customize-map-frame" aria-hidden="true">
+            <span class="tour-plan__customize-map-image"></span>
+            <svg class="tour-plan__customize-map-route" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+              ${routePreview.points ? `<polyline points="${escapeAttr(routePreview.points)}" fill="none" vector-effect="non-scaling-stroke" />` : ""}
+            </svg>
+            ${routePreview.groups.map((group) => `
+              <span class="tour-plan__customize-map-marker" style="left:${group.x}%;top:${group.y}%;" title="${escapeAttr(group.locationLabel)}">${escapeHTML(group.label)}</span>
+            `).join("")}
+          </span>
+        </button>
       </div>
     `;
   }
 
   function renderTourTravelPlanDetails(trip) {
-    const days = travelPlanDays(trip);
+    const days = activeTourPlanDays(trip);
     if (!days.length) {
       return `
         <div class="tour-plan--empty">
@@ -1874,7 +1862,7 @@ export function createFrontendToursController(ctx) {
       ${renderTourDetailsHeader(trip, days)}
       ${renderTourExperienceHighlights(trip)}
       ${renderTourOnePagerDownload(trip)}
-      ${renderSecretCustomizeButton(tripId)}
+      ${renderTourCustomizeButton(trip)}
       ${renderTourPlanDaySummary(days, tripId)}
       <div class="tour-plan__footer-cta">
         <button class="btn btn-primary tour-plan__footer-plan-trip" type="button" data-open-modal data-trip-id="${escapeAttr(tripId)}">${escapeHTML(ctaLabel)}</button>
@@ -2193,6 +2181,50 @@ export function createFrontendToursController(ctx) {
         animateTourDetailsToggle(tripId, false);
       });
       button.dataset.tourDetailsCloseBound = "1";
+    });
+
+    const customizeButtons = els.tourGrid.querySelectorAll("[data-tour-customize][data-trip-id]");
+    customizeButtons.forEach((button) => {
+      if (!(button instanceof HTMLElement) || button.dataset.tourCustomizeBound === "1") return;
+      button.addEventListener("click", async (event) => {
+        event.preventDefault();
+        const tripId = normalizeText(button.getAttribute("data-trip-id"));
+        if (!tripId || button.dataset.tourCustomizeLoading === "1") return;
+        button.dataset.tourCustomizeLoading = "1";
+        button.setAttribute("aria-disabled", "true");
+        try {
+          await tourCustomizer.open(tripId);
+        } catch (error) {
+          console.error("Failed to open tour customizer.", error);
+        } finally {
+          delete button.dataset.tourCustomizeLoading;
+          button.removeAttribute("aria-disabled");
+        }
+      });
+      button.dataset.tourCustomizeBound = "1";
+    });
+
+    const customPdfLinks = els.tourGrid.querySelectorAll("[data-tour-custom-pdf][data-trip-id]");
+    customPdfLinks.forEach((link) => {
+      if (!(link instanceof HTMLElement) || link.dataset.tourCustomPdfBound === "1") return;
+      link.addEventListener("click", async (event) => {
+        event.preventDefault();
+        const tripId = normalizeText(link.getAttribute("data-trip-id"));
+        if (!tripId || link.dataset.tourCustomPdfLoading === "1") return;
+        link.dataset.tourCustomPdfLoading = "1";
+        link.setAttribute("aria-disabled", "true");
+        try {
+          await tourCustomizer.openCustomizedPdf(tripId);
+        } catch (error) {
+          console.error("Failed to open customized tour PDF preview.", error);
+          const fallbackUrl = tourOnePagerPdfUrl(findTripById(tripId));
+          if (fallbackUrl) window.open(fallbackUrl, "_blank", "noopener");
+        } finally {
+          delete link.dataset.tourCustomPdfLoading;
+          link.removeAttribute("aria-disabled");
+        }
+      });
+      link.dataset.tourCustomPdfBound = "1";
     });
 
     const buttons = els.tourGrid.querySelectorAll("[data-open-modal][data-trip-id]");
@@ -4077,7 +4109,6 @@ export function createFrontendToursController(ctx) {
     setFilterCheckboxes,
     setupFilterEvents,
     setupFilterSelectPanels,
-    setupSecretCustomizeUnlock,
     syncFilterInputs,
     tourDestinations
   };
