@@ -675,7 +675,9 @@ function publicDestinationScopeCatalog(store, destinationOptions, { lang = "en",
         destination,
         country_code: normalizeText(area?.destination).toUpperCase(),
         code: normalizeText(area?.code),
-        label: normalizeText(area?.label || area?.name || area?.code) || id
+        label: normalizeText(area?.label || area?.name || area?.code) || id,
+        ...(Number.isFinite(Number(area?.latitude)) ? { latitude: Number(area.latitude) } : {}),
+        ...(Number.isFinite(Number(area?.longitude)) ? { longitude: Number(area.longitude) } : {})
       };
     })
     .filter(Boolean);
@@ -690,7 +692,9 @@ function publicDestinationScopeCatalog(store, destinationOptions, { lang = "en",
         id,
         area_id: areaId,
         code: normalizeText(place?.code),
-        label: normalizeText(place?.label || place?.name || place?.code) || id
+        label: normalizeText(place?.label || place?.name || place?.code) || id,
+        ...(Number.isFinite(Number(place?.latitude)) ? { latitude: Number(place.latitude) } : {}),
+        ...(Number.isFinite(Number(place?.longitude)) ? { longitude: Number(place.longitude) } : {})
       };
     })
     .filter(Boolean);
@@ -1649,9 +1653,10 @@ async function writeSeoSurfaceAssets({
 
 async function writeHomepageInitialBundleScript(outputPath) {
   await ensureDirectory(path.dirname(outputPath));
-  const [mainSource, toursSource] = await Promise.all([
+  const [mainSource, toursSource, tourCustomizeSource] = await Promise.all([
     readFile(path.join(ROOT_DIR, "frontend", "scripts", "main.js"), "utf8"),
-    readFile(path.join(ROOT_DIR, "frontend", "scripts", "main_tours.js"), "utf8")
+    readFile(path.join(ROOT_DIR, "frontend", "scripts", "main_tours.js"), "utf8"),
+    readFile(path.join(ROOT_DIR, "frontend", "scripts", "tour_customize.js"), "utf8")
   ]);
 
   const bundlePrelude = [
@@ -1696,11 +1701,19 @@ async function writeHomepageInitialBundleScript(outputPath) {
     ""
   ].join("\n");
 
+  const transformedTourCustomizeSource = tourCustomizeSource
+    .replace("export function createTourCustomizer", "function createTourCustomizer");
+
   const transformedToursSource = toursSource
     .replace(
-      'import { normalizeText } from "../../shared/js/text.js";\nimport {\n  FRONTEND_LANGUAGE_CODES,\n  normalizeLanguageCode\n} from "../../shared/generated/language_catalog.js";\n\n',
+      'import { normalizeText } from "../../shared/js/text.js";\n',
       ""
     )
+    .replace(
+      'import {\n  FRONTEND_LANGUAGE_CODES,\n  normalizeLanguageCode\n} from "../../shared/generated/language_catalog.js";\n',
+      ""
+    )
+    .replace('import { createTourCustomizer } from "./tour_customize.js";\n', "")
     .replace("export function createFrontendToursController", "function createFrontendToursController");
 
   const transformedMainSource = mainSource
@@ -1715,6 +1728,8 @@ async function writeHomepageInitialBundleScript(outputPath) {
 
   const bundleSource = [
     bundlePrelude,
+    transformedTourCustomizeSource,
+    "",
     transformedToursSource,
     "",
     transformedMainSource,

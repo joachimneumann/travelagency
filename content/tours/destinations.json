@@ -50,6 +50,8 @@
         "sv": "Norr",
         "no": "Nord"
       },
+      "latitude": 21.55,
+      "longitude": 105.3,
       "sort_order": 100,
       "is_active": true,
       "created_at": "2026-04-27T13:42:52.459Z",
@@ -78,6 +80,8 @@
         "sv": "Central",
         "no": "Sentral"
       },
+      "latitude": 16.2,
+      "longitude": 107.8,
       "sort_order": 100,
       "is_active": true,
       "created_at": "2026-04-27T13:43:16.237Z",
@@ -106,6 +110,8 @@
         "sv": "Söder",
         "no": "Sør"
       },
+      "latitude": 10.75,
+      "longitude": 106.7,
       "sort_order": 100,
       "is_active": true,
       "created_at": "2026-04-27T13:43:29.077Z",
@@ -136,6 +142,8 @@
         "sv": "Nyans",
         "no": "Huế"
       },
+      "latitude": 16.4637,
+      "longitude": 107.5909,
       "sort_order": 100,
       "is_active": true,
       "created_at": "2026-04-27T13:44:12.737Z",
@@ -164,6 +172,8 @@
         "sv": "Hội An",
         "no": "Hội An"
       },
+      "latitude": 15.8801,
+      "longitude": 108.338,
       "sort_order": 100,
       "is_active": true,
       "created_at": "2026-04-27T13:44:19.826Z",
@@ -192,10 +202,117 @@
         "sv": "Sapa",
         "no": "Sapa"
       },
+      "latitude": 22.3364,
+      "longitude": 103.8438,
       "sort_order": 100,
       "is_active": true,
       "created_at": "2026-04-27T13:50:03.476Z",
       "updated_at": "2026-05-01T17:53:46.854Z"
+    },
+    {
+      "id": "place_hanoi",
+      "area_id": "area_3fa05b42-97ab-495d-b16d-4691e66e0434",
+      "code": "hanoi",
+      "name": "Hanoi",
+      "name_i18n": {
+        "vi": "Hà Nội"
+      },
+      "latitude": 21.0278,
+      "longitude": 105.8342,
+      "sort_order": 90,
+      "is_active": true,
+      "created_at": "2026-05-07T00:00:00.000Z",
+      "updated_at": "2026-05-07T00:00:00.000Z"
+    },
+    {
+      "id": "place_halong_bay",
+      "area_id": "area_3fa05b42-97ab-495d-b16d-4691e66e0434",
+      "code": "halong-bay",
+      "name": "Halong Bay",
+      "name_i18n": {
+        "vi": "Vịnh Hạ Long"
+      },
+      "latitude": 20.9101,
+      "longitude": 107.1839,
+      "sort_order": 95,
+      "is_active": true,
+      "created_at": "2026-05-07T00:00:00.000Z",
+      "updated_at": "2026-05-07T00:00:00.000Z"
+    },
+    {
+      "id": "place_ninh_binh",
+      "area_id": "area_3fa05b42-97ab-495d-b16d-4691e66e0434",
+      "code": "ninh-binh",
+      "name": "Ninh Binh",
+      "name_i18n": {
+        "vi": "Ninh Bình"
+      },
+      "latitude": 20.2506,
+      "longitude": 105.9745,
+      "sort_order": 110,
+      "is_active": true,
+      "created_at": "2026-05-07T00:00:00.000Z",
+      "updated_at": "2026-05-07T00:00:00.000Z"
+    },
+    {
+      "id": "place_tam_dao",
+      "area_id": "area_3fa05b42-97ab-495d-b16d-4691e66e0434",
+      "code": "tam-dao",
+      "name": "Tam Dao",
+      "name_i18n": {
+        "vi": "Tam Đảo"
+      },
+      "latitude": 21.4569,
+      "longitude": 105.644,
+      "sort_order": 120,
+      "is_active": true,
+      "created_at": "2026-05-07T00:00:00.000Z",
+      "updated_at": "2026-05-07T00:00:00.000Z"
+    },
+    {
+      "id": "place_da_nang",
+      "area_id": "area_3d22386f-d130-4f20-ab82-a30164fa5a19",
+      "code": "da-nang",
+      "name": "Da Nang",
+      "name_i18n": {
+        "vi": "Đà Nẵng"
+      },
+      "latitude": 16.0544,
+      "longitude": 108.2022,
+      "sort_order": 90,
+      "is_active": true,
+      "created_at": "2026-05-07T00:00:00.000Z",
+      "updated_at": "2026-05-07T00:00:00.000Z"
+    },
+    {
+      "id": "place_ba_na_hills",
+      "area_id": "area_3d22386f-d130-4f20-ab82-a30164fa5a19",
+      "code": "ba-na-hills",
+      "name": "Ba Na Hills",
+      "name_i18n": {
+        "vi": "Bà Nà Hills"
+      },
+      "latitude": 15.995,
+      "longitude": 107.996,
+      "sort_order": 98,
+      "is_active": true,
+      "created_at": "2026-05-07T00:00:00.000Z",
+      "updated_at": "2026-05-07T00:00:00.000Z"
+    },
+    {
+      "id": "place_phu_quoc",
+      "area_id": "area_024155db-da17-4cdb-ae0e-a01fd1e77f58",
+      "code": "phu-quoc",
+      "name": "Phu Quoc",
+      "name_i18n": {
+        "vi": "Phú Quốc"
+      },
+      "latitude": 10.2899,
+      "longitude": 103.984,
+      "sort_order": 90,
+      "is_active": true,
+      "created_at": "2026-05-07T00:00:00.000Z",
+      "updated_at": "2026-05-07T00:00:00.000Z"
     }
   ]
 }

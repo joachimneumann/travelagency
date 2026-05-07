@@ -89,6 +89,9 @@ export function createTourHandlers(deps) {
   const IMAGE_UPLOAD_BODY_MAX_BYTES = 16 * 1024 * 1024;
   const VIDEO_UPLOAD_BODY_MAX_BYTES = 150 * 1024 * 1024;
   const TOUR_STALE_UPDATE_MESSAGE = "This tour was updated by someone else. Reload before saving.";
+  const CUSTOM_ONE_PAGER_PREVIEW_TTL_MS = 20 * 60 * 1000;
+  const CUSTOM_ONE_PAGER_PREVIEW_MAX_DAYS = 20;
+  const customOnePagerPreviewTokens = new Map();
   let publicHomepageAssetGenerationQueue = Promise.resolve();
 
   function nowMs() {
@@ -143,6 +146,15 @@ export function createTourHandlers(deps) {
 
   function requestLang(reqUrl) {
     return normalizeTourLang(new URL(reqUrl, "http://localhost").searchParams.get("lang"));
+  }
+
+  function cleanupCustomOnePagerPreviewTokens() {
+    const now = nowMs();
+    for (const [token, entry] of customOnePagerPreviewTokens.entries()) {
+      if (!entry || Number(entry.expiresAtMs || 0) <= now) {
+        customOnePagerPreviewTokens.delete(token);
+      }
+    }
   }
 
   function normalizeStyleCodes(values) {
@@ -953,6 +965,212 @@ export function createTourHandlers(deps) {
       });
     } catch (error) {
       sendJson(res, 500, { error: "Could not render tour one-pager PDF", detail: String(error?.message || error) });
+    } finally {
+      await rm(renderedPath, { force: true }).catch(() => {});
+      if (renderedPath !== previewPath) {
+        await rm(previewPath, { force: true }).catch(() => {});
+      }
+    }
+  }
+
+  function selectedPreviewDayKeys(payload, baseTourId) {
+    const selectedDays = Array.isArray(payload?.selected_days) ? payload.selected_days : [];
+    return selectedDays
+      .slice(0, CUSTOM_ONE_PAGER_PREVIEW_MAX_DAYS + 1)
+      .map((item) => ({
+        source_tour_id: normalizeText(item?.source_tour_id) || baseTourId,
+        source_day_id: normalizeText(item?.source_day_id)
+      }))
+      .filter((item) => item.source_tour_id && item.source_day_id);
+  }
+
+  function publicTourById(tours, tourId, publishedDestinationCodes) {
+    const tour = (Array.isArray(tours) ? tours : []).find((item) => normalizeText(item?.id) === tourId);
+    return tour ? normalizeTourForPublicWebpage(tour, publishedDestinationCodes) : null;
+  }
+
+  function publicTourLocalizedTravelPlan(tour, lang) {
+    return normalizeMarketingTourTravelPlan(tour?.travel_plan, {
+      sourceLang: "en",
+      contentLang: lang,
+      flatLang: lang,
+      flatMode: "localized",
+      strictReferences: false
+    });
+  }
+
+  function mergePreviewDestinationScopes(scopes) {
+    const entries = [];
+    const destinationMap = new Map();
+    for (const scope of Array.isArray(scopes) ? scopes : []) {
+      for (const entry of Array.isArray(scope) ? scope : []) {
+        const destination = normalizeText(entry?.destination).toUpperCase();
+        if (!destination) continue;
+        if (!destinationMap.has(destination)) {
+          const nextEntry = { destination, areas: [] };
+          destinationMap.set(destination, nextEntry);
+          entries.push(nextEntry);
+        }
+        const nextEntry = destinationMap.get(destination);
+        const areaMap = new Map(nextEntry.areas.map((area) => [area.area_id, area]));
+        for (const area of Array.isArray(entry?.areas) ? entry.areas : []) {
+          const areaId = normalizeText(area?.area_id);
+          if (!areaId) continue;
+          if (!areaMap.has(areaId)) {
+            const nextArea = { area_id: areaId, places: [] };
+            areaMap.set(areaId, nextArea);
+            nextEntry.areas.push(nextArea);
+          }
+          const nextArea = areaMap.get(areaId);
+          const placeIds = new Set(nextArea.places.map((place) => normalizeText(place?.place_id)).filter(Boolean));
+          for (const place of Array.isArray(area?.places) ? area.places : []) {
+            const placeId = normalizeText(place?.place_id);
+            if (!placeId || placeIds.has(placeId)) continue;
+            nextArea.places.push({ place_id: placeId });
+            placeIds.add(placeId);
+          }
+        }
+      }
+    }
+    return entries;
+  }
+
+  async function customizedPreviewTourFromTokenEntry(entry) {
+    const lang = normalizeTourLang(entry?.lang);
+    const baseTourId = normalizeText(entry?.baseTourId);
+    const selectedDays = Array.isArray(entry?.selectedDays) ? entry.selectedDays : [];
+    const publishedDestinationCodes = publishedWebpageDestinationCodes(await readCountryPracticalInfo());
+    const storedTours = (await readTours()).map((tour) => normalizeTourForStorage(tour));
+    const baseTour = publicTourById(storedTours, baseTourId, publishedDestinationCodes);
+    if (!baseTour) return { ok: false, status: 404, error: "Tour not found" };
+
+    const daySourcesByTourId = new Map();
+    const nextDays = [];
+    const destinationScopes = [];
+    for (const selection of selectedDays) {
+      const sourceTourId = normalizeText(selection?.source_tour_id);
+      const sourceDayId = normalizeText(selection?.source_day_id);
+      if (!sourceTourId || !sourceDayId) {
+        return { ok: false, status: 400, error: "Selected days are invalid" };
+      }
+      if (!daySourcesByTourId.has(sourceTourId)) {
+        const publicSourceTour = publicTourById(storedTours, sourceTourId, publishedDestinationCodes);
+        if (!publicSourceTour) {
+          return { ok: false, status: 400, error: "Selected day source is not available" };
+        }
+        const localizedTravelPlan = publicTourLocalizedTravelPlan(publicSourceTour, lang);
+        daySourcesByTourId.set(sourceTourId, {
+          tour: publicSourceTour,
+          travelPlan: localizedTravelPlan,
+          daysById: new Map((Array.isArray(localizedTravelPlan?.days) ? localizedTravelPlan.days : [])
+            .map((day) => [normalizeText(day?.id), day])
+            .filter(([dayId]) => dayId))
+        });
+      }
+      const source = daySourcesByTourId.get(sourceTourId);
+      const sourceDay = source.daysById.get(sourceDayId);
+      if (!sourceDay) {
+        return { ok: false, status: 400, error: "Selected day is not available" };
+      }
+      nextDays.push({
+        ...cloneJson(sourceDay),
+        day_number: nextDays.length + 1
+      });
+      destinationScopes.push(source.travelPlan?.destination_scope);
+    }
+
+    if (!nextDays.length || nextDays.length > CUSTOM_ONE_PAGER_PREVIEW_MAX_DAYS) {
+      return { ok: false, status: 400, error: "Select between 1 and 20 days" };
+    }
+
+    const localizedBaseTour = await applyMarketingTourMemoryToOnePagerTour(baseTour, lang);
+    const readModel = normalizeTourForRead(localizedBaseTour, { lang });
+    const baseTravelPlan = publicTourLocalizedTravelPlan(localizedBaseTour, lang);
+    const destinationScope = mergePreviewDestinationScopes([
+      baseTravelPlan?.destination_scope,
+      ...destinationScopes
+    ]);
+    const destinations = Array.from(new Set(destinationScope.map((entry) => normalizeText(entry?.destination)).filter(Boolean)));
+
+    return {
+      ok: true,
+      tour: {
+        ...readModel,
+        travel_plan: {
+          ...baseTravelPlan,
+          destination_scope: destinationScope,
+          destinations,
+          days: nextDays
+        }
+      }
+    };
+  }
+
+  async function handlePostPublicTourOnePagerPreview(req, res, [tourId]) {
+    cleanupCustomOnePagerPreviewTokens();
+    const baseTourId = normalizeText(tourId);
+    const payload = await readBodyJson(req, { maxBytes: 64 * 1024 });
+    const lang = normalizeTourLang(payload?.lang || requestLang(req.url));
+    const selectedDays = selectedPreviewDayKeys(payload, baseTourId);
+    if (!baseTourId || !selectedDays.length || selectedDays.length > CUSTOM_ONE_PAGER_PREVIEW_MAX_DAYS) {
+      sendJson(res, 400, { error: "Select between 1 and 20 days" });
+      return;
+    }
+
+    const previewCheck = await customizedPreviewTourFromTokenEntry({ baseTourId, lang, selectedDays });
+    if (!previewCheck.ok) {
+      sendJson(res, previewCheck.status || 400, { error: previewCheck.error || "Invalid customized tour preview" });
+      return;
+    }
+
+    const token = randomUUID();
+    const expiresAtMs = nowMs() + CUSTOM_ONE_PAGER_PREVIEW_TTL_MS;
+    customOnePagerPreviewTokens.set(token, {
+      baseTourId,
+      lang,
+      selectedDays,
+      expiresAtMs
+    });
+    sendJson(res, 200, {
+      token,
+      pdf_url: `/public/v1/tour-preview/${encodeURIComponent(token)}.pdf?lang=${encodeURIComponent(lang)}`,
+      expires_at: new Date(expiresAtMs).toISOString()
+    }, { "Cache-Control": "no-store" });
+  }
+
+  async function handleGetPublicTourOnePagerPreviewPdf(req, res, [token]) {
+    cleanupCustomOnePagerPreviewTokens();
+    if (typeof writeMarketingTourOnePagerPdf !== "function") {
+      sendJson(res, 503, { error: "Tour one-pager PDF rendering is not configured" });
+      return;
+    }
+    const normalizedToken = normalizeText(token);
+    const entry = customOnePagerPreviewTokens.get(normalizedToken);
+    if (!entry || Number(entry.expiresAtMs || 0) <= nowMs()) {
+      customOnePagerPreviewTokens.delete(normalizedToken);
+      sendJson(res, 404, { error: "Tour preview expired" });
+      return;
+    }
+    const result = await customizedPreviewTourFromTokenEntry(entry);
+    if (!result.ok) {
+      sendJson(res, result.status || 400, { error: result.error || "Invalid customized tour preview" });
+      return;
+    }
+
+    const previewPath = path.join(TEMP_UPLOAD_DIR, `tour-one-pager-preview-${normalizedToken}.pdf`);
+    let renderedPath = previewPath;
+    try {
+      await mkdir(path.dirname(previewPath), { recursive: true });
+      const pdfResult = await writeMarketingTourOnePagerPdf(result.tour, {
+        lang: normalizeTourLang(entry.lang),
+        outputPath: previewPath
+      });
+      renderedPath = normalizeText(pdfResult?.outputPath) || previewPath;
+      await sendFileWithCache(req, res, renderedPath, "private, max-age=0, no-store", {
+        "Content-Disposition": `inline; filename="${tourOnePagerFilename(result.tour).replace(/"/g, "")}"`
+      });
+    } catch (error) {
+      sendJson(res, 500, { error: "Could not render customized tour one-pager PDF", detail: String(error?.message || error) });
     } finally {
       await rm(renderedPath, { force: true }).catch(() => {});
       if (renderedPath !== previewPath) {
@@ -2082,6 +2300,8 @@ export function createTourHandlers(deps) {
   return {
     handlePublicListTours,
     handleGetPublicTourOnePagerPdf,
+    handlePostPublicTourOnePagerPreview,
+    handleGetPublicTourOnePagerPreviewPdf,
     handleListTours,
     handleSearchTourTravelPlanDays,
     handleSearchTourTravelPlanServices,
