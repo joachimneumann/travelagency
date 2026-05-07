@@ -5103,8 +5103,8 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
   );
   assert.match(
     stagingCaddy,
-    /Permissions-Policy "accelerometer=\(\), autoplay=\(self\), camera=\(\), display-capture=\(\), encrypted-media=\(\), fullscreen=\(self\), geolocation=\(\), gyroscope=\(\), magnetometer=\(\), microphone=\(\), midi=\(\), payment=\(\), publickey-credentials-get=\(\), screen-wake-lock=\(\), usb=\(\), web-share=\(\), xr-spatial-tracking=\(\)"/,
-    "Shared Caddy security headers should disable browser capabilities the site does not use"
+    /Permissions-Policy "accelerometer=\(\), autoplay=\(self\), camera=\(\), display-capture=\(\), encrypted-media=\(\), fullscreen=\(self\), geolocation=\(\), gyroscope=\(\), magnetometer=\(\), microphone=\(\), midi=\(\), payment=\(\), publickey-credentials-get=\(\), screen-wake-lock=\(\), usb=\(\), web-share=\(self\), xr-spatial-tracking=\(\)"/,
+    "Shared Caddy security headers should disable unused browser capabilities while allowing native reel sharing"
   );
   assert.match(
     localCaddy,
