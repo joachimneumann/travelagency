@@ -37,7 +37,6 @@
     "no": "Da Lat er en kjent turistby som ligger på Lam Vien-platået, Lam Dong-provinsen. Med en høyde på ca. 1500 meter over havet er dette stedet kjent som \"blomstenes by\" og \"tåkebyen\".  er et sted med 4 sesonger på 1 dag i Vietnam. Poetisk natur, blomster som blomstrer hele året, gammel fransk arkitektur. Opplev gjerne med oss"
   },
   "styles": [
-    "beach",
     "budget",
     "culture",
     "family"
@@ -46,7 +45,7 @@
   "seasonality_end_month": "dec",
   "priority": 100,
   "created_at": "2026-04-16T03:51:45.597Z",
-  "updated_at": "2026-05-07T08:10:29.537Z",
+  "updated_at": "2026-05-07T08:46:11.314Z",
   "published_on_webpage": true,
   "travel_plan": {
     "destination_scope": [
