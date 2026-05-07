@@ -62,6 +62,18 @@ function resolveFrontendAssetUrl(value) {
   return normalized;
 }
 
+const CUSTOMIZE_FEATURE_KEY = "asiatravelplan_customize_enabled";
+const CUSTOMIZE_FEATURE_TOGGLE_TAP_TARGET = 5;
+const CUSTOMIZE_FEATURE_TOGGLE_WINDOW_MS = 3000;
+
+function initialCustomizeFeatureEnabled() {
+  try {
+    return window.localStorage.getItem(CUSTOMIZE_FEATURE_KEY) !== "0";
+  } catch {
+    return true;
+  }
+}
+
 const state = {
   lang: currentFrontendLang(),
   trips: [],
@@ -92,7 +104,8 @@ const state = {
   authStatusKnown: false,
   websiteAuthenticated: false,
   websiteAuthenticatedUser: "",
-  reelsModeOpen: false
+  reelsModeOpen: false,
+  customizeFeatureEnabled: initialCustomizeFeatureEnabled()
 };
 
 let lastBookingModalTrigger = null;
@@ -106,6 +119,7 @@ let teamSectionRevealObserved = false;
 let teamMembersLoadPromise = null;
 let authStatusLoadPromise = null;
 let reelsUnlockTapTimes = [];
+let customizeFeatureToggleTapTimes = [];
 let reelsRuntimePromise = null;
 let reelsRuntimeInstance = null;
 let heroDownArrowLoadReady = false;
@@ -448,6 +462,7 @@ async function init() {
   markHomepageMobileStageReady("heroCopyReady");
   setupMobileNav();
   setupReelsUnlock();
+  setupCustomizeFeatureToggle();
   setupReelsToggle();
   setupFAQ();
   setupTeamSection();
@@ -769,6 +784,41 @@ function setupReelsUnlock() {
   if (!(els.footerBrandTitle instanceof HTMLElement) || els.footerBrandTitle.dataset.reelsUnlockBound === "1") return;
   els.footerBrandTitle.dataset.reelsUnlockBound = "1";
   els.footerBrandTitle.addEventListener("click", registerReelsUnlockTap);
+}
+
+function syncCustomizeFeatureState() {
+  document.documentElement.classList.toggle("tour-customize-feature-disabled", state.customizeFeatureEnabled === false);
+}
+
+function setCustomizeFeatureEnabled(enabled) {
+  state.customizeFeatureEnabled = Boolean(enabled);
+  try {
+    window.localStorage.setItem(CUSTOMIZE_FEATURE_KEY, state.customizeFeatureEnabled ? "1" : "0");
+  } catch {
+    // Ignore storage failures; the runtime state still updates for this page view.
+  }
+  syncCustomizeFeatureState();
+  if (!state.customizeFeatureEnabled) {
+    document.querySelector(".tour-customize [data-customize-close]")?.click();
+  }
+  renderVisibleTrips();
+}
+
+function registerCustomizeFeatureToggleTap() {
+  const now = Date.now();
+  customizeFeatureToggleTapTimes = customizeFeatureToggleTapTimes
+    .filter((time) => now - time <= CUSTOMIZE_FEATURE_TOGGLE_WINDOW_MS);
+  customizeFeatureToggleTapTimes.push(now);
+  if (customizeFeatureToggleTapTimes.length < CUSTOMIZE_FEATURE_TOGGLE_TAP_TARGET) return;
+  customizeFeatureToggleTapTimes = [];
+  setCustomizeFeatureEnabled(!state.customizeFeatureEnabled);
+}
+
+function setupCustomizeFeatureToggle() {
+  syncCustomizeFeatureState();
+  if (!(els.footerLegalTitle instanceof HTMLElement) || els.footerLegalTitle.dataset.customizeToggleBound === "1") return;
+  els.footerLegalTitle.dataset.customizeToggleBound = "1";
+  els.footerLegalTitle.addEventListener("click", registerCustomizeFeatureToggleTap);
 }
 
 function loadReelsRuntime() {

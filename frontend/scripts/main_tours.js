@@ -782,8 +782,14 @@ export function createFrontendToursController(ctx) {
     return Array.isArray(trip?.travel_plan?.days) ? trip.travel_plan.days : [];
   }
 
+  function customizeFeatureEnabled() {
+    return state.customizeFeatureEnabled !== false;
+  }
+
   function activeTourPlanDays(trip) {
-    return tourCustomizer?.activeDaysForTrip(trip) || travelPlanDays(trip);
+    return customizeFeatureEnabled()
+      ? tourCustomizer?.activeDaysForTrip(trip) || travelPlanDays(trip)
+      : travelPlanDays(trip);
   }
 
   function hasTravelPlanDays(trip) {
@@ -1635,7 +1641,7 @@ export function createFrontendToursController(ctx) {
     const pdfUrl = tourOnePagerPdfUrl(trip);
     if (!pdfUrl) return "";
     const tripId = normalizeText(trip?.id);
-    const hasCustomPreview = tourCustomizer?.hasCustomization(tripId);
+    const hasCustomPreview = customizeFeatureEnabled() && tourCustomizer?.hasCustomization(tripId);
     const pdfAriaLabel = frontendT("tour.plan.pdf_aria", "Tour PDF");
     const pdfDescription = frontendT(
       "tour.plan.pdf_description",
@@ -1827,7 +1833,7 @@ export function createFrontendToursController(ctx) {
 
   function renderTourCustomizeButton(trip) {
     const tripId = normalizeText(trip?.id);
-    if (!tripId) return "";
+    if (!tripId || !customizeFeatureEnabled()) return "";
     const label = frontendT("tour.plan.customize", "Customize this tour");
     const routePreview = tourCustomizer?.routePreviewForTrip(trip) || { points: "", groups: [] };
     return `

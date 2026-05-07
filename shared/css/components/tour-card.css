@@ -9,11 +9,37 @@
 }
 
 .tour-actions {
-  margin-top: 1rem;
+  margin-top: calc(1rem + 32px);
+  margin-bottom: 61px;
   display: flex;
   justify-content: center;
   gap: 0.6rem;
   flex-wrap: wrap;
+}
+
+.tour-actions #showMoreTours {
+  min-height: 2.55rem;
+  padding: 0.58rem 1.05rem;
+  border-color: var(--accent);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--accent);
+  font-size: 0.95rem;
+  font-weight: var(--font-weight-bold);
+  line-height: 1;
+  box-shadow: none;
+}
+
+.tour-actions #showMoreTours:hover,
+.tour-actions #showMoreTours:focus-visible {
+  background: var(--surface-accent);
+  box-shadow: 0 10px 24px rgb(var(--accent-rgb) / 0.14);
+  transform: translateY(-1px);
+}
+
+.tour-actions #showMoreTours:active {
+  box-shadow: 0 8px 18px rgb(var(--accent-rgb) / 0.08);
+  transform: none;
 }
 
 .tour-empty-card {
@@ -367,7 +393,7 @@
 }
 
 .tour-body {
-  padding: 1.3rem 1.55rem 1.55rem;
+  padding: 1.3rem 0.80rem 1.55rem;
   display: grid;
   gap: 0.82rem;
   grid-template-rows: auto auto minmax(0, 1fr) min-content;

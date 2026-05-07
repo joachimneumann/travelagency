@@ -535,6 +535,14 @@ textarea:focus-visible {
   border: 1px solid var(--line);
 }
 
+.footer h3,
+#footerBrandTitle,
+#footerLegalTitle,
+.footer h3 * {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
 .hero {
   padding: 4rem 0 2.5rem;
 }

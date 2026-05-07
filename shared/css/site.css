@@ -1357,9 +1357,18 @@ textarea:focus-visible {
   margin: 0;
 }
 
-.footer h3 {
+.footer h3,
+#footerBrandTitle,
+#footerLegalTitle {
   margin: 0 0 0.5rem;
   font-size: var(--font-size-base);
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.footer h3 * {
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .footer ul {
