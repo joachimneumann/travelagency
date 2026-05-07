@@ -1,7 +1,22 @@
 {
   "id": "tour_43852384-ef7b-4c04-bfd9-e267da363d67",
-  "title": {
-    "en": "Cat Ba Island - Lan Ha Bay",
+  "title": "Cat Ba Island - Lan Ha Bay",
+  "short_description": "Cat Ba Island is a green gem with magnificent primeval forests, where you can enjoy the wonderful interaction between mountains and sea. Lan Ha Bay captivates travelers with the wild beauty of hundreds of small limestone islands and beaches hidden in calm emerald green water.",
+  "styles": [
+    "beach",
+    "budget",
+    "culture",
+    "family",
+    "gastronomic-experiences",
+    "luxury",
+    "wellness"
+  ],
+  "seasonality_start_month": "apr",
+  "seasonality_end_month": "oct",
+  "priority": 50,
+  "created_at": "2026-04-14T10:21:21.199Z",
+  "updated_at": "2026-04-30T04:05:50.414Z",
+  "title_i18n": {
     "ar": "جزيرة كات با - خليج لان ها",
     "fr": "Île de Cat Ba - Baie de Lan Ha",
     "zh": "吉婆岛 - 哈兰湾",
@@ -18,8 +33,7 @@
     "sv": "Cat Ba Island - Lan Ha Bay",
     "no": "Cat Ba Island - Lan Ha Bay"
   },
-  "short_description": {
-    "en": "Cat Ba Island is a green gem with magnificent primeval forests, where you can enjoy the wonderful interaction between mountains and sea. Lan Ha Bay captivates travelers with the wild beauty of hundreds of small limestone islands and beaches hidden in calm emerald green water.",
+  "short_description_i18n": {
     "ar": "جزيرة كات با هي جوهرة خضراء تضم غابات بدائية رائعة، حيث يمكنك الاستمتاع بالتفاعل الرائع بين الجبال والبحر. يأسر خليج لان ها المسافرين بالجمال البري لمئات من جزر الحجر الجيري الصغيرة والشواطئ المخبأة في المياه الخضراء الزمردية الهادئة.",
     "fr": "L'île de Cat Ba est un joyau vert avec de magnifiques forêts vierges, où vous pourrez profiter de la merveilleuse interaction entre les montagnes et la mer. La baie de Lan Ha captive les voyageurs par la beauté sauvage de centaines de petites îles calcaires et de plages cachées dans une eau calme et vert émeraude.",
     "zh": "吉婆岛是一颗绿色宝石，拥有壮丽的原始森林，在这里您可以享受山与海的奇妙互动。兰哈湾以其数百个石灰岩小岛和隐藏在平静的翠绿色海水中的海滩的狂野之美吸引着游客。",
@@ -35,19 +49,5 @@
     "da": "Cat Ba Island er en grøn perle med storslåede urskove, hvor du kan nyde det vidunderlige samspil mellem bjerge og hav. Lan Ha Bay betager rejsende med den vilde skønhed af hundredvis af små kalkstensøer og strande skjult i roligt smaragdgrønt vand.",
     "sv": "Cat Ba Island är en grön pärla med magnifika urskogar, där du kan njuta av det underbara samspelet mellan berg och hav. Lan Ha Bay fängslar resenärer med den vilda skönheten hos hundratals små kalkstensöar och stränder gömda i lugnt smaragdgrönt vatten.",
     "no": "Cat Ba Island er en grønn perle med praktfulle urskoger, hvor du kan nyte det fantastiske samspillet mellom fjell og hav. Lan Ha Bay trollbinder reisende med den ville skjønnheten til hundrevis av små kalksteinsøyer og strender skjult i rolig smaragdgrønt vann."
-  },
-  "styles": [
-    "beach",
-    "budget",
-    "culture",
-    "family",
-    "gastronomic-experiences",
-    "luxury",
-    "wellness"
-  ],
-  "seasonality_start_month": "apr",
-  "seasonality_end_month": "oct",
-  "priority": 50,
-  "created_at": "2026-04-14T10:21:21.199Z",
-  "updated_at": "2026-04-30T04:05:50.414Z"
+  }
 }

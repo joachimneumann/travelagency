@@ -1,41 +1,7 @@
 {
   "id": "tour_16531bfc-a60f-4128-9abe-2eada1f2d7d8",
-  "title": {
-    "en": "Da Nang - Hue - Hoi An",
-    "ar": "دا نانغ - هوي - هوي آن",
-    "fr": "Da Nang - Hué - Hoi An",
-    "zh": "岘港 - 顺化 - 会安",
-    "ja": "ダナン - フエ - ホイアン",
-    "ko": "다낭 - 후에 - 호이안",
-    "ms": "Da Nang - Hue - Hoi An",
-    "de": "Da Nang – Hue – Hoi An",
-    "es": "Da Nang - Hue - Hoi An",
-    "it": "Da Nang-Hue-Hoi An",
-    "ru": "Дананг - Хюэ - Хойан",
-    "nl": "Da Nang - Hue - Hoi An",
-    "pl": "Da Nang – Hue – Hoi An",
-    "da": "Da Nang - Hue - Hoi An",
-    "sv": "Da Nang - Hue - Hoi An",
-    "no": "Da Nang - Hue - Hoi An"
-  },
-  "short_description": {
-    "en": "Experience 5 days of \"slow living\" in Da Nang. Relax on pristine beaches, explore the Marble Mountains, and enjoy the peaceful atmosphere of Vietnam's most livable city.",
-    "ar": "استمتع بتجربة \"الحياة البطيئة\" لمدة 5 أيام في دا نانغ. يمكنك الاسترخاء على الشواطئ البكر واستكشاف جبال الرخام والاستمتاع بالأجواء الهادئة للمدينة الأكثر ملاءمة للعيش في فيتنام.",
-    "fr": "Vivez 5 jours de « slow life » à Da Nang. Détendez-vous sur des plages immaculées, explorez les montagnes de Marbre et profitez de l'atmosphère paisible de la ville la plus agréable à vivre du Vietnam.",
-    "zh": "在岘港体验5天“慢生活”。在原始海滩上放松身心，探索五行山，享受越南最宜居城市的宁静氛围。",
-    "ja": "ダナンで5日間の「スローライフ」を体験してみませんか。自然のままのビーチでリラックスし、マーブル マウンテンを探索し、ベトナムで最も住みやすい都市の静かな雰囲気を満喫してください。",
-    "ko": "다낭에서 5일 동안 \"느린 생활\"을 경험해 보세요. 깨끗한 해변에서 휴식을 취하고, 오행산을 탐험하고, 베트남에서 가장 살기 좋은 도시의 평화로운 분위기를 즐겨보세요.",
-    "ms": "Alami 5 hari \"hidup perlahan\" di Da Nang. Bersantai di pantai yang bersih, terokai Pergunungan Marble, dan nikmati suasana damai di bandar paling sesuai untuk didiami di Vietnam.",
-    "de": "Erleben Sie 5 Tage „Slow Living“ in Da Nang. Entspannen Sie sich an unberührten Stränden, erkunden Sie die Marmorberge und genießen Sie die friedliche Atmosphäre der lebenswertesten Stadt Vietnams.",
-    "es": "Experimente 5 días de \"vida lenta\" en Da Nang. Relájese en playas vírgenes, explore las Montañas de Mármol y disfrute del ambiente tranquilo de la ciudad más habitable de Vietnam.",
-    "it": "Vivi 5 giorni di \"vita lenta\" a Da Nang. Rilassati su spiagge incontaminate, esplora le Montagne di Marmo e goditi l'atmosfera tranquilla della città più vivibile del Vietnam.",
-    "ru": "Испытайте 5 дней «медленной жизни» в Дананге. Отдохните на нетронутых пляжах, исследуйте Мраморные горы и насладитесь мирной атмосферой самого пригодного для жизни города Вьетнама.",
-    "nl": "Ervaar 5 dagen \"slow living\" in Da Nang. Ontspan op ongerepte stranden, verken de Marble Mountains en geniet van de vredige sfeer van de meest leefbare stad van Vietnam.",
-    "pl": "Przeżyj 5 dni „slow life” w Da Nang. Zrelaksuj się na dziewiczych plażach, odkryj Góry Marmurowe i ciesz się spokojną atmosferą najbardziej przyjaznego do życia miasta Wietnamu.",
-    "da": "Oplev 5 dages \"slow living\" i Da Nang. Slap af på uberørte strande, udforsk Marmorbjergene, og nyd den fredelige atmosfære i Vietnams mest beboelige by.",
-    "sv": "Upplev 5 dagars \"slow living\" i Da Nang. Koppla av på orörda stränder, utforska Marmorbergen och njut av den fridfulla atmosfären i Vietnams mest beboeliga stad.",
-    "no": "Opplev 5 dager med \"slow living\" i Da Nang. Slapp av på uberørte strender, utforsk Marmorfjellene og nyt den fredelige atmosfæren i Vietnams mest beboelige by."
-  },
+  "title": "Da Nang - Hue - Hoi An",
+  "short_description": "Experience 5 days of \"slow living\" in Da Nang. Relax on pristine beaches, explore the Marble Mountains, and enjoy the peaceful atmosphere of Vietnam's most livable city.",
   "styles": [
     "grand-expeditions",
     "beach",
@@ -1267,5 +1233,39 @@
       }
     }
   },
-  "published_on_webpage": true
+  "published_on_webpage": true,
+  "title_i18n": {
+    "ar": "دا نانغ - هوي - هوي آن",
+    "fr": "Da Nang - Hué - Hoi An",
+    "zh": "岘港 - 顺化 - 会安",
+    "ja": "ダナン - フエ - ホイアン",
+    "ko": "다낭 - 후에 - 호이안",
+    "ms": "Da Nang - Hue - Hoi An",
+    "de": "Da Nang – Hue – Hoi An",
+    "es": "Da Nang - Hue - Hoi An",
+    "it": "Da Nang-Hue-Hoi An",
+    "ru": "Дананг - Хюэ - Хойан",
+    "nl": "Da Nang - Hue - Hoi An",
+    "pl": "Da Nang – Hue – Hoi An",
+    "da": "Da Nang - Hue - Hoi An",
+    "sv": "Da Nang - Hue - Hoi An",
+    "no": "Da Nang - Hue - Hoi An"
+  },
+  "short_description_i18n": {
+    "ar": "استمتع بتجربة \"الحياة البطيئة\" لمدة 5 أيام في دا نانغ. يمكنك الاسترخاء على الشواطئ البكر واستكشاف جبال الرخام والاستمتاع بالأجواء الهادئة للمدينة الأكثر ملاءمة للعيش في فيتنام.",
+    "fr": "Vivez 5 jours de « slow life » à Da Nang. Détendez-vous sur des plages immaculées, explorez les montagnes de Marbre et profitez de l'atmosphère paisible de la ville la plus agréable à vivre du Vietnam.",
+    "zh": "在岘港体验5天“慢生活”。在原始海滩上放松身心，探索五行山，享受越南最宜居城市的宁静氛围。",
+    "ja": "ダナンで5日間の「スローライフ」を体験してみませんか。自然のままのビーチでリラックスし、マーブル マウンテンを探索し、ベトナムで最も住みやすい都市の静かな雰囲気を満喫してください。",
+    "ko": "다낭에서 5일 동안 \"느린 생활\"을 경험해 보세요. 깨끗한 해변에서 휴식을 취하고, 오행산을 탐험하고, 베트남에서 가장 살기 좋은 도시의 평화로운 분위기를 즐겨보세요.",
+    "ms": "Alami 5 hari \"hidup perlahan\" di Da Nang. Bersantai di pantai yang bersih, terokai Pergunungan Marble, dan nikmati suasana damai di bandar paling sesuai untuk didiami di Vietnam.",
+    "de": "Erleben Sie 5 Tage „Slow Living“ in Da Nang. Entspannen Sie sich an unberührten Stränden, erkunden Sie die Marmorberge und genießen Sie die friedliche Atmosphäre der lebenswertesten Stadt Vietnams.",
+    "es": "Experimente 5 días de \"vida lenta\" en Da Nang. Relájese en playas vírgenes, explore las Montañas de Mármol y disfrute del ambiente tranquilo de la ciudad más habitable de Vietnam.",
+    "it": "Vivi 5 giorni di \"vita lenta\" a Da Nang. Rilassati su spiagge incontaminate, esplora le Montagne di Marmo e goditi l'atmosfera tranquilla della città più vivibile del Vietnam.",
+    "ru": "Испытайте 5 дней «медленной жизни» в Дананге. Отдохните на нетронутых пляжах, исследуйте Мраморные горы и насладитесь мирной атмосферой самого пригодного для жизни города Вьетнама.",
+    "nl": "Ervaar 5 dagen \"slow living\" in Da Nang. Ontspan op ongerepte stranden, verken de Marble Mountains en geniet van de vredige sfeer van de meest leefbare stad van Vietnam.",
+    "pl": "Przeżyj 5 dni „slow life” w Da Nang. Zrelaksuj się na dziewiczych plażach, odkryj Góry Marmurowe i ciesz się spokojną atmosferą najbardziej przyjaznego do życia miasta Wietnamu.",
+    "da": "Oplev 5 dages \"slow living\" i Da Nang. Slap af på uberørte strande, udforsk Marmorbjergene, og nyd den fredelige atmosfære i Vietnams mest beboelige by.",
+    "sv": "Upplev 5 dagars \"slow living\" i Da Nang. Koppla av på orörda stränder, utforska Marmorbergen och njut av den fridfulla atmosfären i Vietnams mest beboeliga stad.",
+    "no": "Opplev 5 dager med \"slow living\" i Da Nang. Slapp av på uberørte strender, utforsk Marmorfjellene og nyt den fredelige atmosfæren i Vietnams mest beboelige by."
+  }
 }

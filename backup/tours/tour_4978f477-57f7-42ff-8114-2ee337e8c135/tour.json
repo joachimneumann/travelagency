@@ -1,7 +1,20 @@
 {
   "id": "tour_4978f477-57f7-42ff-8114-2ee337e8c135",
-  "title": {
-    "en": "Ha Long Bay Cruise",
+  "title": "Ha Long Bay Cruise",
+  "short_description": "Ha Long luxury cruise tour 2 days 1 night or 3 days 2 nights on a 5-star cruise: enjoy private space amidst poetic nature, explore magical caves to the Sunset Party at sunset. Experience kayaking, visit fishing villages and eat seafood specialties.",
+  "styles": [
+    "beach",
+    "budget",
+    "culture",
+    "family",
+    "luxury"
+  ],
+  "seasonality_start_month": "jan",
+  "seasonality_end_month": "dec",
+  "priority": 100,
+  "created_at": "2026-04-03T11:00:28.709Z",
+  "updated_at": "2026-04-30T04:05:50.414Z",
+  "title_i18n": {
     "ar": "رحلة خليج ها لونج",
     "fr": "Croisière dans la baie d'Ha Long",
     "zh": "下龙湾游轮",
@@ -18,8 +31,7 @@
     "sv": "Ha Long Bay kryssning",
     "no": "Ha Long Bay Cruise"
   },
-  "short_description": {
-    "en": "Ha Long luxury cruise tour 2 days 1 night or 3 days 2 nights on a 5-star cruise: enjoy private space amidst poetic nature, explore magical caves to the Sunset Party at sunset. Experience kayaking, visit fishing villages and eat seafood specialties.",
+  "short_description_i18n": {
     "ar": "جولة ها لونج البحرية الفاخرة لمدة يومين وليلة واحدة أو 3 أيام وليلتين في رحلة بحرية 5 نجوم: استمتع بمساحة خاصة وسط الطبيعة الشعرية، واستكشف الكهوف السحرية وحفلة غروب الشمس عند غروب الشمس. يمكنك تجربة التجديف بالكاياك وزيارة قرى الصيد وتناول المأكولات البحرية.",
     "fr": "Croisière de luxe à Ha Long 2 jours 1 nuit ou 3 jours 2 nuits en croisière 5 étoiles : profitez d'un espace privé au milieu d'une nature poétique, explorez des grottes magiques jusqu'à la Sunset Party au coucher du soleil. Faites du kayak, visitez des villages de pêcheurs et dégustez des spécialités de fruits de mer.",
     "zh": "下龙湾豪华游轮之旅2天1夜或3天2夜五星级游轮：在诗意的大自然中享受私人空间，探索神奇的洞穴，参加日落时分的日落派对。体验皮划艇、参观渔村、品尝海鲜特色菜。",
@@ -35,17 +47,5 @@
     "da": "Ha Long luksuskrydstogtstur 2 dage 1 nat eller 3 dage 2 nætter på et 5-stjernet krydstogt: nyd privat rum midt i poetisk natur, udforsk magiske huler til Sunset Party ved solnedgang. Oplev kajaksejlads, besøg fiskerlandsbyer og spis fiske- og skaldyrsspecialiteter.",
     "sv": "Ha Long lyxkryssningstur 2 dagar 1 natt eller 3 dagar 2 nätter på en 5-stjärnig kryssning: njut av privat utrymme mitt i poetisk natur, utforska magiska grottor till Sunset Party vid solnedgången. Upplev kajakpaddling, besök fiskebyar och ät skaldjursspecialiteter.",
     "no": "Ha Long luksuscruisetur 2 dager 1 natt eller 3 dager 2 netter på et 5-stjerners cruise: nyt privat rom midt i poetisk natur, utforsk magiske grotter til Sunset Party ved solnedgang. Opplev kajakkpadling, besøk fiskevær og spis sjømatspesialiteter."
-  },
-  "styles": [
-    "beach",
-    "budget",
-    "culture",
-    "family",
-    "luxury"
-  ],
-  "seasonality_start_month": "jan",
-  "seasonality_end_month": "dec",
-  "priority": 100,
-  "created_at": "2026-04-03T11:00:28.709Z",
-  "updated_at": "2026-04-30T04:05:50.414Z"
+  }
 }

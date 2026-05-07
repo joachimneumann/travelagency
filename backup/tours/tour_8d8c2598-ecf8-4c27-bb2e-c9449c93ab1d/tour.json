@@ -1,7 +1,21 @@
 {
   "id": "tour_8d8c2598-ecf8-4c27-bb2e-c9449c93ab1d",
-  "title": {
-    "en": "Perfume Pagoda - Huong Tich Cave",
+  "title": "Perfume Pagoda - Huong Tich Cave",
+  "short_description": "Perfume Pagoda and Huong Tich Cave are unique cultural and religious complexes, where you can take a boat down the romantic Yen stream to reach the pure Buddha land. Huong Tich Cave is also known as \"Nam Thien De Nhat Cave\", possessing majestic beauty with shimmering stalactites and stalactites and is the most sacred spiritual destination every spring.",
+  "styles": [
+    "budget",
+    "culture",
+    "family",
+    "gastronomic-experiences",
+    "luxury",
+    "wellness"
+  ],
+  "seasonality_start_month": "jan",
+  "seasonality_end_month": "apr",
+  "priority": 50,
+  "created_at": "2026-04-13T09:33:29.406Z",
+  "updated_at": "2026-04-30T04:05:50.414Z",
+  "title_i18n": {
     "ar": "معبد العطور - كهف هونج تيش",
     "fr": "Pagode des Parfums - Grotte de Huong Tich",
     "zh": "香水塔 - Huong Tich Cave",
@@ -18,8 +32,7 @@
     "sv": "Parfym Pagoda - Huong Tich Cave",
     "no": "Parfyme Pagoda - Huong Tich Cave"
   },
-  "short_description": {
-    "en": "Perfume Pagoda and Huong Tich Cave are unique cultural and religious complexes, where you can take a boat down the romantic Yen stream to reach the pure Buddha land. Huong Tich Cave is also known as \"Nam Thien De Nhat Cave\", possessing majestic beauty with shimmering stalactites and stalactites and is the most sacred spiritual destination every spring.",
+  "short_description_i18n": {
     "ar": "يعد معبد العطور وكهف هوونج تيش من المجمعات الثقافية والدينية الفريدة من نوعها، حيث يمكنك ركوب قارب أسفل نهر الين الرومانسي للوصول إلى أرض بوذا النقية.\n\nيُعرف كهف Huong Tich أيضًا باسم \"كهف Nam Thien De Nhat\"، ويتمتع بجمال مهيب مع الهوابط والهوابط المتلألئة وهو الوجهة الروحية الأكثر قدسية كل ربيع.",
     "fr": "La Pagode des Parfums et la grotte Huong Tich sont des complexes culturels et religieux uniques, où vous pouvez prendre un bateau sur le romantique ruisseau Yen pour atteindre la pure terre du Bouddha.\n\nLa grotte Huong Tich est également connue sous le nom de « grotte Nam Thien De Nhat », possédant une beauté majestueuse avec des stalactites et des stalactites chatoyantes et constitue la destination spirituelle la plus sacrée chaque printemps.",
     "zh": "香水塔和香迪洞是独特的文化和宗教建筑群，您可以乘船沿着浪漫的日元溪流而下，到达纯净的佛国。\n\nHuong Tich Cave又被称为“Nam Thien De Nhat Cave”，拥有闪闪发光的钟乳石和钟乳石的雄伟之美，是每年春天最神圣的精神目的地。",
@@ -35,18 +48,5 @@
     "da": "Parfume Pagoda og Huong Tich Cave er unikke kulturelle og religiøse komplekser, hvor du kan tage en båd ned ad den romantiske Yen-strøm for at nå det rene Buddha-land.\n\nHuong Tich Cave er også kendt som \"Nam Thien De Nhat Cave\", som besidder majestætisk skønhed med flimrende drypsten og drypsten og er den mest hellige åndelige destination hvert forår.",
     "sv": "Parfympagoden och Huong Tich-grottan är unika kulturella och religiösa komplex, där du kan ta en båt nerför den romantiska Yen-strömmen för att nå det rena Buddha-landet.\n\nHuong Tich-grottan är också känd som \"Nam Thien De Nhat-grottan\", som har majestätisk skönhet med skimrande stalaktiter och stalaktiter och är den heligaste andliga destinationen varje vår.",
     "no": "Parfymepagoden og Huong Tich-hulen er unike kulturelle og religiøse komplekser, hvor du kan ta en båt nedover den romantiske Yen-strømmen for å nå det rene Buddha-landet.\n\nHuong Tich-hulen er også kjent som \"Nam Thien De Nhat-hulen\", og har majestetisk skjønnhet med glitrende stalaktitter og stalaktitter og er den helligste åndelige destinasjonen hver vår."
-  },
-  "styles": [
-    "budget",
-    "culture",
-    "family",
-    "gastronomic-experiences",
-    "luxury",
-    "wellness"
-  ],
-  "seasonality_start_month": "jan",
-  "seasonality_end_month": "apr",
-  "priority": 50,
-  "created_at": "2026-04-13T09:33:29.406Z",
-  "updated_at": "2026-04-30T04:05:50.414Z"
+  }
 }

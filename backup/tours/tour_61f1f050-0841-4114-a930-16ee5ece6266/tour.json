@@ -1,7 +1,20 @@
 {
   "id": "tour_61f1f050-0841-4114-a930-16ee5ece6266",
-  "title": {
-    "en": "Ninh Binh",
+  "title": "Ninh Binh",
+  "short_description": "Ninh Binh is likened to a \"Ha Long on land\", where visitors can take a boat down the Ngo Dong river or see the world heritage site of Trang An. From conquering the Vietnamese version of the \"Great Wall\" at Mua Cave to exploring magical caves, Ninh Binh is always the top destination for nature and history lovers.",
+  "styles": [
+    "grand-expeditions",
+    "budget",
+    "culture",
+    "family",
+    "gastronomic-experiences"
+  ],
+  "seasonality_start_month": "jan",
+  "seasonality_end_month": "dec",
+  "priority": 50,
+  "created_at": "2026-04-13T04:53:45.385Z",
+  "updated_at": "2026-04-30T04:05:50.414Z",
+  "title_i18n": {
     "ar": "نينه بنه",
     "fr": "Ninh Binh",
     "zh": "宁平",
@@ -18,8 +31,7 @@
     "sv": "Ninh Binh",
     "no": "Ninh Binh"
   },
-  "short_description": {
-    "en": "Ninh Binh is likened to a \"Ha Long on land\", where visitors can take a boat down the Ngo Dong river or see the world heritage site of Trang An. From conquering the Vietnamese version of the \"Great Wall\" at Mua Cave to exploring magical caves, Ninh Binh is always the top destination for nature and history lovers.",
+  "short_description_i18n": {
     "ar": "تُشبه نينه بينه بـ \"ها لونج على الأرض\"، حيث يمكن للزوار ركوب قارب أسفل نهر نجو دونج أو مشاهدة موقع التراث العالمي ترانج آن.\nمن غزو النسخة الفيتنامية من \"السور العظيم\" في كهف موا إلى استكشاف الكهوف السحرية، تعد نينه بينه دائمًا الوجهة الأولى لمحبي الطبيعة والتاريخ.",
     "fr": "Ninh Binh est comparé à un « Ha Long sur terre », où les visiteurs peuvent descendre en bateau sur la rivière Ngo Dong ou visiter le site du patrimoine mondial de Trang An.\nDe la conquête de la version vietnamienne de la « Grande Muraille » à la grotte de Mua à l'exploration de grottes magiques, Ninh Binh est toujours la destination privilégiée des amoureux de la nature et de l'histoire.",
     "zh": "宁平被称为“陆地上的下龙”，游客可以乘船沿着吴东河顺流而下，也可以参观世界遗产长安。\n从征服越南版的Mua Cave“长城”到探索神奇的洞穴，宁平始终是自然和历史爱好者的首选目的地。",
@@ -35,17 +47,5 @@
     "da": "Ninh Binh sammenlignes med en \"Ha Long på land\", hvor besøgende kan tage en båd ned ad Ngo Dong-floden eller se verdensarvstedet Trang An.\nFra at erobre den vietnamesiske version af \"Den Store Mur\" ved Mua Cave til at udforske magiske grotter, Ninh Binh er altid den bedste destination for natur- og historieelskere.",
     "sv": "Ninh Binh liknas vid en \"Ha Long på land\", där besökare kan ta en båt nerför Ngo Dong-floden eller se världsarvet Trang An.\nFrån att erövra den vietnamesiska versionen av \"den stora muren\" vid Mua-grottan till att utforska magiska grottor, Ninh Binh är alltid den bästa destinationen för natur- och historieälskare.",
     "no": "Ninh Binh sammenlignes med en \"Ha Long på land\", hvor besøkende kan ta en båt nedover Ngo Dong-elven eller se verdensarvstedet Trang An.\nFra å erobre den vietnamesiske versjonen av \"den store muren\" ved Mua-hulen til å utforske magiske grotter, er Ninh Binh alltid det beste reisemålet for natur- og historieelskere."
-  },
-  "styles": [
-    "grand-expeditions",
-    "budget",
-    "culture",
-    "family",
-    "gastronomic-experiences"
-  ],
-  "seasonality_start_month": "jan",
-  "seasonality_end_month": "dec",
-  "priority": 50,
-  "created_at": "2026-04-13T04:53:45.385Z",
-  "updated_at": "2026-04-30T04:05:50.414Z"
+  }
 }

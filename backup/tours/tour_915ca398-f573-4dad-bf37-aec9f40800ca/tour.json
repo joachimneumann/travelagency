@@ -1,7 +1,20 @@
 {
   "id": "tour_915ca398-f573-4dad-bf37-aec9f40800ca",
-  "title": {
-    "en": "Exploring Hoi An's Rural Area: A Journey into the Heart of the Countryside",
+  "title": "Exploring Hoi An's Rural Area: A Journey into the Heart of the Countryside",
+  "short_description": "The countryside is where the soul finds peace between the scent of ripe rice and the sound of kite flutes in the afternoon breeze. Along with the slow pace of life here, it weaves a picture of peace and sophistication imbued with the soul of Vietnamese countryside.",
+  "styles": [
+    "budget",
+    "culture",
+    "family",
+    "gastronomic-experiences",
+    "wellness"
+  ],
+  "seasonality_start_month": "mar",
+  "seasonality_end_month": "aug",
+  "priority": 50,
+  "created_at": "2026-04-14T10:52:39.442Z",
+  "updated_at": "2026-04-30T04:05:50.414Z",
+  "title_i18n": {
     "ar": "استكشاف منطقة هوي آن الريفية: رحلة إلى قلب الريف",
     "fr": "Explorer la zone rurale de Hoi An : un voyage au cœur de la campagne",
     "zh": "探索会安的乡村地区：乡村之旅",
@@ -18,8 +31,7 @@
     "sv": "Utforska Hoi Ans landsbygdsområde: En resa in i hjärtat av landsbygden",
     "no": "Utforsk Hoi Ans landlige område: En reise inn i hjertet av landsbygda"
   },
-  "short_description": {
-    "en": "The countryside is where the soul finds peace between the scent of ripe rice and the sound of kite flutes in the afternoon breeze. Along with the slow pace of life here, it weaves a picture of peace and sophistication imbued with the soul of Vietnamese countryside.",
+  "short_description_i18n": {
     "ar": "الريف هو المكان الذي تجد فيه الروح السلام بين رائحة الأرز الناضج وصوت مزامير الطائرات الورقية في نسيم الظهيرة. وإلى جانب وتيرة الحياة البطيئة هنا، فإنها تنسج صورة للسلام والرقي مشبعة بروح الريف الفيتنامي.",
     "fr": "La campagne est l'endroit où l'âme trouve la paix entre le parfum du riz mûr et le son des flûtes cerf-volant dans la brise de l'après-midi. Outre le rythme lent de la vie ici, il tisse une image de paix et de sophistication imprégnée de l'âme de la campagne vietnamienne.",
     "zh": "乡村是在成熟稻香和午后微风中风筝笛声之间找到心灵平静的地方。伴随着这里缓慢的生活节奏，编织出一幅充满越南乡村灵魂的宁静与精致的画面。",
@@ -35,17 +47,5 @@
     "da": "Landskabet er, hvor sjælen finder fred mellem duften af ​​moden ris og lyden af ​​dragefløjter i eftermiddagsbrisen. Sammen med livets langsomme tempo her, væver det et billede af fred og sofistikering gennemsyret af sjælen i det vietnamesiske landskab.",
     "sv": "Landsbygden är där själen finner frid mellan doften av moget ris och ljudet av drakflöjter i eftermiddagsbrisen. Tillsammans med det långsamma livet här, väver den en bild av fred och sofistikering genomsyrad av själen från den vietnamesiska landsbygden.",
     "no": "Landsbygda er der sjelen finner fred mellom duften av moden ris og lyden av dragefløyter i ettermiddagsbrisen. Sammen med det langsomme tempoet i livet her, vever det et bilde av fred og raffinement gjennomsyret av sjelen til det vietnamesiske landskapet."
-  },
-  "styles": [
-    "budget",
-    "culture",
-    "family",
-    "gastronomic-experiences",
-    "wellness"
-  ],
-  "seasonality_start_month": "mar",
-  "seasonality_end_month": "aug",
-  "priority": 50,
-  "created_at": "2026-04-14T10:52:39.442Z",
-  "updated_at": "2026-04-30T04:05:50.414Z"
+  }
 }

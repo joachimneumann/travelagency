@@ -1,7 +1,21 @@
 {
   "id": "tour_932143b3-7e73-4139-84e6-b6283c8a1a28",
-  "title": {
-    "en": "Hanoi – Explore Ha Giang",
+  "title": "Hanoi – Explore Ha Giang",
+  "short_description": "Ha Giang is the top land of the country, a place that makes everyone overwhelmed by the majestic beauty of the rolling limestone mountains and the legendary Ma Pi Leng pass. Dong Van Karst Plateau is not only a world geological heritage but also a colorful cultural space of the Mong, Lo Lo, Dao... ethnic groups with purple and pink buckwheat flowers covering the entire hillside.",
+  "styles": [
+    "grand-expeditions",
+    "budget",
+    "culture",
+    "family",
+    "gastronomic-experiences",
+    "wellness"
+  ],
+  "seasonality_start_month": "",
+  "seasonality_end_month": "",
+  "priority": 50,
+  "created_at": "2026-04-14T10:39:04.534Z",
+  "updated_at": "2026-04-30T04:05:50.414Z",
+  "title_i18n": {
     "ar": "هانوي – اكتشف ها جيانج",
     "fr": "Hanoï – Explorez Ha Giang",
     "zh": "河内 – 探索河江",
@@ -18,8 +32,7 @@
     "sv": "Hanoi – Utforska Ha Giang",
     "no": "Hanoi – Utforsk Ha Giang"
   },
-  "short_description": {
-    "en": "Ha Giang is the top land of the country, a place that makes everyone overwhelmed by the majestic beauty of the rolling limestone mountains and the legendary Ma Pi Leng pass. Dong Van Karst Plateau is not only a world geological heritage but also a colorful cultural space of the Mong, Lo Lo, Dao... ethnic groups with purple and pink buckwheat flowers covering the entire hillside.",
+  "short_description_i18n": {
     "ar": "ها جيانج هي أعلى أرض في البلاد، وهو المكان الذي يبهر الجميع بالجمال المهيب لجبال الحجر الجيري المتموجة وممر ما بي لينج الأسطوري. هضبة دونغ فان كارست ليست فقط تراثًا جيولوجيًا عالميًا ولكنها أيضًا مساحة ثقافية ملونة لمجموعات مونغ ولو لو وداو... العرقية ذات أزهار الحنطة السوداء الأرجوانية والوردية التي تغطي جانب التل بأكمله.",
     "fr": "Ha Giang est la plus haute terre du pays, un endroit qui laisse tout le monde subjugué par la beauté majestueuse des montagnes calcaires vallonnées et du légendaire col de Ma Pi Leng. Le plateau karstique de Dong Van est non seulement un patrimoine géologique mondial mais aussi un espace culturel coloré des ethnies Mong, Lo Lo, Dao... avec des fleurs de sarrasin violettes et roses couvrant tout le flanc de la colline.",
     "zh": "河江是国家的顶级土地，连绵起伏的石灰岩山脉和传奇的马皮岭山口的雄伟美景让每个人都惊叹不已。同文喀斯特高原不仅是世界地质遗产，也是多彩的蒙族、傣族、道族等民族的文化空间，紫色、粉红色的荞麦花覆盖了整个山坡。",
@@ -35,18 +48,5 @@
     "da": "Ha Giang er landets øverste land, et sted, der gør alle overvældet af den majestætiske skønhed i de bølgende kalkstensbjerge og det legendariske Ma Pi Leng-pas. Dong Van Karst Plateau er ikke kun en geologisk verdensarv, men også et farverigt kulturelt rum for Mong, Lo Lo, Dao... etniske grupper med lilla og lyserøde boghvedeblomster, der dækker hele bjergsiden.",
     "sv": "Ha Giang är landets högsta land, en plats som gör alla överväldigade av den majestätiska skönheten i de böljande kalkstensbergen och det legendariska Ma Pi Leng-passet. Dong Van Karst-platån är inte bara ett geologiskt världsarv utan också ett färgstarkt kulturellt utrymme för Mong, Lo Lo, Dao... etniska grupper med lila och rosa boveteblommor som täcker hela sluttningen.",
     "no": "Ha Giang er det øverste landet i landet, et sted som gjør alle overveldet av den majestetiske skjønnheten til de bølgende kalksteinsfjellene og det legendariske Ma Pi Leng-passet. Dong Van Karst-platået er ikke bare en geologisk verdensarv, men også et fargerikt kulturområde for Mong, Lo Lo, Dao... etniske grupper med lilla og rosa bokhveteblomster som dekker hele åssiden."
-  },
-  "styles": [
-    "grand-expeditions",
-    "budget",
-    "culture",
-    "family",
-    "gastronomic-experiences",
-    "wellness"
-  ],
-  "seasonality_start_month": "",
-  "seasonality_end_month": "",
-  "priority": 50,
-  "created_at": "2026-04-14T10:39:04.534Z",
-  "updated_at": "2026-04-30T04:05:50.414Z"
+  }
 }

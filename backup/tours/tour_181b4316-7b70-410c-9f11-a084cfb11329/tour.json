@@ -1,43 +1,7 @@
 {
   "id": "tour_181b4316-7b70-410c-9f11-a084cfb11329",
-  "title": {
-    "en": "Tuyet Tinh Coc - Trang An - Dancing Cave",
-    "ar": "تويت تينه كوك - ترانج آن - الكهف الراقص",
-    "fr": "Tuyet Tinh Coc - Trang An - Grotte dansante",
-    "zh": "雪静谷 - 长安 - 跳舞的洞穴",
-    "ja": "トゥエット・ティンコック - チャンアン - ダンシング・ケーブ",
-    "ko": "Tuyet Tinh Coc - Trang An - 춤추는 동굴",
-    "ms": "Tuyet Tinh Coc - Trang An - Gua Menari",
-    "de": "Tuyet Tinh Coc – Trang An – Tanzende Höhle",
-    "es": "Tuyet Tinh Coc - Trang An - Cueva Danzante",
-    "it": "Tuyet Tinh Coc - Trang An - Grotta danzante",
-    "ru": "Туйет Тинь Кок - Транг Ан - Танцующая пещера",
-    "nl": "Tuyet Tinh Coc - Trang An - Dansende Grot",
-    "pl": "Tuyet Tinh Coc – Trang An – Tańcząca Jaskinia",
-    "da": "Tuyet Tinh Coc - Trang An - Dancing Cave",
-    "sv": "Tuyet Tinh Coc - Trang An - Dansgrotta",
-    "no": "Tuyet Tinh Coc - Trang An - Dancing Cave",
-    "vi": "Tuyệt Tình Cốc - Tràng An - Hang Múa"
-  },
-  "short_description": {
-    "en": "Explore the serene Tuyet Tinh Coc, majestic karst landscapes of Trang An, and panoramic views from Mua Cave (Dancing Cave). Ninh Binh's ultimate scenic trio",
-    "ar": "استكشف منطقة Tuyet Tinh Coc الهادئة، والمناظر الطبيعية الكارستية المهيبة في Trang An، والمناظر البانورامية من كهف Mua (الكهف الراقص). ثلاثي نينه بينه ذو المناظر الخلابة",
-    "fr": "Explorez le serein Tuyet Tinh Coc, les majestueux paysages karstiques de Trang An et les vues panoramiques depuis la grotte Mua (grotte dansante). Le trio scénique ultime de Ninh Binh",
-    "zh": "探索宁静的雪静谷 (Tuyet Tinh Coc)、长安 (Trang An) 雄伟的喀斯特景观，以及 Mua Cave（跳舞洞）的全景。宁平的终极风景三人组",
-    "ja": "静かなトゥエット ティン コック、チャン アンの雄大なカルスト地形、ムア洞窟 (ダンシング ケーブ) からのパノラマの景色を探索しましょう。ニンビンの究極の景色のトリオ",
-    "ko": "고요한 Tuyet Tinh Coc, Trang An의 장엄한 카르스트 풍경, Mua Cave(Dancing Cave)의 탁 트인 전망을 탐험해보세요. 닌빈의 최고의 풍경 트리오",
-    "ms": "Terokai Tuyet Tinh Coc yang tenang, landskap karst Trang An yang megah dan pemandangan panoramik dari Gua Mua (Gua Menari). Trio pemandangan terbaik Ninh Binh",
-    "de": "Erkunden Sie das ruhige Tuyet Tinh Coc, die majestätischen Karstlandschaften von Trang An und den Panoramablick von der Mua-Höhle (Tanzende Höhle). Ninh Binhs ultimatives Bühnentrio",
-    "es": "Explore el sereno Tuyet Tinh Coc, los majestuosos paisajes kársticos de Trang An y las vistas panorámicas desde la cueva Mua (cueva del baile). El trío escénico definitivo de Ninh Binh",
-    "it": "Esplora il sereno Tuyet Tinh Coc, i maestosi paesaggi carsici di Trang An e le viste panoramiche dalla Mua Cave (Grotta Danzante). Il trio scenico definitivo di Ninh Binh",
-    "ru": "Исследуйте безмятежный Туйет Тинь Кок, величественные карстовые пейзажи Транг Ана и панорамные виды из пещеры Муа (Танцующая пещера). Лучшее сценическое трио Нинь Бинь",
-    "nl": "Verken de serene Tuyet Tinh Coc, de majestueuze karstlandschappen van Trang An en panoramische uitzichten vanaf de Mua-grot (dansgrot). Het ultieme scenische trio van Ninh Binh",
-    "pl": "Odkryj spokojną Tuyet Tinh Coc, majestatyczne krajobrazy krasowe Trang An i panoramiczne widoki z jaskini Mua (Tańcząca Jaskinia). Najlepsze sceniczne trio Ninh Binh",
-    "da": "Udforsk den fredfyldte Tuyet Tinh Coc, majestætiske karstlandskaber i Trang An og panoramaudsigt fra Mua Cave (Dancing Cave). Ninh Binhs ultimative naturskønne trio",
-    "sv": "Utforska den fridfulla Tuyet Tinh Coc, majestätiska karstlandskap i Trang An och panoramautsikt från Mua-grottan (dansgrottan). Ninh Binhs ultimata sceniska trio",
-    "no": "Utforsk den rolige Tuyet Tinh Coc, majestetiske karstlandskap i Trang An og panoramautsikt fra Mua-hulen (danshulen). Ninh Binhs ultimate sceniske trio",
-    "vi": "Khám phá Tuyệt Tình Cốc thanh bình, phong cảnh núi đá vôi hùng vĩ của Tràng An và tầm nhìn toàn cảnh từ Hang Múa (Hang Khiêu Vũ). Bộ ba cảnh đẹp tuyệt đỉnh của Ninh Bình"
-  },
+  "title": "Tuyet Tinh Coc - Trang An - Dancing Cave",
+  "short_description": "Explore the serene Tuyet Tinh Coc, majestic karst landscapes of Trang An, and panoramic views from Mua Cave (Dancing Cave). Ninh Binh's ultimate scenic trio",
   "styles": [
     "budget",
     "culture",
@@ -407,5 +371,41 @@
       }
     }
   },
-  "published_on_webpage": true
+  "published_on_webpage": true,
+  "title_i18n": {
+    "ar": "تويت تينه كوك - ترانج آن - الكهف الراقص",
+    "fr": "Tuyet Tinh Coc - Trang An - Grotte dansante",
+    "zh": "雪静谷 - 长安 - 跳舞的洞穴",
+    "ja": "トゥエット・ティンコック - チャンアン - ダンシング・ケーブ",
+    "ko": "Tuyet Tinh Coc - Trang An - 춤추는 동굴",
+    "ms": "Tuyet Tinh Coc - Trang An - Gua Menari",
+    "de": "Tuyet Tinh Coc – Trang An – Tanzende Höhle",
+    "es": "Tuyet Tinh Coc - Trang An - Cueva Danzante",
+    "it": "Tuyet Tinh Coc - Trang An - Grotta danzante",
+    "ru": "Туйет Тинь Кок - Транг Ан - Танцующая пещера",
+    "nl": "Tuyet Tinh Coc - Trang An - Dansende Grot",
+    "pl": "Tuyet Tinh Coc – Trang An – Tańcząca Jaskinia",
+    "da": "Tuyet Tinh Coc - Trang An - Dancing Cave",
+    "sv": "Tuyet Tinh Coc - Trang An - Dansgrotta",
+    "no": "Tuyet Tinh Coc - Trang An - Dancing Cave",
+    "vi": "Tuyệt Tình Cốc - Tràng An - Hang Múa"
+  },
+  "short_description_i18n": {
+    "ar": "استكشف منطقة Tuyet Tinh Coc الهادئة، والمناظر الطبيعية الكارستية المهيبة في Trang An، والمناظر البانورامية من كهف Mua (الكهف الراقص). ثلاثي نينه بينه ذو المناظر الخلابة",
+    "fr": "Explorez le serein Tuyet Tinh Coc, les majestueux paysages karstiques de Trang An et les vues panoramiques depuis la grotte Mua (grotte dansante). Le trio scénique ultime de Ninh Binh",
+    "zh": "探索宁静的雪静谷 (Tuyet Tinh Coc)、长安 (Trang An) 雄伟的喀斯特景观，以及 Mua Cave（跳舞洞）的全景。宁平的终极风景三人组",
+    "ja": "静かなトゥエット ティン コック、チャン アンの雄大なカルスト地形、ムア洞窟 (ダンシング ケーブ) からのパノラマの景色を探索しましょう。ニンビンの究極の景色のトリオ",
+    "ko": "고요한 Tuyet Tinh Coc, Trang An의 장엄한 카르스트 풍경, Mua Cave(Dancing Cave)의 탁 트인 전망을 탐험해보세요. 닌빈의 최고의 풍경 트리오",
+    "ms": "Terokai Tuyet Tinh Coc yang tenang, landskap karst Trang An yang megah dan pemandangan panoramik dari Gua Mua (Gua Menari). Trio pemandangan terbaik Ninh Binh",
+    "de": "Erkunden Sie das ruhige Tuyet Tinh Coc, die majestätischen Karstlandschaften von Trang An und den Panoramablick von der Mua-Höhle (Tanzende Höhle). Ninh Binhs ultimatives Bühnentrio",
+    "es": "Explore el sereno Tuyet Tinh Coc, los majestuosos paisajes kársticos de Trang An y las vistas panorámicas desde la cueva Mua (cueva del baile). El trío escénico definitivo de Ninh Binh",
+    "it": "Esplora il sereno Tuyet Tinh Coc, i maestosi paesaggi carsici di Trang An e le viste panoramiche dalla Mua Cave (Grotta Danzante). Il trio scenico definitivo di Ninh Binh",
+    "ru": "Исследуйте безмятежный Туйет Тинь Кок, величественные карстовые пейзажи Транг Ана и панорамные виды из пещеры Муа (Танцующая пещера). Лучшее сценическое трио Нинь Бинь",
+    "nl": "Verken de serene Tuyet Tinh Coc, de majestueuze karstlandschappen van Trang An en panoramische uitzichten vanaf de Mua-grot (dansgrot). Het ultieme scenische trio van Ninh Binh",
+    "pl": "Odkryj spokojną Tuyet Tinh Coc, majestatyczne krajobrazy krasowe Trang An i panoramiczne widoki z jaskini Mua (Tańcząca Jaskinia). Najlepsze sceniczne trio Ninh Binh",
+    "da": "Udforsk den fredfyldte Tuyet Tinh Coc, majestætiske karstlandskaber i Trang An og panoramaudsigt fra Mua Cave (Dancing Cave). Ninh Binhs ultimative naturskønne trio",
+    "sv": "Utforska den fridfulla Tuyet Tinh Coc, majestätiska karstlandskap i Trang An och panoramautsikt från Mua-grottan (dansgrottan). Ninh Binhs ultimata sceniska trio",
+    "no": "Utforsk den rolige Tuyet Tinh Coc, majestetiske karstlandskap i Trang An og panoramautsikt fra Mua-hulen (danshulen). Ninh Binhs ultimate sceniske trio",
+    "vi": "Khám phá Tuyệt Tình Cốc thanh bình, phong cảnh núi đá vôi hùng vĩ của Tràng An và tầm nhìn toàn cảnh từ Hang Múa (Hang Khiêu Vũ). Bộ ba cảnh đẹp tuyệt đỉnh của Ninh Bình"
+  }
 }

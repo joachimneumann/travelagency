@@ -1,41 +1,7 @@
 {
   "id": "tour_51d3c652-0e8d-4463-ad04-852c64b3a652",
-  "title": {
-    "en": "Hanoi  - Ha Long Bay",
-    "ar": "هانوي - سابا - خليج ها لونج - نينه بينه",
-    "fr": "Hanoï - Sapa - Baie d'Ha Long - Ninh Binh",
-    "zh": "河内 - 沙坝 - 下龙湾 - 宁平",
-    "ja": "ハノイ - サパ - ハロン湾 - ニンビン",
-    "ko": "하노이 - 사파 - 하롱베이 - 닌빈",
-    "ms": "Hanoi - Sapa - Teluk Ha Long - Ninh Binh",
-    "de": "Hanoi – Sapa – Halong-Bucht – Ninh Binh",
-    "es": "Hanoi - Sapa - Bahía de Ha Long - Ninh Binh",
-    "it": "Hanoi – Sapa – Baia di Ha Long – Ninh Binh",
-    "ru": "Ханой – Сапа – залив Халонг – Нинь Бинь",
-    "nl": "Hanoi - Sapa - Ha Longbaai - Ninh Binh",
-    "pl": "Hanoi – Sapa – Zatoka Ha Long – Ninh Binh",
-    "da": "Hanoi - Sapa - Ha Long Bay - Ninh Binh",
-    "sv": "Hanoi - Sapa - Ha Long Bay - Ninh Binh",
-    "no": "Hanoi - Sapa - Ha Long Bay - Ninh Binh"
-  },
-  "short_description": {
-    "en": "From ancient Hanoi’s 36 streets to misty Sapa and Fansipan, then to Ha Long Bay’s limestone islands and Ninh Binh’s scenic Trang An—“Ha Long on land.”",
-    "ar": "من شوارع هانوي القديمة البالغ عددها 36 شارعًا إلى سابا وفانسيبان الضبابيين، ثم إلى جزر الحجر الجيري في خليج ها لونج وترانج آن ذات المناظر الخلابة في نينه بينه - \"ها لونج على الأرض\".",
-    "fr": "Des 36 rues de l’ancienne Hanoï aux brumeuses Sapa et Fansipan, puis aux îles calcaires de la baie d’Ha Long et au pittoresque Trang An de Ninh Binh – « Ha Long sur terre ».",
-    "zh": "从古老河内的 36 条街到云雾缭绕的沙巴和番西邦，再到下龙湾的石灰岩岛屿和宁平风景秀丽的长安——“陆地上的下龙”。",
-    "ja": "古代ハノイの 36 本の通りから霧深いサパやファンシーパン、そしてハロン湾の石灰岩の島々やニンビンの風光明媚なチャンアン (「陸のハロン」) まで。",
-    "ko": "고대 하노이의 36개 거리부터 안개가 자욱한 사파와 판시판, 그리고 하롱베이의 석회섬과 닌빈의 경치 좋은 짱안까지, “육지의 하롱”까지.",
-    "ms": "Dari 36 jalan Hanoi purba ke Sapa dan Fansipan yang berkabus, kemudian ke pulau batu kapur Teluk Ha Long dan Trang An yang indah di Ninh Binh—\"Ha Long di darat.\"",
-    "de": "Von den 36 Straßen des antiken Hanoi über das neblige Sapa und Fansipan bis hin zu den Kalksteininseln der Halong-Bucht und Ninh Binhs malerischem Trang An – „Ha Long an Land“.",
-    "es": "Desde las 36 calles de la antigua Hanoi hasta las brumosas Sapa y Fansipan, luego las islas de piedra caliza de la bahía de Ha Long y el pintoresco Trang An de Ninh Binh: \"Ha Long en tierra\".",
-    "it": "Dalle 36 strade dell'antica Hanoi alle nebbiose Sapa e Fansipan, poi alle isole calcaree della Baia di Ha Long e alla pittoresca Trang An di Ninh Binh: \"Ha Long sulla terraferma\".",
-    "ru": "От 36 улиц древнего Ханоя до туманных Сапы и Фансипана, затем до известняковых островов залива Халонг и живописного Трангана в Ниньбине — «Ха Лонг на суше».",
-    "nl": "Van de 36 straten van het oude Hanoi tot het mistige Sapa en Fansipan, en vervolgens tot de kalkstenen eilanden van Ha Long Bay en het schilderachtige Trang An in Ninh Binh: ‘Ha Long op het land.’",
-    "pl": "Od 36 ulic starożytnego Hanoi po mgliste Sapa i Fansipan, następnie wapienne wyspy w zatoce Ha Long i malowniczą Trang An w Ninh Binh – „Ha Long na lądzie”.",
-    "da": "Fra det gamle Hanois 36 gader til diset Sapa og Fansipan, derefter til Ha Long Bays kalkstensøer og Ninh Binhs naturskønne Trang An - \"Ha Long på land\".",
-    "sv": "Från antika Hanois 36 gator till dimmiga Sapa och Fansipan, sedan till Ha Long Bays kalkstensöar och Ninh Binhs natursköna Trang An – \"Ha Long på land.\"",
-    "no": "Fra gamle Hanois 36 gater til tåkete Sapa og Fansipan, så til Ha Long Bays kalksteinsøyer og Ninh Binhs naturskjønne Trang An – «Ha Long på land»."
-  },
+  "title": "Hanoi  - Ha Long Bay",
+  "short_description": "From ancient Hanoi’s 36 streets to misty Sapa and Fansipan, then to Ha Long Bay’s limestone islands and Ninh Binh’s scenic Trang An—“Ha Long on land.”",
   "styles": [
     "grand-expeditions",
     "beach",
@@ -774,5 +740,39 @@
       }
     }
   },
-  "published_on_webpage": true
+  "published_on_webpage": true,
+  "title_i18n": {
+    "ar": "هانوي - سابا - خليج ها لونج - نينه بينه",
+    "fr": "Hanoï - Sapa - Baie d'Ha Long - Ninh Binh",
+    "zh": "河内 - 沙坝 - 下龙湾 - 宁平",
+    "ja": "ハノイ - サパ - ハロン湾 - ニンビン",
+    "ko": "하노이 - 사파 - 하롱베이 - 닌빈",
+    "ms": "Hanoi - Sapa - Teluk Ha Long - Ninh Binh",
+    "de": "Hanoi – Sapa – Halong-Bucht – Ninh Binh",
+    "es": "Hanoi - Sapa - Bahía de Ha Long - Ninh Binh",
+    "it": "Hanoi – Sapa – Baia di Ha Long – Ninh Binh",
+    "ru": "Ханой – Сапа – залив Халонг – Нинь Бинь",
+    "nl": "Hanoi - Sapa - Ha Longbaai - Ninh Binh",
+    "pl": "Hanoi – Sapa – Zatoka Ha Long – Ninh Binh",
+    "da": "Hanoi - Sapa - Ha Long Bay - Ninh Binh",
+    "sv": "Hanoi - Sapa - Ha Long Bay - Ninh Binh",
+    "no": "Hanoi - Sapa - Ha Long Bay - Ninh Binh"
+  },
+  "short_description_i18n": {
+    "ar": "من شوارع هانوي القديمة البالغ عددها 36 شارعًا إلى سابا وفانسيبان الضبابيين، ثم إلى جزر الحجر الجيري في خليج ها لونج وترانج آن ذات المناظر الخلابة في نينه بينه - \"ها لونج على الأرض\".",
+    "fr": "Des 36 rues de l’ancienne Hanoï aux brumeuses Sapa et Fansipan, puis aux îles calcaires de la baie d’Ha Long et au pittoresque Trang An de Ninh Binh – « Ha Long sur terre ».",
+    "zh": "从古老河内的 36 条街到云雾缭绕的沙巴和番西邦，再到下龙湾的石灰岩岛屿和宁平风景秀丽的长安——“陆地上的下龙”。",
+    "ja": "古代ハノイの 36 本の通りから霧深いサパやファンシーパン、そしてハロン湾の石灰岩の島々やニンビンの風光明媚なチャンアン (「陸のハロン」) まで。",
+    "ko": "고대 하노이의 36개 거리부터 안개가 자욱한 사파와 판시판, 그리고 하롱베이의 석회섬과 닌빈의 경치 좋은 짱안까지, “육지의 하롱”까지.",
+    "ms": "Dari 36 jalan Hanoi purba ke Sapa dan Fansipan yang berkabus, kemudian ke pulau batu kapur Teluk Ha Long dan Trang An yang indah di Ninh Binh—\"Ha Long di darat.\"",
+    "de": "Von den 36 Straßen des antiken Hanoi über das neblige Sapa und Fansipan bis hin zu den Kalksteininseln der Halong-Bucht und Ninh Binhs malerischem Trang An – „Ha Long an Land“.",
+    "es": "Desde las 36 calles de la antigua Hanoi hasta las brumosas Sapa y Fansipan, luego las islas de piedra caliza de la bahía de Ha Long y el pintoresco Trang An de Ninh Binh: \"Ha Long en tierra\".",
+    "it": "Dalle 36 strade dell'antica Hanoi alle nebbiose Sapa e Fansipan, poi alle isole calcaree della Baia di Ha Long e alla pittoresca Trang An di Ninh Binh: \"Ha Long sulla terraferma\".",
+    "ru": "От 36 улиц древнего Ханоя до туманных Сапы и Фансипана, затем до известняковых островов залива Халонг и живописного Трангана в Ниньбине — «Ха Лонг на суше».",
+    "nl": "Van de 36 straten van het oude Hanoi tot het mistige Sapa en Fansipan, en vervolgens tot de kalkstenen eilanden van Ha Long Bay en het schilderachtige Trang An in Ninh Binh: ‘Ha Long op het land.’",
+    "pl": "Od 36 ulic starożytnego Hanoi po mgliste Sapa i Fansipan, następnie wapienne wyspy w zatoce Ha Long i malowniczą Trang An w Ninh Binh – „Ha Long na lądzie”.",
+    "da": "Fra det gamle Hanois 36 gader til diset Sapa og Fansipan, derefter til Ha Long Bays kalkstensøer og Ninh Binhs naturskønne Trang An - \"Ha Long på land\".",
+    "sv": "Från antika Hanois 36 gator till dimmiga Sapa och Fansipan, sedan till Ha Long Bays kalkstensöar och Ninh Binhs natursköna Trang An – \"Ha Long på land.\"",
+    "no": "Fra gamle Hanois 36 gater til tåkete Sapa og Fansipan, så til Ha Long Bays kalksteinsøyer og Ninh Binhs naturskjønne Trang An – «Ha Long på land»."
+  }
 }

@@ -1,7 +1,21 @@
 {
   "id": "tour_5382af29-685f-4e65-9f33-87f263a95f45",
-  "title": {
-    "en": "Khai Nguyen Pagoda - Son Tay Old Town - Duong Lam Ancient Village - Mia Pagoda",
+  "title": "Khai Nguyen Pagoda - Son Tay Old Town - Duong Lam Ancient Village - Mia Pagoda",
+  "short_description": "The journey takes you back to the peaceful space of Duong Lam ancient village with mossy laterite houses and the ancient, majestic beauty of Son Tay Citadel. You can also admire the sophistication of sculptural art at Mia Pagoda and the towering Amitabha Buddha statue at Khai Nguyen Pagoda, bringing a sense of peace in the land of Doai.",
+  "styles": [
+    "budget",
+    "culture",
+    "family",
+    "gastronomic-experiences",
+    "luxury",
+    "wellness"
+  ],
+  "seasonality_start_month": "jan",
+  "seasonality_end_month": "may",
+  "priority": 50,
+  "created_at": "2026-04-13T10:05:18.055Z",
+  "updated_at": "2026-04-30T04:05:50.414Z",
+  "title_i18n": {
     "ar": "معبد خاي نجوين - مدينة سون تاي القديمة - قرية دونج لام القديمة - معبد ميا",
     "fr": "Pagode Khai Nguyen - Vieille ville de Son Tay - Ancien village de Duong Lam - Pagode Mia",
     "zh": "开元寺 - 山西古城 - 阳林古村 - 米亚寺",
@@ -18,8 +32,7 @@
     "sv": "Khai Nguyen Pagoda - Son Tay Old Town - Duong Lam Ancient Village - Mia Pagoda",
     "no": "Khai Nguyen Pagoda - Son Tay Old Town - Duong Lam Ancient Village - Mia Pagoda"
   },
-  "short_description": {
-    "en": "The journey takes you back to the peaceful space of Duong Lam ancient village with mossy laterite houses and the ancient, majestic beauty of Son Tay Citadel. You can also admire the sophistication of sculptural art at Mia Pagoda and the towering Amitabha Buddha statue at Khai Nguyen Pagoda, bringing a sense of peace in the land of Doai.",
+  "short_description_i18n": {
     "ar": "تأخذك الرحلة مرة أخرى إلى المساحة الهادئة لقرية Duong Lam القديمة مع المنازل المطحونة والجمال القديم المهيب لقلعة Son Tay.\nيمكنك أيضًا الاستمتاع بمشاهدة تطور فن النحت في Mia Pagoda وتمثال بوذا أميتابها الشاهق في Khai Nguyen Pagoda، مما يضفي إحساسًا بالسلام في أرض Doai.",
     "fr": "Le voyage vous ramène à l'espace paisible de l'ancien village de Duong Lam avec ses maisons en latérite moussues et la beauté ancienne et majestueuse de la citadelle de Son Tay.\nVous pouvez également admirer la sophistication de l'art sculptural à la pagode Mia et l'imposante statue du Bouddha Amitabha à la pagode Khai Nguyen, apportant un sentiment de paix au pays de Doai.",
     "zh": "旅程将带您回到 Duong Lam 古村的宁静空间，那里有长满青苔的红土房屋和山西城堡古老而雄伟的美景。\n您还可以欣赏米娅塔的精美雕塑艺术和开元塔高耸的阿弥陀佛雕像，给多爱的土地带来宁静的感觉。",
@@ -35,18 +48,5 @@
     "da": "Rejsen tager dig tilbage til det fredelige rum i den gamle landsby Duong Lam med mosbevoksede laterithuse og den ældgamle, majestætiske skønhed ved Son Tay Citadel.\nDu kan også beundre den sofistikerede skulpturelle kunst ved Mia Pagoda og den tårnhøje Amitabha Buddha-statue ved Khai Nguyen Pagoda, der bringer en følelse af fred i landet Doai.",
     "sv": "Resan tar dig tillbaka till det fridfulla området i Duong Lams gamla by med mossiga laterithus och den urgamla majestätiska skönheten i Son Tay Citadel.\nDu kan också beundra den sofistikerade skulpturkonsten vid Mia Pagoda och den höga Amitabha Buddha-statyn vid Khai Nguyen Pagoda, vilket ger en känsla av fred i landet Doai.",
     "no": "Reisen tar deg tilbake til det fredelige området i den gamle landsbyen Duong Lam med moserike lateritthus og den eldgamle, majestetiske skjønnheten til Son Tay Citadel.\nDu kan også beundre det sofistikerte skulpturelle kunsten ved Mia Pagoda og den ruvende Amitabha Buddha-statuen ved Khai Nguyen Pagoda, som gir en følelse av fred i landet Doai."
-  },
-  "styles": [
-    "budget",
-    "culture",
-    "family",
-    "gastronomic-experiences",
-    "luxury",
-    "wellness"
-  ],
-  "seasonality_start_month": "jan",
-  "seasonality_end_month": "may",
-  "priority": 50,
-  "created_at": "2026-04-13T10:05:18.055Z",
-  "updated_at": "2026-04-30T04:05:50.414Z"
+  }
 }

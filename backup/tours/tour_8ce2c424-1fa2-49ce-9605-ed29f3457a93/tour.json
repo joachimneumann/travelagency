@@ -1,7 +1,18 @@
 {
   "id": "tour_8ce2c424-1fa2-49ce-9605-ed29f3457a93",
-  "title": {
-    "en": "Ba Be Lake",
+  "title": "Ba Be Lake",
+  "short_description": "Ba Be Lake, located in the national park of the same name in Bac Kan, is one of the world's largest and most beautiful natural freshwater mountain lakes. This place possesses a magnificent landscape with a harmonious combination of blue water surface, steep limestone cliffs and rich primary vegetation.",
+  "styles": [
+    "grand-expeditions",
+    "budget",
+    "gastronomic-experiences"
+  ],
+  "seasonality_start_month": "apr",
+  "seasonality_end_month": "oct",
+  "priority": 50,
+  "created_at": "2026-04-15T03:58:02.218Z",
+  "updated_at": "2026-04-30T04:05:50.414Z",
+  "title_i18n": {
     "ar": "بحيرة با بي",
     "fr": "Lac Ba Be",
     "zh": "巴贝湖",
@@ -18,8 +29,7 @@
     "sv": "Ba Be Lake",
     "no": "Ba Be Lake"
   },
-  "short_description": {
-    "en": "Ba Be Lake, located in the national park of the same name in Bac Kan, is one of the world's largest and most beautiful natural freshwater mountain lakes. This place possesses a magnificent landscape with a harmonious combination of blue water surface, steep limestone cliffs and rich primary vegetation.",
+  "short_description_i18n": {
     "ar": "بحيرة با بي، التي تقع في الحديقة الوطنية التي تحمل الاسم نفسه في باك كان، هي واحدة من أكبر وأجمل البحيرات الجبلية الطبيعية ذات المياه العذبة في العالم. يتمتع هذا المكان بمناظر طبيعية رائعة مع مزيج متناغم من سطح المياه الزرقاء ومنحدرات الحجر الجيري شديدة الانحدار والنباتات الأولية الغنية.",
     "fr": "Le lac Ba Be, situé dans le parc national du même nom à Bac Kan, est l'un des plus grands et des plus beaux lacs naturels de montagne d'eau douce au monde. Cet endroit possède un paysage magnifique avec une combinaison harmonieuse de surface d'eau bleue, de falaises calcaires abruptes et d'une riche végétation primaire.",
     "zh": "巴贝湖（Ba Be Lake）位于北干（Bac Kan）同名国家公园内，是世界上最大、最美丽的天然淡水高山湖泊之一。这里风景壮丽，碧蓝的水面、陡峭的石灰岩悬崖和丰富的原生植被和谐地结合在一起。",
@@ -35,15 +45,5 @@
     "da": "Ba Be Lake, der ligger i nationalparken af ​​samme navn i Bac Kan, er en af ​​verdens største og smukkeste naturlige ferskvandsbjergsøer. Dette sted besidder et storslået landskab med en harmonisk kombination af blå vandoverflade, stejle kalkstensklipper og rig primær vegetation.",
     "sv": "Ba Be Lake, som ligger i nationalparken med samma namn i Bac Kan, är en av världens största och vackraste naturliga sötvattensbergssjöar. Denna plats har ett magnifikt landskap med en harmonisk kombination av blå vattenyta, branta kalkstensklippor och rik primär vegetation.",
     "no": "Ba Be Lake, som ligger i nasjonalparken med samme navn i Bac Kan, er en av verdens største og vakreste naturlige ferskvannsfjellvann. Dette stedet besitter et storslått landskap med en harmonisk kombinasjon av blå vannflate, bratte kalksteinsklipper og rik primærvegetasjon."
-  },
-  "styles": [
-    "grand-expeditions",
-    "budget",
-    "gastronomic-experiences"
-  ],
-  "seasonality_start_month": "apr",
-  "seasonality_end_month": "oct",
-  "priority": 50,
-  "created_at": "2026-04-15T03:58:02.218Z",
-  "updated_at": "2026-04-30T04:05:50.414Z"
+  }
 }

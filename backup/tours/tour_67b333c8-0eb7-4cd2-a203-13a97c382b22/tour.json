@@ -1,41 +1,7 @@
 {
   "id": "tour_67b333c8-0eb7-4cd2-a203-13a97c382b22",
-  "title": {
-    "en": "HO CHI MINH CITY – BA DEN MOUNTAIN – MUI NE",
-    "ar": "هوشي منه - نها ترانج",
-    "fr": "Hô Chi Minh - Nha Trang",
-    "zh": "胡志明市 - 芽庄",
-    "ja": "ホーチミン - ニャチャン",
-    "ko": "호치민 - 나트랑",
-    "ms": "Ho Chi Minh - Nha Trang",
-    "de": "Ho-Chi-Minh-Nha-Trang",
-    "es": "Ho Chi Minh - Nha Trang",
-    "it": "Ho Chi Minh-Nha Trang",
-    "ru": "Хошимин - Нячанг",
-    "nl": "Ho Chi Minh-Nha Trang",
-    "pl": "Ho Chi Minh – Nha Trang",
-    "da": "Ho Chi Minh - Nha Trang",
-    "sv": "Ho Chi Minh - Nha Trang",
-    "no": "Ho Chi Minh - Nha Trang"
-  },
-  "short_description": {
-    "en": "Road connecting the city. Vibrant Ho Chi Minh with sunny and windy Mui Ne takes you across the vast and poetic Da Lat plateau. The journey ends in Nha Trang - a paradise",
-    "ar": "الطريق الذي يربط المدينة. تأخذك مدينة Ho Chi Minh النابضة بالحياة مع Mui Ne المشمسة والرياح عبر هضبة Da Lat الشاسعة والشاعرية. تنتهي الرحلة في نها ترانج - الجنة",
-    "fr": "Route reliant la ville. La vibrante Ho Chi Minh avec Mui Ne ensoleillée et venteuse vous emmène à travers le vaste et poétique plateau de Da Lat. Le voyage se termine à Nha Trang - un paradis",
-    "zh": "连接城市的道路。充满活力的胡志明市和阳光明媚、风和日丽的美奈带您穿越广阔而诗意的大叻高原。旅程的终点​​是天堂——芽庄",
-    "ja": "街を繋ぐ道路。活気に満ちたホーチミンと晴れた風が吹くムイネーを訪れると、広大で詩的なダラット高原を巡ることができます。旅は楽園ニャチャンで終わります",
-    "ko": "도시를 연결하는 도로. 화창하고 바람이 많이 부는 무이네와 함께 활기찬 호치민은 광활하고 시적인 달랏 고원을 가로지르게 됩니다. 여행은 천국인 나트랑에서 끝납니다",
-    "ms": "Jalan yang menghubungkan bandar. Ho Chi Minh yang meriah dengan Mui Ne yang cerah dan berangin membawa anda merentasi dataran tinggi Da Lat yang luas dan puitis. Perjalanan berakhir di Nha Trang - sebuah syurga",
-    "de": "Straße, die die Stadt verbindet. Das lebhafte Ho Chi Minh mit dem sonnigen und windigen Mui Ne führt Sie über das weite und poetische Da Lat-Plateau. Die Reise endet in Nha Trang – einem Paradies",
-    "es": "Carretera que conecta la ciudad. La vibrante Ho Chi Minh con el soleado y ventoso Mui Ne le llevará a través de la vasta y poética meseta de Da Lat. El viaje termina en Nha Trang: un paraíso",
-    "it": "Strada che collega la città. La vibrante Ho Chi Minh con la soleggiata e ventosa Mui Ne ti porta attraverso il vasto e poetico altopiano di Da Lat. Il viaggio termina a Nha Trang, un paradiso",
-    "ru": "Дорога, соединяющая город. Яркий Хошимин с солнечным и ветреным Муйне проведут вас через обширное и поэтичное плато Далат. Путешествие заканчивается в Нячанге – райском уголке.",
-    "nl": "Weg die de stad verbindt. Levendig Ho Chi Minh met zonnig en winderig Mui Ne neemt je mee over het uitgestrekte en poëtische Da Lat-plateau. De reis eindigt in Nha Trang - een paradijs",
-    "pl": "Droga łącząca miasto. Tętniące życiem Ho Chi Minh ze słonecznym i wietrznym Mui Ne zabierze Cię przez rozległy i poetycki płaskowyż Da Lat. Podróż kończy się w Nha Trang – raju",
-    "da": "Vej, der forbinder byen. Levende Ho Chi Minh med solrige og blæsende Mui Ne tager dig hen over det store og poetiske Da Lat-plateau. Rejsen slutter i Nha Trang – et paradis",
-    "sv": "Vägen som förbinder staden. Livfulla Ho Chi Minh med soligt och blåsigt Mui Ne tar dig över den vidsträckta och poetiska Da Lat-platån. Resan slutar i Nha Trang – ett paradis",
-    "no": "Vei som forbinder byen. Livlige Ho Chi Minh med solfylte og vindfulle Mui Ne tar deg over det enorme og poetiske Da Lat-platået. Reisen ender i Nha Trang – et paradis"
-  },
+  "title": "HO CHI MINH CITY – BA DEN MOUNTAIN – MUI NE",
+  "short_description": "Road connecting the city. Vibrant Ho Chi Minh with sunny and windy Mui Ne takes you across the vast and poetic Da Lat plateau. The journey ends in Nha Trang - a paradise",
   "styles": [
     "grand-expeditions",
     "beach",
@@ -786,5 +752,39 @@
       }
     }
   },
-  "published_on_webpage": true
+  "published_on_webpage": true,
+  "title_i18n": {
+    "ar": "هوشي منه - نها ترانج",
+    "fr": "Hô Chi Minh - Nha Trang",
+    "zh": "胡志明市 - 芽庄",
+    "ja": "ホーチミン - ニャチャン",
+    "ko": "호치민 - 나트랑",
+    "ms": "Ho Chi Minh - Nha Trang",
+    "de": "Ho-Chi-Minh-Nha-Trang",
+    "es": "Ho Chi Minh - Nha Trang",
+    "it": "Ho Chi Minh-Nha Trang",
+    "ru": "Хошимин - Нячанг",
+    "nl": "Ho Chi Minh-Nha Trang",
+    "pl": "Ho Chi Minh – Nha Trang",
+    "da": "Ho Chi Minh - Nha Trang",
+    "sv": "Ho Chi Minh - Nha Trang",
+    "no": "Ho Chi Minh - Nha Trang"
+  },
+  "short_description_i18n": {
+    "ar": "الطريق الذي يربط المدينة. تأخذك مدينة Ho Chi Minh النابضة بالحياة مع Mui Ne المشمسة والرياح عبر هضبة Da Lat الشاسعة والشاعرية. تنتهي الرحلة في نها ترانج - الجنة",
+    "fr": "Route reliant la ville. La vibrante Ho Chi Minh avec Mui Ne ensoleillée et venteuse vous emmène à travers le vaste et poétique plateau de Da Lat. Le voyage se termine à Nha Trang - un paradis",
+    "zh": "连接城市的道路。充满活力的胡志明市和阳光明媚、风和日丽的美奈带您穿越广阔而诗意的大叻高原。旅程的终点​​是天堂——芽庄",
+    "ja": "街を繋ぐ道路。活気に満ちたホーチミンと晴れた風が吹くムイネーを訪れると、広大で詩的なダラット高原を巡ることができます。旅は楽園ニャチャンで終わります",
+    "ko": "도시를 연결하는 도로. 화창하고 바람이 많이 부는 무이네와 함께 활기찬 호치민은 광활하고 시적인 달랏 고원을 가로지르게 됩니다. 여행은 천국인 나트랑에서 끝납니다",
+    "ms": "Jalan yang menghubungkan bandar. Ho Chi Minh yang meriah dengan Mui Ne yang cerah dan berangin membawa anda merentasi dataran tinggi Da Lat yang luas dan puitis. Perjalanan berakhir di Nha Trang - sebuah syurga",
+    "de": "Straße, die die Stadt verbindet. Das lebhafte Ho Chi Minh mit dem sonnigen und windigen Mui Ne führt Sie über das weite und poetische Da Lat-Plateau. Die Reise endet in Nha Trang – einem Paradies",
+    "es": "Carretera que conecta la ciudad. La vibrante Ho Chi Minh con el soleado y ventoso Mui Ne le llevará a través de la vasta y poética meseta de Da Lat. El viaje termina en Nha Trang: un paraíso",
+    "it": "Strada che collega la città. La vibrante Ho Chi Minh con la soleggiata e ventosa Mui Ne ti porta attraverso il vasto e poetico altopiano di Da Lat. Il viaggio termina a Nha Trang, un paradiso",
+    "ru": "Дорога, соединяющая город. Яркий Хошимин с солнечным и ветреным Муйне проведут вас через обширное и поэтичное плато Далат. Путешествие заканчивается в Нячанге – райском уголке.",
+    "nl": "Weg die de stad verbindt. Levendig Ho Chi Minh met zonnig en winderig Mui Ne neemt je mee over het uitgestrekte en poëtische Da Lat-plateau. De reis eindigt in Nha Trang - een paradijs",
+    "pl": "Droga łącząca miasto. Tętniące życiem Ho Chi Minh ze słonecznym i wietrznym Mui Ne zabierze Cię przez rozległy i poetycki płaskowyż Da Lat. Podróż kończy się w Nha Trang – raju",
+    "da": "Vej, der forbinder byen. Levende Ho Chi Minh med solrige og blæsende Mui Ne tager dig hen over det store og poetiske Da Lat-plateau. Rejsen slutter i Nha Trang – et paradis",
+    "sv": "Vägen som förbinder staden. Livfulla Ho Chi Minh med soligt och blåsigt Mui Ne tar dig över den vidsträckta och poetiska Da Lat-platån. Resan slutar i Nha Trang – ett paradis",
+    "no": "Vei som forbinder byen. Livlige Ho Chi Minh med solfylte og vindfulle Mui Ne tar deg over det enorme og poetiske Da Lat-platået. Reisen ender i Nha Trang – et paradis"
+  }
 }

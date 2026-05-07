@@ -1,7 +1,19 @@
 {
   "id": "tour_94d1fcb2-0ac0-4f49-b365-6ffeaf39216c",
-  "title": {
-    "en": "Lacquer – Hat – Incense craft village",
+  "title": "Lacquer – Hat – Incense craft village",
+  "short_description": "The journey takes you into traditional craft villages, where the talented hands of artisans breathe life into sophisticated lacquer works and soulful Vietnamese conical hats. The atmosphere of the trip becomes more brilliant and relaxing when you stop at the incense village, where bundles of incense sticks bloom like colorful flowers, radiating a quiet fragrance in the heart of the heritage.",
+  "styles": [
+    "budget",
+    "culture",
+    "family",
+    "wellness"
+  ],
+  "seasonality_start_month": "jan",
+  "seasonality_end_month": "dec",
+  "priority": 50,
+  "created_at": "2026-04-13T10:48:46.170Z",
+  "updated_at": "2026-04-30T04:05:50.414Z",
+  "title_i18n": {
     "ar": "اللاكيه – القبعة – قرية صناعة البخور",
     "fr": "Village artisanal laque – Chapeau – Encens",
     "zh": "漆器 – 帽子 – 香工艺村",
@@ -18,8 +30,7 @@
     "sv": "Lack – Hatt – Rökelse hantverksby",
     "no": "Lakk – Hat – Røkelse håndverkslandsby"
   },
-  "short_description": {
-    "en": "The journey takes you into traditional craft villages, where the talented hands of artisans breathe life into sophisticated lacquer works and soulful Vietnamese conical hats. The atmosphere of the trip becomes more brilliant and relaxing when you stop at the incense village, where bundles of incense sticks bloom like colorful flowers, radiating a quiet fragrance in the heart of the heritage.",
+  "short_description_i18n": {
     "ar": "تأخذك الرحلة إلى قرى الحرف التقليدية، حيث تبث أيدي الحرفيين الموهوبة الحياة في أعمال الطلاء المتطورة والقبعات الفيتنامية المخروطية المفعمة بالحيوية.\nوتصبح أجواء الرحلة أكثر تألقاً واسترخاء عندما تتوقف عند قرية البخور، حيث تتفتح حزم أعواد البخور كالزهور الملونة، تشع عطراً هادئاً في قلب التراث.",
     "fr": "Le voyage vous emmène dans des villages d'artisanat traditionnels, où les mains talentueuses des artisans donnent vie à des œuvres de laque sophistiquées et à des chapeaux coniques vietnamiens pleins d'âme.\nL'atmosphère du voyage devient plus lumineuse et relaxante lorsque l'on s'arrête au village de l'encens, où des fagots de bâtons d'encens s'épanouissent telles des fleurs colorées, dégageant un parfum tranquille au cœur du patrimoine.",
     "zh": "旅程将带您进入传统手工艺村，工匠们的才华横溢的双手为精致的漆器作品和深情的越南圆锥形帽子注入了生命。\n当你停在香村时，旅途的气氛变得更加灿烂和轻松，一束束香像五颜六色的花朵一样绽放，在遗产的中心散发着安静的香味。",
@@ -35,16 +46,5 @@
     "da": "Rejsen tager dig ind i traditionelle håndværkslandsbyer, hvor de talentfulde håndværkere puster liv i sofistikerede lakværker og sjælfulde vietnamesiske koniske hatte.\nAtmosfæren på turen bliver mere strålende og afslappende, når du stopper ved røgelsesbyen, hvor bundter af røgelsespinde blomstrer som farverige blomster og udstråler en stille duft i hjertet af arven.",
     "sv": "Resan tar dig till traditionella hantverksbyar, där hantverkarnas begåvade händer blåser liv i sofistikerade lackarbeten och själfulla vietnamesiska koniska hattar.\nAtmosfären på resan blir mer lysande och avslappnande när du stannar till i rökelsebyn, där knippen av rökelsepinnar blommar som färgglada blommor och utstrålar en stillsam doft i hjärtat av arvet.",
     "no": "Reisen tar deg med til tradisjonelle håndverkslandsbyer, hvor de talentfulle hendene til håndverkere blåser liv i sofistikerte lakkarbeider og sjelfulle vietnamesiske koniske hatter.\nAtmosfæren på turen blir mer strålende og avslappende når du stopper ved røkelseslandsbyen, der bunter med røkelsespinner blomstrer som fargerike blomster, og utstråler en stille duft i hjertet av arven."
-  },
-  "styles": [
-    "budget",
-    "culture",
-    "family",
-    "wellness"
-  ],
-  "seasonality_start_month": "jan",
-  "seasonality_end_month": "dec",
-  "priority": 50,
-  "created_at": "2026-04-13T10:48:46.170Z",
-  "updated_at": "2026-04-30T04:05:50.414Z"
+  }
 }

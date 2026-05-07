@@ -1,7 +1,21 @@
 {
   "id": "tour_7dc5c632-6a82-498b-8a5b-dc80f7f6a093",
-  "title": {
-    "en": "Hoa Lu Ancient Capital - Tam Coc - Dancing Cave",
+  "title": "Hoa Lu Ancient Capital - Tam Coc - Dancing Cave",
+  "short_description": "The journey takes you back to your historical roots in the ancient capital of Hoa Lu, before taking a boat down the Ngo Dong river to explore the poetic beauty of the golden rice fields in Tam Coc. The highlight of the trip is the experience of conquering the top of Hang Mua, where you can fully take in the majestic and breathtaking landscape of Ninh Binh from above.",
+  "styles": [
+    "budget",
+    "culture",
+    "family",
+    "gastronomic-experiences",
+    "luxury",
+    "wellness"
+  ],
+  "seasonality_start_month": "feb",
+  "seasonality_end_month": "aug",
+  "priority": 50,
+  "created_at": "2026-04-13T10:43:50.789Z",
+  "updated_at": "2026-04-30T04:05:50.414Z",
+  "title_i18n": {
     "ar": "هوا لو العاصمة القديمة - تام كوك - الكهف الراقص",
     "fr": "Hoa Lu Ancienne Capitale - Tam Coc - Grotte Dansante",
     "zh": "华闾古都 - 三谷 - 跳舞洞",
@@ -18,8 +32,7 @@
     "sv": "Hoa Lu antika huvudstad - Tam Coc - Dansgrotta",
     "no": "Hoa Lu eldgamle hovedstad - Tam Coc - Dancing Cave"
   },
-  "short_description": {
-    "en": "The journey takes you back to your historical roots in the ancient capital of Hoa Lu, before taking a boat down the Ngo Dong river to explore the poetic beauty of the golden rice fields in Tam Coc. The highlight of the trip is the experience of conquering the top of Hang Mua, where you can fully take in the majestic and breathtaking landscape of Ninh Binh from above.",
+  "short_description_i18n": {
     "ar": "تأخذك الرحلة إلى جذورك التاريخية في العاصمة القديمة هوا لو، قبل ركوب قارب أسفل نهر نجو دونج لاستكشاف الجمال الشعري لحقول الأرز الذهبية في تام كوك.\nأهم ما يميز الرحلة هو تجربة التغلب على قمة هانغ موا، حيث يمكنك الاستمتاع بالمناظر الطبيعية المهيبة والمذهلة لنينه بينه من الأعلى.",
     "fr": "Le voyage vous ramène à vos racines historiques dans l'ancienne capitale de Hoa Lu, avant de prendre un bateau sur la rivière Ngo Dong pour explorer la beauté poétique des rizières dorées de Tam Coc.\nLe point culminant du voyage est l'expérience de la conquête du sommet de Hang Mua, où vous pourrez pleinement admirer le paysage majestueux et à couper le souffle de Ninh Binh d'en haut.",
     "zh": "旅程将带您回到古都华闾的历史根源，然后乘船沿着吴东河顺流而下，探索三谷金色稻田的诗意之美。\n这次旅行的亮点是征服 Hang Mua 山顶的体验，在那里您可以从高处充分欣赏宁平的雄伟和令人惊叹的风景。",
@@ -35,18 +48,5 @@
     "da": "Rejsen tager dig tilbage til dine historiske rødder i den gamle hovedstad Hoa Lu, før du tager en båd ned ad Ngo Dong-floden for at udforske den poetiske skønhed i de gyldne rismarker i Tam Coc.\nHøjdepunktet på turen er oplevelsen af ​​at erobre toppen af ​​Hang Mua, hvor du fuldt ud kan nyde det majestætiske og betagende landskab i Ninh Binh fra oven.",
     "sv": "Resan tar dig tillbaka till dina historiska rötter i den antika huvudstaden Hoa Lu, innan du tar en båt nerför Ngo Dong-floden för att utforska den poetiska skönheten i de gyllene risfälten i Tam Coc.\nResans höjdpunkt är upplevelsen av att erövra toppen av Hang Mua, där du till fullo kan ta in det majestätiska och hisnande landskapet i Ninh Binh från ovan.",
     "no": "Reisen tar deg tilbake til dine historiske røtter i den gamle hovedstaden Hoa Lu, før du tar en båt nedover Ngo Dong-elven for å utforske den poetiske skjønnheten til de gylne rismarkene i Tam Coc.\nHøydepunktet på turen er opplevelsen av å erobre toppen av Hang Mua, hvor du fullt ut kan ta inn det majestetiske og fantastiske landskapet i Ninh Binh ovenfra."
-  },
-  "styles": [
-    "budget",
-    "culture",
-    "family",
-    "gastronomic-experiences",
-    "luxury",
-    "wellness"
-  ],
-  "seasonality_start_month": "feb",
-  "seasonality_end_month": "aug",
-  "priority": 50,
-  "created_at": "2026-04-13T10:43:50.789Z",
-  "updated_at": "2026-04-30T04:05:50.414Z"
+  }
 }

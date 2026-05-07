@@ -1,41 +1,7 @@
 {
   "id": "tour_6ad22f13-b6c3-4936-9c14-1cde4b4818fa",
-  "title": {
-    "en": "Explore Hanoi's Old Quarter",
-    "ar": "اكتشف هانوي",
-    "fr": "Explorez Hanoï",
-    "zh": "探索河内",
-    "ja": "ハノイを探索する",
-    "ko": "하노이 둘러보기",
-    "ms": "Terokai Hanoi",
-    "de": "Entdecken Sie Hanoi",
-    "es": "Explorar Hanói",
-    "it": "Esplora Hanoi",
-    "ru": "Откройте для себя направление Ханой",
-    "nl": "Verken Hanoi",
-    "pl": "Poznaj Hanoi",
-    "da": "Udforsk Hanoi",
-    "sv": "Utforska Hanoi",
-    "no": "Utforsk Hanoi"
-  },
-  "short_description": {
-    "en": "Discover Hanoi’s soul: explore the bustling Old Quarter, historic temples, and serene lakes. Immerse yourself in the rich culture and vibrant street food of this city",
-    "ar": "اكتشف روح هانوي: استكشف الحي القديم الصاخب والمعابد التاريخية والبحيرات الهادئة. انغمس في الثقافة الغنية وأطعمة الشوارع النابضة بالحياة في هذه المدينة",
-    "fr": "Découvrez l'âme de Hanoï : explorez le vieux quartier animé, les temples historiques et les lacs sereins. Plongez-vous dans la riche culture et la cuisine de rue dynamique de cette ville",
-    "zh": "探索河内的灵魂：探索繁华的老城区、历史悠久的寺庙和宁静的湖泊。沉浸在这座城市丰富的文化和充满活力的街头美食中",
-    "ja": "ハノイの魂を発見しましょう。賑やかな旧市街、歴史ある寺院、静かな湖を探索してください。この街の豊かな文化と活気に満ちた屋台の食べ物を満喫してください。",
-    "ko": "하노이의 영혼을 발견해보세요: 번화한 올드 쿼터, 역사적인 사원, 고요한 호수를 탐험해보세요. 이 도시의 풍부한 문화와 생동감 넘치는 길거리 음식에 푹 빠져보세요.",
-    "ms": "Temui jiwa Hanoi: terokai Old Quarter yang sibuk, kuil bersejarah dan tasik yang tenang. Selami budaya yang kaya dan makanan jalanan yang meriah di bandar ini",
-    "de": "Entdecken Sie Hanois Seele: Erkunden Sie die geschäftige Altstadt, historische Tempel und ruhige Seen. Tauchen Sie ein in die reiche Kultur und das pulsierende Streetfood dieser Stadt",
-    "es": "Descubra el alma de Hanoi: explore el bullicioso casco antiguo, los templos históricos y los serenos lagos. Sumérgete en la rica cultura y la vibrante comida callejera de esta ciudad.",
-    "it": "Scopri l'anima di Hanoi: esplora il vivace quartiere vecchio, i templi storici e i laghi sereni. Immergiti nella ricca cultura e nel vivace cibo di strada di questa città",
-    "ru": "Откройте для себя душу Ханоя: исследуйте шумный Старый квартал, исторические храмы и безмятежные озера. Погрузитесь в богатую культуру и яркую уличную еду этого города.",
-    "nl": "Ontdek de ziel van Hanoi: verken de bruisende oude wijk, historische tempels en serene meren. Dompel jezelf onder in de rijke cultuur en het levendige straatvoedsel van deze stad",
-    "pl": "Odkryj duszę Hanoi: odkryj tętniącą życiem Starą Dzielnicę, historyczne świątynie i spokojne jeziora. Zanurz się w bogatej kulturze i tętniącym życiem ulicznym jedzeniu tego miasta",
-    "da": "Oplev Hanois sjæl: Udforsk det travle gamle kvarter, historiske templer og fredfyldte søer. Fordyb dig i denne bys rige kultur og livlige gademad",
-    "sv": "Upptäck Hanois själ: utforska de livliga gamla kvarteren, historiska tempel och fridfulla sjöar. Fördjupa dig i stadens rika kultur och livliga gatumat",
-    "no": "Oppdag Hanois sjel: Utforsk det travle gamle kvarteret, historiske templer og rolige innsjøer. Fordyp deg i den rike kulturen og den livlige gatematen i denne byen"
-  },
+  "title": "Explore Hanoi's Old Quarter",
+  "short_description": "Discover Hanoi’s soul: explore the bustling Old Quarter, historic temples, and serene lakes. Immerse yourself in the rich culture and vibrant street food of this city",
   "styles": [
     "budget",
     "culture",
@@ -565,5 +531,39 @@
       }
     }
   },
-  "published_on_webpage": true
+  "published_on_webpage": true,
+  "title_i18n": {
+    "ar": "اكتشف هانوي",
+    "fr": "Explorez Hanoï",
+    "zh": "探索河内",
+    "ja": "ハノイを探索する",
+    "ko": "하노이 둘러보기",
+    "ms": "Terokai Hanoi",
+    "de": "Entdecken Sie Hanoi",
+    "es": "Explorar Hanói",
+    "it": "Esplora Hanoi",
+    "ru": "Откройте для себя направление Ханой",
+    "nl": "Verken Hanoi",
+    "pl": "Poznaj Hanoi",
+    "da": "Udforsk Hanoi",
+    "sv": "Utforska Hanoi",
+    "no": "Utforsk Hanoi"
+  },
+  "short_description_i18n": {
+    "ar": "اكتشف روح هانوي: استكشف الحي القديم الصاخب والمعابد التاريخية والبحيرات الهادئة. انغمس في الثقافة الغنية وأطعمة الشوارع النابضة بالحياة في هذه المدينة",
+    "fr": "Découvrez l'âme de Hanoï : explorez le vieux quartier animé, les temples historiques et les lacs sereins. Plongez-vous dans la riche culture et la cuisine de rue dynamique de cette ville",
+    "zh": "探索河内的灵魂：探索繁华的老城区、历史悠久的寺庙和宁静的湖泊。沉浸在这座城市丰富的文化和充满活力的街头美食中",
+    "ja": "ハノイの魂を発見しましょう。賑やかな旧市街、歴史ある寺院、静かな湖を探索してください。この街の豊かな文化と活気に満ちた屋台の食べ物を満喫してください。",
+    "ko": "하노이의 영혼을 발견해보세요: 번화한 올드 쿼터, 역사적인 사원, 고요한 호수를 탐험해보세요. 이 도시의 풍부한 문화와 생동감 넘치는 길거리 음식에 푹 빠져보세요.",
+    "ms": "Temui jiwa Hanoi: terokai Old Quarter yang sibuk, kuil bersejarah dan tasik yang tenang. Selami budaya yang kaya dan makanan jalanan yang meriah di bandar ini",
+    "de": "Entdecken Sie Hanois Seele: Erkunden Sie die geschäftige Altstadt, historische Tempel und ruhige Seen. Tauchen Sie ein in die reiche Kultur und das pulsierende Streetfood dieser Stadt",
+    "es": "Descubra el alma de Hanoi: explore el bullicioso casco antiguo, los templos históricos y los serenos lagos. Sumérgete en la rica cultura y la vibrante comida callejera de esta ciudad.",
+    "it": "Scopri l'anima di Hanoi: esplora il vivace quartiere vecchio, i templi storici e i laghi sereni. Immergiti nella ricca cultura e nel vivace cibo di strada di questa città",
+    "ru": "Откройте для себя душу Ханоя: исследуйте шумный Старый квартал, исторические храмы и безмятежные озера. Погрузитесь в богатую культуру и яркую уличную еду этого города.",
+    "nl": "Ontdek de ziel van Hanoi: verken de bruisende oude wijk, historische tempels en serene meren. Dompel jezelf onder in de rijke cultuur en het levendige straatvoedsel van deze stad",
+    "pl": "Odkryj duszę Hanoi: odkryj tętniącą życiem Starą Dzielnicę, historyczne świątynie i spokojne jeziora. Zanurz się w bogatej kulturze i tętniącym życiem ulicznym jedzeniu tego miasta",
+    "da": "Oplev Hanois sjæl: Udforsk det travle gamle kvarter, historiske templer og fredfyldte søer. Fordyb dig i denne bys rige kultur og livlige gademad",
+    "sv": "Upptäck Hanois själ: utforska de livliga gamla kvarteren, historiska tempel och fridfulla sjöar. Fördjupa dig i stadens rika kultur och livliga gatumat",
+    "no": "Oppdag Hanois sjel: Utforsk det travle gamle kvarteret, historiske templer og rolige innsjøer. Fordyp deg i den rike kulturen og den livlige gatematen i denne byen"
+  }
 }

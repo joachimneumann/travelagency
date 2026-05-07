@@ -1,41 +1,7 @@
 {
   "id": "tour_eeac7fbd-0770-4275-9809-97619ac66084",
-  "title": {
-    "en": "Sapa - Tam Dao - Hanoi - Ninh Binh",
-    "ar": "سابا - تام داو - هانوي - نينه بينه",
-    "fr": "Sapa - Tam Dao - Hanoï - Ninh Binh",
-    "zh": "沙巴 - Tam Dao - 河内 - 宁平",
-    "ja": "サパ - タムダオ - ハノイ - ニンビン",
-    "ko": "사파 - 땀다오 - 하노이 - 닌빈",
-    "ms": "Sapa - Tam Dao - Hanoi - Ninh Binh",
-    "de": "Sapa – Tam Dao – Hanoi – Ninh Binh",
-    "es": "Sapa - Tam Dao - Hanói - Ninh Binh",
-    "it": "Sapa-Tam Dao-Hanoi-Ninh Binh",
-    "ru": "Сапа – Там Дао – Ханой – Нинь Бинь",
-    "nl": "Sapa - Tam Dao - Hanoi - Ninh Binh",
-    "pl": "Sapa – Tam Dao – Hanoi – Ninh Binh",
-    "da": "Sapa - Tam Dao - Hanoi - Ninh Binh",
-    "sv": "Sapa - Tam Dao - Hanoi - Ninh Binh",
-    "no": "Sapa - Tam Dao - Hanoi - Ninh Binh"
-  },
-  "short_description": {
-    "ar": "استكشف شمال فيتنام: من قمم سابا الضبابية وملاذ تام داو الرائع إلى سحر هانوي التاريخي والمناظر الطبيعية الخلابة في نينه بينه. رحلة بين الطبيعة والثقافة",
-    "fr": "Explorez le nord du Vietnam : des sommets brumeux de Sapa et la retraite fraîche de Tam Dao au charme historique de Hanoï et aux paysages époustouflants de Ninh Binh. Un voyage de nature et de culture",
-    "zh": "探索越南北部：从沙巴的云雾缭绕的山峰和 Tam Dao 的清凉胜地到河内的历史魅力和宁平的迷人风景。自然与文化之旅",
-    "ja": "ベトナム北部を探索：サパの霧深い山々やタムダオの涼しい隠れ家から、ハノイの歴史的魅力やニンビンの美しい風景まで。自然と文化の旅",
-    "ko": "북부 베트남 탐험: 사파의 안개 낀 봉우리와 땀다오의 시원한 휴양지부터 하노이의 역사적인 매력과 닌빈의 놀라운 풍경까지. 자연과 문화의 여정",
-    "ms": "Terokai Vietnam Utara: dari puncak berkabus Sapa dan tempat berundur sejuk di Tam Dao ke pesona bersejarah Hanoi dan landskap Ninh Binh yang menakjubkan. Perjalanan alam semula jadi dan budaya",
-    "de": "Entdecken Sie Nordvietnam: von den nebligen Gipfeln von Sapa und dem kühlen Rückzugsort von Tam Dao bis zum historischen Charme von Hanoi und den atemberaubenden Landschaften von Ninh Binh. Eine Reise durch Natur und Kultur",
-    "es": "Explore el norte de Vietnam: desde los picos brumosos de Sapa y el fresco retiro de Tam Dao hasta el encanto histórico de Hanoi y los impresionantes paisajes de Ninh Binh. Un viaje de naturaleza y cultura",
-    "it": "Esplora il Vietnam del Nord: dalle cime nebbiose di Sapa e il fresco rifugio di Tam Dao al fascino storico di Hanoi e agli splendidi paesaggi di Ninh Binh.Un viaggio tra natura e cultura",
-    "ru": "Исследуйте Северный Вьетнам: от туманных вершин Сапы и прохладного уединенного места Там Дао до исторического очарования Ханоя и потрясающих пейзажей Нинь Бинь. Путешествие по природе и культуре.",
-    "nl": "Verken Noord-Vietnam: van de mistige toppen van Sapa en het koele toevluchtsoord van Tam Dao tot de historische charme van Hanoi en de adembenemende landschappen van Ninh Binh. Een reis vol natuur en cultuur",
-    "pl": "Odkryj północny Wietnam: od mglistych szczytów Sapa i spokojnego zacisza Tam Dao, po historyczny urok Hanoi i oszałamiające krajobrazy Ninh Binh. Podróż przez naturę i kulturę",
-    "da": "Udforsk det nordlige Vietnam: fra Sapas tågede tinder og Tam Daos kølige tilbagetog til Hanois historiske charme og Ninh Binhs fantastiske landskaber. En rejse i natur og kultur",
-    "sv": "Utforska norra Vietnam: från Sapas dimmiga toppar och Tam Daos coola tillflyktsort till Hanois historiska charm och Ninh Binhs fantastiska landskap. En natur- och kulturresa",
-    "no": "Utforsk Nord-Vietnam: fra Sapas tåkete topper og Tam Daos kule tilfluktssted til Hanois historiske sjarm og Ninh Binhs fantastiske landskap. En reise med natur og kultur",
-    "en": "Explore Northern Vietnam: from Sapa's misty peaks and Tam Dao's cool retreat to Hanoi's historic charm and Ninh Binh's stunning landscapes.A journey of nature and culture"
-  },
+  "title": "Sapa - Tam Dao - Hanoi - Ninh Binh",
+  "short_description": "Explore Northern Vietnam: from Sapa's misty peaks and Tam Dao's cool retreat to Hanoi's historic charm and Ninh Binh's stunning landscapes.A journey of nature and culture",
   "styles": [
     "grand-expeditions",
     "budget",
@@ -1381,5 +1347,39 @@
       }
     }
   },
-  "published_on_webpage": true
+  "published_on_webpage": true,
+  "title_i18n": {
+    "ar": "سابا - تام داو - هانوي - نينه بينه",
+    "fr": "Sapa - Tam Dao - Hanoï - Ninh Binh",
+    "zh": "沙巴 - Tam Dao - 河内 - 宁平",
+    "ja": "サパ - タムダオ - ハノイ - ニンビン",
+    "ko": "사파 - 땀다오 - 하노이 - 닌빈",
+    "ms": "Sapa - Tam Dao - Hanoi - Ninh Binh",
+    "de": "Sapa – Tam Dao – Hanoi – Ninh Binh",
+    "es": "Sapa - Tam Dao - Hanói - Ninh Binh",
+    "it": "Sapa-Tam Dao-Hanoi-Ninh Binh",
+    "ru": "Сапа – Там Дао – Ханой – Нинь Бинь",
+    "nl": "Sapa - Tam Dao - Hanoi - Ninh Binh",
+    "pl": "Sapa – Tam Dao – Hanoi – Ninh Binh",
+    "da": "Sapa - Tam Dao - Hanoi - Ninh Binh",
+    "sv": "Sapa - Tam Dao - Hanoi - Ninh Binh",
+    "no": "Sapa - Tam Dao - Hanoi - Ninh Binh"
+  },
+  "short_description_i18n": {
+    "ar": "استكشف شمال فيتنام: من قمم سابا الضبابية وملاذ تام داو الرائع إلى سحر هانوي التاريخي والمناظر الطبيعية الخلابة في نينه بينه. رحلة بين الطبيعة والثقافة",
+    "fr": "Explorez le nord du Vietnam : des sommets brumeux de Sapa et la retraite fraîche de Tam Dao au charme historique de Hanoï et aux paysages époustouflants de Ninh Binh. Un voyage de nature et de culture",
+    "zh": "探索越南北部：从沙巴的云雾缭绕的山峰和 Tam Dao 的清凉胜地到河内的历史魅力和宁平的迷人风景。自然与文化之旅",
+    "ja": "ベトナム北部を探索：サパの霧深い山々やタムダオの涼しい隠れ家から、ハノイの歴史的魅力やニンビンの美しい風景まで。自然と文化の旅",
+    "ko": "북부 베트남 탐험: 사파의 안개 낀 봉우리와 땀다오의 시원한 휴양지부터 하노이의 역사적인 매력과 닌빈의 놀라운 풍경까지. 자연과 문화의 여정",
+    "ms": "Terokai Vietnam Utara: dari puncak berkabus Sapa dan tempat berundur sejuk di Tam Dao ke pesona bersejarah Hanoi dan landskap Ninh Binh yang menakjubkan. Perjalanan alam semula jadi dan budaya",
+    "de": "Entdecken Sie Nordvietnam: von den nebligen Gipfeln von Sapa und dem kühlen Rückzugsort von Tam Dao bis zum historischen Charme von Hanoi und den atemberaubenden Landschaften von Ninh Binh. Eine Reise durch Natur und Kultur",
+    "es": "Explore el norte de Vietnam: desde los picos brumosos de Sapa y el fresco retiro de Tam Dao hasta el encanto histórico de Hanoi y los impresionantes paisajes de Ninh Binh. Un viaje de naturaleza y cultura",
+    "it": "Esplora il Vietnam del Nord: dalle cime nebbiose di Sapa e il fresco rifugio di Tam Dao al fascino storico di Hanoi e agli splendidi paesaggi di Ninh Binh.Un viaggio tra natura e cultura",
+    "ru": "Исследуйте Северный Вьетнам: от туманных вершин Сапы и прохладного уединенного места Там Дао до исторического очарования Ханоя и потрясающих пейзажей Нинь Бинь. Путешествие по природе и культуре.",
+    "nl": "Verken Noord-Vietnam: van de mistige toppen van Sapa en het koele toevluchtsoord van Tam Dao tot de historische charme van Hanoi en de adembenemende landschappen van Ninh Binh. Een reis vol natuur en cultuur",
+    "pl": "Odkryj północny Wietnam: od mglistych szczytów Sapa i spokojnego zacisza Tam Dao, po historyczny urok Hanoi i oszałamiające krajobrazy Ninh Binh. Podróż przez naturę i kulturę",
+    "da": "Udforsk det nordlige Vietnam: fra Sapas tågede tinder og Tam Daos kølige tilbagetog til Hanois historiske charme og Ninh Binhs fantastiske landskaber. En rejse i natur og kultur",
+    "sv": "Utforska norra Vietnam: från Sapas dimmiga toppar och Tam Daos coola tillflyktsort till Hanois historiska charm och Ninh Binhs fantastiska landskap. En natur- och kulturresa",
+    "no": "Utforsk Nord-Vietnam: fra Sapas tåkete topper og Tam Daos kule tilfluktssted til Hanois historiske sjarm og Ninh Binhs fantastiske landskap. En reise med natur og kultur"
+  }
 }

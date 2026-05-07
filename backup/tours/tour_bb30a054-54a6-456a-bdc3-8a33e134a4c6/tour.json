@@ -1,41 +1,7 @@
 {
   "id": "tour_bb30a054-54a6-456a-bdc3-8a33e134a4c6",
-  "title": {
-    "en": "Hanoi - Sapa",
-    "ar": "هانوي - سابا",
-    "fr": "Hanoï - Sapa",
-    "zh": "河内 - 沙巴",
-    "ja": "ハノイ - サパ",
-    "ko": "하노이 - 사파",
-    "ms": "Hanoi - Sapa",
-    "de": "Hanoi – Sapa",
-    "es": "Hanói - Sapa",
-    "it": "Hanoi-Sapa",
-    "ru": "Ханой - Сапа",
-    "nl": "Hanoi-Sapa",
-    "pl": "Hanoi – Sapa",
-    "da": "Hanoi - Sapa",
-    "sv": "Hanoi - Sapa",
-    "no": "Hanoi - Sapa"
-  },
-  "short_description": {
-    "en": "Journey from Hanoi to the misty highlands of Sapa. Experience breathtaking mountain landscapes, vibrant ethnic cultures, and a refreshing escape into northern Vietnam.",
-    "ar": "رحلة من هانوي إلى مرتفعات سابا الضبابية. استمتع بالمناظر الطبيعية الجبلية الخلابة والثقافات العرقية النابضة بالحياة والهروب المنعش إلى شمال فيتنام.",
-    "fr": "Voyage de Hanoï vers les hauts plateaux brumeux de Sapa. Découvrez des paysages de montagne à couper le souffle, des cultures ethniques dynamiques et une escapade rafraîchissante dans le nord du Vietnam.",
-    "zh": "从河内到雾蒙蒙的萨帕高原的旅程。体验令人惊叹的山地景观、充满活力的民族文化，以及前往越南北部的清新度假。",
-    "ja": "ハノイから霧深いサパの高地への旅。息を呑むような山の風景、活気に満ちた民族文化、そしてベトナム北部への爽やかな逃避行を体験してください。",
-    "ko": "하노이에서 안개가 자욱한 사파 고원으로 여행을 떠나세요. 숨막히는 산의 풍경, 활기찬 민족 문화, 그리고 베트남 북부로의 상쾌한 탈출을 경험해보세요.",
-    "ms": "Perjalanan dari Hanoi ke tanah tinggi berkabus Sapa. Alami landskap gunung yang mempesonakan, budaya etnik yang bertenaga dan percutian yang menyegarkan ke utara Vietnam.",
-    "de": "Reise von Hanoi in das neblige Hochland von Sapa. Erleben Sie atemberaubende Berglandschaften, lebendige ethnische Kulturen und eine erfrischende Flucht in den Norden Vietnams.",
-    "es": "Viaje desde Hanoi a las brumosas tierras altas de Sapa. Experimente impresionantes paisajes montañosos, vibrantes culturas étnicas y una refrescante escapada al norte de Vietnam.",
-    "it": "Viaggio da Hanoi agli altopiani nebbiosi di Sapa. Scopri paesaggi montani mozzafiato, vivaci culture etniche e una fuga rinfrescante nel Vietnam settentrionale.",
-    "ru": "Путешествие из Ханоя в туманное высокогорье Сапа. Насладитесь захватывающими дух горными пейзажами, яркими этническими культурами и освежающим отдыхом в северном Вьетнаме.",
-    "nl": "Reis van Hanoi naar de mistige hooglanden van Sapa. Ervaar adembenemende berglandschappen, levendige etnische culturen en een verfrissende ontsnapping naar Noord-Vietnam.",
-    "pl": "Podróż z Hanoi do mglistych wyżyn Sapa. Przeżyj zapierające dech w piersiach górskie krajobrazy, tętniące życiem kultury etniczne i orzeźwiającą ucieczkę do północnego Wietnamu.",
-    "da": "Rejs fra Hanoi til det tågede højland i Sapa. Oplev betagende bjerglandskaber, pulserende etniske kulturer og en forfriskende flugt til det nordlige Vietnam.",
-    "sv": "Resa från Hanoi till Sapas dimmiga högland. Upplev hisnande bergslandskap, pulserande etniska kulturer och en uppfriskande flykt till norra Vietnam.",
-    "no": "Reis fra Hanoi til det tåkete høylandet i Sapa. Opplev fantastiske fjellandskap, pulserende etniske kulturer og en forfriskende flukt til det nordlige Vietnam."
-  },
+  "title": "Hanoi - Sapa",
+  "short_description": "Journey from Hanoi to the misty highlands of Sapa. Experience breathtaking mountain landscapes, vibrant ethnic cultures, and a refreshing escape into northern Vietnam.",
   "styles": [
     "budget",
     "culture",
@@ -471,5 +437,39 @@
       }
     }
   },
-  "published_on_webpage": false
+  "published_on_webpage": false,
+  "title_i18n": {
+    "ar": "هانوي - سابا",
+    "fr": "Hanoï - Sapa",
+    "zh": "河内 - 沙巴",
+    "ja": "ハノイ - サパ",
+    "ko": "하노이 - 사파",
+    "ms": "Hanoi - Sapa",
+    "de": "Hanoi – Sapa",
+    "es": "Hanói - Sapa",
+    "it": "Hanoi-Sapa",
+    "ru": "Ханой - Сапа",
+    "nl": "Hanoi-Sapa",
+    "pl": "Hanoi – Sapa",
+    "da": "Hanoi - Sapa",
+    "sv": "Hanoi - Sapa",
+    "no": "Hanoi - Sapa"
+  },
+  "short_description_i18n": {
+    "ar": "رحلة من هانوي إلى مرتفعات سابا الضبابية. استمتع بالمناظر الطبيعية الجبلية الخلابة والثقافات العرقية النابضة بالحياة والهروب المنعش إلى شمال فيتنام.",
+    "fr": "Voyage de Hanoï vers les hauts plateaux brumeux de Sapa. Découvrez des paysages de montagne à couper le souffle, des cultures ethniques dynamiques et une escapade rafraîchissante dans le nord du Vietnam.",
+    "zh": "从河内到雾蒙蒙的萨帕高原的旅程。体验令人惊叹的山地景观、充满活力的民族文化，以及前往越南北部的清新度假。",
+    "ja": "ハノイから霧深いサパの高地への旅。息を呑むような山の風景、活気に満ちた民族文化、そしてベトナム北部への爽やかな逃避行を体験してください。",
+    "ko": "하노이에서 안개가 자욱한 사파 고원으로 여행을 떠나세요. 숨막히는 산의 풍경, 활기찬 민족 문화, 그리고 베트남 북부로의 상쾌한 탈출을 경험해보세요.",
+    "ms": "Perjalanan dari Hanoi ke tanah tinggi berkabus Sapa. Alami landskap gunung yang mempesonakan, budaya etnik yang bertenaga dan percutian yang menyegarkan ke utara Vietnam.",
+    "de": "Reise von Hanoi in das neblige Hochland von Sapa. Erleben Sie atemberaubende Berglandschaften, lebendige ethnische Kulturen und eine erfrischende Flucht in den Norden Vietnams.",
+    "es": "Viaje desde Hanoi a las brumosas tierras altas de Sapa. Experimente impresionantes paisajes montañosos, vibrantes culturas étnicas y una refrescante escapada al norte de Vietnam.",
+    "it": "Viaggio da Hanoi agli altopiani nebbiosi di Sapa. Scopri paesaggi montani mozzafiato, vivaci culture etniche e una fuga rinfrescante nel Vietnam settentrionale.",
+    "ru": "Путешествие из Ханоя в туманное высокогорье Сапа. Насладитесь захватывающими дух горными пейзажами, яркими этническими культурами и освежающим отдыхом в северном Вьетнаме.",
+    "nl": "Reis van Hanoi naar de mistige hooglanden van Sapa. Ervaar adembenemende berglandschappen, levendige etnische culturen en een verfrissende ontsnapping naar Noord-Vietnam.",
+    "pl": "Podróż z Hanoi do mglistych wyżyn Sapa. Przeżyj zapierające dech w piersiach górskie krajobrazy, tętniące życiem kultury etniczne i orzeźwiającą ucieczkę do północnego Wietnamu.",
+    "da": "Rejs fra Hanoi til det tågede højland i Sapa. Oplev betagende bjerglandskaber, pulserende etniske kulturer og en forfriskende flugt til det nordlige Vietnam.",
+    "sv": "Resa från Hanoi till Sapas dimmiga högland. Upplev hisnande bergslandskap, pulserande etniska kulturer och en uppfriskande flykt till norra Vietnam.",
+    "no": "Reis fra Hanoi til det tåkete høylandet i Sapa. Opplev fantastiske fjellandskap, pulserende etniske kulturer og en forfriskende flukt til det nordlige Vietnam."
+  }
 }

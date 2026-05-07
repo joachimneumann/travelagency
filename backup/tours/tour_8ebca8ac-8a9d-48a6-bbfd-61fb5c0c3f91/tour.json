@@ -1,7 +1,21 @@
 {
   "id": "tour_8ebca8ac-8a9d-48a6-bbfd-61fb5c0c3f91",
-  "title": {
-    "en": "Visit Hanoi",
+  "title": "Visit Hanoi",
+  "short_description": "Hanoi is not only the capital, but also the sacred soul of Vietnam, where the flow of time seems to linger in every breath of the streets.",
+  "styles": [
+    "budget",
+    "culture",
+    "family",
+    "gastronomic-experiences",
+    "luxury",
+    "wellness"
+  ],
+  "seasonality_start_month": "jan",
+  "seasonality_end_month": "dec",
+  "priority": 50,
+  "created_at": "2026-04-13T04:43:22.714Z",
+  "updated_at": "2026-04-30T04:05:50.414Z",
+  "title_i18n": {
     "ar": "زيارة هانوي",
     "fr": "Visiter Hanoï",
     "zh": "游览河内",
@@ -18,8 +32,7 @@
     "sv": "Besök Hanoi",
     "no": "Besøk Hanoi"
   },
-  "short_description": {
-    "en": "Hanoi is not only the capital, but also the sacred soul of Vietnam, where the flow of time seems to linger in every breath of the streets.",
+  "short_description_i18n": {
     "ar": "هانوي ليست العاصمة فقط، ولكنها أيضًا الروح المقدسة لفيتنام، حيث يبدو أن تدفق الوقت يظل قائمًا في كل نفس من الشوارع.",
     "fr": "Hanoï n'est pas seulement la capitale, mais aussi l'âme sacrée du Vietnam, où le fil du temps semble s'attarder dans chaque souffle des rues.",
     "zh": "河内不仅是首都，更是越南神圣的灵魂，时间的流动似乎萦绕在街道的每一个呼吸里。",
@@ -35,18 +48,5 @@
     "da": "Hanoi er ikke kun hovedstaden, men også Vietnams hellige sjæl, hvor tidens strøm ser ud til at blive hængende i hvert et åndedrag i gaderne.",
     "sv": "Hanoi är inte bara huvudstaden utan också Vietnams heliga själ, där tidens flöde tycks dröja kvar i varje andetag på gatorna.",
     "no": "Hanoi er ikke bare hovedstaden, men også Vietnams hellige sjel, hvor tidens flyt ser ut til å henge i hvert eneste pust i gatene."
-  },
-  "styles": [
-    "budget",
-    "culture",
-    "family",
-    "gastronomic-experiences",
-    "luxury",
-    "wellness"
-  ],
-  "seasonality_start_month": "jan",
-  "seasonality_end_month": "dec",
-  "priority": 50,
-  "created_at": "2026-04-13T04:43:22.714Z",
-  "updated_at": "2026-04-30T04:05:50.414Z"
+  }
 }

@@ -1,7 +1,23 @@
 {
   "id": "tour_988c323e-72da-4fe5-8b48-01d6382ca2ba",
-  "title": {
-    "en": "A Trip with Thousands of Memories in Vietnam",
+  "title": "A Trip with Thousands of Memories in Vietnam",
+  "short_description": "Hanoi: The capital of a thousand years of civilization with the ancient beauty of 36 streets, the romantic Sword Lake and the depth of sophisticated culinary culture. Ha Long Bay: A natural wonder of the world with thousands of magnificent limestone islands reflected in emerald green water, best when experiencing overnight on a yacht. Da Nang: The most livable city in Vietnam, famous for its modern bridges, charming My Khe beach and the spiritual Marble Mountains symbol. Bay Mau Coconut Forest & Hoi An: Experience fun basket boat rowing at the coconut forest before immersing yourself in the magical lantern space of the heritage old town by the Hoai River. Ba Na Hills: \"Road to paradise\" with four-season climate in one day, highlighted by the brilliant Golden Bridge and classic French village architectural space. Hue Ancient Capital: Journey back in time to the quiet beauty of the palaces, mausoleums of the Nguyen Dynasty and the silence of the Perfume River. City. Ho Chi Minh: The most dynamic economic center, where modern skyscrapers and historical relics of the era intersect. The West (Mekong Delta): Explore the river culture of the southernmost region with lush fruit gardens and a simple lifestyle on the canals.",
+  "styles": [
+    "grand-expeditions",
+    "beach",
+    "budget",
+    "culture",
+    "family",
+    "gastronomic-experiences",
+    "luxury",
+    "wellness"
+  ],
+  "seasonality_start_month": "",
+  "seasonality_end_month": "",
+  "priority": 50,
+  "created_at": "2026-04-14T01:43:39.165Z",
+  "updated_at": "2026-04-30T04:05:50.414Z",
+  "title_i18n": {
     "ar": "رحلة مع الآلاف من الذكريات في فيتنام",
     "fr": "Un voyage aux milliers de souvenirs au Vietnam",
     "zh": "越南之旅，承载万千回忆",
@@ -18,8 +34,7 @@
     "sv": "En resa med tusentals minnen i Vietnam",
     "no": "En tur med tusenvis av minner i Vietnam"
   },
-  "short_description": {
-    "en": "Hanoi: The capital of a thousand years of civilization with the ancient beauty of 36 streets, the romantic Sword Lake and the depth of sophisticated culinary culture. Ha Long Bay: A natural wonder of the world with thousands of magnificent limestone islands reflected in emerald green water, best when experiencing overnight on a yacht. Da Nang: The most livable city in Vietnam, famous for its modern bridges, charming My Khe beach and the spiritual Marble Mountains symbol. Bay Mau Coconut Forest & Hoi An: Experience fun basket boat rowing at the coconut forest before immersing yourself in the magical lantern space of the heritage old town by the Hoai River. Ba Na Hills: \"Road to paradise\" with four-season climate in one day, highlighted by the brilliant Golden Bridge and classic French village architectural space. Hue Ancient Capital: Journey back in time to the quiet beauty of the palaces, mausoleums of the Nguyen Dynasty and the silence of the Perfume River. City. Ho Chi Minh: The most dynamic economic center, where modern skyscrapers and historical relics of the era intersect. The West (Mekong Delta): Explore the river culture of the southernmost region with lush fruit gardens and a simple lifestyle on the canals.",
+  "short_description_i18n": {
     "ar": "هانوي: عاصمة ألف عام من الحضارة بجمال 36 شارعًا قديمًا وبحيرة سورد الرومانسية وعمق ثقافة الطهي المتطورة.\nخليج ها لونج: إحدى عجائب الدنيا الطبيعية التي تضم الآلاف من جزر الحجر الجيري الرائعة التي تنعكس في المياه الخضراء الزمردية، ومن الأفضل الاستمتاع بها طوال الليل على متن يخت.\nدا نانغ: المدينة الأكثر ملاءمة للعيش في فيتنام، وتشتهر بجسورها الحديثة وشاطئ ماي خي الساحر ورمز جبال الرخام الروحي.\nغابة باي ماو جوز الهند وهوي آن: استمتع بتجربة التجديف الممتعة بقارب السلة في غابة جوز الهند قبل الانغماس في مساحة الفانوس السحرية في البلدة القديمة التراثية بجوار نهر هواي.\nبا نا هيلز: \"الطريق إلى الجنة\" مع مناخ أربعة فصول في يوم واحد، يبرزه الجسر الذهبي الرائع والمساحة المعمارية للقرية الفرنسية الكلاسيكية.\nعاصمة هيو القديمة: رحلة عبر الزمن إلى الجمال الهادئ للقصور وأضرحة أسرة نغوين وصمت نهر العطور.\nمدينة. هوشي منه: المركز الاقتصادي الأكثر ديناميكية، حيث تتقاطع ناطحات السحاب الحديثة والآثار التاريخية للعصر.\nالغرب (دلتا ميكونغ): استكشف ثقافة النهر في المنطقة الواقعة في أقصى الجنوب مع حدائق الفاكهة المورقة ونمط الحياة البسيط على القنوات.",
     "fr": "Hanoï : La capitale de mille ans de civilisation avec la beauté ancienne de 36 rues, le lac romantique de l'Épée et la profondeur d'une culture culinaire sophistiquée.\nBaie d'Ha Long : Une merveille naturelle du monde avec des milliers de magnifiques îles calcaires se reflétant dans une eau vert émeraude, idéale lors d'une nuit sur un yacht.\nDa Nang : La ville la plus agréable à vivre du Vietnam, célèbre pour ses ponts modernes, la charmante plage de My Khe et le symbole spirituel des Montagnes de Marbre.\nForêt de noix de coco de Bay Mau et Hoi An : découvrez l'aviron amusant en bateau-panier dans la forêt de noix de coco avant de vous immerger dans l'espace magique des lanternes de la vieille ville patrimoniale au bord de la rivière Hoai.\nBa Na Hills : \"Route du paradis\" avec un climat quatre saisons en une journée, mis en valeur par le brillant Golden Bridge et l'espace architectural classique d'un village français.\nAncienne capitale de Hue : voyagez dans le temps jusqu'à la beauté tranquille des palais, des mausolées de la dynastie Nguyen et le silence de la rivière des Parfums.\nVille. Ho Chi Minh : Le centre économique le plus dynamique, où se croisent gratte-ciel modernes et vestiges historiques de l'époque.\nL'Ouest (Delta du Mékong) : Explorez la culture fluviale de la région la plus méridionale avec des jardins fruitiers luxuriants et un style de vie simple sur les canaux.",
     "zh": "河内：千年文明之都，拥有古老美丽的36条街道、浪漫的剑湖和深厚的美食文化。\n下龙湾：世界自然奇观，数千个壮丽的石灰岩岛屿倒映在翠绿的海水中，最好在游艇上过夜体验。\nDa Nang: The most livable city in Vietnam, famous for its modern bridges, charming My Khe beach and the spiritual Marble Mountains symbol.\nBay Mau 椰子林和会安：在椰子林体验有趣的篮子划船，然后沉浸在怀河边传统老城区的神奇灯笼空间中。\n巴拿山：一天四季气候的“天堂之路”，以绚丽的金桥和经典的法式乡村建筑空间为亮点。\n顺化古都：时光之旅，回到宁静美丽的宫殿、阮朝陵墓和宁静的香水河。\n城市。 Ho Chi Minh: The most dynamic economic center, where modern skyscrapers and historical relics of the era intersect.\nThe West (Mekong Delta): Explore the river culture of the southernmost region with lush fruit gardens and a simple lifestyle on the canals.",
@@ -35,20 +50,5 @@
     "da": "Hanoi: Hovedstaden i tusind års civilisation med den gamle skønhed i 36 gader, den romantiske Sword Lake og dybden af ​​sofistikeret kulinarisk kultur.\nHa Long Bay: Et naturligt verdensvidunder med tusindvis af storslåede kalkstensøer, der reflekteres i smaragdgrønt vand, bedst når man overnatter på en yacht.\nDa Nang: Den mest beboelige by i Vietnam, berømt for sine moderne broer, charmerende My Khe-strand og det åndelige Marmorbjerg-symbol.\nBay Mau Coconut Forest & Hoi An: Oplev sjov kurvebådsroning ved kokosnøddeskoven, før du fordyber dig i det magiske lanternerum i den gamle bydel ved Hoai-floden.\nBa Na Hills: \"Road to paradise\" med fire-sæsons klima på én dag, fremhævet af den strålende gyldne bro og det klassiske franske landsbyarkitektoniske rum.\nHue Ancient Capital: Rejs tilbage i tiden til paladsernes stille skønhed, Nguyen-dynastiets mausoleer og stilheden i Parfume-floden.\nBy. Ho Chi Minh: Det mest dynamiske økonomiske centrum, hvor moderne skyskrabere og historiske levn fra æraen krydser hinanden.\nVesten (Mekong-deltaet): Udforsk flodkulturen i den sydligste region med frodige frugthaver og en enkel livsstil på kanalerne.",
     "sv": "Hanoi: Huvudstaden i tusen år av civilisation med den antika skönheten på 36 gator, den romantiska Sword Lake och djupet av sofistikerad kulinarisk kultur.\nHa Long Bay: Ett naturligt underverk i världen med tusentals magnifika kalkstensöar som reflekteras i smaragdgrönt vatten, bäst när du upplever övernattning på en yacht.\nDa Nang: Den mest beboeliga staden i Vietnam, känd för sina moderna broar, charmiga My Khe-stranden och den andliga symbolen för Marmorbergen.\nBay Mau Coconut Forest & Hoi An: Upplev rolig korgbåtsrodd i kokosskogen innan du fördjupar dig i det magiska lyktutrymmet i den gamla gamla stan vid Hoai-floden.\nBa Na Hills: \"Road to paradise\" med fyra säsongsklimat på en dag, framhävd av den lysande Gyllene bron och den klassiska franska byns arkitektoniska utrymme.\nHue Ancient Capital: Res tillbaka i tiden till den lugna skönheten i palatsen, mausoleerna från Nguyen-dynastin och tystnaden i Parfymfloden.\nStad. Ho Chi Minh: Det mest dynamiska ekonomiska centrumet, där moderna skyskrapor och historiska reliker från eran korsas.\nVäst (Mekongdeltat): Utforska flodkulturen i den sydligaste regionen med lummiga fruktträdgårdar och en enkel livsstil på kanalerna.",
     "no": "Hanoi: Hovedstaden i tusen år med sivilisasjon med den eldgamle skjønnheten til 36 gater, den romantiske Sword Lake og dybden av sofistikert kulinarisk kultur.\nHa Long Bay: Et naturlig underverk i verden med tusenvis av praktfulle kalksteinsøyer reflektert i smaragdgrønt vann, best når du opplever overnatting på en yacht.\nDa Nang: Den mest beboelige byen i Vietnam, kjent for sine moderne broer, sjarmerende My Khe-stranden og det åndelige Marmorfjell-symbolet.\nBay Mau Coconut Forest & Hoi An: Opplev morsom kurvebåtroing i kokosnøttskogen før du fordyper deg i det magiske lanternerommet i den historiske gamlebyen ved Hoai-elven.\nBa Na Hills: \"Road to paradise\" med fire-sesongs klima på én dag, fremhevet av den strålende Golden Bridge og klassiske franske landsbyarkitektoniske rom.\nHue Ancient Capital: Reis tilbake i tid til den stille skjønnheten til palassene, mausoleumene til Nguyen-dynastiet og stillheten til Parfyme-elven.\nBy. Ho Chi Minh: Det mest dynamiske økonomiske sentrum, der moderne skyskrapere og historiske relikvier fra epoken krysser hverandre.\nVesten (Mekong-deltaet): Utforsk elvekulturen i den sørligste regionen med frodige frukthager og en enkel livsstil på kanalene."
-  },
-  "styles": [
-    "grand-expeditions",
-    "beach",
-    "budget",
-    "culture",
-    "family",
-    "gastronomic-experiences",
-    "luxury",
-    "wellness"
-  ],
-  "seasonality_start_month": "",
-  "seasonality_end_month": "",
-  "priority": 50,
-  "created_at": "2026-04-14T01:43:39.165Z",
-  "updated_at": "2026-04-30T04:05:50.414Z"
+  }
 }

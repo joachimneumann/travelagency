@@ -1,7 +1,21 @@
 {
   "id": "tour_f4ed5398-7f89-4800-9da9-deb29272c132",
-  "title": {
-    "en": "Explore Tam Dao - Tay Thien",
+  "title": "Explore Tam Dao - Tay Thien",
+  "short_description": "The journey takes you to the \"Da Lat of the North\" Tam Dao covered with clouds all year round, where the climate of four seasons rotates in one exciting day. Next is the peaceful space at Tay Thien scenic spot, where you can admire the majestic spiritual architectural complex and immerse yourself in the lush green mountains and forests.",
+  "styles": [
+    "budget",
+    "culture",
+    "family",
+    "gastronomic-experiences",
+    "luxury",
+    "wellness"
+  ],
+  "seasonality_start_month": "jan",
+  "seasonality_end_month": "jul",
+  "priority": 50,
+  "created_at": "2026-04-13T10:11:16.624Z",
+  "updated_at": "2026-04-30T04:05:50.414Z",
+  "title_i18n": {
     "ar": "اكتشف تام داو - تاي ثين",
     "fr": "Explorez Tam Dao - Tay Thien",
     "zh": "探索 Tam Dao - 西天",
@@ -18,8 +32,7 @@
     "sv": "Utforska Tam Dao - Tay Thien",
     "no": "Utforsk Tam Dao - Tay Thien"
   },
-  "short_description": {
-    "en": "The journey takes you to the \"Da Lat of the North\" Tam Dao covered with clouds all year round, where the climate of four seasons rotates in one exciting day. Next is the peaceful space at Tay Thien scenic spot, where you can admire the majestic spiritual architectural complex and immerse yourself in the lush green mountains and forests.",
+  "short_description_i18n": {
     "ar": "تأخذك الرحلة إلى \"دا لات الشمال\" تام داو المغطاة بالغيوم على مدار السنة، حيث يدور مناخ الفصول الأربعة في يوم واحد مثير.\n\nالتالي هو المساحة الهادئة في منطقة تاي ثين ذات المناظر الخلابة، حيث يمكنك الاستمتاع بالمجمع المعماري الروحي المهيب والانغماس في الجبال والغابات الخضراء المورقة.",
     "fr": "Le voyage vous emmène au \"Da Lat du Nord\" Tam Dao couvert de nuages ​​toute l'année, où le climat des quatre saisons alterne en une journée passionnante.\n\nVient ensuite l'espace paisible du site pittoresque de Tay Thien, où vous pourrez admirer le majestueux complexe architectural spirituel et vous immerger dans les montagnes et les forêts verdoyantes.",
     "zh": "旅程将带您前往“北方大叻”常年云雾缭绕的谭岛，在这里，四季气候在令人兴奋的一天中轮换。\n\n接下来是西天风景区的宁静空间，在这里您可以欣赏雄伟的精神建筑群，沉浸在郁郁葱葱的青山森林中。",
@@ -35,18 +48,5 @@
     "da": "Rejsen tager dig til \"Nordens Da Lat\" Tam Dao dækket af skyer året rundt, hvor klimaet på fire årstider roterer på én spændende dag.\n\nDernæst er det fredelige område ved Tay Thiens naturskønne sted, hvor du kan beundre det majestætiske åndelige arkitektoniske kompleks og fordybe dig i de frodige grønne bjerge og skove.",
     "sv": "Resan tar dig till \"Nordens Da Lat\" Tam Dao täckt av moln året runt, där klimatet med fyra årstider roterar under en spännande dag.\n\nNästa är det fridfulla utrymmet vid Tay Thiens natursköna plats, där du kan beundra det majestätiska andliga arkitektoniska komplexet och fördjupa dig i de grönskande bergen och skogarna.",
     "no": "Reisen tar deg til «Nordens Da Lat» Tam Dao dekket av skyer hele året, hvor klimaet på fire årstider roterer på en spennende dag.\n\nNeste er den fredelige plassen ved det naturskjønne stedet Tay Thien, hvor du kan beundre det majestetiske åndelige arkitektoniske komplekset og fordype deg i de frodige grønne fjellene og skogene."
-  },
-  "styles": [
-    "budget",
-    "culture",
-    "family",
-    "gastronomic-experiences",
-    "luxury",
-    "wellness"
-  ],
-  "seasonality_start_month": "jan",
-  "seasonality_end_month": "jul",
-  "priority": 50,
-  "created_at": "2026-04-13T10:11:16.624Z",
-  "updated_at": "2026-04-30T04:05:50.414Z"
+  }
 }

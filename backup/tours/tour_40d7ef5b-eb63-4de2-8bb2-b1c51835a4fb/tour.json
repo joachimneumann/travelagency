@@ -1,7 +1,21 @@
 {
   "id": "tour_40d7ef5b-eb63-4de2-8bb2-b1c51835a4fb",
-  "title": {
-    "en": "Symphony of Flowers and Discovering the Romance of Da Lat",
+  "title": "Symphony of Flowers and Discovering the Romance of Da Lat",
+  "short_description": "Da Lat is a paradise of thousands of flowers and mist, a place with dreamy beauty like a sweet symphony of nature. This highland city attracts travelers with its cool temperate climate and nostalgic, romantic street corners.",
+  "styles": [
+    "budget",
+    "culture",
+    "family",
+    "gastronomic-experiences",
+    "luxury",
+    "wellness"
+  ],
+  "seasonality_start_month": "",
+  "seasonality_end_month": "",
+  "priority": 50,
+  "created_at": "2026-04-14T01:35:35.203Z",
+  "updated_at": "2026-04-30T04:05:50.414Z",
+  "title_i18n": {
     "ar": "سيمفونية الزهور واكتشاف رومانسية دا لات",
     "fr": "Symphonie des fleurs et découverte de la romance de Da Lat",
     "zh": "花之交响曲，发现大叻的浪漫",
@@ -18,8 +32,7 @@
     "sv": "Symphony of Flowers and Discovering the Romantic of Da Lat",
     "no": "Symfoni av blomster og oppdagelse av romantikken til Da Lat"
   },
-  "short_description": {
-    "en": "Da Lat is a paradise of thousands of flowers and mist, a place with dreamy beauty like a sweet symphony of nature. This highland city attracts travelers with its cool temperate climate and nostalgic, romantic street corners.",
+  "short_description_i18n": {
     "ar": "دا لات هي جنة تضم آلاف الزهور والضباب، وهي مكان ذو جمال حالم مثل سيمفونية الطبيعة الجميلة. تجذب هذه المدينة المرتفعة المسافرين بمناخها المعتدل البارد وزوايا الشوارع الرومانسية التي تبعث على الحنين إلى الماضي.",
     "fr": "Da Lat est un paradis de milliers de fleurs et de brume, un lieu à la beauté onirique comme une douce symphonie de la nature. Cette ville des montagnes attire les voyageurs avec son climat tempéré frais et ses coins de rues nostalgiques et romantiques.",
     "zh": "大叻是一个万花缭乱、云雾缭绕的世外桃源，一个梦幻般的美丽之地，就像一首大自然甜蜜的交响曲。这座高原城市以其凉爽的温带气候和怀旧浪漫的街角吸引着游客。",
@@ -35,18 +48,5 @@
     "da": "Da Lat er et paradis med tusindvis af blomster og tåge, et sted med drømmende skønhed som en sød natursymfoni. Denne højlandsby tiltrækker rejsende med sit kølige tempererede klima og nostalgiske, romantiske gadehjørner.",
     "sv": "Da Lat är ett paradis med tusentals blommor och dimma, en plats med drömsk skönhet som en söt symfoni av naturen. Denna höglandsstad lockar resenärer med sitt svala tempererade klimat och nostalgiska, romantiska gathörn.",
     "no": "Da Lat er et paradis med tusenvis av blomster og tåke, et sted med drømmende skjønnhet som en søt symfoni av naturen. Denne høylandsbyen tiltrekker reisende med sitt kjølige tempererte klima og nostalgiske, romantiske gatehjørner."
-  },
-  "styles": [
-    "budget",
-    "culture",
-    "family",
-    "gastronomic-experiences",
-    "luxury",
-    "wellness"
-  ],
-  "seasonality_start_month": "",
-  "seasonality_end_month": "",
-  "priority": 50,
-  "created_at": "2026-04-14T01:35:35.203Z",
-  "updated_at": "2026-04-30T04:05:50.414Z"
+  }
 }

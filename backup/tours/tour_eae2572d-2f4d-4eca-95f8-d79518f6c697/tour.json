@@ -1,7 +1,22 @@
 {
   "id": "tour_eae2572d-2f4d-4eca-95f8-d79518f6c697",
-  "title": {
-    "en": "Sapa - O Quy Ho Pass - Fansipan - Tam Dao - Trang An - Bai Dinh Pagoda",
+  "title": "Sapa - O Quy Ho Pass - Fansipan - Tam Dao - Trang An - Bai Dinh Pagoda",
+  "short_description": "Sapa (Lao Cai): \"Town in the clouds\" with a cool climate all year round, where the majestic beauty of the Hoang Lien Son range and the unique culture of ethnic minorities converge. O Quy Ho Pass & Cau Kinh: One of the \"four great passes\" with thousands of winding roads. Dragon Cloud Glass Bridge brings a thrilling experience when viewing the abyss from a height of more than 2,000m. Fansipan: \"Roof of Indochina\" with an altitude of 3,143m. The modern cable car system will take you through the clouds to touch the legendary landmark and admire the spiritual complex on the top of the mountain. Tam Dao (Vinh Phuc): Beautiful small town with \"4 seasons in one day\" weather. Check-in points like Cau May or Ban May farm bring a romantic, peaceful space in the heart of the mountains and forests. Trang An & Mua Cave: World heritage complex with a magical water-through cave system. From the top of Hang Mua, you can see the entire panorama of rice fields and the romantic Ngo Dong river. Bai Dinh & Hoa Lu Pagoda: The combination of the rich history of the first ancient capital and the grandeur of the largest pagoda complex in Vietnam, which holds many impressive Buddhist records.",
+  "styles": [
+    "grand-expeditions",
+    "budget",
+    "culture",
+    "family",
+    "gastronomic-experiences",
+    "luxury",
+    "wellness"
+  ],
+  "seasonality_start_month": "jan",
+  "seasonality_end_month": "dec",
+  "priority": 50,
+  "created_at": "2026-04-14T03:19:32.447Z",
+  "updated_at": "2026-04-30T04:05:50.414Z",
+  "title_i18n": {
     "ar": "سابا - ممر أو كوي هو - فانسيبان - تام داو - ترانج آن - معبد باي دينه",
     "fr": "Sapa - Col O Quy Ho - Fansipan - Tam Dao - Trang An - Pagode Bai Dinh",
     "zh": "沙巴 - 乌归湖口 - 番西邦 - Tam Dao - 长安 - 白亭塔",
@@ -18,8 +33,7 @@
     "sv": "Sapa - O Quy Ho Pass - Fansipan - Tam Dao - Trang An - Bai Dinh Pagoda",
     "no": "Sapa - O Quy Ho Pass - Fansipan - Tam Dao - Trang An - Bai Dinh Pagoda"
   },
-  "short_description": {
-    "en": "Sapa (Lao Cai): \"Town in the clouds\" with a cool climate all year round, where the majestic beauty of the Hoang Lien Son range and the unique culture of ethnic minorities converge. O Quy Ho Pass & Cau Kinh: One of the \"four great passes\" with thousands of winding roads. Dragon Cloud Glass Bridge brings a thrilling experience when viewing the abyss from a height of more than 2,000m. Fansipan: \"Roof of Indochina\" with an altitude of 3,143m. The modern cable car system will take you through the clouds to touch the legendary landmark and admire the spiritual complex on the top of the mountain. Tam Dao (Vinh Phuc): Beautiful small town with \"4 seasons in one day\" weather. Check-in points like Cau May or Ban May farm bring a romantic, peaceful space in the heart of the mountains and forests. Trang An & Mua Cave: World heritage complex with a magical water-through cave system. From the top of Hang Mua, you can see the entire panorama of rice fields and the romantic Ngo Dong river. Bai Dinh & Hoa Lu Pagoda: The combination of the rich history of the first ancient capital and the grandeur of the largest pagoda complex in Vietnam, which holds many impressive Buddhist records.",
+  "short_description_i18n": {
     "ar": "سابا (لاو كاي): \"مدينة في السحاب\" ذات مناخ بارد على مدار السنة، حيث يتلاقى الجمال المهيب لسلسلة جبال هوانغ لين سون والثقافة الفريدة للأقليات العرقية.\nO Quy Ho Pass & Cau Kinh: أحد \"الممرات الأربعة الكبرى\" التي تضم آلاف الطرق المتعرجة. يقدم جسر Dragon Cloud Glass تجربة مثيرة عند مشاهدة الهاوية من ارتفاع يزيد عن 2000 متر.\nفانسيبان: \"سقف الهند الصينية\" بارتفاع 3143 مترًا. سيأخذك نظام التلفريك الحديث عبر السحاب لتلمس المعلم الأسطوري وتستمتع بالمجمع الروحي الموجود على قمة الجبل.\nتام داو (فينه فوك): مدينة صغيرة جميلة ذات طقس \"4 فصول في يوم واحد\". توفر نقاط تسجيل الوصول مثل مزرعة Cau May أو Ban May مساحة رومانسية وهادئة في قلب الجبال والغابات.\nكهف ترانج آن وموا: مجمع التراث العالمي الذي يتميز بنظام كهف سحري يمر بالمياه. من أعلى جبل هانغ موا، يمكنك رؤية المنظر البانورامي الكامل لحقول الأرز ونهر نجو دونغ الرومانسي.\nمعبد باي دينه وهوا لو: مزيج من التاريخ الغني للعاصمة القديمة الأولى وعظمة أكبر مجمع باغودا في فيتنام، والذي يحمل العديد من السجلات البوذية المثيرة للإعجاب.",
     "fr": "Sapa (Lao Cai) : « Ville dans les nuages ​​» au climat frais toute l'année, où convergent la beauté majestueuse de la chaîne de Hoang Lien Son et la culture unique des minorités ethniques.\nCol O Quy Ho & Cau Kinh : L'un des « quatre grands cols » avec des milliers de routes sinueuses. Le pont de verre Dragon Cloud offre une expérience passionnante en observant les abysses à une hauteur de plus de 2 000 m.\nFansipan : « Toit de l'Indochine » avec une altitude de 3 143 m. Le système de téléphérique moderne vous fera traverser les nuages ​​pour toucher le monument légendaire et admirer le complexe spirituel au sommet de la montagne.\nTam Dao (Vinh Phuc) : Belle petite ville avec une météo « 4 saisons en un jour ». Les points d'enregistrement comme Cau May ou la ferme Ban May apportent un espace romantique et paisible au cœur des montagnes et des forêts.\nGrotte de Trang An et Mua : complexe classé au patrimoine mondial avec un système de grottes magiques traversées par l'eau. Du haut de Hang Mua, vous pourrez voir tout le panorama des rizières et de la romantique rivière Ngo Dong.\nPagode Bai Dinh et Hoa Lu : La combinaison de la riche histoire de la première ancienne capitale et de la grandeur du plus grand complexe de pagodes du Vietnam, qui abrite de nombreux documents bouddhistes impressionnants.",
     "zh": "沙巴（老街）：“云中小镇”，终年气候凉爽，黄连山山脉的雄伟美景与少数民族独特的文化在这里交汇。\nO Quy Ho Pass & Cau Kinh：“四大关隘”之一，拥有数千条蜿蜒道路。龙云玻璃桥在2000多米的高度观看深渊，带来惊险刺激的体验。\n番西邦：“印度支那屋脊”，海拔3,143m。现代化的缆车系统将带您穿越云端，触摸传奇地标，欣赏山顶的精神情结。\nTam Dao (Vinh Phuc)：美丽的小镇，拥有“一日四季”的天气。 Cau May 或 Ban May 农场等入住点在群山和森林的中心地带营造出浪漫、宁静的空间。\nTrang An & Mua Cave：世界遗产建筑群，拥有神奇的水洞系统。从 Hang Mua 的山顶，您可以看到整个稻田和浪漫的 Ngo Dong 河的全景。\n白亭和华闾塔：将第一个古都的丰富历史与越南最大的佛塔建筑群的宏伟相结合，保存着许多令人印象深刻的佛教记录。",
@@ -35,19 +49,5 @@
     "da": "Sapa (Lao Cai): \"Town in the clouds\" med et køligt klima året rundt, hvor den majestætiske skønhed i Hoang Lien Son-området og den unikke kultur af etniske minoriteter mødes.\nO Quy Ho Pass & Cau Kinh: Et af de \"fire store pas\" med tusindvis af snoede veje. Dragon Cloud Glass Bridge bringer en spændende oplevelse, når man ser afgrunden fra en højde på mere end 2.000 m.\nFansipan: \"Indokinas tag\" med en højde på 3.143m. Det moderne svævebanesystem vil tage dig gennem skyerne for at røre ved det legendariske vartegn og beundre det åndelige kompleks på toppen af ​​bjerget.\nTam Dao (Vinh Phuc): Smuk lille by med \"4 årstider på en dag\" vejr. Indtjekningssteder som Cau May eller Ban May-gården bringer et romantisk, fredeligt sted i hjertet af bjergene og skovene.\nTrang An & Mua Cave: Verdensarvskompleks med et magisk hulesystem, der går gennem vand. Fra toppen af ​​Hang Mua kan du se hele panoramaet af rismarker og den romantiske Ngo Dong-flod.\nBai Dinh & Hoa Lu Pagoda: Kombinationen af ​​den første antikke hovedstads rige historie og storheden ved det største pagodekompleks i Vietnam, som har mange imponerende buddhistiske optegnelser.",
     "sv": "Sapa (Lao Cai): \"Stad i molnen\" med ett svalt klimat året runt, där Hoang Lien Sons majestätiska skönhet och etniska minoriteters unika kultur möts.\nO Quy Ho Pass & Cau Kinh: Ett av de \"fyra stora passen\" med tusentals slingrande vägar. Dragon Cloud Glass Bridge ger en spännande upplevelse när du tittar på avgrunden från en höjd av mer än 2 000 m.\nFansipan: \"Roof of Indokina\" med en höjd av 3 143m. Det moderna linbanesystemet tar dig genom molnen för att vidröra det legendariska landmärket och beundra det andliga komplexet på toppen av berget.\nTam Dao (Vinh Phuc): Vacker liten stad med \"4 årstider på en dag\" väder. Incheckningsställen som Cau May eller Ban May-gården erbjuder en romantisk, fridfull plats i hjärtat av bergen och skogarna.\nTrang An & Mua Cave: Världsarvskomplex med ett magiskt grottsystem som går igenom vattnet. Från toppen av Hang Mua kan du se hela panorama av risfält och den romantiska Ngo Dong-floden.\nBai Dinh & Hoa Lu Pagoda: Kombinationen av den första antika huvudstadens rika historia och storheten hos det största pagodkomplexet i Vietnam, som har många imponerande buddhistiska rekord.",
     "no": "Sapa (Lao Cai): \"Town in the clouds\" med et kjølig klima året rundt, hvor den majestetiske skjønnheten til Hoang Lien Son-området og den unike kulturen til etniske minoriteter møtes.\nO Quy Ho Pass & Cau Kinh: Et av de \"fire store passene\" med tusenvis av svingete veier. Dragon Cloud Glass Bridge gir en spennende opplevelse når du ser avgrunnen fra en høyde på mer enn 2000 meter.\nFansipan: \"Roof of Indokina\" med en høyde på 3.143m. Det moderne taubanesystemet tar deg gjennom skyene for å berøre det legendariske landemerket og beundre det åndelige komplekset på toppen av fjellet.\nTam Dao (Vinh Phuc): Vakker liten by med \"4 årstider på en dag\" vær. Innsjekkingssteder som Cau May eller Ban May-gården gir en romantisk, fredelig plass i hjertet av fjellene og skogene.\nTrang An & Mua Cave: Verdensarvkompleks med et magisk grottesystem som går gjennom vann. Fra toppen av Hang Mua kan du se hele panoramaet av rismarker og den romantiske Ngo Dong-elven.\nBai Dinh & Hoa Lu Pagoda: Kombinasjonen av den rike historien til den første eldgamle hovedstaden og storheten til det største pagodekomplekset i Vietnam, som har mange imponerende buddhistiske rekorder."
-  },
-  "styles": [
-    "grand-expeditions",
-    "budget",
-    "culture",
-    "family",
-    "gastronomic-experiences",
-    "luxury",
-    "wellness"
-  ],
-  "seasonality_start_month": "jan",
-  "seasonality_end_month": "dec",
-  "priority": 50,
-  "created_at": "2026-04-14T03:19:32.447Z",
-  "updated_at": "2026-04-30T04:05:50.414Z"
+  }
 }

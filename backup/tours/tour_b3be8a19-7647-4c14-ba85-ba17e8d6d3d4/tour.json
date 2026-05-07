@@ -1,41 +1,7 @@
 {
   "id": "tour_b3be8a19-7647-4c14-ba85-ba17e8d6d3d4",
-  "title": {
-    "en": "Explore Hue Ancient Capital",
-    "ar": "اكتشف هيو العاصمة القديمة",
-    "fr": "Explorez l'ancienne capitale de Hue",
-    "zh": "探索顺化古都",
-    "ja": "古都フエを探索する",
-    "ko": "후에(Hue) 고대 수도 탐험",
-    "ms": "Terokai Ibu Kota Purba Hue",
-    "de": "Erkunden Sie die antike Hauptstadt Hue",
-    "es": "Explora la antigua capital de Hue",
-    "it": "Esplora l'antica capitale di Hue",
-    "ru": "Исследуйте древнюю столицу Хюэ",
-    "nl": "Verken de oude hoofdstad van Hue",
-    "pl": "Poznaj starożytną stolicę Hue",
-    "da": "Udforsk Hue Ancient Capital",
-    "sv": "Utforska Hue Ancient Capital",
-    "no": "Utforsk Hue Ancient Capital"
-  },
-  "short_description": {
-    "en": "Explore the majestic Citadel, royal tombs, and poetic Perfume River. Discover the timeless charm, rich history, and imperial elegance of Vietnam’s ancient capital, Hue.",
-    "ar": "استكشف القلعة المهيبة والمقابر الملكية ونهر العطور الشعري. اكتشف السحر الخالد والتاريخ الغني والأناقة الإمبراطورية لعاصمة فيتنام القديمة، هيو.",
-    "fr": "Explorez la majestueuse Citadelle, les tombeaux royaux et la poétique rivière des Parfums. Découvrez le charme intemporel, la riche histoire et l'élégance impériale de l'ancienne capitale du Vietnam, Hue.",
-    "zh": "探索雄伟的城堡、皇家陵墓和诗意的香水河。探索越南古都顺化的永恒魅力、丰富历史和帝国优雅。",
-    "ja": "雄大な城塞、王家の墓、詩的な香水川を探索してください。ベトナムの古都フエの時代を超越した魅力、豊かな歴史、帝国の優雅さを発見してください。",
-    "ko": "장엄한 성채, 왕릉, 시적인 향강을 탐험해보세요. 베트남의 고대 수도 후에(Hue)에서 시대를 초월한 매력, 풍부한 역사, 황실의 우아함을 느껴보세요.",
-    "ms": "Terokai Citadel yang megah, makam diraja, dan Sungai Perfume yang puitis. Temui daya tarikan abadi, sejarah yang kaya dan keanggunan empayar ibu kota purba Vietnam, Hue.",
-    "de": "Erkunden Sie die majestätische Zitadelle, die Königsgräber und den poetischen Parfümfluss. Entdecken Sie den zeitlosen Charme, die reiche Geschichte und die imperiale Eleganz der alten Hauptstadt Vietnams, Hue.",
-    "es": "Explore la majestuosa Ciudadela, las tumbas reales y el poético río Perfume. Descubra el encanto eterno, la rica historia y la elegancia imperial de la antigua capital de Vietnam, Hue.",
-    "it": "Esplora la maestosa Cittadella, le tombe reali e il poetico Fiume dei Profumi. Scopri il fascino senza tempo, la ricca storia e l'eleganza imperiale dell'antica capitale del Vietnam, Hue.",
-    "ru": "Исследуйте величественную Цитадель, королевские гробницы и поэтическую Ароматную реку. Откройте для себя вечное очарование, богатую историю и имперскую элегантность древней столицы Вьетнама Хюэ.",
-    "nl": "Verken de majestueuze Citadel, koninklijke graven en de poëtische Parfumrivier. Ontdek de tijdloze charme, rijke geschiedenis en keizerlijke elegantie van de oude hoofdstad van Vietnam, Hue.",
-    "pl": "Poznaj majestatyczną Cytadelę, grobowce królewskie i poetycką Rzekę Perfum. Odkryj ponadczasowy urok, bogatą historię i imperialną elegancję starożytnej stolicy Wietnamu, Hue.",
-    "da": "Udforsk det majestætiske Citadel, kongelige grave og poetiske Parfume River. Oplev den tidløse charme, rige historie og kejserlige elegance i Vietnams gamle hovedstad, Hue.",
-    "sv": "Utforska det majestätiska Citadellet, kungliga gravar och den poetiska Parfymfloden. Upptäck den tidlösa charmen, rika historien och kejserliga elegansen i Vietnams antika huvudstad, Hue.",
-    "no": "Utforsk det majestetiske citadellet, kongegravene og den poetiske parfymeelven. Oppdag den tidløse sjarmen, den rike historien og den keiserlige elegansen til Vietnams eldgamle hovedstad, Hue."
-  },
+  "title": "Explore Hue Ancient Capital",
+  "short_description": "Explore the majestic Citadel, royal tombs, and poetic Perfume River. Discover the timeless charm, rich history, and imperial elegance of Vietnam’s ancient capital, Hue.",
   "styles": [
     "budget",
     "culture",
@@ -510,5 +476,39 @@
         "updated_at": "2026-04-28T03:43:19.359Z"
       }
     }
+  },
+  "title_i18n": {
+    "ar": "اكتشف هيو العاصمة القديمة",
+    "fr": "Explorez l'ancienne capitale de Hue",
+    "zh": "探索顺化古都",
+    "ja": "古都フエを探索する",
+    "ko": "후에(Hue) 고대 수도 탐험",
+    "ms": "Terokai Ibu Kota Purba Hue",
+    "de": "Erkunden Sie die antike Hauptstadt Hue",
+    "es": "Explora la antigua capital de Hue",
+    "it": "Esplora l'antica capitale di Hue",
+    "ru": "Исследуйте древнюю столицу Хюэ",
+    "nl": "Verken de oude hoofdstad van Hue",
+    "pl": "Poznaj starożytną stolicę Hue",
+    "da": "Udforsk Hue Ancient Capital",
+    "sv": "Utforska Hue Ancient Capital",
+    "no": "Utforsk Hue Ancient Capital"
+  },
+  "short_description_i18n": {
+    "ar": "استكشف القلعة المهيبة والمقابر الملكية ونهر العطور الشعري. اكتشف السحر الخالد والتاريخ الغني والأناقة الإمبراطورية لعاصمة فيتنام القديمة، هيو.",
+    "fr": "Explorez la majestueuse Citadelle, les tombeaux royaux et la poétique rivière des Parfums. Découvrez le charme intemporel, la riche histoire et l'élégance impériale de l'ancienne capitale du Vietnam, Hue.",
+    "zh": "探索雄伟的城堡、皇家陵墓和诗意的香水河。探索越南古都顺化的永恒魅力、丰富历史和帝国优雅。",
+    "ja": "雄大な城塞、王家の墓、詩的な香水川を探索してください。ベトナムの古都フエの時代を超越した魅力、豊かな歴史、帝国の優雅さを発見してください。",
+    "ko": "장엄한 성채, 왕릉, 시적인 향강을 탐험해보세요. 베트남의 고대 수도 후에(Hue)에서 시대를 초월한 매력, 풍부한 역사, 황실의 우아함을 느껴보세요.",
+    "ms": "Terokai Citadel yang megah, makam diraja, dan Sungai Perfume yang puitis. Temui daya tarikan abadi, sejarah yang kaya dan keanggunan empayar ibu kota purba Vietnam, Hue.",
+    "de": "Erkunden Sie die majestätische Zitadelle, die Königsgräber und den poetischen Parfümfluss. Entdecken Sie den zeitlosen Charme, die reiche Geschichte und die imperiale Eleganz der alten Hauptstadt Vietnams, Hue.",
+    "es": "Explore la majestuosa Ciudadela, las tumbas reales y el poético río Perfume. Descubra el encanto eterno, la rica historia y la elegancia imperial de la antigua capital de Vietnam, Hue.",
+    "it": "Esplora la maestosa Cittadella, le tombe reali e il poetico Fiume dei Profumi. Scopri il fascino senza tempo, la ricca storia e l'eleganza imperiale dell'antica capitale del Vietnam, Hue.",
+    "ru": "Исследуйте величественную Цитадель, королевские гробницы и поэтическую Ароматную реку. Откройте для себя вечное очарование, богатую историю и имперскую элегантность древней столицы Вьетнама Хюэ.",
+    "nl": "Verken de majestueuze Citadel, koninklijke graven en de poëtische Parfumrivier. Ontdek de tijdloze charme, rijke geschiedenis en keizerlijke elegantie van de oude hoofdstad van Vietnam, Hue.",
+    "pl": "Poznaj majestatyczną Cytadelę, grobowce królewskie i poetycką Rzekę Perfum. Odkryj ponadczasowy urok, bogatą historię i imperialną elegancję starożytnej stolicy Wietnamu, Hue.",
+    "da": "Udforsk det majestætiske Citadel, kongelige grave og poetiske Parfume River. Oplev den tidløse charme, rige historie og kejserlige elegance i Vietnams gamle hovedstad, Hue.",
+    "sv": "Utforska det majestätiska Citadellet, kungliga gravar och den poetiska Parfymfloden. Upptäck den tidlösa charmen, rika historien och kejserliga elegansen i Vietnams antika huvudstad, Hue.",
+    "no": "Utforsk det majestetiske citadellet, kongegravene og den poetiske parfymeelven. Oppdag den tidløse sjarmen, den rike historien og den keiserlige elegansen til Vietnams eldgamle hovedstad, Hue."
   }
 }
