@@ -6123,6 +6123,7 @@ test("marketing tour editor imports days and services only from other marketing 
   assert.match(tourPageScriptSource, /travelPlanServiceLibraryModal:\s*document\.getElementById\("travel_plan_service_library_modal"\)/, "Marketing tour script should wire the travel-plan library modal");
   assert.match(tourAdapterSource, /tourTravelPlanDaySearchRequest/, "Marketing tour editor should search reusable days through tour endpoints");
   assert.match(tourAdapterSource, /tourTravelPlanServiceSearchRequest/, "Marketing tour editor should search reusable services through tour endpoints");
+  assert.match(tourAdapterSource, /TRAVEL_PLAN_SERVICE_LIBRARY_SEARCH_LIMIT = 500[\s\S]*tourTravelPlanServiceSearchRequest[\s\S]*limit: TRAVEL_PLAN_SERVICE_LIBRARY_SEARCH_LIMIT/, "Marketing tour editor should request enough reusable services to avoid truncating the copy-existing-service list");
   assert.match(tourAdapterSource, /tourTravelPlanDayImportRequest/, "Marketing tour editor should import days through tour endpoints");
   assert.match(tourAdapterSource, /tourTravelPlanServiceImportRequest/, "Marketing tour editor should import services through tour endpoints");
   assert.match(tourAdapterSource, /target_travel_plan:\s*omitDerivedTravelPlanDestinations\(targetTravelPlan\)/, "Marketing tour editor should send dirty draft travel plans with import mutations");
@@ -6148,6 +6149,7 @@ test("marketing tour editor imports days and services only from other marketing 
   assert.match(routesSource, /\/api\/v1\/tours\/\{tour_id\}\/travel-plan\/days\/\{day_id\}\/services\/import/, "Routes should expose marketing tour service import");
   assert.match(tourAdapterSource, /include_translations:\s*true[\s\S]*include_translations:\s*true/, "Marketing tour imports should copy translated day and service branches");
   assert.match(tourHandlersSource, /copyMarketingTourServiceForImport[\s\S]*details:\s*preferredEnglishImportText\(sourceItem\?\.details_i18n,\s*sourceItem\?\.details\)[\s\S]*details_i18n:\s*includeTranslations/, "Marketing tour imports should preserve English service details as source text");
+  assert.match(tourHandlersSource, /handleSearchTourTravelPlanServices[\s\S]*const limit = clamp\(safeInt\(requestUrl\.searchParams\.get\("limit"\)\) \|\| 500, 1, 500\)/, "Marketing tour service search should default to the full reusable-service library window instead of the old 20-item cap");
   assert.match(tourHandlersSource, /copyMarketingTourDayForImport\(sourceDay,[\s\S]*includeTranslations:\s*payload\.include_translations !== false[\s\S]*copyMarketingTourServiceForImport\(sourceService,[\s\S]*includeTranslations:\s*payload\.include_translations !== false/, "Marketing tour import endpoints should copy translated branches by default");
   assert.match(tourHandlersSource, /sourceTourId === tourId[\s\S]*Choose a day from another marketing tour/, "Day imports should reject the current marketing tour as a source");
   assert.match(tourHandlersSource, /sourceTourId === tourId[\s\S]*Choose a service from another marketing tour/, "Service imports should reject the current marketing tour as a source");
@@ -6186,6 +6188,7 @@ test("booking travel plan copies days and services from marketing tours only", a
   ]);
 
   assert.match(bookingPageScriptSource, /tourTravelPlanDaySearchRequest[\s\S]*tourTravelPlanServiceSearchRequest/, "Booking editor should search day and service libraries through marketing-tour endpoints");
+  assert.match(bookingPageScriptSource, /TRAVEL_PLAN_SERVICE_LIBRARY_SEARCH_LIMIT = 500[\s\S]*tourTravelPlanServiceSearchRequest[\s\S]*limit: TRAVEL_PLAN_SERVICE_LIBRARY_SEARCH_LIMIT/, "Booking editor should request enough reusable services to avoid truncating the copy-existing-service list");
   assert.match(bookingPageScriptSource, /buildBookingMarketingTourDayImportRequest[\s\S]*source_tour_id:\s*normalizedSourceTourId[\s\S]*target_travel_plan:\s*targetTravelPlan[\s\S]*buildBookingMarketingTourServiceImportRequest[\s\S]*source_tour_id:\s*normalizedSourceTourId[\s\S]*target_travel_plan:\s*targetTravelPlan/, "Booking editor should import selected marketing-tour days and services with source_tour_id and optional dirty draft payloads");
   assert.match(bookingPageScriptSource, /cloneTravelPlanDayForLocalImport:\s*cloneBookingMarketingTourDayForLocalImport[\s\S]*cloneTravelPlanServiceForLocalImport:\s*cloneBookingMarketingTourServiceForLocalImport/, "Booking editor should provide local reusable-content clone hooks");
   assert.match(bookingPageScriptSource, /travelPlanLibrarySource:\s*"marketing_tour"[\s\S]*dayImport:\s*true[\s\S]*tourImport:\s*false[\s\S]*serviceImport:\s*true/, "Booking travel plan should expose only day and service copy actions from the marketing-tour library");

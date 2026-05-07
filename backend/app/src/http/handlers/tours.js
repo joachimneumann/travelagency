@@ -1067,7 +1067,7 @@ export function createTourHandlers(deps) {
     const query = normalizeText(requestUrl.searchParams.get("q")).toLowerCase();
     const serviceKind = normalizeText(requestUrl.searchParams.get("service_kind")).toLowerCase();
     const excludeTourId = normalizeText(requestUrl.searchParams.get("exclude_tour_id"));
-    const limit = clamp(safeInt(requestUrl.searchParams.get("limit")) || 20, 1, 50);
+    const limit = clamp(safeInt(requestUrl.searchParams.get("limit")) || 500, 1, 500);
     const offset = clamp(safeInt(requestUrl.searchParams.get("offset")) || 0, 0, 5000);
     const rows = [];
 
