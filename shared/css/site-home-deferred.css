@@ -625,6 +625,41 @@ html[data-language-direction="rtl"] .home-page .metric span {
   grid-area: actions;
   min-width: 0;
   margin-top: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-end;
+  gap: 0.7rem;
+}
+
+.mobile-reel-card__share-button {
+  align-self: flex-end;
+  width: clamp(2.1rem, 9vw, 2.55rem);
+  aspect-ratio: 141 / 145;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 0.5rem;
+  background: transparent;
+  cursor: pointer;
+  filter: drop-shadow(0 0.45rem 0.8rem rgba(0, 0, 0, 0.36));
+  transform: translate(0.25rem, -0.35rem);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.mobile-reel-card__share-button:focus-visible {
+  outline: 3px solid rgba(255, 255, 255, 0.9);
+  outline-offset: 0.18rem;
+}
+
+.mobile-reel-card__share-button img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .mobile-reel-card__cta {

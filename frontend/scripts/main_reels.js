@@ -2,6 +2,8 @@ import { normalizeText } from "../../shared/js/text.js";
 
 const ACTIVE_CARD_THRESHOLDS = [0.2, 0.4, 0.6, 0.8];
 const ACTIVE_VIDEO_WINDOW_RADIUS = 1;
+const SHARE_BUTTON_IMAGE_URL = "/assets/img/share.png";
+const REEL_LINK_PARAM = "reel";
 
 export function createReelsRuntime(ctx) {
   const {
@@ -48,6 +50,36 @@ export function createReelsRuntime(ctx) {
       .map((value) => normalizeText(value))
       .filter(Boolean)
       .join(" • ");
+  }
+
+  function slugify(value, fallback = "tour") {
+    const slug = normalizeText(value)
+      .normalize("NFKD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/&/g, " and ")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .replace(/-{2,}/g, "-");
+    return slug || fallback;
+  }
+
+  function tourSeoSlug(trip) {
+    const explicitSlug = slugify(trip?.seo_slug, "");
+    if (explicitSlug) return explicitSlug;
+    const tripId = normalizeText(trip?.id);
+    const title = resolveTripTitle(trip) || tripId;
+    const suffix = slugify(tripId.replace(/^tour[_-]?/i, ""), "tour").slice(0, 8);
+    return `${slugify(title)}-${suffix}`;
+  }
+
+  function tourShareUrl(trip) {
+    const url = new URL("/", window.location.origin);
+    const lang = normalizeText(state?.lang);
+    const reelRef = tourSeoSlug(trip) || normalizeText(trip?.id);
+    if (lang) url.searchParams.set("lang", lang);
+    if (reelRef) url.searchParams.set(REEL_LINK_PARAM, reelRef);
+    return url.toString();
   }
 
   async function fetchManifest() {
@@ -102,7 +134,8 @@ export function createReelsRuntime(ctx) {
           meta: resolveTripMeta(trip),
           videoUrl: media.videoUrl,
           posterUrl: media.posterUrl,
-          duration: media.duration
+          duration: media.duration,
+          shareUrl: tourShareUrl(trip)
         };
       })
       .filter(Boolean);
@@ -135,6 +168,8 @@ export function createReelsRuntime(ctx) {
 
     const cards = renderedItems.map((item, index) => {
       const ctaLabel = frontendT("tour.card.plan_trip", "Plan this trip");
+      const shareLabel = frontendT("reels.share", "Share");
+      const shareAriaLabel = frontendT("reels.share_label", "Share {title}", { title: item.title });
       return `
         <article class="mobile-reel-card" data-reel-card data-reel-index="${index}" data-tour-id="${escapeAttribute(item.tourId)}">
           <video
@@ -156,6 +191,16 @@ export function createReelsRuntime(ctx) {
             ${item.meta ? `<p class="mobile-reel-card__meta">${escapeHtml(item.meta)}</p>` : ""}
             <div class="mobile-reel-card__actions">
               <button
+                class="mobile-reel-card__share-button"
+                type="button"
+                data-reel-share-button
+                data-trip-id="${escapeAttribute(item.tourId)}"
+                aria-label="${escapeAttribute(shareAriaLabel)}"
+                title="${escapeAttribute(shareLabel)}"
+              >
+                <img src="${escapeAttribute(SHARE_BUTTON_IMAGE_URL)}" alt="" aria-hidden="true" loading="lazy" decoding="async" />
+              </button>
+              <button
                 class="btn btn-primary mobile-reel-card__cta"
                 type="button"
                 data-reel-booking-button
@@ -169,6 +214,68 @@ export function createReelsRuntime(ctx) {
 
     els.mobileReelFeed.innerHTML = cards;
     cardElements = Array.from(els.mobileReelFeed.querySelectorAll("[data-reel-card]"));
+  }
+
+  function resolveInitialReelIndex({ tourId = "" } = {}) {
+    const normalizedTourId = normalizeText(tourId).toLowerCase();
+    if (!normalizedTourId) return 0;
+    const targetIndex = renderedItems.findIndex((item) => normalizeText(item?.tourId).toLowerCase() === normalizedTourId);
+    return targetIndex >= 0 ? targetIndex : 0;
+  }
+
+  function shareDataForItem(item) {
+    if (!item) return null;
+    const title = item.title
+      ? frontendT("reels.share_title", "{title} | AsiaTravelPlan", { title: item.title })
+      : "AsiaTravelPlan";
+    const text = item.meta
+      ? frontendT("reels.share_text_with_meta", "{title} in {meta}", { title: item.title, meta: item.meta })
+      : item.title;
+    return {
+      title,
+      text,
+      url: item.shareUrl
+    };
+  }
+
+  async function copyShareUrlFallback(url) {
+    let copied = false;
+    if (navigator.clipboard?.writeText && window.isSecureContext) {
+      try {
+        await navigator.clipboard.writeText(url);
+        copied = true;
+      } catch {
+        copied = false;
+      }
+    }
+    if (copied) {
+      window.alert(frontendT("reels.share_copied", "Reel link copied."));
+      return;
+    }
+    window.prompt(frontendT("reels.share_copy_prompt", "Copy this reel link:"), url);
+  }
+
+  async function shareReelItem(item) {
+    const shareData = shareDataForItem(item);
+    if (!shareData?.url) return;
+    if (typeof navigator === "undefined") return;
+    let canUseNativeShare = Boolean(navigator.share);
+    if (navigator.canShare) {
+      try {
+        canUseNativeShare = navigator.canShare(shareData);
+      } catch {
+        canUseNativeShare = false;
+      }
+    }
+    if (canUseNativeShare) {
+      try {
+        await navigator.share(shareData);
+        return;
+      } catch (error) {
+        if (error?.name === "AbortError") return;
+      }
+    }
+    await copyShareUrlFallback(shareData.url);
   }
 
   function destroyObserver() {
@@ -324,6 +431,15 @@ export function createReelsRuntime(ctx) {
         return;
       }
 
+      const shareButton = event.target instanceof Element ? event.target.closest("[data-reel-share-button]") : null;
+      if (shareButton instanceof HTMLButtonElement) {
+        event.stopPropagation();
+        const tripId = shareButton.getAttribute("data-trip-id");
+        const item = renderedItems.find((renderedItem) => renderedItem.tourId === tripId);
+        void shareReelItem(item).catch(() => {});
+        return;
+      }
+
       const card = event.target instanceof Element ? event.target.closest("[data-reel-card]") : null;
       if (!(card instanceof HTMLElement)) return;
       const index = Number.parseInt(card.getAttribute("data-reel-index") || "-1", 10);
@@ -357,7 +473,7 @@ export function createReelsRuntime(ctx) {
     });
   }
 
-  async function open() {
+  async function open(options = {}) {
     bindFeedEvents();
     bindLifecycleEvents();
     let manifestLoadFailed = false;
@@ -371,9 +487,11 @@ export function createReelsRuntime(ctx) {
 
     renderedItems = buildRenderedItems();
     renderFeed();
+    const initialIndex = renderedItems.length ? resolveInitialReelIndex(options) : -1;
     setReelsModeOpen(true);
     if (els?.mobileReelFeed instanceof HTMLElement) {
-      els.mobileReelFeed.scrollTop = 0;
+      const reelHeight = Math.max(1, els.mobileReelFeed.clientHeight);
+      els.mobileReelFeed.scrollTop = initialIndex > 0 ? initialIndex * reelHeight : 0;
     }
     setupObserver();
 
@@ -385,7 +503,7 @@ export function createReelsRuntime(ctx) {
       return;
     }
 
-    setActiveIndex(renderedItems.length ? 0 : -1, { force: true });
+    setActiveIndex(initialIndex, { force: true });
   }
 
   function close() {

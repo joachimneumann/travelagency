@@ -118,6 +118,7 @@ const FALLBACK_MAX_TRAVELERS = 30;
 const REELS_UNLOCK_KEY = "asiatravelplan_reels_unlocked";
 const REELS_UNLOCK_TAP_TARGET = 5;
 const REELS_UNLOCK_WINDOW_MS = 3000;
+const REEL_LINK_PARAM = "reel";
 const MONTH_ABBREVIATION_TO_NUMBER = Object.freeze({
   jan: 1,
   feb: 2,
@@ -463,7 +464,8 @@ async function init() {
   setupLiveValidationReset();
   applyTravelerBoundsFromModel();
 
-  const savedFilters = JSON.parse(localStorage.getItem("asiatravelplan_filters") || "null");
+  const reelDeepLinkRef = currentReelDeepLinkRef();
+  const savedFilters = reelDeepLinkRef ? null : JSON.parse(localStorage.getItem("asiatravelplan_filters") || "null");
   const urlFilters = getFiltersFromURL();
   state.filters.dest = normalizeFilterSelection(urlFilters.dest.length ? urlFilters.dest : savedFilters?.dest);
   state.filters.area = normalizeText(urlFilters.area || savedFilters?.area);
@@ -498,6 +500,7 @@ async function init() {
   setupFilterEvents();
   prefillBookingFormWithFilters();
   setupTourSectionImagePrewarm();
+  void openReelDeepLink();
 }
 
 function scheduleDeferredTask(task, { timeout = 1200, fallbackDelayMs = 250 } = {}) {
@@ -582,6 +585,60 @@ function publicTeamDataUrl() {
 
 function publicReelsDataUrl() {
   return normalizeText(generatedHomepageAssetUrls()?.reels) || "/frontend/data/generated/reels/public-reels.json";
+}
+
+function currentReelDeepLinkRef() {
+  const params = new URLSearchParams(window.location.search);
+  return normalizeText(params.get(REEL_LINK_PARAM));
+}
+
+function tripMatchesReelRef(trip, reelRef) {
+  const normalizedRef = normalizeText(reelRef).toLowerCase();
+  if (!normalizedRef) return false;
+  return [
+    trip?.id,
+    trip?.seo_slug
+  ].some((value) => normalizeText(value).toLowerCase() === normalizedRef);
+}
+
+function resolveReelDeepLinkTourId(reelRef = currentReelDeepLinkRef()) {
+  const normalizedRef = normalizeText(reelRef);
+  if (!normalizedRef) return "";
+  const trip = state.trips.find((item) => tripMatchesReelRef(item, normalizedRef));
+  return normalizeText(trip?.id) || normalizedRef;
+}
+
+function isMobileReelViewport() {
+  return !window.matchMedia || window.matchMedia("(max-width: 760px)").matches;
+}
+
+async function openReelDeepLink() {
+  const reelRef = currentReelDeepLinkRef();
+  if (!reelRef || !isMobileReelViewport()) return;
+  const tourId = resolveReelDeepLinkTourId(reelRef);
+  if (!tourId) return;
+
+  if (!state.filteredTrips.some((trip) => normalizeText(trip?.id) === tourId)) {
+    state.filters.dest = [];
+    state.filters.area = "";
+    state.filters.place = "";
+    state.filters.style = [];
+    syncFilterInputs();
+    applyFilters();
+  }
+
+  setReelsUnlocked(true);
+  syncReelsButtonVisibility();
+  try {
+    const runtime = await ensureReelsRuntime();
+    await runtime.open({ tourId });
+  } catch (error) {
+    logBrowserConsoleError("[frontend-home] Failed to open shared reel link.", {
+      reel_ref: reelRef,
+      tour_id: tourId,
+      page_url: window.location.href
+    }, error);
+  }
 }
 
 function isReelsUnlocked() {
