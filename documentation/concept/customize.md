@@ -10,9 +10,19 @@ The tool has three main areas:
 
 - bottom: a horizontal timeline containing the current days in the selected tour
 - top left: a simplified Southeast Asia route map showing the selected itinerary route, connected by a dotted route line
-- top right: a list of optional days from other published marketing tours that can be dragged into the timeline
+- top right: a list of optional days from published marketing tours, plus any removed days from the current base tour, that can be dragged into the timeline
 
 When the visitor adds, removes, or reorders days, the map updates immediately so the visual route always reflects the timeline.
+
+## V1 Product Decisions
+
+For the first implementation:
+
+- include frontend customization, local customized-state persistence, visible itinerary replacement, and customized PDF preview
+- exclude booking submission with the customized itinerary
+- keep the existing `Plan this trip` booking flow unchanged until a later request/submission phase
+- include deleted base-tour days in the optional-days panel so visitors can add them back
+- manually seed coordinates for the current Vietnam destination catalog before relying on route maps
 
 ## Feasibility Findings
 
@@ -23,6 +33,7 @@ For the public customer customizer, do not expose the authenticated admin day se
 Recommended public approach:
 
 - build a public-safe optional-day catalog from all published marketing tours
+- include the current base tour's public-safe days when they are not currently selected in the visitor's timeline
 - include only customer-visible day content and customer-visible images
 - exclude unpublished tours and internal-only fields
 - include only days that have overnight latitude/longitude
@@ -128,7 +139,7 @@ Interaction rules:
 
 ### Top Right: Optional Days
 
-The optional-days panel shows available day modules that are not currently part of the tour timeline.
+The optional-days panel shows available day modules that are not currently part of the tour timeline. This includes public-safe days from other published marketing tours and public-safe days from the current base tour after the visitor removes them from the timeline.
 
 Each optional day card should include:
 
@@ -164,7 +175,7 @@ The visitor can:
 - reorder existing timeline days
 - delete days from the timeline
 
-Deleting a day removes it from the timeline and triggers a map update. If the deleted day came from the optional-days pool, it should become available again in the optional-days panel.
+Deleting a day removes it from the timeline and triggers a map update. If the deleted day is reusable public-safe content, including an original base-tour day, it should become available in the optional-days panel.
 
 Customers may remove all original days. The customized itinerary is still valid as long as it stays within the configured day limit and contains at least one selected day before requesting or booking the trip.
 
@@ -215,8 +226,10 @@ Rules:
 - Optional days should have stable ids so they can move between panels without duplicating.
 - The customized state should persist after the visitor finishes the customizer.
 - For v1, persist the customized state in browser storage keyed by original tour id so it survives closing/reopening the details panel and a same-device page reload.
-- When the visitor clicks `Plan this trip`, send the customized itinerary with the booking request and use it directly as the initial booking travel plan.
-- After booking creation, the durable copy of the customized itinerary is the booking travel plan.
+- For v1, do not send the customized itinerary with the `Plan this trip` booking request.
+- For v1, the existing booking flow can continue to submit the original selected tour context.
+- A later request/submission phase can send the customized itinerary with the booking or custom-tour request and use it directly as the initial booking travel plan.
+- After that later booking creation flow exists, the durable copy of the customized itinerary should be the booking travel plan.
 - A later v2 can add server-side customization drafts if visitors need a shareable link, cross-device access, or recovery after clearing browser data.
 
 ## Data Requirements
@@ -310,10 +323,17 @@ For v1 with a static Southeast Asia image, normalized image coordinates are simp
 Optional days can come from:
 
 - any published marketing tour
+- public-safe days from the current base tour when those days are not currently selected
 
 Only show optional days that have overnight latitude/longitude. Days without usable route coordinates should be hidden from the optional-days catalog.
 
 The current destination scope catalog already has destinations, areas, and places, but it does not yet store latitude or longitude. Coordinates should be added to that catalog before relying on route maps.
+
+V1 coordinate seeding decision:
+
+- manually seed latitude and longitude for the current Vietnam destination areas and places
+- keep the coordinate fields in the reusable destination catalog, not duplicated on each tour day
+- add editor maintenance after the seeded catalog proves the route-map workflow
 
 Existing travel-plan days also do not currently have structured `destination_place_id` or `destination_area_id` fields. They should be added so days can resolve their map point through the catalog.
 
@@ -336,7 +356,7 @@ If an optional day source becomes unavailable because the source tour is unpubli
 1. Visitor clicks the delete action on a timeline day.
 2. The day is removed from the timeline.
 3. Timeline day numbers are recalculated.
-4. If the day is reusable, it appears again in optional days.
+4. If the day is reusable, including a removed original base-tour day, it appears again in optional days.
 5. The map markers and dotted route line are redrawn.
 
 ### Reorder Timeline Days
@@ -358,14 +378,14 @@ Recommended v1 output:
 - removed original day ids
 - visitor notes, if a notes field is added
 
-The first implementation can stop at frontend customization, updating the visible tour details and PDF preview locally, and a clear call-to-action such as `Request this customized tour`. The backend request flow can be added separately.
+The first implementation should stop at frontend customization, updating the visible tour details and PDF preview locally. Booking submission with the customized itinerary is explicitly out of v1 scope. A later backend request flow can add a clear call-to-action such as `Request this customized tour`.
 
 After finishing the customizer:
 
 - the marketing tour details page should show the customized itinerary as the active itinerary for this visitor session
 - the PDF preview should render the customized itinerary
 - the page should still retain enough state to reset back to the original tour if a reset action is provided
-- the customized itinerary state should be included in any later `Request this customized tour` submission
+- the customized itinerary state should be retained locally so it can be included in a later `Request this customized tour` or booking submission phase
 
 ### Customized PDF Preview
 
@@ -477,13 +497,14 @@ The projected `{ x, y }` values can drive marker placement with percentages and 
 
 Recommended implementation sequence:
 
-1. Add coordinates to destination areas and places.
-2. Add day references to destination place/area records.
-3. Generate public-safe optional-day data from published marketing tours.
-4. Build the frontend customizer overlay and local itinerary state.
-5. Apply finished customization back into the visible tour details.
-6. Add the customized PDF preview endpoint.
-7. Add the request/submission flow for sales follow-up.
+1. Add coordinate fields to destination areas and places.
+2. Manually seed coordinates for the current Vietnam destination catalog.
+3. Add day references to destination place/area records.
+4. Generate public-safe optional-day data from published marketing tours and removed base-tour days.
+5. Build the frontend customizer overlay and local itinerary state.
+6. Apply finished customization back into the visible tour details.
+7. Add the customized PDF preview endpoint.
+8. Later: add the request/submission flow for sales follow-up and customized booking creation.
 
 ## Acceptance Scenarios
 
@@ -495,6 +516,7 @@ Recommended implementation sequence:
 - Dragging an optional day into the timeline adds it to the selected itinerary.
 - Adding a day updates marker numbering and redraws the dotted route.
 - Deleting a timeline day removes it from the timeline and updates the map.
+- Deleting an original base-tour day makes it available in the optional-days panel so the visitor can add it back.
 - Reordering timeline days updates the route order on the map.
 - Finishing the customizer closes the tool and updates the public tour details with the customized itinerary.
 - After finishing, the PDF preview shows the customized tour itinerary.
@@ -503,3 +525,4 @@ Recommended implementation sequence:
 - Days without resolvable route coordinates are hidden from the optional-days catalog.
 - Route markers are drawn on a simplified static map without Google Maps.
 - The tool remains usable on mobile without requiring drag and drop.
+- V1 does not send the customized itinerary through the booking submission flow.
