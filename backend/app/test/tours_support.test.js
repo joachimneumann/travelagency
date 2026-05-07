@@ -139,13 +139,11 @@ test("tour helpers resolve localized titles with vietnamese then english fallbac
   const viTour = helpers.normalizeTourForRead(
     {
       id: "tour_1",
-      title: {
-        en: "English title",
+      title: "English title",
+      title_i18n: {
         vi: "Tieu de tieng Viet"
       },
-      short_description: {
-        en: "English description"
-      },
+      short_description: "English description",
       destinations: ["vietnam"],
       styles: ["culture"]
     },
@@ -157,9 +155,7 @@ test("tour helpers resolve localized titles with vietnamese then english fallbac
   const fallbackTour = helpers.normalizeTourForRead(
     {
       id: "tour_2",
-      title: {
-        en: "English title only"
-      },
+      title: "English title only",
       destinations: ["vietnam"],
       styles: ["culture"]
     },

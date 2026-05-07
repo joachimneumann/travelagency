@@ -185,6 +185,43 @@ export function createTourHandlers(deps) {
     );
   }
 
+  function localizedTranslationMap(value) {
+    return Object.fromEntries(
+      Object.entries(localizedTextMap(value))
+        .filter(([lang]) => lang !== "en")
+    );
+  }
+
+  function localizedPairMap(plainValue, i18nValue, { multiline = false } = {}) {
+    return localizedTextareaMap({
+      ...(normalizeText(plainValue) ? { en: plainValue } : {}),
+      ...localizedTranslationMap(i18nValue)
+    }, { multiline });
+  }
+
+  function splitLocalizedPairInput(value, fallbackPlain = "") {
+    const source = localizedTextMap(value);
+    return {
+      text: normalizeText(source.en) || normalizeText(fallbackPlain),
+      i18n: localizedTranslationMap(source)
+    };
+  }
+
+  function updateLocalizedPairForLang(holder, plainField, i18nField, inputValue, lang = "en") {
+    if (!holder || typeof holder !== "object" || Array.isArray(holder)) return;
+    const normalizedLang = normalizeTourLang(lang);
+    const normalizedText = normalizeText(inputValue);
+    if (normalizedLang === "en") {
+      holder[plainField] = normalizedText;
+      holder[i18nField] = localizedTranslationMap(holder[i18nField]);
+      return;
+    }
+    const nextMap = localizedTranslationMap(holder[i18nField]);
+    if (normalizedText) nextMap[normalizedLang] = normalizedText;
+    else delete nextMap[normalizedLang];
+    holder[i18nField] = nextMap;
+  }
+
   function addTourTranslationDescriptor(descriptors, { holder, mapField, plainField = "", key }) {
     if (!holder || !mapField || !key) return;
     const map = localizedTextMap(holder?.[mapField]);
@@ -203,12 +240,14 @@ export function createTourHandlers(deps) {
     const descriptors = [];
     addTourTranslationDescriptor(descriptors, {
       holder: tour,
-      mapField: "title",
+      mapField: "title_i18n",
+      plainField: "title",
       key: "website.title"
     });
     addTourTranslationDescriptor(descriptors, {
       holder: tour,
-      mapField: "short_description",
+      mapField: "short_description_i18n",
+      plainField: "short_description",
       key: "website.short_description"
     });
     const days = Array.isArray(tour?.travel_plan?.days) ? tour.travel_plan.days : [];
@@ -326,8 +365,8 @@ export function createTourHandlers(deps) {
     const stored = normalizeTourForStorage(tour);
     return {
       ...normalizeTourForRead(stored, { lang }),
-      title_i18n: localizedTextareaMap(stored.title),
-      short_description_i18n: localizedTextareaMap(stored.short_description),
+      title_i18n: localizedPairMap(stored.title, stored.title_i18n),
+      short_description_i18n: localizedPairMap(stored.short_description, stored.short_description_i18n),
       travel_plan: buildTourTravelPlanEditorValue(stored),
       reel_video: buildTourReelVideoMeta(stored)
     };
@@ -365,14 +404,6 @@ export function createTourHandlers(deps) {
       return normalizeText(value.en) || fallbackText;
     }
     return normalizeText(value) || fallbackText;
-  }
-
-  function collectOnePagerMemoryLocalizedMap(actions, entries, holder, fieldName, lang, key) {
-    if (!holder || typeof holder !== "object" || Array.isArray(holder)) return;
-    const sourceText = sourceTextFromLocalizedValue(holder[fieldName]);
-    if (!sourceText) return;
-    entries[key] = sourceText;
-    actions.push({ kind: "map", holder, fieldName, key, sourceText });
   }
 
   function collectOnePagerMemoryLocalizedPair(actions, entries, holder, plainField, i18nField, lang, key) {
@@ -420,16 +451,7 @@ export function createTourHandlers(deps) {
     for (const action of actions) {
       const targetText = normalizeText(memoryEntries?.[action.key]);
       if (!targetText) continue;
-      if (action.kind === "map") {
-        const existingValue = action.holder[action.fieldName];
-        action.holder[action.fieldName] = {
-          ...(existingValue && typeof existingValue === "object" && !Array.isArray(existingValue)
-            ? existingValue
-            : { en: action.sourceText }),
-          [normalizedLang]: targetText
-        };
-        changed = true;
-      } else if (action.kind === "pair") {
+      if (action.kind === "pair") {
         const i18nValue = action.holder[action.i18nField];
         action.holder[action.i18nField] = {
           ...(i18nValue && typeof i18nValue === "object" && !Array.isArray(i18nValue)
@@ -449,8 +471,8 @@ export function createTourHandlers(deps) {
     const next = cloneJson(tour);
     const entries = {};
     const actions = [];
-    collectOnePagerMemoryLocalizedMap(actions, entries, next, "title", normalizedLang, "tour.title");
-    collectOnePagerMemoryLocalizedMap(actions, entries, next, "short_description", normalizedLang, "tour.short_description");
+    collectOnePagerMemoryLocalizedPair(actions, entries, next, "title", "title_i18n", normalizedLang, "tour.title");
+    collectOnePagerMemoryLocalizedPair(actions, entries, next, "short_description", "short_description_i18n", normalizedLang, "tour.short_description");
     collectOnePagerTravelPlanMemory(actions, entries, next.travel_plan, normalizedLang);
     if (!Object.keys(entries).length) return tour;
     try {
@@ -483,14 +505,18 @@ export function createTourHandlers(deps) {
 
     if (isCreate || payload.id !== undefined) next.id = normalizeText(payload.id) || next.id;
     if (payload.title_i18n !== undefined) {
-      next.title = payload.title_i18n;
+      const pair = splitLocalizedPairInput(payload.title_i18n, current.title);
+      next.title = pair.text;
+      next.title_i18n = pair.i18n;
     } else if (isCreate || payload.title !== undefined) {
-      next.title = setLocalizedTextForLang(current.title, payload.title, lang);
+      updateLocalizedPairForLang(next, "title", "title_i18n", payload.title, lang);
     }
     if (payload.short_description_i18n !== undefined) {
-      next.short_description = payload.short_description_i18n;
+      const pair = splitLocalizedPairInput(payload.short_description_i18n, current.short_description);
+      next.short_description = pair.text;
+      next.short_description_i18n = pair.i18n;
     } else if (payload.short_description !== undefined) {
-      next.short_description = setLocalizedTextForLang(current.short_description, payload.short_description, lang);
+      updateLocalizedPairForLang(next, "short_description", "short_description_i18n", payload.short_description, lang);
     }
     if (isCreate || payload.styles !== undefined) next.styles = normalizeStyleCodes(payload.styles);
     if (payload.video !== undefined) next.video = payload.video;
@@ -518,7 +544,7 @@ export function createTourHandlers(deps) {
   }
 
   function validateTourInput(tour, { isCreate = false, lang = "en" } = {}) {
-    if (isCreate && !resolveLocalizedText(tour?.title, lang)) return "title is required";
+    if (isCreate && !normalizeText(tour?.title)) return "title is required";
     if (isCreate && !tourDestinationCodes(tour).length) return "destinations is required";
     if (isCreate && !normalizeStyleCodes(tour?.styles).length) return "styles is required";
     return "";

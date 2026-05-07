@@ -847,8 +847,8 @@ function applyPublishedMarketingTourTranslations(tour, lang, translations) {
   if (normalizedLang === "en" || !(translations instanceof Map) || translations.size === 0) return tour;
   const next = cloneJson(tour);
   let changed = false;
-  changed = applyPublishedTranslationToLocalizedMap(next, "title", normalizedLang, translations) || changed;
-  changed = applyPublishedTranslationToLocalizedMap(next, "short_description", normalizedLang, translations) || changed;
+  changed = applyPublishedTranslationToLocalizedPair(next, "title", "title_i18n", normalizedLang, translations) || changed;
+  changed = applyPublishedTranslationToLocalizedPair(next, "short_description", "short_description_i18n", normalizedLang, translations) || changed;
   changed = applyPublishedTranslationsToTravelPlan(next.travel_plan, normalizedLang, translations) || changed;
   return changed ? next : tour;
 }
@@ -1227,7 +1227,7 @@ function storedTourSeoSlug(tour) {
   const explicitSlug = slugify(tour?.seo_slug, "");
   if (explicitSlug) return explicitSlug;
   const id = normalizeText(tour?.id);
-  const title = resolveLocalizedText(tour?.title, "en", "") || id;
+  const title = normalizeText(tour?.title) || id;
   const suffix = slugify(id.replace(/^tour[_-]?/i, ""), "tour").slice(0, 8);
   return `${slugify(title, "tour")}-${suffix}`;
 }

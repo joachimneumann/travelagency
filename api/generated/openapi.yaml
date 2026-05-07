@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-05-02T11:44:13Z
+# 2026-05-07T08:30:18Z
 
 ---
 openapi: 3.1.0
@@ -3983,6 +3983,11 @@ components:
         time_label:
           type: string
           nullable: true
+        time_label_i18n:
+          type: object
+          additionalProperties:
+            type: string
+          nullable: true
         time_point:
           type: string
           nullable: true
@@ -3990,6 +3995,11 @@ components:
           "$ref": "#/components/schemas/TravelPlanServiceKind"
         title:
           type: string
+          nullable: true
+        title_i18n:
+          type: object
+          additionalProperties:
+            type: string
           nullable: true
         details:
           type: string
@@ -4009,6 +4019,11 @@ components:
           nullable: true
         location:
           type: string
+          nullable: true
+        location_i18n:
+          type: object
+          additionalProperties:
+            type: string
           nullable: true
         start_time:
           type: string
@@ -4032,8 +4047,18 @@ components:
         title:
           type: string
           nullable: true
+        title_i18n:
+          type: object
+          additionalProperties:
+            type: string
+          nullable: true
         overnight_location:
           type: string
+          nullable: true
+        overnight_location_i18n:
+          type: object
+          additionalProperties:
+            type: string
           nullable: true
         services:
           type: array
@@ -4041,6 +4066,11 @@ components:
             "$ref": "#/components/schemas/TravelPlanService"
         notes:
           type: string
+          nullable: true
+        notes_i18n:
+          type: object
+          additionalProperties:
+            type: string
           nullable: true
     TravelPlanDestinationPlaceSelection:
       type: object

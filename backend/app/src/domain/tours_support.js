@@ -109,6 +109,25 @@ export function createTourHelpers({ toursDir, safeInt, normalizeMarketingTourTra
     return normalized ? { en: normalized } : {};
   }
 
+  function normalizeTranslationMap(value, { sourceLang = "en" } = {}) {
+    const normalizedSourceLang = normalizeTourLang(sourceLang);
+    if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+    return Object.fromEntries(
+      Object.entries(value)
+        .map(([lang, text]) => [normalizeTourLang(lang), normalizeText(text)])
+        .filter(([lang, text]) => Boolean(lang && text && lang !== normalizedSourceLang))
+    );
+  }
+
+  function localizedPairMap(plainValue, i18nValue, { sourceLang = "en" } = {}) {
+    const normalizedSourceLang = normalizeTourLang(sourceLang);
+    const sourceText = normalizeText(plainValue);
+    return {
+      ...(sourceText ? { [normalizedSourceLang]: sourceText } : {}),
+      ...normalizeTranslationMap(i18nValue, { sourceLang: normalizedSourceLang })
+    };
+  }
+
   function resolveLocalizedText(value, lang = "en") {
     if (typeof value === "string") return normalizeText(value);
     if (!value || typeof value !== "object" || Array.isArray(value)) return "";
@@ -119,6 +138,14 @@ export function createTourHelpers({ toursDir, safeInt, normalizeMarketingTourTra
       if (text) return text;
     }
     return "";
+  }
+
+  function resolveLocalizedPair(holder, plainField, i18nField, lang = "en") {
+    if (!holder || typeof holder !== "object" || Array.isArray(holder)) return "";
+    const normalizedLang = normalizeTourLang(lang);
+    if (normalizedLang === "en") return normalizeText(holder?.[plainField]);
+    const translations = normalizeTranslationMap(holder?.[i18nField]);
+    return normalizeText(translations[normalizedLang]) || normalizeText(holder?.[plainField]);
   }
 
   function setLocalizedTextForLang(existingValue, inputValue, lang = "en") {
@@ -173,10 +200,16 @@ export function createTourHelpers({ toursDir, safeInt, normalizeMarketingTourTra
     delete next.shortDescription;
     delete next.budget_lower_USD;
 
-    next.title = normalizeLocalizedTextMap(next.title);
-    next.short_description = normalizeLocalizedTextMap(
+    next.title = normalizeText(next.title);
+    const title_i18n = normalizeTranslationMap(next.title_i18n);
+    if (Object.keys(title_i18n).length) next.title_i18n = title_i18n;
+    else delete next.title_i18n;
+    next.short_description = normalizeText(
       hasLocalizedContent(next.short_description) ? next.short_description : legacyShortDescription
     );
+    const short_description_i18n = normalizeTranslationMap(next.short_description_i18n);
+    if (Object.keys(short_description_i18n).length) next.short_description_i18n = short_description_i18n;
+    else delete next.short_description_i18n;
     next.styles = tourStyleCodes(next);
     delete next.pictures;
     delete next.image;
@@ -211,8 +244,8 @@ export function createTourHelpers({ toursDir, safeInt, normalizeMarketingTourTra
     const travelPlan = normalizeTourTravelPlan(stored.travel_plan);
     return {
       ...stored,
-      title: resolveLocalizedText(stored.title, normalizedLang),
-      short_description: resolveLocalizedText(stored.short_description, normalizedLang),
+      title: resolveLocalizedPair(stored, "title", "title_i18n", normalizedLang),
+      short_description: resolveLocalizedPair(stored, "short_description", "short_description_i18n", normalizedLang),
       destinations: destinationCodes.map((code) => getTourDestinationLabel(code, normalizedLang)),
       destination_codes: destinationCodes,
       styles: styleCodes.map((code) => getTourStyleLabel(code, normalizedLang)),
@@ -254,7 +287,10 @@ export function createTourHelpers({ toursDir, safeInt, normalizeMarketingTourTra
 
   return {
     normalizeLocalizedTextMap,
+    normalizeTranslationMap,
+    localizedPairMap,
     resolveLocalizedText,
+    resolveLocalizedPair,
     setLocalizedTextForLang,
     normalizeTourTravelPlan,
     tourDestinations,

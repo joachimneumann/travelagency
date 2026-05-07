@@ -2175,7 +2175,7 @@ test("booking editor can import days and services from marketing tours", async (
     const importedService = serviceImportResult.body.booking.travel_plan.days[0].services[1];
     assert.equal(importedService.title, "Reusable booking service");
     assert.equal(importedService.details, "Reusable booking service details");
-    assert.equal(importedService.details_i18n?.de, undefined);
+    assert.equal(importedService.details_i18n?.de, "Wiederverwendbare Buchungsdetails");
     assert.notEqual(importedService.id, "booking_marketing_source_service_1");
     assert.equal(importedService.timing_kind, "not_applicable");
 
@@ -2206,7 +2206,7 @@ test("booking editor can import days and services from marketing tours", async (
     assert.equal(dayImportResult.body.booking.travel_plan.days[1].title, "Reusable booking day");
     assert.equal(dayImportResult.body.booking.travel_plan.days[1].title_i18n?.de, undefined);
     assert.equal(dayImportResult.body.booking.travel_plan.days[1].services[0].details, "Reusable booking service details");
-    assert.equal(dayImportResult.body.booking.travel_plan.days[1].services[0].details_i18n?.de, undefined);
+    assert.equal(dayImportResult.body.booking.travel_plan.days[1].services[0].details_i18n?.de, "Wiederverwendbare Buchungsdetails");
     assert.notEqual(dayImportResult.body.booking.travel_plan.days[1].id, "booking_marketing_source_day_1");
     assert.equal(dayImportResult.body.booking.travel_plan.destination_scope[0].destination, "VN");
   } finally {
@@ -6025,7 +6025,41 @@ test("public tours only expose destinations published on webpage and hide unpubl
             destination_scope: [
               { destination: "VN", areas: [] }
             ],
-            days: []
+            days: [
+              {
+                id: "visible_public_tour_day_1",
+                day_number: 1,
+                title: "Visible Vietnam day",
+                services: [
+                  {
+                    id: "visible_public_tour_service_1",
+                    timing_kind: "label",
+                    kind: "activity",
+                    title: "Visible Vietnam service 1",
+                    image: {
+                      id: "visible_public_tour_image_1",
+                      storage_path: "visible-public-tour/image-1.webp",
+                      sort_order: 0,
+                      is_customer_visible: true,
+                      include_in_travel_tour_card: true
+                    }
+                  },
+                  {
+                    id: "visible_public_tour_service_2",
+                    timing_kind: "label",
+                    kind: "activity",
+                    title: "Visible Vietnam service 2",
+                    image: {
+                      id: "visible_public_tour_image_2",
+                      storage_path: "visible-public-tour/image-2.webp",
+                      sort_order: 1,
+                      is_customer_visible: true,
+                      include_in_travel_tour_card: true
+                    }
+                  }
+                ]
+              }
+            ]
           }
         }
       }

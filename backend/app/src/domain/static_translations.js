@@ -672,8 +672,8 @@ export function createStaticTranslationService({
   function collectMarketingTourMemorySources(tours) {
     const sources = new Set();
     for (const tour of Array.isArray(tours) ? tours : []) {
-      addSourceText(sources, localizedSource(tour?.title, tour?.id));
-      addSourceText(sources, localizedSource(tour?.short_description, ""));
+      addSourceText(sources, localizedSource(tour?.title_i18n, tour?.title || tour?.id));
+      addSourceText(sources, localizedSource(tour?.short_description_i18n, tour?.short_description));
       collectMarketingTourMemorySourcesFromPlan(sources, tour?.travel_plan);
     }
     return Array.from(sources).sort((left, right) => left.localeCompare(right, "en", { sensitivity: "base" }));

@@ -3752,7 +3752,7 @@ test("tour card images are selected from travel-plan service images", async () =
   );
   assert.match(
     toursHandlerSource,
-    /async function applyMarketingTourMemoryToOnePagerTour\(tour, lang\)[\s\S]*collectOnePagerMemoryLocalizedMap\(actions, entries, next, "title", normalizedLang, "tour\.title"\);[\s\S]*collectOnePagerTravelPlanMemory\(actions, entries, next\.travel_plan, normalizedLang\);[\s\S]*translationMemoryStore\.resolveEntries\(entries, normalizedLang\)[\s\S]*const localizedTour = await applyMarketingTourMemoryToOnePagerTour\(tour, lang\);[\s\S]*normalizeTourForRead\(localizedTour, \{ lang \}\)[\s\S]*normalizeMarketingTourTravelPlan\(localizedTour\.travel_plan,[\s\S]*sourceLang: "en"[\s\S]*flatMode: "localized"/,
+    /async function applyMarketingTourMemoryToOnePagerTour\(tour, lang\)[\s\S]*collectOnePagerMemoryLocalizedPair\(actions, entries, next, "title", "title_i18n", normalizedLang, "tour\.title"\);[\s\S]*collectOnePagerTravelPlanMemory\(actions, entries, next\.travel_plan, normalizedLang\);[\s\S]*translationMemoryStore\.resolveEntries\(entries, normalizedLang\)[\s\S]*const localizedTour = await applyMarketingTourMemoryToOnePagerTour\(tour, lang\);[\s\S]*normalizeTourForRead\(localizedTour, \{ lang \}\)[\s\S]*normalizeMarketingTourTravelPlan\(localizedTour\.travel_plan,[\s\S]*sourceLang: "en"[\s\S]*flatMode: "localized"/,
     "On-demand one-pager PDFs should apply published marketing-tour translation memory before localized PDF rendering"
   );
   assert.match(
@@ -3966,7 +3966,7 @@ test("tour page edits English website content while marketing-tour translations 
   );
   assert.match(
     staticTranslationsSource,
-    /function collectMarketingTourMemorySources\(tours\)[\s\S]*localizedSource\(tour\?\.title,\s*tour\?\.id\)[\s\S]*localizedSource\(tour\?\.short_description,\s*""\)/,
+    /function collectMarketingTourMemorySources\(tours\)[\s\S]*localizedSource\(tour\?\.title_i18n,\s*tour\?\.title \|\| tour\?\.id\)[\s\S]*localizedSource\(tour\?\.short_description_i18n,\s*tour\?\.short_description\)/,
     "The central marketing-tour translation memory should collect website title and description"
   );
   assert.doesNotMatch(

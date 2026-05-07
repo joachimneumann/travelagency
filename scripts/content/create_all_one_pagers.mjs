@@ -431,8 +431,8 @@ function applyPublishedMarketingTourTranslations(tour, lang, translations) {
   if (normalizedLang === "en" || !(translations instanceof Map) || translations.size === 0) return tour;
   const next = cloneJson(tour);
   let changed = false;
-  changed = applyPublishedTranslationToLocalizedMap(next, "title", normalizedLang, translations) || changed;
-  changed = applyPublishedTranslationToLocalizedMap(next, "short_description", normalizedLang, translations) || changed;
+  changed = applyPublishedTranslationToLocalizedPair(next, "title", "title_i18n", normalizedLang, translations) || changed;
+  changed = applyPublishedTranslationToLocalizedPair(next, "short_description", "short_description_i18n", normalizedLang, translations) || changed;
   changed = applyPublishedTranslationsToTravelPlan(next.travel_plan, normalizedLang, translations) || changed;
   return changed ? next : tour;
 }
@@ -902,7 +902,7 @@ async function main() {
   let rendered = 0;
 
   for (const tour of tours) {
-    const title = tourHelpers.resolveLocalizedText(tour.title, "en") || tour.id;
+    const title = normalizeText(tour.title) || tour.id;
     const row = { id: tour.id, title, artifacts: [] };
     const manifestTour = { id: tour.id, title, artifacts: [] };
     for (const lang of options.languages) {
