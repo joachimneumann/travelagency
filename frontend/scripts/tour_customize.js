@@ -1,10 +1,10 @@
 const TOUR_CUSTOMIZE_STORAGE_PREFIX = "asiatravelplan.custom_tour.";
 const TOUR_CUSTOMIZE_MAX_DAYS = 20;
 const TOUR_CUSTOMIZE_ROUTE_BOUNDS = Object.freeze({
-  north: 24.5,
-  south: 7.0,
-  west: 97.0,
-  east: 110.5
+  north: 24.3,
+  south: 7.49,
+  west: 101.1,
+  east: 110
 });
 
 const TOUR_CUSTOMIZE_ROUTE_POINTS = Object.freeze([
