@@ -1,7 +1,7 @@
 {
   "id": "tour_9760629b-9b7c-4330-a2e8-8a021b4d47cd",
   "title": {
-    "en": "HO CHI MINH – MUI NE – DA LAT – NHA TRANG",
+    "en": "From Ho Chi Minh City to Dreamy Dalat",
     "ar": "دا لات - مدينة حالمة",
     "fr": "Da Lat - Ville de rêve",
     "zh": "大叻——梦想之城",
@@ -19,7 +19,7 @@
     "no": "Da Lat - Drømmende by"
   },
   "short_description": {
-    "en": "Hành trình kết nối Sài Gòn sôi động, biển xanh Mũi Né, Nha Trang cùng Đà Lạt mộng mơ. Trải nghiệm đa dạng từ cát trắng, sóng biển đến cao nguyên ôn đới tuyệt đẹp",
+    "en": "From vibrant Ho Chi Minh City to the cool mountain charm of Da Lat, enjoy culture, colonial beauty, and peaceful landscapes.",
     "ar": "دا لات هي مدينة سياحية شهيرة تقع على هضبة لام فيان بمقاطعة لام دونغ. وعلى ارتفاع حوالي 1500 متر فوق مستوى سطح البحر، يُعرف هذا المكان باسم \"مدينة الزهور\" و\"مدينة الضباب\".  هو مكان به 4 مواسم في يوم واحد في فيتنام. طبيعة شاعرية، زهور تتفتح طوال العام، هندسة معمارية فرنسية قديمة. يرجى تجربة معنا",
     "fr": "Da Lat est une ville touristique célèbre située sur le plateau de Lam Vien, province de Lam Dong. Avec une altitude d'environ 1 500 m au-dessus du niveau de la mer, cet endroit est connu comme la « ville des fleurs » et « la ville du brouillard ».  est un endroit avec 4 saisons en 1 jour au Vietnam. Nature poétique, Fleurs épanouies toute l’année, Architecture française ancienne. S'il vous plaît, faites l'expérience avec nous",
     "zh": "大叻是位于林同省林维恩高原的著名旅游城市。这里海拔约1500m，素有“花城”、“雾城”之称。  越南是一个1天4个季节的地方。诗意的自然，四季鲜花盛开，法式古建筑。请和我们一起体验",
@@ -46,7 +46,7 @@
   "seasonality_end_month": "dec",
   "priority": 100,
   "created_at": "2026-04-16T03:51:45.597Z",
-  "updated_at": "2026-05-07T03:19:14.464Z",
+  "updated_at": "2026-05-07T08:10:29.537Z",
   "published_on_webpage": true,
   "travel_plan": {
     "destination_scope": [
@@ -90,7 +90,7 @@
       {
         "id": "travel_plan_day_f8558193-ef9a-4c59-a5c1-f10837dd2dad",
         "day_number": 1,
-        "title": "Ho Chi Minh City - Independence Palace - Notre-Dame Cathedral Basilica of Saigon - Saigon Central Post Office - Thien Hau Temple",
+        "title": "Ho Chi Minh City Highlights",
         "title_i18n": {},
         "overnight_location": null,
         "overnight_location_i18n": {},
@@ -102,7 +102,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Pick up guests and take them to the hotel.",
+            "title": "We welcome you at the airport and take you to your hotel.",
             "title_i18n": {},
             "details": null,
             "details_i18n": {},
@@ -139,7 +139,7 @@
             "kind": "other",
             "title": "Independence Palace",
             "title_i18n": {},
-            "details": "The Independence Palace (also known as Reunification Palace) is one of Ho Chi Minh City’s most significant historical landmarks. Once the home and workplace of the President of South Vietnam, it is now a powerful symbol of the country’s journey toward peace and unity",
+            "details": "The Independence Palace, also known as the Reunification Palace, is one of Ho Chi Minh City’s most important historical landmarks. Once the residence and workplace of the President of South Vietnam, it now stands as a symbol of the country’s reunification and journey toward peace.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -174,7 +174,7 @@
             "kind": "other",
             "title": "Notre-Dame Cathedral Basilica of Saigon",
             "title_i18n": {},
-            "details": "The Notre-Dame Cathedral Basilica of Saigon is a majestic landmark and a symbol of Ho Chi Minh City, located in the heart of the \"French Quarter",
+            "details": "The Notre-Dame Cathedral Basilica of Saigon is one of Ho Chi Minh City’s most iconic landmarks — a majestic cathedral in the heart of the historic French Quarter.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -209,7 +209,7 @@
             "kind": "other",
             "title": "Saigon Central Post Office",
             "title_i18n": {},
-            "details": "Located next to the Cathedral, the Saigon Central Post Office is a French colonial masterpiece. With its grand vaulted ceiling and timeless charm, it is a must-see landmark",
+            "details": "Located beside the Notre-Dame Cathedral Basilica of Saigon, the Saigon Central Post Office is a beautiful example of French colonial architecture. With its grand vaulted ceiling and timeless charm, it remains one of the city’s most iconic landmarks.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -242,9 +242,9 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Thien Hau Temple",
+            "title": "Thien Hau Temple - The Spiritual Gem of Saigon’s Chinatown",
             "title_i18n": {},
-            "details": "The Thien Hau Temple (Chùa Bà Thiên Hậu) is one of the oldest and most beautiful Chinese temples in Ho Chi Minh City, located in the heart of the vibrant Cholon (Chinatown) district",
+            "details": "The Thien Hau Temple is one of the oldest and most beautiful Chinese temples in Ho Chi Minh City, located in the heart of the vibrant Cholon district. Filled with intricate carvings, spiral incense coils, and a rich spiritual atmosphere, the temple offers a fascinating glimpse into the city’s Chinese heritage.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -271,7 +271,7 @@
             }
           }
         ],
-        "notes": "Discover the heart of Ho Chi Minh City through its most iconic landmarks. From the historic Independence Palace and the architectural beauty of Notre-Dame Cathedral and the Central Post Office, to the spiritual atmosphere of Thien Hau Temple, this journey offers a perfect blend of history, colonial charm, and vibrant local culture",
+        "notes": "With an altitude of around 1,500 meters, Đà Lạt is known for its mild climate, poetic landscapes, and charming French colonial architecture. Combined with the vibrant energy and cultural highlights of Ho Chi Minh City, this journey offers a perfect blend of urban discovery and peaceful mountain retreat.",
         "notes_i18n": {}
       },
       {
