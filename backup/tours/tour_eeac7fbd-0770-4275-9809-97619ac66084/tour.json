@@ -51,7 +51,7 @@
       {
         "id": "travel_plan_day_bde5a92b-64be-4e98-bd3c-3ec97881766b",
         "day_number": 1,
-        "title": "Arrival and Road to Sapa",
+        "title": "Arrival and road to Sapa",
         "title_i18n": {
           "ar": "الاستقبال في المطار - الانتقال إلى سابا",
           "fr": "Prise en charge à l'aéroport - Transfert à Sapa",
@@ -80,7 +80,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Sapa Town",
+            "title": "Sapa town",
             "title_i18n": {
               "ar": "مدينة سابا",
               "fr": "Ville de Sapa",
@@ -149,7 +149,7 @@
       {
         "id": "travel_plan_day_f87d54f7-c56b-472a-8847-36b0833b398d",
         "day_number": 2,
-        "title": "O Quy Ho Pass and Night Market",
+        "title": "O Quy Ho Pass and night market",
         "title_i18n": {
           "ar": "سابا - ممر أو كوي هو - الشجرة الوحيدة - الجسر الزجاجي - السوق الليلي",
           "fr": "Sapa - Col O Quy Ho - Arbre solitaire - Pont de verre - Marché nocturne",
@@ -230,7 +230,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Lonely Tree Viewpoint",
+            "title": "Lonely Tree viewpoint",
             "title_i18n": {
               "ar": "الشجرة الوحيدة",
               "fr": "Arbre solitaire",
@@ -334,7 +334,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Sapa Night Market",
+            "title": "Sapa night market",
             "title_i18n": {
               "ar": "السوق الليلي",
               "fr": "Marché nocturne",
@@ -403,7 +403,7 @@
       {
         "id": "travel_plan_day_3acebe40-fbfd-491e-a297-eeffe08087a4",
         "day_number": 3,
-        "title": "Muong Hoa Train and Fansipan",
+        "title": "Muong Hoa train and Fansipan",
         "title_i18n": {
           "ar": "سابا - قطار موونج هوا - فانسيبان",
           "fr": "Sapa - Train Muong Hoa - Fansipan",
@@ -432,7 +432,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Muong Hoa Train",
+            "title": "Muong Hoa train",
             "title_i18n": {
               "ar": "قطار مونج هوا",
               "fr": "Train Muong Hoa",
@@ -1205,7 +1205,7 @@
       {
         "id": "travel_plan_day_043f0985-1102-486c-a192-43a1d15684b7",
         "day_number": 8,
-        "title": "Hanoi Farewell",
+        "title": "Hanoi farewell",
         "title_i18n": {
           "ar": "هانوي",
           "fr": "Hanoï",

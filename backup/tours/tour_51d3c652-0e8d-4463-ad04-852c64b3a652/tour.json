@@ -54,7 +54,7 @@
       {
         "id": "travel_plan_day_923dfd89-6533-43fa-ada7-38e6767a7c6e",
         "day_number": 1,
-        "title": "Hanoi Heritage Day",
+        "title": "Hanoi heritage day",
         "title_i18n": {
           "ar": "جولة مدينة هانوي",
           "fr": "Visite de la ville de Hanoï",
@@ -83,7 +83,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Hotel Arrival Transfer",
+            "title": "Hotel arrival transfer",
             "title_i18n": {},
             "details": "Arrive in Hanoi and transfer to your hotel, giving the day a calm start before sightseeing begins.",
             "details_i18n": {},
@@ -372,7 +372,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Ha Long Bay Transfer",
+            "title": "Ha Long Bay transfer",
             "title_i18n": {
               "ar": "التقاط الضيوف في المطار",
               "fr": "Récupérer les invités à l'aéroport",
@@ -475,7 +475,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Ha Long Bay Cruise",
+            "title": "Ha Long Bay cruise",
             "title_i18n": {
               "ar": "رحلة بحرية في خليج هالونج",
               "fr": "Croisière dans la Baie d'Halong",
@@ -527,7 +527,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Cruise Lunch",
+            "title": "Cruise lunch",
             "title_i18n": {
               "ar": "تناول وجبة الغداء على متن السفينة السياحية",
               "fr": "Déjeuner sur le bateau de croisière",
@@ -596,7 +596,7 @@
       {
         "id": "travel_plan_day_56a905e0-b4a3-497c-913f-c23666ce0388",
         "day_number": 3,
-        "title": "Shopping and Departure",
+        "title": "Shopping and departure",
         "title_i18n": {},
         "overnight_location": null,
         "overnight_location_i18n": {},
@@ -608,7 +608,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Shopping and Airport Transfer",
+            "title": "Shopping and airport transfer",
             "title_i18n": {},
             "details": "Stop for last purchases before continuing to the airport for departure.",
             "details_i18n": {},

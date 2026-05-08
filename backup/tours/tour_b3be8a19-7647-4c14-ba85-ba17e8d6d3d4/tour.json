@@ -1,6 +1,6 @@
 {
   "id": "tour_b3be8a19-7647-4c14-ba85-ba17e8d6d3d4",
-  "title": "Hue Imperial Day",
+  "title": "Hue imperial day",
   "short_description": "A Hue day shaped by Lang Co Bay, Tam Giang Lagoon, royal citadel walls, Khai Dinh's tomb and the calm tower of Thien Mu Pagoda.",
   "styles": [
     "budget",
@@ -34,7 +34,7 @@
       {
         "id": "travel_plan_day_3a3eb033-930f-403a-8cfb-d20cf1f380b5",
         "day_number": 1,
-        "title": "Hue Lagoon and Royal Sites",
+        "title": "Hue lagoon and royal sites",
         "title_i18n": {
           "ar": "اذهب إلى هوي",
           "fr": "aller à Hué",
@@ -165,7 +165,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Pearl Village",
+            "title": "Pearl village",
             "title_i18n": {
               "ar": "قرية اللؤلؤة",
               "fr": "Village des Perles",

@@ -23,7 +23,7 @@
       {
         "id": "travel_plan_day_f8d8e76e-d360-4705-adf2-0f1a2036f254",
         "day_number": 1,
-        "title": "Southern Vietnam Route",
+        "title": "Southern Vietnam route",
         "title_i18n": {},
         "overnight_location": null,
         "overnight_location_i18n": {},
@@ -35,7 +35,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Route Overview",
+            "title": "Route overview",
             "title_i18n": {},
             "details": "Follow the stated journey from Ho Chi Minh City through the Mekong, Mui Ne and Da Lat, ending by the sea in Nha Trang.",
             "details_i18n": {},

@@ -1,6 +1,6 @@
 {
   "id": "tour_181b4316-7b70-410c-9f11-a084cfb11329",
-  "title": "Ninh Binh Scenic Trio",
+  "title": "Ninh Binh scenic trio",
   "short_description": "One day, three Ninh Binh moods: Tuyet Tinh Coc's still lake, Trang An's cave waterways and Hang Mua's climb above the karsts.",
   "styles": [
     "budget",
@@ -119,7 +119,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Trang An Boat Journey",
+            "title": "Trang An boat journey",
             "title_i18n": {
               "ar": "المناظر الطبيعية الكارستية المهيبة في ترانج آن",
               "fr": "Paysages karstiques majestueux de Trang An",
@@ -188,7 +188,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Hang Mua Viewpoint",
+            "title": "Hang Mua viewpoint",
             "title_i18n": {
               "ar": "مناظر بانورامية من كهف Mua",
               "fr": "vues panoramiques depuis la grotte de Mua",

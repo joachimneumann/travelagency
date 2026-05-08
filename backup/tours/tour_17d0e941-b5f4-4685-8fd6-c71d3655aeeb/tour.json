@@ -1,6 +1,6 @@
 {
   "id": "tour_17d0e941-b5f4-4685-8fd6-c71d3655aeeb",
-  "title": "Da Nang in Three Days",
+  "title": "Da Nang in three days",
   "short_description": "A compact Central Vietnam escape linking Marble Mountains, Hoi An, Ba Na Hills and Son Tra's sea views from a Da Nang base.",
   "styles": [
     "budget",
@@ -70,7 +70,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Da Nang Airport Welcome",
+            "title": "Da Nang airport welcome",
             "title_i18n": {},
             "details": "Begin with airport pickup in Da Nang and a comfortable start to your Central Vietnam itinerary.",
             "details_i18n": {},
@@ -222,7 +222,7 @@
       {
         "id": "travel_plan_day_692b96ba-7a8a-416b-a35e-b8f8eb11d082",
         "day_number": 3,
-        "title": "Son Tra and Airport Farewell",
+        "title": "Son Tra and airport farewell",
         "title_i18n": {},
         "overnight_location": null,
         "overnight_location_i18n": {},
@@ -304,7 +304,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Airport Drop-Off",
+            "title": "Airport drop-off",
             "title_i18n": {},
             "details": "Continue to the airport for your onward flight after the final Da Nang sightseeing stops.",
             "details_i18n": {},

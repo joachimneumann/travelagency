@@ -1,6 +1,6 @@
 {
   "id": "tour_75618ce5-f5e4-41e9-a2ad-a8e1d50cc136",
-  "title": "Hanoi to Sapa Heights",
+  "title": "Hanoi to Sapa heights",
   "short_description": "Start in Hanoi's old streets, then head into Sapa's mist, H'Mong village life and the cable-car climb toward Fansipan.",
   "styles": [
     "budget",
@@ -54,7 +54,7 @@
       {
         "id": "travel_plan_day_edb37b47-cb51-46ec-9fb7-756c2e257f0a",
         "day_number": 1,
-        "title": "Hanoi Arrival and Old Quarter",
+        "title": "Hanoi arrival and Old Quarter",
         "title_i18n": {},
         "overnight_location": null,
         "overnight_location_i18n": {},
@@ -66,7 +66,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Hotel Arrival Transfer",
+            "title": "Hotel arrival transfer",
             "title_i18n": {},
             "details": "Meet your driver on arrival and transfer to the hotel before the Hanoi city visits begin.",
             "details_i18n": {},
@@ -218,7 +218,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Sapa Town",
+            "title": "Sapa town",
             "title_i18n": {},
             "details": "Arrive in Sapa, a highland town known for mist, terraces and views toward the Hoang Lien Son range.",
             "details_i18n": {},
@@ -288,7 +288,7 @@
       {
         "id": "travel_plan_day_2392b5de-e895-4d19-995b-9da35e9f4812",
         "day_number": 3,
-        "title": "Fansipan and Return Hanoi",
+        "title": "Fansipan and return Hanoi",
         "title_i18n": {},
         "overnight_location": null,
         "overnight_location_i18n": {},
@@ -300,7 +300,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Fansipan Cable Car",
+            "title": "Fansipan cable car",
             "title_i18n": {},
             "details": "Ride toward Fansipan peak for high mountain views over Sapa, Muong Hoa Valley and the Hoang Lien Son range.",
             "details_i18n": {},

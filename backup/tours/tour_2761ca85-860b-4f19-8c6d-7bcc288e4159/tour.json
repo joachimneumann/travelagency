@@ -1,6 +1,6 @@
 {
   "id": "tour_2761ca85-860b-4f19-8c6d-7bcc288e4159",
-  "title": "Ha Long Bay in a Day",
+  "title": "Ha Long Bay in a day",
   "short_description": "Cruise into Ha Long Bay's emerald water, limestone islets and bright caves, with Ti Top views giving the day its final lift.",
   "styles": [
     "beach",
@@ -43,7 +43,7 @@
       {
         "id": "travel_plan_day_1788880e-7c86-4dc7-91b2-49d54706a677",
         "day_number": 1,
-        "title": "Classic Ha Long Bay Cruise",
+        "title": "Classic Ha Long Bay cruise",
         "title_i18n": {},
         "overnight_location": null,
         "overnight_location_i18n": {},

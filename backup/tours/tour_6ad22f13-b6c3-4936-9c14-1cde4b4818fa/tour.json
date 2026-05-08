@@ -1,6 +1,6 @@
 {
   "id": "tour_6ad22f13-b6c3-4936-9c14-1cde4b4818fa",
-  "title": "Hanoi Heritage Streets",
+  "title": "Hanoi heritage streets",
   "short_description": "A deep Hanoi day through prison history, ethnic culture, Confucian courtyards, lakeside pagodas, cathedral stone and Train Street.",
   "styles": [
     "budget",
@@ -41,7 +41,7 @@
       {
         "id": "travel_plan_day_cedf2aa5-236f-4144-afc2-d58e6464bdcb",
         "day_number": 1,
-        "title": "Hanoi History and Streets",
+        "title": "Hanoi history and streets",
         "title_i18n": {
           "ar": "اكتشف هانوي",
           "fr": "Explorez Hanoï",

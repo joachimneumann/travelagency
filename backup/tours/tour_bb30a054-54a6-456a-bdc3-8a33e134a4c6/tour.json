@@ -1,6 +1,6 @@
 {
   "id": "tour_bb30a054-54a6-456a-bdc3-8a33e134a4c6",
-  "title": "Hanoi to Sapa Peaks",
+  "title": "Hanoi to Sapa peaks",
   "short_description": "Leave Hanoi for Sapa's misty terraces, Cat Cat Village, Moana viewpoints and the high cable-car ascent toward Fansipan.",
   "styles": [
     "budget",
@@ -51,7 +51,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Hanoi to Sapa Transfer",
+            "title": "Hanoi to Sapa transfer",
             "title_i18n": {},
             "details": "Depart Hanoi in the morning and travel north toward Sapa's cooler air and mountain scenery.",
             "details_i18n": {},
@@ -86,7 +86,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Sapa Town",
+            "title": "Sapa town",
             "title_i18n": {
               "ar": "مدينة سابا",
               "fr": "Ville de Sapa",
@@ -208,7 +208,7 @@
       {
         "id": "travel_plan_day_6f0b35ff-e816-45c3-9661-01701173671a",
         "day_number": 2,
-        "title": "Fansipan and Return Hanoi",
+        "title": "Fansipan and return Hanoi",
         "title_i18n": {
           "ar": "جولة مدينة هانوي",
           "fr": "Visite de la ville de Hanoï",
@@ -272,7 +272,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Return Transfer",
+            "title": "Return transfer",
             "title_i18n": {
               "ar": "الاستقبال في المطار",
               "fr": "prise en charge à l'aéroport",

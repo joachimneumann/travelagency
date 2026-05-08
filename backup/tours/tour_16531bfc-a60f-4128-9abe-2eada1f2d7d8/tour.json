@@ -56,7 +56,7 @@
       {
         "id": "travel_plan_day_0cc434a5-139d-4ab7-944f-6adc04c534db",
         "day_number": 1,
-        "title": "Marble Caves to Hoi An",
+        "title": "Marble caves to Hoi An",
         "title_i18n": {
           "ar": "النقل من المطار - جبال الرخام - هوي آن - المبيت في هوي آن",
           "fr": "Prise en charge à l'aéroport - Montagnes de Marbre - Hoi An - Nuit à Hoi An",
@@ -85,7 +85,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Da Nang Airport Welcome",
+            "title": "Da Nang airport welcome",
             "title_i18n": {
               "ar": "الاستقبال في المطار",
               "fr": "Prise en charge à l'aéroport",
@@ -293,7 +293,7 @@
       {
         "id": "travel_plan_day_6dbca279-5dcc-40e9-9c44-a631225970b7",
         "day_number": 2,
-        "title": "Coconut Forest and Da Nang",
+        "title": "Coconut forest and Da Nang",
         "title_i18n": {
           "ar": "فندق هوي آن - غابة جوز الهند - شبه جزيرة سون ترا - جسر التنين والحب - كنيسة الدجاج",
           "fr": "Hôtel Hoi An - Forêt de noix de coco - Péninsule de Son Tra - Pont du Dragon et Amour - Église du Poulet",
@@ -582,7 +582,7 @@
       {
         "id": "travel_plan_day_4d9d797e-9a7d-445f-957c-df9c6abfb4ed",
         "day_number": 3,
-        "title": "Ba Na Hills and Night Market",
+        "title": "Ba Na Hills and night market",
         "title_i18n": {
           "ar": "فندق دانانج - بانا هيل - السوق الليلي",
           "fr": "Hôtel DaNang - Bana Hill - Marché nocturne",
@@ -663,7 +663,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Da Nang Night Market",
+            "title": "Da Nang night market",
             "title_i18n": {
               "ar": "السوق الليلي",
               "fr": "Marché nocturne",
@@ -732,7 +732,7 @@
       {
         "id": "travel_plan_day_35ee634e-27d4-4fa1-8142-33b2c20f5531",
         "day_number": 4,
-        "title": "Lang Co Bay to Imperial Hue",
+        "title": "Lang Co Bay to imperial Hue",
         "title_i18n": {
           "ar": "فندق دانانج - لانج كو - معبد ثين مو - القلعة الإمبراطورية - قرية البخور - دونج با",
           "fr": "Hôtel DaNang - Lang Co - Pagode Thien Mu - Citadelle Impériale - Village des Encens - Dong Ba",
@@ -917,7 +917,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Thuy Xuan Incense Village",
+            "title": "Thuy Xuan incense village",
             "title_i18n": {
               "ar": "قرية البخور",
               "fr": "Village des Encens",
@@ -1038,7 +1038,7 @@
       {
         "id": "travel_plan_day_c7b84d7b-b6ad-4a04-bb85-fc2430f1f72b",
         "day_number": 5,
-        "title": "Da Nang Shopping and Farewell",
+        "title": "Da Nang shopping and farewell",
         "title_i18n": {
           "ar": "فندق دا نانج - التسوق - المغادرة من المطار",
           "fr": "Hôtel Da Nang - Shopping - Départ de l'aéroport",
@@ -1067,7 +1067,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Airport Transfer",
+            "title": "Airport transfer",
             "title_i18n": {
               "ar": "السيارة تأخذك إلى المطار",
               "fr": "La voiture vous emmène à l'aéroport",

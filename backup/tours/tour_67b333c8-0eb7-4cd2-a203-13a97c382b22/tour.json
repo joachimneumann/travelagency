@@ -54,7 +54,7 @@
       {
         "id": "travel_plan_day_e21f4f02-b0a4-4d74-816d-b5e0b24db279",
         "day_number": 1,
-        "title": "Saigon Icons and Markets",
+        "title": "Saigon icons and markets",
         "title_i18n": {},
         "overnight_location": null,
         "overnight_location_i18n": {},
@@ -66,7 +66,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Hotel Arrival Transfer",
+            "title": "Hotel arrival transfer",
             "title_i18n": {},
             "details": "Meet your driver on arrival and transfer to the hotel before starting the first Ho Chi Minh City visits.",
             "details_i18n": {},
@@ -288,7 +288,7 @@
       {
         "id": "travel_plan_day_2109e908-bf4b-4ced-a677-93a4af8e1352",
         "day_number": 3,
-        "title": "Saigon History to Mui Ne",
+        "title": "Saigon history to Mui Ne",
         "title_i18n": {},
         "overnight_location": null,
         "overnight_location_i18n": {},
@@ -440,7 +440,7 @@
       {
         "id": "travel_plan_day_d1e9908d-b037-4374-af3d-68eebb497e9b",
         "day_number": 4,
-        "title": "Mui Ne Dunes and Coast",
+        "title": "Mui Ne dunes and coast",
         "title_i18n": {},
         "overnight_location": null,
         "overnight_location_i18n": {},
@@ -487,7 +487,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Mui Ne Fishing Village",
+            "title": "Mui Ne fishing village",
             "title_i18n": {},
             "details": "See round basket boats, fishing vessels and daily coastal trade at Mui Ne Fishing Village.",
             "details_i18n": {},
@@ -592,7 +592,7 @@
       {
         "id": "travel_plan_day_b2d72111-87a3-4ff7-9b72-7c3289374955",
         "day_number": 5,
-        "title": "Mui Ne Farewell",
+        "title": "Mui Ne farewell",
         "title_i18n": {},
         "overnight_location": null,
         "overnight_location_i18n": {},
@@ -604,7 +604,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Airport Drop-Off",
+            "title": "Airport drop-off",
             "title_i18n": {
               "ar": "التقاط الضيوف في المطار",
               "fr": "Récupérer les invités à l'aéroport",

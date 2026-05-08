@@ -1,6 +1,6 @@
 {
   "id": "tour_c2c80f99-287c-41b5-93cc-53c4d98d0caf",
-  "title": "Phu Quoc Island Days",
+  "title": "Phu Quoc island days",
   "short_description": "Four Phu Quoc days mix beaches, temples, island history, VinWonders, Grand World, cable-car views and Sunset Town color.",
   "styles": [
     "grand-expeditions",
@@ -47,7 +47,7 @@
       {
         "id": "travel_plan_day_cd73568b-8916-4faa-998f-c6285531de92",
         "day_number": 1,
-        "title": "Temples, Prison and Beach",
+        "title": "Temples, prison and beach",
         "title_i18n": {
           "ar": "الاستقبال في مطار فو كوك - معبد هو كوك - سجن شجرة جوز الهند - شاطئ ساو - سوق فو كوك الليلي",
           "fr": "Prise en charge à l'aéroport de Phu Quoc – Pagode Ho Quoc – Prison des cocotiers – Plage de Sao – Marché nocturne de Phu Quoc",
@@ -76,7 +76,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Phu Quoc Airport Welcome",
+            "title": "Phu Quoc airport welcome",
             "title_i18n": {
               "ar": "التقاط الضيوف في المطار",
               "fr": "Récupérer les invités à l'aéroport",
@@ -463,7 +463,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Hon Thom Cable Car",
+            "title": "Hon Thom cable car",
             "title_i18n": {
               "ar": "تلفريك غروب الشمس",
               "fr": "Téléphérique du coucher du soleil",
@@ -532,7 +532,7 @@
       {
         "id": "travel_plan_day_18bacfad-0f7f-49d8-8295-8af767ec3a40",
         "day_number": 4,
-        "title": "Crafts, Bun Quay and Farewell",
+        "title": "Crafts, Bun Quay and farewell",
         "title_i18n": {
           "ar": "دينه كاو - دينه با - قرى الحرف التقليدية - نودلز \"بون كواي\" - نقل المطار",
           "fr": "Dinh Cau – Dinh Ba – Villages artisanaux traditionnels – Nouilles « Bun Quay » – Transfert aéroport",
