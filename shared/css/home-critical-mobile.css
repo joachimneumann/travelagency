@@ -409,6 +409,33 @@ img {
   user-drag: none;
 }
 
+:where(
+  button,
+  [role="button"],
+  [draggable="true"],
+  summary,
+  svg,
+  img,
+  [aria-hidden="true"],
+  .btn,
+  .icon-btn,
+  .nav-toggle,
+  .nav-list a,
+  .backend-section-nav__item,
+  .filter-select-trigger,
+  .hero-destination-menu button,
+  .tour-customize-map__marker,
+  .tour-plan__customize-map-marker,
+  .tour-customize-option__handle,
+  .tour-customize-timeline__handle,
+  .tour-customize-drag-ghost,
+  .is-dragging,
+  [class*="__icon"]
+) {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
 .container {
   width: min(1120px, 92vw);
   margin: 0 auto;
