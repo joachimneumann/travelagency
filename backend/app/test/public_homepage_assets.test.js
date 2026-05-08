@@ -141,6 +141,21 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
   await writeFile(path.join(toursRoot, "tour_alpha", "travel-plan-services", "pickup.png"), Buffer.from(TINY_PNG_BASE64, "base64"));
   await writeFile(path.join(toursRoot, "tour_alpha", "travel-plan-services", "featured.png"), Buffer.from(TINY_PNG_BASE64, "base64"));
   await writeFile(path.join(toursRoot, "tour_alpha", "travel-plan-services", "legacy.png"), Buffer.from(TINY_PNG_BASE64, "base64"));
+  await writeJson(path.join(contentRoot, "translations", "customers", "marketing-tours.de.json"), {
+    items: [
+      { source_text: "Alpha tour", target_text: "Alpha Reise" },
+      { source_text: "Alpha description", target_text: "Alpha Beschreibung" },
+      { source_text: "Arrival day", target_text: "Ankunftstag" },
+      { source_text: "Airport pick-up", target_text: "Flughafenabholung" },
+      { source_text: "Private transfer to the hotel.", target_text: "Privater Transfer zum Hotel." },
+      { source_text: "Driver at arrivals", target_text: "Fahrer bei der Ankunft" },
+      { source_text: "Featured viewpoint", target_text: "Aussichtspunkt" },
+      { source_text: "The selected card image should be first.", target_text: "Das ausgewählte Kartenbild sollte zuerst erscheinen." },
+      { source_text: "Legacy included image", target_text: "Altes ausgewähltes Bild" },
+      { source_text: "The ordered selection should be authoritative.", target_text: "Die sortierte Auswahl sollte maßgeblich sein." },
+      { source_text: "Legacy viewpoint", target_text: "Alter Aussichtspunkt" }
+    ]
+  });
   await writeJson(path.join(contentRoot, "translations", "customers", "marketing-tours.vi.json"), {
     items: [
       { source_text: "Alpha tour", target_text: "Tour Alpha" },

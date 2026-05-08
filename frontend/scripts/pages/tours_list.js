@@ -49,6 +49,8 @@ const els = {
   toursClearFiltersBtn: document.getElementById("toursClearFiltersBtn"),
   toursSearchBtn: document.getElementById("toursSearchBtn"),
   toursCreateBtn: document.getElementById("toursCreateBtn"),
+  toursPublishBtn: document.getElementById("toursPublishBtn"),
+  toursPublishStatus: document.getElementById("toursPublishStatus"),
   toursCountInfo: document.getElementById("toursCountInfo"),
   toursActionStatus: document.getElementById("toursActionStatus"),
   toursMatrixMount: document.getElementById("toursMatrixMount"),
@@ -108,7 +110,8 @@ const state = {
     catalog: normalizeDestinationScopeCatalog({}),
     loading: false,
     saving: false
-  }
+  },
+  publishing: false
 };
 
 function refreshBackendNavElements() {
@@ -135,6 +138,17 @@ function clearError() {
 function setActionStatus(message = "") {
   if (!els.toursActionStatus) return;
   els.toursActionStatus.textContent = message;
+}
+
+function setPublishStatus(message = "") {
+  if (!els.toursPublishStatus) return;
+  els.toursPublishStatus.textContent = message;
+}
+
+function syncPublishButtonState() {
+  if (!(els.toursPublishBtn instanceof HTMLButtonElement)) return;
+  els.toursPublishBtn.hidden = !state.permissions.canEditTours;
+  els.toursPublishBtn.disabled = !state.permissions.canEditTours || state.publishing;
 }
 
 function setToursPageOverlay(isVisible, message = "") {
@@ -241,6 +255,7 @@ async function init() {
   bindControls();
   window.addEventListener("backend-i18n-changed", handleBackendLanguageChanged);
   if (els.toursCreateBtn) els.toursCreateBtn.hidden = !state.permissions.canEditTours;
+  syncPublishButtonState();
 
   if (state.permissions.canReadTours) {
     loadTours();
@@ -267,6 +282,12 @@ function bindControls() {
     els.toursCreateBtn.addEventListener("click", () => {
       if (!state.permissions.canEditTours) return;
       window.location.href = buildTourCreateHref();
+    });
+  }
+
+  if (els.toursPublishBtn) {
+    els.toursPublishBtn.addEventListener("click", () => {
+      void publishToursStaticContent();
     });
   }
 
@@ -438,6 +459,35 @@ async function loadTours() {
   renderTours(state.tours.lastItems);
   renderToursMatrix(payload?.matrix, Number((payload?.matrix?.total_tours ?? pagination.total_items) || 0));
   renderDestinationCatalog();
+}
+
+async function publishToursStaticContent() {
+  if (!state.permissions.canEditTours || state.publishing) return;
+  clearError();
+  state.publishing = true;
+  syncPublishButtonState();
+  setPublishStatus(backendT("backend.tours.status.publishing", "Publishing..."));
+  setToursPageOverlay(true, backendT("backend.tours.status.publishing_overlay", "Publishing static web page content. Please wait."));
+  try {
+    const result = await fetchApi(withBackendApiLang("/api/v1/tours/publish"), {
+      method: "POST"
+    });
+    if (!result) {
+      setPublishStatus(backendT("backend.tours.status.publish_failed", "Publish failed."));
+      return;
+    }
+    if (result?.homepage_assets?.ok === false) {
+      setPublishStatus(backendT("backend.tours.status.publish_failed", "Publish failed."));
+      showError(result.homepage_assets.error || backendT("backend.tours.status.publish_failed", "Publish failed."));
+      return;
+    }
+    setPublishStatus(backendT("backend.tours.status.published", "Published."));
+    await loadTours();
+  } finally {
+    state.publishing = false;
+    syncPublishButtonState();
+    setToursPageOverlay(false);
+  }
 }
 
 function buildToursQueryEntries({ page = 1, pageSize = state.tours.pageSize } = {}) {

@@ -414,6 +414,7 @@ export function createApplicationRoutes({
     execFile: runtime.execFile,
     TEMP_UPLOAD_DIR: runtime.paths.tempUploadDir,
     TOURS_DIR: runtime.paths.toursDir,
+    TRANSLATIONS_SNAPSHOT_DIR: runtime.paths.translationsSnapshotDir,
     BOOKING_IMAGES_DIR: runtime.paths.bookingImagesDir,
     writeFile,
     rm

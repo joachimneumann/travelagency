@@ -169,7 +169,6 @@ const els = {
   status: document.getElementById("tour_formStatus"),
   cancel: document.getElementById("tour_cancel_btn"),
   saveBtn: document.getElementById("tour_save_btn"),
-  publishBtn: document.getElementById("tour_publish_btn"),
   onePagerBtn: document.getElementById("tour_one_pager_btn"),
   onePagerDisabledReason: document.getElementById("tour_one_pager_disabled_reason"),
   onePagerLang: document.getElementById("tour_one_pager_lang"),
@@ -378,17 +377,11 @@ function renderTourDirtyBar() {
     els.dirtyBarSummary.textContent = hasUnsavedEdits
       ? backendT("tour.dirty.save_before_publish", "Save changes before publishing.")
       : (hasUnpublishedChanges
-        ? backendT("tour.dirty.public_homepage_assets", "Press Publish to refresh the static web page.")
+        ? backendT("tour.dirty.public_homepage_assets", "Publish from the tours list to refresh the static web page.")
         : "");
   }
   if (els.saveBtn instanceof HTMLButtonElement) {
     els.saveBtn.disabled = !state.permissions.canEditTours || !hasUnsavedEdits;
-  }
-  if (els.publishBtn instanceof HTMLButtonElement) {
-    els.publishBtn.disabled = !state.permissions.canEditTours || !state.id || hasUnsavedEdits || !hasUnpublishedChanges;
-    els.publishBtn.title = hasUnsavedEdits
-      ? backendT("tour.publish_save_first", "Save changes before publishing.")
-      : "";
   }
   syncOnePagerButtonState();
 }
@@ -1708,7 +1701,6 @@ async function init() {
   }
   renderOnePagerLanguageOptions();
   els.onePagerBtn?.addEventListener("click", openTourOnePagerPdf);
-  els.publishBtn?.addEventListener("click", publishTourStaticContent);
   if (els.logoutLink) {
     const returnTo = `${window.location.origin}/`;
     wireAuthLogoutLink(els.logoutLink, { apiBase, returnTo });
@@ -1928,11 +1920,24 @@ async function loadTour({ preserveTravelPlanCollapsedState = false } = {}) {
   const payload = await fetchApi(withApiLang(request.url));
   if (!payload?.tour) return;
 
-  state.tour = payload.tour;
   state.options.destinations = Array.isArray(payload.options?.destinations) ? payload.options.destinations : [];
   state.options.styles = Array.isArray(payload.options?.styles) ? payload.options.styles : [];
+  applyTourEditorTour(payload.tour, { preserveTravelPlanCollapsedState });
+  markTourSnapshotClean();
+  if (normalizeText(qs.get("needs_publish")) === "1") {
+    state.publicHomepageAssetsDirty = true;
+    updateTourDirtyState();
+    const cleanUrl = withBackendLang("/marketing_tour.html", { id: state.id });
+    window.history.replaceState(null, "", cleanUrl);
+  }
+  syncOnePagerButtonState();
+}
 
-  const tour = state.tour;
+function applyTourEditorTour(tour, { preserveTravelPlanCollapsedState = false } = {}) {
+  if (!tour) return;
+  state.tour = tour;
+  state.id = String(tour.id || "");
+  state.is_create_mode = !state.id;
   state.localizedContent.title_i18n = normalizeLocalizedTextMap(
     tour.title_i18n || { en: tour.title || "" }
   );
@@ -1940,9 +1945,7 @@ async function loadTour({ preserveTravelPlanCollapsedState = false } = {}) {
     tour.short_description_i18n,
     tour.short_description
   );
-  const destinations = tour_destinations(tour);
-  const styles = tour_styles(tour);
-  updateHeader(tour, destinations, styles);
+  updateHeader(tour, tour_destinations(tour), tour_styles(tour));
 
   setInput("tour_priority", toInputNumber(tour.priority));
   setInput("tour_seasonality_start_month", tour.seasonality_start_month || "");
@@ -1958,14 +1961,8 @@ async function loadTour({ preserveTravelPlanCollapsedState = false } = {}) {
   renderDestinationChoices(tour_destination_codes(tour));
   renderStyleChoices(tour_style_codes(tour));
   applyTourPermissions();
-  markTourSnapshotClean();
-  if (normalizeText(qs.get("needs_publish")) === "1") {
-    state.publicHomepageAssetsDirty = true;
-    updateTourDirtyState();
-    const cleanUrl = withBackendLang("/marketing_tour.html", { id: state.id });
-    window.history.replaceState(null, "", cleanUrl);
-  }
   syncOnePagerButtonState();
+  syncPublishedOnWebpageControl();
 }
 
 async function initializeNewTourForm() {
@@ -2239,24 +2236,8 @@ async function submitForm(event) {
     return;
   }
 
-  let keepPageOverlayVisible = false;
   setTourPageOverlay(true, backendT("tour.status.saving_overlay", "Saving changes. Please wait."));
   try {
-    const duplicate = await findDuplicateTourTitle(title_i18n, state.id);
-    if (!state.authenticated) return;
-    if (duplicate) {
-      const duplicateMessage = backendT(
-        "tour.error.duplicate_title",
-        "A tour titled \"{title}\" already exists (ID: {id}). Please use a different title.",
-        { title: duplicate.title || payload.title, id: duplicate.id }
-      );
-      setTitleError(duplicateMessage);
-      showError(duplicateMessage);
-      setStatus(backendT("tour.status.duplicate", "Save blocked due to duplicate title."));
-      focusPrimaryTitleField();
-      return;
-    }
-
     setStatus(backendT("tour.status.saving", "Saving..."));
     const is_create = state.is_create_mode;
     const request = is_create
@@ -2276,16 +2257,8 @@ async function submitForm(event) {
         ? backendT("tour.status.created", "Tour created.")
         : backendT("tour.status.updated", "Tour updated."));
     state.tour = result.tour;
-    state.localizedContent.title_i18n = normalizeLocalizedTextMap(
-      result.tour.title_i18n || { en: result.tour.title || "" }
-    );
-    state.localizedContent.short_description_i18n = normalizeTourShortDescriptionMap(
-      result.tour.short_description_i18n,
-      result.tour.short_description
-    );
     state.id = String(result.tour.id || "");
     state.is_create_mode = false;
-    updateHeader(state.tour, tour_destinations(state.tour), tour_styles(state.tour));
 
     if (pendingReelVideo) {
       setStatus(backendT("tour.status.uploading_video", "Uploading reel video..."));
@@ -2326,67 +2299,13 @@ async function submitForm(event) {
 
     setStatus(finalSaveStatus);
     if (is_create) {
-      state.allowPageUnload = true;
-      keepPageOverlayVisible = true;
-      window.location.href = withBackendLang("/marketing_tour.html", {
-        id: state.id,
-        needs_publish: publicHomepageAssetsStillDirty ? "1" : ""
-      });
-      return;
+      window.history.replaceState(null, "", withBackendLang("/marketing_tour.html", { id: state.id }));
     }
-    await loadTour({ preserveTravelPlanCollapsedState: true });
-    if (publicHomepageAssetsStillDirty) {
-      state.publicHomepageAssetsDirty = true;
-      updateTourDirtyState();
-    }
+    applyTourEditorTour(state.tour, { preserveTravelPlanCollapsedState: true });
+    state.publicHomepageAssetsDirty = publicHomepageAssetsStillDirty;
+    markTourSnapshotClean();
+    updateTourDirtyState();
     notifyBackendTranslationsStatus();
-  } finally {
-    if (!keepPageOverlayVisible) {
-      setTourPageOverlay(false);
-    }
-  }
-}
-
-async function publishTourStaticContent() {
-  if (!state.permissions.canEditTours || !state.id) return;
-  if (hasUnsavedTourEditorChanges()) {
-    setStatus(backendT("tour.publish_save_first", "Save changes before publishing."));
-    updateTourDirtyState();
-    return;
-  }
-
-  setTourPageOverlay(true, backendT("tour.status.publishing_overlay", "Publishing static web page content. Please wait."));
-  setStatus(backendT("tour.status.publishing", "Publishing..."));
-  try {
-    const result = await fetchApi(withApiLang(`/api/v1/tours/${encodeURIComponent(state.id)}/publish`), {
-      method: "POST"
-    });
-    if (!result) return;
-    if (homepageAssetSyncFailed(result)) {
-      state.publicHomepageAssetsDirty = true;
-      updateTourDirtyState();
-      setStatus(homepageAssetSyncWarningMessage());
-      return;
-    }
-    if (result.tour) {
-      state.tour = result.tour;
-      state.localizedContent.title_i18n = normalizeLocalizedTextMap(
-        result.tour.title_i18n || { en: result.tour.title || "" }
-      );
-      state.localizedContent.short_description_i18n = normalizeTourShortDescriptionMap(
-        result.tour.short_description_i18n,
-        result.tour.short_description
-      );
-      updateHeader(state.tour, tour_destinations(state.tour), tour_styles(state.tour));
-      tourTravelPlanAdapter?.applyTour(state.tour, { preserveCollapsedState: true });
-      renderOnePagerImageSelector();
-      renderTourCardImageSelector();
-      syncPublishedOnWebpageControl();
-    }
-    state.publicHomepageAssetsDirty = false;
-    markTourSnapshotClean({ clearPublicHomepageAssetsDirty: true });
-    updateTourDirtyState();
-    setStatus(backendT("tour.status.published", "Published."));
   } finally {
     setTourPageOverlay(false);
   }
@@ -2413,6 +2332,15 @@ const fetchApi = createApiFetcher({
       return;
     }
     const staleTourUpdate = response?.status === 409 && payload?.code === "TOUR_REVISION_MISMATCH";
+    const duplicateTourTitle = response?.status === 409 && payload?.code === "TOUR_DUPLICATE_TITLE";
+    if (duplicateTourTitle) {
+      const duplicateMessage = duplicateTourTitleMessage(payload);
+      setTitleError(duplicateMessage);
+      showError(duplicateMessage);
+      setStatus(backendT("tour.status.duplicate", "Save blocked due to duplicate title."));
+      focusPrimaryTitleField();
+      return;
+    }
     const visibleMessage = staleTourUpdate ? staleTourUpdateMessage() : message;
     showError(visibleMessage);
     if (staleTourUpdate) setStatus(visibleMessage);
@@ -2502,70 +2430,15 @@ function applyTourPermissions() {
   setStatus(backendT("tour.status.read_only", "Read-only access."));
 }
 
-function collectDuplicateTitleCandidates(titleMap) {
-  const normalizedMap = normalizeLocalizedTextMap(titleMap);
-  const orderedLangs = [currentTourEditingLang(), "vi", "en", ...Object.keys(normalizedMap)];
-  const seen = new Set();
-  return orderedLangs
-    .map((lang) => normalizeTourTextLang(lang))
-    .filter((lang) => {
-      if (!lang || seen.has(lang)) return false;
-      seen.add(lang);
-      return true;
-    })
-    .map((lang) => ({ lang, title: String(normalizedMap[lang] || "").trim() }))
-    .filter((entry) => Boolean(entry.title));
-}
-
-async function findDuplicateTourTitle(titleMap, currentTourId) {
-  const candidates = collectDuplicateTitleCandidates(titleMap);
-  if (!candidates.length) return null;
-
-  for (const candidate of candidates) {
-    if (!state.authenticated) return null;
-    const duplicate = await findDuplicateTourTitleForLang(candidate.title, currentTourId, candidate.lang);
-    if (duplicate) return duplicate;
-  }
-
-  return null;
-}
-
-async function findDuplicateTourTitleForLang(title, currentTourId, lang) {
-  const normalizedTitle = normalizeCompareText(title);
-  if (!normalizedTitle) return null;
-
-  let page = 1;
-  const pageSize = 100;
-  const maxPages = 50;
-
-  while (page <= maxPages) {
-    if (!state.authenticated) return null;
-    const query = new URLSearchParams({
-      search: title,
-      page: String(page),
-      page_size: String(pageSize)
-    });
-
-    const request = toursRequest({ baseURL: apiOrigin, query: Object.fromEntries(query.entries()) });
-    const requestUrl = new URL(request.url, window.location.origin);
-    if (lang) requestUrl.searchParams.set("lang", lang);
-    const payload = await fetchApi(`${requestUrl.pathname}${requestUrl.search}`);
-    if (!payload) return null;
-
-    const items = Array.isArray(payload.items) ? payload.items : [];
-    const duplicate = items.find((tour) => {
-      const otherId = String(tour?.id || "").trim();
-      if (!otherId || otherId === currentTourId) return false;
-      return normalizeCompareText(tour?.title) === normalizedTitle;
-    });
-    if (duplicate) return duplicate;
-
-    const totalPages = Number(payload.pagination?.total_pages || 1);
-    if (!Number.isFinite(totalPages) || page >= totalPages) break;
-    page += 1;
-  }
-
-  return null;
+function duplicateTourTitleMessage(payload) {
+  return backendT(
+    "tour.error.duplicate_title",
+    "A tour titled \"{title}\" already exists (ID: {id}). Please use a different title.",
+    {
+      title: normalizeText(payload?.duplicate_title) || normalizeText(payload?.title) || backendT("tour.title_fallback", "this title"),
+      id: normalizeText(payload?.duplicate_tour_id) || "-"
+    }
+  );
 }
 
 function showError(message) {
@@ -2731,11 +2604,4 @@ function slugify(value) {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
     .slice(0, 80);
-}
-
-function normalizeCompareText(value) {
-  return String(value || "")
-    .trim()
-    .replace(/\s+/g, " ")
-    .toLowerCase();
 }

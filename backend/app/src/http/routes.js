@@ -107,6 +107,7 @@ const OPERATIONAL_ROUTE_DEFINITIONS = Object.freeze([
   { method: "GET", pattern: /^\/public\/v1\/tours\/([^/]+)\/one-pager\.pdf$/, handlerKey: "handleGetPublicTourOnePagerPdf" },
   { method: "POST", pattern: /^\/public\/v1\/tours\/([^/]+)\/one-pager-preview$/, handlerKey: "handlePostPublicTourOnePagerPreview" },
   { method: "GET", pattern: /^\/public\/v1\/tour-preview\/([^/]+)\.pdf$/, handlerKey: "handleGetPublicTourOnePagerPreviewPdf" },
+  { method: "POST", pattern: /^\/api\/v1\/tours\/publish$/, handlerKey: "handlePublishTours" },
   { method: "POST", pattern: /^\/api\/v1\/tours\/([^/]+)\/publish$/, handlerKey: "handlePublishTour" },
   { method: "GET", pattern: /^\/api\/v1\/tours\/([^/]+)\/video$/, handlerKey: "handleGetTourVideo" },
   { method: "POST", pattern: /^\/api\/v1\/tours\/([^/]+)\/video$/, handlerKey: "handleUploadTourVideo" },

@@ -5838,6 +5838,29 @@ test("tour editor can manage tours while staff cannot access tour endpoints", as
   const createdUpdatedAt = createResult.body.tour.updated_at;
   assert.ok(createdUpdatedAt);
 
+  const duplicateTitleResult = await requestJson(
+    endpointPath("tour_create"),
+    apiHeaders("atp_tour_editor", "tour-editor", "kc-tour-editor"),
+    {
+      method: "POST",
+      body: {
+        title: " Tour editor   access test ",
+        styles: ["culture"],
+        short_description: "Duplicate tour",
+        priority: 43,
+        travel_plan: {
+          destination_scope: [
+            { destination: "VN", areas: [] }
+          ],
+          days: []
+        }
+      }
+    }
+  );
+  assert.equal(duplicateTitleResult.status, 409);
+  assert.equal(duplicateTitleResult.body.code, "TOUR_DUPLICATE_TITLE");
+  assert.equal(duplicateTitleResult.body.duplicate_tour_id, tourId);
+
   const editorList = await requestJson(
     `${endpointPath("tours")}?page=1&page_size=20&sort=updated_at_desc`,
     apiHeaders("atp_tour_editor", "tour-editor", "kc-tour-editor")

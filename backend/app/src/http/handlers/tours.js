@@ -22,6 +22,10 @@ import {
   filterDestinationScopeByTourDestinations,
   validateDestinationScopeAgainstCatalog
 } from "../../domain/destination_scope.js";
+import {
+  applyMarketingTourTranslations,
+  loadPublishedMarketingTourTranslations
+} from "../../domain/marketing_tour_translations.js";
 
 export function createTourHandlers(deps) {
   const {
@@ -76,6 +80,7 @@ export function createTourHandlers(deps) {
     execFile,
     TEMP_UPLOAD_DIR,
     TOURS_DIR,
+    TRANSLATIONS_SNAPSHOT_DIR,
     BOOKING_IMAGES_DIR,
     writeFile,
     rm
@@ -91,6 +96,7 @@ export function createTourHandlers(deps) {
   const TOUR_STALE_UPDATE_MESSAGE = "This tour was updated by someone else. Reload before saving.";
   const CUSTOM_ONE_PAGER_PREVIEW_TTL_MS = 20 * 60 * 1000;
   const CUSTOM_ONE_PAGER_PREVIEW_MAX_DAYS = 20;
+  const translationsSnapshotDir = normalizeText(TRANSLATIONS_SNAPSHOT_DIR) || path.join(repoRoot, "content", "translations");
   const customOnePagerPreviewTokens = new Map();
   let publicHomepageAssetGenerationQueue = Promise.resolve();
 
@@ -146,6 +152,35 @@ export function createTourHandlers(deps) {
 
   function requestLang(reqUrl) {
     return normalizeTourLang(new URL(reqUrl, "http://localhost").searchParams.get("lang"));
+  }
+
+  async function loadMarketingTourContentTranslationMap(lang) {
+    const normalizedLang = normalizeTourLang(lang);
+    if (!normalizedLang || normalizedLang === "en") return new Map();
+    try {
+      const publishedByLang = await loadPublishedMarketingTourTranslations(translationsSnapshotDir, [normalizedLang]);
+      return publishedByLang.get(normalizedLang) || new Map();
+    } catch (error) {
+      console.warn("[backend-tour-translation] Could not read published marketing tour translations.", {
+        lang: normalizedLang,
+        error: String(error?.message || error)
+      });
+    }
+    return new Map();
+  }
+
+  async function localizeMarketingToursForRead(tours, lang) {
+    const translations = await loadMarketingTourContentTranslationMap(lang);
+    return (Array.isArray(tours) ? tours : []).map((tour) => applyMarketingTourTranslations(tour, lang, translations));
+  }
+
+  async function localizeMarketingTourForRead(tour, lang) {
+    const [localized] = await localizeMarketingToursForRead([tour], lang);
+    return localized || tour;
+  }
+
+  async function buildLocalizedTourEditorResponse(tour, lang) {
+    return buildTourEditorResponse(await localizeMarketingTourForRead(tour, lang), lang);
   }
 
   function cleanupCustomOnePagerPreviewTokens() {
@@ -352,6 +387,12 @@ export function createTourHandlers(deps) {
     }
   }
 
+  async function syncMarketingTourTranslationsForPublish(tours) {
+    for (const tour of Array.isArray(tours) ? tours : []) {
+      await syncTourManualTranslationsToMemory(tour);
+    }
+  }
+
   function preferredEnglishImportText(mapValue, plainValue) {
     const source = mapValue && typeof mapValue === "object" && !Array.isArray(mapValue) ? mapValue : {};
     const englishText = normalizeText(source.en);
@@ -381,108 +422,9 @@ export function createTourHandlers(deps) {
     return `${title}-one-pager.pdf`;
   }
 
-  function localizedObjectText(value, lang) {
-    return value && typeof value === "object" && !Array.isArray(value)
-      ? normalizeText(value[normalizeTourLang(lang)])
-      : "";
-  }
-
   function cloneJson(value) {
     if (value === undefined || value === null) return value;
     return JSON.parse(JSON.stringify(value));
-  }
-
-  function fallbackSourceText(value) {
-    return value && typeof value === "object" && !Array.isArray(value)
-      ? normalizeText(value.en)
-      : normalizeText(value);
-  }
-
-  function sourceTextFromLocalizedValue(value, fallback = "") {
-    const fallbackText = fallbackSourceText(fallback);
-    if (value && typeof value === "object" && !Array.isArray(value)) {
-      return normalizeText(value.en) || fallbackText;
-    }
-    return normalizeText(value) || fallbackText;
-  }
-
-  function collectOnePagerMemoryLocalizedPair(actions, entries, holder, plainField, i18nField, lang, key) {
-    if (!holder || typeof holder !== "object" || Array.isArray(holder)) return;
-    const sourceText = sourceTextFromLocalizedValue(holder[i18nField], holder[plainField]);
-    if (!sourceText) return;
-    entries[key] = sourceText;
-    actions.push({ kind: "pair", holder, i18nField, key });
-  }
-
-  function collectOnePagerTravelPlanImageMemory(actions, entries, image, lang, keyPrefix) {
-    if (!image || typeof image !== "object" || Array.isArray(image)) return;
-    collectOnePagerMemoryLocalizedPair(actions, entries, image, "caption", "caption_i18n", lang, `${keyPrefix}.caption`);
-    collectOnePagerMemoryLocalizedPair(actions, entries, image, "alt_text", "alt_text_i18n", lang, `${keyPrefix}.alt_text`);
-  }
-
-  function collectOnePagerTravelPlanMemory(actions, entries, travelPlan, lang) {
-    if (!travelPlan || typeof travelPlan !== "object" || Array.isArray(travelPlan)) return;
-    for (const [dayIndex, day] of (Array.isArray(travelPlan.days) ? travelPlan.days : []).entries()) {
-      if (!day || typeof day !== "object" || Array.isArray(day)) continue;
-      const dayKey = `travel_plan.day.${dayIndex + 1}`;
-      collectOnePagerMemoryLocalizedPair(actions, entries, day, "title", "title_i18n", lang, `${dayKey}.title`);
-      collectOnePagerMemoryLocalizedPair(actions, entries, day, "overnight_location", "overnight_location_i18n", lang, `${dayKey}.overnight_location`);
-      collectOnePagerMemoryLocalizedPair(actions, entries, day, "notes", "notes_i18n", lang, `${dayKey}.notes`);
-
-      for (const [serviceIndex, service] of (Array.isArray(day.services) ? day.services : []).entries()) {
-        if (!service || typeof service !== "object" || Array.isArray(service)) continue;
-        const serviceKey = `${dayKey}.service.${serviceIndex + 1}`;
-        collectOnePagerMemoryLocalizedPair(actions, entries, service, "time_label", "time_label_i18n", lang, `${serviceKey}.time_label`);
-        collectOnePagerMemoryLocalizedPair(actions, entries, service, "title", "title_i18n", lang, `${serviceKey}.title`);
-        collectOnePagerMemoryLocalizedPair(actions, entries, service, "details", "details_i18n", lang, `${serviceKey}.details`);
-        collectOnePagerMemoryLocalizedPair(actions, entries, service, "location", "location_i18n", lang, `${serviceKey}.location`);
-        collectOnePagerMemoryLocalizedPair(actions, entries, service, "image_subtitle", "image_subtitle_i18n", lang, `${serviceKey}.image_subtitle`);
-        collectOnePagerTravelPlanImageMemory(actions, entries, service.image, lang, `${serviceKey}.image`);
-        for (const [imageIndex, image] of (Array.isArray(service.images) ? service.images : []).entries()) {
-          collectOnePagerTravelPlanImageMemory(actions, entries, image, lang, `${serviceKey}.image.${imageIndex + 1}`);
-        }
-      }
-    }
-  }
-
-  function applyResolvedOnePagerMemoryActions(actions, memoryEntries, lang) {
-    const normalizedLang = normalizeTourLang(lang);
-    let changed = false;
-    for (const action of actions) {
-      const targetText = normalizeText(memoryEntries?.[action.key]);
-      if (!targetText) continue;
-      if (action.kind === "pair") {
-        const i18nValue = action.holder[action.i18nField];
-        action.holder[action.i18nField] = {
-          ...(i18nValue && typeof i18nValue === "object" && !Array.isArray(i18nValue)
-            ? i18nValue
-            : {}),
-          [normalizedLang]: targetText
-        };
-        changed = true;
-      }
-    }
-    return changed;
-  }
-
-  async function applyMarketingTourMemoryToOnePagerTour(tour, lang) {
-    const normalizedLang = normalizeTourLang(lang);
-    if (normalizedLang === "en" || typeof translationMemoryStore?.resolveEntries !== "function") return tour;
-    const next = cloneJson(tour);
-    const entries = {};
-    const actions = [];
-    collectOnePagerMemoryLocalizedPair(actions, entries, next, "title", "title_i18n", normalizedLang, "tour.title");
-    collectOnePagerMemoryLocalizedPair(actions, entries, next, "short_description", "short_description_i18n", normalizedLang, "tour.short_description");
-    collectOnePagerTravelPlanMemory(actions, entries, next.travel_plan, normalizedLang);
-    if (!Object.keys(entries).length) return tour;
-    try {
-      const memoryResult = await translationMemoryStore.resolveEntries(entries, normalizedLang);
-      return applyResolvedOnePagerMemoryActions(actions, memoryResult?.entries || {}, normalizedLang)
-        ? next
-        : tour;
-    } catch {
-      return tour;
-    }
   }
 
   function assertExpectedTourUpdatedAt(payload, currentTour, res) {
@@ -497,6 +439,56 @@ export function createTourHandlers(deps) {
       current_updated_at: currentUpdatedAt || null
     });
     return false;
+  }
+
+  function normalizeDuplicateTitleKey(value) {
+    return normalizeText(value).replace(/\s+/g, " ").toLowerCase();
+  }
+
+  function addDuplicateTitleCandidate(candidates, value) {
+    if (value && typeof value === "object" && !Array.isArray(value)) {
+      Object.values(value).forEach((entry) => addDuplicateTitleCandidate(candidates, entry));
+      return;
+    }
+    const title = normalizeText(value);
+    const key = normalizeDuplicateTitleKey(title);
+    if (key && !candidates.has(key)) candidates.set(key, title);
+  }
+
+  function collectTourTitleCandidates(tour) {
+    const candidates = new Map();
+    addDuplicateTitleCandidate(candidates, tour?.title);
+    addDuplicateTitleCandidate(candidates, tour?.title_i18n);
+    return candidates;
+  }
+
+  function findDuplicateTourTitle(tours, candidateTour, currentTourId = "") {
+    const currentId = normalizeText(currentTourId);
+    const candidates = collectTourTitleCandidates(candidateTour);
+    if (!candidates.size) return null;
+    for (const tour of tours) {
+      const tourId = normalizeText(tour?.id);
+      if (!tourId || tourId === currentId) continue;
+      const existingCandidates = collectTourTitleCandidates(tour);
+      for (const [key, candidateTitle] of candidates.entries()) {
+        if (existingCandidates.has(key)) {
+          return {
+            id: tourId,
+            title: existingCandidates.get(key) || candidateTitle
+          };
+        }
+      }
+    }
+    return null;
+  }
+
+  function sendDuplicateTourTitle(res, duplicate) {
+    sendJson(res, 409, {
+      error: `A tour titled "${duplicate.title}" already exists.`,
+      code: "TOUR_DUPLICATE_TITLE",
+      duplicate_tour_id: duplicate.id,
+      duplicate_title: duplicate.title
+    });
   }
 
   function buildTourPayload(payload, { existing = null, isCreate = false, lang = "en" } = {}) {
@@ -928,9 +920,9 @@ export function createTourHandlers(deps) {
   async function handlePublicListTours(req, res) {
     const lang = requestLang(req.url);
     const publishedDestinationCodes = publishedWebpageDestinationCodes(await readCountryPracticalInfo());
-    const tours = (await readTours())
+    const tours = await localizeMarketingToursForRead((await readTours())
       .map((tour) => normalizeTourForPublicWebpage(tour, publishedDestinationCodes))
-      .filter(Boolean);
+      .filter(Boolean), lang);
     const requestUrl = new URL(req.url, "http://localhost");
     const destination = normalizeTourDestinationCode(requestUrl.searchParams.get("destination"));
     const style = normalizeTourStyleCode(requestUrl.searchParams.get("style"));
@@ -966,7 +958,7 @@ export function createTourHandlers(deps) {
       return;
     }
 
-    const localizedTour = await applyMarketingTourMemoryToOnePagerTour(tour, lang);
+    const localizedTour = await localizeMarketingTourForRead(tour, lang);
     const readModel = normalizeTourForRead(localizedTour, { lang });
     const travelPlan = normalizeMarketingTourTravelPlan(localizedTour.travel_plan, {
       sourceLang: "en",
@@ -1086,9 +1078,10 @@ export function createTourHandlers(deps) {
         if (!publicSourceTour) {
           return { ok: false, status: 400, error: "Selected day source is not available" };
         }
-        const localizedTravelPlan = publicTourLocalizedTravelPlan(publicSourceTour, lang);
+        const localizedSourceTour = await localizeMarketingTourForRead(publicSourceTour, lang);
+        const localizedTravelPlan = publicTourLocalizedTravelPlan(localizedSourceTour, lang);
         daySourcesByTourId.set(sourceTourId, {
-          tour: publicSourceTour,
+          tour: localizedSourceTour,
           travelPlan: localizedTravelPlan,
           daysById: new Map((Array.isArray(localizedTravelPlan?.days) ? localizedTravelPlan.days : [])
             .map((day) => [normalizeText(day?.id), day])
@@ -1111,7 +1104,7 @@ export function createTourHandlers(deps) {
       return { ok: false, status: 400, error: "Select between 1 and 20 days" };
     }
 
-    const localizedBaseTour = await applyMarketingTourMemoryToOnePagerTour(baseTour, lang);
+    const localizedBaseTour = await localizeMarketingTourForRead(baseTour, lang);
     const readModel = normalizeTourForRead(localizedBaseTour, { lang });
     const baseTravelPlan = publicTourLocalizedTravelPlan(localizedBaseTour, lang);
     const destinationScope = mergePreviewDestinationScopes([
@@ -1227,7 +1220,7 @@ export function createTourHandlers(deps) {
       return;
     }
     const lang = requestLang(req.url);
-    const tours = (await readTours()).map((tour) => normalizeTourForStorage(tour));
+    const tours = await localizeMarketingToursForRead((await readTours()).map((tour) => normalizeTourForStorage(tour)), lang);
     const requestUrl = new URL(req.url, "http://localhost");
     const { items: filtered, sort, filters } = filterAndSortTours(tours, requestUrl.searchParams, lang);
     const paged = paginate(filtered, requestUrl.searchParams);
@@ -1266,12 +1259,14 @@ export function createTourHandlers(deps) {
     const offset = clamp(safeInt(requestUrl.searchParams.get("offset")) || 0, 0, 5000);
     const rows = [];
 
-    for (const tour of (await readTours()).map((item) => normalizeTourForStorage(item))) {
+    for (const tour of await localizeMarketingToursForRead((await readTours()).map((item) => normalizeTourForStorage(item)), lang)) {
       if (excludeTourId && tour.id === excludeTourId) continue;
       const readModel = normalizeTourForRead(tour, { lang });
       const travelPlan = normalizeMarketingTourTravelPlan(tour.travel_plan, {
+        sourceLang: "en",
         contentLang: lang,
         flatLang: lang,
+        flatMode: "localized",
         strictReferences: false
       });
       for (const day of Array.isArray(travelPlan?.days) ? travelPlan.days : []) {
@@ -1317,12 +1312,14 @@ export function createTourHandlers(deps) {
     const offset = clamp(safeInt(requestUrl.searchParams.get("offset")) || 0, 0, 5000);
     const rows = [];
 
-    for (const tour of (await readTours()).map((item) => normalizeTourForStorage(item))) {
+    for (const tour of await localizeMarketingToursForRead((await readTours()).map((item) => normalizeTourForStorage(item)), lang)) {
       if (excludeTourId && tour.id === excludeTourId) continue;
       const readModel = normalizeTourForRead(tour, { lang });
       const travelPlan = normalizeMarketingTourTravelPlan(tour.travel_plan, {
+        sourceLang: "en",
         contentLang: lang,
         flatLang: lang,
+        flatMode: "localized",
         strictReferences: false
       });
       for (const day of Array.isArray(travelPlan?.days) ? travelPlan.days : []) {
@@ -1362,7 +1359,7 @@ export function createTourHandlers(deps) {
       return;
     }
     const lang = requestLang(req.url);
-    const tours = (await readTours()).map((tour) => normalizeTourForStorage(tour));
+    const tours = await localizeMarketingToursForRead((await readTours()).map((tour) => normalizeTourForStorage(tour)), lang);
     const tour = tours.find((item) => item.id === tourId);
     if (!tour) {
       sendJson(res, 404, { error: "Tour not found" });
@@ -1370,7 +1367,7 @@ export function createTourHandlers(deps) {
     }
     const options = collectTourOptions(tours, { lang, includeAllStyleCatalogEntries: true });
     sendJson(res, 200, {
-      tour: buildTourEditorResponse(tour, lang),
+      tour: await buildLocalizedTourEditorResponse(tour, lang),
       options: {
         destinations: options.destinations,
         styles: options.styles
@@ -1559,10 +1556,16 @@ export function createTourHandlers(deps) {
     }
     if (!(await validateTourDestinationScope(tour.travel_plan, res))) return;
 
+    const existingTours = (await readTours()).map((item) => normalizeTourForStorage(item));
+    const duplicate = findDuplicateTourTitle(existingTours, tour, tour.id);
+    if (duplicate) {
+      sendDuplicateTourTitle(res, duplicate);
+      return;
+    }
+
     await persistTour(tour);
-    await syncTourManualTranslationsToMemory(tour);
     sendJson(res, 201, {
-      tour: buildTourEditorResponse(tour, lang),
+      tour: await buildLocalizedTourEditorResponse(tour, lang),
       homepage_assets: deferredPublicHomepageAssets("tour_create", { tour_id: tour.id })
     });
   }
@@ -1607,11 +1610,16 @@ export function createTourHandlers(deps) {
     }
     if (!(await validateTourDestinationScope(updated.travel_plan, res))) return;
 
+    const duplicate = findDuplicateTourTitle(tours, updated, updated.id);
+    if (duplicate) {
+      sendDuplicateTourTitle(res, duplicate);
+      return;
+    }
+
     tours[index] = updated;
     await persistTour(updated);
-    await syncTourManualTranslationsToMemory(updated);
     sendJson(res, 200, {
-      tour: buildTourEditorResponse(updated, lang),
+      tour: await buildLocalizedTourEditorResponse(updated, lang),
       homepage_assets: deferredPublicHomepageAssets("tour_patch", { tour_id: updated.id })
     });
   }
@@ -1655,10 +1663,25 @@ export function createTourHandlers(deps) {
     });
     tours[index] = updated;
     await persistTour(updated);
-    await syncTourManualTranslationsToMemory(updated);
     sendJson(res, 200, {
-      tour: buildTourEditorResponse(updated, lang),
+      tour: await buildLocalizedTourEditorResponse(updated, lang),
       homepage_assets: deferredPublicHomepageAssets("tour_travel_plan_patch", { tour_id: updated.id })
+    });
+  }
+
+  async function handlePublishTours(req, res) {
+    const principal = getPrincipal(req);
+    if (!canEditTours(principal)) {
+      sendJson(res, 403, { error: "Forbidden" });
+      return;
+    }
+
+    const tours = (await readTours()).map((tour) => normalizeTourForStorage(tour));
+    await syncMarketingTourTranslationsForPublish(tours);
+    const homepageAssets = await regeneratePublicHomepageAssets("tours_publish", { tour_count: tours.length });
+    sendJson(res, 200, {
+      published: homepageAssets?.ok !== false,
+      homepage_assets: homepageAssets
     });
   }
 
@@ -1677,9 +1700,10 @@ export function createTourHandlers(deps) {
       return;
     }
 
+    await syncMarketingTourTranslationsForPublish(tours);
     const homepageAssets = await regeneratePublicHomepageAssets("tour_publish", { tour_id: tour.id });
     sendJson(res, 200, {
-      tour: buildTourEditorResponse(tour, lang),
+      tour: await buildLocalizedTourEditorResponse(tour, lang),
       homepage_assets: homepageAssets
     });
   }
@@ -1769,7 +1793,7 @@ export function createTourHandlers(deps) {
     tours[targetIndex] = updated;
     await persistTour(updated);
     sendJson(res, 200, {
-      tour: buildTourEditorResponse(updated, lang),
+      tour: await buildLocalizedTourEditorResponse(updated, lang),
       homepage_assets: deferredPublicHomepageAssets("tour_travel_plan_day_import", { tour_id: updated.id })
     });
   }
@@ -1886,7 +1910,7 @@ export function createTourHandlers(deps) {
     tours[targetIndex] = updated;
     await persistTour(updated);
     sendJson(res, 200, {
-      tour: buildTourEditorResponse(updated, lang),
+      tour: await buildLocalizedTourEditorResponse(updated, lang),
       homepage_assets: deferredPublicHomepageAssets("tour_travel_plan_service_import", { tour_id: updated.id })
     });
   }
@@ -2141,7 +2165,7 @@ export function createTourHandlers(deps) {
     tours[index] = updated;
     await persistTour(updated);
     sendJson(res, 200, {
-      tour: buildTourEditorResponse(updated, lang),
+      tour: await buildLocalizedTourEditorResponse(updated, lang),
       homepage_assets: deferredPublicHomepageAssets("tour_travel_plan_service_image_upload", { tour_id: updated.id })
     });
   }
@@ -2206,7 +2230,7 @@ export function createTourHandlers(deps) {
       await rm(imagePath, { force: true }).catch(() => {});
     }
     sendJson(res, 200, {
-      tour: buildTourEditorResponse(updated, lang),
+      tour: await buildLocalizedTourEditorResponse(updated, lang),
       homepage_assets: deferredPublicHomepageAssets("tour_travel_plan_service_image_delete", { tour_id: updated.id })
     });
   }
@@ -2282,7 +2306,7 @@ export function createTourHandlers(deps) {
     await persistTour(updated);
 
     sendJson(res, 200, {
-      tour: buildTourEditorResponse(updated, lang),
+      tour: await buildLocalizedTourEditorResponse(updated, lang),
       homepage_assets: deferredPublicHomepageAssets("tour_video_upload", { tour_id: updated.id })
     });
   }
@@ -2320,7 +2344,7 @@ export function createTourHandlers(deps) {
     await persistTour(updated);
 
     sendJson(res, 200, {
-      tour: buildTourEditorResponse(updated, lang),
+      tour: await buildLocalizedTourEditorResponse(updated, lang),
       homepage_assets: deferredPublicHomepageAssets("tour_video_delete", { tour_id: updated.id })
     });
   }
@@ -2332,10 +2356,11 @@ export function createTourHandlers(deps) {
     handleGetPublicTourOnePagerPreviewPdf,
     handleListTours,
     handleSearchTourTravelPlanDays,
-    handleSearchTourTravelPlanServices,
-    handleGetTour,
-    handleGetTourOnePagerPdf,
-    handlePublishTour,
+	    handleSearchTourTravelPlanServices,
+	    handleGetTour,
+	    handleGetTourOnePagerPdf,
+	    handlePublishTours,
+	    handlePublishTour,
     handleTranslateTourFields,
     handleCreateTour,
     handlePatchTour,

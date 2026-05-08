@@ -326,24 +326,10 @@ async function loadPublishedMarketingTourTranslations(languages) {
   return mapsByLang;
 }
 
-function localizedObjectText(value, lang) {
-  return value && typeof value === "object" && !Array.isArray(value)
-    ? normalizeText(value[normalizeLanguageCode(lang)])
-    : "";
-}
-
-function fallbackSourceText(value) {
+function sourceTextFromPlainValue(value) {
   return value && typeof value === "object" && !Array.isArray(value)
     ? normalizeText(value.en)
     : normalizeText(value);
-}
-
-function sourceTextFromLocalizedValue(value, fallback = "") {
-  const fallbackText = fallbackSourceText(fallback);
-  if (value && typeof value === "object" && !Array.isArray(value)) {
-    return normalizeText(value.en) || fallbackText;
-  }
-  return normalizeText(value) || fallbackText;
 }
 
 function publishedTranslationForSource(translations, sourceText) {
@@ -357,40 +343,49 @@ function cloneJson(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
-function applyPublishedTranslationToLocalizedMap(holder, fieldName, lang, translations) {
+function applyPublishedTranslationToLocalizedPair(holder, plainField, i18nField, lang, translations) {
   if (!holder || typeof holder !== "object" || Array.isArray(holder)) return false;
   const normalizedLang = normalizeLanguageCode(lang);
-  const existingValue = holder[fieldName];
-  const sourceText = sourceTextFromLocalizedValue(existingValue);
+  const sourceText = sourceTextFromPlainValue(holder[plainField]);
   if (!sourceText) return false;
   const targetText = publishedTranslationForSource(translations, sourceText);
   if (!targetText) return false;
-  if (localizedObjectText(existingValue, normalizedLang) === targetText) return false;
-  holder[fieldName] = {
-    ...(existingValue && typeof existingValue === "object" && !Array.isArray(existingValue)
-      ? existingValue
-      : { en: sourceText }),
+  holder[i18nField] = {
     [normalizedLang]: targetText
   };
   return true;
 }
 
-function applyPublishedTranslationToLocalizedPair(holder, plainField, i18nField, lang, translations) {
-  if (!holder || typeof holder !== "object" || Array.isArray(holder)) return false;
-  const normalizedLang = normalizeLanguageCode(lang);
-  const i18nValue = holder[i18nField];
-  const sourceText = sourceTextFromLocalizedValue(i18nValue, holder[plainField]);
-  if (!sourceText) return false;
-  const targetText = publishedTranslationForSource(translations, sourceText);
-  if (!targetText) return false;
-  if (localizedObjectText(i18nValue, normalizedLang) === targetText) return false;
-  holder[i18nField] = {
-    ...(i18nValue && typeof i18nValue === "object" && !Array.isArray(i18nValue)
-      ? i18nValue
-      : {}),
-    [normalizedLang]: targetText
-  };
+function removePublishedMarketingTourOwnField(holder, fieldName) {
+  if (!holder || typeof holder !== "object" || Array.isArray(holder) || !Object.hasOwn(holder, fieldName)) return false;
+  delete holder[fieldName];
   return true;
+}
+
+function stripPublishedMarketingTourI18nFields(value) {
+  if (Array.isArray(value)) {
+    return value.reduce((changed, item) => stripPublishedMarketingTourI18nFields(item) || changed, false);
+  }
+  if (!value || typeof value !== "object") return false;
+  let changed = false;
+  for (const key of Object.keys(value)) {
+    if (key.endsWith("_i18n")) {
+      delete value[key];
+      changed = true;
+      continue;
+    }
+    changed = stripPublishedMarketingTourI18nFields(value[key]) || changed;
+  }
+  return changed;
+}
+
+function stripPublishedMarketingTourEmbeddedTranslations(tour) {
+  if (!tour || typeof tour !== "object" || Array.isArray(tour)) return false;
+  let changed = false;
+  changed = removePublishedMarketingTourOwnField(tour, "title_i18n") || changed;
+  changed = removePublishedMarketingTourOwnField(tour, "short_description_i18n") || changed;
+  changed = stripPublishedMarketingTourI18nFields(tour.travel_plan) || changed;
+  return changed;
 }
 
 function applyPublishedTranslationsToTravelPlanImage(image, lang, translations) {
@@ -428,12 +423,14 @@ function applyPublishedTranslationsToTravelPlan(travelPlan, lang, translations) 
 
 function applyPublishedMarketingTourTranslations(tour, lang, translations) {
   const normalizedLang = normalizeLanguageCode(lang);
-  if (normalizedLang === "en" || !(translations instanceof Map) || translations.size === 0) return tour;
+  if (!tour || typeof tour !== "object" || Array.isArray(tour)) return tour;
   const next = cloneJson(tour);
-  let changed = false;
-  changed = applyPublishedTranslationToLocalizedPair(next, "title", "title_i18n", normalizedLang, translations) || changed;
-  changed = applyPublishedTranslationToLocalizedPair(next, "short_description", "short_description_i18n", normalizedLang, translations) || changed;
-  changed = applyPublishedTranslationsToTravelPlan(next.travel_plan, normalizedLang, translations) || changed;
+  let changed = stripPublishedMarketingTourEmbeddedTranslations(next);
+  if (normalizedLang !== "en" && translations instanceof Map && translations.size > 0) {
+    changed = applyPublishedTranslationToLocalizedPair(next, "title", "title_i18n", normalizedLang, translations) || changed;
+    changed = applyPublishedTranslationToLocalizedPair(next, "short_description", "short_description_i18n", normalizedLang, translations) || changed;
+    changed = applyPublishedTranslationsToTravelPlan(next.travel_plan, normalizedLang, translations) || changed;
+  }
   return changed ? next : tour;
 }
 

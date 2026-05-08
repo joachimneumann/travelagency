@@ -2737,8 +2737,8 @@ test("marketing tour travel-plan form save prunes empty services and days withou
   );
   assert.match(
     tourPageSource,
-    /await loadTour\(\{\s*preserveTravelPlanCollapsedState: true\s*\}\);[\s\S]*tourTravelPlanAdapter\?\.applyTour\(state\.tour,\s*\{\s*preserveCollapsedState: true\s*\}\)/,
-    "Marketing-tour save and publish should keep the currently edited service open after the UI refreshes"
+    /function applyTourEditorTour\(tour,\s*\{\s*preserveTravelPlanCollapsedState = false\s*\} = \{\}\)[\s\S]*tourTravelPlanAdapter\?\.applyTour\(tour,\s*\{\s*preserveCollapsedState: preserveTravelPlanCollapsedState\s*\}\)[\s\S]*applyTourEditorTour\(state\.tour,\s*\{\s*preserveTravelPlanCollapsedState:\s*true\s*\}\);/,
+    "Marketing-tour save should keep the currently edited service open while applying the saved tour locally"
   );
 });
 
@@ -3498,14 +3498,16 @@ test("tour page reads month options from the generated catalogs layer", async ()
   const generatedCatalogsPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "shared", "generated_catalogs.js");
   const travelPlanCorePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "shared", "travel_plan_editor_core.js");
   const toursHandlerPath = path.resolve(__dirname, "..", "src", "http", "handlers", "tours.js");
-  const [tourSource, tourTravelPlanAdapterSource, tourHtml, toursListHtml, toursListSource, travelPlanCoreSource, toursHandlerSource] = await Promise.all([
+  const routesPath = path.resolve(__dirname, "..", "src", "http", "routes.js");
+  const [tourSource, tourTravelPlanAdapterSource, tourHtml, toursListHtml, toursListSource, travelPlanCoreSource, toursHandlerSource, routesSource] = await Promise.all([
     readFile(tourPageModulePath, "utf8"),
     readFile(tourTravelPlanAdapterPath, "utf8"),
     readFile(tourPageHtmlPath, "utf8"),
     readFile(toursListHtmlPath, "utf8"),
     readFile(toursListModulePath, "utf8"),
     readFile(travelPlanCorePath, "utf8"),
-    readFile(toursHandlerPath, "utf8")
+    readFile(toursHandlerPath, "utf8"),
+    readFile(routesPath, "utf8")
   ]);
   const generatedCatalogs = await import(`${pathToFileURL(generatedCatalogsPath).href}?test=${Date.now()}`);
 
@@ -3577,6 +3579,51 @@ test("tour page reads month options from the generated catalogs layer", async ()
     toursListSource,
     /destinationScopeAreaCreateRequest[\s\S]*destinationScopeCatalogRequest[\s\S]*destinationScopeDestinationCreateRequest[\s\S]*destinationScopePlaceCreateRequest[\s\S]*data-destination-filter/,
     "The marketing tours list should manage destinations, areas, and places through the destination-scope APIs"
+  );
+  assert.doesNotMatch(
+    tourHtml,
+    /id="tour_publish_btn"/,
+    "The single marketing-tour editor should not render the publish button"
+  );
+  assert.match(
+    toursListHtml,
+    /id="toursPublishBtn"[\s\S]*id="toursPublishStatus"/,
+    "The marketing tours list should render the global publish control"
+  );
+  assert.match(
+    toursListSource,
+    /toursPublishBtn[\s\S]*publishToursStaticContent[\s\S]*\/api\/v1\/tours\/publish/,
+    "The marketing tours list should publish via the global tours endpoint"
+  );
+  assert.match(
+    routesSource,
+    /\\\/api\\\/v1\\\/tours\\\/publish[\s\S]*handlerKey:\s*"handlePublishTours"/,
+    "Routes should expose a global marketing-tours publish endpoint"
+  );
+  assert.doesNotMatch(
+    tourSource,
+    /findDuplicateTourTitle|collectDuplicateTitleCandidates|loadTour\(\{\s*preserveTravelPlanCollapsedState:\s*true\s*\}\)/,
+    "Tour saves should not do paginated duplicate-title preflight or reload the tour after save"
+  );
+  assert.match(
+    tourSource,
+    /TOUR_DUPLICATE_TITLE[\s\S]*setTitleError\(duplicateMessage\)[\s\S]*focusPrimaryTitleField\(\)/,
+    "Tour saves should display backend duplicate-title conflicts in the title field"
+  );
+  assert.match(
+    toursHandlerSource,
+    /function findDuplicateTourTitle[\s\S]*code:\s*"TOUR_DUPLICATE_TITLE"[\s\S]*handleCreateTour[\s\S]*findDuplicateTourTitle\(existingTours,\s*tour,\s*tour\.id\)[\s\S]*handlePatchTour[\s\S]*findDuplicateTourTitle\(tours,\s*updated,\s*updated\.id\)/,
+    "Tour create/update should reject duplicate titles in the backend"
+  );
+  assert.doesNotMatch(
+    toursHandlerSource,
+    /handle(CreateTour|PatchTour|PatchTourTravelPlan)[\s\S]{0,2600}await syncTourManualTranslationsToMemory\((tour|updated)\)/,
+    "Normal marketing-tour saves should not sync manual translations to memory"
+  );
+  assert.match(
+    toursHandlerSource,
+    /async function syncMarketingTourTranslationsForPublish[\s\S]*syncTourManualTranslationsToMemory\(tour\)[\s\S]*async function handlePublishTours[\s\S]*regeneratePublicHomepageAssets\("tours_publish"/,
+    "Publishing should sync marketing-tour manual translations once before generating public homepage assets"
   );
   assert.doesNotMatch(
     tourHtml,
@@ -3752,13 +3799,23 @@ test("tour card images are selected from travel-plan service images", async () =
   );
   assert.match(
     toursHandlerSource,
-    /async function applyMarketingTourMemoryToOnePagerTour\(tour, lang\)[\s\S]*collectOnePagerMemoryLocalizedPair\(actions, entries, next, "title", "title_i18n", normalizedLang, "tour\.title"\);[\s\S]*collectOnePagerTravelPlanMemory\(actions, entries, next\.travel_plan, normalizedLang\);[\s\S]*translationMemoryStore\.resolveEntries\(entries, normalizedLang\)[\s\S]*const localizedTour = await applyMarketingTourMemoryToOnePagerTour\(tour, lang\);[\s\S]*normalizeTourForRead\(localizedTour, \{ lang \}\)[\s\S]*normalizeMarketingTourTravelPlan\(localizedTour\.travel_plan,[\s\S]*sourceLang: "en"[\s\S]*flatMode: "localized"/,
-    "On-demand one-pager PDFs should apply published marketing-tour translation memory before localized PDF rendering"
+    /loadMarketingTourContentTranslationMap\(lang\)[\s\S]*loadPublishedMarketingTourTranslations\(translationsSnapshotDir, \[normalizedLang\]\)[\s\S]*return publishedByLang\.get\(normalizedLang\) \|\| new Map\(\);[\s\S]*localizeMarketingToursForRead\(tours, lang\)[\s\S]*applyMarketingTourTranslations\(tour, lang, translations\)[\s\S]*localizeMarketingTourForRead\(tour, lang\)[\s\S]*const localizedTour = await localizeMarketingTourForRead\(tour, lang\);[\s\S]*normalizeTourForRead\(localizedTour, \{ lang \}\)[\s\S]*normalizeMarketingTourTravelPlan\(localizedTour\.travel_plan,[\s\S]*sourceLang: "en"[\s\S]*flatMode: "localized"/,
+    "On-demand one-pager PDFs should apply published content/translations marketing-tour copy before localized PDF rendering"
+  );
+  assert.doesNotMatch(
+    toursHandlerSource,
+    /marketingTourTranslationMapFromMemory|mergeMarketingTourTranslationMaps/,
+    "Marketing-tour reads should not merge live translation memory into localized tour output"
   );
   assert.match(
     onePagerScriptSource,
-    /const translationsSnapshotDir = path\.join\(repoRoot, "content", "translations"\);[\s\S]*async function loadPublishedMarketingTourTranslations\(languages\)[\s\S]*`marketing-tours\.\$\{lang\}\.json`[\s\S]*function applyPublishedTranslationsToTravelPlan\(travelPlan, lang, translations\)[\s\S]*applyPublishedTranslationToLocalizedPair\(service, "title", "title_i18n", lang, translations\)[\s\S]*function applyPublishedMarketingTourTranslations\(tour, lang, translations\)[\s\S]*applyPublishedTranslationsToTravelPlan\(next\.travel_plan, normalizedLang, translations\)[\s\S]*const publishedTranslationsByLang = await loadPublishedMarketingTourTranslations\(options\.languages\);[\s\S]*const localizedTour = applyPublishedMarketingTourTranslations\(tour, lang, publishedTranslations\);[\s\S]*const readModel = tourHelpers\.normalizeTourForRead\(localizedTour, \{ lang \}\);[\s\S]*normalizeMarketingTourTravelPlan\(localizedTour\.travel_plan,[\s\S]*sourceLang: "en"[\s\S]*flatMode: "localized"/,
+    /const translationsSnapshotDir = path\.join\(repoRoot, "content", "translations"\);[\s\S]*async function loadPublishedMarketingTourTranslations\(languages\)[\s\S]*`marketing-tours\.\$\{lang\}\.json`[\s\S]*function stripPublishedMarketingTourEmbeddedTranslations\(tour\)[\s\S]*removePublishedMarketingTourOwnField\(tour, "title_i18n"\)[\s\S]*stripPublishedMarketingTourI18nFields\(tour\.travel_plan\)[\s\S]*function applyPublishedTranslationsToTravelPlan\(travelPlan, lang, translations\)[\s\S]*applyPublishedTranslationToLocalizedPair\(service, "title", "title_i18n", lang, translations\)[\s\S]*function applyPublishedMarketingTourTranslations\(tour, lang, translations\)[\s\S]*stripPublishedMarketingTourEmbeddedTranslations\(next\)[\s\S]*applyPublishedTranslationsToTravelPlan\(next\.travel_plan, normalizedLang, translations\)[\s\S]*const publishedTranslationsByLang = await loadPublishedMarketingTourTranslations\(options\.languages\);[\s\S]*const localizedTour = applyPublishedMarketingTourTranslations\(tour, lang, publishedTranslations\);[\s\S]*const readModel = tourHelpers\.normalizeTourForRead\(localizedTour, \{ lang \}\);[\s\S]*normalizeMarketingTourTravelPlan\(localizedTour\.travel_plan,[\s\S]*sourceLang: "en"[\s\S]*flatMode: "localized"/,
     "Batch one-pager PDFs should apply published marketing-tour translation snapshots before localized PDF rendering"
+  );
+  assert.match(
+    homepageGeneratorSource,
+    /async function loadPublishedMarketingTourTranslations\(translationsSnapshotDir, languages\)[\s\S]*`marketing-tours\.\$\{lang\}\.json`[\s\S]*function stripPublishedMarketingTourEmbeddedTranslations\(tour\)[\s\S]*removePublishedMarketingTourOwnField\(tour, "title_i18n"\)[\s\S]*stripPublishedMarketingTourI18nFields\(tour\.travel_plan\)[\s\S]*function applyPublishedMarketingTourTranslations\(tour, lang, translations\)[\s\S]*stripPublishedMarketingTourEmbeddedTranslations\(next\)[\s\S]*const localizedTour = applyPublishedMarketingTourTranslations\([\s\S]*normalizeLegacyTourLocalizedPairs\(tour\),[\s\S]*publishedTranslations[\s\S]*const readModel = normalizeTourForRead\(localizedTour, \{ lang: normalizedLang \}\)/,
+    "Homepage generation should strip embedded marketing-tour translations before applying published snapshots"
   );
   assert.match(
     onePagerShellSource,
@@ -3767,13 +3824,13 @@ test("tour card images are selected from travel-plan service images", async () =
   );
   assert.doesNotMatch(
     `${homepageGeneratorSource}\n${onePagerScriptSource}`,
-    /if \(!sourceText \|\| localizedObjectText\([^)]*, normalizedLang\)\) return false;/,
-    "Published marketing-tour snapshots should override stale embedded localized tour text instead of only filling missing languages"
+    /sourceTextFromLocalizedValue|localizedObjectText|applyPublishedTranslationToLocalizedMap/,
+    "Published marketing-tour snapshots should not read stale embedded localized tour text as fallback"
   );
   assert.doesNotMatch(
     toursHandlerSource,
-    /if \(!sourceText \|\| localizedObjectText\([^)]*, lang\)\) return;/,
-    "On-demand one-pager translation memory should override stale embedded localized tour text instead of only filling missing languages"
+    /sourceTextFromLocalizedValue|localizedObjectText/,
+    "On-demand marketing-tour reads should not read stale embedded localized tour text as fallback"
   );
   assert.match(
     onePagerScriptSource,
