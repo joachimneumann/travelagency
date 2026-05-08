@@ -77,6 +77,28 @@ function resolveLocalizedField(source, field, lang) {
   return localized || normalizeText(source?.[field]);
 }
 
+function normalizeCoordinate(value) {
+  if (value === undefined || value === null || value === "") return null;
+  const numberValue = Number(value);
+  return Number.isFinite(numberValue) ? numberValue : null;
+}
+
+function locationCatalogById(catalog) {
+  const source = catalog && typeof catalog === "object" && !Array.isArray(catalog) ? catalog : {};
+  return new Map([
+    ...(Array.isArray(source.areas) ? source.areas : []),
+    ...(Array.isArray(source.places) ? source.places : [])
+  ].map((location) => {
+    const id = normalizeText(location?.id);
+    return [id, {
+      id,
+      label: normalizeText(location?.label || location?.name || location?.code || id),
+      latitude: normalizeCoordinate(location?.latitude),
+      longitude: normalizeCoordinate(location?.longitude)
+    }];
+  }).filter(([id]) => id));
+}
+
 function daySearchText(day, lang) {
   const services = Array.isArray(day?.services) ? day.services : [];
   return [
@@ -91,11 +113,31 @@ function daySearchText(day, lang) {
   ].join(" ");
 }
 
-function resolveRoutePoint(day, lang) {
+function resolveRoutePoints(day, lang, catalog = null) {
+  const locationsById = locationCatalogById(catalog);
+  const explicitLocationIds = [
+    { id: normalizeText(day?.primary_location_id), role: "primary" },
+    { id: normalizeText(day?.secondary_location_id), role: "secondary" }
+  ].filter((entry) => entry.id);
+  const explicitPoints = [];
+  for (const { id, role } of explicitLocationIds) {
+    if (explicitPoints.some((point) => point.locationId === id)) continue;
+    const location = locationsById.get(id);
+    if (location?.latitude !== null && location?.longitude !== null) {
+      explicitPoints.push({
+        lat: location.latitude,
+        lng: location.longitude,
+        label: location.label || resolveLocalizedField(day, "overnight_location", lang),
+        locationId: id,
+        role
+      });
+    }
+  }
+  if (explicitPoints.length) return explicitPoints;
   const explicit = day?.route_point || day?.routePoint;
   if (explicit && Number.isFinite(Number(explicit.lat)) && Number.isFinite(Number(explicit.lng))) {
     const label = normalizeText(explicit.label) || resolveLocalizedField(day, "overnight_location", lang);
-    return { lat: Number(explicit.lat), lng: Number(explicit.lng), label };
+    return [{ lat: Number(explicit.lat), lng: Number(explicit.lng), label, role: "primary" }];
   }
   const haystack = normalizeSearchText(daySearchText(day, lang));
   let match = null;
@@ -113,7 +155,7 @@ function resolveRoutePoint(day, lang) {
       }
     }
   }
-  return match ? { lat: match.point.lat, lng: match.point.lng, label: match.point.label } : null;
+  return match ? [{ lat: match.point.lat, lng: match.point.lng, label: match.point.label, role: "primary" }] : [];
 }
 
 function firstCustomerImage(day) {
@@ -141,12 +183,17 @@ function summarizeDay(day, lang) {
   return service || "";
 }
 
-function dayModuleFromDay({ day, sourceTourId, originalTourId, lang }) {
+function dayModuleFromDay({ day, sourceTourId, originalTourId, lang, destinationCatalog = null }) {
   const sourceDayId = normalizeText(day?.id);
-  const routePoint = resolveRoutePoint(day, lang);
-  if (!sourceTourId || !sourceDayId || !routePoint) return null;
-  const mapPoint = projectLatLng(routePoint);
-  if (!mapPoint) return null;
+  const routePoints = resolveRoutePoints(day, lang, destinationCatalog)
+    .map((routePoint) => ({
+      routePoint,
+      mapPoint: projectLatLng(routePoint),
+      label: normalizeText(routePoint?.label)
+    }))
+    .filter((entry) => entry.mapPoint);
+  if (!sourceTourId || !sourceDayId || !routePoints.length) return null;
+  const { routePoint, mapPoint } = routePoints[0];
   const locationLabel = normalizeText(routePoint.label)
     || resolveLocalizedField(day, "overnight_location", lang)
     || resolveLocalizedField(day, "title", lang);
@@ -160,6 +207,7 @@ function dayModuleFromDay({ day, sourceTourId, originalTourId, lang }) {
     summary: summarizeDay(day, lang),
     thumbnailUrl: firstCustomerImage(day),
     routePoint,
+    routePoints,
     mapPoint,
     day: cloneJson(day)
   };
@@ -195,6 +243,7 @@ export function createTourCustomizer({
   escapeHTML,
   escapeAttr,
   travelPlanDays,
+  destinationScopeCatalog,
   findTripById,
   ensureTourDetailsLoaded,
   allTrips,
@@ -288,12 +337,14 @@ export function createTourCustomizer({
   function routePreviewForTrip(trip) {
     const tourId = normalizeText(trip?.id);
     const days = activeDaysForTrip(trip);
+    const destinationCatalog = typeof destinationScopeCatalog === "function" ? destinationScopeCatalog() : null;
     const modules = days
       .map((day) => dayModuleFromDay({
         day,
         sourceTourId: tourId,
         originalTourId: tourId,
-        lang: lang()
+        lang: lang(),
+        destinationCatalog
       }))
       .filter(Boolean);
     const groups = routeGroups(modules);
@@ -302,7 +353,7 @@ export function createTourCustomizer({
       path: routePathData(groups),
       groups: groups.map((group) => ({
         label: formatDayNumbers(group.dayNumbers),
-        locationLabel: group.item.locationLabel,
+        locationLabel: group.locationLabel || group.item.locationLabel,
         x: group.mapPoint.x,
         y: group.mapPoint.y
       }))
@@ -312,6 +363,7 @@ export function createTourCustomizer({
   async function candidateModulesForTrip(baseTrip) {
     const currentLang = lang();
     const baseTourId = normalizeText(baseTrip?.id);
+    const destinationCatalog = typeof destinationScopeCatalog === "function" ? destinationScopeCatalog() : null;
     const trips = typeof allTrips === "function" ? allTrips() : [];
     await Promise.all((Array.isArray(trips) ? trips : []).map(async (trip) => {
       const tripId = normalizeText(trip?.id);
@@ -325,7 +377,7 @@ export function createTourCustomizer({
     return (Array.isArray(trips) ? trips : []).flatMap((trip) => {
       const sourceTourId = normalizeText(trip?.id);
       return (typeof travelPlanDays === "function" ? travelPlanDays(trip) : [])
-        .map((day) => dayModuleFromDay({ day, sourceTourId, originalTourId: baseTourId, lang: currentLang }))
+        .map((day) => dayModuleFromDay({ day, sourceTourId, originalTourId: baseTourId, lang: currentLang, destinationCatalog }))
         .filter(Boolean);
     });
   }
@@ -335,12 +387,14 @@ export function createTourCustomizer({
     const stored = loadStoredCustomization(baseTourId);
     if (stored) {
       const byId = new Map(modules.map((item) => [item.id, item]));
+      const destinationCatalog = typeof destinationScopeCatalog === "function" ? destinationScopeCatalog() : null;
       const timelineDays = stored.timelineDays
         .map((item) => byId.get(`${item.sourceTourId}:${item.sourceDayId}`) || dayModuleFromDay({
           day: item.day,
           sourceTourId: item.sourceTourId,
           originalTourId: baseTourId,
-          lang: lang()
+          lang: lang(),
+          destinationCatalog
         }))
         .filter(Boolean)
         .slice(0, TOUR_CUSTOMIZE_MAX_DAYS);
@@ -360,29 +414,39 @@ export function createTourCustomizer({
     const groups = [];
     const byPoint = new Map();
     timelineDays.forEach((item, index) => {
-      const key = routeKeyForItem(item);
-      if (!key) return;
-      if (!byPoint.has(key)) {
-        const group = {
-          key,
-          item,
-          mapPoint: item.mapPoint,
-          dayNumbers: [],
-          visits: []
-        };
-        byPoint.set(key, group);
-        groups.push(group);
+      const itemRoutePoints = Array.isArray(item?.routePoints) && item.routePoints.length
+        ? item.routePoints
+        : [{ routePoint: item?.routePoint, mapPoint: item?.mapPoint, label: item?.locationLabel }];
+      for (const point of itemRoutePoints) {
+        const key = routeKeyForPoint(point?.routePoint);
+        if (!key) continue;
+        if (!byPoint.has(key)) {
+          const group = {
+            key,
+            item,
+            mapPoint: point.mapPoint,
+            locationLabel: normalizeText(point.label) || item.locationLabel,
+            dayNumbers: [],
+            visits: []
+          };
+          byPoint.set(key, group);
+          groups.push(group);
+        }
+        const group = byPoint.get(key);
+        if (!group.dayNumbers.includes(index + 1)) group.dayNumbers.push(index + 1);
+        group.visits.push({ item, routePoint: point.routePoint });
       }
-      const group = byPoint.get(key);
-      group.dayNumbers.push(index + 1);
-      group.visits.push(item);
     });
     return groups;
   }
 
   function routeKeyForItem(item) {
-    const lat = Number(item?.routePoint?.lat);
-    const lng = Number(item?.routePoint?.lng);
+    return routeKeyForPoint(item?.routePoint);
+  }
+
+  function routeKeyForPoint(routePoint) {
+    const lat = Number(routePoint?.lat);
+    const lng = Number(routePoint?.lng);
     if (!Number.isFinite(lat) || !Number.isFinite(lng)) return "";
     return `${lat.toFixed(4)}:${lng.toFixed(4)}`;
   }
@@ -500,7 +564,7 @@ export function createTourCustomizer({
         </svg>
         ${groups.map((group) => {
           const label = formatDayNumbers(group.dayNumbers);
-          const location = group.item.locationLabel;
+          const location = group.locationLabel || group.item.locationLabel;
           const aria = t("tour.customize.marker_label", "Days {days}, {location}", { days: label, location });
           return `
             <button class="tour-customize-map__marker" type="button" data-customize-route-key="${escapeAttr(group.key)}" style="left:${group.mapPoint.x}%;top:${group.mapPoint.y}%;" aria-label="${escapeAttr(aria)}" title="${escapeAttr(aria)}">

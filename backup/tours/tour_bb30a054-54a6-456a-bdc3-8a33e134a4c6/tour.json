@@ -1,7 +1,7 @@
 {
   "id": "tour_bb30a054-54a6-456a-bdc3-8a33e134a4c6",
-  "title": "Hanoi - Sapa",
-  "short_description": "Journey from Hanoi to the misty highlands of Sapa. Experience breathtaking mountain landscapes, vibrant ethnic cultures, and a refreshing escape into northern Vietnam.",
+  "title": "Hanoi to Sapa Peaks",
+  "short_description": "Leave Hanoi for Sapa's misty terraces, Cat Cat Village, Moana viewpoints and the high cable-car ascent toward Fansipan.",
   "styles": [
     "budget",
     "culture",
@@ -39,7 +39,7 @@
       {
         "id": "travel_plan_day_551a3b81-6412-4fa1-913d-f5650f02fc35",
         "day_number": 1,
-        "title": "Hà Nội - Sapa - CatCat - Moana",
+        "title": "Hanoi to Cat Cat Village",
         "title_i18n": {},
         "overnight_location": null,
         "overnight_location_i18n": {},
@@ -51,9 +51,9 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Hà Nội - Sapa",
+            "title": "Hanoi to Sapa Transfer",
             "title_i18n": {},
-            "details": "Departing from Hanoi to Sapa at 6 AM.",
+            "details": "Depart Hanoi in the morning and travel north toward Sapa's cooler air and mountain scenery.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -86,7 +86,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Sapa town",
+            "title": "Sapa Town",
             "title_i18n": {
               "ar": "مدينة سابا",
               "fr": "Ville de Sapa",
@@ -105,7 +105,7 @@
               "no": "Sapa by",
               "vi": "Thị trấn Sa Pa"
             },
-            "details": "Sapa is a breathtaking mountain town in Lao Cai Province, located in the Hoang Lien Son mountain range of northwestern Vietnam. Known for its cool climate, emerald-green rice terraces, and diverse ethnic cultures, it is one of the most iconic destinations in the country.",
+            "details": "Arrive in Sapa, a highland town known for mist, rice terraces and the Hoang Lien Son mountain backdrop.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -138,9 +138,9 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "CatCat",
+            "title": "Cat Cat Village",
             "title_i18n": {},
-            "details": "Hi everyone! Meet CatCat. They are a bundle of fur and mischief who loves napping in sunbeams and chasing laser pointers. CatCat is the real boss of the house",
+            "details": "Visit Cat Cat Village for H'Mong culture, wooden houses, terraced fields and a valley waterfall close to Sapa.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -173,9 +173,9 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Moana",
+            "title": "Moana Sapa",
             "title_i18n": {},
-            "details": "Moana Sapa is a film set located at 145 Thach Son Street, near the center of Sapa town. Spanning over 10,000 square meters, it's considered a paradise for Instagrammable photos thanks to its unique man-made architecture and panoramic views of the majestic Hoang Lien Son mountain range.",
+            "details": "Stop at Moana Sapa for staged viewpoints and wide photo angles over the Hoang Lien Son mountains.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -202,13 +202,13 @@
             }
           }
         ],
-        "notes": null,
+        "notes": "Depart Hanoi early for Sapa, then settle into the highland mood with town views, Cat Cat Village and Moana's mountain photo spots.",
         "notes_i18n": {}
       },
       {
         "id": "travel_plan_day_6f0b35ff-e816-45c3-9661-01701173671a",
         "day_number": 2,
-        "title": "Sapa - Fansipan - Hà Nội",
+        "title": "Fansipan and Return Hanoi",
         "title_i18n": {
           "ar": "جولة مدينة هانوي",
           "fr": "Visite de la ville de Hanoï",
@@ -239,7 +239,7 @@
             "kind": "other",
             "title": "Fansipan",
             "title_i18n": {},
-            "details": "Sapa - Fansipan - Hà Nội",
+            "details": "Ride toward Fansipan for cloud-level views and the chance to stand near Vietnam's highest mountain peak.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -272,7 +272,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "airport pick-up",
+            "title": "Return Transfer",
             "title_i18n": {
               "ar": "الاستقبال في المطار",
               "fr": "prise en charge à l'aéroport",
@@ -290,7 +290,7 @@
               "sv": "upphämtning på flygplatsen",
               "no": "henting på flyplassen"
             },
-            "details": null,
+            "details": "Leave Sapa after the mountain visit and continue back toward Hanoi or your onward travel point.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -317,7 +317,7 @@
             }
           }
         ],
-        "notes": "Discover the Roof of Indochina",
+        "notes": "Spend the day with Fansipan, the Roof of Indochina, before descending from the highlands and returning to Hanoi.",
         "notes_i18n": {
           "ar": "اليوم، نبدأ استكشافنا في هانوي، ونرى أبرز المعالم في ضريح هوشي منه (يقع بالقرب من الاثنين والجمعة). تم بناء هذا النصب التذكاري المهيب من الرخام والجرانيت باتجاه ميدان با دينه. نتبع الممر المؤدي إلى معبد العمود الواحد الذي يرتفع من وسط بركة لوتس مربعة، ويصعد على عمود واحد ويشبه زهرة اللوتس المتفتحة.",
           "fr": "Aujourd'hui, nous commençons notre exploration de Hanoï en visitant le monument le plus remarquable du mausolée de Hô Chi Minh (fermé le lundi et le vendredi). Cet imposant monument de marbre et de granit a été construit en direction de la place Ba Dinh. Nous suivons le sentier jusqu'à la pagode au pilier unique qui s'élève du centre d'un étang de lotus carré, montant sur un seul pilier et ressemblant à une fleur de lotus en fleurs.",

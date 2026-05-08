@@ -344,6 +344,8 @@ function normalizeTravelPlanDays(days, options = {}) {
         title_i18n: titleField.map,
         overnight_location: overnightLocationField.text || null,
         overnight_location_i18n: overnightLocationField.map,
+        primary_location_id: normalizeOptionalText(day?.primary_location_id) || null,
+        secondary_location_id: normalizeOptionalText(day?.secondary_location_id) || null,
         services,
         notes: notesField.text || null,
         notes_i18n: notesField.map

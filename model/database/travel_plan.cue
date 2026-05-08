@@ -80,6 +80,8 @@ import (
 	title_i18n?:         [string]: string
 	overnight_location?: string
 	overnight_location_i18n?: [string]: string
+	primary_location_id?: common.#Identifier
+	secondary_location_id?: common.#Identifier
 	services?: [...#TravelPlanService]
 	notes?: string
 	notes_i18n?: [string]: string

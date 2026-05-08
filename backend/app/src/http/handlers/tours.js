@@ -843,6 +843,8 @@ export function createTourHandlers(deps) {
       title_i18n: includeTranslations && sourceDay?.title_i18n ? { ...sourceDay.title_i18n } : undefined,
       overnight_location: preferredEnglishImportText(sourceDay?.overnight_location_i18n, sourceDay?.overnight_location),
       overnight_location_i18n: includeTranslations && sourceDay?.overnight_location_i18n ? { ...sourceDay.overnight_location_i18n } : undefined,
+      primary_location_id: normalizeText(sourceDay?.primary_location_id) || null,
+      secondary_location_id: normalizeText(sourceDay?.secondary_location_id) || null,
       notes: includeNotes ? preferredEnglishImportText(sourceDay?.notes_i18n, sourceDay?.notes) : null,
       notes_i18n: includeNotes && includeTranslations && sourceDay?.notes_i18n ? { ...sourceDay.notes_i18n } : undefined,
       services: (Array.isArray(sourceDay?.services) ? sourceDay.services : []).map((sourceItem) => (

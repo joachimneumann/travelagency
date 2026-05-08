@@ -1,7 +1,7 @@
 {
   "id": "tour_6ad22f13-b6c3-4936-9c14-1cde4b4818fa",
-  "title": "Explore Hanoi's Old Quarter",
-  "short_description": "Discover Hanoi’s soul: explore the bustling Old Quarter, historic temples, and serene lakes. Immerse yourself in the rich culture and vibrant street food of this city",
+  "title": "Hanoi Heritage Streets",
+  "short_description": "A deep Hanoi day through prison history, ethnic culture, Confucian courtyards, lakeside pagodas, cathedral stone and Train Street.",
   "styles": [
     "budget",
     "culture",
@@ -41,7 +41,7 @@
       {
         "id": "travel_plan_day_cedf2aa5-236f-4144-afc2-d58e6464bdcb",
         "day_number": 1,
-        "title": "Explore Hanoi's Old Quarter",
+        "title": "Hanoi History and Streets",
         "title_i18n": {
           "ar": "اكتشف هانوي",
           "fr": "Explorez Hanoï",
@@ -89,7 +89,7 @@
               "no": "Hoa Lo fengsel",
               "vi": "Nhà tù Hỏa Lò"
             },
-            "details": "Hoa Lo Prison is a powerful journey through the resilience of the human spirit. From its dark origins as a colonial dungeon to its complex role in the Vietnam War, this 'Hanoi Hilton' serves as a somber reminder of the sacrifices made in the pursuit of independence.",
+            "details": "Visit Hoa Lo Prison, a sobering site that traces colonial imprisonment and wartime memory in the center of Hanoi.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -141,7 +141,7 @@
               "no": "Etnologisk museum",
               "vi": "Bảo tàng Dân tộc học"
             },
-            "details": "The Vietnam Museum of Ethnology is a vibrant mosaic of the nation's cultural soul. From the soaring peaks of the Central Highlands houses to the intricate textiles of the northern mountains, it offers a beautiful and respectful celebration of the people who define Vietnam.",
+            "details": "Discover Vietnam's cultural diversity through houses, textiles, tools and traditions at the Museum of Ethnology.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -174,7 +174,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Văn Miếu Quốc Tủ Giám",
+            "title": "Temple of Literature",
             "title_i18n": {
               "ar": "Văn Miếu Quốc Tủ Giám",
               "fr": "Văn Miếu Quốc Tủ Giám",
@@ -193,7 +193,7 @@
               "no": "Văn Miếu Quốc Tủ Giám",
               "vi": "Văn Miếu Quốc Tủ Giám"
             },
-            "details": "The Temple of Literature is often cited as one of Hanoi’s most picturesque tourist attractions. Originally built as a university in 1070 dedicated to Confucius, scholars, and sages, the building is extremely well preserved and is a superb example of traditional-style Vietnamese architecture",
+            "details": "Walk through the Temple of Literature, Vietnam's first university and one of Hanoi's most graceful historic courtyards.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -226,7 +226,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Một cột pagoda",
+            "title": "One Pillar Pagoda",
             "title_i18n": {
               "ar": "معبد Một cột",
               "fr": "Pagode Một Cột",
@@ -245,7 +245,7 @@
               "no": "Det er en pagode",
               "vi": "Chùa Một cột"
             },
-            "details": "The One Pillar Pagoda is a masterpiece of ancient Vietnamese architecture. Floating like a lotus above a peaceful pond, this historic temple tells a story of royal gratitude and spiritual devotion, making it a must-see symbol of Hanoi's cultural heritage.\"",
+            "details": "See the compact One Pillar Pagoda, built in the form of a lotus rising from a quiet pond.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -278,7 +278,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Chấn Quốc Pagoda",
+            "title": "Tran Quoc Pagoda",
             "title_i18n": {
               "ar": "معبد Chấn Quốc",
               "fr": "Pagode Chấn Quốc",
@@ -297,7 +297,7 @@
               "sv": "Chấn Quốc Pagoda",
               "no": "Chấn Quốc Pagoda"
             },
-            "details": "Chấn Quốc Pagoda\n\nTrấn Quốc Pagoda (Chùa Trấn Quốc) is widely regarded as the oldest Buddhist temple in Hanoi, with a history spanning over 1,500 years. Situated on a small island on the eastern shore of West Lake (Ho Tay), it is famous for its stunning architecture and serene atmosphere",
+            "details": "Pause at Tran Quoc Pagoda on West Lake, Hanoi's oldest Buddhist temple and a calm lakeside landmark.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -330,7 +330,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Hanoi Cathedral",
+            "title": "St. Joseph's Cathedral",
             "title_i18n": {
               "ar": "كاتدرائية هانوي",
               "fr": "Cathédrale de Hanoï",
@@ -349,7 +349,7 @@
               "sv": "Hanois katedral",
               "no": "Hanoi katedral"
             },
-            "details": "St. Joseph's Cathedral (Nhà thờ Lớn Hà Nội) is the oldest Roman Catholic church in Hanoi and serves as the cathedral of the Archdiocese of Hanoi. It is a stunning example of colonial architecture and a centerpiece of the city's historic district",
+            "details": "Stand before St. Joseph's Cathedral, where neo-Gothic stone anchors one of Hanoi's most atmospheric old neighborhoods.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -401,7 +401,7 @@
               "sv": "Hanoi tåggatan",
               "no": "Hanoi toggate"
             },
-            "details": "Hanoi Train Street is one of the most unique and photographed spots in the city. It consists of a narrow residential corridor where a functional railway track runs just centimeters away from the doorsteps of homes and cafes.",
+            "details": "Visit the narrow railway corridor where homes and cafes sit close to the tracks, one of Hanoi's most unusual urban scenes.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -428,7 +428,7 @@
             }
           }
         ],
-        "notes": "Explore a labyrinth of heritage with centuries-old craft villages, where moss-covered ancient houses blend seamlessly with the bustling city life. A journey that takes you back to the elegant beauty and cultural depth of Thang Long, a thousand-year-old city.",
+        "notes": "Explore Hanoi beyond the postcard view, linking difficult history, living culture, old temples, colonial stone and the tight drama of Train Street.",
         "notes_i18n": {}
       }
     ],

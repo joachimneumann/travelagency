@@ -1,7 +1,7 @@
 {
   "id": "tour_3d160d2f-62ea-43a4-8ca6-3acb6dcd30df",
-  "title": "Da Nang - Marble Mountains - Hoi An Ancient Town",
-  "short_description": "Experience the best of Central Vietnam: from Da Nang's modern beaches to the mystical Marble Mountains and the timeless, lantern-lit charm of Hoi An Ancient Town",
+  "title": "Marble Hills to Hoi An",
+  "short_description": "A concise Central Vietnam day linking Da Nang's sacred Marble Mountains with Hoi An's preserved lanes and lantern-lit riverfront.",
   "styles": [
     "culture",
     "family",
@@ -42,7 +42,7 @@
       {
         "id": "travel_plan_day_928327c1-d5dd-4152-90b6-0d4e97c46370",
         "day_number": 1,
-        "title": "Marble Mountains - Hoi An Ancient Town",
+        "title": "Marble Mountains and Hoi An",
         "title_i18n": {},
         "overnight_location": null,
         "overnight_location_i18n": {},
@@ -56,7 +56,7 @@
             "kind": "other",
             "title": "Marble Mountains",
             "title_i18n": {},
-            "details": "Located just south of Da Nang, the Marble Mountains are a cluster of five limestone and marble hills named after the five essential elements: Metal, Wood, Water, Fire, and Earth",
+            "details": "Explore the limestone and marble hills south of Da Nang, where caves, pagodas and viewpoints sit close to the coast.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -91,7 +91,7 @@
             "kind": "other",
             "title": "Hoi An Ancient Town",
             "title_i18n": {},
-            "details": "Recognized as a UNESCO World Heritage site, Hoi An Ancient Town is a remarkably well-preserved example of a Southeast Asian trading port dating from the 15th to the 19th century",
+            "details": "Walk through Hoi An's UNESCO old town, known for yellow merchant houses, riverside lanes and soft lantern light.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -118,7 +118,7 @@
             }
           }
         ],
-        "notes": "This journey takes you through two of Central Vietnam’s most iconic landmarks, blending spiritual nature with ancient history",
+        "notes": "Move from cave temples and stone peaks near Da Nang to Hoi An's historic trading streets in one easy, atmospheric day.",
         "notes_i18n": {}
       }
     ],

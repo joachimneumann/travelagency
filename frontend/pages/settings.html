@@ -103,6 +103,22 @@
             <div class="settings-staff-editor__check-grid" id="websiteDestinationPublicationList"></div>
           </section>
 
+          <section class="backend-section settings-location-manager" id="locationManagerPanel" hidden>
+            <div class="settings-destination-publication__head">
+              <div>
+                <h2 class="section-title u-title-medium">Locations</h2>
+                <p class="micro">Manage regions and map points used by tour filters and itinerary maps.</p>
+              </div>
+              <div class="settings-destination-publication__actions">
+                <p class="micro settings-destination-publication__status" id="locationManagerStatus"></p>
+                <button class="btn btn-ghost" id="locationManagerRefreshBtn" type="button">Refresh</button>
+                <button class="btn btn-ghost" id="locationManagerAddAreaBtn" type="button">Add region</button>
+                <button class="btn btn-ghost" id="locationManagerAddPlaceBtn" type="button">Add place</button>
+              </div>
+            </div>
+            <div class="settings-location-manager__grid" id="locationManagerList"></div>
+          </section>
+
           <div class="backend-table-wrap" id="settingsPanel">
             <table class="backend-table" id="staffTable"></table>
           </div>

@@ -1,7 +1,7 @@
 {
   "id": "tour_16531bfc-a60f-4128-9abe-2eada1f2d7d8",
-  "title": "Da Nang - Hue - Hoi An",
-  "short_description": "Experience 5 days of \"slow living\" in Da Nang. Relax on pristine beaches, explore the Marble Mountains, and enjoy the peaceful atmosphere of Vietnam's most livable city.",
+  "title": "Da Nang, Hoi An and Hue",
+  "short_description": "Move from marble caves and lantern lanes to Da Nang's coast, Ba Na Hills and imperial Hue, with Central Vietnam unfolding at an easy pace.",
   "styles": [
     "grand-expeditions",
     "beach",
@@ -56,7 +56,7 @@
       {
         "id": "travel_plan_day_0cc434a5-139d-4ab7-944f-6adc04c534db",
         "day_number": 1,
-        "title": "Airport pick-up - Marble Mountains - Hoi An - Overnight in Hoi An",
+        "title": "Marble Caves to Hoi An",
         "title_i18n": {
           "ar": "النقل من المطار - جبال الرخام - هوي آن - المبيت في هوي آن",
           "fr": "Prise en charge à l'aéroport - Montagnes de Marbre - Hoi An - Nuit à Hoi An",
@@ -85,7 +85,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Airport pick-up",
+            "title": "Da Nang Airport Welcome",
             "title_i18n": {
               "ar": "الاستقبال في المطار",
               "fr": "Prise en charge à l'aéroport",
@@ -104,7 +104,7 @@
               "sv": "Upphämtning på flygplatsen",
               "no": "Henting på flyplassen"
             },
-            "details": null,
+            "details": "Meet your driver on arrival in Da Nang and start the journey smoothly with a private transfer into the first day of sightseeing.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -156,7 +156,7 @@
               "sv": "Marmorberg",
               "no": "Marmorfjellene"
             },
-            "details": "Discover the spiritual heart of Central Vietnam at the Marble Mountains. A journey through hidden caves, ancient pagodas, and soaring viewpoints, this natural wonder perfectly blends the beauty of the landscape with the deep traditions of Vietnamese Buddhism.",
+            "details": "Explore limestone peaks above Da Nang, where cave shrines, pagodas and sea views reveal the spiritual side of the central coast.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -208,7 +208,7 @@
               "sv": "Huyen Khong-grottan",
               "no": "Huyen Khong-hulen"
             },
-            "details": "Step into the mystical atmosphere of Huyen Khong Cave, where natural light beams create a sacred glow over ancient stone altars. It is a breathtaking sanctuary of light and shadows, offering a profound sense of peace and wonder hidden deep within the marble cliffs.",
+            "details": "Step into a quiet cave sanctuary where daylight falls through the rock onto altars, statues and the cool marble walls around you.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -241,7 +241,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Hội An Ancient Town",
+            "title": "Hoi An Ancient Town",
             "title_i18n": {
               "ar": "مدينة هوي آن القديمة",
               "fr": "Vieille ville de Hội An",
@@ -260,7 +260,7 @@
               "sv": "Hội An Ancient Town",
               "no": "Hội en gammel by"
             },
-            "details": "Step back in time in Hoi An Ancient Town, where golden walls and lantern-lit alleys tell the story of a bygone era. From its peaceful riverfront to its vibrant night markets, Hoi An offers a nostalgic charm that captures the soul of every traveler.",
+            "details": "Wander Hoi An's preserved trading streets, golden facades and riverside lanes as lanterns bring the old town into its evening glow.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -287,13 +287,13 @@
             }
           }
         ],
-        "notes": null,
+        "notes": "Arrive in Da Nang, then ease into Central Vietnam with sacred marble caves before reaching Hoi An's warm lantern-lit streets for the night.",
         "notes_i18n": {}
       },
       {
         "id": "travel_plan_day_6dbca279-5dcc-40e9-9c44-a631225970b7",
         "day_number": 2,
-        "title": "Hoi An hotel - Coconut Forest  - Son Tra Peninsula - Dragon Bridge & Love - Chicken Church",
+        "title": "Coconut Forest and Da Nang",
         "title_i18n": {
           "ar": "فندق هوي آن - غابة جوز الهند - شبه جزيرة سون ترا - جسر التنين والحب - كنيسة الدجاج",
           "fr": "Hôtel Hoi An - Forêt de noix de coco - Péninsule de Son Tra - Pont du Dragon et Amour - Église du Poulet",
@@ -341,7 +341,7 @@
               "sv": "Son Tra halvön",
               "no": "Son Tra-halvøya"
             },
-            "details": "Escape to the Son Tra Peninsula, where lush mountains meet the deep blue sea. Whether you are seeking spiritual peace at the feet of the Lady Buddha or searching for rare wildlife in the jungle, Son Tra is a breathtaking sanctuary of nature and serenity",
+            "details": "Follow the road around Son Tra, where forested slopes, sea views and quiet bays give Da Nang a wilder edge beyond the city.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -393,7 +393,7 @@
               "sv": "Linh Ung Pagoda",
               "no": "Linh Ung Pagoda"
             },
-            "details": "The Linh Ung Pagodas are the spiritual guardians of Da Nang. Whether you are gazing up at the towering Lady Buddha on the coast or finding peace among the misty peaks of Ba Na, these sacred sites offer a profound blend of architectural beauty and tranquil spirituality.",
+            "details": "Visit Linh Ung Pagoda on Son Tra, home to the towering Lady Buddha and open views across Da Nang's coastline.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -445,7 +445,7 @@
               "sv": "Drakbron",
               "no": "Dragebroen"
             },
-            "details": "The Dragon Bridge is more than just a piece of infrastructure; it is a living masterpiece that captures the dynamic spirit of Da Nang. Witnessing the golden dragon breathe fire under the night sky is an unforgettable experience that blends modern engineering with ancient legend",
+            "details": "See Da Nang's golden Dragon Bridge, a bold modern landmark crossing the Han River and a symbol of the city's energy.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -497,7 +497,7 @@
               "sv": "Kycklingkyrkan",
               "no": "Kyllingkirken"
             },
-            "details": "Step into a piece of history at the Da Nang Cathedral, where colonial charm meets local legend. With its striking pink walls and the famous rooster crowning its spire, this cathedral offers a peaceful, colorful retreat in the heart of bustling Da Nang",
+            "details": "Pause at Da Nang Cathedral, known for its pink facade, colonial lines and rooster-topped spire in the city center.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -530,9 +530,9 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "explore the Coconut Forest",
+            "title": "Cam Thanh Coconut Forest",
             "title_i18n": {},
-            "details": "Escape to the tranquil Cam Thanh Coconut Forest, where you can glide through emerald waters in a traditional basket boat. From exciting boat performances to peaceful sunset views, it is a unique cultural adventure that perfectly complements your visit to Hoi An.",
+            "details": "Glide through Cam Thanh's water coconut palms by basket boat, a playful look at rural life close to Hoi An.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -559,7 +559,7 @@
             }
           }
         ],
-        "notes": "From Hoi An, explore the Coconut Forest, Son Tra Peninsula, and Da Nang’s icons: Dragon Bridge, Love Bridge, and the Chicken Church. A perfect mix of nature and culture.",
+        "notes": "Move from Hoi An's countryside waterways to Da Nang's coastal viewpoints, spiritual landmarks and lively bridges in one varied day.",
         "notes_i18n": {
           "ar": "من هوي آن، استكشف غابة جوز الهند وشبه جزيرة سون ترا وأيقونات دا نانغ: جسر التنين وجسر الحب وكنيسة الدجاج. مزيج مثالي من الطبيعة والثقافة.",
           "fr": "Depuis Hoi An, explorez la forêt de noix de coco, la péninsule de Son Tra et les icônes de Da Nang : le pont du dragon, le pont de l'amour et l'église du poulet. Un mélange parfait de nature et de culture.",
@@ -582,7 +582,7 @@
       {
         "id": "travel_plan_day_4d9d797e-9a7d-445f-957c-df9c6abfb4ed",
         "day_number": 3,
-        "title": "Hotel DaNang - Bana Hill - Night Market",
+        "title": "Ba Na Hills and Night Market",
         "title_i18n": {
           "ar": "فندق دانانج - بانا هيل - السوق الليلي",
           "fr": "Hôtel DaNang - Bana Hill - Marché nocturne",
@@ -611,7 +611,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Bana Hil",
+            "title": "Ba Na Hills",
             "title_i18n": {
               "ar": "بانا هيل",
               "fr": "Bana Hil",
@@ -630,7 +630,7 @@
               "sv": "Bana Hil",
               "no": "Bana Hil"
             },
-            "details": "From world-class hotels on the shores of My Khe Beach to the misty peaks of Ba Na Hills, Da Nang is a city of endless discovery. End your day at a bustling Night Market, where the local flavors and vibrant energy capture the true spirit of Central Vietnam.",
+            "details": "Ride into the mountain air of Ba Na Hills for the Golden Bridge, French Village and wide forest views above Da Nang.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -663,7 +663,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Night Market",
+            "title": "Da Nang Night Market",
             "title_i18n": {
               "ar": "السوق الليلي",
               "fr": "Marché nocturne",
@@ -682,7 +682,7 @@
               "sv": "Nattmarknad",
               "no": "Nattmarked"
             },
-            "details": "Experience the vibrant pulse of Vietnam at a Night Market. Whether you are searching for the perfect handmade souvenir, feasting on fresh grilled seafood, or simply soaking in the neon-lit atmosphere, these markets offer an authentic slice of local life that you won't find anywhere else",
+            "details": "End the day among food stalls, souvenirs and bright evening crowds, a relaxed way to taste Da Nang after dark.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -709,7 +709,7 @@
             }
           }
         ],
-        "notes": "Depart from Da Nang for a magical day at Ba Na Hills. Explore the Golden Bridge and French Village before ending your evening with local food at the vibrant Night Market",
+        "notes": "Spend the day in the cool heights of Ba Na Hills, then return to Da Nang for the flavors and local bustle of the night market.",
         "notes_i18n": {
           "ar": "غادر دا نانغ لقضاء يوم سحري في با نا هيلز. استكشف الجسر الذهبي والقرية الفرنسية قبل إنهاء أمسيتك بتناول المأكولات المحلية في السوق الليلي النابض بالحياة",
           "fr": "Départ de Da Nang pour une journée magique à Ba Na Hills. Explorez le Golden Bridge et le French Village avant de terminer votre soirée avec des plats locaux au marché nocturne animé.",
@@ -732,7 +732,7 @@
       {
         "id": "travel_plan_day_35ee634e-27d4-4fa1-8142-33b2c20f5531",
         "day_number": 4,
-        "title": "Hotel DaNang - Lang Co - Thien Mu Pagoda - Imperial Citadel - Incense Village - Dong Ba",
+        "title": "Lang Co Bay to Imperial Hue",
         "title_i18n": {
           "ar": "فندق دانانج - لانج كو - معبد ثين مو - القلعة الإمبراطورية - قرية البخور - دونج با",
           "fr": "Hôtel DaNang - Lang Co - Pagode Thien Mu - Citadelle Impériale - Village des Encens - Dong Ba",
@@ -761,7 +761,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Lang Co bay",
+            "title": "Lang Co Bay",
             "title_i18n": {
               "ar": "خليج لانج كو",
               "fr": "Baie de Lang Co",
@@ -780,7 +780,7 @@
               "sv": "Lang Co bay",
               "no": "Lang Co bukt"
             },
-            "details": "Lang Co Bay is a masterpiece of nature, where the mountains dip their toes into the emerald sea. Whether you are wandering along its white sandy shores or watching the sunset over the tranquil Lap An Lagoon, Lang Co offers a peaceful escape that feels worlds away from the hustle of modern life",
+            "details": "Pause by Lang Co Bay, where pale sand, green mountains and lagoon water soften the journey between Da Nang and Hue.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -832,7 +832,7 @@
               "sv": "Thien Mu Pagoda",
               "no": "Thien Mu-pagoden"
             },
-            "details": "As the symbol of Hue, Thien Mu Pagoda stands as a timeless guardian of the Perfume River. With its elegant tower and peaceful gardens, it offers a deep dive into the spiritual soul and royal history of Vietnam’s former imperial capital.",
+            "details": "Visit Hue's riverside Thien Mu Pagoda, a graceful tower and garden complex linked closely with the Perfume River.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -884,7 +884,7 @@
               "sv": "Kejserliga citadellet",
               "no": "Imperial Citadel"
             },
-            "details": "Step through the gates of the Imperial Citadel and travel back to the era of Vietnam’s last emperors. With its majestic palaces, ornate temples, and tranquil lotus ponds, this walled fortress remains a powerful testament to the grandeur and resilience of the Nguyen Dynasty.",
+            "details": "Walk through the gates of Hue's Imperial Citadel, where palaces, courtyards and walls recall Vietnam's Nguyen emperors.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -917,7 +917,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Incense Village",
+            "title": "Thuy Xuan Incense Village",
             "title_i18n": {
               "ar": "قرية البخور",
               "fr": "Village des Encens",
@@ -936,7 +936,7 @@
               "sv": "Rökelse by",
               "no": "Røkelse Village"
             },
-            "details": "Immerse yourself in a world of color at the Thuy Xuan Incense Village. A feast for the senses, this historic craft village offers a rare glimpse into a centuries-old tradition, where every 'flower' of incense tells a story of Hue’s enduring cultural heritage.",
+            "details": "See bundles of colorful incense drying in Thuy Xuan, a craft village that adds scent and color to Hue's cultural day.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -988,7 +988,7 @@
               "sv": "Dong Ba Market",
               "no": "Dong Ba-markedet"
             },
-            "details": "Experience the soul of Hue at Dong Ba Market. From the sizzling sounds of street food stalls to the delicate craftsmanship of poem conical hats, this bustling market is a sensory journey through the traditions and flavors of central Vietnam.",
+            "details": "Explore Dong Ba Market for Hue flavors, local produce and everyday trade beside the Perfume River.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -1015,7 +1015,7 @@
             }
           }
         ],
-        "notes": "Travel from Da Nang via Lang Co Bay to Hue. Visit Thien Mu Pagoda, the Imperial Citadel, the colorful Incense Village, and Dong Ba Market.",
+        "notes": "Travel north by coast and lagoon scenery to Hue, where pagodas, royal walls, incense craft and market life tell the story of the former capital.",
         "notes_i18n": {
           "ar": "سافر من دا نانغ عبر خليج لانج كو إلى هوي. قم بزيارة Thien Mu Pagoda والقلعة الإمبراطورية وقرية البخور الملونة وسوق Dong Ba.",
           "fr": "Voyagez de Da Nang via la baie de Lang Co jusqu'à Hue. Visitez la pagode Thien Mu, la citadelle impériale, le village coloré de l'encens et le marché de Dong Ba.",
@@ -1038,7 +1038,7 @@
       {
         "id": "travel_plan_day_c7b84d7b-b6ad-4a04-bb85-fc2430f1f72b",
         "day_number": 5,
-        "title": "Da Nang hotel  - Shopping - Departure from airport",
+        "title": "Da Nang Shopping and Farewell",
         "title_i18n": {
           "ar": "فندق دا نانج - التسوق - المغادرة من المطار",
           "fr": "Hôtel Da Nang - Shopping - Départ de l'aéroport",
@@ -1067,7 +1067,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "The car takes you to the airport",
+            "title": "Airport Transfer",
             "title_i18n": {
               "ar": "السيارة تأخذك إلى المطار",
               "fr": "La voiture vous emmène à l'aéroport",
@@ -1086,7 +1086,7 @@
               "sv": "Bilen tar dig till flygplatsen",
               "no": "Bilen tar deg til flyplassen"
             },
-            "details": null,
+            "details": "After checkout and a final shopping stop, continue to the airport for your departure from Da Nang.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -1113,7 +1113,7 @@
             }
           }
         ],
-        "notes": "The group has breakfast at the hotel, arranges luggage and checks out.\nOn the way to the airport, the group stopped by shopping locations to buy souvenirs to give to relatives.",
+        "notes": "Use the final morning for a relaxed checkout and souvenir stop before the airport transfer closes the Central Vietnam route.",
         "notes_i18n": {
           "ar": "تتناول المجموعة وجبة الإفطار في الفندق، وترتيب الأمتعة وتسجيل المغادرة. وفي الطريق إلى المطار، توقفت المجموعة عند مواقع التسوق لشراء الهدايا التذكارية لتقديمها إلى الأقارب.",
           "fr": "Le groupe prend le petit-déjeuner à l'hôtel, organise les bagages et effectue le départ. Sur le chemin de l'aéroport, le groupe s'est arrêté dans des magasins pour acheter des souvenirs à offrir à des proches.",

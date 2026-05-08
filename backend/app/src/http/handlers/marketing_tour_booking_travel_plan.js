@@ -211,6 +211,8 @@ export function createMarketingTourBookingTravelPlanCloner(deps) {
       title_i18n: title.map,
       overnight_location: overnightLocation.text || null,
       overnight_location_i18n: overnightLocation.map,
+      primary_location_id: normalizeText(day?.primary_location_id) || null,
+      secondary_location_id: normalizeText(day?.secondary_location_id) || null,
       services: await Promise.all((Array.isArray(day?.services) ? day.services : []).map((service) => (
         cloneMarketingTourServiceForBooking(service, {
           tourId,

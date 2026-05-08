@@ -282,6 +282,8 @@ export function createEmptyTravelPlanDay(index = 0) {
     title_i18n: {},
     overnight_location: "",
     overnight_location_i18n: {},
+    primary_location_id: "",
+    secondary_location_id: "",
     services: [],
     notes: "",
     notes_i18n: {}
@@ -433,6 +435,8 @@ export function normalizeTravelPlanDraft(plan, options = {}) {
         title_i18n: titleField.map,
         overnight_location: overnightLocationField.text,
         overnight_location_i18n: overnightLocationField.map,
+        primary_location_id: normalizeOptionalText(rawDay.primary_location_id),
+        secondary_location_id: normalizeOptionalText(rawDay.secondary_location_id),
         services: (
           Array.isArray(rawDay.services)
             ? rawDay.services

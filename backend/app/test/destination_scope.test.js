@@ -56,7 +56,7 @@ test("destination scope ignores legacy destination fields unless scope is explic
 test("destination area and place catalog validates selected scope", () => {
   let store = {};
   const areaRecord = createDestinationAreaRecord(
-    { destination: "Vietnam", name: "Central" },
+    { destination: "Vietnam", name: "Central", latitude: "16.4637", longitude: "107.5909", map_zoom: "8" },
     { randomUUID: idFactory("area_uuid"), nowIso: () => fixedNow }
   );
   assert.equal(areaRecord.ok, true);
@@ -66,7 +66,7 @@ test("destination area and place catalog validates selected scope", () => {
   store = areaResult.store;
 
   const placeRecord = createDestinationPlaceRecord(
-    { area_id: areaResult.area.id, name: "Hoi An" },
+    { area_id: areaResult.area.id, name: "Hoi An", latitude: 15.8801, longitude: 108.338, map_zoom: 12 },
     store,
     { randomUUID: idFactory("place_uuid"), nowIso: () => fixedNow }
   );
@@ -83,8 +83,14 @@ test("destination area and place catalog validates selected scope", () => {
   );
   assert.equal(catalog.areas[0].id, "area_area_uuid");
   assert.equal(catalog.areas[0].label, "Central");
+  assert.equal(catalog.areas[0].latitude, 16.4637);
+  assert.equal(catalog.areas[0].longitude, 107.5909);
+  assert.equal(catalog.areas[0].map_zoom, 8);
   assert.equal(catalog.places[0].id, "place_place_uuid");
   assert.equal(catalog.places[0].label, "Hoi An");
+  assert.equal(catalog.places[0].latitude, 15.8801);
+  assert.equal(catalog.places[0].longitude, 108.338);
+  assert.equal(catalog.places[0].map_zoom, 12);
 
   const valid = validateDestinationScopeAgainstCatalog([
     {

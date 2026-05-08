@@ -481,6 +481,8 @@ export function createBookingTravelPlanModule(ctx) {
     ].some((fieldName) => localizedTravelPlanFieldHasContent(day, fieldName))
       || hasTravelPlanTextContent(day.date)
       || hasTravelPlanTextContent(day.date_string)
+      || hasTravelPlanTextContent(day.primary_location_id)
+      || hasTravelPlanTextContent(day.secondary_location_id)
       || (Array.isArray(day.services) && day.services.length > 0);
   }
 
@@ -528,6 +530,8 @@ export function createBookingTravelPlanModule(ctx) {
         const nextDay = {
           ...sourceDay,
           day_number: dayIndex + 1,
+          primary_location_id: String(sourceDay.primary_location_id || "").trim(),
+          secondary_location_id: String(sourceDay.secondary_location_id || "").trim(),
           services: (Array.isArray(sourceDay.services) ? sourceDay.services : []).map((item) => {
             const sourceItem = item && typeof item === "object" && !Array.isArray(item) ? item : {};
             const nextItem = { ...sourceItem };
@@ -1749,6 +1753,185 @@ export function createBookingTravelPlanModule(ctx) {
     `;
   }
 
+  function normalizeLocationCoordinate(value) {
+    if (value === undefined || value === null || value === "") return null;
+    const numberValue = Number(value);
+    return Number.isFinite(numberValue) ? numberValue : null;
+  }
+
+  function travelPlanLocationCatalog() {
+    const catalog = normalizeDestinationScopeCatalog(state.destinationScopeCatalog || {});
+    const selectedScope = normalizeDestinationScope(state.travelPlanDraft?.destination_scope);
+    const selectedAreaIds = new Set(
+      selectedScope.flatMap((entry) => (Array.isArray(entry.areas) ? entry.areas : []).map((area) => area.area_id))
+    );
+    const selectedDestinationIds = new Set(selectedScope.map((entry) => entry.destination));
+    const hasSelectedAreas = selectedAreaIds.size > 0;
+    const hasSelectedDestinations = selectedDestinationIds.size > 0;
+    const areas = catalog.areas
+      .filter((area) => area.is_active !== false)
+      .filter((area) => {
+        if (hasSelectedAreas) return selectedAreaIds.has(area.id);
+        if (hasSelectedDestinations) return selectedDestinationIds.has(area.destination);
+        return true;
+      });
+    const areaById = new Map(catalog.areas.map((area) => [area.id, area]));
+    const selectedPlaceIds = new Set(
+      selectedScope.flatMap((entry) => (
+        Array.isArray(entry.areas)
+          ? entry.areas.flatMap((area) => (Array.isArray(area.places) ? area.places : []).map((place) => place.place_id))
+          : []
+      ))
+    );
+    const hasSelectedPlaces = selectedPlaceIds.size > 0;
+    const places = catalog.places
+      .filter((place) => place.is_active !== false)
+      .filter((place) => {
+        const area = areaById.get(place.area_id);
+        if (hasSelectedPlaces) return selectedPlaceIds.has(place.id);
+        if (hasSelectedAreas) return selectedAreaIds.has(place.area_id);
+        if (hasSelectedDestinations) return area && selectedDestinationIds.has(area.destination);
+        return true;
+      });
+    return { ...catalog, areas, places };
+  }
+
+  function travelPlanLocationOptions() {
+    const catalog = travelPlanLocationCatalog();
+    const areaById = new Map(catalog.areas.map((area) => [area.id, area]));
+    const options = [];
+    for (const area of catalog.areas) {
+      options.push({
+        id: area.id,
+        label: area.label || area.code || area.id,
+        group: bookingT("booking.travel_plan.location_group_regions", "Regions"),
+        latitude: normalizeLocationCoordinate(area.latitude),
+        longitude: normalizeLocationCoordinate(area.longitude)
+      });
+    }
+    for (const place of catalog.places) {
+      const area = areaById.get(place.area_id);
+      options.push({
+        id: place.id,
+        label: place.label || place.code || place.id,
+        group: area?.label || bookingT("booking.travel_plan.location_group_places", "Places"),
+        latitude: normalizeLocationCoordinate(place.latitude),
+        longitude: normalizeLocationCoordinate(place.longitude)
+      });
+    }
+    return options.sort((left, right) => {
+      const groupCompare = left.group.localeCompare(right.group, "en", { sensitivity: "base" });
+      if (groupCompare !== 0) return groupCompare;
+      return left.label.localeCompare(right.label, "en", { sensitivity: "base" });
+    });
+  }
+
+  function travelPlanLocationById() {
+    return new Map(travelPlanLocationOptions().map((location) => [location.id, location]));
+  }
+
+  function renderTravelPlanLocationSelect({ id, field, value, label }) {
+    const options = travelPlanLocationOptions();
+    const selectedValue = String(value || "").trim();
+    const groups = new Map();
+    for (const option of options) {
+      if (!groups.has(option.group)) groups.set(option.group, []);
+      groups.get(option.group).push(option);
+    }
+    return `
+      <label for="${escapeHtml(id)}">${escapeHtml(label)}</label>
+      <select id="${escapeHtml(id)}" data-travel-plan-day-location-field="${escapeHtml(field)}" ${!state.permissions.canEditBooking ? "disabled" : ""}>
+        <option value="">${escapeHtml(bookingT("booking.travel_plan.location_none", "No map point"))}</option>
+        ${Array.from(groups.entries()).map(([groupLabel, groupOptions]) => `
+          <optgroup label="${escapeHtml(groupLabel)}">
+            ${groupOptions.map((option) => `
+              <option value="${escapeHtml(option.id)}" ${option.id === selectedValue ? "selected" : ""}>
+                ${escapeHtml(option.label)}${option.latitude === null || option.longitude === null ? ` ${escapeHtml(bookingT("booking.travel_plan.location_missing_coordinates_short", "(no coordinates)"))}` : ""}
+              </option>
+            `).join("")}
+          </optgroup>
+        `).join("")}
+      </select>
+    `;
+  }
+
+  function travelPlanRoutePoints(plan = state.travelPlanDraft) {
+    const locationById = travelPlanLocationById();
+    return (Array.isArray(plan?.days) ? plan.days : [])
+      .flatMap((day) => [
+        { day, role: "primary", locationId: String(day?.primary_location_id || "").trim() },
+        { day, role: "secondary", locationId: String(day?.secondary_location_id || "").trim() }
+      ])
+      .filter((entry) => entry.locationId)
+      .map((entry) => {
+        const location = locationById.get(entry.locationId) || null;
+        return {
+          ...entry,
+          location,
+          latitude: normalizeLocationCoordinate(location?.latitude),
+          longitude: normalizeLocationCoordinate(location?.longitude)
+        };
+      });
+  }
+
+  function renderTravelPlanRouteMap() {
+    const points = travelPlanRoutePoints();
+    if (!points.length) return "";
+    const coordinatePoints = points.filter((point) => point.latitude !== null && point.longitude !== null);
+    const missingPoints = points.filter((point) => point.latitude === null || point.longitude === null);
+    const width = 640;
+    const height = 260;
+    const padding = 34;
+    const latitudes = coordinatePoints.map((point) => point.latitude);
+    const longitudes = coordinatePoints.map((point) => point.longitude);
+    const minLat = Math.min(...latitudes);
+    const maxLat = Math.max(...latitudes);
+    const minLng = Math.min(...longitudes);
+    const maxLng = Math.max(...longitudes);
+    const latSpan = Math.max(0.0001, maxLat - minLat);
+    const lngSpan = Math.max(0.0001, maxLng - minLng);
+    const projected = coordinatePoints.map((point, index) => ({
+      ...point,
+      index,
+      x: padding + ((point.longitude - minLng) / lngSpan) * (width - padding * 2),
+      y: height - padding - ((point.latitude - minLat) / latSpan) * (height - padding * 2)
+    }));
+    const linePoints = projected.map((point) => `${point.x.toFixed(1)},${point.y.toFixed(1)}`).join(" ");
+    return `
+      <section class="travel-plan-route-map" aria-label="${escapeHtml(bookingT("booking.travel_plan.route_map", "Route map"))}">
+        <div class="travel-plan-route-map__head">
+          <h3>${escapeHtml(bookingT("booking.travel_plan.route_map", "Route map"))}</h3>
+          <p class="micro">${escapeHtml(bookingT("booking.travel_plan.route_map_hint", "Dashed route uses each day primary point, then secondary point when set."))}</p>
+        </div>
+        ${projected.length
+          ? `<svg class="travel-plan-route-map__svg" viewBox="0 0 ${width} ${height}" role="img">
+              <rect x="0" y="0" width="${width}" height="${height}" rx="8"></rect>
+              ${projected.length > 1 ? `<polyline points="${linePoints}" fill="none"></polyline>` : ""}
+              ${projected.map((point, index) => `
+                <g class="travel-plan-route-map__marker" transform="translate(${point.x.toFixed(1)} ${point.y.toFixed(1)})">
+                  <circle r="12"></circle>
+                  <text text-anchor="middle" dominant-baseline="central">${index + 1}</text>
+                </g>
+              `).join("")}
+            </svg>`
+          : ""}
+        <div class="travel-plan-route-map__legend">
+          ${points.map((point, index) => `
+            <span class="travel-plan-route-map__legend-item${point.latitude === null || point.longitude === null ? " is-missing" : ""}">
+              <span>${escapeHtml(String(index + 1))}</span>
+              ${escapeHtml(bookingT("booking.travel_plan.day_heading", "Day {day}", { day: point.day?.day_number || "?" }))}
+              ${point.role === "secondary" ? escapeHtml(` ${bookingT("booking.travel_plan.secondary_location_suffix", "(secondary)")}`) : ""}
+              - ${escapeHtml(point.location?.label || point.locationId)}
+            </span>
+          `).join("")}
+        </div>
+        ${missingPoints.length
+          ? `<p class="micro travel-plan-route-map__warning">${escapeHtml(bookingT("booking.travel_plan.route_map_missing_coordinates", "{count} selected map point(s) need coordinates.", { count: missingPoints.length }))}</p>`
+          : ""}
+      </section>
+    `;
+  }
+
   function renderTravelPlanDay(day, dayIndex) {
     const items = Array.isArray(day.services) ? day.services : [];
     const collapsed = isTravelPlanDayCollapsed(day.id);
@@ -1827,6 +2010,24 @@ export function createBookingTravelPlanModule(ctx) {
                   type: "input",
                   sourceValue: resolveLocalizedDraftBranchText(day.overnight_location_i18n ?? day.overnight_location, bookingSourceLang(), ""),
                   localizedValue: resolveLocalizedDraftBranchText(day.overnight_location_i18n ?? day.overnight_location, bookingContentLang(), "")
+                })}
+              </div>
+            </div>
+            <div class="travel-plan-grid travel-plan-grid--map-locations">
+              <div class="field">
+                ${renderTravelPlanLocationSelect({
+                  id: `travel_plan_day_primary_location_${day.id}`,
+                  field: "primary_location_id",
+                  value: day.primary_location_id,
+                  label: bookingT("booking.travel_plan.primary_location", "Primary map point")
+                })}
+              </div>
+              <div class="field">
+                ${renderTravelPlanLocationSelect({
+                  id: `travel_plan_day_secondary_location_${day.id}`,
+                  field: "secondary_location_id",
+                  value: day.secondary_location_id,
+                  label: bookingT("booking.travel_plan.secondary_location", "Secondary map point")
                 })}
               </div>
             </div>
@@ -1939,6 +2140,8 @@ export function createBookingTravelPlanModule(ctx) {
       );
       day.overnight_location = overnight.text;
       day.overnight_location_i18n = overnight.map;
+      day.primary_location_id = String(dayNode.querySelector('[data-travel-plan-day-location-field="primary_location_id"]')?.value || "").trim();
+      day.secondary_location_id = String(dayNode.querySelector('[data-travel-plan-day-location-field="secondary_location_id"]')?.value || "").trim();
       const dayNotes = readLocalizedFieldPayload(
         dayNode,
         "travel-plan-day-field",
@@ -3420,6 +3623,7 @@ export function createBookingTravelPlanModule(ctx) {
         const shouldRerender = Boolean(
           target?.matches?.('[data-travel-plan-service-field="timing_kind"]')
           || target?.matches?.('[data-travel-plan-service-field="kind"]')
+          || target?.matches?.("[data-travel-plan-day-location-field]")
           || target?.matches?.("[data-destination-scope-destination]")
           || target?.matches?.("[data-destination-scope-area]")
         );
@@ -3725,6 +3929,7 @@ export function createBookingTravelPlanModule(ctx) {
     }
     els.travel_plan_editor.innerHTML = `
       ${usesExternalDestinationScopeEditor() ? "" : destinationScopeMarkup}
+      ${renderTravelPlanRouteMap()}
       ${(Array.isArray(state.travelPlanDraft.days) ? state.travelPlanDraft.days : []).map((day, dayIndex) => renderTravelPlanDay(day, dayIndex)).join("") || `<p class="travel-plan-empty">${escapeHtml(bookingT("booking.travel_plan.no_days", "No travel-plan days yet."))}</p>`}
       <div class="travel-plan-footer">
         <div class="travel-plan-footer__action-rows">

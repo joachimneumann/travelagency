@@ -1,7 +1,7 @@
 {
   "id": "tour_181b4316-7b70-410c-9f11-a084cfb11329",
-  "title": "Tuyet Tinh Coc - Trang An - Dancing Cave",
-  "short_description": "Explore the serene Tuyet Tinh Coc, majestic karst landscapes of Trang An, and panoramic views from Mua Cave (Dancing Cave). Ninh Binh's ultimate scenic trio",
+  "title": "Ninh Binh Scenic Trio",
+  "short_description": "One day, three Ninh Binh moods: Tuyet Tinh Coc's still lake, Trang An's cave waterways and Hang Mua's climb above the karsts.",
   "styles": [
     "budget",
     "culture",
@@ -38,7 +38,7 @@
       {
         "id": "travel_plan_day_63c3809d-f8bd-4bae-ba85-26f9eb64d4cc",
         "day_number": 1,
-        "title": "",
+        "title": "Tuyet Tinh Coc and Trang An",
         "title_i18n": {},
         "overnight_location": null,
         "overnight_location_i18n": {},
@@ -50,7 +50,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Explore the serene Tuyet Tinh Coc",
+            "title": "Tuyet Tinh Coc",
             "title_i18n": {
               "ar": "استكشف منطقة Tuyet Tinh Coc الهادئة",
               "fr": "Explorez le paisible Tuyet Tinh Coc",
@@ -69,7 +69,7 @@
               "sv": "Utforska den fridfulla Tuyet Tinh Coc",
               "no": "Utforsk den rolige Tuyet Tinh Coc"
             },
-            "details": "Tuyet Tinh Coc, nestled in the ancient capital of Hoa Lu, Ninh Binh, is a hidden gem famous for its crystal-clear turquoise lake and limestone cliffs. This \"Fairytale Garden\" offers a peaceful escape with its serene atmosphere, a tranquil pagoda, and a mysterious cave, perfect for those seeking natural beauty and quiet reflection",
+            "details": "Visit Tuyet Tinh Coc, a calm lake enclosed by limestone cliffs near Hoa Lu, with a small pagoda and cave atmosphere.",
             "details_i18n": {
               "ar": "تقع Tuyet Tinh Coc في العاصمة القديمة هوا لو، نينه بينه، وهي جوهرة مخفية تشتهر ببحيرتها الفيروزية الصافية ومنحدراتها من الحجر الجيري. توفر \"حديقة القصص الخيالية\" هذه ملاذًا هادئًا بأجوائها الهادئة ومعبدها الهادئ وكهفها الغامض، وهي مثالية لأولئك الذين يبحثون عن الجمال الطبيعي والتأمل الهادئ.",
               "fr": "Tuyet Tinh Coc, niché dans l'ancienne capitale de Hoa Lu, Ninh Binh, est un joyau caché célèbre pour son lac turquoise aux eaux cristallines et ses falaises calcaires. Ce \"Jardin de conte de fées\" offre une évasion paisible avec son atmosphère sereine, une pagode tranquille et une grotte mystérieuse, parfaite pour ceux qui recherchent la beauté naturelle et la réflexion tranquille.",
@@ -119,7 +119,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Majestic karst landscapes of Trang An",
+            "title": "Trang An Boat Journey",
             "title_i18n": {
               "ar": "المناظر الطبيعية الكارستية المهيبة في ترانج آن",
               "fr": "Paysages karstiques majestueux de Trang An",
@@ -138,7 +138,7 @@
               "sv": "Majestätiska karstlandskap i Trang An",
               "no": "Majestetiske karstlandskap i Trang An"
             },
-            "details": "Trang An Landscape Complex, a UNESCO World Heritage site, is renowned for its majestic limestone karsts rising from emerald waters. This \"Ha Long Bay on Land\" features a labyrinth of secret caves and ancient temples accessible by traditional sampan boats, offering a breathtaking blend of natural beauty and cultural history",
+            "details": "Travel by sampan through Trang An's emerald waterways, caves and temple scenery in the UNESCO landscape complex.",
             "details_i18n": {
               "ar": "يشتهر مجمع ترانج آن للمناظر الطبيعية، أحد مواقع التراث العالمي لليونسكو، بالكارستات الجيرية المهيبة التي ترتفع من المياه الزمردية. يتميز \"خليج ها لونج على الأرض\" بمتاهة من الكهوف السرية والمعابد القديمة التي يمكن الوصول إليها عن طريق قوارب السامبان التقليدية، مما يوفر مزيجًا مذهلاً من الجمال الطبيعي والتاريخ الثقافي",
               "fr": "Le complexe paysager de Trang An, site classé au patrimoine mondial de l'UNESCO, est réputé pour ses majestueux karsts calcaires s'élevant des eaux émeraude. Cette « baie d'Ha Long terrestre » présente un labyrinthe de grottes secrètes et de temples anciens accessibles par des bateaux sampan traditionnels, offrant un mélange époustouflant de beauté naturelle et d'histoire culturelle.",
@@ -188,7 +188,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "panoramic views from Mua Cave",
+            "title": "Hang Mua Viewpoint",
             "title_i18n": {
               "ar": "مناظر بانورامية من كهف Mua",
               "fr": "vues panoramiques depuis la grotte de Mua",
@@ -207,7 +207,7 @@
               "sv": "panoramautsikt från Mua-grottan",
               "no": "panoramautsikt fra Mua-hulen"
             },
-            "details": "Mua Cave (Hang Mua) offers the most spectacular panoramic views in Ninh Binh. After climbing nearly 500 stone steps, you are rewarded with a breathtaking 360-degree vista of the Ngo Dong River winding through lush rice fields and towering limestone karsts. It is the ultimate spot to capture the majestic beauty of the Tam Coc valley from above",
+            "details": "Climb the stone steps at Hang Mua for sweeping views over rivers, rice fields and Ninh Binh's limestone towers.",
             "details_i18n": {
               "ar": "يوفر كهف Mua (Hang Mua) أروع المناظر البانورامية في نينه بينه. بعد تسلق ما يقرب من 500 درجة حجرية، ستتم مكافأتك بمنظر يحبس الأنفاس بزاوية 360 درجة لنهر نجو دونج الذي يتعرج عبر حقول الأرز الخضراء وأحجار الكارست الجيرية الشاهقة. إنه المكان المثالي لالتقاط الجمال المهيب لوادي تام كوك من الأعلى",
               "fr": "La grotte Mua (Hang Mua) offre les vues panoramiques les plus spectaculaires de Ninh Binh. Après avoir gravi près de 500 marches de pierre, vous êtes récompensé par une vue imprenable à 360 degrés sur la rivière Ngo Dong qui serpente à travers des rizières luxuriantes et d'imposants karsts calcaires. C'est l'endroit idéal pour capturer la beauté majestueuse de la vallée de Tam Coc d'en haut.",
@@ -251,7 +251,7 @@
             }
           }
         ],
-        "notes": "The vehicle and guide will pick you up from your hotel in the central Old Quarter and the Hanoi Opera House area, then depart for Ninh Binh.",
+        "notes": "Leave Hanoi for Ninh Binh and follow a route of quiet lakes, sampan waterways and a final climb to one of the region's best viewpoints.",
         "notes_i18n": {
           "ar": "ستنقلك السيارة والدليل من فندقك في الحي القديم المركزي ومنطقة دار الأوبرا في هانوي، ثم تغادران إلى نينه بينه.",
           "fr": "Le véhicule et le guide viendront vous chercher à votre hôtel dans le vieux quartier central et dans le quartier de l'opéra de Hanoï, puis partiront pour Ninh Binh.",

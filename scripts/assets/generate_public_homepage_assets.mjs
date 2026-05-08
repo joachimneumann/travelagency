@@ -853,6 +853,23 @@ function applyPublishedMarketingTourTranslations(tour, lang, translations) {
   return changed ? next : tour;
 }
 
+function normalizeLegacyTourLocalizedPairs(tour) {
+  if (!tour || typeof tour !== "object" || Array.isArray(tour)) return tour;
+  const next = cloneJson(tour);
+  for (const field of ["title", "short_description"]) {
+    const value = next[field];
+    if (!value || typeof value !== "object" || Array.isArray(value)) continue;
+    next[`${field}_i18n`] = {
+      ...value,
+      ...(next[`${field}_i18n`] && typeof next[`${field}_i18n`] === "object" && !Array.isArray(next[`${field}_i18n`])
+        ? next[`${field}_i18n`]
+        : {})
+    };
+    next[field] = normalizeText(value.en) || normalizeText(Object.values(value).find((entry) => normalizeText(entry)));
+  }
+  return next;
+}
+
 function extractTourAssetRelativePath(imagePath, tourId) {
   const normalized = normalizeText(imagePath);
   if (!normalized) return "";
@@ -1815,7 +1832,7 @@ async function generateTourAssets({
       if (error?.code === "ENOENT") continue;
       throw new Error(`Could not parse ${tourPath}: ${error?.message || error}`);
     }
-    const normalizedTour = normalizeTourForStorage(parsedTour);
+    const normalizedTour = normalizeTourForStorage(normalizeLegacyTourLocalizedPairs(parsedTour));
     if (!normalizeText(normalizedTour?.id)) {
       throw new Error(`Tour at ${tourPath} is missing an id.`);
     }
@@ -1870,7 +1887,11 @@ async function generateTourAssets({
     const localizedSeoItems = [];
     for (const tour of sortedPublicTours) {
       const seoSlug = storedTourSeoSlug(tour);
-      const localizedTour = applyPublishedMarketingTourTranslations(tour, normalizedLang, publishedTranslations);
+      const localizedTour = applyPublishedMarketingTourTranslations(
+        normalizeLegacyTourLocalizedPairs(tour),
+        normalizedLang,
+        publishedTranslations
+      );
       const readModel = normalizeTourForRead(localizedTour, { lang: normalizedLang });
       const travelPlan = await publicHomepageTourTravelPlan(
         readModel.travel_plan,

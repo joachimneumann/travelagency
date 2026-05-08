@@ -31,6 +31,23 @@ function unique(values) {
   return Array.from(new Set((Array.isArray(values) ? values : []).filter(Boolean)));
 }
 
+function normalizeCoordinate(value, { min, max } = {}) {
+  if (value === undefined || value === null || value === "") return null;
+  const numberValue = Number(value);
+  if (!Number.isFinite(numberValue)) return null;
+  if (Number.isFinite(min) && numberValue < min) return null;
+  if (Number.isFinite(max) && numberValue > max) return null;
+  return numberValue;
+}
+
+function normalizeMapZoom(value) {
+  if (value === undefined || value === null || value === "") return null;
+  const numberValue = Number(value);
+  if (!Number.isFinite(numberValue)) return null;
+  const normalized = Math.round(numberValue);
+  return normalized >= 0 && normalized <= 22 ? normalized : null;
+}
+
 export function destinationScopeDestinations(scope) {
   const order = new Map(DESTINATION_OPTIONS.map((option, index) => [option.code, index]));
   return unique((Array.isArray(scope) ? scope : []).map((entry) => countryCode(entry?.destination)).filter(Boolean))
@@ -94,6 +111,9 @@ export function normalizeDestinationScopeCatalog(catalog) {
       destination: countryCode(area?.destination),
       code: normalizeText(area?.code),
       label: normalizeText(area?.label || area?.name || area?.code || area?.id),
+      latitude: normalizeCoordinate(area?.latitude, { min: -90, max: 90 }),
+      longitude: normalizeCoordinate(area?.longitude, { min: -180, max: 180 }),
+      map_zoom: normalizeMapZoom(area?.map_zoom),
       is_active: area?.is_active !== false
     })).filter((area) => area.id && area.destination),
     places: (Array.isArray(catalog?.places) ? catalog.places : []).map((place) => ({
@@ -101,6 +121,9 @@ export function normalizeDestinationScopeCatalog(catalog) {
       area_id: normalizeText(place?.area_id),
       code: normalizeText(place?.code),
       label: normalizeText(place?.label || place?.name || place?.code || place?.id),
+      latitude: normalizeCoordinate(place?.latitude, { min: -90, max: 90 }),
+      longitude: normalizeCoordinate(place?.longitude, { min: -180, max: 180 }),
+      map_zoom: normalizeMapZoom(place?.map_zoom),
       is_active: place?.is_active !== false
     })).filter((place) => place.id && place.area_id)
   };

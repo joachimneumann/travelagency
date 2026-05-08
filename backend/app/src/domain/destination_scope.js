@@ -66,6 +66,23 @@ function normalizeLocalizedTextMap(value) {
   );
 }
 
+function normalizeCoordinate(value, { min, max } = {}) {
+  if (value === undefined || value === null || value === "") return null;
+  const numberValue = Number(value);
+  if (!Number.isFinite(numberValue)) return null;
+  if (Number.isFinite(min) && numberValue < min) return null;
+  if (Number.isFinite(max) && numberValue > max) return null;
+  return numberValue;
+}
+
+function normalizeMapZoom(value) {
+  if (value === undefined || value === null || value === "") return null;
+  const numberValue = Number(value);
+  if (!Number.isFinite(numberValue)) return null;
+  const normalized = Math.round(numberValue);
+  return normalized >= 0 && normalized <= 22 ? normalized : null;
+}
+
 function resolveLocalizedText(value, lang = "en", fallback = "") {
   const normalizedLang = normalizeText(lang).toLowerCase() || "en";
   if (typeof value === "string") return normalizeText(value) || fallback;
@@ -245,8 +262,9 @@ function normalizeCatalogArea(rawArea, index = 0) {
     code: code || id,
     name,
     name_i18n: normalizeLocalizedTextMap(source.name_i18n),
-    ...(Number.isFinite(Number(source.latitude)) ? { latitude: Number(source.latitude) } : {}),
-    ...(Number.isFinite(Number(source.longitude)) ? { longitude: Number(source.longitude) } : {}),
+    ...(normalizeCoordinate(source.latitude, { min: -90, max: 90 }) !== null ? { latitude: normalizeCoordinate(source.latitude, { min: -90, max: 90 }) } : {}),
+    ...(normalizeCoordinate(source.longitude, { min: -180, max: 180 }) !== null ? { longitude: normalizeCoordinate(source.longitude, { min: -180, max: 180 }) } : {}),
+    ...(normalizeMapZoom(source.map_zoom) !== null ? { map_zoom: normalizeMapZoom(source.map_zoom) } : {}),
     sort_order: Number.isInteger(Number(source.sort_order)) ? Number(source.sort_order) : index,
     is_active: source.is_active !== false,
     created_at: normalizeOptionalText(source.created_at) || null,
@@ -267,8 +285,9 @@ function normalizeCatalogPlace(rawPlace, areaIdSet, index = 0) {
     code: code || id,
     name,
     name_i18n: normalizeLocalizedTextMap(source.name_i18n),
-    ...(Number.isFinite(Number(source.latitude)) ? { latitude: Number(source.latitude) } : {}),
-    ...(Number.isFinite(Number(source.longitude)) ? { longitude: Number(source.longitude) } : {}),
+    ...(normalizeCoordinate(source.latitude, { min: -90, max: 90 }) !== null ? { latitude: normalizeCoordinate(source.latitude, { min: -90, max: 90 }) } : {}),
+    ...(normalizeCoordinate(source.longitude, { min: -180, max: 180 }) !== null ? { longitude: normalizeCoordinate(source.longitude, { min: -180, max: 180 }) } : {}),
+    ...(normalizeMapZoom(source.map_zoom) !== null ? { map_zoom: normalizeMapZoom(source.map_zoom) } : {}),
     sort_order: Number.isInteger(Number(source.sort_order)) ? Number(source.sort_order) : index,
     is_active: source.is_active !== false,
     created_at: normalizeOptionalText(source.created_at) || null,
@@ -414,7 +433,7 @@ export function createDestinationCatalogDestinationRecord(payload, { nowIso }) {
       },
       sort_order: Number.isInteger(Number(payload?.sort_order)) ? Number(payload.sort_order) : 100,
       is_active: payload?.is_active !== false,
-      created_at: now,
+      created_at: normalizeOptionalText(payload?.created_at) || now,
       updated_at: now
     }
   };
@@ -435,9 +454,12 @@ export function createDestinationAreaRecord(payload, { randomUUID, nowIso }) {
       code,
       name,
       name_i18n: normalizeLocalizedTextMap(payload?.name_i18n),
+      ...(normalizeCoordinate(payload?.latitude, { min: -90, max: 90 }) !== null ? { latitude: normalizeCoordinate(payload.latitude, { min: -90, max: 90 }) } : {}),
+      ...(normalizeCoordinate(payload?.longitude, { min: -180, max: 180 }) !== null ? { longitude: normalizeCoordinate(payload.longitude, { min: -180, max: 180 }) } : {}),
+      ...(normalizeMapZoom(payload?.map_zoom) !== null ? { map_zoom: normalizeMapZoom(payload.map_zoom) } : {}),
       sort_order: Number.isInteger(Number(payload?.sort_order)) ? Number(payload.sort_order) : 100,
       is_active: payload?.is_active !== false,
-      created_at: now,
+      created_at: normalizeOptionalText(payload?.created_at) || now,
       updated_at: now
     }
   };
@@ -460,9 +482,12 @@ export function createDestinationPlaceRecord(payload, store, { randomUUID, nowIs
       code,
       name,
       name_i18n: normalizeLocalizedTextMap(payload?.name_i18n),
+      ...(normalizeCoordinate(payload?.latitude, { min: -90, max: 90 }) !== null ? { latitude: normalizeCoordinate(payload.latitude, { min: -90, max: 90 }) } : {}),
+      ...(normalizeCoordinate(payload?.longitude, { min: -180, max: 180 }) !== null ? { longitude: normalizeCoordinate(payload.longitude, { min: -180, max: 180 }) } : {}),
+      ...(normalizeMapZoom(payload?.map_zoom) !== null ? { map_zoom: normalizeMapZoom(payload.map_zoom) } : {}),
       sort_order: Number.isInteger(Number(payload?.sort_order)) ? Number(payload.sort_order) : 100,
       is_active: payload?.is_active !== false,
-      created_at: now,
+      created_at: normalizeOptionalText(payload?.created_at) || now,
       updated_at: now
     }
   };

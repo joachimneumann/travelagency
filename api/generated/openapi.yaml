@@ -4060,6 +4060,12 @@ components:
           additionalProperties:
             type: string
           nullable: true
+        primary_location_id:
+          type: string
+          nullable: true
+        secondary_location_id:
+          type: string
+          nullable: true
         services:
           type: array
           items:
@@ -5820,6 +5826,15 @@ components:
           "$ref": "#/components/schemas/CountryCode"
         label:
           type: string
+        latitude:
+          type: number
+          nullable: true
+        longitude:
+          type: number
+          nullable: true
+        map_zoom:
+          type: integer
+          nullable: true
         sort_order:
           type: integer
         is_active:
@@ -5858,6 +5873,15 @@ components:
           nullable: true
         label:
           type: string
+        latitude:
+          type: number
+          nullable: true
+        longitude:
+          type: number
+          nullable: true
+        map_zoom:
+          type: integer
+          nullable: true
         sort_order:
           type: integer
         is_active:
@@ -6865,6 +6889,15 @@ components:
         code:
           type: string
           nullable: true
+        latitude:
+          type: number
+          nullable: true
+        longitude:
+          type: number
+          nullable: true
+        map_zoom:
+          type: integer
+          nullable: true
         actor:
           type: string
           nullable: true
@@ -6885,6 +6918,15 @@ components:
           nullable: true
         code:
           type: string
+          nullable: true
+        latitude:
+          type: number
+          nullable: true
+        longitude:
+          type: number
+          nullable: true
+        map_zoom:
+          type: integer
           nullable: true
         actor:
           type: string

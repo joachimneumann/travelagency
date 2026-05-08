@@ -1,7 +1,7 @@
 {
   "id": "tour_17d0e941-b5f4-4685-8fd6-c71d3655aeeb",
-  "title": "Đà Nẵng - Marble Mountains - Hội An - Ba Na Hill",
-  "short_description": "Ba Na Hills offers mountain views, Hue preserves royal history, and Hoi An charms with its ancient streets. All are iconic highlights of Central Vietnam",
+  "title": "Da Nang in Three Days",
+  "short_description": "A compact Central Vietnam escape linking Marble Mountains, Hoi An, Ba Na Hills and Son Tra's sea views from a Da Nang base.",
   "styles": [
     "budget",
     "culture",
@@ -58,7 +58,7 @@
       {
         "id": "travel_plan_day_e20eb658-8438-48cd-9c02-88b5ec401139",
         "day_number": 1,
-        "title": "Airport pick-up - Marble Mountains - Hoi An",
+        "title": "Marble Mountains and Hoi An",
         "title_i18n": {},
         "overnight_location": null,
         "overnight_location_i18n": {},
@@ -70,9 +70,9 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Airport pick-up",
+            "title": "Da Nang Airport Welcome",
             "title_i18n": {},
-            "details": null,
+            "details": "Begin with airport pickup in Da Nang and a comfortable start to your Central Vietnam itinerary.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -107,7 +107,7 @@
             "kind": "other",
             "title": "Marble Mountains",
             "title_i18n": {},
-            "details": "Located about 8km from the center of Da Nang, Ngu Hanh Son is a cluster of five limestone mountains rising amidst a vast sandy beach, named after the five elements: Metal, Wood, Water, Fire, and Earth. It is not only a spiritual landmark but also a symbol of the convergence of nature, history, and sculptural art.",
+            "details": "Explore the five limestone hills of Ngu Hanh Son, known for cave temples, viewpoints and stone-carving heritage.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -140,9 +140,9 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Hoi An",
+            "title": "Hoi An Ancient Town",
             "title_i18n": {},
-            "details": "Hoi An is not just an ancient town, but also a \"living museum\" recognized by UNESCO as a World Cultural Heritage site. Once a bustling international trading port from the 15th century, Hoi An today still retains its ancient beauty with moss-covered yellow walls, yin-yang tiled roofs, and streets filled with the glow of lanterns.",
+            "details": "Discover Hoi An's preserved trading houses, yellow walls and lantern streets, a UNESCO old town with a gentle riverside mood.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -169,13 +169,13 @@
             }
           }
         ],
-        "notes": "Welcome to the radiant Central Vietnam! Upon landing, your journey begins with a perfect connection: from the vibrant modernity of Da Nang, to the breathtaking beauty of the Marble Mountains, and finally, to the tranquil, nostalgic atmosphere of Hoi An Ancient Town. A perfect start to a luxurious getaway.",
+        "notes": "Start from Da Nang with a smooth arrival, then move from sacred marble caves to the soft evening atmosphere of Hoi An Ancient Town.",
         "notes_i18n": {}
       },
       {
         "id": "travel_plan_day_c1349bca-3f7b-41ca-86ad-de352cba33c1",
         "day_number": 2,
-        "title": "Ba Na Hill",
+        "title": "Ba Na Hills",
         "title_i18n": {},
         "overnight_location": null,
         "overnight_location_i18n": {},
@@ -187,9 +187,9 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Ba Na Hill",
+            "title": "Ba Na Hills",
             "title_i18n": {},
-            "details": "Located at an altitude of 1,487 meters above sea level on the summit of Mount Chua, Ba Na Hills is not just a tourist destination, but an architectural masterpiece in the heart of the forest. With its climate experiencing four seasons in a single day, it offers a charming and romantic European atmosphere right in the middle of the tropics.",
+            "details": "Ride up Mount Chua to Ba Na Hills for the Golden Bridge, mountain views and the European-style French Village above Da Nang.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -216,13 +216,13 @@
             }
           }
         ],
-        "notes": "Explore Ba Na Hill",
+        "notes": "Spend a full day in Ba Na Hills, where cool mountain air, cable cars, the Golden Bridge and French-style streets contrast with the coast.",
         "notes_i18n": {}
       },
       {
         "id": "travel_plan_day_692b96ba-7a8a-416b-a35e-b8f8eb11d082",
         "day_number": 3,
-        "title": "City Đà Nẵng-Airport Drop-off",
+        "title": "Son Tra and Airport Farewell",
         "title_i18n": {},
         "overnight_location": null,
         "overnight_location_i18n": {},
@@ -236,7 +236,7 @@
             "kind": "other",
             "title": "Linh Ung Pagoda",
             "title_i18n": {},
-            "details": "Located atop a mountain on the Son Tra Peninsula, Linh Ung Bai But Pagoda is a place where mountains, forests, and the sea meet. It is considered a Buddhist realm on earth, with its grand and exquisite architecture.",
+            "details": "Visit Linh Ung Bai But Pagoda, where the Lady Buddha looks over Da Nang's bay from the slopes of Son Tra.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -271,7 +271,7 @@
             "kind": "other",
             "title": "Son Tra Peninsula",
             "title_i18n": {},
-            "details": "Son Tra Peninsula is known as the \"jewel\" of Da Nang. It's a must-visit destination for those who love pristine nature and want to admire the city from the most beautiful angles.",
+            "details": "Take in Son Tra's forested coastline and city views, a scenic last impression of Da Nang before departure.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -304,9 +304,9 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Have a safe flight",
+            "title": "Airport Drop-Off",
             "title_i18n": {},
-            "details": null,
+            "details": "Continue to the airport for your onward flight after the final Da Nang sightseeing stops.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -333,7 +333,7 @@
             }
           }
         ],
-        "notes": "City Đà Nẵng",
+        "notes": "Use the final day for Da Nang's coastal landmarks on Son Tra Peninsula before transferring to the airport.",
         "notes_i18n": {}
       }
     ],

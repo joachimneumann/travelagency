@@ -1,7 +1,7 @@
 {
   "id": "tour_51d3c652-0e8d-4463-ad04-852c64b3a652",
-  "title": "Hanoi  - Ha Long Bay",
-  "short_description": "From ancient Hanoi’s 36 streets to misty Sapa and Fansipan, then to Ha Long Bay’s limestone islands and Ninh Binh’s scenic Trang An—“Ha Long on land.”",
+  "title": "Hanoi and Ha Long Bay",
+  "short_description": "Trace Hanoi's historic heart before cruising into Ha Long Bay, where limestone islands, caves and seafood turn the city break seaward.",
   "styles": [
     "grand-expeditions",
     "beach",
@@ -54,7 +54,7 @@
       {
         "id": "travel_plan_day_923dfd89-6533-43fa-ada7-38e6767a7c6e",
         "day_number": 1,
-        "title": "HaNoi city Tour",
+        "title": "Hanoi Heritage Day",
         "title_i18n": {
           "ar": "جولة مدينة هانوي",
           "fr": "Visite de la ville de Hanoï",
@@ -83,9 +83,9 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Pick up guests and take them to the hotel.",
+            "title": "Hotel Arrival Transfer",
             "title_i18n": {},
-            "details": null,
+            "details": "Arrive in Hanoi and transfer to your hotel, giving the day a calm start before sightseeing begins.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -137,7 +137,7 @@
               "sv": "Hoa Lo fängelse",
               "no": "Hoa Lo fengsel"
             },
-            "details": "A visit to Hoa Lo Prison offers a somber and deeply moving look into Vietnam's turbulent history. From its origins as a colonial prison to its role during the Vietnam War, this site serves as a testament to the human spirit's endurance and the complex layers of war and peace.",
+            "details": "Visit Hoa Lo Prison for a sobering look at colonial-era detention, wartime memory and Vietnam's long struggle for independence.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -189,7 +189,7 @@
               "sv": "Ho Chi Minh-mausoleet",
               "no": "Ho Chi Minh-mausoleet"
             },
-            "details": "The Ho Chi Minh Mausoleum is a place of deep national pride and pilgrimage. As the resting place of Vietnam's greatest leader, it stands as a symbol of the country's independence and a must-visit landmark for those wishing to understand the heart of Vietnamese history.",
+            "details": "See the solemn mausoleum at Ba Dinh Square, a key national site connected to modern Vietnam's independence story.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -222,7 +222,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Văn Miếu Quốc Tủ Giám",
+            "title": "Temple of Literature",
             "title_i18n": {
               "ar": "Văn Miếu Quốc Tủ Giám",
               "fr": "Văn Miếu Quốc Tủ Giám",
@@ -241,7 +241,7 @@
               "sv": "Văn Miếu Quốc Tủ Giám",
               "no": "Văn Miếu Quốc Tủ Giám"
             },
-            "details": "Step into the Temple of Literature, a sanctuary of peace and a testament to Vietnam's intellectual heritage. As the site of the country’s first university, it remains a place where students still come to pray for academic success, blending ancient history with living tradition.",
+            "details": "Walk through Vietnam's first university, where courtyards, stone steles and old pavilions honor Hanoi's scholarly tradition.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -274,7 +274,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Một cột pagoda",
+            "title": "One Pillar Pagoda",
             "title_i18n": {
               "ar": "معبد Một cột",
               "fr": "Pagode Một Cột",
@@ -293,7 +293,7 @@
               "sv": "Jag har en pagod",
               "no": "Det er en pagode"
             },
-            "details": "The One Pillar Pagoda is a masterpiece of ancient Vietnamese architecture. Floating like a lotus above a peaceful pond, this historic temple tells a story of royal gratitude and spiritual devotion, making it a must-see symbol of Hanoi's cultural heritage.",
+            "details": "Visit the small lotus-shaped One Pillar Pagoda, one of Hanoi's most distinctive historic Buddhist landmarks.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -320,7 +320,7 @@
             }
           }
         ],
-        "notes": "Explore Hanoi’s landmarks: visit the Ho Chi Minh Mausoleum at Ba Dinh Square and the iconic One Pillar Pagoda, a unique structure resembling a blooming lotus flower.",
+        "notes": "Spend the day with Hanoi's layered history, from Hoa Lo Prison and Ho Chi Minh's memorial sites to Confucian courtyards and a lotus-shaped pagoda.",
         "notes_i18n": {
           "ar": "استكشف معالم هانوي: قم بزيارة ضريح هوشي منه في ميدان با دينه ومعبد One Pillar Pagoda الشهير، وهو هيكل فريد يشبه زهرة اللوتس المتفتحة.",
           "fr": "Explorez les monuments de Hanoï : visitez le mausolée de Hô Chi Minh sur la place Ba Dinh et l'emblématique pagode au pilier unique, une structure unique ressemblant à une fleur de lotus en fleurs.",
@@ -343,7 +343,7 @@
       {
         "id": "travel_plan_day_aba484c1-bf58-44ac-a62c-17d04eabba24",
         "day_number": 2,
-        "title": "HaNoi – HaLong Bay",
+        "title": "Hanoi to Ha Long Bay",
         "title_i18n": {
           "ar": "هانوي - خليج هالونج",
           "fr": "Hanoï – Baie d’HaLong",
@@ -372,7 +372,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Pick up guests at the airport",
+            "title": "Ha Long Bay Transfer",
             "title_i18n": {
               "ar": "التقاط الضيوف في المطار",
               "fr": "Récupérer les invités à l'aéroport",
@@ -390,7 +390,7 @@
               "sv": "Hämta gäster på flygplatsen",
               "no": "Hente gjester på flyplassen"
             },
-            "details": null,
+            "details": "Depart Hanoi for Ha Long Bay, crossing the Red River Delta before the karst seascape comes into view.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -423,7 +423,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Hà Nội- Hạ Long bay",
+            "title": "Ha Long Bay",
             "title_i18n": {
               "ar": "ها ني- خليج ها لونج",
               "fr": "Hà Nội - Baie de Hạ Long",
@@ -442,7 +442,7 @@
               "sv": "Hà Nội- Hạ Long bay",
               "no": "Hà Nội- Hạ Long bay"
             },
-            "details": "Visiting Ha Long Bay is a surreal experience. I was completely mesmerized by the emerald waters and the majestic limestone karsts. It felt like stepping into a different world—peaceful, grand, and timeless. It is truly a masterpiece of nature that everyone should see at least once in their life",
+            "details": "Enter Ha Long Bay's emerald water, where limestone towers rise in layers around the cruise route.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -475,7 +475,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Halong Bay cruise",
+            "title": "Ha Long Bay Cruise",
             "title_i18n": {
               "ar": "رحلة بحرية في خليج هالونج",
               "fr": "Croisière dans la Baie d'Halong",
@@ -494,7 +494,7 @@
               "sv": "Halong Bay kryssning",
               "no": "Halong Bay cruise"
             },
-            "details": "Choosing the right Ha Long Bay cruise depends on how much time you have and the level of luxury you prefer. While most cruises follow a similar format—including kayaking, cave exploring, and onboard dining—the experience changes significantly based on the duration.",
+            "details": "Cruise between the islands with time for classic bay activities such as cave scenery, kayaking routes or deck views where scheduled.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -527,7 +527,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Lunch on the cruise ship",
+            "title": "Cruise Lunch",
             "title_i18n": {
               "ar": "تناول وجبة الغداء على متن السفينة السياحية",
               "fr": "Déjeuner sur le bateau de croisière",
@@ -546,7 +546,7 @@
               "sv": "Lunch på kryssningsfartyget",
               "no": "Lunsj på cruiseskipet"
             },
-            "details": "Lunch on a Ha Long Bay cruise is a feast for both the palate and the eyes. Savoring fresh-caught seafood while gliding through the emerald waters and emerald peaks is an essential experience that captures the true luxury of Northern Vietnam.",
+            "details": "Enjoy lunch on board while the boat moves through Ha Long's limestone scenery and open water.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -573,7 +573,7 @@
             }
           }
         ],
-        "notes": "Pick up at Hanoi Old Quarter. Enjoy the Red River Delta scenery to Ha Long Bay. Arrive 10 mins early. Traffic may cause delays. Thanks for your patience!",
+        "notes": "Leave the capital for Ha Long Bay and spend the day on the water among limestone islands, cave scenery and lunch aboard the cruise.",
         "notes_i18n": {
           "ar": "التقط في حي هانوي القديم. استمتع بمناظر دلتا النهر الأحمر إلى خليج ها لونج. الوصول مبكرًا بـ 10 دقائق. قد تتسبب حركة المرور في حدوث تأخيرات. شكرا لصبرك!",
           "fr": "Prise en charge au vieux quartier de Hanoi. Profitez du paysage du delta du fleuve Rouge jusqu'à la baie d'Ha Long. Arrivez 10 minutes plus tôt. La circulation peut entraîner des retards. Merci pour votre patience !",
@@ -596,7 +596,7 @@
       {
         "id": "travel_plan_day_56a905e0-b4a3-497c-913f-c23666ce0388",
         "day_number": 3,
-        "title": "Take them shopping and see them off at the airport.",
+        "title": "Shopping and Departure",
         "title_i18n": {},
         "overnight_location": null,
         "overnight_location_i18n": {},
@@ -608,9 +608,9 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Take them shopping and see them off at the airport.",
+            "title": "Shopping and Airport Transfer",
             "title_i18n": {},
-            "details": null,
+            "details": "Stop for last purchases before continuing to the airport for departure.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -637,7 +637,7 @@
             }
           }
         ],
-        "notes": null,
+        "notes": "Use the final day for a simple shopping stop and airport send-off after the Hanoi and Ha Long route.",
         "notes_i18n": {}
       }
     ],

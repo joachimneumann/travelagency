@@ -234,6 +234,9 @@ import (
 	name:        string & !=""
 	name_i18n?: [string]: string
 	label:       string & !=""
+	latitude?:   >=-90 & <=90 & number
+	longitude?:  >=-180 & <=180 & number
+	map_zoom?:   >=0 & <=22 & int
 	sort_order:  >=0 & int
 	is_active:   bool
 	created_at?: common.#Timestamp | null
@@ -247,6 +250,9 @@ import (
 	name:    string & !=""
 	name_i18n?: [string]: string
 	label:       string & !=""
+	latitude?:   >=-90 & <=90 & number
+	longitude?:  >=-180 & <=180 & number
+	map_zoom?:   >=0 & <=22 & int
 	sort_order:  >=0 & int
 	is_active:   bool
 	created_at?: common.#Timestamp | null

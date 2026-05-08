@@ -10,6 +10,9 @@ import { GENERATED_APP_ROLES } from "../../Generated/Models/generated_Roles.js";
 import {
   countryReferenceInfoRequest,
   countryReferenceInfoUpdateRequest,
+  destinationScopeAreaCreateRequest,
+  destinationScopeCatalogRequest,
+  destinationScopePlaceCreateRequest,
   keycloakUserStaffProfileUpdateRequest,
   keycloakUserStaffProfileTranslateFieldsRequest,
   keycloakUserStaffProfilePictureUploadRequest,
@@ -55,6 +58,12 @@ const els = {
   websiteDestinationPublicationStatus: document.getElementById("websiteDestinationPublicationStatus"),
   websiteDestinationPublicationList: document.getElementById("websiteDestinationPublicationList"),
   websiteDestinationPublicationSaveBtn: document.getElementById("websiteDestinationPublicationSaveBtn"),
+  locationManagerPanel: document.getElementById("locationManagerPanel"),
+  locationManagerStatus: document.getElementById("locationManagerStatus"),
+  locationManagerList: document.getElementById("locationManagerList"),
+  locationManagerRefreshBtn: document.getElementById("locationManagerRefreshBtn"),
+  locationManagerAddAreaBtn: document.getElementById("locationManagerAddAreaBtn"),
+  locationManagerAddPlaceBtn: document.getElementById("locationManagerAddPlaceBtn"),
   translationRulesPanel: document.getElementById("translationRulesPanel"),
   translationRulesStatus: document.getElementById("translationRulesStatus"),
   translationRulesTable: document.getElementById("translationRulesTable"),
@@ -212,6 +221,8 @@ const state = {
     canEditStaffProfiles: false,
     canReadWebsiteDestinationPublication: false,
     canEditWebsiteDestinationPublication: false,
+    canReadLocations: false,
+    canEditLocations: false,
     canReadTranslationRules: false,
     canEditTranslationRules: false,
     canReadEmergency: false,
@@ -231,6 +242,13 @@ const state = {
   websiteDestinationPublicationInitialByCountry: {},
   websiteDestinationPublicationDraftByCountry: {},
   websiteDestinationPublicationSaving: false,
+  locationCatalog: {
+    destinations: [],
+    areas: [],
+    places: []
+  },
+  locationCatalogLoading: false,
+  locationCatalogSavingId: "",
   translationRulesLoaded: false,
   translationRulesInitialItems: [],
   translationRulesDraftItems: [],
@@ -269,6 +287,56 @@ function hasAnyRoleInList(roleList, ...roles) {
 function countryLabel(countryCode) {
   const normalizedCountry = normalizeText(countryCode).toUpperCase();
   return normalizeText(COUNTRY_LABEL_BY_VALUE.get(normalizedCountry)) || normalizedCountry;
+}
+
+function normalizeCoordinate(value, { min, max } = {}) {
+  if (value === undefined || value === null || value === "") return "";
+  const numberValue = Number(value);
+  if (!Number.isFinite(numberValue)) return "";
+  if (Number.isFinite(min) && numberValue < min) return "";
+  if (Number.isFinite(max) && numberValue > max) return "";
+  return String(numberValue);
+}
+
+function normalizeLocationCatalog(catalog) {
+  const destinations = (Array.isArray(catalog?.destinations) ? catalog.destinations : [])
+    .map((destination) => ({
+      code: normalizeText(destination?.code).toUpperCase(),
+      label: normalizeText(destination?.label) || countryLabel(destination?.code),
+      is_active: destination?.is_active !== false
+    }))
+    .filter((destination) => destination.code);
+  const areas = (Array.isArray(catalog?.areas) ? catalog.areas : [])
+    .map((area) => ({
+      id: normalizeText(area?.id),
+      destination: normalizeText(area?.destination).toUpperCase(),
+      code: normalizeText(area?.code),
+      name: normalizeText(area?.name || area?.label),
+      label: normalizeText(area?.label || area?.name || area?.code || area?.id),
+      latitude: normalizeCoordinate(area?.latitude, { min: -90, max: 90 }),
+      longitude: normalizeCoordinate(area?.longitude, { min: -180, max: 180 }),
+      map_zoom: normalizeText(area?.map_zoom),
+      sort_order: Number.isInteger(Number(area?.sort_order)) ? Number(area.sort_order) : 100,
+      is_active: area?.is_active !== false,
+      created_at: normalizeText(area?.created_at)
+    }))
+    .filter((area) => area.id && area.destination);
+  const places = (Array.isArray(catalog?.places) ? catalog.places : [])
+    .map((place) => ({
+      id: normalizeText(place?.id),
+      area_id: normalizeText(place?.area_id),
+      code: normalizeText(place?.code),
+      name: normalizeText(place?.name || place?.label),
+      label: normalizeText(place?.label || place?.name || place?.code || place?.id),
+      latitude: normalizeCoordinate(place?.latitude, { min: -90, max: 90 }),
+      longitude: normalizeCoordinate(place?.longitude, { min: -180, max: 180 }),
+      map_zoom: normalizeText(place?.map_zoom),
+      sort_order: Number.isInteger(Number(place?.sort_order)) ? Number(place.sort_order) : 100,
+      is_active: place?.is_active !== false,
+      created_at: normalizeText(place?.created_at)
+    }))
+    .filter((place) => place.id && place.area_id);
+  return { destinations, areas, places };
 }
 
 function defaultTranslationRuleTargetLang() {
@@ -690,6 +758,8 @@ async function init() {
       canEditStaffProfiles: roles.includes(ROLES.ADMIN),
       canReadWebsiteDestinationPublication: roles.includes(ROLES.ADMIN),
       canEditWebsiteDestinationPublication: roles.includes(ROLES.ADMIN),
+      canReadLocations: roles.includes(ROLES.ADMIN),
+      canEditLocations: roles.includes(ROLES.ADMIN),
       canReadTranslationRules: roles.includes(ROLES.ADMIN),
       canEditTranslationRules: roles.includes(ROLES.ADMIN),
       canReadEmergency: roles.includes(ROLES.ADMIN),
@@ -712,6 +782,8 @@ async function init() {
     canEditStaffProfiles: Boolean(authState.permissions?.canEditStaffProfiles),
     canReadWebsiteDestinationPublication: Boolean(authState.permissions?.canReadWebsiteDestinationPublication),
     canEditWebsiteDestinationPublication: Boolean(authState.permissions?.canEditWebsiteDestinationPublication),
+    canReadLocations: Boolean(authState.permissions?.canReadLocations),
+    canEditLocations: Boolean(authState.permissions?.canEditLocations),
     canReadTranslationRules: Boolean(authState.permissions?.canReadTranslationRules),
     canEditTranslationRules: Boolean(authState.permissions?.canEditTranslationRules),
     canReadEmergency: Boolean(authState.permissions?.canReadEmergency),
@@ -727,6 +799,7 @@ async function init() {
       state.permissions.canReadStaffProfiles ? loadStaffDirectoryEntries() : Promise.resolve(),
       state.permissions.canEditStaffProfiles ? loadDestinationOptions() : Promise.resolve(),
       state.permissions.canReadTranslationRules ? loadTranslationRules() : Promise.resolve(),
+      state.permissions.canReadLocations ? loadLocationCatalog() : Promise.resolve(),
       (state.permissions.canReadWebsiteDestinationPublication || state.permissions.canReadEmergency)
         ? loadWebsiteDestinationPublication()
         : Promise.resolve()
@@ -745,6 +818,7 @@ function handleBackendLanguageChanged() {
   renderObservability();
   renderTranslationRules();
   renderWebsiteDestinationPublication();
+  renderLocationManager();
   renderEmergencyAddCountryOptions();
   renderEmergencyEditor();
   renderStaff(state.keycloakUsers);
@@ -760,6 +834,22 @@ function bindEvents() {
   els.websiteDestinationPublicationList?.addEventListener("change", handleWebsiteDestinationPublicationToggle);
   els.websiteDestinationPublicationSaveBtn?.addEventListener("click", () => {
     void saveWebsiteDestinationPublication();
+  });
+  els.locationManagerRefreshBtn?.addEventListener("click", () => {
+    void loadLocationCatalog();
+  });
+  els.locationManagerAddAreaBtn?.addEventListener("click", () => {
+    void addLocationArea();
+  });
+  els.locationManagerAddPlaceBtn?.addEventListener("click", () => {
+    void addLocationPlace();
+  });
+  els.locationManagerList?.addEventListener("click", (event) => {
+    const target = event.target instanceof Element ? event.target : null;
+    const saveButton = target?.closest("[data-location-save]");
+    if (!saveButton) return;
+    const [type, id] = normalizeText(saveButton.getAttribute("data-location-save")).split(":");
+    void saveLocationRecord(type, id);
   });
   els.translationRulesAddBtn?.addEventListener("click", () => {
     if (!state.permissions.canEditTranslationRules) return;
@@ -977,6 +1067,9 @@ function renderPermissionScopedSections() {
   if (els.websiteDestinationPublicationPanel) {
     els.websiteDestinationPublicationPanel.hidden = !state.permissions.canReadWebsiteDestinationPublication;
   }
+  if (els.locationManagerPanel) {
+    els.locationManagerPanel.hidden = !state.permissions.canReadLocations;
+  }
   if (els.translationRulesPanel) {
     els.translationRulesPanel.hidden = !state.permissions.canReadTranslationRules;
   }
@@ -1082,6 +1175,232 @@ async function loadDestinationOptions() {
     state.destinationOptions = [];
   }
   renderDestinationChecklist();
+}
+
+function showLocationManagerStatus(message = "", isError = false) {
+  if (!els.locationManagerStatus) return;
+  els.locationManagerStatus.textContent = message;
+  els.locationManagerStatus.classList.toggle("is-error", Boolean(isError));
+}
+
+function locationDestinationOptions(selectedCountry = "") {
+  const destinations = state.locationCatalog.destinations.length
+    ? state.locationCatalog.destinations
+    : COUNTRY_OPTIONS.map((option) => ({ code: option.value, label: countryLabel(option.value) }));
+  return destinations.map((destination) => `
+    <option value="${escapeHtml(destination.code)}" ${destination.code === selectedCountry ? "selected" : ""}>${escapeHtml(destination.label || countryLabel(destination.code))}</option>
+  `).join("");
+}
+
+function locationAreaOptions(selectedAreaId = "") {
+  return state.locationCatalog.areas.map((area) => `
+    <option value="${escapeHtml(area.id)}" ${area.id === selectedAreaId ? "selected" : ""}>${escapeHtml(countryLabel(area.destination))} / ${escapeHtml(area.label || area.name || area.id)}</option>
+  `).join("");
+}
+
+function renderLocationCoordinateInputs(record, type) {
+  const prefix = `${type}:${record.id}`;
+  const disabled = state.permissions.canEditLocations ? "" : "disabled";
+  return `
+    <label>
+      <span>Name</span>
+      <input type="text" data-location-field="name" data-location-record="${escapeHtml(prefix)}" value="${escapeHtml(record.name || record.label)}" ${disabled} />
+    </label>
+    <label>
+      <span>Latitude</span>
+      <input type="number" step="0.000001" inputmode="decimal" data-location-field="latitude" data-location-record="${escapeHtml(prefix)}" value="${escapeHtml(record.latitude)}" ${disabled} />
+    </label>
+    <label>
+      <span>Longitude</span>
+      <input type="number" step="0.000001" inputmode="decimal" data-location-field="longitude" data-location-record="${escapeHtml(prefix)}" value="${escapeHtml(record.longitude)}" ${disabled} />
+    </label>
+  `;
+}
+
+function renderLocationManager() {
+  if (!els.locationManagerList) return;
+  if (!state.permissions.canReadLocations) {
+    els.locationManagerList.innerHTML = "";
+    return;
+  }
+  const areasByDestination = new Map();
+  for (const area of state.locationCatalog.areas) {
+    if (!areasByDestination.has(area.destination)) areasByDestination.set(area.destination, []);
+    areasByDestination.get(area.destination).push(area);
+  }
+  const placesByArea = new Map();
+  for (const place of state.locationCatalog.places) {
+    if (!placesByArea.has(place.area_id)) placesByArea.set(place.area_id, []);
+    placesByArea.get(place.area_id).push(place);
+  }
+  els.locationManagerList.innerHTML = (state.locationCatalog.destinations.length ? state.locationCatalog.destinations : COUNTRY_OPTIONS.map((option) => ({ code: option.value, label: countryLabel(option.value) })))
+    .map((destination) => {
+      const areas = areasByDestination.get(destination.code) || [];
+      return `
+        <article class="settings-location-manager__country">
+          <h3>${escapeHtml(destination.label || countryLabel(destination.code))}</h3>
+          ${areas.map((area) => `
+            <section class="settings-location-manager__record">
+              <div class="settings-location-manager__record-head">
+                <strong>${escapeHtml(area.label || area.name || area.id)}</strong>
+                <button class="btn btn-ghost" type="button" data-location-save="area:${escapeHtml(area.id)}" ${state.permissions.canEditLocations ? "" : "disabled"}>Save</button>
+              </div>
+              <div class="settings-location-manager__fields">
+                ${renderLocationCoordinateInputs(area, "area")}
+              </div>
+              <div class="settings-location-manager__places">
+                ${(placesByArea.get(area.id) || []).map((place) => `
+                  <div class="settings-location-manager__place">
+                    <div class="settings-location-manager__record-head">
+                      <span>${escapeHtml(place.label || place.name || place.id)}</span>
+                      <button class="btn btn-ghost" type="button" data-location-save="place:${escapeHtml(place.id)}" ${state.permissions.canEditLocations ? "" : "disabled"}>Save</button>
+                    </div>
+                    <div class="settings-location-manager__fields">
+                      ${renderLocationCoordinateInputs(place, "place")}
+                    </div>
+                  </div>
+                `).join("") || `<p class="micro">No places yet.</p>`}
+              </div>
+            </section>
+          `).join("") || `<p class="micro">No regions yet.</p>`}
+        </article>
+      `;
+    }).join("");
+}
+
+async function loadLocationCatalog() {
+  if (!state.permissions.canReadLocations) return;
+  state.locationCatalogLoading = true;
+  showLocationManagerStatus("Loading locations...");
+  try {
+    const request = destinationScopeCatalogRequest({
+      baseURL: apiOrigin,
+      query: { lang: "en" }
+    });
+    const payload = await fetchApi(request.url, { suppressNotFound: true });
+    state.locationCatalog = normalizeLocationCatalog(payload);
+    showLocationManagerStatus("Locations loaded.");
+  } catch (error) {
+    console.error("[backend-settings] Failed to load location catalog.", { error });
+    state.locationCatalog = normalizeLocationCatalog({});
+    showLocationManagerStatus("Could not load locations.", true);
+  } finally {
+    state.locationCatalogLoading = false;
+    renderLocationManager();
+  }
+}
+
+function readLocationDraft(type, id) {
+  const selectorValue = `${type}:${id}`.replace(/["\\]/g, "\\$&");
+  const fieldValue = (field) => normalizeText(els.locationManagerList?.querySelector(`[data-location-record="${selectorValue}"][data-location-field="${field}"]`)?.value);
+  return {
+    name: fieldValue("name"),
+    latitude: fieldValue("latitude"),
+    longitude: fieldValue("longitude")
+  };
+}
+
+async function saveLocationRecord(type, id) {
+  if (!state.permissions.canEditLocations || state.locationCatalogSavingId) return;
+  const normalizedType = normalizeText(type);
+  const normalizedId = normalizeText(id);
+  const draft = readLocationDraft(normalizedType, normalizedId);
+  if (!draft.name) {
+    showLocationManagerStatus("Name is required.", true);
+    return;
+  }
+  state.locationCatalogSavingId = `${normalizedType}:${normalizedId}`;
+  showLocationManagerStatus("Saving location...");
+  try {
+    if (normalizedType === "area") {
+      const area = state.locationCatalog.areas.find((item) => item.id === normalizedId);
+      if (!area) throw new Error("Region not found.");
+      const request = destinationScopeAreaCreateRequest({ baseURL: apiOrigin });
+      const payload = await fetchApi(request.url, {
+        method: request.method,
+        body: {
+          id: area.id,
+          destination: area.destination,
+          code: area.code,
+          name: draft.name,
+          latitude: draft.latitude || undefined,
+          longitude: draft.longitude || undefined,
+          map_zoom: area.map_zoom || undefined,
+          sort_order: area.sort_order,
+          is_active: area.is_active,
+          created_at: area.created_at
+        }
+      });
+      if (payload?.catalog) state.locationCatalog = normalizeLocationCatalog(payload.catalog);
+    } else {
+      const place = state.locationCatalog.places.find((item) => item.id === normalizedId);
+      if (!place) throw new Error("Place not found.");
+      const request = destinationScopePlaceCreateRequest({ baseURL: apiOrigin });
+      const payload = await fetchApi(request.url, {
+        method: request.method,
+        body: {
+          id: place.id,
+          area_id: place.area_id,
+          code: place.code,
+          name: draft.name,
+          latitude: draft.latitude || undefined,
+          longitude: draft.longitude || undefined,
+          map_zoom: place.map_zoom || undefined,
+          sort_order: place.sort_order,
+          is_active: place.is_active,
+          created_at: place.created_at
+        }
+      });
+      if (payload?.catalog) state.locationCatalog = normalizeLocationCatalog(payload.catalog);
+    }
+    showLocationManagerStatus("Location saved.");
+  } catch (error) {
+    console.error("[backend-settings] Failed to save location.", { error, type, id });
+    showLocationManagerStatus("Could not save location.", true);
+  } finally {
+    state.locationCatalogSavingId = "";
+    renderLocationManager();
+  }
+}
+
+async function addLocationArea() {
+  if (!state.permissions.canEditLocations) return;
+  const destination = window.prompt("Country code", "VN");
+  const normalizedDestination = normalizeText(destination).toUpperCase();
+  if (!DESTINATION_COUNTRY_CODE_SET.has(normalizedDestination)) return;
+  const name = window.prompt("Region name");
+  const normalizedName = normalizeText(name);
+  if (!normalizedName) return;
+  const request = destinationScopeAreaCreateRequest({ baseURL: apiOrigin });
+  const payload = await fetchApi(request.url, {
+    method: request.method,
+    body: {
+      destination: normalizedDestination,
+      name: normalizedName
+    }
+  });
+  if (payload?.catalog) state.locationCatalog = normalizeLocationCatalog(payload.catalog);
+  renderLocationManager();
+}
+
+async function addLocationPlace() {
+  if (!state.permissions.canEditLocations || !state.locationCatalog.areas.length) return;
+  const areaId = window.prompt("Region id", state.locationCatalog.areas[0]?.id || "");
+  const normalizedAreaId = normalizeText(areaId);
+  if (!state.locationCatalog.areas.some((area) => area.id === normalizedAreaId)) return;
+  const name = window.prompt("Place name");
+  const normalizedName = normalizeText(name);
+  if (!normalizedName) return;
+  const request = destinationScopePlaceCreateRequest({ baseURL: apiOrigin });
+  const payload = await fetchApi(request.url, {
+    method: request.method,
+    body: {
+      area_id: normalizedAreaId,
+      name: normalizedName
+    }
+  });
+  if (payload?.catalog) state.locationCatalog = normalizeLocationCatalog(payload.catalog);
+  renderLocationManager();
 }
 
 function normalizeCountryReferenceItems(items) {

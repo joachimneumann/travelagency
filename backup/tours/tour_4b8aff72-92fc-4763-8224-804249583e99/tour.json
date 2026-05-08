@@ -1,7 +1,7 @@
 {
   "id": "tour_4b8aff72-92fc-4763-8224-804249583e99",
-  "title": "One Trip, A Thousand Memories",
-  "short_description": "One Trip, A Thousand Memories. Explore the best of Viet Nam, from misty peaks to serene temples. Every moment is a story waiting to be told. Create your journey today",
+  "title": "Hanoi First Impressions",
+  "short_description": "A focused Hanoi welcome through cathedral stone, Old Quarter trade streets, railway lanes and Hoan Kiem Lake's local rhythm.",
   "styles": [
     "grand-expeditions",
     "budget",
@@ -43,7 +43,7 @@
       {
         "id": "travel_plan_day_aa48919f-2139-4e51-a951-f7df3312a41c",
         "day_number": 1,
-        "title": "Welcome To Ha Noi - The Grand Cathedral - 36 Street - Railwway Street - Hoan Kiem Lake",
+        "title": "Old Quarter and Hoan Kiem",
         "title_i18n": {},
         "overnight_location": null,
         "overnight_location_i18n": {},
@@ -55,9 +55,9 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Pick up guests and take them to the hotel.",
+            "title": "Hotel Arrival Transfer",
             "title_i18n": {},
-            "details": null,
+            "details": "Meet your driver on arrival and transfer to the hotel before starting the Hanoi city experience.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -90,7 +90,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "The Grand Cathedra",
+            "title": "St. Joseph's Cathedral",
             "title_i18n": {
               "ar": "كاتدرائية هانوي",
               "fr": "Cathédrale de Hanoï",
@@ -109,7 +109,7 @@
               "sv": "Hanois katedral",
               "no": "Hanoi katedral"
             },
-            "details": "St. Joseph's Cathedral (Nhà thờ Lớn Hà Nội) is the oldest Roman Catholic church in Hanoi and serves as the cathedral of the Archdiocese of Hanoi. It is a stunning example of colonial architecture and a centerpiece of the city's historic district",
+            "details": "See Hanoi's neo-Gothic cathedral, a French-era landmark surrounded by cafes, narrow lanes and Old Quarter street life.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -142,9 +142,9 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "visit Hanoi's 36 streets",
+            "title": "Hanoi Old Quarter",
             "title_i18n": {},
-            "details": "Visiting Hanoi's Old Quarter (Phố Cổ), also known as the \"36 Streets,\" is an essential experience to understand the soul of the capital. Each street traditionally specialized in a specific trade, and even today, many retain their ancient charm and specialized commerce",
+            "details": "Explore the 36 Streets, where old craft names, shopfronts and dense daily life keep Hanoi's trading heritage visible.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -179,7 +179,7 @@
             "kind": "other",
             "title": "Hoan Kiem Lake",
             "title_i18n": {},
-            "details": "Hoan Kiem Lake is the heart of Hanoi, famous for its peaceful waters and the iconic Turtle Tower. A perfect spot to experience the city's local life and legendary history",
+            "details": "Pause by Hoan Kiem Lake, a calm center of Hanoi life with Turtle Tower, shaded paths and local routines around the water.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -206,7 +206,7 @@
             }
           }
         ],
-        "notes": "Experience Hanoi’s soul: from the Grand Cathedral and Old Quarter to the unique Railway Street",
+        "notes": "Begin in Hanoi with a gentle city route through its cathedral quarter, craft streets, railway lane and the lake at the heart of the capital.",
         "notes_i18n": {}
       }
     ],

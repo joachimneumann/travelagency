@@ -1,7 +1,7 @@
 {
   "id": "tour_75618ce5-f5e4-41e9-a2ad-a8e1d50cc136",
-  "title": "Timeless North VIETNAM",
-  "short_description": "Explore Timeless North Vietnam: from the soul of Hanoi to misty Sa Pa and the rustic charm of Cat Cat village. A perfect blend of heritage and nature",
+  "title": "Hanoi to Sapa Heights",
+  "short_description": "Start in Hanoi's old streets, then head into Sapa's mist, H'Mong village life and the cable-car climb toward Fansipan.",
   "styles": [
     "budget",
     "culture",
@@ -14,7 +14,7 @@
   "seasonality_end_month": "dec",
   "priority": 50,
   "created_at": "2026-04-14T09:47:49.907Z",
-  "updated_at": "2026-05-05T09:38:47.687Z",
+  "updated_at": "2026-05-07T14:18:21.019Z",
   "published_on_webpage": true,
   "travel_plan": {
     "destination_scope": [
@@ -44,11 +44,17 @@
       "travel_plan_service_image_e6a70b33-65ed-4468-83e5-5e5f9be8f259",
       "travel_plan_service_image_a3e1ba38-cf2b-46e4-8a42-8b65577b6b23"
     ],
+    "one_pager_experience_highlight_ids": [
+      "iconic_landmarks",
+      "local_experiences",
+      "delicious_cuisine",
+      "scenic_landscapes"
+    ],
     "days": [
       {
         "id": "travel_plan_day_edb37b47-cb51-46ec-9fb7-756c2e257f0a",
         "day_number": 1,
-        "title": "Airport pick-up – HaNoi city tour",
+        "title": "Hanoi Arrival and Old Quarter",
         "title_i18n": {},
         "overnight_location": null,
         "overnight_location_i18n": {},
@@ -60,9 +66,9 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Pick up guests and take them to the hotel.",
+            "title": "Hotel Arrival Transfer",
             "title_i18n": {},
-            "details": null,
+            "details": "Meet your driver on arrival and transfer to the hotel before the Hanoi city visits begin.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -95,9 +101,9 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "visit Hanoi's 36 streets",
+            "title": "Hanoi Old Quarter",
             "title_i18n": {},
-            "details": "Visiting Hanoi's Old Quarter (Phố Cổ), also known as the \"36 Streets,\" is an essential experience to understand the soul of the capital. Each street traditionally specialized in a specific trade, and even today, many retain their ancient charm and specialized commerce",
+            "details": "Explore the 36 Streets, where old craft traditions, shopfronts and local life keep Hanoi's trading history alive.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -130,9 +136,9 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "visits the Cathedral",
+            "title": "St. Joseph's Cathedral",
             "title_i18n": {},
-            "details": "When visiting Hanoi's St. Joseph's Cathedral, you will admire one of the most iconic French colonial architectural works in the capital. Located at 40 Nha Chung Street, it is a fascinating blend of the modern life of the Old Quarter and the tranquil beauty of religion.",
+            "details": "Visit St. Joseph's Cathedral, a French-era landmark set among cafes and narrow lanes near Hoan Kiem.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -167,7 +173,7 @@
             "kind": "other",
             "title": "Hanoi Opera House",
             "title_i18n": {},
-            "details": "The Hanoi Opera House is one of the most important cultural and architectural symbols of the capital, located in August Revolution Square, at the beginning of Trang Tien Street.",
+            "details": "See the Hanoi Opera House, a grand colonial landmark at the edge of the French Quarter.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -194,13 +200,13 @@
             }
           }
         ],
-        "notes": "Airport pick-up – HaNoi city tour",
+        "notes": "Begin in the capital with airport pickup and a first look at Hanoi's Old Quarter, cathedral area and Opera House surroundings.",
         "notes_i18n": {}
       },
       {
         "id": "travel_plan_day_4f2d0ce8-ffda-4f9e-9fbf-534c234d6f5d",
         "day_number": 2,
-        "title": "HaNoi – SaPa – CatCat village",
+        "title": "Hanoi to Cat Cat Village",
         "title_i18n": {},
         "overnight_location": null,
         "overnight_location_i18n": {},
@@ -212,9 +218,9 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "SaPa",
+            "title": "Sapa Town",
             "title_i18n": {},
-            "details": "Sapa is one of Vietnam's most famous tourist destinations, located at an altitude of 1,600 meters above sea level. It boasts not only majestic natural landscapes but also a unique cultural melting pot. Sapa always possesses a mystical beauty shrouded in mist, promising unforgettable experiences.",
+            "details": "Arrive in Sapa, a highland town known for mist, terraces and views toward the Hoang Lien Son range.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -247,9 +253,9 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "CatCat village",
+            "title": "Cat Cat Village",
             "title_i18n": {},
-            "details": "Cat Cat Village appears as a miniature painting of the mountainous region, both peaceful and bustling with the vibrant atmosphere of village life.",
+            "details": "Visit Cat Cat Village, where H'Mong culture, wooden houses, terraced fields and a small waterfall shape the valley walk.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -276,13 +282,13 @@
             }
           }
         ],
-        "notes": "Sa Pa is a stunning misty town with the majestic Fansipan mountain. Cat Cat village, steeped in H'Mong culture, is notable for its terraced rice fields and picturesque waterfalls.",
+        "notes": "Leave Hanoi for Sapa's cooler mountain air, then continue into Cat Cat Village for terraced scenery and H'Mong cultural atmosphere.",
         "notes_i18n": {}
       },
       {
         "id": "travel_plan_day_2392b5de-e895-4d19-995b-9da35e9f4812",
         "day_number": 3,
-        "title": "SaPa – Fansifan – Hà Nội",
+        "title": "Fansipan and Return Hanoi",
         "title_i18n": {},
         "overnight_location": null,
         "overnight_location_i18n": {},
@@ -294,9 +300,9 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Take the cable car to Fansipan peak",
+            "title": "Fansipan Cable Car",
             "title_i18n": {},
-            "details": "Fansipan is not just a geographical landmark, but also a journey of willpower and pride. A Sapa exploration program would never be complete without the moment of standing on its summit.",
+            "details": "Ride toward Fansipan peak for high mountain views over Sapa, Muong Hoa Valley and the Hoang Lien Son range.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -323,7 +329,7 @@
             }
           }
         ],
-        "notes": "Standing amidst the sea of ​​clouds on the summit of Fansipan, gazing at the Muong Hoa Valley shimmering below, is a breathtaking experience that everyone should try at least once in their lifetime.",
+        "notes": "Reach toward the Roof of Indochina by cable car, with mountain views and cloud scenery before returning to Hanoi.",
         "notes_i18n": {}
       }
     ],

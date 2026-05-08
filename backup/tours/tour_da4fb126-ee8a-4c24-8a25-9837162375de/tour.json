@@ -1,7 +1,7 @@
 {
   "id": "tour_da4fb126-ee8a-4c24-8a25-9837162375de",
-  "title": "Ho Chi Minh - Mui Ne - Da Lat - Nha Trang",
-  "short_description": "Saigon Imprint: Explore the \"Pearl of the Far East\" through iconic architectural works such as the Independence Palace, Notre Dame Cathedral and Central Post Office. Don't forget to visit the ancient Ba Thien Hau Pagoda and immerse yourself in the rhythm of modern life on Nguyen Hue walking street. Cu Chi Tunnels: The legendary \"underground maze\", where you will be amazed by the resilience and wisdom of the Vietnamese people throughout history. Western river region: Experience the gentle pace of life of the Mekong Delta with its interlaced canals, fruitful orchards and typical horticultural culture. Mui Ne (Phan Thiet): Paradise of sun, wind and sand. You will admire the surreal beauty of the Red Sand Dunes, wade the colorful Fairy Stream and learn about the simple life in the fishing village. Dreamy Da Lat: The city of flowers welcomes you with the chilly air, the romantic beauty of the Valley of Love, the tranquility at Truc Lam Zen Monastery and the immense view from the majestic Langbiang peak. Nha Trang: The perfect ending point in the beautiful coastal city, where you can relax, shop for specialties and enjoy the fresh ocean breeze before ending your journey.",
+  "title": "Saigon to Nha Trang",
+  "short_description": "A southern route from Saigon and Cu Chi to the Mekong, Mui Ne dunes, Da Lat highlands and a coastal finish in Nha Trang.",
   "styles": [
     "grand-expeditions",
     "beach",
@@ -23,7 +23,7 @@
       {
         "id": "travel_plan_day_f8d8e76e-d360-4705-adf2-0f1a2036f254",
         "day_number": 1,
-        "title": "",
+        "title": "Southern Vietnam Route",
         "title_i18n": {},
         "overnight_location": null,
         "overnight_location_i18n": {},
@@ -35,9 +35,9 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "",
+            "title": "Route Overview",
             "title_i18n": {},
-            "details": null,
+            "details": "Follow the stated journey from Ho Chi Minh City through the Mekong, Mui Ne and Da Lat, ending by the sea in Nha Trang.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -64,7 +64,7 @@
             }
           }
         ],
-        "notes": null,
+        "notes": "This route links Saigon history, Cu Chi, Mekong river life, Mui Ne's coast, Da Lat's cool highlands and a final Nha Trang departure.",
         "notes_i18n": {}
       }
     ],

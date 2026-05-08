@@ -226,16 +226,22 @@ import (
 	destination: enums.#CountryCode
 	name:        string & !=""
 	name_i18n?: [string]: string
-	code?:  string
-	actor?: string
+	code?:       string
+	latitude?:   >=-90 & <=90 & number
+	longitude?:  >=-180 & <=180 & number
+	map_zoom?:   >=0 & <=22 & int
+	actor?:      string
 }
 
 #DestinationPlaceCreateRequest: {
 	area_id: common.#Identifier
 	name:    string & !=""
 	name_i18n?: [string]: string
-	code?:  string
-	actor?: string
+	code?:       string
+	latitude?:   >=-90 & <=90 & number
+	longitude?:  >=-180 & <=180 & number
+	map_zoom?:   >=0 & <=22 & int
+	actor?:      string
 }
 
 #BookingTourApplyRequest: {

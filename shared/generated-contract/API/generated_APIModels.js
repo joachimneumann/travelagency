@@ -983,6 +983,9 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
     schemaField({"name":"name","required":true,"wireName":"name"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"name_i18n","required":false,"wireName":"name_i18n"}, SHARED_FIELD_DEFS.FIELD_79),
     schemaField({"name":"code","required":false,"wireName":"code"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"latitude","required":false,"wireName":"latitude"}, SHARED_FIELD_DEFS.FIELD_63),
+    schemaField({"name":"longitude","required":false,"wireName":"longitude"}, SHARED_FIELD_DEFS.FIELD_63),
+    schemaField({"name":"map_zoom","required":false,"wireName":"map_zoom"}, SHARED_FIELD_DEFS.FIELD_18),
     schemaField({"name":"actor","required":false,"wireName":"actor"}, SHARED_FIELD_DEFS.FIELD_1)
         ]
       };
@@ -1018,6 +1021,9 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
     schemaField({"name":"name","required":true,"wireName":"name"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"name_i18n","required":false,"wireName":"name_i18n"}, SHARED_FIELD_DEFS.FIELD_79),
     schemaField({"name":"code","required":false,"wireName":"code"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"latitude","required":false,"wireName":"latitude"}, SHARED_FIELD_DEFS.FIELD_63),
+    schemaField({"name":"longitude","required":false,"wireName":"longitude"}, SHARED_FIELD_DEFS.FIELD_63),
+    schemaField({"name":"map_zoom","required":false,"wireName":"map_zoom"}, SHARED_FIELD_DEFS.FIELD_18),
     schemaField({"name":"actor","required":false,"wireName":"actor"}, SHARED_FIELD_DEFS.FIELD_1)
         ]
       };
@@ -1709,6 +1715,9 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
     schemaField({"name":"name","required":true,"wireName":"name"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"name_i18n","required":false,"wireName":"name_i18n"}, SHARED_FIELD_DEFS.FIELD_79),
     schemaField({"name":"label","required":true,"wireName":"label"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"latitude","required":false,"wireName":"latitude"}, SHARED_FIELD_DEFS.FIELD_63),
+    schemaField({"name":"longitude","required":false,"wireName":"longitude"}, SHARED_FIELD_DEFS.FIELD_63),
+    schemaField({"name":"map_zoom","required":false,"wireName":"map_zoom"}, SHARED_FIELD_DEFS.FIELD_18),
     schemaField({"name":"sort_order","required":true,"wireName":"sort_order"}, SHARED_FIELD_DEFS.FIELD_18),
     schemaField({"name":"is_active","required":true,"wireName":"is_active"}, SHARED_FIELD_DEFS.FIELD_9),
     schemaField({"name":"created_at","required":false,"wireName":"created_at"}, SHARED_FIELD_DEFS.FIELD_5),
@@ -1733,6 +1742,9 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
     schemaField({"name":"name","required":true,"wireName":"name"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"name_i18n","required":false,"wireName":"name_i18n"}, SHARED_FIELD_DEFS.FIELD_79),
     schemaField({"name":"label","required":true,"wireName":"label"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"latitude","required":false,"wireName":"latitude"}, SHARED_FIELD_DEFS.FIELD_63),
+    schemaField({"name":"longitude","required":false,"wireName":"longitude"}, SHARED_FIELD_DEFS.FIELD_63),
+    schemaField({"name":"map_zoom","required":false,"wireName":"map_zoom"}, SHARED_FIELD_DEFS.FIELD_18),
     schemaField({"name":"sort_order","required":true,"wireName":"sort_order"}, SHARED_FIELD_DEFS.FIELD_18),
     schemaField({"name":"is_active","required":true,"wireName":"is_active"}, SHARED_FIELD_DEFS.FIELD_9),
     schemaField({"name":"created_at","required":false,"wireName":"created_at"}, SHARED_FIELD_DEFS.FIELD_5),
@@ -2181,6 +2193,8 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
     schemaField({"name":"title_i18n","required":false,"wireName":"title_i18n"}, SHARED_FIELD_DEFS.FIELD_79),
     schemaField({"name":"overnight_location","required":false,"wireName":"overnight_location"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"overnight_location_i18n","required":false,"wireName":"overnight_location_i18n"}, SHARED_FIELD_DEFS.FIELD_79),
+    schemaField({"name":"primary_location_id","required":false,"wireName":"primary_location_id"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"secondary_location_id","required":false,"wireName":"secondary_location_id"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"services","required":false,"wireName":"services"}, SHARED_FIELD_DEFS.FIELD_116),
     schemaField({"name":"notes","required":false,"wireName":"notes"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"notes_i18n","required":false,"wireName":"notes_i18n"}, SHARED_FIELD_DEFS.FIELD_79)

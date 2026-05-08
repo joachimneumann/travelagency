@@ -1,7 +1,7 @@
 {
   "id": "tour_b3be8a19-7647-4c14-ba85-ba17e8d6d3d4",
-  "title": "Explore Hue Ancient Capital",
-  "short_description": "Explore the majestic Citadel, royal tombs, and poetic Perfume River. Discover the timeless charm, rich history, and imperial elegance of Vietnam’s ancient capital, Hue.",
+  "title": "Hue Imperial Day",
+  "short_description": "A Hue day shaped by Lang Co Bay, Tam Giang Lagoon, royal citadel walls, Khai Dinh's tomb and the calm tower of Thien Mu Pagoda.",
   "styles": [
     "budget",
     "culture",
@@ -34,7 +34,7 @@
       {
         "id": "travel_plan_day_3a3eb033-930f-403a-8cfb-d20cf1f380b5",
         "day_number": 1,
-        "title": "go to Hue",
+        "title": "Hue Lagoon and Royal Sites",
         "title_i18n": {
           "ar": "اذهب إلى هوي",
           "fr": "aller à Hué",
@@ -104,7 +104,8 @@
               "source_attribution": null,
               "focal_point": null,
               "created_at": "2026-04-28T03:15:15.091Z"
-            }
+            },
+            "details": "Pause at Lang Co Bay, where pale sand, mountains and lagoon water mark the scenic approach to Hue."
           },
           {
             "id": "travel_plan_service_b0f16854-af2b-468d-91cf-51940acff027",
@@ -154,7 +155,8 @@
               "source_attribution": null,
               "focal_point": null,
               "created_at": "2026-04-28T03:16:40.796Z"
-            }
+            },
+            "details": "See Tam Giang Lagoon, a wide brackish-water landscape tied to fishing life and open skies near Hue."
           },
           {
             "id": "travel_plan_service_00c6d1f3-9ffe-45a4-8a84-b121220f9c73",
@@ -204,7 +206,8 @@
               "source_attribution": null,
               "focal_point": null,
               "created_at": "2026-04-28T03:20:01.696Z"
-            }
+            },
+            "details": "Visit a pearl village stop connected to the coastal and lagoon culture of the Hue region."
           },
           {
             "id": "travel_plan_service_100b9921-5dd8-49f9-862f-bc41f5f31348",
@@ -213,7 +216,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Imperial Citade",
+            "title": "Imperial Citadel",
             "title_i18n": {
               "ar": "القلعة الإمبراطورية",
               "fr": "Citade Impériale",
@@ -254,7 +257,8 @@
               "source_attribution": null,
               "focal_point": null,
               "created_at": "2026-04-28T03:21:22.447Z"
-            }
+            },
+            "details": "Explore Hue's Imperial Citadel, the walled heart of Vietnam's Nguyen Dynasty with palaces, gates and royal courtyards."
           },
           {
             "id": "travel_plan_service_f95e7ee1-39e7-414b-8d39-b0ae9fcc9e72",
@@ -304,7 +308,8 @@
               "source_attribution": null,
               "focal_point": null,
               "created_at": "2026-04-28T03:30:33.138Z"
-            }
+            },
+            "details": "Visit Khai Dinh Mausoleum, where hillside setting, stonework and ornate details reflect a distinctive royal style."
           },
           {
             "id": "travel_plan_service_690fa366-1d20-4a94-9af4-472d4bec41dd",
@@ -354,10 +359,11 @@
               "source_attribution": null,
               "focal_point": null,
               "created_at": "2026-04-28T03:32:11.368Z"
-            }
+            },
+            "details": "End at Thien Mu Pagoda, Hue's graceful riverside tower and one of the city's most enduring symbols."
           }
         ],
-        "notes": "Explore the majestic Citadel, royal tombs, and poetic Perfume River. Discover the timeless charm, rich history, and imperial elegance of Vietnam’s ancient capital, Hue.",
+        "notes": "Travel into Hue's imperial landscape by way of coastal and lagoon scenery, then visit the citadel, royal tomb architecture and riverside pagoda.",
         "notes_i18n": {
           "ar": "استكشف القلعة المهيبة والمقابر الملكية ونهر العطور الشعري. اكتشف السحر الخالد والتاريخ الغني والأناقة الإمبراطورية لعاصمة فيتنام القديمة، هيو.",
           "fr": "Explorez la majestueuse Citadelle, les tombeaux royaux et la poétique rivière des Parfums. Découvrez le charme intemporel, la riche histoire et l'élégance impériale de l'ancienne capitale du Vietnam, Hue.",

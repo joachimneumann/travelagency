@@ -1,5 +1,57 @@
 # TODO
 
+ENGLISH
+=======
+
+Review every tour file at `content/tours/*/tour.json`.
+
+For each tour, first read the full tour carefully and understand its route, mood, audience, pace, highlights, and distinctive selling points. Then improve only the English source content in these fields:
+
+- `title`
+- `short_description`
+- `travel_plan.days[].title`
+- `travel_plan.days[].notes`
+- `travel_plan.days[].services[].title`
+- `travel_plan.days[].services[].details`
+
+Ignore all `*_i18n` fields completely. Do not edit them.
+
+Writing goals:
+- Make each tour feel coherent from title through short description, day notes, and service details.
+- Create curiosity and a sense of place for potential customers.
+- Make the title and short description attractive enough that users want to open the tour details.
+- Keep the copy accurate to the actual itinerary. Do not invent destinations, activities, hotels, transport, meals, or inclusions that are not supported by the tour data.
+- Avoid generic travel-marketing language. Use specific, vivid phrasing tied to the actual days and services.
+- Keep a consistent tone: polished, warm, concise, customer-facing, and suitable for AsiaTravelPlan.
+
+Length guidance:
+- `title`: about 25-30 characters where possible.
+- Day titles and service titles: concise, ideally about 25-30 characters.
+- `short_description`, day `notes`, and service `details`: about 160 characters each where possible.
+- If strict length would make the text awkward or unclear, prioritize quality and coherence, but stay close to the limits.
+
+Editing rules:
+- Preserve the JSON structure and field order as much as possible.
+- Do not rename keys.
+- Do not delete fields.
+- Do not modify IDs, media, pricing, destinations, styles, metadata, or any non-copy fields.
+- Do not edit generated or backup files unless they are under `content/tours/*/tour.json`.
+- Make focused copy edits only.
+
+After editing, validate that every changed JSON file still parses correctly. Then summarize:
+- how many tour files were updated,
+- which fields were improved,
+- any tours that had insufficient information or required conservative wording.
+
+
+Customization
+=============
+- search field for destinations
+- treat arrival and depature differently
+- in one destination select type of day / style
+- day: location / Second location
+- list of locations
+
 One pager
 =========
 Redo the experience highlights cut, its a bit off.

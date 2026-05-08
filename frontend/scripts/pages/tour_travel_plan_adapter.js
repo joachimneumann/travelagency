@@ -139,6 +139,8 @@ function cloneTourMarketingDayForLocalImport({ searchResult, targetDayIndex = 0 
     title_i18n: normalizeLocalizedMap(sourceDay.title_i18n),
     overnight_location: preferredEnglishImportText(sourceDay.overnight_location_i18n, sourceDay.overnight_location) || null,
     overnight_location_i18n: normalizeLocalizedMap(sourceDay.overnight_location_i18n),
+    primary_location_id: normalizeText(sourceDay.primary_location_id),
+    secondary_location_id: normalizeText(sourceDay.secondary_location_id),
     notes: preferredEnglishImportText(sourceDay.notes_i18n, sourceDay.notes) || null,
     notes_i18n: normalizeLocalizedMap(sourceDay.notes_i18n),
     id: undefined,

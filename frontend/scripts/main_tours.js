@@ -97,6 +97,7 @@ export function createFrontendToursController(ctx) {
     escapeHTML,
     escapeAttr,
     travelPlanDays,
+    destinationScopeCatalog,
     findTripById,
     ensureTourDetailsLoaded,
     allTrips: () => state.trips,
@@ -244,7 +245,9 @@ export function createFrontendToursController(ctx) {
           id,
           destination,
           code: normalizeText(area?.code),
-          label: normalizeText(area?.label || area?.name || area?.code) || id
+          label: normalizeText(area?.label || area?.name || area?.code) || id,
+          latitude: Number.isFinite(Number(area?.latitude)) ? Number(area.latitude) : null,
+          longitude: Number.isFinite(Number(area?.longitude)) ? Number(area.longitude) : null
         };
       })
       .filter(Boolean);
@@ -258,7 +261,9 @@ export function createFrontendToursController(ctx) {
           id,
           area_id,
           code: normalizeText(place?.code),
-          label: normalizeText(place?.label || place?.name || place?.code) || id
+          label: normalizeText(place?.label || place?.name || place?.code) || id,
+          latitude: Number.isFinite(Number(place?.latitude)) ? Number(place.latitude) : null,
+          longitude: Number.isFinite(Number(place?.longitude)) ? Number(place.longitude) : null
         };
       })
       .filter(Boolean);

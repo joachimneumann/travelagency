@@ -1,7 +1,7 @@
 {
   "id": "tour_c2c80f99-287c-41b5-93cc-53c4d98d0caf",
-  "title": "Phu Quoc",
-  "short_description": "Explore Phu Quoc’s highlights: VinWonders, Grand World, a 4-island tour, Hon Thom cable car, Sunset Town, Ho Quoc Pagoda, Coconut Prison, and the vibrant Night Market.",
+  "title": "Phu Quoc Island Days",
+  "short_description": "Four Phu Quoc days mix beaches, temples, island history, VinWonders, Grand World, cable-car views and Sunset Town color.",
   "styles": [
     "grand-expeditions",
     "beach",
@@ -47,7 +47,7 @@
       {
         "id": "travel_plan_day_cd73568b-8916-4faa-998f-c6285531de92",
         "day_number": 1,
-        "title": "Phu Quoc Airport Pick-Up – Ho Quoc Pagoda – Coconut Tree Prison – Sao Beach – Phu Quoc Night Market",
+        "title": "Temples, Prison and Beach",
         "title_i18n": {
           "ar": "الاستقبال في مطار فو كوك - معبد هو كوك - سجن شجرة جوز الهند - شاطئ ساو - سوق فو كوك الليلي",
           "fr": "Prise en charge à l'aéroport de Phu Quoc – Pagode Ho Quoc – Prison des cocotiers – Plage de Sao – Marché nocturne de Phu Quoc",
@@ -76,7 +76,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Pick up guests at the airport",
+            "title": "Phu Quoc Airport Welcome",
             "title_i18n": {
               "ar": "التقاط الضيوف في المطار",
               "fr": "Récupérer les invités à l'aéroport",
@@ -95,7 +95,7 @@
               "sv": "Hämta gäster på flygplatsen",
               "no": "Hente gjester på flyplassen"
             },
-            "details": null,
+            "details": "Arrive on Phu Quoc and meet your driver for the first island visits after airport pickup.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -128,7 +128,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Bai Sao Beach",
+            "title": "Sao Beach",
             "title_i18n": {
               "ar": "شاطئ باي ساو",
               "fr": "Plage de Baï São",
@@ -147,7 +147,7 @@
               "sv": "Bai Sao Beach",
               "no": "Bai Sao-stranden"
             },
-            "details": null,
+            "details": "Relax at Sao Beach, known for soft pale sand and clear water on Phu Quoc's southern coast.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -199,7 +199,7 @@
               "sv": "Ho Quoc Pagoda",
               "no": "Ho Quoc Pagoda"
             },
-            "details": null,
+            "details": "Visit Ho Quoc Pagoda, a coastal Buddhist complex with sea views and a calm spiritual setting.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -251,7 +251,7 @@
               "sv": "Cay Dua fängelse",
               "no": "Cay Dua fengsel"
             },
-            "details": null,
+            "details": "Tour Cay Dua Prison, a sobering historical site that preserves Phu Quoc's wartime memory.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -278,7 +278,7 @@
             }
           }
         ],
-        "notes": "Discover the cultural and historical beauty from Ho Quoc Pagoda to Cay Dua Prison. Relax at Bai Sao Beach and experience the unique cuisine at Phu Quoc Night Market.",
+        "notes": "Start Phu Quoc with spiritual landmarks, wartime memory, Sao Beach's pale sand and the island's night-market flavors.",
         "notes_i18n": {
           "ar": "اكتشف الجمال الثقافي والتاريخي من Ho Quoc Pagoda إلى سجن Cay Dua. يمكنك الاسترخاء على شاطئ Bai Sao وتجربة المأكولات الفريدة في Phu Quoc Night Market.",
           "fr": "Découvrez la beauté culturelle et historique de la pagode Ho Quoc à la prison de Cay Dua. Détendez-vous sur la plage de Bai Sao et découvrez la cuisine unique du marché nocturne de Phu Quoc.",
@@ -301,7 +301,7 @@
       {
         "id": "travel_plan_day_0487563f-2b92-40c9-809f-1abf24d2efa9",
         "day_number": 2,
-        "title": "VinWonders Phú Quốc",
+        "title": "VinWonders and Grand World",
         "title_i18n": {
           "ar": "العرض الليلي \"One\" -Grand World Phú Quốc",
           "fr": "Spectacle nocturne « One » -Grand World Phú Quốc",
@@ -330,7 +330,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "VinWonders Phú Quốc",
+            "title": "VinWonders Phu Quoc",
             "title_i18n": {
               "ar": "العالم الكبير",
               "fr": "Grand Monde",
@@ -349,7 +349,7 @@
               "sv": "Stora världen",
               "no": "Grand World"
             },
-            "details": "Prepare for a journey through space and time at VinWonders Phu Quoc. From ancient European castles to a giant turtle palace beneath the ocean, every step will be a new discovery. VinWonders is more than just an amusement park; it's where dreams come true.",
+            "details": "Explore VinWonders Phu Quoc, with themed areas, aquarium experiences, rides and the Once multimedia show.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -382,9 +382,9 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Grand World Phú Quốc",
+            "title": "Grand World Phu Quoc",
             "title_i18n": {},
-            "details": "Grand World Phu Quoc, often called the \"City That Never Sleeps,\" is one of the most vibrant destinations in the north of Phu Quoc Island. This complex is renowned for its diverse architecture, ranging from European styles to distinctive traditional Vietnamese cultural elements.",
+            "details": "Visit Grand World, the island's lively City That Never Sleeps with canals, architecture, shops and evening atmosphere.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -411,7 +411,7 @@
             }
           }
         ],
-        "notes": "The Sea Shell (Top 5 largest aquariums globally), Adventure World, and the world-class \"Once\" multimedia show",
+        "notes": "Spend the day in northern Phu Quoc's entertainment zone, from VinWonders' themed worlds to Grand World's evening energy.",
         "notes_i18n": {
           "ar": "• انغمس في التجربة الفنية المطلقة في جراند وورلد، \"المدينة التي لا تنام أبدًا\". مرة واحدة: سيمفونية من تكنولوجيا الضوء والمشاعر السامية في قلب فو كووك.",
           "fr": "• Plongez-vous dans l'expérience artistique ultime à Grand World, la « ville qui ne dort jamais ». ONCE : Une symphonie de technologie lumineuse et d'émotions sublimes au cœur de Phu Quoc.",
@@ -434,7 +434,7 @@
       {
         "id": "travel_plan_day_b000233a-94e5-4cde-a478-ded96247b367",
         "day_number": 3,
-        "title": "Four Islands Tour – Hon Thom Cable Car– Sunset Town",
+        "title": "Islands and Sunset Town",
         "title_i18n": {
           "ar": "جولة الجزر الأربع – تلفريك هون توم – مدينة الغروب",
           "fr": "Tour des quatre îles – Téléphérique Hon Thom – Sunset Town",
@@ -463,7 +463,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Sunset Cable Car",
+            "title": "Hon Thom Cable Car",
             "title_i18n": {
               "ar": "تلفريك غروب الشمس",
               "fr": "Téléphérique du coucher du soleil",
@@ -482,7 +482,7 @@
               "sv": "Solnedgång linbana",
               "no": "Solnedgang taubane"
             },
-            "details": null,
+            "details": "Ride the Hon Thom cable car for sweeping sea views between Phu Quoc and the southern islands.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -509,7 +509,7 @@
             }
           }
         ],
-        "notes": "Discover a paradise of blue seas and golden sunshine with a canoe trip through pristine islands and snorkeling to admire vibrant coral reefs. End a long and memorable day with a breathtaking sunset and artistic architecture at Sunset Town.",
+        "notes": "Follow the sea south for island-hopping, coral-viewing and the Hon Thom cable car before Sunset Town closes the day in warm light.",
         "notes_i18n": {
           "ar": "• اكتشف جنة البحار الزرقاء وأشعة الشمس الذهبية من خلال رحلة بالقارب عبر الجزر البكر والغطس للاستمتاع بالشعاب المرجانية النابضة بالحياة• أنهِ يومًا طويلًا لا يُنسى مع غروب الشمس المذهل والهندسة المعمارية الفنية في مدينة سانس.",
           "fr": "• Découvrez un paradis de mer bleue et de soleil doré avec une excursion en canoë à travers des îles vierges et de la plongée en apnée pour admirer les récifs coralliens vibrants. • Terminez une longue et mémorable journée avec un coucher de soleil à couper le souffle et une architecture artistique à Sunse Town.",
@@ -532,7 +532,7 @@
       {
         "id": "travel_plan_day_18bacfad-0f7f-49d8-8295-8af767ec3a40",
         "day_number": 4,
-        "title": "Dinh Cau – Dinh Ba – Traditional Craft Villages – “Bun Quay” Noodles – Airport Transfer",
+        "title": "Crafts, Bun Quay and Farewell",
         "title_i18n": {
           "ar": "دينه كاو - دينه با - قرى الحرف التقليدية - نودلز \"بون كواي\" - نقل المطار",
           "fr": "Dinh Cau – Dinh Ba – Villages artisanaux traditionnels – Nouilles « Bun Quay » – Transfert aéroport",
@@ -580,7 +580,7 @@
               "sv": "Dinh Cau",
               "no": "Dinh Cau"
             },
-            "details": null,
+            "details": "Visit Dinh Cau, a small sea-facing shrine and one of Phu Quoc's best-known spiritual landmarks.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -607,7 +607,7 @@
             }
           }
         ],
-        "notes": "•\tCultural Highlights: Discover the spiritual essence at Dinh Cau and Dinh Ba temples, and explore the rich heritage of Phu Quoc Island's long-standing traditional craft villages.\n•\tLocal Flavors: Enjoy the famous Bun Quay noodle dish before concluding your journey with convenient and attentive airport transfer service.",
+        "notes": "Close the island route with local temples, traditional craft stops, Bun Quay noodles and an easy airport transfer.",
         "notes_i18n": {
           "ar": "• المعالم الثقافية: اكتشف الجوهر الروحي في معبدي دينه كاو ودينه با، واستكشف التراث الغني للقرى الحرفية التقليدية العريقة في جزيرة فو كوك. • النكهات المحلية: استمتع بطبق المعكرونة الشهير بون كواي قبل اختتام رحلتك مع خدمة نقل المطار المريحة واليقظة.",
           "fr": "• Points forts culturels : découvrez l'essence spirituelle des temples Dinh Cau et Dinh Ba et explorez le riche patrimoine des villages artisanaux traditionnels de longue date de l'île de Phu Quoc. • Saveurs locales : dégustez le célèbre plat de nouilles Bun Quay avant de terminer votre voyage avec un service de transfert aéroport pratique et attentionné.",

@@ -1,7 +1,7 @@
 {
   "id": "tour_f76f8004-3244-40f6-9477-918dfecb1658",
-  "title": "Hoa Lu Ancient Capital - Trang An - Dancing Cave",
-  "short_description": "The journey takes you back to your historical roots in the ancient capital of Hoa Lu, before immersing yourself in the magical \"Ha Long on land\" scenery of Trang An natural heritage. The highlight of the trip is the experience of conquering the top of Hang Mua, where you can fully take in the majestic and poetic picture of Ninh Binh mountains and water from above.",
+  "title": "Hoa Lu, Trang An, Hang Mua",
+  "short_description": "A Ninh Binh day linking Hoa Lu's ancient capital, Trang An's cave waterways and Hang Mua's climb above the river valleys.",
   "styles": [
     "budget",
     "culture",
@@ -23,7 +23,7 @@
       {
         "id": "travel_plan_day_1d712640-cda9-42ff-8656-eaf6fa505e5c",
         "day_number": 1,
-        "title": "",
+        "title": "Hoa Lu, Trang An and Hang Mua",
         "title_i18n": {},
         "overnight_location": null,
         "overnight_location_i18n": {},
@@ -35,9 +35,9 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "",
+            "title": "Ninh Binh Scenic Day",
             "title_i18n": {},
-            "details": null,
+            "details": "Explore Hoa Lu, Trang An and Hang Mua, three classic stops combining history, caves, rivers and karst views.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -64,7 +64,7 @@
             }
           }
         ],
-        "notes": null,
+        "notes": "A compact Ninh Binh route through ancient capital history, UNESCO boat scenery and the viewpoint climb at Hang Mua.",
         "notes_i18n": {}
       }
     ],

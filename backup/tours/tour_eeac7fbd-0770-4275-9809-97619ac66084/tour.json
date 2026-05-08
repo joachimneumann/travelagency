@@ -1,7 +1,7 @@
 {
   "id": "tour_eeac7fbd-0770-4275-9809-97619ac66084",
-  "title": "Sapa - Tam Dao - Hanoi - Ninh Binh",
-  "short_description": "Explore Northern Vietnam: from Sapa's misty peaks and Tam Dao's cool retreat to Hanoi's historic charm and Ninh Binh's stunning landscapes.A journey of nature and culture",
+  "title": "Sapa, Tam Dao, Ninh Binh",
+  "short_description": "An eight-day northern route from Sapa's high passes to Tam Dao's mist and Ninh Binh's river caves, temples and karst viewpoints.",
   "styles": [
     "grand-expeditions",
     "budget",
@@ -51,7 +51,7 @@
       {
         "id": "travel_plan_day_bde5a92b-64be-4e98-bd3c-3ec97881766b",
         "day_number": 1,
-        "title": "Airport pick-up - Transfer to Sapa",
+        "title": "Arrival and Road to Sapa",
         "title_i18n": {
           "ar": "الاستقبال في المطار - الانتقال إلى سابا",
           "fr": "Prise en charge à l'aéroport - Transfert à Sapa",
@@ -80,7 +80,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Sapa town",
+            "title": "Sapa Town",
             "title_i18n": {
               "ar": "مدينة سابا",
               "fr": "Ville de Sapa",
@@ -99,7 +99,7 @@
               "sv": "Sapa stad",
               "no": "Sapa by"
             },
-            "details": null,
+            "details": "Arrive in Sapa, the mountain town known for terraces, mist and views toward the Hoang Lien Son range.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -126,7 +126,7 @@
             }
           }
         ],
-        "notes": "Airport pick-up and private transfer to Sapa. Relax as you journey to the majestic mountains and misty landscapes of Northwestern Vietnam. Safe and comfortable",
+        "notes": "Begin with airport pickup and a private transfer into the northern mountains, where Sapa's cooler air and misty scenery set the tone.",
         "notes_i18n": {
           "ar": "الاستقبال في المطار والنقل الخاص إلى سابا. استرخ أثناء رحلتك إلى الجبال الشامخة والمناظر الطبيعية الضبابية في شمال غرب فيتنام. آمنة ومريحة",
           "fr": "Prise en charge à l'aéroport et transfert privé à Sapa. Détendez-vous pendant votre voyage vers les montagnes majestueuses et les paysages brumeux du nord-ouest du Vietnam. Sûr et confortable",
@@ -149,7 +149,7 @@
       {
         "id": "travel_plan_day_f87d54f7-c56b-472a-8847-36b0833b398d",
         "day_number": 2,
-        "title": "Sapa - O Quy Ho Pass - Lonely Tree - Glass Bridge - Night Market",
+        "title": "O Quy Ho Pass and Night Market",
         "title_i18n": {
           "ar": "سابا - ممر أو كوي هو - الشجرة الوحيدة - الجسر الزجاجي - السوق الليلي",
           "fr": "Sapa - Col O Quy Ho - Arbre solitaire - Pont de verre - Marché nocturne",
@@ -197,7 +197,7 @@
               "sv": "O Quy Ho Pass",
               "no": "O Quy Ho Pass"
             },
-            "details": "O Quy Ho Pass is renowned as one of the \"Four Great Mountain Passes\" of the northern coastal region, connecting the two provinces of Lao Cai and Lai Chau. This is a route that anyone who loves exploration wants to conquer at least once because of its majestic beauty and the magical transformation of the clouds and sky.",
+            "details": "Travel O Quy Ho Pass, one of northern Vietnam's great mountain roads, with sweeping views and changing cloudscapes.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -230,7 +230,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Lonely Tree",
+            "title": "Lonely Tree Viewpoint",
             "title_i18n": {
               "ar": "الشجرة الوحيدة",
               "fr": "Arbre solitaire",
@@ -249,7 +249,7 @@
               "sv": "Ensamt träd",
               "no": "Ensomt tre"
             },
-            "details": "An iconic check-in spot at the top of O Quy Ho Pass. A solitary tree stands amidst the majestic mountain scenery, creating stunning and romantic photos perfect for social media.",
+            "details": "Stop at the lonely tree viewpoint, a simple but striking photo spot framed by high mountain scenery.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -282,7 +282,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Glass Bridge",
+            "title": "Dragon Cloud Glass Bridge",
             "title_i18n": {
               "ar": "الجسر الزجاجي",
               "fr": "Pont de verre",
@@ -301,7 +301,7 @@
               "sv": "Glas bro",
               "no": "Glassbroen"
             },
-            "details": "When mentioning Glass Bridges in the Sa Pa and O Quy Ho Pass area, the most prominent landmark is the Dragon Cloud Glass Bridge. This is currently the highest glass bridge in Vietnam, offering an incredibly thrilling and impressive experience.",
+            "details": "Step onto the glass bridge near O Quy Ho for a thrilling view over the deep valley and surrounding peaks.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -334,7 +334,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Night Market",
+            "title": "Sapa Night Market",
             "title_i18n": {
               "ar": "السوق الليلي",
               "fr": "Marché nocturne",
@@ -353,7 +353,7 @@
               "sv": "Nattmarknad",
               "no": "Nattmarked"
             },
-            "details": "Sa Pa Night Market is one of the most exciting cultural and culinary experiences you shouldn't miss when visiting this misty town. Unlike the quietness of the day, the atmosphere here at night is very lively and full of the colors of the Northwest region.",
+            "details": "Explore Sapa Night Market for local food, textiles and the lively evening atmosphere of the highlands.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -380,7 +380,7 @@
             }
           }
         ],
-        "notes": "Discover Sapa’s beauty: Marvel at O Quy Ho Pass, visit the Lonely Tree and Glass Bridge, then soak in the local atmosphere at the vibrant Night Market. Adventure awaits",
+        "notes": "Spend the day around Sapa's dramatic pass scenery, from lonely viewpoints and glass-bridge height to the color of the night market.",
         "notes_i18n": {
           "ar": "اكتشف جمال سابا: استمتع بزيارة ممر O Quy Ho، وقم بزيارة Lonely Tree والجسر الزجاجي، ثم انغمس في الأجواء المحلية في السوق الليلي النابض بالحياة. المغامرة تنتظر",
           "fr": "Découvrez la beauté de Sapa : émerveillez-vous devant le col O Quy Ho, visitez l'arbre solitaire et le pont de verre, puis imprégnez-vous de l'atmosphère locale au marché nocturne animé. L'aventure vous attend",
@@ -403,7 +403,7 @@
       {
         "id": "travel_plan_day_3acebe40-fbfd-491e-a297-eeffe08087a4",
         "day_number": 3,
-        "title": "Sapa - Muong Hoa Train - Fansipan",
+        "title": "Muong Hoa Train and Fansipan",
         "title_i18n": {
           "ar": "سابا - قطار موونج هوا - فانسيبان",
           "fr": "Sapa - Train Muong Hoa - Fansipan",
@@ -451,7 +451,7 @@
               "sv": "Muong Hoa tåg",
               "no": "Muong Hoa tog"
             },
-            "details": null,
+            "details": "Take the Muong Hoa mountain train for views across Sapa's valley scenery before the Fansipan ascent.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -503,7 +503,7 @@
               "sv": "Fansipan",
               "no": "Fansipan"
             },
-            "details": null,
+            "details": "Reach toward Fansipan, Vietnam's highest peak, for cloud-level views over the Hoang Lien Son range.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -530,7 +530,7 @@
             }
           }
         ],
-        "notes": "Ride the scenic Muong Hoa mountain train and conquer Fansipan, the \"Roof of Indochina.\" Enjoy breathtaking panoramic views of the Hoang Lien Son range. A must-do experience",
+        "notes": "Ride through mountain scenery on the Muong Hoa train, then continue toward Fansipan for the Roof of Indochina experience.",
         "notes_i18n": {
           "ar": "اركب قطار جبل مونج هوا ذو المناظر الخلابة واحتل فانسيبان، \"سقف الهند الصينية\". استمتع بالمناظر البانورامية الخلابة لمجموعة Hoang Lien Son. تجربة لا بد منها",
           "fr": "Montez à bord du train de montagne pittoresque Muong Hoa et partez à la conquête de Fansipan, le « toit de l'Indochine ». Profitez d'une vue panoramique à couper le souffle sur la chaîne Hoang Lien Son. Une expérience incontournable",
@@ -553,7 +553,7 @@
       {
         "id": "travel_plan_day_b1574690-7e56-428e-abe9-358b259bf9e1",
         "day_number": 4,
-        "title": "Sapa - Ham Rong Mountain - Silver Waterfall - Tam Dao",
+        "title": "Sapa to Tam Dao",
         "title_i18n": {
           "ar": "سابا - جبل هام رونج - الشلال الفضي - تام داو",
           "fr": "Sapa - Montagne Ham Rong - Cascade d'Argent - Tam Dao",
@@ -601,7 +601,7 @@
               "sv": "Ham Rong Mountain",
               "no": "Ham Rong-fjellet"
             },
-            "details": null,
+            "details": "Visit Ham Rong Mountain for gardens, rock formations and elevated views over Sapa town and the valley.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -653,7 +653,7 @@
               "sv": "Silver vattenfall",
               "no": "Sølvfoss"
             },
-            "details": null,
+            "details": "Stop at Silver Waterfall, where water drops through mountain greenery near Sapa's high road.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -680,7 +680,7 @@
             }
           }
         ],
-        "notes": "Explore Sapa’s Ham Rong Mountain and the majestic Silver Waterfall before heading to the cool, misty hills of Tam Dao. A perfect blend of nature and mountain scenery",
+        "notes": "Leave Sapa after Ham Rong Mountain and Silver Waterfall, then continue toward Tam Dao's cooler hill-town atmosphere.",
         "notes_i18n": {
           "ar": "استكشف جبل هام رونغ في سابا والشلال الفضي المهيب قبل التوجه إلى تلال تام داو الباردة والضبابية. مزيج مثالي من الطبيعة والمناظر الجبلية",
           "fr": "Explorez la montagne Ham Rong de Sapa et la majestueuse cascade d'argent avant de vous diriger vers les collines fraîches et brumeuses de Tam Dao. Un mélange parfait de nature et de paysages de montagne",
@@ -703,7 +703,7 @@
       {
         "id": "travel_plan_day_cfe6d681-14a5-4bcd-bf23-b313c874b14f",
         "day_number": 5,
-        "title": "Tam Dao - Cloud Bridge - Ban May Farm - Co La Cafe - Hanoi",
+        "title": "Tam Dao to Hanoi",
         "title_i18n": {
           "ar": "تام داو - جسر السحاب - مزرعة بان ماي - كو لا كافيه - هانوي",
           "fr": "Tam Dao - Pont Cloud - Ferme Ban May - Co La Café - Hanoï",
@@ -751,7 +751,7 @@
               "sv": "Molnbron",
               "no": "Cloud Bridge"
             },
-            "details": null,
+            "details": "Visit Cloud Bridge, a Tam Dao viewpoint made for misty mountain photos and open valley views.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -803,7 +803,7 @@
               "sv": "Ban May Farm",
               "no": "Ban May Farm"
             },
-            "details": null,
+            "details": "Stop at Ban May Farm for rural scenery and a gentle highland break in Tam Dao.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -855,7 +855,7 @@
               "sv": "Co La Café",
               "no": "Co La Cafe"
             },
-            "details": null,
+            "details": "Pause at Co La Cafe, using the stop to enjoy Tam Dao's cool air before the return to Hanoi.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -882,7 +882,7 @@
             }
           }
         ],
-        "notes": "Experience Tam Dao's charm: visit Cloud Bridge, Ban May Farm, and relax at Co La Cafe before returning to Hanoi. A refreshing escape into nature and scenic misty views",
+        "notes": "Enjoy Tam Dao's misty viewpoints, farm scenery and cafe pause before returning to Hanoi for the next part of the journey.",
         "notes_i18n": {
           "ar": "استمتع بسحر تام داو: قم بزيارة جسر كلاود، ومزرعة بان ماي، وتمتع بالاسترخاء في مقهى كو لا قبل العودة إلى هانوي. ملاذ منعش إلى الطبيعة والمناظر الضبابية الخلابة",
           "fr": "Découvrez le charme de Tam Dao : visitez Cloud Bridge, Ban May Farm et détendez-vous au Co La Café avant de retourner à Hanoï. Une évasion rafraîchissante dans la nature et des vues panoramiques brumeuses",
@@ -905,7 +905,7 @@
       {
         "id": "travel_plan_day_539215f1-99c8-4616-873c-d77517586dd4",
         "day_number": 6,
-        "title": "Hanoi - Ninh Binh - Trang An - Hang Mua - Stay in Ninh Binh",
+        "title": "Trang An and Hang Mua",
         "title_i18n": {
           "ar": "هانوي - نينه بينه - ترانج آن - هانغ موا - البقاء في نينه بينه",
           "fr": "Hanoï - Ninh Binh - Trang An - Hang Mua - Séjour à Ninh Binh",
@@ -953,7 +953,7 @@
               "sv": "Trang An",
               "no": "Trang An"
             },
-            "details": null,
+            "details": "Boat through Trang An's cave passages, temples and limestone cliffs in the UNESCO landscape complex.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -1005,7 +1005,7 @@
               "sv": "Häng Mua",
               "no": "Heng Mua"
             },
-            "details": null,
+            "details": "Climb Hang Mua for broad views over Ninh Binh's rivers, rice fields and limestone peaks.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -1032,7 +1032,7 @@
             }
           }
         ],
-        "notes": "Travel from Hanoi to Ninh Binh to explore the scenic Trang An complex and climb Mua Cave for panoramic views. Enjoy an overnight stay amidst the stunning karst landscapes",
+        "notes": "Travel from Hanoi to Ninh Binh for a day of sampan waterways and a climb above the karst landscape, staying overnight in the region.",
         "notes_i18n": {
           "ar": "سافر من هانوي إلى نينه بينه لاستكشاف مجمع ترانج آن الخلاب وتسلق كهف موا للاستمتاع بالمناظر البانورامية. استمتع بإقامة ليلية وسط المناظر الطبيعية الكارستية المذهلة",
           "fr": "Voyagez de Hanoï à Ninh Binh pour explorer le complexe pittoresque de Trang An et gravissez la grotte de Mua pour une vue panoramique. Profitez d'une nuit au milieu de superbes paysages karstiques",
@@ -1055,7 +1055,7 @@
       {
         "id": "travel_plan_day_3ba87f1b-ac71-400a-b272-c7066446a8d1",
         "day_number": 7,
-        "title": "Ninh Binh - Hoa Lu - Bai Dinh Pagoda - Hanoi",
+        "title": "Hoa Lu and Bai Dinh",
         "title_i18n": {
           "ar": "نينه بينه - هوا لو - معبد باي دينه - هانوي",
           "fr": "Ninh Binh - Hoa Lu - Pagode Bai Dinh - Hanoï",
@@ -1103,7 +1103,7 @@
               "sv": "Hoa Lu",
               "no": "Hoa Lu"
             },
-            "details": null,
+            "details": "Visit Hoa Lu, Vietnam's ancient capital, where temple grounds sit among Ninh Binh's limestone scenery.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -1155,7 +1155,7 @@
               "sv": "Bai Dinh-pagoden",
               "no": "Bai Dinh-pagoden"
             },
-            "details": null,
+            "details": "Explore Bai Dinh Pagoda, a large Buddhist complex of halls, courtyards and statues near Trang An.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -1182,7 +1182,7 @@
             }
           }
         ],
-        "notes": "Visit the ancient capital of Hoa Lu and the majestic Bai Dinh Pagoda in Ninh Binh before returning to Hanoi. A day filled with deep history and spiritual architecture",
+        "notes": "Before returning to Hanoi, connect Ninh Binh's ancient capital history with the scale and calm of Bai Dinh Pagoda.",
         "notes_i18n": {
           "ar": "قم بزيارة العاصمة القديمة هوا لو ومعبد باي دينه المهيب في نينه بينه قبل العودة إلى هانوي. يوم مليء بالتاريخ العميق والعمارة الروحية",
           "fr": "Visitez l'ancienne capitale de Hoa Lu et la majestueuse pagode Bai Dinh à Ninh Binh avant de retourner à Hanoi. Une journée remplie d'histoire profonde et d'architecture spirituelle",
@@ -1205,7 +1205,7 @@
       {
         "id": "travel_plan_day_043f0985-1102-486c-a192-43a1d15684b7",
         "day_number": 8,
-        "title": "Hanoi",
+        "title": "Hanoi Farewell",
         "title_i18n": {
           "ar": "هانوي",
           "fr": "Hanoï",
@@ -1227,7 +1227,7 @@
         "overnight_location": null,
         "overnight_location_i18n": {},
         "services": [],
-        "notes": "Good Bye and See You Again",
+        "notes": "End the northern journey in Hanoi after eight days of highland passes, misty towns, caves, temples and karst viewpoints.",
         "notes_i18n": {
           "ar": "وداعا ونراكم مرة أخرى",
           "fr": "Au revoir et à bientôt",

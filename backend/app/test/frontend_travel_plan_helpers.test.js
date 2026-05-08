@@ -39,6 +39,8 @@ test("normalizeTravelPlanDraft preserves localized maps while keeping flat sourc
         overnight_location_i18n: {
           vi: "Ha Noi"
         },
+        primary_location_id: "area_central",
+        secondary_location_id: "place_hue",
         notes: "English notes",
         notes_i18n: {
           vi: "Ghi chu"
@@ -111,6 +113,8 @@ test("normalizeTravelPlanDraft preserves localized maps while keeping flat sourc
     vi: "Ha Noi",
     en: "Hanoi"
   });
+  assert.equal(day.primary_location_id, "area_central");
+  assert.equal(day.secondary_location_id, "place_hue");
   assert.equal(day.notes, "English notes");
   assert.deepEqual(day.notes_i18n, {
     vi: "Ghi chu",
