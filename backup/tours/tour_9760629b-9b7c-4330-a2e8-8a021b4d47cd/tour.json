@@ -11,7 +11,7 @@
   "seasonality_end_month": "dec",
   "priority": 100,
   "created_at": "2026-04-16T03:51:45.597Z",
-  "updated_at": "2026-05-07T08:46:11.314Z",
+  "updated_at": "2026-05-08T03:28:50.092Z",
   "published_on_webpage": true,
   "travel_plan": {
     "destination_scope": [
@@ -59,6 +59,8 @@
         "title_i18n": {},
         "overnight_location": null,
         "overnight_location_i18n": {},
+        "primary_location_id": null,
+        "secondary_location_id": null,
         "services": [
           {
             "id": "travel_plan_service_c77d3498-2e3c-43ad-8458-f5091b9e997f",
@@ -246,6 +248,8 @@
         "title_i18n": {},
         "overnight_location": null,
         "overnight_location_i18n": {},
+        "primary_location_id": null,
+        "secondary_location_id": null,
         "services": [
           {
             "id": "travel_plan_service_88121474-0af2-4b25-9a57-0a669fb16f46",
@@ -328,7 +332,80 @@
         "title_i18n": {},
         "overnight_location": null,
         "overnight_location_i18n": {},
-        "services": [],
+        "primary_location_id": null,
+        "secondary_location_id": null,
+        "services": [
+          {
+            "id": "travel_plan_service_b13b2d2f-f532-4367-9ea3-345d543d6780",
+            "timing_kind": "label",
+            "time_label": null,
+            "time_label_i18n": {},
+            "time_point": null,
+            "kind": "other",
+            "title": "Cu Chi Tunnels",
+            "title_i18n": {},
+            "details": "Located approximately 60 kilometers northwest of Ho Chi Minh City, the Cu Chi Tunnels are an immense network of connecting underground tunnels that played a pivotal role during the Vietnam War. This \"underground city\" is not only a symbol of the resilience and ingenuity of the Vietnamese people but also one of the most iconic historical destinations in the country.",
+            "details_i18n": {},
+            "image_subtitle": null,
+            "image_subtitle_i18n": {},
+            "location": null,
+            "location_i18n": {},
+            "start_time": null,
+            "end_time": null,
+            "image": {
+              "id": "travel_plan_service_image_f10e319f-7984-4c4b-8a9e-56f2b5029638",
+              "storage_path": "/public/v1/tour-images/tour_9760629b-9b7c-4330-a2e8-8a021b4d47cd/travel-plan-services/travel_plan_service_b13b2d2f-f532-4367-9ea3-345d543d6780-1778210852772-e7d39a27-e949-4029-a418-25f61403a124.webp",
+              "caption": null,
+              "caption_i18n": {},
+              "alt_text": null,
+              "alt_text_i18n": {},
+              "sort_order": 0,
+              "is_primary": true,
+              "is_customer_visible": true,
+              "include_in_travel_tour_card": false,
+              "width_px": null,
+              "height_px": null,
+              "source_attribution": null,
+              "focal_point": null,
+              "created_at": "2026-05-08T03:27:32.950Z"
+            }
+          },
+          {
+            "id": "travel_plan_service_99325809-fd34-4ed0-9d97-78f70ed0c899",
+            "timing_kind": "label",
+            "time_label": null,
+            "time_label_i18n": {},
+            "time_point": null,
+            "kind": "other",
+            "title": "Ben Thanh Market",
+            "title_i18n": {},
+            "details": "Located in the very center of District 1, Ben Thanh Market is more than just a place to shop—it is a historic landmark and a symbol of the bustling energy of Ho Chi Minh City. Built in 1914, the market's iconic clock tower at the South Gate is recognized worldwide as an emblem of the city",
+            "details_i18n": {},
+            "image_subtitle": null,
+            "image_subtitle_i18n": {},
+            "location": null,
+            "location_i18n": {},
+            "start_time": null,
+            "end_time": null,
+            "image": {
+              "id": "travel_plan_service_image_2060a43c-35fd-45fd-8aee-cd1c085dc442",
+              "storage_path": "/public/v1/tour-images/tour_9760629b-9b7c-4330-a2e8-8a021b4d47cd/travel-plan-services/travel_plan_service_99325809-fd34-4ed0-9d97-78f70ed0c899-1778210929835-36abcdec-0655-4bcb-8142-ca2da8656765.webp",
+              "caption": null,
+              "caption_i18n": {},
+              "alt_text": null,
+              "alt_text_i18n": {},
+              "sort_order": 0,
+              "is_primary": true,
+              "is_customer_visible": true,
+              "include_in_travel_tour_card": false,
+              "width_px": null,
+              "height_px": null,
+              "source_attribution": null,
+              "focal_point": null,
+              "created_at": "2026-05-08T03:28:50.090Z"
+            }
+          }
+        ],
         "notes": "Connect Vietnam's wartime ingenuity at Cu Chi with the color, bargaining and street-food energy of Ben Thanh Market in modern Saigon.",
         "notes_i18n": {}
       },
@@ -339,6 +416,8 @@
         "title_i18n": {},
         "overnight_location": null,
         "overnight_location_i18n": {},
+        "primary_location_id": null,
+        "secondary_location_id": null,
         "services": [
           {
             "id": "travel_plan_service_1153a14c-4693-4cbf-bc6e-d5cb433c7411",
@@ -456,6 +535,8 @@
         "title_i18n": {},
         "overnight_location": null,
         "overnight_location_i18n": {},
+        "primary_location_id": null,
+        "secondary_location_id": null,
         "services": [
           {
             "id": "travel_plan_service_4f962c44-22fd-4f2d-ab93-c51619b8a383",
@@ -522,6 +603,8 @@
         "title_i18n": {},
         "overnight_location": null,
         "overnight_location_i18n": {},
+        "primary_location_id": null,
+        "secondary_location_id": null,
         "services": [
           {
             "id": "travel_plan_service_d8c2ac57-0552-4f37-89e0-e39b32fa65bd",
@@ -639,6 +722,8 @@
         "title_i18n": {},
         "overnight_location": null,
         "overnight_location_i18n": {},
+        "primary_location_id": null,
+        "secondary_location_id": null,
         "services": [
           {
             "id": "travel_plan_service_7cad64f5-a922-4e37-99ef-9eb152099641",
@@ -756,6 +841,8 @@
         "title_i18n": {},
         "overnight_location": null,
         "overnight_location_i18n": {},
+        "primary_location_id": null,
+        "secondary_location_id": null,
         "services": [],
         "notes": "Use the final morning for Da Lat coffee, tea, jams and souvenirs before the transfer toward Nha Trang airport closes the route.",
         "notes_i18n": {}
