@@ -11,9 +11,9 @@
   ],
   "seasonality_start_month": "mar",
   "seasonality_end_month": "nov",
-  "priority": 50,
+  "priority": 0,
   "created_at": "2026-04-13T09:01:09.779Z",
-  "updated_at": "2026-04-30T04:05:50.414Z",
+  "updated_at": "2026-05-08T07:07:55.754Z",
   "travel_plan": {
     "destination_scope": [
       {
@@ -30,31 +30,27 @@
         ]
       }
     ],
+    "tour_card_image_ids": [
+      "travel_plan_service_image_7f1a217d-9356-4cf4-8158-4ae95ce014c9",
+      "travel_plan_service_image_65209eff-9a9a-4039-8fbc-a20e895fae07",
+      "travel_plan_service_image_cdb3029c-b068-44af-85da-06fb55619fae",
+      "travel_plan_service_image_70e29ccd-8173-4476-a048-719c4979259f",
+      "travel_plan_service_image_5f7c79e9-a6ca-48b6-ae67-d8ec7e0042e8",
+      "travel_plan_service_image_71692e7f-2bb8-4245-8923-78e6e5c3cb4a"
+    ],
+    "tour_card_primary_image_id": "travel_plan_service_image_7f1a217d-9356-4cf4-8158-4ae95ce014c9",
+    "one_pager_hero_image_id": "travel_plan_service_image_7f1a217d-9356-4cf4-8158-4ae95ce014c9",
+    "one_pager_image_ids": [],
     "days": [
       {
         "id": "travel_plan_day_3a3eb033-930f-403a-8cfb-d20cf1f380b5",
         "day_number": 1,
         "title": "Hue lagoon and royal sites",
-        "title_i18n": {
-          "ar": "اذهب إلى هوي",
-          "fr": "aller à Hué",
-          "zh": "去顺化",
-          "ja": "フエに行く",
-          "ko": "후에(Hue)로 가다",
-          "vi": "đi Huế",
-          "ms": "pergi ke Hue",
-          "de": "Gehe nach Hue",
-          "es": "ir a hué",
-          "it": "vai a Tonalità",
-          "ru": "поехать в Хюэ",
-          "nl": "ga naar Hue",
-          "pl": "idź do Hue",
-          "da": "gå til Hue",
-          "sv": "gå till Hue",
-          "no": "gå til Hue"
-        },
+        "title_i18n": {},
         "overnight_location": null,
         "overnight_location_i18n": {},
+        "primary_location_id": null,
+        "secondary_location_id": null,
         "services": [
           {
             "id": "travel_plan_service_c3958108-8d2f-4e26-876a-7ca4a2ce69fa",
@@ -64,24 +60,9 @@
             "time_point": null,
             "kind": "other",
             "title": "Lang Co Bay",
-            "title_i18n": {
-              "ar": "خليج لانج كو",
-              "fr": "Baie de Lang Co",
-              "zh": "兰姑湾",
-              "ja": "ランコー湾",
-              "ko": "랑코 베이",
-              "vi": "Vịnh Lăng Cô",
-              "ms": "Teluk Lang Co",
-              "de": "Lang Co Bay",
-              "es": "Bahía Lang Co",
-              "it": "Baia di Lang Co",
-              "ru": "Ланг Ко Бэй",
-              "nl": "Lang Co-baai",
-              "pl": "Zatoka Lang Co",
-              "da": "Lang Co Bay",
-              "sv": "Lang Co Bay",
-              "no": "Lang Co Bay"
-            },
+            "title_i18n": {},
+            "details": "Pause at Lang Co Bay, where pale sand, mountains and lagoon water mark the scenic approach to Hue.",
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -104,8 +85,7 @@
               "source_attribution": null,
               "focal_point": null,
               "created_at": "2026-04-28T03:15:15.091Z"
-            },
-            "details": "Pause at Lang Co Bay, where pale sand, mountains and lagoon water mark the scenic approach to Hue."
+            }
           },
           {
             "id": "travel_plan_service_b0f16854-af2b-468d-91cf-51940acff027",
@@ -115,24 +95,9 @@
             "time_point": null,
             "kind": "other",
             "title": "Tam Giang Lagoon",
-            "title_i18n": {
-              "ar": "تام جيانج لاجون",
-              "fr": "Lagune de Tam Giang",
-              "zh": "三江泻湖",
-              "ja": "タムザン ラグーン",
-              "ko": "땀장 라군",
-              "vi": "Phá Tam Giang",
-              "ms": "Lagun Tam Giang",
-              "de": "Lagune Tam Giang",
-              "es": "Laguna Tam Giang",
-              "it": "Laguna Tam Giang",
-              "ru": "Лагуна Там Джианг",
-              "nl": "Tam Giang-lagune",
-              "pl": "Laguna Tam Giang",
-              "da": "Tam Giang-lagunen",
-              "sv": "Tam Giang lagun",
-              "no": "Tam Giang-lagunen"
-            },
+            "title_i18n": {},
+            "details": "See Tam Giang Lagoon, a wide brackish-water landscape tied to fishing life and open skies near Hue.",
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -155,8 +120,7 @@
               "source_attribution": null,
               "focal_point": null,
               "created_at": "2026-04-28T03:16:40.796Z"
-            },
-            "details": "See Tam Giang Lagoon, a wide brackish-water landscape tied to fishing life and open skies near Hue."
+            }
           },
           {
             "id": "travel_plan_service_00c6d1f3-9ffe-45a4-8a84-b121220f9c73",
@@ -166,24 +130,9 @@
             "time_point": null,
             "kind": "other",
             "title": "Pearl village",
-            "title_i18n": {
-              "ar": "قرية اللؤلؤة",
-              "fr": "Village des Perles",
-              "zh": "珍珠村",
-              "ja": "パールビレッジ",
-              "ko": "진주마을",
-              "vi": "Làng Ngọc",
-              "ms": "Kampung Mutiara",
-              "de": "Perlendorf",
-              "es": "Pueblo Perla",
-              "it": "Villaggio delle Perle",
-              "ru": "Жемчужная деревня",
-              "nl": "Parel dorp",
-              "pl": "Perłowa Wioska",
-              "da": "Perlelandsby",
-              "sv": "Pearl Village",
-              "no": "Pearl Village"
-            },
+            "title_i18n": {},
+            "details": "Visit a pearl village stop connected to the coastal and lagoon culture of the Hue region.",
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -206,8 +155,7 @@
               "source_attribution": null,
               "focal_point": null,
               "created_at": "2026-04-28T03:20:01.696Z"
-            },
-            "details": "Visit a pearl village stop connected to the coastal and lagoon culture of the Hue region."
+            }
           },
           {
             "id": "travel_plan_service_100b9921-5dd8-49f9-862f-bc41f5f31348",
@@ -217,24 +165,9 @@
             "time_point": null,
             "kind": "other",
             "title": "Imperial Citadel",
-            "title_i18n": {
-              "ar": "القلعة الإمبراطورية",
-              "fr": "Citade Impériale",
-              "zh": "皇城",
-              "ja": "帝国の城塞",
-              "ko": "임페리얼 시타드",
-              "vi": "Hoàng thành",
-              "ms": "Kota Imperial",
-              "de": "Kaiserliche Zitadelle",
-              "es": "Ciudad Imperial",
-              "it": "Cittadina Imperiale",
-              "ru": "Имперская Цитада",
-              "nl": "Keizerlijke Citade",
-              "pl": "Cytata Cesarska",
-              "da": "Kejserligt Citade",
-              "sv": "Imperialistisk Citad",
-              "no": "Imperial Citade"
-            },
+            "title_i18n": {},
+            "details": "Explore Hue's Imperial Citadel, the walled heart of Vietnam's Nguyen Dynasty with palaces, gates and royal courtyards.",
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -257,8 +190,7 @@
               "source_attribution": null,
               "focal_point": null,
               "created_at": "2026-04-28T03:21:22.447Z"
-            },
-            "details": "Explore Hue's Imperial Citadel, the walled heart of Vietnam's Nguyen Dynasty with palaces, gates and royal courtyards."
+            }
           },
           {
             "id": "travel_plan_service_f95e7ee1-39e7-414b-8d39-b0ae9fcc9e72",
@@ -268,24 +200,9 @@
             "time_point": null,
             "kind": "other",
             "title": "Khai Dinh Mausoleum",
-            "title_i18n": {
-              "ar": "ضريح خاي دينه",
-              "fr": "Mausolée de Khai Dinh",
-              "zh": "启定陵",
-              "ja": "カイディン廟",
-              "ko": "카이딘 영묘",
-              "vi": "Lăng Khải Định",
-              "ms": "Makam Khai Dinh",
-              "de": "Khai-Dinh-Mausoleum",
-              "es": "Mausoleo de Khai Dinh",
-              "it": "Mausoleo di Khai Dinh",
-              "ru": "Мавзолей Кхай Динь",
-              "nl": "Khai Dinh-mausoleum",
-              "pl": "Mauzoleum Khai Dinha",
-              "da": "Khai Dinh Mausoleum",
-              "sv": "Khai Dinh mausoleum",
-              "no": "Khai Dinh-mausoleet"
-            },
+            "title_i18n": {},
+            "details": "Visit Khai Dinh Mausoleum, where hillside setting, stonework and ornate details reflect a distinctive royal style.",
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -308,8 +225,7 @@
               "source_attribution": null,
               "focal_point": null,
               "created_at": "2026-04-28T03:30:33.138Z"
-            },
-            "details": "Visit Khai Dinh Mausoleum, where hillside setting, stonework and ornate details reflect a distinctive royal style."
+            }
           },
           {
             "id": "travel_plan_service_690fa366-1d20-4a94-9af4-472d4bec41dd",
@@ -319,24 +235,9 @@
             "time_point": null,
             "kind": "other",
             "title": "Thien Mu Pagoda",
-            "title_i18n": {
-              "ar": "معبد ثين مو",
-              "fr": "Pagode Thien Mu",
-              "zh": "天姥寺",
-              "ja": "ティエンムー塔",
-              "ko": "티엔무 파고다",
-              "vi": "Chùa Thiên Mụ",
-              "ms": "Pagoda Thien Mu",
-              "de": "Thien Mu Pagode",
-              "es": "Pagoda Thien Mu",
-              "it": "Pagoda di Thien Mu",
-              "ru": "Пагода Тхиен Му",
-              "nl": "Thien Mu-pagode",
-              "pl": "Pagoda Thien Mu",
-              "da": "Thien Mu Pagoda",
-              "sv": "Thien Mu Pagoda",
-              "no": "Thien Mu-pagoden"
-            },
+            "title_i18n": {},
+            "details": "End at Thien Mu Pagoda, Hue's graceful riverside tower and one of the city's most enduring symbols.",
+            "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -359,29 +260,11 @@
               "source_attribution": null,
               "focal_point": null,
               "created_at": "2026-04-28T03:32:11.368Z"
-            },
-            "details": "End at Thien Mu Pagoda, Hue's graceful riverside tower and one of the city's most enduring symbols."
+            }
           }
         ],
         "notes": "Travel into Hue's imperial landscape by way of coastal and lagoon scenery, then visit the citadel, royal tomb architecture and riverside pagoda.",
-        "notes_i18n": {
-          "ar": "استكشف القلعة المهيبة والمقابر الملكية ونهر العطور الشعري. اكتشف السحر الخالد والتاريخ الغني والأناقة الإمبراطورية لعاصمة فيتنام القديمة، هيو.",
-          "fr": "Explorez la majestueuse Citadelle, les tombeaux royaux et la poétique rivière des Parfums. Découvrez le charme intemporel, la riche histoire et l'élégance impériale de l'ancienne capitale du Vietnam, Hue.",
-          "zh": "探索雄伟的城堡、皇家陵墓和诗意的香水河。探索越南古都顺化的永恒魅力、丰富历史和帝国优雅。",
-          "ja": "雄大な城塞、王家の墓、詩的な香水川を探索してください。ベトナムの古都フエの時代を超越した魅力、豊かな歴史、帝国の優雅さを発見してください。",
-          "ko": "장엄한 성채, 왕릉, 시적인 향강을 탐험해보세요. 베트남의 고대 수도 후에(Hue)에서 시대를 초월한 매력, 풍부한 역사, 황실의 우아함을 느껴보세요.",
-          "vi": "Khám phá Hoàng thành hùng vĩ, lăng mộ hoàng gia và sông Hương thơ mộng. Khám phá vẻ đẹp quyến rũ vượt thời gian, lịch sử phong phú và nét sang trọng hoàng gia của cố đô Huế của Việt Nam.",
-          "ms": "Terokai Citadel yang megah, makam diraja, dan Sungai Perfume yang puitis. Temui daya tarikan abadi, sejarah yang kaya dan keanggunan empayar ibu kota purba Vietnam, Hue.",
-          "de": "Erkunden Sie die majestätische Zitadelle, die Königsgräber und den poetischen Parfümfluss. Entdecken Sie den zeitlosen Charme, die reiche Geschichte und die imperiale Eleganz der alten Hauptstadt Vietnams, Hue.",
-          "es": "Explore la majestuosa Ciudadela, las tumbas reales y el poético río Perfume. Descubra el encanto eterno, la rica historia y la elegancia imperial de la antigua capital de Vietnam, Hue.",
-          "it": "Esplora la maestosa Cittadella, le tombe reali e il poetico Fiume dei Profumi. Scopri il fascino senza tempo, la ricca storia e l'eleganza imperiale dell'antica capitale del Vietnam, Hue.",
-          "ru": "Исследуйте величественную Цитадель, королевские гробницы и поэтическую Ароматную реку. Откройте для себя вечное очарование, богатую историю и имперскую элегантность древней столицы Вьетнама Хюэ.",
-          "nl": "Verken de majestueuze Citadel, koninklijke graven en de poëtische Parfumrivier. Ontdek de tijdloze charme, rijke geschiedenis en keizerlijke elegantie van de oude hoofdstad van Vietnam, Hue.",
-          "pl": "Poznaj majestatyczną Cytadelę, grobowce królewskie i poetycką Rzekę Perfum. Odkryj ponadczasowy urok, bogatą historię i imperialną elegancję starożytnej stolicy Wietnamu, Hue.",
-          "da": "Udforsk det majestætiske Citadel, kongelige grave og poetiske Parfume River. Oplev den tidløse charme, rige historie og kejserlige elegance i Vietnams gamle hovedstad, Hue.",
-          "sv": "Utforska det majestätiska Citadellet, kungliga gravar och den poetiska Parfymfloden. Upptäck den tidlösa charmen, rika historien och kejserliga elegansen i Vietnams antika huvudstad, Hue.",
-          "no": "Utforsk det majestetiske citadellet, kongegravene og den poetiske parfymeelven. Oppdag den tidløse sjarmen, den rike historien og den keiserlige elegansen til Vietnams eldgamle hovedstad, Hue."
-        }
+        "notes_i18n": {}
       }
     ],
     "translation_meta": {
@@ -483,38 +366,5 @@
       }
     }
   },
-  "title_i18n": {
-    "ar": "اكتشف هيو العاصمة القديمة",
-    "fr": "Explorez l'ancienne capitale de Hue",
-    "zh": "探索顺化古都",
-    "ja": "古都フエを探索する",
-    "ko": "후에(Hue) 고대 수도 탐험",
-    "ms": "Terokai Ibu Kota Purba Hue",
-    "de": "Erkunden Sie die antike Hauptstadt Hue",
-    "es": "Explora la antigua capital de Hue",
-    "it": "Esplora l'antica capitale di Hue",
-    "ru": "Исследуйте древнюю столицу Хюэ",
-    "nl": "Verken de oude hoofdstad van Hue",
-    "pl": "Poznaj starożytną stolicę Hue",
-    "da": "Udforsk Hue Ancient Capital",
-    "sv": "Utforska Hue Ancient Capital",
-    "no": "Utforsk Hue Ancient Capital"
-  },
-  "short_description_i18n": {
-    "ar": "استكشف القلعة المهيبة والمقابر الملكية ونهر العطور الشعري. اكتشف السحر الخالد والتاريخ الغني والأناقة الإمبراطورية لعاصمة فيتنام القديمة، هيو.",
-    "fr": "Explorez la majestueuse Citadelle, les tombeaux royaux et la poétique rivière des Parfums. Découvrez le charme intemporel, la riche histoire et l'élégance impériale de l'ancienne capitale du Vietnam, Hue.",
-    "zh": "探索雄伟的城堡、皇家陵墓和诗意的香水河。探索越南古都顺化的永恒魅力、丰富历史和帝国优雅。",
-    "ja": "雄大な城塞、王家の墓、詩的な香水川を探索してください。ベトナムの古都フエの時代を超越した魅力、豊かな歴史、帝国の優雅さを発見してください。",
-    "ko": "장엄한 성채, 왕릉, 시적인 향강을 탐험해보세요. 베트남의 고대 수도 후에(Hue)에서 시대를 초월한 매력, 풍부한 역사, 황실의 우아함을 느껴보세요.",
-    "ms": "Terokai Citadel yang megah, makam diraja, dan Sungai Perfume yang puitis. Temui daya tarikan abadi, sejarah yang kaya dan keanggunan empayar ibu kota purba Vietnam, Hue.",
-    "de": "Erkunden Sie die majestätische Zitadelle, die Königsgräber und den poetischen Parfümfluss. Entdecken Sie den zeitlosen Charme, die reiche Geschichte und die imperiale Eleganz der alten Hauptstadt Vietnams, Hue.",
-    "es": "Explore la majestuosa Ciudadela, las tumbas reales y el poético río Perfume. Descubra el encanto eterno, la rica historia y la elegancia imperial de la antigua capital de Vietnam, Hue.",
-    "it": "Esplora la maestosa Cittadella, le tombe reali e il poetico Fiume dei Profumi. Scopri il fascino senza tempo, la ricca storia e l'eleganza imperiale dell'antica capitale del Vietnam, Hue.",
-    "ru": "Исследуйте величественную Цитадель, королевские гробницы и поэтическую Ароматную реку. Откройте для себя вечное очарование, богатую историю и имперскую элегантность древней столицы Вьетнама Хюэ.",
-    "nl": "Verken de majestueuze Citadel, koninklijke graven en de poëtische Parfumrivier. Ontdek de tijdloze charme, rijke geschiedenis en keizerlijke elegantie van de oude hoofdstad van Vietnam, Hue.",
-    "pl": "Poznaj majestatyczną Cytadelę, grobowce królewskie i poetycką Rzekę Perfum. Odkryj ponadczasowy urok, bogatą historię i imperialną elegancję starożytnej stolicy Wietnamu, Hue.",
-    "da": "Udforsk det majestætiske Citadel, kongelige grave og poetiske Parfume River. Oplev den tidløse charme, rige historie og kejserlige elegance i Vietnams gamle hovedstad, Hue.",
-    "sv": "Utforska det majestätiska Citadellet, kungliga gravar och den poetiska Parfymfloden. Upptäck den tidlösa charmen, rika historien och kejserliga elegansen i Vietnams antika huvudstad, Hue.",
-    "no": "Utforsk det majestetiske citadellet, kongegravene og den poetiske parfymeelven. Oppdag den tidløse sjarmen, den rike historien og den keiserlige elegansen til Vietnams eldgamle hovedstad, Hue."
-  }
+  "published_on_webpage": true
 }
