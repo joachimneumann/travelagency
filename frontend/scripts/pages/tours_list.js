@@ -175,6 +175,12 @@ function formatIntegerWithGrouping(value) {
   }).format(Number(value));
 }
 
+function formatWebPagePriority(value) {
+  const numberValue = Number(value);
+  const normalized = Number.isFinite(numberValue) ? Math.round(numberValue) : 50;
+  return String(Math.min(100, Math.max(0, normalized)));
+}
+
 const fetchApi = createApiFetcher({
   apiBase,
   onError: (message) => showError(message),
@@ -1024,7 +1030,7 @@ function renderTours(items) {
       const title = tour.title || "-";
       const tourImageMarkup = renderTourImageMarkup(tour);
       const publishedPill = tour.published_on_webpage !== false
-        ? `<span class="tour-list__published-pill">${escapeHtml(backendT("backend.tours.published_pill", "web page"))}</span>`
+        ? `<span class="tour-list__published-meta"><span class="tour-list__published-pill">${escapeHtml(backendT("backend.tours.published_pill", "web page"))}</span><span class="tour-list__published-priority" aria-label="${escapeHtml(backendT("backend.tours.web_page_priority", "Web page ranking priority"))}">${escapeHtml(formatWebPagePriority(tour.priority))}</span></span>`
         : "";
       const rowAriaLabel = backendT("backend.tours.open_tour", "Open tour {name}", {
         name: title
