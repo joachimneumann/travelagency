@@ -921,8 +921,22 @@ export function createFrontendToursController(ctx) {
     const normalizedTripId = normalizeText(tripId);
     if (!normalizedTripId) return;
     const expandedIds = expandedTourIdSet();
-    if (expanded) expandedIds.add(normalizedTripId);
-    else expandedIds.delete(normalizedTripId);
+    if (expanded) {
+      expandedIds.clear();
+      expandedIds.add(normalizedTripId);
+    } else {
+      expandedIds.delete(normalizedTripId);
+    }
+  }
+
+  function normalizeExpandedTourIdSet() {
+    const expandedIds = expandedTourIdSet();
+    const normalizedIds = Array.from(expandedIds)
+      .map((value) => normalizeText(value))
+      .filter(Boolean);
+    const activeTripId = normalizedIds[normalizedIds.length - 1] || "";
+    expandedIds.clear();
+    if (activeTripId) expandedIds.add(activeTripId);
   }
 
   function prefersReducedMotion() {
@@ -2050,9 +2064,35 @@ export function createFrontendToursController(ctx) {
     return button instanceof HTMLElement ? button : null;
   }
 
+  function closeOtherExpandedTourDetails(activeTripId) {
+    const normalizedActiveTripId = normalizeText(activeTripId);
+    const expandedIds = Array.from(expandedTourIdSet())
+      .map((value) => normalizeText(value))
+      .filter((tripId) => tripId && tripId !== normalizedActiveTripId);
+    if (!expandedIds.length) return;
+
+    expandedIds.forEach((tripId) => {
+      const row = expandedTourRow(tripId);
+      const card = tourCardElement(tripId);
+      if (card instanceof HTMLElement) {
+        const button = setTourCardExpandedDomState(card, false);
+        setTourShowMoreButtonLabel(button, tourShowMoreLabel(false));
+      }
+      if (row instanceof HTMLElement) {
+        if (card instanceof HTMLElement && row.contains(card)) {
+          row.replaceWith(card);
+        } else {
+          row.remove();
+        }
+      }
+      setTourExpanded(tripId, false);
+    });
+  }
+
   function renderTrips(trips, { showNoResults = false } = {}) {
     if (!els.tourGrid) return;
     bindTourGridResizeHandler();
+    normalizeExpandedTourIdSet();
 
     if (!trips.length) {
       els.tourGrid.innerHTML = "";
@@ -2819,6 +2859,9 @@ export function createFrontendToursController(ctx) {
     if (!normalizedTripId) return;
 
     const transitionToken = beginTourDetailsTransition();
+    if (willOpen) {
+      closeOtherExpandedTourDetails(normalizedTripId);
+    }
     if (isSingleColumnTourLayout()) {
       if (willOpen) {
         animateSingleColumnTourDetailsOpen(normalizedTripId, transitionToken);

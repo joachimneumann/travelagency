@@ -523,3 +523,109 @@ test("expanded public tour details load into the refreshed language trip list", 
   ]);
   assert.equal(state.filteredTrips[0].travel_plan.days[0].title, "Old English day");
 });
+
+test("public tour details render only one expanded tour at a time", async () => {
+  global.HTMLElement = FakeElement;
+  global.HTMLButtonElement = FakeElement;
+  global.window = {
+    addEventListener() {},
+    requestAnimationFrame(callback) {
+      if (typeof callback === "function") callback();
+    },
+    matchMedia() {
+      return { matches: true };
+    }
+  };
+
+  const { createFrontendToursController } = await loadToursController();
+  const firstTrip = {
+    id: "tour_first_open",
+    title: "First tour",
+    short_description: "",
+    styles: [],
+    destinations: ["Vietnam"],
+    pictures: [],
+    travel_plan: {
+      days: [
+        {
+          id: "first_day",
+          day_number: 1,
+          title: "First day",
+          services: []
+        }
+      ]
+    }
+  };
+  const secondTrip = {
+    id: "tour_second_open",
+    title: "Second tour",
+    short_description: "",
+    styles: [],
+    destinations: ["Thailand"],
+    pictures: [],
+    travel_plan: {
+      days: [
+        {
+          id: "second_day",
+          day_number: 1,
+          title: "Second day",
+          services: []
+        }
+      ]
+    }
+  };
+  const state = {
+    lang: "en",
+    filteredTrips: [firstTrip, secondTrip],
+    trips: [firstTrip, secondTrip],
+    visibleToursCount: 2,
+    expandedTourIds: new Set([firstTrip.id, secondTrip.id]),
+    filterOptions: {
+      destinations: [],
+      styles: [],
+      destinationScopeCatalog: null
+    },
+    filters: {
+      dest: [],
+      area: "",
+      place: "",
+      style: []
+    }
+  };
+  const els = {
+    tourGrid: new FakeElement(),
+    noResultsMessage: new FakeElement(),
+    tourActions: null,
+    showMoreTours: null
+  };
+  const controller = createFrontendToursController({
+    state,
+    els,
+    backendBaseUrl: "",
+    initialVisibleTours: 2,
+    showMoreBatch: 1,
+    frontendT: (_id, fallback, vars = {}) => String(fallback ?? "").replace(/\{([^{}]+)\}/g, (_match, key) => (
+      Object.prototype.hasOwnProperty.call(vars, key) ? String(vars[key]) : ""
+    )),
+    currentFrontendLang: () => "en",
+    preferredCurrencyForFrontendLang: () => "USD",
+    approximateDisplayAmountFromUSD: () => null,
+    formatDisplayMoney: () => "",
+    defaultBookingCurrency: "USD",
+    escapeHTML,
+    escapeAttr,
+    updateBookingModalTitle() {},
+    openBookingModal() {},
+    setSelectedTourContext() {},
+    clearSelectedTourContext() {},
+    setBookingField() {},
+    prefillBookingFormWithFilters() {}
+  });
+
+  controller.renderVisibleTrips();
+
+  assert.deepEqual([...state.expandedTourIds], [secondTrip.id]);
+  assert.equal((els.tourGrid.innerHTML.match(/data-expanded-tour-id=/g) || []).length, 1);
+  assert.doesNotMatch(els.tourGrid.innerHTML, /data-expanded-tour-id="tour_first_open"/);
+  assert.match(els.tourGrid.innerHTML, /data-expanded-tour-id="tour_second_open"/);
+});
