@@ -1098,9 +1098,27 @@ export function createTourCustomizer({
     document.addEventListener("pointercancel", handlePointerDragCancel);
   }
 
+  function isCustomizeDragBlockedTarget(target) {
+    return target instanceof Element && Boolean(target.closest([
+      "button",
+      "a",
+      "input",
+      "select",
+      "textarea",
+      "[contenteditable]",
+      "[data-customize-remove]"
+    ].join(",")));
+  }
+
   function bindDraggableElement(element, root) {
     if (!(element instanceof HTMLElement) || !(root instanceof HTMLElement) || element.dataset.customizeDragBound === "1") return;
     element.dataset.customizeDragBound = "1";
+    if (element.hasAttribute("data-customize-timeline-id")) {
+      element.addEventListener("pointerdown", (event) => {
+        if (isCustomizeDragBlockedTarget(event.target)) return;
+        startPointerDrag(element, event, root);
+      });
+    }
     element.querySelectorAll(".tour-customize-option__handle, .tour-customize-timeline__handle").forEach((handle) => {
       if (!(handle instanceof HTMLElement)) return;
       handle.addEventListener("pointerdown", (event) => {

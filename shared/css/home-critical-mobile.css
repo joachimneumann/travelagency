@@ -2945,6 +2945,8 @@ html.tour-customize-pointer-dragging * {
   position: relative;
   scroll-snap-align: start;
   text-align: center;
+  cursor: grab;
+  touch-action: none;
   user-select: none;
 }
 
@@ -2967,6 +2969,7 @@ html.tour-customize-pointer-dragging * {
   font-size: 1.35rem;
   line-height: 1;
   cursor: pointer;
+  touch-action: manipulation;
 }
 
 .tour-customize-timeline__actions button:hover,
