@@ -374,6 +374,95 @@ export function createTourTravelPlanAdapter({
     });
   }
 
+  function setTravelPlanStatus(message, variant = "info") {
+    if (!(els.travel_plan_status instanceof HTMLElement)) return;
+    els.travel_plan_status.textContent = normalizeText(message);
+    els.travel_plan_status.dataset.status = normalizeText(variant) || "info";
+  }
+
+  function tourTravelPlanPdfUrl() {
+    const tourId = normalizeText(state.booking?.id || state.id);
+    if (!tourId) return "";
+    return withBackendLang(`/api/v1/tours/${encodeURIComponent(tourId)}/travel-plan.pdf`);
+  }
+
+  function renderTourTravelPlanPdfAction() {
+    const actionRows = els.travel_plan_editor instanceof HTMLElement
+      ? els.travel_plan_editor.querySelector(".travel-plan-footer__action-rows")
+      : null;
+    if (!(actionRows instanceof HTMLElement) || actionRows.querySelector("[data-tour-travel-plan-pdf-row]")) return;
+    actionRows.insertAdjacentHTML("beforeend", `
+      <div class="travel-plan-footer__action-row" data-tour-travel-plan-pdf-row>
+        <button class="btn btn-ghost booking-offer-add-btn travel-plan-pdf-btn" data-tour-travel-plan-pdf type="button">
+          ${escapeHtml("Create full travel plan PDF")}
+        </button>
+      </div>
+    `);
+  }
+
+  async function saveCurrentTravelPlanBeforePdf(instance) {
+    const collected = instance.collectTravelPlanPayload({
+      focusFirstInvalid: true,
+      pruneEmptyContent: true
+    });
+    if (!collected?.ok) {
+      setTravelPlanStatus(collected?.error || "Travel plan is invalid.", "error");
+      return false;
+    }
+    const nextSnapshot = JSON.stringify(omitDerivedTravelPlanDestinations(collected.payload));
+    const currentSnapshot = JSON.stringify(omitDerivedTravelPlanDestinations(state.booking?.travel_plan || { days: [] }));
+    if (!state.travelPlanDirty && nextSnapshot === currentSnapshot) return true;
+
+    setTravelPlanStatus("Saving travel plan before creating PDF...", "info");
+    const request = buildTourTravelPlanSaveRequest({
+      apiOrigin,
+      state,
+      travelPlanPayload: collected.payload
+    });
+    const result = await fetchTourTravelPlanMutation(request.url, {
+      method: request.method,
+      body: request.body
+    });
+    if (!result?.booking) {
+      setTravelPlanStatus("Could not save travel plan before creating PDF.", "error");
+      return false;
+    }
+    state.booking = result.booking;
+    instance.applyBookingPayload({ preserveCollapsedState: true });
+    return true;
+  }
+
+  async function openTourTravelPlanPdf() {
+    const url = tourTravelPlanPdfUrl();
+    if (!url) return;
+    const previewWindow = window.open("", "_blank");
+    if (!previewWindow) {
+      setTravelPlanStatus("Allow pop-ups to open the PDF.", "error");
+      return;
+    }
+    previewWindow.document.title = "Creating travel plan PDF";
+    previewWindow.document.documentElement.innerHTML = `
+      <head><title>${escapeHtml("Creating travel plan PDF")}</title></head>
+      <body style="margin:0;min-height:100vh;display:grid;place-items:center;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f7f2e9;color:#213443;">
+        <strong>${escapeHtml("Creating travel plan PDF...")}</strong>
+      </body>
+    `;
+    const instance = ensureCore();
+    try {
+      const saved = await saveCurrentTravelPlanBeforePdf(instance);
+      if (!saved) {
+        previewWindow.close();
+        return;
+      }
+      previewWindow.location.replace(url);
+      setTravelPlanStatus("Travel plan PDF opened.", "success");
+    } catch (error) {
+      previewWindow.close();
+      console.error("[tour-travel-plan-pdf] Could not open marketing tour travel-plan PDF.", error);
+      setTravelPlanStatus("Could not create travel plan PDF.", "error");
+    }
+  }
+
   function ensureCore() {
     if (core) return core;
     state.permissions.canEditBooking = state.permissions.canEditTours === true;
@@ -433,7 +522,20 @@ export function createTourTravelPlanAdapter({
       initializeBookingSection(els.travel_plan_panel);
       setBookingSectionOpen(els.travel_plan_panel, true, { animate: false });
     }
+    if (els.travel_plan_editor instanceof HTMLElement && els.travel_plan_editor.dataset.tourTravelPlanPdfBound !== "true") {
+      els.travel_plan_editor.addEventListener("click", (event) => {
+        const button = event.target instanceof Element
+          ? event.target.closest("[data-tour-travel-plan-pdf]")
+          : null;
+        if (button instanceof HTMLButtonElement) {
+          event.preventDefault();
+          void openTourTravelPlanPdf();
+        }
+      });
+      els.travel_plan_editor.dataset.tourTravelPlanPdfBound = "true";
+    }
     instance.bindEvents();
+    renderTourTravelPlanPdfAction();
   }
 
   function applyTour(tour, { preserveCollapsedState = false } = {}) {
@@ -443,6 +545,7 @@ export function createTourTravelPlanAdapter({
     const instance = ensureCore();
     instance.applyBookingPayload({ preserveCollapsedState });
     instance.renderTravelPlanPanel();
+    renderTourTravelPlanPdfAction();
   }
 
   function collectPayload(options = {}) {
@@ -458,6 +561,7 @@ export function createTourTravelPlanAdapter({
       });
     }
     instance.renderTravelPlanPanel();
+    renderTourTravelPlanPdfAction();
   }
 
   function snapshot() {

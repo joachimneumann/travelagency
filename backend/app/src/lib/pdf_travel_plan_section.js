@@ -56,8 +56,7 @@ async function rasterizeImage(filePath, { width, height } = {}) {
   };
 }
 
-export function resolveTravelPlanServiceThumbnailPath(item, bookingImagesDir) {
-  if (!bookingImagesDir) return null;
+export function resolveTravelPlanServiceThumbnailPath(item, bookingImagesDir, options = {}) {
   const candidate = item?.image && typeof item.image === "object" && !Array.isArray(item.image)
     ? item.image
     : safeArray(item?.images)
@@ -65,15 +64,21 @@ export function resolveTravelPlanServiceThumbnailPath(item, bookingImagesDir) {
       .find((image) => textOrNull(image?.storage_path));
   if (!candidate) return null;
   const storagePath = String(candidate.storage_path || "");
-  const publicRelativePath = extractPublicRelativePath(storagePath, "/public/v1/booking-images/");
-  const relativePath = publicRelativePath || storagePath.replace(/^\/+/, "");
+  const publicBookingRelativePath = extractPublicRelativePath(storagePath, "/public/v1/booking-images/");
+  if (publicBookingRelativePath && bookingImagesDir) return path.resolve(bookingImagesDir, publicBookingRelativePath);
+  if (typeof options.resolveServiceImageDiskPath === "function") {
+    const resolvedPath = options.resolveServiceImageDiskPath(storagePath, item);
+    if (resolvedPath) return resolvedPath;
+  }
+  if (!bookingImagesDir) return null;
+  const relativePath = storagePath.replace(/^\/+/, "");
   return relativePath ? path.resolve(bookingImagesDir, relativePath) : null;
 }
 
-export async function buildTravelPlanItemThumbnailMap(plan, bookingImagesDir) {
+export async function buildTravelPlanItemThumbnailMap(plan, bookingImagesDir, options = {}) {
   const items = safeArray(plan?.days).flatMap((day) => safeArray(day?.services || day?.items));
   const entries = await Promise.all(items.map(async (item) => {
-    const thumbnailPath = resolveTravelPlanServiceThumbnailPath(item, bookingImagesDir);
+    const thumbnailPath = resolveTravelPlanServiceThumbnailPath(item, bookingImagesDir, options);
     if (!thumbnailPath || !(await fileExists(thumbnailPath))) return [item.id, null];
     const thumbnail = await rasterizeImage(thumbnailPath, {
       width: ITEM_THUMBNAIL_WIDTH * 3,

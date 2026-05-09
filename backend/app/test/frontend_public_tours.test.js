@@ -628,6 +628,76 @@ test("tour customizer only previews day cards with a title, geocoded location, a
   assert.deepEqual(preview.groups.map((group) => group.label), ["1", "2"]);
 });
 
+test("tour customizer keeps route segments for non-consecutive location revisits", async () => {
+  global.window = undefined;
+
+  const { createTourCustomizer } = await loadTourCustomizer();
+  const trip = {
+    id: "tour_customizer_route_revisit",
+    travel_plan: {
+      days: [
+        {
+          id: "sapa_arrival",
+          title: "Sapa arrival",
+          primary_location_id: "place_sapa",
+          services: [{ title: "Arrival", image: { storage_path: "/assets/img/sapa.webp" } }]
+        },
+        {
+          id: "sapa_market",
+          title: "Sapa market",
+          primary_location_id: "place_sapa",
+          services: [{ title: "Market", image: { storage_path: "/assets/img/market.webp" } }]
+        },
+        {
+          id: "hue_lagoon",
+          title: "Hue lagoon",
+          primary_location_id: "place_hue",
+          services: [{ title: "Lagoon", image: { storage_path: "/assets/img/hue.webp" } }]
+        },
+        {
+          id: "hanoi_quarter",
+          title: "Hanoi quarter",
+          primary_location_id: "place_hanoi",
+          services: [{ title: "Quarter", image: { storage_path: "/assets/img/hanoi.webp" } }]
+        },
+        {
+          id: "sapa_return",
+          title: "Sapa return",
+          primary_location_id: "place_sapa",
+          services: [{ title: "Return", image: { storage_path: "/assets/img/return.webp" } }]
+        }
+      ]
+    }
+  };
+  const customizer = createTourCustomizer({
+    state: {},
+    frontendT: (_id, fallback) => fallback,
+    currentFrontendLang: () => "en",
+    normalizeFrontendTourLang: (lang) => lang || "en",
+    escapeHTML,
+    escapeAttr,
+    travelPlanDays: (item) => item?.travel_plan?.days || [],
+    destinationScopeCatalog: () => ({
+      places: [
+        { id: "place_sapa", label: "Sapa", latitude: 22.3364, longitude: 103.8438 },
+        { id: "place_hue", label: "Hue", latitude: 16.4637, longitude: 107.5909 },
+        { id: "place_hanoi", label: "Hanoi", latitude: 21.0278, longitude: 105.8342 }
+      ]
+    }),
+    findTripById: () => trip,
+    ensureTourDetailsLoaded: async () => {},
+    allTrips: () => [trip],
+    renderVisibleTrips() {}
+  });
+
+  const preview = customizer.routePreviewForTrip(trip);
+
+  assert.equal(preview.points.split(" ").length, 4);
+  assert.equal((preview.path.match(/\bQ\b/g) || []).length, 3);
+  assert.deepEqual(preview.groups.map((group) => group.locationLabel), ["Sapa", "Hue", "Hanoi"]);
+  assert.equal(preview.groups.find((group) => group.locationLabel === "Sapa")?.label, "1-2, 5");
+});
+
 test("expanded public tour details load into the refreshed language trip list", async () => {
   global.HTMLElement = FakeElement;
   global.HTMLButtonElement = FakeElement;

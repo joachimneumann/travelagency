@@ -2825,6 +2825,10 @@ html.tour-customize-modal-open {
   opacity: 0.72;
 }
 
+.tour-customize-option--location-break {
+  grid-column-start: 1;
+}
+
 html.tour-customize-pointer-dragging,
 html.tour-customize-pointer-dragging * {
   cursor: grabbing !important;

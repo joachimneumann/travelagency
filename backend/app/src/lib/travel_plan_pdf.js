@@ -801,6 +801,7 @@ export function createTravelPlanPdfWriter({
   bookingImagesDir = "",
   readTours = null,
   resolveTourImageDiskPath = null,
+  resolveTravelPlanServiceImageDiskPath = null,
   resolveAssignedAtpStaffProfile = null,
   resolveAtpStaffPhotoDiskPath = null,
   logoPath = "",
@@ -824,21 +825,27 @@ export function createTravelPlanPdfWriter({
     const attachmentPaths = resolveTravelPlanAttachmentPaths(plan, travelPlanAttachmentsDir);
     const heroSubtitle = resolveTravelPlanSubtitle(booking, plan, lang);
     const welcomeText = resolveTravelPlanWelcomeText(booking, lang);
-    const childrenPolicyText = resolveTravelPlanChildrenPolicyText(booking, lang);
-    const whatsNotIncludedText = resolveTravelPlanWhatsNotIncludedText(booking, lang);
-    const closingText = resolveTravelPlanClosingText(booking, lang);
+    const includeGuideSection = options?.includeGuideSection !== false;
+    const includeEndingSection = options?.includeEndingSection !== false;
+    const childrenPolicyText = includeEndingSection ? resolveTravelPlanChildrenPolicyText(booking, lang) : "";
+    const whatsNotIncludedText = includeEndingSection ? resolveTravelPlanWhatsNotIncludedText(booking, lang) : "";
+    const closingText = includeEndingSection ? resolveTravelPlanClosingText(booking, lang) : "";
 
-    const guideContext = await resolveAtpGuidePdfContext({
-      booking,
-      resolveAssignedAtpStaffProfile,
-      resolveAtpStaffPhotoDiskPath
-    });
+    const guideContext = includeGuideSection
+      ? await resolveAtpGuidePdfContext({
+          booking,
+          resolveAssignedAtpStaffProfile,
+          resolveAtpStaffPhotoDiskPath
+        })
+      : null;
 
     const [heroTitle, logoImage, heroPath, itemThumbnailMap, guidePhoto] = await Promise.all([
       resolveBookingHeroTitle(booking, lang, readTours),
       rasterizeImage(logoPath, { width: 1000 }).catch(() => null),
       resolveBookingImageForPdf({ booking, bookingImagesDir, readTours, resolveTourImageDiskPath }),
-      buildTravelPlanItemThumbnailMap(plan, bookingImagesDir),
+      buildTravelPlanItemThumbnailMap(plan, bookingImagesDir, {
+        resolveServiceImageDiskPath: resolveTravelPlanServiceImageDiskPath
+      }),
       guideContext?.photoDiskPath
         ? rasterizeImage(guideContext.photoDiskPath, {
             width: 420,
@@ -949,8 +956,10 @@ export function createTravelPlanPdfWriter({
         pdfFontName
       });
       y = drawTravelPlanHero(doc, heroTitle, heroSubtitle, heroImage, y, fonts, lang);
-      y = ensureSpace(y, estimateGuideSectionHeight(doc, guideContext, fonts, lang) + 10);
-      y = drawGuideSection(doc, y, fonts, lang, guideContext, guidePhoto);
+      if (includeGuideSection) {
+        y = ensureSpace(y, estimateGuideSectionHeight(doc, guideContext, fonts, lang) + 10);
+        y = drawGuideSection(doc, y, fonts, lang, guideContext, guidePhoto);
+      }
       if (welcomeText) {
         y = ensureSpace(y + 6, 72);
         y = drawTextParagraph(doc, y + 6, welcomeText, fonts, lang, { fontSize: 11.2 }) + 12;
@@ -993,18 +1002,20 @@ export function createTravelPlanPdfWriter({
         });
       }
 
-      y = ensureSpace(y + 8, measureTravelPlanEndingHeight(doc, fonts, lang, {
-        childrenPolicyText,
-        whatsNotIncludedText,
-        closingText,
-        attachmentCount: attachmentPaths.length
-      }));
-      drawClosing(doc, y + 10, fonts, lang, {
-        childrenPolicyText,
-        whatsNotIncludedText,
-        closingText,
-        attachmentCount: attachmentPaths.length
-      });
+      if (includeEndingSection) {
+        y = ensureSpace(y + 8, measureTravelPlanEndingHeight(doc, fonts, lang, {
+          childrenPolicyText,
+          whatsNotIncludedText,
+          closingText,
+          attachmentCount: attachmentPaths.length
+        }));
+        drawClosing(doc, y + 10, fonts, lang, {
+          childrenPolicyText,
+          whatsNotIncludedText,
+          closingText,
+          attachmentCount: attachmentPaths.length
+        });
+      }
       drawFooter(doc, fonts, companyProfile, lang);
       doc.end();
     });

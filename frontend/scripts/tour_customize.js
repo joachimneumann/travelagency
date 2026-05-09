@@ -369,10 +369,14 @@ export function createTourCustomizer({
   function selectedDaysForPdf(tourId) {
     const customization = loadStoredCustomization(tourId);
     if (!customization) return [];
-    return customization.timelineDays.map((item) => ({
+    return selectedDaysFromTimeline(customization.timelineDays);
+  }
+
+  function selectedDaysFromTimeline(timelineDays) {
+    return (Array.isArray(timelineDays) ? timelineDays : []).map((item) => ({
       source_tour_id: item.sourceTourId,
       source_day_id: item.sourceDayId
-    }));
+    })).filter((item) => item.source_tour_id && item.source_day_id);
   }
 
   function routePreviewForTrip(trip) {
@@ -390,8 +394,8 @@ export function createTourCustomizer({
       .filter(Boolean);
     const groups = routeGroups(modules);
     return {
-      points: routePolylinePoints(groups),
-      path: routePathData(groups),
+      points: routePolylinePoints(modules),
+      path: routePathData(routeSequencePoints(modules)),
       groups: groups.map((group) => ({
         label: formatDayNumbers(group.dayNumbers),
         locationLabel: group.locationLabel || group.item.locationLabel,
@@ -456,10 +460,7 @@ export function createTourCustomizer({
     const groups = [];
     const byPoint = new Map();
     timelineDays.forEach((item, index) => {
-      const itemRoutePoints = Array.isArray(item?.routePoints) && item.routePoints.length
-        ? item.routePoints
-        : [{ routePoint: item?.routePoint, mapPoint: item?.mapPoint, label: item?.locationLabel }];
-      for (const point of itemRoutePoints) {
+      for (const point of routePointEntriesForItem(item)) {
         const key = routeKeyForPoint(point?.routePoint);
         if (!key) continue;
         if (!byPoint.has(key)) {
@@ -482,6 +483,12 @@ export function createTourCustomizer({
     return groups;
   }
 
+  function routePointEntriesForItem(item) {
+    return Array.isArray(item?.routePoints) && item.routePoints.length
+      ? item.routePoints
+      : [{ routePoint: item?.routePoint, mapPoint: item?.mapPoint, label: item?.locationLabel }];
+  }
+
   function routeKeyForItem(item) {
     return routeKeyForPoint(item?.routePoint);
   }
@@ -501,21 +508,23 @@ export function createTourCustomizer({
     return ranges.join(", ");
   }
 
-  function routePolylinePoints(groups) {
-    return routeUniquePoints(groups)
+  function routePolylinePoints(timelineDays) {
+    return routeSequencePoints(timelineDays)
       .map((point) => `${point.x.toFixed(2)},${point.y.toFixed(2)}`)
       .join(" ");
   }
 
-  function routeUniquePoints(groups) {
+  function routeSequencePoints(timelineDays) {
     const points = [];
-    for (const group of groups) {
-      const x = Number(group?.mapPoint?.x);
-      const y = Number(group?.mapPoint?.y);
-      if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
-      const previous = points[points.length - 1];
-      if (!previous || previous.x.toFixed(2) !== x.toFixed(2) || previous.y.toFixed(2) !== y.toFixed(2)) {
-        points.push({ x, y });
+    for (const item of Array.isArray(timelineDays) ? timelineDays : []) {
+      for (const point of routePointEntriesForItem(item)) {
+        const x = Number(point?.mapPoint?.x);
+        const y = Number(point?.mapPoint?.y);
+        if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
+        const previous = points[points.length - 1];
+        if (!previous || previous.x.toFixed(2) !== x.toFixed(2) || previous.y.toFixed(2) !== y.toFixed(2)) {
+          points.push({ x, y });
+        }
       }
     }
     return points;
@@ -525,13 +534,13 @@ export function createTourCustomizer({
     return Math.min(98, Math.max(2, value));
   }
 
-  function routePathData(groups) {
-    const points = routeUniquePoints(groups);
-    if (!points.length) return "";
-    const commands = [`M ${points[0].x.toFixed(2)} ${points[0].y.toFixed(2)}`];
-    for (let index = 1; index < points.length; index += 1) {
-      const start = points[index - 1];
-      const end = points[index];
+  function routePathData(points) {
+    const routePoints = Array.isArray(points) ? points : [];
+    if (!routePoints.length) return "";
+    const commands = [`M ${routePoints[0].x.toFixed(2)} ${routePoints[0].y.toFixed(2)}`];
+    for (let index = 1; index < routePoints.length; index += 1) {
+      const start = routePoints[index - 1];
+      const end = routePoints[index];
       const dx = end.x - start.x;
       const dy = end.y - start.y;
       const distance = Math.hypot(dx, dy);
@@ -579,15 +588,20 @@ export function createTourCustomizer({
     }));
   }
 
+  function displayedRoutePoints(points) {
+    return points.map((point) => displayedMapPoint(point));
+  }
+
   function renderMap() {
     const sourceGroups = routeGroups(draft.timelineDays);
     const groups = displayedRouteGroups(sourceGroups);
+    const points = displayedRoutePoints(routeSequencePoints(draft.timelineDays));
     const zoom = currentMapZoom();
     const zoomClass = zoom.zoomed ? " is-zoomed" : "";
     const zoomStyle = zoom.zoomed
       ? ` style="--tour-customize-map-zoom-x:${zoom.x.toFixed(2)}%;--tour-customize-map-zoom-y:${zoom.y.toFixed(2)}%;"`
       : "";
-    const path = routePathData(groups);
+    const path = routePathData(points);
     return `
       <section class="tour-customize-map${zoomClass}"${zoomStyle} aria-label="${escapeAttr(t("tour.customize.map", "Route map"))}">
         <div class="tour-customize-map__region" aria-hidden="true"></div>
@@ -611,9 +625,14 @@ export function createTourCustomizer({
     `;
   }
 
-  function renderOptionalCard(item) {
+  function optionalLocationGroupKey(item) {
+    return modulePrimaryLocationKey(item) || normalizeSearchText(item?.locationLabel);
+  }
+
+  function renderOptionalCard(item, startsLocationGroup = false) {
+    const locationBreakClass = startsLocationGroup ? " tour-customize-option--location-break" : "";
     return `
-      <article class="tour-customize-option" data-customize-option-id="${escapeAttr(item.id)}">
+      <article class="tour-customize-option${locationBreakClass}" data-customize-option-id="${escapeAttr(item.id)}">
         ${item.thumbnailUrl
           ? `<img src="${escapeAttr(item.thumbnailUrl)}" alt="" loading="lazy" />`
           : `<span class="tour-customize-option__thumb" aria-hidden="true"></span>`}
@@ -625,6 +644,15 @@ export function createTourCustomizer({
         <span class="tour-customize-option__handle" aria-hidden="true">::</span>
       </article>
     `;
+  }
+
+  function renderOptionalCards(optionalDays) {
+    return optionalDays.map((item, index) => {
+      const previous = index > 0 ? optionalDays[index - 1] : null;
+      const startsLocationGroup = Boolean(previous)
+        && optionalLocationGroupKey(item) !== optionalLocationGroupKey(previous);
+      return renderOptionalCard(item, startsLocationGroup);
+    }).join("");
   }
 
   function renderTimelineItem(item, index) {
@@ -667,15 +695,15 @@ export function createTourCustomizer({
             <h3>${escapeHTML(t("tour.customize.optional_days", "Optional days"))}</h3>
             <div class="tour-customize-options__list">
               ${optionalDays.length
-                ? optionalDays.map(renderOptionalCard).join("")
+                ? renderOptionalCards(optionalDays)
                 : `<p class="tour-customize__empty">${escapeHTML(t("tour.customize.no_optional_days", "No optional days are available for this route yet."))}</p>`}
             </div>
             </section>
             <section class="tour-customize-timeline" aria-label="${escapeAttr(t("tour.customize.timeline", "Your itinerary"))}">
               <div class="tour-customize-timeline__header">
-                <h3>${escapeHTML(t("tour.customize.timeline", "Your itinerary"))}</h3>
-              </div>
-              <div class="tour-customize-timeline__list" data-customize-timeline>
+            <h3>${escapeHTML(t("tour.customize.timeline", "Your itinerary"))}</h3>
+          </div>
+          <div class="tour-customize-timeline__list" data-customize-timeline>
                 ${draft.timelineDays.length
                 ? draft.timelineDays.map(renderTimelineItem).join("")
                 : `<p class="tour-customize__empty">${escapeHTML(t("tour.customize.empty_timeline", "Add at least one day to keep customizing."))}</p>`}
@@ -686,6 +714,7 @@ export function createTourCustomizer({
           <p>${escapeHTML(t("tour.customize.limit", "Maximum {count} days.", { count: String(TOUR_CUSTOMIZE_MAX_DAYS) }))}</p>
           <div>
             <button class="btn btn-secondary" type="button" data-customize-cancel>${escapeHTML(t("tour.customize.cancel", "Cancel"))}</button>
+            <button class="btn btn-secondary" type="button" data-customize-pdf ${canFinish ? "" : "disabled"}>${escapeHTML(t("tour.customize.show_pdf", "Show Tour PDF"))}</button>
             <button class="btn btn-primary" type="button" data-customize-finish ${canFinish ? "" : "disabled"}>${escapeHTML(t("tour.customize.finish", "Use this itinerary"))}</button>
           </div>
         </footer>
@@ -714,7 +743,7 @@ export function createTourCustomizer({
     if (!(optionsList instanceof HTMLElement)) return false;
     const optionalDays = optionalModules(draft.modules, draft.timelineDays);
     optionsList.innerHTML = optionalDays.length
-      ? optionalDays.map(renderOptionalCard).join("")
+      ? renderOptionalCards(optionalDays)
       : `<p class="tour-customize__empty">${escapeHTML(t("tour.customize.no_optional_days", "No optional days are available for this route yet."))}</p>`;
     optionsList.querySelectorAll("[data-customize-option-id]").forEach((element) => {
       if (element instanceof HTMLElement) bindDraggableElement(element, modal);
@@ -1180,7 +1209,8 @@ export function createTourCustomizer({
     };
     const updateMapOverlays = () => {
       const groups = displayedRouteGroups(routeGroups(draft?.timelineDays || []));
-      const routePath = routePathData(groups);
+      const routePoints = displayedRoutePoints(routeSequencePoints(draft?.timelineDays || []));
+      const routePath = routePathData(routePoints);
       const route = map.querySelector(".tour-customize-map__route");
       const path = route?.querySelector("path");
       if (path instanceof SVGPathElement) {
@@ -1316,6 +1346,9 @@ export function createTourCustomizer({
     bindTimelineItemControls(modal);
     bindMapZoom(modal);
     modal.querySelector("[data-customize-reset]")?.addEventListener("click", resetDraftToOriginal);
+    modal.querySelector("[data-customize-pdf]")?.addEventListener("click", () => {
+      void openDraftPdf().catch(() => {});
+    });
     modal.querySelector("[data-customize-finish]")?.addEventListener("click", finishCustomization);
     modal.querySelector("[data-customize-close]")?.addEventListener("click", () => closeModal());
     modal.querySelector("[data-customize-cancel]")?.addEventListener("click", () => closeModal());
@@ -1356,22 +1389,78 @@ export function createTourCustomizer({
     if (closeButton instanceof HTMLElement) closeButton.focus();
   }
 
-  async function openCustomizedPdf(tourId) {
+  async function createCustomizedTravelPlanPdfPreview(tourId, selectedDays) {
     const normalizedTourId = normalizeText(tourId);
-    const selectedDays = selectedDaysForPdf(normalizedTourId);
-    if (!selectedDays.length) return false;
-    const response = await fetch(`/public/v1/tours/${encodeURIComponent(normalizedTourId)}/one-pager-preview`, {
+    const normalizedSelectedDays = Array.isArray(selectedDays) ? selectedDays : [];
+    if (!normalizedTourId || !normalizedSelectedDays.length) return "";
+    const response = await fetch(`/public/v1/tours/${encodeURIComponent(normalizedTourId)}/travel-plan-preview`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         lang: lang(),
-        selected_days: selectedDays
+        selected_days: normalizedSelectedDays
       })
     });
-    if (!response.ok) throw new Error(`Customized PDF preview failed: ${response.status}`);
+    if (!response.ok) throw new Error(`Customized travel-plan PDF preview failed: ${response.status}`);
     const payload = await response.json();
     const pdfUrl = normalizeText(payload?.pdf_url);
-    if (!pdfUrl) throw new Error("Customized PDF preview did not return a URL.");
+    if (!pdfUrl) throw new Error("Customized travel-plan PDF preview did not return a URL.");
+    return pdfUrl;
+  }
+
+  function openPendingPdfWindow() {
+    if (typeof window === "undefined") return null;
+    const previewWindow = window.open("", "_blank");
+    if (!previewWindow) return null;
+    previewWindow.document.title = t("tour.customize.pdf_loading_title", "Creating Tour PDF");
+    previewWindow.document.documentElement.innerHTML = `
+      <head><title>${escapeHTML(t("tour.customize.pdf_loading_title", "Creating Tour PDF"))}</title></head>
+      <body style="margin:0;min-height:100vh;display:grid;place-items:center;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f7f2e9;color:#213443;">
+        <strong>${escapeHTML(t("tour.customize.pdf_loading", "Creating Tour PDF..."))}</strong>
+      </body>
+    `;
+    return previewWindow;
+  }
+
+  function showPdfInWindow(previewWindow, pdfUrl) {
+    if (previewWindow && !previewWindow.closed) {
+      previewWindow.location.replace(pdfUrl);
+      return;
+    }
+    window.open(pdfUrl, "_blank", "noopener");
+  }
+
+  async function openDraftPdf() {
+    const pdfButton = modal?.querySelector?.("[data-customize-pdf]");
+    if (pdfButton instanceof HTMLElement && pdfButton.dataset.customizePdfLoading === "1") return false;
+    const normalizedTourId = normalizeText(draft?.tourId);
+    const selectedDays = selectedDaysFromTimeline(draft?.timelineDays);
+    if (!normalizedTourId || !selectedDays.length) return false;
+    const previewWindow = openPendingPdfWindow();
+    if (pdfButton instanceof HTMLElement) {
+      pdfButton.dataset.customizePdfLoading = "1";
+      pdfButton.setAttribute("aria-disabled", "true");
+    }
+    try {
+      const pdfUrl = await createCustomizedTravelPlanPdfPreview(normalizedTourId, selectedDays);
+      showPdfInWindow(previewWindow, pdfUrl);
+    } catch (error) {
+      previewWindow?.close?.();
+      throw error;
+    } finally {
+      if (pdfButton instanceof HTMLElement) {
+        delete pdfButton.dataset.customizePdfLoading;
+        pdfButton.removeAttribute("aria-disabled");
+      }
+    }
+    return true;
+  }
+
+  async function openCustomizedPdf(tourId) {
+    const normalizedTourId = normalizeText(tourId);
+    const selectedDays = selectedDaysForPdf(normalizedTourId);
+    if (!selectedDays.length) return false;
+    const pdfUrl = await createCustomizedTravelPlanPdfPreview(normalizedTourId, selectedDays);
     window.open(pdfUrl, "_blank", "noopener");
     return true;
   }

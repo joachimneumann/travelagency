@@ -97,6 +97,10 @@ test("buildApiRoutes includes the marketing tour one-pager PDF route", () => {
     true
   );
   assert.equal(
+    routes.some((route) => route.method === "GET" && route.pattern.test("/api/v1/tours/tour_alpha/travel-plan.pdf")),
+    true
+  );
+  assert.equal(
     routes.some((route) => route.method === "GET" && route.pattern.test("/public/v1/tours/tour_alpha/one-pager.pdf")),
     true
   );
@@ -105,7 +109,15 @@ test("buildApiRoutes includes the marketing tour one-pager PDF route", () => {
     true
   );
   assert.equal(
+    routes.some((route) => route.method === "POST" && route.pattern.test("/public/v1/tours/tour_alpha/travel-plan-preview")),
+    true
+  );
+  assert.equal(
     routes.some((route) => route.method === "GET" && route.pattern.test("/public/v1/tour-preview/token_alpha.pdf")),
+    true
+  );
+  assert.equal(
+    routes.some((route) => route.method === "GET" && route.pattern.test("/public/v1/tour-preview/token_alpha/travel-plan.pdf")),
     true
   );
 });

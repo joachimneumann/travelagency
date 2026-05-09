@@ -5554,6 +5554,43 @@ test("homepage tour details resolve travel-plan day and service copy from the ac
   );
 });
 
+test("public tour configurator exposes a current-draft Tour PDF action", async () => {
+  const tourCustomizerPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "tour_customize.js");
+  const routesPath = path.resolve(__dirname, "..", "src", "http", "routes.js");
+  const tourHandlersPath = path.resolve(__dirname, "..", "src", "http", "handlers", "tours.js");
+  const [tourCustomizerSource, routesSource, tourHandlersSource] = await Promise.all([
+    readFile(tourCustomizerPath, "utf8"),
+    readFile(routesPath, "utf8"),
+    readFile(tourHandlersPath, "utf8")
+  ]);
+
+  assert.match(
+    tourCustomizerSource,
+    /data-customize-pdf[\s\S]*Show Tour PDF[\s\S]*openDraftPdf/,
+    "The public configurator footer should expose a Show Tour PDF button"
+  );
+  assert.match(
+    tourCustomizerSource,
+    /function openDraftPdf\(\)[\s\S]*selectedDaysFromTimeline\(draft\?\.timelineDays\)[\s\S]*createCustomizedTravelPlanPdfPreview\(normalizedTourId, selectedDays\)/,
+    "Show Tour PDF should render the current configurator draft without requiring Use this itinerary first"
+  );
+  assert.match(
+    tourCustomizerSource,
+    /\/public\/v1\/tours\/\$\{encodeURIComponent\(normalizedTourId\)\}\/travel-plan-preview/,
+    "Show Tour PDF should open a public customized full travel-plan PDF preview endpoint"
+  );
+  assert.match(
+    routesSource,
+    /\/public\\\/v1\\\/tours\\\/\(\[\^\/\]\+\)\\\/travel-plan-preview[\s\S]*handlePostPublicTourTravelPlanPreview[\s\S]*\/public\\\/v1\\\/tour-preview\\\/\(\[\^\/\]\+\)\\\/travel-plan\\\.pdf[\s\S]*handleGetPublicTourTravelPlanPreviewPdf/,
+    "Routes should expose a public tokenized customized travel-plan PDF preview endpoint"
+  );
+  assert.match(
+    tourHandlersSource,
+    /handlePostPublicTourTravelPlanPreview[\s\S]*customizedPreviewTourFromTokenEntry[\s\S]*\/public\/v1\/tour-preview\/\$\{encodeURIComponent\(token\)\}\/travel-plan\.pdf[\s\S]*handleGetPublicTourTravelPlanPreviewPdf[\s\S]*writeTravelPlanPdf\([\s\S]*result\.tour\.travel_plan,[\s\S]*includeGuideSection: false,[\s\S]*includeEndingSection: false/,
+    "Public customized Tour PDF should reuse selected-day assembly and render the full travel-plan PDF without guide or closing sections"
+  );
+});
+
 test("homepage tour service image detail overlays render full copy over a stronger image treatment", async () => {
   const mainToursPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "main_tours.js");
   const tourCardCssPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "components", "tour-card.css");
@@ -6225,6 +6262,39 @@ test("marketing tour editor imports days and services only from other marketing 
   assert.match(tourHandlersSource, /copyMarketingTourDayForImport\(sourceDay,[\s\S]*includeTranslations:\s*payload\.include_translations !== false[\s\S]*copyMarketingTourServiceForImport\(sourceService,[\s\S]*includeTranslations:\s*payload\.include_translations !== false/, "Marketing tour import endpoints should copy translated branches by default");
   assert.match(tourHandlersSource, /sourceTourId === tourId[\s\S]*Choose a day from another marketing tour/, "Day imports should reject the current marketing tour as a source");
   assert.match(tourHandlersSource, /sourceTourId === tourId[\s\S]*Choose a service from another marketing tour/, "Service imports should reject the current marketing tour as a source");
+});
+
+test("marketing tour editor exposes a full travel-plan PDF without guide or closing sections", async () => {
+  const tourAdapterPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "tour_travel_plan_adapter.js");
+  const routesPath = path.resolve(__dirname, "..", "src", "http", "routes.js");
+  const tourHandlersPath = path.resolve(__dirname, "..", "src", "http", "handlers", "tours.js");
+  const travelPlanPdfPath = path.resolve(__dirname, "..", "src", "lib", "travel_plan_pdf.js");
+  const travelPlanSectionPath = path.resolve(__dirname, "..", "src", "lib", "pdf_travel_plan_section.js");
+  const servicesPath = path.resolve(__dirname, "..", "src", "bootstrap", "services.js");
+  const [
+    tourAdapterSource,
+    routesSource,
+    tourHandlersSource,
+    travelPlanPdfSource,
+    travelPlanSectionSource,
+    servicesSource
+  ] = await Promise.all([
+    readFile(tourAdapterPath, "utf8"),
+    readFile(routesPath, "utf8"),
+    readFile(tourHandlersPath, "utf8"),
+    readFile(travelPlanPdfPath, "utf8"),
+    readFile(travelPlanSectionPath, "utf8"),
+    readFile(servicesPath, "utf8")
+  ]);
+
+  assert.match(tourAdapterSource, /data-tour-travel-plan-pdf[\s\S]*Create full travel plan PDF/, "Marketing tour editor should expose a full travel-plan PDF action in the travel-plan footer");
+  assert.match(tourAdapterSource, /\/api\/v1\/tours\/\$\{encodeURIComponent\(tourId\)\}\/travel-plan\.pdf/, "Marketing tour PDF action should open the private tour travel-plan endpoint");
+  assert.match(tourAdapterSource, /saveCurrentTravelPlanBeforePdf[\s\S]*buildTourTravelPlanSaveRequest[\s\S]*openTourTravelPlanPdf[\s\S]*saveCurrentTravelPlanBeforePdf\(instance\)/, "Marketing tour PDF action should save the current draft before opening the PDF");
+  assert.match(routesSource, /\/api\\\/v1\\\/tours\\\/\(\[\^\/\]\+\)\\\/travel-plan\\\.pdf[\s\S]*handleGetTourTravelPlanPdf/, "Routes should expose a private marketing tour travel-plan PDF endpoint");
+  assert.match(tourHandlersSource, /handleGetTourTravelPlanPdf[\s\S]*normalizeMarketingTourTravelPlan\(localizedTour\.travel_plan,[\s\S]*flatMode: "localized"[\s\S]*writeTravelPlanPdf\(bookingLikeTour, travelPlan,[\s\S]*includeGuideSection: false,[\s\S]*includeEndingSection: false/, "Marketing tour PDF handler should reuse the shared travel-plan PDF writer and disable guide and closing sections");
+  assert.match(travelPlanPdfSource, /includeGuideSection = options\?\.includeGuideSection !== false[\s\S]*includeEndingSection = options\?\.includeEndingSection !== false[\s\S]*if \(includeGuideSection\) \{[\s\S]*drawGuideSection[\s\S]*if \(includeEndingSection\) \{[\s\S]*drawClosing/, "Shared travel-plan PDF writer should allow callers to omit guide and closing sections");
+  assert.match(travelPlanSectionSource, /resolveTravelPlanServiceThumbnailPath\(item, bookingImagesDir, options = \{\}\)[\s\S]*options\.resolveServiceImageDiskPath\(storagePath, item\)[\s\S]*buildTravelPlanItemThumbnailMap\(plan, bookingImagesDir, options = \{\}\)/, "Shared travel-plan PDF thumbnails should support non-booking image resolvers");
+  assert.match(servicesSource, /resolveTravelPlanServiceImageDiskPath:[\s\S]*public\/v1\/tour-images\/[\s\S]*resolveTourImageDiskPath/, "Bootstrap should resolve marketing tour service images for the shared travel-plan PDF writer");
 });
 
 test("booking travel plan copies days and services from marketing tours only", async () => {

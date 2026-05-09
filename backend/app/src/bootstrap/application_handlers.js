@@ -408,6 +408,7 @@ export function createApplicationRoutes({
     persistTour: storeUtils.persistTour,
     repoRoot: runtime.paths.repoRoot,
     resolveTourImageDiskPath: tourHelpers.resolveTourImageDiskPath,
+    writeTravelPlanPdf,
     writeMarketingTourOnePagerPdf,
     sendFileWithCache: httpHelpers.sendFileWithCache,
     mkdir,

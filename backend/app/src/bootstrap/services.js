@@ -217,6 +217,14 @@ export function createBackendServices({
     bookingImagesDir: collections.bookingImagesDir,
     readTours: storeUtils.readTours,
     resolveTourImageDiskPath: tourHelpers.resolveTourImageDiskPath,
+    resolveTravelPlanServiceImageDiskPath: (storagePath) => {
+      const normalizedPath = String(storagePath || "").split("?")[0].replace(/^\/+/, "");
+      const publicTourPrefix = "public/v1/tour-images/";
+      if (normalizedPath.startsWith(publicTourPrefix)) {
+        return tourHelpers.resolveTourImageDiskPath(normalizedPath.slice(publicTourPrefix.length));
+      }
+      return normalizedPath.startsWith("tour_") ? tourHelpers.resolveTourImageDiskPath(normalizedPath) : "";
+    },
     resolveAssignedAtpStaffProfile: atpStaffDirectory.resolveAssignedStaffProfile,
     resolveAtpStaffPhotoDiskPath: atpStaffDirectory.resolvePhotoDiskPath,
     logoPath: collections.logoPngPath,
