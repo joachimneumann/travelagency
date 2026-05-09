@@ -47,90 +47,90 @@
       "region_id": "region_3d22386f-d130-4f20-ab82-a30164fa5a19",
       "code": "hoi-an",
       "name": "Hoi An",
-      "latitude": 15.8801,
-      "longitude": 108.338,
       "sort_order": 100,
       "is_active": true,
       "created_at": "2026-04-27T13:44:19.826Z",
-      "updated_at": "2026-05-09T03:31:33.438Z"
+      "updated_at": "2026-05-09T03:31:33.438Z",
+      "latitude": 15.88804,
+      "longitude": 108.33679
     },
     {
       "id": "place_a8172e07-213b-46ed-bb88-f0f77bb7fbe0",
       "code": "sapa",
       "name": "Sapa",
-      "latitude": 22.3364,
-      "longitude": 103.8438,
       "sort_order": 100,
       "is_active": true,
       "created_at": "2026-04-27T13:50:03.476Z",
       "updated_at": "2026-05-01T17:53:46.854Z",
       "region_id": "region_3fa05b42-97ab-495d-b16d-4691e66e0434",
-      "destination": "VN"
+      "destination": "VN",
+      "latitude": 22.34051,
+      "longitude": 103.8457
     },
     {
       "id": "place_hanoi",
       "code": "hanoi",
       "name": "Hanoi",
-      "latitude": 21.0278,
-      "longitude": 105.8342,
       "sort_order": 90,
       "is_active": true,
       "created_at": "2026-05-07T00:00:00.000Z",
       "updated_at": "2026-05-07T00:00:00.000Z",
       "region_id": "region_3fa05b42-97ab-495d-b16d-4691e66e0434",
-      "destination": "VN"
+      "destination": "VN",
+      "latitude": 21.02833,
+      "longitude": 105.85404
     },
     {
       "id": "place_halong_bay",
       "code": "halong-bay",
       "name": "Halong Bay",
-      "latitude": 20.9101,
-      "longitude": 107.1839,
       "sort_order": 95,
       "is_active": true,
       "created_at": "2026-05-07T00:00:00.000Z",
       "updated_at": "2026-05-07T00:00:00.000Z",
       "region_id": "region_3fa05b42-97ab-495d-b16d-4691e66e0434",
-      "destination": "VN"
+      "destination": "VN",
+      "latitude": 20.90844,
+      "longitude": 107.06828
     },
     {
       "id": "place_ba_na_hills",
       "code": "ba-na-hills",
       "name": "Ba Na Hills",
-      "latitude": 15.995,
-      "longitude": 107.996,
       "sort_order": 98,
       "is_active": true,
       "created_at": "2026-05-07T00:00:00.000Z",
       "updated_at": "2026-05-07T00:00:00.000Z",
       "region_id": "region_3d22386f-d130-4f20-ab82-a30164fa5a19",
-      "destination": "VN"
+      "destination": "VN",
+      "latitude": 16.02575,
+      "longitude": 108.03116
     },
     {
       "id": "place_phu_quoc",
       "code": "phu-quoc",
       "name": "Phu Quoc",
-      "latitude": 10.2899,
-      "longitude": 103.984,
       "sort_order": 90,
       "is_active": true,
       "created_at": "2026-05-07T00:00:00.000Z",
       "updated_at": "2026-05-07T00:00:00.000Z",
       "region_id": "region_024155db-da17-4cdb-ae0e-a01fd1e77f58",
-      "destination": "VN"
+      "destination": "VN",
+      "latitude": 10.22879,
+      "longitude": 104.01436
     },
     {
       "id": "place_d273e209-f56a-4dc6-ae33-5b23e67bbdbf",
       "code": "ho-chi-minh-city",
       "name": "Ho Chi Minh City",
-      "latitude": 10.7626,
-      "longitude": 106.6602,
       "sort_order": 100,
       "is_active": true,
       "created_at": "2026-05-08T15:57:35.906Z",
       "updated_at": "2026-05-08T15:59:27.515Z",
       "region_id": "region_024155db-da17-4cdb-ae0e-a01fd1e77f58",
-      "destination": "VN"
+      "destination": "VN",
+      "latitude": 10.77373,
+      "longitude": 106.7166
     },
     {
       "id": "place_2db9c791-6d7f-4396-be8a-195eb5d3d164",
@@ -141,7 +141,9 @@
       "sort_order": 100,
       "is_active": true,
       "created_at": "2026-05-09T03:23:02.316Z",
-      "updated_at": "2026-05-09T03:23:02.316Z"
+      "updated_at": "2026-05-09T03:23:02.316Z",
+      "latitude": 16.068,
+      "longitude": 108.212
     },
     {
       "id": "place_e182e7a4-a6a6-4884-ab35-710cc4c254bc",
@@ -152,7 +154,9 @@
       "sort_order": 100,
       "is_active": true,
       "created_at": "2026-05-09T03:31:22.675Z",
-      "updated_at": "2026-05-09T03:31:22.675Z"
+      "updated_at": "2026-05-09T03:31:22.675Z",
+      "latitude": 16.46393,
+      "longitude": 107.58634
     },
     {
       "id": "place_a27e01f9-2b41-4aa3-a1c8-b836c2237f27",
@@ -163,7 +167,9 @@
       "sort_order": 100,
       "is_active": true,
       "created_at": "2026-05-09T03:32:04.604Z",
-      "updated_at": "2026-05-09T03:32:04.604Z"
+      "updated_at": "2026-05-09T03:32:04.604Z",
+      "latitude": 16.10217,
+      "longitude": 108.24858
     },
     {
       "id": "place_2b2214cb-a20a-4d50-bc78-8aee0ef9e7cd",
@@ -174,7 +180,9 @@
       "sort_order": 100,
       "is_active": true,
       "created_at": "2026-05-09T03:32:20.910Z",
-      "updated_at": "2026-05-09T03:32:20.910Z"
+      "updated_at": "2026-05-09T03:32:20.910Z",
+      "latitude": 11.94024,
+      "longitude": 108.43758
     },
     {
       "id": "place_a3cb234e-27ec-4560-b0bc-780c86ed45d5",
@@ -185,7 +193,9 @@
       "sort_order": 100,
       "is_active": true,
       "created_at": "2026-05-09T03:32:33.378Z",
-      "updated_at": "2026-05-09T03:32:33.378Z"
+      "updated_at": "2026-05-09T03:32:33.378Z",
+      "latitude": 10.9469,
+      "longitude": 108.26868
     },
     {
       "id": "place_d17c6fad-2b99-497b-8bfd-8d2b00237a3d",
@@ -196,7 +206,9 @@
       "sort_order": 100,
       "is_active": true,
       "created_at": "2026-05-09T03:32:57.126Z",
-      "updated_at": "2026-05-09T03:32:57.126Z"
+      "updated_at": "2026-05-09T03:32:57.126Z",
+      "latitude": 20.24211,
+      "longitude": 105.97462
     },
     {
       "id": "place_0e64de8f-8735-46c0-a3e6-02a9babb6eb4",
@@ -207,7 +219,9 @@
       "sort_order": 100,
       "is_active": true,
       "created_at": "2026-05-09T03:33:23.322Z",
-      "updated_at": "2026-05-09T03:33:23.322Z"
+      "updated_at": "2026-05-09T03:33:23.322Z",
+      "latitude": 20.27523,
+      "longitude": 105.86547
     },
     {
       "id": "place_5da10678-f8e2-4f2b-97f7-7b2a41017036",
@@ -218,7 +232,9 @@
       "sort_order": 100,
       "is_active": true,
       "created_at": "2026-05-09T03:34:11.937Z",
-      "updated_at": "2026-05-09T03:34:11.937Z"
+      "updated_at": "2026-05-09T03:34:11.937Z",
+      "latitude": 12.2085,
+      "longitude": 109.28712
     },
     {
       "id": "place_0612b13f-6f41-4bbc-9bf7-5e361bf9a4aa",
@@ -229,7 +245,9 @@
       "sort_order": 100,
       "is_active": true,
       "created_at": "2026-05-09T03:35:32.823Z",
-      "updated_at": "2026-05-09T03:35:32.823Z"
+      "updated_at": "2026-05-09T03:35:32.823Z",
+      "latitude": 11.38238,
+      "longitude": 106.17022
     },
     {
       "id": "place_b0095ac7-9d86-454c-9ede-ba3ea71a84d4",
@@ -240,7 +258,9 @@
       "sort_order": 100,
       "is_active": true,
       "created_at": "2026-05-09T03:38:20.959Z",
-      "updated_at": "2026-05-09T03:38:20.959Z"
+      "updated_at": "2026-05-09T03:38:20.959Z",
+      "latitude": 9.88374,
+      "longitude": 106.73402
     },
     {
       "id": "place_cab7e8b7-41b0-4f76-bc66-da8add3ceaf1",
@@ -251,7 +271,9 @@
       "sort_order": 100,
       "is_active": true,
       "created_at": "2026-05-09T03:38:30.181Z",
-      "updated_at": "2026-05-09T03:38:30.181Z"
+      "updated_at": "2026-05-09T03:38:30.181Z",
+      "latitude": 10.36277,
+      "longitude": 106.35909
     },
     {
       "id": "place_7adf0a6c-2425-49fd-9f3a-6cdf37240ceb",
@@ -262,7 +284,9 @@
       "sort_order": 100,
       "is_active": true,
       "created_at": "2026-05-09T03:39:25.084Z",
-      "updated_at": "2026-05-09T03:39:25.084Z"
+      "updated_at": "2026-05-09T03:39:25.084Z",
+      "latitude": 10.97442,
+      "longitude": 106.4949
     },
     {
       "id": "place_be4300a4-cb6c-425d-91ec-b34ea6f61e0d",
@@ -273,7 +297,9 @@
       "sort_order": 100,
       "is_active": true,
       "created_at": "2026-05-09T03:39:38.828Z",
-      "updated_at": "2026-05-09T03:39:38.828Z"
+      "updated_at": "2026-05-09T03:39:38.828Z",
+      "latitude": 11.95109,
+      "longitude": 108.45962
     },
     {
       "id": "place_baf76224-bda3-44fd-bd0a-9c098626f9b3",
@@ -284,7 +310,9 @@
       "sort_order": 100,
       "is_active": true,
       "created_at": "2026-05-09T03:41:06.844Z",
-      "updated_at": "2026-05-09T03:41:06.844Z"
+      "updated_at": "2026-05-09T03:41:06.844Z",
+      "latitude": 10.02943,
+      "longitude": 104.00831
     },
     {
       "id": "place_df5d50a9-cd0a-4059-a470-3360c46da58f",
@@ -295,7 +323,9 @@
       "sort_order": 100,
       "is_active": true,
       "created_at": "2026-05-09T03:41:58.777Z",
-      "updated_at": "2026-05-09T03:41:58.777Z"
+      "updated_at": "2026-05-09T03:41:58.777Z",
+      "latitude": 20.24983,
+      "longitude": 105.95653
     }
   ]
 }
