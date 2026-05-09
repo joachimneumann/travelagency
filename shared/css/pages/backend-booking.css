@@ -2458,6 +2458,11 @@
   padding-block: 3px;
 }
 
+.settings-location-manager__fields .offer-remove-btn {
+  justify-self: end;
+  width: 34px;
+}
+
 .settings-location-manager__name-field {
   grid-template-columns: max-content minmax(10rem, 1fr);
 }
@@ -2477,6 +2482,14 @@
 
 .settings-location-manager__name-field--place input {
   max-width: calc(250px - 48px);
+}
+
+.settings-location-manager__record--region .settings-location-manager__usage {
+  grid-column: 5;
+}
+
+.settings-location-manager__record--region .offer-remove-btn {
+  grid-column: 6;
 }
 
 .settings-location-manager__usage {
@@ -2545,5 +2558,10 @@
 
   .settings-location-manager__fields {
     grid-template-columns: 1fr;
+  }
+
+  .settings-location-manager__record--region .settings-location-manager__usage,
+  .settings-location-manager__record--region .offer-remove-btn {
+    grid-column: auto;
   }
 }

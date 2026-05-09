@@ -33,14 +33,18 @@ import { FRONTEND_LANGUAGE_CODES } from "../../shared/generated/language_catalog
 const ROOT_DIR = path.resolve(fileURLToPath(new URL("../..", import.meta.url)));
 const CONTENT_ROOT = normalizeText(process.env.PUBLIC_HOMEPAGE_CONTENT_ROOT) || path.join(ROOT_DIR, "content");
 const FRONTEND_I18N_DIR = path.join(ROOT_DIR, "frontend", "data", "i18n", "frontend");
-const TOURS_ROOT = normalizeText(process.env.PUBLIC_HOMEPAGE_TOURS_ROOT) || path.join(CONTENT_ROOT, "tours");
+const TOURS_ROOT = normalizeText(
+  process.env.PUBLIC_HOMEPAGE_TOURS_ROOT
+  || process.env.TOURS_DIR
+  || process.env.TOURS_ROOT
+) || path.join(CONTENT_ROOT, "tours");
 const ATP_STAFF_ROOT = normalizeText(process.env.PUBLIC_HOMEPAGE_STAFF_ROOT) || path.join(CONTENT_ROOT, "atp_staff");
 const ATP_STAFF_PROFILES_PATH = normalizeText(process.env.PUBLIC_HOMEPAGE_STAFF_PROFILES_PATH) || path.join(ATP_STAFF_ROOT, "staff.json");
 const ATP_STAFF_PHOTOS_ROOT = normalizeText(process.env.PUBLIC_HOMEPAGE_STAFF_PHOTOS_DIR) || path.join(ATP_STAFF_ROOT, "photos");
 const COUNTRY_REFERENCE_INFO_PATH = normalizeText(process.env.PUBLIC_HOMEPAGE_COUNTRY_REFERENCE_INFO_PATH) || path.join(CONTENT_ROOT, "country_reference_info.json");
 const DESTINATION_CATALOG_PATH = path.resolve(
   normalizeText(process.env.PUBLIC_HOMEPAGE_DESTINATION_CATALOG_PATH || process.env.TOUR_DESTINATIONS_PATH)
-    || path.join(CONTENT_ROOT, "tours", "destinations.json")
+    || path.join(TOURS_ROOT, "destinations.json")
 );
 const TRANSLATIONS_SNAPSHOT_DIR = path.resolve(
   normalizeText(process.env.PUBLIC_HOMEPAGE_TRANSLATIONS_SNAPSHOT_DIR || process.env.TRANSLATIONS_SNAPSHOT_DIR)
