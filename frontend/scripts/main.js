@@ -65,6 +65,7 @@ function resolveFrontendAssetUrl(value) {
 const CUSTOMIZE_FEATURE_KEY = "asiatravelplan_customize_enabled";
 const CUSTOMIZE_FEATURE_TOGGLE_TAP_TARGET = 5;
 const CUSTOMIZE_FEATURE_TOGGLE_WINDOW_MS = 3000;
+const CUSTOMIZE_FEATURE_MOBILE_QUERY = "(max-width: 760px)";
 
 function initialCustomizeFeatureEnabled() {
   try {
@@ -789,7 +790,18 @@ function setupReelsUnlock() {
 }
 
 function syncCustomizeFeatureState() {
-  document.documentElement.classList.toggle("tour-customize-feature-disabled", state.customizeFeatureEnabled === false);
+  document.documentElement.classList.toggle("tour-customize-feature-disabled", !effectiveCustomizeFeatureEnabled());
+}
+
+function isCustomizeFeatureMobileViewport() {
+  return typeof window === "undefined"
+    || typeof window.matchMedia !== "function"
+    ? false
+    : window.matchMedia(CUSTOMIZE_FEATURE_MOBILE_QUERY).matches;
+}
+
+function effectiveCustomizeFeatureEnabled() {
+  return state.customizeFeatureEnabled !== false && !isCustomizeFeatureMobileViewport();
 }
 
 function setCustomizeFeatureEnabled(enabled) {
@@ -800,13 +812,14 @@ function setCustomizeFeatureEnabled(enabled) {
     // Ignore storage failures; the runtime state still updates for this page view.
   }
   syncCustomizeFeatureState();
-  if (!state.customizeFeatureEnabled) {
+  if (!effectiveCustomizeFeatureEnabled()) {
     document.querySelector(".tour-customize [data-customize-close]")?.click();
   }
   renderVisibleTrips();
 }
 
 function registerCustomizeFeatureToggleTap() {
+  if (isCustomizeFeatureMobileViewport()) return;
   const now = Date.now();
   customizeFeatureToggleTapTimes = customizeFeatureToggleTapTimes
     .filter((time) => now - time <= CUSTOMIZE_FEATURE_TOGGLE_WINDOW_MS);

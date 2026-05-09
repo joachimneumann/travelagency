@@ -19,6 +19,7 @@ const TOUR_CARD_SCROLL_TIMEOUT_MS = 900;
 const TOUR_CARD_SCROLL_MARGIN_PX = 12;
 const TOUR_DETAILS_IMAGE_READY_TIMEOUT_MS = 900;
 const TOUR_DETAILS_CONNECTOR_VIEWPORT_THRESHOLD_PX = 100;
+const TOUR_CUSTOMIZE_MOBILE_QUERY = "(max-width: 760px)";
 const TOUR_CARD_MEDIA_SNAPSHOT_HOLD_MS = Math.max(
   TOUR_DETAILS_OPEN_TRANSITION_MS,
   TOUR_DETAILS_MOBILE_OPEN_TRANSITION_MS,
@@ -773,7 +774,13 @@ export function createFrontendToursController(ctx) {
   }
 
   function customizeFeatureEnabled() {
-    return state.customizeFeatureEnabled !== false;
+    return state.customizeFeatureEnabled !== false && !isCustomizeMobileViewport();
+  }
+
+  function isCustomizeMobileViewport() {
+    return typeof window !== "undefined"
+      && typeof window.matchMedia === "function"
+      && window.matchMedia(TOUR_CUSTOMIZE_MOBILE_QUERY).matches;
   }
 
   function activeTourPlanDays(trip) {
@@ -974,6 +981,9 @@ export function createFrontendToursController(ctx) {
     tourGridResizeBound = true;
     window.addEventListener("resize", () => {
       const nextColumnCount = getTourGridColumnCount();
+      if (!customizeFeatureEnabled()) {
+        document.querySelector(".tour-customize [data-customize-close]")?.click();
+      }
       if (nextColumnCount === renderedTourGridColumnCount) {
         syncTourCardImageSwipeSurfaces();
         fitTourCardDescriptions();
@@ -2226,6 +2236,7 @@ export function createFrontendToursController(ctx) {
       if (!(button instanceof HTMLElement) || button.dataset.tourCustomizeBound === "1") return;
       button.addEventListener("click", async (event) => {
         event.preventDefault();
+        if (!customizeFeatureEnabled()) return;
         const tripId = normalizeText(button.getAttribute("data-trip-id"));
         if (!tripId || button.dataset.tourCustomizeLoading === "1") return;
         button.dataset.tourCustomizeLoading = "1";
