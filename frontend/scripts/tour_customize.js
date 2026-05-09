@@ -1113,7 +1113,7 @@ export function createTourCustomizer({
   function bindDraggableElement(element, root) {
     if (!(element instanceof HTMLElement) || !(root instanceof HTMLElement) || element.dataset.customizeDragBound === "1") return;
     element.dataset.customizeDragBound = "1";
-    if (element.hasAttribute("data-customize-timeline-id")) {
+    if (element.matches("[data-customize-option-id], [data-customize-timeline-id]")) {
       element.addEventListener("pointerdown", (event) => {
         if (isCustomizeDragBlockedTarget(event.target)) return;
         startPointerDrag(element, event, root);

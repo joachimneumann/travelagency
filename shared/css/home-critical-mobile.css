@@ -2799,6 +2799,8 @@ html.tour-customize-modal-open {
   background: #fff;
   position: relative;
   text-align: center;
+  cursor: grab;
+  touch-action: none;
   user-select: none;
 }
 
