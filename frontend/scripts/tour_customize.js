@@ -113,7 +113,7 @@ function daySearchText(day, lang) {
   ].join(" ");
 }
 
-function resolveRoutePoints(day, lang, catalog = null) {
+function resolveRoutePoints(day, lang, catalog = null, { allowTextFallback = true } = {}) {
   const locationsById = locationCatalogById(catalog);
   const explicitLocationIds = [
     { id: normalizeText(day?.primary_location_id), role: "primary" },
@@ -139,6 +139,7 @@ function resolveRoutePoints(day, lang, catalog = null) {
     const label = normalizeText(explicit.label) || resolveLocalizedField(day, "overnight_location", lang);
     return [{ lat: Number(explicit.lat), lng: Number(explicit.lng), label, role: "primary" }];
   }
+  if (!allowTextFallback) return [];
   const haystack = normalizeSearchText(daySearchText(day, lang));
   let match = null;
   for (const point of TOUR_CUSTOMIZE_ROUTE_POINTS) {
@@ -185,27 +186,29 @@ function summarizeDay(day, lang) {
 
 function dayModuleFromDay({ day, sourceTourId, originalTourId, lang, destinationCatalog = null }) {
   const sourceDayId = normalizeText(day?.id);
-  const routePoints = resolveRoutePoints(day, lang, destinationCatalog)
+  const title = resolveLocalizedField(day, "title", lang);
+  const thumbnailUrl = firstCustomerImage(day);
+  const routePoints = resolveRoutePoints(day, lang, destinationCatalog, { allowTextFallback: false })
     .map((routePoint) => ({
       routePoint,
       mapPoint: projectLatLng(routePoint),
       label: normalizeText(routePoint?.label)
     }))
     .filter((entry) => entry.mapPoint);
-  if (!sourceTourId || !sourceDayId || !routePoints.length) return null;
+  if (!sourceTourId || !sourceDayId || !title || !thumbnailUrl || !routePoints.length) return null;
   const { routePoint, mapPoint } = routePoints[0];
   const locationLabel = normalizeText(routePoint.label)
-    || resolveLocalizedField(day, "overnight_location", lang)
-    || resolveLocalizedField(day, "title", lang);
+    || resolveLocalizedField(day, "overnight_location", lang);
+  if (!locationLabel) return null;
   return {
     id: `${sourceTourId}:${sourceDayId}`,
     source: sourceTourId === originalTourId ? "original" : "optional",
     sourceTourId,
     sourceDayId,
-    title: resolveLocalizedField(day, "title", lang) || locationLabel,
+    title,
     locationLabel,
     summary: summarizeDay(day, lang),
-    thumbnailUrl: firstCustomerImage(day),
+    thumbnailUrl,
     routePoint,
     routePoints,
     mapPoint,

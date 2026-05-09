@@ -1848,8 +1848,9 @@ export function createFrontendToursController(ctx) {
   function renderTourCustomizeButton(trip) {
     const tripId = normalizeText(trip?.id);
     if (!tripId || !customizeFeatureEnabled()) return "";
-    const label = frontendT("tour.plan.customize", "Customize this tour");
     const routePreview = tourCustomizer?.routePreviewForTrip(trip) || { points: "", groups: [] };
+    if (!routePreview.groups.length) return "";
+    const label = frontendT("tour.plan.customize", "Customize this tour");
     return `
       <div class="tour-plan__customize">
         <button class="tour-plan__customize-map" type="button" data-tour-customize data-trip-id="${escapeAttr(tripId)}" aria-label="${escapeAttr(label)}" title="${escapeAttr(label)}">

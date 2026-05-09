@@ -7,7 +7,9 @@ import { pathToFileURL } from "node:url";
 
 const repoRoot = path.resolve(new URL("../../..", import.meta.url).pathname);
 const controllerPath = path.join(repoRoot, "frontend", "scripts", "main_tours.js");
+const customizerPath = path.join(repoRoot, "frontend", "scripts", "tour_customize.js");
 let esmControllerPathPromise;
+let esmCustomizerPathPromise;
 
 class FakeElement {
   constructor() {
@@ -61,6 +63,20 @@ async function loadToursController() {
   }
   const esmControllerPath = await esmControllerPathPromise;
   return await import(`${pathToFileURL(esmControllerPath).href}?test=${Date.now()}`);
+}
+
+async function loadTourCustomizer() {
+  if (!esmCustomizerPathPromise) {
+    esmCustomizerPathPromise = (async () => {
+      const tempRoot = await mkdtemp(path.join(os.tmpdir(), "frontend-tour-customizer-esm-"));
+      await writeFile(path.join(tempRoot, "package.json"), "{\"type\":\"module\"}\n", "utf8");
+      await mkdir(path.join(tempRoot, "frontend", "scripts"), { recursive: true });
+      await copyFile(customizerPath, path.join(tempRoot, "frontend", "scripts", "tour_customize.js"));
+      return path.join(tempRoot, "frontend", "scripts", "tour_customize.js");
+    })();
+  }
+  const esmCustomizerPath = await esmCustomizerPathPromise;
+  return await import(`${pathToFileURL(esmCustomizerPath).href}?test=${Date.now()}`);
 }
 
 async function loadFrontendDictionary(lang) {
@@ -410,7 +426,13 @@ test("secret tour customization stays disabled on mobile viewports", async () =>
           id: "day_1",
           day_number: 1,
           title: "Day one",
-          services: []
+          primary_location_id: "place_hanoi",
+          services: [
+            {
+              title: "Arrival",
+              image: { storage_path: "/assets/img/hanoi.webp" }
+            }
+          ]
         }
       ]
     }
@@ -425,7 +447,20 @@ test("secret tour customization stays disabled on mobile viewports", async () =>
     filterOptions: {
       destinations: [],
       styles: [],
-      destinationScopeCatalog: null
+      destinationScopeCatalog: {
+        destinations: [
+          { code: "vietnam", label: "Vietnam" }
+        ],
+        places: [
+          {
+            id: "place_hanoi",
+            destination: "vietnam",
+            label: "Hanoi",
+            latitude: 21.0278,
+            longitude: 105.8342
+          }
+        ]
+      }
     },
     filters: {
       dest: [],
@@ -490,6 +525,107 @@ test("secret tour customization stays disabled on mobile viewports", async () =>
 
   assert.match(desktop.els.tourGrid.innerHTML, /data-tour-customize/);
   assert.match(desktop.els.tourGrid.innerHTML, /Customize this tour/);
+});
+
+test("tour customizer only previews day cards with a title, geocoded location, and service image", async () => {
+  global.window = undefined;
+
+  const { createTourCustomizer } = await loadTourCustomizer();
+  const trip = {
+    id: "tour_customizer_eligibility",
+    travel_plan: {
+      days: [
+        {
+          id: "eligible_catalog_location",
+          day_number: 1,
+          title: "Hanoi arrival",
+          primary_location_id: "place_hanoi",
+          services: [
+            { title: "Arrival", image: { storage_path: "/assets/img/hanoi.webp" } }
+          ]
+        },
+        {
+          id: "missing_title",
+          day_number: 2,
+          primary_location_id: "place_hanoi",
+          services: [
+            { title: "Guide", image: { storage_path: "/assets/img/guide.webp" } }
+          ]
+        },
+        {
+          id: "text_only_location",
+          day_number: 3,
+          title: "Hoi An beach",
+          overnight_location: "Hoi An",
+          services: [
+            { title: "Boat", image: { storage_path: "/assets/img/boat.webp" } }
+          ]
+        },
+        {
+          id: "location_without_coordinates",
+          day_number: 4,
+          title: "Hue stop",
+          primary_location_id: "place_hue",
+          services: [
+            { title: "Citadel", image: { storage_path: "/assets/img/hue.webp" } }
+          ]
+        },
+        {
+          id: "missing_service_image",
+          day_number: 5,
+          title: "Saigon food walk",
+          primary_location_id: "place_saigon",
+          services: [
+            { title: "Food walk" }
+          ]
+        },
+        {
+          id: "hidden_service_image",
+          day_number: 6,
+          title: "Nha Trang beach",
+          primary_location_id: "place_nha_trang",
+          services: [
+            { title: "Beach", image: { storage_path: "/assets/img/beach.webp", is_customer_visible: false } }
+          ]
+        },
+        {
+          id: "eligible_explicit_route_point",
+          day_number: 7,
+          title: "Mekong stop",
+          route_point: { lat: 10.0452, lng: 105.7469, label: "Mekong Delta" },
+          services: [
+            { title: "Boat", image: { storage_path: "/assets/img/mekong.webp" } }
+          ]
+        }
+      ]
+    }
+  };
+  const customizer = createTourCustomizer({
+    state: {},
+    frontendT: (_id, fallback) => fallback,
+    currentFrontendLang: () => "en",
+    normalizeFrontendTourLang: (lang) => lang || "en",
+    escapeHTML,
+    escapeAttr,
+    travelPlanDays: (item) => item?.travel_plan?.days || [],
+    destinationScopeCatalog: () => ({
+      places: [
+        { id: "place_hanoi", label: "Hanoi", latitude: 21.0278, longitude: 105.8342 },
+        { id: "place_hue", label: "Hue" },
+        { id: "place_saigon", label: "Ho Chi Minh City", latitude: 10.8231, longitude: 106.6297 },
+        { id: "place_nha_trang", label: "Nha Trang", latitude: 12.2388, longitude: 109.1967 }
+      ]
+    }),
+    findTripById: () => trip,
+    ensureTourDetailsLoaded: async () => {},
+    allTrips: () => [trip],
+    renderVisibleTrips() {}
+  });
+
+  const preview = customizer.routePreviewForTrip(trip);
+
+  assert.deepEqual(preview.groups.map((group) => group.locationLabel), ["Hanoi", "Mekong Delta"]);
+  assert.deepEqual(preview.groups.map((group) => group.label), ["1", "2"]);
 });
 
 test("expanded public tour details load into the refreshed language trip list", async () => {
