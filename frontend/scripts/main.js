@@ -162,6 +162,7 @@ const authRuntime = {
 const INITIAL_VISIBLE_TOURS = 6;
 const SHOW_MORE_BATCH = 3;
 const HERO_DOWN_ARROW_DELAY_MS = 5000;
+const TOURS_SECTION_HASH = "#tours";
 const BACKEND_BASE_URL = window.ASIATRAVELPLAN_API_BASE ? window.ASIATRAVELPLAN_API_BASE.replace(/\/$/, "") : "";
 const API_BASE_ORIGIN = BACKEND_BASE_URL || window.location.origin;
 const PUBLIC_BOOTSTRAP_URL = `${API_BASE_ORIGIN}/public/v1/mobile/bootstrap`;
@@ -469,6 +470,7 @@ async function init() {
   setupBackendLogin();
   setupBrandLogoLinkBehavior();
   setupHeroDownArrowPrompt();
+  setupToursSectionHashNavigation();
   setupPageDragPrevention();
   applyWebsiteAuthState({ authenticated: false, user: "", known: false });
   primeBackendLoginFromCache();
@@ -511,6 +513,7 @@ async function init() {
   syncFilterInputs();
   applyFilters();
   markHomepageMobileStageReady("toursReady");
+  scrollToToursSectionFromHash();
   queueHomepageMobileStageReady("restReady");
   setupFilterEvents();
   prefillBookingFormWithFilters();
@@ -1564,14 +1567,43 @@ function updateHeroDownArrowPromptVisibility() {
   scheduleHeroDownArrowPrompt();
 }
 
-function scrollToToursSection() {
+function currentUrlWithHash(hash) {
+  const nextUrl = new URL(window.location.href);
+  nextUrl.hash = hash;
+  return nextUrl;
+}
+
+function setToursSectionHash() {
+  if (window.location.hash === TOURS_SECTION_HASH) return;
+  if (typeof window.history?.replaceState === "function") {
+    window.history.replaceState(window.history.state, "", currentUrlWithHash(TOURS_SECTION_HASH));
+    return;
+  }
+  window.location.hash = TOURS_SECTION_HASH;
+}
+
+function scrollToToursSection({ behavior = "smooth", updateHash = false } = {}) {
   if (!(els.toursSection instanceof HTMLElement)) return;
+  if (updateHash) setToursSectionHash();
   const headerHeight = els.pageHeader instanceof HTMLElement ? els.pageHeader.getBoundingClientRect().height : 0;
   const targetTop = els.toursSection.getBoundingClientRect().top + window.scrollY - headerHeight;
 
   window.scrollTo({
     top: Math.max(0, targetTop),
-    behavior: "smooth"
+    behavior
+  });
+}
+
+function scrollToToursSectionFromHash() {
+  if (window.location.hash !== TOURS_SECTION_HASH) return;
+  window.requestAnimationFrame(() => {
+    scrollToToursSection({ behavior: "auto" });
+  });
+}
+
+function setupToursSectionHashNavigation() {
+  window.addEventListener("hashchange", () => {
+    scrollToToursSectionFromHash();
   });
 }
 
@@ -1618,7 +1650,7 @@ function setupHeroDownArrowPrompt() {
   els.heroDownArrow.addEventListener("click", () => {
     clearHeroDownArrowTimer();
     setHeroDownArrowVisible(false);
-    scrollToToursSection();
+    scrollToToursSection({ updateHash: true });
   });
 }
 

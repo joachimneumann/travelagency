@@ -5962,8 +5962,13 @@ test("homepage hero title follows published destinations and keeps the destinati
   );
   assert.match(
     mainSource,
-    /const HERO_DOWN_ARROW_DELAY_MS = 5000;[\s\S]*function setupHeroDownArrowPrompt\(\)[\s\S]*window\.addEventListener\("load", beginDelayAfterLoad, \{ once: true \}\)[\s\S]*new IntersectionObserver[\s\S]*els\.navStyleTrigger[\s\S]*els\.navStyleOptions[\s\S]*els\.navDestinationTrigger[\s\S]*els\.navDestinationOptions[\s\S]*target\.addEventListener\("pointerdown", resetAfterFilterInteraction[\s\S]*target\.addEventListener\("change", resetAfterFilterInteraction[\s\S]*scrollToToursSection\(\);/,
-    "Homepage main script should reveal the down arrow after a five-second hero-visible idle delay and reset it after filter interactions"
+    /const HERO_DOWN_ARROW_DELAY_MS = 5000;[\s\S]*const TOURS_SECTION_HASH = "#tours";[\s\S]*function setupHeroDownArrowPrompt\(\)[\s\S]*window\.addEventListener\("load", beginDelayAfterLoad, \{ once: true \}\)[\s\S]*new IntersectionObserver[\s\S]*els\.navStyleTrigger[\s\S]*els\.navStyleOptions[\s\S]*els\.navDestinationTrigger[\s\S]*els\.navDestinationOptions[\s\S]*target\.addEventListener\("pointerdown", resetAfterFilterInteraction[\s\S]*target\.addEventListener\("change", resetAfterFilterInteraction[\s\S]*scrollToToursSection\(\{ updateHash: true \}\);/,
+    "Homepage main script should reveal the down arrow after a five-second hero-visible idle delay, reset it after filter interactions, and anchor tour-list jumps"
+  );
+  assert.match(
+    mainSource,
+    /setupToursSectionHashNavigation\(\);[\s\S]*markHomepageMobileStageReady\("toursReady"\);[\s\S]*scrollToToursSectionFromHash\(\);[\s\S]*function scrollToToursSectionFromHash\(\)[\s\S]*window\.location\.hash !== TOURS_SECTION_HASH[\s\S]*scrollToToursSection\(\{ behavior: "auto" \}\);/,
+    "Homepage refreshes with #tours should correct-scroll to the top of the tour list after tours render"
   );
   assert.doesNotMatch(
     mainToursSource,
