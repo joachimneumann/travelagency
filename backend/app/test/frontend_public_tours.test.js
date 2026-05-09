@@ -1,11 +1,13 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import os from "node:os";
+import { copyFile, mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
 const repoRoot = path.resolve(new URL("../../..", import.meta.url).pathname);
 const controllerPath = path.join(repoRoot, "frontend", "scripts", "main_tours.js");
+let esmControllerPathPromise;
 
 class FakeElement {
   constructor() {
@@ -39,7 +41,26 @@ function escapeAttr(value) {
 }
 
 async function loadToursController() {
-  return await import(`${pathToFileURL(controllerPath).href}?test=${Date.now()}`);
+  if (!esmControllerPathPromise) {
+    esmControllerPathPromise = (async () => {
+      const tempRoot = await mkdtemp(path.join(os.tmpdir(), "frontend-public-tours-esm-"));
+      const files = [
+        ["frontend/scripts/main_tours.js", "frontend/scripts/main_tours.js"],
+        ["frontend/scripts/tour_customize.js", "frontend/scripts/tour_customize.js"],
+        ["shared/js/text.js", "shared/js/text.js"],
+        ["shared/generated/language_catalog.js", "shared/generated/language_catalog.js"]
+      ];
+      await writeFile(path.join(tempRoot, "package.json"), "{\"type\":\"module\"}\n", "utf8");
+      for (const [source, destination] of files) {
+        const destinationPath = path.join(tempRoot, destination);
+        await mkdir(path.dirname(destinationPath), { recursive: true });
+        await copyFile(path.join(repoRoot, source), destinationPath);
+      }
+      return path.join(tempRoot, "frontend", "scripts", "main_tours.js");
+    })();
+  }
+  const esmControllerPath = await esmControllerPathPromise;
+  return await import(`${pathToFileURL(esmControllerPath).href}?test=${Date.now()}`);
 }
 
 async function loadFrontendDictionary(lang) {
