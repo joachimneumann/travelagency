@@ -4101,22 +4101,6 @@ html.tour-customize-pointer-dragging * {
   min-width: 0;
 }
 
-.home-page .hero-filter-match-count {
-  grid-column: 1 / -1;
-  width: 100%;
-  margin: 0.05rem 0 0;
-  color: var(--text-black);
-  font-size: var(--font-size-body-sm);
-  font-weight: var(--font-weight-regular);
-  line-height: 1.35;
-  text-align: center;
-  text-shadow: none;
-}
-
-.home-page .hero-filter-match-count[hidden] {
-  display: none;
-}
-
 .home-page .filter-menu--hero .select-wrap {
   min-width: 0;
 }

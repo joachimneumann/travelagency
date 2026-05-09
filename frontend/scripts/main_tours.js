@@ -486,27 +486,6 @@ export function createFrontendToursController(ctx) {
     els.activeFilters.hidden = true;
   }
 
-  function updateHeroFilterMatchCount() {
-    if (!(els.heroFilterMatchCount instanceof HTMLElement)) return;
-
-    if (!hasActiveHeroFilters()) {
-      els.heroFilterMatchCount.textContent = "";
-      els.heroFilterMatchCount.hidden = true;
-      return;
-    }
-
-    const total = state.filteredTrips.length;
-    const label = total === 0
-      ? frontendT("tours.filter_match_count.zero", "No tours match these filter criteria")
-      : total === 1
-        ? frontendT("tours.filter_match_count.one", "1 tour matches these filter criteria")
-        : frontendT("tours.filter_match_count.many", "{count} tours match these filter criteria", {
-          count: String(total)
-        });
-    els.heroFilterMatchCount.textContent = label;
-    els.heroFilterMatchCount.hidden = false;
-  }
-
   function buildShowMoreToursLabel(moreCount) {
     const style = filterLabels(state.filters.style, "style");
     const destination = state.filters.dest.length ? [selectedDestinationScopeLabel()] : [];
@@ -3759,7 +3738,6 @@ export function createFrontendToursController(ctx) {
     state.filteredTrips = rankedEntries.map((entry) => entry.trip);
 
     renderFilterSummary();
-    updateHeroFilterMatchCount();
     updateTitlesForFilters();
     renderVisibleTrips();
     renderPriorityDebug();

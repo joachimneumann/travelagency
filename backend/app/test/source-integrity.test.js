@@ -5947,8 +5947,8 @@ test("homepage hero title follows published destinations and keeps the destinati
 
   assert.match(
     homepageSource,
-    /id="heroTitle"[\s\S]*class="filter-menu--hero__filters"[\s\S]*id="navStyleTrigger"[\s\S]*id="navDestinationWrap" class="select-wrap"[\s\S]*id="navDestinationSummary" data-i18n-id="filters\.all_destinations">All destinations[\s\S]*id="heroFilterMatchCount" class="hero-filter-match-count" aria-live="polite" hidden/,
-    "Homepage hero should expose a dedicated title mount, keep the style and destination controls available, and include a hidden filter match count"
+    /id="heroTitle"[\s\S]*class="filter-menu--hero__filters"[\s\S]*id="navStyleTrigger"[\s\S]*id="navDestinationWrap" class="select-wrap"[\s\S]*id="navDestinationSummary" data-i18n-id="filters\.all_destinations">All destinations/,
+    "Homepage hero should expose a dedicated title mount and keep the style and destination controls available"
   );
   assert.doesNotMatch(
     homepageSource,
@@ -5965,20 +5965,20 @@ test("homepage hero title follows published destinations and keeps the destinati
     /const HERO_DOWN_ARROW_DELAY_MS = 5000;[\s\S]*function setupHeroDownArrowPrompt\(\)[\s\S]*window\.addEventListener\("load", beginDelayAfterLoad, \{ once: true \}\)[\s\S]*new IntersectionObserver[\s\S]*els\.navStyleTrigger[\s\S]*els\.navStyleOptions[\s\S]*els\.navDestinationTrigger[\s\S]*els\.navDestinationOptions[\s\S]*target\.addEventListener\("pointerdown", resetAfterFilterInteraction[\s\S]*target\.addEventListener\("change", resetAfterFilterInteraction[\s\S]*scrollToToursSection\(\);/,
     "Homepage main script should reveal the down arrow after a five-second hero-visible idle delay and reset it after filter interactions"
   );
-  assert.match(
+  assert.doesNotMatch(
     mainToursSource,
-    /function updateHeroFilterMatchCount\(\) \{[\s\S]*els\.heroFilterMatchCount\.hidden = true;[\s\S]*const total = state\.filteredTrips\.length;[\s\S]*frontendT\("tours\.filter_match_count\.zero"[\s\S]*frontendT\("tours\.filter_match_count\.one"[\s\S]*frontendT\("tours\.filter_match_count\.many"[\s\S]*els\.heroFilterMatchCount\.hidden = false;[\s\S]*renderFilterSummary\(\);[\s\S]*updateHeroFilterMatchCount\(\);[\s\S]*updateTitlesForFilters\(\);/,
-    "Homepage tour filtering should show a centered hero match count only when a filter criterion is active"
+    /heroFilterMatchCount|tours\.filter_match_count/,
+    "Homepage tour filtering should not render a hero filter match count"
   );
   assert.match(
     homeCriticalMobileCssSource,
-    /\.home-page \.hero-filter-match-count \{[\s\S]*grid-column: 1 \/ -1;[\s\S]*text-align: center;[\s\S]*\.home-page \.hero-down-arrow \{[\s\S]*position: fixed;[\s\S]*bottom: max\(1\.25rem, env\(safe-area-inset-bottom\)\);[\s\S]*\.home-page \.hero-down-arrow\.is-visible \{[\s\S]*opacity: 1;[\s\S]*@keyframes hero-down-arrow-nudge/,
-    "Homepage critical CSS should center the hero filter match count and style the bottom down-arrow prompt"
+    /\.home-page \.hero-down-arrow \{[\s\S]*position: fixed;[\s\S]*bottom: max\(1\.25rem, env\(safe-area-inset-bottom\)\);[\s\S]*\.home-page \.hero-down-arrow\.is-visible \{[\s\S]*opacity: 1;[\s\S]*@keyframes hero-down-arrow-nudge/,
+    "Homepage critical CSS should style the bottom down-arrow prompt"
   );
-  assert.match(
+  assert.doesNotMatch(
     frontendEnI18nSource,
-    /"tours\.filter_match_count\.zero": "No tours match these filter criteria"[\s\S]*"tours\.filter_match_count\.one": "1 tour matches these filter criteria"[\s\S]*"tours\.filter_match_count\.many": "\{count\} tours match these filter criteria"/,
-    "Frontend source copy should include the hero filter match count labels"
+    /"tours\.filter_match_count\./,
+    "Frontend source copy should not include hero filter match count labels"
   );
   assert.match(
     homepageSource,

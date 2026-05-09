@@ -190,7 +190,6 @@ const els = {
   hero: document.getElementById("hero"),
   heroTitle: document.getElementById("heroTitle"),
   heroDownArrow: document.getElementById("heroDownArrow"),
-  heroFilterMatchCount: document.getElementById("heroFilterMatchCount"),
   backendLoginBtn: document.getElementById("backendLoginBtn"),
   backendLoginBtnTitle: document.getElementById("backendLoginBtnTitle"),
   backendLoginBtnSubtitle: document.getElementById("backendLoginBtnSubtitle"),
