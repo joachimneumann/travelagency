@@ -123,7 +123,7 @@ function resolveRoutePoints(day, lang, catalog = null) {
   for (const { id, role } of explicitLocationIds) {
     if (explicitPoints.some((point) => point.locationId === id)) continue;
     const location = locationsById.get(id);
-    if (location?.latitude !== null && location?.longitude !== null) {
+    if (Number.isFinite(location?.latitude) && Number.isFinite(location?.longitude)) {
       explicitPoints.push({
         lat: location.latitude,
         lng: location.longitude,
