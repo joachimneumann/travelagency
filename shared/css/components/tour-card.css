@@ -1494,6 +1494,7 @@ html.tour-customize-pointer-dragging * {
   display: -webkit-box;
   overflow: hidden;
   font-size: 0.62rem;
+  font-weight: var(--font-weight-regular);
   line-height: 1.08;
   text-align: center;
   -webkit-box-orient: vertical;
@@ -1508,7 +1509,8 @@ html.tour-customize-pointer-dragging * {
   white-space: nowrap;
 }
 
-.tour-customize-option__location {
+.tour-customize-option__location,
+.tour-customize-timeline__location {
   color: var(--accent);
   font-weight: var(--font-weight-bold);
 }

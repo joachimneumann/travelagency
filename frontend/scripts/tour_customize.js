@@ -213,6 +213,37 @@ function dayModuleFromDay({ day, sourceTourId, originalTourId, lang, destination
   };
 }
 
+function modulePrimaryLocationKey(module) {
+  return routeKeyForPoint(module?.routePoint) || normalizeSearchText(module?.locationLabel || module?.title);
+}
+
+function modulePrimaryLatitude(module) {
+  const direct = Number(module?.routePoint?.lat);
+  if (Number.isFinite(direct)) return direct;
+  const firstPoint = Array.isArray(module?.routePoints) ? module.routePoints[0]?.routePoint : null;
+  const fallback = Number(firstPoint?.lat);
+  return Number.isFinite(fallback) ? fallback : -Infinity;
+}
+
+function sortModulesNorthToSouth(modules) {
+  return [...(Array.isArray(modules) ? modules : [])].sort((left, right) => {
+    const leftLocationKey = modulePrimaryLocationKey(left);
+    const rightLocationKey = modulePrimaryLocationKey(right);
+    if (leftLocationKey !== rightLocationKey) {
+      const latitudeDelta = modulePrimaryLatitude(right) - modulePrimaryLatitude(left);
+      if (latitudeDelta) return latitudeDelta;
+      return leftLocationKey.localeCompare(rightLocationKey);
+    }
+
+    const leftDayNumber = Number(left?.day?.day_number);
+    const rightDayNumber = Number(right?.day?.day_number);
+    if (Number.isFinite(leftDayNumber) && Number.isFinite(rightDayNumber) && leftDayNumber !== rightDayNumber) {
+      return leftDayNumber - rightDayNumber;
+    }
+    return normalizeText(left?.id).localeCompare(normalizeText(right?.id));
+  });
+}
+
 function normalizeCustomizationPayload(value) {
   const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
   const originalTourId = normalizeText(source.originalTourId);
@@ -374,12 +405,13 @@ export function createTourCustomizer({
         // Optional days are opportunistic; skip tours whose details fail to load.
       }
     }));
-    return (Array.isArray(trips) ? trips : []).flatMap((trip) => {
+    const modules = (Array.isArray(trips) ? trips : []).flatMap((trip) => {
       const sourceTourId = normalizeText(trip?.id);
       return (typeof travelPlanDays === "function" ? travelPlanDays(trip) : [])
         .map((day) => dayModuleFromDay({ day, sourceTourId, originalTourId: baseTourId, lang: currentLang, destinationCatalog }))
         .filter(Boolean);
     });
+    return sortModulesNorthToSouth(modules);
   }
 
   function initialTimelineFromTrip(baseTrip, modules) {
@@ -400,14 +432,14 @@ export function createTourCustomizer({
         .slice(0, TOUR_CUSTOMIZE_MAX_DAYS);
       if (timelineDays.length) return timelineDays;
     }
-    return modules
+    return sortModulesNorthToSouth(modules
       .filter((item) => item.sourceTourId === baseTourId)
-      .slice(0, TOUR_CUSTOMIZE_MAX_DAYS);
+    ).slice(0, TOUR_CUSTOMIZE_MAX_DAYS);
   }
 
   function optionalModules(modules, timelineDays) {
     const selected = new Set(timelineDays.map((item) => item.id));
-    return modules.filter((item) => !selected.has(item.id));
+    return sortModulesNorthToSouth(modules.filter((item) => !selected.has(item.id)));
   }
 
   function routeGroups(timelineDays) {
@@ -583,8 +615,8 @@ export function createTourCustomizer({
           ? `<img src="${escapeAttr(item.thumbnailUrl)}" alt="" loading="lazy" />`
           : `<span class="tour-customize-option__thumb" aria-hidden="true"></span>`}
         <div class="tour-customize-option__body">
-          <h4>${escapeHTML(item.title)}</h4>
           <p class="tour-customize-option__location">${escapeHTML(item.locationLabel)}</p>
+          <h4>${escapeHTML(item.title)}</h4>
           ${item.summary ? `<p>${escapeHTML(item.summary)}</p>` : ""}
         </div>
         <span class="tour-customize-option__handle" aria-hidden="true">::</span>
@@ -603,8 +635,8 @@ export function createTourCustomizer({
           ? `<img src="${escapeAttr(item.thumbnailUrl)}" alt="" loading="lazy" />`
           : `<span class="tour-customize-timeline__thumb" aria-hidden="true"></span>`}
         <div class="tour-customize-timeline__body">
+          <p class="tour-customize-timeline__location">${escapeHTML(item.locationLabel)}</p>
           <h4>${escapeHTML(item.title)}</h4>
-          <p>${escapeHTML(item.locationLabel)}</p>
         </div>
         <span class="tour-customize-timeline__handle" aria-hidden="true">::</span>
       </article>
