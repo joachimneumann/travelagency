@@ -213,6 +213,13 @@ function dayModuleFromDay({ day, sourceTourId, originalTourId, lang, destination
   };
 }
 
+function routeKeyForPoint(routePoint) {
+  const lat = Number(routePoint?.lat);
+  const lng = Number(routePoint?.lng);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return "";
+  return `${lat.toFixed(4)}:${lng.toFixed(4)}`;
+}
+
 function modulePrimaryLocationKey(module) {
   return routeKeyForPoint(module?.routePoint) || normalizeSearchText(module?.locationLabel || module?.title);
 }
@@ -474,13 +481,6 @@ export function createTourCustomizer({
 
   function routeKeyForItem(item) {
     return routeKeyForPoint(item?.routePoint);
-  }
-
-  function routeKeyForPoint(routePoint) {
-    const lat = Number(routePoint?.lat);
-    const lng = Number(routePoint?.lng);
-    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return "";
-    return `${lat.toFixed(4)}:${lng.toFixed(4)}`;
   }
 
   function formatDayNumbers(numbers) {
