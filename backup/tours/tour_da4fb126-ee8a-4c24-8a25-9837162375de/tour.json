@@ -17,6 +17,7 @@
   "updated_at": "2026-05-06T15:13:03.708Z",
   "published_on_webpage": false,
   "travel_plan": {
+    "destination_scope": [],
     "one_pager_image_ids": [],
     "days": [
       {
@@ -54,7 +55,8 @@
             }
           }
         ],
-        "notes": "This route links Saigon history, Cu Chi, Mekong river life, Mui Ne's coast, Da Lat's cool highlands and a final Nha Trang departure."
+        "notes": "This route links Saigon history, Cu Chi, Mekong river life, Mui Ne's coast, Da Lat's cool highlands and a final Nha Trang departure.",
+        "primary_location_id": "place_5da10678-f8e2-4f2b-97f7-7b2a41017036"
       }
     ],
     "translation_meta": {}

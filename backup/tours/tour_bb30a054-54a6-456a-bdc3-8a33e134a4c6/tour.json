@@ -14,6 +14,21 @@
   "created_at": "2026-04-18T08:35:52.218Z",
   "updated_at": "2026-05-04T11:03:51.021Z",
   "travel_plan": {
+    "destination_scope": [
+      {
+        "destination": "VN",
+        "areas": [
+          {
+            "area_id": "area_3fa05b42-97ab-495d-b16d-4691e66e0434",
+            "places": [
+              {
+                "place_id": "place_a8172e07-213b-46ed-bb88-f0f77bb7fbe0"
+              }
+            ]
+          }
+        ]
+      }
+    ],
     "tour_card_image_ids": [
       "travel_plan_service_image_72001d18-e286-4bc8-9b1a-b7da2f104735"
     ],
@@ -141,8 +156,7 @@
           }
         ],
         "notes": "Depart Hanoi early for Sapa, then settle into the highland mood with town views, Cat Cat Village and Moana's mountain photo spots.",
-        "primary_location_id": "place_a8172e07-213b-46ed-bb88-f0f77bb7fbe0",
-        "secondary_location_id": null
+        "primary_location_id": "place_hanoi"
       },
       {
         "id": "travel_plan_day_6f0b35ff-e816-45c3-9661-01701173671a",
@@ -207,7 +221,8 @@
             }
           }
         ],
-        "notes": "Spend the day with Fansipan, the Roof of Indochina, before descending from the highlands and returning to Hanoi."
+        "notes": "Spend the day with Fansipan, the Roof of Indochina, before descending from the highlands and returning to Hanoi.",
+        "primary_location_id": "place_hanoi"
       }
     ],
     "translation_meta": {

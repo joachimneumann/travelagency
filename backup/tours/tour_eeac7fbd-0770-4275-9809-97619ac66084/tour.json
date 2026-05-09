@@ -16,6 +16,21 @@
   "created_at": "2026-04-09T03:29:39.112Z",
   "updated_at": "2026-05-05T02:32:14.143Z",
   "travel_plan": {
+    "destination_scope": [
+      {
+        "destination": "VN",
+        "areas": [
+          {
+            "area_id": "area_3fa05b42-97ab-495d-b16d-4691e66e0434",
+            "places": [
+              {
+                "place_id": "place_a8172e07-213b-46ed-bb88-f0f77bb7fbe0"
+              }
+            ]
+          }
+        ]
+      }
+    ],
     "tour_card_image_ids": [
       "travel_plan_service_image_9fd14563-b2e0-4680-8202-4c00e641471c",
       "travel_plan_service_image_a73baa84-2431-4bb1-812e-4e3ff20d40a6",
@@ -69,8 +84,7 @@
           }
         ],
         "notes": "Begin with airport pickup and a private transfer into the northern mountains, where Sapa's cooler air and misty scenery set the tone.",
-        "primary_location_id": "place_a8172e07-213b-46ed-bb88-f0f77bb7fbe0",
-        "secondary_location_id": null
+        "primary_location_id": "place_a8172e07-213b-46ed-bb88-f0f77bb7fbe0"
       },
       {
         "id": "travel_plan_day_f87d54f7-c56b-472a-8847-36b0833b398d",
@@ -191,7 +205,8 @@
             }
           }
         ],
-        "notes": "Spend the day around Sapa's dramatic pass scenery, from lonely viewpoints and glass-bridge height to the color of the night market."
+        "notes": "Spend the day around Sapa's dramatic pass scenery, from lonely viewpoints and glass-bridge height to the color of the night market.",
+        "primary_location_id": "place_a8172e07-213b-46ed-bb88-f0f77bb7fbe0"
       },
       {
         "id": "travel_plan_day_3acebe40-fbfd-491e-a297-eeffe08087a4",
@@ -256,7 +271,8 @@
             }
           }
         ],
-        "notes": "Ride through mountain scenery on the Muong Hoa train, then continue toward Fansipan for the Roof of Indochina experience."
+        "notes": "Ride through mountain scenery on the Muong Hoa train, then continue toward Fansipan for the Roof of Indochina experience.",
+        "primary_location_id": "place_a8172e07-213b-46ed-bb88-f0f77bb7fbe0"
       },
       {
         "id": "travel_plan_day_b1574690-7e56-428e-abe9-358b259bf9e1",
@@ -321,7 +337,8 @@
             }
           }
         ],
-        "notes": "Leave Sapa after Ham Rong Mountain and Silver Waterfall, then continue toward Tam Dao's cooler hill-town atmosphere."
+        "notes": "Leave Sapa after Ham Rong Mountain and Silver Waterfall, then continue toward Tam Dao's cooler hill-town atmosphere.",
+        "primary_location_id": "place_a8172e07-213b-46ed-bb88-f0f77bb7fbe0"
       },
       {
         "id": "travel_plan_day_cfe6d681-14a5-4bcd-bf23-b313c874b14f",
@@ -414,7 +431,8 @@
             }
           }
         ],
-        "notes": "Enjoy Tam Dao's misty viewpoints, farm scenery and cafe pause before returning to Hanoi for the next part of the journey."
+        "notes": "Enjoy Tam Dao's misty viewpoints, farm scenery and cafe pause before returning to Hanoi for the next part of the journey.",
+        "primary_location_id": "place_hanoi"
       },
       {
         "id": "travel_plan_day_539215f1-99c8-4616-873c-d77517586dd4",
@@ -479,7 +497,8 @@
             }
           }
         ],
-        "notes": "Travel from Hanoi to Ninh Binh for a day of sampan waterways and a climb above the karst landscape, staying overnight in the region."
+        "notes": "Travel from Hanoi to Ninh Binh for a day of sampan waterways and a climb above the karst landscape, staying overnight in the region.",
+        "primary_location_id": "place_d17c6fad-2b99-497b-8bfd-8d2b00237a3d"
       },
       {
         "id": "travel_plan_day_3ba87f1b-ac71-400a-b272-c7066446a8d1",
@@ -544,7 +563,8 @@
             }
           }
         ],
-        "notes": "Before returning to Hanoi, connect Ninh Binh's ancient capital history with the scale and calm of Bai Dinh Pagoda."
+        "notes": "Before returning to Hanoi, connect Ninh Binh's ancient capital history with the scale and calm of Bai Dinh Pagoda.",
+        "primary_location_id": "place_df5d50a9-cd0a-4059-a470-3360c46da58f"
       },
       {
         "id": "travel_plan_day_043f0985-1102-486c-a192-43a1d15684b7",
@@ -552,7 +572,8 @@
         "title": "Hanoi farewell",
         "overnight_location": null,
         "services": [],
-        "notes": "End the northern journey in Hanoi after eight days of highland passes, misty towns, caves, temples and karst viewpoints."
+        "notes": "End the northern journey in Hanoi after eight days of highland passes, misty towns, caves, temples and karst viewpoints.",
+        "primary_location_id": "place_hanoi"
       }
     ],
     "translation_meta": {

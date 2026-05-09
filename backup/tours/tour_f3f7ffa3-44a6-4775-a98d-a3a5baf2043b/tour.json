@@ -17,6 +17,12 @@
   "updated_at": "2026-05-08T07:05:57.747Z",
   "published_on_webpage": false,
   "travel_plan": {
+    "destination_scope": [
+      {
+        "destination": "VN",
+        "areas": []
+      }
+    ],
     "one_pager_image_ids": [],
     "days": [],
     "translation_meta": {}

@@ -96,7 +96,7 @@
         "title_i18n": {},
         "overnight_location": null,
         "overnight_location_i18n": {},
-        "primary_location_id": null,
+        "primary_location_id": "place_hanoi",
         "secondary_location_id": null,
         "services": [
           {
@@ -250,7 +250,7 @@
         "title_i18n": {},
         "overnight_location": null,
         "overnight_location_i18n": {},
-        "primary_location_id": null,
+        "primary_location_id": "place_halong_bay",
         "secondary_location_id": null,
         "services": [
           {
@@ -299,7 +299,7 @@
         "title_i18n": {},
         "overnight_location": null,
         "overnight_location_i18n": {},
-        "primary_location_id": null,
+        "primary_location_id": "place_halong_bay",
         "secondary_location_id": null,
         "services": [
           {
@@ -348,7 +348,7 @@
         "title_i18n": {},
         "overnight_location": null,
         "overnight_location_i18n": {},
-        "primary_location_id": null,
+        "primary_location_id": "place_2db9c791-6d7f-4396-be8a-195eb5d3d164",
         "secondary_location_id": null,
         "services": [
           {
@@ -537,7 +537,7 @@
         "title_i18n": {},
         "overnight_location": null,
         "overnight_location_i18n": {},
-        "primary_location_id": null,
+        "primary_location_id": "place_2db9c791-6d7f-4396-be8a-195eb5d3d164",
         "secondary_location_id": null,
         "services": [
           {
@@ -656,7 +656,7 @@
         "title_i18n": {},
         "overnight_location": null,
         "overnight_location_i18n": {},
-        "primary_location_id": null,
+        "primary_location_id": "place_ba_na_hills",
         "secondary_location_id": null,
         "services": [
           {
@@ -705,7 +705,7 @@
         "title_i18n": {},
         "overnight_location": null,
         "overnight_location_i18n": {},
-        "primary_location_id": null,
+        "primary_location_id": "place_2db9c791-6d7f-4396-be8a-195eb5d3d164",
         "secondary_location_id": null,
         "services": [],
         "notes": null,
@@ -718,7 +718,7 @@
         "title_i18n": {},
         "overnight_location": null,
         "overnight_location_i18n": {},
-        "primary_location_id": null,
+        "primary_location_id": "place_d273e209-f56a-4dc6-ae33-5b23e67bbdbf",
         "secondary_location_id": null,
         "services": [
           {
@@ -802,7 +802,7 @@
         "title_i18n": {},
         "overnight_location": null,
         "overnight_location_i18n": {},
-        "primary_location_id": null,
+        "primary_location_id": "place_d273e209-f56a-4dc6-ae33-5b23e67bbdbf",
         "secondary_location_id": null,
         "services": [
           {
@@ -956,7 +956,7 @@
         "title_i18n": {},
         "overnight_location": null,
         "overnight_location_i18n": {},
-        "primary_location_id": null,
+        "primary_location_id": "place_d273e209-f56a-4dc6-ae33-5b23e67bbdbf",
         "secondary_location_id": null,
         "services": [
           {

@@ -17,6 +17,17 @@
   "created_at": "2026-04-09T04:30:04.537Z",
   "updated_at": "2026-05-07T00:32:48.527Z",
   "travel_plan": {
+    "destination_scope": [
+      {
+        "destination": "VN",
+        "areas": [
+          {
+            "area_id": "area_024155db-da17-4cdb-ae0e-a01fd1e77f58",
+            "places": []
+          }
+        ]
+      }
+    ],
     "tour_card_image_ids": [
       "travel_plan_service_image_6b1cce87-be10-4851-91e5-e3366253493c",
       "travel_plan_service_image_f2c9b2f2-637d-4c02-aa5e-0ba5057b8b9f",
@@ -188,8 +199,7 @@
           }
         ],
         "notes": "Arrive in Ho Chi Minh City and begin with green space, market color, colonial architecture and the evening life of Nguyen Hue Walking Street.",
-        "primary_location_id": "place_phu_quoc",
-        "secondary_location_id": null
+        "primary_location_id": "place_d273e209-f56a-4dc6-ae33-5b23e67bbdbf"
       },
       {
         "id": "travel_plan_day_c9d87faa-c31e-43e4-8caf-cbb3136d5262",
@@ -226,7 +236,8 @@
             }
           }
         ],
-        "notes": "Travel to Tay Ninh for Ba Den Mountain, combining cable-car scenery, highland air and one of southern Vietnam's strongest spiritual landmarks."
+        "notes": "Travel to Tay Ninh for Ba Den Mountain, combining cable-car scenery, highland air and one of southern Vietnam's strongest spiritual landmarks.",
+        "primary_location_id": "place_0612b13f-6f41-4bbc-9bf7-5e361bf9a4aa"
       },
       {
         "id": "travel_plan_day_2109e908-bf4b-4ced-a677-93a4af8e1352",
@@ -347,7 +358,8 @@
             }
           }
         ],
-        "notes": "Connect Saigon's reunification and Chinatown heritage with Nha Rong Wharf before leaving the city for the coastal mood of Mui Ne."
+        "notes": "Connect Saigon's reunification and Chinatown heritage with Nha Rong Wharf before leaving the city for the coastal mood of Mui Ne.",
+        "primary_location_id": "place_d273e209-f56a-4dc6-ae33-5b23e67bbdbf"
       },
       {
         "id": "travel_plan_day_d1e9908d-b037-4374-af3d-68eebb497e9b",
@@ -468,7 +480,8 @@
             }
           }
         ],
-        "notes": "Spend the day with Mui Ne's sandy stream, fishing village, red dunes and a winery-style castle, giving the coast both local life and playful scenery."
+        "notes": "Spend the day with Mui Ne's sandy stream, fishing village, red dunes and a winery-style castle, giving the coast both local life and playful scenery.",
+        "primary_location_id": "place_a3cb234e-27ec-4560-b0bc-780c86ed45d5"
       },
       {
         "id": "travel_plan_day_b2d72111-87a3-4ff7-9b72-7c3289374955",
@@ -505,7 +518,8 @@
             }
           }
         ],
-        "notes": "Close the five-day route with the return journey and airport send-off after Saigon, Tay Ninh and Phan Thiet highlights."
+        "notes": "Close the five-day route with the return journey and airport send-off after Saigon, Tay Ninh and Phan Thiet highlights.",
+        "primary_location_id": "place_a3cb234e-27ec-4560-b0bc-780c86ed45d5"
       }
     ],
     "translation_meta": {

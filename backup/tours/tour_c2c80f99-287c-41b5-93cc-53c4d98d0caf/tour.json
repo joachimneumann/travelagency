@@ -55,7 +55,7 @@
         "title_i18n": {},
         "overnight_location": null,
         "overnight_location_i18n": {},
-        "primary_location_id": null,
+        "primary_location_id": "place_phu_quoc",
         "secondary_location_id": null,
         "services": [
           {
@@ -244,7 +244,7 @@
         "title_i18n": {},
         "overnight_location": null,
         "overnight_location_i18n": {},
-        "primary_location_id": null,
+        "primary_location_id": "place_phu_quoc",
         "secondary_location_id": null,
         "services": [
           {
@@ -328,7 +328,7 @@
         "title_i18n": {},
         "overnight_location": null,
         "overnight_location_i18n": {},
-        "primary_location_id": null,
+        "primary_location_id": "place_baf76224-bda3-44fd-bd0a-9c098626f9b3",
         "secondary_location_id": null,
         "services": [
           {
@@ -412,7 +412,7 @@
         "title_i18n": {},
         "overnight_location": null,
         "overnight_location_i18n": {},
-        "primary_location_id": null,
+        "primary_location_id": "place_phu_quoc",
         "secondary_location_id": null,
         "services": [
           {

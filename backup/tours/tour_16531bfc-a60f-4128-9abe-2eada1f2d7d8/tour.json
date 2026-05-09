@@ -16,6 +16,24 @@
   "created_at": "2026-04-06T02:54:41.519Z",
   "updated_at": "2026-05-04T16:14:09.580Z",
   "travel_plan": {
+    "destination_scope": [
+      {
+        "destination": "VN",
+        "areas": [
+          {
+            "area_id": "area_3d22386f-d130-4f20-ab82-a30164fa5a19",
+            "places": [
+              {
+                "place_id": "place_5c7c616b-f7c7-4650-a206-bfcf204d078e"
+              },
+              {
+                "place_id": "place_49c6e6a3-b74f-4127-a87b-5dc90f183ace"
+              }
+            ]
+          }
+        ]
+      }
+    ],
     "tour_card_image_ids": [
       "travel_plan_service_image_c8ef8a06-65a9-472a-ac9c-044541acf90a",
       "travel_plan_service_image_1b734592-dd38-4b0a-869d-665664446468",
@@ -155,8 +173,7 @@
           }
         ],
         "notes": "Arrive in Da Nang, then ease into Central Vietnam with sacred marble caves before reaching Hoi An's warm lantern-lit streets for the night.",
-        "primary_location_id": "place_5c7c616b-f7c7-4650-a206-bfcf204d078e",
-        "secondary_location_id": null
+        "primary_location_id": "place_5c7c616b-f7c7-4650-a206-bfcf204d078e"
       },
       {
         "id": "travel_plan_day_6dbca279-5dcc-40e9-9c44-a631225970b7",
@@ -305,7 +322,8 @@
             }
           }
         ],
-        "notes": "Move from Hoi An's countryside waterways to Da Nang's coastal viewpoints, spiritual landmarks and lively bridges in one varied day."
+        "notes": "Move from Hoi An's countryside waterways to Da Nang's coastal viewpoints, spiritual landmarks and lively bridges in one varied day.",
+        "primary_location_id": "place_2db9c791-6d7f-4396-be8a-195eb5d3d164"
       },
       {
         "id": "travel_plan_day_4d9d797e-9a7d-445f-957c-df9c6abfb4ed",
@@ -370,7 +388,8 @@
             }
           }
         ],
-        "notes": "Spend the day in the cool heights of Ba Na Hills, then return to Da Nang for the flavors and local bustle of the night market."
+        "notes": "Spend the day in the cool heights of Ba Na Hills, then return to Da Nang for the flavors and local bustle of the night market.",
+        "primary_location_id": "place_ba_na_hills"
       },
       {
         "id": "travel_plan_day_35ee634e-27d4-4fa1-8142-33b2c20f5531",
@@ -519,7 +538,8 @@
             }
           }
         ],
-        "notes": "Travel north by coast and lagoon scenery to Hue, where pagodas, royal walls, incense craft and market life tell the story of the former capital."
+        "notes": "Travel north by coast and lagoon scenery to Hue, where pagodas, royal walls, incense craft and market life tell the story of the former capital.",
+        "primary_location_id": "place_e182e7a4-a6a6-4884-ab35-710cc4c254bc"
       },
       {
         "id": "travel_plan_day_c7b84d7b-b6ad-4a04-bb85-fc2430f1f72b",
@@ -556,7 +576,8 @@
             }
           }
         ],
-        "notes": "Use the final morning for a relaxed checkout and souvenir stop before the airport transfer closes the Central Vietnam route."
+        "notes": "Use the final morning for a relaxed checkout and souvenir stop before the airport transfer closes the Central Vietnam route.",
+        "primary_location_id": "place_2db9c791-6d7f-4396-be8a-195eb5d3d164"
       }
     ],
     "translation_meta": {

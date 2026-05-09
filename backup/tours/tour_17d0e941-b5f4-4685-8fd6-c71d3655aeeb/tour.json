@@ -61,7 +61,7 @@
         "title_i18n": {},
         "overnight_location": null,
         "overnight_location_i18n": {},
-        "primary_location_id": null,
+        "primary_location_id": "place_5c7c616b-f7c7-4650-a206-bfcf204d078e",
         "secondary_location_id": null,
         "services": [
           {
@@ -180,7 +180,7 @@
         "title_i18n": {},
         "overnight_location": null,
         "overnight_location_i18n": {},
-        "primary_location_id": null,
+        "primary_location_id": "place_ba_na_hills",
         "secondary_location_id": null,
         "services": [
           {
@@ -229,7 +229,7 @@
         "title_i18n": {},
         "overnight_location": null,
         "overnight_location_i18n": {},
-        "primary_location_id": null,
+        "primary_location_id": "place_a27e01f9-2b41-4aa3-a1c8-b836c2237f27",
         "secondary_location_id": null,
         "services": [
           {

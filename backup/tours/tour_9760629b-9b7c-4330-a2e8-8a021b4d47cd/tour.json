@@ -14,6 +14,17 @@
   "updated_at": "2026-05-08T03:28:50.092Z",
   "published_on_webpage": true,
   "travel_plan": {
+    "destination_scope": [
+      {
+        "destination": "VN",
+        "areas": [
+          {
+            "area_id": "area_024155db-da17-4cdb-ae0e-a01fd1e77f58",
+            "places": []
+          }
+        ]
+      }
+    ],
     "tour_card_image_ids": [
       "travel_plan_service_image_86bbf895-82e5-4bd6-b827-3c0c3fde2acd",
       "travel_plan_service_image_214ed290-6f14-46b4-9f2b-dd32f66b818e",
@@ -46,7 +57,7 @@
         "day_number": 1,
         "title": "Saigon arrival and heritage",
         "overnight_location": null,
-        "primary_location_id": "place_phu_quoc",
+        "primary_location_id": "place_d273e209-f56a-4dc6-ae33-5b23e67bbdbf",
         "secondary_location_id": null,
         "services": [
           {
@@ -197,7 +208,7 @@
         "day_number": 2,
         "title": "My Tho and Ben Tre",
         "overnight_location": null,
-        "primary_location_id": null,
+        "primary_location_id": "place_b0095ac7-9d86-454c-9ede-ba3ea71a84d4",
         "secondary_location_id": null,
         "services": [
           {
@@ -264,7 +275,7 @@
         "day_number": 3,
         "title": "Cu Chi and Ben Thanh",
         "overnight_location": null,
-        "primary_location_id": null,
+        "primary_location_id": "place_7adf0a6c-2425-49fd-9f3a-6cdf37240ceb",
         "secondary_location_id": null,
         "services": [
           {
@@ -331,7 +342,7 @@
         "day_number": 4,
         "title": "Saigon to Mui Ne coast",
         "overnight_location": null,
-        "primary_location_id": null,
+        "primary_location_id": "place_d273e209-f56a-4dc6-ae33-5b23e67bbdbf",
         "secondary_location_id": null,
         "services": [
           {
@@ -426,7 +437,7 @@
         "day_number": 5,
         "title": "Mui Ne to Da Lat",
         "overnight_location": null,
-        "primary_location_id": null,
+        "primary_location_id": "place_a3cb234e-27ec-4560-b0bc-780c86ed45d5",
         "secondary_location_id": null,
         "services": [
           {
@@ -479,7 +490,7 @@
         "day_number": 6,
         "title": "Da Lat gardens and coffee",
         "overnight_location": null,
-        "primary_location_id": null,
+        "primary_location_id": "place_2b2214cb-a20a-4d50-bc78-8aee0ef9e7cd",
         "secondary_location_id": null,
         "services": [
           {
@@ -574,7 +585,7 @@
         "day_number": 7,
         "title": "Langbiang and Truc Lam",
         "overnight_location": null,
-        "primary_location_id": null,
+        "primary_location_id": "place_be4300a4-cb6c-425d-91ec-b34ea6f61e0d",
         "secondary_location_id": null,
         "services": [
           {
@@ -669,7 +680,7 @@
         "day_number": 8,
         "title": "Da Lat to Nha Trang airport",
         "overnight_location": null,
-        "primary_location_id": null,
+        "primary_location_id": "place_5da10678-f8e2-4f2b-97f7-7b2a41017036",
         "secondary_location_id": null,
         "services": [],
         "notes": "Use the final morning for Da Lat coffee, tea, jams and souvenirs before the transfer toward Nha Trang airport closes the route."

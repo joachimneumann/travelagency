@@ -51,7 +51,7 @@
         "title_i18n": {},
         "overnight_location": null,
         "overnight_location_i18n": {},
-        "primary_location_id": null,
+        "primary_location_id": "place_hanoi",
         "secondary_location_id": null,
         "services": [
           {
@@ -170,7 +170,7 @@
         "title_i18n": {},
         "overnight_location": null,
         "overnight_location_i18n": {},
-        "primary_location_id": null,
+        "primary_location_id": "VN",
         "secondary_location_id": null,
         "services": [
           {
@@ -289,7 +289,7 @@
         "title_i18n": {},
         "overnight_location": null,
         "overnight_location_i18n": {},
-        "primary_location_id": null,
+        "primary_location_id": "place_hanoi",
         "secondary_location_id": null,
         "services": [
           {

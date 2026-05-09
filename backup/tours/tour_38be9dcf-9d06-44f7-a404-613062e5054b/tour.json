@@ -17,6 +17,17 @@
   "updated_at": "2026-05-08T07:07:27.014Z",
   "published_on_webpage": true,
   "travel_plan": {
+    "destination_scope": [
+      {
+        "destination": "VN",
+        "areas": [
+          {
+            "area_id": "area_3fa05b42-97ab-495d-b16d-4691e66e0434",
+            "places": []
+          }
+        ]
+      }
+    ],
     "tour_card_image_ids": [
       "travel_plan_service_image_ac49cd04-ba8b-4b86-aceb-696a05adb90b",
       "travel_plan_service_image_01c8eaa6-8ea7-4bb0-84b3-728a2a41cc52"
@@ -38,7 +49,7 @@
         "day_number": 1,
         "title": "Bai Dinh and Trang An",
         "overnight_location": null,
-        "primary_location_id": "place_a8172e07-213b-46ed-bb88-f0f77bb7fbe0",
+        "primary_location_id": "place_0e64de8f-8735-46c0-a3e6-02a9babb6eb4",
         "secondary_location_id": null,
         "services": [
           {
