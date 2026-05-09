@@ -5339,6 +5339,16 @@ test("frontend language switching updates the homepage in place instead of forci
     /const WEBSITE_AUTH_CACHE_KEY = "asiatravelplan_backend_auth_me_v1";[\s\S]*function primeBackendLoginFromCache\(\)[\s\S]*applyWebsiteAuthState\(\{ authenticated: true, user, known: false \}\);[\s\S]*authStatusLoadPromise = \(async \(\) => \{[\s\S]*return authStatusLoadPromise;/,
     "Homepage should restore a cached backend user label immediately and return the live auth-status promise"
   );
+  assert.match(
+    mainSource,
+    /function initialCustomizeFeatureEnabled\(\) \{[\s\S]*window\.localStorage\.getItem\(CUSTOMIZE_FEATURE_KEY\) === "1";[\s\S]*return false;/,
+    "Homepage tour customization should be hidden by default until the secret localStorage flag is explicitly enabled"
+  );
+  assert.match(
+    mainSource,
+    /const CUSTOMIZE_FEATURE_TOGGLE_TAP_TARGET = 5;[\s\S]*els\.footerLegalTitle\.addEventListener\("click", registerCustomizeFeatureToggleTap\)/,
+    "Homepage should keep the five-click legal-title gesture as the secret customization toggle"
+  );
   assert.doesNotMatch(
     mainSource,
     new RegExp(`${["shouldLoadWebsiteAuthStatus", "OnInit"].join("")}|/${["app", "home"].join("-")}\\.html`),

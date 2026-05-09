@@ -69,9 +69,9 @@ const CUSTOMIZE_FEATURE_MOBILE_QUERY = "(max-width: 760px)";
 
 function initialCustomizeFeatureEnabled() {
   try {
-    return window.localStorage.getItem(CUSTOMIZE_FEATURE_KEY) !== "0";
+    return window.localStorage.getItem(CUSTOMIZE_FEATURE_KEY) === "1";
   } catch {
-    return true;
+    return false;
   }
 }
 

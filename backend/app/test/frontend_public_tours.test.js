@@ -392,6 +392,106 @@ test("collapsed public tour cards use swipe-only mobile galleries for multi-imag
   assert.match(els.tourGrid.innerHTML, /tour_multi_image[\s\S]*tour-card__media-dots/);
 });
 
+test("secret tour customization stays disabled on mobile viewports", async () => {
+  global.HTMLElement = FakeElement;
+  global.HTMLButtonElement = FakeElement;
+
+  const { createFrontendToursController } = await loadToursController();
+  const trip = {
+    id: "tour_customize_mobile",
+    title: "Mobile customization tour",
+    short_description: "",
+    styles: [],
+    destinations: ["Vietnam"],
+    pictures: [],
+    travel_plan: {
+      days: [
+        {
+          id: "day_1",
+          day_number: 1,
+          title: "Day one",
+          services: []
+        }
+      ]
+    }
+  };
+  const baseState = () => ({
+    lang: "en",
+    filteredTrips: [trip],
+    trips: [trip],
+    visibleToursCount: 1,
+    expandedTourIds: new Set([trip.id]),
+    customizeFeatureEnabled: true,
+    filterOptions: {
+      destinations: [],
+      styles: [],
+      destinationScopeCatalog: null
+    },
+    filters: {
+      dest: [],
+      area: "",
+      place: "",
+      style: []
+    }
+  });
+  const createController = (state) => {
+    const els = {
+      tourGrid: new FakeElement(),
+      noResultsMessage: new FakeElement(),
+      tourActions: null,
+      showMoreTours: null
+    };
+    return {
+      els,
+      controller: createFrontendToursController({
+        state,
+        els,
+        backendBaseUrl: "",
+        initialVisibleTours: 1,
+        showMoreBatch: 1,
+        frontendT: (_id, fallback, vars = {}) => String(fallback ?? "").replace(/\{([^{}]+)\}/g, (_match, key) => (
+          Object.prototype.hasOwnProperty.call(vars, key) ? String(vars[key]) : ""
+        )),
+        currentFrontendLang: () => "en",
+        preferredCurrencyForFrontendLang: () => "USD",
+        approximateDisplayAmountFromUSD: () => null,
+        formatDisplayMoney: () => "",
+        defaultBookingCurrency: "USD",
+        escapeHTML,
+        escapeAttr,
+        updateBookingModalTitle() {},
+        openBookingModal() {},
+        setSelectedTourContext() {},
+        clearSelectedTourContext() {},
+        setBookingField() {},
+        prefillBookingFormWithFilters() {}
+      })
+    };
+  };
+
+  global.window = {
+    addEventListener() {},
+    requestAnimationFrame(callback) {
+      if (typeof callback === "function") callback();
+    },
+    matchMedia(query) {
+      return { matches: query === "(max-width: 760px)" };
+    }
+  };
+  const mobile = createController(baseState());
+  mobile.controller.renderVisibleTrips();
+
+  assert.doesNotMatch(mobile.els.tourGrid.innerHTML, /data-tour-customize/);
+  assert.doesNotMatch(mobile.els.tourGrid.innerHTML, /Customize this tour/);
+
+  global.window.matchMedia = () => ({ matches: false });
+  const desktop = createController(baseState());
+  desktop.controller.renderVisibleTrips();
+
+  assert.match(desktop.els.tourGrid.innerHTML, /data-tour-customize/);
+  assert.match(desktop.els.tourGrid.innerHTML, /Customize this tour/);
+});
+
 test("expanded public tour details load into the refreshed language trip list", async () => {
   global.HTMLElement = FakeElement;
   global.HTMLButtonElement = FakeElement;
