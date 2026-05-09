@@ -202,7 +202,7 @@ Examples:
 backend_static:common.save
 frontend_static:hero.title
 public_dynamic:destination.VN.label
-public_dynamic:area.area_north.name
+public_dynamic:region.region_north.name
 public_staff:<username>:short_description
 marketing_tour:<tour_id>:title
 marketing_tour:<tour_id>:travel_plan.<day_id>.<service_id>.details

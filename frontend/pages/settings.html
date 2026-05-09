@@ -89,31 +89,15 @@
             <p class="micro settings-observability__hint">Current-process only: this list is cleared when the backend restarts.</p>
           </section>
 
-          <section class="backend-section settings-destination-publication" id="websiteDestinationPublicationPanel" hidden>
-            <div class="settings-destination-publication__head">
-              <div>
-                <h2 class="section-title u-title-medium" data-i18n-id="backend.settings.website_destinations_heading">Website destinations</h2>
-                <p class="micro" data-i18n-id="backend.settings.website_destinations_intro">Choose which destinations appear on the public website hero and tours.</p>
-              </div>
-              <div class="settings-destination-publication__actions">
-                <p class="micro settings-destination-publication__status" id="websiteDestinationPublicationStatus"></p>
-                <button class="btn btn-primary" id="websiteDestinationPublicationSaveBtn" type="button" data-i18n-id="common.save" disabled>Save</button>
-              </div>
-            </div>
-            <div class="settings-staff-editor__check-grid" id="websiteDestinationPublicationList"></div>
-          </section>
-
           <section class="backend-section settings-location-manager" id="locationManagerPanel" hidden>
             <div class="settings-destination-publication__head">
               <div>
-                <h2 class="section-title u-title-medium">Locations</h2>
-                <p class="micro">Manage regions and map points used by tour filters and itinerary maps.</p>
+                <h2 class="section-title u-title-medium">Locations and website destinations</h2>
+                <p class="micro">Manage the country, region, and place hierarchy used by tour filters and itinerary maps. Website destinations for the public title are derived from the countries in tours visible on the website.</p>
               </div>
               <div class="settings-destination-publication__actions">
                 <p class="micro settings-destination-publication__status" id="locationManagerStatus"></p>
-                <button class="btn btn-ghost" id="locationManagerRefreshBtn" type="button">Refresh</button>
-                <button class="btn btn-ghost" id="locationManagerAddAreaBtn" type="button">Add region</button>
-                <button class="btn btn-ghost" id="locationManagerAddPlaceBtn" type="button">Add place</button>
+                <button class="btn btn-primary" id="locationManagerSaveBtn" type="button" disabled>Save</button>
               </div>
             </div>
             <div class="settings-location-manager__grid" id="locationManagerList"></div>
@@ -251,6 +235,13 @@
         </div>
       </section>
     </main>
+
+    <div class="booking-page-overlay" id="settingsLocationOverlay" hidden aria-hidden="true">
+      <div class="booking-page-overlay__panel" role="status" aria-live="assertive">
+        <span class="booking-page-overlay__spinner" aria-hidden="true"></span>
+        <span class="booking-page-overlay__text" id="settingsLocationOverlayText">Updating locations. Please wait.</span>
+      </div>
+    </div>
 
     <script src="shared/generated/language_catalog.global.js"></script>
     <script src="frontend/scripts/shared/backend_i18n.js"></script>

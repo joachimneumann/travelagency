@@ -14,17 +14,6 @@
   "updated_at": "2026-05-08T03:28:50.092Z",
   "published_on_webpage": true,
   "travel_plan": {
-    "destination_scope": [
-      {
-        "destination": "VN",
-        "areas": [
-          {
-            "area_id": "area_024155db-da17-4cdb-ae0e-a01fd1e77f58",
-            "places": []
-          }
-        ]
-      }
-    ],
     "tour_card_image_ids": [
       "travel_plan_service_image_86bbf895-82e5-4bd6-b827-3c0c3fde2acd",
       "travel_plan_service_image_214ed290-6f14-46b4-9f2b-dd32f66b818e",
@@ -57,7 +46,7 @@
         "day_number": 1,
         "title": "Saigon arrival and heritage",
         "overnight_location": null,
-        "primary_location_id": null,
+        "primary_location_id": "place_phu_quoc",
         "secondary_location_id": null,
         "services": [
           {

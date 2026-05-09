@@ -86,7 +86,7 @@ function normalizeCoordinate(value) {
 function locationCatalogById(catalog) {
   const source = catalog && typeof catalog === "object" && !Array.isArray(catalog) ? catalog : {};
   return new Map([
-    ...(Array.isArray(source.areas) ? source.areas : []),
+    ...(Array.isArray(source.destination_places) ? source.destination_places : []),
     ...(Array.isArray(source.places) ? source.places : [])
   ].map((location) => {
     const id = normalizeText(location?.id);

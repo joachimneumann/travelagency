@@ -121,6 +121,7 @@ export function createBookingTravelPlanModule(ctx) {
   const allowDestinationScopeCreate = isFeatureEnabled("destinationScopeCreate", false);
   const allowTourCardImageSelection = isFeatureEnabled("tourCardImageSelection", false);
   const pruneEmptyTravelPlanContentOnCollect = isFeatureEnabled("pruneEmptyTravelPlanContentOnCollect", false);
+  const allowAllPrimaryMapPointOptions = isFeatureEnabled("allPrimaryMapPointOptions", false);
 
   function destinationScopeEditorRoot() {
     if (els.travel_plan_destination_scope_editor instanceof HTMLElement) {
@@ -186,11 +187,11 @@ export function createBookingTravelPlanModule(ctx) {
     return state.destinationScopeCatalog;
   }
 
-  async function createDestinationScopeArea(destination) {
-    const name = window.prompt(destinationScopeEnglishInputLabel(bookingT("booking.travel_plan.add_area_prompt", "Area name")));
+  async function createDestinationScopeRegion(destination) {
+    const name = window.prompt(destinationScopeEnglishInputLabel(bookingT("booking.travel_plan.add_region_prompt", "Region name")));
     const normalizedName = String(name || "").trim();
     if (!normalizedName) return false;
-    const url = withDestinationScopeEnglishLangQuery(`${apiOrigin}/api/v1/destination-scope/areas`);
+    const url = withDestinationScopeEnglishLangQuery(`${apiOrigin}/api/v1/destination-scope/regions`);
     const result = await fetchBookingMutation(url, {
       method: "POST",
       body: {
@@ -200,12 +201,13 @@ export function createBookingTravelPlanModule(ctx) {
     });
     if (!result) return false;
     if (result.catalog) state.destinationScopeCatalog = normalizeDestinationScopeCatalog(result.catalog);
-    if (result?.area?.id) {
+    if (result?.region?.id) {
       state.travelPlanDraft.destination_scope = normalizeDestinationScope([
         ...normalizeDestinationScope(state.travelPlanDraft.destination_scope),
         {
           destination,
-          areas: [{ area_id: result.area.id, places: [] }]
+          regions: [{ region_id: result.region.id, places: [] }],
+          places: []
         }
       ]);
       renderTravelPlanPanel();
@@ -216,7 +218,7 @@ export function createBookingTravelPlanModule(ctx) {
     return true;
   }
 
-  async function createDestinationScopePlace(areaId) {
+  async function createDestinationScopePlace(regionId, destination = "") {
     const name = window.prompt(destinationScopeEnglishInputLabel(bookingT("booking.travel_plan.add_place_prompt", "Place name")));
     const normalizedName = String(name || "").trim();
     if (!normalizedName) return false;
@@ -224,7 +226,8 @@ export function createBookingTravelPlanModule(ctx) {
     const result = await fetchBookingMutation(url, {
       method: "POST",
       body: {
-        area_id: areaId,
+        destination,
+        ...(regionId ? { region_id: regionId } : {}),
         name: normalizedName
       }
     });
@@ -232,12 +235,20 @@ export function createBookingTravelPlanModule(ctx) {
     if (result.catalog) state.destinationScopeCatalog = normalizeDestinationScopeCatalog(result.catalog);
     if (result?.place?.id) {
       const scope = normalizeDestinationScope(state.travelPlanDraft.destination_scope);
+      const placeDestination = result.place.destination || destination;
       for (const entry of scope) {
-        const area = (Array.isArray(entry.areas) ? entry.areas : []).find((item) => item.area_id === areaId);
-        if (!area) continue;
-        area.places = Array.isArray(area.places) ? area.places : [];
-        if (!area.places.some((place) => place.place_id === result.place.id)) {
-          area.places.push({ place_id: result.place.id });
+        if (!regionId && entry.destination === placeDestination) {
+          entry.places = Array.isArray(entry.places) ? entry.places : [];
+          if (!entry.places.some((place) => place.place_id === result.place.id)) {
+            entry.places.push({ place_id: result.place.id });
+          }
+          continue;
+        }
+        const region = (Array.isArray(entry.regions) ? entry.regions : []).find((item) => item.region_id === regionId);
+        if (!region) continue;
+        region.places = Array.isArray(region.places) ? region.places : [];
+        if (!region.places.some((place) => place.place_id === result.place.id)) {
+          region.places.push({ place_id: result.place.id });
         }
       }
       state.travelPlanDraft.destination_scope = normalizeDestinationScope(scope);
@@ -483,6 +494,7 @@ export function createBookingTravelPlanModule(ctx) {
       || hasTravelPlanTextContent(day.date_string)
       || hasTravelPlanTextContent(day.primary_location_id)
       || hasTravelPlanTextContent(day.secondary_location_id)
+      || (Array.isArray(day.experience_highlight_ids) && day.experience_highlight_ids.some(hasTravelPlanTextContent))
       || (Array.isArray(day.services) && day.services.length > 0);
   }
 
@@ -532,6 +544,7 @@ export function createBookingTravelPlanModule(ctx) {
           day_number: dayIndex + 1,
           primary_location_id: String(sourceDay.primary_location_id || "").trim(),
           secondary_location_id: String(sourceDay.secondary_location_id || "").trim(),
+          experience_highlight_ids: normalizeTravelPlanDayExperienceHighlightIds(sourceDay.experience_highlight_ids),
           services: (Array.isArray(sourceDay.services) ? sourceDay.services : []).map((item) => {
             const sourceItem = item && typeof item === "object" && !Array.isArray(item) ? item : {};
             const nextItem = { ...sourceItem };
@@ -1017,7 +1030,7 @@ export function createBookingTravelPlanModule(ctx) {
     "button",
     "input",
     "select",
-    "textarea",
+    "textregion",
     "a",
     "label",
     "summary",
@@ -1025,15 +1038,15 @@ export function createBookingTravelPlanModule(ctx) {
     "[contenteditable='true']"
   ].join(", ");
 
-  function resolveTravelPlanToggleArea(target, selector) {
+  function resolveTravelPlanToggleRegion(target, selector) {
     if (!(target instanceof Element)) return null;
-    const area = target.closest(selector);
-    if (!(area instanceof HTMLElement)) return null;
+    const region = target.closest(selector);
+    if (!(region instanceof HTMLElement)) return null;
     const interactive = target.closest(TRAVEL_PLAN_TOGGLE_INTERACTIVE_SELECTOR);
-    if (interactive instanceof HTMLElement && interactive !== area && area.contains(interactive)) {
+    if (interactive instanceof HTMLElement && interactive !== region && region.contains(interactive)) {
       return null;
     }
-    return area;
+    return region;
   }
 
   function finishTravelPlanToggleBody(body, isOpen) {
@@ -1692,7 +1705,7 @@ export function createBookingTravelPlanModule(ctx) {
         </div>
         <div class="travel-plan-service__main">
           <div class="travel-plan-service__head">
-            <div class="travel-plan-service__title" data-travel-plan-toggle-item-area="${escapeHtml(item.id)}">
+            <div class="travel-plan-service__title" data-travel-plan-toggle-item-region="${escapeHtml(item.id)}">
               <span class="travel-plan-service__collapsed-title">${escapeHtml(collapsedTitle)}</span>
               <span class="travel-plan-service__collapsed-timing"${timingSummary ? "" : " hidden"}>${escapeHtml(timingSummary)}</span>
             </div>
@@ -1733,7 +1746,7 @@ export function createBookingTravelPlanModule(ctx) {
                       dayId: day.id,
                       itemId: item.id,
                       field: "details",
-                      type: "textarea",
+                      type: "textregion",
                       rows: 3,
                       sourceValue: resolveLocalizedDraftBranchText(item.details_i18n ?? item.details, bookingSourceLang(), ""),
                       localizedValue: resolveLocalizedDraftBranchText(item.details_i18n ?? item.details, bookingContentLang(), "")
@@ -1759,62 +1772,71 @@ export function createBookingTravelPlanModule(ctx) {
     return Number.isFinite(numberValue) ? numberValue : null;
   }
 
-  function travelPlanLocationCatalog() {
+  function travelPlanLocationCatalog({ includeAllLocations = false } = {}) {
     const catalog = normalizeDestinationScopeCatalog(state.destinationScopeCatalog || {});
+    if (includeAllLocations) {
+      return {
+        ...catalog,
+        regions: catalog.regions.filter((region) => region.is_active !== false),
+        places: catalog.places.filter((place) => place.is_active !== false)
+      };
+    }
     const selectedScope = normalizeDestinationScope(state.travelPlanDraft?.destination_scope);
-    const selectedAreaIds = new Set(
-      selectedScope.flatMap((entry) => (Array.isArray(entry.areas) ? entry.areas : []).map((area) => area.area_id))
+    const selectedRegionIds = new Set(
+      selectedScope.flatMap((entry) => (Array.isArray(entry.regions) ? entry.regions : []).map((region) => region.region_id))
     );
     const selectedDestinationIds = new Set(selectedScope.map((entry) => entry.destination));
-    const hasSelectedAreas = selectedAreaIds.size > 0;
+    const selectedCountryPlaceIds = new Set(
+      selectedScope.flatMap((entry) => (Array.isArray(entry.places) ? entry.places : []).map((place) => place.place_id))
+    );
+    const hasSelectedRegions = selectedRegionIds.size > 0;
     const hasSelectedDestinations = selectedDestinationIds.size > 0;
-    const areas = catalog.areas
-      .filter((area) => area.is_active !== false)
-      .filter((area) => {
-        if (hasSelectedAreas) return selectedAreaIds.has(area.id);
-        if (hasSelectedDestinations) return selectedDestinationIds.has(area.destination);
+    const regions = catalog.regions
+      .filter((region) => region.is_active !== false)
+      .filter((region) => {
+        if (hasSelectedRegions) return selectedRegionIds.has(region.id);
+        if (hasSelectedDestinations) return selectedDestinationIds.has(region.destination);
         return true;
       });
-    const areaById = new Map(catalog.areas.map((area) => [area.id, area]));
+    const regionById = new Map(catalog.regions.map((region) => [region.id, region]));
     const selectedPlaceIds = new Set(
       selectedScope.flatMap((entry) => (
-        Array.isArray(entry.areas)
-          ? entry.areas.flatMap((area) => (Array.isArray(area.places) ? area.places : []).map((place) => place.place_id))
+        Array.isArray(entry.regions)
+          ? entry.regions.flatMap((region) => (Array.isArray(region.places) ? region.places : []).map((place) => place.place_id))
           : []
       ))
     );
+    for (const placeId of selectedCountryPlaceIds) selectedPlaceIds.add(placeId);
     const hasSelectedPlaces = selectedPlaceIds.size > 0;
     const places = catalog.places
       .filter((place) => place.is_active !== false)
       .filter((place) => {
-        const area = areaById.get(place.area_id);
         if (hasSelectedPlaces) return selectedPlaceIds.has(place.id);
-        if (hasSelectedAreas) return selectedAreaIds.has(place.area_id);
-        if (hasSelectedDestinations) return area && selectedDestinationIds.has(area.destination);
+        if (hasSelectedRegions) return selectedRegionIds.has(place.region_id);
+        if (hasSelectedDestinations) return selectedDestinationIds.has(place.destination);
         return true;
       });
-    return { ...catalog, areas, places };
+    return { ...catalog, regions, places };
   }
 
-  function travelPlanLocationOptions() {
-    const catalog = travelPlanLocationCatalog();
-    const areaById = new Map(catalog.areas.map((area) => [area.id, area]));
+  function travelPlanLocationOptions({ includeAllLocations = false } = {}) {
+    const catalog = travelPlanLocationCatalog({ includeAllLocations });
+    const regionById = new Map(catalog.regions.map((region) => [region.id, region]));
     const options = [];
-    for (const area of catalog.areas) {
+    for (const region of catalog.regions) {
       options.push({
-        id: area.id,
-        label: area.label || area.code || area.id,
+        id: region.id,
+        label: region.label || region.code || region.id,
         group: bookingT("booking.travel_plan.location_group_regions", "Regions"),
-        latitude: normalizeLocationCoordinate(area.latitude),
-        longitude: normalizeLocationCoordinate(area.longitude)
+        latitude: null,
+        longitude: null
       });
     }
     for (const place of catalog.places) {
-      const area = areaById.get(place.area_id);
       options.push({
         id: place.id,
         label: place.label || place.code || place.id,
-        group: area?.label || bookingT("booking.travel_plan.location_group_places", "Places"),
+        group: regionById.get(place.region_id)?.label || bookingT("booking.travel_plan.location_group_places", "Places"),
         latitude: normalizeLocationCoordinate(place.latitude),
         longitude: normalizeLocationCoordinate(place.longitude)
       });
@@ -1826,12 +1848,8 @@ export function createBookingTravelPlanModule(ctx) {
     });
   }
 
-  function travelPlanLocationById() {
-    return new Map(travelPlanLocationOptions().map((location) => [location.id, location]));
-  }
-
-  function renderTravelPlanLocationSelect({ id, field, value, label }) {
-    const options = travelPlanLocationOptions();
+  function renderTravelPlanLocationSelect({ id, field, value, label, includeAllLocations = false }) {
+    const options = travelPlanLocationOptions({ includeAllLocations });
     const selectedValue = String(value || "").trim();
     const groups = new Map();
     for (const option of options) {
@@ -1855,80 +1873,60 @@ export function createBookingTravelPlanModule(ctx) {
     `;
   }
 
-  function travelPlanRoutePoints(plan = state.travelPlanDraft) {
-    const locationById = travelPlanLocationById();
-    return (Array.isArray(plan?.days) ? plan.days : [])
-      .flatMap((day) => [
-        { day, role: "primary", locationId: String(day?.primary_location_id || "").trim() },
-        { day, role: "secondary", locationId: String(day?.secondary_location_id || "").trim() }
-      ])
-      .filter((entry) => entry.locationId)
-      .map((entry) => {
-        const location = locationById.get(entry.locationId) || null;
-        return {
-          ...entry,
-          location,
-          latitude: normalizeLocationCoordinate(location?.latitude),
-          longitude: normalizeLocationCoordinate(location?.longitude)
-        };
-      });
+  function normalizeTravelPlanDayExperienceHighlightIds(values, { availableIds = null } = {}) {
+    const allowed = availableIds instanceof Set ? availableIds : null;
+    const seen = new Set();
+    return (Array.isArray(values) ? values : [])
+      .map((value) => String(value || "").trim())
+      .filter((id) => {
+        if (!id || seen.has(id)) return false;
+        if (allowed && !allowed.has(id)) return false;
+        seen.add(id);
+        return true;
+      })
+      .slice(0, 1);
   }
 
-  function renderTravelPlanRouteMap() {
-    const points = travelPlanRoutePoints();
-    if (!points.length) return "";
-    const coordinatePoints = points.filter((point) => point.latitude !== null && point.longitude !== null);
-    const missingPoints = points.filter((point) => point.latitude === null || point.longitude === null);
-    const width = 640;
-    const height = 260;
-    const padding = 34;
-    const latitudes = coordinatePoints.map((point) => point.latitude);
-    const longitudes = coordinatePoints.map((point) => point.longitude);
-    const minLat = Math.min(...latitudes);
-    const maxLat = Math.max(...latitudes);
-    const minLng = Math.min(...longitudes);
-    const maxLng = Math.max(...longitudes);
-    const latSpan = Math.max(0.0001, maxLat - minLat);
-    const lngSpan = Math.max(0.0001, maxLng - minLng);
-    const projected = coordinatePoints.map((point, index) => ({
-      ...point,
-      index,
-      x: padding + ((point.longitude - minLng) / lngSpan) * (width - padding * 2),
-      y: height - padding - ((point.latitude - minLat) / latSpan) * (height - padding * 2)
-    }));
-    const linePoints = projected.map((point) => `${point.x.toFixed(1)},${point.y.toFixed(1)}`).join(" ");
+  function travelPlanExperienceHighlightOptions() {
+    return (Array.isArray(state.experienceHighlights) ? state.experienceHighlights : [])
+      .map((item) => {
+        const source = item && typeof item === "object" && !Array.isArray(item) ? item : {};
+        const id = String(source.id || item || "").trim();
+        if (!id) return null;
+        const titleMap = source.title_i18n && typeof source.title_i18n === "object" && !Array.isArray(source.title_i18n)
+          ? source.title_i18n
+          : {};
+        return {
+          ...source,
+          id,
+          title: String(
+            titleMap[bookingContentLang()]
+            || titleMap[bookingSourceLang()]
+            || titleMap.en
+            || source.title
+            || id
+          ).trim()
+        };
+      })
+      .filter(Boolean);
+  }
+
+  function renderTravelPlanDayExperienceHighlights(day) {
+    const options = travelPlanExperienceHighlightOptions();
+    if (!options.length) return "";
+    const availableIds = new Set(options.map((item) => item.id));
+    const selectedId = normalizeTravelPlanDayExperienceHighlightIds(day?.experience_highlight_ids, { availableIds })[0] || "";
+    const selectId = `travel_plan_day_highlight_${day.id}`;
     return `
-      <section class="travel-plan-route-map" aria-label="${escapeHtml(bookingT("booking.travel_plan.route_map", "Route map"))}">
-        <div class="travel-plan-route-map__head">
-          <h3>${escapeHtml(bookingT("booking.travel_plan.route_map", "Route map"))}</h3>
-          <p class="micro">${escapeHtml(bookingT("booking.travel_plan.route_map_hint", "Dashed route uses each day primary point, then secondary point when set."))}</p>
-        </div>
-        ${projected.length
-          ? `<svg class="travel-plan-route-map__svg" viewBox="0 0 ${width} ${height}" role="img">
-              <rect x="0" y="0" width="${width}" height="${height}" rx="8"></rect>
-              ${projected.length > 1 ? `<polyline points="${linePoints}" fill="none"></polyline>` : ""}
-              ${projected.map((point, index) => `
-                <g class="travel-plan-route-map__marker" transform="translate(${point.x.toFixed(1)} ${point.y.toFixed(1)})">
-                  <circle r="12"></circle>
-                  <text text-anchor="middle" dominant-baseline="central">${index + 1}</text>
-                </g>
-              `).join("")}
-            </svg>`
-          : ""}
-        <div class="travel-plan-route-map__legend">
-          ${points.map((point, index) => `
-            <span class="travel-plan-route-map__legend-item${point.latitude === null || point.longitude === null ? " is-missing" : ""}">
-              <span>${escapeHtml(String(index + 1))}</span>
-              ${escapeHtml(bookingT("booking.travel_plan.day_heading", "Day {day}", { day: point.day?.day_number || "?" }))}
-              ${point.role === "secondary" ? escapeHtml(` ${bookingT("booking.travel_plan.secondary_location_suffix", "(secondary)")}`) : ""}
-              - ${escapeHtml(point.location?.label || point.locationId)}
-            </span>
+      <div class="field travel-plan-day-highlights">
+        <label for="${escapeHtml(selectId)}">${escapeHtml(bookingT("booking.travel_plan.experience_highlight", "Experience highlight"))}</label>
+        <select id="${escapeHtml(selectId)}" data-travel-plan-day-highlight ${!state.permissions.canEditBooking ? "disabled" : ""}>
+          <option value="">${escapeHtml(bookingT("booking.travel_plan.experience_highlight_none", "No experience highlight"))}</option>
+          ${options.map((item) => `
+            <option value="${escapeHtml(item.id)}" ${item.id === selectedId ? "selected" : ""}>${escapeHtml(item.title || item.id)}</option>
           `).join("")}
-        </div>
-        ${missingPoints.length
-          ? `<p class="micro travel-plan-route-map__warning">${escapeHtml(bookingT("booking.travel_plan.route_map_missing_coordinates", "{count} selected map point(s) need coordinates.", { count: missingPoints.length }))}</p>`
-          : ""}
-      </section>
+        </select>
+      </div>
     `;
   }
 
@@ -1957,7 +1955,7 @@ export function createBookingTravelPlanModule(ctx) {
         </div>
         <div class="travel-plan-day__main">
           <div class="travel-plan-day__head">
-            <div class="travel-plan-day__head-copy" data-travel-plan-toggle-day-area="${escapeHtml(day.id)}">
+            <div class="travel-plan-day__head-copy" data-travel-plan-toggle-day-region="${escapeHtml(day.id)}">
               <h3 class="travel-plan-day__collapsed-heading" data-travel-plan-day-fallback="${escapeHtml(dayHeading)}" title="${escapeHtml(headingLabel)}">${escapeHtml(headingLabel)}</h3>
             </div>
             <div class="travel-plan-day__actions">
@@ -2019,7 +2017,8 @@ export function createBookingTravelPlanModule(ctx) {
                   id: `travel_plan_day_primary_location_${day.id}`,
                   field: "primary_location_id",
                   value: day.primary_location_id,
-                  label: bookingT("booking.travel_plan.primary_location", "Primary map point")
+                  label: bookingT("booking.travel_plan.primary_location", "Primary map point"),
+                  includeAllLocations: allowAllPrimaryMapPointOptions
                 })}
               </div>
               <div class="field">
@@ -2031,6 +2030,7 @@ export function createBookingTravelPlanModule(ctx) {
                 })}
               </div>
             </div>
+            ${renderTravelPlanDayExperienceHighlights(day)}
             <div class="field">
               ${renderTravelPlanLocalizedField({
                 label: bookingT("booking.travel_plan.day_notes", "Day Details"),
@@ -2038,7 +2038,7 @@ export function createBookingTravelPlanModule(ctx) {
                 dataScope: "travel-plan-day-field",
                 dayId: day.id,
                 field: "notes",
-                type: "textarea",
+                type: "textregion",
                 rows: 3,
                 sourceValue: resolveLocalizedDraftBranchText(day.notes_i18n ?? day.notes, bookingSourceLang(), ""),
                 localizedValue: resolveLocalizedDraftBranchText(day.notes_i18n ?? day.notes, bookingContentLang(), "")
@@ -2142,6 +2142,10 @@ export function createBookingTravelPlanModule(ctx) {
       day.overnight_location_i18n = overnight.map;
       day.primary_location_id = String(dayNode.querySelector('[data-travel-plan-day-location-field="primary_location_id"]')?.value || "").trim();
       day.secondary_location_id = String(dayNode.querySelector('[data-travel-plan-day-location-field="secondary_location_id"]')?.value || "").trim();
+      const highlightInput = dayNode.querySelector("[data-travel-plan-day-highlight]");
+      day.experience_highlight_ids = highlightInput
+        ? normalizeTravelPlanDayExperienceHighlightIds([highlightInput.value])
+        : normalizeTravelPlanDayExperienceHighlightIds(previousDay?.experience_highlight_ids);
       const dayNotes = readLocalizedFieldPayload(
         dayNode,
         "travel-plan-day-field",
@@ -3361,13 +3365,13 @@ export function createBookingTravelPlanModule(ctx) {
           <div class="tour-travel-plan-translation__review-row">
             <div class="micro">${escapeHtml(field.label)}</div>
             <div class="tour-travel-plan-translation__source">${escapeHtml(field.sourceText)}</div>
-            <textarea
+            <textregion
               class="booking-text-field tour-travel-plan-translation__target"
               rows="2"
               data-booking-translation-review-key="${escapeHtml(field.key)}"
               data-booking-translation-review-lang="${escapeHtml(targetLang)}"
               ${state.permissions.canEditBooking ? "" : "disabled"}
-            >${escapeHtml(field.targetText)}</textarea>
+            >${escapeHtml(field.targetText)}</textregion>
           </div>
         `).join("")}
       </div>
@@ -3625,31 +3629,36 @@ export function createBookingTravelPlanModule(ctx) {
           || target?.matches?.('[data-travel-plan-service-field="kind"]')
           || target?.matches?.("[data-travel-plan-day-location-field]")
           || target?.matches?.("[data-destination-scope-destination]")
-          || target?.matches?.("[data-destination-scope-area]")
+          || target?.matches?.("[data-destination-scope-country-place]")
+          || target?.matches?.("[data-destination-scope-region]")
         );
         if (shouldRerender) {
           renderTravelPlanPanel();
         }
       });
       els.travel_plan_editor.addEventListener("click", (event) => {
-        const dayToggleArea = resolveTravelPlanToggleArea(event.target, "[data-travel-plan-toggle-day-area]");
-        if (dayToggleArea) {
-          toggleTravelPlanDayCollapsed(dayToggleArea.getAttribute("data-travel-plan-toggle-day-area"));
+        const dayToggleRegion = resolveTravelPlanToggleRegion(event.target, "[data-travel-plan-toggle-day-region]");
+        if (dayToggleRegion) {
+          toggleTravelPlanDayCollapsed(dayToggleRegion.getAttribute("data-travel-plan-toggle-day-region"));
           return;
         }
-        const itemToggleArea = resolveTravelPlanToggleArea(event.target, "[data-travel-plan-toggle-item-area]");
-        if (itemToggleArea) {
-          toggleTravelPlanServiceCollapsed(itemToggleArea.getAttribute("data-travel-plan-toggle-item-area"));
+        const itemToggleRegion = resolveTravelPlanToggleRegion(event.target, "[data-travel-plan-toggle-item-region]");
+        if (itemToggleRegion) {
+          toggleTravelPlanServiceCollapsed(itemToggleRegion.getAttribute("data-travel-plan-toggle-item-region"));
           return;
         }
         const button = event.target.closest("button");
         if (!button) return;
-        if (button.hasAttribute("data-destination-scope-add-area")) {
-          void createDestinationScopeArea(button.getAttribute("data-destination-scope-add-area"));
+        if (button.hasAttribute("data-destination-scope-add-region")) {
+          void createDestinationScopeRegion(button.getAttribute("data-destination-scope-add-region"));
           return;
         }
         if (button.hasAttribute("data-destination-scope-add-place")) {
           void createDestinationScopePlace(button.getAttribute("data-destination-scope-add-place"));
+          return;
+        }
+        if (button.hasAttribute("data-destination-scope-add-country-place")) {
+          void createDestinationScopePlace("", button.getAttribute("data-destination-scope-add-country-place"));
           return;
         }
         if (button.hasAttribute("data-travel-plan-add-day")) {
@@ -3769,7 +3778,8 @@ export function createBookingTravelPlanModule(ctx) {
         renderTravelPlanTranslationPanel();
         if (
           target?.matches?.("[data-destination-scope-destination]")
-          || target?.matches?.("[data-destination-scope-area]")
+          || target?.matches?.("[data-destination-scope-country-place]")
+          || target?.matches?.("[data-destination-scope-region]")
         ) {
           renderTravelPlanPanel();
         }
@@ -3777,12 +3787,16 @@ export function createBookingTravelPlanModule(ctx) {
       externalDestinationScopeRoot.addEventListener("click", (event) => {
         const button = event.target.closest("button");
         if (!button) return;
-        if (button.hasAttribute("data-destination-scope-add-area")) {
-          void createDestinationScopeArea(button.getAttribute("data-destination-scope-add-area"));
+        if (button.hasAttribute("data-destination-scope-add-region")) {
+          void createDestinationScopeRegion(button.getAttribute("data-destination-scope-add-region"));
           return;
         }
         if (button.hasAttribute("data-destination-scope-add-place")) {
           void createDestinationScopePlace(button.getAttribute("data-destination-scope-add-place"));
+          return;
+        }
+        if (button.hasAttribute("data-destination-scope-add-country-place")) {
+          void createDestinationScopePlace("", button.getAttribute("data-destination-scope-add-country-place"));
         }
       });
       externalDestinationScopeRoot.dataset.travelPlanDestinationScopeBound = "true";
@@ -3857,7 +3871,7 @@ export function createBookingTravelPlanModule(ctx) {
         if (button.hasAttribute("data-travel-plan-pdf-save-comment")) {
           const artifactId = String(button.getAttribute("data-travel-plan-pdf-save-comment") || "").trim();
           const input = els.travel_plan_pdf_workspace.querySelector(`[data-travel-plan-pdf-comment-input="${CSS.escape(artifactId)}"]`);
-          const nextValue = input instanceof HTMLTextAreaElement ? input.value : "";
+          const nextValue = input instanceof HTMLTextRegionElement ? input.value : "";
           void travelPlanPdfsModule.saveTravelPlanPdfComment(artifactId, nextValue).then((ok) => {
             if (!ok) renderTravelPlanPanel();
           });
@@ -3929,7 +3943,6 @@ export function createBookingTravelPlanModule(ctx) {
     }
     els.travel_plan_editor.innerHTML = `
       ${usesExternalDestinationScopeEditor() ? "" : destinationScopeMarkup}
-      ${renderTravelPlanRouteMap()}
       ${(Array.isArray(state.travelPlanDraft.days) ? state.travelPlanDraft.days : []).map((day, dayIndex) => renderTravelPlanDay(day, dayIndex)).join("") || `<p class="travel-plan-empty">${escapeHtml(bookingT("booking.travel_plan.no_days", "No travel-plan days yet."))}</p>`}
       <div class="travel-plan-footer">
         <div class="travel-plan-footer__action-rows">

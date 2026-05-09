@@ -3,6 +3,7 @@ import {
   normalizeBookingContentLang
 } from "../../domain/booking_content_i18n.js";
 import { normalizeDestinationScope } from "../../domain/destination_scope.js";
+import { normalizeExperienceHighlightIds } from "../../domain/tour_metadata.js";
 import {
   DESTINATION_COUNTRY_CODES,
   TOUR_DESTINATION_TO_COUNTRY_CODE
@@ -213,6 +214,7 @@ export function createMarketingTourBookingTravelPlanCloner(deps) {
       overnight_location_i18n: overnightLocation.map,
       primary_location_id: normalizeText(day?.primary_location_id) || null,
       secondary_location_id: normalizeText(day?.secondary_location_id) || null,
+      experience_highlight_ids: normalizeExperienceHighlightIds(day?.experience_highlight_ids, { limit: 1 }),
       services: await Promise.all((Array.isArray(day?.services) ? day.services : []).map((service) => (
         cloneMarketingTourServiceForBooking(service, {
           tourId,

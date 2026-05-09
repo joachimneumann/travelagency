@@ -930,7 +930,7 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         requireOneOf: [],
         fields: [
     schemaField({"name":"destinations","required":false,"wireName":"destinations"}, SHARED_FIELD_DEFS.FIELD_74),
-    schemaField({"name":"areas","required":false,"wireName":"areas"}, SHARED_FIELD_DEFS.FIELD_75),
+    schemaField({"name":"regions","required":false,"wireName":"regions"}, SHARED_FIELD_DEFS.FIELD_75),
     schemaField({"name":"places","required":false,"wireName":"places"}, SHARED_FIELD_DEFS.FIELD_76)
         ]
       };
@@ -972,42 +972,39 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         return validateShape(value, DESTINATION_CREATE_RESPONSE_SCHEMA);
       }
 
-      export const DESTINATION_AREA_CREATE_REQUEST_SCHEMA = {
-        name: "DestinationAreaCreateRequest",
+      export const DESTINATION_REGION_CREATE_REQUEST_SCHEMA = {
+        name: "DestinationRegionCreateRequest",
         domain: "api",
         module: "api",
-        sourceType: "openapi.components.schemas.DestinationAreaCreateRequest",
+        sourceType: "openapi.components.schemas.DestinationRegionCreateRequest",
         requireOneOf: [],
         fields: [
     schemaField({"name":"destination","required":true,"wireName":"destination"}, SHARED_FIELD_DEFS.FIELD_2),
     schemaField({"name":"name","required":true,"wireName":"name"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"name_i18n","required":false,"wireName":"name_i18n"}, SHARED_FIELD_DEFS.FIELD_79),
     schemaField({"name":"code","required":false,"wireName":"code"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"latitude","required":false,"wireName":"latitude"}, SHARED_FIELD_DEFS.FIELD_63),
-    schemaField({"name":"longitude","required":false,"wireName":"longitude"}, SHARED_FIELD_DEFS.FIELD_63),
-    schemaField({"name":"map_zoom","required":false,"wireName":"map_zoom"}, SHARED_FIELD_DEFS.FIELD_18),
     schemaField({"name":"actor","required":false,"wireName":"actor"}, SHARED_FIELD_DEFS.FIELD_1)
         ]
       };
 
-      export function validateDestinationAreaCreateRequest(value) {
-        return validateShape(value, DESTINATION_AREA_CREATE_REQUEST_SCHEMA);
+      export function validateDestinationRegionCreateRequest(value) {
+        return validateShape(value, DESTINATION_REGION_CREATE_REQUEST_SCHEMA);
       }
 
-      export const DESTINATION_AREA_CREATE_RESPONSE_SCHEMA = {
-        name: "DestinationAreaCreateResponse",
+      export const DESTINATION_REGION_CREATE_RESPONSE_SCHEMA = {
+        name: "DestinationRegionCreateResponse",
         domain: "api",
         module: "api",
-        sourceType: "openapi.components.schemas.DestinationAreaCreateResponse",
+        sourceType: "openapi.components.schemas.DestinationRegionCreateResponse",
         requireOneOf: [],
         fields: [
-    schemaField({"name":"area","required":true,"wireName":"area"}, SHARED_FIELD_DEFS.FIELD_80),
+    schemaField({"name":"region","required":true,"wireName":"region"}, SHARED_FIELD_DEFS.FIELD_80),
     schemaField({"name":"catalog","required":true,"wireName":"catalog"}, SHARED_FIELD_DEFS.FIELD_78)
         ]
       };
 
-      export function validateDestinationAreaCreateResponse(value) {
-        return validateShape(value, DESTINATION_AREA_CREATE_RESPONSE_SCHEMA);
+      export function validateDestinationRegionCreateResponse(value) {
+        return validateShape(value, DESTINATION_REGION_CREATE_RESPONSE_SCHEMA);
       }
 
       export const DESTINATION_PLACE_CREATE_REQUEST_SCHEMA = {
@@ -1017,13 +1014,11 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         sourceType: "openapi.components.schemas.DestinationPlaceCreateRequest",
         requireOneOf: [],
         fields: [
-    schemaField({"name":"area_id","required":true,"wireName":"area_id"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"destination","required":true,"wireName":"destination"}, SHARED_FIELD_DEFS.FIELD_2),
+    schemaField({"name":"region_id","required":false,"wireName":"region_id"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"name","required":true,"wireName":"name"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"name_i18n","required":false,"wireName":"name_i18n"}, SHARED_FIELD_DEFS.FIELD_79),
     schemaField({"name":"code","required":false,"wireName":"code"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"latitude","required":false,"wireName":"latitude"}, SHARED_FIELD_DEFS.FIELD_63),
-    schemaField({"name":"longitude","required":false,"wireName":"longitude"}, SHARED_FIELD_DEFS.FIELD_63),
-    schemaField({"name":"map_zoom","required":false,"wireName":"map_zoom"}, SHARED_FIELD_DEFS.FIELD_18),
     schemaField({"name":"actor","required":false,"wireName":"actor"}, SHARED_FIELD_DEFS.FIELD_1)
         ]
       };
@@ -1057,7 +1052,6 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         fields: [
     schemaField({"name":"id","required":false,"wireName":"id"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"title","required":false,"wireName":"title"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"destinations","required":false,"wireName":"destinations"}, SHARED_FIELD_DEFS.FIELD_17),
     schemaField({"name":"styles","required":false,"wireName":"styles"}, SHARED_FIELD_DEFS.FIELD_82),
     schemaField({"name":"priority","required":false,"wireName":"priority"}, SHARED_FIELD_DEFS.FIELD_18),
     schemaField({"name":"published_on_webpage","required":false,"wireName":"published_on_webpage"}, SHARED_FIELD_DEFS.FIELD_9),
@@ -1702,11 +1696,11 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         return validateShape(value, DESTINATION_SCOPE_CATALOG_DESTINATION_SCHEMA);
       }
 
-      export const DESTINATION_AREA_SCHEMA = {
-        name: "DestinationArea",
+      export const DESTINATION_REGION_SCHEMA = {
+        name: "DestinationRegion",
         domain: "api",
         module: "api",
-        sourceType: "openapi.components.schemas.DestinationArea",
+        sourceType: "openapi.components.schemas.DestinationRegion",
         requireOneOf: [],
         fields: [
     schemaField({"name":"id","required":true,"wireName":"id"}, SHARED_FIELD_DEFS.FIELD_1),
@@ -1715,9 +1709,6 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
     schemaField({"name":"name","required":true,"wireName":"name"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"name_i18n","required":false,"wireName":"name_i18n"}, SHARED_FIELD_DEFS.FIELD_79),
     schemaField({"name":"label","required":true,"wireName":"label"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"latitude","required":false,"wireName":"latitude"}, SHARED_FIELD_DEFS.FIELD_63),
-    schemaField({"name":"longitude","required":false,"wireName":"longitude"}, SHARED_FIELD_DEFS.FIELD_63),
-    schemaField({"name":"map_zoom","required":false,"wireName":"map_zoom"}, SHARED_FIELD_DEFS.FIELD_18),
     schemaField({"name":"sort_order","required":true,"wireName":"sort_order"}, SHARED_FIELD_DEFS.FIELD_18),
     schemaField({"name":"is_active","required":true,"wireName":"is_active"}, SHARED_FIELD_DEFS.FIELD_9),
     schemaField({"name":"created_at","required":false,"wireName":"created_at"}, SHARED_FIELD_DEFS.FIELD_5),
@@ -1725,8 +1716,8 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         ]
       };
 
-      export function validateDestinationArea(value) {
-        return validateShape(value, DESTINATION_AREA_SCHEMA);
+      export function validateDestinationRegion(value) {
+        return validateShape(value, DESTINATION_REGION_SCHEMA);
       }
 
       export const DESTINATION_PLACE_SCHEMA = {
@@ -1737,14 +1728,12 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         requireOneOf: [],
         fields: [
     schemaField({"name":"id","required":true,"wireName":"id"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"area_id","required":true,"wireName":"area_id"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"destination","required":true,"wireName":"destination"}, SHARED_FIELD_DEFS.FIELD_2),
+    schemaField({"name":"region_id","required":false,"wireName":"region_id"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"code","required":true,"wireName":"code"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"name","required":true,"wireName":"name"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"name_i18n","required":false,"wireName":"name_i18n"}, SHARED_FIELD_DEFS.FIELD_79),
     schemaField({"name":"label","required":true,"wireName":"label"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"latitude","required":false,"wireName":"latitude"}, SHARED_FIELD_DEFS.FIELD_63),
-    schemaField({"name":"longitude","required":false,"wireName":"longitude"}, SHARED_FIELD_DEFS.FIELD_63),
-    schemaField({"name":"map_zoom","required":false,"wireName":"map_zoom"}, SHARED_FIELD_DEFS.FIELD_18),
     schemaField({"name":"sort_order","required":true,"wireName":"sort_order"}, SHARED_FIELD_DEFS.FIELD_18),
     schemaField({"name":"is_active","required":true,"wireName":"is_active"}, SHARED_FIELD_DEFS.FIELD_9),
     schemaField({"name":"created_at","required":false,"wireName":"created_at"}, SHARED_FIELD_DEFS.FIELD_5),
@@ -1756,26 +1745,25 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         return validateShape(value, DESTINATION_PLACE_SCHEMA);
       }
 
-      export const TRAVEL_PLAN_SCHEMA = {
-        name: "TravelPlan",
+      export const MARKETING_TOUR_TRAVEL_PLAN_SCHEMA = {
+        name: "MarketingTourTravelPlan",
         domain: "api",
         module: "api",
-        sourceType: "openapi.components.schemas.TravelPlan",
+        sourceType: "openapi.components.schemas.MarketingTourTravelPlan",
         requireOneOf: [],
         fields: [
-    schemaField({"name":"destination_scope","required":false,"wireName":"destination_scope"}, SHARED_FIELD_DEFS.FIELD_96),
-    schemaField({"name":"destinations","required":false,"wireName":"destinations"}, SHARED_FIELD_DEFS.FIELD_17),
     schemaField({"name":"tour_card_primary_image_id","required":false,"wireName":"tour_card_primary_image_id"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"tour_card_image_ids","required":false,"wireName":"tour_card_image_ids"}, SHARED_FIELD_DEFS.FIELD_7),
     schemaField({"name":"one_pager_hero_image_id","required":false,"wireName":"one_pager_hero_image_id"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"one_pager_image_ids","required":false,"wireName":"one_pager_image_ids"}, SHARED_FIELD_DEFS.FIELD_7),
     schemaField({"name":"one_pager_experience_highlight_ids","required":false,"wireName":"one_pager_experience_highlight_ids"}, SHARED_FIELD_DEFS.FIELD_7),
+    schemaField({"name":"derived_experience_highlight_ids","required":false,"wireName":"derived_experience_highlight_ids"}, SHARED_FIELD_DEFS.FIELD_7),
     schemaField({"name":"days","required":false,"wireName":"days"}, SHARED_FIELD_DEFS.FIELD_102)
         ]
       };
 
-      export function validateTravelPlan(value) {
-        return validateShape(value, TRAVEL_PLAN_SCHEMA);
+      export function validateMarketingTourTravelPlan(value) {
+        return validateShape(value, MARKETING_TOUR_TRAVEL_PLAN_SCHEMA);
       }
 
       export const TOUR_TRAVEL_PLAN_DAY_SEARCH_RESULT_SCHEMA = {
@@ -1838,7 +1826,6 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         sourceType: "openapi.components.schemas.TourOptions",
         requireOneOf: [],
         fields: [
-    schemaField({"name":"destinations","required":false,"wireName":"destinations"}, SHARED_FIELD_DEFS.FIELD_52),
     schemaField({"name":"styles","required":false,"wireName":"styles"}, SHARED_FIELD_DEFS.FIELD_52)
         ]
       };
@@ -1974,7 +1961,8 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         requireOneOf: [],
         fields: [
     schemaField({"name":"destination","required":true,"wireName":"destination"}, SHARED_FIELD_DEFS.FIELD_2),
-    schemaField({"name":"areas","required":false,"wireName":"areas"}, SHARED_FIELD_DEFS.FIELD_112)
+    schemaField({"name":"regions","required":false,"wireName":"regions"}, SHARED_FIELD_DEFS.FIELD_112),
+    schemaField({"name":"places","required":false,"wireName":"places"}, SHARED_FIELD_DEFS.FIELD_113)
         ]
       };
 
@@ -1995,7 +1983,7 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
     schemaField({"name":"date_string","required":false,"wireName":"date_string"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"title","required":false,"wireName":"title"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"overnight_location","required":false,"wireName":"overnight_location"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"services","required":false,"wireName":"services"}, SHARED_FIELD_DEFS.FIELD_113),
+    schemaField({"name":"services","required":false,"wireName":"services"}, SHARED_FIELD_DEFS.FIELD_114),
     schemaField({"name":"notes","required":false,"wireName":"notes"}, SHARED_FIELD_DEFS.FIELD_1)
         ]
       };
@@ -2104,7 +2092,7 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
     schemaField({"name":"subtotal_net_amount_cents","required":true,"wireName":"subtotal_net_amount_cents"}, SHARED_FIELD_DEFS.FIELD_99),
     schemaField({"name":"total_tax_amount_cents","required":true,"wireName":"total_tax_amount_cents"}, SHARED_FIELD_DEFS.FIELD_99),
     schemaField({"name":"grand_total_amount_cents","required":true,"wireName":"grand_total_amount_cents"}, SHARED_FIELD_DEFS.FIELD_99),
-    schemaField({"name":"tax_breakdown","required":false,"wireName":"tax_breakdown"}, SHARED_FIELD_DEFS.FIELD_114)
+    schemaField({"name":"tax_breakdown","required":false,"wireName":"tax_breakdown"}, SHARED_FIELD_DEFS.FIELD_115)
         ]
       };
 
@@ -2120,7 +2108,7 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         requireOneOf: [],
         fields: [
     schemaField({"name":"currency","required":true,"wireName":"currency"}, SHARED_FIELD_DEFS.FIELD_19),
-    schemaField({"name":"lines","required":false,"wireName":"lines"}, SHARED_FIELD_DEFS.FIELD_115)
+    schemaField({"name":"lines","required":false,"wireName":"lines"}, SHARED_FIELD_DEFS.FIELD_116)
         ]
       };
 
@@ -2193,9 +2181,7 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
     schemaField({"name":"title_i18n","required":false,"wireName":"title_i18n"}, SHARED_FIELD_DEFS.FIELD_79),
     schemaField({"name":"overnight_location","required":false,"wireName":"overnight_location"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"overnight_location_i18n","required":false,"wireName":"overnight_location_i18n"}, SHARED_FIELD_DEFS.FIELD_79),
-    schemaField({"name":"primary_location_id","required":false,"wireName":"primary_location_id"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"secondary_location_id","required":false,"wireName":"secondary_location_id"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"services","required":false,"wireName":"services"}, SHARED_FIELD_DEFS.FIELD_116),
+    schemaField({"name":"services","required":false,"wireName":"services"}, SHARED_FIELD_DEFS.FIELD_117),
     schemaField({"name":"notes","required":false,"wireName":"notes"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"notes_i18n","required":false,"wireName":"notes_i18n"}, SHARED_FIELD_DEFS.FIELD_79)
         ]
@@ -2213,7 +2199,7 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         requireOneOf: [],
         fields: [
     schemaField({"name":"currency","required":true,"wireName":"currency"}, SHARED_FIELD_DEFS.FIELD_19),
-    schemaField({"name":"lines","required":false,"wireName":"lines"}, SHARED_FIELD_DEFS.FIELD_117),
+    schemaField({"name":"lines","required":false,"wireName":"lines"}, SHARED_FIELD_DEFS.FIELD_118),
     schemaField({"name":"notes","required":false,"wireName":"notes"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"basis_total_amount_cents","required":true,"wireName":"basis_total_amount_cents"}, SHARED_FIELD_DEFS.FIELD_18),
     schemaField({"name":"scheduled_total_amount_cents","required":true,"wireName":"scheduled_total_amount_cents"}, SHARED_FIELD_DEFS.FIELD_18)
@@ -2233,8 +2219,8 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         fields: [
     schemaField({"name":"detail_level","required":true,"wireName":"detail_level"}, SHARED_FIELD_DEFS.FIELD_25),
     schemaField({"name":"derivable","required":true,"wireName":"derivable"}, SHARED_FIELD_DEFS.FIELD_9),
-    schemaField({"name":"trip_price","required":false,"wireName":"trip_price"}, SHARED_FIELD_DEFS.FIELD_118),
-    schemaField({"name":"days","required":false,"wireName":"days"}, SHARED_FIELD_DEFS.FIELD_119),
+    schemaField({"name":"trip_price","required":false,"wireName":"trip_price"}, SHARED_FIELD_DEFS.FIELD_119),
+    schemaField({"name":"days","required":false,"wireName":"days"}, SHARED_FIELD_DEFS.FIELD_120),
     schemaField({"name":"additional_items","required":false,"wireName":"additional_items"}, SHARED_FIELD_DEFS.FIELD_64)
         ]
       };
@@ -2243,20 +2229,35 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         return validateShape(value, BOOKING_OFFER_VISIBLE_PRICING_READ_MODEL_SCHEMA);
       }
 
-      export const TRAVEL_PLAN_DESTINATION_AREA_SELECTION_SCHEMA = {
-        name: "TravelPlanDestinationAreaSelection",
+      export const TRAVEL_PLAN_DESTINATION_REGION_SELECTION_SCHEMA = {
+        name: "TravelPlanDestinationRegionSelection",
         domain: "api",
         module: "api",
-        sourceType: "openapi.components.schemas.TravelPlanDestinationAreaSelection",
+        sourceType: "openapi.components.schemas.TravelPlanDestinationRegionSelection",
         requireOneOf: [],
         fields: [
-    schemaField({"name":"area_id","required":true,"wireName":"area_id"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"places","required":false,"wireName":"places"}, SHARED_FIELD_DEFS.FIELD_120)
+    schemaField({"name":"region_id","required":true,"wireName":"region_id"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"places","required":false,"wireName":"places"}, SHARED_FIELD_DEFS.FIELD_113)
         ]
       };
 
-      export function validateTravelPlanDestinationAreaSelection(value) {
-        return validateShape(value, TRAVEL_PLAN_DESTINATION_AREA_SELECTION_SCHEMA);
+      export function validateTravelPlanDestinationRegionSelection(value) {
+        return validateShape(value, TRAVEL_PLAN_DESTINATION_REGION_SELECTION_SCHEMA);
+      }
+
+      export const TRAVEL_PLAN_DESTINATION_PLACE_SELECTION_SCHEMA = {
+        name: "TravelPlanDestinationPlaceSelection",
+        domain: "api",
+        module: "api",
+        sourceType: "openapi.components.schemas.TravelPlanDestinationPlaceSelection",
+        requireOneOf: [],
+        fields: [
+    schemaField({"name":"place_id","required":true,"wireName":"place_id"}, SHARED_FIELD_DEFS.FIELD_1)
+        ]
+      };
+
+      export function validateTravelPlanDestinationPlaceSelection(value) {
+        return validateShape(value, TRAVEL_PLAN_DESTINATION_PLACE_SELECTION_SCHEMA);
       }
 
       export const BOOKING_TRAVEL_PLAN_SERVICE_SCHEMA = {
@@ -2418,21 +2419,6 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
 
       export function validateBookingOfferVisibleDayPriceReadModel(value) {
         return validateShape(value, BOOKING_OFFER_VISIBLE_DAY_PRICE_READ_MODEL_SCHEMA);
-      }
-
-      export const TRAVEL_PLAN_DESTINATION_PLACE_SELECTION_SCHEMA = {
-        name: "TravelPlanDestinationPlaceSelection",
-        domain: "api",
-        module: "api",
-        sourceType: "openapi.components.schemas.TravelPlanDestinationPlaceSelection",
-        requireOneOf: [],
-        fields: [
-    schemaField({"name":"place_id","required":true,"wireName":"place_id"}, SHARED_FIELD_DEFS.FIELD_1)
-        ]
-      };
-
-      export function validateTravelPlanDestinationPlaceSelection(value) {
-        return validateShape(value, TRAVEL_PLAN_DESTINATION_PLACE_SELECTION_SCHEMA);
       }
 
       export const BOOKING_TRAVEL_PLAN_SERVICE_IMAGE_SCHEMA = {

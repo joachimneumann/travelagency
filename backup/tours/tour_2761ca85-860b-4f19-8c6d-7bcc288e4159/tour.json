@@ -18,17 +18,6 @@
   "updated_at": "2026-05-08T07:08:28.171Z",
   "published_on_webpage": true,
   "travel_plan": {
-    "destination_scope": [
-      {
-        "destination": "VN",
-        "areas": [
-          {
-            "area_id": "area_3fa05b42-97ab-495d-b16d-4691e66e0434",
-            "places": []
-          }
-        ]
-      }
-    ],
     "tour_card_image_ids": [
       "travel_plan_service_image_70568f63-ac8c-4b7f-b363-29015e73f16c",
       "travel_plan_service_image_5a4a5750-69dc-4645-be41-f928ff3e3db4"
@@ -45,7 +34,7 @@
         "day_number": 1,
         "title": "Classic Ha Long Bay cruise",
         "overnight_location": null,
-        "primary_location_id": null,
+        "primary_location_id": "place_a8172e07-213b-46ed-bb88-f0f77bb7fbe0",
         "secondary_location_id": null,
         "services": [
           {

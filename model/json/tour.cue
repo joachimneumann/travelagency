@@ -15,7 +15,6 @@ import (
 	id:     common.#Identifier
 	title?: string
 	title_i18n?: [string]: string
-	destinations?: [...enums.#CountryCode]
 	styles: [...enums.#TourStyleCode]
 	priority?:                int
 	published_on_webpage?:    bool
@@ -24,7 +23,7 @@ import (
 	short_description?:       string
 	short_description_i18n?: [string]: string
 	video?:       #TourVideo
-	travel_plan?: databaseModel.#TravelPlan
+	travel_plan?: databaseModel.#MarketingTourTravelPlan
 	created_at?:  common.#Timestamp
 	updated_at?:  common.#Timestamp
 }

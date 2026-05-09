@@ -15,21 +15,6 @@
   "updated_at": "2026-05-04T10:15:35.242Z",
   "published_on_webpage": false,
   "travel_plan": {
-    "destination_scope": [
-      {
-        "destination": "VN",
-        "areas": [
-          {
-            "area_id": "area_3d22386f-d130-4f20-ab82-a30164fa5a19",
-            "places": [
-              {
-                "place_id": "place_5c7c616b-f7c7-4650-a206-bfcf204d078e"
-              }
-            ]
-          }
-        ]
-      }
-    ],
     "tour_card_image_ids": [
       "travel_plan_service_image_8cc2713e-3646-4017-9600-4b3cab31b8d5"
     ],
@@ -102,7 +87,9 @@
             }
           }
         ],
-        "notes": "Move from cave temples and stone peaks near Da Nang to Hoi An's historic trading streets in one easy, atmospheric day."
+        "notes": "Move from cave temples and stone peaks near Da Nang to Hoi An's historic trading streets in one easy, atmospheric day.",
+        "primary_location_id": "place_5c7c616b-f7c7-4650-a206-bfcf204d078e",
+        "secondary_location_id": null
       }
     ],
     "translation_meta": {}

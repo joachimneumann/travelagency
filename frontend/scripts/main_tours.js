@@ -182,10 +182,10 @@ export function createFrontendToursController(ctx) {
   function getFiltersFromURL() {
     const params = new URLSearchParams(window.location.search);
     const dest = normalizeFilterSelection(params.get("dest"));
-    const area = normalizeText(params.get("area"));
+    const region = normalizeText(params.get("region"));
     const place = normalizeText(params.get("place"));
     const style = normalizeFilterSelection(params.get("style"));
-    return { dest, area, place, style };
+    return { dest, region, place, style };
   }
 
   function normalizeFilterOptionList(items) {
@@ -236,30 +236,30 @@ export function createFrontendToursController(ctx) {
 
     const destinations = Array.from(destinationByCode.values());
     const destinationCodes = new Set(destinations.map((destination) => destination.code));
-    const areas = (Array.isArray(rawCatalog.areas) ? rawCatalog.areas : [])
-      .map((area) => {
-        const destination = normalizeDestinationCode(area?.destination || area?.country_code);
-        const id = normalizeText(area?.id || area?.area_id);
+    const regions = (Array.isArray(rawCatalog.regions) ? rawCatalog.regions : [])
+      .map((region) => {
+        const destination = normalizeDestinationCode(region?.destination || region?.country_code);
+        const id = normalizeText(region?.id || region?.region_id);
         if (!id || !destination || !destinationCodes.has(destination)) return null;
         return {
           id,
           destination,
-          code: normalizeText(area?.code),
-          label: normalizeText(area?.label || area?.name || area?.code) || id,
-          latitude: Number.isFinite(Number(area?.latitude)) ? Number(area.latitude) : null,
-          longitude: Number.isFinite(Number(area?.longitude)) ? Number(area.longitude) : null
+          code: normalizeText(region?.code),
+          label: normalizeText(region?.label || region?.name || region?.code) || id
         };
       })
       .filter(Boolean);
-    const areaIds = new Set(areas.map((area) => area.id));
+    const regionIds = new Set(regions.map((region) => region.id));
     const places = (Array.isArray(rawCatalog.places) ? rawCatalog.places : [])
       .map((place) => {
-        const area_id = normalizeText(place?.area_id || place?.areaId);
+        const region_id = normalizeText(place?.region_id || place?.regionId);
+        const destination = normalizeDestinationCode(place?.destination || place?.country_code);
         const id = normalizeText(place?.id || place?.place_id);
-        if (!id || !area_id || !areaIds.has(area_id)) return null;
+        if (!id || !destination || !destinationCodes.has(destination) || (region_id && !regionIds.has(region_id))) return null;
         return {
           id,
-          area_id,
+          destination,
+          region_id,
           code: normalizeText(place?.code),
           label: normalizeText(place?.label || place?.name || place?.code) || id,
           latitude: Number.isFinite(Number(place?.latitude)) ? Number(place.latitude) : null,
@@ -268,7 +268,7 @@ export function createFrontendToursController(ctx) {
       })
       .filter(Boolean);
 
-    return { destinations, areas, places };
+    return { destinations, regions, places };
   }
 
   function destinationScopeCatalog() {
@@ -327,14 +327,15 @@ export function createFrontendToursController(ctx) {
     return scope
       .map((entry) => ({
         destination: normalizeDestinationCode(entry?.destination),
-        areas: Array.isArray(entry?.areas) ? entry.areas : []
+        regions: Array.isArray(entry?.regions) ? entry.regions : (Array.isArray(entry?.areas) ? entry.areas : []),
+        places: Array.isArray(entry?.places) ? entry.places : []
       }))
       .filter((entry) => entry.destination);
   }
 
-  function tourIncludesDestinationScope(trip, { destination = "", area = "", place = "" } = {}) {
+  function tourIncludesDestinationScope(trip, { destination = "", region = "", place = "" } = {}) {
     const selectedDestination = normalizeDestinationCode(destination);
-    const selectedArea = normalizeText(area);
+    const selectedRegion = normalizeText(region);
     const selectedPlace = normalizeText(place);
     const scopeEntries = tourDestinationScopeEntries(trip);
 
@@ -343,18 +344,22 @@ export function createFrontendToursController(ctx) {
       || scopeEntries.some((entry) => entry.destination === selectedDestination);
     if (!destinationMatch) return false;
 
-    if (!selectedArea && !selectedPlace) return true;
+    if (!selectedRegion && !selectedPlace) return true;
 
-    return scopeEntries.some((entry) => (
-      (!selectedDestination || entry.destination === selectedDestination)
-      && entry.areas.some((areaSelection) => {
-        const areaId = normalizeText(areaSelection?.area_id);
-        if (selectedArea && areaId !== selectedArea) return false;
+    return scopeEntries.some((entry) => {
+      if (selectedDestination && entry.destination !== selectedDestination) return false;
+      if (selectedPlace && !selectedRegion && (Array.isArray(entry.places) ? entry.places : [])
+        .some((placeSelection) => normalizeText(placeSelection?.place_id) === selectedPlace)) {
+        return true;
+      }
+      return entry.regions.some((regionSelection) => {
+        const regionId = normalizeText(regionSelection?.region_id);
+        if (selectedRegion && regionId !== selectedRegion) return false;
         if (!selectedPlace) return true;
-        return (Array.isArray(areaSelection?.places) ? areaSelection.places : [])
+        return (Array.isArray(regionSelection?.places) ? regionSelection.places : [])
           .some((placeSelection) => normalizeText(placeSelection?.place_id) === selectedPlace);
-      })
-    ));
+      });
+    });
   }
 
   function tourStyleCodes(trip) {
@@ -370,39 +375,40 @@ export function createFrontendToursController(ctx) {
 
   function normalizeDestinationScopeFilterFromOptions() {
     const catalog = destinationScopeCatalog();
-    const areaById = new Map(catalog.areas.map((area) => [area.id, area]));
+    const regionById = new Map(catalog.regions.map((region) => [region.id, region]));
     const placeById = new Map(catalog.places.map((place) => [place.id, place]));
     let destination = normalizeSelectionToCodes(state.filters.dest, "destination", { allowUnknown: false })[0] || "";
-    let area = normalizeText(state.filters.area);
+    let region = normalizeText(state.filters.region);
     let place = normalizeText(state.filters.place);
 
     if (place) {
       const matchedPlace = placeById.get(place);
       if (matchedPlace) {
-        area = matchedPlace.area_id;
+        region = matchedPlace.region_id || "";
+        destination = matchedPlace.destination || destination;
       } else {
         place = "";
       }
     }
 
-    if (area) {
-      const matchedArea = areaById.get(area);
-      if (matchedArea) {
-        destination = matchedArea.destination;
+    if (region) {
+      const matchedRegion = regionById.get(region);
+      if (matchedRegion) {
+        destination = matchedRegion.destination;
       } else {
-        area = "";
+        region = "";
         place = "";
       }
     }
 
     if (destination && !filterOptionList("destination").some((option) => normalizeDestinationCode(option.code) === destination)) {
       destination = "";
-      area = "";
+      region = "";
       place = "";
     }
 
     state.filters.dest = destination ? [destination] : [];
-    state.filters.area = area;
+    state.filters.region = region;
     state.filters.place = place;
   }
 
@@ -414,7 +420,7 @@ export function createFrontendToursController(ctx) {
   function hasActiveHeroFilters() {
     return Boolean(
       state.filters.dest.length
-      || normalizeText(state.filters.area)
+      || normalizeText(state.filters.region)
       || normalizeText(state.filters.place)
       || state.filters.style.length
     );
@@ -445,7 +451,7 @@ export function createFrontendToursController(ctx) {
   function selectedDestinationScopeLabel() {
     const catalog = destinationScopeCatalog();
     const selectedPlace = normalizeText(state.filters.place);
-    const selectedArea = normalizeText(state.filters.area);
+    const selectedRegion = normalizeText(state.filters.region);
     const selectedDestination = normalizeText(state.filters.dest?.[0]);
     const destinationLabel = selectedDestination ? filterLabel("destination", selectedDestination) : "";
     const labels = [];
@@ -453,9 +459,9 @@ export function createFrontendToursController(ctx) {
       const place = catalog.places.find((item) => item.id === selectedPlace);
       if (place?.label) labels.push(place.label);
     }
-    if (selectedArea) {
-      const area = catalog.areas.find((item) => item.id === selectedArea);
-      if (area?.label) labels.push(area.label);
+    if (selectedRegion) {
+      const region = catalog.regions.find((item) => item.id === selectedRegion);
+      if (region?.label) labels.push(region.label);
     }
     if (destinationLabel) {
       labels.push(destinationLabel);
@@ -3742,7 +3748,7 @@ export function createFrontendToursController(ctx) {
       const styles = tourStyleCodes(trip);
       const matchDest = tourIncludesDestinationScope(trip, {
         destination: state.filters.dest[0],
-        area: state.filters.area,
+        region: state.filters.region,
         place: state.filters.place
       });
       const matchStyle = !state.filters.style.length || state.filters.style.some((style) => styles.includes(style));
@@ -3780,7 +3786,7 @@ export function createFrontendToursController(ctx) {
       state.filters.dest = normalizeText(button.getAttribute("data-destination"))
         ? [normalizeText(button.getAttribute("data-destination"))]
         : [];
-      state.filters.area = normalizeText(button.getAttribute("data-area"));
+      state.filters.region = normalizeText(button.getAttribute("data-region"));
       state.filters.place = normalizeText(button.getAttribute("data-place"));
       normalizeDestinationScopeFilterFromOptions();
       state.visibleToursCount = initialVisibleTours;
@@ -3817,10 +3823,10 @@ export function createFrontendToursController(ctx) {
       url.searchParams.set("dest", state.filters.dest.join(","));
     }
 
-    if (!state.filters.area) {
-      url.searchParams.delete("area");
+    if (!state.filters.region) {
+      url.searchParams.delete("region");
     } else {
-      url.searchParams.set("area", state.filters.area);
+      url.searchParams.set("region", state.filters.region);
     }
 
     if (!state.filters.place) {
@@ -3847,13 +3853,13 @@ export function createFrontendToursController(ctx) {
   function syncDestinationFilterMenu() {
     if (!els.navDestinationOptions) return;
     const selectedDestination = normalizeText(state.filters.dest?.[0]);
-    const selectedArea = normalizeText(state.filters.area);
+    const selectedRegion = normalizeText(state.filters.region);
     const selectedPlace = normalizeText(state.filters.place);
     Array.from(els.navDestinationOptions.querySelectorAll("[data-hero-destination-filter]")).forEach((button) => {
       const destination = normalizeText(button.getAttribute("data-destination"));
-      const area = normalizeText(button.getAttribute("data-area"));
+      const region = normalizeText(button.getAttribute("data-region"));
       const place = normalizeText(button.getAttribute("data-place"));
-      const isSelected = destination === selectedDestination && area === selectedArea && place === selectedPlace;
+      const isSelected = destination === selectedDestination && region === selectedRegion && place === selectedPlace;
       button.setAttribute("aria-pressed", isSelected ? "true" : "false");
     });
   }
@@ -3869,7 +3875,7 @@ export function createFrontendToursController(ctx) {
   function clearFilterGroup(group, optionsContainer) {
     if (group === "destination") {
       state.filters.dest = [];
-      state.filters.area = "";
+      state.filters.region = "";
       state.filters.place = "";
     } else if (group === "style") {
       state.filters.style = [];
@@ -3906,7 +3912,7 @@ export function createFrontendToursController(ctx) {
   function renderDestinationFilterButton({
     label,
     destination = "",
-    area = "",
+    region = "",
     place = "",
     className = "hero-destination-menu__item"
   } = {}) {
@@ -3917,7 +3923,7 @@ export function createFrontendToursController(ctx) {
         role="menuitem"
         data-hero-destination-filter
         data-destination="${escapeAttr(destination)}"
-        data-area="${escapeAttr(area)}"
+        data-region="${escapeAttr(region)}"
         data-place="${escapeAttr(place)}"
         aria-pressed="false"
       >${escapeHTML(label)}</button>
@@ -3926,21 +3932,29 @@ export function createFrontendToursController(ctx) {
 
   function renderDestinationScopeMenu() {
     const catalog = destinationScopeCatalog();
-    const areaByDestination = new Map();
-    for (const area of catalog.areas) {
-      const items = areaByDestination.get(area.destination) || [];
-      items.push(area);
-      areaByDestination.set(area.destination, items);
+    const regionByDestination = new Map();
+    for (const region of catalog.regions) {
+      const items = regionByDestination.get(region.destination) || [];
+      items.push(region);
+      regionByDestination.set(region.destination, items);
     }
-    const placesByArea = new Map();
+    const placesByRegion = new Map();
+    const placesByDestination = new Map();
     for (const place of catalog.places) {
-      const items = placesByArea.get(place.area_id) || [];
-      items.push(place);
-      placesByArea.set(place.area_id, items);
+      if (place.region_id) {
+        const items = placesByRegion.get(place.region_id) || [];
+        items.push(place);
+        placesByRegion.set(place.region_id, items);
+      } else {
+        const items = placesByDestination.get(place.destination) || [];
+        items.push(place);
+        placesByDestination.set(place.destination, items);
+      }
     }
 
     const destinationMarkup = catalog.destinations.map((destination) => {
-      const areas = areaByDestination.get(destination.code) || [];
+      const regions = regionByDestination.get(destination.code) || [];
+      const countryPlaces = placesByDestination.get(destination.code) || [];
       return `
         <section class="hero-destination-menu__destination">
           ${renderDestinationFilterButton({
@@ -3948,24 +3962,33 @@ export function createFrontendToursController(ctx) {
             destination: destination.code,
             className: "hero-destination-menu__destination-button"
           })}
-          ${areas.length
-            ? `<div class="hero-destination-menu__areas">
-                ${areas.map((area) => {
-                  const places = placesByArea.get(area.id) || [];
+          ${countryPlaces.length
+            ? `<div class="hero-destination-menu__places">
+                ${countryPlaces.map((place) => renderDestinationFilterButton({
+                  label: place.label,
+                  destination: destination.code,
+                  place: place.id
+                })).join("")}
+              </div>`
+            : ""}
+          ${regions.length
+            ? `<div class="hero-destination-menu__regions">
+                ${regions.map((region) => {
+                  const places = placesByRegion.get(region.id) || [];
                   return `
-                    <section class="hero-destination-menu__area">
+                    <section class="hero-destination-menu__region">
                       ${renderDestinationFilterButton({
-                        label: area.label,
+                        label: region.label,
                         destination: destination.code,
-                        area: area.id,
-                        className: "hero-destination-menu__area-button"
+                        region: region.id,
+                        className: "hero-destination-menu__region-button"
                       })}
                       ${places.length
                         ? `<div class="hero-destination-menu__places">
                             ${places.map((place) => renderDestinationFilterButton({
                               label: place.label,
                               destination: destination.code,
-                              area: area.id,
+                              region: region.id,
                               place: place.id
                             })).join("")}
                           </div>`

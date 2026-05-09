@@ -1043,13 +1043,41 @@ package api
 		responseType:  "DestinationCreateResponse"
 	},
 	{
-		key:           "destination_scope_area_create"
-		path:          "/api/v1/destination-scope/areas"
+		key:           "destination_scope_destination_delete"
+		path:          "/api/v1/destination-scope/destinations/{destination}"
+		method:        "DELETE"
+		tag:           "Tours"
+		authenticated: true
+		responseType:  "DestinationScopeDeleteResponse"
+		parameters: [{
+			name:     "destination"
+			location: "path"
+			required: true
+			typeName: "string"
+		}]
+	},
+	{
+		key:           "destination_scope_region_create"
+		path:          "/api/v1/destination-scope/regions"
 		method:        "POST"
 		tag:           "Tours"
 		authenticated: true
-		requestType:   "DestinationAreaCreateRequest"
-		responseType:  "DestinationAreaCreateResponse"
+		requestType:   "DestinationRegionCreateRequest"
+		responseType:  "DestinationRegionCreateResponse"
+	},
+	{
+		key:           "destination_scope_region_delete"
+		path:          "/api/v1/destination-scope/regions/{region_id}"
+		method:        "DELETE"
+		tag:           "Tours"
+		authenticated: true
+		responseType:  "DestinationScopeDeleteResponse"
+		parameters: [{
+			name:     "region_id"
+			location: "path"
+			required: true
+			typeName: "string"
+		}]
 	},
 	{
 		key:           "destination_scope_place_create"
@@ -1059,6 +1087,20 @@ package api
 		authenticated: true
 		requestType:   "DestinationPlaceCreateRequest"
 		responseType:  "DestinationPlaceCreateResponse"
+	},
+	{
+		key:           "destination_scope_place_delete"
+		path:          "/api/v1/destination-scope/places/{place_id}"
+		method:        "DELETE"
+		tag:           "Tours"
+		authenticated: true
+		responseType:  "DestinationScopeDeleteResponse"
+		parameters: [{
+			name:     "place_id"
+			location: "path"
+			required: true
+			typeName: "string"
+		}]
 	},
 	{
 		key:           "tours"

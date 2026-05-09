@@ -10,14 +10,17 @@ import { GENERATED_APP_ROLES } from "../../Generated/Models/generated_Roles.js";
 import {
   countryReferenceInfoRequest,
   countryReferenceInfoUpdateRequest,
-  destinationScopeAreaCreateRequest,
+  destinationScopeRegionCreateRequest,
+  destinationScopeRegionDeleteRequest,
   destinationScopeCatalogRequest,
   destinationScopePlaceCreateRequest,
+  destinationScopePlaceDeleteRequest,
   keycloakUserStaffProfileUpdateRequest,
   keycloakUserStaffProfileTranslateFieldsRequest,
   keycloakUserStaffProfilePictureUploadRequest,
   settingsTranslationRulesRequest,
   settingsTranslationRulesUpdateRequest,
+  destinationScopeDestinationDeleteRequest,
   toursRequest
 } from "../../Generated/API/generated_APIRequestFactory.js";
 import {
@@ -42,6 +45,9 @@ const apiOrigin = getBackendApiOrigin();
 const STAFF_DIRECTORY_API_URL = `${apiOrigin}/api/v1/staff-profiles`;
 
 const els = {
+  pageBody: document.body,
+  pageHeader: document.getElementById("top"),
+  mainContent: document.getElementById("main-content"),
   homeLink: document.getElementById("backendHomeLink"),
   logoutLink: document.getElementById("backendLogoutLink"),
   userLabel: document.getElementById("backendUserLabel"),
@@ -54,16 +60,12 @@ const els = {
   settingsPanel: document.getElementById("settingsPanel"),
   staffStatus: document.getElementById("staffStatus"),
   staffTable: document.getElementById("staffTable"),
-  websiteDestinationPublicationPanel: document.getElementById("websiteDestinationPublicationPanel"),
-  websiteDestinationPublicationStatus: document.getElementById("websiteDestinationPublicationStatus"),
-  websiteDestinationPublicationList: document.getElementById("websiteDestinationPublicationList"),
-  websiteDestinationPublicationSaveBtn: document.getElementById("websiteDestinationPublicationSaveBtn"),
   locationManagerPanel: document.getElementById("locationManagerPanel"),
   locationManagerStatus: document.getElementById("locationManagerStatus"),
   locationManagerList: document.getElementById("locationManagerList"),
-  locationManagerRefreshBtn: document.getElementById("locationManagerRefreshBtn"),
-  locationManagerAddAreaBtn: document.getElementById("locationManagerAddAreaBtn"),
-  locationManagerAddPlaceBtn: document.getElementById("locationManagerAddPlaceBtn"),
+  locationManagerSaveBtn: document.getElementById("locationManagerSaveBtn"),
+  settingsLocationOverlay: document.getElementById("settingsLocationOverlay"),
+  settingsLocationOverlayText: document.getElementById("settingsLocationOverlayText"),
   translationRulesPanel: document.getElementById("translationRulesPanel"),
   translationRulesStatus: document.getElementById("translationRulesStatus"),
   translationRulesTable: document.getElementById("translationRulesTable"),
@@ -219,8 +221,6 @@ const state = {
     canReadSettings: false,
     canReadStaffProfiles: false,
     canEditStaffProfiles: false,
-    canReadWebsiteDestinationPublication: false,
-    canEditWebsiteDestinationPublication: false,
     canReadLocations: false,
     canEditLocations: false,
     canReadTranslationRules: false,
@@ -239,16 +239,16 @@ const state = {
   staffProfilesByUsername: {},
   destinationOptions: [],
   countryReferenceItems: [],
-  websiteDestinationPublicationInitialByCountry: {},
-  websiteDestinationPublicationDraftByCountry: {},
-  websiteDestinationPublicationSaving: false,
   locationCatalog: {
     destinations: [],
-    areas: [],
+    regions: [],
     places: []
   },
   locationCatalogLoading: false,
-  locationCatalogSavingId: "",
+  locationCatalogSaving: false,
+  locationUsageCounts: {},
+  locationUsageLoading: false,
+  locationFocusId: "",
   translationRulesLoaded: false,
   translationRulesInitialItems: [],
   translationRulesDraftItems: [],
@@ -295,7 +295,7 @@ function normalizeCoordinate(value, { min, max } = {}) {
   if (!Number.isFinite(numberValue)) return "";
   if (Number.isFinite(min) && numberValue < min) return "";
   if (Number.isFinite(max) && numberValue > max) return "";
-  return String(numberValue);
+  return numberValue.toFixed(5);
 }
 
 function normalizeLocationCatalog(catalog) {
@@ -306,25 +306,23 @@ function normalizeLocationCatalog(catalog) {
       is_active: destination?.is_active !== false
     }))
     .filter((destination) => destination.code);
-  const areas = (Array.isArray(catalog?.areas) ? catalog.areas : [])
-    .map((area) => ({
-      id: normalizeText(area?.id),
-      destination: normalizeText(area?.destination).toUpperCase(),
-      code: normalizeText(area?.code),
-      name: normalizeText(area?.name || area?.label),
-      label: normalizeText(area?.label || area?.name || area?.code || area?.id),
-      latitude: normalizeCoordinate(area?.latitude, { min: -90, max: 90 }),
-      longitude: normalizeCoordinate(area?.longitude, { min: -180, max: 180 }),
-      map_zoom: normalizeText(area?.map_zoom),
-      sort_order: Number.isInteger(Number(area?.sort_order)) ? Number(area.sort_order) : 100,
-      is_active: area?.is_active !== false,
-      created_at: normalizeText(area?.created_at)
+  const regions = (Array.isArray(catalog?.regions) ? catalog.regions : [])
+    .map((region) => ({
+      id: normalizeText(region?.id),
+      destination: normalizeText(region?.destination).toUpperCase(),
+      code: normalizeText(region?.code),
+      name: normalizeText(region?.name || region?.label),
+      label: normalizeText(region?.label || region?.name || region?.code || region?.id),
+      sort_order: Number.isInteger(Number(region?.sort_order)) ? Number(region.sort_order) : 100,
+      is_active: region?.is_active !== false,
+      created_at: normalizeText(region?.created_at)
     }))
-    .filter((area) => area.id && area.destination);
+    .filter((region) => region.id && region.destination);
   const places = (Array.isArray(catalog?.places) ? catalog.places : [])
     .map((place) => ({
       id: normalizeText(place?.id),
-      area_id: normalizeText(place?.area_id),
+      destination: normalizeText(place?.destination).toUpperCase(),
+      region_id: normalizeText(place?.region_id || place?.area_id),
       code: normalizeText(place?.code),
       name: normalizeText(place?.name || place?.label),
       label: normalizeText(place?.label || place?.name || place?.code || place?.id),
@@ -335,8 +333,8 @@ function normalizeLocationCatalog(catalog) {
       is_active: place?.is_active !== false,
       created_at: normalizeText(place?.created_at)
     }))
-    .filter((place) => place.id && place.area_id);
-  return { destinations, areas, places };
+    .filter((place) => place.id && place.destination);
+  return { destinations, regions, places };
 }
 
 function defaultTranslationRuleTargetLang() {
@@ -543,28 +541,11 @@ function homepageAssetSyncWarningMessage() {
   );
 }
 
-function countryReferenceHomepageAssetSyncWarningMessage() {
-  return backendT(
-    "backend.settings.public_sync_failed",
-    "Settings saved, but refreshing the public homepage failed. Please retry or run the homepage asset generator."
-  );
-}
-
 function emergencyHomepageAssetSyncWarningMessage() {
   return backendT(
     "backend.emergency.public_sync_failed",
     "Emergency information saved, but refreshing the public homepage failed. Please retry or run the homepage asset generator."
   );
-}
-
-function showWebsiteDestinationPublicationStatus(message, isError = false) {
-  if (!els.websiteDestinationPublicationStatus) return;
-  els.websiteDestinationPublicationStatus.textContent = normalizeText(message);
-  els.websiteDestinationPublicationStatus.classList.toggle("is-error", Boolean(isError));
-}
-
-function clearWebsiteDestinationPublicationStatus() {
-  showWebsiteDestinationPublicationStatus("", false);
 }
 
 function showTranslationRulesStatus(message = "", isError = false) {
@@ -583,6 +564,34 @@ function showObservabilityStatus(message, isError = false) {
   if (!els.settingsObservabilityStatus) return;
   els.settingsObservabilityStatus.textContent = normalizeText(message);
   els.settingsObservabilityStatus.classList.toggle("is-error", Boolean(isError));
+}
+
+function setSettingsLocationOverlay(isVisible, message = "") {
+  if (els.settingsLocationOverlayText) {
+    els.settingsLocationOverlayText.textContent = normalizeText(message) || "Updating locations. Please wait.";
+  }
+  if (els.pageBody instanceof HTMLElement) {
+    els.pageBody.classList.toggle("backend-list-page--busy", Boolean(isVisible));
+  }
+  if (els.pageHeader instanceof HTMLElement) {
+    els.pageHeader.inert = Boolean(isVisible);
+    els.pageHeader.setAttribute("aria-busy", isVisible ? "true" : "false");
+  }
+  if (els.mainContent instanceof HTMLElement) {
+    els.mainContent.inert = Boolean(isVisible);
+    els.mainContent.setAttribute("aria-busy", isVisible ? "true" : "false");
+  }
+  if (!(els.settingsLocationOverlay instanceof HTMLElement)) return;
+  if (isVisible) {
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+    els.settingsLocationOverlay.hidden = false;
+    els.settingsLocationOverlay.setAttribute("aria-hidden", "false");
+    return;
+  }
+  els.settingsLocationOverlay.hidden = true;
+  els.settingsLocationOverlay.setAttribute("aria-hidden", "true");
 }
 
 function clearObservabilityStatus() {
@@ -756,8 +765,6 @@ async function init() {
       canReadObservability: roles.includes(ROLES.ADMIN),
       canReadStaffProfiles: roles.includes(ROLES.ADMIN),
       canEditStaffProfiles: roles.includes(ROLES.ADMIN),
-      canReadWebsiteDestinationPublication: roles.includes(ROLES.ADMIN),
-      canEditWebsiteDestinationPublication: roles.includes(ROLES.ADMIN),
       canReadLocations: roles.includes(ROLES.ADMIN),
       canEditLocations: roles.includes(ROLES.ADMIN),
       canReadTranslationRules: roles.includes(ROLES.ADMIN),
@@ -780,8 +787,6 @@ async function init() {
     canReadSettings: Boolean(authState.permissions?.canReadSettings),
     canReadStaffProfiles: Boolean(authState.permissions?.canReadStaffProfiles),
     canEditStaffProfiles: Boolean(authState.permissions?.canEditStaffProfiles),
-    canReadWebsiteDestinationPublication: Boolean(authState.permissions?.canReadWebsiteDestinationPublication),
-    canEditWebsiteDestinationPublication: Boolean(authState.permissions?.canEditWebsiteDestinationPublication),
     canReadLocations: Boolean(authState.permissions?.canReadLocations),
     canEditLocations: Boolean(authState.permissions?.canEditLocations),
     canReadTranslationRules: Boolean(authState.permissions?.canReadTranslationRules),
@@ -799,9 +804,9 @@ async function init() {
       state.permissions.canReadStaffProfiles ? loadStaffDirectoryEntries() : Promise.resolve(),
       state.permissions.canEditStaffProfiles ? loadDestinationOptions() : Promise.resolve(),
       state.permissions.canReadTranslationRules ? loadTranslationRules() : Promise.resolve(),
-      state.permissions.canReadLocations ? loadLocationCatalog() : Promise.resolve(),
-      (state.permissions.canReadWebsiteDestinationPublication || state.permissions.canReadEmergency)
-        ? loadWebsiteDestinationPublication()
+      state.permissions.canReadLocations ? loadLocationCatalog().then(() => loadLocationUsageCounts()) : Promise.resolve(),
+      state.permissions.canReadEmergency
+        ? loadCountryReferenceInfo()
         : Promise.resolve()
     ]);
   } else {
@@ -817,7 +822,6 @@ function handleBackendLanguageChanged() {
   updateStatusCopy();
   renderObservability();
   renderTranslationRules();
-  renderWebsiteDestinationPublication();
   renderLocationManager();
   renderEmergencyAddCountryOptions();
   renderEmergencyEditor();
@@ -831,25 +835,49 @@ function bindEvents() {
   });
   els.staffTable?.addEventListener("click", handleStaffTableClick);
   els.staffTable?.addEventListener("keydown", handleStaffTableKeydown);
-  els.websiteDestinationPublicationList?.addEventListener("change", handleWebsiteDestinationPublicationToggle);
-  els.websiteDestinationPublicationSaveBtn?.addEventListener("click", () => {
-    void saveWebsiteDestinationPublication();
-  });
-  els.locationManagerRefreshBtn?.addEventListener("click", () => {
-    void loadLocationCatalog();
-  });
-  els.locationManagerAddAreaBtn?.addEventListener("click", () => {
-    void addLocationArea();
-  });
-  els.locationManagerAddPlaceBtn?.addEventListener("click", () => {
-    void addLocationPlace();
+  els.locationManagerSaveBtn?.addEventListener("click", () => {
+    void saveLocationChanges();
   });
   els.locationManagerList?.addEventListener("click", (event) => {
     const target = event.target instanceof Element ? event.target : null;
-    const saveButton = target?.closest("[data-location-save]");
-    if (!saveButton) return;
-    const [type, id] = normalizeText(saveButton.getAttribute("data-location-save")).split(":");
-    void saveLocationRecord(type, id);
+    const addRegionButton = target?.closest("[data-location-add-region]");
+    if (addRegionButton) {
+      void addLocationRegion(addRegionButton.getAttribute("data-location-add-region"));
+      return;
+    }
+    const addPlaceButton = target?.closest("[data-location-add-place]");
+    if (addPlaceButton) {
+      void addLocationPlace(addPlaceButton.getAttribute("data-location-add-place"));
+      return;
+    }
+    const addCountryPlaceButton = target?.closest("[data-location-add-country-place]");
+    if (addCountryPlaceButton) {
+      void addLocationPlace("", addCountryPlaceButton.getAttribute("data-location-add-country-place"));
+      return;
+    }
+    const deleteButton = target?.closest("[data-location-delete]");
+    if (deleteButton) {
+      const [type, id] = normalizeText(deleteButton.getAttribute("data-location-delete")).split(":");
+      void deleteLocationRecord(type, id);
+    }
+  });
+  els.locationManagerList?.addEventListener("input", (event) => {
+    const target = event.target instanceof Element ? event.target : null;
+    if (!target?.closest("[data-location-field]")) return;
+    const recordKey = normalizeText(target.getAttribute("data-location-record"));
+    if (target.matches('[data-location-field="latitude"], [data-location-field="longitude"]')) {
+      updateLocationMapLinkForRecord(recordKey);
+    }
+    updateLocationManagerSaveButtonState();
+    showLocationManagerStatus(isLocationManagerDirty() ? "Unsaved changes." : "Locations loaded.");
+  });
+  els.locationManagerList?.addEventListener("change", (event) => {
+    const target = event.target instanceof Element ? event.target : null;
+    if (!target?.matches('[data-location-field="latitude"], [data-location-field="longitude"]')) return;
+    normalizeLocationCoordinateInput(target);
+    updateLocationMapLinkForRecord(target.getAttribute("data-location-record"));
+    updateLocationManagerSaveButtonState();
+    showLocationManagerStatus(isLocationManagerDirty() ? "Unsaved changes." : "Locations loaded.");
   });
   els.translationRulesAddBtn?.addEventListener("click", () => {
     if (!state.permissions.canEditTranslationRules) return;
@@ -1064,9 +1092,6 @@ function renderPermissionScopedSections() {
   if (els.staffStatus) {
     els.staffStatus.hidden = !state.permissions.canReadStaffProfiles;
   }
-  if (els.websiteDestinationPublicationPanel) {
-    els.websiteDestinationPublicationPanel.hidden = !state.permissions.canReadWebsiteDestinationPublication;
-  }
   if (els.locationManagerPanel) {
     els.locationManagerPanel.hidden = !state.permissions.canReadLocations;
   }
@@ -1183,6 +1208,13 @@ function showLocationManagerStatus(message = "", isError = false) {
   els.locationManagerStatus.classList.toggle("is-error", Boolean(isError));
 }
 
+function updateLocationManagerSaveButtonState() {
+  if (!els.locationManagerSaveBtn) return;
+  els.locationManagerSaveBtn.disabled = !state.permissions.canEditLocations
+    || state.locationCatalogSaving
+    || !isLocationManagerDirty();
+}
+
 function locationDestinationOptions(selectedCountry = "") {
   const destinations = state.locationCatalog.destinations.length
     ? state.locationCatalog.destinations
@@ -1192,80 +1224,196 @@ function locationDestinationOptions(selectedCountry = "") {
   `).join("");
 }
 
-function locationAreaOptions(selectedAreaId = "") {
-  return state.locationCatalog.areas.map((area) => `
-    <option value="${escapeHtml(area.id)}" ${area.id === selectedAreaId ? "selected" : ""}>${escapeHtml(countryLabel(area.destination))} / ${escapeHtml(area.label || area.name || area.id)}</option>
+function locationRegionOptions(selectedRegionId = "") {
+  return state.locationCatalog.regions.map((region) => `
+    <option value="${escapeHtml(region.id)}" ${region.id === selectedRegionId ? "selected" : ""}>${escapeHtml(countryLabel(region.destination))} / ${escapeHtml(region.label || region.name || region.id)}</option>
   `).join("");
 }
 
-function renderLocationCoordinateInputs(record, type) {
+function googleMapsLocationUrl(latitude, longitude) {
+  const normalizedLatitude = normalizeCoordinate(latitude, { min: -90, max: 90 });
+  const normalizedLongitude = normalizeCoordinate(longitude, { min: -180, max: 180 });
+  if (!normalizedLatitude || !normalizedLongitude) return "";
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${normalizedLatitude},${normalizedLongitude}`)}`;
+}
+
+function renderLocationMapLink(recordKey, latitude, longitude) {
+  const url = googleMapsLocationUrl(latitude, longitude);
+  const label = url ? "Map" : "-";
+  return `
+    <span class="settings-location-manager__map-link-wrap">
+      ${url
+        ? `<a class="settings-location-manager__map-link" data-location-map-link="${escapeHtml(recordKey)}" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" aria-label="Open this location in Google Maps">${escapeHtml(label)}</a>`
+        : `<span class="settings-location-manager__map-link settings-location-manager__map-link--empty" data-location-map-link="${escapeHtml(recordKey)}" aria-label="No coordinates for Google Maps">${escapeHtml(label)}</span>`}
+    </span>
+  `;
+}
+
+function updateLocationMapLinkForRecord(recordKey) {
+  if (!els.locationManagerList) return;
+  const normalizedRecordKey = normalizeText(recordKey);
+  if (!normalizedRecordKey) return;
+  const selectorValue = normalizedRecordKey.replace(/["\\]/g, "\\$&");
+  const latitude = els.locationManagerList.querySelector(`[data-location-record="${selectorValue}"][data-location-field="latitude"]`)?.value;
+  const longitude = els.locationManagerList.querySelector(`[data-location-record="${selectorValue}"][data-location-field="longitude"]`)?.value;
+  const current = els.locationManagerList.querySelector(`[data-location-map-link="${selectorValue}"]`);
+  if (!(current instanceof HTMLElement)) return;
+  const nextWrapper = document.createElement("span");
+  nextWrapper.innerHTML = renderLocationMapLink(normalizedRecordKey, latitude, longitude).trim();
+  const next = nextWrapper.firstElementChild?.firstElementChild;
+  if (next instanceof HTMLElement) current.replaceWith(next);
+}
+
+function normalizeLocationCoordinateInput(target) {
+  if (!(target instanceof HTMLInputElement)) return;
+  const field = normalizeText(target.getAttribute("data-location-field"));
+  if (field === "latitude") {
+    target.value = normalizeCoordinate(target.value, { min: -90, max: 90 });
+  } else if (field === "longitude") {
+    target.value = normalizeCoordinate(target.value, { min: -180, max: 180 });
+  }
+}
+
+function renderLocationCoordinateInputs(record, type, { childCount = 0 } = {}) {
   const prefix = `${type}:${record.id}`;
   const disabled = state.permissions.canEditLocations ? "" : "disabled";
+  const nameLabel = type === "region" ? "Region name" : "Place name";
+  const namePlaceholder = type === "region" ? "Region" : "Place";
+  const nodeLabel = type === "region" ? "Region:" : "Place:";
+  const usageCount = Math.max(0, Number(state.locationUsageCounts?.[record.id] || 0));
+  const isRegion = type === "region";
+  const deleteDisabled = !state.permissions.canEditLocations || (isRegion ? childCount > 0 || usageCount > 0 : usageCount > 0);
+  const deleteTitle = isRegion && childCount > 0
+    ? `Cannot delete while this region has ${childCount} place${childCount === 1 ? "" : "s"}`
+    : usageCount > 0
+      ? `Cannot delete while ${usageCount} day${usageCount === 1 ? "" : "s"} use this location`
+      : `Delete ${isRegion ? "region" : "place"}`;
   return `
-    <label>
-      <span>Name</span>
-      <input type="text" data-location-field="name" data-location-record="${escapeHtml(prefix)}" value="${escapeHtml(record.name || record.label)}" ${disabled} />
+    <label class="settings-location-manager__name-field settings-location-manager__name-field--${escapeHtml(type)}">
+      <span>${escapeHtml(nodeLabel)}</span>
+      <input type="text" aria-label="${escapeHtml(nameLabel)}" placeholder="${escapeHtml(namePlaceholder)}" data-location-field="name" data-location-record="${escapeHtml(prefix)}" value="${escapeHtml(record.name || record.label)}" ${disabled} />
     </label>
-    <label>
-      <span>Latitude</span>
-      <input type="number" step="0.000001" inputmode="decimal" data-location-field="latitude" data-location-record="${escapeHtml(prefix)}" value="${escapeHtml(record.latitude)}" ${disabled} />
-    </label>
-    <label>
-      <span>Longitude</span>
-      <input type="number" step="0.000001" inputmode="decimal" data-location-field="longitude" data-location-record="${escapeHtml(prefix)}" value="${escapeHtml(record.longitude)}" ${disabled} />
-    </label>
+    ${isRegion ? "" : `
+      <label>
+        <span>Lat:</span>
+        <input type="number" step="0.00001" inputmode="decimal" data-location-field="latitude" data-location-record="${escapeHtml(prefix)}" value="${escapeHtml(record.latitude)}" ${disabled} />
+      </label>
+      <label>
+        <span>Long:</span>
+        <input type="number" step="0.00001" inputmode="decimal" data-location-field="longitude" data-location-record="${escapeHtml(prefix)}" value="${escapeHtml(record.longitude)}" ${disabled} />
+      </label>
+      ${renderLocationMapLink(prefix, record.latitude, record.longitude)}
+    `}
+    <div class="settings-location-manager__usage" aria-label="${escapeHtml(`${usageCount} day${usageCount === 1 ? "" : "s"} use this location`)}">
+      <span>Days:</span>
+      <strong>${escapeHtml(usageCount)}</strong>
+    </div>
+    <button class="btn btn-ghost offer-remove-btn" type="button" data-location-delete="${escapeHtml(prefix)}" aria-label="${escapeHtml(deleteTitle)}" title="${escapeHtml(deleteTitle)}" ${deleteDisabled ? "disabled" : ""}>&times;</button>
   `;
+}
+
+function locationNodeSelector(id) {
+  const normalizedId = normalizeText(id).replace(/["\\]/g, "\\$&");
+  return normalizedId ? `[data-location-node="${normalizedId}"]` : "";
+}
+
+function scrollFocusedLocationIntoView() {
+  const selector = locationNodeSelector(state.locationFocusId);
+  if (!selector || !els.locationManagerList) return;
+  const node = els.locationManagerList.querySelector(selector);
+  state.locationFocusId = "";
+  if (!(node instanceof HTMLElement)) return;
+  node.scrollIntoView({ block: "center", behavior: "smooth" });
+  node.classList.add("settings-location-manager__record--focused");
+  window.setTimeout(() => {
+    node.classList.remove("settings-location-manager__record--focused");
+  }, 1800);
 }
 
 function renderLocationManager() {
   if (!els.locationManagerList) return;
   if (!state.permissions.canReadLocations) {
     els.locationManagerList.innerHTML = "";
+    updateLocationManagerSaveButtonState();
     return;
   }
-  const areasByDestination = new Map();
-  for (const area of state.locationCatalog.areas) {
-    if (!areasByDestination.has(area.destination)) areasByDestination.set(area.destination, []);
-    areasByDestination.get(area.destination).push(area);
+  const regionsByDestination = new Map();
+  for (const region of state.locationCatalog.regions) {
+    if (!regionsByDestination.has(region.destination)) regionsByDestination.set(region.destination, []);
+    regionsByDestination.get(region.destination).push(region);
   }
-  const placesByArea = new Map();
+  const placesByRegion = new Map();
+  const placesByDestination = new Map();
   for (const place of state.locationCatalog.places) {
-    if (!placesByArea.has(place.area_id)) placesByArea.set(place.area_id, []);
-    placesByArea.get(place.area_id).push(place);
+    if (place.region_id) {
+      if (!placesByRegion.has(place.region_id)) placesByRegion.set(place.region_id, []);
+      placesByRegion.get(place.region_id).push(place);
+    } else {
+      if (!placesByDestination.has(place.destination)) placesByDestination.set(place.destination, []);
+      placesByDestination.get(place.destination).push(place);
+    }
   }
   els.locationManagerList.innerHTML = (state.locationCatalog.destinations.length ? state.locationCatalog.destinations : COUNTRY_OPTIONS.map((option) => ({ code: option.value, label: countryLabel(option.value) })))
     .map((destination) => {
-      const areas = areasByDestination.get(destination.code) || [];
+      const regions = regionsByDestination.get(destination.code) || [];
+      const countryPlaces = placesByDestination.get(destination.code) || [];
+      const countryName = destination.label || countryLabel(destination.code);
+      const countryUsageCount = Math.max(0, Number(state.locationUsageCounts?.[destination.code] || 0));
+      const countryChildCount = regions.length + countryPlaces.length;
+      const countryDeleteDisabled = !state.permissions.canEditLocations || countryChildCount > 0 || countryUsageCount > 0;
+      const countryDeleteTitle = countryChildCount > 0
+        ? `Cannot delete while this country has ${countryChildCount} child location${countryChildCount === 1 ? "" : "s"}`
+        : countryUsageCount > 0
+          ? `Cannot delete while ${countryUsageCount} day${countryUsageCount === 1 ? "" : "s"} use this country`
+          : "Delete country";
       return `
         <article class="settings-location-manager__country">
-          <h3>${escapeHtml(destination.label || countryLabel(destination.code))}</h3>
-          ${areas.map((area) => `
-            <section class="settings-location-manager__record">
-              <div class="settings-location-manager__record-head">
-                <strong>${escapeHtml(area.label || area.name || area.id)}</strong>
-                <button class="btn btn-ghost" type="button" data-location-save="area:${escapeHtml(area.id)}" ${state.permissions.canEditLocations ? "" : "disabled"}>Save</button>
+          <div class="settings-location-manager__country-head">
+            <div>
+              <span class="settings-location-manager__node-kind">Country / website destination</span>
+              <h3>${escapeHtml(countryName)}</h3>
+            </div>
+            <div class="settings-location-manager__country-actions">
+              <div class="settings-location-manager__usage" aria-label="${escapeHtml(`${countryUsageCount} day${countryUsageCount === 1 ? "" : "s"} use this country`)}">
+                <span>Days:</span>
+                <strong>${escapeHtml(countryUsageCount)}</strong>
               </div>
+              <button class="btn btn-ghost offer-remove-btn" type="button" data-location-delete="destination:${escapeHtml(destination.code)}" aria-label="${escapeHtml(countryDeleteTitle)}" title="${escapeHtml(countryDeleteTitle)}" ${countryDeleteDisabled ? "disabled" : ""}>&times;</button>
+            </div>
+          </div>
+          <div class="settings-location-manager__children settings-location-manager__children--regions">
+            ${countryPlaces.map((place) => `
+              <div class="settings-location-manager__record settings-location-manager__record--place" data-location-node="${escapeHtml(place.id)}">
+                <div class="settings-location-manager__fields">
+                  ${renderLocationCoordinateInputs(place, "place")}
+                </div>
+              </div>
+            `).join("")}
+            ${regions.map((region) => `
+            <section class="settings-location-manager__record settings-location-manager__record--region" data-location-node="${escapeHtml(region.id)}">
               <div class="settings-location-manager__fields">
-                ${renderLocationCoordinateInputs(area, "area")}
+                ${renderLocationCoordinateInputs(region, "region", { childCount: (placesByRegion.get(region.id) || []).length })}
               </div>
-              <div class="settings-location-manager__places">
-                ${(placesByArea.get(area.id) || []).map((place) => `
-                  <div class="settings-location-manager__place">
-                    <div class="settings-location-manager__record-head">
-                      <span>${escapeHtml(place.label || place.name || place.id)}</span>
-                      <button class="btn btn-ghost" type="button" data-location-save="place:${escapeHtml(place.id)}" ${state.permissions.canEditLocations ? "" : "disabled"}>Save</button>
-                    </div>
+              <div class="settings-location-manager__children settings-location-manager__children--places">
+                ${(placesByRegion.get(region.id) || []).map((place) => `
+                  <div class="settings-location-manager__record settings-location-manager__record--place" data-location-node="${escapeHtml(place.id)}">
                     <div class="settings-location-manager__fields">
                       ${renderLocationCoordinateInputs(place, "place")}
                     </div>
                   </div>
-                `).join("") || `<p class="micro">No places yet.</p>`}
+                `).join("")}
+                <button class="btn btn-ghost settings-location-manager__inline-add" type="button" data-location-add-place="${escapeHtml(region.id)}" ${state.permissions.canEditLocations ? "" : "disabled"}>+ New place</button>
               </div>
             </section>
-          `).join("") || `<p class="micro">No regions yet.</p>`}
+            `).join("")}
+            <button class="btn btn-ghost settings-location-manager__inline-add" type="button" data-location-add-country-place="${escapeHtml(destination.code)}" ${state.permissions.canEditLocations ? "" : "disabled"}>+ New country place</button>
+            <button class="btn btn-ghost settings-location-manager__inline-add" type="button" data-location-add-region="${escapeHtml(destination.code)}" ${state.permissions.canEditLocations ? "" : "disabled"}>+ New region</button>
+          </div>
         </article>
       `;
     }).join("");
+  updateLocationManagerSaveButtonState();
+  window.requestAnimationFrame(scrollFocusedLocationIntoView);
 }
 
 async function loadLocationCatalog() {
@@ -1277,7 +1425,7 @@ async function loadLocationCatalog() {
       baseURL: apiOrigin,
       query: { lang: "en" }
     });
-    const payload = await fetchApi(request.url, { suppressNotFound: true });
+    const payload = await fetchApi(request.url, { suppressNotFound: true, cache: "no-store" });
     state.locationCatalog = normalizeLocationCatalog(payload);
     showLocationManagerStatus("Locations loaded.");
   } catch (error) {
@@ -1290,117 +1438,462 @@ async function loadLocationCatalog() {
   }
 }
 
+function countLocationUsageFromTours(tours) {
+  const counts = {};
+  const regionById = new Map(state.locationCatalog.regions.map((region) => [region.id, region]));
+  const placeById = new Map(state.locationCatalog.places.map((place) => [place.id, place]));
+  const destinationCodes = new Set(state.locationCatalog.destinations.map((destination) => destination.code));
+  const increment = (locationId) => {
+    const normalizedLocationId = normalizeText(locationId);
+    if (!normalizedLocationId) return;
+    counts[normalizedLocationId] = Math.max(0, Number(counts[normalizedLocationId] || 0)) + 1;
+  };
+  for (const tour of Array.isArray(tours) ? tours : []) {
+    for (const day of Array.isArray(tour?.travel_plan?.days) ? tour.travel_plan.days : []) {
+      const dayLocationIds = new Set([
+        normalizeText(day?.primary_location_id),
+        normalizeText(day?.secondary_location_id)
+      ].filter(Boolean));
+      const countedNodes = new Set();
+      for (const locationId of dayLocationIds) {
+        if (placeById.has(locationId)) {
+          const place = placeById.get(locationId);
+          const region = regionById.get(place.region_id);
+          countedNodes.add(place.id);
+          if (region) {
+            countedNodes.add(region.id);
+            countedNodes.add(region.destination);
+          } else if (place.destination) {
+            countedNodes.add(place.destination);
+          }
+          continue;
+        }
+        if (regionById.has(locationId)) {
+          const region = regionById.get(locationId);
+          countedNodes.add(region.id);
+          countedNodes.add(region.destination);
+          continue;
+        }
+        if (destinationCodes.has(locationId)) {
+          countedNodes.add(locationId);
+        }
+      }
+      for (const nodeId of countedNodes) increment(nodeId);
+    }
+  }
+  return counts;
+}
+
+async function loadLocationUsageCounts() {
+  if (!state.permissions.canReadLocations) return;
+  state.locationUsageLoading = true;
+  try {
+    const tours = [];
+    const pageSize = 100;
+    let page = 1;
+    let totalPages = 1;
+    do {
+      const request = toursRequest({
+        baseURL: apiOrigin,
+        query: {
+          page,
+          page_size: pageSize,
+          lang: "en"
+        }
+      });
+      const payload = await fetchApi(request.url, { suppressNotFound: true });
+      tours.push(...(Array.isArray(payload?.items) ? payload.items : []));
+      totalPages = Math.max(1, Number(payload?.pagination?.total_pages || 1));
+      page += 1;
+    } while (page <= totalPages);
+    state.locationUsageCounts = countLocationUsageFromTours(tours);
+  } catch (error) {
+    console.error("[backend-settings] Failed to load location usage counts.", { error });
+    state.locationUsageCounts = {};
+  } finally {
+    state.locationUsageLoading = false;
+    renderLocationManager();
+  }
+}
+
 function readLocationDraft(type, id) {
   const selectorValue = `${type}:${id}`.replace(/["\\]/g, "\\$&");
   const fieldValue = (field) => normalizeText(els.locationManagerList?.querySelector(`[data-location-record="${selectorValue}"][data-location-field="${field}"]`)?.value);
   return {
     name: fieldValue("name"),
-    latitude: fieldValue("latitude"),
-    longitude: fieldValue("longitude")
+    latitude: normalizeCoordinate(fieldValue("latitude"), { min: -90, max: 90 }),
+    longitude: normalizeCoordinate(fieldValue("longitude"), { min: -180, max: 180 })
   };
 }
 
-async function saveLocationRecord(type, id) {
-  if (!state.permissions.canEditLocations || state.locationCatalogSavingId) return;
+function locationCatalogRecord(type, id) {
   const normalizedType = normalizeText(type);
   const normalizedId = normalizeText(id);
-  const draft = readLocationDraft(normalizedType, normalizedId);
-  if (!draft.name) {
+  if (normalizedType === "region") {
+    return state.locationCatalog.regions.find((item) => item.id === normalizedId) || null;
+  }
+  if (normalizedType === "place") {
+    return state.locationCatalog.places.find((item) => item.id === normalizedId) || null;
+  }
+  return null;
+}
+
+function locationDraftFromCatalogRecord(record) {
+  return {
+    name: normalizeText(record?.name || record?.label),
+    latitude: normalizeText(record?.latitude),
+    longitude: normalizeText(record?.longitude)
+  };
+}
+
+function locationDraftsEqual(left, right) {
+  return normalizeText(left?.name) === normalizeText(right?.name)
+    && normalizeText(left?.latitude) === normalizeText(right?.latitude)
+    && normalizeText(left?.longitude) === normalizeText(right?.longitude);
+}
+
+function dirtyLocationRecords() {
+  if (!els.locationManagerList) return [];
+  const seen = new Set();
+  return Array.from(els.locationManagerList.querySelectorAll("[data-location-record]"))
+    .map((input) => normalizeText(input.getAttribute("data-location-record")))
+    .filter((recordKey) => {
+      if (!recordKey || seen.has(recordKey)) return false;
+      seen.add(recordKey);
+      return true;
+    })
+    .map((recordKey) => {
+      const [type, id] = recordKey.split(":");
+      const catalogRecord = locationCatalogRecord(type, id);
+      const draft = readLocationDraft(type, id);
+      return { type, id, catalogRecord, draft };
+    })
+    .filter((entry) => entry.catalogRecord && !locationDraftsEqual(entry.draft, locationDraftFromCatalogRecord(entry.catalogRecord)));
+}
+
+function isLocationManagerDirty() {
+  return dirtyLocationRecords().length > 0;
+}
+
+async function persistLocationRecord(type, id, draft) {
+  const normalizedType = normalizeText(type);
+  const normalizedId = normalizeText(id);
+  if (normalizedType === "region") {
+    const region = state.locationCatalog.regions.find((item) => item.id === normalizedId);
+    if (!region) throw new Error("Region not found.");
+    const request = destinationScopeRegionCreateRequest({ baseURL: apiOrigin });
+    const payload = await fetchApi(request.url, {
+      method: request.method,
+      body: {
+        id: region.id,
+        destination: region.destination,
+        code: region.code,
+        name: draft.name,
+        sort_order: region.sort_order,
+        is_active: region.is_active,
+        created_at: region.created_at
+      }
+    });
+    if (payload?.catalog) state.locationCatalog = normalizeLocationCatalog(payload.catalog);
+    return;
+  }
+  const place = state.locationCatalog.places.find((item) => item.id === normalizedId);
+  if (!place) throw new Error("Place not found.");
+  const request = destinationScopePlaceCreateRequest({ baseURL: apiOrigin });
+  const payload = await fetchApi(request.url, {
+    method: request.method,
+    body: {
+      id: place.id,
+      destination: place.destination,
+      region_id: place.region_id,
+      code: place.code,
+      name: draft.name,
+      latitude: draft.latitude || undefined,
+      longitude: draft.longitude || undefined,
+      map_zoom: place.map_zoom || undefined,
+      sort_order: place.sort_order,
+      is_active: place.is_active,
+      created_at: place.created_at
+    }
+  });
+  if (payload?.catalog) state.locationCatalog = normalizeLocationCatalog(payload.catalog);
+}
+
+async function saveLocationChanges() {
+  if (!state.permissions.canEditLocations || state.locationCatalogSaving) return;
+  const records = dirtyLocationRecords();
+  if (!records.length) {
+    updateLocationManagerSaveButtonState();
+    return;
+  }
+  const missingName = records.find((record) => !record.draft.name);
+  if (missingName) {
     showLocationManagerStatus("Name is required.", true);
     return;
   }
-  state.locationCatalogSavingId = `${normalizedType}:${normalizedId}`;
-  showLocationManagerStatus("Saving location...");
+  state.locationCatalogSaving = true;
+  updateLocationManagerSaveButtonState();
+  showLocationManagerStatus(`Saving ${records.length} location${records.length === 1 ? "" : "s"}...`);
   try {
-    if (normalizedType === "area") {
-      const area = state.locationCatalog.areas.find((item) => item.id === normalizedId);
-      if (!area) throw new Error("Region not found.");
-      const request = destinationScopeAreaCreateRequest({ baseURL: apiOrigin });
-      const payload = await fetchApi(request.url, {
-        method: request.method,
-        body: {
-          id: area.id,
-          destination: area.destination,
-          code: area.code,
-          name: draft.name,
-          latitude: draft.latitude || undefined,
-          longitude: draft.longitude || undefined,
-          map_zoom: area.map_zoom || undefined,
-          sort_order: area.sort_order,
-          is_active: area.is_active,
-          created_at: area.created_at
-        }
-      });
-      if (payload?.catalog) state.locationCatalog = normalizeLocationCatalog(payload.catalog);
-    } else {
-      const place = state.locationCatalog.places.find((item) => item.id === normalizedId);
-      if (!place) throw new Error("Place not found.");
-      const request = destinationScopePlaceCreateRequest({ baseURL: apiOrigin });
-      const payload = await fetchApi(request.url, {
-        method: request.method,
-        body: {
-          id: place.id,
-          area_id: place.area_id,
-          code: place.code,
-          name: draft.name,
-          latitude: draft.latitude || undefined,
-          longitude: draft.longitude || undefined,
-          map_zoom: place.map_zoom || undefined,
-          sort_order: place.sort_order,
-          is_active: place.is_active,
-          created_at: place.created_at
-        }
-      });
-      if (payload?.catalog) state.locationCatalog = normalizeLocationCatalog(payload.catalog);
+    for (const record of records) {
+      await persistLocationRecord(record.type, record.id, record.draft);
     }
-    showLocationManagerStatus("Location saved.");
+    showLocationManagerStatus("Locations saved.");
   } catch (error) {
-    console.error("[backend-settings] Failed to save location.", { error, type, id });
-    showLocationManagerStatus("Could not save location.", true);
+    console.error("[backend-settings] Failed to save locations.", { error });
+    showLocationManagerStatus("Could not save locations.", true);
   } finally {
-    state.locationCatalogSavingId = "";
+    state.locationCatalogSaving = false;
     renderLocationManager();
   }
 }
 
-async function addLocationArea() {
+function locationDeleteRequest(type, id) {
+  const normalizedType = normalizeText(type);
+  const normalizedId = normalizeText(id);
+  if (normalizedType === "destination") {
+    return destinationScopeDestinationDeleteRequest({
+      baseURL: apiOrigin,
+      params: { destination: normalizedId }
+    });
+  }
+  if (normalizedType === "region") {
+    return destinationScopeRegionDeleteRequest({
+      baseURL: apiOrigin,
+      params: { region_id: normalizedId }
+    });
+  }
+  if (normalizedType === "place") {
+    return destinationScopePlaceDeleteRequest({
+      baseURL: apiOrigin,
+      params: { place_id: normalizedId }
+    });
+  }
+  return null;
+}
+
+function normalizedLocationCatalogHasRecord(catalog, type, id) {
+  const normalizedType = normalizeText(type);
+  const normalizedId = normalizeText(id);
+  if (normalizedType === "destination") {
+    return catalog.destinations.some((item) => item.code === normalizedId);
+  }
+  if (normalizedType === "region") {
+    return catalog.regions.some((item) => item.id === normalizedId);
+  }
+  if (normalizedType === "place") {
+    return catalog.places.some((item) => item.id === normalizedId);
+  }
+  return false;
+}
+
+function locationCatalogMatchesExpectation(catalog, expectation) {
+  if (!expectation) return true;
+  const exists = normalizedLocationCatalogHasRecord(catalog, expectation.type, expectation.id);
+  return expectation.shouldExist ? exists : !exists;
+}
+
+function delayLocationReloadAttempt(ms) {
+  return new Promise((resolve) => {
+    window.setTimeout(resolve, ms);
+  });
+}
+
+async function fetchLocationCatalogSnapshot() {
+  const request = destinationScopeCatalogRequest({
+    baseURL: apiOrigin,
+    query: {
+      lang: "en",
+      _: String(Date.now())
+    }
+  });
+  const payload = await fetchApi(request.url, { suppressNotFound: true, cache: "no-store" });
+  return normalizeLocationCatalog(payload);
+}
+
+async function reloadLocationsAfterMutation({
+  responseCatalog = null,
+  expectation = null,
+  statusMessage = "Locations loaded."
+} = {}) {
+  const responseFallback = responseCatalog ? normalizeLocationCatalog(responseCatalog) : null;
+  let nextCatalog = null;
+
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    const freshCatalog = await fetchLocationCatalogSnapshot();
+    if (locationCatalogMatchesExpectation(freshCatalog, expectation)) {
+      nextCatalog = freshCatalog;
+      break;
+    }
+    await delayLocationReloadAttempt(150 * (attempt + 1));
+  }
+
+  if (!nextCatalog && responseFallback && locationCatalogMatchesExpectation(responseFallback, expectation)) {
+    nextCatalog = responseFallback;
+  }
+
+  if (!nextCatalog) {
+    throw new Error("The backend did not return the expected locations catalog after the change.");
+  }
+
+  state.locationCatalog = nextCatalog;
+  renderLocationManager();
+  showLocationManagerStatus(statusMessage);
+  void loadLocationUsageCounts();
+}
+
+function locationDeleteLabel(type, id) {
+  const normalizedType = normalizeText(type);
+  const normalizedId = normalizeText(id);
+  if (normalizedType === "destination") {
+    const destination = state.locationCatalog.destinations.find((item) => item.code === normalizedId);
+    return destination?.label || countryLabel(normalizedId) || normalizedId;
+  }
+  const record = locationCatalogRecord(normalizedType, normalizedId);
+  return record?.name || record?.label || normalizedId;
+}
+
+function locationDeleteBlocker(type, id) {
+  const normalizedType = normalizeText(type);
+  const normalizedId = normalizeText(id);
+  const usageCount = Math.max(0, Number(state.locationUsageCounts?.[normalizedId] || 0));
+  if (normalizedType === "destination") {
+    const regionCount = state.locationCatalog.regions.filter((region) => region.destination === normalizedId).length;
+    const placeCount = state.locationCatalog.places.filter((place) => place.destination === normalizedId && !place.region_id).length;
+    const childCount = regionCount + placeCount;
+    if (childCount > 0) return `Remove its ${childCount} child location${childCount === 1 ? "" : "s"} first.`;
+  }
+  if (normalizedType === "region") {
+    const childCount = state.locationCatalog.places.filter((place) => place.region_id === normalizedId).length;
+    if (childCount > 0) return `Remove its ${childCount} place${childCount === 1 ? "" : "s"} first.`;
+  }
+  if (usageCount > 0) {
+    return `Only locations with Days: 0 can be deleted.`;
+  }
+  return "";
+}
+
+async function deleteLocationRecord(type, id) {
   if (!state.permissions.canEditLocations) return;
-  const destination = window.prompt("Country code", "VN");
+  const normalizedType = normalizeText(type);
+  const normalizedId = normalizeText(id);
+  const blocker = locationDeleteBlocker(normalizedType, normalizedId);
+  if (blocker) {
+    showLocationManagerStatus(blocker, true);
+    return;
+  }
+  const request = locationDeleteRequest(normalizedType, normalizedId);
+  if (!request) return;
+  const label = locationDeleteLabel(normalizedType, normalizedId);
+  const typeLabel = normalizedType === "destination" ? "country" : normalizedType === "region" ? "region" : "place";
+  if (!window.confirm(`Delete ${typeLabel} "${label}"?`)) return;
+  showLocationManagerStatus(`Deleting ${typeLabel}...`);
+  setSettingsLocationOverlay(true, `Deleting ${typeLabel}. Please wait.`);
+  try {
+    const payload = await fetchApi(request.url, { method: request.method });
+    if (!payload?.deleted) {
+      throw new Error("Delete request did not confirm deletion.");
+    }
+    const deletedMessage = `${typeLabel.charAt(0).toUpperCase()}${typeLabel.slice(1)} deleted. Refreshing...`;
+    await reloadLocationsAfterMutation({
+      responseCatalog: payload.catalog,
+      expectation: {
+        type: normalizedType,
+        id: normalizedId,
+        shouldExist: false
+      },
+      statusMessage: deletedMessage
+    });
+  } catch (error) {
+    console.error("[backend-settings] Failed to delete location.", { error, type: normalizedType, id: normalizedId });
+    showLocationManagerStatus("Could not delete location.", true);
+  } finally {
+    setSettingsLocationOverlay(false);
+  }
+}
+
+async function addLocationRegion(destination) {
+  if (!state.permissions.canEditLocations) return;
   const normalizedDestination = normalizeText(destination).toUpperCase();
   if (!DESTINATION_COUNTRY_CODE_SET.has(normalizedDestination)) return;
   const name = window.prompt("Region name");
   const normalizedName = normalizeText(name);
   if (!normalizedName) return;
-  const request = destinationScopeAreaCreateRequest({ baseURL: apiOrigin });
-  const payload = await fetchApi(request.url, {
-    method: request.method,
-    body: {
-      destination: normalizedDestination,
-      name: normalizedName
+  showLocationManagerStatus("Adding region...");
+  setSettingsLocationOverlay(true, "Adding region. Please wait.");
+  try {
+    const request = destinationScopeRegionCreateRequest({ baseURL: apiOrigin });
+    const payload = await fetchApi(request.url, {
+      method: request.method,
+      body: {
+        destination: normalizedDestination,
+        name: normalizedName
+      }
+    });
+    if (!payload?.region?.id) {
+      throw new Error("Region create request did not return a region.");
     }
-  });
-  if (payload?.catalog) state.locationCatalog = normalizeLocationCatalog(payload.catalog);
-  renderLocationManager();
+    state.locationFocusId = normalizeText(payload?.region?.id);
+    await reloadLocationsAfterMutation({
+      responseCatalog: payload.catalog,
+      expectation: {
+        type: "region",
+        id: state.locationFocusId,
+        shouldExist: true
+      },
+      statusMessage: "Region added."
+    });
+  } catch (error) {
+    console.error("[backend-settings] Failed to add region.", { error, destination: normalizedDestination });
+    showLocationManagerStatus("Could not add region.", true);
+  } finally {
+    setSettingsLocationOverlay(false);
+  }
 }
 
-async function addLocationPlace() {
-  if (!state.permissions.canEditLocations || !state.locationCatalog.areas.length) return;
-  const areaId = window.prompt("Region id", state.locationCatalog.areas[0]?.id || "");
-  const normalizedAreaId = normalizeText(areaId);
-  if (!state.locationCatalog.areas.some((area) => area.id === normalizedAreaId)) return;
+async function addLocationPlace(regionId, destination = "") {
+  if (!state.permissions.canEditLocations) return;
+  const normalizedRegionId = normalizeText(regionId);
+  const region = normalizedRegionId
+    ? state.locationCatalog.regions.find((item) => item.id === normalizedRegionId)
+    : null;
+  const normalizedDestination = normalizeText(destination || region?.destination).toUpperCase();
+  if (normalizedRegionId && !region) return;
+  if (!DESTINATION_COUNTRY_CODE_SET.has(normalizedDestination)) return;
   const name = window.prompt("Place name");
   const normalizedName = normalizeText(name);
   if (!normalizedName) return;
-  const request = destinationScopePlaceCreateRequest({ baseURL: apiOrigin });
-  const payload = await fetchApi(request.url, {
-    method: request.method,
-    body: {
-      area_id: normalizedAreaId,
-      name: normalizedName
+  showLocationManagerStatus("Adding place...");
+  setSettingsLocationOverlay(true, "Adding place. Please wait.");
+  try {
+    const request = destinationScopePlaceCreateRequest({ baseURL: apiOrigin });
+    const payload = await fetchApi(request.url, {
+      method: request.method,
+      body: {
+        destination: normalizedDestination,
+        ...(normalizedRegionId ? { region_id: normalizedRegionId } : {}),
+        name: normalizedName
+      }
+    });
+    if (!payload?.place?.id) {
+      throw new Error("Place create request did not return a place.");
     }
-  });
-  if (payload?.catalog) state.locationCatalog = normalizeLocationCatalog(payload.catalog);
-  renderLocationManager();
+    state.locationFocusId = normalizeText(payload?.place?.id);
+    await reloadLocationsAfterMutation({
+      responseCatalog: payload.catalog,
+      expectation: {
+        type: "place",
+        id: state.locationFocusId,
+        shouldExist: true
+      },
+      statusMessage: "Place added."
+    });
+  } catch (error) {
+    console.error("[backend-settings] Failed to add place.", { error, region_id: normalizedRegionId });
+    showLocationManagerStatus("Could not add place.", true);
+  } finally {
+    setSettingsLocationOverlay(false);
+  }
 }
 
 function normalizeCountryReferenceItems(items) {
@@ -1429,33 +1922,6 @@ function cloneCountryReferenceItems(items) {
       ...(normalizeText(entry?.note) ? { note: normalizeText(entry.note) } : {})
     }))
   }));
-}
-
-function publicationMapFromCountryReferenceItems(items) {
-  const defaults = Object.fromEntries(COUNTRY_OPTIONS.map((option) => [option.value, true]));
-  for (const item of normalizeCountryReferenceItems(items)) {
-    defaults[item.country] = item.published_on_webpage !== false;
-  }
-  return defaults;
-}
-
-function normalizeWebsiteDestinationPublicationDraft(draft) {
-  return Object.fromEntries(
-    COUNTRY_OPTIONS.map((option) => [option.value, draft?.[option.value] !== false])
-  );
-}
-
-function isWebsiteDestinationPublicationDirty() {
-  if (!state.permissions.canEditWebsiteDestinationPublication) return false;
-  return JSON.stringify(normalizeWebsiteDestinationPublicationDraft(state.websiteDestinationPublicationDraftByCountry))
-    !== JSON.stringify(normalizeWebsiteDestinationPublicationDraft(state.websiteDestinationPublicationInitialByCountry));
-}
-
-function updateWebsiteDestinationPublicationSaveButtonState() {
-  if (!els.websiteDestinationPublicationSaveBtn) return;
-  els.websiteDestinationPublicationSaveBtn.disabled = !state.permissions.canEditWebsiteDestinationPublication
-    || state.websiteDestinationPublicationSaving
-    || !isWebsiteDestinationPublicationDirty();
 }
 
 function buildEmptyTranslationRuleTarget() {
@@ -1489,7 +1955,7 @@ function renderTranslationRules() {
   const rows = items.map((item, index) => `
     <tr data-translation-rule-row="${index}">
       <td>
-        <textarea class="settings-translation-rules__textarea" rows="3" data-translation-rule-source ${state.permissions.canEditTranslationRules ? "" : "disabled"}>${escapeHtml(item?.source || "")}</textarea>
+        <textregion class="settings-translation-rules__textregion" rows="3" data-translation-rule-source ${state.permissions.canEditTranslationRules ? "" : "disabled"}>${escapeHtml(item?.source || "")}</textregion>
       </td>
       <td>
         <div class="settings-translation-rules__targets">
@@ -1502,7 +1968,7 @@ function renderTranslationRules() {
                   return `<option value="${escapeHtml(value)}" ${value === normalizeText(target?.target_lang).toLowerCase() ? "selected" : ""}>${escapeHtml(label)}</option>`;
                 }).join("")}
               </select>
-              <textarea class="settings-translation-rules__textarea" rows="2" data-translation-rule-target ${state.permissions.canEditTranslationRules ? "" : "disabled"}>${escapeHtml(target?.target || "")}</textarea>
+              <textregion class="settings-translation-rules__textregion" rows="2" data-translation-rule-target ${state.permissions.canEditTranslationRules ? "" : "disabled"}>${escapeHtml(target?.target || "")}</textregion>
               <button class="btn btn-ghost settings-translation-rules__remove" type="button" data-translation-rule-remove-target="${index}" data-translation-rule-target-index="${targetIndex}" ${state.permissions.canEditTranslationRules ? "" : "disabled"}>${escapeHtml(backendT("common.remove", "Remove"))}</button>
             </div>
           `).join("")}
@@ -1755,11 +2221,11 @@ function renderEmergencyEditor() {
         <div class="backend-section__body emergency-country-card__body">
           <div class="field full">
             <label class="field-label" data-i18n-id="backend.emergency.practical_tips">Practical tips</label>
-            <textarea
+            <textregion
               rows="5"
               placeholder="${escapeHtml(backendT("backend.emergency.practical_tips_placeholder", "One tip per line"))}"
               data-emergency-practical-tips
-            >${escapeHtml(tips)}</textarea>
+            >${escapeHtml(tips)}</textregion>
             <p class="micro" data-i18n-id="backend.emergency.practical_tips_hint">Write one practical tip per line.</p>
           </div>
 
@@ -1869,8 +2335,6 @@ function markEmergencyDirty() {
 function syncCountryReferenceState(items) {
   const normalizedItems = normalizeCountryReferenceItems(items);
   state.countryReferenceItems = normalizedItems;
-  state.websiteDestinationPublicationInitialByCountry = publicationMapFromCountryReferenceItems(normalizedItems);
-  state.websiteDestinationPublicationDraftByCountry = { ...state.websiteDestinationPublicationInitialByCountry };
   state.emergencyItems = cloneCountryReferenceItems(normalizedItems);
   state.emergencyOpenCountries = state.emergencyLoaded
     ? new Set(
@@ -1880,162 +2344,36 @@ function syncCountryReferenceState(items) {
     : new Set(normalizedItems.map((item) => item.country).filter(Boolean));
   state.emergencyLoaded = true;
   state.emergencyDirty = false;
-  renderWebsiteDestinationPublication();
   renderEmergencyAddCountryOptions();
   renderEmergencyEditor();
 }
 
-function renderWebsiteDestinationPublication() {
-  if (!els.websiteDestinationPublicationList) return;
-  if (!state.permissions.canReadWebsiteDestinationPublication) {
-    els.websiteDestinationPublicationList.innerHTML = "";
-    updateWebsiteDestinationPublicationSaveButtonState();
-    return;
-  }
-  const current = normalizeWebsiteDestinationPublicationDraft(state.websiteDestinationPublicationDraftByCountry);
-  els.websiteDestinationPublicationList.innerHTML = COUNTRY_OPTIONS
-    .map((option) => `<label class="settings-staff-editor__check-pill">
-      <input type="checkbox" data-website-destination-publication="${escapeHtml(option.value)}" ${current[option.value] !== false ? "checked" : ""} />
-      <span>${escapeHtml(countryLabel(option.value))}</span>
-    </label>`)
-    .join("");
-  updateWebsiteDestinationPublicationSaveButtonState();
-}
-
-async function loadWebsiteDestinationPublication() {
-  clearWebsiteDestinationPublicationStatus();
-  showWebsiteDestinationPublicationStatus(
-    backendT("backend.settings.website_destinations_loading", "Loading website destinations...")
-  );
+async function loadCountryReferenceInfo() {
   showEmergencyStatus(backendT("backend.emergency.loading", "Loading emergency information..."));
   try {
     const request = countryReferenceInfoRequest({ baseURL: apiOrigin });
     const payload = await fetchApi(request.url, { suppressNotFound: true });
     if (!payload) {
-      showWebsiteDestinationPublicationStatus(
-        backendT("backend.settings.website_destinations_load_failed", "Could not load website destinations."),
-        true
-      );
       showEmergencyStatus(backendT("backend.emergency.load_failed", "Could not load emergency information."), true);
-      renderWebsiteDestinationPublication();
       renderEmergencyEditor();
       return;
     }
     syncCountryReferenceState(payload?.items);
-    showWebsiteDestinationPublicationStatus(
-      backendT("backend.settings.website_destinations_status", "Destination publication is managed here.")
-    );
     showEmergencyStatus(backendT("backend.emergency.ready", "Emergency information loaded."));
   } catch (error) {
-    console.error("[backend-settings] Failed to load website destination publication controls.", {
+    console.error("[backend-settings] Failed to load emergency information.", {
       error,
       apiOrigin,
       user: state.authUser?.username || state.authUser?.sub || null
     });
     state.countryReferenceItems = [];
-    state.websiteDestinationPublicationInitialByCountry = publicationMapFromCountryReferenceItems([]);
-    state.websiteDestinationPublicationDraftByCountry = { ...state.websiteDestinationPublicationInitialByCountry };
     state.emergencyItems = [];
     state.emergencyLoaded = false;
     state.emergencyDirty = false;
     state.emergencyOpenCountries = new Set();
-    renderWebsiteDestinationPublication();
     renderEmergencyAddCountryOptions();
     renderEmergencyEditor();
-    showWebsiteDestinationPublicationStatus(
-      backendT("backend.settings.website_destinations_load_failed", "Could not load website destinations."),
-      true
-    );
     showEmergencyStatus(backendT("backend.emergency.load_failed", "Could not load emergency information."), true);
-  }
-}
-
-function handleWebsiteDestinationPublicationToggle(event) {
-  const input = event.target.closest("[data-website-destination-publication]");
-  if (!input) return;
-  const country = normalizeText(input.getAttribute("data-website-destination-publication")).toUpperCase();
-  if (!country || !DESTINATION_COUNTRY_CODE_SET.has(country)) return;
-  state.websiteDestinationPublicationDraftByCountry = {
-    ...normalizeWebsiteDestinationPublicationDraft(state.websiteDestinationPublicationDraftByCountry),
-    [country]: input.checked !== false
-  };
-  showWebsiteDestinationPublicationStatus(
-    backendT("backend.settings.website_destinations_unsaved", "Unsaved changes.")
-  );
-  updateWebsiteDestinationPublicationSaveButtonState();
-}
-
-async function saveWebsiteDestinationPublication() {
-  if (!state.permissions.canEditWebsiteDestinationPublication) return;
-  if (!isWebsiteDestinationPublicationDirty()) {
-    updateWebsiteDestinationPublicationSaveButtonState();
-    return;
-  }
-  clearError();
-  clearWebsiteDestinationPublicationStatus();
-  syncEmergencyStateFromDom();
-  showWebsiteDestinationPublicationStatus(
-    backendT("backend.settings.website_destinations_saving", "Saving website destinations...")
-  );
-  state.websiteDestinationPublicationSaving = true;
-  updateWebsiteDestinationPublicationSaveButtonState();
-
-  try {
-    const currentItemsByCountry = new Map(
-      normalizeCountryReferenceItems(state.emergencyItems).map((item) => [item.country, item])
-    );
-    const draft = normalizeWebsiteDestinationPublicationDraft(state.websiteDestinationPublicationDraftByCountry);
-    const nextItems = COUNTRY_OPTIONS
-      .map((option) => {
-        const existing = currentItemsByCountry.get(option.value) || null;
-        const publishedOnWebpage = draft[option.value] !== false;
-        if (existing) {
-          return {
-            ...existing,
-            published_on_webpage: publishedOnWebpage
-          };
-        }
-        if (!publishedOnWebpage) {
-          return {
-            country: option.value,
-            published_on_webpage: false,
-            practical_tips: [],
-            emergency_contacts: []
-          };
-        }
-        return null;
-      })
-      .filter(Boolean);
-
-    const request = countryReferenceInfoUpdateRequest({ baseURL: apiOrigin });
-    const payload = await fetchApi(request.url, {
-      method: request.method,
-      body: { items: nextItems }
-    });
-    if (!payload) {
-      showWebsiteDestinationPublicationStatus(
-        backendT("backend.settings.website_destinations_save_failed", "Could not save website destinations."),
-        true
-      );
-      return;
-    }
-    syncCountryReferenceState(payload?.items);
-    showWebsiteDestinationPublicationStatus(
-      homepageAssetSyncFailed(payload)
-        ? countryReferenceHomepageAssetSyncWarningMessage()
-        : backendT("backend.settings.website_destinations_saved", "Website destinations saved."),
-      homepageAssetSyncFailed(payload)
-    );
-    showEmergencyStatus(
-      homepageAssetSyncFailed(payload)
-        ? emergencyHomepageAssetSyncWarningMessage()
-        : backendT("backend.emergency.saved", "Emergency information saved."),
-      homepageAssetSyncFailed(payload)
-    );
-  } finally {
-    state.websiteDestinationPublicationSaving = false;
-    updateWebsiteDestinationPublicationSaveButtonState();
-    updateEmergencyControls();
   }
 }
 
@@ -2058,11 +2396,14 @@ async function saveEmergencyCountryReferenceInfo() {
     const emergencyItemsByCountry = new Map(
       normalizeCountryReferenceItems(state.emergencyItems).map((item) => [item.country, item])
     );
-    const destinationDraft = normalizeWebsiteDestinationPublicationDraft(state.websiteDestinationPublicationDraftByCountry);
+    const previousItemsByCountry = new Map(
+      normalizeCountryReferenceItems(state.countryReferenceItems).map((item) => [item.country, item])
+    );
     const nextItems = COUNTRY_OPTIONS
       .map((option) => {
         const existing = emergencyItemsByCountry.get(option.value) || null;
-        const publishedOnWebpage = destinationDraft[option.value] !== false;
+        const previousItem = previousItemsByCountry.get(option.value) || null;
+        const publishedOnWebpage = previousItem?.published_on_webpage !== false;
         if (existing) {
           return {
             ...existing,
@@ -2096,16 +2437,9 @@ async function saveEmergencyCountryReferenceInfo() {
         : backendT("backend.emergency.saved", "Emergency information saved."),
       homepageAssetSyncFailed(payload)
     );
-    showWebsiteDestinationPublicationStatus(
-      homepageAssetSyncFailed(payload)
-        ? countryReferenceHomepageAssetSyncWarningMessage()
-        : backendT("backend.settings.website_destinations_status", "Destination publication is managed here."),
-      homepageAssetSyncFailed(payload)
-    );
   } finally {
     state.emergencySaving = false;
     updateEmergencyControls();
-    updateWebsiteDestinationPublicationSaveButtonState();
   }
 }
 
@@ -2485,7 +2819,7 @@ function renderDescriptionEditor() {
       return `<div class="tour-localized-group__row">
         <div class="tour-localized-group__code-cell">${buttonHtml}</div>
         <div class="tour-localized-group__field">
-          <textarea id="${escapeHtml(descriptionTextareaId(lang))}" data-description-lang="${escapeHtml(lang)}" dir="${escapeHtml(option.direction)}" rows="4" spellcheck="true">${escapeHtml(normalizeText(current[lang]))}</textarea>
+          <textregion id="${escapeHtml(descriptionTextregionId(lang))}" data-description-lang="${escapeHtml(lang)}" dir="${escapeHtml(option.direction)}" rows="4" spellcheck="true">${escapeHtml(normalizeText(current[lang]))}</textregion>
         </div>
       </div>`;
     })
@@ -2509,7 +2843,7 @@ function renderShortDescriptionEditor() {
       return `<div class="tour-localized-group__row">
         <div class="tour-localized-group__code-cell">${buttonHtml}</div>
         <div class="tour-localized-group__field">
-          <textarea id="${escapeHtml(shortDescriptionTextareaId(lang))}" data-short-description-lang="${escapeHtml(lang)}" dir="${escapeHtml(option.direction)}" rows="4" spellcheck="true">${escapeHtml(normalizeText(current[lang]))}</textarea>
+          <textregion id="${escapeHtml(shortDescriptionTextregionId(lang))}" data-short-description-lang="${escapeHtml(lang)}" dir="${escapeHtml(option.direction)}" rows="4" spellcheck="true">${escapeHtml(normalizeText(current[lang]))}</textregion>
         </div>
       </div>`;
     })
@@ -2594,20 +2928,20 @@ function handleAppearsInTeamWebPageChange(event) {
   updateEditorSaveButtonState();
 }
 
-function descriptionTextareaId(lang) {
+function descriptionTextregionId(lang) {
   return `staff_description_${normalizeText(lang).toLowerCase()}`;
 }
 
-function getDescriptionTextarea(lang) {
-  return document.getElementById(descriptionTextareaId(lang));
+function getDescriptionTextregion(lang) {
+  return document.getElementById(descriptionTextregionId(lang));
 }
 
-function shortDescriptionTextareaId(lang) {
+function shortDescriptionTextregionId(lang) {
   return `staff_short_description_${normalizeText(lang).toLowerCase()}`;
 }
 
-function getShortDescriptionTextarea(lang) {
-  return document.getElementById(shortDescriptionTextareaId(lang));
+function getShortDescriptionTextregion(lang) {
+  return document.getElementById(shortDescriptionTextregionId(lang));
 }
 
 function positionInputId(lang) {
@@ -2658,9 +2992,9 @@ function setDescriptionValue(lang, value) {
   }
   if (normalizedValue) state.editor.descriptionByLang[normalizedLang] = normalizedValue;
   else delete state.editor.descriptionByLang[normalizedLang];
-  const textarea = getDescriptionTextarea(normalizedLang);
-  if (textarea && textarea.value !== normalizedValue) {
-    textarea.value = normalizedValue;
+  const textregion = getDescriptionTextregion(normalizedLang);
+  if (textregion && textregion.value !== normalizedValue) {
+    textregion.value = normalizedValue;
   }
   updateEditorSaveButtonState();
 }
@@ -2702,9 +3036,9 @@ function setShortDescriptionValue(lang, value) {
   }
   if (normalizedValue) state.editor.shortDescriptionByLang[normalizedLang] = normalizedValue;
   else delete state.editor.shortDescriptionByLang[normalizedLang];
-  const textarea = getShortDescriptionTextarea(normalizedLang);
-  if (textarea && textarea.value !== normalizedValue) {
-    textarea.value = normalizedValue;
+  const textregion = getShortDescriptionTextregion(normalizedLang);
+  if (textregion && textregion.value !== normalizedValue) {
+    textregion.value = normalizedValue;
   }
   updateEditorSaveButtonState();
 }
@@ -2869,8 +3203,8 @@ async function translatePositionToAll(button) {
 
 async function translateDescription(button) {
   const targetLang = normalizeText(button?.getAttribute("data-target-lang")).toLowerCase();
-  const sourceInput = getDescriptionTextarea(currentStaffSourceLang());
-  const targetInput = getDescriptionTextarea(targetLang);
+  const sourceInput = getDescriptionTextregion(currentStaffSourceLang());
+  const targetInput = getDescriptionTextregion(targetLang);
   if (!targetLang || !sourceInput || !targetInput) return;
 
   const sourceText = String(sourceInput.value || "");
@@ -2899,7 +3233,7 @@ async function translateDescription(button) {
 async function translateDescriptionToAll(button) {
   const field = normalizeText(button?.getAttribute("data-staff-translate-all")).toLowerCase();
   if (field !== "description") return;
-  const sourceInput = getDescriptionTextarea(currentStaffSourceLang());
+  const sourceInput = getDescriptionTextregion(currentStaffSourceLang());
   if (!sourceInput) return;
 
   const sourceText = String(sourceInput.value || "");
@@ -2976,8 +3310,8 @@ async function translateDescriptionToAll(button) {
 
 async function translateShortDescription(button) {
   const targetLang = normalizeText(button?.getAttribute("data-target-lang")).toLowerCase();
-  const sourceInput = getShortDescriptionTextarea(currentStaffSourceLang());
-  const targetInput = getShortDescriptionTextarea(targetLang);
+  const sourceInput = getShortDescriptionTextregion(currentStaffSourceLang());
+  const targetInput = getShortDescriptionTextregion(targetLang);
   if (!targetLang || !sourceInput || !targetInput) return;
 
   const sourceText = String(sourceInput.value || "");
@@ -3006,7 +3340,7 @@ async function translateShortDescription(button) {
 async function translateShortDescriptionToAll(button) {
   const field = normalizeText(button?.getAttribute("data-staff-translate-all")).toLowerCase();
   if (field !== "short-description") return;
-  const sourceInput = getShortDescriptionTextarea(currentStaffSourceLang());
+  const sourceInput = getShortDescriptionTextregion(currentStaffSourceLang());
   if (!sourceInput) return;
 
   const sourceText = String(sourceInput.value || "");

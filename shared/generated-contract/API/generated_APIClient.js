@@ -146,10 +146,16 @@ case "destination_scope_catalog":
   return RequestFactory.destinationScopeCatalogRequest(options);
 case "destination_scope_destination_create":
   return RequestFactory.destinationScopeDestinationCreateRequest(options);
-case "destination_scope_area_create":
-  return RequestFactory.destinationScopeAreaCreateRequest(options);
+case "destination_scope_destination_delete":
+  return RequestFactory.destinationScopeDestinationDeleteRequest(options);
+case "destination_scope_region_create":
+  return RequestFactory.destinationScopeRegionCreateRequest(options);
+case "destination_scope_region_delete":
+  return RequestFactory.destinationScopeRegionDeleteRequest(options);
 case "destination_scope_place_create":
   return RequestFactory.destinationScopePlaceCreateRequest(options);
+case "destination_scope_place_delete":
+  return RequestFactory.destinationScopePlaceDeleteRequest(options);
 case "tours":
   return RequestFactory.toursRequest(options);
 case "tour_create":

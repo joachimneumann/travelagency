@@ -305,6 +305,54 @@ For AsiaTravelPlan, the highest-value integrations are probably:
 - website form capture
 - later maybe supplier / inventory systems
 
+### 3.12.1 CRM Replacement Integration Questions
+
+If AsiaTravelPlan evaluates a new CRM instead of Kommo, the integration decision should be based on operational fit, not only CRM feature lists.
+
+Key questions to ask each candidate CRM vendor:
+
+- Which objects should ATP treat as canonical in the CRM: contacts, leads, deals, bookings, conversations, or custom objects?
+- Can the CRM model a booking as the central operational record, with multiple booking persons attached to it?
+- Can one traveler or customer be linked to multiple bookings without duplicating communication history incorrectly?
+- Can the CRM support custom fields for booking stage, travel dates, destination, language, source, assigned staff, budget, payment status, and quote status?
+- Can the CRM support custom objects or strongly related records for quotes, itineraries, payment documents, traveler groups, and activities?
+- Does the CRM provide a stable REST API for creating, updating, searching, and linking contacts, deals/bookings, activities, tasks, and conversations?
+- Does the API support idempotency keys, external IDs, or reliable upsert behavior so ATP can sync records safely?
+- What webhook events are available for contact changes, deal/booking changes, stage changes, owner changes, task updates, and incoming messages?
+- Are webhook retries, signatures, event IDs, and event ordering documented well enough for production use?
+- Can ATP store its own `booking_id` and other internal IDs in the CRM and query by them efficiently?
+- Can the CRM link inbound WhatsApp, Facebook Messenger, Instagram, TikTok, email, website form, and phone activity back to the correct booking?
+- Does the CRM offer official WhatsApp Business Platform integration, or does it depend on a third-party messaging provider?
+- If WhatsApp is supported, who owns the WhatsApp Business Account and phone number relationship: ATP, Meta, the CRM vendor, or a BSP?
+- Can the existing WhatsApp number be migrated away later without losing ownership or blocking another provider?
+- Does the CRM preserve full message history if staff reply from the CRM, mobile app, or native channel apps?
+- Can the CRM enforce an operating rule that replies should happen inside the CRM for tracked conversations?
+- How does the CRM handle Meta's 24-hour messaging window and approved WhatsApp templates?
+- Can message templates be created, approved, categorized, localized, and reported on from the CRM or connected provider?
+- Can the CRM expose conversation data to ATP's backend for a read-only booking timeline?
+- Can ATP send outbound messages through the CRM API later, or is sending limited to the CRM user interface?
+- Can the CRM support assignment rules that match ATP roles: staff, manager, accountant, and admin?
+- Can staff visibility be restricted to assigned bookings while managers and admins see all bookings?
+- Can accountants be given limited access to payment-related fields and actions without broad sales access?
+- Does the CRM provide audit logs for field changes, owner changes, stage changes, and message actions?
+- Can ATP import existing Kommo contacts, leads, conversations, notes, tags, tasks, and pipeline history?
+- What data can be exported from Kommo and imported into the new CRM without manual cleanup?
+- What message history can realistically be migrated, and what must remain as archived reference data?
+- Can duplicate contacts be detected and merged during migration without losing booking-person relationships?
+- Can the CRM support website lead capture from ATP forms with source attribution, UTM fields, destination interest, and language?
+- Can the CRM push status updates back to ATP, such as new lead, assigned staff, stage, next task, payment status, and lost reason?
+- Can ATP keep payment processing and payment documents outside the CRM while linking their status into CRM records?
+- Can the CRM integrate with Gmail or business email in a way that preserves customer history without exposing unrelated inbox data?
+- Does the CRM support task reminders, Service Level Agreement tracking, overdue booking views, and escalation rules?
+- Can reports answer ATP-specific questions such as lead source conversion, response time, stage aging, staff workload, destination demand, and payment readiness?
+- What rate limits, API quotas, webhook limits, file storage limits, and conversation limits apply at the expected ATP usage level?
+- What data residency, retention, privacy, and deletion controls are available for traveler personal data?
+- Can ATP export all operational data and attachments if the CRM is replaced later?
+- What features require higher pricing tiers, paid add-ons, marketplace apps, or third-party providers?
+- How much configuration is possible by ATP admins, and what changes require vendor support or custom development?
+- Is there a sandbox or test account where ATP can validate booking sync, messaging sync, and migration before committing?
+- What is the failure mode if CRM sync is down: can ATP still work from the booking system, and can changes replay later?
+
 ## 3.13 AI Features
 
 AI is now a major CRM feature category.
@@ -481,3 +529,35 @@ The feature patterns above were cross-checked against current official product a
 
 Inference note:
 - The vendor pages do not use identical category names, but they consistently cluster around the same practical feature groups: records, pipeline, communication, automation, analytics, service, marketing, mobile, integrations, and AI.
+
+
+Questions:
+
+What is the structure the CRM?
+- customers
+- leads
+- task queues
+- overdue reminders
+- due dates and Service Level Agreements
+- next-step suggestions
+- team dashboards for pending work
+- note editing
+Is there a documentation that we can look at (vietnamese is ok)
+Can we have a test account?
+
+Is there a system for limiting staff permissions?
+
+Financial aspects: Does the CRM offer this:
+- generation of quotes with our logo
+- generation of invoices with our logo
+- booking confirmation / deposit
+- documentation of payments
+
+Is there an API that allows us to use HTTP requests to:
+- write data to the contact
+- read data from the contact
+- write data to a lead
+- read data from a lead
+
+Is there an iPhone app in the apple App store? 
+What is the name of the app?

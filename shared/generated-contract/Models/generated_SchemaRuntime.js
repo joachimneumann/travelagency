@@ -3307,7 +3307,7 @@
 },
   FIELD_43: {
   "kind": "entity",
-  "typeName": "TravelPlan",
+  "typeName": "MarketingTourTravelPlan",
   "isArray": false
 },
   FIELD_44: {
@@ -3556,7 +3556,7 @@
 },
   FIELD_75: {
   "kind": "transport",
-  "typeName": "DestinationArea",
+  "typeName": "DestinationRegion",
   "isArray": true
 },
   FIELD_76: {
@@ -3581,7 +3581,7 @@
 },
   FIELD_80: {
   "kind": "transport",
-  "typeName": "DestinationArea",
+  "typeName": "DestinationRegion",
   "isArray": false
 },
   FIELD_81: {
@@ -3640,7 +3640,7 @@
 },
   FIELD_83: {
   "kind": "transport",
-  "typeName": "TravelPlan",
+  "typeName": "MarketingTourTravelPlan",
   "isArray": false
 },
   FIELD_84: {
@@ -3873,47 +3873,47 @@
 },
   FIELD_112: {
   "kind": "transport",
-  "typeName": "TravelPlanDestinationAreaSelection",
+  "typeName": "TravelPlanDestinationRegionSelection",
   "isArray": true
 },
   FIELD_113: {
   "kind": "transport",
-  "typeName": "BookingTravelPlanService",
+  "typeName": "TravelPlanDestinationPlaceSelection",
   "isArray": true
 },
   FIELD_114: {
   "kind": "transport",
-  "typeName": "BookingOfferTaxBucket",
+  "typeName": "BookingTravelPlanService",
   "isArray": true
 },
   FIELD_115: {
   "kind": "transport",
-  "typeName": "BookingOfferPaymentTermLine",
+  "typeName": "BookingOfferTaxBucket",
   "isArray": true
 },
   FIELD_116: {
   "kind": "transport",
-  "typeName": "TravelPlanService",
+  "typeName": "BookingOfferPaymentTermLine",
   "isArray": true
 },
   FIELD_117: {
   "kind": "transport",
-  "typeName": "BookingOfferPaymentTermLineReadModel",
+  "typeName": "TravelPlanService",
   "isArray": true
 },
   FIELD_118: {
   "kind": "transport",
-  "typeName": "BookingOfferVisibleTripPriceReadModel",
-  "isArray": false
+  "typeName": "BookingOfferPaymentTermLineReadModel",
+  "isArray": true
 },
   FIELD_119: {
   "kind": "transport",
-  "typeName": "BookingOfferVisibleDayPriceReadModel",
-  "isArray": true
+  "typeName": "BookingOfferVisibleTripPriceReadModel",
+  "isArray": false
 },
   FIELD_120: {
   "kind": "transport",
-  "typeName": "TravelPlanDestinationPlaceSelection",
+  "typeName": "BookingOfferVisibleDayPriceReadModel",
   "isArray": true
 },
   FIELD_121: {

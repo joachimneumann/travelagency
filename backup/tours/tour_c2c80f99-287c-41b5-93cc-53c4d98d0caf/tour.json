@@ -15,17 +15,6 @@
   "created_at": "2026-04-09T03:15:24.977Z",
   "updated_at": "2026-05-05T02:24:53.253Z",
   "travel_plan": {
-    "destination_scope": [
-      {
-        "destination": "VN",
-        "areas": [
-          {
-            "area_id": "area_024155db-da17-4cdb-ae0e-a01fd1e77f58",
-            "places": []
-          }
-        ]
-      }
-    ],
     "tour_card_image_ids": [
       "travel_plan_service_image_de94ec95-0a5f-4dbd-a546-deb4d5847e53",
       "travel_plan_service_image_56be8279-c524-4b62-a072-184337ddb334",
@@ -163,7 +152,9 @@
             }
           }
         ],
-        "notes": "Start Phu Quoc with spiritual landmarks, wartime memory, Sao Beach's pale sand and the island's night-market flavors."
+        "notes": "Start Phu Quoc with spiritual landmarks, wartime memory, Sao Beach's pale sand and the island's night-market flavors.",
+        "primary_location_id": "place_phu_quoc",
+        "secondary_location_id": null
       },
       {
         "id": "travel_plan_day_0487563f-2b92-40c9-809f-1abf24d2efa9",

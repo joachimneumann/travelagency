@@ -45,7 +45,7 @@ test("tour admin options can include catalog travel styles that no tour uses yet
   );
 });
 
-test("tour helpers derive destinations from scope and omit legacy destination storage", () => {
+test("tour helpers omit legacy tour-level destination storage", () => {
   const legacyOnly = helpers.normalizeTourForStorage({
     id: "tour_legacy_destinations",
     title: "Legacy destinations",
@@ -75,16 +75,17 @@ test("tour helpers derive destinations from scope and omit legacy destination st
 
   assert.equal("destinations" in scoped, false);
   assert.equal("destinations" in scoped.travel_plan, false);
-  assert.deepEqual(helpers.tourDestinationCodes(scoped), ["vietnam"]);
-  assert.deepEqual(helpers.normalizeTourForRead(scoped).destination_codes, ["vietnam"]);
-  assert.deepEqual(helpers.normalizeTourForRead(scoped).travel_plan.destinations, ["VN"]);
+  assert.equal("destination_scope" in scoped.travel_plan, false);
+  assert.deepEqual(helpers.tourDestinationCodes(scoped), []);
+  assert.deepEqual(helpers.normalizeTourForRead(scoped).destination_codes, []);
+  assert.equal("destinations" in helpers.normalizeTourForRead(scoped).travel_plan, false);
 });
 
-test("tour helpers only publish tours with root scope and at least two web page images", () => {
+test("tour helpers only publish tours with day locations and at least two web page images", () => {
   const eligibleTravelPlan = {
-    destination_scope: [{ destination: "VN", areas: [] }],
     tour_card_image_ids: ["image_1", "image_2"],
     days: [{
+      primary_location_id: "place_hanoi",
       services: [
         { image: { id: "image_1", storage_path: "/public/v1/tour-images/tour_default_publication/one.webp", include_in_travel_tour_card: true } },
         { image: { id: "image_2", storage_path: "/public/v1/tour-images/tour_default_publication/two.webp", include_in_travel_tour_card: true } }
@@ -100,17 +101,21 @@ test("tour helpers only publish tours with root scope and at least two web page 
   assert.equal(defaultPublished.published_on_webpage, true);
   assert.equal(helpers.normalizeTourForRead(defaultPublished).published_on_webpage, true);
 
-  const missingRootScope = helpers.normalizeTourForStorage({
-    id: "tour_missing_root_scope",
-    title: "Missing root scope",
+  const missingDayLocation = helpers.normalizeTourForStorage({
+    id: "tour_missing_day_location",
+    title: "Missing day location",
     styles: ["culture"],
     published_on_webpage: true,
     travel_plan: {
       ...eligibleTravelPlan,
-      destination_scope: []
+      days: eligibleTravelPlan.days.map((day) => ({
+        ...day,
+        primary_location_id: null,
+        secondary_location_id: null
+      }))
     }
   });
-  assert.equal(missingRootScope.published_on_webpage, false);
+  assert.equal(missingDayLocation.published_on_webpage, false);
 
   const missingSecondImage = helpers.normalizeTourForStorage({
     id: "tour_missing_second_image",

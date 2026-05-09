@@ -1151,16 +1151,50 @@ export function destinationScopeDestinationCreateRequest({ baseURL = '', params 
   };
 }
 
-export function destinationScopeAreaCreatePath(params = {}) {
-  return buildPath("/api/v1/destination-scope/areas", params);
+export function destinationScopeDestinationDeletePath(params = {}) {
+  return buildPath("/api/v1/destination-scope/destinations/{destination}", params);
 }
 
-export function destinationScopeAreaCreateRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
-  const path = destinationScopeAreaCreatePath(params);
+export function destinationScopeDestinationDeleteRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = destinationScopeDestinationDeletePath(params);
   const url = buildURL(baseURL, path, query);
   return {
-    key: "destination_scope_area_create",
+    key: "destination_scope_destination_delete",
+    method: "DELETE",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function destinationScopeRegionCreatePath(params = {}) {
+  return buildPath("/api/v1/destination-scope/regions", params);
+}
+
+export function destinationScopeRegionCreateRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = destinationScopeRegionCreatePath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "destination_scope_region_create",
     method: "POST",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function destinationScopeRegionDeletePath(params = {}) {
+  return buildPath("/api/v1/destination-scope/regions/{region_id}", params);
+}
+
+export function destinationScopeRegionDeleteRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = destinationScopeRegionDeletePath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "destination_scope_region_delete",
+    method: "DELETE",
     authenticated: true,
     url,
     headers,
@@ -1178,6 +1212,23 @@ export function destinationScopePlaceCreateRequest({ baseURL = '', params = {}, 
   return {
     key: "destination_scope_place_create",
     method: "POST",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function destinationScopePlaceDeletePath(params = {}) {
+  return buildPath("/api/v1/destination-scope/places/{place_id}", params);
+}
+
+export function destinationScopePlaceDeleteRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = destinationScopePlaceDeletePath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "destination_scope_place_delete",
+    method: "DELETE",
     authenticated: true,
     url,
     headers,

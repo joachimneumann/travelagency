@@ -195,7 +195,7 @@ import (
 	expected_updated_at?:                 common.#Timestamp
 	source_tour_id:                       common.#Identifier
 	source_day_id:                        common.#Identifier
-	target_travel_plan?:                  databaseModel.#TravelPlan
+	target_travel_plan?:                  databaseModel.#MarketingTourTravelPlan
 	include_images:                       *true | bool
 	include_customer_visible_images_only: *false | bool
 	include_notes:                        *true | bool
@@ -208,7 +208,7 @@ import (
 	source_tour_id:                       common.#Identifier
 	source_service_id:                    common.#Identifier
 	insert_after_service_id?:             common.#Identifier
-	target_travel_plan?:                  databaseModel.#TravelPlan
+	target_travel_plan?:                  databaseModel.#MarketingTourTravelPlan
 	include_images:                       *true | bool
 	include_customer_visible_images_only: *false | bool
 	include_notes:                        *true | bool
@@ -222,20 +222,18 @@ import (
 	actor?:      string
 }
 
-#DestinationAreaCreateRequest: {
+#DestinationRegionCreateRequest: {
 	destination: enums.#CountryCode
 	name:        string & !=""
 	name_i18n?: [string]: string
 	code?:       string
-	latitude?:   >=-90 & <=90 & number
-	longitude?:  >=-180 & <=180 & number
-	map_zoom?:   >=0 & <=22 & int
 	actor?:      string
 }
 
 #DestinationPlaceCreateRequest: {
-	area_id: common.#Identifier
-	name:    string & !=""
+	destination: enums.#CountryCode
+	region_id?: common.#Identifier
+	name:       string & !=""
 	name_i18n?: [string]: string
 	code?:       string
 	latitude?:   >=-90 & <=90 & number
@@ -250,7 +248,7 @@ import (
 }
 
 #TourTravelPlanUpdateRequest: {
-	travel_plan:          databaseModel.#TravelPlan
+	travel_plan:          databaseModel.#MarketingTourTravelPlan
 	expected_updated_at?: common.#Timestamp
 	actor?:               string
 }
@@ -384,7 +382,6 @@ import (
 	id?:    common.#Identifier
 	title?: string
 	title_i18n?: [string]: string
-	destinations?: [...enums.#CountryCode]
 	styles?: [...enums.#TourStyleCode]
 	priority?:                int
 	published_on_webpage?:    bool
@@ -392,7 +389,7 @@ import (
 	seasonality_end_month?:   enums.#MonthCode
 	short_description?:       string
 	short_description_i18n?: [string]: string
-	travel_plan?:         databaseModel.#TravelPlan
+	travel_plan?:         databaseModel.#MarketingTourTravelPlan
 	expected_updated_at?: common.#Timestamp
 }
 

@@ -3537,18 +3537,13 @@ test("tour page reads month options from the generated catalogs layer", async ()
   );
   assert.match(
     tourHtml,
-    /<div class="field full tour-taxonomy-field">\s*<span class="field-label" data-i18n-id="tour\.styles_label">Tour Styles/,
-    "Tour styles should span the full editor width"
+    /id="tour_travel_plan_destination_summary"[\s\S]*<span class="field-label" data-i18n-id="tour\.styles_label">Tour Styles/,
+    "Marketing-tour detail should show read-only travel-plan destinations above Tour Styles"
   );
-  assert.match(
+  assert.doesNotMatch(
     tourHtml,
-    /id="tour_destination_scope_editor"[\s\S]*id="tour_style_choices"[\s\S]*id="tour_one_pager_experience_highlights"[\s\S]*id="tour_seasonality_start_month"[\s\S]*id="tour_seasonality_end_month"[\s\S]*id="tour_priority"/,
-    "Tour destination/area/place controls, styles, experience highlights, and seasonality should render in the requested order above priority"
-  );
-  assert.match(
-    tourSource,
-    /travel_plan_destination_scope_editor: document\.getElementById\("tour_destination_scope_editor"\)/,
-    "Tour page should wire the external route-scope editor mount"
+    /id="tour_destination_scope_editor"/,
+    "Marketing-tour detail should not render a tour-level destination/region/place selector"
   );
   assert.match(
     travelPlanCoreSource,
@@ -3557,8 +3552,8 @@ test("tour page reads month options from the generated catalogs layer", async ()
   );
   assert.match(
     tourTravelPlanAdapterSource,
-    /destinationScopeCreate:\s*false/,
-    "Marketing-tour detail should only select existing destination-scope catalog entries"
+    /destinationScope:\s*false/,
+    "Marketing-tour detail should keep location only on travel-plan days"
   );
   assert.match(
     toursListHtml,
@@ -3573,12 +3568,12 @@ test("tour page reads month options from the generated catalogs layer", async ()
   assert.match(
     toursListHtml,
     /id="toursDestinationScopeFilter"/,
-    "The marketing tours list should render the structured destination/area/place filter"
+    "The marketing tours list should render the structured destination/region/place filter"
   );
   assert.match(
     toursListSource,
-    /destinationScopeAreaCreateRequest[\s\S]*destinationScopeCatalogRequest[\s\S]*destinationScopeDestinationCreateRequest[\s\S]*destinationScopePlaceCreateRequest[\s\S]*data-destination-filter/,
-    "The marketing tours list should manage destinations, areas, and places through the destination-scope APIs"
+    /destinationScopeRegionCreateRequest[\s\S]*destinationScopeCatalogRequest[\s\S]*destinationScopeDestinationCreateRequest[\s\S]*destinationScopePlaceCreateRequest[\s\S]*data-destination-filter/,
+    "The marketing tours list should manage destinations, regions, and places through the destination-scope APIs"
   );
   assert.doesNotMatch(
     tourHtml,
@@ -3744,8 +3739,8 @@ test("tour card images are selected from travel-plan service images", async () =
   );
   assert.match(
     tourHtmlSource,
-    /id="tour_one_pager_image_selector"[\s\S]*id="tour_destination_scope_editor"[\s\S]*id="tour_style_choices"[\s\S]*id="tour_one_pager_experience_highlights"[\s\S]*id="tour_seasonality_start_month"/,
-    "Marketing-tour detail should render destination, styles, experience highlights, and seasonality below one-pager sections"
+    /id="tour_one_pager_image_selector"[\s\S]*id="tour_style_choices"[\s\S]*id="tour_one_pager_experience_highlights"[\s\S]*id="tour_seasonality_start_month"/,
+    "Marketing-tour detail should render styles, experience highlights, and seasonality below one-pager sections"
   );
   assert.match(
     tourPageSource,
@@ -3814,7 +3809,7 @@ test("tour card images are selected from travel-plan service images", async () =
   );
   assert.match(
     homepageGeneratorSource,
-    /async function loadPublishedMarketingTourTranslations\(translationsSnapshotDir, languages\)[\s\S]*`marketing-tours\.\$\{lang\}\.json`[\s\S]*function stripPublishedMarketingTourEmbeddedTranslations\(tour\)[\s\S]*removePublishedMarketingTourOwnField\(tour, "title_i18n"\)[\s\S]*stripPublishedMarketingTourI18nFields\(tour\.travel_plan\)[\s\S]*function applyPublishedMarketingTourTranslations\(tour, lang, translations\)[\s\S]*stripPublishedMarketingTourEmbeddedTranslations\(next\)[\s\S]*const localizedTour = applyPublishedMarketingTourTranslations\([\s\S]*normalizeLegacyTourLocalizedPairs\(tour\),[\s\S]*publishedTranslations[\s\S]*const readModel = normalizeTourForRead\(localizedTour, \{ lang: normalizedLang \}\)/,
+    /async function loadPublishedMarketingTourTranslations\(translationsSnapshotDir, languages\)[\s\S]*`marketing-tours\.\$\{lang\}\.json`[\s\S]*function stripPublishedMarketingTourEmbeddedTranslations\(tour\)[\s\S]*removePublishedMarketingTourOwnField\(tour, "title_i18n"\)[\s\S]*stripPublishedMarketingTourI18nFields\(tour\.travel_plan\)[\s\S]*function applyPublishedMarketingTourTranslations\(tour, lang, translations\)[\s\S]*stripPublishedMarketingTourEmbeddedTranslations\(next\)[\s\S]*const localizedTour = applyPublishedMarketingTourTranslations\([\s\S]*normalizeLegacyTourLocalizedPairs\(tour\),[\s\S]*publishedTranslations[\s\S]*const readModelBase = normalizeTourForRead\(localizedTour, \{ lang: normalizedLang \}\)/,
     "Homepage generation should strip embedded marketing-tour translations before applying published snapshots"
   );
   assert.match(
@@ -4168,7 +4163,7 @@ test("settings page staff translation follows the active backend source language
   );
 });
 
-test("settings page hosts destination publication controls while emergency no longer renders that checkbox", async () => {
+test("settings page joins website destinations into locations while emergency no longer renders that checkbox", async () => {
   const settingsPageModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "settings_list.js");
   const settingsPageHtmlPath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "settings.html");
   const emergencyPageModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "emergency.js");
@@ -4184,8 +4179,13 @@ test("settings page hosts destination publication controls while emergency no lo
 
   assert.match(
     settingsHtml,
-    /id="websiteDestinationPublicationPanel"[\s\S]*id="websiteDestinationPublicationStatus"[\s\S]*id="websiteDestinationPublicationSaveBtn"[\s\S]*id="websiteDestinationPublicationList"/,
-    "Settings page should expose a dedicated website destination publication section with status, save action, and checkbox list mounts"
+    /id="locationManagerPanel"[\s\S]*Locations and website destinations[\s\S]*Website destinations for the public title are derived from the countries in tours visible on the website[\s\S]*id="locationManagerStatus"[\s\S]*id="locationManagerSaveBtn"[\s\S]*id="locationManagerList"/,
+    "Settings page should join website destination context into the location manager"
+  );
+  assert.doesNotMatch(
+    settingsHtml,
+    /id="websiteDestinationPublicationPanel"/,
+    "Settings page should no longer expose a separate website destination publication section"
   );
   assert.match(
     settingsHtml,
@@ -4200,7 +4200,7 @@ test("settings page hosts destination publication controls while emergency no lo
   assert.match(
     settingsSource,
     /countryReferenceInfoRequest|countryReferenceInfoUpdateRequest/,
-    "Settings page should use the generated country-reference API requests for website destination publication"
+    "Settings page should use the generated country-reference API requests for emergency information"
   );
   assert.match(
     settingsSource,
@@ -4219,13 +4219,13 @@ test("settings page hosts destination publication controls while emergency no lo
   );
   assert.match(
     settingsSource,
-    /canReadStaffProfiles:\s*roles\.includes\(ROLES\.ADMIN\)[\s\S]*canEditStaffProfiles:\s*roles\.includes\(ROLES\.ADMIN\)[\s\S]*canReadWebsiteDestinationPublication:\s*roles\.includes\(ROLES\.ADMIN\)[\s\S]*canEditWebsiteDestinationPublication:\s*roles\.includes\(ROLES\.ADMIN\)[\s\S]*canReadTranslationRules:\s*roles\.includes\(ROLES\.ADMIN\)[\s\S]*canEditTranslationRules:\s*roles\.includes\(ROLES\.ADMIN\)[\s\S]*canReadEmergency:\s*roles\.includes\(ROLES\.ADMIN\)[\s\S]*canEditEmergency:\s*roles\.includes\(ROLES\.ADMIN\)[\s\S]*canReadSettings:\s*roles\.includes\(ROLES\.ADMIN\)[\s\S]*expectedRolesAnyOf:\s*\[ROLES\.ADMIN\]/,
-    "Settings page should now be admin-only, including the website destination publication section"
+    /canReadStaffProfiles:\s*roles\.includes\(ROLES\.ADMIN\)[\s\S]*canEditStaffProfiles:\s*roles\.includes\(ROLES\.ADMIN\)[\s\S]*canReadLocations:\s*roles\.includes\(ROLES\.ADMIN\)[\s\S]*canEditLocations:\s*roles\.includes\(ROLES\.ADMIN\)[\s\S]*canReadTranslationRules:\s*roles\.includes\(ROLES\.ADMIN\)[\s\S]*canEditTranslationRules:\s*roles\.includes\(ROLES\.ADMIN\)[\s\S]*canReadEmergency:\s*roles\.includes\(ROLES\.ADMIN\)[\s\S]*canEditEmergency:\s*roles\.includes\(ROLES\.ADMIN\)[\s\S]*canReadSettings:\s*roles\.includes\(ROLES\.ADMIN\)[\s\S]*expectedRolesAnyOf:\s*\[ROLES\.ADMIN\]/,
+    "Settings page should now be admin-only, including the location manager"
   );
   assert.match(
     settingsSource,
-    /async function saveWebsiteDestinationPublication\(\) \{[\s\S]*published_on_webpage:[\s\S]*countryReferenceInfoUpdateRequest/,
-    "Settings page should save the published-on-webpage flags through the country-reference update route"
+    /async function saveEmergencyCountryReferenceInfo\(\) \{[\s\S]*previousItemsByCountry[\s\S]*published_on_webpage:\s*publishedOnWebpage[\s\S]*countryReferenceInfoUpdateRequest/,
+    "Settings page should preserve existing country-reference publication flags when saving emergency information"
   );
   assert.match(
     settingsSource,
@@ -6041,8 +6041,8 @@ test("homepage hero title follows published destinations and keeps the destinati
   );
   assert.match(
     mainToursSource,
-    /function shouldShowHeroDestinationFilter\(\) \{[\s\S]*return true;[\s\S]*function normalizeDestinationScopeFilterFromOptions\(\) \{[\s\S]*state\.filters\.area = area;[\s\S]*state\.filters\.place = place;[\s\S]*function normalizeActiveFiltersFromOptions\(\) \{[\s\S]*normalizeDestinationScopeFilterFromOptions\(\);[\s\S]*state\.filters\.style = normalizeSelectionToCodes\(state\.filters\.style, "style", \{ allowUnknown: false \}\);[\s\S]*function selectedDestinationScopeLabel\(\) \{[\s\S]*labels\.join\(" · "\)[\s\S]*frontendT\("filters\.all_destinations", "All destinations"\)/,
-    "Homepage should keep the hero destination button visible and preserve valid destination, area, and place filters"
+    /function shouldShowHeroDestinationFilter\(\) \{[\s\S]*return true;[\s\S]*function normalizeDestinationScopeFilterFromOptions\(\) \{[\s\S]*state\.filters\.region = region;[\s\S]*state\.filters\.place = place;[\s\S]*function normalizeActiveFiltersFromOptions\(\) \{[\s\S]*normalizeDestinationScopeFilterFromOptions\(\);[\s\S]*state\.filters\.style = normalizeSelectionToCodes\(state\.filters\.style, "style", \{ allowUnknown: false \}\);[\s\S]*function selectedDestinationScopeLabel\(\) \{[\s\S]*labels\.join\(" · "\)[\s\S]*frontendT\("filters\.all_destinations", "All destinations"\)/,
+    "Homepage should keep the hero destination button visible and preserve valid destination, region, and place filters"
   );
   assert.match(
     mainToursSource,

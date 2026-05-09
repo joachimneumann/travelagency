@@ -346,6 +346,7 @@ export function createApplicationRoutes({
     readBodyJson: httpHelpers.readBodyJson,
     sendJson: httpHelpers.sendJson,
     readStore: storeUtils.readStore,
+    readTours: storeUtils.readTours,
     persistStore: storeUtils.persistStore,
     getPrincipal,
     canEditTours,

@@ -12,7 +12,6 @@ import { SHARED_FIELD_DEFS, schemaField, validateShape } from './generated_Schem
         fields: [
     schemaField({"name":"id","required":true,"wireName":"id"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"title","required":false,"wireName":"title"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"destinations","required":false,"wireName":"destinations"}, SHARED_FIELD_DEFS.FIELD_7),
     schemaField({"name":"styles","required":false,"wireName":"styles"}, SHARED_FIELD_DEFS.FIELD_7),
     schemaField({"name":"priority","required":false,"wireName":"priority"}, SHARED_FIELD_DEFS.FIELD_18),
     schemaField({"name":"published_on_webpage","required":false,"wireName":"published_on_webpage"}, SHARED_FIELD_DEFS.FIELD_9),

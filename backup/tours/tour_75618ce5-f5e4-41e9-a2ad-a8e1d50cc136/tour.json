@@ -17,17 +17,6 @@
   "updated_at": "2026-05-08T05:49:29.636Z",
   "published_on_webpage": true,
   "travel_plan": {
-    "destination_scope": [
-      {
-        "destination": "VN",
-        "areas": [
-          {
-            "area_id": "area_024155db-da17-4cdb-ae0e-a01fd1e77f58",
-            "places": []
-          }
-        ]
-      }
-    ],
     "tour_card_image_ids": [
       "travel_plan_service_image_eb4c1ca6-87ce-4753-ace4-10c1cf3da25b",
       "travel_plan_service_image_e59c8f29-b253-4ba8-a621-0b47d73f5381",
@@ -56,7 +45,7 @@
         "day_number": 1,
         "title": "Hanoi arrival and Old Quarter",
         "overnight_location": null,
-        "primary_location_id": null,
+        "primary_location_id": "place_phu_quoc",
         "secondary_location_id": null,
         "services": [
           {

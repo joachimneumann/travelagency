@@ -1,5 +1,6 @@
 import {
   authMeRequest,
+  destinationScopeCatalogRequest,
   tourCreateRequest,
   tourDetailRequest,
   toursRequest,
@@ -19,10 +20,7 @@ import { MONTH_CODE_CATALOG } from "../shared/generated_catalogs.js";
 import { resolveBackendSectionHref } from "../shared/nav.js";
 import { applyBackendUserLabel } from "../shared/backend_page.js";
 import { createTourTravelPlanAdapter } from "./tour_travel_plan_adapter.js";
-import {
-  destinationScopeTourDestinations,
-  readDestinationScopeFromDom
-} from "../shared/destination_scope_editor.js";
+import { normalizeDestinationScopeCatalog } from "../shared/destination_scope_editor.js";
 import {
   CUSTOMER_CONTENT_LANGUAGE_CODES,
   CUSTOMER_CONTENT_LANGUAGES,
@@ -88,7 +86,7 @@ function staleTourUpdateMessage() {
 
 function omitDerivedTravelPlanDestinations(plan) {
   if (!plan || typeof plan !== "object" || Array.isArray(plan)) return plan;
-  const { destinations: _derivedDestinations, ...next } = plan;
+  const { destinations: _derivedDestinations, destination_scope: _destinationScope, ...next } = plan;
   return next;
 }
 
@@ -125,8 +123,9 @@ const state = {
   originalTravelPlanState: null,
   originalLocalizedContentSnapshot: "",
   reelVideoDraftItem: null,
+  destinationScopeCatalog: normalizeDestinationScopeCatalog({}),
+  destinationScopeCatalogLoadFailed: false,
   options: {
-    destinations: [],
     styles: []
   },
   localizedContent: {
@@ -172,11 +171,10 @@ const els = {
   onePagerBtn: document.getElementById("tour_one_pager_btn"),
   onePagerDisabledReason: document.getElementById("tour_one_pager_disabled_reason"),
   onePagerLang: document.getElementById("tour_one_pager_lang"),
-  destinationHidden: document.getElementById("tour_destinations"),
-  destinationChoices: document.getElementById("tour_destination_choices"),
+  travelPlanDestinationSummary: document.getElementById("tour_travel_plan_destination_summary"),
   stylesHidden: document.getElementById("tour_styles"),
   styleChoices: document.getElementById("tour_style_choices"),
-  travel_plan_destination_scope_editor: document.getElementById("tour_destination_scope_editor"),
+  travel_plan_destination_scope_editor: null,
   seasonalityStartMonth: document.getElementById("tour_seasonality_start_month"),
   seasonalityEndMonth: document.getElementById("tour_seasonality_end_month"),
   publishedOnWebpage: document.getElementById("tour_published_on_webpage"),
@@ -272,7 +270,6 @@ function shouldIgnoreTourSnapshotControl(control) {
   // These sub-editors already contribute their own semantic snapshots via state.
   return control === els.reelVideoUpload
     || Boolean(els.localizedContentEditor?.contains(control))
-    || Boolean(els.travel_plan_destination_scope_editor?.contains(control))
     || Boolean(els.travel_plan_editor?.contains(control));
 }
 
@@ -873,25 +870,183 @@ function selectedTourCardImageIds(plan, images) {
 }
 
 function tourWebPagePublicationEligibility(plan = currentTourTravelPlan()) {
-  const rootScopeCount = destinationScopeTourDestinations(plan?.destination_scope).length;
   const imageCount = selectedTourCardImageIds(plan, collectTourCardImageOptions(plan)).length;
-  const hasRootScope = rootScopeCount > 0;
+  const hasDayLocation = travelPlanHasDayLocation(plan);
   const hasEnoughImages = imageCount >= TOUR_WEB_PAGE_MIN_IMAGE_COUNT;
-  const canPublish = hasRootScope && hasEnoughImages;
+  const canPublish = hasDayLocation && hasEnoughImages;
   const message = canPublish
     ? backendT("tour.published_on_webpage", "Show on web page")
-    : !hasRootScope && !hasEnoughImages
-      ? backendT("tour.published_on_webpage_disabled_scope_and_images", "Select a root destination scope and at least 2 web page images before publishing on the web page.")
-      : !hasRootScope
-        ? backendT("tour.published_on_webpage_disabled_scope", "Select a root destination scope before publishing on the web page.")
+    : !hasDayLocation && !hasEnoughImages
+      ? backendT("tour.published_on_webpage_disabled_location_and_images", "Select at least one travel-plan day location and at least 2 web page images before publishing on the web page.")
+      : !hasDayLocation
+        ? backendT("tour.published_on_webpage_disabled_location", "Select at least one travel-plan day location before publishing on the web page.")
         : backendT("tour.published_on_webpage_disabled_images", "Select at least 2 web page images before publishing on the web page.");
   return {
     canPublish,
-    hasRootScope,
+    hasDayLocation,
     hasEnoughImages,
     imageCount,
     message
   };
+}
+
+function travelPlanHasDayLocation(plan = {}) {
+  return (Array.isArray(plan?.days) ? plan.days : []).some((day) => (
+    normalizeText(day?.primary_location_id) || normalizeText(day?.secondary_location_id)
+  ));
+}
+
+async function loadTravelPlanDestinationCatalog() {
+  state.destinationScopeCatalogLoadFailed = false;
+  try {
+    const request = destinationScopeCatalogRequest({ baseURL: apiOrigin });
+    const payload = await fetchApi(withApiLang(request.url), { cache: "no-store" });
+    state.destinationScopeCatalog = normalizeDestinationScopeCatalog(payload);
+  } catch (error) {
+    state.destinationScopeCatalogLoadFailed = true;
+    state.destinationScopeCatalog = normalizeDestinationScopeCatalog({});
+    logBrowserConsoleError("[tour-page] Failed to load the travel-plan destination catalog.", {
+      tour_id: state.id || ""
+    }, error);
+  }
+  renderTravelPlanDestinationSummary();
+}
+
+function addTravelPlanDestinationSummaryEntry(entries, countryCode, { region = null, place = null } = {}) {
+  const destination = normalizeText(countryCode).toUpperCase();
+  if (!destination) return;
+  if (!entries.has(destination)) {
+    entries.set(destination, {
+      destination,
+      countryPlaces: new Set(),
+      regions: new Map()
+    });
+  }
+  const entry = entries.get(destination);
+  const placeId = normalizeText(place?.id || place);
+  const regionId = normalizeText(region?.id || region);
+  if (regionId) {
+    if (!entry.regions.has(regionId)) {
+      entry.regions.set(regionId, {
+        regionId,
+        places: new Set()
+      });
+    }
+    if (placeId) entry.regions.get(regionId).places.add(placeId);
+    return;
+  }
+  if (placeId) entry.countryPlaces.add(placeId);
+}
+
+function travelPlanDestinationSummaryEntries(plan = currentTourTravelPlan()) {
+  const catalog = normalizeDestinationScopeCatalog(state.destinationScopeCatalog || {});
+  const destinationByCode = new Map(catalog.destinations.map((destination) => [normalizeText(destination.code).toUpperCase(), destination]));
+  const regionById = new Map(catalog.regions.map((region) => [normalizeText(region.id), region]));
+  const placeById = new Map(catalog.places.map((place) => [normalizeText(place.id), place]));
+  const entries = new Map();
+
+  for (const day of Array.isArray(plan?.days) ? plan.days : []) {
+    for (const field of ["primary_location_id", "secondary_location_id"]) {
+      const locationId = normalizeText(day?.[field]);
+      if (!locationId) continue;
+      const place = placeById.get(locationId);
+      if (place) {
+        const region = regionById.get(normalizeText(place.region_id));
+        addTravelPlanDestinationSummaryEntry(entries, region?.destination || place.destination, { region, place });
+        continue;
+      }
+      const region = regionById.get(locationId);
+      if (region) {
+        addTravelPlanDestinationSummaryEntry(entries, region.destination, { region });
+        continue;
+      }
+      const countryCode = locationId.toUpperCase();
+      if (destinationByCode.has(countryCode)) {
+        addTravelPlanDestinationSummaryEntry(entries, countryCode);
+      }
+    }
+  }
+
+  const destinationOrder = new Map(catalog.destinations.map((destination, index) => [normalizeText(destination.code).toUpperCase(), index]));
+  const regionOrder = new Map(catalog.regions.map((region, index) => [normalizeText(region.id), index]));
+  const placeOrder = new Map(catalog.places.map((place, index) => [normalizeText(place.id), index]));
+  return Array.from(entries.values()).sort((left, right) => {
+    const leftIndex = destinationOrder.has(left.destination) ? destinationOrder.get(left.destination) : Number.POSITIVE_INFINITY;
+    const rightIndex = destinationOrder.has(right.destination) ? destinationOrder.get(right.destination) : Number.POSITIVE_INFINITY;
+    if (leftIndex !== rightIndex) return leftIndex - rightIndex;
+    return left.destination.localeCompare(right.destination, "en", { sensitivity: "base" });
+  }).map((entry) => ({
+    ...entry,
+    countryPlaces: Array.from(entry.countryPlaces).sort((left, right) => {
+      const leftIndex = placeOrder.has(left) ? placeOrder.get(left) : Number.POSITIVE_INFINITY;
+      const rightIndex = placeOrder.has(right) ? placeOrder.get(right) : Number.POSITIVE_INFINITY;
+      if (leftIndex !== rightIndex) return leftIndex - rightIndex;
+      return left.localeCompare(right, "en", { sensitivity: "base" });
+    }),
+    regions: Array.from(entry.regions.values()).sort((left, right) => {
+      const leftIndex = regionOrder.has(left.regionId) ? regionOrder.get(left.regionId) : Number.POSITIVE_INFINITY;
+      const rightIndex = regionOrder.has(right.regionId) ? regionOrder.get(right.regionId) : Number.POSITIVE_INFINITY;
+      if (leftIndex !== rightIndex) return leftIndex - rightIndex;
+      return left.regionId.localeCompare(right.regionId, "en", { sensitivity: "base" });
+    }).map((regionEntry) => ({
+      ...regionEntry,
+      places: Array.from(regionEntry.places).sort((left, right) => {
+        const leftIndex = placeOrder.has(left) ? placeOrder.get(left) : Number.POSITIVE_INFINITY;
+        const rightIndex = placeOrder.has(right) ? placeOrder.get(right) : Number.POSITIVE_INFINITY;
+        if (leftIndex !== rightIndex) return leftIndex - rightIndex;
+        return left.localeCompare(right, "en", { sensitivity: "base" });
+      })
+    }))
+  }));
+}
+
+function renderTravelPlanDestinationSummary(plan = currentTourTravelPlan()) {
+  if (!(els.travelPlanDestinationSummary instanceof HTMLElement)) return;
+  const catalog = normalizeDestinationScopeCatalog(state.destinationScopeCatalog || {});
+  const destinationByCode = new Map(catalog.destinations.map((destination) => [normalizeText(destination.code).toUpperCase(), destination]));
+  const regionById = new Map(catalog.regions.map((region) => [normalizeText(region.id), region]));
+  const placeById = new Map(catalog.places.map((place) => [normalizeText(place.id), place]));
+  const entries = travelPlanDestinationSummaryEntries(plan);
+  if (!entries.length) {
+    els.travelPlanDestinationSummary.innerHTML = `<p class="micro">${escapeHtml(state.destinationScopeCatalogLoadFailed
+      ? backendT("tour.travel_plan_destinations_load_failed", "Could not load travel-plan destinations.")
+      : backendT("tour.travel_plan_destinations_empty", "No travel-plan day destinations selected yet."))}</p>`;
+    return;
+  }
+  els.travelPlanDestinationSummary.innerHTML = entries.map((entry) => {
+    const country = destinationByCode.get(entry.destination);
+    const countryLabel = normalizeText(country?.label || country?.code || entry.destination) || entry.destination;
+    const countryPlaceChips = entry.countryPlaces
+      .map((placeId) => {
+        const place = placeById.get(placeId);
+        return normalizeText(place?.label || place?.code || placeId);
+      })
+      .filter(Boolean);
+    const regionChips = entry.regions
+      .map((regionEntry) => {
+        const region = regionById.get(regionEntry.regionId);
+        const regionLabel = normalizeText(region?.label || region?.code || regionEntry.regionId);
+        const placeLabels = regionEntry.places
+          .map((placeId) => {
+            const place = placeById.get(placeId);
+            return normalizeText(place?.label || place?.code || placeId);
+          })
+          .filter(Boolean);
+        return placeLabels.length
+          ? `${regionLabel}: ${placeLabels.join(", ")}`
+          : regionLabel;
+      })
+      .filter(Boolean);
+    const chips = [...countryPlaceChips, ...regionChips];
+    return `
+      <article class="tour-travel-plan-destinations__country">
+        <h3>${escapeHtml(countryLabel)}</h3>
+        ${chips.length
+          ? `<div class="tour-travel-plan-destinations__regions">${chips.map((label) => `<span class="tour-travel-plan-destinations__chip">${escapeHtml(label)}</span>`).join("")}</div>`
+          : `<p class="micro">${escapeHtml(backendT("tour.travel_plan_destinations_country_only", "Country selected directly."))}</p>`}
+      </article>
+    `;
+  }).join("");
 }
 
 function syncPublishedOnWebpageControl(plan = currentTourTravelPlan()) {
@@ -1665,6 +1820,9 @@ function focusPrimaryTitleField() {
 init();
 
 function handleBackendLanguageChanged() {
+  void loadTravelPlanDestinationCatalog().then(() => {
+    tourTravelPlanAdapter?.renderTravelPlanPanel?.({ syncFromDom: true });
+  });
   if (els.onePagerLang && els.onePagerLang.dataset.onePagerLangUserSelected !== "true") {
     delete els.onePagerLang.dataset.onePagerLangInitialized;
     renderOnePagerLanguageOptions();
@@ -1675,6 +1833,7 @@ function handleBackendLanguageChanged() {
   renderLocalizedTourContentEditor();
   renderTourReelVideo();
   tourTravelPlanAdapter?.renderTravelPlanPanel?.({ syncFromDom: true });
+  renderTravelPlanDestinationSummary();
   renderOnePagerImageSelector();
   renderOnePagerExperienceHighlightSelectors();
   renderTourCardImageSelector();
@@ -1719,6 +1878,7 @@ async function init() {
     return;
   }
   await loadExperienceHighlights();
+  await loadTravelPlanDestinationCatalog();
   renderMonthOptions();
   tourTravelPlanAdapter = createTourTravelPlanAdapter({
     state,
@@ -1727,6 +1887,7 @@ async function init() {
     fetchApi,
     escapeHtml,
     onDirtyChange: () => {
+      renderTravelPlanDestinationSummary();
       updateTourDirtyState();
     },
     onTourMutation: (tour, result = null) => {
@@ -1745,6 +1906,7 @@ async function init() {
         state.booking.updated_at = normalizeText(tour?.updated_at) || state.booking.updated_at || null;
       }
       window.setTimeout(() => {
+        renderTravelPlanDestinationSummary();
         renderOnePagerImageSelector();
         renderTourCardImageSelector();
         syncPublishedOnWebpageControl();
@@ -1788,16 +1950,6 @@ async function init() {
         els.onePagerLang.dataset.onePagerLangUserSelected = "true";
         renderOnePagerExperienceHighlightSelectors();
         return;
-      }
-      if (
-        event.target?.matches?.("[data-destination-scope-destination]")
-        || event.target?.matches?.("[data-destination-scope-area]")
-        || event.target?.matches?.("[data-destination-scope-place]")
-      ) {
-        window.setTimeout(() => {
-          syncPublishedOnWebpageControl();
-          updateTourDirtyState();
-        }, 0);
       }
       scheduleTourDirtyState();
     });
@@ -1920,7 +2072,6 @@ async function loadTour({ preserveTravelPlanCollapsedState = false } = {}) {
   const payload = await fetchApi(withApiLang(request.url));
   if (!payload?.tour) return;
 
-  state.options.destinations = Array.isArray(payload.options?.destinations) ? payload.options.destinations : [];
   state.options.styles = Array.isArray(payload.options?.styles) ? payload.options.styles : [];
   applyTourEditorTour(payload.tour, { preserveTravelPlanCollapsedState });
   markTourSnapshotClean();
@@ -1945,7 +2096,7 @@ function applyTourEditorTour(tour, { preserveTravelPlanCollapsedState = false } 
     tour.short_description_i18n,
     tour.short_description
   );
-  updateHeader(tour, tour_destinations(tour), tour_styles(tour));
+  updateHeader(tour, [], tour_styles(tour));
 
   setInput("tour_priority", toInputNumber(tour.priority));
   setInput("tour_seasonality_start_month", tour.seasonality_start_month || "");
@@ -1955,10 +2106,10 @@ function applyTourEditorTour(tour, { preserveTravelPlanCollapsedState = false } 
   renderLocalizedTourContentEditor();
   syncReelVideoDraftItemFromTour(tour);
   tourTravelPlanAdapter?.applyTour(tour, { preserveCollapsedState: preserveTravelPlanCollapsedState });
+  renderTravelPlanDestinationSummary();
   renderOnePagerImageSelector();
   renderTourCardImageSelector();
 
-  renderDestinationChoices(tour_destination_codes(tour));
   renderStyleChoices(tour_style_codes(tour));
   applyTourPermissions();
   syncOnePagerButtonState();
@@ -1969,14 +2120,11 @@ async function initializeNewTourForm() {
   tourDirtySnapshotReady = false;
   const request = toursRequest({ baseURL: apiOrigin, query: { page: 1, page_size: 1 } });
   const payload = await fetchApi(withApiLang(request.url));
-  state.options.destinations = Array.isArray(payload?.available_destinations) ? payload.available_destinations : [];
   state.options.styles = Array.isArray(payload?.available_styles) ? payload.available_styles : [];
   state.tour = {
     id: "",
     title: "",
     title_i18n: {},
-    destinations: [],
-    destination_codes: [],
     styles: [],
     style_codes: [],
     priority: 50,
@@ -1986,7 +2134,7 @@ async function initializeNewTourForm() {
     short_description_i18n: {},
     published_on_webpage: false,
     reel_video: null,
-    travel_plan: { destination_scope: [], destinations: [], days: [] }
+    travel_plan: { days: [] }
   };
 
   state.localizedContent.title_i18n = {};
@@ -2000,34 +2148,15 @@ async function initializeNewTourForm() {
   renderLocalizedTourContentEditor();
   syncReelVideoDraftItemFromTour(state.tour);
   tourTravelPlanAdapter?.applyTour(state.tour);
+  renderTravelPlanDestinationSummary();
   renderOnePagerImageSelector();
   renderTourCardImageSelector();
-  renderDestinationChoices([]);
   renderStyleChoices([]);
   applyTourPermissions();
   clearError();
   setStatus(backendT("tour.status.new", "New tour"));
   markTourSnapshotClean();
   syncOnePagerButtonState();
-}
-
-function renderDestinationChoices(selectedValues) {
-  const values = dedupeOptions([...(state.options.destinations || []), ...(selectedValues || []).map((value) => ({ code: value, label: value }))]);
-  renderCheckboxes({
-    container: els.destinationChoices,
-    inputName: "destinationCountryChoice",
-    values,
-    selectedValues,
-    singleSelect: false,
-    onChange: () => {
-      const selected = getCheckedValues("destinationCountryChoice");
-      if (els.destinationHidden) els.destinationHidden.value = selected.join(", ");
-    }
-  });
-
-  if (els.destinationHidden) {
-    els.destinationHidden.value = (selectedValues || []).join(", ");
-  }
 }
 
 function renderStyleChoices(selectedValues) {
@@ -2098,27 +2227,17 @@ function getCheckedValues(inputName) {
   return Array.from(document.querySelectorAll(`input[name="${inputName}"]:checked`)).map((el) => String(el.value || "").trim());
 }
 
-function selectedDestinationScopeForSave(travelPlanPayload) {
-  if (els.travel_plan_destination_scope_editor instanceof HTMLElement) {
-    return readDestinationScopeFromDom(els.travel_plan_destination_scope_editor);
-  }
-  return Array.isArray(travelPlanPayload?.destination_scope) ? travelPlanPayload.destination_scope : [];
-}
-
-function buildTourSaveValidationMessage({ title = "", destinations = [], styles = [] }) {
+function buildTourSaveValidationMessage({ title = "", styles = [] }) {
   const missing = [];
   if (!normalizeText(title)) {
     missing.push(backendT("tour.validation.title", "Title"));
-  }
-  if (!Array.isArray(destinations) || !destinations.length) {
-    missing.push(backendT("tour.validation.destination_country_required", "at least one destination country"));
   }
   if (!Array.isArray(styles) || !styles.length) {
     missing.push(backendT("tour.validation.style_required", "at least one style"));
   }
   if (!missing.length) return "";
   return backendT("tour.status.required_with_missing", "{base} Missing: {fields}.", {
-    base: backendT("tour.status.required", "Title, at least one Destination Country, and at least one Style are required."),
+    base: backendT("tour.status.required", "Title and at least one Style are required."),
     fields: missing.join(", ")
   });
 }
@@ -2186,12 +2305,11 @@ async function submitForm(event) {
     setStatus(message);
     return;
   }
-  const selectedDestinationScope = selectedDestinationScopeForSave(travelPlanResult.payload);
-  const selectedDestinationCountries = destinationScopeTourDestinations(selectedDestinationScope);
   const travelPlanPayload = {
-    ...(travelPlanResult.payload || {}),
-    destination_scope: selectedDestinationScope
+    ...(travelPlanResult.payload || {})
   };
+  delete travelPlanPayload.destination_scope;
+  delete travelPlanPayload.destinations;
   const publishOnWebpage = Boolean(
     els.publishedOnWebpage?.checked
     && tourWebPagePublicationEligibility(travelPlanPayload).canPublish
@@ -2227,7 +2345,6 @@ async function submitForm(event) {
 
   const validationMessage = buildTourSaveValidationMessage({
     title: payload.title,
-    destinations: selectedDestinationCountries,
     styles: payload.styles
   });
   if (validationMessage) {
@@ -2512,19 +2629,6 @@ function setTourPageOverlay(isVisible, message = "") {
 function updateHeader(tour, destinations, styles) {
   updateHeaderTitle();
   updateHeaderSubtitle();
-}
-
-function tour_destinations(tour) {
-  const scoped = destinationScopeTourDestinations(tour?.travel_plan?.destination_scope);
-  if (scoped.length) return scoped;
-  return [];
-}
-
-function tour_destination_codes(tour) {
-  if (Array.isArray(tour?.destination_codes) && tour.destination_codes.length) {
-    return tour.destination_codes.map((value) => String(value || "").trim()).filter(Boolean);
-  }
-  return [];
 }
 
 function tour_styles(tour) {

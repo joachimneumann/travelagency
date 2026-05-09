@@ -132,7 +132,6 @@ IR: {
 			fields: [
 				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
 				{name: "title", kind: "scalar", typeName: "string", required: false},
-				{name: "destinations", kind: "scalar", typeName: "string", required: false, isArray: true},
 				{name: "styles", kind: "scalar", typeName: "string", required: true, isArray: true},
 				{name: "priority", kind: "scalar", typeName: "int", required: false},
 				{name: "published_on_webpage", kind: "scalar", typeName: "bool", required: false},
@@ -140,7 +139,7 @@ IR: {
 				{name: "seasonality_end_month", kind: "enum", typeName: "MonthCode", required: false},
 				{name: "short_description", kind: "scalar", typeName: "string", required: false},
 				{name: "video", kind: "entity", typeName: "TourVideo", required: false},
-				{name: "travel_plan", kind: "entity", typeName: "TravelPlan", required: false},
+				{name: "travel_plan", kind: "entity", typeName: "MarketingTourTravelPlan", required: false},
 				{name: "created_at", kind: "scalar", typeName: "Timestamp", required: false},
 				{name: "updated_at", kind: "scalar", typeName: "Timestamp", required: false},
 			]
@@ -242,12 +241,12 @@ IR: {
 			]
 		},
 		{
-			name:       "TravelPlanDestinationAreaSelection"
+			name:       "TravelPlanDestinationRegionSelection"
 			domain:     "booking"
 			module:     "database"
-			sourceType: "database.#TravelPlanDestinationAreaSelection"
+			sourceType: "database.#TravelPlanDestinationRegionSelection"
 			fields: [
-				{name: "area_id", kind: "scalar", typeName: "Identifier", required: true},
+				{name: "region_id", kind: "scalar", typeName: "Identifier", required: true},
 				{name: "places", kind: "entity", typeName: "TravelPlanDestinationPlaceSelection", required: false, isArray: true},
 			]
 		},
@@ -258,7 +257,8 @@ IR: {
 			sourceType: "database.#TravelPlanDestinationScopeEntry"
 			fields: [
 				{name: "destination", kind: "enum", typeName: "CountryCode", required: true},
-				{name: "areas", kind: "entity", typeName: "TravelPlanDestinationAreaSelection", required: false, isArray: true},
+				{name: "regions", kind: "entity", typeName: "TravelPlanDestinationRegionSelection", required: false, isArray: true},
+				{name: "places", kind: "entity", typeName: "TravelPlanDestinationPlaceSelection", required: false, isArray: true},
 			]
 		},
 		{
@@ -274,6 +274,21 @@ IR: {
 				{name: "one_pager_hero_image_id", kind: "scalar", typeName: "Identifier", required: false},
 				{name: "one_pager_image_ids", kind: "scalar", typeName: "Identifier", required: false, isArray: true},
 				{name: "one_pager_experience_highlight_ids", kind: "scalar", typeName: "Identifier", required: false, isArray: true},
+				{name: "days", kind: "entity", typeName: "TravelPlanDay", required: false, isArray: true},
+			]
+		},
+		{
+			name:       "MarketingTourTravelPlan"
+			domain:     "booking"
+			module:     "database"
+			sourceType: "database.#MarketingTourTravelPlan"
+			fields: [
+				{name: "tour_card_primary_image_id", kind: "scalar", typeName: "Identifier", required: false},
+				{name: "tour_card_image_ids", kind: "scalar", typeName: "Identifier", required: false, isArray: true},
+				{name: "one_pager_hero_image_id", kind: "scalar", typeName: "Identifier", required: false},
+				{name: "one_pager_image_ids", kind: "scalar", typeName: "Identifier", required: false, isArray: true},
+				{name: "one_pager_experience_highlight_ids", kind: "scalar", typeName: "Identifier", required: false, isArray: true},
+				{name: "derived_experience_highlight_ids", kind: "scalar", typeName: "Identifier", required: false, isArray: true},
 				{name: "days", kind: "entity", typeName: "TravelPlanDay", required: false, isArray: true},
 			]
 		},
@@ -1160,10 +1175,10 @@ IR: {
 			]
 		},
 		{
-			name:       "DestinationArea"
+			name:       "DestinationRegion"
 			domain:     "api"
 			module:     "api"
-			sourceType: "api.#DestinationArea"
+			sourceType: "api.#DestinationRegion"
 			fields: [
 				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
 				{name: "destination", kind: "enum", typeName: "CountryCode", required: true},
@@ -1184,7 +1199,8 @@ IR: {
 			sourceType: "api.#DestinationPlace"
 			fields: [
 				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
-				{name: "area_id", kind: "scalar", typeName: "Identifier", required: true},
+				{name: "destination", kind: "enum", typeName: "CountryCode", required: true},
+				{name: "region_id", kind: "scalar", typeName: "Identifier", required: false},
 				{name: "code", kind: "scalar", typeName: "string", required: true},
 				{name: "name", kind: "scalar", typeName: "string", required: true},
 				{name: "name_i18n", kind: "map", typeName: "string", required: false},
@@ -1202,7 +1218,7 @@ IR: {
 			sourceType: "api.#DestinationScopeCatalogResponse"
 			fields: [
 				{name: "destinations", kind: "transport", typeName: "DestinationScopeCatalogDestination", required: true, isArray: true},
-				{name: "areas", kind: "transport", typeName: "DestinationArea", required: true, isArray: true},
+				{name: "regions", kind: "transport", typeName: "DestinationRegion", required: true, isArray: true},
 				{name: "places", kind: "transport", typeName: "DestinationPlace", required: true, isArray: true},
 			]
 		},
@@ -1217,12 +1233,12 @@ IR: {
 			]
 		},
 		{
-			name:       "DestinationAreaCreateResponse"
+			name:       "DestinationRegionCreateResponse"
 			domain:     "api"
 			module:     "api"
-			sourceType: "api.#DestinationAreaCreateResponse"
+			sourceType: "api.#DestinationRegionCreateResponse"
 			fields: [
-				{name: "area", kind: "transport", typeName: "DestinationArea", required: true},
+				{name: "region", kind: "transport", typeName: "DestinationRegion", required: true},
 				{name: "catalog", kind: "transport", typeName: "DestinationScopeCatalogResponse", required: true},
 			]
 		},
@@ -1276,7 +1292,6 @@ IR: {
 			module:     "api"
 			sourceType: "api.#TourOptions"
 			fields: [
-				{name: "destinations", kind: "transport", typeName: "CatalogOption", required: false, isArray: true},
 				{name: "styles", kind: "transport", typeName: "CatalogOption", required: false, isArray: true},
 			]
 		},
@@ -1869,10 +1884,10 @@ IR: {
 			]
 		},
 		{
-			name:       "DestinationAreaCreateRequest"
+			name:       "DestinationRegionCreateRequest"
 			domain:     "api"
 			module:     "api"
-			sourceType: "api.#DestinationAreaCreateRequest"
+			sourceType: "api.#DestinationRegionCreateRequest"
 			fields: [
 				{name: "destination", kind: "enum", typeName: "CountryCode", required: true},
 				{name: "name", kind: "scalar", typeName: "string", required: true},
@@ -1887,7 +1902,8 @@ IR: {
 			module:     "api"
 			sourceType: "api.#DestinationPlaceCreateRequest"
 			fields: [
-				{name: "area_id", kind: "scalar", typeName: "Identifier", required: true},
+				{name: "destination", kind: "enum", typeName: "CountryCode", required: true},
+				{name: "region_id", kind: "scalar", typeName: "Identifier", required: false},
 				{name: "name", kind: "scalar", typeName: "string", required: true},
 				{name: "name_i18n", kind: "map", typeName: "string", required: false},
 				{name: "code", kind: "scalar", typeName: "string", required: false},
@@ -1910,7 +1926,7 @@ IR: {
 			module:     "api"
 			sourceType: "api.#TourTravelPlanUpdateRequest"
 			fields: [
-				{name: "travel_plan", kind: "entity", typeName: "TravelPlan", required: true},
+				{name: "travel_plan", kind: "entity", typeName: "MarketingTourTravelPlan", required: true},
 				{name: "expected_updated_at", kind: "scalar", typeName: "Timestamp", required: false},
 				{name: "actor", kind: "scalar", typeName: "string", required: false},
 			]
@@ -1924,7 +1940,7 @@ IR: {
 				{name: "expected_updated_at", kind: "scalar", typeName: "Timestamp", required: false},
 				{name: "source_tour_id", kind: "scalar", typeName: "Identifier", required: true},
 				{name: "source_day_id", kind: "scalar", typeName: "Identifier", required: true},
-				{name: "target_travel_plan", kind: "entity", typeName: "TravelPlan", required: false},
+				{name: "target_travel_plan", kind: "entity", typeName: "MarketingTourTravelPlan", required: false},
 				{name: "include_images", kind: "scalar", typeName: "bool", required: true},
 				{name: "include_customer_visible_images_only", kind: "scalar", typeName: "bool", required: true},
 				{name: "include_notes", kind: "scalar", typeName: "bool", required: true},
@@ -1942,7 +1958,7 @@ IR: {
 				{name: "source_tour_id", kind: "scalar", typeName: "Identifier", required: true},
 				{name: "source_service_id", kind: "scalar", typeName: "Identifier", required: true},
 				{name: "insert_after_service_id", kind: "scalar", typeName: "Identifier", required: false},
-				{name: "target_travel_plan", kind: "entity", typeName: "TravelPlan", required: false},
+				{name: "target_travel_plan", kind: "entity", typeName: "MarketingTourTravelPlan", required: false},
 				{name: "include_images", kind: "scalar", typeName: "bool", required: true},
 				{name: "include_customer_visible_images_only", kind: "scalar", typeName: "bool", required: true},
 				{name: "include_notes", kind: "scalar", typeName: "bool", required: true},
@@ -2173,14 +2189,13 @@ IR: {
 			fields: [
 				{name: "id", kind: "scalar", typeName: "Identifier", required: false},
 				{name: "title", kind: "scalar", typeName: "string", required: false},
-				{name: "destinations", kind: "enum", typeName: "CountryCode", required: false, isArray: true},
 				{name: "styles", kind: "enum", typeName: "TourStyleCode", required: false, isArray: true},
 				{name: "priority", kind: "scalar", typeName: "int", required: false},
 				{name: "published_on_webpage", kind: "scalar", typeName: "bool", required: false},
 				{name: "seasonality_start_month", kind: "enum", typeName: "MonthCode", required: false},
 				{name: "seasonality_end_month", kind: "enum", typeName: "MonthCode", required: false},
 				{name: "short_description", kind: "scalar", typeName: "string", required: false},
-				{name: "travel_plan", kind: "entity", typeName: "TravelPlan", required: false},
+				{name: "travel_plan", kind: "entity", typeName: "MarketingTourTravelPlan", required: false},
 				{name: "expected_updated_at", kind: "scalar", typeName: "Timestamp", required: false},
 			]
 		},

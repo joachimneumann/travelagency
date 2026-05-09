@@ -732,14 +732,14 @@ export function createStaticTranslationService({
           key: code ? `destination.${code}.label` : ""
         };
       });
-    const areaEntries = (Array.isArray(store?.destination_areas) ? store.destination_areas : [])
+    const regionEntries = (Array.isArray(store?.destination_regions) ? store.destination_regions : [])
       .map((record) => ({
         record,
-        kind: "area",
+        kind: "region",
         mapField: "name_i18n",
         sourceField: "name",
         sourceFallback: "",
-        key: `area.${normalizeText(record?.id)}.name`
+        key: `region.${normalizeText(record?.id)}.name`
       }));
     const placeEntries = (Array.isArray(store?.destination_places) ? store.destination_places : [])
       .map((record) => ({
@@ -751,7 +751,7 @@ export function createStaticTranslationService({
         key: `place.${normalizeText(record?.id)}.name`
       }));
 
-    return [...destinationEntries, ...areaEntries, ...placeEntries]
+    return [...destinationEntries, ...regionEntries, ...placeEntries]
       .filter((entry) => (
         entry.record
         && typeof entry.record === "object"

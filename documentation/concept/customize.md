@@ -112,7 +112,7 @@ The map should update whenever:
 - a day is deleted from the timeline
 - the timeline order changes
 
-For v1, the map can use a static image with marker coordinates resolved from destination place/area latitude and longitude. A full map library is optional and should only be added if the product needs zooming, panning, or accurate geographic interaction.
+For v1, the map can use a static image with marker coordinates resolved from destination place latitude and longitude. A full map library is optional and should only be added if the product needs zooming, panning, or accurate geographic interaction.
 
 ### Several Days At The Same Location
 
@@ -258,9 +258,8 @@ Many marketing-tour days refer to the same real place. If each day stores its ow
 Store coordinates once on reusable destination catalog records instead:
 
 - destination place: exact city, town, site, hotel area, airport, or attraction
-- destination area: broader region or fallback centroid
 
-Marketing-tour days should reference a destination place or area. The customizer resolves the route point from that reference.
+Marketing-tour days should reference a destination place for route coordinates. The customizer resolves the route point from that place reference. Regions are grouping nodes only and do not have latitude or longitude.
 
 For v1, use the day overnight location as the route-marker source. One representative marker per day is acceptable. If a day has many service locations, the map still uses the overnight location unless a tour editor sets a day-level route override.
 
@@ -271,19 +270,18 @@ Recommended catalog shape:
   destination_places: [
     {
       id: "place_hoi_an",
-      area_id: "area_central_vietnam",
+      destination: "VN",
+      region_id: "region_central_vietnam",
       name: "Hội An",
       latitude: 15.8801,
       longitude: 108.3380
     }
   ],
-  destination_areas: [
+  destination_regions: [
     {
-      id: "area_central_vietnam",
+      id: "region_central_vietnam",
       destination: "VN",
-      name: "Central Vietnam",
-      latitude: 16.3,
-      longitude: 107.6
+      name: "Central Vietnam"
     }
   ]
 }
@@ -295,8 +293,7 @@ Recommended travel-plan day shape:
 {
   id: "day_...",
   title: "Explore Hoi An Ancient Town",
-  destination_place_id: "place_hoi_an",
-  destination_area_id: "area_central_vietnam"
+  destination_place_id: "place_hoi_an"
 }
 ```
 
@@ -304,8 +301,7 @@ Route point resolution order:
 
 1. day-level route override, if present
 2. referenced destination place coordinates
-3. referenced destination area coordinates
-4. no marker / not available
+3. no marker / not available
 
 Day-level overrides are still useful for special cases, for example a river cruise, a mountain pass route, or a multi-stop day where the route marker should sit at a curated midpoint. These overrides should be exceptions, not the default.
 
@@ -327,17 +323,17 @@ Optional days can come from:
 
 Only show optional days that have overnight latitude/longitude. Days without usable route coordinates should be hidden from the optional-days catalog.
 
-The current destination scope catalog already has destinations, areas, and places, but it does not yet store latitude or longitude. Coordinates should be added to that catalog before relying on route maps.
+The destination scope catalog has destinations, regions, and places. Places carry latitude and longitude; regions do not.
 
 V1 coordinate seeding decision:
 
-- manually seed latitude and longitude for the current Vietnam destination areas and places
+- manually seed latitude and longitude for the current Vietnam destination places
 - keep the coordinate fields in the reusable destination catalog, not duplicated on each tour day
 - add editor maintenance after the seeded catalog proves the route-map workflow
 
-Existing travel-plan days also do not currently have structured `destination_place_id` or `destination_area_id` fields. They should be added so days can resolve their map point through the catalog.
+Existing travel-plan days also do not currently have structured `destination_place_id` fields. They should be added so days can resolve their map point through the catalog.
 
-Tour editors should maintain the route coordinates inside the marketing tour editor. The editor should make it easy to choose a destination place or area for each day and should expose latitude/longitude maintenance for the selected overnight location.
+Tour editors should maintain the route coordinates inside the marketing tour editor. The editor should make it easy to choose a destination place for each day and should expose latitude/longitude maintenance for the selected overnight location.
 
 If an optional day source becomes unavailable because the source tour is unpublished or the day is removed after the public customization data was generated, delete that optional day from the visitor's available/customized state the next time the state is reconciled.
 
@@ -497,9 +493,9 @@ The projected `{ x, y }` values can drive marker placement with percentages and 
 
 Recommended implementation sequence:
 
-1. Add coordinate fields to destination areas and places.
+1. Add coordinate fields to destination places.
 2. Manually seed coordinates for the current Vietnam destination catalog.
-3. Add day references to destination place/area records.
+3. Add day references to destination place records.
 4. Generate public-safe optional-day data from published marketing tours and removed base-tour days.
 5. Build the frontend customizer overlay and local itinerary state.
 6. Apply finished customization back into the visible tour details.

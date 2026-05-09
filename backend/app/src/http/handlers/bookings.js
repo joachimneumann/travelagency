@@ -226,7 +226,7 @@ export function createBookingHandlers(deps) {
   function defaultInitialBookingTravelPlan(destinations) {
     return {
       ...defaultBookingTravelPlan(),
-      destination_scope: destinations.map((destination) => ({ destination, areas: [] })),
+      destination_scope: destinations.map((destination) => ({ destination, regions: [], places: [] })),
       destinations
     };
   }
@@ -1044,7 +1044,7 @@ export function createBookingHandlers(deps) {
       persons: [],
       travel_plan: {
         ...defaultBookingTravelPlan(),
-        destination_scope: destinations.map((destination) => ({ destination, areas: [] })),
+        destination_scope: destinations.map((destination) => ({ destination, regions: [], places: [] })),
         destinations
       },
       offer: defaultBookingOffer(preferredCurrency),

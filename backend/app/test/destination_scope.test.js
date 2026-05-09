@@ -3,17 +3,23 @@ import assert from "node:assert/strict";
 import {
   buildDestinationScopeCatalogResponse,
   createDestinationCatalogDestinationRecord,
-  createDestinationAreaRecord,
+  createDestinationRegionRecord,
   createDestinationPlaceRecord,
+  deleteDestinationCatalogDestination,
+  deleteDestinationRegion,
+  deleteDestinationPlace,
+  deriveDestinationScopeFromTravelPlanLocations,
   destinationScopeDestinations,
   destinationScopeTourDestinations,
   ensureDestinationScopeCatalogI18n,
+  mergeDestinationScopeWithTravelPlanLocations,
   normalizeDestinationScope,
   normalizeTravelPlanDestinationScope,
   upsertDestinationCatalogDestination,
-  upsertDestinationArea,
+  upsertDestinationRegion,
   upsertDestinationPlace,
   validateDestinationScopeAgainstCatalog,
+  validateTravelPlanDayLocationIdsAgainstCatalog,
   withDerivedDestinationsFromScope
 } from "../src/domain/destination_scope.js";
 
@@ -33,9 +39,9 @@ test("destination scope ignores legacy destination fields unless scope is explic
   ]);
 
   assert.deepEqual(scope, [
-    { destination: "VN", areas: [] },
-    { destination: "TH", areas: [] },
-    { destination: "KH", areas: [] }
+    { destination: "VN", regions: [], places: [] },
+    { destination: "TH", regions: [], places: [] },
+    { destination: "KH", regions: [], places: [] }
   ]);
   assert.deepEqual(destinationScopeDestinations(scope), ["VN", "TH", "KH"]);
   assert.deepEqual(destinationScopeTourDestinations(scope), ["vietnam", "thailand", "cambodia"]);
@@ -53,20 +59,20 @@ test("destination scope ignores legacy destination fields unless scope is explic
   );
 });
 
-test("destination area and place catalog validates selected scope", () => {
+test("destination region and place catalog validates selected scope", () => {
   let store = {};
-  const areaRecord = createDestinationAreaRecord(
-    { destination: "Vietnam", name: "Central", latitude: "16.4637", longitude: "107.5909", map_zoom: "8" },
-    { randomUUID: idFactory("area_uuid"), nowIso: () => fixedNow }
+  const regionRecord = createDestinationRegionRecord(
+    { destination: "Vietnam", name: "Central" },
+    { randomUUID: idFactory("region_uuid"), nowIso: () => fixedNow }
   );
-  assert.equal(areaRecord.ok, true);
+  assert.equal(regionRecord.ok, true);
 
-  const areaResult = upsertDestinationArea(store, areaRecord.area);
-  assert.equal(areaResult.ok, true);
-  store = areaResult.store;
+  const regionResult = upsertDestinationRegion(store, regionRecord.region);
+  assert.equal(regionResult.ok, true);
+  store = regionResult.store;
 
   const placeRecord = createDestinationPlaceRecord(
-    { area_id: areaResult.area.id, name: "Hoi An", latitude: 15.8801, longitude: 108.338, map_zoom: 12 },
+    { region_id: regionResult.region.id, name: "Hoi An", latitude: 15.8801, longitude: 108.338, map_zoom: 12 },
     store,
     { randomUUID: idFactory("place_uuid"), nowIso: () => fixedNow }
   );
@@ -81,11 +87,11 @@ test("destination area and place catalog validates selected scope", () => {
     { code: catalog.destinations[0].code, label: catalog.destinations[0].label },
     { code: "VN", label: "Vietnam" }
   );
-  assert.equal(catalog.areas[0].id, "area_area_uuid");
-  assert.equal(catalog.areas[0].label, "Central");
-  assert.equal(catalog.areas[0].latitude, 16.4637);
-  assert.equal(catalog.areas[0].longitude, 107.5909);
-  assert.equal(catalog.areas[0].map_zoom, 8);
+  assert.equal(catalog.regions[0].id, "region_region_uuid");
+  assert.equal(catalog.regions[0].label, "Central");
+  assert.equal(catalog.regions[0].latitude, undefined);
+  assert.equal(catalog.regions[0].longitude, undefined);
+  assert.equal(catalog.regions[0].map_zoom, undefined);
   assert.equal(catalog.places[0].id, "place_place_uuid");
   assert.equal(catalog.places[0].label, "Hoi An");
   assert.equal(catalog.places[0].latitude, 15.8801);
@@ -95,9 +101,10 @@ test("destination area and place catalog validates selected scope", () => {
   const valid = validateDestinationScopeAgainstCatalog([
     {
       destination: "VN",
-      areas: [
+      places: [],
+      regions: [
         {
-          area_id: areaResult.area.id,
+          region_id: regionResult.region.id,
           places: [{ place_id: placeResult.place.id }]
         }
       ]
@@ -108,7 +115,7 @@ test("destination area and place catalog validates selected scope", () => {
   const invalid = validateDestinationScopeAgainstCatalog([
     {
       destination: "TH",
-      areas: [{ area_id: areaResult.area.id, places: [] }]
+      regions: [{ region_id: regionResult.region.id, places: [] }]
     }
   ], store);
   assert.equal(invalid.ok, false);
@@ -144,9 +151,118 @@ test("destination catalog can add missing supported destinations", () => {
   assert.equal(duplicate.ok, false);
   assert.match(duplicate.error, /already exists/);
 
-  const invalidScope = validateDestinationScopeAgainstCatalog([{ destination: "KH", areas: [] }], store);
+  const invalidScope = validateDestinationScopeAgainstCatalog([{ destination: "KH", regions: [] }], store);
   assert.equal(invalidScope.ok, false);
   assert.match(invalidScope.error, /Unknown destination: KH/);
+});
+
+test("destination catalog deletes only empty places, regions, and destinations", () => {
+  let store = {
+    destination_scope_destinations: [
+      { code: "VN", label: "Vietnam", sort_order: 0, is_active: true },
+      { code: "TH", label: "Thailand", sort_order: 1, is_active: true }
+    ],
+    destination_regions: [
+      { id: "region_central", destination: "VN", code: "central", name: "Central", sort_order: 0, is_active: true },
+      { id: "region_north", destination: "VN", code: "north", name: "North", sort_order: 1, is_active: true },
+      { id: "region_bangkok", destination: "TH", code: "bangkok", name: "Bangkok", sort_order: 0, is_active: true }
+    ],
+    destination_places: [
+      { id: "place_hue", region_id: "region_central", code: "hue", name: "Hue", sort_order: 0, is_active: true },
+      { id: "place_hanoi", region_id: "region_north", code: "hanoi", name: "Hanoi", sort_order: 0, is_active: true },
+      { id: "place_sukhumvit", region_id: "region_bangkok", code: "sukhumvit", name: "Sukhumvit", sort_order: 0, is_active: true }
+    ]
+  };
+
+  const placeResult = deleteDestinationPlace(store, "place_hue");
+  assert.equal(placeResult.ok, true);
+  store = placeResult.store;
+  assert.equal(store.destination_places.some((place) => place.id === "place_hue"), false);
+  assert.equal(store.destination_regions.some((region) => region.id === "region_central"), true);
+
+  const regionWithPlacesResult = deleteDestinationRegion(store, "region_north");
+  assert.equal(regionWithPlacesResult.ok, false);
+  assert.match(regionWithPlacesResult.error, /still has places/);
+
+  const destinationWithRegionsResult = deleteDestinationCatalogDestination(store, "TH");
+  assert.equal(destinationWithRegionsResult.ok, false);
+  assert.match(destinationWithRegionsResult.error, /still has regions/);
+
+  const emptyRegionResult = deleteDestinationRegion(store, "region_central");
+  assert.equal(emptyRegionResult.ok, true);
+  store = emptyRegionResult.store;
+  assert.equal(store.destination_regions.some((region) => region.id === "region_central"), false);
+
+  const placeBeforeRegionResult = deleteDestinationPlace(store, "place_hanoi");
+  assert.equal(placeBeforeRegionResult.ok, true);
+  store = placeBeforeRegionResult.store;
+  const regionResult = deleteDestinationRegion(store, "region_north");
+  assert.equal(regionResult.ok, true);
+  store = regionResult.store;
+  assert.equal(store.destination_regions.some((region) => region.id === "region_north"), false);
+
+  const thaiPlaceResult = deleteDestinationPlace(store, "place_sukhumvit");
+  assert.equal(thaiPlaceResult.ok, true);
+  store = thaiPlaceResult.store;
+  const thaiRegionResult = deleteDestinationRegion(store, "region_bangkok");
+  assert.equal(thaiRegionResult.ok, true);
+  store = thaiRegionResult.store;
+  const destinationResult = deleteDestinationCatalogDestination(store, "TH");
+  assert.equal(destinationResult.ok, true);
+  store = destinationResult.store;
+  assert.equal(store.destination_scope_destinations.some((destination) => destination.code === "TH"), false);
+});
+
+test("travel plan day locations derive compatibility destination scope", () => {
+  const store = {
+    destination_scope_destinations: [
+      { code: "VN", label: "Vietnam", sort_order: 0, is_active: true }
+    ],
+    destination_regions: [
+      { id: "region_central", destination: "VN", name: "Central Vietnam", sort_order: 0, is_active: true }
+    ],
+    destination_places: [
+      { id: "place_hoi_an", region_id: "region_central", name: "Hoi An", sort_order: 0, is_active: true }
+    ]
+  };
+  const travelPlan = {
+    days: [
+      { primary_location_id: "region_central" },
+      { primary_location_id: "place_hoi_an" }
+    ]
+  };
+
+  assert.deepEqual(deriveDestinationScopeFromTravelPlanLocations(travelPlan, store), [
+    {
+      destination: "VN",
+      places: [],
+      regions: [
+        {
+          region_id: "region_central",
+          places: [{ place_id: "place_hoi_an" }]
+        }
+      ]
+    }
+  ]);
+  assert.deepEqual(
+    mergeDestinationScopeWithTravelPlanLocations([{ destination: "VN", regions: [], places: [] }], travelPlan, store),
+    [
+      {
+        destination: "VN",
+        places: [],
+        regions: [
+          {
+            region_id: "region_central",
+            places: [{ place_id: "place_hoi_an" }]
+          }
+        ]
+      }
+    ]
+  );
+  assert.equal(validateTravelPlanDayLocationIdsAgainstCatalog(travelPlan, store).ok, true);
+  assert.equal(validateTravelPlanDayLocationIdsAgainstCatalog({
+    days: [{ primary_location_id: "place_missing" }]
+  }, store).ok, false);
 });
 
 test("empty destination catalog is pre-populated with supported destinations", () => {
@@ -162,27 +278,26 @@ test("empty destination catalog is pre-populated with supported destinations", (
     ]
   );
 
-  const areaRecord = createDestinationAreaRecord(
+  const regionRecord = createDestinationRegionRecord(
     { destination: "VN", name: "Central" },
-    { randomUUID: idFactory("area_uuid"), nowIso: () => fixedNow }
+    { randomUUID: idFactory("region_uuid"), nowIso: () => fixedNow }
   );
-  assert.equal(areaRecord.ok, true);
-  const areaResult = upsertDestinationArea(store, areaRecord.area);
-  assert.equal(areaResult.ok, true);
+  assert.equal(regionRecord.ok, true);
+  const regionResult = upsertDestinationRegion(store, regionRecord.region);
+  assert.equal(regionResult.ok, true);
 });
 
-test("destination catalog labels fall back to base names before another language", () => {
+test("destination catalog labels use canonical base names", () => {
   const store = {
     destination_scope_destinations: [
       { code: "VN", label: "Vietnam", sort_order: 0, is_active: true }
     ],
-    destination_areas: [
+    destination_regions: [
       {
-        id: "area_central",
+        id: "region_central",
         destination: "VN",
         code: "central",
         name: "Central",
-        name_i18n: { vi: "Miền Trung" },
         sort_order: 0,
         is_active: true
       }
@@ -190,10 +305,9 @@ test("destination catalog labels fall back to base names before another language
     destination_places: [
       {
         id: "place_hue",
-        area_id: "area_central",
+        region_id: "region_central",
         code: "hue",
         name: "Hue",
-        name_i18n: { vi: "Huế" },
         sort_order: 0,
         is_active: true
       }
@@ -204,26 +318,26 @@ test("destination catalog labels fall back to base names before another language
   const germanCatalog = buildDestinationScopeCatalogResponse(store, { lang: "de" });
   const vietnameseCatalog = buildDestinationScopeCatalogResponse(store, { lang: "vi" });
 
-  assert.equal(englishCatalog.areas[0].label, "Central");
+  assert.equal(englishCatalog.regions[0].label, "Central");
   assert.equal(englishCatalog.places[0].label, "Hue");
-  assert.equal(germanCatalog.areas[0].label, "Central");
+  assert.equal(germanCatalog.regions[0].label, "Central");
   assert.equal(germanCatalog.places[0].label, "Hue");
-  assert.equal(vietnameseCatalog.areas[0].label, "Miền Trung");
-  assert.equal(vietnameseCatalog.places[0].label, "Huế");
+  assert.equal(vietnameseCatalog.regions[0].label, "Central");
+  assert.equal(vietnameseCatalog.places[0].label, "Hue");
 });
 
-test("destination catalog i18n fills destinations, areas, and places", async () => {
+test("destination catalog i18n cleanup strips legacy localized maps", async () => {
   const store = {
     destination_scope_destinations: [
-      { code: "VN", label: "Vietnam", sort_order: 0, is_active: true }
+      { code: "VN", label: "Vietnam", label_i18n: { vi: "Việt Nam" }, sort_order: 0, is_active: true }
     ],
-    destination_areas: [
+    destination_regions: [
       {
-        id: "area_central",
+        id: "region_central",
         destination: "VN",
         code: "central",
         name: "Central",
-        name_i18n: {},
+        name_i18n: { vi: "Miền Trung" },
         sort_order: 100,
         is_active: true
       }
@@ -231,54 +345,26 @@ test("destination catalog i18n fills destinations, areas, and places", async () 
     destination_places: [
       {
         id: "place_hoi_an",
-        area_id: "area_central",
+        region_id: "region_central",
         code: "hoi-an",
         name: "Hoi An",
-        name_i18n: {},
+        name_i18n: { vi: "Hội An" },
         sort_order: 100,
         is_active: true
       }
     ]
   };
-  const translatedRequests = [];
   const result = await ensureDestinationScopeCatalogI18n(store, {
     languages: ["en", "fr", "de"],
     nowIso: () => fixedNow,
     translateEntriesWithMeta: async (entries, lang) => {
-      translatedRequests.push({ entries, lang });
-      return {
-        entries: Object.fromEntries(
-          Object.entries(entries).map(([key, value]) => [key, `${value} ${lang}`])
-        )
-      };
+      throw new Error(`Unexpected translation request for ${lang}`);
     }
   });
 
   assert.equal(result.errors.length, 0);
-  assert.deepEqual(result.store.destination_scope_destinations[0].label_i18n, {
-    en: "Vietnam",
-    ar: "فيتنام",
-    fr: "Vietnam",
-    zh: "越南",
-    ja: "ベトナム",
-    ko: "베트남",
-    vi: "Việt Nam",
-    ms: "Vietnam",
-    de: "Vietnam",
-    es: "Vietnam",
-    it: "Vietnam",
-    ru: "Вьетнам",
-    nl: "Vietnam",
-    pl: "Wietnam",
-    da: "Vietnam",
-    sv: "Vietnam",
-    no: "Vietnam"
-  });
-  assert.equal(result.store.destination_areas[0].name_i18n.en, "Central");
-  assert.equal(result.store.destination_areas[0].name_i18n.fr, "Central fr");
-  assert.equal(result.store.destination_areas[0].name_i18n.de, "Central de");
-  assert.equal(result.store.destination_places[0].name_i18n.en, "Hoi An");
-  assert.equal(result.store.destination_places[0].name_i18n.fr, "Hoi An fr");
-  assert.equal(result.store.destination_places[0].name_i18n.de, "Hoi An de");
-  assert.deepEqual(translatedRequests.map((request) => request.lang), ["fr", "de"]);
+  assert.equal(result.translated, false);
+  assert.equal(Object.hasOwn(result.store.destination_scope_destinations[0], "label_i18n"), false);
+  assert.equal(Object.hasOwn(result.store.destination_regions[0], "name_i18n"), false);
+  assert.equal(Object.hasOwn(result.store.destination_places[0], "name_i18n"), false);
 });

@@ -16,25 +16,6 @@
   "created_at": "2026-04-09T03:37:52.367Z",
   "updated_at": "2026-05-05T07:05:43.065Z",
   "travel_plan": {
-    "destination_scope": [
-      {
-        "destination": "VN",
-        "areas": [
-          {
-            "area_id": "area_3fa05b42-97ab-495d-b16d-4691e66e0434",
-            "places": [
-              {
-                "place_id": "place_a8172e07-213b-46ed-bb88-f0f77bb7fbe0"
-              }
-            ]
-          },
-          {
-            "area_id": "area_024155db-da17-4cdb-ae0e-a01fd1e77f58",
-            "places": []
-          }
-        ]
-      }
-    ],
     "tour_card_image_ids": [
       "travel_plan_service_image_ee80bf4d-6417-44aa-a4c2-8a19819afba5",
       "travel_plan_service_image_66239309-9b58-458d-92a9-265a203b1492",
@@ -198,7 +179,9 @@
             }
           }
         ],
-        "notes": "Spend the day with Hanoi's layered history, from Hoa Lo Prison and Ho Chi Minh's memorial sites to Confucian courtyards and a lotus-shaped pagoda."
+        "notes": "Spend the day with Hanoi's layered history, from Hoa Lo Prison and Ho Chi Minh's memorial sites to Confucian courtyards and a lotus-shaped pagoda.",
+        "primary_location_id": "place_a8172e07-213b-46ed-bb88-f0f77bb7fbe0",
+        "secondary_location_id": null
       },
       {
         "id": "travel_plan_day_aba484c1-bf58-44ac-a62c-17d04eabba24",

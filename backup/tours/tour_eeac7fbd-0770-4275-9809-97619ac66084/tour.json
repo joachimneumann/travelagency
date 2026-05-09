@@ -16,21 +16,6 @@
   "created_at": "2026-04-09T03:29:39.112Z",
   "updated_at": "2026-05-05T02:32:14.143Z",
   "travel_plan": {
-    "destination_scope": [
-      {
-        "destination": "VN",
-        "areas": [
-          {
-            "area_id": "area_3fa05b42-97ab-495d-b16d-4691e66e0434",
-            "places": [
-              {
-                "place_id": "place_a8172e07-213b-46ed-bb88-f0f77bb7fbe0"
-              }
-            ]
-          }
-        ]
-      }
-    ],
     "tour_card_image_ids": [
       "travel_plan_service_image_9fd14563-b2e0-4680-8202-4c00e641471c",
       "travel_plan_service_image_a73baa84-2431-4bb1-812e-4e3ff20d40a6",
@@ -83,7 +68,9 @@
             }
           }
         ],
-        "notes": "Begin with airport pickup and a private transfer into the northern mountains, where Sapa's cooler air and misty scenery set the tone."
+        "notes": "Begin with airport pickup and a private transfer into the northern mountains, where Sapa's cooler air and misty scenery set the tone.",
+        "primary_location_id": "place_a8172e07-213b-46ed-bb88-f0f77bb7fbe0",
+        "secondary_location_id": null
       },
       {
         "id": "travel_plan_day_f87d54f7-c56b-472a-8847-36b0833b398d",

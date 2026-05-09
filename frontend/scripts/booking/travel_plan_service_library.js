@@ -592,7 +592,7 @@ export function createBookingTravelPlanServiceLibraryModule(deps) {
             ...(Array.isArray(currentTravelPlan?.days) ? currentTravelPlan.days : []),
             importedDay
           ]
-        }, searchResult.source_destination_scope);
+        });
         applyLocalTravelPlanImport(nextTravelPlan, bookingT("booking.travel_plan.day_inserted", "Day inserted."));
         return;
       }
@@ -671,7 +671,7 @@ export function createBookingTravelPlanServiceLibraryModule(deps) {
         const nextTravelPlan = mergeDestinationScopeIntoTravelPlan({
           ...cloneJson(currentTravelPlan),
           days: targetDays
-        }, searchResult.source_destination_scope);
+        });
         applyLocalTravelPlanImport(nextTravelPlan, bookingT("booking.travel_plan.item_inserted", "Service inserted."));
         return;
       }

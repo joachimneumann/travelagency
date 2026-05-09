@@ -81,30 +81,48 @@
   "typeName": "Identifier"
 },
   PARAM_14: {
+  "name": "destination",
+  "location": "path",
+  "required": true,
+  "typeName": "Identifier"
+},
+  PARAM_15: {
+  "name": "region_id",
+  "location": "path",
+  "required": true,
+  "typeName": "Identifier"
+},
+  PARAM_16: {
+  "name": "place_id",
+  "location": "path",
+  "required": true,
+  "typeName": "Identifier"
+},
+  PARAM_17: {
   "name": "q",
   "location": "query",
   "required": false,
   "typeName": "Identifier"
 },
-  PARAM_15: {
+  PARAM_18: {
   "name": "service_kind",
   "location": "query",
   "required": false,
   "typeName": "Identifier"
 },
-  PARAM_16: {
+  PARAM_19: {
   "name": "exclude_tour_id",
   "location": "query",
   "required": false,
   "typeName": "Identifier"
 },
-  PARAM_17: {
+  PARAM_20: {
   "name": "limit",
   "location": "query",
   "required": false,
   "typeName": "Identifier"
 },
-  PARAM_18: {
+  PARAM_21: {
   "name": "offset",
   "location": "query",
   "required": false,
@@ -887,14 +905,36 @@
         ]
       },
       {
-        key: "destination_scope_area_create",
-        path: "/api/v1/destination-scope/areas",
+        key: "destination_scope_destination_delete",
+        path: "/api/v1/destination-scope/destinations/{destination}",
+        method: "DELETE",
+        authenticated: true,
+        requestType: null,
+        responseType: "DestinationScopeDeleteResponse",
+        parameters: [
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_14)
+        ]
+      },
+      {
+        key: "destination_scope_region_create",
+        path: "/api/v1/destination-scope/regions",
         method: "POST",
         authenticated: true,
-        requestType: "DestinationAreaCreateRequest",
-        responseType: "DestinationAreaCreateResponse",
+        requestType: "DestinationRegionCreateRequest",
+        responseType: "DestinationRegionCreateResponse",
         parameters: [
 
+        ]
+      },
+      {
+        key: "destination_scope_region_delete",
+        path: "/api/v1/destination-scope/regions/{region_id}",
+        method: "DELETE",
+        authenticated: true,
+        requestType: null,
+        responseType: "DestinationScopeDeleteResponse",
+        parameters: [
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_15)
         ]
       },
       {
@@ -906,6 +946,17 @@
         responseType: "DestinationPlaceCreateResponse",
         parameters: [
 
+        ]
+      },
+      {
+        key: "destination_scope_place_delete",
+        path: "/api/v1/destination-scope/places/{place_id}",
+        method: "DELETE",
+        authenticated: true,
+        requestType: null,
+        responseType: "DestinationScopeDeleteResponse",
+        parameters: [
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_16)
         ]
       },
       {
@@ -938,11 +989,11 @@
         requestType: null,
         responseType: "TourTravelPlanDaySearchResponse",
         parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_14),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_15),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_16),
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_17),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_18)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_18),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_19),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_20),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_21)
         ]
       },
       {
@@ -953,11 +1004,11 @@
         requestType: null,
         responseType: "TourTravelPlanServiceSearchResponse",
         parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_14),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_15),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_16),
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_17),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_18)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_18),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_19),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_20),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_21)
         ]
       },
       {

@@ -284,6 +284,7 @@ export function createEmptyTravelPlanDay(index = 0) {
     overnight_location_i18n: {},
     primary_location_id: "",
     secondary_location_id: "",
+    experience_highlight_ids: [],
     services: [],
     notes: "",
     notes_i18n: {}
@@ -373,6 +374,18 @@ function normalizeOnePagerExperienceHighlightIds(values) {
     });
 }
 
+function normalizeTravelPlanExperienceHighlightIds(values) {
+  const seen = new Set();
+  return (Array.isArray(values) ? values : [])
+    .map((value) => normalizeOptionalText(value))
+    .filter((id) => {
+      if (!id || seen.has(id)) return false;
+      seen.add(id);
+      return true;
+    })
+    .slice(0, 1);
+}
+
 function normalizeOnePagerHeroImageId(source, days) {
   const heroImageId = normalizeOptionalText(source?.one_pager_hero_image_id);
   if (!heroImageId) return "";
@@ -437,6 +450,7 @@ export function normalizeTravelPlanDraft(plan, options = {}) {
         overnight_location_i18n: overnightLocationField.map,
         primary_location_id: normalizeOptionalText(rawDay.primary_location_id),
         secondary_location_id: normalizeOptionalText(rawDay.secondary_location_id),
+        experience_highlight_ids: normalizeTravelPlanExperienceHighlightIds(rawDay.experience_highlight_ids),
         services: (
           Array.isArray(rawDay.services)
             ? rawDay.services

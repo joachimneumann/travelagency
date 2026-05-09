@@ -158,7 +158,6 @@ import (
 }
 
 #TourOptions: {
-	destinations?: [...#CatalogOption]
 	styles?: [...#CatalogOption]
 }
 
@@ -177,7 +176,6 @@ import (
 	source_tour_id:      common.#Identifier
 	source_tour_title?:  string
 	source_tour_code?:   string
-	source_destination_scope?: [...databaseModel.#TravelPlanDestinationScopeEntry]
 	source_service?:     databaseModel.#TravelPlanService
 	day_number?:         >0 & int
 	service_id:          common.#Identifier
@@ -200,12 +198,14 @@ import (
 	source_tour_id:      common.#Identifier
 	source_tour_title?:  string
 	source_tour_code?:   string
-	source_destination_scope?: [...databaseModel.#TravelPlanDestinationScopeEntry]
 	source_day?:         databaseModel.#TravelPlanDay
 	day_id:              common.#Identifier
 	day_number?:         >0 & int
 	title?:              string
 	overnight_location?: string
+	primary_location_id?: common.#Identifier
+	secondary_location_id?: common.#Identifier
+	experience_highlight_ids?: [...common.#Identifier]
 	notes?:              string
 	thumbnail_url?:      common.#Url | string
 	service_count?:      >=0 & int
@@ -227,16 +227,13 @@ import (
 	updated_at?: common.#Timestamp | null
 }
 
-#DestinationArea: {
+#DestinationRegion: {
 	id:          common.#Identifier
 	destination: enums.#CountryCode
 	code:        string & !=""
 	name:        string & !=""
 	name_i18n?: [string]: string
 	label:       string & !=""
-	latitude?:   >=-90 & <=90 & number
-	longitude?:  >=-180 & <=180 & number
-	map_zoom?:   >=0 & <=22 & int
 	sort_order:  >=0 & int
 	is_active:   bool
 	created_at?: common.#Timestamp | null
@@ -244,8 +241,9 @@ import (
 }
 
 #DestinationPlace: {
-	id:      common.#Identifier
-	area_id: common.#Identifier
+	id:          common.#Identifier
+	destination: enums.#CountryCode
+	region_id?: common.#Identifier
 	code:    string & !=""
 	name:    string & !=""
 	name_i18n?: [string]: string
@@ -261,7 +259,7 @@ import (
 
 #DestinationScopeCatalogResponse: {
 	destinations: [...#DestinationScopeCatalogDestination]
-	areas: [...#DestinationArea]
+	regions: [...#DestinationRegion]
 	places: [...#DestinationPlace]
 }
 
@@ -270,13 +268,18 @@ import (
 	catalog:     #DestinationScopeCatalogResponse
 }
 
-#DestinationAreaCreateResponse: {
-	area:    #DestinationArea
+#DestinationRegionCreateResponse: {
+	region:    #DestinationRegion
 	catalog: #DestinationScopeCatalogResponse
 }
 
 #DestinationPlaceCreateResponse: {
 	place:   #DestinationPlace
+	catalog: #DestinationScopeCatalogResponse
+}
+
+#DestinationScopeDeleteResponse: {
+	deleted: bool
 	catalog: #DestinationScopeCatalogResponse
 }
 

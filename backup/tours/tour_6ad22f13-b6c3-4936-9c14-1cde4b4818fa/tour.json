@@ -15,17 +15,6 @@
   "created_at": "2026-04-13T09:16:46.974Z",
   "updated_at": "2026-05-08T07:06:53.509Z",
   "travel_plan": {
-    "destination_scope": [
-      {
-        "destination": "VN",
-        "areas": [
-          {
-            "area_id": "area_3fa05b42-97ab-495d-b16d-4691e66e0434",
-            "places": []
-          }
-        ]
-      }
-    ],
     "tour_card_image_ids": [
       "travel_plan_service_image_082a5d88-405b-4af1-bf38-983c3394385d",
       "travel_plan_service_image_f42ccab6-f020-406e-8006-2bd8193fec73",
@@ -43,7 +32,7 @@
         "day_number": 1,
         "title": "Hanoi history and streets",
         "overnight_location": null,
-        "primary_location_id": null,
+        "primary_location_id": "place_a8172e07-213b-46ed-bb88-f0f77bb7fbe0",
         "secondary_location_id": null,
         "services": [
           {

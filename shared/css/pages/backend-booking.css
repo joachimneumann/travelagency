@@ -2382,61 +2382,167 @@
 
 .settings-location-manager__grid {
   display: grid;
-  gap: 10px;
+  gap: 6px;
 }
 
 .settings-location-manager__country {
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 10px 12px;
+  padding: 8px;
   background: var(--surface);
 }
 
+.settings-location-manager__country-head {
+  align-items: center;
+  display: flex;
+  gap: 2px;
+  justify-content: space-between;
+}
+
 .settings-location-manager__country h3 {
-  margin: 0 0 8px;
+  margin: 0;
+}
+
+.settings-location-manager__country h3 {
   font-size: 1rem;
 }
 
-.settings-location-manager__record,
-.settings-location-manager__place {
-  border-top: 1px solid var(--border);
-  padding-top: 8px;
-  margin-top: 8px;
+.settings-location-manager__node-kind {
+  display: block;
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1.2;
+  text-transform: uppercase;
 }
 
-.settings-location-manager__record-head {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  align-items: center;
-  margin-bottom: 6px;
+.settings-location-manager__children {
+  border-left: 1px solid var(--border);
+  display: grid;
+  gap: 6px;
+  margin-left: 20px;
+  margin-top: 6px;
+  padding-left: 28px;
+}
+
+.settings-location-manager__record {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.settings-location-manager__record--focused {
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
 }
 
 .settings-location-manager__fields {
   display: grid;
-  grid-template-columns: minmax(12rem, 1fr) minmax(7.5rem, 9rem) minmax(7.5rem, 9rem);
-  gap: 8px;
-  align-items: end;
+  grid-template-columns: minmax(12rem, 1fr) minmax(6.5rem, 8rem) minmax(6.5rem, 8rem) minmax(3.25rem, max-content) minmax(4.25rem, max-content) max-content;
+  gap: 4px;
+  align-items: center;
 }
 
 .settings-location-manager__fields label {
+  align-items: center;
   display: grid;
-  gap: 2px;
+  gap: 4px;
+  grid-template-columns: max-content minmax(0, 1fr);
   font-size: 0.82rem;
 }
 
 .settings-location-manager__fields input {
   min-width: 0;
-  padding-block: 6px;
+  padding-block: 3px;
+}
+
+.settings-location-manager__name-field {
+  grid-template-columns: max-content minmax(10rem, 1fr);
+}
+
+.settings-location-manager__name-field span {
+  font-weight: 700;
+}
+
+.settings-location-manager__name-field input {
+  justify-self: end;
+  width: 100%;
+}
+
+.settings-location-manager__name-field--region input {
+  max-width: 250px;
+}
+
+.settings-location-manager__name-field--place input {
+  max-width: calc(250px - 48px);
+}
+
+.settings-location-manager__usage {
+  align-items: center;
+  display: grid;
+  gap: 4px;
+  grid-template-columns: max-content minmax(1.5rem, max-content);
+  justify-content: start;
+  font-size: 0.82rem;
+}
+
+.settings-location-manager__usage strong {
+  font-variant-numeric: tabular-nums;
+}
+
+.settings-location-manager__map-link-wrap {
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
+.settings-location-manager__map-link {
+  color: var(--accent);
+  display: inline-block;
+  font-weight: 700;
+  padding-inline: 6px;
+  text-decoration: none;
+}
+
+.settings-location-manager__map-link:hover {
+  text-decoration: underline;
+}
+
+.settings-location-manager__map-link--empty {
+  color: var(--text-muted);
+  cursor: default;
+  font-weight: 600;
+}
+
+.settings-location-manager__map-link--empty:hover {
+  text-decoration: none;
+}
+
+.settings-location-manager__country-actions {
+  align-items: center;
+  display: flex;
+  gap: 6px;
+}
+
+.settings-location-manager__inline-add {
+  justify-self: start;
+  min-height: 0;
+  padding: 3px 6px;
 }
 
 @media (max-width: 760px) {
   .settings-location-manager__fields {
-    grid-template-columns: 1fr minmax(6.5rem, 8rem) minmax(6.5rem, 8rem);
+    grid-template-columns: 1fr minmax(6.5rem, 8rem) minmax(6.5rem, 8rem) minmax(3.25rem, max-content) minmax(4.25rem, max-content) max-content;
   }
 }
 
 @media (max-width: 560px) {
+  .settings-location-manager__country-head {
+    align-items: start;
+    display: grid;
+  }
+
   .settings-location-manager__fields {
     grid-template-columns: 1fr;
   }

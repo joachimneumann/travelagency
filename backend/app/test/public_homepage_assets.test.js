@@ -45,7 +45,7 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
   });
   await writeFile(
     homepageHtmlPath,
-    '<!doctype html><html><head><title data-i18n-id="meta.home_title">Old title</title><meta name="description" content="Old description" data-i18n-content-id="meta.home_description"><meta property="og:title" content="Old title" data-i18n-content-id="meta.home_title"><script type="application/ld+json">{"@context":"https://schema.org","@type":"TravelAgency","description":"Old schema","areaServed":["Vietnam","Thailand"]}</script></head><body><h1 id="heroTitle" class="hero-title-only" data-i18n-id="hero.title">Old title</h1><script src="/frontend/data/generated/homepage/public-homepage-copy.global.js"></script></body></html>\n'
+    '<!doctype html><html><head><title data-i18n-id="meta.home_title">Old title</title><meta name="description" content="Old description" data-i18n-content-id="meta.home_description"><meta property="og:title" content="Old title" data-i18n-content-id="meta.home_title"><script type="application/ld+json">{"@context":"https://schema.org","@type":"TravelAgency","description":"Old schema","regionServed":["Vietnam","Thailand"]}</script></head><body><h1 id="heroTitle" class="hero-title-only" data-i18n-id="hero.title">Old title</h1><script src="/frontend/data/generated/homepage/public-homepage-copy.global.js"></script></body></html>\n'
   );
 
   await writeJson(path.join(contentRoot, "country_reference_info.json"), {
@@ -70,23 +70,10 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
         "travel_plan_service_image_featured",
         "travel_plan_service_image_pickup"
       ],
-      destination_scope: [
-        {
-          destination: "VN",
-          areas: [
-            {
-              area_id: "area_central",
-              places: [
-                { place_id: "place_hoi_an" }
-              ]
-            }
-          ]
-        },
-        { destination: "TH", areas: [] }
-      ],
       days: [
         {
           day_number: 1,
+          primary_location_id: "place_hoi_an",
           title: "Arrival day",
           title_i18n: { de: "Ankunftstag" },
           services: [
@@ -211,9 +198,6 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
     styles: ["luxury"],
     image: "/public/v1/tour-images/tour_hidden/hidden.png",
     travel_plan: {
-      destination_scope: [
-        { destination: "TH", areas: [] }
-      ],
       days: []
     },
     priority: 20,
@@ -228,9 +212,6 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
     styles: ["luxury"],
     published_on_webpage: false,
     travel_plan: {
-      destination_scope: [
-        { destination: "VN", areas: [] }
-      ],
       days: []
     },
     priority: 90,
@@ -242,14 +223,14 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
       { code: "VN", label: "Vietnam", sort_order: 1 },
       { code: "TH", label: "Thailand", sort_order: 2 }
     ],
-    destination_areas: [
-      { id: "area_central", destination: "VN", code: "central", name: "Central", sort_order: 1 },
-      { id: "area_north", destination: "VN", code: "north", name: "North", sort_order: 2 }
+    destination_regions: [
+      { id: "region_central", destination: "VN", code: "central", name: "Central", sort_order: 1 },
+      { id: "region_north", destination: "VN", code: "north", name: "North", sort_order: 2 }
     ],
     destination_places: [
-      { id: "place_hoi_an", area_id: "area_central", code: "hoi-an", name: "Hoi An", sort_order: 1 },
-      { id: "place_unused", area_id: "area_central", code: "unused", name: "Unused", sort_order: 2 },
-      { id: "place_hanoi", area_id: "area_north", code: "hanoi", name: "Hanoi", sort_order: 3 }
+      { id: "place_hoi_an", destination: "VN", region_id: "region_central", code: "hoi-an", name: "Hoi An", sort_order: 1 },
+      { id: "place_unused", destination: "VN", region_id: "region_central", code: "unused", name: "Unused", sort_order: 2 },
+      { id: "place_hanoi", destination: "VN", region_id: "region_north", code: "hanoi", name: "Hanoi", sort_order: 3 }
     ]
   });
 
@@ -338,12 +319,16 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
   assert.equal(publicToursEn.items[0].seo_slug, "alpha-custom-route");
   assert.doesNotMatch(JSON.stringify(publicToursEn), /tour_unpublished|Unpublished tour/);
   assert.deepEqual(publicToursEn.items[0].destination_codes, ["vietnam"]);
-  assert.deepEqual(publicToursEn.available_destinations, [{ code: "vietnam", label: "Vietnam" }]);
+  assert.deepEqual(publicToursEn.available_destinations, [
+    { code: "vietnam", label: "Vietnam" }
+  ]);
   assert.equal(publicToursEn.available_destination_scope_catalog, undefined);
   assert.deepEqual(publicTourDestinationsEn.available_destination_scope_catalog, {
-    destinations: [{ code: "vietnam", country_code: "VN", label: "Vietnam" }],
-    areas: [{ id: "area_central", destination: "vietnam", country_code: "VN", code: "central", label: "Central" }],
-    places: [{ id: "place_hoi_an", area_id: "area_central", code: "hoi-an", label: "Hoi An" }]
+    destinations: [
+      { code: "vietnam", country_code: "VN", label: "Vietnam" }
+    ],
+    regions: [{ id: "region_central", destination: "vietnam", country_code: "VN", code: "central", label: "Central" }],
+    places: [{ id: "place_hoi_an", destination: "vietnam", country_code: "VN", region_id: "region_central", code: "hoi-an", label: "Hoi An" }]
   });
   assert.equal("travel_plan" in publicToursEn.items[0], false);
   assert.equal(publicToursEn.items[0].travel_plan_day_count, 1);
@@ -352,9 +337,10 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
   assert.deepEqual(publicToursEn.items[0].destination_scope, [
     {
       destination: "VN",
-      areas: [
+      places: [],
+      regions: [
         {
-          area_id: "area_central",
+          region_id: "region_central",
           places: [
             { place_id: "place_hoi_an" }
           ]
@@ -430,7 +416,7 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
   assert.match(homepageCopyGlobal, /heroTitleByLang/);
   assert.match(homepageCopyGlobal, /metaTitleByLang/);
   assert.match(homepageCopyGlobal, /metaDescriptionByLang/);
-  assert.match(homepageCopyGlobal, /areaServed/);
+  assert.match(homepageCopyGlobal, /regionServed/);
   assert.match(homepageCopyGlobal, /assetUrls/);
   assert.match(homepageCopyGlobal, /public-tours\.en\.json\?v=/);
   assert.match(homepageCopyGlobal, /public-tour-destinations\.en\.json\?v=/);
@@ -456,8 +442,7 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
   assert.match(generatedHomepageHtml, /<title data-i18n-id="meta\.home_title">AsiaTravelPlan \| Private holidays in Vietnam<\/title>/);
   assert.match(generatedHomepageHtml, /content="Private holidays in Vietnam with clear pricing and local support\. Book a free discovery call\."/);
   assert.match(generatedHomepageHtml, />Private holidays in Vietnam<\/h1>/);
-  assert.match(generatedHomepageHtml, /"areaServed": \[\s*"Vietnam"\s*\]/);
-  assert.doesNotMatch(generatedHomepageHtml, /Thailand/);
+  assert.match(generatedHomepageHtml, /"regionServed": \[\s*"Vietnam"\s*\]/);
   const generatedTravelAgencySchema = JSON.parse(generatedHomepageHtml.match(/<script type="application\/ld\+json">\s*([\s\S]*?)\s*<\/script>/)?.[1] || "{}");
   assert.equal(generatedTravelAgencySchema.telephone, "+84 354999192");
   assert.equal(generatedTravelAgencySchema.email, "info@asiatravelplan.com");
@@ -529,6 +514,9 @@ test("generatePublicHomepageAssets fails when a tour destination is not listed i
   await writeJson(destinationCatalogPath, {
     destination_scope_destinations: [
       { code: "VN", label: "Vietnam", sort_order: 1 }
+    ],
+    destination_places: [
+      { id: "place_bangkok", destination: "TH", code: "bangkok", name: "Bangkok", sort_order: 1 }
     ]
   });
   await writeJson(path.join(toursRoot, "tour_unlisted_destination", "tour.json"), {
@@ -536,10 +524,9 @@ test("generatePublicHomepageAssets fails when a tour destination is not listed i
     title: { en: "Unlisted destination tour" },
     short_description: { en: "Should fail before deployment assets are generated." },
     travel_plan: {
-      destination_scope: [
-        { destination: "TH", areas: [] }
-      ],
-      days: []
+      days: [
+        { day_number: 1, primary_location_id: "place_bangkok", services: [] }
+      ]
     },
     updated_at: "2026-04-14T12:34:56.000Z"
   });
@@ -581,6 +568,9 @@ test("generatePublicHomepageAssets falls back when a visible tour image is missi
   await writeJson(destinationCatalogPath, {
     destination_scope_destinations: [
       { code: "VN", label: "Vietnam", sort_order: 1 }
+    ],
+    destination_places: [
+      { id: "place_hanoi", destination: "VN", code: "hanoi", name: "Hanoi", sort_order: 1 }
     ]
   });
   await writeJson(path.join(toursRoot, "tour_missing_image", "tour.json"), {
@@ -593,10 +583,8 @@ test("generatePublicHomepageAssets falls back when a visible tour image is missi
         "travel_plan_service_image_missing_one",
         "travel_plan_service_image_missing_two"
       ],
-      destination_scope: [
-        { destination: "VN", areas: [] }
-      ],
       days: [{
+        primary_location_id: "place_hanoi",
         services: [
           {
             title: "Missing image one",

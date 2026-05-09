@@ -520,6 +520,51 @@
         border: 0;
       }
 
+      .tour-travel-plan-destinations {
+        display: grid;
+        gap: 0.55rem;
+      }
+
+      .tour-travel-plan-destinations__body {
+        display: grid;
+        gap: 0.55rem;
+        padding: 0.7rem 0.8rem;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--surface-muted);
+      }
+
+      .tour-travel-plan-destinations__country {
+        display: grid;
+        gap: 0.35rem;
+      }
+
+      .tour-travel-plan-destinations__country h3 {
+        margin: 0;
+        font-size: 0.95rem;
+        line-height: 1.25;
+      }
+
+      .tour-travel-plan-destinations__regions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+      }
+
+      .tour-travel-plan-destinations__chip {
+        display: inline-flex;
+        align-items: center;
+        max-width: 100%;
+        padding: 0.18rem 0.45rem;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        background: var(--surface);
+        color: var(--text);
+        font-size: 0.82rem;
+        line-height: 1.25;
+        overflow-wrap: anywhere;
+      }
+
       @media (max-width: 520px) {
         .tour-card-image-selector__layout {
           grid-template-columns: minmax(0, 1fr);
@@ -655,7 +700,10 @@
                   </div>
                 </div>
                 <div class="field full tour-taxonomy-field">
-                  <div id="tour_destination_scope_editor"></div>
+                  <div class="tour-travel-plan-destinations" aria-live="polite">
+                    <span class="field-label" data-i18n-id="tour.travel_plan_destinations_label">Travel Plan Destinations</span>
+                    <div id="tour_travel_plan_destination_summary" class="tour-travel-plan-destinations__body"></div>
+                  </div>
                 </div>
                 <div class="field full tour-taxonomy-field">
                   <span class="field-label" data-i18n-id="tour.styles_label">Tour Styles</span>

@@ -8,7 +8,7 @@ import {
 } from "../shared/api.js";
 import { GENERATED_APP_ROLES } from "../../Generated/Models/generated_Roles.js";
 import {
-  destinationScopeAreaCreateRequest,
+  destinationScopeRegionCreateRequest,
   destinationScopeCatalogRequest,
   destinationScopeDestinationCreateRequest,
   destinationScopePlaceCreateRequest,
@@ -97,7 +97,7 @@ const state = {
     lastItems: [],
     search: "",
     destination: "",
-    area: "",
+    region: "",
     place: "",
     style: "all",
     pendingDeleteId: "",
@@ -302,7 +302,7 @@ function bindControls() {
   if (els.toursClearFiltersBtn) {
     els.toursClearFiltersBtn.addEventListener("click", () => {
       state.tours.destination = "";
-      state.tours.area = "";
+      state.tours.region = "";
       state.tours.place = "";
       state.tours.style = "all";
       state.tours.page = 1;
@@ -319,7 +319,7 @@ function bindControls() {
       event.preventDefault();
       applyDestinationScopeFilter({
         destination: normalizeText(button.getAttribute("data-destination-filter-destination")),
-        area: normalizeText(button.getAttribute("data-destination-filter-area")),
+        region: normalizeText(button.getAttribute("data-destination-filter-region")),
         place: normalizeText(button.getAttribute("data-destination-filter-place"))
       });
     });
@@ -369,8 +369,8 @@ function bindControls() {
       const form = event.target instanceof HTMLFormElement ? event.target : null;
       if (!form) return;
       event.preventDefault();
-      if (form.hasAttribute("data-destination-area-create")) {
-        void createDestinationCatalogArea(form);
+      if (form.hasAttribute("data-destination-region-create")) {
+        void createDestinationCatalogRegion(form);
         return;
       }
       if (form.hasAttribute("data-destination-create")) {
@@ -379,6 +379,10 @@ function bindControls() {
       }
       if (form.hasAttribute("data-destination-place-create")) {
         void createDestinationCatalogPlace(form);
+        return;
+      }
+      if (form.hasAttribute("data-destination-country-place-create")) {
+        void createDestinationCatalogPlace(form);
       }
     });
   }
@@ -386,7 +390,7 @@ function bindControls() {
 
 function resolveTourRowTarget(target) {
   if (!(target instanceof Element)) return null;
-  if (target.closest("a, button, input, select, textarea, summary, label")) return null;
+  if (target.closest("a, button, input, select, textregion, summary, label")) return null;
   const row = target.closest("[data-tour-href]");
   return row instanceof HTMLElement ? row : null;
 }
@@ -498,7 +502,7 @@ function buildToursQueryEntries({ page = 1, pageSize = state.tours.pageSize } = 
   };
   if (state.tours.search) entries.search = state.tours.search;
   if (state.tours.destination) entries.destination = state.tours.destination;
-  if (state.tours.area) entries.area = state.tours.area;
+  if (state.tours.region) entries.region = state.tours.region;
   if (state.tours.place) entries.place = state.tours.place;
   if (state.tours.style && state.tours.style !== "all") entries.style = state.tours.style;
   return entries;
@@ -516,15 +520,15 @@ function selectedStyleLabel() {
 function selectedDestinationFilterLabel() {
   const catalog = normalizeDestinationScopeCatalog(state.destinationCatalog.catalog);
   const destinationCode = normalizeText(state.tours.destination);
-  const areaId = normalizeText(state.tours.area);
+  const regionId = normalizeText(state.tours.region);
   const placeId = normalizeText(state.tours.place);
-  if (!destinationCode && !areaId && !placeId) return "";
+  if (!destinationCode && !regionId && !placeId) return "";
 
   const destination = catalog.destinations.find((entry) => normalizeText(entry.code) === destinationCode);
-  const area = catalog.areas.find((entry) => normalizeText(entry.id) === areaId);
+  const region = catalog.regions.find((entry) => normalizeText(entry.id) === regionId);
   const place = catalog.places.find((entry) => normalizeText(entry.id) === placeId);
   if (place) return normalizeText(place.label || place.code || place.id);
-  if (area) return normalizeText(area.label || area.code || area.id);
+  if (region) return normalizeText(region.label || region.code || region.id);
   return destinationDisplayLabel(destination || destinationCode);
 }
 
@@ -628,9 +632,9 @@ async function loadDestinationCatalog() {
   }
 }
 
-function applyDestinationScopeFilter({ destination = "", area = "", place = "" } = {}) {
+function applyDestinationScopeFilter({ destination = "", region = "", place = "" } = {}) {
   state.tours.destination = destination;
-  state.tours.area = area;
+  state.tours.region = region;
   state.tours.place = place;
   state.tours.page = 1;
   renderDestinationScopeFilter();
@@ -642,22 +646,22 @@ function destinationDisplayLabel(destination) {
   return normalizeText(destination?.label) || COUNTRY_LABEL_BY_CODE.get(code) || code;
 }
 
-function isDestinationFilterActive({ destination = "", area = "", place = "" } = {}) {
+function isDestinationFilterActive({ destination = "", region = "", place = "" } = {}) {
   return state.tours.destination === destination
-    && state.tours.area === area
+    && state.tours.region === region
     && state.tours.place === place;
 }
 
-function renderFilterButton({ label, destination = "", area = "", place = "", className = "tour-destination-filter__chip" }) {
+function renderFilterButton({ label, destination = "", region = "", place = "", className = "tour-destination-filter__chip" }) {
   return `
     <button
       class="${escapeHtml(className)}"
       type="button"
       data-destination-filter
       data-destination-filter-destination="${escapeHtml(destination)}"
-      data-destination-filter-area="${escapeHtml(area)}"
+      data-destination-filter-region="${escapeHtml(region)}"
       data-destination-filter-place="${escapeHtml(place)}"
-      aria-pressed="${isDestinationFilterActive({ destination, area, place }) ? "true" : "false"}"
+      aria-pressed="${isDestinationFilterActive({ destination, region, place }) ? "true" : "false"}"
     >${escapeHtml(label)}</button>
   `;
 }
@@ -671,22 +675,30 @@ function renderDestinationScopeFilter() {
   }
 
   const catalog = normalizeDestinationScopeCatalog(state.destinationCatalog.catalog);
-  const areaByDestination = new Map();
-  for (const area of catalog.areas) {
-    const items = areaByDestination.get(area.destination) || [];
-    items.push(area);
-    areaByDestination.set(area.destination, items);
+  const regionByDestination = new Map();
+  for (const region of catalog.regions) {
+    const items = regionByDestination.get(region.destination) || [];
+    items.push(region);
+    regionByDestination.set(region.destination, items);
   }
-  const placesByArea = new Map();
+  const placesByRegion = new Map();
+  const placesByDestination = new Map();
   for (const place of catalog.places) {
-    const items = placesByArea.get(place.area_id) || [];
-    items.push(place);
-    placesByArea.set(place.area_id, items);
+    if (place.region_id) {
+      const items = placesByRegion.get(place.region_id) || [];
+      items.push(place);
+      placesByRegion.set(place.region_id, items);
+    } else {
+      const items = placesByDestination.get(place.destination) || [];
+      items.push(place);
+      placesByDestination.set(place.destination, items);
+    }
   }
 
   const destinationsMarkup = catalog.destinations.map((destination) => {
     const destinationCode = normalizeText(destination.code);
-    const areas = areaByDestination.get(destinationCode) || [];
+    const regions = regionByDestination.get(destinationCode) || [];
+    const countryPlaces = placesByDestination.get(destinationCode) || [];
     return `
       <section class="tour-destination-filter__destination">
         ${renderFilterButton({
@@ -694,24 +706,33 @@ function renderDestinationScopeFilter() {
           destination: destinationCode,
           className: "tour-destination-filter__chip tour-destination-filter__destination-head"
         })}
-        ${areas.length
-          ? `<div class="tour-destination-filter__areas">
-              ${areas.map((area) => {
-                const places = placesByArea.get(area.id) || [];
+        ${countryPlaces.length
+          ? `<div class="tour-destination-filter__places">
+              ${countryPlaces.map((place) => renderFilterButton({
+                label: place.label || place.code || place.id,
+                destination: destinationCode,
+                place: place.id
+              })).join("")}
+            </div>`
+          : ""}
+        ${regions.length
+          ? `<div class="tour-destination-filter__regions">
+              ${regions.map((region) => {
+                const places = placesByRegion.get(region.id) || [];
                 return `
-                  <div class="tour-destination-filter__area">
+                  <div class="tour-destination-filter__region">
                     ${renderFilterButton({
-                      label: area.label || area.code || area.id,
+                      label: region.label || region.code || region.id,
                       destination: destinationCode,
-                      area: area.id,
-                      className: "tour-destination-filter__chip tour-destination-filter__area-head"
+                      region: region.id,
+                      className: "tour-destination-filter__chip tour-destination-filter__region-head"
                     })}
                     ${places.length
                       ? `<div class="tour-destination-filter__places">
                           ${places.map((place) => renderFilterButton({
                             label: place.label || place.code || place.id,
                             destination: destinationCode,
-                            area: area.id,
+                            region: region.id,
                             place: place.id
                           })).join("")}
                         </div>`
@@ -720,7 +741,7 @@ function renderDestinationScopeFilter() {
                 `;
               }).join("")}
             </div>`
-          : `<p class="micro tour-destination-filter__empty">${escapeHtml(backendT("backend.tours.destination_catalog.no_areas", "No areas yet."))}</p>`}
+          : `<p class="micro tour-destination-filter__empty">${escapeHtml(backendT("backend.tours.destination_catalog.no_regions", "No regions yet."))}</p>`}
       </section>
     `;
   }).join("");
@@ -742,7 +763,7 @@ function renderDestinationScopeFilter() {
 
 function selectedTourDestinationScopeWarnings(catalog) {
   const destinationByCode = new Map(catalog.destinations.map((destination) => [normalizeText(destination.code), destination]));
-  const areaById = new Map(catalog.areas.map((area) => [normalizeText(area.id), area]));
+  const regionById = new Map(catalog.regions.map((region) => [normalizeText(region.id), region]));
   const placeById = new Map(catalog.places.map((place) => [normalizeText(place.id), place]));
   const warnings = [];
 
@@ -756,30 +777,49 @@ function selectedTourDestinationScopeWarnings(catalog) {
           value: destination
         }));
       }
-      for (const areaSelection of Array.isArray(entry?.areas) ? entry.areas : []) {
-        const areaId = normalizeText(areaSelection?.area_id);
-        const area = areaById.get(areaId);
-        if (areaId && !area) {
-          problems.push(backendT("backend.tours.destination_catalog.warning_area", "area {value}", {
-            value: areaId
+      for (const placeSelection of Array.isArray(entry?.places) ? entry.places : []) {
+        const placeId = normalizeText(placeSelection?.place_id);
+        const place = placeById.get(placeId);
+        if (placeId && !place) {
+          problems.push(backendT("backend.tours.destination_catalog.warning_place", "place {value}", {
+            value: placeId
           }));
-        } else if (area && destination && area.destination !== destination) {
-          problems.push(backendT("backend.tours.destination_catalog.warning_area_mismatch", "area {value} under {destination}", {
-            value: area.label || area.id,
+        } else if (place && destination && place.destination !== destination) {
+          problems.push(backendT("backend.tours.destination_catalog.warning_place_destination_mismatch", "place {value} under {destination}", {
+            value: place.label || place.id,
+            destination
+          }));
+        } else if (place?.region_id) {
+          problems.push(backendT("backend.tours.destination_catalog.warning_place_region_mismatch", "place {value} belongs to region {region}", {
+            value: place.label || place.id,
+            region: place.region_id
+          }));
+        }
+      }
+      for (const regionSelection of Array.isArray(entry?.regions) ? entry.regions : []) {
+        const regionId = normalizeText(regionSelection?.region_id);
+        const region = regionById.get(regionId);
+        if (regionId && !region) {
+          problems.push(backendT("backend.tours.destination_catalog.warning_region", "region {value}", {
+            value: regionId
+          }));
+        } else if (region && destination && region.destination !== destination) {
+          problems.push(backendT("backend.tours.destination_catalog.warning_region_mismatch", "region {value} under {destination}", {
+            value: region.label || region.id,
             destination
           }));
         }
-        for (const placeSelection of Array.isArray(areaSelection?.places) ? areaSelection.places : []) {
+        for (const placeSelection of Array.isArray(regionSelection?.places) ? regionSelection.places : []) {
           const placeId = normalizeText(placeSelection?.place_id);
           const place = placeById.get(placeId);
           if (placeId && !place) {
             problems.push(backendT("backend.tours.destination_catalog.warning_place", "place {value}", {
               value: placeId
             }));
-          } else if (place && areaId && place.area_id !== areaId) {
-            problems.push(backendT("backend.tours.destination_catalog.warning_place_mismatch", "place {value} under {area}", {
+          } else if (place && regionId && place.region_id !== regionId) {
+            problems.push(backendT("backend.tours.destination_catalog.warning_place_mismatch", "place {value} under {region}", {
               value: place.label || place.id,
-              area: areaId
+              region: regionId
             }));
           }
         }
@@ -801,7 +841,7 @@ function renderDestinationCatalogWarnings(catalog) {
   if (!warnings.length) return "";
   return `
     <div class="tour-destination-catalog__warnings" role="alert">
-      <strong>${escapeHtml(backendT("backend.tours.destination_catalog.warning_heading", "Some tours use destinations, areas, or places that are not configured."))}</strong>
+      <strong>${escapeHtml(backendT("backend.tours.destination_catalog.warning_heading", "Some tours use destinations, regions, or places that are not configured."))}</strong>
       <ul>
         ${warnings.map((warning) => `
           <li>${escapeHtml(warning.tour)}: ${escapeHtml(warning.problems.join(", "))}</li>
@@ -849,9 +889,9 @@ async function createDestinationCatalogDestination(form) {
   }
 }
 
-async function createDestinationCatalogArea(form) {
+async function createDestinationCatalogRegion(form) {
   if (!state.permissions.canEditTours || state.destinationCatalog.saving) return;
-  const destination = normalizeText(form.getAttribute("data-destination-area-create"));
+  const destination = normalizeText(form.getAttribute("data-destination-region-create"));
   const name = catalogInputValue(form);
   if (!destination || !name) return;
   state.destinationCatalog.saving = true;
@@ -859,7 +899,7 @@ async function createDestinationCatalogArea(form) {
   setToursPageOverlay(true, destinationCatalogSaveOverlayMessage());
   try {
     const body = { destination, name };
-    const request = destinationScopeAreaCreateRequest({
+    const request = destinationScopeRegionCreateRequest({
       baseURL: apiOrigin,
       body
     });
@@ -881,14 +921,19 @@ async function createDestinationCatalogArea(form) {
 
 async function createDestinationCatalogPlace(form) {
   if (!state.permissions.canEditTours || state.destinationCatalog.saving) return;
-  const areaId = normalizeText(form.getAttribute("data-destination-place-create"));
+  const regionId = normalizeText(form.getAttribute("data-destination-place-create"));
+  const destination = normalizeText(form.getAttribute("data-destination-country-place-create"));
   const name = catalogInputValue(form);
-  if (!areaId || !name) return;
+  if ((!regionId && !destination) || !name) return;
   state.destinationCatalog.saving = true;
   setDestinationCatalogStatus(backendT("backend.tours.destination_catalog.saving", "Saving destination catalog..."));
   setToursPageOverlay(true, destinationCatalogSaveOverlayMessage());
   try {
-    const body = { area_id: areaId, name };
+    const body = {
+      ...(destination ? { destination } : {}),
+      ...(regionId ? { region_id: regionId } : {}),
+      name
+    };
     const request = destinationScopePlaceCreateRequest({
       baseURL: apiOrigin,
       body
@@ -918,28 +963,40 @@ function renderDestinationCatalog() {
 
   const catalog = normalizeDestinationScopeCatalog(state.destinationCatalog.catalog);
   const canEdit = state.permissions.canEditTours && !state.destinationCatalog.saving;
-  const areaByDestination = new Map();
-  for (const area of catalog.areas) {
-    const items = areaByDestination.get(area.destination) || [];
-    items.push(area);
-    areaByDestination.set(area.destination, items);
+  const regionByDestination = new Map();
+  for (const region of catalog.regions) {
+    const items = regionByDestination.get(region.destination) || [];
+    items.push(region);
+    regionByDestination.set(region.destination, items);
   }
-  const placesByArea = new Map();
+  const placesByRegion = new Map();
+  const placesByDestination = new Map();
   for (const place of catalog.places) {
-    const items = placesByArea.get(place.area_id) || [];
-    items.push(place);
-    placesByArea.set(place.area_id, items);
+    if (place.region_id) {
+      const items = placesByRegion.get(place.region_id) || [];
+      items.push(place);
+      placesByRegion.set(place.region_id, items);
+    } else {
+      const items = placesByDestination.get(place.destination) || [];
+      items.push(place);
+      placesByDestination.set(place.destination, items);
+    }
   }
 
   const destinationMarkup = catalog.destinations.map((destination) => {
-    const areas = areaByDestination.get(destination.code) || [];
+    const regions = regionByDestination.get(destination.code) || [];
+    const countryPlaces = placesByDestination.get(destination.code) || [];
     return `
       <article class="tour-destination-catalog__destination">
         <h3>${escapeHtml(destination.label || destination.code)}</h3>
-        ${areas.length
-          ? areas.map((area) => renderDestinationCatalogArea(area, placesByArea.get(area.id) || [], canEdit)).join("")
-          : `<p class="micro tour-destination-catalog__empty">${escapeHtml(backendT("backend.tours.destination_catalog.no_areas", "No areas yet."))}</p>`}
-        ${canEdit ? renderDestinationCatalogAreaForm(destination) : ""}
+        ${countryPlaces.length
+          ? `<ul class="tour-destination-catalog__places">${countryPlaces.map((place) => `<li class="tour-destination-catalog__place">${escapeHtml(place.label || place.code || place.id)}</li>`).join("")}</ul>`
+          : ""}
+        ${regions.length
+          ? regions.map((region) => renderDestinationCatalogRegion(region, placesByRegion.get(region.id) || [], canEdit)).join("")
+          : `<p class="micro tour-destination-catalog__empty">${escapeHtml(backendT("backend.tours.destination_catalog.no_regions", "No regions yet."))}</p>`}
+        ${canEdit ? renderDestinationCatalogCountryPlaceForm(destination) : ""}
+        ${canEdit ? renderDestinationCatalogRegionForm(destination) : ""}
       </article>
     `;
   }).join("");
@@ -952,14 +1009,26 @@ function renderDestinationCatalog() {
   `;
 }
 
-function renderDestinationCatalogArea(area, places, canEdit) {
+function renderDestinationCatalogCountryPlaceForm(destination) {
   return `
-    <section class="tour-destination-catalog__area">
-      <h4>${escapeHtml(area.label || area.code || area.id)}</h4>
+    <form class="tour-destination-catalog__form" data-destination-country-place-create="${escapeHtml(destination.code)}">
+      <div class="field">
+        <label>${escapeHtml(destinationCatalogFieldLabel("backend.tours.destination_catalog.place_name", "New place"))}</label>
+        <input name="name" type="text" autocomplete="off" required />
+      </div>
+      <button class="btn btn-ghost" type="submit">${escapeHtml(backendT("backend.tours.destination_catalog.add_place", "Add place"))}</button>
+    </form>
+  `;
+}
+
+function renderDestinationCatalogRegion(region, places, canEdit) {
+  return `
+    <section class="tour-destination-catalog__region">
+      <h4>${escapeHtml(region.label || region.code || region.id)}</h4>
       ${places.length
         ? `<ul class="tour-destination-catalog__places">${places.map((place) => `<li class="tour-destination-catalog__place">${escapeHtml(place.label || place.code || place.id)}</li>`).join("")}</ul>`
         : `<p class="micro tour-destination-catalog__empty">${escapeHtml(backendT("backend.tours.destination_catalog.no_places", "No places yet."))}</p>`}
-      ${canEdit ? renderDestinationCatalogPlaceForm(area) : ""}
+      ${canEdit ? renderDestinationCatalogPlaceForm(region) : ""}
     </section>
   `;
 }
@@ -983,21 +1052,21 @@ function renderDestinationCatalogDestinationForm(destinations) {
   `;
 }
 
-function renderDestinationCatalogAreaForm(destination) {
+function renderDestinationCatalogRegionForm(destination) {
   return `
-    <form class="tour-destination-catalog__form" data-destination-area-create="${escapeHtml(destination.code)}">
+    <form class="tour-destination-catalog__form" data-destination-region-create="${escapeHtml(destination.code)}">
       <div class="field">
-        <label>${escapeHtml(destinationCatalogFieldLabel("backend.tours.destination_catalog.area_name", "New area"))}</label>
+        <label>${escapeHtml(destinationCatalogFieldLabel("backend.tours.destination_catalog.region_name", "New region"))}</label>
         <input name="name" type="text" autocomplete="off" required />
       </div>
-      <button class="btn btn-ghost" type="submit">${escapeHtml(backendT("backend.tours.destination_catalog.add_area", "Add area"))}</button>
+      <button class="btn btn-ghost" type="submit">${escapeHtml(backendT("backend.tours.destination_catalog.add_region", "Add region"))}</button>
     </form>
   `;
 }
 
-function renderDestinationCatalogPlaceForm(area) {
+function renderDestinationCatalogPlaceForm(region) {
   return `
-    <form class="tour-destination-catalog__form" data-destination-place-create="${escapeHtml(area.id)}">
+    <form class="tour-destination-catalog__form" data-destination-place-create="${escapeHtml(region.id)}">
       <div class="field">
         <label>${escapeHtml(destinationCatalogFieldLabel("backend.tours.destination_catalog.place_name", "New place"))}</label>
         <input name="name" type="text" autocomplete="off" required />

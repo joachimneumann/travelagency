@@ -13,6 +13,7 @@ import { getTourDestinationLabel } from "../domain/tour_catalog_i18n.js";
 const STORE_SNAPSHOT = Symbol("asiatravelplan_store_snapshot");
 const DESTINATION_CATALOG_KEYS = Object.freeze([
   "destination_scope_destinations",
+  "destination_regions",
   "destination_areas",
   "destination_places"
 ]);
@@ -44,18 +45,37 @@ function defaultDestinationScopeDestinations() {
 function defaultDestinationCatalogDocument() {
   return {
     destination_scope_destinations: defaultDestinationScopeDestinations(),
-    destination_areas: [],
+    destination_regions: [],
     destination_places: []
   };
 }
 
+function normalizeDestinationCatalogDocumentShape(store = {}) {
+  const regions = Array.isArray(store?.destination_regions)
+    ? cloneJson(store.destination_regions)
+    : (Array.isArray(store?.destination_areas) ? cloneJson(store.destination_areas) : []);
+  const regionById = new Map(regions.map((region) => [normalizeText(region?.id), region]).filter(([id]) => id));
+  const places = (Array.isArray(store?.destination_places) ? cloneJson(store.destination_places) : []).map((place) => {
+    const regionId = normalizeText(place?.region_id || place?.area_id);
+    const region = regionById.get(regionId);
+    const destination = normalizeText(place?.destination || region?.destination).toUpperCase();
+    const next = { ...place };
+    delete next.area_id;
+    if (destination) next.destination = destination;
+    if (regionId) next.region_id = regionId;
+    return next;
+  });
+  return { regions, places };
+}
+
 function destinationCatalogDocumentFromStore(store = {}) {
+  const normalizedCatalog = normalizeDestinationCatalogDocumentShape(store);
   return {
     destination_scope_destinations: Array.isArray(store?.destination_scope_destinations) && store.destination_scope_destinations.length
       ? cloneJson(store.destination_scope_destinations)
       : defaultDestinationScopeDestinations(),
-    destination_areas: Array.isArray(store?.destination_areas) ? cloneJson(store.destination_areas) : [],
-    destination_places: Array.isArray(store?.destination_places) ? cloneJson(store.destination_places) : []
+    destination_regions: normalizedCatalog.regions,
+    destination_places: normalizedCatalog.places
   };
 }
 
@@ -194,7 +214,7 @@ function mergeStoreSnapshot(baseStore, latestStore, nextStore) {
   );
   for (const key of [
     "destination_scope_destinations",
-    "destination_areas",
+    "destination_regions",
     "destination_places"
   ]) {
     result[key] = mergeCollectionByKey(baseStore?.[key], latestStore?.[key], nextStore?.[key], mergePlainObject);
@@ -315,8 +335,19 @@ export function createStoreUtils({
       parsed.destination_scope_destinations = defaultDestinationScopeDestinations();
       legacyStoreWritebackNeeded = true;
     }
-    parsed.destination_areas ||= [];
-    parsed.destination_places ||= [];
+    if (!Array.isArray(parsed.destination_regions) && Array.isArray(parsed.destination_areas)) {
+      parsed.destination_regions = cloneJson(parsed.destination_areas);
+      delete parsed.destination_areas;
+      legacyStoreWritebackNeeded = true;
+    }
+    parsed.destination_regions ||= [];
+    const normalizedDestinationCatalog = normalizeDestinationCatalogDocumentShape(parsed);
+    if (JSON.stringify(parsed.destination_places || []) !== JSON.stringify(normalizedDestinationCatalog.places)) {
+      parsed.destination_places = normalizedDestinationCatalog.places;
+      legacyStoreWritebackNeeded = true;
+    } else {
+      parsed.destination_places ||= [];
+    }
     parsed.chat_channel_accounts ||= [];
     parsed.chat_conversations ||= [];
     parsed.chat_events ||= [];

@@ -291,7 +291,7 @@ export function setBookingTravelPlanDestinations(booking, destinations) {
     .filter((entry) => nextDestinations.includes(entry.destination));
   for (const destination of nextDestinations) {
     if (!nextDestinationScope.some((entry) => entry.destination === destination)) {
-      nextDestinationScope.push({ destination, areas: [] });
+      nextDestinationScope.push({ destination, regions: [], places: [] });
     }
   }
   booking.travel_plan = {

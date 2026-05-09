@@ -82,6 +82,7 @@ import (
 	overnight_location_i18n?: [string]: string
 	primary_location_id?: common.#Identifier
 	secondary_location_id?: common.#Identifier
+	experience_highlight_ids?: [...common.#Identifier]
 	services?: [...#TravelPlanService]
 	notes?: string
 	notes_i18n?: [string]: string
@@ -92,14 +93,15 @@ import (
 	place_id: common.#Identifier
 }
 
-#TravelPlanDestinationAreaSelection: {
-	area_id: common.#Identifier
+#TravelPlanDestinationRegionSelection: {
+	region_id: common.#Identifier
 	places?: [...#TravelPlanDestinationPlaceSelection]
 }
 
 #TravelPlanDestinationScopeEntry: {
 	destination: enums.#CountryCode
-	areas?: [...#TravelPlanDestinationAreaSelection]
+	regions?: [...#TravelPlanDestinationRegionSelection]
+	places?: [...#TravelPlanDestinationPlaceSelection]
 }
 
 #BookingTravelPlanDay: #TravelPlanDay & {
@@ -116,6 +118,18 @@ import (
 	one_pager_hero_image_id?: common.#Identifier
 	one_pager_image_ids?: [...common.#Identifier]
 	one_pager_experience_highlight_ids?: [...common.#Identifier]
+	derived_experience_highlight_ids?: [...common.#Identifier]
+	days?: [...#TravelPlanDay]
+	...
+}
+
+#MarketingTourTravelPlan: {
+	tour_card_primary_image_id?: common.#Identifier
+	tour_card_image_ids?: [...common.#Identifier]
+	one_pager_hero_image_id?: common.#Identifier
+	one_pager_image_ids?: [...common.#Identifier]
+	one_pager_experience_highlight_ids?: [...common.#Identifier]
+	derived_experience_highlight_ids?: [...common.#Identifier]
 	days?: [...#TravelPlanDay]
 	...
 }

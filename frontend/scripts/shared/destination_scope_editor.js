@@ -62,34 +62,46 @@ export function normalizeDestinationScope(scope, fallbackDestinations = []) {
   const source = Array.isArray(scope) && scope.length
     ? scope
     : unique((Array.isArray(fallbackDestinations) ? fallbackDestinations : []).map(countryCode).filter(Boolean))
-      .map((destination) => ({ destination, areas: [] }));
+      .map((destination) => ({ destination, regions: [] }));
   const byDestination = new Map();
   for (const rawEntry of source) {
     const destination = countryCode(rawEntry?.destination || rawEntry);
     if (!destination) continue;
-    const entry = byDestination.get(destination) || { destination, areas: [] };
-    const knownAreaIds = new Set(entry.areas.map((area) => area.area_id));
-    for (const rawArea of Array.isArray(rawEntry?.areas) ? rawEntry.areas : []) {
-      const areaId = normalizeText(rawArea?.area_id || rawArea?.id);
-      if (!areaId) continue;
-      const existingArea = entry.areas.find((area) => area.area_id === areaId);
-      const places = unique((Array.isArray(rawArea?.places) ? rawArea.places : [])
+    const entry = byDestination.get(destination) || { destination, regions: [], places: [] };
+    const knownRegionIds = new Set(entry.regions.map((region) => region.region_id));
+    const countryPlaces = unique((Array.isArray(rawEntry?.places) ? rawEntry.places : [])
+      .map((rawPlace) => normalizeText(rawPlace?.place_id || rawPlace?.id || rawPlace))
+      .filter(Boolean))
+      .map((placeId) => ({ place_id: placeId }));
+    const knownCountryPlaceIds = new Set(entry.places.map((place) => place.place_id));
+    for (const place of countryPlaces) {
+      if (!knownCountryPlaceIds.has(place.place_id)) {
+        entry.places.push(place);
+        knownCountryPlaceIds.add(place.place_id);
+      }
+    }
+    const rawRegions = Array.isArray(rawEntry?.regions) ? rawEntry.regions : (Array.isArray(rawEntry?.areas) ? rawEntry.areas : []);
+    for (const rawRegion of rawRegions) {
+      const regionId = normalizeText(rawRegion?.region_id || rawRegion?.area_id || rawRegion?.id);
+      if (!regionId) continue;
+      const existingRegion = entry.regions.find((region) => region.region_id === regionId);
+      const places = unique((Array.isArray(rawRegion?.places) ? rawRegion.places : [])
         .map((rawPlace) => normalizeText(rawPlace?.place_id || rawPlace?.id || rawPlace))
         .filter(Boolean))
         .map((placeId) => ({ place_id: placeId }));
-      if (existingArea) {
-        const knownPlaceIds = new Set(existingArea.places.map((place) => place.place_id));
+      if (existingRegion) {
+        const knownPlaceIds = new Set(existingRegion.places.map((place) => place.place_id));
         for (const place of places) {
           if (!knownPlaceIds.has(place.place_id)) {
-            existingArea.places.push(place);
+            existingRegion.places.push(place);
             knownPlaceIds.add(place.place_id);
           }
         }
         continue;
       }
-      if (!knownAreaIds.has(areaId)) {
-        entry.areas.push({ area_id: areaId, places });
-        knownAreaIds.add(areaId);
+      if (!knownRegionIds.has(regionId)) {
+        entry.regions.push({ region_id: regionId, places });
+        knownRegionIds.add(regionId);
       }
     }
     byDestination.set(destination, entry);
@@ -106,26 +118,24 @@ export function normalizeDestinationScopeCatalog(catalog) {
       code: countryCode(option?.code || option?.value || option),
       label: normalizeText(option?.label || option?.name || option?.code || option?.value || option)
     })).filter((option) => option.code),
-    areas: (Array.isArray(catalog?.areas) ? catalog.areas : []).map((area) => ({
-      id: normalizeText(area?.id),
-      destination: countryCode(area?.destination),
-      code: normalizeText(area?.code),
-      label: normalizeText(area?.label || area?.name || area?.code || area?.id),
-      latitude: normalizeCoordinate(area?.latitude, { min: -90, max: 90 }),
-      longitude: normalizeCoordinate(area?.longitude, { min: -180, max: 180 }),
-      map_zoom: normalizeMapZoom(area?.map_zoom),
-      is_active: area?.is_active !== false
-    })).filter((area) => area.id && area.destination),
+    regions: (Array.isArray(catalog?.regions) ? catalog.regions : []).map((region) => ({
+      id: normalizeText(region?.id),
+      destination: countryCode(region?.destination),
+      code: normalizeText(region?.code),
+      label: normalizeText(region?.label || region?.name || region?.code || region?.id),
+      is_active: region?.is_active !== false
+    })).filter((region) => region.id && region.destination),
     places: (Array.isArray(catalog?.places) ? catalog.places : []).map((place) => ({
       id: normalizeText(place?.id),
-      area_id: normalizeText(place?.area_id),
+      destination: countryCode(place?.destination),
+      region_id: normalizeText(place?.region_id || place?.area_id),
       code: normalizeText(place?.code),
       label: normalizeText(place?.label || place?.name || place?.code || place?.id),
       latitude: normalizeCoordinate(place?.latitude, { min: -90, max: 90 }),
       longitude: normalizeCoordinate(place?.longitude, { min: -180, max: 180 }),
       map_zoom: normalizeMapZoom(place?.map_zoom),
       is_active: place?.is_active !== false
-    })).filter((place) => place.id && place.area_id)
+    })).filter((place) => place.id && place.destination)
   };
 }
 
@@ -136,7 +146,7 @@ export function ensureDestinationScopeForDestinations(scope, destinations) {
   const existing = normalizeDestinationScope(scope).filter((entry) => normalizedDestinations.includes(entry.destination));
   for (const destination of normalizedDestinations) {
     if (!existing.some((entry) => entry.destination === destination)) {
-      existing.push({ destination, areas: [] });
+      existing.push({ destination, regions: [], places: [] });
     }
   }
   return normalizeDestinationScope(existing);
@@ -161,8 +171,11 @@ export function renderDestinationScopeEditor({
   const normalizedCatalog = normalizeDestinationScopeCatalog(catalog);
   const normalizedScope = normalizeDestinationScope(scope);
   const selectedDestinations = new Set(destinationScopeDestinations(normalizedScope));
-  const areaSelections = new Map(
-    normalizedScope.flatMap((entry) => (Array.isArray(entry.areas) ? entry.areas : []).map((area) => [area.area_id, area]))
+  const regionSelections = new Map(
+    normalizedScope.flatMap((entry) => (Array.isArray(entry.regions) ? entry.regions : []).map((region) => [region.region_id, region]))
+  );
+  const countryPlaceSelections = new Map(
+    normalizedScope.map((entry) => [entry.destination, new Set((Array.isArray(entry.places) ? entry.places : []).map((place) => place.place_id))])
   );
 
   return `
@@ -188,33 +201,55 @@ export function renderDestinationScopeEditor({
         ${normalizedCatalog.destinations
           .filter((destination) => selectedDestinations.has(destination.code))
           .map((destination) => {
-            const areas = normalizedCatalog.areas.filter((area) => area.destination === destination.code);
+            const regions = normalizedCatalog.regions.filter((region) => region.destination === destination.code);
+            const countryPlaces = normalizedCatalog.places.filter((place) => place.destination === destination.code && !place.region_id);
+            const selectedCountryPlaceIds = countryPlaceSelections.get(destination.code) || new Set();
             return `
               <article class="destination-scope-editor__group" data-destination-scope-destination-group="${escapeHtml(destination.code)}">
                 <div class="destination-scope-editor__group-head">
                   <h4>${escapeHtml(destination.label || destination.code)}</h4>
                   ${allowCreate && canEdit
-                    ? `<button class="btn btn-ghost destination-scope-editor__small-action" type="button" data-destination-scope-add-area="${escapeHtml(destination.code)}">${escapeHtml(t("booking.travel_plan.add_area", "Add area"))}</button>`
+                    ? `<button class="btn btn-ghost destination-scope-editor__small-action" type="button" data-destination-scope-add-region="${escapeHtml(destination.code)}">${escapeHtml(t("booking.travel_plan.add_region", "Add region"))}</button>`
                     : ""}
                 </div>
-                <div class="destination-scope-editor__areas">
-                  ${areas.length ? areas.map((area) => {
-                    const areaSelection = areaSelections.get(area.id);
-                    const checked = Boolean(areaSelection);
-                    const selectedPlaceIds = new Set((Array.isArray(areaSelection?.places) ? areaSelection.places : []).map((place) => place.place_id));
-                    const places = normalizedCatalog.places.filter((place) => place.area_id === area.id);
-                    return `
-                      <div class="destination-scope-editor__area" data-destination-scope-area-row="${escapeHtml(area.id)}">
-                        <label class="backend-checkbox-item destination-scope-editor__area-choice">
+                ${countryPlaces.length || (allowCreate && canEdit)
+                  ? `<div class="destination-scope-editor__places">
+                      ${countryPlaces.map((place) => `
+                        <label class="backend-checkbox-item destination-scope-editor__place-choice">
                           <input
                             type="checkbox"
-                            data-destination-scope-area="${escapeHtml(area.id)}"
-                            data-destination-scope-area-destination="${escapeHtml(destination.code)}"
-                            value="${escapeHtml(area.id)}"
+                            data-destination-scope-country-place="${escapeHtml(place.id)}"
+                            data-destination-scope-country-place-destination="${escapeHtml(destination.code)}"
+                            value="${escapeHtml(place.id)}"
+                            ${checkedAttr(selectedCountryPlaceIds.has(place.id))}
+                            ${disabledAttr(!canEdit)}
+                          />
+                          ${escapeHtml(place.label || place.code || place.id)}
+                        </label>
+                      `).join("")}
+                      ${allowCreate && canEdit
+                        ? `<button class="btn btn-ghost destination-scope-editor__small-action" type="button" data-destination-scope-add-country-place="${escapeHtml(destination.code)}">${escapeHtml(t("booking.travel_plan.add_place", "Add place"))}</button>`
+                        : ""}
+                    </div>`
+                  : ""}
+                <div class="destination-scope-editor__regions">
+                  ${regions.length ? regions.map((region) => {
+                    const regionSelection = regionSelections.get(region.id);
+                    const checked = Boolean(regionSelection);
+                    const selectedPlaceIds = new Set((Array.isArray(regionSelection?.places) ? regionSelection.places : []).map((place) => place.place_id));
+                    const places = normalizedCatalog.places.filter((place) => place.region_id === region.id);
+                    return `
+                      <div class="destination-scope-editor__region" data-destination-scope-region-row="${escapeHtml(region.id)}">
+                        <label class="backend-checkbox-item destination-scope-editor__region-choice">
+                          <input
+                            type="checkbox"
+                            data-destination-scope-region="${escapeHtml(region.id)}"
+                            data-destination-scope-region-destination="${escapeHtml(destination.code)}"
+                            value="${escapeHtml(region.id)}"
                             ${checkedAttr(checked)}
                             ${disabledAttr(!canEdit)}
                           />
-                          ${escapeHtml(area.label || area.code || area.id)}
+                          ${escapeHtml(region.label || region.code || region.id)}
                         </label>
                         ${checked
                           ? `<div class="destination-scope-editor__places">
@@ -223,7 +258,7 @@ export function renderDestinationScopeEditor({
                                   <input
                                     type="checkbox"
                                     data-destination-scope-place="${escapeHtml(place.id)}"
-                                    data-destination-scope-place-area="${escapeHtml(area.id)}"
+                                    data-destination-scope-place-region="${escapeHtml(region.id)}"
                                     value="${escapeHtml(place.id)}"
                                     ${checkedAttr(selectedPlaceIds.has(place.id))}
                                     ${disabledAttr(!canEdit)}
@@ -232,13 +267,13 @@ export function renderDestinationScopeEditor({
                                 </label>
                               `).join("") || `<p class="micro destination-scope-editor__empty">${escapeHtml(t("booking.travel_plan.no_places", "No places yet."))}</p>`}
                               ${allowCreate && canEdit
-                                ? `<button class="btn btn-ghost destination-scope-editor__small-action" type="button" data-destination-scope-add-place="${escapeHtml(area.id)}">${escapeHtml(t("booking.travel_plan.add_place", "Add place"))}</button>`
+                                ? `<button class="btn btn-ghost destination-scope-editor__small-action" type="button" data-destination-scope-add-place="${escapeHtml(region.id)}">${escapeHtml(t("booking.travel_plan.add_place", "Add place"))}</button>`
                                 : ""}
                             </div>`
                           : ""}
                       </div>
                     `;
-                  }).join("") : `<p class="micro destination-scope-editor__empty">${escapeHtml(t("booking.travel_plan.no_areas", "No areas yet."))}</p>`}
+                  }).join("") : `<p class="micro destination-scope-editor__empty">${escapeHtml(t("booking.travel_plan.no_regions", "No regions yet."))}</p>`}
                 </div>
               </article>
             `;
@@ -253,20 +288,26 @@ export function readDestinationScopeFromDom(container) {
   const destinations = Array.from(container.querySelectorAll("[data-destination-scope-destination]:checked"))
     .map((input) => countryCode(input.getAttribute("data-destination-scope-destination") || input.value))
     .filter(Boolean);
-  const entries = destinations.map((destination) => ({ destination, areas: [] }));
+  const entries = destinations.map((destination) => ({ destination, regions: [], places: [] }));
   const entryByDestination = new Map(entries.map((entry) => [entry.destination, entry]));
-  const checkedAreas = Array.from(container.querySelectorAll("[data-destination-scope-area]:checked"));
-  for (const areaInput of checkedAreas) {
-    const areaId = normalizeText(areaInput.getAttribute("data-destination-scope-area") || areaInput.value);
-    const destination = countryCode(areaInput.getAttribute("data-destination-scope-area-destination"));
+  const checkedRegions = Array.from(container.querySelectorAll("[data-destination-scope-region]:checked"));
+  for (const placeInput of Array.from(container.querySelectorAll("[data-destination-scope-country-place]:checked"))) {
+    const placeId = normalizeText(placeInput.getAttribute("data-destination-scope-country-place") || placeInput.value);
+    const destination = countryCode(placeInput.getAttribute("data-destination-scope-country-place-destination"));
     const entry = entryByDestination.get(destination);
-    if (!areaId || !entry) continue;
+    if (placeId && entry) entry.places.push({ place_id: placeId });
+  }
+  for (const regionInput of checkedRegions) {
+    const regionId = normalizeText(regionInput.getAttribute("data-destination-scope-region") || regionInput.value);
+    const destination = countryCode(regionInput.getAttribute("data-destination-scope-region-destination"));
+    const entry = entryByDestination.get(destination);
+    if (!regionId || !entry) continue;
     const places = Array.from(container.querySelectorAll("[data-destination-scope-place]:checked"))
-      .filter((placeInput) => normalizeText(placeInput.getAttribute("data-destination-scope-place-area")) === areaId)
+      .filter((placeInput) => normalizeText(placeInput.getAttribute("data-destination-scope-place-region")) === regionId)
       .map((placeInput) => normalizeText(placeInput.getAttribute("data-destination-scope-place") || placeInput.value))
       .filter(Boolean)
       .map((placeId) => ({ place_id: placeId }));
-    entry.areas.push({ area_id: areaId, places });
+    entry.regions.push({ region_id: regionId, places });
   }
   return normalizeDestinationScope(entries);
 }

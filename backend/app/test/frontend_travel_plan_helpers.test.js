@@ -39,8 +39,9 @@ test("normalizeTravelPlanDraft preserves localized maps while keeping flat sourc
         overnight_location_i18n: {
           vi: "Ha Noi"
         },
-        primary_location_id: "area_central",
+        primary_location_id: "region_central",
         secondary_location_id: "place_hue",
+        experience_highlight_ids: ["iconic_landmarks", "cultural_heritage", "iconic_landmarks", ""],
         notes: "English notes",
         notes_i18n: {
           vi: "Ghi chu"
@@ -113,8 +114,9 @@ test("normalizeTravelPlanDraft preserves localized maps while keeping flat sourc
     vi: "Ha Noi",
     en: "Hanoi"
   });
-  assert.equal(day.primary_location_id, "area_central");
+  assert.equal(day.primary_location_id, "region_central");
   assert.equal(day.secondary_location_id, "place_hue");
+  assert.deepEqual(day.experience_highlight_ids, ["iconic_landmarks"]);
   assert.equal(day.notes, "English notes");
   assert.deepEqual(day.notes_i18n, {
     vi: "Ghi chu",
@@ -219,11 +221,11 @@ test("normalizeTravelPlanDraft ignores legacy destinations without explicit scop
   const scoped = normalizeTravelPlanDraft({
     destinations: ["TH"],
     destination_scope: [
-      { destination: "VN", areas: [] }
+      { destination: "VN", regions: [], places: [] }
     ],
     days: []
   });
-  assert.deepEqual(scoped.destination_scope, [{ destination: "VN", areas: [] }]);
+  assert.deepEqual(scoped.destination_scope, [{ destination: "VN", regions: [], places: [] }]);
   assert.deepEqual(scoped.destinations, ["VN"]);
 });
 

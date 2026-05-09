@@ -244,20 +244,20 @@
         font-weight: 700;
       }
 
-      .tour-destination-filter__areas {
+      .tour-destination-filter__regions {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
         gap: 1rem;
       }
 
-      .tour-destination-filter__area {
+      .tour-destination-filter__region {
         display: grid;
         align-content: start;
         gap: 0.35rem;
         min-width: 0;
       }
 
-      .tour-destination-filter__area-head {
+      .tour-destination-filter__region-head {
         justify-self: start;
         font-weight: 700;
       }
@@ -329,11 +329,11 @@
       }
 
       .tour-destination-catalog__destination h3,
-      .tour-destination-catalog__area h4 {
+      .tour-destination-catalog__region h4 {
         margin: 0;
       }
 
-      .tour-destination-catalog__area {
+      .tour-destination-catalog__region {
         display: grid;
         gap: 0.55rem;
         padding: 0.85rem;
@@ -478,7 +478,7 @@
             <details class="booking-section tour-destination-catalog" id="tourDestinationCatalogPanel">
               <summary class="tour-destination-catalog__summary" data-i18n-id="backend.tours.destination_catalog.heading">Destinations</summary>
               <div class="tour-destination-catalog__body">
-                <p class="micro" data-i18n-id="backend.tours.destination_catalog.intro">Manage destinations, areas, and places available to tour travel plans.</p>
+                <p class="micro" data-i18n-id="backend.tours.destination_catalog.intro">Manage destinations, regions, and places available to tour travel plans.</p>
                 <div id="tourDestinationCatalogContent" class="tour-destination-catalog__grid" aria-live="polite"></div>
                 <span id="tourDestinationCatalogStatus" class="micro" role="status" aria-live="polite"></span>
               </div>

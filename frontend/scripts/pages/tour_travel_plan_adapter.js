@@ -17,9 +17,15 @@ function normalizeText(value) {
   return String(value ?? "").trim();
 }
 
+function normalizeUniqueTextList(values) {
+  return Array.from(
+    new Set((Array.isArray(values) ? values : []).map(normalizeText).filter(Boolean))
+  );
+}
+
 function omitDerivedTravelPlanDestinations(plan) {
   if (!plan || typeof plan !== "object" || Array.isArray(plan)) return plan;
-  const { destinations: _derivedDestinations, ...next } = plan;
+  const { destinations: _derivedDestinations, destination_scope: _destinationScope, ...next } = plan;
   return next;
 }
 
@@ -141,6 +147,7 @@ function cloneTourMarketingDayForLocalImport({ searchResult, targetDayIndex = 0 
     overnight_location_i18n: normalizeLocalizedMap(sourceDay.overnight_location_i18n),
     primary_location_id: normalizeText(sourceDay.primary_location_id),
     secondary_location_id: normalizeText(sourceDay.secondary_location_id),
+    experience_highlight_ids: normalizeUniqueTextList(sourceDay.experience_highlight_ids).slice(0, 1),
     notes: preferredEnglishImportText(sourceDay.notes_i18n, sourceDay.notes) || null,
     notes_i18n: normalizeLocalizedMap(sourceDay.notes_i18n),
     id: undefined,
@@ -411,8 +418,9 @@ export function createTourTravelPlanAdapter({
         tourCardImageSelection: true,
         serviceDetails: true,
         renumberDays: false,
-        destinationScope: true,
+        destinationScope: false,
         destinationScopeCreate: false,
+        allPrimaryMapPointOptions: true,
         pruneEmptyTravelPlanContentOnCollect: true
       }
     });

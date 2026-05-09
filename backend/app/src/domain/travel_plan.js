@@ -7,6 +7,7 @@ import {
   destinationScopeDestinations,
   normalizeTravelPlanDestinationScope
 } from "./destination_scope.js";
+import { normalizeExperienceHighlightIds } from "./tour_metadata.js";
 import { normalizeTravelPlanTranslationMeta } from "./booking_translation.js";
 import {
   normalizeBookingContentLang,
@@ -149,8 +150,6 @@ function normalizeTimingKind(value) {
 
 function buildDefaultTravelPlan() {
   return {
-    destination_scope: [],
-    destinations: [],
     tour_card_primary_image_id: null,
     days: []
   };
@@ -159,6 +158,7 @@ function buildDefaultTravelPlan() {
 function buildDefaultBookingTravelPlan() {
   return {
     ...buildDefaultTravelPlan(),
+    destination_scope: [],
     destinations: [],
     attachments: []
   };
@@ -346,6 +346,7 @@ function normalizeTravelPlanDays(days, options = {}) {
         overnight_location_i18n: overnightLocationField.map,
         primary_location_id: normalizeOptionalText(day?.primary_location_id) || null,
         secondary_location_id: normalizeOptionalText(day?.secondary_location_id) || null,
+        experience_highlight_ids: normalizeExperienceHighlightIds(day?.experience_highlight_ids, { limit: 1 }),
         services,
         notes: notesField.text || null,
         notes_i18n: notesField.map
@@ -420,15 +421,7 @@ function normalizeTravelPlanOnePagerHeroImageId(source, days) {
 }
 
 function normalizeTravelPlanOnePagerExperienceHighlightIds(values) {
-  const seen = new Set();
-  return (Array.isArray(values) ? values : [])
-    .map((value) => normalizeOptionalText(value))
-    .filter((value) => {
-      if (!value || seen.has(value)) return false;
-      seen.add(value);
-      return true;
-    })
-    .slice(0, ONE_PAGER_EXPERIENCE_HIGHLIGHT_LIMIT);
+  return normalizeExperienceHighlightIds(values, { limit: ONE_PAGER_EXPERIENCE_HIGHLIGHT_LIMIT });
 }
 
 function applyTravelPlanTourCardImageSelection(days, selectedIds) {
@@ -505,7 +498,9 @@ export function createTravelPlanHelpers() {
   }
 
   function normalizeMarketingTourTravelPlan(rawTravelPlan, options = {}) {
-    return normalizeTravelPlan(rawTravelPlan, options);
+    const normalized = normalizeTravelPlan(rawTravelPlan, options);
+    const { destination_scope: _destinationScope, destinations: _destinations, ...withoutTourLevelLocations } = normalized;
+    return withoutTourLevelLocations;
   }
 
   function normalizeBookingTravelPlan(rawTravelPlan, offer = null, options = {}) {

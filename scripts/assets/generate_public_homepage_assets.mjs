@@ -10,8 +10,11 @@ import { createTourHelpers } from "../../backend/app/src/domain/tours_support.js
 import {
   buildDestinationScopeCatalogResponse,
   countryCodeToTourDestinationCode,
-  filterDestinationScopeByTourDestinations
+  destinationScopeTourDestinations,
+  filterDestinationScopeByTourDestinations,
+  mergeDestinationScopeWithTravelPlanLocations
 } from "../../backend/app/src/domain/destination_scope.js";
+import { deriveTourExperienceHighlightIds } from "../../backend/app/src/domain/tour_metadata.js";
 import {
   normalizeTourDestinationCode,
   normalizeTourLang
@@ -23,7 +26,7 @@ import {
 import { normalizeDisplayLineBreaks, normalizeText } from "../../backend/app/src/lib/text.js";
 import {
   DESTINATION_COUNTRY_CODES,
-  DESTINATION_COUNTRY_TO_TOUR_DESTINATION_CODE
+  TOUR_DESTINATION_TO_COUNTRY_CODE
 } from "../../shared/js/destination_country_codes.js";
 import { FRONTEND_LANGUAGE_CODES } from "../../shared/generated/language_catalog.js";
 
@@ -535,29 +538,24 @@ async function generateHomepageTourAssets(sourceDir, destinationDir) {
   return generatedPathBySourceName;
 }
 
-function publishedDestinationCountryCodes(countryReferencePayload) {
-  const publishedCountryCodes = new Set(DESTINATION_COUNTRY_CODES);
-  for (const item of Array.isArray(countryReferencePayload?.items) ? countryReferencePayload.items : []) {
-    const countryCode = normalizeText(item?.country).toUpperCase();
-    if (!countryCode) continue;
-    if (item?.published_on_webpage === false) publishedCountryCodes.delete(countryCode);
-    else publishedCountryCodes.add(countryCode);
-  }
-  return DESTINATION_COUNTRY_CODES.filter((countryCode) => publishedCountryCodes.has(countryCode));
-}
-
 function destinationLabelsForCountryCodes(countryCodes, lang) {
   return (Array.isArray(countryCodes) ? countryCodes : [])
     .map((countryCode) => countryDisplayName(countryCode, lang))
     .filter(Boolean);
 }
 
-function visiblePublishedDestinationCodes(countryReferencePayload) {
-  return new Set(
-    publishedDestinationCountryCodes(countryReferencePayload)
-      .map((countryCode) => normalizeTourDestinationCode(DESTINATION_COUNTRY_TO_TOUR_DESTINATION_CODE[countryCode]))
-      .filter(Boolean)
-  );
+function publicTourCountryCodes(publicTours) {
+  const countryCodes = new Set();
+  for (const tour of Array.isArray(publicTours) ? publicTours : []) {
+    for (const destination of Array.isArray(tour?.destinations) ? tour.destinations : []) {
+      const countryCode = TOUR_DESTINATION_TO_COUNTRY_CODE[normalizeTourDestinationCode(destination)]
+        || normalizeText(destination).toUpperCase();
+      if (DESTINATION_COUNTRY_CODES.includes(countryCode)) {
+        countryCodes.add(countryCode);
+      }
+    }
+  }
+  return DESTINATION_COUNTRY_CODES.filter((countryCode) => countryCodes.has(countryCode));
 }
 
 function catalogDestinationTourCode(destination) {
@@ -578,13 +576,28 @@ function destinationCatalogTourDestinationCodes(destinationCatalogPayload) {
 }
 
 function assertTourDestinationsListedInCatalog(tours, destinationCatalogPayload, {
-  destinationCatalogPath = "",
-  tourDestinationCodes
+  destinationCatalogPath = ""
 } = {}) {
   const allowedDestinations = destinationCatalogTourDestinationCodes(destinationCatalogPayload);
+  const rawPlaceDestinationById = new Map(
+    (Array.isArray(destinationCatalogPayload?.destination_places) ? destinationCatalogPayload.destination_places : [])
+      .map((place) => [normalizeText(place?.id), normalizeTourDestinationCode(countryCodeToTourDestinationCode(place?.destination))])
+      .filter(([placeId, destination]) => placeId && destination)
+  );
   const missingByTour = [];
   for (const tour of Array.isArray(tours) ? tours : []) {
-    const missingCodes = (typeof tourDestinationCodes === "function" ? tourDestinationCodes(tour) : [])
+    const destinationScope = mergeDestinationScopeWithTravelPlanLocations([], tour?.travel_plan, destinationCatalogPayload);
+    const referencedLocationDestinations = [];
+    for (const day of Array.isArray(tour?.travel_plan?.days) ? tour.travel_plan.days : []) {
+      for (const locationId of [day?.primary_location_id, day?.secondary_location_id]) {
+        const destination = rawPlaceDestinationById.get(normalizeText(locationId));
+        if (destination) referencedLocationDestinations.push(destination);
+      }
+    }
+    const missingCodes = [
+      ...destinationScopeTourDestinations(destinationScope),
+      ...referencedLocationDestinations
+    ]
       .filter((code) => code && !allowedDestinations.has(code));
     if (missingCodes.length) {
       missingByTour.push(`${normalizeText(tour?.id) || "(missing id)"}: ${Array.from(new Set(missingCodes)).join(", ")}`);
@@ -603,7 +616,7 @@ function assertTourDestinationsListedInCatalog(tours, destinationCatalogPayload,
 
 function publicTourDestinationScopeFilters(tours) {
   const destinationCodes = new Set();
-  const areaIds = new Set();
+  const regionIds = new Set();
   const placeIds = new Set();
   for (const tour of Array.isArray(tours) ? tours : []) {
     const scope = Array.isArray(tour?.travel_plan?.destination_scope)
@@ -612,23 +625,27 @@ function publicTourDestinationScopeFilters(tours) {
     for (const entry of scope) {
       const destinationCode = normalizeTourDestinationCode(countryCodeToTourDestinationCode(entry?.destination));
       if (destinationCode) destinationCodes.add(destinationCode);
-      for (const area of Array.isArray(entry?.areas) ? entry.areas : []) {
-        const areaId = normalizeText(area?.area_id || area?.id);
-        if (areaId) areaIds.add(areaId);
-        for (const place of Array.isArray(area?.places) ? area.places : []) {
+      for (const region of Array.isArray(entry?.regions) ? entry.regions : []) {
+        const regionId = normalizeText(region?.region_id || region?.id);
+        if (regionId) regionIds.add(regionId);
+        for (const place of Array.isArray(region?.places) ? region.places : []) {
           const placeId = normalizeText(place?.place_id || place?.id);
           if (placeId) placeIds.add(placeId);
         }
       }
+      for (const place of Array.isArray(entry?.places) ? entry.places : []) {
+        const placeId = normalizeText(place?.place_id || place?.id);
+        if (placeId) placeIds.add(placeId);
+      }
     }
   }
-  return { destinationCodes, areaIds, placeIds };
+  return { destinationCodes, regionIds, placeIds };
 }
 
 function publicDestinationScopeCatalog(store, destinationOptions, { lang = "en", scopeFilters = null } = {}) {
   const hasDestinationOptions = Array.isArray(destinationOptions);
   const scopedDestinationCodes = scopeFilters?.destinationCodes instanceof Set ? scopeFilters.destinationCodes : null;
-  const scopedAreaIds = scopeFilters?.areaIds instanceof Set ? scopeFilters.areaIds : null;
+  const scopedRegionIds = scopeFilters?.regionIds instanceof Set ? scopeFilters.regionIds : null;
   const scopedPlaceIds = scopeFilters?.placeIds instanceof Set ? scopeFilters.placeIds : null;
   const allowedDestinationCodes = scopedDestinationCodes || new Set(
     (hasDestinationOptions ? destinationOptions : [])
@@ -664,33 +681,34 @@ function publicDestinationScopeCatalog(store, destinationOptions, { lang = "en",
       };
     })
     .filter(Boolean);
-  const areas = (Array.isArray(catalog.areas) ? catalog.areas : [])
-    .map((area) => {
-      const destination = normalizeTourDestinationCode(countryCodeToTourDestinationCode(area?.destination));
-      const id = normalizeText(area?.id);
+  const regions = (Array.isArray(catalog.regions) ? catalog.regions : [])
+    .map((region) => {
+      const destination = normalizeTourDestinationCode(countryCodeToTourDestinationCode(region?.destination));
+      const id = normalizeText(region?.id);
       if (!id || !destination || !destinationCodes.has(destination)) return null;
-      if (scopedAreaIds && !scopedAreaIds.has(id)) return null;
+      if (scopedRegionIds && !scopedRegionIds.has(id)) return null;
       return {
         id,
         destination,
-        country_code: normalizeText(area?.destination).toUpperCase(),
-        code: normalizeText(area?.code),
-        label: normalizeText(area?.label || area?.name || area?.code) || id,
-        ...(Number.isFinite(Number(area?.latitude)) ? { latitude: Number(area.latitude) } : {}),
-        ...(Number.isFinite(Number(area?.longitude)) ? { longitude: Number(area.longitude) } : {})
+        country_code: normalizeText(region?.destination).toUpperCase(),
+        code: normalizeText(region?.code),
+        label: normalizeText(region?.label || region?.name || region?.code) || id
       };
     })
     .filter(Boolean);
-  const areaIds = new Set(areas.map((area) => area.id));
+  const regionIds = new Set(regions.map((region) => region.id));
   const places = (Array.isArray(catalog.places) ? catalog.places : [])
     .map((place) => {
-      const areaId = normalizeText(place?.area_id);
+      const regionId = normalizeText(place?.region_id);
+      const destination = normalizeTourDestinationCode(countryCodeToTourDestinationCode(place?.destination));
       const id = normalizeText(place?.id);
-      if (!id || !areaId || !areaIds.has(areaId)) return null;
+      if (!id || !destination || !destinationCodes.has(destination) || (regionId && !regionIds.has(regionId))) return null;
       if (scopedPlaceIds && !scopedPlaceIds.has(id)) return null;
       return {
         id,
-        area_id: areaId,
+        destination,
+        country_code: normalizeText(place?.destination).toUpperCase(),
+        ...(regionId ? { region_id: regionId } : {}),
         code: normalizeText(place?.code),
         label: normalizeText(place?.label || place?.name || place?.code) || id,
         ...(Number.isFinite(Number(place?.latitude)) ? { latitude: Number(place.latitude) } : {}),
@@ -699,22 +717,27 @@ function publicDestinationScopeCatalog(store, destinationOptions, { lang = "en",
     })
     .filter(Boolean);
 
-  return { destinations, areas, places };
+  return { destinations, regions, places };
 }
 
-function normalizeTourForPublicHomepage(tour, publishedDestinationCodes, { normalizeTourForStorage, tourDestinationCodes }) {
+function normalizeTourForPublicHomepage(tour, { normalizeTourForStorage, destinationCatalogPayload }) {
   const stored = normalizeTourForStorage(tour);
   if (stored.published_on_webpage === false) return null;
-  const visibleDestinations = tourDestinationCodes(stored).filter((code) => publishedDestinationCodes.has(code));
-  if (!visibleDestinations.length) return null;
   const travelPlan = stored.travel_plan && typeof stored.travel_plan === "object" && !Array.isArray(stored.travel_plan)
     ? stored.travel_plan
     : {};
+  const destination_scope = mergeDestinationScopeWithTravelPlanLocations(
+    [],
+    travelPlan,
+    destinationCatalogPayload
+  );
+  const visibleDestinations = destinationScopeTourDestinations(destination_scope);
+  if (!visibleDestinations.length) return null;
   return {
     ...stored,
     travel_plan: {
       ...travelPlan,
-      destination_scope: filterDestinationScopeByTourDestinations(travelPlan.destination_scope, visibleDestinations)
+      destination_scope: filterDestinationScopeByTourDestinations(destination_scope, visibleDestinations)
     },
     destinations: visibleDestinations
   };
@@ -1123,7 +1146,7 @@ async function buildDestinationPromiseCopyByLang({
     metaTitleByLang,
     metaDescriptionByLang,
     destinationLabelsByLang,
-    areaServed: englishDestinationLabels,
+    regionServed: englishDestinationLabels,
     travelAgencyDescription: englishDestinationList
       ? `Private travel agency in Vietnam creating custom holidays in ${englishDestinationList}.`
       : "Private travel agency in Vietnam creating custom holidays."
@@ -1176,7 +1199,7 @@ function replaceHomepageStructuredData(source, copy) {
         ...parsed,
         ...FOOTER_ALIGNED_TRAVEL_AGENCY_STRUCTURED_DATA,
         description: copy.travelAgencyDescription,
-        areaServed: copy.areaServed
+        regionServed: copy.regionServed
       };
       return [
         '    <script type="application/ld+json">',
@@ -1651,7 +1674,7 @@ async function writeSeoSurfaceAssets({
             name: "AsiaTravelPlan",
             url: canonicalUrl("/")
           },
-          areaServed: homepageCopy?.areaServed || []
+          regionServed: homepageCopy?.regionServed || []
         }
       ]
     }));
@@ -1810,8 +1833,7 @@ async function generateTourAssets({
   const {
     collectTourOptions,
     normalizeTourForRead,
-    normalizeTourForStorage,
-    tourDestinationCodes
+    normalizeTourForStorage
   } = tourHelpers;
 
   const tourDirectories = (await listDirectoryEntries(toursRoot)).filter((entry) => entry.isDirectory());
@@ -1842,11 +1864,9 @@ async function generateTourAssets({
     throw new Error("Duplicate tour ids found while generating public homepage assets.");
   }
 
-  const countryReferencePayload = await readJson(countryReferenceInfoPath, { fallback: { items: [] } });
   const destinationCatalogPayload = await readJson(resolvedDestinationCatalogPath, { fallback: {} });
   assertTourDestinationsListedInCatalog(tours, destinationCatalogPayload, {
-    destinationCatalogPath: resolvedDestinationCatalogPath,
-    tourDestinationCodes
+    destinationCatalogPath: resolvedDestinationCatalogPath
   });
 
   await cleanGeneratedAssetDir(outputRoot);
@@ -1860,15 +1880,14 @@ async function generateTourAssets({
   const storePayload = destinationCatalogPayload && typeof destinationCatalogPayload === "object" && !Array.isArray(destinationCatalogPayload)
     ? destinationCatalogPayload
     : {};
-  const publishedCountryCodes = publishedDestinationCountryCodes(countryReferencePayload);
-  const publishedDestinationCodes = visiblePublishedDestinationCodes(countryReferencePayload);
   const publicTours = tours
-    .map((tour) => normalizeTourForPublicHomepage(tour, publishedDestinationCodes, {
+    .map((tour) => normalizeTourForPublicHomepage(tour, {
       normalizeTourForStorage,
-      tourDestinationCodes
+      destinationCatalogPayload: storePayload
     }))
     .filter(Boolean);
   const sortedPublicTours = [...publicTours].sort((left, right) => Number(right.priority || 0) - Number(left.priority || 0));
+  const publishedCountryCodes = publicTourCountryCodes(sortedPublicTours);
   const destinationScopeFilters = publicTourDestinationScopeFilters(sortedPublicTours);
   const publishedMarketingTourTranslations = await loadPublishedMarketingTourTranslations(translationsSnapshotDir, languages);
   const onePagerArtifactsByTourId = await loadOnePagerArtifacts(onePagersManifestPath);
@@ -1889,7 +1908,20 @@ async function generateTourAssets({
         normalizedLang,
         publishedTranslations
       );
-      const readModel = normalizeTourForRead(localizedTour, { lang: normalizedLang });
+      const readModelBase = normalizeTourForRead(localizedTour, { lang: normalizedLang });
+      const destinationCodes = Array.isArray(tour?.destinations) ? tour.destinations.map((value) => normalizeText(value)).filter(Boolean) : [];
+      const derivedTravelPlan = {
+        ...(readModelBase.travel_plan && typeof readModelBase.travel_plan === "object" && !Array.isArray(readModelBase.travel_plan) ? readModelBase.travel_plan : {}),
+        destination_scope: Array.isArray(tour?.travel_plan?.destination_scope) ? tour.travel_plan.destination_scope : []
+      };
+      const readModel = {
+        ...readModelBase,
+        destination_codes: destinationCodes,
+        destinations: destinationCodes.map((code) => (
+          countryDisplayName(TOUR_DESTINATION_TO_COUNTRY_CODE[normalizeTourDestinationCode(code)] || code, normalizedLang) || code
+        )),
+        travel_plan: derivedTravelPlan
+      };
       const travelPlan = await publicHomepageTourTravelPlan(
         readModel.travel_plan,
         readModel.id,
@@ -1899,7 +1931,19 @@ async function generateTourAssets({
       );
       const pictures = selectedTravelTourCardImagePaths(travelPlan);
       const onePagerArtifact = onePagerArtifactForLang(onePagerArtifactsByTourId, readModel.id, normalizedLang);
-      const onePagerExperienceHighlightIds = onePagerArtifact?.selectedExperienceHighlightIds || [];
+      const artifactExperienceHighlightIds = Array.isArray(onePagerArtifact?.selectedExperienceHighlightIds)
+        ? onePagerArtifact.selectedExperienceHighlightIds
+        : [];
+      const derivedExperienceHighlightIds = deriveTourExperienceHighlightIds(
+        readModel.travel_plan,
+        experienceHighlightCatalog
+      );
+      const configuredExperienceHighlightIds = Array.isArray(readModel.travel_plan?.one_pager_experience_highlight_ids)
+        ? readModel.travel_plan.one_pager_experience_highlight_ids
+        : [];
+      const onePagerExperienceHighlightIds = artifactExperienceHighlightIds.length
+        ? artifactExperienceHighlightIds
+        : (derivedExperienceHighlightIds.length ? derivedExperienceHighlightIds : configuredExperienceHighlightIds);
       const onePagerExperienceHighlightSelection = publicOnePagerExperienceHighlightSelection(
         onePagerExperienceHighlightIds,
         experienceHighlightCatalog,
@@ -1932,7 +1976,11 @@ async function generateTourAssets({
       });
     }
     const options = collectTourOptions(publicTours, { lang: normalizedLang });
-    const destinationScopeCatalog = publicDestinationScopeCatalog(storePayload, options.destinations, {
+    const availableDestinations = Array.from(new Set(publicTours.flatMap((tour) => (
+      Array.isArray(tour?.destinations) ? tour.destinations : []
+    ))))
+      .map((code) => ({ code, label: countryDisplayName(TOUR_DESTINATION_TO_COUNTRY_CODE[normalizeTourDestinationCode(code)] || code, normalizedLang) || code }));
+    const destinationScopeCatalog = publicDestinationScopeCatalog(storePayload, availableDestinations, {
       lang: normalizedLang,
       scopeFilters: destinationScopeFilters
     });
@@ -1947,7 +1995,7 @@ async function generateTourAssets({
 
     const payload = {
       items: localizedItems,
-      available_destinations: options.destinations,
+      available_destinations: availableDestinations,
       available_styles: options.styles,
       pagination: {
         page: 1,

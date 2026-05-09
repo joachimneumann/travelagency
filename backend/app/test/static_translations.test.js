@@ -516,9 +516,9 @@ test("static translation service exposes destination scope catalog labels as cus
           label_i18n: { en: "Vietnam", vi: "Việt Nam" }
         }
       ],
-      destination_areas: [
+      destination_regions: [
         {
-          id: "area_north",
+          id: "region_north",
           destination: "VN",
           code: "north",
           name: "North",
@@ -528,7 +528,8 @@ test("static translation service exposes destination scope catalog labels as cus
       destination_places: [
         {
           id: "place_sapa",
-          area_id: "area_north",
+          destination: "VN",
+          region_id: "region_north",
           code: "sapa",
           name: "Sapa",
           name_i18n: { en: "Sapa" }
@@ -561,7 +562,7 @@ test("static translation service exposes destination scope catalog labels as cus
 
     const state = await service.getLanguageState("destination-scope-catalog", "vi");
     const vietnam = state.rows.find((row) => row.key === "destination.VN.label");
-    const north = state.rows.find((row) => row.key === "area.area_north.name");
+    const north = state.rows.find((row) => row.key === "region.region_north.name");
     const sapa = state.rows.find((row) => row.key === "place.place_sapa.name");
 
     assert.equal(vietnam.cached, "Việt Nam");
@@ -600,7 +601,7 @@ test("static translation service exposes destination scope catalog labels as cus
     assert.equal(calls[0].options.translationProfile, "destination_scope_catalog");
     const deSection = await readTranslationSection(repoRoot, "customers/tour-destinations.de.json");
     assert.equal(deSection.items.find((item) => item.key === "destination.VN.label").machine_text, "de:Vietnam");
-    assert.equal(deSection.items.find((item) => item.key === "area.area_north.name").machine_text, "de:North");
+    assert.equal(deSection.items.find((item) => item.key === "region.region_north.name").machine_text, "de:North");
     assert.equal(deSection.items.find((item) => item.key === "place.place_sapa.name").machine_text, "de:Sapa");
   } finally {
     await rm(repoRoot, { recursive: true, force: true });

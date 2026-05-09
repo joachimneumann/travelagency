@@ -16,24 +16,6 @@
   "created_at": "2026-04-06T02:54:41.519Z",
   "updated_at": "2026-05-04T16:14:09.580Z",
   "travel_plan": {
-    "destination_scope": [
-      {
-        "destination": "VN",
-        "areas": [
-          {
-            "area_id": "area_3d22386f-d130-4f20-ab82-a30164fa5a19",
-            "places": [
-              {
-                "place_id": "place_5c7c616b-f7c7-4650-a206-bfcf204d078e"
-              },
-              {
-                "place_id": "place_49c6e6a3-b74f-4127-a87b-5dc90f183ace"
-              }
-            ]
-          }
-        ]
-      }
-    ],
     "tour_card_image_ids": [
       "travel_plan_service_image_c8ef8a06-65a9-472a-ac9c-044541acf90a",
       "travel_plan_service_image_1b734592-dd38-4b0a-869d-665664446468",
@@ -172,7 +154,9 @@
             }
           }
         ],
-        "notes": "Arrive in Da Nang, then ease into Central Vietnam with sacred marble caves before reaching Hoi An's warm lantern-lit streets for the night."
+        "notes": "Arrive in Da Nang, then ease into Central Vietnam with sacred marble caves before reaching Hoi An's warm lantern-lit streets for the night.",
+        "primary_location_id": "place_5c7c616b-f7c7-4650-a206-bfcf204d078e",
+        "secondary_location_id": null
       },
       {
         "id": "travel_plan_day_6dbca279-5dcc-40e9-9c44-a631225970b7",

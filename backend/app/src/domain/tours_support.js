@@ -2,11 +2,6 @@ import path from "node:path";
 import { normalizeText } from "../lib/text.js";
 import { normalizeStringArray } from "../lib/collection_utils.js";
 import {
-  destinationScopeDestinations,
-  normalizeDestinationScope,
-  destinationScopeTourDestinations
-} from "./destination_scope.js";
-import {
   TOUR_STYLE_CODE_CATALOG,
   buildTourDestinationOption,
   buildTourStyleOption,
@@ -86,10 +81,7 @@ export function createTourHelpers({ toursDir, safeInt, normalizeMarketingTourTra
     if (typeof normalizeMarketingTourTravelPlan === "function") {
       return normalizeMarketingTourTravelPlan(value, options);
     }
-    const destinationScope = normalizeDestinationScope(value?.destination_scope);
     return {
-      destination_scope: destinationScope,
-      destinations: destinationScopeDestinations(destinationScope),
       tour_card_image_ids: Array.isArray(value?.tour_card_image_ids)
         ? value.tour_card_image_ids.map((entry) => normalizeText(entry)).filter(Boolean)
         : [],
@@ -158,7 +150,9 @@ export function createTourHelpers({ toursDir, safeInt, normalizeMarketingTourTra
   }
 
   function tourDestinationCodes(tour) {
-    return sortTourDestinationCodes(destinationScopeTourDestinations(tour?.travel_plan?.destination_scope));
+    return sortTourDestinationCodes(
+      normalizeStringArray(tour?.destination_codes).map((value) => normalizeTourDestinationCode(value)).filter(Boolean)
+    );
   }
 
   function tourStyleCodes(tour) {
@@ -184,8 +178,14 @@ export function createTourHelpers({ toursDir, safeInt, normalizeMarketingTourTra
 
   function canPublishTourOnWebpage(tour) {
     const travelPlan = normalizeTourTravelPlan(tour?.travel_plan);
-    return destinationScopeTourDestinations(travelPlan?.destination_scope).length > 0
+    return travelPlanHasDayLocation(travelPlan)
       && selectedTourWebPageImageCount(travelPlan) >= TOUR_WEB_PAGE_MIN_IMAGE_COUNT;
+  }
+
+  function travelPlanHasDayLocation(travelPlan) {
+    return (Array.isArray(travelPlan?.days) ? travelPlan.days : []).some((day) => (
+      normalizeText(day?.primary_location_id) || normalizeText(day?.secondary_location_id)
+    ));
   }
 
   function normalizeTourForStorage(tour) {
@@ -218,10 +218,15 @@ export function createTourHelpers({ toursDir, safeInt, normalizeMarketingTourTra
     else delete next.video;
     if (next.travel_plan !== undefined) {
       const normalizedTravelPlan = normalizeTourTravelPlan(next.travel_plan);
-      const { destinations: _derivedDestinations, ...travelPlanWithoutDerivedDestinations } = normalizedTravelPlan;
-      next.travel_plan = travelPlanWithoutDerivedDestinations;
+      const {
+        destinations: _derivedDestinations,
+        destination_scope: _destinationScope,
+        ...travelPlanWithoutDerivedLocations
+      } = normalizedTravelPlan;
+      next.travel_plan = travelPlanWithoutDerivedLocations;
     }
     delete next.destinations;
+    delete next.destination_codes;
     next.seasonality_start_month = normalizeText(next.seasonality_start_month);
     next.seasonality_end_month = normalizeText(next.seasonality_end_month);
     next.priority = safeInt(next.priority) ?? 50;

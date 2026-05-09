@@ -1704,6 +1704,12 @@ function preferredEnglishImportText(mapValue, plainValue) {
   return "";
 }
 
+function normalizeUniqueTextList(values) {
+  return Array.from(
+    new Set((Array.isArray(values) ? values : []).map(normalizeText).filter(Boolean))
+  );
+}
+
 function cloneMarketingTourSourceImageForLocalBookingInsert(sourceImage) {
   const normalizedImage = sourceImage && typeof sourceImage === "object" && !Array.isArray(sourceImage)
     ? sourceImage
@@ -1756,6 +1762,9 @@ function cloneBookingMarketingTourDayForLocalImport({ searchResult, targetDayInd
     title_i18n: {},
     overnight_location: preferredEnglishImportText(sourceDay.overnight_location_i18n, sourceDay.overnight_location) || null,
     overnight_location_i18n: {},
+    primary_location_id: normalizeText(sourceDay.primary_location_id),
+    secondary_location_id: normalizeText(sourceDay.secondary_location_id),
+    experience_highlight_ids: normalizeUniqueTextList(sourceDay.experience_highlight_ids).slice(0, 1),
     services: (Array.isArray(sourceDay.services) ? sourceDay.services : []).map((service) => (
       cloneBookingMarketingTourServiceForLocalImport({
         searchResult: { source_service: service }
