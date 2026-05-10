@@ -49,6 +49,7 @@ import {
   normalizeStringList
 } from "../shared/booking_persons.js";
 import { wireAuthLogoutLink } from "../shared/auth.js";
+import { setBackendPageLoadingOverlay } from "../shared/backend_page.js";
 import {
   bookingContentLang,
   bookingLanguageQuery,
@@ -725,6 +726,15 @@ function redirectToBackendLogin() {
 }
 
 async function init() {
+  setBackendPageLoadingOverlay(true);
+  try {
+    await initBookingPage();
+  } finally {
+    setBackendPageLoadingOverlay(false);
+  }
+}
+
+async function initBookingPage() {
   await waitForBackendI18n();
   renderBookingPdfPersonalizationPanels(els);
   Object.assign(els, resolveBookingPdfPersonalizationElements(document));

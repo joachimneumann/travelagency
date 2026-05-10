@@ -183,10 +183,6 @@ function callbackPhase(id, label, run) {
   return { id, label, run, status: "pending" };
 }
 
-function whenPhase(phase, when) {
-  return { ...phase, when };
-}
-
 function languageHasTranslationIssues(entry) {
   return Number(entry?.missing_count || 0) > 0
     || Number(entry?.stale_count || 0) > 0
@@ -229,7 +225,7 @@ function issueEntriesFromStatus(status) {
   return (Array.isArray(status?.languages) ? status.languages : []).filter(languageHasTranslationIssues);
 }
 
-function fallbackApplyPhases({ applyTranslations, includeHomepageAssets = true } = {}) {
+function fallbackApplyPhases({ applyTranslations } = {}) {
   const phases = [];
   if (typeof applyTranslations === "function") {
     phases.push(callbackPhase("translate_content_store", "Translate missing and stale strings", async (_phase, job, helpers) => {
@@ -239,9 +235,6 @@ function fallbackApplyPhases({ applyTranslations, includeHomepageAssets = true }
         `Translated ${summary?.translated_count || 0} translation item${summary?.translated_count === 1 ? "" : "s"} in content/translations.`
       );
     }));
-  }
-  if (includeHomepageAssets) {
-    phases.push(homepageAssetsPhase());
   }
   return phases;
 }
@@ -293,39 +286,8 @@ async function applyPhases({ applyTranslations, getStatusSummary } = {}) {
   return phases;
 }
 
-function autoPublishPhases({ publishTranslations, getStatusSummary } = {}) {
-  if (typeof publishTranslations !== "function" || typeof getStatusSummary !== "function") return [];
-  const autoPublished = (job) => job?.auto_published === true;
+async function publishPhases({ publishTranslations }) {
   return [
-    callbackPhase("validate_translation_store", "Validate content/translations", async (_phase, job, helpers) => {
-      const status = await getStatusSummary();
-      const issueEntries = issueEntriesFromStatus(status);
-      const unavailableCount = Array.isArray(status?.unavailable) ? status.unavailable.length : 0;
-      if (issueEntries.length || unavailableCount) {
-        job.auto_published = false;
-        helpers.appendLog(
-          job,
-          unavailableCount
-            ? `Skipped runtime generation because ${unavailableCount} translation section${unavailableCount === 1 ? "" : "s"} could not be checked.`
-            : `Skipped runtime generation because ${issueEntries.length} translation target${issueEntries.length === 1 ? "" : "s"} still need work.`
-        );
-        return;
-      }
-      const manifest = await publishTranslations();
-      job.auto_published = true;
-      helpers.appendLog(
-        job,
-        `Validated ${manifest.total_items || 0} content/translations item${manifest.total_items === 1 ? "" : "s"}. source_set_hash=${manifest.source_set_hash || ""}`
-      );
-    }),
-    whenPhase(runtimeI18nPhase(), autoPublished),
-    whenPhase(homepageAssetsPhase(), autoPublished)
-  ];
-}
-
-async function publishPhases({ applyTranslations, publishTranslations, getStatusSummary }) {
-  return [
-    ...fallbackApplyPhases({ applyTranslations, includeHomepageAssets: false }),
     callbackPhase("validate_translation_store", "Validate content/translations", async (_phase, job, helpers) => {
       const manifest = await publishTranslations();
       helpers.appendLog(
@@ -413,9 +375,7 @@ function protectedTermsPhases({ protectTranslations } = {}) {
         job,
         `Updated ${summary?.translated_count || 0} protected-term translation item${summary?.translated_count === 1 ? "" : "s"}.`
       );
-    }),
-    runtimeI18nPhase(),
-    homepageAssetsPhase()
+    })
   ];
 }
 
@@ -536,17 +496,14 @@ export function createStaticTranslationApplyJobs({
     async startApply() {
       return startJob({
         type: "apply",
-        phases: [
-          ...await applyPhases({ applyTranslations, getStatusSummary }),
-          ...autoPublishPhases({ publishTranslations, getStatusSummary })
-        ]
+        phases: await applyPhases({ applyTranslations, getStatusSummary })
       });
     },
     async startPublish() {
       if (typeof publishTranslations !== "function") {
         throw apiError(500, "STATIC_TRANSLATION_PUBLISH_UNAVAILABLE", "Translation store validation is not configured.");
       }
-      return startJob({ type: "publish", phases: await publishPhases({ applyTranslations, publishTranslations, getStatusSummary }) });
+      return startJob({ type: "publish", phases: await publishPhases({ publishTranslations }) });
     },
     startRetranslate({ mode, target_lang: targetLang } = {}) {
       if (mode === "protected_terms") {

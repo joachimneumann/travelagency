@@ -636,6 +636,9 @@ export function createStaticTranslationService({
     if (value && typeof value === "object" && !Array.isArray(value)) {
       return normalizeText(value.en) || normalizeText(fallback);
     }
+    if (fallback && typeof fallback === "object" && !Array.isArray(fallback)) {
+      return normalizeText(fallback.en) || normalizeText(value);
+    }
     return normalizeText(fallback || value);
   }
 
@@ -1790,8 +1793,8 @@ export function createStaticTranslationService({
       return domainSummary(config);
     },
     getLanguageState: loadState,
-    async getStatusSummary() {
-      const domains = normalizeStatusDomains();
+    async getStatusSummary(options = {}) {
+      const domains = normalizeStatusDomains(options);
       const publishedIndex = await readPublishedIndex();
       const languageStates = [];
       const unavailable = [];

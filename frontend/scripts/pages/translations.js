@@ -141,11 +141,11 @@ function logTranslationJobConsoleError(message, job = null, extra = {}, error = 
 }
 
 function translationsApplyingOverlayText() {
-  return backendT("backend.translations.applying_overlay", "Generating runtime translations. Please wait.");
+  return backendT("backend.translations.applying_overlay", "Updating translations. Please wait.");
 }
 
 function translationsTranslateOverlayText() {
-  return backendT("backend.translations.translating_overlay", "Translating content and generating runtime files. Please wait.");
+  return backendT("backend.translations.translating_overlay", "Translating content. Please wait.");
 }
 
 function translationsRefreshingOverlayText() {
@@ -179,7 +179,7 @@ function retranslateBackendViOverlayText() {
 
 function applyProtectedTermsOverlayText() {
   return backendT(
-    "backend.translations.translating_overlay",
+    "backend.translations.protected_terms_overlay",
     "Updating translations that use protected terms. Please wait."
   );
 }
@@ -330,7 +330,7 @@ function currentTranslationActionState() {
   const loaded = Boolean(status?.loaded);
   const translateNeeded = loaded && status.translationIssueCount > 0;
   const publishReady = loaded && !translateNeeded && status.publishReadyCount > 0;
-  const translateActionReady = translateNeeded || publishReady;
+  const translateActionReady = translateNeeded;
   return {
     loaded,
     translateNeeded,
@@ -346,14 +346,14 @@ function translationActionTitle(action, translationState, actionsBusy) {
     return "Translation editing is disabled for your account or this environment.";
   }
   if (action === "translate") {
-    if (translationState.translateNeeded) return "Translate all missing or stale strings across staff and customer content, then generate runtime files automatically if clean.";
+    if (translationState.translateNeeded) return "Translate all missing or stale strings across staff and customer content.";
     if (runtimeI18nBlocked(translationState.status)) return "Runtime i18n generation is blocked. See the warning below.";
-    if (translationState.publishReady) return "Generate runtime translation files.";
-    return translationState.loaded ? "No strings need translation or runtime generation." : "Loading translation status.";
+    if (translationState.publishReady) return "No strings need translation. Use Publish Website to update runtime translations and static website content.";
+    return translationState.loaded ? "No strings need translation." : "Loading translation status.";
   }
-  if (translationState.translateNeeded) return "Translate missing or stale strings before runtime generation.";
+  if (translationState.translateNeeded) return "Translate missing or stale strings before publishing.";
   if (runtimeI18nBlocked(translationState.status)) return "Runtime i18n generation is blocked. See the warning below.";
-  return translationState.publishReady ? "Generate runtime translation files." : "No translated strings are ready for runtime generation.";
+  return translationState.publishReady ? "Use Publish Website to update runtime translations and static website content." : "No translated strings are ready for publishing.";
 }
 
 function configureTranslationActionButton(button, action, translationState, canRunTranslationAction, actionsBusy) {
@@ -378,13 +378,13 @@ function translationStatusMessage(status) {
   const count = numberCount(status.translationIssueCount);
   const subject = count === 1 ? "string" : "strings";
   const verb = count === 1 ? "needs" : "need";
-  const base = `${count} ${subject} ${verb} translation before runtime generation.`;
+  const base = `${count} ${subject} ${verb} translation before publishing.`;
   if (count > 0) return base;
   if (runtimeI18nBlocked(status)) {
-    return `${base} Runtime i18n generation is blocked.`;
+    return `${base} Runtime i18n generation is blocked; Publish Website cannot finish yet.`;
   }
   if (status.publishReadyCount > 0) {
-    return `${base} ${pluralize(status.publishReadyCount, "translated string")} ready for runtime generation with Translate.`;
+    return `${base} ${pluralize(status.publishReadyCount, "translated string")} ready. Use Publish Website to update runtime translations and static website content.`;
   }
   if (status.dirty) {
     return `${base} ${pluralize(status.dirtyCount, "translation item")} still need attention.`;
@@ -406,7 +406,7 @@ function refreshTranslationStatusText() {
 
 function notifyBackendTranslationsStatus(status = state.translationStatus) {
   const detail = status?.loaded
-    ? { dirty: Boolean(status.dirty), refresh: false }
+    ? { dirty: Boolean(status.dirty), refresh: false, publicSiteRefresh: true }
     : {};
   window.dispatchEvent(new CustomEvent("backend-translations-status-refresh", { detail }));
 }
@@ -1537,17 +1537,12 @@ async function pollJob(jobId, overlayStartedAt) {
       return;
     }
     if (latest.type === "apply" && translationStatus.translationIssueCount > 0) {
-      showError(`${translationStatusMessage(translationStatus)} Runtime generation was skipped.`);
+      showError(`${translationStatusMessage(translationStatus)} Publish Website remains blocked.`);
       refreshTranslationStatusText();
       return;
     }
     if (latest.type === "apply" && translationStatus.unavailableCount > 0) {
-      showError(`${translationStatusMessage(translationStatus)} Runtime generation was skipped.`);
-      refreshTranslationStatusText();
-      return;
-    }
-    if (latest.type === "apply" && translationStatus.dirty) {
-      showError(`${translationStatusMessage(translationStatus)} The translation warning icon could not be cleared.`);
+      showError(`${translationStatusMessage(translationStatus)} Publish Website remains blocked.`);
       refreshTranslationStatusText();
       return;
     }
@@ -1582,7 +1577,7 @@ async function startJob(path, body = null, overlayText = translationsApplyingOve
   }
   if (isPublishJob && translationState.translateNeeded) {
     refreshTranslationStatusText();
-    showError("Translate missing or stale strings before runtime generation.");
+    showError("Translate missing or stale strings before publishing.");
     return;
   }
   if (isPublishJob && !translationState.publishReady) {

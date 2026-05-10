@@ -26,6 +26,7 @@ import {
   getBackendApiOrigin,
   initializeBackendPageChrome,
   loadBackendPageAuthState,
+  setBackendPageLoadingOverlay,
   withBackendApiLang
 } from "../shared/backend_page.js";
 
@@ -49,8 +50,6 @@ const els = {
   toursClearFiltersBtn: document.getElementById("toursClearFiltersBtn"),
   toursSearchBtn: document.getElementById("toursSearchBtn"),
   toursCreateBtn: document.getElementById("toursCreateBtn"),
-  toursPublishBtn: document.getElementById("toursPublishBtn"),
-  toursPublishStatus: document.getElementById("toursPublishStatus"),
   toursCountInfo: document.getElementById("toursCountInfo"),
   toursActionStatus: document.getElementById("toursActionStatus"),
   toursMatrixMount: document.getElementById("toursMatrixMount"),
@@ -110,8 +109,7 @@ const state = {
     catalog: normalizeDestinationScopeCatalog({}),
     loading: false,
     saving: false
-  },
-  publishing: false
+  }
 };
 
 function refreshBackendNavElements() {
@@ -138,17 +136,6 @@ function clearError() {
 function setActionStatus(message = "") {
   if (!els.toursActionStatus) return;
   els.toursActionStatus.textContent = message;
-}
-
-function setPublishStatus(message = "") {
-  if (!els.toursPublishStatus) return;
-  els.toursPublishStatus.textContent = message;
-}
-
-function syncPublishButtonState() {
-  if (!(els.toursPublishBtn instanceof HTMLButtonElement)) return;
-  els.toursPublishBtn.hidden = !state.permissions.canEditTours;
-  els.toursPublishBtn.disabled = !state.permissions.canEditTours || state.publishing;
 }
 
 function setToursPageOverlay(isVisible, message = "") {
@@ -225,43 +212,56 @@ function destinationCatalogFieldLabel(i18nId, fallback) {
 init();
 
 async function init() {
-  const chrome = await initializeBackendPageChrome({
-    currentSection: "tours",
-    homeLink: els.homeLink,
-    refreshNav: refreshBackendNavElements
-  });
-  els.logoutLink = chrome.logoutLink;
-  els.userLabel = chrome.userLabel;
+  setBackendPageLoadingOverlay(true);
+  try {
+    const chrome = await initializeBackendPageChrome({
+      currentSection: "tours",
+      homeLink: els.homeLink,
+      refreshNav: refreshBackendNavElements
+    });
+    els.logoutLink = chrome.logoutLink;
+    els.userLabel = chrome.userLabel;
 
-  const authState = await loadBackendPageAuthState({
-    apiOrigin,
-    refreshNav: refreshBackendNavElements,
-    computePermissions: (roles) => ({
-      canReadTours: hasAnyRoleInList(roles, ROLES.ADMIN, ROLES.ACCOUNTANT, ROLES.TOUR_EDITOR),
-      canEditTours: hasAnyRoleInList(roles, ROLES.ADMIN, ROLES.TOUR_EDITOR)
-    }),
-    hasPageAccess: (permissions) => permissions.canReadTours,
-    logKey: "backend-tours",
-    pageName: "marketing_tours.html",
-    expectedRolesAnyOf: [ROLES.ADMIN, ROLES.ACCOUNTANT, ROLES.TOUR_EDITOR],
-    likelyCause: "The user is authenticated in Keycloak but does not have the ATP roles required to access tours."
-  });
-  state.authUser = authState.authUser;
-  state.roles = authState.roles;
-  state.permissions = {
-    canReadTours: Boolean(authState.permissions?.canReadTours),
-    canEditTours: Boolean(authState.permissions?.canEditTours)
-  };
-  bindControls();
-  window.addEventListener("backend-i18n-changed", handleBackendLanguageChanged);
-  if (els.toursCreateBtn) els.toursCreateBtn.hidden = !state.permissions.canEditTours;
-  syncPublishButtonState();
+    const authState = await loadBackendPageAuthState({
+      apiOrigin,
+      refreshNav: refreshBackendNavElements,
+      computePermissions: (roles) => ({
+        canReadTours: hasAnyRoleInList(roles, ROLES.ADMIN, ROLES.ACCOUNTANT, ROLES.TOUR_EDITOR),
+        canEditTours: hasAnyRoleInList(roles, ROLES.ADMIN, ROLES.TOUR_EDITOR)
+      }),
+      hasPageAccess: (permissions) => permissions.canReadTours,
+      logKey: "backend-tours",
+      pageName: "marketing_tours.html",
+      expectedRolesAnyOf: [ROLES.ADMIN, ROLES.ACCOUNTANT, ROLES.TOUR_EDITOR],
+      likelyCause: "The user is authenticated in Keycloak but does not have the ATP roles required to access tours."
+    });
+    state.authUser = authState.authUser;
+    state.roles = authState.roles;
+    state.permissions = {
+      canReadTours: Boolean(authState.permissions?.canReadTours),
+      canEditTours: Boolean(authState.permissions?.canEditTours)
+    };
+    bindControls();
+    window.addEventListener("backend-i18n-changed", handleBackendLanguageChanged);
+    if (els.toursCreateBtn) els.toursCreateBtn.hidden = !state.permissions.canEditTours;
 
-  if (state.permissions.canReadTours) {
-    loadTours();
-    loadDestinationCatalog();
-  } else {
-    showError(backendT("tour.error.forbidden", "You do not have access to tours."));
+    if (state.permissions.canReadTours) {
+      await Promise.all([
+        loadTours(),
+        loadDestinationCatalog()
+      ]);
+    } else {
+      showError(backendT("tour.error.forbidden", "You do not have access to tours."));
+    }
+  } catch (error) {
+    console.error("[backend-tours] Marketing tours page initialization failed.", {
+      pageUrl: window.location.href,
+      apiBase,
+      apiOrigin
+    }, error);
+    showError(backendT("tour.error.load", "Could not load tours."));
+  } finally {
+    setBackendPageLoadingOverlay(false);
   }
 }
 
@@ -282,12 +282,6 @@ function bindControls() {
     els.toursCreateBtn.addEventListener("click", () => {
       if (!state.permissions.canEditTours) return;
       window.location.href = buildTourCreateHref();
-    });
-  }
-
-  if (els.toursPublishBtn) {
-    els.toursPublishBtn.addEventListener("click", () => {
-      void publishToursStaticContent();
     });
   }
 
@@ -463,35 +457,6 @@ async function loadTours() {
   renderTours(state.tours.lastItems);
   renderToursMatrix(payload?.matrix, Number((payload?.matrix?.total_tours ?? pagination.total_items) || 0));
   renderDestinationCatalog();
-}
-
-async function publishToursStaticContent() {
-  if (!state.permissions.canEditTours || state.publishing) return;
-  clearError();
-  state.publishing = true;
-  syncPublishButtonState();
-  setPublishStatus(backendT("backend.tours.status.publishing", "Publishing..."));
-  setToursPageOverlay(true, backendT("backend.tours.status.publishing_overlay", "Publishing static web page content. Please wait."));
-  try {
-    const result = await fetchApi(withBackendApiLang("/api/v1/tours/publish"), {
-      method: "POST"
-    });
-    if (!result) {
-      setPublishStatus(backendT("backend.tours.status.publish_failed", "Publish failed."));
-      return;
-    }
-    if (result?.homepage_assets?.ok === false) {
-      setPublishStatus(backendT("backend.tours.status.publish_failed", "Publish failed."));
-      showError(result.homepage_assets.error || backendT("backend.tours.status.publish_failed", "Publish failed."));
-      return;
-    }
-    setPublishStatus(backendT("backend.tours.status.published", "Published."));
-    await loadTours();
-  } finally {
-    state.publishing = false;
-    syncPublishButtonState();
-    setToursPageOverlay(false);
-  }
 }
 
 function buildToursQueryEntries({ page = 1, pageSize = state.tours.pageSize } = {}) {

@@ -24,7 +24,8 @@ import {
   getBackendApiBase,
   getBackendApiOrigin,
   initializeBackendPageChrome,
-  loadBackendPageAuthState
+  loadBackendPageAuthState,
+  setBackendPageLoadingOverlay
 } from "../shared/backend_page.js";
 import { BOOKING_CONTENT_LANGUAGE_OPTIONS } from "../booking/i18n.js";
 import {
@@ -347,6 +348,7 @@ const fetchApi = createApiFetcher({
 init();
 
 async function init() {
+  setBackendPageLoadingOverlay(true);
   const initStep = startConsoleStep("Booking list page init", {
     pageUrl: window.location.href,
     apiBase,
@@ -414,6 +416,8 @@ async function init() {
       apiBase,
       apiOrigin
     }, error);
+  } finally {
+    setBackendPageLoadingOverlay(false);
   }
 }
 

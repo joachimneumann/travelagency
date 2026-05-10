@@ -18,6 +18,62 @@ export function backendT(id, fallback, vars) {
   });
 }
 
+const BACKEND_PAGE_LOADING_OVERLAY_ID = "backendPageLoadingOverlay";
+const BACKEND_PAGE_LOADING_OVERLAY_TEXT_ID = "backendPageLoadingOverlayText";
+
+function backendPageLoadingMessage(message = "") {
+  return normalizeText(message) || backendT("backend.page_loading_overlay", "Loading page content. Please wait.");
+}
+
+function ensureBackendPageLoadingOverlay() {
+  let overlay = document.getElementById(BACKEND_PAGE_LOADING_OVERLAY_ID);
+  if (!(overlay instanceof HTMLElement)) {
+    overlay = document.createElement("div");
+    overlay.className = "booking-page-overlay backend-page-loading-overlay";
+    overlay.id = BACKEND_PAGE_LOADING_OVERLAY_ID;
+    overlay.hidden = true;
+    overlay.setAttribute("aria-hidden", "true");
+    overlay.innerHTML = `
+      <div class="booking-page-overlay__panel" role="status" aria-live="assertive">
+        <span class="booking-page-overlay__spinner" aria-hidden="true"></span>
+        <span class="booking-page-overlay__text" id="${BACKEND_PAGE_LOADING_OVERLAY_TEXT_ID}"></span>
+      </div>
+    `;
+    document.body?.appendChild(overlay);
+  }
+  return overlay;
+}
+
+export function setBackendPageLoadingOverlay(isVisible, message = "") {
+  const overlay = ensureBackendPageLoadingOverlay();
+  const visible = Boolean(isVisible);
+  const overlayText = overlay.querySelector(`#${BACKEND_PAGE_LOADING_OVERLAY_TEXT_ID}`);
+  if (overlayText instanceof HTMLElement) {
+    overlayText.textContent = backendPageLoadingMessage(message);
+  }
+
+  document.body?.classList.toggle("backend-page-loading--busy", visible);
+
+  [document.getElementById("top"), document.getElementById("main-content")]
+    .filter((element) => element instanceof HTMLElement)
+    .forEach((element) => {
+      element.inert = visible;
+      element.setAttribute("aria-busy", visible ? "true" : "false");
+    });
+
+  if (visible) {
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+    overlay.hidden = false;
+    overlay.setAttribute("aria-hidden", "false");
+    return;
+  }
+
+  overlay.hidden = true;
+  overlay.setAttribute("aria-hidden", "true");
+}
+
 export async function waitForBackendI18n() {
   await (window.__BACKEND_I18N_PROMISE || Promise.resolve());
 }

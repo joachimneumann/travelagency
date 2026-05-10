@@ -18,6 +18,7 @@ import { createKeycloakUserHandlers } from "../http/handlers/keycloak_users.js";
 import { createStaticTranslationHandlers } from "../http/handlers/static_translations.js";
 import { createTourHandlers } from "../http/handlers/tours.js";
 import { createTranslationRulesHandlers } from "../http/handlers/translation_rules.js";
+import { createPublicSitePublishHandlers } from "../http/handlers/public_site_publish.js";
 
 export function createApplicationRoutes({
   auth,
@@ -54,6 +55,7 @@ export function createApplicationRoutes({
     translationMemoryStore,
     staticTranslationService,
     staticTranslationApplyJobs,
+    publicSitePublishService,
     travelPlanPdfArtifacts,
     metaWebhookHandlers,
     tourHelpers,
@@ -432,6 +434,13 @@ export function createApplicationRoutes({
     writesEnabled: runtime.translationOverrideWritesEnabled !== false
   });
 
+  const publicSitePublishHandlers = createPublicSitePublishHandlers({
+    sendJson: httpHelpers.sendJson,
+    getPrincipal,
+    canPublishPublicSite: canEditTours,
+    publicSitePublishService
+  });
+
   return buildApiRoutes({
     authRoutes: auth.routes,
     handlers: {
@@ -454,6 +463,7 @@ export function createApplicationRoutes({
       ...destinationScopeHandlers,
       ...translationRulesHandlers,
       ...staticTranslationHandlers,
+      ...publicSitePublishHandlers,
       ...tourHandlers
     }
   });

@@ -18,7 +18,7 @@ import { wireAuthLogoutLink } from "../shared/auth.js";
 import { createSnapshotDirtyTracker } from "../shared/edit_state.js";
 import { MONTH_CODE_CATALOG } from "../shared/generated_catalogs.js";
 import { resolveBackendSectionHref } from "../shared/nav.js";
-import { applyBackendUserLabel } from "../shared/backend_page.js";
+import { applyBackendUserLabel, setBackendPageLoadingOverlay } from "../shared/backend_page.js";
 import { createTourTravelPlanAdapter } from "./tour_travel_plan_adapter.js";
 import { normalizeDestinationScopeCatalog } from "../shared/destination_scope_editor.js";
 import {
@@ -1791,6 +1791,10 @@ function notifyBackendTranslationsStatus(detail = {}) {
   window.dispatchEvent(new CustomEvent("backend-translations-status-refresh", { detail }));
 }
 
+function notifyPublicSitePublishStatus(detail = {}) {
+  window.dispatchEvent(new CustomEvent("backend-public-site-publish-refresh", { detail }));
+}
+
 function preferredTourHeaderLangs() {
   return [TOUR_SOURCE_LANG, "vi"];
 }
@@ -1841,6 +1845,15 @@ function handleBackendLanguageChanged() {
 }
 
 async function init() {
+  setBackendPageLoadingOverlay(true);
+  try {
+    await initTourPage();
+  } finally {
+    setBackendPageLoadingOverlay(false);
+  }
+}
+
+async function initTourPage() {
   await waitForBackendI18n();
   window.addEventListener("beforeunload", (event) => {
     if (state.allowPageUnload || !updateTourDirtyState()) return;
@@ -1896,6 +1909,7 @@ async function init() {
       state.is_create_mode = !state.id;
       if (result?.homepage_assets?.dirty === true) {
         state.publicHomepageAssetsDirty = true;
+        notifyPublicSitePublishStatus();
         window.setTimeout(() => {
           markTourSnapshotClean();
           updateTourDirtyState();
@@ -2423,6 +2437,7 @@ async function submitForm(event) {
     markTourSnapshotClean();
     updateTourDirtyState();
     notifyBackendTranslationsStatus();
+    notifyPublicSitePublishStatus({ dirty: true, source_dirty: true });
   } finally {
     setTourPageOverlay(false);
   }

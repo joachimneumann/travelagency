@@ -73,6 +73,26 @@ test("buildApiRoutes includes static translation management routes", () => {
   assert.equal(firstApplyJobRoute.handler, expectedHandler);
 });
 
+test("buildApiRoutes includes central public-site publish routes", () => {
+  const handlerFns = new Map();
+  const handlers = new Proxy({}, {
+    get: (_target, prop) => {
+      if (!handlerFns.has(prop)) handlerFns.set(prop, () => {});
+      return handlerFns.get(prop);
+    }
+  });
+
+  const routes = buildApiRoutes({ handlers });
+  const matches = (method, path) => routes.some((route) => route.method === method && route.pattern.test(path));
+
+  assert.equal(matches("GET", "/api/v1/public-site/publish-status"), true);
+  assert.equal(matches("POST", "/api/v1/public-site/publish"), true);
+  assert.equal(matches("GET", "/api/v1/public-site/publish/job_123"), true);
+
+  const jobRoute = routes.find((route) => route.method === "GET" && route.pattern.test("/api/v1/public-site/publish/job_123"));
+  assert.equal(jobRoute.handler, handlerFns.get("handleGetPublicSitePublishJob"));
+});
+
 test("buildApiRoutes includes tour reel video editor routes", () => {
   const handlers = new Proxy({}, {
     get: () => () => {}

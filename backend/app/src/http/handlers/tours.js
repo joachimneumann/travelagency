@@ -27,7 +27,8 @@ import {
 } from "../../domain/tour_metadata.js";
 import {
   applyMarketingTourTranslations,
-  loadPublishedMarketingTourTranslations
+  loadPublishedMarketingTourTranslations,
+  syncMarketingTourTranslationsForPublish
 } from "../../domain/marketing_tour_translations.js";
 
 export function createTourHandlers(deps) {
@@ -260,142 +261,6 @@ export function createTourHandlers(deps) {
     if (normalizedText) nextMap[normalizedLang] = normalizedText;
     else delete nextMap[normalizedLang];
     holder[i18nField] = nextMap;
-  }
-
-  function addTourTranslationDescriptor(descriptors, { holder, mapField, plainField = "", key }) {
-    if (!holder || !mapField || !key) return;
-    const map = localizedTextMap(holder?.[mapField]);
-    const sourceText = normalizeText(map.en || (plainField ? holder?.[plainField] : ""));
-    if (!sourceText) return;
-    descriptors.push({
-      key,
-      sourceText,
-      targetText(targetLang) {
-        return normalizeText(map[normalizeTourLang(targetLang)]);
-      }
-    });
-  }
-
-  function collectTourTranslationDescriptors(tour) {
-    const descriptors = [];
-    addTourTranslationDescriptor(descriptors, {
-      holder: tour,
-      mapField: "title_i18n",
-      plainField: "title",
-      key: "website.title"
-    });
-    addTourTranslationDescriptor(descriptors, {
-      holder: tour,
-      mapField: "short_description_i18n",
-      plainField: "short_description",
-      key: "website.short_description"
-    });
-    const days = Array.isArray(tour?.travel_plan?.days) ? tour.travel_plan.days : [];
-    days.forEach((day, dayIndex) => {
-      const dayId = normalizeText(day?.id) || `day_${dayIndex + 1}`;
-      addTourTranslationDescriptor(descriptors, {
-        holder: day,
-        mapField: "title_i18n",
-        plainField: "title",
-        key: `travel_plan.${dayId}.title`
-      });
-      addTourTranslationDescriptor(descriptors, {
-        holder: day,
-        mapField: "overnight_location_i18n",
-        plainField: "overnight_location",
-        key: `travel_plan.${dayId}.overnight_location`
-      });
-      addTourTranslationDescriptor(descriptors, {
-        holder: day,
-        mapField: "notes_i18n",
-        plainField: "notes",
-        key: `travel_plan.${dayId}.notes`
-      });
-      const services = Array.isArray(day?.services) ? day.services : [];
-      services.forEach((service, serviceIndex) => {
-        const serviceId = normalizeText(service?.id) || `service_${dayIndex + 1}_${serviceIndex + 1}`;
-        if (normalizeText(service?.timing_kind || "label") === "label") {
-          addTourTranslationDescriptor(descriptors, {
-            holder: service,
-            mapField: "time_label_i18n",
-            plainField: "time_label",
-            key: `travel_plan.${dayId}.${serviceId}.time_label`
-          });
-        }
-        addTourTranslationDescriptor(descriptors, {
-          holder: service,
-          mapField: "title_i18n",
-          plainField: "title",
-          key: `travel_plan.${dayId}.${serviceId}.title`
-        });
-        addTourTranslationDescriptor(descriptors, {
-          holder: service,
-          mapField: "details_i18n",
-          plainField: "details",
-          key: `travel_plan.${dayId}.${serviceId}.details`
-        });
-        addTourTranslationDescriptor(descriptors, {
-          holder: service,
-          mapField: "location_i18n",
-          plainField: "location",
-          key: `travel_plan.${dayId}.${serviceId}.location`
-        });
-        addTourTranslationDescriptor(descriptors, {
-          holder: service,
-          mapField: "image_subtitle_i18n",
-          plainField: "image_subtitle",
-          key: `travel_plan.${dayId}.${serviceId}.image_subtitle`
-        });
-        addTourTranslationDescriptor(descriptors, {
-          holder: service?.image,
-          mapField: "caption_i18n",
-          plainField: "caption",
-          key: `travel_plan.${dayId}.${serviceId}.image.caption`
-        });
-        addTourTranslationDescriptor(descriptors, {
-          holder: service?.image,
-          mapField: "alt_text_i18n",
-          plainField: "alt_text",
-          key: `travel_plan.${dayId}.${serviceId}.image.alt_text`
-        });
-      });
-    });
-    return descriptors;
-  }
-
-  async function syncTourManualTranslationsToMemory(tour) {
-    if (!translationMemoryStore || typeof translationMemoryStore.patchManualOverrides !== "function") return;
-    const meta = tour?.travel_plan?.translation_meta && typeof tour.travel_plan.translation_meta === "object" && !Array.isArray(tour.travel_plan.translation_meta)
-      ? tour.travel_plan.translation_meta
-      : {};
-    const descriptors = collectTourTranslationDescriptors(tour);
-    const descriptorsByKey = new Map(descriptors.map((descriptor) => [descriptor.key, descriptor]));
-    for (const [lang, entry] of Object.entries(meta)) {
-      const targetLang = normalizeTourLang(lang);
-      const manualKeys = Array.isArray(entry?.manual_keys)
-        ? entry.manual_keys.map((key) => normalizeText(key)).filter(Boolean)
-        : [];
-      const updates = manualKeys
-        .map((key) => {
-          const descriptor = descriptorsByKey.get(key);
-          const manualOverride = descriptor?.targetText(targetLang);
-          if (!descriptor?.sourceText || !manualOverride) return null;
-          return {
-            source_text: descriptor.sourceText,
-            manual_override: manualOverride
-          };
-        })
-        .filter(Boolean);
-      if (updates.length) {
-        await translationMemoryStore.patchManualOverrides(targetLang, updates);
-      }
-    }
-  }
-
-  async function syncMarketingTourTranslationsForPublish(tours) {
-    for (const tour of Array.isArray(tours) ? tours : []) {
-      await syncTourManualTranslationsToMemory(tour);
-    }
   }
 
   function preferredEnglishImportText(mapValue, plainValue) {
@@ -2042,7 +1907,7 @@ export function createTourHandlers(deps) {
     }
 
     const tours = (await readTours()).map((tour) => normalizeTourForStorage(tour));
-    await syncMarketingTourTranslationsForPublish(tours);
+    await syncMarketingTourTranslationsForPublish(tours, translationMemoryStore);
     const homepageAssets = await regeneratePublicHomepageAssets("tours_publish", { tour_count: tours.length });
     sendJson(res, 200, {
       published: homepageAssets?.ok !== false,
@@ -2065,7 +1930,7 @@ export function createTourHandlers(deps) {
       return;
     }
 
-    await syncMarketingTourTranslationsForPublish(tours);
+    await syncMarketingTourTranslationsForPublish(tours, translationMemoryStore);
     const homepageAssets = await regeneratePublicHomepageAssets("tour_publish", { tour_id: tour.id });
     sendJson(res, 200, {
       tour: await buildLocalizedTourEditorResponse(tour, lang),

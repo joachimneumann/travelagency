@@ -3495,16 +3495,18 @@ test("tour page reads month options from the generated catalogs layer", async ()
   const tourPageHtmlPath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "marketing_tour.html");
   const toursListHtmlPath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "marketing_tours.html");
   const toursListModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "tours_list.js");
+  const navPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "shared", "nav.js");
   const generatedCatalogsPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "shared", "generated_catalogs.js");
   const travelPlanCorePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "shared", "travel_plan_editor_core.js");
   const toursHandlerPath = path.resolve(__dirname, "..", "src", "http", "handlers", "tours.js");
   const routesPath = path.resolve(__dirname, "..", "src", "http", "routes.js");
-  const [tourSource, tourTravelPlanAdapterSource, tourHtml, toursListHtml, toursListSource, travelPlanCoreSource, toursHandlerSource, routesSource] = await Promise.all([
+  const [tourSource, tourTravelPlanAdapterSource, tourHtml, toursListHtml, toursListSource, navSource, travelPlanCoreSource, toursHandlerSource, routesSource] = await Promise.all([
     readFile(tourPageModulePath, "utf8"),
     readFile(tourTravelPlanAdapterPath, "utf8"),
     readFile(tourPageHtmlPath, "utf8"),
     readFile(toursListHtmlPath, "utf8"),
     readFile(toursListModulePath, "utf8"),
+    readFile(navPath, "utf8"),
     readFile(travelPlanCorePath, "utf8"),
     readFile(toursHandlerPath, "utf8"),
     readFile(routesPath, "utf8")
@@ -3580,15 +3582,50 @@ test("tour page reads month options from the generated catalogs layer", async ()
     /id="tour_publish_btn"/,
     "The single marketing-tour editor should not render the publish button"
   );
-  assert.match(
+  assert.doesNotMatch(
     toursListHtml,
-    /id="toursPublishBtn"[\s\S]*id="toursPublishStatus"/,
-    "The marketing tours list should render the global publish control"
+    /id="toursPublishBtn"|id="toursPublishStatus"/,
+    "The marketing tours list should not render the retired publish control"
+  );
+  assert.doesNotMatch(
+    toursListSource,
+    /toursPublishBtn|publishToursStaticContent|\/api\/v1\/tours\/publish/,
+    "The marketing tours list should not call the retired publish control"
   );
   assert.match(
-    toursListSource,
-    /toursPublishBtn[\s\S]*publishToursStaticContent[\s\S]*\/api\/v1\/tours\/publish/,
-    "The marketing tours list should publish via the global tours endpoint"
+    navSource,
+    /id="backendPublicSitePublishBtn"/,
+    "The backend nav should own the central public-site publish control"
+  );
+  assert.match(
+    navSource,
+    /\/api\/v1\/public-site\/publish-status/,
+    "The backend nav should read central public-site publish status"
+  );
+  assert.match(
+    navSource,
+    /\/api\/v1\/public-site\/publish`,\s*\{[\s\S]*method:\s*"POST"/,
+    "The backend nav should start central public-site publish jobs"
+  );
+  assert.match(
+    navSource,
+    /status\?\.dirty \|\| status\?\.source_dirty/,
+    "The backend nav should enable central publish from either dirty or source_dirty status"
+  );
+  assert.match(
+    tourSource,
+    /notifyPublicSitePublishStatus\(\{ dirty: true, source_dirty: true \}\)/,
+    "Saving a marketing tour should immediately mark central publish dirty in the nav"
+  );
+  assert.match(
+    navSource,
+    /backendPublicSitePublishOverlay[\s\S]*setPublicSitePublishOverlay\(mount, true\)[\s\S]*pollPublicSitePublishJob/,
+    "The backend nav should show the modal wait overlay while central publish jobs run"
+  );
+  assert.match(
+    routesSource,
+    /\\\/api\\\/v1\\\/public-site\\\/publish-status[\s\S]*handlerKey:\s*"handleGetPublicSitePublishStatus"[\s\S]*\\\/api\\\/v1\\\/public-site\\\/publish[\s\S]*handlerKey:\s*"handleStartPublicSitePublish"/,
+    "Routes should expose the central public-site publish status and start endpoints"
   );
   assert.match(
     routesSource,
@@ -3617,7 +3654,7 @@ test("tour page reads month options from the generated catalogs layer", async ()
   );
   assert.match(
     toursHandlerSource,
-    /async function syncMarketingTourTranslationsForPublish[\s\S]*syncTourManualTranslationsToMemory\(tour\)[\s\S]*async function handlePublishTours[\s\S]*regeneratePublicHomepageAssets\("tours_publish"/,
+    /syncMarketingTourTranslationsForPublish[\s\S]*async function handlePublishTours[\s\S]*syncMarketingTourTranslationsForPublish\(tours,\s*translationMemoryStore\)[\s\S]*regeneratePublicHomepageAssets\("tours_publish"/,
     "Publishing should sync marketing-tour manual translations once before generating public homepage assets"
   );
   assert.doesNotMatch(
@@ -4618,7 +4655,7 @@ test("backend translation nav icon reflects dirty centralized translation state"
   );
 });
 
-test("translations page exposes one translate action that regenerates runtime translations", async () => {
+test("translations page exposes one translate action and leaves website generation to central publish", async () => {
   const repoRoot = path.resolve(__dirname, "..", "..", "..");
   const [translationsHtml, translationsSource, translationsStyles, staticTranslationsSource, staticTranslationApplyJobsSource, servicesSource] = await Promise.all([
     readFile(path.join(repoRoot, "frontend", "pages", "translations.html"), "utf8"),
@@ -4659,7 +4696,7 @@ test("translations page exposes one translate action that regenerates runtime tr
   assert.match(
     staticTranslationApplyJobsSource,
     /mode === "marketing_tour_cache"[\s\S]*clearTranslationCaches\(\{[\s\S]*domains: \["marketing-tour-memory"\][\s\S]*Use Translate to rebuild missing machine translations in content\/translations/,
-    "The marketing-tour cache job should clear central memory cache and leave translation plus runtime generation to Translate"
+    "The marketing-tour cache job should clear central memory cache and leave translation rebuilding to Translate"
   );
   assert.match(
     servicesSource,
@@ -4684,12 +4721,12 @@ test("translations page exposes one translate action that regenerates runtime tr
   assert.match(
     translationsSource,
     /function currentTranslationActionState\(\)[\s\S]*translateNeeded[\s\S]*publishReady[\s\S]*translateActionReady/,
-    "The translations page should enable Translate for missing strings or runtime-ready translations"
+    "The translations page should distinguish missing-string translation from publish-ready strings"
   );
-  assert.match(
+  assert.doesNotMatch(
     staticTranslationApplyJobsSource,
-    /function autoPublishPhases\(\{ publishTranslations, getStatusSummary \} = \{\}\)[\s\S]*issueEntriesFromStatus\(status\)[\s\S]*Skipped runtime generation because[\s\S]*const manifest = await publishTranslations\(\)[\s\S]*whenPhase\(runtimeI18nPhase\(\), autoPublished\)[\s\S]*whenPhase\(homepageAssetsPhase\(\), autoPublished\)/,
-    "The apply job should validate content/translations and rebuild runtime assets after translation issues clear"
+    /function autoPublishPhases|whenPhase\(runtimeI18nPhase\(\), autoPublished\)|whenPhase\(homepageAssetsPhase\(\), autoPublished\)/,
+    "The apply job should not auto-publish or rebuild runtime/homepage assets after translation issues clear"
   );
   assert.match(
     translationsSource,
@@ -4723,8 +4760,8 @@ test("translations page exposes one translate action that regenerates runtime tr
   );
   assert.match(
     translationsSource,
-    /function translationStatusMessage\(status\)[\s\S]*const base = `\$\{count\} \$\{subject\} \$\{verb\} translation before runtime generation\.`[\s\S]*ready for runtime generation with Translate\./,
-    "The status text above Translate should explain that runtime-ready strings are handled by the global action"
+    /function translationStatusMessage\(status\)[\s\S]*const base = `\$\{count\} \$\{subject\} \$\{verb\} translation before publishing\.`[\s\S]*Use Publish Website to update runtime translations and static website content\./,
+    "The status text above Translate should point clean unpublished translations to central Publish"
   );
   assert.match(
     translationsSource,
@@ -4824,7 +4861,7 @@ test("translations page exposes one translate action that regenerates runtime tr
   assert.match(
     translationsSource,
     /function configureTranslationActionButton\(button, action, translationState, canRunTranslationAction, actionsBusy\)[\s\S]*button\.classList\.toggle\("is-waiting", Boolean\(actionsBusy\)\)[\s\S]*button\.disabled = !canRunTranslationAction \|\| !translationState\.translateActionReady/,
-    "Translate should stay enabled when strings need translation or clean content/translations is ready for runtime generation"
+    "Translate should stay enabled only while strings need translation"
   );
   assert.match(
     translationsSource,
@@ -4858,13 +4895,13 @@ test("translations page exposes one translate action that regenerates runtime tr
   );
   assert.match(
     translationsSource,
-    /latest\.type === "apply" && translationStatus\.translationIssueCount > 0[\s\S]*Runtime generation was skipped[\s\S]*latest\.type === "apply" && translationStatus\.dirty[\s\S]*warning icon could not be cleared/,
-    "After Translate finishes, the page should either report skipped runtime generation or warn when dirty status remains"
+    /latest\.type === "apply" && translationStatus\.translationIssueCount > 0[\s\S]*Publish Website remains blocked[\s\S]*latest\.type === "apply" && translationStatus\.unavailableCount > 0[\s\S]*Publish Website remains blocked/,
+    "After Translate finishes, the page should report only blockers that keep central Publish unavailable"
   );
-  assert.match(
+  assert.doesNotMatch(
     translationsSource,
-    /function notifyBackendTranslationsStatus[\s\S]*backend-translations-status-refresh[\s\S]*latest\.type === "apply" && translationStatus\.dirty[\s\S]*warning icon could not be cleared[\s\S]*refreshTranslationStatusText\(\)/,
-    "After Translate generates runtime files, the page should refresh the nav translation icon or show an error if dirty status remains"
+    /latest\.type === "apply" && translationStatus\.dirty[\s\S]*warning icon could not be cleared|Runtime generation was skipped/,
+    "Dirty unpublished translations after Translate should be a normal central Publish state, not a runtime-generation error"
   );
 });
 
@@ -5291,6 +5328,74 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
     stagingCaddy,
     /@production_backend_html_pages path \/bookings\.html[\s\S]*forward_auth @production_backend_html_pages host\.docker\.internal:8788 \{[\s\S]*uri \/backend-access\/check[\s\S]*respond 404/,
     "Production Caddy should protect backend HTML pages with backend-access forward auth and end unmatched paths with 404"
+  );
+});
+
+test("backend pages keep the shared loading overlay visible until initial content loads", async () => {
+  const repoRoot = path.resolve(__dirname, "..", "..", "..");
+  const frontendRoot = path.resolve(repoRoot, "frontend");
+  const [
+    backendPageSource,
+    bookingListSource,
+    toursListSource,
+    tourSource,
+    bookingSource,
+    backendNavCss,
+    backendCatalog
+  ] = await Promise.all([
+    readFile(path.join(frontendRoot, "scripts", "shared", "backend_page.js"), "utf8"),
+    readFile(path.join(frontendRoot, "scripts", "pages", "booking_list.js"), "utf8"),
+    readFile(path.join(frontendRoot, "scripts", "pages", "tours_list.js"), "utf8"),
+    readFile(path.join(frontendRoot, "scripts", "pages", "tour.js"), "utf8"),
+    readFile(path.join(frontendRoot, "scripts", "pages", "booking.js"), "utf8"),
+    readFile(path.join(repoRoot, "shared", "css", "components", "backend-nav.css"), "utf8"),
+    readFile(path.join(repoRoot, "scripts", "i18n", "source_catalogs", "backend.en.json"), "utf8")
+  ]);
+
+  assert.match(
+    backendPageSource,
+    /BACKEND_PAGE_LOADING_OVERLAY_ID = "backendPageLoadingOverlay"[\s\S]*export function setBackendPageLoadingOverlay\(isVisible, message = ""\)[\s\S]*ensureBackendPageLoadingOverlay\(\)/,
+    "The shared backend page helper should own the reusable page-loading modal"
+  );
+  assert.match(
+    backendNavCss,
+    /\.backend-page-loading-overlay/,
+    "The shared backend nav stylesheet should style the reusable page-loading modal"
+  );
+  assert.match(
+    backendCatalog,
+    /"backend\.page_loading_overlay": "Loading page content\. Please wait\."/,
+    "The backend i18n source catalog should include the page-loading overlay message"
+  );
+  assert.match(
+    bookingListSource,
+    /setBackendPageLoadingOverlay\(true\)[\s\S]*await loadBookings\(\)[\s\S]*finally\s*\{[\s\S]*setBackendPageLoadingOverlay\(false\)/,
+    "bookings.html should keep the loading modal visible until its bookings list is loaded"
+  );
+  assert.match(
+    toursListSource,
+    /setBackendPageLoadingOverlay\(true\)[\s\S]*await Promise\.all\(\[[\s\S]*loadTours\(\)[\s\S]*loadDestinationCatalog\(\)[\s\S]*finally\s*\{[\s\S]*setBackendPageLoadingOverlay\(false\)/,
+    "marketing_tours.html should await both tours and destination catalog before hiding the loading modal"
+  );
+  assert.match(
+    tourSource,
+    /async function init\(\)[\s\S]*setBackendPageLoadingOverlay\(true\)[\s\S]*await initTourPage\(\)[\s\S]*finally\s*\{[\s\S]*setBackendPageLoadingOverlay\(false\)/,
+    "marketing_tour.html should wrap page bootstrap with the shared loading modal"
+  );
+  assert.match(
+    tourSource,
+    /async function initTourPage\(\)[\s\S]*await loadExperienceHighlights\(\)[\s\S]*await loadTravelPlanDestinationCatalog\(\)[\s\S]*(await initializeNewTourForm\(\)|await loadTour\(\))/,
+    "marketing_tour.html should not hide the loading modal before its initial tour editor data has loaded"
+  );
+  assert.match(
+    bookingSource,
+    /async function init\(\)[\s\S]*setBackendPageLoadingOverlay\(true\)[\s\S]*await initBookingPage\(\)[\s\S]*finally\s*\{[\s\S]*setBackendPageLoadingOverlay\(false\)/,
+    "booking.html should wrap page bootstrap with the shared loading modal"
+  );
+  assert.match(
+    bookingSource,
+    /async function initBookingPage\(\)[\s\S]*await loadAuthStatus\(\)[\s\S]*await loadBookingPage\(\)/,
+    "booking.html should not hide the loading modal before booking detail data has loaded"
   );
 });
 

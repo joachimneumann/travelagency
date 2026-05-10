@@ -74,24 +74,6 @@
         justify-self: end;
       }
 
-      .backend-tours-publish {
-        display: grid;
-        justify-items: center;
-        gap: 0.45rem;
-        margin-bottom: 1rem;
-      }
-
-      .backend-tours-publish__button {
-        min-width: min(100%, 300px);
-        min-height: 52px;
-        font-size: 1.05rem;
-      }
-
-      .backend-tours-publish__status {
-        min-height: 1.25em;
-        text-align: center;
-      }
-
       .backend-tours-disclosure {
         display: grid;
         gap: 0.9rem;
@@ -434,10 +416,6 @@
           <div id="backendError" class="backend-message" role="alert" aria-live="assertive"></div>
 
           <section class="backend-section" id="toursPanel">
-            <div class="backend-tours-publish">
-              <button class="btn btn-primary backend-tours-publish__button" id="toursPublishBtn" type="button" data-i18n-id="backend.tours.publish_static_content">Publish Website</button>
-              <span id="toursPublishStatus" class="micro backend-tours-publish__status" role="status" aria-live="polite"></span>
-            </div>
             <details class="backend-tours-disclosure">
               <summary id="toursMatrixTotal" class="backend-tours-disclosure__summary" data-i18n-id="backend.tours.statistics_summary">Statistics: 0 tours</summary>
               <div class="backend-tours-disclosure__body">
