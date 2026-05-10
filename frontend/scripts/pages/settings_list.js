@@ -36,7 +36,8 @@ import {
   getBackendApiBase,
   getBackendApiOrigin,
   initializeBackendPageChrome,
-  loadBackendPageAuthState
+  loadBackendPageAuthState,
+  setBackendPageLoadingOverlay
 } from "../shared/backend_page.js";
 import { initializeBackendCollapsibles } from "../shared/collapsible.js";
 
@@ -248,6 +249,11 @@ const state = {
   locationCatalogSaving: false,
   locationUsageCounts: {},
   locationUsageLoading: false,
+  locationUsageLoaded: false,
+  locationUsageRequested: false,
+  locationUsageLazyBound: false,
+  locationUsageReadyWaitBound: false,
+  locationUsageObserver: null,
   locationFocusId: "",
   translationRulesLoaded: false,
   translationRulesInitialItems: [],
@@ -747,70 +753,75 @@ const fetchApi = createApiFetcher({
 init();
 
 async function init() {
-  bindEvents();
-  initializeBackendCollapsibles(document);
+  setBackendPageLoadingOverlay(true);
+  try {
+    bindEvents();
+    initializeBackendCollapsibles(document);
 
-  const chrome = await initializeBackendPageChrome({
-    currentSection: "settings",
-    homeLink: els.homeLink,
-    refreshNav: refreshBackendNavElements
-  });
-  els.logoutLink = chrome.logoutLink;
-  els.userLabel = chrome.userLabel;
+    const chrome = await initializeBackendPageChrome({
+      currentSection: "settings",
+      homeLink: els.homeLink,
+      refreshNav: refreshBackendNavElements
+    });
+    els.logoutLink = chrome.logoutLink;
+    els.userLabel = chrome.userLabel;
 
-  const authState = await loadBackendPageAuthState({
-    apiOrigin,
-    refreshNav: refreshBackendNavElements,
-    computePermissions: (roles) => ({
-      canReadObservability: roles.includes(ROLES.ADMIN),
-      canReadStaffProfiles: roles.includes(ROLES.ADMIN),
-      canEditStaffProfiles: roles.includes(ROLES.ADMIN),
-      canReadLocations: roles.includes(ROLES.ADMIN),
-      canEditLocations: roles.includes(ROLES.ADMIN),
-      canReadTranslationRules: roles.includes(ROLES.ADMIN),
-      canEditTranslationRules: roles.includes(ROLES.ADMIN),
-      canReadEmergency: roles.includes(ROLES.ADMIN),
-      canEditEmergency: roles.includes(ROLES.ADMIN),
-      canReadSettings: roles.includes(ROLES.ADMIN)
-    }),
-    hasPageAccess: (permissions) => permissions.canReadSettings,
-    logKey: "backend-settings",
-    pageName: "settings.html",
-    expectedRolesAnyOf: [ROLES.ADMIN],
-    likelyCause: "The user is authenticated in Keycloak but does not have the ATP roles required to read settings."
-  });
+    const authState = await loadBackendPageAuthState({
+      apiOrigin,
+      refreshNav: refreshBackendNavElements,
+      computePermissions: (roles) => ({
+        canReadObservability: roles.includes(ROLES.ADMIN),
+        canReadStaffProfiles: roles.includes(ROLES.ADMIN),
+        canEditStaffProfiles: roles.includes(ROLES.ADMIN),
+        canReadLocations: roles.includes(ROLES.ADMIN),
+        canEditLocations: roles.includes(ROLES.ADMIN),
+        canReadTranslationRules: roles.includes(ROLES.ADMIN),
+        canEditTranslationRules: roles.includes(ROLES.ADMIN),
+        canReadEmergency: roles.includes(ROLES.ADMIN),
+        canEditEmergency: roles.includes(ROLES.ADMIN),
+        canReadSettings: roles.includes(ROLES.ADMIN)
+      }),
+      hasPageAccess: (permissions) => permissions.canReadSettings,
+      logKey: "backend-settings",
+      pageName: "settings.html",
+      expectedRolesAnyOf: [ROLES.ADMIN],
+      likelyCause: "The user is authenticated in Keycloak but does not have the ATP roles required to read settings."
+    });
 
-  state.authUser = authState.authUser;
-  state.roles = authState.roles;
-  state.permissions = {
-    canReadObservability: Boolean(authState.permissions?.canReadObservability),
-    canReadSettings: Boolean(authState.permissions?.canReadSettings),
-    canReadStaffProfiles: Boolean(authState.permissions?.canReadStaffProfiles),
-    canEditStaffProfiles: Boolean(authState.permissions?.canEditStaffProfiles),
-    canReadLocations: Boolean(authState.permissions?.canReadLocations),
-    canEditLocations: Boolean(authState.permissions?.canEditLocations),
-    canReadTranslationRules: Boolean(authState.permissions?.canReadTranslationRules),
-    canEditTranslationRules: Boolean(authState.permissions?.canEditTranslationRules),
-    canReadEmergency: Boolean(authState.permissions?.canReadEmergency),
-    canEditEmergency: Boolean(authState.permissions?.canEditEmergency)
-  };
+    state.authUser = authState.authUser;
+    state.roles = authState.roles;
+    state.permissions = {
+      canReadObservability: Boolean(authState.permissions?.canReadObservability),
+      canReadSettings: Boolean(authState.permissions?.canReadSettings),
+      canReadStaffProfiles: Boolean(authState.permissions?.canReadStaffProfiles),
+      canEditStaffProfiles: Boolean(authState.permissions?.canEditStaffProfiles),
+      canReadLocations: Boolean(authState.permissions?.canReadLocations),
+      canEditLocations: Boolean(authState.permissions?.canEditLocations),
+      canReadTranslationRules: Boolean(authState.permissions?.canReadTranslationRules),
+      canEditTranslationRules: Boolean(authState.permissions?.canEditTranslationRules),
+      canReadEmergency: Boolean(authState.permissions?.canReadEmergency),
+      canEditEmergency: Boolean(authState.permissions?.canEditEmergency)
+    };
 
-  renderPermissionScopedSections();
-  updateStatusCopy();
-  window.addEventListener("backend-i18n-changed", handleBackendLanguageChanged);
-  if (state.permissions.canReadSettings) {
-    await Promise.all([
-      state.permissions.canReadObservability ? loadObservability() : Promise.resolve(),
-      state.permissions.canReadStaffProfiles ? loadStaffDirectoryEntries() : Promise.resolve(),
-      state.permissions.canEditStaffProfiles ? loadDestinationOptions() : Promise.resolve(),
-      state.permissions.canReadTranslationRules ? loadTranslationRules() : Promise.resolve(),
-      state.permissions.canReadLocations ? loadLocationCatalog().then(() => loadLocationUsageCounts()) : Promise.resolve(),
-      state.permissions.canReadEmergency
-        ? loadCountryReferenceInfo()
-        : Promise.resolve()
-    ]);
-  } else {
-    showError(backendT("backend.settings.forbidden", "You do not have access to reports and settings."));
+    renderPermissionScopedSections();
+    updateStatusCopy();
+    window.addEventListener("backend-i18n-changed", handleBackendLanguageChanged);
+    if (state.permissions.canReadSettings) {
+      await Promise.all([
+        state.permissions.canReadObservability ? loadObservability() : Promise.resolve(),
+        state.permissions.canReadStaffProfiles ? loadStaffDirectoryEntries() : Promise.resolve(),
+        state.permissions.canEditStaffProfiles ? loadDestinationOptions() : Promise.resolve(),
+        state.permissions.canReadTranslationRules ? loadTranslationRules() : Promise.resolve(),
+        state.permissions.canReadLocations ? loadLocationCatalog().then(() => initLocationUsageCountsLazyLoad()) : Promise.resolve(),
+        state.permissions.canReadEmergency
+          ? loadCountryReferenceInfo()
+          : Promise.resolve()
+      ]);
+    } else {
+      showError(backendT("backend.settings.forbidden", "You do not have access to reports and settings."));
+    }
+  } finally {
+    setBackendPageLoadingOverlay(false);
   }
 }
 
@@ -836,9 +847,11 @@ function bindEvents() {
   els.staffTable?.addEventListener("click", handleStaffTableClick);
   els.staffTable?.addEventListener("keydown", handleStaffTableKeydown);
   els.locationManagerSaveBtn?.addEventListener("click", () => {
+    requestLocationUsageCounts();
     void saveLocationChanges();
   });
   els.locationManagerList?.addEventListener("click", (event) => {
+    requestLocationUsageCounts();
     const target = event.target instanceof Element ? event.target : null;
     const addRegionButton = target?.closest("[data-location-add-region]");
     if (addRegionButton) {
@@ -862,6 +875,7 @@ function bindEvents() {
     }
   });
   els.locationManagerList?.addEventListener("input", (event) => {
+    requestLocationUsageCounts();
     const target = event.target instanceof Element ? event.target : null;
     if (!target?.closest("[data-location-field]")) return;
     const recordKey = normalizeText(target.getAttribute("data-location-record"));
@@ -1208,6 +1222,74 @@ function showLocationManagerStatus(message = "", isError = false) {
   els.locationManagerStatus.classList.toggle("is-error", Boolean(isError));
 }
 
+function isLocationUsageReady() {
+  return state.locationUsageLoaded && !state.locationUsageLoading;
+}
+
+function locationUsageState(id, noun = "location") {
+  const ready = isLocationUsageReady();
+  const loading = state.locationUsageLoading;
+  const count = ready ? Math.max(0, Number(state.locationUsageCounts?.[id] || 0)) : 0;
+  const display = loading ? "..." : ready ? String(count) : "-";
+  const label = loading
+    ? "Loading day usage counts"
+    : ready
+      ? `${count} day${count === 1 ? "" : "s"} use this ${noun}`
+      : "Day usage counts have not loaded yet";
+  return {
+    ready,
+    loading,
+    count,
+    display,
+    label
+  };
+}
+
+function requestLocationUsageCounts() {
+  if (!state.permissions.canReadLocations || state.locationUsageLoading || state.locationUsageLoaded) return;
+  if (state.locationUsageRequested) return;
+  state.locationUsageRequested = true;
+  void loadLocationUsageCounts();
+}
+
+function initLocationUsageCountsLazyLoad() {
+  if (!state.permissions.canReadLocations || !els.locationManagerPanel) return;
+  if (document.body?.classList.contains("backend-page-loading--busy")) {
+    if (!state.locationUsageReadyWaitBound) {
+      state.locationUsageReadyWaitBound = true;
+      window.addEventListener("backend-page-ready", () => {
+        state.locationUsageReadyWaitBound = false;
+        initLocationUsageCountsLazyLoad();
+      }, { once: true });
+    }
+    return;
+  }
+
+  if (!state.locationUsageLazyBound) {
+    els.locationManagerPanel.addEventListener("focusin", requestLocationUsageCounts);
+    els.locationManagerPanel.addEventListener("pointerenter", requestLocationUsageCounts);
+    state.locationUsageLazyBound = true;
+  }
+
+  if (state.locationUsageObserver) {
+    state.locationUsageObserver.disconnect();
+    state.locationUsageObserver = null;
+  }
+
+  if ("IntersectionObserver" in window) {
+    state.locationUsageObserver = new IntersectionObserver((entries) => {
+      if (!entries.some((entry) => entry.isIntersecting)) return;
+      state.locationUsageObserver?.disconnect();
+      state.locationUsageObserver = null;
+      requestLocationUsageCounts();
+    }, { rootMargin: "160px 0px" });
+    state.locationUsageObserver.observe(els.locationManagerPanel);
+    return;
+  }
+
+  window.setTimeout(requestLocationUsageCounts, 0);
+}
+
 function updateLocationManagerSaveButtonState() {
   if (!els.locationManagerSaveBtn) return;
   els.locationManagerSaveBtn.disabled = !state.permissions.canEditLocations
@@ -1280,13 +1362,15 @@ function renderLocationCoordinateInputs(record, type, { childCount = 0 } = {}) {
   const nameLabel = type === "region" ? "Region name" : "Place name";
   const namePlaceholder = type === "region" ? "Region" : "Place";
   const nodeLabel = type === "region" ? "Region:" : "Place:";
-  const usageCount = Math.max(0, Number(state.locationUsageCounts?.[record.id] || 0));
+  const usage = locationUsageState(record.id, type === "region" ? "region" : "location");
   const isRegion = type === "region";
-  const deleteDisabled = !state.permissions.canEditLocations || (isRegion ? childCount > 0 || usageCount > 0 : usageCount > 0);
+  const deleteDisabled = !state.permissions.canEditLocations || !usage.ready || (isRegion ? childCount > 0 || usage.count > 0 : usage.count > 0);
   const deleteTitle = isRegion && childCount > 0
     ? `Cannot delete while this region has ${childCount} place${childCount === 1 ? "" : "s"}`
-    : usageCount > 0
-      ? `Cannot delete while ${usageCount} day${usageCount === 1 ? "" : "s"} use this location`
+    : !usage.ready
+      ? "Load day usage counts before deleting"
+    : usage.count > 0
+      ? `Cannot delete while ${usage.count} day${usage.count === 1 ? "" : "s"} use this location`
       : `Delete ${isRegion ? "region" : "place"}`;
   return `
     <label class="settings-location-manager__name-field settings-location-manager__name-field--${escapeHtml(type)}">
@@ -1304,9 +1388,9 @@ function renderLocationCoordinateInputs(record, type, { childCount = 0 } = {}) {
       </label>
       ${renderLocationMapLink(prefix, record.latitude, record.longitude)}
     `}
-    <div class="settings-location-manager__usage" aria-label="${escapeHtml(`${usageCount} day${usageCount === 1 ? "" : "s"} use this location`)}">
+    <div class="settings-location-manager__usage" aria-label="${escapeHtml(usage.label)}">
       <span>Days:</span>
-      <strong>${escapeHtml(usageCount)}</strong>
+      <strong>${escapeHtml(usage.display)}</strong>
     </div>
     <button class="btn btn-ghost offer-remove-btn" type="button" data-location-delete="${escapeHtml(prefix)}" aria-label="${escapeHtml(deleteTitle)}" title="${escapeHtml(deleteTitle)}" ${deleteDisabled ? "disabled" : ""}>&times;</button>
   `;
@@ -1358,13 +1442,15 @@ function renderLocationManager() {
       const regions = regionsByDestination.get(destination.code) || [];
       const countryPlaces = placesByDestination.get(destination.code) || [];
       const countryName = destination.label || countryLabel(destination.code);
-      const countryUsageCount = Math.max(0, Number(state.locationUsageCounts?.[destination.code] || 0));
+      const countryUsage = locationUsageState(destination.code, "country");
       const countryChildCount = regions.length + countryPlaces.length;
-      const countryDeleteDisabled = !state.permissions.canEditLocations || countryChildCount > 0 || countryUsageCount > 0;
+      const countryDeleteDisabled = !state.permissions.canEditLocations || !countryUsage.ready || countryChildCount > 0 || countryUsage.count > 0;
       const countryDeleteTitle = countryChildCount > 0
         ? `Cannot delete while this country has ${countryChildCount} child location${countryChildCount === 1 ? "" : "s"}`
-        : countryUsageCount > 0
-          ? `Cannot delete while ${countryUsageCount} day${countryUsageCount === 1 ? "" : "s"} use this country`
+        : !countryUsage.ready
+          ? "Load day usage counts before deleting"
+        : countryUsage.count > 0
+          ? `Cannot delete while ${countryUsage.count} day${countryUsage.count === 1 ? "" : "s"} use this country`
           : "Delete country";
       return `
         <article class="settings-location-manager__country">
@@ -1374,9 +1460,9 @@ function renderLocationManager() {
               <h3>${escapeHtml(countryName)}</h3>
             </div>
             <div class="settings-location-manager__country-actions">
-              <div class="settings-location-manager__usage" aria-label="${escapeHtml(`${countryUsageCount} day${countryUsageCount === 1 ? "" : "s"} use this country`)}">
+              <div class="settings-location-manager__usage" aria-label="${escapeHtml(countryUsage.label)}">
                 <span>Days:</span>
-                <strong>${escapeHtml(countryUsageCount)}</strong>
+                <strong>${escapeHtml(countryUsage.display)}</strong>
               </div>
               <button class="btn btn-ghost offer-remove-btn" type="button" data-location-delete="destination:${escapeHtml(destination.code)}" aria-label="${escapeHtml(countryDeleteTitle)}" title="${escapeHtml(countryDeleteTitle)}" ${countryDeleteDisabled ? "disabled" : ""}>&times;</button>
             </div>
@@ -1427,7 +1513,7 @@ async function loadLocationCatalog() {
     });
     const payload = await fetchApi(request.url, { suppressNotFound: true, cache: "no-store" });
     state.locationCatalog = normalizeLocationCatalog(payload);
-    showLocationManagerStatus("Locations loaded.");
+    showLocationManagerStatus("Locations loaded. Day counts load when this panel is opened.");
   } catch (error) {
     console.error("[backend-settings] Failed to load location catalog.", { error });
     state.locationCatalog = normalizeLocationCatalog({});
@@ -1487,6 +1573,10 @@ function countLocationUsageFromTours(tours) {
 async function loadLocationUsageCounts() {
   if (!state.permissions.canReadLocations) return;
   state.locationUsageLoading = true;
+  state.locationUsageRequested = true;
+  state.locationUsageLoaded = false;
+  showLocationManagerStatus("Loading location usage counts...");
+  renderLocationManager();
   try {
     const tours = [];
     const pageSize = 100;
@@ -1507,9 +1597,14 @@ async function loadLocationUsageCounts() {
       page += 1;
     } while (page <= totalPages);
     state.locationUsageCounts = countLocationUsageFromTours(tours);
+    state.locationUsageLoaded = true;
+    showLocationManagerStatus("Locations loaded.");
   } catch (error) {
     console.error("[backend-settings] Failed to load location usage counts.", { error });
     state.locationUsageCounts = {};
+    state.locationUsageLoaded = false;
+    state.locationUsageRequested = false;
+    showLocationManagerStatus("Could not load location usage counts.", true);
   } finally {
     state.locationUsageLoading = false;
     renderLocationManager();
@@ -1756,7 +1851,7 @@ function locationDeleteLabel(type, id) {
 function locationDeleteBlocker(type, id) {
   const normalizedType = normalizeText(type);
   const normalizedId = normalizeText(id);
-  const usageCount = Math.max(0, Number(state.locationUsageCounts?.[normalizedId] || 0));
+  const usage = locationUsageState(normalizedId, normalizedType || "location");
   if (normalizedType === "destination") {
     const regionCount = state.locationCatalog.regions.filter((region) => region.destination === normalizedId).length;
     const placeCount = state.locationCatalog.places.filter((place) => place.destination === normalizedId && !place.region_id).length;
@@ -1767,7 +1862,11 @@ function locationDeleteBlocker(type, id) {
     const childCount = state.locationCatalog.places.filter((place) => place.region_id === normalizedId).length;
     if (childCount > 0) return `Remove its ${childCount} place${childCount === 1 ? "" : "s"} first.`;
   }
-  if (usageCount > 0) {
+  if (!usage.ready) {
+    requestLocationUsageCounts();
+    return "Load day usage counts before deleting.";
+  }
+  if (usage.count > 0) {
     return `Only locations with Days: 0 can be deleted.`;
   }
   return "";

@@ -1,8 +1,13 @@
-import { fetchAuthMe, readCachedAuthMe, wireAuthLogoutLink } from "./auth.js";
+import { readCachedAuthMe, wireAuthLogoutLink } from "./auth.js";
 
 const TRANSLATIONS_ICON_READY = "assets/img/translation.png";
 const TRANSLATIONS_ICON_MISSING = "assets/img/translation.missing.png";
 const PUBLIC_SITE_PUBLISH_POLL_MS = 1800;
+const NAV_STATUS_CACHE_TTL_MS = 60_000;
+const NAV_STATUS_REFRESH_DELAY_MS = 400;
+const NAV_PUBLIC_STATUS_STAGGER_MS = 650;
+const NAV_STATUS_READY_FALLBACK_MS = 12_000;
+const navStatusCache = new Map();
 
 function buildIconMarkup(icon) {
   if (icon?.type === "image") {
@@ -26,6 +31,120 @@ function backendT(id, fallback, vars) {
   }
   if (!vars || typeof vars !== "object") return String(fallback ?? id);
   return String(fallback ?? id).replace(/\{(\w+)\}/g, (match, key) => (key in vars ? String(vars[key]) : match));
+}
+
+function runWhenIdle(callback) {
+  if (typeof window.requestIdleCallback === "function") {
+    window.requestIdleCallback(callback, { timeout: 2000 });
+    return;
+  }
+  window.setTimeout(callback, 0);
+}
+
+function navStatusCacheKey(kind, url) {
+  return `${String(kind || "status")}:${String(url || "")}`;
+}
+
+async function fetchNavStatusJson(kind, url, { force = false } = {}) {
+  const key = navStatusCacheKey(kind, url);
+  const existing = navStatusCache.get(key);
+  const now = Date.now();
+  if (!force && existing?.payload && now - Number(existing.cachedAt || 0) <= NAV_STATUS_CACHE_TTL_MS) {
+    return existing.payload;
+  }
+  if (!force && existing?.promise) {
+    return existing.promise;
+  }
+
+  const promise = fetch(url, {
+    credentials: "include",
+    headers: { Accept: "application/json" },
+    cache: "no-store"
+  })
+    .then(async (response) => {
+      if (!response.ok) return null;
+      const payload = await readJsonResponse(response);
+      navStatusCache.set(key, {
+        payload,
+        cachedAt: Date.now()
+      });
+      return payload;
+    })
+    .catch(() => null)
+    .finally(() => {
+      const latest = navStatusCache.get(key);
+      if (latest?.promise === promise) {
+        if (latest.payload) {
+          delete latest.promise;
+        } else {
+          navStatusCache.delete(key);
+        }
+      }
+    });
+
+  navStatusCache.set(key, {
+    ...(existing || {}),
+    promise
+  });
+  return promise;
+}
+
+function clearNavStatusCache(kind = "") {
+  const normalizedKind = String(kind || "").trim();
+  if (!normalizedKind) {
+    navStatusCache.clear();
+    return;
+  }
+  for (const key of Array.from(navStatusCache.keys())) {
+    if (key.startsWith(`${normalizedKind}:`)) navStatusCache.delete(key);
+  }
+}
+
+function clearBackendStatusReadyWait(mount) {
+  if (!mount) return;
+  if (typeof mount.__backendStatusReadyHandler === "function") {
+    window.removeEventListener("backend-page-ready", mount.__backendStatusReadyHandler);
+    mount.__backendStatusReadyHandler = null;
+  }
+  if (mount.__backendStatusReadyFallbackTimer) {
+    window.clearTimeout(mount.__backendStatusReadyFallbackTimer);
+    mount.__backendStatusReadyFallbackTimer = null;
+  }
+}
+
+function scheduleBackendStatusRefresh(mount, apiBase, options = {}) {
+  if (!mount) return;
+  if (mount.__backendStatusRefreshTimer) {
+    window.clearTimeout(mount.__backendStatusRefreshTimer);
+  }
+  const force = options.force === true;
+  const delayMs = Number.isFinite(Number(options.delayMs)) ? Number(options.delayMs) : NAV_STATUS_REFRESH_DELAY_MS;
+  mount.__backendStatusRefreshTimer = window.setTimeout(() => {
+    mount.__backendStatusRefreshTimer = null;
+    if (!document.body?.contains(mount)) return;
+    runWhenIdle(() => {
+      void refreshTranslationsIconState(mount, apiBase, { force });
+      window.setTimeout(() => {
+        void refreshPublicSitePublishState(mount, apiBase, { force });
+      }, NAV_PUBLIC_STATUS_STAGGER_MS);
+    });
+  }, Math.max(0, delayMs));
+}
+
+function scheduleBackendStatusRefreshWhenReady(mount, apiBase, options = {}) {
+  if (!mount) return;
+  clearBackendStatusReadyWait(mount);
+  const run = () => {
+    clearBackendStatusReadyWait(mount);
+    scheduleBackendStatusRefresh(mount, apiBase, options);
+  };
+  if (document.body?.classList.contains("backend-page-loading--busy")) {
+    mount.__backendStatusReadyHandler = run;
+    window.addEventListener("backend-page-ready", run, { once: true });
+    mount.__backendStatusReadyFallbackTimer = window.setTimeout(run, NAV_STATUS_READY_FALLBACK_MS);
+    return;
+  }
+  scheduleBackendStatusRefresh(mount, apiBase, options);
 }
 
 function currentLang() {
@@ -92,6 +211,17 @@ function applyNavPermissions(mount, roles) {
   }
 }
 
+function applyBackendAuthPayloadToNav(mount, apiBase, payload) {
+  const roles = Array.isArray(payload?.user?.roles) ? payload.user.roles : [];
+  applyNavPermissions(mount, roles);
+  scheduleBackendStatusRefreshWhenReady(mount, apiBase);
+  const liveUserLabel = resolveUserLabel(payload?.user);
+  const labelElement = mount?.querySelector?.("#backendUserLabel");
+  if (labelElement) {
+    labelElement.textContent = liveUserLabel;
+  }
+}
+
 function translationsButton(mount) {
   return mount?.querySelector?.('.backend-section-nav__item[data-backend-section="translations"]') || null;
 }
@@ -110,20 +240,19 @@ function setTranslationsIconState(mount, isDirty) {
   button.setAttribute("aria-label", label);
 }
 
-async function refreshTranslationsIconState(mount, apiBase) {
+async function refreshTranslationsIconState(mount, apiBase, options = {}) {
   const button = translationsButton(mount);
   if (!(button instanceof HTMLElement) || button.hidden) return;
   const requestId = (mount.__backendTranslationStatusRequestId || 0) + 1;
   mount.__backendTranslationStatusRequestId = requestId;
   try {
     const base = String(apiBase || "").replace(/\/$/, "");
-    const response = await fetch(`${base}/api/v1/static-translations/status`, {
-      credentials: "include",
-      headers: { Accept: "application/json" },
-      cache: "no-store"
-    });
-    if (!response.ok || mount.__backendTranslationStatusRequestId !== requestId) return;
-    const payload = await response.json().catch(() => null);
+    const payload = await fetchNavStatusJson(
+      "translations",
+      `${base}/api/v1/static-translations/status`,
+      { force: options.force === true }
+    );
+    if (!payload || mount.__backendTranslationStatusRequestId !== requestId) return;
     setTranslationsIconState(mount, Boolean(payload?.dirty || Number(payload?.dirty_count || 0) > 0));
   } catch {
     // Keep the default icon if the optional status probe is unavailable.
@@ -140,7 +269,8 @@ function bindTranslationsStatusRefresh(mount, apiBase) {
       setTranslationsIconState(mount, Boolean(detail.dirty));
     }
     if (detail.refresh === false) return;
-    void refreshTranslationsIconState(mount, apiBase);
+    clearNavStatusCache("translations");
+    void refreshTranslationsIconState(mount, apiBase, { force: true });
   };
   window.addEventListener("backend-translations-status-refresh", mount.__backendTranslationStatusHandler);
 }
@@ -249,20 +379,19 @@ async function readJsonResponse(response) {
   return response.json().catch(() => null);
 }
 
-async function refreshPublicSitePublishState(mount, apiBase) {
+async function refreshPublicSitePublishState(mount, apiBase, options = {}) {
   const button = publicSitePublishButton(mount);
   if (!(button instanceof HTMLButtonElement) || button.hidden) return null;
   const requestId = (mount.__backendPublicSitePublishStatusRequestId || 0) + 1;
   mount.__backendPublicSitePublishStatusRequestId = requestId;
   try {
     const base = String(apiBase || "").replace(/\/$/, "");
-    const response = await fetch(`${base}/api/v1/public-site/publish-status`, {
-      credentials: "include",
-      headers: { Accept: "application/json" },
-      cache: "no-store"
-    });
-    if (!response.ok || mount.__backendPublicSitePublishStatusRequestId !== requestId) return null;
-    const payload = await readJsonResponse(response);
+    const payload = await fetchNavStatusJson(
+      "public-site",
+      `${base}/api/v1/public-site/publish-status`,
+      { force: options.force === true }
+    );
+    if (!payload || mount.__backendPublicSitePublishStatusRequestId !== requestId) return null;
     if (mount.__backendPublicSitePublishStatusRequestId !== requestId) return null;
     setPublicSitePublishState(mount, payload || {});
     mount.__backendPublicSitePublishLastStatus = payload || null;
@@ -313,14 +442,16 @@ async function pollPublicSitePublishJob(mount, apiBase, jobId) {
       return;
     }
     if (job?.status === "failed") {
-      const status = await refreshPublicSitePublishState(mount, apiBase);
+      clearNavStatusCache("public-site");
+      const status = await refreshPublicSitePublishState(mount, apiBase, { force: true });
       setPublicSitePublishState(mount, status || { dirty: true }, { error: job.error || backendT("nav.public_site_publish_failed", "Publish failed.") });
       mount.__backendPublicSitePublishLocalRunning = false;
       setPublicSitePublishOverlay(mount, false);
       return;
     }
     mount.__backendPublicSitePublishLocalDirty = false;
-    await refreshPublicSitePublishState(mount, apiBase);
+    clearNavStatusCache("public-site");
+    await refreshPublicSitePublishState(mount, apiBase, { force: true });
     mount.__backendPublicSitePublishLocalRunning = false;
     setPublicSitePublishOverlay(mount, false);
   } catch {
@@ -347,7 +478,8 @@ async function startPublicSitePublish(mount, apiBase) {
     });
     const payload = await readJsonResponse(response);
     if (!response.ok) {
-      const status = await refreshPublicSitePublishState(mount, apiBase);
+      clearNavStatusCache("public-site");
+      const status = await refreshPublicSitePublishState(mount, apiBase, { force: true });
       setPublicSitePublishState(mount, status || { dirty: true }, { error: payload?.error || backendT("nav.public_site_publish_failed", "Publish failed.") });
       mount.__backendPublicSitePublishLocalRunning = false;
       setPublicSitePublishOverlay(mount, false);
@@ -359,11 +491,13 @@ async function startPublicSitePublish(mount, apiBase) {
       return;
     }
     mount.__backendPublicSitePublishLocalDirty = false;
-    await refreshPublicSitePublishState(mount, apiBase);
+    clearNavStatusCache("public-site");
+    await refreshPublicSitePublishState(mount, apiBase, { force: true });
     mount.__backendPublicSitePublishLocalRunning = false;
     setPublicSitePublishOverlay(mount, false);
   } catch {
-    const status = await refreshPublicSitePublishState(mount, apiBase);
+    clearNavStatusCache("public-site");
+    const status = await refreshPublicSitePublishState(mount, apiBase, { force: true });
     setPublicSitePublishState(mount, status || { dirty: true }, { error: backendT("nav.public_site_publish_failed", "Publish failed.") });
     mount.__backendPublicSitePublishLocalRunning = false;
     setPublicSitePublishOverlay(mount, false);
@@ -385,7 +519,8 @@ function bindPublicSitePublishRefresh(mount, apiBase) {
       });
     }
     if (detail.refresh === false) return;
-    void refreshPublicSitePublishState(mount, apiBase);
+    clearNavStatusCache("public-site");
+    void refreshPublicSitePublishState(mount, apiBase, { force: true });
   };
   window.addEventListener("backend-public-site-publish-refresh", mount.__backendPublicSitePublishRefreshHandler);
 
@@ -395,7 +530,8 @@ function bindPublicSitePublishRefresh(mount, apiBase) {
   mount.__backendPublicSiteTranslationRefreshHandler = (event) => {
     const detail = event?.detail && typeof event.detail === "object" ? event.detail : {};
     if (detail.refresh === false && detail.publicSiteRefresh !== true) return;
-    void refreshPublicSitePublishState(mount, apiBase);
+    clearNavStatusCache("public-site");
+    void refreshPublicSitePublishState(mount, apiBase, { force: true });
   };
   window.addEventListener("backend-translations-status-refresh", mount.__backendPublicSiteTranslationRefreshHandler);
 }
@@ -406,6 +542,11 @@ export function mountBackendNav(mount, options = {}) {
     window.clearTimeout(mount.__backendPublicSitePublishPollTimer);
     mount.__backendPublicSitePublishPollTimer = null;
   }
+  if (mount.__backendStatusRefreshTimer) {
+    window.clearTimeout(mount.__backendStatusRefreshTimer);
+    mount.__backendStatusRefreshTimer = null;
+  }
+  clearBackendStatusReadyWait(mount);
   const currentSection = options.currentSection || "";
   const apiBase = String(window.ASIATRAVELPLAN_API_BASE || "").replace(/\/$/, "");
   const websiteHref = withLang("index.html");
@@ -451,13 +592,20 @@ export function mountBackendNav(mount, options = {}) {
   applyNavPermissions(mount, cachedRoles);
   bindTranslationsStatusRefresh(mount, apiBase);
   bindPublicSitePublishRefresh(mount, apiBase);
-  void refreshTranslationsIconState(mount, apiBase);
-  void refreshPublicSitePublishState(mount, apiBase);
   const cachedUserLabel = resolveUserLabel(cachedAuth?.user);
   const userLabelEl = mount.querySelector("#backendUserLabel");
   if (userLabelEl) {
     userLabelEl.textContent = cachedUserLabel;
   }
+
+  if (typeof mount.__backendAuthReadyHandler === "function") {
+    window.removeEventListener("backend-auth-ready", mount.__backendAuthReadyHandler);
+  }
+  mount.__backendAuthReadyHandler = (event) => {
+    const payload = event?.detail?.payload || null;
+    applyBackendAuthPayloadToNav(mount, apiBase, payload);
+  };
+  window.addEventListener("backend-auth-ready", mount.__backendAuthReadyHandler);
 
   if (currentSection) {
     const activeButton = mount.querySelector(`.backend-section-nav__item[data-backend-section="${currentSection}"]`);
@@ -475,22 +623,6 @@ export function mountBackendNav(mount, options = {}) {
       window.location.href = resolveBackendSectionHref(section);
     });
   });
-
-  fetchAuthMe(apiBase)
-    .then(({ payload }) => {
-      const roles = Array.isArray(payload?.user?.roles) ? payload.user.roles : [];
-      applyNavPermissions(mount, roles);
-      void refreshTranslationsIconState(mount, apiBase);
-      void refreshPublicSitePublishState(mount, apiBase);
-      const liveUserLabel = resolveUserLabel(payload?.user);
-      const labelElement = mount.querySelector("#backendUserLabel");
-      if (labelElement) {
-        labelElement.textContent = liveUserLabel;
-      }
-    })
-    .catch(() => {
-      applyNavPermissions(mount, cachedRoles);
-    });
 
   publicSitePublishButton(mount)?.addEventListener("click", () => {
     void startPublicSitePublish(mount, apiBase);

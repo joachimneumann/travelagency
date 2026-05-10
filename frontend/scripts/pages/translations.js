@@ -3,7 +3,8 @@ import {
   getBackendApiOrigin,
   initializeBackendPageChrome,
   loadBackendPageAuthState,
-  refreshBackendNavElements
+  refreshBackendNavElements,
+  setBackendPageLoadingOverlay
 } from "../shared/backend_page.js";
 import {
   BACKEND_UI_LANGUAGES,
@@ -1693,52 +1694,58 @@ function bindEvents() {
 }
 
 async function init() {
-  bindEvents();
-  await initializeBackendPageChrome({
-    currentSection: "translations",
-    homeLink: els.homeLink,
-    refreshNav: refreshBackendNavElements
-  });
-
-  const authState = await loadBackendPageAuthState({
-    apiOrigin,
-    refreshNav: refreshBackendNavElements,
-    computePermissions: (roles) => ({
-      canReadTranslations: roles.includes(ROLES.ADMIN),
-      canEditTranslations: roles.includes(ROLES.ADMIN)
-    }),
-    hasPageAccess: (permissions) => permissions.canReadTranslations,
-    logKey: "backend-translations",
-    pageName: "translations.html",
-    expectedRolesAnyOf: [ROLES.ADMIN],
-    likelyCause: "The user is authenticated in Keycloak but does not have the ATP admin role required to manage translations."
-  });
-
-  state.permissions = {
-    canReadTranslations: Boolean(authState.permissions?.canReadTranslations),
-    canEditTranslations: Boolean(authState.permissions?.canEditTranslations)
-  };
-
-  window.addEventListener("backend-i18n-changed", handleBackendLanguageChanged);
-  if (!state.permissions.canReadTranslations) {
-    showError(backendT("backend.translations.forbidden", "You do not have access to translations."));
-    return;
-  }
-
-  if (els.panel) els.panel.hidden = false;
-  state.translationStatus = null;
-  syncTranslationStatusText(null);
-  const overlayStartedAt = Date.now();
-  setOverlayLog("");
-  setOverlayVisible(true, translationsLoadingStatusOverlayText());
+  setBackendPageLoadingOverlay(true);
   try {
-    await waitForNextPaint();
-    await loadDomains();
-    state.permissions.canEditTranslations = state.permissions.canEditTranslations && state.translationWritesEnabled;
-    renderSectionCards();
-    await loadAllSections({ preserveLanguage: false });
+    bindEvents();
+    await initializeBackendPageChrome({
+      currentSection: "translations",
+      homeLink: els.homeLink,
+      refreshNav: refreshBackendNavElements
+    });
+
+    const authState = await loadBackendPageAuthState({
+      apiOrigin,
+      refreshNav: refreshBackendNavElements,
+      computePermissions: (roles) => ({
+        canReadTranslations: roles.includes(ROLES.ADMIN),
+        canEditTranslations: roles.includes(ROLES.ADMIN)
+      }),
+      hasPageAccess: (permissions) => permissions.canReadTranslations,
+      logKey: "backend-translations",
+      pageName: "translations.html",
+      expectedRolesAnyOf: [ROLES.ADMIN],
+      likelyCause: "The user is authenticated in Keycloak but does not have the ATP admin role required to manage translations."
+    });
+
+    state.permissions = {
+      canReadTranslations: Boolean(authState.permissions?.canReadTranslations),
+      canEditTranslations: Boolean(authState.permissions?.canEditTranslations)
+    };
+
+    window.addEventListener("backend-i18n-changed", handleBackendLanguageChanged);
+    if (!state.permissions.canReadTranslations) {
+      showError(backendT("backend.translations.forbidden", "You do not have access to translations."));
+      return;
+    }
+
+    if (els.panel) els.panel.hidden = false;
+    state.translationStatus = null;
+    syncTranslationStatusText(null);
+    setBackendPageLoadingOverlay(false);
+    const overlayStartedAt = Date.now();
+    setOverlayLog("");
+    setOverlayVisible(true, translationsLoadingStatusOverlayText());
+    try {
+      await waitForNextPaint();
+      await loadDomains();
+      state.permissions.canEditTranslations = state.permissions.canEditTranslations && state.translationWritesEnabled;
+      renderSectionCards();
+      await loadAllSections({ preserveLanguage: false });
+    } finally {
+      await hideOverlayAfterMinimum(overlayStartedAt);
+    }
   } finally {
-    await hideOverlayAfterMinimum(overlayStartedAt);
+    setBackendPageLoadingOverlay(false);
   }
 }
 

@@ -7,14 +7,13 @@ import {
   tourUpdateRequest
 } from "../../Generated/API/generated_APIRequestFactory.js";
 import { GENERATED_APP_ROLES } from "../../Generated/Models/generated_Roles.js";
-import { validateAuthMeResponse } from "../../Generated/API/generated_APIModels.js";
 import {
   createApiFetcher,
   escapeHtml,
   logBrowserConsoleError,
   resolveApiUrl
 } from "../shared/api.js";
-import { wireAuthLogoutLink } from "../shared/auth.js";
+import { fetchAuthMe, wireAuthLogoutLink } from "../shared/auth.js";
 import { createSnapshotDirtyTracker } from "../shared/edit_state.js";
 import { MONTH_CODE_CATALOG } from "../shared/generated_catalogs.js";
 import { resolveBackendSectionHref } from "../shared/nav.js";
@@ -2484,14 +2483,9 @@ const fetchApi = createApiFetcher({
 async function loadAuthStatus() {
   try {
     refreshBackendNavElements();
-    const request = authMeRequest({ baseURL: apiOrigin });
-    const response = await fetch(request.url, {
-      method: request.method,
-      credentials: "include",
-      headers: request.headers
+    const { request, response, payload } = await fetchAuthMe(apiOrigin, {
+      allowCached: true
     });
-    const payload = await response.json().catch(() => null);
-    if (payload) validateAuthMeResponse(payload);
     if (!response.ok || !payload?.authenticated) {
       state.authenticated = false;
       if (els.userLabel) els.userLabel.textContent = "";

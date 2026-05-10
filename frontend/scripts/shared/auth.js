@@ -3,6 +3,16 @@ import { validateAuthMeResponse } from "../../Generated/API/generated_APIModels.
 import { logLocalhostDiagnostic } from "./api.js";
 
 const BACKEND_AUTH_CACHE_KEY = "asiatravelplan_backend_auth_me_v1";
+const DEFAULT_AUTH_CACHE_MAX_AGE_MS = 15_000;
+const inFlightAuthMeRequests = new Map();
+
+function sharedInFlightAuthMeRequests() {
+  if (typeof window === "undefined") return inFlightAuthMeRequests;
+  if (!(window.__BACKEND_AUTH_ME_IN_FLIGHT_REQUESTS__ instanceof Map)) {
+    window.__BACKEND_AUTH_ME_IN_FLIGHT_REQUESTS__ = new Map();
+  }
+  return window.__BACKEND_AUTH_ME_IN_FLIGHT_REQUESTS__;
+}
 
 export function resolveAuthBase(apiBase = "") {
   return String(apiBase || window.ASIATRAVELPLAN_API_BASE || window.location.origin).replace(/\/$/, "");
@@ -10,10 +20,12 @@ export function resolveAuthBase(apiBase = "") {
 
 function normalizeCachedAuthPayload(payload) {
   if (!payload || typeof payload !== "object") return null;
+  const cachedAt = Number(payload.cached_at || payload.cachedAt || 0);
   if (payload.authenticated !== true || !payload.user || typeof payload.user !== "object") return null;
   const user = payload.user;
   return {
     authenticated: true,
+    cached_at: Number.isFinite(cachedAt) && cachedAt > 0 ? cachedAt : 0,
     user: {
       sub: String(user.sub || "").trim(),
       preferred_username: String(user.preferred_username || "").trim(),
@@ -23,11 +35,17 @@ function normalizeCachedAuthPayload(payload) {
   };
 }
 
-export function readCachedAuthMe() {
+export function readCachedAuthMe({ maxAgeMs = 0 } = {}) {
   try {
     const raw = window.sessionStorage.getItem(BACKEND_AUTH_CACHE_KEY);
     if (!raw) return null;
-    return normalizeCachedAuthPayload(JSON.parse(raw));
+    const cached = normalizeCachedAuthPayload(JSON.parse(raw));
+    if (!cached) return null;
+    const ttl = Number(maxAgeMs);
+    if (Number.isFinite(ttl) && ttl > 0) {
+      if (!cached.cached_at || Date.now() - cached.cached_at > ttl) return null;
+    }
+    return cached;
   } catch {
     return null;
   }
@@ -48,10 +66,39 @@ function writeCachedAuthMe(payload) {
       clearCachedAuthMe();
       return;
     }
-    window.sessionStorage.setItem(BACKEND_AUTH_CACHE_KEY, JSON.stringify(normalized));
+    window.sessionStorage.setItem(BACKEND_AUTH_CACHE_KEY, JSON.stringify({
+      ...normalized,
+      cached_at: Date.now()
+    }));
   } catch {
     // Ignore cache write failures.
   }
+}
+
+function dispatchBackendAuthReady(payload) {
+  if (typeof window === "undefined" || !payload?.authenticated) return;
+  window.dispatchEvent(new CustomEvent("backend-auth-ready", {
+    detail: { payload }
+  }));
+}
+
+export function readCachedAuthMeResult(apiBase = "", options = {}) {
+  const payload = readCachedAuthMe(options);
+  if (!payload) return null;
+  const authBase = resolveAuthBase(apiBase);
+  const request = authMeRequest({ baseURL: authBase });
+  return {
+    request,
+    response: {
+      ok: true,
+      status: 200,
+      statusText: "OK",
+      url: request.url,
+      cached: true
+    },
+    payload,
+    cached: true
+  };
 }
 
 export function buildAuthLogoutHref({ apiBase = "", returnTo = "" } = {}) {
@@ -84,9 +131,34 @@ export function wireAuthLogoutLink(link, { apiBase = "", returnTo = "" } = {}) {
   return href;
 }
 
-export async function fetchAuthMe(apiBase = "") {
+export async function fetchAuthMe(apiBase = "", options = {}) {
   const authBase = resolveAuthBase(apiBase);
+  const allowCached = options?.allowCached === true;
+  const cacheMaxAgeMs = Number(options?.cacheMaxAgeMs || DEFAULT_AUTH_CACHE_MAX_AGE_MS);
+  if (allowCached) {
+    const cachedResult = readCachedAuthMeResult(authBase, { maxAgeMs: cacheMaxAgeMs });
+    if (cachedResult) {
+      dispatchBackendAuthReady(cachedResult.payload);
+      return cachedResult;
+    }
+  }
+
   const request = authMeRequest({ baseURL: authBase });
+  const cacheKey = request.url;
+  if (
+    options?.force !== true
+    && typeof window !== "undefined"
+    && window.__BACKEND_AUTH_ME_PROMISE_URL === cacheKey
+    && typeof window.__BACKEND_AUTH_ME_PROMISE?.then === "function"
+  ) {
+    return window.__BACKEND_AUTH_ME_PROMISE;
+  }
+  const sharedInFlight = sharedInFlightAuthMeRequests();
+  if (options?.force !== true && sharedInFlight.has(cacheKey)) {
+    return sharedInFlight.get(cacheKey);
+  }
+
+  const fetchPromise = (async () => {
   logLocalhostDiagnostic("info", "auth/me request started", {
     request_url: request.url,
     method: request.method
@@ -132,5 +204,24 @@ export async function fetchAuthMe(apiBase = "") {
     }
   }
   writeCachedAuthMe(payload);
+  dispatchBackendAuthReady(payload);
   return { request, response, payload };
+  })();
+
+  sharedInFlight.set(cacheKey, fetchPromise);
+  if (typeof window !== "undefined") {
+    window.__BACKEND_AUTH_ME_PROMISE_URL = cacheKey;
+    window.__BACKEND_AUTH_ME_PROMISE = fetchPromise;
+  }
+  try {
+    return await fetchPromise;
+  } finally {
+    if (sharedInFlight.get(cacheKey) === fetchPromise) {
+      sharedInFlight.delete(cacheKey);
+    }
+    if (typeof window !== "undefined" && window.__BACKEND_AUTH_ME_PROMISE === fetchPromise) {
+      window.__BACKEND_AUTH_ME_PROMISE = null;
+      window.__BACKEND_AUTH_ME_PROMISE_URL = "";
+    }
+  }
 }

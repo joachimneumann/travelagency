@@ -13,6 +13,7 @@ import {
   getBackendApiOrigin,
   initializeBackendPageChrome,
   loadBackendPageAuthState,
+  setBackendPageLoadingOverlay,
   withBackendApiLang
 } from "../shared/backend_page.js";
 import { initializeBackendCollapsibles } from "../shared/collapsible.js";
@@ -524,47 +525,52 @@ function bindEvents() {
 }
 
 async function init() {
-  bindEvents();
+  setBackendPageLoadingOverlay(true);
+  try {
+    bindEvents();
 
-  const chrome = await initializeBackendPageChrome({
-    currentSection: "emergency",
-    homeLink: els.homeLink,
-    refreshNav: refreshBackendNavElements
-  });
-  els.logoutLink = chrome.logoutLink;
-  els.userLabel = chrome.userLabel;
+    const chrome = await initializeBackendPageChrome({
+      currentSection: "emergency",
+      homeLink: els.homeLink,
+      refreshNav: refreshBackendNavElements
+    });
+    els.logoutLink = chrome.logoutLink;
+    els.userLabel = chrome.userLabel;
 
-  const authState = await loadBackendPageAuthState({
-    apiOrigin,
-    refreshNav: refreshBackendNavElements,
-    computePermissions: (roles) => ({
-      canReadEmergency: hasAnyRoleInList(roles, ROLES.ADMIN, ROLES.TOUR_EDITOR),
-      canEditEmergency: hasAnyRoleInList(roles, ROLES.ADMIN, ROLES.TOUR_EDITOR)
-    }),
-    hasPageAccess: (permissions) => permissions.canReadEmergency,
-    logKey: "backend-emergency",
-    pageName: "emergency.html",
-    expectedRolesAnyOf: [ROLES.ADMIN, ROLES.TOUR_EDITOR],
-    likelyCause: "The user is authenticated in Keycloak but does not have the ATP roles required to access emergency references."
-  });
+    const authState = await loadBackendPageAuthState({
+      apiOrigin,
+      refreshNav: refreshBackendNavElements,
+      computePermissions: (roles) => ({
+        canReadEmergency: hasAnyRoleInList(roles, ROLES.ADMIN, ROLES.TOUR_EDITOR),
+        canEditEmergency: hasAnyRoleInList(roles, ROLES.ADMIN, ROLES.TOUR_EDITOR)
+      }),
+      hasPageAccess: (permissions) => permissions.canReadEmergency,
+      logKey: "backend-emergency",
+      pageName: "emergency.html",
+      expectedRolesAnyOf: [ROLES.ADMIN, ROLES.TOUR_EDITOR],
+      likelyCause: "The user is authenticated in Keycloak but does not have the ATP roles required to access emergency references."
+    });
 
-  state.authUser = authState.authUser;
-  state.roles = authState.roles;
-  state.permissions = {
-    canReadEmergency: Boolean(authState.permissions?.canReadEmergency),
-    canEditEmergency: Boolean(authState.permissions?.canEditEmergency)
-  };
+    state.authUser = authState.authUser;
+    state.roles = authState.roles;
+    state.permissions = {
+      canReadEmergency: Boolean(authState.permissions?.canReadEmergency),
+      canEditEmergency: Boolean(authState.permissions?.canEditEmergency)
+    };
 
-  window.addEventListener("backend-i18n-changed", handleBackendLanguageChanged);
-  renderAddCountryOptions();
-  updateControls();
+    window.addEventListener("backend-i18n-changed", handleBackendLanguageChanged);
+    renderAddCountryOptions();
+    updateControls();
 
-  if (!state.permissions.canReadEmergency) {
-    showError(backendT("backend.emergency.forbidden", "You do not have access to emergency references."));
-    return;
+    if (!state.permissions.canReadEmergency) {
+      showError(backendT("backend.emergency.forbidden", "You do not have access to emergency references."));
+      return;
+    }
+
+    await loadCountryReferenceInfo();
+  } finally {
+    setBackendPageLoadingOverlay(false);
   }
-
-  await loadCountryReferenceInfo();
 }
 
 function handleBackendLanguageChanged() {

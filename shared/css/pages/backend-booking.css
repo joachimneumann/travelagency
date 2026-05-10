@@ -2381,8 +2381,21 @@
 }
 
 .settings-location-manager__grid {
+  --location-children-offset: 48px;
+  --location-coordinate-column: 8rem;
+  --location-delete-column: 34px;
+  --location-days-column: 4.25rem;
+  --location-map-column: 3.25rem;
+  --location-name-column: calc(var(--location-name-label-column) + var(--location-name-input-column));
+  --location-name-input-column: 250px;
+  --location-name-label-column: 4.85rem;
+  --location-table-offset: calc(var(--location-children-offset) * 2);
+
   display: grid;
   gap: 6px;
+  margin-inline: auto;
+  max-width: 100%;
+  width: fit-content;
 }
 
 .settings-location-manager__country {
@@ -2394,9 +2407,15 @@
 
 .settings-location-manager__country-head {
   align-items: center;
-  display: flex;
-  gap: 2px;
-  justify-content: space-between;
+  display: grid;
+  gap: 0;
+  grid-template-columns: var(--location-table-offset) var(--location-name-column) var(--location-coordinate-column) var(--location-coordinate-column) var(--location-map-column) var(--location-days-column) var(--location-delete-column);
+  min-height: 34px;
+}
+
+.settings-location-manager__country-head > :first-child {
+  grid-column: 1 / 5;
+  min-width: 0;
 }
 
 .settings-location-manager__country h3 {
@@ -2440,15 +2459,15 @@
 
 .settings-location-manager__fields {
   display: grid;
-  grid-template-columns: minmax(12rem, 1fr) minmax(6.5rem, 8rem) minmax(6.5rem, 8rem) minmax(3.25rem, max-content) minmax(4.25rem, max-content) max-content;
-  gap: 4px;
+  grid-template-columns: var(--location-name-column) var(--location-coordinate-column) var(--location-coordinate-column) var(--location-map-column) var(--location-days-column) var(--location-delete-column);
+  gap: 0;
   align-items: center;
 }
 
 .settings-location-manager__fields label {
   align-items: center;
   display: grid;
-  gap: 4px;
+  gap: 0;
   grid-template-columns: max-content minmax(0, 1fr);
   font-size: 0.82rem;
 }
@@ -2458,34 +2477,36 @@
   padding-block: 3px;
 }
 
+.settings-location-manager__fields label > span {
+  padding-inline: 8px;
+}
+
 .settings-location-manager__fields .offer-remove-btn {
+  grid-column: 6;
   justify-self: end;
-  width: 34px;
+  width: var(--location-delete-column);
 }
 
 .settings-location-manager__name-field {
-  grid-template-columns: max-content minmax(10rem, 1fr);
+  grid-template-columns: var(--location-name-label-column) minmax(0, 1fr);
 }
 
 .settings-location-manager__name-field span {
   font-weight: 700;
+  justify-self: end;
 }
 
 .settings-location-manager__name-field input {
-  justify-self: end;
+  justify-self: stretch;
   width: 100%;
-}
-
-.settings-location-manager__name-field--region input {
-  max-width: 250px;
-}
-
-.settings-location-manager__name-field--place input {
-  max-width: calc(250px - 48px);
 }
 
 .settings-location-manager__record--region .settings-location-manager__usage {
   grid-column: 5;
+}
+
+.settings-location-manager__record--region > .settings-location-manager__fields {
+  grid-template-columns: var(--location-name-column) var(--location-coordinate-column) var(--location-coordinate-column) calc(var(--location-map-column) + var(--location-children-offset)) var(--location-days-column) var(--location-delete-column);
 }
 
 .settings-location-manager__record--region .offer-remove-btn {
@@ -2501,11 +2522,16 @@
   font-size: 0.82rem;
 }
 
+.settings-location-manager__fields > .settings-location-manager__usage {
+  grid-column: 5;
+}
+
 .settings-location-manager__usage strong {
   font-variant-numeric: tabular-nums;
 }
 
 .settings-location-manager__map-link-wrap {
+  grid-column: 4;
   font-size: 0.82rem;
   white-space: nowrap;
 }
@@ -2533,9 +2559,21 @@
 }
 
 .settings-location-manager__country-actions {
-  align-items: center;
-  display: flex;
-  gap: 6px;
+  display: contents;
+}
+
+.settings-location-manager__country-actions > * {
+  align-self: center;
+}
+
+.settings-location-manager__country-actions .settings-location-manager__usage {
+  grid-column: 6;
+}
+
+.settings-location-manager__country-actions .offer-remove-btn {
+  grid-column: 7;
+  justify-self: end;
+  width: var(--location-delete-column);
 }
 
 .settings-location-manager__inline-add {
@@ -2545,8 +2583,12 @@
 }
 
 @media (max-width: 760px) {
+  .settings-location-manager__country-head {
+    grid-template-columns: var(--location-table-offset) 1fr var(--location-coordinate-column) var(--location-coordinate-column) var(--location-map-column) var(--location-days-column) var(--location-delete-column);
+  }
+
   .settings-location-manager__fields {
-    grid-template-columns: 1fr minmax(6.5rem, 8rem) minmax(6.5rem, 8rem) minmax(3.25rem, max-content) minmax(4.25rem, max-content) max-content;
+    grid-template-columns: 1fr var(--location-coordinate-column) var(--location-coordinate-column) var(--location-map-column) var(--location-days-column) var(--location-delete-column);
   }
 }
 
@@ -2554,12 +2596,33 @@
   .settings-location-manager__country-head {
     align-items: start;
     display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .settings-location-manager__country-head > :first-child {
+    grid-column: auto;
+  }
+
+  .settings-location-manager__country-actions {
+    align-items: center;
+    display: grid;
+    gap: 0;
+    grid-template-columns: var(--location-days-column) var(--location-delete-column);
   }
 
   .settings-location-manager__fields {
     grid-template-columns: 1fr;
   }
 
+  .settings-location-manager__record--region > .settings-location-manager__fields {
+    padding-left: 0;
+  }
+
+  .settings-location-manager__fields > .settings-location-manager__usage,
+  .settings-location-manager__fields > .offer-remove-btn,
+  .settings-location-manager__fields > .settings-location-manager__map-link-wrap,
+  .settings-location-manager__country-actions .settings-location-manager__usage,
+  .settings-location-manager__country-actions .offer-remove-btn,
   .settings-location-manager__record--region .settings-location-manager__usage,
   .settings-location-manager__record--region .offer-remove-btn {
     grid-column: auto;

@@ -94,9 +94,12 @@ const state = {
     pageSize: 10,
     totalPages: 1,
     total: 0,
-    search: ""
+    search: "",
+    lastItems: []
   },
-  tourImagesById: new Map()
+  tourImagesById: new Map(),
+  tourImageCatalogLoaded: false,
+  tourImageCatalogPromise: null
 };
 
 function startConsoleStep(label, details = {}, options = {}) {
@@ -533,8 +536,6 @@ async function loadBookings() {
   }, { warnAfterMs: 4000 });
 
   try {
-    await ensureTourImageCatalog();
-
     const params = new URLSearchParams({
       page: String(state.bookings.page),
       page_size: String(state.bookings.pageSize),
@@ -579,6 +580,7 @@ async function loadBookings() {
     state.bookings.total = Number(pagination.total_items || 0);
     state.bookings.page = Number(pagination.page || state.bookings.page);
     const items = Array.isArray(payload.items) ? payload.items : [];
+    state.bookings.lastItems = items;
 
     if (!items.length && !String(state.bookings.search || "").trim()) {
       console.error("[backend-bookings] Empty bookings list returned by API.", {
@@ -596,6 +598,7 @@ async function loadBookings() {
 
     updateBookingsPaginationUi();
     renderBookings(items);
+    loadTourImageCatalogForRenderedBookings(items);
     loadStep.done({
       rendered_items: items.length,
       total_items: state.bookings.total,
@@ -615,41 +618,73 @@ async function loadBookings() {
   }
 }
 
+function bookingsNeedTourImageCatalog(items) {
+  if (state.tourImageCatalogLoaded || state.tourImagesById.size) return false;
+  return (Array.isArray(items) ? items : []).some((booking) => (
+    !normalizeText(booking?.image)
+    && normalizeText(booking?.web_form_submission?.tour_id)
+  ));
+}
+
+function loadTourImageCatalogForRenderedBookings(items) {
+  if (!bookingsNeedTourImageCatalog(items)) return;
+  void ensureTourImageCatalog().then((updated) => {
+    if (!updated || !state.bookings.lastItems.length) return;
+    renderBookings(state.bookings.lastItems);
+  });
+}
+
 async function ensureTourImageCatalog() {
-  if (state.tourImagesById.size) return;
+  if (state.tourImageCatalogLoaded || state.tourImagesById.size) return false;
+  if (state.tourImageCatalogPromise) return state.tourImageCatalogPromise;
   const requestUrl = publicToursRequest({ baseURL: apiOrigin }).url;
-  const toursStep = startConsoleStep("Public tour image preload", {
-    requestUrl,
-    authUser: state.authUser?.preferred_username || state.authUser?.sub || "",
-    roles: state.roles
-  }, { warnAfterMs: 4000 });
-  const payload = await fetchApi(publicToursRequest({ baseURL: apiOrigin }).url, {
-    includeDetailInError: false,
-    connectionErrorMessage: backendT("tour.error.load_public_images", "Could not load public tour images.")
-  });
-  if (!payload) {
-    toursStep.done({
-      received_payload: false
-    });
-    console.error("[backend-bookings] Public tour image preload returned no payload.", {
-      requestUrl: publicToursRequest({ baseURL: apiOrigin }).url,
-      authUser: state.authUser,
-      roles: state.roles,
-      permissions: state.permissions,
-      likelyCause: "The bookings page preloads public tour images before rendering. If that request fails, bookings can still load, but this indicates a backend or frontend API problem."
-    });
-  }
-  const items = Array.isArray(payload?.items) ? payload.items : [];
-  state.tourImagesById = new Map(
-    items
-      .map((tour) => [normalizeText(tour?.id), firstTravelTourCardImagePath(tour)])
-      .filter(([tourId]) => Boolean(tourId))
-  );
-  toursStep.done({
-    received_payload: true,
-    item_count: items.length,
-    cached_images: state.tourImagesById.size
-  });
+  state.tourImageCatalogPromise = (async () => {
+    const toursStep = startConsoleStep("Public tour image preload", {
+      requestUrl,
+      authUser: state.authUser?.preferred_username || state.authUser?.sub || "",
+      roles: state.roles
+    }, { warnAfterMs: 4000 });
+    try {
+      const payload = await fetchApi(publicToursRequest({ baseURL: apiOrigin }).url, {
+        includeDetailInError: false,
+        connectionErrorMessage: backendT("tour.error.load_public_images", "Could not load public tour images.")
+      });
+      if (!payload) {
+        toursStep.done({
+          received_payload: false
+        });
+        console.error("[backend-bookings] Public tour image preload returned no payload.", {
+          requestUrl: publicToursRequest({ baseURL: apiOrigin }).url,
+          authUser: state.authUser,
+          roles: state.roles,
+          permissions: state.permissions,
+          likelyCause: "The bookings page preloads public tour images after rendering. If that request fails, bookings can still load, but this indicates a backend or frontend API problem."
+        });
+        state.tourImageCatalogLoaded = true;
+        return false;
+      }
+      const items = Array.isArray(payload?.items) ? payload.items : [];
+      state.tourImagesById = new Map(
+        items
+          .map((tour) => [normalizeText(tour?.id), firstTravelTourCardImagePath(tour)])
+          .filter(([tourId]) => Boolean(tourId))
+      );
+      state.tourImageCatalogLoaded = true;
+      toursStep.done({
+        received_payload: true,
+        item_count: items.length,
+        cached_images: state.tourImagesById.size
+      });
+      return true;
+    } catch (error) {
+      state.tourImageCatalogLoaded = true;
+      toursStep.fail(error);
+      return false;
+    } finally {
+      state.tourImageCatalogPromise = null;
+    }
+  })();
+  return state.tourImageCatalogPromise;
 }
 
 function firstTravelTourCardImagePath(tour) {

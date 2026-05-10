@@ -1273,11 +1273,14 @@ export function createBookingHandlers(deps) {
     const requestUrl = new URL(req.url, "http://localhost");
     const { items: filtered, filters, sort } = filterBookings(store, requestUrl.searchParams);
     const visibleBookings = filtered.filter((booking) => canAccessBooking(principal, booking));
+    const pagedBookings = paginate(visibleBookings, requestUrl.searchParams);
     const visible = await Promise.all(
-      visibleBookings.map((booking) => buildBookingPayload(booking, { req, listMode: true }))
+      pagedBookings.items.map((booking) => buildBookingPayload(booking, { req, listMode: true }))
     );
-    const paged = paginate(visible, requestUrl.searchParams);
-    sendJson(res, 200, buildPaginatedListResponse(paged, { filters, sort }));
+    sendJson(res, 200, buildPaginatedListResponse({
+      ...pagedBookings,
+      items: visible
+    }, { filters, sort }));
   }
 
   async function handleGetBooking(req, res, [bookingId]) {

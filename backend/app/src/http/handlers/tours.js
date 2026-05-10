@@ -1388,13 +1388,14 @@ export function createTourHandlers(deps) {
     }
     const lang = requestLang(req.url);
     const store = await readStore();
-    const tours = await localizeMarketingToursForRead((await readTours()).map((tour) => normalizeTourForStorage(tour)), lang);
+    const storedTours = (await readTours()).map((tour) => normalizeTourForStorage(tour));
+    const tours = lang === "en" ? storedTours : await localizeMarketingToursForRead(storedTours, lang);
     const requestUrl = new URL(req.url, "http://localhost");
     const { items: filtered, sort, filters } = filterAndSortTours(tours, requestUrl.searchParams, lang, store);
     const paged = paginate(filtered, requestUrl.searchParams);
-    const destinationOptions = Array.from(new Set(tours.flatMap((tour) => deriveTourDestinationCodesFromDayLocations(tour, store))))
+    const destinationOptions = Array.from(new Set(storedTours.flatMap((tour) => deriveTourDestinationCodesFromDayLocations(tour, store))))
       .map((code) => ({ code, label: code }));
-    const options = collectTourOptions(tours, { lang, includeAllStyleCatalogEntries: true });
+    const options = collectTourOptions(storedTours, { lang, includeAllStyleCatalogEntries: true });
     sendJson(
       res,
       200,

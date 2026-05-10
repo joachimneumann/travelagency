@@ -36,7 +36,7 @@ function ensureBackendPageLoadingOverlay() {
     overlay.innerHTML = `
       <div class="booking-page-overlay__panel" role="status" aria-live="assertive">
         <span class="booking-page-overlay__spinner" aria-hidden="true"></span>
-        <span class="booking-page-overlay__text" id="${BACKEND_PAGE_LOADING_OVERLAY_TEXT_ID}"></span>
+        <span class="booking-page-overlay__text" id="${BACKEND_PAGE_LOADING_OVERLAY_TEXT_ID}" data-i18n-id="backend.page_loading_overlay"></span>
       </div>
     `;
     document.body?.appendChild(overlay);
@@ -72,6 +72,9 @@ export function setBackendPageLoadingOverlay(isVisible, message = "") {
 
   overlay.hidden = true;
   overlay.setAttribute("aria-hidden", "true");
+  window.dispatchEvent(new CustomEvent("backend-page-ready", {
+    detail: { overlayId: BACKEND_PAGE_LOADING_OVERLAY_ID }
+  }));
 }
 
 export async function waitForBackendI18n() {
@@ -256,7 +259,9 @@ export async function loadBackendPageAuthState({
   const userLabel = navElements.userLabel || null;
 
   try {
-    const { request, response, payload } = await fetchAuthMe(apiOrigin);
+    const { request, response, payload } = await fetchAuthMe(apiOrigin, {
+      allowCached: true
+    });
     if (!response.ok || !payload?.authenticated) {
       if (userLabel) userLabel.textContent = "";
       if (redirectToLoginWhenUnauthenticated) {

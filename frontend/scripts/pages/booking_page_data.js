@@ -4,7 +4,6 @@ import {
   keycloakUsersRequest,
   staffProfilesRequest
 } from "../../Generated/API/generated_APIRequestFactory.js";
-import { validateAuthMeResponse } from "../../Generated/API/generated_APIModels.js";
 import {
   logBrowserConsoleError,
   normalizeText,
@@ -12,6 +11,7 @@ import {
   translationProviderMetaFromResponse
 } from "../shared/api.js";
 import { applyBackendUserLabel } from "../shared/backend_page.js";
+import { fetchAuthMe } from "../shared/auth.js";
 import {
   bookingContentLang,
   setBookingContentLang
@@ -191,14 +191,9 @@ export function createBookingPageDataController(ctx) {
 
   async function loadAuthStatus() {
     try {
-      const request = authMeRequest({ baseURL: apiOrigin });
-      const response = await fetch(request.url, {
-        method: request.method,
-        credentials: "include",
-        headers: request.headers
+      const { request, response, payload } = await fetchAuthMe(apiOrigin, {
+        allowCached: true
       });
-      const payload = await response.json().catch(() => null);
-      if (payload) validateAuthMeResponse(payload);
       if (response.status === 401 || (response.ok && !payload?.authenticated)) {
         state.authUser = null;
         if (els.userLabel) els.userLabel.textContent = "";

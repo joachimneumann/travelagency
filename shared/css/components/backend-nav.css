@@ -82,6 +82,10 @@ body.backend-page-loading--busy {
   backdrop-filter: blur(3px);
 }
 
+body.backend-page-loading--busy .booking-page-overlay.backend-page-loading-overlay {
+  z-index: 350;
+}
+
 .backend-public-site-publish-overlay[hidden],
 .backend-page-loading-overlay[hidden] {
   display: none;
