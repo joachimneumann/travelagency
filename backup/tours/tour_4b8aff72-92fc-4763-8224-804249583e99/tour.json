@@ -16,51 +16,9 @@
   "seasonality_end_month": "dec",
   "priority": 100,
   "created_at": "2026-04-14T02:15:56.438Z",
-  "updated_at": "2026-05-08T09:42:22.995Z",
+  "updated_at": "2026-05-09T07:21:54.369Z",
   "published_on_webpage": true,
   "travel_plan": {
-    "destination_scope": [
-      {
-        "destination": "VN",
-        "areas": [
-          {
-            "area_id": "area_3d22386f-d130-4f20-ab82-a30164fa5a19",
-            "places": [
-              {
-                "place_id": "place_da_nang"
-              },
-              {
-                "place_id": "place_ba_na_hills"
-              },
-              {
-                "place_id": "place_5c7c616b-f7c7-4650-a206-bfcf204d078e"
-              },
-              {
-                "place_id": "place_49c6e6a3-b74f-4127-a87b-5dc90f183ace"
-              }
-            ]
-          },
-          {
-            "area_id": "area_3fa05b42-97ab-495d-b16d-4691e66e0434",
-            "places": [
-              {
-                "place_id": "place_hanoi"
-              },
-              {
-                "place_id": "place_halong_bay"
-              },
-              {
-                "place_id": "place_a8172e07-213b-46ed-bb88-f0f77bb7fbe0"
-              }
-            ]
-          },
-          {
-            "area_id": "area_024155db-da17-4cdb-ae0e-a01fd1e77f58",
-            "places": []
-          }
-        ]
-      }
-    ],
     "tour_card_image_ids": [
       "travel_plan_service_image_4ef28a01-c27b-4101-97fe-5db9f7c9763f",
       "travel_plan_service_image_4153d91e-aeac-4eef-a660-8b5b74bb54db",
@@ -98,6 +56,7 @@
         "overnight_location_i18n": {},
         "primary_location_id": "place_hanoi",
         "secondary_location_id": null,
+        "experience_highlight_ids": [],
         "services": [
           {
             "id": "travel_plan_service_f5c39a81-ed7a-43c8-915d-ed6f958d5599",
@@ -252,6 +211,7 @@
         "overnight_location_i18n": {},
         "primary_location_id": "place_halong_bay",
         "secondary_location_id": null,
+        "experience_highlight_ids": [],
         "services": [
           {
             "id": "travel_plan_service_98ba1585-185a-4565-a9f7-f6420776ca7c",
@@ -301,6 +261,7 @@
         "overnight_location_i18n": {},
         "primary_location_id": "place_halong_bay",
         "secondary_location_id": null,
+        "experience_highlight_ids": [],
         "services": [
           {
             "id": "travel_plan_service_b907a323-2e05-4e2c-8426-518ecffadcbe",
@@ -350,6 +311,7 @@
         "overnight_location_i18n": {},
         "primary_location_id": "place_2db9c791-6d7f-4396-be8a-195eb5d3d164",
         "secondary_location_id": null,
+        "experience_highlight_ids": [],
         "services": [
           {
             "id": "travel_plan_service_6f613b22-b548-42a9-a9a8-773001b129ef",
@@ -539,6 +501,7 @@
         "overnight_location_i18n": {},
         "primary_location_id": "place_2db9c791-6d7f-4396-be8a-195eb5d3d164",
         "secondary_location_id": null,
+        "experience_highlight_ids": [],
         "services": [
           {
             "id": "travel_plan_service_1e69ff39-ad8f-42bc-a686-31acc4caaae6",
@@ -658,6 +621,7 @@
         "overnight_location_i18n": {},
         "primary_location_id": "place_ba_na_hills",
         "secondary_location_id": null,
+        "experience_highlight_ids": [],
         "services": [
           {
             "id": "travel_plan_service_67e03aa2-1875-482e-8aee-b9d10930cea0",
@@ -707,7 +671,184 @@
         "overnight_location_i18n": {},
         "primary_location_id": "place_2db9c791-6d7f-4396-be8a-195eb5d3d164",
         "secondary_location_id": null,
-        "services": [],
+        "experience_highlight_ids": [],
+        "services": [
+          {
+            "id": "travel_plan_service_df9b2598-cfe7-49de-aaae-419188d74e59",
+            "timing_kind": "label",
+            "time_label": null,
+            "time_label_i18n": {},
+            "time_point": null,
+            "kind": "other",
+            "title": "Lang Co Bay",
+            "title_i18n": {},
+            "details": "Pause at Lang Co Bay, where pale sand, mountains and lagoon water mark the scenic approach to Hue.",
+            "details_i18n": {},
+            "image_subtitle": null,
+            "image_subtitle_i18n": {},
+            "location": null,
+            "location_i18n": {},
+            "start_time": null,
+            "end_time": null,
+            "image": {
+              "id": "travel_plan_service_image_2b28828a-692e-44d0-9ab3-dff89b986c81",
+              "storage_path": "/public/v1/tour-images/tour_b3be8a19-7647-4c14-ba85-ba17e8d6d3d4/travel-plan-services/travel_plan_service_c3958108-8d2f-4e26-876a-7ca4a2ce69fa-1777346115004-232f850c-b3ae-4e9c-adb9-a5a95c69fa43.webp",
+              "caption": null,
+              "caption_i18n": {},
+              "alt_text": null,
+              "alt_text_i18n": {},
+              "sort_order": 0,
+              "is_primary": true,
+              "is_customer_visible": true,
+              "include_in_travel_tour_card": false,
+              "width_px": null,
+              "height_px": null,
+              "source_attribution": null,
+              "focal_point": null,
+              "created_at": "2026-04-28T03:15:15.091Z"
+            }
+          },
+          {
+            "id": "travel_plan_service_e844fbf3-e7f9-41cd-b067-9dcc7efcf1cc",
+            "timing_kind": "label",
+            "time_label": null,
+            "time_label_i18n": {},
+            "time_point": null,
+            "kind": "other",
+            "title": "Thien Mu Pagoda",
+            "title_i18n": {},
+            "details": "Visit Hue's riverside Thien Mu Pagoda, a graceful tower and garden complex linked closely with the Perfume River.",
+            "details_i18n": {},
+            "image_subtitle": null,
+            "image_subtitle_i18n": {},
+            "location": null,
+            "location_i18n": {},
+            "start_time": null,
+            "end_time": null,
+            "image": {
+              "id": "travel_plan_service_image_2d16eb33-c4de-4478-80d0-bd013f131e6b",
+              "storage_path": "/public/v1/tour-images/tour_16531bfc-a60f-4128-9abe-2eada1f2d7d8/travel-plan-services/travel_plan_service_3f1c6420-888e-4655-9533-fe19486c8eb8-1777361489424-517513a6-db8b-4d97-a77d-bcace891080c.webp",
+              "caption": null,
+              "caption_i18n": {},
+              "alt_text": null,
+              "alt_text_i18n": {},
+              "sort_order": 0,
+              "is_primary": true,
+              "is_customer_visible": true,
+              "include_in_travel_tour_card": false,
+              "width_px": null,
+              "height_px": null,
+              "source_attribution": null,
+              "focal_point": null,
+              "created_at": "2026-04-28T07:31:29.669Z"
+            }
+          },
+          {
+            "id": "travel_plan_service_c5c1a63c-6d73-447e-a880-16c416a68b23",
+            "timing_kind": "label",
+            "time_label": null,
+            "time_label_i18n": {},
+            "time_point": null,
+            "kind": "other",
+            "title": "Imperial Citadel",
+            "title_i18n": {},
+            "details": "Walk through the gates of Hue's Imperial Citadel, where palaces, courtyards and walls recall Vietnam's Nguyen emperors.",
+            "details_i18n": {},
+            "image_subtitle": null,
+            "image_subtitle_i18n": {},
+            "location": null,
+            "location_i18n": {},
+            "start_time": null,
+            "end_time": null,
+            "image": {
+              "id": "travel_plan_service_image_a6de1867-1c5d-4456-8779-2f307c8d5c77",
+              "storage_path": "/public/v1/tour-images/tour_16531bfc-a60f-4128-9abe-2eada1f2d7d8/travel-plan-services/travel_plan_service_d0d43aab-720e-43e7-b530-eb6c506e5a3e-1777361578901-e741d0d0-9765-4eb7-9d0f-31f251d48ce5.webp",
+              "caption": null,
+              "caption_i18n": {},
+              "alt_text": null,
+              "alt_text_i18n": {},
+              "sort_order": 0,
+              "is_primary": true,
+              "is_customer_visible": true,
+              "include_in_travel_tour_card": false,
+              "width_px": null,
+              "height_px": null,
+              "source_attribution": null,
+              "focal_point": null,
+              "created_at": "2026-04-28T07:32:58.989Z"
+            }
+          },
+          {
+            "id": "travel_plan_service_4896777f-3271-4d6e-91df-0c509a39755e",
+            "timing_kind": "label",
+            "time_label": null,
+            "time_label_i18n": {},
+            "time_point": null,
+            "kind": "other",
+            "title": "Lincense  Village",
+            "title_i18n": {},
+            "details": "Hoi An is a charming ancient town famous for its golden-walled houses and mossy roofs. Its poetic beauty and peaceful alleys create a unique cultural space that attracts visitors from all over the world.",
+            "details_i18n": {},
+            "image_subtitle": null,
+            "image_subtitle_i18n": {},
+            "location": null,
+            "location_i18n": {},
+            "start_time": null,
+            "end_time": null,
+            "image": {
+              "id": "travel_plan_service_image_3286a87d-ed28-476d-8763-13988d56f760",
+              "storage_path": "/public/v1/tour-images/tour_4b8aff72-92fc-4763-8224-804249583e99/travel-plan-services/travel_plan_service_4896777f-3271-4d6e-91df-0c509a39755e-1778311260594-11d8e2ed-88f3-4943-85b5-5ca132184084.webp",
+              "caption": null,
+              "caption_i18n": {},
+              "alt_text": null,
+              "alt_text_i18n": {},
+              "sort_order": 0,
+              "is_primary": true,
+              "is_customer_visible": true,
+              "include_in_travel_tour_card": false,
+              "width_px": null,
+              "height_px": null,
+              "source_attribution": null,
+              "focal_point": null,
+              "created_at": "2026-05-09T07:21:00.826Z"
+            }
+          },
+          {
+            "id": "travel_plan_service_37b45471-93e9-4815-bdef-10f817a0b64b",
+            "timing_kind": "label",
+            "time_label": null,
+            "time_label_i18n": {},
+            "time_point": null,
+            "kind": "other",
+            "title": "Dong Ba Market",
+            "title_i18n": {},
+            "details": "Explore Dong Ba Market for Hue flavors, local produce and everyday trade beside the Perfume River.",
+            "details_i18n": {},
+            "image_subtitle": null,
+            "image_subtitle_i18n": {},
+            "location": null,
+            "location_i18n": {},
+            "start_time": null,
+            "end_time": null,
+            "image": {
+              "id": "travel_plan_service_image_ae840409-f696-4e31-bba4-cd2b3ac749b9",
+              "storage_path": "/public/v1/tour-images/tour_16531bfc-a60f-4128-9abe-2eada1f2d7d8/travel-plan-services/travel_plan_service_193f4411-f341-45bd-a9ee-fd0c55b67390-1777361824144-33d26c48-0f6e-4952-bb56-a01b88c86736.webp",
+              "caption": null,
+              "caption_i18n": {},
+              "alt_text": null,
+              "alt_text_i18n": {},
+              "sort_order": 0,
+              "is_primary": true,
+              "is_customer_visible": true,
+              "include_in_travel_tour_card": false,
+              "width_px": null,
+              "height_px": null,
+              "source_attribution": null,
+              "focal_point": null,
+              "created_at": "2026-04-28T07:37:04.235Z"
+            }
+          }
+        ],
         "notes": null,
         "notes_i18n": {}
       },
@@ -720,6 +861,7 @@
         "overnight_location_i18n": {},
         "primary_location_id": "place_d273e209-f56a-4dc6-ae33-5b23e67bbdbf",
         "secondary_location_id": null,
+        "experience_highlight_ids": [],
         "services": [
           {
             "id": "travel_plan_service_d9290fb2-f990-4b46-9ff1-31d9d3d1c382",
@@ -804,6 +946,7 @@
         "overnight_location_i18n": {},
         "primary_location_id": "place_d273e209-f56a-4dc6-ae33-5b23e67bbdbf",
         "secondary_location_id": null,
+        "experience_highlight_ids": [],
         "services": [
           {
             "id": "travel_plan_service_f89eeec5-f200-4b27-a85d-e94cb2d55510",
@@ -958,6 +1101,7 @@
         "overnight_location_i18n": {},
         "primary_location_id": "place_d273e209-f56a-4dc6-ae33-5b23e67bbdbf",
         "secondary_location_id": null,
+        "experience_highlight_ids": [],
         "services": [
           {
             "id": "travel_plan_service_cbbb4f9b-69cc-4c82-9086-88e039e23728",
@@ -999,6 +1143,7 @@
         "notes_i18n": {}
       }
     ],
-    "translation_meta": {}
+    "translation_meta": {},
+    "derived_experience_highlight_ids": []
   }
 }
