@@ -1,15 +1,22 @@
 import { access } from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
+import { drawMarketingTourFramedImage } from "./marketing_tour_one_pager_pdf.js";
 import { normalizeText } from "./text.js";
 
 const ITEM_THUMBNAIL_WIDTH = 118;
 const ITEM_THUMBNAIL_HEIGHT = 88;
 const ITEM_CARD_PADDING = 14;
 const ITEM_COLUMN_GAP = 18;
-const ITEM_VERTICAL_GAP = 8;
+const ITEM_VERTICAL_GAP = 6;
+const DAY_HEADER_TOP_GAP = 18;
 const IMAGE_CARD_MIN_HEIGHT = 92;
-const IMAGE_CARD_MAX_HEIGHT = 124;
+const IMAGE_CARD_MAX_HEIGHT = 118;
+const IMAGE_PLACEMENT_LOOKAHEAD = 8;
+const FLUID_TEXT_IMAGE_SERVICE_LIMIT = 2;
+const TRAVEL_PLAN_IMAGE_FRAME_INSET = 8;
+const TRAVEL_PLAN_IMAGE_FRAME_SHAPE_INTENSITY = 0.38;
+const TRAVEL_PLAN_TRIP_LABEL_COLOR = "#F27A1A";
 
 function safeArray(value) {
   return Array.isArray(value) ? value : [];
@@ -147,18 +154,31 @@ function resolveDayAccommodationTitle(day) {
   return textOrNull(accommodation?.title);
 }
 
-export function dayHeading(day, lang, pdfT) {
-  const label = pdfT(lang, "offer.day_label", "Day {day}", {
+function dayLabelText(day, lang, pdfT) {
+  return pdfT(lang, "offer.day_label", "Day {day}", {
     day: Number(day?.day_number || 0) || 1
   });
+}
+
+export function dayHeading(day, lang, pdfT) {
+  const label = dayLabelText(day, lang, pdfT);
   const title = textOrNull(day?.title);
   return title ? `${label} - ${title}` : label;
+}
+
+function dayTitleText(day, lang, pdfT) {
+  return textOrNull(day?.title) || dayLabelText(day, lang, pdfT);
 }
 
 function measureTextHeight(doc, text, { width, fontSize, fonts, weight = "regular", lineGap = 0, pdfFontName }) {
   if (!text) return 0;
   doc.font(pdfFontName(weight, fonts)).fontSize(fontSize);
   return doc.heightOfString(text, { width, lineGap });
+}
+
+function travelPlanImageFrameVariant(entry) {
+  const seed = textOrNull(entry?.item?.id) || textOrNull(entry?.item?.title) || "travel-plan-image";
+  return Array.from(seed).reduce((sum, char) => sum + char.charCodeAt(0), 0);
 }
 
 function imageBoxHeight(doc, entry, contentWidth, fonts, deps) {
@@ -177,8 +197,7 @@ function imageBoxHeight(doc, entry, contentWidth, fonts, deps) {
 }
 
 function itemBoxHeight(doc, item, fonts, lang, dayDate, contentWidth, deps) {
-  const innerWidth = contentWidth - ITEM_CARD_PADDING * 2;
-  const textWidth = innerWidth;
+  const textWidth = contentWidth;
   const metaParts = [textOrNull(item?.location), formatTravelPlanTiming(item, lang, dayDate, deps.formatPdfDateOnly)].filter(Boolean);
   const title = textOrNull(item?.title) || deps.pdfT(lang, "offer.item_fallback", "Planned service");
   const details = textOrNull(item?.details);
@@ -186,11 +205,11 @@ function itemBoxHeight(doc, item, fonts, lang, dayDate, contentWidth, deps) {
   if (metaParts.length) {
     textHeight += measureTextHeight(doc, metaParts.join(" · "), { width: textWidth, fontSize: 9.2, fonts, lineGap: 1, pdfFontName: deps.pdfFontName }) + 4;
   }
-  textHeight += measureTextHeight(doc, title, { width: textWidth, fontSize: 11.2, fonts, weight: "bold", lineGap: 1, pdfFontName: deps.pdfFontName }) + 4;
+  textHeight += measureTextHeight(doc, title, { width: textWidth, fontSize: 11.2, fonts, weight: "bold", lineGap: 1, pdfFontName: deps.pdfFontName });
   if (details) {
-    textHeight += measureTextHeight(doc, details, { width: textWidth, fontSize: 10.2, fonts, lineGap: 2, pdfFontName: deps.pdfFontName }) + 4;
+    textHeight += 4 + measureTextHeight(doc, details, { width: textWidth, fontSize: 10.2, fonts, lineGap: 2, pdfFontName: deps.pdfFontName });
   }
-  return Math.max(88, ITEM_CARD_PADDING + textHeight + ITEM_CARD_PADDING);
+  return Math.max(1, textHeight);
 }
 
 function drawTravelPlanItemCard(doc, x, y, width, entry, fonts, lang, dayDate, deps) {
@@ -207,16 +226,20 @@ function drawTravelPlanItemCard(doc, x, y, width, entry, fonts, lang, dayDate, d
       })
       : 0;
     const imageHeight = itemHeight - subtitleHeight - (subtitle ? 8 : 0);
-    doc
-      .save()
-      .roundedRect(x, y, width, imageHeight, 12)
-      .clip();
-    doc.image(entry.thumbnail.buffer, x, y, {
-      fit: [width, imageHeight],
-      align: "center",
-      valign: "center"
+    const frameX = x + TRAVEL_PLAN_IMAGE_FRAME_INSET;
+    const frameY = y + TRAVEL_PLAN_IMAGE_FRAME_INSET;
+    const frameWidth = Math.max(1, width - TRAVEL_PLAN_IMAGE_FRAME_INSET * 2);
+    const frameHeight = Math.max(1, imageHeight - TRAVEL_PLAN_IMAGE_FRAME_INSET * 2);
+    drawMarketingTourFramedImage(doc, {
+      x: frameX,
+      y: frameY,
+      width: frameWidth,
+      height: frameHeight,
+      imageBuffer: entry.thumbnail.buffer,
+      variant: travelPlanImageFrameVariant(entry),
+      labelLayer: false,
+      shapeIntensity: TRAVEL_PLAN_IMAGE_FRAME_SHAPE_INTENSITY
     });
-    doc.restore();
 
     if (subtitle) {
       doc
@@ -239,16 +262,10 @@ function drawTravelPlanItemCard(doc, x, y, width, entry, fonts, lang, dayDate, d
 
   const item = entry?.item || entry;
   const itemHeight = itemBoxHeight(doc, item, fonts, lang, dayDate, width, deps);
-  doc
-    .save()
-    .roundedRect(x, y, width, itemHeight, 12)
-    .fill(deps.colors.surfaceSubtle)
-    .restore();
 
-  const innerX = x + ITEM_CARD_PADDING;
-  const innerWidth = width - ITEM_CARD_PADDING * 2;
-  const textWidth = innerWidth;
-  let innerY = y + ITEM_CARD_PADDING;
+  const innerX = x;
+  const textWidth = width;
+  let innerY = y;
 
   const metaParts = [textOrNull(item?.location), formatTravelPlanTiming(item, lang, dayDate, deps.formatPdfDateOnly)].filter(Boolean);
   if (metaParts.length) {
@@ -271,10 +288,10 @@ function drawTravelPlanItemCard(doc, x, y, width, entry, fonts, lang, dayDate, d
       width: textWidth,
       lineGap: 1
     }));
-  innerY = doc.y + 4;
 
   const details = textOrNull(item?.details);
   if (details) {
+    innerY = doc.y + 4;
     doc
       .font(deps.pdfFontName("regular", fonts))
       .fontSize(10.2)
@@ -289,102 +306,241 @@ function drawTravelPlanItemCard(doc, x, y, width, entry, fonts, lang, dayDate, d
 }
 
 function buildTravelPlanDayLayoutEntries(day, itemThumbnailMap) {
-  return safeArray(day?.services || day?.items).flatMap((item) => {
-    const entries = [{ kind: "service", item }];
+  return safeArray(day?.services || day?.items).reduce((layout, item) => {
+    layout.services.push({ kind: "service", item });
     const thumbnail = itemThumbnailMap.get(item?.id) || null;
     if (thumbnail?.buffer) {
-      entries.push({ kind: "image", item, thumbnail });
+      layout.images.push({ kind: "image", item, thumbnail });
     }
-    return entries;
-  });
+    return layout;
+  }, { services: [], images: [] });
+}
+
+function remainingTravelPlanLayoutItemCount(items) {
+  return safeArray(items?.services).length + safeArray(items?.images).length;
+}
+
+function firstTravelPlanLayoutItem(items) {
+  return safeArray(items?.services)[0] || safeArray(items?.images)[0] || null;
+}
+
+function entriesShareTravelPlanItem(firstEntry, secondEntry) {
+  return firstEntry?.item === secondEntry?.item
+    || (
+      textOrNull(firstEntry?.item?.id)
+      && textOrNull(firstEntry?.item?.id) === textOrNull(secondEntry?.item?.id)
+    );
+}
+
+function findPairedImageIndex(images, serviceEntry, placedImageIndexes = new Set()) {
+  return safeArray(images).findIndex((image, index) => (
+    !placedImageIndexes.has(index)
+    && entriesShareTravelPlanItem(image, serviceEntry)
+  ));
+}
+
+function travelPlanTextStackHeight(textEntries) {
+  return safeArray(textEntries).reduce((total, entry, index) => (
+    total + (index ? ITEM_VERTICAL_GAP : 0) + entry.itemHeight
+  ), 0);
+}
+
+function layoutTravelPlanFluidTextImagePair(doc, items, fonts, lang, dayDate, columnWidth, availableHeight, deps) {
+  const services = safeArray(items?.services);
+  const images = safeArray(items?.images);
+  if (!services.length || !images.length) return null;
+
+  const textEntries = services
+    .slice(0, Math.min(FLUID_TEXT_IMAGE_SERVICE_LIMIT, services.length))
+    .map((entry) => ({
+      entry,
+      itemHeight: itemBoxHeight(doc, entry.item, fonts, lang, dayDate, columnWidth, deps)
+    }));
+  const pairedTextIndex = textEntries.reduce((matchedIndex, { entry }, index) => (
+    findPairedImageIndex(images, entry) >= 0 ? index : matchedIndex
+  ), -1);
+  if (pairedTextIndex < 0) return null;
+
+  const pairedImageIndex = findPairedImageIndex(images, textEntries[pairedTextIndex].entry);
+  const imageEntry = images[pairedImageIndex];
+  const imageHeight = imageBoxHeight(doc, imageEntry, columnWidth, fonts, deps);
+  const textImages = [];
+  let textHeight = travelPlanTextStackHeight(textEntries);
+  const secondaryImageIndex = textEntries.reduce((matchedIndex, { entry }, index) => {
+    if (index === pairedTextIndex) return matchedIndex;
+    const candidateIndex = findPairedImageIndex(images, entry, new Set([pairedImageIndex]));
+    return candidateIndex >= 0 && matchedIndex < 0 ? candidateIndex : matchedIndex;
+  }, -1);
+  if (secondaryImageIndex >= 0) {
+    const secondaryImageEntry = images[secondaryImageIndex];
+    const secondaryImageHeight = imageBoxHeight(doc, secondaryImageEntry, columnWidth, fonts, deps);
+    const projectedTextHeight = textHeight + ITEM_VERTICAL_GAP + secondaryImageHeight;
+    if (projectedTextHeight <= availableHeight) {
+      textImages.push({
+        entry: secondaryImageEntry,
+        itemHeight: secondaryImageHeight
+      });
+      textHeight = projectedTextHeight;
+    }
+  }
+  const layoutHeight = Math.max(textHeight, imageHeight);
+  if (layoutHeight > availableHeight) return null;
+  const placedImageIndexes = new Set([
+    pairedImageIndex,
+    ...(textImages.length ? [secondaryImageIndex] : [])
+  ]);
+
+  return {
+    mode: "fluidTextImage",
+    textEntries,
+    textImages,
+    imageEntry: {
+      entry: imageEntry,
+      itemHeight: imageHeight
+    },
+    imageColumn: "right",
+    height: layoutHeight,
+    rest: {
+      services: services.slice(textEntries.length),
+      images: images.filter((_, index) => !placedImageIndexes.has(index))
+    }
+  };
 }
 
 function layoutTravelPlanItemsForPage(doc, items, fonts, lang, dayDate, columnWidth, availableHeight, deps) {
+  const fluidTextImageLayout = layoutTravelPlanFluidTextImagePair(doc, items, fonts, lang, dayDate, columnWidth, availableHeight, deps);
+  if (fluidTextImageLayout) return fluidTextImageLayout;
+
   const columns = { left: [], right: [] };
   const heights = { left: 0, right: 0 };
-  const imageCounts = { left: 0, right: 0 };
-  let lastImageColumn = null;
-  let index = 0;
+  const services = safeArray(items?.services);
+  const images = safeArray(items?.images);
+  let serviceIndex = 0;
+  const placedImageIndexes = new Set();
 
   function projectedHeight(key, itemHeight) {
     return heights[key] + (columns[key].length ? ITEM_VERTICAL_GAP : 0) + itemHeight;
   }
 
-  function choosePreferredColumnForImage() {
-    if (imageCounts.left !== imageCounts.right) {
-      return imageCounts.left <= imageCounts.right ? "left" : "right";
-    }
-    if (lastImageColumn === "left") return "right";
-    if (lastImageColumn === "right") return "left";
-    return heights.left <= heights.right ? "left" : "right";
+  function placeEntry(key, entry, itemHeight) {
+    heights[key] = projectedHeight(key, itemHeight);
+    columns[key].push({ entry, itemHeight });
   }
 
-  while (index < items.length) {
-    const entry = items[index];
-    const itemHeight = entry?.kind === "image"
-      ? imageBoxHeight(doc, entry, columnWidth, fonts, deps)
-      : itemBoxHeight(doc, entry.item, fonts, lang, dayDate, columnWidth, deps);
-    const preferredKey = entry?.kind === "image"
-      ? choosePreferredColumnForImage()
-      : (heights.left <= heights.right ? "left" : "right");
+  function chooseColumn(itemHeight, preferredColumn = null) {
+    const preferredKey = preferredColumn || (heights.left <= heights.right ? "left" : "right");
     const alternateKey = preferredKey === "left" ? "right" : "left";
     const fitsPreferred = projectedHeight(preferredKey, itemHeight) <= availableHeight;
     const fitsAlternate = projectedHeight(alternateKey, itemHeight) <= availableHeight;
-    let targetKey = null;
+    if (fitsPreferred) return preferredKey;
+    if (fitsAlternate) return alternateKey;
+    return null;
+  }
 
-    if (fitsPreferred) {
-      targetKey = preferredKey;
-    } else if (fitsAlternate) {
-      targetKey = alternateKey;
-    } else {
-      break;
+  function bestImagePlacement() {
+    let best = null;
+    let candidateCount = 0;
+    for (let index = 0; index < images.length; index += 1) {
+      if (placedImageIndexes.has(index)) continue;
+      candidateCount += 1;
+      if (candidateCount > IMAGE_PLACEMENT_LOOKAHEAD) break;
+      const entry = images[index];
+      const itemHeight = imageBoxHeight(doc, entry, columnWidth, fonts, deps);
+      for (const key of ["left", "right"]) {
+        const projected = projectedHeight(key, itemHeight);
+        if (projected > availableHeight) continue;
+        const nextLeft = key === "left" ? projected : heights.left;
+        const nextRight = key === "right" ? projected : heights.right;
+        const layoutHeight = Math.max(nextLeft, nextRight);
+        const balance = Math.abs(nextLeft - nextRight);
+        const score = layoutHeight + balance * 0.35 + index * 2;
+        if (!best || score < best.score) {
+          best = { index, key, entry, itemHeight, score };
+        }
+      }
+    }
+    return best;
+  }
+
+  while (serviceIndex < services.length) {
+    const entry = services[serviceIndex];
+    const itemHeight = itemBoxHeight(doc, entry.item, fonts, lang, dayDate, columnWidth, deps);
+    const pairedImageIndex = findPairedImageIndex(images, entry, placedImageIndexes);
+    const pairedImageHeight = pairedImageIndex >= 0
+      ? imageBoxHeight(doc, images[pairedImageIndex], columnWidth, fonts, deps)
+      : 0;
+    const targetKey = chooseColumn(itemHeight);
+    if (!targetKey) break;
+    if (pairedImageIndex >= 0 && (columns.left.length || columns.right.length)) {
+      const alternateKey = targetKey === "left" ? "right" : "left";
+      const serviceProjectedHeight = projectedHeight(targetKey, itemHeight);
+      const imageFitsSameColumn = serviceProjectedHeight + ITEM_VERTICAL_GAP + pairedImageHeight <= availableHeight;
+      const imageFitsAlternateColumn = projectedHeight(alternateKey, pairedImageHeight) <= availableHeight;
+      if (!imageFitsSameColumn && !imageFitsAlternateColumn) break;
     }
 
-    heights[targetKey] = projectedHeight(targetKey, itemHeight);
-    columns[targetKey].push({ entry, itemHeight });
-    if (entry?.kind === "image") {
-      imageCounts[targetKey] += 1;
-      lastImageColumn = targetKey;
+    placeEntry(targetKey, entry, itemHeight);
+    serviceIndex += 1;
+
+    if (pairedImageIndex >= 0) {
+      const imageEntry = images[pairedImageIndex];
+      const imageTargetKey = chooseColumn(pairedImageHeight, targetKey);
+      if (imageTargetKey) {
+        placeEntry(imageTargetKey, imageEntry, pairedImageHeight);
+        placedImageIndexes.add(pairedImageIndex);
+      }
     }
-    index += 1;
+  }
+
+  while (true) {
+    const placement = bestImagePlacement();
+    if (!placement) break;
+    placeEntry(placement.key, placement.entry, placement.itemHeight);
+    placedImageIndexes.add(placement.index);
   }
 
   return {
     mode: "columns",
     columns,
     height: Math.max(heights.left, heights.right, 0),
-    rest: items.slice(index)
+    rest: {
+      services: services.slice(serviceIndex),
+      images: images.filter((_, index) => !placedImageIndexes.has(index))
+    }
   };
 }
 
 function countTravelPlanLayoutItems(layout) {
   if (!layout || typeof layout !== "object") return 0;
   if (layout.mode === "stack") return safeArray(layout.entries).length;
+  if (layout.mode === "fluidTextImage") {
+    return safeArray(layout.textEntries).length + safeArray(layout.textImages).length + (layout.imageEntry ? 1 : 0);
+  }
   return safeArray(layout.columns?.left).length + safeArray(layout.columns?.right).length;
 }
 
-function layoutTravelPlanItemsForFullWidthPage(doc, items, fonts, lang, dayDate, contentWidth, availableHeight, deps) {
-  const entries = [];
-  let height = 0;
-  let index = 0;
-
-  while (index < items.length) {
-    const entry = items[index];
-    const itemHeight = entry?.kind === "image"
-      ? imageBoxHeight(doc, entry, contentWidth, fonts, deps)
-      : itemBoxHeight(doc, entry.item, fonts, lang, dayDate, contentWidth, deps);
-    const projectedHeight = height + (entries.length ? ITEM_VERTICAL_GAP : 0) + itemHeight;
-    if (projectedHeight > availableHeight) break;
-    height = projectedHeight;
-    entries.push({ entry, itemHeight });
-    index += 1;
+function layoutTravelPlanServiceForFullWidthPage(doc, items, fonts, lang, dayDate, contentWidth, availableHeight, deps) {
+  const service = safeArray(items?.services)[0] || null;
+  if (!service) {
+    return {
+      mode: "stack",
+      entries: [],
+      height: 0,
+      rest: items
+    };
   }
+  const entries = [];
+  const itemHeight = itemBoxHeight(doc, service.item, fonts, lang, dayDate, contentWidth, deps);
+  if (itemHeight <= availableHeight) entries.push({ entry: service, itemHeight });
 
   return {
     mode: "stack",
     entries,
-    height,
-    rest: items.slice(index)
+    height: entries.length ? itemHeight : 0,
+    rest: {
+      services: entries.length ? safeArray(items?.services).slice(1) : safeArray(items?.services),
+      images: safeArray(items?.images)
+    }
   };
 }
 
@@ -405,6 +561,28 @@ function drawTravelPlanItemColumns(doc, startY, columnWidth, pageLayout, fonts, 
   }
 }
 
+function drawTravelPlanFluidTextImagePair(doc, startY, columnWidth, pageLayout, fonts, lang, dayDate, deps) {
+  const leftX = deps.pageMargin;
+  const rightX = deps.pageMargin + columnWidth + ITEM_COLUMN_GAP;
+  const textX = pageLayout.imageColumn === "left" ? rightX : leftX;
+  const imageX = pageLayout.imageColumn === "left" ? leftX : rightX;
+  let textY = startY;
+
+  for (const entry of safeArray(pageLayout.textEntries)) {
+    drawTravelPlanItemCard(doc, textX, textY, columnWidth, entry.entry, fonts, lang, dayDate, deps);
+    textY += entry.itemHeight + ITEM_VERTICAL_GAP;
+  }
+
+  for (const entry of safeArray(pageLayout.textImages)) {
+    drawTravelPlanItemCard(doc, textX, textY, columnWidth, entry.entry, fonts, lang, dayDate, deps);
+    textY += entry.itemHeight + ITEM_VERTICAL_GAP;
+  }
+
+  if (pageLayout.imageEntry) {
+    drawTravelPlanItemCard(doc, imageX, startY, columnWidth, pageLayout.imageEntry.entry, fonts, lang, dayDate, deps);
+  }
+}
+
 function drawTravelPlanItemStack(doc, startY, contentWidth, pageLayout, fonts, lang, dayDate, deps) {
   let y = startY;
   for (const entry of safeArray(pageLayout.entries)) {
@@ -415,8 +593,12 @@ function drawTravelPlanItemStack(doc, startY, contentWidth, pageLayout, fonts, l
 
 function drawTravelPlanDayHeader(doc, y, day, fonts, lang, deps, { compact = false } = {}) {
   const dateLabel = formatTravelPlanDayDateLabel(day, lang, deps.formatPdfDateOnly, deps.pdfT);
-  const titleText = dayHeading(day, lang, deps.pdfT);
+  const separateDayLabel = deps.separateDayLabel === true;
+  const titleText = separateDayLabel
+    ? dayTitleText(day, lang, deps.pdfT)
+    : dayHeading(day, lang, deps.pdfT);
   const titleWidth = doc.page.width - deps.pageMargin * 2 - 150;
+  const titleY = separateDayLabel ? y + 15 : y;
   const titleHeight = measureTextHeight(doc, titleText, {
     width: titleWidth,
     fontSize: 15,
@@ -433,11 +615,25 @@ function drawTravelPlanDayHeader(doc, y, day, fonts, lang, deps, { compact = fal
     })
     : 0;
 
+  if (separateDayLabel) {
+    const dayLabel = dayLabelText(day, lang, deps.pdfT).toUpperCase();
+    const dayLabelOptions = deps.pdfTextOptions(lang, {
+      width: titleWidth,
+      characterSpacing: 0
+    });
+    doc
+      .font(deps.pdfFontName("bold", fonts))
+      .fontSize(9.6)
+      .fillColor(TRAVEL_PLAN_TRIP_LABEL_COLOR)
+      .text(dayLabel, deps.pageMargin, y, dayLabelOptions)
+      .text(dayLabel, deps.pageMargin + 0.28, y, dayLabelOptions);
+  }
+
   doc
     .font(deps.pdfFontName("bold", fonts))
     .fontSize(15)
     .fillColor(deps.colors.textStrong)
-    .text(titleText, deps.pageMargin, y, deps.pdfTextOptions(lang, {
+    .text(titleText, deps.pageMargin, titleY, deps.pdfTextOptions(lang, {
       width: titleWidth
     }));
   if (dateLabel) {
@@ -445,12 +641,13 @@ function drawTravelPlanDayHeader(doc, y, day, fonts, lang, deps, { compact = fal
       .font(deps.pdfFontName("regular", fonts))
       .fontSize(10)
       .fillColor(deps.colors.textMutedStrong)
-      .text(dateLabel, doc.page.width - deps.pageMargin - 140, y + 2, {
+      .text(dateLabel, doc.page.width - deps.pageMargin - 140, titleY + 2, {
         width: 140,
         align: "right"
       });
   }
-  let nextY = y + Math.max(titleHeight, dateHeight) + 4;
+  const titleBlockGap = separateDayLabel ? 8 : 4;
+  let nextY = titleY + Math.max(titleHeight, dateHeight) + titleBlockGap;
 
   const overnight = textOrNull(day?.overnight_location);
   if (overnight) {
@@ -496,7 +693,7 @@ function drawTravelPlanDayHeader(doc, y, day, fonts, lang, deps, { compact = fal
     }
   }
 
-  return nextY;
+  return nextY + (Number(deps.dayHeaderBottomGap) || 0);
 }
 
 function drawEmptyState(doc, y, fonts, lang, deps) {
@@ -540,7 +737,10 @@ export function drawTravelPlanDaysSection({
   sectionTitle,
   emptyStateMessage,
   sectionTitleFontSize = 18,
-  renderSectionTitle = true
+  renderSectionTitle = true,
+  sectionTitleUsesTripLabel = false,
+  separateDayLabel = false,
+  dayHeaderBottomGap = 4
 }) {
   const deps = {
     colors,
@@ -550,7 +750,9 @@ export function drawTravelPlanDaysSection({
     formatPdfDateOnly,
     pageMargin,
     sectionTitle,
-    emptyStateMessage
+    emptyStateMessage,
+    separateDayLabel,
+    dayHeaderBottomGap
   };
   const ensureSpace = (currentY, requiredHeight) => (
     currentY + requiredHeight <= bottomLimit()
@@ -565,9 +767,9 @@ export function drawTravelPlanDaysSection({
     if (renderSectionTitle) {
       y = ensureSpace(y, 40 + 88);
       doc
-        .font(pdfFontName("bold", fonts))
-        .fontSize(sectionTitleFontSize)
-        .fillColor(colors.textStrong)
+        .font(sectionTitleUsesTripLabel ? pdfFontName("tripLabel", fonts) : pdfFontName("bold", fonts))
+        .fontSize(sectionTitleUsesTripLabel ? 27 : sectionTitleFontSize)
+        .fillColor(sectionTitleUsesTripLabel ? TRAVEL_PLAN_TRIP_LABEL_COLOR : colors.textStrong)
         .text(sectionTitle, pageMargin, y, pdfTextOptions(lang, {
           width: doc.page.width - pageMargin * 2
         }));
@@ -582,26 +784,38 @@ export function drawTravelPlanDaysSection({
   if (renderSectionTitle) {
     y = ensureSpace(y, 40 + 90);
     doc
-      .font(pdfFontName("bold", fonts))
-      .fontSize(sectionTitleFontSize)
-      .fillColor(colors.textStrong)
+      .font(sectionTitleUsesTripLabel ? pdfFontName("tripLabel", fonts) : pdfFontName("bold", fonts))
+      .fontSize(sectionTitleUsesTripLabel ? 27 : sectionTitleFontSize)
+      .fillColor(sectionTitleUsesTripLabel ? TRAVEL_PLAN_TRIP_LABEL_COLOR : colors.textStrong)
       .text(sectionTitle, pageMargin, y, pdfTextOptions(lang, {
         width: doc.page.width - pageMargin * 2
       }));
-    y = doc.y + 10;
+    y = doc.y + (sectionTitleUsesTripLabel ? 0 : 10);
   }
 
   for (const day of days) {
-    y = ensureSpace(y, 90);
-    y = drawTravelPlanDayHeader(doc, y, day, fonts, lang, deps);
-
     const contentWidth = doc.page.width - pageMargin * 2;
     const columnWidth = (contentWidth - ITEM_COLUMN_GAP) / 2;
     let remainingItems = buildTravelPlanDayLayoutEntries(day, itemThumbnailMap);
+
+    y = ensureSpace(y + DAY_HEADER_TOP_GAP, 90);
+    y += DAY_HEADER_TOP_GAP;
+    y = drawTravelPlanDayHeader(doc, y, day, fonts, lang, deps);
+
     let continuationPageReady = false;
 
-    while (remainingItems.length) {
-      const availableHeight = Math.max(96, bottomLimit() - y);
+    while (remainingTravelPlanLayoutItemCount(remainingItems)) {
+      const availableHeight = bottomLimit() - y;
+      if (availableHeight < 96) {
+        if (continuationPageReady) {
+          const blockingEntry = firstTravelPlanLayoutItem(remainingItems);
+          const blockingItemTitle = textOrNull(blockingEntry?.item?.title) || pdfT(lang, "offer.item_fallback", "Planned service");
+          throw new Error(`Travel-plan service does not fit on a single page: ${blockingItemTitle}`);
+        }
+        y = addContinuationPage();
+        continuationPageReady = true;
+        continue;
+      }
       let pageLayout = layoutTravelPlanItemsForPage(
         doc,
         remainingItems,
@@ -613,8 +827,8 @@ export function drawTravelPlanDaysSection({
         deps
       );
 
-      if (countTravelPlanLayoutItems(pageLayout) === 1) {
-        pageLayout = layoutTravelPlanItemsForFullWidthPage(
+      if (!countTravelPlanLayoutItems(pageLayout) && safeArray(remainingItems?.services).length) {
+        pageLayout = layoutTravelPlanServiceForFullWidthPage(
           doc,
           remainingItems,
           fonts,
@@ -628,7 +842,8 @@ export function drawTravelPlanDaysSection({
 
       if (!countTravelPlanLayoutItems(pageLayout)) {
         if (continuationPageReady) {
-          const blockingItemTitle = textOrNull(remainingItems[0]?.title) || pdfT(lang, "offer.item_fallback", "Planned service");
+          const blockingEntry = firstTravelPlanLayoutItem(remainingItems);
+          const blockingItemTitle = textOrNull(blockingEntry?.item?.title) || pdfT(lang, "offer.item_fallback", "Planned service");
           throw new Error(`Travel-plan service does not fit on a single page: ${blockingItemTitle}`);
         }
         y = addContinuationPage();
@@ -638,17 +853,14 @@ export function drawTravelPlanDaysSection({
 
       if (pageLayout.mode === "stack") {
         drawTravelPlanItemStack(doc, y, contentWidth, pageLayout, fonts, lang, day?.date, deps);
+      } else if (pageLayout.mode === "fluidTextImage") {
+        drawTravelPlanFluidTextImagePair(doc, y, columnWidth, pageLayout, fonts, lang, day?.date, deps);
       } else {
         drawTravelPlanItemColumns(doc, y, columnWidth, pageLayout, fonts, lang, day?.date, deps);
       }
       y += pageLayout.height + 14;
       remainingItems = pageLayout.rest;
       continuationPageReady = false;
-
-      if (remainingItems.length) {
-        y = addContinuationPage();
-        continuationPageReady = true;
-      }
     }
 
     y += 6;

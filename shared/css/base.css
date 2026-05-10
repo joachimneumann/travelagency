@@ -50,8 +50,6 @@ img {
   .hero-destination-menu button,
   .tour-customize-map__marker,
   .tour-plan__customize-map-marker,
-  .tour-customize-option__handle,
-  .tour-customize-timeline__handle,
   .tour-customize-drag-ghost,
   .is-dragging,
   [class*="__icon"]

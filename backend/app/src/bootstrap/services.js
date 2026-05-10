@@ -228,6 +228,7 @@ export function createBackendServices({
     resolveAssignedAtpStaffProfile: atpStaffDirectory.resolveAssignedStaffProfile,
     resolveAtpStaffPhotoDiskPath: atpStaffDirectory.resolvePhotoDiskPath,
     logoPath: collections.logoPngPath,
+    marketingTourLogoPath: path.join(repoRoot, "assets", "img", "logo-asiatravelplan.large.transparent.png"),
     fallbackImagePath: collections.fallbackBookingImagePath,
     travelPlanAttachmentsDir: collections.bookingTravelPlanAttachmentsDir,
     companyProfile: runtime.companyProfile
@@ -235,9 +236,9 @@ export function createBackendServices({
 
   const writeMarketingTourOnePagerPdf = createMarketingTourOnePagerPdfWriter({
     resolveTourImageDiskPath: tourHelpers.resolveTourImageDiskPath,
-    logoPath: path.join(collections.repoRoot, "assets", "img", "logo-asiatravelplan.png"),
+    logoPath: path.join(repoRoot, "assets", "img", "logo-asiatravelplan.large.transparent.png"),
     fallbackImagePath: collections.fallbackBookingImagePath,
-    experienceHighlightsManifestPath: path.join(collections.repoRoot, "assets", "img", "experience-highlights", "manifest.json"),
+    experienceHighlightsManifestPath: path.join(repoRoot, "assets", "img", "experience-highlights", "manifest.json"),
     companyProfile: runtime.companyProfile
   });
 

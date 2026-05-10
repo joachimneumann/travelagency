@@ -3691,7 +3691,8 @@ test("tour card images are selected from travel-plan service images", async () =
   const onePagerShellPath = path.resolve(__dirname, "..", "..", "..", "scripts", "content", "create_all_one-pagers.sh");
   const onePagerScriptPath = path.resolve(__dirname, "..", "..", "..", "scripts", "content", "create_all_one_pagers.mjs");
   const onePagerPdfPath = path.resolve(__dirname, "..", "src", "lib", "marketing_tour_one_pager_pdf.js");
-  const [toursSupportSource, toursHandlerSource, tourHtmlSource, tourPageSource, toursListSource, mainToursSource, travelPlanHelpersSource, travelPlanEditorSource, travelPlanModelSource, homepageGeneratorSource, onePagerShellSource, onePagerScriptSource, onePagerPdfSource] = await Promise.all([
+  const marketingTourPdfBackgroundPath = path.resolve(__dirname, "..", "src", "lib", "marketing_tour_pdf_background.js");
+  const [toursSupportSource, toursHandlerSource, tourHtmlSource, tourPageSource, toursListSource, mainToursSource, travelPlanHelpersSource, travelPlanEditorSource, travelPlanModelSource, homepageGeneratorSource, onePagerShellSource, onePagerScriptSource, onePagerPdfSource, marketingTourPdfBackgroundSource] = await Promise.all([
     readFile(toursSupportPath, "utf8"),
     readFile(toursHandlerPath, "utf8"),
     readFile(tourHtmlPath, "utf8"),
@@ -3704,7 +3705,8 @@ test("tour card images are selected from travel-plan service images", async () =
     readFile(homepageGeneratorPath, "utf8"),
     readFile(onePagerShellPath, "utf8"),
     readFile(onePagerScriptPath, "utf8"),
-    readFile(onePagerPdfPath, "utf8")
+    readFile(onePagerPdfPath, "utf8"),
+    readFile(marketingTourPdfBackgroundPath, "utf8")
   ]);
 
   assert.match(
@@ -3903,9 +3905,14 @@ test("tour card images are selected from travel-plan service images", async () =
     "The one-pager PDF should position the trip label closer to the main title"
   );
   assert.match(
+    marketingTourPdfBackgroundSource,
+    /function smoothStep\(edge0, edge1, value\)[\s\S]*async function createMarketingTourPdfBackgroundImageBuffer\(imageBuffer\)[\s\S]*alphaMask[\s\S]*blend: "dest-in"[\s\S]*\.png\(\)/,
+    "The shared marketing-tour PDF background should feather the hero image into transparency"
+  );
+  assert.match(
     onePagerPdfSource,
-    /function smoothStep\(edge0, edge1, value\)[\s\S]*async function createFeatheredHeroImageBuffer\(imageBuffer\)[\s\S]*alphaMask[\s\S]*blend: "dest-in"[\s\S]*\.png\(\)[\s\S]*const heroBackgroundBuffer = await createFeatheredHeroImageBuffer\(frameImages\[0\]\?\.buffer\)[\s\S]*drawBackground\(doc, heroBackgroundBuffer\)/,
-    "The one-pager PDF should feather the hero image into transparency before drawing it"
+    /const heroBackgroundBuffer = await createMarketingTourPdfBackgroundImageBuffer\(frameImages\[0\]\?\.buffer\)[\s\S]*drawMarketingTourPdfBackground\(doc, heroBackgroundBuffer\)/,
+    "The one-pager PDF should use the shared feathered marketing-tour background"
   );
   assert.match(
     onePagerPdfSource,
@@ -4312,7 +4319,7 @@ test("shared travel-plan PDF headers reserve height for wrapped day titles befor
 
   assert.match(
     source,
-    /const titleHeight = measureTextHeight\(doc, titleText,[\s\S]*const dateHeight = dateLabel[\s\S]*let nextY = y \+ Math\.max\(titleHeight, dateHeight\) \+ 4;/,
+    /const titleHeight = measureTextHeight\(doc, titleText,[\s\S]*const dateHeight = dateLabel[\s\S]*const titleBlockGap = separateDayLabel \? 8 : 4;[\s\S]*let nextY = titleY \+ Math\.max\(titleHeight, dateHeight\) \+ titleBlockGap;/,
     "The shared travel-plan PDF day header should reserve space for wrapped titles before rendering overnight or accommodation rows"
   );
 });
@@ -4323,13 +4330,13 @@ test("shared travel-plan PDF item layout falls back to full-width cards when onl
 
   assert.match(
     source,
-    /function layoutTravelPlanItemsForFullWidthPage\(/,
-    "The shared travel-plan PDF renderer should define a full-width fallback packer"
+    /function layoutTravelPlanServiceForFullWidthPage\(/,
+    "The shared travel-plan PDF renderer should define a full-width service fallback packer"
   );
   assert.match(
     source,
-    /if \(countTravelPlanLayoutItems\(pageLayout\) === 1\) \{[\s\S]*layoutTravelPlanItemsForFullWidthPage\(/,
-    "The shared travel-plan PDF renderer should repack single-card pages as full-width layouts"
+    /if \(!countTravelPlanLayoutItems\(pageLayout\) && safeArray\(remainingItems\?\.services\)\.length\) \{[\s\S]*layoutTravelPlanServiceForFullWidthPage\(/,
+    "The shared travel-plan PDF renderer should repack an oversized first service as a full-width layout"
   );
   assert.match(
     source,
@@ -4344,13 +4351,13 @@ test("shared travel-plan PDF packer balances image cards across both columns whe
 
   assert.match(
     source,
-    /const imageCounts = \{ left: 0, right: 0 \};[\s\S]*let lastImageColumn = null;[\s\S]*function choosePreferredColumnForImage\(\) \{[\s\S]*imageCounts\.left !== imageCounts\.right[\s\S]*lastImageColumn === "left"[\s\S]*lastImageColumn === "right"/,
-    "The shared travel-plan PDF packer should track image-card balance and alternate image placement when both columns can accept the next image"
+    /function bestImagePlacement\(\)[\s\S]*candidateCount > IMAGE_PLACEMENT_LOOKAHEAD[\s\S]*layoutHeight \+ balance \* 0\.35 \+ index \* 2[\s\S]*return best;/,
+    "The shared travel-plan PDF packer should score image-card placements by fit, column balance, and nearby image order"
   );
   assert.match(
     source,
-    /const preferredKey = entry\?\.kind === "image"[\s\S]*choosePreferredColumnForImage\(\)[\s\S]*if \(entry\?\.kind === "image"\) \{[\s\S]*imageCounts\[targetKey\] \+= 1;[\s\S]*lastImageColumn = targetKey;/,
-    "The shared travel-plan PDF packer should apply the balancing preference only to image cards and remember where each image landed"
+    /const pairedImageIndex = findPairedImageIndex\(images, entry, placedImageIndexes\)[\s\S]*const imageTargetKey = chooseColumn\(pairedImageHeight, targetKey\)[\s\S]*const placement = bestImagePlacement\(\);/,
+    "The shared travel-plan PDF packer should keep paired service images close before using remaining images as balanced fillers"
   );
 });
 
@@ -4389,7 +4396,7 @@ test("shared travel-plan PDF item packing defers oversized cards instead of draw
 test("shared travel-plan PDF uses text-only service cards with interleaved standalone image cards", async () => {
   const travelPlanSectionPath = path.resolve(__dirname, "..", "..", "..", "backend", "app", "src", "lib", "pdf_travel_plan_section.js");
   const source = await readFile(travelPlanSectionPath, "utf8");
-  const itemBoxHeightSource = source.match(/function itemBoxHeight\([\s\S]*?return Math\.max\(88, ITEM_CARD_PADDING \+ textHeight \+ ITEM_CARD_PADDING\);\n\}/)?.[0] || "";
+  const itemBoxHeightSource = source.match(/function itemBoxHeight\([\s\S]*?return Math\.max\(1, textHeight\);\n\}/)?.[0] || "";
 
   assert.ok(
     itemBoxHeightSource,
@@ -5556,28 +5563,60 @@ test("homepage tour details resolve travel-plan day and service copy from the ac
 
 test("public tour configurator exposes a current-draft Tour PDF action", async () => {
   const tourCustomizerPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "tour_customize.js");
+  const mainToursPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "main_tours.js");
   const routesPath = path.resolve(__dirname, "..", "src", "http", "routes.js");
   const tourHandlersPath = path.resolve(__dirname, "..", "src", "http", "handlers", "tours.js");
-  const [tourCustomizerSource, routesSource, tourHandlersSource] = await Promise.all([
+  const [tourCustomizerSource, mainToursSource, routesSource, tourHandlersSource] = await Promise.all([
     readFile(tourCustomizerPath, "utf8"),
+    readFile(mainToursPath, "utf8"),
     readFile(routesPath, "utf8"),
     readFile(tourHandlersPath, "utf8")
   ]);
 
   assert.match(
+    mainToursSource,
+    /function renderTourPdfActions\(trip\)[\s\S]*Overview \(one-pager\)[\s\S]*Day-by-Day Travel Plan[\s\S]*A PDF that gives you an overview of this tour[\s\S]*A PDF that shows you all activies of this tour[\s\S]*data-tour-overview-pdf[\s\S]*data-tour-travel-plan-pdf/,
+    "Expanded public tour details should expose separate overview and day-by-day PDF buttons with descriptions below highlights"
+  );
+  assert.doesNotMatch(
     tourCustomizerSource,
-    /data-customize-pdf[\s\S]*Show Tour PDF[\s\S]*openDraftPdf/,
-    "The public configurator footer should expose a Show Tour PDF button"
+    /TOUR_CUSTOMIZE_MAX_DAYS|tour\.customize\.limit|Maximum \{count\} days|data-customize-cancel|data-customize-overview-pdf|data-customize-travel-plan-pdf|data-customize-finish/,
+    "The public configurator should not cap customized itineraries at 20 days or render bottom action buttons"
+  );
+  assert.doesNotMatch(
+    tourHandlersSource,
+    /CUSTOM_ONE_PAGER_PREVIEW_MAX_DAYS|Select between 1 and 20 days/,
+    "Customized public PDF previews should accept any positive number of selected days"
+  );
+  assert.match(
+    mainToursSource,
+    /data-tour-overview-pdf[\s\S]*data-tour-travel-plan-pdf[\s\S]*openCustomizedOverviewPdf[\s\S]*openCustomizedTravelPlanPdf/,
+    "The overview and day-by-day buttons should each open their matching current itinerary PDF"
   );
   assert.match(
     tourCustomizerSource,
-    /function openDraftPdf\(\)[\s\S]*selectedDaysFromTimeline\(draft\?\.timelineDays\)[\s\S]*createCustomizedTravelPlanPdfPreview\(normalizedTourId, selectedDays\)/,
-    "Show Tour PDF should render the current configurator draft without requiring Use this itinerary first"
+    /function openCustomizedPdfWith\(tourId, createPreview\)[\s\S]*selectedDaysForPdf\(normalizedTourId\)[\s\S]*customizedTitleForTrip\(trip\)[\s\S]*createPreview\(normalizedTourId, selectedDays, proposedTitle\)/,
+    "Tour detail PDF actions should render the current itinerary and proposed customized title"
+  );
+  assert.match(
+    tourCustomizerSource,
+    /\/public\/v1\/tours\/\$\{encodeURIComponent\(normalizedTourId\)\}\/one-pager-preview/,
+    "Overview PDF should open the public customized one-page overview preview endpoint"
+  );
+  assert.match(
+    tourHandlersSource,
+    /function collectRandomOverviewFrameImages\(tour\)[\s\S]*tour\?\.travel_plan\?\.days[\s\S]*day\?\.services \|\| day\?\.items[\s\S]*service\?\.image[\s\S]*service\?\.images[\s\S]*randomUUID\(\)[\s\S]*\.slice\(0, 4\)/,
+    "Customized Overview PDFs should randomly select up to four visible service images from the selected itinerary days"
+  );
+  assert.match(
+    tourHandlersSource,
+    /overviewFrameImages: collectRandomOverviewFrameImages\(previewCheck\.tour\)[\s\S]*writeMarketingTourOnePagerPdf\(tourWithOverviewFrameImages\(result\.tour, entry\.overviewFrameImages\)/,
+    "Customized Overview PDF tokens should keep the random service-image selection stable for the rendered PDF"
   );
   assert.match(
     tourCustomizerSource,
     /\/public\/v1\/tours\/\$\{encodeURIComponent\(normalizedTourId\)\}\/travel-plan-preview/,
-    "Show Tour PDF should open a public customized full travel-plan PDF preview endpoint"
+    "Day-by-day PDF should open the public customized full travel-plan PDF preview endpoint"
   );
   assert.match(
     routesSource,
@@ -5586,8 +5625,8 @@ test("public tour configurator exposes a current-draft Tour PDF action", async (
   );
   assert.match(
     tourHandlersSource,
-    /handlePostPublicTourTravelPlanPreview[\s\S]*customizedPreviewTourFromTokenEntry[\s\S]*\/public\/v1\/tour-preview\/\$\{encodeURIComponent\(token\)\}\/travel-plan\.pdf[\s\S]*handleGetPublicTourTravelPlanPreviewPdf[\s\S]*writeTravelPlanPdf\([\s\S]*result\.tour\.travel_plan,[\s\S]*includeGuideSection: false,[\s\S]*includeEndingSection: false/,
-    "Public customized Tour PDF should reuse selected-day assembly and render the full travel-plan PDF without guide or closing sections"
+    /handlePostPublicTourTravelPlanPreview[\s\S]*customizedPreviewTourFromTokenEntry[\s\S]*\/public\/v1\/tour-preview\/\$\{encodeURIComponent\(token\)\}\/travel-plan\.pdf[\s\S]*handleGetPublicTourTravelPlanPreviewPdf[\s\S]*writeTravelPlanPdf\([\s\S]*result\.tour\.travel_plan,[\s\S]*includeMarketingTourBackground: true,[\s\S]*includeGuideSection: false,[\s\S]*includeEndingSection: false/,
+    "Public customized Tour PDF should reuse selected-day assembly and render the full travel-plan PDF with the overview background and without guide or closing sections"
   );
 });
 
@@ -6291,10 +6330,17 @@ test("marketing tour editor exposes a full travel-plan PDF without guide or clos
   assert.match(tourAdapterSource, /\/api\/v1\/tours\/\$\{encodeURIComponent\(tourId\)\}\/travel-plan\.pdf/, "Marketing tour PDF action should open the private tour travel-plan endpoint");
   assert.match(tourAdapterSource, /saveCurrentTravelPlanBeforePdf[\s\S]*buildTourTravelPlanSaveRequest[\s\S]*openTourTravelPlanPdf[\s\S]*saveCurrentTravelPlanBeforePdf\(instance\)/, "Marketing tour PDF action should save the current draft before opening the PDF");
   assert.match(routesSource, /\/api\\\/v1\\\/tours\\\/\(\[\^\/\]\+\)\\\/travel-plan\\\.pdf[\s\S]*handleGetTourTravelPlanPdf/, "Routes should expose a private marketing tour travel-plan PDF endpoint");
-  assert.match(tourHandlersSource, /handleGetTourTravelPlanPdf[\s\S]*normalizeMarketingTourTravelPlan\(localizedTour\.travel_plan,[\s\S]*flatMode: "localized"[\s\S]*writeTravelPlanPdf\(bookingLikeTour, travelPlan,[\s\S]*includeGuideSection: false,[\s\S]*includeEndingSection: false/, "Marketing tour PDF handler should reuse the shared travel-plan PDF writer and disable guide and closing sections");
+  assert.match(tourHandlersSource, /handleGetTourTravelPlanPdf[\s\S]*normalizeMarketingTourTravelPlan\(localizedTour\.travel_plan,[\s\S]*flatMode: "localized"[\s\S]*writeTravelPlanPdf\(bookingLikeTour, travelPlan,[\s\S]*includeMarketingTourBackground: true,[\s\S]*includeGuideSection: false,[\s\S]*includeEndingSection: false/, "Marketing tour PDF handler should reuse the shared travel-plan PDF writer, use the overview background, and disable guide and closing sections");
   assert.match(travelPlanPdfSource, /includeGuideSection = options\?\.includeGuideSection !== false[\s\S]*includeEndingSection = options\?\.includeEndingSection !== false[\s\S]*if \(includeGuideSection\) \{[\s\S]*drawGuideSection[\s\S]*if \(includeEndingSection\) \{[\s\S]*drawClosing/, "Shared travel-plan PDF writer should allow callers to omit guide and closing sections");
+  assert.match(travelPlanPdfSource, /drawMarketingTourOnePagerLogo,[\s\S]*drawMarketingTourOnePagerTripTitle,[\s\S]*marketingTourLogoPath = ""[\s\S]*drawPageBackground\(\{ includeHeroImage: true \}\)[\s\S]*drawMarketingTourOnePagerLogo\(doc, marketingTourLogoPath\)/, "Marketing tour travel-plan PDFs should reuse the one-page transparent brand logo at the top left of the first page");
+  assert.match(travelPlanPdfSource, /resolveMarketingTourOnePagerCoverFonts[\s\S]*marketingCoverFonts[\s\S]*includeMarketingTourBackground[\s\S]*drawMarketingTourOnePagerTripTitle\(doc, heroTitle, marketingCoverFonts, lang\)[\s\S]*drawTravelPlanHero\(/, "Marketing tour travel-plan PDFs should reuse the one-page Trip to and title treatment instead of the booking-style header card");
+  assert.match(travelPlanPdfSource, /function marketingTravelPlanSectionTitle\(lang\)[\s\S]*"Your Travel Plan"[\s\S]*sectionTitle: includeMarketingTourBackground \? marketingTravelPlanSectionTitle\(lang\) : travelPlanSectionTitle\(lang\)[\s\S]*renderSectionTitle: includeMarketingTourBackground/, "Marketing tour travel-plan PDFs should start the day-by-day content with a Your Travel Plan title after the reused one-page cover treatment");
+  assert.match(travelPlanPdfSource, /const addContinuationPage = \(\) => \{[\s\S]*doc\.addPage\(\);[\s\S]*drawPageBackground\(\);[\s\S]*return includeMarketingTourBackground[\s\S]*\? PAGE_MARGIN[\s\S]*: drawRunningHeader/, "Marketing tour travel-plan PDFs should omit the recurring continuation-page title and divider header");
+  assert.match(travelPlanPdfSource, /marketingTourBackgroundEntry = includeMarketingTourBackground[\s\S]*itemThumbnailMap\.delete\(marketingTourBackgroundEntry\.service\.id\)/, "Marketing tour travel-plan PDFs should not repeat the hero image as a small service thumbnail");
+  assert.match(travelPlanPdfSource, /drawPageBackground = \(\{ includeHeroImage = false \} = \{\}\)[\s\S]*drawMarketingTourPdfBackground\(doc, marketingTourBackgroundImage, \{ includeHeroImage \}\)[\s\S]*drawPageBackground\(\{ includeHeroImage: true \}\)/, "Marketing tour travel-plan PDFs should only draw the hero-image background on the first page");
   assert.match(travelPlanSectionSource, /resolveTravelPlanServiceThumbnailPath\(item, bookingImagesDir, options = \{\}\)[\s\S]*options\.resolveServiceImageDiskPath\(storagePath, item\)[\s\S]*buildTravelPlanItemThumbnailMap\(plan, bookingImagesDir, options = \{\}\)/, "Shared travel-plan PDF thumbnails should support non-booking image resolvers");
   assert.match(servicesSource, /resolveTravelPlanServiceImageDiskPath:[\s\S]*public\/v1\/tour-images\/[\s\S]*resolveTourImageDiskPath/, "Bootstrap should resolve marketing tour service images for the shared travel-plan PDF writer");
+  assert.match(servicesSource, /createTravelPlanPdfWriter\(\{[\s\S]*marketingTourLogoPath: path\.join\(repoRoot, "assets", "img", "logo-asiatravelplan\.large\.transparent\.png"\)[\s\S]*createMarketingTourOnePagerPdfWriter\(\{[\s\S]*logoPath: path\.join\(repoRoot, "assets", "img", "logo-asiatravelplan\.large\.transparent\.png"\)/, "Bootstrap should pass the transparent logo to marketing tour PDFs");
 });
 
 test("booking travel plan copies days and services from marketing tours only", async () => {

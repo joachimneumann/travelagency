@@ -18,6 +18,7 @@ import {
   destinationScopeTourDestinations,
   filterDestinationScopeByTourDestinations,
   mergeDestinationScopeWithTravelPlanLocations,
+  normalizeDestinationScopeCatalog,
   validateTravelPlanDayLocationIdsAgainstCatalog
 } from "../../domain/destination_scope.js";
 import {
@@ -97,7 +98,9 @@ export function createTourHandlers(deps) {
   const VIDEO_UPLOAD_BODY_MAX_BYTES = 150 * 1024 * 1024;
   const TOUR_STALE_UPDATE_MESSAGE = "This tour was updated by someone else. Reload before saving.";
   const CUSTOM_ONE_PAGER_PREVIEW_TTL_MS = 20 * 60 * 1000;
-  const CUSTOM_ONE_PAGER_PREVIEW_MAX_DAYS = 20;
+  const CUSTOM_PREVIEW_TITLE_MAX_LENGTH = 120;
+  const CUSTOM_PREVIEW_TITLE_PROPOSAL_LIMIT = 1;
+  const CUSTOM_PREVIEW_TITLE_LOCATION_LIMIT = 3;
   const translationsSnapshotDir = normalizeText(TRANSLATIONS_SNAPSHOT_DIR) || path.join(repoRoot, "content", "translations");
   const customOnePagerPreviewTokens = new Map();
   let publicHomepageAssetGenerationQueue = Promise.resolve();
@@ -1072,12 +1075,138 @@ export function createTourHandlers(deps) {
   function selectedPreviewDayKeys(payload, baseTourId) {
     const selectedDays = Array.isArray(payload?.selected_days) ? payload.selected_days : [];
     return selectedDays
-      .slice(0, CUSTOM_ONE_PAGER_PREVIEW_MAX_DAYS + 1)
       .map((item) => ({
         source_tour_id: normalizeText(item?.source_tour_id) || baseTourId,
         source_day_id: normalizeText(item?.source_day_id)
       }))
       .filter((item) => item.source_tour_id && item.source_day_id);
+  }
+
+  function compactPreviewText(value) {
+    return normalizeText(value).replace(/\s+/g, " ");
+  }
+
+  function normalizeCustomPreviewTitle(value) {
+    return compactPreviewText(value)
+      .replace(/[\u0000-\u001f\u007f]/g, "")
+      .slice(0, CUSTOM_PREVIEW_TITLE_MAX_LENGTH)
+      .trim();
+  }
+
+  function uniqueOrderedPreviewTexts(values) {
+    const seen = new Set();
+    const result = [];
+    for (const value of Array.isArray(values) ? values : []) {
+      const text = compactPreviewText(value);
+      const key = text.toLowerCase();
+      if (!text || !key || seen.has(key)) continue;
+      seen.add(key);
+      result.push(text);
+    }
+    return result;
+  }
+
+  function humanPreviewList(values) {
+    const items = uniqueOrderedPreviewTexts(values);
+    if (!items.length) return "";
+    if (items.length === 1) return items[0];
+    if (items.length === 2) return `${items[0]} and ${items[1]}`;
+    return `${items.slice(0, -1).join(", ")} and ${items[items.length - 1]}`;
+  }
+
+  function destinationPlaceLabelById(destinationCatalogPayload) {
+    try {
+      const catalog = normalizeDestinationScopeCatalog(destinationCatalogPayload);
+      return new Map(catalog.places.map((place) => [normalizeText(place?.id), normalizeText(place?.name || place?.label)]));
+    } catch {
+      return new Map();
+    }
+  }
+
+  function customizedDayLocationLabels(days, destinationCatalogPayload) {
+    const placeLabelById = destinationPlaceLabelById(destinationCatalogPayload);
+    const labels = [];
+    for (const day of Array.isArray(days) ? days : []) {
+      for (const locationId of [day?.primary_location_id, day?.secondary_location_id].map(normalizeText).filter(Boolean)) {
+        labels.push(placeLabelById.get(locationId));
+      }
+      const routePoint = day?.route_point || day?.routePoint;
+      labels.push(routePoint?.label, day?.overnight_location);
+    }
+    return uniqueOrderedPreviewTexts(labels);
+  }
+
+  function customizedTourTitleProposals(days, destinationCatalogPayload) {
+    const dayCount = Array.isArray(days) ? days.length : 0;
+    if (!dayCount) return [];
+    const routeLabel = humanPreviewList(
+      customizedDayLocationLabels(days, destinationCatalogPayload).slice(0, CUSTOM_PREVIEW_TITLE_LOCATION_LIMIT)
+    );
+    const proposals = [
+      routeLabel || "Custom Tour"
+    ];
+    return uniqueOrderedPreviewTexts(proposals)
+      .map(normalizeCustomPreviewTitle)
+      .filter(Boolean)
+      .slice(0, CUSTOM_PREVIEW_TITLE_PROPOSAL_LIMIT);
+  }
+
+  function selectedDaysMatchBaseTourDaySet(selectedDays, baseTourId, baseTravelPlan) {
+    const baseKeys = (Array.isArray(baseTravelPlan?.days) ? baseTravelPlan.days : [])
+      .map((day) => `${baseTourId}:${normalizeText(day?.id)}`)
+      .filter((key) => !key.endsWith(":"))
+      .sort();
+    const selectedKeys = (Array.isArray(selectedDays) ? selectedDays : [])
+      .map((item) => `${normalizeText(item?.source_tour_id)}:${normalizeText(item?.source_day_id)}`)
+      .filter((key) => !key.endsWith(":"))
+      .sort();
+    return baseKeys.length > 0
+      && baseKeys.length === selectedKeys.length
+      && baseKeys.every((key, index) => key === selectedKeys[index]);
+  }
+
+  function collectRandomOverviewFrameImages(tour) {
+    const entries = [];
+    const seenStoragePaths = new Set();
+    (Array.isArray(tour?.travel_plan?.days) ? tour.travel_plan.days : []).forEach((day, dayIndex) => {
+      (Array.isArray(day?.services || day?.items) ? (day.services || day.items) : []).forEach((service, serviceIndex) => {
+        const images = [
+          service?.image && typeof service.image === "object" && !Array.isArray(service.image) ? service.image : null,
+          ...(Array.isArray(service?.images) ? service.images : [])
+        ].filter((image) => image && typeof image === "object" && !Array.isArray(image));
+        images.forEach((image, imageIndex) => {
+          const storagePath = normalizeText(image?.storage_path);
+          if (!storagePath || image?.is_customer_visible === false || seenStoragePaths.has(storagePath)) return;
+          seenStoragePaths.add(storagePath);
+          entries.push({
+            id: normalizeText(image?.id) || `overview-service-image-${dayIndex + 1}-${serviceIndex + 1}-${imageIndex + 1}`,
+            storage_path: storagePath,
+            label: normalizeText(service?.title) || normalizeText(service?.location) || normalizeText(day?.overnight_location) || normalizeText(day?.title) || "Tour"
+          });
+        });
+      });
+    });
+    return entries
+      .map((entry) => ({ entry, sortKey: randomUUID() }))
+      .sort((left, right) => left.sortKey.localeCompare(right.sortKey))
+      .slice(0, 4)
+      .map(({ entry }, index) => ({
+        ...entry,
+        priority: index,
+        order: index
+      }));
+  }
+
+  function tourWithOverviewFrameImages(tour, overviewFrameImages) {
+    const frameImages = Array.isArray(overviewFrameImages) ? overviewFrameImages : [];
+    if (!frameImages.length) return tour;
+    return {
+      ...tour,
+      travel_plan: {
+        ...(tour?.travel_plan || {}),
+        __one_pager_random_images: frameImages
+      }
+    };
   }
 
   function publicTourById(tours, tourId, destinationCatalogPayload = {}) {
@@ -1138,8 +1267,8 @@ export function createTourHandlers(deps) {
       });
     }
 
-    if (!nextDays.length || nextDays.length > CUSTOM_ONE_PAGER_PREVIEW_MAX_DAYS) {
-      return { ok: false, status: 400, error: "Select between 1 and 20 days" };
+    if (!nextDays.length) {
+      return { ok: false, status: 400, error: "Select at least 1 day" };
     }
 
     const localizedBaseTour = await localizeMarketingTourForRead(baseTour, lang);
@@ -1147,11 +1276,27 @@ export function createTourHandlers(deps) {
     const baseTravelPlan = publicTourLocalizedTravelPlan(localizedBaseTour, lang);
     const destinationScope = mergeDestinationScopeWithTravelPlanLocations([], { days: nextDays }, destinationCatalogPayload);
     const destinations = Array.from(new Set(destinationScope.map((entry) => normalizeText(entry?.destination)).filter(Boolean)));
+    const requestedTitle = normalizeCustomPreviewTitle(entry?.title);
+    const hasCustomizedSelection = Boolean(requestedTitle)
+      || !selectedDaysMatchBaseTourDaySet(selectedDays, baseTourId, baseTravelPlan);
+    const generatedTitleProposals = hasCustomizedSelection
+      ? customizedTourTitleProposals(nextDays, destinationCatalogPayload)
+      : [];
+    const customizedTitle = requestedTitle || generatedTitleProposals[0] || "";
+    const customizedTitleCandidates = uniqueOrderedPreviewTexts([
+      customizedTitle,
+      ...generatedTitleProposals
+    ]).slice(0, CUSTOM_PREVIEW_TITLE_PROPOSAL_LIMIT);
 
     return {
       ok: true,
       tour: {
         ...readModel,
+        ...(customizedTitle ? {
+          title: customizedTitle,
+          title_i18n: {},
+          customized_title_candidates: customizedTitleCandidates
+        } : {}),
         travel_plan: {
           ...baseTravelPlan,
           destination_scope: destinationScope,
@@ -1200,12 +1345,13 @@ export function createTourHandlers(deps) {
     const payload = await readBodyJson(req, { maxBytes: 64 * 1024 });
     const lang = normalizeTourLang(payload?.lang || requestLang(req.url));
     const selectedDays = selectedPreviewDayKeys(payload, baseTourId);
-    if (!baseTourId || !selectedDays.length || selectedDays.length > CUSTOM_ONE_PAGER_PREVIEW_MAX_DAYS) {
-      sendJson(res, 400, { error: "Select between 1 and 20 days" });
+    const title = normalizeCustomPreviewTitle(payload?.title);
+    if (!baseTourId || !selectedDays.length) {
+      sendJson(res, 400, { error: "Select at least 1 day" });
       return;
     }
 
-    const previewCheck = await customizedPreviewTourFromTokenEntry({ baseTourId, lang, selectedDays });
+    const previewCheck = await customizedPreviewTourFromTokenEntry({ baseTourId, lang, selectedDays, title });
     if (!previewCheck.ok) {
       sendJson(res, previewCheck.status || 400, { error: previewCheck.error || "Invalid customized tour preview" });
       return;
@@ -1217,6 +1363,8 @@ export function createTourHandlers(deps) {
       baseTourId,
       lang,
       selectedDays,
+      title,
+      overviewFrameImages: collectRandomOverviewFrameImages(previewCheck.tour),
       expiresAtMs
     });
     sendJson(res, 200, {
@@ -1236,12 +1384,13 @@ export function createTourHandlers(deps) {
     const payload = await readBodyJson(req, { maxBytes: 64 * 1024 });
     const lang = normalizeTourLang(payload?.lang || requestLang(req.url));
     const selectedDays = selectedPreviewDayKeys(payload, baseTourId);
-    if (!baseTourId || !selectedDays.length || selectedDays.length > CUSTOM_ONE_PAGER_PREVIEW_MAX_DAYS) {
-      sendJson(res, 400, { error: "Select between 1 and 20 days" });
+    const title = normalizeCustomPreviewTitle(payload?.title);
+    if (!baseTourId || !selectedDays.length) {
+      sendJson(res, 400, { error: "Select at least 1 day" });
       return;
     }
 
-    const previewCheck = await customizedPreviewTourFromTokenEntry({ baseTourId, lang, selectedDays });
+    const previewCheck = await customizedPreviewTourFromTokenEntry({ baseTourId, lang, selectedDays, title });
     if (!previewCheck.ok) {
       sendJson(res, previewCheck.status || 400, { error: previewCheck.error || "Invalid customized tour preview" });
       return;
@@ -1253,6 +1402,7 @@ export function createTourHandlers(deps) {
       baseTourId,
       lang,
       selectedDays,
+      title,
       expiresAtMs
     });
     sendJson(res, 200, {
@@ -1285,7 +1435,7 @@ export function createTourHandlers(deps) {
     let renderedPath = previewPath;
     try {
       await mkdir(path.dirname(previewPath), { recursive: true });
-      const pdfResult = await writeMarketingTourOnePagerPdf(result.tour, {
+      const pdfResult = await writeMarketingTourOnePagerPdf(tourWithOverviewFrameImages(result.tour, entry.overviewFrameImages), {
         lang: normalizeTourLang(entry.lang),
         outputPath: previewPath
       });
@@ -1333,6 +1483,7 @@ export function createTourHandlers(deps) {
         {
           lang,
           outputPath: previewPath,
+          includeMarketingTourBackground: true,
           includeGuideSection: false,
           includeEndingSection: false
         }
@@ -1587,6 +1738,7 @@ export function createTourHandlers(deps) {
       const result = await writeTravelPlanPdf(bookingLikeTour, travelPlan, {
         lang,
         outputPath: previewPath,
+        includeMarketingTourBackground: true,
         includeGuideSection: false,
         includeEndingSection: false
       });

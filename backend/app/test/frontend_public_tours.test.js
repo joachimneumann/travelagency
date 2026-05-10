@@ -279,20 +279,29 @@ test("public tour travel-plan content and detail chrome follow the frontend lang
   assert.match(els.tourGrid.innerHTML, /Delicious Cuisine/);
   assert.match(els.tourGrid.innerHTML, /\/assets\/img\/experience-highlights\/01\.png/);
   assert.match(els.tourGrid.innerHTML, /tour-plan-pdf/);
-  assert.doesNotMatch(els.tourGrid.innerHTML, /Tourübersicht/);
-  assert.doesNotMatch(els.tourGrid.innerHTML, /Tour Overview/);
+  assert.match(els.tourGrid.innerHTML, /data-tour-overview-pdf/);
+  assert.match(els.tourGrid.innerHTML, /data-tour-travel-plan-pdf/);
+  assert.match(els.tourGrid.innerHTML, />Overview \(one-pager\)<\/button>/);
+  assert.match(els.tourGrid.innerHTML, />Day-by-Day Travel Plan<\/button>/);
+  assert.match(els.tourGrid.innerHTML, /A PDF that gives you an overview of this tour/);
+  assert.match(els.tourGrid.innerHTML, /A PDF that shows you all activies of this tour/);
   assert.doesNotMatch(els.tourGrid.innerHTML, /tour-plan-pdf__badge/);
-  assert.match(els.tourGrid.innerHTML, /\/public\/v1\/tours\/tour_localized_plan\/one-pager\.pdf\?lang=de/);
+  assert.doesNotMatch(els.tourGrid.innerHTML, /\/public\/v1\/tours\/tour_localized_plan\/one-pager\.pdf\?lang=de/);
   assert.doesNotMatch(els.tourGrid.innerHTML, /\/content\/one-pagers\/pdfs\/tour_localized_plan\/de\.pdf/);
   assert.doesNotMatch(els.tourGrid.innerHTML, /\/api\/v1\/tours\/tour_localized_plan\/one-pager\.pdf/);
   assert.match(els.tourGrid.innerHTML, /tour-plan-summary/);
   assert.match(els.tourGrid.innerHTML, /tour-plan-summary-day/);
   assert.match(els.tourGrid.innerHTML, /Ihre Reiseroute/);
+  assert.match(els.tourGrid.innerHTML, /tour-plan-actions/);
+  assert.match(els.tourGrid.innerHTML, /data-tour-plan-itinerary-toggle/);
+  assert.match(els.tourGrid.innerHTML, /tour-plan-itinerary"[^>]+hidden/);
+  assert.match(els.tourGrid.innerHTML, /data-tour-plan-itinerary-toggle[\s\S]*Ihre Reiseroute[\s\S]*<\/button>/);
+  assert.match(els.tourGrid.innerHTML, />Angebot anfragen<\/button>/);
   assert.match(els.tourGrid.innerHTML, /data-tour-plan-summary-toggle/);
   assert.match(els.tourGrid.innerHTML, /data-tour-plan-summary-details hidden/);
   assert.doesNotMatch(els.tourGrid.innerHTML, /data-tour-plan-full-itinerary/);
-  assert.match(els.tourGrid.innerHTML, /tour-plan__footer-cta/);
-  assert.match(els.tourGrid.innerHTML, /tour-plan__footer-plan-trip/);
+  assert.doesNotMatch(els.tourGrid.innerHTML, /tour-plan__footer-cta/);
+  assert.doesNotMatch(els.tourGrid.innerHTML, /tour-plan__footer-plan-trip/);
   assert.match(els.tourGrid.innerHTML, /tour-plan-service-card--has-details/);
   assert.match(els.tourGrid.innerHTML, /tour-plan-service-card__details-indicator/);
   assert.match(els.tourGrid.innerHTML, /tour-plan-service-card__details-text/);
@@ -408,7 +417,7 @@ test("collapsed public tour cards use swipe-only mobile galleries for multi-imag
   assert.match(els.tourGrid.innerHTML, /tour_multi_image[\s\S]*tour-card__media-dots/);
 });
 
-test("secret tour customization stays disabled on mobile viewports", async () => {
+test("secret tour customization stays disabled when inactive and on mobile viewports", async () => {
   global.HTMLElement = FakeElement;
   global.HTMLButtonElement = FakeElement;
 
@@ -517,14 +526,135 @@ test("secret tour customization stays disabled on mobile viewports", async () =>
   mobile.controller.renderVisibleTrips();
 
   assert.doesNotMatch(mobile.els.tourGrid.innerHTML, /data-tour-customize/);
-  assert.doesNotMatch(mobile.els.tourGrid.innerHTML, /Customize this tour/);
+  assert.doesNotMatch(mobile.els.tourGrid.innerHTML, /Customize this Trip/);
 
   global.window.matchMedia = () => ({ matches: false });
+  const inactiveDesktop = createController({
+    ...baseState(),
+    customizeFeatureEnabled: false
+  });
+  inactiveDesktop.controller.renderVisibleTrips();
+
+  assert.match(inactiveDesktop.els.tourGrid.innerHTML, /tour-plan-pdf/);
+  assert.match(inactiveDesktop.els.tourGrid.innerHTML, /data-tour-overview-pdf/);
+  assert.match(inactiveDesktop.els.tourGrid.innerHTML, /data-tour-travel-plan-pdf/);
+  assert.match(inactiveDesktop.els.tourGrid.innerHTML, />Overview \(one-pager\)<\/button>/);
+  assert.match(inactiveDesktop.els.tourGrid.innerHTML, />Day-by-Day Travel Plan<\/button>/);
+  assert.match(inactiveDesktop.els.tourGrid.innerHTML, /tour-plan-actions/);
+  assert.match(inactiveDesktop.els.tourGrid.innerHTML, /data-tour-plan-itinerary-toggle/);
+  assert.match(inactiveDesktop.els.tourGrid.innerHTML, />\s*Itinerary\s*<\/button>/);
+  assert.match(inactiveDesktop.els.tourGrid.innerHTML, />Get a Quote<\/button>/);
+  assert.doesNotMatch(inactiveDesktop.els.tourGrid.innerHTML, /data-tour-customize/);
+  assert.doesNotMatch(inactiveDesktop.els.tourGrid.innerHTML, /Customize this Trip/);
+
   const desktop = createController(baseState());
   desktop.controller.renderVisibleTrips();
 
   assert.match(desktop.els.tourGrid.innerHTML, /data-tour-customize/);
-  assert.match(desktop.els.tourGrid.innerHTML, /Customize this tour/);
+  assert.match(desktop.els.tourGrid.innerHTML, /Customize this Trip/);
+});
+
+test("tour customizer names the original itinerary with the tour title before customization", async () => {
+  const previousDocument = global.document;
+  const previousHTMLElement = global.HTMLElement;
+  const previousHTMLButtonElement = global.HTMLButtonElement;
+  const previousWindow = global.window;
+  let modalElement = null;
+
+  class CapturingElement extends FakeElement {
+    constructor() {
+      super();
+      this._innerHTML = "";
+    }
+
+    set innerHTML(value) {
+      this._innerHTML = String(value ?? "");
+    }
+
+    get innerHTML() {
+      return this._innerHTML;
+    }
+
+    querySelector() {
+      return null;
+    }
+
+    remove() {}
+  }
+
+  global.HTMLElement = CapturingElement;
+  global.HTMLButtonElement = CapturingElement;
+  global.document = {
+    activeElement: null,
+    body: {
+      appendChild(element) {
+        modalElement = element;
+      }
+    },
+    createElement() {
+      modalElement = new CapturingElement();
+      return modalElement;
+    },
+    documentElement: {
+      classList: {
+        add() {},
+        remove() {}
+      }
+    }
+  };
+  global.window = undefined;
+
+  try {
+    const { createTourCustomizer } = await loadTourCustomizer();
+    const trip = {
+      id: "tour_original_title",
+      title: "Original Tour Title",
+      travel_plan: {
+        days: [
+          {
+            id: "day_hanoi",
+            day_number: 1,
+            title: "Hanoi arrival",
+            primary_location_id: "place_hanoi",
+            services: [
+              { title: "Arrival", image: { storage_path: "/assets/img/hanoi.webp" } }
+            ]
+          }
+        ]
+      }
+    };
+    const customizer = createTourCustomizer({
+      state: {},
+      frontendT: (_id, fallback, vars = {}) => String(fallback ?? "").replace(/\{([^{}]+)\}/g, (_match, key) => (
+        Object.prototype.hasOwnProperty.call(vars, key) ? String(vars[key]) : ""
+      )),
+      currentFrontendLang: () => "en",
+      normalizeFrontendTourLang: (lang) => lang || "en",
+      escapeHTML,
+      escapeAttr,
+      travelPlanDays: (item) => item?.travel_plan?.days || [],
+      destinationScopeCatalog: () => ({
+        places: [
+          { id: "place_hanoi", label: "Hanoi", latitude: 21.0278, longitude: 105.8342 }
+        ]
+      }),
+      findTripById: () => trip,
+      ensureTourDetailsLoaded: async () => trip,
+      allTrips: () => [trip],
+      renderVisibleTrips() {}
+    });
+
+    await customizer.open(trip.id);
+
+    assert.match(modalElement?.innerHTML || "", /Your Itinerary: Original Tour Title/);
+    assert.match(modalElement?.innerHTML || "", /I am happy with this Tour/);
+    assert.doesNotMatch(modalElement?.innerHTML || "", /&times;|>×<\/button>/);
+  } finally {
+    global.document = previousDocument;
+    global.HTMLElement = previousHTMLElement;
+    global.HTMLButtonElement = previousHTMLButtonElement;
+    global.window = previousWindow;
+  }
 });
 
 test("tour customizer only previews day cards with a title, geocoded location, and service image", async () => {
@@ -626,6 +756,168 @@ test("tour customizer only previews day cards with a title, geocoded location, a
 
   assert.deepEqual(preview.groups.map((group) => group.locationLabel), ["Hanoi", "Mekong Delta"]);
   assert.deepEqual(preview.groups.map((group) => group.label), ["1", "2"]);
+});
+
+test("tour customizer route preview rehydrates saved days from current tour records", async () => {
+  const storage = new Map();
+  global.window = {
+    localStorage: {
+      getItem(key) {
+        return storage.has(key) ? storage.get(key) : null;
+      },
+      setItem(key, value) {
+        storage.set(key, String(value));
+      },
+      removeItem(key) {
+        storage.delete(key);
+      }
+    }
+  };
+
+  const { createTourCustomizer } = await loadTourCustomizer();
+  const trip = {
+    id: "tour_saved_rehydrate",
+    travel_plan: {
+      days: [
+        {
+          id: "day_hanoi",
+          day_number: 1,
+          title: "Hanoi arrival",
+          primary_location_id: "place_hanoi",
+          services: [
+            { title: "Arrival", image: { storage_path: "/assets/img/hanoi.webp" } }
+          ]
+        }
+      ]
+    }
+  };
+  storage.set("asiatravelplan.custom_tour.tour_saved_rehydrate", JSON.stringify({
+    originalTourId: "tour_saved_rehydrate",
+    timelineDays: [
+      {
+        sourceTourId: "tour_saved_rehydrate",
+        sourceDayId: "day_hanoi",
+        day: {
+          id: "day_hanoi",
+          title: "Old Hanoi arrival",
+          primary_location_id: "place_hanoi",
+          services: []
+        }
+      }
+    ]
+  }));
+
+  const customizer = createTourCustomizer({
+    state: {},
+    frontendT: (_id, fallback) => fallback,
+    currentFrontendLang: () => "en",
+    normalizeFrontendTourLang: (lang) => lang || "en",
+    escapeHTML,
+    escapeAttr,
+    travelPlanDays: (item) => item?.travel_plan?.days || [],
+    destinationScopeCatalog: () => ({
+      places: [
+        { id: "place_hanoi", label: "Hanoi", latitude: 21.0278, longitude: 105.8342 }
+      ]
+    }),
+    findTripById: () => trip,
+    ensureTourDetailsLoaded: async () => {},
+    allTrips: () => [trip],
+    renderVisibleTrips() {}
+  });
+
+  const preview = customizer.routePreviewForTrip(trip);
+
+  assert.deepEqual(preview.groups.map((group) => group.locationLabel), ["Hanoi"]);
+  assert.deepEqual(preview.groups.map((group) => group.label), ["1"]);
+});
+
+test("tour customizer proposes a route-based title for saved customized days", async () => {
+  const storage = new Map();
+  global.window = {
+    localStorage: {
+      getItem(key) {
+        return storage.has(key) ? storage.get(key) : null;
+      },
+      setItem(key, value) {
+        storage.set(key, String(value));
+      },
+      removeItem(key) {
+        storage.delete(key);
+      }
+    }
+  };
+
+  const { createTourCustomizer } = await loadTourCustomizer();
+  const trip = {
+    id: "tour_customized_title",
+    travel_plan: {
+      days: [
+        {
+          id: "day_hanoi",
+          title: "Hanoi arrival",
+          primary_location_id: "place_hanoi",
+          services: [
+            { title: "Arrival", image: { storage_path: "/assets/img/hanoi.webp" } }
+          ]
+        }
+      ]
+    }
+  };
+  const optionalTrip = {
+    id: "tour_optional_hue",
+    travel_plan: {
+      days: [
+        {
+          id: "day_hue",
+          title: "Hue citadel",
+          primary_location_id: "place_hue",
+          services: [
+            { title: "Citadel", image: { storage_path: "/assets/img/hue.webp" } }
+          ]
+        }
+      ]
+    }
+  };
+  storage.set("asiatravelplan.custom_tour.tour_customized_title", JSON.stringify({
+    originalTourId: "tour_customized_title",
+    timelineDays: [
+      {
+        sourceTourId: "tour_customized_title",
+        sourceDayId: "day_hanoi",
+        day: trip.travel_plan.days[0]
+      },
+      {
+        sourceTourId: "tour_optional_hue",
+        sourceDayId: "day_hue",
+        day: optionalTrip.travel_plan.days[0]
+      }
+    ]
+  }));
+
+  const customizer = createTourCustomizer({
+    state: {},
+    frontendT: (_id, fallback, vars = {}) => String(fallback ?? "").replace(/\{([^{}]+)\}/g, (_match, key) => (
+      Object.prototype.hasOwnProperty.call(vars, key) ? String(vars[key]) : ""
+    )),
+    currentFrontendLang: () => "en",
+    normalizeFrontendTourLang: (lang) => lang || "en",
+    escapeHTML,
+    escapeAttr,
+    travelPlanDays: (item) => item?.travel_plan?.days || [],
+    destinationScopeCatalog: () => ({
+      places: [
+        { id: "place_hanoi", label: "Hanoi", latitude: 21.0278, longitude: 105.8342 },
+        { id: "place_hue", label: "Hue", latitude: 16.4637, longitude: 107.5909 }
+      ]
+    }),
+    findTripById: (id) => id === optionalTrip.id ? optionalTrip : trip,
+    ensureTourDetailsLoaded: async () => {},
+    allTrips: () => [trip, optionalTrip],
+    renderVisibleTrips() {}
+  });
+
+  assert.equal(customizer.customizedTitleForTrip(trip), "Hanoi and Hue");
 });
 
 test("tour customizer keeps route segments for non-consecutive location revisits", async () => {

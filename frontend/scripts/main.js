@@ -801,7 +801,7 @@ function isCustomizeFeatureMobileViewport() {
 }
 
 function effectiveCustomizeFeatureEnabled() {
-  return state.customizeFeatureEnabled !== false && !isCustomizeFeatureMobileViewport();
+  return state.customizeFeatureEnabled === true && !isCustomizeFeatureMobileViewport();
 }
 
 function setCustomizeFeatureEnabled(enabled) {

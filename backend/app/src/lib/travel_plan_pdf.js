@@ -42,6 +42,16 @@ import {
   drawPdfTravelersSection,
   estimatePdfTravelersSectionHeight
 } from "./pdf_travelers_section.js";
+import {
+  createMarketingTourPdfBackgroundImageBuffer,
+  drawMarketingTourPdfBackground
+} from "./marketing_tour_pdf_background.js";
+import {
+  drawMarketingTourOnePagerLogo,
+  drawMarketingTourOnePagerTripTitle,
+  registerMarketingTourOnePagerFonts,
+  resolveMarketingTourOnePagerCoverFonts
+} from "./marketing_tour_one_pager_pdf.js";
 
 const MM_TO_POINTS = 72 / 25.4;
 // PDFKit's built-in "A4" preset rounds the page box and some viewers display it as
@@ -56,6 +66,7 @@ const PDF_FONT_REGULAR = "ATPUnicodeRegular";
 const PDF_FONT_BOLD = "ATPUnicodeBold";
 const PDF_FONT_ACCENT_REGULAR = "ATPUnicodeAccentRegular";
 const PDF_FONT_ACCENT_BOLD = "ATPUnicodeAccentBold";
+const PDF_FONT_MARKETING_TRIP_LABEL = "MarketingTourOnePagerTripLabel";
 
 const PDF_FONT_REGULAR_CANDIDATES = [
   "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
@@ -176,6 +187,10 @@ function travelPlanSectionTitle(lang) {
   return pdfT(lang, "travel_plan.pdf_subtitle", "Travel plan overview");
 }
 
+function marketingTravelPlanSectionTitle(lang) {
+  return pdfT(lang, "travel_plan.marketing_section_title", "Your Travel Plan");
+}
+
 function resolveTravelPlanSubtitle(booking, plan, lang) {
   if (!resolveBookingPdfPersonalizationFlag(booking?.pdf_personalization, "travel_plan", "include_subtitle", { sourceLang: lang })) {
     return "";
@@ -275,9 +290,11 @@ function registerPdfFonts(doc, fonts) {
   if (fonts?.bold) doc.registerFont(PDF_FONT_BOLD, fonts.bold);
   if (fonts?.accentRegular) doc.registerFont(PDF_FONT_ACCENT_REGULAR, fonts.accentRegular);
   if (fonts?.accentBold) doc.registerFont(PDF_FONT_ACCENT_BOLD, fonts.accentBold);
+  if (fonts?.tripLabel) doc.registerFont(PDF_FONT_MARKETING_TRIP_LABEL, fonts.tripLabel);
 }
 
 function pdfFontName(weight = "regular", fonts = null) {
+  if (weight === "tripLabel" && fonts?.tripLabel) return PDF_FONT_MARKETING_TRIP_LABEL;
   if (!fonts?.regular) return weight === "bold" ? "Helvetica-Bold" : "Helvetica";
   if (weight === "bold" && fonts?.bold) return PDF_FONT_BOLD;
   return PDF_FONT_REGULAR;
@@ -353,6 +370,44 @@ async function resolveBookingImageForPdf({ booking, bookingImagesDir, readTours,
   }
 
   return null;
+}
+
+function firstMarketingTourOverviewImageEntry(plan) {
+  const webImageIds = (Array.isArray(plan?.tour_card_image_ids) ? plan.tour_card_image_ids : [])
+    .map((value) => textOrNull(value))
+    .filter(Boolean);
+  const hasOnePagerImageIds = Object.prototype.hasOwnProperty.call(plan || {}, "one_pager_image_ids");
+  const onePagerImageIds = (Array.isArray(plan?.one_pager_image_ids) ? plan.one_pager_image_ids : [])
+    .map((value) => textOrNull(value))
+    .filter(Boolean);
+  const selectedImageIds = hasOnePagerImageIds && onePagerImageIds.length ? onePagerImageIds : webImageIds;
+  const heroImageId = textOrNull(plan?.one_pager_hero_image_id)
+    || selectedImageIds[0]
+    || webImageIds[0]
+    || textOrNull(plan?.tour_card_primary_image_id);
+  if (!heroImageId) return null;
+
+  for (const day of safeArray(plan?.days)) {
+    for (const service of safeArray(day?.services || day?.items)) {
+      const image = service?.image && typeof service.image === "object" && !Array.isArray(service.image)
+        ? service.image
+        : null;
+      if (
+        textOrNull(image?.id) === heroImageId
+        && image?.is_customer_visible !== false
+        && textOrNull(image?.storage_path)
+      ) {
+        return { storagePath: image.storage_path, service };
+      }
+    }
+  }
+  return null;
+}
+
+function resolveMarketingTourOverviewBackgroundPath(plan, resolveTravelPlanServiceImageDiskPath) {
+  const entry = firstMarketingTourOverviewImageEntry(plan);
+  if (!entry || typeof resolveTravelPlanServiceImageDiskPath !== "function") return "";
+  return textOrNull(resolveTravelPlanServiceImageDiskPath(entry.storagePath, entry.service));
 }
 
 function firstTravelTourCardImagePath(tour) {
@@ -471,6 +526,30 @@ function drawTravelPlanHero(doc, heroTitle, heroSubtitle, heroImage, startY, fon
     bottomY = doc.y;
   }
   return Math.max(startY + HERO_IMAGE_HEIGHT, bottomY) + 18;
+}
+
+function drawMarketingTravelPlanHero(doc, heroTitle, fonts, lang) {
+  const titleY = PAGE_MARGIN + 94;
+  const titleWidth = 318;
+  doc
+    .font(pdfFontName("bold", fonts))
+    .fontSize(27)
+    .fillColor(PDF_COLORS.textStrong)
+    .text(heroTitle, PAGE_MARGIN, titleY, pdfTextOptions(lang, {
+      width: titleWidth,
+      lineGap: 2
+    }));
+  return Math.max(doc.y + 52, 348);
+}
+
+function drawMarketingTravelPlanLogo(doc, logoPath) {
+  const normalizedLogoPath = textOrNull(logoPath);
+  if (!normalizedLogoPath) return;
+  doc.image(normalizedLogoPath, 24, 18, {
+    fit: [205, 82],
+    align: "left",
+    valign: "top"
+  });
 }
 
 function drawRunningHeader(doc, booking, fonts, companyProfile, lang) {
@@ -805,6 +884,7 @@ export function createTravelPlanPdfWriter({
   resolveAssignedAtpStaffProfile = null,
   resolveAtpStaffPhotoDiskPath = null,
   logoPath = "",
+  marketingTourLogoPath = "",
   fallbackImagePath = "",
   travelPlanAttachmentsDir = "",
   companyProfile = null
@@ -827,6 +907,7 @@ export function createTravelPlanPdfWriter({
     const welcomeText = resolveTravelPlanWelcomeText(booking, lang);
     const includeGuideSection = options?.includeGuideSection !== false;
     const includeEndingSection = options?.includeEndingSection !== false;
+    const includeMarketingTourBackground = options?.includeMarketingTourBackground === true;
     const childrenPolicyText = includeEndingSection ? resolveTravelPlanChildrenPolicyText(booking, lang) : "";
     const whatsNotIncludedText = includeEndingSection ? resolveTravelPlanWhatsNotIncludedText(booking, lang) : "";
     const closingText = includeEndingSection ? resolveTravelPlanClosingText(booking, lang) : "";
@@ -857,7 +938,26 @@ export function createTravelPlanPdfWriter({
       width: 1200,
       height: 780
     }).catch(() => null);
-
+    const marketingTourBackgroundEntry = includeMarketingTourBackground
+      ? firstMarketingTourOverviewImageEntry(plan)
+      : null;
+    if (marketingTourBackgroundEntry?.service?.id) {
+      itemThumbnailMap.delete(marketingTourBackgroundEntry.service.id);
+    }
+    const marketingTourBackgroundPath = includeMarketingTourBackground
+      && marketingTourBackgroundEntry
+      && typeof resolveTravelPlanServiceImageDiskPath === "function"
+      ? textOrNull(resolveTravelPlanServiceImageDiskPath(marketingTourBackgroundEntry?.storagePath, marketingTourBackgroundEntry?.service))
+      : "";
+    const marketingTourBackgroundSourceImage = marketingTourBackgroundPath
+      ? await rasterizeImage(marketingTourBackgroundPath, {
+          width: 1200,
+          height: 780
+        }).catch(() => null)
+      : heroImage;
+    const marketingTourBackgroundImage = includeMarketingTourBackground
+      ? await createMarketingTourPdfBackgroundImageBuffer(marketingTourBackgroundSourceImage?.buffer).catch(() => null)
+      : null;
     const asciiOnly = [
       textOrNull(heroTitle),
       textOrNull(booking?.name),
@@ -913,6 +1013,9 @@ export function createTravelPlanPdfWriter({
           accentBold: accentFonts?.bold || accentFonts?.regular || null
         }
       : null;
+    const marketingCoverFonts = includeMarketingTourBackground
+      ? await resolveMarketingTourOnePagerCoverFonts(lang, normalizeText(process.env.ONE_PAGER_FONT_DIR), fonts)
+      : null;
 
     await new Promise((resolve, reject) => {
       const doc = new PDFDocument({
@@ -933,12 +1036,23 @@ export function createTravelPlanPdfWriter({
       doc.on("error", reject);
 
       registerPdfFonts(doc, fonts);
+      if (includeMarketingTourBackground) {
+        registerMarketingTourOnePagerFonts(doc, marketingCoverFonts);
+      }
 
       const bottomLimit = () => doc.page.height - PAGE_MARGIN - PAGE_FOOTER_GAP;
+      const drawPageBackground = ({ includeHeroImage = false } = {}) => {
+        if (includeMarketingTourBackground) {
+          drawMarketingTourPdfBackground(doc, marketingTourBackgroundImage, { includeHeroImage });
+        }
+      };
       const addContinuationPage = () => {
         drawFooter(doc, fonts, companyProfile, lang);
         doc.addPage();
-        return drawRunningHeader(doc, booking, fonts, companyProfile, lang);
+        drawPageBackground();
+        return includeMarketingTourBackground
+          ? PAGE_MARGIN
+          : drawRunningHeader(doc, booking, fonts, companyProfile, lang);
       };
       const ensureSpace = (currentY, requiredHeight) => (
         currentY + requiredHeight <= bottomLimit()
@@ -946,21 +1060,41 @@ export function createTravelPlanPdfWriter({
           : addContinuationPage()
       );
 
-      let y = drawPdfCompanyHeader(doc, {
-        companyProfile,
-        logoImage,
-        fonts,
-        lang,
-        pageMargin: PAGE_MARGIN,
-        colors: PDF_COLORS,
-        pdfFontName
-      });
-      y = drawTravelPlanHero(doc, heroTitle, heroSubtitle, heroImage, y, fonts, lang);
-      if (includeGuideSection) {
-        y = ensureSpace(y, estimateGuideSectionHeight(doc, guideContext, fonts, lang) + 10);
-        y = drawGuideSection(doc, y, fonts, lang, guideContext, guidePhoto);
+      drawPageBackground({ includeHeroImage: true });
+      if (includeMarketingTourBackground) {
+        if (textOrNull(marketingTourLogoPath)) {
+          drawMarketingTourOnePagerLogo(doc, marketingTourLogoPath);
+        }
       }
-      if (welcomeText) {
+      let y = includeMarketingTourBackground
+        ? Math.max(
+          348,
+          drawMarketingTourOnePagerTripTitle(doc, heroTitle, marketingCoverFonts, lang).bottomY + 54
+        )
+        : drawTravelPlanHero(
+          doc,
+          heroTitle,
+          heroSubtitle,
+          heroImage,
+          drawPdfCompanyHeader(doc, {
+            companyProfile,
+            logoImage,
+            fonts,
+            lang,
+            pageMargin: PAGE_MARGIN,
+            colors: PDF_COLORS,
+            pdfFontName
+          }),
+          fonts,
+          lang
+        );
+      if (includeGuideSection) {
+        if (!includeMarketingTourBackground) {
+          y = ensureSpace(y, estimateGuideSectionHeight(doc, guideContext, fonts, lang) + 10);
+          y = drawGuideSection(doc, y, fonts, lang, guideContext, guidePhoto);
+        }
+      }
+      if (!includeMarketingTourBackground && welcomeText) {
         y = ensureSpace(y + 6, 72);
         y = drawTextParagraph(doc, y + 6, welcomeText, fonts, lang, { fontSize: 11.2 }) + 12;
       }
@@ -970,7 +1104,7 @@ export function createTravelPlanPdfWriter({
         startY: y,
         plan,
         itemThumbnailMap,
-        fonts,
+        fonts: includeMarketingTourBackground ? marketingCoverFonts : fonts,
         lang,
         colors: PDF_COLORS,
         pdfFontName,
@@ -980,10 +1114,13 @@ export function createTravelPlanPdfWriter({
         pageMargin: PAGE_MARGIN,
         bottomLimit,
         addContinuationPage,
-        sectionTitle: travelPlanSectionTitle(lang),
+        sectionTitle: includeMarketingTourBackground ? marketingTravelPlanSectionTitle(lang) : travelPlanSectionTitle(lang),
         emptyStateMessage: pdfT(lang, "travel_plan.empty", "No travel plan is available yet."),
         sectionTitleFontSize: 18,
-        renderSectionTitle: false
+        renderSectionTitle: includeMarketingTourBackground,
+        sectionTitleUsesTripLabel: includeMarketingTourBackground,
+        separateDayLabel: includeMarketingTourBackground,
+        dayHeaderBottomGap: includeMarketingTourBackground ? 18 : 4
       });
 
       if (booking?.pdf_personalization?.travel_plan?.include_who_is_traveling === true) {

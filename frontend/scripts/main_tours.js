@@ -59,6 +59,7 @@ const TOUR_EXPERIENCE_HIGHLIGHTS = Object.freeze([
 const TOUR_EXPERIENCE_HIGHLIGHT_BY_ID = new Map(TOUR_EXPERIENCE_HIGHLIGHTS.map((item) => [item.id, item]));
 const tourCardImageTransitionTimers = new WeakMap();
 const tourPlanSummaryDetailsAnimations = new WeakMap();
+const tourPlanItineraryAnimations = new WeakMap();
 
 export function createFrontendToursController(ctx) {
   const {
@@ -774,7 +775,7 @@ export function createFrontendToursController(ctx) {
   }
 
   function customizeFeatureEnabled() {
-    return state.customizeFeatureEnabled !== false && !isCustomizeMobileViewport();
+    return state.customizeFeatureEnabled === true && !isCustomizeMobileViewport();
   }
 
   function isCustomizeMobileViewport() {
@@ -806,6 +807,20 @@ export function createFrontendToursController(ctx) {
     return dayCount > 0
       ? frontendT("tour.card.days", "{days} days", { days: String(dayCount) })
       : "";
+  }
+
+  function tourDisplayTitle(trip) {
+    const baseTitle = resolveLocalizedFrontendText(trip?.title, state.lang);
+    if (!customizeFeatureEnabled()) return baseTitle;
+    return tourCustomizer?.customizedTitleForTrip(trip) || baseTitle;
+  }
+
+  function tourForSelectedContext(trip) {
+    if (!trip || typeof trip !== "object") return trip;
+    const displayTitle = tourDisplayTitle(trip);
+    const baseTitle = resolveLocalizedFrontendText(trip?.title, state.lang);
+    if (!displayTitle || displayTitle === baseTitle) return trip;
+    return { ...trip, title: displayTitle };
   }
 
   function tourDetailsCache() {
@@ -969,6 +984,11 @@ export function createFrontendToursController(ctx) {
     return `tour-details-${normalizedTripId || "unknown"}`;
   }
 
+  function tourPlanItineraryPanelId(tripId) {
+    const normalizedTripId = normalizeText(tripId).replace(/[^a-zA-Z0-9_-]+/g, "-");
+    return `tour-itinerary-${normalizedTripId || "unknown"}`;
+  }
+
   function getTourGridColumnCount() {
     if (typeof window === "undefined" || typeof window.matchMedia !== "function") return 3;
     if (window.matchMedia("(max-width: 760px)").matches) return 1;
@@ -1094,7 +1114,7 @@ export function createFrontendToursController(ctx) {
 
   function renderTourCard(trip, { index = 0, expanded = false } = {}) {
     const tripId = normalizeText(trip?.id);
-    const tripTitle = resolveLocalizedFrontendText(trip?.title, state.lang);
+    const tripTitle = tourDisplayTitle(trip);
     const tripShortDescription = resolveLocalizedFrontendText(trip?.short_description, state.lang);
     const countries = tourDestinations(trip);
     const countriesLabel = countries.join(", ");
@@ -1651,28 +1671,24 @@ export function createFrontendToursController(ctx) {
     return `/public/v1/tours/${encodeURIComponent(tourId)}/one-pager.pdf?lang=${encodeURIComponent(lang)}`;
   }
 
-  function renderTourOnePagerDownload(trip) {
-    const pdfUrl = tourOnePagerPdfUrl(trip);
-    if (!pdfUrl) return "";
+  function renderTourPdfActions(trip) {
     const tripId = normalizeText(trip?.id);
-    const hasCustomPreview = customizeFeatureEnabled() && tourCustomizer?.hasCustomization(tripId);
-    const pdfAriaLabel = frontendT("tour.plan.pdf_aria", "Tour PDF");
-    const pdfDescription = frontendT(
-      "tour.plan.pdf_description",
-      "Contact information, Experience highlights, and pictures"
-    );
-    const pdfDownloadLabel = hasCustomPreview
-      ? frontendT("tour.plan.pdf_download_customized", "Custom Tour Preview")
-      : frontendT("tour.plan.pdf_download", "Tour Preview");
-    const downloadAttrs = hasCustomPreview
-      ? `href="#" data-tour-custom-pdf data-trip-id="${escapeAttr(tripId)}"`
-      : `href="${escapeAttr(pdfUrl)}"`;
+    if (!tripId) return "";
+    const pdfAriaLabel = frontendT("tour.plan.pdf_aria", "Tour PDFs");
+    const overviewLabel = frontendT("tour.plan.pdf_overview_one_pager", "Overview (one-pager)");
+    const travelPlanLabel = frontendT("tour.plan.pdf_day_by_day_travel_plan", "Day-by-Day Travel Plan");
+    const overviewDescription = frontendT("tour.plan.pdf_overview_description", "A PDF that gives you an overview of this tour");
+    const travelPlanDescription = frontendT("tour.plan.pdf_day_by_day_description", "A PDF that shows you all activies of this tour");
     return `
       <section class="tour-plan-pdf" aria-label="${escapeAttr(pdfAriaLabel)}">
-        <div class="tour-plan-pdf__body">
-          <div class="tour-plan-pdf__content">
-            <a class="btn btn-secondary tour-plan-pdf__download" ${downloadAttrs} target="_blank" rel="noopener">${escapeHTML(pdfDownloadLabel)}</a>
-            <p>${escapeHTML(pdfDescription)}</p>
+        <div class="tour-plan-pdf__actions">
+          <div class="tour-plan-pdf__item">
+            <button class="btn btn-secondary tour-plan-pdf__download" type="button" data-tour-overview-pdf data-trip-id="${escapeAttr(tripId)}">${escapeHTML(overviewLabel)}</button>
+            <p class="tour-plan-pdf__description">${escapeHTML(overviewDescription)}</p>
+          </div>
+          <div class="tour-plan-pdf__item">
+            <button class="btn btn-secondary tour-plan-pdf__download" type="button" data-tour-travel-plan-pdf data-trip-id="${escapeAttr(tripId)}">${escapeHTML(travelPlanLabel)}</button>
+            <p class="tour-plan-pdf__description">${escapeHTML(travelPlanDescription)}</p>
           </div>
         </div>
       </section>
@@ -1686,7 +1702,7 @@ export function createFrontendToursController(ctx) {
   }
 
   function renderTourDetailsHeader(trip, days) {
-    const tripTitle = resolveLocalizedFrontendText(trip?.title, state.lang);
+    const tripTitle = tourDisplayTitle(trip);
     const destinations = tourDestinations(trip).join(", ");
     const styles = (Array.isArray(trip?.styles) ? trip.styles : [])
       .map((style) => normalizeText(style))
@@ -1868,6 +1884,44 @@ export function createFrontendToursController(ctx) {
     `;
   }
 
+  function canCustomizeTour(trip) {
+    const tripId = normalizeText(trip?.id);
+    if (!tripId || !customizeFeatureEnabled()) return false;
+    const routePreview = tourCustomizer?.routePreviewForTrip(trip) || { groups: [] };
+    return routePreview.groups.length > 0;
+  }
+
+  function renderTourDetailsActionButtons(trip, days) {
+    const tripId = normalizeText(trip?.id);
+    const itineraryId = tourPlanItineraryPanelId(tripId);
+    const itineraryLabel = frontendT("tour.plan.your_itinerary", "Itinerary");
+    const customizeLabel = frontendT("tour.plan.customize_trip", "Customize this Trip");
+    const quoteLabel = frontendT("tour.card.get_quote", "Get a Quote");
+    const customizeButton = canCustomizeTour(trip)
+      ? `<button class="btn btn-secondary tour-plan-actions__button" type="button" data-tour-customize data-trip-id="${escapeAttr(tripId)}">${escapeHTML(customizeLabel)}</button>`
+      : "";
+
+    return `
+      <div class="tour-plan-actions" data-tour-plan-actions>
+        <button class="btn btn-secondary tour-plan-actions__button" type="button" data-tour-plan-itinerary-toggle aria-expanded="false" aria-controls="${escapeAttr(itineraryId)}"${days.length ? "" : " disabled"}>
+          ${escapeHTML(itineraryLabel)}
+        </button>
+        ${customizeButton}
+        <button class="btn btn-primary tour-plan-actions__button" type="button" data-open-modal data-trip-id="${escapeAttr(tripId)}">${escapeHTML(quoteLabel)}</button>
+      </div>
+    `;
+  }
+
+  function renderTourPlanItineraryPanel(days, tripId) {
+    if (!days.length) return "";
+    const itineraryId = tourPlanItineraryPanelId(tripId);
+    return `
+      <div class="tour-plan-itinerary" id="${escapeAttr(itineraryId)}" data-tour-plan-itinerary hidden>
+        ${renderTourPlanDaySummary(days, tripId)}
+      </div>
+    `;
+  }
+
   function renderTourTravelPlanDetails(trip) {
     const days = activeTourPlanDays(trip);
     if (!days.length) {
@@ -1879,24 +1933,20 @@ export function createFrontendToursController(ctx) {
     }
 
     const tripId = normalizeText(trip?.id);
-    const ctaLabel = frontendT("tour.card.plan_trip", "Plan this trip");
 
     return `
       ${renderTourDetailsHeader(trip, days)}
       ${renderTourExperienceHighlights(trip)}
-      ${renderTourOnePagerDownload(trip)}
-      ${renderTourCustomizeButton(trip)}
-      ${renderTourPlanDaySummary(days, tripId)}
-      <div class="tour-plan__footer-cta">
-        <button class="btn btn-primary tour-plan__footer-plan-trip" type="button" data-open-modal data-trip-id="${escapeAttr(tripId)}">${escapeHTML(ctaLabel)}</button>
-      </div>
+      ${renderTourPdfActions(trip)}
+      ${renderTourDetailsActionButtons(trip, days)}
+      ${renderTourPlanItineraryPanel(days, tripId)}
     `;
   }
 
   function renderExpandedTourRow(trip, index, columnIndex = 0) {
     const tripId = normalizeText(trip?.id);
     const panelId = tourDetailsPanelId(tripId);
-    const tripTitle = resolveLocalizedFrontendText(trip?.title, state.lang);
+    const tripTitle = tourDisplayTitle(trip);
     const panelLabel = frontendT("tour.plan.panel_label", "Travel plan for {title}", {
       title: tripTitle
     });
@@ -1946,7 +1996,7 @@ export function createFrontendToursController(ctx) {
   function renderBelowGridTourDetailsRow(trip, columnIndex = 0, columnCount = getTourGridColumnCount()) {
     const tripId = normalizeText(trip?.id);
     const panelId = tourDetailsPanelId(tripId);
-    const tripTitle = resolveLocalizedFrontendText(trip?.title, state.lang);
+    const tripTitle = tourDisplayTitle(trip);
     const panelLabel = frontendT("tour.plan.panel_label", "Travel plan for {title}", {
       title: tripTitle
     });
@@ -1972,7 +2022,7 @@ export function createFrontendToursController(ctx) {
 
   function createTourDetailsPanelElement(trip) {
     const tripId = normalizeText(trip?.id);
-    const tripTitle = resolveLocalizedFrontendText(trip?.title, state.lang);
+    const tripTitle = tourDisplayTitle(trip);
     const panelLabel = frontendT("tour.plan.panel_label", "Travel plan for {title}", {
       title: tripTitle
     });
@@ -2220,6 +2270,15 @@ export function createFrontendToursController(ctx) {
       button.dataset.tourPlanSummaryBound = "1";
     });
 
+    const itineraryButtons = els.tourGrid.querySelectorAll("[data-tour-plan-itinerary-toggle]");
+    itineraryButtons.forEach((button) => {
+      if (!(button instanceof HTMLElement) || button.dataset.tourPlanItineraryBound === "1") return;
+      button.addEventListener("click", () => {
+        toggleTourPlanItinerary(button);
+      });
+      button.dataset.tourPlanItineraryBound = "1";
+    });
+
     const tourDetailsCloseButtons = els.tourGrid.querySelectorAll("[data-tour-details-close][data-trip-id]");
     tourDetailsCloseButtons.forEach((button) => {
       if (!(button instanceof HTMLElement) || button.dataset.tourDetailsCloseBound === "1") return;
@@ -2254,27 +2313,34 @@ export function createFrontendToursController(ctx) {
       button.dataset.tourCustomizeBound = "1";
     });
 
-    const customPdfLinks = els.tourGrid.querySelectorAll("[data-tour-custom-pdf][data-trip-id]");
-    customPdfLinks.forEach((link) => {
-      if (!(link instanceof HTMLElement) || link.dataset.tourCustomPdfBound === "1") return;
-      link.addEventListener("click", async (event) => {
+    const tourPdfButtons = els.tourGrid.querySelectorAll("[data-tour-overview-pdf][data-trip-id], [data-tour-travel-plan-pdf][data-trip-id]");
+    tourPdfButtons.forEach((button) => {
+      if (!(button instanceof HTMLElement) || button.dataset.tourPdfBound === "1") return;
+      button.addEventListener("click", async (event) => {
         event.preventDefault();
-        const tripId = normalizeText(link.getAttribute("data-trip-id"));
-        if (!tripId || link.dataset.tourCustomPdfLoading === "1") return;
-        link.dataset.tourCustomPdfLoading = "1";
-        link.setAttribute("aria-disabled", "true");
+        const tripId = normalizeText(button.getAttribute("data-trip-id"));
+        if (!tripId || button.dataset.tourPdfLoading === "1") return;
+        const isOverview = button.hasAttribute("data-tour-overview-pdf");
+        button.dataset.tourPdfLoading = "1";
+        button.setAttribute("aria-disabled", "true");
         try {
-          await tourCustomizer.openCustomizedPdf(tripId);
+          if (isOverview) {
+            await tourCustomizer.openCustomizedOverviewPdf(tripId);
+          } else {
+            await tourCustomizer.openCustomizedTravelPlanPdf(tripId);
+          }
         } catch (error) {
-          console.error("Failed to open customized tour PDF preview.", error);
-          const fallbackUrl = tourOnePagerPdfUrl(findTripById(tripId));
-          if (fallbackUrl) window.open(fallbackUrl, "_blank", "noopener");
+          console.error("Failed to open tour PDF preview.", error);
+          if (isOverview) {
+            const fallbackUrl = tourOnePagerPdfUrl(findTripById(tripId));
+            if (fallbackUrl) window.open(fallbackUrl, "_blank", "noopener");
+          }
         } finally {
-          delete link.dataset.tourCustomPdfLoading;
-          link.removeAttribute("aria-disabled");
+          delete button.dataset.tourPdfLoading;
+          button.removeAttribute("aria-disabled");
         }
       });
-      link.dataset.tourCustomPdfBound = "1";
+      button.dataset.tourPdfBound = "1";
     });
 
     const buttons = els.tourGrid.querySelectorAll("[data-open-modal][data-trip-id]");
@@ -2287,7 +2353,7 @@ export function createFrontendToursController(ctx) {
         if (selected) {
           setBookingField("bookingDestination", tourDestinations(selected));
           setBookingField("bookingStyle", selected.styles || []);
-          setSelectedTourContext(selected);
+          setSelectedTourContext(tourForSelectedContext(selected));
         } else {
           clearSelectedTourContext();
         }
@@ -3184,6 +3250,82 @@ export function createFrontendToursController(ctx) {
       return;
     }
     syncExpandedTourDetailsHeightsDuring(0);
+  }
+
+  function clearTourPlanItineraryAnimation(panel) {
+    const activeAnimation = tourPlanItineraryAnimations.get(panel);
+    if (!activeAnimation) return;
+    if (typeof window !== "undefined" && typeof window.clearTimeout === "function") {
+      window.clearTimeout(activeAnimation.timer);
+    } else {
+      clearTimeout(activeAnimation.timer);
+    }
+    panel.removeEventListener("transitionend", activeAnimation.onTransitionEnd);
+    tourPlanItineraryAnimations.delete(panel);
+  }
+
+  function finishTourPlanItineraryAnimation(panel, expanded) {
+    clearTourPlanItineraryAnimation(panel);
+    panel.style.height = "";
+    panel.style.opacity = "";
+    delete panel.dataset.tourPlanItineraryAnimating;
+    if (!expanded) {
+      panel.hidden = true;
+    }
+    syncExpandedTourDetailsHeights();
+  }
+
+  function animateTourPlanItinerary(panel, expanded) {
+    if (!(panel instanceof HTMLElement)) return;
+    clearTourPlanItineraryAnimation(panel);
+
+    if (prefersReducedMotion()) {
+      panel.hidden = !expanded;
+      panel.style.height = "";
+      panel.style.opacity = "";
+      delete panel.dataset.tourPlanItineraryAnimating;
+      syncExpandedTourDetailsHeightsDuring(0);
+      return;
+    }
+
+    panel.hidden = false;
+    panel.dataset.tourPlanItineraryAnimating = expanded ? "expanding" : "collapsing";
+    if (expanded) {
+      panel.style.height = "0px";
+      panel.style.opacity = "0";
+      void panel.offsetHeight;
+      panel.style.height = `${panel.scrollHeight}px`;
+      panel.style.opacity = "1";
+    } else {
+      panel.style.height = `${panel.scrollHeight}px`;
+      panel.style.opacity = "1";
+      void panel.offsetHeight;
+      panel.style.height = "0px";
+      panel.style.opacity = "0";
+    }
+
+    const done = () => finishTourPlanItineraryAnimation(panel, expanded);
+    const onTransitionEnd = (event) => {
+      if (event.target !== panel || event.propertyName !== "height") return;
+      done();
+    };
+    panel.addEventListener("transitionend", onTransitionEnd);
+    const timer = typeof window !== "undefined" && typeof window.setTimeout === "function"
+      ? window.setTimeout(done, TOUR_PLAN_DAY_DETAILS_TRANSITION_MS + 120)
+      : setTimeout(done, TOUR_PLAN_DAY_DETAILS_TRANSITION_MS + 120);
+    tourPlanItineraryAnimations.set(panel, { onTransitionEnd, timer });
+    syncExpandedTourDetailsHeightsDuring(TOUR_PLAN_DAY_DETAILS_TRANSITION_MS + 80);
+  }
+
+  function toggleTourPlanItinerary(trigger) {
+    if (!(trigger instanceof HTMLElement)) return;
+    const panelId = normalizeText(trigger.getAttribute("aria-controls"));
+    const panel = panelId ? document.getElementById(panelId) : null;
+    if (!(panel instanceof HTMLElement)) return;
+    const willExpand = trigger.getAttribute("aria-expanded") !== "true";
+    trigger.setAttribute("aria-expanded", willExpand ? "true" : "false");
+    trigger.classList.toggle("is-active", willExpand);
+    animateTourPlanItinerary(panel, willExpand);
   }
 
   function tourPlanServiceMediaFromEvent(event) {

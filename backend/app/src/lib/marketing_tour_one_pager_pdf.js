@@ -8,6 +8,10 @@ import { normalizeText } from "./text.js";
 import { styleToken } from "./style_tokens.js";
 import { pdfTextOptions, normalizePdfLang, pdfT } from "./pdf_i18n.js";
 import { resolvePdfFontsForLang } from "./pdf_font_resolver.js";
+import {
+  createMarketingTourPdfBackgroundImageBuffer,
+  drawMarketingTourPdfBackground
+} from "./marketing_tour_pdf_background.js";
 
 const MM_TO_POINTS = 72 / 25.4;
 // PDFKit's built-in "A4" preset rounds the page box and some viewers display it as
@@ -57,13 +61,6 @@ const BODY_IMAGE_LAYOUT_BOUNDS = Object.freeze({
   maxX: 570,
   maxY: 626
 });
-const HERO_BACKGROUND_IMAGE = Object.freeze({
-  x: 118,
-  y: 54,
-  width: 466,
-  height: 274
-});
-
 const PDF_FONT_REGULAR_CANDIDATES = Object.freeze([
   "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
   "/Library/Fonts/Arial Unicode.ttf",
@@ -310,6 +307,10 @@ function registerPdfFonts(doc, fonts) {
   if (fonts?.tripLabel) doc.registerFont(PDF_FONT_TRIP_LABEL, fonts.tripLabel);
 }
 
+export function registerMarketingTourOnePagerFonts(doc, fonts) {
+  registerPdfFonts(doc, fonts);
+}
+
 async function fileExists(filePath) {
   if (!filePath) return false;
   try {
@@ -393,6 +394,17 @@ async function resolveOnePagerDisplayFonts(lang, fontDir = "") {
     ))
   ]);
   return { display, script, label, tripLabel };
+}
+
+export async function resolveMarketingTourOnePagerCoverFonts(lang, fontDir = "", baseFonts = null) {
+  const normalizedLang = normalizePdfLang(lang);
+  const displayFonts = shouldUseOnePagerDecorativeFonts(normalizedLang)
+    ? await resolveOnePagerDisplayFonts(normalizedLang, fontDir)
+    : {};
+  return {
+    ...(baseFonts || {}),
+    ...Object.fromEntries(Object.entries(displayFonts).filter(([, value]) => value))
+  };
 }
 
 function ensureOnePagerFontDirHasBodyFont(fontDir, fonts) {
@@ -578,15 +590,26 @@ function photoFrameShape(variant = 0) {
   return PHOTO_FRAME_SHAPES[Math.abs(Number(variant) || 0) % PHOTO_FRAME_SHAPES.length];
 }
 
-function framedImageGeometry({ x, y, width, height, angle = 0, variant = 0 } = {}) {
+function framedImageGeometry({ x, y, width, height, angle = 0, variant = 0, shapeIntensity = 1 } = {}) {
   const centerX = x + width / 2;
   const centerY = y + height / 2;
   const shape = photoFrameShape(variant);
+  const normalizedShapeIntensity = clampNumber(shapeIntensity, 0, 1);
+  const rectangleShape = [
+    [0, 0],
+    [1, 0],
+    [1, 1],
+    [0, 1]
+  ];
+  const softenedShape = shape.map(([relativeX, relativeY], index) => [
+    rectangleShape[index][0] + (relativeX - rectangleShape[index][0]) * normalizedShapeIntensity,
+    rectangleShape[index][1] + (relativeY - rectangleShape[index][1]) * normalizedShapeIntensity
+  ]);
   return {
     centerX,
     centerY,
-    outerPoints: polygonPointsFromRelative(x - 5.5, y - 5.5, width + 12, height + 12, shape),
-    innerPoints: polygonPointsFromRelative(x, y, width, height, shape)
+    outerPoints: polygonPointsFromRelative(x - 5.5, y - 5.5, width + 12, height + 12, softenedShape),
+    innerPoints: polygonPointsFromRelative(x, y, width, height, softenedShape)
   };
 }
 
@@ -625,9 +648,9 @@ function photoFrameBottomEdgeGeometry(points) {
   };
 }
 
-function drawFramedImageLabel(doc, { x, y, width, height, angle = 0, label = "", labelBackdrop = false, fonts = null, lang = "en", variant = 0 } = {}) {
+function drawFramedImageLabel(doc, { x, y, width, height, angle = 0, label = "", labelBackdrop = false, fonts = null, lang = "en", variant = 0, shapeIntensity = 1 } = {}) {
   if (!label) return;
-  const { centerX, centerY, innerPoints } = framedImageGeometry({ x, y, width, height, angle, variant });
+  const { centerX, centerY, innerPoints } = framedImageGeometry({ x, y, width, height, angle, variant, shapeIntensity });
   if (labelBackdrop) {
     doc.save();
     doc.rotate(angle, { origin: [centerX, centerY] });
@@ -672,8 +695,8 @@ function drawFramedImageLabel(doc, { x, y, width, height, angle = 0, label = "",
   doc.restore();
 }
 
-function drawFramedImage(doc, { x, y, width, height, angle = 0, imageBuffer = null, label = "", labelBackdrop = false, fonts = null, lang = "en", variant = 0, labelLayer = true } = {}) {
-  const { centerX, centerY, outerPoints, innerPoints } = framedImageGeometry({ x, y, width, height, angle, variant });
+export function drawMarketingTourFramedImage(doc, { x, y, width, height, angle = 0, imageBuffer = null, label = "", labelBackdrop = false, fonts = null, lang = "en", variant = 0, labelLayer = true, shapeIntensity = 1 } = {}) {
+  const { centerX, centerY, outerPoints, innerPoints } = framedImageGeometry({ x, y, width, height, angle, variant, shapeIntensity });
   doc.save();
   doc.rotate(angle, { origin: [centerX, centerY] });
   doc.save();
@@ -689,12 +712,16 @@ function drawFramedImage(doc, { x, y, width, height, angle = 0, imageBuffer = nu
     doc.rect(x, y, width, height).fill(COLORS.accentSoft);
   }
   doc.restore();
-  if (labelLayer) drawFramedImageLabel(doc, { x, y, width, height, angle, label, labelBackdrop, fonts, lang, variant });
+  if (labelLayer) drawFramedImageLabel(doc, { x, y, width, height, angle, label, labelBackdrop, fonts, lang, variant, shapeIntensity });
   doc.save();
   drawPolygonPath(doc, outerPoints);
   doc.lineWidth(1.1).strokeColor(COLORS.white).stroke();
   doc.restore();
   doc.restore();
+}
+
+function drawFramedImage(doc, options = {}) {
+  drawMarketingTourFramedImage(doc, options);
 }
 
 function clampNumber(value, min, max) {
@@ -1054,7 +1081,7 @@ function sortBodyImageLayoutsForDraw(items) {
     .sort((left, right) => right.lowestPoint - left.lowestPoint || left.drawOrderIndex - right.drawOrderIndex);
 }
 
-function drawLogo(doc, logoPath) {
+export function drawMarketingTourOnePagerLogo(doc, logoPath) {
   if (!logoPath) {
     throw new Error("Production logo path is required for the tour one-pager PDF.");
   }
@@ -1088,45 +1115,6 @@ function fitTitleSize(doc, title, fonts, options) {
     maxHeight: 124,
     options
   });
-}
-
-function smoothStep(edge0, edge1, value) {
-  if (edge0 === edge1) return value >= edge1 ? 1 : 0;
-  const t = Math.max(0, Math.min(1, (value - edge0) / (edge1 - edge0)));
-  return t * t * (3 - 2 * t);
-}
-
-async function createFeatheredHeroImageBuffer(imageBuffer) {
-  if (!imageBuffer) return null;
-  const width = Math.max(1, Math.round(HERO_BACKGROUND_IMAGE.width * IMAGE_RENDER_SCALE));
-  const height = Math.max(1, Math.round(HERO_BACKGROUND_IMAGE.height * IMAGE_RENDER_SCALE));
-  const alphaMask = Buffer.alloc(width * height * 4);
-  for (let y = 0; y < height; y += 1) {
-    for (let x = 0; x < width; x += 1) {
-      const leftAlpha = smoothStep(width * 0.02, width * 0.56, x);
-      const topAlpha = smoothStep(0, height * 0.12, y);
-      const bottomAlpha = 1 - smoothStep(height * 0.58, height, y);
-      const alpha = Math.round(255 * Math.min(leftAlpha, topAlpha, bottomAlpha));
-      const offset = (y * width + x) * 4;
-      alphaMask[offset] = 255;
-      alphaMask[offset + 1] = 255;
-      alphaMask[offset + 2] = 255;
-      alphaMask[offset + 3] = alpha;
-    }
-  }
-  const maskBuffer = await sharp(alphaMask, {
-    raw: {
-      width,
-      height,
-      channels: 4
-    }
-  }).png().toBuffer();
-  return await sharp(imageBuffer)
-    .resize(width, height, { fit: "cover", position: "centre" })
-    .ensureAlpha()
-    .composite([{ input: maskBuffer, blend: "dest-in" }])
-    .png()
-    .toBuffer();
 }
 
 function durationParts(days, lang) {
@@ -1878,15 +1866,8 @@ async function prepareFrameImages(tour, deps, lang) {
   }));
 }
 
-function drawMainCopy(doc, tour, duration, fonts, lang) {
-  const title = textOrNull(tour?.title) || onePagerT(lang, "tour", "Tour");
-  const titleText = title.toUpperCase();
-  const description = textOrNull(tour?.short_description)
-    || onePagerT(lang, "default_description", "A curated {duration} by Asia Travel Plan.", {
-      duration: duration.label.toLowerCase()
-    });
-  const styleLine = safeArray(tour?.styles).slice(0, 3).map((item) => item.toUpperCase()).join("  |  ");
-
+export function drawMarketingTourOnePagerTripTitle(doc, title, fonts, lang) {
+  const titleText = (textOrNull(title) || onePagerT(lang, "tour", "Tour")).toUpperCase();
   doc
     .font(pdfFontName("tripLabel", fonts))
     .fontSize(fonts?.tripLabel ? 27 : 30)
@@ -1905,8 +1886,21 @@ function drawMainCopy(doc, tour, duration, fonts, lang) {
     .fontSize(titleSize)
     .fillColor(COLORS.textStrong)
     .text(titleText, 42, 208, titleOptions);
+  return { titleHeight, bottomY: 208 + titleHeight };
+}
+
+function drawMainCopy(doc, tour, duration, fonts, lang) {
+  const title = textOrNull(tour?.title) || onePagerT(lang, "tour", "Tour");
+  const titleText = title.toUpperCase();
+  const description = textOrNull(tour?.short_description)
+    || onePagerT(lang, "default_description", "A curated {duration} by Asia Travel Plan.", {
+      duration: duration.label.toLowerCase()
+    });
+  const styleLine = safeArray(tour?.styles).slice(0, 3).map((item) => item.toUpperCase()).join("  |  ");
+
+  const titleLayout = drawMarketingTourOnePagerTripTitle(doc, titleText, fonts, lang);
   const styleText = styleLine || onePagerT(lang, "default_style_line", "PRIVATE TOUR  |  LOCAL EXPERTISE").toUpperCase();
-  const styleY = Math.max(338, 208 + titleHeight + 10);
+  const styleY = Math.max(338, titleLayout.bottomY + 10);
   const styleOptions = pdfTextOptions(lang, { width: 282, characterSpacing: 1.4, lineGap: 2 });
   doc
     .font(pdfFontName("label", fonts))
@@ -1938,33 +1932,6 @@ function drawMainCopy(doc, tour, duration, fonts, lang) {
   const sectionRuleY = Math.max(430, descriptionY + descriptionHeight + 8);
   doc.moveTo(42, sectionRuleY).lineTo(78, sectionRuleY).lineWidth(1).strokeColor(COLORS.accent).stroke();
   return { highlightsY: Math.max(438, sectionRuleY + 8) };
-}
-
-function drawHeroBackgroundImage(doc, imageBuffer) {
-  const { x, y, width, height } = HERO_BACKGROUND_IMAGE;
-  const heroPoints = [
-    [104, 58],
-    [584, 56],
-    [584, 257],
-    [502, 290],
-    [344, 282],
-    [253, 230],
-    [176, 145]
-  ];
-  if (imageBuffer) {
-    doc.image(imageBuffer, x, y, { width, height });
-  } else {
-    doc.save();
-    drawPolygonPath(doc, heroPoints);
-    doc.clip();
-    doc.rect(x, y, width, height).fill(COLORS.accentSoft);
-    doc.restore();
-  }
-}
-
-function drawBackground(doc, heroImageBuffer) {
-  drawSoftRect(doc, 0, 0, PAGE_WIDTH, PAGE_HEIGHT, COLORS.surfaceMuted, 0);
-  drawHeroBackgroundImage(doc, heroImageBuffer);
 }
 
 export function createMarketingTourOnePagerPdfWriter({
@@ -2019,7 +1986,7 @@ export function createMarketingTourOnePagerPdfWriter({
       ...Object.fromEntries(Object.entries(displayFonts).filter(([, value]) => value))
     };
     const frameImages = await prepareFrameImages(tour, { resolveTourImageDiskPath, fallbackImagePath }, normalizedLang);
-    const heroBackgroundBuffer = await createFeatheredHeroImageBuffer(frameImages[0]?.buffer);
+    const heroBackgroundBuffer = await createMarketingTourPdfBackgroundImageBuffer(frameImages[0]?.buffer);
     const bodyImageLayouts = createBodyImageLayouts(tour, frameImages);
     const configuredHighlightItems = await collectConfiguredExperienceHighlightItems(tour, normalizedLang, experienceHighlightsManifestPath);
     const highlightItems = configuredHighlightItems.length
@@ -2044,8 +2011,8 @@ export function createMarketingTourOnePagerPdfWriter({
       registerPdfFonts(doc, renderFonts);
       doc.addPage({ size: PAGE_SIZE, margin: 0 });
 
-      drawBackground(doc, heroBackgroundBuffer);
-      drawLogo(doc, logoPath);
+      drawMarketingTourPdfBackground(doc, heroBackgroundBuffer);
+      drawMarketingTourOnePagerLogo(doc, logoPath);
       drawDurationBadge(doc, duration, renderFonts);
       const mainCopyLayout = drawMainCopy(doc, tour, duration, renderFonts, normalizedLang);
       const highlightsY = Math.max(438, Number(mainCopyLayout?.highlightsY) || 438);
