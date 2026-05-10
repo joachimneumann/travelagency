@@ -892,6 +892,146 @@ test("public booking request inherits the selected marketing tour travel plan wi
   }
 });
 
+test("public booking request materializes submitted custom tour day selections", async () => {
+  await resetStore();
+  let baseTourId = "";
+  let optionalTourId = "";
+  try {
+    const baseTourResult = await requestJson(
+      endpointPath("tour_create"),
+      apiHeaders("atp_tour_editor", "tour-editor", "kc-tour-editor"),
+      {
+        method: "POST",
+        body: {
+          title: `Custom booking base tour ${Date.now()}`,
+          styles: ["culture"],
+          short_description: "Base tour for custom public booking",
+          travel_plan: {
+            destination_scope: [
+              { destination: "VN", areas: [] }
+            ],
+            days: [
+              {
+                id: "custom_booking_base_day_1",
+                day_number: 1,
+                title: "Base day one",
+                services: [
+                  {
+                    id: "custom_booking_base_service_1",
+                    timing_kind: "label",
+                    time_label: "Morning",
+                    kind: "activity",
+                    title: "Base service one"
+                  }
+                ]
+              },
+              {
+                id: "custom_booking_base_day_2",
+                day_number: 2,
+                title: "Base day two selected",
+                services: [
+                  {
+                    id: "custom_booking_base_service_2",
+                    timing_kind: "label",
+                    time_label: "Afternoon",
+                    kind: "meal",
+                    title: "Base service two selected"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    );
+    assert.equal(baseTourResult.status, 201);
+    baseTourId = baseTourResult.body.tour.id;
+
+    const optionalTourResult = await requestJson(
+      endpointPath("tour_create"),
+      apiHeaders("atp_tour_editor", "tour-editor", "kc-tour-editor"),
+      {
+        method: "POST",
+        body: {
+          title: `Custom booking optional tour ${Date.now()}`,
+          styles: ["culture"],
+          short_description: "Optional tour day for custom public booking",
+          travel_plan: {
+            destination_scope: [
+              { destination: "VN", areas: [] }
+            ],
+            days: [
+              {
+                id: "custom_booking_optional_day",
+                day_number: 1,
+                title: "Optional day selected first",
+                services: [
+                  {
+                    id: "custom_booking_optional_service",
+                    timing_kind: "label",
+                    time_label: "Evening",
+                    kind: "activity",
+                    title: "Optional service selected first"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    );
+    assert.equal(optionalTourResult.status, 201);
+    optionalTourId = optionalTourResult.body.tour.id;
+
+    const result = await requestJson(endpointPath("public_bookings"), {}, {
+      method: "POST",
+      body: {
+        name: "Custom Tour Customer",
+        email: "custom-tour@example.com",
+        preferred_language: "en",
+        preferred_currency: "USD",
+        destinations: ["Vietnam"],
+        travel_style: ["Culture"],
+        booking_name: "Custom Hanoi and Hue tour",
+        tour_id: baseTourId,
+        custom_tour: {
+          schema_version: 1,
+          base_tour_id: baseTourId,
+          title: "Custom Hanoi and Hue tour",
+          selected_days: [
+            { source_tour_id: optionalTourId, source_day_id: "custom_booking_optional_day" },
+            { source_tour_id: baseTourId, source_day_id: "custom_booking_base_day_2" }
+          ]
+        }
+      }
+    });
+
+    assert.equal(result.status, 201);
+    const booking = result.body.booking;
+    assert.equal(booking.web_form_submission.custom_tour.base_tour_id, baseTourId);
+    assert.deepEqual(booking.web_form_submission.custom_tour.selected_days, [
+      { source_tour_id: optionalTourId, source_day_id: "custom_booking_optional_day" },
+      { source_tour_id: baseTourId, source_day_id: "custom_booking_base_day_2" }
+    ]);
+    assert.deepEqual(booking.travel_plan.destinations, ["VN"]);
+    assert.deepEqual(booking.travel_plan.days.map((day) => day.day_number), [1, 2]);
+    assert.deepEqual(booking.travel_plan.days.map((day) => day.title), [
+      "Optional day selected first",
+      "Base day two selected"
+    ]);
+    assert.deepEqual(booking.travel_plan.days.map((day) => day.services[0].title), [
+      "Optional service selected first",
+      "Base service two selected"
+    ]);
+    assert.notEqual(booking.travel_plan.days[0].id, "custom_booking_optional_day");
+    assert.notEqual(booking.travel_plan.days[1].services[0].id, "custom_booking_base_service_2");
+  } finally {
+    await resetStore();
+    if (baseTourId) await deleteTourForTest(baseTourId);
+    if (optionalTourId) await deleteTourForTest(optionalTourId);
+  }
+});
+
 test("booking detail, activities, and payment documents conform to the mobile contract", async () => {
   const createdBooking = await createSeedBooking();
   const bookingId = createdBooking.id;

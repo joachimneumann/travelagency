@@ -10,6 +10,11 @@ import {
   isSuspiciousSentinelString,
   resolveBookingNameForStorage
 } from "../../domain/booking_names.js";
+import {
+  destinationScopeDestinations,
+  mergeDestinationScopeWithTravelPlanLocations,
+  normalizeDestinationScope
+} from "../../domain/destination_scope.js";
 import { normalizePdfLang } from "../../lib/pdf_i18n.js";
 import { createBookingNotificationEmailService } from "../../lib/booking_notification_email.js";
 import { cloneBookingForTesting } from "../../domain/booking_clone.js";
@@ -231,11 +236,57 @@ export function createBookingHandlers(deps) {
     };
   }
 
+  function normalizeCustomTourSelectedDays(value, fallbackTourId = "") {
+    const normalizedFallbackTourId = normalizeText(fallbackTourId);
+    return (Array.isArray(value) ? value : [])
+      .map((item) => {
+        const source = item && typeof item === "object" && !Array.isArray(item) ? item : {};
+        const sourceTourId = normalizeText(source.source_tour_id) || normalizedFallbackTourId;
+        const sourceDayId = normalizeText(source.source_day_id);
+        return sourceTourId && sourceDayId
+          ? { source_tour_id: sourceTourId, source_day_id: sourceDayId }
+          : null;
+      })
+      .filter(Boolean);
+  }
+
+  function normalizeSubmittedCustomTour(value, fallbackBaseTourId = "") {
+    const source = value && typeof value === "object" && !Array.isArray(value) ? value : null;
+    if (!source) return null;
+    const baseTourId = normalizeText(source.base_tour_id || source.tour_id || fallbackBaseTourId);
+    const selectedDays = normalizeCustomTourSelectedDays(source.selected_days, baseTourId);
+    if (!baseTourId || !selectedDays.length) return null;
+    const schemaVersion = safeInt(source.schema_version || 1);
+    const title = normalizeText(source.title);
+    return {
+      schema_version: Number.isInteger(schemaVersion) && schemaVersion > 0 ? schemaVersion : 1,
+      base_tour_id: baseTourId,
+      ...(title ? { title } : {}),
+      selected_days: selectedDays
+    };
+  }
+
+  function destinationCountryCodeFromTourValue(value) {
+    const normalized = normalizeText(value);
+    if (!normalized) return "";
+    const directCode = normalized.toUpperCase();
+    if (DESTINATION_COUNTRY_CODES.includes(directCode)) return directCode;
+    const tourCode = normalizeTourDestinationCode(normalized);
+    return DESTINATION_COUNTRY_CODE_BY_TOUR_CODE[tourCode] || "";
+  }
+
   function tourCountryCodesFromTour(tour) {
     return Array.from(
       new Set(
-        tourDestinationCodes(tour)
-          .map((code) => DESTINATION_COUNTRY_CODE_BY_TOUR_CODE[code] || normalizeText(code).toUpperCase())
+        [
+          ...tourDestinationCodes(tour),
+          ...normalizeStringArray(tour?.destination_codes),
+          ...normalizeStringArray(tour?.destinations),
+          ...(Array.isArray(tour?.travel_plan?.destination_scope)
+            ? tour.travel_plan.destination_scope.map((entry) => entry?.destination)
+            : [])
+        ]
+          .map(destinationCountryCodeFromTourValue)
           .filter((code) => DESTINATION_COUNTRY_CODES.includes(code))
       )
     );
@@ -254,11 +305,134 @@ export function createBookingHandlers(deps) {
     return publishedCountryCodes;
   }
 
-  async function canSeedSubmittedTourFromPublicForm(tour) {
+  async function canSeedSubmittedTourFromPublicForm(tour, fallbackDestinations = []) {
     const tourCountryCodes = tourCountryCodesFromTour(tour);
-    if (!tourCountryCodes.length) return false;
+    const candidateCountryCodes = tourCountryCodes.length
+      ? tourCountryCodes
+      : normalizeCountryCodes(fallbackDestinations, normalizeText);
+    if (!candidateCountryCodes.length) return false;
     const publishedCountryCodes = await publishedPublicWebpageCountryCodes();
-    return tourCountryCodes.some((countryCode) => publishedCountryCodes.has(countryCode));
+    return candidateCountryCodes.some((countryCode) => publishedCountryCodes.has(countryCode));
+  }
+
+  function sourceDaysByIdForCustomTour(tour) {
+    const normalizedTravelPlan = normalizeMarketingTourTravelPlan(tour?.travel_plan, {
+      sourceLang: "en",
+      contentLang: "en",
+      flatLang: "en"
+    });
+    return new Map((Array.isArray(normalizedTravelPlan?.days) ? normalizedTravelPlan.days : [])
+      .map((day) => [normalizeText(day?.id), day])
+      .filter(([dayId]) => Boolean(dayId)));
+  }
+
+  async function buildInitialTravelPlanFromSubmittedCustomTour(customTour, booking, fallbackDestinations, destinationCatalogStore) {
+    const normalizedCustomTour = normalizeSubmittedCustomTour(
+      customTour,
+      booking?.web_form_submission?.tour_id
+    );
+    if (!normalizedCustomTour) return null;
+
+    const bookingId = normalizeText(booking?.id);
+    let tours = [];
+    try {
+      tours = (await readTours()).map((item) => normalizeTourForStorage(item));
+    } catch (error) {
+      console.warn("[public-booking-tour] Could not read marketing tours for custom submission.", {
+        base_tour_id: normalizedCustomTour.base_tour_id,
+        booking_id: bookingId,
+        error: String(error?.message || error)
+      });
+      return null;
+    }
+
+    const toursById = new Map(tours.map((tour) => [normalizeText(tour?.id), tour]).filter(([tourId]) => Boolean(tourId)));
+    const baseTour = toursById.get(normalizedCustomTour.base_tour_id);
+    if (!baseTour) return null;
+
+    try {
+      if (!(await canSeedSubmittedTourFromPublicForm(baseTour, fallbackDestinations))) {
+        return null;
+      }
+    } catch (error) {
+      console.warn("[public-booking-tour] Could not verify submitted custom tour publication state.", {
+        base_tour_id: normalizedCustomTour.base_tour_id,
+        booking_id: bookingId,
+        error: String(error?.message || error)
+      });
+      return null;
+    }
+
+    const sourceCaches = new Map();
+    const selectedSourceDays = [];
+    for (const selection of normalizedCustomTour.selected_days) {
+      const sourceTourId = normalizeText(selection.source_tour_id);
+      const sourceDayId = normalizeText(selection.source_day_id);
+      const sourceTour = toursById.get(sourceTourId);
+      if (!sourceTour) return null;
+      try {
+        if (!(await canSeedSubmittedTourFromPublicForm(sourceTour, fallbackDestinations))) {
+          return null;
+        }
+      } catch (error) {
+        console.warn("[public-booking-tour] Could not verify submitted custom day source publication state.", {
+          source_tour_id: sourceTourId,
+          source_day_id: sourceDayId,
+          booking_id: bookingId,
+          error: String(error?.message || error)
+        });
+        return null;
+      }
+      if (!sourceCaches.has(sourceTourId)) {
+        sourceCaches.set(sourceTourId, sourceDaysByIdForCustomTour(sourceTour));
+      }
+      const sourceDay = sourceCaches.get(sourceTourId).get(sourceDayId);
+      if (!sourceDay) return null;
+      selectedSourceDays.push({ sourceTourId, sourceDay });
+    }
+    if (!selectedSourceDays.length) return null;
+
+    const createdAt = nowIso();
+    let days = [];
+    try {
+      days = await Promise.all(selectedSourceDays.map(({ sourceTourId, sourceDay }, dayIndex) => (
+        marketingTourBookingTravelPlanCloner.cloneMarketingTourDayForBooking(sourceDay, {
+          dayIndex,
+          tourId: sourceTourId,
+          bookingId,
+          createdAt
+        })
+      )));
+    } catch (error) {
+      console.warn("[public-booking-tour] Could not clone submitted custom tour travel plan.", {
+        base_tour_id: normalizedCustomTour.base_tour_id,
+        booking_id: bookingId,
+        error: String(error?.message || error)
+      });
+      return null;
+    }
+
+    const destinationScope = normalizeDestinationScope(
+      mergeDestinationScopeWithTravelPlanLocations([], { days }, destinationCatalogStore),
+      fallbackDestinations
+    );
+    const nextTravelPlan = {
+      destination_scope: destinationScope,
+      destinations: destinationScopeDestinations(destinationScope),
+      days,
+      attachments: []
+    };
+    const check = validateBookingTravelPlanInput(nextTravelPlan, booking.offer);
+    if (!check.ok) {
+      console.warn("[public-booking-tour] Submitted custom tour travel plan was invalid for booking.", {
+        base_tour_id: normalizedCustomTour.base_tour_id,
+        booking_id: bookingId,
+        error: check.error
+      });
+      return null;
+    }
+
+    return check.travel_plan;
   }
 
   async function buildInitialTravelPlanFromSubmittedTour(tourId, booking, fallbackDestinations) {
@@ -281,7 +455,7 @@ export function createBookingHandlers(deps) {
     if (!tour) return defaultInitialBookingTravelPlan(fallbackDestinations);
 
     try {
-      if (!(await canSeedSubmittedTourFromPublicForm(tour))) {
+      if (!(await canSeedSubmittedTourFromPublicForm(tour, fallbackDestinations))) {
         return defaultInitialBookingTravelPlan(fallbackDestinations);
       }
     } catch (error) {
@@ -295,7 +469,9 @@ export function createBookingHandlers(deps) {
 
     let nextTravelPlan;
     try {
-      nextTravelPlan = await marketingTourBookingTravelPlanCloner.cloneMarketingTourTravelPlanForBooking(tour, booking);
+      nextTravelPlan = await marketingTourBookingTravelPlanCloner.cloneMarketingTourTravelPlanForBooking(tour, booking, {
+        fallbackDestinations
+      });
     } catch (error) {
       console.warn("[public-booking-tour] Could not clone submitted marketing tour travel plan.", {
         tour_id: normalizedTourId,
@@ -920,11 +1096,14 @@ export function createBookingHandlers(deps) {
     }
 
     const normalizedDestinations = normalizeCountryCodes(payload.destinations, normalizeText);
+    const submittedTourId = normalizeText(payload.tour_id) || null;
+    const submittedCustomTour = normalizeSubmittedCustomTour(payload.custom_tour, submittedTourId);
     const submission = {
       destinations: normalizedDestinations,
       travel_style: canonicalBookingTravelStyles(payload.travel_style),
       booking_name: initialBookingName,
-      tour_id: normalizeText(payload.tour_id) || null,
+      tour_id: submittedTourId,
+      custom_tour: submittedCustomTour,
       page_url: normalizeText(payload.page_url),
       ip_address: ipAddress || null,
       ip_country_guess: ipCountryGuess || null,
@@ -975,7 +1154,12 @@ export function createBookingHandlers(deps) {
       updated_at: now
     };
 
-    booking.travel_plan = await buildInitialTravelPlanFromSubmittedTour(
+    booking.travel_plan = await buildInitialTravelPlanFromSubmittedCustomTour(
+      submission.custom_tour,
+      booking,
+      normalizedDestinations,
+      store
+    ) || await buildInitialTravelPlanFromSubmittedTour(
       submission.tour_id,
       booking,
       normalizedDestinations

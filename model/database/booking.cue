@@ -5,11 +5,24 @@ import (
 	enums "travelagency.local/model/enums"
 )
 
+#BookingWebFormCustomTourDaySelection: {
+	source_tour_id: common.#Identifier | string
+	source_day_id:  common.#Identifier | string
+}
+
+#BookingWebFormCustomTour: {
+	schema_version?: >=1 & int
+	base_tour_id?:   common.#Identifier | string
+	title?:          string
+	selected_days?: [...#BookingWebFormCustomTourDaySelection]
+}
+
 #BookingWebFormSubmission: {
 	destinations?: [...enums.#CountryCode]
 	travel_style?: [...string]
 	booking_name?:             string
 	tour_id?:                  common.#Identifier | string
+	custom_tour?:              #BookingWebFormCustomTour
 	page_url?:                 common.#Url | string
 	ip_address?:               string
 	ip_country_guess?:         string

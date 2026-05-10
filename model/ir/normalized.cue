@@ -797,6 +797,28 @@ IR: {
 			]
 		},
 		{
+			name:       "BookingWebFormCustomTourDaySelection"
+			domain:     "booking"
+			module:     "database"
+			sourceType: "database.#BookingWebFormCustomTourDaySelection"
+			fields: [
+				{name: "source_tour_id", kind: "scalar", typeName: "Identifier", required: true},
+				{name: "source_day_id", kind: "scalar", typeName: "Identifier", required: true},
+			]
+		},
+		{
+			name:       "BookingWebFormCustomTour"
+			domain:     "booking"
+			module:     "database"
+			sourceType: "database.#BookingWebFormCustomTour"
+			fields: [
+				{name: "schema_version", kind: "scalar", typeName: "int", required: false},
+				{name: "base_tour_id", kind: "scalar", typeName: "Identifier", required: false},
+				{name: "title", kind: "scalar", typeName: "string", required: false},
+				{name: "selected_days", kind: "entity", typeName: "BookingWebFormCustomTourDaySelection", required: false, isArray: true},
+			]
+		},
+		{
 			name:       "BookingWebFormSubmission"
 			domain:     "booking"
 			module:     "database"
@@ -806,6 +828,7 @@ IR: {
 				{name: "travel_style", kind: "scalar", typeName: "string", required: false, isArray: true},
 				{name: "booking_name", kind: "scalar", typeName: "string", required: false},
 				{name: "tour_id", kind: "scalar", typeName: "Identifier", required: false},
+				{name: "custom_tour", kind: "entity", typeName: "BookingWebFormCustomTour", required: false},
 				{name: "page_url", kind: "scalar", typeName: "string", required: false},
 				{name: "ip_address", kind: "scalar", typeName: "string", required: false},
 				{name: "ip_country_guess", kind: "scalar", typeName: "string", required: false},
@@ -1683,6 +1706,7 @@ IR: {
 				{name: "notes", kind: "scalar", typeName: "string", required: false},
 				{name: "booking_name", kind: "scalar", typeName: "string", required: false},
 				{name: "tour_id", kind: "scalar", typeName: "Identifier", required: false},
+				{name: "custom_tour", kind: "entity", typeName: "BookingWebFormCustomTour", required: false},
 				{name: "page_url", kind: "scalar", typeName: "string", required: false},
 				{name: "referrer", kind: "scalar", typeName: "string", required: false},
 				{name: "utm_source", kind: "scalar", typeName: "string", required: false},

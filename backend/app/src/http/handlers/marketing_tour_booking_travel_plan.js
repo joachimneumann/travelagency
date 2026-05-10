@@ -97,6 +97,22 @@ export function createMarketingTourBookingTravelPlanCloner(deps) {
     );
   }
 
+  function bookingDestinationCodesFromValues(values) {
+    return Array.from(
+      new Set(
+        (Array.isArray(values) ? values : [])
+          .map((value) => {
+            const normalized = normalizeText(value);
+            if (!normalized) return "";
+            const mappedCode = TOUR_DESTINATION_TO_COUNTRY_CODE[normalized.toLowerCase()];
+            if (mappedCode) return mappedCode;
+            return normalized.toUpperCase();
+          })
+          .filter((code) => DESTINATION_COUNTRY_CODES.includes(code))
+      )
+    );
+  }
+
   async function copyTourServiceImageToBooking(image, {
     tourId,
     bookingId,
@@ -227,7 +243,7 @@ export function createMarketingTourBookingTravelPlanCloner(deps) {
     };
   }
 
-  async function cloneMarketingTourTravelPlanForBooking(tour, booking) {
+  async function cloneMarketingTourTravelPlanForBooking(tour, booking, options = {}) {
     const normalized = normalizeMarketingTourTravelPlan(tour?.travel_plan, {
       sourceLang: "en",
       contentLang: "en",
@@ -235,7 +251,10 @@ export function createMarketingTourBookingTravelPlanCloner(deps) {
     });
     const createdAt = nowIso();
     const bookingId = normalizeText(booking?.id);
-    const destinations = bookingDestinationCodesFromTour(tour);
+    const tourDestinations = bookingDestinationCodesFromTour(tour);
+    const destinations = tourDestinations.length
+      ? tourDestinations
+      : bookingDestinationCodesFromValues(options?.fallbackDestinations);
     return {
       destination_scope: normalizeDestinationScope(normalized.destination_scope, destinations),
       destinations,

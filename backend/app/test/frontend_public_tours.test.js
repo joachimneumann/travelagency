@@ -292,11 +292,16 @@ test("public tour travel-plan content and detail chrome follow the frontend lang
   assert.match(els.tourGrid.innerHTML, /tour-plan-summary/);
   assert.match(els.tourGrid.innerHTML, /tour-plan-summary-day/);
   assert.match(els.tourGrid.innerHTML, /Ihre Reiseroute/);
+  const cardActionsStart = els.tourGrid.innerHTML.indexOf('class="tour-card__actions"');
+  const cardActionsEnd = els.tourGrid.innerHTML.indexOf("</div>", cardActionsStart);
+  const cardActionsMarkup = els.tourGrid.innerHTML.slice(cardActionsStart, cardActionsEnd);
+  assert.match(cardActionsMarkup, /tour-card__show-more[\s\S]*tour-card__plan-trip/);
+  assert.match(cardActionsMarkup, />Get a Quote<\/button>/);
   assert.match(els.tourGrid.innerHTML, /tour-plan-actions/);
   assert.match(els.tourGrid.innerHTML, /data-tour-plan-itinerary-toggle/);
   assert.match(els.tourGrid.innerHTML, /tour-plan-itinerary"[^>]+hidden/);
   assert.match(els.tourGrid.innerHTML, /data-tour-plan-itinerary-toggle[\s\S]*Ihre Reiseroute[\s\S]*<\/button>/);
-  assert.match(els.tourGrid.innerHTML, />Angebot anfragen<\/button>/);
+  assert.match(els.tourGrid.innerHTML, />Get a Quote<\/button>/);
   assert.match(els.tourGrid.innerHTML, /data-tour-plan-summary-toggle/);
   assert.match(els.tourGrid.innerHTML, /data-tour-plan-summary-details hidden/);
   assert.doesNotMatch(els.tourGrid.innerHTML, /data-tour-plan-full-itinerary/);
@@ -918,6 +923,135 @@ test("tour customizer proposes a route-based title for saved customized days", a
   });
 
   assert.equal(customizer.customizedTitleForTrip(trip), "Hanoi and Hue");
+});
+
+test("public tour controller exposes saved custom tour day refs for booking submission", async () => {
+  const storage = new Map();
+  global.HTMLElement = FakeElement;
+  global.HTMLButtonElement = FakeElement;
+  global.window = {
+    localStorage: {
+      getItem(key) {
+        return storage.has(key) ? storage.get(key) : null;
+      },
+      setItem(key, value) {
+        storage.set(key, String(value));
+      },
+      removeItem(key) {
+        storage.delete(key);
+      }
+    },
+    addEventListener() {},
+    requestAnimationFrame(callback) {
+      if (typeof callback === "function") callback();
+    },
+    matchMedia() {
+      return { matches: false };
+    }
+  };
+
+  const { createFrontendToursController } = await loadToursController();
+  const trip = {
+    id: "tour_booking_custom_submit",
+    title: "Custom submission tour",
+    travel_plan: {
+      days: [
+        {
+          id: "day_original",
+          title: "Original day",
+          primary_location_id: "place_hanoi",
+          services: [
+            { title: "Arrival", image: { storage_path: "/assets/img/hanoi.webp" } }
+          ]
+        }
+      ]
+    }
+  };
+  storage.set("asiatravelplan.custom_tour.tour_booking_custom_submit", JSON.stringify({
+    originalTourId: "tour_booking_custom_submit",
+    timelineDays: [
+      {
+        sourceTourId: "tour_booking_custom_submit",
+        sourceDayId: "day_original",
+        day: trip.travel_plan.days[0]
+      },
+      {
+        sourceTourId: "tour_optional_submit",
+        sourceDayId: "day_optional",
+        day: {
+          id: "day_optional",
+          title: "Optional day",
+          primary_location_id: "place_hue",
+          services: [
+            { title: "Citadel", image: { storage_path: "/assets/img/hue.webp" } }
+          ]
+        }
+      }
+    ]
+  }));
+
+  const controller = createFrontendToursController({
+    state: {
+      lang: "en",
+      filteredTrips: [trip],
+      trips: [trip],
+      visibleToursCount: 1,
+      expandedTourIds: new Set(),
+      customizeFeatureEnabled: true,
+      filterOptions: {
+        destinations: [{ code: "vietnam", label: "Vietnam" }],
+        styles: [],
+        destinationScopeCatalog: {
+          destinations: [{ code: "vietnam", label: "Vietnam" }],
+          places: [
+            { id: "place_hanoi", destination: "vietnam", label: "Hanoi", latitude: 21.0278, longitude: 105.8342 },
+            { id: "place_hue", destination: "vietnam", label: "Hue", latitude: 16.4637, longitude: 107.5909 }
+          ]
+        }
+      },
+      filters: {
+        dest: [],
+        area: "",
+        place: "",
+        style: []
+      }
+    },
+    els: {
+      tourGrid: new FakeElement(),
+      noResultsMessage: new FakeElement(),
+      tourActions: null,
+      showMoreTours: null
+    },
+    backendBaseUrl: "",
+    initialVisibleTours: 1,
+    showMoreBatch: 1,
+    frontendT: (_id, fallback, vars = {}) => String(fallback ?? "").replace(/\{([^{}]+)\}/g, (_match, key) => (
+      Object.prototype.hasOwnProperty.call(vars, key) ? String(vars[key]) : ""
+    )),
+    currentFrontendLang: () => "en",
+    preferredCurrencyForFrontendLang: () => "USD",
+    approximateDisplayAmountFromUSD: () => null,
+    formatDisplayMoney: () => "",
+    defaultBookingCurrency: "USD",
+    escapeHTML,
+    escapeAttr,
+    updateBookingModalTitle() {},
+    openBookingModal() {},
+    setSelectedTourContext() {},
+    clearSelectedTourContext() {},
+    setBookingField() {},
+    prefillBookingFormWithFilters() {}
+  });
+
+  assert.deepEqual(controller.customTourSubmissionForTrip(trip.id), {
+    schema_version: 1,
+    base_tour_id: "tour_booking_custom_submit",
+    title: "Hanoi and Hue",
+    selected_days: [
+      { source_tour_id: "tour_booking_custom_submit", source_day_id: "day_original" },
+      { source_tour_id: "tour_optional_submit", source_day_id: "day_optional" }
+    ]
+  });
 });
 
 test("tour customizer keeps route segments for non-consecutive location revisits", async () => {

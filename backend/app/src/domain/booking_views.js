@@ -151,6 +151,35 @@ export function createBookingViewHelpers({
     return null;
   }
 
+  function validateCustomTourInputShape(value) {
+    if (value === undefined || value === null || value === "") return { ok: true };
+    const source = value && typeof value === "object" && !Array.isArray(value) ? value : null;
+    if (!source) return { ok: false, error: "custom_tour must be an object" };
+    if (source.schema_version !== undefined && source.schema_version !== null) {
+      const schemaVersion = safeOptionalInt(source.schema_version);
+      if (!Number.isInteger(schemaVersion) || schemaVersion < 1) {
+        return { ok: false, error: "custom_tour.schema_version must be a positive integer" };
+      }
+    }
+    if (source.base_tour_id !== undefined && source.base_tour_id !== null && !normalizeText(source.base_tour_id)) {
+      return { ok: false, error: "custom_tour.base_tour_id must be present when provided" };
+    }
+    if (source.selected_days !== undefined && !Array.isArray(source.selected_days)) {
+      return { ok: false, error: "custom_tour.selected_days must be an array" };
+    }
+    for (const selectedDay of Array.isArray(source.selected_days) ? source.selected_days : []) {
+      const day = selectedDay && typeof selectedDay === "object" && !Array.isArray(selectedDay) ? selectedDay : null;
+      if (!day) return { ok: false, error: "custom_tour.selected_days entries must be objects" };
+      if (!normalizeText(day.source_tour_id)) {
+        return { ok: false, error: "custom_tour.selected_days.source_tour_id is required" };
+      }
+      if (!normalizeText(day.source_day_id)) {
+        return { ok: false, error: "custom_tour.selected_days.source_day_id is required" };
+      }
+    }
+    return { ok: true };
+  }
+
   function validateBookingInput(payload) {
     const required = ["name", "preferred_currency", "preferred_language"];
     const missing = required.filter((key) => !normalizeText(payload[key]));
@@ -184,6 +213,9 @@ export function createBookingViewHelpers({
     if (travelers !== null && travelers !== undefined && (travelers < 1 || travelers > 30)) {
       return { ok: false, error: "Travelers must be between 1 and 30" };
     }
+
+    const customTourCheck = validateCustomTourInputShape(payload.custom_tour);
+    if (!customTourCheck.ok) return customTourCheck;
 
     return { ok: true };
   }

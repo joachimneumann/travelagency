@@ -39,6 +39,7 @@ import (
 #PublicBookingCreateRequest: #WebsiteBookingForm & {
 	booking_name?:    string
 	tour_id?:         string
+	custom_tour?:     databaseModel.#BookingWebFormCustomTour
 	page_url?:        common.#Url | string
 	referrer?:        common.#Url | string
 	utm_source?:      string

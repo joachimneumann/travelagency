@@ -823,6 +823,21 @@ export function createFrontendToursController(ctx) {
     return { ...trip, title: displayTitle };
   }
 
+  function customTourSubmissionForTrip(tripId) {
+    const normalizedTripId = normalizeText(tripId);
+    if (!normalizedTripId || !tourCustomizer?.hasCustomization(normalizedTripId)) return null;
+    const selectedDays = tourCustomizer.selectedDaysForPdf(normalizedTripId);
+    if (!selectedDays.length) return null;
+    const trip = findTripById(normalizedTripId);
+    const title = tourCustomizer.customizedTitleForTrip(trip);
+    return {
+      schema_version: 1,
+      base_tour_id: normalizedTripId,
+      ...(title ? { title } : {}),
+      selected_days: selectedDays
+    };
+  }
+
   function tourDetailsCache() {
     if (!state.tourDetailsById || typeof state.tourDetailsById !== "object") {
       state.tourDetailsById = {};
@@ -1118,7 +1133,7 @@ export function createFrontendToursController(ctx) {
     const tripShortDescription = resolveLocalizedFrontendText(trip?.short_description, state.lang);
     const countries = tourDestinations(trip);
     const countriesLabel = countries.join(", ");
-    const ctaLabel = frontendT("tour.card.plan_trip", "Plan this trip");
+    const ctaLabel = frontendT("tour.card.get_quote", "Get a Quote");
     const durationMetaLabel = tourDurationDaysLabel(trip);
     const privateTourLabel = frontendT("tour.card.private_tour", "Private tour");
     const showMoreLabel = tourShowMoreLabel(expanded);
@@ -1240,8 +1255,8 @@ export function createFrontendToursController(ctx) {
             <p class="tour-desc" data-tour-desc>${escapeHTML(tripShortDescription)}</p>
           </div>
           <div class="tour-card__actions">
-            <button class="btn btn-primary tour-card__plan-trip" type="button" data-open-modal data-trip-id="${escapeAttr(tripId)}">${escapeHTML(ctaLabel)}</button>
             <a class="btn tour-card__show-more" href="${escapeAttr(detailsHref)}" data-tour-card-show-more data-trip-id="${escapeAttr(tripId)}" ${showMoreStateAttrs}>${renderTourShowMoreLabel(showMoreLabel)}</a>
+            <button class="btn btn-primary tour-card__plan-trip" type="button" data-open-modal data-trip-id="${escapeAttr(tripId)}">${escapeHTML(ctaLabel)}</button>
           </div>
         </div>
       </article>
@@ -4304,6 +4319,7 @@ export function createFrontendToursController(ctx) {
 
   return {
     applyFilters,
+    customTourSubmissionForTrip,
     filterLabels,
     getCheckedValues,
     getFiltersFromURL,

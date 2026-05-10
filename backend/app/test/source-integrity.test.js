@@ -5756,7 +5756,7 @@ test("homepage tour cards expand descriptions and align same-row cards without a
   );
   assert.match(
     tourCardCssSource,
-    /\.tour-body \{[\s\S]*grid-template-rows: auto auto minmax\(0, 1fr\) min-content;[\s\S]*\.tour-desc-wrap \{[\s\S]*align-content: start;[\s\S]*\.tour-card__actions \{[\s\S]*grid-template-columns: minmax\(0, 1fr\) minmax\(0, 0\.78fr\);[\s\S]*margin-top: 0\.4rem;/,
+    /\.tour-body \{[\s\S]*grid-template-rows: auto auto minmax\(0, 1fr\) min-content;[\s\S]*\.tour-desc-wrap \{[\s\S]*align-content: start;[\s\S]*\.tour-card__actions \{[\s\S]*grid-template-columns: minmax\(0, 0\.78fr\) minmax\(0, 1fr\);[\s\S]*margin-top: 0\.4rem;/,
     "Tour card text rows should pin the two action buttons side by side at the bottom"
   );
   assert.doesNotMatch(

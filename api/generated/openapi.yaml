@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-05-09T03:14:15Z
+# 2026-05-10T05:21:31Z
 
 ---
 openapi: 3.1.0
@@ -5113,6 +5113,33 @@ components:
         created_at:
           type: string
           format: date-time
+    BookingWebFormCustomTourDaySelection:
+      type: object
+      required:
+      - source_tour_id
+      - source_day_id
+      properties:
+        source_tour_id:
+          type: string
+        source_day_id:
+          type: string
+    BookingWebFormCustomTour:
+      type: object
+      required: []
+      properties:
+        schema_version:
+          type: integer
+          nullable: true
+        base_tour_id:
+          type: string
+          nullable: true
+        title:
+          type: string
+          nullable: true
+        selected_days:
+          type: array
+          items:
+            "$ref": "#/components/schemas/BookingWebFormCustomTourDaySelection"
     BookingWebFormSubmission:
       type: object
       required: []
@@ -5130,6 +5157,9 @@ components:
           nullable: true
         tour_id:
           type: string
+          nullable: true
+        custom_tour:
+          "$ref": "#/components/schemas/BookingWebFormCustomTour"
           nullable: true
         page_url:
           type: string
@@ -6616,6 +6646,9 @@ components:
           nullable: true
         tour_id:
           type: string
+          nullable: true
+        custom_tour:
+          "$ref": "#/components/schemas/BookingWebFormCustomTour"
           nullable: true
         page_url:
           type: string

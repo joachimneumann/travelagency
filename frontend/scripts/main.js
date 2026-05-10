@@ -432,6 +432,7 @@ const toursController = createFrontendToursController({
 });
 const {
   applyFilters,
+  customTourSubmissionForTrip,
   filterLabels,
   getCheckedValues,
   getFiltersFromURL,
@@ -2195,6 +2196,8 @@ async function submitBookingForm() {
     return;
   }
 
+  const selectedTourId = normalizeText(entries.tour_id);
+  const customTour = customTourSubmissionForTrip?.(selectedTourId);
   const payload = {
     destinations: selectedDestinations,
     travel_style: selectedStyles,
@@ -2211,7 +2214,8 @@ async function submitBookingForm() {
     preferred_language: entries.preferred_language || "",
     notes: entries.notes || "",
     booking_name: resolveLocalizedFrontendText(state.selectedTour?.title, state.lang) || "",
-    tour_id: entries.tour_id || "",
+    tour_id: selectedTourId,
+    ...(customTour ? { custom_tour: customTour } : {}),
     page_url: window.location.href,
     referrer: document.referrer || "",
     utm_source: getQueryParam("utm_source"),
