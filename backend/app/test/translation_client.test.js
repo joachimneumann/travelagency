@@ -270,138 +270,6 @@ test("google translation runs entries with bounded concurrency", async () => {
   }
 });
 
-test("global translation rules can satisfy an exact override without calling a provider", async () => {
-  const originalFetch = globalThis.fetch;
-  let callCount = 0;
-  globalThis.fetch = async () => {
-    callCount += 1;
-    return {
-      ok: true,
-      async json() {
-        return [[
-          ["ignored", null, null, null]
-        ]];
-      }
-    };
-  };
-
-  try {
-    const client = createTranslationClient({
-      apiKey: "",
-      googleFallbackEnabled: true
-    });
-    const translated = await client.translateEntries(
-      {
-        value: "Travel plan"
-      },
-      "fr",
-      {
-        sourceLangCode: "en",
-        provider: "google",
-        cacheNamespace: "translation-rules",
-        translationRules: [
-          { source: "Travel plan", target_lang: "fr", target: "Itineraire" }
-        ]
-      }
-    );
-
-    assert.equal(translated.value, "Itineraire");
-    assert.equal(callCount, 0);
-  } finally {
-    globalThis.fetch = originalFetch;
-  }
-});
-
-test("global translation rules can group multiple language overrides under one source term", async () => {
-  const originalFetch = globalThis.fetch;
-  let callCount = 0;
-  globalThis.fetch = async () => {
-    callCount += 1;
-    return {
-      ok: true,
-      async json() {
-        return [[
-          ["ignored", null, null, null]
-        ]];
-      }
-    };
-  };
-
-  try {
-    const client = createTranslationClient({
-      apiKey: "",
-      googleFallbackEnabled: true
-    });
-    const translated = await client.translateEntries(
-      {
-        value: "Travel plan"
-      },
-      "vi",
-      {
-        sourceLangCode: "en",
-        provider: "google",
-        cacheNamespace: "translation-rules-grouped",
-        translationRules: [
-          {
-            source: "Travel plan",
-            targets: [
-              { target_lang: "fr", target: "Itineraire" },
-              { target_lang: "vi", target: "Ke hoach du lich" }
-            ]
-          }
-        ]
-      }
-    );
-
-    assert.equal(translated.value, "Ke hoach du lich");
-    assert.equal(callCount, 0);
-  } finally {
-    globalThis.fetch = originalFetch;
-  }
-});
-
-test("global translation rules are restored inside longer translated strings", async () => {
-  const originalFetch = globalThis.fetch;
-  let requestUrl = "";
-  globalThis.fetch = async (url) => {
-    requestUrl = String(url || "");
-    return {
-      ok: true,
-      async json() {
-        return [[
-          ["Consultez [[ATP_TRANSLATION_RULE_0]] a Hoi An.", null, null, null]
-        ]];
-      }
-    };
-  };
-
-  try {
-    const client = createTranslationClient({
-      apiKey: "",
-      googleFallbackEnabled: true
-    });
-    const translated = await client.translateEntries(
-      {
-        value: "See AsiaTravelPlan in Hoi An."
-      },
-      "fr",
-      {
-        sourceLangCode: "en",
-        provider: "google",
-        cacheNamespace: "translation-rules",
-        translationRules: [
-          { source: "AsiaTravelPlan", target_lang: "fr", target: "AsiaTravelPlan" }
-        ]
-      }
-    );
-
-    assert.equal(translated.value, "Consultez AsiaTravelPlan a Hoi An.");
-    assert.match(decodeURIComponent(requestUrl), /\[\[ATP_TRANSLATION_RULE_0\]\]/);
-  } finally {
-    globalThis.fetch = originalFetch;
-  }
-});
-
 test("global protected terms are loaded from file and restored inside longer translated strings", async () => {
   const originalFetch = globalThis.fetch;
   const tempDir = await mkdtemp(path.join(os.tmpdir(), "atp-protected-terms-"));
@@ -419,7 +287,7 @@ test("global protected terms are loaded from file and restored inside longer tra
       ok: true,
       async json() {
         return [[
-          ["Ouvrez [[ATP_TRANSLATION_RULE_0]] [[ATP_TRANSLATION_RULE_1]].", null, null, null]
+          ["Ouvrez [[ATP_PROTECTED_TERM_0]] [[ATP_PROTECTED_TERM_1]].", null, null, null]
         ]];
       }
     };
@@ -444,7 +312,7 @@ test("global protected terms are loaded from file and restored inside longer tra
     );
 
     assert.equal(translated.value, "Ouvrez Asia Travel Plan backend.");
-    assert.equal(requestedSource, "Open [[ATP_TRANSLATION_RULE_0]] [[ATP_TRANSLATION_RULE_1]].");
+    assert.equal(requestedSource, "Open [[ATP_PROTECTED_TERM_0]] [[ATP_PROTECTED_TERM_1]].");
   } finally {
     globalThis.fetch = originalFetch;
     await rm(tempDir, { recursive: true, force: true });
@@ -496,7 +364,7 @@ test("global protected terms can satisfy an exact match without calling a provid
   }
 });
 
-test("translation cache is keyed by source text hash, source lang, target lang, translation profile, and global rules", async () => {
+test("translation cache is keyed by source text hash, source lang, target lang, translation profile, and protected terms", async () => {
   const originalFetch = globalThis.fetch;
   const requestLog = [];
   globalThis.fetch = async (url) => {
@@ -526,10 +394,7 @@ test("translation cache is keyed by source text hash, source lang, target lang, 
       {
         sourceLangCode: "en",
         provider: "google",
-        cacheNamespace: "tour-marketing-copy",
-        translationRules: [
-          { source: "AsiaTravelPlan", target_lang: "fr", target: "AsiaTravelPlan" }
-        ]
+        cacheNamespace: "tour-marketing-copy"
       }
     );
     const second = await client.translateEntries(
@@ -538,10 +403,7 @@ test("translation cache is keyed by source text hash, source lang, target lang, 
       {
         sourceLangCode: "en",
         provider: "google",
-        cacheNamespace: "tour-marketing-copy",
-        translationRules: [
-          { source: "AsiaTravelPlan", target_lang: "fr", target: "AsiaTravelPlan" }
-        ]
+        cacheNamespace: "tour-marketing-copy"
       }
     );
     const differentTarget = await client.translateEntries(
@@ -550,10 +412,7 @@ test("translation cache is keyed by source text hash, source lang, target lang, 
       {
         sourceLangCode: "en",
         provider: "google",
-        cacheNamespace: "tour-marketing-copy",
-        translationRules: [
-          { source: "AsiaTravelPlan", target_lang: "de", target: "AsiaTravelPlan" }
-        ]
+        cacheNamespace: "tour-marketing-copy"
       }
     );
     const differentSource = await client.translateEntries(
@@ -562,10 +421,7 @@ test("translation cache is keyed by source text hash, source lang, target lang, 
       {
         sourceLangCode: "vi",
         provider: "google",
-        cacheNamespace: "tour-marketing-copy",
-        translationRules: [
-          { source: "AsiaTravelPlan", target_lang: "fr", target: "AsiaTravelPlan" }
-        ]
+        cacheNamespace: "tour-marketing-copy"
       }
     );
     const differentProfile = await client.translateEntries(
@@ -575,22 +431,17 @@ test("translation cache is keyed by source text hash, source lang, target lang, 
         sourceLangCode: "en",
         provider: "google",
         cacheNamespace: "tour-marketing-copy",
-        translationProfile: "staff_profile",
-        translationRules: [
-          { source: "AsiaTravelPlan", target_lang: "fr", target: "AsiaTravelPlan" }
-        ]
+        translationProfile: "staff_profile"
       }
     );
-    const differentRules = await client.translateEntries(
+    const differentProtectedTerms = await client.translateEntries(
       { value: "ATP profile" },
       "fr",
       {
         sourceLangCode: "en",
         provider: "google",
         cacheNamespace: "tour-marketing-copy",
-        translationRules: [
-          { source: "Kommo", target_lang: "fr", target: "Kommo" }
-        ]
+        protectedTerms: ["profile"]
       }
     );
 
@@ -599,7 +450,7 @@ test("translation cache is keyed by source text hash, source lang, target lang, 
     assert.equal(differentTarget.value, "translated-de");
     assert.equal(differentSource.value, "translated-fr");
     assert.equal(differentProfile.value, "translated-fr");
-    assert.equal(differentRules.value, "translated-fr");
+    assert.equal(differentProtectedTerms.value, "translated-fr");
     assert.equal(requestLog.length, 5);
   } finally {
     globalThis.fetch = originalFetch;
@@ -674,7 +525,7 @@ test("translation cache reuses individual booking travel-plan texts across reque
   }
 });
 
-test("OpenAI translation uses profile context and global translation rules in instructions", async () => {
+test("OpenAI translation uses profile context and protected terms in instructions", async () => {
   const originalFetch = globalThis.fetch;
   const requests = [];
   globalThis.fetch = async (url, options = {}) => {
@@ -708,10 +559,7 @@ test("OpenAI translation uses profile context and global translation rules in in
         sourceLangCode: "en",
         translationProfile: "staff_backend_ui",
         context: "This label appears in the booking sidebar.",
-        translationRules: [
-          { source: "Booking", target_lang: "vi", target: "Dat cho" },
-          { source: "Kommo", target_lang: "vi", target: "Kommo" }
-        ]
+        protectedTerms: ["Booking", "Kommo"]
       }
     );
 
@@ -721,7 +569,8 @@ test("OpenAI translation uses profile context and global translation rules in in
     assert.match(requests[0].body.instructions, /internal staff backend UI copy/);
     assert.match(requests[0].body.instructions, /These strings are staff-facing labels, hints, statuses, and workflow text inside a travel agency backend\./);
     assert.match(requests[0].body.instructions, /This label appears in the booking sidebar\./);
-    assert.match(requests[0].body.instructions, /"Booking" => "Dat cho"/);
+    assert.match(requests[0].body.instructions, /Do not translate or rewrite these names and terms/);
+    assert.match(requests[0].body.instructions, /Booking/);
     assert.match(requests[0].body.instructions, /Kommo/);
   } finally {
     globalThis.fetch = originalFetch;

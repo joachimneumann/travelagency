@@ -1127,16 +1127,11 @@ textarea:focus-visible {
 .hero-bg-poster {
   position: absolute;
   inset: 0;
+  background-image: url("/assets/video/rice%20field.webp");
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;
   transition: opacity 0.32s ease, visibility 0.32s ease;
-}
-
-@media (min-width: 761px) {
-  .hero-bg-poster {
-    background-image: url("/assets/video/rice%20field.webp");
-  }
 }
 
 .hero-bg-video::-webkit-media-controls,
@@ -1155,10 +1150,65 @@ textarea:focus-visible {
   visibility: hidden;
 }
 
+.hero-video-play-button {
+  display: none;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 4;
+  align-items: center;
+  justify-content: center;
+  width: 5.75rem;
+  height: 5.75rem;
+  padding: 0;
+  border: 0;
+  color: #fff;
+  background: transparent;
+  cursor: pointer;
+  transform: translate(-50%, -50%);
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+.hero-video-play-button__icon {
+  position: relative;
+  width: 4.75rem;
+  height: 4.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.42);
+  border-radius: 999px;
+  background: rgba(28, 43, 53, 0.74);
+  box-shadow: 0 1rem 2.5rem rgba(0, 0, 0, 0.26);
+  backdrop-filter: blur(8px);
+}
+
+.hero-video-play-button__icon::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-top: 0.85rem solid transparent;
+  border-bottom: 0.85rem solid transparent;
+  border-left: 1.25rem solid currentColor;
+  transform: translate(-35%, -50%);
+}
+
+.hero-video-play-button:focus-visible .hero-video-play-button__icon {
+  outline: 3px solid rgba(255, 255, 255, 0.86);
+  outline-offset: 4px;
+}
+
+.hero-video--playing .hero-video-play-button {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
 .hero-scrim {
   position: absolute;
   inset: 0;
   background: transparent;
+  pointer-events: none;
 }
 
 .hero-content {
@@ -1356,6 +1406,10 @@ textarea:focus-visible {
   .hero-bg-video,
   .hero-bg-poster {
     transition-duration: 0.12s;
+  }
+
+  .hero-video-play-button {
+    display: flex;
   }
 
   .hero-content {
@@ -4199,7 +4253,8 @@ html.tour-customize-pointer-dragging .tour-customize-timeline {
 
 .home-page .hero-bg-video,
 .home-page .hero-bg-poster,
-.home-page .hero-scrim {
+.home-page .hero-scrim,
+.home-page .hero-video-play-button {
   border-radius: inherit;
 }
 
@@ -4559,7 +4614,7 @@ html.tour-customize-pointer-dragging .tour-customize-timeline {
   }
 
   .home-page .hero-bg-poster {
-    display: none;
+    background-position: 68% center;
   }
 
   .home-page .hero-content {

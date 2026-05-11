@@ -13,8 +13,6 @@ import { createKeycloakDirectory } from "../lib/keycloak_directory.js";
 import { createStoreUtils } from "../lib/store_utils.js";
 import { createAtpStaffDirectory } from "../lib/atp_staff_directory.js";
 import { createCountryReferenceStore } from "../lib/country_reference_store.js";
-import { createTranslationRulesStore } from "../lib/translation_rules_store.js";
-import { createTranslationProtectedTermsStore } from "../lib/translation_protected_terms_store.js";
 import { createTranslationMemoryStore } from "../lib/translation_memory_store.js";
 import { createStaticTranslationApplyJobs } from "../domain/static_translation_apply_jobs.js";
 import { createStaticTranslationService } from "../domain/static_translations.js";
@@ -82,18 +80,6 @@ export function createBackendServices({
     nowIso: support.nowIso
   });
 
-  const translationRulesStore = createTranslationRulesStore({
-    dataPath: collections.translationRulesPath,
-    writeQueueRef,
-    nowIso: support.nowIso
-  });
-
-  const translationProtectedTermsStore = createTranslationProtectedTermsStore({
-    dataPath: collections.translationProtectedTermsPath,
-    writeQueueRef,
-    nowIso: support.nowIso
-  });
-
   const translationMemoryStore = createTranslationMemoryStore({
     dataPath: collections.translationMemoryPath,
     writeQueueRef,
@@ -155,13 +141,14 @@ export function createBackendServices({
   const staticTranslationService = createStaticTranslationService({
     repoRoot,
     translationsSnapshotDir: collections.translationsSnapshotDir,
+    protectedTermsPath: collections.translationProtectedTermsPath,
+    manualOverridesPath: collections.translationManualOverridesPath,
     readStore: storeUtils.readStore,
     persistStore: storeUtils.persistStore,
     readTours: storeUtils.readTours,
     persistTour: storeUtils.persistTour,
     translationMemoryStore,
     translateEntriesWithMeta: translationClient.translateEntriesWithMeta,
-    readTranslationRules: translationRulesStore.readTranslationRules,
     nowIso: support.nowIso,
     writesEnabled: runtime.translationOverrideWritesEnabled !== false
   });
@@ -274,8 +261,6 @@ export function createBackendServices({
     keycloakDirectory,
     atpStaffDirectory,
     countryReferenceStore,
-    translationRulesStore,
-    translationProtectedTermsStore,
     translationMemoryStore,
     staticTranslationService,
     staticTranslationApplyJobs,

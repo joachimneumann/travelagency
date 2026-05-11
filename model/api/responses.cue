@@ -146,12 +146,6 @@ import (
 	latest_changed_booking?: #SettingsObservabilityLatestChangedBooking
 }
 
-#TranslationRulesResponse: {
-	items: [...#TranslationRule]
-	total:       >=0 & int
-	updated_at?: common.#Timestamp
-}
-
 #CatalogOption: {
 	code:  string & !=""
 	label: string & !=""

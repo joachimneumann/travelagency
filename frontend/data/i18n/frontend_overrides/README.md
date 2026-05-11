@@ -1,11 +1,7 @@
-Add optional per-language override files here as `<lang>.json`.
+Deprecated. Frontend manual translation overrides now live in:
 
-Example:
-
-```json
-{
-  "home.hero.title": "Your curated manual translation"
-}
+```text
+config/i18n/translation_manual_overrides.json
 ```
 
-`node scripts/i18n/sync_frontend_i18n.mjs translate` will preserve these keys during future automatic translation runs and write them back into the generated frontend dictionary.
+The backend and i18n scripts read that committed policy file and do not write per-language override files here.

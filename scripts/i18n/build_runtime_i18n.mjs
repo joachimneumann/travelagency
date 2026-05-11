@@ -9,6 +9,13 @@ import {
   BACKEND_UI_LANGUAGE_CODES,
   FRONTEND_LANGUAGE_CODES
 } from "../../shared/generated/language_catalog.js";
+import {
+  createTranslationManualOverrideIndex,
+  normalizeStoredTranslationManualOverrides,
+  resolveTranslationManualOverride,
+  validateTranslationManualOverride
+} from "../../backend/app/src/lib/translation_manual_overrides.js";
+import { normalizeStoredTranslationProtectedTerms } from "../../backend/app/src/lib/translation_protected_terms.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -98,13 +105,27 @@ function shouldPreserveProtectedSource(sourceValue, protectedTerms) {
   return Boolean(sourceTokens.length) && sourceTokens.every((token) => protectedTokens.has(token));
 }
 
-async function readProtectedTermSet(snapshotDir) {
+async function readProtectedTermSet(filePath) {
   try {
-    const parsed = await readJsonObject(path.join(snapshotDir, "translation_protected_terms.json"));
-    const items = Array.isArray(parsed?.items) ? parsed.items : [];
-    return new Set(items.map((item) => normalizeText(item)).filter(Boolean));
+    const parsed = await readJsonObject(filePath);
+    return new Set(normalizeStoredTranslationProtectedTerms(parsed).items);
   } catch (error) {
     if (error?.code === "ENOENT") return new Set();
+    throw error;
+  }
+}
+
+async function readManualOverrideIndex(filePath) {
+  try {
+    const parsed = await readJsonObject(filePath);
+    const normalized = normalizeStoredTranslationManualOverrides(parsed);
+    const index = createTranslationManualOverrideIndex(normalized);
+    if (index.duplicates.length) {
+      throw new Error(`Duplicate manual translation override: ${index.duplicates[0]}`);
+    }
+    return index;
+  } catch (error) {
+    if (error?.code === "ENOENT") return createTranslationManualOverrideIndex({});
     throw error;
   }
 }
@@ -121,6 +142,8 @@ function usage() {
     "  --target <lang>       Limit to one or more comma-separated target languages. Repeatable.",
     "  --domain <domain>     Limit to frontend and/or backend. Repeatable.",
     "  --snapshot-dir <path> Override content/translations.",
+    "  --protected-terms <path> Override config/i18n/translation_protected_terms.json.",
+    "  --manual-overrides <path> Override config/i18n/translation_manual_overrides.json.",
     "  --repo-root <path>    Override repository root.",
     "  --quiet               Suppress success output."
   ].join("\n"));
@@ -130,6 +153,8 @@ function parseArgs(argv) {
   const options = {
     repoRoot: DEFAULT_REPO_ROOT,
     snapshotDir: "",
+    protectedTermsPath: "",
+    manualOverridesPath: "",
     check: false,
     strict: true,
     quiet: false,
@@ -164,6 +189,14 @@ function parseArgs(argv) {
       options.snapshotDir = path.resolve(normalizeText(args.shift()));
       continue;
     }
+    if (token === "--protected-terms") {
+      options.protectedTermsPath = path.resolve(normalizeText(args.shift()));
+      continue;
+    }
+    if (token === "--manual-overrides") {
+      options.manualOverridesPath = path.resolve(normalizeText(args.shift()));
+      continue;
+    }
     if (token === "--target") {
       options.targetLangs.push(...normalizeText(args.shift()).split(","));
       continue;
@@ -183,6 +216,12 @@ function parseArgs(argv) {
   options.snapshotDir = options.snapshotDir
     ? path.resolve(options.snapshotDir)
     : path.join(options.repoRoot, "content", "translations");
+  options.protectedTermsPath = options.protectedTermsPath
+    ? path.resolve(options.protectedTermsPath)
+    : path.join(options.repoRoot, "config", "i18n", "translation_protected_terms.json");
+  options.manualOverridesPath = options.manualOverridesPath
+    ? path.resolve(options.manualOverridesPath)
+    : path.join(options.repoRoot, "config", "i18n", "translation_manual_overrides.json");
   options.domains = unique(options.domains);
   options.targetLangs = unique(options.targetLangs);
 
@@ -241,14 +280,13 @@ function metadataFromSnapshotItem(item, snapshot, manifest, expectedHash) {
 
 function itemTargetText(item) {
   return String(
-    normalizeText(item?.manual_override)
-      || normalizeText(item?.machine_text)
+    normalizeText(item?.machine_text)
       || item?.target_text
       || ""
   );
 }
 
-function validateSnapshotItems({ config, lang, source, snapshot, manifest, strict, protectedTerms = new Set() }) {
+function validateSnapshotItems({ config, lang, source, snapshot, manifest, strict, protectedTerms = new Set(), manualOverrides = null }) {
   const errors = [];
   const items = Array.isArray(snapshot?.items) ? snapshot.items : null;
   if (!items) {
@@ -323,7 +361,11 @@ function validateSnapshotItems({ config, lang, source, snapshot, manifest, stric
     const itemSourceText = String(item.source_text ?? "");
     const itemSourceHash = normalizeText(item.source_hash);
     const rawTargetText = itemTargetText(item);
-    const targetText = shouldPreserveProtectedSource(sourceValue, protectedTerms) ? sourceValue : rawTargetText;
+    let targetText = shouldPreserveProtectedSource(sourceValue, protectedTerms) ? sourceValue : rawTargetText;
+    const manualOverride = resolveTranslationManualOverride(manualOverrides, {
+      target_lang: lang,
+      source_text: sourceValue
+    });
 
     if (itemSourceText !== sourceValue) {
       errors.push(`${config.id}/${lang}: ${key} has stale source_text.`);
@@ -333,12 +375,28 @@ function validateSnapshotItems({ config, lang, source, snapshot, manifest, stric
     } else if (itemSourceHash !== expectedHash) {
       errors.push(`${config.id}/${lang}: ${key} has stale source_hash.`);
     }
+
+    if (manualOverride) {
+      const manualErrors = validateTranslationManualOverride(manualOverride, {
+        sourceText: sourceValue,
+        context: `${config.id}/${lang}: ${key}`
+      });
+      if (manualErrors.length) {
+        errors.push(...manualErrors);
+      } else {
+        targetText = manualOverride.manual_override;
+      }
+    }
+
     if (!normalizeText(targetText)) {
       errors.push(`${config.id}/${lang}: ${key} is missing target_text.`);
     }
 
     target[key] = targetText;
     meta[key] = metadataFromSnapshotItem(item, snapshot, manifest, expectedHash);
+    if (manualOverride && normalizeText(targetText) === normalizeText(manualOverride.manual_override)) {
+      meta[key].origin = "manual_override";
+    }
   }
 
   if (missingKeys.length) {
@@ -393,10 +451,11 @@ function selectSections({ manifest, config, targetLangs }) {
   return [...byLang.entries()].map(([lang, section]) => ({ lang, section }));
 }
 
-async function loadRuntimeBuildPlan({ repoRoot, snapshotDir, domains, targetLangs, strict }) {
+async function loadRuntimeBuildPlan({ repoRoot, snapshotDir, protectedTermsPath, manualOverridesPath, domains, targetLangs, strict }) {
   const manifestPath = path.join(snapshotDir, "manifest.json");
   const manifest = await readJsonObject(manifestPath);
-  const protectedTerms = await readProtectedTermSet(snapshotDir);
+  const protectedTerms = await readProtectedTermSet(protectedTermsPath);
+  const manualOverrides = await readManualOverrideIndex(manualOverridesPath);
   if (strict && normalizeText(manifest.schema) && normalizeText(manifest.schema) !== TRANSLATION_SNAPSHOT_SCHEMA) {
     throw new Error(`Unsupported translation manifest schema: ${manifest.schema}`);
   }
@@ -423,7 +482,8 @@ async function loadRuntimeBuildPlan({ repoRoot, snapshotDir, domains, targetLang
         snapshot,
         manifest,
         strict,
-        protectedTerms
+        protectedTerms,
+        manualOverrides
       });
       if (build.errors.length) {
         errors.push(...build.errors);
@@ -500,6 +560,12 @@ export async function generateRuntimeI18nFromSnapshots(rawOptions = {}) {
     snapshotDir: rawOptions.snapshotDir
       ? path.resolve(rawOptions.snapshotDir)
       : path.join(path.resolve(rawOptions.repoRoot || DEFAULT_REPO_ROOT), "content", "translations"),
+    protectedTermsPath: rawOptions.protectedTermsPath
+      ? path.resolve(rawOptions.protectedTermsPath)
+      : path.join(path.resolve(rawOptions.repoRoot || DEFAULT_REPO_ROOT), "config", "i18n", "translation_protected_terms.json"),
+    manualOverridesPath: rawOptions.manualOverridesPath
+      ? path.resolve(rawOptions.manualOverridesPath)
+      : path.join(path.resolve(rawOptions.repoRoot || DEFAULT_REPO_ROOT), "config", "i18n", "translation_manual_overrides.json"),
     domains: unique(rawOptions.domains || []),
     targetLangs: unique(rawOptions.targetLangs || []),
     check: Boolean(rawOptions.check),

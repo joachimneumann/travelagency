@@ -9,7 +9,6 @@ import {
   normalizeStoredTranslationProtectedTerms,
   normalizeTranslationProtectedTerms
 } from "./translation_protected_terms.js";
-import { translationRulesForTargetLang } from "./translation_rules.js";
 
 function nowMs() {
   return Date.now();
@@ -196,20 +195,16 @@ function cloneTranslationResult(result) {
   };
 }
 
-function buildTranslationRulePrompt(rule) {
-  return `${JSON.stringify(normalizeText(rule?.source))} => ${JSON.stringify(normalizeText(rule?.target))}`;
-}
+const PROTECTED_TERM_PLACEHOLDER_PATTERN = /\[\[ATP_PROTECTED_TERM_\d+\]\]/g;
 
-const TRANSLATION_RULE_PLACEHOLDER_PATTERN = /\[\[ATP_TRANSLATION_RULE_\d+\]\]/g;
-
-function replaceOutsideTranslationPlaceholders(value, source, placeholder) {
+function replaceOutsideProtectedTermPlaceholders(value, source, placeholder) {
   const sourceText = normalizeText(source);
   if (!sourceText) return { value, replaced: false };
 
   let replaced = false;
   let cursor = 0;
   let nextValue = "";
-  for (const match of String(value || "").matchAll(TRANSLATION_RULE_PLACEHOLDER_PATTERN)) {
+  for (const match of String(value || "").matchAll(PROTECTED_TERM_PLACEHOLDER_PATTERN)) {
     const index = Number(match.index || 0);
     const segment = String(value || "").slice(cursor, index);
     if (segment.includes(sourceText)) replaced = true;
@@ -233,38 +228,25 @@ function compareReplacementRules(left, right) {
   if (rightSource.length !== leftSource.length) {
     return rightSource.length - leftSource.length;
   }
-  if (Boolean(left?.protected) !== Boolean(right?.protected)) {
-    return left?.protected ? 1 : -1;
-  }
   return leftSource.localeCompare(rightSource, "en", { sensitivity: "base" });
 }
 
-function prepareEntriesWithTranslationRules(entries, targetLang, translationRules, protectedTerms = []) {
-  const applicableRules = translationRulesForTargetLang(translationRules, targetLang);
-  const ruleSourceSet = new Set(applicableRules.map((rule) => rule.source));
+function prepareEntriesWithProtectedTerms(entries, protectedTerms = []) {
   const protectedRules = normalizeTranslationProtectedTerms(protectedTerms)
-    .filter((term) => !ruleSourceSet.has(term))
     .map((term) => ({
       source: term,
-      target: term,
-      protected: true
+      target: term
     }));
-  const replacementRules = [...applicableRules, ...protectedRules].sort(compareReplacementRules);
+  const replacementRules = protectedRules.sort(compareReplacementRules);
   const exactEntries = {};
   const providerEntries = {};
   const replacementsByKey = {};
-  const exactOverrideBySource = new Map(applicableRules.map((rule) => [rule.source, rule.target]));
   const exactProtectedBySource = new Map(protectedRules.map((rule) => [rule.source, rule.target]));
   let placeholderCounter = 0;
 
   for (const [key, value] of Object.entries(entries || {})) {
     const sourceText = normalizeText(value);
     if (!sourceText) continue;
-    const exactOverride = exactOverrideBySource.get(sourceText);
-    if (exactOverride) {
-      exactEntries[key] = exactOverride;
-      continue;
-    }
     const exactProtected = exactProtectedBySource.get(sourceText);
     if (exactProtected) {
       exactEntries[key] = exactProtected;
@@ -275,8 +257,8 @@ function prepareEntriesWithTranslationRules(entries, targetLang, translationRule
     const replacements = [];
     for (const rule of replacementRules) {
       if (!rule.source || !maskedSourceText.includes(rule.source)) continue;
-      const placeholder = `[[ATP_TRANSLATION_RULE_${placeholderCounter}]]`;
-      const masked = replaceOutsideTranslationPlaceholders(maskedSourceText, rule.source, placeholder);
+      const placeholder = `[[ATP_PROTECTED_TERM_${placeholderCounter}]]`;
+      const masked = replaceOutsideProtectedTermPlaceholders(maskedSourceText, rule.source, placeholder);
       if (!masked.replaced) continue;
       placeholderCounter += 1;
       maskedSourceText = masked.value;
@@ -291,7 +273,6 @@ function prepareEntriesWithTranslationRules(entries, targetLang, translationRule
   }
 
   return {
-    applicableRules,
     protectedTerms: protectedRules.map((rule) => rule.source),
     exactEntries,
     providerEntries,
@@ -329,7 +310,7 @@ export function createTranslationClient({
   organizationId = "",
   projectId = "",
   protectedTerms = [],
-  protectedTermsPath = process.env.TRANSLATION_PROTECTED_TERMS_PATH || path.join("content", "translations", "translation_protected_terms.json"),
+  protectedTermsPath = process.env.TRANSLATION_PROTECTED_TERMS_PATH || path.join("config", "i18n", "translation_protected_terms.json"),
   googleFallbackEnabled = true,
   googleRetryMaxAttempts = 3,
   googleRetryBaseDelayMs = 250,
@@ -391,7 +372,7 @@ export function createTranslationClient({
     );
   }
 
-  function translationCacheContext(targetLang, options = {}, applicableRules = [], profileOptions = resolveTranslationProfileOptions(options)) {
+  function translationCacheContext(targetLang, options = {}, profileOptions = resolveTranslationProfileOptions(options)) {
     const namespace = normalizeText(options?.cacheNamespace);
     if (!namespace) return null;
     const sourceLangCode = googleTranslateLangCode(options?.sourceLangCode || "en", "en");
@@ -402,8 +383,7 @@ export function createTranslationClient({
         domain: profileOptions.domain,
         context: profileOptions.context,
         glossary_terms: profileOptions.glossaryTerms,
-        protected_terms: profileOptions.protectedTerms,
-        translation_rules: applicableRules
+        protected_terms: profileOptions.protectedTerms
       }))
       .digest("hex");
     return {
@@ -415,8 +395,8 @@ export function createTranslationClient({
     };
   }
 
-  function translationCacheKey(entries, targetLang, options = {}, applicableRules = [], profileOptions = resolveTranslationProfileOptions(options)) {
-    const context = translationCacheContext(targetLang, options, applicableRules, profileOptions);
+  function translationCacheKey(entries, targetLang, options = {}, profileOptions = resolveTranslationProfileOptions(options)) {
+    const context = translationCacheContext(targetLang, options, profileOptions);
     if (!context) return "";
     const sourceHash = createHash("sha256")
       .update(JSON.stringify(stableEntriesObject(entries)))
@@ -531,7 +511,7 @@ export function createTranslationClient({
       target_lang: targetLangCode,
       entry_count: entryStats.entryCount,
       total_chars: entryStats.totalChars,
-      exact_override_count: exactEntryCount
+      exact_protected_term_count: exactEntryCount
     });
 
     const googleEntries = Object.entries(entries || {});
@@ -616,7 +596,7 @@ export function createTranslationClient({
       source_lang: sourceLangCode,
       target_lang: targetLangCode,
       entry_count: Object.keys(translated).length,
-      exact_override_count: exactEntryCount,
+      exact_protected_term_count: exactEntryCount,
       duration_ms: durationMs(totalStartMs)
     });
 
@@ -640,20 +620,17 @@ export function createTranslationClient({
     const allowGoogleFallback = Boolean(options?.allowGoogleFallback) && allowGoogleFallbackByDefault;
     const forceGoogleProvider = normalizeText(options?.provider).toLowerCase() === "google";
     const profileOptions = await resolveClientTranslationProfileOptions(options);
-    const preparedTranslation = prepareEntriesWithTranslationRules(
+    const preparedTranslation = prepareEntriesWithProtectedTerms(
       normalizedEntriesObject,
-      targetLang,
-      options?.translationRules,
       profileOptions.protectedTerms
     );
     const cacheKey = translationCacheKey(
       normalizedEntriesObject,
       targetLang,
       options,
-      preparedTranslation.applicableRules,
       profileOptions
     );
-    const cacheContext = translationCacheContext(targetLang, options, preparedTranslation.applicableRules, profileOptions);
+    const cacheContext = translationCacheContext(targetLang, options, profileOptions);
     const cachedResult = readCachedTranslation(cacheKey);
     if (cachedResult) {
       logTranslationTiming("Translation cache hit", {
@@ -662,7 +639,6 @@ export function createTranslationClient({
         translation_profile: profileOptions.profile || "",
         source_lang: googleTranslateLangCode(options?.sourceLangCode || "en", "en"),
         target_lang: googleTranslateLangCode(targetLang, "en"),
-        translation_rule_count: preparedTranslation.applicableRules.length,
         protected_term_count: preparedTranslation.protectedTerms.length
       });
       return cachedResult;
@@ -730,7 +706,6 @@ export function createTranslationClient({
     const targetLanguageName = promptLanguageName(targetLang, "English");
     const glossaryTerms = profileOptions.glossaryTerms;
     const protectedTerms = profileOptions.protectedTerms;
-    const translationRulePrompts = preparedTranslation.applicableRules.map(buildTranslationRulePrompt);
     const entriesToTranslate = Object.entries(stableEntriesObject(providerPreparedTranslation.providerEntries || {}));
     if (!entriesToTranslate.length) {
       return completeTranslationResult({
@@ -756,8 +731,7 @@ export function createTranslationClient({
       entry_count: entryStats.entryCount,
       total_chars: entryStats.totalChars,
       chunk_count: chunks.length,
-      exact_override_count: Object.keys(preparedTranslation.exactEntries).length,
-      translation_rule_count: preparedTranslation.applicableRules.length,
+      exact_protected_term_count: Object.keys(preparedTranslation.exactEntries).length,
       protected_term_count: preparedTranslation.protectedTerms.length
     });
 
@@ -802,13 +776,10 @@ export function createTranslationClient({
             protectedTerms.length
               ? `Do not translate or rewrite these names and terms when they appear in the source unless the source already localizes them: ${protectedTerms.join(", ")}.`
               : "",
-            translationRulePrompts.length
-              ? `Apply these translation overrides exactly when they match the source text or appear inside it:\n- ${translationRulePrompts.join("\n- ")}`
-              : "",
             "Return JSON only.",
             "Keep the exact same keys.",
             "Preserve line breaks and blank lines within each value exactly.",
-            "Preserve placeholder tokens such as [[ATP_TRANSLATION_RULE_0]] exactly when they appear.",
+            "Preserve placeholder tokens such as [[ATP_PROTECTED_TERM_0]] exactly when they appear.",
             "Preserve proper nouns, brand names, phone numbers, ISO codes, URLs, and currency codes unless a natural translation requires otherwise.",
             "Do not add explanations."
           ].filter(Boolean).join(" "),
@@ -891,8 +862,7 @@ export function createTranslationClient({
       source_lang: sourceLang,
       target_lang: targetLanguageName,
       translated_count: translatedCount,
-      exact_override_count: Object.keys(preparedTranslation.exactEntries).length,
-      translation_rule_count: preparedTranslation.applicableRules.length,
+      exact_protected_term_count: Object.keys(preparedTranslation.exactEntries).length,
       duration_ms: durationMs(totalStartMs)
     });
 

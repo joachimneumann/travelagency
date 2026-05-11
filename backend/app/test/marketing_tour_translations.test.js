@@ -152,7 +152,6 @@ test("tour API reads marketing tour translations only from content translations"
     setLocalizedTextForLang: tourHelpers.setLocalizedTextForLang,
     translateEntries: async () => ({}),
     translateEntriesWithMeta: async () => ({ entries: {} }),
-    readTranslationRules: async () => ({ items: [] }),
     translationMemoryStore: {
       readTranslationMemory: async () => ({
         items: {

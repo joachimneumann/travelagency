@@ -23,7 +23,7 @@ const SECTION_CONFIGS = [
   {
     key: "staff",
     title: "For staff (NE/VI)",
-    description: "Manual overrides for staff-facing backend Vietnamese.",
+    description: "Manual overrides are read from config/i18n/translation_manual_overrides.json.",
     fixedTargetLang: "vi",
     domains: [
       { domainId: "backend", label: "Staff backend terms" }
@@ -32,7 +32,7 @@ const SECTION_CONFIGS = [
   {
     key: "customers",
     title: "For customers",
-    description: "Manual overrides for Customer UI, Marketing tours, and tour destinations.",
+    description: "Manual overrides are read from config/i18n/translation_manual_overrides.json.",
     customer: true,
     domains: CUSTOMER_DOMAIN_CONFIGS
   }
@@ -482,6 +482,14 @@ async function loadTranslationStatus({ updateMessage = false } = {}) {
   }
 }
 
+function manualOverrideEditingEnabled(section) {
+  if (!state.permissions.canEditTranslations || !section?.current) return false;
+  const domains = Array.isArray(section.current.states)
+    ? section.current.states.map((entry) => entry.domain)
+    : [section.current.domain];
+  return domains.some((domain) => domain?.manual_overrides_writable === true);
+}
+
 function updateActions() {
   const translationState = currentTranslationActionState();
   const actionsBusy = state.isSaving || state.isJobRunning || state.isStatusRefreshing;
@@ -502,18 +510,21 @@ function updateActions() {
 
   for (const section of state.sections.values()) {
     const sectionDirty = section.dirty.size;
+    const canEditManualOverrides = manualOverrideEditingEnabled(section);
     if (section.els.saveBtn) {
-      section.els.saveBtn.disabled = !state.permissions.canEditTranslations || !sectionDirty || sectionControlsBusy;
-      section.els.saveBtn.textContent = sectionDirty ? `Save manual overrides (${sectionDirty})` : "Save manual overrides";
+      section.els.saveBtn.disabled = !canEditManualOverrides || !sectionDirty || sectionControlsBusy;
+      section.els.saveBtn.textContent = canEditManualOverrides
+        ? (sectionDirty ? `Save manual overrides (${sectionDirty})` : "Save manual overrides")
+        : "Manual overrides in config";
     }
     if (section.els.exportBtn) {
       section.els.exportBtn.disabled = !state.permissions.canReadTranslations || !section.current || sectionControlsBusy;
     }
     if (section.els.importBtn) {
-      section.els.importBtn.disabled = !state.permissions.canEditTranslations || !section.current || sectionControlsBusy;
+      section.els.importBtn.disabled = !canEditManualOverrides || !section.current || sectionControlsBusy;
     }
     section.els.table?.querySelectorAll("[data-override-key]").forEach((textarea) => {
-      textarea.disabled = !state.permissions.canEditTranslations || sectionControlsBusy;
+      textarea.disabled = !canEditManualOverrides || sectionControlsBusy;
     });
     section.els.table?.querySelectorAll("[data-cache-delete-key]").forEach((button) => {
       button.disabled = !state.permissions.canEditTranslations || sectionControlsBusy;
@@ -1220,6 +1231,7 @@ function renderTable(section) {
   const table = section.els.table;
   if (!table) return;
   const isCustomer = isCustomerSectionConfig(section.config);
+  const canEditManualOverrides = manualOverrideEditingEnabled(section);
   table.classList.toggle("translations-table--customer", isCustomer);
   const rows = filteredRows(section);
   if (!section.current) {
@@ -1272,7 +1284,7 @@ function renderTable(section) {
             </td>
             <td class="translations-table__text translations-table__translation-cell">${renderCachedTranslationCell(row)}</td>
             <td class="translations-table__translation-cell">
-              <textarea class="translations-table__override" data-override-key="${escapeHtml(id)}" rows="2" ${state.permissions.canEditTranslations && !state.isSaving && !state.isJobRunning && !state.isLoadingSections ? "" : "disabled"}>${escapeHtml(overrideValue)}</textarea>
+              <textarea class="translations-table__override" data-override-key="${escapeHtml(id)}" rows="2" ${canEditManualOverrides && !state.isSaving && !state.isJobRunning && !state.isLoadingSections ? "" : "disabled"}>${escapeHtml(overrideValue)}</textarea>
             </td>
             <td class="translations-table__state-cell">
               ${renderStatePills(row)}
@@ -1430,7 +1442,7 @@ function dirtyOverrideGroups(section) {
 }
 
 async function saveOverrides(section) {
-  if (!state.permissions.canEditTranslations || !section.current || !section.dirty.size || state.isSaving) return;
+  if (!manualOverrideEditingEnabled(section) || !section.current || !section.dirty.size || state.isSaving) return;
   state.isSaving = true;
   updateActions();
   setSectionStatus(section, "Saving manual overrides...");

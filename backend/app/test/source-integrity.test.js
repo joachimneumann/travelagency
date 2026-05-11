@@ -508,7 +508,7 @@ test("country reference info lives under content and startup migrates the legacy
   );
 });
 
-test("translation runtime files live under content translations and startup migrates legacy content files", async () => {
+test("translation policy lives under committed config while generated stores stay under content translations", async () => {
   const runtimePath = path.resolve(__dirname, "..", "src", "config", "runtime.js");
   const serverPath = path.resolve(__dirname, "..", "src", "server.js");
   const [runtimeSource, serverSource] = await Promise.all([
@@ -518,18 +518,28 @@ test("translation runtime files live under content translations and startup migr
 
   assert.match(
     runtimeSource,
-    /LEGACY_TRANSLATION_RULES_PATH = resolveConfigPathFromRepoRoot\(path\.join\("content", "translation_rules\.json"\)\);[\s\S]*LEGACY_TRANSLATION_PROTECTED_TERMS_PATH = resolveConfigPathFromRepoRoot\(path\.join\("content", "translation_protected_terms\.json"\)\);[\s\S]*LEGACY_TRANSLATION_MEMORY_PATH = resolveConfigPathFromRepoRoot\(path\.join\("content", "translation_memory\.json"\)\);/,
-    "Runtime should keep old content-root translation file paths as migration sources"
+    /TRANSLATION_POLICY_DIR = resolveConfigPathFromRepoRoot\([\s\S]*path\.join\("config", "i18n"\)[\s\S]*TRANSLATION_PROTECTED_TERMS_PATH[\s\S]*path\.join\("config", "i18n", "translation_protected_terms\.json"\)[\s\S]*TRANSLATION_MANUAL_OVERRIDES_PATH[\s\S]*path\.join\("config", "i18n", "translation_manual_overrides\.json"\)/,
+    "Runtime should load human-maintained translation policy from committed config/i18n files"
   );
   assert.match(
     runtimeSource,
-    /TRANSLATION_RULES_PATH[\s\S]*path\.join\("content", "translations", "translation_rules\.json"\)[\s\S]*TRANSLATION_PROTECTED_TERMS_PATH[\s\S]*path\.join\("content", "translations", "translation_protected_terms\.json"\)[\s\S]*TRANSLATION_MEMORY_PATH[\s\S]*path\.join\("content", "translations", "translation_memory\.json"\)/,
-    "Translation runtime files should default to content/translations"
+    /LEGACY_TRANSLATION_MEMORY_PATH = resolveConfigPathFromRepoRoot\(path\.join\("content", "translation_memory\.json"\)\);[\s\S]*TRANSLATION_MEMORY_PATH[\s\S]*path\.join\("content", "translations", "translation_memory\.json"\)/,
+    "Generated translation memory should remain under content/translations with the old content-root path as a migration source"
   );
   assert.match(
     serverSource,
-    /moveFileIfNeeded\(RUNTIME_PATHS\.legacyTranslationRulesPath, RUNTIME_PATHS\.translationRulesPath\);[\s\S]*moveFileIfNeeded\(RUNTIME_PATHS\.legacyTranslationProtectedTermsPath, RUNTIME_PATHS\.translationProtectedTermsPath\);[\s\S]*moveFileIfNeeded\(RUNTIME_PATHS\.legacyTranslationMemoryPath, RUNTIME_PATHS\.translationMemoryPath\);/,
-    "Backend startup should move legacy content-root translation files before stores initialize"
+    /moveFileIfNeeded\(RUNTIME_PATHS\.legacyTranslationMemoryPath, RUNTIME_PATHS\.translationMemoryPath\);/,
+    "Backend startup should still migrate generated translation memory"
+  );
+  assert.doesNotMatch(
+    serverSource,
+    /translationProtectedTermsStore|legacyTranslationProtectedTermsPath/,
+    "Backend startup should not create or migrate committed translation policy files"
+  );
+  assert.doesNotMatch(
+    runtimeSource,
+    /translation_rules\.json|TRANSLATION_RULES_PATH|legacyTranslationRulesPath|translationRulesPath/,
+    "Runtime should no longer manage translation_rules.json"
   );
 });
 
@@ -4231,10 +4241,10 @@ test("settings page joins website destinations into locations while emergency no
     /id="websiteDestinationPublicationPanel"/,
     "Settings page should no longer expose a separate website destination publication section"
   );
-  assert.match(
+  assert.doesNotMatch(
     settingsHtml,
-    /id="translationRulesPanel"[\s\S]*id="translationRulesStatus"[\s\S]*id="translationRulesAddBtn"[\s\S]*id="translationRulesSaveBtn"[\s\S]*id="translationRulesTable"/,
-    "Settings page should expose a global translation overrides section with status, add/save actions, and a table mount"
+    /translationRulesPanel|translationRulesStatus|translationRulesAddBtn|translationRulesSaveBtn|translationRulesTable/,
+    "Settings page should no longer expose the removed translation-rules editor"
   );
   assert.match(
     settingsHtml,
@@ -4246,10 +4256,10 @@ test("settings page joins website destinations into locations while emergency no
     /countryReferenceInfoRequest|countryReferenceInfoUpdateRequest/,
     "Settings page should use the generated country-reference API requests for emergency information"
   );
-  assert.match(
+  assert.doesNotMatch(
     settingsSource,
-    /settingsTranslationRulesRequest|settingsTranslationRulesUpdateRequest/,
-    "Settings page should use the generated translation-rules API requests for the global overrides table"
+    /settingsTranslationRulesRequest|settingsTranslationRulesUpdateRequest|translationRules/i,
+    "Settings page should no longer call the removed translation-rules API"
   );
   assert.match(
     settingsSource,
@@ -4263,18 +4273,13 @@ test("settings page joins website destinations into locations while emergency no
   );
   assert.match(
     settingsSource,
-    /canReadStaffProfiles:\s*roles\.includes\(ROLES\.ADMIN\)[\s\S]*canEditStaffProfiles:\s*roles\.includes\(ROLES\.ADMIN\)[\s\S]*canReadLocations:\s*roles\.includes\(ROLES\.ADMIN\)[\s\S]*canEditLocations:\s*roles\.includes\(ROLES\.ADMIN\)[\s\S]*canReadTranslationRules:\s*roles\.includes\(ROLES\.ADMIN\)[\s\S]*canEditTranslationRules:\s*roles\.includes\(ROLES\.ADMIN\)[\s\S]*canReadEmergency:\s*roles\.includes\(ROLES\.ADMIN\)[\s\S]*canEditEmergency:\s*roles\.includes\(ROLES\.ADMIN\)[\s\S]*canReadSettings:\s*roles\.includes\(ROLES\.ADMIN\)[\s\S]*expectedRolesAnyOf:\s*\[ROLES\.ADMIN\]/,
+    /canReadStaffProfiles:\s*roles\.includes\(ROLES\.ADMIN\)[\s\S]*canEditStaffProfiles:\s*roles\.includes\(ROLES\.ADMIN\)[\s\S]*canReadLocations:\s*roles\.includes\(ROLES\.ADMIN\)[\s\S]*canEditLocations:\s*roles\.includes\(ROLES\.ADMIN\)[\s\S]*canReadEmergency:\s*roles\.includes\(ROLES\.ADMIN\)[\s\S]*canEditEmergency:\s*roles\.includes\(ROLES\.ADMIN\)[\s\S]*canReadSettings:\s*roles\.includes\(ROLES\.ADMIN\)[\s\S]*expectedRolesAnyOf:\s*\[ROLES\.ADMIN\]/,
     "Settings page should now be admin-only, including the location manager"
   );
   assert.match(
     settingsSource,
     /async function saveEmergencyCountryReferenceInfo\(\) \{[\s\S]*previousItemsByCountry[\s\S]*published_on_webpage:\s*publishedOnWebpage[\s\S]*countryReferenceInfoUpdateRequest/,
     "Settings page should preserve existing country-reference publication flags when saving emergency information"
-  );
-  assert.match(
-    settingsSource,
-    /async function saveTranslationRules\(\) \{[\s\S]*settingsTranslationRulesUpdateRequest[\s\S]*items:\s*cloneTranslationRules\(state\.translationRulesDraftItems\)/,
-    "Settings page should save the global translation overrides through the translation-rules update route"
   );
   assert.match(
     navSource,
@@ -6268,8 +6273,8 @@ test("homepage hero title follows published destinations and keeps the destinati
   );
   assert.match(
     homepageSource,
-    /data-mobile-src="\/assets\/video\/rice%20field-mobile\.mp4"[\s\S]*data-desktop-src="\/assets\/video\/rice%20field\.mp4"[\s\S]*const chooseHeroVideoSource = \(\) => \{[\s\S]*window\.matchMedia\("\(max-width: 760px\)"\)\.matches[\s\S]*heroVideo\.src = heroVideoSource;[\s\S]*document\.addEventListener\("DOMContentLoaded", startPlayback, \{ once: true \}\)/,
-    "Homepage should keep hero MP4s out of the initial request graph, attach a mobile-specific source on small screens, and start autoplay setup before full page load"
+    /<link rel="preload" as="image" href="\/assets\/video\/rice%20field\.webp" fetchpriority="high" \/>[\s\S]*data-mobile-src="\/assets\/video\/rice%20field-mobile\.mp4"[\s\S]*data-desktop-src="\/assets\/video\/rice%20field\.mp4"[\s\S]*data-hero-play-button[\s\S]*const playButton = heroSection\?\.querySelector\("\[data-hero-play-button\]"\);[\s\S]*const isMobileHeroViewport = \(\) => \([\s\S]*window\.matchMedia\("\(max-width: 760px\)"\)\.matches[\s\S]*const chooseHeroVideoSource = \(\) => \{[\s\S]*const useMobile = isMobileHeroViewport\(\);[\s\S]*heroVideo\.src = heroVideoSource;[\s\S]*const requestPlayback = \(\{ force = false \} = \{\}\) => \{[\s\S]*\(!force && !shouldAutoplayVideo\(\)\)[\s\S]*const startManualPlayback = \(\) => \{[\s\S]*startPlayback\(\{ force: true \}\);[\s\S]*const handlePosterClick = \(event\) => \{[\s\S]*isInteractiveHeroTarget\(event\.target\)[\s\S]*playButton\?\.addEventListener\("click", handlePlayButtonClick\);[\s\S]*heroSection\?\.addEventListener\("click", handlePosterClick\);[\s\S]*document\.addEventListener\("DOMContentLoaded", startPlayback, \{ once: true \}\)/,
+    "Homepage should preload the hero poster, keep hero MP4s out of the initial request graph, attach a mobile-specific source on small screens, and let the poster/play button start video from a user gesture"
   );
   assert.ok(
     mobileHeroVideo.size < desktopHeroVideo.size / 3,
@@ -6354,8 +6359,8 @@ test("homepage mobile load stages keep unstable sections hidden until hero and t
   );
   assert.match(
     homeCriticalCssSource,
-    /html\[data-home-mobile-stage="hero-media"\] \.home-page \.hero-content \{[\s\S]*opacity: 0;[\s\S]*html\[data-home-mobile-stage="hero-copy"\] \.home-page #tours[\s\S]*html\[data-home-mobile-stage="tours"\] \.home-page #tours ~ section[\s\S]*\.home-page \.hero-bg-poster \{[\s\S]*display: none;/,
-    "Homepage mobile critical CSS should hide poster-based hero fallbacks, stage hero copy, and defer lower sections on small screens"
+    /html\[data-home-mobile-stage="hero-media"\] \.home-page \.hero-content \{[\s\S]*opacity: 0;[\s\S]*html\[data-home-mobile-stage="hero-copy"\] \.home-page #tours[\s\S]*html\[data-home-mobile-stage="tours"\] \.home-page #tours ~ section[\s\S]*\.home-page \.hero-bg-video \{[\s\S]*object-position: 68% center;[\s\S]*\.home-page \.hero-bg-poster \{[\s\S]*background-position: 68% center;/,
+    "Homepage mobile critical CSS should show a poster-first hero fallback, stage hero copy, and defer lower sections on small screens"
   );
 });
 

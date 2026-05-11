@@ -6198,21 +6198,6 @@ components:
           type: array
           items:
             "$ref": "#/components/schemas/TranslationEntry"
-    TranslationRulesResponse:
-      type: object
-      required:
-      - total
-      properties:
-        items:
-          type: array
-          items:
-            "$ref": "#/components/schemas/TranslationRule"
-        total:
-          type: integer
-        updated_at:
-          type: string
-          format: date-time
-          nullable: true
     BookingChatEvent:
       type: object
       required:
@@ -6833,27 +6818,6 @@ components:
           type: array
           items:
             "$ref": "#/components/schemas/TranslationEntry"
-    TranslationRule:
-      type: object
-      required:
-      - source
-      - target_lang
-      - target
-      properties:
-        source:
-          type: string
-        target_lang:
-          "$ref": "#/components/schemas/LanguageCode"
-        target:
-          type: string
-    TranslationRulesUpdateRequest:
-      type: object
-      required: []
-      properties:
-        items:
-          type: array
-          items:
-            "$ref": "#/components/schemas/TranslationRule"
     BookingTravelPlanUpdateRequest:
       type: object
       required:
@@ -9662,67 +9626,6 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/SettingsObservabilityResponse"
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-  "/api/v1/settings/translation-rules":
-    get:
-      operationId: settings_translation_rules
-      summary: Settings Translation Rules
-      tags:
-      - Settings
-      security:
-      - bearerAuth: []
-      parameters: []
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/TranslationRulesResponse"
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-    patch:
-      operationId: settings_translation_rules_update
-      summary: Settings Translation Rules Update
-      tags:
-      - Settings
-      security:
-      - bearerAuth: []
-      parameters: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              "$ref": "#/components/schemas/TranslationRulesUpdateRequest"
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/TranslationRulesResponse"
         '401':
           description: Unauthorized
           content:

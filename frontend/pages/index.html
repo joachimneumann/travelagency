@@ -220,7 +220,7 @@
       })();
     </script>
     <link rel="manifest" href="/site.webmanifest" />
-    <link rel="preload" as="image" href="/assets/video/rice%20field.webp" media="(min-width: 761px)" fetchpriority="high" />
+    <link rel="preload" as="image" href="/assets/video/rice%20field.webp" fetchpriority="high" />
     <link rel="stylesheet" href="/shared/css/home-critical-mobile.css" media="(max-width: 760px)" />
     <link rel="stylesheet" href="/shared/css/home-critical-desktop.css" media="(min-width: 760.01px)" />
     <link rel="preload" href="/shared/css/site-home-deferred.css" as="style" onload="this.onload=null;this.rel='stylesheet'" />
@@ -312,6 +312,9 @@
           <span data-i18n-id="hero.video_fallback">Your browser does not support HTML5 video.</span>
         </video>
         <div class="hero-bg-poster" aria-hidden="true"></div>
+        <button class="hero-video-play-button" type="button" aria-label="Play hero video" data-hero-play-button>
+          <span class="hero-video-play-button__icon" aria-hidden="true"></span>
+        </button>
         <div class="hero-scrim" aria-hidden="true"></div>
         <div class="container hero-content">
           <h1 id="heroTitle" class="hero-title-only" data-i18n-id="hero.title">Private holidays in Vietnam</h1>
@@ -834,13 +837,15 @@
         const heroVideo = document.querySelector(".hero-bg-video[data-deferred-autoplay]");
         if (!heroVideo) return;
         const heroSection = heroVideo.closest(".hero-video");
-        if (window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) return;
+        const playButton = heroSection?.querySelector("[data-hero-play-button]");
+        const prefersReducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
 
         const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
         let playbackStarted = false;
         let sourceAttached = false;
         let playbackRetryBound = false;
         let playbackAttemptPending = false;
+        let playbackAttemptSerial = 0;
 
         const markHeroMediaReady = () => {
           if (!(heroSection instanceof HTMLElement) || heroSection.dataset.heroMediaReady === "true") return;
@@ -857,15 +862,20 @@
         };
 
         const shouldAutoplayVideo = () => {
+          if (prefersReducedMotion) return false;
           if (connection?.saveData) return false;
           return !/2g/i.test(String(connection?.effectiveType || ""));
         };
 
+        const isMobileHeroViewport = () => (
+          typeof window.matchMedia === "function"
+          && window.matchMedia("(max-width: 760px)").matches
+        );
+
         const chooseHeroVideoSource = () => {
           const mobileSource = heroVideo.dataset.mobileSrc || "";
           const desktopSource = heroVideo.dataset.desktopSrc || "";
-          const useMobile = typeof window.matchMedia === "function"
-            && window.matchMedia("(max-width: 760px)").matches;
+          const useMobile = isMobileHeroViewport();
           return useMobile ? mobileSource || desktopSource : desktopSource || mobileSource;
         };
 
@@ -916,16 +926,19 @@
           heroVideo.addEventListener("canplaythrough", retryPlayback);
         };
 
-        const requestPlayback = () => {
-          if (playbackStarted || playbackAttemptPending || !shouldAutoplayVideo()) return;
+        const requestPlayback = ({ force = false } = {}) => {
+          if (playbackStarted || (playbackAttemptPending && !force) || (!force && !shouldAutoplayVideo())) return;
+          const attemptSerial = ++playbackAttemptSerial;
           playbackAttemptPending = true;
           const playPromise = heroVideo.play();
           if (playPromise && typeof playPromise.catch === "function") {
             playPromise.then(() => {
+              if (attemptSerial !== playbackAttemptSerial) return;
               playbackStarted = true;
               playbackAttemptPending = false;
               revealHeroVideo();
             }).catch(() => {
+              if (attemptSerial !== playbackAttemptSerial) return;
               playbackAttemptPending = false;
             });
             return;
@@ -935,13 +948,13 @@
           revealHeroVideo();
         };
 
-        const startPlayback = () => {
-          if (playbackStarted || !shouldAutoplayVideo()) return;
+        const startPlayback = ({ force = false } = {}) => {
+          if (playbackStarted || (!force && !shouldAutoplayVideo())) return;
           attachVideoSource();
           configureHeroVideo();
           bindPlaybackRetry();
-          if (heroVideo.readyState >= 2) {
-            requestPlayback();
+          if (force || heroVideo.readyState >= 2) {
+            requestPlayback({ force });
             return;
           }
           const playbackWhenReady = () => {
@@ -955,9 +968,27 @@
           heroVideo.addEventListener("canplaythrough", playbackWhenReady, { once: true });
         };
 
-        ["pointerdown", "keydown", "touchstart"].forEach((eventName) => {
-          window.addEventListener(eventName, startPlayback, { once: true, passive: true });
-        });
+        const startManualPlayback = () => {
+          startPlayback({ force: true });
+        };
+
+        const isInteractiveHeroTarget = (target) => (
+          target instanceof Element
+          && Boolean(target.closest("a, button, input, select, textarea, label, [role='button']"))
+        );
+        const handlePlayButtonClick = (event) => {
+          event.stopPropagation();
+          startManualPlayback();
+        };
+        const handlePosterClick = (event) => {
+          if (!isMobileHeroViewport() || playbackStarted) return;
+          if (isInteractiveHeroTarget(event.target)) return;
+          startManualPlayback();
+        };
+
+        playButton?.addEventListener("click", handlePlayButtonClick);
+        heroSection?.addEventListener("click", handlePosterClick);
+        markHeroMediaReady();
 
         if (document.readyState === "loading") {
           document.addEventListener("DOMContentLoaded", startPlayback, { once: true });

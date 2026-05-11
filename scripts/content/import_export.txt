@@ -20,7 +20,6 @@ atp
 rsync -av content/atp_staff/ atp:/srv/asiatravelplan-staging/content/atp_staff/
 rsync -av --delete content/tours/ atp:/srv/asiatravelplan-staging/content/tours/
 rsync -av --delete content/translations/ atp:/srv/asiatravelplan-staging/content/translations/
-rsync -av content/translation_rules.json content/translation_protected_terms.json atp:/srv/asiatravelplan-staging/content/
 
 
 ## import ATP content to local
@@ -28,15 +27,15 @@ rsync -av content/translation_rules.json content/translation_protected_terms.jso
 rsync -av atp:/srv/asiatravelplan-staging/content/atp_staff/ content/atp_staff/
 rsync -av --delete atp:/srv/asiatravelplan-staging/content/tours/ content/tours/
 rsync -av --delete atp:/srv/asiatravelplan-staging/content/translations/ content/translations/
-rsync -av atp:/srv/asiatravelplan-staging/content/translation_rules.json atp:/srv/asiatravelplan-staging/content/translation_protected_terms.json content/
 
 
 ## commit translations to git
 
-content/translations is ignored by content/**, so force-add it when a translation snapshot must be portable through git.
+content/translations is ignored by content/**, so force-add it when a translation snapshot must be portable through git. Human-maintained translation policy lives in config/i18n and is committed normally.
 
-git status --short content/translations scripts/i18n/source_catalogs
+git status --short content/translations config/i18n scripts/i18n/source_catalogs
 git add -f content/translations
+git add config/i18n
 git add scripts/i18n/source_catalogs
 git commit -m "Update translation snapshots"
 
@@ -46,11 +45,12 @@ git commit -m "Update translation snapshots"
 Restore the committed translation snapshots into the working tree.
 
 git restore content/translations
+git restore config/i18n
 git restore scripts/i18n/source_catalogs
 
 If content/translations was deleted locally and git does not restore ignored paths in your shell, use checkout:
 
-git checkout HEAD -- content/translations scripts/i18n/source_catalogs
+git checkout HEAD -- content/translations config/i18n scripts/i18n/source_catalogs
 
 
 ## transfer translations through git: local to ATP
@@ -58,6 +58,7 @@ git checkout HEAD -- content/translations scripts/i18n/source_catalogs
 On local:
 
 git add -f content/translations
+git add config/i18n
 git add scripts/i18n/source_catalogs
 git commit -m "Update translation snapshots"
 git push origin main
@@ -73,6 +74,7 @@ node backend/app/scripts/backfill_marketing_tour_translations.js --validate
 On ATP:
 
 git add -f content/translations
+git add config/i18n
 git add scripts/i18n/source_catalogs
 git commit -m "Update translation snapshots from ATP"
 git push origin main
@@ -106,7 +108,6 @@ node scripts/i18n/build_runtime_i18n.mjs --strict
 rsync -av content/atp_staff/ backup/atp_staff/
 rsync -av --delete content/tours/ backup/tours/
 rsync -av --delete content/translations/ backup/translations/
-rsync -av content/translation_rules.json content/translation_protected_terms.json backup/
 
 
 ## restore content from backup
@@ -114,7 +115,6 @@ rsync -av content/translation_rules.json content/translation_protected_terms.jso
 rsync -av backup/atp_staff/ content/atp_staff/
 rsync -av --delete backup/tours/ content/tours/
 rsync -av --delete backup/translations/ content/translations/
-rsync -av backup/translation_rules.json backup/translation_protected_terms.json content/
 
 
 ### CAUTION

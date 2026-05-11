@@ -9,6 +9,12 @@ import {
   FRONTEND_LANGUAGE_CODES
 } from "../../../../shared/generated/language_catalog.js";
 import { translationMemorySourceKey } from "../lib/translation_memory_store.js";
+import {
+  createTranslationManualOverrideIndex,
+  normalizeStoredTranslationManualOverrides,
+  resolveTranslationManualOverride,
+  validateTranslationManualOverride
+} from "../lib/translation_manual_overrides.js";
 import { normalizeStoredTranslationProtectedTerms } from "../lib/translation_protected_terms.js";
 import { normalizeDestinationCountryCode } from "./destination_scope.js";
 
@@ -103,7 +109,6 @@ function buildDomainConfigs(repoRoot) {
       sourcePath: () => path.join(repoRoot, "frontend", "data", "generated", "i18n", "source", "frontend", "en.json"),
       targetPath: (lang) => path.join(repoRoot, "frontend", "data", "i18n", "frontend", `${lang}.json`),
       metaPath: (lang) => path.join(repoRoot, "frontend", "data", "i18n", "frontend_meta", `${lang}.json`),
-      overridePath: (lang) => path.join(repoRoot, "frontend", "data", "i18n", "frontend_overrides", `${lang}.json`),
       targetLanguages: frontendLangs,
       context: FRONTEND_CONTEXT
     },
@@ -155,7 +160,6 @@ function buildDomainConfigs(repoRoot) {
       sourcePath: () => path.join(repoRoot, "frontend", "data", "generated", "i18n", "source", "backend", "en.json"),
       targetPath: (lang) => path.join(repoRoot, "frontend", "data", "i18n", "backend", `${lang}.json`),
       metaPath: (lang) => path.join(repoRoot, "frontend", "data", "i18n", "backend", `${lang}.meta.json`),
-      overridePath: (lang) => path.join(repoRoot, "frontend", "data", "i18n", "backend_overrides", `${lang}.json`),
       targetLanguages: backendLangs,
       context: BACKEND_CONTEXT
     }
@@ -165,11 +169,12 @@ function buildDomainConfigs(repoRoot) {
 export function createStaticTranslationService({
   repoRoot,
   translationsSnapshotDir = path.join(repoRoot || "", "content", "translations"),
+  protectedTermsPath = path.join(repoRoot || "", "config", "i18n", "translation_protected_terms.json"),
+  manualOverridesPath = path.join(repoRoot || "", "config", "i18n", "translation_manual_overrides.json"),
   readStore = null,
   readTours = null,
   translationMemoryStore = null,
   translateEntriesWithMeta = null,
-  readTranslationRules = null,
   nowIso = () => new Date().toISOString(),
   readJsonFile = defaultReadJsonFile,
   mkdirFn = mkdir,
@@ -211,7 +216,8 @@ export function createStaticTranslationService({
       source_lang: config.sourceLang,
       target_languages: config.targetLanguages,
       context: config.context,
-      writes_enabled: writesEnabled !== false
+      writes_enabled: writesEnabled !== false,
+      manual_overrides_writable: false
     };
   }
 
@@ -223,6 +229,14 @@ export function createStaticTranslationService({
         "Manual translation override editing is disabled in this environment."
       );
     }
+  }
+
+  function assertManualOverrideWritesManagedInConfig() {
+    throw apiError(
+      403,
+      "STATIC_TRANSLATION_MANUAL_OVERRIDES_READ_ONLY",
+      "Manual translation overrides are managed in config/i18n/translation_manual_overrides.json."
+    );
   }
 
   function translationScope(config) {
@@ -252,9 +266,7 @@ export function createStaticTranslationService({
   }
 
   function storeItemManualOverride(item) {
-    const explicit = normalizeText(item?.manual_override);
-    if (explicit) return explicit;
-    return isManualStoreOrigin(item?.origin) ? normalizeText(item?.target_text) : "";
+    return "";
   }
 
   function storeItemMachineText(item) {
@@ -353,6 +365,9 @@ export function createStaticTranslationService({
   function deriveFreshnessState(row) {
     if (!normalizeText(row?.source)) return "extra";
     if (!rowTargetText(row)) return "missing";
+    if (normalizeText(row?.override)) {
+      return "current";
+    }
     const cachedSourceHash = normalizeText(row?.cached_source_hash);
     const expectedSourceHash = normalizeText(row?.source_hash);
     if (!cachedSourceHash) return "legacy";
@@ -398,6 +413,53 @@ export function createStaticTranslationService({
 
   async function readTranslationStoreManifest() {
     return readJsonFile(path.join(translationsSnapshotDir, "manifest.json"), {});
+  }
+
+  async function readManualOverrideIndex() {
+    const { data } = await readJsonFile(manualOverridesPath, {});
+    const normalized = normalizeStoredTranslationManualOverrides(data);
+    const index = createTranslationManualOverrideIndex(normalized);
+    if (index.duplicates.length) {
+      throw apiError(
+        500,
+        "STATIC_TRANSLATION_MANUAL_OVERRIDE_DUPLICATE",
+        `Duplicate manual translation override: ${index.duplicates[0]}`
+      );
+    }
+    return index;
+  }
+
+  function applyManualOverridePolicy(config, language, row, manualOverrideIndex) {
+    if (!row?.source) return row;
+    const item = resolveTranslationManualOverride(manualOverrideIndex, {
+      target_lang: language.code,
+      source_text: row.source
+    });
+    if (!item) return row;
+
+    const errors = validateTranslationManualOverride(item, {
+      sourceText: row.source,
+      context: `${config.id}/${language.code}:${row.key}`
+    });
+    const cacheMeta = {
+      ...(row.cache_meta && typeof row.cache_meta === "object" && !Array.isArray(row.cache_meta) ? row.cache_meta : {}),
+      manual_override_source_text: item.source_text
+    };
+    if (errors.length) {
+      return {
+        ...row,
+        manual_override_error: errors[0],
+        cache_meta: cacheMeta
+      };
+    }
+    return {
+      ...row,
+      override: item.manual_override,
+      origin: "manual_override",
+      status: "manual_override",
+      manual_override_source_text: item.source_text,
+      cache_meta: cacheMeta
+    };
   }
 
   function sectionMatches(config, language, section) {
@@ -571,9 +633,10 @@ export function createStaticTranslationService({
     const expectedSourceHash = sourceRow?.source_hash || sourceHash(source);
     const manualOverride = storeItemManualOverride(item);
     const machineText = storeItemMachineText(item);
+    const storedOrigin = normalizeText(item?.origin || item?.cache_meta?.origin);
     const origin = manualOverride
       ? "manual_override"
-      : normalizeText(item?.origin || item?.cache_meta?.origin) || (machineText ? "machine" : "");
+      : (machineText ? (isManualStoreOrigin(storedOrigin) ? "machine" : (storedOrigin || "machine")) : "");
     const cachedSourceHash = normalizeText(item?.source_hash);
     return {
       key: normalizeText(sourceRow?.key || item?.key),
@@ -603,6 +666,7 @@ export function createStaticTranslationService({
 
   async function rowsFromTranslationStore(config, language, sourceRows, legacyRows = [], { publishedIndex = null } = {}) {
     const store = await readTranslationStoreSection(config, language);
+    const manualOverrideIndex = await readManualOverrideIndex();
     const storeItemsByKey = new Map();
     for (const item of store.items) {
       const key = normalizeText(item?.key);
@@ -647,7 +711,8 @@ export function createStaticTranslationService({
       rows.push({ ...legacy, status: "extra" });
     }
 
-    const augmentedRows = await augmentRows(config, language, rows, publishedIndex);
+    const policyRows = rows.map((row) => applyManualOverridePolicy(config, language, row, manualOverrideIndex));
+    const augmentedRows = await augmentRows(config, language, policyRows, publishedIndex);
     const counts = countRows(augmentedRows);
     return {
       revision: sha256(store.raw || JSON.stringify(store.items || [])),
@@ -815,8 +880,8 @@ export function createStaticTranslationService({
       .map(({ key, source }) => {
         const target = memory.items?.[key]?.targets?.[language.code] || {};
         const cached = normalizeText(target.machine);
-        const override = normalizeText(target.manual_override);
-        const status = override ? "manual_override" : (cached ? "machine" : "missing");
+        const override = "";
+        const status = cached ? "machine" : "missing";
         return {
           key,
           source,
@@ -825,7 +890,7 @@ export function createStaticTranslationService({
           status,
           source_hash: key,
           cached_source_hash: key,
-          origin: status === "manual_override" ? "manual_override" : (cached ? "machine" : ""),
+          origin: cached ? "machine" : "",
           updated_at: normalizeText(target.manual_updated_at || target.machine_updated_at),
           cache_meta: {
             source_hash: key,
@@ -917,11 +982,10 @@ export function createStaticTranslationService({
       return loadDestinationScopeCatalogState(config, language, { publishedIndex });
     }
 
-    const [{ data: source }, { data: target }, { data: meta }, { data: overrides, raw: overrideRaw }] = await Promise.all([
+    const [{ data: source }, { data: target }, { data: meta }] = await Promise.all([
       readJsonFile(config.sourcePath(), {}),
       readJsonFile(config.targetPath(language.code), {}),
-      readJsonFile(config.metaPath(language.code), {}),
-      readJsonFile(config.overridePath(language.code), {})
+      readJsonFile(config.metaPath(language.code), {})
     ]);
 
     const sourceKeys = Object.keys(source || {});
@@ -935,7 +999,7 @@ export function createStaticTranslationService({
       const expectedSourceHash = sourceHash(sourceValue);
       const metaEntry = meta?.[key] && typeof meta[key] === "object" ? meta[key] : {};
       const cachedValue = String(target?.[key] ?? "");
-      const overrideValue = String(overrides?.[key] ?? "");
+      const overrideValue = "";
       return {
         key,
         source: sourceValue,
@@ -959,8 +1023,7 @@ export function createStaticTranslationService({
 
     const extraKeys = new Set([
       ...Object.keys(target || {}),
-      ...Object.keys(meta || {}),
-      ...Object.keys(overrides || {})
+      ...Object.keys(meta || {})
     ]);
     for (const key of sourceKeys) extraKeys.delete(key);
     for (const key of Array.from(extraKeys).sort()) {
@@ -969,7 +1032,7 @@ export function createStaticTranslationService({
         key,
         source: "",
         cached: String(target?.[key] ?? ""),
-        override: String(overrides?.[key] ?? ""),
+        override: "",
         status: "extra",
         source_hash: "",
         cached_source_hash: normalizeText(metaEntry?.source_hash),
@@ -986,7 +1049,7 @@ export function createStaticTranslationService({
       language,
       source_lang: config.sourceLang,
       target_lang: language.code,
-      revision: storeState.revision || sha256(overrideRaw),
+      revision: storeState.revision,
       total: storeState.rows.length,
       counts: storeState.counts,
       rows: storeState.rows
@@ -1147,8 +1210,8 @@ export function createStaticTranslationService({
 
   async function patchOverrides(domain, targetLang, payload = {}) {
     assertWritesEnabled();
-    const { config, language } = getLanguageConfig(domain, targetLang);
-    return patchTranslationStoreOverrides(config, language, payload);
+    getLanguageConfig(domain, targetLang);
+    assertManualOverrideWritesManagedInConfig();
   }
 
   function translationProfileForConfig(config) {
@@ -1159,7 +1222,7 @@ export function createStaticTranslationService({
 
   async function loadProtectedTermsForApply(options = {}) {
     if (Array.isArray(options.protectedTerms)) return options.protectedTerms;
-    const { data } = await readJsonFile(path.join(translationsSnapshotDir, "translation_protected_terms.json"), {});
+    const { data } = await readJsonFile(protectedTermsPath, {});
     return normalizeStoredTranslationProtectedTerms(data).items;
   }
 
@@ -1180,13 +1243,6 @@ export function createStaticTranslationService({
           || row.review_state === "needs_update"
         ))
     ));
-  }
-
-  async function loadTranslationRulesForApply(options = {}) {
-    if (Array.isArray(options.translationRules)) return options.translationRules;
-    if (typeof readTranslationRules !== "function") return [];
-    const rules = await readTranslationRules();
-    return Array.isArray(rules?.items) ? rules.items : [];
   }
 
   async function translateCentralRows(config, language, rows, options = {}) {
@@ -1226,7 +1282,6 @@ export function createStaticTranslationService({
       context: config.context,
       cacheNamespace: `static-translations:${config.id}`,
       translationProfile: translationProfileForConfig(config),
-      translationRules: await loadTranslationRulesForApply(options),
       protectedTerms: sourceProtectedTerms,
       allowGoogleFallback: true,
       onEntryComplete(entry) {
@@ -1325,7 +1380,6 @@ export function createStaticTranslationService({
       context: config.context,
       cacheNamespace: `static-translations:${config.id}`,
       translationProfile: translationProfileForConfig(config),
-      translationRules: await loadTranslationRulesForApply(options),
       protectedTerms: sourceProtectedTerms,
       allowGoogleFallback: true,
       onEntryComplete(entry) {
@@ -1377,10 +1431,7 @@ export function createStaticTranslationService({
 
   async function applyMissingTranslations(options = {}) {
     assertWritesEnabled();
-    const applyOptions = {
-      ...options,
-      translationRules: await loadTranslationRulesForApply(options)
-    };
+    const applyOptions = { ...options };
     const summary = {
       requested_count: 0,
       translated_count: 0,
@@ -1411,8 +1462,7 @@ export function createStaticTranslationService({
     assertWritesEnabled();
     const applyOptions = {
       ...options,
-      protectedTermsOnly: true,
-      translationRules: await loadTranslationRulesForApply(options)
+      protectedTermsOnly: true
     };
     const summary = {
       requested_count: 0,
@@ -1607,7 +1657,6 @@ export function createStaticTranslationService({
       target_text: targetText,
       target_hash: sourceHash(targetText),
       machine_text: machineText,
-      manual_override: manualOverride,
       origin,
       freshness_state: freshnessState,
       job_state: row.job_state,

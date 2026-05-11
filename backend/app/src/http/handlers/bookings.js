@@ -154,7 +154,6 @@ export function createBookingHandlers(deps) {
     rm,
     sendFileWithCache,
     translateEntries,
-    readTranslationRules,
     resolveLocalizedTourText
   } = deps;
 
@@ -844,8 +843,7 @@ export function createBookingHandlers(deps) {
     buildBookingDetailResponse,
     buildBookingPayload,
     incrementBookingRevision,
-    translateEntries,
-    readTranslationRules
+    translateEntries
   });
 
   const {
@@ -912,7 +910,6 @@ export function createBookingHandlers(deps) {
     deleteBookingTravelPlanPdfArtifact,
     sendFileWithCache,
     translateEntries,
-    readTranslationRules,
     path,
     randomUUID,
     generatedOfferPdfPath,

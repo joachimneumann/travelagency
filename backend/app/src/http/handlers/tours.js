@@ -53,7 +53,6 @@ export function createTourHandlers(deps) {
     setLocalizedTextForLang,
     translateEntries,
     translateEntriesWithMeta,
-    readTranslationRules,
     translationMemoryStore,
     normalizeTourLang,
     normalizeTourDestinationCode,
@@ -1641,9 +1640,6 @@ export function createTourHandlers(deps) {
     const sourceLang = normalizeTourLang(payload.source_lang);
     const targetLang = normalizeTourLang(payload.target_lang);
     const translationProfile = normalizeText(payload.translation_profile) || "marketing_trip_copy";
-    const translationRules = typeof readTranslationRules === "function"
-      ? (await readTranslationRules()).items
-      : [];
     const entries = translationEntriesToObject(payload.entries);
     const traceId = `tour_${randomUUID()}`;
     const requestStartMs = nowMs();
@@ -1696,7 +1692,6 @@ export function createTourHandlers(deps) {
             provider: "google",
             cacheNamespace: "tour-marketing-copy",
             translationProfile,
-            translationRules,
             traceId
           })
         : {
@@ -1706,7 +1701,6 @@ export function createTourHandlers(deps) {
               provider: "google",
               cacheNamespace: "tour-marketing-copy",
               translationProfile,
-              translationRules,
               traceId
             }),
             provider: { kind: "google", model: "", display: "google" }

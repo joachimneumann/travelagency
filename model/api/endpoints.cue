@@ -942,23 +942,6 @@ package api
 		responseType:  "SettingsObservabilityResponse"
 	},
 	{
-		key:           "settings_translation_rules"
-		path:          "/api/v1/settings/translation-rules"
-		method:        "GET"
-		tag:           "Settings"
-		authenticated: true
-		responseType:  "TranslationRulesResponse"
-	},
-	{
-		key:           "settings_translation_rules_update"
-		path:          "/api/v1/settings/translation-rules"
-		method:        "PATCH"
-		tag:           "Settings"
-		authenticated: true
-		requestType:   "TranslationRulesUpdateRequest"
-		responseType:  "TranslationRulesResponse"
-	},
-	{
 		key:           "staff_profiles"
 		path:          "/api/v1/staff-profiles"
 		method:        "GET"

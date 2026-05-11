@@ -50,8 +50,7 @@ export function createBookingCoreHandlers(deps) {
     buildBookingPayload,
     incrementBookingRevision,
     translateEntries,
-    translateEntriesWithMeta,
-    readTranslationRules
+    translateEntriesWithMeta
   } = deps;
 
   function translationEntriesToObject(entries) {
@@ -475,9 +474,6 @@ export function createBookingCoreHandlers(deps) {
     const sourceLang = normalizeBookingSourceLang(payload.source_lang);
     const targetLang = normalizeBookingContentLang(payload.target_lang);
     const translationProfile = normalizeText(payload.translation_profile) || "customer_travel_plan";
-    const translationRules = typeof readTranslationRules === "function"
-      ? (await readTranslationRules()).items
-      : [];
     const entries = translationEntriesToObject(payload.entries);
     if (!Object.keys(entries).length) {
       sendJson(res, 422, { error: "At least one source field is required." });
@@ -500,8 +496,7 @@ export function createBookingCoreHandlers(deps) {
             domain: "travel planning",
             allowGoogleFallback: true,
             cacheNamespace: "booking-travel-plan",
-            translationProfile,
-            translationRules
+            translationProfile
           })
         : {
             entries: await translateEntries(entries, targetLang, {
@@ -509,8 +504,7 @@ export function createBookingCoreHandlers(deps) {
               domain: "travel planning",
               allowGoogleFallback: true,
               cacheNamespace: "booking-travel-plan",
-              translationProfile,
-              translationRules
+              translationProfile
             }),
             provider: null
           };

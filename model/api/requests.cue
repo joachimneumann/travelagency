@@ -143,16 +143,6 @@ import (
 	entries: [...#TranslationEntry]
 }
 
-#TranslationRule: {
-	source:      string
-	target_lang: enums.#LanguageCode
-	target:      string
-}
-
-#TranslationRulesUpdateRequest: {
-	items: [...#TranslationRule]
-}
-
 #BookingTravelPlanUpdateRequest: {
 	expected_travel_plan_revision?: >=0 & int
 	travel_plan:                    databaseModel.#BookingTravelPlan

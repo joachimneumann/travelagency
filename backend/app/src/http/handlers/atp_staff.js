@@ -90,7 +90,6 @@ export function createAtpStaffHandlers(deps) {
     repoRoot,
     translateEntries,
     translateEntriesWithMeta,
-    readTranslationRules,
     execFile,
     mkdir,
     writeFile,
@@ -345,9 +344,6 @@ export function createAtpStaffHandlers(deps) {
     const sourceLang = normalizeLanguageCode(payload.source_lang, "en");
     const targetLang = normalizeLanguageCode(payload.target_lang, "en");
     const translationProfile = normalizeText(payload.translation_profile) || "staff_profile";
-    const translationRules = typeof readTranslationRules === "function"
-      ? (await readTranslationRules()).items
-      : [];
     const entries = translationEntriesToObject(payload.entries);
     if (!Object.keys(entries).length) {
       sendJson(res, 422, { error: "At least one source field is required." });
@@ -370,8 +366,7 @@ export function createAtpStaffHandlers(deps) {
             domain: "ATP staff profile text",
             allowGoogleFallback: true,
             cacheNamespace: "staff-profile",
-            translationProfile,
-            translationRules
+            translationProfile
           })
         : {
             entries: await translateEntries(entries, targetLang, {
@@ -379,8 +374,7 @@ export function createAtpStaffHandlers(deps) {
               domain: "ATP staff profile text",
               allowGoogleFallback: true,
               cacheNamespace: "staff-profile",
-              translationProfile,
-              translationRules
+              translationProfile
             }),
             provider: null
           };

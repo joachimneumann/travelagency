@@ -1,11 +1,7 @@
-Add optional per-language override files here as `<lang>.json`.
+Deprecated. Backend manual translation overrides now live in:
 
-Example:
-
-```json
-{
-  "backend.bookings.title": "Your curated manual translation"
-}
+```text
+config/i18n/translation_manual_overrides.json
 ```
 
-`node scripts/i18n/sync_backend_i18n.mjs translate` will preserve these keys during future automatic translation runs and write them back into the generated backend dictionary.
+The backend reads that committed policy file and does not write per-language override files here.

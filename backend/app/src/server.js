@@ -207,8 +207,8 @@ const services = createBackendServices({
     atpStaffPhotosDir: RUNTIME_PATHS.atpStaffPhotosDir,
     keycloakUserSnapshotPath: RUNTIME_PATHS.keycloakUserSnapshotPath,
     countryReferenceInfoPath: RUNTIME_PATHS.countryReferenceInfoPath,
-    translationRulesPath: RUNTIME_PATHS.translationRulesPath,
     translationProtectedTermsPath: RUNTIME_PATHS.translationProtectedTermsPath,
+    translationManualOverridesPath: RUNTIME_PATHS.translationManualOverridesPath,
     translationMemoryPath: RUNTIME_PATHS.translationMemoryPath,
     translationsSnapshotDir: RUNTIME_PATHS.translationsSnapshotDir,
     bookingTravelPlanAttachmentsDir: RUNTIME_PATHS.bookingTravelPlanAttachmentsDir,
@@ -278,8 +278,6 @@ export async function createBackendHandler({ port = PORT } = {}) {
   await moveDirectoryIfNeeded(RUNTIME_PATHS.legacyGeneratedOffersDir, RUNTIME_PATHS.generatedOffersDir);
   await moveDirectoryIfNeeded(RUNTIME_PATHS.legacyBookingTravelPlanAttachmentsDir, RUNTIME_PATHS.bookingTravelPlanAttachmentsDir);
   await moveFileIfNeeded(RUNTIME_PATHS.legacyCountryReferenceInfoPath, RUNTIME_PATHS.countryReferenceInfoPath);
-  await moveFileIfNeeded(RUNTIME_PATHS.legacyTranslationRulesPath, RUNTIME_PATHS.translationRulesPath);
-  await moveFileIfNeeded(RUNTIME_PATHS.legacyTranslationProtectedTermsPath, RUNTIME_PATHS.translationProtectedTermsPath);
   await moveFileIfNeeded(RUNTIME_PATHS.legacyTranslationMemoryPath, RUNTIME_PATHS.translationMemoryPath);
   await services.storeUtils.ensureStorage();
   await backfillPersistedTourState();
@@ -288,8 +286,6 @@ export async function createBackendHandler({ port = PORT } = {}) {
   await pruneDirectoryContents(path.join(RUNTIME_PATHS.pdfsRoot, "invoices"));
   await services.atpStaffDirectory.ensureStorage();
   await services.countryReferenceStore.ensureStorage();
-  await services.translationRulesStore.ensureStorage();
-  await services.translationProtectedTermsStore.ensureStorage();
   await services.translationMemoryStore.ensureStorage();
   await services.atpStaffDirectory.syncProfilesFromKeycloak().catch(() => []);
   const startupStore = await services.storeUtils.readStore();

@@ -51,7 +51,6 @@ export function createBookingTravelPlanHandlers(deps) {
     deleteBookingTravelPlanPdfArtifact,
     sendFileWithCache,
     translateEntries,
-    readTranslationRules,
     path,
     randomUUID,
     generatedOfferPdfPath,
@@ -733,9 +732,6 @@ export function createBookingTravelPlanHandlers(deps) {
     const contentLang = requestContentLang(req, payload);
     const sourceLang = requestSourceLang(req, payload);
     const translationProfile = normalizeText(payload.translation_profile) || "customer_travel_plan";
-    const translationRules = typeof readTranslationRules === "function"
-      ? (await readTranslationRules()).items
-      : [];
     try {
       const translatedTravelPlan = await translateTravelPlanFromSourceLanguage(
         booking.travel_plan,
@@ -743,8 +739,7 @@ export function createBookingTravelPlanHandlers(deps) {
         contentLang,
         (entries, targetLang, translateOptions = {}) => translateEntries(entries, targetLang, {
           ...translateOptions,
-          cacheNamespace: "booking-travel-plan",
-          translationRules
+          cacheNamespace: "booking-travel-plan"
         }),
         nowIso(),
         { translationProfile }

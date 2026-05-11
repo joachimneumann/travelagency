@@ -3460,11 +3460,6 @@
   "typeName": "SettingsObservabilityLatestChangedBooking",
   "isArray": false
 },
-  FIELD_74: {
-  "kind": "transport",
-  "typeName": "TranslationRule",
-  "isArray": true
-},
   FIELD_75: {
   "kind": "enum",
   "typeName": "LanguageCode",

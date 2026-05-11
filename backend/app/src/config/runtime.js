@@ -54,14 +54,15 @@ export const LEGACY_COUNTRY_REFERENCE_INFO_PATH = path.join(DATA_ROOT, "country_
 export const COUNTRY_REFERENCE_INFO_PATH = resolveConfigPathFromRepoRoot(
   normalizeText(process.env.COUNTRY_REFERENCE_INFO_PATH || path.join("content", "country_reference_info.json"))
 );
-export const LEGACY_TRANSLATION_RULES_PATH = resolveConfigPathFromRepoRoot(path.join("content", "translation_rules.json"));
-export const LEGACY_TRANSLATION_PROTECTED_TERMS_PATH = resolveConfigPathFromRepoRoot(path.join("content", "translation_protected_terms.json"));
 export const LEGACY_TRANSLATION_MEMORY_PATH = resolveConfigPathFromRepoRoot(path.join("content", "translation_memory.json"));
-export const TRANSLATION_RULES_PATH = resolveConfigPathFromRepoRoot(
-  normalizeText(process.env.TRANSLATION_RULES_PATH || path.join("content", "translations", "translation_rules.json"))
+export const TRANSLATION_POLICY_DIR = resolveConfigPathFromRepoRoot(
+  normalizeText(process.env.TRANSLATION_POLICY_DIR || path.join("config", "i18n"))
 );
 export const TRANSLATION_PROTECTED_TERMS_PATH = resolveConfigPathFromRepoRoot(
-  normalizeText(process.env.TRANSLATION_PROTECTED_TERMS_PATH || path.join("content", "translations", "translation_protected_terms.json"))
+  normalizeText(process.env.TRANSLATION_PROTECTED_TERMS_PATH || path.join("config", "i18n", "translation_protected_terms.json"))
+);
+export const TRANSLATION_MANUAL_OVERRIDES_PATH = resolveConfigPathFromRepoRoot(
+  normalizeText(process.env.TRANSLATION_MANUAL_OVERRIDES_PATH || path.join("config", "i18n", "translation_manual_overrides.json"))
 );
 export const TRANSLATION_MEMORY_PATH = resolveConfigPathFromRepoRoot(
   normalizeText(process.env.TRANSLATION_MEMORY_PATH || path.join("content", "translations", "translation_memory.json"))
@@ -324,11 +325,10 @@ export const RUNTIME_PATHS = Object.freeze({
   keycloakUserSnapshotPath: KEYCLOAK_USER_SNAPSHOT_PATH,
   legacyCountryReferenceInfoPath: LEGACY_COUNTRY_REFERENCE_INFO_PATH,
   countryReferenceInfoPath: COUNTRY_REFERENCE_INFO_PATH,
-  legacyTranslationRulesPath: LEGACY_TRANSLATION_RULES_PATH,
-  legacyTranslationProtectedTermsPath: LEGACY_TRANSLATION_PROTECTED_TERMS_PATH,
   legacyTranslationMemoryPath: LEGACY_TRANSLATION_MEMORY_PATH,
-  translationRulesPath: TRANSLATION_RULES_PATH,
+  translationPolicyDir: TRANSLATION_POLICY_DIR,
   translationProtectedTermsPath: TRANSLATION_PROTECTED_TERMS_PATH,
+  translationManualOverridesPath: TRANSLATION_MANUAL_OVERRIDES_PATH,
   translationMemoryPath: TRANSLATION_MEMORY_PATH,
   translationsSnapshotDir: TRANSLATIONS_SNAPSHOT_DIR,
   bookingTravelPlanAttachmentsDir: BOOKING_TRAVEL_PLAN_ATTACHMENTS_DIR,

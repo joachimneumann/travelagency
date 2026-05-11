@@ -17,7 +17,6 @@ import { createDestinationScopeHandlers } from "../http/handlers/destination_sco
 import { createKeycloakUserHandlers } from "../http/handlers/keycloak_users.js";
 import { createStaticTranslationHandlers } from "../http/handlers/static_translations.js";
 import { createTourHandlers } from "../http/handlers/tours.js";
-import { createTranslationRulesHandlers } from "../http/handlers/translation_rules.js";
 import { createPublicSitePublishHandlers } from "../http/handlers/public_site_publish.js";
 
 export function createApplicationRoutes({
@@ -51,7 +50,6 @@ export function createApplicationRoutes({
     keycloakDirectory,
     atpStaffDirectory,
     countryReferenceStore,
-    translationRulesStore,
     translationMemoryStore,
     staticTranslationService,
     staticTranslationApplyJobs,
@@ -277,7 +275,6 @@ export function createApplicationRoutes({
     sendFileWithCache: httpHelpers.sendFileWithCache,
     translateEntries: runtime.translationClient.translateEntries,
     translateEntriesWithMeta: runtime.translationClient.translateEntriesWithMeta,
-    readTranslationRules: translationRulesStore.readTranslationRules,
     resolveLocalizedTourText: tourHelpers.resolveLocalizedText
   });
 
@@ -305,7 +302,6 @@ export function createApplicationRoutes({
     repoRoot: runtime.paths.repoRoot,
     translateEntries: runtime.translationClient.translateEntries,
     translateEntriesWithMeta: runtime.translationClient.translateEntriesWithMeta,
-    readTranslationRules: translationRulesStore.readTranslationRules,
     execFile: runtime.execFile,
     mkdir,
     writeFile,
@@ -333,17 +329,6 @@ export function createApplicationRoutes({
     execFile: runtime.execFile
   });
 
-  const translationRulesHandlers = createTranslationRulesHandlers({
-    readBodyJson: httpHelpers.readBodyJson,
-    sendJson: httpHelpers.sendJson,
-    getPrincipal,
-    canReadSettings,
-    readTranslationRules: translationRulesStore.readTranslationRules,
-    persistTranslationRules: translationRulesStore.persistTranslationRules,
-    nowIso: support.nowIso,
-    writesEnabled: runtime.translationOverrideWritesEnabled !== false
-  });
-
   const destinationScopeHandlers = createDestinationScopeHandlers({
     readBodyJson: httpHelpers.readBodyJson,
     sendJson: httpHelpers.sendJson,
@@ -360,8 +345,7 @@ export function createApplicationRoutes({
     dataPath: runtime.paths.dataPath,
     toursDir: runtime.paths.toursDir,
     tourDestinationsPath: runtime.paths.tourDestinationsPath,
-    translateEntriesWithMeta: runtime.translationClient.translateEntriesWithMeta,
-    readTranslationRules: translationRulesStore.readTranslationRules
+    translateEntriesWithMeta: runtime.translationClient.translateEntriesWithMeta
   });
 
   const tourHandlers = createTourHandlers({
@@ -385,7 +369,6 @@ export function createApplicationRoutes({
     setLocalizedTextForLang: tourHelpers.setLocalizedTextForLang,
     translateEntries: runtime.translationClient.translateEntries,
     translateEntriesWithMeta: runtime.translationClient.translateEntriesWithMeta,
-    readTranslationRules: translationRulesStore.readTranslationRules,
     translationMemoryStore,
     normalizeTourLang,
     normalizeTourDestinationCode,
@@ -461,7 +444,6 @@ export function createApplicationRoutes({
       ...keycloakUserHandlers,
       ...countryReferenceHandlers,
       ...destinationScopeHandlers,
-      ...translationRulesHandlers,
       ...staticTranslationHandlers,
       ...publicSitePublishHandlers,
       ...tourHandlers

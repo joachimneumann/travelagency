@@ -22,7 +22,8 @@
 
 .home-page .hero-bg-video,
 .home-page .hero-bg-poster,
-.home-page .hero-scrim {
+.home-page .hero-scrim,
+.home-page .hero-video-play-button {
   border-radius: inherit;
 }
 
@@ -382,7 +383,7 @@
   }
 
   .home-page .hero-bg-poster {
-    display: none;
+    background-position: 68% center;
   }
 
   .home-page .hero-content {

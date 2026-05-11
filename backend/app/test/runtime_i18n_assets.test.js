@@ -191,7 +191,7 @@ test("runtime i18n generator preserves protected-term-only strings from snapshot
   await writeJson(sourcePath, source);
   await writeJson(snapshotPath, snapshot);
   await writeJson(manifestPath, manifest);
-  await writeJson(path.join(repoRoot, "content", "translations", "translation_protected_terms.json"), {
+  await writeJson(path.join(repoRoot, "config", "i18n", "translation_protected_terms.json"), {
     items: ["AsiaTravelPlan", "backend"],
     updated_at: null
   });
@@ -200,6 +200,28 @@ test("runtime i18n generator preserves protected-term-only strings from snapshot
 
   const frontendVi = JSON.parse(await readFile(path.join(repoRoot, "frontend", "data", "i18n", "frontend", "vi.json"), "utf8"));
   assert.equal(frontendVi["backend.button_full"], "AsiaTravelPlan Backend");
+});
+
+test("runtime i18n generator applies committed manual overrides after snapshots", async () => {
+  const { repoRoot, frontendSource } = await createRuntimeI18nFixture();
+  await writeJson(path.join(repoRoot, "config", "i18n", "translation_manual_overrides.json"), {
+    schema: "translation-manual-overrides/v2",
+    schema_version: 2,
+    items: [
+      {
+        source_text: frontendSource["tour.card.plan_trip"],
+        target_lang: "vi",
+        manual_override: "Khám phá chuyến đi"
+      }
+    ]
+  });
+
+  await generateRuntimeI18nFromSnapshots({ repoRoot, quiet: true });
+
+  const frontendVi = JSON.parse(await readFile(path.join(repoRoot, "frontend", "data", "i18n", "frontend", "vi.json"), "utf8"));
+  const frontendMeta = JSON.parse(await readFile(path.join(repoRoot, "frontend", "data", "i18n", "frontend_meta", "vi.json"), "utf8"));
+  assert.equal(frontendVi["tour.card.plan_trip"], "Khám phá chuyến đi");
+  assert.equal(frontendMeta["tour.card.plan_trip"].origin, "manual_override");
 });
 
 test("runtime i18n check validates snapshots without writing generated files", async () => {

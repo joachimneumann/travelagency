@@ -855,38 +855,6 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         return validateShape(value, SETTINGS_OBSERVABILITY_RESPONSE_SCHEMA);
       }
 
-      export const TRANSLATION_RULES_RESPONSE_SCHEMA = {
-        name: "TranslationRulesResponse",
-        domain: "api",
-        module: "api",
-        sourceType: "openapi.components.schemas.TranslationRulesResponse",
-        requireOneOf: [],
-        fields: [
-    schemaField({"name":"items","required":false,"wireName":"items"}, SHARED_FIELD_DEFS.FIELD_74),
-    schemaField({"name":"total","required":true,"wireName":"total"}, SHARED_FIELD_DEFS.FIELD_19),
-    schemaField({"name":"updated_at","required":false,"wireName":"updated_at"}, SHARED_FIELD_DEFS.FIELD_5)
-        ]
-      };
-
-      export function validateTranslationRulesResponse(value) {
-        return validateShape(value, TRANSLATION_RULES_RESPONSE_SCHEMA);
-      }
-
-      export const TRANSLATION_RULES_UPDATE_REQUEST_SCHEMA = {
-        name: "TranslationRulesUpdateRequest",
-        domain: "api",
-        module: "api",
-        sourceType: "openapi.components.schemas.TranslationRulesUpdateRequest",
-        requireOneOf: [],
-        fields: [
-    schemaField({"name":"items","required":false,"wireName":"items"}, SHARED_FIELD_DEFS.FIELD_74)
-        ]
-      };
-
-      export function validateTranslationRulesUpdateRequest(value) {
-        return validateShape(value, TRANSLATION_RULES_UPDATE_REQUEST_SCHEMA);
-      }
-
       export const ATP_STAFF_PROFILE_UPDATE_REQUEST_SCHEMA = {
         name: "AtpStaffProfileUpdateRequest",
         domain: "api",
@@ -1674,23 +1642,6 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
 
       export function validateSettingsObservabilityLatestChangedBooking(value) {
         return validateShape(value, SETTINGS_OBSERVABILITY_LATEST_CHANGED_BOOKING_SCHEMA);
-      }
-
-      export const TRANSLATION_RULE_SCHEMA = {
-        name: "TranslationRule",
-        domain: "api",
-        module: "api",
-        sourceType: "openapi.components.schemas.TranslationRule",
-        requireOneOf: [],
-        fields: [
-    schemaField({"name":"source","required":true,"wireName":"source"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"target_lang","required":true,"wireName":"target_lang"}, SHARED_FIELD_DEFS.FIELD_11),
-    schemaField({"name":"target","required":true,"wireName":"target"}, SHARED_FIELD_DEFS.FIELD_1)
-        ]
-      };
-
-      export function validateTranslationRule(value) {
-        return validateShape(value, TRANSLATION_RULE_SCHEMA);
       }
 
       export const DESTINATION_SCOPE_CATALOG_DESTINATION_SCHEMA = {

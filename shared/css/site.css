@@ -715,16 +715,11 @@ textarea:focus-visible {
 .hero-bg-poster {
   position: absolute;
   inset: 0;
+  background-image: url("/assets/video/rice%20field.webp");
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;
   transition: opacity 0.32s ease, visibility 0.32s ease;
-}
-
-@media (min-width: 761px) {
-  .hero-bg-poster {
-    background-image: url("/assets/video/rice%20field.webp");
-  }
 }
 
 .hero-bg-video::-webkit-media-controls,
@@ -743,10 +738,65 @@ textarea:focus-visible {
   visibility: hidden;
 }
 
+.hero-video-play-button {
+  display: none;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 4;
+  align-items: center;
+  justify-content: center;
+  width: 5.75rem;
+  height: 5.75rem;
+  padding: 0;
+  border: 0;
+  color: #fff;
+  background: transparent;
+  cursor: pointer;
+  transform: translate(-50%, -50%);
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+.hero-video-play-button__icon {
+  position: relative;
+  width: 4.75rem;
+  height: 4.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.42);
+  border-radius: 999px;
+  background: rgba(28, 43, 53, 0.74);
+  box-shadow: 0 1rem 2.5rem rgba(0, 0, 0, 0.26);
+  backdrop-filter: blur(8px);
+}
+
+.hero-video-play-button__icon::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-top: 0.85rem solid transparent;
+  border-bottom: 0.85rem solid transparent;
+  border-left: 1.25rem solid currentColor;
+  transform: translate(-35%, -50%);
+}
+
+.hero-video-play-button:focus-visible .hero-video-play-button__icon {
+  outline: 3px solid rgba(255, 255, 255, 0.86);
+  outline-offset: 4px;
+}
+
+.hero-video--playing .hero-video-play-button {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
 .hero-scrim {
   position: absolute;
   inset: 0;
   background: transparent;
+  pointer-events: none;
 }
 
 .hero-content {
@@ -4236,50 +4286,6 @@ textarea:focus-visible {
   color: var(--error-text);
 }
 
-.settings-translation-rules__textarea,
-.settings-translation-rules__lang {
-  width: 100%;
-}
-
-.settings-translation-rules__textarea {
-  min-height: 5.25rem;
-  resize: vertical;
-}
-
-.settings-translation-rules__targets {
-  display: grid;
-  gap: 0.6rem;
-}
-
-.settings-translation-rules__target-row {
-  display: grid;
-  grid-template-columns: minmax(9rem, 0.45fr) minmax(14rem, 1fr) auto;
-  gap: 0.5rem;
-  align-items: start;
-}
-
-.settings-translation-rules__target-row .settings-translation-rules__textarea {
-  min-height: 3.25rem;
-}
-
-.settings-translation-rules__add-target {
-  justify-self: start;
-}
-
-@media (max-width: 720px) {
-  .settings-translation-rules__target-row {
-    grid-template-columns: 1fr;
-  }
-}
-
-.settings-translation-rules__remove {
-  white-space: nowrap;
-}
-
-.settings-translation-rules__empty {
-  color: var(--text-muted);
-}
-
 .backend-tour-form {
   display: grid;
   grid-template-columns: repeat(2, minmax(220px, 1fr));
@@ -5052,6 +5058,10 @@ textarea:focus-visible {
   .hero-bg-video,
   .hero-bg-poster {
     transition-duration: 0.12s;
+  }
+
+  .hero-video-play-button {
+    display: flex;
   }
 
   .hero-content {

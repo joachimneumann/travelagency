@@ -9,6 +9,12 @@ import {
   FRONTEND_LANGUAGE_CODES,
   promptLanguageName
 } from "../../shared/generated/language_catalog.js";
+import {
+  createTranslationManualOverrideIndex,
+  normalizeStoredTranslationManualOverrides,
+  resolveTranslationManualOverride,
+  validateTranslationManualOverride
+} from "../../backend/app/src/lib/translation_manual_overrides.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -16,7 +22,7 @@ const ROOT = path.resolve(__dirname, "..", "..");
 const FRONTEND_SOURCE_CATALOG_PATH = path.join(ROOT, "scripts", "i18n", "source_catalogs", "frontend.en.json");
 const FRONTEND_I18N_DIR = path.join(ROOT, "frontend", "data", "i18n", "frontend");
 const FRONTEND_I18N_META_DIR = path.join(ROOT, "frontend", "data", "i18n", "frontend_meta");
-const FRONTEND_I18N_OVERRIDE_DIR = path.join(ROOT, "frontend", "data", "i18n", "frontend_overrides");
+const TRANSLATION_MANUAL_OVERRIDES_PATH = path.join(ROOT, "config", "i18n", "translation_manual_overrides.json");
 
 const DEFAULT_SOURCE_LANG = "en";
 const DEFAULT_OPENAI_TRANSLATION_MODEL = "gpt-4o-mini";
@@ -103,10 +109,6 @@ function metadataPath(lang) {
   return path.join(FRONTEND_I18N_META_DIR, `${lang}.json`);
 }
 
-function overridePath(lang) {
-  return path.join(FRONTEND_I18N_OVERRIDE_DIR, `${lang}.json`);
-}
-
 async function readJsonFile(filePath, fallback = {}) {
   try {
     const raw = await readFile(filePath, "utf8");
@@ -123,6 +125,29 @@ async function readJsonFile(filePath, fallback = {}) {
 
 function sourceHash(value) {
   return createHash("sha256").update(String(value ?? ""), "utf8").digest("hex");
+}
+
+async function readManualOverrides(source, targetLang) {
+  const payload = await readJsonFile(TRANSLATION_MANUAL_OVERRIDES_PATH, {});
+  const index = createTranslationManualOverrideIndex(normalizeStoredTranslationManualOverrides(payload));
+  if (index.duplicates.length) {
+    throw new Error(`Duplicate manual translation override: ${index.duplicates[0]}`);
+  }
+  const overrides = {};
+  for (const [key, sourceText] of Object.entries(source || {})) {
+    const item = resolveTranslationManualOverride(index, {
+      target_lang: targetLang,
+      source_text: sourceText
+    });
+    if (!item) continue;
+    const errors = validateTranslationManualOverride(item, {
+      sourceText,
+      context: `frontend/${targetLang}: ${key}`
+    });
+    if (errors.length) throw new Error(errors[0]);
+    overrides[key] = item.manual_override;
+  }
+  return overrides;
 }
 
 function maskTemplateTokens(text) {
@@ -316,7 +341,7 @@ async function resolveTranslatorSession(targetLang, sourceLang) {
   const organizationId = normalizeText(process.env.OPENAI_ORGANIZATION_ID);
   const projectId = normalizeText(process.env.OPENAI_PROJECT_ID);
   const protectedTermsPath = normalizeText(process.env.TRANSLATION_PROTECTED_TERMS_PATH)
-    || path.join(ROOT, "content", "translations", "translation_protected_terms.json");
+    || path.join(ROOT, "config", "i18n", "translation_protected_terms.json");
   const probeEntries = { __probe: "Public AsiaTravelPlan website translation check." };
   const probeOptions = {
     sourceLang: promptLanguageName(sourceLang, "English"),
@@ -380,7 +405,7 @@ async function runCheck(options) {
   for (const targetLang of targetLangs) {
     const target = await readJsonFile(dictionaryPath(targetLang));
     const meta = await readJsonFile(metadataPath(targetLang));
-    const overrides = await readJsonFile(overridePath(targetLang));
+    const overrides = await readManualOverrides(source, targetLang);
     const effective = applyManualOverrides(source, target, meta, overrides);
     const state = collectSyncState(source, effective.target, effective.meta);
     printCheckSummary(targetLang, state);
@@ -404,7 +429,7 @@ async function runTranslate(options) {
   for (const targetLang of targetLangs) {
     const target = await readJsonFile(dictionaryPath(targetLang));
     const meta = await readJsonFile(metadataPath(targetLang));
-    const overrides = await readJsonFile(overridePath(targetLang));
+    const overrides = await readManualOverrides(source, targetLang);
     const effective = applyManualOverrides(source, target, meta, overrides);
     totalOverrideKeys += effective.overrideKeys.length;
     const overrideKeySet = new Set(effective.overrideKeys);

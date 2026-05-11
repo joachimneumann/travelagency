@@ -1,0 +1,846 @@
+{
+  "schema": "translation-manual-overrides/v2",
+  "schema_version": 2,
+  "items": [
+    {
+      "source_text": "Next",
+      "target_lang": "de",
+      "manual_override": "weiter"
+    },
+    {
+      "source_text": "(change below)",
+      "target_lang": "vi",
+      "manual_override": "(thay đổi bên dưới)"
+    },
+    {
+      "source_text": "{base} Missing: {fields}.",
+      "target_lang": "vi",
+      "manual_override": "{base} Thiếu: {fields}."
+    },
+    {
+      "source_text": "{count} day(s) found.",
+      "target_lang": "vi",
+      "manual_override": "Tìm thấy {count} ngày."
+    },
+    {
+      "source_text": "{count} service(s)",
+      "target_lang": "vi",
+      "manual_override": "{count} dịch vụ"
+    },
+    {
+      "source_text": "{label} cannot be selected right now",
+      "target_lang": "vi",
+      "manual_override": "Hiện không thể chọn {label}"
+    },
+    {
+      "source_text": "{label} is not shown in the card",
+      "target_lang": "vi",
+      "manual_override": "{label} không hiển thị trong thẻ"
+    },
+    {
+      "source_text": "{label} is one-page PDF image {order}",
+      "target_lang": "vi",
+      "manual_override": "{label} là ảnh PDF một trang số {order}"
+    },
+    {
+      "source_text": "{label} is the first image shown in the card",
+      "target_lang": "vi",
+      "manual_override": "{label} là ảnh đầu tiên hiển thị trong thẻ"
+    },
+    {
+      "source_text": "{label} is the one-page PDF hero image",
+      "target_lang": "vi",
+      "manual_override": "{label} là ảnh chính của PDF một trang"
+    },
+    {
+      "source_text": "{label} is web page image {order}",
+      "target_lang": "vi",
+      "manual_override": "{label} là ảnh trang web số {order}"
+    },
+    {
+      "source_text": "{translated}/{total} fields",
+      "target_lang": "vi",
+      "manual_override": "{translated}/{total} trường"
+    },
+    {
+      "source_text": "Add {label} to the one-page PDF images",
+      "target_lang": "vi",
+      "manual_override": "Thêm {label} vào ảnh PDF một trang"
+    },
+    {
+      "source_text": "Add {label} to the web page images",
+      "target_lang": "vi",
+      "manual_override": "Thêm {label} vào ảnh trang web"
+    },
+    {
+      "source_text": "Add destination",
+      "target_lang": "vi",
+      "manual_override": "Thêm điểm đến"
+    },
+    {
+      "source_text": "Add English travel-plan or PDF text before translating.",
+      "target_lang": "vi",
+      "manual_override": "Thêm lịch trình hoặc nội dung PDF bằng tiếng Anh trước khi dịch."
+    },
+    {
+      "source_text": "Add English website or travel-plan text before translating.",
+      "target_lang": "vi",
+      "manual_override": "Vui lòng thêm nội dung website hoặc kế hoạch du lịch bằng tiếng Anh trước khi dịch."
+    },
+    {
+      "source_text": "Add place",
+      "target_lang": "vi",
+      "manual_override": "Thêm địa điểm"
+    },
+    {
+      "source_text": "All destinations are already in the catalog.",
+      "target_lang": "vi",
+      "manual_override": "Tất cả điểm đến đã có trong danh mục."
+    },
+    {
+      "source_text": "Allow pop-ups to open the one-pager PDF.",
+      "target_lang": "vi",
+      "manual_override": "Cho phép cửa sổ bật lên để mở PDF một trang."
+    },
+    {
+      "source_text": "Allow pop-ups to preview the PDF.",
+      "target_lang": "vi",
+      "manual_override": "Cho phép cửa sổ bật lên để xem trước PDF."
+    },
+    {
+      "source_text": "at least one style",
+      "target_lang": "vi",
+      "manual_override": "ít nhất một phong cách"
+    },
+    {
+      "source_text": "Cancellation policy ({travelerRange})",
+      "target_lang": "vi",
+      "manual_override": "Chính sách hủy ({travelerRange})"
+    },
+    {
+      "source_text": "Change Reel",
+      "target_lang": "vi",
+      "manual_override": "Đổi Reel"
+    },
+    {
+      "source_text": "Children's Policy",
+      "target_lang": "vi",
+      "manual_override": "Chính sách trẻ em"
+    },
+    {
+      "source_text": "Clear selection",
+      "target_lang": "vi",
+      "manual_override": "Xóa lựa chọn"
+    },
+    {
+      "source_text": "Clearing marketing tour translation cache. Please wait.",
+      "target_lang": "vi",
+      "manual_override": "Đang xóa bộ nhớ đệm bản dịch tour marketing. Vui lòng chờ."
+    },
+    {
+      "source_text": "Click on &ldquo;Plan this trip&rdquo; or contact us directly via <a href=\"https://wa.me/84354999192\">WhatsApp (+84 354999192)</a> or <a href=\"mailto:info@asiatravelplan.com\">info@asiatravelplan.com</a>. We will design your itinerary, confirm details, and guide you through the booking process. Fast response within 2 hours.",
+      "target_lang": "vi",
+      "manual_override": "Nhấp vào “Khám phá chuyến đi” hoặc liên hệ trực tiếp với chúng tôi qua <a href=\"https://wa.me/84354999192\">WhatsApp (+84 354999192)</a> hoặc <a href=\"mailto:info@asiatravelplan.com\">info@asiatravelplan.com</a>. Chúng tôi sẽ thiết kế hành trình của bạn, xác nhận chi tiết và hướng dẫn bạn trong quá trình đặt vé. Phản hồi nhanh trong vòng 2 giờ."
+    },
+    {
+      "source_text": "Collapse day",
+      "target_lang": "vi",
+      "manual_override": "Thu gọn ngày"
+    },
+    {
+      "source_text": "Confirm payment",
+      "target_lang": "vi",
+      "manual_override": "Xác nhận thanh toán"
+    },
+    {
+      "source_text": "Copied from booking {booking}",
+      "target_lang": "vi",
+      "manual_override": "Sao chép từ đặt chỗ {booking}"
+    },
+    {
+      "source_text": "Could not insert this day.",
+      "target_lang": "vi",
+      "manual_override": "Không thể chèn ngày này."
+    },
+    {
+      "source_text": "Could not preview the travel plan PDF.",
+      "target_lang": "vi",
+      "manual_override": "Không thể xem trước PDF lịch trình."
+    },
+    {
+      "source_text": "Could not search existing days.",
+      "target_lang": "vi",
+      "manual_override": "Không thể tìm kiếm ngày hiện có."
+    },
+    {
+      "source_text": "Create One-Page PDF",
+      "target_lang": "vi",
+      "manual_override": "Tạo PDF một trang"
+    },
+    {
+      "source_text": "Day {day}, service {item}: Date must use YYYY-MM-DD.",
+      "target_lang": "vi",
+      "manual_override": "Ngày {day}, dịch vụ {item}: Ngày phải dùng định dạng YYYY-MM-DD."
+    },
+    {
+      "source_text": "Day {day}, service {item}: Dates must use YYYY-MM-DD.",
+      "target_lang": "vi",
+      "manual_override": "Ngày {day}, dịch vụ {item}: Ngày phải dùng định dạng YYYY-MM-DD."
+    },
+    {
+      "source_text": "Day {day}, service {item}: Kind is invalid.",
+      "target_lang": "vi",
+      "manual_override": "Ngày {day}, dịch vụ {item}: Loại không hợp lệ."
+    },
+    {
+      "source_text": "Day {day}, service {item}: Service id is duplicated.",
+      "target_lang": "vi",
+      "manual_override": "Ngày {day}, dịch vụ {item}: ID dịch vụ bị trùng."
+    },
+    {
+      "source_text": "Day {day}, service {item}: Service id is missing.",
+      "target_lang": "vi",
+      "manual_override": "Ngày {day}, dịch vụ {item}: Thiếu ID dịch vụ."
+    },
+    {
+      "source_text": "Day {day}, service {item}: Start and end time are required.",
+      "target_lang": "vi",
+      "manual_override": "Ngày {day}, dịch vụ {item}: Cần nhập giờ bắt đầu và giờ kết thúc."
+    },
+    {
+      "source_text": "Day {day}, service {item}: Time information is invalid.",
+      "target_lang": "vi",
+      "manual_override": "Ngày {day}, dịch vụ {item}: Thông tin thời gian không hợp lệ."
+    },
+    {
+      "source_text": "Day {day}, service {item}: Time point is required.",
+      "target_lang": "vi",
+      "manual_override": "Ngày {day}, dịch vụ {item}: Cần nhập thời điểm."
+    },
+    {
+      "source_text": "Day {day}: Date must use YYYY-MM-DD.",
+      "target_lang": "vi",
+      "manual_override": "Ngày {day}: Ngày phải dùng định dạng YYYY-MM-DD."
+    },
+    {
+      "source_text": "Day inserted.",
+      "target_lang": "vi",
+      "manual_override": "Đã chèn ngày."
+    },
+    {
+      "source_text": "Delete all translations and translate",
+      "target_lang": "vi",
+      "manual_override": "Xóa tất cả bản dịch và dịch lại"
+    },
+    {
+      "source_text": "Destination",
+      "target_lang": "vi",
+      "manual_override": "Điểm đến"
+    },
+    {
+      "source_text": "destination {value}",
+      "target_lang": "vi",
+      "manual_override": "điểm đến {value}"
+    },
+    {
+      "source_text": "Destination catalog saved.",
+      "target_lang": "vi",
+      "manual_override": "Danh mục điểm đến đã được lưu."
+    },
+    {
+      "source_text": "Destination filter",
+      "target_lang": "vi",
+      "manual_override": "Bộ lọc điểm đến"
+    },
+    {
+      "source_text": "Destination(s)",
+      "target_lang": "vi",
+      "manual_override": "Điểm đến"
+    },
+    {
+      "source_text": "Destinations",
+      "target_lang": "vi",
+      "manual_override": "Điểm đến"
+    },
+    {
+      "source_text": "Displayed in the card",
+      "target_lang": "vi",
+      "manual_override": "Hiển thị trong thẻ"
+    },
+    {
+      "source_text": "English source",
+      "target_lang": "vi",
+      "manual_override": "Nguồn tiếng Anh"
+    },
+    {
+      "source_text": "Expand day",
+      "target_lang": "vi",
+      "manual_override": "Mở rộng ngày"
+    },
+    {
+      "source_text": "Experience Highlights (4 required!)",
+      "target_lang": "vi",
+      "manual_override": "Điểm nhấn trải nghiệm (bắt buộc 4!)"
+    },
+    {
+      "source_text": "Field translated to {lang}.",
+      "target_lang": "vi",
+      "manual_override": "Trường đã được dịch sang {lang}."
+    },
+    {
+      "source_text": "First card image selected. Save changes to publish it.",
+      "target_lang": "vi",
+      "manual_override": "Đã chọn ảnh đầu tiên cho thẻ tour. Lưu thay đổi để xuất bản."
+    },
+    {
+      "source_text": "Hero image",
+      "target_lang": "vi",
+      "manual_override": "Ảnh chính"
+    },
+    {
+      "source_text": "Hide",
+      "target_lang": "vi",
+      "manual_override": "Ẩn"
+    },
+    {
+      "source_text": "Image alt text",
+      "target_lang": "vi",
+      "manual_override": "Văn bản thay thế của ảnh"
+    },
+    {
+      "source_text": "Image caption",
+      "target_lang": "vi",
+      "manual_override": "Chú thích ảnh"
+    },
+    {
+      "source_text": "Image removed.",
+      "target_lang": "vi",
+      "manual_override": "Ảnh đã được xóa."
+    },
+    {
+      "source_text": "Image subtitle (optional)",
+      "target_lang": "vi",
+      "manual_override": "Phụ đề ảnh (tùy chọn)"
+    },
+    {
+      "source_text": "Include cancellation policy",
+      "target_lang": "vi",
+      "manual_override": "Bao gồm chính sách hủy"
+    },
+    {
+      "source_text": "Include in travel tour card",
+      "target_lang": "vi",
+      "manual_override": "Hiển thị trong thẻ tour du lịch"
+    },
+    {
+      "source_text": "Inserting day...",
+      "target_lang": "vi",
+      "manual_override": "Đang chèn ngày..."
+    },
+    {
+      "source_text": "Loading destinations...",
+      "target_lang": "vi",
+      "manual_override": "Đang tải điểm đến..."
+    },
+    {
+      "source_text": "Loading page content. Please wait.",
+      "target_lang": "vi",
+      "manual_override": "Đang tải nội dung trang. Vui lòng chờ."
+    },
+    {
+      "source_text": "Machine translated",
+      "target_lang": "vi",
+      "manual_override": "Dịch máy"
+    },
+    {
+      "source_text": "Manage destinations, regions, and places available to tour travel plans.",
+      "target_lang": "vi",
+      "manual_override": "Quản lý điểm đến, khu vực và địa điểm có thể dùng trong kế hoạch tour."
+    },
+    {
+      "source_text": "Master language matches customer language. No translation is needed.",
+      "target_lang": "vi",
+      "manual_override": "Ngôn ngữ gốc trùng với ngôn ngữ khách hàng. Không cần dịch."
+    },
+    {
+      "source_text": "Missing",
+      "target_lang": "vi",
+      "manual_override": "Thiếu"
+    },
+    {
+      "source_text": "New place",
+      "target_lang": "vi",
+      "manual_override": "Địa điểm mới"
+    },
+    {
+      "source_text": "New Reel",
+      "target_lang": "vi",
+      "manual_override": "Reel mới"
+    },
+    {
+      "source_text": "No customer languages configured.",
+      "target_lang": "vi",
+      "manual_override": "Chưa cấu hình ngôn ngữ khách hàng."
+    },
+    {
+      "source_text": "No destinations configured.",
+      "target_lang": "vi",
+      "manual_override": "Chưa cấu hình điểm đến."
+    },
+    {
+      "source_text": "No existing days found.",
+      "target_lang": "vi",
+      "manual_override": "Không tìm thấy ngày nào."
+    },
+    {
+      "source_text": "no filters",
+      "target_lang": "vi",
+      "manual_override": "không có bộ lọc"
+    },
+    {
+      "source_text": "No places yet.",
+      "target_lang": "vi",
+      "manual_override": "Chưa có địa điểm."
+    },
+    {
+      "source_text": "No reel video uploaded yet.",
+      "target_lang": "vi",
+      "manual_override": "Chưa tải video reel nào lên."
+    },
+    {
+      "source_text": "No service images are available for the web page.",
+      "target_lang": "vi",
+      "manual_override": "Chưa có ảnh dịch vụ nào khả dụng cho trang web."
+    },
+    {
+      "source_text": "No service images are currently hidden from the card.",
+      "target_lang": "vi",
+      "manual_override": "Hiện không có ảnh dịch vụ nào bị ẩn khỏi thẻ."
+    },
+    {
+      "source_text": "No service images are currently shown in the card.",
+      "target_lang": "vi",
+      "manual_override": "Hiện không có ảnh dịch vụ nào được hiển thị trong thẻ."
+    },
+    {
+      "source_text": "No source text",
+      "target_lang": "vi",
+      "manual_override": "Không có nội dung nguồn"
+    },
+    {
+      "source_text": "Not shown",
+      "target_lang": "vi",
+      "manual_override": "Không hiển thị"
+    },
+    {
+      "source_text": "Offer PDF",
+      "target_lang": "vi",
+      "manual_override": "PDF báo giá"
+    },
+    {
+      "source_text": "One pager",
+      "target_lang": "vi",
+      "manual_override": "Tờ giới thiệu một trang"
+    },
+    {
+      "source_text": "One reel video per tour. Uploading a new file replaces the previous reel and stores it as a normalized portrait MP4.",
+      "target_lang": "vi",
+      "manual_override": "Mỗi tour có một video reel. Khi tải tệp mới lên, video reel hiện tại sẽ được thay thế và được lưu dưới dạng MP4 dọc đã chuẩn hóa."
+    },
+    {
+      "source_text": "One-page PDF hero image selected. Save changes to publish it.",
+      "target_lang": "vi",
+      "manual_override": "Đã chọn ảnh chính cho PDF một trang. Lưu thay đổi để xuất bản."
+    },
+    {
+      "source_text": "One-page PDF image selected. Save changes to publish it.",
+      "target_lang": "vi",
+      "manual_override": "Đã chọn ảnh PDF một trang. Lưu thay đổi để xuất bản."
+    },
+    {
+      "source_text": "One-page PDF image selection cleared. Select images again, then save changes.",
+      "target_lang": "vi",
+      "manual_override": "Đã xóa lựa chọn ảnh PDF một trang. Chọn lại ảnh, rồi lưu thay đổi."
+    },
+    {
+      "source_text": "Only available service images can be selected for the web page.",
+      "target_lang": "vi",
+      "manual_override": "Chỉ có thể chọn ảnh dịch vụ khả dụng cho trang web."
+    },
+    {
+      "source_text": "Only images shown in the card can be selected as first image.",
+      "target_lang": "vi",
+      "manual_override": "Chỉ ảnh được hiển thị trong thẻ mới có thể được chọn làm ảnh đầu tiên."
+    },
+    {
+      "source_text": "Only images shown in the card can be selected as the first image on the public homepage.",
+      "target_lang": "vi",
+      "manual_override": "Chỉ các ảnh được hiển thị trong thẻ mới có thể được chọn làm ảnh đầu tiên trên trang chủ công khai."
+    },
+    {
+      "source_text": "Opening one-pager PDF.",
+      "target_lang": "vi",
+      "manual_override": "Đang mở PDF một trang."
+    },
+    {
+      "source_text": "Outdated",
+      "target_lang": "vi",
+      "manual_override": "Đã lỗi thời"
+    },
+    {
+      "source_text": "Partial",
+      "target_lang": "vi",
+      "manual_override": "Một phần"
+    },
+    {
+      "source_text": "Payment confirmation closing",
+      "target_lang": "vi",
+      "manual_override": "Lời kết xác nhận thanh toán"
+    },
+    {
+      "source_text": "Payment confirmation subtitle",
+      "target_lang": "vi",
+      "manual_override": "Phụ đề xác nhận thanh toán"
+    },
+    {
+      "source_text": "Payment confirmation welcome",
+      "target_lang": "vi",
+      "manual_override": "Lời mở đầu xác nhận thanh toán"
+    },
+    {
+      "source_text": "PDF language",
+      "target_lang": "vi",
+      "manual_override": "Ngôn ngữ PDF"
+    },
+    {
+      "source_text": "PDF Texts",
+      "target_lang": "vi",
+      "manual_override": "Nội dung PDF"
+    },
+    {
+      "source_text": "place {value}",
+      "target_lang": "vi",
+      "manual_override": "địa điểm {value}"
+    },
+    {
+      "source_text": "place {value} under {region}",
+      "target_lang": "vi",
+      "manual_override": "địa điểm {value} dưới {region}"
+    },
+    {
+      "source_text": "Plan this trip",
+      "target_lang": "vi",
+      "manual_override": "Khám phá chuyến đi"
+    },
+    {
+      "source_text": "Please fix the invalid date.",
+      "target_lang": "vi",
+      "manual_override": "Vui lòng sửa ngày không hợp lệ."
+    },
+    {
+      "source_text": "Private holidays in {destinations}",
+      "target_lang": "vi",
+      "manual_override": "Kỳ nghỉ riêng tại {destinations}"
+    },
+    {
+      "source_text": "Published on webpage",
+      "target_lang": "vi",
+      "manual_override": "Xuất bản trên trang web"
+    },
+    {
+      "source_text": "Remove reel",
+      "target_lang": "vi",
+      "manual_override": "Xóa reel"
+    },
+    {
+      "source_text": "Remove reel video",
+      "target_lang": "vi",
+      "manual_override": "Xóa video reel"
+    },
+    {
+      "source_text": "Removing image...",
+      "target_lang": "vi",
+      "manual_override": "Đang xóa ảnh..."
+    },
+    {
+      "source_text": "Request payment",
+      "target_lang": "vi",
+      "manual_override": "Yêu cầu thanh toán"
+    },
+    {
+      "source_text": "Retranslating backend Vietnamese. Please wait.",
+      "target_lang": "vi",
+      "manual_override": "Đang dịch lại tiếng Việt cho backend. Vui lòng chờ."
+    },
+    {
+      "source_text": "Retranslating current language. Please wait.",
+      "target_lang": "vi",
+      "manual_override": "Đang dịch lại ngôn ngữ hiện tại. Vui lòng chờ."
+    },
+    {
+      "source_text": "Retranslating customer UI strings. Please wait.",
+      "target_lang": "vi",
+      "manual_override": "Đang dịch lại chuỗi giao diện khách hàng. Vui lòng chờ."
+    },
+    {
+      "source_text": "Review",
+      "target_lang": "vi",
+      "manual_override": "Xem lại"
+    },
+    {
+      "source_text": "Reviewed",
+      "target_lang": "vi",
+      "manual_override": "Đã xem lại"
+    },
+    {
+      "source_text": "Save the tour before creating a one-pager PDF.",
+      "target_lang": "vi",
+      "manual_override": "Hãy lưu tour trước khi tạo PDF một trang."
+    },
+    {
+      "source_text": "Saving changes. Please wait.",
+      "target_lang": "vi",
+      "manual_override": "Đang lưu thay đổi. Vui lòng chờ."
+    },
+    {
+      "source_text": "Saving destination catalog, translating labels, and refreshing public homepage. Please wait.",
+      "target_lang": "vi",
+      "manual_override": "Đang lưu danh mục điểm đến, dịch nhãn và làm mới trang chủ công khai. Vui lòng chờ."
+    },
+    {
+      "source_text": "Saving destination catalog...",
+      "target_lang": "vi",
+      "manual_override": "Đang lưu danh mục điểm đến..."
+    },
+    {
+      "source_text": "Search and Filters: {filters}",
+      "target_lang": "vi",
+      "manual_override": "Tìm kiếm và bộ lọc: {filters}"
+    },
+    {
+      "source_text": "Search existing booking days and append a copy to this travel plan.",
+      "target_lang": "vi",
+      "manual_override": "Tìm kiếm các ngày đặt chỗ hiện có và thêm một bản sao vào cuối lịch trình này."
+    },
+    {
+      "source_text": "Searching days...",
+      "target_lang": "vi",
+      "manual_override": "Đang tìm ngày..."
+    },
+    {
+      "source_text": "Select 4 small images",
+      "target_lang": "vi",
+      "manual_override": "Chọn 4 ảnh nhỏ"
+    },
+    {
+      "source_text": "Select at least 2 web page images before publishing on the web page.",
+      "target_lang": "vi",
+      "manual_override": "Chọn ít nhất 2 ảnh trang web trước khi xuất bản trên trang web."
+    },
+    {
+      "source_text": "Select at least one small image to create the one-page PDF.",
+      "target_lang": "vi",
+      "manual_override": "Chọn ít nhất một ảnh nhỏ để tạo PDF một trang."
+    },
+    {
+      "source_text": "SEO URL slug",
+      "target_lang": "vi",
+      "manual_override": "Slug URL SEO"
+    },
+    {
+      "source_text": "Set traveler count to show the applicable cancellation policy section.",
+      "target_lang": "vi",
+      "manual_override": "Đặt số lượng hành khách để hiển thị phần chính sách hủy phù hợp."
+    },
+    {
+      "source_text": "Show on web page",
+      "target_lang": "vi",
+      "manual_override": "Hiển thị trên trang web"
+    },
+    {
+      "source_text": "Some tours use destinations, regions, or places that are not configured.",
+      "target_lang": "vi",
+      "manual_override": "Một số tour đang dùng điểm đến, khu vực hoặc địa điểm chưa được cấu hình."
+    },
+    {
+      "source_text": "Statistics: {count} tours",
+      "target_lang": "vi",
+      "manual_override": "Thống kê: {count} tour"
+    },
+    {
+      "source_text": "This image is already selected for the one-page PDF.",
+      "target_lang": "vi",
+      "manual_override": "Ảnh này đã được chọn cho PDF một trang."
+    },
+    {
+      "source_text": "This image is already selected for the web page.",
+      "target_lang": "vi",
+      "manual_override": "Ảnh này đã được chọn cho trang web."
+    },
+    {
+      "source_text": "This image is already used as the one-page PDF hero image.",
+      "target_lang": "vi",
+      "manual_override": "Ảnh này đã được dùng làm ảnh chính của PDF một trang."
+    },
+    {
+      "source_text": "Title",
+      "target_lang": "vi",
+      "manual_override": "Tiêu đề"
+    },
+    {
+      "source_text": "Tour card images",
+      "target_lang": "vi",
+      "manual_override": "Ảnh thẻ tour"
+    },
+    {
+      "source_text": "Tour Title and description",
+      "target_lang": "vi",
+      "manual_override": "Tiêu đề và mô tả tour"
+    },
+    {
+      "source_text": "Translate",
+      "target_lang": "vi",
+      "manual_override": "Dịch"
+    },
+    {
+      "source_text": "Translate English customer-facing content",
+      "target_lang": "vi",
+      "manual_override": "Dịch nội dung gửi khách bằng tiếng Anh"
+    },
+    {
+      "source_text": "Translate everything",
+      "target_lang": "vi",
+      "manual_override": "Dịch toàn bộ"
+    },
+    {
+      "source_text": "Translate the English website content and travel plan",
+      "target_lang": "vi",
+      "manual_override": "Dịch tiêu đề, mô tả website và kế hoạch du lịch tiếng Anh"
+    },
+    {
+      "source_text": "Translating {language} using {translator}. Please wait.",
+      "target_lang": "vi",
+      "manual_override": "Đang dịch {language} bằng {translator}. Vui lòng chờ."
+    },
+    {
+      "source_text": "Translating content. Please wait.",
+      "target_lang": "vi",
+      "manual_override": "Đang dịch nội dung và tạo tệp runtime. Vui lòng chờ."
+    },
+    {
+      "source_text": "Translating customer-facing content. Please wait.",
+      "target_lang": "vi",
+      "manual_override": "Đang dịch nội dung gửi khách. Vui lòng chờ."
+    },
+    {
+      "source_text": "Translating customer-facing content...",
+      "target_lang": "vi",
+      "manual_override": "Đang dịch nội dung gửi khách..."
+    },
+    {
+      "source_text": "Translating field from {language}...",
+      "target_lang": "vi",
+      "manual_override": "Đang dịch trường từ {language}..."
+    },
+    {
+      "source_text": "Translating website content and travel plan. Please wait.",
+      "target_lang": "vi",
+      "manual_override": "Đang dịch nội dung website và kế hoạch du lịch. Vui lòng chờ."
+    },
+    {
+      "source_text": "Translating website content and travel plan...",
+      "target_lang": "vi",
+      "manual_override": "Đang dịch nội dung website và kế hoạch du lịch..."
+    },
+    {
+      "source_text": "Translation: incomplete",
+      "target_lang": "vi",
+      "manual_override": "Bản dịch: chưa hoàn tất"
+    },
+    {
+      "source_text": "Translations",
+      "target_lang": "vi",
+      "manual_override": "Bản dịch"
+    },
+    {
+      "source_text": "Translations updated.",
+      "target_lang": "vi",
+      "manual_override": "Đã cập nhật bản dịch."
+    },
+    {
+      "source_text": "Travel plan image preview",
+      "target_lang": "vi",
+      "manual_override": "Xem trước ảnh lịch trình"
+    },
+    {
+      "source_text": "Travel plan is invalid.",
+      "target_lang": "vi",
+      "manual_override": "Lịch trình không hợp lệ."
+    },
+    {
+      "source_text": "Travel-plan day id {id} is duplicated.",
+      "target_lang": "vi",
+      "manual_override": "ID ngày trong lịch trình {id} bị trùng."
+    },
+    {
+      "source_text": "Update",
+      "target_lang": "vi",
+      "manual_override": "Cập nhật"
+    },
+    {
+      "source_text": "Update {language}",
+      "target_lang": "vi",
+      "manual_override": "Cập nhật {language}"
+    },
+    {
+      "source_text": "Updating translations. Please wait.",
+      "target_lang": "vi",
+      "manual_override": "Đang tạo bản dịch runtime. Vui lòng chờ."
+    },
+    {
+      "source_text": "Upload reel video",
+      "target_lang": "vi",
+      "manual_override": "Tải video reel lên"
+    },
+    {
+      "source_text": "Uploading image. Please wait.",
+      "target_lang": "vi",
+      "manual_override": "Đang tải ảnh lên. Vui lòng đợi."
+    },
+    {
+      "source_text": "Use {label} as the first card image",
+      "target_lang": "vi",
+      "manual_override": "Dùng {label} làm ảnh đầu tiên của thẻ"
+    },
+    {
+      "source_text": "Use {label} as the one-page PDF hero image",
+      "target_lang": "vi",
+      "manual_override": "Dùng {label} làm ảnh chính của PDF một trang"
+    },
+    {
+      "source_text": "Used for /tours/{slug}. Leave blank to generate it from the title.",
+      "target_lang": "vi",
+      "manual_override": "Dùng cho /tours/{slug}. Để trống để tạo từ tiêu đề."
+    },
+    {
+      "source_text": "web page",
+      "target_lang": "vi",
+      "manual_override": "trang web"
+    },
+    {
+      "source_text": "Web page image selected. Save changes to publish it.",
+      "target_lang": "vi",
+      "manual_override": "Đã chọn ảnh trang web. Lưu thay đổi để xuất bản."
+    },
+    {
+      "source_text": "Web page image selection cleared. Select images again, then save changes.",
+      "target_lang": "vi",
+      "manual_override": "Đã xóa lựa chọn ảnh trang web. Chọn lại ảnh, rồi lưu thay đổi."
+    },
+    {
+      "source_text": "What's not included",
+      "target_lang": "vi",
+      "manual_override": "Không bao gồm"
+    }
+  ]
+}
